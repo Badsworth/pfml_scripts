@@ -1,6 +1,7 @@
 import argparse
 from dataclasses import asdict
 from enum import Enum
+from typing import Optional
 
 from pydantic import BaseSettings, Field
 
@@ -8,8 +9,7 @@ import massgov.pfml.fineos.employers
 import massgov.pfml.util.batch.log
 import massgov.pfml.util.logging as logging
 from massgov.pfml import db, fineos
-from massgov.pfml.util.logging import audit
-from massgov.pfml.util.sentry import initialize_sentry
+from massgov.pfml.util.bg import background_task
 
 logger = logging.get_logger(__name__)
 
@@ -21,6 +21,9 @@ class EmployerLoadMode(Enum):
 
 class EmployerLoadConfig(BaseSettings):
     mode: EmployerLoadMode = Field(EmployerLoadMode.ONLY_NEW, env="EMPLOYER_LOAD_MODE")
+    update_employer_number_limit: Optional[int] = Field(
+        None, env="EMPLOYER_UPDATE_LIMIT"
+    )  # Only applies to "updates" mode
 
 
 def parse_args():
@@ -34,12 +37,9 @@ def parse_args():
     return parser.parse_args()
 
 
+@background_task("load-employers-to-fineos")
 def handler():
     """ECS handler function."""
-    initialize_sentry()
-    audit.init_security_logging()
-    logging.init(__name__)
-
     logger.info("Starting loading employers to FINEOS.")
 
     args = parse_args()
@@ -56,7 +56,10 @@ def handler():
 
         if config.mode is EmployerLoadMode.UPDATES:
             report = massgov.pfml.fineos.employers.load_updates(
-                db_session, fineos_client, args.process_id
+                db_session,
+                fineos_client,
+                args.process_id,
+                employer_update_limit=config.update_employer_number_limit,
             )
         else:
             report = massgov.pfml.fineos.employers.load_all(db_session, fineos_client)

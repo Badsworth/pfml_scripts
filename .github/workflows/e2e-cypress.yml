@@ -20,117 +20,174 @@ on:
         description: "Cypress Run Tags"
         required: false
         default: "Manual"
-      only_stable:
-        description: "Only run 'stable' tests? (true/false)"
+      title_override:
+        description: "Title Override (replaces commit message in Cypress Dashboard)"
+        required: false
+      run_unstable:
+        description: "Run tests in unstable group"
         required: false
         default: "false"
-  # E2E PRs that touch Cypress.
-  pull_request:
-    paths:
-      - e2e/cypress/**
-      - e2e/cypress.json
-      - e2e/package.json
-      - e2e/employee.json
+      run_nightly:
+        description: "Run tests in nightly group"
+        required: false
+        default: "false"
+
+defaults:
+  run:
+    working-directory: e2e
 
 env:
+  E2E_ENVIRONMENT: ${{ github.event.inputs.target_environment }}
+  COMMIT_INFO_MESSAGE: |
+    ${{ github.event.inputs.title_override || format('Manual Run: {0}', github.event.inputs.target_environment) }}
   # Setup any secret overrides that are necessary here.
   # Most other environment variables will come from /e2e/config.json,
-  # as determined by the E2E_ENVIRONMENT variable set above.
+  # as determined by the E2E_ENVIRONMENT variable.
   E2E_FINEOS_PASSWORD: ${{ secrets.E2E_FINEOS_PASSWORD }}
   E2E_PORTAL_PASSWORD: ${{ secrets.E2E_PORTAL_PASSWORD }}
+  E2E_EMPLOYER_PORTAL_PASSWORD: ${{ secrets.E2E_EMPLOYER_PORTAL_PASSWORD }}
   E2E_TESTMAIL_APIKEY: ${{ secrets.E2E_TESTMAIL_APIKEY }}
   E2E_SSO_PASSWORD: ${{ secrets.E2E_SSO_PASSWORD }}
   E2E_SSO_USERNAME: ${{ secrets.E2E_SSO_USERNAME }}
   CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  # Caching/build performance - Move Cypress, Playwright binary storage to .npm to leverage caching.
+  CYPRESS_CACHE_FOLDER: /home/runner/.npm/.cypress-cache
+  PLAYWRIGHT_BROWSERS_PATH: /home/runner/.npm/.playwright-cache
+  PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: 1 # We never actually need puppeteer chromium installed - it's for flood only.
+  TEST_RUN_ID: ${{ github.repository }}-${{ github.run_id }}-${{ github.run_attempt}}
+
+# Prevent this workflow from running more than 1x concurrently in any environment.
+# This prevents us from overloading the environment with requests, which causes false failures.
+# Cypress & Flood share the same concurrency key to prevent E2E and Flood running concurrently.
+concurrency: E2E-${{ github.event.inputs.target_environment }}
 
 jobs:
+  # Health check job. Ensures Fineos is online before proceeding with testing. This saves resources
+  # when we know we're going to get a high failure rate.
+  health-check:
+    name: Check for Healthy Services
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v2
+      - name: Check Fineos Online
+        run: |
+          fineos_url=$(cat config.json | jq -re '.["${{ env.E2E_ENVIRONMENT }}"].FINEOS_BASEURL')
+          status_code=$(curl -s -o /dev/null -w "%{http_code}" "$fineos_url")
+          echo "Received ${status_code} from ${fineos_url}"
+          test "$status_code" -lt 500
   cypress:
     name: Run Cypress Tests
+    needs: [health-check]
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    # At the job level, we extend timeout from 6 minutes to 30. We'll set tighter timeouts for steps below to prevent
+    # hung tests from spinning endlessly.
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
-        containers: [1,2,3,4,5,6,7]
+        containers: [1, 2, 3, 4, 5, 6, 7]
     steps:
       - uses: actions/checkout@v2
+      - name: Setup Node
+        uses: actions/setup-node@v2
+        with: { node-version: "14.x" }
+      - name: "Install Node Modules"
+        uses: bahmutov/npm-install@v1
+        with:
+          working-directory: e2e
 
-      # Set Cypress Tags according to what type of event we're dealing with.
-      - name: Set variables for PR
-        if: github.event_name == 'pull_request'
-        run: |
-          echo "cypress_tags=PR" >> $GITHUB_ENV
-          echo "E2E_ENVIRONMENT=test" >> $GITHUB_ENV
-          echo "COMMIT_INFO_MESSAGE=${{ github.event.pull_request.title }}" >> $GITHUB_ENV
-          echo "only_stable=false" >> $GITHUB_ENV
-      - name: Set variables for Nightly
-        if: github.event_name == 'schedule'
-        run: |
-          echo "cypress_tags=Nightly" >> $GITHUB_ENV
-          echo "E2E_ENVIRONMENT=test" >> $GITHUB_ENV
-          echo "only_stable=false" >> $GITHUB_ENV
-      - name: Set variables for manual run
-        if: github.event_name == 'workflow_dispatch'
-        run: |
-          echo "cypress_tags=${{ github.event.inputs.cypress_tags }}" >> $GITHUB_ENV
-          echo "E2E_ENVIRONMENT=${{ github.event.inputs.target_environment }}" >> $GITHUB_ENV
-          echo "only_stable=${{github.event.inputs.only_stable }}" >> $GITHUB_ENV
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+          role-to-assume: ci-run-deploys
+          role-duration-seconds: 3600
+      - name: Pull the newrelic API key from parameter store for reporting
+        uses: "marvinpinto/action-inject-ssm-secrets@latest"
+        with:
+          ssm_parameter: "/service/pfml-api/common/newrelic-license-key"
+          env_variable_name: "E2E_NEWRELIC_INGEST_KEY"
 
       # Run Cypress tests.
-      - name: Cypress Tests (Stable)
+      - name: Cypress Tests (Commit Stable)
         uses: cypress-io/github-action@v2
+        timeout-minutes: 15
         with:
           spec: "cypress/specs/stable/**"
           record: true
           parallel: true
+          install: false
           working-directory: e2e
-          group: Stable
-          tag: "${{ env.cypress_tags }},Env-${{ env.E2E_ENVIRONMENT }}"
+          ci-build-id: ${{ env.TEST_RUN_ID }}
+          group: Commit Stable
+          tag: "${{ github.event.inputs.cypress_tags }},Env-${{ github.event.inputs.target_environment }}"
+          config: reporter=cypress/reporters/new-relic.js
 
       # Run Cypress tests.
-      - name: Cypress Tests (Unstable)
+      - name: Cypress Tests (Commit Unstable)
         uses: cypress-io/github-action@v2
         with:
           spec: "cypress/specs/unstable/**"
           record: true
           parallel: true
           working-directory: e2e
+          ci-build-id: ${{ env.TEST_RUN_ID }}
           group: Unstable
-          install: false # Skip install on second run.
-          tag: "${{ env.cypress_tags }},Env-${{ env.E2E_ENVIRONMENT }}"
+          install: false
+          tag: "${{ github.event.inputs.cypress_tags }},Env-${{ github.event.inputs.target_environment }}"
+          config: trashAssetsBeforeRuns=false,reporter=cypress/reporters/new-relic.js
         # Always run this step if requested, even if stable tests fail.
-        if: env.only_stable == 'false' && always()
+        if: github.event.inputs.run_unstable == 'true' && always()
         # Do not allow this step to fail the job. It is informational, not mandatory.
-        # This should be removed when we are ready to make 1.1 tests mandatory.
         continue-on-error: true
+        # Setting a step timeout here prevents a hung unstable test from timing out at the job level - it times out at
+        # the step level instead, allowing continue-on-error to do its job.
+        timeout-minutes: 15
 
-# Run Integration Tests.
+#      # Run Nightly Cypress tests (commented out until we have some).
+#      - name: Cypress Tests (Nightly)
+#        uses: cypress-io/github-action@v2
+#        timeout-minutes: 15
+#        with:
+#          spec: "cypress/specs/nightly/**"
+#          record: true
+#          parallel: true
+#          working-directory: e2e
+#          group: Nightly
+#          ci-build-id: ${{ env.TEST_RUN_ID }}
+#          install: false
+#          tag: "${{ github.event.inputs.cypress_tags }},Env-${{ github.event.inputs.target_environment }}"
+#          config: trashAssetsBeforeRuns=false,reporter=cypress/reporters/new-relic.js
+#        if: github.event.inputs.run_nightly == 'true' && always()
+
+      - name: "Archive screenshots"
+        uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          # See https://github.com/actions/upload-artifact#uploading-to-the-same-artifact for an explanation of
+          # why we use a different name for each instance.
+          name: cypress-screenshots ${{ matrix.containers }}
+          path: e2e/cypress/screenshots
+          if-no-files-found: "ignore"
+
+  # Run Integration Tests.
   run_integration_test:
     name: Integration Tests
+    needs: [health-check]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      # Set Cypress Tags according to what type of event we're dealing with.
-      - name: Set variables for PR
-        if: github.event_name == 'pull_request'
-        run: |
-          echo "cypress_tags=PR" >> $GITHUB_ENV
-          echo "E2E_ENVIRONMENT=test" >> $GITHUB_ENV
-          echo "COMMIT_INFO_MESSAGE=${{ github.event.pull_request.title }}" >> $GITHUB_ENV
-          echo "only_stable=false" >> $GITHUB_ENV
-      - name: Set variables for Nightly
-        if: github.event_name == 'schedule'
-        run: |
-          echo "cypress_tags=Nightly" >> $GITHUB_ENV
-          echo "E2E_ENVIRONMENT=test" >> $GITHUB_ENV
-          echo "only_stable=false" >> $GITHUB_ENV
-      - name: Set variables for manual run
-        if: github.event_name == 'workflow_dispatch'
-        run: |
-          echo "cypress_tags=${{ github.event.inputs.cypress_tags }}" >> $GITHUB_ENV
-          echo "E2E_ENVIRONMENT=${{ github.event.inputs.target_environment }}" >> $GITHUB_ENV
-          echo "only_stable=${{github.event.inputs.only_stable }}" >> $GITHUB_ENV
+      - name: Setup Node
+        uses: actions/setup-node@v2
+        with: { node-version: "14.x" }
+      - name: "Install Node Modules"
+        uses: bahmutov/npm-install@v1
+        with:
+          working-directory: e2e
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -145,22 +202,18 @@ jobs:
       - name: Pull Client_ID from SSM
         uses: "marvinpinto/action-inject-ssm-secrets@latest"
         with:
-          ssm_parameter: "/service/pfml-api/${{ env.E2E_ENVIRONMENT }}/cognito_internal_fineos_role_app_client_id"
+          ssm_parameter: "/service/pfml-api/${{ github.event.inputs.target_environment }}/cognito_internal_fineos_role_app_client_id"
           env_variable_name: "E2E_API_FINEOS_CLIENT_ID"
       - name: Pull Client_SECRET from SSM
         uses: "marvinpinto/action-inject-ssm-secrets@latest"
         with:
-          ssm_parameter: "/service/pfml-api/${{ env.E2E_ENVIRONMENT }}/cognito_internal_fineos_role_app_client_secret"
+          ssm_parameter: "/service/pfml-api/${{ github.event.inputs.target_environment }}/cognito_internal_fineos_role_app_client_secret"
           env_variable_name: "E2E_API_FINEOS_CLIENT_SECRET"
+      - name: Pull the newrelic API key from parameter store for reporting
+        uses: "marvinpinto/action-inject-ssm-secrets@latest"
+        with:
+          ssm_parameter: "/service/pfml-api/common/newrelic-license-key"
+          env_variable_name: "E2E_NEWRELIC_INGEST_KEY"
 
-      - name: Setup Node
-        uses: actions/setup-node@v1
-        with: { node-version: 14.x }
-      - name: "Install Dependencies"
-        working-directory: e2e
-        run: npm ci
       - name: Integration Tests
-        working-directory: e2e
-        run: npm run test:integration
-
-
+        run: npm run test:integration:ci -- --group=stable${{ github.event.inputs.run_unstable == 'true' && ' --group=unstable' || '' }}${{ github.event.inputs.run_nightly == 'true' && ' --group=nightly' || '' }}

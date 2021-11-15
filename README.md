@@ -1,6 +1,6 @@
 # Massachusetts Paid Family & Medical Leave
 
-This is the top level of the monorepo for the Mass PFML project, including web portal and API. View the `README` in each child directory for information specific to each system component.
+This is the top level of the monorepo for the Mass PFML project, including web portal and API. **View the `README` in each child directory for information specific to each system component.**
 
 **You may also be interested in:**
 
@@ -17,7 +17,7 @@ To make configuration updates to mkdocs or the deployment workflow, see [mkdocs.
 
 ## Developer Setup
 
-When initially setting up the project, install packages from the repo root to enable git hooks and linting.
+When initially setting up the project, install packages from the repo root to enable git hooks.
 
 ```
 npm install
@@ -30,53 +30,37 @@ $ brew install tfenv
 $ tfenv install 0.14.7
 ```
 
-## Portal
+### Using pre-commit hooks
 
-### Prerequisites
+In order for our pre-commit hooks to work properly, you'll need to have a supported version of Node installed and have run `npm install` in the root directory. Once you've completed those steps, pre-commit hooks should work with any of the API's [Development Environment Setup](docs/api/development-environment-setup.md) options. If you have not set `RUN_CMD_OPT` the pre-commit hooks will default to running in docker.
 
-Node v10 (or greater)
+We're using husky and lint-staged to manage our pre-commit hooks so that they only run on relevant file changes. Here are the details on which changes will trigger which checks:
 
-### Run Instructions
+| File(s) changed                               | Command                                | What's being checked                                    |
+|-----------------------------------------------|---------------------------------------------|---------------------------------------------------------|
+| Files in the `portal/` directory              | `npm run format --prefix=portal -- --write` | Formatting (prettier)                                   |
+| Any `.tf` or `.tfvars` files                  | `npm run lint:tf`                           | Formatting (terraform fmt)
+| `.py` files in the `api/` directory           | `make pre-commit`                           | Formatting (isort & black) and linting (flake8 & mypy)  |
+| Files in the `api/massgov/pfml/db/` directory | `make db-check-model-parity`                | Ensure application models are in sync with the database |
+| `api/openapi.yaml`                            | `make lint-spectral`                        | OpenAPI spec linting                                    |
 
-Run the web portal locally from the project root directory with the following commands:
-
-```
-npm install --prefix portal
-npm run dev --prefix portal
-```
+While using the pre-commit hooks is highly encouraged, if you ever need to force a commit to go through without passing the pre-commit hooks, you can commit with the `--no-verify` flag. 
 
 ### Additional commands
 
-#### `npm run lint`
+#### `npm run lint:tf`
 
-Run all linters. Fixes any [auto-fixable ESLint errors](https://eslint.org/docs/user-guide/command-line-interface#fixing-problems) and formats the Terraform files.
-
-[Integrate ESLint into your IDE or a git hook](https://eslint.org/docs/user-guide/integrations) if you'd like to catch linting errors before it reaches the CI.
-
-#### `npm run lint:ci`
-
-Runs all linters and fails on errors. Does not attempt to auto-fix ESLint errors.
-
-#### `npm run lint:js`
-
-Lint JS files using [ESLint](https://eslint.org/).
-
-#### `npm run prettier`
-
-Automatically format files using [Prettier](https://prettier.io/).
-
-## API
-
-See [api/README.md](/api/README.md).
+Formats the Terraform files.
 
 ## Directory Structure
 
 ```
 └── .github                 🗂 GitHub actions and templates
+└── admin                   🔑 Admin portal
 └── api                     🔀 Integration API
 └── bin                     🤖 Developer scripts
 └── docs                    🔖 Developer documentation
 └── e2e                     🏁 End-to-end & business simulation tests
 └── infra                   🌲 Infrastructure config
-└── portal                  🚪 Claimant portal web app
+└── portal                  🚪 Claimant and Employer portal
 ```

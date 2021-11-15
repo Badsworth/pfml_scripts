@@ -1,28 +1,12 @@
 data "aws_s3_bucket" "agency_transfer" {
   bucket = "massgov-pfml-${var.environment_name}-agency-transfer"
 }
-
 data "aws_s3_bucket" "reports" {
   bucket = "massgov-pfml-${var.environment_name}-reports"
 }
 
-resource "aws_s3_bucket" "bulk_user_import" {
-  bucket = "massgov-pfml-${var.environment_name}-bulk-user-import"
-  acl    = "private"
-
-  server_side_encryption_configuration {
-    rule {
-      apply_server_side_encryption_by_default {
-        sse_algorithm = "AES256"
-      }
-    }
-  }
-
-  tags = merge(module.constants.common_tags, {
-    environment = module.constants.environment_tags[var.environment_name]
-    Name        = "massgov-pfml-${var.environment_name}-bulk-user-import"
-    public      = "no"
-  })
+data "aws_iam_role" "replication" {
+  name = "massgov-pfml-prod-s3-replication"
 }
 
 resource "aws_s3_bucket" "execute_sql_export" {
@@ -37,20 +21,35 @@ resource "aws_s3_bucket" "execute_sql_export" {
     }
   }
 
+  versioning {
+    enabled = true
+  }
+
   tags = merge(module.constants.common_tags, {
     environment = module.constants.environment_tags[var.environment_name]
     Name        = "massgov-pfml-${var.environment_name}-execute-sql-export"
     public      = "no"
   })
-}
 
-resource "aws_s3_bucket_public_access_block" "user_import_block_public_access" {
-  bucket = aws_s3_bucket.bulk_user_import.id
+  # dynamic "replication_configuration" {
+  #   for_each = var.environment_name == module.constants.bucket_replication_environment ? [1] : []
+  #   content {
+  #     role = data.aws_iam_role.replication.name
+  #     rules {
+  #       id     = "replicateFullBucket"
+  #       status = "Enabled"
 
-  block_public_acls       = true
-  block_public_policy     = true
-  ignore_public_acls      = true
-  restrict_public_buckets = true
+  #       destination {
+  #         bucket        = "arn:aws:s3:::massgov-pfml-${var.environment_name}-execute-sql-export-replica"
+  #         storage_class = "STANDARD"
+  #         account_id    = "018311717589"
+  #         access_control_translation {
+  #           owner = "Destination"
+  #         }
+  #       }
+  #     }
+  #   }
+  # }
 }
 
 resource "aws_s3_bucket_public_access_block" "sql_export_block_public_access" {

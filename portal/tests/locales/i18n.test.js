@@ -22,7 +22,7 @@ describe("i18n", () => {
 
     expect(spy).toHaveBeenCalledWith("Missing i18n", {
       i18nKey: "this.key.doesnt.exist",
-      i18nLocales: ["en-US"],
+      i18nLocales: '["en-US"]',
       i18nNamespace: "translation",
     });
   });

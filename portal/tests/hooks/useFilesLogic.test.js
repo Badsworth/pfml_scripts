@@ -1,7 +1,7 @@
-import { makeFile, testHook } from "../test-utils";
+import { act, renderHook } from "@testing-library/react-hooks";
 import TempFileCollection from "../../src/models/TempFileCollection";
 import { ValidationError } from "../../src/errors";
-import { act } from "react-dom/test-utils";
+import { makeFile } from "../test-utils";
 import tracker from "../../src/services/tracker";
 import useFilesLogic from "../../src/hooks/useFilesLogic";
 
@@ -12,7 +12,7 @@ describe("useFilesLogic", () => {
   beforeEach(() => {
     clearErrors = jest.fn();
     catchError = jest.fn();
-    testHook(() => {
+    renderHook(() => {
       ({ processFiles, removeFile, files } = useFilesLogic({
         clearErrors,
         catchError,
@@ -38,7 +38,7 @@ describe("useFilesLogic", () => {
       expect(catchError).not.toHaveBeenCalled();
       expect(files.items).toEqual([
         { id: "TempFile1", file: makeFile({ name: "file1" }) },
-        { id: "TempFile3", file: makeFile({ name: "file2" }) },
+        { id: "TempFile2", file: makeFile({ name: "file2" }) },
       ]);
     });
 
@@ -81,6 +81,48 @@ describe("useFilesLogic", () => {
         "FileValidationError",
         expect.any(Object)
       );
+    });
+
+    it("does not validate PDF file size when sendLargePdfToApi feature flag is enabled and PDF is less than 10mb", async () => {
+      const compressiblePdf = makeFile({
+        name: "file1",
+        type: "application/pdf",
+      });
+      Object.defineProperty(compressiblePdf, "size", {
+        get: () => 9500000,
+      });
+
+      // Before feature flag
+      await act(async () => await processFiles([compressiblePdf]));
+      expect(files.items).toEqual([]);
+
+      // After feature flag
+      process.env.featureFlags = { sendLargePdfToApi: true };
+      await act(async () => await processFiles([compressiblePdf]));
+      expect(files.items).toEqual([
+        { id: expect.any(String), file: compressiblePdf },
+      ]);
+    });
+
+    it("prevents PDF files when sendLargePdfToApi feature flag is enabled and PDF is more than 10mb", async () => {
+      process.env.featureFlags = { sendLargePdfToApi: true };
+      const tooBigPdf = makeFile({ name: "file1", type: "application/pdf" });
+      Object.defineProperty(tooBigPdf, "size", {
+        get: () => 10000000,
+      });
+
+      await act(async () => await processFiles([tooBigPdf]));
+      expect(catchError).toHaveBeenCalledTimes(1);
+      const error = catchError.mock.calls[0][0];
+      expect(error).toBeInstanceOf(ValidationError);
+      expect(error.issues).toMatchInlineSnapshot(`
+        Array [
+          Object {
+            "message": "We could not upload: file1. Files must be smaller than 10 MB.",
+          },
+        ]
+      `);
+      expect(files.items).toEqual([]);
     });
 
     it("catches error when the file type is invalid", async () => {

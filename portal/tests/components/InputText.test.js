@@ -1,8 +1,9 @@
-import { mount, shallow } from "enzyme";
-import InputText from "../../src/components/InputText";
+import { render, screen } from "@testing-library/react";
+import InputText from "../../src/components/core/InputText";
 import React from "react";
+import userEvent from "@testing-library/user-event";
 
-function render(customProps = {}, mountComponent = false) {
+function setup(customProps = {}) {
   const props = Object.assign(
     {
       label: "Field Label",
@@ -12,255 +13,202 @@ function render(customProps = {}, mountComponent = false) {
     customProps
   );
 
-  const component = <InputText {...props} />;
-
-  return {
-    props,
-    wrapper: mountComponent ? mount(component) : shallow(component),
-  };
+  return render(<InputText {...props} />);
 }
 
 describe("InputText", () => {
   it("defaults to a text input", () => {
-    const { wrapper } = render();
-    const field = wrapper.find(".usa-input");
+    setup();
 
-    expect(field.is("input")).toBe(true);
-    expect(field.prop("type")).toBe("text");
+    expect(screen.getByRole("textbox")).toHaveAttribute("type", "text");
   });
 
-  it("sets the input's name", () => {
+  it("sets the input's name and value", () => {
     const name = "foo";
-    const { wrapper } = render({ name });
-    const field = wrapper.find(".usa-input");
-
-    expect(field.prop("name")).toBe(name);
-  });
-
-  it("sets the input's value", () => {
     const value = "Yay";
-    const { wrapper } = render({ value });
-    const field = wrapper.find(".usa-input");
+    setup({ name, value });
 
-    expect(field.prop("value")).toBe(value);
+    const field = screen.getByRole("textbox");
+
+    expect(field).toHaveAttribute("name", name);
+    expect(field).toHaveValue(value);
   });
 
-  it("generates a unique id", () => {
-    const { wrapper: wrapper1 } = render({ name: "one" });
-    const { wrapper: wrapper2 } = render({ name: "two" });
+  it("associates label and hint text to the field", () => {
+    const label = "Field Label";
+    const hint = "Field Hint";
+    setup({ label, hint });
 
-    const input1 = wrapper1.find(".usa-input");
-    const label1 = wrapper1.find("FormLabel");
-    const input2 = wrapper2.find(".usa-input");
-
-    const idRegex = new RegExp("InputText[0-9]+");
-
-    expect(input1.prop("id")).toMatch(idRegex);
-    expect(input1.prop("id")).not.toBe(input2.prop("id"));
-    expect(label1.prop("inputId")).toBe(input1.prop("id"));
+    expect(
+      screen.getByRole("textbox", {
+        name: `${label} ${hint}`,
+      })
+    ).toBeInTheDocument();
   });
 
-  describe("when inputId prop is set", () => {
-    it("uses the passed id instead of the generated one", () => {
-      const { wrapper } = render({ inputId: "my-unique-id" });
-
-      const input = wrapper.find(".usa-input");
-      const label = wrapper.find("FormLabel");
-
-      expect(input.prop("id")).toBe("my-unique-id");
-      expect(label.prop("inputId")).toBe(input.prop("id"));
-    });
-  });
-
-  it("renders a label component", () => {
-    const { props, wrapper } = render();
-    const label = wrapper.find("FormLabel");
-
-    expect(label.prop("children")).toBe(props.label);
-  });
-
-  it("prevents usage of HTML number type", () => {
-    jest.spyOn(console, "error").mockImplementationOnce(jest.fn());
-    const { wrapper } = render({ type: "number" });
-    const field = wrapper.find(".usa-input");
-
-    expect(field.prop("type")).toBe("text");
-    expect(field.prop("inputMode")).toBe("numeric");
-  });
-
-  describe("when autoComplete prop is set", () => {
-    it("passes the autoComplete to input", () => {
-      const { props, wrapper } = render({ autoComplete: "off" });
-      const label = wrapper.find("input");
-
-      expect(label.prop("autoComplete")).toBe(props.autoComplete);
-    });
-  });
-
-  describe("when type prop is set to password", () => {
-    it("sets input type to password", () => {
-      const { wrapper } = render({ type: "password" });
-      const field = wrapper.find(".usa-input");
-
-      expect(field.prop("type")).toBe("password");
-    });
-  });
-
-  describe("when formGroupClassName prop is set", () => {
-    it("includes the formGroupClassName on the containing element", () => {
-      const { wrapper } = render({ formGroupClassName: "custom-input-class" });
-
-      expect(wrapper.hasClass("custom-input-class")).toBe(true);
-    });
-  });
-
-  describe("when hint prop is set", () => {
-    it("passes the hint to FormLabel", () => {
-      const { props, wrapper } = render({ hint: "123" });
-      const label = wrapper.find("FormLabel");
-
-      expect(label.prop("hint")).toBe(props.hint);
-    });
-  });
-
-  describe("when example prop is set", () => {
-    it("passes the example to FormLabel", () => {
-      const { props, wrapper } = render({ example: "123" });
-      const label = wrapper.find("FormLabel");
-
-      expect(label.prop("example")).toBe(props.example);
-    });
-  });
-
-  describe("when inputMode prop is set", () => {
-    it("includes the inputMode on the input field", () => {
-      const { wrapper } = render({ inputMode: "decimal" });
-      const input = wrapper.find("input");
-
-      expect(input.prop("inputMode")).toBe("decimal");
-    });
-  });
-
-  describe("when valueType prop is set", () => {
-    it("sets the data-value-type attribute on the input field", () => {
-      const { wrapper } = render({ valueType: "integer" });
-      const input = wrapper.find("input");
-
-      expect(input.prop("data-value-type")).toBe("integer");
-    });
-  });
-
-  describe("when inputRef prop is set", () => {
-    it("sets the ref on the input field", () => {
-      const ref = React.createRef();
-      // We need to mount this component so we can access its ref
-      const mountComponent = true;
-      const { props } = render({ inputRef: ref, value: "abc" }, mountComponent);
-
-      expect(ref.current.value).toBe(props.value);
-    });
-  });
-
-  describe("when maxLength prop is set", () => {
-    it("includes the maxLength on the input field", () => {
-      const { wrapper } = render({ maxLength: "4" });
-      const input = wrapper.find("input");
-
-      expect(input.prop("maxLength")).toBe("4");
-    });
-  });
-
-  describe("when optionalText prop is set", () => {
-    it("passes the optionalText to FormLabel", () => {
-      const { props, wrapper } = render({ optionalText: "(optional)" });
-      const label = wrapper.find("FormLabel");
-
-      expect(label.prop("optionalText")).toBe(props.optionalText);
-    });
-  });
-
-  describe("when width prop is set", () => {
-    it("adds width classes to input", () => {
-      const mediumData = render({ width: "medium" });
-      const mediumField = mediumData.wrapper.find(".usa-input");
-      const smallData = render({ width: "small" });
-      const smallField = smallData.wrapper.find(".usa-input");
-
-      expect(mediumField.hasClass("usa-input--medium")).toBe(true);
-      expect(smallField.hasClass("usa-input--small")).toBe(true);
-    });
-  });
-
-  describe("when errorMsg is set", () => {
-    it("passes errorMsg to FormLabel", () => {
-      const { props, wrapper } = render({ errorMsg: "Oh no." });
-
-      expect(wrapper.find("FormLabel").prop("errorMsg")).toBe(props.errorMsg);
+  it("supports inline error message and styling", () => {
+    const { container } = setup({ errorMsg: "Oh no" });
+    const field = screen.getByRole("textbox", {
+      name: /Oh no/i,
     });
 
-    it("adds error classes to the form group and input field", () => {
-      const { wrapper } = render({ errorMsg: "Oh no." });
-      const formGroup = wrapper.find(".usa-form-group");
-      const field = wrapper.find(".usa-input");
-
-      expect(formGroup.hasClass("usa-form-group--error")).toBe(true);
-      expect(field.hasClass("usa-input--error")).toBe(true);
-    });
+    expect(field).toHaveClass("usa-input--error");
+    expect(container.firstChild).toHaveClass("usa-form-group--error");
   });
 
-  describe("when `labelClassName` is set", () => {
-    it("overrides the FormLabel .text-bold class", () => {
-      const { wrapper } = render({ labelClassName: "text-normal" });
-      const label = wrapper.find("FormLabel");
+  it("supports setting the Optional text in the label", () => {
+    setup({ optionalText: "Optional" });
 
-      expect(label.prop("labelClassName")).toBe("text-normal");
-    });
+    expect(
+      screen.getByRole("textbox", { name: /optional/i })
+    ).toBeInTheDocument();
   });
 
-  describe("when `smallLabel` is true", () => {
-    it("sets the FormLabel small prop to true", () => {
-      const { wrapper } = render({ smallLabel: true });
-      const label = wrapper.find("FormLabel");
+  it("supports providing an example", () => {
+    const example = "For example: 1/2/3";
+    setup({ example });
 
-      expect(label.prop("small")).toBe(true);
-    });
+    expect(screen.getByText(example)).toBeInTheDocument();
   });
 
-  describe("when change event is triggered", () => {
-    it("calls onChange", () => {
-      const { props, wrapper } = render({
-        onChange: jest.fn(),
-      });
+  it("sets a unique id by default", () => {
+    setup({ name: "one" });
+    setup({ name: "two" });
 
-      wrapper.find(".usa-input").simulate("change");
+    const idRegex = /InputText[0-9]+/;
+    const [fieldOne, fieldTwo] = screen.getAllByRole("textbox");
 
-      expect(props.onChange).toHaveBeenCalledTimes(1);
-    });
+    expect(fieldOne.id).toMatch(idRegex);
+    expect(fieldOne.id).not.toBe(fieldTwo.id);
   });
 
-  describe("when blur event is triggered", () => {
-    it("calls onBlur", () => {
-      const { props, wrapper } = render({
-        onBlur: jest.fn(),
-      });
+  it("supports a custom ID", () => {
+    const label = "Unique ID field";
+    setup({ inputId: "my-unique-id", label });
 
-      wrapper.find(".usa-input").simulate("blur");
+    const field = screen.getByRole("textbox", { name: label });
 
-      expect(props.onBlur).toHaveBeenCalledTimes(1);
-    });
+    expect(field.id).toBe("my-unique-id");
   });
 
-  describe("when pii prop is true", () => {
-    it("uses pii handleBlur and handleFocus", () => {
-      const { props, wrapper } = render({
-        pii: true,
-        onBlur: jest.fn(),
-        onFocus: jest.fn(),
-      });
-      expect(wrapper.find("input").props().onBlur).toBeInstanceOf(Function);
-      expect(wrapper.find("input").props().onBlur).not.toEqual(props.onBlur);
-      expect(wrapper.find("input").props().onFocus).toBeInstanceOf(Function);
-      expect(wrapper.find("input").props().onFocus).not.toEqual(props.onFocus);
+  it("supports autocomplete attribute", () => {
+    setup({ autoComplete: "address-line1" });
+
+    expect(screen.getByRole("textbox")).toHaveAttribute(
+      "autocomplete",
+      "address-line1"
+    );
+  });
+
+  it("supports password input type", () => {
+    setup({ type: "password", label: "Password field" });
+    // Password inputs don't have an implicit role
+    // https://github.com/testing-library/dom-testing-library/issues/567
+    const field = screen.getByLabelText("Password field");
+
+    expect(field.type).toBe("password");
+  });
+
+  it("supports usage of inputMode", () => {
+    setup({ inputMode: "decimal" });
+    const input = screen.getByRole("textbox");
+
+    expect(input.inputMode).toBe("decimal");
+  });
+
+  it("sets the data-value-type attribute on the input when valueType prop is set", () => {
+    setup({ valueType: "integer" });
+    const input = screen.getByRole("textbox");
+
+    expect(input).toHaveAttribute("data-value-type", "integer");
+  });
+
+  it("supports getting a ref to the input", () => {
+    const ref = React.createRef();
+    setup({ inputRef: ref });
+
+    expect(ref.current).toBe(screen.getByRole("textbox"));
+  });
+
+  it("supports maxLength", () => {
+    setup({ maxLength: "4" });
+    const input = screen.getByRole("textbox");
+
+    expect(input).toHaveAttribute("maxlength", "4");
+  });
+
+  it("supports a custom class on the containing element", () => {
+    const { container } = setup({ formGroupClassName: "custom-input-class" });
+
+    expect(container.firstChild).toHaveClass("custom-input-class");
+  });
+
+  it("supports various width classes on the input", () => {
+    setup({ width: "medium" });
+    setup({ width: "small" });
+
+    const [mediumField, smallField] = screen.getAllByRole("textbox");
+
+    expect(mediumField).toHaveClass("usa-input--medium");
+    expect(smallField).toHaveClass("usa-input--small");
+  });
+
+  it("supports a custom class on the label", () => {
+    setup({ labelClassName: "text-normal", label: "Field label" });
+    const label = screen.getByText("Field label");
+
+    expect(label).toHaveClass("text-normal");
+  });
+
+  it("supports the small label variation", () => {
+    setup({ smallLabel: true, label: "Field label" });
+    const label = screen.getByText("Field label");
+
+    expect(label).toHaveClass("font-heading-xs");
+  });
+
+  it("supports onChange and onBlur events", () => {
+    const onChange = jest.fn();
+    const onBlur = jest.fn();
+    setup({
+      onBlur,
+      onChange,
     });
+    const field = screen.getByRole("textbox");
+
+    userEvent.type(field, "123");
+    expect(onChange).toHaveBeenCalledTimes(3);
+
+    field.blur();
+    expect(onBlur).toHaveBeenCalledTimes(1);
+  });
+
+  it("supports masking behavior", () => {
+    setup({ mask: "currency", value: "1234" });
+
+    expect(screen.getByRole("textbox")).toHaveAttribute("inputmode", "decimal");
+  });
+
+  it("supports viewing obfuscated PII and changing the PII", () => {
+    const onChange = jest.fn();
+    const onBlur = jest.fn();
+    const initialValue = "***-123";
+
+    setup({
+      pii: true,
+      onBlur,
+      onChange,
+      value: initialValue,
+    });
+
+    const field = screen.getByRole("textbox");
+
+    field.focus();
+    expect(onChange).toHaveBeenCalledTimes(1);
+    field.blur();
+    expect(onBlur).toHaveBeenCalledTimes(1);
+
+    userEvent.type(field, "000");
+    expect(onChange).toHaveBeenCalledTimes(4);
   });
 });

@@ -1,0 +1,25 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Search renders the default component 1`] = `
+<form
+  className="search"
+  data-testid="search-form"
+  onSubmit={[Function]}
+>
+  <div
+    className="search__input-wrapper"
+  >
+    <input
+      className="search__input"
+      data-testid="search-input"
+      onChange={[Function]}
+      placeholder="Enter email address"
+      type="text"
+      value=""
+    />
+    <i
+      className="pfml-icon--search search__icon"
+    />
+  </div>
+</form>
+`;

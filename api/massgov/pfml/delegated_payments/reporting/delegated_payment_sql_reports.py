@@ -18,6 +18,13 @@ class ReportName(str, Enum):
     PUB_ERROR_REPORT = "pub-error-report"
     PAYMENT_RECONCILIATION_SUMMARY_REPORT = "payment-reconciliation-summary-report"
     PAYMENT_REJECT_REPORT = "payment-reject-report"
+    PAYMENT_FULL_SNAPSHOT_RECONCILIATION_SUMMARY_REPORT = (
+        "payment-full-snapshot-reconciliation-summary-report"
+    )
+    PAYMENT_FULL_SNAPSHOT_RECONCILIATION_DETAIL_REPORT = (
+        "payment-full-snapshot-reconciliation-detail-report"
+    )
+    PROCCESS_1099_DOCUMENT_REPORTS = "irs-1099-document-report"
 
 
 # Reports grouped by processing tasks
@@ -25,12 +32,12 @@ PROCESS_FINEOS_EXTRACT_REPORTS: List[ReportName] = [
     ReportName.CLAIMANT_EXTRACT_ERROR_REPORT,
     ReportName.PAYMENT_EXTRACT_ERROR_REPORT,
     ReportName.ADDRESS_ERROR_REPORT,
-]
-CREATE_PUB_FILES_REPORTS: List[ReportName] = [
     ReportName.OVERPAYMENT_REPORT,
     ReportName.ZERO_DOLLAR_PAYMENT_REPORT,
     ReportName.CANCELLATION_REPORT,
     ReportName.EMPLOYER_REIMBURSEMENT_REPORT,
+]
+CREATE_PUB_FILES_REPORTS: List[ReportName] = [
     ReportName.ACH_PAYMENT_REPORT,
     ReportName.CHECK_PAYMENT_REPORT,
     ReportName.DAILY_CASH_REPORT,
@@ -38,6 +45,13 @@ CREATE_PUB_FILES_REPORTS: List[ReportName] = [
     ReportName.PAYMENT_RECONCILIATION_SUMMARY_REPORT,
 ]
 PROCESS_PUB_RESPONSES_REPORTS: List[ReportName] = [ReportName.PUB_ERROR_REPORT]
+PROCESS_FINEOS_RECONCILIATION_REPORTS: List[ReportName] = [
+    ReportName.PAYMENT_FULL_SNAPSHOT_RECONCILIATION_SUMMARY_REPORT,
+    ReportName.PAYMENT_FULL_SNAPSHOT_RECONCILIATION_DETAIL_REPORT,
+]
+
+
+PROCESS_1099_DOCUMENT_REPORTS: List[ReportName] = [ReportName.PROCCESS_1099_DOCUMENT_REPORTS]
 
 
 @dataclass
@@ -107,6 +121,22 @@ REPORTS: List[Report] = [
     Report(
         sql_command=_get_report_sql_command_from_file(ReportName.PAYMENT_REJECT_REPORT),
         report_name=ReportName.PAYMENT_REJECT_REPORT,
+    ),
+    Report(
+        sql_command=_get_report_sql_command_from_file(
+            ReportName.PAYMENT_FULL_SNAPSHOT_RECONCILIATION_SUMMARY_REPORT
+        ),
+        report_name=ReportName.PAYMENT_FULL_SNAPSHOT_RECONCILIATION_SUMMARY_REPORT,
+    ),
+    Report(
+        sql_command=_get_report_sql_command_from_file(
+            ReportName.PAYMENT_FULL_SNAPSHOT_RECONCILIATION_DETAIL_REPORT
+        ),
+        report_name=ReportName.PAYMENT_FULL_SNAPSHOT_RECONCILIATION_DETAIL_REPORT,
+    ),
+    Report(
+        sql_command=_get_report_sql_command_from_file(ReportName.PROCCESS_1099_DOCUMENT_REPORTS),
+        report_name=ReportName.PROCCESS_1099_DOCUMENT_REPORTS,
     ),
 ]
 

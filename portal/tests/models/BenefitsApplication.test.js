@@ -3,19 +3,21 @@ import {
   WorkPattern,
 } from "../../src/models/BenefitsApplication";
 import { DateTime } from "luxon";
-import { MockClaimBuilder } from "../test-utils";
+import { MockBenefitsApplicationBuilder } from "../test-utils";
 import { map } from "lodash";
 
 describe("Claim", () => {
   let emptyClaim;
 
   beforeEach(() => {
-    emptyClaim = new MockClaimBuilder().create();
+    emptyClaim = new MockBenefitsApplicationBuilder().create();
   });
 
   describe("#isCompleted", () => {
     it("returns true when the Claim status is 'completed'", () => {
-      const completedClaim = new MockClaimBuilder().completed().create();
+      const completedClaim = new MockBenefitsApplicationBuilder()
+        .completed()
+        .create();
 
       expect(emptyClaim.isCompleted).toBe(false);
       expect(completedClaim.isCompleted).toBe(true);
@@ -24,10 +26,21 @@ describe("Claim", () => {
 
   describe("#isSubmitted", () => {
     it("returns true when the Claim status is 'submitted'", () => {
-      const submittedClaim = new MockClaimBuilder().submitted().create();
+      const submittedClaim = new MockBenefitsApplicationBuilder()
+        .submitted()
+        .create();
 
       expect(emptyClaim.isSubmitted).toBe(false);
       expect(submittedClaim.isSubmitted).toBe(true);
+    });
+
+    it("returns true when the Claim status is 'completed'", () => {
+      const completedClaim = new MockBenefitsApplicationBuilder()
+        .completed()
+        .create();
+
+      expect(emptyClaim.isSubmitted).toBe(false);
+      expect(completedClaim.isSubmitted).toBe(true);
     });
   });
 
@@ -50,7 +63,7 @@ describe("Claim", () => {
     });
 
     it("returns true when hybrid leave start dates are in the future", () => {
-      const claim = new MockClaimBuilder()
+      const claim = new MockBenefitsApplicationBuilder()
         .continuous({ start_date: future })
         .reducedSchedule({ start_date: future })
         .create();
@@ -59,7 +72,7 @@ describe("Claim", () => {
     });
 
     it("returns false when one of the hybrid leave start dates is in the past", () => {
-      const claim = new MockClaimBuilder()
+      const claim = new MockBenefitsApplicationBuilder()
         .continuous({ start_date: past })
         .reducedSchedule({ start_date: future })
         .create();
@@ -68,7 +81,7 @@ describe("Claim", () => {
     });
 
     it("returns true when intermittent leave start dates are in the future", () => {
-      const claim = new MockClaimBuilder()
+      const claim = new MockBenefitsApplicationBuilder()
         .intermittent({ start_date: future })
         .create();
 
@@ -76,7 +89,7 @@ describe("Claim", () => {
     });
 
     it("returns false when continuous leave start date is in the past", () => {
-      const claim = new MockClaimBuilder()
+      const claim = new MockBenefitsApplicationBuilder()
         .continuous({ start_date: past })
         .create();
 
@@ -84,7 +97,7 @@ describe("Claim", () => {
     });
 
     it("returns false when continuous leave start date is the current day", () => {
-      const claim = new MockClaimBuilder()
+      const claim = new MockBenefitsApplicationBuilder()
         .continuous({ start_date: now })
         .create();
 
@@ -92,19 +105,28 @@ describe("Claim", () => {
     });
 
     it("returns false when there are no start dates", () => {
-      const claim = new MockClaimBuilder().create();
+      const claim = new MockBenefitsApplicationBuilder().create();
 
       expect(claim.isLeaveStartDateInFuture).toBe(false);
     });
   });
 
-  it("#isMedicalLeave returns true when the Claim reason is medical", () => {
-    const claimWithReason = new MockClaimBuilder()
+  it("#isMedicalOrPregnancyLeave returns true when the Claim reason is medical", () => {
+    const claimWithReason = new MockBenefitsApplicationBuilder()
       .medicalLeaveReason()
       .create();
 
-    expect(emptyClaim.isMedicalLeave).toBe(false);
-    expect(claimWithReason.isMedicalLeave).toBe(true);
+    expect(emptyClaim.isMedicalOrPregnancyLeave).toBe(false);
+    expect(claimWithReason.isMedicalOrPregnancyLeave).toBe(true);
+  });
+
+  it("#isMedicalOrPregnancyLeave returns true when the Claim reason is pregnancy", () => {
+    const claimWithReason = new MockBenefitsApplicationBuilder()
+      .pregnancyLeaveReason()
+      .create();
+
+    expect(emptyClaim.isMedicalOrPregnancyLeave).toBe(false);
+    expect(claimWithReason.isMedicalOrPregnancyLeave).toBe(true);
   });
 
   describe("WorkPattern", () => {
@@ -132,9 +154,9 @@ describe("Claim", () => {
           expect(day.minutes).toEqual(660);
         });
 
-        workPattern2.work_pattern_days.forEach((day) => {
-          expect(day.minutes).toEqual(670);
-        });
+        expect(map(workPattern2.work_pattern_days, "minutes")).toEqual([
+          675, 675, 675, 675, 670, 660, 660,
+        ]);
       });
 
       it("returns week with 0 minutes when 0 minutes are provided", () => {
@@ -145,17 +167,11 @@ describe("Claim", () => {
         });
       });
 
-      it("adds a minute to each day until there is no remainder when minutes are not a multiple of 7", () => {
+      it("divides minutes in increments of 15 and adds remainders to the next day", () => {
         const workPattern = WorkPattern.createWithWeek(77 * 60 + 18); // 77 hours and 18 minutes
 
         expect(map(workPattern.work_pattern_days, "minutes")).toEqual([
-          663,
-          663,
-          663,
-          663,
-          662,
-          662,
-          662,
+          675, 663, 660, 660, 660, 660, 660,
         ]);
       });
 
@@ -172,7 +188,9 @@ describe("Claim", () => {
       it("totals minutes worked across all work pattern days", () => {
         const workPattern = WorkPattern.createWithWeek(70 * 60 + 4); // 70 hours and 4 minutes
 
-        expect(workPattern.minutesWorkedPerWeek).toEqual(70 * 60 + 4);
+        expect(map(workPattern.work_pattern_days, "minutes")).toEqual([
+          604, 600, 600, 600, 600, 600, 600,
+        ]);
       });
 
       it("returns null if work_pattern_days are empty", () => {

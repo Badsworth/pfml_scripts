@@ -6,15 +6,25 @@ import * as data from "../util";
 
 /*
   Note: The function will skip this test if E2E_ENVIRONMENT
-  is NOT stage.  The id-proofing test will only work in stage based
-  on specific claimant in RMV database
+  is equal to test and training. The id-proofing test will not
+  work in test based on the environment being fulled mocked for ID-Proofing.
+
+  @Reminder: Add RMV claimants to E2E data generation script in order to add
+  training back - based on data wipes not adding training.
 */
 const describeIf = (condition: boolean) =>
   condition ? describe : describe.skip;
 
 let token: string;
 
-describeIf(config("ENVIRONMENT") === "stage")("ID Proofing Tests", () => {
+/**
+ * @group stable
+ */
+describeIf(
+  config("ENVIRONMENT") !== "test" &&
+    config("ENVIRONMENT") !== "training" &&
+    config("ENVIRONMENT") !== "breakfix"
+)("ID Proofing Tests", () => {
   beforeAll(async () => {
     const authenticator = getAuthManager();
 
@@ -42,7 +52,6 @@ describeIf(config("ENVIRONMENT") === "stage")("ID Proofing Tests", () => {
         },
       };
       const res = await postRmvCheck(rmvCheckRequest, pmflApiOptions);
-
       expect(res.status).toBe(200);
       expect(res.data.data?.description).toBe(message);
       expect(res.data.data?.verified).toBe(verified);

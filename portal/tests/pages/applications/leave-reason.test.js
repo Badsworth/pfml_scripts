@@ -1,207 +1,162 @@
-import {
-  MockClaimBuilder,
-  renderWithAppLogic,
-  simulateEvents,
-} from "../../test-utils";
+import { MockBenefitsApplicationBuilder, renderPage } from "../../test-utils";
+import { screen, waitFor } from "@testing-library/react";
 import LeaveReason from "../../../src/models/LeaveReason";
 import LeaveReasonPage from "../../../src/pages/applications/leave-reason";
 import { ReasonQualifier } from "../../../src/models/BenefitsApplication";
+import { setupBenefitsApplications } from "../../test-utils/helpers";
+import userEvent from "@testing-library/user-event";
 
-jest.mock("../../../src/hooks/useAppLogic");
+function setup(
+  { claim } = { claim: new MockBenefitsApplicationBuilder().create() }
+) {
+  const updateSpy = jest.fn();
 
-const setup = (claim = new MockClaimBuilder().create()) => {
-  const { appLogic, wrapper } = renderWithAppLogic(LeaveReasonPage, {
-    claimAttrs: claim,
-  });
-
-  const { changeRadioGroup, submitForm } = simulateEvents(wrapper);
+  const utils = renderPage(
+    LeaveReasonPage,
+    {
+      addCustomSetup: (appLogic) => {
+        setupBenefitsApplications(appLogic, [claim]);
+        appLogic.benefitsApplications.update = updateSpy;
+      },
+    },
+    {
+      query: { claim_id: claim.application_id },
+    }
+  );
 
   return {
-    appLogic,
-    changeRadioGroup,
-    claim,
-    submitForm,
-    wrapper,
+    updateSpy,
+    ...utils,
   };
-};
+}
 
-const medicalLeaveClaim = new MockClaimBuilder().medicalLeaveReason().create();
-const caringLeaveClaim = new MockClaimBuilder().caringLeaveReason().create();
+describe("LeaveReason", () => {
+  it("renders the page without the military leave option", () => {
+    const { container } = setup();
 
-describe("LeaveReasonPage", () => {
-  it("renders the page with all five reasons when type feature flags are enabled", () => {
+    expect(container).toMatchSnapshot();
+  });
+
+  it("renders military leave options when feature flag is enabled", () => {
     process.env.featureFlags = {
       claimantShowMilitaryLeaveTypes: true,
-      showCaringLeaveType: true,
     };
 
-    const { wrapper } = setup();
+    setup();
 
-    const choiceGroup = wrapper.find("InputChoiceGroup").first().dive();
-
-    expect(choiceGroup.exists(`[value="${LeaveReason.medical}"]`)).toBe(true);
-    expect(choiceGroup.exists(`[value="${LeaveReason.bonding}"]`)).toBe(true);
-    expect(choiceGroup.exists(`[value="${LeaveReason.care}"]`)).toBe(true);
     expect(
-      choiceGroup.exists(`[value="${LeaveReason.activeDutyFamily}"]`)
-    ).toBe(true);
-    expect(
-      choiceGroup.exists(`[value="${LeaveReason.serviceMemberFamily}"]`)
-    ).toBe(true);
+      screen.getAllByRole("radio", {
+        name: /armed forces/i,
+      })
+    ).toHaveLength(2);
   });
 
-  it("renders the page without military leave and caring leave options when type feature flags are disabled", () => {
-    process.env.featureFlags = {
-      claimantShowMilitaryLeaveTypes: false,
-      showCaringLeaveType: false,
-    };
+  it("selects Medical leave reason if the reason on the existing claim is Pregnancy", () => {
+    setup({
+      claim: new MockBenefitsApplicationBuilder()
+        .pregnancyLeaveReason()
+        .create(),
+    });
 
-    const { wrapper } = setup();
-
-    const choiceGroup = wrapper.find("InputChoiceGroup").first().dive();
-
-    expect(choiceGroup.exists(`[value="${LeaveReason.medical}"]`)).toBe(true);
-    expect(choiceGroup.exists(`[value="${LeaveReason.bonding}"]`)).toBe(true);
-    expect(choiceGroup.exists(`[value="${LeaveReason.care}"]`)).toBe(false);
     expect(
-      choiceGroup.exists(`[value="${LeaveReason.activeDutyFamily}"]`)
-    ).toBe(false);
-    expect(
-      choiceGroup.exists(`[value="${LeaveReason.serviceMemberFamily}"]`)
-    ).toBe(false);
+      screen.getByRole("radio", { name: /illness, injury/i })
+    ).toBeChecked();
   });
 
-  it("renders the page for medical leave and does not show reason qualifier followup", () => {
-    const { wrapper } = setup(medicalLeaveClaim);
+  it.each([
+    ["Medical", LeaveReason.medical, /illness, injury/i],
+    ["Caring", LeaveReason.care, /care for my family member/i],
+    [
+      "Military",
+      LeaveReason.activeDutyFamily,
+      /manage family affairs while a family member is on active duty/i,
+    ],
+    [
+      "Military Caring",
+      LeaveReason.serviceMemberFamily,
+      /care for a family member who serves in the armed forces/i,
+    ],
+  ])(
+    "clears bonding leave fields and submits leave reason when user selects %s leave option",
+    async (_testLabel, reason, radioName) => {
+      process.env.featureFlags = {
+        claimantShowMilitaryLeaveTypes: true,
+      };
+      const { updateSpy } = setup({
+        claim: new MockBenefitsApplicationBuilder()
+          .bondingBirthLeaveReason()
+          .create(),
+      });
 
-    expect(wrapper).toMatchSnapshot();
-    expect(wrapper.find("Trans").dive()).toMatchSnapshot();
-    expect(
-      wrapper
-        .find({ name: "leave_details.reason_qualifier" })
-        .parents("ConditionalContent")
-        .prop("visible")
-    ).toBe(false);
-  });
+      userEvent.click(screen.getByRole("radio", { name: radioName }));
+      userEvent.click(screen.getByRole("button", { name: /save/i }));
 
-  it("renders the page for caring leave and does not show reason qualifier followup", () => {
-    const { wrapper } = setup(caringLeaveClaim);
+      await waitFor(() =>
+        expect(updateSpy).toHaveBeenCalledWith(expect.any(String), {
+          leave_details: {
+            child_birth_date: null,
+            child_placement_date: null,
+            pregnant_or_recent_birth: null,
+            has_future_child_date: null,
+            reason_qualifier: null,
+            reason,
+          },
+        })
+      );
+    }
+  );
 
-    expect(wrapper).toMatchSnapshot();
-    expect(wrapper.find("Trans").dive()).toMatchSnapshot();
-    expect(
-      wrapper
-        .find({ name: "leave_details.reason_qualifier" })
-        .parents("ConditionalContent")
-        .prop("visible")
-    ).toBe(false);
-  });
+  it("submits leave reason AND reason qualifier when user selects Bonding leave options", async () => {
+    const { updateSpy } = setup();
 
-  it("shows the bonding type question when a user selects bonding as their leave reason", () => {
-    const { changeRadioGroup, wrapper } = setup();
+    userEvent.click(screen.getByRole("radio", { name: /bond with my child/i }));
+    userEvent.click(screen.getByRole("radio", { name: "Adoption" }));
+    userEvent.click(screen.getByRole("button", { name: /save/i }));
 
-    changeRadioGroup("leave_details.reason", LeaveReason.bonding);
-
-    expect(
-      wrapper
-        .find({ name: "leave_details.reason_qualifier" })
-        .parents("ConditionalContent")
-        .prop("visible")
-    ).toBe(true);
-  });
-
-  it("calls claims.update with leave reason and reason qualifier for bonding leave when the user selects those options", async () => {
-    const { appLogic, changeRadioGroup, claim, submitForm } = setup();
-
-    changeRadioGroup("leave_details.reason", LeaveReason.bonding);
-    changeRadioGroup("leave_details.reason_qualifier", ReasonQualifier.newBorn);
-
-    await submitForm();
-
-    expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
-      claim.application_id,
-      {
+    await waitFor(() =>
+      expect(updateSpy).toHaveBeenCalledWith(expect.any(String), {
         leave_details: {
+          pregnant_or_recent_birth: null,
           reason: LeaveReason.bonding,
-          reason_qualifier: ReasonQualifier.newBorn,
+          reason_qualifier: ReasonQualifier.adoption,
         },
-      }
+      })
     );
   });
 
-  it("calls claims.update with with only leave reason for medical leave and set child birth/placement date to null", async () => {
-    const { appLogic, submitForm } = setup(medicalLeaveClaim);
-
-    await submitForm();
-
-    expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
-      medicalLeaveClaim.application_id,
-      {
-        leave_details: {
-          child_birth_date: null,
-          child_placement_date: null,
-          has_future_child_date: null,
-          reason: LeaveReason.medical,
-          reason_qualifier: null,
-        },
-      }
-    );
-  });
-
-  it("calls claims.update with with only leave reason for caring leave and set child birth/placement date to null", async () => {
-    const { appLogic, submitForm } = setup(caringLeaveClaim);
-
-    await submitForm();
-
-    expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
-      medicalLeaveClaim.application_id,
-      {
-        leave_details: {
-          child_birth_date: null,
-          child_placement_date: null,
-          has_future_child_date: null,
-          reason: LeaveReason.care,
-          reason_qualifier: null,
-        },
-      }
-    );
-  });
-
-  it("sets the radio values and calls claims.update with leave reason and reason qualifer when the claim already has data", async () => {
-    const bondingFosterCareClaim = new MockClaimBuilder()
-      .bondingFosterCareLeaveReason()
+  it("instructs the user to review their previous leaves when user changes their leave reason after reporting previous leaves for the same reason", () => {
+    const claim = new MockBenefitsApplicationBuilder()
+      .caringLeaveReason()
+      .previousLeavesSameReason()
       .create();
 
-    const { appLogic, claim, wrapper } = setup(bondingFosterCareClaim);
+    const alertTextMatch = /review your previous leave/i;
 
-    const bondingReasonRadio = wrapper
-      .find("InputChoiceGroup")
-      .first()
-      .dive()
-      .find({ value: LeaveReason.bonding });
-    expect(bondingReasonRadio.props().checked).toBe(true);
+    setup({ claim });
 
-    const fosterQualifierRadio = wrapper
-      .find("ConditionalContent")
-      .dive()
-      .find("InputChoiceGroup")
-      .first()
-      .dive()
-      .find({ value: ReasonQualifier.fosterCare });
-    expect(fosterQualifierRadio.props().checked).toBe(true);
+    // Haven't changed our answer yet, so shouldn't be visible
+    expect(
+      screen.queryByRole("heading", { name: alertTextMatch })
+    ).not.toBeInTheDocument();
 
-    const { submitForm } = simulateEvents(wrapper);
+    userEvent.click(screen.getByRole("radio", { name: /bond with my child/i }));
 
-    await submitForm();
+    expect(
+      screen.getByRole("heading", { name: alertTextMatch }).parentNode
+    ).toMatchSnapshot();
+  });
 
-    expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
-      claim.application_id,
-      {
-        leave_details: {
-          reason: LeaveReason.bonding,
-          reason_qualifier: ReasonQualifier.fosterCare,
-        },
-      }
-    );
+  it("does not instruct the user to review their previous leaves when user changes their leave reason but didn't have previous leaves for the same reason", () => {
+    const claim = new MockBenefitsApplicationBuilder()
+      .caringLeaveReason()
+      .previousLeavesSameReason([])
+      .create();
+    setup({ claim });
+
+    userEvent.click(screen.getByRole("radio", { name: /bond with my child/i }));
+
+    expect(
+      screen.queryByRole("heading", { name: /review your previous leave/i })
+    ).not.toBeInTheDocument();
   });
 });

@@ -1,14 +1,21 @@
 import Success from "../../../../src/pages/employers/applications/success";
-import { renderWithAppLogic } from "../../../test-utils";
+import { renderPage } from "../../../test-utils/renderPage";
 
 describe("Success", () => {
-  it("renders Success page", () => {
-    const query = { absence_id: "test-absence-id" };
-    const { wrapper } = renderWithAppLogic(Success, {
-      diveLevels: 1,
-      props: { query },
-    });
+  it("renders the page", () => {
+    const { container } = renderPage(
+      Success,
+      {
+        addCustomSetup: (appLogicHook) => {
+          appLogicHook.portalFlow.getNextPageRoute = jest.fn();
+          appLogicHook.pathname = "";
+        },
+      },
+      {
+        query: { absence_id: "my-absence-id" },
+      }
+    );
 
-    expect(wrapper).toMatchSnapshot();
+    expect(container).toMatchSnapshot();
   });
 });

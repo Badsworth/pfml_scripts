@@ -11,15 +11,17 @@ import datetime
 import pathlib
 import typing
 from decimal import Decimal
-from typing import Any, List, Optional, Union
+from typing import Any, List, Optional, Tuple, Union
 
 import faker
 import requests
 
 import massgov.pfml.util.logging
+import massgov.pfml.util.logging.wrapper
 from massgov.pfml.fineos.transforms.to_fineos.base import EFormBody
 from massgov.pfml.util.converters.json_to_obj import set_empty_dates_to_none
 
+from ..db.models.applications import PhoneType
 from . import client, exception, fineos_client, models
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
@@ -201,8 +203,13 @@ def mock_customer_info():
             "addressLine6": "GA",
             "addressLine7": "",
             "postCode": "30303",
-            "country": {"name": "USA", "domainName": "Country",},
-            "extensions": {},
+            "country": {"name": "USA", "domainName": "Country"},
+            "extensions": {
+                "ConsenttoShareData": True,
+                "Confirmed": True,
+                "MassachusettsID": "",
+                "OutOfStateID": "",
+            },
         },
     }
 
@@ -214,7 +221,7 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
         _capture_call("read_employer", None, employer_fein=employer_fein)
 
         if employer_fein == "999999999":
-            raise exception.FINEOSNotFound("Employer not found.")
+            raise exception.FINEOSEntityNotFound("Employer not found.")
 
         return models.OCOrganisation(
             OCOrganisation=[
@@ -228,7 +235,7 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
         _capture_call("find_employer", None, employer_fein=employer_fein)
 
         if employer_fein == "999999999":
-            raise exception.FINEOSNotFound("Employer not found.")
+            raise exception.FINEOSEntityNotFound("Employer not found.")
         else:
             # TODO: Match the FINEOS employer id format
             return employer_fein + "1000"
@@ -237,7 +244,7 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
         _capture_call("register_api_user", None, employee_registration=employee_registration)
 
         if employee_registration.national_insurance_no == "999999999":
-            raise exception.FINEOSClientBadResponse(requests.codes.ok, 400)
+            raise exception.FINEOSClientBadResponse("register_api_user", requests.codes.ok, 400)
         else:
             pass
 
@@ -263,7 +270,10 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
         return models.customer_api.ContactDetails(
             phoneNumbers=[
                 models.customer_api.PhoneNumber(
-                    id=1, intCode=None, telephoneNo=None, phoneNumberType=None
+                    id=1,
+                    intCode=None,
+                    telephoneNo=None,
+                    phoneNumberType=PhoneType.PHONE.phone_type_description,
                 )
             ]
         )
@@ -303,13 +313,6 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
             startDate=start_date,
             endDate=end_date,
         )
-        logger.info(
-            "mock: %r %r => %r %r",
-            user_id,
-            absence_case.additionalComments,
-            absence_case_summary.absenceId,
-            absence_case_summary.notificationCaseId,
-        )
         return absence_case_summary
 
     def complete_intake(
@@ -320,19 +323,29 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
         notification_case_summary = models.customer_api.NotificationCaseSummary(
             notificationCaseId=notification_case_id
         )
-        logger.info(
-            "mock: %r %r => %r",
-            user_id,
-            notification_case_id,
-            notification_case_summary.notificationCaseId,
-        )
         return notification_case_summary
 
     def get_absences(self, user_id: str) -> typing.List[models.customer_api.AbsenceCaseSummary]:
         return [models.customer_api.AbsenceCaseSummary()]
 
     def get_absence(self, user_id: str, absence_id: str) -> models.customer_api.AbsenceDetails:
-        return models.customer_api.AbsenceDetails()
+        if absence_id == "NTN-304363-ABS-01":
+            absence_details = models.customer_api.AbsenceDetails()
+            absence_details.absenceId = "NTN-304363-ABS-01"
+            absence_period = models.customer_api.AbsencePeriod()
+            absence_period.id = "PL-14449-0000002237"
+            absence_period.absenceType = "Continuous"
+            absence_period.reason = "Child Bonding"
+            absence_period.reasonQualifier1 = "Foster Care"
+            absence_period.reasonQualifier2 = ""
+            absence_period.startDate = datetime.date(2021, 1, 29)
+            absence_period.endDate = datetime.date(2021, 1, 30)
+            absence_period.requestStatus = "Pending"
+
+            absence_details.absencePeriods = [absence_period]
+            return absence_details
+        else:
+            return models.customer_api.AbsenceDetails()
 
     def get_absence_period_decisions(
         self, user_id: str, absence_id: str
@@ -347,6 +360,18 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
     ) -> models.group_client_api.CustomerInfo:
         return models.group_client_api.CustomerInfo.parse_obj(mock_customer_info())
 
+    def get_customer_occupations_customer_api(
+        self, user_id: str, customer_id: str
+    ) -> List[models.customer_api.ReadCustomerOccupation]:
+        _capture_call("get_customer_occupations_customer_api", user_id, customer_id=customer_id)
+
+        hrsWorkedPerWeek = 37 if customer_id == "1000" else 37.5
+        return [
+            models.customer_api.ReadCustomerOccupation(
+                occupationId=12345, hoursWorkedPerWeek=hrsWorkedPerWeek
+            )
+        ]
+
     def get_customer_occupations(
         self, user_id: str, customer_id: str
     ) -> models.group_client_api.CustomerOccupations:
@@ -354,7 +379,11 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
 
         hrsWorkedPerWeek = 37 if customer_id == "1000" else 37.5
         return models.group_client_api.CustomerOccupations(
-            elements=[models.group_client_api.CustomerOccupation(hrsWorkedPerWeek=hrsWorkedPerWeek)]
+            elements=[
+                models.group_client_api.CustomerOccupation(
+                    id="12345", hrsWorkedPerWeek=str(hrsWorkedPerWeek)
+                )
+            ]
         )
 
     def get_outstanding_information(
@@ -398,7 +427,7 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
     def get_eform(
         self, user_id: str, absence_id: str, eform_id: str
     ) -> models.group_client_api.EForm:
-        return models.group_client_api.EForm(eformId=12345)
+        return models.group_client_api.EForm(eformId=12345, eformAttributes=[])
 
     def create_eform(self, user_id: str, absence_id: str, eform: EFormBody) -> None:
         _capture_call("create_eform", user_id, eform=eform, absence_id=absence_id)
@@ -509,16 +538,25 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
     def group_client_get_documents(
         self, user_id: str, absence_id: str
     ) -> List[models.group_client_api.GroupClientDocument]:
+        # TODO: (API-1812) - deprecate magic string ( no longer used )
         # special case for testing all downloadable document types:
         if absence_id == "leave_admin_mixed_allowable_doc_types":
-            # This should mirror the DOWNLOADABLE_DOC_TYPES in administrator_fineos_actions.py
+            # This should mirror the DOWNLOADABLE_DOC_TYPES in fineos/common.py
             DOWNLOADABLE_DOC_TYPES = [
                 "state managed paid leave confirmation",
                 "approval notice",
                 "request for more information",
                 "denial notice",
                 "employer response additional documentation",
+                "care for a family member form",
+                "own serious health condition form",
+                "pregnancy/maternity form",
+                "child bonding evidence form",
+                "military exigency form",
+                "pending application withdrawn",
+                "appeal acknowledgment",
             ]
+
             allowed_documents = [
                 mock_document(absence_id, document_type=document_type)
                 for document_type in DOWNLOADABLE_DOC_TYPES
@@ -604,7 +642,7 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
         )
 
         if user_id == "USER_WITH_EXISTING_WORK_PATTERN":
-            raise exception.FINEOSClientBadResponse(200, 403)
+            raise exception.FINEOSForbidden("add_week_based_work_pattern", 200, 403)
         else:
             return week_based_work_pattern
 
@@ -635,11 +673,12 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
 
         if employer_create_or_update.employer_fein == "999999999":
             raise exception.FINEOSFatalResponseError(
+                "create_or_update_employer",
                 Exception(
                     "Employer not created. Response Code: 422, "
                     "Party alias pfml_api_21ecb120-9a9a-4f8d-968d-e710b120e148 for alias "
                     "type Unknown already exists for customer 2569"
-                )
+                ),
             )
 
         return (
@@ -649,8 +688,9 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
 
     def create_or_update_leave_admin(
         self, leave_admin_create_or_update: models.CreateOrUpdateLeaveAdmin
-    ) -> None:
+    ) -> Tuple[Optional[str], Optional[str]]:
         _capture_call("create_or_update_leave_admin", None)
+        return "", ""
 
     def update_reflexive_questions(
         self,
@@ -675,6 +715,17 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
         )
 
         return "SA-123"
+
+    def send_tax_withholding_preference(self, absence_id: str, is_withholding_tax: bool) -> None:
+        _capture_call(
+            "send_tax_withholding_preference",
+            None,
+            absence_id=absence_id,
+            is_withholding_tax=is_withholding_tax,
+        )
+
+
+massgov.pfml.util.logging.wrapper.log_all_method_calls(MockFINEOSClient, logger)
 
 
 def start_capture():

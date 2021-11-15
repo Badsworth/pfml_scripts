@@ -1,7 +1,10 @@
 {
-  /**
-   * `next/babel` is required for our React tests to work
-   * https://nextjs.org/docs/advanced-features/customizing-babel-config
-   */
-  "presets": ["next/babel"]
+  "presets": [
+    // https://nextjs.org/docs/advanced-features/customizing-babel-config
+    "next/babel"
+  ],
+  "plugins": [
+    // Reduce bundle size by importing only the Lodash methods we use
+    "lodash"
+  ]
 }

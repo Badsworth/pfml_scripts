@@ -8,7 +8,7 @@
 # pfml-github-actions does not.
 #
 # For PFML admins and developers that want to assume the role (i.e. pretend to be github actions),
-# see the infra/README.md for details.
+# see /docs/infra/extras/testing-github-action-permissions.md for details.
 #
 # Access for the role covers the following:
 # - full access to services used by our applications.
@@ -42,8 +42,7 @@ data "aws_iam_policy_document" "trust_assume_role_policy" {
     principals {
       type = "AWS"
       identifiers = [
-        "arn:aws:iam::498823821309:role/AWS-498823821309-CloudOps-Engineer",
-        "arn:aws:iam::498823821309:role/AWS-498823821309-Infrastructure-Admin",
+        module.constants.infra_admin_sso_arn,
         aws_iam_user.github_actions.arn,
       ]
     }

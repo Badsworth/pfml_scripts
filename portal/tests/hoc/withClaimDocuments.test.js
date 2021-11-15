@@ -1,75 +1,177 @@
+import { screen, waitFor } from "@testing-library/react";
 import BenefitsApplication from "../../src/models/BenefitsApplication";
-import Document from "../../src/models/Document";
 import DocumentCollection from "../../src/models/DocumentCollection";
 import React from "react";
-import { act } from "react-dom/test-utils";
-import { mount } from "enzyme";
-import useAppLogic from "../../src/hooks/useAppLogic";
+import { renderPage } from "../test-utils";
 import withClaimDocuments from "../../src/hoc/withClaimDocuments";
+
+const mockClaimId = "mock-claim-id";
+const mockPageContent = "This is the page.";
+const mockLoadingDocumentsText = "Loading documents";
 
 jest.mock("../../src/hooks/useAppLogic");
 
-describe("withClaimDocuments", () => {
-  let appLogic, wrapper;
-  const application_id = "12345";
-  const claim = new BenefitsApplication({ application_id });
-
-  const PageComponent = () => <div />;
+function setup(
+  { addCustomSetup } = {},
+  customProps = {
+    query: {
+      claim_id: mockClaimId,
+    },
+  }
+) {
+  const PageComponent = (props) => (
+    <div>
+      {mockPageContent}
+      {props.isLoadingDocuments
+        ? mockLoadingDocumentsText
+        : props.documents.map((document) => (
+            <div key={document.fineos_document_id}>
+              {document.fineos_document_id}
+            </div>
+          ))}
+    </div>
+  );
   const WrappedComponent = withClaimDocuments(PageComponent);
 
-  function render() {
-    act(() => {
-      wrapper = mount(<WrappedComponent appLogic={appLogic} claim={claim} />);
+  renderPage(
+    WrappedComponent,
+    {
+      addCustomSetup,
+    },
+    customProps
+  );
+}
+
+describe("withClaimDocuments", () => {
+  it("renders page with empty documents and isLoadingDocuments when initially loading state", async () => {
+    setup();
+
+    expect(
+      await screen.findByText(mockLoadingDocumentsText, { exact: false })
+    ).toBeInTheDocument();
+  });
+
+  it("shows Page Not Found when application ID isn't found", () => {
+    setup(
+      {},
+      {
+        query: {
+          claim_id: "",
+        },
+      }
+    );
+
+    expect(
+      screen.getByRole("heading", { name: "Page not found" })
+    ).toBeInTheDocument();
+  });
+
+  it("requires user to be logged in", async () => {
+    let spy;
+
+    setup({
+      addCustomSetup: (appLogic) => {
+        spy = jest.spyOn(appLogic.auth, "requireLogin");
+      },
     });
-  }
 
-  beforeEach(() => {
-    appLogic = useAppLogic();
+    await waitFor(() => {
+      expect(spy).toHaveBeenCalled();
+    });
   });
 
-  it("loads documents", () => {
-    render();
-    expect(appLogic.documents.loadAll).toHaveBeenCalledTimes(1);
-  });
-
-  it("does not load documents if there are already loaded documents", () => {
-    jest
-      .spyOn(appLogic.documents, "hasLoadedClaimDocuments")
-      .mockReturnValue(true);
-    render();
-    expect(appLogic.documents.loadAll).not.toHaveBeenCalled();
-  });
-
-  it("does not load documents if user has not yet loaded", () => {
-    appLogic.user = appLogic.users.user = null;
-    render();
-    expect(appLogic.benefitsApplications.loadAll).not.toHaveBeenCalled();
-  });
-
-  it("does not load documents when documents are already loaded", () => {
-    appLogic.documents.hasLoadedClaimDocuments.mockReturnValueOnce(true);
-    render();
-    expect(appLogic.documents.loadAll).not.toHaveBeenCalled();
-  });
-
-  it("sets the 'documents' prop on the passed component to the loaded documents", () => {
-    const loadedDocuments = new DocumentCollection([
-      new Document({ application_id, fineos_document_id: 1 }),
-      new Document({ application_id, fineos_document_id: 2 }),
-      new Document({ application_id, fineos_document_id: 3 }),
-      new Document({
+  it("renders the page with Claim documents when document state is loaded", async () => {
+    const mockDocuments = new DocumentCollection([
+      {
+        application_id: mockClaimId,
+        fineos_document_id: 1,
+      },
+      {
+        application_id: mockClaimId,
+        fineos_document_id: 2,
+      },
+      {
+        application_id: mockClaimId,
+        fineos_document_id: 3,
+      },
+      {
+        // Helps assert the filtering logic within the HOC.
         application_id: "something different",
         fineos_document_id: 4,
-      }),
+      },
     ]);
-    const filterDocuments = loadedDocuments.filterByApplication(application_id);
-    appLogic.documents.documents = loadedDocuments;
-    render();
-    expect(wrapper.find(PageComponent).prop("documents")[0]).toBeInstanceOf(
-      Document
+
+    setup({
+      addCustomSetup: (appLogic) => {
+        appLogic.documents.documents = mockDocuments;
+        jest
+          .spyOn(appLogic.documents, "hasLoadedClaimDocuments")
+          .mockReturnValue(true);
+      },
+    });
+
+    expect(
+      await screen.findByText(mockPageContent, { exact: false })
+    ).toBeInTheDocument();
+
+    // Assert that the HOC is passing in the applications as a prop to our page component:
+    expect(
+      await screen.findByText(mockDocuments.items[0].fineos_document_id, {
+        exact: false,
+      })
+    ).toBeInTheDocument();
+    expect(
+      await screen.findByText(mockDocuments.items[1].fineos_document_id, {
+        exact: false,
+      })
+    ).toBeInTheDocument();
+    expect(
+      await screen.findByText(mockDocuments.items[2].fineos_document_id, {
+        exact: false,
+      })
+    ).toBeInTheDocument();
+    // This document isn't associated with the current claim
+    expect(
+      screen.queryByText(mockDocuments.items[3].fineos_document_id, {
+        exact: false,
+      })
+    ).not.toBeInTheDocument();
+  });
+
+  // Mostly identical to test above, except testing the scenario where the claim prop is set,
+  // instead of the query param
+  it("renders the page with Application documents when document state is loaded", async () => {
+    const mockDocuments = new DocumentCollection([
+      {
+        application_id: mockClaimId,
+        fineos_document_id: 1,
+      },
+    ]);
+    const mockApplication = new BenefitsApplication({
+      application_id: mockClaimId,
+    });
+
+    setup(
+      {
+        addCustomSetup: (appLogic) => {
+          appLogic.documents.documents = mockDocuments;
+          jest
+            .spyOn(appLogic.documents, "hasLoadedClaimDocuments")
+            .mockReturnValue(true);
+        },
+      },
+      { claim: mockApplication }
     );
-    expect(wrapper.find(PageComponent).prop("documents")).toEqual(
-      filterDocuments
-    );
+
+    expect(
+      await screen.findByText(mockPageContent, { exact: false })
+    ).toBeInTheDocument();
+
+    // Assert that the HOC is passing in the applications as a prop to our page component:
+    expect(
+      await screen.findByText(mockDocuments.items[0].fineos_document_id, {
+        exact: false,
+      })
+    ).toBeInTheDocument();
   });
 });

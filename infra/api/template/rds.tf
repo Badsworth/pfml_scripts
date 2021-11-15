@@ -25,10 +25,8 @@ resource "aws_ssm_parameter" "db_password" {
   })
 }
 
-resource "aws_db_subnet_group" "rds_postgres_dbprivate" {
-  name        = "${local.app_name}-${var.environment_name}-rds"
-  description = "Mass RDS DB subnet group"
-  subnet_ids  = var.vpc_db_subnet_ids
+data "aws_db_subnet_group" "rds_postgres_dbprivate" {
+  name = var.environment_name == "prod" ? "eolwd-pfml-prod-dbprivate" : "eolwd-pfml-nonprod-dbprivate"
 }
 
 resource "aws_db_instance" "default" {
@@ -70,7 +68,7 @@ resource "aws_db_instance" "default" {
   # This is required by Smartronix CIS Benchmark audits, which are run via AWS Config through their CAMS Monitoring Harness.
   deletion_protection = true
 
-  db_subnet_group_name = aws_db_subnet_group.rds_postgres_dbprivate.name
+  db_subnet_group_name = data.aws_db_subnet_group.rds_postgres_dbprivate.name
   parameter_group_name = var.environment_name == "prod" ? "pfml-postgres12-prod" : "pfml-postgres12-non-prod"
 
   monitoring_interval = 30
@@ -93,8 +91,9 @@ resource "aws_db_instance" "default" {
       # minutes to hours. Plan changes to these configs with this in mind, and
       # any changes must be made in AWS Console first, then in Terraform as a follow-up.
       # 
-      # "engine_version" and "parameter_group_name" will be managed manually
+      # "engine_version", "parameter_group_name" and "db_subnet_group_name"  will be managed manually by Smartronix
       # -----------------------------------------------------------------------#
+      db_subnet_group_name,
       engine_version,
       instance_class,
       storage_type,
@@ -116,18 +115,16 @@ resource "aws_db_instance" "default" {
     # Human-readable tag for operations team (smartronix)
     purpose = "${var.environment_name} database for PFML"
 
-    # Temporary scheduler exception tags
-    schedulev2       = "na"
-    expenddate       = "01/31/21"
-    expenddatedetail = "SCTASK0177777"
     # schedulev2 is an EOTSS-required custom tag. It configures a mandatory scheduled downtime
     # period for test only.*
     #
-    # Test downtime is disabled until 01/31/2021 to account for launch activities.
+    # *Test downtime is currently disabled to account for launch activities. Usually this requires an exception tag provided by EOTSS,
+    #  however a separate arrangement has been made as indicated in ServiceNow ticket SCTASK0208809.
     #
     # If you change this schedule, please update the ECS autoscaling policy in autoscaling-ecs.tf.
     #
     # See https://lwd.atlassian.net/wiki/spaces/DD/pages/275611773/RDS+databases.
+    schedulev2 = "na"
   })
 }
 # ------------------------------------

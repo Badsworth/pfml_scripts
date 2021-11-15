@@ -116,7 +116,7 @@ resource "aws_wafregional_web_acl" "fortinet_managed_rules" {
   }
 }
 
-resource "aws_wafregional_web_acl_association" "api_gateway" {
+resource "aws_wafregional_web_acl_association" "fortinet_managed_rules" {
   count        = var.enable_fortinet_managed_rules ? 1 : 0
   resource_arn = local.api_gateway_stage_arn
   web_acl_id   = aws_wafregional_web_acl.fortinet_managed_rules[0].id

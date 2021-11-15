@@ -17,11 +17,12 @@ import {
   postApplicationsByApplication_idSubmit_application,
   postApplicationsByApplication_idComplete_application,
   postApplicationsByApplication_idSubmit_payment_preference,
+  EmployerClaimRequestBody,
 } from "../api";
 import pRetry from "p-retry";
 import AuthenticationManager from "./AuthenticationManager";
-import { Credentials } from "../types";
-import { GeneratedClaim, GeneratedEmployerResponse } from "../generation/Claim";
+import { ApplicationSubmissionResponse, Credentials } from "../types";
+import { GeneratedClaim } from "../generation/Claim";
 import { DocumentWithPromisedFile } from "../generation/documents";
 
 if (!global.FormData) {
@@ -53,7 +54,9 @@ export default class PortalSubmitter {
     return session;
   }
 
-  private async getOptions(credentials: Credentials): Promise<RequestOptions> {
+  protected async getOptions(
+    credentials: Credentials
+  ): Promise<RequestOptions> {
     const session = await this.getSession(credentials);
     return {
       baseUrl: this.base,
@@ -68,7 +71,7 @@ export default class PortalSubmitter {
     claim: GeneratedClaim,
     credentials: Credentials,
     employerCredentials?: Credentials
-  ): Promise<ApplicationResponse> {
+  ): Promise<ApplicationSubmissionResponse> {
     const options = await this.getOptions(credentials);
 
     const application_id = await this.createApplication(options);
@@ -128,10 +131,10 @@ export default class PortalSubmitter {
     };
   }
 
-  protected async submitEmployerResponse(
+  async submitEmployerResponse(
     employerCredentials: Credentials,
     fineos_absence_id: string,
-    response: GeneratedEmployerResponse
+    response: EmployerClaimRequestBody
   ): Promise<void> {
     const options = await this.getOptions(employerCredentials);
     // When we go to submit employer response, we need to first fetch the review doc.
@@ -169,9 +172,13 @@ export default class PortalSubmitter {
     await patchEmployersClaimsByFineos_absence_idReview(
       { fineos_absence_id },
       {
-        employer_benefits: data.employer_benefits,
-        previous_leaves: data.previous_leaves,
         ...response,
+        employer_benefits: [
+          ...data.employer_benefits,
+          ...response.employer_benefits,
+        ],
+        previous_leaves: [...data.previous_leaves, ...response.previous_leaves],
+        uses_second_eform_version: true,
       },
       options
     );
@@ -196,25 +203,25 @@ export default class PortalSubmitter {
     await Promise.all(promises);
   }
 
-  private documentIsPromisedFile(
+  protected documentIsPromisedFile(
     document: DocumentUploadRequest | DocumentWithPromisedFile
   ): document is DocumentWithPromisedFile {
     return typeof document.file === "function";
   }
 
-  private async createApplication(options?: RequestOptions): Promise<string> {
+  protected async createApplication(options?: RequestOptions): Promise<string> {
     const response = await postApplications(options);
-    if (response.data.data && response.data.data.application_id) {
+    if (response?.data?.data && response?.data?.data.application_id) {
       return response.data.data.application_id;
     }
     throw new Error("Unable to create new application");
   }
 
-  private async updateApplication(
+  protected async updateApplication(
     application_id: string,
     application: ApplicationRequestBody,
     options: RequestOptions
-  ) {
+  ): ReturnType<typeof patchApplicationsByApplication_id> {
     return patchApplicationsByApplication_id(
       { application_id },
       application,
@@ -222,39 +229,52 @@ export default class PortalSubmitter {
     );
   }
 
-  private async submitApplication(
+  protected async submitApplication(
     application_id: string,
     options?: RequestOptions
-  ) {
+  ): Promise<{
+    fineos_absence_id: string;
+    first_name: string;
+    last_name: string;
+  }> {
     const response = await postApplicationsByApplication_idSubmit_application(
       { application_id },
       options
     );
-    if (response.data.data && "fineos_absence_id" in response.data.data) {
+    if (
+      response.data.data &&
+      "fineos_absence_id" in response.data.data &&
+      "first_name" in response.data.data &&
+      "last_name" in response.data.data
+    ) {
       return response.data.data as {
         fineos_absence_id: string;
         first_name: string;
         last_name: string;
       };
     }
-    throw new Error("Submit application data did not contain absence id");
+    throw new Error(
+      "Submit application data did not contain one of the following required properties: fineos_absence_id, first_name, last_name"
+    );
   }
 
-  private async completeApplication(
+  protected async completeApplication(
     application_id: string,
     options?: RequestOptions
-  ) {
+  ): ReturnType<typeof postApplicationsByApplication_idComplete_application> {
     return postApplicationsByApplication_idComplete_application(
       { application_id },
       options
     );
   }
 
-  private async uploadPaymentPreference(
+  protected async uploadPaymentPreference(
     application_id: string,
     paymentPreference: PaymentPreferenceRequestBody,
     options?: RequestOptions
-  ) {
+  ): ReturnType<
+    typeof postApplicationsByApplication_idSubmit_payment_preference
+  > {
     return postApplicationsByApplication_idSubmit_payment_preference(
       { application_id },
       paymentPreference,

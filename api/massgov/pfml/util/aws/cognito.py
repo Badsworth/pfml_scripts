@@ -1,97 +1,25 @@
-import secrets
-import string
 import time
 from typing import Optional, Union
 
 import boto3
 import botocore
 
-import massgov.pfml.db as db
 import massgov.pfml.util.logging
-from massgov.pfml.api.util.response import Issue, IssueType
-from massgov.pfml.cognito_post_confirmation_lambda.lib import leave_admin_create
-from massgov.pfml.db.models.employees import User
+from massgov.pfml.api.validation.exceptions import IssueType, ValidationErrorDetail
+from massgov.pfml.cognito.exceptions import (
+    CognitoAccountCreationFailure,
+    CognitoLookupFailure,
+    CognitoSubNotFound,
+    CognitoUserExistsValidationError,
+    CognitoValidationError,
+)
 
-ACTIVE_DIRECTORY_ATTRIBUTE = "sub"
+USER_ID_ATTRIBUTE = "sub"
 logger = massgov.pfml.util.logging.get_logger(__name__)
-
-
-# TODO (CP-1988): Move custom exceptions to an exceptions.py to follow the pattern we use for other modules
-class CognitoSubNotFound(Exception):
-    pass
-
-
-class CognitoLookupFailure(Exception):
-    """ Error that represents an inability to complete the lookup successfully """
-
-    pass
-
-
-class CognitoAccountCreationFailure(Exception):
-    """Error creating a Cognito user that may not be due to a user/validation error. This does not include network-related errors."""
-
-    pass
-
-
-class CognitoValidationError(Exception):
-    """Error raised due to a user-recoverable Cognito issue
-
-    Attributes:
-        message -- Cognito's explanation of the error
-        issue -- used for communicating the error to the user
-    """
-
-    __slots__ = ["message", "issue"]
-
-    def __init__(self, message: str, issue: Issue):
-        self.message = message
-        self.issue = issue
-
-
-class CognitoUserExistsValidationError(CognitoValidationError):
-    """Error raised due to a user with the provided email already existing in the Cognito user pool
-
-    Attributes:
-        message -- Cognito's explanation of the error
-        active_directory_id -- Existing user's ID attribute
-        issue -- used for communicating the error to the user
-    """
-
-    __slots__ = ["active_directory_id", "issue", "message"]
-
-    def __init__(self, message: str, active_directory_id: Optional[str]):
-        self.active_directory_id = active_directory_id
-        self.message = message
-        self.issue = Issue(field="email_address", type=IssueType.exists, message=message)
-
-
-class CognitoPasswordSetFailure(Exception):
-    pass
 
 
 def create_cognito_client():
     return boto3.client("cognito-idp", region_name="us-east-1")
-
-
-def generate_temp_password() -> str:
-    alphabet = string.ascii_letters + string.digits + string.punctuation
-    while True:
-        has_punctuation = False
-        has_upper = False
-        has_lower = False
-        has_number = False
-        password = "".join(secrets.choice(alphabet) for i in range(16))
-        for letter in password:
-            if letter in string.punctuation:
-                has_punctuation = True
-            elif letter.isupper():
-                has_upper = True
-            elif letter.islower():
-                has_lower = True
-            elif letter in string.digits:
-                has_number = True
-        if has_punctuation and has_upper and has_lower and has_number:
-            return password
 
 
 def lookup_cognito_account_id(
@@ -126,62 +54,11 @@ def lookup_cognito_account_id(
 
     if response and response["UserAttributes"]:
         for attr in response["UserAttributes"]:
-            if attr["Name"] == ACTIVE_DIRECTORY_ATTRIBUTE:
+            if attr["Name"] == USER_ID_ATTRIBUTE:
                 return attr["Value"]
 
         raise CognitoSubNotFound("Cognito did not return an ID for the user!")
     return None
-
-
-def create_verified_cognito_leave_admin_account(
-    db_session: db.Session,
-    email: str,
-    fein: str,
-    cognito_user_pool_id: str,
-    cognito_client: Optional["botocore.client.CognitoIdentityProvider"] = None,
-) -> User:
-    """Create Cognito and API records for a leave admin with a verified email and temporary password"""
-
-    active_directory_id: Optional[str] = None
-    if cognito_client is None:
-        cognito_client = create_cognito_client()
-    temp_password = generate_temp_password()
-
-    try:
-        cognito_user = cognito_client.admin_create_user(
-            UserPoolId=cognito_user_pool_id,
-            Username=email,
-            UserAttributes=[
-                {"Name": "email", "Value": email},
-                {"Name": "email_verified", "Value": "true"},
-            ],
-            DesiredDeliveryMediums=["EMAIL"],
-            MessageAction="SUPPRESS",
-        )
-    except botocore.exceptions.ClientError as exc:
-        logger.warning("Unable to create account for user", exc_info=exc)
-        raise CognitoAccountCreationFailure("Unable to create account for user")
-
-    for attr in cognito_user["User"]["Attributes"]:
-        if attr["Name"] == ACTIVE_DIRECTORY_ATTRIBUTE:
-            active_directory_id = attr["Value"]
-            break
-
-    if active_directory_id is None:
-        raise CognitoSubNotFound("Cognito did not return an ID for the user!")
-
-    try:
-        cognito_client.admin_set_user_password(
-            UserPoolId=cognito_user_pool_id, Username=email, Password=temp_password, Permanent=True
-        )
-    except botocore.exceptions.ClientError as exc:
-        logger.warning("Unable to set password for user", exc_info=exc)
-        raise CognitoPasswordSetFailure("Unable to set password for user")
-
-    log_attributes = {
-        "auth_id": active_directory_id,
-    }
-    return leave_admin_create(db_session, active_directory_id, email, fein, log_attributes)
 
 
 def create_cognito_account(
@@ -195,7 +72,7 @@ def create_cognito_account(
 
     Returns
     -------
-    active_directory_id
+    sub_id
         Cognito user sub (id)
 
     Raises
@@ -218,7 +95,10 @@ def create_cognito_account(
                 "sign_up_source": "pfml_api"
             },
         )
-    except cognito_client.exceptions.InvalidPasswordException as error:
+    except (
+        cognito_client.exceptions.InvalidPasswordException,
+        cognito_client.exceptions.InvalidParameterException,
+    ) as error:
         # Thrown for various reasons:
         # 1. When password doesn't conform to our password requirements (length, casing, characters)
         # 2. When password is a commonly used or compromised credential
@@ -230,7 +110,7 @@ def create_cognito_account(
             else IssueType.invalid
         )
 
-        issue = Issue(field="password", type=issue_type, message=message)
+        issue = ValidationErrorDetail(field="password", type=issue_type, message=message)
         logger.info(
             "Cognito validation issue - InvalidPasswordException",
             extra={"cognito_error": issue.message},
@@ -243,7 +123,9 @@ def create_cognito_account(
         # 2. When username isn't an email
         # Number 2 above will be caught by our OpenAPI validations, which check that email_address
         # is an email, so we interpret this error to indicate something is wrong with the password
-        issue = Issue(field="password", type=IssueType.invalid, message="{}".format(error))
+        issue = ValidationErrorDetail(
+            field="password", type=IssueType.invalid, message="{}".format(error)
+        )
         logger.info(
             "Cognito validation issue - ParamValidationError",
             extra={"cognito_error": issue.message},

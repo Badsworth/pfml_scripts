@@ -3,28 +3,23 @@
 #
 from datetime import datetime
 
-import pytest
-
 from massgov.pfml.db.models.factories import (
     ApplicationFactory,
     ContinuousLeavePeriodFactory,
     EmployerBenefitFactory,
     IntermittentLeavePeriodFactory,
     OtherIncomeFactory,
-    PreviousLeaveFactory,
+    PreviousLeaveOtherReasonFactory,
     ReducedScheduleLeavePeriodFactory,
 )
 from massgov.pfml.util.logging.applications import get_application_log_attributes
 
-# every test in here requires real resources
-pytestmark = pytest.mark.integration
-
 
 def test_get_application_log_attributes(user, test_db_session, initialize_factories_session):
-    application = ApplicationFactory.create(user=user, updated_time=datetime.now())
+    application = ApplicationFactory.create(user=user, updated_at=datetime.now())
     EmployerBenefitFactory.create(application_id=application.application_id, benefit_type_id=None)
     OtherIncomeFactory.create(application_id=application.application_id)
-    PreviousLeaveFactory.create(application_id=application.application_id)
+    PreviousLeaveOtherReasonFactory.create(application_id=application.application_id)
 
     log_attributes = get_application_log_attributes(application)
 
@@ -33,24 +28,24 @@ def test_get_application_log_attributes(user, test_db_session, initialize_factor
         "application.application_id": str(application.application_id),
         "application.completed_time": None,
         "application.completed_time.timestamp": None,
-        "application.employer_id": str(application.employer_id),
+        "application.has_concurrent_leave": "False",
         "application.has_continuous_leave_periods": "False",
-        "application.has_employer_benefits": None,
+        "application.has_employer_benefits": "False",
         "application.has_future_child_date": None,
         "application.has_intermittent_leave_periods": "False",
         "application.has_mailing_address": "False",
-        "application.has_other_incomes": None,
-        "application.has_other_incomes_awaiting_approval": None,
-        "application.has_previous_leaves": None,
+        "application.has_other_incomes": "False",
+        "application.has_previous_leaves_other_reason": "False",
+        "application.has_previous_leaves_same_reason": "False",
         "application.has_reduced_schedule_leave_periods": "False",
         "application.has_state_id": "False",
         "application.has_submitted_payment_preference": None,
         "application.leave_reason": "Serious Health Condition - Employee",
         "application.leave_reason_qualifier": None,
-        "application.leave_type": None,
         "application.num_employer_benefits": "1",
         "application.num_other_incomes": "1",
-        "application.num_previous_leaves": "1",
+        "application.num_previous_leaves_other_reason": "1",
+        "application.num_previous_leaves_same_reason": "0",
         "application.num_employer_benefit_types.Accrued paid leave": "0",
         "application.num_employer_benefit_types.Family or medical leave insurance": "0",
         "application.num_employer_benefit_types.Permanent disability insurance": "0",
@@ -62,20 +57,27 @@ def test_get_application_log_attributes(user, test_db_session, initialize_factor
         "application.num_other_income_types.SSDI": "1",
         "application.num_other_income_types.Unemployment Insurance": "0",
         "application.num_other_income_types.Workers Compensation": "0",
-        "application.num_previous_leave_reasons.Care for a family member": "0",
-        "application.num_previous_leave_reasons.Child bonding": "0",
-        "application.num_previous_leave_reasons.Military caregiver": "0",
-        "application.num_previous_leave_reasons.Military exigency family": "0",
-        "application.num_previous_leave_reasons.Pregnancy / Maternity": "1",
-        "application.num_previous_leave_reasons.Serious health condition": "0",
+        "application.num_previous_leave_other_reason_reasons.Caring for a family member with a serious health condition": "0",
+        "application.num_previous_leave_other_reason_reasons.Bonding with my child after birth or placement": "0",
+        "application.num_previous_leave_other_reason_reasons.Caring for a family member who serves in the armed forces": "0",
+        "application.num_previous_leave_other_reason_reasons.Managing family affairs while a family member is on active duty in the armed forces": "0",
+        "application.num_previous_leave_other_reason_reasons.Pregnancy": "1",
+        "application.num_previous_leave_other_reason_reasons.An illness or injury": "0",
+        "application.num_previous_leave_same_reason_reasons.Caring for a family member with a serious health condition": "0",
+        "application.num_previous_leave_same_reason_reasons.Bonding with my child after birth or placement": "0",
+        "application.num_previous_leave_same_reason_reasons.Caring for a family member who serves in the armed forces": "0",
+        "application.num_previous_leave_same_reason_reasons.Managing family affairs while a family member is on active duty in the armed forces": "0",
+        "application.num_previous_leave_same_reason_reasons.Pregnancy": "0",
+        "application.num_previous_leave_same_reason_reasons.An illness or injury": "0",
         "application.pregnant_or_recent_birth": "False",
-        "application.start_time": str(application.start_time),
-        "application.start_time.timestamp": str(application.start_time.timestamp()),
+        "application.created_at": str(application.created_at),
+        "application.created_at.timestamp": str(application.created_at.timestamp()),
         "application.submitted_time": None,
         "application.submitted_time.timestamp": None,
-        "application.updated_time": str(application.updated_time),
-        "application.updated_time.timestamp": str(application.updated_time.timestamp()),
+        "application.updated_at": str(application.updated_at),
+        "application.updated_at.timestamp": str(application.updated_at.timestamp()),
         "work_pattern.work_pattern_type": None,
+        "application.is_withholding_tax": None,
     }
     assert log_attributes == expected_attributes
 
@@ -83,7 +85,7 @@ def test_get_application_log_attributes(user, test_db_session, initialize_factor
 def test_get_leave_period_log_attributes(user, test_db_session, initialize_factories_session):
     application = ApplicationFactory.create(
         user=user,
-        updated_time=datetime.now(),
+        updated_at=datetime.now(),
         has_continuous_leave_periods=True,
         has_intermittent_leave_periods=True,
         has_reduced_schedule_leave_periods=True,

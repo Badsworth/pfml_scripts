@@ -1,0 +1,19 @@
+.ma__footer-slim {
+  // Remove underlines on all footer links to match Mayflower -- Note: Footer
+  // links are separated with ::after{content:"|"}, which adds an awkward
+  // underline to the pipe, as it's part of the preceding link.
+  a {
+    text-decoration: none;
+  }
+
+  // USWDS removes italic user agent style
+  address {
+    font-style: revert;
+  }
+
+  // The version of Mayflower we're using is missing &__copyright styles
+  &__copyright {
+    font-size: 1rem;
+    font-weight: 550;
+  }
+}

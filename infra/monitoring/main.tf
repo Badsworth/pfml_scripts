@@ -17,7 +17,6 @@ provider "aws" {
 }
 
 provider "newrelic" {
-  version       = "~> 2.15.0"
   region        = "US"
   account_id    = "2837112"
   api_key       = data.aws_ssm_parameter.newrelic-api-key.value
@@ -29,13 +28,16 @@ terraform {
 
   required_providers {
     aws = {
-      source = "hashicorp/aws"
+      source  = "hashicorp/aws"
+      version = "~> 3.63.0"
     }
     newrelic = {
-      source = "newrelic/newrelic"
+      source  = "newrelic/newrelic"
+      version = "~> 2.30.0"
     }
     pagerduty = {
-      source = "pagerduty/pagerduty"
+      source  = "pagerduty/pagerduty"
+      version = "~> 2.0.0"
     }
   }
 

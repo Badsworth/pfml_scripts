@@ -1,0 +1,7 @@
+out
+.next
+.terraform
+__snapshots__
+new-relic.js
+.mypy_cache
+*-lock.json

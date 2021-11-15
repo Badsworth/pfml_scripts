@@ -1,0 +1,32 @@
+
+.card {
+  background: #fff;
+  border: 0;
+  border-radius: $Border-Radius;
+  box-shadow: $Box-Shadow;
+  display: flex;
+  margin-top: 2em;
+  padding: 0.857143em;
+}
+
+.card__info {
+  flex: 1 1 auto;
+  padding-right: 1.071429em;
+}
+
+.card__controls {
+  align-items: flex-end;
+  display: flex;
+}
+
+.card__title {
+  font-size: 1.143em;
+  line-height: 1.714em;
+  margin-bottom: 0;
+}
+
+
+.card__btn {
+  display: block;
+  padding: 0.572em 1.143em;
+}

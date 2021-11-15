@@ -10,9 +10,6 @@ from sqlalchemy.orm import relationship
 import massgov.pfml.db.lookup as lookup
 from massgov.pfml.db.models.base import Base
 
-# every test in here requires real resources
-pytestmark = pytest.mark.integration
-
 
 # A lookup table with an id and description.
 class LkColour(Base):
@@ -287,13 +284,15 @@ def test_get_id(test_db_session, class_colour):
     assert purple_id == 3
 
 
-def test_lookup_modified_as_foreign_key(test_db_session, test_db_other_session, class_colour):
+def test_lookup_modified_as_foreign_key(
+    local_test_db_session, local_test_db_other_session, class_colour
+):
     Colour = class_colour
 
-    test_db_session.add_all(
+    local_test_db_session.add_all(
         (LkShape(1, "circle", 0), LkShape(2, "square", 4), LkShape(3, "triangle", 3))
     )
-    test_db_session.commit()
+    local_test_db_session.commit()
 
     class ShapeModified(lookup.LookupTable):
         model = LkShape
@@ -304,15 +303,15 @@ def test_lookup_modified_as_foreign_key(test_db_session, test_db_other_session, 
         HEXAGON = LkShape(3, "hexagon", 6)
         OVAL = LkShape(4, "oval", 0)
 
-    Colour.sync_to_database(test_db_other_session)
-    ShapeModified.sync_to_database(test_db_other_session)
-    test_db_other_session.commit()
+    Colour.sync_to_database(local_test_db_other_session)
+    ShapeModified.sync_to_database(local_test_db_other_session)
+    local_test_db_other_session.commit()
 
-    purple = Colour.get_instance(test_db_other_session, template=Colour.PURPLE)
-    rect = ShapeModified.get_instance(test_db_other_session, template=ShapeModified.RECTANGLE)
+    purple = Colour.get_instance(local_test_db_other_session, template=Colour.PURPLE)
+    rect = ShapeModified.get_instance(local_test_db_other_session, template=ShapeModified.RECTANGLE)
     widget = Widget(name="Test widget 1", colour=purple, shape=rect)
-    test_db_other_session.add(widget)
-    test_db_other_session.commit()
+    local_test_db_other_session.add(widget)
+    local_test_db_other_session.commit()
     assert widget.colour == purple
     assert widget.shape == rect
     assert widget.colour_id == 3
@@ -378,25 +377,25 @@ def test_lookup_as_foreign_key_by_id(test_db_session, class_colour, class_shape)
 
 
 def test_lookup_modified_as_foreign_key_other_session(
-    test_db_session, test_db_other_session, class_colour, class_shape
+    local_test_db_session, local_test_db_other_session, class_colour, class_shape
 ):
     Colour = class_colour
     Shape = class_shape
 
-    test_db_session.add_all(
+    local_test_db_session.add_all(
         (LkShape(1, "circle", 0), LkShape(2, "square", 4), LkShape(3, "triangle", 3))
     )
-    test_db_session.commit()
+    local_test_db_session.commit()
 
-    Colour.sync_to_database(test_db_session)
-    Shape.sync_to_database(test_db_session)
-    test_db_session.commit()
+    Colour.sync_to_database(local_test_db_session)
+    Shape.sync_to_database(local_test_db_session)
+    local_test_db_session.commit()
 
-    purple = Colour.get_instance(test_db_other_session, Colour.PURPLE)
-    square = Shape.get_instance(test_db_other_session, Shape.SQUARE)
+    purple = Colour.get_instance(local_test_db_other_session, Colour.PURPLE)
+    square = Shape.get_instance(local_test_db_other_session, Shape.SQUARE)
     widget = Widget(name="Test widget 1", colour=purple, shape=square)
-    test_db_other_session.add(widget)
-    test_db_other_session.commit()
+    local_test_db_other_session.add(widget)
+    local_test_db_other_session.commit()
     assert widget.colour == purple
     assert widget.shape == square
     assert widget.colour_id == 3

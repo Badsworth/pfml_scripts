@@ -1,20 +1,11 @@
 import datetime
 from decimal import Decimal
 from enum import Enum
+from itertools import chain
+from typing import Optional
 
-from sqlalchemy import (
-    JSON,
-    TIMESTAMP,
-    Boolean,
-    Column,
-    Date,
-    ForeignKey,
-    Integer,
-    Numeric,
-    Text,
-    case,
-)
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import TIMESTAMP, Boolean, Column, Date, ForeignKey, Integer, Numeric, Text, case
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import backref, relationship
 
@@ -23,27 +14,31 @@ from massgov.pfml.db.models.employees import (
     Address,
     Claim,
     ClaimType,
-    Employee,
-    Employer,
     LkBankAccountType,
+    LkGender,
     LkOccupation,
     LkPaymentMethod,
     TaxIdentifier,
     User,
 )
 from massgov.pfml.rmv.models import RmvAcknowledgement
+from massgov.pfml.util.decimals import round_nearest_hundredth
 
 from ..lookup import LookupTable
-from .base import Base, utc_timestamp_gen, uuid_gen
-from .common import StrEnum
+from .base import Base, TimestampMixin, uuid_gen
+from .common import PostgreSQLUUID, StrEnum
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
+
+
+class NoClaimTypeForAbsenceType(Exception):
+    pass
 
 
 class LkEmploymentStatus(Base):
     __tablename__ = "lk_employment_status"
     employment_status_id = Column(Integer, primary_key=True, autoincrement=True)
-    employment_status_description = Column(Text)
+    employment_status_description = Column(Text, nullable=False)
     fineos_label = Column(Text)
 
     def __init__(self, employment_status_id, employment_status_description, fineos_label):
@@ -55,47 +50,45 @@ class LkEmploymentStatus(Base):
 class LkLeaveReason(Base):
     __tablename__ = "lk_leave_reason"
     leave_reason_id = Column(Integer, primary_key=True, autoincrement=True)
-    leave_reason_description = Column(Text)
+    leave_reason_description = Column(Text, nullable=False)
+    _map = None
 
     def __init__(self, leave_reason_id, leave_reason_description):
         self.leave_reason_id = leave_reason_id
         self.leave_reason_description = leave_reason_description
 
+    @classmethod
+    def generate_map(cls):
+        return {
+            LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_id: ClaimType.FAMILY_LEAVE.claim_type_id,
+            LeaveReason.PREGNANCY_MATERNITY.leave_reason_id: ClaimType.FAMILY_LEAVE.claim_type_id,
+            LeaveReason.CHILD_BONDING.leave_reason_id: ClaimType.FAMILY_LEAVE.claim_type_id,
+            LeaveReason.SERIOUS_HEALTH_CONDITION_EMPLOYEE.leave_reason_id: ClaimType.MEDICAL_LEAVE.claim_type_id,
+        }
+
+    @hybrid_property
+    def absence_to_claim_type(self) -> int:
+        if not self._map:
+            self._map = self.generate_map()
+        if self.leave_reason_id not in self._map:
+            raise NoClaimTypeForAbsenceType(f"{self.leave_reason_id} not in the lookup table")
+        return self._map[self.leave_reason_id]
+
 
 class LkLeaveReasonQualifier(Base):
     __tablename__ = "lk_leave_reason_qualifier"
     leave_reason_qualifier_id = Column(Integer, primary_key=True, autoincrement=True)
-    leave_reason_qualifier_description = Column(Text)
+    leave_reason_qualifier_description = Column(Text, nullable=False)
 
     def __init__(self, leave_reason_qualifier_id, leave_reason_qualifier_description):
         self.leave_reason_qualifier_id = leave_reason_qualifier_id
         self.leave_reason_qualifier_description = leave_reason_qualifier_description
 
 
-class LkLeaveType(Base):
-    __tablename__ = "lk_leave_type"
-    leave_type_id = Column(Integer, primary_key=True, autoincrement=True)
-    leave_type_description = Column(Text)
-
-    def __init__(self, leave_type_id, leave_type_description):
-        self.leave_type_id = leave_type_id
-        self.leave_type_description = leave_type_description
-
-    @hybrid_property
-    def absence_to_claim_type(self) -> int:
-        _map = {
-            LeaveType.BONDING_LEAVE.leave_type_id: ClaimType.FAMILY_LEAVE.claim_type_id,
-            LeaveType.MEDICAL_LEAVE.leave_type_id: ClaimType.MEDICAL_LEAVE.claim_type_id,
-            LeaveType.ACCIDENT.leave_type_id: ClaimType.MEDICAL_LEAVE.claim_type_id,
-            LeaveType.MILITARY.leave_type_id: ClaimType.MILITARY_LEAVE.claim_type_id,
-        }
-        return _map[self.leave_type_id]
-
-
 class LkRelationshipToCaregiver(Base):
     __tablename__ = "lk_relationship_to_caregiver"
     relationship_to_caregiver_id = Column(Integer, primary_key=True, autoincrement=True)
-    relationship_to_caregiver_description = Column(Text)
+    relationship_to_caregiver_description = Column(Text, nullable=False)
 
     def __init__(self, relationship_to_caregiver_id, relationship_to_caregiver_description):
         self.relationship_to_caregiver_id = relationship_to_caregiver_id
@@ -105,7 +98,7 @@ class LkRelationshipToCaregiver(Base):
 class LkRelationshipQualifier(Base):
     __tablename__ = "lk_relationship_qualifier"
     relationship_qualifier_id = Column(Integer, primary_key=True, autoincrement=True)
-    relationship_qualifier_description = Column(Text)
+    relationship_qualifier_description = Column(Text, nullable=False)
 
     def __init__(self, relationship_qualifier_id, relationship_qualifier_description):
         self.relationship_qualifier_id = relationship_qualifier_id
@@ -115,7 +108,7 @@ class LkRelationshipQualifier(Base):
 class LkNotificationMethod(Base):
     __tablename__ = "lk_notification_method"
     notification_method_id = Column(Integer, primary_key=True, autoincrement=True)
-    notification_method_description = Column(Text)
+    notification_method_description = Column(Text, nullable=False)
 
     def __init__(self, notification_method_id, notification_method_description):
         self.notification_method_id = notification_method_id
@@ -125,7 +118,7 @@ class LkNotificationMethod(Base):
 class LkFrequencyOrDuration(Base):
     __tablename__ = "lk_frequency_or_duration"
     frequency_or_duration_id = Column(Integer, primary_key=True, autoincrement=True)
-    frequency_or_duration_description = Column(Text)
+    frequency_or_duration_description = Column(Text, nullable=False)
 
     def __init__(self, frequency_or_duration_id, frequency_or_duration_description):
         self.frequency_or_duration_id = frequency_or_duration_id
@@ -135,7 +128,7 @@ class LkFrequencyOrDuration(Base):
 class LkWorkPatternType(Base):
     __tablename__ = "lk_work_pattern_type"
     work_pattern_type_id = Column(Integer, primary_key=True, autoincrement=True)
-    work_pattern_type_description = Column(Text)
+    work_pattern_type_description = Column(Text, nullable=False)
 
     def __init__(self, work_pattern_type_id, work_pattern_type_description):
         self.work_pattern_type_id = work_pattern_type_id
@@ -145,7 +138,7 @@ class LkWorkPatternType(Base):
 class LkDayOfWeek(Base):
     __tablename__ = "lk_day_of_week"
     day_of_week_id = Column(Integer, primary_key=True, autoincrement=True)
-    day_of_week_description = Column(Text)
+    day_of_week_description = Column(Text, nullable=False)
 
     def __init__(self, day_of_week_id, day_of_week_description):
         self.day_of_week_id = day_of_week_id
@@ -155,7 +148,7 @@ class LkDayOfWeek(Base):
 class LkAmountFrequency(Base):
     __tablename__ = "lk_amount_frequency"
     amount_frequency_id = Column(Integer, primary_key=True, autoincrement=True)
-    amount_frequency_description = Column(Text)
+    amount_frequency_description = Column(Text, nullable=False)
 
     def __init__(self, amount_frequency_id, amount_frequency_description):
         self.amount_frequency_id = amount_frequency_id
@@ -165,7 +158,7 @@ class LkAmountFrequency(Base):
 class LkEmployerBenefitType(Base):
     __tablename__ = "lk_employer_benefit_type"
     employer_benefit_type_id = Column(Integer, primary_key=True, autoincrement=True)
-    employer_benefit_type_description = Column(Text)
+    employer_benefit_type_description = Column(Text, nullable=False)
 
     def __init__(self, employer_benefit_type_id, employer_benefit_type_description):
         self.employer_benefit_type_id = employer_benefit_type_id
@@ -175,7 +168,7 @@ class LkEmployerBenefitType(Base):
 class LkOtherIncomeType(Base):
     __tablename__ = "lk_other_income_type"
     other_income_type_id = Column(Integer, primary_key=True, autoincrement=True)
-    other_income_type_description = Column(Text)
+    other_income_type_description = Column(Text, nullable=False)
 
     def __init__(self, other_income_type_id, other_income_type_description):
         self.other_income_type_id = other_income_type_id
@@ -185,7 +178,7 @@ class LkOtherIncomeType(Base):
 class LkPreviousLeaveQualifyingReason(Base):
     __tablename__ = "lk_previous_leave_qualifying_reason"
     previous_leave_qualifying_reason_id = Column(Integer, primary_key=True, autoincrement=True)
-    previous_leave_qualifying_reason_description = Column(Text)
+    previous_leave_qualifying_reason_description = Column(Text, nullable=False)
 
     def __init__(
         self, previous_leave_qualifying_reason_id, previous_leave_qualifying_reason_description
@@ -206,23 +199,35 @@ class LkPhoneType(Base):
         self.phone_type_description = phone_type_description
 
 
-class Phone(Base):
+class Phone(Base, TimestampMixin):
     __tablename__ = "phone"
     application = relationship("Application", back_populates="phone")
     fineos_phone_id = Column(Integer)
-    phone_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+    phone_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     phone_number = Column(Text)  # Formatted in E.164
     phone_type_id = Column(Integer, ForeignKey("lk_phone_type.phone_type_id"))
     phone_type_instance = relationship(LkPhoneType)
 
 
-class PreviousLeave(Base):
+class ConcurrentLeave(Base, TimestampMixin):
+    __tablename__ = "concurrent_leave"
+    concurrent_leave_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+    application_id = Column(
+        PostgreSQLUUID, ForeignKey("application.application_id"), index=True, nullable=False
+    )
+    is_for_current_employer = Column(Boolean)
+    leave_start_date = Column(Date)
+    leave_end_date = Column(Date)
+    application = relationship("Application")
+
+
+class PreviousLeave(Base, TimestampMixin):
     # Caution: records of this model get recreated frequently as part of the PATCH /applications/:id endpoint.
     # Only the Application model should hold foreign keys to these records to avoid referenced objects being unexpectedly deleted.
     __tablename__ = "previous_leave"
-    previous_leave_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+    previous_leave_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     application_id = Column(
-        UUID(as_uuid=True), ForeignKey("application.application_id"), index=True, nullable=False
+        PostgreSQLUUID, ForeignKey("application.application_id"), index=True, nullable=False
     )
     leave_start_date = Column(Date)
     leave_end_date = Column(Date)
@@ -231,28 +236,41 @@ class PreviousLeave(Base):
         Integer,
         ForeignKey("lk_previous_leave_qualifying_reason.previous_leave_qualifying_reason_id"),
     )
+    worked_per_week_minutes = Column(Integer)
+    leave_minutes = Column(Integer)
     leave_reason = relationship(LkPreviousLeaveQualifyingReason)
-    application = relationship("Application", back_populates="previous_leaves")
+    type = Column(Text)
+
+    __mapper_args__ = {"polymorphic_on": type, "polymorphic_identity": "previous_leave"}
 
 
-class Application(Base):
+# The Application model will have references to previous_leaves for both other and same reasons
+# In order for sqlalchemy to distinguish between the 2, we are making PreviousLeave polymorphic
+# https://docs.sqlalchemy.org/en/14/orm/inheritance.html#single-table-inheritance
+class PreviousLeaveOtherReason(PreviousLeave):
+    application = relationship("Application", back_populates="previous_leaves_other_reason")
+    __mapper_args__ = {"polymorphic_identity": "other_reason"}
+
+
+class PreviousLeaveSameReason(PreviousLeave):
+    application = relationship("Application", back_populates="previous_leaves_same_reason")
+    __mapper_args__ = {"polymorphic_identity": "same_reason"}
+
+
+class Application(Base, TimestampMixin):
     __tablename__ = "application"
-    application_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("user.user_id"), nullable=False, index=True)
+    application_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+    user_id = Column(PostgreSQLUUID, ForeignKey("user.user_id"), nullable=False, index=True)
     tax_identifier_id = Column(
-        UUID(as_uuid=True), ForeignKey("tax_identifier.tax_identifier_id"), index=True
+        PostgreSQLUUID, ForeignKey("tax_identifier.tax_identifier_id"), index=True
     )
     nickname = Column(Text)
     requestor = Column(Integer)
-    claim_id = Column(UUID(as_uuid=True), ForeignKey("claim.claim_id"), nullable=True, unique=True)
-    employee_id = Column(UUID(as_uuid=True), ForeignKey("employee.employee_id"), index=True)
-    employer_id = Column(UUID(as_uuid=True), ForeignKey("employer.employer_id"), index=True)
+    claim_id = Column(PostgreSQLUUID, ForeignKey("claim.claim_id"), nullable=True, unique=True)
     has_mailing_address = Column(Boolean)
-    mailing_address_id = Column(UUID(as_uuid=True), ForeignKey("address.address_id"), nullable=True)
-    residential_address_id = Column(
-        UUID(as_uuid=True), ForeignKey("address.address_id"), nullable=True
-    )
-    phone_id = Column(UUID(as_uuid=True), ForeignKey("phone.phone_id"), nullable=True)
+    mailing_address_id = Column(PostgreSQLUUID, ForeignKey("address.address_id"), nullable=True)
+    residential_address_id = Column(PostgreSQLUUID, ForeignKey("address.address_id"), nullable=True)
+    phone_id = Column(PostgreSQLUUID, ForeignKey("phone.phone_id"), nullable=True)
     employer_fein = Column(Text)
     first_name = Column(Text)
     last_name = Column(Text)
@@ -264,6 +282,7 @@ class Application(Base):
     has_state_id = Column(Boolean)
     mass_id = Column(Text)
     occupation_id = Column(Integer, ForeignKey("lk_occupation.occupation_id"))
+    gender_id = Column(Integer, ForeignKey("lk_gender.gender_id"))
     hours_worked_per_week = Column(Numeric)
     relationship_to_caregiver_id = Column(
         Integer, ForeignKey("lk_relationship_to_caregiver.relationship_to_caregiver_id")
@@ -280,15 +299,14 @@ class Application(Base):
     employer_notification_method_id = Column(
         Integer, ForeignKey("lk_notification_method.notification_method_id")
     )
-    leave_type_id = Column(Integer, ForeignKey("lk_leave_type.leave_type_id"))
     leave_reason_id = Column(Integer, ForeignKey("lk_leave_reason.leave_reason_id"))
     leave_reason_qualifier_id = Column(
         Integer, ForeignKey("lk_leave_reason_qualifier.leave_reason_qualifier_id")
     )
     employment_status_id = Column(Integer, ForeignKey("lk_employment_status.employment_status_id"))
-    work_pattern_id = Column(UUID(as_uuid=True), ForeignKey("work_pattern.work_pattern_id"))
+    work_pattern_id = Column(PostgreSQLUUID, ForeignKey("work_pattern.work_pattern_id"))
     payment_preference_id = Column(
-        UUID(as_uuid=True), ForeignKey("application_payment_preference.payment_pref_id")
+        PostgreSQLUUID, ForeignKey("application_payment_preference.payment_pref_id")
     )
     start_time = Column(TIMESTAMP(timezone=True))
     updated_time = Column(TIMESTAMP(timezone=True))
@@ -296,20 +314,20 @@ class Application(Base):
     submitted_time = Column(TIMESTAMP(timezone=True))
     has_employer_benefits = Column(Boolean)
     has_other_incomes = Column(Boolean)
-    other_incomes_awaiting_approval = Column(Boolean)
     has_submitted_payment_preference = Column(Boolean)
-    has_previous_leaves = Column(Boolean)
     caring_leave_metadata_id = Column(
-        UUID(as_uuid=True), ForeignKey("caring_leave_metadata.caring_leave_metadata_id")
+        PostgreSQLUUID, ForeignKey("caring_leave_metadata.caring_leave_metadata_id")
     )
+    has_previous_leaves_same_reason = Column(Boolean)
+    has_previous_leaves_other_reason = Column(Boolean)
+    has_concurrent_leave = Column(Boolean)
+    is_withholding_tax = Column(Boolean, nullable=True)
 
     user = relationship(User)
     caring_leave_metadata = relationship("CaringLeaveMetadata", back_populates="application")
     claim = relationship(Claim, backref=backref("application", uselist=False))
-    employer = relationship(Employer)
-    employee = relationship(Employee)
     occupation = relationship(LkOccupation)
-    leave_type = relationship(LkLeaveType)
+    gender = relationship(LkGender)
     leave_reason = relationship(LkLeaveReason)
     leave_reason_qualifier = relationship(LkLeaveReasonQualifier)
     employment_status = relationship(LkEmploymentStatus)
@@ -329,22 +347,48 @@ class Application(Base):
     #
     # https://github.com/dropbox/sqlalchemy-stubs/issues/152
     continuous_leave_periods = relationship(
-        "ContinuousLeavePeriod", back_populates="application", uselist=True
+        "ContinuousLeavePeriod",
+        back_populates="application",
+        uselist=True,
+        cascade="all, delete-orphan",
     )
     intermittent_leave_periods = relationship(
-        "IntermittentLeavePeriod", back_populates="application", uselist=True
+        "IntermittentLeavePeriod",
+        back_populates="application",
+        uselist=True,
+        cascade="all, delete-orphan",
     )
     reduced_schedule_leave_periods = relationship(
-        "ReducedScheduleLeavePeriod", back_populates="application", uselist=True
+        "ReducedScheduleLeavePeriod",
+        back_populates="application",
+        uselist=True,
+        cascade="all, delete-orphan",
     )
     employer_benefits = relationship("EmployerBenefit", back_populates="application", uselist=True)
     other_incomes = relationship("OtherIncome", back_populates="application", uselist=True)
-    previous_leaves = relationship("PreviousLeave", back_populates="application", uselist=True)
+    previous_leaves_other_reason = relationship(
+        "PreviousLeaveOtherReason", back_populates="application", uselist=True,
+    )
+    previous_leaves_same_reason = relationship(
+        "PreviousLeaveSameReason", back_populates="application", uselist=True,
+    )
+    concurrent_leave = relationship("ConcurrentLeave", back_populates="application", uselist=False,)
+
+    @hybrid_property
+    def all_leave_periods(self) -> Optional[list]:
+        leave_periods = list(
+            chain(
+                self.continuous_leave_periods,
+                self.intermittent_leave_periods,
+                self.reduced_schedule_leave_periods,
+            )
+        )
+        return leave_periods
 
 
-class CaringLeaveMetadata(Base):
+class CaringLeaveMetadata(Base, TimestampMixin):
     __tablename__ = "caring_leave_metadata"
-    caring_leave_metadata_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+    caring_leave_metadata_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     family_member_first_name = Column(Text)
     family_member_last_name = Column(Text)
     family_member_middle_name = Column(Text)
@@ -357,9 +401,9 @@ class CaringLeaveMetadata(Base):
     application = relationship("Application", back_populates="caring_leave_metadata", uselist=False)
 
 
-class ApplicationPaymentPreference(Base):
+class ApplicationPaymentPreference(Base, TimestampMixin):
     __tablename__ = "application_payment_preference"
-    payment_pref_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+    payment_pref_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     payment_method_id = Column(Integer, ForeignKey("lk_payment_method.payment_method_id"))
     account_number = Column(Text)
     routing_number = Column(Text)
@@ -372,12 +416,10 @@ class ApplicationPaymentPreference(Base):
     bank_account_type = relationship(LkBankAccountType)
 
 
-class ContinuousLeavePeriod(Base):
+class ContinuousLeavePeriod(Base, TimestampMixin):
     __tablename__ = "continuous_leave_period"
-    leave_period_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
-    application_id = Column(
-        UUID(as_uuid=True), ForeignKey("application.application_id"), index=True
-    )
+    leave_period_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+    application_id = Column(PostgreSQLUUID, ForeignKey("application.application_id"), index=True)
     start_date = Column(Date)
     end_date = Column(Date)
     is_estimated = Column(Boolean, default=True, nullable=False)
@@ -393,12 +435,10 @@ class ContinuousLeavePeriod(Base):
     application = relationship(Application, back_populates="continuous_leave_periods")
 
 
-class IntermittentLeavePeriod(Base):
+class IntermittentLeavePeriod(Base, TimestampMixin):
     __tablename__ = "intermittent_leave_period"
-    leave_period_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
-    application_id = Column(
-        UUID(as_uuid=True), ForeignKey("application.application_id"), index=True
-    )
+    leave_period_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+    application_id = Column(PostgreSQLUUID, ForeignKey("application.application_id"), index=True)
     start_date = Column(Date)
     end_date = Column(Date)
     frequency = Column(Integer)
@@ -410,12 +450,10 @@ class IntermittentLeavePeriod(Base):
     application = relationship(Application, back_populates="intermittent_leave_periods")
 
 
-class ReducedScheduleLeavePeriod(Base):
+class ReducedScheduleLeavePeriod(Base, TimestampMixin):
     __tablename__ = "reduced_schedule_leave_period"
-    leave_period_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
-    application_id = Column(
-        UUID(as_uuid=True), ForeignKey("application.application_id"), index=True
-    )
+    leave_period_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+    application_id = Column(PostgreSQLUUID, ForeignKey("application.application_id"), index=True)
     start_date = Column(Date)
     end_date = Column(Date)
     is_estimated = Column(Boolean, default=True, nullable=False)
@@ -430,13 +468,13 @@ class ReducedScheduleLeavePeriod(Base):
     application = relationship(Application, back_populates="reduced_schedule_leave_periods")
 
 
-class EmployerBenefit(Base):
+class EmployerBenefit(Base, TimestampMixin):
     # Caution: records of this model get recreated frequently as part of the PATCH /applications/:id endpoint.
     # Only the Application model should hold foreign keys to these records to avoid referenced objects being unexpectedly deleted.
     __tablename__ = "employer_benefit"
-    employer_benefit_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+    employer_benefit_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     application_id = Column(
-        UUID(as_uuid=True), ForeignKey("application.application_id"), index=True, nullable=False
+        PostgreSQLUUID, ForeignKey("application.application_id"), index=True, nullable=False
     )
     benefit_start_date = Column(Date)
     benefit_end_date = Column(Date)
@@ -447,19 +485,20 @@ class EmployerBenefit(Base):
     benefit_amount_frequency_id = Column(
         Integer, ForeignKey("lk_amount_frequency.amount_frequency_id")
     )
+    is_full_salary_continuous = Column(Boolean)
 
     application = relationship(Application, back_populates="employer_benefits")
     benefit_type = relationship(LkEmployerBenefitType)
     benefit_amount_frequency = relationship(LkAmountFrequency)
 
 
-class OtherIncome(Base):
+class OtherIncome(Base, TimestampMixin):
     # Caution: records of this model get recreated frequently as part of the PATCH /applications/:id endpoint.
     # Only the Application model should hold foreign keys to these records to avoid referenced objects being unexpectedly deleted.
     __tablename__ = "other_income"
-    other_income_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+    other_income_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     application_id = Column(
-        UUID(as_uuid=True), ForeignKey("application.application_id"), index=True, nullable=False
+        PostgreSQLUUID, ForeignKey("application.application_id"), index=True, nullable=False
     )
     income_start_date = Column(Date)
     income_end_date = Column(Date)
@@ -474,9 +513,9 @@ class OtherIncome(Base):
     income_amount_frequency = relationship(LkAmountFrequency)
 
 
-class WorkPattern(Base):
+class WorkPattern(Base, TimestampMixin):
     __tablename__ = "work_pattern"
-    work_pattern_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+    work_pattern_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     work_pattern_type_id = Column(Integer, ForeignKey("lk_work_pattern_type.work_pattern_type_id"))
 
     applications = relationship("Application", back_populates="work_pattern", uselist=True)
@@ -489,10 +528,10 @@ class WorkPattern(Base):
     )
 
 
-class WorkPatternDay(Base):
+class WorkPatternDay(Base, TimestampMixin):
     __tablename__ = "work_pattern_day"
     work_pattern_id = Column(
-        UUID(as_uuid=True), ForeignKey("work_pattern.work_pattern_id"), primary_key=True
+        PostgreSQLUUID, ForeignKey("work_pattern.work_pattern_id"), primary_key=True
     )
     day_of_week_id = Column(Integer, ForeignKey("lk_day_of_week.day_of_week_id"), primary_key=True)
     minutes = Column(Integer)
@@ -555,16 +594,6 @@ class LeaveReasonQualifier(LookupTable):
     POSTNATAL_DISABILITY = LkLeaveReasonQualifier(8, "Postnatal Disability")
 
 
-class LeaveType(LookupTable):
-    model = LkLeaveType
-    column_names = ("leave_type_id", "leave_type_description")
-
-    BONDING_LEAVE = LkLeaveType(1, "Bonding Leave")
-    MEDICAL_LEAVE = LkLeaveType(2, "Medical Leave")
-    ACCIDENT = LkLeaveType(3, "Accident")
-    MILITARY = LkLeaveType(4, "Military")
-
-
 class RelationshipToCaregiver(LookupTable):
     model = LkRelationshipToCaregiver
     column_names = ("relationship_to_caregiver_id", "relationship_to_caregiver_description")
@@ -592,6 +621,9 @@ class RelationshipQualifier(LookupTable):
     CUSTODIAL_PARENT = LkRelationshipQualifier(4, "Custodial Parent")
     LEGAL_GAURDIAN = LkRelationshipQualifier(5, "Legal Guardian")
     STEP_PARENT = LkRelationshipQualifier(6, "Step Parent")
+    LEGALLY_MARRIED = LkRelationshipQualifier(7, "Legally Married")
+    UNDISCLOSED = LkRelationshipQualifier(8, "Undisclosed")
+    PARENT_IN_LAW = LkRelationshipQualifier(9, "Parent-In-Law")
 
 
 class NotificationMethod(LookupTable):
@@ -660,7 +692,7 @@ class OtherIncomeType(LookupTable):
     OTHER_EMPLOYER = LkOtherIncomeType(7, "Earnings from another employment/self-employment")
 
 
-class FINEOSWebIdExt(Base):
+class FINEOSWebIdExt(Base, TimestampMixin):
     __tablename__ = "link_fineos_web_id_ext"
     employee_tax_identifier = Column(Text, primary_key=True)
     employer_fein = Column(Text, primary_key=True)
@@ -677,16 +709,6 @@ class LkDocumentType(Base):
         self.document_type_description = document_type_description
 
 
-class LkContentType(Base):
-    __tablename__ = "lk_content_type"
-    content_type_id = Column(Integer, primary_key=True, autoincrement=True)
-    content_type_description = Column(Text, nullable=False)
-
-    def __init__(self, content_type_id, content_type_description):
-        self.content_type_id = content_type_id
-        self.content_type_description = content_type_description
-
-
 class DocumentType(LookupTable):
     model = LkDocumentType
     column_names = ("document_type_id", "document_type_description")
@@ -701,32 +723,25 @@ class DocumentType(LookupTable):
     APPROVAL_NOTICE = LkDocumentType(6, "Approval Notice")
     REQUEST_FOR_MORE_INFORMATION = LkDocumentType(7, "Request for More Information")
     DENIAL_NOTICE = LkDocumentType(8, "Denial Notice")
+    OWN_SERIOUS_HEALTH_CONDITION_FORM = LkDocumentType(9, "Own serious health condition form")
+    PREGNANCY_MATERNITY_FORM = LkDocumentType(10, "Pregnancy/Maternity form")
+    CHILD_BONDING_EVIDENCE_FORM = LkDocumentType(11, "Child bonding evidence form")
+    CARE_FOR_A_FAMILY_MEMBER_FORM = LkDocumentType(12, "Care for a family member form")
+    MILITARY_EXIGENCY_FORM = LkDocumentType(13, "Military exigency form")
+    WITHDRAWAL_NOTICE = LkDocumentType(14, "Pending Application Withdrawn")
+    APPEAL_ACKNOWLEDGMENT = LkDocumentType(15, "Appeal Acknowledgment")
 
 
-class ContentType(LookupTable):
-    model = LkContentType
-    column_names = ("content_type_id", "content_type_description")
-
-    PDF = LkContentType(1, "application/pdf")
-    JPEG = LkContentType(2, "image/jpeg")
-    PNG = LkContentType(3, "image/png")
-    TIFF = LkContentType(4, "image/tiff")
-    HEIC = LkContentType(5, "image/heic")
-
-
-class Document(Base):
+class Document(Base, TimestampMixin):
     __tablename__ = "document"
-    document_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("user.user_id"), nullable=False, index=True)
+    document_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+    user_id = Column(PostgreSQLUUID, ForeignKey("user.user_id"), nullable=False, index=True)
     application_id = Column(
-        UUID(as_uuid=True), ForeignKey("application.application_id"), nullable=False, index=True
+        PostgreSQLUUID, ForeignKey("application.application_id"), nullable=False, index=True
     )
-    created_at = Column(TIMESTAMP(timezone=True), nullable=False)
-    updated_at = Column(TIMESTAMP(timezone=True), nullable=False)
     document_type_id = Column(
         Integer, ForeignKey("lk_document_type.document_type_id"), nullable=False
     )
-    content_type_id = Column(Integer, ForeignKey("lk_content_type.content_type_id"), nullable=False)
     size_bytes = Column(Integer, nullable=False)
     fineos_id = Column(Text, nullable=True)
     is_stored_in_s3 = Column(Boolean, nullable=False)
@@ -734,7 +749,6 @@ class Document(Base):
     description = Column(Text, nullable=False)
 
     document_type_instance = relationship(LkDocumentType)
-    content_type_instance = relationship(LkContentType)
 
 
 class RMVCheckApiErrorCode(Enum):
@@ -744,17 +758,9 @@ class RMVCheckApiErrorCode(Enum):
     UNKNOWN_RMV_ISSUE = "UNKNOWN_RMV_ISSUE"
 
 
-class RMVCheck(Base):
+class RMVCheck(Base, TimestampMixin):
     __tablename__ = "rmv_check"
-    rmv_check_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
-
-    created_at = Column(TIMESTAMP(timezone=True), nullable=False, default=utc_timestamp_gen)
-    updated_at = Column(
-        TIMESTAMP(timezone=True),
-        nullable=False,
-        default=utc_timestamp_gen,
-        onupdate=utc_timestamp_gen,
-    )
+    rmv_check_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
 
     request_to_rmv_started_at = Column(TIMESTAMP(timezone=True), nullable=True)
     request_to_rmv_completed_at = Column(TIMESTAMP(timezone=True), nullable=True)
@@ -787,17 +793,19 @@ class RMVCheck(Base):
     rmv_customer_key = Column(Text, nullable=True)
 
 
-class StateMetric(Base):
+class StateMetric(Base, TimestampMixin):
     __tablename__ = "state_metric"
     effective_date = Column(Date, primary_key=True, nullable=False)
     unemployment_minimum_earnings = Column(Numeric, nullable=False)
     average_weekly_wage = Column(Numeric, nullable=False)
+    maximum_weekly_benefit_amount = Column(Numeric, nullable=False)
 
     def __init__(
         self,
         effective_date: datetime.date,
         unemployment_minimum_earnings: str,
         average_weekly_wage: str,
+        maximum_weekly_benefit_amount: Optional[str] = None,
     ):
         """Constructor that takes metric values as strings.
 
@@ -808,25 +816,112 @@ class StateMetric(Base):
         self.unemployment_minimum_earnings = Decimal(unemployment_minimum_earnings)
         self.average_weekly_wage = Decimal(average_weekly_wage)
 
+        # When the maximum weekly benefit is not manually set, it will be calculated based on
+        # the average weekly wage, as per the regulation:
+        # https://malegislature.gov/Laws/GeneralLaws/PartI/TitleXXII/Chapter175M/Section3
+        if maximum_weekly_benefit_amount is None:
+            self.maximum_weekly_benefit_amount = round_nearest_hundredth(
+                self.average_weekly_wage * Decimal(".64")
+            )
+        else:
+            self.maximum_weekly_benefit_amount = Decimal(maximum_weekly_benefit_amount)
+
     def __repr__(self):
-        return "StateMetric(%s, %s, %s)" % (
+        return "StateMetric(%s, %s, %s, %s)" % (
             self.effective_date,
             self.unemployment_minimum_earnings,
             self.average_weekly_wage,
+            self.maximum_weekly_benefit_amount,
+        )
+
+
+class UnemploymentMetric(Base, TimestampMixin):
+    __tablename__ = "unemployment_metric"
+    effective_date = Column(Date, primary_key=True, nullable=False)
+    unemployment_minimum_earnings = Column(Numeric, nullable=False)
+
+    def __init__(
+        self, effective_date: datetime.date, unemployment_minimum_earnings: str,
+    ):
+        """Constructor that takes metric values as strings.
+
+        This ensures that the decimals are precise. For example compare Decimal(1431.66) to
+        Decimal("1431.66").
+        """
+        self.effective_date = effective_date
+        self.unemployment_minimum_earnings = Decimal(unemployment_minimum_earnings)
+
+    def __repr__(self):
+        return "UnemploymentMetric(%s, %s)" % (
+            self.effective_date,
+            self.unemployment_minimum_earnings,
+        )
+
+
+class BenefitsMetrics(Base, TimestampMixin):
+    __tablename__ = "benefits_metrics"
+    effective_date = Column(Date, primary_key=True, nullable=False)
+    average_weekly_wage = Column(Numeric, nullable=False)
+    maximum_weekly_benefit_amount = Column(Numeric, nullable=False)
+
+    def __init__(
+        self,
+        effective_date: datetime.date,
+        average_weekly_wage: str,
+        maximum_weekly_benefit_amount: Optional[str] = None,
+    ):
+        """Constructor that takes metric values as strings.
+
+        This ensures that the decimals are precise. For example compare Decimal(1431.66) to
+        Decimal("1431.66").
+        """
+        self.effective_date = effective_date
+        self.average_weekly_wage = Decimal(average_weekly_wage)
+
+        # When the maximum weekly benefit is not manually set, it will be calculated based on
+        # the average weekly wage, as per the regulation:
+        # https://malegislature.gov/Laws/GeneralLaws/PartI/TitleXXII/Chapter175M/Section3
+        if maximum_weekly_benefit_amount is None:
+            self.maximum_weekly_benefit_amount = round_nearest_hundredth(
+                self.average_weekly_wage * Decimal(".64")
+            )
+        else:
+            self.maximum_weekly_benefit_amount = Decimal(maximum_weekly_benefit_amount)
+
+    def __repr__(self):
+        return "BenefitsMetrics(%s, %s, %s)" % (
+            self.effective_date,
+            self.average_weekly_wage,
+            self.maximum_weekly_benefit_amount,
         )
 
 
 def sync_state_metrics(db_session):
+    # For the first year of the program, the maximum weekly benefit is $850, which needs to
+    # be set directly. Beyond that, we should only directly set the unempleoyment minimum
+    # earnings and the average weekly wage. The maximum weekly benefit amount will then be
+    # calculated based on the average weekly wage.
+
     state_metrics = [
-        StateMetric(
+        BenefitsMetrics(
             effective_date=datetime.date(2020, 10, 1),
-            unemployment_minimum_earnings="5100.00",
             average_weekly_wage="1431.66",
+            maximum_weekly_benefit_amount="850.00",
         ),
-        StateMetric(
+        UnemploymentMetric(
+            effective_date=datetime.date(2020, 10, 1), unemployment_minimum_earnings="5100.00",
+        ),
+        BenefitsMetrics(
             effective_date=datetime.date(2021, 1, 1),
-            unemployment_minimum_earnings="5400.00",
             average_weekly_wage="1487.78",
+            maximum_weekly_benefit_amount="850.00",
+        ),
+        UnemploymentMetric(
+            effective_date=datetime.date(2021, 1, 1), unemployment_minimum_earnings="5400.00",
+        ),
+        BenefitsMetrics(effective_date=datetime.date(2022, 1, 2), average_weekly_wage="1694.24",),
+        UnemploymentMetric(
+            effective_date=datetime.date(2022, 1, 2), unemployment_minimum_earnings="5700.00",
         ),
     ]
 
@@ -838,12 +933,10 @@ def sync_state_metrics(db_session):
     db_session.commit()
 
 
-class Notification(Base):
+class Notification(Base, TimestampMixin):
     __tablename__ = "notification"
-    notification_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
-    request_json = Column(JSON, nullable=False)
-    created_at = Column(TIMESTAMP(timezone=True), nullable=False)
-    updated_at = Column(TIMESTAMP(timezone=True), nullable=False)
+    notification_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+    request_json = Column(JSONB, nullable=False)
     fineos_absence_id = Column(Text, index=True)
 
 
@@ -864,19 +957,26 @@ class PreviousLeaveQualifyingReason(LookupTable):
         "previous_leave_qualifying_reason_description",
     )
 
-    PREGNANCY_MATERNITY = LkPreviousLeaveQualifyingReason(1, "Pregnancy / Maternity")
-    SERIOUS_HEALTH_CONDITION = LkPreviousLeaveQualifyingReason(2, "Serious health condition")
-    CARE_FOR_A_FAMILY_MEMBER = LkPreviousLeaveQualifyingReason(3, "Care for a family member")
-    CHILD_BONDING = LkPreviousLeaveQualifyingReason(4, "Child bonding")
-    MILITARY_CAREGIVER = LkPreviousLeaveQualifyingReason(5, "Military caregiver")
-    MILITARY_EXIGENCY_FAMILY = LkPreviousLeaveQualifyingReason(6, "Military exigency family")
+    PREGNANCY_MATERNITY = LkPreviousLeaveQualifyingReason(1, "Pregnancy")
+    AN_ILLNESS_OR_INJURY = LkPreviousLeaveQualifyingReason(2, "An illness or injury")
+    CARE_FOR_A_FAMILY_MEMBER = LkPreviousLeaveQualifyingReason(
+        3, "Caring for a family member with a serious health condition"
+    )
+    CHILD_BONDING = LkPreviousLeaveQualifyingReason(
+        4, "Bonding with my child after birth or placement"
+    )
+    MILITARY_CAREGIVER = LkPreviousLeaveQualifyingReason(
+        5, "Caring for a family member who serves in the armed forces"
+    )
+    MILITARY_EXIGENCY_FAMILY = LkPreviousLeaveQualifyingReason(
+        6, "Managing family affairs while a family member is on active duty in the armed forces"
+    )
 
 
 def sync_lookup_tables(db_session):
     """Synchronize lookup tables to the database."""
     LeaveReason.sync_to_database(db_session)
     LeaveReasonQualifier.sync_to_database(db_session)
-    LeaveType.sync_to_database(db_session)
     RelationshipToCaregiver.sync_to_database(db_session)
     RelationshipQualifier.sync_to_database(db_session)
     NotificationMethod.sync_to_database(db_session)
@@ -886,7 +986,6 @@ def sync_lookup_tables(db_session):
     EmployerBenefitType.sync_to_database(db_session)
     OtherIncomeType.sync_to_database(db_session)
     DocumentType.sync_to_database(db_session)
-    ContentType.sync_to_database(db_session)
     DayOfWeek.sync_to_database(db_session)
     WorkPatternType.sync_to_database(db_session)
     PhoneType.sync_to_database(db_session)

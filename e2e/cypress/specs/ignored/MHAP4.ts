@@ -1,6 +1,7 @@
-import { portal, fineos } from "../../actions";
-import { getLeaveAdminCredentials, getFineosBaseUrl } from "../../config";
+import { portal, fineos, fineosPages } from "../../actions";
 import { Submission } from "../../../src/types";
+import { assertValidClaim } from "../../../src/util/typeUtils";
+import { getDocumentReviewTaskName } from "../../../src/util/documents";
 
 describe("Submitting a Medical pregnancy claim and adding bonding leave in Fineos", () => {
   it("Create a financially eligible claim (MHAP4) in which an employer will respond", () => {
@@ -14,36 +15,45 @@ describe("Submitting a Medical pregnancy claim and adding bonding leave in Fineo
           timestamp_from: Date.now(),
         });
         // Complete Employer Response
-        if (typeof claim.claim.employer_fein !== "string") {
-          throw new Error("Claim must include employer FEIN");
-        }
-        if (typeof response.fineos_absence_id !== "string") {
-          throw new Error("Response must include FINEOS absence ID");
-        }
+        assertValidClaim(claim.claim);
 
-        portal.login(getLeaveAdminCredentials(claim.claim.employer_fein));
-        portal.respondToLeaveAdminRequest(
-          response.fineos_absence_id,
-          false,
-          true,
-          true
-        );
+        portal.loginLeaveAdmin(claim.claim.employer_fein);
+        portal.visitActionRequiredERFormPage(response.fineos_absence_id);
+        portal.respondToLeaveAdminRequest(false, true, true);
       });
     });
     cy.wait(1000);
   });
 
   // Check for ER and approval claim in Fineos
-  it(
-    "In Fineos, complete an Adjudication Approval along w/adding Bonding Leave",
-    { baseUrl: getFineosBaseUrl() },
-    () => {
-      fineos.before();
-      cy.unstash<Submission>("submission").then((submission) => {
+  it("In Fineos, complete an Adjudication Approval along w/adding Bonding Leave", () => {
+    fineos.before();
+    cy.unstash<Submission>("submission").then(({ fineos_absence_id }) => {
+      cy.unstash<DehydratedClaim>("claim").then((claim) => {
         cy.visit("/");
-        fineos.claimAdjudicationFlow(submission.fineos_absence_id, true);
+        fineosPages.ClaimPage.visit(fineos_absence_id)
+          .tasks((tasks) => {
+            claim.documents.forEach((doc) =>
+              tasks.assertTaskExists(
+                getDocumentReviewTaskName(doc.document_type)
+              )
+            );
+          })
+          .shouldHaveStatus("Applicability", "Applicable")
+          .shouldHaveStatus("Eligibility", "Met")
+          .adjudicate((adjudication) => {
+            adjudication
+              .evidence((evidence) =>
+                claim.documents.forEach((doc) =>
+                  evidence.receive(doc.document_type)
+                )
+              )
+              .certificationPeriods((certPreiods) => certPreiods.prefill())
+              .acceptLeavePlan();
+          })
+          .approve();
         fineos.addBondingLeaveFlow(new Date());
       });
-    }
-  );
+    });
+  });
 });

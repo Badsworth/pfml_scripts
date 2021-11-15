@@ -1,58 +1,27 @@
-import Address from "../../src/models/Address";
 import BaseBenefitsApplication from "../../src/models/BaseBenefitsApplication";
-import { BaseMockClaimBuilder } from "../test-utils";
+import LeaveReason from "../../src/models/LeaveReason";
+import { merge } from "lodash";
+
+class TestClaim extends BaseBenefitsApplication {
+  constructor(attrs = {}) {
+    super();
+
+    // Defaults:
+    this.first_name = "Michael";
+    this.middle_name = null;
+    this.last_name = "Scott";
+    this.leave_details = {
+      continuous_leave_periods: [],
+      intermittent_leave_periods: [],
+      reduced_schedule_leave_periods: [],
+      reason: null,
+    };
+
+    merge(this, attrs);
+  }
+}
 
 describe("BaseBenefitsApplication", () => {
-  class TestClaim extends BaseBenefitsApplication {}
-  class MockTestClaimBuilder extends BaseMockClaimBuilder {
-    constructor(middleName) {
-      super();
-      this.claimAttrs = {
-        first_name: "Michael",
-        middle_name: middleName || "",
-        last_name: "Scott",
-        date_of_birth: "1980-07-17",
-        tax_identifier: "1234",
-      };
-    }
-
-    completed() {
-      this.continuous();
-      this.reducedSchedule();
-      return this;
-    }
-
-    create() {
-      return new TestClaim(this.claimAttrs);
-    }
-  }
-
-  const expectedLeaveDetails = {
-    continuous_leave_periods: null,
-    employer_notification_date: null,
-    intermittent_leave_periods: null,
-    reason: null,
-    reduced_schedule_leave_periods: null,
-  };
-
-  describe("#constructor()", () => {
-    it("instantiates a model with default attributes", () => {
-      const testClaim = new TestClaim();
-
-      expect(testClaim.fineos_absence_id).toEqual(null);
-      expect(testClaim.leave_details).toEqual(expectedLeaveDetails);
-      expect(testClaim.residential_address).toEqual(new Address());
-    });
-
-    it("has access to getter properties", () => {
-      const testClaim = new TestClaim();
-
-      expect(testClaim.isContinuous).toBe(false);
-      expect(testClaim.isIntermittent).toBe(false);
-      expect(testClaim.isReducedSchedule).toBe(false);
-    });
-  });
-
   let claim,
     claimWithContinuousLeave,
     claimWithIntermittentLeave,
@@ -60,20 +29,38 @@ describe("BaseBenefitsApplication", () => {
     claimWithReducedLeave;
 
   beforeEach(() => {
-    claim = new MockTestClaimBuilder().completed().create();
-    claimWithContinuousLeave = new MockTestClaimBuilder()
-      .continuous({ start_date: "2021-03-01", end_date: "2021-09-01" })
-      .create();
-    claimWithIntermittentLeave = new MockTestClaimBuilder()
-      .intermittent({ start_date: "2021-02-01", end_date: "2021-08-01" })
-      .create();
-    claimWithMultipleLeavePeriods = new MockTestClaimBuilder()
-      .continuous({ start_date: "2021-03-01", end_date: "2021-09-01" })
-      .reducedSchedule({ start_date: "2021-01-01", end_date: "2021-08-01" })
-      .create();
-    claimWithReducedLeave = new MockTestClaimBuilder()
-      .reducedSchedule({ start_date: "2021-01-01", end_date: "2021-08-01" })
-      .create();
+    claim = new TestClaim();
+    claimWithContinuousLeave = new TestClaim({
+      leave_details: {
+        continuous_leave_periods: [
+          { start_date: "2021-03-01", end_date: "2021-09-01" },
+        ],
+      },
+    });
+    claimWithIntermittentLeave = new TestClaim({
+      leave_details: {
+        intermittent_leave_periods: [
+          { start_date: "2021-02-01", end_date: "2021-08-01" },
+        ],
+      },
+    });
+    claimWithMultipleLeavePeriods = new TestClaim({
+      leave_details: {
+        continuous_leave_periods: [
+          { start_date: "2021-03-01", end_date: "2021-09-01" },
+        ],
+        reduced_schedule_leave_periods: [
+          { start_date: "2021-01-01", end_date: "2021-08-01" },
+        ],
+      },
+    });
+    claimWithReducedLeave = new TestClaim({
+      leave_details: {
+        reduced_schedule_leave_periods: [
+          { start_date: "2021-01-01", end_date: "2021-08-01" },
+        ],
+      },
+    });
   });
 
   describe("#fullName", () => {
@@ -82,21 +69,25 @@ describe("BaseBenefitsApplication", () => {
     });
 
     it("returns formatted name with middle name", () => {
-      const claimWithMiddleName = new MockTestClaimBuilder("Gary")
-        .completed()
-        .create();
+      const claimWithMiddleName = new TestClaim({
+        first_name: "Michael",
+        middle_name: "Gary",
+        last_name: "Scott",
+      });
       expect(claimWithMiddleName.fullName).toEqual("Michael Gary Scott");
     });
   });
 
   it("#isBondingLeave returns true when the Claim reason is bonding", () => {
-    const emptyClaim = new BaseBenefitsApplication();
-    const claimWithReason = new MockTestClaimBuilder()
-      .bondingLeaveReason()
-      .create();
+    const bondingLeaveClaim = new TestClaim({
+      leave_details: { reason: LeaveReason.bonding },
+    });
+    const medicalLeaveClaim = new TestClaim({
+      leave_details: { reason: LeaveReason.medical },
+    });
 
-    expect(emptyClaim.isBondingLeave).toBe(false);
-    expect(claimWithReason.isBondingLeave).toBe(true);
+    expect(medicalLeaveClaim.isBondingLeave).toBe(false);
+    expect(bondingLeaveClaim.isBondingLeave).toBe(true);
   });
 
   describe("#isContinuous", () => {
@@ -111,7 +102,7 @@ describe("BaseBenefitsApplication", () => {
   describe("#continuousLeaveDateRange", () => {
     it("returns the expected date range", () => {
       expect(claimWithContinuousLeave.continuousLeaveDateRange()).toEqual(
-        "3/1/2021 – 9/1/2021"
+        "3/1/2021 to 9/1/2021"
       );
     });
   });
@@ -128,7 +119,7 @@ describe("BaseBenefitsApplication", () => {
   describe("#reducedLeaveDateRange", () => {
     it("returns the expected date range", () => {
       expect(claimWithReducedLeave.reducedLeaveDateRange()).toBe(
-        "1/1/2021 – 8/1/2021"
+        "1/1/2021 to 8/1/2021"
       );
     });
   });
@@ -145,7 +136,7 @@ describe("BaseBenefitsApplication", () => {
   describe("#intermittentLeaveDateRange", () => {
     it("returns the expected date range", () => {
       expect(claimWithIntermittentLeave.intermittentLeaveDateRange()).toEqual(
-        "2/1/2021 – 8/1/2021"
+        "2/1/2021 to 8/1/2021"
       );
     });
   });

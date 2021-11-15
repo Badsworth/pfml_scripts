@@ -12,6 +12,11 @@
 #   Once the changes are merged, you must run the changes
 #   manually with your elevated role.
 #
+# ** NOTE **
+# The data and resources in this file will ONLY be used for "ci_run_deploys" permissions
+# after July 1st, 2021. All other roles are transitioning to Smartronix-managed SSO
+# and will no longer be managed through Nava-owned Terraform.
+#
 data "aws_iam_policy_document" "developers_and_ci_deploy_access_policy" {
   # TODO: This is probably more wide-ranging than it needs to be,
   #       and can be more granular in scope for certain services.
@@ -105,6 +110,9 @@ data "aws_iam_policy_document" "developers_and_ci_deploy_access_policy" {
       "firehose:*",
       "kinesis:*",
 
+      # Allow Infra Admins to view resources associated with WAF ACL
+      "appsync:ListGraphqlApis",
+
       # Allow API team to deploy Step Functions, such as the DOR Import.
       "states:*",
 
@@ -148,7 +156,7 @@ data "aws_iam_policy_document" "developers_and_ci_iam_policy" {
       "arn:aws:iam::498823821309:role/lambda_s3_access",
       "arn:aws:iam::498823821309:role/idaptive-Admin",
       "arn:aws:iam::498823821309:role/AWS_Events_Invoke_Event_Bus_*",
-      "${aws_iam_role.ci_run_deploys.arn}"
+      aws_iam_role.ci_run_deploys.arn
     ]
   }
 }

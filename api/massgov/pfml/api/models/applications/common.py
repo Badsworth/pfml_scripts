@@ -10,8 +10,16 @@ from pydantic import UUID4, root_validator
 import massgov.pfml.db.models.applications as db_application_models
 import massgov.pfml.db.models.employees as db_employee_models
 import massgov.pfml.util.pydantic.mask as mask
-from massgov.pfml.api.models.common import LookupEnum
-from massgov.pfml.api.validation.exceptions import ValidationErrorDetail, ValidationException
+from massgov.pfml.api.models.common import (
+    AmountFrequency,
+    LookupEnum,
+    PreviousLeaveQualifyingReason,
+)
+from massgov.pfml.api.validation.exceptions import (
+    IssueType,
+    ValidationErrorDetail,
+    ValidationException,
+)
 from massgov.pfml.util.pydantic import PydanticBaseModel
 from massgov.pfml.util.pydantic.types import (
     FinancialRoutingNumber,
@@ -29,19 +37,19 @@ class Occupation(str, LookupEnum):
     engineer = "Engineer"
     health_care = "Health Care"
 
-    @classmethod
-    def get_lookup_model(cls):
-        return db_employee_models.LkOccupation
+
+class EligibilityEmploymentStatus(str):
+    employed = "Employed"
+    unemployed = "Unemployed"
+    self_employed = "Self-Employed"
+    unknown = "Unknown"
+    retired = "Retired"
 
 
 class EmploymentStatus(str, LookupEnum):
     employed = "Employed"
     unemployed = "Unemployed"
     self_employed = "Self-Employed"
-
-    @classmethod
-    def get_lookup_model(cls):
-        return db_application_models.LkEmploymentStatus
 
 
 class LeaveReason(str, LookupEnum):
@@ -51,8 +59,19 @@ class LeaveReason(str, LookupEnum):
     caring_leave = "Care for a Family Member"
 
     @classmethod
-    def get_lookup_model(cls):
-        return db_application_models.LkLeaveReason
+    def to_previous_leave_qualifying_reason(
+        cls, leave_reason: "LeaveReason"
+    ) -> PreviousLeaveQualifyingReason:
+        if leave_reason == LeaveReason.pregnancy:
+            return PreviousLeaveQualifyingReason.PREGNANCY_MATERNITY
+        elif leave_reason == LeaveReason.child_bonding:
+            return PreviousLeaveQualifyingReason.CHILD_BONDING
+        elif leave_reason == LeaveReason.serious_health_condition_employee:
+            return PreviousLeaveQualifyingReason.AN_ILLNESS_OR_INJURY
+        elif leave_reason == LeaveReason.caring_leave:
+            return PreviousLeaveQualifyingReason.CARE_FOR_A_FAMILY_MEMBER
+        else:
+            raise ValueError("unexpected value reason mapping -- was a new value added recently?")
 
 
 class LeaveReasonQualifier(str, LookupEnum):
@@ -60,10 +79,6 @@ class LeaveReasonQualifier(str, LookupEnum):
     adoption = "Adoption"
     foster_care = "Foster Care"
     serious_health_condition = "Serious Health Condition"
-
-    @classmethod
-    def get_lookup_model(cls):
-        return db_application_models.LkLeaveReasonQualifier
 
 
 class RelationshipToCaregiver(str, LookupEnum):
@@ -79,10 +94,6 @@ class RelationshipToCaregiver(str, LookupEnum):
     other = "Other"
     employee = "Employee"
 
-    @classmethod
-    def get_lookup_model(cls):
-        return db_application_models.LkRelationshipToCaregiver
-
 
 class RelationshipQualifier(str, LookupEnum):
     adoptive = "Adoptive"
@@ -92,20 +103,12 @@ class RelationshipQualifier(str, LookupEnum):
     legal_guardian = "Legal Guardian"
     step_parent = "Step Parent"
 
-    @classmethod
-    def get_lookup_model(cls):
-        return db_application_models.LkRelationshipQualifier
 
-
-class EmployerNotificationMethod(str, LookupEnum):
+class NotificationMethod(str, LookupEnum):
     in_writing = "In Writing"
     in_person = "In Person"
     by_telephone = "By Telephone"
     other = "Other"
-
-    @classmethod
-    def get_lookup_model(cls):
-        return db_application_models.LkNotificationMethod
 
 
 class ReducedScheduleLeavePeriods(PydanticBaseModel):
@@ -207,7 +210,7 @@ class BaseApplicationLeaveDetails(PydanticBaseModel):
     pregnant_or_recent_birth: Optional[bool]
     employer_notified: Optional[bool]
     employer_notification_date: Optional[date]
-    employer_notification_method: Optional[EmployerNotificationMethod]
+    employer_notification_method: Optional[NotificationMethod]
     has_future_child_date: Optional[bool]
 
 
@@ -262,28 +265,16 @@ class PaymentMethod(str, LookupEnum):
     check = "Check"
     debit = "Debit"
 
-    @classmethod
-    def get_lookup_model(cls):
-        return db_employee_models.LkPaymentMethod
-
 
 class BankAccountType(str, LookupEnum):
     savings = "Savings"
     checking = "Checking"
-
-    @classmethod
-    def get_lookup_model(cls):
-        return db_employee_models.LkBankAccountType
 
 
 class WorkPatternType(str, LookupEnum):
     fixed = "Fixed"
     rotating = "Rotating"
     variable = "Variable"
-
-    @classmethod
-    def get_lookup_model(cls):
-        return db_application_models.LkWorkPatternType
 
 
 class DayOfWeek(str, LookupEnum):
@@ -294,10 +285,6 @@ class DayOfWeek(str, LookupEnum):
     thursday = "Thursday"
     friday = "Friday"
     saturday = "Saturday"
-
-    @classmethod
-    def get_lookup_model(cls):
-        return db_application_models.LkDayOfWeek
 
 
 class BasePaymentPreference(PydanticBaseModel):
@@ -325,29 +312,6 @@ class WorkPattern(PydanticBaseModel):
     work_pattern_days: Optional[List[WorkPatternDay]]
 
 
-class AmountFrequency(str, LookupEnum):
-    per_day = "Per Day"
-    per_week = "Per Week"
-    per_month = "Per Month"
-    all_at_once = "In Total"
-
-    @classmethod
-    def get_lookup_model(cls):
-        return db_application_models.LkAmountFrequency
-
-
-class EmployerBenefitType(str, LookupEnum):
-    accrued_paid_leave = "Accrued paid leave"
-    short_term_disability = "Short-term disability insurance"
-    permanent_disability_insurance = "Permanent disability insurance"
-    family_or_medical_leave_insurance = "Family or medical leave insurance"
-    unknown = "Unknown"
-
-    @classmethod
-    def get_lookup_model(cls):
-        return db_application_models.LkEmployerBenefitType
-
-
 class OtherIncomeType(str, LookupEnum):
     workers_comp = "Workers Compensation"
     unemployment = "Unemployment Insurance"
@@ -356,19 +320,6 @@ class OtherIncomeType(str, LookupEnum):
     jones_act = "Jones Act benefits"
     railroad_retirement = "Railroad Retirement benefits"
     other_employer = "Earnings from another employment/self-employment"
-
-    @classmethod
-    def get_lookup_model(cls):
-        return db_application_models.LkOtherIncomeType
-
-
-class EmployerBenefit(PydanticBaseModel):
-    employer_benefit_id: Optional[UUID4]
-    benefit_type: Optional[EmployerBenefitType]
-    benefit_start_date: Optional[date]
-    benefit_end_date: Optional[date]
-    benefit_amount_dollars: Optional[Decimal]
-    benefit_amount_frequency: Optional[AmountFrequency]
 
 
 class OtherIncome(PydanticBaseModel):
@@ -392,10 +343,16 @@ class DocumentType(str, LookupEnum):
     approval_notice = "Approval Notice"
     request_for_more_information = "Request for More Information"
     denial_notice = "Denial Notice"
-
-    @classmethod
-    def get_lookup_model(cls):
-        return db_application_models.LkDocumentType
+    certification_form = (
+        "Certification Form"  # only used when Portal uploads a certification document
+    )
+    own_serious_health_condition_form = "Own serious health condition form"
+    pregnancy_maternity_form = "Pregnancy/Maternity form"
+    child_bonding_evidence_form = "Child bonding evidence form"
+    care_for_a_family_member_form = "Care for a family member form"
+    military_exigency_form = "Military exigency form"
+    withdrawal_notice = "Pending Application Withdrawn"
+    appeal_acknowledgment = "Appeal Acknowledgment"
 
 
 class ContentType(str, LookupEnum):
@@ -405,9 +362,14 @@ class ContentType(str, LookupEnum):
     webp = "image/tiff"
     heic = "image/heic"
 
-    @classmethod
-    def get_lookup_model(cls):
-        return db_application_models.LkContentType
+
+# Gender I/O Types
+class Gender(str, LookupEnum):
+    woman = "Woman"
+    man = "Man"
+    non_binary = "Non-binary"
+    not_listed = "Gender not listed"
+    no_answer = "Prefer not to answer"
 
 
 # Phone I/O Types
@@ -417,10 +379,6 @@ class PhoneType(str, LookupEnum):
     Cell = "Cell"
     Fax = "Fax"
     Phone = "Phone"
-
-    @classmethod
-    def get_lookup_model(cls):
-        return db_application_models.LkPhoneType
 
 
 class Phone(PydanticBaseModel):
@@ -451,7 +409,7 @@ class Phone(PydanticBaseModel):
             error_list.append(
                 ValidationErrorDetail(
                     message="Phone number must be a valid number",
-                    type="invalid_phone_number",
+                    type=IssueType.invalid_phone_number,
                     rule="phone_number_must_be_valid_number",
                     field="phone.phone_number",
                 )
@@ -461,7 +419,7 @@ class Phone(PydanticBaseModel):
             error_list.append(
                 ValidationErrorDetail(
                     message="Phone number must be a valid number",
-                    type="invalid_phone_number",
+                    type=IssueType.invalid_phone_number,
                     rule="phone_number_must_be_valid_number",
                     field="phone.phone_number",
                 )

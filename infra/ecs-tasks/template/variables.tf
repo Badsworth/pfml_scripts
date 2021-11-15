@@ -14,7 +14,9 @@ variable "vpc_id" {
 }
 
 variable "app_subnet_ids" {
+  type        = list(string)
   description = "App subnet IDS."
+  default     = []
 }
 
 variable "fineos_client_customer_api_url" {
@@ -71,6 +73,11 @@ variable "fineos_aws_iam_role_external_id" {
   default     = ""
 }
 
+variable "fineos_report_export_path" {
+  description = "Location for additional FINEOS exports"
+  type        = string
+  default     = ""
+}
 variable "fineos_eligibility_feed_output_directory_path" {
   description = "Location the FINEOS Eligibility Feed export should write output to"
   type        = string
@@ -101,6 +108,12 @@ variable "fineos_data_export_path" {
   default     = ""
 }
 
+variable "fineos_adhoc_data_export_path" {
+  description = "FINEOS generates adhoc data export files from custom queries for PFML API to pick up"
+  type        = string
+  default     = ""
+}
+
 variable "fineos_data_import_path" {
   description = "PFML API generates files for FINEOS to process"
   type        = string
@@ -125,28 +138,16 @@ variable "pfml_fineos_outbound_path" {
   default     = ""
 }
 
-variable "fineos_vendor_max_history_date" {
-  description = "PFML API will not process FINEOS vendor data older than this date"
+variable "dor_fineos_etl_schedule_expression_standard" {
+  description = "EventBridge schedule for DOR FINEOS ETL in standard time"
   type        = string
-  default     = ""
+  default     = "cron(30 5 * * ? *)"
 }
 
-variable "fineos_payment_max_history_date" {
-  description = "PFML API will not process FINEOS payment data older than this date"
+variable "dor_fineos_etl_schedule_expression_daylight_savings" {
+  description = "EventBridge schedule for DOR FINEOS ETL in daylight time"
   type        = string
-  default     = ""
-}
-
-variable "pfml_ctr_inbound_path" {
-  description = "PFML API stores a copy of all files that CTR/MMARS generates for us"
-  type        = string
-  default     = ""
-}
-
-variable "pfml_ctr_outbound_path" {
-  description = "PFML API stores a copy of all files that we generate for CTR/MMARS"
-  type        = string
-  default     = ""
+  default     = "cron(30 4 * * ? *)"
 }
 
 variable "eolwd_moveit_sftp_uri" {
@@ -159,60 +160,6 @@ variable "pfml_error_reports_path" {
   description = "PFML API stores a copy of all error reports generated"
   type        = string
   default     = ""
-}
-
-variable "pfml_voucher_output_path" {
-  description = "PFML API stores a copy of all payment vouchers generated"
-  type        = string
-  default     = ""
-}
-
-variable "ctr_moveit_incoming_path" {
-  description = "CTR/MMARS generates Outbound Return files for PFML API to pick up (MOVEit folder)"
-  type        = string
-  default     = ""
-}
-
-variable "ctr_moveit_outgoing_path" {
-  description = "PFML API generates files for CTR/MMARS to process (MOVEit folder)"
-  type        = string
-  default     = ""
-}
-
-variable "ctr_moveit_archive_path" {
-  description = "Once PFML API picks up files from CTR/MMARS MOVEit, we need to archive them (MOVEit folder)"
-  type        = string
-  default     = ""
-}
-
-variable "ctr_gax_bievnt_email_address" {
-  description = "Email address to send GAX BIEVNT report to"
-  type        = string
-  default     = ""
-}
-
-variable "ctr_vcc_bievnt_email_address" {
-  description = "Email address to send VCC BIEVNT report to"
-  type        = string
-  default     = ""
-}
-
-variable "ctr_data_mart_host" {
-  description = "URL of the EOL Finance Data Mart."
-  type        = string
-  default     = ""
-}
-
-variable "ctr_data_mart_username" {
-  description = "Username to connect to EOL Finance Data Mart."
-  type        = string
-  default     = ""
-}
-
-variable "enable_recurring_payments_schedule" {
-  description = "Enable scheduling for payments-payment-voucher-plus ECS task"
-  type        = bool
-  default     = false
 }
 
 variable "pfml_email_address" {
@@ -263,25 +210,14 @@ variable "task_failure_email_address_list" {
   default     = []
 }
 
-variable "enable_sentry" {
-  description = "Enable sending ECS errors to Sentry."
-  type        = string
-  default     = "0"
-}
 variable "enable_reductions_send_claimant_lists_to_agencies_schedule" {
   description = "Enable scheduling for 'reductions-send-claimant-lists-to-agencies' ECS task"
   type        = bool
-  default     = true
+  default     = false
 }
 
-variable "enable_reductions_retrieve_payment_lists_from_agencies_schedule" {
-  description = "Enable scheduling for 'reductions-retrieve-payment-lists-from-agencies' ECS task"
-  type        = bool
-  default     = true
-}
-
-variable "enable_reductions_send_wage_replacement_payments_to_dfml_schedule" {
-  description = "Enable scheduling for 'reductions-send-wage-replacement-payments-to-dfml' ECS task"
+variable "enable_reductions_process_agency_data_schedule" {
+  description = "Enable scheduling for 'reductions-process-agency-data' ECS task"
   type        = bool
   default     = false
 }
@@ -311,4 +247,55 @@ variable "enable_pub_automation_create_pub_files" {
 variable "enable_pub_automation_process_returns" {
   description = "Enable scheduling for pub automation return processing task"
   default     = false
+}
+
+variable "enable_pub_automation_process_1099_documents" {
+  description = "Enable scheduling for pub automation 1099 documents processing task"
+  default     = false
+}
+
+variable "rmv_client_base_url" {
+  description = "The base URL for the Registry of Motor Vehicles (RMV) API."
+  type        = string
+  default     = ""
+}
+
+variable "rmv_client_certificate_binary_arn" {
+  description = "The secretsmanager ARN for the Registry of Motor Vehicles (RMV) certificate."
+  type        = string
+  default     = ""
+}
+
+variable "rmv_api_behavior" {
+  description = "Specifies if the RMV response is mocked"
+  type        = string
+  default     = "fully_mocked"
+}
+
+########## Variables for Step Functions ################
+
+variable "st_use_mock_dor_data" {
+  description = "Step Function Mock DOR Data"
+  default     = false
+}
+
+variable "st_decrypt_dor_data" {
+  description = "Step Function Decrypted DOR Data"
+  default     = false
+}
+
+variable "st_file_limit_specified" {
+  description = "Step Function Eligibility Feed Export File Number Limit"
+  default     = true
+}
+
+variable "st_employer_update_limit" {
+  description = "Employer Upload Update Limit"
+  type        = number
+}
+
+variable "enforce_execute_sql_read_only" {
+  description = "Determines whether write access or read-only access is granted against an API RDS DB. Read-only access is enforced on production and breakfix for the execute-sql task."
+  type        = bool
+  default     = true
 }

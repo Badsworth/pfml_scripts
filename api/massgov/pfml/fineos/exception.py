@@ -23,9 +23,9 @@ class FINEOSFatalError(FINEOSClientError):
 
     def __init__(
         self,
+        method_name: str,
         cause: Optional[Exception] = None,
         response_status: Optional[int] = None,
-        method_name: str = "",
         message: str = "",
     ):
         self.cause = cause
@@ -35,11 +35,21 @@ class FINEOSFatalError(FINEOSClientError):
 
     def __str__(self) -> str:
         if self.cause:
-            return "%s: %s" % (type(self.cause).__name__, self.cause)
+            return "(%s) %s: %s: %s" % (
+                self.method_name,
+                type(self.cause).__name__,
+                self.cause,
+                self.message,
+            )
         elif self.response_status:
-            return "%s: %s" % (type(self).__name__, self.response_status)
+            return "(%s) %s: %s: %s" % (
+                self.method_name,
+                type(self).__name__,
+                self.response_status,
+                self.message,
+            )
         else:
-            return type(self).__name__
+            return "(%s) %s: %s" % (self.method_name, type(self).__name__, self.message)
 
 
 class FINEOSFatalClientSideError(FINEOSFatalError):
@@ -61,22 +71,41 @@ class FINEOSClientBadResponse(FINEOSClientError):
 
     expected_status: int
     response_status: int
+    method_name: str
+    message: str
 
     def __init__(
-        self, expected_status: int, response_status: int, method_name: str = "", message: str = ""
+        self, method_name: str, expected_status: int, response_status: int, message: str = ""
     ):
+        self.method_name = method_name
         self.expected_status = expected_status
         self.response_status = response_status
-        self.method_name = method_name
         self.message = message
 
     def __str__(self) -> str:
-        return "expected %s, but got %s" % (self.expected_status, self.response_status)
+        return "(%s) expected %s, but got %s: %s" % (
+            self.method_name,
+            self.expected_status,
+            self.response_status,
+            self.message,
+        )
+
+
+class FINEOSUnprocessableEntity(FINEOSClientBadResponse):
+    """The FINEOS API returned an Unprocessable Entity (422) error"""
+
+
+class FINEOSNotFound(FINEOSClientBadResponse):
+    """The FINEOS API returned a Not Found (404) error"""
+
+
+class FINEOSForbidden(FINEOSClientBadResponse):
+    """The FINEOS API returned an authorization (403) error"""
 
 
 # NOTE: This is currently only thrown manually for missing employers in read_employer,
 #       and for missing employee occupations in register_api_user.
-class FINEOSNotFound(FINEOSClientBadResponse):
+class FINEOSEntityNotFound(FINEOSClientBadResponse):
     def __init__(self, message: str):
         self.message = message
 

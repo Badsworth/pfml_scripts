@@ -1,111 +1,108 @@
-import InputChoiceGroup from "../../src/components/InputChoiceGroup";
+import { render, screen } from "@testing-library/react";
+
+import InputChoiceGroup from "../../src/components/core/InputChoiceGroup";
 import React from "react";
-import { shallow } from "enzyme";
-
-function render(customProps = {}) {
-  const props = Object.assign(
-    {
-      choices: [
-        {
-          label: "Choice A",
-          value: "a",
-        },
-        {
-          label: "Choice B",
-          value: "b",
-        },
-      ],
-      label: "Field label",
-      name: "field-name",
-    },
-    customProps
-  );
-
-  const component = <InputChoiceGroup {...props} />;
-
-  return {
-    props,
-    wrapper: shallow(component),
-  };
-}
+import userEvent from "@testing-library/user-event";
 
 describe("InputChoiceGroup", () => {
-  it("groups everything within a Fieldset", () => {
-    const { wrapper } = render();
+  const defaultProps = {
+    choices: [
+      { label: "Foo", value: "foo" },
+      { label: "Bar", value: "bar" },
+    ],
+    label: "Foobar",
+    name: "foo-bar",
+  };
 
-    expect(wrapper.is("Fieldset")).toBe(true);
-  });
+  describe("InputChoiceGroup rendering", () => {
+    it("renders groups using a `fieldset` element", () => {
+      render(<InputChoiceGroup {...defaultProps} />);
+      const inputChoiceGroup = screen.getByRole("group");
 
-  it("renders a legend", () => {
-    const { wrapper } = render({
-      errorMsg: "Error message",
-      hint: "Hint text",
-      optionalText: "Optional",
+      expect(inputChoiceGroup).toBeInTheDocument();
     });
 
-    expect(wrapper.find("FormLabel")).toMatchSnapshot();
-  });
-
-  it("renders an InputChoice for each object in choices", () => {
-    const { wrapper } = render();
-
-    expect(wrapper.find("InputChoice")).toMatchSnapshot();
-  });
-
-  it("sets the name on each InputChoice", () => {
-    const name = "foo";
-    const { wrapper } = render({ name });
-    const choices = wrapper.find("InputChoice");
-
-    // make sure our usage of .first() and .last() are doing what we expect
-    expect(choices.length > 1).toBe(true);
-
-    expect(choices.first().prop("name")).toBe(name);
-    expect(choices.last().prop("name")).toBe(name);
-  });
-
-  describe("when the type prop isn't set", () => {
-    it("sets the InputChoice type to checkbox", () => {
-      const { wrapper } = render();
-      const choices = wrapper.find("InputChoice");
-
-      expect(choices.first().prop("type")).toBe("checkbox");
-    });
-  });
-
-  describe("when type prop is set to radio", () => {
-    it("sets the InputChoice type to radio", () => {
-      const { props, wrapper } = render({ type: "radio" });
-      const choices = wrapper.find("InputChoice");
-
-      expect(choices.first().prop("type")).toBe(props.type);
-    });
-  });
-
-  describe("when errorMsg is set", () => {
-    it("passes errorMsg to FormLabel", () => {
-      const { props, wrapper } = render({ errorMsg: "Oh no." });
-
-      expect(wrapper.find("FormLabel").prop("errorMsg")).toBe(props.errorMsg);
-    });
-
-    it("adds error classes to the form group", () => {
-      const { wrapper } = render({ errorMsg: "Oh no." });
-      const formGroup = wrapper.find(".usa-form-group");
-
-      expect(formGroup.hasClass("usa-form-group--error")).toBe(true);
-    });
-  });
-
-  describe("when change event is triggered", () => {
-    it("calls onChange", () => {
-      const { props, wrapper } = render({
-        onChange: jest.fn(),
+    it("renders a `fieldset` with `legend` element", () => {
+      render(<InputChoiceGroup {...defaultProps} />);
+      const legendElement = screen.getByRole("group", {
+        name: defaultProps.label,
       });
 
-      wrapper.find("InputChoice").first().simulate("change");
+      expect(legendElement).toBeInTheDocument();
+    });
 
-      expect(props.onChange).toHaveBeenCalledTimes(1);
+    it("renders an `InputChoice` to display options", () => {
+      render(<InputChoiceGroup {...defaultProps} />);
+      const inputChoices = screen.getAllByRole("checkbox");
+
+      inputChoices.forEach((inputChoice) => {
+        expect(inputChoice).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe("InputChoiceGroup attributes", () => {
+    it("sets the name attribute on each `InputChoice`", () => {
+      render(<InputChoiceGroup {...defaultProps} />);
+      const inputChoices = screen.getAllByRole("checkbox");
+
+      inputChoices.forEach((inputChoice) => {
+        expect(inputChoice).toHaveAttribute("name", defaultProps.name);
+      });
+    });
+
+    it("sets `checkbox` as default `type` attribute on `InputChoice`", () => {
+      render(<InputChoiceGroup {...defaultProps} />);
+      const inputChoices = screen.getAllByRole("checkbox");
+
+      inputChoices.forEach((inputChoice) => {
+        expect(inputChoice).toHaveAttribute("type", "checkbox");
+      });
+    });
+
+    it("uses `radio` when set with `type` attribute on `InputChoice`", () => {
+      render(<InputChoiceGroup {...defaultProps} type="radio" />);
+      const inputChoices = screen.getAllByRole("radio");
+
+      inputChoices.forEach((inputChoice) => {
+        expect(inputChoice).toHaveAttribute("type", "radio");
+      });
+    });
+  });
+
+  describe("InputChoiceGroup error messages", () => {
+    const errorMsg = "error message";
+    it("passes errorMsg to FormLabel when provided", () => {
+      render(<InputChoiceGroup {...defaultProps} errorMsg={errorMsg} />);
+      const formLabel = screen.getByText(errorMsg);
+
+      expect(formLabel).toBeInTheDocument();
+      expect(formLabel).toMatchSnapshot();
+    });
+
+    it("adds error class to the form group", () => {
+      render(<InputChoiceGroup {...defaultProps} errorMsg={errorMsg} />);
+      const inputChoiceGroup = screen.getByRole("group");
+
+      expect(inputChoiceGroup).toHaveClass("usa-form-group--error");
+    });
+
+    it("does not add error class to the form group when there is no error", () => {
+      render(<InputChoiceGroup {...defaultProps} />);
+      const inputChoiceGroup = screen.getByRole("group");
+
+      expect(inputChoiceGroup).not.toHaveClass("usa-form-group--error");
+    });
+  });
+
+  it("calls `onChange` on click, when `onChange` is provided", () => {
+    const handleChange = jest.fn();
+    render(<InputChoiceGroup {...defaultProps} onChange={handleChange} />);
+    const inputChoices = screen.getAllByRole("checkbox");
+
+    inputChoices.forEach((inputChoice) => {
+      userEvent.click(inputChoice);
+      expect(handleChange).toHaveBeenCalled();
     });
   });
 });

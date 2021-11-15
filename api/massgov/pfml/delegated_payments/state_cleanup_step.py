@@ -1,7 +1,10 @@
+import enum
+
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml.db.models.employees import LkState, State
+from massgov.pfml.db.models.payments import FineosWritebackDetails, FineosWritebackTransactionStatus
 from massgov.pfml.delegated_payments.step import Step
 
 # This step moves various payment states
@@ -15,11 +18,14 @@ from massgov.pfml.delegated_payments.step import Step
 # move those to the error state
 logger = logging.get_logger(__name__)
 
-ERROR_STATE = State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT
+ERROR_STATE = State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT_RESTARTABLE
 ERROR_OUTCOME = state_log_util.build_outcome("Payment timed out waiting for audit reject report")
 
 
 class StateCleanupStep(Step):
+    class Metrics(str, enum.Enum):
+        AUDIT_STATE_CLEANUP_COUNT = "audit_state_cleanup_count"
+
     def run_step(self) -> None:
         self.cleanup_states()
 
@@ -42,7 +48,7 @@ class StateCleanupStep(Step):
         )
 
         for state_log in state_logs:
-            self.increment("audit_state_cleanup_count")
+            self.increment(self.Metrics.AUDIT_STATE_CLEANUP_COUNT)
             payment = state_log.payment
 
             # Shouldn't happen as they should always have a payment attached
@@ -58,6 +64,23 @@ class StateCleanupStep(Step):
                 payment, ERROR_STATE, ERROR_OUTCOME, self.db_session
             )
 
+            writeback_transaction_status = FineosWritebackTransactionStatus.PENDING_PAYMENT_AUDIT
+            state_log_util.create_finished_state_log(
+                end_state=State.DELEGATED_ADD_TO_FINEOS_WRITEBACK,
+                associated_model=payment,
+                outcome=state_log_util.build_outcome(
+                    writeback_transaction_status.transaction_status_description
+                ),
+                import_log_id=self.get_import_log_id(),
+                db_session=self.db_session,
+            )
+
+            writeback_details = FineosWritebackDetails(
+                payment=payment,
+                transaction_status_id=writeback_transaction_status.transaction_status_id,
+                import_log_id=self.get_import_log_id(),
+            )
+            self.db_session.add(writeback_details)
         logger.info(
             "Successfully moved %i state logs from %s to %s",
             state_log_count,
@@ -69,15 +92,9 @@ class StateCleanupStep(Step):
         logger.info(
             "Beginning cleanup of payment state logs for payments in audit report pending states"
         )
-        try:
-            for audit_state in payments_util.Constants.REJECT_FILE_PENDING_STATES:
-                self._cleanup_state(audit_state)
-            self.db_session.commit()
-            logger.info(
-                "Completed cleanup of payment state logs for payments in audit report pending states"
-            )
-        except Exception:
-            self.db_session.rollback()
-            logger.exception("Error cleaning up audit report pending states")
-            # We do not want to run any subsequent steps if this fails
-            raise
+        for audit_state in payments_util.Constants.REJECT_FILE_PENDING_STATES:
+            self._cleanup_state(audit_state)
+        self.db_session.commit()
+        logger.info(
+            "Completed cleanup of payment state logs for payments in audit report pending states"
+        )

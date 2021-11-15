@@ -9,13 +9,16 @@ locals {
   environments = ["test", "stage", "prod", "performance", "training", "uat", "breakfix", "cps-preview", "adhoc"]
 }
 
+data "aws_iam_role" "replication" {
+  name = "massgov-pfml-prod-s3-replication"
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 
 resource "aws_s3_bucket" "terraform" {
   for_each = toset(local.environments)
-
-  bucket = "massgov-pfml-${each.key}-env-mgmt"
-  acl    = "private"
+  bucket   = "massgov-pfml-${each.key}-env-mgmt"
+  acl      = "private"
 
   server_side_encryption_configuration {
     rule {
@@ -34,49 +37,27 @@ resource "aws_s3_bucket" "terraform" {
     public      = "no"
     Name        = "pfml-${each.key}-env-mgmt"
   })
+
+  replication_configuration {
+    role = data.aws_iam_role.replication.arn
+    rules {
+      id     = "replicateFullBucket"
+      status = "Enabled"
+      # Note: These buckets already exist
+      destination {
+        bucket        = "arn:aws:s3:::massgov-pfml-${each.key}-env-mgmt-replica"
+        storage_class = "STANDARD"
+        account_id    = "018311717589"
+        access_control_translation {
+          owner = "Destination"
+        }
+      }
+    }
+  }
 }
 
 resource "aws_s3_bucket_public_access_block" "terraform_block_public_access" {
   for_each = aws_s3_bucket.terraform
-  bucket   = each.value.id
-
-  block_public_acls       = true
-  block_public_policy     = true
-  ignore_public_acls      = true
-  restrict_public_buckets = true
-}
-
-# ----------------------------------------------------------------------------------------------------------------------
-
-# Create S3 buckets to store data imported from Formstack
-
-resource "aws_s3_bucket" "formstack_import" {
-  for_each = toset(local.environments)
-
-  bucket = "massgov-pfml-${each.key}-formstack-data"
-  acl    = "private"
-
-  server_side_encryption_configuration {
-    rule {
-      apply_server_side_encryption_by_default {
-        sse_algorithm = "AES256"
-      }
-    }
-  }
-
-  versioning {
-    enabled = "true"
-  }
-
-  tags = merge(module.constants.common_tags, {
-    environment = module.constants.environment_tags[each.key]
-    public      = "no"
-    Name        = "massgov-pfml-${each.key}-formstack-data"
-  })
-}
-
-resource "aws_s3_bucket_public_access_block" "formstack_import_block_public_access" {
-  for_each = aws_s3_bucket.formstack_import
   bucket   = each.value.id
 
   block_public_acls       = true
@@ -114,11 +95,35 @@ resource "aws_s3_bucket" "agency_transfer" {
     }
   }
 
+  versioning {
+    enabled = true
+  }
+
   tags = merge(module.constants.common_tags, {
     environment = module.constants.environment_tags[each.key]
     Name        = "massgov-pfml-${each.key}-agency-transfer"
     public      = "no"
   })
+
+  dynamic "replication_configuration" {
+    for_each = each.key == module.constants.bucket_replication_environment ? [1] : []
+    content {
+      role = data.aws_iam_role.replication.arn
+      rules {
+        id     = "replicateFullBucket"
+        status = "Enabled"
+
+        destination {
+          bucket        = "arn:aws:s3:::massgov-pfml-${each.key}-agency-transfer-replica"
+          storage_class = "STANDARD"
+          account_id    = "018311717589"
+          access_control_translation {
+            owner = "Destination"
+          }
+        }
+      }
+    }
+  }
 }
 
 resource "aws_s3_bucket_public_access_block" "agency_transfer_block_public_access" {
@@ -132,37 +137,6 @@ resource "aws_s3_bucket_public_access_block" "agency_transfer_block_public_acces
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
-
-resource "aws_s3_bucket" "lambda_build" {
-  bucket = "massgov-pfml-api-lambda-builds"
-  acl    = "private"
-
-  server_side_encryption_configuration {
-    rule {
-      apply_server_side_encryption_by_default {
-        sse_algorithm = "AES256"
-      }
-    }
-  }
-
-  tags = merge(module.constants.common_tags, {
-    environment = "prod"
-    public      = "no"
-    Name        = "massgov-pfml-api-lambda-builds"
-  })
-}
-
-resource "aws_s3_bucket_public_access_block" "lambda_build_block_public_access" {
-  bucket = aws_s3_bucket.lambda_build.id
-
-  block_public_acls       = true
-  block_public_policy     = true
-  ignore_public_acls      = true
-  restrict_public_buckets = true
-}
-
-# ----------------------------------------------------------------------------------------------------------------------
-
 # Create S3 buckets to store CSVs that will be linked in emails sent to
 # Third-Party Administrators (TPAs)
 

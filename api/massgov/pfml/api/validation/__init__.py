@@ -1,11 +1,14 @@
 #
 # Utility functions to support custom validation handlers on connexion
 #
+from typing import Union
+
+import botocore.exceptions
 import connexion.apps.flask_app
 import pydantic
-import sentry_sdk
 from connexion.exceptions import BadRequestProblem, ExtraParameterProblem, ProblemException
 from flask.wrappers import Response
+from sqlalchemy.exc import OperationalError
 from werkzeug.exceptions import (
     BadRequest,
     Forbidden,
@@ -18,8 +21,12 @@ from werkzeug.exceptions import (
 
 import massgov.pfml.api.util.response as response_util
 import massgov.pfml.util.logging as logging
-import massgov.pfml.util.sentry as sentry_util
-from massgov.pfml.api.validation.exceptions import ValidationErrorDetail, ValidationException
+import massgov.pfml.util.newrelic.events as newrelic_util
+from massgov.pfml.api.validation.exceptions import (
+    IssueType,
+    ValidationErrorDetail,
+    ValidationException,
+)
 from massgov.pfml.api.validation.validators import (
     CustomParameterValidator,
     CustomRequestBodyValidator,
@@ -32,7 +39,11 @@ logger = logging.get_logger(__name__)
 
 
 def is_unexpected_validation_error(error: ValidationErrorDetail) -> bool:
-    return error.type in UNEXPECTED_ERROR_TYPES or error.type.startswith("type_error")
+    return (
+        error.type in UNEXPECTED_ERROR_TYPES
+        or error.type.startswith("type_error")
+        or error.type.startswith("value_error")
+    )
 
 
 def log_validation_error(
@@ -58,21 +69,27 @@ def log_validation_error(
         logger.info(message, extra=log_attributes)
     else:
         # Log explicit errors in the case of unexpected validation errors.
-        with sentry_sdk.push_scope() as scope:
-            scope.fingerprint = [error.type, error.rule, error.field]
-            sentry_util.log_and_capture_exception(message, extra=log_attributes)
+        newrelic_util.log_and_capture_exception(message, extra=log_attributes)
+
+
+def db_operational_error_handler(operational_error: OperationalError) -> Response:
+    log_attr = {
+        "error.class": "sqlalchemy.exc.OperationalError",
+    }
+    logger.warning(operational_error.detail, extra=log_attr, exc_info=True)
+    return response_util.error_response(
+        status_code=ServiceUnavailable, message="database service unavailable", errors=[],
+    ).to_api_response()
 
 
 def validation_request_handler(validation_exception: ValidationException) -> Response:
-    errors = []
     for error in validation_exception.errors:
         log_validation_error(validation_exception, error)
-        errors.append(response_util.validation_issue(error))
 
     return response_util.error_response(
         status_code=BadRequest,
         message=validation_exception.message,
-        errors=errors,
+        errors=validation_exception.errors,
         data=validation_exception.data,
     ).to_api_response()
 
@@ -97,11 +114,11 @@ def http_exception_handler(http_exception: HTTPException) -> Response:
 def internal_server_error_handler(error: InternalServerError) -> Response:
     # Use the original exception if it exists.
     #
-    # Ignore the mypy type error because it hasn't caught up to werkzeug 1.0.0.
+    # Ignore the mypy type error because it is missing the `original_exception` attribute.
     #
     # see: https://github.com/python/typeshed/pull/4210
     #
-    exception = error.original_exception or error  # type: ignore
+    exception = error.original_exception or error  # type: ignore[attr-defined]
 
     logger.exception(str(exception), extra={"error.class": type(exception).__name__})
 
@@ -112,7 +129,21 @@ def handle_fineos_unavailable_error(error: FINEOSFatalUnavailable) -> Response:
     return response_util.error_response(
         status_code=ServiceUnavailable,
         message="The service is currently unavailable. Please try again later.",
-        errors=[response_util.custom_issue("fineos_client", "FINEOS is currently unavailable")],
+        errors=[
+            ValidationErrorDetail(
+                type=IssueType.fineos_client, message="FINEOS is currently unavailable"
+            )
+        ],
+    ).to_api_response()
+
+
+def handle_aws_connection_error(
+    error: Union[botocore.exceptions.ConnectionError, botocore.exceptions.HTTPClientError]
+) -> Response:
+    return response_util.error_response(
+        status_code=ServiceUnavailable,
+        message="Connection was closed before receiving a valid response from endpoint.",
+        errors=[],
     ).to_api_response()
 
 
@@ -122,7 +153,13 @@ def add_error_handlers_to_app(connexion_app):
     connexion_app.add_error_handler(ExtraParameterProblem, connexion_400_handler)
     connexion_app.add_error_handler(pydantic.ValidationError, handle_pydantic_validation_error)
     connexion_app.add_error_handler(FINEOSFatalUnavailable, handle_fineos_unavailable_error)
-
+    connexion_app.add_error_handler(
+        botocore.exceptions.HTTPClientError, handle_aws_connection_error
+    )
+    connexion_app.add_error_handler(
+        botocore.exceptions.ConnectionError, handle_aws_connection_error
+    )
+    connexion_app.add_error_handler(OperationalError, db_operational_error_handler)
     # These are all handled with the same generic exception handler to make them uniform in structure.
     connexion_app.add_error_handler(NotFound, http_exception_handler)
     connexion_app.add_error_handler(HTTPException, http_exception_handler)
@@ -169,10 +206,13 @@ def convert_pydantic_error_to_validation_exception(
         if err_type in pydantic_error_type_map:
             err_type = pydantic_error_type_map[err_type]
 
+        err_field = e["loc"][0]
+        err_message = e["msg"]
+
         errors.append(
             ValidationErrorDetail(
                 type=err_type,
-                message=e["msg"],
+                message=f'Error in field: "{err_field}". {err_message.capitalize()}.',
                 rule=None,
                 field=".".join(str(loc) for loc in e["loc"]),
             )

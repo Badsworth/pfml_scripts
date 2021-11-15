@@ -21,6 +21,13 @@ resource "aws_cognito_user_pool" "claimants_pool" {
   username_attributes      = ["email"]
   auto_verified_attributes = ["email"]
 
+  account_recovery_setting {
+    recovery_mechanism {
+      name     = "verified_email"
+      priority = 1
+    }
+  }
+
   email_configuration {
     # Use this SES email to send cognito emails. If we're not using SES for emails then use null
     source_arn            = var.ses_email_address == "" ? null : "arn:aws:ses:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:identity/${var.ses_email_address}"
@@ -37,9 +44,7 @@ resource "aws_cognito_user_pool" "claimants_pool" {
 
   # Use aliases (for provisioned concurrency) in perf and prod. Elsewhere, use the lambda's $LATEST version directly.
   lambda_config {
-    custom_message    = aws_lambda_function.cognito_custom_message.arn
-    post_confirmation = var.cognito_enable_provisioned_concurrency ? data.aws_lambda_alias.cognito_post_confirmation__latest[0].arn : data.aws_lambda_function.cognito_post_confirmation[0].arn
-    pre_sign_up       = var.cognito_enable_provisioned_concurrency ? data.aws_lambda_alias.cognito_pre_signup__latest[0].arn : data.aws_lambda_function.cognito_pre_signup[0].arn
+    custom_message = aws_lambda_function.cognito_custom_message.arn
   }
 
   password_policy {
@@ -171,7 +176,7 @@ resource "aws_lambda_function" "cognito_custom_message" {
       NEW_RELIC_TRUSTED_ACCOUNT_KEY         = "1606654"        # EOLWD parent account
       NEW_RELIC_LAMBDA_HANDLER              = "lambda.handler" # the actual lambda entrypoint
       NEW_RELIC_DISTRIBUTED_TRACING_ENABLED = true
-      PORTAL_DOMAIN                         = var.enable_pretty_domain ? module.constants.cert_domains[var.environment_name] : aws_cloudfront_distribution.portal_web_distribution.domain_name
+      PORTAL_DOMAIN                         = local.cert_domain == null ? aws_cloudfront_distribution.portal_web_distribution.domain_name : local.cert_domain
     }
   }
 

@@ -1,23 +1,15 @@
 import os
-import pathlib
 import re
-import uuid
-import xml.dom.minidom as minidom
 from collections import OrderedDict
 from dataclasses import dataclass, field
 from datetime import date, datetime
+from decimal import Decimal, InvalidOperation
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Tuple, Type, Union, cast
-from xml.etree.ElementTree import Element
+from typing import Any, Callable, Dict, List, Optional, Set, Type, Union, cast
 
-import boto3
-import botocore
 import pytz
-import smart_open
-from sqlalchemy import func
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import ColumnProperty, class_mapper
-from sqlalchemy.orm.exc import MultipleResultsFound
 
 import massgov.pfml.delegated_payments.delegated_config as payments_config
 import massgov.pfml.util.files as file_util
@@ -29,43 +21,61 @@ from massgov.pfml.db.models.employees import (
     Address,
     Claim,
     ClaimType,
-    CtrBatchIdentifier,
-    CtrDocumentIdentifier,
     Employee,
-    EmployeeReferenceFile,
     ExperianAddressPair,
     LkClaimType,
     LkReferenceFileType,
     Payment,
-    PaymentReferenceFile,
+    PaymentTransactionType,
     PubEft,
     ReferenceFile,
     ReferenceFileType,
     State,
 )
 from massgov.pfml.db.models.payments import (
+    FineosExtractCancelledPayments,
     FineosExtractEmployeeFeed,
+    FineosExtractPaymentFullSnapshot,
+    FineosExtractReplacedPayments,
     FineosExtractVbiRequestedAbsence,
     FineosExtractVbiRequestedAbsenceSom,
     FineosExtractVpei,
     FineosExtractVpeiClaimDetails,
     FineosExtractVpeiPaymentDetails,
+    PaymentLog,
 )
 from massgov.pfml.util.csv import CSVSourceWrapper
+from massgov.pfml.util.routing_number_validation import validate_routing_number
 
 logger = logging.get_logger(__package__)
 
+ExtractTable = Union[
+    Type[FineosExtractVpei],
+    Type[FineosExtractVpeiClaimDetails],
+    Type[FineosExtractVpeiPaymentDetails],
+    Type[FineosExtractVbiRequestedAbsenceSom],
+    Type[FineosExtractEmployeeFeed],
+    Type[FineosExtractVbiRequestedAbsence],
+    Type[FineosExtractCancelledPayments],
+    Type[FineosExtractPaymentFullSnapshot],
+    Type[FineosExtractReplacedPayments],
+]
+
+
+@dataclass(frozen=True, eq=True)
+class FineosExtract:
+    file_name: str
+
+    table: ExtractTable = field(compare=False, repr=False)
+
+    # Note field names is simply a list
+    # of fields we care about. Extracts
+    # will contain many additional fields
+    # that we do not use.
+    field_names: List[str] = field(compare=False, repr=False)
+
 
 class Constants:
-    COMPTROLLER_UNIT_CODE = "8770"
-    COMPTROLLER_DEPT_CODE = "EOL"
-    COMPTROLLER_AD_ID = "AD010"
-    COMPTROLLER_AD_TYPE = "PA"
-    DOC_PHASE_CD_FINAL_STATUS = "3 - Final"
-
-    BATCH_ID_TEMPLATE = COMPTROLLER_DEPT_CODE + "{}{}{}"  # Date, GAX/VCC, batch number.
-    MMARS_FILE_SKIPPED = "Did not create file for MMARS because there was no work to do"
-
     S3_OUTBOUND_READY_DIR = "ready"
     S3_OUTBOUND_SENT_DIR = "sent"
     S3_OUTBOUND_ERROR_DIR = "error"
@@ -78,6 +88,15 @@ class Constants:
     FILE_NAME_PUB_EZ_CHECK = "EOLWD-DFML-EZ-CHECK"
     FILE_NAME_PUB_POSITIVE_PAY = "EOLWD-DFML-POSITIVE-PAY"
     FILE_NAME_PAYMENT_AUDIT_REPORT = "Payment-Audit-Report"
+    FILE_NAME_RAW_PUB_ACH_FILE = "ACD9T136-DFML"
+
+    REQUESTED_ABSENCE_SOM_FILE_NAME = "VBI_REQUESTEDABSENCE_SOM.csv"
+    EMPLOYEE_FEED_FILE_NAME = "Employee_feed.csv"
+
+    PEI_EXPECTED_FILE_NAME = "vpei.csv"
+    PAYMENT_DETAILS_EXPECTED_FILE_NAME = "vpeipaymentdetails.csv"
+    CLAIM_DETAILS_EXPECTED_FILE_NAME = "vpeiclaimdetails.csv"
+    REQUESTED_ABSENCE_FILE_NAME = "VBI_REQUESTEDABSENCE.csv"
 
     NACHA_FILE_FORMAT = f"%Y-%m-%d-%H-%M-%S-{FILE_NAME_PUB_NACHA}"
 
@@ -90,14 +109,13 @@ class Constants:
     # How do you know if something should go in this list?
     #   1. The payment associated with the state has reached an end state and will never change again
     #   2. The state is an error state and someone will be notified (eg. Program Integrity) via a report
-    #   3. We expect, and want, to receive the payment again when the issue is corrected via the FINEOS extract
+    #   3. The state has a scenario where we want to receive the same payment again unmodified (eg. the issue is we're missing the employee record)
     #   4. The payment has not already been sent to PUB - even if it's an error state
     #   5. The state is in the DELEGATED_PAYMENT flow
     RESTARTABLE_PAYMENT_STATES = frozenset(
         [
-            State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT,
-            State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT,
-            State.PAYMENT_FAILED_ADDRESS_VALIDATION,
+            State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT_RESTARTABLE,
+            State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT_RESTARTABLE,
         ]
     )
     RESTARTABLE_PAYMENT_STATE_IDS = frozenset(
@@ -110,11 +128,290 @@ class Constants:
     REJECT_FILE_PENDING_STATES = [
         State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT,
         State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_NOT_SAMPLED,
-        State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_OVERPAYMENT,
-        State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_ZERO_PAYMENT,
-        State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_CANCELLATION,
-        State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_EMPLOYER_REIMBURSEMENT,
     ]
+
+    # These overpayment transaction types don't have payment details
+    # which means in a few places we want to explicitly not expect to see payment details.
+    OVERPAYMENT_TYPES_WITHOUT_PAYMENT_DETAILS = frozenset(
+        [
+            PaymentTransactionType.OVERPAYMENT_ACTUAL_RECOVERY,
+            PaymentTransactionType.OVERPAYMENT_RECOVERY,
+            PaymentTransactionType.OVERPAYMENT_RECOVERY_CANCELLATION,
+            PaymentTransactionType.OVERPAYMENT_RECOVERY_REVERSE,
+            PaymentTransactionType.OVERPAYMENT_ADJUSTMENT,
+        ]
+    )
+    OVERPAYMENT_TYPES_WITHOUT_PAYMENT_DETAILS_IDS = frozenset(
+        [
+            overpayment_type.payment_transaction_type_id
+            for overpayment_type in OVERPAYMENT_TYPES_WITHOUT_PAYMENT_DETAILS
+        ]
+    )
+
+    PAYMENT_SENT_STATES = frozenset(
+        [
+            State.DELEGATED_PAYMENT_PUB_TRANSACTION_CHECK_SENT,
+            State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT,
+        ]
+    )
+    PAYMENT_SENT_STATE_IDS = frozenset([state.state_id for state in PAYMENT_SENT_STATES])
+
+
+CANCELLED_OR_REPLACED_EXTRACT_FIELD_NAMES = [
+    "C",
+    "I",
+    "STATUSREASON",
+    "GROSSAMOUNT",
+    "ADDEDBY",
+    "ISSUEDATE",
+    "CANCELLATIONDATE",
+    "TRANSACTIONSTATUSDATE",
+    "TRANSACTIONSTATUS",
+    "EXTRACTIONDATE",
+    "STOCKNUMBER",
+    "CLAIMNUMBER",
+    "BENEFITCASENUMBER",
+]
+
+
+@dataclass
+class FineosExtractConstants:
+    # FINEOS Claimant Extract Files
+    VBI_REQUESTED_ABSENCE_SOM = FineosExtract(
+        file_name="VBI_REQUESTEDABSENCE_SOM.csv",
+        table=FineosExtractVbiRequestedAbsenceSom,
+        field_names=[
+            "ABSENCEPERIOD_CLASSID",
+            "ABSENCEPERIOD_INDEXID",
+            "ABSENCEREASON_COVERAGE",
+            "ABSENCE_CASENUMBER",
+            "NOTIFICATION_CASENUMBER",
+            "ABSENCE_CASESTATUS",
+            "ABSENCEPERIOD_START",
+            "ABSENCEPERIOD_END",
+            "LEAVEREQUEST_EVIDENCERESULTTYPE",
+            "EMPLOYEE_CUSTOMERNO",
+            "EMPLOYER_CUSTOMERNO",
+            "LEAVEREQUEST_ID",
+        ],
+    )
+
+    EMPLOYEE_FEED = FineosExtract(
+        file_name="Employee_feed.csv",
+        table=FineosExtractEmployeeFeed,
+        field_names=[
+            "C",
+            "I",
+            "DEFPAYMENTPREF",
+            "CUSTOMERNO",
+            "NATINSNO",
+            "DATEOFBIRTH",
+            "PAYMENTMETHOD",
+            "ADDRESS1",
+            "ADDRESS2",
+            "ADDRESS4",
+            "ADDRESS6",
+            "POSTCODE",
+            "SORTCODE",
+            "ACCOUNTNO",
+            "ACCOUNTTYPE",
+            "FIRSTNAMES",
+            "INITIALS",
+            "LASTNAME",
+        ],
+    )
+
+    VPEI = FineosExtract(
+        file_name="vpei.csv",
+        table=FineosExtractVpei,
+        field_names=[
+            "C",
+            "I",
+            "PAYEESOCNUMBE",
+            "PAYMENTADD1",
+            "PAYMENTADD2",
+            "PAYMENTADD4",
+            "PAYMENTADD6",
+            "PAYMENTPOSTCO",
+            "PAYMENTMETHOD",
+            "PAYMENTDATE",
+            "AMOUNT_MONAMT",
+            "PAYEEBANKSORT",
+            "PAYEEACCOUNTN",
+            "PAYEEACCOUNTT",
+            "EVENTTYPE",
+            "PAYEEIDENTIFI",
+            "EVENTREASON",
+            "AMALGAMATIONC",
+        ],
+    )
+
+    PAYMENT_DETAILS = FineosExtract(
+        file_name="vpeipaymentdetails.csv",
+        table=FineosExtractVpeiPaymentDetails,
+        field_names=[
+            "PECLASSID",
+            "PEINDEXID",
+            "PAYMENTSTARTP",
+            "PAYMENTENDPER",
+            "BALANCINGAMOU_MONAMT",
+        ],
+    )
+
+    CLAIM_DETAILS = FineosExtract(
+        file_name="vpeiclaimdetails.csv",
+        table=FineosExtractVpeiClaimDetails,
+        field_names=["PECLASSID", "PEINDEXID", "ABSENCECASENU", "LEAVEREQUESTI"],
+    )
+
+    # Note this is the one used in the payment extract
+    # do not confuse it with the similar _SOM one in the claimant extract
+    VBI_REQUESTED_ABSENCE = FineosExtract(
+        file_name="VBI_REQUESTEDABSENCE.csv",
+        table=FineosExtractVbiRequestedAbsence,
+        field_names=[
+            "LEAVEREQUEST_DECISION",
+            "LEAVEREQUEST_ID",
+            "ABSENCEREASON_COVERAGE",
+            "ABSENCE_CASECREATIONDATE",
+        ],
+    )
+
+    PAYMENT_FULL_SNAPSHOT = FineosExtract(
+        file_name="Automated-Adhoc-Extract-SOM_PEI_Fullextract.csv",
+        table=FineosExtractPaymentFullSnapshot,
+        field_names=[
+            "C",
+            "I",
+            "FLAGS",
+            "PARTITIONID",
+            "LASTUPDATEDATE",
+            "BOEVERSION",
+            "C_OSUSER_UPDATEDBY",
+            "I_OSUSER_UPDATEDBY",
+            "ADDRESSLINE1",
+            "ADDRESSLINE2",
+            "ADDRESSLINE3",
+            "ADDRESSLINE4",
+            "ADDRESSLINE5",
+            "ADDRESSLINE6",
+            "ADDRESSLINE7",
+            "ADVICETOPAY",
+            "ADVICETOPAYOV",
+            "AMALGAMATIONC",
+            "AMOUNT_MONAMT",
+            "AMOUNT_MONCUR",
+            "CHECKCUTTING",
+            "CONFIRMEDBYUS",
+            "CONFIRMEDUID",
+            "CONTRACTREF",
+            "CORRESPCOUNTR",
+            "CURRENCY",
+            "DATEINTERFACE",
+            "DATELASTPROCE",
+            "DESCRIPTION",
+            "EMPLOYEECONTR",
+            "EVENTEFFECTIV",
+            "EVENTREASON",
+            "EVENTTYPE",
+            "EXTRACTIONDAT",
+            "GROSSPAYMENTA_MONAMT",
+            "GROSSPAYMENTA_MONCUR",
+            "INSUREDRESIDE",
+            "NAMETOPRINTON",
+            "NOMINATEDPAYE",
+            "NOMPAYEECUSTO",
+            "NOMPAYEEDOB",
+            "NOMPAYEEFULLN",
+            "NOMPAYEESOCNU",
+            "NOTES",
+            "PAYEEACCOUNTN",
+            "PAYEEACCOUNTT",
+            "PAYEEADDRESS",
+            "PAYEEBANKBRAN",
+            "PAYEEBANKCODE",
+            "PAYEEBANKINST",
+            "PAYEEBANKSORT",
+            "PAYEECORRESPO",
+            "PAYEECUSTOMER",
+            "PAYEEDOB",
+            "PAYEEFULLNAME",
+            "PAYEEIDENTIFI",
+            "PAYEESOCNUMBE",
+            "PAYMENTADD",
+            "PAYMENTADD1",
+            "PAYMENTADD2",
+            "PAYMENTADD3",
+            "PAYMENTADD4",
+            "PAYMENTADD5",
+            "PAYMENTADD6",
+            "PAYMENTADD7",
+            "PAYMENTADDCOU",
+            "PAYMENTCORRST",
+            "PAYMENTDATE",
+            "PAYMENTFREQUE",
+            "PAYMENTMETHOD",
+            "PAYMENTPOSTCO",
+            "PAYMENTPREMIS",
+            "PAYMENTTRIGGE",
+            "PAYMENTTYPE",
+            "PAYMETHCURREN",
+            "PERCENTTAXABL",
+            "POSTCODE",
+            "PREMISESNO",
+            "SETUPBYUSERID",
+            "SETUPBYUSERNA",
+            "STATUS",
+            "STATUSEFFECTI",
+            "STATUSREASON",
+            "STOCKNO",
+            "SUMMARYEFFECT",
+            "SUMMARYSTATUS",
+            "TAXOVERRIDE",
+            "TAXWAGEAMOUNT_MONAMT",
+            "TAXWAGEAMOUNT_MONCUR",
+            "TRANSACTIONNO",
+            "TRANSACTIONST",
+            "TRANSSTATUSDA",
+        ],
+    )
+
+    CANCELLED_PAYMENTS_EXTRACT = FineosExtract(
+        file_name="Automated-Adhoc-Extract-SOM_PEI_CancelledRecords.csv",
+        table=FineosExtractCancelledPayments,
+        field_names=CANCELLED_OR_REPLACED_EXTRACT_FIELD_NAMES,
+    )
+
+    REPLACED_PAYMENTS_EXTRACT = FineosExtract(
+        file_name="Automated-Adhoc-Extract-SOM_PEI_ReplacedRecords.csv",
+        table=FineosExtractReplacedPayments,
+        field_names=CANCELLED_OR_REPLACED_EXTRACT_FIELD_NAMES,
+    )
+
+
+CLAIMANT_EXTRACT_FILES = [
+    FineosExtractConstants.VBI_REQUESTED_ABSENCE_SOM,
+    FineosExtractConstants.EMPLOYEE_FEED,
+]
+
+CLAIMANT_EXTRACT_FILE_NAMES = [extract_file.file_name for extract_file in CLAIMANT_EXTRACT_FILES]
+
+PAYMENT_EXTRACT_FILES = [
+    FineosExtractConstants.VPEI,
+    FineosExtractConstants.CLAIM_DETAILS,
+    FineosExtractConstants.PAYMENT_DETAILS,
+    FineosExtractConstants.VBI_REQUESTED_ABSENCE,
+]
+PAYMENT_EXTRACT_FILE_NAMES = [extract_file.file_name for extract_file in PAYMENT_EXTRACT_FILES]
+
+PAYMENT_RECONCILIATION_EXTRACT_FILES = [
+    FineosExtractConstants.PAYMENT_FULL_SNAPSHOT,
+    FineosExtractConstants.CANCELLED_PAYMENTS_EXTRACT,
+    FineosExtractConstants.REPLACED_PAYMENTS_EXTRACT,
+]
+PAYMENT_RECONCILIATION_EXTRACT_FILE_NAMES = [
+    extract_file.file_name for extract_file in PAYMENT_RECONCILIATION_EXTRACT_FILES
+]
 
 
 class Regexes:
@@ -131,24 +428,23 @@ class Regexes:
 class ValidationReason(str, Enum):
     MISSING_FIELD = "MissingField"
     MISSING_DATASET = "MissingDataset"
+    TOO_MANY_DATASETS = "TooManyDatasets"
     MISSING_IN_DB = "MissingInDB"
+    MISSING_FINEOS_NAME = "MissingFineosName"
     FIELD_TOO_SHORT = "FieldTooShort"
     FIELD_TOO_LONG = "FieldTooLong"
     INVALID_LOOKUP_VALUE = "InvalidLookupValue"
     INVALID_VALUE = "InvalidValue"
     INVALID_TYPE = "InvalidType"
-    MULTIPLE_VALUES_FOUND = "MultipleValuesFound"
-    VALUE_NOT_FOUND = "ValueNotFound"
-    NON_NULLABLE = "NonNullable"
-    EXCEPTION_OCCURRED = "ExceptionOccurred"
-    OUTBOUND_STATUS_ERROR = "OutboundStatusError"
-    MISMATCHED_DATA = "MismatchedData"
-    UNUSABLE_STATE = "UnusableState"
     RECEIVED_PAYMENT_CURRENTLY_BEING_PROCESSED = "ReceivedPaymentCurrentlyBeingProcessed"
     UNEXPECTED_PAYMENT_TRANSACTION_TYPE = "UnexpectedPaymentTransactionType"
     EFT_PRENOTE_PENDING = "EFTPending"
     EFT_PRENOTE_REJECTED = "EFTRejected"
     CLAIMANT_MISMATCH = "ClaimantMismatch"
+    CLAIM_NOT_ID_PROOFED = "ClaimNotIdProofed"
+    PAYMENT_EXCEEDS_PAY_PERIOD_CAP = "PaymentExceedsPayPeriodCap"
+    ROUTING_NUMBER_FAILS_CHECKSUM = "RoutingNumberFailsChecksum"
+    LEAVE_REQUEST_IN_REVIEW = "LeaveRequestInReview"
 
 
 @dataclass(frozen=True, eq=True)
@@ -168,6 +464,9 @@ class ValidationContainer:
 
     def has_validation_issues(self) -> bool:
         return len(self.validation_issues) != 0
+
+    def get_reasons(self) -> List[ValidationReason]:
+        return [validation_issue.reason for validation_issue in self.validation_issues]
 
 
 class ValidationIssueException(Exception):
@@ -242,6 +541,21 @@ def zip_code_validator(zip_code: str) -> Optional[ValidationReason]:
     return None
 
 
+def routing_number_validator(routing_number: str) -> Optional[ValidationReason]:
+    if not validate_routing_number(routing_number):
+        return ValidationReason.ROUTING_NUMBER_FAILS_CHECKSUM
+
+    return None
+
+
+def amount_validator(amount_str: str) -> Optional[ValidationReason]:
+    try:
+        Decimal(amount_str)
+    except (InvalidOperation, TypeError):  # Amount is not numeric
+        return ValidationReason.INVALID_VALUE
+    return None
+
+
 def validate_csv_input(
     key: str,
     data: Dict[str, str],
@@ -251,7 +565,6 @@ def validate_csv_input(
     max_length: Optional[int] = None,
     custom_validator_func: Optional[Callable[[str], Optional[ValidationReason]]] = None,
 ) -> Optional[str]:
-    # Don't write out the actual value in the messages, these can be SSNs, routing #s, and other PII
     value = data.get(key)
     if value == "Unknown":
         value = None  # Effectively treating "" and "Unknown" the same
@@ -275,8 +588,11 @@ def validate_csv_input(
                 validation_issues.append(reason)
 
     if required:
+
         for validation_issue in validation_issues:
-            errors.add_validation_issue(validation_issue, key)
+            # Any non-missing error types add the value to the error details
+            # Note that this means these reports will contain PII data
+            errors.add_validation_issue(validation_issue, f"{key}: {value}")
 
     # If any of the specific validations hit an error, don't return the value
     # This is true even if the field is not required as we may still use the field.
@@ -288,225 +604,48 @@ def validate_csv_input(
 
 def validate_db_input(
     key: str,
-    db_object: Any,
-    required: bool,
-    max_length: int,
-    truncate: bool,
-    func: Optional[Callable[[Any], Optional[str]]] = None,
+    data: Any,
+    errors: ValidationContainer,
+    required: Optional[bool] = False,
+    min_length: Optional[int] = None,
+    max_length: Optional[int] = None,
+    custom_validator_func: Optional[Callable[[str], Optional[ValidationReason]]] = None,
 ) -> Optional[str]:
-    value = getattr(db_object, key, None)
+    value = getattr(data, key.lower(), None)
+    if value == "Unknown":
+        value = None  # Effectively treating "" and "Unknown" the same
 
     if required and not value:
-        raise Exception(f"Value for {key} is required to generate document.")
-    elif not required and not value:
-        return None
-
-    if func is not None:
-        value_str = func(value)
-    else:
-        value_str = str(value)  # Everything else should be safe to convert to string
-
-    if value_str and len(value_str) > max_length:
-        if truncate:
-            return value_str[:max_length]
-        # Don't add the value itself, these can include SSNs and other PII
-        raise Exception(f"Value for {key} is longer than allowed length of {max_length}.")
-
-    return value_str
-
-
-def validate_xml_input(
-    key: str,
-    element: Element,
-    errors: ValidationContainer,
-    find_attribute: bool = False,
-    required: Optional[bool] = False,
-    acceptable_values: Optional[List[str]] = None,
-) -> Optional[str]:
-    """Validate XML input
-
-    Primarily used to validate XML input from CTR Outbound Return files
-    """
-    if find_attribute:
-        value = get_xml_attribute(element, key)
-    else:
-        value = get_xml_subelement(element, key)
-
-    # If this attribute is required and it is either not present or set to
-    # "null", then add a validation issue and return None
-    if required and value is None:
         errors.add_validation_issue(ValidationReason.MISSING_FIELD, key)
         return None
 
-    # If this attribute can only be within a set of acceptable values, then
-    # add a validation issue if it isn't one of those values
-    if acceptable_values and value not in acceptable_values:
-        errors.add_validation_issue(ValidationReason.INVALID_VALUE, key)
+    validation_issues = []
+    # Check the length only if it is defined/not empty
+    if value:
+        if min_length and len(value) < min_length:
+            validation_issues.append(ValidationReason.FIELD_TOO_SHORT)
+        if max_length and len(value) > max_length:
+            validation_issues.append(ValidationReason.FIELD_TOO_LONG)
+
+        # Also only bother with custom validation if the value exists
+        if custom_validator_func:
+            reason = custom_validator_func(value)
+            if reason:
+                validation_issues.append(reason)
+
+    if required:
+
+        for validation_issue in validation_issues:
+            # Any non-missing error types add the value to the error details
+            # Note that this means these reports will contain PII data
+            errors.add_validation_issue(validation_issue, f"{key}: {value}")
+
+    # If any of the specific validations hit an error, don't return the value
+    # This is true even if the field is not required as we may still use the field.
+    if len(validation_issues) > 0:
+        return None
 
     return value
-
-
-def get_xml_attribute(element: Element, key: str) -> Optional[str]:
-    """Get an attribute from an XML element
-
-    Returns:
-        None: if the attribute is missing
-    """
-    if key in element.attrib:
-        return element.attrib[key]
-    else:
-        return None
-
-
-def get_xml_subelement(element: Element, key: str) -> Optional[str]:
-    """Get a subelement from an XML element
-
-    Returns:
-        None: if the subelement is missing or is set to "null"
-    """
-    sub_elem = element.find(key)
-    if sub_elem is not None and sub_elem.text and sub_elem.text.lower() != "null":
-        return sub_elem.text.strip("\n")
-    else:
-        return None
-
-
-def validate_input(
-    key: str,
-    doc_data: Dict[str, Any],
-    required: bool,
-    max_length: int,
-    truncate: bool,
-    func: Optional[Callable[[Any], str]] = None,
-) -> Optional[str]:
-    # This will need to be adjusted to use getattr once doc_data is a db model
-    value = doc_data.get(key)
-
-    if required and not value:
-        raise Exception(f"Value for {key} is required to generate document.")
-    elif not required and not value:
-        return None
-
-    if func is not None:
-        value_str = func(value)
-    else:
-        value_str = str(value)  # Everything else should be safe to convert to string
-
-    if len(value_str) > max_length:
-        if truncate:
-            return value_str[:max_length]
-        # Don't add the value itself, these can include SSNs and other PII
-        raise Exception(f"Value for {key} is longer than allowed length of {max_length}.")
-
-    return value_str
-
-
-def add_attributes(element: minidom.Element, attributes: Dict[str, str]) -> None:
-    for k, v in attributes.items():
-        value = v if v else "null"
-        element.setAttribute(k, value)
-
-
-def add_cdata_elements(
-    parent: minidom.Element,
-    document: minidom.Document,
-    elements: Dict[str, Any],
-    add_y_attribute: bool = True,
-) -> None:
-    for key, val in elements.items():
-        elem = document.createElement(key)
-        if add_y_attribute:
-            add_attributes(elem, {"Attribute": "Y"})
-        parent.appendChild(elem)
-
-        if val is None:
-            cdata = document.createCDATASection("null")
-        else:
-            # Anything in the CDATA tag is passed directly and markup ignored
-            # CTR wants DFML to send all values in as uppercase
-            cdata = document.createCDATASection(str(val).upper())
-        elem.appendChild(cdata)
-
-
-def create_next_batch_id(
-    now: datetime, file_type_descr: str, db_session: db.Session
-) -> CtrBatchIdentifier:
-    ctr_batch_id_pattern = Constants.BATCH_ID_TEMPLATE.format(
-        now.strftime("%m%d"), file_type_descr, "%"
-    )
-    max_batch_id_today = (
-        db_session.query(func.max(CtrBatchIdentifier.batch_counter))
-        .filter(
-            CtrBatchIdentifier.batch_date == now.date(),
-            CtrBatchIdentifier.ctr_batch_identifier.like(ctr_batch_id_pattern),
-        )
-        .scalar()
-    )
-
-    # Start batch counters at 10.
-    # Other agencies use suffixes 1-7 (for days of the week). We start our suffixes at 10 so we
-    # don't conflict with their batch IDs and have a logical starting point (10 instead of 8).
-    batch_counter = 10
-    if max_batch_id_today:
-        batch_counter = max_batch_id_today + 1
-
-    batch_id = Constants.BATCH_ID_TEMPLATE.format(
-        now.strftime("%m%d"), file_type_descr, batch_counter
-    )
-    ctr_batch_id = CtrBatchIdentifier(
-        ctr_batch_identifier_id=uuid.uuid4(),
-        ctr_batch_identifier=batch_id,
-        year=now.year,
-        batch_date=now.date(),
-        batch_counter=batch_counter,
-    )
-    db_session.add(ctr_batch_id)
-
-    return ctr_batch_id
-
-
-def create_batch_id_and_reference_file(
-    now: datetime, file_type: LkReferenceFileType, db_session: db.Session, ctr_outbound_path: str
-) -> Tuple[CtrBatchIdentifier, ReferenceFile, pathlib.Path]:
-    ctr_batch_id = create_next_batch_id(
-        now, file_type.reference_file_type_description or "", db_session
-    )
-
-    s3_path = os.path.join(ctr_outbound_path, Constants.S3_OUTBOUND_READY_DIR)
-    batch_filename = pathlib.Path(
-        Constants.BATCH_ID_TEMPLATE.format(
-            now.strftime("%Y%m%d"),
-            file_type.reference_file_type_description,
-            ctr_batch_id.batch_counter,
-        )
-    )
-    dir_path = os.path.join(s3_path, batch_filename)
-
-    ref_file = ReferenceFile(
-        reference_file_id=uuid.uuid4(),
-        file_location=dir_path,
-        reference_file_type_id=file_type.reference_file_type_id,
-        ctr_batch_identifier=ctr_batch_id,
-    )
-    db_session.add(ref_file)
-
-    return (ctr_batch_id, ref_file, batch_filename)
-
-
-def create_files(
-    directory: str, filename: str, dat_xml_document: minidom.Document, inf_dict: Dict[str, str]
-) -> Tuple[str, str]:
-    dat_filepath = os.path.join(directory, f"{filename}.DAT")
-    inf_filepath = os.path.join(directory, f"{filename}.INF")
-
-    with open(dat_filepath, "wb") as dat_file:
-        dat_file.write(dat_xml_document.toprettyxml(indent="   ", encoding="ISO-8859-1"))
-
-    with open(inf_filepath, "w") as inf_file:
-        for k, v in inf_dict.items():
-            inf_file.write(f"{k} = {v};\n")
-
-    return (dat_filepath, inf_filepath)
 
 
 def get_date_group_str_from_path(path: str) -> Optional[str]:
@@ -563,6 +702,7 @@ def get_fineos_max_history_date(export_type: LkReferenceFileType) -> datetime:
     Only accepts:
         - ReferenceFileType.FINEOS_CLAIMANT_EXTRACT
         - ReferenceFileType.FINEOS_PAYMENT_EXTRACT
+        - ReferenceFileType.FINEOS_PAYMENT_RECONCILIATION_EXTRACT
 
     Raises:
         ValueError: An unacceptable ReferenceFileType or a bad datestring was
@@ -581,6 +721,11 @@ def get_fineos_max_history_date(export_type: LkReferenceFileType) -> datetime:
         == ReferenceFileType.FINEOS_PAYMENT_EXTRACT.reference_file_type_id
     ):
         datestring = date_config.fineos_payment_extract_max_history_date
+    elif (
+        export_type.reference_file_type_id
+        == ReferenceFileType.FINEOS_PAYMENT_RECONCILIATION_EXTRACT.reference_file_type_id
+    ):
+        datestring = date_config.fineos_payment_reconciliation_extract_max_history_date
 
     else:
         raise ValueError(f"Incorrect export_type {export_type} provided")
@@ -590,11 +735,14 @@ def get_fineos_max_history_date(export_type: LkReferenceFileType) -> datetime:
 
 # TODO: This function should probably get broken down into smaller functions
 def copy_fineos_data_to_archival_bucket(
-    db_session: db.Session, expected_file_names: List[str], export_type: LkReferenceFileType
+    db_session: db.Session,
+    expected_file_names: List[str],
+    export_type: LkReferenceFileType,
+    source_folder_s3_config_key: str = "fineos_data_export_path",
 ) -> Dict[str, Dict[str, str]]:
     # stage source and destination folders
     s3_config = payments_config.get_s3_config()
-    source_folder = s3_config.fineos_data_export_path
+    source_folder = getattr(s3_config, source_folder_s3_config_key)
     destination_folder = os.path.join(
         s3_config.pfml_fineos_extract_archive_path, Constants.S3_INBOUND_RECEIVED_DIR
     )
@@ -783,35 +931,6 @@ def group_s3_files_by_date(expected_file_names: List[str]) -> Dict[str, List[str
     return date_to_full_path
 
 
-def create_mmars_files_in_s3(
-    path: str,
-    filename: str,
-    dat_xml_document: minidom.Document,
-    inf_dict: Dict[str, str],
-    session: Optional[boto3.Session] = None,
-) -> Tuple[str, str]:
-    if not path.startswith("s3:"):
-        os.makedirs(path, exist_ok=True)
-
-    dat_filepath = os.path.join(path, f"{filename}.DAT")
-    inf_filepath = os.path.join(path, f"{filename}.INF")
-
-    config = botocore.client.Config(retries={"max_attempts": 10, "mode": "standard"})
-    transport_params = {
-        "session": session or boto3.Session(),
-        "resource_kwargs": {"config": config},
-    }
-
-    with smart_open.open(dat_filepath, "wb", transport_params=transport_params) as dat_file:
-        dat_file.write(dat_xml_document.toprettyxml(indent="   ", encoding="ISO-8859-1"))
-
-    with smart_open.open(inf_filepath, "w", transport_params=transport_params) as inf_file:
-        for k, v in inf_dict.items():
-            inf_file.write(f"{k} = {v};\n")
-
-    return (dat_filepath, inf_filepath)
-
-
 def datetime_str_to_date(datetime_str: Optional[str]) -> Optional[date]:
     if not datetime_str:
         return None
@@ -821,10 +940,6 @@ def datetime_str_to_date(datetime_str: Optional[str]) -> Optional[date]:
 def compare_address_fields(first: Address, second: Address, field: str) -> bool:
     value1 = getattr(first, field)
     value2 = getattr(second, field)
-
-    if field == "zip_code":
-        value1 = value1.strip()[:5] if value1 else None
-        value2 = value2.strip()[:5] if value2 else None
 
     if type(value1) is str:
         value1 = value1.strip().lower()
@@ -871,7 +986,9 @@ def find_existing_address_pair(
         .all()
     )
 
-    # TODO
+    # For each address associated with prior payments for the claimant
+    # see if either the address from FINEOS matches or the one returned
+    # by Experian matches (in case FINEOS is updated to the more correct one)
     for experian_address_pair in experian_address_pairs:
 
         existing_fineos_address = experian_address_pair.fineos_address
@@ -916,38 +1033,6 @@ def move_file_and_update_ref_file(
     ref_file.file_location = destination
 
 
-def get_inf_data_from_reference_file(
-    reference: ReferenceFile, db_session: db.Session
-) -> Optional[Dict]:
-    ctr_id = reference.ctr_batch_identifier_id
-
-    try:
-        ctr_batch = (
-            db_session.query(CtrBatchIdentifier)
-            .filter(CtrBatchIdentifier.ctr_batch_identifier_id == ctr_id)
-            .one_or_none()
-        )
-
-        if ctr_batch and ctr_batch.inf_data:
-            # convert to Dict from sql alchemy JSON data type which has type Union[Dict, List]
-            return cast(Dict, ctr_batch.inf_data)
-    except SQLAlchemyError as e:
-        logger.exception(
-            "CtrBatchIdentifier query failed: %s",
-            type(e),
-            extra={"CtrBatchIdentifier.ctr_batch_identifier_id": ctr_id},
-        )
-    return None
-
-
-def get_inf_data_as_plain_text(inf_data: Dict) -> str:
-    text = ""
-    for key, value in inf_data.items():
-        text += f"{key} = {value}\n"
-
-    return text
-
-
 def get_mapped_claim_type(claim_type_str: str) -> LkClaimType:
     """Given a string from a Vendor Extract, return a LkClaimType
 
@@ -960,36 +1045,6 @@ def get_mapped_claim_type(claim_type_str: str) -> LkClaimType:
         return ClaimType.MEDICAL_LEAVE
     else:
         raise ValueError("Unknown claim type")
-
-
-def get_fineos_vendor_customer_numbers_from_reference_file(reference: ReferenceFile) -> List[Dict]:
-    return [
-        {
-            "fineos_customer_number": emp.employee.fineos_customer_number,
-            "ctr_vendor_customer_code": emp.employee.ctr_vendor_customer_code,
-        }
-        for emp in reference.employees
-    ]
-
-
-def read_reference_file(ref_file: ReferenceFile, ref_file_type: LkReferenceFileType) -> str:
-    """ Reads a ReferenceFile
-
-    Must have a file_location and a matching file_type
-
-    Raises:
-        ValueError: if the file_type is wrong or if the file_location is missing
-        Also: various errors from actually reading the file
-    """
-
-    if ref_file.file_location is None:
-        raise ValueError(f"ReferenceFile {ref_file.reference_file_id} is missing a file_location")
-    elif ref_file.reference_file_type_id != ref_file_type.reference_file_type_id:
-        raise ValueError(
-            f"ReferenceFile {ref_file.reference_file_id} is not of the expected ReferenceFileType {ref_file_type.reference_file_type_description}"
-        )
-    else:
-        return file_util.read_file(ref_file.file_location)  # May raise file handling errors
 
 
 def move_reference_file(
@@ -1045,107 +1100,6 @@ def move_reference_file(
         raise
 
 
-def get_payment_by_doc_id(
-    db_session: db.Session, doc_id: str
-) -> Tuple[Payment, CtrDocumentIdentifier]:
-    """Return the payment associated with the given DOC_ID"""
-    payment_ref_file = (
-        db_session.query(PaymentReferenceFile)
-        .join(PaymentReferenceFile.ctr_document_identifier)
-        .filter(CtrDocumentIdentifier.ctr_document_identifier == doc_id)
-        .first()
-    )
-    if payment_ref_file is None or payment_ref_file.payment is None:
-        raise ValueError("No payment was found")
-    else:
-        return (payment_ref_file.payment, payment_ref_file.ctr_document_identifier)
-
-
-def get_model_by_doc_id(
-    db_session: db.Session, doc_id: str
-) -> Tuple[Union[Employee, Payment], CtrDocumentIdentifier]:
-    """Return the payment or employee associated with the given DOC_ID"""
-    try:
-        return get_payment_by_doc_id(db_session, doc_id)
-    except ValueError:
-        # If no payment was found, look for an employee
-        employee_ref_file = (
-            db_session.query(EmployeeReferenceFile)
-            .join(EmployeeReferenceFile.ctr_document_identifier)
-            .filter(CtrDocumentIdentifier.ctr_document_identifier == doc_id)
-            .first()
-        )
-        if employee_ref_file is None or employee_ref_file.employee is None:
-            raise ValueError("No employee or payment was found")
-        else:
-            return (employee_ref_file.employee, employee_ref_file.ctr_document_identifier)
-
-
-def create_model_reference_file(
-    db_session: db.Session,
-    ref_file: ReferenceFile,
-    associated_model: Union[Payment, Employee],
-    ctr_document_identifier_model: CtrDocumentIdentifier,
-) -> None:
-    """Creates a PaymentReferenceFile or EmployeeReferenceFile for a Payment or Employee
-
-    Raises:
-        SQLAlchemyError: if there is an issue creating the db record
-    """
-    model_ref_file: Union[EmployeeReferenceFile, PaymentReferenceFile]
-    try:
-        if isinstance(associated_model, Payment):
-            model_ref_file = PaymentReferenceFile(
-                payment=associated_model,
-                reference_file=ref_file,
-                ctr_document_identifier=ctr_document_identifier_model,
-            )
-        elif isinstance(associated_model, Employee):
-            model_ref_file = EmployeeReferenceFile(
-                employee=associated_model,
-                reference_file=ref_file,
-                ctr_document_identifier=ctr_document_identifier_model,
-            )
-
-        db_session.add(model_ref_file)
-    except SQLAlchemyError:
-        # It's possible for SQLAlchemy to raise an IntegrityError if we try to
-        # add a second PaymentReferenceFile/EmployeeReferenceFile with the
-        # same payment + reference_file combination. IntegrityErrors blow up
-        # the db transaction and require a rollback. If we rollback, we've
-        # broken all processing.
-        db_session.rollback()
-        logger.exception(
-            "Unable to create a <Model>ReferenceFile",
-            extra={
-                "file_location": ref_file.file_location,
-                "ctr_document_identifier": ctr_document_identifier_model.ctr_document_identifier,
-            },
-        )
-        raise
-
-
-def get_reference_file(source_filepath: str, db_session: db.Session) -> Optional[ReferenceFile]:
-    """Returns a ReferenceFile for a given file location
-
-    Raises:
-        MultipleResultsFound: if multiple ReferenceFiles have the same file_location
-                              This should not happen. The db is broken.
-    """
-    try:
-        return (
-            db_session.query(ReferenceFile)
-            .filter(ReferenceFile.file_location == source_filepath)
-            .one_or_none()
-        )
-    except MultipleResultsFound:
-        logger.exception(
-            f"Found more than one ReferenceFile with the same file_location: {source_filepath}",
-            extra={"source_filepath": source_filepath},
-        )
-        raise
-
-
 def download_and_parse_csv(s3_path: str, download_directory: str) -> CSVSourceWrapper:
     file_name = os.path.basename(s3_path)
     download_location = os.path.join(download_directory, file_name)
@@ -1181,14 +1135,7 @@ def get_attribute_names(cls):
 
 def create_staging_table_instance(
     data: Dict,
-    db_cls: Union[
-        Type[FineosExtractVpei],
-        Type[FineosExtractVpeiClaimDetails],
-        Type[FineosExtractVpeiPaymentDetails],
-        Type[FineosExtractVbiRequestedAbsenceSom],
-        Type[FineosExtractEmployeeFeed],
-        Type[FineosExtractVbiRequestedAbsence],
-    ],
+    db_cls: ExtractTable,
     ref_file: ReferenceFile,
     fineos_extract_import_log_id: Optional[int],
 ) -> base.Base:
@@ -1208,16 +1155,180 @@ def create_staging_table_instance(
         absence_casestatus. We will log a warning stating property new_column is not included in model
         class VbiRequestedAbsenceSom.
     """
-
+    lower_data = make_keys_lowercase(data)
     # check if extracted data types match our db model properties
     known_properties = set(get_attribute_names(db_cls))
-    extracted_properties = set(data.keys())
+    extracted_properties = set(lower_data.keys())
     difference = [prop for prop in extracted_properties if prop not in known_properties]
 
     if len(difference) > 0:
         logger.warning(f"{db_cls.__name__} does not include properties: {','.join(difference)}")
-        [data.pop(diff) for diff in difference]
+        [lower_data.pop(diff) for diff in difference]
 
     return db_cls(
-        **data, reference_file=ref_file, fineos_extract_import_log_id=fineos_extract_import_log_id,
+        **lower_data,
+        reference_file=ref_file,
+        fineos_extract_import_log_id=fineos_extract_import_log_id,
     )
+
+
+def get_traceable_payment_details(payment: Payment) -> Dict[str, Optional[Any]]:
+    # For logging purposes, this returns useful, traceable details
+    # about a payment and related fields if they exist.
+    #
+    # DO NOT PUT PII IN THE RETURN OF THIS METHOD, IT'S MEANT FOR LOGGING
+    #
+
+    claim = payment.claim
+    employee = payment.claim.employee if payment.claim else None
+
+    return {
+        "c_value": payment.fineos_pei_c_value,
+        "i_value": payment.fineos_pei_i_value,
+        "absence_case_number": claim.fineos_absence_id if claim else None,
+        "fineos_customer_number": employee.fineos_customer_number if employee else None,
+    }
+
+
+def get_transaction_status_date(payment: Payment) -> date:
+    # Check payments that have a check posted date should use
+    # that for the transaction status date as that indicates
+    # from PUB when the check was actually posted
+    if payment.check and payment.check.check_posted_date:
+        return payment.check.check_posted_date
+
+    # Otherwise the transaction status date is calculated using the current time.
+    return get_now().date()
+
+
+def filter_dict(dict: Dict[str, Any], allowed_keys: Set[str]) -> Dict[str, Any]:
+    """
+    Filter a dictionary to a specified set of allowed keys.
+    If the key isn't present, will not cause an issue (ie. when we delete columns in the DB)
+    """
+    new_dict = {}
+    for k, v in dict.items():
+        if k in allowed_keys:
+            new_dict[k] = v
+
+    return new_dict
+
+
+employee_audit_log_keys = set(
+    [
+        "employee_id",
+        "tax_identifier_id",
+        "first_name",
+        "last_name",
+        "date_of_birth",
+        "fineos_customer_number",
+        "latest_import_log_id",
+        "created_at",
+        "updated_at",
+    ]
+)
+employer_audit_log_keys = set(
+    [
+        "employer_id",
+        "employer_fein",
+        "employer_name",
+        "dor_updated_date",
+        "latest_import_log_id",
+        "fineos_employer_id",
+        "created_at",
+        "updated_at",
+    ]
+)
+
+
+def create_payment_log(
+    payment: Payment,
+    import_log_id: Optional[int],
+    db_session: db.Session,
+    additional_details: Optional[Dict[str, Any]] = None,
+) -> None:
+    """
+    Create a log in the DB for information about a payment at a particular point
+    in the processing. Automatically adds a snapshot of
+    employee/employer/claim/absence period/payment check
+    """
+    absence_period = payment.leave_request
+    claim = payment.claim
+
+    snapshot = {}
+    if absence_period:
+        snapshot["absence_period"] = absence_period.for_json()
+    # When we refactor claim to be fetched from absence period, change this
+    # to be in the above if statement
+    claim = payment.claim
+    if claim:
+        snapshot["claim"] = claim.for_json()
+
+        employee = claim.employee
+        if employee:
+            employee_json = employee.for_json()
+            snapshot["employee"] = filter_dict(employee_json, employee_audit_log_keys)
+
+        employer = claim.employer
+        if employer:
+            employer_json = employer.for_json()
+            snapshot["employer"] = filter_dict(employer_json, employer_audit_log_keys)
+
+    payment_details = payment.payment_details
+    if payment_details:
+        payment_details_info = []
+        for payment_detail in payment_details:
+            payment_details_info.append(payment_detail.for_json())
+        snapshot["payment_details"] = payment_details_info
+
+    check_details = payment.check
+    if check_details:
+        snapshot["payment_check"] = check_details.for_json()
+
+    audit_details = {}
+    audit_details["snapshot"] = snapshot
+    if additional_details:
+        audit_details.update(additional_details)
+
+    payment_log = PaymentLog(payment=payment, import_log_id=import_log_id, details=audit_details)
+    db_session.add(payment_log)
+
+
+def create_success_file(start_time: datetime, process_name: str) -> None:
+    """
+    Create a file that indicates the ECS process was successful. Will
+    be put in a folder for the date the processing started, but
+    the file will be timestamped with the time it completed.
+
+    s3://bucket/reports/processed/{start_date}/{completion_timestamp}-{process_name}.SUCCESS
+    """
+    s3_config = payments_config.get_s3_config()
+
+    end_time = get_now()
+    timestamp_prefix = end_time.strftime("%Y-%m-%d-%H-%M-%S")
+    success_file_name = f"{timestamp_prefix}-{process_name}.SUCCESS"
+
+    archive_path = s3_config.pfml_error_reports_archive_path
+    output_path = build_archive_path(
+        archive_path, Constants.S3_INBOUND_PROCESSED_DIR, success_file_name, current_time=start_time
+    )
+
+    # What is the easiest way to create an empty file to upload?
+    with file_util.write_file(output_path) as success_file:
+        success_file.write("SUCCESS")
+
+    logger.info("Creating success file at %s", output_path)
+
+
+def validate_columns_present(record: Dict[str, Any], fineos_extract: FineosExtract) -> None:
+    missing_columns = []
+
+    for required_column in fineos_extract.field_names:
+        if required_column not in record:
+            missing_columns.append(required_column)
+
+    if len(missing_columns) > 0:
+        raise Exception(
+            "FINEOS extract %s is missing required fields: %s - found only %s"
+            % (fineos_extract.file_name, missing_columns, list(record.keys()))
+        )

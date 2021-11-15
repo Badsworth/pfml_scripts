@@ -23,18 +23,20 @@ on:
         description: |
           --------------------------------------
           ⬇️ Tag or branch to be deployed.
-      extraUatDeploy:
+      envs_for_autodeploy:
+        required: false
+        default: "uat, performance, cps-preview"
+        description: |
+          --------------------------------------
+          ⬇️ [Staging only] Comma-separated list
+          of additional environments to automatically deploy to.
+          Valid options are 'uat', 'performance', 'cps-preview'.
+      performLoadTest:
         required: false
         default: "true"
         description: |
-          --------------------------------------
-          ⬇️ (For staging deploys only) Also deploy the above version to UAT?
-      extraPerformanceDeploy:
-        required: false
-        default: "true"
-        description: |
-          --------------------------------------
-          ⬇️ (Also for staging deploys only) Also deploy the above version to Performance?
+          ⬇️ (For performance deploys only, including extra deploys from staging)
+          Perform a small-scale load test in performance after deployment?
   push:
     branches:
       - main
@@ -55,7 +57,7 @@ env:
   terraform-env-shared-dir: ./infra/env-shared/environments
   terraform-ecs-tasks-dir: ./infra/ecs-tasks/environments
   terraform-version: 0.14.7
-  python-version: 3.8
+  python-version: 3.9
 
   # Set a timeout of two minutes for all terraform commands in the workflow
   # to account for parallel jobs working in the same environment with the same
@@ -168,7 +170,6 @@ jobs:
             echo "::set-output name=message::${{ env.just_the_deploy }}"
           fi
 
-
   start-comms-github:
     name: Start deploy comms (GitHub)
     needs: [update-the-deploy-branch, deploy-info]
@@ -235,59 +236,40 @@ jobs:
               "title": "API ${{ needs.deploy-info.outputs.api-env }} deployment #${{ github.run_number }} was started\n${{ needs.deploy-info.outputs.subtitle }}",
               "color": "warning",
               "fields": [
-                { "title": "started by", "value": "`${{ github.actor }}`", "short": true },
-                { "title": "releasing", "value": "`${{ env.version }}`", "short": true },
-                { "title": "commit details", "value": "`${{ env.commit_details }}`" }
+                { "title": "started by", "value": "*${{ github.actor }}*", "short": true },
+                { "title": "releasing", "value": "*${{ env.version }}*", "short": true },
+                { "title": "commit details", "value": "*${{ env.commit_details }}*" }
               ]
             }]
           }' https://slack.com/api/chat.postMessage)
 
-  extra-uat-deploy:
-    if: contains(github.event.inputs.deployment_env, 'stage') && github.event.inputs.extraUatDeploy == 'true'
-    name: (Stage) Extra UAT deploy
-    needs: update-the-deploy-branch
+  extra-env-deploy:
+    if: github.event.inputs.deployment_env == 'stage'
+    name: Extra Environment deploy
+    strategy:
+      fail-fast: false
+      matrix:
+        env: [cps-preview, performance, uat]
+    needs: [update-the-deploy-branch]
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v2
+        if: github.event.inputs.deployment_env != matrix.env && contains(github.event.inputs.envs_for_autodeploy, matrix.env)
         with:
           ref: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
-      - name: Start a UAT deploy
+      - name: Start a deployment
+        if: github.event.inputs.deployment_env != matrix.env && contains(github.event.inputs.envs_for_autodeploy, matrix.env)
         env:
           GITHUB_API: "https://api.github.com/repos/EOLWD/pfml"
           GITHUB_TOKEN: ${{ secrets.PFML_DEVOPS_TOKEN }}
           WORKFLOW_NAME: "api-deploy.yml"
         run: |
-          echo "*** An API staging deploy is now in progress. Enqueuing an extra deployment to UAT... ***"
+          echo "*** Enqueuing an extra deployment to ${{matrix.env}} ... ***"
           curl -fLS -X POST "$GITHUB_API/actions/workflows/$WORKFLOW_NAME/dispatches" \
                         -H "Authorization: Bearer $GITHUB_TOKEN" \
                         -H "Accept: application/vnd.github.v3+json" \
-                        -d '{ "ref": "${{ github.ref }}", "inputs": { "deployment_env": "uat", "version": "${{ env.version }}" } }'
-          echo "Done."
-
-  extra-performance-deploy:
-    if: contains(github.event.inputs.deployment_env, 'stage') && github.event.inputs.extraPerformanceDeploy == 'true'
-    name: (Stage) Extra Performance deploy
-    needs: update-the-deploy-branch
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          ref: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
-      - name: Start a Perf deploy
-        env:
-          GITHUB_API: "https://api.github.com/repos/EOLWD/pfml"
-          GITHUB_TOKEN: ${{ secrets.PFML_DEVOPS_TOKEN }}
-          WORKFLOW_NAME: "api-deploy.yml"
-        run: |
-          echo "*** An API staging deploy is now in progress. Enqueuing an extra deployment to Performance... ***"
-          curl -fLS -X POST "$GITHUB_API/actions/workflows/$WORKFLOW_NAME/dispatches" \
-                        -H "Authorization: Bearer $GITHUB_TOKEN" \
-                        -H "Accept: application/vnd.github.v3+json" \
-                        -d '{ "ref": "${{ github.ref }}", "inputs": { "deployment_env": "performance", "version": "${{ env.version }}" } }'
-          echo "Done."
-
+                        -d '{ "ref": "${{ github.ref }}", "inputs": { "deployment_env": "${{matrix.env}}", "version": "${{ env.version }}", "performLoadTest": "${{ github.event.inputs.performLoadTest }}"} }'
   api-build:
     name: Build docker image
     needs: update-the-deploy-branch
@@ -321,83 +303,13 @@ jobs:
 
       - name: Build and upload docker image artifact
         if: steps.ecr-check.outcome == 'failure'
-        run: make release
+        run: make build-and-publish
         working-directory: ${{ env.working-dir }}
-
-  lambda-builds:
-    name: Build lambdas
-    needs: update-the-deploy-branch
-    runs-on: ubuntu-latest
-
-    strategy:
-      fail-fast: false
-      matrix:
-        component: ["formstack_import", "cognito_pre_signup", "cognito_post_confirmation"]
-
-    env:
-      infra-working-dir: ./api/lambdas
-
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          ref: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
-
-      - uses: actions/setup-python@v1
-        with:
-          python-version: ${{ env.python-version }}
-
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
-          role-to-assume: ci-run-deploys
-          role-duration-seconds: 3600
-
-      - name: Check if lambda packages exist in S3 before the build
-        id: s3-check
-        run: aws s3 ls $(make get-bucket-url)/ | grep ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
-        continue-on-error: true
-        working-directory: ${{ env.infra-working-dir }}/${{ matrix.component }}
-
-      - name: Echo message about the package
-        if: steps.s3-check.outcome == 'success'
-        run: echo "The Lambda package already exists in S3 bucket; skipping rebuild."
-
-      - name: Install API Package Dependencies
-        if: steps.s3-check.outcome == 'failure'
-        run: pip install wheel setuptools poetry
-        working-directory: ${{ env.working-dir }}
-
-      - name: Build API package
-        if: steps.s3-check.outcome == 'failure'
-        run: poetry build
-        working-directory: ${{ env.working-dir }}
-
-      - name: Install Lambda CLI Dependencies
-        if: steps.s3-check.outcome == 'failure'
-        run: pip install aws-sam-cli
-        working-directory: ${{ env.infra-working-dir }}/${{ matrix.component }}
-
-      - name: Lambda Build, Package and Upload to S3
-        if: steps.s3-check.outcome == 'failure'
-        run: make release
-        working-directory: ${{ env.infra-working-dir }}/${{ matrix.component }}
-
-      - name: Rename Lambda S3 Package
-        id: rename
-        if: steps.s3-check.outcome == 'failure'
-        run: |
-          aws s3 mv $(make get-release-url) $(make get-bucket-url)/${{ needs.update-the-deploy-branch.outputs.commit_hash }}
-        working-directory: ${{ env.infra-working-dir }}/${{ matrix.component }}
 
   api-db-migrate-up:
     name: Run migrations
     runs-on: ubuntu-latest
-    # This step doesn't really depend on lambda-builds, but for good measure we should
-    # make sure everything builds before we deploy any updates to ECS tasks or services.
-    needs: [update-the-deploy-branch, api-build, lambda-builds, deploy-info]
+    needs: [update-the-deploy-branch, api-build, deploy-info]
 
     env:
       TF_VAR_service_docker_tag: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
@@ -489,16 +401,13 @@ jobs:
 
     env:
       TF_VAR_service_docker_tag: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
-      TF_VAR_formstack_lambda_artifact_s3_key: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
-      TF_VAR_cognito_post_confirmation_lambda_artifact_s3_key: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
-      TF_VAR_cognito_pre_signup_lambda_artifact_s3_key: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
       TF_VAR_release_version: ${{ github.event.inputs.version || 'main' }}
 
     steps:
       - uses: actions/checkout@v2
         with:
           ref: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
-
+        
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -518,36 +427,6 @@ jobs:
         run: terraform init
         working-directory: ${{ env.terraform-api-dir }}/${{ needs.deploy-info.outputs.api-env }}
 
-      # Temporary step to ensure the existing RDS log group gets imported into the state.
-      # This is necessary to prevent terraform from running into a duplicate-log-group error.
-      #
-      # (TODO: Remove in INFRA-386 after rollout)
-      - name: (temp) Fix RDS log group state
-        # Clear out global lock timeout for "terraform state show""
-        env:
-          TF_CLI_ARGS: ''
-        run: |
-          needs_new=$(git grep aws/rds/instance/massgov-pfml-.*/postgresql ../../template/rds.tf || true)
-          is_new=$(terraform state show module.api.aws_cloudwatch_log_group.postgresql | { grep massgov-pfml- || true; })
-
-          if [[ -z "$needs_new" ]] && ! [[ -z "$is_new" ]]; then
-            echo "Importing old format massgov_pfml_"
-            prefix=massgov_pfml_
-          elif ! [[ -z "$needs_new" ]] && [[ -z "$is_new" ]]; then
-            echo "Importing new format massgov-pfml-"
-            prefix=massgov-pfml-
-          else
-            echo "No imports needed."
-          fi
-
-          if ! [ -z $prefix ]; then
-            terraform state rm -lock-timeout=120s module.api.aws_cloudwatch_log_group.postgresql
-            terraform import -lock-timeout=120s \
-              module.api.aws_cloudwatch_log_group.postgresql \
-              /aws/rds/instance/${prefix}${{ needs.deploy-info.outputs.api-env }}/postgresql
-          fi
-        working-directory: ${{ env.terraform-api-dir }}/${{ needs.deploy-info.outputs.api-env }}
-
       - name: Terraform Plan with new docker image
         id: terraform_plan
         run: terraform plan -out=plan.tfplan
@@ -564,31 +443,30 @@ jobs:
           TF_CLI_ARGS: ''
         run: |
           CLUSTER_ID=$(terraform output ecs_cluster_arn | sed s/\"//g | cut -d/ -f2)
-          SVC_ID=$(terraform output ecs_service_id | sed s/\"//g | cut -d/ -f2)
+          SVC_ID=$(terraform output ecs_service_id | sed s/\"//g | rev | cut -d/ -f1 | rev)
 
           # Wait for ECS service to be stable, and run it twice to allow for
-          # abnormally long deploys (up to 20 minutes.)
+          # abnormally long deploys (up to 30 minutes.)
           failures=0
 
-          while [[ $failures -lt 2 ]]; do
+          while [[ $failures -lt 3 ]]; do
             set +e -x
-            result_msg=$(aws ecs wait services-stable --cluster $CLUSTER_ID --services $SVC_ID)
+            result_msg=$(aws ecs wait services-stable --cluster $CLUSTER_ID --services $SVC_ID 2>&1)
             result_code=$?
             set -e +x
 
             if [[ ${result_code} -eq 0 ]]; then
               break
             elif [[ "${result_msg}" =~ "MISSING" ]]; then
-              # This happens sometimes when the script runs too quickly after terraform apply.
-              # Sleep for a little bit and try again without considering it a retry.
-              sleep 5
+              echo "ECS Cluster \"${CLUSTER_ID}\" or service \"${SVC_ID}\" does not exist"
+              exit 1
             else
               failures=$((failures+=1))
             fi
           done
 
-          if [[ $failures -ge 2 ]]; then
-            echo "ECS service failed to stabilize within 20 minutes."
+          if [[ $failures -ge 3 ]]; then
+            echo "ECS service failed to stabilize within 30 minutes."
             echo "Please check the ECS service at https://console.aws.amazon.com/ecs/home?region=us-east-1#/clusters/${{ needs.deploy-info.outputs.api-env }}/services/pfml-api-${{ needs.deploy-info.outputs.api-env }}/events"
             echo "If the service stabilizes, you do not need to re-deploy. For lower environments you should run the E2E test job manually."
             echo
@@ -604,6 +482,7 @@ jobs:
     needs: [update-the-deploy-branch, api-release, deploy-info]
 
     steps:
+      - uses: actions/checkout@v2
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -613,14 +492,11 @@ jobs:
           role-to-assume: ci-run-deploys
           role-duration-seconds: 3600
 
-      - name: Pull the newrelic API key from parameter store
-        uses: "marvinpinto/action-inject-ssm-secrets@latest"
-        with:
-          ssm_parameter: "/admin/pfml-api/newrelic-api-key"
-          env_variable_name: "newrelic_api_key"
+      - name: Setup & Configure New Relic CLI
+        uses: ./.github/actions/setup-nr-cli
 
       - name: Create a deployment marker
-        uses: newrelic/deployment-marker-action@v1
+        run: newrelic apm deployment create --applicationId "${{ env[needs.deploy-info.outputs.api-env] }}" --revision "${{ env.version || needs.update-the-deploy-branch.outputs.commit_hash }}"
         env:
           prod: "868501894"
           performance: "980622863"
@@ -628,11 +504,12 @@ jobs:
           stage: "847267539"
           uat: "1114117515"
           training: "980608199"
-        with:
-          apiKey: ${{ env.NEWRELIC_API_KEY }}
-          accountId: "2837112"
-          applicationId: ${{ env[needs.deploy-info.outputs.api-env] }}
-          revision: ${{ env.version || needs.update-the-deploy-branch.outputs.commit_hash }}
+          breakfix: "1298450359"
+          cps-preview: "1386420590"
+      - name: Create a custom deployment record
+        run: |
+          newrelic events post --event "{ \"eventType\": \"CustomDeploymentMarker\", \"component\": \"api\", \"environment\":\"${{ needs.deploy-info.outputs.api-env }}\", \"version\": \"${{ env.version || needs.update-the-deploy-branch.outputs.commit_hash }}\" }"
+
 
   api-gateway-release:
     name: API Gateway Release
@@ -735,6 +612,8 @@ jobs:
     name: Finish deploy comms (Slack)
     needs: [start-comms-slack, deploy-info, postdeploy-info]
     runs-on: ubuntu-latest
+    outputs:
+      message-ts: ${{ steps.post-to-slack.outputs.message-ts }}
     # Notifies if there's a failure on auto-deploys to test
     if: always() && 
       (
@@ -788,6 +667,7 @@ jobs:
           fi
 
       - name: Post to Slack
+        id: post-to-slack
         run: |
           SLACKBOT_RESPONSE=$(curl -fsLS -X POST -H "Authorization: Bearer ${{ env.SLACKBOT_TOKEN }}" \
           -H 'Content-Type: application/json;charset=utf-8' \
@@ -803,34 +683,86 @@ jobs:
             }]
           }' https://slack.com/api/chat.postMessage)
 
+          MESSAGE_TS=$(echo $SLACKBOT_RESPONSE | jq -r '.ts')
+          echo $MESSAGE_TS
+          echo "::set-output name=message-ts::$MESSAGE_TS"
+
   end-to-end:
     name: End-to-End Test Deployment
     runs-on: ubuntu-latest
     needs: [update-the-deploy-branch, api-release, api-gateway-release]
-    if: github.event.inputs.deployment_env != 'prod' && github.event.inputs.deployment_env != 'uat'
+    if: github.event.inputs.deployment_env != 'prod'
     steps:
-      - uses: actions/checkout@v2
+      - name: Trigger E2E Workflow
+        uses: aurelien-baudet/workflow-dispatch@v2
         with:
-          ref: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
+          workflow: e2e-cypress.yml
+          token: ${{ secrets.PFML_DEVOPS_TOKEN }}
+          wait-for-completion: true
+          ref: "main"
+          inputs: |
+            {
+              "target_environment": ${{ toJSON(env.deployment_env) }},
+              "cypress_tags": "Deploy,Deploy-API",
+              "run_unstable": "${{ env.deployment_env != 'test' && 'false' || 'true' }}",
+              "title_override": ${{ toJSON(format('API Deploy: {0} to {1}', env.version, env.deployment_env)) }}
+            }
 
-      - name: "Determine E2E test suite ref"
-        id: determine_e2e_ref
+  load-test:
+    name: "Trigger Load Testing"
+    runs-on: ubuntu-latest
+    # We allow load testing to be triggered at the same time as E2E tests. Load testing and E2E testing share a
+    # concurrency key, so they are guaranteed not to run concurrently.
+    needs: [ update-the-deploy-branch, api-release, api-gateway-release ]
+    if: github.event.inputs.deployment_env == 'performance' && github.event.inputs.performLoadTest == 'true'
+    steps:
+      - name: Trigger LST run with Base preset on Flood
+        uses: aurelien-baudet/workflow-dispatch@v2
+        with:
+          workflow: e2e-flood.yml
+          token: ${{ secrets.PFML_DEVOPS_TOKEN }}
+          wait-for-completion: false
+          ref: main
+          inputs: |
+            {
+              "target_environment": "performance",
+              "preset": "base"
+            }
+
+  post-e2e-failures-to-slack:
+    name: Post E2E failures to Slack
+    needs: [finish-comms-slack, end-to-end]
+    # Run if the E2E tests failed or timed out. Applies to any environment that runs E2E tests.
+    if: always() &&
+        (needs.end-to-end.result == 'failure' || needs.end-to-end.result == 'timed_out')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+          role-to-assume: ci-run-deploys
+          role-duration-seconds: 3600
+
+      - name: Pull slackbot API token from SSM
+        uses: "marvinpinto/action-inject-ssm-secrets@latest"
+        with:
+          ssm_parameter: "/admin/common/nava-slackbot-api-key"
+          env_variable_name: "slackbot_token"
+
+      - name: Post to Slack
         run: |
-          # Run the E2E test suite based off of the last Portal deployment branch.
-          # This will ensure that the E2E test suite version is based off of the
-          # Portal version currently in the environment.
-          if [[ "${{ env.deployment_env }}" == "test" ]]; then
-            echo "::set-output name=e2e_ref::main"
-          else
-            echo "::set-output name=e2e_ref::deploy/portal/${{ env.deployment_env }}"
-          fi
-
-      - uses: ./.github/actions/trigger-cypress
-        name: "Trigger Cypress Run"
-        with:
-          target_environment: ${{ env.deployment_env }}
-          cypress_tags: "Deploy,Deploy-API"
-          github_token: ${{ secrets.PFML_DEVOPS_TOKEN }}
-          github_branch: ${{ steps.determine_e2e_ref.outputs.e2e_ref }}
-          # Limit to "stable" suite for any environment but test.
-          only_stable: ${{ env.deployment_env == 'test' && 'false' || 'true' }}
+          echo "Slackbot message reply TS is ${{ needs.finish-comms-slack.outputs.message-ts }}"
+          
+          SLACKBOT_RESPONSE=$(curl -fsLS -X POST -H "Authorization: Bearer ${{ env.SLACKBOT_TOKEN }}" \
+          -H 'Content-Type: application/json;charset=utf-8' \
+          --data '{
+            "channel": "${{ env.deploys_channel }}",
+            "thread_ts": "${{ needs.finish-comms-slack.outputs.message-ts }}",
+            "attachments": [{
+              "title": "E2E Test failed in ${{ github.event.inputs.deployment_env || 'test' }} (<${{ env.workflow_self_link }}|build logs>)",
+              "color": "danger"
+            }]
+          }' https://slack.com/api/chat.postMessage)

@@ -60,6 +60,8 @@ class LookupTable:
     template_instance_to_db_instance: Dict[type, type]
     # Map from description (2nd column) to persistent or detached model instance.
     description_to_db_instance: Dict[str, type]
+    # Map from description (2nd column) to row_id.
+    description_to_id: Dict[str, int]
 
     # Caches for looking up template instances in different ways
     attr_name_to_template_instance: Dict[str, type]
@@ -104,6 +106,7 @@ class LookupTable:
 
         cls.template_instance_to_db_instance = {}
         cls.description_to_db_instance = {}
+        cls.description_to_id = {}
 
         # Optimization: read all rows into db_session's identity map. This makes the get() in
         # sync_row_to_database() get the row from the identity map instead of making a query.
@@ -138,6 +141,7 @@ class LookupTable:
                 logger.info("%s: update %s %r", cls.repr(), key, row)
         cls.template_instance_to_db_instance[template_instance] = instance
         cls.description_to_db_instance[description] = instance
+        cls.description_to_id[description] = row_id
         return row_was_updated
 
     @classmethod

@@ -10,6 +10,7 @@ from datetime import date, datetime, timedelta
 from decimal import Decimal
 
 import factory  # this is from the factory_boy package
+import faker
 import pytz
 from sqlalchemy.orm import scoped_session
 
@@ -20,6 +21,8 @@ import massgov.pfml.db.models.verifications as verification_models
 import massgov.pfml.util.datetime as datetime_util
 
 db_session = None
+
+fake = faker.Faker()
 
 
 def get_db_session():
@@ -55,7 +58,7 @@ Session = scoped_session(lambda: get_db_session(), scopefunc=lambda: get_db_sess
 
 class Generators:
     AccountKey = factory.Sequence(lambda n: "%011d" % n)
-    Tin = factory.LazyFunction(lambda: factory.Faker("ssn").generate().replace("-", ""))
+    Tin = factory.LazyFunction(lambda: fake.ssn().replace("-", ""))
     Fein = Tin
     Money = factory.LazyFunction(lambda: Decimal(round(random.uniform(0, 50000), 2)))
     Now = factory.LazyFunction(datetime.now)
@@ -99,7 +102,7 @@ class UserFactory(BaseFactory):
         model = employee_models.User
 
     user_id = Generators.UuidObj
-    active_directory_id = factory.Faker("uuid4")
+    sub_id = factory.Faker("uuid4")
     email_address = factory.Faker("email")
 
     @factory.post_generation
@@ -150,7 +153,7 @@ class EmployerOnlyDORDataFactory(EmployerOnlyRequiredFactory):
 
 
 class EmployerFactory(EmployerOnlyDORDataFactory):
-    fineos_employer_id = random.randint(100, 1000)
+    fineos_employer_id = factory.Sequence(lambda n: n + 1)
 
 
 class TaxIdentifierFactory(BaseFactory):
@@ -201,6 +204,9 @@ class EmployeeFactory(EmployeeOnlyDORDataFactory):
     email_address = factory.Faker("email")
     phone_number = "+19425290727"
     ctr_vendor_customer_code = "VC0001201168"
+    gender_id = None
+    fineos_employee_first_name = factory.LazyAttribute(lambda e: e.first_name)
+    fineos_employee_last_name = factory.LazyAttribute(lambda e: e.last_name)
 
 
 class EmployeeWithFineosNumberFactory(EmployeeFactory):
@@ -295,7 +301,8 @@ class VerificationFactory(BaseFactory):
     created_at = Generators.UtcNow
     updated_at = Generators.UtcNow
     verification_id = Generators.UuidObj
-    verification_type_id = None
+    verification_type = factory.SubFactory(VerificationTypeFactory, __sequence=100)
+    verification_type_id = factory.LazyAttribute(lambda w: w.verification_type.verification_type_id)
     verification_metadata = factory.Faker("json")
 
 
@@ -310,16 +317,31 @@ class EmployerQuarterlyContributionFactory(BaseFactory):
     pfm_account_id = factory.Faker("random_int")
 
 
-class EmployeeLogFactory(BaseFactory):
+class EmployeePushToFineosQueueFactory(BaseFactory):
     class Meta:
-        model = employee_models.EmployeeLog
+        model = employee_models.EmployeePushToFineosQueue
 
-    employee_log_id = Generators.UuidObj
-    employee_id = Generators.UuidObj
-    employer_id = Generators.UuidObj
+    employee_push_to_fineos_queue_id = Generators.UuidObj
+    employee_id = None
+    employer_id = None
     action = "UPDATE_NEW_EMPLOYER"
     modified_at = Generators.UtcNow
     process_id = 1
+
+
+class EmployerPushToFineosQueueFactoryFactory(BaseFactory):
+    class Meta:
+        model = employee_models.EmployerPushToFineosQueue
+
+    employer_push_to_fineos_queue_id = Generators.UuidObj
+    employer_id = None
+    action = "INSERT"
+    modified_at = Generators.UtcNow
+    process_id = 1
+    family_exemption = None
+    medical_exemption = None
+    exemption_commence_date = None
+    exemption_cease_date = None
 
 
 class WagesAndContributionsFactory(BaseFactory):
@@ -361,6 +383,56 @@ class ClaimFactory(BaseFactory):
     employee_id = factory.LazyAttribute(lambda w: w.employee.employee_id)
 
 
+class AbsencePeriodFactory(BaseFactory):
+    class Meta:
+        model = employee_models.AbsencePeriod
+
+    absence_period_id = Generators.UuidObj
+    claim = factory.SubFactory(ClaimFactory)
+    claim_id = factory.LazyAttribute(lambda w: w.claim.claim_id)
+    fineos_leave_request_id = factory.Faker("random_int")
+    absence_period_start_date = factory.Faker(
+        "date_between_dates", date_start=date(2021, 1, 1), date_end=date(2021, 1, 15)
+    )
+    absence_period_end_date = factory.Faker(
+        "date_between_dates", date_start=date(2021, 1, 16), date_end=date(2021, 1, 28)
+    )
+    leave_request_decision_id = (
+        employee_models.LeaveRequestDecision.APPROVED.leave_request_decision_id
+    )
+    absence_period_type_id = 1
+    absence_reason_id = 1
+    absence_reason_qualifier_one_id = 1
+    absence_reason_qualifier_two_id = 1
+    is_id_proofed = False
+    created_at = datetime.now()
+    updated_at = datetime.now()
+    fineos_absence_period_class_id = factory.Faker("random_int")
+    fineos_absence_period_index_id = factory.Faker("random_int")
+
+
+class ManagedRequirementFactory(BaseFactory):
+    class Meta:
+        model = employee_models.ManagedRequirement
+
+    managed_requirement_id = Generators.UuidObj
+    claim = factory.SubFactory(ClaimFactory)
+    claim_id = factory.LazyAttribute(lambda w: w.claim.claim_id)
+    respondent_user = factory.SubFactory(UserFactory)
+    respondent_user_id = factory.LazyAttribute(lambda w: w.respondent_user.user_id)
+    fineos_managed_requirement_id = factory.Sequence(lambda n: n)
+    follow_up_date = factory.LazyAttribute(lambda w: w.claim.created_at + timedelta(days=10))
+    managed_requirement_status_id = (
+        employee_models.ManagedRequirementStatus.OPEN.managed_requirement_status_id
+    )
+    managed_requirement_category_id = (
+        employee_models.ManagedRequirementCategory.EMPLOYER_CONFIRMATION.managed_requirement_category_id
+    )
+    managed_requirement_type_id = (
+        employee_models.ManagedRequirementType.EMPLOYER_CONFIRMATION.managed_requirement_type_id
+    )
+
+
 class PaymentFactory(BaseFactory):
     class Meta:
         model = employee_models.Payment
@@ -383,10 +455,32 @@ class PaymentFactory(BaseFactory):
     # matter what number it is, so picking a static number is fine.
     fineos_pei_c_value = "9000"
     # The I value is unique for all payments and should be a string, not an int.
-    fineos_pei_i_value = factory.Faker("numerify", text="####")
+    fineos_pei_i_value = factory.Sequence(lambda n: "%d" % n)
 
     claim = factory.SubFactory(ClaimFactory)
     claim_id = factory.LazyAttribute(lambda a: a.claim.claim_id)
+
+    fineos_employee_first_name = factory.Faker("first_name")
+    fineos_employee_last_name = factory.Faker("last_name")
+
+
+class PaymentDetailsFactory(BaseFactory):
+    class Meta:
+        model = employee_models.PaymentDetails
+
+    payment_details_id = Generators.UuidObj
+
+    payment = factory.SubFactory(PaymentFactory)
+    payment_id = factory.LazyAttribute(lambda a: a.payment.payment_id)
+
+    period_start_date = factory.Faker(
+        "date_between_dates", date_start=date(2021, 1, 1), date_end=date(2021, 1, 15)
+    )
+    period_end_date = factory.Faker(
+        "date_between_dates", date_start=date(2021, 1, 16), date_end=date(2021, 1, 28)
+    )
+
+    amount = Generators.Money
 
 
 class PaymentReferenceFileFactory(BaseFactory):
@@ -415,6 +509,14 @@ class PhoneFactory(BaseFactory):
     phone_type_id = application_models.PhoneType.CELL.phone_type_id
 
 
+class LeaveReasonFactory(BaseFactory):
+    class Meta:
+        model = application_models.LkLeaveReason
+
+    leave_reason_id = None
+    leave_reason_description = None
+
+
 class ApplicationFactory(BaseFactory):
     class Meta:
         model = application_models.Application
@@ -438,44 +540,45 @@ class ApplicationFactory(BaseFactory):
     completed_time = None
     submitted_time = None
     hours_worked_per_week = None
+    is_withholding_tax = None
 
     # Leave Periods
     has_continuous_leave_periods = False
     has_intermittent_leave_periods = False
     has_reduced_schedule_leave_periods = False
 
+    # Other leaves
+    has_concurrent_leave = False
+    has_employer_benefits = False
+    has_other_incomes = False
+    has_previous_leaves_other_reason = False
+    has_previous_leaves_same_reason = False
+
     # Relationships
     user = factory.SubFactory(UserFactory)
     user_id = factory.LazyAttribute(lambda a: a.user.user_id)
 
-    # EmployerFactory generates the FEIN, and we want to use the same FEIN
-    # so that EIN validations succeed
-    employer_fein = factory.SelfAttribute("employer.employer_fein")
-    employer = factory.SubFactory(EmployerFactory)
-    employer_id = factory.LazyAttribute(lambda a: a.employer.employer_id)
+    employer_fein = Generators.Fein
 
-    employee = factory.SubFactory(EmployeeFactory)
-    employee_id = factory.LazyAttribute(lambda a: a.employee.employee_id)
-
-    tax_identifier = factory.SelfAttribute("employee.tax_identifier")
+    tax_identifier = factory.SubFactory(TaxIdentifierFactory)
     tax_identifier_id = factory.LazyAttribute(lambda t: t.tax_identifier.tax_identifier_id)
 
     phone = factory.SubFactory(PhoneFactory)
 
     # Lookups
+    gender_id = None
     occupation_id = None
     employment_status_id = None
     relationship_to_caregiver_id = None
     relationship_qualifier_id = None
     employer_notification_method_id = None
-    leave_type_id = None
     leave_reason_id = (
         application_models.LeaveReason.SERIOUS_HEALTH_CONDITION_EMPLOYEE.leave_reason_id
     )
     leave_reason_qualifier_id = None
 
-    start_time = Generators.TransactionDateTime
-    updated_time = factory.LazyAttribute(lambda a: a.start_time + timedelta(days=1))
+    created_at = Generators.TransactionDateTime
+    updated_at = factory.LazyAttribute(lambda a: a.created_at + timedelta(days=1))
 
 
 class AddressFactory(BaseFactory):
@@ -512,7 +615,7 @@ class PaymentPreferenceFactory(BaseFactory):
     payment_pref_id = Generators.UuidObj
     payment_method_id = employee_models.PaymentMethod.ACH.payment_method_id
     account_number = "123456789"
-    routing_number = "234567890"
+    routing_number = "011401533"
     bank_account_type_id = employee_models.BankAccountType.CHECKING.bank_account_type_id
 
 
@@ -583,7 +686,7 @@ class EmployerBenefitFactory(BaseFactory):
 
     # application_id must be passed into the create() call
     benefit_type_id = (
-        application_models.EmployerBenefitType.ACCRUED_PAID_LEAVE.employer_benefit_type_id
+        application_models.EmployerBenefitType.SHORT_TERM_DISABILITY.employer_benefit_type_id
     )
     benefit_amount_dollars = factory.Faker("random_int")
     benefit_amount_frequency_id = application_models.AmountFrequency.PER_MONTH.amount_frequency_id
@@ -593,6 +696,7 @@ class EmployerBenefitFactory(BaseFactory):
     benefit_end_date = factory.Faker(
         "date_between_dates", date_start=date(2021, 3, 16), date_end=date(2021, 3, 28)
     )
+    is_full_salary_continuous = True
 
 
 class OtherIncomeFactory(BaseFactory):
@@ -607,6 +711,20 @@ class OtherIncomeFactory(BaseFactory):
         "date_between_dates", date_start=date(2021, 3, 1), date_end=date(2021, 3, 15)
     )
     income_end_date = factory.Faker(
+        "date_between_dates", date_start=date(2021, 3, 16), date_end=date(2021, 3, 28)
+    )
+
+
+class ConcurrentLeaveFactory(BaseFactory):
+    class Meta:
+        model = application_models.ConcurrentLeave
+
+    # application_id must be passed into the create() call
+    is_for_current_employer = factory.Faker("boolean")
+    leave_start_date = factory.Faker(
+        "date_between_dates", date_start=date(2021, 3, 1), date_end=date(2021, 3, 15)
+    )
+    leave_end_date = factory.Faker(
         "date_between_dates", date_start=date(2021, 3, 16), date_end=date(2021, 3, 28)
     )
 
@@ -627,14 +745,35 @@ class PreviousLeaveFactory(BaseFactory):
         "date_between_dates", date_start=date(2021, 3, 16), date_end=date(2021, 3, 28)
     )
 
+    worked_per_week_minutes = random.randint(600, 2400)
+    leave_minutes = random.randint(600, 2400)
 
-class StateMetricFactory(BaseFactory):
+
+class PreviousLeaveOtherReasonFactory(PreviousLeaveFactory):
     class Meta:
-        model = application_models.StateMetric
+        model = application_models.PreviousLeaveOtherReason
+
+
+class PreviousLeaveSameReasonFactory(PreviousLeaveFactory):
+    class Meta:
+        model = application_models.PreviousLeaveSameReason
+
+
+class BenefitsMetricsFactory(BaseFactory):
+    class Meta:
+        model = application_models.BenefitsMetrics
+
+    effective_date = datetime(2019, 10, 1)
+    average_weekly_wage = Decimal("1331.66")
+    maximum_weekly_benefit_amount = Decimal("1000.00")
+
+
+class UnemploymentMetricFactory(BaseFactory):
+    class Meta:
+        model = application_models.UnemploymentMetric
 
     effective_date = datetime(2019, 10, 1)
     unemployment_minimum_earnings = Decimal("5000")
-    average_weekly_wage = Decimal("1331.66")
 
 
 class DocumentFactory(BaseFactory):
@@ -662,7 +801,6 @@ class DocumentFactory(BaseFactory):
     document_type_id = random.randint(
         1, application_models.DocumentType.STATE_MANAGED_PAID_LEAVE_CONFIRMATION.document_type_id
     )
-    content_type_id = random.randint(1, application_models.ContentType.HEIC.content_type_id)
 
     # These values have no special meaning, just bounds so we get some variation.
     size_bytes = random.randint(1989, 24_072_020)
@@ -683,6 +821,11 @@ class WorkPatternFixedFactory(BaseFactory):
     work_pattern_type_id = application_models.WorkPatternType.FIXED.work_pattern_type_id
     work_pattern_days = factory.LazyAttribute(
         lambda w: [
+            application_models.WorkPatternDay(
+                work_pattern_id=w.work_pattern_id,
+                day_of_week_id=application_models.DayOfWeek.SUNDAY.day_of_week_id,
+                minutes=8 * 60 + 15,
+            ),
             application_models.WorkPatternDay(
                 work_pattern_id=w.work_pattern_id,
                 day_of_week_id=application_models.DayOfWeek.MONDAY.day_of_week_id,
@@ -713,11 +856,6 @@ class WorkPatternFixedFactory(BaseFactory):
                 day_of_week_id=application_models.DayOfWeek.SATURDAY.day_of_week_id,
                 minutes=8 * 60 + 15,
             ),
-            application_models.WorkPatternDay(
-                work_pattern_id=w.work_pattern_id,
-                day_of_week_id=application_models.DayOfWeek.SUNDAY.day_of_week_id,
-                minutes=8 * 60 + 15,
-            ),
         ]
     )
 
@@ -742,7 +880,7 @@ class DuaReductionPaymentFactory(BaseFactory):
     class Meta:
         model = employee_models.DuaReductionPayment
 
-    absence_case_id = Generators.FineosAbsenceId
+    fineos_customer_number = factory.Faker("numerify", text="####")
     employer_fein = Generators.Fein
     payment_date = factory.Faker("date_object")
     request_week_begin_date = factory.Faker("date_object")
@@ -757,7 +895,7 @@ class DiaReductionPaymentFactory(BaseFactory):
     class Meta:
         model = employee_models.DiaReductionPayment
 
-    absence_case_id = Generators.FineosAbsenceId
+    fineos_customer_number = factory.Faker("numerify", text="####")
     board_no = factory.Faker("uuid4")
     event_id = factory.Faker("uuid4")
     event_description = "PC"
@@ -771,3 +909,19 @@ class DiaReductionPaymentFactory(BaseFactory):
     end_date = factory.Faker("date_object")
     weekly_amount = 400.00
     award_created_date = factory.Faker("date_object")
+    termination_date = factory.Faker("date_object")
+
+
+class CaringLeaveMetadataFactory(BaseFactory):
+    class Meta:
+        model = application_models.CaringLeaveMetadata
+
+    family_member_first_name = factory.Faker("first_name")
+    family_member_middle_name = factory.Faker("first_name")
+    family_member_last_name = factory.Faker("last_name")
+    family_member_date_of_birth = factory.Faker("date_object")
+
+
+class ImportLogFactory(BaseFactory):
+    class Meta:
+        model = employee_models.ImportLog

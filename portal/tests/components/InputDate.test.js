@@ -1,202 +1,153 @@
 import InputDate, {
   formatFieldsAsISO8601,
   parseDateParts,
-} from "../../src/components/InputDate";
-import { mount, shallow } from "enzyme";
+} from "../../src/components/core/InputDate";
+import { render, screen } from "@testing-library/react";
 import React from "react";
+import userEvent from "@testing-library/user-event";
 
-function render(customProps = {}, mountComponent = false) {
+function setup(customProps = {}) {
   const props = Object.assign(
     {
       label: "Field Label",
       dayLabel: "Day",
       monthLabel: "Month",
       name: "field-name",
-      onChange: jest.fn(),
       yearLabel: "Year",
     },
     customProps
   );
 
-  const component = <InputDate {...props} />;
+  // Setup state management so we can test event handlers
+  const InputDateWithState = () => {
+    const [value, setValue] = React.useState(props.value);
+    const handleChange = (event) => {
+      setValue(event.target.value);
+      props.onChange(event);
+    };
 
-  return {
-    props,
-    wrapper: mountComponent ? mount(component) : shallow(component),
+    return <InputDate {...props} value={value} onChange={handleChange} />;
   };
+
+  return render(<InputDateWithState />);
 }
 
 describe("InputDate", () => {
   it("renders separate fields for month / day / year", () => {
-    const { wrapper } = render({
-      name: "test-date-field",
+    setup({
       dayLabel: "Test Day",
       monthLabel: "Test Month",
       yearLabel: "Test Year",
     });
-    const fields = wrapper.find("InputText");
 
-    expect(fields).toMatchSnapshot();
+    expect(
+      screen.getByRole("textbox", { name: "Test Day" })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("textbox", { name: "Test Month" })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("textbox", { name: "Test Year" })
+    ).toBeInTheDocument();
   });
 
-  it("renders everything within a Fieldset", () => {
-    const { wrapper } = render();
+  it("renders a fieldset with a legend", () => {
+    setup({ label: "Date of birth" });
 
-    expect(wrapper.is("Fieldset")).toBe(true);
+    expect(
+      screen.getByRole("group", { name: "Date of birth" })
+    ).toBeInTheDocument();
   });
 
-  it("renders a legend for the fieldset", () => {
-    const { wrapper } = render({
-      label: "Legend text",
-      hint: "Legend hint",
-      example: "Legend example",
-      optionalText: "Optional",
-    });
+  it("supports setting the Optional text in the label", () => {
+    setup({ optionalText: "Optional" });
 
-    const legend = wrapper.find("FormLabel");
-
-    expect(legend).toMatchSnapshot();
+    expect(
+      screen.getByRole("group", { name: /optional/i })
+    ).toBeInTheDocument();
   });
 
   it("breaks apart the full date value to set the month/day/year field values", () => {
-    const { wrapper } = render({
+    setup({
       value: "2020-10-04",
     });
-    const fields = wrapper.find("InputText");
+    const fields = screen.getAllByRole("textbox");
 
     // Month
-    expect(fields.at(0).prop("value")).toBe("10");
+    expect(fields[0]).toHaveValue("10");
     // Day
-    expect(fields.at(1).prop("value")).toBe("04");
+    expect(fields[1]).toHaveValue("04");
     // Year
-    expect(fields.at(2).prop("value")).toBe("2020");
+    expect(fields[2]).toHaveValue("2020");
   });
 
-  describe("when a month or day field is blurred", () => {
-    it("adds a leading zero to month and day and calls the onChange prop", () => {
-      // We need to mount the component so the input values can be accessed
-      const mountComponent = true;
-      const { props, wrapper } = render(
-        {
-          name: "full-date-field",
-          onChange: jest.fn(),
-          value: "2020--",
-        },
-        mountComponent
-      );
-      const monthInput = wrapper.find("input").at(0);
-      const dayInput = wrapper.find("input").at(1);
-
-      monthInput.getDOMNode().value = "1";
-      dayInput.getDOMNode().value = "2";
-      monthInput.simulate("blur");
-
-      expect(props.onChange).toHaveBeenCalledTimes(1);
-      // Read the event passed into the onChange function
-      expect(props.onChange.mock.calls[0][0].target.value).toBe("2020-01-02");
+  it("adds leading zero to month and day only when value is 1-digit and is blurred", () => {
+    const onChange = jest.fn();
+    setup({
+      onChange,
+      value: "2020--",
     });
+    const [monthInput, dayInput, yearInput] = screen.getAllByRole("textbox");
+
+    const getLastChangeEventValue = () => {
+      // Access the event argument this way instead of toHaveBeenCalledWith()
+      // to workaround warnings related to https://fb.me/react-event-pooling
+      return onChange.mock.calls[onChange.mock.calls.length - 1][0].target
+        .value;
+    };
+
+    userEvent.type(monthInput, "1");
+    expect(getLastChangeEventValue()).toBe("2020-1-");
+    monthInput.blur();
+    expect(getLastChangeEventValue()).toBe("2020-01-");
+
+    userEvent.type(dayInput, "2");
+    expect(getLastChangeEventValue()).toBe("2020-01-2");
+    dayInput.blur();
+    expect(getLastChangeEventValue()).toBe("2020-01-02");
+
+    // No leading zero on year
+    userEvent.clear(yearInput);
+    userEvent.type(yearInput, "1990");
+    expect(getLastChangeEventValue()).toBe("1990-01-02");
+    yearInput.blur();
+    expect(getLastChangeEventValue()).toBe("1990-01-02");
+
+    // No leading zero when the value is already two digits
+    userEvent.clear(dayInput);
+    userEvent.type(dayInput, "30");
+    expect(getLastChangeEventValue()).toBe("1990-01-30");
+    dayInput.blur();
+    expect(getLastChangeEventValue()).toBe("1990-01-30");
   });
 
-  describe("when change event is triggered", () => {
-    it("does not add a leading zero to month or days", () => {
-      // We need to mount the component so the input values can be accessed
-      const mountComponent = true;
-      const { props, wrapper } = render(
-        {
-          name: "full-date-field",
-          onChange: jest.fn(),
-          value: "2020-07-04",
-        },
-        mountComponent
-      );
-      const monthInput = wrapper.find("input").at(0);
-      const dayInput = wrapper.find("input").at(1);
+  it("supports inline error message and styling", () => {
+    const { container } = setup({ errorMsg: "Oh no" });
 
-      monthInput.getDOMNode().value = "1";
-      dayInput.getDOMNode().value = "2";
-      monthInput.simulate("change");
-
-      expect(props.onChange).toHaveBeenCalledTimes(1);
-      // Read the event passed into the onChange function
-      expect(props.onChange.mock.calls[0][0].target.value).toBe("2020-1-2");
-    });
-
-    it("combines the field values to return an event target representing the full date", () => {
-      // We need to mount the component so the input values can be accessed
-      const mountComponent = true;
-
-      const { props, wrapper } = render(
-        {
-          name: "full-date-field",
-          onChange: jest.fn(),
-          value: "2020-07-04",
-        },
-        mountComponent
-      );
-
-      wrapper
-        .find("input") // since we mount the component, this is input rather than InputText
-        .first()
-        .simulate("change");
-
-      expect(props.onChange).toHaveBeenCalledTimes(1);
-      // Read the event passed into the onChange function
-      expect(props.onChange.mock.calls[0][0].target.value).toBe("2020-07-04");
-    });
+    expect(screen.getByText("Oh no")).toBeInTheDocument();
+    expect(container.firstChild).toHaveClass("usa-form-group--error");
   });
 
-  describe("when errorMsg is set", () => {
-    it("passes errorMsg to FormLabel", () => {
-      const { props, wrapper } = render({ errorMsg: "Oh no." });
-
-      expect(wrapper.find("FormLabel").prop("errorMsg")).toBe(props.errorMsg);
+  it("supports error styling for day/month/year fields", () => {
+    setup({
+      errorMsg: "Oh no",
+      dayInvalid: true,
+      monthInvalid: true,
+      yearInvalid: true,
     });
 
-    it("adds error classes to the form group", () => {
-      const { wrapper } = render({ errorMsg: "Oh no." });
-      const formGroup = wrapper.find(".usa-form-group");
+    const [monthInput, dayInput, yearInput] = screen.getAllByRole("textbox");
 
-      expect(formGroup.hasClass("usa-form-group--error")).toBe(true);
-    });
+    expect(monthInput).toHaveClass("usa-input--error");
+    expect(dayInput).toHaveClass("usa-input--error");
+    expect(yearInput).toHaveClass("usa-input--error");
   });
 
-  describe("when `smallLabel` is true", () => {
-    it("sets the FormLabel small prop to true", () => {
-      const { wrapper } = render({ smallLabel: true });
-      const label = wrapper.find("FormLabel");
+  it("supports the small label variation", () => {
+    setup({ smallLabel: true, label: "Field label" });
+    const label = screen.getByText("Field label");
 
-      expect(label.prop("small")).toBe(true);
-    });
-  });
-
-  describe("when dayInvalid is true", () => {
-    it("adds error class to the day input component", () => {
-      const { wrapper } = render({ dayInvalid: true });
-
-      const field = wrapper.find("InputText").at(1);
-
-      expect(field.prop("inputClassName")).toMatch("usa-input--error");
-    });
-  });
-
-  describe("when monthInvalid is true", () => {
-    it("adds error class to the month input component", () => {
-      const { wrapper } = render({ monthInvalid: true });
-
-      const field = wrapper.find("InputText").at(0);
-
-      expect(field.prop("inputClassName")).toMatch("usa-input--error");
-    });
-  });
-
-  describe("when yearInvalid is true", () => {
-    it("adds error class to the year input component", () => {
-      const { wrapper } = render({ yearInvalid: true });
-
-      const field = wrapper.find("InputText").at(2);
-
-      expect(field.prop("inputClassName")).toMatch("usa-input--error");
-    });
+    expect(label).toHaveClass("font-heading-xs");
   });
 });
 

@@ -1,6 +1,18 @@
 import { expect, describe, it } from "@jest/globals";
 import EmployerPool, { Employer } from "../../../src/generation/Employer";
 import { collect } from "streaming-iterables";
+import dataDirectory, {
+  DataDirectory,
+} from "../../../src/generation/DataDirectory";
+import * as fs from "fs";
+
+const storage: DataDirectory = dataDirectory("tmp", __dirname);
+async function prepareStorage() {
+  await storage.prepare();
+}
+async function removeStorage() {
+  await fs.promises.rmdir(storage.dir, { recursive: true });
+}
 
 describe("Employer Generation", () => {
   it("generate() should generate an employer pool", () => {
@@ -14,11 +26,11 @@ describe("Employer Generation", () => {
     expect(employers.pop()).toMatchObject({
       accountKey: expect.stringMatching(/\d{11}/),
       name: expect.any(String),
-      fein: expect.stringMatching(/\d{2}\-\d{7}/),
+      fein: expect.stringMatching(/\d{2}-\d{7}/),
       street: expect.any(String),
       city: expect.any(String),
       state: "MA",
-      zip: expect.stringMatching(/\d{5}\-\d{4}/),
+      zip: expect.stringMatching(/\d{5}-\d{4}/),
       dba: expect.any(String),
       family_exemption: false,
       medical_exemption: false,
@@ -123,9 +135,9 @@ describe("Employer Generation", () => {
   });
 
   it("pick() should accept a specification that allows it to pick employers by metadata properties", () => {
-    const employers = ([
+    const employers = [
       { fein: "123", metadata: { foo: "bar" } },
-    ] as unknown) as Employer[];
+    ] as unknown as Employer[];
     const pool = new EmployerPool(employers);
     expect(() => pool.pick({ metadata: { foo: "baz" } })).toThrow(
       "No employers match the specification"
@@ -177,5 +189,32 @@ describe("Employer Generation", () => {
         withholding
       );
     }
+  });
+
+  describe("andGenerateOrSave", () => {
+    beforeEach(async () => {
+      await prepareStorage();
+    });
+    afterEach(async () => {
+      await removeStorage();
+    });
+    it("orGenerateAndSave() will generate used employees when used with load()", async () => {
+      const employers = EmployerPool.generate(1);
+      const gen = jest.fn(() => employers);
+      const pool = await EmployerPool.load(storage.employees).orGenerateAndSave(
+        gen
+      );
+      expect(gen).toHaveBeenCalled();
+      expect((await collect(pool)).length).toEqual(
+        await collect(await EmployerPool.load(storage.employees)).length
+      );
+    });
+    it("orGenerateAndSave() will save employers to hard drive", async () => {
+      await EmployerPool.load(storage.employees).orGenerateAndSave(() =>
+        EmployerPool.generate(1)
+      );
+      const refreshedPool = await EmployerPool.load(storage.employees);
+      expect((await collect(refreshedPool)).length).toBe(1);
+    });
   });
 });

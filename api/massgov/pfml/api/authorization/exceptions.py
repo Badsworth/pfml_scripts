@@ -1,6 +1,7 @@
 from werkzeug.exceptions import Forbidden
 
 import massgov.pfml.api.util.response as response_util
+from massgov.pfml.api.validation.exceptions import ValidationErrorDetail
 
 
 class NotAuthorizedForAccess(Forbidden):
@@ -20,6 +21,6 @@ class NotAuthorizedForAccess(Forbidden):
         return response_util.error_response(
             status_code=self.status_code,
             message=self.description,
-            errors=[response_util.custom_issue(message=self.description, type=self.error_type)],
+            errors=[ValidationErrorDetail(message=self.description, type=self.error_type)],
             data=self.data,
         ).to_api_response()

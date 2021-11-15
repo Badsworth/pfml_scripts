@@ -1,0 +1,127 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Payments renders the \`changes to payments\` section 1`] = `
+<section
+  class="margin-y-4"
+>
+  <h3
+    class="margin-bottom-2 font-heading-sm text-bold"
+  >
+    Changes to payments
+  </h3>
+  <div
+    aria-multiselectable="true"
+    class="usa-accordion usa-accordion--bordered"
+  >
+    <h2
+      class="usa-accordion__heading"
+    >
+      <button
+        aria-controls="accordion7"
+        aria-expanded="false"
+        class="usa-accordion__button"
+        type="button"
+      >
+        What may change your payment schedule
+      </button>
+    </h2>
+    <div
+      class="usa-accordion__content usa-prose"
+      data-testid="accordion7"
+      hidden=""
+      id="accordion7"
+    >
+      <ul>
+         
+        <li>
+          State and federal holidays
+        </li>
+        <li>
+          Your bank’s processes
+        </li>
+        <li>
+          Pay periods that end on a weekend
+        </li>
+        <li>
+          Payments may be delayed if we need to adjust your benefit amount based on extensions, other income or benefits you’ve reported and other process delays
+        </li>
+      </ul>
+    </div>
+    <h2
+      class="usa-accordion__heading"
+    >
+      <button
+        aria-controls="accordion8"
+        aria-expanded="false"
+        class="usa-accordion__button"
+        type="button"
+      >
+        What may change your benefit amount
+      </button>
+    </h2>
+    <div
+      class="usa-accordion__content usa-prose"
+      data-testid="accordion8"
+      hidden=""
+      id="accordion8"
+    >
+      <p>
+        See your approval notice for your maximum weekly benefit. We may reduce your benefit amount based on other leave, income and benefits you reported to us. You will receive another notice in this application’s details if we reduce or offset your benefit amount.
+      </p>
+      <p>
+        Other scenarios that may change your benefit amount are:
+      </p>
+      <ul>
+         
+        <li>
+          You reach the $850 benefit total across multiple employers
+        </li>
+        <li>
+          If you transition from medical pregnancy to leave to bond with a child
+        </li>
+        <li>
+          Extending your leave
+        </li>
+      </ul>
+       
+      <p>
+        Check your 
+        <a
+          href="/applications/status?absence_id=mock-absence-case-id/#view_notices"
+        >
+          application’s notices
+        </a>
+         to see your approval notice and any updates to your approved benefit amount.
+      </p>
+    </div>
+    <h2
+      class="usa-accordion__heading"
+    >
+      <button
+        aria-controls="accordion9"
+        aria-expanded="false"
+        class="usa-accordion__button"
+        type="button"
+      >
+        Change your payment preference
+      </button>
+    </h2>
+    <div
+      class="usa-accordion__content usa-prose"
+      data-testid="accordion9"
+      hidden=""
+      id="accordion9"
+    >
+      <p>
+        To make changes to your application, call the Contact Center at 
+        <a
+          href="tel:(833) 344-7365"
+        >
+          (833) 344‑7365
+        </a>
+        . If you request a change to your start and end dates, we may need to review your application again.
+      </p>
+    </div>
+  </div>
+</section>
+`;

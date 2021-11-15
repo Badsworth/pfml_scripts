@@ -1,11 +1,22 @@
 {
   "compilerOptions": {
     "strict": true,
-    "lib": ["DOM","es2019", "es2020.promise", "es2020.bigint", "es2020.string"],
+    // @Todo: This flag causes the catch variable
+    // to be typed any. Once removed (or set to true)
+    // it will cause numerous ts errors in which the
+    // catch clause var will need to be explicity typed.
+    "useUnknownInCatchVariables": false,
+    "lib": [
+      "DOM",
+      "es2019",
+      "es2020.promise",
+      "es2020.bigint",
+      "es2020.string"
+    ],
     "module": "commonjs",
     "target": "es2019",
     "sourceMap": true,
-    "types": ["cypress", "node"],
+    "types": ["cypress", "node", "@testing-library/cypress"],
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "allowJs": true,
@@ -22,11 +33,6 @@
       "JSONStream": ["../types/JSONStream"]
     }
   },
-  "include": [
-    "**/*.ts"
-  ],
-  "exclude": [
-    "scripts/*",
-    "data/*",
-  ]
+  "include": ["src/**/*.ts", "cypress/**/*.ts", "*.ts"],
+  "exclude": ["scripts/*", "data/*"]
 }

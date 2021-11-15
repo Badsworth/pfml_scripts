@@ -1,9 +1,3 @@
-variable "enable_pretty_domain" {
-  description = "Set to false to disable ACM certificate lookup and domain configuration"
-  type        = bool
-  default     = true
-}
-
 variable "environment_name" {
   description = "Name of the environment"
   type        = string
@@ -44,11 +38,20 @@ variable "enforce_fortinet_managed_rules" {
 variable "runtime_py" {
   description = "Pointer to the Python runtime used by the PFML API lambdas"
   type        = string
-  default     = "python3.8"
+  default     = "python3.9"
 }
 
 variable "is_adhoc_workspace" {
   description = "Whether this is running as a personal, adhoc workspace"
   type        = bool
   default     = false
+}
+
+variable "pfmldata_bucket_resources" {
+  description = "S3 bucket resources included in pfmldata S3 proxy"
+  type = list(object({
+    bucket_arn        = string
+    resource_prefixes = list(string)
+  }))
+  default = []
 }

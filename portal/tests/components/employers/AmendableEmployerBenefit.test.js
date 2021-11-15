@@ -2,227 +2,286 @@ import EmployerBenefit, {
   EmployerBenefitFrequency,
   EmployerBenefitType,
 } from "../../../src/models/EmployerBenefit";
-import AmendButton from "../../../src/components/employers/AmendButton";
+import { fireEvent, render, screen } from "@testing-library/react";
 import AmendableEmployerBenefit from "../../../src/components/employers/AmendableEmployerBenefit";
-import AmendmentForm from "../../../src/components/employers/AmendmentForm";
-import Button from "../../../src/components/Button";
-import Dropdown from "../../../src/components/Dropdown";
-import InputDate from "../../../src/components/InputDate";
-import InputNumber from "../../../src/components/InputNumber";
+import AppErrorInfoCollection from "../../../src/models/AppErrorInfoCollection";
 import React from "react";
-import { shallow } from "enzyme";
-import { testHook } from "../../test-utils";
-import useAppLogic from "../../../src/hooks/useAppLogic";
+import userEvent from "@testing-library/user-event";
+
+const onChange = jest.fn();
+const onRemove = jest.fn();
+const appErrors = new AppErrorInfoCollection([]);
+const employerBenefit = new EmployerBenefit({
+  benefit_amount_dollars: 1000,
+  benefit_amount_frequency: EmployerBenefitFrequency.monthly,
+  benefit_end_date: "2021-03-01",
+  benefit_start_date: "2021-02-01",
+  benefit_type: EmployerBenefitType.shortTermDisability,
+  employer_benefit_id: 0,
+});
+
+const renderComponent = (customProps) => {
+  const props = {
+    appErrors,
+    employerBenefit,
+    isAddedByLeaveAdmin: true,
+    onChange,
+    onRemove,
+    shouldShowV2: false,
+    ...customProps,
+  };
+  return render(
+    <table>
+      <tbody>
+        <AmendableEmployerBenefit {...props} />
+      </tbody>
+    </table>
+  );
+};
+
+const v2ExclusiveLabels = [
+  /What kind of employer-sponsored benefit is it?/,
+  /Does this employer-sponsored benefit fully replace your employee's wages?/,
+];
 
 describe("AmendableEmployerBenefit", () => {
-  const shortTermDisability = new EmployerBenefit({
-    benefit_amount_dollars: 1000,
-    benefit_amount_frequency: EmployerBenefitFrequency.monthly,
-    benefit_end_date: "2021-03-01",
-    benefit_start_date: "2021-02-01",
-    benefit_type: EmployerBenefitType.shortTermDisability,
-    employer_benefit_id: 0,
+  it("does not show v2 exclusive fields in v1", () => {
+    renderComponent();
+    v2ExclusiveLabels.forEach((label) => {
+      expect(screen.queryByText(label)).not.toBeInTheDocument();
+    });
   });
-  const onChange = jest.fn();
-  const employerBenefit = shortTermDisability;
 
-  let appLogic, wrapper;
+  it("shows v2 exclusive fields in v2", () => {
+    renderComponent({ shouldShowV2: true });
+    v2ExclusiveLabels.forEach((label) => {
+      expect(screen.getByText(label)).toBeInTheDocument();
+    });
+  });
 
-  beforeEach(() => {
-    testHook(() => {
-      appLogic = useAppLogic();
+  it("for amended benefits, it renders the existing data with amendment form hidden initially", () => {
+    renderComponent({ isAddedByLeaveAdmin: false, shouldShowV2: true });
+    expect(screen.getByText("2/1/2021 to 3/1/2021")).toBeInTheDocument();
+    expect(
+      screen.getByText(/Short-term disability insurance/)
+    ).toBeInTheDocument();
+    expect(screen.getByText("$1,000.00 per month")).toBeInTheDocument();
+    const amendButton = screen.getByRole("button", { name: "Amend" });
+    expect(
+      screen.queryByText(/Amend employer-sponsored benefit/)
+    ).not.toBeInTheDocument();
+    userEvent.click(amendButton);
+    expect(
+      screen.queryByText(/Amend employer-sponsored benefit/)
+    ).toBeInTheDocument();
+  });
+
+  it("specifies amountPerFrequency_unknown when amount not zero AND frequency is 'Unknown'", () => {
+    renderComponent({
+      employerBenefit: new EmployerBenefit({
+        benefit_amount_dollars: 200,
+        benefit_amount_frequency: EmployerBenefitFrequency.unknown,
+        benefit_end_date: "2021-03-01",
+        benefit_start_date: "2021-02-01",
+        benefit_type: EmployerBenefitType.paidLeave,
+        employer_benefit_id: 0,
+        is_full_salary_continuous: false,
+      }),
+      isAddedByLeaveAdmin: false,
     });
 
-    wrapper = shallow(
-      <AmendableEmployerBenefit
-        appErrors={appLogic.appErrors}
-        employerBenefit={employerBenefit}
-        onChange={onChange}
-      />
-    );
+    expect(screen.getByText("$200.00 (frequency unknown)")).toBeInTheDocument();
   });
 
-  it("renders the component", () => {
-    expect(wrapper).toMatchSnapshot();
-  });
-
-  it("renders formatted date range for benefit used by employee", () => {
-    expect(wrapper.find("th").last().text()).toEqual("2/1/2021 – 3/1/2021");
-  });
-
-  it("renders formatted benefit type as sentence case", () => {
-    expect(wrapper.find("td").first().text()).toEqual(
-      "Short-term disability insurance"
-    );
-  });
-
-  it("renders formatted benefit amount with dollar sign and frequency", () => {
-    expect(wrapper.find("td").at(1).text()).toEqual("$1,000.00 per month");
-  });
-
-  it("excludes frequency from benefit amount and displays helper text when frequency is 'Unknown'", () => {
-    const paidLeave = new EmployerBenefit({
+  it("renders fullSalaryContinuous when is_full_salary_continuous is true", () => {
+    const fullSalaryContinuousPaidLeave = new EmployerBenefit({
       benefit_amount_dollars: 0,
-      benefit_amount_frequency: "Unknown",
+      benefit_amount_frequency: EmployerBenefitFrequency.unknown,
       benefit_end_date: "2021-03-01",
       benefit_start_date: "2021-02-01",
       benefit_type: EmployerBenefitType.paidLeave,
       employer_benefit_id: 0,
+      is_full_salary_continuous: true,
     });
-    const wrapper = shallow(
-      <AmendableEmployerBenefit
-        appErrors={appLogic.appErrors}
-        employerBenefit={paidLeave}
-        onChange={() => {}}
-      />
-    );
 
-    expect(wrapper.find("td").at(1).text()).toEqual("$0.00[Needs review]");
+    renderComponent({
+      isAddedByLeaveAdmin: false,
+      employerBenefit: fullSalaryContinuousPaidLeave,
+    });
+
+    expect(screen.getByText(/Full salary continuous/)).toBeInTheDocument();
   });
 
-  it("renders an AmendmentForm if user clicks on AmendButton", () => {
-    wrapper.find(AmendButton).simulate("click");
+  it("renders noAmountReported when benefit_amount_dollars is 0.00 AND benefit_amount_frequency is unknown AND is_full_salary_continuous is falsy", () => {
+    const noAmountNoFreqPaidLeave = new EmployerBenefit({
+      benefit_amount_dollars: 0,
+      benefit_amount_frequency: EmployerBenefitFrequency.unknown,
+      benefit_end_date: "2021-03-01",
+      benefit_start_date: "2021-02-01",
+      benefit_type: EmployerBenefitType.paidLeave,
+      employer_benefit_id: 0,
+      is_full_salary_continuous: false,
+    });
 
-    expect(wrapper.find(AmendmentForm).exists()).toEqual(true);
+    renderComponent({
+      isAddedByLeaveAdmin: false,
+      employerBenefit: noAmountNoFreqPaidLeave,
+    });
+
+    expect(screen.getByText(/No amount reported/)).toBeInTheDocument();
   });
 
-  it("renders several input fields in the AmendmentForm", () => {
-    wrapper.find(AmendButton).simulate("click");
+  it("enables updates to start and end dates", () => {
+    renderComponent({ isAddedByLeaveAdmin: false, shouldShowV2: true });
+    const amendButton = screen.getByRole("button", { name: "Amend" });
+    userEvent.click(amendButton);
 
-    expect(wrapper.find(InputDate)).toHaveLength(2);
-    expect(wrapper.find(InputNumber)).toHaveLength(1);
-  });
+    const [startMonthInput, endMonthInput] = screen.getAllByRole("textbox", {
+      name: "Month",
+    });
+    const [startDayInput, endDayInput] = screen.getAllByRole("textbox", {
+      name: "Day",
+    });
+    const [startYearInput, endYearInput] = screen.getAllByRole("textbox", {
+      name: "Year",
+    });
+    expect(startYearInput).toHaveValue("2021");
+    expect(startMonthInput).toHaveValue("02");
+    expect(startDayInput).toHaveValue("01");
+    expect(endMonthInput).toHaveValue("03");
+    expect(endDayInput).toHaveValue("01");
+    expect(endYearInput).toHaveValue("2021");
+    expect(onChange).toHaveBeenCalledTimes(0);
 
-  it("renders amount field with currency mask", () => {
-    wrapper.find(AmendButton).simulate("click");
-
-    expect(wrapper.find(InputNumber).prop("mask")).toEqual("currency");
-  });
-
-  it("updates start and end dates in the AmendmentForm", () => {
-    wrapper.find(AmendButton).simulate("click");
-    wrapper
-      .find(InputDate)
-      .first()
-      .simulate("change", { target: { value: "2020-10-10" } });
-    wrapper
-      .find(InputDate)
-      .last()
-      .simulate("change", { target: { value: "2020-10-20" } });
-
-    expect(onChange).toHaveBeenCalledTimes(2);
-    expect(wrapper.find(InputDate).first().prop("value")).toEqual("2020-10-10");
-    expect(wrapper.find(InputDate).last().prop("value")).toEqual("2020-10-20");
-  });
-
-  it("updates amount in the AmendmentForm", () => {
-    wrapper.find(AmendButton).simulate("click");
-    wrapper.find(InputNumber).simulate("change", { target: { value: "500" } });
-
+    fireEvent.change(startMonthInput, { target: { value: "05" } });
     expect(onChange).toHaveBeenCalledWith(
-      expect.objectContaining({ benefit_amount_dollars: 500 })
+      { benefit_start_date: "2021-05-01", employer_benefit_id: 0 },
+      "amendedBenefits"
     );
-    expect(wrapper.find(InputNumber).prop("value")).toEqual("500");
+    fireEvent.change(endMonthInput, { target: { value: "06" } });
+    expect(onChange).toHaveBeenLastCalledWith(
+      { benefit_end_date: "2021-06-01", employer_benefit_id: 0 },
+      "amendedBenefits"
+    );
+    expect(startMonthInput).toHaveValue("05");
+    expect(endMonthInput).toHaveValue("06");
   });
 
-  it("formats empty, zero, invalid amount values to 0", () => {
-    wrapper.find(AmendButton).simulate("click");
-    wrapper.find(InputNumber).simulate("change", { target: { value: "" } });
+  it("formats empty dates as null instead of empty string", () => {
+    renderComponent({ isAddedByLeaveAdmin: false, shouldShowV2: true });
+    userEvent.click(screen.getByRole("button", { name: "Amend" }));
+    const dayInputs = screen.getAllByRole("textbox", { name: "Day" });
+    const monthInputs = screen.getAllByRole("textbox", { name: "Month" });
+    const yearInputs = screen.getAllByRole("textbox", { name: "Year" });
+    fireEvent.change(dayInputs[0], { target: { value: "" } });
+    fireEvent.change(monthInputs[0], { target: { value: "" } });
+    fireEvent.change(yearInputs[0], { target: { value: "" } });
 
-    expect(onChange).toHaveBeenCalledWith(
-      expect.objectContaining({ benefit_amount_dollars: 0 })
-    );
-    expect(wrapper.find(InputNumber).prop("value")).toEqual(0);
-
-    wrapper.find(InputNumber).simulate("change", { target: { value: "0" } });
-    expect(onChange).toHaveBeenCalledWith(
-      expect.objectContaining({ benefit_amount_dollars: 0 })
-    );
-    expect(wrapper.find(InputNumber).prop("value")).toEqual(0);
-
-    wrapper
-      .find(InputNumber)
-      .simulate("change", { target: { value: "hello" } });
-    expect(onChange).toHaveBeenCalledWith(
-      expect.objectContaining({ benefit_amount_dollars: 0 })
-    );
-    expect(wrapper.find(InputNumber).prop("value")).toEqual(0);
-  });
-
-  it("formats decimal amount values", () => {
-    wrapper.find(AmendButton).simulate("click");
-    wrapper
-      .find(InputNumber)
-      .simulate("change", { target: { value: "100.5000" } });
-
-    expect(onChange).toHaveBeenCalledWith(
-      expect.objectContaining({ benefit_amount_dollars: 100.5 })
+    expect(onChange).toHaveBeenLastCalledWith(
+      { benefit_start_date: null, employer_benefit_id: 0 },
+      "amendedBenefits"
     );
   });
 
-  it("formats amount values without commas", () => {
-    wrapper.find(AmendButton).simulate("click");
-    wrapper.find(InputNumber).simulate("change", { target: { value: "1000" } });
-
-    expect(onChange).toHaveBeenCalledWith(
-      expect.objectContaining({ benefit_amount_dollars: 1000 })
-    );
-  });
-
-  it("updates frequency in the AmendmentForm", () => {
-    wrapper.find(AmendButton).simulate("click");
-    wrapper.find(Dropdown).simulate("change", {
+  it("enables update of frequency in the AmendmentForm", () => {
+    renderComponent({ isAddedByLeaveAdmin: false });
+    userEvent.click(screen.getByRole("button", { name: "Amend" }));
+    const frequencyDropdown = screen.getByLabelText("Frequency");
+    fireEvent.change(frequencyDropdown, {
       target: { value: EmployerBenefitFrequency.weekly },
     });
 
-    expect(onChange).toHaveBeenCalled();
-    expect(wrapper.find(Dropdown).prop("value")).toEqual(
-      EmployerBenefitFrequency.weekly
-    );
-  });
-
-  it("hides 'Needs review' helper text if user selects a valid frequency value", () => {
-    const paidLeave = new EmployerBenefit({
-      benefit_amount_dollars: 1000,
-      benefit_amount_frequency: "Unknown",
-      benefit_end_date: "2021-03-01",
-      benefit_start_date: "2021-02-01",
-      benefit_type: EmployerBenefitType.paidLeave,
-      employer_benefit_id: 0,
-    });
-    const wrapper = shallow(
-      <AmendableEmployerBenefit
-        appErrors={appLogic.appErrors}
-        employerBenefit={paidLeave}
-        onChange={() => {}}
-      />
-    );
-
-    expect(wrapper.find("td").at(1).text()).toEqual("$1,000.00[Needs review]");
-
-    wrapper.find(AmendButton).simulate("click");
-    wrapper.find(Dropdown).simulate("change", {
-      target: {
-        value: EmployerBenefitFrequency.weekly,
-        employer_benefit_id: 1,
-      },
-    });
-
-    expect(wrapper.find("td").at(1).text()).toEqual("$1,000.00");
-  });
-
-  it("restores original value on cancel", () => {
-    wrapper.find(AmendButton).simulate("click");
-    wrapper.find(InputNumber).simulate("change", { target: { value: "500" } });
-
     expect(onChange).toHaveBeenCalledWith(
-      expect.objectContaining({ benefit_amount_dollars: 500 })
+      {
+        benefit_amount_frequency: EmployerBenefitFrequency.weekly,
+        employer_benefit_id: 0,
+      },
+      "amendedBenefits"
     );
-    expect(wrapper.find(InputNumber).prop("value")).toEqual("500");
 
-    wrapper.find(AmendmentForm).dive().find(Button).simulate("click");
+    expect(frequencyDropdown).toHaveValue(EmployerBenefitFrequency.weekly);
+  });
 
-    wrapper.find(AmendButton).simulate("click");
-    expect(wrapper.find(InputNumber).prop("value")).toEqual(1000);
+  it("restores original value on cancel, and minimizes form", () => {
+    renderComponent({ isAddedByLeaveAdmin: false });
+    userEvent.click(screen.getByRole("button", { name: "Amend" }));
+
+    const [startYearInput, endYearInput] = screen.getAllByRole("textbox", {
+      name: "Year",
+    });
+    fireEvent.change(startYearInput, { target: { value: "2020" } });
+    fireEvent.change(endYearInput, { target: { value: "2020" } });
+    expect(endYearInput).toHaveValue("2020");
+
+    const cancelButton = screen.getByRole("button", {
+      name: "Cancel amendment",
+    });
+    userEvent.click(cancelButton);
+    expect(onChange).toHaveBeenLastCalledWith(
+      employerBenefit,
+      "amendedBenefits"
+    );
+    expect(screen.getByText("2/1/2021 to 3/1/2021")).toBeInTheDocument();
+    expect(
+      screen.queryByText(/Amend employer-sponsored benefit/)
+    ).not.toBeInTheDocument();
+  });
+
+  it("for added benefits, form expanded by default (and no table row with the amend button)", () => {
+    renderComponent();
+    expect(
+      screen.getByText(/Add an employer-sponsored benefit/)
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Amend" })
+    ).not.toBeInTheDocument();
+  });
+
+  it("user can update amount via the form", () => {
+    renderComponent();
+    const benefitInput = screen.getByLabelText("Amount");
+    expect(benefitInput).toHaveValue("1,000");
+    fireEvent.change(benefitInput, { target: { value: 500 } });
+    expect(onChange).toHaveBeenCalledWith(
+      { benefit_amount_dollars: 500, employer_benefit_id: 0 },
+      "addedBenefits"
+    );
+    expect(benefitInput).toHaveValue("500");
+  });
+
+  it("calls onRemove on cancel", () => {
+    renderComponent({ isAddedByLeaveAdmin: true });
+    const cancelButton = screen.getByRole("button", {
+      name: "Cancel addition",
+    });
+    userEvent.click(cancelButton);
+    expect(onRemove).toHaveBeenCalled();
+  });
+
+  it("benefit type is modifiable in v2", () => {
+    renderComponent({ shouldShowV2: true });
+    const benefitTypeRadio = screen.getByRole("radio", {
+      name: "Permanent disability insurance",
+    });
+    userEvent.click(benefitTypeRadio);
+    expect(onChange).toHaveBeenCalledWith(
+      {
+        benefit_type: EmployerBenefitType.permanentDisability,
+        employer_benefit_id: 0,
+      },
+      "addedBenefits"
+    );
+  });
+
+  it("full salary continuous is modifiable in v2", () => {
+    renderComponent({ shouldShowV2: true });
+    const salaryContinuousRadio = screen.getByRole("radio", { name: "Yes" });
+    expect(salaryContinuousRadio).not.toBeChecked();
+    userEvent.click(salaryContinuousRadio);
+    expect(onChange).toHaveBeenCalledWith(
+      { is_full_salary_continuous: true, employer_benefit_id: 0 },
+      "addedBenefits"
+    );
+    expect(salaryContinuousRadio).toBeChecked();
   });
 });

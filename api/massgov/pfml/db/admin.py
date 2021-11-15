@@ -3,12 +3,8 @@ import os
 from dataclasses import dataclass, field
 from typing import List, Optional
 
-import massgov.pfml.util.logging
 from massgov.pfml.db import create_engine, create_user, get_config
-from massgov.pfml.util.sentry import initialize_sentry
-
-initialize_sentry()
-massgov.pfml.util.logging.init("DB Admin Tasks")
+from massgov.pfml.util.bg import background_task
 
 
 @dataclass
@@ -18,6 +14,7 @@ class UserConfig:
     roles: List[str] = field(default_factory=list)
 
 
+@background_task("db-admin-create-db-users")
 def create_users():
     engine = create_engine(get_config(prefer_admin=True))
 

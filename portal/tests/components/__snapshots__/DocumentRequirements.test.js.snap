@@ -1,104 +1,36 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`DocumentRequirements renders Certification Document Requirements content 1`] = `
-<Heading
-  className="usa-summary-box__heading"
-  level="3"
-  size="4"
+<ul
+  class="usa-list"
 >
-  Document Requirements:
-</Heading>
-`;
-
-exports[`DocumentRequirements renders Certification Document Requirements content 2`] = `
-Array [
-  <ul
-    className="usa-list"
-    key="0"
-  >
-    <li
-      key="0"
-    >
-      The text must be clear and readable
-    </li>
-    <li
-      key="1"
-    >
-      Upload every page of the document where you or your health care provider have entered information
-    </li>
-    <li
-      key="2"
-    >
-      Each file you upload must be smaller than 4.5 MB
-    </li>
-  </ul>,
-  <p
-    key="p-1"
-  >
-    It’s faster to upload your documents online, but you can fax or mail color copies of your documents if you prefer. Follow the 
-    <a
-      href="https://www.mass.gov/pfmlsubmitinfo"
-      key="1"
-      rel="noopener"
-      target="_blank"
-    >
-      fax and mail instructions
-    </a>
-    .
-  </p>,
-]
+  <li>
+    The text must be clear and readable
+  </li>
+  <li>
+    Upload every page of the document where you or your health care provider have entered information
+  </li>
+  <li>
+    Each file you upload must be smaller than 4.5 MB
+  </li>
+</ul>
 `;
 
 exports[`DocumentRequirements renders ID Document Requirements content 1`] = `
-<Heading
-  className="usa-summary-box__heading"
-  level="3"
-  size="4"
+<ul
+  class="usa-list"
 >
-  Document Requirements:
-</Heading>
-`;
-
-exports[`DocumentRequirements renders ID Document Requirements content 2`] = `
-Array [
-  <ul
-    className="usa-list"
-    key="0"
-  >
-    <li
-      key="0"
-    >
-      The image of the card must be in full color
-    </li>
-    <li
-      key="1"
-    >
-      The text must be clear and readable
-    </li>
-    <li
-      key="2"
-    >
-      The front and back can be in one file, or in two separate files
-    </li>
-    <li
-      key="3"
-    >
-      Each file must be smaller than 4.5 MB
-    </li>
-  </ul>,
-  <p
-    key="p-1"
-  >
-    It’s faster to upload your documents online, but you can fax or mail color copies of your documents if you prefer. Follow the 
-    <a
-      href="https://www.mass.gov/pfmlsubmitinfo"
-      key="1"
-      rel="noopener"
-      target="_blank"
-    >
-      fax and mail instructions
-    </a>
-    .
-  </p>,
-]
+  <li>
+    The image of the card must be in full color
+  </li>
+  <li>
+    The text must be clear and readable
+  </li>
+  <li>
+    The front and back can be in one file, or in two separate files
+  </li>
+  <li>
+    Each file must be smaller than 4.5 MB
+  </li>
+</ul>
 `;

@@ -1,0 +1,24 @@
+.settings-table__header--center,
+.settings-table__col--center {
+  text-align: center;
+}
+
+.settings-table__col {
+  width: 16.4%;
+}
+
+.settings-table__col:first-child {
+  width: 18%;
+}
+
+.settings-checkbox {
+  vertical-align: middle;
+}
+
+.settings-table__controls {
+  padding: 1em 0;
+}
+
+.settings-btn__cancel {
+  margin-right: 0.9em;
+}

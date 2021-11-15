@@ -1,4 +1,5 @@
 import csv
+import enum
 import os
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
@@ -8,6 +9,7 @@ import massgov.pfml.delegated_payments.delegated_config as payments_config
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
+from massgov.pfml import db
 from massgov.pfml.db.models.employees import (
     Flow,
     LkState,
@@ -16,6 +18,12 @@ from massgov.pfml.db.models.employees import (
     ReferenceFileType,
     State,
     StateLog,
+)
+from massgov.pfml.db.models.payments import (
+    FineosWritebackDetails,
+    FineosWritebackTransactionStatus,
+    LkFineosWritebackTransactionStatus,
+    PaymentAuditReportType,
 )
 from massgov.pfml.delegated_payments.audit.delegated_payment_audit_csv import (
     PAYMENT_AUDIT_CSV_HEADERS,
@@ -35,38 +43,6 @@ class NonSampledStateTransitionDescriptor:
 
 
 NOT_SAMPLED_STATE_TRANSITIONS: List[NonSampledStateTransitionDescriptor] = []
-
-NOT_SAMPLED_STATE_TRANSITIONS.append(
-    NonSampledStateTransitionDescriptor(
-        State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_CANCELLATION,
-        State.DELEGATED_PAYMENT_ADD_CANCELLATION_PAYMENT_TO_FINEOS_WRITEBACK,
-        state_log_util.build_outcome("Cancelled payment to be added to FINEOS Writeback"),
-    )
-)
-
-NOT_SAMPLED_STATE_TRANSITIONS.append(
-    NonSampledStateTransitionDescriptor(
-        State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_ZERO_PAYMENT,
-        State.DELEGATED_PAYMENT_ADD_ZERO_PAYMENT_TO_FINEOS_WRITEBACK,
-        state_log_util.build_outcome("$0 payment to be added to FINEOS Writeback"),
-    )
-)
-
-NOT_SAMPLED_STATE_TRANSITIONS.append(
-    NonSampledStateTransitionDescriptor(
-        State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_OVERPAYMENT,
-        State.DELEGATED_PAYMENT_ADD_OVERPAYMENT_TO_FINEOS_WRITEBACK,
-        state_log_util.build_outcome("Overpayment to be added to FINEOS Writeback"),
-    )
-)
-
-NOT_SAMPLED_STATE_TRANSITIONS.append(
-    NonSampledStateTransitionDescriptor(
-        State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_EMPLOYER_REIMBURSEMENT,
-        State.DELEGATED_PAYMENT_ADD_EMPLOYER_REIMBURSEMENT_PAYMENT_TO_FINEOS_WRITEBACK,
-        state_log_util.build_outcome("Employer reimbursement to be added to FINEOS Writeback"),
-    )
-)
 
 NOT_SAMPLED_STATE_TRANSITIONS.append(
     NonSampledStateTransitionDescriptor(
@@ -95,6 +71,25 @@ ACCEPTED_OUTCOME = state_log_util.build_outcome(
     "Accepted payment to be added to FINEOS Writeback - sampled"
 )
 
+AUDIT_REJECT_NOTE_TO_WRITEBACK_STATUS = {
+    "DUA Additional Income": FineosWritebackTransactionStatus.DUA_ADDITIONAL_INCOME,
+    "DIA Additional Income": FineosWritebackTransactionStatus.DIA_ADDITIONAL_INCOME,
+    "Self-Reported Additional Income": FineosWritebackTransactionStatus.SELF_REPORTED_ADDITIONAL_INCOME,
+    "Exempt Employer": FineosWritebackTransactionStatus.EXEMPT_EMPLOYER,
+    "Weekly benefit amount exceeds $850": FineosWritebackTransactionStatus.WEEKLY_BENEFITS_AMOUNT_EXCEEDS_850,
+    "Waiting Week": FineosWritebackTransactionStatus.WAITING_WEEK,
+    "InvalidPayment PaidDate": FineosWritebackTransactionStatus.ALREADY_PAID_FOR_DATES,
+    "Leave Dates Change": FineosWritebackTransactionStatus.LEAVE_DATES_CHANGE,
+    "Under or Over payments(Adhocs needed)": FineosWritebackTransactionStatus.UNDER_OR_OVERPAY_ADJUSTMENT,
+    "Name mismatch": FineosWritebackTransactionStatus.NAME_MISMATCH,
+    "Other": FineosWritebackTransactionStatus.FAILED_MANUAL_VALIDATION,
+}
+
+AUDIT_SKIPPED_NOTE_TO_WRITEBACK_STATUS = {
+    PaymentAuditReportType.LEAVE_PLAN_IN_REVIEW.payment_audit_report_type_description: FineosWritebackTransactionStatus.LEAVE_IN_REVIEW,
+    "Other": FineosWritebackTransactionStatus.PENDING_PAYMENT_AUDIT,
+}
+
 
 class PaymentRejectsException(Exception):
     """An error during Payment Rejects file processing."""
@@ -103,12 +98,48 @@ class PaymentRejectsException(Exception):
 def get_row(row: Dict[str, str], key: Optional[str]) -> Optional[str]:
     if not key:
         return None
-    return row[key]
+    return row.get(key, None)
 
 
 class PaymentRejectsStep(Step):
+    class Metrics(str, enum.Enum):
+        ARCHIVE_PATH = "archive_path"
+        ACCEPTED_PAYMENT_COUNT = "accepted_payment_count"
+        PARSED_ROWS_COUNT = "parsed_rows_count"
+        PAYMENT_STATE_LOG_MISSING_COUNT = "payment_state_log_missing_count"
+        PAYMENT_STATE_LOG_NOT_IN_AUDIT_RESPONSE_PENDING_COUNT = (
+            "payment_state_log_not_in_audit_response_pending_count"
+        )
+        REJECTED_PAYMENT_COUNT = "rejected_payment_count"
+        SKIPPED_PAYMENT_COUNT = "skipped_payment_count"
+        STATE_LOGS_COUNT = "state_logs_count"
+        MISSING_REJECT_NOTES = "missing_reject_notes"
+        UNKNOWN_REJECT_NOTES = "unknown_reject_notes"
+
+    def __init__(
+        self,
+        db_session: db.Session,
+        log_entry_db_session: db.Session,
+        payment_rejects_folder_path: str = "",
+    ) -> None:
+        """Constructor."""
+        super().__init__(db_session, log_entry_db_session)
+
+        self.payment_rejects_folder_path = payment_rejects_folder_path
+        if not payment_rejects_folder_path:
+            s3_config = payments_config.get_s3_config()
+            self.payment_rejects_folder_path = s3_config.pfml_payment_rejects_archive_path
+            self.payment_rejects_received_folder_path = os.path.join(
+                self.payment_rejects_folder_path, payments_util.Constants.S3_INBOUND_RECEIVED_DIR
+            )
+
     def run_step(self) -> None:
         self.process_rejects()
+
+    def cleanup_on_failure(self) -> None:
+        s3_config = payments_config.get_s3_config()
+
+        self.move_rejects_file_to_error_archive_folder(s3_config.pfml_payment_rejects_archive_path)
 
     def parse_payment_rejects_file(self, file_path: str) -> List[PaymentAuditCSV]:
         with file_util.open_stream(file_path) as csvfile:
@@ -120,13 +151,19 @@ class PaymentRejectsStep(Step):
                 payment_reject_row = PaymentAuditCSV(
                     pfml_payment_id=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.pfml_payment_id),
                     leave_type=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.leave_type),
+                    fineos_customer_number=get_row(
+                        row, PAYMENT_AUDIT_CSV_HEADERS.fineos_customer_number
+                    ),
                     first_name=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.first_name),
                     last_name=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.last_name),
+                    dor_first_name=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.dor_first_name),
+                    dor_last_name=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.dor_last_name),
                     address_line_1=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.address_line_1),
                     address_line_2=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.address_line_2),
                     city=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.city),
                     state=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.state),
                     zip=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.zip),
+                    is_address_verified=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.is_address_verified),
                     payment_preference=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.payment_preference),
                     scheduled_payment_date=get_row(
                         row, PAYMENT_AUDIT_CSV_HEADERS.scheduled_payment_date
@@ -137,14 +174,46 @@ class PaymentRejectsStep(Step):
                     payment_period_end_date=get_row(
                         row, PAYMENT_AUDIT_CSV_HEADERS.payment_period_end_date
                     ),
+                    payment_period_weeks=get_row(
+                        row, PAYMENT_AUDIT_CSV_HEADERS.payment_period_weeks
+                    ),
+                    gross_payment_amount=get_row(
+                        row, PAYMENT_AUDIT_CSV_HEADERS.gross_payment_amount
+                    ),
                     payment_amount=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.payment_amount),
+                    federal_withholding_amount=get_row(
+                        row, PAYMENT_AUDIT_CSV_HEADERS.federal_withholding_amount
+                    ),
+                    state_withholding_amount=get_row(
+                        row, PAYMENT_AUDIT_CSV_HEADERS.state_withholding_amount
+                    ),
+                    employer_reimbursement_amount=get_row(
+                        row, PAYMENT_AUDIT_CSV_HEADERS.employer_reimbursement_amount
+                    ),
+                    child_support_amount=get_row(
+                        row, PAYMENT_AUDIT_CSV_HEADERS.child_support_amount
+                    ),
                     absence_case_number=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.absence_case_number),
                     c_value=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.c_value),
                     i_value=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.i_value),
-                    fineos_customer_number=get_row(
-                        row, PAYMENT_AUDIT_CSV_HEADERS.fineos_customer_number
+                    federal_withholding_i_value=get_row(
+                        row, PAYMENT_AUDIT_CSV_HEADERS.federal_withholding_i_value
+                    ),
+                    state_withholding_i_value=get_row(
+                        row, PAYMENT_AUDIT_CSV_HEADERS.state_withholding_i_value
+                    ),
+                    employer_reimbursement_i_value=get_row(
+                        row, PAYMENT_AUDIT_CSV_HEADERS.employer_reimbursement_i_value
+                    ),
+                    child_support_i_value=get_row(
+                        row, PAYMENT_AUDIT_CSV_HEADERS.child_support_i_value
                     ),
                     employer_id=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.employer_id),
+                    absence_case_creation_date=get_row(
+                        row, PAYMENT_AUDIT_CSV_HEADERS.absence_case_creation_date
+                    ),
+                    absence_start_date=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.absence_start_date),
+                    absence_end_date=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.absence_end_date),
                     case_status=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.case_status),
                     leave_request_decision=get_row(
                         row, PAYMENT_AUDIT_CSV_HEADERS.leave_request_decision
@@ -153,17 +222,32 @@ class PaymentRejectsStep(Step):
                     is_first_time_payment=get_row(
                         row, PAYMENT_AUDIT_CSV_HEADERS.is_first_time_payment
                     ),
-                    is_previously_errored_payment=get_row(
-                        row, PAYMENT_AUDIT_CSV_HEADERS.is_previously_errored_payment
+                    previously_errored_payment_count=get_row(
+                        row, PAYMENT_AUDIT_CSV_HEADERS.previously_errored_payment_count
                     ),
-                    is_previously_rejected_payment=get_row(
-                        row, PAYMENT_AUDIT_CSV_HEADERS.is_previously_rejected_payment
+                    previously_rejected_payment_count=get_row(
+                        row, PAYMENT_AUDIT_CSV_HEADERS.previously_rejected_payment_count
                     ),
-                    number_of_times_in_rejected_or_error_state=get_row(
-                        row, PAYMENT_AUDIT_CSV_HEADERS.number_of_times_in_rejected_or_error_state
+                    previously_skipped_payment_count=get_row(
+                        row, PAYMENT_AUDIT_CSV_HEADERS.previously_skipped_payment_count
+                    ),
+                    max_weekly_benefits_details=get_row(
+                        row, PAYMENT_AUDIT_CSV_HEADERS.max_weekly_benefits_details
+                    ),
+                    dua_additional_income_details=get_row(
+                        row, PAYMENT_AUDIT_CSV_HEADERS.dua_additional_income_details
+                    ),
+                    dia_additional_income_details=get_row(
+                        row, PAYMENT_AUDIT_CSV_HEADERS.dia_additional_income_details
+                    ),
+                    dor_fineos_name_mismatch_details=get_row(
+                        row, PAYMENT_AUDIT_CSV_HEADERS.dor_fineos_name_mismatch_details
                     ),
                     rejected_by_program_integrity=get_row(
                         row, PAYMENT_AUDIT_CSV_HEADERS.rejected_by_program_integrity
+                    ),
+                    skipped_by_program_integrity=get_row(
+                        row, PAYMENT_AUDIT_CSV_HEADERS.skipped_by_program_integrity
                     ),
                     rejected_notes=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.rejected_notes),
                 )
@@ -172,14 +256,18 @@ class PaymentRejectsStep(Step):
         return payment_rejects_rows
 
     def transition_audit_pending_payment_state(
-        self, payment: Payment, is_rejected_payment: bool
+        self,
+        payment: Payment,
+        is_rejected_payment: bool,
+        is_skipped_payment: bool,
+        rejected_notes: Optional[str] = None,
     ) -> None:
         payment_state_log: Optional[StateLog] = state_log_util.get_latest_state_log_in_flow(
             payment, Flow.DELEGATED_PAYMENT, self.db_session
         )
 
         if payment_state_log is None:
-            self.increment("payment_state_log_missing_count")
+            self.increment(self.Metrics.PAYMENT_STATE_LOG_MISSING_COUNT)
             raise PaymentRejectsException(
                 f"No state log found for payment found in audit reject file: {payment.payment_id}"
             )
@@ -188,29 +276,144 @@ class PaymentRejectsStep(Step):
             payment_state_log.end_state_id
             != State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT.state_id
         ):
-            self.increment("payment_state_log_not_in_audit_response_pending_count")
+            self.increment(self.Metrics.PAYMENT_STATE_LOG_NOT_IN_AUDIT_RESPONSE_PENDING_COUNT)
             raise PaymentRejectsException(
                 f"Found payment state log not in audit response pending state: {payment_state_log.end_state.state_description if payment_state_log.end_state else None}, payment_id: {payment.payment_id}"
             )
 
+        # For whatever reason, the reject notes end up with a weird
+        # character in the new line due to the process the PI team uses.
+        # Replace that character with a space so our parsing and logging
+        # logic works as expected. This char represents an unknown unicode
+        # character.
+        if rejected_notes:
+            rejected_notes = rejected_notes.replace("\ufffd", " ")
+
         if is_rejected_payment:
-            self.increment("rejected_payment_count")
+            self.increment(self.Metrics.REJECTED_PAYMENT_COUNT)
             state_log_util.create_finished_state_log(
                 payment,
                 State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT,
-                state_log_util.build_outcome("Payment rejected"),
+                state_log_util.build_outcome(f"Payment rejected with notes: {rejected_notes}"),
                 self.db_session,
             )
+
+            writeback_transaction_status = self.convert_reject_notes_to_writeback_status(
+                payment, is_rejected=True, rejected_notes=rejected_notes
+            )
+
+            state_log_util.create_finished_state_log(
+                payment,
+                State.DELEGATED_ADD_TO_FINEOS_WRITEBACK,
+                state_log_util.build_outcome(
+                    writeback_transaction_status.transaction_status_description
+                ),
+                self.db_session,
+            )
+            writeback_details = FineosWritebackDetails(
+                payment=payment,
+                transaction_status_id=writeback_transaction_status.transaction_status_id,
+                import_log_id=self.get_import_log_id(),
+            )
+            self.db_session.add(writeback_details)
+        elif is_skipped_payment:
+            self.increment(self.Metrics.SKIPPED_PAYMENT_COUNT)
+            state_log_util.create_finished_state_log(
+                payment,
+                State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT_RESTARTABLE,
+                state_log_util.build_outcome("Payment skipped"),
+                self.db_session,
+            )
+
+            writeback_transaction_status = self.convert_reject_notes_to_writeback_status(
+                payment, is_rejected=False, rejected_notes=rejected_notes
+            )
+            state_log_util.create_finished_state_log(
+                payment,
+                State.DELEGATED_ADD_TO_FINEOS_WRITEBACK,
+                state_log_util.build_outcome(
+                    writeback_transaction_status.transaction_status_description
+                ),
+                self.db_session,
+            )
+            writeback_details = FineosWritebackDetails(
+                payment=payment,
+                transaction_status_id=writeback_transaction_status.transaction_status_id,
+                import_log_id=self.get_import_log_id(),
+            )
+            self.db_session.add(writeback_details)
         else:
-            self.increment("accepted_payment_count")
+            self.increment(self.Metrics.ACCEPTED_PAYMENT_COUNT)
             state_log_util.create_finished_state_log(
                 payment, ACCEPTED_STATE, ACCEPTED_OUTCOME, self.db_session
             )
+
+    def convert_reject_notes_to_writeback_status(
+        self, payment: Payment, is_rejected: bool, rejected_notes: Optional[str] = None
+    ) -> LkFineosWritebackTransactionStatus:
+        if is_rejected:
+            default_transaction_status = FineosWritebackTransactionStatus.FAILED_MANUAL_VALIDATION
+            transaction_status_mapping = AUDIT_REJECT_NOTE_TO_WRITEBACK_STATUS
+            status_str = "rejected"
+        else:
+            default_transaction_status = FineosWritebackTransactionStatus.PENDING_PAYMENT_AUDIT
+            transaction_status_mapping = AUDIT_SKIPPED_NOTE_TO_WRITEBACK_STATUS
+            status_str = "skipped"
+
+        # Set writeback status from reject notes if available and matching, otherwise use default reject status
+        try:
+            if rejected_notes is None:
+                self.increment(self.Metrics.MISSING_REJECT_NOTES)
+                logger.warning(
+                    "Empty reject note for %s payment: %s", status_str, payment.payment_id
+                )
+                writeback_transaction_status = default_transaction_status
+            else:
+                writeback_transaction_status = transaction_status_mapping[rejected_notes]
+        except KeyError:
+            # No exact match, try a close match
+            # - ignore case
+            # - key is substring of reject writeback status
+            found = False
+            if rejected_notes:
+                rejected_notes_lowercase = rejected_notes.lower()
+                for reject_note_expected in transaction_status_mapping.keys():
+                    reject_note_expected_lowercase = reject_note_expected.lower()
+                    if (
+                        rejected_notes_lowercase == reject_note_expected_lowercase
+                        or rejected_notes_lowercase.find(reject_note_expected_lowercase) >= 0
+                    ):
+                        writeback_transaction_status = transaction_status_mapping[
+                            reject_note_expected
+                        ]
+                        found = True
+                        break
+
+            if not found:
+                self.increment(self.Metrics.UNKNOWN_REJECT_NOTES)
+                logger.warning(
+                    "Could not get writeback transaction status from reject notes for %s payment: %s, notes: %s",
+                    status_str,
+                    payment.payment_id,
+                    rejected_notes,
+                )
+                writeback_transaction_status = default_transaction_status
+
+        return writeback_transaction_status
 
     def transition_audit_pending_payment_states(
         self, payment_rejects_rows: List[PaymentAuditCSV]
     ) -> None:
         for payment_rejects_row in payment_rejects_rows:
+            if payment_rejects_row.pfml_payment_id is None:
+                raise PaymentRejectsException("Missing payment id column in rejects file.")
+
+            if payment_rejects_row.rejected_by_program_integrity is None:
+                raise PaymentRejectsException("Missing rejection column in rejects file.")
+
+            if payment_rejects_row.skipped_by_program_integrity is None:
+                raise PaymentRejectsException("Missing skip column in rejects file.")
+
             payment = (
                 self.db_session.query(Payment)
                 .filter(Payment.payment_id == payment_rejects_row.pfml_payment_id)
@@ -223,8 +426,18 @@ class PaymentRejectsStep(Step):
                 )
 
             is_rejected_payment = payment_rejects_row.rejected_by_program_integrity == "Y"
+            is_skipped_payment = payment_rejects_row.skipped_by_program_integrity == "Y"
 
-            self.transition_audit_pending_payment_state(payment, is_rejected_payment)
+            if is_rejected_payment and is_skipped_payment:
+                raise PaymentRejectsException(
+                    "Unexpected state - rejects row both rejected and skipped."
+                )
+
+            rejected_notes = payment_rejects_row.rejected_notes
+
+            self.transition_audit_pending_payment_state(
+                payment, is_rejected_payment, is_skipped_payment, rejected_notes
+            )
 
     def _transition_not_sampled_payment_audit_pending_state(self, pending_state: LkState) -> None:
         state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
@@ -276,17 +489,17 @@ class PaymentRejectsStep(Step):
 
         logger.info("Completed transition of not sampled payment audit pending states")
 
-    def process_rejects_and_send_report(self, payment_rejects_archive_path: str) -> None:
-        payment_rejects_received_folder_path = os.path.join(
-            payment_rejects_archive_path, payments_util.Constants.S3_INBOUND_RECEIVED_DIR
-        )
+    def get_rejects_files_to_process(self) -> List[str]:
+        return file_util.list_files(self.payment_rejects_received_folder_path)
 
-        rejects_files = file_util.list_files(payment_rejects_received_folder_path)
+    def process_rejects_and_send_report(self) -> None:
+        rejects_files = self.get_rejects_files_to_process()
 
         if len(rejects_files) == 0:
             raise PaymentRejectsException("No Payment Rejects file found.")
 
         if len(rejects_files) > 1:
+            rejects_files.sort()
             rejects_file_names = ", ".join(rejects_files)
             raise PaymentRejectsException(
                 f"Too many Payment Rejects files found: {rejects_file_names}"
@@ -295,7 +508,7 @@ class PaymentRejectsStep(Step):
         # process the file
         rejects_file_name = rejects_files[0]
         payment_rejects_file_path = os.path.join(
-            payment_rejects_received_folder_path, rejects_file_name
+            self.payment_rejects_received_folder_path, rejects_file_name
         )
 
         logger.info("Start processing Payment Rejects file: %s", payment_rejects_file_path)
@@ -305,7 +518,7 @@ class PaymentRejectsStep(Step):
             payment_rejects_file_path,
         )
         parsed_rows_count = len(payment_rejects_rows)
-        self.set_metrics(parsed_rows_count=parsed_rows_count)
+        self.set_metrics({self.Metrics.PARSED_ROWS_COUNT: parsed_rows_count})
         logger.info("Parsed %i payment rejects rows", parsed_rows_count)
 
         # check if returned rows match expected number in our state log
@@ -315,7 +528,7 @@ class PaymentRejectsStep(Step):
             self.db_session,
         )
         state_log_count = len(state_logs)
-        self.set_metrics(state_logs_count=state_log_count)
+        self.set_metrics({self.Metrics.STATE_LOGS_COUNT: state_log_count})
 
         if state_log_count != parsed_rows_count:
             raise PaymentRejectsException(
@@ -330,12 +543,13 @@ class PaymentRejectsStep(Step):
 
         # put file in processed folder
         processed_file_path = payments_util.build_archive_path(
-            payment_rejects_archive_path,
+            self.payment_rejects_folder_path,
             payments_util.Constants.S3_INBOUND_PROCESSED_DIR,
             rejects_file_name,
         )
         file_util.rename_file(payment_rejects_file_path, processed_file_path)
         logger.info("Payment Rejects file in processed folder: %s", processed_file_path)
+        self.set_metrics({self.Metrics.ARCHIVE_PATH: processed_file_path})
 
         # create reference file
         reference_file = ReferenceFile(
@@ -350,23 +564,31 @@ class PaymentRejectsStep(Step):
 
         logger.info("Done processing Payment Rejects file: %s", payment_rejects_file_path)
 
+    def move_rejects_file_to_error_archive_folder(self, payment_rejects_archive_path: str) -> None:
+        rejects_files = self.get_rejects_files_to_process()
+
+        for rejects_file_name in rejects_files:
+            payment_rejects_file_path = os.path.join(
+                self.payment_rejects_received_folder_path, rejects_file_name
+            )
+
+            errored_file_path = payments_util.build_archive_path(
+                payment_rejects_archive_path,
+                payments_util.Constants.S3_INBOUND_ERROR_DIR,
+                rejects_file_name,
+            )
+
+            file_util.rename_file(payment_rejects_file_path, errored_file_path)
+            logger.warning("Payment Rejects file moved to errored folder: %s", errored_file_path)
+
+        logger.info(
+            "Done moving Payment Rejects files to error folder: %s", ", ".join(rejects_files)
+        )
+
     def process_rejects(self):
         """Top level function to process payments rejects"""
+        logger.info("Start processing payment rejects")
 
-        try:
-            logger.info("Start processing payment rejects")
+        self.process_rejects_and_send_report()
 
-            s3_config = payments_config.get_s3_config()
-
-            self.process_rejects_and_send_report(s3_config.pfml_payment_rejects_archive_path)
-
-            self.db_session.commit()
-
-            logger.info("Done processing payment rejects")
-
-        except Exception:
-            self.db_session.rollback()
-            logger.exception("Error processing Payment Rejects file")
-
-            # We do not want to run any subsequent steps if this fails
-            raise
+        logger.info("Done processing payment rejects")

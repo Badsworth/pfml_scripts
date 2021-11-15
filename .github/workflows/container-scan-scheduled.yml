@@ -25,7 +25,7 @@ jobs:
           ref: ${{ matrix.api_environment }}
 
       - name: build image
-        run: make release-build
+        run: make api-image-build
 
       - name: pull latest tenable image
         env:

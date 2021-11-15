@@ -1,0 +1,118 @@
+html {
+  color: $Color-GraniteGray-700;
+  font: 400 14px/1.14 NotoSans, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1 {
+  color: $Color-RevolutionGray;
+  font-size: 1.71em;
+  font-weight: 200;
+  line-height: 1.33;
+  margin-bottom: 0.6em;
+}
+
+h2 {
+  color: $Color-RevolutionGray;
+  font-size: 1.43em;
+  font-weight: 300;
+  line-height: 1.4;
+  margin-bottom: 0.72em;
+}
+
+a {
+  color: $Color-BayBlue-500;
+  text-decoration: none;
+}
+
+a:hover,
+a:focus {
+  text-decoration: underline;
+}
+
+// general input styling:
+// changes here will apply to all inputs, therefore
+// custom overrides should happen at the component level
+input[type='text'] {
+  appearance: none;
+  border: 1px solid #ddd;
+  border-radius: $Border-Radius;
+  box-shadow: $Box-Shadow;
+  color: $Color-GraniteGray-400;
+  font: inherit;
+  margin-bottom: 0.57em;
+  outline: none;
+  padding: 1em;
+  transition: all 0.2s ease-in-out;
+  width: 100%;
+
+  &:hover {
+    border-color: $Color-GraniteGray-400;
+  }
+
+  &:active,
+  &:focus {
+    border-color: $Color-BayBlue-500;
+  }
+
+  &:active {
+    pointer-events: none; // fixes issue with click-drag-select in text input field scrolls parent
+  }
+
+  &:not(:placeholder-shown) {
+    color: $Color-RevolutionGray;
+  }
+}
+
+input[type='checkbox'] {
+  appearance: none;
+  background: #fff;
+  border: solid 1px $Color-GraniteGray-200;
+  border-radius: 4px;
+  color: $Color-GraniteGray-200;
+  height: 16px;
+  margin: 0;
+  padding: 0;
+  position: relative;
+  width: 16px;
+
+  &:checked {
+    background: $Color-BayBlue-50;
+    border-color: $Color-BayBlue-500;
+    color: $Color-BayBlue-500;
+  }
+
+  &:checked::after {
+    @include IconFontProps;
+    content: $IconCheck;
+    font-size: 0.6em;
+    left: 2px;
+    position: absolute;
+    top: 3px;
+  }
+
+  &[disabled]:checked {
+    background: $Color-GraniteGray-50;
+    border-color: $Color-GraniteGray-300;
+    color: $Color-GraniteGray-300;
+  }
+}
+
+.users__warning-wrapper {
+  margin: 1.71em 0;
+}
+
+.account-info-slideover__image-wrapper {
+  height: 224px;
+  position: relative;
+  width: 400px;
+}
+
+.page {
+  background: #e5e5e5;
+  display: grid;
+  grid-template-columns: 15.79em auto;
+  grid-template-rows: minmax(min-content, max-content) auto;
+  height: 100vh;
+}

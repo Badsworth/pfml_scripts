@@ -1,74 +1,68 @@
-import { renderWithAppLogic, simulateEvents } from "../../../test-utils";
-import { UserLeaveAdministrator } from "../../../../src/models/User";
-import { VerifyContributions } from "../../../../src/pages/employers/organizations/verify-contributions";
-import Withholding from "../../../../src/models/Withholding";
-import { mockRouter } from "next/router";
-import routes from "../../../../src/routes";
+import User, { UserLeaveAdministrator } from "../../../../src/models/User";
+import { screen, waitFor } from "@testing-library/react";
+import VerifyContributions from "../../../../src/pages/employers/organizations/verify-contributions";
+import { renderPage } from "../../../test-utils";
+import userEvent from "@testing-library/user-event";
 
-jest.mock("../../../../src/hooks/useAppLogic");
+const query = {
+  employer_id: "mock_employer_id",
+  next: "/employers/applications/new-application/?absence_id=mock_absence_id",
+};
+
+const setup = (props = {}) => {
+  let submitWithholdingSpy;
+  const utils = renderPage(
+    VerifyContributions,
+    {
+      addCustomSetup: (appLogic) => {
+        appLogic.users.user = new User({
+          consented_to_data_sharing: true,
+          user_leave_administrators: [
+            new UserLeaveAdministrator({
+              employer_dba: "Company Name",
+              employer_fein: "12-3456789",
+              employer_id: "mock_employer_id",
+              verified: false,
+            }),
+          ],
+        });
+        appLogic.employers.loadWithholding = jest.fn().mockResolvedValue({
+          filing_period: "2011-11-20",
+        });
+        submitWithholdingSpy = jest.spyOn(
+          appLogic.employers,
+          "submitWithholding"
+        );
+      },
+    },
+    {
+      query,
+      ...props,
+    }
+  );
+  return { submitWithholdingSpy, ...utils };
+};
 
 describe("VerifyContributions", () => {
-  let appLogic, changeField, submitForm, wrapper;
-  const query = {
-    employer_id: "mock_employer_id",
-    next: "/employers/applications/new-application/?absence_id=mock_absence_id",
-  };
-  mockRouter.pathname = routes.employers.verifyContributions;
+  it("renders the page", async () => {
+    const { container } = setup();
 
-  function render() {
-    return renderWithAppLogic(VerifyContributions, {
-      diveLevels: 0,
-      props: {
-        query,
-        withholding: new Withholding({
-          filing_period: "2011-11-20",
-        }),
-      },
-      userAttrs: {
-        user_leave_administrators: [
-          new UserLeaveAdministrator({
-            employer_dba: "Company Name",
-            employer_fein: "11-111111",
-            employer_id: "mock_employer_id",
-            verified: false,
-          }),
-        ],
-      },
-    });
-  }
-
-  describe('when "employerShowVerifications" feature flag is disabled', () => {
-    beforeEach(() => {
-      process.env.featureFlags = { employerShowVerifications: false };
-      ({ wrapper, appLogic } = render());
+    await waitFor(() => {
+      expect(
+        screen.getByText(/Verify your paid leave contributions/)
+      ).toBeInTheDocument();
     });
 
-    it("redirects to the employer welcome page", () => {
-      expect(appLogic.portalFlow.goTo).toHaveBeenCalledWith(
-        routes.employers.welcome
-      );
-    });
+    expect(container.firstChild).toMatchSnapshot();
   });
 
-  describe('when "employerShowVerifications" feature flag is enabled', () => {
-    beforeEach(() => {
-      process.env.featureFlags = { employerShowVerifications: true };
-      ({ wrapper, appLogic } = render());
-    });
+  it("submits withholding data with correct values", async () => {
+    const { submitWithholdingSpy } = setup();
+    userEvent.type(await screen.findByRole("textbox"), "1,234.560");
+    userEvent.click(await screen.findByRole("button", { name: "Submit" }));
 
-    it("renders the page", () => {
-      expect(wrapper).toMatchSnapshot();
-      wrapper.find("Trans").forEach((trans) => {
-        expect(trans.dive()).toMatchSnapshot();
-      });
-    });
-
-    it("submits withholding data with correct values", async () => {
-      ({ changeField, submitForm } = simulateEvents(wrapper));
-      changeField("withholdingAmount", "1,234.560");
-      await submitForm();
-
-      expect(appLogic.employers.submitWithholding).toHaveBeenCalledWith(
+    await waitFor(() => {
+      expect(submitWithholdingSpy).toHaveBeenCalledWith(
         {
           employer_id: "mock_employer_id",
           withholding_amount: 1234.56,
@@ -77,13 +71,15 @@ describe("VerifyContributions", () => {
         query.next
       );
     });
+  });
 
-    it("submits withholding data as 0 if input is invalid", async () => {
-      ({ changeField, submitForm } = simulateEvents(wrapper));
-      changeField("withholdingAmount", null);
-      await submitForm();
+  it("submits withholding data as 0 if input is invalid", async () => {
+    const { submitWithholdingSpy } = setup();
+    userEvent.type(await screen.findByRole("textbox"), "invalid");
+    userEvent.click(await screen.findByRole("button", { name: "Submit" }));
 
-      expect(appLogic.employers.submitWithholding).toHaveBeenCalledWith(
+    await waitFor(() => {
+      expect(submitWithholdingSpy).toHaveBeenCalledWith(
         {
           employer_id: "mock_employer_id",
           withholding_amount: 0,

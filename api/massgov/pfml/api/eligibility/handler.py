@@ -11,6 +11,7 @@ import massgov.pfml.api.eligibility.eligibility as eligibility
 import massgov.pfml.api.util.response as response_util
 import massgov.pfml.util.logging
 from massgov.pfml.api.authorization.flask import CREATE, ensure
+from massgov.pfml.api.models.applications.common import EligibilityEmploymentStatus
 from massgov.pfml.db.models.employees import Employee, Employer, TaxIdentifier
 from massgov.pfml.util.pydantic import PydanticBaseModel
 
@@ -30,7 +31,7 @@ class EligibilityRequest(PydanticBaseModel):
     employer_fein: str
     leave_start_date: date
     application_submitted_date: date
-    employment_status: str
+    employment_status: EligibilityEmploymentStatus
     tax_identifier: str
 
 
@@ -39,11 +40,38 @@ def eligibility_post():
     ensure(CREATE, "Financial Eligibility Calculation")
 
     request = EligibilityRequest.parse_obj(connexion.request.json)
+
+    logger.info(
+        "Received financial eligibility request",
+        extra={
+            "leave_start_date": str(request.leave_start_date),
+            "application_submitted_date": str(request.application_submitted_date),
+            "employment_status": request.employment_status,
+        },
+    )
+
     tax_identifier = request.tax_identifier
     fein = request.employer_fein
     leave_start_date = request.leave_start_date
     application_submitted_date = request.application_submitted_date
     employment_status = request.employment_status
+
+    if employment_status not in [
+        EligibilityEmploymentStatus.employed,
+        EligibilityEmploymentStatus.self_employed,
+        EligibilityEmploymentStatus.unemployed,
+    ]:
+        return response_util.success_response(
+            message="success",
+            data=EligibilityResponse(
+                financially_eligible=False,
+                description="Not Known: invalid employment status",
+                total_wages=None,
+                state_average_weekly_wage=None,
+                unemployment_minimum=None,
+                employer_average_weekly_wage=None,
+            ).dict(),
+        ).to_api_response()
 
     with app.db_session() as db_session:
         tax_record = (
@@ -60,8 +88,8 @@ def eligibility_post():
                 status_code=NotFound, message="Non-eligible employee", errors=[], data={},
             ).to_api_response()
 
-        employee_id: UUID = UUID(str(employee.employee_id))
-        employer_id: UUID = UUID(str(employer.employer_id))
+        employee_id: UUID = employee.employee_id
+        employer_id: UUID = employer.employer_id
 
     try:
         wage_data_response = eligibility.compute_financial_eligibility(
@@ -77,10 +105,16 @@ def eligibility_post():
         logger.info(
             "Calculated financial eligibility",
             extra={
-                "financially_eligible": wage_data_response.financially_eligible,
-                "description": wage_data_response.description,
                 "employee_id": employee_id,
                 "employer_id": employer_id,
+                "financially_eligible": wage_data_response.financially_eligible,
+                "description": wage_data_response.description,
+                "total_wages": str(wage_data_response.total_wages),
+                "state_average_weekly_wage": wage_data_response.state_average_weekly_wage,
+                "unemployment_minimum": wage_data_response.unemployment_minimum,
+                "employer_average_weekly_wage": str(
+                    wage_data_response.employer_average_weekly_wage
+                ),
             },
         )
 

@@ -20,12 +20,24 @@ import xmlschema
 
 import massgov.pfml.util.logging
 from massgov.pfml.fineos.transforms.to_fineos.base import EFormBody
+from massgov.pfml.fineos.util.response import (
+    fineos_document_empty_dates_to_none,
+    get_fineos_correlation_id,
+    log_validation_error,
+)
 from massgov.pfml.util.converters.json_to_obj import set_empty_dates_to_none
 
 from . import client, exception, models
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 MILLISECOND = datetime.timedelta(milliseconds=1)
+
+# Failure messages that are expected and don't need to be logged or tracked as errors.
+EXPECTED_DOCUMENT_UPLOAD_FAILURES = {
+    "encoded file data is mandatory",
+    "file size is mandatory",
+    "is not a valid file",
+}
 
 employee_register_request_schema = xmlschema.XMLSchema(
     os.path.join(os.path.dirname(__file__), "wscomposer", "EmployeeRegisterService.Request.xsd")
@@ -42,6 +54,12 @@ update_or_create_party_response_schema = xmlschema.XMLSchema(
 create_or_update_leave_admin_request_schema = xmlschema.XMLSchema(
     os.path.join(
         os.path.dirname(__file__), "leave_admin_creation", "CreateOrUpdateLeaveAdmin.Request.xsd"
+    )
+)
+
+create_or_update_leave_admin_response_schema = xmlschema.XMLSchema(
+    os.path.join(
+        os.path.dirname(__file__), "leave_admin_creation", "CreateOrUpdateLeaveAdmin.Response.xsd"
     )
 )
 
@@ -63,36 +81,13 @@ read_employer_response_schema = xmlschema.XMLSchema(
     os.path.join(os.path.dirname(__file__), "wscomposer", "ReadEmployer.Response.xsd")
 )
 
+update_tax_withholding_pref_request_schema = xmlschema.XMLSchema(
+    os.path.join(os.path.dirname(__file__), "wscomposer", "OptInSITFITService.Request.xsd")
+)
 
-def fineos_document_empty_dates_to_none(response_json: dict) -> dict:
-    # Document effectiveFrom and effectiveTo are empty and set to empty strings
-    # These fields are not set by the portal. Set to none to avoid validation errors.
-
-    if response_json["effectiveFrom"] == "":
-        response_json["effectiveFrom"] = None
-
-    if response_json["effectiveTo"] == "":
-        response_json["effectiveTo"] = None
-
-    # Documents uploaded through FINEOS use "dateCreated" instead of "receivedDate"
-    if response_json["receivedDate"] == "":
-        if response_json["dateCreated"]:
-            response_json["receivedDate"] = response_json["dateCreated"]
-        else:
-            response_json["receivedDate"] = None
-
-    return response_json
-
-
-def get_fineos_correlation_id(response: requests.Response) -> Optional[Any]:
-    try:
-        response_payload_json = response.json()
-        if isinstance(response_payload_json, dict):
-            return response_payload_json.get("correlationId", "")
-    except ValueError:
-        pass
-
-    return None
+update_tax_withholding_pref_response_schema = xmlschema.XMLSchema(
+    os.path.join(os.path.dirname(__file__), "wscomposer", "OptInSITFITService.Response.xsd")
+)
 
 
 class FINEOSClient(client.AbstractFINEOSClient):
@@ -155,7 +150,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
             requests.exceptions.RequestException,
             requests.exceptions.Timeout,
         ) as ex:
-            self._handle_client_side_exception("POST", self.oauth2_url, ex)
+            self._handle_client_side_exception("POST", self.oauth2_url, ex, "init_oauth_session")
 
         logger.info(
             "POST %s => type %s, expires %is (at %s)",
@@ -165,7 +160,9 @@ class FINEOSClient(client.AbstractFINEOSClient):
             datetime.datetime.utcfromtimestamp(token["expires_at"]),
         )
 
-    def _handle_client_side_exception(self, method: str, url: str, ex: Exception) -> None:
+    def _handle_client_side_exception(
+        self, method: str, url: str, ex: Exception, method_name: str
+    ) -> None:
         # Make sure New Relic records errors from FINEOS, even if the API does not ultimately
         # return an error.
         has_flask_context = flask.has_request_context()
@@ -186,17 +183,22 @@ class FINEOSClient(client.AbstractFINEOSClient):
             },
         )
 
-        if isinstance(ex, requests.exceptions.Timeout) or isinstance(
-            ex, oauthlib.oauth2.TemporarilyUnavailableError
+        if isinstance(
+            ex,
+            (
+                requests.exceptions.Timeout,
+                oauthlib.oauth2.TemporarilyUnavailableError,
+                requests.exceptions.ConnectionError,
+            ),
         ):
             logger.warning("%s %s => %r", method, url, ex)
-            raise exception.FINEOSFatalUnavailable(cause=ex)
+            raise exception.FINEOSFatalUnavailable(method_name=method_name, cause=ex)
         else:
             logger.exception("%s %s => %r", method, url, ex)
-            raise exception.FINEOSFatalClientSideError(cause=ex)
+            raise exception.FINEOSFatalClientSideError(method_name=method_name, cause=ex)
 
     def _request(
-        self, method: str, url: str, headers: Dict[str, str], **args: Any,
+        self, method: str, url: str, method_name: str, headers: Dict[str, str], **args: Any,
     ) -> requests.Response:
         """Make a request and handle errors."""
         self.request_count += 1
@@ -229,7 +231,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
                     method, url, timeout=(6.1, request_timeout), headers=headers, **args
                 )
         except (requests.exceptions.RequestException, requests.exceptions.Timeout) as ex:
-            self._handle_client_side_exception(method, url, ex)
+            self._handle_client_side_exception(method, url, ex, method_name)
 
         if response.status_code != requests.codes.ok:
 
@@ -270,31 +272,40 @@ class FINEOSClient(client.AbstractFINEOSClient):
                 in (requests.codes.SERVICE_UNAVAILABLE, requests.codes.GATEWAY_TIMEOUT,)
                 or "ESOCKETTIMEDOUT" in response.text
             ):
-                # The service is unavailable for some reason. Log a warning and don't tell sentry -- there should be a
+                # The service is unavailable for some reason. Log a warning. There should be a
                 # percentage-based alarm for when there are too many of these.
                 #
                 # Ideally we would never get GATEWAY_TIMEOUT and would instead always keep our client-side timeout lower than the
                 # FINEOS 29s timeout; however, the program has requested that we keep them as high as possible. We should still
                 # manage them the same as a client-side timeout exception.
                 err = exception.FINEOSFatalUnavailable(
-                    response_status=response.status_code, message=response.text
+                    response_status=response.status_code,
+                    message=response.text,
+                    method_name=method_name,
                 )
                 log_fn = logger.warning
-            elif response.status_code in (
-                requests.codes.UNPROCESSABLE_ENTITY,
-                requests.codes.NOT_FOUND,
-                requests.codes.FORBIDDEN,
-            ):
-                # Ideally we'd raise exceptions that distinguish between 403/404/422 but we'll leave that for another time.
-                err = exception.FINEOSClientBadResponse(
-                    requests.codes.ok, response.status_code, message=response.text
+            elif response.status_code == requests.codes.UNPROCESSABLE_ENTITY:
+                err = exception.FINEOSUnprocessableEntity(
+                    method_name, requests.codes.ok, response.status_code, message=response.text,
+                )
+                log_fn = logger.warning
+            elif response.status_code == requests.codes.NOT_FOUND:
+                err = exception.FINEOSNotFound(
+                    method_name, requests.codes.ok, response.status_code, message=response.text,
+                )
+                log_fn = logger.warning
+            elif response.status_code == requests.codes.FORBIDDEN:
+                err = exception.FINEOSForbidden(
+                    method_name, requests.codes.ok, response.status_code, message=response.text,
                 )
                 log_fn = logger.warning
             else:
-                # We should never see anything other than these. Log an error and notify Sentry if we do. These include issues
+                # We should never see anything other than these. Log an error if we do. These include issues
                 # like 400 BAD REQUEST (misformatted request), 500 INTERNAL SERVER ERROR, and 413 SIZE TOO LARGE.
                 err = exception.FINEOSFatalResponseError(
-                    response_status=response.status_code, message=response.text
+                    response_status=response.status_code,
+                    message=response.text,
+                    method_name=method_name,
                 )
                 log_fn = logger.error
 
@@ -310,7 +321,6 @@ class FINEOSClient(client.AbstractFINEOSClient):
                 },
                 exc_info=err,
             )
-
             raise err
 
         logger.info(
@@ -323,6 +333,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
         method: str,
         path: str,
         user_id: str,
+        method_name: str,
         header_content_type: Optional[str] = "application/json",
         **args: Any,
     ) -> requests.Response:
@@ -330,7 +341,8 @@ class FINEOSClient(client.AbstractFINEOSClient):
         url = urllib.parse.urljoin(self.customer_api_url, path)
         content_type_header = {"Content-Type": header_content_type} if header_content_type else {}
         headers = dict({"userid": user_id}, **content_type_header)
-        response = self._request(method, url, headers, **args)
+
+        response = self._request(method, url, method_name, headers, **args)
         return response
 
     def _group_client_api(
@@ -338,6 +350,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
         method: str,
         path: str,
         user_id: str,
+        method_name: str,
         header_content_type: Optional[str] = "application/json",
         **args: Any,
     ) -> requests.Response:
@@ -345,7 +358,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
         url = urllib.parse.urljoin(self.group_client_api_url, path)
         content_type_header = {"Content-Type": header_content_type} if header_content_type else {}
         headers = dict({"userid": user_id}, **content_type_header)
-        response = self._request(method, url, headers, **args)
+        response = self._request(method, url, method_name, headers, **args)
         return response
 
     def _integration_services_api(
@@ -353,6 +366,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
         method: str,
         path: str,
         user_id: str,
+        method_name: str,
         header_content_type: Optional[str] = "application/xml; charset=utf-8",
         **args: Any,
     ) -> requests.Response:
@@ -360,11 +374,11 @@ class FINEOSClient(client.AbstractFINEOSClient):
         url = urllib.parse.urljoin(self.integration_services_api_url, path)
         content_type_header = {"Content-Type": header_content_type} if header_content_type else {}
         headers = dict({"userid": user_id}, **content_type_header)
-        response = self._request(method, url, headers, **args)
+        response = self._request(method, url, method_name, headers, **args)
         return response
 
     def _wscomposer_request(
-        self, method: str, path: str, query: Mapping[str, str], xml_data: str
+        self, method: str, path: str, method_name: str, query: Mapping[str, str], xml_data: str
     ) -> requests.Response:
         """Make a request to the Web Services Composer API."""
         query_with_user_id = dict(query)
@@ -372,23 +386,23 @@ class FINEOSClient(client.AbstractFINEOSClient):
         path_with_query = path + "?" + urllib.parse.urlencode(query_with_user_id)
         url = urllib.parse.urljoin(self.wscomposer_url, path_with_query)
         headers = {"Content-Type": "application/xml; charset=utf-8"}
-        return self._request(method, url, headers, data=xml_data.encode("utf-8"))
+        return self._request(method, url, method_name, headers, data=xml_data.encode("utf-8"))
 
     def read_employer(self, employer_fein: str) -> models.OCOrganisation:
         """Retrieves FINEOS employer info given an FEIN.
 
         Raises
         ------
-        FINEOSNotFound
+        FINEOSEntityNotFound
             If no employer exists in FINEOS that matches the given FEIN.
         """
         response = self._wscomposer_request(
-            "GET", "ReadEmployer", {"param_str_taxId": employer_fein}, ""
+            "GET", "ReadEmployer", "read_employer", {"param_str_taxId": employer_fein}, ""
         )
         response_decoded = read_employer_response_schema.decode(response.text)
 
         if "OCOrganisation" not in response_decoded:
-            raise exception.FINEOSNotFound("Employer not found.")
+            raise exception.FINEOSEntityNotFound("Employer not found.")
 
         return models.OCOrganisation.parse_obj(response_decoded)
 
@@ -397,7 +411,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
 
         Raises
         ------
-        FINEOSNotFound
+        FINEOSEntityNotFound
             If no employer exists in FINEOS that matches the given FEIN.
         """
         employer_response = self.read_employer(employer_fein)
@@ -410,7 +424,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
 
         Raises
         ------
-        FINEOSNotFound
+        FINEOSEntityNotFound
             If no employee-employer combination exists in FINEOS
             that matches the given SSN + employer FEIN.
         """
@@ -418,7 +432,11 @@ class FINEOSClient(client.AbstractFINEOSClient):
 
         try:
             self._wscomposer_request(
-                "POST", "webservice", {"config": "EmployeeRegisterService"}, xml_body
+                "POST",
+                "webservice",
+                "register_api_user",
+                {"config": "EmployeeRegisterService"},
+                xml_body,
             )
         except exception.FINEOSFatalResponseError as err:
             # Expected 500 errors. See #3 and #7 here:
@@ -430,7 +448,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
                 "The employee does not have an occupation linked" in err.message  # noqa: B306
                 or "No Employee Details" in err.message  # noqa: B306
             ):
-                raise exception.FINEOSNotFound(err.message)  # noqa: B306
+                raise exception.FINEOSEntityNotFound(err.message)  # noqa: B306
 
             # If not an expected error, bubble it up.
             raise
@@ -460,23 +478,31 @@ class FINEOSClient(client.AbstractFINEOSClient):
 
     def health_check(self, user_id: str) -> bool:
         """Health check API."""
-        response = self._customer_api("GET", "healthcheck", user_id)
+        response = self._customer_api("GET", "healthcheck", user_id, "health_check")
         return response.text == "ALIVE"
 
     def read_customer_details(self, user_id: str) -> models.customer_api.Customer:
         """Read customer details."""
-        response = self._customer_api("GET", "customer/readCustomerDetails", user_id)
+        response = self._customer_api(
+            "GET", "customer/readCustomerDetails", user_id, "read_customer_details"
+        )
         return models.customer_api.Customer.parse_obj(response.json())
 
     def update_customer_details(self, user_id: str, customer: models.customer_api.Customer) -> None:
         """Update customer details."""
         self._customer_api(
-            "POST", "customer/updateCustomerDetails", user_id, data=customer.json(exclude_none=True)
+            "POST",
+            "customer/updateCustomerDetails",
+            user_id,
+            "update_customer_details",
+            data=customer.json(exclude_none=True),
         )
 
     def read_customer_contact_details(self, user_id: str) -> models.customer_api.ContactDetails:
         """Update customer contact details."""
-        response = self._customer_api("GET", "customer/readCustomerContactDetails", user_id,)
+        response = self._customer_api(
+            "GET", "customer/readCustomerContactDetails", user_id, "read_customer_contact_details"
+        )
 
         return models.customer_api.ContactDetails.parse_obj(response.json())
 
@@ -488,6 +514,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
             "POST",
             "customer/updateCustomerContactDetails",
             user_id,
+            "update_customer_contact_details",
             data=contact_details.json(exclude_none=True),
         )
 
@@ -501,6 +528,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
             "POST",
             "customer/absence/startAbsence",
             user_id,
+            "start_absence",
             data=absence_case.json(exclude_none=True),
         )
         json = response.json()
@@ -518,6 +546,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
             "POST",
             f"customer/absence/notifications/{notification_case_id}/complete-intake",
             user_id,
+            "complete_intake",
         )
         json = response.json()
         logger.debug("json %r", json)
@@ -537,7 +566,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
         return models.customer_api.NotificationCaseSummary.parse_obj(json[0])
 
     def get_absences(self, user_id: str) -> List[models.customer_api.AbsenceCaseSummary]:
-        response = self._customer_api("GET", "customer/absence/absences", user_id)
+        response = self._customer_api("GET", "customer/absence/absences", user_id, "get_absences")
         json = response.json()
         logger.debug("json %r", json)
         # Workaround empty strings in response instead of null. These cause parse_obj to fail.
@@ -547,8 +576,16 @@ class FINEOSClient(client.AbstractFINEOSClient):
         return pydantic.parse_obj_as(List[models.customer_api.AbsenceCaseSummary], json)
 
     def get_absence(self, user_id: str, absence_id: str) -> models.customer_api.AbsenceDetails:
-        response = self._customer_api("GET", f"customer/absence/absences/{absence_id}", user_id)
-        return models.customer_api.AbsenceDetails.parse_obj(response.json())
+        response = self._customer_api(
+            "GET", f"customer/absence/absences/{absence_id}", user_id, "get_absence"
+        )
+        json = response.json()
+        logger.debug("json %r", json)
+
+        for item in json["absencePeriods"]:
+            set_empty_dates_to_none(item, ["startDate", "endDate", "expectedReturnToWorkDate"])
+
+        return models.customer_api.AbsenceDetails.parse_obj(json)
 
     def get_absence_period_decisions(
         self, user_id: str, absence_id: str
@@ -558,6 +595,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
                 "GET",
                 f"groupClient/absences/absence-period-decisions?absenceId={absence_id}",
                 user_id,
+                "get_absence_period_decisions",
             )
         except exception.FINEOSClientError as error:
             logger.error(
@@ -576,7 +614,10 @@ class FINEOSClient(client.AbstractFINEOSClient):
     ) -> models.group_client_api.CustomerInfo:
         try:
             response = self._group_client_api(
-                "GET", f"groupClient/customers/{customer_id}/customer-info", user_id
+                "GET",
+                f"groupClient/customers/{customer_id}/customer-info",
+                user_id,
+                "get_customer_info",
             )
         except exception.FINEOSClientError as error:
             logger.error(
@@ -595,7 +636,10 @@ class FINEOSClient(client.AbstractFINEOSClient):
     ) -> models.group_client_api.CustomerOccupations:
         try:
             response = self._group_client_api(
-                "GET", f"groupClient/customers/{customer_id}/customer-occupations", user_id
+                "GET",
+                f"groupClient/customers/{customer_id}/customer-occupations",
+                user_id,
+                "get_customer_occupations",
             )
         except exception.FINEOSClientError as error:
             logger.error(
@@ -617,7 +661,10 @@ class FINEOSClient(client.AbstractFINEOSClient):
         try:
             """Get outstanding information"""
             response = self._group_client_api(
-                "GET", f"groupClient/cases/{case_id}/outstanding-information", user_id
+                "GET",
+                f"groupClient/cases/{case_id}/outstanding-information",
+                user_id,
+                "get_outstanding_information",
             )
         except exception.FINEOSClientError as error:
             logger.error(
@@ -643,6 +690,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
                 "POST",
                 f"groupClient/cases/{case_id}/outstanding-information-received",
                 user_id,
+                "update_outstanding_information_as_recieved",
                 data=outstanding_information.json(exclude_none=True),
             )
         except exception.FINEOSClientError as error:
@@ -659,7 +707,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
     ) -> List[models.group_client_api.EFormSummary]:
         try:
             response = self._group_client_api(
-                "GET", f"groupClient/cases/{absence_id}/eforms", user_id
+                "GET", f"groupClient/cases/{absence_id}/eforms", user_id, "get_eform_summary"
             )
         except exception.FINEOSClientError as error:
             logger.error(
@@ -680,7 +728,10 @@ class FINEOSClient(client.AbstractFINEOSClient):
     ) -> models.group_client_api.EForm:
         try:
             response = self._group_client_api(
-                "GET", f"groupClient/cases/{absence_id}/eforms/{eform_id}/readEform", user_id
+                "GET",
+                f"groupClient/cases/{absence_id}/eforms/{eform_id}/readEform",
+                user_id,
+                "get_eform",
             )
         except exception.FINEOSClientError as error:
             logger.error(
@@ -702,6 +753,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
                 "POST",
                 f"groupClient/cases/{absence_id}/addEForm/{encoded_eform_type}",
                 user_id,
+                "create_eform",
                 data=json.dumps(eform.eformAttributes),
             )
         except exception.FINEOSClientError as error:
@@ -720,13 +772,30 @@ class FINEOSClient(client.AbstractFINEOSClient):
             "POST",
             f"customer/cases/{absence_id}/addEForm/{encoded_eform_type}",
             user_id,
+            "customer_create_eform",
             data=json.dumps(eform.eformAttributes),
         )
+
+    def get_customer_occupations_customer_api(
+        self, user_id: str, customer_id: str
+    ) -> List[models.customer_api.ReadCustomerOccupation]:
+
+        response = self._customer_api(
+            "GET", "customer/occupations", user_id, "get_customer_occupations_customer_api",
+        )
+
+        json = response.json()
+        for item in json:
+            set_empty_dates_to_none(item, ["dateJobBegan", "dateJobEnded"])
+
+        return pydantic.parse_obj_as(List[models.customer_api.ReadCustomerOccupation], json)
 
     def get_case_occupations(
         self, user_id: str, case_id: str
     ) -> List[models.customer_api.ReadCustomerOccupation]:
-        response = self._customer_api("GET", f"customer/cases/{case_id}/occupations", user_id,)
+        response = self._customer_api(
+            "GET", f"customer/cases/{case_id}/occupations", user_id, "get_case_occupations",
+        )
 
         json = response.json()
         for item in json:
@@ -741,6 +810,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
             "POST",
             "customer/addPaymentPreference",
             user_id,
+            "add_payment_preference",
             data=payment_preference.json(exclude_none=True),
         )
         json = response.json()
@@ -758,7 +828,11 @@ class FINEOSClient(client.AbstractFINEOSClient):
             occupation_id, employment_status, hours_worked_per_week
         )
         self._wscomposer_request(
-            "POST", "webservice", {"config": "OccupationDetailUpdateService"}, xml_body
+            "POST",
+            "webservice",
+            "update_occupation",
+            {"config": "OccupationDetailUpdateService"},
+            xml_body,
         )
 
     @staticmethod
@@ -771,14 +845,14 @@ class FINEOSClient(client.AbstractFINEOSClient):
 
         # Occupation ID is the only identifier we use to specify which occupation record we want to update in FINEOS.
         additional_data_set.additional_data.append(
-            models.AdditionalData(name="OccupationId", value=occupation_id)
+            models.AdditionalData(name="OccupationId", value=str(occupation_id))
         )
 
         # Application's hours_worked_per_week field is optional so we only update this value in FINEOS
         # if we've set it on the Application object in our database.
         if hours_worked_per_week:
             additional_data_set.additional_data.append(
-                models.AdditionalData(name="HoursPerWeek", value=hours_worked_per_week)
+                models.AdditionalData(name="HoursPerWeek", value=str(hours_worked_per_week))
             )
 
         if employment_status:
@@ -820,18 +894,27 @@ class FINEOSClient(client.AbstractFINEOSClient):
             "managedReqId": None,
         }
 
-        response = self._customer_api(
-            "POST",
-            f"customer/cases/{absence_id}/documents/base64Upload/{document_type}",
-            user_id,
-            json=data,
-        )
+        document_type = document_type.replace("/", "%2F")
 
-        response_json = response.json()
+        try:
+            response = self._customer_api(
+                "POST",
+                f"customer/cases/{absence_id}/documents/base64Upload/{document_type}",
+                user_id,
+                "upload_documents",
+                json=data,
+            )
 
-        return models.customer_api.Document.parse_obj(
-            fineos_document_empty_dates_to_none(response_json)
-        )
+            response_json = response.json()
+
+            return models.customer_api.Document.parse_obj(
+                fineos_document_empty_dates_to_none(response_json)
+            )
+        except exception.FINEOSUnprocessableEntity as err:
+            # Log any unexpected upload failures, even if we always
+            # return a BadRequest to the user.
+            log_validation_error(err, EXPECTED_DOCUMENT_UPLOAD_FAILURES)
+            raise
 
     def group_client_get_documents(
         self, user_id: str, absence_id: str
@@ -843,6 +926,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
                 "GET",
                 f"groupClient/cases/{absence_id}/documents",
                 user_id,
+                "group_client_get_documents",
                 header_content_type=header_content_type,
             )
         except exception.FINEOSClientError as error:
@@ -871,6 +955,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
                 "GET",
                 f"groupClient/cases/{absence_id}/managedRequirements",
                 user_id,
+                "get_managed_requirements",
                 header_content_type=header_content_type,
             )
 
@@ -904,12 +989,22 @@ class FINEOSClient(client.AbstractFINEOSClient):
     def get_documents(self, user_id: str, absence_id: str) -> List[models.customer_api.Document]:
         header_content_type = None
 
-        response = self._customer_api(
-            "GET",
-            f"customer/cases/{absence_id}/documents",
-            user_id,
-            header_content_type=header_content_type,
-        )
+        try:
+            response = self._customer_api(
+                "GET",
+                f"customer/cases/{absence_id}/documents?includeChildCases=True",
+                user_id,
+                "get_documents",
+                header_content_type=header_content_type,
+            )
+        except exception.FINEOSClientBadResponse as finres:
+            # See API-1198
+            if finres.response_status == requests.codes.FORBIDDEN:
+                logger.warning(
+                    "FINEOS API responded with 403. Returning empty documents list",
+                    extra={"absence_id": absence_id, "user_id": user_id,},
+                )
+                return []
 
         documents = response.json()
 
@@ -928,6 +1023,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
                 "GET",
                 f"groupClient/cases/{absence_id}/documents/{fineos_document_id}/base64Download",
                 user_id,
+                "download_document_as_leave_admin",
                 header_content_type=header_content_type,
             )
         except exception.FINEOSClientError as error:
@@ -955,6 +1051,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
             "GET",
             f"customer/cases/{absence_id}/documents/{fineos_document_id}/base64Download",
             user_id,
+            "download_documents",
             header_content_type=header_content_type,
         )
 
@@ -974,6 +1071,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
             "POST",
             f"customer/cases/{absence_id}/documents/{fineos_document_id}/doc-received-for-outstanding-supporting-evidence",
             user_id,
+            "mark_document_as_recieved",
         )
 
     def get_week_based_work_pattern(
@@ -981,7 +1079,10 @@ class FINEOSClient(client.AbstractFINEOSClient):
     ) -> models.customer_api.WeekBasedWorkPattern:
 
         response = self._customer_api(
-            "GET", f"customer/occupations/{occupation_id}/week-based-work-pattern", user_id,
+            "GET",
+            f"customer/occupations/{occupation_id}/week-based-work-pattern",
+            user_id,
+            "get_week_based_work_pattern",
         )
 
         json = response.json()
@@ -1000,6 +1101,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
             "POST",
             f"customer/occupations/{occupation_id}/week-based-work-pattern",
             user_id,
+            "add_week_based_work_pattern",
             data=week_based_work_pattern.json(exclude_none=True),
         )
 
@@ -1019,6 +1121,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
             "POST",
             f"customer/occupations/{occupation_id}/week-based-work-pattern/replace",
             user_id,
+            "update_week_based_work_pattern",
             data=week_based_work_pattern.json(exclude_none=True),
         )
 
@@ -1028,15 +1131,18 @@ class FINEOSClient(client.AbstractFINEOSClient):
 
     def create_or_update_leave_admin(
         self, leave_admin_create_or_update: models.CreateOrUpdateLeaveAdmin
-    ) -> None:
+    ) -> Tuple[Optional[str], Optional[str]]:
         """Create or update a leave admin in FINEOS."""
         xml_body = self._create_or_update_leave_admin_payload(leave_admin_create_or_update)
-        self._integration_services_api(
+        response = self._integration_services_api(
             "POST",
             "rest/externalUserProvisioningService/createOrUpdateEmployerViewpointUser",
             self.wscomposer_user_id,
+            "create_or_update_leave_admin",
             data=xml_body.encode("utf-8"),
         )
+        response_decoded = create_or_update_leave_admin_response_schema.decode(response.text)
+        return response_decoded["ns2:errorCode"], response_decoded["ns2:errorMessage"]
 
     def create_or_update_employer(
         self,
@@ -1048,7 +1154,11 @@ class FINEOSClient(client.AbstractFINEOSClient):
             employer_create_or_update, existing_organization
         )
         response = self._wscomposer_request(
-            "POST", "webservice", {"config": "UpdateOrCreateParty"}, xml_body
+            "POST",
+            "webservice",
+            "create_or_update_employer",
+            {"config": "UpdateOrCreateParty"},
+            xml_body,
         )
         response_decoded = update_or_create_party_response_schema.decode(response.text)
 
@@ -1083,9 +1193,10 @@ class FINEOSClient(client.AbstractFINEOSClient):
             )
             validation_msg_value = validation_msg.get("value")
             raise exception.FINEOSFatalResponseError(
+                "create_or_update_employer",
                 Exception(
                     f"Employer not created. Response Code: {response_code_value}, {validation_msg_value}"
-                )
+                ),
             )
         else:
             fineos_employer_id_value = fineos_employer_id.get("value")
@@ -1107,7 +1218,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
         )
         leave_admin_create_payload = models.CreateOrUpdateLeaveAdminRequest(
             full_name=leave_admin_create_or_update.admin_full_name,
-            party_reference=leave_admin_create_or_update.fineos_employer_id,
+            party_reference=str(leave_admin_create_or_update.fineos_employer_id),
             user_id=leave_admin_create_or_update.fineos_web_id,
             email=leave_admin_create_or_update.admin_email,
             phone=leave_admin_phone,
@@ -1198,6 +1309,22 @@ class FINEOSClient(client.AbstractFINEOSClient):
         employer_create_payload.update_data = models.UpdateData(PartyIntegrationDTO=[party_dto])
 
         payload_as_dict = employer_create_payload.dict(by_alias=True)
+
+        """
+        Relevant tickets: EDM-291, CPS-2703
+        After updating the OCOrganisation model to include the organisationUnits field for the ReadEmployer.Response, it did not match the previous OCOrganisation schema used for UpdateOrCreateParty.Request.
+        TODO Once FINEOS adds the organisationUnits field in the UpdateOrCreateParty.Request to allow creation of employers with a predefined list of org. units, the code deleting the organisationUnits key needs to be removed.
+        TODO The XSDS and the test file of expected XML will also need to be regenerated.
+        """
+        del payload_as_dict["update-data"]["PartyIntegrationDTO"][0]["organisation"][
+            "OCOrganisation"
+        ][0]["organisationUnits"]
+        del payload_as_dict["update-data"]["PartyIntegrationDTO"][0]["organisation"][
+            "OCOrganisation"
+        ][0]["names"]["OCOrganisationName"][0]["organisationWithDefault"]["OCOrganisation"][0][
+            "organisationUnits"
+        ]
+
         xml_element = update_or_create_party_request_schema.encode(payload_as_dict)
         return xml.etree.ElementTree.tostring(xml_element, encoding="unicode", xml_declaration=True)
 
@@ -1212,7 +1339,11 @@ class FINEOSClient(client.AbstractFINEOSClient):
         )
 
         response = self._wscomposer_request(
-            "POST", "webservice", {"config": "ServiceAgreementService"}, xml_body
+            "POST",
+            "webservice",
+            "create_service_agreement_for_employer",
+            {"config": "ServiceAgreementService"},
+            xml_body,
         )
         response_decoded = service_agreement_service_response_schema.decode(response.text)
 
@@ -1229,9 +1360,10 @@ class FINEOSClient(client.AbstractFINEOSClient):
 
         if fineos_customer_nbr == {}:
             raise exception.FINEOSFatalResponseError(
+                "create_service_agreement_for_employer",
                 Exception(
                     f"Could not create service agreement for FINEOS employer id: {fineos_employer_id}"
-                )
+                ),
             )
         else:
             fineos_customer_nbr_value = fineos_customer_nbr.get("value")
@@ -1245,24 +1377,40 @@ class FINEOSClient(client.AbstractFINEOSClient):
         fineos_employer_id_data = models.AdditionalData(
             name="CustomerNumber", value=str(fineos_employer_id)
         )
-        absence_management_data = models.AdditionalData(
-            name="AbsenceManagement", value=service_agreement_inputs.absence_management_flag
-        )
-        leave_plans_data = models.AdditionalData(
-            name="LeavePlans", value=service_agreement_inputs.leave_plans
-        )
         unlink_leave_plans_data = models.AdditionalData(
-            name="UnlinkAllExistingLeavePlans", value=True
+            name="UnlinkAllExistingLeavePlans",
+            value=str(service_agreement_inputs.unlink_leave_plans),
         )
 
         additional_data_set = models.AdditionalDataSet()
         additional_data_set.additional_data.append(fineos_employer_id_data)
-        if service_agreement_inputs.absence_management_flag:
-            additional_data_set.additional_data.append(leave_plans_data)
-        else:
-            additional_data_set.additional_data.append(absence_management_data)
-
         additional_data_set.additional_data.append(unlink_leave_plans_data)
+
+        if service_agreement_inputs.absence_management_flag is not None:
+            additional_data_set.additional_data.append(
+                models.AdditionalData(
+                    name="AbsenceManagement",
+                    value=str(service_agreement_inputs.absence_management_flag),
+                )
+            )
+        if service_agreement_inputs.leave_plans is not None:
+            leave_plans_data = models.AdditionalData(
+                name="LeavePlans", value=service_agreement_inputs.leave_plans
+            )
+            additional_data_set.additional_data.append(leave_plans_data)
+
+        if service_agreement_inputs.start_date:
+            additional_data_set.additional_data.append(
+                models.AdditionalData(
+                    name="StartDate", value=service_agreement_inputs.start_date.isoformat()
+                )
+            )
+        if service_agreement_inputs.end_date:
+            additional_data_set.additional_data.append(
+                models.AdditionalData(
+                    name="EndDate", value=service_agreement_inputs.end_date.isoformat()
+                )
+            )
 
         service_data = models.ServiceAgreementData()
         service_data.additional_data_set = additional_data_set
@@ -1276,6 +1424,60 @@ class FINEOSClient(client.AbstractFINEOSClient):
 
         return xml.etree.ElementTree.tostring(xml_element, encoding="unicode", xml_declaration=True)
 
+    @staticmethod
+    def _create_tax_preference_payload(absence_id, tax_preference):
+
+        additional_data_set = models.AdditionalDataSet()
+
+        additional_data_set.additional_data.append(
+            models.AdditionalData(name="AbsenceCaseNumber", value=str(absence_id))
+        )
+        additional_data_set.additional_data.append(
+            models.AdditionalData(name="FlagValue", value=bool(tax_preference))
+        )
+
+        tax_data = models.TaxWithholdingUpdateData()
+        tax_data.additional_data_set = additional_data_set
+
+        service_request = models.TaxWithholdingUpdateRequest()
+        service_request.update_data = tax_data
+
+        payload = service_request.dict(by_alias=True)
+        xml_element = update_tax_withholding_pref_request_schema.encode(payload)
+        return xml.etree.ElementTree.tostring(xml_element, encoding="unicode", xml_declaration=True)
+
+    @staticmethod
+    def _handle_service_err(response_decoded, absence_id):
+        resp_data = response_decoded.get("additional-data-set").get("additional-data")
+        service_errors_obj = next(
+            (obj for obj in resp_data if obj["name"] == "ServiceErrors"), None
+        )
+        fineos_err = (
+            service_errors_obj["value"]
+            if service_errors_obj
+            else "Failed to retrieve FINEOS err msg"
+        )
+        logger.warning(
+            "FINEOS API responded with an error: {}".format(fineos_err),
+            extra={"absence_id": absence_id},
+        )
+        raise Exception(fineos_err)
+
+    def send_tax_withholding_preference(self, absence_id: str, tax_preference: bool) -> None:
+        """Update tax withholding preference in FINEOS."""
+        xml_body = self._create_tax_preference_payload(absence_id, tax_preference)
+
+        response = self._wscomposer_request(
+            "POST",
+            "webservice",
+            "send_tax_withholding_preference",
+            {"config": "OptInSITFITService"},
+            xml_body,
+        )
+        response_decoded = update_tax_withholding_pref_response_schema.decode(response.text)
+        if "ServiceErrors" in response_decoded:
+            self._handle_service_err(response_decoded, absence_id)
+
     def update_reflexive_questions(
         self,
         user_id: str,
@@ -1287,5 +1489,6 @@ class FINEOSClient(client.AbstractFINEOSClient):
             "POST",
             f"customer/absence/{absence_id}/reflexive-questions",
             user_id,
+            "update_reflexive_questions",
             data=additional_information.json(exclude_none=True),
         )

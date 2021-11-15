@@ -1,67 +1,48 @@
+import { render, screen } from "@testing-library/react";
 import React from "react";
 import ReviewRow from "../../src/components/ReviewRow";
-import { shallow } from "enzyme";
 
-function render(customProps = {}) {
-  const props = Object.assign(
-    {
-      children: "Medical",
-      label: "Leave type",
-      level: "3",
-    },
-    customProps
-  );
-  const component = <ReviewRow {...props} />;
-
-  return {
-    props,
-    wrapper: shallow(component),
+const renderRow = (customProps) => {
+  const props = {
+    children: "Medical",
+    label: "Leave type",
+    level: "3",
+    ...customProps,
   };
-}
+  return render(<ReviewRow {...props} />);
+};
 
 describe("ReviewRow", () => {
   it("accepts a string as children", () => {
-    const { wrapper } = render({
-      children: "Medical",
-    });
-
-    expect(wrapper.text()).toMatch("Medical");
+    renderRow();
+    expect(screen.getByText(/Medical/)).toBeInTheDocument();
   });
 
-  it("accepts HTML as children", () => {
-    const { wrapper } = render({
-      children: <p className="test-html">Medical</p>,
-    });
-
-    expect(wrapper.find(".test-html")).toHaveLength(1);
+  it("accepts html as a child", () => {
+    renderRow({ children: <p className="test-html">Hello World</p> });
+    expect(screen.getByText(/Hello World/)).toHaveClass("test-html");
+    expect(document.querySelector(".border-bottom-2px")).toBeInTheDocument();
   });
 
   it("excludes border classes when noBorder is set", () => {
-    const { wrapper: borderlessRow } = render({
-      noBorder: true,
-    });
-    const { wrapper: borderedRow } = render();
-
-    expect(borderedRow.prop("className")).toMatch("border");
-    expect(borderlessRow.prop("className")).not.toMatch("border");
+    renderRow({ noBorder: true });
+    expect(
+      document.querySelector(".border-bottom-2px")
+    ).not.toBeInTheDocument();
   });
 
-  describe("when editHref is defined", () => {
-    it("renders with an edit link", () => {
-      const { wrapper } = render({
-        editHref: "/name",
-        editText: "Edit name",
-      });
-
-      expect(wrapper).toMatchSnapshot();
+  it("when editHref is defined it renders an edit link", () => {
+    renderRow({
+      editHref: "/name",
+      editText: "Edit name",
     });
+    expect(
+      screen.getByRole("link", { name: "Edit name: Leave type" })
+    ).toBeInTheDocument();
   });
 
-  describe("when editHref is not defined", () => {
-    it("does not render an edit link", () => {
-      const { wrapper } = render();
-
-      expect(wrapper.find("a")).toHaveLength(0);
-    });
+  it("without editHref there is no edit link rendered", () => {
+    renderRow();
+    expect(screen.queryByRole("link")).not.toBeInTheDocument();
   });
 });

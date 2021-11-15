@@ -18,37 +18,25 @@ import {
   subMonths,
 } from "date-fns";
 import faker from "faker";
-
-type LeaveDetailsSpec = {
-  reason: ApplicationLeaveDetails["reason"];
-  reason_qualifier?: ApplicationLeaveDetails["reason_qualifier"];
-  // Makes a claim for an extremely short time period (1 day).
-  shortClaim?: boolean;
-  shortNotice?: boolean;
-  has_continuous_leave_periods?: boolean;
-  // Reduced leave can be specified in a specification. See work_pattern_spec for the expected
-  // format.
-  reduced_leave_spec?: string;
-  has_intermittent_leave_periods?: boolean;
-  pregnant_or_recent_birth?: boolean;
-  leave_dates?: [Date, Date];
-  bondingDate?: "far-past" | "past" | "future";
-};
+import { ClaimSpecification, LeaveReason } from "./Claim";
 
 export default function generateLeaveDetails(
-  config: LeaveDetailsSpec,
+  config: ClaimSpecification,
   work_pattern: WorkPattern
 ): ApplicationLeaveDetails {
   const { reason, reason_qualifier } = config;
   const has_continuous_leave_periods =
-    config.has_continuous_leave_periods ||
-    (!config.reduced_leave_spec && !config.has_intermittent_leave_periods);
+    config.has_continuous_leave_periods ??
+    (!config.reduced_leave_spec && !config.intermittent_leave_spec);
+
   const details: ApplicationLeaveDetails = {
     continuous_leave_periods: has_continuous_leave_periods
       ? generateContinuousLeavePeriods(
           !!config.shortClaim,
           work_pattern,
-          config.leave_dates
+          config.leave_dates instanceof Function
+            ? config.leave_dates()
+            : config.leave_dates
         )
       : [],
     reduced_schedule_leave_periods: config.reduced_leave_spec
@@ -56,20 +44,41 @@ export default function generateLeaveDetails(
           !!config.shortClaim,
           work_pattern,
           config.reduced_leave_spec,
-          config.leave_dates
+          config.leave_dates instanceof Function
+            ? config.leave_dates()
+            : config.leave_dates
         )
       : [],
-    intermittent_leave_periods: config.has_intermittent_leave_periods
+    intermittent_leave_periods: config.intermittent_leave_spec
       ? generateIntermittentLeavePeriods(
           !!config.shortClaim,
           work_pattern,
-          config.leave_dates
+          config.intermittent_leave_spec,
+          config.leave_dates instanceof Function
+            ? config.leave_dates()
+            : config.leave_dates
         )
       : [],
     pregnant_or_recent_birth: !!config.pregnant_or_recent_birth,
     employer_notified: true,
     reason,
     reason_qualifier: reason_qualifier ?? null,
+    caring_leave_metadata:
+      reason === "Care for a Family Member" ||
+      (reason as NonNullable<LeaveReason>) === "Military Caregiver"
+        ? {
+            relationship_to_caregiver: "Sibling - Brother/Sister",
+            family_member_first_name: faker.name.firstName(),
+            family_member_last_name: faker.name.lastName(),
+            family_member_date_of_birth: formatISO(
+              faker.date.between(
+                add(new Date(), { years: -85 }),
+                add(new Date(), { years: -10 })
+              ),
+              { representation: "date" }
+            ),
+          }
+        : undefined,
   };
 
   const earliestStartDate = getEarliestStartDate(details);
@@ -79,8 +88,11 @@ export default function generateLeaveDetails(
     { representation: "date" }
   );
 
-  switch (reason) {
+  switch (reason as NonNullable<LeaveReason>) {
     case "Serious Health Condition - Employee":
+      // Do nothing else.
+      break;
+    case "Care for a Family Member":
       // Do nothing else.
       break;
     case "Pregnancy/Maternity":
@@ -110,6 +122,11 @@ export default function generateLeaveDetails(
         default:
           throw new Error(`Invalid reason_qualifier for Child Bonding`);
       }
+      break;
+    //Fineos leave reasons
+    case "Military Caregiver":
+      break;
+    case "Military Exigency Family":
       break;
     default:
       throw new Error(`Invalid reason given`);
@@ -172,27 +189,36 @@ function generateContinuousLeavePeriods(
   ];
 }
 
+type IntermittentLeaveSpec =
+  | Partial<IntermittentLeavePeriods>
+  | Partial<IntermittentLeavePeriods>[]
+  | true;
 function generateIntermittentLeavePeriods(
   shortLeave: boolean,
   work_pattern: WorkPattern,
+  periods: IntermittentLeaveSpec,
   leave_dates?: [Date, Date]
 ): IntermittentLeavePeriods[] {
   const [startDate, endDate] =
     leave_dates ??
     generateLeaveDates(work_pattern, shortLeave ? { days: 7 } : undefined);
   const diffInDays = differenceInDays(endDate, startDate);
-
-  return [
-    {
-      start_date: formatISO(startDate, { representation: "date" }),
-      end_date: formatISO(endDate, { representation: "date" }),
-      duration: faker.random.number({ min: 1, max: Math.min(diffInDays, 7) }),
-      duration_basis: "Days",
-      frequency: 1,
-      frequency_interval: 1,
-      frequency_interval_basis: "Weeks",
-    },
-  ];
+  const defaults: IntermittentLeavePeriods = {
+    start_date: formatISO(startDate, { representation: "date" }),
+    end_date: formatISO(endDate, { representation: "date" }),
+    duration: faker.random.number({ min: 1, max: Math.min(diffInDays, 7) }),
+    duration_basis: "Days",
+    frequency: 1,
+    frequency_interval: 1,
+    frequency_interval_basis: "Weeks",
+  };
+  if (periods === true) {
+    return [defaults];
+  } else if (!Array.isArray(periods)) {
+    return [{ ...defaults, ...periods }];
+  } else {
+    return periods.map((period) => ({ ...defaults, ...period }));
+  }
 }
 
 function generateReducedLeavePeriods(
@@ -255,7 +281,7 @@ function getEarliestStartDate(details: ApplicationLeaveDetails): Date {
 }
 
 function makeChildPlacementDate(
-  spec: LeaveDetailsSpec["bondingDate"],
+  spec: ClaimSpecification["bondingDate"],
   leaveStart: Date
 ): string {
   switch (spec) {

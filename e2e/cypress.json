@@ -2,6 +2,7 @@
   "integrationFolder": "cypress/specs",
   "watchForFileChanges": false,
   "defaultCommandTimeout": 10000,
+  "experimentalSessionSupport": true,
   "video": true,
   "videosFolder": "cypress/videos",
   "projectId": "wjoxhr",
@@ -12,10 +13,8 @@
     "openMode": 0,
     "runMode": 1
   },
-  "testFiles": [
-    "**/*.{feature,ts}"
-  ],
+  "testFiles": ["**/*.{feature,ts}"],
   "viewportWidth": 2000,
-  "viewportHeight": 1320
+  "viewportHeight": 1320,
+  "videoCompression": 20
 }
-

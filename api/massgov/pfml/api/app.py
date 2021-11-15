@@ -13,7 +13,7 @@ import flask
 import flask_cors
 import newrelic.api.time_trace
 from flask import Flask, current_app, g
-from sentry_sdk import set_context
+from sqlalchemy.orm import Session
 
 import massgov.pfml.api.authorization.flask
 import massgov.pfml.api.authorization.rules
@@ -32,7 +32,10 @@ logger = massgov.pfml.util.logging.get_logger(__name__)
 
 
 def create_app(
-    config: Optional[AppConfig] = None, check_migrations_current: bool = True
+    config: Optional[AppConfig] = None,
+    check_migrations_current: bool = True,
+    db_session_factory: Optional[Session] = None,
+    do_close_db: bool = True,
 ) -> connexion.FlaskApp:
     logger.info("Creating API Application...")
 
@@ -40,9 +43,10 @@ def create_app(
         config = get_config()
 
     # Initialize the db
-    db_session_factory = db.init(
-        config.db, sync_lookups=True, check_migrations_current=check_migrations_current
-    )
+    if db_session_factory is None:
+        db_session_factory = db.init(
+            config.db, sync_lookups=True, check_migrations_current=check_migrations_current
+        )
 
     # Enable mock responses for unimplemented paths.
     resolver = connexion.mock.MockResolver(mock_all=False)
@@ -80,13 +84,22 @@ def create_app(
 
     @flask_app.before_request
     def push_db():
-        set_context("New Relic", newrelic.api.time_trace.get_linking_metadata())
         g.db = db_session_factory
         g.start_time = time.monotonic()
         massgov.pfml.util.logging.access.access_log_start(flask.request)
+        newrelic.agent.add_custom_parameter(
+            "api_release_version", os.environ.get("RELEASE_VERSION")
+        )
+        newrelic.agent.add_custom_parameter(
+            "request_id", flask.request.headers.get("x-amzn-requestid", "")
+        )
 
     @flask_app.teardown_request
     def close_db(exception=None):
+        if not do_close_db:
+            logger.debug("Not closing DB session")
+            return
+
         try:
             logger.debug("Closing DB session")
             db = g.pop("db", None)

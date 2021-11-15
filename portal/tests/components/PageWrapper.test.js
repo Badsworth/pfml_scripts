@@ -1,35 +1,52 @@
+import { render, screen } from "@testing-library/react";
+import AppErrorInfo from "../../src/models/AppErrorInfo";
+import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
 import { DateTime } from "luxon";
+import Flag from "../../src/models/Flag";
 import PageWrapper from "../../src/components/PageWrapper";
 import React from "react";
+import User from "../../src/models/User";
 import { mockRouter } from "next/router";
-import { shallow } from "enzyme";
-import { testHook } from "../test-utils";
 import useAppLogic from "../../src/hooks/useAppLogic";
 
-// see https://github.com/vercel/next.js/issues/5416
-jest.mock("next/dynamic", () => () => (_props) => null);
+jest.mock("next/dynamic", () => (...args) => {
+  if (args[0] && args[0].toString().includes("MaintenanceTakeover")) {
+    const MaintenanceTakeover =
+      // eslint-disable-next-line global-require
+      require("../../src/components/MaintenanceTakeover").default;
+    // eslint-disable-next-line react/display-name
+    return (props) => <MaintenanceTakeover {...props} />;
+  } else if (args[0] && args[0].toString().includes("Footer")) {
+    const Footer =
+      // eslint-disable-next-line global-require
+      require("../../src/components/Footer").default;
+    // eslint-disable-next-line react/display-name
+    return () => <Footer />;
+  } else {
+    return () => null;
+  }
+});
+jest.mock("react-helmet", () => {
+  // Render <title> directly in document.body so we can assert its value
+  return { Helmet: ({ children }) => children };
+});
 
-function render(customProps = {}) {
-  let appLogic;
+const PageWrapperWithAppLogic = ({
+  // eslint-disable-next-line react/prop-types
+  addAppLogicMocks = (appLogic) => {},
+  ...props
+}) => {
+  const appLogic = useAppLogic();
+  appLogic.users.user = new User({ consented_to_data_sharing: true });
 
-  testHook(() => {
-    appLogic = useAppLogic();
-  });
+  addAppLogicMocks(appLogic);
 
-  return shallow(
-    <PageWrapper
-      appLogic={appLogic}
-      children={<div>Page</div>}
-      {...customProps}
-    />
+  return (
+    <PageWrapper appLogic={appLogic} maintenance={new Flag()} {...props}>
+      <div>Page</div>
+    </PageWrapper>
   );
-}
-
-function hasMaintenancePage(wrapper) {
-  // Need to use data-test attribute since the MaintenanceTakeover component
-  // is lazy-loaded, so won't be present on initial render
-  return wrapper.find({ "data-test": "maintenance page" }).exists();
-}
+};
 
 describe("PageWrapper", () => {
   beforeEach(() => {
@@ -44,171 +61,240 @@ describe("PageWrapper", () => {
       pfmlTerriyay: false,
     };
 
-    const wrapper = render();
+    const { container } = render(<PageWrapperWithAppLogic />);
 
-    expect(wrapper).toMatchInlineSnapshot(`
-        <code>
-          Hello world (◕‿◕)
-        </code>
-      `);
+    expect(container.firstChild).toMatchInlineSnapshot(`
+          <code>
+            Hello world (◕‿◕)
+          </code>
+        `);
   });
 
   it("sets description meta tag", () => {
-    const wrapper = render();
-
-    expect(wrapper.find("meta")).toMatchSnapshot();
+    const { container } = render(<PageWrapperWithAppLogic />);
+    // meta element
+    expect(container.firstChild).toMatchSnapshot();
   });
 
   it("renders the Header", () => {
-    let appLogic;
-    testHook(() => {
-      appLogic = useAppLogic();
-    });
+    render(<PageWrapperWithAppLogic />);
 
-    const wrapper = render({ appLogic });
+    expect(screen.getByTestId("Header")).toBeInTheDocument();
+  });
 
-    expect(wrapper.find("Header").exists()).toBe(true);
-    expect(wrapper.find("Header").prop("user")).toBe(appLogic.users.user);
-    expect(wrapper.find("Header").prop("onLogout")).toBe(appLogic.auth.logout);
+  it("renders the Footer", () => {
+    render(<PageWrapperWithAppLogic />);
+
+    expect(screen.getByRole("contentinfo")).toBeInTheDocument();
   });
 
   it("renders Spinner when isLoading is true", () => {
-    const wrapper = render({ isLoading: true });
-
-    expect(wrapper.find("#page")).toMatchSnapshot();
+    render(<PageWrapperWithAppLogic isLoading={true} />);
+    expect(screen.getByRole("main")).toMatchSnapshot();
   });
 
   it("renders the children as the page's body", () => {
-    const wrapper = render({ children: <p>Page content</p> });
+    render(<PageWrapperWithAppLogic />);
 
-    expect(wrapper.find("#page")).toMatchInlineSnapshot(`
-      <section
-        id="page"
-      >
-        <p>
-          Page content
-        </p>
-      </section>
-    `);
+    expect(screen.getByRole("main")).toMatchSnapshot();
   });
 
   it("renders MaintenanceTakeover when maintenancePageRoutes includes the current page's route and no start/end time is set", () => {
     mockRouter.pathname = "/login";
 
-    const wrapper = render({ maintenancePageRoutes: ["/login"] });
+    const maintenanceProp = new Flag({
+      enabled: true,
+      options: {
+        page_routes: ["/login"],
+      },
+    });
+    render(<PageWrapperWithAppLogic maintenance={maintenanceProp} />);
 
-    expect(hasMaintenancePage(wrapper)).toBe(true);
+    expect(
+      screen.getByRole("heading", { name: "We’re undergoing maintenance" })
+    ).toBeInTheDocument();
   });
 
   it("renders MaintenanceTakeover when maintenancePageRoutes includes a wildcard matching the current page's route", () => {
-    let wrapper;
-    const maintenancePageRoutes = ["/employers/*"];
-
     // Doesn't render for a page that doesn't match the wildcard
     mockRouter.pathname = "/foo";
-    wrapper = render({ maintenancePageRoutes });
-    expect(hasMaintenancePage(wrapper)).toBe(false);
+    const maintenanceProp = new Flag({
+      enabled: true,
+      options: {
+        page_routes: ["/employers/*"],
+      },
+    });
+    const { rerender } = render(
+      <PageWrapperWithAppLogic maintenance={maintenanceProp} />
+    );
+    expect(
+      screen.queryByRole("heading", { name: "We’re undergoing maintenance" })
+    ).not.toBeInTheDocument();
 
     // Matches base pathname
     mockRouter.pathname = "/employers/";
-    wrapper = render({ maintenancePageRoutes });
-    expect(hasMaintenancePage(wrapper)).toBe(true);
+    rerender(<PageWrapperWithAppLogic maintenance={maintenanceProp} />);
+
+    expect(
+      screen.getByRole("heading", { name: "We’re undergoing maintenance" })
+    ).toBeInTheDocument();
 
     // Matches sub-pages
     mockRouter.pathname = "/employers/create-account";
-    wrapper = render({ maintenancePageRoutes });
-    expect(hasMaintenancePage(wrapper)).toBe(true);
+    rerender(<PageWrapperWithAppLogic maintenance={maintenanceProp} />);
+
+    expect(
+      screen.getByRole("heading", { name: "We’re undergoing maintenance" })
+    ).toBeInTheDocument();
+  });
+
+  it("renders MaintenanceTakeover on all routes when 'page_routes' is omitted from 'options' in the 'maintenance' feature flag definition", () => {
+    // Test random page 1
+    mockRouter.pathname = "/applications/";
+
+    const maintenanceProp = new Flag({
+      enabled: true,
+      options: {},
+    });
+    const { rerender } = render(
+      <PageWrapperWithAppLogic maintenance={maintenanceProp} />
+    );
+    expect(
+      screen.getByRole("heading", { name: "We’re undergoing maintenance" })
+    ).toBeInTheDocument();
+
+    // Test random page 2
+    mockRouter.pathname = "/employers/";
+    rerender(<PageWrapperWithAppLogic maintenance={maintenanceProp} />);
+    expect(
+      screen.getByRole("heading", { name: "We’re undergoing maintenance" })
+    ).toBeInTheDocument();
+
+    // Test random sub-page
+    mockRouter.pathname = "/employers/create-account";
+    rerender(<PageWrapperWithAppLogic maintenance={maintenanceProp} />);
+    expect(
+      screen.getByRole("heading", { name: "We’re undergoing maintenance" })
+    ).toBeInTheDocument();
   });
 
   it("renders MaintenanceTakeover with localized end time when maintenanceEnd is set", () => {
     mockRouter.pathname = "/";
-    const maintenancePageRoutes = ["/*"];
     // Ends in an hour
     const maintenanceEndDateTime = DateTime.local().plus({ hours: 1 });
 
-    const wrapperWithoutEndTime = render({
-      maintenancePageRoutes,
-      maintenanceEnd: null,
-    });
-    const wrapperWithEndTime = render({
-      maintenancePageRoutes,
-      maintenanceEnd: maintenanceEndDateTime.toISO(),
+    const maintenanceWithoutEndTime = new Flag({
+      enabled: true,
+      options: {
+        page_routes: ["/*"],
+      },
     });
 
-    expect(
-      wrapperWithoutEndTime
-        .find({ "data-test": "maintenance page" })
-        .childAt(0)
-        .prop("scheduledRemovalDayAndTimeText")
-    ).toBeNull();
+    const maintenanceWithEndTime = new Flag({
+      enabled: true,
+      options: {
+        page_routes: ["/*"],
+      },
+      end: maintenanceEndDateTime.toISO(),
+    });
+
+    const { rerender } = render(
+      <PageWrapperWithAppLogic maintenance={maintenanceWithoutEndTime} />
+    );
 
     expect(
-      wrapperWithEndTime
-        .find({ "data-test": "maintenance page" })
-        .childAt(0)
-        .prop("scheduledRemovalDayAndTimeText")
-    ).toEqual(maintenanceEndDateTime.toLocaleString(DateTime.DATETIME_FULL));
+      screen.queryByText(
+        maintenanceEndDateTime.toLocaleString(DateTime.DATETIME_FULL)
+      )
+    ).not.toBeInTheDocument();
+
+    rerender(<PageWrapperWithAppLogic maintenance={maintenanceWithEndTime} />);
+    expect(
+      screen.getByText(
+        maintenanceEndDateTime.toLocaleString(DateTime.DATETIME_FULL)
+      )
+    ).toBeInTheDocument();
   });
 
   it("renders MaintenanceTakeover when current time is between maintenanceStart and maintenanceEnd", () => {
     mockRouter.pathname = "/";
-    const maintenancePageRoutes = ["/*"];
 
-    const wrapperInMaintenanceWindow = render({
-      maintenancePageRoutes,
-      // Started an hour ago
-      maintenanceStart: DateTime.local().minus({ hours: 1 }).toISO(),
-      // Ends in an hour
-      maintenanceEnd: DateTime.local().plus({ hours: 1 }).toISO(),
+    const maintenanceInMaintenanceWindow = new Flag({
+      enabled: true,
+      options: {
+        page_routes: ["/*"],
+      },
+      // Started 1 hour ago
+      start: DateTime.local().minus({ hours: 1 }).toISO(),
+      // Ends in 1 hour
+      end: DateTime.local().plus({ hours: 1 }).toISO(),
     });
-    const wrapperNotInMaintenanceWindow = render({
-      maintenancePageRoutes,
+
+    const maintenanceNotInMaintenanceWindow = new Flag({
+      enabled: true,
+      options: {
+        page_routes: ["/*"],
+      },
       // Started 2 hours ago
-      maintenanceStart: DateTime.local().minus({ hours: 1 }).toISO(),
-      // Ended an hour ago
-      maintenanceEnd: DateTime.local().minus({ hours: 1 }).toISO(),
+      start: DateTime.local().minus({ hours: 2 }).toISO(),
+      // Ended 1 hour ago
+      end: DateTime.local().minus({ hours: 1 }).toISO(),
     });
 
-    expect(hasMaintenancePage(wrapperInMaintenanceWindow)).toBe(true);
-    expect(hasMaintenancePage(wrapperNotInMaintenanceWindow)).toBe(false);
+    const { rerender } = render(
+      <PageWrapperWithAppLogic maintenance={maintenanceInMaintenanceWindow} />
+    );
+    expect(
+      screen.getByRole("heading", { name: "We’re undergoing maintenance" })
+    ).toBeInTheDocument();
+    rerender(
+      <PageWrapperWithAppLogic
+        maintenance={maintenanceNotInMaintenanceWindow}
+      />
+    );
+    expect(
+      screen.queryByRole("heading", { name: "We’re undergoing maintenance" })
+    ).not.toBeInTheDocument();
   });
 
   it("renders MaintenanceTakeover when current time is after maintenanceStart and maintenanceEnd is not set", () => {
     mockRouter.pathname = "/";
-    const maintenancePageRoutes = ["/*"];
 
-    const wrapperInMaintenanceWindow = render({
-      maintenancePageRoutes,
-      // Started an hour ago
-      maintenanceStart: DateTime.local().minus({ hours: 1 }).toISO(),
-    });
-    const wrapperNotInMaintenanceWindow = render({
-      maintenancePageRoutes,
-      // Starts in one hour
-      maintenanceStart: DateTime.local().plus({ hours: 1 }).toISO(),
+    const maintenanceInMaintenanceWindow = new Flag({
+      enabled: true,
+      options: {
+        page_routes: ["/*"],
+      },
+      // Started 1 hour ago
+      start: DateTime.local().minus({ hours: 1 }).toISO(),
     });
 
-    expect(hasMaintenancePage(wrapperInMaintenanceWindow)).toBe(true);
-    expect(hasMaintenancePage(wrapperNotInMaintenanceWindow)).toBe(false);
+    render(
+      <PageWrapperWithAppLogic maintenance={maintenanceInMaintenanceWindow} />
+    );
+    expect(
+      screen.getByRole("heading", { name: "We’re undergoing maintenance" })
+    ).toBeInTheDocument();
   });
 
   it("renders MaintenanceTakeover when current time is before maintenanceEnd and maintenanceStart is not set", () => {
     mockRouter.pathname = "/";
-    const maintenancePageRoutes = ["/*"];
 
-    const wrapperInMaintenanceWindow = render({
-      maintenancePageRoutes,
-      // Ends in an hour
-      maintenanceEnd: DateTime.local().plus({ hours: 1 }).toISO(),
-    });
-    const wrapperNotInMaintenanceWindow = render({
-      maintenancePageRoutes,
-      // Ended an hour ago
-      maintenanceEnd: DateTime.local().minus({ hours: 1 }).toISO(),
+    const maintenanceInMaintenanceWindow = new Flag({
+      enabled: true,
+      options: {
+        page_routes: ["/*"],
+      },
+      // Ends in 1 hour
+      end: DateTime.local().plus({ hours: 1 }).toISO(),
     });
 
-    expect(hasMaintenancePage(wrapperInMaintenanceWindow)).toBe(true);
-    expect(hasMaintenancePage(wrapperNotInMaintenanceWindow)).toBe(false);
+    render(
+      <PageWrapperWithAppLogic maintenance={maintenanceInMaintenanceWindow} />
+    );
+    expect(
+      screen.getByRole("heading", { name: "We’re undergoing maintenance" })
+    ).toBeInTheDocument();
   });
 
   it("bypasses MaintenanceTakeover when noMaintenance feature flag is present", () => {
@@ -218,21 +304,34 @@ describe("PageWrapper", () => {
     };
     mockRouter.pathname = "/login";
 
-    const wrapper = render({ maintenancePageRoutes: ["/login"] });
-
-    expect(hasMaintenancePage(wrapper)).toBe(false);
-  });
-
-  it("sets errors prop on ErrorsSummary", () => {
-    let appLogic;
-    testHook(() => {
-      appLogic = useAppLogic();
+    const maintenanceProp = new Flag({
+      enabled: true,
+      options: {
+        page_routes: ["/login"],
+      },
     });
 
-    const wrapper = render({ appLogic });
+    render(<PageWrapperWithAppLogic maintenance={maintenanceProp} />);
+    expect(
+      screen.queryByRole("heading", { name: "We’re undergoing maintenance" })
+    ).not.toBeInTheDocument();
+  });
 
-    expect(wrapper.find("ErrorsSummary").prop("errors")).toBe(
-      appLogic.appErrors
+  it("renders error messages when there is app error", () => {
+    let appLogic;
+    render(
+      <PageWrapperWithAppLogic
+        addAppLogicMocks={(_appLogic) => {
+          appLogic = _appLogic;
+          appLogic.appErrors = new AppErrorInfoCollection([
+            new AppErrorInfo({
+              message: "Error message",
+            }),
+          ]);
+        }}
+      />
     );
+
+    expect(screen.getByText("Error message")).toBeInTheDocument();
   });
 });

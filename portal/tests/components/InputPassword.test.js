@@ -1,10 +1,9 @@
-import { mount, shallow } from "enzyme";
-import InputChoice from "../../src/components/InputChoice";
+import { render, screen } from "@testing-library/react";
 import InputPassword from "../../src/components/InputPassword";
-import InputText from "../../src/components/InputText";
 import React from "react";
+import userEvent from "@testing-library/user-event";
 
-function render(customProps = {}, mountComponent = false) {
+function renderComponent(customProps = {}) {
   const props = Object.assign(
     {
       label: "Field Label",
@@ -13,44 +12,39 @@ function render(customProps = {}, mountComponent = false) {
     },
     customProps
   );
-
-  const component = <InputPassword {...props} />;
-
-  return {
-    props,
-    wrapper: mountComponent ? mount(component) : shallow(component),
-  };
+  return render(<InputPassword {...props} />);
 }
 
 describe("InputPassword", () => {
   it("defaults to a password input", () => {
-    const { wrapper } = render();
-
-    expect(wrapper.find(InputText).prop("type")).toBe("password");
+    renderComponent();
+    expect(screen.getByLabelText("Field Label")).toHaveAttribute(
+      "type",
+      "password"
+    );
   });
 
-  describe("when checkbox is clicked", () => {
-    it("toggles the input type", async () => {
-      const { wrapper } = render();
-
-      await wrapper.find(InputChoice).simulate("change", {
-        preventDefault: jest.fn(),
-      });
-
-      expect(wrapper.find(InputText).prop("type")).toBe("text");
-    });
+  it("when checkbox is clicked, toggles the input type", () => {
+    renderComponent();
+    expect(screen.getByLabelText("Field Label")).toHaveAttribute(
+      "type",
+      "password"
+    );
+    userEvent.click(screen.getByRole("checkbox", { name: /Show password/i }));
+    expect(screen.getByLabelText("Field Label")).toHaveAttribute(
+      "type",
+      "text"
+    );
   });
 
   it("generates a unique id", () => {
-    const { wrapper: wrapper1 } = render({ name: "one" });
-    const { wrapper: wrapper2 } = render({ name: "two" });
+    renderComponent({ name: "one" });
+    renderComponent({ name: "two" });
 
-    const input1 = wrapper1.find(InputText);
-    const input2 = wrapper2.find(InputText);
+    const idRegex = /InputPassword[0-9]+/;
+    const [fieldOne, fieldTwo] = screen.getAllByLabelText("Field Label");
 
-    const idRegex = new RegExp("InputPassword[0-9]+");
-
-    expect(input1.prop("inputId")).toMatch(idRegex);
-    expect(input1.prop("inputId")).not.toBe(input2.prop("inputId"));
+    expect(fieldOne.id).toMatch(idRegex);
+    expect(fieldOne.id).not.toBe(fieldTwo.id);
   });
 });

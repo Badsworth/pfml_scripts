@@ -1,42 +1,52 @@
 import mimetypes
 import uuid
 from datetime import date, datetime
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 import massgov.pfml.db
 import massgov.pfml.fineos.models
 import massgov.pfml.util.logging as logging
+from massgov.pfml.api.authorization.exceptions import NotAuthorizedForAccess
+from massgov.pfml.api.exceptions import ClaimWithdrawn, ObjectNotFound
 from massgov.pfml.api.models.claims.common import (
     Address,
-    EmployerBenefit,
     IntermittentLeavePeriod,
     LeaveDetails,
     PreviousLeave,
     StandardLeavePeriod,
 )
 from massgov.pfml.api.models.claims.responses import ClaimReviewResponse, DocumentResponse
+from massgov.pfml.api.models.common import ConcurrentLeave, EmployerBenefit
+from massgov.pfml.api.validation.exceptions import ContainsV1AndV2Eforms
 from massgov.pfml.db.models.employees import Employer, User, UserLeaveAdministrator
+from massgov.pfml.fineos.common import DOWNLOADABLE_DOC_TYPES
+from massgov.pfml.fineos.models.group_client_api import (
+    Base64EncodedFileData,
+    GroupClientDocument,
+    ManagedRequirementDetails,
+    PeriodDecisions,
+)
 from massgov.pfml.fineos.models.leave_admin_creation import CreateOrUpdateLeaveAdmin
 from massgov.pfml.fineos.transforms.from_fineos.eforms import (
+    TransformConcurrentLeaveFromOtherLeaveEform,
+    TransformEmployerBenefitsFromOtherIncomeEform,
     TransformOtherIncomeEform,
-    TransformOtherLeaveEform,
+    TransformPreviousLeaveFromOtherLeaveEform,
 )
 from massgov.pfml.fineos.transforms.to_fineos.eforms.employer import EFormBody
 from massgov.pfml.util.converters.json_to_obj import set_empty_dates_to_none
+from massgov.pfml.util.pydantic.types import FEINFormattedStr, MaskedTaxIdFormattedStr
 
 LEAVE_ADMIN_INFO_REQUEST_TYPE = "Employer Confirmation of Leave Data"
 
-# Downloadable leave admin doc types: https://lwd.atlassian.net/wiki/spaces/DD/pages/691208493/Document+Categorization
-# Lower case to prevent casing discrepancies
-DOWNLOADABLE_DOC_TYPES = [
-    "state managed paid leave confirmation",
-    "approval notice",
-    "request for more information",
-    "denial notice",
-    "employer response additional documentation",
-]
-
 logger = logging.get_logger(__name__)
+
+
+EFORM_TYPES = {
+    "OTHER_INCOME": "Other Income",
+    "OTHER_INCOME_V2": "Other Income - current version",
+    "OTHER_LEAVES": "Other Leaves - current version",
+}
 
 
 class RegisterFINEOSDuplicateRecord(Exception):
@@ -74,11 +84,11 @@ def get_leave_details(absence_periods: Dict) -> LeaveDetails:
                 reduced_end_date = end_date
 
         elif decision["period"]["type"] == "Episodic":
-            # FINEOS has yet to implement data for Episodic (intermittent) leaves
-            # TODO when this info is available https://lwd.atlassian.net/browse/EMPLOYER-448
-            # Send a static fake start and end date for recognition from the front end
-            intermittent_start_date = datetime(2021, 1, 1, 0, 0)
-            intermittent_end_date = datetime(2021, 2, 1, 0, 0)
+            if intermittent_start_date is None or start_date < intermittent_start_date:
+                intermittent_start_date = start_date
+
+            if intermittent_end_date is None or end_date > intermittent_end_date:
+                intermittent_end_date = end_date
 
     if continuous_start_date is not None and continuous_end_date is not None:
         leave_details["continuous_leave_periods"] = [
@@ -109,7 +119,7 @@ def fineos_document_response_to_document_response(
         created_at=fineos_document_response.dateCreated,
         document_type=fineos_document_response.name,
         content_type=content_type,
-        fineos_document_id=fineos_document_response.documentId,
+        fineos_document_id=str(fineos_document_response.documentId),
         name=fineos_document_response.originalFilename,
         description=fineos_document_response.description,
     )
@@ -133,11 +143,50 @@ def get_documents_as_leave_admin(fineos_user_id: str, absence_id: str) -> List[D
 
 
 def download_document_as_leave_admin(
+    fineos_user_id: str,
+    absence_id: str,
+    fineos_document_id: str,
+    log_attributes: Optional[Dict] = None,
+) -> Base64EncodedFileData:
+    if log_attributes is None:
+        log_attributes = {}
+    log_attributes.update(
+        {
+            "fineos_user_id": fineos_user_id,
+            "absence_id": absence_id,
+            "fineos_document_id": fineos_document_id,
+        }
+    )
+
+    document = _get_document(fineos_user_id, absence_id, fineos_document_id)
+
+    if document is None:
+        logger.warning("Unable to find FINEOS document for user", extra=log_attributes)
+        raise ObjectNotFound(description="Unable to find FINEOS document for user")
+
+    doc_type = document.name.lower()
+    log_attributes["document.document_type"] = doc_type
+    if not document.is_downloadable_by_leave_admin():
+        logger.warning(
+            f"Leave Admin is not authorized to download documents of type {doc_type}",
+            extra=log_attributes,
+        )
+        raise NotAuthorizedForAccess(
+            description=f"User is not authorized to access documents of type: {doc_type}",
+            error_type="unauthorized_document_type",
+            data={"document.document_type": doc_type},
+        )
+    fineos = massgov.pfml.fineos.create_client()
+    return fineos.download_document_as_leave_admin(fineos_user_id, absence_id, fineos_document_id)
+
+
+def _get_document(
     fineos_user_id: str, absence_id: str, fineos_document_id: str
-) -> massgov.pfml.fineos.models.group_client_api.Base64EncodedFileData:
+) -> Optional[GroupClientDocument]:
     fineos = massgov.pfml.fineos.create_client()
 
-    return fineos.download_document_as_leave_admin(fineos_user_id, absence_id, fineos_document_id)
+    documents = fineos.group_client_get_documents(fineos_user_id, absence_id)
+    return next((doc for doc in documents if str(doc.documentId) == fineos_document_id), None)
 
 
 def get_claim_as_leave_admin(
@@ -145,17 +194,18 @@ def get_claim_as_leave_admin(
     absence_id: str,
     employer: Employer,
     fineos_client: Optional[massgov.pfml.fineos.AbstractFINEOSClient] = None,
-) -> Optional[ClaimReviewResponse]:
+) -> Tuple[ClaimReviewResponse, List[ManagedRequirementDetails], PeriodDecisions]:
     """
     Given an absence ID, gets a full claim for the claim review page by calling multiple endpoints from FINEOS
     """
     if not fineos_client:
         fineos_client = massgov.pfml.fineos.create_client()
 
-    absence_periods = fineos_client.get_absence_period_decisions(fineos_user_id, absence_id).dict()
-    set_empty_dates_to_none(absence_periods, ["startDate", "endDate"])
+    absence_periods = fineos_client.get_absence_period_decisions(fineos_user_id, absence_id)
+    absence_periods_dict = absence_periods.dict()
+    set_empty_dates_to_none(absence_periods_dict, ["startDate", "endDate"])
 
-    if not absence_periods.get("decisions", []):
+    if not absence_periods_dict.get("decisions", []):
         logger.error(
             "Did not receive leave period decisions for absence periods",
             extra={
@@ -164,10 +214,10 @@ def get_claim_as_leave_admin(
                 "employer_id": employer.employer_id,
             },
         )
-        return None
+        raise ClaimWithdrawn()
 
-    customer_id = absence_periods["decisions"][0]["employee"]["id"]
-    status = absence_periods["decisions"][0]["period"]["status"] or "Unknown"
+    customer_id = absence_periods_dict["decisions"][0]["employee"]["id"]
+    status = absence_periods_dict["decisions"][0]["period"]["status"] or "Unknown"
     customer_info = fineos_client.get_customer_info(fineos_user_id, customer_id).dict()
     customer_occupations = fineos_client.get_customer_occupations(
         fineos_user_id, customer_id
@@ -175,29 +225,72 @@ def get_claim_as_leave_admin(
     hours_worked_per_week = customer_occupations["elements"][0]["hrsWorkedPerWeek"]
     eform_summaries = fineos_client.get_eform_summary(fineos_user_id, absence_id)
     managed_reqs = fineos_client.get_managed_requirements(fineos_user_id, absence_id)
-    other_leaves: List[PreviousLeave] = []
-    other_incomes: List[EmployerBenefit] = []
+    previous_leaves: List[PreviousLeave] = []
+    concurrent_leave: Optional[ConcurrentLeave] = None
+    employer_benefits: List[EmployerBenefit] = []
     is_reviewable = False
     follow_up_date = None
+    contains_version_one_eforms = False
+    contains_version_two_eforms = False
 
     for req in managed_reqs:
         if req.type == LEAVE_ADMIN_INFO_REQUEST_TYPE:
             follow_up_date = req.followUpDate
-            break
+            if follow_up_date is not None and req.status == "Open":
+                is_reviewable = date.today() < follow_up_date
+                break
 
     for eform_summary_obj in eform_summaries:
         eform_summary = eform_summary_obj.dict()
-        if eform_summary["eformType"] == "Other Income":
+        if eform_summary["eformType"] == EFORM_TYPES["OTHER_INCOME"]:
+            logger.info(
+                "Claim contains an other income eform",
+                extra={
+                    "fineos_user_id": fineos_user_id,
+                    "absence_id": absence_id,
+                    "employer_id": employer.employer_id,
+                },
+            )
+            contains_version_one_eforms = True
             eform = fineos_client.get_eform(fineos_user_id, absence_id, eform_summary["eformId"])
-            other_incomes.extend(
+            employer_benefits.extend(
                 other_income
                 for other_income in TransformOtherIncomeEform.from_fineos(eform)
                 if other_income.program_type == "Employer"
             )
-        elif eform_summary["eformType"] == "Other Leaves":
+        elif eform_summary["eformType"] == EFORM_TYPES["OTHER_INCOME_V2"]:
+            logger.info(
+                "Claim contains an other income V2 eform",
+                extra={
+                    "fineos_user_id": fineos_user_id,
+                    "absence_id": absence_id,
+                    "employer_id": employer.employer_id,
+                },
+            )
+            contains_version_two_eforms = True
             eform = fineos_client.get_eform(fineos_user_id, absence_id, eform_summary["eformId"])
-            other_leaves = other_leaves + TransformOtherLeaveEform.from_fineos(eform)
-
+            employer_benefits = (
+                employer_benefits + TransformEmployerBenefitsFromOtherIncomeEform.from_fineos(eform)
+            )
+        elif eform_summary["eformType"] == EFORM_TYPES["OTHER_LEAVES"]:
+            logger.info(
+                "Claim contains an other leaves eform",
+                extra={
+                    "fineos_user_id": fineos_user_id,
+                    "absence_id": absence_id,
+                    "employer_id": employer.employer_id,
+                },
+            )
+            contains_version_two_eforms = True
+            eform = fineos_client.get_eform(fineos_user_id, absence_id, eform_summary["eformId"])
+            previous_leaves.extend(
+                previous_leave
+                for previous_leave in TransformPreviousLeaveFromOtherLeaveEform.from_fineos(eform)
+                if previous_leave.is_for_current_employer
+            )
+            concurrent_leave = TransformConcurrentLeaveFromOtherLeaveEform.from_fineos(eform)
+            if concurrent_leave and not concurrent_leave.is_for_current_employer:
+                concurrent_leave = None
     if customer_info["address"] is not None:
         claimant_address = Address(
             line_1=customer_info["address"]["addressLine1"],
@@ -209,30 +302,55 @@ def get_claim_as_leave_admin(
     else:
         claimant_address = Address()
 
-    if follow_up_date is not None:
-        is_reviewable = date.today() < follow_up_date
+    if contains_version_one_eforms and contains_version_two_eforms:
+        logger.error(
+            "Contains version one and version two eforms",
+            extra={
+                "fineos_user_id": fineos_user_id,
+                "absence_id": absence_id,
+                "employer_id": employer.employer_id,
+            },
+        )
+        raise ContainsV1AndV2Eforms()
 
-    leave_details = get_leave_details(absence_periods)
+    # Default to version two eforms unless this is a legacy case containing version one eforms
+    uses_second_eform_version = not contains_version_one_eforms
 
-    return ClaimReviewResponse(
-        date_of_birth=customer_info["dateOfBirth"],
-        employer_benefits=other_incomes,
-        employer_fein=employer.employer_fein,
-        employer_dba=employer.employer_dba,
-        employer_id=employer.employer_id,
-        fineos_absence_id=absence_id,
-        first_name=customer_info["firstName"],
-        hours_worked_per_week=hours_worked_per_week,
-        last_name=customer_info["lastName"],
-        leave_details=leave_details,
-        middle_name=customer_info["secondName"],
-        previous_leaves=other_leaves,
-        residential_address=claimant_address,
-        tax_identifier=customer_info["idNumber"] if customer_info["idNumber"] is not None else "",
-        status=status,
-        follow_up_date=follow_up_date,
-        is_reviewable=is_reviewable,
+    leave_details = get_leave_details(absence_periods_dict)
+
+    logger.info("Count of info request employer benefits:", extra={"count": len(employer_benefits)})
+
+    return (
+        ClaimReviewResponse(
+            date_of_birth=customer_info["dateOfBirth"],
+            employer_benefits=employer_benefits,
+            employer_fein=FEINFormattedStr(employer.employer_fein),
+            employer_dba=employer.employer_dba,
+            employer_id=employer.employer_id,
+            fineos_absence_id=absence_id,
+            first_name=customer_info["firstName"],
+            hours_worked_per_week=hours_worked_per_week,
+            last_name=customer_info["lastName"],
+            leave_details=leave_details,
+            middle_name=customer_info["secondName"],
+            previous_leaves=previous_leaves,
+            concurrent_leave=concurrent_leave,
+            residential_address=claimant_address,
+            tax_identifier=MaskedTaxIdFormattedStr(customer_info["idNumber"])
+            if customer_info["idNumber"] is not None
+            else None,
+            status=status,
+            follow_up_date=follow_up_date,
+            is_reviewable=is_reviewable,
+            uses_second_eform_version=uses_second_eform_version,
+        ),
+        managed_reqs,
+        absence_periods,
     )
+
+
+def generate_fineos_web_id() -> str:
+    return f"pfml_leave_admin_{str(uuid.uuid4())}"
 
 
 def register_leave_admin_with_fineos(
@@ -268,14 +386,16 @@ def register_leave_admin_with_fineos(
             return leave_admin_record
 
     fineos = fineos_client if fineos_client else massgov.pfml.fineos.create_client()
-    fineos_web_id = f"pfml_leave_admin_{str(uuid.uuid4())}"
+    fineos_web_id = generate_fineos_web_id()
     logger.info(
         "Calling FINEOS to Create Leave Admin",
         extra={"email": admin_email, "fineos_web_id": fineos_web_id},
     )
+    if not employer.fineos_employer_id:
+        raise ValueError("Employer must have a Fineos employer ID to register a leave admin.")
     leave_admin_create_payload = CreateOrUpdateLeaveAdmin(
         fineos_web_id=fineos_web_id,
-        fineos_employer_id=str(employer.fineos_employer_id),
+        fineos_employer_id=employer.fineos_employer_id,
         admin_full_name=admin_full_name,
         admin_area_code=admin_area_code,
         admin_phone_number=admin_phone_number,

@@ -1,41 +1,62 @@
+import { AbsenceCaseStatus } from "../../../src/models/Claim";
 import AbsenceCaseStatusTag from "../../../src/components/AbsenceCaseStatusTag";
 import React from "react";
-import { shallow } from "enzyme";
+import { render } from "@testing-library/react";
 
 describe("AbsenceCaseStatusTag", () => {
-  const renderComponent = (status) => {
-    return shallow(<AbsenceCaseStatusTag status={status} />);
+  const renderComponent = (status, managedRequirements) => {
+    return render(
+      <AbsenceCaseStatusTag
+        status={status}
+        managedRequirements={managedRequirements}
+      />
+    );
   };
 
   it("renders the component with success state for 'Approved'", () => {
-    const wrapper = renderComponent("Approved");
+    const { container } = renderComponent(AbsenceCaseStatus.approved);
 
-    expect(wrapper).toMatchSnapshot();
+    expect(container).toMatchSnapshot();
   });
 
   it("renders the component with error state and mapped status for 'Declined'", () => {
-    const wrapper = renderComponent("Declined");
+    const { container } = renderComponent("Declined");
 
-    expect(wrapper).toMatchSnapshot();
+    expect(container).toMatchSnapshot();
   });
 
-  it("renders the component with warning state and mapped status for 'Closed'", () => {
-    const wrapper = renderComponent("Closed");
+  it("renders the component with inactive state for 'Closed'", () => {
+    const { container } = renderComponent(AbsenceCaseStatus.closed);
 
-    expect(wrapper).toMatchSnapshot();
+    expect(container).toMatchSnapshot();
   });
 
-  it("renders the component with warning state and mapped status for 'Completed'", () => {
-    const wrapper = renderComponent("Completed");
+  it("renders the component with inactive state and mapped status for 'Completed'", () => {
+    const { container } = renderComponent(AbsenceCaseStatus.completed);
 
-    expect(wrapper).toMatchSnapshot();
+    expect(container).toMatchSnapshot();
   });
 
-  it("renders -- for invalid status values", () => {
-    const wrapperWithPendingState = renderComponent("Pending");
-    const wrapperWithEmptyState = renderComponent("");
+  it("renders the component with 'Review By {{date}}' when managedRequirements is not empty", () => {
+    const managedRequirementsData = [
+      { follow_up_date: "2021-08-22" },
+      { follow_up_date: "2021-07-22" },
+    ];
+    const { container } = renderComponent(
+      AbsenceCaseStatus.approved,
+      managedRequirementsData
+    );
 
-    expect(wrapperWithPendingState.text()).toEqual("--");
-    expect(wrapperWithEmptyState.text()).toEqual("--");
+    expect(container).toMatchSnapshot();
+  });
+
+  it("renders the component with 'No Action Required' when managedRequirements is empty and has a pending-line status value", () => {
+    const managedRequirementsData = [];
+    const { container } = renderComponent(
+      "Intake In Progress",
+      managedRequirementsData
+    );
+
+    expect(container).toMatchSnapshot();
   });
 });

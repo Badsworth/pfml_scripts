@@ -1,28 +1,24 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`QuestionPage renders the form 1`] = `
-<Fragment>
-  <BackButton />
-  <form
-    className="usa-form"
-    method="post"
-    onSubmit={[Function]}
+<form
+  class="usa-form"
+  method="post"
+>
+  <h1
+    class="js-title margin-top-0 margin-bottom-2 font-heading-sm line-height-sans-3"
+    tabindex="-1"
   >
-    <Title
-      small={true}
-    >
-      This is a question page
-    </Title>
-    <div>
-      Some stuff here
-    </div>
-    <Button
-      className="margin-top-4"
-      loading={false}
-      type="submit"
-    >
-      Save and continue
-    </Button>
-  </form>
-</Fragment>
+    This is a question page
+  </h1>
+  <div>
+    Some stuff here
+  </div>
+  <button
+    class="usa-button position-relative margin-top-4"
+    type="submit"
+  >
+    Save and continue
+  </button>
+</form>
 `;

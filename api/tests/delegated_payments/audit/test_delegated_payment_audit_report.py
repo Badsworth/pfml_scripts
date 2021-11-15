@@ -1,6 +1,7 @@
 import csv
 import os
 import tempfile
+from datetime import date
 from typing import List
 
 import pytest
@@ -9,14 +10,9 @@ from freezegun import freeze_time
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.files as file_util
-from massgov.pfml.db.models.employees import (
-    Address,
-    Payment,
-    PaymentMethod,
-    ReferenceFile,
-    ReferenceFileType,
-    State,
-)
+from massgov.pfml.db.models.employees import Payment, ReferenceFile, ReferenceFileType, State
+from massgov.pfml.db.models.factories import ClaimFactory, PaymentFactory
+from massgov.pfml.db.models.payments import PaymentAuditReportDetails, PaymentAuditReportType
 from massgov.pfml.delegated_payments.audit.delegated_payment_audit_csv import (
     PAYMENT_AUDIT_CSV_HEADERS,
     PaymentAuditCSV,
@@ -25,10 +21,13 @@ from massgov.pfml.delegated_payments.audit.delegated_payment_audit_report import
     PaymentAuditReportStep,
 )
 from massgov.pfml.delegated_payments.audit.delegated_payment_audit_util import (
+    AUDIT_REPORT_NOTES_OVERRIDE,
     PaymentAuditData,
     bool_to_str,
     get_leave_type,
+    get_payment_audit_report_details,
     get_payment_preference,
+    stage_payment_audit_report_details,
     write_audit_report,
 )
 from massgov.pfml.delegated_payments.audit.mock.delegated_payment_audit_generator import (
@@ -37,9 +36,9 @@ from massgov.pfml.delegated_payments.audit.mock.delegated_payment_audit_generato
     AuditScenarioData,
     generate_audit_report_dataset,
 )
+from massgov.pfml.delegated_payments.mock.delegated_payments_factory import DelegatedPaymentFactory
 from massgov.pfml.delegated_payments.pub.pub_check import _format_check_memo
-
-pytestmark = pytest.mark.integration
+from massgov.pfml.util.datetime import get_period_in_weeks
 
 
 @pytest.fixture
@@ -47,6 +46,310 @@ def payment_audit_report_step(initialize_factories_session, test_db_session, tes
     return PaymentAuditReportStep(
         db_session=test_db_session, log_entry_db_session=test_db_other_session
     )
+
+
+def test_stage_payment_audit_report_details(test_db_session, initialize_factories_session):
+    payment = PaymentFactory.create()
+    stage_payment_audit_report_details(
+        payment, PaymentAuditReportType.MAX_WEEKLY_BENEFITS, "Test Message", None, test_db_session
+    )
+
+    audit_report_details = test_db_session.query(PaymentAuditReportDetails).one_or_none()
+    assert audit_report_details
+    assert audit_report_details.payment_id == payment.payment_id
+    assert (
+        audit_report_details.audit_report_type_id
+        == PaymentAuditReportType.MAX_WEEKLY_BENEFITS.payment_audit_report_type_id
+    )
+    assert audit_report_details.details
+    assert audit_report_details.details["message"] == "Test Message"
+    assert audit_report_details.created_at is not None
+    assert audit_report_details.updated_at is not None
+    assert audit_report_details.added_to_audit_report_at is None
+
+
+def test_get_payment_audit_report_details(test_db_session, initialize_factories_session):
+    payment = PaymentFactory.create()
+    stage_payment_audit_report_details(
+        payment,
+        PaymentAuditReportType.MAX_WEEKLY_BENEFITS,
+        "Max Weekly Benefits Test Message",
+        None,
+        test_db_session,
+    )
+    stage_payment_audit_report_details(
+        payment,
+        PaymentAuditReportType.DUA_ADDITIONAL_INCOME,
+        "DUA Reduction Test Message",
+        None,
+        test_db_session,
+    )
+    stage_payment_audit_report_details(
+        payment,
+        PaymentAuditReportType.DIA_ADDITIONAL_INCOME,
+        "DIA Reduction Test Message",
+        None,
+        test_db_session,
+    )
+    stage_payment_audit_report_details(
+        payment,
+        PaymentAuditReportType.DOR_FINEOS_NAME_MISMATCH,
+        "Name mismatch Test Message",
+        None,
+        test_db_session,
+    )
+    stage_payment_audit_report_details(
+        payment,
+        PaymentAuditReportType.LEAVE_PLAN_IN_REVIEW,
+        "Leave Plan In Review Test Message",  # Not used
+        None,
+        test_db_session,
+    )
+
+    audit_report_time = payments_util.get_now()
+
+    audit_report_details = get_payment_audit_report_details(
+        payment, audit_report_time, test_db_session
+    )
+
+    assert audit_report_details
+    assert audit_report_details.max_weekly_benefits_details == "Max Weekly Benefits Test Message"
+    assert audit_report_details.dua_additional_income_details == "DUA Reduction Test Message"
+    assert audit_report_details.dia_additional_income_details == "DIA Reduction Test Message"
+    assert audit_report_details.dor_fineos_name_mismatch_details == "Name mismatch Test Message"
+    assert audit_report_details.rejected_by_program_integrity
+    assert not audit_report_details.skipped_by_program_integrity
+    assert (
+        audit_report_details.rejected_notes
+        == f"{AUDIT_REPORT_NOTES_OVERRIDE[PaymentAuditReportType.MAX_WEEKLY_BENEFITS.payment_audit_report_type_id]} (Rejected), {PaymentAuditReportType.DUA_ADDITIONAL_INCOME.payment_audit_report_type_description}, {PaymentAuditReportType.DIA_ADDITIONAL_INCOME.payment_audit_report_type_description}, {PaymentAuditReportType.DOR_FINEOS_NAME_MISMATCH.payment_audit_report_type_description}, {PaymentAuditReportType.LEAVE_PLAN_IN_REVIEW.payment_audit_report_type_description} (Skipped)"
+    )
+
+    # test that the audit report time was set
+    audit_report_details = test_db_session.query(PaymentAuditReportDetails).all()
+    assert len(audit_report_details) == 5
+    for audit_report_detail in audit_report_details:
+        assert audit_report_detail.added_to_audit_report_at == audit_report_time
+
+
+def test_is_first_time_payment(
+    initialize_factories_session, test_db_session, test_db_other_session
+):
+    payment_audit_report_step = PaymentAuditReportStep(
+        db_session=test_db_session, log_entry_db_session=test_db_other_session
+    )
+
+    claim = ClaimFactory.create()
+    payment = DelegatedPaymentFactory(
+        test_db_session, claim=claim,
+    ).get_or_create_payment_with_state(
+        State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING
+    )
+
+    assert payment_audit_report_step.previously_audit_sent_count(payment) == 0
+
+    DelegatedPaymentFactory(test_db_session, claim=claim,).get_or_create_payment_with_state(
+        State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT
+    )
+
+    assert payment_audit_report_step.previously_audit_sent_count(payment) == 0
+
+    previous_rejected_payment_factory = DelegatedPaymentFactory(test_db_session, claim=claim,)
+    previous_rejected_payment_factory.get_or_create_payment_with_state(
+        State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT
+    )
+    previous_rejected_payment_factory.get_or_create_payment_with_state(
+        State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT
+    )
+
+    assert payment_audit_report_step.previously_audit_sent_count(payment) == 1
+
+    previous_bank_error_payment_factory = DelegatedPaymentFactory(test_db_session, claim=claim,)
+    previous_bank_error_payment_factory.get_or_create_payment_with_state(
+        State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT
+    )
+    previous_bank_error_payment_factory.get_or_create_payment_with_state(
+        State.DELEGATED_PAYMENT_ERROR_FROM_BANK
+    )
+
+    assert payment_audit_report_step.previously_audit_sent_count(payment) == 2
+
+
+def test_previously_errored_payment_count(
+    initialize_factories_session, test_db_session, test_db_other_session
+):
+    payment_audit_report_step = PaymentAuditReportStep(
+        db_session=test_db_session, log_entry_db_session=test_db_other_session
+    )
+
+    period_start_date = date(2021, 1, 16)
+    period_end_date = date(2021, 1, 28)
+
+    other_period_start_date = date(2021, 1, 1)
+    other_period_end_date = date(2021, 1, 15)
+
+    # state the payment for audit
+    claim = ClaimFactory.create()
+
+    payment = DelegatedPaymentFactory(
+        test_db_session,
+        claim=claim,
+        period_start_date=period_start_date,
+        period_end_date=period_end_date,
+    ).get_or_create_payment_with_state(
+        State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING
+    )
+
+    assert payment_audit_report_step.previously_errored_payment_count(payment) == 0
+
+    # confirm that errors for payments in other periods for the same claim are not counted
+    DelegatedPaymentFactory(
+        test_db_session,
+        claim=claim,
+        period_start_date=other_period_start_date,
+        period_end_date=other_period_end_date,
+    ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT)
+
+    assert payment_audit_report_step.previously_errored_payment_count(payment) == 0
+
+    DelegatedPaymentFactory(
+        test_db_session,
+        claim=claim,
+        period_start_date=other_period_start_date,
+        period_end_date=other_period_end_date,
+    ).get_or_create_payment_with_state(
+        State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT_RESTARTABLE
+    )
+
+    assert payment_audit_report_step.previously_errored_payment_count(payment) == 0
+
+    # check errored payments in the same payment period are counted
+
+    DelegatedPaymentFactory(
+        test_db_session,
+        claim=claim,
+        period_start_date=period_start_date,
+        period_end_date=period_end_date,
+    ).get_or_create_payment_with_state(State.PAYMENT_FAILED_ADDRESS_VALIDATION)
+
+    assert payment_audit_report_step.previously_errored_payment_count(payment) == 1
+
+    DelegatedPaymentFactory(
+        test_db_session,
+        claim=claim,
+        period_start_date=period_start_date,
+        period_end_date=period_end_date,
+    ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT)
+
+    assert payment_audit_report_step.previously_errored_payment_count(payment) == 2
+
+    same_period_erroed_payment_restarted = DelegatedPaymentFactory(
+        test_db_session,
+        claim=claim,
+        period_start_date=period_start_date,
+        period_end_date=period_end_date,
+    ).get_or_create_payment_with_state(
+        State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT_RESTARTABLE
+    )
+
+    assert payment_audit_report_step.previously_errored_payment_count(payment) == 3
+
+    # each restart will be counted
+    DelegatedPaymentFactory(
+        test_db_session,
+        claim=claim,
+        fineos_pei_c_value=same_period_erroed_payment_restarted.fineos_pei_c_value,
+        fineos_pei_i_value=same_period_erroed_payment_restarted.fineos_pei_c_value,
+        period_start_date=period_start_date,
+        period_end_date=period_end_date,
+    ).get_or_create_payment_with_state(
+        State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT_RESTARTABLE
+    )
+
+    assert payment_audit_report_step.previously_errored_payment_count(payment) == 4
+
+
+def test_previously_rejected_payment_count(
+    initialize_factories_session, test_db_session, test_db_other_session
+):
+    payment_audit_report_step = PaymentAuditReportStep(
+        db_session=test_db_session, log_entry_db_session=test_db_other_session
+    )
+
+    period_start_date = date(2021, 1, 16)
+    period_end_date = date(2021, 1, 28)
+
+    other_period_start_date = date(2021, 1, 1)
+    other_period_end_date = date(2021, 1, 15)
+
+    # state the payment for audit
+    claim = ClaimFactory.create()
+
+    payment = DelegatedPaymentFactory(
+        test_db_session,
+        claim=claim,
+        period_start_date=period_start_date,
+        period_end_date=period_end_date,
+    ).get_or_create_payment_with_state(
+        State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING
+    )
+
+    assert payment_audit_report_step.previously_rejected_payment_count(payment) == 0
+
+    # confirm that rejects for payments in other periods for the same claim are not counted
+    DelegatedPaymentFactory(
+        test_db_session,
+        claim=claim,
+        period_start_date=other_period_start_date,
+        period_end_date=other_period_end_date,
+    ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT)
+
+    DelegatedPaymentFactory(
+        test_db_session,
+        claim=claim,
+        period_start_date=other_period_start_date,
+        period_end_date=other_period_end_date,
+    ).get_or_create_payment_with_state(
+        State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT_RESTARTABLE
+    )
+
+    assert payment_audit_report_step.previously_rejected_payment_count(payment) == 0
+
+    # check errored payments in the same payment period are counted
+    DelegatedPaymentFactory(
+        test_db_session,
+        claim=claim,
+        period_start_date=period_start_date,
+        period_end_date=period_end_date,
+    ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT)
+
+    assert payment_audit_report_step.previously_rejected_payment_count(payment) == 1
+
+    # skips are counted separately
+    same_period_rejected_payment_restarted = DelegatedPaymentFactory(
+        test_db_session,
+        claim=claim,
+        period_start_date=period_start_date,
+        period_end_date=period_end_date,
+    ).get_or_create_payment_with_state(
+        State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT_RESTARTABLE
+    )
+
+    assert payment_audit_report_step.previously_rejected_payment_count(payment) == 1
+    assert payment_audit_report_step.previously_skipped_payment_count(payment) == 1
+
+    # each restart will be counted
+    DelegatedPaymentFactory(
+        test_db_session,
+        claim=claim,
+        fineos_pei_c_value=same_period_rejected_payment_restarted.fineos_pei_c_value,
+        fineos_pei_i_value=same_period_rejected_payment_restarted.fineos_pei_c_value,
+        period_start_date=period_start_date,
+        period_end_date=period_end_date,
+    ).get_or_create_payment_with_state(
+        State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT_RESTARTABLE
+    )
+
+    assert payment_audit_report_step.previously_skipped_payment_count(payment) == 2
 
 
 def test_write_audit_report(tmp_path, test_db_session, initialize_factories_session):
@@ -72,13 +375,6 @@ def test_write_audit_report(tmp_path, test_db_session, initialize_factories_sess
     # Correct number of rows
     csv_path = os.path.join(expected_output_folder, files[0])
 
-    expected_count = len(payment_audit_data_set)
-    file_content = file_util.read_file(csv_path)
-    file_line_count = file_content.count("\n")
-    assert (
-        file_line_count == expected_count + 1  # account for header row
-    ), f"Unexpected number of lines in audit reportfound: {file_line_count}, expected: {expected_count + 1}"
-
     # Validate rows
     parsed_csv = csv.DictReader(open(csv_path))
 
@@ -89,55 +385,90 @@ def test_write_audit_report(tmp_path, test_db_session, initialize_factories_sess
 
         index += 1
 
+    expected_count = len(payment_audit_data_set)
+    assert (
+        index == expected_count  # account for header row
+    ), f"Unexpected number of lines in audit report found: {index}, expected: {expected_count}"
+
 
 def validate_payment_audit_csv_row_by_payment_audit_data(
     row: PaymentAuditCSV, audit_scenario_data: AuditScenarioData
 ):
     payment_audit_data: PaymentAuditData = audit_scenario_data.payment_audit_data
     scenario_descriptor = AUDIT_SCENARIO_DESCRIPTORS[audit_scenario_data.scenario_name]
+    previous_rejection_count = len(
+        list(
+            filter(
+                lambda s: s == State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT,
+                scenario_descriptor.previous_rejection_states,
+            )
+        )
+    )
+    previously_skipped_payment_count = len(
+        list(
+            filter(
+                lambda s: s == State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT_RESTARTABLE,
+                scenario_descriptor.previous_rejection_states,
+            )
+        )
+    )
+
+    error_msg = f"Error validaing payment audit scenario data - scenario name: {audit_scenario_data.scenario_name}"
 
     validate_payment_audit_csv_row_by_payment(row, payment_audit_data.payment)
 
     assert (
         row[PAYMENT_AUDIT_CSV_HEADERS.is_first_time_payment]
         == bool_to_str[scenario_descriptor.is_first_time_payment]
+    ), error_msg
+    assert row[PAYMENT_AUDIT_CSV_HEADERS.previously_errored_payment_count] == str(
+        len(scenario_descriptor.previous_error_states)
+    ), error_msg
+    assert row[PAYMENT_AUDIT_CSV_HEADERS.previously_rejected_payment_count] == str(
+        previous_rejection_count
+    ), error_msg
+    assert row[PAYMENT_AUDIT_CSV_HEADERS.previously_skipped_payment_count] == str(
+        previously_skipped_payment_count
     )
-    assert (
-        row[PAYMENT_AUDIT_CSV_HEADERS.is_previously_errored_payment]
-        == bool_to_str[scenario_descriptor.is_previously_errored_payment]
-    )
-    assert (
-        row[PAYMENT_AUDIT_CSV_HEADERS.is_previously_rejected_payment]
-        == bool_to_str[scenario_descriptor.is_previously_rejected_payment]
-    )
-    assert row[PAYMENT_AUDIT_CSV_HEADERS.number_of_times_in_rejected_or_error_state] == str(
-        scenario_descriptor.number_of_times_in_error_state
-        + scenario_descriptor.number_of_times_in_rejected_state
-    )
-    assert row[PAYMENT_AUDIT_CSV_HEADERS.rejected_by_program_integrity] == ""
-    assert row[PAYMENT_AUDIT_CSV_HEADERS.rejected_notes] == ""
+
+    if scenario_descriptor.audit_report_detail_rejected:
+        assert row[PAYMENT_AUDIT_CSV_HEADERS.max_weekly_benefits_details]
+        assert row[PAYMENT_AUDIT_CSV_HEADERS.max_weekly_benefits_details] != ""
+
+    if scenario_descriptor.audit_report_detail_informational:
+        assert row[PAYMENT_AUDIT_CSV_HEADERS.dua_additional_income_details]
+        assert row[PAYMENT_AUDIT_CSV_HEADERS.dua_additional_income_details] != ""
+
+    assert row[PAYMENT_AUDIT_CSV_HEADERS.dor_fineos_name_mismatch_details] == ""
+
+    assert row[PAYMENT_AUDIT_CSV_HEADERS.rejected_by_program_integrity] == (
+        "Y" if scenario_descriptor.audit_report_detail_rejected else ""
+    ), error_msg
+
+    assert row[PAYMENT_AUDIT_CSV_HEADERS.skipped_by_program_integrity] == "", error_msg
+
+    if (
+        scenario_descriptor.audit_report_detail_rejected
+        or scenario_descriptor.audit_report_detail_informational
+    ):
+        assert row[PAYMENT_AUDIT_CSV_HEADERS.rejected_notes]
+        assert row[PAYMENT_AUDIT_CSV_HEADERS.rejected_notes] != ""
 
 
 def validate_payment_audit_csv_row_by_payment(row: PaymentAuditCSV, payment: Payment):
-    address: Address = payment.experian_address_pair.experian_address
-
-    check_description = (
-        _format_check_memo(payment) if payment.disb_method == PaymentMethod.CHECK else ""
-    )
-
     assert row[PAYMENT_AUDIT_CSV_HEADERS.pfml_payment_id] == str(payment.payment_id)
-    assert row[PAYMENT_AUDIT_CSV_HEADERS.leave_type] == get_leave_type(payment.claim)
-    assert row[PAYMENT_AUDIT_CSV_HEADERS.first_name] == payment.claim.employee.first_name
-    assert row[PAYMENT_AUDIT_CSV_HEADERS.last_name] == payment.claim.employee.last_name
-    assert row[PAYMENT_AUDIT_CSV_HEADERS.address_line_1] == address.address_line_one
+    assert row[PAYMENT_AUDIT_CSV_HEADERS.leave_type] == get_leave_type(payment)
     assert (
-        row[PAYMENT_AUDIT_CSV_HEADERS.address_line_2] == ""
-        if address.address_line_two is None
-        else address.address_line_two
+        row[PAYMENT_AUDIT_CSV_HEADERS.fineos_customer_number]
+        == payment.claim.employee.fineos_customer_number
     )
-    assert row[PAYMENT_AUDIT_CSV_HEADERS.city] == address.city
-    assert row[PAYMENT_AUDIT_CSV_HEADERS.state] == address.geo_state.geo_state_description
-    assert row[PAYMENT_AUDIT_CSV_HEADERS.zip] == address.zip_code
+    assert row[PAYMENT_AUDIT_CSV_HEADERS.first_name] == payment.fineos_employee_first_name
+    assert row[PAYMENT_AUDIT_CSV_HEADERS.last_name] == payment.fineos_employee_last_name
+    assert row[PAYMENT_AUDIT_CSV_HEADERS.dor_first_name] == payment.claim.employee.first_name
+    assert row[PAYMENT_AUDIT_CSV_HEADERS.dor_last_name] == payment.claim.employee.last_name
+
+    validate_address_columns(row, payment)
+
     assert row[PAYMENT_AUDIT_CSV_HEADERS.payment_preference] == get_payment_preference(payment)
     assert row[PAYMENT_AUDIT_CSV_HEADERS.scheduled_payment_date] == payment.payment_date.isoformat()
     assert (
@@ -148,23 +479,75 @@ def validate_payment_audit_csv_row_by_payment(row: PaymentAuditCSV, payment: Pay
         row[PAYMENT_AUDIT_CSV_HEADERS.payment_period_end_date]
         == payment.period_end_date.isoformat()
     )
+    assert row[PAYMENT_AUDIT_CSV_HEADERS.payment_period_weeks] == str(
+        get_period_in_weeks(payment.period_start_date, payment.period_end_date)
+    )
     assert row[PAYMENT_AUDIT_CSV_HEADERS.payment_amount] == str(payment.amount)
     assert row[PAYMENT_AUDIT_CSV_HEADERS.absence_case_number] == payment.claim.fineos_absence_id
     assert row[PAYMENT_AUDIT_CSV_HEADERS.c_value] == payment.fineos_pei_c_value
     assert row[PAYMENT_AUDIT_CSV_HEADERS.i_value] == payment.fineos_pei_i_value
-    assert (
-        row[PAYMENT_AUDIT_CSV_HEADERS.fineos_customer_number]
-        == payment.claim.employee.fineos_customer_number
-    )
+
     assert row[PAYMENT_AUDIT_CSV_HEADERS.employer_id] == str(
         payment.claim.employer.fineos_employer_id
+    )
+    assert (
+        row[PAYMENT_AUDIT_CSV_HEADERS.absence_case_creation_date]
+        == payment.absence_case_creation_date.isoformat()
+    )
+    assert (
+        row[PAYMENT_AUDIT_CSV_HEADERS.absence_start_date]
+        == payment.claim.absence_period_start_date.isoformat()
+    )
+    assert (
+        row[PAYMENT_AUDIT_CSV_HEADERS.absence_end_date]
+        == payment.claim.absence_period_end_date.isoformat()
     )
     assert (
         row[PAYMENT_AUDIT_CSV_HEADERS.case_status]
         == payment.claim.fineos_absence_status.absence_status_description
     )
     assert row[PAYMENT_AUDIT_CSV_HEADERS.leave_request_decision] == payment.leave_request_decision
-    assert row[PAYMENT_AUDIT_CSV_HEADERS.check_description] == check_description
+    assert row[PAYMENT_AUDIT_CSV_HEADERS.check_description] == _format_check_memo(payment)
+
+
+def validate_address_columns(row: PaymentAuditCSV, payment: Payment):
+    def validate_address_columns_helper(
+        address_line_one, address_line_two, city, state, zip_code, is_address_verified,
+    ):
+        assert row[PAYMENT_AUDIT_CSV_HEADERS.address_line_1] == address_line_one
+        assert row[PAYMENT_AUDIT_CSV_HEADERS.address_line_2] == address_line_two
+        assert row[PAYMENT_AUDIT_CSV_HEADERS.city] == city
+        assert row[PAYMENT_AUDIT_CSV_HEADERS.state] == state
+        assert row[PAYMENT_AUDIT_CSV_HEADERS.zip] == zip_code
+        assert row[PAYMENT_AUDIT_CSV_HEADERS.is_address_verified] == is_address_verified
+
+    address_pair = payment.experian_address_pair
+
+    if address_pair is None:
+        validate_address_columns_helper(
+            address_line_one="",
+            address_line_two="",
+            city="",
+            state="",
+            zip_code="",
+            is_address_verified="N",
+        )
+    else:
+        address = (
+            address_pair.experian_address
+            if address_pair.experian_address is not None
+            else address_pair.fineos_address
+        )
+        is_address_verified = "Y" if address_pair.experian_address is not None else "N"
+
+        validate_address_columns_helper(
+            address_line_one=address.address_line_one,
+            address_line_two="" if address.address_line_two is None else address.address_line_two,
+            city=address.city,
+            state=address.geo_state.geo_state_description,
+            zip_code=address.zip_code,
+            is_address_verified=is_address_verified,
+        )
 
 
 @freeze_time("2021-01-15 12:00:00", tz_offset=5)  # payments_util.get_now returns EST time
@@ -183,6 +566,10 @@ def test_generate_audit_report(test_db_session, payment_audit_report_step, monke
     payment_audit_scenario_data_set = generate_audit_report_dataset(
         DEFAULT_AUDIT_SCENARIO_DATA_SET, test_db_session
     )
+    payment_audit_scenario_data_set_by_payment_id = {
+        str(audit_scenario_data.payment_audit_data.payment.payment_id): audit_scenario_data
+        for audit_scenario_data in payment_audit_scenario_data_set
+    }
 
     # generate audit report
     payment_audit_report_step.run()
@@ -205,22 +592,22 @@ def test_generate_audit_report(test_db_session, payment_audit_report_step, monke
     audit_report_file_path = os.path.join(
         expected_audit_report_archive_folder_path, payment_audit_report_file_name
     )
-    payment_audit_report_file_content = file_util.read_file(audit_report_file_path)
-    payment_audit_report_file_line_count = payment_audit_report_file_content.count("\n")
-    assert (
-        payment_audit_report_file_line_count
-        == len(sampled_state_logs) + 1  # account for header row
-    ), f"Unexpected number of lines in payment rejects report - found: {payment_audit_report_file_line_count}, expected: {len(sampled_state_logs) + 1}"
 
     # Validate column values
     parsed_csv = csv.DictReader(open(audit_report_file_path))
+    parsed_csv_by_payment_id = {
+        row[PAYMENT_AUDIT_CSV_HEADERS.pfml_payment_id]: row for row in parsed_csv
+    }
 
-    index = 0
-    for row in parsed_csv:
-        audit_scenario_data = payment_audit_scenario_data_set[index]
+    assert len(parsed_csv_by_payment_id) == len(
+        sampled_state_logs
+    ), f"Unexpected number of lines in payment rejects report - found: {parsed_csv}, expected: {len(sampled_state_logs)}"
+
+    for payment_id, row in parsed_csv_by_payment_id.items():
+        audit_scenario_data = payment_audit_scenario_data_set_by_payment_id.get(payment_id, None)
+        assert audit_scenario_data is not None
+
         validate_payment_audit_csv_row_by_payment_audit_data(row, audit_scenario_data)
-
-        index += 1
 
     # check reference file created for archive folder file
     assert (

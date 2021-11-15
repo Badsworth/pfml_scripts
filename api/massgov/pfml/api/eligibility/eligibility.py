@@ -8,7 +8,7 @@ from typing import Optional
 import massgov.pfml.api.eligibility.eligibility_util as eligibility_util
 import massgov.pfml.api.eligibility.wage as wage
 from massgov.pfml.api.eligibility.eligibility_date import eligibility_date
-from massgov.pfml.api.models.applications.common import EmploymentStatus
+from massgov.pfml.api.models.applications.common import EligibilityEmploymentStatus
 from massgov.pfml.util.pydantic import PydanticBaseModel
 
 
@@ -16,8 +16,8 @@ class EligibilityResponse(PydanticBaseModel):
     financially_eligible: bool
     description: str
     total_wages: Optional[Decimal]
-    state_average_weekly_wage: Optional[int]
-    unemployment_minimum: Optional[int]
+    state_average_weekly_wage: Optional[Decimal]
+    unemployment_minimum: Optional[Decimal]
     employer_average_weekly_wage: Optional[Decimal]
 
 
@@ -31,14 +31,18 @@ def compute_financial_eligibility(
     employment_status,
 ):
     effective_date = eligibility_date(leave_start_date, application_submitted_date)
-    state_metric_data = eligibility_util.fetch_state_metric(db_session, effective_date)
-    state_average_weekly_wage = state_metric_data.average_weekly_wage
-    unemployment_minimum = state_metric_data.unemployment_minimum_earnings
+    (benefits_metrics_data, unemployment_metric_data) = eligibility_util.fetch_state_metric(
+        db_session, effective_date
+    )
+    state_average_weekly_wage = benefits_metrics_data.average_weekly_wage
+    maximum_weekly_benefit_amount = benefits_metrics_data.maximum_weekly_benefit_amount
+    unemployment_minimum = unemployment_metric_data.unemployment_minimum_earnings
 
     # Calculate various wages by fetching them from DOR
     wage_calculator = wage.get_wage_calculator(employee_id, effective_date, db_session)
     total_wages = wage_calculator.compute_total_wage()
-    individual_average_weekly_wage = wage_calculator.compute_average_weekly_wage()
+    consolidated_weekly_wage = wage_calculator.compute_consolidated_aww()
+    wage_calculator.set_each_employers_average_weekly_wage()
     quarterly_wages = wage_calculator.compute_total_quarterly_wages()
 
     unemployment_min_met = eligibility_util.wages_gte_unemployment_min(
@@ -46,9 +50,11 @@ def compute_financial_eligibility(
     )
 
     gte_thirty_times_wba = eligibility_util.wages_gte_thirty_times_wba(
-        total_wages, individual_average_weekly_wage, state_average_weekly_wage, effective_date
+        total_wages,
+        consolidated_weekly_wage,
+        state_average_weekly_wage,
+        maximum_weekly_benefit_amount,
     )
-
     # Check various financial eligibility thresholds, set the description accordingly
     financially_eligible = False
     if not unemployment_min_met:
@@ -57,7 +63,9 @@ def compute_financial_eligibility(
     elif not gte_thirty_times_wba:
         description = "Claimant wages failed 30x rule"
 
-    elif employment_status == EmploymentStatus.self_employed and len(quarterly_wages) < 2:
+    elif (
+        employment_status == EligibilityEmploymentStatus.self_employed and len(quarterly_wages) < 2
+    ):
         description = "Opt-in quarterly contributions not met"
 
     else:

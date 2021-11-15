@@ -1,227 +1,393 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`LeavePeriodReducedSchedule renders the page with bonding leave content 1`] = `
-<QuestionPage
-  onSave={[Function]}
-  title="Leave details"
->
-  <InputChoiceGroup
-    choices={
-      Array [
-        Object {
-          "checked": false,
-          "label": "Yes",
-          "value": "true",
-        },
-        Object {
-          "checked": false,
-          "label": "No",
-          "value": "false",
-        },
-      ]
-    }
-    hint={null}
-    label="Do you need to work fewer hours than usual for a period of time (reduced leave schedule)?"
-    name="has_reduced_schedule_leave_periods"
-    onChange={[Function]}
-    type="radio"
-    value=""
-  />
-  <ConditionalContent
-    clearField={[Function]}
-    fieldNamesClearedWhenHidden={
-      Array [
-        "leave_details.reduced_schedule_leave_periods",
-      ]
-    }
-    getField={[Function]}
-    updateFields={[Function]}
-    visible={null}
+exports[`LeavePeriodReducedSchedule renders a variation of the page when claimant is taking bonding leave 1`] = `
+<div>
+  <form
+    class="usa-form"
+    method="post"
   >
-    <Heading
-      level="2"
-      size="1"
+    <h1
+      class="js-title margin-top-0 margin-bottom-2 font-heading-sm line-height-sans-3"
+      tabindex="-1"
     >
-      Enter the start and end dates for your reduced leave schedule.
-    </Heading>
-    <Lead>
-      <Trans
-        i18nKey="pages.claimsLeavePeriodReducedSchedule.datesLead"
-        tOptions={
-          Object {
-            "context": "bonding",
-          }
-        }
-      />
-    </Lead>
-    <div
-      className="measure-6"
+      Leave details
+    </h1>
+    <fieldset
+      class="usa-fieldset margin-top-3 usa-form-group"
     >
-      <Details
-        label="Do you work in an acute care hospital or the teaching hospital of the University of Massachusetts Medical School?"
+      <legend
+        class="usa-label text-bold usa-legend font-heading-lg line-height-sans-3 margin-bottom-1 maxw-tablet"
       >
-        <Trans
-          components={
-            Object {
-              "emergency-bonding-regs-worker-link": <a
-                href="https://www.mass.gov/pfml-acute-claimant"
-                rel="noopener"
-                target="_blank"
-              />,
-            }
-          }
-          i18nKey="pages.claimsLeavePeriodReducedSchedule.bondingRegsDetailsSummary"
-        />
-      </Details>
-    </div>
-    <InputDate
-      dayLabel="Day"
-      example="mm / dd / yyyy"
-      label="First day of leave"
-      monthLabel="Month"
-      name="leave_details.reduced_schedule_leave_periods[0].start_date"
-      onChange={[Function]}
-      smallLabel={true}
-      value=""
-      yearLabel="Year"
-    />
-    <InputDate
-      dayLabel="Day"
-      example="mm / dd / yyyy"
-      label="Last day of leave"
-      monthLabel="Month"
-      name="leave_details.reduced_schedule_leave_periods[0].end_date"
-      onChange={[Function]}
-      smallLabel={true}
-      value=""
-      yearLabel="Year"
-    />
-  </ConditionalContent>
-</QuestionPage>
-`;
-
-exports[`LeavePeriodReducedSchedule renders the page with bonding leave content 2`] = `
-Array [
-  "If you have already taken some or all of your family leave in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.",
-  <br
-    key="br-1"
-  />,
-  <br
-    key="br-2"
-  />,
-  "Your paid leave must end before the child’s first birthday or the one year anniversary of when they arrived in your home (for foster care and adoption).",
-]
-`;
-
-exports[`LeavePeriodReducedSchedule renders the page with bonding leave content 3`] = `
-Array [
-  "If you had a child join your family in 2020, you may be eligible for paid leave anytime in 2021. ",
-  <a
-    href="https://www.mass.gov/pfml-acute-claimant"
-    key="1"
-    rel="noopener"
-    target="_blank"
-  >
-    Learn more about emergency Covid-19 regulations for hospital workers.
-  </a>,
-]
-`;
-
-exports[`LeavePeriodReducedSchedule renders the page with medical leave content 1`] = `
-<QuestionPage
-  onSave={[Function]}
-  title="Leave details"
->
-  <Alert
-    neutral={true}
-    state="info"
-  >
-    You will need a completed Certification of a Serious Health Condition form for this section.
-  </Alert>
-  <InputChoiceGroup
-    choices={
-      Array [
-        Object {
-          "checked": false,
-          "label": "Yes",
-          "value": "true",
-        },
-        Object {
-          "checked": false,
-          "label": "No",
-          "value": "false",
-        },
-      ]
-    }
-    hint="Refer to Question 26 in the Certification of a Serious Health Condition form (page 7)."
-    label="Do you need to work fewer hours than usual for a period of time (reduced leave schedule)?"
-    name="has_reduced_schedule_leave_periods"
-    onChange={[Function]}
-    type="radio"
-    value=""
-  />
-  <ConditionalContent
-    clearField={[Function]}
-    fieldNamesClearedWhenHidden={
-      Array [
-        "leave_details.reduced_schedule_leave_periods",
-      ]
-    }
-    getField={[Function]}
-    updateFields={[Function]}
-    visible={null}
-  >
-    <Heading
-      level="2"
-      size="1"
+        Do you need to work fewer hours than usual for a period of time (
+        <a
+          href="https://www.mass.gov/info-details/intermittent-and-reduced-leave-schedules"
+          rel="noopener"
+          target="_blank"
+        >
+          reduced leave schedule
+        </a>
+        )?
+      </legend>
+      <div
+        class="margin-top-3"
+      >
+        <div
+          class="usa-radio measure-5 bg-transparent"
+        >
+          <input
+            class="usa-radio__input"
+            id="InputChoice1"
+            name="has_reduced_schedule_leave_periods"
+            type="radio"
+            value="true"
+          />
+          <label
+            class="usa-radio__label"
+            for="InputChoice1"
+          >
+            Yes
+          </label>
+        </div>
+        <div
+          class="usa-radio measure-5 bg-transparent"
+        >
+          <input
+            class="usa-radio__input"
+            id="InputChoice2"
+            name="has_reduced_schedule_leave_periods"
+            type="radio"
+            value="false"
+          />
+          <label
+            class="usa-radio__label"
+            for="InputChoice2"
+          >
+            No
+          </label>
+        </div>
+      </div>
+    </fieldset>
+    <button
+      class="usa-button position-relative margin-top-4"
+      type="submit"
     >
-      Enter the start and end dates for your reduced leave schedule.
-    </Heading>
-    <Lead>
-      <Trans
-        i18nKey="pages.claimsLeavePeriodReducedSchedule.datesLead"
-        tOptions={
-          Object {
-            "context": "medical",
-          }
-        }
-      />
-    </Lead>
-    <InputDate
-      dayLabel="Day"
-      example="mm / dd / yyyy"
-      label="First day of leave"
-      monthLabel="Month"
-      name="leave_details.reduced_schedule_leave_periods[0].start_date"
-      onChange={[Function]}
-      smallLabel={true}
-      value=""
-      yearLabel="Year"
-    />
-    <InputDate
-      dayLabel="Day"
-      example="mm / dd / yyyy"
-      label="Last day of leave or re‑evaluation date"
-      monthLabel="Month"
-      name="leave_details.reduced_schedule_leave_periods[0].end_date"
-      onChange={[Function]}
-      smallLabel={true}
-      value=""
-      yearLabel="Year"
-    />
-  </ConditionalContent>
-</QuestionPage>
+      Save and continue
+    </button>
+  </form>
+</div>
 `;
 
-exports[`LeavePeriodReducedSchedule renders the page with medical leave content 2`] = `
-Array [
-  "If you have already taken leave for this condition in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.",
-  <br
-    key="br-1"
-  />,
-  <br
-    key="br-2"
-  />,
-  "Refer to Question 32 in the Certification of a Serious Health Condition form (page 8).",
-]
+exports[`LeavePeriodReducedSchedule renders a variation of the page when claimant is taking caring leave 1`] = `
+<div>
+  <form
+    class="usa-form"
+    method="post"
+  >
+    <h1
+      class="js-title margin-top-0 margin-bottom-2 font-heading-sm line-height-sans-3"
+      tabindex="-1"
+    >
+      Leave details
+    </h1>
+    <div
+      class="usa-alert usa-alert--info c-alert--neutral"
+      role="region"
+      tabindex="-1"
+    >
+      <div
+        class="usa-alert__body"
+      >
+        <div
+          class="usa-alert__text"
+        >
+          You will need a completed 
+          <a
+            href="https://www.mass.gov/family-caring-form"
+            rel="noopener"
+            target="_blank"
+          >
+            Certification of Your Family Member’s Serious Health Condition
+          </a>
+           for this section.
+        </div>
+      </div>
+    </div>
+    <fieldset
+      class="usa-fieldset margin-top-3 usa-form-group"
+    >
+      <legend
+        class="usa-label text-bold usa-legend font-heading-lg line-height-sans-3 margin-bottom-1 maxw-tablet"
+      >
+        Do you need to work fewer hours than usual for a period of time (
+        <a
+          href="https://www.mass.gov/info-details/intermittent-and-reduced-leave-schedules"
+          rel="noopener"
+          target="_blank"
+        >
+          reduced leave schedule
+        </a>
+        )?
+      </legend>
+      <span
+        class="display-block line-height-sans-5 measure-5 usa-intro"
+      >
+        Your answer must match the Certification of Your Family Member’s Serious Health Condition.
+      </span>
+      <div
+        class="margin-top-3"
+      >
+        <div
+          class="usa-radio measure-5 bg-transparent"
+        >
+          <input
+            class="usa-radio__input"
+            id="InputChoice3"
+            name="has_reduced_schedule_leave_periods"
+            type="radio"
+            value="true"
+          />
+          <label
+            class="usa-radio__label"
+            for="InputChoice3"
+          >
+            Yes
+          </label>
+        </div>
+        <div
+          class="usa-radio measure-5 bg-transparent"
+        >
+          <input
+            class="usa-radio__input"
+            id="InputChoice4"
+            name="has_reduced_schedule_leave_periods"
+            type="radio"
+            value="false"
+          />
+          <label
+            class="usa-radio__label"
+            for="InputChoice4"
+          >
+            No
+          </label>
+        </div>
+      </div>
+    </fieldset>
+    <button
+      class="usa-button position-relative margin-top-4"
+      type="submit"
+    >
+      Save and continue
+    </button>
+  </form>
+</div>
+`;
+
+exports[`LeavePeriodReducedSchedule renders a variation of the page when claimant is taking medical leave 1`] = `
+<div>
+  <form
+    class="usa-form"
+    method="post"
+  >
+    <h1
+      class="js-title margin-top-0 margin-bottom-2 font-heading-sm line-height-sans-3"
+      tabindex="-1"
+    >
+      Leave details
+    </h1>
+    <div
+      class="usa-alert usa-alert--info c-alert--neutral"
+      role="region"
+      tabindex="-1"
+    >
+      <div
+        class="usa-alert__body"
+      >
+        <div
+          class="usa-alert__text"
+        >
+          You will need a completed 
+          <a
+            href="https://www.mass.gov/medical-leave-form"
+            rel="noopener"
+            target="_blank"
+          >
+            Certification of Your Serious Health Condition
+          </a>
+           for this section.
+        </div>
+      </div>
+    </div>
+    <fieldset
+      class="usa-fieldset margin-top-3 usa-form-group"
+    >
+      <legend
+        class="usa-label text-bold usa-legend font-heading-lg line-height-sans-3 margin-bottom-1 maxw-tablet"
+      >
+        Do you need to work fewer hours than usual for a period of time (
+        <a
+          href="https://www.mass.gov/info-details/intermittent-and-reduced-leave-schedules"
+          rel="noopener"
+          target="_blank"
+        >
+          reduced leave schedule
+        </a>
+        )?
+      </legend>
+      <span
+        class="display-block line-height-sans-5 measure-5 usa-intro"
+      >
+        Your answer must match the Certification of Your Serious Health Condition.
+      </span>
+      <div
+        class="margin-top-3"
+      >
+        <div
+          class="usa-radio measure-5 bg-transparent"
+        >
+          <input
+            class="usa-radio__input"
+            id="InputChoice5"
+            name="has_reduced_schedule_leave_periods"
+            type="radio"
+            value="true"
+          />
+          <label
+            class="usa-radio__label"
+            for="InputChoice5"
+          >
+            Yes
+          </label>
+        </div>
+        <div
+          class="usa-radio measure-5 bg-transparent"
+        >
+          <input
+            class="usa-radio__input"
+            id="InputChoice6"
+            name="has_reduced_schedule_leave_periods"
+            type="radio"
+            value="false"
+          />
+          <label
+            class="usa-radio__label"
+            for="InputChoice6"
+          >
+            No
+          </label>
+        </div>
+      </div>
+    </fieldset>
+    <button
+      class="usa-button position-relative margin-top-4"
+      type="submit"
+    >
+      Save and continue
+    </button>
+  </form>
+</div>
+`;
+
+exports[`LeavePeriodReducedSchedule renders a variation of the page when claimant is taking pregnancy leave 1`] = `
+<div>
+  <form
+    class="usa-form"
+    method="post"
+  >
+    <h1
+      class="js-title margin-top-0 margin-bottom-2 font-heading-sm line-height-sans-3"
+      tabindex="-1"
+    >
+      Leave details
+    </h1>
+    <div
+      class="usa-alert usa-alert--info c-alert--neutral"
+      role="region"
+      tabindex="-1"
+    >
+      <div
+        class="usa-alert__body"
+      >
+        <div
+          class="usa-alert__text"
+        >
+          You will need a completed 
+          <a
+            href="https://www.mass.gov/medical-leave-form"
+            rel="noopener"
+            target="_blank"
+          >
+            Certification of Your Serious Health Condition
+          </a>
+           for this section.
+        </div>
+      </div>
+    </div>
+    <fieldset
+      class="usa-fieldset margin-top-3 usa-form-group"
+    >
+      <legend
+        class="usa-label text-bold usa-legend font-heading-lg line-height-sans-3 margin-bottom-1 maxw-tablet"
+      >
+        Do you need to work fewer hours than usual for a period of time (
+        <a
+          href="https://www.mass.gov/info-details/intermittent-and-reduced-leave-schedules"
+          rel="noopener"
+          target="_blank"
+        >
+          reduced leave schedule
+        </a>
+        )?
+      </legend>
+      <span
+        class="display-block line-height-sans-5 measure-5 usa-intro"
+      >
+        Your answer must match the Certification of Your Serious Health Condition.
+      </span>
+      <div
+        class="margin-top-3"
+      >
+        <div
+          class="usa-radio measure-5 bg-transparent"
+        >
+          <input
+            class="usa-radio__input"
+            id="InputChoice7"
+            name="has_reduced_schedule_leave_periods"
+            type="radio"
+            value="true"
+          />
+          <label
+            class="usa-radio__label"
+            for="InputChoice7"
+          >
+            Yes
+          </label>
+        </div>
+        <div
+          class="usa-radio measure-5 bg-transparent"
+        >
+          <input
+            class="usa-radio__input"
+            id="InputChoice8"
+            name="has_reduced_schedule_leave_periods"
+            type="radio"
+            value="false"
+          />
+          <label
+            class="usa-radio__label"
+            for="InputChoice8"
+          >
+            No
+          </label>
+        </div>
+      </div>
+    </fieldset>
+    <button
+      class="usa-button position-relative margin-top-4"
+      type="submit"
+    >
+      Save and continue
+    </button>
+  </form>
+</div>
 `;

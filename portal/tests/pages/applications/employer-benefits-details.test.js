@@ -2,104 +2,89 @@ import EmployerBenefit, {
   EmployerBenefitFrequency,
   EmployerBenefitType,
 } from "../../../src/models/EmployerBenefit";
-import EmployerBenefitsDetails, {
-  EmployerBenefitCard,
-} from "../../../src/pages/applications/employer-benefits-details";
-import {
-  MockClaimBuilder,
-  renderWithAppLogic,
-  simulateEvents,
-  testHook,
-} from "../../test-utils";
-import AppErrorInfoCollection from "../../../src/models/AppErrorInfoCollection";
-import React from "react";
-import RepeatableFieldset from "../../../src/components/RepeatableFieldset";
-import RepeatableFieldsetCard from "../../../src/components/RepeatableFieldsetCard";
-import { shallow } from "enzyme";
-import useFunctionalInputProps from "../../../src/hooks/useFunctionalInputProps";
+import { MockBenefitsApplicationBuilder, renderPage } from "../../test-utils";
+import { screen, waitFor } from "@testing-library/react";
+import EmployerBenefitsDetails from "../../../src/pages/applications/employer-benefits-details";
+import { setupBenefitsApplications } from "../../test-utils/helpers";
+import userEvent from "@testing-library/user-event";
 
-jest.mock("../../../src/hooks/useAppLogic");
+const updateClaim = jest.fn(() => {
+  return Promise.resolve();
+});
 
-const setup = (claimAttrs) => {
-  const claim = new MockClaimBuilder().continuous().create();
+const setup = (claim) => {
+  if (!claim) {
+    claim = new MockBenefitsApplicationBuilder().continuous().create();
+  }
 
-  const { appLogic, wrapper } = renderWithAppLogic(EmployerBenefitsDetails, {
-    claimAttrs: claimAttrs || claim,
-  });
-  const { changeField, click, submitForm } = simulateEvents(wrapper);
-
-  return {
-    appLogic,
-    changeField,
-    claim,
-    click,
-    submitForm,
-    wrapper,
-  };
+  return renderPage(
+    EmployerBenefitsDetails,
+    {
+      addCustomSetup: (appLogic) => {
+        setupBenefitsApplications(appLogic, [claim]);
+        appLogic.benefitsApplications.update = updateClaim;
+      },
+    },
+    {
+      query: { claim_id: "mock_application_id" },
+    }
+  );
 };
 
 const benefitData = {
   benefit_type: EmployerBenefitType.shortTermDisability,
   benefit_start_date: "2021-03-01",
   benefit_end_date: "2021-04-01",
+  is_full_salary_continuous: false,
   benefit_amount_dollars: 100,
   benefit_amount_frequency: EmployerBenefitFrequency.monthly,
   employer_benefit_id: null,
 };
 
-const setBenefitFields = (wrapper, benefit) => {
-  const employerBenefitCard = wrapper
-    .find(RepeatableFieldset)
-    .dive()
-    .find(RepeatableFieldsetCard)
-    .first()
-    .dive()
-    .find("EmployerBenefitCard")
-    .first()
-    .dive();
+const setBenefitFields = (benefit) => {
+  userEvent.click(
+    screen.getByRole("radio", {
+      name: "Temporary disability insurance Short-term or long-term disability",
+    })
+  );
 
-  const { changeRadioGroup, changeField } = simulateEvents(employerBenefitCard);
-  changeRadioGroup("employer_benefits[0].benefit_type", benefit.benefit_type);
-  changeField(
-    "employer_benefits[0].benefit_start_date",
-    benefit.benefit_start_date
+  const [startMonth, endMonth] = screen.getAllByRole("textbox", {
+    name: "Month",
+  });
+  const [startDay, endDay] = screen.getAllByRole("textbox", { name: "Day" });
+  const [startYear, endYear] = screen.getAllByRole("textbox", {
+    name: "Year",
+  });
+  userEvent.type(startMonth, "3");
+  userEvent.type(startDay, "1");
+  userEvent.type(startYear, "2021");
+  userEvent.type(endMonth, "4");
+  userEvent.type(endDay, "1");
+  userEvent.type(endYear, "2021");
+
+  userEvent.click(screen.getByRole("radio", { name: "No" }));
+  userEvent.type(
+    screen.getByRole("textbox", { name: "Amount" }),
+    benefit.benefit_amount_dollars.toString()
   );
-  changeField(
-    "employer_benefits[0].benefit_end_date",
-    benefit.benefit_end_date
-  );
-  changeField(
-    "employer_benefits[0].benefit_amount_dollars",
-    benefit.benefit_amount_dollars
-  );
-  changeField(
-    "employer_benefits[0].benefit_amount_frequency",
-    benefit.benefit_amount_frequency
-  );
+  userEvent.selectOptions(screen.getByRole("combobox", { name: "Frequency" }), [
+    benefit.benefit_amount_frequency,
+  ]);
 };
 
-const clickFirstRemoveButton = async (wrapper) => {
-  // can't use simulateEvent's .click() here because this is a Child component
-  await wrapper
-    .find(RepeatableFieldset)
-    .dive()
-    .find(RepeatableFieldsetCard)
-    .first()
-    .dive()
-    .find("Button")
-    .simulate("click");
+const clickFirstRemoveButton = () => {
+  const allRemovalButtons = screen.getAllByRole("button", {
+    name: "Remove benefit",
+  });
+  userEvent.click(allRemovalButtons[0]);
 };
 
-const clickAddBenefitButton = async (wrapper) => {
-  await wrapper
-    .find(RepeatableFieldset)
-    .dive()
-    .find({ name: "add-entry-button" })
-    .simulate("click");
+const clickAddBenefitButton = () => {
+  userEvent.click(screen.getByRole("button", { name: "Add another benefit" }));
 };
 
 const createClaimWithBenefits = () =>
-  new MockClaimBuilder()
+  new MockBenefitsApplicationBuilder()
     .continuous()
     .employerBenefit([
       {
@@ -108,13 +93,15 @@ const createClaimWithBenefits = () =>
         benefit_end_date: "2021-02-01",
         benefit_start_date: "2021-01-01",
         benefit_type: EmployerBenefitType.familyOrMedicalLeave,
+        is_full_salary_continuous: true,
       },
       {
         benefit_amount_dollars: 700,
         benefit_amount_frequency: EmployerBenefitFrequency.monthly,
         benefit_end_date: "2021-02-05",
         benefit_start_date: "2021-01-05",
-        benefit_type: EmployerBenefitType.paidLeave,
+        benefit_type: EmployerBenefitType.permanentDisability,
+        is_full_salary_continuous: false,
       },
     ])
     .create();
@@ -122,247 +109,127 @@ const createClaimWithBenefits = () =>
 describe("EmployerBenefitsDetails", () => {
   describe("when the user's claim has no employer benefits", () => {
     it("renders the page", () => {
-      const { wrapper } = setup();
-      expect(wrapper).toMatchSnapshot();
+      const { container } = setup();
+      expect(container).toMatchSnapshot();
     });
 
     it("adds a blank entry so a card is rendered", () => {
-      const { wrapper } = setup();
-      const entries = wrapper.find(RepeatableFieldset).prop("entries");
-
-      expect(entries).toHaveLength(1);
-      expect(entries[0]).toEqual(new EmployerBenefit());
-
-      expect(
-        wrapper.find(RepeatableFieldset).dive().find(RepeatableFieldsetCard)
-          .length
-      ).toEqual(1);
+      setup();
+      const entries = screen.getByTestId("repeatable-fieldset-card");
+      expect(entries).toBeInTheDocument();
     });
 
     it("calls claims.update with new benefits data when user clicks continue", async () => {
-      const { appLogic, claim, submitForm, wrapper } = setup();
+      setup();
 
-      setBenefitFields(wrapper, benefitData);
+      setBenefitFields(benefitData);
 
-      const entries = wrapper.find(RepeatableFieldset).prop("entries");
-      expect(entries).toHaveLength(1);
-      expect(entries[0]).toEqual(benefitData);
+      const entries = screen.getByTestId("repeatable-fieldset-card");
+      expect(entries).toBeInTheDocument();
 
-      await submitForm();
-
-      expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
-        claim.application_id,
-        {
-          employer_benefits: [benefitData],
-        }
+      userEvent.click(
+        screen.getByRole("button", { name: "Save and continue" })
       );
+      await waitFor(() => {
+        expect(updateClaim).toHaveBeenCalledWith("mock_application_id", {
+          employer_benefits: [benefitData],
+        });
+      });
     });
 
-    it("adds an empty benefit when the user clicks Add Another Benefit", async () => {
-      const { wrapper } = setup();
+    it("adds an empty benefit when the user clicks Add Another Benefit", () => {
+      setup();
+      setBenefitFields(benefitData);
+      clickAddBenefitButton();
 
-      setBenefitFields(wrapper, benefitData);
-      await clickAddBenefitButton(wrapper);
-
-      const entries = wrapper.find(RepeatableFieldset).prop("entries");
+      const entries = screen.getAllByTestId("repeatable-fieldset-card");
       expect(entries).toHaveLength(2);
-      expect(entries).toEqual([benefitData, new EmployerBenefit()]);
-
-      expect(
-        wrapper.find(RepeatableFieldset).dive().find(RepeatableFieldsetCard)
-      ).toHaveLength(2);
     });
 
-    it("removes a benefit when the user clicks Remove Benefit", async () => {
-      const { wrapper } = setup();
+    it("removes a benefit when the user clicks Remove Benefit", () => {
+      setup();
 
-      setBenefitFields(wrapper, benefitData);
+      setBenefitFields(benefitData);
 
-      await clickAddBenefitButton(wrapper);
+      clickAddBenefitButton();
 
-      await clickFirstRemoveButton(wrapper);
+      clickFirstRemoveButton();
 
-      const entries = wrapper.find(RepeatableFieldset).prop("entries");
-      expect(entries).toHaveLength(1);
-      expect(entries).toEqual([new EmployerBenefit()]);
-
-      expect(
-        wrapper.find(RepeatableFieldset).dive().find(RepeatableFieldsetCard)
-      ).toHaveLength(1);
+      const entries = screen.getByTestId("repeatable-fieldset-card");
+      expect(entries).toBeInTheDocument();
     });
   });
 
   describe("when the user's claim has employer benefits", () => {
     it("renders the page", () => {
       const claimWithBenefits = createClaimWithBenefits();
-      const { wrapper } = setup(claimWithBenefits);
-      expect(wrapper).toMatchSnapshot();
+      const { container } = setup(claimWithBenefits);
+      expect(container).toMatchSnapshot();
     });
 
     it("adds another benefit when the user clicks 'Add another'", async () => {
       const claimWithBenefits = createClaimWithBenefits();
-      const { appLogic, claim, submitForm, wrapper } = setup(claimWithBenefits);
+      setup(claimWithBenefits);
 
-      clickAddBenefitButton(wrapper);
+      clickAddBenefitButton();
 
-      expect(
-        wrapper.find(RepeatableFieldset).dive().find(RepeatableFieldsetCard)
-          .length
-      ).toEqual(3);
+      const entries = screen.getAllByTestId("repeatable-fieldset-card");
+      expect(entries).toHaveLength(3);
 
-      await submitForm();
+      userEvent.click(
+        screen.getByRole("button", { name: "Save and continue" })
+      );
 
-      expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
-        claim.application_id,
-        {
+      await waitFor(() => {
+        expect(updateClaim).toHaveBeenCalledWith("mock_application_id", {
           employer_benefits: [
             ...claimWithBenefits.employer_benefits,
             new EmployerBenefit(),
           ],
-        }
-      );
+        });
+      });
     });
 
     it("calls claims.update when user clicks continue", async () => {
       const claimWithBenefits = createClaimWithBenefits();
-      const { appLogic, claim, submitForm } = setup(claimWithBenefits);
-      await submitForm();
-
-      expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
-        claim.application_id,
-        {
-          employer_benefits: claimWithBenefits.employer_benefits,
-        }
+      setup(claimWithBenefits);
+      userEvent.click(
+        screen.getByRole("button", { name: "Save and continue" })
       );
-    });
-
-    describe("when the user clicks 'Remove'", () => {
-      it("removes the benefit when the benefit isn't saved to the API", async () => {
-        const claimWithBenefits = createClaimWithBenefits();
-        const { appLogic, submitForm, wrapper } = setup(claimWithBenefits);
-        appLogic.benefitsApplications.update.mockImplementationOnce(
-          (applicationId, patchData) => {
-            expect(applicationId).toBe(claimWithBenefits.application_id);
-            expect(patchData.employer_benefits).toHaveLength(1);
-          }
-        );
-
-        await clickFirstRemoveButton(wrapper);
-        await submitForm();
-
-        expect(
-          appLogic.otherLeaves.removeEmployerBenefit
-        ).not.toHaveBeenCalled();
-
-        expect(appLogic.benefitsApplications.update).toHaveBeenCalledTimes(1);
-      });
-
-      it("removes the benefit when the benefit is saved to the API and the DELETE request succeeds", async () => {
-        const claimWithBenefits = createClaimWithBenefits();
-        claimWithBenefits.employer_benefits[0].employer_benefit_id =
-          "mock-employer-benefit-id-1";
-
-        const { appLogic, submitForm, wrapper } = setup(claimWithBenefits);
-
-        appLogic.benefitsApplications.update.mockImplementationOnce(
-          (applicationId, patchData) => {
-            expect(applicationId).toBe(claimWithBenefits.application_id);
-            expect(patchData.employer_benefits).toHaveLength(1);
-          }
-        );
-
-        await clickFirstRemoveButton(wrapper);
-        await submitForm();
-
-        const entries = wrapper.find(RepeatableFieldset).prop("entries");
-
-        expect(appLogic.otherLeaves.removeEmployerBenefit).toHaveBeenCalled();
-        expect(appLogic.benefitsApplications.update).toHaveBeenCalledTimes(1);
-        expect(entries).toHaveLength(1);
-        expect(
-          wrapper.find(RepeatableFieldset).dive().find(RepeatableFieldsetCard)
-        ).toHaveLength(1);
-      });
-
-      it("does not remove the benefit when the benefit is saved to the API and the DELETE request fails", async () => {
-        const claimWithBenefits = createClaimWithBenefits();
-        claimWithBenefits.employer_benefits[0].employer_benefit_id =
-          "mock-employer-benefit-id-1";
-
-        const { appLogic, submitForm, wrapper } = setup(claimWithBenefits);
-
-        appLogic.otherLeaves.removeEmployerBenefit.mockImplementationOnce(
-          () => false
-        );
-
-        appLogic.benefitsApplications.update.mockImplementationOnce(
-          (applicationId, patchData) => {
-            expect(applicationId).toBe(claimWithBenefits.application_id);
-            expect(patchData.employer_benefits).toHaveLength(2);
-          }
-        );
-
-        await clickFirstRemoveButton(wrapper);
-        expect(appLogic.otherLeaves.removeEmployerBenefit).toHaveBeenCalled();
-
-        await submitForm();
-        expect(appLogic.benefitsApplications.update).toHaveBeenCalledTimes(1);
-
-        const entries = wrapper.find(RepeatableFieldset).prop("entries");
-        expect(entries).toHaveLength(2);
-        expect(
-          wrapper.find(RepeatableFieldset).dive().find(RepeatableFieldsetCard)
-        ).toHaveLength(2);
+      await waitFor(() => {
+        expect(updateClaim).toHaveBeenCalledWith("mock_application_id", {
+          employer_benefits: claimWithBenefits.employer_benefits,
+        });
       });
     });
-  });
 
-  describe("when there are validation errors", () => {
-    it.todo("updates the formState with employer_benefit_ids - see CP-1686");
-  });
-});
+    it("when the user clicks 'Remove' removes the benefit", async () => {
+      const claimWithBenefits = createClaimWithBenefits();
+      setup(claimWithBenefits);
 
-const setupBenefitCard = () => {
-  const index = 0;
-  const entry = new EmployerBenefit();
-  let getFunctionalInputProps;
+      clickAddBenefitButton();
+      clickFirstRemoveButton();
 
-  testHook(() => {
-    getFunctionalInputProps = useFunctionalInputProps({
-      appErrors: new AppErrorInfoCollection(),
-      formState: {},
-      updateFields: jest.fn(),
-    });
-  });
+      userEvent.click(
+        screen.getByRole("button", { name: "Save and continue" })
+      );
 
-  const wrapper = shallow(
-    <EmployerBenefitCard
-      entry={entry}
-      index={index}
-      getFunctionalInputProps={getFunctionalInputProps}
-    />
-  );
-
-  return {
-    index,
-    wrapper,
-  };
-};
-
-describe("EmployerBenefitCard", () => {
-  it("renders fields for an EmployerBenefit instance", () => {
-    const { wrapper } = setupBenefitCard();
-    expect(wrapper).toMatchSnapshot();
-  });
-
-  it("doesn't include Unknown as a benefit type option", () => {
-    const { index, wrapper } = setupBenefitCard();
-    const field = wrapper.find({
-      name: `employer_benefits[${index}].benefit_type`,
+      // Note we expect call to have first item from claimWithBenefits removed
+      await waitFor(() => {
+        expect(updateClaim).toHaveBeenCalledWith("mock_application_id", {
+          employer_benefits: [
+            claimWithBenefits.employer_benefits[1],
+            new EmployerBenefit(),
+          ],
+        });
+      });
     });
 
-    expect(field.prop("choices")).not.toContainEqual(
-      expect.objectContaining({ value: EmployerBenefitType.unknown })
-    );
+    it("excludes unknown benefit types from display in the EmployerBenefitCard", () => {
+      setup();
+      const choiceOptions = screen.getAllByRole("radio");
+      expect(choiceOptions).toHaveLength(5); // 3 for benefit type, 2 for salary
+      expect(screen.queryByText(/unknown/i)).not.toBeInTheDocument();
+    });
   });
 });

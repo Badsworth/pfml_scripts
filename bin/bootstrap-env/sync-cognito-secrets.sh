@@ -39,7 +39,7 @@ internal_client_id=$(
     aws cognito-idp list-user-pool-clients --user-pool-id=$pool_id \
         | jq -r ".UserPoolClients | .[] | select(.ClientName == \"internal-fineos-role-oauth-pfml-$ENV\") | .ClientId")
 
-internal_secret=$(aws cognito-idp describe-user-pool-client --user-pool-id=$pool_id --client-id=$internal_client_id)
+internal_secret=$(aws cognito-idp describe-user-pool-client --user-pool-id=$pool_id --client-id=$internal_client_id | jq -r ".UserPoolClient.ClientSecret")
 
 cat <<-EOF
 cognito_user_pool_arn = "arn:aws:cognito-idp:us-east-1:498823821309:userpool/$pool_id"

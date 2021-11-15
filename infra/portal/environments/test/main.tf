@@ -43,9 +43,8 @@ output "storybook_url" {
 }
 
 module "massgov_pfml" {
-  cognito_extra_redirect_urls            = ["http://localhost:3000"]
-  cognito_extra_logout_urls              = ["http://localhost:3000"]
-  cognito_enable_provisioned_concurrency = false
+  cognito_extra_redirect_urls = ["http://localhost:3000"]
+  cognito_extra_logout_urls   = ["http://localhost:3000"]
 
   # Firewall rules
   # 'true' will set rule to 'BLOCK' (or 'NONE' which is equivalent)

@@ -54,28 +54,29 @@ def get_leave_period_log_attributes(application: Application) -> Dict[str, str]:
 def get_application_log_attributes(application: Application) -> Dict[str, Optional[str]]:
     attributes_to_log = [
         "application_id",
-        "employer_id",
-        "leave_type",
         "has_state_id",
+        "has_concurrent_leave",
         "has_continuous_leave_periods",
         "has_employer_benefits",
         "has_future_child_date",
         "has_intermittent_leave_periods",
         "has_mailing_address",
         "has_other_incomes",
-        "has_previous_leaves",
+        "has_previous_leaves_other_reason",
+        "has_previous_leaves_same_reason",
         "has_reduced_schedule_leave_periods",
         "has_submitted_payment_preference",
+        "is_withholding_tax",
         "pregnant_or_recent_birth",
-        "start_time",
-        "updated_time",
+        "created_at",
+        "updated_at",
         "completed_time",
         "submitted_time",
     ]
 
     timestamp_attributes_to_log = [
-        "start_time",
-        "updated_time",
+        "created_at",
+        "updated_at",
         "completed_time",
         "submitted_time",
     ]
@@ -90,14 +91,6 @@ def get_application_log_attributes(application: Application) -> Dict[str, Option
         result[f"application.{name}.timestamp"] = (
             str(dt_value.timestamp()) if dt_value is not None else None
         )
-
-    # Use a different attribute name for other_incomes_awaiting_approval to be consistent with other booleans
-    has_other_incomes_awaiting_approval = application.other_incomes_awaiting_approval
-    result["application.has_other_incomes_awaiting_approval"] = (
-        str(has_other_incomes_awaiting_approval)
-        if has_other_incomes_awaiting_approval is not None
-        else None
-    )
 
     # Use a different attribute name for fineos_absence_id to avoid using vendor specific names
     result["application.absence_case_id"] = (
@@ -135,19 +128,26 @@ def get_application_log_attributes(application: Application) -> Dict[str, Option
     # add leave start_date and end_date for each type of leave period
     result.update(get_leave_period_log_attributes(application))
 
-    result.update(get_previous_leaves_log_attributes(application.previous_leaves))
+    result.update(
+        get_previous_leaves_log_attributes(application.previous_leaves_other_reason, "other_reason")
+    )
+    result.update(
+        get_previous_leaves_log_attributes(application.previous_leaves_same_reason, "same_reason")
+    )
     result.update(get_employer_benefits_log_attributes(application.employer_benefits))
     result.update(get_other_incomes_log_attributes(application.other_incomes))
 
     return result
 
 
-def get_previous_leaves_log_attributes(leaves: Iterable[PreviousLeave]) -> Dict[str, str]:
-    result = {"application.num_previous_leaves": str(len(list(leaves)))}
+def get_previous_leaves_log_attributes(
+    leaves: Iterable[PreviousLeave], leave_type: str
+) -> Dict[str, str]:
+    result = {f"application.num_previous_leaves_{leave_type}": str(len(list(leaves)))}
 
     reason_values = [
         PreviousLeaveQualifyingReason.PREGNANCY_MATERNITY.previous_leave_qualifying_reason_description,
-        PreviousLeaveQualifyingReason.SERIOUS_HEALTH_CONDITION.previous_leave_qualifying_reason_description,
+        PreviousLeaveQualifyingReason.AN_ILLNESS_OR_INJURY.previous_leave_qualifying_reason_description,
         PreviousLeaveQualifyingReason.CARE_FOR_A_FAMILY_MEMBER.previous_leave_qualifying_reason_description,
         PreviousLeaveQualifyingReason.CHILD_BONDING.previous_leave_qualifying_reason_description,
         PreviousLeaveQualifyingReason.MILITARY_CAREGIVER.previous_leave_qualifying_reason_description,
@@ -165,7 +165,7 @@ def get_previous_leaves_log_attributes(leaves: Iterable[PreviousLeave]) -> Dict[
     for reason in reason_values:
         assert reason
         count = reason_counts[reason]
-        result[f"application.num_previous_leave_reasons.{reason}"] = str(count)
+        result[f"application.num_previous_leave_{leave_type}_reasons.{reason}"] = str(count)
 
     return result
 

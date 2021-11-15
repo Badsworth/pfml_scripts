@@ -58,16 +58,15 @@ services:
       - COGNITO_USER_POOL_ID=us-east-1_HpL4XslLg
       - COGNITO_USER_POOL_CLIENT_ID=10rjcp71r8bnk4459c67bn18t8
       - DASHBOARD_PASSWORD=secret123
-      - LOGGING_LEVEL=massgov.pfml.fineos.fineos_client=DEBUG
+      - LOGGING_LEVEL=massgov.pfml.fineos.fineos_client=DEBUG,massgov.pfml.servicenow.client=DEBUG
       - ENABLE_EMPLOYEE_ENDPOINTS=1
-      # Enable this variable to enforce Verification checks; disable to ignore
-      - ENFORCE_LEAVE_ADMIN_VERIFICATION=1
       - FOLDER_PATH=dor_mock
       - FINEOS_FOLDER_PATH=fineos_mock
       # Enable this variable after initial full load
       # - ELIGIBILITY_FEED_MODE=updates
+      # Enable this variable to configure calls to the RMV API
+      - RMV_API_BEHAVIOR=fully_mocked
       # Enable this variable to configure /rmv-check
-      - RMV_CHECK_BEHAVIOR=fully_mocked
       - RMV_CHECK_MOCK_SUCCESS=1
       # Enable these variables to use a real FINEOS API instead of a mock:
       # - FINEOS_CLIENT_CUSTOMER_API_URL=https://idt-api.masspfml.fineos.com/customerapi/
@@ -86,8 +85,6 @@ services:
       - PORTAL_BASE_URL=https://paidleave.mass.gov
       - ENABLE_APPLICATION_FRAUD_CHECK=0
       # Payments env vars
-      # - FINEOS_VENDOR_MAX_HISTORY_DATE=2021-01-01
-      # - FINEOS_PAYMENT_MAX_HISTORY_DATE=2021-01-01
       # - PAYMENTS_GAX_BIEVNT_EMAIL=
       # - PAYMENTS_DFML_BUSINESS_OPERATIONS_EMAIL=
       - AGENCY_REDUCTIONS_EMAIL_ADDRESS=EOL-DL-DFML-Agency-Reductions@mass.gov
@@ -105,10 +102,9 @@ services:
       #- PFML_FINEOS_OUTBOUND_PATH=s3://massgov-pfml-test-agency-transfer/chouinard-test/payments/cps/outbound
       #- PFML_ERROR_REPORTS_PATH=s3://massgov-pfml-test-agency-transfer/chouinard-test/payments/error-reports/outbound
       #- AWS_PROFILE=AWS-498823821309-Infrastructure-Admin_profile
+      #- NEW_PLAN_PROOFS_ACTIVE_AT=2021-06-26 00:00:00+00:00
+      #- FEATURES_FILE_PATH=file:///app/features.yaml
 
-      # To test Sentry locally, set this to 1.
-      # Errors will be captured under the 'local' environment.
-      - ENABLE_SENTRY=0
     networks:
       main:
         aliases:

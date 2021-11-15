@@ -1,55 +1,61 @@
-import { renderWithAppLogic, simulateEvents } from "../../test-utils";
+import User, { UserRole } from "../../../src/models/User";
+import { screen, waitFor } from "@testing-library/react";
 import ConsentToDataSharing from "../../../src/pages/user/consent-to-data-sharing";
-import { UserRole } from "../../../src/models/User";
-import routes from "../../../src/routes";
+import { renderPage } from "../../test-utils";
+import tracker from "../../../src/services/tracker";
+import userEvent from "@testing-library/user-event";
 
 jest.mock("../../../src/hooks/useAppLogic");
 
-describe("ConsentToDataSharing", () => {
-  let appLogic, wrapper;
-  const user_id = "mock-user-id";
+const updateUser = jest.fn();
 
-  const renderWithUserParams = (user) => {
-    ({ appLogic, wrapper } = renderWithAppLogic(ConsentToDataSharing, {
-      diveLevels: 1,
-      userAttrs: { ...user },
-    }));
-    appLogic.portalFlow.pathName = routes.user.consentToDataSharing;
-  };
-
-  beforeEach(() => {
-    renderWithUserParams({ user_id });
+const renderWithUserParams = (user) => {
+  if (!user) {
+    user = { user_id: "mock_user_id", consented_to_data_sharing: true };
+  }
+  return renderPage(ConsentToDataSharing, {
+    addCustomSetup: (appLogic) => {
+      appLogic.users.user = new User(user);
+      appLogic.users.updateUser = updateUser;
+    },
   });
+};
 
+describe("ConsentToDataSharing", () => {
   it("shows the correct content for non-employers", () => {
-    expect(wrapper.find("AccordionItem").at(0).prop("heading")).toEqual(
-      "Applying for PFML"
-    );
-    expect(wrapper).toMatchSnapshot();
+    const { container } = renderWithUserParams();
+    expect(
+      screen.getByRole("button", { name: "Applying for benefits" })
+    ).toBeInTheDocument();
+    expect(container).toMatchSnapshot();
   });
 
   it("shows the correct contents for employers", () => {
-    renderWithUserParams({
-      user_id,
+    const { container } = renderWithUserParams({
+      user_id: "mock_user_id",
+      consented_to_data_sharing: true,
       roles: [new UserRole({ role_description: "Employer" })],
     });
 
-    expect(wrapper.find("AccordionItem").at(0).prop("heading")).toEqual(
-      "Reviewing paid leave applications"
-    );
-    expect(wrapper).toMatchSnapshot();
+    expect(container).toMatchSnapshot();
+    expect(
+      screen.getByRole("button", { name: "Reviewing paid leave applications" })
+    ).toBeInTheDocument();
   });
 
-  describe("when the user agrees and submits the form", () => {
-    beforeEach(async () => {
-      const { submitForm } = simulateEvents(wrapper);
-      await submitForm();
-    });
+  it("on submit, we set user's consented_to_data_sharing field to true and track to new relic", async () => {
+    const trackEventSpy = jest.spyOn(tracker, "trackEvent");
+    renderWithUserParams();
 
-    it("sets user's consented_to_data_sharing field to true", () => {
-      expect(appLogic.users.updateUser).toHaveBeenCalledWith(user_id, {
+    userEvent.click(screen.getByRole("button", { name: "Agree and continue" }));
+    await waitFor(() => {
+      expect(updateUser).toHaveBeenCalledWith("mock_user_id", {
         consented_to_data_sharing: true,
       });
+      expect(trackEventSpy).toHaveBeenCalledWith(
+        "User consented to data sharing",
+        {}
+      );
     });
   });
 });

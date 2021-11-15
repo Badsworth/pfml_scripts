@@ -13,7 +13,6 @@ import massgov.pfml.util.logging as logging
 from massgov.pfml.db.models.employees import (
     Address,
     ClaimType,
-    Employee,
     Payment,
     PaymentCheck,
     PaymentMethod,
@@ -21,6 +20,7 @@ from massgov.pfml.db.models.employees import (
     ReferenceFileType,
     State,
 )
+from massgov.pfml.db.models.payments import FineosWritebackDetails, FineosWritebackTransactionStatus
 from massgov.pfml.delegated_payments.check_issue_file import CheckIssueEntry, CheckIssueFile
 from massgov.pfml.delegated_payments.ez_check import EzCheckFile, EzCheckHeader, EzCheckRecord
 
@@ -54,7 +54,9 @@ class Constants:
 
 
 def create_check_file(
-    db_session: db.Session, count_incrementer: Optional[Callable[[str], None]] = None
+    db_session: db.Session,
+    count_incrementer: Optional[Callable[[str], None]] = None,
+    import_log_id: Optional[int] = None,
 ) -> Tuple[Optional[EzCheckFile], Optional[CheckIssueFile]]:
     eligible_check_payments = _get_eligible_check_payments(db_session)
 
@@ -110,6 +112,11 @@ def create_check_file(
 
     if encountered_exception:
         logger.info("Not creating a check file because we encountered issues adding records")
+
+        # If a single check payment is not added to the payment, then we do not send any check
+        # payments to PUB so we need to count all of the check payments we attempted to add.
+        if count_incrementer:
+            [count_incrementer("failed_to_add_transaction_count") for _ in eligible_check_payments]
         return (None, None)
 
     ez_check_file = EzCheckFile(_get_ez_check_header())
@@ -119,12 +126,29 @@ def create_check_file(
         ez_check_file.add_record(record.ez_check_record)
         check_issue_file.add_entry(record.positive_pay_record)
 
+        outcome = state_log_util.build_outcome("Payment added to PUB EZ Check file")
         state_log_util.create_finished_state_log(
             associated_model=payment,
             end_state=State.DELEGATED_PAYMENT_PUB_TRANSACTION_CHECK_SENT,
-            outcome=state_log_util.build_outcome("Payment added to PUB EZ Check file"),
+            outcome=outcome,
             db_session=db_session,
         )
+
+        transaction_status = FineosWritebackTransactionStatus.PAID
+        state_log_util.create_finished_state_log(
+            end_state=State.DELEGATED_ADD_TO_FINEOS_WRITEBACK,
+            outcome=outcome,
+            associated_model=payment,
+            import_log_id=import_log_id,
+            db_session=db_session,
+        )
+        writeback_details = FineosWritebackDetails(
+            payment=payment,
+            transaction_status_id=transaction_status.transaction_status_id,
+            import_log_id=import_log_id,
+        )
+        db_session.add(writeback_details)
+        payments_util.create_payment_log(payment, import_log_id, db_session)
 
     return ez_check_file, check_issue_file
 
@@ -199,31 +223,28 @@ def _get_eligible_check_payments(db_session: db.Session) -> List[Payment]:
 
 
 def _convert_payment_to_check_issue_entry(payment: Payment) -> CheckIssueEntry:
-    employee = payment.claim.employee
-
     return CheckIssueEntry(
         status_code="I",  # Always use the issue code? Use "V" for void.
         check_number=payment.check.check_number,  # check number has already been generated in previous EZ Check step
         issue_date=cast(date, payment.payment_date),
         amount=payment.amount,
         payee_id=payment.pub_individual_id,
-        payee_name=_format_employee_name_for_ez_check(employee),
+        payee_name=_format_employee_name_for_ez_check(payment),
         account_number=int(os.environ.get("DFML_PUB_ACCOUNT_NUMBER")),  # type: ignore
     )
 
 
 def _convert_payment_to_ez_check_record(payment: Payment, check_number: int) -> EzCheckRecord:
-    if payment.claim.claim_type.claim_type_id not in [
+    if payment.claim_type_id not in [
         ClaimType.FAMILY_LEAVE.claim_type_id,
         ClaimType.MEDICAL_LEAVE.claim_type_id,
     ]:
         raise UnSupportedClaimTypeException(
             "Expected claim type to be either family or medical. Found {}".format(
-                payment.claim.claim_type.claim_type_description
+                payment.claim_type.claim_type_description
             )
         )
 
-    employee = payment.claim.employee
     experian_address_pair = payment.experian_address_pair
     address = cast(Address, experian_address_pair.experian_address)
 
@@ -234,11 +255,11 @@ def _convert_payment_to_ez_check_record(payment: Payment, check_number: int) -> 
         check_date=cast(date, payment.payment_date),
         amount=payment.amount,
         memo=_format_check_memo(payment),
-        payee_name=_format_employee_name_for_ez_check(employee),
+        payee_name=_format_employee_name_for_ez_check(payment),
         address_line_1=cast(str, address.address_line_one),
         address_line_2=address.address_line_two,
         city=cast(str, address.city),
-        state=cast(str, geo_state.geo_state_description),
+        state=geo_state.geo_state_description,
         zip_code=cast(str, address.zip_code),
         # Hard-coding country to US because we store country codes in 3 characters in our database
         # and the EZcheck format requires 2 character country codes.
@@ -250,7 +271,7 @@ def _format_check_memo(payment: Payment) -> str:
     start_date = cast(date, payment.period_start_date).strftime(Constants.EZ_CHECK_MEMO_DATE_FORMAT)
     end_date = cast(date, payment.period_end_date).strftime(Constants.EZ_CHECK_MEMO_DATE_FORMAT)
 
-    claim_type = payment.claim.claim_type.claim_type_description
+    claim_type = payment.claim_type.claim_type_description if payment.claim_type else ""
 
     return Constants.EZ_CHECK_MEMO_FORMAT.format(
         claim_type, payment.claim.fineos_absence_id, start_date, end_date
@@ -259,9 +280,12 @@ def _format_check_memo(payment: Payment) -> str:
 
 # Follow same truncation rules as described for the ACH file names.
 # https://lwd.atlassian.net/wiki/spaces/API/pages/1313800323/PUB+ACH+File+Format
-def _format_employee_name_for_ez_check(employee: Employee) -> str:
+def _format_employee_name_for_ez_check(payment: Payment) -> str:
+    fineos_first_name = payment.fineos_employee_first_name or ""
+    fineos_employee_last_name = payment.fineos_employee_last_name or ""
+
     # If last name is > 85 characters, truncate to 85.
-    last_name = employee.last_name[: Constants.EZ_CHECK_MAX_NAME_LENGTH]
+    last_name = fineos_employee_last_name[: Constants.EZ_CHECK_MAX_NAME_LENGTH]
     remaining_characters = Constants.EZ_CHECK_MAX_NAME_LENGTH - len(last_name)
 
     # If last name is exactly 84 or 85 characters just use last name.
@@ -271,18 +295,18 @@ def _format_employee_name_for_ez_check(employee: Employee) -> str:
     # If last name < 85 characters use full last name and truncate the first name to use the
     # remaining space.
     remaining_characters = remaining_characters - 1  # Make room for the space character.
-    return "{} {}".format(employee.first_name[:remaining_characters], last_name)
+    return "{} {}".format(fineos_first_name[:remaining_characters], last_name)
 
 
 def _get_ez_check_header() -> EzCheckHeader:
     return EzCheckHeader(
-        name_line_1="Department of Family and Medical Leave",
+        name_line_1="MA Department of Family and Medical Leave",
         name_line_2="Commonwealth of Massachusetts",
-        address_line_1="19 Staniford Street",
+        address_line_1="P.O. Box 838",
         address_line_2="",
-        city="Boston",
+        city="Lawrence",
         state="MA",
-        zip_code="02114",  # Pass the zip code in as a string since it starts with a zero.
+        zip_code="01842",  # Pass the zip code in as a string since it starts with a zero.
         country="US",
         account_number=int(os.environ.get("DFML_PUB_ACCOUNT_NUMBER")),  # type: ignore
         routing_number=int(os.environ.get("DFML_PUB_ROUTING_NUMBER")),  # type: ignore

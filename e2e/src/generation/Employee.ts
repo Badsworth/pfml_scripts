@@ -8,13 +8,18 @@ import { promisify } from "util";
 import { pipeline, Readable } from "stream";
 import JSONStream from "JSONStream";
 import shuffle from "./shuffle";
+import { concat, collect } from "streaming-iterables";
 
 const pipelineP = promisify(pipeline);
+interface PromiseWithOptionalGeneration<T> extends Promise<T> {
+  orGenerateAndSave(gen: () => T): Promise<T>;
+}
 
 export type EmployeeOccupation = {
   fein: string;
   wages: number;
 };
+
 export type Employee = {
   first_name: string;
   last_name: string;
@@ -135,12 +140,12 @@ export type EmployeePickSpec = {
   mass_id?: boolean;
   // A specific wage specification that needs to be matched (# or level name).
   wages?: WageSpecification;
+  fein?: string;
   metadata?: Record<string, unknown>;
 };
 
 export default class EmployeePool implements Iterable<Employee> {
-  used: Set<Employee>;
-
+  used: Set<string>;
   /**
    * Generate a new pool.
    */
@@ -158,11 +163,34 @@ export default class EmployeePool implements Iterable<Employee> {
   /**
    * Load a pool from a JSON file.
    */
-  static async load(filename: string): Promise<EmployeePool> {
+  static load(
+    filename: string,
+    usedFileName?: string
+  ): PromiseWithOptionalGeneration<EmployeePool> {
     // Do not use streams here. Interestingly, the perf/memory usage of this was tested,
     // and raw read/parse is faster and more efficient than the streams equivalent. ¯\_(ツ)_/¯
-    const raw = await fs.promises.readFile(filename, "utf-8");
-    return new this(JSON.parse(raw));
+    const loadPromise = (async () => {
+      let used: string[] = [];
+      const raw = await fs.promises.readFile(filename, "utf-8");
+      if (usedFileName) {
+        const contents = await fs.promises.readFile(usedFileName, "utf-8");
+        used = JSON.parse(contents);
+      }
+      return new this(JSON.parse(raw), used);
+    })();
+    return Object.assign(loadPromise, {
+      orGenerateAndSave: async (generator: () => EmployeePool) => {
+        // When orGenerateAndSave() is called, return a new promise that adds a catch() to
+        // the load promise to regenerate and save the data _only if the initial load fails_
+        return loadPromise.catch(async (e) => {
+          if (e.code !== "ENOENT") return Promise.reject(e);
+          // Invoke the generator here, and save the pool it returns to `filename`
+          const pool = generator();
+          await pool.save(filename, usedFileName);
+          return await EmployeePool.load(filename, usedFileName);
+        });
+      },
+    });
   }
 
   /**
@@ -170,24 +198,32 @@ export default class EmployeePool implements Iterable<Employee> {
    *
    * @param pools
    */
-  static merge(...pools: EmployeePool[]): EmployeePool {
-    return new this(pools.map((p) => p.employees).flat(1));
+  static merge(...pools: Iterable<Employee>[]): EmployeePool {
+    return new this(collect(concat(...pools)));
   }
 
-  constructor(private employees: Employee[]) {
-    this.used = new Set<Employee>();
+  constructor(private employees: Employee[], used?: string[]) {
+    this.used = new Set<string>(used);
   }
 
   /**
    * Save the pool to JSON format.
    */
-  async save(filename: string): Promise<void> {
+  async save(filename: string, usedFileName?: string): Promise<void> {
     // Use streams for memory efficiency.
     await pipelineP(
       Readable.from(this.employees),
       JSONStream.stringify(),
       fs.createWriteStream(filename)
     );
+
+    if (usedFileName) {
+      await pipelineP(
+        Readable.from(this.used),
+        JSONStream.stringify(),
+        fs.createWriteStream(usedFileName)
+      );
+    }
   }
 
   [Symbol.iterator](): Iterator<Employee> {
@@ -207,6 +243,7 @@ export default class EmployeePool implements Iterable<Employee> {
       ) {
         return false;
       }
+      if (spec.fein && spec.fein !== e.occupations[0].fein) return false;
       if (metadata) {
         for (const [k, v] of Object.entries(metadata)) {
           if (!e.metadata || e.metadata[k] !== v) {
@@ -263,12 +300,12 @@ export default class EmployeePool implements Iterable<Employee> {
   pick(spec: EmployeePickSpec): Employee {
     const finder = this._createFinder(spec);
     const employee = shuffle(this.employees).find((employee) => {
-      return !this.used.has(employee) && finder(employee);
+      return !this.used.has(employee.ssn) && finder(employee);
     });
     // Track employee usage.
     if (employee) {
       // Track the employee's usage.
-      this.used.add(employee);
+      this.used.add(employee.ssn);
       return employee;
     }
     throw new Error(

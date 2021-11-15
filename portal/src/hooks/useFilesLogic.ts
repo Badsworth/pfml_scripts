@@ -1,0 +1,217 @@
+import { Issue, ValidationError } from "../errors";
+import { AppErrorsLogic } from "./useAppErrorsLogic";
+import Compressor from "compressorjs";
+import TempFile from "../models/TempFile";
+import TempFileCollection from "../models/TempFileCollection";
+import { isFeatureEnabled } from "../services/featureFlags";
+import { snakeCase } from "lodash";
+import { t } from "../locales/i18n";
+import tracker from "../services/tracker";
+import useCollectionState from "./useCollectionState";
+
+// Only image and pdf files are allowed to be uploaded
+const defaultAllowedFileTypes = [
+  "image/png",
+  "image/jpeg",
+  "application/pdf",
+] as const;
+
+// Fineos uploads are Base64-encoded. Their limit is 6mb. 4.5mb is the max size before base64 encoding.
+const fineosMaximumFileSize = 4500000; // bytes
+// PFML API Gateway has a 10mb payload size limit, so we shouldn't attempt to send files beyond this.
+// https://docs.aws.amazon.com/apigateway/latest/developerguide/limits.html#http-api-quotas
+const apiGatewayMaximumFileSize = 10000000;
+
+function bytesToMb(bytes: number): number {
+  return bytes / 1000000;
+}
+
+// Exclusion reasons
+const disallowedReasons = {
+  size: "size",
+  apiGatewaySize: "apiGatewaySize",
+  sizeAndType: "sizeAndType",
+  type: "type",
+} as const;
+
+/**
+ * Compress an image which size is greater than maximum file size and  returns a promise
+ * @param maximumFileSize - Size at which compression will be attempted
+ */
+function optimizeImageSize(file: File): Promise<File> {
+  const maximumImageSize = fineosMaximumFileSize;
+
+  return new Promise((resolve) => {
+    if (
+      file.size <= maximumImageSize ||
+      !["image/png", "image/jpeg"].includes(file.type)
+    ) {
+      return resolve(file);
+    }
+    // eslint-disable-next-line no-new
+    new Compressor(file, {
+      quality: 0.6,
+      checkOrientation: false, // Improves compression speed for larger files
+      convertSize: maximumImageSize,
+      success: (compressedBlob: File) => {
+        tracker.trackEvent("CompressorSize", {
+          originalSize: file.size,
+          compressedSize: compressedBlob.size,
+        });
+
+        resolve(compressedBlob);
+      },
+      error: (error) => {
+        tracker.noticeError(error, {
+          fileSize: file.size,
+          fileType: file.type,
+        });
+
+        tracker.trackEvent("CompressorError", {
+          errorMessage: error.message,
+          fileSize: file.size,
+          fileType: file.type,
+        });
+        resolve(file);
+      },
+    });
+  });
+}
+
+/**
+ * Attempt to reduce the size of files
+ * @param maximumFileSize - Size at which compression will be attempted
+ */
+function optimizeFiles(files: File[]) {
+  const compressPromises = files.map((file) => optimizeImageSize(file));
+
+  return Promise.all(compressPromises);
+}
+
+/**
+ * Filter a list of files into sets of allowed files and disallowed files based on file types and sizes.
+ * Track disallowed files with a ValidationError event.
+ * @example const { allowedFiles,issues }  = filterAllowedFiles(files);
+ */
+function filterAllowedFiles(
+  files: File[],
+  {
+    allowedFileTypes,
+  }: {
+    allowedFileTypes: readonly string[];
+  }
+) {
+  const allowedFiles: File[] = [];
+  const issues: Issue[] = [];
+
+  files.forEach((file) => {
+    let disallowedReason = "";
+    const useApiGatewaySizeLimit =
+      file.type === "application/pdf" && isFeatureEnabled("sendLargePdfToApi");
+
+    const exceedsSizeLimit = useApiGatewaySizeLimit
+      ? file.size >= apiGatewayMaximumFileSize
+      : file.size > fineosMaximumFileSize;
+
+    if (exceedsSizeLimit) {
+      disallowedReason = useApiGatewaySizeLimit
+        ? disallowedReasons.apiGatewaySize
+        : disallowedReasons.size;
+    }
+    if (!allowedFileTypes.includes(file.type)) {
+      if (disallowedReason === disallowedReasons.size) {
+        disallowedReason = disallowedReasons.sizeAndType;
+      } else {
+        disallowedReason = disallowedReasons.type;
+      }
+    }
+
+    const fileTrackingData = {
+      fileSize: file.size,
+      fileType: file.type,
+    };
+
+    if (disallowedReason) {
+      issues.push(getIssueForDisallowedFile(file, disallowedReason));
+      // TODO (PORTAL-375): Remove tracking once error handling supports additional event data
+      tracker.trackEvent("FileValidationError", {
+        ...fileTrackingData,
+        issueType: `invalid_${snakeCase(disallowedReason)}`,
+        issueField: "file",
+      });
+    } else {
+      allowedFiles.push(file);
+      tracker.trackEvent("File selected", fileTrackingData);
+    }
+  });
+
+  return {
+    allowedFiles,
+    issues,
+  };
+}
+
+/**
+ * Return ValidationError issues for disallowed file
+ * @param disallowedReason - reason file is not allowed (size, sizeAndType, or type)
+ */
+function getIssueForDisallowedFile(
+  disallowedFile: File,
+  disallowedReason: string
+): Issue {
+  const context =
+    disallowedReason === disallowedReasons.apiGatewaySize
+      ? disallowedReasons.size
+      : disallowedReason;
+
+  return {
+    message: t("errors.invalidFile", {
+      context,
+      sizeLimit:
+        disallowedReason === disallowedReasons.apiGatewaySize
+          ? bytesToMb(apiGatewayMaximumFileSize)
+          : bytesToMb(fineosMaximumFileSize),
+      disallowedFileNames:
+        disallowedFile instanceof File ? disallowedFile.name : "",
+    }),
+  };
+}
+
+const useFilesLogic = ({
+  allowedFileTypes = defaultAllowedFileTypes,
+  catchError,
+  clearErrors,
+}: {
+  allowedFileTypes?: readonly string[];
+  catchError: AppErrorsLogic["catchError"];
+  clearErrors: AppErrorsLogic["clearErrors"];
+}) => {
+  const {
+    collection: files,
+    addItems: addFiles,
+    removeItem: removeFile,
+  } = useCollectionState(new TempFileCollection());
+
+  /**
+   * Async function handles file optimization and filter logic
+   */
+  const processFiles = async (files: File[]) => {
+    clearErrors();
+    const compressedFiles = await optimizeFiles(files);
+
+    const { allowedFiles, issues } = filterAllowedFiles(compressedFiles, {
+      allowedFileTypes,
+    });
+
+    addFiles(allowedFiles.map((file) => new TempFile({ file })));
+
+    if (issues.length > 0) {
+      const i18nPrefix = "files";
+      catchError(new ValidationError(issues, i18nPrefix));
+    }
+  };
+
+  return { files, processFiles, removeFile };
+};
+
+export default useFilesLogic;

@@ -2,13 +2,11 @@
   "compilerOptions": {
     "baseUrl": "./",
     "paths": {
+      "lib/*": ["../lib/*"],
       "src/*": ["../src/*"],
       "storybook/*": ["../storybook/*"],
       "tests/*": ["../tests/*"]
     }
   },
-  "exclude": [
-    "node_modules",
-    "**/node_modules/*"
-  ]
+  "exclude": ["node_modules", "**/node_modules/*"]
 }

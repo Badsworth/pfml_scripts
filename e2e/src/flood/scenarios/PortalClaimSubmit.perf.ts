@@ -1,10 +1,25 @@
 import { StepFunction, TestData, Browser, step, By, ENV } from "@flood/element";
 import * as Cfg from "../config";
 import * as Util from "../helpers";
-import { fetchFormData, fetchJSON } from "../fetch";
+import config from "../../config";
+import {
+  generateCredentials,
+  getLeaveAdminCredentials,
+} from "../../util/credentials";
+import TestMailVerificationFetcher from "../../submission/TestMailVerificationFetcher";
+import { fetchJSON, fetchFormData } from "../fetch";
+import pRetry from "p-retry";
+import type {
+  EmployerClaimRequestBody,
+  GETEmployersClaimsByFineosAbsenceIdReviewResponse,
+} from "../../_api";
+import { splitClaimToParts } from "../../util/common";
+import assert from "assert";
+import { DashboardClaimStatus } from "../../../cypress/actions/portal";
 
 let authToken: string;
-let newAccount: { username: string; password: string };
+let username: string;
+let password: string;
 let applicationId: string;
 let fineosId: string;
 
@@ -13,38 +28,24 @@ export const scenario: Cfg.LSTScenario = "PortalClaimSubmit";
 
 export const steps: Cfg.StoredStep[] = [
   {
-    time: 15000,
     name: "Register a new account",
     test: async (browser: Browser): Promise<void> => {
       await setFeatureFlags(browser);
-      const emailVerifier = await Util.getMailVerifier(browser);
-      newAccount = emailVerifier.getCredentials();
-      await register(
-        browser,
-        emailVerifier,
-        newAccount.username,
-        newAccount.password
-      );
+      ({ username, password } = generateCredentials());
+      await register(browser, username, password);
     },
   },
   {
-    time: 15000,
     name: "Login with new account",
     test: async (browser: Browser): Promise<void> => {
-      authToken = await login(
-        browser,
-        newAccount.username,
-        newAccount.password
-      );
+      authToken = await login(browser, username, password);
     },
   },
   {
-    time: 15000,
     name: "Create new application",
     test: createApplication,
   },
   {
-    time: 15000,
     name: "Update application",
     test: async (browser: Browser, data: Cfg.LSTSimClaim): Promise<void> => {
       // Attempt at simulating portal's consequent small patch requests
@@ -61,63 +62,54 @@ export const steps: Cfg.StoredStep[] = [
     },
   },
   {
-    time: 15000,
     name: "Submit application",
     test: submitApplication,
   },
   {
-    time: 15000,
+    name: "Submit payment preference",
+    test: submitPaymentPreference,
+  },
+  {
     name: "Upload documents",
     test: uploadDocuments,
   },
   {
-    time: 15000,
     name: "Complete application",
     test: completeApplication,
   },
   {
-    time: 35000,
-    name: "Point of Contact fills employer response",
-    options: { waitTimeout: 300000 },
+    name: "Leave Admin Login",
     test: async (browser: Browser, data: Cfg.LSTSimClaim): Promise<void> => {
-      if (data.employerResponse?.employer_decision !== "Approve") return;
-      const employerResponseStep = employerResponse(fineosId);
-      console.info(employerResponseStep.name);
-      await employerResponseStep.test(browser, data);
+      await (
+        await Util.waitForElement(browser, By.visibleText("Log out"))
+      ).click();
+      const fein = data.claim.employer_fein;
+      if (!fein) throw new Error("No FEIN was found on this claim");
+      const { username, password } = getLeaveAdminCredentials(fein);
+      // Log in on Portal as Leave Admin
+      authToken = await login(browser, username, password);
     },
   },
   {
-    time: 0,
-    name: "Assign tasks to specific Agent",
-    test: async (browser: Browser, data: Cfg.LSTSimClaim): Promise<void> => {
-      // we don't want to run this step on a real Flood
-      if (!ENV.FLOOD_LOAD_TEST) {
-        const assignTasksStep = Util.assignTasks(fineosId);
-        console.info(assignTasksStep.name);
-        await assignTasksStep.test(browser, data);
-      }
-    },
+    name: "Leave Admin submits employer response",
+    options: { waitTimeout: 300000 },
+    test: submitEmployerResponse,
   },
 ];
 
 export default async (): Promise<void> => {
-  TestData.fromJSON<Cfg.LSTSimClaim>(
-    `../${await Cfg.dataBaseUrl}/claims.json`
-  ).filter((line) => line.scenario === scenario);
+  TestData.fromJSON<Cfg.LSTSimClaim>(`../data/claims.json`).filter(
+    (line) => line.scenario === scenario
+  );
 
   steps.forEach((action) => {
     step(action.name, action.test as StepFunction<unknown>);
   });
 };
 
-async function register(
-  browser: Browser,
-  verifier: Util.TestMailVerificationFetcher,
-  username: string,
-  password: string
-) {
+async function register(browser: Browser, username: string, password: string) {
   // go to registration page
-  await browser.visit(`${await Cfg.PortalBaseUrl}/create-account/`);
+  await browser.visit(`${config("PORTAL_BASEURL")}/create-account/`);
   // fill out the form
   await (await Util.labelled(browser, "Email address")).type(username);
   await (await Util.labelled(browser, "Password")).type(password);
@@ -126,9 +118,11 @@ async function register(
     await Util.waitForElement(browser, By.css("button[type='submit']"))
   ).click();
 
-  const code = await verifier.getVerificationCodeForUser(username);
-  if (code.length === 0)
-    throw new Error("Couldn't getVerificationCodeForUser email!");
+  const fetcher = new TestMailVerificationFetcher(
+    config("TESTMAIL_APIKEY"),
+    config("TESTMAIL_NAMESPACE")
+  );
+  const code = await fetcher.getVerificationCodeForUser(username);
   // type code
   await (await Util.labelled(browser, "6-digit code")).type(code);
   // submit code
@@ -147,7 +141,7 @@ async function login(
   username: string,
   password: string
 ): Promise<string> {
-  await browser.visit(`${await Cfg.PortalBaseUrl}/login`);
+  await browser.visit(`${config("PORTAL_BASEURL")}/login`);
   await (await Util.labelled(browser, "Email address")).type(username);
   await (await Util.labelled(browser, "Password")).type(password);
   await (
@@ -172,114 +166,79 @@ async function login(
   return cookie.value;
 }
 
-function employerResponse(fineosId: string): Cfg.StoredStep {
-  return {
-    time: 0,
-    name: `Point of Contact responds to "${fineosId}"`,
-    test: async (browser: Browser, data: Cfg.LSTSimClaim): Promise<void> => {
-      await setFeatureFlags(browser);
-      let error;
-      for (let i = 0; i < 6; i++) {
-        await (
-          await Util.waitForElement(browser, By.visibleText("Log out"))
-        ).click();
-        // Log in on Portal as Leave Admin
-        authToken = await login(
-          browser,
-          `gqzap.lst-employer.${data.claim.employer_fein?.replace(
-            "-",
-            ""
-          )}@inbox.testmail.app`,
-          await Cfg.config("E2E_EMPLOYER_PORTAL_PASSWORD")
-        );
-        // Review submited application via direct link on Portal
-        await browser.visit(
-          `${await Cfg.PortalBaseUrl}/employers/applications/new-application/?absence_id=${fineosId}`
-        );
-        error = await Util.maybeFindElement(
-          browser,
-          By.visibleText("An error occurred")
-        );
-        if (error) {
-          // Waits 20 seconds for FINEOS to catch up.
-          // Will wait 120 seconds total over entire For loop.
-          await browser.wait(20000);
-        } else {
-          break;
-        }
-      }
+async function submitEmployerResponse(
+  browser: Browser,
+  data: Cfg.LSTSimClaim
+): Promise<void> {
+  if (!data.employerResponse) return;
+  await (await Util.waitForElement(browser, By.linkText("Dashboard"))).click();
+  await filterClaims(browser, "Review by");
+  await randomClaimSort(browser); // filter for "Review by" status
+  // Randomly Select Search Methods
+  switch (randomNumber(2)) {
+    case 0:
+      await searchAbsenceCaseNumber(browser, fineosId);
+      break;
+    case 1:
+      await searchName(browser, data);
+      break;
+  }
 
-      // Are you the right person? true | false
-      await (
-        await Util.waitForElement(
-          browser,
-          By.css("[name='hasReviewerVerified'][value='true'] + label")
-        )
-      ).click();
-      // Click "Agree and submit" button
-      await (
-        await Util.waitForElement(browser, By.visibleText("Agree and submit"))
-      ).click();
-      await browser.waitForNavigation();
-      // Suspect of fraud? Yes | No
-      const isSus = Math.random() * 100 <= 5;
-      await (
-        await Util.waitForElement(
-          browser,
-          By.css(`[name='isFraud'][value='${isSus ? "Yes" : "No"}'] + label`)
-        )
-      ).click();
-      // Given 30 days notice? Yes | No
-      const employerNotified = data.claim.leave_details?.employer_notified;
-      await (
-        await Util.waitForElement(
-          browser,
-          By.css(
-            `[name='employeeNotice'][value='${
-              employerNotified ? "Yes" : "No"
-            }'] + label`
-          )
-        )
-      ).click();
-      // Leave request response? Approve | Deny
-      const isApproved = !isSus && employerNotified;
-      await (
-        await Util.waitForElement(
-          browser,
-          By.css(
-            `[name='employerDecision'][value="${
-              isApproved ? "Approve" : "Deny"
-            }"] + label`
-          )
-        )
-      ).click();
-      // Any concerns? true | false
-      await (
-        await Util.waitForElement(
-          browser,
-          By.css("[name='shouldShowCommentBox'][value='false'] + label")
-        )
-      ).click();
-      // Provides required comment as needed.
-      if (!isApproved) {
-        await (
-          await Util.waitForElement(browser, By.css('textarea[name="comment"]'))
-        ).type("PFML - Denied for LST purposes");
-      }
-      // Click "Submit"
-      await (
-        await Util.waitForElement(browser, By.css("button[type='submit']"))
-      ).click();
-      await browser.waitForNavigation();
-      // Check if review was successful
-      await Util.waitForElement(
+  console.log("Sort and Search Completed w/o errors!");
+
+  // submit response directly to API
+  const employerResponse = data.employerResponse;
+  const review = await pRetry(
+    async () => {
+      const fetchedResponse = await fetchJSON(
         browser,
-        By.visibleText("Thanks for reviewing the application")
+        authToken,
+        `${config("API_BASEURL")}/employers/claims/${fineosId}/review`
       );
-      await Util.waitForElement(browser, By.visibleText(fineosId));
-      // @todo?: Possibly check back on fineos claim if employer response showed up
+      if (fetchedResponse.status_code !== 200) {
+        if (
+          fetchedResponse.data &&
+          fetchedResponse.data.message ===
+            "Claim does not exist for given absence ID"
+        ) {
+          throw new Error(
+            `Unable to find claim as leave admin for ${fineosId}.`
+          );
+        }
+        throw new pRetry.AbortError(
+          `Hit an unknown error fetching leave admin response`
+        );
+      }
+      return fetchedResponse as GETEmployersClaimsByFineosAbsenceIdReviewResponse;
     },
-  };
+    { retries: 20, maxRetryTime: 30000 }
+  );
+  const body = {
+    ...employerResponse,
+    employer_benefits: [
+      ...(review.data?.employer_benefits ?? []),
+      ...(employerResponse.employer_benefits ?? []),
+    ],
+    previous_leaves: [
+      ...(review.data?.previous_leaves ?? []),
+      ...(employerResponse.previous_leaves ?? []),
+    ],
+  } as EmployerClaimRequestBody;
+  const res = await fetchJSON(
+    browser,
+    authToken,
+    `${config("API_BASEURL")}/employers/claims/${fineosId}/review`,
+    {
+      method: "PATCH",
+      body: JSON.stringify(body),
+    }
+  );
+  if (res.status_code !== 200) {
+    throw new Error(
+      `Unable to update application: ${JSON.stringify(res, null, 2)}`
+    );
+  }
+  console.log("Submitted employer response");
 }
 
 const isNode = !!(typeof process !== "undefined" && process.version);
@@ -304,10 +263,11 @@ async function setFeatureFlags(browser: Browser): Promise<void> {
     name: "_ff",
     value: JSON.stringify({
       pfmlTerriyay: true,
-      claimantShowAuth: true,
-      claimantAuthThroughApi: true,
+      employerShowDashboardSort: true,
+      employerShowDashboardSearch: true,
+      employerShowReviewByStatus: true,
     }),
-    url: await Cfg.PortalBaseUrl,
+    url: config("PORTAL_BASEURL"),
   });
 }
 
@@ -315,96 +275,14 @@ function getClaimParts(
   data: Cfg.LSTSimClaim
 ): Partial<Cfg.LSTSimClaim["claim"]>[] {
   const { claim } = data;
-  const { leave_details } = claim;
-  return [
-    {
-      first_name: claim.first_name,
-      middle_name: null,
-      last_name: claim.last_name,
-    },
-    {
-      has_mailing_address: claim.has_mailing_address,
-      residential_address: claim.residential_address,
-      mailing_address: claim.mailing_address,
-    },
-    {
-      date_of_birth: claim.date_of_birth,
-    },
-    {
-      has_state_id: claim.has_state_id,
-      mass_id: claim.mass_id,
-    },
-    {
-      tax_identifier: claim.tax_identifier,
-    },
-    {
-      employment_status: claim.employment_status,
-      employer_fein: claim.employer_fein,
-    },
-    {
-      leave_details: {
-        employer_notified: leave_details?.employer_notified,
-        employer_notification_date: leave_details?.employer_notification_date,
-      },
-    },
-    {
-      work_pattern: {
-        work_pattern_type: claim.work_pattern?.work_pattern_type,
-      },
-    },
-    {
-      hours_worked_per_week: claim.hours_worked_per_week,
-      work_pattern: {
-        work_pattern_days: claim.work_pattern?.work_pattern_days,
-      },
-    },
-    {
-      leave_details: {
-        reason: leave_details?.reason,
-        reason_qualifier: leave_details?.reason_qualifier,
-      },
-    },
-    {
-      leave_details: {
-        child_birth_date: leave_details?.child_birth_date,
-        child_placement_date: leave_details?.child_placement_date,
-        pregnant_or_recent_birth: leave_details?.pregnant_or_recent_birth,
-      },
-    },
-    {
-      has_continuous_leave_periods: claim.has_continuous_leave_periods,
-      leave_details: {
-        continuous_leave_periods: leave_details?.continuous_leave_periods,
-      },
-    },
-    {
-      has_reduced_schedule_leave_periods:
-        claim.has_reduced_schedule_leave_periods,
-    },
-    {
-      has_intermittent_leave_periods: claim.has_intermittent_leave_periods,
-    },
-    {
-      phone: {
-        int_code: "1",
-        phone_number: "844-781-3163",
-        phone_type: "Cell",
-      },
-    },
-    // { temp: { has_employer_benefits: false } },
-    // { temp: { has_other_incomes: false } },
-    // { temp: { has_previous_leaves: false } },
-    // {
-    //   payment_preferences: claim.payment_preferences,
-    // },
-  ];
+  return splitClaimToParts(claim);
 }
 
 async function createApplication(browser: Browser): Promise<void> {
   const res = await fetchJSON(
     browser,
     authToken,
-    `${await Cfg.APIBaseUrl}/applications`,
+    `${config("API_BASEURL")}/applications`,
     {
       method: "POST",
     }
@@ -426,7 +304,7 @@ async function updateApplication(
   const res = await fetchJSON(
     browser,
     authToken,
-    `${await Cfg.APIBaseUrl}/applications/${applicationId}`,
+    `${config("API_BASEURL")}/applications/${applicationId}`,
     {
       method: "PATCH",
       body: JSON.stringify(claimPart),
@@ -444,7 +322,7 @@ async function submitApplication(browser: Browser): Promise<void> {
   const res = await fetchJSON(
     browser,
     authToken,
-    `${await Cfg.APIBaseUrl}/applications/${applicationId}/submit_application`,
+    `${config("API_BASEURL")}/applications/${applicationId}/submit_application`,
     {
       method: "POST",
     }
@@ -457,12 +335,39 @@ async function submitApplication(browser: Browser): Promise<void> {
   console.info("Submitted application", res.status_code);
 }
 
+async function submitPaymentPreference(browser: Browser): Promise<void> {
+  const res = await fetchJSON(
+    browser,
+    authToken,
+    `${config(
+      "API_BASEURL"
+    )}/applications/${applicationId}/submit_payment_preference`,
+    {
+      method: "POST",
+      body: JSON.stringify({
+        payment_preference: {
+          payment_method: "Elec Funds Transfer",
+          routing_number: "011401533",
+          account_number: "5555555555",
+          bank_account_type: "Checking",
+        },
+      }),
+    }
+  );
+  if (res.status_code !== 201) {
+    throw new Error(
+      `Unable to submit application: ${JSON.stringify(res, null, 2)}`
+    );
+  }
+  console.info("Payment preferences updated", res.status_code);
+}
+
 async function uploadDocuments(
   browser: Browser,
   data: Cfg.LSTSimClaim
 ): Promise<void> {
   for (const document of data.documents) {
-    const data = await readFile(Cfg.documentUrl);
+    const data = await readFile("forms/hcp-real.pdf");
     const name = `${document.document_type}.pdf`;
     const res = await fetchFormData(
       browser,
@@ -473,7 +378,7 @@ async function uploadDocuments(
         file: { data, name, type: "application/pdf" },
         name,
       },
-      `${await Cfg.APIBaseUrl}/applications/${applicationId}/documents`,
+      `${config("API_BASEURL")}/applications/${applicationId}/documents`,
       {
         method: "POST",
       }
@@ -492,7 +397,9 @@ async function completeApplication(browser: Browser): Promise<void> {
   const res = await fetchJSON(
     browser,
     authToken,
-    `${await Cfg.APIBaseUrl}/applications/${applicationId}/complete_application`,
+    `${config(
+      "API_BASEURL"
+    )}/applications/${applicationId}/complete_application`,
     {
       method: "POST",
     }
@@ -507,4 +414,162 @@ async function completeApplication(browser: Browser): Promise<void> {
     application_id: res.data.application_id,
     fineos_absence_id: res.data.fineos_absence_id,
   });
+}
+
+async function searchAbsenceCaseNumber(
+  browser: Browser,
+  claimID: string
+): Promise<void> {
+  await (
+    await Util.labelled(browser, "Search for employee name or application ID")
+  ).type(claimID);
+  await (
+    await Util.waitForElement(browser, By.css('button[type="submit"]'))
+  ).click();
+  await Util.waitForElement(browser, By.linkText(claimID)).then(async (el) => {
+    assert.strictEqual(await el.text(), claimID);
+  });
+  await browser
+    .findElements(By.css("table.usa-table > tbody > tr"))
+    .then(async (el) => {
+      assert.strictEqual(el.length, 1);
+    });
+}
+
+async function searchName(
+  browser: Browser,
+  data: Cfg.LSTSimClaim
+): Promise<void> {
+  const { claim } = data;
+  const { first_name, last_name } = claim;
+  const full_name = `${first_name} ${last_name}`;
+
+  switch (randomNumber(3)) {
+    // First Name Only
+    case 0:
+      await (
+        await Util.labelled(
+          browser,
+          "Search for employee name or application ID"
+        )
+      ).type(first_name as string);
+      await (
+        await Util.waitForElement(browser, By.css('button[type="submit"]'))
+      ).click();
+      await Util.waitForElement(
+        browser,
+        By.partialLinkText(first_name as string)
+      );
+      await browser
+        .findElements(By.css("table.usa-table > tbody > tr"))
+        .then(async (el) => {
+          assert.ok(
+            el.length >= 1,
+            "Expect there to be at least 1 or more rows"
+          );
+        });
+      break;
+    // First and Last Name
+    case 1:
+      await (
+        await Util.labelled(
+          browser,
+          "Search for employee name or application ID"
+        )
+      ).type(full_name);
+      await (
+        await Util.waitForElement(browser, By.css('button[type="submit"]'))
+      ).click();
+      await Util.waitForElement(browser, By.linkText(full_name));
+      await browser
+        .findElements(By.css("table.usa-table > tbody > tr"))
+        .then(async (el) => {
+          assert.ok(
+            el.length >= 1,
+            "Expect there to be at least 1 or more rows"
+          );
+        });
+      break;
+    // Last name only
+    case 2:
+      await (
+        await Util.labelled(
+          browser,
+          "Search for employee name or application ID"
+        )
+      ).type(last_name as string);
+      await (
+        await Util.waitForElement(browser, By.css('button[type="submit"]'))
+      ).click();
+      await Util.waitForElement(
+        browser,
+        By.partialLinkText(last_name as string)
+      );
+      await browser
+        .findElements(By.css("table.usa-table > tbody > tr"))
+        .then(async (el) => {
+          assert.ok(
+            el.length >= 1,
+            "Expect there to be at least 1 or more rows"
+          );
+        });
+      break;
+  }
+}
+
+async function randomClaimSort(browser: Browser): Promise<void> {
+  const sorts = [
+    "Oldest applications",
+    "Last name – A to Z",
+    "Last name – Z to A",
+    "Newest applications",
+    "Status",
+  ] as const;
+  const randomIndex = randomNumber(sorts.length);
+  await Util.waitForElement(browser, Util.byLabelled("Sort"));
+  await (await Util.labelled(browser, "Sort")).click();
+  await browser.selectByText(
+    By.nameAttr("orderAndDirection"),
+    sorts[randomIndex]
+  );
+}
+
+function randomNumber(n: number): number {
+  return Math.floor(Math.random() * n);
+}
+
+/**
+ * Applies a single filter by status. Checks the results, clears filters.
+ * @param status
+ */
+async function filterClaims(browser: Browser, status: DashboardClaimStatus) {
+  // find filters button
+  await browser
+    .findElement(By.css('button[aria-controls="filters"]'))
+    .then((button) => button.click());
+  // Select the right filter
+  await Util.waitForElement(browser, Util.byContains("label", status)).then(
+    (el) => el.click()
+  );
+  // Apply filters
+  await browser
+    .findElement(By.visibleText("Apply filters"))
+    .then((el) => el.click());
+  // Check results
+  await browser
+    .findElements(By.css("table.usa-table > tbody > tr"))
+    .then(async (rows) => {
+      for (const row of rows) {
+        const text = await row.text();
+        console.log(text);
+        assert.ok(
+          text.includes(status),
+          `Expected all rows to have status: ${status}`
+        );
+      }
+    });
+  // Disable filter
+  await browser
+    .findElement(Util.byButtonText(status))
+    .then((button) => button.click());
 }

@@ -2,23 +2,22 @@ import uuid
 from datetime import date
 from typing import Any, Dict
 
+import botocore.exceptions
 import faker
 import pytest
 from dateutil.relativedelta import relativedelta
 
 import tests.api
+from massgov.pfml.cognito.exceptions import CognitoUserExistsValidationError
 from massgov.pfml.db.models.employees import Role, User, UserLeaveAdministrator
 from massgov.pfml.db.models.factories import (
     EmployerFactory,
     EmployerQuarterlyContributionFactory,
     UserFactory,
 )
-from massgov.pfml.util.aws.cognito import CognitoUserExistsValidationError
+from massgov.pfml.util.strings import format_fein
 
 fake = faker.Faker()
-
-# every test in here requires real resources
-pytestmark = pytest.mark.integration
 
 
 @pytest.fixture
@@ -43,7 +42,7 @@ def valid_employer_creation_request_body(employer_for_new_user) -> Dict[str, Any
         "email_address": fake.email(domain="example.com"),
         "password": fake.password(length=12),
         "role": {"role_description": "Employer"},
-        "user_leave_administrator": {"employer_fein": "-".join([ein[:2], ein[2:9]]),},
+        "user_leave_administrator": {"employer_fein": format_fein(ein)},
     }
 
 
@@ -64,7 +63,7 @@ def test_users_post_claimant(
 
     # User added to DB
     user = test_db_session.query(User).filter(User.email_address == email_address).one_or_none()
-    assert user.active_directory_id is not None
+    assert user.sub_id is not None
 
     # User added to user pool
     cognito_users = mock_cognito.list_users(UserPoolId=mock_cognito_user_pool["id"],)
@@ -92,14 +91,11 @@ def test_users_post_employer(
     assert response_user.get("email_address") == email_address
     assert len(response_user.get("user_leave_administrators")) == 1
     # EIN is masked in response
-    assert (
-        response_user.get("user_leave_administrators")[0].get("employer_fein")
-        == f"**-***{employer_fein[6:]}"
-    )
+    assert response_user.get("user_leave_administrators")[0].get("employer_fein") == employer_fein
 
     # User added to DB
     user = test_db_session.query(User).filter(User.email_address == email_address).one_or_none()
-    assert user.active_directory_id is not None
+    assert user.sub_id is not None
 
     # Employer records added to DB
     assert len(user.roles) == 1
@@ -216,12 +212,10 @@ def test_users_post_cognito_user_exists_error(
     test_db_session,
     valid_claimant_creation_request_body,
 ):
-    existing_user = UserFactory.create(active_directory_id=str(uuid.uuid4()))
+    existing_user = UserFactory.create(sub_id=str(uuid.uuid4()))
 
     def sign_up(**kwargs):
-        raise CognitoUserExistsValidationError(
-            "Username already exists", existing_user.active_directory_id
-        )
+        raise CognitoUserExistsValidationError("Username already exists", existing_user.sub_id)
 
     monkeypatch.setattr(mock_cognito, "sign_up", sign_up)
 
@@ -283,8 +277,9 @@ def test_users_get(client, employer_user, employer_auth_token, test_db_session):
     assert response_body.get("data")["user_leave_administrators"] == [
         {
             "employer_dba": employer.employer_dba,
-            "employer_fein": f"**-***{employer.employer_fein[5:]}",
+            "employer_fein": format_fein(employer.employer_fein),
             "employer_id": str(employer.employer_id),
+            "has_fineos_registration": True,
             "verified": False,
             "has_verification_data": False,
         }
@@ -303,7 +298,7 @@ def test_users_unauthorized_get(client, user, auth_token):
 
 def test_users_get_404(client, auth_token):
     response = client.get(
-        "/v1/users/{}".format("00000000-0000-0000-0000-000000000000"),
+        "/v1/users/{}".format("0dcb64c8-d259-4169-9b7a-486e5b474bc0"),
         headers={"Authorization": f"Bearer {auth_token}"},
     )
     tests.api.validate_error_response(response, 404)
@@ -341,12 +336,53 @@ def test_users_get_current(client, employer_user, employer_auth_token, test_db_s
     assert response_body.get("data")["user_leave_administrators"] == [
         {
             "employer_dba": employer.employer_dba,
-            "employer_fein": f"**-***{employer.employer_fein[5:]}",
+            "employer_fein": format_fein(employer.employer_fein),
             "employer_id": str(employer.employer_id),
+            "has_fineos_registration": True,
             "verified": False,
             "has_verification_data": False,
         }
     ]
+
+
+def test_users_get_current_with_query_count(
+    client, employer_user, employer_auth_token, test_db_session, sqlalchemy_query_counter
+):
+    """
+    assert that the number of database queries in get_current_user and user_response
+    is independent of the number of leave admin objects and quarterly contributions objects
+    a user has
+    """
+    for _ in range(100):
+        employer = EmployerFactory.create()
+        for _ in range(10):
+            EmployerQuarterlyContributionFactory.create(employer_id=employer.employer_id)
+        link = UserLeaveAdministrator(
+            user_id=employer_user.user_id,
+            employer_id=employer.employer_id,
+            fineos_web_id="fake-fineos-web-id",
+        )
+        test_db_session.add(link)
+    test_db_session.commit()
+    with sqlalchemy_query_counter(test_db_session, expected_query_count=7):
+        response = client.get(
+            "/v1/users/current", headers={"Authorization": f"Bearer {employer_auth_token}"}
+        )
+    assert response.status_code == 200
+
+
+def test_users_get_aws_503(client, mock_cognito, monkeypatch, valid_claimant_creation_request_body):
+
+    # valid user input recieves an error because the connection timed out
+    body = valid_claimant_creation_request_body
+
+    def sign_up(**kwargs):
+        raise botocore.exceptions.HTTPClientError(error="ServiceUnavailable")
+
+    monkeypatch.setattr(mock_cognito, "sign_up", sign_up)
+    response = client.post("/v1/users", json=body)
+
+    assert response.status_code == 503
 
 
 def test_users_get_current_fineos_forbidden(client, fineos_user_token):
@@ -369,8 +405,74 @@ def test_users_patch(client, user, auth_token, test_db_session):
     assert response.status_code == 200
     assert response_body.get("data")["consented_to_data_sharing"] is True
 
-    test_db_session.refresh(user)
+    # test_db_session.refresh(user)
     assert user.consented_to_data_sharing is True
+
+
+def test_users_convert_employer(client, user, employer_for_new_user, auth_token, test_db_session):
+    ein = employer_for_new_user.employer_fein
+    body = {"employer_fein": format_fein(ein)}
+    assert len(user.roles) == 0
+    response = client.post(
+        "v1/users/{}/convert_employer".format(user.user_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json=body,
+    )
+    response_body = response.get_json()
+    assert response.status_code == 201
+    assert response_body.get("data")["user_leave_administrators"] == [
+        {
+            "employer_dba": employer_for_new_user.employer_dba,
+            "employer_fein": format_fein(employer_for_new_user.employer_fein),
+            "employer_id": str(employer_for_new_user.employer_id),
+            "has_fineos_registration": False,
+            "has_verification_data": False,
+            "verified": False,
+        }
+    ]
+    assert response_body.get("data")["roles"] == [
+        {"role_description": "Employer", "role_id": Role.EMPLOYER.role_id,}
+    ]
+
+    assert len(user.roles) == 1
+    assert user.roles[0].role_id == Role.EMPLOYER.role_id
+    assert len(user.user_leave_administrators) == 1
+    assert user.user_leave_administrators[0].employer_id == employer_for_new_user.employer_id
+
+
+def test_users_convert_employer_bad_fein(client, user, auth_token):
+    body = {"employer_fein": "99-9999999"}
+    response = client.post(
+        "v1/users/{}/convert_employer".format(user.user_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json=body,
+    )
+    tests.api.validate_error_response(response, 400)
+    errors = response.get_json().get("errors")
+
+    assert {
+        "field": "employer_fein",
+        "message": "Invalid FEIN",
+        "type": "require_employer",
+    } in errors
+
+
+def test_users_unauthorized_convert_employer(
+    client, employer_for_new_user, auth_token, test_db_session
+):
+    user_2 = UserFactory.create()
+    assert len(user_2.user_leave_administrators) == 0
+    ein = employer_for_new_user.employer_fein
+    body = {"employer_fein": format_fein(ein)}
+    response = client.post(
+        "v1/users/{}/convert_employer".format(user_2.user_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json=body,
+    )
+
+    tests.api.validate_error_response(response, 403)
+
+    assert len(user_2.user_leave_administrators) == 0
 
 
 def test_users_unauthorized_patch(client, user, auth_token, test_db_session):
@@ -386,7 +488,6 @@ def test_users_unauthorized_patch(client, user, auth_token, test_db_session):
 
     tests.api.validate_error_response(response, 403)
 
-    test_db_session.refresh(user_2)
     assert user_2.consented_to_data_sharing is False
 
 
@@ -460,8 +561,9 @@ def test_has_verification_data_flag(client, employer_user, employer_auth_token, 
     assert response_body.get("data")["user_leave_administrators"] == [
         {
             "employer_dba": employer.employer_dba,
-            "employer_fein": f"**-***{employer.employer_fein[5:]}",
+            "employer_fein": format_fein(employer.employer_fein),
             "employer_id": str(employer.employer_id),
+            "has_fineos_registration": True,
             "verified": False,
             "has_verification_data": True,
         }
@@ -490,8 +592,9 @@ def test_has_verification_data_flag_old_data(
     assert response_body.get("data")["user_leave_administrators"] == [
         {
             "employer_dba": employer.employer_dba,
-            "employer_fein": f"**-***{employer.employer_fein[5:]}",
+            "employer_fein": format_fein(employer.employer_fein),
             "employer_id": str(employer.employer_id),
+            "has_fineos_registration": True,
             "verified": False,
             "has_verification_data": False,
         }

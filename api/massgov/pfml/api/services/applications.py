@@ -1,5 +1,5 @@
 from re import Pattern
-from typing import Any, Dict, List, Optional, Type, Union
+from typing import Any, Dict, List, Literal, Optional, Type, Union
 
 import phonenumbers
 from phonenumbers.phonenumberutil import region_code_for_number
@@ -8,6 +8,7 @@ from werkzeug.exceptions import BadRequest, Forbidden
 
 import massgov.pfml.api.models.applications.common as apps_common_io
 import massgov.pfml.api.models.claims.common as claims_common_io
+import massgov.pfml.api.models.common as common_io
 import massgov.pfml.db as db
 import massgov.pfml.db.lookups as db_lookups
 import massgov.pfml.util.datetime as datetime_util
@@ -19,13 +20,18 @@ from massgov.pfml.api.models.applications.requests import ApplicationRequestBody
 from massgov.pfml.api.models.applications.responses import DocumentResponse
 from massgov.pfml.api.models.common import LookupEnum
 from massgov.pfml.api.services.fineos_actions import get_documents
-from massgov.pfml.api.util.response import IssueRule, IssueType
-from massgov.pfml.api.validation.exceptions import ValidationErrorDetail, ValidationException
+from massgov.pfml.api.validation.exceptions import (
+    IssueRule,
+    IssueType,
+    ValidationErrorDetail,
+    ValidationException,
+)
 from massgov.pfml.db.models.applications import (
     AmountFrequency,
     Application,
     ApplicationPaymentPreference,
     CaringLeaveMetadata,
+    ConcurrentLeave,
     ContinuousLeavePeriod,
     DayOfWeek,
     Document,
@@ -37,7 +43,9 @@ from massgov.pfml.db.models.applications import (
     Phone,
     PhoneType,
     PreviousLeave,
+    PreviousLeaveOtherReason,
     PreviousLeaveQualifyingReason,
+    PreviousLeaveSameReason,
     ReducedScheduleLeavePeriod,
     TaxIdentifier,
     WorkPattern,
@@ -50,7 +58,7 @@ from massgov.pfml.util.pydantic.types import Regexes
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
 LeaveScheduleDB = Union[ContinuousLeavePeriod, IntermittentLeavePeriod, ReducedScheduleLeavePeriod]
-OtherBenefitsDB = Union[EmployerBenefit, OtherIncome, PreviousLeave]
+OtherBenefitsDB = Union[EmployerBenefit, OtherIncome, PreviousLeave, ConcurrentLeave]
 
 
 def process_partially_masked_field(
@@ -182,22 +190,22 @@ def process_masked_phone_number(
 def remove_masked_fields_from_request(
     body: Dict[str, Any], existing_application: Application
 ) -> Dict[str, Any]:
-    """ Handle masked inputs, which varies depending on a few factors.
+    """Handle masked inputs, which varies depending on a few factors.
 
-        This is done by checking against regexes/static strings to see if the value is masked.
+    This is done by checking against regexes/static strings to see if the value is masked.
 
-        - Input is partially masked
-          - If the visible portion matches what's in the DB - drop the field from the input, it's considered a non-change
-          - If the visible portion does not match, throw a BadRequest error
-          - If the DB does not contain any value yet, throw a BadRequest error
+    - Input is partially masked
+      - If the visible portion matches what's in the DB - drop the field from the input, it's considered a non-change
+      - If the visible portion does not match, throw a BadRequest error
+      - If the DB does not contain any value yet, throw a BadRequest error
 
-        - Input is fully masked
-          - If correctly masked, drop the field from the input, it's considered a non-change
-          - If not correctly masked, it'll pass through this logic, and should fail on later validation
+    - Input is fully masked
+      - If correctly masked, drop the field from the input, it's considered a non-change
+      - If not correctly masked, it'll pass through this logic, and should fail on later validation
 
-        Note address fields (line_1, line_2, zip) behave differently because their update logic assumes
-        a value not being set should be deleted unlike every other example. So, we instead just do the
-        validation bit for those and have seperate logic in the add_or_update_address method for those.
+    Note address fields (line_1, line_2, zip) behave differently because their update logic assumes
+    a value not being set should be deleted unlike every other example. So, we instead just do the
+    validation bit for those and have seperate logic in the add_or_update_address method for those.
     """
     errors = []
     # tax identifier - partially masked field
@@ -323,7 +331,7 @@ def update_from_request(
     for key in body.__fields_set__:
         value = getattr(body, key)
 
-        if key in ("leave_details", "employee_ssn", "tax_identifier"):
+        if key in ("leave_details", "tax_identifier"):
             continue
 
         if key == "mailing_address":
@@ -350,8 +358,20 @@ def update_from_request(
             set_other_incomes(db_session, body.other_incomes, application)
             continue
 
-        if key == "previous_leaves":
-            set_previous_leaves(db_session, body.previous_leaves, application)
+        if key == "concurrent_leave":
+            set_concurrent_leave(db_session, body.concurrent_leave, application)
+            continue
+
+        if key == "previous_leaves_other_reason":
+            set_previous_leaves(
+                db_session, body.previous_leaves_other_reason, application, "other_reason",
+            )
+            continue
+
+        if key == "previous_leaves_same_reason":
+            set_previous_leaves(
+                db_session, body.previous_leaves_same_reason, application, "same_reason",
+            )
             continue
 
         if key == "application_nickname":
@@ -360,7 +380,6 @@ def update_from_request(
         if key == "phone":
             add_or_update_phone(db_session, body.phone, application)
             continue
-
         if isinstance(value, LookupEnum):
             lookup_model = db_lookups.by_value(db_session, value.get_lookup_model(), value)
 
@@ -382,7 +401,6 @@ def update_from_request(
     for leave_schedule in leave_schedules:
         db_session.add(leave_schedule)
 
-    db_session.flush()
     db_session.commit()
     db_session.refresh(application)
     if application.work_pattern is not None:
@@ -492,9 +510,12 @@ def update_leave_schedule(
     if leave_schedule is None or len(leave_schedule) == 0:
         # Leave periods are removed by sending a PATCH request with an
         # empty array (or null value) for that category of leave.
-        db_session.query(leave_cls).filter(
-            leave_cls.application_id == application.application_id
-        ).delete(synchronize_session="fetch")
+        if leave_cls == ContinuousLeavePeriod:
+            application.continuous_leave_periods = []
+        elif leave_cls == IntermittentLeavePeriod:
+            application.intermittent_leave_periods = []
+        elif leave_cls == ReducedScheduleLeavePeriod:
+            application.reduced_schedule_leave_periods = []
 
         return None
 
@@ -580,9 +601,24 @@ def add_or_update_address(
 
     state_id = None
     address_to_update = None
+    fields_to_update = set()
+
     if address is not None:
         if address.state:
-            state_id = GeoState.get_id(address.state)
+            try:
+                state_id = GeoState.get_id(address.state)
+            except KeyError as error:
+                message = f"'{error.args[0]}' is not a valid state"
+                # Guard clause is included here to satisfy the linter...
+                address_description = (
+                    address_type.address_description and address_type.address_description.lower()
+                )
+                error_detail = ValidationErrorDetail(
+                    type=IssueType.invalid,
+                    message=message,
+                    field=f"{address_description}_address.state",
+                )
+                raise ValidationException([error_detail], message, {})
 
         address_to_update = Address(
             address_line_one=address.line_1,
@@ -591,6 +627,7 @@ def add_or_update_address(
             geo_state_id=state_id,
             zip_code=address.zip,
         )
+        fields_to_update = address.__fields_set__
 
     address_field_name, address_id_field_name, address_type_id = address_type_mapping(address_type)
 
@@ -612,24 +649,22 @@ def add_or_update_address(
         elif db_address is not None:
             db_address.address_line_one = (
                 address.line_1
-                if address.line_1 != mask.ADDRESS_MASK
+                if address.line_1 != mask.ADDRESS_MASK and "line_1" in fields_to_update
                 else db_address.address_line_one
             )
             db_address.address_line_two = (
                 address.line_2
-                if address.line_2 != mask.ADDRESS_MASK
+                if address.line_2 != mask.ADDRESS_MASK and "line_2" in fields_to_update
                 else db_address.address_line_two
             )
-            db_address.city = address.city
-            db_address.geo_state_id = state_id
-            zip_code = None
-            if address.zip:
+            if "city" in fields_to_update:
+                db_address.city = address.city
+            if "state" in fields_to_update:
+                db_address.geo_state_id = state_id
+            if "zip" in fields_to_update and address.zip:
                 # re-use the db value if zip is masked, otherwise, use the new value
-                if Regexes.MASKED_ZIP.match(address.zip):
-                    zip_code = db_address.zip_code
-                else:
-                    zip_code = address.zip
-            db_address.zip_code = zip_code
+                if not Regexes.MASKED_ZIP.match(address.zip):
+                    db_address.zip_code = address.zip
 
     # If we don't have an existing address but have a body, add an address.
     elif address_to_update is not None:
@@ -692,7 +727,7 @@ def delete_application_other_benefits(
 
 def set_employer_benefits(
     db_session: db.Session,
-    api_employer_benefits: Optional[List[apps_common_io.EmployerBenefit]],
+    api_employer_benefits: Optional[List[common_io.EmployerBenefit]],
     application: Application,
 ) -> None:
 
@@ -708,6 +743,7 @@ def set_employer_benefits(
             benefit_start_date=api_employer_benefit.benefit_start_date,
             benefit_end_date=api_employer_benefit.benefit_end_date,
             benefit_amount_dollars=api_employer_benefit.benefit_amount_dollars,
+            is_full_salary_continuous=api_employer_benefit.is_full_salary_continuous,
         )
 
         if api_employer_benefit.benefit_type:
@@ -754,46 +790,63 @@ def set_other_incomes(
         db_session.add(new_other_income)
 
 
+def set_concurrent_leave(
+    db_session: db.Session,
+    api_concurrent_leave: Optional[massgov.pfml.api.models.common.ConcurrentLeave],
+    application: Application,
+) -> None:
+    if application.concurrent_leave:
+        delete_application_other_benefits(ConcurrentLeave, application, db_session)
+
+    if not api_concurrent_leave:
+        return
+
+    concurrent_leave = ConcurrentLeave(
+        application_id=application.application_id,
+        is_for_current_employer=api_concurrent_leave.is_for_current_employer,
+        leave_start_date=api_concurrent_leave.leave_start_date,
+        leave_end_date=api_concurrent_leave.leave_end_date,
+    )
+    db_session.add(concurrent_leave)
+
+
 def set_previous_leaves(
     db_session: db.Session,
     api_previous_leaves: Optional[List[claims_common_io.PreviousLeave]],
     application: Application,
+    type: Literal["same_reason", "other_reason"],
 ) -> None:
+    previous_leave_type = {
+        "same_reason": PreviousLeaveSameReason,
+        "other_reason": PreviousLeaveOtherReason,
+    }[type]
 
-    if application.previous_leaves:
-        delete_application_other_benefits(PreviousLeave, application, db_session)
+    if getattr(application, f"previous_leaves_{type}"):
+        db_session.query(PreviousLeave).filter(
+            PreviousLeave.application_id == application.application_id
+        ).filter(PreviousLeave.type == type).delete(synchronize_session=False)
+        db_session.refresh(application)
 
     if not api_previous_leaves:
         return
 
     for api_previous_leave in api_previous_leaves:
-        new_previous_leave = PreviousLeave(
+        new_previous_leave = previous_leave_type(
             application_id=application.application_id,
             leave_start_date=api_previous_leave.leave_start_date,
             leave_end_date=api_previous_leave.leave_end_date,
             is_for_current_employer=api_previous_leave.is_for_current_employer,
+            worked_per_week_minutes=api_previous_leave.worked_per_week_minutes,
+            leave_minutes=api_previous_leave.leave_minutes,
         )
-        if api_previous_leave.leave_reason:
+
+        # We only care about the leave reason for PreviousLeaveOtherReason objects
+        if previous_leave_type == PreviousLeaveOtherReason and api_previous_leave.leave_reason:
             new_previous_leave.leave_reason_id = PreviousLeaveQualifyingReason.get_id(
                 api_previous_leave.leave_reason
             )
 
         db_session.add(new_previous_leave)
-
-
-def remove_employer_benefit(db_session: db.Session, employer_benefit: EmployerBenefit) -> None:
-    db_session.delete(employer_benefit)
-    db_session.commit()
-
-
-def remove_other_income(db_session: db.Session, other_income: OtherIncome) -> None:
-    db_session.delete(other_income)
-    db_session.commit()
-
-
-def remove_previous_leave(db_session: db.Session, previous_leave: PreviousLeave) -> None:
-    db_session.delete(previous_leave)
-    db_session.commit()
 
 
 def add_or_update_phone(
@@ -833,7 +886,7 @@ def add_or_update_phone(
 def get_or_add_tax_identifier(
     db_session: db.Session, body: ApplicationRequestBody
 ) -> Optional[TaxIdentifier]:
-    tax_identifier = body.tax_identifier or body.employee_ssn
+    tax_identifier = body.tax_identifier
 
     if tax_identifier is None:
         return None

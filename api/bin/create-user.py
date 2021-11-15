@@ -15,6 +15,6 @@ if len(sys.argv) > 1:
     for arg in sys.argv[1:]:
         roles.append(employee_models.Role.__dict__[arg.upper()])
 
-user = UserFactory.create(roles=roles)
+user = UserFactory.create(roles=roles, consented_to_data_sharing=True)
 
 pprint.pp({k: v for k, v in user.__dict__.items() if not k.startswith("_sa")})

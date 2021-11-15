@@ -3,8 +3,9 @@
 #
 # This is intended to be run as an ECS task with the SQL passed as a command line argument.
 # Ex: ./bin/run-ecs-task/run-task.sh <env> execute-sql <firstname>.<lastname> execute-sql \
-#     "SELECT COUNT(*) FROM employer" "SELECT * FROM lk_geo_state
+#     "SELECT COUNT(*) FROM employer" "SELECT * FROM lk_geo_state"
 #
+# Results can be output to an S3 file by adding the --s3_output flag.
 
 import argparse
 import csv
@@ -16,8 +17,7 @@ import sqlalchemy
 import massgov.pfml.db
 import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging
-import massgov.pfml.util.logging.audit
-from massgov.pfml.util.sentry import initialize_sentry
+from massgov.pfml.util.bg import background_task
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 S3_BUCKET = os.environ.get("S3_EXPORT_BUCKET", None)
@@ -30,12 +30,9 @@ def get_file_target(args, count):
     return f"{args.s3_output}-query{count}.csv"
 
 
+@background_task("execute-sql")
 def execute_sql():
     """Execute some SQL against the database."""
-    initialize_sentry()
-    massgov.pfml.util.logging.audit.init_security_logging()
-    massgov.pfml.util.logging.init("execute_sql")
-
     args = parse_args()
     if args.s3_output and not args.s3_bucket:
         logger.error("S3 Output Requested without S3_EXPORT_BUCKET or --s3_bucket set")

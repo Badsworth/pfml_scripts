@@ -5,8 +5,9 @@ import pytest
 from freezegun import freeze_time
 
 import massgov.pfml.api.util.state_log_util as state_log_util
-import massgov.pfml.payments.payments_util as payments_util
+import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 from massgov.pfml.db.models.employees import (
+    Claim,
     Employee,
     Flow,
     LatestStateLog,
@@ -15,11 +16,13 @@ from massgov.pfml.db.models.employees import (
     State,
     StateLog,
 )
-from massgov.pfml.db.models.factories import EmployeeFactory, PaymentFactory, ReferenceFileFactory
+from massgov.pfml.db.models.factories import (
+    ClaimFactory,
+    EmployeeFactory,
+    PaymentFactory,
+    ReferenceFileFactory,
+)
 from tests.helpers.state_log import default_outcome, setup_state_log
-
-# every test in here requires real resources
-pytestmark = pytest.mark.integration
 
 ### Setup methods for various state log scenarios ###
 
@@ -100,6 +103,7 @@ def test_create_finished_state_log(initialize_factories_session, test_db_session
     assert employee_state_log.associated_type == state_log_util.AssociatedClass.EMPLOYEE.value
     assert employee_state_log.employee_id == employee.employee_id
     assert employee_state_log.payment is None
+    assert employee_state_log.claim_id is None
     assert employee_state_log.reference_file_id is None
 
     # A payment
@@ -118,7 +122,27 @@ def test_create_finished_state_log(initialize_factories_session, test_db_session
     assert payment_state_log.associated_type == state_log_util.AssociatedClass.PAYMENT.value
     assert payment_state_log.employee_id is None
     assert payment_state_log.payment_id == payment.payment_id
+    assert payment_state_log.claim_id is None
     assert payment_state_log.reference_file_id is None
+
+    # A claim
+    claim = ClaimFactory()
+    claim_state_log = state_log_util.create_finished_state_log(
+        associated_model=claim,
+        end_state=State.DELEGATED_CLAIM_EXTRACTED_FROM_FINEOS,
+        outcome=default_outcome(),
+        db_session=test_db_session,
+    )
+
+    assert claim_state_log.end_state_id == State.DELEGATED_CLAIM_EXTRACTED_FROM_FINEOS.state_id
+    assert claim_state_log.started_at.isoformat() == "2020-01-01T12:00:00+00:00"
+    assert claim_state_log.ended_at.isoformat() == "2020-01-01T12:00:00+00:00"
+    assert claim_state_log.outcome == {"message": "success"}
+    assert claim_state_log.associated_type == state_log_util.AssociatedClass.CLAIM.value
+    assert claim_state_log.employee_id is None
+    assert claim_state_log.payment_id is None
+    assert claim_state_log.claim_id == claim.claim_id
+    assert claim_state_log.reference_file_id is None
 
     # A reference file
     reference_file = ReferenceFileFactory.create()
@@ -140,6 +164,7 @@ def test_create_finished_state_log(initialize_factories_session, test_db_session
     )
     assert reference_file_state_log.employee_id is None
     assert reference_file_state_log.payment_id is None
+    assert reference_file_state_log.claim_id is None
     assert reference_file_state_log.reference_file_id == reference_file.reference_file_id
 
 
@@ -193,9 +218,9 @@ def test_create_finished_state_log_same_flow(initialize_factories_session, test_
         else:
             raise Exception("This should not happen - the test is broken")
 
-    state_log_a.prev_state_log_id is None
-    state_log_b.prev_state_log_id == state_log_a.state_log_id
-    state_log_c.prev_state_log_id == state_log_b.state_log_id
+    assert state_log_a.prev_state_log_id is None
+    assert state_log_b.prev_state_log_id == state_log_a.state_log_id
+    assert state_log_c.prev_state_log_id == state_log_b.state_log_id
 
 
 def test_create_finished_state_log_different_flow(initialize_factories_session, test_db_session):
@@ -502,7 +527,7 @@ def test_get_state_logs_stuck_in_state(initialize_factories_session, test_db_ses
 
 def test_get_state_counts(initialize_factories_session, test_db_session):
     misc_states = [
-        State.DELEGATED_PAYMENT_ADD_ZERO_PAYMENT_TO_FINEOS_WRITEBACK,
+        State.DELEGATED_PAYMENT_PROCESSED_ZERO_PAYMENT,
         State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT,
         State.DELEGATED_PAYMENT_PUB_TRANSACTION_CHECK_SENT,
     ]
@@ -524,7 +549,7 @@ def test_get_state_counts(initialize_factories_session, test_db_session):
     for _ in range(7):
         payment = build_state_log(
             state_log_util.AssociatedClass.PAYMENT,
-            State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_EFT_SENT,
+            State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT,
             test_db_session,
         )
         payments.append(payment)
@@ -534,9 +559,7 @@ def test_get_state_counts(initialize_factories_session, test_db_session):
     for state in misc_states:
         assert state_log_counts[state.state_description] == 5
 
-    assert (
-        state_log_counts[State.DELEGATED_PAYMENT_FINEOS_WRITEBACK_EFT_SENT.state_description] == 7
-    )
+    assert state_log_counts[State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT.state_description] == 7
 
     # Now move every payment to a new state
     for payment in payments:
@@ -687,6 +710,11 @@ def test_create_finished_state_log_for_associated_model_without_id_fails(
         ),
         (Payment(), Flow.PAYMENT, "Payment model associated with StateLog has no payment_id",),
         (
+            Claim(),
+            Flow.DELEGATED_CLAIM_VALIDATION,
+            "Claim model associated with StateLog has no claim_id",
+        ),
+        (
             ReferenceFile(),
             Flow.DUA_PAYMENT_LIST,
             "ReferenceFile model associated with StateLog has no reference_file_id",
@@ -716,6 +744,11 @@ def test_get_latest_state_log_in_flow_for_associated_model_without_id_fails(
             "Payment model associated with StateLog has no payment_id",
         ),
         (
+            Claim(),
+            State.DELEGATED_CLAIM_EXTRACTED_FROM_FINEOS,
+            "Claim model associated with StateLog has no claim_id",
+        ),
+        (
             ReferenceFile(),
             State.DUA_PAYMENT_LIST_SAVED_TO_S3,
             "ReferenceFile model associated with StateLog has no reference_file_id",
@@ -743,6 +776,11 @@ def test_get_latest_state_log_in_end_state_for_associated_model_without_id_fails
             Payment(),
             State.PAYMENTS_STORED_IN_DB,
             "Payment model associated with StateLog has no payment_id",
+        ),
+        (
+            Claim(),
+            State.DELEGATED_CLAIM_EXTRACTED_FROM_FINEOS,
+            "Claim model associated with StateLog has no claim_id",
         ),
         (
             ReferenceFile(),

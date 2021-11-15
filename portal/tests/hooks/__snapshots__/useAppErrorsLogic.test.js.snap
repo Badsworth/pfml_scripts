@@ -1,0 +1,98 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`useAppErrorsLogic returns HTML message when Application validation error type is fineos_case_creation_issues 1`] = `
+<div>
+  We couldn’t find you in our system. Check that you entered your employer’s Employer Identification Number (EIN) correctly. If you continue to get this error, 
+  <a
+    href="https://www.mass.gov/forms/apply-for-paid-leave-if-you-received-an-error"
+    rel="noreferrer noopener"
+    target="_blank"
+  >
+    follow these instructions
+  </a>
+   and we’ll set up your application through our Contact Center.
+</div>
+`;
+
+exports[`useAppErrorsLogic returns HTML message when Employer ClaimWithdrawnError is thrown 1`] = `
+<div>
+  Application 
+  <strong>
+    mock-absence-id
+  </strong>
+   has been withdrawn and is no longer being processed.  If you believe this application has been withdrawn in error, check if any additional applications in your account cover the same leave period.  If you have additional questions, call the Contact Center at 
+  <a
+    href="tel:(833) 344-7365"
+  >
+    (833) 344‑7365
+  </a>
+  .
+</div>
+`;
+
+exports[`useAppErrorsLogic returns HTML message when Employer validation error type is contains_v1_and_v2_eforms 1`] = `
+<div>
+  <h3>
+    Call the contact center to review this application
+  </h3>
+  <p>
+    We can’t display this application for review online. To review this application, call the Contact Center at 
+    <a
+      href="tel:(833) 344-7365"
+    >
+      (833) 344‑7365
+    </a>
+    .
+  </p>
+  <p>
+    <strong>
+      What you will need to know when you call the agent:
+    </strong>
+  </p>
+  <ul>
+    <li>
+      The employee’s name and application ID. You can find these on the Dashboard, or in the email we sent to tell you that you can review this application.
+    </li>
+    <li>
+      The error code for this error: 
+      <strong>
+        V-12
+      </strong>
+      .
+    </li>
+  </ul>
+  <strong>
+    Why you are seeing this error:
+  </strong>
+   Your employee told us about some other leave and benefits they are receiving in addition to paid leave from PFML. This information was added to their application recently. In some cases, when an employee who submitted an application before July 15th then adds other leave and benefits information later, it can cause this error.
+  <p>
+    This is a rare error that will not happen with new applications.
+  </p>
+</div>
+`;
+
+exports[`useAppErrorsLogic returns HTML message when Employer validation error type is employer_verification_data_required 1`] = `
+<div>
+  Your account can’t be verified yet, because your organization has not made any paid leave contributions. Once this organization pays quarterly taxes, you can verify your account and review applications. 
+  <a
+    href="https://www.mass.gov/pfml-zero-balance-employer"
+    rel="noreferrer noopener"
+    target="_blank"
+  >
+    Learn more about filing returns and remitting contributions
+  </a>
+  .
+</div>
+`;
+
+exports[`useAppErrorsLogic returns HTML message when Employer validation error type is unauthorized_leave_admin 1`] = `
+<div>
+  Sorry, you do not have permission to view that page. To access it, you need to 
+  <a
+    href="/employers/organizations/add-organization"
+  >
+    add that organization
+  </a>
+   to your account.
+</div>
+`;

@@ -11,9 +11,8 @@ import massgov.pfml.util.batch.log
 import massgov.pfml.util.config as config
 import massgov.pfml.util.logging as logging
 from massgov.pfml import db, fineos
-from massgov.pfml.util.sentry import initialize_sentry
+from massgov.pfml.util.bg import background_task
 
-logging.init(__name__)
 logger = logging.get_logger(__name__)
 
 
@@ -42,11 +41,7 @@ def make_fineos_boto_session(config: eligibility_feed.EligibilityFeedExportConfi
     )
 
 
-def handler(_event, _context):
-    """Handler for Lambda function"""
-    return main_with_return()
-
-
+@background_task("fineos-eligibility-feed-export")
 def main():
     """Entry point for ECS task
 
@@ -58,7 +53,6 @@ def main():
 
 
 def main_with_return():
-    initialize_sentry()
     logger.info("Starting FINEOS eligibility feed export run")
 
     config = eligibility_feed.EligibilityFeedExportConfig()
@@ -68,27 +62,44 @@ def main_with_return():
             db_session, "Eligibility export", config.mode.name.lower()
         )
 
+    output_transport_params = None
+    output_directory_path = f"{config.output_directory_path}/absence-eligibility/upload"
+
+    # Note that the IAM role for the Eligibility Feed Export Lambda/ECS Task
+    # does not have access to any S3 bucket in the PFML account by default. So
+    # in order to test the functionality by writing to a non-FINEOS S3 location,
+    # the IAM role needs updated for the test as well.
+    if eligibility_feed.is_fineos_output_location(output_directory_path):
+        session = make_fineos_boto_session(config)
+        output_transport_params = dict(session=session)
+
+    fineos_client = make_fineos_client()
+
     if config.mode is eligibility_feed.EligibilityFeedExportMode.UPDATES:
-        output_transport_params = None
-        output_directory_path = f"{config.output_directory_path}/absence-eligibility/upload"
-
-        # Note that the IAM role for the Eligibility Feed Export Lambda/ECS Task
-        # does not have access to any S3 bucket in the PFML account by default. So
-        # in order to test the functionality by writing to a non-FINEOS S3 location,
-        # the IAM role needs updated for the test as well.
-        if eligibility_feed.is_fineos_output_location(output_directory_path):
-            session = make_fineos_boto_session(config)
-            output_transport_params = dict(session=session)
-
-        fineos_client = make_fineos_client()
         with db.session_scope(make_db_session(), close=True) as db_session:
             process_result = eligibility_feed.process_employee_updates(
                 db_session,
                 fineos_client,
                 output_directory_path,
                 output_transport_params,
-                batch_size=config.update_batch_size,
                 export_file_number_limit=config.export_file_number_limit,
+            )
+    elif config.mode is eligibility_feed.EligibilityFeedExportMode.LIST:
+        employer_ids = config.employer_ids.split(",")
+        if config and len(employer_ids) > 0:
+            with db.session_scope(make_db_session(), close=True) as db_session:
+                process_result = eligibility_feed.process_a_list_of_employers(
+                    employer_ids,
+                    db_session,
+                    fineos_client,
+                    output_directory_path,
+                    output_transport_params,
+                )
+        else:
+            logger.info(
+                "Task started in 'LIST' mode but no list of employers provided. "
+                "If you intended to start task in this mode please provide a list of "
+                "employers to process in the ELIGIBILITY_FEED_LIST_OF_EMPLOYER_IDS environment variable."
             )
     else:
         process_result = eligibility_feed.process_all_employers(

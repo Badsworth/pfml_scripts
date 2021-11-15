@@ -1,303 +1,171 @@
 import User, { UserLeaveAdministrator } from "../../src/models/User";
+import { screen, waitFor } from "@testing-library/react";
+import AppErrorInfo from "../../src/models/AppErrorInfo";
+import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
 import EmployerClaim from "../../src/models/EmployerClaim";
-import { MockEmployerClaimBuilder } from "../test-utils";
 import React from "react";
-import { act } from "react-dom/test-utils";
-import { mount } from "enzyme";
-import useAppLogic from "../../src/hooks/useAppLogic";
+import { renderPage } from "../test-utils";
 import withEmployerClaim from "../../src/hoc/withEmployerClaim";
+
+const mockAbsenceId = "NTN-111-ABS-01";
+const mockPageContent = "Claim is loaded. This is the page.";
 
 jest.mock("../../src/hooks/useAppLogic");
 
-describe("withEmployerClaim", () => {
-  const user = new User({
-    user_id: "mock_user_id",
-    consented_to_data_sharing: true,
-    user_leave_administrators: [
-      new UserLeaveAdministrator({
-        employer_dba: "Test Company",
-        employer_fein: "1298391823",
-        employer_id: "dda903f-f093f-ff900",
-        has_verification_data: true,
-        verified: true,
-      }),
-      new UserLeaveAdministrator({
-        employer_dba: "Tomato Touchdown",
-        employer_fein: "**-***7192",
-        employer_id: "io19fj9-00jjf-uiw3r",
-        has_verification_data: false,
-        verified: false,
-      }),
-    ],
-  });
-  const absence_id = "mock-absence-id";
-  const PageComponent = () => <div />;
+function setup({ addCustomSetup, query } = {}) {
+  const PageComponent = (props) => (
+    <div>
+      {mockPageContent}
+      Application: {props.claim?.fineos_absence_id}
+    </div>
+  );
   const WrappedComponent = withEmployerClaim(PageComponent);
-  let appLogic, wrapper;
 
-  beforeEach(() => {
-    appLogic = useAppLogic();
+  return renderPage(
+    WrappedComponent,
+    {
+      addCustomSetup,
+    },
+    {
+      query: {
+        absence_id: mockAbsenceId,
+        ...query,
+      },
+    }
+  );
+}
+
+describe("withEmployerClaim", () => {
+  it("shows spinner when loading claim state", async () => {
+    setup();
+
+    expect(await screen.findByRole("progressbar")).toBeInTheDocument();
   });
 
-  function render(appLogic) {
-    act(() => {
-      wrapper = mount(
-        <WrappedComponent appLogic={appLogic} query={{ absence_id }} />
-      );
+  it("doesn't show the spinner if there are errors", () => {
+    const { container } = setup({
+      addCustomSetup: (appLogic) => {
+        appLogic.appErrors = new AppErrorInfoCollection([new AppErrorInfo()]);
+      },
     });
-  }
 
-  it("shows spinner when claim is not loaded", () => {
-    appLogic.users.user = user;
-
-    render(appLogic);
-
-    expect(wrapper.find("Spinner").exists()).toBe(true);
-    expect(wrapper.find("PageComponent").exists()).toBe(false);
+    expect(container).toBeEmptyDOMElement();
   });
 
-  it("loads the claim", () => {
-    render(appLogic);
+  it("shows Page Not Found when absence ID isn't found", () => {
+    setup({
+      query: {
+        absence_id: "",
+      },
+    });
 
-    expect(appLogic.employers.loadClaim).toHaveBeenCalledTimes(1);
-    expect(appLogic.employers.loadClaim).toHaveBeenCalledWith(
-      "mock-absence-id"
+    expect(
+      screen.getByRole("heading", { name: "Page not found" })
+    ).toBeInTheDocument();
+  });
+
+  it("requires user to be logged in", async () => {
+    let spy;
+
+    setup({
+      addCustomSetup: (appLogic) => {
+        spy = jest.spyOn(appLogic.auth, "requireLogin");
+      },
+    });
+
+    await waitFor(() => {
+      expect(spy).toHaveBeenCalled();
+    });
+  });
+
+  it("renders the page when claim state is loaded", async () => {
+    const mockClaim = new EmployerClaim({ fineos_absence_id: mockAbsenceId });
+
+    setup({
+      addCustomSetup: (appLogic) => {
+        appLogic.employers.claim = mockClaim;
+      },
+    });
+
+    expect(
+      await screen.findByText(mockPageContent, { exact: false })
+    ).toBeInTheDocument();
+
+    // Assert that the HOC is passing in the claim as a prop to our page component:
+    expect(
+      await screen.findByText(mockClaim.fineos_absence_id, { exact: false })
+    ).toBeInTheDocument();
+  });
+
+  it("redirects to Verify Contributions page when claim is associated with an unverified employer that can be verified", () => {
+    let spy;
+    const mockEmployerId = "dda903f-f093f-ff900";
+    const mockUser = new User({
+      user_id: "mock_user_id",
+      consented_to_data_sharing: true,
+      user_leave_administrators: [
+        new UserLeaveAdministrator({
+          employer_id: mockEmployerId,
+          // These two fields indicate the employer is "verifiable":
+          has_verification_data: true,
+          verified: false,
+        }),
+      ],
+    });
+    const mockClaim = new EmployerClaim({
+      employer_id: mockEmployerId,
+      fineos_absence_id: mockAbsenceId,
+    });
+
+    setup({
+      addCustomSetup: (appLogic) => {
+        spy = jest.spyOn(appLogic.portalFlow, "goTo");
+        appLogic.users.user = mockUser;
+        appLogic.employers.claim = mockClaim;
+        appLogic.portalFlow.pathWithParams = "/test-route";
+      },
+    });
+
+    expect(spy).toHaveBeenCalledWith(
+      "/employers/organizations/verify-contributions",
+      {
+        employer_id: mockEmployerId,
+        next: "/test-route",
+      }
     );
   });
 
-  it("does not load claim if user has not yet loaded", () => {
-    appLogic.users.user = null;
-
-    render(appLogic);
-    wrapper.update();
-
-    expect(appLogic.employers.loadClaim).not.toHaveBeenCalled();
-  });
-
-  describe("when claim is loaded", () => {
-    let claim;
-
-    beforeEach(() => {
-      claim = new MockEmployerClaimBuilder().completed().create();
-      appLogic.employers.claim = claim;
+  it("redirects to Cannot Verify page when user has employer that cannot be verified", () => {
+    let spy;
+    const mockEmployerId = "dda903f-f093f-ff900";
+    const mockUser = new User({
+      user_id: "mock_user_id",
+      consented_to_data_sharing: true,
+      user_leave_administrators: [
+        new UserLeaveAdministrator({
+          employer_id: mockEmployerId,
+          // These two fields indicate the employer is "unverifiable":
+          has_verification_data: false,
+          verified: false,
+        }),
+      ],
+    });
+    const mockClaim = new EmployerClaim({
+      employer_id: mockEmployerId,
+      fineos_absence_id: mockAbsenceId,
     });
 
-    it("passes the 'user' prop from the withUser HOC", () => {
-      appLogic.users.user = user;
-      render(appLogic);
-
-      expect(wrapper.find("PageComponent").prop("user")).toEqual(
-        appLogic.users.user
-      );
+    setup({
+      addCustomSetup: (appLogic) => {
+        spy = jest.spyOn(appLogic.portalFlow, "goTo");
+        appLogic.users.user = mockUser;
+        appLogic.employers.claim = mockClaim;
+        appLogic.portalFlow.pathWithParams = "/test-route";
+      },
     });
 
-    it("sets the 'claim' prop on the passed component", () => {
-      appLogic.users.user = user;
-      render(appLogic);
-
-      expect(wrapper.find("PageComponent").prop("claim")).toBeInstanceOf(
-        EmployerClaim
-      );
-      expect(wrapper.find("PageComponent").prop("claim")).toEqual(claim);
-    });
-
-    it("renders the wrapper component", () => {
-      appLogic.users.user = user;
-      render(appLogic);
-
-      expect(wrapper.find("PageComponent").exists()).toBe(true);
-      expect(wrapper.find("Spinner").exists()).toBe(false);
-    });
-  });
-
-  describe("when user has verifiable employer", () => {
-    describe('and "employerShowVerifications" feature flag is off', () => {
-      let claim;
-
-      beforeEach(() => {
-        process.env.featureFlags = { employerShowVerifications: false };
-
-        claim = new MockEmployerClaimBuilder().completed().create();
-        appLogic.employers.claim = claim;
-        appLogic.portalFlow.pathWithParams = "test-route";
-      });
-
-      it("does not redirect to the Verify Contributions page if employer id matches", () => {
-        render(appLogic);
-        expect(appLogic.portalFlow.goTo).not.toHaveBeenCalled();
-      });
-
-      it("does not redirect to Verify Contributions page if employer is verifiable", () => {
-        appLogic.users.user = user;
-
-        render(appLogic);
-
-        expect(appLogic.portalFlow.goTo).not.toHaveBeenCalled();
-      });
-
-      it("does not redirect to Verify Contributions page if employer id does not match", () => {
-        const userWithUnverifiedDiffEmployer = new User({
-          user_id: "mock_user_id",
-          consented_to_data_sharing: true,
-          user_leave_administrators: [
-            new UserLeaveAdministrator({
-              employer_dba: "Test Company",
-              employer_fein: "1298391823",
-              employer_id: "different_id",
-              has_verification_data: true,
-              verified: false,
-            }),
-          ],
-        });
-        appLogic.users.user = userWithUnverifiedDiffEmployer;
-
-        render(appLogic);
-
-        expect(appLogic.portalFlow.goTo).not.toHaveBeenCalled();
-      });
-    });
-
-    describe('and "employerShowVerifications" feature flag is on', () => {
-      let claim;
-
-      beforeEach(() => {
-        process.env.featureFlags = { employerShowVerifications: true };
-
-        claim = new MockEmployerClaimBuilder().completed().create();
-        appLogic.employers.claim = claim;
-        appLogic.portalFlow.pathWithParams = "test-route";
-      });
-
-      it("redirects to Verify Contributions page if employer id matches", () => {
-        render(appLogic);
-
-        expect(appLogic.portalFlow.goTo).toHaveBeenCalledWith(
-          "/employers/organizations/verify-contributions",
-          {
-            employer_id: "dda903f-f093f-ff900",
-            next: "test-route",
-          }
-        );
-      });
-
-      it("does not redirect to Verify Contributions page if employer is verified", () => {
-        appLogic.users.user = user;
-
-        render(appLogic);
-
-        expect(appLogic.portalFlow.goTo).not.toHaveBeenCalled();
-      });
-
-      it("does not redirect to Verify Contributions page if employer id does not match", () => {
-        const unverifiedUserWithVerificationData = new User({
-          user_id: "mock_user_id",
-          consented_to_data_sharing: true,
-          user_leave_administrators: [
-            new UserLeaveAdministrator({
-              employer_dba: "Test Company",
-              employer_fein: "1298391823",
-              employer_id: "different_id",
-              has_verification_data: true,
-              verified: false,
-            }),
-          ],
-        });
-        appLogic.users.user = unverifiedUserWithVerificationData;
-
-        render(appLogic);
-
-        expect(appLogic.portalFlow.goTo).not.toHaveBeenCalled();
-      });
-    });
-  });
-
-  describe("when user has employer that cannot be verified", () => {
-    describe('and "employerShowVerifications" feature flag is off', () => {
-      let claim;
-
-      beforeEach(() => {
-        process.env.featureFlags = { employerShowVerifications: false };
-
-        claim = new MockEmployerClaimBuilder()
-          .completed()
-          .employer_id("io19fj9-00jjf-uiw3r")
-          .create();
-        appLogic.employers.claim = claim;
-        appLogic.portalFlow.pathWithParams = "test-route";
-      });
-
-      it("does not redirect to the Cannot Verify page if employer id matches", () => {
-        render(appLogic);
-        expect(appLogic.portalFlow.goTo).not.toHaveBeenCalled();
-      });
-
-      it("does not redirect to the Cannot Verify page if employer is not verifiable", () => {
-        appLogic.users.user = user;
-
-        render(appLogic);
-
-        expect(appLogic.portalFlow.goTo).not.toHaveBeenCalled();
-      });
-
-      it("does not redirect to Cannot Verify page if employer id does not match", () => {
-        const userWithDiffUnverifiableEmployer = new User({
-          user_leave_administrators: [
-            new UserLeaveAdministrator({
-              employer_id: "different_id",
-              has_verification_data: false,
-              verified: false,
-            }),
-          ],
-        });
-        appLogic.users.user = userWithDiffUnverifiableEmployer;
-
-        render(appLogic);
-
-        expect(appLogic.portalFlow.goTo).not.toHaveBeenCalled();
-      });
-    });
-
-    describe('and "employerShowVerifications" feature flag is on', () => {
-      let claim;
-
-      beforeEach(() => {
-        process.env.featureFlags = { employerShowVerifications: true };
-
-        claim = new MockEmployerClaimBuilder()
-          .completed()
-          .employer_id("io19fj9-00jjf-uiw3r")
-          .create();
-        appLogic.employers.claim = claim;
-        appLogic.portalFlow.pathWithParams = "test-route";
-      });
-
-      it("redirects to Cannot Verify page if employer id matches", () => {
-        render(appLogic);
-
-        expect(appLogic.portalFlow.goTo).toHaveBeenCalledWith(
-          "/employers/organizations/cannot-verify",
-          {
-            employer_id: "io19fj9-00jjf-uiw3r",
-          }
-        );
-      });
-
-      it("does not redirect to Cannot Verify page if employer id does not match", () => {
-        const unverifiedUserWithoutVerificationData = new User({
-          user_leave_administrators: [
-            new UserLeaveAdministrator({
-              employer_id: "different_id",
-              has_verification_data: false,
-              verified: false,
-            }),
-          ],
-        });
-        appLogic.users.user = unverifiedUserWithoutVerificationData;
-
-        render(appLogic);
-
-        expect(appLogic.portalFlow.goTo).not.toHaveBeenCalled();
-      });
+    expect(spy).toHaveBeenCalledWith("/employers/organizations/cannot-verify", {
+      employer_id: mockEmployerId,
     });
   });
 });

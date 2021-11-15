@@ -1,179 +1,132 @@
-import playwright, { chromium, Page } from "playwright-chromium";
-import delay from "delay";
-import * as actions from "../util/playwright";
-
-export type Tasks =
-  | "ID Review"
-  | "Certification Review"
-  | "Employer Approval Received";
-
-export async function withFineosBrowser(
-  baseUrl: string,
-  next: (page: Page) => Promise<void>,
-  debug = false
-): Promise<void> {
-  const browser = await chromium.launch({
-    headless: !debug,
-  });
-  const page = await browser.newPage({
-    viewport: { width: 1200, height: 1000 },
-  });
-  await page.goto(baseUrl);
-  page.on("dialog", async (dialog) => {
-    await delay(2000);
-    await dialog.dismiss().catch(() => {
-      //intentional no-op on error.
-    });
-  });
-
-  try {
-    await next(page).catch(async (e) => {
-      // When in debug mode, hold the browser window open for 100 seconds for debugging purposes.
-      if (debug) {
-        console.log(
-          "Caught error - holding browser window open for debugging.",
-          e
-        );
-        await delay(100000);
-      }
-      throw e;
-    });
-  } finally {
-    await browser.close();
-  }
-}
+import { Page } from "playwright-chromium";
+import { GeneratedClaim } from "../generation/Claim";
+import { getDocumentReviewTaskName } from "../util/documents";
+import { Claim } from "./fineos.pages";
+import winston from "winston";
 
 export async function approveClaim(
-  page: playwright.Page,
-  fineos_absence_id: string
+  page: Page,
+  claim: GeneratedClaim,
+  fineos_absence_id: string,
+  logger?: winston.Logger
 ): Promise<void> {
-  await actions.gotoCase(page, fineos_absence_id);
-  // Start Adjudication.
-  await page.click('input[type="submit"][value="Adjudicate"]');
-  await approveDocuments(page);
-  await approveCertificationPeriods(page);
-  await approvePlanEligibility(page);
-  // Complete Adjudication.
-  await Promise.all([
-    page.waitForNavigation(),
-    page.click("#footerButtonsBar input[value='OK']"),
-  ]);
-
-  await closeTask(page, "ID Review");
-  await closeTask(page, "Certification Review");
-  await closeTask(page, "Employer Approval Received");
-  await actions.clickTab(page, "Absence Hub");
-
-  // Approve the claim.
-  await Promise.all([
-    page.waitForNavigation(),
-    page.click("a[title='Approve the Pending Leaving Request']"),
-  ]);
-  await delay(150);
-  await expectClaimState(page, "Approved");
+  // Visit the claim
+  logger?.debug("Searching for Claim ...");
+  const claimPage = await Claim.visit(page, fineos_absence_id);
+  // Start adjudication
+  logger?.debug("Starting Adjudication Process in Fineos", {
+    fineos_absence_id,
+  });
+  await claimPage.adjudicate(async (adjudication) => {
+    logger?.debug("Accept Leave Plan complete", {
+      fineos_absence_id,
+    });
+    await adjudication.evidence(async (evidence) => {
+      for (const { document_type } of claim.documents)
+        await evidence.receive(document_type);
+    });
+    logger?.debug("Evidence has been recieved", {
+      fineos_absence_id,
+    });
+    await adjudication.certificationPeriods(async (certification) => {
+      await certification.prefill();
+    });
+    logger?.debug("Certification Periods have been pre-filled", {
+      fineos_absence_id,
+    });
+    await adjudication.acceptLeavePlan();
+  });
+  logger?.debug("Adjudication Completed w/o errors:", {
+    fineos_absence_id,
+  });
+  logger?.debug("Attempting to close Tasks ...", {
+    fineos_absence_id,
+  });
+  await claimPage.tasks(async (tasks) => {
+    // Close document tasks
+    for (const document of claim.documents)
+      await tasks.close(getDocumentReviewTaskName(document.document_type));
+    // Close ER approval task
+    await tasks.close("Employer Approval Received");
+  });
+  logger?.debug("Document & ER approval task have been closed", {
+    fineos_absence_id,
+  });
+  logger?.debug("Attempting to approve claim ...", {
+    fineos_absence_id,
+  });
+  await claimPage.approve();
+  logger?.debug("Claim was approved in Fineos", {
+    fineos_absence_id,
+  });
 }
 
 export async function denyClaim(
-  page: playwright.Page,
+  page: Page,
   fineos_absence_id: string
 ): Promise<void> {
-  await actions.gotoCase(page, fineos_absence_id);
-  await page.click('input[type="submit"][value="Adjudicate"]');
-  await page.click('input[type="submit"][value="Reject"]');
-  await page.click("#footerButtonsBar input[value='OK']");
-  await page.click("div[title='Deny the Pending Leave Request']");
-  await actions
-    .labelled(page, "Denial Reason")
-    .then((el) => el.selectOption("5"));
-  await Promise.all([
-    page.waitForNavigation(),
-    page.click('input[type="submit"][value="OK"]'),
-  ]);
-  await expectClaimState(page, "Declined");
-}
-
-async function expectClaimState(page: playwright.Page, expected: string) {
-  const status = await page
-    .waitForSelector(".key-info-bar .status dd")
-    .then((e) => e.innerText());
-  if (status !== expected) {
-    throw new Error(`Expected status to be ${expected}, but it was ${status}`);
-  }
+  const claimPage = await Claim.visit(page, fineos_absence_id);
+  // go into adjudication
+  await claimPage.adjudicate(async (adjudication) => {
+    // deny leave plan
+    await adjudication.denyLeavePlan();
+  });
+  await claimPage.deny();
 }
 
 export async function closeDocuments(
-  page: playwright.Page,
+  page: Page,
+  claim: GeneratedClaim,
   fineos_absence_id: string
 ): Promise<void> {
-  await actions.gotoCase(page, fineos_absence_id);
-  await page.click('input[type="submit"][value="Adjudicate"]');
-  await approveDocuments(page);
-  await page.click("#footerButtonsBar input[value='OK']");
-  await closeTask(page, "ID Review");
-  await closeTask(page, "Certification Review");
-}
+  const claimPage = await Claim.visit(page, fineos_absence_id);
+  await claimPage.adjudicate(async (adjudication) => {
+    await adjudication.evidence(async (evidence) => {
+      for (const { document_type } of claim.documents)
+        await evidence.receive(document_type);
+    });
 
-export async function closeTask(
-  page: playwright.Page,
-  task: Tasks
-): Promise<void> {
-  await actions.clickTab(page, "Tasks");
-  await Promise.race([
-    page.waitForNavigation(),
-    page.click(`td[title="${task}"]`),
-  ]);
-  // await actions.click(page, await page.waitForSelector(`td[title="${task}"]`));
-  await actions.waitForStablePage(page);
-  await page.waitForTimeout(150);
-  await Promise.race([
-    page.waitForNavigation(),
-    page.click('input[type="submit"][value="Close"]'),
-  ]);
-  await delay(150);
-}
+    await adjudication.certificationPeriods((cert) => cert.prefill());
+  });
 
-async function approveDocuments(page: playwright.Page): Promise<void> {
-  await actions.clickTab(page, "Evidence");
-  while (true) {
-    try {
-      await page.click('td[title="Pending"]', { timeout: 1000 });
-    } catch (e) {
-      // Exit now if we weren't able to find any documents.
-      if (e.name === "TimeoutError") {
-        break;
-      }
-      throw e;
+  // Close all of the documentation review tasks.
+  await claimPage.tasks(async (tasks) => {
+    for (const { document_type } of claim.documents) {
+      await tasks.close(getDocumentReviewTaskName(document_type));
     }
-    await page.click('input[value="Manage Evidence"]');
-    await page.waitForSelector(".WidgetPanel_PopupWidget");
-    await actions
-      .labelled(page, "Evidence Decision")
-      .then((el) => el.selectOption("0"));
-    await page.click('.WidgetPanel_PopupWidget input[value="OK"]');
-    await page
-      .waitForSelector("#disablingLayer")
-      .then((el) => el.waitForElementState("hidden"));
-  }
-  await delay(150);
+    if (claim.employerResponse?.has_amendments) {
+      await tasks.close("Employer Conflict Reported");
+      if (claim.employerResponse.concurrent_leave)
+        await tasks.open("Escalate employer reported accrued paid leave (PTO)");
+      if (claim.employerResponse.previous_leaves.length)
+        await tasks.open("Escalate employer reported past leave");
+      if (claim.employerResponse.employer_benefits.length)
+        await tasks.open("Escalate Employer Reported Other Income");
+    } else if (claim.employerResponse?.employer_decision === "Approve") {
+      await tasks.close("Employer Approval Received");
+    }
+  });
 }
 
-async function approveCertificationPeriods(
-  page: playwright.Page
+export async function closeDocumentsErOpen(
+  page: Page,
+  claim: GeneratedClaim,
+  fineos_absence_id: string
 ): Promise<void> {
-  await actions.clickTab(page, "Certification Periods");
-  await page.click('input[value="Prefill with Requested Absence Periods"]');
-  await Promise.all([
-    page.waitForNavigation(),
-    page.click('#PopupContainer input[value="Yes"]'),
-  ]);
-  await delay(150);
-}
+  const claimPage = await Claim.visit(page, fineos_absence_id);
+  await claimPage.adjudicate(async (adjudication) => {
+    await adjudication.evidence(async (evidence) => {
+      for (const { document_type } of claim.documents)
+        await evidence.receive(document_type);
+    });
 
-async function approvePlanEligibility(page: playwright.Page): Promise<void> {
-  await actions.clickTab(page, "Manage Request");
-  await Promise.all([
-    page.waitForNavigation(),
-    page.click('input[value="Accept"]'),
-  ]);
-  await delay(150);
+    await adjudication.certificationPeriods((cert) => cert.prefill());
+  });
+
+  // Close all of the documentation review tasks.
+  await claimPage.tasks(async (tasks) => {
+    for (const { document_type } of claim.documents) {
+      await tasks.close(getDocumentReviewTaskName(document_type));
+    }
+  });
 }

@@ -1,195 +1,188 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`CreateAccount when employerShowSelfRegistrationForm is set to true renders the page 1`] = `
-<Fragment>
-  <form
-    className="usa-form"
-    method="post"
-    onSubmit={[Function]}
+exports[`CreateAccount renders the empty page 1`] = `
+<form
+  class="usa-form"
+  method="post"
+>
+  <h1
+    class="js-title margin-top-0 margin-bottom-2 font-heading-lg line-height-sans-2"
+    tabindex="-1"
   >
-    <Title>
-      Create an employer account
-    </Title>
-    <Alert
-      className="margin-bottom-3"
-      neutral={true}
-      state="info"
+    Create an employer account
+  </h1>
+  <div
+    class="usa-alert usa-alert--info c-alert--neutral margin-bottom-3"
+    role="region"
+    tabindex="-1"
+  >
+    <div
+      class="usa-alert__body"
     >
-      <Trans
-        components={
-          Object {
-            "create-account-link": <a
-              href="/"
-            />,
-            "p": <p />,
-          }
-        }
-        i18nKey="pages.employersAuthCreateAccount.alertHeading"
-      />
-    </Alert>
-    <Lead>
-      Welcome! Please take a few minutes to create an account for your company so you can manage leave for your team. Massachusetts workers can now apply for paid family and medical leave.
-    </Lead>
-    <Lead>
-      If you manage leave for multiple companies, please create an account for each Employer ID number (EIN). You’ll be able to add more companies to an existing account in the future.
-    </Lead>
-    <Details
-      label="What you can do with this account"
+      <div
+        class="usa-alert__text"
+      >
+        Workers who wish to apply for paid leave should follow 
+        <a
+          href="/"
+        >
+          these instructions
+        </a>
+        .
+      </div>
+    </div>
+  </div>
+  <p
+    class="usa-intro"
+  >
+    Welcome! Please take a few minutes to create an account for your company so you can manage leave for your team. Massachusetts workers can now apply for paid family and medical leave.
+  </p>
+  <p
+    class="usa-intro"
+  >
+    If you manage leave for multiple companies, please create an account for one using the form below. You’ll be able to add more companies to your account in the portal.
+  </p>
+  <details
+    class="c-details"
+  >
+    <summary
+      class="margin-bottom-2 text-primary text-underline font-ui-xs"
     >
-      <Trans
-        components={
-          Object {
-            "li": <li />,
-            "ul": <ul
-              className="usa-list"
-            />,
-          }
-        }
-        i18nKey="pages.employersAuthCreateAccount.detailsList"
-      />
-    </Details>
-    <InputText
-      hint="Use a secure work address. An email address can only be associated with one account."
-      label="Email address"
-      name="username"
-      onChange={[Function]}
-      smallLabel={true}
+      What you can do with this account
+    </summary>
+    <div
+      class="margin-bottom-2"
+    >
+      <ul
+        class="usa-list"
+      >
+        <li>
+          Review paid leave applications from your employees
+        </li>
+        <li>
+          Get updates about the program by email
+        </li>
+        <li>
+          Download documents and decision letters
+        </li>
+      </ul>
+    </div>
+  </details>
+  <div
+    class="usa-form-group"
+  >
+    <label
+      class="usa-label text-bold font-heading-xs measure-5"
+      for="InputText1"
+      id="InputText1_label"
+    >
+      Email address
+    </label>
+    <span
+      class="display-block line-height-sans-5 measure-5 usa-hint text-base-darkest"
+      id="InputText1_hint"
+    >
+      Use a secure work address. An email address can only be associated with one account.
+    </span>
+    <input
+      aria-labelledby="InputText1_label InputText1_hint InputText1_error"
+      class="usa-input maxw-mobile-lg"
+      id="InputText1"
+      name="email_address"
       type="email"
       value=""
     />
-    <InputPassword
-      autoComplete="new-password"
-      hint="Your password must be at least 12 characters long and include at least 1 number, 1 symbol, and both uppercase and lowercase letters."
-      label="Password"
-      name="password"
-      onChange={[Function]}
-      smallLabel={true}
-      value=""
-    />
-    <InputText
-      hint={
-        <Trans
-          components={
-            Object {
-              "ein-link": <a
-                href="https://www.mass.gov/info-details/finding-your-employers-federal-employer-identification-number-fein"
-                rel="noopener"
-                target="_blank"
-              />,
-            }
-          }
-          i18nKey="pages.employersAuthCreateAccount.einHint"
-        />
-      }
-      inputMode="numeric"
-      label="Employer ID number (EIN)"
-      mask="fein"
-      name="ein"
-      onChange={[Function]}
-      smallLabel={true}
-      value=""
-    />
-    <p>
-      We’ll send you a 6-digit code to verify your email address.
-    </p>
-    <Button
-      loading={false}
-      type="submit"
-    >
-      Create account
-    </Button>
-  </form>
-  <div
-    className="border-top-2px border-base-lighter margin-top-4 padding-top-4 text-base-dark text-bold"
-  >
-    <p>
-      <Trans
-        components={
-          Object {
-            "log-in-link": <a
-              className="display-inline-block"
-              href="/login"
-            />,
-          }
-        }
-        i18nKey="pages.employersAuthCreateAccount.haveAnAccount"
-      />
-    </p>
-    <p>
-      <Trans
-        components={
-          Object {
-            "create-account-link": <a
-              className="display-inline-block"
-              href="/create-account"
-            />,
-          }
-        }
-        i18nKey="pages.employersAuthCreateAccount.createClaimantAccount"
-      />
-    </p>
   </div>
-</Fragment>
-`;
-
-exports[`CreateAccount when employerShowSelfRegistrationForm is set to true renders the page 2`] = `
-Array [
-  "Workers who wish to apply for paid leave should follow ",
-  <a
-    href="/"
-    key="1"
+  <div
+    class="usa-form-group"
   >
-    these instructions
-  </a>,
-  ".",
-]
-`;
-
-exports[`CreateAccount when employerShowSelfRegistrationForm is set to true renders the page 3`] = `
-<ul
-  className="usa-list"
-  key="0"
->
-  <li
-    key="0"
+    <label
+      class="usa-label text-bold font-heading-xs measure-5"
+      for="InputPassword2"
+      id="InputPassword2_label"
+    >
+      Password
+    </label>
+    <span
+      class="display-block line-height-sans-5 measure-5 usa-hint text-base-darkest"
+      id="InputPassword2_hint"
+    >
+      Your password must be at least 12 characters long and include at least 1 number, 1 symbol, and both uppercase and lowercase letters.
+    </span>
+    <input
+      aria-labelledby="InputPassword2_label InputPassword2_hint InputPassword2_error"
+      autocomplete="new-password"
+      class="usa-input maxw-mobile-lg"
+      id="InputPassword2"
+      name="password"
+      type="password"
+      value=""
+    />
+  </div>
+  <div
+    class="usa-checkbox measure-5 bg-transparent"
   >
-    Review paid leave applications from your employees
-  </li>
-  <li
-    key="1"
+    <input
+      aria-controls="InputPassword2"
+      class="usa-checkbox__input"
+      id="InputChoice4"
+      name="InputPassword2-toggle"
+      type="checkbox"
+      value="password"
+    />
+    <label
+      class="usa-checkbox__label"
+      for="InputChoice4"
+    >
+      Show password
+    </label>
+  </div>
+  <div
+    class="usa-form-group"
   >
-    Get updates about the program by email
-  </li>
-  <li
-    key="2"
+    <label
+      class="usa-label text-bold font-heading-xs measure-5"
+      for="InputText5"
+      id="InputText5_label"
+    >
+      Employer ID number (EIN)
+    </label>
+    <span
+      class="display-block line-height-sans-5 measure-5 usa-hint text-base-darkest"
+      id="InputText5_hint"
+    >
+      Your Employer Identification Number is a 
+      <a
+        href="https://www.mass.gov/info-details/finding-your-employers-federal-employer-identification-number-fein"
+        rel="noopener"
+        target="_blank"
+      >
+        9-digit number
+      </a>
+       assigned by the Internal Revenue Service. It is listed on tax returns and your payroll department should have this information.
+    </span>
+    <div
+      class=""
+    >
+      <input
+        aria-labelledby="InputText5_label InputText5_hint InputText5_error"
+        class="usa-input maxw-mobile-lg"
+        id="InputText5"
+        inputmode="numeric"
+        name="user_leave_administrator.employer_fein"
+        type="text"
+        value=""
+      />
+    </div>
+  </div>
+  <p>
+    We’ll send you a 6-digit code to verify your email address.
+  </p>
+  <button
+    class="usa-button position-relative"
+    type="submit"
   >
-    Download documents and decision letters
-  </li>
-</ul>
-`;
-
-exports[`CreateAccount when employerShowSelfRegistrationForm is set to true renders the page 4`] = `
-Array [
-  "Have an account? ",
-  <a
-    className="display-inline-block"
-    href="/login"
-    key="1"
-  >
-    Log in
-  </a>,
-]
-`;
-
-exports[`CreateAccount when employerShowSelfRegistrationForm is set to true renders the page 5`] = `
-Array [
-  "Need to apply for paid leave? ",
-  <a
-    className="display-inline-block"
-    href="/create-account"
-    key="1"
-  >
-    Create an account
-  </a>,
-]
+    Create account
+  </button>
+</form>
 `;

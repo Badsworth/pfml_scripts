@@ -2,7 +2,6 @@ import { ApplicationRequestBody } from "../../api";
 import { format, parseISO } from "date-fns";
 import {
   AbstractDocumentGenerator,
-  DocumentType,
   PDFFormData,
 } from "./AbstractDocumentGenerator";
 import { EmployeeGenerator } from "../Employee";
@@ -10,11 +9,8 @@ import { EmployeeGenerator } from "../Employee";
 export default class MassID extends AbstractDocumentGenerator<{
   invalid?: boolean;
 }> {
-  get documentSource(): string {
+  documentSource(): string {
     return this.path(`license-MA.pdf`);
-  }
-  get documentType(): DocumentType {
-    return "Identification Proof";
   }
   getFormData(
     claim: ApplicationRequestBody,

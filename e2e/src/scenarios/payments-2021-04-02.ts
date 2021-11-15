@@ -164,7 +164,7 @@ export const PMT5: ScenarioSpecification = {
 
 // Family leave claim payment(s)
 export const PMT6: ScenarioSpecification = {
-  employee: { wages: 30000, metadata: { prenoted: "no" } },
+  employee: { wages: 30000, metadata: { prenoted: "yes" } },
   claim: {
     label: "PMT6",
     reason: "Child Bonding",
@@ -349,7 +349,7 @@ export const ADDRESS3: ScenarioSpecification = {
 
 // Valid address for ACH payment – no correction needed from Experian
 export const ADDRESS5: ScenarioSpecification = {
-  employee: { wages: 30000, metadata: { prenoted: "no" } },
+  employee: { wages: 30000, metadata: { prenoted: "yes" } },
   claim: {
     label: "ADDRESS5",
     reason: "Serious Health Condition - Employee",
@@ -373,7 +373,7 @@ export const ADDRESS5: ScenarioSpecification = {
 // Valid address for ACH payment – one for one correction provided from Experian
 // Valid address for ACH payment – no correction needed from Experian
 export const ADDRESS6: ScenarioSpecification = {
-  employee: { wages: 30000, metadata: { prenoted: "no" } },
+  employee: { wages: 30000, metadata: { prenoted: "yes" } },
   claim: {
     label: "ADDRESS6",
     reason: "Serious Health Condition - Employee",
@@ -395,7 +395,7 @@ export const ADDRESS6: ScenarioSpecification = {
 };
 // Valid address for ACH payment – no correction needed from Experian
 export const ADDRESS7: ScenarioSpecification = {
-  employee: { wages: 30000, metadata: { prenoted: "no" } },
+  employee: { wages: 30000, metadata: { prenoted: "yes" } },
   claim: {
     label: "ADDRESS7",
     reason: "Serious Health Condition - Employee",

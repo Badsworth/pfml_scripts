@@ -1,50 +1,35 @@
-import { renderWithAppLogic, simulateEvents } from "../../../test-utils";
+import { screen, waitFor } from "@testing-library/react";
 import AddOrganization from "../../../../src/pages/employers/organizations/add-organization";
+import { renderPage } from "../../../test-utils";
 import routes from "../../../../src/routes";
+import userEvent from "@testing-library/user-event";
 
-jest.mock("../../../../src/hooks/useAppLogic");
-
+const setup = () => {
+  let addEmployerSpy;
+  const utils = renderPage(AddOrganization, {
+    addCustomSetup: (appLogic) => {
+      addEmployerSpy = jest.spyOn(appLogic.employers, "addEmployer");
+    },
+  });
+  return { addEmployerSpy, ...utils };
+};
 describe("AddOrganization", () => {
-  let appLogic, changeField, submitForm, wrapper;
-
-  describe('when "employerShowAddOrganization" is enabled', () => {
-    beforeEach(() => {
-      process.env.featureFlags = { employerShowAddOrganization: true };
-      ({ wrapper, appLogic } = renderWithAppLogic(AddOrganization, {
-        diveLevels: 1,
-      }));
-    });
-
-    it("renders the page", () => {
-      expect(wrapper).toMatchSnapshot();
-      expect(appLogic.portalFlow.goTo).not.toHaveBeenCalled();
-    });
-
-    it("submits FEIN", async () => {
-      ({ changeField, submitForm } = simulateEvents(wrapper));
-      changeField("ein", "012345678");
-      await submitForm();
-
-      expect(appLogic.employers.addEmployer).toHaveBeenCalledWith(
-        {
-          employer_fein: "012345678",
-        },
-        routes.employers.organizations
-      );
-    });
+  it("renders the page", () => {
+    const { container } = setup();
+    expect(container.firstChild).toMatchSnapshot();
   });
 
-  describe('when "employerShowAddOrganization" is disabled', () => {
-    beforeEach(() => {
-      process.env.featureFlags = { employerShowAddOrganization: false };
-      ({ appLogic } = renderWithAppLogic(AddOrganization, {
-        diveLevels: 1,
-      }));
-    });
+  it("submits FEIN", async () => {
+    const { addEmployerSpy } = setup();
+    userEvent.type(screen.getByRole("textbox"), "01-2345678");
+    userEvent.click(screen.getByRole("button", { name: "Continue" }));
 
-    it("redirects to Welcome page", () => {
-      expect(appLogic.portalFlow.goTo).toHaveBeenCalledWith(
-        routes.employers.welcome
+    await waitFor(() => {
+      expect(addEmployerSpy).toHaveBeenCalledWith(
+        {
+          employer_fein: "01-2345678",
+        },
+        routes.employers.organizations
       );
     });
   });

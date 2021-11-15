@@ -4,6 +4,19 @@ import EmployeePool, {
   EmployeeGenerator,
   WageSpecification,
 } from "../../../src/generation/Employee";
+import fs from "fs";
+import dataDirectory, {
+  DataDirectory,
+} from "./../../../src/generation/DataDirectory";
+import { collect } from "streaming-iterables";
+
+const storage: DataDirectory = dataDirectory("tmp", __dirname);
+const prepareStorage = async () => {
+  await storage.prepare();
+};
+const removeStorage = async () => {
+  await fs.promises.rmdir(storage.dir, { recursive: true });
+};
 
 const wageTests: [WageSpecification, number, number][] = [
   ["ineligible", 0, 5399],
@@ -27,8 +40,8 @@ describe("EmployeeGenerator", () => {
     expect(employee).toMatchObject({
       first_name: expect.any(String),
       last_name: expect.any(String),
-      ssn: expect.stringMatching(/\d{3}\-\d{2}\-\d{4}/),
-      date_of_birth: expect.stringMatching(/\d{4}\-\d{2}\-\d{2}/),
+      ssn: expect.stringMatching(/\d{3}-\d{2}-\d{4}/),
+      date_of_birth: expect.stringMatching(/\d{4}-\d{2}-\d{2}/),
       occupations: expect.arrayContaining([
         expect.objectContaining({
           fein: employer.fein,
@@ -68,6 +81,10 @@ describe("EmployeeGenerator", () => {
 });
 
 describe("EmployeePool", () => {
+  afterAll(async () => {
+    await fs.promises.rmdir(storage.dir, { recursive: true });
+  });
+
   const employerPool = EmployerPool.generate(1);
 
   it("generate() should generate an employee pool", () => {
@@ -88,6 +105,8 @@ describe("EmployeePool", () => {
       });
       pool = new EmployeePool(employees);
     });
+    beforeAll(async () => await prepareStorage());
+    afterAll(async () => await removeStorage());
     it.each(wageTests)(
       "Should be able to pick() an employee with %s wages",
       (spec, min, max) => {
@@ -105,6 +124,18 @@ describe("EmployeePool", () => {
         .map(() => pool.pick({}))
         .map((e) => e.ssn);
       expect(new Set(ssns).size).toBe(10);
+    });
+
+    it("will persist used employees when saved after pick(s) have been performed", async () => {
+      const pool = EmployeePool.generate(1, employerPool, {});
+      const employee = await pool.pick({});
+      await pool.save(storage.employees, storage.usedEmployees);
+      const refreshedPool = await EmployeePool.load(
+        storage.employees,
+        storage.usedEmployees
+      );
+      expect(refreshedPool.used.size).toBe(1);
+      expect(refreshedPool.used.has(employee.ssn)).toBe(true);
     });
   });
 
@@ -131,5 +162,32 @@ describe("EmployeePool", () => {
       "No employee is left matching the specification"
     );
     expect(pool.pick({ metadata: { prenoted: true } })).toEqual(expectEmployee);
+  });
+
+  describe("orGenerateAndSave", () => {
+    beforeEach(async () => {
+      await prepareStorage();
+    });
+    afterEach(async () => {
+      await removeStorage();
+    });
+    it("orGenerateAndSave() will generate used employees when used with load()", async () => {
+      const employees = EmployeePool.generate(1, employerPool, {});
+      const gen = jest.fn(() => employees);
+      const pool = await EmployeePool.load(storage.employees).orGenerateAndSave(
+        gen
+      );
+      expect(gen).toHaveBeenCalled();
+      expect((await collect(pool)).length).toEqual(
+        await collect(await EmployeePool.load(storage.employees)).length
+      );
+    });
+    it("orGenerateAndSave() will save employers to hard drive", async () => {
+      await EmployeePool.load(storage.employees).orGenerateAndSave(() =>
+        EmployeePool.generate(1, employerPool, {})
+      );
+      const refreshedPool = await EmployeePool.load(storage.employees);
+      expect((await collect(refreshedPool)).length).toBe(1);
+    });
   });
 });

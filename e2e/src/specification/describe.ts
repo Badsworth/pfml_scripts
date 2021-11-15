@@ -11,8 +11,11 @@ function describeClaimLeaveType(claimSpec: ScenarioSpecification["claim"]) {
   if (claimSpec.has_continuous_leave_periods) {
     return "Continuous";
   }
-  if (claimSpec.has_intermittent_leave_periods) {
-    return "Intermittent";
+  if (claimSpec.intermittent_leave_spec) {
+    const description = claimSpec.intermittent_leave_spec
+      ? ":\n" + yaml.dump(claimSpec.intermittent_leave_spec)
+      : "";
+    return `Intermittent${description}`;
   }
   if (claimSpec.reduced_leave_spec) {
     return `Reduced (${claimSpec.reduced_leave_spec})`;
@@ -21,11 +24,19 @@ function describeClaimLeaveType(claimSpec: ScenarioSpecification["claim"]) {
 }
 
 function describeClaimLeaveDates(claimSpec: ScenarioSpecification["claim"]) {
-  if (claimSpec.leave_dates) {
+  if (Array.isArray(claimSpec.leave_dates)) {
     return claimSpec.leave_dates
       .map((date) => formatISO(date, { representation: "date" }))
       .join(" - ");
   }
+  if (claimSpec.leave_dates instanceof Function) {
+    if (!claimSpec?.metadata?.leaveDescription)
+      throw new Error(
+        "Missing 'leaveDescription' property in the scenario metadata\nProviding a function to the 'leave_dates' property requires a description of dates that will be generated"
+      );
+    return claimSpec.metadata.leaveDescription as string;
+  }
+
   if (claimSpec.shortClaim) {
     return "Random (short leave)";
   }
@@ -37,7 +48,10 @@ function describeCertificationDocs(spec: ScenarioSpecification["claim"]) {
     const generator = generators[documentKey as keyof typeof generators];
     return (
       generator &&
-      generator.documentType === "State managed Paid Leave Confirmation"
+      (generator.documentType === "State managed Paid Leave Confirmation" ||
+        generator.documentType === "Child bonding evidence form" ||
+        generator.documentType === "Own serious health condition form" ||
+        generator.documentType === "Care for a family member form")
     );
   });
   if (!matchingDocs) {
@@ -45,7 +59,7 @@ function describeCertificationDocs(spec: ScenarioSpecification["claim"]) {
   }
   return matchingDocs
     .map((key) => {
-      const config = spec.docs?.[key as keyof typeof generators];
+      const config = spec.docs?.[key as "MASSID"];
       const invalid = config && "invalid" in config && config.invalid;
       return `${key}${invalid ? " (invalid)" : ""}`;
     })
@@ -62,7 +76,7 @@ function describeIDProofDocs(spec: ScenarioSpecification["claim"]) {
   }
   return matchingDocs
     .map((key) => {
-      const config = spec.docs?.[key as keyof typeof generators];
+      const config = spec.docs?.[key as "MASSID"];
       const invalid = config && "invalid" in config && config.invalid;
       return `${key}${invalid ? " (invalid)" : ""}`;
     })

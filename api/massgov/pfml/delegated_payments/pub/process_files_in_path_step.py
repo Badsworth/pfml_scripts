@@ -54,7 +54,7 @@ class ProcessFilesInPathStep(Step, metaclass=abc.ABCMeta):
         if s3_objects:
             file = s3_objects.pop(0)
             path = os.path.join(self.received_path, file)
-            self.set_metrics(input_path=path)
+            self.set_metrics({"input_path": path})
             self.process_file(path)
 
         self.more_files_to_process = s3_objects != []
@@ -74,10 +74,10 @@ class ProcessFilesInPathStep(Step, metaclass=abc.ABCMeta):
             self.base_path, delegated_payments_util.Constants.S3_INBOUND_RECEIVED_DIR,
         )
         self.processed_path = os.path.join(
-            self.base_path, date_folder, delegated_payments_util.Constants.S3_INBOUND_PROCESSED_DIR,
+            self.base_path, delegated_payments_util.Constants.S3_INBOUND_PROCESSED_DIR, date_folder
         )
         self.error_path = os.path.join(
-            self.base_path, date_folder, delegated_payments_util.Constants.S3_INBOUND_ERROR_DIR,
+            self.base_path, delegated_payments_util.Constants.S3_INBOUND_ERROR_DIR, date_folder
         )
 
     @abc.abstractmethod

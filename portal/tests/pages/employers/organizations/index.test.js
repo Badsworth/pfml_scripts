@@ -1,192 +1,169 @@
-import { renderWithAppLogic, testHook } from "../../../test-utils";
+import User, { UserLeaveAdministrator } from "../../../../src/models/User";
+import { cleanup, screen } from "@testing-library/react";
 import Index from "../../../../src/pages/employers/organizations";
-import React from "react";
-import { UserLeaveAdministrator } from "../../../../src/models/User";
+import { renderPage } from "../../../test-utils";
 import routeWithParams from "../../../../src/utils/routeWithParams";
-import { shallow } from "enzyme";
-import useAppLogic from "../../../../src/hooks/useAppLogic";
 
-jest.mock("../../../../src/hooks/useAppLogic");
+const verifiedAdministrator = new UserLeaveAdministrator({
+  employer_dba: "Knitting Castle",
+  employer_fein: "11-3453443",
+  employer_id: "dda930f-93jfk-iej08",
+  has_fineos_registration: true,
+  has_verification_data: true,
+  verified: true,
+});
+
+const verifiableAdministrator = new UserLeaveAdministrator({
+  employer_dba: "Book Bindings 'R Us",
+  employer_fein: "00-3451823",
+  employer_id: "dda903f-f093f-ff900",
+  has_fineos_registration: true,
+  has_verification_data: true,
+  verified: false,
+});
+
+const unverifiableAdministrator = new UserLeaveAdministrator({
+  employer_dba: "Tomato Touchdown",
+  employer_fein: "22-3457192",
+  employer_id: "io19fj9-00jjf-uiw3r",
+  has_fineos_registration: true,
+  has_verification_data: false,
+  verified: false,
+});
+
+const EMPLOYERS = [
+  verifiableAdministrator,
+  verifiedAdministrator,
+  unverifiableAdministrator,
+];
+
+const setup = (employers = [], props = {}) => {
+  return renderPage(
+    Index,
+    {
+      addCustomSetup: (appLogic) => {
+        appLogic.users.user = new User({
+          consented_to_data_sharing: true,
+          user_leave_administrators: employers,
+        });
+      },
+    },
+    { query: { account_converted: "false" }, ...props }
+  );
+};
 
 describe("Index", () => {
-  let appLogic, wrapper;
-
-  const renderPage = () => {
-    testHook(() => {
-      appLogic = useAppLogic();
-    });
-
-    wrapper = shallow(<Index appLogic={appLogic} />).dive();
-  };
-
-  beforeEach(() => {
-    process.env.featureFlags = { employerShowVerifications: false };
-    renderPage();
-  });
-
   it("renders the page", () => {
-    expect(wrapper).toMatchSnapshot();
+    const { container } = setup();
+    expect(container).toMatchSnapshot();
   });
 
-  it("shows the correct empty state", () => {
-    ({ wrapper } = renderWithAppLogic(Index, {
-      diveLevels: 1,
-    }));
-
-    expect(wrapper.find("LeaveAdministratorRow").exists()).toBe(false);
+  it("show the correct empty state", () => {
+    setup();
+    expect(
+      screen.getByRole("row", { name: "None reported" })
+    ).toBeInTheDocument();
   });
 
   it("displays a table row for each user leave administrator", () => {
-    const rows = wrapper.find("LeaveAdministratorRow");
-    const titles = rows.map((row) => row.dive().find("span").first().text());
-    const eins = rows.map((row) => row.dive().find("td").text());
-    expect(titles).toEqual([
-      "Book Bindings 'R Us",
-      "Knitting Castle",
-      "Tomato Touchdown",
-    ]);
-    expect(eins).toEqual(["**-***1823", "**-***3443", "**-***7192"]);
+    setup(EMPLOYERS);
+    expect(
+      screen.queryByRole("row", { name: "None reported" })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("row", {
+        name: "Book Bindings 'R Us Verification required 00-3451823",
+      })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("row", { name: "Knitting Castle 11-3453443" })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("row", {
+        name: "Tomato Touchdown Verification blocked 22-3457192",
+      })
+    ).toBeInTheDocument();
   });
 
-  describe('when "employerShowAddOrganization" feature flag is enabled', () => {
-    beforeEach(() => {
-      process.env.featureFlags = { employerShowAddOrganization: true };
-    });
-
-    it("displays a button linked to Add Organization page", () => {
-      wrapper = shallow(<Index appLogic={appLogic} />).dive();
-      expect(wrapper.find("ButtonLink").exists()).toBe(true);
-    });
+  it("displays a button linked to Add Organization page", () => {
+    setup();
+    expect(
+      screen.getByRole("link", { name: "Add organization" })
+    ).toBeInTheDocument();
   });
 
-  describe('when "employerShowVerifications" feature flag is enabled', () => {
-    beforeEach(() => {
-      process.env.featureFlags = { employerShowVerifications: true };
-    });
+  it("shows an Alert telling the user to start verification if there are unverified employers", () => {
+    const verifyAccountDescription =
+      /Every employer must verify paid leave contributions when creating an account./;
+    setup(EMPLOYERS);
+    expect(
+      screen.queryByRole("heading", {
+        name: "Verify your account",
+      })
+    ).toBeInTheDocument();
 
-    it("shows an Alert telling the user to start verification if there are unverified employers", () => {
-      wrapper = shallow(<Index appLogic={appLogic} />).dive();
-      expect(wrapper.find("Alert").exists()).toBe(true);
-    });
+    expect(screen.queryByText(verifyAccountDescription)).toBeInTheDocument();
+    expect(screen.getByRole("region")).toMatchSnapshot();
 
-    it("does not show an alert if all users are verified", () => {
-      appLogic.users.user.user_leave_administrators = [
-        new UserLeaveAdministrator({
-          employer_dba: "Book Bindings 'R Us",
-          employer_fein: "1298391823",
-          employer_id: "dda903f-f093f-ff900",
-          has_verification_data: true,
-          verified: true,
-        }),
-      ];
-      wrapper = shallow(<Index appLogic={appLogic} />).dive();
-
-      expect(wrapper.find("Alert").exists()).toBe(false);
-    });
-
-    describe("for orgs that are not verified", () => {
-      describe("and can be verified", () => {
-        const expectedUrl = routeWithParams("employers.verifyContributions", {
-          employer_id: "dda903f-f093f-ff900",
-          next: "/employers/organizations",
-        });
-        let row;
-
-        beforeEach(() => {
-          renderPage();
-          row = wrapper.find("LeaveAdministratorRow").first().dive();
-        });
-
-        it('shows the "Verification required" tag', () => {
-          const verificationTag = row.find("Tag");
-          expect(verificationTag.parent().is("a")).toBe(true);
-          expect(verificationTag.parent().prop("href")).toBe(expectedUrl);
-          expect(verificationTag.prop("label")).toBe("Verification required");
-          expect(verificationTag.prop("state")).toBe("warning");
-        });
-
-        it("links to the correct Verify Business page", () => {
-          const link = row.find("a").first();
-          expect(link.text()).toBe("Book Bindings 'R Us");
-          expect(link.prop("href")).toBe(expectedUrl);
-        });
-      });
-
-      describe("and canNOT be verified", () => {
-        const expectedUrl = routeWithParams("employers.cannotVerify", {
-          employer_id: "io19fj9-00jjf-uiw3r",
-        });
-        let row;
-
-        beforeEach(() => {
-          renderPage();
-          row = wrapper.find("LeaveAdministratorRow").at(2).dive();
-        });
-
-        it('shows the "Verification blocked" tag', () => {
-          const verificationTag = row.find("Tag");
-          expect(verificationTag.parent().is("a")).toBe(true);
-          expect(verificationTag.parent().prop("href")).toBe(expectedUrl);
-          expect(verificationTag.prop("label")).toBe("Verification blocked");
-          expect(verificationTag.prop("state")).toBe("error");
-        });
-
-        it("links to the Cannot Verify page", () => {
-          const link = row.find("a").first();
-          expect(link.text()).toBe("Tomato Touchdown");
-          expect(link.prop("href")).toBe(expectedUrl);
-        });
-      });
-    });
-
-    describe("for orgs that are verified", () => {
-      let row;
-      beforeEach(() => {
-        row = wrapper.find("LeaveAdministratorRow").at(1).dive();
-      });
-
-      it('does not show the "Verification required" tag', () => {
-        expect(row.find("Tag").exists()).toBe(false);
-      });
-
-      it("does not link anywhere", () => {
-        expect(row.find("a").exists()).toBe(false);
-      });
-    });
+    cleanup();
+    setup([verifiedAdministrator]);
+    expect(
+      screen.queryByRole("heading", {
+        name: "Verify your account",
+      })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(verifyAccountDescription)
+    ).not.toBeInTheDocument();
   });
 
-  describe('when "employerShowVerifications" feature flag is disabled', () => {
-    it("does not show an Alert telling the user to start verification if there are unverified employers", () => {
-      wrapper = shallow(<Index appLogic={appLogic} />).dive();
-      expect(wrapper.find("Alert").exists()).toBe(false);
+  it("shows the 'Verification required' tag and link for verifiable administrators", () => {
+    setup([verifiableAdministrator]);
+    expect(
+      screen.getByRole("rowheader", {
+        name: "Book Bindings 'R Us Verification required",
+      })
+    ).toMatchSnapshot();
+  });
+
+  it("shows the 'Verification blocked' tag and link for unverifiable administrators", () => {
+    setup([unverifiableAdministrator]);
+    expect(
+      screen.getByRole("rowheader", {
+        name: "Tomato Touchdown Verification blocked",
+      })
+    ).toMatchSnapshot();
+  });
+
+  it("links to the cannot verify page for unverifiable administrators", () => {
+    setup([unverifiableAdministrator]);
+    const expectedUrl = routeWithParams("employers.cannotVerify", {
+      employer_id: unverifiableAdministrator.employer_id,
     });
+    expect(
+      screen.getByRole("link", { name: unverifiableAdministrator.employer_dba })
+    ).toHaveAttribute("href", expectedUrl);
+  });
 
-    describe("for all orgs", () => {
-      let verificationBlockedRow, verificationRequiredRow, verifiedRow;
-      beforeEach(() => {
-        renderPage();
-        verificationRequiredRow = wrapper
-          .find("LeaveAdministratorRow")
-          .first()
-          .dive();
-        verifiedRow = wrapper.find("LeaveAdministratorRow").at(1).dive();
-        verificationBlockedRow = wrapper
-          .find("LeaveAdministratorRow")
-          .at(2)
-          .dive();
-      });
+  it("does not show the 'Verification required' tag for verified administrators", () => {
+    setup([verifiedAdministrator]);
+    expect(
+      screen.queryByRole("link", { name: "Verification required" })
+    ).not.toBeInTheDocument();
+  });
 
-      it('does not show the "Verification required" tag', () => {
-        expect(verificationRequiredRow.find("Tag").exists()).toBe(false);
-        expect(verifiedRow.find("Tag").exists()).toBe(false);
-        expect(verificationBlockedRow.find("Tag").exists()).toBe(false);
-      });
+  it("does not render links for verified administrators", () => {
+    setup([verifiedAdministrator]);
+    expect(
+      screen.queryByRole("link", { name: verifiedAdministrator.employer_dba })
+    ).not.toBeInTheDocument();
+  });
 
-      it("does not navigate anywhere on click", () => {
-        expect(verificationRequiredRow.find("a").exists()).toBe(false);
-        expect(verifiedRow.find("a").exists()).toBe(false);
-        expect(verificationBlockedRow.find("a").exists()).toBe(false);
-      });
-    });
+  it("shows a success message telling the user they are now a leave admin", () => {
+    setup([], { query: { account_converted: "true" } });
+    expect(
+      screen.getByRole("heading", { name: "Success" })
+    ).toBeInTheDocument();
+    expect(screen.getByRole("region")).toMatchSnapshot();
   });
 });

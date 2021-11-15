@@ -1,29 +1,33 @@
-import { describe, beforeAll, test, expect } from "@jest/globals";
+import { jest, describe, beforeAll, test, expect } from "@jest/globals";
 import {
   DocumentUploadRequest,
   RequestOptions,
   postApplicationsByApplication_idDocuments,
 } from "../../src/api";
-import fs from "fs";
+import * as fs from "fs";
 import {
-  getClaimantCredentials,
   getEmployeePool,
   getPortalSubmitter,
   getAuthManager,
 } from "../../src/util/common";
+import { getClaimantCredentials } from "../../src/util/credentials";
 import { ClaimGenerator } from "../../src/generation/Claim";
 import * as scenarios from "../../src/scenarios";
 import config from "../../src/config";
 import * as data from "../util";
-import path from "path";
+import * as path from "path";
+import pRetry from "p-retry";
 
 const defaultClaimantCredentials = getClaimantCredentials();
 let application_id: string;
 let pmflApiOptions: RequestOptions;
 
+/**
+ * @group stable
+ */
 describe("API Documents Test of various file sizes", () => {
   beforeAll(async () => {
-    jest.retryTimes(3);
+    jest.retryTimes(2);
     const authenticator = getAuthManager();
     const submitter = getPortalSubmitter();
     const employeePool = await getEmployeePool();
@@ -40,29 +44,30 @@ describe("API Documents Test of various file sizes", () => {
       },
     };
 
-    const claim = ClaimGenerator.generate(
-      employeePool,
-      scenarios.BHAP1.employee,
-      scenarios.BHAP1.claim
+    // Before hooks will not be retried, so we have to handle our own retry logic here.
+    application_id = await pRetry(
+      async () => {
+        const claim = ClaimGenerator.generate(
+          employeePool,
+          scenarios.BHAP1.employee,
+          scenarios.BHAP1.claim
+        );
+        const res = await submitter.submitPartOne(
+          defaultClaimantCredentials,
+          claim.claim
+        );
+        expect(res).toMatchObject({
+          application_id: expect.any(String),
+        });
+        return res.application_id;
+      },
+      { retries: 3 }
     );
 
-    const res = await submitter.submitPartOne(
-      defaultClaimantCredentials,
-      claim.claim
-    );
-
-    if (!res.application_id || !res.fineos_absence_id) {
-      throw new Error(
-        `Unable to determine application ID or absence ID from response ${JSON.stringify(
-          res
-        )}`
-      );
-    }
     console.log(
-      `Documents are being submitted to this application_id: "${res.application_id}"`
+      `Documents are being submitted to this application_id: "${application_id}"`
     );
-    application_id = res.application_id;
-  }, 60000);
+  }, 120000);
 
   /**
    *  Idea here is to test the file size limit (4.5MB) w/each accepted

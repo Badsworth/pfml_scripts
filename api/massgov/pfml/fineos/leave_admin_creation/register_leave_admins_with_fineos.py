@@ -1,13 +1,11 @@
 import boto3
 
-import massgov.pfml.api.app as app
 import massgov.pfml.util.config as config
 import massgov.pfml.util.logging
 from massgov.pfml import db, fineos
 from massgov.pfml.api.services.administrator_fineos_actions import register_leave_admin_with_fineos
 from massgov.pfml.db.models.employees import UserLeaveAdministrator
-from massgov.pfml.util import feature_gate
-from massgov.pfml.util.sentry import initialize_sentry
+from massgov.pfml.util.bg import background_task
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
@@ -17,23 +15,23 @@ def find_user_and_register(
     leave_admin: UserLeaveAdministrator,
     fineos_client: fineos.AbstractFINEOSClient,
 ) -> None:
-    if leave_admin.user is None:
-        logger.error(
-            "No user found for record: ",
-            extra={"user_id": leave_admin.user_id, "employer_id": leave_admin.employer_id},
-        )
-        return
-
-    if leave_admin.employer is None:
-        logger.error(
-            "No employer found for record: ",
-            extra={"user_id": leave_admin.user_id, "employer_id": leave_admin.employer_id},
-        )
-        return
-
     if leave_admin.employer.fineos_employer_id is None:
         logger.error(
             "No FINEOS employer ID found for record: ",
+            extra={"user_id": leave_admin.user_id, "employer_id": leave_admin.employer_id},
+        )
+        return
+
+    if not leave_admin.verified:
+        logger.error(
+            "Leave admin not verified: ",
+            extra={"user_id": leave_admin.user_id, "employer_id": leave_admin.employer_id},
+        )
+        return
+
+    if not leave_admin.user.email_address:
+        logger.error(
+            "No leave admin email address provided: ",
             extra={"user_id": leave_admin.user_id, "employer_id": leave_admin.employer_id},
         )
         return
@@ -51,27 +49,19 @@ def find_user_and_register(
     )
 
 
-def find_admins_without_registration(db_session: db.Session):
+def find_admins_without_registration(db_session: db.Session) -> None:
     # Get verified records with no fineos_web_id
     # For each record, lookup the user and employer
     # Register with fineos
 
-    # TODO: Remove this check - https://lwd.atlassian.net/browse/EMPLOYER-962
-    if app.get_config().enforce_verification:
-        leave_admins_without_fineos = (
-            db_session.query(UserLeaveAdministrator)
-            .filter(
-                UserLeaveAdministrator.fineos_web_id.is_(None),
-                UserLeaveAdministrator.verified == True,  # noqa: E712
-            )
-            .all()
+    leave_admins_without_fineos = (
+        db_session.query(UserLeaveAdministrator)
+        .filter(
+            UserLeaveAdministrator.fineos_web_id.is_(None),
+            UserLeaveAdministrator.verification_id.isnot(None),
         )
-    else:
-        leave_admins_without_fineos = (
-            db_session.query(UserLeaveAdministrator)
-            .filter(UserLeaveAdministrator.fineos_web_id.is_(None))
-            .all()
-        )
+        .all()
+    )
 
     if len(leave_admins_without_fineos) > 0:
         fineos_client_config = fineos.factory.FINEOSClientConfig.from_env()
@@ -88,31 +78,16 @@ def find_admins_without_registration(db_session: db.Session):
     )
 
     for leave_admin in leave_admins_without_fineos:
-        verification_required = feature_gate.check_enabled(
-            feature_name=feature_gate.LEAVE_ADMIN_VERIFICATION,
-            user_email=leave_admin.user.email_address,
-        )
-
-        if verification_required and leave_admin.verified is False:
-            continue
-
         find_user_and_register(db_session, leave_admin, fineos_client)
 
-    if app.get_config().enforce_verification:
-        leave_admins_without_fineos_count = (
-            db_session.query(UserLeaveAdministrator)
-            .filter(
-                UserLeaveAdministrator.fineos_web_id.is_(None),
-                UserLeaveAdministrator.verified == True,  # noqa: E712
-            )
-            .count()
+    leave_admins_without_fineos_count = (
+        db_session.query(UserLeaveAdministrator)
+        .filter(
+            UserLeaveAdministrator.fineos_web_id.is_(None),
+            UserLeaveAdministrator.verification_id.isnot(None),
         )
-    else:
-        leave_admins_without_fineos_count = (
-            db_session.query(UserLeaveAdministrator)
-            .filter(UserLeaveAdministrator.fineos_web_id.is_(None))
-            .count()
-        )
+        .count()
+    )
 
     logger.info(
         "Leave admin records left unprocessed",
@@ -122,9 +97,8 @@ def find_admins_without_registration(db_session: db.Session):
     logger.info("Completed FINEOS Leave Admin Creation Script")
 
 
+@background_task("register-leave-admins-with-fineos")
 def main():
-    initialize_sentry()
-    massgov.pfml.util.logging.init("register_leave_admins_with_fineos")
     logger.info("Beginning FINEOS Leave Admin Creation Script")
     db_session_raw = db.init()
 

@@ -15,22 +15,10 @@ variable "cognito_extra_logout_urls" {
   default     = []
 }
 
-variable "cognito_enable_provisioned_concurrency" {
-  description = "Enable or disable provisioned concurrency (and new-version publishing) for Cognito lambdas."
-  type        = bool
-  default     = false
-}
-
 variable "domain" {
   description = "Domain name to point to CloudFront distribution (including TLD)"
   type        = string
   default     = ""
-}
-
-variable "enable_pretty_domain" {
-  description = "Set to false to disable ACM certificate lookup and domain configuration"
-  type        = bool
-  default     = true
 }
 
 variable "environment_name" {

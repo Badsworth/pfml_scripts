@@ -1,0 +1,18 @@
+/* Styles for Table.tsx component */
+.tag {
+  border: 1px solid;
+  border-radius: 0.75em;
+  padding: 0.25em 0.6em;
+  // @todo: get real colors
+  &--green {
+    background: $Color-BerkshiresGreen-50;
+    border-color: $Color-BerkshiresGreen-500;
+    color: $Color-BerkshiresGreen-800;
+  }
+
+  &--blue {
+    background: $Color-BayBlue-50;
+    border-color: $Color-BayBlue-500;
+    color: $Color-BayBlue-800;
+  }
+}

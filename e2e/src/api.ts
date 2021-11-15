@@ -1,4 +1,4 @@
-import { http } from "./_api";
+import { http, HttpError } from "./_api";
 import { enrichHttpError } from "./errors";
 
 /**
@@ -12,7 +12,9 @@ http.fetchJson = (
   ...args: Parameters<typeof fetchJson>
 ): ReturnType<typeof fetchJson> => {
   return fetchJson(...args).catch((e) => {
-    enrichHttpError(e);
+    if (e instanceof HttpError) {
+      enrichHttpError(e);
+    }
     throw e;
   });
 };

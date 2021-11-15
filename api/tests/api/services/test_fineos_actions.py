@@ -1,17 +1,22 @@
+import datetime
 import io
 import re
 from datetime import date, timedelta
+from unittest import mock
 
 import pytest
 
 import massgov.pfml.fineos
 import massgov.pfml.fineos.mock_client as fineos_mock
+from massgov.pfml.api.models.claims.responses import AbsencePeriodStatusResponse
 from massgov.pfml.api.services import fineos_actions
 from massgov.pfml.db.models.applications import (
     Application,
     LeaveReason,
     LeaveReasonQualifier,
     LkDayOfWeek,
+    RelationshipQualifier,
+    RelationshipToCaregiver,
 )
 from massgov.pfml.db.models.employees import (
     AddressType,
@@ -23,20 +28,43 @@ from massgov.pfml.db.models.employees import (
 from massgov.pfml.db.models.factories import (
     AddressFactory,
     ApplicationFactory,
+    CaringLeaveMetadataFactory,
     ClaimFactory,
+    ConcurrentLeaveFactory,
     ContinuousLeavePeriodFactory,
+    EmployeeFactory,
+    EmployerFactory,
     PaymentPreferenceFactory,
+    PreviousLeaveOtherReasonFactory,
+    PreviousLeaveSameReasonFactory,
     ReducedScheduleLeavePeriodFactory,
     WorkPatternFixedFactory,
 )
-from massgov.pfml.fineos import FINEOSClient
-from massgov.pfml.fineos.exception import FINEOSClientBadResponse, FINEOSClientError, FINEOSNotFound
+from massgov.pfml.fineos import FINEOSClient, exception
+from massgov.pfml.fineos.exception import (
+    FINEOSClientBadResponse,
+    FINEOSClientError,
+    FINEOSEntityNotFound,
+    FINEOSForbidden,
+)
 from massgov.pfml.fineos.models import CreateOrUpdateEmployer, CreateOrUpdateServiceAgreement
 from massgov.pfml.fineos.models.customer_api import Address as FineosAddress
 from massgov.pfml.fineos.models.customer_api import CustomerAddress
 
-# almost every test in here requires real resources
-pytestmark = pytest.mark.integration
+
+@pytest.fixture
+def employer():
+    return EmployerFactory.create()
+
+
+@pytest.fixture
+def claim(employer):
+    return ClaimFactory.create(employer_id=employer.employer_id, fineos_absence_id="NTN-111-111")
+
+
+@pytest.fixture
+def application(user, claim):
+    return ApplicationFactory.create(user=user, claim_id=claim.claim_id)
 
 
 def test_register_employee_pass(test_db_session):
@@ -94,7 +122,7 @@ def test_register_employee_bad_fein(test_db_session):
         fineos_actions.register_employee(
             fineos_client, employee_ssn, employer_fein, test_db_session
         )
-    except FINEOSNotFound:
+    except FINEOSEntityNotFound:
         assert True
 
 
@@ -138,33 +166,49 @@ def test_determine_absence_period_status_reduced(user, test_db_session):
     assert status == "estimated"
 
 
-def test_send_to_fineos(user, test_db_session):
-    application = ApplicationFactory.create(
-        user=user, work_pattern=WorkPatternFixedFactory.create()
-    )
-    application.employer_fein = "179892886"
-    application.tax_identifier.tax_identifier = "784569632"
+class TestSendToFineos:
+    # autouse the initialize_factories_session fixture
+    @pytest.fixture(autouse=True)
+    def setup(self, initialize_factories_session):
+        return
 
-    # create leave period to ensure the code that sets the "status" for the absence period is triggered
-    continuous_leave_period = ContinuousLeavePeriodFactory.create()
-    application.continuous_leave_periods.append(continuous_leave_period)
+    @pytest.fixture
+    def employee(self):
+        return EmployeeFactory.create()
 
-    assert application.claim_id is None
+    @pytest.fixture
+    def employer(self):
+        return EmployerFactory.create()
 
-    fineos_actions.send_to_fineos(application, test_db_session, user)
+    @pytest.fixture
+    def application(self, employee, employer, user):
+        application = ApplicationFactory.create(
+            tax_identifier=employee.tax_identifier,
+            employer_fein=employer.employer_fein,
+            user=user,
+            work_pattern=WorkPatternFixedFactory.create(),
+        )
 
-    updated_application = test_db_session.query(Application).get(application.application_id)
-    claim = ClaimFactory.create(
-        fineos_notification_id="NTN-1989", fineos_absence_id="NTN-1989-ABS-01"
-    )
-    application.claim = claim
+        # create leave period to ensure the code that sets the "status" for the absence period is triggered
+        continuous_leave_period = ContinuousLeavePeriodFactory.create()
+        application.continuous_leave_periods.append(continuous_leave_period)
 
-    assert updated_application.claim_id is not None
-    assert str(updated_application.claim.fineos_absence_id).startswith("NTN")
-    assert str(updated_application.claim.fineos_absence_id).__contains__("ABS")
+        return application
 
-    assert updated_application.claim.fineos_notification_id is not None
-    assert str(updated_application.claim.fineos_notification_id).startswith("NTN")
+    def test_valid_application(self, application, employee, employer, test_db_session, user):
+        fineos_actions.send_to_fineos(application, test_db_session, user)
+
+        updated_application = test_db_session.query(Application).get(application.application_id)
+        claim = updated_application.claim
+
+        assert claim.absence_period_start_date is not None
+        assert claim.absence_period_end_date is not None
+        assert claim.fineos_absence_id.startswith("NTN")
+        assert claim.fineos_absence_id.__contains__("ABS")
+        assert claim.fineos_notification_id is not None
+        assert claim.fineos_notification_id.startswith("NTN")
+        assert claim.employee == employee
+        assert claim.employer == employer
 
 
 def test_document_upload(user, test_db_session):
@@ -401,7 +445,9 @@ def test_build_week_based_work_pattern(user, test_db_session):
             hours=8,
             minutes=15,
         )
-        for i in range(7)
+        # Order of days different between expected and actual.
+        # Forcing to start on Sunday on expected to match actual.
+        for i in [6, 0, 1, 2, 3, 4, 5]
     ]
 
 
@@ -452,8 +498,6 @@ def test_employer_creation_exception(test_db_session):
         fineos_actions.create_or_update_employer(fineos_client, employer)
 
 
-# not an integration test, but marked as such by global pytest.mark.integration
-# at top of file
 def test_creating_request_payload():
     create_or_update_request = CreateOrUpdateEmployer(
         fineos_customer_nbr="pfml_test_payload",
@@ -471,8 +515,6 @@ def test_creating_request_payload():
     assert payload.__contains__("<DoingBusinessAs>Test Organization DBA</DoingBusinessAs>")
 
 
-# not an integration test, but marked as such by global pytest.mark.integration
-# at top of file
 def test_creating_request_payload_with_other_names():
     create_or_update_request = CreateOrUpdateEmployer(
         fineos_customer_nbr="pfml_test_payload",
@@ -536,6 +578,151 @@ def test_build_bonding_date_reflexive_question_foster(user):
     assert reflexive_question.reflexiveQuestionDetails[0].dateValue == date(2021, 2, 9)
 
 
+def test_build_caring_leave_reflexive_question_age_capacity(user):
+    # Child relationship uses the "AgeCapacityFamilyMemberQuestionGroup.familyMemberDetailsQuestions" field name
+
+    caring_leave_metadata = CaringLeaveMetadataFactory.create(
+        relationship_to_caregiver_id=RelationshipToCaregiver.CHILD.relationship_to_caregiver_id,
+    )
+    application = ApplicationFactory.create(user=user, caring_leave_metadata=caring_leave_metadata)
+    application.leave_reason_id = LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_id
+
+    reflexive_question = fineos_actions.build_caring_leave_reflexive_question(application)
+
+    assert (
+        reflexive_question.reflexiveQuestionDetails[0].fieldName
+        == "AgeCapacityFamilyMemberQuestionGroup.familyMemberDetailsQuestions.firstName"
+    )
+    assert (
+        reflexive_question.reflexiveQuestionDetails[1].fieldName
+        == "AgeCapacityFamilyMemberQuestionGroup.familyMemberDetailsQuestions.middleInital"
+    )
+    assert (
+        reflexive_question.reflexiveQuestionDetails[2].fieldName
+        == "AgeCapacityFamilyMemberQuestionGroup.familyMemberDetailsQuestions.lastName"
+    )
+    assert (
+        reflexive_question.reflexiveQuestionDetails[3].fieldName
+        == "AgeCapacityFamilyMemberQuestionGroup.familyMemberDetailsQuestions.dateOfBirth"
+    )
+    assert (
+        reflexive_question.reflexiveQuestionDetails[0].stringValue
+        == caring_leave_metadata.family_member_first_name
+    )
+    assert (
+        reflexive_question.reflexiveQuestionDetails[1].stringValue
+        == caring_leave_metadata.family_member_middle_name
+    )
+    assert (
+        reflexive_question.reflexiveQuestionDetails[2].stringValue
+        == caring_leave_metadata.family_member_last_name
+    )
+    assert (
+        reflexive_question.reflexiveQuestionDetails[3].dateValue
+        == caring_leave_metadata.family_member_date_of_birth
+    )
+
+
+def test_build_caring_leave_reflexive_question_family_member_details(user):
+    # Grandchild, Grandparent, Inlaw, Parent, and Spouse relationships use the "FamilyMemberDetailsQuestionGroup.familyMemberDetailsQuestions" field name
+    relationship_ids = [
+        RelationshipToCaregiver.GRANDCHILD.relationship_to_caregiver_id,
+        RelationshipToCaregiver.GRANDPARENT.relationship_to_caregiver_id,
+        RelationshipToCaregiver.INLAW.relationship_to_caregiver_id,
+        RelationshipToCaregiver.PARENT.relationship_to_caregiver_id,
+        RelationshipToCaregiver.SPOUSE.relationship_to_caregiver_id,
+    ]
+
+    for relationship_id in relationship_ids:
+        caring_leave_metadata = CaringLeaveMetadataFactory.create(
+            relationship_to_caregiver_id=relationship_id,
+        )
+        application = ApplicationFactory.create(
+            user=user, caring_leave_metadata=caring_leave_metadata
+        )
+        application.leave_reason_id = LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_id
+
+        reflexive_question = fineos_actions.build_caring_leave_reflexive_question(application)
+
+        assert (
+            reflexive_question.reflexiveQuestionDetails[0].fieldName
+            == "FamilyMemberDetailsQuestionGroup.familyMemberDetailsQuestions.firstName"
+        )
+        assert (
+            reflexive_question.reflexiveQuestionDetails[1].fieldName
+            == "FamilyMemberDetailsQuestionGroup.familyMemberDetailsQuestions.middleInital"
+        )
+        assert (
+            reflexive_question.reflexiveQuestionDetails[2].fieldName
+            == "FamilyMemberDetailsQuestionGroup.familyMemberDetailsQuestions.lastName"
+        )
+        assert (
+            reflexive_question.reflexiveQuestionDetails[3].fieldName
+            == "FamilyMemberDetailsQuestionGroup.familyMemberDetailsQuestions.dateOfBirth"
+        )
+        assert (
+            reflexive_question.reflexiveQuestionDetails[0].stringValue
+            == caring_leave_metadata.family_member_first_name
+        )
+        assert (
+            reflexive_question.reflexiveQuestionDetails[1].stringValue
+            == caring_leave_metadata.family_member_middle_name
+        )
+        assert (
+            reflexive_question.reflexiveQuestionDetails[2].stringValue
+            == caring_leave_metadata.family_member_last_name
+        )
+        assert (
+            reflexive_question.reflexiveQuestionDetails[3].dateValue
+            == caring_leave_metadata.family_member_date_of_birth
+        )
+
+
+def test_build_caring_leave_reflexive_question_family_member_sibling(user):
+    # Sibling relationship uses the "FamilyMemberSiblingDetailsQuestionGroup.familyMemberDetailsQuestions" field name
+
+    caring_leave_metadata = CaringLeaveMetadataFactory.create(
+        relationship_to_caregiver_id=RelationshipToCaregiver.SIBLING.relationship_to_caregiver_id,
+    )
+    application = ApplicationFactory.create(user=user, caring_leave_metadata=caring_leave_metadata)
+    application.leave_reason_id = LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_id
+
+    reflexive_question = fineos_actions.build_caring_leave_reflexive_question(application)
+
+    assert (
+        reflexive_question.reflexiveQuestionDetails[0].fieldName
+        == "FamilyMemberSiblingDetailsQuestionGroup.familyMemberDetailsQuestions.firstName"
+    )
+    assert (
+        reflexive_question.reflexiveQuestionDetails[1].fieldName
+        == "FamilyMemberSiblingDetailsQuestionGroup.familyMemberDetailsQuestions.middleInital"
+    )
+    assert (
+        reflexive_question.reflexiveQuestionDetails[2].fieldName
+        == "FamilyMemberSiblingDetailsQuestionGroup.familyMemberDetailsQuestions.lastName"
+    )
+    assert (
+        reflexive_question.reflexiveQuestionDetails[3].fieldName
+        == "FamilyMemberSiblingDetailsQuestionGroup.familyMemberDetailsQuestions.dateOfBirth"
+    )
+    assert (
+        reflexive_question.reflexiveQuestionDetails[0].stringValue
+        == caring_leave_metadata.family_member_first_name
+    )
+    assert (
+        reflexive_question.reflexiveQuestionDetails[1].stringValue
+        == caring_leave_metadata.family_member_middle_name
+    )
+    assert (
+        reflexive_question.reflexiveQuestionDetails[2].stringValue
+        == caring_leave_metadata.family_member_last_name
+    )
+    assert (
+        reflexive_question.reflexiveQuestionDetails[3].dateValue
+        == caring_leave_metadata.family_member_date_of_birth
+    )
+
+
 def test_build_customer_model_no_mass_id(user):
     application = ApplicationFactory.create(user=user)
     customer_model = fineos_actions.build_customer_model(application, user)
@@ -572,17 +759,17 @@ def test_create_service_agreement_for_employer(test_db_session):
 
     fineos_actions.create_or_update_employer(fineos_client, employer)
 
-    fineos_sa_id = fineos_actions.create_service_agreement_for_employer(fineos_client, employer)
+    fineos_sa_id = fineos_actions.create_service_agreement_for_employer(
+        fineos_client, employer, True
+    )
 
     assert fineos_sa_id is not None
     assert fineos_sa_id == "SA-123"
 
 
-# not an integration test, but marked as such by global pytest.mark.integration
-# at top of file
 def test_create_service_agreement_payload():
     service_agreement_inputs = CreateOrUpdateServiceAgreement(
-        absence_management_flag=True, leave_plans="MA PFML - Family, MA PFML - Military Care"
+        leave_plans="MA PFML - Family, MA PFML - Military Care", unlink_leave_plans=True,
     )
     payload = FINEOSClient._create_service_agreement_payload(123, service_agreement_inputs)
 
@@ -600,7 +787,7 @@ def test_create_service_agreement_payload():
     )
 
     service_agreement_inputs = CreateOrUpdateServiceAgreement(
-        absence_management_flag=False, leave_plans=""
+        absence_management_flag=False, unlink_leave_plans=True,
     )
     payload = FINEOSClient._create_service_agreement_payload(123, service_agreement_inputs)
 
@@ -618,8 +805,79 @@ def test_create_service_agreement_payload():
     )
 
 
-# not an integration test, but marked as such by global pytest.mark.integration
-# at top of file
+def test_service_agreement_exempt_to_not_payload():
+    employer = Employer()
+    employer.employer_fein = "888447598"
+    employer.employer_name = "Test Organization Name"
+    employer.employer_dba = "Test Organization DBA"
+    employer.family_exemption = False
+    employer.medical_exemption = False
+    prev_family_exemption = True
+    prev_medical_exemption = True
+    prev_exemption_cease_date = date(2021, 2, 9)
+
+    service_agreement_inputs = fineos_actions.resolve_service_agreement_inputs(
+        False, employer, prev_family_exemption, prev_medical_exemption, prev_exemption_cease_date,
+    )
+
+    payload = FINEOSClient._create_service_agreement_payload(123, service_agreement_inputs)
+
+    assert payload is not None
+    assert payload.__contains__("<config-name>ServiceAgreementService</config-name>")
+    assert payload.__contains__("<name>CustomerNumber</name>")
+    assert payload.__contains__("<value>123</value>")
+    # Leave plans are unordered sets so the order cannot be guaranteed.
+    assert payload.__contains__("<name>LeavePlans</name>")
+    assert payload.__contains__("<value>MA PFML -")
+    assert payload.count("MA PFML - ") == 3
+    assert payload.__contains__("<name>AbsenceManagement</name>")
+    assert re.search("<name>AbsenceManagement</name>\\s+<value>True</value>", payload) is not None
+    assert payload.__contains__("<name>UnlinkAllExistingLeavePlans</name>")
+    assert (
+        re.search("<name>UnlinkAllExistingLeavePlans</name>\\s+<value>True</value>", payload)
+        is not None
+    )
+    assert payload.__contains__("<name>StartDate</name>")
+    assert re.search("<name>StartDate</name>\\s+<value>2021-02-09</value>", payload) is not None
+
+
+def test_service_agreement_not_exempt_to_exempt_payload():
+    employer = Employer()
+    employer.employer_fein = "888447598"
+    employer.employer_name = "Test Organization Name"
+    employer.employer_dba = "Test Organization DBA"
+    employer.family_exemption = True
+    employer.medical_exemption = True
+    employer.exemption_commence_date = date(2021, 2, 9)
+    prev_family_exemption = False
+    prev_medical_exemption = False
+    prev_exemption_cease_date = None
+
+    service_agreement_inputs = fineos_actions.resolve_service_agreement_inputs(
+        False, employer, prev_family_exemption, prev_medical_exemption, prev_exemption_cease_date,
+    )
+    payload = FINEOSClient._create_service_agreement_payload(123, service_agreement_inputs)
+
+    assert payload is not None
+    assert payload.__contains__("<config-name>ServiceAgreementService</config-name>")
+    assert payload.__contains__("<name>CustomerNumber</name>")
+    assert payload.__contains__("<value>123</value>")
+    # Leave plans are unordered sets so the order cannot be guaranteed.
+    assert payload.__contains__("<name>LeavePlans</name>")
+    assert payload.__contains__("<value>MA PFML -")
+    assert payload.count("MA PFML - ") == 3
+    assert payload.__contains__("<name>AbsenceManagement</name>")
+    assert re.search("<name>AbsenceManagement</name>\\s+<value>True</value>", payload) is not None
+    assert payload.__contains__("<name>UnlinkAllExistingLeavePlans</name>")
+    assert (
+        re.search("<name>UnlinkAllExistingLeavePlans</name>\\s+<value>False</value>", payload)
+        is not None
+    )
+    assert payload.__contains__("<name>EndDate</name>")
+    # The EndDate is set to the day BEFORE the exemption commence date.
+    assert re.search("<name>EndDate</name>\\s+<value>2021-02-08</value>", payload) is not None
+
+
 def test_resolve_leave_plans():
     # Family Exemption = false
     # Medical Exemption = false
@@ -660,8 +918,8 @@ def test_determine_absence_notification_reason(user, test_db_session):
         leave_reason_qualifier_id=LeaveReasonQualifier.NEWBORN.leave_reason_qualifier_id,
     )
 
-    absence_case: massgov.pfml.fineos.models.customer_api.AbsenceCase = fineos_actions.build_absence_case(
-        application
+    absence_case: massgov.pfml.fineos.models.customer_api.AbsenceCase = (
+        fineos_actions.build_absence_case(application)
     )
     assert (
         absence_case.notificationReason
@@ -675,8 +933,8 @@ def test_determine_absence_notification_reason(user, test_db_session):
         pregnant_or_recent_birth=True,
     )
 
-    absence_case: massgov.pfml.fineos.models.customer_api.AbsenceCase = fineos_actions.build_absence_case(
-        application
+    absence_case: massgov.pfml.fineos.models.customer_api.AbsenceCase = (
+        fineos_actions.build_absence_case(application)
     )
     assert (
         absence_case.notificationReason
@@ -689,8 +947,8 @@ def test_determine_absence_notification_reason(user, test_db_session):
         leave_reason_qualifier_id=LeaveReasonQualifier.WORK_RELATED_ACCIDENT_INJURY.leave_reason_qualifier_id,
     )
 
-    absence_case: massgov.pfml.fineos.models.customer_api.AbsenceCase = fineos_actions.build_absence_case(
-        application
+    absence_case: massgov.pfml.fineos.models.customer_api.AbsenceCase = (
+        fineos_actions.build_absence_case(application)
     )
     assert (
         absence_case.notificationReason
@@ -698,15 +956,481 @@ def test_determine_absence_notification_reason(user, test_db_session):
     )
 
     application = ApplicationFactory.create(
+        caring_leave_metadata=CaringLeaveMetadataFactory.create(
+            relationship_to_caregiver_id=RelationshipToCaregiver.SIBLING.relationship_to_caregiver_id
+        ),
         user=user,
         leave_reason_id=LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_id,
         leave_reason_qualifier_id=LeaveReasonQualifier.SERIOUS_HEALTH_CONDITION.leave_reason_qualifier_id,
     )
 
-    absence_case: massgov.pfml.fineos.models.customer_api.AbsenceCase = fineos_actions.build_absence_case(
-        application
+    absence_case: massgov.pfml.fineos.models.customer_api.AbsenceCase = (
+        fineos_actions.build_absence_case(application)
     )
     assert (
         absence_case.notificationReason
         == fineos_actions.LeaveNotificationReason.CARING_FOR_A_FAMILY_MEMBER
     )
+
+
+def test_determine_relationship_qualifiers(user, test_db_session):
+    # Relationships that use the BIOLOGICAL qualifier
+    biological_qualifier_relationships = [
+        RelationshipToCaregiver.PARENT,
+        RelationshipToCaregiver.CHILD,
+        RelationshipToCaregiver.GRANDPARENT,
+        RelationshipToCaregiver.GRANDCHILD,
+        RelationshipToCaregiver.SIBLING,
+    ]
+
+    for relationship in biological_qualifier_relationships:
+        caring_leave_metatadata = CaringLeaveMetadataFactory.create(
+            relationship_to_caregiver_id=relationship.relationship_to_caregiver_id
+        )
+        application = ApplicationFactory.create(
+            caring_leave_metadata=caring_leave_metatadata,
+            user=user,
+            leave_reason_id=LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_id,
+            leave_reason_qualifier_id=LeaveReasonQualifier.SERIOUS_HEALTH_CONDITION.leave_reason_qualifier_id,
+        )
+        absence_case: massgov.pfml.fineos.models.customer_api.AbsenceCase = (
+            fineos_actions.build_absence_case(application)
+        )
+        assert (
+            absence_case.primaryRelationship == relationship.relationship_to_caregiver_description
+        )
+        assert (
+            absence_case.primaryRelQualifier1
+            == RelationshipQualifier.BIOLOGICAL.relationship_qualifier_description
+        )
+        assert absence_case.primaryRelQualifier2 is None
+
+    # INLAW relationship
+    caring_leave_metatadata = CaringLeaveMetadataFactory.create(
+        relationship_to_caregiver_id=RelationshipToCaregiver.INLAW.relationship_to_caregiver_id
+    )
+    application = ApplicationFactory.create(
+        caring_leave_metadata=caring_leave_metatadata,
+        user=user,
+        leave_reason_id=LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_id,
+        leave_reason_qualifier_id=LeaveReasonQualifier.SERIOUS_HEALTH_CONDITION.leave_reason_qualifier_id,
+    )
+    absence_case: massgov.pfml.fineos.models.customer_api.AbsenceCase = (
+        fineos_actions.build_absence_case(application)
+    )
+    assert (
+        absence_case.primaryRelationship
+        == RelationshipToCaregiver.INLAW.relationship_to_caregiver_description
+    )
+    assert (
+        absence_case.primaryRelQualifier1
+        == RelationshipQualifier.PARENT_IN_LAW.relationship_qualifier_description
+    )
+    assert absence_case.primaryRelQualifier2 is None
+
+    # SPOUSE relationship
+    caring_leave_metatadata = CaringLeaveMetadataFactory.create(
+        relationship_to_caregiver_id=RelationshipToCaregiver.SPOUSE.relationship_to_caregiver_id
+    )
+    application = ApplicationFactory.create(
+        caring_leave_metadata=caring_leave_metatadata,
+        user=user,
+        leave_reason_id=LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_id,
+        leave_reason_qualifier_id=LeaveReasonQualifier.SERIOUS_HEALTH_CONDITION.leave_reason_qualifier_id,
+    )
+    absence_case: massgov.pfml.fineos.models.customer_api.AbsenceCase = (
+        fineos_actions.build_absence_case(application)
+    )
+    assert (
+        absence_case.primaryRelationship
+        == RelationshipToCaregiver.SPOUSE.relationship_to_caregiver_description
+    )
+    assert (
+        absence_case.primaryRelQualifier1
+        == RelationshipQualifier.LEGALLY_MARRIED.relationship_qualifier_description
+    )
+    assert (
+        absence_case.primaryRelQualifier2
+        == RelationshipQualifier.UNDISCLOSED.relationship_qualifier_description
+    )
+
+
+def test_format_other_leaves_data_no_leaves(user, test_db_session):
+    application: Application = ApplicationFactory.create(user=user)
+    # Application without Other Leaves - No EForm generated.
+    eform = fineos_actions.format_other_leaves_data(application)
+    assert eform is None
+
+
+def test_format_other_leaves_data_only_other_reason(user, test_db_session):
+    application: Application = ApplicationFactory.create(user=user)
+    application.previous_leaves_other_reason = [
+        PreviousLeaveOtherReasonFactory.create(
+            application_id=application.application_id,
+            is_for_current_employer=False,
+            worked_per_week_minutes=2430,
+            leave_minutes=3600,
+        ),
+    ]
+    application.has_previous_leaves_other_reason = True
+
+    eform = fineos_actions.format_other_leaves_data(application)
+    assert eform is not None
+    assert eform.eformType == "Other Leaves - current version"
+    expected_attributes = [
+        {
+            "dateValue": application.previous_leaves_other_reason[0].leave_start_date.isoformat(),
+            "name": "V2OtherLeavesPastLeaveStartDate1",
+        },
+        {
+            "dateValue": application.previous_leaves_other_reason[0].leave_end_date.isoformat(),
+            "name": "V2OtherLeavesPastLeaveEndDate1",
+        },
+        {
+            "enumValue": {"domainName": "QualifyingReasons", "instanceValue": "Pregnancy",},
+            "name": "V2QualifyingReason1",
+        },
+        {
+            "enumValue": {"domainName": "PleaseSelectYesNo", "instanceValue": "No"},
+            "name": "V2LeaveFromEmployer1",
+        },
+        {
+            "enumValue": {"domainName": "PleaseSelectYesNo", "instanceValue": "No"},
+            "name": "V2Leave1",
+        },
+        {"integerValue": 40, "name": "V2HoursWorked1"},
+        {
+            "enumValue": {"domainName": "15MinuteIncrements", "instanceValue": "30"},
+            "name": "V2MinutesWorked1",
+        },
+        {"integerValue": 60, "name": "V2TotalHours1"},
+        {
+            "enumValue": {"domainName": "15MinuteIncrements", "instanceValue": "00"},
+            "name": "V2TotalMinutes1",
+        },
+        {
+            "enumValue": {"domainName": "PleaseSelectYesNo", "instanceValue": "Yes"},
+            "name": "V2Applies1",
+        },
+    ]
+
+    assert eform.eformAttributes == expected_attributes
+
+
+def test_format_other_leaves_data_only_same_reason(user, test_db_session):
+    application: Application = ApplicationFactory.create(user=user)
+    application.previous_leaves_same_reason = [
+        PreviousLeaveSameReasonFactory.create(
+            application_id=application.application_id,
+            is_for_current_employer=True,
+            worked_per_week_minutes=2430,
+            leave_minutes=3600,
+        ),
+    ]
+    application.has_previous_leaves_same_reason = True
+
+    eform = fineos_actions.format_other_leaves_data(application)
+    assert eform is not None
+    assert eform.eformType == "Other Leaves - current version"
+    expected_attributes = [
+        {
+            "dateValue": application.previous_leaves_same_reason[0].leave_start_date.isoformat(),
+            "name": "V2OtherLeavesPastLeaveStartDate1",
+        },
+        {
+            "dateValue": application.previous_leaves_same_reason[0].leave_end_date.isoformat(),
+            "name": "V2OtherLeavesPastLeaveEndDate1",
+        },
+        {
+            "enumValue": {
+                "domainName": "QualifyingReasons",
+                "instanceValue": "An illness or injury",
+            },
+            "name": "V2QualifyingReason1",
+        },
+        {
+            "enumValue": {"domainName": "PleaseSelectYesNo", "instanceValue": "Yes"},
+            "name": "V2LeaveFromEmployer1",
+        },
+        {
+            "enumValue": {"domainName": "PleaseSelectYesNo", "instanceValue": "Yes"},
+            "name": "V2Leave1",
+        },
+        {"integerValue": 40, "name": "V2HoursWorked1"},
+        {
+            "enumValue": {"domainName": "15MinuteIncrements", "instanceValue": "30"},
+            "name": "V2MinutesWorked1",
+        },
+        {"integerValue": 60, "name": "V2TotalHours1"},
+        {
+            "enumValue": {"domainName": "15MinuteIncrements", "instanceValue": "00"},
+            "name": "V2TotalMinutes1",
+        },
+        {
+            "enumValue": {"domainName": "PleaseSelectYesNo", "instanceValue": "Yes"},
+            "name": "V2Applies1",
+        },
+    ]
+
+    assert eform.eformAttributes == expected_attributes
+
+
+def test_format_other_leaves_data_only_concurrent_leave(user, test_db_session):
+    application: Application = ApplicationFactory.create(user=user)
+    application.concurrent_leave = ConcurrentLeaveFactory.create(
+        application_id=application.application_id, is_for_current_employer=False,
+    )
+    application.has_concurrent_leave = True
+
+    eform = fineos_actions.format_other_leaves_data(application)
+    assert eform is not None
+    assert eform.eformType == "Other Leaves - current version"
+    expected_attributes = [
+        {
+            "dateValue": application.concurrent_leave.leave_start_date.isoformat(),
+            "name": "V2AccruedStartDate1",
+        },
+        {
+            "dateValue": application.concurrent_leave.leave_end_date.isoformat(),
+            "name": "V2AccruedEndDate1",
+        },
+        {
+            "enumValue": {"domainName": "PleaseSelectYesNo", "instanceValue": "No"},
+            "name": "V2AccruedPLEmployer1",
+        },
+        {
+            "enumValue": {"domainName": "PleaseSelectYesNo", "instanceValue": "Yes"},
+            "name": "V2AccruedPaidLeave1",
+        },
+    ]
+
+    assert eform.eformAttributes == expected_attributes
+
+
+def test_format_other_leaves_data_all_present(user, test_db_session):
+    application: Application = ApplicationFactory.create(user=user)
+    application.previous_leaves_other_reason = [
+        PreviousLeaveOtherReasonFactory.create(
+            application_id=application.application_id,
+            is_for_current_employer=False,
+            worked_per_week_minutes=2430,
+            leave_minutes=3600,
+        ),
+        PreviousLeaveOtherReasonFactory.create(
+            application_id=application.application_id,
+            is_for_current_employer=False,
+            worked_per_week_minutes=2430,
+            leave_minutes=3600,
+        ),
+    ]
+    application.has_previous_leaves_other_reason = True
+
+    application.previous_leaves_same_reason = [
+        PreviousLeaveSameReasonFactory.create(
+            application_id=application.application_id,
+            is_for_current_employer=True,
+            worked_per_week_minutes=2430,
+            leave_minutes=3600,
+        ),
+    ]
+    application.has_previous_leaves_other_reason = True
+
+    application.concurrent_leave = ConcurrentLeaveFactory.create(
+        application_id=application.application_id, is_for_current_employer=False,
+    )
+    application.has_concurrent_leave = True
+
+    eform = fineos_actions.format_other_leaves_data(application)
+    assert eform is not None
+    assert eform.eformType == "Other Leaves - current version"
+
+    expected_attributes = [
+        {
+            "dateValue": application.previous_leaves_other_reason[0].leave_start_date.isoformat(),
+            "name": "V2OtherLeavesPastLeaveStartDate1",
+        },
+        {
+            "dateValue": application.previous_leaves_other_reason[0].leave_end_date.isoformat(),
+            "name": "V2OtherLeavesPastLeaveEndDate1",
+        },
+        {
+            "enumValue": {"domainName": "QualifyingReasons", "instanceValue": "Pregnancy",},
+            "name": "V2QualifyingReason1",
+        },
+        {
+            "enumValue": {"domainName": "PleaseSelectYesNo", "instanceValue": "No"},
+            "name": "V2LeaveFromEmployer1",
+        },
+        {
+            "enumValue": {"domainName": "PleaseSelectYesNo", "instanceValue": "No"},
+            "name": "V2Leave1",
+        },
+        {"integerValue": 40, "name": "V2HoursWorked1"},
+        {
+            "enumValue": {"domainName": "15MinuteIncrements", "instanceValue": "30"},
+            "name": "V2MinutesWorked1",
+        },
+        {"integerValue": 60, "name": "V2TotalHours1"},
+        {
+            "enumValue": {"domainName": "15MinuteIncrements", "instanceValue": "00"},
+            "name": "V2TotalMinutes1",
+        },
+        {
+            "enumValue": {"domainName": "PleaseSelectYesNo", "instanceValue": "Yes"},
+            "name": "V2Applies1",
+        },
+        {
+            "dateValue": application.previous_leaves_other_reason[1].leave_start_date.isoformat(),
+            "name": "V2OtherLeavesPastLeaveStartDate2",
+        },
+        {
+            "dateValue": application.previous_leaves_other_reason[1].leave_end_date.isoformat(),
+            "name": "V2OtherLeavesPastLeaveEndDate2",
+        },
+        {
+            "enumValue": {"domainName": "QualifyingReasons", "instanceValue": "Pregnancy",},
+            "name": "V2QualifyingReason2",
+        },
+        {
+            "enumValue": {"domainName": "PleaseSelectYesNo", "instanceValue": "No"},
+            "name": "V2LeaveFromEmployer2",
+        },
+        {
+            "enumValue": {"domainName": "PleaseSelectYesNo", "instanceValue": "No"},
+            "name": "V2Leave2",
+        },
+        {"integerValue": 40, "name": "V2HoursWorked2"},
+        {
+            "enumValue": {"domainName": "15MinuteIncrements", "instanceValue": "30"},
+            "name": "V2MinutesWorked2",
+        },
+        {"integerValue": 60, "name": "V2TotalHours2"},
+        {
+            "enumValue": {"domainName": "15MinuteIncrements", "instanceValue": "00"},
+            "name": "V2TotalMinutes2",
+        },
+        {
+            "enumValue": {"domainName": "PleaseSelectYesNo", "instanceValue": "Yes"},
+            "name": "V2Applies2",
+        },
+        {
+            "dateValue": application.previous_leaves_same_reason[0].leave_start_date.isoformat(),
+            "name": "V2OtherLeavesPastLeaveStartDate3",
+        },
+        {
+            "dateValue": application.previous_leaves_same_reason[0].leave_end_date.isoformat(),
+            "name": "V2OtherLeavesPastLeaveEndDate3",
+        },
+        {
+            "enumValue": {
+                "domainName": "QualifyingReasons",
+                "instanceValue": "An illness or injury",
+            },
+            "name": "V2QualifyingReason3",
+        },
+        {
+            "enumValue": {"domainName": "PleaseSelectYesNo", "instanceValue": "Yes"},
+            "name": "V2LeaveFromEmployer3",
+        },
+        {
+            "enumValue": {"domainName": "PleaseSelectYesNo", "instanceValue": "Yes"},
+            "name": "V2Leave3",
+        },
+        {"integerValue": 40, "name": "V2HoursWorked3"},
+        {
+            "enumValue": {"domainName": "15MinuteIncrements", "instanceValue": "30"},
+            "name": "V2MinutesWorked3",
+        },
+        {"integerValue": 60, "name": "V2TotalHours3"},
+        {
+            "enumValue": {"domainName": "15MinuteIncrements", "instanceValue": "00"},
+            "name": "V2TotalMinutes3",
+        },
+        {
+            "enumValue": {"domainName": "PleaseSelectYesNo", "instanceValue": "Yes"},
+            "name": "V2Applies3",
+        },
+        {
+            "dateValue": application.concurrent_leave.leave_start_date.isoformat(),
+            "name": "V2AccruedStartDate1",
+        },
+        {
+            "dateValue": application.concurrent_leave.leave_end_date.isoformat(),
+            "name": "V2AccruedEndDate1",
+        },
+        {
+            "enumValue": {"domainName": "PleaseSelectYesNo", "instanceValue": "No"},
+            "name": "V2AccruedPLEmployer1",
+        },
+        {
+            "enumValue": {"domainName": "PleaseSelectYesNo", "instanceValue": "Yes"},
+            "name": "V2AccruedPaidLeave1",
+        },
+    ]
+
+    assert eform.eformAttributes == expected_attributes
+
+
+class TestGetAbsencePeriods:
+    @mock.patch("massgov.pfml.api.services.fineos_actions.register_employee")
+    def test_success(self, mock_register, test_db_session, user):
+        mock_register.return_value = "web_id"
+
+        employee_tax_id = "123-45-6789"
+        employer_fein = "12-3456789"
+        # TODO (PORTAL-752): don't use magic string here
+        absence_case_id = "NTN-304363-ABS-01"
+        absence_periods = fineos_actions.get_absence_periods(
+            employee_tax_id, employer_fein, absence_case_id, test_db_session
+        )
+
+        assert type(absence_periods[0]) == AbsencePeriodStatusResponse
+        assert absence_periods == [
+            AbsencePeriodStatusResponse(
+                fineos_leave_period_id="PL-14449-0000002237",
+                absence_period_start_date=datetime.date(2021, 1, 29),
+                absence_period_end_date=datetime.date(2021, 1, 30),
+                reason="Child Bonding",
+                reason_qualifier_one="Foster Care",
+                reason_qualifier_two="",
+                period_type="Continuous",
+                request_decision="Pending",
+                evidence_status=None,
+            )
+        ]
+
+    @mock.patch("massgov.pfml.api.services.fineos_actions.register_employee")
+    def test_with_fineos_error(self, mock_register, test_db_session, user, caplog):
+        error = exception.FINEOSForbidden("get_absence", 200, 403, "Unable to get absence periods")
+        mock_register.side_effect = error
+
+        employee_tax_id = "123-45-6789"
+        employer_fein = "12-3456789"
+        absence_case_id = "NTN-304363-ABS-01"
+        try:
+            fineos_actions.get_absence_periods(
+                employee_tax_id, employer_fein, absence_case_id, test_db_session
+            )
+        except FINEOSForbidden:
+            pass
+
+        assert "Unable to get absence periods" in caplog.text
+
+
+def test_send_tax_withholding_preference(application, claim):
+    fineos_mock_client = massgov.pfml.fineos.MockFINEOSClient()
+    fineos_mock.start_capture()
+    fineos_actions.send_tax_withholding_preference(application, True, fineos_mock_client)
+    capture = fineos_mock.get_capture()
+    assert capture[0][2] == {"absence_id": claim.fineos_absence_id, "is_withholding_tax": True}
+
+
+def test_tax_preference_payload():
+    payload = FINEOSClient._create_tax_preference_payload("NTN-111-111", True)
+
+    assert payload is not None
+    assert payload.__contains__("<config-name>OptInSITFITService</config-name>")
+    assert payload.__contains__("<name>AbsenceCaseNumber</name>")
+    assert payload.__contains__("<value>NTN-111-111</value>")
+    assert payload.__contains__("<name>FlagValue</name>")
+    assert payload.__contains__("<value>True</value>")

@@ -1,97 +1,81 @@
+import User, { UserLeaveAdministrator } from "../../../../src/models/User";
 import Success from "../../../../src/pages/employers/organizations/success";
-import { UserLeaveAdministrator } from "../../../../src/models/User";
-import { renderWithAppLogic } from "../../../test-utils";
-import routes from "../../../../src/routes";
+import { renderPage } from "../../../test-utils";
+import { screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 
-jest.mock("../../../../src/hooks/useAppLogic");
+const setup = (props = {}, query = {}) => {
+  let goToSpy;
+  const utils = renderPage(
+    Success,
+    {
+      addCustomSetup: (appLogic) => {
+        appLogic.users.user = new User({
+          consented_to_data_sharing: true,
+          user_leave_administrators: [
+            new UserLeaveAdministrator({
+              employer_dba: "Company Name",
+              employer_fein: "12-3456789",
+              employer_id: "mock_employer_id",
+              verified: false,
+            }),
+          ],
+        });
+        goToSpy = jest.spyOn(appLogic.portalFlow, "goTo");
+      },
+    },
+    {
+      query: { employer_id: "mock_employer_id", next: "", ...query },
+      ...props,
+    }
+  );
+  return { goToSpy, ...utils };
+};
 
 describe("Success", () => {
-  const query = {
-    employer_id: "mock_employer_id",
-    next: "/employers/organizations",
-  };
-  let appLogic, wrapper;
-
-  const renderPage = (query) => {
-    ({ wrapper, appLogic } = renderWithAppLogic(Success, {
-      diveLevels: 1,
-      props: { query },
-      userAttrs: {
-        user_leave_administrators: [
-          new UserLeaveAdministrator({
-            employer_dba: "Company Name",
-            employer_fein: "11-111111",
-            employer_id: "mock_employer_id",
-            verified: false,
-          }),
-        ],
-      },
-    }));
-  };
-
-  describe('when "employerShowVerifications" feature flag is disabled', () => {
-    beforeEach(() => {
-      process.env.featureFlags = { employerShowVerifications: false };
-      renderPage(query);
-    });
-
-    it("redirects to the employer welcome page", () => {
-      expect(appLogic.portalFlow.goTo).toHaveBeenCalledWith(
-        routes.employers.welcome
-      );
-    });
+  it("renders the page", () => {
+    const { container } = setup();
+    expect(container).toMatchSnapshot();
   });
 
-  describe('when "employerShowVerifications" feature flag is enabled', () => {
-    beforeEach(() => {
-      process.env.featureFlags = { employerShowVerifications: true };
+  it("renders page not found when employer isn't found", () => {
+    setup({}, { employer_id: "" });
+
+    expect(
+      screen.getByRole("heading", { name: "Page not found" })
+    ).toBeInTheDocument();
+  });
+
+  it("navigates to Organizations page when clicking 'Continue' button", () => {
+    const { goToSpy } = setup();
+    userEvent.click(screen.getByRole("button", { name: "Continue" }));
+    expect(goToSpy).toHaveBeenCalledWith("/employers/organizations");
+  });
+
+  it("navigates to Organizations page by default if query param is invalid", () => {
+    const queryWithoutNextParam = {
+      employer_id: "mock_employer_id",
+      next: "",
+    };
+    const { goToSpy } = setup({
+      query: queryWithoutNextParam,
     });
+    userEvent.click(screen.getByRole("button", { name: "Continue" }));
+    expect(goToSpy).toHaveBeenCalledWith("/employers/organizations");
+  });
 
-    it("renders the page", () => {
-      renderPage(query);
+  it("navigates to New Application page based on next param", () => {
+    const queryWithNextParam = {
+      employer_id: "mock_employer_id",
+      next: "/employers/applications/new-application/?absence_id=mock_absence_id",
+    };
 
-      expect(wrapper).toMatchSnapshot();
-      wrapper.find("Trans").forEach((trans) => {
-        expect(trans.dive()).toMatchSnapshot();
-      });
+    const { goToSpy } = setup({
+      query: queryWithNextParam,
     });
-
-    describe("upon clicking 'Continue' button", () => {
-      it("navigates to Organizations page", () => {
-        renderPage(query);
-
-        wrapper.find("Button").simulate("click");
-        expect(appLogic.portalFlow.goTo).toHaveBeenCalledWith(
-          "/employers/organizations"
-        );
-      });
-
-      it("navigates to Organizations page by default if query param is invalid", () => {
-        const queryWithoutNextParam = {
-          employer_id: "mock_employer_id",
-          next: "",
-        };
-        renderPage(queryWithoutNextParam);
-
-        wrapper.find("Button").simulate("click");
-        expect(appLogic.portalFlow.goTo).toHaveBeenCalledWith(
-          "/employers/organizations"
-        );
-      });
-
-      it("navigates to New Application page based on next param", () => {
-        const queryWithNextParam = {
-          employer_id: "mock_employer_id",
-          next:
-            "/employers/applications/new-application/?absence_id=mock_absence_id",
-        };
-        renderPage(queryWithNextParam);
-
-        wrapper.find("Button").simulate("click");
-        expect(appLogic.portalFlow.goTo).toHaveBeenCalledWith(
-          "/employers/applications/new-application/?absence_id=mock_absence_id"
-        );
-      });
-    });
+    userEvent.click(screen.getByRole("button", { name: "Continue" }));
+    expect(goToSpy).toHaveBeenCalledWith(
+      "/employers/applications/new-application/?absence_id=mock_absence_id"
+    );
   });
 });

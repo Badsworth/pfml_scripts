@@ -2,24 +2,28 @@
 
 exports[`AmendmentForm renders the component 1`] = `
 <div
-  className="usa-alert usa-alert--info usa-alert--no-icon usa-form c-amendment-form"
+  class="usa-alert usa-alert--info usa-alert--no-icon usa-form c-amendment-form border-y border-y-width-1px border-right border-right-width-1px"
 >
   <div
-    className="usa-alert__body"
+    class="usa-alert__body"
   >
     <div
-      className="usa-alert__text"
+      class="usa-alert__text"
     >
       <p>
         Testing
       </p>
     </div>
-    <Button
-      className="margin-top-3"
-      variation="unstyled"
+    <div
+      class="border-top border-width-1px margin-top-4 margin-bottom-1 border-base-light"
     >
-      Cancel amendment
-    </Button>
+      <button
+        class="usa-button position-relative margin-top-3 text-red usa-button--unstyled"
+        type="button"
+      >
+        Destroy
+      </button>
+    </div>
   </div>
 </div>
 `;

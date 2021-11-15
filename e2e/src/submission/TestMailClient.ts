@@ -1,6 +1,7 @@
 import { GraphQLClient, gql } from "graphql-request";
 import fetch, { RequestInfo, RequestInit } from "node-fetch";
 import AbortController from "abort-controller";
+import { formatDuration } from "date-fns";
 
 export type Email = {
   id: string;
@@ -76,7 +77,7 @@ export default class TestMailClient {
     }
 
     let excludedIds: string[] = [];
-    while (true) {
+    for (;;) {
       const candidates = await this._fetchEmails(opts, client, excludedIds);
       const matches = candidates.filter((email) =>
         email.html.includes(messageWildcard)
@@ -151,8 +152,13 @@ export default class TestMailClient {
           "GraphQL Headers": JSON.stringify(this.headers, undefined, 4),
           ...opts.debugInfo,
         };
+        const timeoutDuration = {
+          seconds: Math.round((opts.timeout || this.timeout) / 1000),
+        };
         throw new Error(
-          `Timed out while looking for e-mail. This can happen when an e-mail is taking a long time to arrive, the e-mail was never sent, or you're looking for the wrong message.
+          `Timed out while looking for e-mail after ${formatDuration(
+            timeoutDuration
+          )}. This can happen when an e-mail is taking a long time to arrive, the e-mail was never sent, or you're looking for the wrong message.
 
           Debug information:
           ------------------
@@ -167,7 +173,7 @@ export default class TestMailClient {
   }
 
   getTagFromAddress(address: string): string {
-    const re = new RegExp(`^${this.namespace}\.(.*)@inbox\.testmail\.app$`);
+    const re = new RegExp(`^${this.namespace}.(.*)@inbox.testmail.app$`);
     const match = address.match(re);
     if (!match || !(match[1].length > 0)) {
       throw new Error(

@@ -2,7 +2,7 @@
 
 [pytest](https://docs.pytest.org) is our test runner, which is simple but
 powerful. If you are new to pytest, reading up on how [fixtures
-work](https://docs.pytest.org/en/latest/fixture.html) in particular might be
+work](https://docs.pytest.org/en/latest/explanation/fixtures.html) in particular might be
 helpful as it's one area that is a bit different than is common with other
 runners (and languages).
 
@@ -21,7 +21,7 @@ For this project specifically:
   - `massgov/pfml/util/aws/` under `test/util/aws/`.
 - Create `__init__.py` files for each directory. This helps [avoid name
   conflicts when pytest is resolving
-  tests](https://docs.pytest.org/en/latest/goodpractices.html#tests-outside-application-code).
+  tests](https://docs.pytest.org/en/stable/goodpractices.html#tests-outside-application-code).
 - Test files should begin with the `test_` prefix, followed by the module the
   tests cover, for example, a file `foo.py` will have tests in a file
   `test_foo.py`.
@@ -54,7 +54,7 @@ below them in the directory hierarchy, for example, the `tests/db/conftest.py`
 file is only loaded for tests under `tests/db/`.
 
 More info:
-https://docs.pytest.org/en/latest/fixture.html#conftest-py-sharing-fixture-functions
+https://docs.pytest.org/en/latest/how-to/fixtures.html?highlight=conftest#scope-sharing-fixtures-across-classes-modules-packages-or-session
 
 ## Helpers
 
@@ -131,7 +131,31 @@ file-like objects, should generally prefer using in-memory constructs like
 a test needs to load test fixture files or use `tmp_path` to work with a real
 file for some purpose, those do not need to be tagged `integration`.
 
-Decorate any individual test with `@pytest.mark.integration`.
+**In the vast majority of cases, the appropriate tests will get automatically tagged with the `integration` marker behind the scenes via the fixtures it uses.**
+
+### Automatic marking
+
+Test fixtures that use real resources should request the fixture
+`has_external_dependencies`.
+
+```python
+@pytest.fixture
+def some_fixture_using_real_resources(has_external_dependencies):
+  ...
+```
+
+Fixtures that have the `has_external_dependencies` fixture
+in their dependency graph do not need to explicitly
+request the `has_external_dependencies` fixture.
+
+All tests that request a fixture with `has_external_dependencies`
+in their dependency graph will be automatically marked
+with the `integration` marker.
+
+### Manual marking
+
+To manually mark integration tests, decorate any individual test
+with `@pytest.mark.integration`.
 
 If all (or almost all) tests in a given test file are integration tests, they
 can be tagged all at once with a declaration like the following at the top of

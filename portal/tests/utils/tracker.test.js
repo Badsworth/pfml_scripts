@@ -13,12 +13,21 @@ describe("tracker", () => {
   // here and in the mocked newrelic object below
   const newrelicMethods = [
     // Mappings of tracker.METHOD_NAME to newrelic.METHOD_NAME
-    { trackerMethod: "noticeError", newrelicMethod: "noticeError" },
     {
+      args: [new Error()],
+      trackerMethod: "noticeError",
+      newrelicMethod: "noticeError",
+    },
+    {
+      args: ["/test"],
       trackerMethod: "startPageView",
       newrelicMethod: "setCurrentRouteName",
     },
-    { trackerMethod: "trackEvent", newrelicMethod: "addPageAction" },
+    {
+      args: ["Event description"],
+      trackerMethod: "trackEvent",
+      newrelicMethod: "addPageAction",
+    },
   ];
 
   describe("when newrelic is defined", () => {
@@ -45,12 +54,18 @@ describe("tracker", () => {
       };
     });
 
-    newrelicMethods.forEach(({ trackerMethod, newrelicMethod }) => {
+    newrelicMethods.forEach(({ args, trackerMethod, newrelicMethod }) => {
       it(`${trackerMethod}: calls newrelic.${newrelicMethod}`, () => {
-        tracker[trackerMethod]();
+        tracker[trackerMethod](...args);
 
         expect(newrelic[newrelicMethod]).toHaveBeenCalledTimes(1);
       });
+    });
+
+    it("markFetchRequestEnd ends the interaction", () => {
+      tracker.trackFetchRequest("https://example.com");
+
+      expect(newrelic.interaction().end).toHaveBeenCalledTimes(1);
     });
 
     it("trackFetchRequest tracks interaction with the given URL and environment", () => {
@@ -234,7 +249,7 @@ describe("tracker", () => {
 
         newrelic.interaction().setAttribute.mockClear();
         tracker.trackFetchRequest("/test-api-call");
-        expect(newrelic.interaction().setAttribute).toHaveBeenCalledTimes(2); // includes the environment setAttribute()
+        expect(newrelic.interaction().setAttribute).toHaveBeenCalledTimes(3); // includes the environment setAttribute()
         expect(newrelic.interaction().setAttribute).not.toHaveBeenCalledWith(
           "numberAttribute",
           numberAttribute
@@ -249,7 +264,7 @@ describe("tracker", () => {
         expect(newrelic.interaction().setAttribute).not.toHaveBeenCalled();
 
         tracker.trackFetchRequest("/test-api-call");
-        expect(newrelic.interaction().setAttribute).toHaveBeenCalledTimes(1); // just the environment setAttribute()
+        expect(newrelic.interaction().setAttribute).toHaveBeenCalledTimes(2); // just the environment setAttribute()
       });
     });
   });

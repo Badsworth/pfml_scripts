@@ -1,34 +1,30 @@
-import { renderWithAppLogic, simulateEvents } from "../../test-utils";
+import { MockBenefitsApplicationBuilder, renderPage } from "../../test-utils";
 import CaringLeaveAttestation from "../../../src/pages/applications/caring-leave-attestation";
+import { screen } from "@testing-library/react";
+import { setupBenefitsApplications } from "../../test-utils/helpers";
 
-const setup = () => {
-  const { appLogic, claim, wrapper } = renderWithAppLogic(
-    CaringLeaveAttestation
-  );
-
-  const { submitForm } = simulateEvents(wrapper);
-
-  return {
-    appLogic,
-    claim,
-    submitForm,
-    wrapper,
-  };
-};
+jest.mock("../../../src/hooks/useLoggedInRedirect");
+const claim = new MockBenefitsApplicationBuilder()
+  .part1Complete()
+  .caringLeaveReason()
+  .create();
 
 describe("CaringLeaveAttestation", () => {
   it("renders the page", () => {
-    const { wrapper } = setup();
+    const { container } = renderPage(
+      CaringLeaveAttestation,
+      {
+        addCustomSetup: (hook) => setupBenefitsApplications(hook, [claim]),
+      },
+      { query: { claim_id: "mock_application_id" } }
+    );
 
-    expect(wrapper).toMatchSnapshot();
-  });
-
-  it("calls goToNextPage when user submits form", async () => {
-    const { appLogic, wrapper } = setup();
-    const spy = jest.spyOn(appLogic.portalFlow, "goToNextPage");
-
-    const { submitForm } = simulateEvents(wrapper);
-    await submitForm();
-    expect(spy).toHaveBeenCalledTimes(1);
+    expect(container).toMatchSnapshot();
+    expect(
+      screen.getByText(/Confirm that you are an eligible caregiver/)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "I understand and agree" })
+    ).toBeInTheDocument();
   });
 });

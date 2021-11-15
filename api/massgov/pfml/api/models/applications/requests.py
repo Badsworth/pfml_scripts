@@ -8,31 +8,84 @@ from pydantic import validator
 from massgov.pfml.api.models.applications.common import (
     Address,
     ApplicationLeaveDetails,
-    CaringLeaveMetadata,
     DocumentType,
-    EmployerBenefit,
     EmploymentStatus,
+    Gender,
     Occupation,
     OtherIncome,
     PaymentPreference,
     Phone,
     WorkPattern,
 )
-from massgov.pfml.api.models.common import PreviousLeave
-from massgov.pfml.api.validation.exceptions import ValidationErrorDetail, ValidationException
+from massgov.pfml.api.models.common import ConcurrentLeave, EmployerBenefit, PreviousLeave
+from massgov.pfml.api.validation.exceptions import (
+    IssueType,
+    ValidationErrorDetail,
+    ValidationException,
+)
 from massgov.pfml.util.pydantic import PydanticBaseModel
 from massgov.pfml.util.pydantic.types import FEINUnformattedStr, MassIdStr, TaxIdUnformattedStr
+
+MAX_FUTURE_BIRTH_MONTHS = 7
+
+MAX_BIRTH_YEARS = 150
+
+MIN_AGE = 14
+
+
+def max_date_of_birth_validator(date_of_birth, field):
+    error_list = []
+    if date_of_birth.year < date.today().year - MAX_BIRTH_YEARS:
+        error_list.append(
+            ValidationErrorDetail(
+                message=f"Date of birth must be within the past {MAX_BIRTH_YEARS} years",
+                type=IssueType.invalid_year_range,
+                rule=f"date_of_birth_within_past_{MAX_BIRTH_YEARS}_years",
+                field=field,
+            )
+        )
+
+    return error_list
+
+
+def min_date_of_birth_validator(date_of_birth, field):
+    error_list = []
+    if date_of_birth > date.today() - relativedelta(years=MIN_AGE):
+        error_list.append(
+            ValidationErrorDetail(
+                message=f"The person taking leave must be at least {MIN_AGE} years old",
+                type=IssueType.invalid_age,
+                rule=f"older_than_{MIN_AGE}",
+                field=field,
+            )
+        )
+    return error_list
+
+
+def future_date_of_birth_validator(date_of_birth, field):
+    error_list = []
+
+    if date_of_birth > date.today() + relativedelta(months=MAX_FUTURE_BIRTH_MONTHS):
+        error_list.append(
+            ValidationErrorDetail(
+                message=f"Family member's date of birth must be less than {MAX_FUTURE_BIRTH_MONTHS} months from now",
+                type=IssueType.future_birth_date,
+                rule=f"max_{MAX_FUTURE_BIRTH_MONTHS}_months_in_future",
+                field=field,
+            )
+        )
+    return error_list
 
 
 class ApplicationRequestBody(PydanticBaseModel):
     application_nickname: Optional[str]
-    employee_ssn: Optional[TaxIdUnformattedStr]
     tax_identifier: Optional[TaxIdUnformattedStr]
     employer_fein: Optional[FEINUnformattedStr]
     first_name: Optional[str]
     middle_name: Optional[str]
     last_name: Optional[str]
     date_of_birth: Optional[date]
+    gender: Optional[Gender]
     has_continuous_leave_periods: Optional[bool]
     has_intermittent_leave_periods: Optional[bool]
     has_reduced_schedule_leave_periods: Optional[bool]
@@ -49,45 +102,63 @@ class ApplicationRequestBody(PydanticBaseModel):
     has_employer_benefits: Optional[bool]
     employer_benefits: Optional[List[EmployerBenefit]]
     has_other_incomes: Optional[bool]
-    other_incomes_awaiting_approval: Optional[bool]
     other_incomes: Optional[List[OtherIncome]]
     phone: Optional[Phone]
-    previous_leaves: Optional[List[PreviousLeave]]
-    has_previous_leaves: Optional[bool]
-    caring_leave_metadata: Optional[CaringLeaveMetadata]
+    previous_leaves_other_reason: Optional[List[PreviousLeave]]
+    previous_leaves_same_reason: Optional[List[PreviousLeave]]
+    concurrent_leave: Optional[ConcurrentLeave]
+    has_previous_leaves_other_reason: Optional[bool]
+    has_previous_leaves_same_reason: Optional[bool]
+    has_concurrent_leave: Optional[bool]
 
     @validator("date_of_birth")
     def date_of_birth_in_valid_range(cls, date_of_birth):  # noqa: B902
-        """Applicant must be older than 14 and under 100"""
-
+        """Applicant must be older than 14 and under 150"""
         if not date_of_birth:
             return date_of_birth
 
-        error_list = []
-        today = date.today()
-        if date_of_birth.year < today.year - 100:
-            error_list.append(
-                ValidationErrorDetail(
-                    message="Date of birth must be within the past 100 years",
-                    type="invalid_year_range",
-                    rule="date_of_birth_within_past_100_years",
-                    field="date_of_birth",
-                )
+        max_date_of_birth_issue = max_date_of_birth_validator(date_of_birth, "date_of_birth")
+        if max_date_of_birth_issue:
+            raise ValidationException(
+                errors=max_date_of_birth_issue, message="Validation error", data={}
             )
 
-        elif date_of_birth > today - relativedelta(years=14):
-            error_list.append(
-                ValidationErrorDetail(
-                    message="The person taking leave must be at least 14 years old",
-                    type="invalid_age",
-                    rule="older_than_14",
-                    field="date_of_birth",
-                )
+        min_date_of_birth_issue = min_date_of_birth_validator(date_of_birth, "date_of_birth")
+        if min_date_of_birth_issue:
+            raise ValidationException(
+                errors=min_date_of_birth_issue, message="Validation error", data={}
             )
 
-        if error_list:
-            raise ValidationException(errors=error_list, message="Validation error", data={})
         return date_of_birth
+
+    @validator("leave_details")
+    def family_member_date_of_birth_in_valid_range(cls, leave_details):  # noqa: B902
+        """Caring leave family member must be under 150 years old"""
+        if (
+            not leave_details.caring_leave_metadata
+            or not leave_details.caring_leave_metadata.family_member_date_of_birth
+        ):
+            return leave_details
+
+        future_date_of_birth_issue = future_date_of_birth_validator(
+            leave_details.caring_leave_metadata.family_member_date_of_birth,
+            "leave_details.caring_leave_metadata.family_member_date_of_birth",
+        )
+        if future_date_of_birth_issue:
+            raise ValidationException(
+                errors=future_date_of_birth_issue, message="Validation error", data={}
+            )
+
+        max_date_of_birth_issue = max_date_of_birth_validator(
+            leave_details.caring_leave_metadata.family_member_date_of_birth,
+            "leave_details.caring_leave_metadata.family_member_date_of_birth",
+        )
+        if max_date_of_birth_issue:
+            raise ValidationException(
+                errors=max_date_of_birth_issue, message="Validation error", data={}
+            )
+
+        return leave_details
 
     @validator("work_pattern")
     def work_pattern_must_have_seven_days(cls, work_pattern):  # noqa: B902
@@ -120,7 +191,7 @@ class ApplicationRequestBody(PydanticBaseModel):
                 error_list.append(
                     ValidationErrorDetail(
                         message=f"Provided work_pattern_days is missing {', '.join(sorted(missing_days))}.",
-                        type="invalid_days",
+                        type=IssueType.required,
                         rule="no_missing_days",
                         field="work_pattern.work_pattern_days",
                     )
@@ -130,7 +201,7 @@ class ApplicationRequestBody(PydanticBaseModel):
                 error_list.append(
                     ValidationErrorDetail(
                         message=f"Provided work_pattern_days has {len(api_work_pattern_days)} days. There should be 7 days.",
-                        type="invalid_days",
+                        type=IssueType.required,
                         rule="seven_days_required",
                         field="work_pattern.work_pattern_days",
                     )
@@ -150,3 +221,7 @@ class DocumentRequestBody(PydanticBaseModel):
 
 class PaymentPreferenceRequestBody(PydanticBaseModel):
     payment_preference: Optional[PaymentPreference]
+
+
+class TaxWithholdingPreferenceRequestBody(PydanticBaseModel):
+    is_withholding_tax: bool

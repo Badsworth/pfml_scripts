@@ -1,31 +1,31 @@
 import base64
+from uuid import UUID
 
 import connexion
-import flask
 import puremagic
-from flask import Response
+from flask import Response, abort, request
 from puremagic import PureError
-from sqlalchemy import desc
+from pydantic import ValidationError
+from sqlalchemy import asc, desc
 from werkzeug.exceptions import BadRequest, Forbidden, NotFound, ServiceUnavailable, Unauthorized
 
 import massgov.pfml.api.app as app
-import massgov.pfml.api.services.application_rules as application_rules
 import massgov.pfml.api.services.applications as applications_service
 import massgov.pfml.api.util.response as response_util
+import massgov.pfml.api.validation.application_rules as application_rules
 import massgov.pfml.util.datetime as datetime_util
 import massgov.pfml.util.logging
-from massgov.pfml.api.authorization.flask import CREATE, EDIT, READ, can, ensure
+from massgov.pfml.api.authorization.flask import CREATE, EDIT, READ, ensure
 from massgov.pfml.api.models.applications.common import ContentType as AllowedContentTypes
+from massgov.pfml.api.models.applications.common import DocumentType as IoDocumentTypes
 from massgov.pfml.api.models.applications.requests import (
     ApplicationRequestBody,
     DocumentRequestBody,
     PaymentPreferenceRequestBody,
+    TaxWithholdingPreferenceRequestBody,
 )
 from massgov.pfml.api.models.applications.responses import ApplicationResponse, DocumentResponse
 from massgov.pfml.api.services.applications import get_document_by_id
-from massgov.pfml.api.services.employment_validator import (
-    get_contributing_employer_or_employee_issue,
-)
 from massgov.pfml.api.services.fineos_actions import (
     complete_intake,
     create_other_leaves_and_other_incomes_eforms,
@@ -33,26 +33,50 @@ from massgov.pfml.api.services.fineos_actions import (
     get_documents,
     mark_documents_as_received,
     mark_single_document_as_received,
+    send_tax_withholding_preference,
     send_to_fineos,
     submit_payment_preference,
     upload_document,
 )
-from massgov.pfml.api.util.response import Issue, IssueType
-from massgov.pfml.api.validation.exceptions import ValidationErrorDetail, ValidationException
-from massgov.pfml.db.models.applications import (
-    Application,
-    ContentType,
-    Document,
-    DocumentType,
-    EmployerBenefit,
-    OtherIncome,
-    PreviousLeave,
+from massgov.pfml.api.validation.employment_validator import (
+    get_contributing_employer_or_employee_issue,
 )
-from massgov.pfml.fineos.exception import FINEOSClientError, FINEOSFatalUnavailable, FINEOSNotFound
+from massgov.pfml.api.validation.exceptions import (
+    IssueType,
+    ValidationErrorDetail,
+    ValidationException,
+)
+from massgov.pfml.db.models.applications import Application, Document, DocumentType, LeaveReason
+from massgov.pfml.fineos.exception import (
+    FINEOSClientError,
+    FINEOSEntityNotFound,
+    FINEOSFatalUnavailable,
+    FINEOSUnprocessableEntity,
+)
+from massgov.pfml.fineos.models.customer_api import Base64EncodedFileData
 from massgov.pfml.util.logging.applications import get_application_log_attributes
+from massgov.pfml.util.paginate.paginator import (
+    ApplicationPaginationAPIContext,
+    OrderDirection,
+    page_for_api_context,
+)
 from massgov.pfml.util.sqlalchemy import get_or_404
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
+
+LEAVE_REASON_TO_DOCUMENT_TYPE_MAPPING = {
+    LeaveReason.CHILD_BONDING.leave_reason_description: DocumentType.CHILD_BONDING_EVIDENCE_FORM,
+    LeaveReason.SERIOUS_HEALTH_CONDITION_EMPLOYEE.leave_reason_description: DocumentType.OWN_SERIOUS_HEALTH_CONDITION_FORM,
+    LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_description: DocumentType.CARE_FOR_A_FAMILY_MEMBER_FORM,
+    LeaveReason.PREGNANCY_MATERNITY.leave_reason_description: DocumentType.PREGNANCY_MATERNITY_FORM,
+}
+
+ID_DOCS = [
+    DocumentType.PASSPORT.document_type_description,
+    DocumentType.DRIVERS_LICENSE_MASS.document_type_description,
+    DocumentType.DRIVERS_LICENSE_OTHER_STATE.document_type_description,
+    DocumentType.IDENTIFICATION_PROOF.document_type_description,
+]
 
 
 def application_get(application_id):
@@ -62,7 +86,7 @@ def application_get(application_id):
         ensure(READ, existing_application)
         application_response = ApplicationResponse.from_orm(existing_application)
 
-    issues = application_rules.get_application_issues(existing_application, flask.request.headers)
+    issues = application_rules.get_application_issues(existing_application)
 
     return response_util.success_response(
         message="Successfully retrieved application",
@@ -76,37 +100,34 @@ def applications_get():
         user_id = user.user_id
     else:
         raise Unauthorized
+    with ApplicationPaginationAPIContext(Application, request=request) as pagination_context:
+        with app.db_session() as db_session:
+            is_asc = pagination_context.order_direction == OrderDirection.asc.value
+            sort_fn = asc if is_asc else desc
+            application_query = (
+                db_session.query(Application)
+                .filter(Application.user_id == user_id)
+                .order_by(sort_fn(pagination_context.order_key))
+            )
+            page = page_for_api_context(pagination_context, application_query)
 
-    with app.db_session() as db_session:
-        applications = (
-            db_session.query(Application)
-            .filter(Application.user_id == user_id)
-            .order_by(desc(Application.start_time))
-            .limit(50)  # Mitigate slow queries for end-to-end test user
-            .all()
-        )
-
-        filtered_applications = filter(lambda a: can(READ, a), applications)
-
-    applications_response = list(
-        map(
-            lambda application: ApplicationResponse.from_orm(application).dict(),
-            filtered_applications,
-        )
-    )
-    return response_util.success_response(
-        message="Successfully retrieved applications", data=applications_response
+    return response_util.paginated_success_response(
+        message="Successfully retrieved applications",
+        model=ApplicationResponse,
+        page=page,
+        context=pagination_context,
+        status_code=200,
     ).to_api_response()
 
 
 def applications_start():
     application = Application()
 
+    ensure(CREATE, application)
+
     now = datetime_util.utcnow()
     application.start_time = now
     application.updated_time = now
-
-    ensure(CREATE, application)
 
     # this should always be the case at this point, but the type for
     # current_user is still optional until we require authentication
@@ -130,7 +151,6 @@ def applications_start():
 
 def applications_update(application_id):
     body = connexion.request.json
-
     with app.db_session() as db_session:
         existing_application = get_or_404(db_session, Application, application_id)
 
@@ -163,7 +183,7 @@ def applications_update(application_id):
             db_session, application_request, existing_application
         )
 
-    issues = application_rules.get_application_issues(existing_application, flask.request.headers)
+    issues = application_rules.get_application_issues(existing_application)
     employer_issue = get_contributing_employer_or_employee_issue(
         db_session, existing_application.employer_fein, existing_application.tax_identifier
     )
@@ -185,14 +205,14 @@ def applications_update(application_id):
 
 
 def get_fineos_submit_issues_response(err, existing_application):
-    if isinstance(err, FINEOSNotFound):
+    if isinstance(err, FINEOSEntityNotFound):
         return response_util.error_response(
             status_code=BadRequest,
             message="Application {} could not be submitted".format(
                 existing_application.application_id
             ),
             errors=[
-                Issue(
+                ValidationErrorDetail(
                     IssueType.fineos_case_creation_issues, "register_employee did not find a match"
                 )
             ],
@@ -208,7 +228,7 @@ def get_fineos_submit_issues_response(err, existing_application):
                 existing_application.application_id
             ),
             errors=[
-                Issue(
+                ValidationErrorDetail(
                     IssueType.fineos_case_error,
                     "Unexpected error encountered when submitting to the Claims Processing System",
                 )
@@ -229,9 +249,7 @@ def applications_submit(application_id):
 
         log_attributes = get_application_log_attributes(existing_application)
 
-        issues = application_rules.get_application_issues(
-            existing_application, flask.request.headers
-        )
+        issues = application_rules.get_application_issues(existing_application)
         employer_issue = get_contributing_employer_or_employee_issue(
             db_session, existing_application.employer_fein, existing_application.tax_identifier
         )
@@ -288,6 +306,14 @@ def applications_submit(application_id):
         if not existing_application.claim:
             try:
                 send_to_fineos(existing_application, db_session, current_user)
+            # TODO (CP-2350): improve handling of FINEOS validation rules
+            except ValidationError as e:
+                logger.warning(
+                    "applications_submit failure - application failed FINEOS validation",
+                    extra=log_attributes,
+                )
+                raise e
+
             except Exception as e:
                 logger.warning(
                     "applications_submit failure - failure sending application to claims processing system",
@@ -295,10 +321,10 @@ def applications_submit(application_id):
                     exc_info=True,
                 )
 
-                if not isinstance(e, FINEOSClientError):
-                    raise e
+                if isinstance(e, FINEOSClientError):
+                    return get_fineos_submit_issues_response(e, existing_application)
 
-                return get_fineos_submit_issues_response(e, existing_application)
+                raise e
 
             logger.info(
                 "applications_submit - application sent to claims processing system",
@@ -348,8 +374,8 @@ def applications_complete(application_id):
 
         log_attributes = get_application_log_attributes(existing_application)
 
-        issues = application_rules.get_application_issues(
-            existing_application, flask.request.headers
+        issues = application_rules.get_application_complete_issues(
+            existing_application, request.headers
         )
         if issues:
             logger.info(
@@ -398,14 +424,17 @@ def validate_content_type(content_type):
         message = "Incorrect file type: {}".format(content_type)
         logger.warning(message)
         validation_error = ValidationErrorDetail(
-            message=message, type="file_type", rule=allowed_content_types, field="file",
+            message=message,
+            type=IssueType.file_type,
+            rule=", ".join(allowed_content_types),
+            field="file",
         )
         raise ValidationException(errors=[validation_error], message=message, data={})
 
 
 # We need custom validation here since we get the content type from the uploaded file
 def get_valid_content_type(file):
-    """ Use pure magic library to identify file type, use file mimetype as backup"""
+    """Use pure magic library to identify file type, use file mimetype as backup"""
     try:
         validate_content_type(file.mimetype)
         content_type = puremagic.from_stream(file.stream, mime=True, filename=file.filename)
@@ -417,7 +446,7 @@ def get_valid_content_type(file):
             logger.warning(message)
             validation_error = ValidationErrorDetail(
                 message=message,
-                type="file_type_mismatch",
+                type=IssueType.file_type_mismatch,
                 rule="Detected content type and mime type do not match.",
                 field="file",
             )
@@ -437,14 +466,35 @@ def validate_file_name(file_name):
         message = "Missing extension on file name: {}".format(file_name)
         validation_error = ValidationErrorDetail(
             message=message,
-            type="file_name_extension",
+            type=IssueType.file_name_extension,
             rule="File name extension required.",
             field="file",
         )
         raise ValidationException(errors=[validation_error], message=message, data={})
 
 
+def has_previous_state_managed_paid_leave(existing_application, db_session):
+    # For now, if there are documents previously submitted for the application with the
+    # STATE_MANAGED_PAID_LEAVE_CONFIRMATION document type, that document type must also
+    # be used for subsequent documents uploaded to the application. If not, the document type
+    # from the request should be used instead.
+    existing_documents_with_old_doc_type = (
+        db_session.query(Document)
+        .filter(Document.application_id == existing_application.application_id)
+        .filter(
+            Document.document_type_id
+            == DocumentType.STATE_MANAGED_PAID_LEAVE_CONFIRMATION.document_type_id
+        )
+    ).all()
+
+    if len(existing_documents_with_old_doc_type) > 0:
+        return True
+
+    return False
+
+
 def document_upload(application_id, body, file):
+
     with app.db_session() as db_session:
         # Get the referenced application or return 404
         existing_application = get_or_404(db_session, Application, application_id)
@@ -472,7 +522,7 @@ def document_upload(application_id, body, file):
             return response_util.error_response(
                 status_code=BadRequest,
                 message="File validation error.",
-                errors=[response_util.validation_issue(error) for error in ve.errors],
+                errors=ve.errors,
                 data=document_details.dict(),
             ).to_api_response()
 
@@ -484,7 +534,31 @@ def document_upload(application_id, body, file):
         file_description = ""
         if document_details.description:
             file_description = document_details.description
+
+        # To accomodate both State managed Paid Leave Confirmation and the new plan proof types, the front end will
+        # use Certification Form when the feature flag for caring leave is active, but will otherwise use
+        # State manage Paid Leave Confirmation. If the document type is Certification Form,
+        # the API will map to the corresponding plan proof based on leave reason
         document_type = document_details.document_type.value
+
+        if document_type == IoDocumentTypes.certification_form.value:
+            document_type = LEAVE_REASON_TO_DOCUMENT_TYPE_MAPPING[
+                existing_application.leave_reason.leave_reason_description
+            ].document_type_description
+
+        if document_type not in ID_DOCS:
+            # Check for existing STATE_MANAGED_PAID_LEAVE_CONFIRMATION documents, and reuse the doc type if there are docs
+            # Because existng claims where only part 1 has been submitted should continue using old doc type, submitted_time
+            # rather than existing docs should be examined
+
+            if has_previous_state_managed_paid_leave(existing_application, db_session) or (
+                existing_application.submitted_time
+                and existing_application.submitted_time
+                < app.get_app_config().new_plan_proofs_active_at
+            ):
+                document_type = (
+                    DocumentType.STATE_MANAGED_PAID_LEAVE_CONFIRMATION.document_type_description
+                )
 
         log_attributes = {
             **get_application_log_attributes(existing_application),
@@ -508,26 +582,31 @@ def document_upload(application_id, body, file):
                 "document_upload - document uploaded to claims processing system",
                 extra=log_attributes,
             )
-        except ValueError as ve:
+        except Exception as err:
             logger.warning(
                 "document_upload failure - failure uploading document to claims processing system",
                 extra=log_attributes,
                 exc_info=True,
             )
-            return response_util.error_response(
-                status_code=BadRequest,
-                message=str(ve),
-                errors=[response_util.custom_issue("fineos_client", str(ve))],
-                data=document_details.dict(),
-            ).to_api_response()
+
+            if isinstance(err, FINEOSUnprocessableEntity):
+                message = "Issue encountered while attempting to upload the document."
+                return response_util.error_response(
+                    status_code=BadRequest,
+                    message=message,
+                    errors=[ValidationErrorDetail(type=IssueType.fineos_client, message=message)],
+                    data=document_details.dict(),
+                ).to_api_response()
+
+            # Bubble any other issues up to the API error handlers
+            raise
 
         # Insert a document metadata row
         document.application_id = existing_application.application_id
         now = datetime_util.utcnow()
         document.created_at = now
         document.updated_at = now
-        document.document_type_id = DocumentType.get_id(document_details.document_type.value)
-        document.content_type_id = ContentType.get_id(content_type)
+        document.document_type_id = DocumentType.get_id(document_type)
         document.size_bytes = file_size
         document.fineos_id = fineos_document["documentId"]
         document.is_stored_in_s3 = False
@@ -564,11 +643,12 @@ def document_upload(application_id, body, file):
         logger.info(
             "document_upload success", extra=log_attributes,
         )
-
+        document_response = DocumentResponse.from_orm(document)
+        document_response.content_type = content_type
         # Return response
         return response_util.success_response(
             message="Successfully uploaded document",
-            data=DocumentResponse.from_orm(document).dict(),
+            data=document_response.dict(),
             status_code=200,
         ).to_api_response()
 
@@ -596,7 +676,7 @@ def documents_get(application_id):
         ).to_api_response()
 
 
-def document_download(application_id: str, document_id: str) -> Response:
+def document_download(application_id: UUID, document_id: str) -> Response:
     with app.db_session() as db_session:
         # Get the referenced application or return 404
         existing_application = get_or_404(db_session, Application, application_id)
@@ -609,9 +689,12 @@ def document_download(application_id: str, document_id: str) -> Response:
             raise NotFound(description=f"Could not find Document with ID {document_id}")
 
         ensure(READ, document)
-
-        document_data: massgov.pfml.fineos.models.customer_api.Base64EncodedFileData = download_document(
-            existing_application, document_id, db_session
+        if isinstance(document, DocumentResponse):
+            document_type = document.document_type
+        else:
+            document_type = None
+        document_data: Base64EncodedFileData = download_document(
+            existing_application, document_id, db_session, document_type
         )
         file_bytes = base64.b64decode(document_data.base64EncodedFileContents.encode("ascii"))
 
@@ -624,64 +707,9 @@ def document_download(application_id: str, document_id: str) -> Response:
         )
 
 
-def employer_benefit_delete(application_id: str, employer_benefit_id: str) -> Response:
-    with app.db_session() as db_session:
-        existing_application = get_or_404(db_session, Application, application_id)
-
-        ensure(EDIT, existing_application)
-
-        existing_employer_benefit = get_or_404(db_session, EmployerBenefit, employer_benefit_id)
-        if existing_employer_benefit.application_id != existing_application.application_id:
-            raise NotFound(
-                description=f"Could not find EmployerBenefit with ID {employer_benefit_id}"
-            )
-
-        applications_service.remove_employer_benefit(db_session, existing_employer_benefit)
-
-    return response_util.success_response(
-        message="EmployerBenefit removed.",
-        data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
-    ).to_api_response()
-
-
-def other_income_delete(application_id: str, other_income_id: str) -> Response:
-    with app.db_session() as db_session:
-        existing_application = get_or_404(db_session, Application, application_id)
-
-        ensure(EDIT, existing_application)
-
-        existing_other_income = get_or_404(db_session, OtherIncome, other_income_id)
-        if existing_other_income.application_id != existing_application.application_id:
-            raise NotFound(description=f"Could not find OtherIncome with ID {other_income_id}")
-
-        applications_service.remove_other_income(db_session, existing_other_income)
-
-    return response_util.success_response(
-        message="OtherIncome removed.",
-        data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
-    ).to_api_response()
-
-
-def previous_leave_delete(application_id: str, previous_leave_id: str) -> Response:
-    with app.db_session() as db_session:
-        existing_application = get_or_404(db_session, Application, application_id)
-
-        ensure(EDIT, existing_application)
-
-        existing_previous_leave = get_or_404(db_session, PreviousLeave, previous_leave_id)
-        if existing_previous_leave.application_id != existing_application.application_id:
-            raise NotFound(description=f"Could not find PreviousLeave with ID {previous_leave_id}")
-
-        applications_service.remove_previous_leave(db_session, existing_previous_leave)
-
-    return response_util.success_response(
-        message="PreviousLeave removed.",
-        data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
-    ).to_api_response()
-
-
-def payment_preference_submit(application_id: str) -> Response:
+def payment_preference_submit(application_id: UUID) -> Response:
     body = connexion.request.json
+
     with app.db_session() as db_session:
         existing_application = get_or_404(db_session, Application, application_id)
 
@@ -711,6 +739,7 @@ def payment_preference_submit(application_id: str) -> Response:
             applications_service.add_or_update_payment_preference(
                 db_session, payment_pref_request.payment_preference, existing_application
             )
+
             existing_application.updated_time = datetime_util.utcnow()
             db_session.add(existing_application)
             db_session.commit()
@@ -777,4 +806,77 @@ def payment_preference_submit(application_id: str) -> Response:
             ),
             data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
             errors=[],
+        ).to_api_response()
+
+
+def validate_tax_withholding_request(db_session, application_id, tax_preference_body):
+    """
+    Helper to handle validation for tax withholding requests
+        1. Must be an existing application
+        2. Requesting user must have authorization to edit application
+        3. Preference must not already be set
+    """
+    existing_application = get_or_404(db_session, Application, application_id)
+    ensure(EDIT, existing_application)
+
+    if existing_application.is_withholding_tax is not None:
+        logger.info(
+            "submit_tax_withholding_preference failure - preference already set",
+            extra=get_application_log_attributes(existing_application),
+        )
+        abort(
+            response_util.error_response(
+                status_code=Forbidden,
+                message="Application {} could not be updated. Tax withholding preference already submitted".format(
+                    existing_application.application_id
+                ),
+                data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
+                errors=[],
+            ).to_api_response()
+        )
+
+    return existing_application
+
+
+def save_tax_preference(db_session, existing_application, tax_preference_body):
+    existing_application.is_withholding_tax = tax_preference_body.is_withholding_tax
+    db_session.commit()
+    db_session.refresh(existing_application)
+
+
+def send_tax_selection_to_fineos(existing_application, tax_preference_body):
+    try:
+        send_tax_withholding_preference(
+            existing_application, tax_preference_body.is_withholding_tax
+        )
+    except Exception:
+        logger.warning(
+            "submit_tax_withholding_preference failure - failure submitting tax withholding preference to claims processing system",
+            extra=get_application_log_attributes(existing_application),
+            exc_info=True,
+        )
+        raise
+
+
+def submit_tax_withholding_preference(application_id: UUID) -> Response:
+    body = connexion.request.json
+    tax_preference_body = TaxWithholdingPreferenceRequestBody.parse_obj(body)
+
+    with app.db_session() as db_session:
+        existing_application = validate_tax_withholding_request(
+            db_session, application_id, tax_preference_body
+        )
+        send_tax_selection_to_fineos(existing_application, tax_preference_body)
+        save_tax_preference(db_session, existing_application, tax_preference_body)
+
+        logger.info(
+            "tax_withholding_preference_submit success",
+            extra=get_application_log_attributes(existing_application),
+        )
+        return response_util.success_response(
+            message="Tax Withholding Preference for application {} submitted without errors".format(
+                existing_application.application_id
+            ),
+            data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
+            status_code=201,
         ).to_api_response()

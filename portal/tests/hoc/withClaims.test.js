@@ -1,71 +1,117 @@
+import { screen, waitFor } from "@testing-library/react";
 import Claim from "../../src/models/Claim";
 import ClaimCollection from "../../src/models/ClaimCollection";
 import React from "react";
-import User from "../../src/models/User";
-import { act } from "react-dom/test-utils";
-import { mount } from "enzyme";
-import useAppLogic from "../../src/hooks/useAppLogic";
+import { renderPage } from "../test-utils";
 import withClaims from "../../src/hoc/withClaims";
+
+const mockPageContent = "Claims are loaded. This is the page.";
 
 jest.mock("../../src/hooks/useAppLogic");
 
+function setup({ addCustomSetup } = {}, apiParams) {
+  const PageComponent = (props) => (
+    <div>
+      {mockPageContent}
+      Page {props.paginationMeta.page_offset}
+      {props.claims.items.map((claim) => (
+        <div key={claim.fineos_absence_id}>{claim.fineos_absence_id}</div>
+      ))}
+    </div>
+  );
+  const WrappedComponent = withClaims(PageComponent, apiParams);
+
+  renderPage(WrappedComponent, {
+    addCustomSetup,
+  });
+}
+
 describe("withClaims", () => {
-  function setup(appLogic, query = {}) {
-    let wrapper;
-
-    act(() => {
-      const PageComponent = () => <div />;
-      const WrappedComponent = withClaims(PageComponent);
-
-      wrapper = mount(<WrappedComponent appLogic={appLogic} query={query} />);
+  it("shows spinner when loading application state", async () => {
+    setup({
+      addCustomSetup: (appLogic) => {
+        appLogic.claims.isLoadingClaims = true;
+      },
     });
 
-    return { wrapper };
-  }
-
-  it("shows spinner when claims aren't loaded yet", () => {
-    const appLogic = useAppLogic();
-    appLogic.claims.hasLoadedAll = false;
-
-    const { wrapper } = setup(appLogic);
-
-    expect(wrapper.find("Spinner").exists()).toBe(true);
+    expect(await screen.findByRole("progressbar")).toBeInTheDocument();
   });
 
-  it("sets user and claims prop on page component when claims are loaded", () => {
-    const claimsCollection = new ClaimCollection([
-      new Claim({
-        fineos_absence_id: "abs-1",
-      }),
-    ]);
-    const appLogic = useAppLogic();
-    appLogic.claims.claims = claimsCollection;
-    appLogic.claims.hasLoadedAll = true;
+  it("requires user to be logged in", async () => {
+    let spy;
 
-    const { wrapper } = setup(appLogic);
-    const pageProps = wrapper.find("PageComponent").props();
+    setup({
+      addCustomSetup: (appLogic) => {
+        spy = jest.spyOn(appLogic.auth, "requireLogin");
+      },
+    });
 
-    expect(pageProps.user).toBeInstanceOf(User);
-    expect(pageProps.claims).toBe(claimsCollection);
+    await waitFor(() => {
+      expect(spy).toHaveBeenCalled();
+    });
   });
 
-  it("makes request with 0 as page index if value is not provided", () => {
-    const appLogic = useAppLogic();
-    appLogic.claims.hasLoadedAll = false;
-    const query = { page: null };
+  it("renders the page when claims state is loaded", async () => {
+    const mockClaim = new Claim({
+      fineos_absence_id: "mock-fineos-id",
+    });
+    const mockPaginationMeta = { page_offset: 2 };
 
-    setup(appLogic, query);
+    setup({
+      addCustomSetup: (appLogic) => {
+        const claimsCollection = new ClaimCollection([mockClaim]);
+        appLogic.claims.claims = claimsCollection;
+        appLogic.claims.paginationMeta = mockPaginationMeta;
+        appLogic.claims.isLoadingClaims = false;
+      },
+    });
 
-    expect(appLogic.claims.loadAll).toHaveBeenCalledWith(0);
+    expect(
+      await screen.findByText(mockPageContent, { exact: false })
+    ).toBeInTheDocument();
+
+    // Assert that the HOC is passing in the claims and pagination data as props to our page component:
+    expect(
+      await screen.findByText(mockClaim.fineos_absence_id, { exact: false })
+    ).toBeInTheDocument();
+    expect(
+      await screen.findByText(`Page ${mockPaginationMeta.page_offset}`, {
+        exact: false,
+      })
+    ).toBeInTheDocument();
   });
 
-  it("makes request with zero-based page index if value is provided", () => {
-    const appLogic = useAppLogic();
-    appLogic.claims.hasLoadedAll = false;
-    const query = { page: "3" };
+  it("makes request with pagination, order, and filters params", () => {
+    let spy;
+    const apiParams = {
+      page_offset: "2",
+      claim_status: "Approved,Pending",
+      employer_id: "mock-employer-id",
+      order_by: "employee",
+      order_direction: "descending",
+      search: "foo",
+    };
 
-    setup(appLogic, query);
+    setup(
+      {
+        addCustomSetup: (appLogic) => {
+          spy = jest.spyOn(appLogic.claims, "loadPage");
+        },
+      },
+      apiParams
+    );
 
-    expect(appLogic.claims.loadAll).toHaveBeenCalledWith(2);
+    expect(spy).toHaveBeenLastCalledWith(
+      "2",
+      {
+        order_by: "employee",
+        order_direction: "descending",
+      },
+      {
+        claim_status: "Approved,Pending",
+        employer_id: "mock-employer-id",
+        search: "foo",
+      }
+    );
   });
 });

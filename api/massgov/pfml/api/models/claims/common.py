@@ -1,8 +1,9 @@
 from datetime import date
 from decimal import Decimal
+from enum import Enum
 from typing import List, Optional
 
-from massgov.pfml.api.models.common import PreviousLeave
+from massgov.pfml.api.models.common import ConcurrentLeave, EmployerBenefit, PreviousLeave
 from massgov.pfml.util.pydantic import PydanticBaseModel
 
 
@@ -36,22 +37,24 @@ class LeaveDetails(PydanticBaseModel):
     reduced_schedule_leave_periods: Optional[List[StandardLeavePeriod]]
 
 
-class EmployerBenefit(PydanticBaseModel):
-    benefit_amount_dollars: Optional[float]
-    benefit_amount_frequency: Optional[str]
-    benefit_start_date: Optional[date]
-    benefit_end_date: Optional[date]
-    benefit_type: Optional[str]
-    program_type: Optional[str]
+class YesNoUnknown(str, Enum):
+    YES = "Yes"
+    NO = "No"
+    UNKNOWN = "Unknown"
 
 
 class EmployerClaimReview(PydanticBaseModel):
     """ Defines the Employer info request / response format """
 
+    uses_second_eform_version: bool = False
     comment: Optional[str]
     employer_benefits: List[EmployerBenefit]
+    concurrent_leave: Optional[ConcurrentLeave]
     hours_worked_per_week: Optional[Decimal]
     previous_leaves: List[PreviousLeave]
     employer_decision: Optional[str]
     fraud: Optional[str]
     has_amendments: bool = False
+    leave_reason: Optional[str]
+    believe_relationship_accurate: Optional[YesNoUnknown]
+    relationship_inaccurate_reason: Optional[str]

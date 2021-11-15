@@ -4,6 +4,7 @@
 #
 
 import os
+import re
 import resource
 import sys
 import uuid
@@ -19,10 +20,15 @@ import massgov.pfml.dor.importer.lib.dor_persistence_util as dor_persistence_uti
 import massgov.pfml.util.batch.log
 import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
-import massgov.pfml.util.logging.audit
 import massgov.pfml.util.newrelic.events
 from massgov.pfml import db
-from massgov.pfml.db.models.employees import EmployeeLog, ImportLog, WagesAndContributions
+from massgov.pfml.db.models.employees import (
+    EmployeePushToFineosQueue,
+    EmployerPushToFineosQueue,
+    ImportLog,
+    WagesAndContributions,
+    WagesAndContributionsHistory,
+)
 from massgov.pfml.dor.importer.dor_file_formats import (
     EMPLOYEE_FILE_ROW_LENGTH,
     EMPLOYEE_FORMAT,
@@ -31,9 +37,9 @@ from massgov.pfml.dor.importer.dor_file_formats import (
     EMPLOYER_QUARTER_INFO_FORMAT,
 )
 from massgov.pfml.dor.importer.paths import ImportBatch, get_files_to_process
+from massgov.pfml.util.bg import background_task
 from massgov.pfml.util.config import get_secret_from_env
 from massgov.pfml.util.encryption import Crypt, GpgCrypt, Utf8Crypt
-from massgov.pfml.util.sentry import initialize_sentry
 
 logger = logging.get_logger("massgov.pfml.dor.importer.import_dor")
 
@@ -82,6 +88,8 @@ class ImportReport:
     invalid_employer_lines_count: int = 0
     parsed_employers_exception_line_nums: List[Any] = field(default_factory=list)
     invalid_employer_addresses_by_account_key: Dict[Any, Any] = field(default_factory=dict)
+    invalid_employer_feins_by_account_key: Dict[Any, Any] = field(default_factory=dict)
+    errored_employers_fein_count: int = 0
     invalid_employee_lines_count: int = 0
     skipped_wages_count: int = 0
     parsed_employer_quarter_exception_count: int = 0
@@ -99,12 +107,9 @@ class ImportRunReport:
     message: str = ""
 
 
+@background_task("dor-import")
 def handler(event=None, context=None):
     """ECS task main method."""
-    initialize_sentry()
-    massgov.pfml.util.logging.audit.init_security_logging()
-    logging.init(__name__)
-
     logger.addFilter(filter_add_memory_usage)
 
     report = ImportRunReport(start=datetime.now().isoformat())
@@ -533,23 +538,38 @@ def bulk_save(db_session, models_list, model_name, commit=False, batch_size=1000
     batch_apply(models_list, f"Saving {model_name}", bulk_save_helper, batch_size=batch_size)
 
 
-def is_valid_employer_address(employee_info, report):
+def is_valid_employer_address(employer_info, report):
     try:
-        dor_persistence_util.employer_dict_to_country_and_state_values(employee_info)
+        dor_persistence_util.employer_dict_to_country_and_state_values(employer_info)
     except KeyError:
         invalid_address_msg = "city: {}, state: {}, zip: {}, country: {}".format(
-            employee_info["employer_address_city"],
-            employee_info["employer_address_state"],
-            employee_info["employer_address_zip"],
-            employee_info["employer_address_country"],
+            employer_info["employer_address_city"],
+            employer_info["employer_address_state"],
+            employer_info["employer_address_zip"],
+            employer_info["employer_address_country"],
         )
         logger.warning(f"Invalid employer address - {invalid_address_msg}")
         report.invalid_employer_addresses_by_account_key[
-            employee_info["account_key"]
+            employer_info["account_key"]
         ] = invalid_address_msg
         return False
 
     return True
+
+
+RE_FEIN = re.compile(r"^[0-9]{9}$")
+
+
+def is_valid_employer_fein(employer_info, report):
+    fein = str(employer_info.get("fein"))
+    correct = RE_FEIN.fullmatch(fein) is not None
+    if correct:
+        return True
+    err_msg = f"Invalid FEIN: {fein}. Expected a 9-digit integer value"
+    report.errored_employers_fein_count += 1
+    report.invalid_employer_feins_by_account_key[employer_info["account_key"]] = err_msg
+    logger.warning(f"Invalid employer fein - {fein}")
+    return False
 
 
 def import_employers(db_session, employers, report, import_log_entry_id):
@@ -580,7 +600,11 @@ def import_employers(db_session, employers, report, import_log_entry_id):
         if not is_valid_employer_address(employer_info, report):
             continue
 
+        if not is_valid_employer_fein(employer_info, report):
+            continue
+
         fein = employer_info["fein"]
+
         if fein in staged_not_found_employer_ssns:
             # this means there is more than one line for the same employer
             # add it to the found list for later possible update processing
@@ -626,6 +650,17 @@ def import_employers(db_session, employers, report, import_log_entry_id):
 
     report.created_employers_count += len(employer_models_to_create)
 
+    # Enqueue newly created employers for push to FINEOS
+    employer_insert_logs_to_create = list(
+        map(
+            lambda employer: EmployerPushToFineosQueue(
+                employer_id=employer.employer_id, action="INSERT"
+            ),
+            employer_models_to_create,
+        )
+    )
+    bulk_save(db_session, employer_insert_logs_to_create, "Employer Insert Logs")
+
     # 3 - Create employer addresses
     addresses_models_to_create = list(
         map(
@@ -660,11 +695,9 @@ def import_employers(db_session, employers, report, import_log_entry_id):
     )
 
     bulk_save(
-        db_session,
-        employer_address_relationship_models_to_create,
-        "Employer Address Mapping",
-        commit=True,
+        db_session, employer_address_relationship_models_to_create, "Employer Address Mapping",
     )
+    db_session.commit()
 
     logger.info(
         "Done - Creating new employer address mapping: %i",
@@ -711,6 +744,17 @@ def import_employers(db_session, employers, report, import_log_entry_id):
 
         existing_employer_model = dor_persistence_util.get_employer_by_fein(
             db_session, employer_info["fein"]
+        )
+        # Enqueue updated employer for push to FINEOS
+        db_session.add(
+            EmployerPushToFineosQueue(
+                employer_id=existing_employer_model.employer_id,
+                action="UPDATE",
+                family_exemption=existing_employer_model.family_exemption,
+                medical_exemption=existing_employer_model.medical_exemption,
+                exemption_commence_date=existing_employer_model.exemption_commence_date,
+                exemption_cease_date=existing_employer_model.exemption_cease_date,
+            )
         )
         dor_persistence_util.update_employer(
             db_session, existing_employer_model, employer_info, import_log_entry_id
@@ -826,6 +870,8 @@ def import_employees(
     # 3 - Create new employees
     employee_models_to_create = []
     employee_ssns_staged_for_creation_in_current_loop = set()
+    employee_insert_logs_to_create = []
+
     for employee_info in not_found_employee_info_list:
         ssn = employee_info["employee_ssn"]
 
@@ -834,18 +880,26 @@ def import_employees(
             continue
 
         new_employee_id = ssn_to_new_employee_id[ssn]
-        employee_models_to_create.append(
-            dor_persistence_util.dict_to_employee(
-                employee_info, import_log_entry_id, new_employee_id, ssn_to_new_tax_id[ssn],
-            )
+        new_employee = dor_persistence_util.dict_to_employee(
+            employee_info, import_log_entry_id, new_employee_id, ssn_to_new_tax_id[ssn],
+        )
+        employee_models_to_create.append(new_employee)
+        # Enqueue newly created employee for push to FINEOS
+        employee_insert_logs_to_create.append(
+            EmployeePushToFineosQueue(employee_id=new_employee.employee_id, action="INSERT")
         )
 
         employee_ssns_staged_for_creation_in_current_loop.add(ssn)
         employee_ssns_to_id_created_in_current_import_run[ssn] = new_employee_id
 
+    # Store log entries for new employees
+    bulk_save(db_session, employee_insert_logs_to_create, "Employee Insert Logs")
+
     logger.info("Creating new employees: %i", len(employee_models_to_create))
 
-    bulk_save(db_session, employee_models_to_create, "Employees", commit=True)
+    bulk_save(db_session, employee_models_to_create, "Employees")
+
+    db_session.commit()
 
     report.created_employees_count += len(employee_models_to_create)
 
@@ -896,6 +950,14 @@ def import_employees(
         if is_updated:
             updated_employees_count += 1
             report.updated_employees_count += 1
+
+            # Enqueue updated employee for push to FINEOS
+            db_session.add(
+                EmployeePushToFineosQueue(
+                    employee_id=existing_employee_model.employee_id, action="UPDATE"
+                )
+            )
+
         else:
             unmodified_employees_count += 1
             report.unmodified_employees_count += 1
@@ -909,10 +971,6 @@ def import_employees(
         updated_employees_count,
         unmodified_employees_count,
     )
-
-
-def get_employer_quarterly_contribution_composite_key(employer_id, filing_period):
-    return (employer_id, filing_period)
 
 
 def get_wage_composite_key(employer_id, employee_id, filing_period):
@@ -967,8 +1025,7 @@ def log_employees_with_new_employers(
         )
     )
 
-    employee_new_employer_logs_to_create = []
-    modified_at = datetime.now()
+    push_to_fineos_queue_items_to_create = []
     already_logged_employee_id_employer_id_tuples = set()
 
     for employee_wage_info in employee_wage_info_for_existing_employees:
@@ -989,29 +1046,28 @@ def log_employees_with_new_employers(
 
         employer_id_set = employee_id_to_employer_id_set.get(employee_id, None)
         if employer_id_set is None or employer_id not in employer_id_set:
-            employee_log = EmployeeLog(
-                employee_log_id=str(uuid.uuid4()),
-                employee_id=employee_id,
-                employer_id=employer_id,
-                action="UPDATE_NEW_EMPLOYER",
-                modified_at=modified_at,
-                process_id=None,
+            push_to_fineos_queue_item = EmployeePushToFineosQueue(
+                employee_id=employee_id, employer_id=employer_id, action="UPDATE_NEW_EMPLOYER",
             )
-            employee_new_employer_logs_to_create.append(employee_log)
+            push_to_fineos_queue_items_to_create.append(push_to_fineos_queue_item)
             already_logged_employee_id_employer_id_tuples.add((employee_id, employer_id))
 
-    employee_logs_count = len(employee_new_employer_logs_to_create)
-    if employee_logs_count > 0:
-        logger.info("Logging employees as updated for new employer: %i", employee_logs_count)
+    push_to_fineos_queue_items_count = len(push_to_fineos_queue_items_to_create)
+    if push_to_fineos_queue_items_count > 0:
+        logger.info(
+            "Logging employees as updated for new employer: %i", push_to_fineos_queue_items_count,
+        )
         bulk_save(
             db_session,
-            employee_new_employer_logs_to_create,
+            push_to_fineos_queue_items_to_create,
             "Employee Logs (New Employer Update)",
             commit=True,
         )
 
-    report.logged_employees_for_new_employer += employee_logs_count
-    logger.info("Done - Check and log employees with new employers: %i", employee_logs_count)
+    report.logged_employees_for_new_employer += push_to_fineos_queue_items_count
+    logger.info(
+        "Done - Check and log employees with new employers: %i", push_to_fineos_queue_items_count,
+    )
 
 
 def import_wage_data(
@@ -1107,6 +1163,7 @@ def import_wage_data(
     count = 0
     updated_count = 0
     unmodified_count = 0
+    wage_history_records: List[WagesAndContributionsHistory] = []
 
     for wage_info in wage_info_list_to_create_or_update:
         count += 1
@@ -1147,7 +1204,7 @@ def import_wage_data(
             wages_contributions_models_existing_employees_to_create.append(wage_model)
         else:
             is_updated = dor_persistence_util.check_and_update_wages_and_contributions(
-                db_session, existing_wage, wage_info, import_log_entry_id
+                db_session, existing_wage, wage_info, import_log_entry_id, wage_history_records
             )
 
             if is_updated:
@@ -1172,6 +1229,17 @@ def import_wage_data(
         logger.info(
             "Batch committing wage updates: %i, unmodified: %i", updated_count, unmodified_count
         )
+
+        db_session.commit()
+
+        logger.info(
+            "Batch saving wages and contribution history",
+            extra={"record_count": len(wage_history_records)},
+        )
+        bulk_save(
+            db_session, wage_history_records, "Batch creating WagesAndContributionsHistory records",
+        )
+
         db_session.commit()
 
     logger.info(
@@ -1204,43 +1272,28 @@ def import_wage_data(
 
 
 def import_employer_pfml_contributions(
-    db_session, employer_quarterly_info_list, report, import_log_entry_id,
-):
-    account_key_to_employer_id_map = {}
-    account_keys = []
-    for employee_info in employer_quarterly_info_list:
-        account_keys.append(employee_info["account_key"])
-
-    employer_models = dor_persistence_util.get_employers_account_key(db_session, account_keys)
-    for employer in employer_models:
-        account_key_to_employer_id_map[employer.account_key] = employer.employer_id
-
-    employer_ids_to_check_in_db = []
-    for employer_quarterly_info in employer_quarterly_info_list:
-        found_employer_id = account_key_to_employer_id_map.get(
-            employer_quarterly_info["account_key"], None
-        )
-        if found_employer_id is not None:
-            employer_ids_to_check_in_db.append(found_employer_id)
-
-    existing_employer_models_all_dates = dor_persistence_util.get_employer_quarterly_info_by_employer_id(
-        db_session, employer_ids_to_check_in_db
+    db_session: massgov.pfml.db.Session,
+    employer_quarterly_info_list: List[Dict],
+    report: ImportReport,
+    import_log_entry_id: int,
+) -> None:
+    account_keys = {employee_info["account_key"] for employee_info in employer_quarterly_info_list}
+    account_key_to_employer_id_map = dor_persistence_util.get_employers_by_account_key(
+        db_session, account_keys
     )
 
-    existing_quarterly_map: Dict[Any, Any] = {}
-    for existing_employer_model in existing_employer_models_all_dates:
-        key: str = get_employer_quarterly_contribution_composite_key(
-            existing_employer_model.employer_id, existing_employer_model.filing_period
-        )
-        existing_quarterly_map[key] = existing_employer_model
+    existing_quarterly_map = dor_persistence_util.get_employer_quarterly_info_by_employer_id(
+        db_session, account_key_to_employer_id_map.values()
+    )
 
-    not_found_employer_quarterly_contribution_list = []
+    # Determine which are new (employer, quarter) combinations, and which are updates to existing
+    # rows in the database.
+    new_employer_quarterly_contributions = {}
     found_employer_quarterly_contribution_list = []
 
     for employer_quarterly_info in employer_quarterly_info_list:
-        employer_id = account_key_to_employer_id_map.get(
-            employer_quarterly_info["account_key"], None
-        )
+        account_key = employer_quarterly_info["account_key"]
+        employer_id = account_key_to_employer_id_map.get(account_key, None)
         if employer_id is None:
             logger.warning(
                 "Attempted to create a quarterly row for unknown employer: %s",
@@ -1249,15 +1302,18 @@ def import_employer_pfml_contributions(
             report.skipped_employer_quarterly_contribution += 1
             continue
 
-        existing_composite_key: str = get_employer_quarterly_contribution_composite_key(
-            employer_id, employer_quarterly_info["filing_period"],
-        )
-        existing_model = existing_quarterly_map.get(existing_composite_key, None)
+        period = employer_quarterly_info["filing_period"]
+        composite_key = (employer_id, period)
 
-        if existing_model is not None:
+        if composite_key in existing_quarterly_map:
             found_employer_quarterly_contribution_list.append(employer_quarterly_info)
         else:
-            not_found_employer_quarterly_contribution_list.append(employer_quarterly_info)
+            if composite_key in new_employer_quarterly_contributions:
+                logger.warning(
+                    "duplicate employer quarterly contribution row",
+                    extra=dict(account_key=account_key, filing_period=period),
+                )
+            new_employer_quarterly_contributions[composite_key] = employer_quarterly_info
 
     employer_quarter_models_to_create = list(
         map(
@@ -1266,7 +1322,7 @@ def import_employer_pfml_contributions(
                 account_key_to_employer_id_map[employer_info["account_key"]],
                 import_log_entry_id,
             ),
-            not_found_employer_quarterly_contribution_list,
+            new_employer_quarterly_contributions.values(),
         )
     )
 
@@ -1293,20 +1349,21 @@ def import_employer_pfml_contributions(
         if count % 10000 == 0:
             logger.info("Updating quarterly contribution info, current %i", count)
 
-        existing_composite_model_key: str = get_employer_quarterly_contribution_composite_key(
-            account_key_to_employer_id_map[employer_info["account_key"]],
-            employer_info["filing_period"],
-        )
+        account_key = employer_info["account_key"]
+        filing_period = employer_info["filing_period"]
+        employer_id = account_key_to_employer_id_map[account_key]
 
-        existing_employer_quarterly_contribution_model = existing_quarterly_map.get(
-            existing_composite_model_key
-        )
+        employer_quarterly_contribution = existing_quarterly_map[(employer_id, filing_period)]
 
-        is_updated = dor_persistence_util.check_and_update_employer_quarlerly_contribution(
-            db_session,
-            existing_employer_quarterly_contribution_model,
-            employer_info,
-            import_log_entry_id,
+        if employer_quarterly_contribution.latest_import_log_id == import_log_entry_id:
+            # Since the import log id is equal, we already updated this row during this import.
+            logger.warning(
+                "duplicate employer quarterly contribution row",
+                extra=dict(account_key=account_key, filing_period=filing_period),
+            )
+
+        is_updated = dor_persistence_util.check_and_update_employer_quarterly_contribution(
+            employer_quarterly_contribution, employer_info, import_log_entry_id,
         )
 
         if is_updated:
@@ -1333,14 +1390,10 @@ def import_employees_and_wage_data(
     import_log_entry_id,
 ):
     # 1 - Create account key to existing employer id reference map
-    account_key_to_employer_id_map = {}
-    account_keys = []
-    for employee_info in employee_and_wage_info_list:
-        account_keys.append(employee_info["account_key"])
-
-    employer_models = dor_persistence_util.get_employers_account_key(db_session, account_keys)
-    for employer in employer_models:
-        account_key_to_employer_id_map[employer.account_key] = employer.employer_id
+    account_keys = {employee_info["account_key"] for employee_info in employee_and_wage_info_list}
+    account_key_to_employer_id_map = dor_persistence_util.get_employers_by_account_key(
+        db_session, account_keys
+    )
 
     # 2 - Create existing employee reference maps
     logger.info(

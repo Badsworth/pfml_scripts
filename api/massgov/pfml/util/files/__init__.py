@@ -8,7 +8,7 @@ import os
 import pathlib
 import shutil
 import tempfile
-from typing import Dict, Iterable, List, Optional
+from typing import Dict, Iterable, List, Optional, Sequence
 from urllib.parse import urlparse
 
 import boto3
@@ -145,6 +145,7 @@ def list_files(
         bucket_name, prefix = split_s3_url(path)
 
         # TODO Use boto3 for now to address multithreading issue in lambda, revisit after pilot 2
+        # TODO: this issue has been fixed; should we go back to using smart_open for this?
         # https://github.com/RaRe-Technologies/smart_open/issues/340
         # for key, _content in smart_open.s3_iter_bucket(bucket_name, prefix=prefix, workers=1):
         #     files.append(get_file_name(key))
@@ -302,41 +303,6 @@ def copy_file(source, destination):
         shutil.copy2(source, destination)
 
 
-def copy_s3_files(source, destination, expected_file_names, recursive=False):
-    s3_objects = list_files(source, recursive=recursive)
-
-    # A dictionary of mapping from expected file names to the new S3 location
-    file_mapping = dict.fromkeys(expected_file_names, "")
-
-    for s3_object in s3_objects:
-        for expected_file_name in expected_file_names:
-            # The objects will be just the file name
-            # eg. a file at s3://bucket/path/to/2020-01-01-file.csv.zip
-            # would be named 2020-01-01-file.csv.zip here
-            if s3_object.endswith(expected_file_name):
-                source_file = os.path.join(source, s3_object)
-                dest_file = os.path.join(destination, s3_object)
-
-                # We found two files which end the same, error
-                if file_mapping.get(expected_file_name):
-                    raise RuntimeError(
-                        f"Duplicate files found for {expected_file_name}: {file_mapping.get(expected_file_name)} and {source_file}"
-                    )
-
-                copy_file(source_file, dest_file)
-                file_mapping[expected_file_name] = dest_file
-
-    missing_files = []
-    for expected_file_name, destination in file_mapping.items():
-        if not destination:
-            missing_files.append(expected_file_name)
-
-    if missing_files:
-        raise Exception(f"The following files were not found in S3 {','.join(missing_files)}")
-
-    return file_mapping
-
-
 def delete_file(path):
     if is_s3_path(path):
         bucket, s3_path = split_s3_url(path)
@@ -395,8 +361,8 @@ def open_stream(path, mode="r"):
     if is_s3_path(path):
         so_config = Config(
             max_pool_connections=10,
-            connect_timeout=14400,
-            read_timeout=14400,
+            connect_timeout=60,
+            read_timeout=60,
             retries={"max_attempts": 10},
         )
         so_transport_params = {"resource_kwargs": {"config": so_config}}
@@ -423,7 +389,7 @@ def read_file_lines(path, mode="r", encoding=None):
     return map(lambda line: line.rstrip(), stream)
 
 
-def get_sftp_client(uri: str, ssh_key_password: str, ssh_key: str) -> paramiko.SFTPClient:
+def get_sftp_client(uri: str, ssh_key_password: Optional[str], ssh_key: str) -> paramiko.SFTPClient:
     if not is_sftp_path(uri):
         raise ValueError("uri must be an SFTP URI")
 
@@ -438,7 +404,11 @@ def get_sftp_client(uri: str, ssh_key_password: str, ssh_key: str) -> paramiko.S
     t = paramiko.Transport((host, port))
     t.connect(username=user, pkey=pkey)
 
-    return paramiko.SFTPClient.from_transport(t)
+    client = paramiko.SFTPClient.from_transport(t)
+    if not client:
+        raise RuntimeError("STFP client unavailable")
+
+    return client
 
 
 def copy_file_from_s3_to_sftp(source: str, dest: str, sftp: paramiko.SFTPClient) -> None:
@@ -480,21 +450,21 @@ def remove_if_exists(path: str) -> None:
 
 def create_csv_from_list(
     data: Iterable[Dict],
-    fieldnames: Iterable[str],
+    fieldnames: Sequence[str],
     file_name: str,
-    folder_path: Optional[pathlib.Path] = None,
+    folder_path: Optional[str] = None,
 ) -> pathlib.Path:
     if not folder_path:
         directory = tempfile.mkdtemp()
-        csv_filepath = pathlib.Path(os.path.join(directory, f"{file_name}.csv"))
+        csv_filepath = os.path.join(directory, f"{file_name}.csv")
     else:
-        csv_filepath = pathlib.Path(os.path.join(folder_path, f"{file_name}.csv"))
+        csv_filepath = os.path.join(folder_path, f"{file_name}.csv")
 
-    with open(csv_filepath, mode="w") as csv_file:
+    with write_file(csv_filepath) as csv_file:
         writer = csv.DictWriter(csv_file, fieldnames=fieldnames, extrasaction="ignore")
 
         writer.writeheader()
         for d in data:
             writer.writerow(d)
 
-    return csv_filepath
+    return pathlib.Path(csv_filepath)

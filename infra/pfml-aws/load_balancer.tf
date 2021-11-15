@@ -18,6 +18,8 @@ resource "aws_lb" "nlbs" {
   load_balancer_type = "network"
   subnets            = data.aws_subnet_ids.app_private[each.key].ids
 
+  enable_deletion_protection = true
+
   # Even though the load balancer and ECS instances run in the same subnets,
   # an LB instance in zone A cannot route to an ECS instance in zone B unless
   # cross zone load balancing is enabled.
@@ -43,5 +45,5 @@ resource "aws_api_gateway_vpc_link" "nlb_vpc_links" {
   for_each    = toset(local.vpcs)
   name        = "${each.key}-nlb-vpc-link"
   description = "VPC link between API gateway and internal network LB for ${each.key} VPC"
-  target_arns = ["${aws_lb.nlbs[each.key].arn}"]
+  target_arns = [aws_lb.nlbs[each.key].arn]
 }

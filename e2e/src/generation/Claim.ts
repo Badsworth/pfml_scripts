@@ -26,23 +26,48 @@ import * as si from "streaming-iterables";
 import ndjson from "ndjson";
 import { StreamWrapper } from "./FileWrapper";
 import { collect, map, AnyIterable } from "streaming-iterables";
+import { OtherIncome } from "../api";
+import {
+  ConcurrentLeave,
+  EmployerBenefit,
+  IntermittentLeavePeriods,
+  PreviousLeave,
+} from "../_api";
+import { generateOtherIncomes } from "./OtherIncomes";
+import { generateEmployerBenefits } from "./EmployerBenefits";
+import { generatePreviousLeaves } from "./PreviousLeaves";
+import { generateConcurrentLeaves } from "./ConcurrentLeave";
+import { NonEmptyArray } from "../types";
 
-const pipelineP = promisify(pipeline);
+export type FineosExclusiveLeaveReasons =
+  | "Military Exigency Family"
+  | "Military Caregiver";
+export type APILeaveReason = ApplicationLeaveDetails["reason"];
+export type LeaveReason = APILeaveReason | FineosExclusiveLeaveReasons;
 
-/**
- * Specifies how a claim should be generated.
- */
-export type ClaimSpecification = {
+/**Claim types accepted by the API */
+export interface APIClaimSpec extends BaseClaimSpecification {
+  reason: APILeaveReason;
+}
+/**Claim types exclusive to Fineos intake process */
+export interface FineosClaimSpec extends BaseClaimSpecification {
+  reason: FineosExclusiveLeaveReasons;
+}
+
+export type ClaimSpecification = APIClaimSpec;
+
+/**Base Claim specification allowing for any combination of values */
+export interface BaseClaimSpecification {
   /** A human-readable name or ID for this type of claim. */
   label: string;
   /** Reason for leave. */
-  reason: ApplicationLeaveDetails["reason"];
+  reason: LeaveReason;
   /** The qualifier for the leave reason */
   reason_qualifier?: ApplicationLeaveDetails["reason_qualifier"];
   /** An object describing documentation that should accompany the claim. */
   docs?: DocumentGenerationSpec;
   /** Describes the employer response that accompanies this claim */
-  employerResponse?: GeneratedEmployerResponse;
+  employerResponse?: EmployerResponseSpec;
   /** Generate an employer notification date that is considered "short notice" by law. */
   shortNotice?: boolean;
   /** Flag to make this a continuous leave claim */
@@ -52,12 +77,33 @@ export type ClaimSpecification = {
    * following the specification given here. See work_pattern_spec for information on the format.
    */
   reduced_leave_spec?: string;
-  /** Flag to make this an intermittent leave claim */
-  has_intermittent_leave_periods?: boolean;
+  /**
+   * Data to create an intermittent leave period.
+   *
+   * Acceptable values for this property are:
+   *   * `false` or `undefined`: No intermittent leave period will be added.
+   *   * `true`: An intermittent leave period will be generated automatically.
+   *   * Partial Intermittent Leave period object: Will be merged with the generated defaults into a leave period.
+   *   * Array of Partial Intermittent Leave Period objects: Each item will be merged with the generated defaults into
+   *     multiple leave periods.
+   */
+  intermittent_leave_spec?: IntermittentLeaveSpec | false;
+  /**Make this a medical prebirth claim */
   pregnant_or_recent_birth?: boolean;
+  /** Control the date of the bonding event (child birth/adoption/etc) */
   bondingDate?: "far-past" | "past" | "future";
   /** Specify explicit leave dates for the claim. These will be used for the reduced/intermittent/continuous leave periods. */
-  leave_dates?: [Date, Date];
+  leave_dates?: (() => [Date, Date]) | [Date, Date];
+  /** Specify other incomes, if not specified, start & end dates are automatically matched to leave dates*/
+  other_incomes?: NonEmptyArray<OtherIncome>;
+  /** Specify employer benefits. if not specified, start & end dates are automatically matched to leave dates. */
+  employer_benefits?: NonEmptyArray<EmployerBenefit>;
+  /** Specify concurrent leave. If not specified, start & end dates are automatically matched to leave dates.*/
+  concurrent_leave?: ConcurrentLeave;
+  /** Specify previous leaves with same reason. if not specified, previous leave length is matched to the length of current leave, and it's set to end 2 weeks before the start of current leave */
+  previous_leaves_other_reason?: NonEmptyArray<PreviousLeave>;
+  /** Specify previous leaves with different reason. if not specified, previous leave length is matched to the length of current leave, and it's set to end 2 weeks before the start of current leave */
+  previous_leaves_same_reason?: NonEmptyArray<PreviousLeave>;
   /** Specify an explicit address to use for the claim. */
   address?: Address;
   /** Specify explicit payment details to be used for the claim. */
@@ -68,18 +114,27 @@ export type ClaimSpecification = {
    * are minutes worked on that day of the week (starting Sunday).
    */
   work_pattern_spec?: WorkPatternSpec;
-  /** Makes a claim for an extremely short time period (1 day). */
-  shortClaim?: boolean;
   /** Optional metadata to be saved verbatim on the claim object. Not submitted in any way. */
   metadata?: GeneratedClaimMetadata;
-};
+  /** Makes a claim for an extremely short time period (1 day). */
+  shortClaim?: boolean;
+}
 
-export type GeneratedClaimMetadata = Record<string, string | boolean>;
+type IntermittentLeaveSpec =
+  | IntermittentLeavePeriods
+  | IntermittentLeavePeriods[]
+  | true;
 
-export type GeneratedEmployerResponse = Pick<
+export type GeneratedClaimMetadata = Record<string, string | boolean | number>;
+
+export type EmployerResponseSpec = Omit<
   EmployerClaimRequestBody,
-  "hours_worked_per_week" | "employer_decision" | "fraud" | "comment"
->;
+  "employer_benefits" | "previous_leaves" | "concurrent_leave"
+> & {
+  employer_benefits?: EmployerBenefit[];
+  previous_leaves?: PreviousLeave[];
+  concurrent_leave?: ConcurrentLeave;
+};
 
 // Represents a single claim that will be issued to the system.
 export type GeneratedClaim = {
@@ -87,7 +142,7 @@ export type GeneratedClaim = {
   scenario: string;
   claim: ApplicationRequestBody;
   documents: DocumentWithPromisedFile[];
-  employerResponse?: GeneratedEmployerResponse | null;
+  employerResponse?: EmployerClaimRequestBody | null;
   paymentPreference: PaymentPreferenceRequestBody;
   metadata?: GeneratedClaimMetadata;
 };
@@ -95,6 +150,11 @@ export type GeneratedClaim = {
 export type DehydratedClaim = Omit<GeneratedClaim, "documents"> & {
   documents: DehydratedDocument[];
 };
+
+interface PromiseWithOptionalGeneration<T> extends Promise<T> {
+  orGenerateAndSave(gen: () => T): Promise<T>;
+}
+const pipelineP = promisify(pipeline);
 
 /**
  * Responsible for generating single claims.
@@ -120,6 +180,26 @@ export class ClaimGenerator {
     const address = spec.address ?? this.generateAddress();
     const workPattern = generateWorkPattern(spec.work_pattern_spec);
     const leaveDetails = generateLeaveDetails(spec, workPattern);
+    const other_incomes = generateOtherIncomes(
+      spec.other_incomes,
+      leaveDetails
+    );
+    const employer_benefits = generateEmployerBenefits(
+      spec.employer_benefits,
+      leaveDetails
+    );
+    const previous_leaves_other_reason = generatePreviousLeaves(
+      spec.previous_leaves_other_reason,
+      leaveDetails
+    );
+    const previous_leaves_same_reason = generatePreviousLeaves(
+      spec.previous_leaves_same_reason,
+      leaveDetails
+    );
+    const concurrent_leave = generateConcurrentLeaves(
+      spec.concurrent_leave,
+      leaveDetails
+    );
     // @todo: Later, we will want smarter logic for which occupation is picked.
     const occupation = employee.occupations[0];
 
@@ -130,6 +210,7 @@ export class ClaimGenerator {
       occupation: "Administrative",
       first_name: employee.first_name,
       last_name: employee.last_name,
+      gender: "Prefer not to answer",
       tax_identifier: employee.ssn,
       employer_fein: occupation.fein,
       date_of_birth: employee.date_of_birth,
@@ -148,8 +229,18 @@ export class ClaimGenerator {
         (leaveDetails.reduced_schedule_leave_periods?.length ?? 0) > 0,
       has_intermittent_leave_periods:
         (leaveDetails.intermittent_leave_periods?.length ?? 0) > 0,
+      other_incomes,
+      employer_benefits,
+      previous_leaves_other_reason,
+      previous_leaves_same_reason,
+      concurrent_leave,
+      // !! is just casting those properties to booleans
+      has_other_incomes: !!other_incomes,
+      has_concurrent_leave: !!concurrent_leave,
+      has_employer_benefits: !!employer_benefits,
+      has_previous_leaves_other_reason: !!previous_leaves_other_reason,
+      has_previous_leaves_same_reason: !!previous_leaves_same_reason,
     };
-
     return {
       id: uuid(),
       // @todo: Rename to label?
@@ -160,8 +251,28 @@ export class ClaimGenerator {
       paymentPreference: {
         payment_preference: spec.payment ?? this.generatePaymentPreference(),
       },
-      employerResponse: spec.employerResponse ?? null,
+      employerResponse: spec.employerResponse
+        ? this.generateEmployerResponse(spec.employerResponse, leaveDetails)
+        : null,
       metadata: spec.metadata,
+    };
+  }
+
+  private static generateEmployerResponse(
+    response: EmployerResponseSpec,
+    leaveDetails: ApplicationLeaveDetails
+  ): EmployerClaimRequestBody {
+    return {
+      ...response,
+      employer_benefits:
+        generateEmployerBenefits(response.employer_benefits, leaveDetails) ??
+        [],
+      previous_leaves:
+        generatePreviousLeaves(response.previous_leaves, leaveDetails) ?? [],
+      concurrent_leave: generateConcurrentLeaves(
+        response.concurrent_leave,
+        leaveDetails
+      ),
     };
   }
 
@@ -303,18 +414,31 @@ export default class ClaimPool implements AsyncIterable<GeneratedClaim> {
   /**
    * Load a pool from NDJSON format.
    */
-  static async load(filename: string, documentDir: string): Promise<ClaimPool> {
-    // Check readability of the file up front so we can verify its existence.
-    await fs.promises.access(filename, fs.constants.R_OK);
-
-    // Load the claims from NDJSON, then "rehydrate" each one by replacing the file path
-    // with a function to create a UInt8Buffer for the file contents.
-    const input = fs.createReadStream(filename).pipe(ndjson.parse());
-    const hydrate = si.map((claim: DehydratedClaim) =>
-      ClaimGenerator.hydrate(claim, documentDir)
-    );
-
-    return new this(hydrate(input));
+  static load(
+    filename: string,
+    documentDir: string
+  ): PromiseWithOptionalGeneration<ClaimPool> {
+    const loadPromise = (async () => {
+      await fs.promises.access(filename, fs.constants.R_OK);
+      const input = fs.createReadStream(filename).pipe(ndjson.parse());
+      const hydrate = si.map((claim: DehydratedClaim) =>
+        ClaimGenerator.hydrate(claim, documentDir)
+      );
+      return new this(hydrate(input));
+    })();
+    return Object.assign(loadPromise, {
+      orGenerateAndSave: async (generator: () => ClaimPool) => {
+        // When orGenerateAndSave() is called, return a new promise that adds a catch() to
+        // the load promise to regenerate and save the data _only if the initial load fails_
+        return loadPromise.catch(async (e) => {
+          if (e.code !== "ENOENT") return Promise.reject(e);
+          // Invoke the generator here, and save the pool it returns to `filename`
+          const pool = await generator();
+          await pool.save(filename, documentDir);
+          return await ClaimPool.load(filename, documentDir);
+        });
+      },
+    });
   }
 
   constructor(

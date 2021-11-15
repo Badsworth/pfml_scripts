@@ -3,8 +3,8 @@ import sys
 from typing import List
 
 import massgov.pfml.db as db
+import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.logging as logging
-import massgov.pfml.util.logging.audit as audit
 from massgov.pfml.delegated_payments.delegated_fineos_pei_writeback import FineosPeiWritebackStep
 from massgov.pfml.delegated_payments.pickup_response_files_step import PickupResponseFilesStep
 from massgov.pfml.delegated_payments.pub.process_check_return_step import ProcessCheckReturnFileStep
@@ -13,6 +13,7 @@ from massgov.pfml.delegated_payments.reporting.delegated_payment_sql_report_step
 from massgov.pfml.delegated_payments.reporting.delegated_payment_sql_reports import (
     PROCESS_PUB_RESPONSES_REPORTS,
 )
+from massgov.pfml.util.bg import background_task
 
 logger = logging.get_logger("massgov.pfml.delegated_payments.task.process_pub_responses")
 
@@ -76,11 +77,9 @@ def make_db_session() -> db.Session:
     return db.init(sync_lookups=True)
 
 
+@background_task("pub-payments-process-pub-returns")
 def main():
     """Entry point for PUB Response Processing"""
-    audit.init_security_logging()
-    logging.init(__name__)
-
     config = Configuration(sys.argv[1:])
 
     with db.session_scope(make_db_session(), close=True) as db_session, db.session_scope(
@@ -94,6 +93,7 @@ def _process_pub_responses(
 ) -> None:
     """Process PUB Responses"""
     logger.info("Start - PUB Responses ECS Task")
+    start_time = payments_util.get_now()
 
     if config.pickup_files:
         PickupResponseFilesStep(
@@ -140,6 +140,7 @@ def _process_pub_responses(
             report_names=PROCESS_PUB_RESPONSES_REPORTS,
         ).run()
 
+    payments_util.create_success_file(start_time, "pub-payments-process-pub-returns")
     logger.info("Done - PUB Responses ECS Task")
 
 

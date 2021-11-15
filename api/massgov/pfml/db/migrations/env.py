@@ -43,6 +43,19 @@ target_metadata = Base.metadata
 # ... etc.
 
 
+def include_object(object, name, type_, reflected, compare_to):
+    # skip this index because we need it on the DuaEmployeeDemographics model for testing
+    # but we created this index in a previous migration to take advantage of the `coalesce` keyword
+    # see: 2021_10_04_13_30_03_95d3e464a5b2_add_dua_employee_demographics_table
+    if type_ == "index" and name == "dua_employee_demographics_unique_import_data_idx":
+        return False
+
+    if type_ == "schema" and object.schema is not None:
+        return False
+    else:
+        return True
+
+
 def run_migrations_offline():
     """Run migrations in 'offline' mode.
 
@@ -62,7 +75,8 @@ def run_migrations_offline():
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
-        include_schemas=True,
+        include_schemas=False,
+        include_object=include_object,
         compare_type=True,
     )
 
@@ -85,7 +99,8 @@ def run_migrations_online():
         context.configure(
             connection=connection,
             target_metadata=target_metadata,
-            include_schemas=True,
+            include_schemas=False,
+            include_object=include_object,
             compare_type=True,
         )
         with context.begin_transaction():

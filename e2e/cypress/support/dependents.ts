@@ -1,4 +1,4 @@
-import { Runnable, Test } from "mocha";
+import { Runnable, Test, Context } from "mocha";
 
 /**
  * This file contains the dependsOnPreviousPass command.
@@ -27,6 +27,10 @@ const getRunnableSuiteId = (runnable: Runnable): string => {
   // @ts-ignore
   return runnable.parent.id;
 };
+function getMochaContext(): Context {
+  // @ts-ignore "cy.state" is not in the "cy" type
+  return cy.state("runnable").ctx;
+}
 
 Cypress.on("test:after:run", (attr, runnable) => {
   if (runnable.state) {
@@ -72,8 +76,6 @@ Cypress.Commands.add("dependsOnPreviousPass", (dependencies?: [Test]) => {
   // If any of the previous results we're considering are not passes, we've failed
   // the check and should skip the current test.
   if (dependentValues.some((r) => r !== "passed")) {
-    throw new Error(
-      "This test failed because it depends on a previous test that did not pass"
-    );
+    getMochaContext().skip();
   }
 });

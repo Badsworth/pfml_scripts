@@ -1,0 +1,25 @@
+# Lint checker for the github/workflows YAML files that are adjusted.
+#
+name: Actionlint GHA Workflows
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/**
+
+jobs:
+  lint:
+    name: Actionlint GHA Workflows
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Download actionlint
+        id: get_actionlint
+        run: bash <(curl https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash)
+        shell: bash
+      - name: actionlint checker
+        # We are disabling the shellcheck (-shellcheck=) from running for the moment.
+        # Ignore usages of run_attempt for the moment - this is new and an issue has been raised:
+        # https://github.com/rhysd/actionlint/issues/57
+        run: ${{ steps.get_actionlint.outputs.executable }} -color --ignore='property "run_attempt" is not defined' -shellcheck=
+        shell: bash

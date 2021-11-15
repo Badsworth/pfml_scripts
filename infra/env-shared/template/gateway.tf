@@ -44,7 +44,11 @@ resource "aws_api_gateway_deployment" "stage" {
     aws_api_gateway_integration.s3_integration_get_reports,
     aws_api_gateway_integration.s3_integration_put_reports,
     aws_api_gateway_integration.s3_integration_delete_reports,
-    aws_cloudwatch_log_group.gateway_execution_log_group
+    aws_cloudwatch_log_group.gateway_execution_log_group,
+    aws_api_gateway_integration.pfmldata_get_object_s3_integration,
+    aws_api_gateway_integration.pfmldata_delete_object_s3_integration,
+    aws_api_gateway_integration.pfmldata_list_objects_s3_integration,
+    aws_api_gateway_integration.pfmldata_copy_object_s3_integration,
   ]
 }
 

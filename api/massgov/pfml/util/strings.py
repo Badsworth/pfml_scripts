@@ -36,6 +36,5 @@ def sanitize_fein(fein: str) -> str:
     return fein.replace("-", "").zfill(9)
 
 
-def mask_fein(fein: str) -> str:
-    # Log only last 4 of FEIN
-    return f"**-***{fein[5:]}"
+def format_fein(fein: str) -> str:
+    return f"{fein[:2]}-{fein[2:]}"

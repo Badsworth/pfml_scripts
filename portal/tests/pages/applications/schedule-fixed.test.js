@@ -1,81 +1,90 @@
-import {
-  MockClaimBuilder,
-  renderWithAppLogic,
-  simulateEvents,
-} from "../../test-utils";
+import { MockBenefitsApplicationBuilder, renderPage } from "../../test-utils";
 import {
   WorkPattern,
   WorkPatternType,
 } from "../../../src/models/BenefitsApplication";
-import { map, sum } from "lodash";
-
+import { screen, waitFor } from "@testing-library/react";
 import ScheduleFixed from "../../../src/pages/applications/schedule-fixed";
-
-jest.mock("../../../src/hooks/useAppLogic");
+import { setupBenefitsApplications } from "../../test-utils/helpers";
+import userEvent from "@testing-library/user-event";
 
 const MINUTES_WORKED_PER_WEEK = 60 * 8 * 7;
 
-const setup = (claim) => {
-  if (!claim) {
-    claim = new MockClaimBuilder()
-      .continuous()
-      .workPattern({
-        work_pattern_type: WorkPatternType.fixed,
-      })
-      .create();
-  }
+const defaultClaim = new MockBenefitsApplicationBuilder()
+  .continuous()
+  .workPattern({
+    work_pattern_type: WorkPatternType.fixed,
+  })
+  .create();
 
-  const { appLogic, wrapper } = renderWithAppLogic(ScheduleFixed, {
-    claimAttrs: claim,
-  });
+const updateClaim = jest.fn(() => {
+  return Promise.resolve();
+});
 
-  const { changeField, submitForm } = simulateEvents(wrapper);
-
-  return { appLogic, changeField, claim, submitForm, wrapper };
+const setup = (claim = defaultClaim) => {
+  return renderPage(
+    ScheduleFixed,
+    {
+      addCustomSetup: (appLogic) => {
+        setupBenefitsApplications(appLogic, [claim]);
+        appLogic.benefitsApplications.update = updateClaim;
+      },
+    },
+    { query: { claim_id: "mock_application_id" } }
+  );
 };
 
 describe("ScheduleFixed", () => {
   it("renders the page", () => {
-    const { wrapper } = setup();
-    expect(wrapper).toMatchSnapshot();
+    const { container } = setup();
+    expect(container).toMatchSnapshot();
   });
 
   it("displays work schedule values that were previously entered", () => {
     const workPattern = WorkPattern.createWithWeek(MINUTES_WORKED_PER_WEEK);
-    const claim = new MockClaimBuilder()
+    const claim = new MockBenefitsApplicationBuilder()
       .continuous()
       .workPattern({
         work_pattern_type: WorkPatternType.fixed,
         work_pattern_days: workPattern.work_pattern_days,
       })
       .create();
+    setup(claim);
 
-    const { wrapper } = setup(claim);
-    const inputHoursValues = wrapper
-      .find("InputHours")
-      .map((el) => el.props().value);
-    expect(inputHoursValues).toEqual(
-      map(workPattern.work_pattern_days, "minutes")
-    );
+    const hoursInputs = screen.getAllByRole("textbox", { name: "Hours" });
+    hoursInputs.forEach((input) => {
+      expect(input).toHaveValue("8");
+    });
   });
 
   it("updates the claim's work_pattern_days and hours_worked_per_week when the page is submitted", async () => {
-    const { appLogic, changeField, submitForm } = setup();
+    setup();
 
-    for (let day = 0; day < 7; day++) {
-      changeField(`work_pattern.work_pattern_days[${day}].minutes`, 8 * 60);
-    }
-    await submitForm();
+    const hoursInputs = screen.getAllByRole("textbox", { name: "Hours" });
+    hoursInputs.forEach((input) => {
+      userEvent.type(input, "1");
+    });
 
-    const {
-      hours_worked_per_week,
-      work_pattern,
-    } = appLogic.benefitsApplications.update.mock.calls[0][1];
+    userEvent.click(screen.getByRole("button", { name: "Save and continue" }));
 
-    expect(hours_worked_per_week).toEqual(MINUTES_WORKED_PER_WEEK / 60);
-    expect(work_pattern.work_pattern_days.length).toEqual(7);
-    expect(sum(map(work_pattern.work_pattern_days, "minutes"))).toEqual(
-      MINUTES_WORKED_PER_WEEK
-    );
+    await waitFor(() => {
+      expect(updateClaim).toHaveBeenCalledWith(
+        "mock_application_id",
+        expect.objectContaining({
+          hours_worked_per_week: 7,
+          work_pattern: {
+            work_pattern_days: [
+              { day_of_week: "Sunday", minutes: 60 },
+              { day_of_week: "Monday", minutes: 60 },
+              { day_of_week: "Tuesday", minutes: 60 },
+              { day_of_week: "Wednesday", minutes: 60 },
+              { day_of_week: "Thursday", minutes: 60 },
+              { day_of_week: "Friday", minutes: 60 },
+              { day_of_week: "Saturday", minutes: 60 },
+            ],
+          },
+        })
+      );
+    });
   });
 });

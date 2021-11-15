@@ -1,220 +1,169 @@
-import {
-  MockClaimBuilder,
-  renderWithAppLogic,
-  simulateEvents,
-} from "../../test-utils";
+import { MockBenefitsApplicationBuilder, renderPage } from "../../test-utils";
+import { screen, waitFor, within } from "@testing-library/react";
 import LeavePeriodIntermittent from "../../../src/pages/applications/leave-period-intermittent";
-import { act } from "react-dom/test-utils";
+import { setupBenefitsApplications } from "../../test-utils/helpers";
+import userEvent from "@testing-library/user-event";
 
-jest.mock("../../../src/hooks/useAppLogic");
+function setup({ claim }) {
+  const updateSpy = jest.fn();
+
+  const utils = renderPage(
+    LeavePeriodIntermittent,
+    {
+      addCustomSetup: (appLogic) => {
+        setupBenefitsApplications(appLogic, [claim]);
+        appLogic.benefitsApplications.update = updateSpy;
+      },
+    },
+    {
+      query: { claim_id: claim.application_id },
+    }
+  );
+
+  return {
+    updateSpy,
+    ...utils,
+  };
+}
 
 describe("LeavePeriodIntermittent", () => {
-  it("renders the page with bonding leave content", () => {
-    const claim = new MockClaimBuilder().bondingBirthLeaveReason().create();
+  it.each([
+    ["bonding", new MockBenefitsApplicationBuilder().bondingBirthLeaveReason()],
+    ["caring", new MockBenefitsApplicationBuilder().caringLeaveReason()],
+    ["medical", new MockBenefitsApplicationBuilder().medicalLeaveReason()],
+    ["pregnancy", new MockBenefitsApplicationBuilder().pregnancyLeaveReason()],
+  ])(
+    "renders a variation of the page when claimant is taking %s leave",
+    (_type, claim) => {
+      const { container } = setup({
+        claim: claim.create(),
+      });
 
-    const { wrapper } = renderWithAppLogic(LeavePeriodIntermittent, {
-      claimAttrs: claim,
-    });
-
-    expect(wrapper).toMatchSnapshot();
-    wrapper
-      .find("Trans")
-      .forEach((trans) => expect(trans.dive()).toMatchSnapshot());
-  });
-
-  it("renders the page with medical leave content", () => {
-    const claim = new MockClaimBuilder().medicalLeaveReason().create();
-
-    const { wrapper } = renderWithAppLogic(LeavePeriodIntermittent, {
-      claimAttrs: claim,
-    });
-
-    expect(wrapper).toMatchSnapshot();
-    wrapper
-      .find("Trans")
-      .forEach((trans) => expect(trans.dive()).toMatchSnapshot());
-  });
-
-  it("displays date fields when user indicates they have this leave period and no other leave period type", () => {
-    const claim = new MockClaimBuilder().bondingBirthLeaveReason().create();
-
-    const { wrapper } = renderWithAppLogic(LeavePeriodIntermittent, {
-      claimAttrs: claim,
-    });
-    const { changeRadioGroup } = simulateEvents(wrapper);
-
-    expect(
-      wrapper
-        .find("InputDate")
-        .first()
-        .parents("ConditionalContent")
-        .prop("visible")
-    ).toBeFalsy();
-
-    changeRadioGroup("has_intermittent_leave_periods", true);
-
-    expect(
-      wrapper
-        .find("InputDate")
-        .first()
-        .parents("ConditionalContent")
-        .prop("visible")
-    ).toBe(true);
-  });
+      expect(container).toMatchSnapshot();
+    }
+  );
 
   it("adds empty leave period when user first indicates they have this leave period", async () => {
-    const { appLogic, claim, wrapper } = renderWithAppLogic(
-      LeavePeriodIntermittent,
-      {
-        claimAttrs: new MockClaimBuilder().medicalLeaveReason().create(),
-        render: "mount", // support useEffect
-      }
-    );
-    const { changeRadioGroup, submitForm } = simulateEvents(wrapper);
-
-    // Trigger the effect
-    changeRadioGroup("has_intermittent_leave_periods", "true");
-
-    // Submit the form and assert against what's submitted
-    await submitForm();
-
-    expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
-      claim.application_id,
-      {
-        has_intermittent_leave_periods: true,
-        leave_details: {
-          intermittent_leave_periods: [{}],
-        },
-      }
-    );
-  });
-
-  it("adds empty leave period when user first indicates they have this leave period but also already have a continuous leave period", async () => {
-    const { appLogic, claim, wrapper } = renderWithAppLogic(
-      LeavePeriodIntermittent,
-      {
-        claimAttrs: new MockClaimBuilder()
-          .medicalLeaveReason()
-          .continuous()
-          .create(),
-        render: "mount", // support useEffect
-      }
-    );
-    const { changeRadioGroup } = simulateEvents(wrapper);
-
-    // Trigger the effect
-    changeRadioGroup("has_intermittent_leave_periods", "true");
-
-    // Submit the form and assert against what's submitted
-    await act(async () => {
-      await wrapper.find("form").simulate("submit");
-    });
-
-    expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
-      claim.application_id,
-      {
-        has_intermittent_leave_periods: true,
-        leave_details: {
-          intermittent_leave_periods: [{}],
-        },
-      }
-    );
-  });
-
-  it("displays warning when user indicates they have this leave period and already have another leave period type", () => {
-    const claim = new MockClaimBuilder()
-      .bondingBirthLeaveReason()
-      .continuous()
+    const claim = new MockBenefitsApplicationBuilder()
+      .medicalLeaveReason()
       .create();
 
-    const { wrapper } = renderWithAppLogic(LeavePeriodIntermittent, {
-      claimAttrs: claim,
+    const { updateSpy } = setup({ claim });
+
+    userEvent.click(screen.getByRole("radio", { name: /yes/i }));
+    userEvent.click(screen.getByRole("button", { name: /save/i }));
+
+    await waitFor(() => {
+      expect(updateSpy).toHaveBeenCalledWith(claim.application_id, {
+        has_intermittent_leave_periods: true,
+        leave_details: {
+          intermittent_leave_periods: [{}],
+        },
+      });
     });
-    const { changeRadioGroup } = simulateEvents(wrapper);
-
-    expect(
-      wrapper
-        .find("Alert[state='warning']")
-        .first()
-        .parents("ConditionalContent")
-        .prop("visible")
-    ).toBeFalsy();
-
-    changeRadioGroup("has_intermittent_leave_periods", true);
-
-    expect(
-      wrapper
-        .find("Alert[state='warning']")
-        .first()
-        .parents("ConditionalContent")
-        .prop("visible")
-    ).toBe(true);
   });
 
-  it("sends intermittent leave dates and ID to the api when the claim already has data", async () => {
-    const claim = new MockClaimBuilder().intermittent().create();
-    const {
-      end_date,
-      start_date,
-      leave_period_id,
-    } = claim.leave_details.intermittent_leave_periods[0];
+  it("submits form successfully with pre-filled data", async () => {
+    const claim = new MockBenefitsApplicationBuilder().intermittent().create();
+    const { end_date, start_date, leave_period_id } =
+      claim.leave_details.intermittent_leave_periods[0];
 
-    const { appLogic, wrapper } = renderWithAppLogic(LeavePeriodIntermittent, {
-      claimAttrs: claim,
-    });
+    const { updateSpy } = setup({ claim });
 
-    const { submitForm } = simulateEvents(wrapper);
+    userEvent.click(screen.getByRole("button", { name: /save/i }));
 
-    await submitForm();
-
-    expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
-      claim.application_id,
-      {
+    await waitFor(() => {
+      expect(updateSpy).toHaveBeenCalledWith(claim.application_id, {
         has_intermittent_leave_periods: true,
         leave_details: {
           intermittent_leave_periods: [
             { end_date, start_date, leave_period_id },
           ],
         },
-      }
-    );
+      });
+    });
   });
 
-  it("sends intermittent leave dates and ID to the api when the user enters new data", async () => {
-    const claim = new MockClaimBuilder().create();
-    const startDate = "2021-01-01";
-    const endDate = "2021-03-01";
+  it("removes leave periods data when changing answer from Yes to No", async () => {
+    const claim = new MockBenefitsApplicationBuilder().intermittent().create();
+    const { updateSpy } = setup({ claim });
 
-    const { appLogic, wrapper } = renderWithAppLogic(LeavePeriodIntermittent, {
-      claimAttrs: claim,
+    userEvent.click(screen.getByRole("radio", { name: /no/i }));
+    userEvent.click(screen.getByRole("button", { name: /save/i }));
+
+    await waitFor(() => {
+      expect(updateSpy).toHaveBeenCalledWith(claim.application_id, {
+        has_intermittent_leave_periods: false,
+        leave_details: {
+          intermittent_leave_periods: null,
+        },
+      });
     });
+  });
 
-    const { changeField, changeRadioGroup, submitForm } = simulateEvents(
-      wrapper
+  it("sends continuous leave dates and ID to the api when the user enters leave data", async () => {
+    const claim = new MockBenefitsApplicationBuilder()
+      .medicalLeaveReason()
+      .create();
+    const { updateSpy } = setup({ claim });
+
+    userEvent.click(screen.getByRole("radio", { name: /yes/i }));
+
+    const startDateGroup = screen.getByRole("group", { name: /first day/i });
+    const endDateGroup = screen.getByRole("group", { name: /last day/i });
+
+    userEvent.type(
+      within(startDateGroup).getByRole("textbox", { name: /month/i }),
+      "1"
+    );
+    userEvent.type(
+      within(startDateGroup).getByRole("textbox", { name: /day/i }),
+      "30"
+    );
+    userEvent.type(
+      within(startDateGroup).getByRole("textbox", { name: /year/i }),
+      "2021"
     );
 
-    changeRadioGroup("has_intermittent_leave_periods", true);
-    changeField(
-      "leave_details.intermittent_leave_periods[0].start_date",
-      startDate
+    userEvent.type(
+      within(endDateGroup).getByRole("textbox", { name: /month/i }),
+      "3"
     );
-    changeField(
-      "leave_details.intermittent_leave_periods[0].end_date",
-      endDate
+    userEvent.type(
+      within(endDateGroup).getByRole("textbox", { name: /day/i }),
+      "29"
+    );
+    userEvent.type(
+      within(endDateGroup).getByRole("textbox", { name: /year/i }),
+      "2021"
     );
 
-    await submitForm();
+    userEvent.click(screen.getByRole("button", { name: /save/i }));
 
-    expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
-      claim.application_id,
-      {
+    await waitFor(() => {
+      expect(updateSpy).toHaveBeenCalledWith(claim.application_id, {
         has_intermittent_leave_periods: true,
         leave_details: {
           intermittent_leave_periods: [
-            { end_date: endDate, start_date: startDate },
+            { end_date: "2021-03-29", start_date: "2021-01-30" },
           ],
         },
-      }
-    );
+      });
+    });
+  });
+
+  it("displays warning when user indicates they have this leave period and already have another leave period type", () => {
+    const claim = new MockBenefitsApplicationBuilder()
+      .bondingBirthLeaveReason()
+      .continuous()
+      .create();
+    const alertTextMatch =
+      /you have to create a separate application for intermittent leave/i;
+
+    setup({ claim });
+
+    expect(screen.queryByText(alertTextMatch)).not.toBeInTheDocument();
+    userEvent.click(screen.getByRole("radio", { name: /yes/i }));
+    expect(screen.queryByText(alertTextMatch)).toBeInTheDocument();
   });
 });

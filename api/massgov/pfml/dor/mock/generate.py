@@ -19,8 +19,9 @@ import faker
 
 import massgov.pfml.util.files
 import massgov.pfml.util.logging
+from massgov.pfml.util.bg import background_task
 from massgov.pfml.util.datetime.quarter import Quarter
-from massgov.pfml.util.sentry import initialize_sentry
+from massgov.pfml.util.decimals import round_nearest_hundredth
 
 logger = massgov.pfml.util.logging.get_logger("massgov.pfml.dor.mock.generate")
 
@@ -29,8 +30,6 @@ fake = faker.Faker()
 # To make the output of this script identical each time it runs, we use this date as the base of
 # various generated dates.
 SIMULATED_TODAY = datetime(2020, 12, 1, 23, 0, 0)
-
-TWOPLACES = decimal.Decimal(10) ** -2
 
 
 def fein_or_ssn(arg):
@@ -90,11 +89,9 @@ NO_EXEMPTION_DATE = dt.date(9999, 12, 31)
 # == entry point functions for command line ==
 
 
+@background_task("dor-generate")
 def main():
     """DOR Mock File Generator"""
-    initialize_sentry()
-    massgov.pfml.util.logging.init(__name__)
-
     args = parser.parse_args()
     employer_count = args.count
     update_mode = args.update
@@ -492,10 +489,10 @@ def generate_single_employee(
 
 class Contribution:
     def __init__(self, qtr_wages):
-        self.employer_medical = (decimal.Decimal(0.0062 * 0.6) * qtr_wages).quantize(TWOPLACES)
-        self.employee_medical = (decimal.Decimal(0.0062 * 0.4) * qtr_wages).quantize(TWOPLACES)
-        self.employer_family = (decimal.Decimal(0.0013 * 0.0) * qtr_wages).quantize(TWOPLACES)
-        self.employee_family = (decimal.Decimal(0.0013 * 1.0) * qtr_wages).quantize(TWOPLACES)
+        self.employer_medical = round_nearest_hundredth(decimal.Decimal(0.0062 * 0.6) * qtr_wages)
+        self.employee_medical = round_nearest_hundredth(decimal.Decimal(0.0062 * 0.4) * qtr_wages)
+        self.employer_family = round_nearest_hundredth(decimal.Decimal(0.0013 * 0.0) * qtr_wages)
+        self.employee_family = round_nearest_hundredth(decimal.Decimal(0.0013 * 1.0) * qtr_wages)
 
 
 QUARTERS = tuple(Quarter(2019, 2).series(4))

@@ -1,33 +1,30 @@
-import {
-  MockClaimBuilder,
-  renderWithAppLogic,
-  simulateEvents,
-} from "../../test-utils";
+import { MockBenefitsApplicationBuilder, renderPage } from "../../test-utils";
+import { screen, waitFor } from "@testing-library/react";
 import { EmploymentStatus } from "../../../src/models/BenefitsApplication";
 import EmploymentStatusPage from "../../../src/pages/applications/employment-status";
+import { setupBenefitsApplications } from "../../test-utils/helpers";
+import userEvent from "@testing-library/user-event";
 
-jest.mock("../../../src/hooks/useAppLogic");
+const updateClaim = jest.fn(() => {
+  return Promise.resolve();
+});
 
-const setup = (claimAttrs) => {
-  const { appLogic, claim, wrapper } = renderWithAppLogic(
+const testFein = "123456789";
+
+const setup = (claim) => {
+  if (!claim) {
+    claim = new MockBenefitsApplicationBuilder().create();
+  }
+  return renderPage(
     EmploymentStatusPage,
     {
-      claimAttrs: claimAttrs || new MockClaimBuilder().create(),
-    }
+      addCustomSetup: (appLogic) => {
+        setupBenefitsApplications(appLogic, [claim]);
+        appLogic.benefitsApplications.update = updateClaim;
+      },
+    },
+    { query: { claim_id: "mock_application_id" } }
   );
-  const { changeField, changeRadioGroup, submitForm } = simulateEvents(wrapper);
-  return {
-    appLogic,
-    changeField,
-    changeRadioGroup,
-    claim,
-    submitForm,
-    wrapper,
-  };
-};
-
-const notificationFeinQuestionWrapper = (wrapper) => {
-  return wrapper.find({ name: "employer_fein" });
 };
 
 describe("EmploymentStatusPage", () => {
@@ -39,25 +36,29 @@ describe("EmploymentStatusPage", () => {
     });
 
     it("renders the page without the employment status field", () => {
-      const { wrapper } = setup();
-      expect(wrapper).toMatchSnapshot();
-      expect(wrapper.find("Trans").dive()).toMatchSnapshot();
+      const { container } = setup();
+      expect(container).toMatchSnapshot();
     });
 
-    it("submits status and FEIN", () => {
-      const { appLogic, claim, changeField, submitForm } = setup();
-      const testFein = 123456789;
-      changeField("employer_fein", testFein);
+    it("submits status and FEIN", async () => {
+      setup();
 
-      submitForm();
-
-      expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
-        claim.application_id,
-        {
-          employment_status: EmploymentStatus.employed,
-          employer_fein: testFein,
-        }
+      userEvent.type(
+        screen.getByRole("textbox", {
+          name: "What is your employer’s Employer Identification Number (EIN)? This number is 9 digits. You can find this number on all notices your employer sent about Paid Family and Medical Leave. You can also find it on your W‑2 or 1099‑MISC. Ask your employer if you need help getting this information.",
+        }),
+        testFein
       );
+      userEvent.click(
+        screen.getByRole("button", { name: "Save and continue" })
+      );
+
+      await waitFor(() => {
+        expect(updateClaim).toHaveBeenCalledWith("mock_application_id", {
+          employment_status: EmploymentStatus.employed,
+          employer_fein: "12-3456789",
+        });
+      });
     });
   });
 
@@ -69,97 +70,82 @@ describe("EmploymentStatusPage", () => {
     });
 
     it("renders the page with the employment status field", () => {
-      const { wrapper } = setup();
-      expect(wrapper).toMatchSnapshot();
+      const { container } = setup();
+      expect(container).toMatchSnapshot();
     });
 
-    describe("when user selects employed in MA as their employment status", () => {
-      it("shows FEIN question", () => {
-        const { changeRadioGroup, wrapper } = setup();
-        changeRadioGroup("employment_status", EmploymentStatus.employed);
+    it("when user selects employed in MA as their employment status submits status and FEIN", async () => {
+      setup();
+      userEvent.click(
+        screen.getByRole("radio", { name: "I’m employed in Massachusetts" })
+      );
 
-        expect(
-          notificationFeinQuestionWrapper(wrapper)
-            .parents("ConditionalContent")
-            .prop("visible")
-        ).toBeTruthy();
-      });
+      userEvent.type(
+        screen.getByRole("textbox", {
+          name: "What is your employer’s Employer Identification Number (EIN)? This number is 9 digits. You can find this number on all notices your employer sent about Paid Family and Medical Leave. You can also find it on your W‑2 or 1099‑MISC. Ask your employer if you need help getting this information.",
+        }),
+        testFein
+      );
+      userEvent.click(
+        screen.getByRole("button", { name: "Save and continue" })
+      );
 
-      it("submits status and FEIN", () => {
-        const {
-          appLogic,
-          claim,
-          changeField,
-          changeRadioGroup,
-          submitForm,
-        } = setup();
-        changeRadioGroup("employment_status", EmploymentStatus.employed);
-        const testFein = 123456789;
-        changeField("employer_fein", testFein);
-        submitForm();
-
-        expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
-          claim.application_id,
-          {
-            employment_status: EmploymentStatus.employed,
-            employer_fein: testFein,
-          }
-        );
+      await waitFor(() => {
+        expect(updateClaim).toHaveBeenCalledWith("mock_application_id", {
+          employment_status: EmploymentStatus.employed,
+          employer_fein: "12-3456789",
+        });
       });
     });
 
-    describe("when user selects self-employed as their employment status", () => {
-      it("hides FEIN question", () => {
-        const { changeRadioGroup, wrapper } = setup();
-        changeRadioGroup("employment_status", EmploymentStatus.selfEmployed);
-        expect(
-          notificationFeinQuestionWrapper(wrapper)
-            .parents("ConditionalContent")
-            .prop("visible")
-        ).toBeFalsy();
-      });
+    it("when user selects self-employed as their employment status, hides FEIN question", () => {
+      setup();
+      userEvent.click(screen.getByRole("radio", { name: "I’m self-employed" }));
+      expect(
+        screen.queryByRole("textbox", {
+          name: "What is your employer’s Employer Identification Number (EIN)? This number is 9 digits. You can find this number on all notices your employer sent about Paid Family and Medical Leave. You can also find it on your W‑2 or 1099‑MISC. Ask your employer if you need help getting this information.",
+        })
+      ).not.toBeInTheDocument();
+    });
 
-      it("submits status and empty FEIN", () => {
-        const { appLogic, claim, changeRadioGroup, submitForm } = setup();
-        changeRadioGroup("employment_status", EmploymentStatus.selfEmployed);
-        submitForm();
+    it("when user selects self-employed as their employment status, submits status and empty FEIN", async () => {
+      setup();
+      userEvent.click(screen.getByRole("radio", { name: "I’m self-employed" }));
+      userEvent.click(
+        screen.getByRole("button", { name: "Save and continue" })
+      );
 
-        expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
-          claim.application_id,
-          {
-            employment_status: EmploymentStatus.selfEmployed,
-            employer_fein: null,
-          }
-        );
+      await waitFor(() => {
+        expect(updateClaim).toHaveBeenCalledWith("mock_application_id", {
+          employment_status: EmploymentStatus.selfEmployed,
+          employer_fein: null,
+        });
       });
     });
 
-    describe("when user selects unemployed as their employment status", () => {
-      it("hides FEIN question", () => {
-        const { changeRadioGroup, wrapper } = setup();
-        changeRadioGroup("employment_status", EmploymentStatus.unemployed);
-        expect(
-          notificationFeinQuestionWrapper(wrapper)
-            .parents("ConditionalContent")
-            .prop("visible")
-        ).toBeFalsy();
-      });
+    it("when user selects unemployed, hides FEIN question", () => {
+      setup();
+      userEvent.click(screen.getByRole("radio", { name: "I’m unemployed" }));
+      expect(
+        screen.queryByRole("textbox", {
+          name: "What is your employer’s Employer Identification Number (EIN)? This number is 9 digits. You can find this number on all notices your employer sent about Paid Family and Medical Leave. You can also find it on your W‑2 or 1099‑MISC. Ask your employer if you need help getting this information.",
+        })
+      ).not.toBeInTheDocument();
     });
 
-    describe("when claim has existing employment status", () => {
-      it("submits status and FEIN without changing fields", () => {
-        const test = new MockClaimBuilder().employed().create();
-        const { appLogic, claim, submitForm } = setup(test);
+    it("when claim has existing employment status, submits status and FEIN without changing fields", async () => {
+      const claim = new MockBenefitsApplicationBuilder().employed().create();
+      setup(claim);
 
-        submitForm();
+      userEvent.click(
+        screen.getByRole("button", { name: "Save and continue" })
+      );
 
-        expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
-          claim.application_id,
-          {
-            employment_status: EmploymentStatus.employed,
-            employer_fein: "12-3456789",
-          }
-        );
+      await waitFor(() => {
+        expect(updateClaim).toHaveBeenCalledWith("mock_application_id", {
+          employment_status: EmploymentStatus.employed,
+          employer_fein: "12-3456789",
+        });
       });
     });
   });

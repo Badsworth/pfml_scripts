@@ -1,0 +1,65 @@
+.users__warning-wrapper {
+  margin: 1.71em 0;
+}
+
+.slide-out--account-info-image-wrapper {
+  padding-top: 39.473684%;
+  position: relative;
+}
+
+.slide-out--account-info-image {
+  height: 100%;
+  left: 0;
+  position: absolute;
+  top: 0;
+  width: 100%;
+}
+
+.slide-out--account-info-content-wrapper {
+  padding: 1.714em 0;
+}
+
+.slide-out--account-info-name {
+  font-size: 1.714em;
+  font-weight: 700;
+  margin-bottom: 0;
+}
+
+.slide-out--account-info-button {
+  cursor: pointer;
+  padding: 0.642em 0;
+}
+
+.slide-out--account-info-header {
+  border-bottom: 1px solid $Color-GraniteGray-50;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 1.714em 1em;
+}
+
+.slide-out--account-info-button-wrapper {
+  align-items: center;
+  display: flex;
+  padding: 0 1.714em;
+}
+
+
+.slide-out__section {
+  margin-bottom: 2em;
+  padding: 0 1.714em;
+}
+
+
+
+.page__back-icon {
+  font-size: 0.857em;
+  padding-right: 0.571em;
+  text-transform: uppercase;
+}
+
+.page__back-button {
+  color: $Color-GraniteGray-700;
+  cursor: pointer;
+  font-size: 0.857em;
+  padding: 0.571em 0 1em;
+}

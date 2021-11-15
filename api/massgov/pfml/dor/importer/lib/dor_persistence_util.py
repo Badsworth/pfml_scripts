@@ -1,7 +1,10 @@
+import datetime
 import uuid
+from typing import Any, Dict, Iterable, Tuple
 
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 
+import massgov.pfml.db
 import massgov.pfml.util.logging as logging
 from massgov.pfml.db.models.employees import (
     Address,
@@ -14,7 +17,9 @@ from massgov.pfml.db.models.employees import (
     GeoState,
     TaxIdentifier,
     WagesAndContributions,
+    WagesAndContributionsHistory,
 )
+from massgov.pfml.util.datetime import to_datetime
 from massgov.pfml.util.pydantic.types import TaxIdUnformattedStr
 
 logger = logging.get_logger(__name__)
@@ -97,7 +102,7 @@ def employer_dict_to_country_and_state_values(employer_info):
     country_id = None
     try:
         country_id = Country.get_id(employer_info["employer_address_country"])
-    except Exception:
+    except KeyError:
         logger.info("Country not found %s", employer_info["employer_address_country"])
 
     if Country.USA.country_id == country_id:
@@ -220,30 +225,36 @@ def update_employee(db_session, existing_employee, employee_info, import_log_ent
     return existing_employee
 
 
-def check_and_update_employer_quarlerly_contribution(
-    db_session, existing_employer_quarlerly_contribution, employer_info, import_log_entry_id
-):
+def check_and_update_employer_quarterly_contribution(
+    existing_employer_quarterly_contribution: EmployerQuarterlyContribution,
+    employer_info: Dict[str, Any],
+    import_log_entry_id: int,
+) -> bool:
     do_update = (
-        existing_employer_quarlerly_contribution.employer_total_pfml_contribution
+        existing_employer_quarterly_contribution.employer_total_pfml_contribution
         != employer_info["total_pfml_contribution"]
-        or existing_employer_quarlerly_contribution.dor_received_date.date()
+        or existing_employer_quarterly_contribution.dor_received_date is None
+        or existing_employer_quarterly_contribution.dor_received_date.date()
         != employer_info["received_date"]
-        or existing_employer_quarlerly_contribution.dor_updated_date.date()
+        or existing_employer_quarterly_contribution.dor_updated_date is None
+        or existing_employer_quarterly_contribution.dor_updated_date.date()
         != employer_info["updated_date"].date()
-        or existing_employer_quarlerly_contribution.pfm_account_id
+        or existing_employer_quarterly_contribution.pfm_account_id
         != employer_info["pfm_account_id"]
     )
 
     if not do_update:
         return False
 
-    existing_employer_quarlerly_contribution.employer_total_pfml_contribution = employer_info[
+    existing_employer_quarterly_contribution.employer_total_pfml_contribution = employer_info[
         "total_pfml_contribution"
     ]
-    existing_employer_quarlerly_contribution.pfm_account_id = employer_info["pfm_account_id"]
-    existing_employer_quarlerly_contribution.dor_received_date = employer_info["received_date"]
-    existing_employer_quarlerly_contribution.dor_updated_date = employer_info["updated_date"]
-    existing_employer_quarlerly_contribution.latest_import_log_id = import_log_entry_id
+    existing_employer_quarterly_contribution.pfm_account_id = employer_info["pfm_account_id"]
+    existing_employer_quarterly_contribution.dor_received_date = to_datetime(
+        employer_info["received_date"]
+    )
+    existing_employer_quarterly_contribution.dor_updated_date = employer_info["updated_date"]
+    existing_employer_quarterly_contribution.latest_import_log_id = import_log_entry_id
 
     return True
 
@@ -259,8 +270,29 @@ def create_wages_and_contributions(
     return wage
 
 
+def _capture_current_wage_and_contribution_state(
+    wage_and_contribution_record: WagesAndContributions,
+) -> WagesAndContributionsHistory:
+    return WagesAndContributionsHistory(
+        wage_and_contribution_id=wage_and_contribution_record.wage_and_contribution_id,
+        is_independent_contractor=wage_and_contribution_record.is_independent_contractor,
+        is_opted_in=wage_and_contribution_record.is_opted_in,
+        employee_ytd_wages=wage_and_contribution_record.employee_ytd_wages,
+        employee_qtr_wages=wage_and_contribution_record.employee_qtr_wages,
+        employee_med_contribution=wage_and_contribution_record.employee_med_contribution,
+        employer_med_contribution=wage_and_contribution_record.employer_med_contribution,
+        employee_fam_contribution=wage_and_contribution_record.employee_fam_contribution,
+        employer_fam_contribution=wage_and_contribution_record.employer_fam_contribution,
+        import_log_id=wage_and_contribution_record.latest_import_log_id,
+    )
+
+
 def check_and_update_wages_and_contributions(
-    db_session, existing_wages_and_contributions, employee_wage_info, import_log_entry_id
+    db_session,
+    existing_wages_and_contributions,
+    employee_wage_info,
+    import_log_entry_id,
+    wage_history_records,
 ):
     do_update = (
         existing_wages_and_contributions.is_independent_contractor
@@ -283,6 +315,10 @@ def check_and_update_wages_and_contributions(
     if not do_update:
         return False
 
+    wage_and_contribution_history = _capture_current_wage_and_contribution_state(
+        existing_wages_and_contributions
+    )
+
     existing_wages_and_contributions.is_independent_contractor = employee_wage_info[
         "independent_contractor"
     ]
@@ -303,19 +339,22 @@ def check_and_update_wages_and_contributions(
     ]
     existing_wages_and_contributions.latest_import_log_id = import_log_entry_id
 
+    wage_history_records.append(wage_and_contribution_history)
+
     return True
 
 
 # == Query Helpers ==
 
 
-def get_employer_quarterly_info_by_employer_id(db_session, employer_ids):
-    employer_rows = (
-        db_session.query(EmployerQuarterlyContribution)
-        .filter(EmployerQuarterlyContribution.employer_id.in_(employer_ids))
-        .all()
+def get_employer_quarterly_info_by_employer_id(
+    db_session: massgov.pfml.db.Session, employer_ids: Iterable[uuid.UUID]
+) -> Dict[Tuple[uuid.UUID, datetime.date], EmployerQuarterlyContribution]:
+    """Return a map from (employer id, period date) to EmployerQuarterlyContribution object."""
+    employer_contributions = db_session.query(EmployerQuarterlyContribution).filter(
+        EmployerQuarterlyContribution.employer_id.in_(employer_ids)
     )
-    return employer_rows
+    return {(c.employer_id, c.filing_period): c for c in employer_contributions}
 
 
 def get_tax_ids(db_session, ssns):
@@ -377,14 +416,14 @@ def get_all_employers_fein(db_session):
     return employer_rows
 
 
-def get_employers_account_key(db_session, account_keys):
-    employer_rows = (
-        db_session.query(Employer)
-        .filter(Employer.account_key.in_(account_keys))
-        .with_entities(Employer.employer_id, Employer.account_key, Employer.dor_updated_date)
-        .all()
+def get_employers_by_account_key(
+    db_session: massgov.pfml.db.Session, account_keys: Iterable[str]
+) -> Dict[str, uuid.UUID]:
+    """Return a map from account key to employer id for the given account keys."""
+    employer_rows = db_session.query(Employer.account_key, Employer.employer_id).filter(
+        Employer.account_key.in_(account_keys)
     )
-    return employer_rows
+    return dict(employer_rows)
 
 
 def get_employer_by_fein(db_session, fein):

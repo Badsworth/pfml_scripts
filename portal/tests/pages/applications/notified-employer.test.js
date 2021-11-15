@@ -1,132 +1,115 @@
-import { renderWithAppLogic, simulateEvents } from "../../test-utils";
+import { MockBenefitsApplicationBuilder, renderPage } from "../../test-utils";
+import { screen, waitFor } from "@testing-library/react";
+import BenefitsApplication from "../../../src/models/BenefitsApplication";
 import NotifiedEmployer from "../../../src/pages/applications/notified-employer";
+import { setupBenefitsApplications } from "../../test-utils/helpers";
+import userEvent from "@testing-library/user-event";
 
-jest.mock("../../../src/hooks/useAppLogic");
+const updateClaim = jest.fn(() => {
+  return Promise.resolve();
+});
 
-const setup = (claimAttrs = {}) => {
-  const { appLogic, claim, wrapper } = renderWithAppLogic(NotifiedEmployer, {
-    claimAttrs,
-  });
-
-  const { changeField, changeRadioGroup, submitForm } = simulateEvents(wrapper);
-
-  return {
-    appLogic,
-    changeField,
-    changeRadioGroup,
-    claim,
-    submitForm,
-    wrapper,
-  };
+const setup = (claim) => {
+  if (!claim) {
+    claim = new MockBenefitsApplicationBuilder().create();
+  }
+  return renderPage(
+    NotifiedEmployer,
+    {
+      addCustomSetup: (appLogic) => {
+        setupBenefitsApplications(appLogic, [claim]);
+        appLogic.benefitsApplications.update = updateClaim;
+      },
+    },
+    { query: { claim_id: "mock_application_id" } }
+  );
 };
 
 describe("NotifiedEmployer", () => {
-  function notificationDateQuestionWrapper(wrapper) {
-    return wrapper.find({ name: "leave_details.employer_notification_date" });
-  }
-
-  function mustNotifyWarningWrapper(wrapper) {
-    return wrapper.find("Alert[state='warning']");
-  }
-
   it("renders the page", () => {
-    const { wrapper } = setup();
-    expect(wrapper).toMatchSnapshot();
+    const { container } = setup();
+    expect(container).toMatchSnapshot();
   });
 
-  it("shows employer notification date question when user selects yes to having notified employer", () => {
-    const { changeRadioGroup, wrapper } = setup();
-
-    changeRadioGroup("leave_details.employer_notified", "true");
-
-    expect(
-      notificationDateQuestionWrapper(wrapper)
-        .parents("ConditionalContent")
-        .prop("visible")
-    ).toBeTruthy();
+  it("shows employer notification date question when user selects yes to having notified employer", async () => {
+    setup();
+    userEvent.click(screen.getByRole("radio", { name: "Yes" }));
+    await waitFor(() => {
+      expect(screen.getByText(/When did you tell them?/)).toBeInTheDocument();
+    });
   });
 
   it("hides must notify employer warning when user selects yes to having notified employer", () => {
-    const { changeRadioGroup, wrapper } = setup();
-
-    changeRadioGroup("leave_details.employer_notified", "true");
+    setup();
+    userEvent.click(screen.getByRole("radio", { name: "Yes" }));
 
     expect(
-      mustNotifyWarningWrapper(wrapper)
-        .parents("ConditionalContent")
-        .prop("visible")
-    ).toBeFalsy();
+      screen.queryByText(
+        /You can continue to enter information about your leave. Before you can submit your application, you must tell your employer that you’re taking$t(chars.nbsp)leave. Notify your employer at least 30 days before the start of your leave if possible./
+      )
+    ).not.toBeInTheDocument();
   });
 
-  it("calls claims.update when user submits form with newly entered data", () => {
-    const {
-      appLogic,
-      changeField,
-      changeRadioGroup,
-      claim,
-      submitForm,
-    } = setup();
+  it("calls claims.update when user submits form with newly entered data", async () => {
+    setup();
 
-    changeRadioGroup("leave_details.employer_notified", "true");
-    changeField("leave_details.employer_notification_date", "2020-06-25");
-
-    submitForm();
-
-    expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
-      claim.application_id,
-      {
+    userEvent.click(screen.getByRole("radio", { name: "Yes" }));
+    const [monthInput, dayInput, yearInput] = screen.getAllByRole("textbox");
+    userEvent.type(monthInput, "6");
+    userEvent.type(dayInput, "25");
+    userEvent.type(yearInput, "2020");
+    userEvent.click(screen.getByRole("button", { name: "Save and continue" }));
+    await waitFor(() => {
+      expect(updateClaim).toHaveBeenCalledWith("mock_application_id", {
         leave_details: {
           employer_notified: true,
           employer_notification_date: "2020-06-25",
         },
-      }
-    );
+      });
+    });
   });
 
-  it("calls claims.update when user submits form with previously entered data", () => {
-    const { appLogic, claim, submitForm } = setup({
+  it("calls claims.update when user submits form with previously entered data", async () => {
+    const claim = new BenefitsApplication({
+      application_id: "mock_application_id",
       leave_details: {
         employer_notified: true,
         employer_notification_date: "2020-06-25",
       },
     });
 
-    submitForm();
-
-    expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
-      claim.application_id,
-      {
+    setup(claim);
+    userEvent.click(screen.getByRole("button", { name: "Save and continue" }));
+    await waitFor(() => {
+      expect(updateClaim).toHaveBeenCalledWith("mock_application_id", {
         leave_details: {
           employer_notified: true,
           employer_notification_date: "2020-06-25",
         },
-      }
-    );
+      });
+    });
   });
 
   describe("when user selects no to having notified employer", () => {
     it("hides employer notification date question", () => {
-      const { changeRadioGroup, wrapper } = setup();
+      setup();
 
-      changeRadioGroup("leave_details.employer_notified", "false");
-
+      userEvent.click(screen.getByRole("radio", { name: "No" }));
       expect(
-        notificationDateQuestionWrapper(wrapper)
-          .parents("ConditionalContent")
-          .prop("visible")
-      ).toBeFalsy();
+        screen.queryByRole("textbox", { name: "Year" })
+      ).not.toBeInTheDocument();
     });
 
     it("shows must notify employer warning", () => {
-      const { changeRadioGroup, wrapper } = setup();
+      setup();
 
-      changeRadioGroup("leave_details.employer_notified", "false");
+      userEvent.click(screen.getByRole("radio", { name: "No" }));
 
       expect(
-        mustNotifyWarningWrapper(wrapper)
-          .parents("ConditionalContent")
-          .prop("visible")
-      ).toBeTruthy();
+        screen.getByText(
+          /You can continue to enter information about your leave./
+        )
+      ).toBeInTheDocument();
     });
   });
 });

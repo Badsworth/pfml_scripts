@@ -8,7 +8,6 @@ let evidenceApproved = false;
 export const steps: Cfg.StoredStep[] = [
   checkApprovalReadiness(false),
   {
-    time: 15000,
     name: "Paid Benefits",
     test: async (browser: Browser): Promise<void> => {
       const adjudicateButton = await browser.maybeFindElement(
@@ -65,7 +64,6 @@ export const steps: Cfg.StoredStep[] = [
     },
   },
   {
-    time: 15000,
     name: "Accept Leave Plan",
     test: async (browser: Browser, data: Cfg.LSTSimClaim): Promise<void> => {
       let manageRequestTab = await Util.waitForElement(
@@ -114,7 +112,6 @@ export const steps: Cfg.StoredStep[] = [
     },
   },
   {
-    time: 15000,
     name: "Finalize claim adjudication",
     test: async (browser: Browser, data: Cfg.LSTSimClaim): Promise<void> => {
       // check if leave has been accepted
@@ -147,7 +144,6 @@ export function checkApprovalReadiness(
   exitAdjudication = true
 ): Cfg.StoredStep {
   return {
-    time: 15000,
     name: "Claim Approval Readiness Check",
     test: async (browser: Browser, data: Cfg.LSTSimClaim): Promise<void> => {
       // we're looking for a specific plan
@@ -187,7 +183,6 @@ export function checkApprovalReadiness(
 export const approveEvidence = (
   specificDoc?: Cfg.StandardDocumentType
 ): Cfg.StoredStep => ({
-  time: 0,
   name: "Evidence Review",
   test: async (browser: Browser): Promise<void> => {
     console.info("Approve - Evidence Review");
@@ -269,7 +264,6 @@ export const approveDocumentEvidence = async (
 };
 
 export const certifyEvidence: Cfg.StoredStep = {
-  time: 0,
   name: "Evidence Certification",
   test: async (browser: Browser): Promise<void> => {
     console.info("Approve - Evidence Certification");
@@ -302,8 +296,7 @@ export default async (
 ): Promise<void> => {
   const isEligible = await Util.isFinanciallyEligible(browser);
   if (isEligible) {
-    const realTimeSteps = steps.map(Util.simulateRealTime);
-    for (const step of realTimeSteps) {
+    for (const step of steps) {
       const stepName = `Approve - ${step.name}`;
       try {
         console.info(stepName);

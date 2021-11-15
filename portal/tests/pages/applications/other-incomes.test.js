@@ -1,125 +1,123 @@
-import {
-  MockClaimBuilder,
-  renderWithAppLogic,
-  simulateEvents,
-} from "../../test-utils";
+import { MockBenefitsApplicationBuilder, renderPage } from "../../test-utils";
+import { screen, waitFor } from "@testing-library/react";
+import BenefitsApplicationCollection from "../../../src/models/BenefitsApplicationCollection";
 import OtherIncomes from "../../../src/pages/applications/other-incomes";
+import userEvent from "@testing-library/user-event";
 
 jest.mock("../../../src/hooks/useAppLogic");
 
-const otherIncomeClaim = new MockClaimBuilder()
+const otherIncomeClaim = new MockBenefitsApplicationBuilder()
   .continuous()
   .otherIncome()
   .create();
 
-const setup = (claimAttrs = new MockClaimBuilder().continuous().create()) => {
-  const { appLogic, claim, wrapper } = renderWithAppLogic(OtherIncomes, {
-    claimAttrs,
-  });
+const update = jest.fn(() => {
+  return Promise.resolve();
+});
+const claim_id = "mock_application_id";
 
-  const { changeRadioGroup, submitForm } = simulateEvents(wrapper);
-
-  return {
-    appLogic,
-    changeRadioGroup,
-    claim,
-    submitForm,
-    wrapper,
+const render = (
+  claimAttrs = new MockBenefitsApplicationBuilder().continuous().create()
+) => {
+  const options = {
+    addCustomSetup: (appLogic) => {
+      appLogic.benefitsApplications.update = update;
+      appLogic.benefitsApplications.benefitsApplications =
+        new BenefitsApplicationCollection([claimAttrs]);
+    },
+    isLoggedIn: true,
   };
+
+  return renderPage(OtherIncomes, options, { query: { claim_id } });
 };
 
 describe("OtherIncomes", () => {
   it("renders the page", () => {
-    const { wrapper } = setup();
-    expect(wrapper).toMatchSnapshot();
+    const { container } = render();
+    expect(container.firstChild).toMatchSnapshot();
   });
 
-  // MockClaimBuilder sets defaults for other_incomes_awaiting_approval to
-  // false and has_other_incomes to true. The following 3 tests ensure
-  // that making a selection calls handleHasOtherIncomesChange() and updates
-  // both fields to the expected values.
   it("calls claims.update with expected API fields when user selects Yes", async () => {
-    const { appLogic, claim, changeRadioGroup, submitForm } = setup(
-      otherIncomeClaim
+    render(otherIncomeClaim);
+
+    userEvent.click(
+      screen.getByRole("radio", {
+        name: "Yes I will recieve other income from other sources during my paid leave",
+      })
     );
-
-    changeRadioGroup("has_other_incomes", "yes");
-
-    await submitForm();
-
-    expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
-      claim.application_id,
-      {
-        other_incomes_awaiting_approval: false,
+    userEvent.click(screen.getByRole("button", { name: "Save and continue" }));
+    await waitFor(() => {
+      expect(update).toHaveBeenCalledWith(claim_id, {
         has_other_incomes: true,
-      }
-    );
+      });
+    });
   });
 
   it("calls claims.update with expected API fields when user selects No", async () => {
-    const { appLogic, claim, changeRadioGroup, submitForm } = setup();
+    render();
 
-    changeRadioGroup("has_other_incomes", "no");
-
-    await submitForm();
-
-    expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
-      claim.application_id,
-      {
-        other_incomes_awaiting_approval: false,
-        has_other_incomes: false,
-      }
+    userEvent.click(
+      screen.getByRole("radio", {
+        name: "No I won't receive other income from the above sources during my paid leave, I've applied but it hasn't been approved, or I don’t know the income amount yet",
+      })
     );
+    userEvent.click(screen.getByRole("button", { name: "Save and continue" }));
+    await waitFor(() => {
+      expect(update).toHaveBeenCalledWith(claim_id, {
+        has_other_incomes: false,
+      });
+    });
   });
 
-  it("calls claims.update with expected API fields when user selects Not Yet", async () => {
-    const { appLogic, claim, changeRadioGroup, submitForm } = setup();
+  it("calls claims.update with expected API fields when claim already has data", async () => {
+    render(otherIncomeClaim);
 
-    changeRadioGroup("has_other_incomes", "pending");
-
-    await submitForm();
-
-    expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
-      claim.application_id,
-      {
-        other_incomes_awaiting_approval: true,
-        has_other_incomes: false,
-      }
-    );
-  });
-
-  it("calls claims.update with expected API fields when claim already has data", () => {
-    const { appLogic, claim, submitForm } = setup(otherIncomeClaim);
-
-    submitForm();
-
-    expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
-      claim.application_id,
-      {
-        other_incomes_awaiting_approval: false,
+    userEvent.click(screen.getByRole("button", { name: "Save and continue" }));
+    await waitFor(() => {
+      expect(update).toHaveBeenCalledWith(claim_id, {
         has_other_incomes: true,
-      }
-    );
+      });
+    });
   });
 
-  it("sets other_leaves to null when the user selects No", () => {
-    const { appLogic, claim, changeRadioGroup, submitForm } = setup(
-      otherIncomeClaim
+  it("deletes other income entries if user previously entered any and then selects No", async () => {
+    render(otherIncomeClaim);
+
+    userEvent.click(
+      screen.getByRole("radio", {
+        name: "No I won't receive other income from the above sources during my paid leave, I've applied but it hasn't been approved, or I don’t know the income amount yet",
+      })
     );
-
-    expect(claim.other_incomes).toHaveLength(1);
-
-    changeRadioGroup("has_other_incomes", "no");
-
-    submitForm();
-
-    expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
-      claim.application_id,
-      {
-        other_incomes_awaiting_approval: false,
-        other_incomes: null,
+    userEvent.click(screen.getByRole("button", { name: "Save and continue" }));
+    await waitFor(() => {
+      expect(update).toHaveBeenCalledWith(claim_id, {
         has_other_incomes: false,
-      }
+        other_incomes: null,
+      });
+    });
+  });
+
+  it("conditionally renders an info alert when user selects No", () => {
+    render();
+
+    // conditional alert should not render if no choice is made
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+
+    // conditional alert should not render if the choice is "Yes"
+    userEvent.click(
+      screen.getByRole("radio", {
+        name: "Yes I will recieve other income from other sources during my paid leave",
+      })
     );
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+
+    // conditional alert should render if the choice is "No"
+    userEvent.click(
+      screen.getByRole("radio", {
+        name: "No I won't receive other income from the above sources during my paid leave, I've applied but it hasn't been approved, or I don’t know the income amount yet",
+      })
+    );
+    const alert = screen.getByRole("alert");
+    expect(alert).toMatchSnapshot();
   });
 });

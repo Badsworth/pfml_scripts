@@ -10,7 +10,10 @@ import { ScenarioSpecification } from "../../src/generation/Scenario";
 
 let token: string;
 
-describe("FE test", () => {
+/**
+ * @group stable
+ */
+describe("Financial Eligibility", () => {
   beforeAll(async () => {
     const authenticator = getAuthManager();
 
@@ -22,9 +25,14 @@ describe("FE test", () => {
     token = await authenticator.getAPIBearerToken(apiCreds);
   });
 
+  const INEL: ScenarioSpecification = {
+    ...scenarios.BHAP1,
+    employee: { wages: "ineligible" },
+  };
+
   const financial_eligibility = [
     ["Eligible", scenarios.BHAP1],
-    ["Ineligible", scenarios.BHAP1INEL],
+    ["Ineligible", INEL],
   ];
 
   test.each(financial_eligibility)(

@@ -1,13 +1,12 @@
-import { NetworkError, UnauthorizedError } from "../../src/errors";
 import User, { RoleDescription, UserRole } from "../../src/models/User";
+import { act, renderHook } from "@testing-library/react-hooks";
 import AppErrorInfo from "../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
 import BenefitsApplication from "../../src/models/BenefitsApplication";
+import { NetworkError } from "../../src/errors";
 import UsersApi from "../../src/api/UsersApi";
-import { act } from "react-dom/test-utils";
 import { mockRouter } from "next/router";
 import routes from "../../src/routes";
-import { testHook } from "../test-utils";
 import useAppErrorsLogic from "../../src/hooks/useAppErrorsLogic";
 import usePortalFlow from "../../src/hooks/usePortalFlow";
 import useUsersLogic from "../../src/hooks/useUsersLogic";
@@ -28,8 +27,8 @@ describe("useUsersLogic", () => {
     });
   }
 
-  function renderHook() {
-    testHook(() => {
+  function setup() {
+    renderHook(() => {
       portalFlow = usePortalFlow();
       appErrorsLogic = useAppErrorsLogic({ portalFlow });
       usersLogic = useUsersLogic({ appErrorsLogic, isLoggedIn, portalFlow });
@@ -52,8 +51,9 @@ describe("useUsersLogic", () => {
     const patchData = { path: "data" };
 
     beforeEach(async () => {
+      setup();
+
       await act(async () => {
-        renderHook();
         await usersLogic.updateUser(user_id, patchData);
       });
     });
@@ -126,7 +126,7 @@ describe("useUsersLogic", () => {
 
   describe("loadUser", () => {
     beforeEach(() => {
-      renderHook();
+      setup();
     });
 
     it("fetches current user from api", async () => {
@@ -170,34 +170,8 @@ describe("useUsersLogic", () => {
 
     it("throws an error if user is not logged in to Cognito", async () => {
       isLoggedIn = false;
-      renderHook();
+      setup();
       await expect(usersLogic.loadUser).rejects.toThrow(/Cannot load user/);
-    });
-
-    it("redirects to reset password page when api responds with a 401 UnauthorizedError", async () => {
-      const goToSpy = jest.spyOn(portalFlow, "goTo");
-      usersApi.getCurrentUser.mockRejectedValueOnce(new UnauthorizedError());
-
-      await act(async () => {
-        await usersLogic.loadUser();
-      });
-
-      expect(appErrorsLogic.appErrors.items).toHaveLength(0);
-      expect(goToSpy).toHaveBeenCalledWith("/reset-password", {
-        "user-not-found": true,
-      });
-    });
-
-    it("throws UserNotReceivedError when api resolves with no user", async () => {
-      usersApi.getCurrentUser.mockResolvedValueOnce({ user: null });
-
-      await act(async () => {
-        await usersLogic.loadUser();
-      });
-
-      expect(appErrorsLogic.appErrors.items[0].message).toMatchInlineSnapshot(
-        `"Sorry, we were unable to retrieve your account. Please log out and try again. If this continues to happen, you may call the Paid Family Leave Contact Center at (833) 344‑7365"`
-      );
     });
 
     it("throws NetworkError when fetch request fails", async () => {
@@ -214,7 +188,7 @@ describe("useUsersLogic", () => {
   describe("requireUserConsentToDataAgreement", () => {
     describe("when user is not loaded", () => {
       it("throws error if user not loaded", () => {
-        renderHook();
+        setup();
 
         expect(usersLogic.requireUserConsentToDataAgreement).toThrow(
           /User not loaded/
@@ -224,7 +198,7 @@ describe("useUsersLogic", () => {
 
     describe("when user consented to data sharing", () => {
       beforeEach(async () => {
-        renderHook();
+        setup();
         await preloadUser(new User({ consented_to_data_sharing: true }));
       });
 
@@ -237,7 +211,7 @@ describe("useUsersLogic", () => {
 
     describe("when user didn't consent to data sharing", () => {
       it("redirects to consent page if user isn't already there", async () => {
-        renderHook();
+        setup();
         await preloadUser(new User({ consented_to_data_sharing: false }));
 
         usersLogic.requireUserConsentToDataAgreement();
@@ -248,7 +222,7 @@ describe("useUsersLogic", () => {
       it("doesn't redirect if route is already set to consent page", async () => {
         mockRouter.pathname = "/user/consent-to-data-sharing";
 
-        renderHook();
+        setup();
         await preloadUser(new User({ consented_to_data_sharing: false }));
 
         usersLogic.requireUserConsentToDataAgreement();
@@ -269,7 +243,7 @@ describe("useUsersLogic", () => {
     describe("when user is currently on Consent to Data Sharing page", () => {
       it("does not redirect to another page", () => {
         mockRouter.pathname = "/user/consent-to-data-sharing";
-        renderHook();
+        setup();
 
         usersLogic.requireUserRole();
 
@@ -281,20 +255,24 @@ describe("useUsersLogic", () => {
       it("redirects to Employers welcome if user has Employer role", async () => {
         mockRouter.pathname = routes.applications.index;
 
-        renderHook();
+        setup();
         await preloadUser(
           new User({ roles: employerRole, consented_to_data_sharing: true })
         );
 
         usersLogic.requireUserRole();
 
-        expect(goToSpy).toHaveBeenCalledWith("/employers/welcome");
+        expect(goToSpy).toHaveBeenCalledWith(
+          "/employers/welcome",
+          {},
+          { redirect: true }
+        );
       });
 
       it("does not redirect if user has Employer role and currently in Employer Portal", async () => {
         mockRouter.pathname = routes.employers.welcome;
 
-        renderHook();
+        setup();
         await preloadUser(
           new User({ roles: employerRole, consented_to_data_sharing: true })
         );
@@ -315,27 +293,101 @@ describe("useUsersLogic", () => {
         ];
         const multipleRoles = employerRole.concat(userRole);
 
-        renderHook();
+        setup();
         await preloadUser(
           new User({ roles: multipleRoles, consented_to_data_sharing: true })
         );
 
         usersLogic.requireUserRole();
 
-        expect(goToSpy).toHaveBeenCalledWith("/employers/welcome");
+        expect(goToSpy).toHaveBeenCalledWith(
+          "/employers/welcome",
+          {},
+          { redirect: true }
+        );
       });
 
       it("redirects to Claims index if user does not have a role", async () => {
         mockRouter.pathname = routes.employers.welcome;
 
-        renderHook();
+        setup();
         await preloadUser(
           new User({ roles: [], consented_to_data_sharing: true })
         );
 
         usersLogic.requireUserRole();
 
-        expect(goToSpy).toHaveBeenCalledWith("/applications");
+        expect(goToSpy).toHaveBeenCalledWith(
+          "/applications",
+          {},
+          { redirect: true }
+        );
+      });
+    });
+  });
+
+  describe("convertUser", () => {
+    const user_id = "mock-user-id";
+    const postData = { employer_fein: "12-3456789" };
+
+    beforeEach(async () => {
+      setup();
+
+      await act(async () => {
+        await usersLogic.convertUser(user_id, postData);
+      });
+    });
+
+    it("converts user role in the api", () => {
+      expect(usersApi.convertUser).toHaveBeenCalledWith(user_id, postData);
+    });
+
+    it("receives user as employer", () => {
+      expect(usersLogic.user).toBeInstanceOf(User);
+      expect(usersLogic.user.roles.length).toBeGreaterThan(0);
+      expect(usersLogic.user.user_leave_administrators.length).toBeGreaterThan(
+        0
+      );
+      expect(usersLogic.user.roles[0].role_description).toBe(
+        RoleDescription.employer
+      );
+    });
+
+    it("goes to next page", () => {
+      expect(mockRouter.push).toHaveBeenCalled();
+    });
+
+    describe("when errors exist", () => {
+      beforeEach(async () => {
+        act(() => {
+          appErrorsLogic.setAppErrors(
+            new AppErrorInfoCollection([new AppErrorInfo()])
+          );
+        });
+
+        await act(async () => {
+          await usersLogic.convertUser(user_id, postData);
+        });
+      });
+
+      it("clears errors", () => {
+        expect(appErrorsLogic.appErrors.items).toHaveLength(0);
+      });
+    });
+
+    describe("when api errors", () => {
+      it("catches error", async () => {
+        usersApi.convertUser.mockImplementationOnce(() => {
+          throw new NetworkError();
+        });
+
+        await act(async () => {
+          await usersLogic.convertUser(user_id, postData);
+        });
+
+        expect(appErrorsLogic.appErrors.items[0].name).toEqual(
+          NetworkError.name
+        );
       });
     });
   });

@@ -13,6 +13,6 @@ export const actions: TaskType[] = [
   "Certification Review",
 ];
 
-const { default: SavilinxAgent, steps } = Agent(scenario, actions, tasksToDo);
+const { default: SavilinxAgent, steps } = Agent(scenario);
 export { settings, steps };
 export default SavilinxAgent;

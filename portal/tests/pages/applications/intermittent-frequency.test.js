@@ -1,235 +1,207 @@
 import {
   DurationBasis,
   FrequencyIntervalBasis,
-  IntermittentLeavePeriod,
 } from "../../../src/models/BenefitsApplication";
-import IntermittentFrequency, {
-  irregularOver6MonthsId,
-} from "../../../src/pages/applications/intermittent-frequency";
-import {
-  MockClaimBuilder,
-  renderWithAppLogic,
-  simulateEvents,
-} from "../../test-utils";
+import { MockBenefitsApplicationBuilder, renderPage } from "../../test-utils";
+import { screen, waitFor } from "@testing-library/react";
+import IntermittentFrequency from "../../../src/pages/applications/intermittent-frequency";
+import { setupBenefitsApplications } from "../../test-utils/helpers";
+import userEvent from "@testing-library/user-event";
 
 jest.mock("../../../src/hooks/useAppLogic");
 
-const frequencyBasisInputName =
-  "leave_details.intermittent_leave_periods[0].frequency_interval_basis";
+const updateClaim = jest.fn(() => {
+  return Promise.resolve();
+});
+
+const render = (claim) => {
+  if (!claim) {
+    claim = new MockBenefitsApplicationBuilder()
+      .intermittent()
+      .medicalLeaveReason()
+      .create();
+  }
+  const cb = (appLogic) => {
+    appLogic.benefitsApplications.update = updateClaim;
+  };
+  return renderPage(
+    IntermittentFrequency,
+    {
+      addCustomSetup: (appLogic) =>
+        setupBenefitsApplications(appLogic, [claim], cb),
+    },
+    { query: { claim_id: "mock_application_id" } }
+  );
+};
 
 describe("IntermittentFrequency", () => {
-  const intermittentClaimAttrs = (attrs) => ({
-    leave_details: {
-      intermittent_leave_periods: [new IntermittentLeavePeriod({ ...attrs })],
-    },
-  });
-
   it("renders the page", () => {
-    const { wrapper } = renderWithAppLogic(IntermittentFrequency, {
-      claimAttrs: new MockClaimBuilder().intermittent().create(),
-    });
-
-    expect(wrapper).toMatchSnapshot();
+    const { container } = render();
+    expect(container).toMatchSnapshot();
   });
 
   it("it displays frequency and duration_basis questions when a frequency_interval_basis is selected", () => {
-    const { wrapper: blankClaimWrapper } = renderWithAppLogic(
-      IntermittentFrequency
-    );
-    const { wrapper: wrapperWithState } = renderWithAppLogic(
-      IntermittentFrequency,
-      {
-        claimAttrs: intermittentClaimAttrs({
+    render(
+      new MockBenefitsApplicationBuilder()
+        .intermittent({
           frequency_interval_basis: FrequencyIntervalBasis.months,
-        }),
-      }
+        })
+        .create()
     );
-
     expect(
-      blankClaimWrapper.find("ConditionalContent").at(0).prop("visible")
-    ).toBe(false);
+      screen.getByText(/Estimate how many absences over the next 6 months./)
+    ).toBeInTheDocument();
     expect(
-      wrapperWithState.find("ConditionalContent").at(0).prop("visible")
-    ).toBe(true);
+      screen.getByText(/How long will an absence typically last?/)
+    ).toBeInTheDocument();
   });
 
   it("it displays duration question when a duration_basis is selected", () => {
-    const { wrapper: blankClaimWrapper } = renderWithAppLogic(
-      IntermittentFrequency
-    );
-    const { wrapper: wrapperWithState } = renderWithAppLogic(
-      IntermittentFrequency,
-      {
-        claimAttrs: intermittentClaimAttrs({
+    render(
+      new MockBenefitsApplicationBuilder()
+        .intermittent({
           duration_basis: DurationBasis.days,
-        }),
-      }
+        })
+        .create()
     );
 
     expect(
-      blankClaimWrapper
-        .find({ name: "leave_details.intermittent_leave_periods[0].duration" })
-        .exists()
-    ).toBe(false);
-    expect(
-      wrapperWithState
-        .find({ name: "leave_details.intermittent_leave_periods[0].duration" })
-        .exists()
-    ).toBe(true);
+      screen.getByText(/How many days of work will you miss per absence?/)
+    ).toBeInTheDocument();
+    expect(screen.getByText(/At least one day/)).toBeInTheDocument();
   });
 
-  it("displays frequency label corresponding to selected frequency interval and basis", () => {
-    expect.assertions();
-
-    const options = [
+  it.each([
+    [
       {
+        frequency_interval: 3,
         frequency_interval_basis: FrequencyIntervalBasis.weeks,
       },
+      "Estimate how many absences per week.",
+    ],
+    [
       {
+        frequency_interval: 3,
         frequency_interval_basis: FrequencyIntervalBasis.months,
       },
+      "Estimate how many absences per month.",
+    ],
+    [
       {
         frequency_interval: 6,
         frequency_interval_basis: FrequencyIntervalBasis.months,
       },
-    ];
+      "Estimate how many absences over the next 6 months.",
+    ],
+  ])(
+    "displays frequency label corresponding to selected frequency interval and basis",
+    (frequencyInterval, textToDisplay) => {
+      render(
+        new MockBenefitsApplicationBuilder()
+          .intermittent(frequencyInterval)
+          .create()
+      );
+      expect(screen.getByText(textToDisplay)).toBeInTheDocument();
+    }
+  );
 
-    options.forEach((option) => {
-      const { wrapper } = renderWithAppLogic(IntermittentFrequency, {
-        claimAttrs: intermittentClaimAttrs(option),
-      });
-
-      expect(
-        wrapper
-          .find({
-            name: "leave_details.intermittent_leave_periods[0].frequency",
-          })
-          .prop("label")
-      ).toMatchSnapshot();
-    });
-  });
-
-  it("displays duration label corresponding to selected duration basis", () => {
-    expect.assertions();
-
-    const options = [
+  it.each([
+    [
       {
         duration_basis: DurationBasis.days,
       },
+      "How many days of work will you miss per absence?",
+    ],
+    [
       {
         duration_basis: DurationBasis.hours,
       },
-    ];
-
-    options.forEach((option) => {
-      const { wrapper } = renderWithAppLogic(IntermittentFrequency, {
-        claimAttrs: intermittentClaimAttrs(option),
-      });
-
-      expect(
-        wrapper
-          .find({
-            name: "leave_details.intermittent_leave_periods[0].duration",
-          })
-          .prop("label")
-      ).toMatchSnapshot();
-    });
-  });
-
-  it("displays Alert about having medical form when claim is for Medical leave", () => {
-    const { wrapper: medicalWrapper } = renderWithAppLogic(
-      IntermittentFrequency,
-      {
-        claimAttrs: new MockClaimBuilder().medicalLeaveReason().create(),
-      }
-    );
-    const { wrapper: bondingWrapper } = renderWithAppLogic(
-      IntermittentFrequency,
-      {
-        claimAttrs: new MockClaimBuilder().bondingBirthLeaveReason().create(),
-      }
-    );
-    const alert = medicalWrapper.find("Alert");
-
-    expect(alert.exists()).toBe(true);
-    expect(alert).toMatchSnapshot();
-    expect(bondingWrapper.find("Alert").exists()).toBe(false);
-  });
-
-  it("displays hint text with medical form context when claim is for Medical leave", () => {
-    expect.assertions();
-
-    const { wrapper: medicalWrapper } = renderWithAppLogic(
-      IntermittentFrequency,
-      {
-        claimAttrs: new MockClaimBuilder()
-          .medicalLeaveReason()
-          .intermittent()
-          .create(),
-      }
-    );
-    const { wrapper: bondingWrapper } = renderWithAppLogic(
-      IntermittentFrequency,
-      {
-        claimAttrs: new MockClaimBuilder()
-          .bondingBirthLeaveReason()
-          .intermittent()
-          .create(),
-      }
-    );
-
-    const fieldFinder = (nodeWrapper) =>
-      ["InputNumber", "InputChoiceGroup"].includes(nodeWrapper.name());
-    const medicalWrapperFields = medicalWrapper.findWhere(fieldFinder);
-    const bondingWrapperFields = bondingWrapper.findWhere(fieldFinder);
-
-    medicalWrapperFields.forEach((field) => {
-      expect(field.prop("hint")).toMatchSnapshot();
-    });
-
-    bondingWrapperFields.forEach((field) => {
-      expect(field.prop("hint")).toBeNull();
-    });
-  });
-
-  describe("frequency_basis change handler", () => {
-    let changeRadioGroup, wrapper;
-    const claimAttrs = intermittentClaimAttrs();
-
-    beforeEach(() => {
-      ({ wrapper } = renderWithAppLogic(IntermittentFrequency, {
-        claimAttrs,
-      }));
-      ({ changeRadioGroup } = simulateEvents(wrapper));
-    });
-
-    it("selects Months radio", () => {
-      changeRadioGroup(frequencyBasisInputName, FrequencyIntervalBasis.months);
-
-      const choices = wrapper
-        .find({ name: frequencyBasisInputName })
-        .prop("choices");
-
-      expect(choices[1].checked).toBe(true);
-    });
-
-    it("selects 'Irregular over 6 months' radio when input ID matches", () => {
-      changeRadioGroup(
-        frequencyBasisInputName,
-        FrequencyIntervalBasis.months,
-        irregularOver6MonthsId
+      "How many hours of work will you miss per absence?",
+    ],
+  ])(
+    "displays duration label corresponding to selected duration basis",
+    (durationBasis, textToDisplay) => {
+      render(
+        new MockBenefitsApplicationBuilder()
+          .intermittent(durationBasis)
+          .create()
       );
+      expect(screen.getByText(textToDisplay)).toBeInTheDocument();
+    }
+  );
 
-      const choices = wrapper
-        .find({ name: frequencyBasisInputName })
-        .prop("choices");
+  it("displays Alert about having form + Lead when claim is caring leave", () => {
+    render(
+      new MockBenefitsApplicationBuilder()
+        .caringLeaveReason()
+        .intermittent()
+        .create()
+    );
+    expect(
+      screen.getByRole("heading", { name: "Leave details" })
+    ).toBeInTheDocument();
 
-      expect(choices[2].checked).toBe(true);
+    expect(
+      screen.getByRole("link", {
+        name: "Certification of Your Family Member’s Serious Health Condition",
+      })
+    ).toBeInTheDocument();
+
+    expect(
+      screen.getByText(
+        /Your answers must match the intermittent leave section in the Certification of Your Family Member’s Serious Health Condition./
+      )
+    ).toBeInTheDocument();
+  });
+
+  it("displays Alert about having form + Lead when claim is medical leave", () => {
+    render(
+      new MockBenefitsApplicationBuilder()
+        .medicalLeaveReason()
+        .intermittent()
+        .create()
+    );
+    expect(
+      screen.getByRole("heading", { name: "Leave details" })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", {
+        name: "Certification of Your Serious Health Condition",
+      })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /Your answers must match the intermittent leave section in the Certification of Your Serious Health Condition./
+      )
+    ).toBeInTheDocument();
+  });
+
+  it("enables user to change frequency of their leave", async () => {
+    render();
+    userEvent.click(
+      screen.getByRole("radio", { name: "Once or more per week" })
+    );
+    await waitFor(() => {
+      expect(
+        screen.getByRole("radio", { name: "Once or more per week" })
+      ).toBeChecked();
     });
   });
 
-  it("sends the page's fields and the leave period ID to the API when the data is already on the claim", () => {
-    const claim = new MockClaimBuilder().intermittent().create();
+  it("enables user to select irregular over 6 months radio", async () => {
+    render();
+    userEvent.click(
+      screen.getByRole("radio", { name: "Irregular over the next 6 months" })
+    );
+    await waitFor(() => {
+      expect(
+        screen.getByRole("radio", { name: "Irregular over the next 6 months" })
+      ).toBeChecked();
+    });
+  });
+
+  it("sends the page's fields and the leave period ID to the API when the data is already on the claim", async () => {
+    const claim = new MockBenefitsApplicationBuilder().intermittent().create();
     const {
       duration,
       duration_basis,
@@ -239,15 +211,12 @@ describe("IntermittentFrequency", () => {
       leave_period_id,
     } = claim.leave_details.intermittent_leave_periods[0];
 
-    const { appLogic, wrapper } = renderWithAppLogic(IntermittentFrequency, {
-      claimAttrs: claim,
-    });
+    render(claim);
 
-    wrapper.find("QuestionPage").simulate("save");
+    userEvent.click(screen.getByRole("button", { name: "Save and continue" }));
 
-    expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
-      claim.application_id,
-      {
+    await waitFor(() => {
+      expect(updateClaim).toHaveBeenCalledWith("mock_application_id", {
         leave_details: {
           intermittent_leave_periods: [
             {
@@ -260,12 +229,12 @@ describe("IntermittentFrequency", () => {
             },
           ],
         },
-      }
-    );
+      });
+    });
   });
 
   it("sends the page's fields and the leave period ID to the API when the data is newly entered", async () => {
-    const claim = new MockClaimBuilder().intermittent().create();
+    const claim = new MockBenefitsApplicationBuilder().intermittent().create();
 
     const frequency_interval_basis = FrequencyIntervalBasis.months;
     const frequency = 6;
@@ -273,37 +242,30 @@ describe("IntermittentFrequency", () => {
     const duration_basis = DurationBasis.hours;
     const duration = 6;
 
-    const { appLogic, wrapper } = renderWithAppLogic(IntermittentFrequency, {
-      claimAttrs: claim,
-    });
+    render(claim);
 
-    const { changeField, changeRadioGroup, submitForm } = simulateEvents(
-      wrapper
+    userEvent.click(
+      screen.getByRole("radio", { name: "Irregular over the next 6 months" })
     );
-
-    changeRadioGroup(
-      frequencyBasisInputName,
-      frequency_interval_basis,
-      irregularOver6MonthsId
+    userEvent.type(
+      screen.getByRole("textbox", {
+        name: "Estimate how many absences over the next 6 months.",
+      }),
+      "{backspace}6"
     );
-    changeField(
-      "leave_details.intermittent_leave_periods[0].frequency",
-      frequency
+    userEvent.click(
+      screen.getByRole("radio", { name: "Less than one full work day" })
     );
-    changeRadioGroup(
-      "leave_details.intermittent_leave_periods[0].duration_basis",
-      duration_basis
-    );
-    changeField(
-      "leave_details.intermittent_leave_periods[0].duration",
-      duration
+    userEvent.type(
+      screen.getByRole("textbox", {
+        name: "How many hours of work will you miss per absence?",
+      }),
+      "{backspace}6"
     );
 
-    await submitForm();
-
-    expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
-      claim.application_id,
-      {
+    userEvent.click(screen.getByRole("button", { name: "Save and continue" }));
+    await waitFor(() => {
+      expect(updateClaim).toHaveBeenCalledWith("mock_application_id", {
         leave_details: {
           intermittent_leave_periods: [
             {
@@ -316,7 +278,7 @@ describe("IntermittentFrequency", () => {
             },
           ],
         },
-      }
-    );
+      });
+    });
   });
 });

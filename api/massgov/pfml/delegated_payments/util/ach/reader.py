@@ -96,7 +96,6 @@ class ACHReturn:
     def get_details_for_log(self) -> Dict[str, Any]:
         return {
             "type_code": self.raw_record.type_code.value,
-            "raw_data": self.raw_record.data,
             "ach_id_number": self.id_number,
             "reason_code": self.return_reason_code,
         }
@@ -115,14 +114,6 @@ class ACHChangeNotification(ACHReturn):
     def is_change_notification(self):
         return True
 
-    def get_details_for_log(self) -> Dict[str, Any]:
-        ach_return_details = super().get_details_for_log()
-        return {**ach_return_details, "addenda_information": self.addenda_information}
-
-    def get_details_for_error(self) -> Dict[str, Any]:
-        ach_return_details = super().get_details_for_error()
-        return {**ach_return_details, "addenda_information": self.addenda_information}
-
 
 @dataclasses.dataclass
 class ACHWarning:
@@ -139,7 +130,7 @@ class ACHWarning:
 class ACHReader:
     """A reader for ACH format files."""
 
-    def __init__(self, f: TextIO):
+    def __init__(self, f: TextIO, parse: bool = True):
         self.f = f
         self.name = getattr(self.f, "name", repr(self.f))
         self.ach_returns: List[ACHReturn] = []
@@ -148,7 +139,8 @@ class ACHReader:
         self.batch_count = 0
         self.entry_count = 0
 
-        self.parse_ach_file()
+        if parse:
+            self.parse_ach_file()
 
     def get_ach_returns(self) -> List[ACHReturn]:
         return self.ach_returns

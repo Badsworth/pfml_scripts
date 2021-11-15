@@ -1,3 +1,6 @@
+locals {
+  environment_name = "training"
+}
 provider "aws" {
   region = "us-east-1"
 }
@@ -16,10 +19,16 @@ terraform {
 module "tasks" {
   source = "../../template"
 
-  environment_name   = "training"
-  service_docker_tag = local.service_docker_tag
-  vpc_id             = data.aws_vpc.vpc.id
-  app_subnet_ids     = data.aws_subnet_ids.vpc_app.ids
+  environment_name              = "training"
+  st_use_mock_dor_data          = false
+  st_decrypt_dor_data           = false
+  st_file_limit_specified       = false
+  st_employer_update_limit      = 1500
+  service_docker_tag            = local.service_docker_tag
+  vpc_id                        = data.aws_vpc.vpc.id
+  app_subnet_ids                = data.aws_subnet_ids.vpc_app.ids
+  enforce_execute_sql_read_only = false
+
 
   cognito_user_pool_id                       = "us-east-1_gHLjkp4A8"
   fineos_client_integration_services_api_url = "https://trn-api.masspfml.fineos.com/integration-services/"
@@ -31,13 +40,21 @@ module "tasks" {
 
   fineos_aws_iam_role_arn         = "arn:aws:iam::666444232783:role/somdev-IAMRoles-CustomerAccountAccessRole-BF05IBJSG74B"
   fineos_aws_iam_role_external_id = "12345"
-  enable_sentry                   = "0"
 
   fineos_eligibility_feed_output_directory_path       = "s3://fin-somdev-data-import/TRN"
   fineos_import_employee_updates_input_directory_path = "s3://fin-somdev-data-export/TRN/dataexports"
   fineos_error_export_path                            = "s3://fin-somdev-data-export/TRN/errorExtracts"
+  fineos_report_export_path                           = "s3://fin-somdev-data-export/TRN/reportExtract"
+
+  rmv_client_base_url               = "https://atlas-staging-gateway.massdot.state.ma.us/vs"
+  rmv_client_certificate_binary_arn = "arn:aws:secretsmanager:us-east-1:498823821309:secret:/service/pfml-api-training/rmv_client_certificate-uUtNEp"
+  rmv_api_behavior                  = "partially_mocked"
 
   enable_register_admins_job = true
 
   task_failure_email_address_list = ["mass-pfml-api-low-priority@navapbc.pagerduty.com"]
+
+  # Hourly at :05 minutes past each hour
+  dor_fineos_etl_schedule_expression_standard         = "cron(5 * * * ? *)"
+  dor_fineos_etl_schedule_expression_daylight_savings = "cron(5 * * * ? *)"
 }

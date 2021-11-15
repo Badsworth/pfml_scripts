@@ -1,5 +1,5 @@
 import BenefitsApplication, {
-  ClaimStatus,
+  BenefitsApplicationStatus,
   EmploymentStatus,
   WorkPatternType,
 } from "../../src/models/BenefitsApplication";
@@ -28,6 +28,11 @@ const machineTests = {
       test: () => {},
     },
   },
+  [routes.user.convert]: {
+    meta: {
+      test: () => {},
+    },
+  },
   [routes.applications.checklist]: {
     meta: {
       test: () => {},
@@ -49,6 +54,11 @@ const machineTests = {
     },
   },
   [routes.applications.name]: {
+    meta: {
+      test: () => {},
+    },
+  },
+  [routes.applications.gender]: {
     meta: {
       test: () => {},
     },
@@ -135,6 +145,11 @@ const machineTests = {
       },
     },
   },
+  [routes.applications.employerBenefitsIntro]: {
+    meta: {
+      test: () => {},
+    },
+  },
   [routes.applications.employerBenefits]: {
     meta: {
       test: () => {},
@@ -159,16 +174,44 @@ const machineTests = {
       },
     },
   },
-  [routes.applications.previousLeaves]: {
+  [routes.applications.previousLeavesIntro]: {
     meta: {
       test: () => {},
     },
   },
-  [routes.applications.previousLeavesDetails]: {
+  [routes.applications.previousLeavesSameReason]: {
     meta: {
-      test: (_, event) => {
-        expect(get(event.context.claim, "has_previous_leaves")).toEqual(true);
-      },
+      test: () => {},
+    },
+  },
+  [routes.applications.previousLeavesSameReasonDetails]: {
+    meta: {
+      test: () => {},
+    },
+  },
+  [routes.applications.previousLeavesOtherReason]: {
+    meta: {
+      test: () => {},
+    },
+  },
+  [routes.applications.previousLeavesOtherReasonDetails]: {
+    meta: {
+      test: () => {},
+    },
+  },
+  [routes.applications.concurrentLeavesIntro]: {
+    meta: {
+      test: () => {},
+    },
+  },
+  [routes.applications.concurrentLeaves]: {
+    meta: {
+      test: () => {},
+    },
+  },
+  [routes.applications.concurrentLeavesDetails]: {
+    meta: {
+      test: () => {},
     },
   },
   [routes.applications.employmentStatus]: {
@@ -186,6 +229,11 @@ const machineTests = {
     },
   },
   [routes.applications.paymentMethod]: {
+    meta: {
+      test: () => {},
+    },
+  },
+  [routes.applications.taxWithholding]: {
     meta: {
       test: () => {},
     },
@@ -267,6 +315,56 @@ const machineTests = {
       },
     },
   },
+  [routes.applications.upload.index]: {
+    meta: {
+      test: () => {},
+    },
+  },
+  [routes.applications.upload.bondingProofOfBirth]: {
+    meta: {
+      test: () => {},
+    },
+  },
+  [routes.applications.upload.bondingProofOfPlacement]: {
+    meta: {
+      test: () => {},
+    },
+  },
+  [routes.applications.upload.caringCertification]: {
+    meta: {
+      test: () => {},
+    },
+  },
+  [routes.applications.upload.medicalCertification]: {
+    meta: {
+      test: () => {},
+    },
+  },
+  [routes.applications.upload.otherId]: {
+    meta: {
+      test: () => {},
+    },
+  },
+  [routes.applications.upload.pregnancyCertification]: {
+    meta: {
+      test: () => {},
+    },
+  },
+  [routes.applications.upload.stateId]: {
+    meta: {
+      test: () => {},
+    },
+  },
+  [routes.applications.status.claim]: {
+    meta: {
+      test: () => {},
+    },
+  },
+  [routes.applications.status.payments]: {
+    meta: {
+      test: () => {},
+    },
+  },
 };
 
 const machineConfigsWithTests = {
@@ -287,6 +385,7 @@ describe("claimFlowConfigs", () => {
   const caringLeaveClaim = { leave_details: { reason: LeaveReason.care } };
   const employed = {
     employment_status: EmploymentStatus.employed,
+    has_concurrent_leave: true,
   };
   const hasIntermittentLeavePeriods = { has_intermittent_leave_periods: true };
   const hasReducedScheduleLeavePeriods = {
@@ -295,7 +394,8 @@ describe("claimFlowConfigs", () => {
   const hasOtherLeavesAndIncomes = {
     has_employer_benefits: true,
     has_other_incomes: true,
-    has_previous_leaves: true,
+    has_previous_leaves_other_reason: true,
+    has_previous_leaves_same_reason: true,
   };
   const hasStateId = { has_state_id: true };
   const fixedWorkPattern = {
@@ -305,7 +405,7 @@ describe("claimFlowConfigs", () => {
     work_pattern: { work_pattern_type: WorkPatternType.variable },
   };
   const completed = {
-    status: ClaimStatus.completed,
+    status: BenefitsApplicationStatus.completed,
   };
   const testData = [
     { claimData: hasStateId, userData: {} },
@@ -349,6 +449,8 @@ describe("claimFlowConfigs", () => {
   // of the portal application when tested.
   const testModel = createModel(routingMachine).withEvents({
     CONSENT_TO_DATA_SHARING: {},
+    PREVENT_CONVERSION: {},
+    CONVERT_EMPLOYER: {},
     CONTINUE: {},
     CREATE_CLAIM: {},
     EMPLOYER_INFORMATION: {},
@@ -358,10 +460,19 @@ describe("claimFlowConfigs", () => {
     REVIEW_AND_CONFIRM: {},
     SHOW_APPLICATIONS: {},
     START_APPLICATION: { cases: testData },
+    STATUS: {},
+    TAX_WITHHOLDING: {},
     UPLOAD_CERTIFICATION: {},
     UPLOAD_DOCS: {},
     UPLOAD_ID: {},
     UPLOAD_MASS_ID: {},
+    UPLOAD_PROOF_OF_BIRTH: {},
+    UPLOAD_PROOF_OF_PLACEMENT: {},
+    UPLOAD_MEDICAL_CERTIFICATION: {},
+    UPLOAD_PREGNANCY_MEDICAL_CERTIFICATION: {},
+    UPLOAD_CARING_LEAVE_CERTIFICATION: {},
+    UPLOAD_DOC_OPTIONS: {},
+
     VERIFY_ID: {},
   });
 
@@ -373,8 +484,9 @@ describe("claimFlowConfigs", () => {
   testPlans.forEach((plan) => {
     describe(plan.description, () => {
       plan.paths.forEach((path) => {
-        /* eslint-disable jest/expect-expect */
         it(path.description, async () => {
+          // Satisfy our rule that each test must have an expect assertion
+          expect(true).toBe(true);
           // Here is where we can simulate our application's environment
           // and pass it to our test
           // e.g if using for e2e testing
@@ -384,15 +496,14 @@ describe("claimFlowConfigs", () => {
           // that page
           await path.test();
         });
-        /* eslint-enable jest/expect-expect */
       });
     });
   });
 
-  /* eslint-disable jest/expect-expect */
   it("should have full coverage", () => {
+    // Satisfy our rule that each test must have an expect assertion
+    expect(true).toBe(true);
     // test that all routes `test` methods were evaluated at least once
     return testModel.testCoverage();
   });
-  /* eslint-enable jest/expect-expect */
 });

@@ -21,4 +21,9 @@ class UserCreateRequest(PydanticBaseModel):
 
 
 class UserUpdateRequest(PydanticBaseModel):
-    consented_to_data_sharing: bool
+    consented_to_data_sharing: Optional[bool]
+    mfa_delivery_preference: Optional[str]
+
+
+class UserConvertEmployerRequest(PydanticBaseModel):
+    employer_fein: FEINUnformattedStr

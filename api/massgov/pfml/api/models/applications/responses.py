@@ -6,8 +6,8 @@ from typing import List, Optional
 from pydantic import UUID4
 
 from massgov.pfml.api.models.applications.common import (
-    EmployerBenefit,
     EmploymentStatus,
+    Gender,
     MaskedAddress,
     MaskedApplicationLeaveDetails,
     MaskedPaymentPreference,
@@ -18,6 +18,7 @@ from massgov.pfml.api.models.applications.common import (
     WorkPattern,
 )
 from massgov.pfml.api.models.claims.common import PreviousLeave
+from massgov.pfml.api.models.common import ConcurrentLeave, EmployerBenefit
 from massgov.pfml.db.models.applications import Application, ApplicationPaymentPreference, Document
 from massgov.pfml.util.pydantic import PydanticBaseModel
 from massgov.pfml.util.pydantic.types import (
@@ -38,13 +39,13 @@ class ApplicationResponse(PydanticBaseModel):
     application_id: UUID4
     application_nickname: Optional[str]
     tax_identifier: Optional[MaskedTaxIdFormattedStr]
-    employer_id: Optional[UUID4]
     employer_fein: Optional[FEINFormattedStr]
     fineos_absence_id: Optional[str]
     first_name: Optional[str]
     middle_name: Optional[str]
     last_name: Optional[str]
     date_of_birth: Optional[MaskedDateStr]
+    gender: Optional[Gender]
     has_continuous_leave_periods: Optional[bool]
     has_intermittent_leave_periods: Optional[bool]
     has_reduced_schedule_leave_periods: Optional[bool]
@@ -57,7 +58,7 @@ class ApplicationResponse(PydanticBaseModel):
     leave_details: Optional[MaskedApplicationLeaveDetails]
     payment_preference: Optional[MaskedPaymentPreference]
     work_pattern: Optional[WorkPattern]
-    updated_time: datetime
+    updated_time: Optional[datetime]
     status: Optional[ApplicationStatus]
     has_mailing_address: Optional[bool]
     mailing_address: Optional[MaskedAddress]
@@ -65,11 +66,17 @@ class ApplicationResponse(PydanticBaseModel):
     has_employer_benefits: Optional[bool]
     employer_benefits: Optional[List[EmployerBenefit]]
     has_other_incomes: Optional[bool]
-    other_incomes_awaiting_approval: Optional[bool]
     other_incomes: Optional[List[OtherIncome]]
     phone: Optional[MaskedPhone]
-    previous_leaves: Optional[List[PreviousLeave]]
+    previous_leaves_other_reason: Optional[List[PreviousLeave]]
+    previous_leaves_same_reason: Optional[List[PreviousLeave]]
+    concurrent_leave: Optional[ConcurrentLeave]
     has_previous_leaves: Optional[bool]
+    has_previous_leaves_other_reason: Optional[bool]
+    has_previous_leaves_same_reason: Optional[bool]
+    has_concurrent_leave: Optional[bool]
+    is_withholding_tax: Optional[bool]
+    updated_at: datetime
 
     @classmethod
     def from_orm(cls, application: Application) -> "ApplicationResponse":
@@ -102,6 +109,8 @@ class ApplicationResponse(PydanticBaseModel):
         if application.claim is not None:
             application_response.fineos_absence_id = application.claim.fineos_absence_id
 
+        application_response.updated_time = application_response.updated_at
+
         return application_response
 
 
@@ -133,5 +142,4 @@ class DocumentResponse(PydanticBaseModel):
         document_response = super().from_orm(document)
         document_response.fineos_document_id = str(document.fineos_id)
         document_response.document_type = document.document_type_instance.document_type_description
-        document_response.content_type = document.content_type_instance.content_type_description
         return document_response

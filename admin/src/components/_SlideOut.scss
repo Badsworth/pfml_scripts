@@ -1,0 +1,119 @@
+/** @define slide-out */
+.slide-out {
+  background: none;
+  border: none;
+  bottom: 0;
+  display: flex;
+  height: auto;
+  justify-content: flex-end;
+  left: 0;
+  padding: 0;
+  position: fixed;
+  right: 0;
+  top: 0;
+  width: auto;
+  z-index: 10;
+}
+
+.slide-out:not([open]) {
+  display: none;
+}
+
+.slide-out__background {
+  animation: animateSlideOutBackgroundIn 0.5s forwards;
+  background: rgba(0, 0, 0, 0.3);
+  bottom: 0;
+  left: 0;
+  opacity: 0;
+  position: absolute;
+  right: 0;
+  top: 0;
+}
+
+.slide-out__header {
+  align-items: flex-start;
+  border-bottom: 1px solid $Color-GraniteGray-50;
+  display: flex;
+  padding: 1.857em 1.714em;
+}
+
+.slide-out__content {
+  animation: animateSlideOutPanelIn 0.5s forwards;
+  background: #fff;
+  height: 100%;
+  max-width: 378px;
+  position: relative;
+  transform: translateX(100%);
+  width: 20%;
+}
+
+.slide-out__title {
+  color: $Color-RevolutionGray;
+  flex: 1 1 auto;
+  font-size: 1.29em;
+  font-weight: 400;
+  line-height: 2em;
+  margin: 0;
+  padding-right: 1.71em;
+}
+
+.slide-out__btn-close {
+  align-items: center;
+  background-color: #fff;
+  border: 0;
+  cursor: pointer;
+  display: flex;
+  flex: none;
+  height: 24px;
+  justify-content: center;
+  margin-top: 0.35em;
+  width: 24px;
+}
+
+.slide-out__btn-close::before {
+  @include IconFontProps;
+  color: $Color-GraniteGray-300;
+  content: $IconX;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.slide-out__body {
+  font-size: 0.86em;
+  line-height: 1.33em;
+  padding-top: 1.86em;
+}
+
+
+.slide-out__paragraph:nth-of-type(n+1) {
+  color: $Color-GraniteGray-700;
+  margin: 1.714em 0 0;
+}
+
+.slide-out__menu-icon {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+
+@keyframes animateSlideOutPanelIn {
+  from {
+    transform: translateX(100%);
+  }
+
+  to {
+    transform: translateX(0);
+  }
+}
+
+
+@keyframes animateSlideOutBackgroundIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}

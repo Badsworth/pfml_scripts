@@ -44,53 +44,49 @@ data "aws_ecs_cluster" "breakfix" {
 module "api" {
   source = "../../template"
 
-  environment_name                     = local.environment_name
-  service_app_count                    = 2
-  service_max_app_count                = 10
-  service_docker_tag                   = local.service_docker_tag
-  service_ecs_cluster_arn              = data.aws_ecs_cluster.breakfix.arn
-  vpc_id                               = data.aws_vpc.vpc.id
-  vpc_app_subnet_ids                   = data.aws_subnet_ids.vpc_app.ids
-  vpc_db_subnet_ids                    = data.aws_subnet_ids.vpc_db.ids
-  postgres_version                     = "12.4"
-  postgres_parameter_group_family      = "postgres12"
-  nlb_name                             = "${local.vpc}-nlb"
-  nlb_port                             = 3504
-  cors_origins                         = ["https://l296x0cj1m.execute-api.us-east-1.amazonaws.com"]
-  formstack_import_lambda_build_s3_key = local.formstack_lambda_artifact_s3_key
-  enforce_leave_admin_verification     = "0"
-  enable_application_fraud_check       = "0"
-  release_version                      = var.release_version
+  environment_name                = local.environment_name
+  service_app_count               = 2
+  service_max_app_count           = 10
+  service_docker_tag              = local.service_docker_tag
+  service_ecs_cluster_arn         = data.aws_ecs_cluster.breakfix.arn
+  vpc_id                          = data.aws_vpc.vpc.id
+  vpc_app_subnet_ids              = data.aws_subnet_ids.vpc_app.ids
+  vpc_db_subnet_ids               = data.aws_subnet_ids.vpc_db.ids
+  postgres_version                = "12.4"
+  postgres_parameter_group_family = "postgres12"
+  nlb_name                        = "${local.vpc}-nlb"
+  nlb_port                        = 3504
+  cors_origins = [
+    "https://paidleave-breakfix.eol.mass.gov",
+    "https://paidleave-api-breakfix.eol.mass.gov",
+    "https://l296x0cj1m.execute-api.us-east-1.amazonaws.com"
+  ]
+  enable_application_fraud_check = "0"
+  release_version                = var.release_version
+  portal_base_url                = "https://paidleave-breakfix.eol.mass.gov"
 
-  cognito_user_pool_arn       = "arn:aws:cognito-idp:us-east-1:498823821309:userpool/us-east-1_Bi6tPV5hz"
-  cognito_user_pool_id        = "us-east-1_Bi6tPV5hz"
-  cognito_user_pool_client_id = "606qc6fmb1sn3pcujrav20h66l"
-  cognito_user_pool_keys_url  = "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_Bi6tPV5hz/.well-known/jwks.json"
-
-  cognito_post_confirmation_lambda_artifact_s3_key = local.cognito_post_confirmation_lambda_artifact_s3_key
-  cognito_pre_signup_lambda_artifact_s3_key        = local.cognito_pre_signup_lambda_artifact_s3_key
+  cognito_user_pool_arn       = "arn:aws:cognito-idp:us-east-1:498823821309:userpool/us-east-1_ZM6ztWTcs"
+  cognito_user_pool_id        = "us-east-1_ZM6ztWTcs"
+  cognito_user_pool_client_id = "1ijqntaslj2des88rlrdvoqlm5"
+  cognito_user_pool_keys_url  = "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_ZM6ztWTcs/.well-known/jwks.json"
 
   rmv_client_base_url               = "https://atlas-staging-gateway.massdot.state.ma.us/vs"
   rmv_client_certificate_binary_arn = "arn:aws:secretsmanager:us-east-1:498823821309:secret:/service/pfml-api-breakfix/rmv_client_certificate-dkPhSI"
-  rmv_check_behavior                = "fully_mocked"
+  rmv_api_behavior                  = "fully_mocked"
   rmv_check_mock_success            = "1"
 
   # TODO: These values are provided by FINEOS.
-  fineos_client_integration_services_api_url          = ""
-  fineos_client_customer_api_url                      = ""
-  fineos_client_group_client_api_url                  = ""
-  fineos_client_wscomposer_api_url                    = ""
-  fineos_client_wscomposer_user_id                    = ""
-  fineos_client_oauth2_url                            = ""
-  fineos_import_employee_updates_input_directory_path = null
-  fineos_aws_iam_role_arn                             = null
-  fineos_aws_iam_role_external_id                     = null
+  fineos_client_integration_services_api_url          = "https://pfx-api.masspfml.fineos.com/integration-services/"
+  fineos_client_customer_api_url                      = "https://pfx-api.masspfml.fineos.com/customerapi/"
+  fineos_client_group_client_api_url                  = "https://pfx-api.masspfml.fineos.com/groupclientapi/"
+  fineos_client_wscomposer_api_url                    = "https://pfx-api.masspfml.fineos.com/integration-services/wscomposer/"
+  fineos_client_wscomposer_user_id                    = "OASIS"
+  fineos_client_oauth2_url                            = "https://pfx-api.masspfml.fineos.com/oauth2/token"
+  fineos_import_employee_updates_input_directory_path = "s3://fin-sompre-data-export/PFX/dataexports"
+  fineos_aws_iam_role_arn                             = "arn:aws:iam::016390658835:role/sompre-IAMRoles-CustomerAccountAccessRole-S0EP9ABIA02Z"
+  fineos_aws_iam_role_external_id                     = "8jFBtjr4UA@"
 
-  # TODO: This value is provided by FINEOS over Interchange.
-  fineos_client_oauth2_client_id = ""
+  fineos_client_oauth2_client_id = "470dvu60ij99vpgsm8dug3nuhg"
 
   service_now_base_url = "https://savilinxstage.servicenowservices.com"
-
-  # dor_fineos_etl_definition                        = local.dor_fineos_etl_definition
-  # dor_fineos_etl_schedule_expression               = "cron(5 * * * ? *)" # Hourly at :05 minutes past each hour
 }

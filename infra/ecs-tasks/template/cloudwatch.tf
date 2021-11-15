@@ -1,3 +1,12 @@
+# This file sets up the centralized cloudwatch log group for ECS tasks.
+#
+# All logs for background ECS tasks are sent to the same log group and forwarded to New Relic through the lambda forwarder.
+#
+# Additionally, recurring task schedules are configured here using the ecs_task_scheduler module.
+#
+# ## NOTE: If you are adding a new scheduled event here, please add monitoring by including it
+#          in the list in infra/modules/alarms_api/alarms-aws.tf.
+
 data "aws_ecs_cluster" "cluster" { cluster_name = var.environment_name }
 
 # Cloudwatch log group to for streaming ECS application logs.
@@ -38,45 +47,6 @@ resource "aws_lambda_permission" "ecs_permission_tasks_logging" {
 # ----------------------------------------------------------------------------------------------
 # Scheduled tasks
 
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Run register-leave-admins-with-fineos every 15 minutes.
-module "register_leave_admins_with_fineos_scheduler" {
-  source     = "../../modules/ecs_task_scheduler"
-  is_enabled = var.enable_register_admins_job
-
-  task_name           = "register-leave-admins-with-fineos"
-  schedule_expression = "rate(15 minutes)"
-  environment_name    = var.environment_name
-
-  cluster_arn        = data.aws_ecs_cluster.cluster.arn
-  app_subnet_ids     = var.app_subnet_ids
-  security_group_ids = [aws_security_group.tasks.id]
-
-  ecs_task_definition_arn    = aws_ecs_task_definition.ecs_tasks["register-leave-admins-with-fineos"].arn
-  ecs_task_definition_family = aws_ecs_task_definition.ecs_tasks["register-leave-admins-with-fineos"].family
-  ecs_task_executor_role     = aws_iam_role.task_executor.arn
-  ecs_task_role              = aws_iam_role.register_admins_task_role.arn
-}
-
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Run payments-payment-voucher-plus at 12am EST (1am EDT) (5am UTC)
-module "payments_payment_voucher_plus_scheduler" {
-  source     = "../../modules/ecs_task_scheduler"
-  is_enabled = var.enable_recurring_payments_schedule
-
-  task_name           = "payments-payment-voucher-plus"
-  schedule_expression = "cron(0 5 ? * MON-FRI *)"
-  environment_name    = var.environment_name
-
-  cluster_arn        = data.aws_ecs_cluster.cluster.arn
-  app_subnet_ids     = var.app_subnet_ids
-  security_group_ids = [aws_security_group.tasks.id]
-
-  ecs_task_definition_arn    = aws_ecs_task_definition.ecs_tasks["payments-payment-voucher-plus"].arn
-  ecs_task_definition_family = aws_ecs_task_definition.ecs_tasks["payments-payment-voucher-plus"].family
-  ecs_task_executor_role     = aws_iam_role.task_executor.arn
-  ecs_task_role              = aws_iam_role.payments_fineos_process_task_role.arn
-}
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Run fineos-bucket-tool daily at 3am EST (4am EDT) (8am UTC)
@@ -84,9 +54,10 @@ module "fineos_bucket_tool_scheduler" {
   source     = "../../modules/ecs_task_scheduler"
   is_enabled = true
 
-  task_name           = "fineos-data-export-tool"
-  schedule_expression = "cron(0 8 * * ? *)"
-  environment_name    = var.environment_name
+  task_name                            = "fineos-data-export-tool"
+  schedule_expression_standard         = "cron(0 9 * * ? *)"
+  schedule_expression_daylight_savings = "cron(0 8 * * ? *)"
+  environment_name                     = var.environment_name
 
   cluster_arn        = data.aws_ecs_cluster.cluster.arn
   app_subnet_ids     = var.app_subnet_ids
@@ -105,7 +76,48 @@ module "fineos_bucket_tool_scheduler" {
         "command": [
           "fineos-bucket-tool",
           "--recursive",
+          "--dated-folders",
           "--copy_dir", "${var.fineos_data_export_path}",
+          "--to_dir", "s3://${data.aws_s3_bucket.business_intelligence_tool.bucket}/fineos/dataexports",
+          "--file_prefixes", "all"
+        ]
+      }
+    ]
+  }
+  JSON
+}
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# run at 12:30pm EST (1:30pm EDT) (5:30pm UTC) and 4:30pm EST (5:30pm EDT) (9:30pm UTC)
+module "fineos_extract_scheduler" {
+  source     = "../../modules/ecs_task_scheduler"
+  is_enabled = true
+
+  task_name                            = "fineos-report-extracts-tool"
+  schedule_expression_standard         = "cron(30 17,21 * * ? *)"
+  schedule_expression_daylight_savings = "cron(30 16,20 * * ? *)"
+
+  environment_name = var.environment_name
+
+  cluster_arn        = data.aws_ecs_cluster.cluster.arn
+  app_subnet_ids     = var.app_subnet_ids
+  security_group_ids = [aws_security_group.tasks.id]
+
+  ecs_task_definition_arn    = aws_ecs_task_definition.ecs_tasks["fineos-bucket-tool"].arn
+  ecs_task_definition_family = aws_ecs_task_definition.ecs_tasks["fineos-bucket-tool"].family
+  ecs_task_executor_role     = aws_iam_role.task_executor.arn
+  ecs_task_role              = aws_iam_role.fineos_bucket_tool_role.arn
+
+  input = <<JSON
+  {
+    "containerOverrides": [
+      {
+        "name": "fineos-bucket-tool",
+        "command": [
+          "fineos-bucket-tool",
+          "--recursive",
+          "--dated-folders",
+          "--copy_dir", "${var.fineos_report_export_path}",
           "--to_dir", "s3://${data.aws_s3_bucket.business_intelligence_tool.bucket}/fineos/dataexports",
           "--file_prefixes", "all"
         ]
@@ -121,9 +133,10 @@ module "import_fineos_to_warehouse" {
   source     = "../../modules/ecs_task_scheduler"
   is_enabled = true
 
-  task_name           = "import-fineos-to-warehouse"
-  schedule_expression = "cron(0 3 * * ? *)"
-  environment_name    = var.environment_name
+  task_name                            = "import-fineos-to-warehouse"
+  schedule_expression_standard         = "cron(0 4 * * ? *)"
+  schedule_expression_daylight_savings = "cron(0 3 * * ? *)"
+  environment_name                     = var.environment_name
 
   cluster_arn        = data.aws_ecs_cluster.cluster.arn
   app_subnet_ids     = var.app_subnet_ids
@@ -141,9 +154,10 @@ module "fineos_error_extract_scheduler" {
   source     = "../../modules/ecs_task_scheduler"
   is_enabled = true
 
-  task_name           = "fineos-error-extract-tool"
-  schedule_expression = "cron(0 13 * * ? *)"
-  environment_name    = var.environment_name
+  task_name                            = "fineos-error-extract-tool"
+  schedule_expression_standard         = "cron(0 14 * * ? *)"
+  schedule_expression_daylight_savings = "cron(0 13 * * ? *)"
+  environment_name                     = var.environment_name
 
   cluster_arn        = data.aws_ecs_cluster.cluster.arn
   app_subnet_ids     = var.app_subnet_ids
@@ -162,8 +176,10 @@ module "fineos_error_extract_scheduler" {
         "command": [
           "fineos-bucket-tool",
           "--recursive",
+          "--dated-folders",
           "--copy_dir", "${var.fineos_error_export_path}",
           "--to_dir", "s3://${data.aws_s3_bucket.agency_transfer.bucket}/cps-errors/received/",
+          "--archive_dir", "s3://${data.aws_s3_bucket.agency_transfer.bucket}/cps-errors/processed/",
           "--file_prefixes", "all"
         ]
       }
@@ -178,9 +194,10 @@ module "export_leave_admins_created_scheduler" {
   source     = "../../modules/ecs_task_scheduler"
   is_enabled = true
 
-  task_name           = "export-leave-admins-created"
-  schedule_expression = "rate(24 hours)"
-  environment_name    = var.environment_name
+  task_name                            = "export-leave-admins-created"
+  schedule_expression_standard         = "rate(24 hours)"
+  schedule_expression_daylight_savings = "rate(24 hours)"
+  environment_name                     = var.environment_name
 
   cluster_arn        = data.aws_ecs_cluster.cluster.arn
   app_subnet_ids     = var.app_subnet_ids
@@ -201,7 +218,7 @@ module "export_leave_admins_created_scheduler" {
               "--s3_output=api_db/accounts_created",
               "--s3_bucket=massgov-pfml-${var.environment_name}-business-intelligence-tool",
               "--use_date",
-              "SELECT pu.email_address as email, pu.user_id as user_id, pu.active_directory_id as cognito_id,ula.fineos_web_id as fineos_id,e.employer_name as employer_name,e.employer_dba as employer_dba,e.employer_fein as fein,e.fineos_employer_id as fineos_customer_number,ula.created_at as date_created FROM public.user pu LEFT JOIN link_user_leave_administrator ula ON (pu.user_id=ula.user_id) LEFT JOIN employer e ON (ula.employer_id=e.employer_id) WHERE ula.created_at >= now() - interval '24 hour'"
+              "SELECT pu.email_address as email, pu.user_id as user_id, pu.sub_id as cognito_id,ula.fineos_web_id as fineos_id,e.employer_name as employer_name,e.employer_dba as employer_dba,e.employer_fein as fein,e.fineos_employer_id as fineos_customer_number,ula.created_at as date_created FROM public.user pu LEFT JOIN link_user_leave_administrator ula ON (pu.user_id=ula.user_id) LEFT JOIN employer e ON (ula.employer_id=e.employer_id) WHERE ula.created_at >= now() - interval '24 hour'"
             ]
           }
         ]
@@ -209,14 +226,36 @@ module "export_leave_admins_created_scheduler" {
   DOC
 }
 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Run cps-errors daily at 9am EST (10am EDT) (2pm UTC)
+# This needs to run after fineos-bucket-tool
+module "cps_errors_crawler_scheduler" {
+  source     = "../../modules/ecs_task_scheduler"
+  is_enabled = true
 
-module "reductions_send_claimant_lists_scheduler" {
+  task_name                            = "cps_errors_crawler"
+  schedule_expression_standard         = "cron(0 15 * * ? *)"
+  schedule_expression_daylight_savings = "cron(0 14 * * ? *)"
+  environment_name                     = var.environment_name
+
+  cluster_arn        = data.aws_ecs_cluster.cluster.arn
+  app_subnet_ids     = var.app_subnet_ids
+  security_group_ids = [aws_security_group.tasks.id]
+
+  ecs_task_definition_arn    = aws_ecs_task_definition.ecs_tasks["cps-errors-crawler"].arn
+  ecs_task_definition_family = aws_ecs_task_definition.ecs_tasks["cps-errors-crawler"].family
+  ecs_task_executor_role     = aws_iam_role.task_executor.arn
+  ecs_task_role              = aws_iam_role.cps_errors_crawler_task_role.arn
+}
+
+module "reductions_dia_send_claimant_lists_scheduler" {
   source     = "../../modules/ecs_task_scheduler"
   is_enabled = var.enable_reductions_send_claimant_lists_to_agencies_schedule
 
-  task_name           = "reductions-send-claimant-lists"
-  schedule_expression = "cron(0 8 * * ? *)"
-  environment_name    = var.environment_name
+  task_name                            = "reductions-dia-send-claimant-lists"
+  schedule_expression_standard         = "cron(0 9 ? * MON-FRI *)"
+  schedule_expression_daylight_savings = "cron(0 8 ? * MON-FRI *)"
+  environment_name                     = var.environment_name
 
   cluster_arn        = data.aws_ecs_cluster.cluster.arn
   app_subnet_ids     = var.app_subnet_ids
@@ -226,51 +265,85 @@ module "reductions_send_claimant_lists_scheduler" {
   ecs_task_definition_family = aws_ecs_task_definition.ecs_tasks["reductions-send-claimant-lists"].family
   ecs_task_executor_role     = aws_iam_role.reductions_workflow_execution_role.arn
   ecs_task_role              = aws_iam_role.reductions_workflow_task_role.arn
+
+  input = <<JSON
+  {
+    "containerOverrides": [
+      {
+        "name": "reductions-send-claimant-lists",
+        "command": [
+          "reductions-send-claimant-lists-to-agencies",
+          "--steps=DIA"
+        ]
+      }
+    ]
+  }
+  JSON
 }
 
-module "reductions_retrieve_payment_listsscheduler" {
+module "reductions_dua_send_claimant_lists_scheduler" {
   source     = "../../modules/ecs_task_scheduler"
-  is_enabled = var.enable_reductions_retrieve_payment_lists_from_agencies_schedule
+  is_enabled = var.enable_reductions_send_claimant_lists_to_agencies_schedule
 
-  task_name           = "reductions-retrieve-payment-lists"
-  schedule_expression = "cron(0/15 8-23,0 * * ? *)"
-  environment_name    = var.environment_name
+  task_name                            = "reductions-dua-send-claimant-lists"
+  schedule_expression_standard         = "cron(0 9 * * ? *)"
+  schedule_expression_daylight_savings = "cron(0 8 * * ? *)"
+  environment_name                     = var.environment_name
 
   cluster_arn        = data.aws_ecs_cluster.cluster.arn
   app_subnet_ids     = var.app_subnet_ids
   security_group_ids = [aws_security_group.tasks.id]
 
-  ecs_task_definition_arn    = aws_ecs_task_definition.ecs_tasks["reductions-retrieve-payment-lists"].arn
-  ecs_task_definition_family = aws_ecs_task_definition.ecs_tasks["reductions-retrieve-payment-lists"].family
+  ecs_task_definition_arn    = aws_ecs_task_definition.ecs_tasks["reductions-send-claimant-lists"].arn
+  ecs_task_definition_family = aws_ecs_task_definition.ecs_tasks["reductions-send-claimant-lists"].family
   ecs_task_executor_role     = aws_iam_role.reductions_workflow_execution_role.arn
   ecs_task_role              = aws_iam_role.reductions_workflow_task_role.arn
+
+  input = <<JSON
+  {
+    "containerOverrides": [
+      {
+        "name": "reductions-send-claimant-lists",
+        "command": [
+          "reductions-send-claimant-lists-to-agencies",
+          "--steps=DUA"
+        ]
+      }
+    ]
+  }
+  JSON
 }
 
-module "reductions-send-wage-replacement-payments-to-dfml" {
+module "reductions_process_agency_data_lists_scheduler" {
   source     = "../../modules/ecs_task_scheduler"
-  is_enabled = var.enable_reductions_send_wage_replacement_payments_to_dfml_schedule
+  is_enabled = var.enable_reductions_process_agency_data_schedule
 
-  task_name           = "reductions-send-wage-replacement"
-  schedule_expression = "cron(0 15 * * ? *)"
-  environment_name    = var.environment_name
+  task_name = "reductions-process-agency-data"
+  # Every 15 minutes between 4 AM - 10 PM Eastern
+  schedule_expression_standard         = "cron(0/15 0-2,3,9-23 * * ? *)"
+  schedule_expression_daylight_savings = "cron(0/15 0-1,2,8-23 * * ? *)"
+  environment_name                     = var.environment_name
 
   cluster_arn        = data.aws_ecs_cluster.cluster.arn
   app_subnet_ids     = var.app_subnet_ids
   security_group_ids = [aws_security_group.tasks.id]
 
-  ecs_task_definition_arn    = aws_ecs_task_definition.ecs_tasks["reductions-send-wage-replacement"].arn
-  ecs_task_definition_family = aws_ecs_task_definition.ecs_tasks["reductions-send-wage-replacement"].family
+  ecs_task_definition_arn    = aws_ecs_task_definition.ecs_tasks["reductions-process-agency-data"].arn
+  ecs_task_definition_family = aws_ecs_task_definition.ecs_tasks["reductions-process-agency-data"].family
   ecs_task_executor_role     = aws_iam_role.reductions_workflow_execution_role.arn
   ecs_task_role              = aws_iam_role.reductions_workflow_task_role.arn
 }
 
+# Run pub-payments-process-fineos at 10pm EST (11pm EDT) Sunday through Thursday
+# The output files will be available by the start of business Mon-Fri
 module "pub-payments-process-fineos" {
   source     = "../../modules/ecs_task_scheduler"
   is_enabled = var.enable_pub_automation_fineos
 
-  task_name           = "pub-payments-process-fineos"
-  schedule_expression = "cron(0 15 * * ? *)"
-  environment_name    = var.environment_name
+  task_name                            = "pub-payments-process-fineos"
+  schedule_expression_standard         = "cron(0 4 ? * MON-FRI *)"
+  schedule_expression_daylight_savings = "cron(0 3 ? * MON-FRI *)"
+  environment_name                     = var.environment_name
 
   cluster_arn        = data.aws_ecs_cluster.cluster.arn
   app_subnet_ids     = var.app_subnet_ids
@@ -281,3 +354,124 @@ module "pub-payments-process-fineos" {
   ecs_task_executor_role     = aws_iam_role.task_executor.arn
   ecs_task_role              = aws_iam_role.pub_payments_process_fineos_task_role.arn
 }
+
+# Run pub-payments-process-fineos claimant extract only
+# at 6am EST (7am EDT) Saturday/Sunday (For Friday/Saturday extract)
+# Runs at 6am instead of 11pm to avoid monthly saturday DB downtime
+module "weekend-pub-payments-process-fineos" {
+  source     = "../../modules/ecs_task_scheduler"
+  is_enabled = var.enable_pub_automation_fineos
+
+  task_name                            = "weekend-pub-claimant-extract"
+  schedule_expression_standard         = "cron(0 11 ? * SAT-SUN *)"
+  schedule_expression_daylight_savings = "cron(0 10 ? * SAT-SUN *)"
+  environment_name                     = var.environment_name
+
+  cluster_arn        = data.aws_ecs_cluster.cluster.arn
+  app_subnet_ids     = var.app_subnet_ids
+  security_group_ids = [aws_security_group.tasks.id]
+
+  ecs_task_definition_arn    = aws_ecs_task_definition.ecs_tasks["pub-payments-process-fineos"].arn
+  ecs_task_definition_family = aws_ecs_task_definition.ecs_tasks["pub-payments-process-fineos"].family
+  ecs_task_executor_role     = aws_iam_role.task_executor.arn
+  ecs_task_role              = aws_iam_role.pub_payments_process_fineos_task_role.arn
+
+  input = <<JSON
+  {
+    "containerOverrides": [
+      {
+        "name": "pub-payments-process-fineos",
+        "command": [
+          "pub-payments-process-fineos",
+          "--steps consume-fineos-claimant claimant-extract"
+        ]
+      }
+    ]
+  }
+  JSON
+}
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Trigger full payment snapshot extracts
+# Run fineos-bucket-tool every week on Wednesday at 7 am UTC, 2am EST, 3am EDT
+module "fineos_snapshot_extract_scheduler" {
+  source     = "../../modules/ecs_task_scheduler"
+  is_enabled = true
+
+  task_name                            = "fineos-snapshot-extracts-tool"
+  schedule_expression_standard         = "cron(0 8 ? * 4 *)"
+  schedule_expression_daylight_savings = "cron(0 7 ? * 4 *)"
+  environment_name                     = var.environment_name
+
+  cluster_arn        = data.aws_ecs_cluster.cluster.arn
+  app_subnet_ids     = var.app_subnet_ids
+  security_group_ids = [aws_security_group.tasks.id]
+
+  ecs_task_definition_arn    = aws_ecs_task_definition.ecs_tasks["fineos-bucket-tool"].arn
+  ecs_task_definition_family = aws_ecs_task_definition.ecs_tasks["fineos-bucket-tool"].family
+  ecs_task_executor_role     = aws_iam_role.task_executor.arn
+  ecs_task_role              = aws_iam_role.fineos_bucket_tool_role.arn
+
+
+  input = <<JSON
+  {
+    "containerOverrides": [
+      {
+        "name": "fineos-bucket-tool",
+        "command": [
+          "fineos-bucket-tool",
+          "--copy", "s3://${data.aws_s3_bucket.agency_transfer.bucket}/payments/static/fineos-query/config-fineos-payments-snapshot.json",
+          "--to", "${var.fineos_adhoc_data_export_path}/config/config.json"
+        ]
+      }
+    ]
+  }
+  JSON
+}
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Process full payment snapshot extracts.
+# The task will process extract files generated by fineos_snapshot_extract_scheduler above.
+# Run fineos-bucket-tool every week on Wednesday at 10 am UTC, 5am EST, 6am EDT
+module "pub-payments-process-snapshot" {
+  source     = "../../modules/ecs_task_scheduler"
+  is_enabled = var.enable_pub_automation_fineos
+
+  task_name                            = "pub-payments-process-snapshot"
+  schedule_expression_standard         = "cron(0 11 ? * 4 *)"
+  schedule_expression_daylight_savings = "cron(0 10 ? * 4 *)"
+  environment_name                     = var.environment_name
+
+  cluster_arn        = data.aws_ecs_cluster.cluster.arn
+  app_subnet_ids     = var.app_subnet_ids
+  security_group_ids = [aws_security_group.tasks.id]
+
+  ecs_task_definition_arn    = aws_ecs_task_definition.ecs_tasks["pub-payments-process-snapshot"].arn
+  ecs_task_definition_family = aws_ecs_task_definition.ecs_tasks["pub-payments-process-snapshot"].family
+  ecs_task_executor_role     = aws_iam_role.task_executor.arn
+  ecs_task_role              = aws_iam_role.pub_payments_process_fineos_task_role.arn
+}
+
+# TODO uncomment if this is ever to be scheduled.  Adjust schedule_expression accordingly
+# Run pub-payments-process-1099-documents at <schedule is TBD>
+# 
+# module "pub-payments-process-1099" {
+#   source     = "../../modules/ecs_task_scheduler"
+#   is_enabled = var.enable_pub_automation_process_1099_documents
+
+#   task_name           = "pub-payments-process-1099-documents"
+#   schedule_expression = "cron(0 3 ? * MON-FRI *)"
+#   environment_name    = var.environment_name
+
+#   cluster_arn        = data.aws_ecs_cluster.cluster.arn
+#   app_subnet_ids     = var.app_subnet_ids
+#   security_group_ids = [aws_security_group.tasks.id]
+
+#   ecs_task_definition_arn    = aws_ecs_task_definition.ecs_tasks["pub-payments-process-1099-documents"].arn
+#   ecs_task_definition_family = aws_ecs_task_definition.ecs_tasks["pub-payments-process-1099-documents"].family
+#   ecs_task_executor_role     = aws_iam_role.task_executor.arn
+#   ecs_task_role              = aws_iam_role.pub_payments_process_fineos_task_role.arn
+# }
+
+## NOTE: If you are adding a new scheduled event here, please add monitoring by including it
+#        in the list in infra/modules/alarms_api/alarms-aws.tf.

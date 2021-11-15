@@ -1,14 +1,9 @@
-import pytest
-
 import massgov.pfml.fineos.mock_client as fineos_mock
 import tests.api
-from massgov.pfml.api.util.response import IssueRule, IssueType
+from massgov.pfml.api.validation.exceptions import IssueRule, IssueType
 from massgov.pfml.db.models.applications import Address, ApplicationPaymentPreference
 from massgov.pfml.db.models.employees import BankAccountType, PaymentMethod
 from massgov.pfml.db.models.factories import ApplicationFactory
-
-# every test in here requires real resources
-pytestmark = pytest.mark.integration
 
 
 def submit_payment_pref_helper(client, user, auth_token, post_data, application):
@@ -27,7 +22,7 @@ def test_submit_payment_preference_ach_success(client, user, auth_token, test_db
         "payment_preference": {
             "payment_method": "Elec Funds Transfer",
             "bank_account_type": "Checking",
-            "routing_number": "000000000",
+            "routing_number": "011401533",
             "account_number": "123456789",
         },
     }
@@ -58,7 +53,7 @@ def test_submit_payment_preference_ach_success(client, user, auth_token, test_db
         == BankAccountType.CHECKING.bank_account_type_id
     )
     assert application.payment_preference.account_number == "123456789"
-    assert application.payment_preference.routing_number == "000000000"
+    assert application.payment_preference.routing_number == "011401533"
     assert application.has_submitted_payment_preference is True
 
     # Verify values returned by the API are properly masked
@@ -120,7 +115,7 @@ def test_submit_payment_preference_ach_mailing_addr_override(
         "payment_preference": {
             "payment_method": "Elec Funds Transfer",
             "bank_account_type": "Checking",
-            "routing_number": "000000000",
+            "routing_number": "011401533",
             "account_number": "123456789",
         },
     }
@@ -142,7 +137,7 @@ def test_submit_payment_preference_ach_mailing_addr_override(
     response_body = response.get_json()
     test_db_session.refresh(application)
     assert application.payment_preference.account_number == "123456789"
-    assert application.payment_preference.routing_number == "000000000"
+    assert application.payment_preference.routing_number == "011401533"
     assert application.has_mailing_address is True
 
     mailing_address = response_body.get("data").get("mailing_address")
@@ -157,7 +152,7 @@ def test_submit_payment_preference_already_submitted(client, user, auth_token, t
         "payment_preference": {
             "payment_method": "Elec Funds Transfer",
             "bank_account_type": "Checking",
-            "routing_number": "000000000",
+            "routing_number": "011401533",
             "account_number": "123456789",
         },
     }
@@ -216,7 +211,7 @@ def test_submit_payment_preference_no_payment_method_error(
 def test_submit_payments_pref_masked_inputs_ignored(client, user, auth_token, test_db_session):
     application = ApplicationFactory.create(user=user)
     application.payment_preference = ApplicationPaymentPreference(
-        routing_number="000000000", account_number="123456789",
+        routing_number="011401533", account_number="123456789",
     )
     test_db_session.commit()
     update_request_body = {
@@ -237,7 +232,7 @@ def test_submit_payments_pref_masked_inputs_ignored(client, user, auth_token, te
     assert response.status_code == 201
     test_db_session.refresh(application)
     assert application.payment_preference.account_number == "123456789"
-    assert application.payment_preference.routing_number == "000000000"
+    assert application.payment_preference.routing_number == "011401533"
 
 
 def test_submit_payments_pref_masked_mismatch_fields(client, user, auth_token, test_db_session):

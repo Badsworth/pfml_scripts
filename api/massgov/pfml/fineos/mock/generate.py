@@ -18,7 +18,6 @@ import massgov.pfml.db
 import massgov.pfml.util.files
 import massgov.pfml.util.logging
 from massgov.pfml.db.models.employees import Employee
-from massgov.pfml.util.sentry import initialize_sentry
 
 logger = massgov.pfml.util.logging.get_logger("massgov.pfml.fineos.mock.generate")
 
@@ -86,7 +85,6 @@ parser.add_argument(
 
 def main():
     """Fineos Daily Mock File Generator"""
-    initialize_sentry()
     massgov.pfml.util.logging.init(__name__)
 
     db_session_raw = massgov.pfml.db.init()
@@ -137,7 +135,7 @@ def generate_employee_file(employee_count, employees_file, db_session):
         employee_generate_id += 1
 
 
-def generate_single_employee(employee_generate_id: int, employee_row: Employee):
+def generate_single_employee(employee_generate_id: int, employee_row: Employee) -> dict:
     """
       Generate a single employee.
 

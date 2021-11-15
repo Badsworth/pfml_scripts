@@ -1,9 +1,10 @@
 # Portal for Mass PFML
 
-This is a [Next.js](https://nextjs.org/docs)-powered React app to bootstrap the Massachusetts Paid Family and Medical Leave Portal.
+This is a [Next.js](https://nextjs.org/docs)-powered [React](https://reactjs.org/) app, written in [TypeScript](https://www.typescriptlang.org/), for the Massachusetts Paid Family and Medical Leave Portal, used by claimants and employers' leave adminstrators.
 
 **You may also be interested in:**
 
+- [Using TypeScript](../docs/portal/typescript.md)
 - [Setting up project tooling](../README.md)
 - [Development practices](../docs/contributing.md)
 - [Portal software architecture design](../docs/portal/software-architecture.md)
@@ -11,7 +12,8 @@ This is a [Next.js](https://nextjs.org/docs)-powered React app to bootstrap the 
 
 ## Prerequisites
 
-Node v10 (or greater)
+- Node v15 (or greater)
+- NPM v7 (or greater)
 
 ## Env Configuration
 
@@ -30,6 +32,11 @@ Run the development server with live reloading:
 ```
 npm run dev
 ```
+
+### Configure your code editor
+
+- [Integrate ESLint into your IDE or a git hook](https://eslint.org/docs/user-guide/integrations) if you'd like to catch linting errors before it reaches the CI.
+- [Setup your IDE to run Prettier upon save.](https://prettier.io/docs/en/editors.html)
 
 ## Build and Export the static site
 
@@ -85,6 +92,28 @@ Exports the Storybook site as a static HTML site.
 
 ## Additional commands
 
+### `npm run ts:check`
+
+Run the TypeScript type checks.
+
+### `npm run format`
+
+Automatically format files using [Prettier](https://prettier.io/).
+
+This can be ran in a pull request by adding a comment with a body of:
+
+```
+/gh portal format
+```
+
+### `npm run lint`
+
+Run ESLint. Fixes any [auto-fixable ESLint errors](https://eslint.org/docs/user-guide/command-line-interface#fixing-problems).
+
+#### `npm run lint:ci`
+
+Runs ESLint and fails on errors. Does not attempt to auto-fix ESLint errors.
+
 ### `npm run analyze-bundle`
 
 Runs `webpack-bundle-analyzer` over the Next.js build, scanning the bundle and creating a visualization of what’s inside it. This can be helpful to debug the bundle size. Use this visualization to find large or unnecessary dependencies.
@@ -131,6 +160,7 @@ make release-notes refs="portal/v6.1..portal/v7.0"
 ```
 
 The work will generally fall into one of a number of categories, with changes to:
+
 - EMPLOYER
 - INFRA
 - CP
@@ -215,27 +245,30 @@ Below is an abbreviated representation of our directory structure, pointing out 
 
 ```
 ├── __mocks__               Dependency mocks used by test suites
-├── tests                   Test suites
 ├── config                  Env. variables & feature flags
+├── lib                     Common code shared between Storybook and Tests
+├── next.config.js          Build process config for Portal
 ├── public                  Static assets
 ├── src                     Source code
 │   ├── api                 API request modules
 │   ├── components
-│   │   └── PageWrapper.js  🖼 Main layout applied to all pages
+|   |   └── core            Home for reusable presentation components
+│   │   └── PageWrapper.tsx 🖼 Main layout applied to all pages
 │   ├── hooks               Custom React hooks
 │   ├── locales             Localization files
 │   ├── models              Data models
 │   ├── pages
-│   │   ├── _app.js         ⭐️ Entry point, setting up the entire application
+│   │   ├── _app.tsx        ⭐️ Entry point, setting up the entire application
 │   │   ├── applications    Pages for authenticated claimants
-│   │   │   └── index.js    List of applications for claimants
+│   │   │   └── index.tsx   List of applications for claimants
 │   │   ├── employers       Pages for authenticated employers
-│   │   │   └── index.js    Dashboard for authenticated employers
-│   │   └── index.js        Landing page for unauthenticated users
+│   │   │   └── index.tsx   Dashboard for authenticated employers
+│   │   └── index.tsx       Landing page for unauthenticated users
 │   ├── services
 │   └── utils               Utility functions
 ├── storybook               Storybook site config and stories
 ├── styles
 │   └── app.scss            Main stylesheet
-└── next.config.js          Build process config for Portal
+├── tests                   Test suites
+└── tsconfig.json           TypeScript setup
 ```

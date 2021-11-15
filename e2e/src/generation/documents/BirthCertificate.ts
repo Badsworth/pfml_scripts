@@ -1,6 +1,5 @@
 import {
   AbstractDocumentGenerator,
-  DocumentType,
   PDFFormData,
 } from "./AbstractDocumentGenerator";
 import { ApplicationRequestBody } from "../../api";
@@ -10,10 +9,7 @@ import { format, parseISO } from "date-fns";
 export default class BirthCertificate extends AbstractDocumentGenerator<{
   invalid?: boolean;
 }> {
-  get documentType(): DocumentType {
-    return "State managed Paid Leave Confirmation";
-  }
-  get documentSource(): string {
+  documentSource(): string {
     return this.path("birth-certificate.pdf");
   }
   getFormData(

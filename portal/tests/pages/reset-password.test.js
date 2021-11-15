@@ -1,238 +1,96 @@
-import { simulateEvents, testHook } from "../test-utils";
-import React from "react";
+import { mockAuth, renderPage } from "../test-utils";
+import { screen, waitFor } from "@testing-library/react";
 import ResetPassword from "../../src/pages/reset-password";
-import { shallow } from "enzyme";
-import tracker from "../../src/services/tracker";
-import useAppLogic from "../../src/hooks/useAppLogic";
-
-jest.mock("@aws-amplify/auth");
-jest.mock("../../src/services/tracker");
-jest.mock("../../src/hooks/useAppLogic");
+import userEvent from "@testing-library/user-event";
 
 describe("ResetPassword", () => {
-  let appLogic, resolveResendCodeMock;
+  let props;
+  const options = { isLoggedIn: false };
+  const username = "test@example.com";
 
-  function render(customProps = {}) {
-    const props = Object.assign(
-      {
-        appLogic,
-        query: {},
-      },
-      customProps
-    );
-
-    return shallow(<ResetPassword {...props} />);
-  }
+  const renderResetPassword = (options, props) => {
+    return renderPage(ResetPassword, options, props);
+  };
 
   beforeEach(() => {
-    testHook(() => {
-      appLogic = useAppLogic();
-    });
-
-    appLogic.auth.resendForgotPasswordCode.mockImplementation(() => {
-      return new Promise((resolve) => {
-        resolveResendCodeMock = resolve;
-      });
-    });
+    mockAuth(false);
   });
 
   it("renders form", () => {
-    const wrapper = render();
-
-    expect(wrapper).toMatchSnapshot();
+    const { container } = renderResetPassword();
+    expect(container.firstChild).toMatchSnapshot();
+    expect(
+      screen.getByRole("textbox", { name: "Email address" })
+    ).toBeInTheDocument();
   });
 
-  describe("when authData.username is set", () => {
-    const username = "test@example.com";
+  it("when authData.username is set, does not render an email field", () => {
+    options.addCustomSetup = (appLogicHook) => {
+      appLogicHook.auth.authData = { resetPasswordUsername: username };
+    };
+    renderResetPassword(options, props);
+    expect(
+      screen.queryByRole("textbox", { name: "Email address" })
+    ).not.toBeInTheDocument();
+  });
 
-    beforeEach(() => {
-      appLogic.auth.authData = { resetPasswordUsername: username };
-    });
+  it("when authData.username is set, the email field is not displayed and still submitted", async () => {
+    const password = "abcdef12345678";
+    const code = "123456";
+    const resetPassword = jest.fn();
+    options.addCustomSetup = (appLogicHook) => {
+      appLogicHook.auth.authData = { resetPasswordUsername: username };
+      appLogicHook.auth.resetPassword = resetPassword;
+    };
+    renderResetPassword(options, props);
 
-    it("does not render an email field", () => {
-      const wrapper = render();
-
-      expect(wrapper.find("InputText[name='username']")).toHaveLength(0);
-    });
-
-    describe("when the form is submitted", () => {
-      it("calls resetPassword", async () => {
-        const password = "abcdef12345678";
-        const code = "123456";
-        const wrapper = render();
-        const { changeField, submitForm } = simulateEvents(wrapper);
-
-        changeField("code", code);
-        changeField("password", password);
-        await submitForm();
-
-        expect(appLogic.auth.resetPassword).toHaveBeenCalledWith(
-          username,
-          code,
-          password
-        );
-      });
+    userEvent.type(screen.getByRole("textbox", { name: "6-digit code" }), code);
+    userEvent.type(screen.getByLabelText("New password"), password);
+    userEvent.click(screen.getByRole("button", { name: "Set new password" }));
+    await waitFor(() => {
+      expect(resetPassword).toHaveBeenCalledWith(username, code, password);
     });
   });
 
-  describe("when authData.username is not set", () => {
-    it("render an email field", () => {
-      const wrapper = render();
+  it("when authData.username is not set, the email field is displayed and submitted", async () => {
+    const email = "email@test.com";
+    const password = "abcdef12345678";
+    const code = "123456";
+    const resetPassword = jest.fn();
+    options.addCustomSetup = (appLogicHook) => {
+      appLogicHook.auth.resetPassword = resetPassword;
+    };
+    renderResetPassword(options, props);
 
-      expect(wrapper.find("InputText[name='username']")).toHaveLength(1);
-    });
-
-    describe("when the form is submitted", () => {
-      it("calls resetPassword", async () => {
-        const email = "email@test.com";
-        const password = "abcdef12345678";
-        const code = "123456";
-        const wrapper = render();
-        const { changeField, submitForm } = simulateEvents(wrapper);
-
-        changeField("code", code);
-        changeField("password", password);
-        changeField("username", email);
-        await submitForm();
-
-        expect(appLogic.auth.resetPassword).toHaveBeenCalledWith(
-          email,
-          code,
-          password
-        );
-      });
+    userEvent.type(screen.getByRole("textbox", { name: "6-digit code" }), code);
+    userEvent.type(screen.getByLabelText("New password"), password);
+    userEvent.type(
+      screen.getByRole("textbox", { name: "Email address" }),
+      email
+    );
+    userEvent.click(screen.getByRole("button", { name: "Set new password" }));
+    await waitFor(() => {
+      expect(resetPassword).toHaveBeenCalledWith(email, code, password);
     });
   });
 
-  describe("when query includes user-not-found", () => {
-    let wrapper;
+  it("user can click resend code and alert is displayed", async () => {
+    const resendForgotPasswordCode = jest.fn();
+    options.addCustomSetup = (appLogicHook) => {
+      appLogicHook.auth.authData = { resetPasswordUsername: username };
+      appLogicHook.auth.resendForgotPasswordCode = resendForgotPasswordCode;
+    };
+    renderResetPassword(options, props);
 
-    beforeEach(() => {
-      wrapper = render({ query: { "user-not-found": "true" } });
-    });
-
-    it("renders different title and lead text, and initially hides all fields except for email", () => {
-      expect(wrapper).toMatchSnapshot();
-    });
-
-    it("initially uses primary styling for resend code button", () => {
-      // no variation means it's rendered as a primary button
+    expect(screen.queryByText("Check your email")).not.toBeInTheDocument();
+    userEvent.click(screen.getByRole("button", { name: "Send a new code" }));
+    await waitFor(() => {
+      expect(resendForgotPasswordCode).toHaveBeenCalledWith(username);
       expect(
-        wrapper.find({ name: "resend-code-button" }).prop("variation")
-      ).toBeNull();
-    });
-
-    it("hides info alert when code is resent", async () => {
-      const { click } = simulateEvents(wrapper);
-
-      click({ name: "resend-code-button" });
-      await resolveResendCodeMock();
-
-      expect(wrapper.find("Alert[name='code-resent-message']")).toHaveLength(1);
-    });
-
-    it("shows lead text and code field when code is resent", async () => {
-      const { click } = simulateEvents(wrapper);
-
-      click({ name: "resend-code-button" });
-      await resolveResendCodeMock();
-
-      expect(wrapper.find("Lead").exists()).toBe(true);
-      expect(wrapper.find("InputText[name='code']").exists()).toBe(true);
-    });
-
-    it("prevents submission when isEmployer isn't set", async () => {
-      const {
-        changeField,
-        changeRadioGroup,
-        click,
-        submitForm,
-      } = simulateEvents(wrapper);
-
-      // Get page into a submittable state
-      changeField("username", "foo@example.com");
-      click({ name: "resend-code-button" });
-      await resolveResendCodeMock();
-
-      await submitForm();
-
-      expect(appLogic.setAppErrors).toHaveBeenCalledTimes(1);
-      expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
-        issueField: "isEmployer",
-        issueType: "required",
-      });
-
-      expect(appLogic.auth.resetPassword).not.toHaveBeenCalled();
-      expect(
-        appLogic.auth.resetEmployerPasswordAndCreateEmployerApiAccount
-      ).not.toHaveBeenCalled();
-
-      changeRadioGroup("isEmployer", "false");
-      await submitForm();
-
-      expect(appLogic.auth.resetPassword).toHaveBeenCalled();
-    });
-
-    it("calls resetEmployerPasswordAndCreateEmployerApiAccount when user indicates they're an employer", async () => {
-      const {
-        changeRadioGroup,
-        changeField,
-        click,
-        submitForm,
-      } = simulateEvents(wrapper);
-
-      const email = "email@test.com";
-      const password = "abcdef12345678";
-      const code = "123456";
-      const ein = "12-3456789";
-
-      // Get page into a submittable state
-      changeField("username", email);
-      click({ name: "resend-code-button" });
-      await resolveResendCodeMock();
-
-      // Fill out the remaining fields
-      changeField("code", code);
-      changeField("password", password);
-      changeRadioGroup("isEmployer", "true");
-      changeField("ein", ein);
-
-      await submitForm();
-
-      expect(
-        appLogic.auth.resetEmployerPasswordAndCreateEmployerApiAccount
-      ).toHaveBeenCalledWith(email, code, password, ein);
-    });
-
-    it("calls resetPassword when user doesn't indicate they're an employer", async () => {
-      const {
-        changeField,
-        changeRadioGroup,
-        click,
-        submitForm,
-      } = simulateEvents(wrapper);
-
-      const email = "email@test.com";
-      const password = "abcdef12345678";
-      const code = "123456";
-
-      // Get page into a submittable state
-      changeField("username", email);
-      click({ name: "resend-code-button" });
-      await resolveResendCodeMock();
-
-      // Fill out the remaining fields
-      changeField("code", code);
-      changeField("password", password);
-      changeRadioGroup("isEmployer", "false");
-
-      await submitForm();
-
-      expect(appLogic.auth.resetPassword).toHaveBeenCalledWith(
-        email,
-        code,
-        password
-      );
+        screen.getByRole("heading", { name: "Check your email" })
+      ).toBeInTheDocument();
+      expect(screen.getByRole("alert")).toBeInTheDocument();
+      expect(screen.getByRole("alert")).toHaveClass("usa-alert--warning");
     });
   });
 });

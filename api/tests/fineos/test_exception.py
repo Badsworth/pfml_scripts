@@ -7,18 +7,27 @@ import massgov.pfml.fineos.exception
 
 def test_fineos_fatal_error_str_cause():
     cause = RuntimeError("test")
-    exception = massgov.pfml.fineos.exception.FINEOSFatalError(cause)
+    method_name = "Test"
+    message = "Failed"
+    exception = massgov.pfml.fineos.exception.FINEOSFatalError(method_name, cause, message=message)
 
-    assert str(exception) == "RuntimeError: test"
+    assert str(exception) == "(Test) RuntimeError: test: Failed"
 
 
 def test_fineos_fatal_error_str_status():
-    exception = massgov.pfml.fineos.exception.FINEOSFatalError(response_status=500)
+    method_name = "Test"
+    message = "FatalError"
+    exception = massgov.pfml.fineos.exception.FINEOSFatalError(
+        method_name, response_status=500, message=message
+    )
 
-    assert str(exception) == "FINEOSFatalError: 500"
+    assert str(exception) == "(Test) FINEOSFatalError: 500: FatalError"
 
 
 def test_fineos_client_bad_response_str():
-    exception = massgov.pfml.fineos.exception.FINEOSClientBadResponse(200, 500)
+    method_name = "Test"
+    exception = massgov.pfml.fineos.exception.FINEOSClientBadResponse(
+        method_name, 200, 500, "Internal Server Error"
+    )
 
-    assert str(exception) == "expected 200, but got 500"
+    assert str(exception) == "(Test) expected 200, but got 500: Internal Server Error"

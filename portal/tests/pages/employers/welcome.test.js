@@ -1,93 +1,35 @@
-import React from "react";
+import User, { UserLeaveAdministrator } from "../../../src/models/User";
 import Welcome from "../../../src/pages/employers/welcome";
-import { shallow } from "enzyme";
-import { testHook } from "../../test-utils";
-import useAppLogic from "../../../src/hooks/useAppLogic";
-
-jest.mock("../../../src/hooks/useAppLogic");
+import { renderPage } from "../../test-utils";
+import { screen } from "@testing-library/react";
 
 describe("Employer welcome", () => {
-  let appLogic, wrapper;
-
-  beforeEach(() => {
-    process.env.featureFlags = {};
-    testHook(() => {
-      appLogic = useAppLogic();
-    });
-
-    wrapper = shallow(<Welcome appLogic={appLogic} />).dive();
-  });
-
   it("renders page", () => {
-    expect(wrapper).toMatchSnapshot();
-    wrapper
-      .find("Trans")
-      .forEach((trans) => expect(trans.dive()).toMatchSnapshot());
+    const { container } = renderPage(Welcome);
+
+    expect(container).toMatchSnapshot();
   });
 
-  describe("when employerShowDashboard is false", () => {
-    beforeEach(() => {
-      process.env.featureFlags = { employerShowDashboard: false };
-      testHook(() => {
-        appLogic = useAppLogic();
-      });
-
-      wrapper = shallow(<Welcome appLogic={appLogic} />).dive();
+  it("shows Verification alert when user has a verifiable employer", () => {
+    renderPage(Welcome, {
+      addCustomSetup: (appLogic) => {
+        appLogic.users.user = new User({
+          consented_to_data_sharing: true,
+          email_address: "unique@miau.com",
+          user_leave_administrators: [
+            new UserLeaveAdministrator({
+              has_verification_data: true,
+              verified: false,
+            }),
+          ],
+        });
+      },
     });
 
-    it("does not show the navigation bar", () => {
-      expect(wrapper.find("EmployerNavigationTabs").exists()).toBe(false);
-    });
+    const alert = screen.getByRole("heading", {
+      name: /Verify your account to continue/i,
+    }).parentNode;
 
-    it("does not show the View Applications list item", () => {
-      const viewApplicationsTitle = wrapper.find('Heading[level="2"]').first();
-      expect(viewApplicationsTitle.dive().text()).not.toContain(
-        "View all applications"
-      );
-    });
-  });
-
-  describe("when employerShowDashboard is true", () => {
-    beforeEach(() => {
-      process.env.featureFlags = { employerShowDashboard: true };
-      testHook(() => {
-        appLogic = useAppLogic();
-      });
-
-      wrapper = shallow(<Welcome appLogic={appLogic} />).dive();
-    });
-
-    it("shows the navigation bar", () => {
-      expect(wrapper.find("EmployerNavigationTabs").exists()).toBe(true);
-    });
-
-    it("shows the View Applications list item", () => {
-      const viewApplicationsTitle = wrapper.find('Heading[level="2"]').first();
-      expect(viewApplicationsTitle.dive().text()).toContain(
-        "View all applications"
-      );
-    });
-  });
-
-  it("displays banner when employerShowNewsBanner is true", () => {
-    process.env.featureFlags = { employerShowNewsBanner: true };
-    wrapper = shallow(<Welcome appLogic={appLogic} />).dive();
-
-    expect(wrapper.find("NewsBanner").exists()).toEqual(true);
-  });
-
-  it("displays links to Organizations page when employerShowVerifications is true", () => {
-    process.env.featureFlags = { employerShowVerifications: true };
-    wrapper = shallow(<Welcome appLogic={appLogic} />).dive();
-
-    expect(wrapper.find("Alert").exists()).toEqual(true);
-    wrapper
-      .find("aside")
-      .find("Heading")
-      .forEach((heading) => expect(heading.dive()).toMatchSnapshot());
-    wrapper
-      .find("aside")
-      .find("Trans")
-      .forEach((trans) => expect(trans.dive()).toMatchSnapshot());
+    expect(alert).toMatchSnapshot();
   });
 });

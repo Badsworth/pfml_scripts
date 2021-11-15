@@ -99,25 +99,23 @@ def add_payments_to_nacha_file(nacha_file: NachaFile, payments: List[Payment]) -
         if payment.disb_method_id != PaymentMethod.ACH.payment_method_id:
             raise Exception(f"Non-ACH payment method for payment: {payment.payment_id}")
 
-        claim = payment.claim
-
         entry = NachaEntry(
             trans_code=get_trans_code(payment.pub_eft.bank_account_type_id, False, False),
             receiving_dfi_id=payment.pub_eft.routing_nbr,
             dfi_act_num=payment.pub_eft.account_nbr,
             amount=payment.amount,
             id=f"P{payment.pub_individual_id}",
-            name=f"{claim.employee.last_name} {claim.employee.first_name}",
+            name=f"{payment.fineos_employee_last_name} {payment.fineos_employee_first_name}",
         )
 
-        if claim.claim_type_id == ClaimType.FAMILY_LEAVE.claim_type_id:
+        if payment.claim_type_id == ClaimType.FAMILY_LEAVE.claim_type_id:
             family_leave_nacha_batch.add_entry(entry)
-        elif claim.claim_type_id == ClaimType.MEDICAL_LEAVE.claim_type_id:
+        elif payment.claim_type_id == ClaimType.MEDICAL_LEAVE.claim_type_id:
             medical_leave_nacha_batch.add_entry(entry)
         else:
             raise Exception(
-                "Invalid leave type for payment. Claim ID: %s - Claim Type: %s"
-                % (claim.claim_id, claim.claim_type_id)
+                "Invalid leave type for payment. Payment ID: %s - Claim Type: %s"
+                % (payment.payment_id, payment.claim_type_id)
             )
 
     if len(family_leave_nacha_batch.entries) > 0:
@@ -157,7 +155,7 @@ def add_eft_prenote_to_nacha_file(
             dfi_act_num=pub_eft.account_nbr,
             amount=Decimal("0.00"),
             id=f"E{pub_eft.pub_individual_id}",
-            name=f"{employee.last_name} {employee.first_name}",
+            name=f"{pub_eft.fineos_employee_last_name} {pub_eft.fineos_employee_first_name}",
         )
 
         nacha_batch.add_entry(entry)

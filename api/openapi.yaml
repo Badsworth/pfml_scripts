@@ -1,8 +1,8 @@
-openapi: 3.0.2
+openapi: 3.0.3
 info:
   title: Paid Leave API
   description: An API for managing leave within Massachusetts Paid Family and Medical Leave.
-  version: "2021-02-23"
+  version: "2021-10-07"
 
 servers:
   - url: /v1
@@ -30,6 +30,24 @@ paths:
         "503":
           $ref: "#/components/responses/ServiceUnavailableError"
 
+  /flags:
+    get:
+      security:
+        - {} # no authentication option
+      tags:
+        - Feature Flags
+      summary: Get feature flags
+      operationId: massgov.pfml.api.flags.flags_get
+      responses:
+        "200":
+          description: A successful request returns a 200 status code and list of flags.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FlagsResponse"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailableError"
+
   /users:
     post:
       security:
@@ -53,6 +71,33 @@ paths:
             schema:
               $ref: "#/components/schemas/UserCreateRequest"
 
+  /users/{user_id}/convert_employer:
+    post:
+      tags:
+        - Users
+      summary: Convert a User account to an employer role
+      operationId: massgov.pfml.api.users.users_convert_employer
+      parameters:
+        - name: user_id
+          in: path
+          schema:
+            type: string
+          description: ID of User to update
+          required: true
+      responses:
+        "201":
+          description: User converted without errors
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+      requestBody:
+        $ref: '#/components/requestBodies/EmployerAddFeinRequestBody'
+  
   /users/{user_id}:
     get:
       tags:
@@ -198,7 +243,6 @@ paths:
       requestBody:
         $ref: "#/components/requestBodies/EmployeeSearchRequest"
 
-
   /employers/add:
     post:
       tags:
@@ -242,7 +286,6 @@ paths:
                 allOf:
                   - $ref: "#/components/schemas/ErrorResponse"
 
-
   /employers/withholding/{employer_id}:
     get:
       summary: Retrieves the last withholding date for the FEIN specified
@@ -276,7 +319,6 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
-
   /claims/{fineos_absence_id}:
     get:
       summary: Retrieve a claim for a specified absence ID
@@ -301,7 +343,7 @@ paths:
                   - $ref: '#/components/schemas/SuccessfulResponse'
                   - properties:
                       data:
-                        $ref: "#/components/schemas/ClaimResponse"
+                        $ref: "#/components/schemas/DetailedClaimResponse"
         "400":
           description: An unsuccessful request returns a 400 status code if one or more errors occurred.
           content:
@@ -316,24 +358,37 @@ paths:
       tags:
         - Claims
       parameters:
-        - in: query
-          name: orderBy
+        - $ref: "#/components/parameters/pageSize"
+        - $ref: "#/components/parameters/pageOffset"
+        - $ref: "#/components/parameters/orderBy"
+        - $ref: "#/components/parameters/orderDirection"
+        - name: employer_id
+          in: query
           schema:
             type: string
-            example: "created_at"
-          description: "Field to order by"
-        - in: query
-          name: sortDirection
+            format: uuid
+          description: ID of Employer to query claims for
+          required: false
+        - name: "claim_status"
+          in: query
           schema:
             type: string
-            example: "ascending"
-          description: "Sort direction of ascending or descending"
-        - in: query
-          name: page
+            pattern: '[a-zA-Z0-9 ,]+'
+          description: > 
+            claim status used to filter the request,
+            single claim status or a comma seperated list of claim status (i.e claim_status="Approved,Closed"),
+            the valid status are "Approved", "Closed", "Completed", "Declined", "Open requirement" and "Pending - no action".
+          required: false
+        - name: "search"
+          in: query
           schema:
-            type: integer
-            example: 2
-          description: "Page to request"
+            type: string
+          description: > 
+            A search string used to filter the request that,
+            when provided, is used in a fuzzy search against the claims'
+            Absence Case IDs, in addition to the employees' first, middle, and last names.
+            When the string is empty, it is ignored.
+          required: false
       responses:
         "200":
           description: The claim information.
@@ -351,6 +406,32 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+
+  /payments:
+    get:
+      summary: Retrieve payments with status for a specified absence ID
+      operationId: massgov.pfml.api.payments.get_payments
+      tags:
+        - Claims
+      parameters:
+        - name: absence_case_id
+          in: query
+          schema:
+            type: string
+            example: "NTN-00-ABS-00"
+          description: "FINEOS absence ID of the claim associated with payment data to be retrieved"
+          required: true
+      responses:
+        "200":
+          description: The payments for this absence case.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessfulResponse'
+                  - properties:
+                      data:
+                        $ref: '#/components/schemas/PaymentsResponse'
 
   /employers/claims/{fineos_absence_id}/documents/{fineos_document_id}:
     get:
@@ -387,7 +468,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-
 
   /employers/claims/{fineos_absence_id}/documents:
     get:
@@ -518,11 +598,6 @@ paths:
             format: uuid
           description: ID of Application to retrieve
           required: true
-        - name: X-FF-Require-Other-Leaves
-          description: Enforces validations on Other Leaves fields when present
-          in: header
-          schema:
-            type: string
       responses:
         "200":
           $ref: "#/components/responses/ApplicationResponse"
@@ -555,11 +630,6 @@ paths:
             format: uuid
           description: ID of Application to update
           required: true
-        - name: X-FF-Require-Other-Leaves
-          description: Enforces validations on Other Leaves fields when present
-          in: header
-          schema:
-            type: string
       responses:
         "200":
           description: Application updated without errors.
@@ -595,11 +665,6 @@ paths:
             format: uuid
           description: ID of Application to submit
           required: true
-        - name: X-FF-Require-Other-Leaves
-          description: Enforces validations on Other Leaves fields when present
-          in: header
-          schema:
-            type: string
       responses:
         "201":
           description: Application submitted without errors.
@@ -639,11 +704,6 @@ paths:
             format: uuid
           description: ID of Application to submit
           required: true
-        - name: X-FF-Require-Other-Leaves
-          description: Enforces validations on Other Leaves fields when present
-          in: header
-          schema:
-            type: string
       responses:
         "201":
           description: Application completed without errors.
@@ -828,13 +888,14 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-
-  /applications/{application_id}/employer_benefits/{employer_benefit_id}:
-    delete:
-      summary: Remove an existing EmployerBenefit record from an application.
-      operationId: massgov.pfml.api.applications.employer_benefit_delete
+  
+  /applications/{application_id}/submit_tax_withholding_preference:
+    post: 
+      summary: Submit Tax Withholding Preference
+      operationId: massgov.pfml.api.applications.submit_tax_withholding_preference
       tags:
         - Applications
+        - TaxPreference
       parameters:
         - name: application_id
           in: path
@@ -842,80 +903,40 @@ paths:
             type: string
             format: uuid
             example: 5f91c12b-4d49-4eb0-b5d9-7fa0ce13eb32
-          description: ID of Application to update
+          description: ID of the application to update
           required: true
-        - name: employer_benefit_id
-          in: path
-          schema:
-            type: string
-            format: uuid
-            example: 5f91c12b-4d49-4eb0-b5d9-7fa0ce13eb32
-          description: ID of EmployerBenefit to remove
-          required: true
+      requestBody: 
+        $ref: "#/components/requestBodies/TaxWithholdingPreferenceRequestBody"
       responses:
-        "200":
-          $ref: "#/components/responses/ApplicationResponse"
+        "201":
+          description: Successful submission of tax withholding preference returns a 201
+          content: 
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessfulResponse'
+                  - properties:
+                      data:
+                        $ref: '#/components/schemas/ApplicationResponse'
+        "400":
+          description: Error when attempting to submit tax withholding preference to FINEOS
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
         "404":
-          $ref: "#/components/responses/NotFound"
-
-  /applications/{application_id}/other_incomes/{other_income_id}:
-    delete:
-      summary: Remove an existing OtherIncome record from an application.
-      operationId: massgov.pfml.api.applications.other_income_delete
-      tags:
-        - Applications
-      parameters:
-        - name: application_id
-          in: path
-          schema:
-            type: string
-            format: uuid
-            example: 5f91c12b-4d49-4eb0-b5d9-7fa0ce13eb32
-          description: ID of Application to update
-          required: true
-        - name: other_income_id
-          in: path
-          schema:
-            type: string
-            format: uuid
-            example: 5f91c12b-4d49-4eb0-b5d9-7fa0ce13eb32
-          description: ID of OtherIncome to remove
-          required: true
-      responses:
-        "200":
-          $ref: "#/components/responses/ApplicationResponse"
-        "404":
-          $ref: "#/components/responses/NotFound"
-
-  /applications/{application_id}/previous_leaves/{previous_leave_id}:
-    delete:
-      summary: Remove an existing PreviousLeave record from an application.
-      operationId: massgov.pfml.api.applications.previous_leave_delete
-      tags:
-        - Applications
-      parameters:
-        - name: application_id
-          in: path
-          schema:
-            type: string
-            format: uuid
-            example: 5f91c12b-4d49-4eb0-b5d9-7fa0ce13eb32
-          description: ID of Application to update
-          required: true
-        - name: previous_leave_id
-          in: path
-          schema:
-            type: string
-            format: uuid
-            example: 5f91c12b-4d49-4eb0-b5d9-7fa0ce13eb32
-          description: ID of PreviousLeave to remove
-          required: true
-      responses:
-        "200":
-          $ref: "#/components/responses/ApplicationResponse"
-        "404":
-          $ref: "#/components/responses/NotFound"
-
+          description: Application with requested application_id was not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "503":
+          description: Tax withholding preference failed to save.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  
   /financial-eligibility:
     post:
       security:
@@ -1055,6 +1076,7 @@ tags:
   - name: Financial Eligibility
   - name: ID Proofing
   - name: Notifications
+  - name: Feature Flags
 
 components:
   securitySchemes:
@@ -1071,6 +1093,42 @@ components:
         clientCredentials:
           tokenUrl: /api/v1/oauth2/token
           scopes: {}
+
+  parameters:
+    pageSize:
+      name: "page_size"
+      in: query
+      required: false
+      schema:
+        type: integer
+        format: int32
+        minimum: 1
+        default: 25
+    pageOffset:
+      name: "page_offset"
+      in: query
+      required: false
+      schema:
+        type: integer
+        format: int32
+        minimum: 1
+        default: 1
+    orderBy:
+      name: "order_by"
+      in: query
+      required: false
+      schema:
+        type: string
+        default: "created_at"
+        enum: ["fineos_absence_status", "created_at", "employee"]
+    orderDirection:
+      name: "order_direction"
+      in: query
+      required: false
+      schema:
+        type: string
+        default: "descending"
+        enum: ["ascending", "descending"]
 
   requestBodies:
     UserUpdateRequest:
@@ -1127,6 +1185,11 @@ components:
           schema:
             $ref: "#/components/schemas/PaymentPreferenceRequestBody"
       required: true
+    TaxWithholdingPreferenceRequestBody:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/TaxWithholdingPreferenceRequestBody"
     EmployerAddFeinRequestBody:
       content:
         application/json:
@@ -1197,7 +1260,6 @@ components:
           schema:
             $ref: "#/components/schemas/ErrorResponse"
 
-
   schemas:
     SuccessfulResponse:
       type: object
@@ -1215,7 +1277,7 @@ components:
         warnings:
           type: array
           items:
-            $ref: "#/components/schemas/Issue"
+            $ref: "#/components/schemas/ValidationErrorDetail"
       required: ["status_code"]
       additionalProperties: false
 
@@ -1235,11 +1297,11 @@ components:
         warnings:
           type: array
           items:
-            $ref: "#/components/schemas/Issue"
+            $ref: "#/components/schemas/ValidationErrorDetail"
         errors:
           type: array
           items:
-            $ref: "#/components/schemas/Issue"
+            $ref: "#/components/schemas/ValidationErrorDetail"
       required: ["status_code", "errors"]
       additionalProperties: false
 
@@ -1255,25 +1317,35 @@ components:
         paging:
           type: object
           properties:
-            offset:
+            page_offset:
               type: integer
-            limit:
+            page_size:
               type: integer
-            count:
+            total_records:
               type: integer
-            total:
+            total_pages:
               type: integer
+            order_by:
+              type: string
+            order_direction:
+              type: string
       required: ["resource", "method"]
       additionalProperties: false
 
-    Issue:
+    ValidationErrorDetail:
       type: object
       properties:
         type:
+          example: "required"
           type: string
         message:
+          example: "leave_details.reason is required."
+          description: "Somewhat user-friendly description of the error. May contain PII."
           type: string
         rule:
+          description: >
+            Usage varies depending on the source of the validation error. OpenAPI validation
+            errors will set this to the expected value behavior (i.e the max length, or pattern).
           oneOf:
             - type: string
             - type: number
@@ -1281,7 +1353,11 @@ components:
             - type: boolean
             - type: array
             - type: object
+          nullable: true
         field:
+          description: "Field path, when the error is associated with a specific field."
+          example: "leave_details.reason"
+          nullable: true
           type: string
       additionalProperties: false
 
@@ -1291,24 +1367,59 @@ components:
         city:
           type: string
           nullable: true
+          maxLength: 40 # FINEOS requirement
           example: "Springfield"
         line_1:
           type: string
           nullable: true
+          maxLength: 40 # FINEOS requirement
           example: "742 Evergreen Terrace"
         line_2:
           type: string
           nullable: true
+          maxLength: 40 # FINEOS requirement
           example: ""
         state:
           type: string
           nullable: true
+          maxLength: 40 # FINEOS requirement
           example: "MA"
         zip:
           type: string
           nullable: true
           pattern: '^[0-9]{5}((?:-[0-9]{4})?|(?:-\*{4})?)$'
           example: "12345"
+
+    FlagResponse:
+      type: object
+      properties:
+        start:
+          type: string
+          nullable: true
+          format: date-time
+          example: "2020-06-26T01:02:03.967736+00:00"
+        end:
+          type: string
+          nullable: true
+          format: date-time
+          example: "2020-06-26T01:02:03.967736+00:00"
+        name:
+          type: string
+          example: "maintenance"
+        options:
+          type: object
+          example:
+            page_routes:
+             - "/applications/*"
+             - "/employers/*"
+        enabled:
+          type: boolean
+          example: false
+
+    FlagsResponse:
+      type: array
+      items:
+        $ref: "#/components/schemas/FlagResponse"
 
     UserResponse:
       type: object
@@ -1359,6 +1470,8 @@ components:
         employer_dba:
           type: string
           example: "The Super Store"
+        has_fineos_registration:
+          type: boolean
         verified:
           type: boolean
 
@@ -1398,8 +1511,15 @@ components:
       properties:
         consented_to_data_sharing:
           type: boolean
+          nullable: false
           example: true
-      required: ["consented_to_data_sharing"]
+        mfa_delivery_preference:
+          type: string
+          enum:
+            - SMS
+            - Opt Out
+          nullable: true
+          example: "SMS"
 
     EmployeeUpdateRequest:
       type: object
@@ -1484,14 +1604,21 @@ components:
     EmployerClaimRequestBody:
       type: object
       properties:
+        uses_second_eform_version:
+          type: boolean
         employer_benefits:
           type: array
           items:
             $ref: "#/components/schemas/EmployerBenefit"
+          maxItems: 10
+        concurrent_leave:
+          $ref: "#/components/schemas/ConcurrentLeave"
+          nullable: true
         previous_leaves:
           type: array
           items:
             $ref: "#/components/schemas/PreviousLeave"
+          maxItems: 16
         has_amendments:
           type: boolean
         hours_worked_per_week:
@@ -1511,6 +1638,23 @@ components:
             - "No"
         comment:
           type: string
+          maxLength: 9999
+        leave_reason:
+          type: string
+          nullable: true
+          example: Care for a Family Member
+        believe_relationship_accurate:
+          type: string
+          nullable: true
+          enum:
+            - "Yes"
+            - "No"
+            - "Unknown"
+        relationship_inaccurate_reason:
+          type: string
+          nullable: true
+          maxLength: 9999
+          example: Their reported info doesn't match my records
       additionalProperties: false
       required:
         - employer_benefits
@@ -1529,6 +1673,9 @@ components:
     ClaimReviewResponse:
       type: object
       properties:
+        concurrent_leave:
+          $ref: "#/components/schemas/ConcurrentLeave"
+          nullable: true
         date_of_birth:
           $ref: "#/components/schemas/MaskedDate"
         employer_benefits:
@@ -1571,6 +1718,25 @@ components:
           $ref: "#/components/schemas/Date"
       additionalProperties: false
 
+    ConcurrentLeave:
+      type: object
+      properties:
+        concurrent_leave_id:
+          type: string
+          format: uuid
+          example: "2a340cf8-6d2a-4f82-a075-73588d003f8f"
+          nullable: true
+        is_for_current_employer:
+          type: boolean
+          nullable: true
+          example: true
+        leave_end_date:
+          $ref: "#/components/schemas/Date"
+          nullable: true
+        leave_start_date:
+          $ref: "#/components/schemas/Date"
+          nullable: true
+
     PreviousLeave:
       type: object
       properties:
@@ -1593,13 +1759,27 @@ components:
           type: string
           nullable: true
           enum:
-            - Pregnancy / Maternity
-            - Serious health condition
-            - Care for a family member
-            - Child bonding
-            - Military caregiver
-            - Military exigency family
+            - Pregnancy
+            - Caring for a family member with a serious health condition
+            - Bonding with my child after birth or placement
+            - Caring for a family member who serves in the armed forces
+            - Managing family affairs while a family member is on active duty in the armed forces
             - Unknown
+            - An illness or injury
+        worked_per_week_minutes:
+          type: integer
+          nullable: true
+          minimum: 0
+        leave_minutes:
+          type: integer
+          nullable: true
+          minimum: 0
+        type:
+          type: string
+          nullable: true
+          enum:
+            - other_reason
+            - same_reason
 
     ApplicationRequestBody:
       allOf:
@@ -1609,9 +1789,6 @@ components:
               type: string
               nullable: true
               example: "My bonding leave request"
-            employee_ssn:
-              $ref: "#/components/schemas/SsnItin"
-              nullable: true
             tax_identifier:
               $ref: "#/components/schemas/SsnItin"
               nullable: true
@@ -1625,14 +1802,17 @@ components:
             first_name:
               type: string
               nullable: true
+              maxLength: 50
               example: "John"
             middle_name:
               type: string
               nullable: true
+              maxLength: 50
               example: "Jake"
             last_name:
               type: string
               nullable: true
+              maxLength: 50
               example: "Doe"
             date_of_birth:
               $ref: "#/components/schemas/DateOrMaskedDate"
@@ -1663,10 +1843,6 @@ components:
               type: boolean
               nullable: true
               example: true
-            other_incomes_awaiting_approval:
-              type: boolean
-              nullable: true
-              example: false
             has_reduced_schedule_leave_periods:
               type: boolean
               nullable: true
@@ -1695,6 +1871,15 @@ components:
                 - Engineer
                 - Health Care
               example: "Sales Clerk"
+            gender:
+              type: string
+              nullable: true
+              enum:
+                - Woman
+                - Man
+                - Non-binary
+                - Gender not listed
+                - Prefer not to answer
             leave_details:
               $ref: "#/components/schemas/ApplicationLeaveDetails"
             work_pattern:
@@ -1705,31 +1890,41 @@ components:
               type: array
               items:
                 $ref: "#/components/schemas/EmployerBenefit"
-              maxItems: 3
+              maxItems: 6
             other_incomes:
               nullable: true
               type: array
               items:
                 $ref: "#/components/schemas/OtherIncome"
-              maxItems: 3
+              maxItems: 6
             phone:
               $ref: "#/components/schemas/Phone"
-            has_previous_leaves:
+            has_previous_leaves_other_reason:
               type: boolean
               nullable: true
-              example: false
-            previous_leaves:
+            has_previous_leaves_same_reason:
+              type: boolean
+              nullable: true
+            has_concurrent_leave:
+              type: boolean
+              nullable: true
+            previous_leaves_other_reason:
               nullable: true
               type: array
               items:
                 $ref: "#/components/schemas/PreviousLeave"
               maxItems: 6
+            previous_leaves_same_reason:
+              nullable: true
+              type: array
+              items:
+                $ref: "#/components/schemas/PreviousLeave"
+              maxItems: 6
+            concurrent_leave:
+              $ref: "#/components/schemas/ConcurrentLeave"
+              nullable: true
         - type: object
           properties:
-            employee_ssn:
-              deprecated: true
-              description: "`tax_identifier` is the preferred field for this information"
-              nullable: true
             tax_identifier:
               nullable: true
             employer_fein:
@@ -1804,10 +1999,6 @@ components:
           type: boolean
           nullable: true
           example: true
-        other_incomes_awaiting_approval:
-          type: boolean
-          nullable: true
-          example: true
         has_state_id:
           type: boolean
           nullable: true
@@ -1843,6 +2034,15 @@ components:
             - Health Care
           example: "Sales Clerk"
           nullable: true
+        gender:
+          type: string
+          nullable: true
+          enum:
+            - Woman
+            - Man
+            - Non-binary
+            - Gender not listed
+            - Prefer not to answer
         hours_worked_per_week:
           type: number
           nullable: true
@@ -1868,9 +2068,15 @@ components:
           items:
             $ref: "#/components/schemas/OtherIncome"
           nullable: true
+        updated_at:
+          type: string
+          format: date-time
+          example: "2020-06-26T01:02:03.967736+00:00"
         updated_time:
           type: string
           format: date-time
+          description: |
+            This field is deprecated. Please use `updated_at`.
           example: "2020-06-26T01:02:03.967736+00:00"
         status:
           type: string
@@ -1887,14 +2093,29 @@ components:
           example: "Started"
         phone:
           $ref: "#/components/schemas/MaskedPhone"
-        has_previous_leaves:
+        has_previous_leaves_other_reason:
           type: boolean
           nullable: true
-          example: false
-        previous_leaves:
+        has_previous_leaves_same_reason:
+          type: boolean
+          nullable: true
+        has_concurrent_leave:
+          type: boolean
+          nullable: true
+        previous_leaves_other_reason:
           type: array
           items:
             $ref: "#/components/schemas/PreviousLeave"
+        previous_leaves_same_reason:
+          type: array
+          items:
+            $ref: "#/components/schemas/PreviousLeave"
+        concurrent_leave:
+          $ref: "#/components/schemas/ConcurrentLeave"
+          nullable: true
+        is_withholding_tax:
+          type: boolean
+          nullable: true
 
     DocumentUploadRequest:
       type: object
@@ -1910,6 +2131,14 @@ components:
             - Approval Notice
             - Request for More information
             - Denial Notice
+            - Own serious health condition form
+            - Pregnancy/Maternity form
+            - Child bonding evidence form
+            - Care for a family member form
+            - Military exigency form
+            - Pending Application Withdrawn
+            - Appeal Acknowledgment
+            - Certification Form # Only used when Claimant Portal uploads certification docs
           example: "Passport"
         name:
           type: string
@@ -1944,6 +2173,176 @@ components:
         employer_fein:
           type: string
 
+    ManagedRequirementResponse:
+      type: object
+      properties:
+        follow_up_date:
+          format: date
+          example: "1970-06-01"
+        responded_at:
+          format: date
+          example: "1970-06-01"
+        status:
+          type: string
+          nullable: true
+        category:
+          type: string
+          nullable: true
+        type:
+          type: string
+          nullable: true
+        created_at:
+          format: date
+    AbsencePeriodResponse:
+      type: object
+      properties:
+        class_id:
+          type: integer
+          example: 1234
+        index_id:
+          type: integer
+          example: 1234
+        absence_period_start_date:
+          type: string
+          format: date
+          example: "2021-06-01"
+        absence_period_end_date:
+          type: string
+          format: date
+          example: "2021-06-08"
+        reason:
+          type: string
+          enum:
+            - Care for a Family Member
+            - Pregnancy/Maternity
+            - Child Bonding
+            - Serious Health Condition - Employ
+          example: "Child Bonding"
+        reason_qualifier_one:
+          type: string
+          enum:
+            - Newborn
+            - Adoption
+            - Foster Care
+          example: "Newborn"
+        reason_qualifier_two:
+          type: string
+        type:
+          type: string
+          enum:
+            - Continuous
+            - Intermittent
+            - Reduced Schedule
+          example: "Continuous"
+        request_decision:
+          type: string
+          enum:
+            - Pending
+            - Approved
+            - Denied
+            - Withdrawn
+          example: "Approved"
+        fineos_leave_request_id:
+          type: integer
+          example: 1234
+        is_id_proofed:
+          type: boolean
+          example: true
+
+    AbsencePeriodStatusResponse:
+      type: object
+      properties:
+        fineos_leave_period_id:
+          type: string
+          example: "PL-14432-0000002026"
+        absence_period_start_date:
+          type: string
+          format: date
+          example: "2021-06-01"
+        absence_period_end_date:
+          type: string
+          format: date
+          example: "2021-06-08"
+        reason:
+          type: string
+          enum:
+            - Care for a Family Member
+            - Pregnancy/Maternity
+            - Child Bonding
+            - Serious Health Condition - Employ
+          example: "Child Bonding"
+        reason_qualifier_one:
+          type: string
+          enum:
+            - Newborn
+            - Adoption
+            - Foster Care
+          example: "Newborn"
+        reason_qualifier_two:
+          type: string
+        period_type:
+          type: string
+          enum:
+            - Continuous
+            - Intermittent
+            - Reduced Schedule
+          example: "Continuous"
+        request_decision:
+          type: string
+          enum:
+            - Pending
+            - Approved
+            - Denied
+            - Withdrawn
+          example: "Approved"
+        evidence_status:
+          type: string
+          enum:
+            - Pending
+            - Waived
+            - Satisfied
+            - Not Satisfied
+            - Not Required
+          example: "Satisfied"
+
+    DetailedClaimResponse:
+      type: object
+      properties:
+        employer:
+          $ref: "#/components/schemas/EmployerResponse"
+        employee:
+          $ref: "#/components/schemas/EmployeeResponse"
+        application_id:
+          type: string
+          format: uuid
+          example: "fdc23456-c8fa-48bf-89a1-5c7c6a3af164"
+        fineos_absence_id:
+          format: string
+          example: "NTN-01-ABS-01"
+        fineos_notification_id:
+          format: string
+          example: "NTN-01"
+        created_at:
+          format: date
+        absence_periods:
+            type: array
+            items:
+              $ref: "#/components/schemas/AbsencePeriodStatusResponse"
+        outstanding_evidence:
+          type: object
+          properties:
+            employee_evidence:
+              type: array
+              items:
+                $ref: "#/components/schemas/EvidenceStatusDetail"
+            employer_evidence:
+              type: array
+              items:
+                $ref: "#/components/schemas/EvidenceStatusDetail"
+        has_paid_payments:
+          type: boolean
+          example: false
+
     ClaimResponse:
       type: object
       properties:
@@ -1963,17 +2362,98 @@ components:
         absence_period_end_date:
           format: date
           example: "1970-06-01"
-        fineos_absence_status:
+        claim_status:
+          description: "Absence case status"
           format: string
-        claim_type:
+          example: "Approved"
+        claim_type_description:
           format: string
+          example: "Medical Leave"
         created_at:
           format: date
+        managed_requirements:
+            type: array
+            items:
+              $ref: "#/components/schemas/ManagedRequirementResponse"
+        absence_periods:
+            type: array
+            items:
+              $ref: "#/components/schemas/AbsencePeriodStatusResponse"
+        has_paid_payments:
+          type: boolean
+          example: false
 
     ClaimsResponse:
       type: array
       items:
         $ref: "#/components/schemas/ClaimResponse"
+
+    PaymentsResponse:
+      type: object
+      properties:
+        absence_case_id:
+          format: string
+          example: "NTN-01-ABS-01"
+        payments:
+          type: array
+          items:
+            $ref: "#/components/schemas/PaymentResponse"
+
+    PaymentResponse:
+      type: object
+      properties:
+        payment_id:
+          type: string
+          format: uuid
+          nullable: true
+        period_start_date:
+          format: date
+          example: "1970-06-01"
+        period_end_date:
+          format: date
+          example: "1970-06-01"
+        amount:
+          type: number
+          nullable: true
+          example: 750.25
+        sent_to_bank_date:
+          format: date
+          example: "1970-06-01"
+          nullable: true
+        payment_method:
+            type: string
+            enum:
+              - Elec Funds Transfer
+              - Check
+              - Debit
+            nullable: true
+            example: "Elec Funds Transfer"
+        expected_send_date_start:
+          format: date
+          nullable: true
+          example: "1970-06-01"
+        expected_send_date_end:
+          format: date
+          nullable: true
+          example: "1970-06-01"
+        status:
+          type: string
+          enum:
+            - Sent to bank
+            - Pending
+            - Cancelled
+            - Delayed
+          example: "Delayed"
+
+    EvidenceStatusDetail:
+      type: object
+      properties:
+        document_name:
+          type: string
+          example: "Document Name"
+        is_document_received:
+          type: boolean
+          example: true
 
     EmployerAddFeinResponse:
       type: object
@@ -1994,6 +2474,7 @@ components:
         created_at:
           format: date
           example: "1970-06-01"
+          nullable: true
         document_type:
           type: string
           enum:
@@ -2002,19 +2483,29 @@ components:
             - Request for More information
             - Denial Notice
             - Employer Response Additional Documentation
+            - Own serious health condition form
+            - Pregnancy/Maternity form
+            - Child bonding evidence form
+            - Care for a family member form
+            - Military exigency form
+            - Pending Application Withdrawn
+            - Appeal Acknowledgment
           example: "Denial Notice"
         content_type:
           type: string
           example: "image/png"
+          nullable: true
         fineos_document_id:
           type: string
           example: "1234"
         name:
           type: string
           example: "passport.png"
+          nullable: true
         description:
           type: string
           example: "Jane Smith Passport"
+          nullable: true
       required:
         - created_at
         - document_type
@@ -2046,6 +2537,13 @@ components:
             - Driver's License Other State
             - Identification Proof
             - State managed Paid Leave Confirmation
+            - Own serious health condition form
+            - Pregnancy/Maternity form
+            - Child bonding evidence form
+            - Care for a family member form
+            - Military exigency form
+            - Pending Application Withdrawn
+            - Appeal Acknowledgment
           example: "Passport"
         content_type:
           type: string
@@ -2076,14 +2574,20 @@ components:
         payment_preference:
           nullable: false
           $ref: "#/components/schemas/PaymentPreference"
+    
+    TaxWithholdingPreferenceRequestBody:
+      type: object
+      properties:
+        is_withholding_tax:
+          type: boolean
+          nullable: false
 
     EmployerAddFeinRequestBody:
       type: object
       properties:
         employer_fein:
-          type: string
-          example: "12-3456789"
-          nullable: false
+          $ref: "#/components/schemas/Fein"
+          nullable: true
 
     EligibilityRequest:
       type: object
@@ -2107,6 +2611,8 @@ components:
             - Employed
             - Unemployed
             - Self-Employed
+            - Unknown
+            - Retired
           example: "Employed"
           nullable: false
       required:
@@ -2128,15 +2634,19 @@ components:
         total_wages:
           type: number
           example: 75000
+          nullable: true
         state_average_weekly_wage:
           type: integer
           example: 1431
+          nullable: true
         unemployment_minimum:
           type: integer
           example: 5100
+          nullable: true
         employer_average_weekly_wage:
           type: number
           example: 1500
+          nullable: true
       required:
         - financially_eligible
         - description
@@ -2514,6 +3024,9 @@ components:
             - Permanent disability insurance
             - Family or medical leave insurance
             - Unknown
+        is_full_salary_continuous:
+          type: boolean
+          nullable: true
 
 
     OtherIncome:

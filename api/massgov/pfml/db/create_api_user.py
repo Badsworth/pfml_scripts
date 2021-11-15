@@ -10,10 +10,9 @@ from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 from sqlalchemy.orm.session import Session
 
 import massgov.pfml.util.logging
-import massgov.pfml.util.logging.audit
 from massgov.pfml import db
 from massgov.pfml.db.models.employees import Role, User, UserRole
-from massgov.pfml.util.sentry import initialize_sentry
+from massgov.pfml.util.bg import background_task
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
@@ -30,11 +29,11 @@ def create_fineos_user_helper(db_session: Session) -> None:
 
     for client_name, client_id in config.__dict__.items():
         try:
-            db_session.query(User).filter(User.active_directory_id == client_id).one()
+            db_session.query(User).filter(User.sub_id == client_id).one()
             logger.info("App client for %s already exists", client_name)
 
         except NoResultFound:
-            api_user = User(active_directory_id=client_id)
+            api_user = User(sub_id=client_id)
             user_role = UserRole(user=api_user, role_id=Role.FINEOS.role_id)
             db_session.add(user_role)
             db_session.commit()
@@ -49,10 +48,8 @@ def create_fineos_user_helper(db_session: Session) -> None:
             )
 
 
+@background_task("db-create-fineos-user")
 def create_fineos_user():
-    initialize_sentry()
-    massgov.pfml.util.logging.init("db-create-fineos-user")
-    massgov.pfml.util.logging.audit.init_security_logging()
     db_session_raw = db.init()
 
     with db.session_scope(db_session_raw) as db_session:

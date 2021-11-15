@@ -11,6 +11,12 @@ const pipelineP = promisify(pipeline);
 
 type EmployerSize = "small" | "medium" | "large";
 
+export interface GeneratePromise<T> extends Promise<T> {
+  orGenerateAndSave(generationCb: () => T): Promise<T>;
+}
+
+export type LoadOrGeneratePromise = GeneratePromise<EmployerPool>;
+
 export type Employer = {
   accountKey: string;
   name: string;
@@ -41,7 +47,7 @@ const employerSizeWheel = [
 type EmployerGenerationSpec = {
   size?: Employer["size"];
   withholdings?: (number | null)[]; // quarters with 0 or null withholding amounts
-  family_expemption?: boolean;
+  family_exemption?: boolean;
   medical_exemption?: boolean;
   exemption_commence_date?: Date;
   exemption_cease_date?: Date;
@@ -94,7 +100,7 @@ export class EmployerGenerator {
       state: "MA",
       zip: faker.address.zipCode("#####-####"),
       dba: name,
-      family_exemption: spec.family_expemption || false,
+      family_exemption: spec.family_exemption || false,
       medical_exemption: spec.medical_exemption || false,
       exemption_commence_date: spec.exemption_commence_date,
       exemption_cease_date: spec.exemption_cease_date,
@@ -119,9 +125,21 @@ export default class EmployerPool implements Iterable<Employer> {
   /**
    * Load a pool from a JSON file.
    */
-  static async load(filename: string): Promise<EmployerPool> {
-    const data = await fs.promises.readFile(filename, "utf-8");
-    return new this(JSON.parse(data));
+  static load(filename: string): LoadOrGeneratePromise {
+    const employerProm = (async () => {
+      const raw = await fs.promises.readFile(filename, "utf-8");
+      return new this(JSON.parse(raw));
+    })();
+    return Object.assign(employerProm, {
+      orGenerateAndSave: async (generator: () => EmployerPool) => {
+        return employerProm.catch(async (e) => {
+          if (e.code !== "ENOENT") throw e;
+          const employerPool = generator();
+          await employerPool.save(filename);
+          return employerPool;
+        });
+      },
+    });
   }
 
   /**

@@ -1,4 +1,5 @@
-from datetime import date, datetime, timezone
+import math
+from datetime import date, datetime, time, timezone
 from typing import NamedTuple, Optional, Union
 
 
@@ -35,3 +36,30 @@ def utcnow() -> datetime:
     See https://docs.python.org/3/library/datetime.html#datetime.datetime.utcnow
     """
     return datetime.now(timezone.utc)
+
+
+def to_datetime(date_or_datetime: date) -> datetime:
+    """Convert a date or datetime to a datetime, setting time to 00:00:00 UTC."""
+    return datetime.combine(date_or_datetime, time.min, tzinfo=timezone.utc)
+
+
+def get_period_in_days(period_start: date, period_end: date) -> int:
+    period_start_date = period_start.date() if isinstance(period_start, datetime) else period_start
+    period_end_date = period_end.date() if isinstance(period_end, datetime) else period_end
+
+    # We add 1 to the period in days because we want to consider a week to be
+    # 7 days inclusive. For example:
+    #    Jan 1st - Jan 1st is 1 day even though no time passes.
+    #    Jan 1st - Jan 2nd is 2 days
+    #    Jan 1st - Jan 7th is 7 days (eg. Monday -> Sunday)
+    #    Jan 1st - Jan 8th is 8 days (eg. Monday -> the next Monday)
+
+    return (period_end_date - period_start_date).days + 1
+
+
+def get_period_in_weeks(period_start: date, period_end: date) -> int:
+    """
+    Get the length of a period of time in weeks, rounded up (eg. 5 days -> 1 week, 8 days -> 2 weeks)
+    """
+    weeks = math.ceil(get_period_in_days(period_start, period_end) / 7.0)
+    return weeks

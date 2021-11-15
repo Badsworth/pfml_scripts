@@ -1,0 +1,77 @@
+.maintenance {
+  background: #fff;
+  border-radius: $Border-Radius;
+  box-shadow: $Box-Shadow;
+  margin-bottom: 2.43em;
+  padding: 1.43em 1.71em;
+}
+
+.maintenance-info {
+  align-items: center;
+  display: flex;
+}
+
+.maintenance-info__title {
+  color: $Color-RevolutionGray;
+  font-size: 1.14em;
+  font-weight: 400;
+  line-height: 1.71;
+  margin-bottom: 0.4em;
+}
+
+.maintenance-info__text {
+  color: $Color-GraniteGray-700;
+  flex: 1 1 auto;
+}
+
+.maintenance-configure {
+  background: #fff;
+  border-radius: $Border-Radius;
+  box-shadow: $Box-Shadow;
+  padding: 1.43em 1.71em;
+}
+
+.maintenance-configure__fieldset {
+  .maintenance-configure__input {
+    appearance: auto;
+    width: auto;
+  }
+}
+
+.maintenance-configure__datetimes-wrapper {
+  display: flex;
+  justify-content: space-between;
+}
+
+.maintenance-configure__datetime-wrapper {
+  width: 49%;
+}
+
+.maintenance-status {
+  background: $Color-BayBlue-50;
+  border-radius: 8px;
+  box-shadow: $Box-Shadow;
+  color: $Color-RevolutionGray;
+  font-size: 1em;
+  line-height: 1.33;
+  margin-top: 1.45em;
+}
+
+.maintenance-status__row {
+  display: flex;
+  padding: 1.07em 1.1em;
+}
+
+.maintenance-status__row:not(:last-child) {
+  border-bottom: solid 1px $Color-BayBlue-100;
+}
+
+.maintenance-status__label {
+  flex: none;
+  padding-right: 1.1em;
+  width: 10.5em;
+}
+
+.maintenance-status__value {
+  flex: 1 1 auto;
+}

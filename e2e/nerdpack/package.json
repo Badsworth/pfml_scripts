@@ -1,0 +1,24 @@
+{
+  "private": true,
+  "name": "pfml-nr-nerdpack",
+  "version": "1.0.10",
+  "scripts": {
+    "start": "nr1 nerdpack:serve",
+    "test": "exit 0"
+  },
+  "nr1": {
+    "uuid": "1561bd97-7e69-4def-9d9c-29156cb5c149"
+  },
+  "dependencies": {
+    "@newrelic/nr1-community": "^1.2.0",
+    "dompurify": "^2.3.3",
+    "prop-types": "^15.6.2",
+    "react": "^16.6.3",
+    "react-dom": "^16.6.3"
+  },
+  "browserslist": [
+    "last 2 versions",
+    "not ie < 11",
+    "not dead"
+  ]
+}

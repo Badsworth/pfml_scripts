@@ -1,81 +1,69 @@
-import { renderWithAppLogic, simulateEvents } from "../../test-utils";
+import { MockBenefitsApplicationBuilder, renderPage } from "../../test-utils";
+import { screen, waitFor } from "@testing-library/react";
 import StateId from "../../../src/pages/applications/state-id";
+import { setupBenefitsApplications } from "../../test-utils/helpers";
+import userEvent from "@testing-library/user-event";
 
-jest.mock("../../../src/hooks/useAppLogic");
-
-const setup = (claimAttrs = {}) => {
-  const { appLogic, claim, wrapper } = renderWithAppLogic(StateId, {
-    claimAttrs,
+const setup = () => {
+  const claim = new MockBenefitsApplicationBuilder().create();
+  const updateSpy = jest.fn(() => {
+    return Promise.resolve();
   });
-
-  const { changeField, changeRadioGroup, submitForm } = simulateEvents(wrapper);
-
-  return {
-    appLogic,
-    changeField,
-    changeRadioGroup,
-    claim,
-    submitForm,
-    wrapper,
-  };
-};
-
-const isStateIdTextFieldVisible = (wrapper) => {
-  return wrapper.find("ConditionalContent").prop("visible");
+  const utils = renderPage(
+    StateId,
+    {
+      addCustomSetup: (appLogic) => {
+        setupBenefitsApplications(appLogic, [claim]);
+        appLogic.benefitsApplications.update = updateSpy;
+      },
+    },
+    { query: { claim_id: "mock_application_id" } }
+  );
+  return { updateSpy, ...utils };
 };
 
 describe("StateId", () => {
   it("initially renders the page with the ID text field hidden", () => {
-    const { wrapper } = setup();
-
-    expect(wrapper).toMatchSnapshot();
-    expect(isStateIdTextFieldVisible(wrapper)).toBeFalsy();
+    const { container } = setup();
+    expect(container.firstChild).toMatchSnapshot();
+    expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
   });
 
   it("renders ID text field only when user indicates they have a state id", () => {
-    const { changeRadioGroup, wrapper } = setup();
+    setup();
 
     // I have a state ID
-    changeRadioGroup("has_state_id", "true");
-    expect(isStateIdTextFieldVisible(wrapper)).toBe(true);
+    userEvent.click(screen.getByRole("radio", { name: "Yes" }));
+    expect(screen.queryByRole("textbox")).toBeInTheDocument();
 
     // I don't have a state ID
-    changeRadioGroup("has_state_id", "false");
-    expect(isStateIdTextFieldVisible(wrapper)).toBe(false);
+    userEvent.click(screen.getByRole("radio", { name: "No" }));
+    expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
   });
 
   it("calls claims.update when the form is submitted", async () => {
-    const mass_id = "sa3456789";
-    const {
-      appLogic,
-      changeField,
-      changeRadioGroup,
-      claim,
-      submitForm,
-    } = setup({ has_state_id: false });
+    const mass_id = "SA3456789";
+    const { updateSpy } = setup();
 
-    // Existing data
-    await submitForm();
+    userEvent.click(screen.getByRole("radio", { name: "No" }));
+    userEvent.click(screen.getByRole("button", { name: "Save and continue" }));
 
-    expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
-      claim.application_id,
-      {
+    await waitFor(() => {
+      expect(updateSpy).toHaveBeenCalledWith("mock_application_id", {
         has_state_id: false,
         mass_id: null,
-      }
-    );
+      });
+    });
 
-    // Changed answer to Yes
-    changeRadioGroup("has_state_id", "true");
-    changeField("mass_id", mass_id.toLowerCase());
-    await submitForm();
+    userEvent.click(screen.getByRole("radio", { name: "Yes" }));
+    userEvent.type(screen.getByRole("textbox"), mass_id);
+    userEvent.click(screen.getByRole("button", { name: "Save and continue" }));
 
-    expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
-      claim.application_id,
-      {
+    await waitFor(() => {
+      expect(updateSpy).toHaveBeenCalledWith("mock_application_id", {
         has_state_id: true,
-        mass_id: mass_id.toUpperCase(),
-      }
-    );
+        mass_id,
+      });
+    });
   });
 });

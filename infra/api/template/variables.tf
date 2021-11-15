@@ -120,15 +120,10 @@ variable "cors_origins" {
   type        = list(string)
 }
 
-variable "formstack_import_lambda_build_s3_key" {
-  description = "The S3 object key of the Formstack integration lambda artifact"
-  type        = string
-}
-
 variable "runtime_py" {
   description = "Pointer to the Python runtime used by the PFML API lambdas"
   type        = string
-  default     = "python3.8"
+  default     = "python3.9"
 }
 
 variable "cognito_user_pool_arn" {
@@ -143,16 +138,6 @@ variable "cognito_user_pool_id" {
 
 variable "cognito_user_pool_client_id" {
   type = string
-}
-
-variable "cognito_post_confirmation_lambda_artifact_s3_key" {
-  description = "The S3 object key of the Cognito Post Confirmation hook Lambda artifact"
-  type        = string
-}
-
-variable "cognito_pre_signup_lambda_artifact_s3_key" {
-  description = "The S3 object key of the Cognito Pre Signup hook Lambda artifact"
-  type        = string
 }
 
 variable "cognito_user_pool_keys_url" {
@@ -179,28 +164,16 @@ variable "rmv_client_certificate_binary_arn" {
   default     = ""
 }
 
-variable "rmv_client_server_ca_bundle_name" {
-  description = "Specifies which special server certificate CA bundle to use for interacting with the RMV API (if one is needed)."
-  type        = string
-  default     = ""
-}
-
-variable "rmv_check_behavior" {
+variable "rmv_api_behavior" {
   description = "Specifies if the RMV response is mocked"
   type        = string
   default     = "fully_mocked"
 }
 
 variable "rmv_check_mock_success" {
-  description = "Specifies if RMV mock response always passes. '1' always passes id proofing, '0' always fails id proofing."
+  description = "Specifies if RMV check mock response always passes. '1' always passes id proofing, '0' always fails id proofing."
   type        = string
   default     = "1"
-}
-
-variable "enforce_leave_admin_verification" {
-  description = "Specifies if API should enforce Verification for Leave Admins. '0' means no Verifications are checked. '1' prevents requests to Leave Admin APIs without Verification"
-  type        = string
-  default     = "0"
 }
 
 variable "fineos_client_customer_api_url" {
@@ -286,23 +259,6 @@ variable "enable_application_fraud_check" {
   type        = string
 }
 
-variable "dor_fineos_etl_definition" {
-  description = "Step function definition for DOR FINEOS ETL"
-  type        = string
-  default     = <<-END
-    {
-      "StartAt": "nothing",
-      "States": {"nothing": {"Type": "Pass", "End": true}}
-    }
-    END
-}
-
-variable "dor_fineos_etl_schedule_expression" {
-  description = "EventBridge schedule for DOR FINEOS ETL"
-  type        = string
-  default     = "cron(30 4 * * ? *)"
-}
-
 variable "cognito_enable_provisioned_concurrency" {
   description = "Enable or disable provisioned concurrency (and new-version publishing) for Cognito lambdas."
   type        = bool
@@ -321,14 +277,20 @@ variable "cognito_provisioned_concurrency_level_min" {
   default     = 1
 }
 
-variable "enable_sentry" {
-  description = "enable sentry in main python function"
-  type        = string
-  default     = "0"
-}
-
 variable "release_version" {
   description = "API release version"
   type        = string
   default     = ""
+}
+
+variable "new_plan_proofs_active_at" {
+  description = "ISO 8601 formatted date string, should explicitly set UTC offset (+00:00)"
+  type        = string
+  default     = "2021-06-21 00:00:00+00:00"
+}
+
+variable "use_claim_status_url" {
+  description = "Whether or not to direct claimants to the claim status page. Can enable this when Claim Status is launched."
+  type        = bool
+  default     = true
 }
