@@ -52,7 +52,7 @@ jobs:
           inputs: |
             {
               "target_environment": "${{ matrix.environment }}",
-              "cypress_tags": ${{ toJSON(github.event_name == 'schedule' && format('Morning Run ({0})', matrix.environment) || github.event.inputs.cypress_tags) }},
+              "cypress_tags": "${{ github.event_name == 'schedule' && 'Morning Run' || github.event.inputs.cypress_tags }}",
               "run_unstable": "${{ github.event.inputs.run_unstable || 'false' }}",
               "run_nightly": "${{ github.event_name == 'schedule' && 'true' || github.event.inputs.run_nightly }}",
               "title_override": "${{ github.event_name == 'schedule' && format('Scheduled Run: {0}', matrix.environment) || '' }}"
