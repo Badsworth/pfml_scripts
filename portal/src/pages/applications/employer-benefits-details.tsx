@@ -3,24 +3,24 @@ import EmployerBenefit, {
   EmployerBenefitType,
 } from "../../models/EmployerBenefit";
 import { get, pick } from "lodash";
-import { AppLogic } from "../../hooks/useAppLogic";
-import BenefitsApplication from "../../models/BenefitsApplication";
+import withBenefitsApplication, {
+  WithBenefitsApplicationProps,
+} from "../../hoc/withBenefitsApplication";
 import ConditionalContent from "../../components/ConditionalContent";
-import Dropdown from "../../components/Dropdown";
-import Fieldset from "../../components/Fieldset";
-import FormLabel from "../../components/FormLabel";
-import Heading from "../../components/Heading";
-import InputChoiceGroup from "../../components/InputChoiceGroup";
-import InputCurrency from "../../components/InputCurrency";
-import InputDate from "../../components/InputDate";
+import Dropdown from "../../components/core/Dropdown";
+import Fieldset from "../../components/core/Fieldset";
+import FormLabel from "../../components/core/FormLabel";
+import Heading from "../../components/core/Heading";
+import InputChoiceGroup from "../../components/core/InputChoiceGroup";
+import InputCurrency from "../../components/core/InputCurrency";
+import InputDate from "../../components/core/InputDate";
 import LeaveDatesAlert from "../../components/LeaveDatesAlert";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
-import RepeatableFieldset from "../../components/RepeatableFieldset";
+import RepeatableFieldset from "../../components/core/RepeatableFieldset";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "react-i18next";
-import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = [
   "claim.employer_benefits",
@@ -32,13 +32,8 @@ export const fields = [
   "claim.employer_benefits[*].is_full_salary_continuous",
 ];
 
-interface EmployerBenefitsDetailsProps {
-  claim: BenefitsApplication;
-  appLogic: AppLogic;
-}
-
 export const EmployerBenefitsDetails = (
-  props: EmployerBenefitsDetailsProps
+  props: WithBenefitsApplicationProps
 ) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();

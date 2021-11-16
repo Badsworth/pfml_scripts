@@ -1,17 +1,16 @@
-import BenefitsApplication, {
-  CaringLeaveMetadata,
-} from "../../models/BenefitsApplication";
 import { get, pick } from "lodash";
-import { AppLogic } from "../../hooks/useAppLogic";
-import Fieldset from "../../components/Fieldset";
-import FormLabel from "../../components/FormLabel";
-import InputText from "../../components/InputText";
+import withBenefitsApplication, {
+  WithBenefitsApplicationProps,
+} from "../../hoc/withBenefitsApplication";
+import { CaringLeaveMetadata } from "../../models/BenefitsApplication";
+import Fieldset from "../../components/core/Fieldset";
+import FormLabel from "../../components/core/FormLabel";
+import InputText from "../../components/core/InputText";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 const caringLeavePath = "leave_details.caring_leave_metadata";
 
@@ -21,12 +20,7 @@ export const fields = [
   `claim.${caringLeavePath}.family_member_last_name`,
 ];
 
-interface FamilyMemberNameProps {
-  appLogic: AppLogic;
-  claim: BenefitsApplication;
-}
-
-export const FamilyMemberName = (props: FamilyMemberNameProps) => {
+export const FamilyMemberName = (props: WithBenefitsApplicationProps) => {
   const { t } = useTranslation();
   const { appLogic, claim } = props;
 

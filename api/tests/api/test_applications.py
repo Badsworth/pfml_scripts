@@ -61,9 +61,9 @@ from massgov.pfml.db.models.factories import (
 from massgov.pfml.fineos.client import AbstractFINEOSClient
 from massgov.pfml.fineos.exception import (
     FINEOSClientError,
+    FINEOSEntityNotFound,
     FINEOSFatalResponseError,
     FINEOSFatalUnavailable,
-    FINEOSNotFound,
 )
 from massgov.pfml.fineos.factory import FINEOSClientConfig
 from massgov.pfml.util.paginate.paginator import DEFAULT_PAGE_SIZE
@@ -71,6 +71,19 @@ from massgov.pfml.util.paginate.paginator import DEFAULT_PAGE_SIZE
 
 def sqlalchemy_object_as_dict(obj):
     return {c.key: getattr(obj, c.key) for c in inspect(obj).mapper.column_attrs}
+
+
+def test_applications_get_invalid_uuid(client, user, auth_token):
+    response = client.get(
+        "/v1/applications/undefined", headers={"Authorization": f"Bearer {auth_token}"},
+    )
+
+    response_body = response.get_json()
+    assert response.status_code == 400
+    assert (
+        response_body.get("detail")
+        == "'undefined' is not a 'uuid'\n\nFailed validating 'format' in schema:\n    {'format': 'uuid', 'type': 'string'}\n\nOn instance:\n    'undefined'"
+    )
 
 
 # The UUID used in this test was generated online. Hopefully it will never match any of
@@ -3213,7 +3226,7 @@ def create_mock_client(err: FINEOSClientError):
         (
             400,
             IssueType.fineos_case_creation_issues,
-            FINEOSNotFound(
+            FINEOSEntityNotFound(
                 "<ErrorDetails><faultcode>com.fineos.common.portalinfrastructure.exceptions.GenericUncheckedException</faultcode><faultstring>The employee does not have an occupation linked.</faultstring><detail></detail></ErrorDetails>"
             ),
         ),

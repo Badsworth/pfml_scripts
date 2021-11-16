@@ -90,6 +90,9 @@ def create_app(
         newrelic.agent.add_custom_parameter(
             "api_release_version", os.environ.get("RELEASE_VERSION")
         )
+        newrelic.agent.add_custom_parameter(
+            "request_id", flask.request.headers.get("x-amzn-requestid", "")
+        )
 
     @flask_app.teardown_request
     def close_db(exception=None):

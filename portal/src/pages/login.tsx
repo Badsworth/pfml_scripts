@@ -1,11 +1,11 @@
-import Alert from "../components/Alert";
+import Alert from "../components/core/Alert";
 import { AppLogic } from "../hooks/useAppLogic";
-import Button from "../components/Button";
+import Button from "../components/core/Button";
 import InputPassword from "../components/InputPassword";
-import InputText from "../components/InputText";
+import InputText from "../components/core/InputText";
 import Link from "next/link";
 import React from "react";
-import Title from "../components/Title";
+import Title from "../components/core/Title";
 import { Trans } from "react-i18next";
 import routes from "../routes";
 import useFormState from "../hooks/useFormState";

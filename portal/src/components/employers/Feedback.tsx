@@ -1,5 +1,5 @@
-import FormLabel from "../FormLabel";
-import InputChoiceGroup from "../InputChoiceGroup";
+import FormLabel from "../core/FormLabel";
+import InputChoiceGroup from "../core/InputChoiceGroup";
 import React from "react";
 import ReviewHeading from "../ReviewHeading";
 import { Trans } from "react-i18next";

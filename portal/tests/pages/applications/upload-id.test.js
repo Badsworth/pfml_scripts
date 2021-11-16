@@ -6,7 +6,6 @@ import {
 import { act, screen, waitFor } from "@testing-library/react";
 import AppErrorInfo from "../../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../../src/models/AppErrorInfoCollection";
-import BenefitsApplicationDocument from "../../../src/models/BenefitsApplicationDocument";
 import DocumentCollection from "../../../src/models/DocumentCollection";
 import { DocumentType } from "../../../src/models/Document";
 import UploadId from "../../../src/pages/applications/upload-id";
@@ -92,12 +91,12 @@ describe("UploadId", () => {
           return Promise.resolve(true);
         });
         appLogic.documents.documents = new DocumentCollection([
-          new BenefitsApplicationDocument({
+          {
             application_id: "mock_application_id",
             fineos_document_id: uuidv4(),
             document_type: DocumentType.identityVerification,
             created_at: "2020-11-26",
-          }),
+          },
         ]);
       };
       beforeEach(() => {
@@ -233,9 +232,15 @@ describe("UploadId", () => {
         );
       });
 
+      expect(
+        screen.getAllByRole("button", { name: "Remove file" })[0]
+      ).toBeEnabled();
       userEvent.click(
         screen.getByRole("button", { name: "Save and continue" })
       );
+      expect(
+        screen.getAllByRole("button", { name: "Remove file" })[0]
+      ).toBeDisabled();
 
       await waitFor(() => {
         expect(goToNextPage).toHaveBeenCalled();
@@ -402,12 +407,12 @@ describe("UploadId", () => {
             return Promise.resolve(true);
           });
           appLogic.documents.documents = new DocumentCollection([
-            new BenefitsApplicationDocument({
+            {
               application_id: "mock_application_id",
               fineos_document_id: uuidv4(),
               document_type: DocumentType.identityVerification,
               created_at: "2020-11-26",
-            }),
+            },
           ]);
         };
         setup(null, null, cb);
@@ -421,12 +426,12 @@ describe("UploadId", () => {
             return Promise.resolve(true);
           });
           appLogic.documents.documents = new DocumentCollection([
-            new BenefitsApplicationDocument({
+            {
               application_id: "mock_application_id",
               fineos_document_id: uuidv4(),
               document_type: DocumentType.identityVerification,
               created_at: "2020-11-26",
-            }),
+            },
           ]);
         };
         setup(claim, null, cb);
@@ -461,12 +466,12 @@ describe("UploadId", () => {
             return Promise.resolve(true);
           });
           appLogic.documents.documents = new DocumentCollection([
-            new BenefitsApplicationDocument({
+            {
               application_id: "mock_application_id",
               fineos_document_id: uuidv4(),
               document_type: DocumentType.identityVerification,
               created_at: "2020-11-26",
-            }),
+            },
           ]);
         };
 

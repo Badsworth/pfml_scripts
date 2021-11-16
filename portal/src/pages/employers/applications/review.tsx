@@ -5,28 +5,30 @@ import PreviousLeave, {
 } from "../../../models/PreviousLeave";
 import React, { useEffect, useState } from "react";
 import { get, isEqual, isNil, omit } from "lodash";
-import Alert from "../../../components/Alert";
-import { AppLogic } from "../../../hooks/useAppLogic";
+import withEmployerClaim, {
+  WithEmployerClaimProps,
+} from "../../../hoc/withEmployerClaim";
+
+import Alert from "../../../components/core/Alert";
 import BackButton from "../../../components/BackButton";
-import Button from "../../../components/Button";
+import Button from "../../../components/core/Button";
 import ConcurrentLeave from "../../../components/employers/ConcurrentLeave";
 import ConcurrentLeaveModel from "../../../models/ConcurrentLeave";
 import EmployeeInformation from "../../../components/employers/EmployeeInformation";
 import EmployeeNotice from "../../../components/employers/EmployeeNotice";
 import EmployerBenefit from "../../../models/EmployerBenefit";
 import EmployerBenefits from "../../../components/employers/EmployerBenefits";
-import EmployerClaim from "../../../models/EmployerClaim";
 import EmployerDecision from "../../../components/employers/EmployerDecision";
 import Feedback from "../../../components/employers/Feedback";
 import FraudReport from "../../../components/employers/FraudReport";
-import Heading from "../../../components/Heading";
+import Heading from "../../../components/core/Heading";
 import LeaveDetails from "../../../components/employers/LeaveDetails";
 import LeaveSchedule from "../../../components/employers/LeaveSchedule";
 import PreviousLeaves from "../../../components/employers/PreviousLeaves";
 import ReviewHeading from "../../../components/ReviewHeading";
 import ReviewRow from "../../../components/ReviewRow";
 import SupportingWorkDetails from "../../../components/employers/SupportingWorkDetails";
-import Title from "../../../components/Title";
+import Title from "../../../components/core/Title";
 import { Trans } from "react-i18next";
 import findDocumentsByTypes from "../../../utils/findDocumentsByTypes";
 import formatDateRange from "../../../utils/formatDateRange";
@@ -37,27 +39,16 @@ import useFormState from "../../../hooks/useFormState";
 import useFunctionalInputProps from "../../../hooks/useFunctionalInputProps";
 import useThrottledHandler from "../../../hooks/useThrottledHandler";
 import { useTranslation } from "../../../locales/i18n";
-import withEmployerClaim from "../../../hoc/withEmployerClaim";
 
-interface ReviewProps {
-  appLogic: AppLogic;
-  claim: EmployerClaim;
-  query: {
-    absence_id: string;
-  };
-}
-
-export const Review = (props: ReviewProps) => {
-  const {
-    appLogic,
-    claim,
-    query: { absence_id: absenceId },
-  } = props;
+export const Review = (props: WithEmployerClaimProps) => {
+  const { appLogic, claim } = props;
   const {
     appErrors,
     employers: { claimDocumentsMap, downloadDocument, loadDocuments },
   } = appLogic;
   const { t } = useTranslation();
+
+  const absenceId = claim.fineos_absence_id;
 
   const shouldShowV2 = !!claim.uses_second_eform_version;
   // explicitly check for false as opposed to falsy values.
@@ -520,6 +511,7 @@ export const Review = (props: ReviewProps) => {
             <ConcurrentLeave
               appErrors={appErrors}
               addedConcurrentLeave={formState.addedConcurrentLeave}
+              claim={claim}
               concurrentLeave={formState.concurrentLeave}
               onAdd={handleConcurrentLeaveAdd}
               onChange={handleConcurrentLeaveInputChange}

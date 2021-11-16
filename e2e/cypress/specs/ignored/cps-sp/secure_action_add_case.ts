@@ -78,10 +78,9 @@ describe("Add case to check the secure actions", () => {
         cy.task("generateClaim", "CHAP_ER").then((claim) => {
           assertValidClaim(claim.claim);
           // Create historical absence
-          fineosPages.ClaimantPage.visit(claim.claim.tax_identifier);
-          cy.get(
-            `div[id^="MENUBAR.PartySubjectMenu_"][id$="_MENUBAR.PartySubjectMenu"] div[title="Add Case"]`
-          ).should(userType.can_add_case ? "be.visible" : "not.be.visible");
+          fineosPages.ClaimantPage.visit(claim.claim.tax_identifier).addCase(
+            userType.can_add_case
+          );
         });
       });
     });

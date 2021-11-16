@@ -222,7 +222,7 @@ def test_update_employee_demographics_moveit_mode(
 
     source_directory_path = "dua/pending"
     archive_directory_path = "dua/archive"
-    moveit_pickup_path = "/DFML/DUA/Outbound"
+    moveit_pickup_path = "/DFML/DUA/Inbound"
 
     monkeypatch.setenv("S3_BUCKET", f"s3://{mock_s3_bucket}")
     monkeypatch.setenv("S3_DUA_OUTBOUND_DIRECTORY_PATH", source_directory_path)

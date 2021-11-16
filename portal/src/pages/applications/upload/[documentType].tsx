@@ -8,22 +8,26 @@
  * should be uploaded and what text should be displayed.
  */
 
-import Accordion from "../../../components/Accordion";
-import AccordionItem from "../../../components/AccordionItem";
-import Alert from "../../../components/Alert";
-import { AppLogic } from "../../../hooks/useAppLogic";
-import BenefitsApplicationDocument from "../../../models/BenefitsApplicationDocument";
+import {
+  BenefitsApplicationDocument,
+  DocumentType,
+} from "../../../models/Document";
+import withClaimDocuments, {
+  WithClaimDocumentsProps,
+} from "../../../hoc/withClaimDocuments";
+import Accordion from "../../../components/core/Accordion";
+import AccordionItem from "../../../components/core/AccordionItem";
+import Alert from "../../../components/core/Alert";
 import ConditionalContent from "../../../components/ConditionalContent";
 import DocumentRequirements from "../../../components/DocumentRequirements";
-import { DocumentType } from "../../../models/Document";
 import FileCardList from "../../../components/FileCardList";
 import FileUploadDetails from "../../../components/FileUploadDetails";
-import Heading from "../../../components/Heading";
-import Lead from "../../../components/Lead";
+import Heading from "../../../components/core/Heading";
+import Lead from "../../../components/core/Lead";
 import LeaveReason from "../../../models/LeaveReason";
 import QuestionPage from "../../../components/QuestionPage";
 import React from "react";
-import Spinner from "../../../components/Spinner";
+import Spinner from "../../../components/core/Spinner";
 import { Trans } from "react-i18next";
 import findDocumentsByTypes from "../../../utils/findDocumentsByTypes";
 import hasDocumentsLoadError from "../../../utils/hasDocumentsLoadError";
@@ -31,7 +35,6 @@ import routes from "../../../routes";
 import uploadDocumentsHelper from "../../../utils/uploadDocumentsHelper";
 import useFilesLogic from "../../../hooks/useFilesLogic";
 import { useTranslation } from "../../../locales/i18n";
-import withClaimDocuments from "../../../hoc/withClaimDocuments";
 
 const uploadRoutes = routes.applications.upload;
 
@@ -185,15 +188,12 @@ const IdentificationUpload = ({ path }: IdentificationUploadProps) => {
   );
 };
 
-interface DocumentUploadProps {
-  appLogic: AppLogic;
-  documents: BenefitsApplicationDocument[];
-  isLoadingDocuments: boolean;
+interface DocumentUploadProps extends WithClaimDocumentsProps {
   query: {
     claim_id: string;
-    absence_case_id: string;
     additionalDoc?: string;
-    documentType:
+    absence_id?: string;
+    documentType?:
       | "state-id"
       | "other-id"
       | "proof-of-birth"
@@ -212,6 +212,7 @@ export const DocumentUpload = (props: DocumentUploadProps) => {
     clearErrors: appLogic.clearErrors,
     catchError: appLogic.catchError,
   });
+  const [submissionInProgress, setSubmissionInProgress] = React.useState(false);
 
   const hasLoadingDocumentsError = hasDocumentsLoadError(
     appErrors,
@@ -232,20 +233,20 @@ export const DocumentUpload = (props: DocumentUploadProps) => {
   // after the application has been completed.
   // If true, the document is immediately marked as received in the CPS,
   // and the user will be navigated back to the claim's status page.
-  // The absence_case_id param is only set when claimant is uploading
+  // The absence_id param is only set when claimant is uploading
   // a document after the application has been completed.
-  const isAdditionalDoc = !!query.absence_case_id;
+  const isAdditionalDoc = !!query.absence_id;
 
   const handleSave = async () => {
     if (files.isEmpty && existingDocuments.length) {
       // Allow user to skip this page if they've previously uploaded documents
       portalFlow.goToNextPage(
         { isAdditionalDoc },
-        { claim_id: query.claim_id, absence_case_id: query.absence_case_id }
+        { claim_id: query.claim_id, absence_id: query.absence_id }
       );
       return;
     }
-
+    setSubmissionInProgress(true);
     const uploadPromises = appLogic.documents.attach(
       query.claim_id,
       files.items,
@@ -259,13 +260,14 @@ export const DocumentUpload = (props: DocumentUploadProps) => {
       files,
       removeFile
     );
+    setSubmissionInProgress(false);
     if (success) {
       portalFlow.goToNextPage(
         { isAdditionalDoc },
         {
           uploaded_document_type: query.documentType,
           claim_id: query.claim_id,
-          absence_case_id: query.absence_case_id,
+          absence_id: query.absence_id,
         }
       );
     }
@@ -311,6 +313,7 @@ export const DocumentUpload = (props: DocumentUploadProps) => {
           documents={existingDocuments}
           onChange={processFiles}
           onRemoveTempFile={removeFile}
+          disableRemove={submissionInProgress}
           fileHeadingPrefix={t(
             "pages.claimsUploadDocumentType.fileHeadingPrefix"
           )}

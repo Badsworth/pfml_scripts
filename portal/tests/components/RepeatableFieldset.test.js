@@ -1,6 +1,6 @@
 import { render, screen, within } from "@testing-library/react";
 import React from "react";
-import RepeatableFieldset from "../../src/components/RepeatableFieldset";
+import RepeatableFieldset from "../../src/components/core/RepeatableFieldset";
 import userEvent from "@testing-library/user-event";
 
 const defaultProps = {

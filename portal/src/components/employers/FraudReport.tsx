@@ -1,8 +1,8 @@
 import { Trans, useTranslation } from "react-i18next";
-import Alert from "../Alert";
+import Alert from "../core/Alert";
 import ConditionalContent from "../ConditionalContent";
-import Details from "../Details";
-import InputChoiceGroup from "../InputChoiceGroup";
+import Details from "../core/Details";
+import InputChoiceGroup from "../core/InputChoiceGroup";
 import React from "react";
 import ReviewHeading from "../ReviewHeading";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";

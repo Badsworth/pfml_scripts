@@ -1,7 +1,8 @@
 import { get, pick } from "lodash";
-import { AppLogic } from "../../hooks/useAppLogic";
-import BenefitsApplication from "../../models/BenefitsApplication";
-import InputChoiceGroup from "../../components/InputChoiceGroup";
+import withBenefitsApplication, {
+  WithBenefitsApplicationProps,
+} from "../../hoc/withBenefitsApplication";
+import InputChoiceGroup from "../../components/core/InputChoiceGroup";
 import LeaveReason from "../../models/LeaveReason";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
@@ -9,17 +10,11 @@ import formatDate from "../../utils/formatDate";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = ["claim.has_previous_leaves_same_reason"];
 
-interface PreviousLeavesSameReasonProps {
-  appLogic: AppLogic;
-  claim: BenefitsApplication;
-}
-
 export const PreviousLeavesSameReason = (
-  props: PreviousLeavesSameReasonProps
+  props: WithBenefitsApplicationProps
 ) => {
   const { t } = useTranslation();
   const { appLogic, claim } = props;

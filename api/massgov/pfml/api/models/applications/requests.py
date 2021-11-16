@@ -224,4 +224,4 @@ class PaymentPreferenceRequestBody(PydanticBaseModel):
 
 
 class TaxWithholdingPreferenceRequestBody(PydanticBaseModel):
-    withhold_taxes: bool
+    is_withholding_tax: bool

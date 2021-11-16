@@ -45,5 +45,5 @@ resource "aws_api_gateway_vpc_link" "nlb_vpc_links" {
   for_each    = toset(local.vpcs)
   name        = "${each.key}-nlb-vpc-link"
   description = "VPC link between API gateway and internal network LB for ${each.key} VPC"
-  target_arns = ["${aws_lb.nlbs[each.key].arn}"]
+  target_arns = [aws_lb.nlbs[each.key].arn]
 }

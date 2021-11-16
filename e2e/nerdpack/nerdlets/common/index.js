@@ -27,3 +27,21 @@ export const labelComponent = (name) => {
       return name[0].toUpperCase() + name.substring(1);
   }
 };
+
+export const labelEnv = (name) => {
+  name = name.toLowerCase();
+  switch (name) {
+    case "test":
+      return "Test/DT2";
+    case "stage":
+      return "Stage/IDT";
+    case "cps-preview":
+      return "CPS-Preview/DT3";
+    case "breakfix":
+      return "Breakfix/PFX";
+    case "uat":
+      return "UAT";
+    default:
+      return name[0].toUpperCase() + name.substring(1);
+  }
+};

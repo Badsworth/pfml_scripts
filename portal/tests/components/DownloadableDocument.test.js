@@ -1,35 +1,33 @@
 import { render, screen } from "@testing-library/react";
-import BenefitsApplicationDocument from "../../src/models/BenefitsApplicationDocument";
-import ClaimDocument from "../../src/models/ClaimDocument";
 import { DocumentType } from "../../src/models/Document";
 import DownloadableDocument from "../../src/components/DownloadableDocument";
-import Icon from "../../src/components/Icon";
+import Icon from "../../src/components/core/Icon";
 import React from "react";
 import userEvent from "@testing-library/user-event";
 
-const DOCUMENT = new BenefitsApplicationDocument({
+const DOCUMENT = {
   content_type: "image/png",
   created_at: "2020-04-05",
   document_type: DocumentType.certification.medicalCertification,
   fineos_document_id: "fineos-id-4",
   name: "Medical cert doc",
-});
+};
 
-const LEGAL_NOTICE = new BenefitsApplicationDocument({
+const LEGAL_NOTICE = {
   content_type: "image/png",
   created_at: "2020-04-05",
   document_type: DocumentType.approvalNotice,
   fineos_document_id: "fineos-id-4",
   name: "legal notice",
-});
+};
 
-const CLAIM_DOCUMENT = new ClaimDocument({
+const CLAIM_DOCUMENT = {
   content_type: "image/png",
   created_at: "2020-04-05",
   document_type: DocumentType.certification.medicalCertification,
   fineos_document_id: "fineos-id-4",
   name: "Medical cert doc",
-});
+};
 
 function renderComponent(customProps = {}) {
   const props = {

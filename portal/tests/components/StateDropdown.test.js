@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import React from "react";
-import StateDropdown from "../../src/components/StateDropdown";
+import StateDropdown from "../../src/components/core/StateDropdown";
 
 describe("StateDropdown", () => {
   it("renders select field with U.S. states as options", () => {

@@ -1,30 +1,24 @@
-import BenefitsApplication, {
-  PhoneType,
-} from "../../models/BenefitsApplication";
 import { cloneDeep, get, pick, set } from "lodash";
-import { AppLogic } from "../../hooks/useAppLogic";
-import Heading from "../../components/Heading";
-import InputChoiceGroup from "../../components/InputChoiceGroup";
-import InputText from "../../components/InputText";
-import Lead from "../../components/Lead";
+import withBenefitsApplication, {
+  WithBenefitsApplicationProps,
+} from "../../hoc/withBenefitsApplication";
+import Heading from "../../components/core/Heading";
+import InputChoiceGroup from "../../components/core/InputChoiceGroup";
+import InputText from "../../components/core/InputText";
+import Lead from "../../components/core/Lead";
+import { PhoneType } from "../../models/BenefitsApplication";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = ["claim.phone.phone_number", "claim.phone.phone_type"];
-
-interface Props {
-  appLogic: AppLogic;
-  claim: BenefitsApplication;
-}
 
 /**
  * A form page to capture the worker's phone number.
  */
-export const PhoneNumber = (props: Props) => {
+export const PhoneNumber = (props: WithBenefitsApplicationProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 

@@ -2,7 +2,11 @@ import {
   BankAccountType,
   PaymentPreferenceMethod,
 } from "../../models/PaymentPreference";
-import BenefitsApplication, {
+import EmployerBenefit, {
+  EmployerBenefitFrequency,
+  EmployerBenefitType,
+} from "../../models/EmployerBenefit";
+import {
   EmploymentStatus,
   Gender,
   PhoneType,
@@ -12,10 +16,6 @@ import BenefitsApplication, {
   WorkPattern,
   WorkPatternType,
 } from "../../models/BenefitsApplication";
-import EmployerBenefit, {
-  EmployerBenefitFrequency,
-  EmployerBenefitType,
-} from "../../models/EmployerBenefit";
 import OtherIncome, {
   OtherIncomeFrequency,
   OtherIncomeType,
@@ -24,22 +24,26 @@ import PreviousLeave, { PreviousLeaveReason } from "../../models/PreviousLeave";
 import React, { useEffect, useState } from "react";
 import Step, { ClaimSteps } from "../../models/Step";
 import { compact, get, isBoolean, isNil } from "lodash";
+import withBenefitsApplication, {
+  WithBenefitsApplicationProps,
+} from "../../hoc/withBenefitsApplication";
+import withClaimDocuments, {
+  WithClaimDocumentsProps,
+} from "../../hoc/withClaimDocuments";
 import Address from "../../models/Address";
-import Alert from "../../components/Alert";
-import { AppLogic } from "../../hooks/useAppLogic";
+import Alert from "../../components/core/Alert";
 import BackButton from "../../components/BackButton";
-import BenefitsApplicationDocument from "../../models/BenefitsApplicationDocument";
 import { DateTime } from "luxon";
 import { DocumentType } from "../../models/Document";
-import Heading from "../../components/Heading";
-import HeadingPrefix from "../../components/HeadingPrefix";
-import Lead from "../../components/Lead";
+import Heading from "../../components/core/Heading";
+import HeadingPrefix from "../../components/core/HeadingPrefix";
+import Lead from "../../components/core/Lead";
 import LeaveReason from "../../models/LeaveReason";
 import ReviewHeading from "../../components/ReviewHeading";
 import ReviewRow from "../../components/ReviewRow";
-import Spinner from "../../components/Spinner";
+import Spinner from "../../components/core/Spinner";
 import ThrottledButton from "../../components/ThrottledButton";
-import Title from "../../components/Title";
+import Title from "../../components/core/Title";
 import { Trans } from "react-i18next";
 import WeeklyTimeTable from "../../components/WeeklyTimeTable";
 import claimantConfigs from "../../flows/claimant";
@@ -55,8 +59,6 @@ import isBlank from "../../utils/isBlank";
 import { isFeatureEnabled } from "../../services/featureFlags";
 import tracker from "../../services/tracker";
 import { useTranslation } from "../../locales/i18n";
-import withBenefitsApplication from "../../hoc/withBenefitsApplication";
-import withClaimDocuments from "../../hoc/withClaimDocuments";
 
 /**
  * Format an address onto a single line, or return undefined if the address
@@ -76,18 +78,13 @@ function formatAddress(address: Partial<Address> | null) {
   return formatted;
 }
 
-interface ReviewProps {
-  appLogic: AppLogic;
-  claim: BenefitsApplication;
-  documents: BenefitsApplicationDocument[];
-  isLoadingDocuments: boolean;
-}
-
 /**
  * Application review page, allowing a user to review the info
  * they've entered before they submit it.
  */
-export const Review = (props: ReviewProps) => {
+export const Review = (
+  props: WithClaimDocumentsProps & WithBenefitsApplicationProps
+) => {
   const { t } = useTranslation();
   const { appLogic, claim, documents, isLoadingDocuments } = props;
 
@@ -214,12 +211,8 @@ export const Review = (props: ReviewProps) => {
       {!usePartOneReview && (
         <Lead>
           <Trans
-            i18nKey={t("pages.claimsReview.partDescription", {
-              step: 1,
-              absence_id: claim.fineos_absence_id,
-            })}
-            tOptions={{ context: "1" }}
-            values={{ absence_id: claim.fineos_absence_id }}
+            i18nKey="pages.claimsReview.partDescription"
+            values={{ absence_id: claim.fineos_absence_id, step: 1 }}
             components={{
               "contact-center-phone-link": (
                 <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
@@ -727,12 +720,8 @@ export const Review = (props: ReviewProps) => {
           </Heading>
           <Lead>
             <Trans
-              i18nKey={t("pages.claimsReview.partDescription", {
-                step: 2,
-                absence_id: claim.fineos_absence_id,
-              })}
-              tOptions={{ context: "2" }}
-              values={{ absence_id: claim.fineos_absence_id }}
+              i18nKey="pages.claimsReview.partDescription"
+              values={{ absence_id: claim.fineos_absence_id, step: 2 }}
               components={{
                 "contact-center-phone-link": (
                   <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />

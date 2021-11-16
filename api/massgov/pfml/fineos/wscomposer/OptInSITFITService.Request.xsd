@@ -1,0 +1,369 @@
+<?xml version="1.0" ?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="http://www.fineos.com/wscomposer/OptInSITFITService" xmlns:tns="http://www.fineos.com/wscomposer/OptInSITFITService" targetNamespace="http://www.fineos.com/wscomposer/OptInSITFITService" elementFormDefault="unqualified">
+  <xs:element name="WSUpdateRequest">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element maxOccurs="1" name="config-name" type="xs:string"/>
+        <xs:element name="update-data" type="tns:OptInSITFITService"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:complexType name="OptInSITFITService">
+    <xs:sequence>
+      <xs:sequence minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="OCCaseForAbsence" type="tns:OCCaseForAbsence"/>
+      </xs:sequence>
+      <xs:element name="additional-data-set" minOccurs="0">
+            
+        <xs:complexType>
+                  
+          <xs:sequence>
+                        
+            <xs:element name="additional-data" minOccurs="0" maxOccurs="unbounded">
+                              
+              <xs:complexType>
+                                    
+                <xs:sequence>
+                                          
+                  <xs:element name="name" type="xs:string"/>
+                                          
+                  <xs:element name="value" type="xs:string"/>
+                                      
+                </xs:sequence>
+                                
+              </xs:complexType>
+                          
+            </xs:element>
+                    
+          </xs:sequence>
+              
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="OCCaseProxyBase">
+    <xs:annotation>
+      <xs:documentation>OCCaseProxyBase</xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="OID" minOccurs="0" maxOccurs="1" type="tns:OID">
+        <xs:annotation>
+          <xs:documentation>OID Control Attribute</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="BOEVersion" minOccurs="0" maxOccurs="1" type="xs:long">
+        <xs:annotation>
+          <xs:documentation>BOE Version Control Attribute</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="LastUpdateDate" minOccurs="0" maxOccurs="1" type="xs:dateTime">
+        <xs:annotation>
+          <xs:documentation>Last UpdateDate Control Attribute</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="UserUpdatedBy" minOccurs="0" maxOccurs="1" type="xs:string">
+        <xs:annotation>
+          <xs:documentation>Last UpdatedBy Control Attribute</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="persistent-oid" minOccurs="0" maxOccurs="1" type="tns:OID">
+        <xs:annotation>
+          <xs:documentation>Shadow persistent field for OID. OID of the persistent BO the transient BO represents</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="persistent-boeversion" minOccurs="0" maxOccurs="1" type="xs:long">
+        <xs:annotation>
+          <xs:documentation>Shadow persistent field for BOEVersion. BOEVersion of the persistent BO the transient BO represents</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="OCCaseForAbsence">
+    <xs:annotation>
+      <xs:documentation>Represents an extension of OCCase for an absence case. The absence case manages one or more leave requests and their periods of absence on behalf of an employee. It has its own process lifecycle steps, for example, adjudication, manage time, completion etc. Any reporting of actuals or cancellations of time occur at the absence case level.</xs:documentation>
+    </xs:annotation>
+    <xs:complexContent>
+      <xs:extension base="tns:OCCaseProxyBase">
+        <xs:sequence>
+          <xs:element name="BaseEpisodicAnchorDate" minOccurs="1" maxOccurs="1" nillable="true" type="xs:dateTime">
+            <xs:annotation>
+              <xs:documentation>Stores the base date used as a reference to define the monthly/weekly anchor dates.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="EpisodicFrequencyAnchorLocked" minOccurs="1" maxOccurs="1" type="xs:boolean">
+            <xs:annotation>
+              <xs:documentation>When true, it indicates that the anchor dates are locked. False, indicates that the anchor dates may be changed.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="Hash" minOccurs="1" maxOccurs="1">
+            <xs:annotation>
+              <xs:documentation>Stores the hash  for historical absence case created from the batch</xs:documentation>
+            </xs:annotation>
+            <xs:simpleType>
+              <xs:restriction base="xs:string">
+                <xs:maxLength value="32"/>
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element name="IntakeSource" minOccurs="1" maxOccurs="1" type="tns:FineosEnum">
+            <xs:annotation>
+              <xs:documentation>The source of the intake process.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="MonthlyEpisodicAnchorDate" minOccurs="1" maxOccurs="1" nillable="true" type="xs:dateTime">
+            <xs:annotation>
+              <xs:documentation>Anchor date for monthly episodic frequency.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="MonthlyEpisodicAnchorSource" minOccurs="1" maxOccurs="1" type="tns:FineosEnum">
+            <xs:annotation>
+              <xs:documentation>The source for the monthly episodic frequency anchor date.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="NotificationDate" minOccurs="1" maxOccurs="1" nillable="true" type="xs:dateTime">
+            <xs:annotation>
+              <xs:documentation>The notification date for this absence case.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="NotifiedBy" minOccurs="1" maxOccurs="1" type="tns:FineosEnum">
+            <xs:annotation>
+              <xs:documentation>The notifier for this absence Case.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="NotifierFirstName" minOccurs="1" maxOccurs="1">
+            <xs:annotation>
+              <xs:documentation>The first name for the Notifier.</xs:documentation>
+            </xs:annotation>
+            <xs:simpleType>
+              <xs:restriction base="xs:string">
+                <xs:maxLength value="50"/>
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element name="NotifierLastName" minOccurs="1" maxOccurs="1">
+            <xs:annotation>
+              <xs:documentation>The last name for the Notifier.</xs:documentation>
+            </xs:annotation>
+            <xs:simpleType>
+              <xs:restriction base="xs:string">
+                <xs:maxLength value="50"/>
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element name="NotifierPhone" minOccurs="1" maxOccurs="1">
+            <xs:annotation>
+              <xs:documentation>The telephone number for the Notifier.</xs:documentation>
+            </xs:annotation>
+            <xs:simpleType>
+              <xs:restriction base="xs:string">
+                <xs:maxLength value="50"/>
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element name="Reviewable" minOccurs="1" maxOccurs="1" type="xs:boolean">
+            <xs:annotation>
+              <xs:documentation>When true, this indicates that an approved or denied leave request within the absence case can be reviewed if the user has the relevant secured action. Leave requests created before the introduction of A55 F01, historical and take over cases cannot be reviewed.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="ThirdPartyIntegration" minOccurs="1" maxOccurs="1" type="xs:boolean">
+            <xs:annotation>
+              <xs:documentation>Indicates if disability data is stored in a third party system.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="WeeklyEpisodicAnchorDate" minOccurs="1" maxOccurs="1" nillable="true" type="xs:dateTime">
+            <xs:annotation>
+              <xs:documentation>Anchor date for weekly episodic frequency.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="WeeklyEpisodicAnchorSource" minOccurs="1" maxOccurs="1" type="tns:FineosEnum">
+            <xs:annotation>
+              <xs:documentation>The source for the weekly episodic frequency anchor date.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="ActionEventTriggeredByInReviewLeaveRequest" minOccurs="1" maxOccurs="1" type="xs:boolean"/>
+          <xs:element name="IDStatus" minOccurs="0" maxOccurs="1">
+            <xs:annotation>
+              <xs:documentation>Identification status for id proofing</xs:documentation>
+            </xs:annotation>
+            <xs:simpleType>
+              <xs:restriction base="xs:string">
+                <xs:maxLength value="150"/>
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <!-- Common Fineos Data Types -->
+  <xs:simpleType name="OID">
+    	
+    <xs:restriction base="xs:string">
+      		
+      <xs:pattern value="[pPtT][eElL]:\d{1,5}:\d{1,10}"/>
+      	
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="FineosEnum">
+    	
+    <xs:annotation>
+      		
+      <xs:documentation>An enumeration data-type similar to the Enum			data-type introduced in Java 5. This allows a Business			Object			(BO)			attribute to have one of a set of pre-defined values that			are stored			in the database.      </xs:documentation>
+      	
+    </xs:annotation>
+    	
+    <xs:sequence>
+      		
+      <xs:choice>
+        			
+        <xs:element name="InstanceDomainAndFullId" type="tns:InstanceNameAndDomainNameAndFullId">
+          			
+          <xs:annotation>
+            					
+            <xs:documentation>An Enum sepecifying Instance Name and Domian Name and FullId</xs:documentation>
+            				
+          </xs:annotation>
+          			
+        </xs:element>
+        			
+        <xs:element name="InstanceAndDomainName" type="tns:InstanceNameAndDomainName">
+          				
+          <xs:annotation>
+            					
+            <xs:documentation>An Enum sepecifying Instance Name and Domian Name</xs:documentation>
+            				
+          </xs:annotation>
+          			
+        </xs:element>
+        			
+        <xs:element name="FullId" type="xs:long">
+          				
+          <xs:annotation>
+            					
+            <xs:documentation>An Enum sepecifying Fullid</xs:documentation>
+            				
+          </xs:annotation>
+          			
+        </xs:element>
+        		
+      </xs:choice>
+      	
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="InstanceNameAndDomainNameAndFullId">
+    	
+    <xs:annotation>
+      		
+      <xs:documentation>Instance name Domain Name and FullId are Expected for enum values. This is type used in Read Service for Enums.          </xs:documentation>
+      			
+    </xs:annotation>
+    	
+    <xs:sequence>
+      		
+      <xs:element name="InstanceName" type="xs:string">
+        			
+        <xs:annotation>
+          				
+          <xs:documentation>Instance Name for this Enum</xs:documentation>
+          			
+        </xs:annotation>
+        		
+      </xs:element>
+      		
+      <xs:element name="DomainName" type="xs:string">
+        			
+        <xs:annotation>
+          				
+          <xs:documentation>Domain in which the instance name belongs</xs:documentation>
+          			
+        </xs:annotation>
+        		
+      </xs:element>
+      		
+      <xs:element name="FullId" type="xs:long">
+        			
+        <xs:annotation>
+          				
+          <xs:documentation>Full ID identifies the instance and the Domain</xs:documentation>
+          			
+        </xs:annotation>
+        		
+      </xs:element>
+      	
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="InstanceNameAndDomainName">
+    	
+    <xs:annotation>
+      		
+      <xs:documentation>Instance Name, Domain Name are Expected for Enum Values.          </xs:documentation>
+      			
+    </xs:annotation>
+    	
+    <xs:sequence>
+      		
+      <xs:element name="InstanceName" type="xs:string">
+        			
+        <xs:annotation>
+          				
+          <xs:documentation>Instance Name for this Enum</xs:documentation>
+          			
+        </xs:annotation>
+        		
+      </xs:element>
+      		
+      <xs:element name="DomainName" type="xs:string">
+        			
+        <xs:annotation>
+          				
+          <xs:documentation>Domain in which the instance name belongs</xs:documentation>
+          			
+        </xs:annotation>
+        		
+      </xs:element>
+      	
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="Money">
+    	
+    <xs:annotation>
+      		
+      <xs:documentation>			DataType for representing the Fineos Money			Object      </xs:documentation>
+      	
+    </xs:annotation>
+    	
+    <xs:sequence>
+      		
+      <xs:element name="CurrencyCode">
+        			
+        <xs:annotation>
+          				
+          <xs:documentation>Optional Currency Code for the Fineos					Money          </xs:documentation>
+          			
+        </xs:annotation>
+        			
+        <xs:simpleType>
+          				
+          <xs:restriction base="xs:string">
+            					
+            <xs:maxLength value="3"/>
+            				
+          </xs:restriction>
+          			
+        </xs:simpleType>
+        		
+      </xs:element>
+      		
+      <xs:element name="Amount" type="xs:decimal">
+        			
+        <xs:annotation>
+          				
+          <xs:documentation>BigDecimal amount for the Fineos Money          </xs:documentation>
+          			
+        </xs:annotation>
+        		
+      </xs:element>
+      	
+    </xs:sequence>
+  </xs:complexType>
+</xs:schema>

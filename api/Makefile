@@ -116,6 +116,9 @@ build-app: ## Build app container
 		--build-arg RUN_UID=$(RUN_UID) \
 		.
 
+create-erds:
+	PYTHONPATH=$$PYTHONPATH:. $(PY_RUN_CMD) python bin/create-erds.py; rm *.dot; mv *.png ../docs/assets/api/erds
+
 create-leave-admin-and-claims: ## Create local API Leave Admin user and claims
 	PYTHONPATH=$$PYTHONPATH:. $(PY_RUN_CMD) python bin/create-leave-admin-and-claims.py $(args)
 
@@ -125,8 +128,8 @@ create-user: ## Create local API User
 deps: ## Install dependencies
 	$(POETRY_CMD) install --no-root --extras "api-only-dependencies"
 
-deps-check:
-	$(PY_RUN_CMD) safety check --full-report
+deps-check: ## Check dependencies for vulnerabilities using Safety
+	$(PY_RUN_CMD) safety check --full-report --ignore=42050 --ignore=42194
 
 distclean: ## Remove all artifacts that can be regenerated
 distclean: clean clean-node clean-venv
@@ -195,6 +198,12 @@ ecr-login: ## Login to ECR for Docker
 	@echo "Authenticating Docker with ECR"
 	aws ecr get-login-password --region 'us-east-1' | \
 	docker login --username AWS --password-stdin 498823821309.dkr.ecr.us-east-1.amazonaws.com
+
+pre-commit: 
+	$(PY_RUN_CMD) isort --atomic --apply $(args)
+	$(PY_RUN_CMD) black $(args)
+	$(PY_RUN_CMD) flake8 $(args)
+	$(PY_RUN_CMD) mypy $(args)
 
 format: ## Format code
 	$(PY_RUN_CMD) isort --atomic --apply

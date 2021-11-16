@@ -11,7 +11,7 @@ import resource
 import sys
 import time
 from datetime import datetime
-from typing import Any, Dict, Generator, Iterable, Optional, TypeVar
+from typing import Any, Dict, Generator, Iterable, Optional, TypeVar, cast
 
 from massgov.pfml.util.datetime import utcnow
 
@@ -65,8 +65,16 @@ def init(program_name):
         extra={
             "hostname": platform.node(),
             "cpu_count": os.cpu_count(),
+            # If mypy is run on a mac, it will throw a module has no attribute error, even though
+            # we never actually access it with the conditional.
+            #
+            # However, we can't just silence this error, because on linux (e.g. CI/CD) that will
+            # throw an unused “type: ignore” comment error. Casting to Any instead ensures this
+            # passes regardless of where mypy is being run
             "cpu_usable": (
-                len(os.sched_getaffinity(0)) if "sched_getaffinity" in dir(os) else "unknown"
+                len(cast(Any, os).sched_getaffinity(0))
+                if "sched_getaffinity" in dir(os)
+                else "unknown"
             ),
         },
     )

@@ -1,21 +1,15 @@
-import { AppLogic } from "../../../hooks/useAppLogic";
+import withUser, { WithUserProps } from "../../../hoc/withUser";
 import BackButton from "../../../components/BackButton";
 import React from "react";
-import Title from "../../../components/Title";
+import Title from "../../../components/core/Title";
 import { Trans } from "react-i18next";
 import UserFeedback from "../../../components/UserFeedback";
 import routes from "../../../routes";
 import { useTranslation } from "../../../locales/i18n";
-import withUser from "../../../hoc/withUser";
 
-interface SuccessProps {
-  appLogic: AppLogic;
-  query: {
-    absence_id: string;
-  };
-}
-
-export const Success = (props: SuccessProps) => {
+export const Success = (
+  props: WithUserProps & { query: { absence_id?: string } }
+) => {
   const { t } = useTranslation();
   const {
     appLogic,

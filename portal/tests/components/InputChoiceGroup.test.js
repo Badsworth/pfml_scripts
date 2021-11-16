@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 
-import InputChoiceGroup from "../../src/components/InputChoiceGroup";
+import InputChoiceGroup from "../../src/components/core/InputChoiceGroup";
 import React from "react";
 import userEvent from "@testing-library/user-event";
 

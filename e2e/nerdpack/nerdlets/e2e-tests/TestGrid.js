@@ -7,37 +7,8 @@ import {
   SectionMessage,
 } from "nr1";
 import React from "react";
-
-const CATEGORY_PRIORITY = {
-  content: {
-    "potential-edm": "EDM",
-    "test-update": "HIGH",
-  },
-  infrastructure: {
-    "timeout-service": "LOW",
-    authentication: "HIGH",
-    "failure-400": "EDM",
-    "failure-500": "EDM",
-    "failure-503": "MEDIUM",
-    "failure-504": "LOW",
-  },
-  known: { priority: "LOW" },
-  notification: { priority: "MEDIUM" },
-};
-
-const ERROR_PRIORITY = ["EDM", "HIGH", "MEDIUM", "LOW"];
-
-function getErrorPriority(cat, sub) {
-  if (CATEGORY_PRIORITY[cat]) {
-    if (CATEGORY_PRIORITY[cat].priority) {
-      return CATEGORY_PRIORITY[cat]?.priority;
-    }
-    if (CATEGORY_PRIORITY[cat][sub]) {
-      return CATEGORY_PRIORITY[cat][sub];
-    }
-  }
-  return "HIGH";
-}
+import { labelEnv } from "../common";
+import { ERROR_PRIORITY, getErrorPriority } from "../common/ErrorPriority";
 
 function RunIdsQuery({ children, environment, accountId }) {
   const whereClauses = [];
@@ -101,9 +72,9 @@ function buildRuns(data) {
         testCount: 0,
         categories: [],
         results: [],
+        branch: result.branch,
       };
     }
-
     seenTests.add(result.file);
     if (result.status != "passed") {
       let errorPriority = getErrorPriority(result.category, result.subCategory);
@@ -171,6 +142,7 @@ function buildRuns(data) {
       runId,
       environment: sample.environment,
       runUrl: sample.runUrl,
+      branch: sample.branch,
       timestamp: Math.min(...Object.values(runResults).map((r) => r.timestamp)),
     };
   });
@@ -337,12 +309,21 @@ export default function TestGrid({ accountId, environment, runIds }) {
   const children = ({ rows, uniqueRuns }) => {
     return (
       <div>
-        {uniqueRuns.map(({ runId, environment, runUrl }, i) => (
+        {uniqueRuns.map(({ runId, environment, runUrl, branch }, i) => (
           <div className={"run-notes"}>
             <span>
-              {`${i + 1} Run ID: ${runId}, Environment: ${environment}`}
+              {`${i + 1} Run ID: ${runId}, Environment: ${labelEnv(
+                environment
+              )}`}
             </span>
             <Link to={runUrl}>View in Cypress</Link>
+            {branch != "main" && (
+              <Link
+                to={`https://github.com/EOLWD/pfml/compare/main...${branch}`}
+              >
+                {branch}
+              </Link>
+            )}
           </div>
         ))}
         <table className={"e2e-status"}>

@@ -1,5 +1,3 @@
-from werkzeug.exceptions import Forbidden
-
 import massgov.pfml.api.app as app
 from massgov.pfml.api.models.claims.responses import DetailedClaimResponse
 from massgov.pfml.api.services.fineos_actions import get_absence_periods
@@ -31,10 +29,9 @@ def get_claim_detail(claim: Claim) -> DetailedClaimResponse:
             absence_periods = get_absence_periods(
                 employee_tax_id, employer_fein, absence_id, db_session
             )
-        except exception.FINEOSClientError as error:
+        except exception.FINEOSForbidden as error:
             if _is_withdrawn_claim_error(error):
                 raise ClaimWithdrawnError
-
             raise error
 
         if len(absence_periods) == 0:
@@ -49,17 +46,6 @@ def get_claim_detail(claim: Claim) -> DetailedClaimResponse:
     return detailed_claim
 
 
-# Check if the given error is the result of a withdrawn claim.
-# FINEOS returns a 403 for some - but not all - withdrawn claim scenarios.
-def _is_withdrawn_claim_error(error: exception.FINEOSClientError) -> bool:
-    if not isinstance(error, exception.FINEOSClientBadResponse):
-        return False
-
-    if not error.response_status == Forbidden.code:
-        return False
-
+def _is_withdrawn_claim_error(error: exception.FINEOSForbidden) -> bool:
     withdrawn_msg = "User does not have permission to access the resource or the instance data"
-    if withdrawn_msg not in error.message:
-        return False
-
-    return True
+    return withdrawn_msg in error.message

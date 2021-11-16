@@ -4,7 +4,6 @@ import PaymentPreference, {
 import BenefitsApplication from "../../src/models/BenefitsApplication";
 import BenefitsApplicationCollection from "../../src/models/BenefitsApplicationCollection";
 import BenefitsApplicationsApi from "../../src/api/BenefitsApplicationsApi";
-import TaxWithholdingPreference from "../../src/models/TaxWithholdingPreference";
 
 import { mockAuth } from "../test-utils";
 
@@ -354,7 +353,7 @@ describe("BenefitsApplicationsApi", () => {
 
     beforeEach(() => {
       claim = new BenefitsApplication();
-      tax_preference = new TaxWithholdingPreference({ withhold_taxes: true });
+      tax_preference = { is_withholding_tax: true };
 
       global.fetch = mockFetch({
         response: { data: { ...claim } },

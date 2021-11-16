@@ -456,7 +456,7 @@ def generate_scenario_data(
 
     if scenario_descriptor.audit_report_detail_informational:
         stage_payment_audit_report_details(
-            payment, PaymentAuditReportType.DUA_DIA_REDUCTION, "Test Message", None, db_session
+            payment, PaymentAuditReportType.DUA_ADDITIONAL_INCOME, "Test Message", None, db_session
         )
 
     return AuditScenarioData(
@@ -518,6 +518,8 @@ def generate_payment_audit_data_set_and_rejects_file(
             state_log_util.build_outcome("test"),
             db_session,
         )
+
+    db_session.commit()
 
     write_audit_report_rows(
         payment_audit_report_rows, folder_path, db_session, report_name=file_name

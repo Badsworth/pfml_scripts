@@ -7,53 +7,40 @@ import React, {
   useState,
 } from "react";
 import { camelCase, compact, find, get, isEqual, startCase } from "lodash";
+import withClaims, { ApiParams, WithClaimsProps } from "../../hoc/withClaims";
+import withUser, { WithUserProps } from "../../hoc/withUser";
 import AbsenceCaseStatusTag from "../../components/AbsenceCaseStatusTag";
-import Alert from "../../components/Alert";
+import Alert from "../../components/core/Alert";
 import { AppLogic } from "../../hooks/useAppLogic";
-import Button from "../../components/Button";
+import Button from "../../components/core/Button";
 import ClaimCollection from "../../models/ClaimCollection";
-import Details from "../../components/Details";
-import Dropdown from "../../components/Dropdown";
+import Details from "../../components/core/Details";
+import Dropdown from "../../components/core/Dropdown";
 import EmployerNavigationTabs from "../../components/employers/EmployerNavigationTabs";
-import Icon from "../../components/Icon";
-import InputChoiceGroup from "../../components/InputChoiceGroup";
-import InputText from "../../components/InputText";
+import Icon from "../../components/core/Icon";
+import InputChoiceGroup from "../../components/core/InputChoiceGroup";
+import InputText from "../../components/core/InputText";
 import Link from "next/link";
-import PaginationMeta from "../../models/PaginationMeta";
 import PaginationNavigation from "../../components/PaginationNavigation";
 import PaginationSummary from "../../components/PaginationSummary";
-import Table from "../../components/Table";
-import Title from "../../components/Title";
-import TooltipIcon from "../../components/TooltipIcon";
+import Table from "../../components/core/Table";
+import Title from "../../components/core/Title";
+import TooltipIcon from "../../components/core/TooltipIcon";
 import { Trans } from "react-i18next";
 import User from "../../models/User";
 import formatDateRange from "../../utils/formatDateRange";
+import isBlank from "../../utils/isBlank";
 import routes from "../../routes";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import withClaims from "../../hoc/withClaims";
-import withUser from "../../hoc/withUser";
 
 interface PageQueryParam {
   name: string;
-  value: number | string | string[];
+  value: number | null | string | string[];
 }
 
-interface DashboardProps {
-  appLogic: AppLogic;
-  query: {
-    claim_status?: string;
-    employer_id?: string;
-    order_by?: "absence_status" | "created_at" | "employee";
-    order_direction?: "ascending" | "descending";
-    page_offset?: string;
-    search?: string;
-  };
-  user: User;
-}
-
-export const Dashboard = (props: DashboardProps) => {
+export const Dashboard = (props: WithUserProps & { query: ApiParams }) => {
   const { t } = useTranslation();
   const introElementRef = useRef<HTMLElement>(null);
   const apiParams = {
@@ -72,7 +59,7 @@ export const Dashboard = (props: DashboardProps) => {
     const params = new URLSearchParams(window.location.search);
 
     paramsToUpdate.forEach(({ name, value }) => {
-      if (typeof value !== "number" && value.length === 0) {
+      if (isBlank(value) || (typeof value !== "number" && value.length === 0)) {
         // Remove param if its value is null, undefined, empty string, or empty array
         params.delete(name);
       } else {
@@ -168,21 +155,16 @@ export const Dashboard = (props: DashboardProps) => {
       />
       <PaginatedClaimsTableWithClaims
         appLogic={props.appLogic}
-        user={props.user}
         {...componentSpecificProps}
       />
     </React.Fragment>
   );
 };
 
-interface PaginatedClaimsTableProps {
-  appLogic: AppLogic;
-  claims: ClaimCollection;
-  paginationMeta: PaginationMeta;
+interface PaginatedClaimsTableProps extends WithClaimsProps {
   updatePageQuery: (params: PageQueryParam[]) => void;
   /** Pass in the SortDropdown so it can be rendered in the expected inline UI position */
   sort: React.ReactNode;
-  user: User;
 }
 
 const PaginatedClaimsTable = (props: PaginatedClaimsTableProps) => {

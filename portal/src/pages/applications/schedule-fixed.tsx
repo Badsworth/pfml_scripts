@@ -1,19 +1,20 @@
-import BenefitsApplication, {
+import {
   OrderedDaysOfWeek,
   WorkPattern,
 } from "../../models/BenefitsApplication";
 import { get, pick, round } from "lodash";
-import { AppLogic } from "../../hooks/useAppLogic";
-import Heading from "../../components/Heading";
-import InputHours from "../../components/InputHours";
-import Lead from "../../components/Lead";
+import withBenefitsApplication, {
+  WithBenefitsApplicationProps,
+} from "../../hoc/withBenefitsApplication";
+import Heading from "../../components/core/Heading";
+import InputHours from "../../components/core/InputHours";
+import Lead from "../../components/core/Lead";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import isBlank from "../../utils/isBlank";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = [
   "claim.work_pattern.work_pattern_days",
@@ -21,12 +22,7 @@ export const fields = [
   "claim.work_pattern.work_pattern_days[*].minutes",
 ];
 
-interface ScheduleFixedProps {
-  claim: BenefitsApplication;
-  appLogic: AppLogic;
-}
-
-export const ScheduleFixed = (props: ScheduleFixedProps) => {
+export const ScheduleFixed = (props: WithBenefitsApplicationProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 

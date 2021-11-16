@@ -129,6 +129,42 @@ module.exports = {
       },
     },
     {
+      files: ["src/components/core/*"],
+      rules: {
+        "no-restricted-imports": [
+          "error",
+          {
+            paths: [
+              {
+                name: "react-i18next",
+                message: "Core components shouldn't have any custom strings",
+              },
+              {
+                name: "next/link",
+                message:
+                  "Core components should not be responsible for routing.",
+              },
+            ],
+            patterns: [
+              {
+                group: [
+                  "*/pages*",
+                  "*/components*.tsx",
+                  "*/models*",
+                  "*/locales/*",
+                  "*/flows*",
+                  "*/hoc*",
+                  "*/services*",
+                ],
+                message:
+                  "Core components should not depend on application code.",
+              },
+            ],
+          },
+        ],
+      },
+    },
+    {
       files: ["src/models/*"],
       rules: {
         "no-restricted-imports": [

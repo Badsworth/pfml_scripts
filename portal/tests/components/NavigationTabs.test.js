@@ -55,11 +55,11 @@ describe("NavigationTabs", () => {
       tabs: [
         {
           label: "Claim Detail",
-          href: `${routes.applications.status.claim}?absence_case_id=NTN-123-213-1234`,
+          href: `${routes.applications.status.claim}?absence_id=NTN-123-213-1234`,
         },
         {
           label: "Payments",
-          href: `${routes.applications.status.payments}?absence_case_id=NTN-123-213-1234`,
+          href: `${routes.applications.status.payments}?absence_id=NTN-123-213-1234`,
         },
       ],
     });

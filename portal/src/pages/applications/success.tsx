@@ -1,37 +1,30 @@
-import BenefitsApplication, {
-  ReasonQualifier,
-} from "../../models/BenefitsApplication";
 import {
   IconCalendar,
   IconCopy,
   IconPhone,
 } from "@massds/mayflower-react/dist/Icon";
+import withBenefitsApplication, {
+  WithBenefitsApplicationProps,
+} from "../../hoc/withBenefitsApplication";
 
-import Alert from "../../components/Alert";
+import Alert from "../../components/core/Alert";
 import BackButton from "../../components/BackButton";
 import ButtonLink from "../../components/ButtonLink";
-import Heading from "../../components/Heading";
+import Heading from "../../components/core/Heading";
 import React from "react";
-import Title from "../../components/Title";
+import { ReasonQualifier } from "../../models/BenefitsApplication";
+import Title from "../../components/core/Title";
 import { Trans } from "react-i18next";
 import UserFeedback from "../../components/UserFeedback";
 import { get } from "lodash";
 import routeWithParams from "../../utils/routeWithParams";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
-import withBenefitsApplication from "../../hoc/withBenefitsApplication";
-
-interface SuccessProps {
-  claim: BenefitsApplication;
-  query: {
-    claim_id?: string;
-  };
-}
 
 /**
  * Success page, shown when an application is successfully submitted.
  */
-export const Success = (props: SuccessProps) => {
+export const Success = (props: WithBenefitsApplicationProps) => {
   const { claim } = props;
   const { t } = useTranslation();
   const iconProps = {
@@ -168,7 +161,7 @@ export const Success = (props: SuccessProps) => {
             "track-status-link": (
               <a
                 href={routeWithParams("applications.status.claim", {
-                  absence_case_id: claim.fineos_absence_id,
+                  absence_id: claim.fineos_absence_id,
                 })}
               />
             ),
@@ -281,7 +274,7 @@ export const Success = (props: SuccessProps) => {
           <ButtonLink
             className="margin-top-4"
             href={routeWithParams("applications.status.claim", {
-              absence_case_id: claim.fineos_absence_id,
+              absence_id: claim.fineos_absence_id,
             })}
           >
             {t("pages.claimsSuccess.exitLink")}

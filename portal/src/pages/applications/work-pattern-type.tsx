@@ -1,24 +1,18 @@
-import BenefitsApplication, {
-  WorkPatternType as WorkPatternTypeEnum,
-} from "../../models/BenefitsApplication";
 import { get, pick, set } from "lodash";
-import { AppLogic } from "../../hooks/useAppLogic";
-import InputChoiceGroup from "../../components/InputChoiceGroup";
+import withBenefitsApplication, {
+  WithBenefitsApplicationProps,
+} from "../../hoc/withBenefitsApplication";
+import InputChoiceGroup from "../../components/core/InputChoiceGroup";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
+import { WorkPatternType as WorkPatternTypeEnum } from "../../models/BenefitsApplication";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = ["claim.work_pattern.work_pattern_type"];
 
-interface WorkPatternTypeProps {
-  appLogic: AppLogic;
-  claim: BenefitsApplication;
-}
-
-export const WorkPatternType = (props: WorkPatternTypeProps) => {
+export const WorkPatternType = (props: WithBenefitsApplicationProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 

@@ -113,6 +113,7 @@ class DelegatedPaymentFactory(MockData):
         self.claim_type = self.get_value("claim_type", ClaimType.FAMILY_LEAVE)
         self.fineos_absence_id = self.get_value("fineos_absence_id", str(fake.unique.random_int()))
         self.is_id_proofed = self.get_value("is_id_proofed", True)
+        self.fineos_absence_status_id = self.get_value("fineos_absence_status_id", None)
 
         # payment defaults
         self.payment_optional_kwargs: Dict[str, Any] = (
@@ -142,6 +143,8 @@ class DelegatedPaymentFactory(MockData):
         self.amount = self.get_value("amount", Decimal("0.00"))
         self.experian_address_pair = self.get_value("experian_address_pair", None)
         self.check_number = self.get_value("check_number", None)
+        self.fineos_extract_import_log_id = self.get_value("fineos_extract_import_log_id", None)
+        self.exclude_from_payment_status = self.get_value("exclude_from_payment_status", None)
 
     # only set if value was passed in constructor through kwarg
     # else defer to lazy factory initialization
@@ -224,6 +227,7 @@ class DelegatedPaymentFactory(MockData):
                 employer=self.employer,
                 is_id_proofed=self.is_id_proofed,
                 employee_id=self.employee.employee_id if self.employee else None,
+                fineos_absence_status_id=self.fineos_absence_status_id,
             )
 
         return self.claim
@@ -260,6 +264,8 @@ class DelegatedPaymentFactory(MockData):
             claim_type=self.claim.claim_type if self.claim else None,
             check=PaymentCheck(check_number=self.check_number) if self.check_number else None,
             fineos_extraction_date=self.fineos_extraction_date,
+            fineos_extract_import_log_id=self.fineos_extract_import_log_id,
+            exclude_from_payment_status=self.exclude_from_payment_status,
             **self.payment_optional_kwargs,
         )
 

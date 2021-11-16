@@ -45,6 +45,7 @@ export function before(credentials?: Credentials): void {
     "baseUrl",
     getFineosBaseUrl(credentials?.username, credentials?.password)
   );
+  Cypress.config("pageLoadTimeout", 90000);
   // Fineos error pages have been found to cause test crashes when rendered. This is very hard to debug, as Cypress
   // crashes with no warning and removes the entire run history, so when a Fineos error page is detected, we replace the
   // page with an error page and capture the real response to a file for future debugging.
@@ -67,7 +68,7 @@ export function before(credentials?: Credentials): void {
             debugInfo ? `\n\nDebug Information:\n----------\n${debugInfo}` : ""
           }}`
         );
-      }, 1000);
+      }, 300);
     });
   });
 
@@ -76,7 +77,7 @@ export function before(credentials?: Credentials): void {
     /(ajax\/pagerender\.jsp|sharedpages\/ajax\/listviewpagerender\.jsp|AJAXRequestHandler\.do)/
   ).as("ajaxRender");
 
-  if (config("ENVIRONMENT") === "uat") {
+  if (config("ENVIRONMENT") === "uat" || config("ENVIRONMENT") === "breakfix") {
     SSO(credentials);
   }
   cy.visit("/");

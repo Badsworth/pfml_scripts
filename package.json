@@ -9,23 +9,18 @@
   "scripts": {
     "docs": "docker run --rm -it -p 8000:8000 -v ${PWD}:/docs squidfunk/mkdocs-material",
     "docs:build": "docker run --rm -v ${PWD}:/docs squidfunk/mkdocs-material build",
-    "lint:tf": "./bin/tf-fmt.sh"
+    "lint:tf": "./bin/tf-fmt.sh",
+    "spectral": "cd ./api && make lint-spectral",
+    "db-parity-check": "cd ./api && make db-check-model-parity"
   },
   "devDependencies": {
     "husky": "^4.3.7",
-    "lint-staged": "^11.0.0"
+    "lint-staged": "^11.2.6"
   },
   "husky": {
     "hooks": {
-      "pre-commit": "lint-staged"
+      "pre-commit": "lint-staged --shell"
     }
-  },
-  "lint-staged": {
-    "portal/**/*": [
-      "npm run format --prefix=portal -- --write"
-    ],
-    "!(bin)/**/*.{tf,tfvars}": [
-      "npm run lint:tf"
-    ]
   }
-}
+ }
+ 

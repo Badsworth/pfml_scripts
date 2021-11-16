@@ -1,6 +1,8 @@
-import BenefitsApplicationDocument from "../models/BenefitsApplicationDocument";
-import ClaimDocument from "../models/ClaimDocument";
-import { DocumentType } from "../models/Document";
+import {
+  BenefitsApplicationDocument,
+  ClaimDocument,
+  DocumentType,
+} from "../models/Document";
 import findDocumentsByTypes from "./findDocumentsByTypes";
 
 /**

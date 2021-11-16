@@ -3,7 +3,7 @@ import routes from "../routes";
 
 // A param with a null/undefined value will be excluded from the query string ultimately created
 export interface NullableQueryParams {
-  [name: string]: null | string | undefined;
+  [name: string]: null | string | undefined | string[];
 }
 
 /**

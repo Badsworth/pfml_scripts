@@ -245,12 +245,14 @@ Below is an abbreviated representation of our directory structure, pointing out 
 
 ```
 ├── __mocks__               Dependency mocks used by test suites
-├── tests                   Test suites
 ├── config                  Env. variables & feature flags
+├── lib                     Common code shared between Storybook and Tests
+├── next.config.js          Build process config for Portal
 ├── public                  Static assets
 ├── src                     Source code
 │   ├── api                 API request modules
 │   ├── components
+|   |   └── core            Home for reusable presentation components
 │   │   └── PageWrapper.tsx 🖼 Main layout applied to all pages
 │   ├── hooks               Custom React hooks
 │   ├── locales             Localization files
@@ -267,6 +269,6 @@ Below is an abbreviated representation of our directory structure, pointing out 
 ├── storybook               Storybook site config and stories
 ├── styles
 │   └── app.scss            Main stylesheet
-├── next.config.js          Build process config for Portal
+├── tests                   Test suites
 └── tsconfig.json           TypeScript setup
 ```

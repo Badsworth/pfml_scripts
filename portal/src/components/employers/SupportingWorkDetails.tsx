@@ -3,8 +3,8 @@ import AmendButton from "./AmendButton";
 import AmendmentForm from "./AmendmentForm";
 import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
 import ConditionalContent from "../ConditionalContent";
-import Heading from "../Heading";
-import InputNumber from "../InputNumber";
+import Heading from "../core/Heading";
+import InputNumber from "../core/InputNumber";
 import ReviewHeading from "../ReviewHeading";
 import ReviewRow from "../ReviewRow";
 import { get } from "lodash";
@@ -97,7 +97,7 @@ const SupportingWorkDetails = (props: SupportingWorkDetailsProps) => {
             mask="hours"
             width="small"
             smallLabel
-            valueType="integer"
+            valueType="float"
           />
         </AmendmentForm>
       </ConditionalContent>

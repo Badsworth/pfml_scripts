@@ -1,7 +1,10 @@
-import BenefitsApplicationDocument from "../models/BenefitsApplicationDocument";
-import Button from "./Button";
-import ClaimDocument from "../models/ClaimDocument";
-import { DocumentType } from "../models/Document";
+import {
+  BenefitsApplicationDocument,
+  ClaimDocument,
+  DocumentType,
+  isClaimDocument,
+} from "../models/Document";
+import Button from "./core/Button";
 import React from "react";
 import classnames from "classnames";
 import download from "downloadjs";
@@ -50,17 +53,12 @@ const DownloadableDocument = (props: DownloadableDocumentProps) => {
   const handleClick = async (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
     let documentData;
-    if (
-      document instanceof ClaimDocument &&
-      downloadClaimDocument &&
-      absenceId
-    ) {
+    if (isClaimDocument(document) && downloadClaimDocument && absenceId) {
       documentData = await downloadClaimDocument(document, absenceId);
-    } else if (
-      downloadBenefitsApplicationDocument &&
-      document instanceof BenefitsApplicationDocument
-    ) {
-      documentData = await downloadBenefitsApplicationDocument(document);
+    } else if (downloadBenefitsApplicationDocument) {
+      documentData = await downloadBenefitsApplicationDocument(
+        document as BenefitsApplicationDocument
+      );
     }
     if (documentData) {
       download(

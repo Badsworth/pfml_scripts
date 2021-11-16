@@ -1,11 +1,11 @@
-import Alert from "../Alert";
+import Alert from "../core/Alert";
 import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
-import ClaimDocument from "../../models/ClaimDocument";
+import { ClaimDocument } from "../../models/Document";
 import ConditionalContent from "../ConditionalContent";
 import DownloadableDocument from "../DownloadableDocument";
 import EmployerClaim from "../../models/EmployerClaim";
-import FormLabel from "../FormLabel";
-import InputChoiceGroup from "../InputChoiceGroup";
+import FormLabel from "../core/FormLabel";
+import InputChoiceGroup from "../core/InputChoiceGroup";
 import LeaveReason from "../../models/LeaveReason";
 import React from "react";
 import ReviewHeading from "../ReviewHeading";

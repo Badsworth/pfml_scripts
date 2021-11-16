@@ -1,13 +1,13 @@
 import { IconMail, IconPdf } from "@massds/mayflower-react/dist/Icon";
-import Alert from "../../components/Alert";
+import Alert from "../../components/core/Alert";
 import { AppLogic } from "../../hooks/useAppLogic";
 import EmployerNavigationTabs from "../../components/employers/EmployerNavigationTabs";
-import Heading from "../../components/Heading";
-import Icon from "../../components/Icon";
+import Heading from "../../components/core/Heading";
+import Icon from "../../components/core/Icon";
 import Link from "next/link";
-import NewTag from "../../components/NewTag";
 import React from "react";
-import Title from "../../components/Title";
+import Tag from "../../components/core/Tag";
+import Title from "../../components/core/Title";
 import { Trans } from "react-i18next";
 import User from "../../models/User";
 import routes from "../../routes";
@@ -74,7 +74,10 @@ export const Welcome = ({ appLogic, user }: WelcomeProps) => {
           <Heading level="2">
             <Icon name="list" size={4} {...iconProps} />
             {t("pages.employersWelcome.viewApplicationsTitle")}
-            <NewTag />
+            <Tag
+              className="margin-left-1"
+              label={t("pages.employersWelcome.newTag")}
+            />
           </Heading>
           <p>
             <Trans

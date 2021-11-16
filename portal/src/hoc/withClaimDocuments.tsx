@@ -1,27 +1,30 @@
 import React, { useEffect } from "react";
-import { AppLogic } from "../hooks/useAppLogic";
+import withUser, { WithUserProps } from "./withUser";
+import BenefitsApplication from "../models/BenefitsApplication";
+import { BenefitsApplicationDocument } from "../models/Document";
 import PageNotFound from "../components/PageNotFound";
 import assert from "assert";
-import withUser from "./withUser";
 
-interface ComponentWithDocumentsProps {
-  appLogic: AppLogic;
-  claim?: {
-    application_id: string;
-  };
-  query: {
-    claim_id?: string;
-  };
+export interface QueryForWithClaimDocuments {
+  claim_id?: string;
+}
+
+export interface WithClaimDocumentsProps extends WithUserProps {
+  isLoadingDocuments: boolean;
+  documents: BenefitsApplicationDocument[];
 }
 
 /**
  * Higher order component that loads documents based on query parameters if they are not yet loaded
- * @param {React.Component} Component - Component to receive documents prop
- * @returns {React.Component} - Component with documents prop
  */
-// @ts-expect-error TODO (PORTAL-966) Fix HOC typing
-const withClaimDocuments = (Component) => {
-  const ComponentWithDocuments = (props: ComponentWithDocumentsProps) => {
+function withClaimDocuments<
+  T extends WithClaimDocumentsProps & { claim?: BenefitsApplication }
+>(Component: React.ComponentType<T>) {
+  const ComponentWithDocuments = (
+    props: Omit<T, "documents" | "isLoadingDocuments"> & {
+      query: QueryForWithClaimDocuments;
+    }
+  ) => {
     const { appLogic, claim, query } = props;
     const {
       documents: { loadAll, documents, hasLoadedClaimDocuments },
@@ -51,7 +54,7 @@ const withClaimDocuments = (Component) => {
 
     return (
       <Component
-        {...props}
+        {...(props as T & { query: QueryForWithClaimDocuments })}
         documents={documents.filterByApplication(application_id)}
         isLoadingDocuments={shouldLoad}
       />
@@ -59,6 +62,6 @@ const withClaimDocuments = (Component) => {
   };
 
   return withUser(ComponentWithDocuments);
-};
+}
 
 export default withClaimDocuments;

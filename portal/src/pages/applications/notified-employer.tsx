@@ -1,34 +1,26 @@
 import { get, pick } from "lodash";
-import Alert from "../../components/Alert";
-import { AppLogic } from "../../hooks/useAppLogic";
-import BenefitsApplication from "../../models/BenefitsApplication";
+import withBenefitsApplication, {
+  WithBenefitsApplicationProps,
+} from "../../hoc/withBenefitsApplication";
+import Alert from "../../components/core/Alert";
 import ConditionalContent from "../../components/ConditionalContent";
-import InputChoiceGroup from "../../components/InputChoiceGroup";
-import InputDate from "../../components/InputDate";
+import InputChoiceGroup from "../../components/core/InputChoiceGroup";
+import InputDate from "../../components/core/InputDate";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = [
   "claim.leave_details.employer_notified",
   "claim.leave_details.employer_notification_date",
 ];
 
-interface NotifiedEmployerProps {
-  claim: BenefitsApplication;
-  appLogic: AppLogic;
-  query: {
-    claim_id?: string;
-  };
-}
-
 /**
  * A form page to capture a user's attestation of having notified their employer.
  */
-export const NotifiedEmployer = (props: NotifiedEmployerProps) => {
+export const NotifiedEmployer = (props: WithBenefitsApplicationProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 

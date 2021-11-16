@@ -3,6 +3,7 @@ import BenefitsApplication from "../models/BenefitsApplication";
 import BenefitsApplicationCollection from "../models/BenefitsApplicationCollection";
 import PaymentPreference from "../models/PaymentPreference";
 import TaxWithholdingPreference from "../models/TaxWithholdingPreference";
+import { isFeatureEnabled } from "../services/featureFlags";
 import routes from "../routes";
 
 export default class BenefitsApplicationsApi extends BaseApi {
@@ -19,12 +20,16 @@ export default class BenefitsApplicationsApi extends BaseApi {
    * API functionality that can be toggled on/off.
    */
   private get featureFlagHeaders() {
-    const headers = {};
+    const headers: { [key: string]: unknown } = {};
 
     // Add any feature flag headers here. eg:
     // if (isFeatureEnabled("claimantShowOtherLeaveStep")) {
     //   headers["X-FF-Require-Other-Leaves"] = true;
     // }
+
+    if (isFeatureEnabled("claimantShowTaxWithholding")) {
+      headers["X-FF-Tax-Withholding-Enabled"] = true;
+    }
 
     return headers;
   }

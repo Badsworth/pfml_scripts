@@ -1,22 +1,21 @@
 import React, { useEffect } from "react";
-import { AppLogic } from "../hooks/useAppLogic";
-import Spinner from "../components/Spinner";
+import withUser, { WithUserProps } from "./withUser";
+import BenefitsApplicationCollection from "../models/BenefitsApplicationCollection";
+import Spinner from "../components/core/Spinner";
 import { useTranslation } from "../locales/i18n";
-import withUser from "./withUser";
 
-interface ComponentWithClaimsProps {
-  appLogic: AppLogic;
+export interface WithBenefitsApplicationsProps extends WithUserProps {
+  claims: BenefitsApplicationCollection;
 }
 
 /**
  * Higher order component that provides the current user's claims to the wrapped component.
  * The higher order component also loads the claims if they have not already been loaded.
- * @param {React.Component} Component - Component to receive claims prop
- * @returns {React.Component} - Component with claims prop
  */
-// @ts-expect-error TODO (PORTAL-966) Fix HOC typing
-const withBenefitsApplications = (Component) => {
-  const ComponentWithClaims = (props: ComponentWithClaimsProps) => {
+function withBenefitsApplications<T extends WithBenefitsApplicationsProps>(
+  Component: React.ComponentType<T>
+) {
+  const ComponentWithClaims = (props: WithUserProps) => {
     const { appLogic } = props;
     const { t } = useTranslation();
 
@@ -44,9 +43,9 @@ const withBenefitsApplications = (Component) => {
       );
     }
 
-    return <Component {...props} claims={benefitsApplications} />;
+    return <Component {...(props as T)} claims={benefitsApplications} />;
   };
   return withUser(ComponentWithClaims);
-};
+}
 
 export default withBenefitsApplications;

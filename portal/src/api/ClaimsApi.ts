@@ -2,7 +2,6 @@ import Claim, { AbsenceCaseStatus } from "../models/Claim";
 import BaseApi from "./BaseApi";
 import ClaimCollection from "../models/ClaimCollection";
 import ClaimDetail from "../models/ClaimDetail";
-import PaginationMeta from "../models/PaginationMeta";
 import routes from "../routes";
 
 export default class ClaimsApi extends BaseApi {
@@ -59,7 +58,7 @@ export default class ClaimsApi extends BaseApi {
 
     return {
       claims: new ClaimCollection(claims),
-      paginationMeta: new PaginationMeta(meta ? meta.paging : {}),
+      paginationMeta: meta?.paging ?? {},
     };
   };
 

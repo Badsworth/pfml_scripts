@@ -1,11 +1,12 @@
 import React, { useEffect } from "react";
 import { isNil, omitBy } from "lodash";
-import { AppLogic } from "../hooks/useAppLogic";
-import Spinner from "../components/Spinner";
+import withUser, { WithUserProps } from "./withUser";
+import ClaimCollection from "../models/ClaimCollection";
+import PaginationMeta from "../models/PaginationMeta";
+import Spinner from "../components/core/Spinner";
 import { useTranslation } from "../locales/i18n";
-import withUser from "./withUser";
 
-interface ApiParams {
+export interface ApiParams {
   page_offset?: string;
   employer_id?: string;
   search?: string;
@@ -14,19 +15,20 @@ interface ApiParams {
   order_direction?: "ascending" | "descending";
 }
 
-interface ComponentWithClaimsProps {
-  appLogic: AppLogic;
+export interface WithClaimsProps extends WithUserProps {
+  claims: ClaimCollection;
+  paginationMeta: PaginationMeta;
 }
 
 /**
  * Higher order component that provides the current user's claims to the wrapped component.
  * The higher order component also loads the claims if they have not already been loaded.
- * @param {React.Component} Component - Component to receive claims prop
- * @returns {React.Component} - Component with claims prop
  */
-// @ts-expect-error TODO (PORTAL-966) Fix HOC typing
-const withClaims = (Component, apiParams: ApiParams = {}) => {
-  const ComponentWithClaims = (props: ComponentWithClaimsProps) => {
+function withClaims<T extends WithClaimsProps>(
+  Component: React.ComponentType<T>,
+  apiParams: ApiParams = {}
+) {
+  const ComponentWithClaims = (props: Omit<T, "claims" | "paginationMeta">) => {
     const { appLogic } = props;
     const { page_offset } = apiParams;
     const { t } = useTranslation();
@@ -68,7 +70,7 @@ const withClaims = (Component, apiParams: ApiParams = {}) => {
 
     return (
       <Component
-        {...props}
+        {...(props as T)}
         claims={appLogic.claims.claims}
         paginationMeta={appLogic.claims.paginationMeta}
       />
@@ -76,6 +78,6 @@ const withClaims = (Component, apiParams: ApiParams = {}) => {
   };
 
   return withUser(ComponentWithClaims);
-};
+}
 
 export default withClaims;

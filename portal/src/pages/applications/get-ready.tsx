@@ -1,24 +1,19 @@
 import { IconLaptop, IconPhone } from "@massds/mayflower-react/dist/Icon";
-import Alert from "../../components/Alert";
-import { AppLogic } from "../../hooks/useAppLogic";
-import BenefitsApplicationCollection from "../../models/BenefitsApplicationCollection";
+import withBenefitsApplications, {
+  WithBenefitsApplicationsProps,
+} from "../../hoc/withBenefitsApplications";
+import Alert from "../../components/core/Alert";
 import ButtonLink from "../../components/ButtonLink";
-import Heading from "../../components/Heading";
-import Icon from "../../components/Icon";
+import Heading from "../../components/core/Heading";
+import Icon from "../../components/core/Icon";
 import Link from "next/link";
 import React from "react";
-import Title from "../../components/Title";
+import Title from "../../components/core/Title";
 import { Trans } from "react-i18next";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
-import withBenefitsApplications from "../../hoc/withBenefitsApplications";
 
-interface GetReadyProps {
-  appLogic: AppLogic;
-  claims: BenefitsApplicationCollection;
-}
-
-export const GetReady = (props: GetReadyProps) => {
+export const GetReady = (props: WithBenefitsApplicationsProps) => {
   const { appLogic, claims } = props;
   const { t } = useTranslation();
 

@@ -21,6 +21,13 @@ resource "aws_cognito_user_pool" "claimants_pool" {
   username_attributes      = ["email"]
   auto_verified_attributes = ["email"]
 
+  account_recovery_setting {
+    recovery_mechanism {
+      name     = "verified_email"
+      priority = 1
+    }
+  }
+
   email_configuration {
     # Use this SES email to send cognito emails. If we're not using SES for emails then use null
     source_arn            = var.ses_email_address == "" ? null : "arn:aws:ses:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:identity/${var.ses_email_address}"

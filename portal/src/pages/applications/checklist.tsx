@@ -4,21 +4,25 @@ import BenefitsApplication, {
 } from "../../models/BenefitsApplication";
 import StepModel, { ClaimSteps } from "../../models/Step";
 import { camelCase, filter, findIndex, get, isBoolean } from "lodash";
-import Alert from "../../components/Alert";
-import { AppLogic } from "../../hooks/useAppLogic";
+import withBenefitsApplication, {
+  WithBenefitsApplicationProps,
+} from "../../hoc/withBenefitsApplication";
+import withClaimDocuments, {
+  WithClaimDocumentsProps,
+} from "../../hoc/withClaimDocuments";
+import Alert from "../../components/core/Alert";
 import BackButton from "../../components/BackButton";
-import BenefitsApplicationDocument from "../../models/BenefitsApplicationDocument";
 import ButtonLink from "../../components/ButtonLink";
-import Details from "../../components/Details";
+import Details from "../../components/core/Details";
 import { DocumentType } from "../../models/Document";
-import HeadingPrefix from "../../components/HeadingPrefix";
+import HeadingPrefix from "../../components/core/HeadingPrefix";
 import LeaveReason from "../../models/LeaveReason";
 import React from "react";
-import Spinner from "../../components/Spinner";
+import Spinner from "../../components/core/Spinner";
 import Step from "../../components/Step";
 import StepGroup from "../../models/StepGroup";
 import StepList from "../../components/StepList";
-import Title from "../../components/Title";
+import Title from "../../components/core/Title";
 import { Trans } from "react-i18next";
 import claimantConfig from "../../flows/claimant";
 import findDocumentsByLeaveReason from "../../utils/findDocumentsByLeaveReason";
@@ -28,19 +32,30 @@ import { isFeatureEnabled } from "../../services/featureFlags";
 import routeWithParams from "../../utils/routeWithParams";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
-import withBenefitsApplication from "../../hoc/withBenefitsApplication";
-import withClaimDocuments from "../../hoc/withClaimDocuments";
 
-interface ChecklistProps {
-  appLogic: AppLogic;
-  claim: BenefitsApplication;
-  documents: BenefitsApplicationDocument[];
-  isLoadingDocuments: boolean;
+interface ChecklistProps
+  extends WithClaimDocumentsProps,
+    WithBenefitsApplicationProps {
   query: {
     "part-one-submitted"?: string;
     "payment-pref-submitted"?: string;
+    "tax-pref-submitted"?: string;
   };
 }
+
+interface ChecklistAlertsProps {
+  submitted: "partOne" | "payment" | "taxPref";
+}
+
+export const ChecklistAlerts = ({ submitted }: ChecklistAlertsProps) => {
+  const { t } = useTranslation();
+
+  return (
+    <Alert className="margin-bottom-3" state="warning">
+      {t("pages.claimsChecklist.afterSubmissionAlert", { context: submitted })}
+    </Alert>
+  );
+};
 
 export const Checklist = (props: ChecklistProps) => {
   const { t } = useTranslation();
@@ -61,8 +76,6 @@ export const Checklist = (props: ChecklistProps) => {
     get(claim, "leave_details.reason")
   );
 
-  const partOneSubmitted = query["part-one-submitted"];
-  const paymentPrefSubmitted = query["payment-pref-submitted"];
   // TODO(PORTAL-1001): - Remove Feature Flag
   const taxWithholdingEnabled = isFeatureEnabled("claimantShowTaxWithholding");
   const warnings =
@@ -341,15 +354,18 @@ export const Checklist = (props: ChecklistProps) => {
   }
   return (
     <div className="measure-6">
-      {partOneSubmitted && (
-        <Alert className="margin-bottom-3" state="warning">
-          {t("pages.claimsChecklist.partOneSubmittedDescription")}
-        </Alert>
-      )}
-      {paymentPrefSubmitted && (
-        <Alert className="margin-bottom-3" state="warning">
-          {t("pages.claimsChecklist.partTwoSubmittedDescription")}
-        </Alert>
+      {(query["part-one-submitted"] ||
+        query["payment-pref-submitted"] ||
+        query["tax-pref-submitted"]) && (
+        <ChecklistAlerts
+          submitted={
+            query["part-one-submitted"]
+              ? "partOne"
+              : query["payment-pref-submitted"]
+              ? "payment"
+              : "taxPref"
+          }
+        />
       )}
       <BackButton
         label={t("pages.claimsChecklist.backButtonLabel")}

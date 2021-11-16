@@ -1,14 +1,49 @@
 [
-	{
-		"filename": "Automated-Adhoc-Extract-SOM_PEI_Fullextract.csv",
-		"query": "SELECT pei.* FROM fineosapp.TOLPaymentEventInterface pei"
-	},
-	{
-		"filename": "Automated-Adhoc-Extract-SOM_PEI_CancelledRecords.csv",
-		"query": "SELECT tpei.c,tpei.i, tpei.statusreason, tpei.grosspaymenta_monamt as GrossAmount, tpei.setupbyuserna as AddedBy, tpoe.eventeffectiv as IssueDate, CASE tpoe.status WHEN 66944004 THEN tpoe.statuseffecti WHEN 66944013 THEN tpoe.statuseffecti ELSE NULL END as CancellationDate, tpei.transstatusda as TransactionStatusDate, tpei.transactionst as TransactionStatus, tpei.extractiondat as ExtractionDate, tpei.stockno as StockNumber, tcdi.claimnumber as ClaimNumber, tc.casenumber as BenefitCaseNumberFROM FINEOSAPP.tolpaymenteventinterface tpeiINNER JOIN FINEOSAPP.tolpaymentlinegrpforcase tplgc ON tplgc.c_pymnteif_paymentlinegr = tpei.c AND tplgc.i_pymnteif_paymentlinegr = tpei.iINNER JOIN FINEOSAPP.tolclaimdetailsforint tcdi ON tplgc.c_casdtlpi_casedetailsfo = tcdi.c and tplgc.i_casdtlpi_casedetailsfo = tcdi.iINNER JOIN FINEOSAPP.toccase tc ON tplgc.c_occase_paymentlinegr = tc.c AND tplgc.i_occase_paymentlinegr = tc.iINNER JOIN FINEOSAPP.tolpaymentoutevent tpoe ON tpei.c = tpoe.c_pymnteif_paymenteventi AND tpei.i = tpoe.i_pymnteif_paymenteventi WHERE tpoe.status= 66944004 order by tpei.i desc"
-	},
-	{
-		"filename": "Automated-Adhoc-Extract-SOM_PEI_ReplacedRecords.csv",
-		"query": "SELECT tpei.c,tpei.i, tpei.statusreason, tpei.grosspaymenta_monamt as GrossAmount, tpei.setupbyuserna as AddedBy, tpoe.eventeffectiv as IssueDate, CASE tpoe.status WHEN 66944004 THEN tpoe.statuseffecti WHEN 66944013 THEN tpoe.statuseffecti ELSE NULL END as CancellationDate, tpei.transstatusda as TransactionStatusDate, tpei.transactionst as TransactionStatus, tpei.extractiondat as ExtractionDate, tpei.stockno as StockNumber, tcdi.claimnumber as ClaimNumber, tc.casenumber as BenefitCaseNumberFROM FINEOSAPP.tolpaymenteventinterface tpeiINNER JOIN FINEOSAPP.tolpaymentlinegrpforcase tplgc ON tplgc.c_pymnteif_paymentlinegr = tpei.c AND tplgc.i_pymnteif_paymentlinegr = tpei.iINNER JOIN FINEOSAPP.tolclaimdetailsforint tcdi ON tplgc.c_casdtlpi_casedetailsfo = tcdi.c and tplgc.i_casdtlpi_casedetailsfo = tcdi.iINNER JOIN FINEOSAPP.toccase tc ON tplgc.c_occase_paymentlinegr = tc.c AND tplgc.i_occase_paymentlinegr = tc.iINNER JOIN FINEOSAPP.tolpaymentoutevent tpoe ON tpei.c = tpoe.c_pymnteif_paymenteventi AND tpei.i = tpoe.i_pymnteif_paymenteventi WHERE tpoe.status= 66944013 order by tpei.i desc"
-	}
+{
+"filename":  "Automated-Adhoc-Extract-SOM_PEI_Fullextract.csv", "query":"SELECT pei.* FROM fineosapp.TOLPaymentEventInterface pei"
+}
+,
+{
+"filename":  "Automated-Adhoc-Extract-SOM_PEI_CancelledRecords.csv", "query":"
+SELECT
+  tpei.c,tpei.i,
+    tpei.statusreason, tpei.grosspaymenta_monamt as GrossAmount,
+	tpei.setupbyuserna as AddedBy, tpoe.eventeffectiv as IssueDate,
+	CASE tpoe.status	WHEN	66944004	THEN tpoe.statuseffecti 	WHEN  66944013 THEN tpoe.statuseffecti 	ELSE NULL END  as CancellationDate,
+	tpei.transstatusda as TransactionStatusDate, tpei.transactionst as TransactionStatus,
+	tpei.extractiondat as ExtractionDate, 	tpei.stockno as StockNumber,
+	tcdi.claimnumber as ClaimNumber,
+    tc.casenumber as BenefitCaseNumber
+FROM
+	FINEOSAPP.tolpaymenteventinterface tpei
+INNER JOIN FINEOSAPP.tolpaymentlinegrpforcase tplgc ON  tplgc.c_pymnteif_paymentlinegr = tpei.c AND  tplgc.i_pymnteif_paymentlinegr = tpei.i
+INNER JOIN FINEOSAPP.tolclaimdetailsforint tcdi ON  tplgc.c_casdtlpi_casedetailsfo = tcdi.c and  tplgc.i_casdtlpi_casedetailsfo = tcdi.i
+INNER JOIN FINEOSAPP.toccase tc ON tplgc.c_occase_paymentlinegr = tc.c AND tplgc.i_occase_paymentlinegr = tc.i
+INNER JOIN FINEOSAPP.tolpaymentoutevent tpoe ON tpei.c = tpoe.c_pymnteif_paymenteventi AND tpei.i = tpoe.i_pymnteif_paymenteventi
+    WHERE tpoe.status= 66944004
+    order by tpei.i desc
+"
+}
+,
+{
+"filename":  "Automated-Adhoc-Extract-SOM_PEI_ReplacedRecords.csv", "query":"
+SELECT
+  tpei.c,tpei.i,
+    tpei.statusreason, tpei.grosspaymenta_monamt as GrossAmount,
+	tpei.setupbyuserna as AddedBy, tpoe.eventeffectiv as IssueDate,
+	CASE tpoe.status	WHEN	66944004	THEN tpoe.statuseffecti 	WHEN  66944013 THEN tpoe.statuseffecti 	ELSE NULL END  as CancellationDate,
+	tpei.transstatusda as TransactionStatusDate, tpei.transactionst as TransactionStatus,
+	tpei.extractiondat as ExtractionDate, 	tpei.stockno as StockNumber,
+	tcdi.claimnumber as ClaimNumber,
+    tc.casenumber as BenefitCaseNumber
+FROM
+	FINEOSAPP.tolpaymenteventinterface tpei
+INNER JOIN FINEOSAPP.tolpaymentlinegrpforcase tplgc ON  tplgc.c_pymnteif_paymentlinegr = tpei.c AND  tplgc.i_pymnteif_paymentlinegr = tpei.i
+INNER JOIN FINEOSAPP.tolclaimdetailsforint tcdi ON  tplgc.c_casdtlpi_casedetailsfo = tcdi.c and  tplgc.i_casdtlpi_casedetailsfo = tcdi.i
+INNER JOIN FINEOSAPP.toccase tc ON tplgc.c_occase_paymentlinegr = tc.c AND tplgc.i_occase_paymentlinegr = tc.i
+INNER JOIN FINEOSAPP.tolpaymentoutevent tpoe ON tpei.c = tpoe.c_pymnteif_paymenteventi AND tpei.i = tpoe.i_pymnteif_paymenteventi
+    WHERE tpoe.status= 66944013
+    order by tpei.i desc
+"
+}
 ]

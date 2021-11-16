@@ -15,7 +15,6 @@ import {
 } from "../../src/api/EmployersApi";
 import AppErrorInfo from "../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
-import ClaimDocument from "../../src/models/ClaimDocument";
 import DocumentCollection from "../../src/models/DocumentCollection";
 import { uniqueId } from "lodash";
 import useAppErrorsLogic from "../../src/hooks/useAppErrorsLogic";
@@ -205,19 +204,19 @@ describe("useEmployersLogic", () => {
     });
 
     describe("when the API returns documents", () => {
-      const denialNotice = new ClaimDocument({
+      const denialNotice = {
         name: "Denial notice",
         fineos_document_id: "67899",
-      });
-      const approvalNotice = new ClaimDocument({
+      };
+      const approvalNotice = {
         name: "Approval notice",
         fineos_document_id: "78789",
-      });
+      };
 
       it("fetches all documents for an application and adds to the claimDocumentsMap", async () => {
-        const absenceCaseId = "NTN-323-ABS-01";
+        const absenceId = "NTN-323-ABS-01";
         const expectedDocumentsMap = new Map([
-          [absenceCaseId, new DocumentCollection([approvalNotice])],
+          [absenceId, new DocumentCollection([approvalNotice])],
         ]);
         let { claimDocumentsMap } = employersLogic;
 
@@ -230,7 +229,7 @@ describe("useEmployersLogic", () => {
         });
 
         await act(async () => {
-          await employersLogic.loadDocuments(absenceCaseId);
+          await employersLogic.loadDocuments(absenceId);
         });
         ({ claimDocumentsMap } = employersLogic);
         expect(claimDocumentsMap).toEqual(expectedDocumentsMap);
@@ -271,9 +270,9 @@ describe("useEmployersLogic", () => {
       });
 
       it("fetches documents for the same absence case twice and only calls the API once", async () => {
-        const absenceCaseId = "NTN-323-ABS-01";
+        const absenceId = "NTN-323-ABS-01";
         const expectedDocumentsMap = new Map([
-          [absenceCaseId, new DocumentCollection([approvalNotice])],
+          [absenceId, new DocumentCollection([approvalNotice])],
         ]);
         let { claimDocumentsMap } = employersLogic;
 
@@ -286,8 +285,8 @@ describe("useEmployersLogic", () => {
         });
 
         await act(async () => {
-          await employersLogic.loadDocuments(absenceCaseId);
-          await employersLogic.loadDocuments(absenceCaseId);
+          await employersLogic.loadDocuments(absenceId);
+          await employersLogic.loadDocuments(absenceId);
         });
 
         ({ claimDocumentsMap } = employersLogic);

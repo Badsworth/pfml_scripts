@@ -1,9 +1,10 @@
 import { AppLogic } from "../../../hooks/useAppLogic";
-import Button from "../../../components/Button";
-import InputText from "../../../components/InputText";
+import Button from "../../../components/core/Button";
+import InputText from "../../../components/core/InputText";
+import Lead from "../../../components/core/Lead";
 import PageNotFound from "../../../components/PageNotFound";
 import React from "react";
-import Title from "../../../components/Title";
+import Title from "../../../components/core/Title";
 import { Trans } from "react-i18next";
 import { isFeatureEnabled } from "../../../services/featureFlags";
 import useFormState from "../../../hooks/useFormState";
@@ -11,11 +12,11 @@ import useFunctionalInputProps from "../../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../../locales/i18n";
 import withUser from "../../../hoc/withUser";
 
-interface SetupMFAProps {
+interface SetupSMSProps {
   appLogic: AppLogic;
 }
 
-export const SetupMFA = (props: SetupMFAProps) => {
+export const SetupSMS = (props: SetupSMSProps) => {
   const { appLogic } = props;
   const { t } = useTranslation();
 
@@ -44,7 +45,9 @@ export const SetupMFA = (props: SetupMFAProps) => {
   return (
     <form className="usa-form" onSubmit={handleSubmit} method="post">
       <Title>{t("pages.authTwoFactorSmsSetup.title")}</Title>
-      <Trans i18nKey="pages.authTwoFactorSmsSetup.lead" />
+      <Lead>
+        <Trans i18nKey="pages.authTwoFactorSmsSetup.lead" />
+      </Lead>
       <InputText
         {...getFunctionalInputProps("phone_number")}
         mask="phone"
@@ -67,4 +70,4 @@ export const SetupMFA = (props: SetupMFAProps) => {
   );
 };
 
-export default withUser(SetupMFA);
+export default withUser(SetupSMS);

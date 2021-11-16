@@ -83,6 +83,48 @@ describe("useFilesLogic", () => {
       );
     });
 
+    it("does not validate PDF file size when sendLargePdfToApi feature flag is enabled and PDF is less than 10mb", async () => {
+      const compressiblePdf = makeFile({
+        name: "file1",
+        type: "application/pdf",
+      });
+      Object.defineProperty(compressiblePdf, "size", {
+        get: () => 9500000,
+      });
+
+      // Before feature flag
+      await act(async () => await processFiles([compressiblePdf]));
+      expect(files.items).toEqual([]);
+
+      // After feature flag
+      process.env.featureFlags = { sendLargePdfToApi: true };
+      await act(async () => await processFiles([compressiblePdf]));
+      expect(files.items).toEqual([
+        { id: expect.any(String), file: compressiblePdf },
+      ]);
+    });
+
+    it("prevents PDF files when sendLargePdfToApi feature flag is enabled and PDF is more than 10mb", async () => {
+      process.env.featureFlags = { sendLargePdfToApi: true };
+      const tooBigPdf = makeFile({ name: "file1", type: "application/pdf" });
+      Object.defineProperty(tooBigPdf, "size", {
+        get: () => 10000000,
+      });
+
+      await act(async () => await processFiles([tooBigPdf]));
+      expect(catchError).toHaveBeenCalledTimes(1);
+      const error = catchError.mock.calls[0][0];
+      expect(error).toBeInstanceOf(ValidationError);
+      expect(error.issues).toMatchInlineSnapshot(`
+        Array [
+          Object {
+            "message": "We could not upload: file1. Files must be smaller than 10 MB.",
+          },
+        ]
+      `);
+      expect(files.items).toEqual([]);
+    });
+
     it("catches error when the file type is invalid", async () => {
       const invalidTypeFile = makeFile({ name: "file1", type: "image/heic" });
       await act(

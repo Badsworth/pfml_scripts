@@ -1,12 +1,12 @@
 import React, { useState } from "react";
-import Alert from "../components/Alert";
+import Alert from "../components/core/Alert";
 import { AppLogic } from "../hooks/useAppLogic";
 import BackButton from "../components/BackButton";
-import Button from "../components/Button";
-import InputText from "../components/InputText";
-import Lead from "../components/Lead";
+import Button from "../components/core/Button";
+import InputText from "../components/core/InputText";
+import Lead from "../components/core/Lead";
 import ThrottledButton from "../components/ThrottledButton";
-import Title from "../components/Title";
+import Title from "../components/core/Title";
 import { get } from "lodash";
 import routes from "../routes";
 import useFormState from "../hooks/useFormState";

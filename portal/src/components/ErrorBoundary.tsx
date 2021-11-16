@@ -1,5 +1,5 @@
-import Alert from "./Alert";
-import Button from "./Button";
+import Alert from "./core/Alert";
+import Button from "./core/Button";
 import React from "react";
 import tracker from "../services/tracker";
 import { withTranslation } from "../locales/i18n";

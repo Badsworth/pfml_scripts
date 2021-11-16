@@ -1,4 +1,5 @@
 import {
+  CaringLeaveClaim,
   MilitaryCaregiverClaim,
   MilitaryExigencyClaim,
   ScenarioSpecification,
@@ -86,20 +87,6 @@ export const MIL_EXI: ScenarioSpecification<MilitaryExigencyClaim> = {
   },
 };
 
-export const BHAP1INEL: ScenarioSpecification = {
-  employee: { mass_id: true, wages: "ineligible" },
-  claim: {
-    label: "BHAP1",
-    shortClaim: true,
-    reason: "Child Bonding",
-    reason_qualifier: "Foster Care",
-    docs: {
-      MASSID: {},
-      FOSTERPLACEMENT: {},
-    },
-  },
-};
-
 export const MED_INTER_INEL: ScenarioSpecification = {
   employee: { mass_id: true, wages: "ineligible" },
   claim: {
@@ -123,19 +110,6 @@ export const MCAP_NODOC: ScenarioSpecification = {
     work_pattern_spec: "0,315,315,315,315,315,0",
     docs: {
       // Missing HCP.
-      MASSID: {},
-    },
-  },
-};
-
-export const MHAP1: ScenarioSpecification = {
-  employee: { mass_id: true, wages: "eligible" },
-  claim: {
-    label: "MHAP1",
-    shortClaim: true,
-    reason: "Serious Health Condition - Employee",
-    docs: {
-      HCP: {},
       MASSID: {},
     },
   },
@@ -528,15 +502,35 @@ export const HIST_CASE: ScenarioSpecification = {
 
 // Leave start date change request
 export const MED_LSDCR: ScenarioSpecification = {
-  ...MHAP1,
+  employee: { mass_id: true, wages: "eligible" },
   claim: {
-    ...MHAP1.claim,
     label: "MED_LSDCR",
+    shortClaim: true,
+    reason: "Serious Health Condition - Employee",
     leave_dates: [addWeeks(new Date(), 2), addWeeks(new Date(), 6)],
     employerResponse: {
       hours_worked_per_week: 40,
       employer_decision: "Approve",
       fraud: "No",
     },
+    docs: {
+      HCP: {},
+      MASSID: {},
+    },
+  },
+};
+
+export const CARE_TAXES: ScenarioSpecification<CaringLeaveClaim> = {
+  employee: { wages: 30000 },
+  claim: {
+    reason: "Care for a Family Member",
+    label: "CARE_TAXES",
+    leave_dates: [
+      startOfWeek(addDays(new Date(), 60)), // claims must start in 2022 in order to test SIT/FIT withholdings
+      startOfWeek(addDays(new Date(), 74)),
+    ],
+    work_pattern_spec: "standard",
+    reduced_leave_spec: "0,240,240,240,240,240,0",
+    docs: { CARING: {}, MASSID: {} },
   },
 };

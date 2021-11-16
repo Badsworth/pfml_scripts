@@ -1,7 +1,6 @@
 import { screen, waitFor } from "@testing-library/react";
 import Claim from "../../src/models/Claim";
 import ClaimCollection from "../../src/models/ClaimCollection";
-import PaginationMeta from "../../src/models/PaginationMeta";
 import React from "react";
 import { renderPage } from "../test-utils";
 import withClaims from "../../src/hoc/withClaims";
@@ -56,7 +55,7 @@ describe("withClaims", () => {
     const mockClaim = new Claim({
       fineos_absence_id: "mock-fineos-id",
     });
-    const mockPaginationMeta = new PaginationMeta({ page_offset: 2 });
+    const mockPaginationMeta = { page_offset: 2 };
 
     setup({
       addCustomSetup: (appLogic) => {

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { groupBy, map } from "lodash";
-import Alert from "./Alert";
+import Alert from "./core/Alert";
 import AppErrorInfo from "../models/AppErrorInfo";
 import AppErrorInfoCollection from "../models/AppErrorInfoCollection";
 import { Trans } from "react-i18next";

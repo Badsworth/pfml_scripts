@@ -1,11 +1,11 @@
 import AddButton from "./AddButton";
 import AmendablePreviousLeave from "./AmendablePreviousLeave";
 import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
-import Details from "../Details";
-import Heading from "../Heading";
+import Details from "../core/Details";
+import Heading from "../core/Heading";
 import PreviousLeave from "../../models/PreviousLeave";
 import React from "react";
-import Table from "../Table";
+import Table from "../core/Table";
 import { Trans } from "react-i18next";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";

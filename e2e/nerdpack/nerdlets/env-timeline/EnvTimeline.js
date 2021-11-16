@@ -1,7 +1,7 @@
 import { NrqlQuery, navigation, Link, Spinner, Icon } from "nr1";
 import React from "react";
 import { format as dateFormat } from "date-fns";
-import { labelComponent } from "../common";
+import { labelComponent, labelEnv } from "../common";
 import { MutiQuery } from "../common/MultiQuery";
 
 class baseDAO {
@@ -33,7 +33,8 @@ class DAOCypressRunsTimelineSummaryForEnvironment extends baseDAO {
                    filter(count(pass), WHERE pass is true)     as passCount,
                    percentage(count(pass), WHERE pass is true) as passPercent,
                    latest(runUrl),
-                   latest(tag)
+                   latest(tag),
+                   latest(branch)
             FROM CypressTestResult FACET environment, runId ${
               where.length ? `WHERE ${where.join(" AND ")}` : ""
             }
@@ -69,6 +70,7 @@ class DAOCypressRunsTimelineSummaryForEnvironment extends baseDAO {
       tag: row.results[6].latest
         .split(",")
         .filter((tag) => !tag.includes("Env-")),
+      branch: row.results[7].latest,
     };
 
     function componentSearch(arr, what) {
@@ -169,6 +171,13 @@ const EnvTimelineRow = (row) => {
                 {tag}
               </span>
             ))}
+            {row?.branch && row?.branch != "main" && (
+              <Link
+                to={`https://github.com/EOLWD/pfml/compare/main...${row.branch}`}
+              >
+                <span className={`branch label`}>{row.branch}</span>
+              </Link>
+            )}
           </div>,
         ]
       ) : (
@@ -205,8 +214,8 @@ class TimelineTable extends React.Component {
     return (
       <div className={`e2e-run-timeline`}>
         <h2>
-          {this.environment} Deployment & E2E Run Timeline | Newest to Oldest |
-          Past Month
+          {labelEnv(this.environment)} Deployment & E2E Run Timeline | Newest to
+          Oldest | Past Month
         </h2>
         <div className={"filters"}>
           <span>Filters:</span>

@@ -1,13 +1,13 @@
-import BenefitsApplication, {
-  EmploymentStatus as EmploymentStatusEnum,
-} from "../../models/BenefitsApplication";
 import { get, pick } from "lodash";
-import Alert from "../../components/Alert";
-import { AppLogic } from "../../hooks/useAppLogic";
+import withBenefitsApplication, {
+  WithBenefitsApplicationProps,
+} from "../../hoc/withBenefitsApplication";
+import Alert from "../../components/core/Alert";
 import ConditionalContent from "../../components/ConditionalContent";
-import Details from "../../components/Details";
-import InputChoiceGroup from "../../components/InputChoiceGroup";
-import InputText from "../../components/InputText";
+import Details from "../../components/core/Details";
+import { EmploymentStatus as EmploymentStatusEnum } from "../../models/BenefitsApplication";
+import InputChoiceGroup from "../../components/core/InputChoiceGroup";
+import InputText from "../../components/core/InputText";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import { Trans } from "react-i18next";
@@ -15,16 +15,10 @@ import { isFeatureEnabled } from "../../services/featureFlags";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = ["claim.employment_status", "claim.employer_fein"];
 
-interface EmploymentStatusProps {
-  appLogic: AppLogic;
-  claim: BenefitsApplication;
-}
-
-export const EmploymentStatus = (props: EmploymentStatusProps) => {
+export const EmploymentStatus = (props: WithBenefitsApplicationProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 

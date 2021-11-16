@@ -1,23 +1,25 @@
 import routeWithParams, {
   createRouteWithQuery,
 } from "../utils/routeWithParams";
+import withClaimDocuments, {
+  WithClaimDocumentsProps,
+} from "../hoc/withClaimDocuments";
 import { AppLogic } from "../hooks/useAppLogic";
 import BenefitsApplication from "../models/BenefitsApplication";
-import BenefitsApplicationDocument from "../models/BenefitsApplicationDocument";
+import { BenefitsApplicationDocument } from "../models/Document";
 import ButtonLink from "./ButtonLink";
-import Heading from "./Heading";
+import Heading from "./core/Heading";
 import LeaveReason from "../models/LeaveReason";
 import LegalNoticeList from "./LegalNoticeList";
 import React from "react";
-import Spinner from "./Spinner";
-import Tag from "./Tag";
+import Spinner from "./core/Spinner";
+import Tag from "./core/Tag";
 import ThrottledButton from "./ThrottledButton";
 import findKeyByValue from "../utils/findKeyByValue";
 import getLegalNotices from "../utils/getLegalNotices";
 import hasDocumentsLoadError from "../utils/hasDocumentsLoadError";
 import tracker from "../services/tracker";
 import { useTranslation } from "../locales/i18n";
-import withClaimDocuments from "../hoc/withClaimDocuments";
 
 /**
  * Assists with page navigation, displays errors on the
@@ -87,7 +89,7 @@ const ManageDocumentSection = ({
   claim,
 }: ManageDocumentSectionProps) => {
   const { t } = useTranslation();
-  const { fineos_absence_id: absence_case_id } = claim;
+  const { fineos_absence_id: absence_id } = claim;
 
   const onClickHandler = async (href: string) => {
     await navigateToPage(claim, appLogic, href);
@@ -95,13 +97,13 @@ const ManageDocumentSection = ({
 
   const viewNoticesLink = createRouteWithQuery(
     "/applications/status/",
-    { absence_case_id },
+    { absence_id },
     "view_notices"
   );
 
   const uploadDocumentsLink = createRouteWithQuery(
     "/applications/status/",
-    { absence_case_id },
+    { absence_id },
     "upload_documents"
   );
 
@@ -206,7 +208,6 @@ const InProgressStatusCard = (props: InProgressStatusCardProps) => {
         })}
       />
       <Tag
-        className="text-no-wrap"
         state="warning"
         label={t("components.applicationCardV2.inProgressTag")}
       />
@@ -248,7 +249,7 @@ const CompletedStatusCard = ({ appLogic, claim }: CompletedStatusCardProps) => {
   });
 
   const statusPage = routeWithParams("applications.status.claim", {
-    absence_case_id: claim.fineos_absence_id,
+    absence_id: claim.fineos_absence_id,
   });
 
   const onClickHandler = async () => {
@@ -280,11 +281,8 @@ const CompletedStatusCard = ({ appLogic, claim }: CompletedStatusCardProps) => {
   );
 };
 
-interface ApplicationCardV2Props {
+interface ApplicationCardV2Props extends WithClaimDocumentsProps {
   claim: BenefitsApplication;
-  appLogic: AppLogic;
-  documents: BenefitsApplicationDocument[];
-  isLoadingDocuments: boolean;
   number: number;
 }
 

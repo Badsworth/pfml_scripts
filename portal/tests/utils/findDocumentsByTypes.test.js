@@ -1,10 +1,9 @@
-import BenefitsApplicationDocument from "../../src/models/BenefitsApplicationDocument";
 import findDocumentsByTypes from "../../src/utils/findDocumentsByTypes";
 
 describe("findDocumentsByTypes", () => {
   const documentsList = [
-    new BenefitsApplicationDocument({ document_type: "identity" }),
-    new BenefitsApplicationDocument({ document_type: "certification" }),
+    { document_type: "identity" },
+    { document_type: "certification" },
   ];
   describe("when no documents are found", () => {
     it("returns an empty array", () => {
@@ -17,8 +16,8 @@ describe("findDocumentsByTypes", () => {
   describe("when the documents list has multiple matching documents", () => {
     it("returns an array with all of the matching documents", () => {
       const testDocs = [
-        new BenefitsApplicationDocument({ document_type: "testType" }),
-        new BenefitsApplicationDocument({ document_type: "testType" }),
+        { document_type: "testType" },
+        { document_type: "testType" },
       ];
       const documents = findDocumentsByTypes(
         [...documentsList, ...testDocs],
@@ -39,8 +38,8 @@ describe("findDocumentsByTypes", () => {
 
   it("returns matching documents even if casing of document_type is different", () => {
     const testDocs = [
-      new BenefitsApplicationDocument({ document_type: "Test Type" }),
-      new BenefitsApplicationDocument({ document_type: "test Type" }),
+      { document_type: "Test Type" },
+      { document_type: "test Type" },
     ];
     const documents = findDocumentsByTypes(
       [...documentsList, ...testDocs],
@@ -53,10 +52,10 @@ describe("findDocumentsByTypes", () => {
 
   it("returns matching documents when there are multiple document types", () => {
     const testDocs = [
-      new BenefitsApplicationDocument({ document_type: "Test Type" }),
-      new BenefitsApplicationDocument({ document_type: "test Type" }),
-      new BenefitsApplicationDocument({ document_type: "test Type 2" }),
-      new BenefitsApplicationDocument({ document_type: "Test Type 2" }),
+      { document_type: "Test Type" },
+      { document_type: "test Type" },
+      { document_type: "test Type 2" },
+      { document_type: "Test Type 2" },
     ];
     const documents = findDocumentsByTypes(
       [...documentsList, ...testDocs],

@@ -26,7 +26,6 @@ import Review, {
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import AppErrorInfo from "../../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../../src/models/AppErrorInfoCollection";
-import BenefitsApplicationDocument from "../../../src/models/BenefitsApplicationDocument";
 import { DateTime } from "luxon";
 import DocumentCollection from "../../../src/models/DocumentCollection";
 import { DocumentType } from "../../../src/models/Document";
@@ -242,18 +241,18 @@ describe("Review Page", () => {
     setup({
       claim,
       documents: [
-        new BenefitsApplicationDocument({
+        {
           application_id: claim.application_id,
           document_type: DocumentType.certification[claim.leave_details.reason],
-        }),
-        new BenefitsApplicationDocument({
+        },
+        {
           application_id: claim.application_id,
           document_type: DocumentType.certification[claim.leave_details.reason],
-        }),
-        new BenefitsApplicationDocument({
+        },
+        {
           application_id: claim.application_id,
           document_type: DocumentType.identityVerification,
-        }),
+        },
       ],
     });
 

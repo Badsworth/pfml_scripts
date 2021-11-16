@@ -3,7 +3,6 @@ import { act, render, screen } from "@testing-library/react";
 import AppErrorInfo from "../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
 import { ApplicationCardV2 } from "../../src/components/ApplicationCardV2";
-import BenefitsApplicationDocument from "../../src/models/BenefitsApplicationDocument";
 import ClaimDetail from "../../src/models/ClaimDetail";
 import { DocumentType } from "../../src/models/Document";
 
@@ -135,7 +134,7 @@ describe("ApplicationCardV2", () => {
       });
 
       expect(appLogic.portalFlow.goTo).toHaveBeenCalledWith(
-        `/applications/status${hash ? "/" : ""}?absence_case_id=${
+        `/applications/status${hash ? "/" : ""}?absence_id=${
           claim.fineos_absence_id
         }${hash}`
       );
@@ -265,15 +264,15 @@ describe("ApplicationCardV2", () => {
         claim={claim}
         number={2}
         documents={[
-          new BenefitsApplicationDocument({
+          {
             application_id: "mock-claim-id",
             document_type: DocumentType.appealAcknowledgment,
-          }),
-          new BenefitsApplicationDocument({
+          },
+          {
             application_id: "mock-claim-id",
             document_type: DocumentType.approvalNotice,
             fineos_document_id: "mock-document-3",
-          }),
+          },
         ]}
       />
     );
@@ -289,16 +288,16 @@ describe("ApplicationCardV2", () => {
         claim={claim}
         number={2}
         documents={[
-          new BenefitsApplicationDocument({
+          {
             application_id: "mock-claim-id",
             document_type: DocumentType.appealAcknowledgment,
             fineos_document_id: "mock-document-1",
-          }),
-          new BenefitsApplicationDocument({
+          },
+          {
             application_id: "mock-claim-id",
             document_type: DocumentType.approvalNotice,
             fineos_document_id: "mock-document-3",
-          }),
+          },
         ]}
       />
     );

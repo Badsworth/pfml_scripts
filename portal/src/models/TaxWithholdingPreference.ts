@@ -1,9 +1,5 @@
-class TaxWithholdingPreference {
-  withhold_taxes: boolean;
-
-  constructor(attrs: TaxWithholdingPreference) {
-    Object.assign(this, attrs);
-  }
+interface TaxWithholdingPreference {
+  is_withholding_tax: boolean;
 }
 
 export default TaxWithholdingPreference;

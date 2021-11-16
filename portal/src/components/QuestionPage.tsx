@@ -1,7 +1,7 @@
 import BackButton from "./BackButton";
-import Button from "./Button";
+import Button from "./core/Button";
 import React from "react";
-import Title from "./Title";
+import Title from "./core/Title";
 import tracker from "../services/tracker";
 import useThrottledHandler from "../hooks/useThrottledHandler";
 import { useTranslation } from "../locales/i18n";
@@ -11,6 +11,7 @@ interface QuestionPageProps {
    * The contents of the form question page.
    */
   children: React.ReactNode;
+  continueButtonLabel?: string;
   /**
    * The text of the small title of the form.
    */
@@ -65,7 +66,7 @@ export const QuestionPage = (props: QuestionPageProps) => {
           type="submit"
           loading={handleSubmit.isThrottled}
         >
-          {t("components.form.continueButton")}
+          {props.continueButtonLabel ?? t("components.form.continueButton")}
         </Button>
       </form>
     </React.Fragment>

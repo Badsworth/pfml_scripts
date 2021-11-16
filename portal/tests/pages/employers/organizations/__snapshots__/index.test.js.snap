@@ -131,7 +131,7 @@ exports[`Index shows the 'Verification blocked' tag and link for unverifiable ad
     href="/employers/organizations/cannot-verify?employer_id=io19fj9-00jjf-uiw3r"
   >
     <span
-      class="usa-tag display-inline-block text-bold padding-y-05 radius-lg text-no-wrap text-error-darker bg-error-lighter padding-x-205"
+      class="usa-tag display-inline-block text-bold text-middle text-no-wrap text-error-darker bg-error-lighter"
     >
       Verification blocked
     </span>
@@ -154,7 +154,7 @@ exports[`Index shows the 'Verification required' tag and link for verifiable adm
     href="/employers/organizations/verify-contributions?employer_id=dda903f-f093f-ff900&next=%2Femployers%2Forganizations"
   >
     <span
-      class="usa-tag display-inline-block text-bold padding-y-05 radius-lg text-no-wrap text-base-darkest bg-warning-lighter padding-x-205"
+      class="usa-tag display-inline-block text-bold text-middle text-no-wrap text-base-darkest bg-warning-lighter"
     >
       Verification required
     </span>

@@ -1,21 +1,15 @@
 import { Trans, useTranslation } from "react-i18next";
+import withUser, { WithUserProps } from "../../../hoc/withUser";
 import BackButton from "../../../components/BackButton";
-import Lead from "../../../components/Lead";
+import Lead from "../../../components/core/Lead";
 import PageNotFound from "../../../components/PageNotFound";
 import React from "react";
-import Title from "../../../components/Title";
-import User from "../../../models/User";
+import Title from "../../../components/core/Title";
 import routes from "../../../routes";
-import withUser from "../../../hoc/withUser";
 
-interface CannotVerifyProps {
-  query: {
-    employer_id: string;
-  };
-  user: User;
-}
-
-export const CannotVerify = (props: CannotVerifyProps) => {
+export const CannotVerify = (
+  props: WithUserProps & { query: { employer_id?: string } }
+) => {
   const { query, user } = props;
   const employer = user.user_leave_administrators.find((employer) => {
     return employer.employer_id === query.employer_id;

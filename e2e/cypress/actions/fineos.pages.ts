@@ -5,10 +5,10 @@ import {
   ReducedScheduleLeavePeriods,
 } from "../../src/_api";
 import {
-  AllNotNull,
   FineosTasks,
   NonEmptyArray,
   PersonalIdentificationDetails,
+  RequireNotNull,
   ValidClaim,
   ValidConcurrentLeave,
   ValidEmployerBenefit,
@@ -350,13 +350,13 @@ export class ClaimPage {
   suppressCorrespondence(hasAction: boolean): this {
     cy.contains("Options").click();
     if (hasAction) {
-      cy.contains("Notifications").click();
+      cy.contains("Notifications").click({ force: true });
       cy.get("input[type='submit'][value='Suppress Notifications']").click();
       cy.contains(
         "Automatic Notifications and Correspondence have been suppressed."
       );
       cy.get("#alertsHeader").within(() => {
-        cy.contains("Open").click();
+        cy.contains("Open").click({ force: true });
         waitForAjaxComplete();
         cy.contains(
           "Automatic Notifications and Correspondence have been suppressed."
@@ -369,6 +369,13 @@ export class ClaimPage {
         "Notifications"
       ).should("have.attr", "disabled");
     }
+    return this;
+  }
+
+  removeSuppressCorrespondence(): this {
+    cy.contains("Options").click();
+    cy.contains("Notifications").click({ force: true });
+    cy.get("input[type='submit'][value='End Suppression']").click();
     return this;
   }
 }
@@ -426,6 +433,12 @@ class AdjudicationPage {
   availability(cb: (page: AvailabilityPage) => unknown): this {
     this.onTab("Availability");
     cb(new AvailabilityPage());
+    this.onTab("Manage Request");
+    return this;
+  }
+  paidBenefits(cb: (page: PaidBenefitsPage) => unknown): this {
+    this.onTab("Paid Benefits");
+    cb(new PaidBenefitsPage());
     this.onTab("Manage Request");
     return this;
   }
@@ -587,8 +600,7 @@ class RequestInformationPage {
 }
 class OutstandingRequirementsPage {
   add() {
-    cy.wait("@ajaxRender");
-    cy.wait(200);
+    waitForAjaxComplete();
     cy.get("input[value='Add']").click();
     cy.get(
       "#AddManagedRequirementPopupWidget_PopupWidgetWrapper input[type='submit'][value='Ok']"
@@ -1323,6 +1335,17 @@ class AvailabilityPage {
   }
 }
 
+class PaidBenefitsPage {
+  assertSitFitOptIn(isParticipating: boolean): this {
+    cy.contains("td[id*='SIT/FIT Opt In']", isParticipating ? "true" : "false");
+    return this;
+  }
+  edit(): this {
+    cy.get("input[type='submit'][value='Edit']").click();
+    return this;
+  }
+}
+
 const reductionCategories = {
   ["Accrued paid leave" as const]: "",
   ["Earnings from another employment/self-employment" as const]: "",
@@ -1470,7 +1493,9 @@ class PaidLeavePage {
     cy.findByLabelText("Start Date")
       .focus()
       .type(`${dateToMMddyyyy(start_date)}{enter}`);
-    cy.findByLabelText("Start Date").should("have.focus");
+
+    waitForAjaxComplete();
+    cy.findByLabelText("Start Date").focus().should("have.focus");
 
     cy.findByLabelText("End Date")
       .focus()
@@ -1627,7 +1652,7 @@ class PaidLeavePage {
 
   assertOwnershipAssignTo(assign: string): this {
     this.onTab("General Claim");
-    cy.get('span[id="CaseDetails_un29_AssignedTo"]').should((element) => {
+    cy.get('span[id*="AssignedTo"]').should((element) => {
       expect(
         element,
         `Expected the Assigned To display the following "${assign}"`
@@ -1773,12 +1798,16 @@ export class ClaimantPage {
     return this;
   }
 
-  addAddress(address: AllNotNull<Address>): this {
+  addAddress(
+    address: RequireNotNull<Address, "city" | "line_1" | "state" | "zip">
+  ): this {
     cy.findByText(`+ Add address`).click({ force: true });
     waitForAjaxComplete();
     cy.get(`#addressPopupWidget_PopupWidgetWrapper`).within(() => {
       cy.findByLabelText(`Address line 1`).type(`${address.line_1}`);
-      cy.findByLabelText(`Address line 2`).type(`${address.line_2}`);
+      if (address.line_2) {
+        cy.findByLabelText(`Address line 2`).type(`${address.line_2}`);
+      }
       cy.findByLabelText(`City`).type(`${address.city}`);
       cy.findByLabelText(`State`).select(`${address.state}`);
       cy.findByLabelText(`Zip code`).type(`${address.zip}`);
@@ -1960,6 +1989,19 @@ export class ClaimantPage {
     onTab("Payment Preferences");
     waitForAjaxComplete();
     return new PaymentPreferencePage();
+  }
+
+  addCase(hasAccess: boolean): this {
+    if (hasAccess) {
+      cy.get(
+        `div[id^="MENUBAR.PartySubjectMenu_"][id$="_MENUBAR.PartySubjectMenu"] div[title="Add Case"]`
+      ).should("be.visible");
+    } else {
+      cy.get(
+        `div[id^="MENUBAR.PartySubjectMenu_"][id$="_MENUBAR.PartySubjectMenu"] div[title="Add Case"]`
+      ).should("not.be.visible");
+    }
+    return this;
   }
 }
 /**Contains utilities used within multiple pages throughout the intake process */

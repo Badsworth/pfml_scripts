@@ -1,21 +1,28 @@
-import { DocumentType, DocumentTypeEnum } from "../../../models/Document";
+import {
+  AbsencePeriod,
+  AbsencePeriodRequestDecision,
+} from "../../../models/ClaimDetail";
+import {
+  BenefitsApplicationDocument,
+  ClaimDocument,
+  DocumentType,
+  DocumentTypeEnum,
+} from "../../../models/Document";
 import React, { useEffect } from "react";
+import Tag, { TagProps } from "../../../components/core/Tag";
 import { find, get, has, map } from "lodash";
-import { AbsencePeriod } from "../../../models/ClaimDetail";
-import Alert from "../../../components/Alert";
+import withUser, { WithUserProps } from "../../../hoc/withUser";
+import Alert from "../../../components/core/Alert";
 import { AppLogic } from "../../../hooks/useAppLogic";
 import BackButton from "../../../components/BackButton";
-import BenefitsApplicationDocument from "../../../models/BenefitsApplicationDocument";
 import ButtonLink from "../../../components/ButtonLink";
-import ClaimDocument from "../../../models/ClaimDocument";
-import Heading from "../../../components/Heading";
+import Heading from "../../../components/core/Heading";
 import LeaveReason from "../../../models/LeaveReason";
 import LegalNoticeList from "../../../components/LegalNoticeList";
 import PageNotFound from "../../../components/PageNotFound";
-import Spinner from "../../../components/Spinner";
+import Spinner from "../../../components/core/Spinner";
 import StatusNavigationTabs from "../../../components/status/StatusNavigationTabs";
-import Tag from "../../../components/Tag";
-import Title from "../../../components/Title";
+import Title from "../../../components/core/Title";
 import { Trans } from "react-i18next";
 import findDocumentsByTypes from "../../../utils/findDocumentsByTypes";
 import findKeyByValue from "../../../utils/findKeyByValue";
@@ -25,21 +32,19 @@ import hasDocumentsLoadError from "../../../utils/hasDocumentsLoadError";
 import { isFeatureEnabled } from "../../../services/featureFlags";
 import routes from "../../../routes";
 import { useTranslation } from "../../../locales/i18n";
-import withUser from "../../../hoc/withUser";
 
-interface StatusProps {
-  appLogic: AppLogic;
+const containerClassName = "border-bottom border-base-lighter padding-y-4";
+
+export const Status = ({
+  appLogic,
+  query,
+}: WithUserProps & {
   query: {
     absence_case_id?: string;
-    claim_id?: string;
+    absence_id?: string;
     uploaded_document_type?: string;
   };
-}
-
-const containerClassName =
-  "border-bottom border-base-lighter measure-6 padding-y-4";
-
-export const Status = ({ appLogic, query }: StatusProps) => {
+}) => {
   const { t } = useTranslation();
   const {
     claims: { claimDetail, isLoadingClaimDetail, loadClaimDetail },
@@ -51,7 +56,9 @@ export const Status = ({ appLogic, query }: StatusProps) => {
     },
     portalFlow,
   } = appLogic;
-  const { absence_case_id, uploaded_document_type } = query;
+  const { absence_case_id, absence_id, uploaded_document_type } = query;
+  const application_id = get(claimDetail, "application_id");
+  const absenceId = absence_id || absence_case_id;
 
   useEffect(() => {
     if (!isFeatureEnabled("claimantShowStatusPage")) {
@@ -60,19 +67,18 @@ export const Status = ({ appLogic, query }: StatusProps) => {
   }, [portalFlow]);
 
   useEffect(() => {
-    if (absence_case_id) {
-      loadClaimDetail(absence_case_id);
+    if (absenceId) {
+      loadClaimDetail(absenceId);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [absence_case_id]);
+  }, [absenceId]);
 
   useEffect(() => {
-    const application_id = get(claimDetail, "application_id");
     if (application_id) {
       loadAllClaimDocuments(application_id);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [claimDetail]);
+  }, [application_id]);
 
   useEffect(() => {
     /**
@@ -84,13 +90,13 @@ export const Status = ({ appLogic, query }: StatusProps) => {
       const anchorId = document.getElementById(location.hash.substring(1));
       if (anchorId) anchorId.scrollIntoView();
     }
-  }, [isLoadingClaimDetail, claimDetail]);
+  }, [isLoadingClaimDetail]);
 
   /**
-   * If there is no absence_case_id query parameter,
+   * If there is no absence_id query parameter,
    * then return the PFML 404 page.
    */
-  const isAbsenceCaseId = Boolean(query.absence_case_id?.length);
+  const isAbsenceCaseId = Boolean(absenceId?.length);
   if (!isAbsenceCaseId) return <PageNotFound />;
 
   // only hide page content if there is an error that's not DocumentsLoadError.
@@ -128,7 +134,7 @@ export const Status = ({ appLogic, query }: StatusProps) => {
     claimDetail.application_id
   );
 
-  const ViewYourNotices = () => {
+  const viewYourNotices = () => {
     const legalNotices = getLegalNotices(documentsForApplication);
 
     const shouldShowSpinner =
@@ -245,7 +251,7 @@ export const Status = ({ appLogic, query }: StatusProps) => {
           state="success"
         >
           {t("pages.applications.uploadSuccessMessage", {
-            absence_id: absence_case_id,
+            absenceId,
           })}
         </Alert>
       )}
@@ -284,10 +290,14 @@ export const Status = ({ appLogic, query }: StatusProps) => {
         label={t("pages.claimsStatus.backButtonLabel")}
         href={routes.applications.index}
       />
-      <div>
-        <Title weight="normal" small>
-          {t("pages.claimsStatus.applicationDetails")}
-        </Title>
+      <div className="measure-6">
+        <Title hidden>{t("pages.claimsStatus.applicationTitle")}</Title>
+        {isFeatureEnabled("claimantShowPayments") && hasApprovedStatus && (
+          <StatusNavigationTabs
+            activePath={appLogic.portalFlow.pathname}
+            absence_id={absenceId}
+          />
+        )}
 
         {/* Heading section */}
 
@@ -296,12 +306,13 @@ export const Status = ({ appLogic, query }: StatusProps) => {
             context: findKeyByValue(LeaveReason, firstAbsenceDetail),
           })}
         </Heading>
-        <div className="display-flex bg-base-lightest padding-2">
-          <div className="padding-right-10">
+
+        <div className="bg-base-lightest padding-2 tablet:display-flex tablet:padding-bottom-0">
+          <div className="padding-bottom-3 padding-right-6">
             <Heading weight="normal" level="2" size="4">
               {t("pages.claimsStatus.applicationID")}
             </Heading>
-            <p className="text-bold">{absence_case_id}</p>
+            <p className="text-bold">{absenceId}</p>
           </div>
           {claimDetail.employer && (
             <div>
@@ -313,13 +324,6 @@ export const Status = ({ appLogic, query }: StatusProps) => {
           )}
         </div>
 
-        {isFeatureEnabled("claimantShowPayments") && (
-          <StatusNavigationTabs
-            activePath={appLogic.portalFlow.pathname}
-            absence_case_id={absence_case_id}
-          />
-        )}
-
         {hasPendingStatus && (
           <Timeline
             absencePeriods={claimDetail.absence_periods}
@@ -328,12 +332,12 @@ export const Status = ({ appLogic, query }: StatusProps) => {
             }
             applicationId={claimDetail.application_id}
             docList={documentsForApplication}
-            absenceCaseId={claimDetail.fineos_absence_id}
+            absenceId={claimDetail.fineos_absence_id}
             appLogic={appLogic}
           />
         )}
         <LeaveDetails absenceDetails={absenceDetails} />
-        <ViewYourNotices />
+        {viewYourNotices()}
 
         {/* Upload documents section */}
         <div className={containerClassName} id="upload_documents">
@@ -358,11 +362,11 @@ export const Status = ({ appLogic, query }: StatusProps) => {
           </div>
           {hasPendingStatus && (
             <ButtonLink
-              className="measure-6 margin-top-3"
+              className="margin-top-3"
               href={appLogic.portalFlow.getNextPageRoute(
                 "UPLOAD_DOC_OPTIONS",
                 {},
-                { absence_case_id: claimDetail.fineos_absence_id }
+                { absence_id: claimDetail.fineos_absence_id }
               )}
             >
               {t("pages.claimsStatus.uploadDocumentsButton")}
@@ -372,10 +376,7 @@ export const Status = ({ appLogic, query }: StatusProps) => {
 
         {/* Manage applications section */}
         {(hasPendingStatus || hasApprovedStatus) && (
-          <div
-            className="measure-6 padding-y-4"
-            data-testid="manageApplication"
-          >
+          <div className="padding-y-4" data-testid="manageApplication">
             <div>
               <Heading level="2">
                 {t("pages.claimsStatus.manageApplicationHeading")}
@@ -430,7 +431,9 @@ export const Status = ({ appLogic, query }: StatusProps) => {
 
 export default withUser(Status);
 
-export const StatusTagMap = {
+export const StatusTagMap: {
+  [status in AbsencePeriodRequestDecision]: TagProps["state"];
+} = {
   Approved: "success",
   Denied: "error",
   Pending: "pending",
@@ -520,7 +523,7 @@ interface TimelineProps {
   applicationId?: string;
   employerFollowUpDate: string | null;
   docList: ClaimDocument[] | BenefitsApplicationDocument[];
-  absenceCaseId: string;
+  absenceId: string;
   appLogic: AppLogic;
 }
 
@@ -529,7 +532,7 @@ export const Timeline = ({
   applicationId,
   docList,
   absencePeriods,
-  absenceCaseId,
+  absenceId,
   appLogic,
 }: TimelineProps) => {
   const { t } = useTranslation();
@@ -578,13 +581,12 @@ export const Timeline = ({
           />
         </p>
         <ButtonLink
-          className="measure-12"
           href={appLogic.portalFlow.getNextPageRoute(
             typeOfProof === "newborn"
               ? "UPLOAD_PROOF_OF_BIRTH"
               : "UPLOAD_PROOF_OF_PLACEMENT",
             {},
-            { claim_id: applicationId, absence_case_id: absenceCaseId }
+            { claim_id: applicationId, absence_id: absenceId }
           )}
         >
           {t("pages.claimsStatus.whatHappensNextButton", {

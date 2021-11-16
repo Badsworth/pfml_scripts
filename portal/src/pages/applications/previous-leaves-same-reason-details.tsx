@@ -1,23 +1,24 @@
 import { get, pick } from "lodash";
-import { AppLogic } from "../../hooks/useAppLogic";
+import withBenefitsApplication, {
+  WithBenefitsApplicationProps,
+} from "../../hoc/withBenefitsApplication";
 import BenefitsApplication from "../../models/BenefitsApplication";
-import Details from "../../components/Details";
-import Heading from "../../components/Heading";
-import Hint from "../../components/Hint";
-import InputChoiceGroup from "../../components/InputChoiceGroup";
-import InputDate from "../../components/InputDate";
-import InputHours from "../../components/InputHours";
+import Details from "../../components/core/Details";
+import Heading from "../../components/core/Heading";
+import Hint from "../../components/core/Hint";
+import InputChoiceGroup from "../../components/core/InputChoiceGroup";
+import InputDate from "../../components/core/InputDate";
+import InputHours from "../../components/core/InputHours";
 import LeaveReason from "../../models/LeaveReason";
 import PreviousLeave from "../../models/PreviousLeave";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
-import RepeatableFieldset from "../../components/RepeatableFieldset";
+import RepeatableFieldset from "../../components/core/RepeatableFieldset";
 import { Trans } from "react-i18next";
 import formatDate from "../../utils/formatDate";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = [
   "claim.previous_leaves_same_reason",
@@ -28,13 +29,8 @@ export const fields = [
   "claim.previous_leaves_same_reason[*].worked_per_week_minutes",
 ];
 
-interface PreviousLeavesSameReasonDetailsProps {
-  appLogic: AppLogic;
-  claim: BenefitsApplication;
-}
-
 export const PreviousLeavesSameReasonDetails = (
-  props: PreviousLeavesSameReasonDetailsProps
+  props: WithBenefitsApplicationProps
 ) => {
   const { t } = useTranslation();
   const { appLogic, claim } = props;

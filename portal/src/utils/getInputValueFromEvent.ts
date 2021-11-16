@@ -39,7 +39,13 @@ export default function getInputValueFromEvent(
   ) {
     // Support comma-delimited numbers
     const transformedValue = value.replace(/,/g, "");
-    if (isNaN(Number(transformedValue))) return result;
+
+    if (
+      isNaN(Number(transformedValue)) ||
+      // Don't prevent a trailing decimal point, otherwise a user can't enter a decimal number
+      (valueType === "float" && transformedValue.endsWith("."))
+    )
+      return result;
 
     result =
       valueType === "integer"

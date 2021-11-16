@@ -3,7 +3,7 @@
 exports[`Status LeaveDetails renders page separated by keys if object of absenceDetails has more keys 1`] = `
 <div>
   <div
-    class="border-bottom border-base-lighter measure-6 padding-y-4"
+    class="border-bottom border-base-lighter padding-y-4"
   >
     <h2
       class="font-heading-md text-bold"
@@ -22,7 +22,7 @@ exports[`Status LeaveDetails renders page separated by keys if object of absence
         From June 1, 2021 to June 8, 2021
       </p>
       <span
-        class="usa-tag display-inline-block text-bold padding-y-05 radius-lg text-no-wrap text-success-dark bg-success-lighter padding-x-205"
+        class="usa-tag display-inline-block text-bold text-middle text-no-wrap text-success-dark bg-success-lighter"
       >
         Approved
       </span>
@@ -48,7 +48,7 @@ exports[`Status LeaveDetails renders page separated by keys if object of absence
     </div>
   </div>
   <div
-    class="border-bottom border-base-lighter measure-6 padding-y-4"
+    class="border-bottom border-base-lighter padding-y-4"
   >
     <h2
       class="font-heading-md text-bold"
@@ -67,7 +67,7 @@ exports[`Status LeaveDetails renders page separated by keys if object of absence
         From August 1, 2021 to August 8, 2021
       </p>
       <span
-        class="usa-tag display-inline-block text-bold padding-y-05 radius-lg text-no-wrap bg-primary-lighter text-primary padding-x-205"
+        class="usa-tag display-inline-block text-bold text-middle text-no-wrap bg-primary-lighter text-primary"
       >
         Pending
       </span>
@@ -79,7 +79,7 @@ exports[`Status LeaveDetails renders page separated by keys if object of absence
     </div>
   </div>
   <div
-    class="border-bottom border-base-lighter measure-6 padding-y-4"
+    class="border-bottom border-base-lighter padding-y-4"
   >
     <h2
       class="font-heading-md text-bold"
@@ -98,7 +98,7 @@ exports[`Status LeaveDetails renders page separated by keys if object of absence
         From August 1, 2021 to August 8, 2021
       </p>
       <span
-        class="usa-tag display-inline-block text-bold padding-y-05 radius-lg text-no-wrap text-base-darker bg-base-lightest padding-x-205"
+        class="usa-tag display-inline-block text-bold text-middle text-no-wrap text-base-darker bg-base-lightest"
       >
         Withdrawn
       </span>
@@ -127,7 +127,7 @@ exports[`Status LeaveDetails renders page separated by keys if object of absence
 exports[`Status LeaveDetails renders page with one section if absenceDetails has only one key 1`] = `
 <div>
   <div
-    class="border-bottom border-base-lighter measure-6 padding-y-4"
+    class="border-bottom border-base-lighter padding-y-4"
   >
     <h2
       class="font-heading-md text-bold"
@@ -146,7 +146,7 @@ exports[`Status LeaveDetails renders page with one section if absenceDetails has
         From August 1, 2021 to August 8, 2021
       </p>
       <span
-        class="usa-tag display-inline-block text-bold padding-y-05 radius-lg text-no-wrap text-base-darker bg-base-lightest padding-x-205"
+        class="usa-tag display-inline-block text-bold text-middle text-no-wrap text-base-darker bg-base-lightest"
       >
         Withdrawn
       </span>
@@ -259,7 +259,7 @@ exports[`Status manage your application displays manage approved application lin
 
 exports[`Status manage your application is displayed if any of the claim statuses on an application are Pending and none are Approved 1`] = `
 <div
-  class="measure-6 padding-y-4"
+  class="padding-y-4"
   data-testid="manageApplication"
 >
   <div>
@@ -330,9 +330,11 @@ exports[`Status renders the page if the only errors are DocumentsLoadError 1`] =
     </svg>
     Back to your applications
   </a>
-  <div>
+  <div
+    class="measure-6"
+  >
     <h1
-      class="js-title margin-top-0 margin-bottom-2 font-heading-sm line-height-sans-3 text-normal"
+      class="js-title margin-top-0 margin-bottom-2 font-heading-lg line-height-sans-2 usa-sr-only"
       tabindex="-1"
     >
       Application details
@@ -343,10 +345,10 @@ exports[`Status renders the page if the only errors are DocumentsLoadError 1`] =
       pages.claimsStatus.leaveReasonValueHeader
     </h2>
     <div
-      class="display-flex bg-base-lightest padding-2"
+      class="bg-base-lightest padding-2 tablet:display-flex tablet:padding-bottom-0"
     >
       <div
-        class="padding-right-10"
+        class="padding-bottom-3 padding-right-6"
       >
         <h2
           class="font-heading-xs text-normal"
@@ -373,7 +375,7 @@ exports[`Status renders the page if the only errors are DocumentsLoadError 1`] =
       </div>
     </div>
     <div
-      class="border-bottom border-base-lighter measure-6 padding-y-4"
+      class="border-bottom border-base-lighter padding-y-4"
     >
       <span
         aria-valuetext="Loading legal notices"
@@ -382,7 +384,7 @@ exports[`Status renders the page if the only errors are DocumentsLoadError 1`] =
       />
     </div>
     <div
-      class="border-bottom border-base-lighter measure-6 padding-y-4"
+      class="border-bottom border-base-lighter padding-y-4"
       id="upload_documents"
     >
       <h2
@@ -431,9 +433,11 @@ exports[`Status renders the page with claim detail 1`] = `
     </svg>
     Back to your applications
   </a>
-  <div>
+  <div
+    class="measure-6"
+  >
     <h1
-      class="js-title margin-top-0 margin-bottom-2 font-heading-sm line-height-sans-3 text-normal"
+      class="js-title margin-top-0 margin-bottom-2 font-heading-lg line-height-sans-2 usa-sr-only"
       tabindex="-1"
     >
       Application details
@@ -444,10 +448,10 @@ exports[`Status renders the page with claim detail 1`] = `
       pages.claimsStatus.leaveReasonValueHeader
     </h2>
     <div
-      class="display-flex bg-base-lightest padding-2"
+      class="bg-base-lightest padding-2 tablet:display-flex tablet:padding-bottom-0"
     >
       <div
-        class="padding-right-10"
+        class="padding-bottom-3 padding-right-6"
       >
         <h2
           class="font-heading-xs text-normal"
@@ -474,7 +478,7 @@ exports[`Status renders the page with claim detail 1`] = `
       </div>
     </div>
     <div
-      class="border-bottom border-base-lighter measure-6 padding-y-4"
+      class="border-bottom border-base-lighter padding-y-4"
     >
       <span
         aria-valuetext="Loading legal notices"
@@ -483,7 +487,110 @@ exports[`Status renders the page with claim detail 1`] = `
       />
     </div>
     <div
-      class="border-bottom border-base-lighter measure-6 padding-y-4"
+      class="border-bottom border-base-lighter padding-y-4"
+      id="upload_documents"
+    >
+      <h2
+        class="font-heading-md text-bold"
+      >
+        Respond to requests for information
+      </h2>
+      <div>
+        We have made a final decision for this application. Your final decision notice has more details about the appeals process.
+        <p
+          class="margin-top-1"
+        >
+          If you would like to appeal the final decision, you can do so using mail, fax, or our 
+          <a
+            href="https://www.mass.gov/forms/request-an-appeal-for-paid-family-and-medical-leave"
+            rel="noreferrer noopener"
+            target="_blank"
+          >
+            online appeals form
+          </a>
+          .
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`Status renders the page with claim detail when there is absence_case_id in query 1`] = `
+<div>
+  <a
+    class="usa-button margin-bottom-5 usa-button--unstyled"
+    href="/applications"
+  >
+    <svg
+      class="margin-right-05"
+      height="12"
+      viewBox="0 0 448 512"
+      width="12"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M257.5 445.1l-22.2 22.2c-9.4 9.4-24.6 9.4-33.9 0L7 273c-9.4-9.4-9.4-24.6 0-33.9L201.4 44.7c9.4-9.4 24.6-9.4 33.9 0l22.2 22.2c9.5 9.5 9.3 25-.4 34.3L136.6 216H424c13.3 0 24 10.7 24 24v32c0 13.3-10.7 24-24 24H136.6l120.5 114.8c9.8 9.3 10 24.8.4 34.3z"
+        fill="currentColor"
+      />
+    </svg>
+    Back to your applications
+  </a>
+  <div
+    class="measure-6"
+  >
+    <h1
+      class="js-title margin-top-0 margin-bottom-2 font-heading-lg line-height-sans-2 usa-sr-only"
+      tabindex="-1"
+    >
+      Application details
+    </h1>
+    <h2
+      class="font-heading-lg text-bold"
+    >
+      pages.claimsStatus.leaveReasonValueHeader
+    </h2>
+    <div
+      class="bg-base-lightest padding-2 tablet:display-flex tablet:padding-bottom-0"
+    >
+      <div
+        class="padding-bottom-3 padding-right-6"
+      >
+        <h2
+          class="font-heading-xs text-normal"
+        >
+          Application ID
+        </h2>
+        <p
+          class="text-bold"
+        >
+          mock-absence-case-id
+        </p>
+      </div>
+      <div>
+        <h2
+          class="font-heading-xs text-normal"
+        >
+          Employer Identification Number (EIN)
+        </h2>
+        <p
+          class="text-bold"
+        >
+          12-1234567
+        </p>
+      </div>
+    </div>
+    <div
+      class="border-bottom border-base-lighter padding-y-4"
+    >
+      <span
+        aria-valuetext="Loading legal notices"
+        class="c-spinner"
+        role="progressbar"
+      />
+    </div>
+    <div
+      class="border-bottom border-base-lighter padding-y-4"
       id="upload_documents"
     >
       <h2
@@ -514,7 +621,7 @@ exports[`Status renders the page with claim detail 1`] = `
 
 exports[`Status timeline is displayed if there is a pending absence period 1`] = `
 <div
-  class="border-bottom border-base-lighter measure-6 padding-y-4"
+  class="border-bottom border-base-lighter padding-y-4"
   data-testid="timeline"
 >
   <h2
@@ -567,7 +674,7 @@ exports[`Status timeline is displayed if there is a pending absence period 1`] =
 
 exports[`Status timeline when there is a pending bonding absence period and claimant has not uploaded certification documents shows follow up steps 1`] = `
 <div
-  class="border-bottom border-base-lighter measure-6 padding-y-4"
+  class="border-bottom border-base-lighter padding-y-4"
   data-testid="timeline"
 >
   <h2
@@ -587,8 +694,8 @@ exports[`Status timeline when there is a pending bonding absence period and clai
      we accept.
   </p>
   <a
-    class="usa-button measure-12"
-    href="/applications/upload/proof-of-birth?claim_id=mock-application-id&absence_case_id=mock-absence-case-id"
+    class="usa-button"
+    href="/applications/upload/proof-of-birth?claim_id=mock-application-id&absence_id=mock-absence-case-id"
   >
     Upload proof of birth
   </a>

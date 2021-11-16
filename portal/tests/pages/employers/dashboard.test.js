@@ -3,7 +3,6 @@ import User, { UserLeaveAdministrator } from "../../../src/models/User";
 import { cleanup, screen, within } from "@testing-library/react";
 import ClaimCollection from "../../../src/models/ClaimCollection";
 import Dashboard from "../../../src/pages/employers/dashboard";
-import PaginationMeta from "../../../src/models/PaginationMeta";
 import faker from "faker";
 import { mockRouter } from "next/router";
 import { renderPage } from "../../test-utils";
@@ -13,7 +12,7 @@ import userEvent from "@testing-library/user-event";
 // Avoid issue where USWDS generates unique ID each render,
 // which causes havoc for our snapshot testing
 // https://github.com/uswds/uswds/issues/4338
-jest.mock("../../../src/components/TooltipIcon", () => ({
+jest.mock("../../../src/components/core/TooltipIcon", () => ({
   __esModule: true,
   default: () => null,
 }));
@@ -87,7 +86,7 @@ const setup = ({
     appLogic.claims.claims = new ClaimCollection(claims);
     appLogic.claims.shouldLoadPage = jest.fn().mockReturnValue(false);
     appLogic.claims.isLoadingClaims = false;
-    appLogic.claims.paginationMeta = new PaginationMeta({
+    appLogic.claims.paginationMeta = {
       page_offset: 1,
       page_size: 25,
       total_pages: 3,
@@ -95,7 +94,7 @@ const setup = ({
       order_by: "created_at",
       order_direction: "ascending",
       ...paginationMeta,
-    });
+    };
 
     updateQuerySpy = jest.spyOn(appLogic.portalFlow, "updateQuery");
   };
@@ -290,6 +289,17 @@ describe("Employer dashboard", () => {
     expect(updateQuerySpy).toHaveBeenCalledWith({
       page_offset: "1",
       search: "Bud Baxter",
+    });
+  });
+
+  it("clears search param when the search field is cleared", () => {
+    const { updateQuerySpy } = setup({ query: { search: "Bud Baxter" } });
+
+    userEvent.clear(screen.getByRole("textbox", { name: /search/i }));
+    userEvent.click(screen.getByRole("button", { name: /search/i }));
+
+    expect(updateQuerySpy).toHaveBeenCalledWith({
+      page_offset: "1",
     });
   });
 
