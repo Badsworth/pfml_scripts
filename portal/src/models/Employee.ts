@@ -2,13 +2,9 @@
 
 export interface OrganizationUnit {
   organization_unit_id: string;
-  fineos_id: string | null;
+  fineos_id?: string | null;
   name: string;
-  employer_id: string | null;
-}
-
-export interface EmployeeOrganizationUnit extends OrganizationUnit {
-  linked: boolean;
+  employer_id?: string | null;
 }
 
 interface Employee {
@@ -20,7 +16,7 @@ interface Employee {
   other_name: string | null;
   email_address: string | null;
   phone_number: string | null;
-  organization_units?: EmployeeOrganizationUnit[];
+  organization_units?: OrganizationUnit[];
 }
 
 export default Employee;

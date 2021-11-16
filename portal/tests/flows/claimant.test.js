@@ -6,6 +6,7 @@ import BenefitsApplication, {
 import { Machine, assign } from "xstate";
 import claimFlowStates, { guards } from "../../src/flows/claimant";
 import { get, merge } from "lodash";
+
 import LeaveReason from "../../src/models/LeaveReason";
 import User from "../../src/models/User";
 import { createModel } from "@xstate/test";
@@ -416,6 +417,11 @@ describe("claimFlowConfigs", () => {
   const completed = {
     status: BenefitsApplicationStatus.completed,
   };
+  const organizationUnitsClaim = {
+    employer_organization_units: [
+      // @todo add one org unit
+    ],
+  };
   const testData = [
     { claimData: hasStateId, userData: {} },
     { claimData: medicalClaim, userData: {} },
@@ -428,6 +434,7 @@ describe("claimFlowConfigs", () => {
     { claimData: fixedWorkPattern, userData: {} },
     { claimData: variableWorkPattern, userData: {} },
     { claimData: caringLeaveClaim, userData: {} },
+    { claimData: organizationUnitsClaim, userData: {} },
   ];
 
   // Action that's fired when exiting getReady state and creating a claim and
@@ -449,6 +456,9 @@ describe("claimFlowConfigs", () => {
         ...guards,
         // TODO (CP-1447): Remove this guard once the feature flag is obsolete
         showPhone: () => true,
+        isEmployedAndEmployerHasDepartments: ({ claim }) =>
+          get(claim, "employment_status") === EmploymentStatus.employed &&
+          get(claim, "employer_organization_units").length,
       },
       actions: { assignTestDataToMachineContext },
     }

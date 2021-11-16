@@ -11,6 +11,7 @@
  * is complete, in progress, or not started
  * @see ../models/Step
  */
+
 import BenefitsApplication, {
   EmploymentStatus,
   WorkPatternType,
@@ -33,6 +34,7 @@ import { fields as familyMemberRelationshipFields } from "../pages/applications/
 import { fields as genderFields } from "../pages/applications/gender";
 import { get } from "lodash";
 import { fields as intermittentFrequencyFields } from "../pages/applications/intermittent-frequency";
+import { isFeatureEnabled } from "../services/featureFlags";
 import { fields as leavePeriodContinuousFields } from "../pages/applications/leave-period-continuous";
 import { fields as leavePeriodIntermittentFields } from "../pages/applications/leave-period-intermittent";
 import { fields as leavePeriodReducedScheduleFields } from "../pages/applications/leave-period-reduced-schedule";
@@ -77,6 +79,11 @@ export const guards: { [guardName: string]: ClaimFlowGuardFn } = {
   isMedicalOrPregnancyLeave: ({ claim }) =>
     claim?.isMedicalOrPregnancyLeave === true,
   isBondingLeave: ({ claim }) => claim?.isBondingLeave === true,
+  // @todo: (PFMLPB-????) Remove isFeatureEnabled check once feature flag is removed
+  isEmployedAndEmployerHasDepartments: ({ claim }) =>
+    isFeatureEnabled("claimantShowOrganizationUnits") &&
+    get(claim, "employment_status") === EmploymentStatus.employed &&
+    get(claim, "employer_organization_units").length,
   isEmployed: ({ claim }) =>
     get(claim, "employment_status") === EmploymentStatus.employed,
   isCompleted: ({ claim }) => claim?.isCompleted === true,
@@ -636,6 +643,10 @@ const claimantFlow: {
         CONTINUE: [
           {
             target: routes.applications.department,
+            cond: "isEmployedAndEmployerHasDepartments",
+          },
+          {
+            target: routes.applications.notifiedEmployer,
             cond: "isEmployed",
           },
           {

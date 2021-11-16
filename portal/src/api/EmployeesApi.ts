@@ -1,4 +1,5 @@
 import BaseApi, { JSONRequestBody } from "./BaseApi";
+
 import Employee from "../models/Employee";
 import routes from "../routes";
 
@@ -7,7 +8,6 @@ export interface EmployeeSearchRequest extends JSONRequestBody {
   last_name: string;
   middle_name?: string;
   tax_identifier_last4: string;
-  employer_fein?: string;
 }
 
 export default class EmployeesApi extends BaseApi {

@@ -1,8 +1,10 @@
 /**
  * @file Benefits application model and enum values
  */
+
 import LeaveReason, { LeaveReasonType } from "./LeaveReason";
 import { compact, get, isNil, merge, sum, sumBy, zip } from "lodash";
+
 import Address from "./Address";
 import BaseBenefitsApplication from "./BaseBenefitsApplication";
 import ConcurrentLeave from "./ConcurrentLeave";
@@ -19,6 +21,7 @@ class BenefitsApplication extends BaseBenefitsApplication {
   application_id: string;
   fineos_absence_id: string | null = null;
   organization_unit_id: string | null = null;
+  organization_unit_selection: string | null = null;
   created_at: string;
 
   first_name: string | null = null;
@@ -82,6 +85,7 @@ class BenefitsApplication extends BaseBenefitsApplication {
     | null = null;
 
   organization_unit: OrganizationUnit | null;
+  employer_organization_units: OrganizationUnit[];
 
   constructor(attrs: Partial<BenefitsApplication>) {
     super();
