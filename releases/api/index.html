@@ -1083,7 +1083,7 @@
 </tr>
 <tr>
 <td>stage</td>
-<td><a href="https://github.com/EOLWD/pfml/releases/tag/api/v2.34.0">api/v2.34.0</a></td>
+<td><a href="https://github.com/EOLWD/pfml/releases/tag/api/v2.35.0-rc2">api/v2.35.0-rc2</a></td>
 <td><a href="https://github.com/EOLWD/pfml/deployments/activity_log?environment=api+(stage)">GitHub</a></td>
 </tr>
 <tr>
@@ -1093,7 +1093,7 @@
 </tr>
 <tr>
 <td>performance</td>
-<td><a href="https://github.com/EOLWD/pfml/releases/tag/api/v2.34.0">api/v2.34.0</a></td>
+<td><a href="https://github.com/EOLWD/pfml/releases/tag/api/v2.35.0-rc2">api/v2.35.0-rc2</a></td>
 <td><a href="https://github.com/EOLWD/pfml/deployments/activity_log?environment=api+(performance)">GitHub</a></td>
 </tr>
 <tr>
@@ -1103,7 +1103,7 @@
 </tr>
 <tr>
 <td>uat</td>
-<td><a href="https://github.com/EOLWD/pfml/releases/tag/api/v2.34.0">api/v2.34.0</a></td>
+<td><a href="https://github.com/EOLWD/pfml/releases/tag/api/v2.35.0-rc2">api/v2.35.0-rc2</a></td>
 <td><a href="https://github.com/EOLWD/pfml/deployments/activity_log?environment=api+(uat)">GitHub</a></td>
 </tr>
 <tr>
@@ -1113,79 +1113,16 @@
 </tr>
 <tr>
 <td>cps-preview</td>
-<td><a href="https://github.com/EOLWD/pfml/releases/tag/api/v2.34.0">api/v2.34.0</a></td>
+<td><a href="https://github.com/EOLWD/pfml/releases/tag/api/v2.35.0-rc2">api/v2.35.0-rc2</a></td>
 <td><a href="https://github.com/EOLWD/pfml/deployments/activity_log?environment=api+(cps-preview)">GitHub</a></td>
 </tr>
 </tbody>
 </table>
 <p>Full release notes are available in <a href="https://lwd.atlassian.net/wiki/spaces/DD/pages/1086226543/2021+Releases">Confluence</a>.</p>
-<p>Next Release (<a href="https://lwd.atlassian.net/issues/?jql=id in (PORTAL-819,API-2046,irs-1099,PORTAL-1050,API-2087,PORTAL-819,API-2058,Infra-739,API-2113,INFRA-812,API-2109,PORTAL-819,PORTAL-976,PORTAL-928,PORTAL-944,Portal-1039,API-2044,API-2097,PORTAL-826,API-2090,API-2075,API-609,API-1485,API-2036,PAY-95,API-2037)">Jira List</a>):</p>
-<ul>
-<li>update logging of fineos Unprocessable Entity (<a href="https://github.com/EOLWD/pfml/pull/6107">#6107</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/Portal-1039">Portal-1039</a>: Backend validation for tax withholding on application complete (<a href="https://github.com/EOLWD/pfml/pull/6118">#6118</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PORTAL-976">PORTAL-976</a>: Add <code>mfa_delivery_preference</code> to API (<a href="https://github.com/EOLWD/pfml/pull/6082">#6082</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PORTAL-944">PORTAL-944</a>: Refactor - Separate tests between API layer and service layer for <code>get_claim</code> endpoint (<a href="https://github.com/EOLWD/pfml/pull/6091">#6091</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PORTAL-928">PORTAL-928</a>: - Validate UUID fields in the OpenAPI spec (<a href="https://github.com/EOLWD/pfml/pull/5908">#5908</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PORTAL-826">PORTAL-826</a>: pdf compressor added to pdf utils (<a href="https://github.com/EOLWD/pfml/pull/5988">#5988</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PORTAL-819">PORTAL-819</a>: Validate that concurrent leave does not overlap with waiting period (<a href="https://github.com/EOLWD/pfml/pull/5868">#5868</a>) (#6171)</li>
-<li><a href="https://lwd.atlassian.net/browse/PORTAL-819">PORTAL-819</a>: Validate that concurrent leave does not overlap with waiting period (<a href="https://github.com/EOLWD/pfml/pull/5868">#5868</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PORTAL-1050">PORTAL-1050</a>: add absence period to claim review (<a href="https://github.com/EOLWD/pfml/pull/6142">#6142</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PAY-95">PAY-95</a>: Adding FK for mmars payment id to 1099 table. (<a href="https://github.com/EOLWD/pfml/pull/6061">#6061</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/Infra-739">Infra-739</a>: Create AWS S3 Buckets for BI (<a href="https://github.com/EOLWD/pfml/pull/6060">#6060</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/INFRA-812">INFRA-812</a>: fix comments in <code>infra/ecs-tasks/template/security_groups.tf</code> (<a href="https://github.com/EOLWD/pfml/pull/6155">#6155</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-609">API-609</a>: Update state metrics for FY 2022 (<a href="https://github.com/EOLWD/pfml/pull/6063">#6063</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-2113">API-2113</a>: Payment already active errors do not do writebacks (<a href="https://github.com/EOLWD/pfml/pull/6157">#6157</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-2109">API-2109</a>: - Check if UUID is a string first (<a href="https://github.com/EOLWD/pfml/pull/6154">#6154</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-2097">API-2097</a>: Set python patch version in Dockerfile (<a href="https://github.com/EOLWD/pfml/pull/6125">#6125</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-2090">API-2090</a>: Updated payment snapshot recon detailed report</li>
-<li><a href="https://lwd.atlassian.net/browse/API-2087">API-2087</a>: Added unique constraint for pair OrganizationUnit Table (<a href="https://github.com/EOLWD/pfml/pull/6144">#6144</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-2075">API-2075</a>: Two new columns to the fineos employee feed extract (<a href="https://github.com/EOLWD/pfml/pull/6100">#6100</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-2058">API-2058</a>: Make s3_ecs_trigger Lambda archive paths relative (<a href="https://github.com/EOLWD/pfml/pull/6086">#6086</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-2046">API-2046</a>: Display fields if payment sent (<a href="https://github.com/EOLWD/pfml/pull/6148">#6148</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-2044">API-2044</a>: dedup payments by i value (<a href="https://github.com/EOLWD/pfml/pull/6097">#6097</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-2037">API-2037</a>: Return has_paid_payments in Claims API responses (<a href="https://github.com/EOLWD/pfml/pull/6066">#6066</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-2036">API-2036</a>: update payment api spec (<a href="https://github.com/EOLWD/pfml/pull/6108">#6108</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-1485">API-1485</a>: omit db/migrations from test-coverage (<a href="https://github.com/EOLWD/pfml/pull/6098">#6098</a>)</li>
-<li>Revert "PORTAL-819: Validate that concurrent leave does not overlap with waiting period (<a href="https://github.com/EOLWD/pfml/pull/5868">#5868</a>)" (#6159)</li>
-<li>Removed modules. (<a href="https://github.com/EOLWD/pfml/pull/6058">#6058</a>)</li>
-<li>PAY- 8-irs-1099g-b record (<a href="https://github.com/EOLWD/pfml/pull/6156">#6156</a>)</li>
-<li>Infra 739 create aws s3 buckets for bi (<a href="https://github.com/EOLWD/pfml/pull/6162">#6162</a>)</li>
-<li>Enable replication on remaining buckets in TEST (<a href="https://github.com/EOLWD/pfml/pull/6143">#6143</a>)</li>
-<li>Adjusting uery . (<a href="https://github.com/EOLWD/pfml/pull/6090">#6090</a>)</li>
-</ul>
+<p>Next Release (<a href="https://lwd.atlassian.net/issues/?jql=id in ()">Jira List</a>):</p>
 <details>
 <summary>Raw</summary>
- <br>* update logging of fineos Unprocessable Entity ([#6107](https://github.com/EOLWD/pfml/pull/6107))
- <br>* [Portal-1039](https://lwd.atlassian.net/browse/Portal-1039): Backend validation for tax withholding on application complete ([#6118](https://github.com/EOLWD/pfml/pull/6118))
- <br>* [PORTAL-976](https://lwd.atlassian.net/browse/PORTAL-976): Add `mfa_delivery_preference` to API ([#6082](https://github.com/EOLWD/pfml/pull/6082))
- <br>* [PORTAL-944](https://lwd.atlassian.net/browse/PORTAL-944): Refactor - Separate tests between API layer and service layer for `get_claim` endpoint ([#6091](https://github.com/EOLWD/pfml/pull/6091))
- <br>* [PORTAL-928](https://lwd.atlassian.net/browse/PORTAL-928): - Validate UUID fields in the OpenAPI spec ([#5908](https://github.com/EOLWD/pfml/pull/5908))
- <br>* [PORTAL-826](https://lwd.atlassian.net/browse/PORTAL-826): pdf compressor added to pdf utils ([#5988](https://github.com/EOLWD/pfml/pull/5988))
- <br>* [PORTAL-819](https://lwd.atlassian.net/browse/PORTAL-819): Validate that concurrent leave does not overlap with waiting period ([#5868](https://github.com/EOLWD/pfml/pull/5868)) (#6171)
- <br>* [PORTAL-819](https://lwd.atlassian.net/browse/PORTAL-819): Validate that concurrent leave does not overlap with waiting period ([#5868](https://github.com/EOLWD/pfml/pull/5868))
- <br>* [PORTAL-1050](https://lwd.atlassian.net/browse/PORTAL-1050): add absence period to claim review ([#6142](https://github.com/EOLWD/pfml/pull/6142))
- <br>* [PAY-95](https://lwd.atlassian.net/browse/PAY-95): Adding FK for mmars payment id to 1099 table. ([#6061](https://github.com/EOLWD/pfml/pull/6061))
- <br>* [Infra-739](https://lwd.atlassian.net/browse/Infra-739): Create AWS S3 Buckets for BI ([#6060](https://github.com/EOLWD/pfml/pull/6060))
- <br>* [INFRA-812](https://lwd.atlassian.net/browse/INFRA-812): fix comments in `infra/ecs-tasks/template/security_groups.tf` ([#6155](https://github.com/EOLWD/pfml/pull/6155))
- <br>* [API-609](https://lwd.atlassian.net/browse/API-609): Update state metrics for FY 2022 ([#6063](https://github.com/EOLWD/pfml/pull/6063))
- <br>* [API-2113](https://lwd.atlassian.net/browse/API-2113): Payment already active errors do not do writebacks ([#6157](https://github.com/EOLWD/pfml/pull/6157))
- <br>* [API-2109](https://lwd.atlassian.net/browse/API-2109): - Check if UUID is a string first ([#6154](https://github.com/EOLWD/pfml/pull/6154))
- <br>* [API-2097](https://lwd.atlassian.net/browse/API-2097): Set python patch version in Dockerfile ([#6125](https://github.com/EOLWD/pfml/pull/6125))
- <br>* [API-2090](https://lwd.atlassian.net/browse/API-2090): Updated payment snapshot recon detailed report
- <br>* [API-2087](https://lwd.atlassian.net/browse/API-2087): Added unique constraint for pair OrganizationUnit Table ([#6144](https://github.com/EOLWD/pfml/pull/6144))
- <br>* [API-2075](https://lwd.atlassian.net/browse/API-2075): Two new columns to the fineos employee feed extract ([#6100](https://github.com/EOLWD/pfml/pull/6100))
- <br>* [API-2058](https://lwd.atlassian.net/browse/API-2058): Make s3_ecs_trigger Lambda archive paths relative ([#6086](https://github.com/EOLWD/pfml/pull/6086))
- <br>* [API-2046](https://lwd.atlassian.net/browse/API-2046): Display fields if payment sent ([#6148](https://github.com/EOLWD/pfml/pull/6148))
- <br>* [API-2044](https://lwd.atlassian.net/browse/API-2044): dedup payments by i value ([#6097](https://github.com/EOLWD/pfml/pull/6097))
- <br>* [API-2037](https://lwd.atlassian.net/browse/API-2037): Return has_paid_payments in Claims API responses ([#6066](https://github.com/EOLWD/pfml/pull/6066))
- <br>* [API-2036](https://lwd.atlassian.net/browse/API-2036): update payment api spec ([#6108](https://github.com/EOLWD/pfml/pull/6108))
- <br>* [API-1485](https://lwd.atlassian.net/browse/API-1485): omit db/migrations from test-coverage ([#6098](https://github.com/EOLWD/pfml/pull/6098))
- <br>* Revert "PORTAL-819: Validate that concurrent leave does not overlap with waiting period ([#5868](https://github.com/EOLWD/pfml/pull/5868))" (#6159)
- <br>* Removed modules. ([#6058](https://github.com/EOLWD/pfml/pull/6058))
- <br>* PAY- 8-irs-1099g-b record ([#6156](https://github.com/EOLWD/pfml/pull/6156))
- <br>* Infra 739 create aws s3 buckets for bi ([#6162](https://github.com/EOLWD/pfml/pull/6162))
- <br>* Enable replication on remaining buckets in TEST ([#6143](https://github.com/EOLWD/pfml/pull/6143))
- <br>* Adjusting uery . ([#6090](https://github.com/EOLWD/pfml/pull/6090))
+
 </details>
                 
               
