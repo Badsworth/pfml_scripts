@@ -50,6 +50,17 @@ export function before(credentials?: Credentials): void {
   // crashes with no warning and removes the entire run history, so when a Fineos error page is detected, we replace the
   // page with an error page and capture the real response to a file for future debugging.
   cy.intercept(/\/(util\/errorpage\.jsp|outofdatedataerror\.jsp)/, (req) => {
+    req.on("after:response", () => {
+      let debugInfo = "";
+      cy.get("[id=ErrorString]").then((el) => {
+        debugInfo = el.text();
+      }); //  Out Of Date Data error pages won't contain a stack trace
+      throw new Error(
+        `A FINEOS error page was detected during this test. An error is being thrown in order to prevent Cypress from crashing.${
+          debugInfo ? `\n\nDebug Information:\n----------\n${debugInfo}` : ""
+        }`
+      );
+    });
     req.continue((res) => {
       // We need to extract this obstructive logic included in a FINEOS error page and replace it with a setTimeout to throw an error letting us know this page was encountered
       // Using the "modifyObstuctiveCode" property in the cypress.json was enough to get the error page to display but it was not enough to mitigate the test from hanging.
@@ -58,17 +69,7 @@ export function before(credentials?: Credentials): void {
         "if (top != self) { top.location=self.location }",
         ""
       );
-      const doc = new DOMParser().parseFromString(body, "text/html");
-      const debugInfo = doc.getElementById("ErrorString")?.innerText; //  Out Of Date Data error pages won't contain a stack trace
       res.send(body);
-      // allow 1 second to pass - allowing page to display in CI recordings
-      setTimeout(() => {
-        throw new Error(
-          `A FINEOS error page was detected during this test. An error is being thrown in order to prevent Cypress from crashing.${
-            debugInfo ? `\n\nDebug Information:\n----------\n${debugInfo}` : ""
-          }}`
-        );
-      }, 300);
     });
   });
 
