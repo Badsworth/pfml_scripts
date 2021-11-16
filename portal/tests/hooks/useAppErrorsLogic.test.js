@@ -340,7 +340,8 @@ describe("useAppErrorsLogic", () => {
       {
         employer_id: "some-employer-id",
         next: "/foo?bar=true",
-      }
+      },
+      { redirect: true }
     );
   });
 
@@ -395,7 +396,8 @@ describe("useAppErrorsLogic", () => {
       "/employers/organizations/cannot-verify",
       {
         employer_id: "some-employer-id",
-      }
+      },
+      { redirect: true }
     );
   });
 

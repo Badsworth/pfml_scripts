@@ -3,8 +3,6 @@ import withUser, { WithUserProps } from "./withUser";
 import EmployerClaim from "../models/EmployerClaim";
 import PageNotFound from "../components/PageNotFound";
 import { Spinner } from "../components/core/Spinner";
-import { UserLeaveAdministrator } from "../models/User";
-import routes from "../routes";
 import { useTranslation } from "react-i18next";
 
 interface QueryForWithEmployerClaim {
@@ -15,9 +13,8 @@ export interface WithEmployerClaimProps extends WithUserProps {
 }
 
 /**
- * Higher order component that (1) loads a claim if not yet loaded and adds a single claim to the wrapper component
- * based on query parameters, and (2) redirects to Verify Business page if an unverified employer exists.
- * This should be used in routes meant for employers.
+ * Higher order component that loads an absence case's data for actions
+ * like info requests. This should be used in routes meant for employers.
  */
 function withEmployerClaim<T extends WithEmployerClaimProps>(
   Component: React.ComponentType<T>
@@ -25,7 +22,7 @@ function withEmployerClaim<T extends WithEmployerClaimProps>(
   const ComponentWithClaim = (
     props: WithUserProps & { query: QueryForWithEmployerClaim }
   ) => {
-    const { appLogic, query, user } = props;
+    const { appLogic, query } = props;
     const { t } = useTranslation();
     const absenceId = query.absence_id;
     const claim =
@@ -40,45 +37,11 @@ function withEmployerClaim<T extends WithEmployerClaimProps>(
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [claim]);
 
-    useEffect(() => {
-      if (claim) {
-        const verifiableEmployer = user.getVerifiableEmployerById(
-          claim.employer_id
-        );
-
-        if (verifiableEmployer) {
-          redirectToVerifyPage(verifiableEmployer);
-          return;
-        }
-
-        const unverifiableEmployer = user.getUnverifiableEmployerById(
-          claim.employer_id
-        );
-        if (unverifiableEmployer) {
-          redirectToCannotVerifyPage(unverifiableEmployer);
-        }
-      }
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [appLogic.portalFlow, claim, user]);
-
-    const redirectToVerifyPage = (employer: UserLeaveAdministrator) => {
-      // the current employer can and should be verified; the page is blocked.
-      appLogic.portalFlow.goTo(routes.employers.verifyContributions, {
-        employer_id: employer.employer_id,
-        next: appLogic.portalFlow.pathWithParams,
-      });
-    };
-
-    const redirectToCannotVerifyPage = (employer: UserLeaveAdministrator) => {
-      // the current employer cannot be verified; the page is blocked.
-      appLogic.portalFlow.goTo(routes.employers.cannotVerify, {
-        employer_id: employer.employer_id,
-      });
-    };
-
     if (!absenceId) {
       return <PageNotFound />;
-    } else if (!claim && appLogic.appErrors.isEmpty) {
+    }
+
+    if (!claim) {
       return (
         <div className="margin-top-8 text-center">
           <Spinner
@@ -86,8 +49,6 @@ function withEmployerClaim<T extends WithEmployerClaimProps>(
           />
         </div>
       );
-    } else if (!claim) {
-      return null;
     }
 
     return (
