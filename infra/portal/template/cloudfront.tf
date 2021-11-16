@@ -13,6 +13,77 @@ resource "random_password" "s3_user_agent_password" {
   }
 }
 
+locals {
+  google_tag_manager_snippet_hashes_list = [
+    "'sha256-6bOQFA12d94CECGI1FeXqgg7Dnk8aHUxum07Xs/GGbA='", # test
+    "'sha256-5lXWtIB9qW9mx6Adr1BrKsJYWjJTZnDhXuZyYJlqQzE='", # stage
+    "'sha256-kuMZ4LjimNmsionsNpKxrnz2EzMJj1y/pq75KgD0fzY='", # prod
+  ]
+  google_tag_manager_snippet_hashes = join(" ", local.google_tag_manager_snippet_hashes_list)
+  allowed_google_script_src         = "https://www.googletagmanager.com/ https://www.google-analytics.com/"
+  allowed_new_relic_script_src      = "https://js-agent.newrelic.com/ https://bam.nr-data.net/"
+  allowed_script_src                = "'self' ${local.allowed_google_script_src} ${local.allowed_new_relic_script_src} ${local.google_tag_manager_snippet_hashes}"
+}
+
+resource "aws_cloudfront_response_headers_policy" "portal_response_header_policy" {
+  name    = "portal-{var.environment_name}-response-header-policy"
+  comment = "Portal response header policy"
+
+
+  security_headers_config {
+    # only allow resource for this domain. keep resources from being loaded over http
+    # do not allow base tag
+    # do not allow form actions
+    # https://infosec.mozilla.org/guidelines/web_security#content-security-policy
+    content_security_policy {
+      content_security_policy = "default-src 'self' https:; script-src ${local.allowed_script_src}; base-uri 'none'; form-action 'none'; img-src 'self' https://www.google-analytics.com/ blob:"
+      override                = true
+    }
+    # sets nosniff header
+    # don't use scripts or stylesheets that don't have the correct MIME
+    # type, which prevent browsers from incorrectly detecting non-scripts
+    # as scripts, which helps prevent XSS attacks
+    # https://infosec.mozilla.org/guidelines/web_security#x-content-type-options
+    content_type_options {
+      override = true
+    }
+    # block site being used in an iframe which prevents clickjacking,
+    # `frame-ancestors` directive in a CSP is more flexible, but not
+    # supported everywhere yet, so this header is a backup for older
+    # browsers
+    # https://infosec.mozilla.org/guidelines/web_security#x-frame-options
+    frame_options {
+      frame_option = "DENY"
+      override     = true
+    }
+    # only send shortened `Referrer` header to a non-same site origin, full
+    # referrer header to the same origin, this is a privacy measure,
+    # protects against leaking (potentially sensitive) information to an
+    # external site that may be in a path or query parameter
+    # https://infosec.mozilla.org/guidelines/web_security#referrer-policy
+    referrer_policy {
+      referrer_policy = "strict-origin-when-cross-origin"
+      override        = true
+    }
+    # only connect to this site over HTTPS
+    # https://infosec.mozilla.org/guidelines/web_security#http-strict-transport-security
+    strict_transport_security {
+      access_control_max_age_sec = 31536000
+      override                   = true
+    }
+
+    # in IE/Chrome, block page from loading if a XSS attack is detected,
+    # largely unnecessary if a good CSP is in place, but again helps
+    # protect older browsers
+    # https://infosec.mozilla.org/guidelines/web_security#x-xss-protection
+    xss_protection {
+      mode_block = true
+      protection = true
+      override   = true
+    }
+  }
+}
+
 resource "aws_cloudfront_distribution" "portal_web_distribution" {
   # AWS Web Application Firewall
   # If environment is performance, do nothing; else connect the rate-limit firewall
@@ -71,11 +142,13 @@ resource "aws_cloudfront_distribution" "portal_web_distribution" {
       }
     }
 
-    viewer_protocol_policy = "redirect-to-https"
-    min_ttl                = 0
-    default_ttl            = 31536000
-    max_ttl                = 31536000
-    compress               = true
+    viewer_protocol_policy     = "redirect-to-https"
+    min_ttl                    = 0
+    default_ttl                = 31536000
+    max_ttl                    = 31536000
+    compress                   = true
+    response_headers_policy_id = aws_cloudfront_response_headers_policy.portal_response_header_policy.id
+
 
     lambda_function_association {
       # Executes only when CloudFront forwards a request to S3. When the requested
@@ -86,15 +159,17 @@ resource "aws_cloudfront_distribution" "portal_web_distribution" {
       lambda_arn = aws_lambda_function.cloudfront_handler.qualified_arn
     }
 
-    lambda_function_association {
-      # The function executes before CloudFront returns the requested object to the viewer.
-      # The function executes regardless of whether the object was already in the edge cache.
-      # If the origin returns an HTTP status code other than HTTP 200 (OK), the function doesn't execute.
-      event_type = "viewer-response"
-      # The Amazon Resource Name (ARN) identifying your Lambda Function Version
-      # when publish = true
-      lambda_arn = aws_lambda_function.cloudfront_handler.qualified_arn
-    }
+    # TODO: INFRA-785 
+    # # remove this code
+    # lambda_function_association {
+    #   # The function executes before CloudFront returns the requested object to the viewer.
+    #   # The function executes regardless of whether the object was already in the edge cache.
+    #   # If the origin returns an HTTP status code other than HTTP 200 (OK), the function doesn't execute.
+    #   event_type = "viewer-response"
+    #   # The Amazon Resource Name (ARN) identifying your Lambda Function Version
+    #   # when publish = true
+    #   lambda_arn = aws_lambda_function.cloudfront_handler.qualified_arn
+    # }
   }
 
   custom_error_response {
