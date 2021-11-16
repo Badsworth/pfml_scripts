@@ -117,14 +117,11 @@ output "domains" {
 
 output "admin_domains" {
   value = {
-    "test"        = "paidleave-admin-test.eol.mass.gov",
-    "stage"       = "paidleave-admin-stage.eol.mass.gov",
-    "performance" = "paidleave-admin-performance.eol.mass.gov",
-    "training"    = "paidleave-admin-training.eol.mass.gov",
-    "breakfix"    = "paidleave-admin-breakfix.eol.mass.gov",
-    "cps-preview" = "paidleave-admin-cps-preview.eol.mass.gov",
-    "uat"         = "paidleave-admin-uat.eol.mass.gov",
-    "prod"        = "paidleave-admin.eol.mass.gov"
+    "test"     = "paidleave-admin-test.dfml.eol.mass.gov",
+    "stage"    = "paidleave-admin-stage.dfml.eol.mass.gov",
+    "breakfix" = "paidleave-admin-breakfix.dfml.eol.mass.gov",
+    "uat"      = "paidleave-admin-uat.dfml.eol.mass.gov",
+    "prod"     = "paidleave-admin.dfml.eol.mass.gov"
   }
 }
 
@@ -162,14 +159,11 @@ output "admin_portal_cert_domains" {
   # you cannot lookup certs by a SAN, so we lookup based on the first domain
   # that is specified in the certificate.
   value = {
-    "test"        = "paidleave-admin-test.eol.mass.gov",
-    "stage"       = "paidleave-admin-test.eol.mass.gov",
-    "performance" = "paidleave-admin-test.eol.mass.gov",
-    "training"    = "paidleave-admin-test.eol.mass.gov",
-    "breakfix"    = "paidleave-admin-test.eol.mass.gov",
-    "cps-preview" = "paidleave-admin-test.eol.mass.gov",
-    "uat"         = "paidleave-admin-test.eol.mass.gov",
-    "prod"        = "paidleave-admin.eol.mass.gov"
+    "test"     = "paidleave-admin-test.dfml.eol.mass.gov",
+    "stage"    = "paidleave-admin-test.dfml.eol.mass.gov",
+    "breakfix" = "paidleave-admin-test.dfml.eol.mass.gov",
+    "uat"      = "paidleave-admin-test.dfml.eol.mass.gov",
+    "prod"     = "paidleave-admin.dfml.eol.mass.gov"
   }
 }
 
