@@ -809,6 +809,30 @@ data "aws_iam_policy_document" "pub_payments_process_1099_task_role_extras" {
   }
 }
 
+resource "aws_iam_role_policy" "pub_payments_process_1099_role_s3_access_policy" {
+  count = var.fineos_aws_iam_role_arn == "" ? 0 : 1
+
+  name = "${local.app_name}-${var.environment_name}-ecs-tasks-pub-payments-process-1099-s3_access-policy"
+  role = aws_iam_role.pub_payments_process_1099_task_role.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = [
+          "s3:Get*",
+          "s3:List*",
+          "s3:PutObject"
+        ]
+        Effect = "Allow"
+        Resource = [
+          "${aws_s3_bucket.ecs_tasks_1099_bucket.arn}",
+          "${aws_s3_bucket.ecs_tasks_1099_bucket.arn}/*"
+        ]
+      },
+    ]
+  })
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # IAM role and policies for reductions-workflow
 # ----------------------------------------------------------------------------------------------------------------------
