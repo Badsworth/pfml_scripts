@@ -287,12 +287,13 @@ class DelegatedPaymentFactory(MockData):
     def get_or_create_payment_with_writeback(self, writeback_transaction_status):
         self.get_or_create_payment_with_state(State.DELEGATED_ADD_TO_FINEOS_WRITEBACK)
 
-        if self.payment:
+        if self.payment and writeback_transaction_status:
             writeback_details = FineosWritebackDetails(
                 payment=self.payment,
                 transaction_status_id=writeback_transaction_status.transaction_status_id,
             )
             self.db_session.add(writeback_details)
+            return writeback_details
 
     def create_all(self):
         if self.add_pub_eft:
