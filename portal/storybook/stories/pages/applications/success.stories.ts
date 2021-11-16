@@ -1,8 +1,9 @@
-import { DateTime } from "luxon";
 import { MockBenefitsApplicationBuilder } from "tests/test-utils";
+import dayjs from "dayjs";
 import generateClaimPageStory from "storybook/utils/generateClaimPageStory";
 
-const futureDate = DateTime.local().plus({ months: 1 }).toISODate();
+const monthToAdd = 1; // workaround for https://github.com/storybookjs/storybook/issues/12208
+const futureDate = dayjs().add(monthToAdd, "month").format("YYYY-MM-DD");
 
 const mockClaims = {
   "Medical (Not pregnant)": new MockBenefitsApplicationBuilder()

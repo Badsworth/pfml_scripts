@@ -2,6 +2,11 @@
  * @file Jest CLI options for unit tests
  * @see https://jestjs.io/docs/en/cli
  */
+process.env.TZ = "America/New_York";
+// Setting time zone explicitly so that we can run tests with a consistent timezone
+// (jest test files don't have access to process.env early enough, so setting here)
+// Alternately, we could set via the CLI: https://github.com/facebook/jest/issues/9856#issuecomment-776532082
+
 module.exports = {
   clearMocks: true,
   coveragePathIgnorePatterns: [
