@@ -33,7 +33,7 @@ logger = massgov.pfml.util.logging.get_logger(__name__)
 MILLISECOND = datetime.timedelta(milliseconds=1)
 
 # Failure messages that are expected and don't need to be logged or tracked as errors.
-EXPECTED_DOCUMENT_UPLOAD_FAILURES = {
+EXPECTED_UNPROCESSABLE_ENTITY_FAILURES = {
     "encoded file data is mandatory",
     "file size is mandatory",
     "is not a valid file",
@@ -289,6 +289,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
                     method_name, requests.codes.ok, response.status_code, message=response.text,
                 )
                 log_fn = logger.warning
+                log_validation_error(err, EXPECTED_UNPROCESSABLE_ENTITY_FAILURES)
             elif response.status_code == requests.codes.NOT_FOUND:
                 err = exception.FINEOSNotFound(
                     method_name, requests.codes.ok, response.status_code, message=response.text,
@@ -896,25 +897,19 @@ class FINEOSClient(client.AbstractFINEOSClient):
 
         document_type = document_type.replace("/", "%2F")
 
-        try:
-            response = self._customer_api(
-                "POST",
-                f"customer/cases/{absence_id}/documents/base64Upload/{document_type}",
-                user_id,
-                "upload_documents",
-                json=data,
-            )
+        response = self._customer_api(
+            "POST",
+            f"customer/cases/{absence_id}/documents/base64Upload/{document_type}",
+            user_id,
+            "upload_documents",
+            json=data,
+        )
 
-            response_json = response.json()
+        response_json = response.json()
 
-            return models.customer_api.Document.parse_obj(
-                fineos_document_empty_dates_to_none(response_json)
-            )
-        except exception.FINEOSUnprocessableEntity as err:
-            # Log any unexpected upload failures, even if we always
-            # return a BadRequest to the user.
-            log_validation_error(err, EXPECTED_DOCUMENT_UPLOAD_FAILURES)
-            raise
+        return models.customer_api.Document.parse_obj(
+            fineos_document_empty_dates_to_none(response_json)
+        )
 
     def group_client_get_documents(
         self, user_id: str, absence_id: str
