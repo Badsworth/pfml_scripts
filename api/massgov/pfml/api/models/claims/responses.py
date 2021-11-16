@@ -78,8 +78,8 @@ class AbsencePeriodStatusResponse(PydanticBaseModel):
 class AbsencePeriodResponse(PydanticBaseModel):
     """Pydantic Model for absence period returned by the database"""
 
-    fineos_absence_period_class_id: int
-    fineos_absence_period_index_id: int
+    fineos_absence_period_class_id: Optional[int]
+    fineos_absence_period_index_id: Optional[int]
     absence_period_start_date: Optional[date]
     absence_period_end_date: Optional[date]
     type: Optional[str]
@@ -195,6 +195,7 @@ class ClaimReviewResponse(PydanticBaseModel):
     is_reviewable: Optional[bool]
     status: Optional[str]
     uses_second_eform_version: bool
+    absence_periods: Optional[List[AbsencePeriodResponse]] = None
 
 
 class DocumentResponse(PydanticBaseModel):

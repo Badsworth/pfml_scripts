@@ -1716,6 +1716,10 @@ components:
           $ref: "#/components/schemas/MaskedSsnItin"
         follow_up_date:
           $ref: "#/components/schemas/Date"
+        absence_periods:
+          type: array
+          items:
+            $ref: "#/components/schemas/AbsencePeriodResponse"
       additionalProperties: false
 
     ConcurrentLeave:
@@ -2378,7 +2382,7 @@ components:
         absence_periods:
             type: array
             items:
-              $ref: "#/components/schemas/AbsencePeriodStatusResponse"
+              $ref: "#/components/schemas/AbsencePeriodResponse"
         has_paid_payments:
           type: boolean
           example: false
