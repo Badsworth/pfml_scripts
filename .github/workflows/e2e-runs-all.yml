@@ -11,15 +11,25 @@ on:
       cypress_tags:
         description: "Cypress Run Tags"
         required: false
-        default: "Manual"
+        default: "Manual - Other (all envs)"
+        type: choice
+        options:
+        - Manual - PR Re-run (all envs)
+        - Manual - PR Env Check (all envs)
+        - Manual - Post Morning Run Check (all envs)
+        - Manual - Environment Sanity Check (all envs)
+        - Manual - New Dataset Check (all envs)
+        - Manual - Other (all envs)
       run_unstable:
         description: "Run tests in unstable group"
         required: false
-        default: "false"
+        default: false
+        type: boolean
       run_nightly:
         description: "Run tests in nightly group"
         required: false
-        default: "false"
+        default: false
+        type: boolean
   schedule:
     - cron: "0 11 * * 1-5"
 
