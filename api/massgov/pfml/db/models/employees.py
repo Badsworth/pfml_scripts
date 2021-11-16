@@ -431,10 +431,15 @@ class Employer(Base, TimestampMixin):
 
 class OrganizationUnit(Base, TimestampMixin):
     __tablename__ = "organization_unit"
+    __table_args__ = (
+        UniqueConstraint("name", "employer_id", name="uix_organization_unit_name_employer_id",),
+    )
     organization_unit_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     fineos_id = Column(Text, nullable=True, unique=True)
-    name = Column(Text, unique=True, nullable=False)
-    employer_id = Column(PostgreSQLUUID, ForeignKey("employer.employer_id"), index=True)
+    name = Column(Text, nullable=False)
+    employer_id = Column(
+        PostgreSQLUUID, ForeignKey("employer.employer_id"), nullable=False, index=True
+    )
 
     employer = relationship("Employer", back_populates="organization_units")
     dua_reporting_units: "Query[DuaReportingUnit]" = dynamic_loader(
