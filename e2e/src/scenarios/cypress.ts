@@ -530,6 +530,7 @@ export const CARE_TAXES: ScenarioSpecification<CaringLeaveClaim> = {
       startOfWeek(addDays(new Date(), 74)),
     ],
     work_pattern_spec: "standard",
+    is_withholding_tax: true,
     reduced_leave_spec: "0,240,240,240,240,240,0",
     docs: { CARING: {}, MASSID: {} },
   },
