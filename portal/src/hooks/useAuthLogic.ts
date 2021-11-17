@@ -123,8 +123,6 @@ const useAuthLogic = ({
    * @param [next] Redirect url after login
    */
   const login = async (username = "", password: string, next?: string) => {
-    console.log("IN login");
-
     appErrorsLogic.clearErrors();
     const trimmedUsername = trim(username);
 
@@ -175,38 +173,24 @@ const useAuthLogic = ({
   };
 
   const updatePhoneNumber = async (user: any) => {
-    console.log("IN updatePhoneNumber")
-
     // input should be of the form 1112223333
     var phoneNumber = prompt("What 10-digit phone number do you want to use for SMS?");
-    console.log('Phone number is: ' + phoneNumber)
 
-    console.log("Calling updateUserAttributes")
     await Auth.updateUserAttributes(user, {
         'phone_number': '+1' + phoneNumber
     });
 
     // this should send the SMS
-    console.log("Calling verifyUserAttribute")
     await Auth.verifyUserAttribute(user, 'phone_number');
 
     const input = prompt("What's the 6-digit number you received via SMS?");
-    console.log('MFA code is: ' + input)
 
-    console.log("Calling verifyUserAttribute")
-    await Auth.verifyUserAttributeSubmit(
-      user,   // Return object from Auth.signIn()
-      'phone_number',
-      input   // Confirmation code
-    );
+    await Auth.verifyUserAttributeSubmit(user, 'phone_number', input);
   }
 
   const setUpSMSMFA = async (user: any) => {
-    console.log("IN setupSMSMFA")
-
-    console.log("Calling setPreferredMFA")
     try {
-      Auth.setPreferredMFA(user, 'SMS').then((data) => {console.log(data)});
+      await Auth.setPreferredMFA(user, 'SMS');
     } catch (error) {
       console.log("Oops")
       console.log(error)
@@ -214,10 +198,7 @@ const useAuthLogic = ({
   };
 
   const verifyMFACodeAndLogIn = async (user: any) => {
-    console.log('IN verifyMFACodeAndLogIn');
-
     const input = prompt("What's the 6-digit number you received via SMS?");
-    console.log('MFA code is: ' + input)
 
     await Auth.confirmSignIn(
         user,   // Return object from Auth.signIn()

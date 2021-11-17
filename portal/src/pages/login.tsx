@@ -34,7 +34,6 @@ export const Login = (props: LoginProps) => {
   });
 
   const handleSubmit = useThrottledHandler(async (event) => {
-    console.log("IN handleSubmit")
     event.preventDefault();
 
     if (query.next) {
