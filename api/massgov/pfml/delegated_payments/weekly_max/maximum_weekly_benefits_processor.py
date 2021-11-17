@@ -11,10 +11,12 @@ from massgov.pfml.delegated_payments.postprocessing.payment_post_processing_util
     PaymentContainer,
     PaymentScenario,
     PayPeriodGroup,
-    PostProcessingMetrics,
     get_all_overpayments_associated_with_employee,
     get_all_paid_payments_associated_with_employee,
     make_payment_log,
+)
+from massgov.pfml.delegated_payments.weekly_max.max_weekly_benefit_amount_util import (
+    MaxWeeklyBenefitAmountMetrics,
 )
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
@@ -28,11 +30,13 @@ class MaximumWeeklyBenefitsStepProcessor(AbstractStepProcessor):
 
     See https://lwd.atlassian.net/wiki/spaces/API/pages/1885372428/Maximum+Weekly+Benefits+Logic
     for details on this algorithm, how it works, and why we do what we do.
+
+    This processor uses common post processing utilities to generate error messages.
+    The max_weekly_benefit_validation step will handle creating payment containers and state transition.
     """
 
+    Metrics = MaxWeeklyBenefitAmountMetrics
     maximum_amount_for_week: Optional[List[BenefitsMetrics]] = None
-
-    Metrics = PostProcessingMetrics
 
     def process(self, employee: Employee, payment_containers: List[PaymentContainer]) -> None:
         """

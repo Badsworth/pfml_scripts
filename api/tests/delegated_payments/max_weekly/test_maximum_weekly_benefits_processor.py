@@ -6,31 +6,30 @@ import pytest
 from massgov.pfml.db.models.applications import BenefitsMetrics
 from massgov.pfml.db.models.employees import PaymentTransactionType
 from massgov.pfml.db.models.factories import ClaimFactory, EmployeeFactory
-from massgov.pfml.delegated_payments.postprocessing.maximum_weekly_benefits_processor import (
-    MaximumWeeklyBenefitsStepProcessor,
-)
-from massgov.pfml.delegated_payments.postprocessing.payment_post_processing_step import (
-    PaymentPostProcessingStep,
-)
 from massgov.pfml.delegated_payments.postprocessing.payment_post_processing_util import (
     PayPeriodGroup,
 )
-
-from . import _create_payment_container
+from massgov.pfml.delegated_payments.weekly_max.max_weekly_benefit_amount_validation_step import (
+    MaxWeeklyBenefitAmountValidationStep,
+)
+from massgov.pfml.delegated_payments.weekly_max.maximum_weekly_benefits_processor import (
+    MaximumWeeklyBenefitsStepProcessor,
+)
+from tests.delegated_payments.postprocessing import _create_payment_container
 
 
 @pytest.fixture
-def payment_post_processing_step(
+def max_weekly_benefit_amount_validation_step(
     local_initialize_factories_session, local_test_db_session, local_test_db_other_session
 ):
-    return PaymentPostProcessingStep(
+    return MaxWeeklyBenefitAmountValidationStep(
         db_session=local_test_db_session, log_entry_db_session=local_test_db_other_session
     )
 
 
 @pytest.fixture
-def maximum_weekly_processor(payment_post_processing_step):
-    return MaximumWeeklyBenefitsStepProcessor(payment_post_processing_step)
+def maximum_weekly_processor(max_weekly_benefit_amount_validation_step):
+    return MaximumWeeklyBenefitsStepProcessor(max_weekly_benefit_amount_validation_step)
 
 
 def validate_payment_success(payment_container):

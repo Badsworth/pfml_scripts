@@ -1026,8 +1026,8 @@ class PaymentAuditReportType(LookupTable):
         "payment_audit_report_action",
     )
 
-    MAX_WEEKLY_BENEFITS = LkPaymentAuditReportType(
-        1, "Max Weekly Benefits", AuditReportAction.REJECTED
+    DEPRECATED_MAX_WEEKLY_BENEFITS = LkPaymentAuditReportType(
+        1, "Deprecated - Max Weekly Benefits", AuditReportAction.REJECTED
     )
     DEPRECATED_DUA_DIA_REDUCTION = LkPaymentAuditReportType(
         2, "DUA DIA Reduction (Deprecated)", AuditReportAction.INFORMATIONAL

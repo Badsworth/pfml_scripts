@@ -185,7 +185,7 @@ def test_run_step_state_transitions_soap(
     # DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING state.
     _assert_payment_state(
         local_test_db_other_session,
-        State.DELEGATED_PAYMENT_POST_PROCESSING_CHECK,
+        State.PAYMENT_READY_FOR_MAX_WEEKLY_BENEFIT_AMOUNT_VALIDATION,
         check_payments_with_validated_addresses,
     )
 
@@ -193,7 +193,7 @@ def test_run_step_state_transitions_soap(
     # DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING state.
     _assert_payment_state(
         local_test_db_other_session,
-        State.DELEGATED_PAYMENT_POST_PROCESSING_CHECK,
+        State.PAYMENT_READY_FOR_MAX_WEEKLY_BENEFIT_AMOUNT_VALIDATION,
         check_payments_with_verified_addresses,
     )
 
@@ -231,7 +231,7 @@ def test_run_step_state_transitions_soap(
     # DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING
     _assert_payment_state(
         local_test_db_other_session,
-        State.DELEGATED_PAYMENT_POST_PROCESSING_CHECK,
+        State.PAYMENT_READY_FOR_MAX_WEEKLY_BENEFIT_AMOUNT_VALIDATION,
         no_match_eft_payments,
     )
 
@@ -274,7 +274,9 @@ def test_run_step_state_transitions_malformed_address(
 
     # EFT payment would have gone to the success state despite the issue
     _assert_payment_state(
-        local_test_db_other_session, State.DELEGATED_PAYMENT_POST_PROCESSING_CHECK, [eft_payment],
+        local_test_db_other_session,
+        State.PAYMENT_READY_FOR_MAX_WEEKLY_BENEFIT_AMOUNT_VALIDATION,
+        [eft_payment],
     )
 
 
@@ -319,7 +321,7 @@ def test_run_step_no_database_changes_on_exception_soap(
 
     # We expect to find no payments in any of the post-address validation states.
     post_address_validation_states = [
-        State.DELEGATED_PAYMENT_POST_PROCESSING_CHECK.state_id,
+        State.PAYMENT_READY_FOR_MAX_WEEKLY_BENEFIT_AMOUNT_VALIDATION.state_id,
         State.PAYMENT_FAILED_ADDRESS_VALIDATION.state_id,
         State.DELEGATED_ADD_TO_FINEOS_WRITEBACK.state_id,
     ]
@@ -381,7 +383,7 @@ def test_run_step_experian_soap_exception(
     _assert_payment_state_log_outcome(
         local_test_db_other_session,
         no_match_eft_payments,
-        State.DELEGATED_PAYMENT_POST_PROCESSING_CHECK,
+        State.PAYMENT_READY_FOR_MAX_WEEKLY_BENEFIT_AMOUNT_VALIDATION,
         Constants.UNKNOWN,
     )
 
@@ -433,7 +435,7 @@ def test_run_step_state_log_outcome_field_soap(
     _assert_payment_state_log_outcome(
         local_test_db_other_session,
         check_payments_with_validated_addresses,
-        State.DELEGATED_PAYMENT_POST_PROCESSING_CHECK,
+        State.PAYMENT_READY_FOR_MAX_WEEKLY_BENEFIT_AMOUNT_VALIDATION,
         Constants.PREVIOUSLY_VERIFIED,
     )
 
@@ -442,7 +444,7 @@ def test_run_step_state_log_outcome_field_soap(
     _assert_payment_state_log_outcome(
         local_test_db_other_session,
         check_payments_with_verified_addresses,
-        State.DELEGATED_PAYMENT_POST_PROCESSING_CHECK,
+        State.PAYMENT_READY_FOR_MAX_WEEKLY_BENEFIT_AMOUNT_VALIDATION,
         sm.VerifyLevel.VERIFIED.value,
         1,
     )
@@ -468,6 +470,6 @@ def test_run_step_state_log_outcome_field_soap(
     _assert_payment_state_log_outcome(
         local_test_db_other_session,
         no_match_eft_payments,
-        State.DELEGATED_PAYMENT_POST_PROCESSING_CHECK,
+        State.PAYMENT_READY_FOR_MAX_WEEKLY_BENEFIT_AMOUNT_VALIDATION,
         sm.VerifyLevel.NONE.value,
     )

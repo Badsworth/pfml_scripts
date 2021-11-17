@@ -2020,9 +2020,16 @@ def test_e2e_pub_payments_delayed_scenarios(
                 ScenarioName.INVALID_ADDRESS_FIXED,
                 ScenarioName.HAPPY_PATH_TWO_PAYMENTS_UNDER_WEEKLY_CAP,
                 ScenarioName.HAPPY_PATH_TWO_ADHOC_PAYMENTS_OVER_CAP,
-                ScenarioName.SECOND_PAYMENT_FOR_PERIOD_OVER_CAP,
             ],
             end_state=State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT,
+            db_session=local_test_db_session,
+            check_additional_payment=True,
+        )
+
+        assert_payment_state_for_scenarios(
+            test_dataset=test_dataset,
+            scenario_names=[ScenarioName.SECOND_PAYMENT_FOR_PERIOD_OVER_CAP,],
+            end_state=State.PAYMENT_FAILED_MAX_WEEKLY_BENEFIT_AMOUNT_VALIDATION,
             db_session=local_test_db_session,
             check_additional_payment=True,
         )
@@ -2066,16 +2073,6 @@ def test_e2e_pub_payments_delayed_scenarios(
                 ScenarioName.HAPPY_PATH_TWO_ADHOC_PAYMENTS_OVER_CAP,
             ],
             end_state=State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT,
-            db_session=local_test_db_session,
-            check_additional_payment=True,
-        )
-
-        # We set these to be rejected in the file we sent
-        # and the file comes back unmodified, so they will be rejected.
-        assert_payment_state_for_scenarios(
-            test_dataset=test_dataset,
-            scenario_names=[ScenarioName.SECOND_PAYMENT_FOR_PERIOD_OVER_CAP],
-            end_state=State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT,
             db_session=local_test_db_session,
             check_additional_payment=True,
         )

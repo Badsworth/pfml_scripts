@@ -2565,6 +2565,16 @@ class State(LookupTable):
         198, "Federal Withholding send funds to IRS", Flow.DELEGATED_PAYMENT.flow_id
     )
 
+    PAYMENT_READY_FOR_MAX_WEEKLY_BENEFIT_AMOUNT_VALIDATION = LkState(
+        199,
+        "Payment ready for max weekly benefit amount validation",
+        Flow.DELEGATED_PAYMENT.flow_id,
+    )
+
+    PAYMENT_FAILED_MAX_WEEKLY_BENEFIT_AMOUNT_VALIDATION = LkState(
+        200, "Payment failed max weekly benefit amount validation", Flow.DELEGATED_PAYMENT.flow_id,
+    )
+
 
 class SharedPaymentConstants:
     """
