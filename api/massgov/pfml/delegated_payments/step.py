@@ -40,7 +40,7 @@ class Step(abc.ABC, metaclass=abc.ABCMeta):
         pass
 
     def run(self) -> None:
-        with LogEntry(self.db_session, self.__class__.__name__) as log_entry:
+        with LogEntry(self.log_entry_db_session, self.__class__.__name__) as log_entry:
             self.log_entry = log_entry
 
             self.initialize_metrics()
@@ -65,15 +65,15 @@ class Step(abc.ABC, metaclass=abc.ABCMeta):
                 self.db_session.commit()
 
             except Exception:
-                # If there was a file-level exception anywhere in the processing,
-                # we move the file from received to error
-                # Add this function:
+                # Rollback for any exception
                 self.db_session.rollback()
                 logger.exception(
                     "Error processing step %s:. Cleaning up after failure if applicable.",
                     self.__class__.__name__,
                 )
 
+                # If there was a file-level exception anywhere in the processing,
+                # we move the file from received to error
                 # perform any cleanup necessary by the step.
                 self.cleanup_on_failure()
                 raise

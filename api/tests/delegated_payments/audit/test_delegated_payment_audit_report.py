@@ -48,6 +48,43 @@ def payment_audit_report_step(initialize_factories_session, test_db_session, tes
     )
 
 
+@freeze_time("2021-01-15 12:00:00", tz_offset=5)  # payments_util.get_now returns EST time
+def test_generate_audit_report_rollback(
+    initialize_factories_session, test_db_session, test_db_other_session, monkeypatch
+):
+    # This validates our rollback works properly.
+    # This will fail after moving one set of state logs
+    # but before the second set of state log updates
+
+    def mock(self):
+        # To mimic a random flush event, have it flush before raising an exception
+        self.db_session.flush()
+        raise Exception("Test exception")
+
+    monkeypatch.setattr(PaymentAuditReportStep, "set_sampled_payments_to_sent_state", mock)
+
+    payment_audit_report_step = PaymentAuditReportStep(
+        db_session=test_db_session, log_entry_db_session=test_db_other_session
+    )
+
+    # setup folder path configs
+    monkeypatch.setenv("PFML_ERROR_REPORTS_ARCHIVE_PATH", str(tempfile.mkdtemp()))
+    monkeypatch.setenv("DFML_REPORT_OUTBOUND_PATH", str(tempfile.mkdtemp()))
+
+    # generate the audit report data set
+    generate_audit_report_dataset(DEFAULT_AUDIT_SCENARIO_DATA_SET, test_db_session)
+    test_db_session.commit()  # Commit here so it'll rollback to this
+
+    state_log_counts_before = state_log_util.get_state_counts(test_db_session)
+
+    # generate audit report
+    with pytest.raises(Exception, match="Test exception"):
+        payment_audit_report_step.run()
+
+    state_log_counts_after = state_log_util.get_state_counts(test_db_session)
+    assert state_log_counts_before == state_log_counts_after
+
+
 def test_stage_payment_audit_report_details(test_db_session, initialize_factories_session):
     payment = PaymentFactory.create()
     stage_payment_audit_report_details(
