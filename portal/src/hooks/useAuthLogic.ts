@@ -122,7 +122,7 @@ const useAuthLogic = ({
    * @param password Password
    * @param [next] Redirect url after login
    */
-  const login = async (username = "", password: string) => {
+  const login = async (username = "", password: string, next?: string) => {
     console.log("IN login");
 
     appErrorsLogic.clearErrors();
@@ -145,14 +145,20 @@ const useAuthLogic = ({
 
       if (user.challengeName !== 'SMS_MFA') {
         console.log('Need to set up MFA with SMS!')
+        await updatePhoneNumber(user)
         await setUpSMSMFA(user)
-
-        // do it again! (this sends the SMS code the second time)
-        user = await Auth.signIn(trimmedUsername, password);
+      } else {
+        // TODO: how to get it to only send the code sometimes
+        await verifyMFACodeAndLogIn(user)
       }
 
-      // return the user, for use in the MFA flow
-      return user
+      setIsLoggedIn(true);
+
+      if (next) {
+        portalFlow.goTo(next);
+      } else {
+        portalFlow.goToPageFor("LOG_IN");
+      }
     } catch (error) {
       if (!isCognitoError(error)) {
         appErrorsLogic.catchError(error);
@@ -168,27 +174,37 @@ const useAuthLogic = ({
     }
   };
 
-  const setUpSMSMFA = async (user: any) => {
-    console.log("IN setPreferredMFA")
+  const updatePhoneNumber = async (user: any) => {
+    console.log("IN updatePhoneNumber")
 
     var phoneNumber = '0001112222';
     phoneNumber = prompt("What 10-digit phone number do you want to use for SMS? Currently: " + phoneNumber);
     console.log('Phone number is: ' + phoneNumber)
 
     console.log("Calling updateUserAttributes")
-    let result = await Auth.updateUserAttributes(user, {
+    var result = await Auth.updateUserAttributes(user, {
         'phone_number': '+1' + phoneNumber
     });
-    console.log(result); // SUCCESS
 
-    /*
-    console.log("Calling getPreferredMFA")
-    Auth.getPreferredMFA(user,{
-      bypassCache: true
-    }).then((data) => {
-      console.log('Current preferred MFA type is: ' + data);
-    })
-    */
+    // this should send the SMS
+    console.log("Calling verifyUserAttribute")
+    result = await Auth.verifyUserAttribute(user, 'phone_number');
+    console.log(result)
+
+    const input = prompt("What's the 6-digit number you received via SMS?");
+    console.log('MFA code is: ' + input)
+
+    console.log("Calling verifyUserAttribute")
+    result = await Auth.verifyUserAttributeSubmit(
+      user,   // Return object from Auth.signIn()
+      'phone_number',
+      input   // Confirmation code
+    );
+    console.log(result)
+  }
+
+  const setUpSMSMFA = async (user: any) => {
+    console.log("IN setupSMSMFA")
 
     console.log("Calling setPreferredMFA")
     try {
@@ -199,7 +215,7 @@ const useAuthLogic = ({
     }
   };
 
-  const verifyMFACodeAndLogIn = async (user: any, next?: string) => {
+  const verifyMFACodeAndLogIn = async (user: any) => {
     console.log('IN verifyMFACodeAndLogIn');
 
     const input = prompt("What's the 6-digit number you received via SMS?");
@@ -210,16 +226,6 @@ const useAuthLogic = ({
         input,   // Confirmation code
         'SMS_MFA'
     );
-
-    console.log('SUCCESS!')
-
-    setIsLoggedIn(true);
-
-    if (next) {
-      portalFlow.goTo(next);
-    } else {
-      portalFlow.goToPageFor("LOG_IN");
-    }
   }
 
   /**

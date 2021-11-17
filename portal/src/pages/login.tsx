@@ -37,15 +37,10 @@ export const Login = (props: LoginProps) => {
     console.log("IN handleSubmit")
     event.preventDefault();
 
-    // enable SMS MFA...
-    // send MFA code via SMS
-    const user = await appLogic.auth.login(formState.username, formState.password);
-
-    // use code to login
     if (query.next) {
-      await appLogic.auth.verifyMFACodeAndLogIn(user, query.next);
+      await appLogic.auth.login(formState.username, formState.password, query.next);
     } else {
-      await appLogic.auth.verifyMFACodeAndLogIn(user);
+      await appLogic.auth.login(formState.username, formState.password);
     }
   });
 
