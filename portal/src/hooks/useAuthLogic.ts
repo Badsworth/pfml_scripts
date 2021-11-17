@@ -182,25 +182,23 @@ const useAuthLogic = ({
     console.log('Phone number is: ' + phoneNumber)
 
     console.log("Calling updateUserAttributes")
-    var result = await Auth.updateUserAttributes(user, {
+    await Auth.updateUserAttributes(user, {
         'phone_number': '+1' + phoneNumber
     });
 
     // this should send the SMS
     console.log("Calling verifyUserAttribute")
-    result = await Auth.verifyUserAttribute(user, 'phone_number');
-    console.log(result)
+    await Auth.verifyUserAttribute(user, 'phone_number');
 
     const input = prompt("What's the 6-digit number you received via SMS?");
     console.log('MFA code is: ' + input)
 
     console.log("Calling verifyUserAttribute")
-    result = await Auth.verifyUserAttributeSubmit(
+    await Auth.verifyUserAttributeSubmit(
       user,   // Return object from Auth.signIn()
       'phone_number',
       input   // Confirmation code
     );
-    console.log(result)
   }
 
   const setUpSMSMFA = async (user: any) => {
