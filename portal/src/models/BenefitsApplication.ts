@@ -85,6 +85,7 @@ class BenefitsApplication extends BaseBenefitsApplication {
     | null = null;
 
   organization_unit: OrganizationUnit | null;
+  employee_organization_units: OrganizationUnit[];
   employer_organization_units: OrganizationUnit[];
 
   constructor(attrs: Partial<BenefitsApplication>) {

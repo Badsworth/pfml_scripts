@@ -1,4 +1,3 @@
-import React, { useEffect, useState } from "react";
 import withBenefitsApplication, {
   WithBenefitsApplicationProps,
 } from "../../hoc/withBenefitsApplication";
@@ -6,14 +5,14 @@ import withBenefitsApplication, {
 import Alert from "../../components/core/Alert";
 import ConditionalContent from "../../components/ConditionalContent";
 import Dropdown from "../../components/core/Dropdown";
-import { EmployeeSearchRequest } from "../../api/EmployeesApi";
 import Fieldset from "../../components/core/Fieldset";
 import FormLabel from "../../components/core/FormLabel";
 import InputChoiceGroup from "../../components/core/InputChoiceGroup";
-import { NullableQueryParams } from "../../utils/routeWithParams";
 import { OrganizationUnit } from "../../models/Employee";
 import QuestionPage from "../../components/QuestionPage";
+import React from "react";
 import { Trans } from "react-i18next";
+import { isFeatureEnabled } from "../../services/featureFlags";
 import { pick } from "lodash";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
@@ -24,128 +23,83 @@ export const fields = [
   "claim.organization_unit_selection",
 ];
 
-interface DepartmentProps extends WithBenefitsApplicationProps {
-  query: NullableQueryParams;
-}
-
-export const Department = (props: DepartmentProps) => {
-  const { appLogic, claim, query } = props;
+export const Department = (props: WithBenefitsApplicationProps) => {
+  const { appLogic, claim } = props;
   const { t } = useTranslation();
 
+  const showDepartments = isFeatureEnabled("claimantShowOrganizationUnits");
+
   const initialFormState = pick(props, fields).claim;
-  const { formState, updateFields, getField, clearField } =
-    useFormState(initialFormState);
 
-  // @todo: claim employer org units + appLogic.employees.employee
-  const { employee } = appLogic.employees;
-  const EEOrgUnits = employee?.organization_units || [];
+  // Organization Units
+  const EEOrgUnits = claim.employee_organization_units;
   const EROrgUnits = claim.employer_organization_units;
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [orgUnits, setOrgUnits] = useState<OrganizationUnit[]>([
-    ...EEOrgUnits,
-    ...EROrgUnits,
-  ]);
-
   const YES: OrganizationUnit = {
     organization_unit_id: EEOrgUnits[0]?.organization_unit_id,
     name: t("pages.claimsOrganizationUnit.choiceYes"),
   };
-
-  const NO: OrganizationUnit = {
-    organization_unit_id: "no",
-    name: t("pages.claimsOrganizationUnit.choiceNo"),
-  };
-
   const NOT_LISTED: OrganizationUnit = {
     organization_unit_id: "not_listed",
     name: t("pages.claimsOrganizationUnit.choiceNotListed"),
   };
-
   const NOT_SURE: OrganizationUnit = {
-    organization_unit_id: "not_sure",
+    organization_unit_id: "not_selected",
     name: t("pages.claimsOrganizationUnit.choiceNotSure"),
   };
-
-  // Determine whether user selected a "workaround" type option
-  // while choosing from radio options
-  const hasSelectedRadioWorkaround = !![NOT_LISTED, NOT_SURE, NO].find(
-    (workaround) => workaround.organization_unit_id === formState.radio_org_unit
-  );
-  // or while choosing from comboBox options
-  const hasSelectedComboboxWorkaround = !![NOT_LISTED, NOT_SURE].find(
-    (workaround) =>
-      workaround.organization_unit_id === formState.combobox_org_unit
-  );
-
-  const skipDepartments = () => {
-    appLogic.portalFlow.goToPageFor("CONTINUE", { claim }, query, {
-      redirect: true,
-    });
+  const NO: OrganizationUnit = {
+    ...NOT_SURE,
+    name: t("pages.claimsOrganizationUnit.choiceNo"),
   };
+  const allOrgUnits: OrganizationUnit[] = [...EEOrgUnits, ...EROrgUnits];
 
+  const isSingular = EEOrgUnits.length === 1;
+  const isShort = !isSingular && EEOrgUnits.length > 1 && EEOrgUnits.length < 3;
+  const isLong = !isSingular && !isShort;
+
+  // Compute default form state
+  const { formState, updateFields, getField, clearField } = useFormState(() => {
+    const { organization_unit_selection, organization_unit_id } =
+      initialFormState || {};
+    const radio_org_unit = !isLong
+      ? organization_unit_selection || organization_unit_id
+      : null;
+    const hasRadioWorkaround = !![NOT_LISTED, NOT_SURE, NO].find(
+      (w) => w.organization_unit_id === radio_org_unit
+    );
+    const combobox_org_unit =
+      (!isLong
+        ? hasRadioWorkaround
+          ? organization_unit_id
+          : null
+        : organization_unit_id) || organization_unit_selection;
+    return {
+      combobox_org_unit,
+      radio_org_unit,
+    };
+  });
+
+  // Form fields' props
   const getFunctionalInputProps = useFunctionalInputProps({
     appErrors: appLogic.appErrors,
     formState,
     updateFields,
   });
 
-  // API calls
-  const handleSave = () =>
-    // @todo: verify errors come from api validate everything
-    appLogic.benefitsApplications.update(claim.application_id, {
-      organization_unit_id: formState.combobox_org_unit,
-      organization_unit_selection: formState.radio_org_unit,
-    });
+  // Constructs radio and comboBox available organization_unit options
+  const orgUnitAsOption = (dep: OrganizationUnit) => ({
+    label: dep.name,
+    value: dep.organization_unit_id,
+    checked: dep.organization_unit_id === formState.radio_org_unit,
+  });
 
-  const populateOrganizationUnits = async () => {
-    // Finds this employee based on name, SSN and employer FEIN and retrieves
-    // the employee info alongside the connected organization units
-    if (!employee) {
-      await appLogic.employees.search({
-        first_name: claim.first_name ?? "",
-        last_name: claim.last_name ?? "",
-        middle_name: claim.middle_name ?? "",
-        tax_identifier_last4: claim.tax_identifier?.slice(-4) ?? "",
-      } as EmployeeSearchRequest);
-    }
-    // @todo: verify that "employee" variable is updated after search
-    if (
-      employee === null ||
-      typeof employee.organization_units === "undefined" ||
-      !employee.organization_units.length
-    ) {
-      skipDepartments();
-    }
-    // @todo check if set state is necessary
-    // setOrgUnits([...EEOrgUnits, ...EROrgUnits])
-  };
-
-  // Helpers
-  const getOrgUnitListSizes = () => {
-    const isSingular = EEOrgUnits.length === 1;
-    const isShort = !isSingular && EEOrgUnits.length < 6;
-    const isLong = !isSingular && !isShort;
-    return {
-      isLong,
-      isShort,
-      isSingular,
-    };
-  };
-
+  // Builds the radio/comboBox options for all the different page views
   const getOrgUnitOptions = () => {
-    // Construct radio and comboBox available organization_unit options
-    const orgUnitAsOption = (dep: OrganizationUnit) => ({
-      label: dep.name,
-      value: dep.organization_unit_id,
-      checked: dep.organization_unit_id === formState.radio_org_unit,
-    });
-
     const workaroundOptions = [NOT_LISTED, NOT_SURE].map(orgUnitAsOption);
 
     const choices = {
       singleOrgUnitOptions: [YES, NO].map(orgUnitAsOption),
       allOrgUnitOptions: [
-        ...orgUnits.map(orgUnitAsOption),
+        ...allOrgUnits.map(orgUnitAsOption),
         ...workaroundOptions,
       ],
       employeeOrgUnitOptions: [
@@ -160,26 +114,6 @@ export const Department = (props: DepartmentProps) => {
     return choices;
   };
 
-  useEffect(() => {
-    // Searches for employee's organization units
-    populateOrganizationUnits();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    if (!orgUnits.length) return;
-
-    // @todo: Determine radio / combobox default values based on claim data
-    const newInitialState = {
-      ...initialFormState,
-      combobox_org_unit: null,
-      radio_org_unit: null,
-    };
-    updateFields(newInitialState);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [orgUnits]);
-
-  const { isLong, isShort, isSingular } = getOrgUnitListSizes();
   const {
     singleOrgUnitOptions,
     allOrgUnitOptions,
@@ -187,7 +121,54 @@ export const Department = (props: DepartmentProps) => {
     employerOrgUnitOptions,
   } = getOrgUnitOptions();
 
-  if (!orgUnits.length) {
+  // Determine whether user selected a "workaround" type option
+  // while choosing from radio options
+  const hasSelectedRadioWorkaround = !![NOT_LISTED, NOT_SURE, NO].find(
+    (w) => w.organization_unit_id === formState.radio_org_unit
+  );
+  // or while choosing from comboBox options
+  const hasSelectedComboboxWorkaround = !![NOT_LISTED, NOT_SURE].find(
+    (w) => w.organization_unit_id === formState.combobox_org_unit
+  );
+
+  // API calls
+  const handleSave = async () => {
+    const { combobox_org_unit: comboBoxVal, radio_org_unit: radioVal } =
+      formState;
+
+    // Auto-selects "I'm not sure"
+    // when user doesn't interact with form fields
+    if (isLong && comboBoxVal === null) {
+      updateFields({
+        radio_org_unit: null,
+        combobox_org_unit: NOT_SURE.organization_unit_id,
+      });
+      return;
+    }
+    if (!isLong && radioVal === null) {
+      updateFields({
+        radio_org_unit: NOT_SURE.organization_unit_id,
+        combobox_org_unit: null,
+      });
+      return;
+    }
+
+    const comboBoxId = !hasSelectedComboboxWorkaround ? comboBoxVal : null;
+    const radioId = !hasSelectedRadioWorkaround ? radioVal : comboBoxId;
+    const comboBoxSel = hasSelectedComboboxWorkaround ? comboBoxVal : null;
+    const radioSel = hasSelectedRadioWorkaround ? radioVal : comboBoxSel;
+
+    await appLogic.benefitsApplications.update(claim.application_id, {
+      organization_unit_id: isLong ? comboBoxId : radioId,
+      organization_unit_selection: isLong ? comboBoxSel : radioSel,
+    });
+  };
+
+  if (!showDepartments || allOrgUnits.length === 0) {
+    appLogic.portalFlow.goToNextPage(
+      { claim },
+      { claim_id: claim.application_id }
+    );
     return null;
   }
 

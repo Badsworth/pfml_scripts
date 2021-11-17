@@ -79,11 +79,11 @@ export const guards: { [guardName: string]: ClaimFlowGuardFn } = {
   isMedicalOrPregnancyLeave: ({ claim }) =>
     claim?.isMedicalOrPregnancyLeave === true,
   isBondingLeave: ({ claim }) => claim?.isBondingLeave === true,
-  // @todo: (PFMLPB-????) Remove isFeatureEnabled check once feature flag is removed
-  isEmployedAndEmployerHasDepartments: ({ claim }) =>
+  // @todo: (PFMLPB-????) Remove isFeatureEnabled check once feature flag is obsolete
+  hasEmployerWithDepartments: ({ claim }) =>
     isFeatureEnabled("claimantShowOrganizationUnits") &&
     get(claim, "employment_status") === EmploymentStatus.employed &&
-    get(claim, "employer_organization_units").length,
+    get(claim, "employer_organization_units", []).length,
   isEmployed: ({ claim }) =>
     get(claim, "employment_status") === EmploymentStatus.employed,
   isCompleted: ({ claim }) => claim?.isCompleted === true,
@@ -643,7 +643,7 @@ const claimantFlow: {
         CONTINUE: [
           {
             target: routes.applications.department,
-            cond: "isEmployedAndEmployerHasDepartments",
+            cond: "hasEmployerWithDepartments",
           },
           {
             target: routes.applications.notifiedEmployer,

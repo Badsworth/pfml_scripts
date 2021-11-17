@@ -12,6 +12,7 @@ import User from "../../src/models/User";
 import { createModel } from "@xstate/test";
 import machineConfigs from "../../src/flows";
 import routes from "../../src/routes";
+import { v4 as uuidv4 } from "uuid";
 
 // In order to determine level of test coverage, each route
 // needs a test function defined for meta
@@ -419,7 +420,10 @@ describe("claimFlowConfigs", () => {
   };
   const organizationUnitsClaim = {
     employer_organization_units: [
-      // @todo add one org unit
+      {
+        organization_unit_id: uuidv4(),
+        name: "Department One",
+      },
     ],
   };
   const testData = [
@@ -456,9 +460,10 @@ describe("claimFlowConfigs", () => {
         ...guards,
         // TODO (CP-1447): Remove this guard once the feature flag is obsolete
         showPhone: () => true,
-        isEmployedAndEmployerHasDepartments: ({ claim }) =>
+        // @todo: (PFMLPB-????) Remove this guard once the feature flag is obsolete
+        hasEmployerWithDepartments: ({ claim }) =>
           get(claim, "employment_status") === EmploymentStatus.employed &&
-          get(claim, "employer_organization_units").length,
+          get(claim, "employer_organization_units", []).length,
       },
       actions: { assignTestDataToMachineContext },
     }
