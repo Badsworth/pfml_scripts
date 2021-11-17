@@ -47,7 +47,6 @@ function setFeatureFlags(flags?: Partial<FeatureFlags>): void {
     noMaintenance: true,
     employerShowDashboardSearch: true,
     employerShowReviewByStatus: true,
-    claimantShowStatusPage: config("ENVIRONMENT") === "breakfix",
   };
   cy.setCookie("_ff", JSON.stringify({ ...defaults, ...flags }), { log: true });
 }
