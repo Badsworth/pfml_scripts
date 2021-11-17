@@ -1340,7 +1340,7 @@
 <p>If you need a new EOTSS-approved tag for environment_tags, send an email to <a href="&#109;&#97;&#105;&#108;&#116;&#111;&#58;&#84;&#105;&#109;&#46;&#76;&#46;&#83;&#104;&#97;&#114;&#112;&#101;&#64;&#109;&#97;&#115;&#115;&#46;&#103;&#111;&#118;">&#84;&#105;&#109;&#46;&#76;&#46;&#83;&#104;&#97;&#114;&#112;&#101;&#64;&#109;&#97;&#115;&#115;&#46;&#103;&#111;&#118;</a> requesting a new tag.</p>
 <ol>
 <li>
-<p>The S3 bucket for holding tfstate files must be created first in <a href="https://github.com/EOLWD/pfml/tree/main/infra/pfml-aws/s3.tf">infra/pfml-aws/s3.tf</a>. Run <code>terraform apply</code>. This may require admin permissions.</p>
+<p>The S3 bucket for holding tfstate files must be created first in <a href="https://github.com/EOLWD/pfml/tree/main/infra/pfml-aws/s3.tf">infra/pfml-aws/s3.tf</a>. Run <code>terraform apply</code>. This may require admin permissions. As well as the replica bucket in LWD account.</p>
 </li>
 <li>
 <p>Send a request to EOTSS (Roy Mounier, cc. Chris Griffith) to update the NonProd Admin role to include <code>arn:aws:s3:::*-pfml-NEW_ENV*</code> and <code>arn:aws:s3:::*-pfml-NEW_ENV-*/*</code> in the S3 permissions. If Roy is out, create a Service Now request.</p>
