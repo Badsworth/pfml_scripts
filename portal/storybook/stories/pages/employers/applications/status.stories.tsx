@@ -95,14 +95,17 @@ export const Default = ({
   } else if (document === "Other") {
     documentData.document_type = DocumentType.identityVerification;
   }
+  const claim = claimBuilder.create();
 
   let documentsMap;
   if (document === "None") {
-    documentsMap = new Map([["mock-absence-id", new DocumentCollection()]]);
+    documentsMap = new Map([
+      [claim.fineos_absence_id, new DocumentCollection()],
+    ]);
   } else if (document === "Multiple") {
     documentsMap = new Map([
       [
-        "mock-absence-id",
+        claim.fineos_absence_id,
         new DocumentCollection([
           { ...documentData },
           {
@@ -114,11 +117,10 @@ export const Default = ({
     ]);
   } else {
     documentsMap = new Map([
-      ["mock-absence-id", new DocumentCollection([{ ...documentData }])],
+      [claim.fineos_absence_id, new DocumentCollection([{ ...documentData }])],
     ]);
   }
 
-  const claim = claimBuilder.create();
   const appLogic = useMockableAppLogic({
     employers: {
       claim,

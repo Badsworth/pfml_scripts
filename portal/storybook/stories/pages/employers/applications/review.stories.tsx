@@ -109,7 +109,8 @@ export const Default = (
     employers: {
       claimDocumentsMap: getDocumentsMap(
         documentationOption,
-        claim.leave_details.reason
+        claim.leave_details.reason,
+        claim.fineos_absence_id
       ),
     },
   });
@@ -119,7 +120,8 @@ export const Default = (
 
 function getDocumentsMap(
   documentation: DocumentationOption,
-  leaveReason: string | null
+  leaveReason: string | null,
+  absenceId: string
 ) {
   const isWithoutDocumentation = documentation.includes(
     "without documentation"
@@ -130,7 +132,7 @@ function getDocumentsMap(
     !leaveReason ||
     !(leaveReason in DocumentType.certification)
   ) {
-    return new Map([["mock-absence-id", new DocumentCollection()]]);
+    return new Map([[absenceId, new DocumentCollection()]]);
   }
 
   const documentData: BenefitsApplicationDocument = {
@@ -147,7 +149,7 @@ function getDocumentsMap(
     user_id: "",
   };
 
-  return new Map([["mock-absence-id", new DocumentCollection([documentData])]]);
+  return new Map([[absenceId, new DocumentCollection([documentData])]]);
 }
 
 function getAppErrorInfoCollection(errorTypes: string[] = []) {
