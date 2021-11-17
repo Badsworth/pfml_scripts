@@ -126,7 +126,8 @@
       color: #aaa;
       font-size: 10px;
 
-      &.branch, &.pr{
+      &.branch,
+      &.pr {
         color: #333;
         border-color: #333;
         background: #dfe4f5;

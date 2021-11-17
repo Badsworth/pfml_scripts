@@ -1,10 +1,10 @@
 import React from "react";
-import {Link, navigation} from "nr1";
+import { Link, navigation } from "nr1";
 
 export default class Navigation extends React.PureComponent {
   render() {
     return (
-      <nav className={'nav'}>
+      <nav className={"nav"}>
         <Link
           to={navigation.getOpenNerdletLocation({
             id: "environments",
@@ -20,6 +20,6 @@ export default class Navigation extends React.PureComponent {
           Error List
         </Link>
       </nav>
-    )
+    );
   }
 }

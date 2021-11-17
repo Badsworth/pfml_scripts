@@ -46,7 +46,10 @@ const cmd: CommandModule<SystemWideArgs, CommandArgs> = {
       "prod",
       `SINCE ${args.since} UNTIL ${args.until}`
     );
-    await fs.promises.writeFile(args.output, JSON.stringify(endpoints, null, 2));
+    await fs.promises.writeFile(
+      args.output,
+      JSON.stringify(endpoints, null, 2)
+    );
     args.logger.info(`${endpoints.length} endpoints written to ${args.output}`);
   },
 };

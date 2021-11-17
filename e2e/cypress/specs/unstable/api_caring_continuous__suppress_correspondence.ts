@@ -2,7 +2,6 @@ import { fineos, fineosPages } from "../../actions";
 import { Submission } from "../../../src/types";
 
 describe("Create a new caring leave claim in FINEOS and Suppress Correspondence check", () => {
-
   const notification =
     it("Create an absence case for the Suppress Correspondence", () => {
       fineos.before();
@@ -14,15 +13,14 @@ describe("Create a new caring leave claim in FINEOS and Suppress Correspondence 
             fineos_absence_id: res.fineos_absence_id,
             timestamp_from: Date.now(),
           });
-          fineosPages.ClaimPage.visit(
-            res.fineos_absence_id
-          )
+          fineosPages.ClaimPage.visit(res.fineos_absence_id);
         });
       });
     });
 
-  it("Check to see if the Suppress Correspondence is available in the Absence Case",
-    {retries: 0},
+  it(
+    "Check to see if the Suppress Correspondence is available in the Absence Case",
+    { retries: 0 },
     () => {
       cy.dependsOnPreviousPass([notification]);
       fineos.before();
@@ -33,5 +31,6 @@ describe("Create a new caring leave claim in FINEOS and Suppress Correspondence 
             docsPage.assertDocumentExists("Notification Suppression Disabled");
           });
       });
-    });
+    }
+  );
 });
