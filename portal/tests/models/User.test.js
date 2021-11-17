@@ -151,51 +151,6 @@ describe("User", () => {
       expect(userWithoutEmployer.hasVerifiableEmployer).toBe(false);
     });
   });
-  describe("#getVerifiableEmployerById", () => {
-    it("returns verifiable employer", () => {
-      const user = new User({
-        user_leave_administrators: [
-          UNVERIFIED_PENDING_WITH_DATA,
-          UNVERIFIED_REGISTERED_WITHOUT_DATA,
-          VERIFIED_PENDING_WITHOUT_DATA,
-          VERIFIED_REGISTERED_WITH_DATA,
-        ],
-      });
-
-      expect(
-        user.getVerifiableEmployerById(UNVERIFIED_PENDING_WITH_DATA.employer_id)
-      ).toEqual(UNVERIFIED_PENDING_WITH_DATA);
-    });
-
-    it("returns undefined if employer id does not match", () => {
-      const user = new User({
-        user_leave_administrators: [
-          UNVERIFIED_PENDING_WITH_DATA,
-          UNVERIFIED_REGISTERED_WITHOUT_DATA,
-          VERIFIED_PENDING_WITHOUT_DATA,
-          VERIFIED_REGISTERED_WITH_DATA,
-        ],
-      });
-
-      expect(user.getVerifiableEmployerById("100")).toEqual(undefined);
-    });
-
-    it("returns undefined if employer is unverified but does not have verification data", () => {
-      const user = new User({
-        user_leave_administrators: [
-          UNVERIFIED_REGISTERED_WITHOUT_DATA,
-          VERIFIED_PENDING_WITHOUT_DATA,
-          VERIFIED_REGISTERED_WITH_DATA,
-        ],
-      });
-
-      expect(
-        user.getVerifiableEmployerById(
-          UNVERIFIED_REGISTERED_WITHOUT_DATA.employer_id
-        )
-      ).toEqual(undefined);
-    });
-  });
 
   describe("#isEmployerIdRegisteredInFineos", () => {
     it("returns true if employer has matching ID and is registered in FINEOS", () => {

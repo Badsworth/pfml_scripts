@@ -809,9 +809,16 @@ class FineosWritebackDetails(Base, TimestampMixin):
     import_log_id = Column(Integer, ForeignKey("import_log.import_log_id"), index=True)
     writeback_sent_at = Column(TIMESTAMP(timezone=True), nullable=True,)
 
-    payment = relationship(Payment)
+    payment = relationship(Payment, back_populates="fineos_writeback_details")
     transaction_status = relationship("LkFineosWritebackTransactionStatus")
     import_log = relationship(ImportLog)
+
+
+# Because of how the app is loaded, we need
+# to define this here, after both classes are registered
+Payment.fineos_writeback_details = relationship(  # type: ignore
+    FineosWritebackDetails, back_populates="payment", order_by="FineosWritebackDetails.created_at",
+)
 
 
 class LkFineosWritebackTransactionStatus(Base):

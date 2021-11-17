@@ -6,6 +6,7 @@ from typing import Dict, List, Optional, Tuple
 import massgov.pfml.db
 import massgov.pfml.fineos.models
 import massgov.pfml.util.logging as logging
+import massgov.pfml.util.newrelic.events as newrelic_util
 from massgov.pfml.api.authorization.exceptions import NotAuthorizedForAccess
 from massgov.pfml.api.exceptions import ClaimWithdrawn, ObjectNotFound
 from massgov.pfml.api.models.claims.common import (
@@ -19,6 +20,9 @@ from massgov.pfml.api.models.claims.responses import ClaimReviewResponse, Docume
 from massgov.pfml.api.models.common import ConcurrentLeave, EmployerBenefit
 from massgov.pfml.api.validation.exceptions import ContainsV1AndV2Eforms
 from massgov.pfml.db.models.employees import Employer, User, UserLeaveAdministrator
+from massgov.pfml.db.queries.absence_periods import (
+    convert_fineos_absence_period_to_claim_response_absence_period,
+)
 from massgov.pfml.fineos.common import DOWNLOADABLE_DOC_TYPES
 from massgov.pfml.fineos.models.group_client_api import (
     Base64EncodedFileData,
@@ -319,6 +323,29 @@ def get_claim_as_leave_admin(
     leave_details = get_leave_details(absence_periods_dict)
 
     logger.info("Count of info request employer benefits:", extra={"count": len(employer_benefits)})
+    absence_period_responses = []
+    if absence_periods.decisions:
+        for decision in absence_periods.decisions:
+            if decision.period is not None:
+                absence_period_responses.append(
+                    convert_fineos_absence_period_to_claim_response_absence_period(
+                        decision.period,
+                        {
+                            "fineos_user_id": fineos_user_id,
+                            "absence_id": absence_id,
+                            "employer_id": employer.employer_id,
+                        },
+                    )
+                )
+            else:
+                newrelic_util.log_and_capture_exception(
+                    "Failed to extract period from fineos decision.",
+                    extra={
+                        "fineos_user_id": fineos_user_id,
+                        "absence_id": absence_id,
+                        "employer_id": employer.employer_id,
+                    },
+                )
 
     return (
         ClaimReviewResponse(
@@ -343,6 +370,7 @@ def get_claim_as_leave_admin(
             follow_up_date=follow_up_date,
             is_reviewable=is_reviewable,
             uses_second_eform_version=uses_second_eform_version,
+            absence_periods=absence_period_responses,
         ),
         managed_reqs,
         absence_periods,

@@ -43,7 +43,11 @@ from massgov.pfml.db.models.factories import (
     UserFactory,
     VerificationFactory,
 )
-from massgov.pfml.db.queries.absence_periods import upsert_absence_period_from_fineos_period
+from massgov.pfml.db.queries.absence_periods import (
+    split_fineos_absence_period_id,
+    split_fineos_leave_request_id,
+    upsert_absence_period_from_fineos_period,
+)
 from massgov.pfml.db.queries.get_claims_query import ActionRequiredStatusFilter
 from massgov.pfml.db.queries.managed_requirements import (
     create_managed_requirement_from_fineos,
@@ -1056,6 +1060,42 @@ class TestGetClaimReview:
 
         assert response.status_code == 200
         self._assert_no_absence_period_data_for_claim(test_db_session, claim)
+
+    @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_absence_period_decisions")
+    def test_employer_get_claim_returns_absence_periods_from_fineos(
+        self, mock_get_absence, client, employer_auth_token, mock_absence_details_create, claim,
+    ):
+        mock_get_absence.return_value = mock_absence_details_create
+        response = client.get(
+            f"/v1/employers/claims/{claim.fineos_absence_id}/review",
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+        )
+        response_data = response.get_json()["data"]
+        absence_periods = response_data["absence_periods"]
+        assert response.status_code == 200
+        periods = [decision.period for decision in mock_absence_details_create.decisions]
+        for fineos_period_data, absence_data in zip(periods, absence_periods):
+            class_id, index_id = split_fineos_absence_period_id(fineos_period_data.periodReference)
+            leave_request_id = split_fineos_leave_request_id(fineos_period_data.leaveRequest.id, {})
+            assert class_id == absence_data["fineos_absence_period_class_id"]
+            assert index_id == absence_data["fineos_absence_period_index_id"]
+            assert leave_request_id == absence_data["fineos_leave_request_id"]
+            assert (
+                fineos_period_data.startDate.isoformat()
+                == absence_data["absence_period_start_date"]
+            )
+            assert fineos_period_data.endDate.isoformat() == absence_data["absence_period_end_date"]
+            assert fineos_period_data.type == absence_data["type"]
+            assert fineos_period_data.leaveRequest.reasonName == absence_data["reason"]
+            assert (
+                fineos_period_data.leaveRequest.qualifier1 == absence_data["reason_qualifier_one"]
+            )
+            assert (
+                fineos_period_data.leaveRequest.qualifier2 == absence_data["reason_qualifier_two"]
+            )
+            assert (
+                fineos_period_data.leaveRequest.decisionStatus == absence_data["request_decision"]
+            )
 
 
 class TestUpdateClaim:

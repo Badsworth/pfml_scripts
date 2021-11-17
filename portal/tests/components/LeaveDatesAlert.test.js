@@ -7,7 +7,6 @@ describe("LeaveDatesAlert", () => {
     const { container } = render(
       <LeaveDatesAlert startDate="2021-01-01" endDate="2021-01-30" />
     );
-
     expect(container.firstChild).toMatchSnapshot();
   });
 
@@ -26,6 +25,20 @@ describe("LeaveDatesAlert", () => {
         Your leave dates for paid leave from PFML
       </h3>
     `);
+  });
+
+  it("with waiting period true, renders date range of wait period as expected", () => {
+    render(
+      <LeaveDatesAlert
+        startDate="2021-01-01"
+        endDate="2021-01-30"
+        showWaitingDayPeriod={true}
+      />
+    );
+    expect(
+      screen.getByRole("heading", { name: "Your 7-day waiting period dates" })
+    ).toBeInTheDocument();
+    expect(screen.getByText("1/1/2021 to 1/7/2021")).toBeInTheDocument();
   });
 
   it("is empty render when one of the dates is missing", () => {

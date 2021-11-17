@@ -127,4 +127,9 @@ locals {
     { name : "RMV_CLIENT_CERTIFICATE_PASSWORD", valueFrom : "/service/${local.app_name}/${var.environment_name}/rmv_client_certificate_password" },
     { name : "RMV_API_BEHAVIOR", value : var.rmv_api_behavior }
   ]
+
+  # Environement variable specifically for the .NET container in tasks_1099.tf
+  apps_netcore_env = [
+    { name : "ASPNETCORE_ENVIRONMENT", value : module.constants.env_var_mappings[var.environment_name] }
+  ]
 }

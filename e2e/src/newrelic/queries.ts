@@ -52,6 +52,8 @@ export async function buildFineosAPIEndpoints(
     .sort((a, b) => {
       if (a.FINEOSUrl > b.FINEOSUrl) return 1;
       if (a.FINEOSUrl < b.FINEOSUrl) return -1;
+      if (a.FINEOSMethod > b.FINEOSMethod) return 1;
+      if (a.FINEOSMethod < b.FINEOSMethod) return -1;
       return 0;
     });
 }

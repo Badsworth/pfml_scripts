@@ -28,7 +28,7 @@ const cmd: CommandModule<SystemWideArgs, CommandArgs> = {
       .options({
         since: {
           string: true,
-          default: "4 days ago",
+          default: "30 days ago",
         },
         until: {
           string: true,
@@ -46,7 +46,7 @@ const cmd: CommandModule<SystemWideArgs, CommandArgs> = {
       "prod",
       `SINCE ${args.since} UNTIL ${args.until}`
     );
-    await fs.promises.writeFile(args.output, JSON.stringify(endpoints));
+    await fs.promises.writeFile(args.output, JSON.stringify(endpoints, null, 2));
     args.logger.info(`${endpoints.length} endpoints written to ${args.output}`);
   },
 };

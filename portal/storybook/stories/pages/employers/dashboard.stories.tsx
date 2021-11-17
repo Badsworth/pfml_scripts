@@ -3,9 +3,9 @@ import React, { useState } from "react";
 import User, { UserLeaveAdministrator } from "src/models/User";
 import ClaimCollection from "src/models/ClaimCollection";
 import { Dashboard } from "src/pages/employers/dashboard";
-import { DateTime } from "luxon";
 import { NullableQueryParams } from "src/utils/routeWithParams";
 import { Props } from "storybook/types";
+import dayjs from "dayjs";
 import faker from "faker";
 import routes from "src/routes";
 import { times } from "lodash";
@@ -154,7 +154,7 @@ export const Default = (
           25,
           (num) =>
             new Claim({
-              created_at: DateTime.local().minus({ days: num }).toISODate(),
+              created_at: dayjs().subtract(num, "day").format("YYYY-MM-DD"),
               fineos_absence_id: `NTN-101-ABS-${num}`,
               claim_status: faker.helpers.randomize([
                 "Approved",

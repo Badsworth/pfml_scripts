@@ -452,23 +452,23 @@ module "pub-payments-process-snapshot" {
   ecs_task_role              = aws_iam_role.pub_payments_process_fineos_task_role.arn
 }
 
-# TODO uncomment if this is ever to be scheduled.  Adjust schedule_expression accordingly
-# Run pub-payments-process-1099-documents at <schedule is TBD>
-# 
-# module "pub-payments-process-1099" {
+# Run 1099-form-generator at <Every 3 hours Mon-Fri>
+# Defined in /pfml/infra/ecs_tasks/template/tasks_1099.tf
+# module "pub-payments-process-1099-form-generator" {
 #   source     = "../../modules/ecs_task_scheduler"
-#   is_enabled = var.enable_pub_automation_process_1099_documents
+#   is_enabled = true
 
-#   task_name           = "pub-payments-process-1099-documents"
-#   schedule_expression = "cron(0 3 ? * MON-FRI *)"
+#   task_name           = "1099-form-generator"
+#   schedule_expression_standard = "cron(0 3 ? * MON-FRI *)"
+#   schedule_expression_daylight_savings = "cron(0 2 ? * MON-FRI *)"
 #   environment_name    = var.environment_name
 
 #   cluster_arn        = data.aws_ecs_cluster.cluster.arn
 #   app_subnet_ids     = var.app_subnet_ids
 #   security_group_ids = [aws_security_group.tasks.id]
 
-#   ecs_task_definition_arn    = aws_ecs_task_definition.ecs_tasks["pub-payments-process-1099-documents"].arn
-#   ecs_task_definition_family = aws_ecs_task_definition.ecs_tasks["pub-payments-process-1099-documents"].family
+#   ecs_task_definition_arn    = aws_ecs_task_definition.ecs_tasks_1099.arn
+#   ecs_task_definition_family = aws_ecs_task_definition.ecs_tasks_1099.family
 #   ecs_task_executor_role     = aws_iam_role.task_executor.arn
 #   ecs_task_role              = aws_iam_role.pub_payments_process_fineos_task_role.arn
 # }

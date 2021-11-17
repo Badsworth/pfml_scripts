@@ -2,8 +2,8 @@ import { MockBenefitsApplicationBuilder, renderPage } from "../../test-utils";
 import { screen, waitFor } from "@testing-library/react";
 import BenefitsApplicationCollection from "../../../src/models/BenefitsApplicationCollection";
 import DateOfChild from "../../../src/pages/applications/date-of-child";
-import { DateTime } from "luxon";
 import { ReasonQualifier } from "../../../src/models/BenefitsApplication";
+import dayjs from "dayjs";
 import userEvent from "@testing-library/user-event";
 
 jest.mock("../../../src/hooks/useAppLogic");
@@ -12,9 +12,8 @@ const updateClaim = jest.fn(() => {
   return Promise.resolve();
 });
 
-const past = DateTime.local().minus({ months: 1 }).toISODate();
-const now = DateTime.local().toISODate();
-const future = DateTime.local().plus({ months: 1 }).toISODate();
+const past = dayjs().subtract(1, "month").format("YYYY-MM-DD");
+const future = dayjs().add(1, "month").format("YYYY-MM-DD");
 
 const setup = (claim) => {
   if (!claim) {
@@ -64,20 +63,6 @@ describe("DateOfChild", () => {
   });
 
   describe("when child birth or placement date is in the future", () => {
-    let spy;
-
-    beforeAll(() => {
-      spy = jest.spyOn(DateTime, "local").mockImplementation(() => {
-        return {
-          toISODate: () => now,
-        };
-      });
-    });
-
-    afterAll(() => {
-      spy.mockRestore();
-    });
-
     it("sets has_future_child_date as true for future birth bonding leave when claim is already populated", async () => {
       const claim = new MockBenefitsApplicationBuilder()
         .bondingBirthLeaveReason(future)
@@ -200,20 +185,6 @@ describe("DateOfChild", () => {
   });
 
   describe("when child birth or placement date is in the past", () => {
-    let spy;
-
-    beforeAll(() => {
-      spy = jest.spyOn(DateTime, "local").mockImplementation(() => {
-        return {
-          toISODate: () => now,
-        };
-      });
-    });
-
-    afterAll(() => {
-      spy.mockRestore();
-    });
-
     it("sets has_future_child_date as false for past birth bonding leave when claim is pre-populated", async () => {
       const claim = new MockBenefitsApplicationBuilder()
         .bondingBirthLeaveReason(past)

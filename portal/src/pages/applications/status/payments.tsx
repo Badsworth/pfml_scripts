@@ -30,24 +30,25 @@ const SectionWrapper = ({ children, heading }: SectionWrapperProps) => {
   );
 };
 
-export const Payments = ({
-  appLogic,
-  query,
-}: WithUserProps & {
+interface PaymentsProps {
   query: {
     absence_id?: string;
   };
-}) => {
+}
+
+export const Payments = ({
+  appLogic,
+  query: { absence_id },
+}: WithUserProps & PaymentsProps) => {
   const { t } = useTranslation();
-  const { portalFlow } = appLogic;
 
   useEffect(() => {
     if (!isFeatureEnabled("claimantShowPayments")) {
-      portalFlow.goTo(routes.applications.status.claim, {
-        absence_id: query.absence_id,
+      appLogic.portalFlow.goTo(routes.applications.status.claim, {
+        absence_id,
       });
     }
-  }, [portalFlow, query.absence_id]);
+  }, [appLogic.portalFlow, absence_id]);
 
   return (
     <React.Fragment>
@@ -58,7 +59,7 @@ export const Payments = ({
       <div className="measure-6">
         <StatusNavigationTabs
           activePath={appLogic.portalFlow.pathname}
-          absence_id={query.absence_id}
+          absence_id={absence_id}
         />
 
         <Title hidden>{t("pages.claimsStatus.paymentsTitle")}</Title>
@@ -95,7 +96,7 @@ export const Payments = ({
                     <a
                       href={createRouteWithQuery(
                         routes.applications.status.claim,
-                        { absence_id: query.absence_id },
+                        { absence_id },
                         "view_notices"
                       )}
                     />
