@@ -107,6 +107,7 @@ output "nonprod_admin_roles" {
 #
 output "domains" {
   value = {
+    "infra-test"  = "paidleave-infra-test.mass.gov",
     "test"        = "paidleave-test.mass.gov",
     "stage"       = "paidleave-stage.mass.gov",
     "performance" = "paidleave-performance.mass.gov",
@@ -120,6 +121,7 @@ output "domains" {
 
 output "api_domains" {
   value = {
+    "infra-test"  = "paidleave-api-infra-test.mass.gov",
     "test"        = "paidleave-api-test.mass.gov",
     "stage"       = "paidleave-api-stage.mass.gov",
     "performance" = "paidleave-api-performance.mass.gov",
@@ -136,6 +138,7 @@ output "cert_domains" {
   # you cannot lookup certs by a SAN, so we lookup based on the first domain
   # that is specified in the certificate.
   value = {
+    "infra-test"  = "paidleave-infra-test.mass.gov",
     "test"        = "paidleave-test.mass.gov",
     "stage"       = "paidleave-test.mass.gov",
     "performance" = "paidleave-performance.mass.gov",
@@ -174,5 +177,6 @@ output "env_var_mappings" {
     "uat"         = "UAT"
     "breakfix"    = "Breakfix"
     "cps-preview" = "CPSPreview"
+    "infra-test"  = "Test"
   }
 }
