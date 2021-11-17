@@ -143,13 +143,13 @@ const useAuthLogic = ({
       var user = await Auth.signIn(trimmedUsername, password);
       tracker.markFetchRequestEnd();
 
-      if (user.challengeName !== 'SMS_MFA') {
-        console.log('Need to set up MFA with SMS!')
+      if (user.challengeName === 'SMS_MFA') {
+        // SMS code needed to finish login
+        await verifyMFACodeAndLogIn(user)
+      } else if (user.preferredMFA !== 'SMS_MFA') {
+        // need to set up SMS MFA for the first time!
         await updatePhoneNumber(user)
         await setUpSMSMFA(user)
-      } else {
-        // TODO: how to get it to only send the code sometimes
-        await verifyMFACodeAndLogIn(user)
       }
 
       setIsLoggedIn(true);
