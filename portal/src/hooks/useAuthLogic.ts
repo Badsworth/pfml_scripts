@@ -177,8 +177,8 @@ const useAuthLogic = ({
   const updatePhoneNumber = async (user: any) => {
     console.log("IN updatePhoneNumber")
 
-    var phoneNumber = '0001112222';
-    phoneNumber = prompt("What 10-digit phone number do you want to use for SMS? Currently: " + phoneNumber);
+    // input should be of the form 1112223333
+    var phoneNumber = prompt("What 10-digit phone number do you want to use for SMS?");
     console.log('Phone number is: ' + phoneNumber)
 
     console.log("Calling updateUserAttributes")
