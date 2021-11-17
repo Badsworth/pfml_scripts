@@ -19,7 +19,7 @@ The easiest way to set up resources in a new environment is using the templates 
    
    If you need a new EOTSS-approved tag for environment_tags, send an email to <Tim.L.Sharpe@mass.gov> requesting a new tag.
 
-2. The S3 bucket for holding tfstate files must be created first in [infra/pfml-aws/s3.tf](../infra/pfml-aws/s3.tf). Run `terraform apply`. This may require admin permissions.
+2. The S3 bucket for holding tfstate files must be created first in [infra/pfml-aws/s3.tf](../infra/pfml-aws/s3.tf). Run `terraform apply`. This may require admin permissions. As well as the replica bucket in LWD account.
 
 1. Send a request to EOTSS (Roy Mounier, cc. Chris Griffith) to update the NonProd Admin role to include `arn:aws:s3:::*-pfml-NEW_ENV*` and `arn:aws:s3:::*-pfml-NEW_ENV-*/*` in the S3 permissions. If Roy is out, create a Service Now request.
 
