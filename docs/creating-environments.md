@@ -38,6 +38,8 @@ The easiest way to set up resources in a new environment is using the templates 
 
 ## 2. Set up the API
 
+1. Request Domain certificates for new domain names Refer to the end of this document ## Setting up Custom Domains
+
 ### 2.0 Create the API Gateway
 
 1. Generate the terraform environment folder:
