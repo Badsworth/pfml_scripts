@@ -180,11 +180,12 @@ const useAuthLogic = ({
         'phone_number': '+1' + phoneNumber
     });
 
-    // this should send the SMS
+    // this should send an SMS with a 6-digit code
     await Auth.verifyUserAttribute(user, 'phone_number');
 
     const input = prompt("What's the 6-digit number you received via SMS?");
 
+    // confirms the confirmation code and updates the phone number
     await Auth.verifyUserAttributeSubmit(user, 'phone_number', input);
   }
 
@@ -200,11 +201,7 @@ const useAuthLogic = ({
   const verifyMFACodeAndLogIn = async (user: any) => {
     const input = prompt("What's the 6-digit number you received via SMS?");
 
-    await Auth.confirmSignIn(
-        user,   // Return object from Auth.signIn()
-        input,   // Confirmation code
-        'SMS_MFA'
-    );
+    await Auth.confirmSignIn(user, input, 'SMS_MFA');
   }
 
   /**
