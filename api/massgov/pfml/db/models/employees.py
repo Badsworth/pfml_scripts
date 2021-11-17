@@ -1179,7 +1179,6 @@ class EmployeeOccupation(Base, TimestampMixin):
     date_of_hire = Column(Date)
     date_job_ended = Column(Date)
     employment_status = Column(Text)
-    org_unit_name = Column(Text)
     hours_worked_per_week = Column(Numeric)
     days_worked_per_week = Column(Numeric)
     manager_id = Column(Text)

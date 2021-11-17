@@ -925,3 +925,13 @@ class CaringLeaveMetadataFactory(BaseFactory):
 class ImportLogFactory(BaseFactory):
     class Meta:
         model = employee_models.ImportLog
+
+
+class OrganizationUnitFactory(BaseFactory):
+    class Meta:
+        model = employee_models.OrganizationUnit
+
+    fineos_id = None
+    name = factory.Faker("company")
+    employer = factory.SubFactory(EmployerFactory)
+    employer_id = factory.LazyAttribute(lambda c: c.employer.employer_id)
