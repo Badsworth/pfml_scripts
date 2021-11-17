@@ -2,7 +2,7 @@ import { Payments } from "src/pages/applications/status/payments";
 import { Props } from "storybook/types";
 import React from "react";
 import User from "src/models/User";
-import { createMockBenefitsApplication } from "tests/test-utils";
+import { createMockBenefitsApplication } from "tests/test-utils/createMockBenefitsApplication";
 import useMockableAppLogic from "lib/mock-helpers/useMockableAppLogic";
 
 const LEAVE_TYPES = {

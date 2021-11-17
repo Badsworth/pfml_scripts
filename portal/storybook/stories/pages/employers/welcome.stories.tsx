@@ -9,12 +9,14 @@ export default {
   component: Welcome,
   argTypes: {
     hasVerifiableEmployer: {
-      defaultValue: "Yes",
       control: {
         type: "radio",
         options: ["Yes", "No"],
       },
     },
+  },
+  args: {
+    hasVerifiableEmployer: "Yes",
   },
 };
 

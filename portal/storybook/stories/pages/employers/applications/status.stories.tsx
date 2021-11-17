@@ -1,6 +1,6 @@
 import { BenefitsApplicationDocument, DocumentType } from "src/models/Document";
 import DocumentCollection from "src/models/DocumentCollection";
-import { MockEmployerClaimBuilder } from "tests/test-utils";
+import { MockEmployerClaimBuilder } from "tests/test-utils/mock-model-builder";
 import React from "react";
 import { Status } from "src/pages/employers/applications/status";
 import User from "src/models/User";
@@ -9,16 +9,19 @@ import useMockableAppLogic from "lib/mock-helpers/useMockableAppLogic";
 export default {
   title: "Pages/Employers/Applications/Status",
   component: Status,
+  args: {
+    document: "Approval notice",
+    leaveDurationType: ["Continuous"],
+    status: "Approved",
+  },
   argTypes: {
     leaveDurationType: {
-      defaultValue: ["Continuous"],
       control: {
         type: "check",
         options: ["Continuous", "Intermittent", "Reduced"],
       },
     },
     status: {
-      defaultValue: "Approved",
       control: {
         type: "radio",
         options: [
@@ -32,7 +35,6 @@ export default {
       },
     },
     document: {
-      defaultValue: "Approval notice",
       control: {
         type: "radio",
         options: [

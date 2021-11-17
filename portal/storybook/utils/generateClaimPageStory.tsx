@@ -5,7 +5,7 @@ import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
 import BenefitsApplication from "src/models/BenefitsApplication";
 import React from "react";
 import User from "../../src/models/User";
-import { createMockBenefitsApplication } from "tests/test-utils";
+import { createMockBenefitsApplication } from "tests/test-utils/createMockBenefitsApplication";
 import englishLocale from "src/locales/app/en-US";
 import useMockableAppLogic from "lib/mock-helpers/useMockableAppLogic";
 import { useTranslation } from "src/locales/i18n";
@@ -134,13 +134,17 @@ function generateDefaultStory(Component, mockClaims, possibleErrors) {
         claim={claim}
         user={user}
         documents={appLogic.documents.documents.items}
+        query={{ claim_id: claim.application_id }}
       />
     );
   };
 
+  DefaultStory.args = {
+    claim: defaultClaim,
+  };
+
   DefaultStory.argTypes = {
     claim: {
-      defaultValue: defaultClaim,
       control: {
         type: "radio",
         options: Object.keys(claims),

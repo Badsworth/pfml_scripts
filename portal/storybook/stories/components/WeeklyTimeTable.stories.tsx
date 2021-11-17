@@ -12,11 +12,13 @@ export default {
   component: WeeklyTimeTable,
   argTypes: {
     days: {
-      defaultValue: workPattern.work_pattern_days,
       control: {
         type: "object",
       },
     },
+  },
+  args: {
+    days: workPattern.work_pattern_days,
   },
 };
 

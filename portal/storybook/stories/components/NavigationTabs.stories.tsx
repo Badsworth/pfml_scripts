@@ -22,12 +22,14 @@ export default {
   component: NavigationTabs,
   argTypes: {
     selectedTab: {
-      defaultValue: TABS[0].label,
       control: {
         type: "radio",
         options: TABS.map((tab) => tab.label),
       },
     },
+  },
+  args: {
+    selectedTab: TABS[0].label,
   },
 };
 
