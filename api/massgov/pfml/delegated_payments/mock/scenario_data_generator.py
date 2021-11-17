@@ -1,10 +1,12 @@
 import uuid
 from dataclasses import dataclass
+from datetime import timedelta
 from typing import Dict, List, Optional
 
 import faker
 
 import massgov.pfml.api.util.state_log_util as state_log_util
+import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.experian.address_validate_soap.client as soap_api
 import massgov.pfml.experian.address_validate_soap.models as sm
 import massgov.pfml.util.logging as logging
@@ -27,6 +29,8 @@ from massgov.pfml.db.models.factories import (
     AddressFactory,
     ClaimFactory,
     CtrAddressPairFactory,
+    DiaReductionPaymentFactory,
+    DuaReductionPaymentFactory,
     EmployeeFactory,
     EmployeePubEftPairFactory,
     EmployerFactory,
@@ -192,6 +196,19 @@ def create_employee(ssn: str, fineos_customer_number: str, db_session: db.Sessio
     )
 
 
+def create_dua_additional_income(fineos_customer_number: str) -> None:
+    payment_date = payments_util.get_now()
+
+    DuaReductionPaymentFactory.create(
+        fineos_customer_number=fineos_customer_number,
+        request_week_begin_date=payment_date + timedelta(days=2),
+    )
+
+
+def create_dia_additional_income(fineos_customer_number: str) -> None:
+    DiaReductionPaymentFactory.create(fineos_customer_number=fineos_customer_number,)
+
+
 def create_claim(
     employer: Employer,
     employee: Optional[Employee],
@@ -244,6 +261,12 @@ def generate_scenario_data_in_db(
     employer = create_employer(fein, fineos_employer_id, db_session)
 
     employee = create_employee(ssn, fineos_customer_number, db_session)
+
+    if scenario_descriptor.dua_additional_income:
+        create_dua_additional_income(fineos_customer_number)
+
+    if scenario_descriptor.dia_additional_income:
+        create_dia_additional_income(fineos_customer_number)
 
     add_eft = (
         scenario_descriptor.payment_method.payment_method_id == PaymentMethod.ACH.payment_method_id
@@ -339,7 +362,9 @@ def generate_scenario_dataset(
 
                 fineos_employer_id = fein_part_str.rjust(9, "3")
                 fineos_notification_id = f"NTN-{ssn_part_str}"
-                fineos_customer_number = ssn_part_str.rjust(9, "5")
+
+                # match with customer_number in fineos_extract_data.py
+                fineos_customer_number = str(ssn)
 
                 scenario_data = generate_scenario_data_in_db(
                     scenario_descriptor,
