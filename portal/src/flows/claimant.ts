@@ -83,7 +83,7 @@ export const guards: { [guardName: string]: ClaimFlowGuardFn } = {
   hasEmployerWithDepartments: ({ claim }) =>
     isFeatureEnabled("claimantShowOrganizationUnits") &&
     get(claim, "employment_status") === EmploymentStatus.employed &&
-    get(claim, "employer_organization_units", []).length,
+    get(claim, "employer_organization_units", []).length > 0,
   isEmployed: ({ claim }) =>
     get(claim, "employment_status") === EmploymentStatus.employed,
   isCompleted: ({ claim }) => claim?.isCompleted === true,

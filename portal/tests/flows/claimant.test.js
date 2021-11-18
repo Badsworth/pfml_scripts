@@ -397,6 +397,12 @@ describe("claimFlowConfigs", () => {
   const employed = {
     employment_status: EmploymentStatus.employed,
     has_concurrent_leave: true,
+    employer_organization_units: [
+      {
+        organization_unit_id: uuidv4(),
+        name: "Department One",
+      },
+    ],
   };
   const hasIntermittentLeavePeriods = { has_intermittent_leave_periods: true };
   const hasReducedScheduleLeavePeriods = {
@@ -418,14 +424,6 @@ describe("claimFlowConfigs", () => {
   const completed = {
     status: BenefitsApplicationStatus.completed,
   };
-  const organizationUnitsClaim = {
-    employer_organization_units: [
-      {
-        organization_unit_id: uuidv4(),
-        name: "Department One",
-      },
-    ],
-  };
   const testData = [
     { claimData: hasStateId, userData: {} },
     { claimData: medicalClaim, userData: {} },
@@ -438,7 +436,6 @@ describe("claimFlowConfigs", () => {
     { claimData: fixedWorkPattern, userData: {} },
     { claimData: variableWorkPattern, userData: {} },
     { claimData: caringLeaveClaim, userData: {} },
-    { claimData: organizationUnitsClaim, userData: {} },
   ];
 
   // Action that's fired when exiting getReady state and creating a claim and
