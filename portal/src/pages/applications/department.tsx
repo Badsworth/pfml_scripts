@@ -148,7 +148,7 @@ export const Department = (props: WithBenefitsApplicationProps) => {
     if (!isLong && radioVal === null) {
       updateFields({
         radio_org_unit: NOT_SURE.organization_unit_id,
-        combobox_org_unit: null,
+        combobox_org_unit: NOT_SURE.organization_unit_id,
       });
       return;
     }
@@ -164,6 +164,8 @@ export const Department = (props: WithBenefitsApplicationProps) => {
     });
   };
 
+  // The claimant flow should already check both requirements
+  // but we still want to prevent direct access to this page
   if (!showDepartments || allOrgUnits.length === 0) {
     appLogic.portalFlow.goToNextPage(
       { claim },
