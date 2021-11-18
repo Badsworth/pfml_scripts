@@ -21,7 +21,11 @@ export function generateConcurrentLeaves(
   // to after waiting periods - See here: https://lwd.atlassian.net/browse/PORTAL-819
   return {
     ...concurrent_leave,
-    leave_start_date: formatISO(addDays(new Date(startDate), 8), { representation: "date" }),
-    leave_end_date: formatISO(addDays(new Date(endDate), 8), { representation: "date" }),
+    leave_start_date: formatISO(addDays(new Date(startDate), 8), {
+      representation: "date",
+    }),
+    leave_end_date: formatISO(addDays(new Date(endDate), 8), {
+      representation: "date",
+    }),
   };
 }

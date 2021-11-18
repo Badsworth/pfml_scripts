@@ -4,7 +4,14 @@ import {
   MilitaryExigencyClaim,
   ScenarioSpecification,
 } from "../generation/Scenario";
-import { addWeeks, subWeeks, startOfWeek, addDays, subDays, formatISO } from "date-fns";
+import {
+  addWeeks,
+  subWeeks,
+  startOfWeek,
+  addDays,
+  subDays,
+  formatISO,
+} from "date-fns";
 
 /**
  * Cypress Testing Scenarios.
@@ -397,10 +404,12 @@ export const BHAP1_OLB: ScenarioSpecification = {
         worked_per_week_minutes: 1200,
       },
     ],
-    concurrent_leave: { 
+    concurrent_leave: {
       is_for_current_employer: true,
-      leave_end_date: formatISO(addWeeks(mostRecentSunday, 1), { representation: "date" }),
-      leave_start_date: formatISO(mostRecentSunday, { representation: "date" }), 
+      leave_end_date: formatISO(addWeeks(mostRecentSunday, 1), {
+        representation: "date",
+      }),
+      leave_start_date: formatISO(mostRecentSunday, { representation: "date" }),
     },
     metadata: { expected_weekly_payment: "850.00" },
   },
