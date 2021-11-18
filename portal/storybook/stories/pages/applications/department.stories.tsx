@@ -1,48 +1,11 @@
 import { Department } from "src/pages/applications/department";
 import { MockBenefitsApplicationBuilder } from "tests/test-utils";
 import OrganizationUnit from "src/models/OrganizationUnit";
+import { Props } from "storybook/types";
 import React from "react";
 import User from "src/models/User";
 import faker from "faker";
 import useMockableAppLogic from "lib/mock-helpers/useMockableAppLogic";
-
-export default {
-  title: "Pages/Applications/Department",
-  component: Department,
-};
-
-export const Singular = () => {
-  const appLogic = useMockableAppLogic();
-  return (
-    <Department
-      appLogic={appLogic}
-      user={user}
-      claim={claimWithUnits(singularDepartmentList)}
-    />
-  );
-};
-
-export const Short = () => {
-  const appLogic = useMockableAppLogic();
-  return (
-    <Department
-      appLogic={appLogic}
-      user={user}
-      claim={claimWithUnits(shortDepartmentList)}
-    />
-  );
-};
-
-export const Long = () => {
-  const appLogic = useMockableAppLogic();
-  return (
-    <Department
-      appLogic={appLogic}
-      user={user}
-      claim={claimWithUnits(longDepartmentList)}
-    />
-  );
-};
 
 // Mock data
 const employerDepartmentList = [
@@ -121,3 +84,44 @@ const claimWithUnits = (employeeDepartmentList: OrganizationUnit[]) =>
     .employeeOrganizationUnits(employeeDepartmentList)
     .employerOrganizationUnits(employerDepartmentList)
     .create();
+
+const scenarios = {
+  Singular: {
+    claim: claimWithUnits(singularDepartmentList),
+  },
+  Short: {
+    claim: claimWithUnits(shortDepartmentList),
+  },
+  Long: {
+    claim: claimWithUnits(longDepartmentList),
+  },
+};
+
+export default {
+  title: "Pages/Applications/Department",
+  component: Department,
+};
+
+export const DefaultStory = (
+  args: Props<typeof Department> & { scenario: keyof typeof scenarios }
+) => {
+  const { claim } = scenarios[args.scenario];
+
+  const appLogic = useMockableAppLogic({
+    benefitsApplications: {
+      update: () => Promise.resolve(),
+    },
+  });
+
+  return <Department appLogic={appLogic} user={user} claim={claim} />;
+};
+
+DefaultStory.argTypes = {
+  scenario: {
+    defaultValue: Object.keys(scenarios)[0],
+    control: {
+      type: "radio",
+      options: Object.keys(scenarios),
+    },
+  },
+};
