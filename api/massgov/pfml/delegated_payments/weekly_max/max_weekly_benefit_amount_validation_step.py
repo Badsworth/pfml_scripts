@@ -5,6 +5,7 @@ import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml.db.models.employees import State
+from massgov.pfml.db.models.payments import FineosWritebackDetails, FineosWritebackTransactionStatus
 from massgov.pfml.delegated_payments.postprocessing.payment_post_processing_util import (
     PaymentContainer,
     make_payment_log,
@@ -97,6 +98,13 @@ class MaxWeeklyBenefitAmountValidationStep(Step):
                     additional_outcome_details[
                         "maximum_weekly_details"
                     ] = maximum_weekly_full_details_msg
+
+                writeback_details = FineosWritebackDetails(
+                    payment=payment_container.payment,
+                    transaction_status_id=FineosWritebackTransactionStatus.WEEKLY_BENEFITS_AMOUNT_EXCEEDS_850.transaction_status_id,
+                    import_log_id=self.get_import_log_id(),
+                )
+                self.db_session.add(writeback_details)
 
                 state_log_util.create_finished_state_log(
                     end_state=State.PAYMENT_FAILED_MAX_WEEKLY_BENEFIT_AMOUNT_VALIDATION,
