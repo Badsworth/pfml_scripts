@@ -11,48 +11,38 @@ export default {
   component: Department,
 };
 
-const views = () => {
-  const Singular = () => {
-    const appLogic = useMockableAppLogic();
-    return (
-      <Department
-        appLogic={appLogic}
-        user={user}
-        claim={claimWithUnits(singularDepartmentList)}
-      />
-    );
-  };
-
-  const Short = () => {
-    const appLogic = useMockableAppLogic();
-    return (
-      <Department
-        appLogic={appLogic}
-        user={user}
-        claim={claimWithUnits(shortDepartmentList)}
-      />
-    );
-  };
-
-  const Long = () => {
-    const appLogic = useMockableAppLogic();
-    return (
-      <Department
-        appLogic={appLogic}
-        user={user}
-        claim={claimWithUnits(longDepartmentList)}
-      />
-    );
-  };
-
-  return {
-    Singular,
-    Short,
-    Long,
-  };
+export const Singular = () => {
+  const appLogic = useMockableAppLogic();
+  return (
+    <Department
+      appLogic={appLogic}
+      user={user}
+      claim={claimWithUnits(singularDepartmentList)}
+    />
+  );
 };
 
-export const { Singular, Short, Long } = views();
+export const Short = () => {
+  const appLogic = useMockableAppLogic();
+  return (
+    <Department
+      appLogic={appLogic}
+      user={user}
+      claim={claimWithUnits(shortDepartmentList)}
+    />
+  );
+};
+
+export const Long = () => {
+  const appLogic = useMockableAppLogic();
+  return (
+    <Department
+      appLogic={appLogic}
+      user={user}
+      claim={claimWithUnits(longDepartmentList)}
+    />
+  );
+};
 
 // Mock data
 const employerDepartmentList = [
