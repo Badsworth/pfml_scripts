@@ -50,7 +50,6 @@ export const Department = (props: WithBenefitsApplicationProps) => {
     ...NOT_SURE,
     name: t("pages.claimsOrganizationUnit.choiceNo"),
   };
-  const allOrgUnits: OrganizationUnit[] = [...EEOrgUnits, ...EROrgUnits];
 
   const isSingular = EEOrgUnits.length === 1;
   const isShort = !isSingular && EEOrgUnits.length > 1 && EEOrgUnits.length < 3;
@@ -98,10 +97,6 @@ export const Department = (props: WithBenefitsApplicationProps) => {
 
     const choices = {
       singleOrgUnitOptions: [YES, NO].map(orgUnitAsOption),
-      allOrgUnitOptions: [
-        ...allOrgUnits.map(orgUnitAsOption),
-        ...workaroundOptions,
-      ],
       employeeOrgUnitOptions: [
         ...EEOrgUnits.map(orgUnitAsOption),
         ...workaroundOptions,
@@ -110,13 +105,19 @@ export const Department = (props: WithBenefitsApplicationProps) => {
         ...EROrgUnits.map(orgUnitAsOption),
         ...workaroundOptions,
       ],
+      extraOrgUnitOptions: [
+        ...EROrgUnits.filter((o) => !EEOrgUnits.includes(o)).map(
+          orgUnitAsOption
+        ),
+        ...workaroundOptions,
+      ],
     };
     return choices;
   };
 
   const {
     singleOrgUnitOptions,
-    allOrgUnitOptions,
+    extraOrgUnitOptions,
     employeeOrgUnitOptions,
     employerOrgUnitOptions,
   } = getOrgUnitOptions();
@@ -164,9 +165,13 @@ export const Department = (props: WithBenefitsApplicationProps) => {
     });
   };
 
-  // The claimant flow should already check both requirements
+  // Prevents showing the combobox when the only options are workarounds
+  const comboBoxHasOnlyWorkarounds =
+    hasSelectedRadioWorkaround && extraOrgUnitOptions.length <= 2;
+
+  // The claimant flow should already check both requirements below
   // but we still want to prevent direct access to this page
-  if (!showDepartments || allOrgUnits.length === 0) {
+  if (!showDepartments || EROrgUnits.length === 0) {
     appLogic.portalFlow.goToNextPage(
       { claim },
       { claim_id: claim.application_id }
@@ -220,18 +225,24 @@ export const Department = (props: WithBenefitsApplicationProps) => {
               {t("pages.claimsOrganizationUnit.sectionLabel")}
             </FormLabel>
           </ConditionalContent>
-          <Dropdown
-            {...getFunctionalInputProps("combobox_org_unit")}
-            choices={
-              hasSelectedRadioWorkaround
-                ? employerOrgUnitOptions
-                : allOrgUnitOptions
+          <ConditionalContent visible={!comboBoxHasOnlyWorkarounds}>
+            <Dropdown
+              {...getFunctionalInputProps("combobox_org_unit")}
+              choices={
+                hasSelectedRadioWorkaround
+                  ? extraOrgUnitOptions
+                  : employerOrgUnitOptions
+              }
+              autocomplete={true}
+              label={t("pages.claimsOrganizationUnit.comboBoxLabel")}
+              smallLabel
+            />
+          </ConditionalContent>
+          <ConditionalContent
+            visible={
+              hasSelectedComboboxWorkaround || comboBoxHasOnlyWorkarounds
             }
-            autocomplete={true}
-            label={t("pages.claimsOrganizationUnit.comboBoxLabel")}
-            smallLabel
-          />
-          <ConditionalContent visible={hasSelectedComboboxWorkaround}>
+          >
             <Alert className="measure-6" state="info" slim>
               {t("pages.claimsOrganizationUnit.followupInfo")}
             </Alert>

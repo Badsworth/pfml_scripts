@@ -1,6 +1,7 @@
+import { BenefitsApplication } from "src/models/BenefitsApplication";
 import { Department } from "src/pages/applications/department";
-import { EmployeeOrganizationUnit } from "src/models/Employee";
 import { MockBenefitsApplicationBuilder } from "tests/test-utils";
+import { OrganizationUnit } from "src/models/Employee";
 import React from "react";
 import User from "src/models/User";
 import faker from "faker";
@@ -11,41 +12,36 @@ export default {
   component: Department,
 };
 
-const appLogicOptions = (organization_units: EmployeeOrganizationUnit[]) => ({
-  employees: {
-    search: () =>
-      Promise.resolve({
-        ...employee,
-        organization_units,
-      }),
-  },
+const claimWithUnits = (
+  employee_organization_units: OrganizationUnit[]
+): BenefitsApplication => ({
+  ...claim,
+  employee_organization_units,
+  employer_organization_units: employerDepartmentList,
 });
 
 const views = () => {
   const Singular = () => (
     <Department
-      appLogic={useMockableAppLogic(appLogicOptions(singularDepartmentList))}
+      appLogic={useMockableAppLogic()}
       user={user}
-      claim={claim}
-      query={{}}
+      claim={claimWithUnits(singularDepartmentList)}
     />
   );
 
   const Short = () => (
     <Department
-      appLogic={useMockableAppLogic(appLogicOptions(shortDepartmentList))}
+      appLogic={useMockableAppLogic()}
       user={user}
-      claim={claim}
-      query={{}}
+      claim={claimWithUnits(shortDepartmentList)}
     />
   );
 
   const Long = () => (
     <Department
-      appLogic={useMockableAppLogic(appLogicOptions(longDepartmentList))}
+      appLogic={useMockableAppLogic()}
       user={user}
-      claim={claim}
-      query={{}}
+      claim={claimWithUnits(longDepartmentList)}
     />
   );
 
@@ -59,64 +55,69 @@ const views = () => {
 export const { Singular, Short, Long } = views();
 
 // Mock data
-const singularDepartmentList: EmployeeOrganizationUnit[] = [
+const employerDepartmentList = [
   {
     organization_unit_id: "dep-1",
     fineos_id: "f-dep-1",
     name: "Department One",
     employer_id: "123456789",
-    linked: true,
   },
   {
     organization_unit_id: "dep-2",
     fineos_id: "f-dep-2",
     name: "Department Two",
     employer_id: "123456789",
-    linked: false,
   },
-];
-
-const shortDepartmentList: EmployeeOrganizationUnit[] = [
-  ...singularDepartmentList,
   {
     organization_unit_id: "dep-3",
     fineos_id: "f-dep-3",
     name: "Department Three",
     employer_id: "123456789",
-    linked: true,
   },
-];
-
-const longDepartmentList: EmployeeOrganizationUnit[] = [
-  ...shortDepartmentList,
   {
     organization_unit_id: "dep-4",
     fineos_id: "f-dep-4",
     name: "Department Four",
     employer_id: "123456789",
-    linked: true,
   },
   {
     organization_unit_id: "dep-5",
     fineos_id: "f-dep-5",
     name: "Department Five",
     employer_id: "123456789",
-    linked: true,
   },
   {
     organization_unit_id: "dep-6",
     fineos_id: "f-dep-6",
     name: "Department Six",
     employer_id: "123456789",
-    linked: true,
   },
   {
     organization_unit_id: "dep-7",
     fineos_id: "f-dep-7",
     name: "Department Seven",
     employer_id: "123456789",
-    linked: true,
   },
+  {
+    organization_unit_id: "dep-8",
+    fineos_id: "f-dep-8",
+    name: "Department Eight",
+    employer_id: "123456789",
+  },
+];
+
+const singularDepartmentList: OrganizationUnit[] = [employerDepartmentList[0]];
+const shortDepartmentList: OrganizationUnit[] = [
+  employerDepartmentList[0],
+  employerDepartmentList[1],
+];
+const longDepartmentList: OrganizationUnit[] = [
+  employerDepartmentList[0],
+  employerDepartmentList[1],
+  employerDepartmentList[2],
+  employerDepartmentList[3],
+  employerDepartmentList[4],
+  employerDepartmentList[5],
 ];
 
 const user = new User({
@@ -127,15 +128,3 @@ const claim = new MockBenefitsApplicationBuilder()
   .verifiedId()
   .employed()
   .create();
-
-const employee = {
-  employee_id: faker.datatype.uuid(),
-  tax_identifier_last4: null,
-  first_name: null,
-  middle_name: null,
-  last_name: null,
-  other_name: null,
-  email_address: null,
-  phone_number: null,
-  organization_units: [],
-};

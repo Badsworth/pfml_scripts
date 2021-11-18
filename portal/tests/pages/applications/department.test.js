@@ -26,24 +26,31 @@ const newOrgUnit = (name) => ({
   name,
 });
 
-const singularOrganizationUnitsList = [newOrgUnit("Department One")];
-
-const shortOrganizationUnitsList = [
-  ...singularOrganizationUnitsList,
+const defaultEmployerOrgUnits = [
+  newOrgUnit("Department One"),
   newOrgUnit("Department Two"),
-];
-
-const longOrganizationUnitsList = [
-  ...shortOrganizationUnitsList,
   newOrgUnit("Department Three"),
   newOrgUnit("Department Four"),
   newOrgUnit("Department Five"),
   newOrgUnit("Department Six"),
-];
-
-const defaultEmployerOrgUnits = [
   newOrgUnit("Department Seven"),
   newOrgUnit("Department Eight"),
+];
+
+const singularOrganizationUnitsList = [defaultEmployerOrgUnits[0]];
+
+const shortOrganizationUnitsList = [
+  defaultEmployerOrgUnits[0],
+  defaultEmployerOrgUnits[1],
+];
+
+const longOrganizationUnitsList = [
+  defaultEmployerOrgUnits[0],
+  defaultEmployerOrgUnits[1],
+  defaultEmployerOrgUnits[2],
+  defaultEmployerOrgUnits[3],
+  defaultEmployerOrgUnits[4],
+  defaultEmployerOrgUnits[5],
 ];
 
 // Render page
@@ -147,8 +154,8 @@ describe("DepartmentPage", () => {
 
       it("when user selects 'No' picks alternative submits department", async () => {
         setup(singularOrganizationUnitsList);
-        // Pick a linked department
-        const department = defaultEmployerOrgUnits[0];
+        // Pick an unlinked department
+        const department = defaultEmployerOrgUnits[1];
         // Click "No" confirming that "Department One" is not your department
         userEvent.click(screen.getByRole("radio", { name: "No" }));
         // Select an alternative department
@@ -232,7 +239,7 @@ describe("DepartmentPage", () => {
       it("when user picks workaround selects alternative submits department", async () => {
         setup(shortOrganizationUnitsList);
         // Pick an unlinked department
-        const department = defaultEmployerOrgUnits[0];
+        const department = defaultEmployerOrgUnits[5];
         // Select a workaround option
         userEvent.click(
           screen.getByRole("radio", { name: "My department is not listed" })
