@@ -9,7 +9,8 @@ import os.path
 import urllib.parse
 import xml.etree.ElementTree
 from decimal import Decimal
-from typing import Any, Dict, List, Mapping, Optional, Tuple, Union
+from typing import Any, Dict, List, Mapping, Optional, Tuple, Union, cast
+from xml.etree.ElementTree import Element
 
 import flask
 import newrelic.agent
@@ -33,7 +34,7 @@ logger = massgov.pfml.util.logging.get_logger(__name__)
 MILLISECOND = datetime.timedelta(milliseconds=1)
 
 # Failure messages that are expected and don't need to be logged or tracked as errors.
-EXPECTED_DOCUMENT_UPLOAD_FAILURES = {
+EXPECTED_UNPROCESSABLE_ENTITY_FAILURES = {
     "encoded file data is mandatory",
     "file size is mandatory",
     "is not a valid file",
@@ -289,6 +290,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
                     method_name, requests.codes.ok, response.status_code, message=response.text,
                 )
                 log_fn = logger.warning
+                log_validation_error(err, EXPECTED_UNPROCESSABLE_ENTITY_FAILURES)
             elif response.status_code == requests.codes.NOT_FOUND:
                 err = exception.FINEOSNotFound(
                     method_name, requests.codes.ok, response.status_code, message=response.text,
@@ -399,9 +401,9 @@ class FINEOSClient(client.AbstractFINEOSClient):
         response = self._wscomposer_request(
             "GET", "ReadEmployer", "read_employer", {"param_str_taxId": employer_fein}, ""
         )
-        response_decoded = read_employer_response_schema.decode(response.text)
+        response_decoded = self._decode_xml_response(read_employer_response_schema, response.text)
 
-        if "OCOrganisation" not in response_decoded:
+        if response_decoded is not None and "OCOrganisation" not in response_decoded:
             raise exception.FINEOSEntityNotFound("Employer not found.")
 
         return models.OCOrganisation.parse_obj(response_decoded)
@@ -473,7 +475,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
                 ]
             },
         }
-        xml_element = employee_register_request_schema.encode(parameters)
+        xml_element = cast(Element, employee_register_request_schema.encode(parameters))
         return xml.etree.ElementTree.tostring(xml_element, encoding="unicode", xml_declaration=True)
 
     def health_check(self, user_id: str) -> bool:
@@ -724,7 +726,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
         return pydantic.parse_obj_as(List[models.group_client_api.EFormSummary], json)
 
     def get_eform(
-        self, user_id: str, absence_id: str, eform_id: str
+        self, user_id: str, absence_id: str, eform_id: int
     ) -> models.group_client_api.EForm:
         try:
             response = self._group_client_api(
@@ -868,7 +870,10 @@ class FINEOSClient(client.AbstractFINEOSClient):
         service_request.update_data = service_data
 
         payload_as_dict = service_request.dict(by_alias=True)
-        xml_element = occupation_detail_update_service_request_schema.encode(payload_as_dict)
+        xml_element = cast(
+            Element, occupation_detail_update_service_request_schema.encode(payload_as_dict)
+        )
+
         return xml.etree.ElementTree.tostring(xml_element, encoding="unicode", xml_declaration=True)
 
     def upload_document(
@@ -896,25 +901,19 @@ class FINEOSClient(client.AbstractFINEOSClient):
 
         document_type = document_type.replace("/", "%2F")
 
-        try:
-            response = self._customer_api(
-                "POST",
-                f"customer/cases/{absence_id}/documents/base64Upload/{document_type}",
-                user_id,
-                "upload_documents",
-                json=data,
-            )
+        response = self._customer_api(
+            "POST",
+            f"customer/cases/{absence_id}/documents/base64Upload/{document_type}",
+            user_id,
+            "upload_documents",
+            json=data,
+        )
 
-            response_json = response.json()
+        response_json = response.json()
 
-            return models.customer_api.Document.parse_obj(
-                fineos_document_empty_dates_to_none(response_json)
-            )
-        except exception.FINEOSUnprocessableEntity as err:
-            # Log any unexpected upload failures, even if we always
-            # return a BadRequest to the user.
-            log_validation_error(err, EXPECTED_DOCUMENT_UPLOAD_FAILURES)
-            raise
+        return models.customer_api.Document.parse_obj(
+            fineos_document_empty_dates_to_none(response_json)
+        )
 
     def group_client_get_documents(
         self, user_id: str, absence_id: str
@@ -1141,7 +1140,9 @@ class FINEOSClient(client.AbstractFINEOSClient):
             "create_or_update_leave_admin",
             data=xml_body.encode("utf-8"),
         )
-        response_decoded = create_or_update_leave_admin_response_schema.decode(response.text)
+        response_decoded = self._decode_xml_response(
+            create_or_update_leave_admin_response_schema, response.text
+        )
         return response_decoded["ns2:errorCode"], response_decoded["ns2:errorMessage"]
 
     def create_or_update_employer(
@@ -1160,8 +1161,9 @@ class FINEOSClient(client.AbstractFINEOSClient):
             {"config": "UpdateOrCreateParty"},
             xml_body,
         )
-        response_decoded = update_or_create_party_response_schema.decode(response.text)
-
+        response_decoded = self._decode_xml_response(
+            update_or_create_party_response_schema, response.text
+        )
         # The value returned in CUSTOMER_NUMBER is the organization's primary key
         # in FINEOS which we store as fineos_employer_id in the employer model.
         fineos_employer_id: dict = next(
@@ -1225,7 +1227,9 @@ class FINEOSClient(client.AbstractFINEOSClient):
         )
         payload_as_dict = leave_admin_create_payload.dict(by_alias=True)
         xml_element = create_or_update_leave_admin_request_schema.encode(payload_as_dict)
-        return xml.etree.ElementTree.tostring(xml_element, encoding="unicode", xml_declaration=True)
+        return xml.etree.ElementTree.tostring(
+            cast(Element, xml_element), encoding="unicode", xml_declaration=True
+        )
 
     @staticmethod
     def _create_or_update_employer_payload(
@@ -1325,7 +1329,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
             "organisationUnits"
         ]
 
-        xml_element = update_or_create_party_request_schema.encode(payload_as_dict)
+        xml_element = cast(Element, update_or_create_party_request_schema.encode(payload_as_dict))
         return xml.etree.ElementTree.tostring(xml_element, encoding="unicode", xml_declaration=True)
 
     def create_service_agreement_for_employer(
@@ -1345,7 +1349,9 @@ class FINEOSClient(client.AbstractFINEOSClient):
             {"config": "ServiceAgreementService"},
             xml_body,
         )
-        response_decoded = service_agreement_service_response_schema.decode(response.text)
+        response_decoded = self._decode_xml_response(
+            service_agreement_service_response_schema, response.text
+        )
 
         # The value returned in CustomerNumber is the organization's primary key
         # in FINEOS which we store as fineos_employer_id in the employer model.
@@ -1420,8 +1426,9 @@ class FINEOSClient(client.AbstractFINEOSClient):
 
         payload_as_dict = service_request.dict(by_alias=True)
 
-        xml_element = service_agreement_service_request_schema.encode(payload_as_dict)
-
+        xml_element = cast(
+            Element, service_agreement_service_request_schema.encode(payload_as_dict)
+        )
         return xml.etree.ElementTree.tostring(xml_element, encoding="unicode", xml_declaration=True)
 
     @staticmethod
@@ -1443,7 +1450,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
         service_request.update_data = tax_data
 
         payload = service_request.dict(by_alias=True)
-        xml_element = update_tax_withholding_pref_request_schema.encode(payload)
+        xml_element = cast(Element, update_tax_withholding_pref_request_schema.encode(payload))
         return xml.etree.ElementTree.tostring(xml_element, encoding="unicode", xml_declaration=True)
 
     @staticmethod
@@ -1474,7 +1481,9 @@ class FINEOSClient(client.AbstractFINEOSClient):
             {"config": "OptInSITFITService"},
             xml_body,
         )
-        response_decoded = update_tax_withholding_pref_response_schema.decode(response.text)
+        response_decoded = self._decode_xml_response(
+            update_tax_withholding_pref_response_schema, response.text
+        )
         if "ServiceErrors" in response_decoded:
             self._handle_service_err(response_decoded, absence_id)
 
@@ -1492,3 +1501,20 @@ class FINEOSClient(client.AbstractFINEOSClient):
             "update_reflexive_questions",
             data=additional_information.json(exclude_none=True),
         )
+
+    def _decode_xml_response(self, schema: xmlschema.XMLSchema, text: str) -> Dict[str, Any]:
+        try:
+            # by default, the response is decoded in `strict` mode, meaning any errors
+            # encountered will throw an exception instead of returned in this response.
+            # if we changed to lax mode, we would need to inspect the decoded object
+            # for errors and handle them, therefore the `Tuple[Optional[Any], List[XMLSchemaValidationError]]``
+            # part of the decode return type is only relevant in lax mode
+            decoded_schema = schema.decode(text)
+            if not decoded_schema:
+                raise ValueError("text could not be decoded.")
+
+            response_decoded = cast(Dict[str, Any], decoded_schema)
+            return response_decoded
+        except Exception:
+            logger.exception("Error decoding response", extra={"schema": repr(schema)})
+            raise

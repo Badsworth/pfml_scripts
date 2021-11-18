@@ -28,13 +28,7 @@ DATE_FORMAT = "%Y-%m-%d"
 class PostProcessingMetrics(str, enum.Enum):
     # General metrics
     PAYMENTS_PROCESSED_COUNT = "payments_processed_count"
-    PAYMENTS_FAILED_VALIDATION_COUNT = "payments_failed_validation_count"
-    PAYMENTS_PASSED_VALIDATION_COUNT = "payments_passed_valdiation_count"
-    # Metrics specific to the payment cap check
-    PAYMENT_CAP_PAYMENT_ERROR_COUNT = "payment_cap_payment_error_count"
-    PAYMENT_CAP_PAYMENT_ACCEPTED_COUNT = "payment_cap_payment_accepted_count"
-
-    PAYMENT_SKIPPED_FOR_CAP_ADHOC_COUNT = "payment_excluded_for_cap_adhoc_count"
+    PAYMENT_DETAIL_MISSING_COUNT = "payment_detail_missing_count"
 
     # DUA / DIA reductions
     PAYMENT_DUA_REDUCTION_OVERLAP = "payment_dua_reduction_overlap"
@@ -42,8 +36,6 @@ class PostProcessingMetrics(str, enum.Enum):
 
     # DOR <> FINEOS name mismatch
     PAYMENT_DOR_FINEOS_NAME_MISMATCH = "payment_dor_fineos_name_mismatch"
-
-    PAYMENT_DETAIL_MISSING_COUNT = "payment_detail_missing_count"
 
     # Metrics specific to the in review processor
     PAYMENT_LEAVE_PLAN_IN_REVIEW_COUNT = "payment_leave_plan_in_review"

@@ -45,7 +45,6 @@ function setFeatureFlags(flags?: Partial<FeatureFlags>): void {
   const defaults: FeatureFlags = {
     pfmlTerriyay: true,
     noMaintenance: true,
-    claimantShowStatusPage: true,
     employerShowDashboardSearch: true,
     employerShowReviewByStatus: true,
   };
@@ -58,6 +57,7 @@ function setFeatureFlags(flags?: Partial<FeatureFlags>): void {
  */
 export function before(flags?: Partial<FeatureFlags>): void {
   Cypress.config("baseUrl", config("PORTAL_BASEURL"));
+  Cypress.config("pageLoadTimeout", 30000);
   // Set the feature flags necessary to see the portal.
   setFeatureFlags(flags);
 
@@ -371,7 +371,9 @@ export function verifyIdentity(application: ApplicationRequestBody): void {
   });
   cy.contains("button", "Save and continue").click();
 
-  const fieldset = cy.contains("Do you have a Massachusetts driver’s license or ID card?").parent()
+  const fieldset = cy
+    .contains("Do you have a Massachusetts driver’s license or ID card?")
+    .parent();
   if (application.has_state_id) {
     fieldset.contains("label", "Yes").click();
     cy.contains("Enter your license or ID number").type(

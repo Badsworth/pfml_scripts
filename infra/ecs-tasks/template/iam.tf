@@ -738,6 +738,78 @@ data "aws_iam_policy_document" "pub_payments_process_pub_returns_task_role_extra
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
+# IAM role and policies for pub-claimant-address-validation
+# ----------------------------------------------------------------------------------------------------------------------
+
+resource "aws_iam_role" "pub_claimant_address_validation_task_role" {
+  name               = "${local.app_name}-${var.environment_name}-ecs-tasks-pub-claimant-address-validation"
+  assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume_role_policy.json
+}
+
+# We may not always have a value for `fineos_aws_iam_role_arn` and a policy has
+# to list a resource, so make this part conditional with the count hack
+resource "aws_iam_role_policy" "pub_claimant_address_validation_task_fineos_role_policy" {
+  count = var.fineos_aws_iam_role_arn == "" ? 0 : 1
+
+  name   = "${local.app_name}-${var.environment_name}-ecs-tasks-pub-claimant-address-validation-fineos-assume-policy"
+  role   = aws_iam_role.pub_claimant_address_validation_task_role.id
+  policy = data.aws_iam_policy_document.fineos_feeds_role_policy[0].json
+}
+
+resource "aws_iam_role_policy" "pub_claimant_address_validation_task_role_extras" {
+  name   = "${local.app_name}-${var.environment_name}-ecs-tasks-pub-claimant-address-validation-extras"
+  role   = aws_iam_role.pub_claimant_address_validation_task_role.id
+  policy = data.aws_iam_policy_document.pub_claimant_address_validation_task_role_extras.json
+}
+
+data "aws_iam_policy_document" "pub_claimant_address_validation_task_role_extras" {
+  statement {
+    sid = "AllowListingOfBucket"
+    actions = [
+      "s3:ListBucket"
+    ]
+
+    resources = [
+      data.aws_s3_bucket.agency_transfer.arn,
+      "${data.aws_s3_bucket.agency_transfer.arn}/*",
+      data.aws_s3_bucket.reports.arn,
+      "${data.aws_s3_bucket.reports.arn}/*"
+    ]
+
+    effect = "Allow"
+  }
+
+  statement {
+    sid = "ReadWriteAccessToAgencyTransferBucket"
+    actions = [
+      "s3:ListBucket",
+      "s3:Get*",
+      "s3:List*",
+      "s3:PutObject",
+      "s3:DeleteObject",
+      "s3:AbortMultipartUpload"
+    ]
+
+    resources = [
+      "${data.aws_s3_bucket.agency_transfer.arn}/pub",
+      "${data.aws_s3_bucket.agency_transfer.arn}/pub/*",
+      "${data.aws_s3_bucket.agency_transfer.arn}/reports",
+      "${data.aws_s3_bucket.agency_transfer.arn}/reports/*",
+      "${data.aws_s3_bucket.agency_transfer.arn}/audit",
+      "${data.aws_s3_bucket.agency_transfer.arn}/audit/*",
+      "${data.aws_s3_bucket.agency_transfer.arn}/cps",
+      "${data.aws_s3_bucket.agency_transfer.arn}/cps/*",
+      "${data.aws_s3_bucket.reports.arn}/dfml-reports",
+      "${data.aws_s3_bucket.reports.arn}/dfml-reports/*",
+      "${data.aws_s3_bucket.reports.arn}/dfml-responses",
+      "${data.aws_s3_bucket.reports.arn}/dfml-responses/*"
+    ]
+
+    effect = "Allow"
+  }
+}
+
+# ----------------------------------------------------------------------------------------------------------------------
 # IAM role and policies for pub-payments-process-1099-documents
 # ----------------------------------------------------------------------------------------------------------------------
 
@@ -807,6 +879,30 @@ data "aws_iam_policy_document" "pub_payments_process_1099_task_role_extras" {
 
     effect = "Allow"
   }
+}
+
+resource "aws_iam_role_policy" "pub_payments_process_1099_role_s3_access_policy" {
+  count = var.fineos_aws_iam_role_arn == "" ? 0 : 1
+
+  name = "${local.app_name}-${var.environment_name}-ecs-tasks-pub-payments-process-1099-s3_access-policy"
+  role = aws_iam_role.pub_payments_process_1099_task_role.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = [
+          "s3:Get*",
+          "s3:List*",
+          "s3:PutObject"
+        ]
+        Effect = "Allow"
+        Resource = [
+          "${aws_s3_bucket.ecs_tasks_1099_bucket.arn}",
+          "${aws_s3_bucket.ecs_tasks_1099_bucket.arn}/*"
+        ]
+      },
+    ]
+  })
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -1308,6 +1404,57 @@ data "aws_iam_policy_document" "dua_employee_workflow_execution_role_extras" {
       "${local.ssm_arn_prefix}/${local.app_name}/${var.environment_name}",
       "${local.ssm_arn_prefix}/${local.app_name}-comptroller/${var.environment_name}",
       "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/admin"
+    ]
+  }
+}
+
+# ------------------------------------------------------------------------------------------------------
+# IAM Roles and Policies for Redshift Daily Import
+# ------------------------------------------------------------------------------------------------------
+locals {
+  nonprod_roles = [
+    "arn:aws:iam::018311717589:role/aws-service-role/redshift.amazonaws.com/AWSServiceRoleForRedshift",
+    "arn:aws:iam::018311717589:role/pfml-all-redshift-s3-daily-import-role",
+    "arn:aws:iam::018311717589:role/redshiftSpectrumRole"
+  ]
+  prod_roles = ["arn:aws:iam::018311717589:role/redshift-lwd-prod-cluster-edw-role"]
+}
+data "aws_iam_policy_document" "bi_imports_bucket_policy_document" {
+  statement {
+    sid = "ReadListAccessToImportBucket"
+
+    effect = "Allow"
+
+    principals {
+      type        = "AWS"
+      identifiers = var.environment_name == "prod" ? local.prod_roles : local.nonprod_roles
+    }
+
+    actions = [
+      "s3:ListBucket",
+      "s3:GetBucketLocation"
+    ]
+
+    resources = [
+      "arn:aws:s3:::massgov-pfml-${var.environment_name}-redshift-daily-import"
+    ]
+  }
+  statement {
+    sid = "AllowGetObject"
+
+    effect = "Allow"
+
+    principals {
+      type        = "AWS"
+      identifiers = var.environment_name == "prod" ? local.prod_roles : local.nonprod_roles
+    }
+
+    actions = [
+      "s3:GetObject"
+    ]
+
+    resources = [
+      "arn:aws:s3:::massgov-pfml-${var.environment_name}-redshift-daily-import/*"
     ]
   }
 }

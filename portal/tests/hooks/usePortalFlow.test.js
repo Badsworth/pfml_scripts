@@ -32,6 +32,40 @@ describe("usePortalFlow", () => {
     });
   });
 
+  describe("goTo", () => {
+    it("routes to the given page with query params", () => {
+      let portalFlow;
+
+      renderHook(() => {
+        portalFlow = usePortalFlow();
+      });
+
+      portalFlow.goTo("/dashboard", { "show-filters": true });
+
+      expect(mockRouter.push).toHaveBeenCalledWith(
+        "/dashboard?show-filters=true"
+      );
+    });
+
+    it("replaces the current page when redirect option is true", () => {
+      let portalFlow;
+
+      renderHook(() => {
+        portalFlow = usePortalFlow();
+      });
+
+      portalFlow.goTo(
+        "/dashboard",
+        { "show-filters": true },
+        { redirect: true }
+      );
+
+      expect(mockRouter.replace).toHaveBeenCalledWith(
+        "/dashboard?show-filters=true"
+      );
+    });
+  });
+
   describe("goToPageFor", () => {
     let expectedRoute, portalFlow;
     beforeEach(() => {

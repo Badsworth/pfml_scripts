@@ -87,14 +87,6 @@ describe("LeaveDetails", () => {
     expect(screen.getByText("1/1/2021 to 7/1/2021")).toBeInTheDocument();
   });
 
-  it("renders dash for leave duration if intermittent leave", () => {
-    const claimWithIntermittentLeave = new MockEmployerClaimBuilder()
-      .completed(true)
-      .create();
-    renderComponent({ claim: claimWithIntermittentLeave });
-    expect(screen.getByText("—")).toBeInTheDocument();
-  });
-
   it("does not render documentation row", () => {
     renderComponent();
     expect(

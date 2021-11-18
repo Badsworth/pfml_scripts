@@ -168,25 +168,22 @@ def get_1099_claimants(db_session: db.Session) -> Iterable[FineosExtractEmployee
 
     year = get_tax_year()
 
-    max_log_id = db_session.query(
-        func.max(FineosExtractEmployeeFeed.fineos_extract_import_log_id)
-    ).first()
-
     subquery = db_session.query(
         FineosExtractEmployeeFeed,
         func.rank()
         .over(
-            order_by=FineosExtractEmployeeFeed.created_at.desc(),
+            order_by=[
+                FineosExtractEmployeeFeed.fineos_extract_import_log_id.desc(),
+                FineosExtractEmployeeFeed.effectivefrom.desc(),
+                FineosExtractEmployeeFeed.effectiveto.desc(),
+                FineosExtractEmployeeFeed.created_at.desc(),
+            ],
             partition_by=FineosExtractEmployeeFeed.customerno,
         )
         .label("R"),
     ).subquery()
 
-    claimants = (
-        db_session.query(subquery)
-        .filter(subquery.c.fineos_extract_import_log_id == max_log_id, subquery.c.R == 1)
-        .all()
-    )
+    claimants = db_session.query(subquery).filter(subquery.c.R == 1).all()
 
     if claimants is not None:
         logger.info("Number of Claimants for %s: %s", year, len(claimants))

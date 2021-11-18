@@ -52,8 +52,6 @@ class PaymentAuditCSV(AbstractRecord):
     previously_errored_payment_count: Optional[str]
     previously_rejected_payment_count: Optional[str]
     previously_skipped_payment_count: Optional[str]
-
-    max_weekly_benefits_details: Optional[str] = None
     dua_additional_income_details: Optional[str] = None
     dia_additional_income_details: Optional[str] = None
     rejected_by_program_integrity: Optional[str] = None
@@ -65,7 +63,6 @@ class PaymentAuditCSV(AbstractRecord):
 class PaymentAuditDetails:
     """Subset of payment audit report relevant to system generated details"""
 
-    max_weekly_benefits_details: Optional[str] = None
     dua_additional_income_details: Optional[str] = None
     dia_additional_income_details: Optional[str] = None
     dor_fineos_name_mismatch_details: Optional[str] = None
@@ -118,7 +115,6 @@ PAYMENT_AUDIT_CSV_HEADERS = PaymentAuditCSV(
     previously_errored_payment_count="Previously Errored Payment Count",
     previously_rejected_payment_count="Previously Rejected Payment Count",
     previously_skipped_payment_count="Previously Skipped Payment Count",
-    max_weekly_benefits_details=PaymentAuditReportType.MAX_WEEKLY_BENEFITS.payment_audit_report_type_description,
     dua_additional_income_details=PaymentAuditReportType.DUA_ADDITIONAL_INCOME.payment_audit_report_type_description,
     dia_additional_income_details=PaymentAuditReportType.DIA_ADDITIONAL_INCOME.payment_audit_report_type_description,
     rejected_by_program_integrity="Reject",

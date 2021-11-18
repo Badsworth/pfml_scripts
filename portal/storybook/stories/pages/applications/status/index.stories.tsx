@@ -146,25 +146,27 @@ export default {
   component: Status,
   argTypes: {
     "Leave Scenario": {
-      defaultValue: "Medical-Pregnancy and Bonding",
       control: {
         type: "radio",
         options: Object.keys(LEAVE_SCENARIO_MAP),
       },
     },
     "Request Decision": {
-      defaultValue: "Approved",
       control: {
         type: "radio",
         options: ["Approved", "Denied", "Pending", "Withdrawn"],
       },
     },
     "Show Request for More Information": {
-      defaultValue: false,
       control: {
         type: "boolean",
       },
     },
+  },
+  args: {
+    "Leave Scenario": "Medical-Pregnancy and Bonding",
+    "Request Decision": "Approved",
+    "Show Request for More Information": false,
   },
 };
 

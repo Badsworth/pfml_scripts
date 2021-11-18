@@ -629,17 +629,6 @@ describe("Review", () => {
     });
   });
 
-  it("does not redirect to the status page if is_reviewable is null", () => {
-    const nullIsReviewableClaim = new MockEmployerClaimBuilder()
-      .completed()
-      .create();
-
-    setup(nullIsReviewableClaim);
-
-    expect(nullIsReviewableClaim.is_reviewable).toBe(null);
-    expect(goTo).not.toHaveBeenCalled();
-  });
-
   it("sets 'has_amendments' to false if nothing is amended", async () => {
     setup();
     userEvent.click(screen.getByRole("button", { name: "Submit" }));

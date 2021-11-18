@@ -449,7 +449,7 @@ def test_process_extract_data_prior_payment_exists_is_being_processed(
     assert state_log.end_state_id == State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT.state_id
 
     assert state_log.outcome == {
-        "message": "Error processing payment record",
+        "message": "Active Payment Error - Contact FINEOS",
         "validation_container": {
             "record_key": f"C={payment_data.c_value},I={payment_data.i_value}",
             "validation_issues": [
@@ -460,7 +460,11 @@ def test_process_extract_data_prior_payment_exists_is_being_processed(
             ],
         },
     }
-    validate_pei_writeback_state_for_payment(new_payment, local_test_db_session, is_invalid=True)
+    # No writeback made for active payment errors
+    pei_writeback_state = state_log_util.get_latest_state_log_in_flow(
+        new_payment, Flow.DELEGATED_PEI_WRITEBACK, local_test_db_session
+    )
+    assert pei_writeback_state is None
 
 
 def test_process_extract_data_one_bad_record(

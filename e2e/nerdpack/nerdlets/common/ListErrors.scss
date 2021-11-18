@@ -1,4 +1,3 @@
-
 .ListHeader {
   display: flex;
   flex-direction: row;
@@ -34,7 +33,7 @@ div.ListErrors {
   }
 
   .errorMessage {
-    background: #CCC;
+    background: #ccc;
     font-family: Consolas, monospace;
     padding: 10px;
 
@@ -43,7 +42,10 @@ div.ListErrors {
     }
   }
 
-  .time, .file, .errorClass, .environment {
+  .time,
+  .file,
+  .errorClass,
+  .environment {
     margin-right: 10px;
     font-size: 11px;
   }
@@ -81,24 +83,24 @@ div.ListErrors {
 
   .label {
     padding: 2px 12px;
-    border: 0.1em #AAA solid;
+    border: 0.1em #aaa solid;
     border-radius: 5px;
     margin-right: 5px;
-    color: #AAA;
+    color: #aaa;
     font-size: 10px;
     white-space: nowrap;
 
     &.deploy {
-      color: #6A8DE1;
-      border-color: #6A8DE1;
-      background: #DFE4F5;
+      color: #6a8de1;
+      border-color: #6a8de1;
+      background: #dfe4f5;
       font-weight: bold;
     }
 
     &.morning {
-      color: #986AE1;
-      border-color: #986AE1;
-      background: #F0E6F5;
+      color: #986ae1;
+      border-color: #986ae1;
+      background: #f0e6f5;
       font-weight: bold;
     }
   }

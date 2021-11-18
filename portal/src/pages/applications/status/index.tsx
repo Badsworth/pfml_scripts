@@ -54,17 +54,10 @@ export const Status = ({
       hasLoadedClaimDocuments,
       loadAll: loadAllClaimDocuments,
     },
-    portalFlow,
   } = appLogic;
   const { absence_case_id, absence_id, uploaded_document_type } = query;
   const application_id = get(claimDetail, "application_id");
   const absenceId = absence_id || absence_case_id;
-
-  useEffect(() => {
-    if (!isFeatureEnabled("claimantShowStatusPage")) {
-      portalFlow.goTo(routes.applications.index);
-    }
-  }, [portalFlow]);
 
   useEffect(() => {
     if (absenceId) {

@@ -7,6 +7,17 @@ import useMockableAppLogic from "lib/mock-helpers/useMockableAppLogic";
 export default {
   title: "Pages/User/Consent to data sharing",
   component: ConsentToDataSharing,
+  argTypes: {
+    query: {
+      control: {
+        type: "radio",
+        options: ["Claimant Portal", "Employer Portal"],
+      },
+    },
+  },
+  args: {
+    query: "Claimant Portal",
+  },
 };
 
 export const Page = (
@@ -21,14 +32,4 @@ export const Page = (
   const appLogic = useMockableAppLogic();
 
   return <ConsentToDataSharing appLogic={appLogic} user={user} />;
-};
-
-Page.argTypes = {
-  query: {
-    defaultValue: "Default",
-    control: {
-      type: "radio",
-      options: ["Claimant Portal", "Employer Portal"],
-    },
-  },
 };

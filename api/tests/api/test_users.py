@@ -298,7 +298,7 @@ def test_users_unauthorized_get(client, user, auth_token):
 
 def test_users_get_404(client, auth_token):
     response = client.get(
-        "/v1/users/{}".format("00000000-0000-0000-0000-000000000000"),
+        "/v1/users/{}".format("0dcb64c8-d259-4169-9b7a-486e5b474bc0"),
         headers={"Authorization": f"Bearer {auth_token}"},
     )
     tests.api.validate_error_response(response, 404)

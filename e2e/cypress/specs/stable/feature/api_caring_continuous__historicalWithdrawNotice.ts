@@ -40,12 +40,10 @@ describe("Create a new caring leave claim in FINEOS and add Historical Absence c
     });
 
   it("Produces a withdrawn notice, available for download", () => {
-    // Skip this part in stage. @todo remove once stage has withdraw statuses.
-    if (
-      config("ENVIRONMENT") === "stage" ||
-      config("ENVIRONMENT") === "breakfix"
-    )
+    // Skip this part in stage. @todo remove once breakfix has withdraw statuses.
+    if (config("ENVIRONMENT") === "breakfix") {
       return;
+    }
     cy.dependsOnPreviousPass([withdraw]);
     portal.before();
     portal.loginClaimant();

@@ -5,7 +5,7 @@ import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
 import BenefitsApplication from "src/models/BenefitsApplication";
 import React from "react";
 import User from "../../src/models/User";
-import { createMockBenefitsApplication } from "tests/test-utils";
+import { createMockBenefitsApplication } from "tests/test-utils/createMockBenefitsApplication";
 import englishLocale from "src/locales/app/en-US";
 import useMockableAppLogic from "lib/mock-helpers/useMockableAppLogic";
 import { useTranslation } from "src/locales/i18n";
@@ -28,9 +28,8 @@ import { useTranslation } from "src/locales/i18n";
  * })
  */
 export default function generateClaimPageStory(
-  // @ts-expect-error ts-migrate(7006) FIXME: Parameter 'claimsPageSubpath' implicitly has an 'a... Remove this comment to see the full error message
-  claimsPageSubpath,
-  mockClaims = null
+  claimsPageSubpath: string,
+  mockClaims: { [scenario: string]: BenefitsApplication } | null = null
 ) {
   // e.g. applications/leave-duration --> LeaveDuration
   const componentName = chain(claimsPageSubpath)
@@ -127,11 +126,6 @@ function generateDefaultStory(Component, mockClaims, possibleErrors) {
       })
     );
 
-    // TODO (PORTAL-1075): Remove `query` object once Story for Payments page is complete
-    const query = {
-      absence_id: "mock-absence-case-id",
-    };
-
     const appLogic = useMockableAppLogic({ appErrors });
 
     return (
@@ -140,14 +134,17 @@ function generateDefaultStory(Component, mockClaims, possibleErrors) {
         claim={claim}
         user={user}
         documents={appLogic.documents.documents.items}
-        query={query}
+        query={{ claim_id: claim.application_id }}
       />
     );
   };
 
+  DefaultStory.args = {
+    claim: defaultClaim,
+  };
+
   DefaultStory.argTypes = {
     claim: {
-      defaultValue: defaultClaim,
       control: {
         type: "radio",
         options: Object.keys(claims),

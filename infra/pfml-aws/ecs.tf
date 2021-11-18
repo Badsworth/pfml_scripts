@@ -7,3 +7,11 @@ resource "aws_ecr_repository" "api" {
     scan_on_push = true
   }
 }
+# Additional ECR repo for PDF API images
+resource "aws_ecr_repository" "pdf_api" {
+  name = "pfml-pdf-api"
+
+  image_scanning_configuration {
+    scan_on_push = true
+  }
+}

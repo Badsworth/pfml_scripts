@@ -43,7 +43,6 @@ const LeaveDetails = (props: LeaveDetailsProps) => {
     believeRelationshipAccurate,
     claim: {
       fineos_absence_id: absenceId,
-      isIntermittent,
       leave_details: { reason },
     },
     documents,
@@ -111,12 +110,7 @@ const LeaveDetails = (props: LeaveDetailsProps) => {
         level="3"
         label={t("components.employersLeaveDetails.leaveDurationLabel")}
       >
-        {isIntermittent
-          ? "—"
-          : formatDateRange(
-              props.claim.leaveStartDate,
-              props.claim.leaveEndDate
-            )}
+        {formatDateRange(props.claim.leaveStartDate, props.claim.leaveEndDate)}
       </ReviewRow>
       {!!documents.length && (
         <ReviewRow

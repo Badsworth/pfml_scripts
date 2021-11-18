@@ -23,8 +23,7 @@ export const Default = () => {
     updateFields({ people: updatedPeople });
   };
 
-  // @ts-expect-error ts-migrate(2554) FIXME: Expected 2 arguments, but got 1.
-  const handleInputChange = useHandleInputChange(updateFields);
+  const handleInputChange = useHandleInputChange(updateFields, formState);
 
   const handleRemoveClick = (entry: Person, index: number) => {
     const updatedPeople = [].concat(formState.people);

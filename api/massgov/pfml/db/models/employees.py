@@ -431,10 +431,15 @@ class Employer(Base, TimestampMixin):
 
 class OrganizationUnit(Base, TimestampMixin):
     __tablename__ = "organization_unit"
+    __table_args__ = (
+        UniqueConstraint("name", "employer_id", name="uix_organization_unit_name_employer_id",),
+    )
     organization_unit_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     fineos_id = Column(Text, nullable=True, unique=True)
-    name = Column(Text, unique=True, nullable=False)
-    employer_id = Column(PostgreSQLUUID, ForeignKey("employer.employer_id"), index=True)
+    name = Column(Text, nullable=False)
+    employer_id = Column(
+        PostgreSQLUUID, ForeignKey("employer.employer_id"), nullable=False, index=True
+    )
 
     employer = relationship("Employer", back_populates="organization_units")
     dua_reporting_units: "Query[DuaReportingUnit]" = dynamic_loader(
@@ -1174,7 +1179,6 @@ class EmployeeOccupation(Base, TimestampMixin):
     date_of_hire = Column(Date)
     date_job_ended = Column(Date)
     employment_status = Column(Text)
-    org_unit_name = Column(Text)
     hours_worked_per_week = Column(Numeric)
     days_worked_per_week = Column(Numeric)
     manager_id = Column(Text)
@@ -1550,6 +1554,7 @@ class AbsenceReason(LookupTable):
     MILITARY_EXIGENCY_FAMILY = LkAbsenceReason(12, "Military Exigency Family")
     PREVENTATIVE_CARE_FAMILY_MEMBER = LkAbsenceReason(13, "Preventative Care - Family Member")
     PUBLIC_HEALTH_EMERGENCY_FAMILY = LkAbsenceReason(14, "Public Health Emergency - Family")
+    MILITARY_EMPLOYEE = LkAbsenceReason(15, "Military - Employee")
 
 
 class AbsenceReasonQualifierOne(LookupTable):
@@ -2561,6 +2566,16 @@ class State(LookupTable):
         198, "Federal Withholding send funds to IRS", Flow.DELEGATED_PAYMENT.flow_id
     )
 
+    PAYMENT_READY_FOR_MAX_WEEKLY_BENEFIT_AMOUNT_VALIDATION = LkState(
+        199,
+        "Payment ready for max weekly benefit amount validation",
+        Flow.DELEGATED_PAYMENT.flow_id,
+    )
+
+    PAYMENT_FAILED_MAX_WEEKLY_BENEFIT_AMOUNT_VALIDATION = LkState(
+        200, "Payment failed max weekly benefit amount validation", Flow.DELEGATED_PAYMENT.flow_id,
+    )
+
 
 class SharedPaymentConstants:
     """
@@ -2663,6 +2678,8 @@ class ReferenceFileType(LookupTable):
     DUA_DEMOGRAPHICS_FILE = LkReferenceFileType(32, "DUA demographics", 1)
 
     DUA_DEMOGRAPHICS_REQUEST_FILE = LkReferenceFileType(33, "DUA demographics request", 1)
+
+    IRS_1099_ORIG = LkReferenceFileType(34, "IRS 1099 org file", 1)
 
 
 class Title(LookupTable):

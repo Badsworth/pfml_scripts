@@ -1091,9 +1091,7 @@ def employee_to_eligibility_feed_record(
         record.employeeEndDate = occupation.date_job_ended
         record.employmentStatus = occupation.employment_status
         record.employeeOrgUnitName = (
-            occupation.organization_unit.name
-            if occupation.organization_unit
-            else occupation.org_unit_name
+            occupation.organization_unit.name if occupation.organization_unit else None
         )
         record.employeeHoursWorkedPerWeek = (
             Decimal(occupation.hours_worked_per_week) if occupation.hours_worked_per_week else None

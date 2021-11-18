@@ -25,6 +25,7 @@ from massgov.pfml.db.models.factories import (
     EmployeeFactory,
     EmployeePushToFineosQueueFactory,
     EmployerFactory,
+    OrganizationUnitFactory,
     WagesAndContributionsFactory,
 )
 from massgov.pfml.util.pydantic.types import TaxIdUnformattedStr
@@ -203,6 +204,8 @@ def test_employee_to_eligibility_feed_record_with_occupation(
     employee = wages_and_contributions.employee
     employer = wages_and_contributions.employer
 
+    org_unit = OrganizationUnitFactory.create(employer=employer)
+
     occupation = EmployeeOccupation(
         employee_id=employee.employee_id,
         employer_id=employer.employer_id,
@@ -210,7 +213,7 @@ def test_employee_to_eligibility_feed_record_with_occupation(
         date_of_hire=date(2019, 1, 1),
         date_job_ended=date(2020, 11, 30),
         employment_status="Resigned",
-        org_unit_name="IT",
+        organization_unit_id=org_unit.organization_unit_id,
         hours_worked_per_week=24,
         days_worked_per_week=3,
         manager_id="E9999",
@@ -226,7 +229,7 @@ def test_employee_to_eligibility_feed_record_with_occupation(
     assert eligibility_feed_record.employeeDateOfHire == occupation.date_of_hire
     assert eligibility_feed_record.employeeEndDate == occupation.date_job_ended
     assert eligibility_feed_record.employmentStatus == occupation.employment_status
-    assert eligibility_feed_record.employeeOrgUnitName == occupation.org_unit_name
+    assert eligibility_feed_record.employeeOrgUnitName == org_unit.name
     assert eligibility_feed_record.employeeHoursWorkedPerWeek == occupation.hours_worked_per_week
     assert eligibility_feed_record.employeeDaysWorkedPerWeek == occupation.days_worked_per_week
     assert eligibility_feed_record.managerIdentifier == occupation.manager_id

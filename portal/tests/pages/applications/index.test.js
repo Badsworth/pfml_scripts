@@ -63,9 +63,6 @@ describe("Applications", () => {
     expect(
       screen.getByRole("heading", { name: "Application 1" })
     ).toBeInTheDocument();
-    expect(
-      screen.getByRole("heading", { name: "NTN-111-ABS-03" })
-    ).toBeInTheDocument();
   });
 
   it("displays completed applications", () => {
@@ -83,7 +80,7 @@ describe("Applications", () => {
     );
 
     expect(screen.getByText(/Submitted applications/)).toBeInTheDocument();
-    expect(screen.getByText(/Download your notices/)).toBeInTheDocument();
+    expect(screen.getByText(/View your notices/)).toBeInTheDocument();
   });
 
   describe("When multiple claims of different statuses exist", () => {
@@ -114,7 +111,6 @@ describe("Applications", () => {
         screen.getAllByRole("link", { name: "Continue application" })
       ).toHaveLength(2);
       expect(screen.getByText(/NTN-111-ABS-01/)).toBeInTheDocument();
-      expect(screen.getByText(/NTN-111-ABS-03/)).toBeInTheDocument();
     });
 
     it("Displays headers for each section", () => {
@@ -127,7 +123,7 @@ describe("Applications", () => {
       expect(
         within(inProgClaim).getByText(/Application 1/)
       ).toBeInTheDocument();
-      expect(within(subClaim).getByText(/NTN-111-ABS-03/)).toBeInTheDocument();
+      expect(within(subClaim).getByText(/Application 2/)).toBeInTheDocument();
       expect(within(compClaim).getByText(/NTN-111-ABS-01/)).toBeInTheDocument();
     });
   });
@@ -154,30 +150,6 @@ describe("Applications", () => {
       { query: {} }
     );
     expect(spy).toHaveBeenCalledTimes(2);
-  });
-
-  it("renders v2 application card when feature flags are enabled", () => {
-    process.env.featureFlags = {
-      claimantShowStatusPage: true,
-    };
-    renderPage(
-      Index,
-      {
-        addCustomSetup: (appLogicHook) => {
-          setUpHelper(appLogicHook);
-          appLogicHook.documents.loadAll = jest.fn();
-          appLogicHook.benefitsApplications.benefitsApplications =
-            new BenefitsApplicationCollection([
-              inProgressClaim,
-              submittedClaim,
-            ]);
-        },
-      },
-      { query: {} }
-    );
-    const [v2CardOne, v2CardTwo] = screen.getAllByRole("article");
-    expect(within(v2CardOne).getByText(/Application 1/)).toBeInTheDocument();
-    expect(within(v2CardTwo).getByText(/Application 2/)).toBeInTheDocument();
   });
 
   it("displays success alert when uploaded absence id is present", () => {

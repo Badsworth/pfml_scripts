@@ -88,7 +88,7 @@ def downgrade():
         "verification",
         sa.Column("related_id", postgresql.UUID(), autoincrement=False, nullable=True),
     )
-    op.drop_constraint(None, "verification", type_="foreignkey")
+    op.drop_constraint(None, "verification", type_="foreignkey")  # type: ignore
     op.drop_column("verification", "verified_at")
     op.drop_column("verification", "verification_code_id")
     # ### end Alembic commands ###

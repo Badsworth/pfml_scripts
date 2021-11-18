@@ -51,9 +51,7 @@ export const Review = (props: WithEmployerClaimProps) => {
   const absenceId = claim.fineos_absence_id;
 
   const shouldShowV2 = !!claim.uses_second_eform_version;
-  // explicitly check for false as opposed to falsy values.
-  // temporarily allows the redirect behavior to work even
-  // if the API has not been updated to populate the field.
+
   if (claim.is_reviewable === false) {
     appLogic.portalFlow.goTo(routes.employers.status, {
       absence_id: absenceId,

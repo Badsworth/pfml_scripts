@@ -1,3 +1,7 @@
+#
+# Terraform configuration of AWS Security Groups.
+#
+
 # Allow RDS access from the ECS tasks.
 resource "aws_security_group_rule" "rds_postgresql_ingress_ecs_tasks" {
   type                     = "ingress"
@@ -10,8 +14,10 @@ resource "aws_security_group_rule" "rds_postgresql_ingress_ecs_tasks" {
 }
 
 
-# Security group for the ECS applications. Allows incoming HTTP network traffic
-# from the load balancer, and outbound HTTPS traffic to all destinations.
+# Security group for ECS tasks. Allows outbound HTTPS traffic to all destinations, and various internal traffic.
+#
+# The tasks connect to various APIs over HTTPS including New Relic, FINEOS, and S3. These connections can't be
+# easily restricted by IP as they have multiple unpredictable IPs.
 resource "aws_security_group" "tasks" {
   name        = "${local.app_name}-${var.environment_name}-tasks"
   description = "Access for ${title(local.app_name)} ECS tasks"

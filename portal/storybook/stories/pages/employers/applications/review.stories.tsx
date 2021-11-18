@@ -1,12 +1,13 @@
+import { BenefitsApplicationDocument, DocumentType } from "src/models/Document";
 import AppErrorInfo from "src/models/AppErrorInfo";
 import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
 import DocumentCollection from "src/models/DocumentCollection";
-import { DocumentType } from "src/models/Document";
+import EmployerClaim from "src/models/EmployerClaim";
 import { Props } from "storybook/types";
 import React from "react";
 import { Review } from "src/pages/employers/applications/review";
 import User from "src/models/User";
-import { createMockEmployerClaim } from "tests/test-utils";
+import { createMockEmployerClaim } from "tests/test-utils/createMockEmployerClaim";
 import useMockableAppLogic from "lib/mock-helpers/useMockableAppLogic";
 
 export default {
@@ -14,7 +15,6 @@ export default {
   component: Review,
   argTypes: {
     claimOption: {
-      defaultValue: "Continuous or reduced - documentation",
       control: {
         type: "radio",
         options: [
@@ -26,7 +26,6 @@ export default {
       },
     },
     "Leave reason": {
-      defaultValue: "Medical",
       control: {
         type: "radio",
         options: ["Bonding", "Medical", "Care", "Pregnancy"],
@@ -34,7 +33,6 @@ export default {
     },
     // Todo(EMPLOYER-1453): remove V1 eform functionality
     "Claimant EForm Version": {
-      defaultValue: "Version 2 (after 2021-07-14)",
       control: {
         type: "radio",
         options: [
@@ -55,6 +53,11 @@ export default {
         ],
       },
     },
+  },
+  args: {
+    claimOption: "Continuous or reduced - documentation",
+    "Leave reason": "Medical",
+    "Claimant EForm Version": "Version 2 (after 2021-07-14)",
   },
 };
 
@@ -99,14 +102,15 @@ export const Default = (
     leaveReason,
     ...formVersion,
     ...leaveTypes
-  );
+  ) as EmployerClaim;
 
   const appLogic = useMockableAppLogic({
     appErrors: getAppErrorInfoCollection(errorTypes),
     employers: {
       claimDocumentsMap: getDocumentsMap(
         documentationOption,
-        claim.leave_details.reason
+        claim.leave_details.reason,
+        claim.fineos_absence_id
       ),
     },
   });
@@ -116,29 +120,36 @@ export const Default = (
 
 function getDocumentsMap(
   documentation: DocumentationOption,
-  leaveReason: string | null
+  leaveReason: string | null,
+  absenceId: string
 ) {
   const isWithoutDocumentation = documentation.includes(
     "without documentation"
   );
-  const documentData = {
+
+  if (
+    isWithoutDocumentation ||
+    !leaveReason ||
+    !(leaveReason in DocumentType.certification)
+  ) {
+    return new Map([[absenceId, new DocumentCollection()]]);
+  }
+
+  const documentData: BenefitsApplicationDocument = {
     application_id: "mock-application-id",
     content_type: "application/pdf",
     created_at: "2020-01-02",
+    description: "",
     document_type:
-      leaveReason && leaveReason in DocumentType.certification
-        ? DocumentType.certification[
-            leaveReason as keyof typeof DocumentType.certification
-          ]
-        : null,
-    fineos_document_id: 202020,
+      DocumentType.certification[
+        leaveReason as keyof typeof DocumentType.certification
+      ],
+    fineos_document_id: "202020",
     name: `${leaveReason} document`,
+    user_id: "",
   };
 
-  return isWithoutDocumentation
-    ? new Map([["mock-absence-id", new DocumentCollection()]])
-    : // @ts-expect-error ts-migrate(2322) FIXME: Type '{ application_id: string; content_type: stri... Remove this comment to see the full error message
-      new Map([["mock-absence-id", new DocumentCollection([documentData])]]);
+  return new Map([[absenceId, new DocumentCollection([documentData])]]);
 }
 
 function getAppErrorInfoCollection(errorTypes: string[] = []) {

@@ -1,6 +1,6 @@
 import BenefitsApplicationCollection from "src/models/BenefitsApplicationCollection";
 import { Index } from "src/pages/applications/index";
-import { MockBenefitsApplicationBuilder } from "tests/test-utils";
+import { MockBenefitsApplicationBuilder } from "tests/test-utils/mock-model-builder";
 import React from "react";
 import User from "src/models/User";
 import useMockableAppLogic from "lib/mock-helpers/useMockableAppLogic";

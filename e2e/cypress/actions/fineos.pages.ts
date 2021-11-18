@@ -347,6 +347,10 @@ export class ClaimPage {
     return this;
   }
 
+  /**
+   * This is used for the secure action testing in CPS ignored folder with security groups.
+   * @param hasAction
+   */
   suppressCorrespondence(hasAction: boolean): this {
     cy.contains("Options").click();
     if (hasAction) {
@@ -372,10 +376,33 @@ export class ClaimPage {
     return this;
   }
 
+  /**
+   * To test secure action task only with our current E2E test suite.
+   * Suppress and remove suppression in the same task. Two options on how to remove the suppression when
+   * clicking the Notification to remove the suppression in the pop-up widget is very flaky in the headless browser.
+   * So the second option is to cancel the suppress notification instead.
+   */
   removeSuppressCorrespondence(): this {
     cy.contains("Options").click();
     cy.contains("Notifications").click({ force: true });
-    cy.get("input[type='submit'][value='End Suppression']").click();
+    cy.get("input[type='submit'][value='Suppress Notifications']").click();
+    cy.contains(
+      "Automatic Notifications and Correspondence have been suppressed."
+    );
+    cy.get("#alertsHeader").within(() => {
+      cy.contains("Open").click({ force: true });
+      waitForAjaxComplete();
+      cy.contains(
+        "Automatic Notifications and Correspondence have been suppressed."
+      );
+    });
+    cy.contains("Close Task").click();
+    cy.get("table.PopupBean").within(() => {
+      cy.get("input[type='submit'][value='Yes']")
+        .first()
+        .click({ force: true });
+    });
+    clickBottomWidgetButton("OK");
     return this;
   }
 }
@@ -1493,7 +1520,9 @@ class PaidLeavePage {
     cy.findByLabelText("Start Date")
       .focus()
       .type(`${dateToMMddyyyy(start_date)}{enter}`);
-    cy.findByLabelText("Start Date").should("have.focus");
+
+    waitForAjaxComplete();
+    cy.findByLabelText("Start Date").focus().should("have.focus");
 
     cy.findByLabelText("End Date")
       .focus()
@@ -2538,7 +2567,7 @@ class HistoricalAbsence {
       qualifier_2: "Sickness",
     };
     cy.contains("Options").click();
-    cy.contains("Add Historical Absence").click();
+    cy.contains("Add Historical Absence").click({ force: true });
     HistoricalAbsence.fillAbsenceDescription(historicalPeriodDescription);
     cy.contains("div", "timeOffHistoricalAbsencePeriodsListviewWidget")
       .find("input")

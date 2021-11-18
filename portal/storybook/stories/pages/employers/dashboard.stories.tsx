@@ -1,11 +1,11 @@
-import Claim, { ClaimEmployee } from "src/models/Claim";
+import Claim, { AbsenceCaseStatusType, ClaimEmployee } from "src/models/Claim";
 import React, { useState } from "react";
 import User, { UserLeaveAdministrator } from "src/models/User";
 import ClaimCollection from "src/models/ClaimCollection";
 import { Dashboard } from "src/pages/employers/dashboard";
-import { DateTime } from "luxon";
 import { NullableQueryParams } from "src/utils/routeWithParams";
 import { Props } from "storybook/types";
+import dayjs from "dayjs";
 import faker from "faker";
 import routes from "src/routes";
 import { times } from "lodash";
@@ -112,22 +112,24 @@ const verificationScenarios = {
 export default {
   title: "Pages/Employers/Dashboard",
   component: Dashboard,
+  args: {
+    claims: "Has claims",
+    total_pages: 3,
+    verification: Object.keys(verificationScenarios)[0],
+  },
   argTypes: {
     claims: {
-      defaultValue: "Has claims",
       control: {
         type: "radio",
         options: ["Has claims", "No claims"],
       },
     },
     total_pages: {
-      defaultValue: 3,
       control: {
         type: "number",
       },
     },
     verification: {
-      defaultValue: Object.keys(verificationScenarios)[0],
       control: {
         type: "radio",
         options: Object.keys(verificationScenarios),
@@ -154,9 +156,8 @@ export const Default = (
           25,
           (num) =>
             new Claim({
-              created_at: DateTime.local().minus({ days: num }).toISODate(),
+              created_at: dayjs().subtract(num, "day").format("YYYY-MM-DD"),
               fineos_absence_id: `NTN-101-ABS-${num}`,
-              // @ts-expect-error AbsenceCaseStatusType only declares a subset of types
               claim_status: faker.helpers.randomize([
                 "Approved",
                 "Declined",
@@ -164,7 +165,7 @@ export const Default = (
                 "Completed",
                 "Adjudication",
                 "Intake In Progress",
-              ]),
+              ]) as AbsenceCaseStatusType,
               employee: new ClaimEmployee({
                 first_name: faker.name.firstName(),
                 last_name: faker.name.lastName(),
@@ -176,6 +177,11 @@ export const Default = (
                   2
                 )}-${faker.finance.account(7)}`,
               },
+              absence_period_end_date: "",
+              absence_period_start_date: "",
+              claim_type_description: "",
+              fineos_notification_id: "",
+              managed_requirements: [],
             })
         );
 

@@ -11,6 +11,7 @@ from massgov.pfml.api.models.users.requests import (
     UserUpdateRequest,
 )
 from massgov.pfml.api.models.users.responses import user_response
+from massgov.pfml.api.services.users import update_user
 from massgov.pfml.api.util.deepgetattr import deepgetattr
 from massgov.pfml.api.validation.exceptions import IssueType, ValidationErrorDetail
 from massgov.pfml.api.validation.user_rules import (
@@ -184,13 +185,13 @@ def users_patch(user_id):
     body = UserUpdateRequest.parse_obj(connexion.request.json)
 
     with app.db_session() as db_session:
-        updated_user = get_or_404(db_session, User, user_id)
+        user = get_or_404(db_session, User, user_id)
 
-        ensure(EDIT, updated_user)
-        for key in body.__fields_set__:
-            value = getattr(body, key)
-            setattr(updated_user, key, value)
-        data = user_response(updated_user, db_session)
+    ensure(EDIT, user)
+
+    updated_user = update_user(user, body)
+    data = user_response(updated_user, db_session)
+
     return response_util.success_response(
         message="Successfully updated user", data=data,
     ).to_api_response()

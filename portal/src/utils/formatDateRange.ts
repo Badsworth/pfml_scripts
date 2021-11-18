@@ -8,7 +8,6 @@ import { t } from "../locales/i18n";
  * @example formatDateRange("2020-09-01", "2020-10-31") // output: "9/1/2020 to 10/31/2020"
  * @example formatDateRange("2020-09-01", "2020-10-31", "–") // output: "9/1/2020 – 10/31/2020"
  * @example formatDateRange("2020-09-01") // output: "9/1/2020"
- * @see https://moment.github.io/luxon/docs/manual/intl.html
  */
 export default function formatDateRange(
   startIsoDate: string | null,

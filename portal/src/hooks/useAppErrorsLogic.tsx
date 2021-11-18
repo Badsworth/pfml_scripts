@@ -400,14 +400,22 @@ const useAppErrorsLogic = ({ portalFlow }: { portalFlow: PortalFlow }) => {
     });
 
     if (error.has_verification_data) {
-      portalFlow.goTo(routes.employers.verifyContributions, {
-        employer_id: error.employer_id,
-        next: portalFlow.pathWithParams,
-      });
+      portalFlow.goTo(
+        routes.employers.verifyContributions,
+        {
+          employer_id: error.employer_id,
+          next: portalFlow.pathWithParams,
+        },
+        { redirect: true }
+      );
     } else {
-      portalFlow.goTo(routes.employers.cannotVerify, {
-        employer_id: error.employer_id,
-      });
+      portalFlow.goTo(
+        routes.employers.cannotVerify,
+        {
+          employer_id: error.employer_id,
+        },
+        { redirect: true }
+      );
     }
   };
 

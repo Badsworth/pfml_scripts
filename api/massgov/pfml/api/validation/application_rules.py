@@ -1,3 +1,4 @@
+import datetime
 from datetime import date
 from itertools import chain, combinations
 from typing import Any, Dict, Iterable, List, Optional, Union
@@ -367,6 +368,60 @@ def get_concurrent_leave_issues(application: Application) -> List[ValidationErro
         PFML_PROGRAM_LAUNCH_DATE,
     )
 
+    if application.has_continuous_leave_periods or application.has_reduced_schedule_leave_periods:
+        issues += _check_concurrent_leave_overlapping_waiting_period(application)
+
+    return issues
+
+
+def _check_concurrent_leave_overlapping_waiting_period(
+    application: Application,
+) -> List[ValidationErrorDetail]:
+    concurrent_leave_start = application.concurrent_leave.leave_start_date
+    concurrent_leave_end = application.concurrent_leave.leave_end_date
+
+    issues = []
+
+    waiting_period_start: date = date.max
+
+    # Loop through continuous_and_reduced_leave_periods to find earliest start date
+    for leave_period in application.all_leave_periods:
+        # Can’t predict the 7-day waiting period for intermittent leave
+        # won't be validating concurrent leave dates for intermittent leave
+        if type(leave_period) == IntermittentLeavePeriod:
+            continue
+
+        if leave_period.start_date is None:
+            continue
+
+        if leave_period.start_date <= waiting_period_start:
+            waiting_period_start = leave_period.start_date
+
+    if waiting_period_start == date.max:
+        return []
+
+    waiting_period_days = 7
+    waiting_period_end = waiting_period_start + datetime.timedelta(days=waiting_period_days - 1)
+
+    if waiting_period_start <= concurrent_leave_start <= waiting_period_end:  # type: ignore
+        issues.append(
+            ValidationErrorDetail(
+                type=IssueType.conflicting,
+                message="Concurrent leaves cannot overlap with waiting period.",
+                rule=IssueRule.disallow_overlapping_waiting_period_and_concurrent_leave_start_date,
+                field="concurrent_leave.leave_start_date",
+            )
+        )
+
+    if waiting_period_start <= concurrent_leave_end <= waiting_period_end:  # type: ignore
+        issues.append(
+            ValidationErrorDetail(
+                type=IssueType.conflicting,
+                message="Concurrent leaves cannot overlap with waiting period.",
+                rule=IssueRule.disallow_overlapping_waiting_period_and_concurrent_leave_end_date,
+                field="concurrent_leave.leave_end_date",
+            )
+        )
     return issues
 
 
@@ -459,18 +514,9 @@ def get_previous_leave_and_leave_period_issues(
 ) -> List[ValidationErrorDetail]:
     issues = []
     # Prevent overlapping leave periods and previous leaves
-    all_leave_periods: Iterable[
-        Union[ContinuousLeavePeriod, IntermittentLeavePeriod, ReducedScheduleLeavePeriod]
-    ] = list(
-        chain(
-            application.continuous_leave_periods,
-            application.intermittent_leave_periods,
-            application.reduced_schedule_leave_periods,
-        )
-    )
     leave_period_ranges = [
         (leave_period.start_date, leave_period.end_date)
-        for leave_period in all_leave_periods
+        for leave_period in application.all_leave_periods
         # Only store complete ranges
         if leave_period.start_date and leave_period.end_date
     ]
@@ -871,19 +917,12 @@ def get_leave_period_ranges_issues(application: Application) -> List[ValidationE
     """Validate all leave period date ranges against each other"""
     issues = []
 
-    all_leave_periods: Iterable[
-        Union[ContinuousLeavePeriod, IntermittentLeavePeriod, ReducedScheduleLeavePeriod]
-    ] = list(
-        chain(
-            application.continuous_leave_periods,
-            application.intermittent_leave_periods,
-            application.reduced_schedule_leave_periods,
-        )
-    )
+    all_leave_periods = application.all_leave_periods
 
     leave_period_start_dates = [
         leave_period.start_date for leave_period in all_leave_periods if leave_period.start_date
     ]
+
     leave_period_end_dates = [
         leave_period.end_date for leave_period in all_leave_periods if leave_period.end_date
     ]

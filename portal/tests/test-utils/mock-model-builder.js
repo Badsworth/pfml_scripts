@@ -48,9 +48,6 @@ export class BaseMockBenefitsApplicationBuilder {
     return this;
   }
 
-  /**
-   * @returns {BaseMockBenefitsApplicationBuilder}
-   */
   absenceId(absenceId = "NTN-111-ABS-01") {
     set(this.claimAttrs, "fineos_absence_id", absenceId);
     return this;
@@ -285,6 +282,7 @@ export class BaseMockBenefitsApplicationBuilder {
 export class MockEmployerClaimBuilder extends BaseMockBenefitsApplicationBuilder {
   constructor(middleName = "") {
     super();
+    // Defaults, can be overridden by calling instance methods
     this.claimAttrs = {
       employer_dba: "Work Inc.",
       employer_id: "dda903f-f093f-ff900",
@@ -294,6 +292,9 @@ export class MockEmployerClaimBuilder extends BaseMockBenefitsApplicationBuilder
       date_of_birth: "****-07-17",
       tax_identifier: "***-**-1234",
       follow_up_date: "2020-10-10",
+      fineos_absence_id: "NTN-111-ABS-01",
+      previous_leaves: [],
+      is_reviewable: false,
     };
   }
 
@@ -310,7 +311,6 @@ export class MockEmployerClaimBuilder extends BaseMockBenefitsApplicationBuilder
       this.reducedSchedule();
     }
     this.employerBenefit();
-    this.absenceId();
     set(this.claimAttrs, "leave_details.reason", LeaveReason.medical);
     return this;
   }

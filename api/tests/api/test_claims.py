@@ -16,6 +16,7 @@ import tests.api
 from massgov.pfml.api.authorization.exceptions import NotAuthorizedForAccess
 from massgov.pfml.api.exceptions import ObjectNotFound
 from massgov.pfml.api.models.claims.common import EmployerClaimReview
+from massgov.pfml.api.services.claims import ClaimWithdrawnError
 from massgov.pfml.api.validation.exceptions import ValidationErrorDetail
 from massgov.pfml.db.models.applications import FINEOSWebIdExt
 from massgov.pfml.db.models.employees import (
@@ -42,14 +43,18 @@ from massgov.pfml.db.models.factories import (
     UserFactory,
     VerificationFactory,
 )
-from massgov.pfml.db.queries.absence_periods import upsert_absence_period_from_fineos_period
+from massgov.pfml.db.queries.absence_periods import (
+    split_fineos_absence_period_id,
+    split_fineos_leave_request_id,
+    upsert_absence_period_from_fineos_period,
+)
 from massgov.pfml.db.queries.get_claims_query import ActionRequiredStatusFilter
 from massgov.pfml.db.queries.managed_requirements import (
     create_managed_requirement_from_fineos,
     get_managed_requirement_by_fineos_managed_requirement_id,
 )
 from massgov.pfml.delegated_payments.mock.delegated_payments_factory import DelegatedPaymentFactory
-from massgov.pfml.fineos import exception, models
+from massgov.pfml.fineos import models
 from massgov.pfml.fineos.mock_client import MockFINEOSClient
 from massgov.pfml.fineos.models.group_client_api import (
     Base64EncodedFileData,
@@ -1056,6 +1061,42 @@ class TestGetClaimReview:
         assert response.status_code == 200
         self._assert_no_absence_period_data_for_claim(test_db_session, claim)
 
+    @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_absence_period_decisions")
+    def test_employer_get_claim_returns_absence_periods_from_fineos(
+        self, mock_get_absence, client, employer_auth_token, mock_absence_details_create, claim,
+    ):
+        mock_get_absence.return_value = mock_absence_details_create
+        response = client.get(
+            f"/v1/employers/claims/{claim.fineos_absence_id}/review",
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+        )
+        response_data = response.get_json()["data"]
+        absence_periods = response_data["absence_periods"]
+        assert response.status_code == 200
+        periods = [decision.period for decision in mock_absence_details_create.decisions]
+        for fineos_period_data, absence_data in zip(periods, absence_periods):
+            class_id, index_id = split_fineos_absence_period_id(fineos_period_data.periodReference)
+            leave_request_id = split_fineos_leave_request_id(fineos_period_data.leaveRequest.id, {})
+            assert class_id == absence_data["fineos_absence_period_class_id"]
+            assert index_id == absence_data["fineos_absence_period_index_id"]
+            assert leave_request_id == absence_data["fineos_leave_request_id"]
+            assert (
+                fineos_period_data.startDate.isoformat()
+                == absence_data["absence_period_start_date"]
+            )
+            assert fineos_period_data.endDate.isoformat() == absence_data["absence_period_end_date"]
+            assert fineos_period_data.type == absence_data["type"]
+            assert fineos_period_data.leaveRequest.reasonName == absence_data["reason"]
+            assert (
+                fineos_period_data.leaveRequest.qualifier1 == absence_data["reason_qualifier_one"]
+            )
+            assert (
+                fineos_period_data.leaveRequest.qualifier2 == absence_data["reason_qualifier_two"]
+            )
+            assert (
+                fineos_period_data.leaveRequest.decisionStatus == absence_data["request_decision"]
+            )
+
 
 class TestUpdateClaim:
     @pytest.fixture(autouse=True)
@@ -1974,90 +2015,6 @@ class TestGetClaimEndpoint:
         claim_data = response_body.get("data")
         assert_detailed_claim_response_equal_to_claim_query(claim_data, claim)
 
-    def test_get_claim_with_no_employer_employee(
-        self, caplog, client, auth_token, user, test_db_session
-    ):
-        claim = ClaimFactory.create(
-            employer=None,
-            employee=None,
-            fineos_absence_status_id=1,
-            claim_type_id=1,
-            fineos_absence_id="NTN-304363-ABS-01",
-            employee_id=None,
-        )
-        ApplicationFactory.create(user=user, claim=claim)
-        response = client.get(
-            f"/v1/claims/{claim.fineos_absence_id}",
-            headers={"Authorization": f"Bearer {auth_token}"},
-        )
-
-        assert response.status_code == 500
-        assert "Can't get absence periods from FINEOS - No employee for claim" in caplog.text
-
-    def test_get_claim_with_no_tax_identifier(
-        self, caplog, client, auth_token, user, test_db_session
-    ):
-        employer = EmployerFactory.create(employer_fein="813648030")
-        employee = EmployeeFactory.create(tax_identifier=None, tax_identifier_id=None)
-
-        claim = ClaimFactory.create(
-            employer=employer,
-            employee=employee,
-            fineos_absence_status_id=1,
-            claim_type_id=1,
-            fineos_absence_id="NTN-304363-ABS-01",
-        )
-        ApplicationFactory.create(user=user, claim=claim)
-        response = client.get(
-            f"/v1/claims/{claim.fineos_absence_id}",
-            headers={"Authorization": f"Bearer {auth_token}"},
-        )
-
-        assert response.status_code == 500
-        assert "Can't get absence periods from FINEOS - No employee for claim" in caplog.text
-
-    @mock.patch("massgov.pfml.api.services.claims.get_absence_periods")
-    def test_withdrawn_claim_returns_403(
-        self, mock_get_absence_periods, client, auth_token, user, test_db_session
-    ):
-        error_msg = """{
-            "error" : "User does not have permission to access the resource or the instance data",
-            "correlationId" : "foo"
-        }"""
-        error = exception.FINEOSForbidden("get_absence", 200, 403, error_msg)
-        mock_get_absence_periods.side_effect = error
-
-        employer = EmployerFactory.create(employer_fein="813648030")
-        tax_identifier = TaxIdentifierFactory.create(tax_identifier="587777091")
-        employee = EmployeeFactory.create(tax_identifier_id=tax_identifier.tax_identifier_id)
-        fineos_web_id_ext = FINEOSWebIdExt()
-        fineos_web_id_ext.employee_tax_identifier = employee.tax_identifier.tax_identifier
-        fineos_web_id_ext.employer_fein = employer.employer_fein
-        fineos_web_id_ext.fineos_web_id = "pfml_api_468df93c-cb2d-424e-9690-f61cc65506bb"
-        test_db_session.add(fineos_web_id_ext)
-
-        test_db_session.commit()
-        claim = ClaimFactory.create(
-            employer=employer,
-            employee=employee,
-            fineos_absence_status_id=1,
-            claim_type_id=1,
-            fineos_absence_id="NTN-304363-ABS-01",
-        )
-
-        ApplicationFactory.create(user=user, claim=claim)
-
-        response = client.get(
-            f"/v1/claims/{claim.fineos_absence_id}",
-            headers={"Authorization": f"Bearer {auth_token}"},
-        )
-
-        assert response.status_code == 403
-
-        response_body = response.get_json()
-        issues = response_body.get("errors")
-        assert issues[0].get("type") == "fineos_claim_withdrawn"
-
     def test_get_claim_with_leave_periods(self, caplog, client, auth_token, user, test_db_session):
         employer = EmployerFactory.create(employer_fein="813648030")
         tax_identifier = TaxIdentifierFactory.create(tax_identifier="587777091")
@@ -2103,11 +2060,29 @@ class TestGetClaimEndpoint:
             claim_data["absence_periods"][0], leave_period
         )
 
-    @mock.patch("massgov.pfml.api.services.claims.get_absence_periods")
-    def test_get_claim_with_no_leave_periods_returns_500(
-        self, mock_get_absence_periods, claim, client, auth_token, setup_db, caplog
+    @mock.patch("massgov.pfml.api.claims.get_claim_detail")
+    def test_withdrawn_claim_returns_403(
+        self, mock_get_claim_detail, claim, client, auth_token, setup_db
     ):
-        mock_get_absence_periods.return_value = []
+        mock_get_claim_detail.side_effect = ClaimWithdrawnError()
+
+        response = client.get(
+            f"/v1/claims/{claim.fineos_absence_id}",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+
+        assert response.status_code == 403
+
+        response_body = response.get_json()
+        issues = response_body.get("errors")
+        assert issues[0].get("type") == "fineos_claim_withdrawn"
+
+    @mock.patch("massgov.pfml.api.claims.get_claim_detail")
+    def test_with_get_claim_detail_error_returns_500(
+        self, mock_get_claim_detail, claim, client, auth_token, setup_db, caplog
+    ):
+        error_msg = "oops :("
+        mock_get_claim_detail.side_effect = Exception(error_msg)
 
         response = client.get(
             f"/v1/claims/{claim.fineos_absence_id}",
@@ -2115,7 +2090,8 @@ class TestGetClaimEndpoint:
         )
 
         assert response.status_code == 500
-        assert "No absence periods found for claim" in caplog.text
+        assert "get_claim failure" in caplog.text
+        assert error_msg in caplog.text
 
     def test_get_claim_with_managed_requirements(self, client, auth_token, user, test_db_session):
         employer = EmployerFactory.create(employer_fein="813648030")
