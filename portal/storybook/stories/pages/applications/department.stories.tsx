@@ -1,4 +1,3 @@
-import { BenefitsApplication } from "src/models/BenefitsApplication";
 import { Department } from "src/pages/applications/department";
 import { MockBenefitsApplicationBuilder } from "tests/test-utils";
 import { OrganizationUnit } from "src/models/Employee";
@@ -11,14 +10,6 @@ export default {
   title: "Pages/Applications/Department",
   component: Department,
 };
-
-const claimWithUnits = (
-  employee_organization_units: OrganizationUnit[]
-): BenefitsApplication => ({
-  ...claim,
-  employee_organization_units,
-  employer_organization_units: employerDepartmentList,
-});
 
 const views = () => {
   const Singular = () => (
@@ -124,7 +115,10 @@ const user = new User({
   email_address: faker.internet.email(faker.name.findName()),
 });
 
-const claim = new MockBenefitsApplicationBuilder()
-  .verifiedId()
-  .employed()
-  .create();
+const claimWithUnits = (employeeDepartmentList: OrganizationUnit[]) =>
+  new MockBenefitsApplicationBuilder()
+    .verifiedId()
+    .employed()
+    .employeeOrganizationUnits(employeeDepartmentList)
+    .employerOrganizationUnits(employerDepartmentList)
+    .create();
