@@ -39,16 +39,16 @@ class PaymentScenarioData:
         WritebackStatus.SELF_REPORTED_ADDITIONAL_INCOME.transaction_status_id: "income",
         WritebackStatus.PAID.transaction_status_id: "paid",
         WritebackStatus.POSTED.transaction_status_id: "paid",
+        None: "no_writeback",
     }
 
     @classmethod
-    def from_payment(cls, payment: Payment):
+    def from_payment(cls, payment: Payment) -> "PaymentScenarioData":
         writeback_detail = get_latest_writeback_detail(payment)
-        detail_id = writeback_detail and writeback_detail.transaction_status_id
-        method_to_call = cls.SCENARIOS.get(detail_id, "other")
-        func = getattr(cls, method_to_call)
+        detail_id = writeback_detail.transaction_status_id if writeback_detail else None
+        method_to_call = getattr(cls, cls.SCENARIOS.get(detail_id, "other"))
 
-        return func(payment, writeback_detail)
+        return method_to_call(payment, writeback_detail)
 
     @classmethod
     def pending_validation(cls, payment, _):
@@ -63,18 +63,16 @@ class PaymentScenarioData:
             )
 
         return cls(
-            amount=payment.amount,
             expected_send_date_start=expected_send_date_start,
             expected_send_date_end=expected_send_date_end,
         )
 
     @classmethod
-    def income(cls, payment, writeback_detail):
+    def income(cls, _, writeback_detail):
         created_date = writeback_detail.created_at.date()
         expected_send_date_start, expected_send_date_end = get_expected_dates(created_date, 2, 4)
 
         return cls(
-            amount=payment.amount,
             expected_send_date_start=expected_send_date_start,
             expected_send_date_end=expected_send_date_end,
         )
@@ -92,10 +90,9 @@ class PaymentScenarioData:
         )
 
     @classmethod
-    def no_writeback(cls, payment, _):
+    def no_writeback(cls, *_):
         expected_send_date_start, expected_send_date_end = get_expected_dates(date.today(), 1, 3)
         return cls(
-            amount=payment.amount,
             expected_send_date_start=expected_send_date_start,
             expected_send_date_end=expected_send_date_end,
             status=FEPaymentStatus.PENDING,
@@ -110,10 +107,10 @@ class PaymentScenarioData:
 class PaymentContainer:
     payment: Payment
 
-    status_detail: Optional[PaymentScenarioData] = None
+    scenario_data: Optional[PaymentScenarioData] = None
 
     def __post_init__(self):
-        self.status_detail = PaymentScenarioData.from_payment(self.payment)
+        self.scenario_data = PaymentScenarioData.from_payment(self.payment)
 
 
 def get_payments_with_status(db_session: Session, claim: Claim) -> Dict:
@@ -144,8 +141,8 @@ def to_response_dict(payment_data: List[PaymentContainer], absence_case_id: Opti
     payments = []
     for payment_container in payment_data:
         payment = payment_container.payment
-        status_detail = payment_container.status_detail
-        if status_detail is None:
+        scenario_data = payment_container.scenario_data
+        if scenario_data is None:
             raise Exception
 
         payments.append(
@@ -155,13 +152,13 @@ def to_response_dict(payment_data: List[PaymentContainer], absence_case_id: Opti
                 fineos_i_value=payment.fineos_pei_i_value,
                 period_start_date=payment.period_start_date,
                 period_end_date=payment.period_end_date,
-                amount=status_detail.amount,
-                sent_to_bank_date=status_detail.sent_date,
+                amount=scenario_data.amount,
+                sent_to_bank_date=scenario_data.sent_date,
                 payment_method=payment.disb_method
                 and payment.disb_method.payment_method_description,
-                expected_send_date_start=status_detail.expected_send_date_start,  # TODO (API-2047)
-                expected_send_date_end=status_detail.expected_send_date_end,  # TODO (API-2047)
-                status=status_detail.status,  # TODO (API-2047)
+                expected_send_date_start=scenario_data.expected_send_date_start,  # TODO (API-2047)
+                expected_send_date_end=scenario_data.expected_send_date_end,  # TODO (API-2047)
+                status=scenario_data.status,  # TODO (API-2047)
             ).dict()
         )
     return {
