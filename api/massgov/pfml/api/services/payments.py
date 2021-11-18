@@ -156,9 +156,9 @@ def to_response_dict(payment_data: List[PaymentContainer], absence_case_id: Opti
                 sent_to_bank_date=scenario_data.sent_date,
                 payment_method=payment.disb_method
                 and payment.disb_method.payment_method_description,
-                expected_send_date_start=scenario_data.expected_send_date_start,  # TODO (API-2047)
-                expected_send_date_end=scenario_data.expected_send_date_end,  # TODO (API-2047)
-                status=scenario_data.status,  # TODO (API-2047)
+                expected_send_date_start=scenario_data.expected_send_date_start,
+                expected_send_date_end=scenario_data.expected_send_date_end,
+                status=scenario_data.status,
             ).dict()
         )
     return {
