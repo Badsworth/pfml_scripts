@@ -45,9 +45,9 @@ module "api" {
   source = "../../template"
 
   environment_name                = local.environment_name
-  st_use_mock_dor_data            = false
-  st_decrypt_dor_data             = false
-  st_file_limit_specified         = true
+  #st_use_mock_dor_data            = false
+  #st_decrypt_dor_data             = false
+  #st_file_limit_specified         = true
   service_app_count               = 2
   service_max_app_count           = 2
   service_docker_tag              = local.service_docker_tag
@@ -59,7 +59,7 @@ module "api" {
   postgres_parameter_group_family = "postgres12"
   nlb_name                        = "${local.vpc}-nlb"
   nlb_port                        = 3506
-  cors_origins                    = [] # TODO
+  cors_origins                    = ["https://zj5brufqrj.execute-api.us-east-1.amazonaws.com/infra-test"]
   enable_application_fraud_check  = "0"
   release_version                 = var.release_version
 
@@ -72,7 +72,8 @@ module "api" {
   # TODO: Connect to an RMV endpoint if desired. All nonprod environments are connected to the staging API
   #       in either a fully-mocked or partially-mocked setting.
   rmv_client_base_url               = "https://atlas-staging-gateway.massdot.state.ma.us/vs"
-  rmv_client_certificate_binary_arn = "TODO"
+  rmv_client_certificate_binary_arn = "arn:aws:secretsmanager:us-east-1:498823821309:secret:/service/pfml-api-test/rmv_client_certificate-zWimpc"
+  #using test resource for now
   rmv_api_behavior                  = "fully_mocked"
   rmv_check_mock_success            = "1"
 
@@ -93,5 +94,5 @@ module "api" {
   # TODO: Connect to ServiceNow. Usually in nonprod you'll connect to test.
   service_now_base_url = "https://savilinxtest.servicenowservices.com"
 
-  dor_fineos_etl_schedule_expression = "cron(5 * * * ? *)" # Hourly at :05 minutes past each hour
+  #dor_fineos_etl_schedule_expression = "cron(5 * * * ? *)" # Hourly at :05 minutes past each hour
 }
