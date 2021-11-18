@@ -344,6 +344,7 @@ class AbsencePeriod(Base, TimestampMixin):
     fineos_absence_period_class_id = Column(Integer, nullable=False, index=True)
     fineos_absence_period_index_id = Column(Integer, nullable=False, index=True)
     fineos_leave_request_id = Column(Integer)
+    fineos_average_weekly_wage = Column(Numeric(asdecimal=True))
     leave_request_decision_id = Column(
         Integer, ForeignKey("lk_leave_request_decision.leave_request_decision_id")
     )
