@@ -1947,9 +1947,14 @@ def test_get_claim_with_open_managed_requirement(
     initialize_factories_session,
     mock_managed_requirements,
 ):
-    mock_get_req.return_value = [
-        ManagedRequirementDetails.parse_obj(mr) for mr in mock_managed_requirements
-    ]
+    returned_managed_req = []
+    for mr in mock_managed_requirements:
+        mr = ManagedRequirementDetails.parse_obj(mr)
+        # Ensure is_reviewable is True if the current date is the same as the followUpDate:
+        mr.followUpDate = datetime_util.utcnow().date()
+        returned_managed_req.append(mr)
+
+    mock_get_req.return_value = returned_managed_req
     fineos_user_id = "Friendly_HR"
     absence_id = "NTN-001-ABS-001"
     employer = EmployerFactory.create()
@@ -1995,7 +2000,7 @@ def test_get_claim_with_open_expired_managed_requirement(
     returned_managed_req = []
     for mr in mock_managed_requirements:
         mr = ManagedRequirementDetails.parse_obj(mr)
-        mr.followUpDate = datetime_util.utcnow().date() - timedelta(days=3)
+        mr.followUpDate = datetime_util.utcnow().date() - timedelta(days=1)
         returned_managed_req.append(mr)
     mock_get_req.return_value = returned_managed_req
     fineos_user_id = "Friendly_HR"

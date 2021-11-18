@@ -244,7 +244,7 @@ def _get_review_requirements(
         if req.type == LEAVE_ADMIN_INFO_REQUEST_TYPE:
             follow_up_date = req.followUpDate
             if follow_up_date is not None and req.status == "Open":
-                is_reviewable = date.today() < follow_up_date
+                is_reviewable = date.today() <= follow_up_date
                 break
 
     return is_reviewable, follow_up_date
