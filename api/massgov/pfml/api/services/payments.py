@@ -22,21 +22,45 @@ class FEPaymentStatus:
     DELAYED = "Delayed"
     PENDING = "Pending"
 
+
 @dataclass
-class PaymentScenarioDetail:
+class PaymentScenarioData:
     amount: Optional[Decimal] = None
     sent_date: Optional[date] = None
     expected_send_date_start: Optional[date] = None
     expected_send_date_end: Optional[date] = None
     status: str = FEPaymentStatus.DELAYED
 
+    SCENARIOS = {
+        WritebackStatus.PENDING_PRENOTE.transaction_status_id: "pending_validation",
+        WritebackStatus.DUA_ADDITIONAL_INCOME.transaction_status_id: "income",
+        WritebackStatus.DIA_ADDITIONAL_INCOME.transaction_status_id: "income",
+        WritebackStatus.WEEKLY_BENEFITS_AMOUNT_EXCEEDS_850.transaction_status_id: "income",
+        WritebackStatus.SELF_REPORTED_ADDITIONAL_INCOME.transaction_status_id: "income",
+        WritebackStatus.PAID.transaction_status_id: "paid",
+        WritebackStatus.POSTED.transaction_status_id: "paid",
+    }
+
+    @classmethod
+    def from_payment(cls, payment: Payment):
+        writeback_detail = get_latest_writeback_detail(payment)
+        detail_id = writeback_detail and writeback_detail.transaction_status_id
+        method_to_call = cls.SCENARIOS.get(detail_id, "other")
+        func = getattr(cls, method_to_call)
+
+        return func(payment, writeback_detail)
+
     @classmethod
     def pending_validation(cls, payment, _):
         created_date = payment.pub_eft.prenote_sent_at if payment.pub_eft else None
         if created_date is None:
-            expected_send_date_start, expected_send_date_end = get_expected_dates(date.today(), 6, 8)
+            expected_send_date_start, expected_send_date_end = get_expected_dates(
+                date.today(), 6, 8
+            )
         else:
-            expected_send_date_start, expected_send_date_end = get_expected_dates(date.today(), 5, 7)
+            expected_send_date_start, expected_send_date_end = get_expected_dates(
+                date.today(), 5, 7
+            )
 
         return cls(
             amount=payment.amount,
@@ -82,26 +106,14 @@ class PaymentScenarioDetail:
         return cls()
 
 
-SCENARIOS = {
-    WritebackStatus.PENDING_PRENOTE.transaction_status_id: PaymentScenarioDetail.pending_validation,
-    WritebackStatus.DUA_ADDITIONAL_INCOME.transaction_status_id: PaymentScenarioDetail.income,
-    WritebackStatus.DIA_ADDITIONAL_INCOME.transaction_status_id: PaymentScenarioDetail.income,
-    WritebackStatus.WEEKLY_BENEFITS_AMOUNT_EXCEEDS_850.transaction_status_id: PaymentScenarioDetail.income,
-    WritebackStatus.SELF_REPORTED_ADDITIONAL_INCOME.transaction_status_id: PaymentScenarioDetail.income,
-    WritebackStatus.PAID.transaction_status_id: PaymentScenarioDetail.paid,
-    WritebackStatus.POSTED.transaction_status_id: PaymentScenarioDetail.paid,
-}
-
-
 @dataclass
 class PaymentContainer:
     payment: Payment
 
-    status_detail: Optional[PaymentScenarioDetail] = None
+    status_detail: Optional[PaymentScenarioData] = None
 
     def __post_init__(self):
-        writeback_detail = get_latest_writeback_detail(self.payment)
-        self.status_detail = get_payment_scenario_detail(self.payment, writeback_detail)
+        self.status_detail = PaymentScenarioData.from_payment(self.payment)
 
 
 def get_payments_with_status(db_session: Session, claim: Claim) -> Dict:
@@ -132,7 +144,9 @@ def to_response_dict(payment_data: List[PaymentContainer], absence_case_id: Opti
     payments = []
     for payment_container in payment_data:
         payment = payment_container.payment
-        status_details = payment_container.status_detail
+        status_detail = payment_container.status_detail
+        if status_detail is None:
+            raise Exception
 
         payments.append(
             PaymentResponse(
@@ -141,13 +155,13 @@ def to_response_dict(payment_data: List[PaymentContainer], absence_case_id: Opti
                 fineos_i_value=payment.fineos_pei_i_value,
                 period_start_date=payment.period_start_date,
                 period_end_date=payment.period_end_date,
-                amount=status_details.amount,
-                sent_to_bank_date=status_details.sent_date,
+                amount=status_detail.amount,
+                sent_to_bank_date=status_detail.sent_date,
                 payment_method=payment.disb_method
                 and payment.disb_method.payment_method_description,
-                expected_send_date_start=status_details.expected_send_date_start,  # TODO (API-2047)
-                expected_send_date_end=status_details.expected_send_date_end,  # TODO (API-2047)
-                status=status_details.status,  # TODO (API-2047)
+                expected_send_date_start=status_detail.expected_send_date_start,  # TODO (API-2047)
+                expected_send_date_end=status_detail.expected_send_date_end,  # TODO (API-2047)
+                status=status_detail.status,  # TODO (API-2047)
             ).dict()
         )
     return {
@@ -173,14 +187,9 @@ def get_latest_writeback_detail(payment: Payment) -> Optional[FineosWritebackDet
     return first_detail_record
 
 
-def get_payment_scenario_detail(payment: Payment, writeback_detail: Optional[FineosWritebackDetails]):
-    detail_id = writeback_detail and writeback_detail.transaction_status_id
-    scenario = SCENARIOS.get(detail_id, PaymentScenarioDetail.other)
-
-    return scenario(payment, writeback_detail)
-
-
-def get_expected_dates(from_date: date, range_start: int, range_end: int):
+def get_expected_dates(
+    from_date: date, range_start: int, range_end: int
+) -> tuple[Optional[date], Optional[date]]:
     if (from_date + timedelta(days=range_end)) < date.today():
         expected_end, expected_start = None, None
     else:
