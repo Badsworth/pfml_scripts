@@ -42,12 +42,12 @@ const presets: Record<string, Preset> = {
       flood: {
         name: "Base Preset - Portal Claims Normal Traffic",
         project: "PFML",
-        threads: 1,
-        duration: seconds(15),
+        threads: 8,
+        duration: seconds(30),
       },
       data: {
         scenario: "PortalClaimSubmit",
-        count: 5,
+        count: 500,
       },
     },
   ],
