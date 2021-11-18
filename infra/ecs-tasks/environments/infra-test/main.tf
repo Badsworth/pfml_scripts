@@ -28,14 +28,15 @@ terraform {
 module "tasks" {
   source = "../../template"
 
-  environment_name         = "infra-test"
-  service_docker_tag       = local.service_docker_tag
-  vpc_id                   = data.aws_vpc.vpc.id
-  app_subnet_ids           = data.aws_subnet_ids.vpc_app.ids
-  st_employer_update_limit = 1500
+  environment_name                  = "infra-test"
+  service_docker_tag                = local.service_docker_tag
+  vpc_id                            = data.aws_vpc.vpc.id
+  app_subnet_ids                    = data.aws_subnet_ids.vpc_app.ids
+  st_employer_update_limit          = 1500
+  rmv_client_certificate_binary_arn = "arn:aws:secretsmanager:us-east-1:498823821309:secret:/service/pfml-api-stage/rmv_client_certificate-QlZaMl"
 
   # TODO: Fill this in once the Portal is deployed.
-  cognito_user_pool_id = ""
+  cognito_user_pool_id = "us-east-1_8OEJk2XeD"
 
   # TODO: These values are provided by FINEOS.
   fineos_client_integration_services_api_url          = ""
