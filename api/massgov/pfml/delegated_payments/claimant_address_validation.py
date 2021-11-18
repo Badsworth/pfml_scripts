@@ -1,3 +1,4 @@
+import enum
 import os
 import pathlib
 import uuid
@@ -7,7 +8,6 @@ from sqlalchemy.sql.functions import func
 
 import massgov.pfml.delegated_payments.delegated_config as payments_config
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
-import massgov.pfml.delegated_payments.util.address.constant as Constants
 import massgov.pfml.experian.address_validate_soap.client as soap_api
 import massgov.pfml.experian.address_validate_soap.models as sm
 import massgov.pfml.util.files as file_util
@@ -22,22 +22,75 @@ from massgov.pfml.db.models.employees import (
     ReferenceFileType,
 )
 from massgov.pfml.db.models.payments import FineosExtractEmployeeFeed
-from massgov.pfml.delegated_payments.address_validation import (
-    AddressValidationStep,
-    _get_experian_soap_client,
-)
+from massgov.pfml.delegated_payments.address_validation import _get_experian_soap_client
+from massgov.pfml.delegated_payments.step import Step
 from massgov.pfml.experian.address_validate_soap.service import (
     address_to_experian_verification_search,
     experian_verification_response_to_address,
-)
-from massgov.pfml.experian.physical_address.service import (
-    address_to_experian_suggestion_text_format,
 )
 
 logger = logging.get_logger(__name__)
 
 
-class ClaimantAddressValidationStep(AddressValidationStep):
+class Constants:
+    MESSAGE_KEY = "Result"
+    EXPERIAN_RESULT_KEY = "experian_result"
+    CONFIDENCE_KEY = "Result"
+    INPUT_ADDRESS_KEY = "Address Provided"
+    OUTPUT_ADDRESS_KEY_PREFIX = "Experian Address Recommendation #"
+    PREVIOUSLY_VERIFIED = "Previously verified"
+    VERIFIED = "Verification Level"
+    UNKNOWN = "Unknown"
+    FIRST_NAME = "First Name"
+    LAST_NAME = "Last Name"
+    CUSTOMER_NUMBER = "Customer Number"
+    NTN_NUMBER = "NTN Number"
+
+    MESSAGE_ALREADY_VALIDATED = "Address has already been validated"
+    MESSAGE_INVALID_EXPERIAN_RESPONSE = "Invalid response from Experian search API"
+    MESSAGE_INVALID_EXPERIAN_FORMAT_RESPONSE = "Invalid response from Experian format API"
+    MESSAGE_VALID_ADDRESS = "Address validated by Experian"
+    MESSAGE_VALID_MATCHING_ADDRESS = "Matching address validated by Experian"
+    MESSAGE_INVALID_ADDRESS = "Address not valid in Experian"
+    MESSAGE_EXPERIAN_EXCEPTION_FORMAT = "An exception was thrown by Experian: {}"
+    MESSAGE_ADDRESS_MISSING_PART = (
+        "The address is missing a required component and cannot be validated"
+    )
+    CLAIMANT_ADDRESS_VALIDATION_FILENAME = "Claimant-Address-Validation-Report"
+    CLAIMANT_ADDRESS_VALIDATION_FILENAME_FORMAT = (
+        f"%Y-%m-%d-%H-%M-%S-{CLAIMANT_ADDRESS_VALIDATION_FILENAME}"
+    )
+    CLAIMANT_ADDRESS_VALIDATION_FIELDS = [
+        CUSTOMER_NUMBER,
+        FIRST_NAME,
+        LAST_NAME,
+        INPUT_ADDRESS_KEY,
+        CONFIDENCE_KEY,
+        OUTPUT_ADDRESS_KEY_PREFIX + "1",
+        OUTPUT_ADDRESS_KEY_PREFIX + "2",
+        OUTPUT_ADDRESS_KEY_PREFIX + "3",
+        OUTPUT_ADDRESS_KEY_PREFIX + "4",
+        OUTPUT_ADDRESS_KEY_PREFIX + "5",
+        OUTPUT_ADDRESS_KEY_PREFIX + "6",
+        OUTPUT_ADDRESS_KEY_PREFIX + "7",
+        OUTPUT_ADDRESS_KEY_PREFIX + "8",
+    ]
+    TRANSACTION_FILES_SENT_COUNT = "transaction_files_sent_count"
+
+
+class ClaimantAddressValidationStep(Step):
+    class Metrics(str, enum.Enum):
+        EXPERIAN_SEARCH_EXCEPTION_COUNT = "experian_search_exception_count"
+        INVALID_EXPERIAN_FORMAT = "invalid_experian_format"
+        INVALID_EXPERIAN_RESPONSE = "invalid_experian_response"
+        MULTIPLE_EXPERIAN_MATCHES = "multiple_experian_matches"
+        NO_EXPERIAN_MATCH_COUNT = "no_experian_match_count"
+        PREVIOUSLY_VALIDATED_MATCH_COUNT = "previously_validated_match_count"
+        VALID_EXPERIAN_FORMAT = "valid_experian_format"
+        VALIDATED_ADDRESS_COUNT = "validated_address_count"
+        VERIFIED_EXPERIAN_MATCH = "verified_experian_match"
+        ADDRESS_MISSING_COMPONENT_COUNT = "address_missing_component_count"
+
     def run_step(self) -> None:
 
         self.process_address_data()
@@ -52,7 +105,12 @@ class ClaimantAddressValidationStep(AddressValidationStep):
                 FineosExtractEmployeeFeed,
                 func.rank()
                 .over(
-                    order_by=FineosExtractEmployeeFeed.created_at.desc(),
+                    order_by=[
+                        FineosExtractEmployeeFeed.fineos_extract_import_log_id.desc(),
+                        FineosExtractEmployeeFeed.effectivefrom.desc(),
+                        FineosExtractEmployeeFeed.effectiveto.desc(),
+                        FineosExtractEmployeeFeed.created_at.desc(),
+                    ],
                     partition_by=FineosExtractEmployeeFeed.customerno,
                 )
                 .label("R"),
@@ -87,6 +145,7 @@ class ClaimantAddressValidationStep(AddressValidationStep):
     def process_address_data(self) -> None:
         address_pair = None
         addressResults = []
+        logger.info("Claimant Address Validation Step - Start")
         try:
             experian_soap_client = _get_experian_soap_client()
             fin_employee_feed_data = self.get_fineos_employee_feed()
@@ -110,10 +169,13 @@ class ClaimantAddressValidationStep(AddressValidationStep):
                     # Does it have all the address lines
                     elif not self._does_address_have_all_parts(employee_feed_address_data):
                         self.increment(self.Metrics.ADDRESS_MISSING_COMPONENT_COUNT)
-                        result = self._build_experian_outcome(
+                        result = self._outcome_for_search_result(
+                            None,
                             Constants.MESSAGE_ADDRESS_MISSING_PART,
                             employee_feed_address_data,
-                            Constants.MESSAGE_ADDRESS_MISSING_PART,
+                            f_employee_data.customerno,
+                            f_employee_data.firstnames,
+                            f_employee_data.lastname,
                         )
                         addressResults.append(result.get("experian_result"))
                     else:
@@ -189,7 +251,12 @@ class ClaimantAddressValidationStep(AddressValidationStep):
                 % (address.address_id, type(e).__name__)
             )
             outcome = self._outcome_for_search_result(
-                None, Constants.MESSAGE_EXPERIAN_EXCEPTION_FORMAT, address, None, None, None,
+                None,
+                Constants.MESSAGE_EXPERIAN_EXCEPTION_FORMAT,
+                address,
+                customer_number,
+                first_name,
+                last_name,
             )
             self.increment(self.Metrics.EXPERIAN_SEARCH_EXCEPTION_COUNT)
             return outcome
@@ -205,9 +272,9 @@ class ClaimantAddressValidationStep(AddressValidationStep):
                         response,
                         Constants.MESSAGE_INVALID_EXPERIAN_FORMAT_RESPONSE,
                         address,
-                        None,
-                        None,
-                        None,
+                        customer_number,
+                        first_name,
+                        last_name,
                     )
                     logger.debug(
                         "Experian return address has missing parts, wasnt supposed to occur"
@@ -276,14 +343,16 @@ class ClaimantAddressValidationStep(AddressValidationStep):
         result: Optional[sm.SearchResponse],
         msg: str,
         address: Address,
-        customer_no: Optional[str],
-        first_name: Optional[str],
-        last_name: Optional[str],
+        customer_no: str,
+        first_name: str,
+        last_name: str,
     ) -> Dict[str, Any]:
         verify_level = (
             result.verify_level.value if result and result.verify_level else Constants.UNKNOWN
         )
-        outcome: Dict[str, Any] = self._build_experian_outcome(msg, address, verify_level)
+        outcome: Dict[str, Any] = self._build_experian_outcome(
+            customer_no, first_name, last_name, msg, address, verify_level
+        )
 
         if result:
             logger.debug("Result Address is %s", result)
@@ -295,19 +364,6 @@ class ClaimantAddressValidationStep(AddressValidationStep):
                         logger.debug(pickList.score)
                         label = Constants.OUTPUT_ADDRESS_KEY_PREFIX + str(1 + i)
                         outcome[Constants.EXPERIAN_RESULT_KEY][label] = pickList.partial_address
-                        label = Constants.CUSTOMER_NUMBER
-                        outcome[Constants.EXPERIAN_RESULT_KEY][label] = customer_no
-                        label = Constants.FIRST_NAME
-                        outcome[Constants.EXPERIAN_RESULT_KEY][label] = first_name
-                        label = Constants.LAST_NAME
-                        outcome[Constants.EXPERIAN_RESULT_KEY][label] = last_name
-                    else:
-                        label = Constants.CUSTOMER_NUMBER
-                        outcome[Constants.EXPERIAN_RESULT_KEY][label] = customer_no
-                        label = Constants.FIRST_NAME
-                        outcome[Constants.EXPERIAN_RESULT_KEY][label] = first_name
-                        label = Constants.LAST_NAME
-                        outcome[Constants.EXPERIAN_RESULT_KEY][label] = last_name
                 return outcome
 
         # Right now we only have the one result.
@@ -316,22 +372,33 @@ class ClaimantAddressValidationStep(AddressValidationStep):
             label = Constants.OUTPUT_ADDRESS_KEY_PREFIX + "1"
             outcome[Constants.EXPERIAN_RESULT_KEY][
                 label
-            ] = address_to_experian_suggestion_text_format(response_address)
+            ] = self.address_to_experian_suggestion_text_format(response_address)
         return outcome
 
     """Builds a dicitonary object of messages and/or address returned from
         experian call"""
 
     def _build_experian_outcome(
-        self, msg: str, address: Address, confidence: str
+        self,
+        customer_no: str,
+        first_name: str,
+        last_name: str,
+        msg: str,
+        address: Address,
+        confidence: str,
     ) -> Dict[str, Any]:
         # print(address, msg)
         logger.debug("Building experian address outcome...")
         exp_outcome: Dict[str, Any] = {
             Constants.EXPERIAN_RESULT_KEY: {
-                Constants.INPUT_ADDRESS_KEY: address_to_experian_suggestion_text_format(address),
-                Constants.CONFIDENCE_KEY: confidence,
-                Constants.MESSAGE_KEY: msg,
+                Constants.CUSTOMER_NUMBER: customer_no,
+                Constants.FIRST_NAME: first_name,
+                Constants.LAST_NAME: last_name,
+                Constants.INPUT_ADDRESS_KEY: self.address_to_experian_suggestion_text_format(
+                    address
+                ),
+                Constants.MESSAGE_KEY: confidence,
+                #Constants.MESSAGE_KEY: msg,
             },
         }
         return exp_outcome
@@ -370,9 +437,34 @@ class ClaimantAddressValidationStep(AddressValidationStep):
             dfml_sharepoint_outgoing_path, Constants.CLAIMANT_ADDRESS_VALIDATION_FILENAME
         )
         file_util.copy_file(str(address_report_csv_path), outgoing_s3_path)
-        logger.debug("Copied address validation report file to s3 path %s", outgoing_s3_path)
+        logger.info("claimant address validation report file added")
         return ReferenceFile(
             file_location=os.path.join(address_report_source_path, file_name),
             reference_file_type_id=ReferenceFileType.CLAIMANT_ADDRESS_VALIDATION_REPORT.reference_file_type_id,
             reference_file_id=uuid.uuid4(),
         )
+
+    # Updated the code as it was not pulling in the correct state description
+    def address_to_experian_suggestion_text_format(self, address: Address) -> str:
+        """Format an Address object in a way that matches the address format that is returned by
+        Experian's AddressSearchV1MatchedResult.text field for the benefit of comparing input addresses
+        and addresses returned by the Experian API in CSV reports we create.
+
+        | line 1    | | line 2|  |city||st||zip|
+        125 Summer St Suite 200, Boston MA 02110
+        """
+        address_lines = [address.address_line_one, address.address_line_two]
+        address_line_str = " ".join([p for p in address_lines if p])
+
+        postal_parts = [
+            str(p)
+            for p in [
+                address.city,
+                GeoState.get_description(address.geo_state_id) if address.geo_state_id else None,
+                address.zip_code,
+            ]
+            if p
+        ]
+        postal_part_str = " ".join([p for p in postal_parts if p])
+
+        return ", ".join([address_line_str, postal_part_str])
