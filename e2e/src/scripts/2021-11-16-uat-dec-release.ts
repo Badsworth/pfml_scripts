@@ -8,10 +8,9 @@ import EmployeeIndex from "../generation/writers/EmployeeIndex";
 import path from "path";
 import * as scenarios from "../scenarios/2021-11-16-dt2";
 
-
 (async () => {
   // @todo Rename the data directory as needed.
-  const storage = dataDirectory("2021-11-16-dt2-dec-release");
+  const storage = dataDirectory("2021-11-16-uat-dec-release");
   // <!-- @default
   await storage.prepare();
   let employerPool: EmployerPool;
@@ -97,7 +96,7 @@ import * as scenarios from "../scenarios/2021-11-16-dt2";
       ClaimPool.generate(employeePool, scenarios.FSTRUE8.employee, scenarios.FSTRUE8.claim, 5),
       ClaimPool.generate(employeePool, scenarios.FSTRUE9.employee, scenarios.FSTRUE9.claim, 10),
       ClaimPool.generate(employeePool, scenarios.FSTRUE10.employee, scenarios.FSTRUE10.claim, 10)
-    );
+  );
     // <!-- @default
     await claimPool.save(storage.claims, storage.documents);
     // Save used employees.
