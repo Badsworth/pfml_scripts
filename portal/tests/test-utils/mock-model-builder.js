@@ -290,6 +290,7 @@ export class MockEmployerClaimBuilder extends BaseMockBenefitsApplicationBuilder
       date_of_birth: "****-07-17",
       tax_identifier: "***-**-1234",
       follow_up_date: "2020-10-10",
+      fineos_absence_id: "NTN-111-ABS-01",
     };
   }
 
@@ -306,7 +307,6 @@ export class MockEmployerClaimBuilder extends BaseMockBenefitsApplicationBuilder
       this.reducedSchedule();
     }
     this.employerBenefit();
-    this.absenceId();
     set(this.claimAttrs, "leave_details.reason", LeaveReason.medical);
     return this;
   }
