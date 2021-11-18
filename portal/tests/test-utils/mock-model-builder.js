@@ -281,6 +281,7 @@ export class BaseMockBenefitsApplicationBuilder {
 export class MockEmployerClaimBuilder extends BaseMockBenefitsApplicationBuilder {
   constructor(middleName = "") {
     super();
+    // Defaults, can be overridden by calling instance methods
     this.claimAttrs = {
       employer_dba: "Work Inc.",
       employer_id: "dda903f-f093f-ff900",
@@ -291,6 +292,8 @@ export class MockEmployerClaimBuilder extends BaseMockBenefitsApplicationBuilder
       tax_identifier: "***-**-1234",
       follow_up_date: "2020-10-10",
       fineos_absence_id: "NTN-111-ABS-01",
+      previous_leaves: [],
+      is_reviewable: false,
     };
   }
 
