@@ -339,7 +339,7 @@ def test_get_eform(httpserver, fineos_client):
         headers={"userid": "FINEOS_WEB_ID", "Content-Type": "application/json"},
     ).respond_with_data(get_eform_response, content_type="application/json")
 
-    eform = fineos_client.get_eform("FINEOS_WEB_ID", "NTN-100-ABS-01", "3333")
+    eform = fineos_client.get_eform("FINEOS_WEB_ID", "NTN-100-ABS-01", 3333)
     assert eform == EForm(
         eformType="Other Income - current version",
         eformId=6245,

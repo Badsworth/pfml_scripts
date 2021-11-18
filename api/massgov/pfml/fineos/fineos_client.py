@@ -726,7 +726,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
         return pydantic.parse_obj_as(List[models.group_client_api.EFormSummary], json)
 
     def get_eform(
-        self, user_id: str, absence_id: str, eform_id: str
+        self, user_id: str, absence_id: str, eform_id: int
     ) -> models.group_client_api.EForm:
         try:
             response = self._group_client_api(

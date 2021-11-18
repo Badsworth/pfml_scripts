@@ -1706,6 +1706,8 @@ components:
           type: string
         middle_name:
           type: string
+        uses_second_eform_version:
+          type: boolean
         previous_leaves:
           type: array
           items:
@@ -1721,6 +1723,19 @@ components:
           items:
             $ref: "#/components/schemas/AbsencePeriodResponse"
       additionalProperties: false
+      required:
+        - employer_benefits
+        - employer_dba
+        - employer_fein
+        - employer_id
+        - fineos_absence_id
+        - leave_details
+        - previous_leaves
+        - residential_address
+        - is_reviewable
+        - status
+        - uses_second_eform_version
+        - absence_periods
 
     ConcurrentLeave:
       type: object
