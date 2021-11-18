@@ -12,29 +12,38 @@ export default {
 };
 
 const views = () => {
-  const Singular = () => (
-    <Department
-      appLogic={useMockableAppLogic()}
-      user={user}
-      claim={claimWithUnits(singularDepartmentList)}
-    />
-  );
+  const Singular = () => {
+    const appLogic = useMockableAppLogic();
+    return (
+      <Department
+        appLogic={appLogic}
+        user={user}
+        claim={claimWithUnits(singularDepartmentList)}
+      />
+    );
+  };
 
-  const Short = () => (
-    <Department
-      appLogic={useMockableAppLogic()}
-      user={user}
-      claim={claimWithUnits(shortDepartmentList)}
-    />
-  );
+  const Short = () => {
+    const appLogic = useMockableAppLogic();
+    return (
+      <Department
+        appLogic={appLogic}
+        user={user}
+        claim={claimWithUnits(shortDepartmentList)}
+      />
+    );
+  };
 
-  const Long = () => (
-    <Department
-      appLogic={useMockableAppLogic()}
-      user={user}
-      claim={claimWithUnits(longDepartmentList)}
-    />
-  );
+  const Long = () => {
+    const appLogic = useMockableAppLogic();
+    return (
+      <Department
+        appLogic={appLogic}
+        user={user}
+        claim={claimWithUnits(longDepartmentList)}
+      />
+    );
+  };
 
   return {
     Singular,
