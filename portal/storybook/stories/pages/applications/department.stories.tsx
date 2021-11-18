@@ -1,6 +1,6 @@
 import { Department } from "src/pages/applications/department";
 import { MockBenefitsApplicationBuilder } from "tests/test-utils";
-import { OrganizationUnit } from "src/models/Employee";
+import OrganizationUnit from "src/models/OrganizationUnit";
 import React from "react";
 import User from "src/models/User";
 import faker from "faker";

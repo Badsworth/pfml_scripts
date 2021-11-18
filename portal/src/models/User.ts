@@ -1,5 +1,4 @@
 /* eslint sort-keys: ["error", "asc"] */
-import { OrganizationUnit } from "./Employee";
 
 class User {
   auth_id: string;
@@ -118,7 +117,6 @@ export class UserLeaveAdministrator {
   has_fineos_registration: boolean;
   has_verification_data: boolean;
   verified: boolean;
-  organization_units?: OrganizationUnit[];
 
   constructor(attrs: Partial<UserLeaveAdministrator>) {
     Object.assign(this, attrs);

@@ -8,7 +8,7 @@ import Dropdown from "../../components/core/Dropdown";
 import Fieldset from "../../components/core/Fieldset";
 import FormLabel from "../../components/core/FormLabel";
 import InputChoiceGroup from "../../components/core/InputChoiceGroup";
-import { OrganizationUnit } from "../../models/Employee";
+import OrganizationUnit from "../../models/OrganizationUnit";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import { Trans } from "react-i18next";

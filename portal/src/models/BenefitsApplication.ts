@@ -10,7 +10,7 @@ import BaseBenefitsApplication from "./BaseBenefitsApplication";
 import ConcurrentLeave from "./ConcurrentLeave";
 import { DateTime } from "luxon";
 import EmployerBenefit from "./EmployerBenefit";
-import { OrganizationUnit } from "./Employee";
+import OrganizationUnit from "./OrganizationUnit";
 import OtherIncome from "./OtherIncome";
 import PaymentPreference from "./PaymentPreference";
 import PreviousLeave from "./PreviousLeave";
