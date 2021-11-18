@@ -23,6 +23,7 @@ import * as scenarios from "../scenarios/2021-11-16-dt2";
     employerPool = await EmployerPool.load(storage.employers);
   } catch (e) {
     if (e.code !== "ENOENT") throw e;
+    throw Error('Test'),
     // @todo Choose number of employers to generate.
     (employerPool = EmployerPool.generate(5)),
       await employerPool.save(storage.employers);
@@ -37,6 +38,7 @@ import * as scenarios from "../scenarios/2021-11-16-dt2";
     employeePool = await EmployeePool.load(storage.employees);
   } catch (e) {
     if (e.code !== "ENOENT") throw e;
+    throw Error('Test'),
     // Define the kinds of employees we need to support. Each type of employee is generated as its own pool,
     // then we merge them all together.
     employeePool = EmployeePool.merge(
@@ -85,17 +87,17 @@ import * as scenarios from "../scenarios/2021-11-16-dt2";
      * defined within the `e2e/src/scenarios` directory, if they are
      * not meant to be reused elsewhere.
      */
-    claimPool = (
-      ClaimPool.generate(employeePool, scenarios.FSTRUE1.employee, scenarios.FSTRUE1.claim, 5),
-      ClaimPool.generate(employeePool, scenarios.FSTRUE2.employee, scenarios.FSTRUE2.claim, 5),
-      ClaimPool.generate(employeePool, scenarios.FSTRUE3.employee, scenarios.FSTRUE3.claim, 5),
-      ClaimPool.generate(employeePool, scenarios.FSTRUE4.employee, scenarios.FSTRUE4.claim, 5),
-      ClaimPool.generate(employeePool, scenarios.FSTRUE5.employee, scenarios.FSTRUE5.claim, 5),
-      ClaimPool.generate(employeePool, scenarios.FSTRUE6.employee, scenarios.FSTRUE6.claim, 5),
-      ClaimPool.generate(employeePool, scenarios.FSTRUE7.employee, scenarios.FSTRUE7.claim, 5),
-      ClaimPool.generate(employeePool, scenarios.FSTRUE8.employee, scenarios.FSTRUE8.claim, 5),
-      ClaimPool.generate(employeePool, scenarios.FSTRUE9.employee, scenarios.FSTRUE9.claim, 10),
-      ClaimPool.generate(employeePool, scenarios.FSTRUE10.employee, scenarios.FSTRUE10.claim, 10)
+    claimPool = ClaimPool.merge(
+      ClaimPool.generate(employeePool, scenarios.FSTRUE1.employee, scenarios.FSTRUE1.claim, 3),
+      ClaimPool.generate(employeePool, scenarios.FSTRUE2.employee, scenarios.FSTRUE2.claim, 3),
+      ClaimPool.generate(employeePool, scenarios.FSTRUE3.employee, scenarios.FSTRUE3.claim, 3),
+      ClaimPool.generate(employeePool, scenarios.FSTRUE4.employee, scenarios.FSTRUE4.claim, 3),
+      ClaimPool.generate(employeePool, scenarios.FSTRUE5.employee, scenarios.FSTRUE5.claim, 3),
+      ClaimPool.generate(employeePool, scenarios.FSTRUE6.employee, scenarios.FSTRUE6.claim, 3),
+      ClaimPool.generate(employeePool, scenarios.FSTRUE7.employee, scenarios.FSTRUE7.claim, 3),
+      ClaimPool.generate(employeePool, scenarios.FSTRUE8.employee, scenarios.FSTRUE8.claim, 3),
+      ClaimPool.generate(employeePool, scenarios.FSTRUE9.employee, scenarios.FSTRUE9.claim, 6),
+      ClaimPool.generate(employeePool, scenarios.FSTRUE10.employee, scenarios.FSTRUE10.claim, 6)
   );
     // <!-- @default
     await claimPool.save(storage.claims, storage.documents);
