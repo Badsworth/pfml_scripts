@@ -786,6 +786,7 @@ const shared = {
   contactCenterPhoneNumber: "(833) 344-7365",
   contactCenterPhoneNumberNoBreak:
     "(833)$t(chars.nbsp)344$t(chars.nbhyphen)7365",
+  contactCenterReportHoursPhoneNumber: "(857) 972-9256",
   dateRangeDelimiter: "to",
   day_Friday: "Friday",
   day_Monday: "Monday",
@@ -2384,9 +2385,6 @@ const pages = {
     title: "Thanks for reviewing the application",
   },
   employersDashboard: {
-    betaHeader: "We're making it easier to manage paid leave applications",
-    betaMessage:
-      "You can now see all the applications you need to review using our new dashboard. Over the next few months, we'll be adding more features to the dashboard so you can easily find and manage paid leave applications. You can <user-feedback-link>use our feedback form</user-feedback-link> to tell us what you think of our new features.",
     filterNavLabel: "Filters:",
     filterOrgsLabel: "Organizations",
     filterRemove: "Remove filter:",
@@ -2488,9 +2486,6 @@ const pages = {
     learnMoreLinks:
       "<ul><li><mass-employer-role-link>Your role as a Massachusetts employer</mass-employer-role-link></li><li><reimbursements-link>Employer reimbursements</reimbursements-link></li></ul>",
     learnMoreTitle: "Learn more",
-    newTag: "New",
-    otherLeaveInfoAlertBody:
-      "The Department of Family and Medical Leave has updated the Review page. Employees can now report other leaves and benefits in their paid leave application. If your employee reported other leaves or benefits, you can review the information provided, and add any that they missed.",
     respondBody:
       "When an application is submitted, you have 10 business days to open the direct link from your email and review it online. You can comment on the application, approve or deny it, and report fraud if needed. Reviewing takes about 10 minutes. If we don’t hear from anyone at your company before the deadline, we’ll process the application solely based on the information the employee provided.",
     respondTitle: "Respond to applications within 10 business days",
@@ -2559,9 +2554,8 @@ const pages = {
   },
   payments: {
     changesToPaymentsAmountAnswer:
-      "<p>See your approval notice for your maximum weekly benefit. We may reduce your benefit amount based on other leave, income and benefits you reported to us. You will receive another notice in this application’s details if we reduce or offset your benefit amount.</p><p>Other scenarios that may change your benefit amount are:</p><ul> <li>You reach the $850 benefit total across multiple employers</li><li>If you transition from medical pregnancy to leave to bond with a child</li><li>Extending your leave</li></ul> <p>Check your <view-notices-link>application’s notices</view-notices-link> to see your approval notice and any updates to your approved benefit amount.</p>",
+      "<p>See your approval notice for your maximum weekly benefit. We may reduce your benefit amount based on <using-other-leave-link>other leave, income and benefits</using-other-leave-link> you reported to us. You will receive another notice in this application’s details if we reduce or offset your benefit amount.</p><p>Other scenarios that may change your benefit amount are:</p><ul> <li>You reach the $850 benefit total across multiple employers</li><li>If you transition from medical pregnancy to leave to bond with a child</li><li>Extending your leave</li></ul> <p>Check your <view-notices-link>application’s notices</view-notices-link> to see your approval notice and any updates to your approved benefit amount.</p>",
     changesToPaymentsAmountQuestion: "What may change your benefit amount",
-    changesToPaymentsHeader: "Changes to payments",
     changesToPaymentsScheduleAnswer:
       "<ul> <li>State and federal holidays</li><li>Your bank’s processes</li><li>Pay periods that end on a weekend</li><li>Payments may be delayed if we need to adjust your benefit amount based on extensions, other income or benefits you’ve reported and other process delays</li></ul>",
     changesToPaymentsScheduleQuestion: "What may change your payment schedule",
@@ -2571,6 +2565,12 @@ const pages = {
     questionsDetails:
       "<p>Call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.</p>",
     questionsHeader: "Questions?",
+    whenToExpectPaymentContinuous:
+      "<p>You can expect your first payment to arrive at the beginning of your fourth week of leave, if your leave has already started. If your leave starts in the future, you can expect your first payment 2-4 weeks after your leave starts. After that, you will receive your payments every week.</p><p>Your application has a 7-day waiting period at the start of your leave. You won’t receive any PFML payments during this time. Read more about the <waiting-period-info>7-day waiting period</waiting-period-info>.</p>",
+    whenToExpectPaymentIntermittent:
+      "<p>Your application has a 7-day waiting period at the first day you use your intermittent leave. You won’t receive any PFML payments during this time. Read more about the <waiting-period-info>7-day waiting period</waiting-period-info>.</p><p>If your leave has not yet started, you can expect your first payment to be sent to you once you have reported at least 8 total leave hours taken or 30 days has passed since the start of your leave.</p><p>If your leave has started, you can expect to receive payment about one week after the hours are filed (as long as they add up to at least 8 hours). You can receive more than one payment in a week depending on how intermittent hours are reported.</p><p>You can report your hours by calling <contact-center-report-hours-phone-link>$t(shared.contactCenterReportHoursPhoneNumber)</contact-center-report-hours-phone-link>.</p>",
+    whenToExpectPaymentReducedSchedule:
+      "<p>You need to have taken 8 hours or more of leave, or 30 days has passed since the start of your leave to be eligible for a weekly benefit payment.</p>",
   },
   userConsentToDataSharing: {
     agreementBody:

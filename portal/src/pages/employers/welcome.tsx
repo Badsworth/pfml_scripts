@@ -6,7 +6,6 @@ import Heading from "../../components/core/Heading";
 import Icon from "../../components/core/Icon";
 import Link from "next/link";
 import React from "react";
-import Tag from "../../components/core/Tag";
 import Title from "../../components/core/Title";
 import { Trans } from "react-i18next";
 import User from "../../models/User";
@@ -63,21 +62,11 @@ export const Welcome = ({ appLogic, user }: WelcomeProps) => {
             </Alert>
           )}
 
-          <Alert state="info">
-            <p>
-              <Trans i18nKey="pages.employersWelcome.otherLeaveInfoAlertBody" />
-            </p>
-          </Alert>
-
           <p>{t("pages.employersWelcome.welcomeBody")}</p>
 
           <Heading level="2">
             <Icon name="list" size={4} {...iconProps} />
             {t("pages.employersWelcome.viewApplicationsTitle")}
-            <Tag
-              className="margin-left-1"
-              label={t("pages.employersWelcome.newTag")}
-            />
           </Heading>
           <p>
             <Trans

@@ -1,6 +1,8 @@
-import Payments from "../../../../src/pages/applications/status/payments";
+// TODO (PORTAL-1148) Update to use createMockClaim when ready
+import { createMockBenefitsApplication, renderPage } from "../../../test-utils";
+
+import { Payments } from "../../../../src/pages/applications/status/payments";
 import { mockRouter } from "next/router";
-import { renderPage } from "../../../test-utils";
 import routes from "../../../../src/routes";
 import { screen } from "@testing-library/react";
 
@@ -62,21 +64,37 @@ describe("Payments", () => {
   it("renders the `changes to payments` section", () => {
     renderPage(Payments, undefined, props);
 
-    const paymentHeader = screen.getByRole("heading", {
-      name: /changes to payments/i,
-    });
-    expect(paymentHeader.parentNode).toMatchSnapshot();
+    const section = screen.getByTestId("changes-to-payments");
+    expect(section).toMatchSnapshot();
   });
 
   it("renders the `questions?` section", () => {
     renderPage(Payments, undefined, props);
 
-    const questionsHeader = screen.getByRole("heading", {
-      name: /questions\?/i,
-    });
-    expect(questionsHeader).toBeInTheDocument();
+    const section = screen.getByTestId("questions");
+    expect(section).toMatchSnapshot();
 
     const details = screen.getAllByText(/call the contact center at/i);
     expect(details.length).toBe(2);
   });
+
+  it.each(["continuous", "intermittent", "reducedSchedule"])(
+    "renders expected content for %s leave",
+    (leavePeriodType) => {
+      renderPage(
+        Payments,
+        {
+          addCustomSetup: (appLogicHook) => {
+            // TODO (PORTAL-1148) Update to use createMockClaim when ready
+            appLogicHook.claims.claimDetail =
+              createMockBenefitsApplication(leavePeriodType);
+          },
+        },
+        props
+      );
+
+      const section = screen.getByTestId("when-to-expect-payments");
+      expect(section).toMatchSnapshot();
+    }
+  );
 });

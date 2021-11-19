@@ -2,6 +2,8 @@ import { Payments } from "src/pages/applications/status/payments";
 import { Props } from "storybook/types";
 import React from "react";
 import User from "src/models/User";
+
+// TODO (PORTAL-1148) Update to use createMockClaim instead of createMockBenefitsApplication when ready
 import { createMockBenefitsApplication } from "tests/test-utils/createMockBenefitsApplication";
 import useMockableAppLogic from "lib/mock-helpers/useMockableAppLogic";
 
@@ -39,6 +41,7 @@ export const DefaultStory = (
   }
 ) => {
   // Claim type is selected control
+  // TODO (PORTAL-1148) Update to use createMockClaim instead of createMockBenefitsApplication when ready
   const claimType = {
     [LEAVE_TYPES.continuous]: createMockBenefitsApplication("continuous"),
     [LEAVE_TYPES.continuousReduced]: createMockBenefitsApplication(

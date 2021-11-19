@@ -47,6 +47,7 @@ function setFeatureFlags(flags?: Partial<FeatureFlags>): void {
     noMaintenance: true,
     employerShowDashboardSearch: true,
     employerShowReviewByStatus: true,
+    claimantShowTaxWithholding: false,
   };
   cy.setCookie("_ff", JSON.stringify({ ...defaults, ...flags }), { log: true });
 }
@@ -669,7 +670,7 @@ export function addPaymentInfo(
     default:
       throw new Error("Unknown payment method");
   }
-  cy.findByText("Submit Part 2").click();
+  cy.findByText(/Submit (Part 2|payment method)/).click();
 }
 
 export function addId(idType: string): void {
@@ -1003,12 +1004,24 @@ export function submitPartsTwoThreeNoLeaveCert(
 
 export function submitClaimPartsTwoThree(
   application: ApplicationRequestBody,
-  paymentPreference: PaymentPreferenceRequestBody
+  paymentPreference: PaymentPreferenceRequestBody,
+  useWithholdingFlow = false
 ): void {
   const reason = application.leave_details && application.leave_details.reason;
-  clickChecklistButton("Add payment information");
+  clickChecklistButton(
+    useWithholdingFlow ? "Enter payment information" : "Add payment information"
+  );
   addPaymentInfo(paymentPreference);
   onPage("checklist");
+  if (useWithholdingFlow) {
+    clickChecklistButton("Enter tax withholding preference");
+    /*
+    @todo: Ideally in the future, this value would come from the application.
+    We don't yet have the support to generate claims with tax withholding values
+    Once that is complete we should update this to be dynamic
+    */
+    addWithholdingPreference(true);
+  }
   clickChecklistButton("Upload identification document");
   addId("MA ID");
   onPage("checklist");
@@ -1019,6 +1032,8 @@ export function submitClaimPartsTwoThree(
   onPage("checklist");
   reviewAndSubmit();
   onPage("review");
+  useWithholdingFlow &&
+    cy.contains("Withhold state and federal taxes?").parent().contains("Yes");
   confirmSubmit();
   goToDashboardFromSuccessPage();
   cy.wait(3000);
@@ -2026,4 +2041,14 @@ export function clearSearch(): void {
   cy.get("table tbody").should(($table) => {
     expect($table.children().length).to.be.gt(1);
   });
+}
+
+export function addWithholdingPreference(withholding: boolean) {
+  cy.contains(
+    "Do you want us to withhold state and federal taxes from your paid leave benefits?"
+  );
+  cy.get("label")
+    .contains(withholding ? "Yes" : "No")
+    .click();
+  cy.get("button").contains("Submit tax withholding preference").click();
 }

@@ -5,7 +5,11 @@ import pytest
 import massgov.pfml.api.util.state_log_util as state_log_util
 from massgov.pfml.db.models.employees import Flow, State
 from massgov.pfml.db.models.factories import EmployeeFactory
-from massgov.pfml.db.models.payments import PaymentLog
+from massgov.pfml.db.models.payments import (
+    FineosWritebackDetails,
+    FineosWritebackTransactionStatus,
+    PaymentLog,
+)
 from massgov.pfml.delegated_payments.weekly_max.max_weekly_benefit_amount_validation_step import (
     MaxWeeklyBenefitAmountValidationStep,
 )
@@ -57,6 +61,21 @@ def test_run_step_payment_over_cap(
     )
     assert payment_flow_log.outcome
     assert payment_flow_log.outcome["maximum_weekly_details"]
+
+    writeback_detail = (
+        local_test_db_session.query(FineosWritebackDetails)
+        .filter(FineosWritebackDetails.payment_id == payment.payment_id)
+        .one_or_none()
+    )
+    assert writeback_detail
+    assert (
+        writeback_detail.transaction_status_id
+        == FineosWritebackTransactionStatus.WEEKLY_BENEFITS_AMOUNT_EXCEEDS_850.transaction_status_id
+    )
+    writeback_flow_log = state_log_util.get_latest_state_log_in_flow(
+        payment, Flow.DELEGATED_PEI_WRITEBACK, local_test_db_session
+    )
+    assert writeback_flow_log.end_state_id == State.DELEGATED_ADD_TO_FINEOS_WRITEBACK.state_id
 
     payment_log = (
         local_test_db_session.query(PaymentLog)
