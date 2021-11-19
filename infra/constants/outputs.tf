@@ -27,17 +27,17 @@ output "infra_admin_sso_arn" {
 #       https://lwd.atlassian.net/wiki/spaces/DD/pages/272072807/Tagging+Standards.
 output "environment_tags" {
   value = {
-    "test"         = "test"
-    "stage"        = "stage"
-    "prod"         = "prod"
-    "nonprod"      = "stage"
-    "performance"  = "qa"
-    "training"     = "train"
-    "uat"          = "uat"
-    "breakfix"     = "qa"
-    "cps-preview"  = "qa"
-    "adhoc"        = "test"
-    "long" = "test"
+    "test"        = "test"
+    "stage"       = "stage"
+    "prod"        = "prod"
+    "nonprod"     = "stage"
+    "performance" = "qa"
+    "training"    = "train"
+    "uat"         = "uat"
+    "breakfix"    = "qa"
+    "cps-preview" = "qa"
+    "adhoc"       = "test"
+    "long"        = "test"
   }
 }
 
@@ -48,15 +48,15 @@ output "environment_tags" {
 #
 output "environment_shorthand" {
   value = {
-    "test"         = "test"
-    "stage"        = "stage"
-    "prod"         = "prod"
-    "performance"  = "perf"
-    "training"     = "train"
-    "uat"          = "uat"
-    "breakfix"     = "bfx"
-    "cps-preview"  = "cpspr"
-    "long" = "long"
+    "test"        = "test"
+    "stage"       = "stage"
+    "prod"        = "prod"
+    "performance" = "perf"
+    "training"    = "train"
+    "uat"         = "uat"
+    "breakfix"    = "bfx"
+    "cps-preview" = "cpspr"
+    "long"        = "long"
   }
 }
 
@@ -68,16 +68,16 @@ output "environment_shorthand" {
 #
 output "smartronix_environment_tags" {
   value = {
-    "test"         = "Development"
-    "stage"        = "Staging"
-    "prod"         = "Production"
-    "performance"  = "QA"
-    "training"     = "Sandbox"
-    "uat"          = "UAT"
-    "breakfix"     = "Breakfix"
-    "cps-preview"  = "CPSPreview"
-    "adhoc"        = "Adhoc"
-    "long" = "LONG"
+    "test"        = "Development"
+    "stage"       = "Staging"
+    "prod"        = "Production"
+    "performance" = "QA"
+    "training"    = "Sandbox"
+    "uat"         = "UAT"
+    "breakfix"    = "Breakfix"
+    "cps-preview" = "CPSPreview"
+    "adhoc"       = "Adhoc"
+    "long"        = "LONG"
   }
 }
 
