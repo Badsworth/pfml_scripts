@@ -19,8 +19,6 @@ import massgov.pfml.db.models.applications as application_models
 import massgov.pfml.db.models.employees as employee_models
 import massgov.pfml.db.models.verifications as verification_models
 import massgov.pfml.util.datetime as datetime_util
-from massgov.pfml.types import Fein as FeinType
-from massgov.pfml.types import TaxId
 
 db_session = None
 

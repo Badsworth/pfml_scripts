@@ -28,7 +28,7 @@ from massgov.pfml.db.models.factories import (
     OrganizationUnitFactory,
     WagesAndContributionsFactory,
 )
-from massgov.pfml.types import Fein, TaxId
+from massgov.pfml.types import TaxId
 
 
 class SpecialTestException(Exception):

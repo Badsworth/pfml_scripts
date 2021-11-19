@@ -8,7 +8,6 @@ import pytest
 from dateutil.relativedelta import relativedelta
 
 import tests.api
-from massgov.pfml.cognito.exceptions import CognitoUserExistsValidationError
 from massgov.pfml.db.models.employees import Role, User, UserLeaveAdministrator
 from massgov.pfml.db.models.factories import (
     EmployerFactory,
