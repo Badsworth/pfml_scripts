@@ -72,6 +72,10 @@ def test_run_step_payment_over_cap(
         writeback_detail.transaction_status_id
         == FineosWritebackTransactionStatus.WEEKLY_BENEFITS_AMOUNT_EXCEEDS_850.transaction_status_id
     )
+    writeback_flow_log = state_log_util.get_latest_state_log_in_flow(
+        payment, Flow.DELEGATED_PEI_WRITEBACK, local_test_db_session
+    )
+    assert writeback_flow_log.end_state_id == State.DELEGATED_ADD_TO_FINEOS_WRITEBACK.state_id
 
     payment_log = (
         local_test_db_session.query(PaymentLog)
