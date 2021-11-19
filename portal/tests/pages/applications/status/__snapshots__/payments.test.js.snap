@@ -1,86 +1,5 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Payments renders expected content for continuous leave 1`] = `
-<section
-  class="margin-y-4"
-  data-testid="when-to-expect-payments"
->
-  <p>
-    You can expect your first payment to arrive at the beginning of your fourth week of leave, if your leave has already started. If your leave starts in the future, you can expect your first payment 2-4 weeks after your leave starts. After that, you will receive your payments every week.
-  </p>
-  <p>
-    Your application has a 7-day waiting period at the start of your leave. You won’t receive any PFML payments during this time. Read more about the 
-    <a
-      href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#what-is-the-7-day-waiting-period?-"
-      rel="noopener noreferrer"
-      target="_blank"
-    >
-      7-day waiting period
-    </a>
-    .
-  </p>
-</section>
-`;
-
-exports[`Payments renders expected content for intermittent leave 1`] = `
-<section
-  class="margin-y-4"
-  data-testid="when-to-expect-payments"
->
-  <p>
-    Your application has a 7-day waiting period at the first day you use your intermittent leave. You won’t receive any PFML payments during this time. Read more about the 
-    <a
-      href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#what-is-the-7-day-waiting-period?-"
-      rel="noopener noreferrer"
-      target="_blank"
-    >
-      7-day waiting period
-    </a>
-    .
-  </p>
-  <p>
-    If your leave has not yet started, you can expect your first payment to be sent to you once you have reported at least 8 total leave hours taken or 30 days has passed since the start of your leave.
-  </p>
-  <p>
-    If your leave has started, you can expect to receive payment about one week after the hours are filed (as long as they add up to at least 8 hours). You can receive more than one payment in a week depending on how intermittent hours are reported.
-  </p>
-  <p>
-    You can report your hours by calling 
-    <a
-      href="tel:(857) 972-9256"
-    >
-      (857) 972-9256
-    </a>
-    .
-  </p>
-</section>
-`;
-
-exports[`Payments renders expected content for reducedSchedule leave 1`] = `
-<section
-  class="margin-y-4"
-  data-testid="when-to-expect-payments"
->
-  <p>
-    You can expect your first payment to arrive at the beginning of your fourth week of leave, if your leave has already started. If your leave starts in the future, you can expect your first payment 2-4 weeks after your leave starts. After that, you will receive your payments every week.
-  </p>
-  <p>
-    Your application has a 7-day waiting period at the start of your leave. You won’t receive any PFML payments during this time. Read more about the 
-    <a
-      href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#what-is-the-7-day-waiting-period?-"
-      rel="noopener noreferrer"
-      target="_blank"
-    >
-      7-day waiting period
-    </a>
-    .
-  </p>
-  <p>
-    You need to have taken 8 hours or more of leave, or 30 days has passed since the start of your leave to be eligible for a weekly benefit payment.
-  </p>
-</section>
-`;
-
 exports[`Payments renders the \`changes to payments\` section 1`] = `
 <section
   class="margin-y-4"
@@ -231,4 +150,96 @@ exports[`Payments renders the \`questions?\` section 1`] = `
     .
   </p>
 </section>
+`;
+
+exports[`Payments renders the Payments table 1`] = `
+<table
+  class="usa-table usa-table--borderless c-table usa-table--stacked borderless-mobile"
+>
+  <thead>
+    <tr>
+      <th
+        scope="col"
+      >
+        Leave dates
+      </th>
+      <th
+        scope="col"
+      >
+        Payment Method
+      </th>
+      <th
+        scope="col"
+      >
+        Estimated scheduled date
+      </th>
+      <th
+        scope="col"
+      >
+        Date sent
+      </th>
+      <th
+        scope="col"
+      >
+        Amount sent
+      </th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td
+        data-label="Leave dates"
+      >
+        11/8/2021 to 11/15/2021
+      </td>
+      <td
+        data-label="Payment Method"
+      >
+        Check
+      </td>
+      <td
+        data-label="Estimated scheduled date"
+      >
+        Pending
+      </td>
+      <td
+        data-label="Date sent"
+      >
+        2021-11-15
+      </td>
+      <td
+        data-label="Amount sent"
+      >
+        $100.00
+      </td>
+    </tr>
+    <tr>
+      <td
+        data-label="Leave dates"
+      >
+        10/31/2021 to 11/7/2021
+      </td>
+      <td
+        data-label="Payment Method"
+      >
+        Check
+      </td>
+      <td
+        data-label="Estimated scheduled date"
+      >
+        Sent to bank
+      </td>
+      <td
+        data-label="Date sent"
+      >
+        2021-11-08
+      </td>
+      <td
+        data-label="Amount sent"
+      >
+        $100.00
+      </td>
+    </tr>
+  </tbody>
+</table>
 `;
