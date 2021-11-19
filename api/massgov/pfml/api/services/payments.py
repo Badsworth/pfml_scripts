@@ -4,6 +4,7 @@ from datetime import date, timedelta
 from decimal import Decimal
 from typing import Dict, List, Optional
 
+import pytz
 from sqlalchemy.orm import joinedload
 from sqlalchemy.sql.expression import desc
 
@@ -43,23 +44,24 @@ class PaymentScenarioData:
     }
 
     @classmethod
-    def from_payment(cls, payment: Payment) -> "PaymentScenarioData":
+    def compute(cls, payment: Payment) -> "PaymentScenarioData":
         writeback_detail = get_latest_writeback_detail(payment)
         detail_id = writeback_detail.transaction_status_id if writeback_detail else None
         method_to_call = getattr(cls, cls.SCENARIOS.get(detail_id, "other"))
 
-        return method_to_call(payment, writeback_detail)
+        return method_to_call(payment=payment, writeback_detail=writeback_detail)
 
     @classmethod
-    def pending_validation(cls, payment, _):
+    def pending_validation(cls, **kwargs):
+        payment = kwargs["payment"]
         created_date = payment.pub_eft.prenote_sent_at if payment.pub_eft else None
         if created_date is None:
             expected_send_date_start, expected_send_date_end = get_expected_dates(
-                date.today(), 6, 8
+                date.today(), range_start=6, range_end=8
             )
         else:
             expected_send_date_start, expected_send_date_end = get_expected_dates(
-                date.today(), 5, 7
+                date.today(), range_start=5, range_end=7
             )
 
         return cls(
@@ -68,9 +70,12 @@ class PaymentScenarioData:
         )
 
     @classmethod
-    def income(cls, _, writeback_detail):
-        created_date = writeback_detail.created_at.date()
-        expected_send_date_start, expected_send_date_end = get_expected_dates(created_date, 2, 4)
+    def income(cls, **kwargs):
+        writeback_detail = kwargs["writeback_detail"]
+        created_date = to_est(writeback_detail.created_at).date()
+        expected_send_date_start, expected_send_date_end = get_expected_dates(
+            created_date, range_start=2, range_end=4
+        )
 
         return cls(
             expected_send_date_start=expected_send_date_start,
@@ -78,8 +83,9 @@ class PaymentScenarioData:
         )
 
     @classmethod
-    def paid(cls, payment, writeback_detail):
-        sent_date = writeback_detail.created_at.date()
+    def paid(cls, **kwargs):
+        payment, writeback_detail = kwargs["payment"], kwargs["writeback_detail"]
+        sent_date = to_est(writeback_detail.created_at).date()
 
         return cls(
             amount=payment.amount,
@@ -90,8 +96,10 @@ class PaymentScenarioData:
         )
 
     @classmethod
-    def no_writeback(cls, *_):
-        expected_send_date_start, expected_send_date_end = get_expected_dates(date.today(), 1, 3)
+    def no_writeback(cls, **_):
+        expected_send_date_start, expected_send_date_end = get_expected_dates(
+            date.today(), range_start=1, range_end=3
+        )
         return cls(
             expected_send_date_start=expected_send_date_start,
             expected_send_date_end=expected_send_date_end,
@@ -99,7 +107,7 @@ class PaymentScenarioData:
         )
 
     @classmethod
-    def other(cls, *_):
+    def other(cls, **_):
         return cls()
 
 
@@ -107,10 +115,8 @@ class PaymentScenarioData:
 class PaymentContainer:
     payment: Payment
 
-    scenario_data: Optional[PaymentScenarioData] = None
-
-    def __post_init__(self):
-        self.scenario_data = PaymentScenarioData.from_payment(self.payment)
+    def get_scenario_data(self) -> PaymentScenarioData:
+        return PaymentScenarioData.compute(self.payment)
 
 
 def get_payments_with_status(db_session: Session, claim: Claim) -> Dict:
@@ -141,9 +147,7 @@ def to_response_dict(payment_data: List[PaymentContainer], absence_case_id: Opti
     payments = []
     for payment_container in payment_data:
         payment = payment_container.payment
-        scenario_data = payment_container.scenario_data
-        if scenario_data is None:
-            raise Exception
+        scenario_data = payment_container.get_scenario_data()
 
         payments.append(
             PaymentResponse(
@@ -194,3 +198,8 @@ def get_expected_dates(
         expected_end = from_date + timedelta(days=range_end)
 
     return (expected_start, expected_end)
+
+
+def to_est(datetime_obj):
+    est = pytz.timezone("US/Eastern")
+    return datetime_obj.astimezone(est)
