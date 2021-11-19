@@ -1415,9 +1415,13 @@ locals {
   nonprod_roles = [
     "arn:aws:iam::018311717589:role/aws-service-role/redshift.amazonaws.com/AWSServiceRoleForRedshift",
     "arn:aws:iam::018311717589:role/pfml-all-redshift-s3-daily-import-role",
-    "arn:aws:iam::018311717589:role/redshiftSpectrumRole"
+    "arn:aws:iam::018311717589:role/redshiftSpectrumRole",
+    "arn:aws:iam::498823821309:role/EOLWD-PFML-BusinessIntell-Redshift-Role"
   ]
-  prod_roles = ["arn:aws:iam::018311717589:role/redshift-lwd-prod-cluster-edw-role"]
+  prod_roles = [
+    "arn:aws:iam::018311717589:role/redshift-lwd-prod-cluster-edw-role",
+    "arn:aws:iam::498823821309:role/EOLWD-PFML-BusinessIntell-Redshift-Role"
+  ]
 }
 data "aws_iam_policy_document" "bi_imports_bucket_policy_document" {
   statement {
