@@ -44,7 +44,7 @@ class Base:
         return json_valid_dict
 
 
-def uuid_gen():
+def uuid_gen() -> uuid.UUID:
     return uuid.uuid4()
 
 

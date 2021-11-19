@@ -62,7 +62,7 @@ def get_files_for_import(path: str) -> Tuple[Iterator[Any], Iterator[Any]]:
     files_for_import = massgov.pfml.util.files.list_files(str(path))
     files_for_import.sort()
 
-    def employer_filter(filename):
+    def employer_filter(filename: str) -> bool:
         match = re.match(r"(DORDFML.*_)(\d+)", filename)
 
         if not match:
@@ -71,7 +71,7 @@ def get_files_for_import(path: str) -> Tuple[Iterator[Any], Iterator[Any]]:
         prefix = match[1]
         return prefix == EMPLOYER_FILE_PREFIX
 
-    def employee_filter(filename):
+    def employee_filter(filename: str) -> bool:
         match = re.match(r"(DORDFML.*_)(\d+)", filename)
 
         if not match:
