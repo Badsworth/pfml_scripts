@@ -3,7 +3,7 @@ from typing import Optional, Union
 
 import massgov.pfml.util.pydantic.mask as mask
 from massgov.pfml.db.models.employees import TaxIdentifier
-from massgov.pfml.types import Fein
+from massgov.pfml.types import Fein, TaxId
 
 
 class Regexes:
@@ -34,7 +34,7 @@ class MaskedTaxIdFormattedStr(str):
             return None
 
         if isinstance(val, TaxIdentifier):
-            return val.tax_identifier.to_masked_str()
+            return TaxId(val.tax_identifier).to_masked_str()
 
         if isinstance(val, str):
             return f"***-**-{val[-4:]}"

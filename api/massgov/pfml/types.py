@@ -29,6 +29,9 @@ class TaxId:
     def to_formatted_str(self) -> str:
         return self.val
 
+    def last4(self) -> str:
+        return self.val[-4:]
+
     def to_masked_str(self) -> str:
         return f"***-**-{self.val[-4:]}"
 

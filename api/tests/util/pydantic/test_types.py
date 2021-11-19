@@ -20,9 +20,10 @@ def test_masked_tax_id_formatted_str_with_str():
 def test_masked_tax_id_formatted_str_with_tax_identifier(
     test_db_session, initialize_factories_session
 ):
-    tax_id = TaxIdentifierFactory.create()
+    tax_identifier = TaxIdentifierFactory.create()
+    tax_id = tax_identifier.tax_identifier
     model = PydanticTypesTestModel(tax_id=tax_id)
-    assert model.tax_id.to_masked_str() == f"***-**-{tax_id.tax_identifier_last4}"
+    assert model.tax_id.to_masked_str() == f"***-**-{model.tax_id.last4()}"
 
 
 def test_tax_id_formatted_str_with_formatted_str():

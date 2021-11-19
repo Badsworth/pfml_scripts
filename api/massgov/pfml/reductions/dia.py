@@ -6,6 +6,7 @@ from typing import Any, Dict, List, Tuple
 
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.db as db
+from massgov.pfml.types import TaxId
 import massgov.pfml.util.batch.log as batch_log
 import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
@@ -157,7 +158,7 @@ def _format_claimants_for_dia_claimant_list(claimants: List[Employee]) -> List[D
             Constants.FIRST_NAME_FIELD: employee.first_name.replace(",", ""),
             Constants.LAST_NAME_FIELD: employee.last_name.replace(",", ""),
             Constants.BIRTH_DATE_FIELD: date_of_birth.strftime(Constants.DATE_OF_BIRTH_FORMAT),
-            Constants.SSN_FIELD: tax_id.tax_identifier.to_unformatted_str(),
+            Constants.SSN_FIELD: tax_id.to_unformatted_str(),
         }
 
         for key, value in info.items():
