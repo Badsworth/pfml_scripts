@@ -11,51 +11,35 @@ import useMockableAppLogic from "lib/mock-helpers/useMockableAppLogic";
 const employerDepartmentList = [
   {
     organization_unit_id: "dep-1",
-    fineos_id: "f-dep-1",
     name: "Department One",
-    employer_id: "123456789",
   },
   {
     organization_unit_id: "dep-2",
-    fineos_id: "f-dep-2",
     name: "Department Two",
-    employer_id: "123456789",
   },
   {
     organization_unit_id: "dep-3",
-    fineos_id: "f-dep-3",
     name: "Department Three",
-    employer_id: "123456789",
   },
   {
     organization_unit_id: "dep-4",
-    fineos_id: "f-dep-4",
     name: "Department Four",
-    employer_id: "123456789",
   },
   {
     organization_unit_id: "dep-5",
-    fineos_id: "f-dep-5",
     name: "Department Five",
-    employer_id: "123456789",
   },
   {
     organization_unit_id: "dep-6",
-    fineos_id: "f-dep-6",
     name: "Department Six",
-    employer_id: "123456789",
   },
   {
     organization_unit_id: "dep-7",
-    fineos_id: "f-dep-7",
     name: "Department Seven",
-    employer_id: "123456789",
   },
   {
     organization_unit_id: "dep-8",
-    fineos_id: "f-dep-8",
     name: "Department Eight",
-    employer_id: "123456789",
   },
 ];
 
@@ -86,13 +70,13 @@ const claimWithUnits = (employeeDepartmentList: OrganizationUnit[]) =>
     .create();
 
 const scenarios = {
-  Singular: {
+  "Singular List": {
     claim: claimWithUnits(singularDepartmentList),
   },
-  Short: {
+  "Short List": {
     claim: claimWithUnits(shortDepartmentList),
   },
-  Long: {
+  "Long List": {
     claim: claimWithUnits(longDepartmentList),
   },
 };
@@ -100,6 +84,15 @@ const scenarios = {
 export default {
   title: "Pages/Applications/Department",
   component: Department,
+  argTypes: {
+    scenario: {
+      defaultValue: Object.keys(scenarios)[0],
+      control: {
+        type: "radio",
+        options: Object.keys(scenarios),
+      },
+    },
+  },
 };
 
 export const DefaultStory = (
@@ -107,21 +100,7 @@ export const DefaultStory = (
 ) => {
   const { claim } = scenarios[args.scenario];
 
-  const appLogic = useMockableAppLogic({
-    benefitsApplications: {
-      update: () => Promise.resolve(),
-    },
-  });
+  const appLogic = useMockableAppLogic();
 
   return <Department appLogic={appLogic} user={user} claim={claim} />;
-};
-
-DefaultStory.argTypes = {
-  scenario: {
-    defaultValue: Object.keys(scenarios)[0],
-    control: {
-      type: "radio",
-      options: Object.keys(scenarios),
-    },
-  },
 };
