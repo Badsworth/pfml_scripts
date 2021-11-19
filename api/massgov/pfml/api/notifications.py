@@ -28,9 +28,9 @@ from massgov.pfml.db.queries.managed_requirements import (
     create_or_update_managed_requirement_from_fineos,
     get_managed_requirement_by_fineos_managed_requirement_id,
 )
-from massgov.pfml.types import Fein
 from massgov.pfml.fineos import AbstractFINEOSClient, FINEOSClientError
 from massgov.pfml.fineos.models.customer_api import AbsenceDetails
+from massgov.pfml.types import Fein
 from massgov.pfml.util.logging.managed_requirements import (
     get_fineos_managed_requirement_log_attributes,
 )
