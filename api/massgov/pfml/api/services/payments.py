@@ -54,7 +54,11 @@ class PaymentScenarioData:
     @classmethod
     def pending_validation(cls, **kwargs):
         payment = kwargs["payment"]
-        created_date = payment.pub_eft.prenote_sent_at if payment.pub_eft else None
+        pub_eft = payment.pub_eft
+        created_date = (
+            pub_eft.prenote_sent_at.date() if pub_eft and pub_eft.prenote_sent_at else None
+        )
+
         if created_date is None:
             # If the EFT record hasn't been sent to PUB yet, pub_eft.prenote_sent_at won't be set yet.
             # We'll assume we are going to send it within the next day, so up the 5-7 day date range by 1 to compensate.
