@@ -22,7 +22,6 @@ from massgov.pfml.delegated_payments.delegated_payments_util import (
 )
 from massgov.pfml.reductions.common import AgencyLoadResult, get_claimants_for_outbound
 from massgov.pfml.reductions.config import get_moveit_config, get_s3_config
-from massgov.pfml.types import TaxId
 from massgov.pfml.util.batch.log import LogEntry
 from massgov.pfml.util.files import upload_to_s3
 from massgov.pfml.util.sftp_s3_transfer import (

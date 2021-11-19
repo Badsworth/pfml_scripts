@@ -97,7 +97,10 @@ def test_format_claimants_for_dia_claimant_list():
             Constants.DATE_OF_BIRTH_FORMAT
         )
         assert isinstance(dia_claimant[Constants.BIRTH_DATE_FIELD], str)
-        assert TaxId(dia_claimant[Constants.SSN_FIELD]).to_unformatted_str() == employee.tax_identifier.tax_identifier
+        assert (
+            TaxId(dia_claimant[Constants.SSN_FIELD]).to_unformatted_str()
+            == employee.tax_identifier.tax_identifier
+        )
         assert "-" not in dia_claimant[Constants.SSN_FIELD]
 
 
