@@ -34,7 +34,7 @@ class MaskedTaxIdFormattedStr(str):
             return None
 
         if isinstance(val, TaxIdentifier):
-            return TaxId(val.tax_identifier).to_masked_str()
+            return TaxId(str(val.tax_identifier)).to_masked_str()
 
         if isinstance(val, str):
             return f"***-**-{val[-4:]}"
