@@ -61,7 +61,7 @@ def update(args):
         git_utils.checkout(args.release_version)
         logger.info(f"Checked out '{args.release_version}'.")
 
-        git_utils.pull()
+        git_utils.gitcmd.pull()
         logger.info(f"Pulled updates")
 
         if args.git_commits:
@@ -135,7 +135,7 @@ def hotfix(args):  # production hotfix, args are a branch name and a list of com
         git_utils.checkout(args.release_version)
         logger.info(f"Checked out '{args.release_version}'.")
 
-        git_utils.pull()
+        git_utils.gitcmd.pull()
         logger.info(f"Pulled updates")
 
         if args.git_commits:
