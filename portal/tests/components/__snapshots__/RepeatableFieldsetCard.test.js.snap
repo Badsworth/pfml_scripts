@@ -2,14 +2,15 @@
 
 exports[`RepeatableFieldsetCard renders with the given content 1`] = `
 <div
-  className="margin-bottom-3 measure-5 padding-3 border-2px border-base-lighter custom-class-name"
-  key="RepeatableFieldsetCard1"
+  class="margin-bottom-3 measure-5 padding-3 border-2px border-base-lighter custom-class-name"
+  data-key="RepeatableFieldsetCard1"
+  data-testid="repeatable-fieldset-card"
 >
   <fieldset
-    className="usa-fieldset"
+    class="usa-fieldset"
   >
     <legend
-      className="usa-legend font-heading-lg text-normal"
+      class="usa-legend font-heading-lg text-normal"
     >
       Person
     </legend>
@@ -18,15 +19,4 @@ exports[`RepeatableFieldsetCard renders with the given content 1`] = `
     </p>
   </fieldset>
 </div>
-`;
-
-exports[`RepeatableFieldsetCard when showRemoveButton is true shows the remove button 1`] = `
-<Button
-  className="text-error hover:text-error-dark active:text-error-darker"
-  name="remove-entry-button"
-  onClick={[Function]}
-  variation="unstyled"
->
-  Remove
-</Button>
 `;

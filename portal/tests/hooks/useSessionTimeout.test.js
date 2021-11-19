@@ -1,5 +1,4 @@
-import { act } from "react-dom/test-utils";
-import { testHook } from "../test-utils";
+import { act, renderHook } from "@testing-library/react-hooks";
 import tracker from "../../src/services/tracker";
 import useAppLogic from "../../src/hooks/useAppLogic";
 import useSessionTimeout from "../../src/hooks/useSessionTimeout";
@@ -13,7 +12,7 @@ describe("useSessionTimeout", () => {
 
   describe("when user is logged in", () => {
     beforeEach(() => {
-      testHook(() => {
+      renderHook(() => {
         appLogic = useAppLogic();
         appLogic.auth.isLoggedIn = true;
         useSessionTimeout(secondsOfInactivityUntilLogout, appLogic.auth);
@@ -47,7 +46,7 @@ describe("useSessionTimeout", () => {
 
   describe("when user is logged out", () => {
     beforeEach(() => {
-      testHook(() => {
+      renderHook(() => {
         appLogic = useAppLogic();
         appLogic.auth.isLoggedIn = false;
         useSessionTimeout(secondsOfInactivityUntilLogout, appLogic.auth);

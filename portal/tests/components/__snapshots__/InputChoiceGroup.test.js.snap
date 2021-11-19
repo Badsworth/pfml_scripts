@@ -1,31 +1,10 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`InputChoiceGroup renders a legend 1`] = `
-<FormLabel
-  component="legend"
-  errorMsg="Error message"
-  hint="Hint text"
-  optionalText="Optional"
+exports[`InputChoiceGroup InputChoiceGroup error messages passes errorMsg to FormLabel when provided 1`] = `
+<span
+  class="usa-error-message measure-5"
+  role="alert"
 >
-  Field label
-</FormLabel>
-`;
-
-exports[`InputChoiceGroup renders an InputChoice for each object in choices 1`] = `
-Array [
-  <InputChoice
-    key="a"
-    label="Choice A"
-    name="field-name"
-    type="checkbox"
-    value="a"
-  />,
-  <InputChoice
-    key="b"
-    label="Choice B"
-    name="field-name"
-    type="checkbox"
-    value="b"
-  />,
-]
+  error message
+</span>
 `;

@@ -1,5 +1,3 @@
-import pytest
-
 from massgov.pfml.api.generate_wagesandcontributions import generate
 from massgov.pfml.db.models.employees import (
     Employee,
@@ -10,7 +8,6 @@ from massgov.pfml.db.models.employees import (
 from massgov.pfml.types import Fein, TaxId
 
 
-@pytest.mark.integration
 def test_full_generate_wagesandcontributions(test_db_session):
     employer_fein = Fein("929292929")
     employee_ssn = TaxId("123456789")

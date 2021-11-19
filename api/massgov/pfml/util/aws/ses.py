@@ -5,7 +5,7 @@ import re
 from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from typing import TYPE_CHECKING, Dict, List, Optional
+from typing import TYPE_CHECKING, Dict, List, Optional, Sequence
 
 import boto3
 from botocore.exceptions import ClientError
@@ -71,7 +71,7 @@ def send_email(
     body_text: str,
     sender: str,
     bounce_forwarding_email_address_arn: str,
-    attachments: Optional[List[AnyPath]] = None,
+    attachments: Optional[Sequence[AnyPath]] = None,
 ) -> Dict:
     """
     attachments is a list containing the full-paths to the file that will be attached to the email.
@@ -121,8 +121,8 @@ def send_email(
         raise RuntimeError("Error sending email: %s", error_message)
 
 
-def create_email_attachments(msg_container: MIMEMultipart, attachments: List[AnyPath]) -> None:
+def create_email_attachments(msg_container: MIMEMultipart, attachments: Sequence[AnyPath]) -> None:
     for attachment in attachments:
         att = MIMEApplication(read_file(attachment, mode="rb"))
-        att.add_header("Content-Disposition", "attachment", filename=os.path.basename(attachment))
+        att.add_header("Content-Disposition", "attachment", filename=os.path.basename(attachment))  # type: ignore
         msg_container.attach(att)

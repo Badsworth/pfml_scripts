@@ -3,12 +3,15 @@ from datetime import date
 import pytest
 
 from massgov.pfml.api.models.common import (
+    ConcurrentLeave,
     EmployerBenefit,
     PreviousLeave,
     PreviousLeaveQualifyingReason,
 )
 from massgov.pfml.fineos.models.group_client_api import EForm
 from massgov.pfml.fineos.transforms.from_fineos.eforms import (
+    EformParseError,
+    TransformConcurrentLeaveFromOtherLeaveEform,
     TransformEmployerBenefitsFromOtherIncomeEform,
     TransformOtherIncomeEform,
     TransformPreviousLeaveFromOtherLeaveEform,
@@ -392,3 +395,47 @@ class TestTransformEformBody:
         assert other_leave_2["leave_start_date"] == date(2020, 9, 23)
         assert other_leave_2["leave_end_date"] == date(2020, 12, 15)
         assert other_leave_2["leave_reason"] == "Unknown"
+
+
+def test_transform_concurrent_leave_from_other_leave_eform():
+    other_leave_eform = EForm.parse_obj(
+        {
+            "eformType": "Other Leaves - current version",
+            "eformId": 11475,
+            "eformAttributes": [
+                {"name": "V2AccruedStartDate1", "dateValue": "2021-05-11"},
+                {"name": "V2AccruedEndDate1", "dateValue": "2021-05-29"},
+                {
+                    "name": "V2AccruedPLEmployer1",
+                    "enumValue": {"domainName": "PleaseSelectYesNo", "instanceValue": "Yes"},
+                },
+            ],
+        }
+    )
+    concurrent_leave = TransformConcurrentLeaveFromOtherLeaveEform.from_fineos(other_leave_eform)
+    assert concurrent_leave == ConcurrentLeave(
+        concurrent_leave_id=None,
+        is_for_current_employer=True,
+        leave_start_date=date(2021, 5, 11),
+        leave_end_date=date(2021, 5, 29),
+    )
+
+
+def test_transform_concurrent_leave_from_other_leave_eform_invalid_boolean():
+    other_leave_eform = EForm.parse_obj(
+        {
+            "eformType": "Other Leaves - current version",
+            "eformId": 11475,
+            "eformAttributes": [
+                {"name": "V2AccruedStartDate1", "dateValue": "2021-05-11"},
+                {"name": "V2AccruedEndDate1", "dateValue": "2021-05-29"},
+                {
+                    "name": "V2AccruedPLEmployer1",
+                    "enumValue": {"domainName": "PleaseSelectYesNo", "instanceValue": "invalid"},
+                },
+            ],
+        }
+    )
+
+    with pytest.raises(EformParseError, match="could not parse ConcurrentLeave object"):
+        TransformConcurrentLeaveFromOtherLeaveEform.from_fineos(other_leave_eform)

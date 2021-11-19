@@ -8,12 +8,6 @@ describe("BaseCollection", () => {
   }
 
   describe("#constructor", () => {
-    it("cannot instantiate BaseCollection directly", () => {
-      expect(() => {
-        return new BaseCollection();
-      }).toThrow();
-    });
-
     it("creates an empty collection when no parameters are passed", () => {
       const collection = new TestCollection();
 
@@ -69,7 +63,7 @@ describe("BaseCollection", () => {
       initialCollection = new TestCollection([item1]);
     });
 
-    it("creates a new collection with an additonal item", () => {
+    it("creates a new collection with an additional item", () => {
       const collection = initialCollection.addItem(item2);
 
       expect(initialCollection.items).toEqual([item1]);
@@ -82,10 +76,13 @@ describe("BaseCollection", () => {
       }).toThrow(/Item testId is null or undefined/);
     });
 
-    it("throws if item is already in collection", () => {
-      expect(() => {
-        initialCollection.addItem(item1);
-      }).toThrow(/Item with testId 123 already exists/);
+    it("ignores a new item if it's already in collection", () => {
+      jest.spyOn(console, "warn").mockImplementationOnce(() => {});
+      const duplicateItem = { ...item1, dupe: true };
+      const collection = initialCollection.addItem(duplicateItem);
+
+      expect(collection.items).toHaveLength(1);
+      expect(collection.items[0]).toEqual(item1);
     });
   });
 

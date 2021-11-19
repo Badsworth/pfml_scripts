@@ -79,6 +79,8 @@ REQUIRED_FIELDS_FOR_DISBURSED_PAYMENT = [
 
 class FineosPeiWritebackStep(Step):
     class Metrics(str, enum.Enum):
+        FINEOS_WRITEBACK_PATH = "fineos_writeback_path"
+        ARCHIVED_WRITEBACK_PATH = "archived_writeback_path"
         ERRORED_WRITEBACK_RECORD_DURING_FILE_CREATION_COUNT = (
             "errored_writeback_record_during_file_creation_count"
         )
@@ -177,7 +179,6 @@ class FineosPeiWritebackStep(Step):
                     raise Exception(
                         f"Can not find writeback details for payment {payment.payment_id} with state {cast(LkState, state_log.end_state).state_description} and outcome {state_log.outcome}"
                     )
-
                 metric_name = transaction_status.transaction_status_description.lower().replace(
                     " ", "_"
                 )
@@ -346,7 +347,7 @@ class FineosPeiWritebackStep(Step):
         try:
             state_log_util.create_finished_state_log(
                 associated_model=reference_file,
-                end_state=State.PEI_WRITEBACK_SENT,  # TODO - we should create a new state and not reuse the old one
+                end_state=State.PEI_WRITEBACK_SENT,
                 outcome=state_log_util.build_outcome(
                     "Archived PEI writeback after sending to FINEOS"
                 ),
@@ -373,6 +374,12 @@ class FineosPeiWritebackStep(Step):
             )
             raise e
 
+        self.set_metrics(
+            {
+                self.Metrics.ARCHIVED_WRITEBACK_PATH: reference_file.file_location,
+                self.Metrics.FINEOS_WRITEBACK_PATH: fineos_pei_writeback_filepath,
+            }
+        )
         logger.info("Successfully uploaded writeback files to FINEOS S3")
 
     def _create_db_records_for_payments(

@@ -1,14 +1,11 @@
-/* eslint-disable react/jsx-key */
 import EmployerBenefit, {
   EmployerBenefitFrequency,
   EmployerBenefitType,
 } from "../../../src/models/EmployerBenefit";
-import AmendableEmployerBenefit from "../../../src/components/employers/AmendableEmployerBenefit";
+import { render, screen } from "@testing-library/react";
+import AppErrorInfoCollection from "../../../src/models/AppErrorInfoCollection";
 import EmployerBenefits from "../../../src/components/employers/EmployerBenefits";
 import React from "react";
-import { shallow } from "enzyme";
-import { testHook } from "../../test-utils";
-import useAppLogic from "../../../src/hooks/useAppLogic";
 
 const BENEFITS = [
   new EmployerBenefit({
@@ -31,112 +28,112 @@ const BENEFITS = [
   }),
 ];
 
+function renderComponent(customProps) {
+  const props = {
+    addedBenefits: [],
+    appErrors: new AppErrorInfoCollection(),
+    employerBenefits: BENEFITS,
+    onAdd: () => {},
+    onChange: () => {},
+    onRemove: () => {},
+    shouldShowV2: false,
+    ...customProps,
+  };
+
+  return render(<EmployerBenefits {...props} />);
+}
+
 describe("EmployerBenefits", () => {
-  let appLogic;
-
-  function render(providedProps) {
-    const defaultProps = {
-      addedBenefits: [],
-      appErrors: appLogic.appErrors,
-      employerBenefits: BENEFITS,
-      onAdd: () => {},
-      onChange: () => {},
-      onRemove: () => {},
-      shouldShowV2: false,
-    };
-    const componentProps = {
-      ...defaultProps,
-      ...providedProps,
-    };
-    return shallow(<EmployerBenefits {...componentProps} />);
-  }
-
-  beforeEach(() => {
-    testHook(() => {
-      appLogic = useAppLogic();
-    });
-  });
-
   it("renders the component for v1 eforms", () => {
-    const wrapper = render();
-    expect(wrapper).toMatchSnapshot();
-    expect(wrapper.find("Trans").dive()).toMatchSnapshot();
+    const { container } = renderComponent();
+    expect(container).toMatchSnapshot();
   });
 
   it("renders the component for v2 eforms", () => {
-    const wrapper = render({
+    const { container } = renderComponent({
       shouldShowV2: true,
     });
-    expect(wrapper).toMatchSnapshot();
-    expect(wrapper.find("Trans").dive()).toMatchSnapshot();
+    expect(container).toMatchSnapshot();
   });
 
   it("displays 'None reported' if no benefits are reported", () => {
-    const wrapper = render({ employerBenefits: [] });
-    expect(wrapper.find(AmendableEmployerBenefit).exists()).toEqual(false);
-    expect(wrapper.find("td").at(0).text()).toEqual("None reported");
+    renderComponent({ employerBenefits: [] });
+
+    expect(
+      screen.getByRole("cell", { name: /None reported/i })
+    ).toBeInTheDocument();
   });
 
   it('displays a row for each benefit in "employerBenefits"', () => {
-    const wrapper = render();
+    renderComponent();
 
-    expect(wrapper.find("AmendableEmployerBenefit").length).toBe(2);
+    expect(screen.queryAllByTestId("benefit-details-row")).toHaveLength(
+      BENEFITS.length
+    );
   });
 
   describe("when 'shouldShowV2' is true", () => {
     it("displays rows for added benefits", () => {
-      const wrapper = render({
+      renderComponent({
         addedBenefits: BENEFITS,
         employerBenefits: [],
         shouldShowV2: true,
       });
 
-      expect(wrapper.find("AmendableEmployerBenefit").length).toBe(2);
+      expect(screen.queryAllByTestId("added-benefit-details-row")).toHaveLength(
+        BENEFITS.length
+      );
     });
 
-    it("displays the first 'Add benefit' button", () => {
-      const wrapper = render({
+    it("displays the first 'Add benefit' button when there are no benefits added", () => {
+      renderComponent({
         employerBenefits: [],
         shouldShowV2: true,
       });
 
       expect(
-        wrapper.find("AddButton").dive().find("Button").dive().text()
-      ).toMatchInlineSnapshot(`"Add an employer-sponsored benefit"`);
+        screen.getByRole("button", {
+          name: "Add an employer-sponsored benefit",
+        })
+      ).toBeInTheDocument();
     });
 
-    it("displays the subsequent 'Add benefit' button", () => {
-      const wrapper = render({
+    it("displays the subsequent 'Add benefit' button when there are benefits added", () => {
+      renderComponent({
         addedBenefits: BENEFITS,
         employerBenefits: [],
         shouldShowV2: true,
       });
 
       expect(
-        wrapper.find("AddButton").dive().find("Button").dive().text()
-      ).toMatchInlineSnapshot(`"Add another employer-sponsored benefit"`);
+        screen.getByRole("button", {
+          name: "Add another employer-sponsored benefit",
+        })
+      ).toBeInTheDocument();
     });
   });
 
   describe("when 'shouldShowV2' is false", () => {
     it("does not display rows for added benefits", () => {
-      const wrapper = render({
+      renderComponent({
         addedBenefits: BENEFITS,
         employerBenefits: [],
         shouldShowV2: false,
       });
 
-      expect(wrapper.find("AmendableEmployerBenefit").length).toBe(0);
+      expect(
+        screen.queryByTestId("added-benefit-details-row")
+      ).not.toBeInTheDocument();
     });
 
     it("does not display the 'Add benefit' button", () => {
-      const wrapper = render({
+      renderComponent({
         addedBenefits: BENEFITS,
         employerBenefits: [],
         shouldShowV2: false,
       });
 
-      expect(wrapper.find("AddButton").exists()).toBe(false);
+      expect(screen.queryByRole("button")).not.toBeInTheDocument();
     });
   });
 });

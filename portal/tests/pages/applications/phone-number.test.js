@@ -1,72 +1,73 @@
-import { renderWithAppLogic, simulateEvents } from "../../test-utils";
+import { MockBenefitsApplicationBuilder, renderPage } from "../../test-utils";
+import { screen, waitFor } from "@testing-library/react";
 import PhoneNumber from "../../../src/pages/applications/phone-number";
 import { PhoneType } from "../../../src/models/BenefitsApplication";
+import { setupBenefitsApplications } from "../../test-utils/helpers";
+import userEvent from "@testing-library/user-event";
 
-jest.mock("../../../src/hooks/useAppLogic");
+const setup = (claim = new MockBenefitsApplicationBuilder().create()) => {
+  let updateSpy;
 
-const phone_number = "123-456-7890";
-const phone_type = PhoneType.cell;
-
-const setup = (phone = {}) => {
-  const { appLogic, claim, wrapper } = renderWithAppLogic(PhoneNumber, {
-    claimAttrs: {
-      phone,
+  const utils = renderPage(
+    PhoneNumber,
+    {
+      addCustomSetup: (appLogic) => {
+        updateSpy = jest.spyOn(appLogic.benefitsApplications, "update");
+        setupBenefitsApplications(appLogic, [claim]);
+      },
     },
-  });
-
-  const { changeField, changeRadioGroup, submitForm } = simulateEvents(wrapper);
+    {
+      query: { claim_id: claim.application_id },
+    }
+  );
 
   return {
-    appLogic,
-    changeField,
-    changeRadioGroup,
-    claim,
-    submitForm,
-    wrapper,
+    updateSpy,
+    ...utils,
   };
 };
 
 describe("PhoneNumber", () => {
   it("renders the page", () => {
-    const { wrapper } = setup({ phone_number, phone_type });
-    expect(wrapper).toMatchSnapshot();
+    const { container } = setup();
+    expect(container).toMatchSnapshot();
   });
 
-  it("calls claims.update when the form is successfully submitted with existing data", () => {
-    const { appLogic, claim, submitForm } = setup({ phone_number, phone_type });
+  it("submits form with existing data", async () => {
+    const claim = new MockBenefitsApplicationBuilder().part1Complete().create();
+    const { updateSpy } = setup(claim);
 
-    submitForm();
+    userEvent.click(screen.getByRole("button", { name: /save/i }));
 
-    expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
-      claim.application_id,
-      {
+    await waitFor(() => {
+      expect(updateSpy).toHaveBeenCalledWith(claim.application_id, {
         phone: {
           int_code: "1",
-          phone_number,
-          phone_type,
+          phone_number: claim.phone.phone_number,
+          phone_type: claim.phone.phone_type,
         },
-      }
-    );
+      });
+    });
   });
 
-  it("calls claims.update when the form is successfully submitted with newly entered data", () => {
-    const { appLogic, changeField, changeRadioGroup, claim, submitForm } =
-      setup();
+  it("submits form with newly entered data", async () => {
+    const { updateSpy } = setup();
 
-    changeRadioGroup("phone.phone_type", phone_type);
-    changeField("phone.phone_number", phone_number);
+    userEvent.type(
+      screen.getByRole("textbox", { name: /phone number/i }),
+      "123-456-7890"
+    );
+    userEvent.click(screen.getByRole("radio", { name: /mobile/i }));
+    userEvent.click(screen.getByRole("button", { name: /save/i }));
 
-    submitForm();
-
-    expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
-      claim.application_id,
-      {
+    await waitFor(() => {
+      expect(updateSpy).toHaveBeenCalledWith(expect.any(String), {
         phone: {
           int_code: "1",
-          phone_number,
-          phone_type,
+          phone_number: "123-456-7890",
+          phone_type: PhoneType.cell,
         },
-      }
-    );
+      });
+    });
   });
 });

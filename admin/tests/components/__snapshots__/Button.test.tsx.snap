@@ -1,0 +1,11 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Button renders the default component 1`] = `
+<button
+  className="btn"
+  data-testid="button"
+  disabled={false}
+  onClick={[Function]}
+  type="button"
+/>
+`;

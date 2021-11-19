@@ -35,6 +35,9 @@ class TransactionFileCreatorStep(Step):
     ach_file: Optional[NachaFile] = None
 
     class Metrics(str, enum.Enum):
+        NACHA_ARCHIVE_PATH = "nacha_archive_path"
+        CHECK_ARCHIVE_PATH = "check_archive_path"
+        CHECK_POSITIVE_PAY_ARCHIVE_PATH = "check_positive_pay_archive_path"
         ACH_PAYMENT_COUNT = "ach_payment_count"
         ACH_PRENOTE_COUNT = "ach_prenote_count"
         CHECK_PAYMENT_COUNT = "check_payment_count"
@@ -43,57 +46,48 @@ class TransactionFileCreatorStep(Step):
         TRANSACTION_FILES_SENT_COUNT = "transaction_files_sent_count"
 
     def run_step(self) -> None:
-        try:
-            logger.info("Start creating PUB transaction file")
+        logger.info("Start creating PUB transaction file")
 
-            # ACH
-            self.add_ach_payments()
-            self.add_prenotes()
+        # ACH
+        self.add_ach_payments()
+        self.add_prenotes()
 
-            # Check and positive pay
-            self.check_file, self.positive_pay_file = pub_check.create_check_file(
-                self.db_session, self.increment, self.get_import_log_id()
+        # Check and positive pay
+        self.check_file, self.positive_pay_file = pub_check.create_check_file(
+            self.db_session, self.increment, self.get_import_log_id()
+        )
+
+        # Send the file
+        self.send_payment_files()
+
+        # Commit pending changes to db
+        self.db_session.commit()
+
+        if self.log_entry is not None:
+            successeful_transactions_count = (
+                self.log_entry.metrics[self.Metrics.ACH_PAYMENT_COUNT]
+                + self.log_entry.metrics[self.Metrics.ACH_PRENOTE_COUNT]
+                + self.log_entry.metrics[self.Metrics.CHECK_PAYMENT_COUNT]
+                # Subtract FAILED_TO_ADD_TRANSACTION_COUNT because pub_check.create_check_file()
+                # may increase that value without raising an exception.
+                - self.log_entry.metrics[self.Metrics.FAILED_TO_ADD_TRANSACTION_COUNT]
+            )
+            self.set_metrics(
+                {self.Metrics.SUCCESSFUL_ADD_TO_TRANSACTION_COUNT: successeful_transactions_count}
             )
 
-            # Send the file
-            self.send_payment_files()
+        logger.info("Done creating PUB transaction file")
 
-            # Commit pending changes to db
-            self.db_session.commit()
-
-            if self.log_entry is not None:
-                successeful_transactions_count = (
-                    self.log_entry.metrics[self.Metrics.ACH_PAYMENT_COUNT]
-                    + self.log_entry.metrics[self.Metrics.ACH_PRENOTE_COUNT]
-                    + self.log_entry.metrics[self.Metrics.CHECK_PAYMENT_COUNT]
-                    # Subtract FAILED_TO_ADD_TRANSACTION_COUNT because pub_check.create_check_file()
-                    # may increase that value without raising an exception.
-                    - self.log_entry.metrics[self.Metrics.FAILED_TO_ADD_TRANSACTION_COUNT]
-                )
-                self.set_metrics(
-                    {
-                        self.Metrics.SUCCESSFUL_ADD_TO_TRANSACTION_COUNT: successeful_transactions_count
-                    }
-                )
-
-            logger.info("Done creating PUB transaction file")
-
-        except Exception:
-            self.db_session.rollback()
-            logger.exception("Error creating PUB transaction file")
-
-            if self.log_entry is not None:
-                total_transactions_attempted = (
-                    self.log_entry.metrics[self.Metrics.ACH_PAYMENT_COUNT]
-                    + self.log_entry.metrics[self.Metrics.ACH_PRENOTE_COUNT]
-                    + self.log_entry.metrics[self.Metrics.CHECK_PAYMENT_COUNT]
-                )
-                self.set_metrics(
-                    {self.Metrics.FAILED_TO_ADD_TRANSACTION_COUNT: total_transactions_attempted}
-                )
-
-            # We do not want to run any subsequent steps if this fails
-            raise
+    def cleanup_on_failure(self) -> None:
+        if self.log_entry is not None:
+            total_transactions_attempted = (
+                self.log_entry.metrics[self.Metrics.ACH_PAYMENT_COUNT]
+                + self.log_entry.metrics[self.Metrics.ACH_PRENOTE_COUNT]
+                + self.log_entry.metrics[self.Metrics.CHECK_PAYMENT_COUNT]
+            )
+            self.set_metrics(
+                {self.Metrics.FAILED_TO_ADD_TRANSACTION_COUNT: total_transactions_attempted}
+            )
 
     def add_prenotes(self):
         logger.info("Start adding EFT prenotes to PUB transaction file")
@@ -195,6 +189,7 @@ class TransactionFileCreatorStep(Step):
             ref_file = pub_check.send_check_file(
                 self.check_file, check_archive_path, dfml_sharepoint_outgoing_path
             )
+            self.set_metrics({self.Metrics.CHECK_ARCHIVE_PATH: ref_file.file_location})
             self.increment(self.Metrics.TRANSACTION_FILES_SENT_COUNT)
             self.db_session.add(ref_file)
 
@@ -204,6 +199,7 @@ class TransactionFileCreatorStep(Step):
             ref_file = pub_check.send_positive_pay_file(
                 self.positive_pay_file, check_archive_path, moveit_outgoing_path
             )
+            self.set_metrics({self.Metrics.CHECK_POSITIVE_PAY_ARCHIVE_PATH: ref_file.file_location})
             self.increment(self.Metrics.TRANSACTION_FILES_SENT_COUNT)
             self.db_session.add(ref_file)
 
@@ -211,6 +207,7 @@ class TransactionFileCreatorStep(Step):
             logger.info("No ACH file to send to PUB")
         else:
             ref_file = send_nacha_file(self.ach_file, ach_archive_path, moveit_outgoing_path)
+            self.set_metrics({self.Metrics.NACHA_ARCHIVE_PATH: ref_file.file_location})
             self.increment(self.Metrics.TRANSACTION_FILES_SENT_COUNT)
             self.db_session.add(ref_file)
 

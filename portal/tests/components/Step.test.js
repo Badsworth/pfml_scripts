@@ -1,120 +1,127 @@
+import { render, screen } from "@testing-library/react";
 import React from "react";
 import Step from "../../src/components/Step";
-import { shallow } from "enzyme";
+
+function getInitialProps() {
+  return {
+    stepHref: "/path-to-step-question",
+    startText: "Start",
+    resumeText: "Resume",
+    resumeScreenReaderText: "Continue",
+    completedText: "Completed",
+    editText: "Edit",
+    editable: true,
+    screenReaderNumberPrefix: "Step",
+    number: "1",
+    title: "Step Title",
+  };
+}
 
 describe("Step", () => {
-  let props;
-  const Child = () => <div>Description of step</div>;
-
-  beforeEach(() => {
-    props = {
-      stepHref: "/path-to-step-question",
-      startText: "Start",
-      resumeText: "Resume",
-      completedText: "Completed",
-      editText: "Edit",
-      editable: true,
-      screenReaderNumberPrefix: "Step",
-      number: "1",
-      title: "Step Title",
-    };
-  });
-
   it("renders component", () => {
-    const wrapper = shallow(
-      <Step {...props} status="not_started">
-        <Child />
+    const { container } = render(
+      <Step {...getInitialProps()} status="not_started">
+        <div>Description of step</div>
       </Step>
     );
 
-    expect(wrapper).toMatchSnapshot();
+    expect(container.firstChild).toMatchSnapshot();
   });
 
-  describe("when status is not_started", () => {
-    it("shows children, displays start button", () => {
-      const wrapper = shallow(
-        <Step {...props} status="not_started">
-          <Child />
-        </Step>
-      );
+  it("shows children, displays start button when status is not_started", () => {
+    const props = {
+      ...getInitialProps(),
+      status: "not_started",
+    };
+    render(
+      <Step {...props}>
+        <div>Description of step</div>
+      </Step>
+    );
 
-      expect(wrapper.find("Child")).toHaveLength(1);
-
-      const buttonLink = wrapper.find("ButtonLink");
-      expect(buttonLink.prop("children")).toEqual(props.startText);
-    });
+    expect(screen.getByText("Description of step")).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: `${props.startText}: ${props.title}` })
+    ).toBeInTheDocument();
   });
 
-  describe("when status is not_applicable", () => {
-    it("shows children, does not show action links/buttons", () => {
-      const wrapper = shallow(
-        <Step {...props} status="not_applicable">
-          <Child />
-        </Step>
-      );
+  it("shows children, does not show action links when status is not_applicable", () => {
+    render(
+      <Step {...getInitialProps()} status="not_applicable">
+        <div>Description of step</div>
+      </Step>
+    );
 
-      expect(wrapper.find("Child")).toHaveLength(1);
-
-      expect(wrapper.find(".usa-link")).toHaveLength(0);
-      expect(wrapper.contains("ButtonLink")).toBe(false);
-    });
+    expect(screen.getByText("Description of step")).toBeInTheDocument();
+    expect(screen.queryByRole("link")).not.toBeInTheDocument();
   });
 
-  describe("when status is in_progress", () => {
-    it("shows children, displays resume button", () => {
-      const wrapper = shallow(
-        <Step {...props} status="in_progress">
-          <Child />
-        </Step>
-      );
+  it("shows children, displays resume button when status is in_progress", () => {
+    const props = {
+      ...getInitialProps(),
+      status: "in_progress",
+    };
+    render(
+      <Step {...props}>
+        <div>Description of step</div>
+      </Step>
+    );
 
-      expect(wrapper.find("Child")).toHaveLength(1);
-
-      const buttonLink = wrapper.find("ButtonLink");
-      expect(buttonLink.prop("children")).toEqual(props.resumeText);
-    });
+    expect(screen.getByText("Description of step")).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", {
+        name: `${props.resumeScreenReaderText}: ${props.title}`,
+      })
+    ).toBeInTheDocument();
   });
 
-  describe("when status is completed", () => {
-    it("does not show children, shows completed and edit link", () => {
-      const wrapper = shallow(
-        <Step {...props} status="completed">
-          <Child />
-        </Step>
-      );
+  it("does not show children, shows completed and edit link when status is completed", () => {
+    const props = {
+      ...getInitialProps(),
+      status: "completed",
+    };
+    render(
+      <Step {...props}>
+        <div>Description of step</div>
+      </Step>
+    );
 
-      expect(wrapper.find("Child")).toHaveLength(0);
-
-      expect(wrapper.find(".usa-link")).toHaveLength(1);
-    });
-
-    it("hides edit link if editable is false", () => {
-      const wrapper = shallow(
-        <Step {...props} status="completed" editable={false}>
-          <Child />
-        </Step>
-      );
-
-      expect(wrapper.find(".usa-link")).toHaveLength(0);
-    });
+    expect(screen.queryByText("Description of step")).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("link", {
+        name: `${props.editText}: ${props.title}`,
+      })
+    ).toBeInTheDocument();
+    expect(screen.getByText(props.completedText)).toBeInTheDocument();
   });
 
-  describe("when status is disabled", () => {
-    it("does not show children, shows a disabled start button", () => {
-      const wrapper = shallow(
-        <Step {...props} status="disabled">
-          <Child />
-        </Step>
-      );
+  it("hides edit link if editable is false when status is completed", () => {
+    render(
+      <Step {...getInitialProps()} status="completed" editable={false}>
+        <div>Description of step</div>
+      </Step>
+    );
 
-      expect(wrapper.find("Child")).toHaveLength(0);
+    expect(screen.queryByRole("link")).not.toBeInTheDocument();
+  });
 
-      expect(wrapper.find(".usa-link")).toHaveLength(0);
-      expect(wrapper.contains("ButtonLink")).toBe(false);
+  it("does not show children, shows a disabled start button when status is disabled", () => {
+    const props = {
+      ...getInitialProps(),
+      status: "disabled",
+    };
+    render(
+      <Step {...props}>
+        <div>Description of step</div>
+      </Step>
+    );
 
-      const button = wrapper.find("Button");
-      expect(button.prop("children")).toEqual(props.startText);
-      expect(button.prop("disabled")).toBe(true);
+    const button = screen.getByRole("button", {
+      name: `${props.startText}: ${props.title}`,
     });
+
+    expect(button).toBeDisabled();
+    expect(screen.queryByText("Description of step")).not.toBeInTheDocument();
+    expect(screen.queryByRole("link")).not.toBeInTheDocument();
   });
 });

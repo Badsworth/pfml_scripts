@@ -1,60 +1,74 @@
-import { renderWithAppLogic, simulateEvents } from "../../test-utils";
+import { MockBenefitsApplicationBuilder, renderPage } from "../../test-utils";
+import BenefitsApplicationCollection from "../../../src/models/BenefitsApplicationCollection";
 import Name from "../../../src/pages/applications/name";
-import { pick } from "lodash";
+import { act } from "react-dom/test-utils";
+import { screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 
 jest.mock("../../../src/hooks/useAppLogic");
 
-const defaultName = {
-  first_name: "Aquib",
-  middle_name: "cricketer",
-  last_name: "Khan",
-};
-const setup = (name) => {
-  const { appLogic, wrapper } = renderWithAppLogic(Name, {
-    claimAttrs: {
-      ...name,
-    },
-  });
-
-  const { changeField, submitForm } = simulateEvents(wrapper);
-
-  return {
-    appLogic,
-    changeField,
-    submitForm,
-    wrapper,
-  };
-};
-
 describe("Name", () => {
   it("renders the page", () => {
-    const { wrapper } = setup(defaultName);
-    expect(wrapper).toMatchSnapshot();
+    const { container } = renderPage(
+      Name,
+      {
+        addCustomSetup: (appLogicHook) => {
+          appLogicHook.benefitsApplications.benefitsApplications =
+            new BenefitsApplicationCollection([
+              new MockBenefitsApplicationBuilder().create(),
+            ]);
+        },
+      },
+      { query: { claim_id: "mock_application_id" }, claim: {} }
+    );
+    expect(container.firstChild).toMatchSnapshot();
   });
 
-  it("calls claims.update when the form is successfully submitted with pre-filled data", async () => {
-    const { appLogic, submitForm } = setup(defaultName);
-
-    await submitForm();
-
-    expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
-      expect.any(String),
-      pick(defaultName, ["first_name", "last_name", "middle_name"])
+  it("enables user to fill and submit name information", async () => {
+    const updateClaim = jest.fn(() => {
+      return Promise.resolve();
+    });
+    renderPage(
+      Name,
+      {
+        addCustomSetup: (appLogicHook) => {
+          appLogicHook.benefitsApplications.update = updateClaim;
+          appLogicHook.benefitsApplications.benefitsApplications =
+            new BenefitsApplicationCollection([
+              new MockBenefitsApplicationBuilder().create(),
+            ]);
+        },
+      },
+      { query: { claim_id: "mock_application_id" }, claim: {} }
     );
-  });
 
-  it("calls claims.update when the form is successfully submitted with new data", async () => {
-    const { appLogic, changeField, submitForm } = setup({});
+    const firstNameInput = screen.getByRole("textbox", { name: "First name" });
+    const middleNameInput = screen.getByRole("textbox", {
+      name: "Middle name (optional)",
+    });
+    const lastNameInput = screen.getByRole("textbox", { name: "Last name" });
+    expect(firstNameInput).toHaveValue("");
+    expect(middleNameInput).toHaveValue("");
+    expect(lastNameInput).toHaveValue("");
 
-    changeField("first_name", defaultName.first_name);
-    changeField("middle_name", defaultName.middle_name);
-    changeField("last_name", defaultName.last_name);
+    userEvent.type(firstNameInput, "Ali");
+    userEvent.type(middleNameInput, "Grace Meadow");
+    userEvent.type(lastNameInput, "Glenesk");
+    expect(firstNameInput).toHaveValue("Ali");
+    expect(middleNameInput).toHaveValue("Grace Meadow");
+    expect(lastNameInput).toHaveValue("Glenesk");
 
-    await submitForm();
-
-    expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
-      expect.any(String),
-      pick(defaultName, ["first_name", "last_name", "middle_name"])
-    );
+    expect(updateClaim).not.toHaveBeenCalled();
+    const submitButton = screen.getByRole("button", {
+      name: "Save and continue",
+    });
+    await act(async () => {
+      await userEvent.click(submitButton);
+    });
+    expect(updateClaim).toHaveBeenCalledWith("mock_application_id", {
+      first_name: "Ali",
+      last_name: "Glenesk",
+      middle_name: "Grace Meadow",
+    });
   });
 });

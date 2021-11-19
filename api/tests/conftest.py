@@ -9,7 +9,8 @@ https://docs.pytest.org/en/latest/fixture.html#conftest-py-sharing-fixture-funct
 import logging.config  # noqa: B1
 import os
 import uuid
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
+from typing import List
 
 import _pytest.monkeypatch
 import boto3
@@ -18,6 +19,7 @@ import pytest
 import sqlalchemy
 from jose import jwt
 from jose.constants import ALGORITHMS
+from pytest import Item
 
 import massgov.pfml.api.app
 import massgov.pfml.api.authentication as authentication
@@ -25,9 +27,25 @@ import massgov.pfml.api.employees
 import massgov.pfml.db.models.employees as employee_models
 import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging
-from massgov.pfml.db.models.factories import UserFactory
+from massgov.pfml.api.models.claims.responses import AbsencePeriodStatusResponse
+from massgov.pfml.db.models.factories import (
+    ClaimFactory,
+    EmployeeFactory,
+    EmployerFactory,
+    TaxIdentifierFactory,
+    UserFactory,
+)
 
 logger = massgov.pfml.util.logging.get_logger("massgov.pfml.api.tests.conftest")
+
+
+@pytest.fixture(scope="session")
+def has_external_dependencies():
+    """
+    Use this fixture to automatically mark all tests that are in the downline
+    of fixtures or tests that request this fixture.
+    """
+    pass
 
 
 @pytest.fixture(autouse=True, scope="session")
@@ -73,6 +91,47 @@ def logging_fix(monkeypatch):
 def user(initialize_factories_session):
     user = UserFactory.create()
     return user
+
+
+@pytest.fixture
+def employer():
+    return EmployerFactory.create(employer_fein="112222222")
+
+
+@pytest.fixture
+def tax_identifier():
+    return TaxIdentifierFactory.create(tax_identifier="123456789")
+
+
+@pytest.fixture
+def employee(tax_identifier):
+    return EmployeeFactory.create(tax_identifier_id=tax_identifier.tax_identifier_id)
+
+
+@pytest.fixture
+def claim(employer, employee):
+    return ClaimFactory.create(
+        employer=employer,
+        employee=employee,
+        fineos_absence_status_id=1,
+        claim_type_id=1,
+        fineos_absence_id="foo",
+    )
+
+
+@pytest.fixture
+def absence_period():
+    return AbsencePeriodStatusResponse(
+        fineos_leave_period_id="PL-14449-0000002237",
+        absence_period_start_date=date(2021, 1, 29),
+        absence_period_end_date=date(2021, 1, 30),
+        reason="Child Bonding",
+        reason_qualifier_one="Foster Care",
+        reason_qualifier_two="",
+        period_type="Continuous",
+        request_decision="Pending",
+        evidence_status=None,
+    )
 
 
 @pytest.fixture
@@ -272,8 +331,6 @@ def mock_ses(monkeypatch, reset_aws_env_vars):
         "BOUNCE_FORWARDING_EMAIL_ADDRESS_ARN",
         "arn:aws:ses:us-east-1:498823821309:identity/noreplypfml@mass.gov",
     )
-    monkeypatch.setenv("CTR_GAX_BIEVNT_EMAIL_ADDRESS", "test1@example.com")
-    monkeypatch.setenv("CTR_VCC_BIEVNT_EMAIL_ADDRESS", "test2@example.com")
     monkeypatch.setenv("DFML_BUSINESS_OPERATIONS_EMAIL_ADDRESS", "test3@example.com")
 
     with moto.mock_ses():
@@ -362,7 +419,7 @@ def setup_mock_sftp_client(monkeypatch, mock_sftp_client):
 
 
 @pytest.fixture(scope="session")
-def test_db_schema(monkeypatch_session):
+def test_db_schema(has_external_dependencies, monkeypatch_session):
     """
     Create a test schema, if it doesn't already exist, and drop it after the
     test completes.
@@ -472,7 +529,7 @@ def initialize_factories_session(monkeypatch, test_db_session):
 
 
 @pytest.fixture
-def local_test_db_schema(monkeypatch):
+def local_test_db_schema(has_external_dependencies, monkeypatch):
     """
     Create a test schema, if it doesn't already exist, and drop it after the
     test completes.
@@ -546,7 +603,7 @@ def local_initialize_factories_session(monkeypatch, local_test_db_session):
 
 
 @pytest.fixture
-def migrations_test_db_schema(monkeypatch):
+def migrations_test_db_schema(has_external_dependencies, monkeypatch):
     """
     Create a test schema, if it doesn't already exist, and drop it after the
     test completes.
@@ -563,7 +620,7 @@ def migrations_test_db_schema(monkeypatch):
 
 
 @pytest.fixture
-def test_db_via_migrations(migrations_test_db_schema, logging_fix):
+def test_db_via_migrations(has_external_dependencies, migrations_test_db_schema, logging_fix):
     """
     Creates a test schema, runs migrations through Alembic. Schema is dropped
     after the test completes.
@@ -602,7 +659,7 @@ def initialize_factories_session_via_migrations(test_db_session_via_migrations):
 
 
 @pytest.fixture(scope="module")
-def module_persistent_db(monkeypatch_module, request):
+def module_persistent_db(has_external_dependencies, monkeypatch_module, request):
     import massgov.pfml.db as db
     from massgov.pfml.db.models.base import Base
 
@@ -618,8 +675,6 @@ def module_persistent_db(monkeypatch_module, request):
 
     engine = db.create_engine()
     Base.metadata.create_all(bind=engine)
-
-    create_triggers_on_connection(engine.connect())
 
     db_session = db.init(sync_lookups=True)
 
@@ -687,105 +742,6 @@ def reset_aws_env_vars(monkeypatch):
     monkeypatch.setenv("AWS_DEFAULT_REGION", "us-east-1")
 
 
-# This fixture was necessary at the time of this PR as
-# the test_db_via_migration was not working. Will refactor
-# once that fixture is fixed. The code here is functionally
-# equal to migration file:
-# 2020_10_20_15_46_57_2b4295929525_add_postgres_triggers_4_employer_employee.py
-@pytest.fixture(scope="session")
-def create_triggers(test_db):
-    with test_db.connect() as connection:
-        create_triggers_on_connection(connection)
-
-
-@pytest.fixture
-def local_create_triggers(local_test_db):
-    with local_test_db.connect() as connection:
-        create_triggers_on_connection(connection)
-
-
-def create_triggers_on_connection(connection):
-    # Create postgres triggers not uploaded by test db
-    connection.execute('CREATE EXTENSION IF NOT EXISTS "pgcrypto";')
-    connection.execute(
-        "CREATE OR REPLACE FUNCTION audit_employee_func() RETURNS TRIGGER AS $$\
-                DECLARE affected_record record;\
-                BEGIN\
-                    IF (TG_OP = 'DELETE') THEN\
-                        FOR affected_record IN SELECT * FROM old_table\
-                            LOOP\
-                                INSERT INTO employee_log(employee_log_id, employee_id, action, modified_at)\
-                                    VALUES (public.gen_random_uuid(), affected_record.employee_id,\
-                                        TG_OP, current_timestamp);\
-                            END loop;\
-                    ELSE\
-                        FOR affected_record IN SELECT * FROM new_table\
-                            LOOP\
-                                INSERT INTO employee_log(employee_log_id, employee_id, action, modified_at)\
-                                    VALUES (public.gen_random_uuid(), affected_record.employee_id,\
-                                        TG_OP, current_timestamp);\
-                            END loop;\
-                    END IF;\
-                    RETURN NEW;\
-                END;\
-            $$ LANGUAGE plpgsql;"
-    )
-    connection.execute(
-        "CREATE TRIGGER after_employee_insert AFTER INSERT ON employee\
-                REFERENCING NEW TABLE AS new_table\
-                FOR EACH STATEMENT EXECUTE PROCEDURE audit_employee_func();"
-    )
-    connection.execute(
-        "CREATE TRIGGER after_employee_update AFTER UPDATE ON employee\
-                REFERENCING OLD TABLE AS old_table NEW TABLE AS new_table\
-                FOR EACH STATEMENT EXECUTE PROCEDURE audit_employee_func();"
-    )
-    connection.execute(
-        "CREATE TRIGGER after_employee_delete AFTER DELETE ON employee\
-                REFERENCING OLD TABLE AS old_table\
-                FOR EACH STATEMENT EXECUTE PROCEDURE audit_employee_func();"
-    )
-
-    connection.execute(
-        "CREATE OR REPLACE FUNCTION audit_employer_func() RETURNS TRIGGER AS $$\
-                DECLARE affected_record record;\
-                BEGIN\
-                    IF (TG_OP = 'DELETE') THEN\
-                        FOR affected_record IN SELECT * FROM old_table\
-                            LOOP\
-                                INSERT INTO employer_log(employer_log_id, employer_id, action, modified_at)\
-                                    VALUES (public.gen_random_uuid(), affected_record.employer_id,\
-                                        TG_OP, current_timestamp);\
-                            END loop;\
-                    ELSE\
-                        FOR affected_record IN SELECT * FROM new_table\
-                            LOOP\
-                                INSERT INTO employer_log(employer_log_id, employer_id, action, modified_at)\
-                                    VALUES (public.gen_random_uuid(), affected_record.employer_id,\
-                                        TG_OP, current_timestamp);\
-                            END loop;\
-                    END IF;\
-                    RETURN NEW;\
-                END;\
-            $$ LANGUAGE plpgsql;"
-    )
-    connection.execute(
-        "CREATE TRIGGER after_employer_insert AFTER INSERT ON employer\
-                REFERENCING NEW TABLE AS new_table\
-                FOR EACH STATEMENT EXECUTE PROCEDURE audit_employer_func();"
-    )
-    connection.execute(
-        "CREATE TRIGGER after_employer_update AFTER UPDATE ON employer\
-                REFERENCING OLD TABLE AS old_table NEW TABLE AS new_table\
-                FOR EACH STATEMENT EXECUTE PROCEDURE audit_employer_func();"
-    )
-    connection.execute(
-        "CREATE TRIGGER after_employer_delete AFTER DELETE ON employer\
-                REFERENCING OLD TABLE AS old_table\
-                FOR EACH STATEMENT EXECUTE PROCEDURE audit_employer_func();"
-    )
-
-
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
 def pytest_terminal_summary(terminalreporter, exitstatus, config):
     """Format output for GitHub Actions.
@@ -807,6 +763,23 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
                 report.longrepr.reprcrash.message,
             )
         )
+
+
+@pytest.hookimpl(hookwrapper=True, tryfirst=True)
+def pytest_collection_modifyitems(items: List[Item]):
+    """Automatically mark integration tests.
+
+    Automatically marks any test with the has_external_dependencies fixture in its
+    fixture request graph as an integration test.
+
+    Other markers could be established here as well.
+    """
+
+    for item in items:
+        if "has_external_dependencies" in item.fixturenames:
+            item.add_marker(pytest.mark.integration)
+
+    yield
 
 
 # This fixture was necessary at the time of this PR as
@@ -835,3 +808,35 @@ def dua_reduction_payment_unique_index(initialize_factories_session):
             )
         """
         )
+
+
+@pytest.fixture
+def sqlalchemy_query_counter():
+    class SQLAlchemyQueryCounter:
+        """
+        Check SQLAlchemy query count.
+        Usage:
+            with SQLAlchemyQueryCounter(session, expected_query_count=2):
+                conn.execute("SELECT 1")
+                conn.execute("SELECT 1")
+        """
+
+        def __init__(self, session, expected_query_count):
+            self.engine = session.get_bind()
+            self._query_count = expected_query_count
+            self.count = 0
+
+        def __enter__(self):
+            sqlalchemy.event.listen(self.engine, "after_execute", self._callback)
+            return self
+
+        def __exit__(self, *_):
+            sqlalchemy.event.remove(self.engine, "after_execute", self._callback)
+            assert self.count == self._query_count, (
+                "Executed: " + str(self.count) + " != Required: " + str(self._query_count)
+            )
+
+        def _callback(self, *_):
+            self.count += 1
+
+    return SQLAlchemyQueryCounter

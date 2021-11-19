@@ -8,6 +8,7 @@ import pytest
 from dateutil.relativedelta import relativedelta
 
 import tests.api
+from massgov.pfml.cognito.exceptions import CognitoUserExistsValidationError
 from massgov.pfml.db.models.employees import Role, User, UserLeaveAdministrator
 from massgov.pfml.db.models.factories import (
     EmployerFactory,
@@ -17,9 +18,6 @@ from massgov.pfml.db.models.factories import (
 from massgov.pfml.util.aws.cognito import CognitoUserExistsValidationError
 
 fake = faker.Faker()
-
-# every test in here requires real resources
-pytestmark = pytest.mark.integration
 
 
 @pytest.fixture
@@ -300,7 +298,7 @@ def test_users_unauthorized_get(client, user, auth_token):
 
 def test_users_get_404(client, auth_token):
     response = client.get(
-        "/v1/users/{}".format("00000000-0000-0000-0000-000000000000"),
+        "/v1/users/{}".format("0dcb64c8-d259-4169-9b7a-486e5b474bc0"),
         headers={"Authorization": f"Bearer {auth_token}"},
     )
     tests.api.validate_error_response(response, 404)
@@ -345,6 +343,32 @@ def test_users_get_current(client, employer_user, employer_auth_token, test_db_s
             "has_verification_data": False,
         }
     ]
+
+
+def test_users_get_current_with_query_count(
+    client, employer_user, employer_auth_token, test_db_session, sqlalchemy_query_counter
+):
+    """
+    assert that the number of database queries in get_current_user and user_response
+    is independent of the number of leave admin objects and quarterly contributions objects
+    a user has
+    """
+    for _ in range(100):
+        employer = EmployerFactory.create()
+        for _ in range(10):
+            EmployerQuarterlyContributionFactory.create(employer_id=employer.employer_id)
+        link = UserLeaveAdministrator(
+            user_id=employer_user.user_id,
+            employer_id=employer.employer_id,
+            fineos_web_id="fake-fineos-web-id",
+        )
+        test_db_session.add(link)
+    test_db_session.commit()
+    with sqlalchemy_query_counter(test_db_session, expected_query_count=7):
+        response = client.get(
+            "/v1/users/current", headers={"Authorization": f"Bearer {employer_auth_token}"}
+        )
+    assert response.status_code == 200
 
 
 def test_users_get_aws_503(client, mock_cognito, monkeypatch, valid_claimant_creation_request_body):

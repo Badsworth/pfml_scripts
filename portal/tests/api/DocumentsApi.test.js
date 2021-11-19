@@ -1,10 +1,7 @@
-import { Auth } from "@aws-amplify/auth";
-import Document from "../../src/models/Document";
+import { makeFile, mockAuth } from "../test-utils";
 import DocumentCollection from "../../src/models/DocumentCollection";
 import DocumentsApi from "../../src/api/DocumentsApi";
-import { makeFile } from "../test-utils";
 
-jest.mock("@aws-amplify/auth");
 jest.mock("../../src/services/tracker");
 
 const mockFetch = ({
@@ -33,11 +30,7 @@ describe("DocumentsApi", () => {
 
   beforeEach(() => {
     jest.resetAllMocks();
-    jest.spyOn(Auth, "currentSession").mockImplementation(() =>
-      Promise.resolve({
-        accessToken: { jwtToken: accessTokenJwt },
-      })
-    );
+    mockAuth(true, accessTokenJwt);
     documentsApi = new DocumentsApi();
   });
 
@@ -91,7 +84,7 @@ describe("DocumentsApi", () => {
             "Mock Category",
             false
           );
-        expect(documentResponse).toBeInstanceOf(Document);
+        expect(documentResponse.application_id).toBe(applicationId);
       });
 
       it("sends POST request with the mark_evidence_received flag", async () => {
@@ -107,22 +100,9 @@ describe("DocumentsApi", () => {
         const request = fetch.mock.calls[0][1];
         expect(request.body.get("mark_evidence_received")).toBe("true");
       });
-
-      it("sends Post request with description", async () => {
-        const file = makeFile({ name: "Compressed_test.png" });
-
-        await documentsApi.attachDocument(
-          applicationId,
-          file,
-          "Mock Category",
-          true
-        );
-
-        const request = fetch.mock.calls[0][1];
-        expect(request.body.get("description")).toBe("Compressed Image");
-      });
     });
   });
+
   describe("getDocuments", () => {
     describe("successful request", () => {
       beforeEach(() => {
@@ -166,18 +146,18 @@ describe("DocumentsApi", () => {
           documents: expect.any(DocumentCollection),
         });
         expect(result.documents.items).toEqual([
-          new Document({
+          {
             application_id: applicationId,
             fineos_document_id: 1,
-          }),
-          new Document({
+          },
+          {
             application_id: applicationId,
             fineos_document_id: 2,
-          }),
-          new Document({
+          },
+          {
             application_id: applicationId,
             fineos_document_id: 3,
-          }),
+          },
         ]);
       });
     });
@@ -192,11 +172,11 @@ describe("DocumentsApi", () => {
     });
 
     it("sends GET request to /applications/{application_id/documents/{fineos_document_id}", async () => {
-      const document = new Document({
+      const document = {
         fineos_document_id: 1234,
         content_type: "image/png",
         application_id: applicationId,
-      });
+      };
 
       await documentsApi.downloadDocument(document);
       expect(fetch).toHaveBeenCalledWith(
@@ -209,11 +189,11 @@ describe("DocumentsApi", () => {
     });
 
     it("returns a Blob object", async () => {
-      const document = new Document({
+      const document = {
         fineos_document_id: 1234,
         content_type: "image/png",
         application_id: applicationId,
-      });
+      };
       const response = await documentsApi.downloadDocument(document);
       expect(response).toBeInstanceOf(Blob);
     });

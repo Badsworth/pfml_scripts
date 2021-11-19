@@ -19,7 +19,7 @@ The easiest way to set up resources in a new environment is using the templates 
    
    If you need a new EOTSS-approved tag for environment_tags, send an email to <Tim.L.Sharpe@mass.gov> requesting a new tag.
 
-2. The S3 bucket for holding tfstate files must be created first in [infra/pfml-aws/s3.tf](../infra/pfml-aws/s3.tf). Run `terraform apply`. This may require admin permissions.
+2. The S3 bucket for holding tfstate files must be created first in [infra/pfml-aws/s3.tf](../infra/pfml-aws/s3.tf). Run `terraform apply`. This may require admin permissions. As well as the replica bucket in LWD account.
 
 1. Send a request to EOTSS (Roy Mounier, cc. Chris Griffith) to update the NonProd Admin role to include `arn:aws:s3:::*-pfml-NEW_ENV*` and `arn:aws:s3:::*-pfml-NEW_ENV-*/*` in the S3 permissions. If Roy is out, create a Service Now request.
 
@@ -37,6 +37,8 @@ The easiest way to set up resources in a new environment is using the templates 
 
 
 ## 2. Set up the API
+
+1. Request Domain certificates for new domain names Refer to the end of this document ## Setting up Custom Domains
 
 ### 2.0 Create the API Gateway
 
@@ -146,12 +148,45 @@ Note that the API will not be working until database migrations are run.
    ```
 
    The command above creates a new directory: `infra/ecs-tasks/environments/NEW_ENV`
+
+   ```
+   rename step_functions.tf to step_functions.bak
+   ```
+   
+   In ecs-tasks/environments/NEW_ENV/main.tf add 
+   rmv_client_certificate_binary_arn = '${ARN VALUE FROM SECRETS MANAGER}'
+   
+   ![image](https://user-images.githubusercontent.com/91554519/142467618-0fee729d-5435-40c7-9306-1635567e59b4.png)
+   
    
 1. Create a PR and run a deployment of this branch to the new environment. See [./deployment.md](deployment.md). This should automatically:
 
    - Initialize and apply the ECS tasks terraform.
    - Run database migrations.
    - Create the required database users for FINEOS and Smartronix Nessus scans. 
+   
+
+   ```
+   rename step_functions.bak to step_functions.tf
+   ```
+   ```sh
+     $ terraform plan \
+     -var='service_docker_tag=82043ae1e04621251fb9e7896176b38c884f027e'
+     ```
+     ```sh
+     $ terraform apply \
+     -var='service_docker_tag=82043ae1e04621251fb9e7896176b38c884f027e'
+     ```
+### 2.3 API pre-work
+ 1.Need to update the bootstrap script to omit these and add some others:
+   - ecs-tasks/main.tf:
+      - st_employer_update_limit = 1500 needs to be added
+   - api/envirnment/$env/:main.tf:
+      - st_use_mock_dor_data needs to be removed
+      - st_decrypt_dor_data needs to be removed
+      - st_file_limit_specified needs to be removed
+      - dor_fineos_etl_schedule_expression needs to be removed
+   - rmv_client_certificate is binary and has to be replicated using cli prior to running terraform
 
 ## 3. Setting up the Portal Environment
 
@@ -213,7 +248,7 @@ Our Terraform scripts enable Advanced Security. however at the time of writing, 
 
 ### Configure PFML credentials for FINEOS
 
-1. Create the FINEOS user the in PFML database.
+1. Create the FINEOS user in the PFML database. This depends on the cognito_fineos_app_client_id secret being configured in Parameter Store from step 2.2, as part of API setup.
 
    ```sh
    ./bin/run-ecs-task/run-task.sh NEW_ENV db-create-fineos-user FIRST_NAME.LAST_NAME
@@ -249,13 +284,15 @@ Verify the following details with FINEOS:
 
 ## Setting up Custom Domains
 
-If we expect FINEOS to call the PFML API, you'll need a custom mass.gov domain for the environment. Please f	ollow these steps:
+If we expect FINEOS to call the PFML API, you'll need a custom mass.gov domain for the environment. Please follow these steps:
 
 1. Request an ACM cert in the AWS Console > AWS Certificate Manager, with Email Verification. Example:
 
    |Domain Name|SANs|
    |---|---|
    |paidleave-performance.eol.mass.gov|paidleave-training.eol.mass.gov,<br>paidleave-api-training.eol.mass.gov,<br>paidleave-api-performance.eol.mass.gov|
+   
+   This requires an individual with cloudops/administrator permissions.
 
 2. Send an email to Vijay with the domain name/SANs, so he can request approval from Sarah Bourne / Chris Velluto / Bill Cole. Boilerplate:
 

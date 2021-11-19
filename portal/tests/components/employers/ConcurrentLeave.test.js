@@ -1,9 +1,10 @@
+import { render, screen } from "@testing-library/react";
+
+import AppErrorInfoCollection from "../../../src/models/AppErrorInfoCollection";
 import ConcurrentLeave from "../../../src/components/employers/ConcurrentLeave";
 import ConcurrentLeaveModel from "../../../src/models/ConcurrentLeave";
 import React from "react";
-import { shallow } from "enzyme";
-import { testHook } from "../../test-utils";
-import useAppLogic from "../../../src/hooks/useAppLogic";
+import { createMockEmployerClaim } from "../../test-utils";
 
 const CONCURRENT_LEAVE = new ConcurrentLeaveModel({
   is_for_current_employer: true,
@@ -11,67 +12,115 @@ const CONCURRENT_LEAVE = new ConcurrentLeaveModel({
   leave_end_date: "2020-03-06",
 });
 
+const defaultProps = {
+  addedConcurrentLeave: null,
+  appErrors: new AppErrorInfoCollection(),
+  concurrentLeave: CONCURRENT_LEAVE,
+  claim: createMockEmployerClaim("completed"),
+  onAdd: jest.fn(),
+  onChange: jest.fn(),
+  onRemove: jest.fn(),
+};
+
+const renderComponent = (props = {}) => {
+  return render(<ConcurrentLeave {...defaultProps} {...props} />);
+};
+
 describe("ConcurrentLeave", () => {
-  let appLogic;
-
-  function render(providedProps) {
-    const defaultProps = {
-      addedConcurrentLeave: null,
-      appErrors: appLogic.appErrors,
-      concurrentLeave: CONCURRENT_LEAVE,
-      onAdd: () => {},
-      onChange: () => {},
-      onRemove: () => {},
-    };
-    const componentProps = {
-      ...defaultProps,
-      ...providedProps,
-    };
-    return shallow(<ConcurrentLeave {...componentProps} />);
-  }
-
-  beforeEach(() => {
-    testHook(() => {
-      appLogic = useAppLogic();
-    });
-  });
-
   it("renders the component", () => {
-    const wrapper = render();
-    expect(wrapper).toMatchSnapshot();
+    const { container } = renderComponent();
+    expect(container).toMatchSnapshot();
   });
 
   it("displays 'None reported' and the add button if no leave periods are reported", () => {
-    const wrapper = render({ concurrentLeave: null });
-    expect(wrapper.find("AmendableConcurrentLeave").exists()).toEqual(false);
-    expect(wrapper.find("td").at(0).text()).toEqual("None reported");
-    expect(wrapper.find("AddButton").exists()).toBe(true);
+    renderComponent({ concurrentLeave: null });
+    expect(
+      screen.getByRole("row", { name: "None reported" })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Add an accrued paid leave" })
+    ).toBeInTheDocument();
   });
 
   it("displays a row for claimant-submitted concurrent leave", () => {
-    const wrapper = render();
-    expect(wrapper.find("AmendableConcurrentLeave").length).toBe(1);
+    renderComponent();
+    expect(
+      screen.getByRole("rowheader", { name: "3/1/2020 to 3/6/2020" })
+    ).toBeInTheDocument();
   });
 
   it("does not display the add button if there exists a claimant-submitted concurrent leave", () => {
-    const wrapper = render();
-    expect(wrapper.find("AddButton").exists()).toBe(false);
+    renderComponent();
+    expect(
+      screen.queryByRole("button", { name: "Add an accrued paid leave" })
+    ).not.toBeInTheDocument();
   });
 
   it("displays a row for admin-added concurrent leave", () => {
-    const wrapper = render({
+    renderComponent({
       addedConcurrentLeave: CONCURRENT_LEAVE,
       concurrentLeave: null,
     });
 
-    expect(wrapper.find("AmendableConcurrentLeave").length).toBe(1);
+    expect(
+      screen.getByRole("group", { name: "When did the leave begin?" })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("group", { name: "When did the leave end?" })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Cancel addition" })
+    ).toBeInTheDocument();
   });
 
   it("does not display the add button if there exists an admin-added concurrent leave", () => {
-    const wrapper = render({
+    renderComponent({
       addedConcurrentLeave: CONCURRENT_LEAVE,
       concurrentLeave: null,
     });
-    expect(wrapper.find("AddButton").exists()).toBe(false);
+    expect(
+      screen.queryByRole("button", { name: "Add an accrued paid leave" })
+    ).not.toBeInTheDocument();
+  });
+
+  it("displays correct conditional text for reduced concurrent leave", () => {
+    renderComponent({
+      addedConcurrentLeave: CONCURRENT_LEAVE,
+      claim: createMockEmployerClaim("reducedSchedule"),
+      concurrentLeave: null,
+    });
+
+    expect(
+      screen.getByText(
+        /your employee won’t receive pfml payments for the first 7 calendar days of their pfml leave from 2\/1\/2021 to 2\/7\/2021\./i
+      )
+    ).toBeInTheDocument();
+  });
+
+  it("displays correct conditional text for continuous concurrent leave", () => {
+    renderComponent({
+      addedConcurrentLeave: CONCURRENT_LEAVE,
+      claim: createMockEmployerClaim("continuous"),
+      concurrentLeave: null,
+    });
+
+    expect(
+      screen.getByText(
+        /your employee won’t receive pfml payments for the first 7 calendar days of their pfml leave from 1\/1\/2021 to 1\/7\/2021\./i
+      )
+    ).toBeInTheDocument();
+  });
+
+  it("displays correct conditional text for intermittent concurrent leave", () => {
+    renderComponent({
+      addedConcurrentLeave: CONCURRENT_LEAVE,
+      claim: createMockEmployerClaim("intermittent"),
+      concurrentLeave: null,
+    });
+    expect(
+      screen.getByText(
+        /your employee won’t receive pfml payments for the first 7 calendar days from the date of their first instance of leave\./i
+      )
+    ).toBeInTheDocument();
   });
 });

@@ -1,13 +1,17 @@
 import classNames from "classnames";
 
-const StatusIcon = function ({ status }: { status: boolean }) {
+export type Props = {
+  status: boolean;
+};
+
+const StatusIcon = ({ status }: Props) => {
   const iconClasses = classNames({
     statusicon: true,
     "statusicon--enabled": status,
     "statusicon--disabled": !status,
   });
 
-  return <span className={iconClasses}></span>;
+  return <span className={iconClasses} data-testid="status-icon"></span>;
 };
 
 export default StatusIcon;

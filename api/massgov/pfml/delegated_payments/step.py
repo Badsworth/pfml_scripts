@@ -7,7 +7,13 @@ from typing import Any, Dict, Optional, Set
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml import db
-from massgov.pfml.db.models.employees import Payment, PaymentReferenceFile, ReferenceFile
+from massgov.pfml.db.models.employees import (
+    Employee,
+    EmployeeReferenceFile,
+    Payment,
+    PaymentReferenceFile,
+    ReferenceFile,
+)
 from massgov.pfml.util.batch.log import LogEntry
 
 logger = logging.get_logger(__name__)
@@ -19,6 +25,7 @@ class Step(abc.ABC, metaclass=abc.ABCMeta):
     log_entry_db_session: db.Session
 
     payments_in_reference_file: Set[uuid.UUID]
+    employees_in_reference_file: Set[uuid.UUID]
 
     class Metrics(str, enum.Enum):
         pass
@@ -27,6 +34,10 @@ class Step(abc.ABC, metaclass=abc.ABCMeta):
         self.db_session = db_session
         self.log_entry_db_session = log_entry_db_session
         self.payments_in_reference_file = set()
+        self.employees_in_reference_file = set()
+
+    def cleanup_on_failure(self) -> None:
+        pass
 
     def run(self) -> None:
         with LogEntry(self.log_entry_db_session, self.__class__.__name__) as log_entry:
@@ -48,22 +59,40 @@ class Step(abc.ABC, metaclass=abc.ABCMeta):
             flattened_state_log_counts_before = flatten(before_map)
 
             self.set_metrics(flattened_state_log_counts_before)
-            self.run_step()
 
-            # Flatten these prefixed with the "after" key since nested values in the
-            # metrics dictionary aren’t properly imported into New Relic
-            state_log_counts_after = state_log_util.get_state_counts(self.db_session)
+            try:
+                self.run_step()
+                self.db_session.commit()
 
-            after_map = {"after_state_log_counts": state_log_counts_after}
-            flattened_state_log_counts_after = flatten(after_map)
+            except Exception:
+                # Rollback for any exception
+                self.db_session.rollback()
+                logger.exception(
+                    "Error processing step %s:. Cleaning up after failure if applicable.",
+                    self.__class__.__name__,
+                )
 
-            self.set_metrics(flattened_state_log_counts_after)
+                # If there was a file-level exception anywhere in the processing,
+                # we move the file from received to error
+                # perform any cleanup necessary by the step.
+                self.cleanup_on_failure()
+                raise
 
-            # Calculate the difference in counts for the metrics
-            state_log_diff = calculate_state_log_count_diff(
-                state_log_counts_before, state_log_counts_after
-            )
-            self.set_metrics(state_log_diff)
+            finally:
+                # Flatten these prefixed with the "after" key since nested values in the
+                # metrics dictionary aren’t properly imported into New Relic
+                state_log_counts_after = state_log_util.get_state_counts(self.db_session)
+
+                after_map = {"after_state_log_counts": state_log_counts_after}
+                flattened_state_log_counts_after = flatten(after_map)
+
+                self.set_metrics(flattened_state_log_counts_after)
+
+                # Calculate the difference in counts for the metrics
+                state_log_diff = calculate_state_log_count_diff(
+                    state_log_counts_before, state_log_counts_after
+                )
+                self.set_metrics(state_log_diff)
 
     @abc.abstractmethod
     def run_step(self) -> None:
@@ -104,6 +133,20 @@ class Step(abc.ABC, metaclass=abc.ABCMeta):
             payment=payment, reference_file=reference_file,
         )
         self.db_session.add(payment_reference_file)
+
+    def add_employee_reference_file(
+        self, employee: Employee, reference_file: ReferenceFile
+    ) -> None:
+        # Add an employee reference file. If a particular job finds an employee
+        # multiple times in a reference file, don't readd it to avoid primary key conflicts
+        if employee.employee_id in self.employees_in_reference_file:
+            return
+        self.employees_in_reference_file.add(employee.employee_id)
+
+        employee_reference_file = EmployeeReferenceFile(
+            employee=employee, reference_file=reference_file,
+        )
+        self.db_session.add(employee_reference_file)
 
 
 def calculate_state_log_count_diff(

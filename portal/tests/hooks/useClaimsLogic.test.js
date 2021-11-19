@@ -1,5 +1,5 @@
 import { act, renderHook } from "@testing-library/react-hooks";
-import { mockFetch, mockLoggedInAuthSession } from "../test-utils";
+import { mockAuth, mockFetch } from "../test-utils";
 import AppErrorInfo from "../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
 import ClaimDetail from "../../src/models/ClaimDetail";
@@ -31,7 +31,7 @@ describe("useClaimsLogic", () => {
   }
 
   beforeAll(() => {
-    mockLoggedInAuthSession();
+    mockAuth();
   });
 
   it("sets initial claims data to empty collection", () => {
@@ -93,8 +93,6 @@ describe("useClaimsLogic", () => {
     });
 
     it("loads page with order and filter params", async () => {
-      expect.assertions();
-
       const { appLogic } = setup();
 
       await act(async () => {
@@ -140,7 +138,6 @@ describe("useClaimsLogic", () => {
     });
 
     it("only makes api request if the page number, ordering, or filters have changed", async () => {
-      expect.assertions();
       const { appLogic } = setup();
 
       await act(async () => {
@@ -245,11 +242,15 @@ describe("useClaimsLogic", () => {
 
       const { appLogic } = setup();
 
+      let claimDetail;
       await act(async () => {
-        await appLogic.current.claims.loadClaimDetail("absence_case_id");
+        claimDetail = await appLogic.current.claims.loadClaimDetail(
+          "absence_case_id"
+        );
       });
 
       expect(appLogic.current.claims.claimDetail).toBeInstanceOf(ClaimDetail);
+      expect(claimDetail).toBe(appLogic.current.claims.claimDetail);
     });
 
     it("it sets isLoadingClaimDetail to true when a claim is being loaded", async () => {
@@ -271,7 +272,6 @@ describe("useClaimsLogic", () => {
     });
 
     it("only makes api request if the absence case ID has changed", async () => {
-      expect.assertions();
       const { appLogic } = setup();
 
       await act(async () => {
@@ -284,18 +284,27 @@ describe("useClaimsLogic", () => {
             data: mockResponseData,
           },
         });
-        await appLogic.current.claims.loadClaimDetail("absence_id_1");
+        let claimDetail = await appLogic.current.claims.loadClaimDetail(
+          "absence_id_1"
+        );
         expect(global.fetch).toHaveBeenCalled();
+        expect(claimDetail).toBeInstanceOf(ClaimDetail);
 
         // but this shouldn't, since we've already loaded this claim
         mockFetch();
-        await appLogic.current.claims.loadClaimDetail("absence_id_1");
+        claimDetail = await appLogic.current.claims.loadClaimDetail(
+          "absence_id_1"
+        );
         expect(global.fetch).not.toHaveBeenCalled();
+        expect(claimDetail).toBeInstanceOf(ClaimDetail);
 
         // this should make an API request since the absence case ID changed
         mockFetch();
-        await appLogic.current.claims.loadClaimDetail("absence_id_2");
+        claimDetail = await appLogic.current.claims.loadClaimDetail(
+          "absence_id_2"
+        );
         expect(global.fetch).toHaveBeenCalled();
+        expect(claimDetail).toBeInstanceOf(ClaimDetail);
       });
     });
 
@@ -316,21 +325,37 @@ describe("useClaimsLogic", () => {
       expect(appLogic.current.appErrors.items).toHaveLength(0);
     });
 
-    it("catches exceptions thrown from the API module", async () => {
+    it("triggers a ClaimWithdrawnError if the absence case has been withdrawn", async () => {
       jest.spyOn(console, "error").mockImplementationOnce(jest.fn());
       mockFetch({
-        status: 400,
+        status: 403,
+        response: {
+          data: null,
+          message: "Claim has been withdrawn. Unable to display claim status.",
+          errors: [
+            {
+              message: "Claim has been withdrawn.",
+              type: "fineos_claim_withdrawn",
+            },
+          ],
+        },
       });
 
       const { appLogic } = setup();
 
+      let claimDetail;
       await act(async () => {
-        await appLogic.current.claims.loadClaimDetail("absence_id_1");
+        claimDetail = await appLogic.current.claims.loadClaimDetail(
+          "absence_id_1"
+        );
       });
 
+      expect(claimDetail).toBeUndefined();
+      expect(appLogic.current.appErrors.items).toHaveLength(1);
       expect(appLogic.current.appErrors.items[0].name).toEqual(
-        "BadRequestError"
+        "ClaimWithdrawnError"
       );
+      expect(appLogic.current.claims.isLoadingClaimDetail).toBe(false);
     });
   });
 });

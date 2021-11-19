@@ -28,9 +28,11 @@ class CreateOrUpdateEmployer(pydantic.BaseModel):
 
 
 class CreateOrUpdateServiceAgreement(pydantic.BaseModel):
-    absence_management_flag: bool
-    leave_plans: str
+    unlink_leave_plans: bool
     start_date: Optional[datetime.date]
+    end_date: Optional[datetime.date]
+    leave_plans: Optional[str]
+    absence_management_flag: Optional[bool]
 
 
 # Classes for UpdateOrCreateParty request. Most attributes
@@ -59,6 +61,67 @@ class OCPartyAliasItem(pydantic.BaseModel):
 
 class OCPartyAlias(pydantic.BaseModel):
     OCPartyAlias: List[OCPartyAliasItem]
+
+
+class OCPartyLocationAssociationItem(pydantic.BaseModel):
+    OID: str = "PE:11797:0000000001"
+    BOEVersion: int = 0
+    LastUpdateDate: str = "1753-01-01T00:00:00"
+    UserUpdatedBy: str = "EMAIL@MASS.GOV"
+    Description: Optional[str] = None
+    EffectiveFrom: str = "1753-01-01T00:00:00"
+    EffectiveTo: str = "1754-01-01T00:00:00"
+    ExternalReference: Any = None
+    Name: str = "HQ"
+    PartyLocationAssociationType: InstanceDomainAndFullId = InstanceDomainAndFullId(
+        InstanceDomainAndFullId=InstanceDomainAndFullIdItem(
+            InstanceName="Unknown", DomainName="PartyLocationAssociationType", FullId=6624000
+        )
+    )
+    SourceSystem: InstanceDomainAndFullId = InstanceDomainAndFullId(
+        InstanceDomainAndFullId=InstanceDomainAndFullIdItem(
+            InstanceName="Internal", DomainName="PartySourceSystem", FullId=8032000
+        )
+    )
+    UpperName: Any = None
+    ReferenceNumberValidated: bool = False
+
+
+class OCPartyLocationAssociation(pydantic.BaseModel):
+    OCPartyLocationAssociation: List[OCPartyLocationAssociationItem]
+
+
+class OCOrganisationUnitLocationLinkItem(pydantic.BaseModel):
+    OID: str = "PE:11797:0000000001"
+    BOEVersion: int = 0
+    LastUpdateDate: str = "1753-01-01T00:00:00"
+    UserUpdatedBy: str = "EMAIL@MASS.GOV"
+    partyLocationAssociation: OCPartyLocationAssociation
+
+
+class OCOrganisationUnitLocationLinks(pydantic.BaseModel):
+    OrgUnitLocationLink: List[OCOrganisationUnitLocationLinkItem]
+
+
+class OCOrganisationUnitItem(pydantic.BaseModel):
+    OID: str = "PE:11797:0000000001"
+    BOEVersion: int = 0
+    LastUpdateDate: str = "1753-01-01T00:00:00"
+    UserUpdatedBy: str = "EMAIL@MASS.GOV"
+    EffectiveFrom: str = "1753-01-01T00:00:00"
+    EffectiveTo: str = "1754-01-01T00:00:00"
+    ExternalReference: Any = None
+    Name: str = "HRD"
+    SourceSystem: InstanceDomainAndFullId = InstanceDomainAndFullId(
+        InstanceDomainAndFullId=InstanceDomainAndFullIdItem(
+            InstanceName="Internal", DomainName="PartySourceSystem", FullId=8032000
+        )
+    )
+    orgUnitLocationLinks: Optional[OCOrganisationUnitLocationLinks]
+
+
+class OCOrganisationUnit(pydantic.BaseModel):
+    OrganisationUnit: Optional[List[OCOrganisationUnitItem]]
 
 
 class OCOrganisationDefaultItem(pydantic.BaseModel):
@@ -139,6 +202,7 @@ class OCOrganisationDefaultItem(pydantic.BaseModel):
     UpperRegisteredNumber: Any = None
     UpperShortName: Any = None
     VatNumber: Any = None
+    organisationUnits: Optional[OCOrganisationUnit]
 
 
 class OCOrganisationWithDefault(pydantic.BaseModel):
@@ -252,6 +316,7 @@ class OCOrganisationItem(pydantic.BaseModel):
     UpperRegisteredNumber: Any = None
     UpperShortName: Any = None
     VatNumber: Any = None
+    organisationUnits: Optional[OCOrganisationUnit]
     names: Optional[OCOrganisationName]
 
 
@@ -329,3 +394,20 @@ class ServiceAgreementServiceRequest(pydantic.BaseModel):
     )
     config_name: str = pydantic.Field("ServiceAgreementService", alias="config-name")
     update_data: ServiceAgreementData = pydantic.Field(None, alias="update-data")
+
+
+class TaxWithholdingUpdateData(pydantic.BaseModel):
+    additional_data_set: AdditionalDataSet = pydantic.Field(None, alias="additional-data-set")
+
+
+class TaxWithholdingUpdateRequest(pydantic.BaseModel):
+    xmlns_p: str = pydantic.Field(
+        "http://www.fineos.com/wscomposer/OptInSITFITService", alias="@xmlns:p"
+    )
+    xmlns_xsi: str = pydantic.Field("http://www.w3.org/2001/XMLSchema-instance", alias="@xmlns:xsi")
+    xsi_schemaLocation: str = pydantic.Field(
+        "http://www.fineos.com/wscomposer/OptInSITFITService  optinsitfitservice.xsd",
+        alias="@xsi:schemaLocation",
+    )
+    config_name: str = pydantic.Field("OptInSITFITService", alias="config-name")
+    update_data: TaxWithholdingUpdateData = pydantic.Field(None, alias="update-data")

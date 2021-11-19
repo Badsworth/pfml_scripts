@@ -1,123 +1,111 @@
-import { renderWithAppLogic, simulateEvents } from "../../test-utils";
+import { MockBenefitsApplicationBuilder, renderPage } from "../../test-utils";
+import { screen, waitFor } from "@testing-library/react";
 import LeaveReason from "../../../src/models/LeaveReason";
 import ReasonPregnancy from "../../../src/pages/applications/reason-pregnancy";
+import { setupBenefitsApplications } from "../../test-utils/helpers";
+import userEvent from "@testing-library/user-event";
 
-jest.mock("../../../src/hooks/useAppLogic");
+const setup = ({ claim } = {}) => {
+  claim = claim ?? new MockBenefitsApplicationBuilder().create();
+  const updateSpy = jest.fn(() => Promise.resolve());
 
-const pregnant_or_recent_birth = false;
-
-const setup = (leave_details = {}) => {
-  const { appLogic, claim, wrapper } = renderWithAppLogic(ReasonPregnancy, {
-    claimAttrs: {
-      leave_details,
+  const utils = renderPage(
+    ReasonPregnancy,
+    {
+      addCustomSetup: (appLogic) => {
+        setupBenefitsApplications(appLogic, [claim]);
+        appLogic.benefitsApplications.update = updateSpy;
+      },
     },
-  });
+    { query: { claim_id: claim.application_id } }
+  );
 
-  const { changeRadioGroup, submitForm } = simulateEvents(wrapper);
-
-  return {
-    appLogic,
-    changeRadioGroup,
-    claim,
-    submitForm,
-    wrapper,
-  };
+  return { updateSpy, ...utils };
 };
 
 describe("ReasonPregnancy", () => {
   it("renders the page with no answer", () => {
-    const { wrapper } = setup();
-    expect(wrapper).toMatchSnapshot();
+    const { container } = setup();
+    expect(container).toMatchSnapshot();
   });
 
-  it("calls claims.update when the user doesn't select a response and clicks save and continue", async () => {
-    const { appLogic, claim, submitForm } = setup();
+  it("submits expected data when the user doesn't select a response and clicks save and continue", async () => {
+    const { updateSpy } = setup();
 
-    await submitForm();
-    expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
-      claim.application_id,
-      {
-        leave_details: {
-          pregnant_or_recent_birth: null,
-        },
-      }
-    );
+    userEvent.click(screen.getByRole("button", { name: /save/i }));
+
+    await waitFor(() => expect(updateSpy).toHaveBeenCalled());
+
+    expect(updateSpy).toHaveBeenCalledWith(expect.any(String), {});
   });
 
-  it("calls claims.update when the user selects a response and clicks save and continue", async () => {
-    const { appLogic, changeRadioGroup, claim, submitForm } = setup();
+  it("submits expected data when the user selects a response and clicks save and continue", async () => {
+    const { updateSpy } = setup();
 
-    changeRadioGroup(
-      "leave_details.pregnant_or_recent_birth",
-      pregnant_or_recent_birth
-    );
+    userEvent.click(screen.getByRole("radio", { name: /yes/i }));
+    userEvent.click(screen.getByRole("button", { name: /save/i }));
 
-    await submitForm();
-    expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
-      claim.application_id,
-      {
-        leave_details: {
-          pregnant_or_recent_birth,
-          reason: LeaveReason.medical,
-        },
-      }
-    );
+    await waitFor(() => expect(updateSpy).toHaveBeenCalled());
+
+    expect(updateSpy).toHaveBeenCalledWith(expect.any(String), {
+      leave_details: {
+        pregnant_or_recent_birth: true,
+        reason: LeaveReason.pregnancy,
+      },
+    });
   });
 
-  it("calls claims.update with existing data when the user clicks save and continue", async () => {
-    const { appLogic, claim, submitForm } = setup({
-      pregnant_or_recent_birth,
+  it("submits existing data when the user doesn't change their answer and clicks save", async () => {
+    const { updateSpy } = setup({
+      claim: new MockBenefitsApplicationBuilder()
+        .pregnancyLeaveReason()
+        .create(),
     });
 
-    await submitForm();
+    userEvent.click(screen.getByRole("button", { name: /save/i }));
+    await waitFor(() => expect(updateSpy).toHaveBeenCalled());
 
-    expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
-      claim.application_id,
-      {
-        leave_details: {
-          pregnant_or_recent_birth,
-          reason: LeaveReason.medical,
-        },
-      }
-    );
+    expect(updateSpy).toHaveBeenCalledWith(expect.any(String), {
+      leave_details: {
+        pregnant_or_recent_birth: true,
+        reason: LeaveReason.pregnancy,
+      },
+    });
   });
 
   it("updates leave reason to pregnancy when the user answers yes", async () => {
-    const { appLogic, changeRadioGroup, claim, submitForm } = setup({
-      reason: LeaveReason.medical,
+    const { updateSpy } = setup({
+      claim: new MockBenefitsApplicationBuilder().medicalLeaveReason().create(),
     });
 
-    changeRadioGroup("leave_details.pregnant_or_recent_birth", true);
+    userEvent.click(screen.getByRole("radio", { name: /yes/i }));
+    userEvent.click(screen.getByRole("button", { name: /save/i }));
 
-    await submitForm();
-    expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
-      claim.application_id,
-      {
-        leave_details: {
-          pregnant_or_recent_birth: true,
-          reason: LeaveReason.pregnancy,
-        },
-      }
-    );
+    await waitFor(() => expect(updateSpy).toHaveBeenCalled());
+    expect(updateSpy).toHaveBeenCalledWith(expect.any(String), {
+      leave_details: {
+        pregnant_or_recent_birth: true,
+        reason: LeaveReason.pregnancy,
+      },
+    });
   });
 
   it("updates leave reason to medical when the user answers no and leave reason is pregnancy", async () => {
-    const { appLogic, changeRadioGroup, claim, submitForm } = setup({
-      reason: LeaveReason.pregnancy,
-      pregnant_or_recent_birth: true,
+    const { updateSpy } = setup({
+      claim: new MockBenefitsApplicationBuilder()
+        .pregnancyLeaveReason()
+        .create(),
     });
 
-    changeRadioGroup("leave_details.pregnant_or_recent_birth", false);
+    userEvent.click(screen.getByRole("radio", { name: /no/i }));
+    userEvent.click(screen.getByRole("button", { name: /save/i }));
 
-    await submitForm();
-    expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
-      claim.application_id,
-      {
-        leave_details: {
-          pregnant_or_recent_birth: false,
-          reason: LeaveReason.medical,
-        },
-      }
-    );
+    await waitFor(() => expect(updateSpy).toHaveBeenCalled());
+    expect(updateSpy).toHaveBeenCalledWith(expect.any(String), {
+      leave_details: {
+        pregnant_or_recent_birth: false,
+        reason: LeaveReason.medical,
+      },
+    });
   });
 });

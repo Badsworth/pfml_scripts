@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { uniqueId } from "lodash";
 
-type Props = {
+export type Props = {
   position?: "top" | "bottom" | "left" | "right";
   children: React.ReactNode;
 };
@@ -23,15 +23,23 @@ const Tooltip = ({ position = "right", children }: Props) => {
      * tooltip trigger element.
      * The Tooltip component will be used inside a <label> element in many cases.
      */
-    <span className={`tooltip tooltip--${position}`}>
+    <span className={`tooltip tooltip--${position}`} data-testid="tooltip">
       <span
         aria-describedby={tooltipID ?? ""}
         className="tooltip__trigger"
         role="button"
         tabIndex={0}
+        data-testid="tooltip-trigger"
       ></span>
-      <span id={tooltipID ?? ""} className="tooltip__container" role="tooltip">
-        <span className="tooltip__text">{children}</span>
+      <span
+        id={tooltipID ?? ""}
+        className="tooltip__container"
+        role="tooltip"
+        data-testid="tooltip-container"
+      >
+        <span className="tooltip__text" data-testid="tooltip-text">
+          {children}
+        </span>
       </span>
     </span>
   );

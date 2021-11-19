@@ -20,9 +20,6 @@ from massgov.pfml.db.models.factories import (
     WagesAndContributionsFactory,
 )
 
-# every test in here requires real resources
-pytestmark = pytest.mark.integration
-
 sample_employee_file = "DORDFML_20200519120622"
 sample_employer_file = "DORDFMLEMP_20200519120622"
 
@@ -148,10 +145,14 @@ def test_check_and_update_wages_and_contributions(test_db_session, initialize_fa
         employer_fam_contribution=payload["employer_family"],
     )
 
+    wage_history_records = []
+
+    existing_import_log = wages_row.latest_import_log_id
     updated = util.check_and_update_wages_and_contributions(
-        test_db_session, wages_row, payload, uuid.uuid4()
+        test_db_session, wages_row, payload, uuid.uuid4(), wage_history_records
     )
 
+    assert len(wage_history_records) == 0
     assert not updated
     assert len(test_db_session.dirty) == 0
 
@@ -159,8 +160,25 @@ def test_check_and_update_wages_and_contributions(test_db_session, initialize_fa
     updated_wages_payload["employer_medical"] = Decimal("1384.64")
 
     updated = util.check_and_update_wages_and_contributions(
-        test_db_session, wages_row, updated_wages_payload, uuid.uuid4()
+        test_db_session, wages_row, updated_wages_payload, uuid.uuid4(), wage_history_records
     )
+
+    assert len(wage_history_records) == 1
+    # Currently Unpersisted
+    wage_history_record = wage_history_records[0]
+    assert wage_history_record.wages_and_contributions_history_id is None
+    # Records previous value
+    assert wage_history_record.employer_med_contribution == Decimal("1384.58")
+    # Records all new values
+    assert wage_history_record.wage_and_contribution_id == wages_row.wage_and_contribution_id
+    assert wage_history_record.is_independent_contractor == wages_row.is_independent_contractor
+    assert wage_history_record.is_opted_in == wages_row.is_opted_in
+    assert wage_history_record.employee_ytd_wages == wages_row.employee_ytd_wages
+    assert wage_history_record.employee_qtr_wages == wages_row.employee_qtr_wages
+    assert wage_history_record.employee_med_contribution == wages_row.employee_med_contribution
+    assert wage_history_record.employee_fam_contribution == wages_row.employee_fam_contribution
+    assert wage_history_record.employer_fam_contribution == wages_row.employer_fam_contribution
+    assert wage_history_record.import_log_id == existing_import_log
 
     assert updated
     assert len(test_db_session.dirty) == 1

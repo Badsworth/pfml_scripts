@@ -7,11 +7,13 @@ import datetime
 import decimal
 import pathlib
 import tempfile
+from typing import List
 
 import boto3
 import botocore
 import pytest
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.sql.elements import not_
 
 import massgov.pfml.dor.importer.import_dor as import_dor
 import massgov.pfml.dor.importer.lib.dor_persistence_util as dor_persistence_util
@@ -22,11 +24,13 @@ from massgov.pfml.db.models.employees import (
     AddressType,
     Country,
     Employee,
-    EmployeeLog,
+    EmployeePushToFineosQueue,
     Employer,
+    EmployerPushToFineosQueue,
     EmployerQuarterlyContribution,
     GeoState,
     WagesAndContributions,
+    WagesAndContributionsHistory,
 )
 from massgov.pfml.db.models.factories import EmployerQuarterlyContributionFactory
 from massgov.pfml.dor.importer.import_dor import (
@@ -38,9 +42,6 @@ from massgov.pfml.types import TaxId
 from massgov.pfml.util.encryption import GpgCrypt, Utf8Crypt
 
 from . import dor_test_data as test_data
-
-# every test in here requires real resources
-pytestmark = pytest.mark.integration
 
 decrypter = Utf8Crypt()
 employee_file = "DORDFML_20200519120622"
@@ -125,6 +126,22 @@ def test_employer_import(test_db_session, dor_employer_lookups):
     assert report.updated_employers_count == 0
     assert report.unmodified_employers_count == 0
 
+    # Verify Logs are correct
+    employer_insert_logs: List[EmployerPushToFineosQueue] = (
+        test_db_session.query(EmployerPushToFineosQueue)
+        .filter(EmployerPushToFineosQueue.action == "INSERT")
+        .all()
+    )
+    assert len(employer_insert_logs) == 1
+    assert employer_insert_logs[0].employer_id == employer_id
+    # ------
+    employer_update_logs: List[EmployerPushToFineosQueue] = (
+        test_db_session.query(EmployerPushToFineosQueue)
+        .filter(EmployerPushToFineosQueue.action == "UPDATE")
+        .all()
+    )
+    assert len(employer_update_logs) == 0
+
 
 def test_employer_update(test_db_session, dor_employer_lookups):
     # perform initial import
@@ -143,6 +160,24 @@ def test_employer_update(test_db_session, dor_employer_lookups):
 
     assert report.created_employers_count == 1
     assert report.updated_employers_count == 0
+
+    # Verify Logs are correct (1)
+    employer_insert_logs1: List[EmployerPushToFineosQueue] = (
+        test_db_session.query(EmployerPushToFineosQueue)
+        .filter(EmployerPushToFineosQueue.action == "INSERT")
+        .all()
+    )
+    employer_insert_logs_ids1 = [x.employer_push_to_fineos_queue_id for x in employer_insert_logs1]
+    assert len(employer_insert_logs1) == 1
+    assert employer_insert_logs1[0].employer_id == employer_id
+    # ------
+    employer_update_logs1: List[EmployerPushToFineosQueue] = (
+        test_db_session.query(EmployerPushToFineosQueue)
+        .filter(EmployerPushToFineosQueue.action == "UPDATE")
+        .all()
+    )
+    assert len(employer_update_logs1) == 0
+    # ------------
 
     # confirm unchanged update date will be skipped
     report2, report_log_entry2 = get_new_import_report(test_db_session)
@@ -163,6 +198,29 @@ def test_employer_update(test_db_session, dor_employer_lookups):
     assert report2.updated_employers_count == 0
     assert report2.unmodified_employers_count == 1
     assert existing_employer.latest_import_log_id == report_log_entry.import_log_id
+
+    # Verify Logs are correct (2)
+    employer_insert_logs2: List[EmployerPushToFineosQueue] = (
+        test_db_session.query(EmployerPushToFineosQueue)
+        .filter(
+            EmployerPushToFineosQueue.action == "INSERT",
+            not_(
+                EmployerPushToFineosQueue.employer_push_to_fineos_queue_id.in_(
+                    employer_insert_logs_ids1
+                )
+            ),
+        )
+        .all()
+    )
+    assert len(employer_insert_logs2) == 0
+    # ------
+    employer_update_logs2: List[EmployerPushToFineosQueue] = (
+        test_db_session.query(EmployerPushToFineosQueue)
+        .filter(EmployerPushToFineosQueue.action == "UPDATE")
+        .all()
+    )
+    assert len(employer_update_logs2) == 0
+    # ------------
 
     # confirm expected columns are now updated
     report3, report_log_entry3 = get_new_import_report(test_db_session)
@@ -194,6 +252,40 @@ def test_employer_update(test_db_session, dor_employer_lookups):
 
     assert report3.updated_employers_count == 1
 
+    # Verify Logs are correct (3)
+    employer_insert_logs3: List[EmployerPushToFineosQueue] = (
+        test_db_session.query(EmployerPushToFineosQueue)
+        .filter(
+            EmployerPushToFineosQueue.action == "INSERT",
+            not_(
+                EmployerPushToFineosQueue.employer_push_to_fineos_queue_id.in_(
+                    employer_insert_logs_ids1
+                )
+            ),
+        )
+        .all()
+    )
+    assert len(employer_insert_logs3) == 0
+    # ------
+    employer_update_logs3: List[EmployerPushToFineosQueue] = (
+        test_db_session.query(EmployerPushToFineosQueue)
+        .filter(EmployerPushToFineosQueue.action == "UPDATE")
+        .all()
+    )
+    assert len(employer_update_logs3) == 1
+    assert employer_update_logs3[0].employer_id == persisted_employer.employer_id
+    assert employer_update_logs3[0].family_exemption == new_employer_payload["family_exemption"]
+    assert employer_update_logs3[0].medical_exemption == new_employer_payload["medical_exemption"]
+    assert (
+        employer_update_logs3[0].exemption_commence_date
+        == new_employer_payload["exemption_commence_date"]
+    )
+    assert (
+        employer_update_logs3[0].exemption_cease_date
+        == new_employer_payload["exemption_cease_date"]
+    )
+    # ------------
+
 
 def test_employer_create_and_update_in_same_run(test_db_session):
     new_employer_payload = test_data.get_new_employer()
@@ -224,6 +316,35 @@ def test_employer_create_and_update_in_same_run(test_db_session):
     validate_employer_persistence(
         updated_employer_payload, persisted_employer, report_log_entry.import_log_id
     )
+
+    # Verify Logs are correct
+    employer_insert_logs: List[EmployerPushToFineosQueue] = (
+        test_db_session.query(EmployerPushToFineosQueue)
+        .filter(EmployerPushToFineosQueue.action == "INSERT")
+        .all()
+    )
+    assert len(employer_insert_logs) == 1
+    assert employer_insert_logs[0].employer_id == persisted_employer.employer_id
+
+    # ------
+    employer_update_logs: List[EmployerPushToFineosQueue] = (
+        test_db_session.query(EmployerPushToFineosQueue)
+        .filter(EmployerPushToFineosQueue.action == "UPDATE")
+        .all()
+    )
+    assert len(employer_update_logs) == 1
+    assert employer_update_logs[0].employer_id == persisted_employer.employer_id
+
+    assert employer_update_logs[0].family_exemption == new_employer_payload["family_exemption"]
+    assert employer_update_logs[0].medical_exemption == new_employer_payload["medical_exemption"]
+    assert (
+        employer_update_logs[0].exemption_commence_date
+        == new_employer_payload["exemption_commence_date"]
+    )
+    assert (
+        employer_update_logs[0].exemption_cease_date == new_employer_payload["exemption_cease_date"]
+    )
+    # ------------
 
 
 def test_employer_address(test_db_session):
@@ -264,6 +385,34 @@ def test_employer_address(test_db_session):
         employer_international_address["employer_address_country"]
     )
 
+    # Verify Logs are correct
+
+    employer_insert_logs: List[EmployerPushToFineosQueue] = (
+        test_db_session.query(EmployerPushToFineosQueue)
+        .filter(EmployerPushToFineosQueue.action == "INSERT")
+        .all()
+    )
+    assert len(employer_insert_logs) == 2
+
+    found_employer_1 = next(
+        x for x in employer_insert_logs if x.employer_id == invalid_country_employer.employer_id
+    )
+    assert found_employer_1
+
+    found_employer_2 = next(
+        x for x in employer_insert_logs if x.employer_id == valid_country_employer.employer_id
+    )
+    assert found_employer_2
+
+    # ------
+    employer_update_logs: List[EmployerPushToFineosQueue] = (
+        test_db_session.query(EmployerPushToFineosQueue)
+        .filter(EmployerPushToFineosQueue.action == "UPDATE")
+        .all()
+    )
+    assert len(employer_update_logs) == 0
+    # ------------
+
 
 def test_employer_invalid_fein(test_db_session):
     employer_data_invalid_type = copy.deepcopy(test_data.new_employer)
@@ -291,6 +440,22 @@ def test_employer_invalid_fein(test_db_session):
     after_employer_count = test_db_session.query(Employer).count()
     assert before_employer_count == after_employer_count
 
+    # Verify Logs are correct
+    employer_insert_logs: List[EmployerPushToFineosQueue] = (
+        test_db_session.query(EmployerPushToFineosQueue)
+        .filter(EmployerPushToFineosQueue.action == "INSERT")
+        .all()
+    )
+    assert len(employer_insert_logs) == 0
+    # ------
+    employer_update_logs: List[EmployerPushToFineosQueue] = (
+        test_db_session.query(EmployerPushToFineosQueue)
+        .filter(EmployerPushToFineosQueue.action == "UPDATE")
+        .all()
+    )
+    assert len(employer_update_logs) == 0
+    # ------------
+
 
 def test_log_employees_with_new_employers(test_db_session):
 
@@ -311,6 +476,33 @@ def test_log_employees_with_new_employers(test_db_session):
 
     created_employers = test_db_session.query(Employer).all()
     assert len(created_employers) == 2
+
+    # Verify Employer Logs are correct (1)
+    employer_insert_logs1: List[EmployerPushToFineosQueue] = (
+        test_db_session.query(EmployerPushToFineosQueue)
+        .filter(EmployerPushToFineosQueue.action == "INSERT")
+        .all()
+    )
+    assert len(employer_insert_logs1) == 2
+
+    found_employer_1 = next(
+        x for x in employer_insert_logs1 if x.employer_id == created_employers[0].employer_id
+    )
+    assert found_employer_1
+
+    found_employer_2 = next(
+        x for x in employer_insert_logs1 if x.employer_id == created_employers[1].employer_id
+    )
+    assert found_employer_2
+
+    # ------
+    employer_update_logs1: List[EmployerPushToFineosQueue] = (
+        test_db_session.query(EmployerPushToFineosQueue)
+        .filter(EmployerPushToFineosQueue.action == "UPDATE")
+        .all()
+    )
+    assert len(employer_update_logs1) == 0
+    # ------------
 
     # Create two employees
     employee1 = generate_employee_and_wage_item(1, employer1)
@@ -336,6 +528,41 @@ def test_log_employees_with_new_employers(test_db_session):
     created_wages = test_db_session.query(WagesAndContributions).all()
     assert len(created_wages) == 2
 
+    # Verify Employee Logs are correct (1)
+    employee_insert_logs1: List[EmployeePushToFineosQueue] = (
+        test_db_session.query(EmployeePushToFineosQueue)
+        .filter(EmployeePushToFineosQueue.action == "INSERT")
+        .all()
+    )
+    employee_insert_log_ids1 = [x.employee_push_to_fineos_queue_id for x in employee_insert_logs1]
+
+    assert len(employee_insert_logs1) == 2
+
+    found_employee_1 = next(
+        x for x in employee_insert_logs1 if x.employee_id == created_employees[0].employee_id
+    )
+    assert found_employee_1
+
+    found_employee_2 = next(
+        x for x in employee_insert_logs1 if x.employee_id == created_employees[1].employee_id
+    )
+    assert found_employee_2
+    # ------
+    employee_update_logs1: List[EmployeePushToFineosQueue] = (
+        test_db_session.query(EmployeePushToFineosQueue)
+        .filter(EmployeePushToFineosQueue.action == "UPDATE")
+        .all()
+    )
+    assert len(employee_update_logs1) == 0
+    # ------
+    employee_employer_logs1: List[EmployeePushToFineosQueue] = (
+        test_db_session.query(EmployeePushToFineosQueue)
+        .filter(EmployeePushToFineosQueue.action == "UPDATE_NEW_EMPLOYER")
+        .all()
+    )
+    assert len(employee_employer_logs1) == 0
+    # ------------
+
     # Simulate a wage entry for an existing employee with a new employer
     employee2_employer1 = generate_employee_and_wage_item(2, employer1)
     employee2_employer1_second_entry = generate_employee_and_wage_item(2, employer1)
@@ -355,15 +582,46 @@ def test_log_employees_with_new_employers(test_db_session):
     assert report2.created_employees_count == 1
     assert report2.logged_employees_for_new_employer == 1
 
-    created_employee_logs = (
-        test_db_session.query(EmployeeLog).filter(EmployeeLog.action == "UPDATE_NEW_EMPLOYER").all()
-    )
-    assert len(created_employee_logs) == 1
-
-    expected_logged_employee = dor_persistence_util.get_employees_by_ssn(
+    employee_with_new_employer = dor_persistence_util.get_employees_by_ssn(
         test_db_session, [employee2_employer1["employee_ssn"]]
     )[0]
-    assert created_employee_logs[0].employee_id == expected_logged_employee.employee_id
+
+    created_employee = dor_persistence_util.get_employees_by_ssn(
+        test_db_session, [employee3["employee_ssn"]]
+    )[0]
+
+    # Verify Employee Logs are correct (2)
+    employee_insert_logs2: List[EmployeePushToFineosQueue] = (
+        test_db_session.query(EmployeePushToFineosQueue)
+        .filter(
+            EmployeePushToFineosQueue.action == "INSERT",
+            not_(
+                EmployeePushToFineosQueue.employee_push_to_fineos_queue_id.in_(
+                    employee_insert_log_ids1
+                )
+            ),
+        )
+        .all()
+    )
+    assert len(employee_insert_logs2) == 1
+    assert employee_insert_logs2[0].employee_id == created_employee.employee_id
+    # ------
+    employee_update_logs2: List[EmployeePushToFineosQueue] = (
+        test_db_session.query(EmployeePushToFineosQueue)
+        .filter(EmployeePushToFineosQueue.action == "UPDATE")
+        .all()
+    )
+    assert len(employee_update_logs2) == 0
+    # ------
+    employee_employer_logs2: List[EmployeePushToFineosQueue] = (
+        test_db_session.query(EmployeePushToFineosQueue)
+        .filter(EmployeePushToFineosQueue.action == "UPDATE_NEW_EMPLOYER")
+        .all()
+    )
+    assert len(employee_employer_logs2) == 1
+    assert employee_employer_logs2[0].employer_id == found_employer_1.employer_id
+    assert employee_employer_logs2[0].employee_id == employee_with_new_employer.employee_id
+    # ------------
 
 
 def get_new_import_report(test_db_session):
@@ -386,6 +644,28 @@ def test_employee_wage_data_create(test_db_session, dor_employer_lookups):
     employers = [employer_payload]
     import_dor.import_employers(test_db_session, employers, report, report_log_entry.import_log_id)
 
+    persisted_employer = (
+        test_db_session.query(Employer).filter(Employer.account_key == account_key).one_or_none()
+    )
+    employer_id = persisted_employer.employer_id
+
+    # Verify Employer Logs are correct
+    employer_insert_logs: List[EmployerPushToFineosQueue] = (
+        test_db_session.query(EmployerPushToFineosQueue)
+        .filter(EmployerPushToFineosQueue.action == "INSERT")
+        .all()
+    )
+    assert len(employer_insert_logs) == 1
+    assert employer_insert_logs[0].employer_id == employer_id
+    # ------
+    employer_update_logs: List[EmployerPushToFineosQueue] = (
+        test_db_session.query(EmployerPushToFineosQueue)
+        .filter(EmployerPushToFineosQueue.action == "UPDATE")
+        .all()
+    )
+    assert len(employer_update_logs) == 0
+    # ------------
+
     # perform employee and wage import
     employee_wage_data_payload = test_data.get_new_employee_wage_data()
 
@@ -406,11 +686,6 @@ def test_employee_wage_data_create(test_db_session, dor_employer_lookups):
         employee_wage_data_payload, persisted_employee, report_log_entry.import_log_id
     )
 
-    persisted_employer = (
-        test_db_session.query(Employer).filter(Employer.account_key == account_key).one_or_none()
-    )
-    employer_id = persisted_employer.employer_id
-
     persisted_wage_info = dor_persistence_util.get_wages_and_contributions_by_employee_id_and_filling_period(
         test_db_session, employee_id, employer_id, employee_wage_data_payload["filing_period"],
     )
@@ -426,6 +701,30 @@ def test_employee_wage_data_create(test_db_session, dor_employer_lookups):
     assert report.created_wages_and_contributions_count == 1
     assert report.updated_wages_and_contributions_count == 0
 
+    # Verify Employee Logs are correct
+    employee_insert_logs: List[EmployeePushToFineosQueue] = (
+        test_db_session.query(EmployeePushToFineosQueue)
+        .filter(EmployeePushToFineosQueue.action == "INSERT")
+        .all()
+    )
+    assert len(employee_insert_logs) == 1
+    assert employee_insert_logs[0].employee_id == employee_id
+    # ------
+    employee_update_logs: List[EmployeePushToFineosQueue] = (
+        test_db_session.query(EmployeePushToFineosQueue)
+        .filter(EmployeePushToFineosQueue.action == "UPDATE")
+        .all()
+    )
+    assert len(employee_update_logs) == 0
+    # ------
+    employee_employer_logs: List[EmployeePushToFineosQueue] = (
+        test_db_session.query(EmployeePushToFineosQueue)
+        .filter(EmployeePushToFineosQueue.action == "UPDATE_NEW_EMPLOYER")
+        .all()
+    )
+    assert len(employee_employer_logs) == 0
+    # ------------
+
 
 def test_employee_wage_data_update(test_db_session, dor_employer_lookups):
 
@@ -437,6 +736,28 @@ def test_employee_wage_data_update(test_db_session, dor_employer_lookups):
     account_key = employer_payload["account_key"]
     employers = [employer_payload]
     import_dor.import_employers(test_db_session, employers, report, report_log_entry.import_log_id)
+
+    persisted_employer = (
+        test_db_session.query(Employer).filter(Employer.account_key == account_key).one_or_none()
+    )
+    employer_id = persisted_employer.employer_id
+
+    # Verify Employer Logs are correct
+    employer_insert_logs: List[EmployerPushToFineosQueue] = (
+        test_db_session.query(EmployerPushToFineosQueue)
+        .filter(EmployerPushToFineosQueue.action == "INSERT")
+        .all()
+    )
+    assert len(employer_insert_logs) == 1
+    assert employer_insert_logs[0].employer_id == employer_id
+    # ------
+    employer_update_logs: List[EmployerPushToFineosQueue] = (
+        test_db_session.query(EmployerPushToFineosQueue)
+        .filter(EmployerPushToFineosQueue.action == "UPDATE")
+        .all()
+    )
+    assert len(employer_update_logs) == 0
+    # ------------
 
     # perform initial employee and wage import
     employee_wage_data_payload = test_data.get_new_employee_wage_data()
@@ -456,6 +777,33 @@ def test_employee_wage_data_update(test_db_session, dor_employer_lookups):
     assert report.updated_employees_count == 0
     assert report.unmodified_employees_count == 0
     assert report.updated_wages_and_contributions_count == 0
+
+    # Verify no WagesAndContributionsHistory records exist
+    assert test_db_session.query(WagesAndContributionsHistory).count() == 0
+    # Verify Employee Logs are correct (1)
+    employee_insert_logs1: List[EmployeePushToFineosQueue] = (
+        test_db_session.query(EmployeePushToFineosQueue)
+        .filter(EmployeePushToFineosQueue.action == "INSERT")
+        .all()
+    )
+    employee_insert_log_ids1 = [x.employee_push_to_fineos_queue_id for x in employee_insert_logs1]
+    assert len(employee_insert_logs1) == 1
+    assert employee_insert_logs1[0].employee_id == employee_id
+    # ------
+    employee_update_logs1: List[EmployeePushToFineosQueue] = (
+        test_db_session.query(EmployeePushToFineosQueue)
+        .filter(EmployeePushToFineosQueue.action == "UPDATE")
+        .all()
+    )
+    assert len(employee_update_logs1) == 0
+    # ------
+    employee_employer_logs1: List[EmployeePushToFineosQueue] = (
+        test_db_session.query(EmployeePushToFineosQueue)
+        .filter(EmployeePushToFineosQueue.action == "UPDATE_NEW_EMPLOYER")
+        .all()
+    )
+    assert len(employee_employer_logs1) == 0
+    # ------------
 
     # confirm that existing employee info is not updated when there is no change
     report2, report_log_entry2 = get_new_import_report(test_db_session)
@@ -482,9 +830,38 @@ def test_employee_wage_data_update(test_db_session, dor_employer_lookups):
     assert report2.updated_wages_and_contributions_count == 0
     assert report2.unmodified_wages_and_contributions_count == 1
 
+    # Verify Employee Logs are correct (2)
+    employee_insert_logs2: List[EmployeePushToFineosQueue] = (
+        test_db_session.query(EmployeePushToFineosQueue)
+        .filter(
+            EmployeePushToFineosQueue.action == "INSERT",
+            not_(
+                EmployeePushToFineosQueue.employee_push_to_fineos_queue_id.in_(
+                    employee_insert_log_ids1
+                )
+            ),
+        )
+        .all()
+    )
+    assert len(employee_insert_logs2) == 0
+    # ------
+    employee_update_logs2: List[EmployeePushToFineosQueue] = (
+        test_db_session.query(EmployeePushToFineosQueue)
+        .filter(EmployeePushToFineosQueue.action == "UPDATE")
+        .all()
+    )
+    assert len(employee_update_logs2) == 0
+    # ------
+    employee_employer_logs2: List[EmployeePushToFineosQueue] = (
+        test_db_session.query(EmployeePushToFineosQueue)
+        .filter(EmployeePushToFineosQueue.action == "UPDATE_NEW_EMPLOYER")
+        .all()
+    )
+    assert len(employee_employer_logs2) == 0
+    # ------------
+
     # confirm updates are persisted
     report3, report_log_entry3 = get_new_import_report(test_db_session)
-
     updated_employee_wage_data_payload = test_data.get_updated_employee_wage_data()
     import_dor.import_employees_and_wage_data(
         test_db_session,
@@ -500,11 +877,6 @@ def test_employee_wage_data_update(test_db_session, dor_employer_lookups):
     validate_employee_persistence(
         updated_employee_wage_data_payload, persisted_employee, report_log_entry3.import_log_id
     )
-
-    persisted_employer = (
-        test_db_session.query(Employer).filter(Employer.account_key == account_key).one_or_none()
-    )
-    employer_id = persisted_employer.employer_id
 
     persisted_wage_info = dor_persistence_util.get_wages_and_contributions_by_employee_id_and_filling_period(
         test_db_session,
@@ -524,6 +896,46 @@ def test_employee_wage_data_update(test_db_session, dor_employer_lookups):
     assert report3.unmodified_employees_count == 0
     assert report3.updated_wages_and_contributions_count == 1
     assert report3.unmodified_wages_and_contributions_count == 0
+
+    # Verify WagesAndContributionsHistory has been persisted
+    wage_history_records = test_db_session.query(WagesAndContributionsHistory).all()
+    assert len(wage_history_records) == 1
+    assert wage_history_records[0].wage_and_contribution == persisted_wage_info
+    # Validate that the data captured is the previous data
+    validate_wage_history_persistence(
+        employee_wage_data_payload, wage_history_records[0], report_log_entry.import_log_id
+    )
+
+    # Verify Employee Logs are correct (3)
+    employee_insert_logs3: List[EmployeePushToFineosQueue] = (
+        test_db_session.query(EmployeePushToFineosQueue)
+        .filter(
+            EmployeePushToFineosQueue.action == "INSERT",
+            not_(
+                EmployeePushToFineosQueue.employee_push_to_fineos_queue_id.in_(
+                    employee_insert_log_ids1
+                )
+            ),
+        )
+        .all()
+    )
+    assert len(employee_insert_logs3) == 0
+    # ------
+    employee_update_logs3: List[EmployeePushToFineosQueue] = (
+        test_db_session.query(EmployeePushToFineosQueue)
+        .filter(EmployeePushToFineosQueue.action == "UPDATE")
+        .all()
+    )
+    assert len(employee_update_logs3) == 1
+    assert employee_update_logs3[0].employee_id == employee_id
+    # ------
+    employee_employer_logs3: List[EmployeePushToFineosQueue] = (
+        test_db_session.query(EmployeePushToFineosQueue)
+        .filter(EmployeePushToFineosQueue.action == "UPDATE_NEW_EMPLOYER")
+        .all()
+    )
+    assert len(employee_employer_logs3) == 0
+    # ------------
 
 
 # == Validation Helpers ==
@@ -548,6 +960,18 @@ def validate_wage_persistence(employee_wage_payload, wage_row, import_log_id):
     assert wage_row.employee_fam_contribution == employee_wage_payload["employee_family"]
     assert wage_row.employer_fam_contribution == employee_wage_payload["employer_family"]
     assert wage_row.latest_import_log_id == import_log_id
+
+
+def validate_wage_history_persistence(employee_wage_payload, wage_row, import_log_id):
+    assert wage_row.is_independent_contractor == employee_wage_payload["independent_contractor"]
+    assert wage_row.is_opted_in == employee_wage_payload["opt_in"]
+    assert wage_row.employee_ytd_wages == employee_wage_payload["employee_ytd_wages"]
+    assert wage_row.employee_qtr_wages == employee_wage_payload["employee_qtr_wages"]
+    assert wage_row.employee_med_contribution == employee_wage_payload["employee_medical"]
+    assert wage_row.employer_med_contribution == employee_wage_payload["employer_medical"]
+    assert wage_row.employee_fam_contribution == employee_wage_payload["employee_family"]
+    assert wage_row.employer_fam_contribution == employee_wage_payload["employer_family"]
+    assert wage_row.import_log_id == import_log_id
 
 
 def validate_employer_persistence(employer_payload, employer_row, import_log_id):

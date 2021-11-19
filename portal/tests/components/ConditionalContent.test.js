@@ -1,122 +1,86 @@
-import { mount, shallow } from "enzyme";
+import { render, screen } from "@testing-library/react";
 import ConditionalContent from "../../src/components/ConditionalContent";
 import React from "react";
-import { act } from "react-dom/test-utils";
 
-describe("<ConditionalContent>", () => {
-  function render(customProps = {}, mountComponent = false) {
-    const props = Object.assign(
-      {
-        children: <h1>Hello</h1>,
-        fieldNamesClearedWhenHidden: [],
-        clearField: jest.fn(),
-        getField: jest.fn(),
-        updateFields: jest.fn(),
-        visible: true,
-      },
-      customProps
-    );
+const renderComponent = (customProps = {}) => {
+  const defaultProps = {
+    children: <h1>Hello I am a child</h1>,
+    fieldNamesClearedWhenHidden: [],
+    clearField: jest.fn(),
+    getField: jest.fn(),
+    updateFields: jest.fn(),
+    visible: true,
+    ...customProps,
+  };
+  return render(<ConditionalContent {...defaultProps} />);
+};
 
-    const conditionalContent = <ConditionalContent {...props} />;
+describe("ConditionalContent", () => {
+  it("renders children when visible is true", () => {
+    renderComponent();
+    expect(screen.getByText(/Hello I am a child/)).toBeInTheDocument();
+  });
 
-    return {
-      props,
-      wrapper: mountComponent
-        ? mount(conditionalContent)
-        : shallow(conditionalContent),
+  it("doesn't render children when visible is false", () => {
+    renderComponent({
+      children: <h1>Hello I am a custom child</h1>,
+      visible: false,
+    });
+    expect(
+      screen.queryByText(/Hello I am a custom child/)
+    ).not.toBeInTheDocument();
+  });
+
+  it("restores previous data when prop visible changes from true to false to true", () => {
+    const clearField = jest.fn();
+    const getField = jest.fn((name) => name + "_fetched");
+    const updateField = jest.fn();
+    const props = {
+      children: <h1 name="hello">Hello I am a child</h1>,
+      fieldNamesClearedWhenHidden: ["hello"],
+      clearField,
+      getField,
+      updateFields: updateField,
+      visible: true,
     };
-  }
-
-  describe("given `visible` prop is set to true", () => {
-    it("renders the children", () => {
-      const { wrapper } = render({ visible: true });
-      expect(wrapper.exists("h1")).toBe(true);
-    });
-
-    it("restores previous data when prop `visible` changes from true -> false -> true", () => {
-      const getField = (name) => name + "_fetched";
-      const mountComponent = true;
-      const { wrapper, props } = render(
-        {
-          children: <h2 name="world">World</h2>,
-          fieldNamesClearedWhenHidden: ["world", "foo"],
-          visible: true,
-          getField,
-        },
-        mountComponent
-      );
-
-      act(() => {
-        wrapper.setProps({ visible: false });
-      });
-
-      act(() => {
-        wrapper.setProps({ visible: true });
-      });
-
-      expect(props.updateFields).toHaveBeenNthCalledWith(1, {
-        world: "world_fetched",
-        foo: "foo_fetched",
-      });
-    });
+    const { rerender } = render(<ConditionalContent {...props} />);
+    expect(screen.getByText(/Hello I am a child/)).toBeInTheDocument();
+    rerender(<ConditionalContent {...props} visible={false} />);
+    expect(screen.queryByText(/Hello I am a child/)).not.toBeInTheDocument();
+    expect(clearField).toHaveBeenNthCalledWith(1, "hello");
+    rerender(<ConditionalContent {...props} visible={true} />);
+    expect(screen.getByText(/Hello I am a child/)).toBeInTheDocument();
+    expect(updateField).toHaveBeenNthCalledWith(1, { hello: "hello_fetched" });
   });
 
-  describe("given `visible` prop is set to false", () => {
-    it("does not render anything", () => {
-      const { wrapper } = render({ visible: false });
-
-      expect(wrapper.isEmptyRender()).toBe(true);
-    });
-
-    it("clears all fields when component is hidden", () => {
-      const mountComponent = true;
-      const clearField = jest.fn();
-      const { wrapper } = render(
-        {
-          visible: true,
-          fieldNamesClearedWhenHidden: ["foo", "bar"],
-          clearField,
-        },
-        mountComponent
-      );
-
-      act(() => {
-        wrapper.setProps({ visible: false });
-      });
-
-      expect(clearField).toHaveBeenCalledTimes(2);
-      expect(clearField).toHaveBeenNthCalledWith(1, "foo");
-      expect(clearField).toHaveBeenNthCalledWith(2, "bar");
-    });
-
-    it("does not attempt clearing fields when component re-renders", () => {
-      const clearField = jest.fn();
-      const mountComponent = true;
-      const { wrapper } = render(
-        {
-          visible: true,
-          clearField,
-          fieldNamesClearedWhenHidden: ["foo", "bar"],
-        },
-        mountComponent
-      );
-
-      wrapper.update();
-      expect(clearField).toHaveBeenCalledTimes(0);
-    });
+  it("clears all necessary fields when a component is hidden", () => {
+    const clearField = jest.fn();
+    const props = {
+      children: <h1 name="hello">Hello I am a child</h1>,
+      fieldNamesClearedWhenHidden: ["hello", "world"],
+      clearField,
+      getField: jest.fn(),
+      updateFields: jest.fn(),
+      visible: true,
+    };
+    const { rerender } = render(<ConditionalContent {...props} />);
+    rerender(<ConditionalContent {...props} visible={false} />);
+    expect(clearField).toHaveBeenCalledTimes(2);
+    expect(clearField).toHaveBeenNthCalledWith(1, "hello");
+    expect(clearField).toHaveBeenNthCalledWith(2, "world");
   });
 
-  describe("given fieldNamesClearedWhenHidden is not defined", () => {
-    it("does not attempting clearing fields when component is hidden", () => {
-      const clearField = jest.fn();
-      const mountComponent = true;
-      const { wrapper } = render(
-        { clearField, visible: false },
-        mountComponent
-      );
-      wrapper.setProps({ visible: false });
-
-      expect(clearField).toHaveBeenCalledTimes(0);
-    });
+  it("doesn't attempt updates if fieldNamesClearedWhenHidden is undefined", () => {
+    const clearField = jest.fn();
+    const props = {
+      children: <h1 name="hello">Hello I am a child</h1>,
+      clearField,
+      getField: jest.fn(),
+      updateFields: jest.fn(),
+      visible: true,
+    };
+    const { rerender } = render(<ConditionalContent {...props} />);
+    rerender(<ConditionalContent {...props} visible={false} />);
+    expect(clearField).toHaveBeenCalledTimes(0);
   });
 });

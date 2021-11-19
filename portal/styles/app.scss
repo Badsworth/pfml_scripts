@@ -21,24 +21,23 @@
 // U.S. Web Design System global and component styles
 // !! Important !! This should come AFTER the Mayflower styles, otherwise
 // spacing styles we rely on are overridden
-@import "~uswds/dist/scss/uswds";
+@import "node_modules/uswds/dist/scss/uswds";
 
 // Include default USWDS h1-h6 style (size, weight, spacing) rulesets
 @include usa-headings-styles;
 
 // Custom PFML styles
 @import "./pfml";
-@import "../src/components/Alert";
-@import "../src/components/AmendButton";
+@import "../src/components/core/styles/Alert";
 @import "../src/components/AmendmentForm";
 @import "../src/components/ButtonLink";
-@import "../src/components/Details";
+@import "../src/components/core/styles/Details";
 @import "../src/components/FileCard";
 @import "../src/components/FileCardList";
 @import "../src/components/Footer";
 @import "../src/components/BetaBanner";
 @import "../src/components/PaginationNavigation";
-@import "../src/components/Spinner";
-@import "../src/components/Table";
-@import "../src/components/Thumbnail";
+@import "../src/components/core/styles/Spinner";
+@import "../src/components/core/styles/Table";
+@import "../src/components/core/styles/Thumbnail";
 @import "../src/components/UnsupportedBrowserBanner";

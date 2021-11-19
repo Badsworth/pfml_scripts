@@ -2,8 +2,8 @@ import {
   ReducedScheduleLeavePeriod,
   WorkPattern,
 } from "../../src/models/BenefitsApplication";
-import { DateTime } from "luxon";
 import { MockBenefitsApplicationBuilder } from "../test-utils";
+import MockDate from "mockdate";
 import { map } from "lodash";
 
 describe("Claim", () => {
@@ -33,24 +33,32 @@ describe("Claim", () => {
       expect(emptyClaim.isSubmitted).toBe(false);
       expect(submittedClaim.isSubmitted).toBe(true);
     });
+
+    it("returns true when the Claim status is 'completed'", () => {
+      const completedClaim = new MockBenefitsApplicationBuilder()
+        .completed()
+        .create();
+
+      expect(emptyClaim.isSubmitted).toBe(false);
+      expect(completedClaim.isSubmitted).toBe(true);
+    });
   });
 
   describe("#isLeaveStartDateInFuture", () => {
     const past = "2020-09-30";
     const now = "2020-10-01";
     const future = "2020-10-02";
-    let spy;
 
-    beforeAll(() => {
-      spy = jest.spyOn(DateTime, "local").mockImplementation(() => {
-        return {
-          toISODate: () => now,
-        };
-      });
+    // Need to explicitly unset timezone to be passed to MockDate to ensure
+    // local timezone is used.
+    const current = "2020-10-01T00:00:00";
+
+    beforeEach(() => {
+      MockDate.set(current);
     });
 
-    afterAll(() => {
-      spy.mockRestore();
+    afterEach(() => {
+      MockDate.reset();
     });
 
     it("returns true when hybrid leave start dates are in the future", () => {

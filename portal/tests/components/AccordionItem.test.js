@@ -1,44 +1,45 @@
-import AccordionItem from "../../src/components/AccordionItem";
+import { render, screen } from "@testing-library/react";
+import AccordionItem from "../../src/components/core/AccordionItem";
 import React from "react";
-import { shallow } from "enzyme";
+import userEvent from "@testing-library/user-event";
 
 jest.mock("../../src/hooks/useUniqueId");
 
 describe("AccordionItem", () => {
   it("generates id", () => {
-    const wrapper = shallow(
-      <AccordionItem heading="Test">Hello world</AccordionItem>
+    render(
+      <AccordionItem heading="Test">
+        <p>Hello world</p>
+      </AccordionItem>
     );
-
-    expect(wrapper.find(".usa-accordion__button").prop("aria-controls")).toBe(
-      "mock-unique-id"
-    );
-    expect(wrapper.find(".usa-accordion__content").prop("id")).toBe(
+    expect(screen.getByRole("button", { name: "Test" })).toHaveAttribute(
+      "aria-controls",
       "mock-unique-id"
     );
   });
 
   it("is collapsed by default", () => {
-    const wrapper = shallow(
-      <AccordionItem heading="Test">Hello world</AccordionItem>
-    );
-
-    expect(wrapper.find(".usa-accordion__button").prop("aria-expanded")).toBe(
+    render(<AccordionItem heading="Test">Hello world</AccordionItem>);
+    expect(screen.getByRole("button", { name: "Test" })).toHaveAttribute(
+      "aria-expanded",
       "false"
     );
-    expect(wrapper.find(".usa-accordion__content").prop("hidden")).toBe(true);
+    expect(screen.getByTestId("mock-unique-id")).toHaveAttribute("hidden");
   });
 
-  it("is expands when clicked", () => {
-    const wrapper = shallow(
-      <AccordionItem heading="Test">Hello world</AccordionItem>
+  it("expands when clicked", () => {
+    render(
+      <AccordionItem heading="Test">
+        <p>Hello world</p>
+      </AccordionItem>
     );
 
-    wrapper.find(".usa-accordion__button").simulate("click");
-
-    expect(wrapper.find(".usa-accordion__button").prop("aria-expanded")).toBe(
+    userEvent.click(screen.getByRole("button", { name: "Test" }));
+    expect(screen.getByRole("button", { name: "Test" })).toHaveAttribute(
+      "aria-expanded",
       "true"
     );
-    expect(wrapper.find(".usa-accordion__content").prop("hidden")).toBe(false);
+    expect(screen.getByText(/Hello world/)).toBeInTheDocument();
+    expect(screen.getByTestId("mock-unique-id")).not.toHaveAttribute("hidden");
   });
 });

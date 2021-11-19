@@ -1,6 +1,6 @@
 import json
 from functools import cached_property
-from typing import Any, Dict, cast
+from typing import Any, Dict
 
 from massgov.pfml.db.models.employees import Address
 from massgov.pfml.experian.address_validate_soap.caller import ApiCaller, LazyApiCaller
@@ -55,9 +55,9 @@ class MockVerificationZeepCaller(LazyApiCaller, ApiCaller):
                 f"Search text is required to be a string. Received: {address_text}"
             )
 
-        response = self.search_responses.get(cast(str, address_text))
+        response = self.search_responses.get(address_text)
         if not response:
-            address = experian_search_request_to_address(cast(str, address_text))
+            address = experian_search_request_to_address(address_text)
             response = self.add_mock_search_response(address, self.fallback_verify_level)
 
         resp_body = json.loads(response.json(by_alias=True))

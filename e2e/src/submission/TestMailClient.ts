@@ -77,7 +77,7 @@ export default class TestMailClient {
     }
 
     let excludedIds: string[] = [];
-    while (true) {
+    for (;;) {
       const candidates = await this._fetchEmails(opts, client, excludedIds);
       const matches = candidates.filter((email) =>
         email.html.includes(messageWildcard)
@@ -173,7 +173,7 @@ export default class TestMailClient {
   }
 
   getTagFromAddress(address: string): string {
-    const re = new RegExp(`^${this.namespace}\.(.*)@inbox\.testmail\.app$`);
+    const re = new RegExp(`^${this.namespace}.(.*)@inbox.testmail.app$`);
     const match = address.match(re);
     if (!match || !(match[1].length > 0)) {
       throw new Error(

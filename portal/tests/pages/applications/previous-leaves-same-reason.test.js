@@ -1,91 +1,79 @@
-import {
-  MockBenefitsApplicationBuilder,
-  renderWithAppLogic,
-  simulateEvents,
-} from "../../test-utils";
-import PreviousLeave from "../../../src/models/PreviousLeave";
+import { MockBenefitsApplicationBuilder, renderPage } from "../../test-utils";
+import { cleanup, screen, waitFor } from "@testing-library/react";
 import PreviousLeavesSameReason from "../../../src/pages/applications/previous-leaves-same-reason";
+import { setupBenefitsApplications } from "../../test-utils/helpers";
+import userEvent from "@testing-library/user-event";
 
-jest.mock("../../../src/hooks/useAppLogic");
+const setup = (
+  claim = new MockBenefitsApplicationBuilder().continuous().create()
+) => {
+  let updateSpy;
 
-const setup = (claimAttrs = {}) => {
-  const { appLogic, claim, wrapper } = renderWithAppLogic(
+  const utils = renderPage(
     PreviousLeavesSameReason,
-    { claimAttrs }
+    {
+      addCustomSetup: (appLogic) => {
+        setupBenefitsApplications(appLogic, [claim]);
+        updateSpy = jest.spyOn(appLogic.benefitsApplications, "update");
+      },
+    },
+    { query: { claim_id: claim.application_id } }
   );
 
-  const { changeRadioGroup, submitForm } = simulateEvents(wrapper);
-
   return {
-    appLogic,
-    changeRadioGroup,
-    claim,
-    submitForm,
-    wrapper,
+    updateSpy,
+    ...utils,
   };
 };
 
 describe("PreviousLeavesSameReason", () => {
-  it("renders the page", () => {
-    const { wrapper } = setup(
-      new MockBenefitsApplicationBuilder().continuous().create()
-    );
-
-    expect(wrapper).toMatchSnapshot();
-  });
-
-  it("changes label date when leave reason is caring leave", () => {
-    const { wrapper } = setup(
+  it("renders different legend and hint when claim is for Caring Leave", () => {
+    setup(
       new MockBenefitsApplicationBuilder()
-        .caringLeaveReason()
         .continuous()
+        .caringLeaveReason()
         .create()
     );
-    expect(wrapper.find("InputChoiceGroup").prop("hint")).toMatchInlineSnapshot(
-      `"Select No if your current paid leave from PFML began on July 1, 2021."`
+
+    expect(screen.getByRole("group")).toMatchSnapshot();
+
+    cleanup();
+    setup(
+      new MockBenefitsApplicationBuilder()
+        .continuous()
+        .medicalLeaveReason()
+        .create()
     );
-    expect(
-      wrapper.find("InputChoiceGroup").prop("label")
-    ).toMatchInlineSnapshot(
-      `"Did you take any other leave between July 1, 2021 and the first day of the leave you are applying for, for the same reason as you are applying?"`
-    );
+
+    expect(screen.getByRole("group")).toMatchSnapshot();
   });
 
   it("submits form with has_previous_leaves_same_reason value", async () => {
-    const { appLogic, changeRadioGroup, claim, submitForm } = setup();
-    const spy = jest.spyOn(appLogic.benefitsApplications, "update");
+    const { updateSpy } = setup();
 
-    await changeRadioGroup("has_previous_leaves_same_reason", "true");
-    await submitForm();
-    expect(spy).toHaveBeenCalledWith(claim.application_id, {
-      has_previous_leaves_same_reason: true,
+    userEvent.click(screen.getByRole("radio", { name: /Yes/i }));
+    userEvent.click(screen.getByRole("button", { name: /save/i }));
+
+    await waitFor(() => {
+      expect(updateSpy).toHaveBeenCalledWith(expect.any(String), {
+        has_previous_leaves_same_reason: true,
+      });
     });
   });
 
-  it("sets previous_leaves_same_reason to null when has_previous_leaves_same_reason is false and previous_leaves exist", async () => {
-    const { appLogic, changeRadioGroup, claim, submitForm } = setup({
-      previous_leaves_same_reason: [new PreviousLeave()],
-    });
-    const spy = jest.spyOn(appLogic.benefitsApplications, "update");
+  it("sets previous_leaves_same_reason to null when has_previous_leaves_same_reason changes to false", async () => {
+    const { updateSpy } = setup(
+      new MockBenefitsApplicationBuilder().previousLeavesSameReason().create()
+    );
 
-    await changeRadioGroup("has_previous_leaves_same_reason", "false");
-    await submitForm();
-    expect(spy).toHaveBeenCalledWith(claim.application_id, {
-      has_previous_leaves_same_reason: false,
-      previous_leaves_same_reason: null,
-    });
-  });
+    userEvent.click(screen.getByRole("radio", { name: /No/i }));
+    userEvent.click(screen.getByRole("button", { name: /save/i }));
 
-  it("does not set previous_leaves_same_reason to null when has_previous_leaves_same_reason is false but previous_leaves do not exist", async () => {
-    const { appLogic, changeRadioGroup, claim, submitForm } = setup({
-      previous_leaves_same_reason: [],
-    });
-    const spy = jest.spyOn(appLogic.benefitsApplications, "update");
-
-    await changeRadioGroup("has_previous_leaves_same_reason", "false");
-    await submitForm();
-    expect(spy).toHaveBeenCalledWith(claim.application_id, {
-      has_previous_leaves_same_reason: false,
+    await waitFor(() => {
+      expect(updateSpy).toHaveBeenCalledWith(expect.any(String), {
+        has_previous_leaves_same_reason: false,
+        previous_leaves_same_reason: null,
+      });
     });
   });
 });

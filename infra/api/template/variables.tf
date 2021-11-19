@@ -123,7 +123,7 @@ variable "cors_origins" {
 variable "runtime_py" {
   description = "Pointer to the Python runtime used by the PFML API lambdas"
   type        = string
-  default     = "python3.8"
+  default     = "python3.9"
 }
 
 variable "cognito_user_pool_arn" {
@@ -164,14 +164,14 @@ variable "rmv_client_certificate_binary_arn" {
   default     = ""
 }
 
-variable "rmv_check_behavior" {
+variable "rmv_api_behavior" {
   description = "Specifies if the RMV response is mocked"
   type        = string
   default     = "fully_mocked"
 }
 
 variable "rmv_check_mock_success" {
-  description = "Specifies if RMV mock response always passes. '1' always passes id proofing, '0' always fails id proofing."
+  description = "Specifies if RMV check mock response always passes. '1' always passes id proofing, '0' always fails id proofing."
   type        = string
   default     = "1"
 }
@@ -287,4 +287,10 @@ variable "new_plan_proofs_active_at" {
   description = "ISO 8601 formatted date string, should explicitly set UTC offset (+00:00)"
   type        = string
   default     = "2021-06-21 00:00:00+00:00"
+}
+
+variable "use_claim_status_url" {
+  description = "Whether or not to direct claimants to the claim status page. Can enable this when Claim Status is launched."
+  type        = bool
+  default     = true
 }

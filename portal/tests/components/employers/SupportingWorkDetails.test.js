@@ -1,149 +1,127 @@
-import { mount, shallow } from "enzyme";
-import { simulateEvents, testHook } from "../../test-utils";
+import { render, screen } from "@testing-library/react";
 import AppErrorInfo from "../../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../../src/models/AppErrorInfoCollection";
 import React from "react";
 import SupportingWorkDetails from "../../../src/components/employers/SupportingWorkDetails";
-import useFunctionalInputProps from "../../../src/hooks/useFunctionalInputProps";
+import userEvent from "@testing-library/user-event";
+
+const clickAmendButton = () =>
+  userEvent.click(screen.getByRole("button", { name: /Amend/ }));
+
+const clickCancelAmendButton = () =>
+  userEvent.click(screen.getByRole("button", { name: /Cancel amendment/ }));
+
+const getInputElement = () =>
+  screen.getByLabelText(
+    /On average, how many hours does the employee work each week\?/
+  );
 
 describe("SupportingWorkDetails", () => {
-  const appErrors = new AppErrorInfoCollection();
-  const hoursWorkedPerWeek = 30;
-  const getField = jest.fn();
+  const formState = { hours_worked_per_week: 40 };
   const clearField = jest.fn();
+  const getField = jest.fn();
+  const functionalOnChange = jest.fn();
+  const getFunctionalInputProps = jest.fn().mockImplementation((name) => ({
+    errorMsg: undefined,
+    name,
+    onChange: functionalOnChange,
+    value: formState[name],
+  }));
   const updateFields = jest.fn();
-  let getFunctionalInputProps;
 
-  beforeEach(() => {
-    testHook(() => {
-      getFunctionalInputProps = useFunctionalInputProps({
-        appErrors,
-        formState: { hours_worked_per_week: hoursWorkedPerWeek },
-        updateFields,
+  const defaultProps = {
+    appErrors: new AppErrorInfoCollection(),
+    clearField,
+    getField,
+    getFunctionalInputProps,
+    initialHoursWorkedPerWeek: 40,
+    updateFields,
+  };
+
+  it("renders without the amendment form open", () => {
+    const { container } = render(<SupportingWorkDetails {...defaultProps} />);
+    expect(container).toMatchSnapshot();
+  });
+
+  it('opens the amendment form when "Amend" is clicked', () => {
+    const { container } = render(<SupportingWorkDetails {...defaultProps} />);
+
+    clickAmendButton();
+
+    const amendTitle = screen.getByRole("heading", {
+      level: 4,
+      name: /Amend weekly hours worked/,
+    });
+    const inputElement = getInputElement();
+    expect(amendTitle).toBeInTheDocument();
+    expect(inputElement.value).toBe("40");
+    expect(container).toMatchSnapshot();
+  });
+
+  it("updates the formState when the amendment form is typed in", () => {
+    render(<SupportingWorkDetails {...defaultProps} />);
+    clickAmendButton();
+
+    userEvent.type(getInputElement(), "78");
+
+    expect(functionalOnChange).toHaveBeenCalled();
+  });
+
+  describe('when "Cancel amendment" is clicked', () => {
+    it("closes the amendment form", () => {
+      render(<SupportingWorkDetails {...defaultProps} />);
+      clickAmendButton();
+
+      clickCancelAmendButton();
+
+      expect(
+        screen.queryByRole("heading", { level: 4 })
+      ).not.toBeInTheDocument();
+    });
+
+    it("restores the original value", () => {
+      render(<SupportingWorkDetails {...defaultProps} />);
+      clickAmendButton();
+      const inputElement = screen.getByLabelText(
+        /On average, how many hours does the employee work each week\?/
+      );
+      userEvent.type(inputElement, "78");
+
+      clickCancelAmendButton();
+
+      expect(
+        screen.queryByRole("heading", { level: 4 })
+      ).not.toBeInTheDocument();
+      expect(functionalOnChange).toHaveBeenCalled();
+    });
+  });
+
+  describe("if there is a form error", () => {
+    it("automatically opens the amendment form", () => {
+      const appErrors = new AppErrorInfoCollection([
+        new AppErrorInfo({ name: "My error", message: "My message" }),
+      ]);
+
+      render(<SupportingWorkDetails {...defaultProps} appErrors={appErrors} />);
+
+      const amendTitle = screen.getByRole("heading", {
+        level: 4,
+        name: /Amend weekly hours worked/,
       });
-    });
-  });
-
-  function render(renderMode = "shallow", givenProps = {}) {
-    const defaultProps = {
-      appErrors,
-      clearField,
-      getField,
-      getFunctionalInputProps,
-      initialHoursWorkedPerWeek: hoursWorkedPerWeek,
-      updateFields,
-    };
-    const props = { ...defaultProps, ...givenProps };
-    if (renderMode === "mount") {
-      return mount(<SupportingWorkDetails {...props} />);
-    }
-    return shallow(<SupportingWorkDetails {...props} />);
-  }
-
-  function clickAmendButton(wrapper) {
-    wrapper.find("ReviewRow").dive(3).find("AmendButton").simulate("click");
-  }
-
-  function clickCancelAmendmentButton(wrapper) {
-    wrapper
-      .find("AmendmentForm")
-      .dive()
-      .find({ "data-test": "amendment-destroy-button" })
-      .simulate("click");
-  }
-
-  function isAmendmentFormVisible(wrapper) {
-    return wrapper.find("ConditionalContent").prop("visible") === true;
-  }
-
-  it("renders the component with the AmendmentForm hidden", () => {
-    const wrapper = render();
-    expect(isAmendmentFormVisible(wrapper)).toBe(false);
-    expect(wrapper).toMatchSnapshot();
-  });
-
-  it("forces open the amendment form if there is an error", () => {
-    const appErrors = new AppErrorInfoCollection([
-      new AppErrorInfo({
-        field: "hours_worked_per_week",
-        message: "New error",
-      }),
-    ]);
-    testHook(() => {
-      getFunctionalInputProps = useFunctionalInputProps({
-        appErrors,
-        formState: { hours_worked_per_week: 30 },
-        updateFields,
-      });
-    });
-    const wrapper = render("mount", { appErrors });
-
-    expect(isAmendmentFormVisible(wrapper)).toBe(true);
-  });
-
-  it("renders the initial weekly hours in the ReviewRow", () => {
-    const wrapper = render();
-    expect(wrapper.find("p").first().text()).toEqual("30");
-  });
-
-  it("opens the AmendmentForm when the amend button is clicked", () => {
-    const wrapper = render();
-
-    clickAmendButton(wrapper);
-
-    expect(isAmendmentFormVisible(wrapper)).toBe(true);
-  });
-
-  it("updates the form state on change", () => {
-    const wrapper = render();
-    clickAmendButton(wrapper);
-
-    const { changeField } = simulateEvents(wrapper);
-    changeField("hours_worked_per_week", 10);
-
-    expect(updateFields).toHaveBeenCalledWith({ hours_worked_per_week: 10 });
-  });
-
-  it("allows closing the amendment form if there is an error", () => {
-    const appErrors = new AppErrorInfoCollection([
-      new AppErrorInfo({
-        field: "hours_worked_per_week",
-        message: "New error",
-      }),
-    ]);
-    testHook(() => {
-      getFunctionalInputProps = useFunctionalInputProps({
-        appErrors,
-        formState: { hours_worked_per_week: 30 },
-        updateFields,
-      });
-    });
-    const wrapper = render("mount", { appErrors });
-
-    expect(isAmendmentFormVisible(wrapper)).toBe(true);
-    wrapper.find({ "data-test": "amendment-destroy-button" }).simulate("click");
-    expect(wrapper.find("AmendmentForm").exists()).toBe(false);
-  });
-
-  describe("when amendment is canceled", () => {
-    it("hides the amendment form", () => {
-      const wrapper = render();
-      clickAmendButton(wrapper);
-      expect(isAmendmentFormVisible(wrapper)).toBe(true);
-
-      clickCancelAmendmentButton(wrapper);
-
-      expect(isAmendmentFormVisible(wrapper)).toBe(false);
+      expect(amendTitle).toBeInTheDocument();
     });
 
-    it("clears hours_worked_per_week", () => {
-      const wrapper = render("mount");
-      wrapper.find({ "data-test": "amend-button" }).simulate("click");
-      wrapper
-        .find({ "data-test": "amendment-destroy-button" })
-        .simulate("click");
+    it("allows closing the opened amendment form", () => {
+      const appErrors = new AppErrorInfoCollection([
+        new AppErrorInfo({ name: "My error", message: "My message" }),
+      ]);
+      render(<SupportingWorkDetails {...defaultProps} appErrors={appErrors} />);
 
-      expect(clearField).toHaveBeenCalledWith("hours_worked_per_week");
+      clickCancelAmendButton();
+
+      expect(
+        screen.queryByRole("heading", { level: 4 })
+      ).not.toBeInTheDocument();
     });
   });
 });

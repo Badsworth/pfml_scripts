@@ -9,7 +9,7 @@
 // https://on.cypress.io/plugins-guide
 // ***********************************************************
 
-import config, { merged } from "../../src/config";
+import config, { configuration } from "../../src/config";
 import path from "path";
 import webpackPreprocessor from "@cypress/webpack-preprocessor";
 import {
@@ -41,7 +41,10 @@ import { ClaimGenerator, DehydratedClaim } from "../../src/generation/Claim";
 import * as scenarios from "../../src/scenarios";
 import { Employer, EmployerPickSpec } from "../../src/generation/Employer";
 import pRetry from "p-retry";
+import { chooseRolePreset } from "../../src/util/fineosRoleSwitching";
+import { FineosSecurityGroups } from "../../src/submission/fineos.pages";
 import { Fineos } from "../../src/submission/fineos.pages";
+import { beforeRunCollectMetadata } from "../reporters/new-relic-collect-metadata";
 
 export default function (
   on: Cypress.PluginEvents,
@@ -54,14 +57,35 @@ export default function (
     config("API_BASEURL"),
     authenticator
   );
-  // Keep a static cache of the SSO login cookies. This allows us to skip double-logins
-  // in envrionments that use SSO. Double logins are a side effect of changing the baseUrl.
-  let ssoCookies: string;
 
   // Declare tasks here.
   on("task", {
     getAuthVerification: (toAddress: string) => {
       return verificationFetcher.getVerificationCodeForUser(toAddress);
+    },
+
+    async chooseFineosRole({
+      userId,
+      preset,
+      debug = false,
+    }: {
+      userId: string;
+      preset: FineosSecurityGroups;
+      debug: boolean;
+    }) {
+      await Fineos.withBrowser(
+        async (page) => {
+          await chooseRolePreset(
+            page,
+            // ID of the account you want to switch the roles for
+            userId,
+            // Role preset you want to switch to.
+            preset
+          );
+        },
+        { debug }
+      );
+      return null;
     },
 
     getEmails(opts: GetEmailsOpts): Promise<Email[]> {
@@ -117,18 +141,16 @@ export default function (
     },
 
     async completeSSOLoginFineos(credentials?: Credentials): Promise<string> {
-      if (ssoCookies === undefined) {
-        ssoCookies = await Fineos.withBrowser(
-          async (page) => {
-            return JSON.stringify(await page.context().cookies());
-          },
-          {
-            debug: false,
-            screenshots: path.join(__dirname, "..", "screenshots"),
-            credentials,
-          }
-        );
-      }
+      const ssoCookies = await Fineos.withBrowser(
+        async (page) => {
+          return JSON.stringify(await page.context().cookies());
+        },
+        {
+          debug: false,
+          screenshots: path.join(__dirname, "..", "screenshots"),
+          credentials,
+        }
+      );
       return ssoCookies;
     },
 
@@ -171,7 +193,13 @@ export default function (
     },
 
     async deleteDownloadFolder(folderName): Promise<true> {
-      await fs.promises.rmdir(folderName, { maxRetries: 5, recursive: true });
+      try {
+        await fs.promises.rmdir(folderName, { maxRetries: 5, recursive: true });
+      } catch (error) {
+        // Ignore the error if download folder doesn't exist.
+        if (error.code === "ENOENT") return true;
+        throw error;
+      }
       return true;
     },
 
@@ -191,16 +219,23 @@ export default function (
   on("file:preprocessor", webpackPreprocessor(options));
 
   // Pass config values through as environment variables, which we will access via Cypress.env() in actions/common.ts.
-  const configEntries = Object.entries(merged).map(([k, v]) => [`E2E_${k}`, v]);
+  const configEntries = Object.entries(configuration).map(([k, v]) => [
+    `E2E_${k}`,
+    v,
+  ]);
 
   // Add dynamic options for the New Relic reporter.
   let reporterOptions = cypressConfig.reporterOptions ?? {};
-  if (cypressConfig.reporter?.match(/new\-relic/)) {
+  if (cypressConfig.reporter?.match(/new-relic/)) {
+    // Add metadata collection for the New Relic runner.
+    on("before:run", beforeRunCollectMetadata);
+
     // Add dynamic reporter options based on config values.
     reporterOptions = {
       accountId: config("NEWRELIC_ACCOUNTID"),
       apiKey: config("NEWRELIC_INGEST_KEY"),
       environment: config("ENVIRONMENT"),
+      branch: path.relative("refs/heads", process.env.GITHUB_REF as string),
       ...reporterOptions,
     };
   }

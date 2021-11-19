@@ -1,45 +1,43 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`LegalNoticeList renders only document that are of type legal notice 1`] = `
-<Fragment>
+exports[`LegalNoticeList renders only documents that are legal notices 1`] = `
+<div>
   <p
-    className="padding-bottom-2 margin-top-05"
+    class="padding-bottom-2 margin-top-05"
   >
     When you click the notice link, the file will download to your device.
   </p>
   <ul
-    className="add-list-reset"
+    class="add-list-reset"
   >
     <li
-      className="grid-row flex-row flex-justify-start flex-align-start margin-bottom-1 text-primary"
-      key="fineos-id-4"
+      class="grid-row flex-row flex-justify-start flex-align-start margin-bottom-1 text-primary"
     >
-      <Icon
-        className="margin-right-1"
+      <svg
+        aria-hidden="true"
+        class="usa-icon--size-3 margin-right-1"
         fill="currentColor"
-        name="file_present"
-        size={3}
-      />
-      <div>
-        <DownloadableDocument
-          className="margin-left-2"
-          document={
-            Document {
-              "application_id": null,
-              "content_type": "image/png",
-              "created_at": "2020-04-05",
-              "description": null,
-              "document_type": "Approval Notice",
-              "fineos_document_id": "fineos-id-4",
-              "name": "legal notice",
-              "user_id": null,
-            }
-          }
-          onDownloadClick={[MockFunction]}
-          showCreatedAt={true}
+        focusable="false"
+        role="img"
+      >
+        <use
+          xlink:href="/img/sprite.svg#file_present"
         />
+      </svg>
+      <div>
+        <button
+          class="usa-button position-relative text-bold usa-button--unstyled"
+          type="button"
+        >
+          Approval notice (PDF)
+        </button>
+        <div
+          class="text-base-dark"
+        >
+          Posted 4/5/2020
+        </div>
       </div>
     </li>
   </ul>
-</Fragment>
+</div>
 `;

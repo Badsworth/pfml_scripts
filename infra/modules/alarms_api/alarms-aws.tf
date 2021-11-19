@@ -5,17 +5,17 @@ locals {
     "fineos-error-extract-tool",
     "fineos-data-export-tool",
     "fineos-report-extracts-tool",
-    "reductions-retrieve-payment-lists",
-    "reductions-send-wage-replacement",
-    "reductions-dua-send-claimant-lists",
-    "reductions-dia-send-claimant-lists",
+    "reductions-process-agency-data",
+    "reductions-send-claimant-lists",
     "dor-fineos-etl",
     "import-fineos-to-warehouse",
-    "payments-payment-voucher-plus",
-    "process-cps-error-reports",
-    "weekend-cps-extract-processing",
     "pub-payments-process-fineos",
-    "weekend-pub-claimant-extract"
+    "weekend-pub-claimant-extract",
+    "dua-generate-and-send-employee-request-file",
+    "dua-import-employee-demographics",
+    "pub-payments-process-snapshot",
+    "pub-payments-process-1099-documents",
+    "pub-claimant-address-validation"
   ]
 }
 

@@ -1,32 +1,30 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`DownloadableDocument renders document item 1`] = `
-<Fragment>
-  <Button
-    className="text-bold"
-    onClick={[Function]}
-    type="button"
-    variation="unstyled"
-  >
-    Other notice (PDF)
-  </Button>
-</Fragment>
+<button
+  class="usa-button position-relative text-bold usa-button--unstyled"
+  type="button"
+>
+  Other notice (PDF)
+</button>
 `;
 
 exports[`DownloadableDocument renders document with icon and additional classname item 1`] = `
-<Fragment>
-  <Button
-    className="text-bold display-flex flex-align-center"
-    onClick={[Function]}
-    type="button"
-    variation="unstyled"
+<button
+  class="usa-button position-relative text-bold display-flex flex-align-center usa-button--unstyled"
+  type="button"
+>
+  <svg
+    aria-hidden="true"
+    class="usa-icon--size-3"
+    fill="currentColor"
+    focusable="false"
+    role="img"
   >
-    <Icon
-      fill="currentColor"
-      name="file_present"
-      size={3}
+    <use
+      xlink:href="/img/sprite.svg#file_present"
     />
-    Other notice (PDF)
-  </Button>
-</Fragment>
+  </svg>
+  Other notice (PDF)
+</button>
 `;

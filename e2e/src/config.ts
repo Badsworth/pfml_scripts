@@ -1,5 +1,9 @@
 import { config as dotenv } from "dotenv";
-import configs from "../config.json";
+import fileConfiguration from "../config.json";
+
+// Load variables from .env. This populates process.env with .env file values.
+// .env files only exist in local environments. In CI, we populate real env variables.
+dotenv();
 
 /**
  * Our configuration system determines the proper value for a given property.
@@ -26,7 +30,6 @@ function getRawEnvironment() {
     PORTAL_PASSWORD: process.env.E2E_PORTAL_PASSWORD,
     PORTAL_USERNAME: process.env.E2E_PORTAL_USERNAME,
     EMPLOYER_PORTAL_PASSWORD: process.env.E2E_EMPLOYER_PORTAL_PASSWORD,
-    PORTAL_HAS_LA_STATUS_UPDATES: process.env.E2E_PORTAL_HAS_LA_STATUS_UPDATES,
 
     COGNITO_POOL: process.env.E2E_COGNITO_POOL,
     COGNITO_CLIENTID: process.env.E2E_COGNITO_CLIENTID,
@@ -39,10 +42,11 @@ function getRawEnvironment() {
     FINEOS_USERNAME: process.env.E2E_FINEOS_USERNAME,
     FINEOS_PASSWORD: process.env.E2E_FINEOS_PASSWORD,
     FINEOS_USERS: process.env.E2E_FINEOS_USERS,
-    FINEOS_HAS_UPDATED_EFORMS: process.env.E2E_FINEOS_HAS_UPDATED_EFORMS,
 
     SSO_USERNAME: process.env.E2E_SSO_USERNAME,
     SSO_PASSWORD: process.env.E2E_SSO_PASSWORD,
+    SSO2_USERNAME: process.env.E2E_SSO2_USERNAME,
+    SSO2_PASSWORD: process.env.E2E_SSO2_PASSWORD,
 
     TESTMAIL_APIKEY: process.env.E2E_TESTMAIL_APIKEY,
     TESTMAIL_NAMESPACE: process.env.E2E_TESTMAIL_NAMESPACE,
@@ -58,49 +62,71 @@ function getRawEnvironment() {
     NEWRELIC_ACCOUNTID: process.env.E2E_NEWRELIC_ACCOUNTID,
     NEWRELIC_INGEST_KEY: process.env.E2E_NEWRELIC_INGEST_KEY,
 
-    HAS_CLAIMANT_STATUS_PAGE: process.env.HAS_CLAIMANT_STATUS_PAGE,
+    DOR_IMPORT_URI: process.env.E2E_DOR_IMPORT_URI,
+    DOR_ETL_ARN: process.env.E2E_DOR_ETL_ARN,
+
+    FINEOS_HAS_TAX_WITHHOLDING: process.env.FINEOS_HAS_TAX_WITHHOLDING,
   };
 }
 
-type Configuration = Record<keyof ReturnType<typeof getRawEnvironment>, string>;
+type Configuration = Record<
+  keyof ReturnType<typeof getRawEnvironment>,
+  string | undefined
+>;
+export type ConfigFactory = (env: string) => {
+  get: ConfigFunction;
+  configuration: Partial<Configuration>;
+};
 export type ConfigFunction = (name: keyof Configuration) => string;
 
-// Load variables from .env. This populates process.env with .env file values.
-// .env files only exist in local environments. In CI, we populate real env variables.
-dotenv();
-
-// The environment layer is the filtered result of the raw environment layer.
-const environment = Object.fromEntries(
-  Object.entries(getRawEnvironment()).filter(([, v]) => typeof v === "string")
-);
-
-// The file layer is the configuration defined in config.json for this environment.
-const file: Partial<Configuration> =
-  environment.ENVIRONMENT && environment.ENVIRONMENT in configs
-    ? configs[environment.ENVIRONMENT as keyof typeof configs]
-    : {};
-
-// The default layer is a set of default values which will be used if nothing is set.
-const defaults: Partial<Configuration> = {
-  FINEOS_HAS_UPDATED_EFORMS: "false",
-  PORTAL_HAS_LA_STATUS_UPDATES: "false",
-  NEWRELIC_ACCOUNTID: "2837112",
-  HAS_CLAIMANT_STATUS_PAGE: "false",
-};
-export const merged = {
-  ...defaults,
-  ...file,
-  ...environment,
-};
-
-const config: ConfigFunction = function (name) {
-  const value = merged[name];
-  if (typeof value === "string") {
-    return value;
+/**
+ * Returns a new configuration function (and config object) for a given environment.
+ *
+ * @param env
+ */
+export const factory: ConfigFactory = (env: string) => {
+  if (!(env in fileConfiguration)) {
+    throw new Error(
+      `Requested config for nonexistent environment: ${env}. Make sure this environment is defined in config.json`
+    );
   }
-  throw new Error(
-    `Failed to get config value for ${name}. This configuration value can be defined underneath the environment as ${name} in config.json, as E2E_${name} in a .env file, or as an environment variable 'E2E_${name}'`
+  // The file layer is the configuration defined in config.json for this environment.
+  const file: Partial<Configuration> =
+    env in fileConfiguration
+      ? fileConfiguration[env as keyof typeof fileConfiguration]
+      : {};
+
+  // The environment layer is the filtered result of the raw environment layer.
+  const environment = Object.fromEntries(
+    Object.entries(getRawEnvironment()).filter(([, v]) => typeof v === "string")
   );
+
+  // Form the configuration by merging various "layers" together. Each layer may override the previous.
+  const configuration = {
+    ...fileConfiguration._default, // Defaults
+    ...file,
+    ...environment,
+  };
+  const get: ConfigFunction = (name) => {
+    const value = configuration[name];
+    if (typeof value === "string") {
+      return value;
+    }
+    throw new Error(
+      `Failed to get config value for ${name}. This configuration value can be defined underneath the environment as ${name} in config.json, as E2E_${name} in a .env file, or as an environment variable 'E2E_${name}'`
+    );
+  };
+  return { get, configuration };
 };
 
-export default config;
+if (!process.env.E2E_ENVIRONMENT) {
+  throw new Error(
+    `Failed to get config value for ENVIRONMENT. This configuration value can be defined as E2E_ENVIRONMENT in a .env file, or as an environment variable 'E2E_ENVIRONMENT'`
+  );
+}
+const { get, configuration } = factory(process.env.E2E_ENVIRONMENT);
+
+// Default export is a getter() for config values.
+export default get;
+// We also export the merged configuration for easy access.
+export { configuration };

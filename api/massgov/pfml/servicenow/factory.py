@@ -1,10 +1,14 @@
+#
+# ServiceNow client - factory.
+#
+
 import os
 from dataclasses import dataclass
 from typing import Optional
 
 import massgov.pfml.util.logging as logging
-from massgov.pfml.servicenow.client import ServiceNowClient
-from massgov.pfml.servicenow.mock_client import MockServiceNowClient
+
+from . import abstract_client, client, mock_client
 
 logger = logging.get_logger(__name__)
 
@@ -25,14 +29,15 @@ class ServiceNowClientConfig:
         )
 
 
-def create_client():
+def create_client() -> abstract_client.AbstractServiceNowClient:
+    """Factory to create the right type of client object for the current configuration."""
     if os.environ.get("ENABLE_MOCK_SERVICE_NOW_CLIENT"):
         logger.warning("Using mock Service Now client")
-        return MockServiceNowClient()
+        return mock_client.MockServiceNowClient()
 
     else:
         config = ServiceNowClientConfig.from_env()
 
-        return ServiceNowClient(
+        return client.ServiceNowClient(
             base_url=config.base_url, username=config.username, password=config.password
         )

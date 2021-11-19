@@ -1,41 +1,33 @@
-import {
-  MockBenefitsApplicationBuilder,
-  renderWithAppLogic,
-  simulateEvents,
-  testHook,
-} from "../../test-utils";
+import { MockBenefitsApplicationBuilder, renderPage } from "../../test-utils";
 import OtherIncome, {
   OtherIncomeFrequency,
   OtherIncomeType,
 } from "../../../src/models/OtherIncome";
-import OtherIncomesDetails, {
-  OtherIncomeCard,
-} from "../../../src/pages/applications/other-incomes-details";
-import AppErrorInfoCollection from "../../../src/models/AppErrorInfoCollection";
-import React from "react";
-import RepeatableFieldset from "../../../src/components/RepeatableFieldset";
-import RepeatableFieldsetCard from "../../../src/components/RepeatableFieldsetCard";
-import { shallow } from "enzyme";
-import useFunctionalInputProps from "../../../src/hooks/useFunctionalInputProps";
+import { screen, waitFor } from "@testing-library/react";
 
-jest.mock("../../../src/hooks/useAppLogic");
+import OtherIncomesDetails from "../../../src/pages/applications/other-incomes-details";
+import { setupBenefitsApplications } from "../../test-utils/helpers";
+import userEvent from "@testing-library/user-event";
 
-const setup = (claimAttrs) => {
-  const claim = new MockBenefitsApplicationBuilder().continuous().create();
+const updateClaim = jest.fn(() => {
+  return Promise.resolve();
+});
 
-  const { appLogic, wrapper } = renderWithAppLogic(OtherIncomesDetails, {
-    claimAttrs: claimAttrs || claim,
-  });
-  const { changeField, click, submitForm } = simulateEvents(wrapper);
+const setup = (claim) => {
+  if (!claim) {
+    claim = new MockBenefitsApplicationBuilder().continuous().create();
+  }
 
-  return {
-    appLogic,
-    changeField,
-    claim,
-    click,
-    submitForm,
-    wrapper,
-  };
+  return renderPage(
+    OtherIncomesDetails,
+    {
+      addCustomSetup: (appLogic) => {
+        setupBenefitsApplications(appLogic, [claim]);
+        appLogic.benefitsApplications.update = updateClaim;
+      },
+    },
+    { query: { claim_id: "mock_application_id" } }
+  );
 };
 
 const incomeData = {
@@ -47,49 +39,47 @@ const incomeData = {
   other_income_id: null,
 };
 
-const setIncomeFields = (wrapper, income) => {
-  const otherIncomeCard = wrapper
-    .find(RepeatableFieldset)
-    .dive()
-    .find(RepeatableFieldsetCard)
-    .first()
-    .dive()
-    .find("OtherIncomeCard")
-    .first()
-    .dive();
+const setIncomeFields = (income) => {
+  userEvent.click(
+    screen.getByRole("radio", { name: "Social Security Disability Insurance" })
+  );
+  const [startMonthInput, endMonthInput] = screen.getAllByRole("textbox", {
+    name: "Month",
+  });
+  const [startDayInput, endDayInput] = screen.getAllByRole("textbox", {
+    name: "Day",
+  });
+  const [startYearInput, endYearInput] = screen.getAllByRole("textbox", {
+    name: "Year",
+  });
+  const [startYear, startMonth, startDay] = income.income_start_date.split("-");
+  const [endYear, endMonth, endDay] = income.income_end_date.split("-");
 
-  const { changeRadioGroup, changeField } = simulateEvents(otherIncomeCard);
-  changeRadioGroup("other_incomes[0].income_type", income.income_type);
-  changeField("other_incomes[0].income_start_date", income.income_start_date);
-  changeField("other_incomes[0].income_end_date", income.income_end_date);
-  changeField(
-    "other_incomes[0].income_amount_dollars",
-    income.income_amount_dollars
+  userEvent.type(startDayInput, startDay);
+  userEvent.type(startMonthInput, startMonth);
+  userEvent.type(startYearInput, startYear);
+  userEvent.type(endDayInput, endDay);
+  userEvent.type(endMonthInput, endMonth);
+  userEvent.type(endYearInput, endYear);
+
+  userEvent.type(
+    screen.getByRole("textbox", { name: "Amount" }),
+    income.income_amount_dollars.toString()
   );
-  changeField(
-    "other_incomes[0].income_amount_frequency",
-    income.income_amount_frequency
-  );
+  userEvent.selectOptions(screen.getByRole("combobox", { name: "Frequency" }), [
+    income.income_amount_frequency.toString(),
+  ]);
 };
 
-const clickFirstRemoveButton = async (wrapper) => {
-  // can't use simulateEvent's .click() here because this is a Child component
-  await wrapper
-    .find(RepeatableFieldset)
-    .dive()
-    .find(RepeatableFieldsetCard)
-    .first()
-    .dive()
-    .find("Button")
-    .simulate("click");
+const clickFirstRemoveButton = () => {
+  const removeButtons = screen.getAllByRole("button", {
+    name: "Remove income",
+  });
+  userEvent.click(removeButtons[0]);
 };
 
-const clickAddIncomeButton = async (wrapper) => {
-  await wrapper
-    .find(RepeatableFieldset)
-    .dive()
-    .find({ name: "add-entry-button" })
-    .simulate("click");
+const clickAddIncomeButton = () => {
+  userEvent.click(screen.getByRole("button", { name: "Add another income" }));
 };
 
 const createClaimWithIncomes = () =>
@@ -116,180 +106,122 @@ const createClaimWithIncomes = () =>
 describe("OtherIncomesDetails", () => {
   describe("when the user's claim has no other incomes", () => {
     it("renders the page", () => {
-      const { wrapper } = setup();
-      expect(wrapper).toMatchSnapshot();
+      const { container } = setup();
+      expect(container).toMatchSnapshot();
     });
 
     it("adds a blank entry so a card is rendered", () => {
-      const { wrapper } = setup();
-      const entries = wrapper.find(RepeatableFieldset).prop("entries");
+      setup();
+      const entries = screen.getByRole("group", { name: "Income 1" });
 
-      expect(entries).toHaveLength(1);
-      expect(entries[0]).toEqual(new OtherIncome());
-
-      expect(
-        wrapper.find(RepeatableFieldset).dive().find(RepeatableFieldsetCard)
-          .length
-      ).toEqual(1);
+      expect(entries).toBeInTheDocument();
     });
 
     it("calls claims.update with new incomes data when user clicks continue", async () => {
-      const { appLogic, claim, submitForm, wrapper } = setup();
+      setup();
 
-      setIncomeFields(wrapper, incomeData);
+      setIncomeFields(incomeData);
 
-      const entries = wrapper.find(RepeatableFieldset).prop("entries");
-      expect(entries).toHaveLength(1);
-      expect(entries[0]).toEqual(incomeData);
-
-      await submitForm();
-
-      expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
-        claim.application_id,
-        {
-          other_incomes: [incomeData],
-        }
+      const entries = screen.getByRole("group", { name: "Income 1" });
+      expect(entries).toBeInTheDocument();
+      userEvent.click(
+        screen.getByRole("button", { name: "Save and continue" })
       );
+
+      await waitFor(() => {
+        expect(updateClaim).toHaveBeenCalledWith("mock_application_id", {
+          other_incomes: [incomeData],
+        });
+      });
     });
 
-    it("adds an empty income when the user clicks Add Another Income", async () => {
-      const { wrapper } = setup();
+    it("adds an empty income when the user clicks Add Another Income", () => {
+      setup();
 
-      setIncomeFields(wrapper, incomeData);
-      await clickAddIncomeButton(wrapper);
+      setIncomeFields(incomeData);
+      clickAddIncomeButton();
 
-      const entries = wrapper.find(RepeatableFieldset).prop("entries");
+      const entries = screen.getAllByRole("group", { name: /Income/ });
       expect(entries).toHaveLength(2);
-      expect(entries).toEqual([incomeData, new OtherIncome()]);
-
-      expect(
-        wrapper.find(RepeatableFieldset).dive().find(RepeatableFieldsetCard)
-      ).toHaveLength(2);
     });
 
-    it("removes an income when the user clicks Remove Income", async () => {
-      const { wrapper } = setup();
+    it("removes an income when the user clicks Remove Income", () => {
+      setup();
 
-      setIncomeFields(wrapper, incomeData);
+      setIncomeFields(incomeData);
 
-      await clickAddIncomeButton(wrapper);
+      clickAddIncomeButton();
+      const entries = screen.getAllByRole("group", { name: /Income/ });
+      expect(entries).toHaveLength(2);
 
-      await clickFirstRemoveButton(wrapper);
+      clickFirstRemoveButton();
 
-      const entries = wrapper.find(RepeatableFieldset).prop("entries");
-      expect(entries).toHaveLength(1);
-      expect(entries).toEqual([new OtherIncome()]);
-
-      expect(
-        wrapper.find(RepeatableFieldset).dive().find(RepeatableFieldsetCard)
-      ).toHaveLength(1);
+      expect(screen.getByRole("group", { name: /Income/ })).toBeInTheDocument();
     });
   });
 
   describe("when the user's claim has other incomes", () => {
     it("renders the page", () => {
       const claimWithIncomes = createClaimWithIncomes();
-      const { wrapper } = setup(claimWithIncomes);
-      expect(wrapper).toMatchSnapshot();
+      const { container } = setup(claimWithIncomes);
+      expect(container).toMatchSnapshot();
     });
 
     it("adds another income when the user clicks 'Add another'", async () => {
       const claimWithIncomes = createClaimWithIncomes();
-      const { appLogic, claim, submitForm, wrapper } = setup(claimWithIncomes);
+      setup(claimWithIncomes);
 
-      clickAddIncomeButton(wrapper);
+      clickAddIncomeButton();
 
-      expect(
-        wrapper.find(RepeatableFieldset).dive().find(RepeatableFieldsetCard)
-          .length
-      ).toEqual(3);
-
-      await submitForm();
-
-      expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
-        claim.application_id,
-        {
-          other_incomes: [...claimWithIncomes.other_incomes, new OtherIncome()],
-        }
+      expect(screen.getAllByRole("group", { name: /Income/ }).length).toEqual(
+        3
       );
+
+      userEvent.click(
+        screen.getByRole("button", { name: "Save and continue" })
+      );
+      await waitFor(() => {
+        expect(updateClaim).toHaveBeenCalledWith("mock_application_id", {
+          other_incomes: [...claimWithIncomes.other_incomes, new OtherIncome()],
+        });
+      });
     });
 
     it("calls claims.update when user clicks continue", async () => {
       const claimWithIncomes = createClaimWithIncomes();
-      const { appLogic, claim, submitForm } = setup(claimWithIncomes);
-      await submitForm();
-
-      expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
-        claim.application_id,
-        {
-          other_incomes: claimWithIncomes.other_incomes,
-        }
+      setup(claimWithIncomes);
+      userEvent.click(
+        screen.getByRole("button", { name: "Save and continue" })
       );
+      await waitFor(() => {
+        expect(updateClaim).toHaveBeenCalledWith("mock_application_id", {
+          other_incomes: claimWithIncomes.other_incomes,
+        });
+      });
     });
 
     describe("when the user clicks 'Remove'", () => {
       it("removes the income", async () => {
         const claimWithIncomes = createClaimWithIncomes();
-        const { appLogic, submitForm, wrapper } = setup(claimWithIncomes);
-        appLogic.benefitsApplications.update.mockImplementationOnce(
-          (applicationId, patchData) => {
-            expect(applicationId).toBe(claimWithIncomes.application_id);
-            expect(patchData.other_incomes).toEqual([
-              claimWithIncomes.other_incomes[1],
-            ]);
-          }
+        setup(claimWithIncomes);
+        clickFirstRemoveButton();
+        userEvent.click(
+          screen.getByRole("button", { name: "Save and continue" })
         );
-
-        await clickFirstRemoveButton(wrapper);
-        await submitForm();
-
-        expect(appLogic.benefitsApplications.update).toHaveBeenCalledTimes(1);
+        await waitFor(() => {
+          expect(updateClaim).toHaveBeenCalledTimes(1);
+        });
       });
     });
-  });
-});
 
-const setupIncomeCard = () => {
-  const index = 0;
-  const entry = new OtherIncome();
-  let getFunctionalInputProps;
-
-  testHook(() => {
-    getFunctionalInputProps = useFunctionalInputProps({
-      appErrors: new AppErrorInfoCollection(),
-      formState: {},
-      updateFields: jest.fn(),
+    it("Unknown is excluded as an income type option", () => {
+      setup();
+      expect(screen.getAllByRole("radio")).toHaveLength(
+        Object.keys(OtherIncomeType).length - 1
+      );
+      expect(
+        screen.queryByRole("radio", { name: "Unknown" })
+      ).not.toBeInTheDocument();
     });
-  });
-
-  const wrapper = shallow(
-    <OtherIncomeCard
-      entry={entry}
-      index={index}
-      getFunctionalInputProps={getFunctionalInputProps}
-    />
-  );
-
-  return {
-    index,
-    wrapper,
-  };
-};
-
-describe("OtherIncomeCard", () => {
-  it("renders fields for an OtherIncome instance", () => {
-    const { wrapper } = setupIncomeCard();
-    expect(wrapper).toMatchSnapshot();
-  });
-
-  it("doesn't include Unknown as an income type option", () => {
-    const { index, wrapper } = setupIncomeCard();
-    const field = wrapper.find({
-      name: `other_incomes[${index}].income_type`,
-    });
-
-    expect(field.prop("choices")).not.toContainEqual(
-      expect.objectContaining({ value: OtherIncomeType.unknown })
-    );
   });
 });

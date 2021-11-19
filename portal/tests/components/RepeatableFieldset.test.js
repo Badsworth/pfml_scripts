@@ -1,164 +1,140 @@
-import { mount, shallow } from "enzyme";
+import { render, screen, within } from "@testing-library/react";
 import React from "react";
-import RepeatableFieldset from "../../src/components/RepeatableFieldset";
-import { act } from "react-dom/test-utils";
+import RepeatableFieldset from "../../src/components/core/RepeatableFieldset";
+import userEvent from "@testing-library/user-event";
+
+const defaultProps = {
+  addButtonLabel: "Add",
+  entries: [
+    { first_name: "Anton" },
+    { first_name: "Bud" },
+    { first_name: "Cat" },
+  ],
+  // eslint-disable-next-line react/display-name
+  render: (entry, index) => (
+    <p>
+      {entry.first_name} – {index}
+    </p>
+  ),
+  headingPrefix: "Person",
+  removeButtonLabel: "Remove",
+  onAddClick: jest.fn(),
+  onRemoveClick: jest.fn(),
+};
+
+const renderComponent = (customProps = {}) => {
+  return render(<RepeatableFieldset {...defaultProps} {...customProps} />);
+};
+
+const RepeatableFieldsetWithState = ({ initialEntries }) => {
+  const customRender = () => (
+    // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
+    <label className="test-label" htmlFor="field" tabIndex="0">
+      Hello
+    </label>
+  );
+  const [entries, setEntries] = React.useState(initialEntries);
+  const handleAddClick = () => {
+    const updatedEntries = entries.concat([{ first_name: "Dog" }]);
+    setEntries(updatedEntries);
+  };
+  const handleRemoveClick = (_entry, index) => {
+    const updatedEntries = [...entries];
+    updatedEntries.splice(index, 1);
+    setEntries(updatedEntries);
+  };
+  const props = {
+    ...defaultProps,
+    entries,
+    render: customRender,
+    onAddClick: handleAddClick,
+    onRemoveClick: handleRemoveClick,
+  };
+
+  return <RepeatableFieldset {...props} />;
+};
 
 describe("RepeatableFieldset", () => {
-  let props, wrapper;
-
-  beforeEach(() => {
-    props = {
-      addButtonLabel: "Remove",
-      entries: [
-        { first_name: "Anton" },
-        { first_name: "Bud" },
-        { first_name: "Cat" },
-      ],
-      // eslint-disable-next-line react/display-name
-      render: (entry, index) => (
-        <p>
-          {entry.first_name} – {index}
-        </p>
-      ),
-      headingPrefix: "Person",
-      removeButtonLabel: "Remove",
-      onAddClick: jest.fn(),
-      onRemoveClick: jest.fn(),
-    };
-  });
-
   it("renders a RepeatableFieldsetCard for each entry", () => {
-    act(() => {
-      wrapper = shallow(<RepeatableFieldset {...props} />);
-    });
-    expect(wrapper).toMatchSnapshot();
+    const { container } = renderComponent();
+
+    expect(container.firstChild).toMatchSnapshot();
   });
 
-  describe("when a limit is set", () => {
-    it("shows an enabled add button without limit message when limit is not reached", () => {
-      props.entries = [{ first_name: "Bud" }];
-      props.limit = 2;
-      props.limitMessage = "You can only add 2";
+  it("shows an enabled add button without limit message when limit is not reached", () => {
+    const limitProps = {
+      entries: [{ first_name: "Bud" }],
+      limit: 2,
+      limitMessage: "You can only add 2",
+    };
+    renderComponent(limitProps);
 
-      const wrapper = shallow(<RepeatableFieldset {...props} />);
-      const addButton = wrapper.find("Button").last();
-      const limitMessage = wrapper.find("Button + strong");
-
-      expect(addButton.prop("disabled")).toBe(false);
-      expect(limitMessage.exists()).toBe(false);
-    });
-
-    it("shows disabled add button and limit message when the limit is reached", () => {
-      props.entries = [{ first_name: "Bud" }, { first_name: "Scooter" }];
-      props.limit = 2;
-      props.limitMessage = "You can only add 2";
-
-      const wrapper = shallow(<RepeatableFieldset {...props} />);
-      const addButton = wrapper.find("Button").last();
-      const limitMessage = wrapper.find("Button + strong").text();
-
-      expect(addButton.prop("disabled")).toBe(true);
-      expect(limitMessage).toMatchInlineSnapshot(`"You can only add 2"`);
-    });
+    const addButton = screen.getByRole("button", { name: "Add" });
+    expect(addButton).toBeEnabled();
+    expect(screen.queryByText("You can only add 2")).not.toBeInTheDocument();
   });
 
-  describe("given only one entry exists", () => {
-    it("does not show a Remove button", () => {
-      props.entries = [{ first_name: "Bud" }];
+  it("shows disabled add button and limit message when the limit is reached", () => {
+    const limitProps = {
+      entries: [{ first_name: "Bud" }, { first_name: "Scooter" }],
+      limit: 2,
+      limitMessage: "You can only add 2",
+    };
+    renderComponent(limitProps);
 
-      act(() => {
-        // useEffect doesn't work with enzyme's shallow function
-        // see https://github.com/enzymejs/enzyme/issues/2086 and https://github.com/enzymejs/enzyme/issues/2011
-        wrapper = mount(<RepeatableFieldset {...props} />);
-      });
-      // Need to call wrapper.update since updates were made outside
-      // of the act call as part of the useEffect callback
-      wrapper.update();
-
-      expect(
-        wrapper.find("RepeatableFieldsetCard").prop("showRemoveButton")
-      ).toBe(false);
-    });
+    const addButton = screen.getByRole("button", { name: "Add" });
+    expect(addButton).toBeDisabled();
+    expect(screen.getByText("You can only add 2")).toBeInTheDocument();
   });
 
-  describe("when the add button is clicked", () => {
-    it("calls onAddClick", () => {
-      const wrapper = shallow(<RepeatableFieldset {...props} />);
-      const addButton = wrapper.find("Button").last();
+  it("does not show a Remove button when only one entry exists", () => {
+    renderComponent({ entries: [{ first_name: "Bud" }] });
 
-      addButton.simulate("click");
-
-      expect(props.onAddClick).toHaveBeenCalledTimes(1);
-    });
+    expect(
+      screen.queryByRole("button", { name: "Remove" })
+    ).not.toBeInTheDocument();
   });
 
-  describe("when a new entry is added", () => {
-    it("changes the focused element to the last card's label", () => {
-      // Hide warning about rendering in the body, since we need to for this test
-      jest.spyOn(console, "error").mockImplementationOnce(jest.fn());
+  it("calls onAddClick when the add button is clicked", () => {
+    const onAddClickMock = jest.fn();
+    renderComponent({ onAddClick: onAddClickMock });
+    const addButton = screen.getByRole("button", { name: "Add" });
 
-      // Note: normally a tabIndex isn't needed on labels, but it is for JS DOM:
-      // eslint-disable-next-line react/display-name
-      props.render = () => (
-        // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
-        <label className="test-label" htmlFor="field" tabIndex="0">
-          Hello
-        </label>
-      );
+    userEvent.click(addButton);
 
-      // Use `mount` so that useEffect and DOM selectors work
-      const wrapper = mount(<RepeatableFieldset {...props} />, {
-        // attachTo the body so document.activeElement works (https://github.com/enzymejs/enzyme/issues/2337#issuecomment-608984530)
-        attachTo: document.body,
-      });
-
-      act(() => {
-        // Pass in a longer list of entries
-        const newEntries = props.entries.concat([{ first_name: "Charles" }]);
-        wrapper.setProps({ entries: newEntries });
-      });
-      // Need to call wrapper.update since updates were made outside
-      // of the act call as part of the useEffect callback
-      wrapper.update();
-
-      const label = wrapper.find(".test-label").last().getDOMNode();
-
-      expect(document.activeElement).toBe(label);
-    });
+    expect(onAddClickMock).toHaveBeenCalledTimes(1);
   });
 
-  describe("when an entry is removed", () => {
-    it("keeps RepeatableFieldsetCard keys stable", () => {
-      const { entries } = props;
-      // Use `mount` so that useEffect works
-      // see https://github.com/enzymejs/enzyme/issues/2086 and https://github.com/enzymejs/enzyme/issues/2011
-      act(() => {
-        wrapper = mount(<RepeatableFieldset {...props} />);
-      });
-      // Need to call wrapper.update since updates were made outside
-      // of the act call as part of the useEffect callback
-      wrapper.update();
+  it("changes the focused element to the last card's label when a new entry is added", () => {
+    render(
+      <RepeatableFieldsetWithState initialEntries={[{ first_name: "Anton" }]} />
+    );
+    const addButton = screen.getByRole("button", { name: "Add" });
+    userEvent.click(addButton);
 
-      const keys1 = wrapper
-        .find("RepeatableFieldsetCard")
-        .map((wrapper) => wrapper.key());
+    const [firstEntry, secondEntry] = screen.getAllByText("Hello");
+    expect(firstEntry).not.toHaveFocus();
+    expect(secondEntry).toHaveFocus();
+  });
 
-      act(() => {
-        // Remove element at index 1
-        const newEntries = entries.slice(0, 1).concat(entries.slice(2));
-        wrapper.setProps({ entries: newEntries });
-      });
-      // Need to call wrapper.update since updates were made outside
-      // of the act call as part of the useEffect callback
-      wrapper.update();
+  it("keeps RepeatableFieldsetCard keys stable when an entry is removed", () => {
+    // we could not get `key` through RTL render, so we set the `data-key`attribute to check
+    // if the keys stay the same.
+    render(
+      <RepeatableFieldsetWithState
+        initialEntries={[{ first_name: "Anton" }, { first_name: "Bud" }]}
+      />
+    );
+    const [firstEntry1, secondEntry1] = screen.getAllByTestId(
+      "repeatable-fieldset-card"
+    );
 
-      const keys2 = wrapper
-        .find("RepeatableFieldsetCard")
-        .map((wrapper) => wrapper.key());
-
-      expect(keys2.length).toBe(keys1.length - 1);
-      expect(keys2[0]).toBe(keys1[0]);
-      expect(keys2.slice(1)).toEqual(keys1.slice(2));
+    const removeSecondEntryButton = within(secondEntry1).getByRole("button", {
+      name: "Remove",
     });
+    userEvent.click(removeSecondEntryButton);
+
+    const [firstEntry2] = screen.getAllByTestId("repeatable-fieldset-card");
+    expect(firstEntry2.attributes).toEqual(firstEntry1.attributes);
   });
 });

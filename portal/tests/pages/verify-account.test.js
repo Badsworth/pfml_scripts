@@ -1,127 +1,174 @@
+import { act, screen, waitFor } from "@testing-library/react";
 import AppErrorInfo from "../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
-import React from "react";
 import VerifyAccount from "../../src/pages/verify-account";
-import { act } from "react-dom/test-utils";
-import { shallow } from "enzyme";
-import { simulateEvents } from "../test-utils";
-import useAppLogic from "../../src/hooks/useAppLogic";
+import { renderPage } from "../test-utils";
+import userEvent from "@testing-library/user-event";
 
 jest.mock("../../src/services/tracker");
 jest.mock("../../src/hooks/useAppLogic");
 
 describe("VerifyAccount", () => {
-  let appLogic,
-    changeField,
-    click,
-    resolveResendVerifyAccountCodeMock,
-    submitForm,
-    username,
-    verificationCode,
-    wrapper;
+  let resolveResendVerifyAccountCodeMock;
+  const username = "test@example.com";
+  const verificationCode = "123456";
+  let options = {};
 
-  function render() {
-    act(() => {
-      wrapper = shallow(<VerifyAccount appLogic={appLogic} />);
-    });
-    ({ changeField, click, submitForm } = simulateEvents(wrapper));
+  function render(options) {
+    return renderPage(VerifyAccount, options);
   }
 
-  beforeEach(() => {
-    appLogic = useAppLogic();
-    appLogic.auth.resendVerifyAccountCode.mockImplementation(() => {
-      return new Promise((resolve) => {
-        resolveResendVerifyAccountCodeMock = resolve;
-      });
-    });
-
-    username = "test@example.com";
-    verificationCode = "123456";
-    render();
-  });
-
-  it("renders the empty page", () => {
-    expect(wrapper).toMatchSnapshot();
+  it("renders the initial page", () => {
+    const { container } = render(options);
+    expect(container.firstChild).toMatchSnapshot();
   });
 
   it("submits empty strings if user has not entered values yet", async () => {
-    await submitForm();
-
-    expect(appLogic.auth.verifyAccount).toHaveBeenCalledWith("", "");
+    const verifyAccount = jest.fn();
+    options = {
+      addCustomSetup: (appLogic) => {
+        appLogic.auth.verifyAccount = verifyAccount;
+      },
+    };
+    render(options);
+    userEvent.click(screen.getByRole("button", { name: "Submit" }));
+    await waitFor(() => {
+      expect(verifyAccount).toHaveBeenCalledWith("", "");
+    });
   });
 
   describe("when authData.username is set", () => {
+    const resendVerifyAccountCode = jest.fn();
+    const verifyAccount = jest.fn();
     beforeEach(() => {
-      appLogic.auth.authData = { createAccountUsername: username };
-      render();
+      options = {
+        addCustomSetup: (appLogic) => {
+          appLogic.auth.authData = { createAccountUsername: username };
+          appLogic.auth.resendVerifyAccountCode = resendVerifyAccountCode;
+          appLogic.auth.verifyAccount = verifyAccount;
+        },
+      };
+      render(options);
     });
 
     it("does not render an email field", () => {
-      expect(wrapper.find("InputText[name='username']")).toHaveLength(0);
+      expect(
+        screen.queryByRole("textbox", { name: "Email address" })
+      ).not.toBeInTheDocument();
     });
 
-    it("calls resendVerifyAccountCode when resend code button is clicked", () => {
-      click({ name: "resend-code-button" });
-      expect(appLogic.auth.resendVerifyAccountCode).toHaveBeenCalledWith(
-        username
-      );
+    it("calls resendVerifyAccountCode when resend code button is clicked", async () => {
+      userEvent.click(screen.getByRole("button", { name: "Send a new code" }));
+
+      await waitFor(() => {
+        expect(resendVerifyAccountCode).toHaveBeenCalledWith(username);
+      });
     });
 
     it("calls verifyAccount when form is submitted", async () => {
-      changeField("code", verificationCode);
-
-      await submitForm();
-
-      expect(appLogic.auth.verifyAccount).toHaveBeenCalledWith(
-        username,
+      userEvent.type(
+        screen.getByRole("textbox", { name: "6-digit code" }),
         verificationCode
       );
+      userEvent.click(screen.getByRole("button", { name: "Submit" }));
+      await waitFor(() => {
+        expect(verifyAccount).toHaveBeenCalledWith(username, verificationCode);
+      });
     });
   });
 
   describe("when authData.username is not set", () => {
+    const resendVerifyAccountCode = jest.fn();
+    const verifyAccount = jest.fn();
+    beforeEach(() => {
+      options = {
+        addCustomSetup: (appLogic) => {
+          appLogic.auth.resendVerifyAccountCode = resendVerifyAccountCode;
+          appLogic.auth.verifyAccount = verifyAccount;
+        },
+      };
+      render(options);
+    });
     it("renders an email field", () => {
-      expect(wrapper.find("InputText[name='username']")).toHaveLength(1);
+      expect(
+        screen.queryByRole("textbox", { name: "Email address" })
+      ).toBeInTheDocument();
     });
 
-    it("calls resendVerifyAccountCode when resend code button is clicked", () => {
-      changeField("username", username);
-      click({ name: "resend-code-button" });
-      expect(appLogic.auth.resendVerifyAccountCode).toHaveBeenCalledWith(
+    it("calls resendVerifyAccountCode when resend code button is clicked", async () => {
+      userEvent.type(
+        screen.queryByRole("textbox", { name: "Email address" }),
         username
       );
+      userEvent.click(screen.getByRole("button", { name: "Send a new code" }));
+      await waitFor(() => {
+        expect(resendVerifyAccountCode).toHaveBeenCalledWith(username);
+      });
     });
 
     it("calls verifyAccount when form is submitted", async () => {
-      changeField("username", username);
-      changeField("code", verificationCode);
-      await submitForm();
-      expect(appLogic.auth.verifyAccount).toHaveBeenCalledWith(
-        username,
+      userEvent.type(
+        screen.queryByRole("textbox", { name: "Email address" }),
+        username
+      );
+      userEvent.type(
+        screen.getByRole("textbox", { name: "6-digit code" }),
         verificationCode
       );
+      userEvent.click(screen.getByRole("button", { name: "Submit" }));
+      await waitFor(() => {
+        expect(verifyAccount).toHaveBeenCalledWith(username, verificationCode);
+      });
     });
   });
 
   it("shows success message after code is resent", async () => {
-    click({ name: "resend-code-button" });
-    await resolveResendVerifyAccountCodeMock();
-
-    expect(wrapper.find("Alert[name='code-resent-message']")).toHaveLength(1);
-    expect(wrapper.find("Alert[name='code-resent-message']")).toMatchSnapshot();
+    options = {
+      addCustomSetup: (appLogic) => {
+        appLogic.auth.resendVerifyAccountCode.mockImplementation(() => {
+          return new Promise((resolve) => {
+            resolveResendVerifyAccountCodeMock = resolve;
+          });
+        });
+      },
+    };
+    render(options);
+    await waitFor(() => {
+      userEvent.click(screen.getByRole("button", { name: "Send a new code" }));
+    });
+    await act(async () => {
+      await resolveResendVerifyAccountCodeMock();
+    });
+    expect(screen.getByText(/New verification code sent/)).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /We sent a new 6-digit verification code to your email address. Enter the new code to verify your email./
+      )
+    ).toBeInTheDocument();
   });
 
-  describe("when there are appErrors", () => {
-    it("does not show success message when code is resent", async () => {
-      appLogic.appErrors = new AppErrorInfoCollection([new AppErrorInfo()]);
+  it("when there are appErrors, does not show success message when code is resent", async () => {
+    options = {
+      addCustomSetup: (appLogic) => {
+        appLogic.appErrors = new AppErrorInfoCollection([new AppErrorInfo()]);
+        appLogic.auth.resendVerifyAccountCode.mockImplementation(() => {
+          return new Promise((resolve) => {
+            resolveResendVerifyAccountCodeMock = resolve;
+          });
+        });
+      },
+    };
+    render(options);
 
-      render();
-      click({ name: "resend-code-button" });
-      await resolveResendVerifyAccountCodeMock();
-
-      expect(wrapper.find("Alert[name='code-resent-message']").exists()).toBe(
-        false
-      );
+    await waitFor(() => {
+      userEvent.click(screen.getByRole("button", { name: "Send a new code" }));
     });
+    await act(async () => {
+      await resolveResendVerifyAccountCodeMock();
+    });
+
+    expect(
+      screen.queryByText(/New verification code sent/)
+    ).not.toBeInTheDocument();
   });
 });

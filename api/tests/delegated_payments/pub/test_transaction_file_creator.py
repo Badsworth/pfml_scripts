@@ -11,9 +11,7 @@ import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.files as file_util
 from massgov.pfml.db.models.employees import (
     ClaimType,
-    Employee,
     LkPaymentMethod,
-    LkPrenoteState,
     PaymentMethod,
     PrenoteState,
     ReferenceFile,
@@ -22,14 +20,13 @@ from massgov.pfml.db.models.employees import (
     StateLog,
 )
 from massgov.pfml.db.models.factories import (
-    ClaimFactory,
     EmployeeFactory,
     EmployeePubEftPairFactory,
-    PaymentFactory,
     PubEftFactory,
 )
 from massgov.pfml.delegated_payments.check_issue_file import CheckIssueFile
 from massgov.pfml.delegated_payments.ez_check import EzCheckFile
+from massgov.pfml.delegated_payments.mock.delegated_payments_factory import DelegatedPaymentFactory
 from massgov.pfml.delegated_payments.pub.transaction_file_creator import TransactionFileCreatorStep
 from tests.delegated_payments.pub.test_pub_check import _random_valid_check_payment_with_state_log
 
@@ -37,19 +34,17 @@ fake = faker.Faker()
 
 
 @pytest.fixture
-def transaction_file_step(test_db_session, initialize_factories_session, test_db_other_session):
+def transaction_file_step(
+    local_test_db_session, local_initialize_factories_session, local_test_db_other_session
+):
     return TransactionFileCreatorStep(
-        db_session=test_db_session, log_entry_db_session=test_db_other_session
+        db_session=local_test_db_session, log_entry_db_session=local_test_db_other_session
     )
 
 
 @freeze_time("2021-01-01 12:00:00")
 def test_ach_file_creation(
-    transaction_file_step: TransactionFileCreatorStep,
-    test_db_session,
-    initialize_factories_session,
-    tmp_path,
-    monkeypatch,
+    transaction_file_step: TransactionFileCreatorStep, local_test_db_session, tmp_path, monkeypatch,
 ):
     # set environment variables
     archive_folder_path = str(tmp_path / "archive")
@@ -63,14 +58,14 @@ def test_ach_file_creation(
 
     # create employees ready for prenote
     for _ in range(prenote_count):
-        create_employee_for_prenote(test_db_session)
+        create_employee_for_prenote(local_test_db_session)
 
     # create payments ready for payment
     for _ in range(pub_eft_count):
-        create_payment_for_pub_transaction(test_db_session, PaymentMethod.ACH)
+        create_payment_for_pub_transaction(local_test_db_session, PaymentMethod.ACH)
 
     # generate the ach file
-    transaction_file_step.run_step()
+    transaction_file_step.run()
 
     # check that ach archive file was generated
     now = payments_util.get_now()
@@ -88,7 +83,7 @@ def test_ach_file_creation(
     # check that no check file was created because no check payments were in the correct state.
     assert transaction_file_step.check_file is None
     assert (
-        test_db_session.query(ReferenceFile)
+        local_test_db_session.query(ReferenceFile)
         .filter(
             ReferenceFile.reference_file_type_id
             == ReferenceFileType.PUB_EZ_CHECK.reference_file_type_id
@@ -99,7 +94,7 @@ def test_ach_file_creation(
 
     # check that corresponding reference file was created
     assert (
-        test_db_session.query(ReferenceFile)
+        local_test_db_session.query(ReferenceFile)
         .filter(
             ReferenceFile.file_location
             == str(os.path.join(expected_ach_file_folder, pub_ach_file_name)),
@@ -114,13 +109,15 @@ def test_ach_file_creation(
     payment_pub_eft_sent_states = state_log_util.get_all_latest_state_logs_in_end_state(
         state_log_util.AssociatedClass.PAYMENT,
         State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT,
-        test_db_session,
+        local_test_db_session,
     )
     assert len(payment_pub_eft_sent_states) == pub_eft_count
 
     # check that prenote states were transitioned for employee
     prenote_sent_states = state_log_util.get_all_latest_state_logs_in_end_state(
-        state_log_util.AssociatedClass.EMPLOYEE, State.DELEGATED_EFT_PRENOTE_SENT, test_db_session,
+        state_log_util.AssociatedClass.EMPLOYEE,
+        State.DELEGATED_EFT_PRENOTE_SENT,
+        local_test_db_session,
     )
     assert len(prenote_sent_states) == prenote_count
 
@@ -164,7 +161,7 @@ def test_check_file_creation(
     transaction_file_step = TransactionFileCreatorStep(
         db_session=local_test_db_session, log_entry_db_session=local_test_db_other_session
     )
-    transaction_file_step.run_step()
+    transaction_file_step.run()
 
     # Validate the EZ Check File was created properly
     ez_check_file = transaction_file_step.check_file
@@ -238,11 +235,11 @@ def test_check_file_creation(
 
 
 def test_get_eligible_eft_payments_error_states(
-    transaction_file_step: TransactionFileCreatorStep, test_db_session, initialize_factories_session
+    transaction_file_step: TransactionFileCreatorStep, local_test_db_session
 ):
-    create_payment_for_pub_transaction(test_db_session, PaymentMethod.CHECK)
+    create_payment_for_pub_transaction(local_test_db_session, PaymentMethod.CHECK)
 
-    test_db_session.commit()
+    local_test_db_session.commit()
 
     with pytest.raises(
         Exception, match=r"Non-ACH payment method detected in state log: .+",
@@ -251,7 +248,7 @@ def test_get_eligible_eft_payments_error_states(
 
 
 def test_get_pub_efts_for_pre_note(
-    transaction_file_step: TransactionFileCreatorStep, test_db_session, initialize_factories_session
+    transaction_file_step: TransactionFileCreatorStep, local_test_db_session
 ):
     employee = EmployeeFactory.create()
     assert len(transaction_file_step._get_pub_efts_for_prenote(employee)) == 0
@@ -282,7 +279,7 @@ def test_get_pub_efts_for_pre_note(
 
 
 def test_get_eft_eligible_employees_with_eft_error_states(
-    transaction_file_step: TransactionFileCreatorStep, test_db_session, initialize_factories_session
+    transaction_file_step: TransactionFileCreatorStep, local_test_db_session
 ):
     employee = EmployeeFactory.create()
 
@@ -290,7 +287,7 @@ def test_get_eft_eligible_employees_with_eft_error_states(
         employee,
         State.DELEGATED_EFT_SEND_PRENOTE,
         state_log_util.build_outcome("test"),
-        test_db_session,
+        local_test_db_session,
     )
 
     with pytest.raises(
@@ -300,45 +297,24 @@ def test_get_eft_eligible_employees_with_eft_error_states(
         transaction_file_step._get_eft_eligible_employees_with_eft()
 
 
-def create_employee_with_eft(prenote_state: LkPrenoteState) -> Employee:
-    employee = EmployeeFactory.create()
-    pub_eft = PubEftFactory.create(prenote_state_id=prenote_state.prenote_state_id)
-    EmployeePubEftPairFactory.create(employee=employee, pub_eft=pub_eft)
-
-    return employee
-
-
 def create_employee_for_prenote(db_session):
-    employee = create_employee_with_eft(PrenoteState.PENDING_PRE_PUB)
-
-    state_log_util.create_finished_state_log(
-        employee,
-        State.DELEGATED_EFT_SEND_PRENOTE,
-        state_log_util.build_outcome("test"),
-        db_session,
-    )
+    DelegatedPaymentFactory(
+        db_session, prenote_state=PrenoteState.PENDING_PRE_PUB
+    ).get_or_create_pub_eft_with_state(State.DELEGATED_EFT_SEND_PRENOTE)
 
 
 def create_payment_for_pub_transaction(db_session, payment_method: LkPaymentMethod):
-    employee = create_employee_with_eft(PrenoteState.APPROVED)
-    employee_pub_eft_pairs = employee.pub_efts.all()
-    pub_eft = employee_pub_eft_pairs[0].pub_eft
-
-    claim = ClaimFactory.create(
-        employee=employee, claim_type_id=ClaimType.MEDICAL_LEAVE.claim_type_id
-    )
-    payment = PaymentFactory.create(
-        claim=claim,
-        pub_eft=pub_eft,
-        disb_method_id=payment_method.payment_method_id,
-        claim_type_id=ClaimType.MEDICAL_LEAVE.claim_type_id,
-    )
-
-    state_log_util.create_finished_state_log(
-        payment,
-        State.DELEGATED_PAYMENT_ADD_TO_PUB_TRANSACTION_EFT,
-        state_log_util.build_outcome("test"),
+    factory = DelegatedPaymentFactory(
         db_session,
+        set_pub_eft_in_payment=True,
+        claim_type=ClaimType.MEDICAL_LEAVE,
+        prenote_state=PrenoteState.APPROVED,
+        payment_method=payment_method,
+    )
+
+    factory.get_or_create_pub_eft()
+    payment = factory.get_or_create_payment_with_state(
+        State.DELEGATED_PAYMENT_ADD_TO_PUB_TRANSACTION_EFT
     )
 
     return payment

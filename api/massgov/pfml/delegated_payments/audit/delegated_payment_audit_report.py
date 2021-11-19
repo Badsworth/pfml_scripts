@@ -32,6 +32,7 @@ class PaymentAuditError(Exception):
 
 class PaymentAuditReportStep(Step):
     class Metrics(str, enum.Enum):
+        AUDIT_PATH = "audit_path"
         PAYMENT_COUNT = "payment_count"
         PAYMENT_SAMPLED_FOR_AUDIT_COUNT = "payment_sampled_for_audit_count"
         SAMPLED_PAYMENT_COUNT = "sampled_payment_count"
@@ -176,64 +177,52 @@ class PaymentAuditReportStep(Step):
     def generate_audit_report(self):
         """Top level function to generate and send payment audit report"""
 
-        try:
-            logger.info("Start generating payment audit report")
+        logger.info("Start generating payment audit report")
 
-            s3_config = payments_config.get_s3_config()
+        s3_config = payments_config.get_s3_config()
 
-            # sample files
-            payments: Iterable[Payment] = self.sample_payments_for_audit_report()
+        # sample files
+        payments: Iterable[Payment] = self.sample_payments_for_audit_report()
 
-            # generate payment audit data
-            payment_audit_data_set: Iterable[PaymentAuditData] = self.build_payment_audit_data_set(
-                payments
-            )
+        # generate payment audit data
+        payment_audit_data_set: Iterable[PaymentAuditData] = self.build_payment_audit_data_set(
+            payments
+        )
 
-            # write the report to the archive directory
-            archive_folder_path = write_audit_report(
-                payment_audit_data_set,
-                s3_config.pfml_error_reports_archive_path,
-                self.db_session,
-                report_name=payments_util.Constants.FILE_NAME_PAYMENT_AUDIT_REPORT,
-            )
+        # write the report to the archive directory
+        archive_folder_path = write_audit_report(
+            payment_audit_data_set,
+            s3_config.pfml_error_reports_archive_path,
+            self.db_session,
+            report_name=payments_util.Constants.FILE_NAME_PAYMENT_AUDIT_REPORT,
+        )
 
-            if archive_folder_path is None:
-                raise Exception("Payment Audit Report file not written to outbound folder")
+        if archive_folder_path is None:
+            raise Exception("Payment Audit Report file not written to outbound folder")
 
-            logger.info(
-                "Done writing Payment Audit Report file to archive folder: %s", archive_folder_path
-            )
+        logger.info(
+            "Done writing Payment Audit Report file to archive folder: %s", archive_folder_path
+        )
+        self.set_metrics({self.Metrics.AUDIT_PATH: archive_folder_path})
 
-            # Copy the report to the outgoing folder for program integrity
-            outgoing_file_name = f"{payments_util.Constants.FILE_NAME_PAYMENT_AUDIT_REPORT}.csv"
-            outbound_path = os.path.join(s3_config.dfml_report_outbound_path, outgoing_file_name)
-            file_util.copy_file(str(archive_folder_path), str(outbound_path))
+        # Copy the report to the outgoing folder for program integrity
+        outgoing_file_name = f"{payments_util.Constants.FILE_NAME_PAYMENT_AUDIT_REPORT}.csv"
+        outbound_path = os.path.join(s3_config.dfml_report_outbound_path, outgoing_file_name)
+        file_util.copy_file(str(archive_folder_path), str(outbound_path))
 
-            logger.info(
-                "Done copying Payment Audit Report file to outbound folder: %s", outbound_path
-            )
+        logger.info("Done copying Payment Audit Report file to outbound folder: %s", outbound_path)
 
-            # create a reference file for the archived report
-            reference_file = ReferenceFile(
-                file_location=str(archive_folder_path),
-                reference_file_type_id=ReferenceFileType.DELEGATED_PAYMENT_AUDIT_REPORT.reference_file_type_id,
-            )
-            self.db_session.add(reference_file)
+        # create a reference file for the archived report
+        reference_file = ReferenceFile(
+            file_location=str(archive_folder_path),
+            reference_file_type_id=ReferenceFileType.DELEGATED_PAYMENT_AUDIT_REPORT.reference_file_type_id,
+        )
+        self.db_session.add(reference_file)
 
-            # set sampled payments as sent
-            self.set_sampled_payments_to_sent_state()
+        # set sampled payments as sent
+        self.set_sampled_payments_to_sent_state()
 
-            # persist changes
-            self.db_session.commit()
-
-            logger.info("Done generating payment audit report")
-
-        except Exception:
-            self.db_session.rollback()
-            logger.exception("Error creating Payment Audit file")
-
-            # We do not want to run any subsequent steps if this fails
-            raise
+        logger.info("Done generating payment audit report")
 
 
 def _get_state_log_count_in_state(

@@ -2,7 +2,7 @@ import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
 import BenefitsApplicationCollection from "../../src/models/BenefitsApplicationCollection";
 import ClaimCollection from "../../src/models/ClaimCollection";
 import DocumentCollection from "../../src/models/DocumentCollection";
-import { testHook } from "../test-utils";
+import { renderHook } from "@testing-library/react-hooks";
 import useAppLogic from "../../src/hooks/useAppLogic";
 
 describe("useAppLogic", () => {
@@ -18,13 +18,12 @@ describe("useAppLogic", () => {
       documents,
       employers,
       featureFlags,
-      otherLeaves,
       portalFlow,
       rest,
       setAppErrors,
       users;
 
-    testHook(() => {
+    renderHook(() => {
       ({
         appErrors,
         _appErrorsLogic,
@@ -37,7 +36,6 @@ describe("useAppLogic", () => {
         employers,
         featureFlags,
         clearRequiredFieldErrors,
-        otherLeaves,
         portalFlow,
         setAppErrors,
         users,
@@ -72,9 +70,6 @@ describe("useAppLogic", () => {
     expect(employers.loadWithholding).toBeInstanceOf(Function);
     expect(employers.submitClaimReview).toBeInstanceOf(Function);
     expect(employers.submitWithholding).toBeInstanceOf(Function);
-    expect(otherLeaves.removeEmployerBenefit).toBeInstanceOf(Function);
-    expect(otherLeaves.removeOtherIncome).toBeInstanceOf(Function);
-    expect(otherLeaves.removePreviousLeave).toBeInstanceOf(Function);
     expect(users.user).toBeUndefined();
     expect(users).toEqual(expect.anything());
     expect(featureFlags).toBeInstanceOf(Object);

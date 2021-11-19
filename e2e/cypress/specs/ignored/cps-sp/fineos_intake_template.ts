@@ -1,5 +1,4 @@
 import { fineos, portal } from "../../../actions";
-import { getLeaveAdminCredentials } from "../../../config";
 import { assertValidClaim } from "../../../../src/util/typeUtils";
 import {
   AbsenceReasonDescription,
@@ -107,11 +106,16 @@ describe("Submit a claim through Fineos intake process, verify the Absence Case"
                             .reduced_schedule_leave_periods[0]
                         );
                     return datesOfAbsence.nextStep((workAbsenceDetails) =>
+                      // @TODO CPS-906-AA (CPS-2579)
                       workAbsenceDetails
+                        // @TODO selectWorkPatternType changed from Fixed to Unknown
                         .selectWorkPatternType("Fixed")
+                        // @TODO comment out applyStandardWorkWeek() and return wrapUp.finishNotificationCreation() and below that line.
                         .applyStandardWorkWeek()
                         .nextStep((wrapUp) => {
                           wrapUp.clickNext();
+                          // @TODO Uncomment the fineos.assertErrorMessage to check for error message
+                          // fineos.assertErrorMessage("Work Pattern must be populated. Total hours per week in the Work Pattern must equal the Hours Worked Per Week field. Populate the Work Pattern and click Apply to Calendar before proceeding.")
                           // Bubble up Leave Case id number to outside scope
                           return wrapUp.finishNotificationCreation();
                         })
@@ -204,7 +208,7 @@ describe("Submit a claim through Fineos intake process, verify the Absence Case"
     cy.unstash<DehydratedClaim>("claim").then(({ claim }) => {
       cy.unstash<Submission>("submission").then((submission) => {
         assertValidClaim(claim);
-        portal.login(getLeaveAdminCredentials(claim.employer_fein));
+        portal.loginLeaveAdmin(claim.employer_fein);
         // Access the review page
         portal.visitActionRequiredERFormPage(submission.fineos_absence_id);
         // Deny the claim

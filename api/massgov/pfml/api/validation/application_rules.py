@@ -1,8 +1,10 @@
+import datetime
 from datetime import date
 from itertools import chain, combinations
 from typing import Any, Dict, Iterable, List, Optional, Union
 
 from dateutil.relativedelta import relativedelta
+from werkzeug.datastructures import Headers
 
 import massgov.pfml.db as db
 import massgov.pfml.util.logging
@@ -44,6 +46,28 @@ def get_application_issues(application: Application) -> List[ValidationErrorDeta
     issues += get_leave_periods_issues(application)
     issues += get_conditional_issues(application)
 
+    return issues
+
+
+def get_application_complete_issues(
+    application: Application, headers: Headers
+) -> List[ValidationErrorDetail]:
+    """Takes in an application and outputs any validation issues.
+        Goes beyond get_application_issues to validate fields required only by complete step, usually steps later in the application process.
+    """
+    issues = get_application_issues(application)
+
+    # only verify tax when tax is enabled
+    if headers.get("X-FF-Tax-Withholding-Enabled") and not isinstance(
+        application.is_withholding_tax, bool
+    ):
+        issues.append(
+            ValidationErrorDetail(
+                type=IssueType.required,
+                message="Tax withholding preference is required",
+                field="is_withholding_tax",
+            )
+        )
     return issues
 
 
@@ -135,6 +159,24 @@ def check_codependent_fields(
     return issues
 
 
+def check_zero_income_amount(
+    item_path: str, item: Any, income_path: str,
+) -> List[ValidationErrorDetail]:
+
+    income_amount = getattr(item, income_path)
+
+    if income_amount is None or income_amount > 0:
+        return []
+
+    return [
+        ValidationErrorDetail(
+            type=IssueType.minimum,
+            message=f"{income_path} must be greater than zero",
+            field=f"{item_path}.{income_path}",
+        )
+    ]
+
+
 def check_date_range(
     start_date: Optional[date],
     start_date_path: str,
@@ -208,15 +250,17 @@ def get_employer_benefit_issues(
         "is_full_salary_continuous",
     ]
     issues += check_required_fields(
-        benefit_path, benefit, required_fields, {"benefit_type_id": "benefit_type"}
+        benefit_path, benefit, required_fields, {"benefit_type_id": "benefit_type",},
     )
-    issues += check_codependent_fields(
-        benefit_path,
-        benefit,
-        "benefit_amount_dollars",
-        "benefit_amount_frequency_id",
-        {"benefit_amount_frequency_id": "benefit_amount_frequency"},
-    )
+
+    if benefit.is_full_salary_continuous is False:
+        issues += check_required_fields(
+            benefit_path,
+            benefit,
+            ["benefit_amount_dollars", "benefit_amount_frequency_id",],
+            {"benefit_amount_frequency_id": "benefit_amount_frequency",},
+        )
+        issues += check_zero_income_amount(benefit_path, benefit, "benefit_amount_dollars",)
 
     start_date = benefit.benefit_start_date
     start_date_path = f"{benefit_path}.benefit_start_date"
@@ -256,17 +300,18 @@ def get_other_income_issues(income: OtherIncome, index: int) -> List[ValidationE
         "income_end_date",
         "income_start_date",
         "income_type_id",
-    ]
-    issues += check_required_fields(
-        income_path, income, required_fields, {"income_type_id": "income_type"}
-    )
-    issues += check_codependent_fields(
-        income_path,
-        income,
         "income_amount_dollars",
         "income_amount_frequency_id",
-        {"income_amount_frequency_id": "income_amount_frequency"},
+    ]
+
+    issues += check_required_fields(
+        income_path,
+        income,
+        required_fields,
+        {"income_type_id": "income_type", "income_amount_frequency_id": "income_amount_frequency"},
     )
+
+    issues += check_zero_income_amount(income_path, income, "income_amount_dollars",)
 
     start_date = income.income_start_date
     start_date_path = f"{income_path}.income_start_date"
@@ -280,48 +325,103 @@ def get_other_income_issues(income: OtherIncome, index: int) -> List[ValidationE
 
 
 def get_concurrent_leave_issues(application: Application) -> List[ValidationErrorDetail]:
+    concurrent_leave = application.concurrent_leave
+
+    if not application.has_concurrent_leave and not concurrent_leave:
+        return []
+
+    if application.has_concurrent_leave and not concurrent_leave:
+        issue = ValidationErrorDetail(
+            type=IssueType.required,
+            rule=IssueRule.conditional,
+            message="when has_concurrent_leave is true, concurrent_leave must be present",
+            field="concurrent_leave",
+        )
+        return [issue]
+
+    if not application.has_concurrent_leave and concurrent_leave:
+        issue = ValidationErrorDetail(
+            type=IssueType.required,
+            rule=IssueRule.conditional,
+            message="when has_concurrent_leave is false, concurrent_leave must be null",
+            field="concurrent_leave",
+        )
+        return [issue]
+
     issues = []
 
-    if application.has_concurrent_leave and application.concurrent_leave:
-        concurrent_leave = application.concurrent_leave
-        issues += check_date_range(
-            concurrent_leave.leave_start_date,
-            "concurrent_leave.leave_start_date",
-            concurrent_leave.leave_end_date,
-            "concurrent_leave.leave_end_date",
-            PFML_PROGRAM_LAUNCH_DATE,
-        )
+    required_fields = [
+        "leave_start_date",
+        "leave_end_date",
+        "is_for_current_employer",
+    ]
 
-        required_fields = [
-            "leave_start_date",
-            "leave_end_date",
-            "is_for_current_employer",
-        ]
+    issues += check_required_fields(
+        "concurrent_leave", application.concurrent_leave, required_fields
+    )
 
-        issues += check_required_fields(
-            "concurrent_leave", application.concurrent_leave, required_fields
-        )
-    else:
-        if application.has_concurrent_leave and not application.concurrent_leave:
-            issues.append(
-                ValidationErrorDetail(
-                    type=IssueType.required,
-                    rule=IssueRule.conditional,
-                    message="when has_concurrent_leave is true, concurrent_leave must be present",
-                    field="concurrent_leave",
-                )
+    issues += check_date_range(
+        concurrent_leave.leave_start_date,
+        "concurrent_leave.leave_start_date",
+        concurrent_leave.leave_end_date,
+        "concurrent_leave.leave_end_date",
+        PFML_PROGRAM_LAUNCH_DATE,
+    )
+
+    if application.has_continuous_leave_periods or application.has_reduced_schedule_leave_periods:
+        issues += _check_concurrent_leave_overlapping_waiting_period(application)
+
+    return issues
+
+
+def _check_concurrent_leave_overlapping_waiting_period(
+    application: Application,
+) -> List[ValidationErrorDetail]:
+    concurrent_leave_start = application.concurrent_leave.leave_start_date
+    concurrent_leave_end = application.concurrent_leave.leave_end_date
+
+    issues = []
+
+    waiting_period_start: date = date.max
+
+    # Loop through continuous_and_reduced_leave_periods to find earliest start date
+    for leave_period in application.all_leave_periods:
+        # Can’t predict the 7-day waiting period for intermittent leave
+        # won't be validating concurrent leave dates for intermittent leave
+        if type(leave_period) == IntermittentLeavePeriod:
+            continue
+
+        if leave_period.start_date is None:
+            continue
+
+        if leave_period.start_date <= waiting_period_start:
+            waiting_period_start = leave_period.start_date
+
+    if waiting_period_start == date.max:
+        return []
+
+    waiting_period_days = 7
+    waiting_period_end = waiting_period_start + datetime.timedelta(days=waiting_period_days - 1)
+
+    if waiting_period_start <= concurrent_leave_start <= waiting_period_end:  # type: ignore
+        issues.append(
+            ValidationErrorDetail(
+                type=IssueType.conflicting,
+                message="Concurrent leaves cannot overlap with waiting period.",
+                rule=IssueRule.disallow_overlapping_waiting_period_and_concurrent_leave_start_date,
+                field="concurrent_leave.leave_start_date",
             )
-        else:
-            if not application.has_concurrent_leave and application.concurrent_leave:
-                issues.append(
-                    ValidationErrorDetail(
-                        type=IssueType.required,
-                        rule=IssueRule.conditional,
-                        message="when has_concurrent_leave is false, concurrent_leave must be null",
-                        field="concurrent_leave",
-                    )
-                )
+        )
 
+    if waiting_period_start <= concurrent_leave_end <= waiting_period_end:  # type: ignore
+        issues.append(
+            ValidationErrorDetail(
+                type=IssueType.conflicting,
+                message="Concurrent leaves cannot overlap with waiting period.",
+                rule=IssueRule.disallow_overlapping_waiting_period_and_concurrent_leave_end_date,
+                field="concurrent_leave.leave_end_date",
+            )
+        )
     return issues
 
 
@@ -405,6 +505,47 @@ def get_previous_leave_issues(leave: PreviousLeave, leave_path: str) -> List[Val
     issues += check_date_range(
         start_date, start_date_path, end_date, end_date_path, minimum_date=PFML_PROGRAM_LAUNCH_DATE,
     )
+
+    return issues
+
+
+def get_previous_leave_and_leave_period_issues(
+    application: Application,
+) -> List[ValidationErrorDetail]:
+    issues = []
+    # Prevent overlapping leave periods and previous leaves
+    leave_period_ranges = [
+        (leave_period.start_date, leave_period.end_date)
+        for leave_period in application.all_leave_periods
+        # Only store complete ranges
+        if leave_period.start_date and leave_period.end_date
+    ]
+
+    all_previous_leaves: Iterable[PreviousLeave] = list(
+        chain(application.previous_leaves_same_reason, application.previous_leaves_other_reason,)
+    )
+    previous_leave_ranges = [
+        (leave.leave_start_date, leave.leave_end_date)
+        for leave in all_previous_leaves
+        # Only store complete ranges
+        if leave.leave_start_date and leave.leave_end_date
+    ]
+
+    for (leave_period_start, leave_period_end) in leave_period_ranges:
+        for (previous_leave_start, previous_leave_end) in previous_leave_ranges:
+            if (
+                # leave period start is in the previous leave range
+                previous_leave_start <= leave_period_start <= previous_leave_end
+                # previous leave start is in the leave period range
+                or leave_period_start <= previous_leave_start <= leave_period_end
+            ):
+                issues.append(
+                    ValidationErrorDetail(
+                        message=f"Previous leaves cannot overlap with leave periods. Received leave period {leave_period_start.isoformat()} – {leave_period_end.isoformat()} and previous leave {previous_leave_start.isoformat()} – {previous_leave_end.isoformat()}.",
+                        rule=IssueRule.disallow_overlapping_leave_period_with_previous_leave,
+                        type=IssueType.conflicting,
+                    )
+                )
 
     return issues
 
@@ -532,6 +673,7 @@ def get_conditional_issues(application: Application) -> List[ValidationErrorDeta
 
     issues += get_previous_leaves_other_reason_issues(application)
     issues += get_previous_leaves_same_reason_issues(application)
+    issues += get_previous_leave_and_leave_period_issues(application)
 
     issues += get_concurrent_leave_issues(application)
 
@@ -775,19 +917,12 @@ def get_leave_period_ranges_issues(application: Application) -> List[ValidationE
     """Validate all leave period date ranges against each other"""
     issues = []
 
-    all_leave_periods: Iterable[
-        Union[ContinuousLeavePeriod, IntermittentLeavePeriod, ReducedScheduleLeavePeriod]
-    ] = list(
-        chain(
-            application.continuous_leave_periods,
-            application.intermittent_leave_periods,
-            application.reduced_schedule_leave_periods,
-        )
-    )
+    all_leave_periods = application.all_leave_periods
 
     leave_period_start_dates = [
         leave_period.start_date for leave_period in all_leave_periods if leave_period.start_date
     ]
+
     leave_period_end_dates = [
         leave_period.end_date for leave_period in all_leave_periods if leave_period.end_date
     ]

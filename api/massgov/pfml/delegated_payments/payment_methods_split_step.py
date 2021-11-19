@@ -82,12 +82,5 @@ class PaymentMethodsSplitStep(Step):
 
     def split_payment_methods(self):
         logger.info("Beginning payment methods split for payments in fineos writeback state")
-        try:
-            self._split_payment_methods()
-            self.db_session.commit()
-            logger.info("Successfully moved payments into check and EFT PUB states")
-        except Exception:
-            self.db_session.rollback()
-            logger.exception("Error splitting payment methods")
-            # We do not want to run any subsequent steps if this fails
-            raise
+        self._split_payment_methods()
+        logger.info("Successfully moved payments into check and EFT PUB states")

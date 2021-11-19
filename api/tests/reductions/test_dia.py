@@ -233,7 +233,6 @@ def _get_invalid_loaded_payment_reference_file_in_s3(
     )
 
 
-@pytest.mark.integration
 def test_copy_to_sftp_and_archive_s3_files(
     local_initialize_factories_session,
     local_test_db_session,
@@ -310,7 +309,6 @@ def test_copy_to_sftp_and_archive_s3_files(
         )
 
 
-@pytest.mark.integration
 def test_create_list_of_claimants(
     initialize_factories_session, monkeypatch, mock_s3_bucket, test_db_session,
 ):
@@ -446,7 +444,6 @@ def test_create_list_of_claimants_skips_claims_with_missing_data(
         3,
     ),
 )
-@pytest.mark.integration
 def test_download_payment_list_from_moveit(
     local_initialize_factories_session,
     local_test_db_session,
@@ -539,7 +536,6 @@ def test_download_payment_list_from_moveit(
         )
 
 
-@pytest.mark.integration
 def test_assert_dia_payments_are_stored_correctly(
     test_db_session, mock_s3_bucket, monkeypatch, initialize_factories_session
 ):
@@ -610,7 +606,6 @@ def test_assert_dia_payments_are_stored_correctly(
     )
 
 
-@pytest.mark.integration
 def test_load_new_dia_payments_sucessfully(
     test_db_session, mock_s3_bucket, monkeypatch, initialize_factories_session
 ):
@@ -671,7 +666,6 @@ def test_load_new_dia_payments_sucessfully(
     )
 
 
-@pytest.mark.integration
 def test_load_new_dia_payments_error(
     test_db_session, mock_s3_bucket, monkeypatch, initialize_factories_session
 ):
@@ -716,7 +710,6 @@ def test_load_new_dia_payments_error(
     )
 
 
-@pytest.mark.integration
 def test_load_new_dia_payments_handles_duplicates(
     test_db_session, mock_s3_bucket, monkeypatch, initialize_factories_session
 ):

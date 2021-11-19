@@ -1,419 +1,396 @@
-import Document, { DocumentType } from "../../../src/models/Document";
 import {
   MockBenefitsApplicationBuilder,
   makeFile,
-  renderWithAppLogic,
-  testHook,
+  renderPage,
 } from "../../test-utils";
-import BenefitsApplicationCollection from "../../../src/models/BenefitsApplicationCollection";
+import { act, screen, waitFor } from "@testing-library/react";
+import AppErrorInfo from "../../../src/models/AppErrorInfo";
+import AppErrorInfoCollection from "../../../src/models/AppErrorInfoCollection";
+import DocumentCollection from "../../../src/models/DocumentCollection";
+import { DocumentType } from "../../../src/models/Document";
 import UploadId from "../../../src/pages/applications/upload-id";
 import { ValidationError } from "../../../src/errors";
-import { act } from "react-dom/test-utils";
-import { uniqueId } from "lodash";
-import useAppLogic from "../../../src/hooks/useAppLogic";
+import { setupBenefitsApplications } from "../../test-utils/helpers";
+import userEvent from "@testing-library/user-event";
+import { v4 as uuidv4 } from "uuid";
 
 jest.mock("../../../src/hooks/useAppLogic");
 jest.mock("../../../src/services/tracker");
 
-// Dive more levels to account for withClaimDocuments HOC
-const diveLevels = 4;
+const expectedTempFiles = [
+  expect.objectContaining({
+    file: expect.objectContaining({ name: "file1" }),
+  }),
+  expect.objectContaining({
+    file: expect.objectContaining({ name: "file2" }),
+  }),
+];
+
+const cbHasLoadedClaimDocsTrue = (appLogic) => {
+  appLogic.documents.hasLoadedClaimDocuments = jest.fn(() => {
+    return Promise.resolve(true);
+  });
+};
+
+const clearErrors = jest.fn();
+const catchError = jest.fn();
+
+const goToNextPage = jest.fn(() => {
+  return Promise.resolve();
+});
+
+let attach = jest.fn();
+
+const setup = (claim, props = {}, cb) => {
+  if (!claim) {
+    claim = new MockBenefitsApplicationBuilder().medicalLeaveReason().create();
+  }
+  return renderPage(
+    UploadId,
+    {
+      addCustomSetup: (appLogic) => {
+        setupBenefitsApplications(appLogic, [claim], cb);
+        appLogic.portalFlow.goToNextPage = goToNextPage;
+        appLogic.documents.attach = attach;
+        appLogic.clearErrors = clearErrors;
+        appLogic.catchError = catchError;
+      },
+    },
+    { query: { claim_id: "mock_application_id" }, ...props }
+  );
+};
 
 describe("UploadId", () => {
-  let appLogic, claim, wrapper;
-
   describe("before any documents have been loaded", () => {
-    function render() {
-      ({ appLogic, wrapper } = renderWithAppLogic(UploadId, {
-        claimAttrs: claim,
-        diveLevels,
-      }));
-    }
     beforeEach(() => {
-      render();
+      setup();
     });
 
     it("does not render a FileCardList", () => {
-      expect(wrapper.find("FileCardList")).toEqual({});
+      expect(screen.queryByText(/File/)).not.toBeInTheDocument();
     });
 
     it("renders a spinner", () => {
-      expect(wrapper.find("Spinner")).toHaveLength(1);
-      expect(wrapper.find("Spinner")).toMatchSnapshot();
-    });
-
-    it("does not render the ReviewRow block", () => {
-      expect(wrapper.find("ReviewRow")).toEqual({});
+      expect(screen.getByRole("progressbar")).toBeInTheDocument();
     });
   });
 
   describe("after documents have been loaded", () => {
-    function render() {
-      ({ wrapper } = renderWithAppLogic(UploadId, {
-        claimAttrs: claim,
-        diveLevels,
-        props: { appLogic },
-      }));
-    }
-
-    beforeEach(() => {
-      testHook(() => {
-        appLogic = useAppLogic();
-        jest
-          .spyOn(appLogic.documents, "hasLoadedClaimDocuments")
-          .mockImplementation(() => {
-            return true;
-          });
-      });
-    });
-
-    describe("when the user doesn't have a Mass ID", () => {
-      it("renders the page with 'Other' ID content", () => {
-        claim = new MockBenefitsApplicationBuilder()
-          .medicalLeaveReason()
-          .create();
-        claim.has_state_id = false;
-        appLogic.benefitsApplications.benefitsApplications =
-          new BenefitsApplicationCollection([claim]);
-        render();
-        expect(wrapper).toMatchSnapshot();
-      });
+    it("when the user doesn't have a Mass ID, renders the page with 'Other' ID content", () => {
+      const claim = new MockBenefitsApplicationBuilder()
+        .medicalLeaveReason()
+        .create();
+      claim.has_state_id = false;
+      const { container } = setup(claim, null, cbHasLoadedClaimDocsTrue);
+      expect(container).toMatchSnapshot();
     });
 
     describe("when the user has a Mass ID", () => {
-      const expectedTempFiles = [
-        expect.objectContaining({
-          file: expect.objectContaining({ name: "file1" }),
-        }),
-        expect.objectContaining({
-          file: expect.objectContaining({ name: "file2" }),
-        }),
-      ];
+      const cb = (appLogic) => {
+        appLogic.documents.hasLoadedClaimDocuments = jest.fn(() => {
+          return Promise.resolve(true);
+        });
+        appLogic.documents.documents = new DocumentCollection([
+          {
+            application_id: "mock_application_id",
+            fineos_document_id: uuidv4(),
+            document_type: DocumentType.identityVerification,
+            created_at: "2020-11-26",
+          },
+        ]);
+      };
       beforeEach(() => {
-        claim = new MockBenefitsApplicationBuilder()
+        const claim = new MockBenefitsApplicationBuilder()
           .medicalLeaveReason()
           .create();
         claim.has_state_id = true;
-        appLogic.benefitsApplications.benefitsApplications =
-          new BenefitsApplicationCollection([claim]);
+        setup(claim, null, cb);
       });
 
       it("renders a FileCardList", () => {
-        render();
-
-        expect(wrapper.find("FileCardList")).toHaveLength(1);
-        expect(wrapper.find("FileCardList")).toMatchSnapshot();
+        expect(screen.queryByText(/File/)).toBeInTheDocument();
       });
 
       it("doesn't render a spinner", () => {
-        render();
-        expect(wrapper.find("Spinner")).toEqual({});
+        expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
       });
 
       it("renders the page with Mass ID content", () => {
-        render();
-        expect(wrapper).toMatchSnapshot();
+        expect(
+          screen.getByText(
+            /Upload the front and back of your Massachusetts driver’s license or ID card/
+          )
+        ).toBeInTheDocument();
+        expect(
+          screen.getByRole("heading", { name: "File 1" })
+        ).toBeInTheDocument();
+        expect(screen.getByText("Choose files")).toBeInTheDocument();
+      });
+    });
+
+    it("when the user uploads files, renders filecards for the files", async () => {
+      setup(null, null, cbHasLoadedClaimDocsTrue);
+      const tempFiles = [makeFile(), makeFile(), makeFile()];
+      await act(async () => {
+        await userEvent.upload(
+          screen.getByLabelText(/Choose files/),
+          tempFiles
+        );
+      });
+      await waitFor(() => {
+        expect(screen.getAllByText(/File/)).toHaveLength(3);
+      });
+    });
+
+    it("clears errors", async () => {
+      setup(null, null, cbHasLoadedClaimDocsTrue);
+      const tempFiles = [makeFile(), makeFile(), makeFile()];
+      await act(async () => {
+        await userEvent.upload(
+          screen.getByLabelText(/Choose files/),
+          tempFiles
+        );
       });
 
-      describe("when the user uploads files", () => {
-        it("renders filecards for the files", async () => {
-          render();
-          const tempFiles = [makeFile(), makeFile(), makeFile()];
+      expect(clearErrors).toHaveBeenCalledTimes(1);
+    });
 
-          await act(async () => {
-            await wrapper.find("FileCardList").simulate("change", tempFiles);
-          });
+    it("catches invalid files", async () => {
+      setup(null, null, cbHasLoadedClaimDocsTrue);
+      const invalidFiles = [makeFile({ name: "file1", type: "image/heic" })];
+      await act(async () => {
+        await userEvent.upload(
+          screen.getByLabelText(/Choose files/),
+          invalidFiles
+        );
+      });
 
-          expect(wrapper).toMatchSnapshot();
-        });
-
-        it("clears errors", async () => {
-          render();
-          const tempFiles = [makeFile(), makeFile(), makeFile()];
-          await act(async () => {
-            await wrapper.find("FileCardList").simulate("change", tempFiles);
-          });
-
-          expect(appLogic.clearErrors).toHaveBeenCalledTimes(1);
-        });
-
-        it("catches invalid files", async () => {
-          render();
-          const invalidFiles = [
-            makeFile({ name: "file1", type: "image/heic" }),
-          ];
-          await act(async () => {
-            await wrapper.find("FileCardList").simulate("change", invalidFiles);
-          });
-
-          const error = appLogic.catchError.mock.calls[0][0];
-          expect(error).toBeInstanceOf(ValidationError);
-          expect(error.issues).toMatchInlineSnapshot(`
-            Array [
-              Object {
-                "message": "We could not upload: file1. Choose a PDF or an image file (.jpg, .jpeg, .png).",
+      await waitFor(() => {
+        expect(catchError).toHaveBeenCalledWith(
+          new ValidationError(
+            [
+              {
+                field: "file",
+                message:
+                  "We could not upload: file1. Choose a PDF or an image file (.jpg, .jpeg, .png).",
+                type: "required",
               },
-            ]
-          `);
-        });
+            ],
+            "documents"
+          )
+        );
+      });
+    });
 
-        it("makes documents.attach request when no documents exist", async () => {
-          claim = new MockBenefitsApplicationBuilder().create();
-          render();
+    it("makes documents.attach request when no documents exist", async () => {
+      const claim = new MockBenefitsApplicationBuilder().create();
+      setup(claim, null, cbHasLoadedClaimDocsTrue);
 
-          // Add files to the page state
-          const tempFiles = [
-            makeFile({ name: "file1" }),
-            makeFile({ name: "file2" }),
-          ];
+      const tempFiles = [
+        makeFile({ name: "file1" }),
+        makeFile({ name: "file2" }),
+      ];
 
-          await act(async () => {
-            await wrapper.find("FileCardList").simulate("change", tempFiles);
-          });
-
-          await act(async () => {
-            await wrapper.find("QuestionPage").simulate("save");
-          });
-
-          expect(appLogic.documents.attach).toHaveBeenCalledWith(
-            claim.application_id,
-            expect.arrayContaining(expectedTempFiles),
-            expect.any(String),
-            false
-          );
-        });
-
-        it("navigates the user to the next page if there are no errors", async () => {
-          render();
-          const tempFiles = [makeFile(), makeFile(), makeFile()];
-
-          await act(async () => {
-            await wrapper.find("FileCardList").simulate("change", tempFiles);
-          });
-
-          await act(async () => {
-            await wrapper.find("QuestionPage").simulate("save");
-          });
-
-          expect(appLogic.portalFlow.goToNextPage).toHaveBeenCalled();
-        });
-
-        it("does not navigate the user to the next page if there are errors", async () => {
-          jest
-            .spyOn(appLogic.documents, "attach")
-            .mockImplementationOnce(() => [
-              Promise.resolve({ success: false }),
-            ]);
-          render();
-          const tempFiles = [makeFile()];
-
-          await act(async () => {
-            await wrapper.find("FileCardList").simulate("change", tempFiles);
-          });
-
-          await act(async () => {
-            await wrapper.find("QuestionPage").simulate("save");
-          });
-
-          expect(appLogic.portalFlow.goToNextPage).not.toHaveBeenCalled();
-        });
-
-        it("displays successfully uploaded files as unremovable file cards", async () => {
-          claim = new MockBenefitsApplicationBuilder()
-            .medicalLeaveReason()
-            .create();
-
-          const attachSpy = jest
-            .spyOn(appLogic.documents, "attach")
-            .mockImplementation(
-              jest.fn(() => {
-                return [
-                  Promise.resolve({ success: true }),
-                  Promise.resolve({ success: true }),
-                  Promise.resolve({ success: true }),
-                ];
-              })
-            );
-
-          render();
-
-          const tempFiles = [
-            makeFile({ name: "File1" }),
-            makeFile({ name: "File2" }),
-            makeFile({ name: "File3" }),
-          ];
-
-          await act(async () => {
-            await wrapper.find("FileCardList").simulate("change", tempFiles);
-          });
-
-          let removableFileCards = wrapper
-            .find("FileCardList")
-            .dive()
-            .findWhere(
-              (component) =>
-                component.name() === "FileCard" && component.prop("file")
-            );
-          let unremovableFileCards = wrapper
-            .find("FileCardList")
-            .dive()
-            .findWhere(
-              (component) =>
-                component.name() === "FileCard" && component.prop("document")
-            );
-          expect(removableFileCards).toHaveLength(3);
-          expect(unremovableFileCards).toHaveLength(0);
-
-          await act(async () => {
-            await wrapper.find("QuestionPage").simulate("save");
-          });
-
-          const newDocuments = [
-            new Document({
-              document_type: DocumentType.identityVerification,
-              application_id: claim.application_id,
-              created_at: "2020-10-12",
-              fineos_document_id: uniqueId(),
-            }),
-            new Document({
-              document_type: DocumentType.identityVerification,
-              application_id: claim.application_id,
-              created_at: "2020-10-12",
-              fineos_document_id: uniqueId(),
-            }),
-            new Document({
-              document_type: DocumentType.identityVerification,
-              application_id: claim.application_id,
-              created_at: "2020-10-12",
-              fineos_document_id: uniqueId(),
-            }),
-          ];
-
-          wrapper.setProps({ documents: newDocuments }); // force the documents to update because we don't have access to the collection in useDocumentsLogic
-
-          removableFileCards = wrapper
-            .find("FileCardList")
-            .dive()
-            .findWhere(
-              (component) =>
-                component.name() === "FileCard" && component.prop("file")
-            );
-          unremovableFileCards = wrapper
-            .find("FileCardList")
-            .dive()
-            .findWhere(
-              (component) =>
-                component.name() === "FileCard" && component.prop("document")
-            );
-          expect(removableFileCards).toHaveLength(0);
-          expect(unremovableFileCards).toHaveLength(3);
-
-          attachSpy.mockRestore();
-        });
-
-        it("displays unsucessfully uploaded files as removable file cards", async () => {
-          claim = new MockBenefitsApplicationBuilder()
-            .medicalLeaveReason()
-            .create();
-
-          const attachSpy = jest
-            .spyOn(appLogic.documents, "attach")
-            .mockImplementation(
-              jest.fn(() => {
-                return [
-                  Promise.resolve({ success: true }),
-                  Promise.resolve({ success: true }),
-                  Promise.resolve({ success: false }),
-                ];
-              })
-            );
-
-          render();
-
-          const tempFiles = [
-            makeFile({ name: "File1" }),
-            makeFile({ name: "File2" }),
-            makeFile({ name: "File3" }),
-          ];
-
-          await act(async () => {
-            await wrapper.find("FileCardList").simulate("change", tempFiles);
-          });
-
-          let removableFileCards = wrapper
-            .find("FileCardList")
-            .dive()
-            .findWhere(
-              (component) =>
-                component.name() === "FileCard" && component.prop("file")
-            );
-          let unremovableFileCards = wrapper
-            .find("FileCardList")
-            .dive()
-            .findWhere(
-              (component) =>
-                component.name() === "FileCard" && component.prop("document")
-            );
-          expect(removableFileCards).toHaveLength(3);
-          expect(unremovableFileCards).toHaveLength(0);
-
-          await act(async () => {
-            await wrapper.find("QuestionPage").simulate("save");
-          });
-
-          const newDocuments = [
-            new Document({
-              document_type: DocumentType.identityVerification,
-              application_id: claim.application_id,
-              created_at: "2020-10-12",
-              fineos_document_id: uniqueId(),
-            }),
-            new Document({
-              document_type: DocumentType.identityVerification,
-              application_id: claim.application_id,
-              created_at: "2020-10-12",
-              fineos_document_id: uniqueId(),
-            }),
-          ];
-
-          wrapper.setProps({ documents: newDocuments }); // force the documents to update because we don't have access to the collection in useDocumentsLogic
-
-          removableFileCards = wrapper
-            .find("FileCardList")
-            .dive()
-            .findWhere(
-              (component) =>
-                component.name() === "FileCard" && component.prop("file")
-            );
-          unremovableFileCards = wrapper
-            .find("FileCardList")
-            .dive()
-            .findWhere(
-              (component) =>
-                component.name() === "FileCard" && component.prop("document")
-            );
-          expect(removableFileCards).toHaveLength(1);
-          expect(unremovableFileCards).toHaveLength(2);
-
-          attachSpy.mockRestore();
-        });
+      await act(async () => {
+        await userEvent.upload(
+          screen.getByLabelText(/Choose files/),
+          tempFiles
+        );
       });
 
-      it("redirects to the Applications page when the claim has been completed", async () => {
-        claim = new MockBenefitsApplicationBuilder().completed().create();
-        appLogic.benefitsApplications.benefitsApplications =
-          new BenefitsApplicationCollection([claim]);
-        render();
-        // Add files to the page state
-        const tempFiles = [makeFile(), makeFile()];
-        await act(async () => {
-          await wrapper.find("FileCardList").simulate("change", tempFiles);
-        });
+      userEvent.click(
+        screen.getByRole("button", { name: "Save and continue" })
+      );
 
-        await act(async () => {
-          await wrapper.find("QuestionPage").simulate("save");
-        });
+      await waitFor(() => {
+        expect(attach).toHaveBeenCalledWith(
+          claim.application_id,
+          expect.arrayContaining(expectedTempFiles),
+          expect.any(String),
+          false
+        );
+      });
+    });
 
-        expect(appLogic.portalFlow.goToNextPage).toHaveBeenCalledWith(
+    it("navigates the user to the next page if there are no errors", async () => {
+      const tempFiles = [makeFile(), makeFile(), makeFile()];
+      attach = jest.fn().mockImplementation(
+        jest.fn(() => {
+          return [
+            Promise.resolve({ success: true }),
+            Promise.resolve({ success: true }),
+            Promise.resolve({ success: true }),
+          ];
+        })
+      );
+      setup(null, null, cbHasLoadedClaimDocsTrue);
+
+      await act(async () => {
+        await userEvent.upload(
+          screen.getByLabelText(/Choose files/),
+          tempFiles
+        );
+      });
+
+      expect(
+        screen.getAllByRole("button", { name: "Remove file" })[0]
+      ).toBeEnabled();
+      userEvent.click(
+        screen.getByRole("button", { name: "Save and continue" })
+      );
+      expect(
+        screen.getAllByRole("button", { name: "Remove file" })[0]
+      ).toBeDisabled();
+
+      await waitFor(() => {
+        expect(goToNextPage).toHaveBeenCalled();
+      });
+    });
+
+    it("does not navigate the user to the next page if there are errors", async () => {
+      attach = jest.fn().mockImplementation(
+        jest.fn(() => {
+          return [Promise.resolve({ success: false })];
+        })
+      );
+      const tempFiles = [makeFile()];
+      setup(null, null, cbHasLoadedClaimDocsTrue);
+
+      await act(async () => {
+        await userEvent.upload(
+          screen.getByLabelText(/Choose files/),
+          tempFiles
+        );
+      });
+
+      userEvent.click(
+        screen.getByRole("button", { name: "Save and continue" })
+      );
+      await waitFor(() => {
+        expect(goToNextPage).not.toHaveBeenCalled();
+      });
+    });
+
+    it("displays successfully uploaded files as unremovable file cards", async () => {
+      const claim = new MockBenefitsApplicationBuilder()
+        .medicalLeaveReason()
+        .create();
+
+      attach = jest.fn().mockImplementation(
+        jest.fn(() => {
+          return [
+            Promise.resolve({ success: true }),
+            Promise.resolve({ success: true }),
+            Promise.resolve({ success: true }),
+          ];
+        })
+      );
+
+      const tempFiles = [
+        makeFile({ name: "File1" }),
+        makeFile({ name: "File2" }),
+        makeFile({ name: "File3" }),
+      ];
+
+      setup(claim, null, cbHasLoadedClaimDocsTrue);
+
+      await act(async () => {
+        await userEvent.upload(
+          screen.getByLabelText(/Choose files/),
+          tempFiles
+        );
+      });
+      await waitFor(() => {
+        expect(screen.getAllByText(/File /)).toHaveLength(3);
+        expect(
+          screen.queryByText(/You can’t remove files previously uploaded./)
+        ).not.toBeInTheDocument();
+      });
+
+      userEvent.click(
+        screen.getByRole("button", { name: "Save and continue" })
+      );
+
+      await waitFor(() => {
+        expect(screen.queryByText(/File [0-9]/)).not.toBeInTheDocument();
+      });
+    });
+
+    it("displays unsucessfully uploaded files as removable file cards", async () => {
+      const claim = new MockBenefitsApplicationBuilder()
+        .medicalLeaveReason()
+        .create();
+      attach = jest.fn().mockImplementation(
+        jest.fn(() => {
+          return [
+            Promise.resolve({ success: true }),
+            Promise.resolve({ success: true }),
+            Promise.resolve({ success: false }),
+          ];
+        })
+      );
+
+      setup(claim, null, cbHasLoadedClaimDocsTrue);
+
+      const tempFiles = [
+        makeFile({ name: "File1" }),
+        makeFile({ name: "File2" }),
+        makeFile({ name: "File3" }),
+      ];
+
+      await act(async () => {
+        await userEvent.upload(
+          screen.getByLabelText(/Choose files/),
+          tempFiles
+        );
+      });
+
+      await waitFor(() => {
+        expect(
+          screen.getAllByRole("heading", { name: /File [0-9]/ })
+        ).toHaveLength(3);
+        expect(
+          screen.queryByText(/You can’t remove files previously uploaded./)
+        ).not.toBeInTheDocument();
+      });
+
+      userEvent.click(
+        screen.getByRole("button", { name: "Save and continue" })
+      );
+      await waitFor(() => {
+        expect(
+          screen.getByRole("heading", { name: /File/ })
+        ).toBeInTheDocument();
+      });
+    });
+
+    it("redirects to the Applications page when the claim has been completed", async () => {
+      const claim = new MockBenefitsApplicationBuilder()
+        .medicalLeaveReason()
+        .create();
+      attach = jest.fn().mockImplementation(
+        jest.fn(() => {
+          return [
+            Promise.resolve({ success: true }),
+            Promise.resolve({ success: true }),
+          ];
+        })
+      );
+
+      setup(claim, null, cbHasLoadedClaimDocsTrue);
+      // Add files to the page state
+      const tempFiles = [makeFile(), makeFile()];
+      await act(async () => {
+        await userEvent.upload(
+          screen.getByLabelText(/Choose files/),
+          tempFiles
+        );
+      });
+      userEvent.click(
+        screen.getByRole("button", { name: "Save and continue" })
+      );
+      await waitFor(() => {
+        expect(goToNextPage).toHaveBeenCalledWith(
           { claim },
           {
             claim_id: claim.application_id,
@@ -421,109 +398,134 @@ describe("UploadId", () => {
           }
         );
       });
+    });
 
-      describe("when there are previously loaded documents", () => {
-        it("renders the FileCardList with documents", async () => {
-          const newDoc = new Document({
-            document_type: DocumentType.identityVerification,
-            application_id: claim.application_id,
-            created_at: "2020-10-12",
-            fineos_document_id: "testId",
+    describe("when there are previously loaded documents", () => {
+      it("renders the FileCardList with documents", () => {
+        const cb = (appLogic) => {
+          appLogic.documents.hasLoadedClaimDocuments = jest.fn(() => {
+            return Promise.resolve(true);
           });
-          appLogic.documents.documents =
-            await appLogic.documents.documents.addItem(newDoc);
-          render();
-          expect(wrapper.find("FileCardList").props().documents).toHaveLength(
-            1
+          appLogic.documents.documents = new DocumentCollection([
+            {
+              application_id: "mock_application_id",
+              fineos_document_id: uuidv4(),
+              document_type: DocumentType.identityVerification,
+              created_at: "2020-11-26",
+            },
+          ]);
+        };
+        setup(null, null, cb);
+        expect(screen.getByText(/File/)).toBeInTheDocument();
+      });
+
+      it("makes API request when there are new files", async () => {
+        const claim = new MockBenefitsApplicationBuilder().create();
+        const cb = (appLogic) => {
+          appLogic.documents.hasLoadedClaimDocuments = jest.fn(() => {
+            return Promise.resolve(true);
+          });
+          appLogic.documents.documents = new DocumentCollection([
+            {
+              application_id: "mock_application_id",
+              fineos_document_id: uuidv4(),
+              document_type: DocumentType.identityVerification,
+              created_at: "2020-11-26",
+            },
+          ]);
+        };
+        setup(claim, null, cb);
+        const tempFiles = [
+          makeFile({ name: "file1" }),
+          makeFile({ name: "file2" }),
+        ];
+
+        await act(async () => {
+          await userEvent.upload(
+            screen.getByLabelText(/Choose files/),
+            tempFiles
           );
         });
+        userEvent.click(
+          screen.getByRole("button", { name: "Save and continue" })
+        );
 
-        it("makes API request when there are new files", async () => {
-          claim = new MockBenefitsApplicationBuilder().create();
-          appLogic.documents.documents = appLogic.documents.documents.addItem(
-            new Document({
-              document_type: DocumentType.identityVerification,
-              application_id: claim.application_id,
-              created_at: "2020-10-12",
-              fineos_document_id: "testId",
-            })
-          );
-          render();
-
-          // Add files to the page state
-          const tempFiles = [
-            makeFile({ name: "file1" }),
-            makeFile({ name: "file2" }),
-          ];
-
-          await act(async () => {
-            await wrapper.find("FileCardList").simulate("change", tempFiles);
-          });
-
-          await act(async () => {
-            await wrapper.find("QuestionPage").simulate("save");
-          });
-
-          expect(appLogic.documents.attach).toHaveBeenCalledWith(
+        await waitFor(() => {
+          expect(attach).toHaveBeenCalledWith(
             claim.application_id,
             expect.arrayContaining(expectedTempFiles),
             expect.any(String),
             false
           );
         });
+      });
 
-        it("skips an API request if there are no new files added", async () => {
-          appLogic.documents.documents = appLogic.documents.documents.addItem(
-            new Document({
-              document_type: DocumentType.identityVerification,
-              application_id: claim.application_id,
-              created_at: "2020-10-12",
-              fineos_document_id: "testId",
-            })
-          );
-
-          render();
-
-          await act(async () => {
-            await wrapper.find("QuestionPage").simulate("save");
+      it("skips an API request if there are no new files added", async () => {
+        const cb = (appLogic) => {
+          appLogic.documents.hasLoadedClaimDocuments = jest.fn(() => {
+            return Promise.resolve(true);
           });
+          appLogic.documents.documents = new DocumentCollection([
+            {
+              application_id: "mock_application_id",
+              fineos_document_id: uuidv4(),
+              document_type: DocumentType.identityVerification,
+              created_at: "2020-11-26",
+            },
+          ]);
+        };
 
-          expect(appLogic.documents.attach).not.toHaveBeenCalled();
-          expect(appLogic.portalFlow.goToNextPage).toHaveBeenCalledTimes(1);
+        setup(null, null, cb);
+
+        userEvent.click(
+          screen.getByRole("button", { name: "Save and continue" })
+        );
+        await waitFor(() => {
+          expect(attach).not.toHaveBeenCalled();
+          expect(goToNextPage).toHaveBeenCalledTimes(1);
         });
       });
     });
-  });
 
-  describe("there is an error while loading document", () => {
-    it("renders alert", () => {
-      ({ wrapper } = renderWithAppLogic(UploadId, {
-        claimAttrs: claim,
-        diveLevels,
-        hasLoadingDocumentsError: true,
-      }));
-      expect(wrapper.exists("Alert")).toBe(true);
+    it("renders alert when there is an error loading documents", () => {
+      const cb = (appLogic) => {
+        appLogic.appErrors = new AppErrorInfoCollection([
+          new AppErrorInfo({
+            meta: { application_id: "mock_application_id" },
+            name: "DocumentsLoadError",
+          }),
+        ]);
+      };
+      setup(null, null, cb);
+      expect(
+        screen.getByText(
+          /An error was encountered while checking your application for documents./
+        )
+      ).toBeInTheDocument();
     });
-  });
 
-  it("When uploading additional docs", async () => {
-    ({ appLogic, wrapper } = renderWithAppLogic(UploadId, {
-      claimAttrs: new MockBenefitsApplicationBuilder().create(),
-      diveLevels,
-      props: {
+    it("When uploading additional docs", async () => {
+      const claim = new MockBenefitsApplicationBuilder()
+        .medicalLeaveReason()
+        .create();
+      attach = jest.fn();
+
+      setup(null, {
         query: { claim_id: claim.application_id, additionalDoc: "true" },
-      },
-    }));
+      });
 
-    await act(async () => {
-      await wrapper.find("QuestionPage").simulate("save");
+      userEvent.click(
+        screen.getByRole("button", { name: "Save and continue" })
+      );
+
+      await waitFor(() => {
+        expect(attach).toHaveBeenCalledWith(
+          claim.application_id,
+          [],
+          DocumentType.identityVerification,
+          true
+        );
+      });
     });
-
-    expect(appLogic.documents.attach).toHaveBeenCalledWith(
-      claim.application_id,
-      [],
-      "Identification Proof",
-      true
-    );
   });
 });

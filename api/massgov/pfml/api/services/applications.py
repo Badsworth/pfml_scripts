@@ -172,10 +172,14 @@ def process_masked_phone_number(
         if existing_phone and existing_phone.phone_number:
             # convert existing phone (in E.164) to masked version of front-end format (***-***-####) to compare masked values
             parsed_existing_phone_number = phonenumbers.parse(existing_phone.phone_number)
-            locally_formatted_existing_number = phonenumbers.format_number(
-                parsed_existing_phone_number, region_code_for_number(parsed_existing_phone_number)
-            )
-            masked_existing_phone_number = mask.mask_phone(locally_formatted_existing_number)
+            region_code = region_code_for_number(parsed_existing_phone_number)
+            if region_code:
+                locally_formatted_number = phonenumbers.format_in_original_format(
+                    parsed_existing_phone_number, region_code
+                )
+                masked_existing_phone_number = mask.mask_phone(locally_formatted_number)
+            else:
+                masked_existing_phone_number = mask.mask_phone(existing_phone.phone_number)
 
             errors += process_partially_masked_field(
                 field_key="phone_number",
@@ -847,21 +851,6 @@ def set_previous_leaves(
             )
 
         db_session.add(new_previous_leave)
-
-
-def remove_employer_benefit(db_session: db.Session, employer_benefit: EmployerBenefit) -> None:
-    db_session.delete(employer_benefit)
-    db_session.commit()
-
-
-def remove_other_income(db_session: db.Session, other_income: OtherIncome) -> None:
-    db_session.delete(other_income)
-    db_session.commit()
-
-
-def remove_previous_leave(db_session: db.Session, previous_leave: PreviousLeave) -> None:
-    db_session.delete(previous_leave)
-    db_session.commit()
 
 
 def add_or_update_phone(

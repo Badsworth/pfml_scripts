@@ -3,9 +3,6 @@ import pytest
 import massgov.pfml.db.lookups as lookups
 import massgov.pfml.db.models.applications as application_models
 
-# every test in here requires real resources
-pytestmark = pytest.mark.integration
-
 
 def test_by_value(test_db_session):
     # setup

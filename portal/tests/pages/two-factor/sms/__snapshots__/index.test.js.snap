@@ -1,0 +1,59 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Two-factor SMS Setup renders landing page content 1`] = `
+<form
+  class="usa-form"
+  method="post"
+>
+  <h1
+    class="js-title margin-top-0 margin-bottom-2 font-heading-lg line-height-sans-2"
+    tabindex="-1"
+  >
+    Make your account more secure
+  </h1>
+  <p
+    class="usa-intro"
+  >
+    We’ll send a 6-digit code by text message (SMS) to secure your account. This step is optional, but we can only show personal information like tax documents if you set this up.
+    <br />
+    <br />
+    If you skip this step now, you can secure your account later by going to the “Setting: Security” page.
+  </p>
+  <div
+    class="usa-form-group"
+  >
+    <label
+      class="usa-label text-bold font-heading-xs measure-5"
+      for="InputText1"
+      id="InputText1_label"
+    >
+      Phone number
+    </label>
+    <div
+      class=""
+    >
+      <input
+        aria-labelledby="InputText1_label InputText1_hint InputText1_error"
+        class="usa-input maxw-mobile-lg"
+        id="InputText1"
+        inputmode="numeric"
+        name="phone_number"
+        type="tel"
+        value=""
+      />
+    </div>
+  </div>
+  <button
+    class="usa-button position-relative display-block"
+    type="submit"
+  >
+    Save and continue
+  </button>
+  <button
+    class="usa-button position-relative display-block margin-top-1 usa-button--outline bg-white"
+    type="button"
+  >
+    Skip this step
+  </button>
+</form>
+`;

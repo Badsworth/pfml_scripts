@@ -23,6 +23,15 @@ locals {
     { name : "DB_PASSWORD", valueFrom : "/service/${local.app_name}/${var.environment_name}/db-password" }
   ]
 
+  # Readonly DB Access
+
+  db_read_only_access = [
+    { name : "DB_HOST", value : data.aws_db_instance.default.address },
+    { name : "DB_NAME", value : data.aws_db_instance.default.db_name },
+    { name : "DB_USERNAME", value : "pfml_svc_readonly" },
+    { name : "DB_PASSWORD", valueFrom : "/service/${local.app_name}/${var.environment_name}/db-password-readonly" }
+  ]
+
   # Provides access to the FINEOS APIs
   fineos_api_access = [
     { name : "FINEOS_CLIENT_CUSTOMER_API_URL", value : var.fineos_client_customer_api_url },
@@ -41,6 +50,7 @@ locals {
     { name : "FINEOS_AWS_IAM_ROLE_EXTERNAL_ID", value : var.fineos_aws_iam_role_external_id },
     { name : "FINEOS_DATA_IMPORT_PATH", value : var.fineos_data_import_path },
     { name : "FINEOS_DATA_EXPORT_PATH", value : var.fineos_data_export_path },
+    { name : "FINEOS_ADHOC_DATA_EXPORT_PATH", value : var.fineos_adhoc_data_export_path },
     # This should just be fineos_data_export_path but we'll roll with this for now
     # to avoid breaking the camel's back
     { name : "FINEOS_FOLDER_PATH", value : var.fineos_import_employee_updates_input_directory_path }
@@ -49,19 +59,10 @@ locals {
   # Provides access to EOLWD's SFTP server (MoveIT)
   eolwd_moveit_access = [
     { name : "EOLWD_MOVEIT_SFTP_URI", value : var.eolwd_moveit_sftp_uri },
-    { name : "CTR_MOVEIT_SSH_KEY", valueFrom : "/service/${local.app_name}-comptroller/${var.environment_name}/eolwd-moveit-ssh-key" },
-    { name : "CTR_MOVEIT_SSH_KEY_PASSWORD", valueFrom : "/service/${local.app_name}-comptroller/${var.environment_name}/eolwd-moveit-ssh-key-password" },
     # Duplicate this for now since reductions has a different name
     { name : "MOVEIT_SFTP_URI", value : var.eolwd_moveit_sftp_uri },
     { name : "MOVEIT_SSH_KEY", valueFrom : "/service/${local.app_name}-comptroller/${var.environment_name}/eolwd-moveit-ssh-key" },
     { name : "MOVEIT_SSH_KEY_PASSWORD", valueFrom : "/service/${local.app_name}-comptroller/${var.environment_name}/eolwd-moveit-ssh-key-password" }
-  ]
-
-  # Provides access to CTR datamart
-  datamart_access = [
-    { name : "CTR_DATA_MART_HOST", value : var.ctr_data_mart_host },
-    { name : "CTR_DATA_MART_USERNAME", value : var.ctr_data_mart_username },
-    { name : "CTR_DATA_MART_PASSWORD", valueFrom : "/service/${local.app_name}/${var.environment_name}/ctr-data-mart-password" }
   ]
 
   # S3 path configurations for PUB
@@ -78,14 +79,27 @@ locals {
     { name : "PFML_PAYMENT_REJECTS_ARCHIVE_PATH", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/audit" }
   ]
 
-  # Moveit and S3 path configurations for reductions
+  # MOVEit and S3 path configurations for reductions
+  #
+  # These environment variables are from the perspective of the API system,
+  # namely:
+  # "inbound" = "where does API look for files coming from DIA/DUA"
+  # "outbound" = "where does API put files to send to DIA/DUA"
+  #
+  # The actual paths in MOVEit may not always correspond to the API perspective.
+  #
+  # *Notably, the DUA paths in MOVEit are reversed from the API point of view.*
+  #
+  # The paths may be made consistent in the future:
+  # https://lwd.atlassian.net/browse/API-1626
   reductions_folders = [
     { name : "MOVEIT_DIA_INBOUND_PATH", value : "/DFML/DIA/Inbound" },
     { name : "MOVEIT_DUA_INBOUND_PATH", value : "/DFML/DUA/Outbound" },
     { name : "MOVEIT_DIA_OUTBOUND_PATH", value : "/DFML/DIA/Outbound" },
     { name : "MOVEIT_DUA_OUTBOUND_PATH", value : "/DFML/DUA/Inbound" },
+    { name : "MOVEIT_DIA_ARCHIVE_PATH", value : "/DFML/DIA/Archive" },
+    { name : "MOVEIT_DUA_ARCHIVE_PATH", value : "/DFML/DUA/Archive" },
     { name : "S3_BUCKET", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/" }
-
   ]
 
   # Basic configuration for sender email
@@ -97,8 +111,6 @@ locals {
 
   # Configuration for email sending + destinations required for payments
   emails_ctr = concat(local.emails, [
-    { name : "CTR_GAX_BIEVNT_EMAIL_ADDRESS", value : var.ctr_gax_bievnt_email_address },
-    { name : "CTR_VCC_BIEVNT_EMAIL_ADDRESS", value : var.ctr_vcc_bievnt_email_address },
     { name : "DFML_PROJECT_MANAGER_EMAIL_ADDRESS", value : var.dfml_project_manager_email_address },
     { name : "DFML_BUSINESS_OPERATIONS_EMAIL_ADDRESS", value : var.dfml_business_operations_email_address },
   ])
@@ -107,4 +119,17 @@ locals {
   emails_reductions = concat(local.emails, [
     { name : "AGENCY_REDUCTIONS_EMAIL_ADDRESS", value : var.agency_reductions_email_address }
   ])
+
+  # Provide access to the RMV APIs
+  rmv_api_access = [
+    { name : "RMV_CLIENT_BASE_URL", value : var.rmv_client_base_url },
+    { name : "RMV_CLIENT_CERTIFICATE_BINARY_ARN", value : var.rmv_client_certificate_binary_arn },
+    { name : "RMV_CLIENT_CERTIFICATE_PASSWORD", valueFrom : "/service/${local.app_name}/${var.environment_name}/rmv_client_certificate_password" },
+    { name : "RMV_API_BEHAVIOR", value : var.rmv_api_behavior }
+  ]
+
+  # Environement variable specifically for the .NET container in tasks_1099.tf
+  apps_netcore_env = [
+    { name : "ASPNETCORE_ENVIRONMENT", value : module.constants.env_var_mappings[var.environment_name] }
+  ]
 }

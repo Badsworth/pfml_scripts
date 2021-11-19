@@ -1,7 +1,7 @@
 # Lambda that runs an ECS task.
 #
 locals {
-  newrelic_log_ingestion_layer = "arn:aws:lambda:us-east-1:451483290750:layer:NewRelicPython38:16"
+  newrelic_log_ingestion_layer = "arn:aws:lambda:us-east-1:451483290750:layer:NewRelicPython39:1"
 }
 
 resource "aws_lambda_function" "task_trigger" {
@@ -12,7 +12,7 @@ resource "aws_lambda_function" "task_trigger" {
   handler          = "newrelic_lambda_wrapper.handler" # the entrypoint of the newrelic instrumentation layer
   role             = aws_iam_role.task_trigger.arn
   layers           = [local.newrelic_log_ingestion_layer]
-  runtime          = "python3.8"
+  runtime          = "python3.9"
   publish          = "false"
   timeout          = 60 # 1 minute
 
@@ -41,11 +41,11 @@ resource "aws_lambda_function" "task_trigger" {
 
 data "archive_file" "task_trigger_lambda" {
   type        = "zip"
-  output_path = "${abspath(path.module)}/.zip/${var.task_name}_handler.zip"
+  output_path = "${path.module}/.zip/${var.task_name}_handler.zip"
 
   source {
     filename = "handler.py"
-    content  = file("${abspath(path.module)}/handler.py")
+    content  = file("${path.module}/handler.py")
   }
 }
 

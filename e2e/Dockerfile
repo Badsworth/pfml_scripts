@@ -1,7 +1,7 @@
 #
 # Dockerfile for creating image
 # to run LST in AWS Fargate
-# 
+#
 FROM node:lts-alpine3.14 AS builder
 WORKDIR /e2e
 ENV CYPRESS_INSTALL_BINARY=0
@@ -13,6 +13,7 @@ COPY ./ ./
 RUN npm run artillery:bundle
 
 FROM zenika/alpine-chrome:with-node
+ENV ARTILLERY_ROOT=/usr/src/app
 ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD 1
 ENV PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium-browser
 WORKDIR /usr/src/app

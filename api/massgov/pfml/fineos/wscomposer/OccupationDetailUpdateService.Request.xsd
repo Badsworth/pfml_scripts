@@ -1,33 +1,42 @@
-<?xml version="1.0" encoding="utf-8"?>
-<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
-xmlns="http://www.fineos.com/wscomposer/OccupationDetailUpdateService"
-targetNamespace="http://www.fineos.com/wscomposer/OccupationDetailUpdateService"
-xmlns:tns="http://www.fineos.com/wscomposer/OccupationDetailUpdateService" elementFormDefault="unqualified">
+<?xml version="1.0" ?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="http://www.fineos.com/wscomposer/OccupationDetailUpdateService" xmlns:tns="http://www.fineos.com/wscomposer/OccupationDetailUpdateService" targetNamespace="http://www.fineos.com/wscomposer/OccupationDetailUpdateService" elementFormDefault="unqualified">
   <xs:element name="WSUpdateRequest">
     <xs:complexType>
       <xs:sequence>
-        <xs:element maxOccurs="1" name="config-name" type="xs:string" />
-        <xs:element name="update-data" type="tns:OccupationDetailUpdateService" />
+        <xs:element maxOccurs="1" name="config-name" type="xs:string"/>
+        <xs:element name="update-data" type="tns:OccupationDetailUpdateService"/>
       </xs:sequence>
     </xs:complexType>
   </xs:element>
   <xs:complexType name="OccupationDetailUpdateService">
     <xs:sequence>
       <xs:sequence minOccurs="0" maxOccurs="unbounded">
-        <xs:element name="OCOccupation" type="tns:OCOccupation" />
+        <xs:element name="OCOccupation" type="tns:OCOccupation"/>
       </xs:sequence>
       <xs:element name="additional-data-set" minOccurs="0">
+            
         <xs:complexType>
+                  
           <xs:sequence>
+                        
             <xs:element name="additional-data" minOccurs="0" maxOccurs="unbounded">
+                              
               <xs:complexType>
+                                    
                 <xs:sequence>
-                  <xs:element name="name" type="xs:string" />
-                  <xs:element name="value" type="xs:string" />
+                                          
+                  <xs:element name="name" type="xs:string"/>
+                                          
+                  <xs:element name="value" type="xs:string"/>
+                                      
                 </xs:sequence>
+                                
               </xs:complexType>
+                          
             </xs:element>
+                    
           </xs:sequence>
+              
         </xs:complexType>
       </xs:element>
     </xs:sequence>
@@ -59,74 +68,67 @@ xmlns:tns="http://www.fineos.com/wscomposer/OccupationDetailUpdateService" eleme
       </xs:element>
       <xs:element name="persistent-oid" minOccurs="0" maxOccurs="1" type="tns:OID">
         <xs:annotation>
-          <xs:documentation>Shadow persistent field for OID. OID of the persistent BO the transient BO
-          represents</xs:documentation>
+          <xs:documentation>Shadow persistent field for OID. OID of the persistent BO the transient BO represents</xs:documentation>
         </xs:annotation>
       </xs:element>
       <xs:element name="persistent-boeversion" minOccurs="0" maxOccurs="1" type="xs:long">
         <xs:annotation>
-          <xs:documentation>Shadow persistent field for BOEVersion. BOEVersion of the persistent BO the transient BO
-          represents</xs:documentation>
+          <xs:documentation>Shadow persistent field for BOEVersion. BOEVersion of the persistent BO the transient BO represents</xs:documentation>
         </xs:annotation>
       </xs:element>
       <xs:element name="AltEmploymentCat" minOccurs="1" maxOccurs="1" type="tns:FineosEnum">
         <xs:annotation>
-          <xs:documentation>Additional employment category field to hold alternative job classifications, e.g. an Equal
-          Employment Opportunity Commission (EEOC) job classification code.</xs:documentation>
+          <xs:documentation>Additional employment category field to hold alternative job classifications, e.g. an Equal Employment Opportunity Commission (EEOC) job classification code. </xs:documentation>
         </xs:annotation>
       </xs:element>
       <xs:element name="CompensationMethod" minOccurs="1" maxOccurs="1" type="tns:FineosEnum">
         <xs:annotation>
-          <xs:documentation>Compensation method of employment to support automatic calculation of employee's benefit
-          for a requested paid leave.</xs:documentation>
+          <xs:documentation>Compensation method of employment to support automatic calculation of employee's benefit for a requested paid leave.</xs:documentation>
         </xs:annotation>
       </xs:element>
       <xs:element name="DateJobBegan" minOccurs="1" maxOccurs="1" nillable="true" type="xs:dateTime">
         <xs:annotation>
-          <xs:documentation>Date employment commenced.</xs:documentation>
+          <xs:documentation>Date employment commenced. </xs:documentation>
         </xs:annotation>
       </xs:element>
       <xs:element name="DateJobEnded" minOccurs="1" maxOccurs="1" nillable="true" type="xs:dateTime">
         <xs:annotation>
-          <xs:documentation>Date employment ended.</xs:documentation>
+          <xs:documentation>Date employment ended. </xs:documentation>
         </xs:annotation>
       </xs:element>
       <xs:element name="DaysWorkedPerWeek" minOccurs="1" maxOccurs="1" type="xs:decimal">
         <xs:annotation>
-          <xs:documentation>Average number of days worked per week for this occupation.</xs:documentation>
+          <xs:documentation>Average number of days worked per week for this occupation. </xs:documentation>
         </xs:annotation>
       </xs:element>
       <xs:element name="EmpLocationCode" minOccurs="1" maxOccurs="1" type="tns:FineosEnum">
         <xs:annotation>
-          <xs:documentation>Geographical location of empoyment from enumerated list.</xs:documentation>
+          <xs:documentation>Geographical location of empoyment from enumerated list. </xs:documentation>
         </xs:annotation>
       </xs:element>
       <xs:element name="EmployeeID" minOccurs="1" maxOccurs="1">
         <xs:annotation>
-          <xs:documentation>The ID of an employee in respect of its employer. Not guaranteed to be
-          unique.</xs:documentation>
+          <xs:documentation>The ID of an employee in respect of its employer. Not guaranteed to be unique.</xs:documentation>
         </xs:annotation>
         <xs:simpleType>
           <xs:restriction base="xs:string">
-            <xs:maxLength value="50" />
+            <xs:maxLength value="50"/>
           </xs:restriction>
         </xs:simpleType>
       </xs:element>
       <xs:element name="Employer" minOccurs="1" maxOccurs="1">
         <xs:annotation>
-          <xs:documentation>The name of the employer for this employment when the employer is not identified as a
-          Party.</xs:documentation>
+          <xs:documentation>The name of the employer for this employment when the employer is not identified as a Party. </xs:documentation>
         </xs:annotation>
         <xs:simpleType>
           <xs:restriction base="xs:string">
-            <xs:maxLength value="100" />
+            <xs:maxLength value="100"/>
           </xs:restriction>
         </xs:simpleType>
       </xs:element>
       <xs:element name="EmploymentCat" minOccurs="1" maxOccurs="1" type="tns:FineosEnum">
         <xs:annotation>
-          <xs:documentation>Category of employment from enumerated list. Usually stored part time or full
-          time.</xs:documentation>
+          <xs:documentation>Category of employment from enumerated list. Usually stored part time or full time. </xs:documentation>
         </xs:annotation>
       </xs:element>
       <xs:element name="EmploymentStatus" minOccurs="1" maxOccurs="1" type="tns:FineosEnum">
@@ -136,89 +138,86 @@ xmlns:tns="http://www.fineos.com/wscomposer/OccupationDetailUpdateService" eleme
       </xs:element>
       <xs:element name="EmploymentTitle" minOccurs="1" maxOccurs="1" type="tns:FineosEnum">
         <xs:annotation>
-          <xs:documentation>Used to describe the position of the employee for this occupation (e.g.: Analyst,
-          Developer, Customer Care Representative)</xs:documentation>
+          <xs:documentation>Used to describe the position of the employee for this occupation (e.g.: Analyst, Developer, Customer Care Representative)</xs:documentation>
         </xs:annotation>
       </xs:element>
       <xs:element name="EndPosCode" minOccurs="1" maxOccurs="1" type="tns:FineosEnum">
         <xs:annotation>
-          <xs:documentation>Reason employment ended from enumerated list.</xs:documentation>
+          <xs:documentation>Reason employment ended from enumerated list. </xs:documentation>
         </xs:annotation>
       </xs:element>
       <xs:element name="EndPosReason" minOccurs="1" maxOccurs="1">
         <xs:annotation>
-          <xs:documentation>Reason employment ended.</xs:documentation>
+          <xs:documentation>Reason employment ended. </xs:documentation>
         </xs:annotation>
         <xs:simpleType>
           <xs:restriction base="xs:string">
-            <xs:maxLength value="1000" />
+            <xs:maxLength value="1000"/>
           </xs:restriction>
         </xs:simpleType>
       </xs:element>
       <xs:element name="HrsWrkedPerWk" minOccurs="1" maxOccurs="1" type="xs:decimal">
         <xs:annotation>
-          <xs:documentation>Number of hours worked per week.</xs:documentation>
+          <xs:documentation>Number of hours worked per week. </xs:documentation>
         </xs:annotation>
       </xs:element>
       <xs:element name="JobDesc" minOccurs="1" maxOccurs="1">
         <xs:annotation>
-          <xs:documentation>Description of employment held.</xs:documentation>
+          <xs:documentation>Description of employment held. </xs:documentation>
         </xs:annotation>
         <xs:simpleType>
           <xs:restriction base="xs:string">
-            <xs:maxLength value="1000" />
+            <xs:maxLength value="1000"/>
           </xs:restriction>
         </xs:simpleType>
       </xs:element>
       <xs:element name="JobStrenuous" minOccurs="1" maxOccurs="1" type="tns:FineosEnum">
         <xs:annotation>
-          <xs:documentation>Rating of how strenuous this occupation is, from enumerated list.</xs:documentation>
+          <xs:documentation>Rating of how strenuous this occupation is, from enumerated list. </xs:documentation>
         </xs:annotation>
       </xs:element>
       <xs:element name="JobTitle" minOccurs="1" maxOccurs="1">
         <xs:annotation>
-          <xs:documentation>Title for employment held.</xs:documentation>
+          <xs:documentation>Title for employment held. </xs:documentation>
         </xs:annotation>
         <xs:simpleType>
           <xs:restriction base="xs:string">
-            <xs:maxLength value="100" />
+            <xs:maxLength value="100"/>
           </xs:restriction>
         </xs:simpleType>
       </xs:element>
       <xs:element name="OverrideDaysWorkedPerWeek" minOccurs="1" maxOccurs="1" type="xs:boolean">
         <xs:annotation>
-          <xs:documentation>Specifies that the DaysWorkedPerWeek is entered manually.</xs:documentation>
+          <xs:documentation>Specifies that the DaysWorkedPerWeek is entered manually. </xs:documentation>
         </xs:annotation>
       </xs:element>
       <xs:element name="Remarks" minOccurs="1" maxOccurs="1">
         <xs:annotation>
-          <xs:documentation>Extra description of this employment.</xs:documentation>
+          <xs:documentation>Extra description of this employment. </xs:documentation>
         </xs:annotation>
         <xs:simpleType>
           <xs:restriction base="xs:string">
-            <xs:maxLength value="1000" />
+            <xs:maxLength value="1000"/>
           </xs:restriction>
         </xs:simpleType>
       </xs:element>
       <xs:element name="SelfEmployed" minOccurs="1" maxOccurs="1" type="xs:boolean">
         <xs:annotation>
-          <xs:documentation>Indicate whether the person linked to this occupation record is self-employed or
-          not.</xs:documentation>
+          <xs:documentation>Indicate whether the person linked to this occupation record is self-employed or not. </xs:documentation>
         </xs:annotation>
       </xs:element>
       <xs:element name="VerificationStatus" minOccurs="1" maxOccurs="1" type="tns:FineosEnum">
         <xs:annotation>
-          <xs:documentation>The verification status of the occupation, chosen from an enumerated
-          list.</xs:documentation>
+          <xs:documentation>The verification status of the occupation, chosen from an enumerated list. </xs:documentation>
         </xs:annotation>
       </xs:element>
       <xs:element name="WorkSchDesc" minOccurs="1" maxOccurs="1">
         <xs:annotation>
-          <xs:documentation>Description of the work schedule. Usually records hours and days worked.</xs:documentation>
+          <xs:documentation>Description of the work schedule. Usually records hours and days worked. </xs:documentation>
         </xs:annotation>
         <xs:simpleType>
           <xs:restriction base="xs:string">
-            <xs:maxLength value="1000" />
+            <xs:maxLength value="1000"/>
           </xs:restriction>
         </xs:simpleType>
       </xs:element>
@@ -226,96 +225,173 @@ xmlns:tns="http://www.fineos.com/wscomposer/OccupationDetailUpdateService" eleme
   </xs:complexType>
   <!-- Common Fineos Data Types -->
   <xs:simpleType name="OID">
+    	
     <xs:restriction base="xs:string">
-      <xs:pattern value="[pPtT][eElL]:\d{1,5}:\d{1,10}" />
+      		
+      <xs:pattern value="[pPtT][eElL]:\d{1,5}:\d{1,10}"/>
+      	
     </xs:restriction>
   </xs:simpleType>
   <xs:complexType name="FineosEnum">
+    	
     <xs:annotation>
-      <xs:documentation>An enumeration data-type similar to the Enum data-type introduced in Java 5. This allows a
-      Business Object (BO) attribute to have one of a set of pre-defined values that are stored in the
-      database.</xs:documentation>
+      		
+      <xs:documentation>An enumeration data-type similar to the Enum			data-type introduced in Java 5. This allows a Business			Object			(BO)			attribute to have one of a set of pre-defined values that			are stored			in the database.      </xs:documentation>
+      	
     </xs:annotation>
+    	
     <xs:sequence>
+      		
       <xs:choice>
+        			
         <xs:element name="InstanceDomainAndFullId" type="tns:InstanceNameAndDomainNameAndFullId">
+          			
           <xs:annotation>
+            					
             <xs:documentation>An Enum sepecifying Instance Name and Domian Name and FullId</xs:documentation>
+            				
           </xs:annotation>
+          			
         </xs:element>
+        			
         <xs:element name="InstanceAndDomainName" type="tns:InstanceNameAndDomainName">
+          				
           <xs:annotation>
+            					
             <xs:documentation>An Enum sepecifying Instance Name and Domian Name</xs:documentation>
+            				
           </xs:annotation>
+          			
         </xs:element>
+        			
         <xs:element name="FullId" type="xs:long">
+          				
           <xs:annotation>
+            					
             <xs:documentation>An Enum sepecifying Fullid</xs:documentation>
+            				
           </xs:annotation>
+          			
         </xs:element>
+        		
       </xs:choice>
+      	
     </xs:sequence>
   </xs:complexType>
   <xs:complexType name="InstanceNameAndDomainNameAndFullId">
+    	
     <xs:annotation>
-      <xs:documentation>Instance name Domain Name and FullId are Expected for enum values. This is type used in Read
-      Service for Enums.</xs:documentation>
+      		
+      <xs:documentation>Instance name Domain Name and FullId are Expected for enum values. This is type used in Read Service for Enums.          </xs:documentation>
+      			
     </xs:annotation>
+    	
     <xs:sequence>
+      		
       <xs:element name="InstanceName" type="xs:string">
+        			
         <xs:annotation>
+          				
           <xs:documentation>Instance Name for this Enum</xs:documentation>
+          			
         </xs:annotation>
+        		
       </xs:element>
+      		
       <xs:element name="DomainName" type="xs:string">
+        			
         <xs:annotation>
+          				
           <xs:documentation>Domain in which the instance name belongs</xs:documentation>
+          			
         </xs:annotation>
+        		
       </xs:element>
+      		
       <xs:element name="FullId" type="xs:long">
+        			
         <xs:annotation>
+          				
           <xs:documentation>Full ID identifies the instance and the Domain</xs:documentation>
+          			
         </xs:annotation>
+        		
       </xs:element>
+      	
     </xs:sequence>
   </xs:complexType>
   <xs:complexType name="InstanceNameAndDomainName">
+    	
     <xs:annotation>
-      <xs:documentation>Instance Name, Domain Name are Expected for Enum Values.</xs:documentation>
+      		
+      <xs:documentation>Instance Name, Domain Name are Expected for Enum Values.          </xs:documentation>
+      			
     </xs:annotation>
+    	
     <xs:sequence>
+      		
       <xs:element name="InstanceName" type="xs:string">
+        			
         <xs:annotation>
+          				
           <xs:documentation>Instance Name for this Enum</xs:documentation>
+          			
         </xs:annotation>
+        		
       </xs:element>
+      		
       <xs:element name="DomainName" type="xs:string">
+        			
         <xs:annotation>
+          				
           <xs:documentation>Domain in which the instance name belongs</xs:documentation>
+          			
         </xs:annotation>
+        		
       </xs:element>
+      	
     </xs:sequence>
   </xs:complexType>
   <xs:complexType name="Money">
+    	
     <xs:annotation>
-      <xs:documentation>DataType for representing the Fineos Money Object</xs:documentation>
+      		
+      <xs:documentation>			DataType for representing the Fineos Money			Object      </xs:documentation>
+      	
     </xs:annotation>
+    	
     <xs:sequence>
+      		
       <xs:element name="CurrencyCode">
+        			
         <xs:annotation>
-          <xs:documentation>Optional Currency Code for the Fineos Money</xs:documentation>
+          				
+          <xs:documentation>Optional Currency Code for the Fineos					Money          </xs:documentation>
+          			
         </xs:annotation>
+        			
         <xs:simpleType>
+          				
           <xs:restriction base="xs:string">
-            <xs:maxLength value="3" />
+            					
+            <xs:maxLength value="3"/>
+            				
           </xs:restriction>
+          			
         </xs:simpleType>
+        		
       </xs:element>
+      		
       <xs:element name="Amount" type="xs:decimal">
+        			
         <xs:annotation>
-          <xs:documentation>BigDecimal amount for the Fineos Money</xs:documentation>
+          				
+          <xs:documentation>BigDecimal amount for the Fineos Money          </xs:documentation>
+          			
         </xs:annotation>
+        		
       </xs:element>
+      	
     </xs:sequence>
   </xs:complexType>
 </xs:schema>

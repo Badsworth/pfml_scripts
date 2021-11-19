@@ -1,53 +1,35 @@
-import React from "react";
+import User, { UserLeaveAdministrator } from "../../../src/models/User";
 import Welcome from "../../../src/pages/employers/welcome";
-import { shallow } from "enzyme";
-import { testHook } from "../../test-utils";
-import useAppLogic from "../../../src/hooks/useAppLogic";
-
-jest.mock("../../../src/hooks/useAppLogic");
+import { renderPage } from "../../test-utils";
+import { screen } from "@testing-library/react";
 
 describe("Employer welcome", () => {
-  let appLogic, wrapper;
+  it("renders page", () => {
+    const { container } = renderPage(Welcome);
 
-  beforeEach(() => {
-    process.env.featureFlags = {};
-    testHook(() => {
-      appLogic = useAppLogic();
+    expect(container).toMatchSnapshot();
+  });
+
+  it("shows Verification alert when user has a verifiable employer", () => {
+    renderPage(Welcome, {
+      addCustomSetup: (appLogic) => {
+        appLogic.users.user = new User({
+          consented_to_data_sharing: true,
+          email_address: "unique@miau.com",
+          user_leave_administrators: [
+            new UserLeaveAdministrator({
+              has_verification_data: true,
+              verified: false,
+            }),
+          ],
+        });
+      },
     });
 
-    wrapper = shallow(<Welcome appLogic={appLogic} />).dive();
-  });
+    const alert = screen.getByRole("heading", {
+      name: /Verify your account to continue/i,
+    }).parentNode;
 
-  it("renders page", () => {
-    expect(wrapper).toMatchSnapshot();
-    wrapper
-      .find("Trans")
-      .forEach((trans) => expect(trans.dive()).toMatchSnapshot());
-  });
-
-  it("displays links to Organizations page", () => {
-    wrapper = shallow(<Welcome appLogic={appLogic} />).dive();
-
-    expect(wrapper.find("Alert").exists()).toEqual(true);
-    wrapper
-      .find("aside")
-      .find("Heading")
-      .forEach((heading) => expect(heading.dive()).toMatchSnapshot());
-    wrapper
-      .find("aside")
-      .find("Trans")
-      .forEach((trans) => expect(trans.dive()).toMatchSnapshot());
-  });
-
-  it("renders other leave alert", () => {
-    wrapper = shallow(<Welcome appLogic={appLogic} />).dive();
-
-    expect(wrapper.find("Alert").exists()).toEqual(true);
-
-    expect(
-      wrapper
-        .find(`Trans[i18nKey="pages.employersWelcome.otherLeaveInfoAlertBody"]`)
-        .dive()
-    ).toMatchSnapshot();
+    expect(alert).toMatchSnapshot();
   });
 });

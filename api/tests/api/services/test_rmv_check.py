@@ -45,6 +45,7 @@ def matching_check_data():
         street2=rmv_check_request.residential_address_line_2,
         city=rmv_check_request.residential_address_city,
         zip=rmv_check_request.residential_address_zip_code,
+        sex="F",
     )
 
     return (rmv_check_request, license_inquiry_response)
@@ -582,7 +583,6 @@ def test_make_response_from_rmv_check_fail_due_to_multiple_thing():
     )
 
 
-@pytest.mark.integration
 def test_handle_rmv_check_request_pass(test_db_session, matching_check_data):
     (rmv_check_request, license_inquiry_response) = matching_check_data
 
@@ -621,7 +621,6 @@ def test_handle_rmv_check_request_pass(test_db_session, matching_check_data):
     assert rmv_check_record.has_passed_required_checks is True
 
 
-@pytest.mark.integration
 def test_handle_rmv_check_request_fail(test_db_session, matching_check_data):
     (rmv_check_request, license_inquiry_response) = matching_check_data
 
@@ -662,7 +661,6 @@ def test_handle_rmv_check_request_fail(test_db_session, matching_check_data):
     assert rmv_check_record.has_passed_required_checks is False
 
 
-@pytest.mark.integration
 def test_handle_rmv_check_request_fail_rmv_request(test_db_session, matching_check_data):
     (rmv_check_request, _) = matching_check_data
 
@@ -701,7 +699,6 @@ def test_handle_rmv_check_request_fail_rmv_request(test_db_session, matching_che
     assert rmv_check_record.has_passed_required_checks is False
 
 
-@pytest.mark.integration
 def test_handle_rmv_check_request_fail_rmv_server_error(
     test_db_session, matching_check_data, mocker
 ):

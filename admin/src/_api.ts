@@ -438,7 +438,8 @@ export interface ClaimDocumentResponse {
     | "Pregnancy/Maternity form"
     | "Child bonding evidence form"
     | "Care for a family member form"
-    | "Military exigency form";
+    | "Military exigency form"
+    | "Pending Application Withdrawn";
   content_type: string;
   fineos_document_id: string;
   name: string;
@@ -744,6 +745,7 @@ export interface ApplicationResponse {
   employer_benefits?: EmployerBenefit[] | null;
   other_incomes?: OtherIncome[] | null;
   updated_time?: string;
+  updated_at?: string;
   status?: "Started" | "Submitted" | "Completed";
   phone?: MaskedPhone;
   has_previous_leaves_other_reason?: boolean | null;
@@ -845,7 +847,8 @@ export interface DocumentResponse {
     | "Pregnancy/Maternity form"
     | "Child bonding evidence form"
     | "Care for a family member form"
-    | "Military exigency form";
+    | "Military exigency form"
+    | "Pending Application Withdrawn";
   content_type: string;
   fineos_document_id: string;
   name: string;
@@ -870,7 +873,8 @@ export interface DocumentUploadRequest {
     | "Child bonding evidence form"
     | "Care for a family member form"
     | "Military exigency form"
-    | "Certification Form";
+    | "Certification Form"
+    | "Pending Application Withdrawn";
   name?: string;
   description?: string;
   mark_evidence_received?: boolean;

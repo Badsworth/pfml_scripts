@@ -12,11 +12,11 @@ from massgov.pfml.api.exceptions import ObjectNotFound
 from massgov.pfml.api.models.claims.common import PreviousLeave
 from massgov.pfml.api.models.common import ConcurrentLeave
 from massgov.pfml.api.services.administrator_fineos_actions import (
-    EFORM_TYPES,
+    EformTypes,
+    _get_leave_details,
     download_document_as_leave_admin,
     get_claim_as_leave_admin,
     get_documents_as_leave_admin,
-    get_leave_details,
     register_leave_admin_with_fineos,
 )
 from massgov.pfml.api.validation.exceptions import ContainsV1AndV2Eforms
@@ -1083,7 +1083,7 @@ def mock_fineos_other_leaves_v2_eform():
 
     def mock_eform_summary(*args, **kwargs):
         return [
-            group_client_api.EFormSummary(eformId=12345, eformType=EFORM_TYPES["OTHER_LEAVES"]),
+            group_client_api.EFormSummary(eformId=12345, eformType=EformTypes.OTHER_LEAVES),
         ]
 
     mock_client = create_client()
@@ -1366,7 +1366,7 @@ def mock_fineos_other_leaves_v2_accrued_leave_different_employer_eform():
 
     def mock_eform_summary(*args, **kwargs):
         return [
-            group_client_api.EFormSummary(eformId=12345, eformType=EFORM_TYPES["OTHER_LEAVES"]),
+            group_client_api.EFormSummary(eformId=12345, eformType=EformTypes.OTHER_LEAVES),
         ]
 
     mock_client = create_client()
@@ -1380,8 +1380,8 @@ def mock_fineos_other_leaves_v2_accrued_leave_different_employer_eform():
 def mock_fineos_other_income_eform_both_versions(period_decisions):
     def mock_eform_summary(*args, **kwargs):
         return [
-            group_client_api.EFormSummary(eformId=12345, eformType=EFORM_TYPES["OTHER_INCOME"]),
-            group_client_api.EFormSummary(eformId=12354, eformType=EFORM_TYPES["OTHER_INCOME_V2"]),
+            group_client_api.EFormSummary(eformId=12345, eformType=EformTypes.OTHER_INCOME),
+            group_client_api.EFormSummary(eformId=12354, eformType=EformTypes.OTHER_INCOME_V2),
         ]
 
     mock_client = create_client()
@@ -1394,7 +1394,7 @@ def mock_fineos_other_income_eform_both_versions(period_decisions):
 def mock_fineos_other_income_v1_eform():
     def mock_eform_summary(*args, **kwargs):
         return [
-            group_client_api.EFormSummary(eformId=12345, eformType=EFORM_TYPES["OTHER_INCOME"]),
+            group_client_api.EFormSummary(eformId=12345, eformType=EformTypes.OTHER_INCOME),
         ]
 
     def mock_get_eform(*args, **kwargs):
@@ -1650,7 +1650,6 @@ def test_create_leave_admin_request_payload():
     assert payload.__contains__("<ns0:enabled>true</ns0:enabled>")
 
 
-@pytest.mark.integration
 def test_register_leave_admin_with_fineos(employer_user, test_db_session):
     employer = EmployerFactory.create()
     register_leave_admin_with_fineos(
@@ -1674,7 +1673,6 @@ def test_register_leave_admin_with_fineos(employer_user, test_db_session):
     assert created_leave_admin.employer_id == employer.employer_id
 
 
-@pytest.mark.integration
 def test_register_previously_registered_leave_admin_with_fineos(
     employer_user, test_db_session, caplog
 ):
@@ -1738,52 +1736,48 @@ def test_register_previously_registered_leave_admin_with_fineos(
 
 
 def test_get_leave_details(period_decisions):
-    leave_details = get_leave_details(period_decisions.dict())
+    leave_details = _get_leave_details(period_decisions.dict())
 
     assert leave_details.continuous_leave_periods[0].start_date == date(2021, 2, 1)
     assert leave_details.continuous_leave_periods[0].end_date == date(2021, 2, 24)
-    assert leave_details.intermittent_leave_periods[0].start_date == date(2021, 1, 1)
-    assert leave_details.intermittent_leave_periods[0].end_date == date(2021, 2, 1)
+    assert leave_details.intermittent_leave_periods[0].start_date == date(2021, 1, 15)
+    assert leave_details.intermittent_leave_periods[0].end_date == date(2021, 1, 20)
     assert leave_details.reduced_schedule_leave_periods[0].start_date == date(2021, 1, 4)
     assert leave_details.reduced_schedule_leave_periods[0].end_date == date(2021, 1, 29)
 
 
-@pytest.mark.integration
 def test_get_claim_plan(mock_fineos_period_decisions, initialize_factories_session):
     fineos_user_id = "Friendly_HR"
     absence_id = "NTN-001-ABS-001"
     employer = EmployerFactory.create()
-    leave_details, _ = get_claim_as_leave_admin(
+    leave_details, _, _ = get_claim_as_leave_admin(
         fineos_user_id, absence_id, employer, fineos_client=mock_fineos_period_decisions
     )
     assert leave_details.status == "Known"
 
 
-@pytest.mark.integration
 def test_get_claim_no_plan(mock_fineos_period_decisions_no_plan, initialize_factories_session):
     fineos_user_id = "Friendly_HR"
     absence_id = "NTN-001-ABS-001"
     employer = EmployerFactory.create()
-    leave_details, _ = get_claim_as_leave_admin(
+    leave_details, _, _ = get_claim_as_leave_admin(
         fineos_user_id, absence_id, employer, fineos_client=mock_fineos_period_decisions_no_plan
     )
     assert leave_details.status == "Known"
 
 
-@pytest.mark.integration
 def test_get_claim_eform_type_contains_neither_version(
     mock_fineos_period_decisions, initialize_factories_session
 ):
     fineos_user_id = "Friendly_HR"
     absence_id = "NTN-001-ABS-001"
     employer = EmployerFactory.create()
-    leave_details, _ = get_claim_as_leave_admin(
+    leave_details, _, _ = get_claim_as_leave_admin(
         fineos_user_id, absence_id, employer, fineos_client=mock_fineos_period_decisions,
     )
     assert leave_details.uses_second_eform_version is True
 
 
-@pytest.mark.integration
 def test_get_claim_other_income_eform_type_contains_both_versions(
     mock_fineos_other_income_eform_both_versions, initialize_factories_session
 ):
@@ -1799,14 +1793,13 @@ def test_get_claim_other_income_eform_type_contains_both_versions(
         )
 
 
-@pytest.mark.integration
 def test_get_claim_other_leaves_v2_eform(
     mock_fineos_other_leaves_v2_eform, initialize_factories_session
 ):
     fineos_user_id = "Friendly_HR"
     absence_id = "NTN-001-ABS-001"
     employer = EmployerFactory.create()
-    leave_details, _ = get_claim_as_leave_admin(
+    leave_details, _, _ = get_claim_as_leave_admin(
         fineos_user_id, absence_id, employer, fineos_client=mock_fineos_other_leaves_v2_eform,
     )
 
@@ -1883,14 +1876,13 @@ def test_get_claim_other_leaves_v2_eform(
     )
 
 
-@pytest.mark.integration
 def test_get_claim_other_leaves_v2_accrued_leave_different_employer_eform(
     mock_fineos_other_leaves_v2_accrued_leave_different_employer_eform, initialize_factories_session
 ):
     fineos_user_id = "Friendly_HR"
     absence_id = "NTN-001-ABS-001"
     employer = EmployerFactory.create()
-    leave_details, _ = get_claim_as_leave_admin(
+    leave_details, _, _ = get_claim_as_leave_admin(
         fineos_user_id,
         absence_id,
         employer,
@@ -1912,12 +1904,11 @@ def test_get_claim_other_leaves_v2_accrued_leave_different_employer_eform(
     assert leave_details.concurrent_leave is None
 
 
-@pytest.mark.integration
 def test_get_claim_other_income(mock_fineos_other_income_v1_eform, initialize_factories_session):
     fineos_user_id = "Friendly_HR"
     absence_id = "NTN-001-ABS-001"
     employer = EmployerFactory.create()
-    leave_details, _ = get_claim_as_leave_admin(
+    leave_details, _, _ = get_claim_as_leave_admin(
         fineos_user_id, absence_id, employer, fineos_client=mock_fineos_other_income_v1_eform,
     )
     assert leave_details.date_of_birth == "****-12-25"
@@ -1949,7 +1940,6 @@ def test_get_claim_other_income(mock_fineos_other_income_v1_eform, initialize_fa
     assert leave_details.uses_second_eform_version is False
 
 
-@pytest.mark.integration
 @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_managed_requirements")
 def test_get_claim_with_open_managed_requirement(
     mock_get_req,
@@ -1957,13 +1947,18 @@ def test_get_claim_with_open_managed_requirement(
     initialize_factories_session,
     mock_managed_requirements,
 ):
-    mock_get_req.return_value = [
-        ManagedRequirementDetails.parse_obj(mr) for mr in mock_managed_requirements
-    ]
+    returned_managed_req = []
+    for mr in mock_managed_requirements:
+        mr = ManagedRequirementDetails.parse_obj(mr)
+        # Ensure is_reviewable is True if the current date is the same as the followUpDate:
+        mr.followUpDate = datetime_util.utcnow().date()
+        returned_managed_req.append(mr)
+
+    mock_get_req.return_value = returned_managed_req
     fineos_user_id = "Friendly_HR"
     absence_id = "NTN-001-ABS-001"
     employer = EmployerFactory.create()
-    leave_details, managed_requirements = get_claim_as_leave_admin(
+    leave_details, managed_requirements, _ = get_claim_as_leave_admin(
         fineos_user_id, absence_id, employer, fineos_client=mock_fineos_period_decisions
     )
     assert leave_details.status == "Known"
@@ -1971,7 +1966,6 @@ def test_get_claim_with_open_managed_requirement(
     assert leave_details.is_reviewable
 
 
-@pytest.mark.integration
 @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_managed_requirements")
 def test_get_claim_with_closed_managed_requirement(
     mock_get_req,
@@ -1988,7 +1982,7 @@ def test_get_claim_with_closed_managed_requirement(
     fineos_user_id = "Friendly_HR"
     absence_id = "NTN-001-ABS-001"
     employer = EmployerFactory.create()
-    leave_details, managed_requirements = get_claim_as_leave_admin(
+    leave_details, managed_requirements, _ = get_claim_as_leave_admin(
         fineos_user_id, absence_id, employer, fineos_client=mock_fineos_period_decisions
     )
     assert leave_details.status == "Known"
@@ -1996,7 +1990,6 @@ def test_get_claim_with_closed_managed_requirement(
     assert not leave_details.is_reviewable
 
 
-@pytest.mark.integration
 @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_managed_requirements")
 def test_get_claim_with_open_expired_managed_requirement(
     mock_get_req,
@@ -2007,13 +2000,13 @@ def test_get_claim_with_open_expired_managed_requirement(
     returned_managed_req = []
     for mr in mock_managed_requirements:
         mr = ManagedRequirementDetails.parse_obj(mr)
-        mr.followUpDate = datetime_util.utcnow().date() - timedelta(days=3)
+        mr.followUpDate = datetime_util.utcnow().date() - timedelta(days=1)
         returned_managed_req.append(mr)
     mock_get_req.return_value = returned_managed_req
     fineos_user_id = "Friendly_HR"
     absence_id = "NTN-001-ABS-001"
     employer = EmployerFactory.create()
-    leave_details, managed_requirements = get_claim_as_leave_admin(
+    leave_details, managed_requirements, _ = get_claim_as_leave_admin(
         fineos_user_id, absence_id, employer, fineos_client=mock_fineos_period_decisions
     )
     assert leave_details.status == "Known"

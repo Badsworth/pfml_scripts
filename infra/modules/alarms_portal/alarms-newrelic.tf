@@ -312,7 +312,7 @@ locals {
   # to prevent noisy false positives.
   #
   js_error_min_uniq_per_window = 5
-  js_error_uniq_count          = "filter(count(session), WHERE browserInteractionName NOT LIKE 'fetch:%')"
+  js_error_uniq_count          = "filter(uniqueCount(session), WHERE browserInteractionName NOT LIKE 'fetch:%')"
   js_error_total_count         = "filter(count(browserInteractionName), WHERE browserInteractionName NOT LIKE 'fetch:%')"
 }
 
@@ -415,4 +415,17 @@ module "portal_synthetic_ping_failure" {
   fill_option = "none"
 
   nrql = "SELECT filter(count(*), WHERE result = 'FAILED') FROM SyntheticCheck WHERE monitorName = 'portal_ping--${var.environment_name}'"
+}
+
+module "portal_scripted_synthetic_failure" {
+  source = "../newrelic_single_error_alarm"
+
+  # ignore performance and training environments
+  enabled     = contains(["prod", "stage", "test"], var.environment_name)
+  name        = "Portal usability check failed"
+  description = "Checks if Portal is loading and not behind a maintenance page"
+  policy_id   = (var.environment_name == "prod") ? newrelic_alert_policy.low_priority_portal_alerts.id : newrelic_alert_policy.portal_alerts.id
+  fill_option = "none"
+
+  nrql = "SELECT filter(count(*), WHERE result = 'FAILED') FROM SyntheticCheck WHERE monitorName = 'portal_scripted_synthetic--${var.environment_name}'"
 }

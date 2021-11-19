@@ -4,9 +4,12 @@ import argparse
 import pathlib
 from scripted_releases import audit_logger, release_tasks, task_args, guardrails
 import sys
-from re import match
+import logging
 
 NO_SUBCOMMAND = "A subcommand must be provided unless running this script with '-h' / '--help'."
+AUDIT_LOGS_STORAGE_LOCATION = f"{pathlib.Path(__file__).parent.resolve()}/logs"
+
+logger = logging.getLogger(__name__)
 
 
 def entrypoint():
@@ -14,6 +17,10 @@ def entrypoint():
     Scripted releases core infrastructure. Handles global state, I/O management,
     audit logging, mode selection, and hand-off to more specialized subprograms.
     """
+    # Store the audit log in /bin/ci/logs, relative to the repo root.
+    # This storage is meant to be temporary. Eventually this file will live in AWS.
+    audit_logger.setup(file_loc=AUDIT_LOGS_STORAGE_LOCATION)
+
     # permits unit testing; see bucket.py
     main(sys.argv[1:])
 
@@ -24,17 +31,12 @@ def main(raw_args: list) -> None:
 
     args = parse_args(raw_args)
 
-    # Store the audit log in /bin/ci/logs, relative to the repo root.
-    # This storage is meant to be temporary. Eventually this file will live in AWS.
-    file_loc = f"{pathlib.Path(__file__).parent.resolve()}/logs"
-    logger = audit_logger.setup(file_loc=file_loc)
-
     # Avert your eyes!
     sys.excepthook = audit_logging_exception_hook
 
-    logger.info("*** Scripted Releases v. 00004 ***")
-    logger.info(f"Args: {repr(args)}")
+    logger.info("*** Scripted Releases v. 00005 ***")
     logger.info(f"Script is running in {'interactive' if args.interactive else 'autonomous'} mode.")
+    logger.info(f"Args: {repr(args)}")
 
     if not hasattr(args, 'func'):
         raise RuntimeError(NO_SUBCOMMAND)
@@ -46,7 +48,8 @@ def main(raw_args: list) -> None:
     elif args.func is release_tasks.finalize:
         guardrails.for_finalized_release(args)
 
-    args.func(args, logger)  # Just do a hand-off to the methods in release_tasks. Any better way to pass the logger?
+    # Hand off execution to the method defined at 'args.func'
+    args.func(args)
     logger.info("Exit release.py\n")
 
 
@@ -56,8 +59,8 @@ def parse_args(raw_args: list) -> argparse.Namespace:
     parser.add_argument("-i", "--interactive", action="store_true",
                         help="If present: run the script interactively. "
                              "If not present: run the script from command-line arguments.")
-    parser.add_argument("-a", "--app", choices=['api', 'portal'], required=True,
-                        help='Are you releasing the Portal or the API?')
+    parser.add_argument("-a", "--app", choices=['api', 'portal', 'foobar'], required=True,
+                        help='Are you releasing the Portal or the API? (Foobar for internal testing ONLY.)')
 
     subparsers = parser.add_subparsers()
 

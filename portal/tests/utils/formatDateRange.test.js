@@ -18,10 +18,11 @@ describe("formatDateRange", () => {
   });
 
   describe("when start and end dates are invalid ISO 8601 strings", () => {
-    it("returns empty string", () => {
-      const formattedDate = formatDateRange("1990--", "1990--31");
-
-      expect(formattedDate).toBe("");
+    it("extrapolates date to display", () => {
+      expect(formatDateRange(null, null)).toBe("");
+      expect(formatDateRange("1990--", "1990--31")).toBe(
+        "1/1/1990 to 1/31/1990"
+      );
     });
   });
 

@@ -42,10 +42,47 @@ resource "aws_ecs_service" "app" {
 }
 
 resource "aws_ecs_task_definition" "app" {
-  family                = "${local.app_name}-${var.environment_name}-server"
-  execution_role_arn    = aws_iam_role.task_executor.arn
-  task_role_arn         = aws_iam_role.api_service.arn
-  container_definitions = data.template_file.container_definitions.rendered
+  family             = "${local.app_name}-${var.environment_name}-server"
+  execution_role_arn = aws_iam_role.task_executor.arn
+  task_role_arn      = aws_iam_role.api_service.arn
+  container_definitions = templatefile(
+    "${path.module}/container_definitions.json",
+    {
+      app_name                                   = local.app_name
+      cpu                                        = "768"
+      memory                                     = "1536"
+      db_host                                    = aws_db_instance.default.address
+      db_name                                    = aws_db_instance.default.name
+      db_username                                = "pfml_api"
+      docker_image                               = "${data.aws_ecr_repository.app.repository_url}:${var.service_docker_tag}"
+      environment_name                           = var.environment_name
+      enable_full_error_logs                     = var.enable_full_error_logs
+      cloudwatch_logs_group_name                 = aws_cloudwatch_log_group.service_logs.name
+      aws_region                                 = data.aws_region.current.name
+      cors_origins                               = join(",", var.cors_origins)
+      cognito_user_pool_id                       = var.cognito_user_pool_id
+      cognito_user_pool_client_id                = var.cognito_user_pool_client_id
+      cognito_user_pool_keys_url                 = var.cognito_user_pool_keys_url
+      logging_level                              = var.logging_level
+      rmv_client_certificate_binary_arn          = var.rmv_client_certificate_binary_arn
+      rmv_client_base_url                        = var.rmv_client_base_url
+      rmv_api_behavior                           = var.rmv_api_behavior
+      rmv_check_mock_success                     = var.rmv_check_mock_success
+      fineos_client_customer_api_url             = var.fineos_client_customer_api_url
+      fineos_client_integration_services_api_url = var.fineos_client_integration_services_api_url
+      fineos_client_group_client_api_url         = var.fineos_client_group_client_api_url
+      fineos_client_wscomposer_api_url           = var.fineos_client_wscomposer_api_url
+      fineos_client_wscomposer_user_id           = var.fineos_client_wscomposer_user_id
+      fineos_client_oauth2_url                   = var.fineos_client_oauth2_url
+      fineos_client_oauth2_client_id             = var.fineos_client_oauth2_client_id
+      service_now_base_url                       = var.service_now_base_url
+      portal_base_url                            = var.portal_base_url
+      enable_application_fraud_check             = var.enable_application_fraud_check
+      release_version                            = var.release_version
+      new_plan_proofs_active_at                  = var.new_plan_proofs_active_at
+      use_claim_status_url                       = var.use_claim_status_url
+    }
+  )
 
   cpu                      = "1024"
   memory                   = "2048"
@@ -55,43 +92,4 @@ resource "aws_ecs_task_definition" "app" {
   tags = merge(module.constants.common_tags, {
     environment = module.constants.environment_tags[var.environment_name]
   })
-}
-
-data "template_file" "container_definitions" {
-  template = file("${path.module}/container_definitions.json")
-
-  vars = {
-    app_name                                   = local.app_name
-    cpu                                        = "768"
-    memory                                     = "1536"
-    db_host                                    = aws_db_instance.default.address
-    db_name                                    = aws_db_instance.default.name
-    db_username                                = "pfml_api"
-    docker_image                               = "${data.aws_ecr_repository.app.repository_url}:${var.service_docker_tag}"
-    environment_name                           = var.environment_name
-    enable_full_error_logs                     = var.enable_full_error_logs
-    cloudwatch_logs_group_name                 = aws_cloudwatch_log_group.service_logs.name
-    aws_region                                 = data.aws_region.current.name
-    cors_origins                               = join(",", var.cors_origins)
-    cognito_user_pool_id                       = var.cognito_user_pool_id
-    cognito_user_pool_client_id                = var.cognito_user_pool_client_id
-    cognito_user_pool_keys_url                 = var.cognito_user_pool_keys_url
-    logging_level                              = var.logging_level
-    rmv_client_certificate_binary_arn          = var.rmv_client_certificate_binary_arn
-    rmv_client_base_url                        = var.rmv_client_base_url
-    rmv_check_behavior                         = var.rmv_check_behavior
-    rmv_check_mock_success                     = var.rmv_check_mock_success
-    fineos_client_customer_api_url             = var.fineos_client_customer_api_url
-    fineos_client_integration_services_api_url = var.fineos_client_integration_services_api_url
-    fineos_client_group_client_api_url         = var.fineos_client_group_client_api_url
-    fineos_client_wscomposer_api_url           = var.fineos_client_wscomposer_api_url
-    fineos_client_wscomposer_user_id           = var.fineos_client_wscomposer_user_id
-    fineos_client_oauth2_url                   = var.fineos_client_oauth2_url
-    fineos_client_oauth2_client_id             = var.fineos_client_oauth2_client_id
-    service_now_base_url                       = var.service_now_base_url
-    portal_base_url                            = var.portal_base_url
-    enable_application_fraud_check             = var.enable_application_fraud_check
-    release_version                            = var.release_version
-    new_plan_proofs_active_at                  = var.new_plan_proofs_active_at
-  }
 }

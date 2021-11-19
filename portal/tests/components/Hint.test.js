@@ -1,65 +1,67 @@
-import Hint from "../../src/components/Hint";
+import { render, screen } from "@testing-library/react";
+import Hint from "../../src/components/core/Hint";
 import React from "react";
-import { shallow } from "enzyme";
-
-function render(customProps = {}) {
-  const props = Object.assign(
-    {
-      children: "Hint text",
-      inputId: "foo",
-      small: false,
-      className: null,
-    },
-    customProps
-  );
-
-  const component = <Hint {...props} />;
-
-  return {
-    props,
-    wrapper: shallow(component),
-  };
-}
 
 describe("Hint", () => {
-  it("renders usa-intro by default", () => {
-    const { wrapper } = render({ children: "This is the hint" });
+  const hintText = "Foobar";
 
-    expect(wrapper).toMatchInlineSnapshot(`
-      <span
-        className="display-block line-height-sans-5 measure-5 usa-intro"
-        id="foo_hint"
-      >
-        This is the hint
-      </span>
-    `);
-  });
+  describe("Hint id attribute", () => {
+    it("set the `id` attribute when inputId is set", () => {
+      render(<Hint inputId="foo">{hintText}</Hint>);
+      const hint = screen.getByText(hintText);
 
-  it("renders usa-hint when small prop is set to true", () => {
-    const { wrapper } = render({ children: "This is the hint", small: true });
-
-    expect(wrapper).toMatchInlineSnapshot(`
-      <span
-        className="display-block line-height-sans-5 measure-5 usa-hint text-base-darkest"
-        id="foo_hint"
-      >
-        This is the hint
-      </span>
-    `);
-  });
-
-  it("does not set the `id` attribute when inputId is not set", () => {
-    const { wrapper } = render({ inputId: undefined, children: "Text" });
-
-    expect(wrapper.prop("id")).toBeNull();
-  });
-
-  it("adds className", () => {
-    const { wrapper } = render({
-      className: "margin-bottom-3",
-      children: "Text",
+      expect(hint).toHaveAttribute("id", "foo_hint");
+      expect(hint).toMatchSnapshot();
     });
 
-    expect(wrapper.find(".margin-bottom-3").exists()).toBe(true);
+    it("does not set the `id` attribute when inputId is not set", () => {
+      render(<Hint>{hintText}</Hint>);
+      const hint = screen.getByText(hintText);
+
+      expect(hint).not.toHaveAttribute("id");
+      expect(hint).toMatchSnapshot();
+    });
+  });
+
+  describe("Hint class names", () => {
+    it("renders correct default classes", () => {
+      render(<Hint inputId="foo">{hintText}</Hint>);
+      const hint = screen.getByText(hintText);
+
+      expect(hint).toHaveClass(
+        "display-block",
+        "line-height-sans-5",
+        "measure-5",
+        "usa-intro"
+      );
+      expect(hint).toMatchSnapshot();
+    });
+
+    it("renders correct classes with `small` prop", () => {
+      render(
+        <Hint inputId="foo" small>
+          {hintText}
+        </Hint>
+      );
+      const hint = screen.getByText(hintText);
+
+      expect(hint).toHaveClass(
+        "display-block",
+        "line-height-sans-5",
+        "measure-5",
+        "usa-hint",
+        "text-base-darkest"
+      );
+      expect(hint).toMatchSnapshot();
+    });
+
+    it("adds class name when provided through props", () => {
+      render(<Hint className="foo">{hintText}</Hint>);
+      const hint = screen.getByText(hintText);
+
+      expect(hint).toBeInTheDocument();
+      expect(hint).toHaveClass("foo");
+      expect(hint).toMatchSnapshot();
+    });
   });
 });

@@ -1,6 +1,7 @@
 .DEFAULT_GOAL := help
 
 APP_NAME := mass-pfml-api
+SHELL = /bin/bash -o pipefail
 
 export AWS_DEFAULT_REGION := us-east-1
 
@@ -115,6 +116,9 @@ build-app: ## Build app container
 		--build-arg RUN_UID=$(RUN_UID) \
 		.
 
+create-erds:
+	PYTHONPATH=$$PYTHONPATH:. $(PY_RUN_CMD) python bin/create-erds.py; rm *.dot; mv *.png ../docs/assets/api/erds
+
 create-leave-admin-and-claims: ## Create local API Leave Admin user and claims
 	PYTHONPATH=$$PYTHONPATH:. $(PY_RUN_CMD) python bin/create-leave-admin-and-claims.py $(args)
 
@@ -122,10 +126,10 @@ create-user: ## Create local API User
 	PYTHONPATH=$$PYTHONPATH:. $(PY_RUN_CMD) python bin/create-user.py $(args)
 
 deps: ## Install dependencies
-	$(POETRY_CMD) install --no-root --extras "mssql-server api-only-dependencies"
+	$(POETRY_CMD) install --no-root --extras "api-only-dependencies"
 
-deps-check:
-	$(PY_RUN_CMD) safety check --full-report
+deps-check: ## Check dependencies for vulnerabilities using Safety
+	$(PY_RUN_CMD) safety check --full-report --ignore=42050 --ignore=42194
 
 distclean: ## Remove all artifacts that can be regenerated
 distclean: clean clean-node clean-venv
@@ -137,6 +141,9 @@ dor-generate: ## Generate fake DOR data
 
 dor-generate-for-update: ## Generate fake update DOR data (mutation of subset of data from `make dor-generate`)
 	$(PY_RUN_CMD) dor-generate --folder dor_mock --count 1000 --update $(DECODE_LOG)
+
+fineos-update-xsds:
+	$(PY_RUN_CMD) fineos-update-xsds $(DECODE_LOG)
 
 fineos-daily-generate: ## Generate fake FINEOS employee extract
 	$(PY_RUN_CMD) fineos-daily-generate --folder fineos_daily_mock --count 1000 $(DECODE_LOG)
@@ -154,20 +161,6 @@ fineos-eligibility-feed-export: ## Run an eligibility feed export
 	mkdir -p eligibility_export/absence-eligibility/upload
 	OUTPUT_DIRECTORY_PATH=eligibility_export FINEOS_AWS_IAM_ROLE_ARN="arn" FINEOS_AWS_IAM_ROLE_EXTERNAL_ID="1" $(PY_RUN_CMD) fineos-eligibility-feed-export $(DECODE_LOG)
 
-fineos-payments-mock-generate:
-	mkdir -p mock_fineos_payments_files
-	rm -rf mock_fineos_payments_files/*
-	$(PY_RUN_CMD) fineos-payments-mock-generate --folder mock_fineos_payments_files --fein 102000000 --ssn 252000000 $(DECODE_LOG)
-
-payments-fineos-process: # Run the Payments FINEOS import process (Just the vendor extract parts for VCC right now)
-	$(PY_RUN_CMD) payments-fineos-process --steps vendor-extract error-report
-
-payments-ctr-process: # Run the Payments Comptroller processes (Just the VCC parts right now)
-	$(PY_RUN_CMD) payments-ctr-process --steps vcc data-mart error-report
-
-payments-payment-voucher-plus:
-	$(PY_RUN_CMD) payments-payment-voucher-plus $(DECODE_LOG)
-
 pub-payments-process-fineos:
 	$(PY_RUN_CMD) pub-payments-process-fineos --steps ALL $(DECODE_LOG)
 
@@ -177,13 +170,14 @@ pub-payments-create-pub-files:
 pub-payments-process-pub-returns:
 	$(PY_RUN_CMD) pub-payments-process-pub-returns --steps ALL $(DECODE_LOG)
 
-fineos-test-vendor-export-generate:
-	mkdir -p mock_fineos_test_vendor_export
-	$(PY_RUN_CMD) fineos-test-vendor-export-generate --folder mock_fineos_test_vendor_export --fein 103000000 --ssn 253000000 --cvalue 5100 --employeecustomernumber 200 --absencecaseid 200 $(DECODE_LOG)
+pub-payments-process-snapshot:
+	$(PY_RUN_CMD) pub-payments-process-snapshot --steps ALL $(DECODE_LOG)
 
-fineos-test-vendor-export-generate-more:
-	mkdir -p mock_fineos_test_vendor_export_more
-	$(PY_RUN_CMD) fineos-test-vendor-export-generate --folder mock_fineos_test_vendor_export_more --fein 104000000 --ssn 254000000 --cvalue 5200 --employeecustomernumber 300 --absencecaseid 300 $(DECODE_LOG)
+pub-payments-mock-generate:
+	$(PY_RUN_CMD)  pub-payments-mock-generate $(DECODE_LOG)
+
+pub-payments-process-1099-documents:
+	$(PY_RUN_CMD) pub-payments-process-1099-documents --steps ALL $(DECODE_LOG)
 
 delegated-payment-audit-rejects-generate:
 	mkdir -p mock_payment_rejects_files
@@ -201,6 +195,12 @@ ecr-login: ## Login to ECR for Docker
 	@echo "Authenticating Docker with ECR"
 	aws ecr get-login-password --region 'us-east-1' | \
 	docker login --username AWS --password-stdin 498823821309.dkr.ecr.us-east-1.amazonaws.com
+
+pre-commit: 
+	$(PY_RUN_CMD) isort --atomic --apply $(args)
+	$(PY_RUN_CMD) black $(args)
+	$(PY_RUN_CMD) flake8 $(args)
+	$(PY_RUN_CMD) mypy $(args)
 
 format: ## Format code
 	$(PY_RUN_CMD) isort --atomic --apply
@@ -244,12 +244,14 @@ jwt: jwks.json
 # See https://help.github.com/en/actions/reference/workflow-commands-for-github-actions
 ifdef CI
  FLAKE8_FORMAT := '::warning file=api/%(path)s,line=%(row)d,col=%(col)d::%(path)s:%(row)d:%(col)d: %(code)s %(text)s'
+ MYPY_FLAGS := --no-pretty
+ MYPY_POSTPROC := | perl -pe "s/^(.+):(\d+):(\d+): error: (.*)/::warning file=api\/\1,line=\2,col=\3::\4/"
 else
  FLAKE8_FORMAT := default
 endif
 
 lint: ## Run linting
-lint: lint-spectral lint-py
+lint: lint-spectral lint-py db-check-model-parity
 
 lint-py: ## Run python linting
 lint-py: lint-flake lint-mypy
@@ -258,14 +260,14 @@ lint-flake: ## Run flake8
 	$(PY_RUN_CMD) flake8 --format=$(FLAKE8_FORMAT) massgov tests bin
 
 lint-mypy: ## Run mypy
-	$(PY_RUN_CMD) mypy massgov bin
+	$(PY_RUN_CMD) mypy $(MYPY_FLAGS) massgov bin $(MYPY_POSTPROC)
 
 lint-security: ## Run security linting
 	$(PY_RUN_CMD) bandit -r . --number 3 --skip B101 -ll
 
 lint-spectral: ## Run OpenAPI Spec linting
 	docker run --rm --tty --cap-drop=ALL --network=none --read-only --volume=$(PWD):/tmp:ro \
-           stoplight/spectral lint /tmp/$(OPEN_API_PATH) --ruleset /tmp/.spectral.yaml
+           stoplight/spectral:5.9 lint /tmp/$(OPEN_API_PATH) --ruleset /tmp/.spectral.yaml
 
 login: start ## Start shell in running container
 	docker exec -it $(APP_NAME) bash
@@ -350,6 +352,9 @@ run: start logs
 run-native: ## Start API server directly
 run-native: jwks.json
 	poetry run python -m massgov.pfml.api $(DECODE_LOG)
+
+db-check-model-parity: ## Ensure application models are in sync with the database
+	$(PY_RUN_CMD) db-check-model-parity
 
 db-create-users: ## Create database users
 	$(PY_RUN_CMD) db-admin-create-db-users $(DECODE_LOG)
@@ -449,18 +454,33 @@ test-watch-changed: ## Watch and run `make test-changed` on file changes
 test-watch-focus: ## Watch and run tests decorated with `@pytest.mark.dev_focus` on file changes
 	$(call run_test_watch,-m dev_focus $(args))
 
+start-release: ## Creates a new release series. Increments the API's minor version number.
+	pushd ../bin/ci && poetry run scripted-releases --app api start-release $(args) && popd
+
+update-release: ## Updates an in-progress release series. Increments the API's RC number.
+	pushd ../bin/ci && poetry run scripted-releases --app api update-release $(args) && popd
+
+finalize-release: ## Marks a release series as approved to go to prod. Enables hotfixes; disables updates.
+	pushd ../bin/ci && poetry run scripted-releases --app api finalize-release $(args) && popd
+
+hotfix: ## Alters a release series that already went to prod. Increments the API's patch version number.
+	pushd ../bin/ci && poetry run scripted-releases --app api hotfix $(args) && popd
+
+major-release: ## Creates a new release series. Increments the API's MAJOR version number.
+	pushd ../bin/ci && poetry run scripted-releases --app api major-release $(args) && popd
+
 API_PATHS := . ../infra/api ../infra/ecs-tasks ../infra/env-shared ../infra/modules/ecs_task_scheduler ../infra/modules/s3_ecs_trigger
 release-notes: refs=origin/deploy/api/stage..origin/main
 release-notes: ## Generate API release notes for $refs (defaults between stage and test)
 	@git log --pretty='format: * %s' $(refs) -- $(API_PATHS) | \
-	sed -E 's;^ \* \[*((API|CP|EDM|EMPLOYER|END|INFRA|PUB|DFMLBI|PSD|PFMLPB)-[0-9]+)[] :]*(.*); \* [\1](https://lwd.atlassian.net/browse/\1): \3;' | \
+	sed -E 's;^ \* \[*([A-Za-z]{2,}-[0-9]+)[] :]*(.*); \* [\1](https://lwd.atlassian.net/browse/\1): \2;' | \
 	sed -E 's;\(#([0-9]+)\);([#\1](https://github.com/EOLWD/pfml/pull/\1));'
 
 release-list: refs=origin/deploy/api/stage..origin/main
 release-list: ## Generate comma-separated list of ticket ids for $refs
-	@git log --pretty='format: * %s' $(refs) -- $(API_PATHS) | \
-	grep -E '(API|CP|EDM|EMPLOYER|END|INFRA|PUB|DFMLBI|PSD|PFMLPB)-[0-9]+' | \
-	sed -E 's/.*((API|CP|EDM|EMPLOYER|END|INFRA|PUB|DFMLBI|PSD|PFMLPB)-[0-9]+)[] :]*(.*)/\1/g' | tr '\n' ',' | sed 's/,$$//'
+	@git log --pretty='format: %s' $(refs) -- $(API_PATHS) | \
+	grep --extended-regexp --only-matching '[A-Za-z]{2,}-[0-9]+' | \
+	tr '\n' ',' | sed 's/,$$//'
 
 
 API_RELEASE_BRANCHES := $(addprefix origin/, main deploy/api/stage deploy/api/prod deploy/api/performance deploy/api/training deploy/api/uat deploy/api/breakfix deploy/api/cps-preview)
@@ -500,3 +520,5 @@ help: ## Displays this help screen
 	@echo "IMAGE_TAG=$(IMAGE_TAG)"
 	@echo "RUN_UID=$(RUN_UID)"
 	@echo "RUN_USER=$(RUN_USER)"
+	@echo "SHELL=$(SHELL)"
+	@echo "MAKE_VERSION=$(MAKE_VERSION)"

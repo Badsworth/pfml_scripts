@@ -1,0 +1,44 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Hint Hint class names adds class name when provided through props 1`] = `
+<span
+  class="display-block line-height-sans-5 measure-5 foo usa-intro"
+>
+  Foobar
+</span>
+`;
+
+exports[`Hint Hint class names renders correct classes with \`small\` prop 1`] = `
+<span
+  class="display-block line-height-sans-5 measure-5 usa-hint text-base-darkest"
+  id="foo_hint"
+>
+  Foobar
+</span>
+`;
+
+exports[`Hint Hint class names renders correct default classes 1`] = `
+<span
+  class="display-block line-height-sans-5 measure-5 usa-intro"
+  id="foo_hint"
+>
+  Foobar
+</span>
+`;
+
+exports[`Hint Hint id attribute does not set the \`id\` attribute when inputId is not set 1`] = `
+<span
+  class="display-block line-height-sans-5 measure-5 usa-intro"
+>
+  Foobar
+</span>
+`;
+
+exports[`Hint Hint id attribute set the \`id\` attribute when inputId is set 1`] = `
+<span
+  class="display-block line-height-sans-5 measure-5 usa-intro"
+  id="foo_hint"
+>
+  Foobar
+</span>
+`;

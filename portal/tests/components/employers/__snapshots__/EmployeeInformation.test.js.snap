@@ -1,48 +1,86 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`EmployeeInformation renders the component 1`] = `
-<Fragment>
-  <ReviewHeading
-    level="2"
+<div>
+  <div
+    class="display-flex flex-align-end margin-top-6 margin-bottom-3"
   >
-    Employee information
-  </ReviewHeading>
-  <ReviewRow
-    label="Employee name"
-    level="3"
-  >
-    Jane
-     
-     
-    Doe
-  </ReviewRow>
-  <ReviewRow
-    label="Mailing address"
-    level="3"
-  >
-    <span
-      className="residential-address"
+    <h2
+      class="flex-fill margin-right-1 font-heading-md text-bold"
     >
-      1234 My St.
-      <br />
-      Boston
-      , 
-      MA
+      Employee information
+    </h2>
+  </div>
+  <div
+    class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+  >
+    <div
+      class="margin-right-2"
+    >
+      <h3
+        class="margin-bottom-1 font-heading-xs text-bold"
+      >
+        Employee name
+      </h3>
+      Jane
        
-      00000
-    </span>
-  </ReviewRow>
-  <ReviewRow
-    label="Social Security Number or Individual Taxpayer Identification Number"
-    level="3"
+      
+       
+      Doe
+    </div>
+  </div>
+  <div
+    class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
   >
-    ***-**-1234
-  </ReviewRow>
-  <ReviewRow
-    label="Date of birth"
-    level="3"
+    <div
+      class="margin-right-2"
+    >
+      <h3
+        class="margin-bottom-1 font-heading-xs text-bold"
+      >
+        Mailing address
+      </h3>
+      <span
+        class="residential-address"
+        data-testid="residential-address"
+      >
+        1234 My St.
+        <br />
+        Boston
+        , 
+        MA
+         
+        00000
+      </span>
+    </div>
+  </div>
+  <div
+    class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
   >
-    7/17/****
-  </ReviewRow>
-</Fragment>
+    <div
+      class="margin-right-2"
+    >
+      <h3
+        class="margin-bottom-1 font-heading-xs text-bold"
+      >
+        Social Security Number or Individual Taxpayer Identification Number
+      </h3>
+      ***-**-1234
+    </div>
+  </div>
+  <div
+    class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+  >
+    <div
+      class="margin-right-2"
+    >
+      <h3
+        class="margin-bottom-1 font-heading-xs text-bold"
+      >
+        Date of birth
+      </h3>
+      7/17/****
+    </div>
+  </div>
+</div>
 `;

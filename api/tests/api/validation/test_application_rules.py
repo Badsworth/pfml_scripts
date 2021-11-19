@@ -1,4 +1,6 @@
-from datetime import date, datetime
+import datetime
+from datetime import date
+from unittest import mock
 
 import pytest
 from freezegun import freeze_time
@@ -6,6 +8,8 @@ from freezegun import freeze_time
 from massgov.pfml.api.models.applications.common import DurationBasis, FrequencyIntervalBasis
 from massgov.pfml.api.validation.application_rules import (
     get_always_required_issues,
+    get_application_complete_issues,
+    get_concurrent_leave_issues,
     get_conditional_issues,
     get_continuous_leave_issues,
     get_intermittent_leave_issues,
@@ -1715,24 +1719,37 @@ def test_has_employer_benefits_true_no_benefit():
     ] == issues
 
 
-def test_employer_benefit_no_issues():
+def test_has_employer_benefits_true_zero_benefit():
     application = ApplicationFactory.build()
-    benefits = [EmployerBenefitFactory.build(application_id=application.application_id)]
-    application.employer_benefits = benefits
+    application.has_employer_benefits = True
 
-    issues = get_conditional_issues(application)
-    assert [] == issues
-
-
-def test_employer_benefit_amount_fields_are_optional():
-    application = ApplicationFactory.build()
     benefits = [
         EmployerBenefitFactory.build(
             application_id=application.application_id,
-            benefit_amount_dollars=None,
-            benefit_amount_frequency_id=None,
+            benefit_amount_dollars=0,
+            is_full_salary_continuous=False,
         )
     ]
+    application.employer_benefits = benefits
+    issues = get_conditional_issues(application)
+
+    assert [
+        ValidationErrorDetail(
+            type=IssueType.minimum,
+            message="benefit_amount_dollars must be greater than zero",
+            field="employer_benefits[0].benefit_amount_dollars",
+        )
+    ] == issues
+
+    application.employer_benefits[0].is_full_salary_continuous = True
+    issues = get_conditional_issues(application)
+
+    assert len(issues) == 0
+
+
+def test_employer_benefit_no_issues():
+    application = ApplicationFactory.build()
+    benefits = [EmployerBenefitFactory.build(application_id=application.application_id)]
     application.employer_benefits = benefits
 
     issues = get_conditional_issues(application)
@@ -1761,41 +1778,26 @@ def test_employer_benefit_missing_fields():
     ] == issues
 
 
-def test_employer_benefit_amount_dollars_required():
-    application = ApplicationFactory.build()
-    benefits = [
-        EmployerBenefitFactory.build(
-            application_id=application.application_id, benefit_amount_dollars=None,
-        )
-    ]
-    application.employer_benefits = benefits
-
-    issues = get_conditional_issues(application)
+def test_benefit_amount_and_frequency_required():
+    test_app = ApplicationFactory.build(
+        employer_benefits=[
+            EmployerBenefit(
+                is_full_salary_continuous=False,
+                benefit_start_date=date(2021, 1, 3),
+                benefit_type_id=0,
+            )
+        ]
+    )
+    issues = get_conditional_issues(test_app)
     assert [
         ValidationErrorDetail(
             type=IssueType.required,
-            rule=IssueRule.conditional,
-            message="employer_benefits[0].benefit_amount_dollars is required if employer_benefits[0].benefit_amount_frequency is set",
+            message="employer_benefits[0].benefit_amount_dollars is required",
             field="employer_benefits[0].benefit_amount_dollars",
         ),
-    ] == issues
-
-
-def test_employer_benefit_amount_frequency_required():
-    application = ApplicationFactory.build()
-    benefits = [
-        EmployerBenefitFactory.build(
-            application_id=application.application_id, benefit_amount_frequency_id=None,
-        )
-    ]
-    application.employer_benefits = benefits
-
-    issues = get_conditional_issues(application)
-    assert [
         ValidationErrorDetail(
             type=IssueType.required,
-            rule=IssueRule.conditional,
-            message="employer_benefits[0].benefit_amount_frequency is required if employer_benefits[0].benefit_amount_dollars is set",
+            message="employer_benefits[0].benefit_amount_frequency is required",
             field="employer_benefits[0].benefit_amount_frequency",
         ),
     ] == issues
@@ -1914,7 +1916,7 @@ def test_other_leave_rules():
 
 def test_other_leave_submitted_rules():
     # TODO (CP-2455): Remove this test once we always require other leaves be present, even on submitted applications
-    application = ApplicationFactory.build(submitted_time=datetime.now())
+    application = ApplicationFactory.build(submitted_time=datetime.datetime.now())
     issues = get_conditional_issues(application)
 
     assert (
@@ -1966,24 +1968,30 @@ def test_has_other_incomes_true_no_income():
     ] == issues
 
 
-def test_other_income_no_issues():
+def test_has_other_incomes_true_zero_income():
     application = ApplicationFactory.build()
-    incomes = [OtherIncomeFactory.build(application_id=application.application_id,)]
+    application.has_other_incomes = True
+
+    incomes = [
+        OtherIncomeFactory.build(
+            application_id=application.application_id, income_amount_dollars=0,
+        )
+    ]
     application.other_incomes = incomes
 
     issues = get_conditional_issues(application)
-    assert [] == issues
-
-
-def test_other_income_amount_fields_are_optional():
-    application = ApplicationFactory.build()
-    incomes = [
-        OtherIncomeFactory.build(
-            application_id=application.application_id,
-            income_amount_dollars=None,
-            income_amount_frequency_id=None,
+    assert [
+        ValidationErrorDetail(
+            type=IssueType.minimum,
+            message="income_amount_dollars must be greater than zero",
+            field="other_incomes[0].income_amount_dollars",
         )
-    ]
+    ] == issues
+
+
+def test_other_income_no_issues():
+    application = ApplicationFactory.build()
+    incomes = [OtherIncomeFactory.build(application_id=application.application_id,)]
     application.other_incomes = incomes
 
     issues = get_conditional_issues(application)
@@ -2009,44 +2017,14 @@ def test_other_income_missing_fields():
             message="other_incomes[0].income_type is required",
             field="other_incomes[0].income_type",
         ),
-    ] == issues
-
-
-def test_other_income_amount_dollars_required():
-    application = ApplicationFactory.build()
-    incomes = [
-        OtherIncomeFactory.build(
-            application_id=application.application_id, income_amount_dollars=None,
-        )
-    ]
-    application.other_incomes = incomes
-
-    issues = get_conditional_issues(application)
-    assert [
         ValidationErrorDetail(
             type=IssueType.required,
-            rule=IssueRule.conditional,
-            message="other_incomes[0].income_amount_dollars is required if other_incomes[0].income_amount_frequency is set",
+            message="other_incomes[0].income_amount_dollars is required",
             field="other_incomes[0].income_amount_dollars",
         ),
-    ] == issues
-
-
-def test_other_income_amount_frequency_required():
-    application = ApplicationFactory.build()
-    incomes = [
-        OtherIncomeFactory.build(
-            application_id=application.application_id, income_amount_frequency_id=None,
-        )
-    ]
-    application.other_incomes = incomes
-
-    issues = get_conditional_issues(application)
-    assert [
         ValidationErrorDetail(
             type=IssueType.required,
-            rule=IssueRule.conditional,
-            message="other_incomes[0].income_amount_frequency is required if other_incomes[0].income_amount_dollars is set",
+            message="other_incomes[0].income_amount_frequency is required",
             field="other_incomes[0].income_amount_frequency",
         ),
     ] == issues
@@ -2386,3 +2364,321 @@ def test_previous_leave_worked_per_week_minutes_must_be_less_than_10080():
             field="previous_leaves_same_reason[0].worked_per_week_minutes",
         )
     ] == issues
+
+
+def test_previous_leaves_cannot_overlap_leave_periods():
+    application = ApplicationFactory.build()
+
+    # Previous leaves for the same reason; continuous leave; previous leave overlapping with the tail of the leave period
+    leave_periods = [
+        ContinuousLeavePeriodFactory.build(
+            application_id=application.application_id,
+            start_date=date(2021, 1, 1),
+            end_date=date(2021, 2, 28),
+        )
+    ]
+    previous_leaves = [
+        PreviousLeaveSameReasonFactory.build(
+            application_id=application.application_id,
+            leave_start_date=date(2021, 2, 28),
+            leave_end_date=date(2021, 3, 12),
+        )
+    ]
+    application.has_continuous_leave_periods = True
+    application.continuous_leave_periods = leave_periods
+    application.previous_leaves_same_reason = previous_leaves
+    issues = get_conditional_issues(application)
+    assert [
+        ValidationErrorDetail(
+            type=IssueType.conflicting,
+            rule=IssueRule.disallow_overlapping_leave_period_with_previous_leave,
+            message="Previous leaves cannot overlap with leave periods. Received leave period 2021-01-01 – 2021-02-28 and previous leave 2021-02-28 – 2021-03-12.",
+        ),
+    ] == issues
+
+    # Previous leaves for the same reason; reduced leave; previous leave overlapping with the beginning of the leave period
+    leave_periods = [
+        ReducedScheduleLeavePeriodFactory.build(
+            application_id=application.application_id,
+            start_date=date(2021, 1, 5),
+            end_date=date(2021, 2, 28),
+        )
+    ]
+    previous_leaves = [
+        PreviousLeaveSameReasonFactory.build(
+            application_id=application.application_id,
+            leave_start_date=date(2021, 1, 1),
+            leave_end_date=date(2021, 1, 5),
+        )
+    ]
+    application.has_continuous_leave_periods = False
+    application.continuous_leave_periods = []
+    application.has_reduced_schedule_leave_periods = True
+    application.reduced_schedule_leave_periods = leave_periods
+    application.previous_leaves_same_reason = previous_leaves
+    issues = get_conditional_issues(application)
+    assert [
+        ValidationErrorDetail(
+            type=IssueType.conflicting,
+            rule=IssueRule.disallow_overlapping_leave_period_with_previous_leave,
+            message="Previous leaves cannot overlap with leave periods. Received leave period 2021-01-05 – 2021-02-28 and previous leave 2021-01-01 – 2021-01-05.",
+        ),
+    ] == issues
+
+    # Previous leaves for another reason; reduced leave; previous leave contained within the leave period
+    leave_periods = [
+        ReducedScheduleLeavePeriodFactory.build(
+            application_id=application.application_id,
+            start_date=date(2021, 1, 5),
+            end_date=date(2021, 2, 28),
+        )
+    ]
+    previous_leaves = [
+        PreviousLeaveOtherReasonFactory.build(
+            application_id=application.application_id,
+            leave_start_date=date(2021, 1, 7),
+            leave_end_date=date(2021, 1, 24),
+        )
+    ]
+    application.reduced_schedule_leave_periods = leave_periods
+    application.previous_leaves_same_reason = []
+    application.previous_leaves_other_reason = previous_leaves
+    issues = get_conditional_issues(application)
+    assert [
+        ValidationErrorDetail(
+            type=IssueType.conflicting,
+            rule=IssueRule.disallow_overlapping_leave_period_with_previous_leave,
+            message="Previous leaves cannot overlap with leave periods. Received leave period 2021-01-05 – 2021-02-28 and previous leave 2021-01-07 – 2021-01-24.",
+        ),
+    ] == issues
+
+    # Previous leaves for another reason; intermittent leave; previous leave contain the entire leave period
+    leave_periods = [
+        IntermittentLeavePeriodFactory.build(
+            application_id=application.application_id,
+            start_date=date(2021, 1, 5),
+            end_date=date(2021, 2, 28),
+        )
+    ]
+    previous_leaves = [
+        PreviousLeaveOtherReasonFactory.build(
+            application_id=application.application_id,
+            leave_start_date=date(2021, 1, 3),
+            leave_end_date=date(2021, 3, 1),
+        )
+    ]
+    application.has_reduced_schedule_leave_periods = False
+    application.has_intermittent_leave_periods = True
+    application.reduced_schedule_leave_periods = []
+    application.intermittent_leave_periods = leave_periods
+    application.previous_leaves_other_reason = previous_leaves
+    issues = get_conditional_issues(application)
+    assert [
+        ValidationErrorDetail(
+            type=IssueType.conflicting,
+            rule=IssueRule.disallow_overlapping_leave_period_with_previous_leave,
+            message="Previous leaves cannot overlap with leave periods. Received leave period 2021-01-05 – 2021-02-28 and previous leave 2021-01-03 – 2021-03-01.",
+        ),
+    ] == issues
+
+
+@pytest.mark.parametrize(
+    "headers, is_withholding_tax, expected_issues",
+    [
+        ({}, None, []),
+        (
+            {"X-FF-Tax-Withholding-Enabled": True},
+            None,
+            [
+                ValidationErrorDetail(
+                    type=IssueType.required,
+                    message="Tax withholding preference is required",
+                    field="is_withholding_tax",
+                ),
+            ],
+        ),
+        ({"X-FF-Tax-Withholding-Enabled": True}, True, []),
+        ({"X-FF-Tax-Withholding-Enabled": True}, False, []),
+    ],
+)
+def test_get_application_complete_issues(headers, is_withholding_tax, expected_issues):
+    with mock.patch(
+        "massgov.pfml.api.validation.application_rules.get_application_issues", return_value=[]
+    ) as mock_get_app_issues:
+        application = ApplicationFactory.build(is_withholding_tax=is_withholding_tax)
+
+        issues = get_application_complete_issues(application, headers)
+
+        mock_get_app_issues.assert_called_once_with(application)
+
+        assert issues == expected_issues
+
+
+class TestGetConcurrentLeaveIssues:
+    @pytest.fixture
+    def application(self, concurrent_leave):
+        application = ApplicationFactory.build()
+        application.concurrent_leave = concurrent_leave
+        application.has_concurrent_leave = True
+        return application
+
+    @pytest.fixture
+    def continuous_leave_periods(self, application):
+        return [
+            ContinuousLeavePeriodFactory.build(
+                start_date=date(2021, 11, 20), end_date=date(2021, 12, 28),
+            )
+        ]
+
+    @pytest.fixture
+    def reduced_leave_periods(self):
+        return [
+            ReducedScheduleLeavePeriodFactory.build(
+                start_date=date(2021, 11, 20), end_date=date(2021, 12, 28),
+            )
+        ]
+
+    @pytest.fixture
+    def concurrent_leave(self):
+        return ConcurrentLeaveFactory.build(
+            is_for_current_employer=True,
+            leave_start_date=date(2021, 11, 19),
+            leave_end_date=date(2021, 11, 27),
+        )
+
+    @pytest.fixture
+    def concurrent_leave_start_issue(self):
+        return ValidationErrorDetail(
+            type=IssueType.conflicting,
+            message="Concurrent leaves cannot overlap with waiting period.",
+            rule=IssueRule.disallow_overlapping_waiting_period_and_concurrent_leave_start_date,
+            field="concurrent_leave.leave_start_date",
+        )
+
+    @pytest.fixture
+    def concurrent_leave_end_issue(self):
+        return ValidationErrorDetail(
+            type=IssueType.conflicting,
+            message="Concurrent leaves cannot overlap with waiting period.",
+            rule=IssueRule.disallow_overlapping_waiting_period_and_concurrent_leave_end_date,
+            field="concurrent_leave.leave_end_date",
+        )
+
+    @pytest.fixture
+    def intermittent_leave(self):
+        return [
+            IntermittentLeavePeriodFactory.build(
+                start_date=date(2021, 11, 20), end_date=date(2021, 12, 20)
+            )
+        ]
+
+    def test_concurrent_leave_start_date_cannot_overlap_continuous_leave_waiting_period(
+        self, application, continuous_leave_periods, concurrent_leave_start_issue
+    ):
+        application.has_continuous_leave_periods = True
+        application.continuous_leave_periods = continuous_leave_periods
+        application.concurrent_leave.leave_start_date = continuous_leave_periods[0].start_date
+
+        issues = get_concurrent_leave_issues(application)
+        assert concurrent_leave_start_issue in issues
+
+    def test_concurrent_leave_end_date_cannot_overlap_continuous_leave_waiting_period(
+        self, application, continuous_leave_periods, concurrent_leave_end_issue
+    ):
+        application.has_continuous_leave_periods = True
+        application.continuous_leave_periods = continuous_leave_periods
+        application.concurrent_leave.leave_end_date = continuous_leave_periods[
+            0
+        ].start_date + datetime.timedelta(days=1)
+
+        issues = get_concurrent_leave_issues(application)
+        assert concurrent_leave_end_issue in issues
+
+    def test_concurrent_leave_start_and_end_dates_cannot_overlap_continuous_leave_waiting_period(
+        self,
+        application,
+        continuous_leave_periods,
+        concurrent_leave_start_issue,
+        concurrent_leave_end_issue,
+    ):
+        application.has_continuous_leave_periods = True
+        application.continuous_leave_periods = continuous_leave_periods
+        application.concurrent_leave.leave_start_date = continuous_leave_periods[0].start_date
+        application.concurrent_leave.leave_end_date = continuous_leave_periods[
+            0
+        ].start_date + datetime.timedelta(days=1)
+
+        issues = get_concurrent_leave_issues(application)
+        assert concurrent_leave_start_issue in issues
+        assert concurrent_leave_end_issue in issues
+
+    def test_concurrent_leave_start_date_cannot_overlap_reduced_leave_waiting_period(
+        self, application, reduced_leave_periods, concurrent_leave_start_issue
+    ):
+        application.has_reduced_schedule_leave_periods = True
+        application.reduced_schedule_leave_periods = reduced_leave_periods
+        application.concurrent_leave.leave_start_date = reduced_leave_periods[0].start_date
+
+        issues = get_concurrent_leave_issues(application)
+        assert concurrent_leave_start_issue in issues
+
+    def test_concurrent_leave_dates_not_validated_for_intermittent_leave(
+        self, application, intermittent_leave
+    ):
+        application.has_intermittent_leave_periods = True
+        application.intermittent_leave_periods = intermittent_leave
+        application.concurrent_leave.leave_start_date = intermittent_leave[0].start_date
+        application.concurrent_leave.leave_end_date = intermittent_leave[
+            0
+        ].start_date + datetime.timedelta(days=1)
+
+        issues = get_concurrent_leave_issues(application)
+        assert [] == issues
+
+    def test_no_issues_returned_if_no_concurrent_leave(self, application, continuous_leave_periods):
+        application.has_continuous_leave_periods = True
+        application.continuous_leave_periods = continuous_leave_periods
+        application.has_concurrent_leave = False
+        application.concurrent_leave = None
+
+        issues = get_concurrent_leave_issues(application)
+        assert [] == issues
+
+    def test_no_issues_for_non_overlapping_leaves(self, application, continuous_leave_periods):
+        application.has_continuous_leave_periods = True
+        application.continuous_leave_periods = continuous_leave_periods
+        application.concurrent_leave.leave_start_date = continuous_leave_periods[
+            0
+        ].start_date + datetime.timedelta(days=7)
+        application.concurrent_leave.leave_end_date = continuous_leave_periods[
+            0
+        ].start_date + datetime.timedelta(days=8)
+
+        issues = get_concurrent_leave_issues(application)
+        assert [] == issues
+
+    def test_correct_calculation_of_waiting_period_dates(
+        self,
+        application,
+        continuous_leave_periods,
+        reduced_leave_periods,
+        concurrent_leave_start_issue,
+    ):
+        application.has_continuous_leave_periods = True
+        application.has_reduced_schedule_leave_periods = True
+
+        application.continuous_leave_periods = continuous_leave_periods
+        application.continuous_leave_periods[0].start_date = date(2021, 11, 20)
+        application.continuous_leave_periods[0].end_date = date(2021, 12, 28)
+
+        # This is the earliest leave start date
+        # we should receive an error if concurrent start or end dates land between 10/28/21 and 11/3/21
+        application.reduced_schedule_leave_periods = reduced_leave_periods
+        application.reduced_schedule_leave_periods[0].start_date = date(2021, 10, 28)
+        application.reduced_schedule_leave_periods[0].end_date = date(2021, 11, 19)
+
+        application.concurrent_leave.leave_start_date = date(2021, 10, 29)
+        application.concurrent_leave.leave_end_date = date(2021, 11, 10)
+
+        issues = get_concurrent_leave_issues(application)
+        assert concurrent_leave_start_issue in issues

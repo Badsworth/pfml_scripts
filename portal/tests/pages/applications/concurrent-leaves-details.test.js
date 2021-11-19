@@ -1,33 +1,29 @@
-import {
-  MockBenefitsApplicationBuilder,
-  renderWithAppLogic,
-  simulateEvents,
-} from "../../test-utils";
+import { MockBenefitsApplicationBuilder, renderPage } from "../../test-utils";
+import { screen, waitFor } from "@testing-library/react";
 import ConcurrentLeavesDetails from "../../../src/pages/applications/concurrent-leaves-details";
+import { setupBenefitsApplications } from "../../test-utils/helpers";
+import userEvent from "@testing-library/user-event";
 
-jest.mock("../../../src/hooks/useAppLogic");
+const updateClaim = jest.fn(() => {
+  return Promise.resolve();
+});
 
 const setup = () => {
-  const { appLogic, claim, wrapper } = renderWithAppLogic(
+  const claims = [
+    new MockBenefitsApplicationBuilder().employed().continuous().create(),
+  ];
+  const cb = (appLogic) => {
+    appLogic.benefitsApplications.update = updateClaim;
+  };
+  return renderPage(
     ConcurrentLeavesDetails,
     {
-      claimAttrs: new MockBenefitsApplicationBuilder()
-        .employed()
-        .continuous()
-        .create(),
-    }
+      addCustomSetup: (hook) => {
+        setupBenefitsApplications(hook, claims, cb);
+      },
+    },
+    { query: { claim_id: "mock_application_id" } }
   );
-
-  const { changeField, changeRadioGroup, submitForm } = simulateEvents(wrapper);
-
-  return {
-    appLogic,
-    changeRadioGroup,
-    changeField,
-    claim,
-    submitForm,
-    wrapper,
-  };
 };
 
 const concurrentLeaveData = {
@@ -38,52 +34,49 @@ const concurrentLeaveData = {
 
 describe("ConcurrentLeavesDetails", () => {
   it("renders the page", () => {
-    const { wrapper } = setup();
-
-    expect(wrapper).toMatchSnapshot();
+    const { container } = setup();
+    expect(container).toMatchSnapshot();
   });
 
   it("calls claims.update with new concurrent leave data when user clicks continue", async () => {
-    const { appLogic, changeField, changeRadioGroup, claim, submitForm } =
-      setup();
+    setup();
+    userEvent.click(screen.getByRole("radio", { name: "Yes" }));
+    const [startMonth, endMonth] = screen.getAllByRole("textbox", {
+      name: "Month",
+    });
+    const [startDay, endDay] = screen.getAllByRole("textbox", { name: "Day" });
+    const [startYear, endYear] = screen.getAllByRole("textbox", {
+      name: "Year",
+    });
 
-    changeRadioGroup(
-      "concurrent_leave.is_for_current_employer",
-      concurrentLeaveData.is_for_current_employer
-    );
-    changeField(
-      "concurrent_leave.leave_start_date",
-      concurrentLeaveData.leave_start_date
-    );
-    changeField(
-      "concurrent_leave.leave_end_date",
-      concurrentLeaveData.leave_end_date
-    );
+    userEvent.type(startMonth, "5");
+    userEvent.type(startDay, "1");
+    userEvent.type(startYear, "2021");
+    userEvent.type(endMonth, "6");
+    userEvent.type(endDay, "1");
+    userEvent.type(endYear, "2021");
 
-    await submitForm();
+    userEvent.click(screen.getByRole("button", { name: "Save and continue" }));
 
-    expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
-      claim.application_id,
-      {
+    await waitFor(() => {
+      expect(updateClaim).toHaveBeenCalledWith("mock_application_id", {
         concurrent_leave: concurrentLeaveData,
-      }
-    );
+      });
+    });
   });
 
   it("calls claims.update with empty concurrent leave data when user does not enter data", async () => {
-    const { appLogic, claim, submitForm } = setup();
+    setup();
 
-    await submitForm();
-
-    expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
-      claim.application_id,
-      {
+    userEvent.click(screen.getByRole("button", { name: "Save and continue" }));
+    await waitFor(() => {
+      expect(updateClaim).toHaveBeenCalledWith("mock_application_id", {
         concurrent_leave: {
           is_for_current_employer: null,
           leave_start_date: null,
           leave_end_date: null,
         },
-      }
-    );
+      });
+    });
   });
 });

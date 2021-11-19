@@ -9,7 +9,6 @@ import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.files as file_util
 from massgov.pfml.db.models.employees import (
-    ClaimType,
     Flow,
     Payment,
     PaymentMethod,
@@ -18,7 +17,7 @@ from massgov.pfml.db.models.employees import (
     State,
     StateLog,
 )
-from massgov.pfml.db.models.factories import ClaimFactory, PaymentFactory
+from massgov.pfml.db.models.factories import PaymentFactory
 from massgov.pfml.db.models.payments import FineosWritebackDetails, FineosWritebackTransactionStatus
 from massgov.pfml.delegated_payments.audit.delegated_payment_audit_csv import (
     PAYMENT_AUDIT_CSV_HEADERS,
@@ -31,6 +30,8 @@ from massgov.pfml.delegated_payments.audit.delegated_payment_audit_util import (
 from massgov.pfml.delegated_payments.audit.delegated_payment_rejects import (
     ACCEPTED_OUTCOME,
     ACCEPTED_STATE,
+    AUDIT_REJECT_NOTE_TO_WRITEBACK_STATUS,
+    AUDIT_SKIPPED_NOTE_TO_WRITEBACK_STATUS,
     NOT_SAMPLED_PAYMENT_NEXT_STATE_BY_CURRENT_STATE,
     NOT_SAMPLED_PAYMENT_OUTCOME_BY_CURRENT_STATE,
     NOT_SAMPLED_STATE_TRANSITIONS,
@@ -41,6 +42,7 @@ from massgov.pfml.delegated_payments.audit.mock.delegated_payment_audit_generato
     DEFAULT_AUDIT_SCENARIO_DATA_SET,
     generate_payment_audit_data_set_and_rejects_file,
 )
+from massgov.pfml.delegated_payments.mock.delegated_payments_factory import DelegatedPaymentFactory
 
 
 @pytest.fixture
@@ -124,21 +126,15 @@ def test_parse_payment_rejects_file_missing_columns(
         # Just verify a few others aren't set
         assert row.rejected_by_program_integrity is None
         assert row.skipped_by_program_integrity is None
-        assert row.max_weekly_benefits_details is None
-        assert row.dua_dia_reduction_details is None
+        assert row.dua_additional_income_details is None
+        assert row.dia_additional_income_details is None
+        assert row.dor_fineos_name_mismatch_details is None
 
 
 def test_rejects_column_validation(test_db_session, payment_rejects_step):
-    claim = ClaimFactory.create(claim_type_id=ClaimType.FAMILY_LEAVE.claim_type_id)
-    payment = PaymentFactory.create(
-        disb_method_id=PaymentMethod.ACH.payment_method_id, claim=claim,
-    )
-    state_log_util.create_finished_state_log(
-        payment,
-        State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT,
-        state_log_util.build_outcome("test"),
-        test_db_session,
-    )
+    payment = DelegatedPaymentFactory(
+        test_db_session, payment_method=PaymentMethod.ACH,
+    ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT)
 
     payment_audit_data = PaymentAuditData(
         payment=payment,
@@ -194,16 +190,9 @@ def test_valid_combination_of_reject_and_skip(
     rejected_by_program_integrity,
     skipped_by_program_integrity,
 ):
-    claim = ClaimFactory.create(claim_type_id=ClaimType.FAMILY_LEAVE.claim_type_id)
-    payment = PaymentFactory.create(
-        disb_method_id=PaymentMethod.ACH.payment_method_id, claim=claim,
-    )
-    state_log_util.create_finished_state_log(
-        payment,
-        State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT,
-        state_log_util.build_outcome("test"),
-        test_db_session,
-    )
+    payment = DelegatedPaymentFactory(
+        test_db_session, payment_method=PaymentMethod.ACH,
+    ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT)
 
     payment_audit_data = PaymentAuditData(
         payment=payment,
@@ -238,13 +227,10 @@ def test_valid_combination_of_reject_and_skip(
 
 def test_transition_audit_pending_payment_state(test_db_session, payment_rejects_step):
     # test rejection
-    payment_1 = PaymentFactory.create()
-    state_log_util.create_finished_state_log(
-        payment_1,
-        State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT,
-        state_log_util.build_outcome("test"),
-        test_db_session,
-    )
+
+    payment_1 = DelegatedPaymentFactory(
+        test_db_session, payment_method=PaymentMethod.ACH,
+    ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT)
 
     payment_rejects_step.transition_audit_pending_payment_state(
         payment_1, True, False, "Example notes"
@@ -286,13 +272,9 @@ def test_transition_audit_pending_payment_state(test_db_session, payment_rejects
     )
 
     # test acceptance
-    payment_2 = PaymentFactory.create()
-    state_log_util.create_finished_state_log(
-        payment_2,
-        State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT,
-        state_log_util.build_outcome("test"),
-        test_db_session,
-    )
+    payment_2 = DelegatedPaymentFactory(
+        test_db_session, payment_method=PaymentMethod.ACH,
+    ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT)
 
     payment_rejects_step.transition_audit_pending_payment_state(payment_2, False, False)
 
@@ -314,12 +296,10 @@ def test_transition_audit_pending_payment_state(test_db_session, payment_rejects
         payment_rejects_step.transition_audit_pending_payment_state(payment_3, True, False)
 
     # test not a payment pending state exception
-    payment_4 = PaymentFactory.create()
-    state_log_util.create_finished_state_log(
-        payment_4,
-        State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_NOT_SAMPLED,
-        state_log_util.build_outcome("test"),
-        test_db_session,
+    payment_4 = DelegatedPaymentFactory(
+        test_db_session, payment_method=PaymentMethod.ACH,
+    ).get_or_create_payment_with_state(
+        State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_NOT_SAMPLED
     )
 
     with pytest.raises(
@@ -329,13 +309,9 @@ def test_transition_audit_pending_payment_state(test_db_session, payment_rejects
         payment_rejects_step.transition_audit_pending_payment_state(payment_4, True, False)
 
     # test skip
-    payment_5 = PaymentFactory.create()
-    state_log_util.create_finished_state_log(
-        payment_5,
-        State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT,
-        state_log_util.build_outcome("test"),
-        test_db_session,
-    )
+    payment_5 = DelegatedPaymentFactory(
+        test_db_session, payment_method=PaymentMethod.ACH,
+    ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT)
 
     payment_rejects_step.transition_audit_pending_payment_state(payment_5, False, True)
 
@@ -372,19 +348,156 @@ def test_transition_audit_pending_payment_state(test_db_session, payment_rejects
         == expected_writeback_transaction_status.transaction_status_id
     )
 
+    # Reject notes have a weird character in them
+    payment_6 = PaymentFactory.create()
+    state_log_util.create_finished_state_log(
+        payment_6,
+        State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT,
+        state_log_util.build_outcome("test"),
+        test_db_session,
+    )
+
+    payment_rejects_step.transition_audit_pending_payment_state(
+        payment_6, True, False, "InvalidPayment" + "\ufffd" + "PaidDate",
+    )
+
+    payment_state_log: Optional[StateLog] = state_log_util.get_latest_state_log_in_flow(
+        payment_6, Flow.DELEGATED_PAYMENT, test_db_session
+    )
+
+    assert payment_state_log is not None
+    assert (
+        payment_state_log.end_state_id
+        == State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT.state_id
+    )
+    # Weird character replaced with space
+    assert (
+        payment_state_log.outcome["message"]
+        == "Payment rejected with notes: InvalidPayment PaidDate"
+    )
+    writeback_details = (
+        test_db_session.query(FineosWritebackDetails)
+        .filter(FineosWritebackDetails.payment_id == payment_6.payment_id)
+        .one_or_none()
+    )
+    # correct writeback details found
+    assert writeback_details is not None
+    assert (
+        writeback_details.transaction_status_id
+        == FineosWritebackTransactionStatus.ALREADY_PAID_FOR_DATES.transaction_status_id
+    )
+
+
+def test_convert_reject_notes_to_writeback_status_rejected_scenarios(
+    test_db_session, payment_rejects_step
+):
+    test_cases = []
+
+    for (reject_note, expected_status) in AUDIT_REJECT_NOTE_TO_WRITEBACK_STATUS.items():
+        test_cases.append(
+            {"reject_notes": reject_note, "expected_status": expected_status,}
+        )
+
+    # Close matches
+    test_cases.append(
+        {
+            "reject_notes": "Dua Additional Income",
+            "expected_status": FineosWritebackTransactionStatus.DUA_ADDITIONAL_INCOME,
+        }
+    )
+
+    test_cases.append(
+        {
+            "reject_notes": "DUA Additional Income.",
+            "expected_status": FineosWritebackTransactionStatus.DUA_ADDITIONAL_INCOME,
+        }
+    )
+
+    # No matches
+    test_cases.append(
+        {
+            "reject_notes": None,
+            "expected_status": FineosWritebackTransactionStatus.FAILED_MANUAL_VALIDATION,
+        }
+    )
+    test_cases.append(
+        {
+            "reject_notes": "",
+            "expected_status": FineosWritebackTransactionStatus.FAILED_MANUAL_VALIDATION,
+        }
+    )
+    test_cases.append(
+        {
+            "reject_notes": "Unknown reject status note",
+            "expected_status": FineosWritebackTransactionStatus.FAILED_MANUAL_VALIDATION,
+        }
+    )
+    for test_case in test_cases:
+        payment_1 = PaymentFactory.create()
+
+        writeback_status = payment_rejects_step.convert_reject_notes_to_writeback_status(
+            payment_1, True, test_case["reject_notes"]
+        )
+
+        assert (
+            writeback_status.transaction_status_id
+            == test_case["expected_status"].transaction_status_id
+        )
+
+
+def test_convert_reject_notes_to_writeback_status_skipped_scenarios(
+    test_db_session, payment_rejects_step
+):
+    test_cases = []
+
+    for (reject_note, expected_status) in AUDIT_SKIPPED_NOTE_TO_WRITEBACK_STATUS.items():
+        test_cases.append(
+            {"reject_notes": reject_note, "expected_status": expected_status,}
+        )
+
+    # Close matches
+    test_cases.append(
+        {
+            "reject_notes": "Leave Plan In Review (Skipped)",
+            "expected_status": FineosWritebackTransactionStatus.LEAVE_IN_REVIEW,
+        }
+    )
+
+    test_cases.append(
+        {
+            "reject_notes": "~!~LeAvE PlAn IN review~!~",
+            "expected_status": FineosWritebackTransactionStatus.LEAVE_IN_REVIEW,
+        }
+    )
+
+    # Unknown test cases
+    test_cases.append(
+        {
+            "reject_notes": "Unknown reject status note",
+            "expected_status": FineosWritebackTransactionStatus.PENDING_PAYMENT_AUDIT,
+        }
+    )
+
+    for test_case in test_cases:
+        payment_1 = PaymentFactory.create()
+
+        writeback_status = payment_rejects_step.convert_reject_notes_to_writeback_status(
+            payment_1, False, test_case["reject_notes"]
+        )
+
+        assert (
+            writeback_status.transaction_status_id
+            == test_case["expected_status"].transaction_status_id
+        )
+
 
 def test_transition_not_sampled_payment_audit_pending_states(test_db_session, payment_rejects_step):
     # create payments with pending states
     payment_to_pending_state = {}
     for state_transition in NOT_SAMPLED_STATE_TRANSITIONS:
-        payment = PaymentFactory.create()
-        state_log_util.create_finished_state_log(
-            payment,
-            state_transition.from_state,
-            state_log_util.build_outcome("test"),
-            test_db_session,
-        )
-
+        payment = DelegatedPaymentFactory(
+            test_db_session, payment_method=PaymentMethod.ACH,
+        ).get_or_create_payment_with_state(state_transition.from_state)
         payment_to_pending_state[payment.payment_id] = state_transition.from_state
 
     # transition the states
@@ -460,12 +573,10 @@ def test_process_rejects(
     )
 
     # Create a few more payments in pending state (not sampled)
-    not_sampled = PaymentFactory.create()
-    state_log_util.create_finished_state_log(
-        not_sampled,
-        State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_NOT_SAMPLED,
-        state_log_util.build_outcome("test"),
-        test_db_session,
+    not_sampled = DelegatedPaymentFactory(
+        test_db_session, payment_method=PaymentMethod.ACH,
+    ).get_or_create_payment_with_state(
+        State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_NOT_SAMPLED
     )
 
     # process rejects
@@ -534,7 +645,7 @@ def test_process_rejects_error(
         PaymentRejectsException,
         match=f"Too many Payment Rejects files found: {rejects_file_name_1}, {rejects_file_name_2}",
     ):
-        payment_rejects_step.process_rejects()
+        payment_rejects_step.run()
 
     # check rejects file was moved to processed folder
     expected_errored_folder_path = os.path.join(

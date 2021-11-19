@@ -15,13 +15,8 @@ import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.files as file_util
 from massgov.pfml.db.models import factories
 from massgov.pfml.db.models.employees import (
-    BankAccountType,
-    Claim,
-    ClaimType,
-    EmployeePubEftPair,
     Flow,
     ImportLog,
-    Payment,
     PaymentMethod,
     PaymentTransactionType,
     PrenoteState,
@@ -34,6 +29,7 @@ from massgov.pfml.db.models.employees import (
 )
 from massgov.pfml.db.models.factories import PaymentFactory, PubEftFactory, ReferenceFileFactory
 from massgov.pfml.db.models.payments import FineosWritebackDetails, FineosWritebackTransactionStatus
+from massgov.pfml.delegated_payments.mock.delegated_payments_factory import DelegatedPaymentFactory
 from massgov.pfml.delegated_payments.pub import process_nacha_return_step
 from massgov.pfml.delegated_payments.util.ach.reader import (
     ACHChangeNotification,
@@ -105,69 +101,19 @@ def create_ach_change_notification(
     return ach_change_notification
 
 
-def pub_eft_with_state_factory(
-    pub_individual_id, prenote_state, employee_end_state, test_db_session
-):
-    employee = factories.EmployeeFactory.create()
-    pub_eft = PubEft(
-        routing_nbr="%09d" % (444000000 + pub_individual_id),
-        account_nbr="%011d" % (3030000000 + pub_individual_id),
-        bank_account_type_id=BankAccountType.CHECKING.bank_account_type_id,
-        prenote_state_id=prenote_state.prenote_state_id,
-        pub_individual_id=pub_individual_id,
-    )
-    test_db_session.add(pub_eft)
-    employee.pub_efts.append(EmployeePubEftPair(pub_eft=pub_eft))
-
-    test_db_session.commit()
-
-    massgov.pfml.api.util.state_log_util.create_finished_state_log(
-        end_state=employee_end_state,
-        associated_model=employee,
-        db_session=test_db_session,
-        outcome=massgov.pfml.api.util.state_log_util.build_outcome(
-            f"Generated state {prenote_state.prenote_state_description}"
-        ),
-    )
-
-    test_db_session.refresh(pub_eft)
-
-    return pub_eft
-
-
-def pub_eft_pending_with_pub_factory(pub_individual_id, test_db_session):
-    return pub_eft_with_state_factory(
-        pub_individual_id,
-        PrenoteState.PENDING_WITH_PUB,
-        State.DELEGATED_EFT_PRENOTE_SENT,
-        test_db_session,
-    )
-
-
 def payment_with_state_factory(pub_individual_id, payment_end_state, test_db_session):
     employee = factories.EmployeeFactory.create()
     employer = factories.EmployerFactory.create()
 
-    pub_eft = PubEft(
-        routing_nbr="%09d" % (444000000 + pub_individual_id),
-        account_nbr="%011d" % (3030000000 + pub_individual_id),
-        bank_account_type_id=BankAccountType.CHECKING.bank_account_type_id,
-        prenote_state_id=PrenoteState.APPROVED.prenote_state_id,
-        pub_individual_id=pub_individual_id,
-    )
-    test_db_session.add(pub_eft)
-    employee.pub_efts.append(EmployeePubEftPair(pub_eft=pub_eft))
-
-    claim = Claim(
-        claim_type_id=ClaimType.FAMILY_LEAVE.claim_type_id,
-        employer=employer,
+    factory = DelegatedPaymentFactory(
+        test_db_session,
+        set_pub_eft_in_payment=True,
         employee=employee,
+        employer=employer,
         fineos_absence_id="NTN-9900%s-ABS-1" % pub_individual_id,
-    )
-    test_db_session.add(claim)
-
-    payment = Payment(
-        payment_transaction_type_id=PaymentTransactionType.STANDARD.payment_transaction_type_id,
+        pub_individual_id=pub_individual_id,
+        prenote_state=PrenoteState.APPROVED,
+        payment_transaction_type=PaymentTransactionType.STANDARD,
         period_start_date=datetime.date(2021, 3, 17),
         period_end_date=datetime.date(2021, 3, 24),
         payment_date=datetime.date(2021, 3, 25),
@@ -175,23 +121,12 @@ def payment_with_state_factory(pub_individual_id, payment_end_state, test_db_ses
         fineos_pei_c_value=42424,
         fineos_pei_i_value=10000 + pub_individual_id,
         fineos_extraction_date=datetime.date(2021, 3, 24),
-        disb_method_id=PaymentMethod.ACH.payment_method_id,
-        pub_eft=pub_eft,
-        claim=claim,
-        pub_individual_id=pub_individual_id,
+        payment_method=PaymentMethod.ACH,
+        payment_end_state_message="Generated state DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT",
     )
-    test_db_session.add(payment)
 
-    test_db_session.commit()
-
-    massgov.pfml.api.util.state_log_util.create_finished_state_log(
-        end_state=payment_end_state,
-        associated_model=payment,
-        db_session=test_db_session,
-        outcome=massgov.pfml.api.util.state_log_util.build_outcome(
-            "Generated state DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT"
-        ),
-    )
+    factory.get_or_create_pub_eft()
+    payment = factory.get_or_create_payment_with_state(payment_end_state)
 
     return payment
 
@@ -321,9 +256,9 @@ def test_prenote_eft_not_found(local_test_db_session, process_return_step, mock_
 
 
 def test_prenote_pending_pre_pub(local_test_db_session, process_return_step, mock_ach_reader):
-    pub_eft_with_state_factory(
-        123, PrenoteState.PENDING_PRE_PUB, State.DELEGATED_EFT_SEND_PRENOTE, local_test_db_session
-    )
+    DelegatedPaymentFactory(
+        local_test_db_session, pub_individual_id=123, prenote_state=PrenoteState.PENDING_PRE_PUB
+    ).get_or_create_pub_eft_with_state(State.DELEGATED_EFT_SEND_PRENOTE)
 
     ach_return = create_ach_return("E123", TypeCode.ENTRY_DETAIL, "R01")
     mock_ach_reader.ach_returns.append(ach_return)
@@ -342,9 +277,9 @@ def test_prenote_pending_pre_pub(local_test_db_session, process_return_step, moc
 
 
 def test_prenote_rejected(local_test_db_session, process_return_step, mock_ach_reader):
-    pub_eft_with_state_factory(
-        123, PrenoteState.REJECTED, State.DELEGATED_EFT_PRENOTE_SENT, local_test_db_session
-    )
+    DelegatedPaymentFactory(
+        local_test_db_session, pub_individual_id=123, prenote_state=PrenoteState.REJECTED
+    ).get_or_create_pub_eft_with_state(State.DELEGATED_EFT_PRENOTE_SENT)
 
     ach_return = create_ach_return("E123", TypeCode.ENTRY_DETAIL, "R01")
     mock_ach_reader.ach_returns.append(ach_return)
@@ -365,9 +300,9 @@ def test_prenote_rejected(local_test_db_session, process_return_step, mock_ach_r
 def test_prenote_return_pending_with_pub(
     local_test_db_session, process_return_step, mock_ach_reader
 ):
-    pub_eft = pub_eft_with_state_factory(
-        123, PrenoteState.PENDING_WITH_PUB, State.DELEGATED_EFT_PRENOTE_SENT, local_test_db_session
-    )
+    pub_eft = DelegatedPaymentFactory(
+        local_test_db_session, pub_individual_id=123, prenote_state=PrenoteState.PENDING_WITH_PUB
+    ).get_or_create_pub_eft_with_state(State.DELEGATED_EFT_PRENOTE_SENT)
 
     ach_return = create_ach_return("E123", TypeCode.ENTRY_DETAIL, "R01")
     mock_ach_reader.ach_returns.append(ach_return)
@@ -388,9 +323,9 @@ def test_prenote_return_pending_with_pub(
 
 
 def test_prenote_return_approved(local_test_db_session, process_return_step, mock_ach_reader):
-    pub_eft = pub_eft_with_state_factory(
-        123, PrenoteState.APPROVED, State.DELEGATED_EFT_PRENOTE_SENT, local_test_db_session
-    )
+    pub_eft = DelegatedPaymentFactory(
+        local_test_db_session, pub_individual_id=123, prenote_state=PrenoteState.APPROVED
+    ).get_or_create_pub_eft_with_state(State.DELEGATED_EFT_PRENOTE_SENT)
 
     ach_return = create_ach_return("E123", TypeCode.ENTRY_DETAIL, "R01")
     mock_ach_reader.ach_returns.append(ach_return)
@@ -413,9 +348,9 @@ def test_prenote_return_approved(local_test_db_session, process_return_step, moc
 def test_prenote_change_notification_pending_with_pub(
     local_test_db_session, process_return_step, mock_ach_reader
 ):
-    pub_eft = pub_eft_with_state_factory(
-        123, PrenoteState.PENDING_WITH_PUB, State.DELEGATED_EFT_PRENOTE_SENT, local_test_db_session
-    )
+    pub_eft = DelegatedPaymentFactory(
+        local_test_db_session, pub_individual_id=123, prenote_state=PrenoteState.PENDING_WITH_PUB
+    ).get_or_create_pub_eft_with_state(State.DELEGATED_EFT_PRENOTE_SENT)
 
     ach_change_notification = create_ach_change_notification("E123", TypeCode.ENTRY_DETAIL, "C01")
     mock_ach_reader.change_notifications.append(ach_change_notification)
@@ -438,9 +373,9 @@ def test_prenote_change_notification_pending_with_pub(
 def test_prenote_change_notification_already_approved(
     local_test_db_session, process_return_step, mock_ach_reader
 ):
-    pub_eft = pub_eft_with_state_factory(
-        123, PrenoteState.APPROVED, State.DELEGATED_EFT_PRENOTE_SENT, local_test_db_session
-    )
+    pub_eft = DelegatedPaymentFactory(
+        local_test_db_session, pub_individual_id=123, prenote_state=PrenoteState.APPROVED
+    ).get_or_create_pub_eft_with_state(State.DELEGATED_EFT_PRENOTE_SENT)
 
     ach_change_notification = create_ach_change_notification("E123", TypeCode.ENTRY_DETAIL, "C01")
     mock_ach_reader.change_notifications.append(ach_change_notification)
@@ -719,7 +654,12 @@ def test_process_nacha_return_file_step_full(
     file_util.copy_file(source_file_path, destination_file_path)
 
     # Add prenotes 0 to 39 to database. These correspond to E0 to E39 ids in return file.
-    pub_efts = [pub_eft_pending_with_pub_factory(i, local_test_db_session) for i in range(40)]
+    pub_efts = [
+        DelegatedPaymentFactory(
+            local_test_db_session, pub_individual_id=i, prenote_state=PrenoteState.PENDING_WITH_PUB
+        ).get_or_create_pub_eft_with_state(State.DELEGATED_EFT_PRENOTE_SENT)
+        for i in range(40)
+    ]
 
     # Add payments 40 to 79 to the database. These correspond to P40 to P79 ids in return file.
     payments = [payment_sent_to_pub_factory(i, local_test_db_session) for i in range(40, 80)]

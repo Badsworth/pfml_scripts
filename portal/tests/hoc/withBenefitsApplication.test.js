@@ -1,108 +1,161 @@
+import { screen, waitFor } from "@testing-library/react";
 import BenefitsApplication from "../../src/models/BenefitsApplication";
 import BenefitsApplicationCollection from "../../src/models/BenefitsApplicationCollection";
 import React from "react";
-import { act } from "react-dom/test-utils";
-import { mount } from "enzyme";
-import useAppLogic from "../../src/hooks/useAppLogic";
+import { renderPage } from "../test-utils";
+import routes from "../../src/routes";
 import withBenefitsApplication from "../../src/hoc/withBenefitsApplication";
+
+const mockApplicationId = "mock-application-id";
+const mockPageContent = "Application is loaded. This is the page.";
 
 jest.mock("../../src/hooks/useAppLogic");
 
-describe("withBenefitsApplication", () => {
-  let appLogic, claim_id, wrapper;
-
-  const PageComponent = () => <div />;
+function setup({ addCustomSetup, query } = {}) {
+  const PageComponent = (props) => (
+    <div>
+      {mockPageContent}
+      Application: {props.claim?.application_id}
+    </div>
+  );
   const WrappedComponent = withBenefitsApplication(PageComponent);
 
-  function render() {
-    act(() => {
-      wrapper = mount(
-        <WrappedComponent appLogic={appLogic} query={{ claim_id }} />
-      );
-    });
-  }
+  renderPage(
+    WrappedComponent,
+    {
+      addCustomSetup,
+    },
+    {
+      query: {
+        claim_id: mockApplicationId,
+        ...query,
+      },
+    }
+  );
+}
 
-  beforeEach(() => {
-    claim_id = "mock-application-id";
-    appLogic = useAppLogic();
-  });
-
-  it("Shows spinner when claim is not loaded", () => {
-    appLogic.benefitsApplications.hasLoadedBenefitsApplicationAndWarnings.mockReturnValue(
-      false
-    );
-
-    render();
-
-    expect(wrapper.find("Spinner").exists()).toBe(true);
-    expect(wrapper.find("PageComponent").exists()).toBe(false);
-  });
-
-  it("Shows spinner when claim's warnings aren't loaded", () => {
-    const claim = new BenefitsApplication({ application_id: claim_id });
-    appLogic.benefitsApplications.benefitsApplications =
-      new BenefitsApplicationCollection([claim]);
-    appLogic.benefitsApplications.hasLoadedBenefitsApplicationAndWarnings.mockReturnValue(
-      false
-    );
-
-    render();
-
-    expect(wrapper.find("Spinner").exists()).toBe(true);
-    expect(wrapper.find("PageComponent").exists()).toBe(false);
-  });
-
-  it("loads the claim", () => {
-    appLogic.benefitsApplications.hasLoadedBenefitsApplicationAndWarnings.mockReturnValue(
-      false
-    );
-
-    render();
-
-    expect(appLogic.benefitsApplications.load).toHaveBeenCalledTimes(1);
-  });
-
-  it("does not load claim if user has not yet loaded", () => {
-    appLogic.user = appLogic.users.user = null;
-    render();
-    wrapper.update();
-    expect(appLogic.benefitsApplications.load).not.toHaveBeenCalled();
-  });
-
-  describe("when claim is loaded", () => {
-    let claim;
-
-    beforeEach(() => {
-      claim = new BenefitsApplication({ application_id: claim_id });
-      appLogic.benefitsApplications.benefitsApplications =
-        new BenefitsApplicationCollection([claim]);
-      appLogic.benefitsApplications.hasLoadedBenefitsApplicationAndWarnings.mockReturnValue(
-        true
-      );
+describe("withBenefitsApplication", () => {
+  it("shows spinner when loading application state", async () => {
+    setup({
+      addCustomSetup: (appLogic) => {
+        jest
+          .spyOn(
+            appLogic.benefitsApplications,
+            "hasLoadedBenefitsApplicationAndWarnings"
+          )
+          .mockReturnValue(false);
+      },
     });
 
-    it("passes through the 'user' prop from the withUser higher order component", () => {
-      render();
+    expect(await screen.findByRole("progressbar")).toBeInTheDocument();
+  });
 
-      expect(wrapper.find("PageComponent").prop("user")).toEqual(
-        appLogic.users.user
-      );
+  it("shows Page Not Found when application ID isn't found", () => {
+    setup({
+      query: {
+        claim_id: "",
+      },
     });
 
-    it("sets the 'claim' prop on the passed component", () => {
-      render();
+    expect(
+      screen.getByRole("heading", { name: "Page not found" })
+    ).toBeInTheDocument();
+  });
 
-      expect(wrapper.find("PageComponent").prop("claim")).toBeInstanceOf(
-        BenefitsApplication
-      );
-      expect(wrapper.find("PageComponent").prop("claim")).toEqual(claim);
+  it("requires user to be logged in", async () => {
+    let spy;
+
+    setup({
+      addCustomSetup: (appLogic) => {
+        spy = jest.spyOn(appLogic.auth, "requireLogin");
+      },
     });
 
-    it("renders the wrapped component", () => {
-      render();
-
-      expect(wrapper.find("PageComponent").exists()).toBe(true);
-      expect(wrapper.find("Spinner").exists()).toBe(false);
+    await waitFor(() => {
+      expect(spy).toHaveBeenCalled();
     });
+  });
+
+  it("renders the page when application state is loaded", async () => {
+    const mockClaim = new BenefitsApplication({
+      application_id: mockApplicationId,
+    });
+    setup({
+      addCustomSetup: (appLogic) => {
+        jest
+          .spyOn(
+            appLogic.benefitsApplications,
+            "hasLoadedBenefitsApplicationAndWarnings"
+          )
+          .mockReturnValue(true);
+
+        appLogic.benefitsApplications.benefitsApplications =
+          new BenefitsApplicationCollection([mockClaim]);
+      },
+    });
+
+    expect(
+      await screen.findByText(mockPageContent, { exact: false })
+    ).toBeInTheDocument();
+
+    // Assert that the HOC is passing in the application as a prop to our page component:
+    expect(
+      await screen.findByText(mockClaim.application_id, { exact: false })
+    ).toBeInTheDocument();
+  });
+
+  it("redirects to index if the claim is completed and it's on the checklist or review page", () => {
+    let spy;
+    const completedClaim = new BenefitsApplication({
+      status: "Completed",
+      application_id: mockApplicationId,
+    });
+
+    setup({
+      addCustomSetup: (appLogic) => {
+        spy = jest.spyOn(appLogic.portalFlow, "goTo");
+        appLogic.portalFlow.pathname = routes.applications.checklist;
+
+        appLogic.benefitsApplications.benefitsApplications =
+          new BenefitsApplicationCollection([completedClaim]);
+      },
+      query: { claim_id: mockApplicationId },
+    });
+
+    expect(spy).toHaveBeenCalled();
+
+    setup({
+      addCustomSetup: (appLogic) => {
+        spy = jest.spyOn(appLogic.portalFlow, "goTo");
+        appLogic.portalFlow.pathname = routes.applications.review;
+
+        appLogic.benefitsApplications.benefitsApplications =
+          new BenefitsApplicationCollection([completedClaim]);
+      },
+      query: { claim_id: mockApplicationId },
+    });
+
+    expect(spy).toHaveBeenCalled();
+  });
+
+  it("does not redirect to index if the claim is completed and it's not on the checklist or review page", () => {
+    let spy;
+    const completedClaim = new BenefitsApplication({
+      status: "Completed",
+      application_id: mockApplicationId,
+    });
+
+    setup({
+      addCustomSetup: (appLogic) => {
+        spy = jest.spyOn(appLogic.portalFlow, "goTo");
+        appLogic.portalFlow.pathname = routes.applications.success;
+
+        appLogic.benefitsApplications.benefitsApplications =
+          new BenefitsApplicationCollection([completedClaim]);
+      },
+      query: { claim_id: mockApplicationId },
+    });
+
+    expect(spy).not.toHaveBeenCalled();
   });
 });

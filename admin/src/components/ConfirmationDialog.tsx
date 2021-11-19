@@ -1,7 +1,7 @@
 import { MouseEvent } from "react";
 import Button from "./Button";
 
-type Props = {
+export type Props = {
   title: string;
   body: string;
   handleCancelCallback: Function;
@@ -31,26 +31,28 @@ const ConfirmationDialog = ({
         onClick={handleCancel}
       ></div>
       <div className="confirmation-dialog__content">
-        <h2 className="confirmation-dialog__title">{title}?</h2>
+        <h2
+          className="confirmation-dialog__title"
+          data-testid="confirmation-dialog-title"
+        >
+          {title}?
+        </h2>
         <div className="confirmation-dialog__body">
-          <p>{body}</p>
+          <p data-testid="confirmation-dialog-body">{body}</p>
         </div>
         <div className="confirmation-dialog__action-buttons">
           <Button
-            additionalClasses={[
-              "confirmation-dialog__btn",
-              "confirmation-dialog__btn-continue",
-            ]}
+            className={
+              "confirmation-dialog__btn confirmation-dialog__btn-continue"
+            }
             onClick={handleContinue}
           >
             Continue
           </Button>
           <Button
-            additionalClasses={[
-              "confirmation-dialog__btn",
-              "confirmation-dialog__btn-cancel",
-              "btn--cancel",
-            ]}
+            className={
+              "confirmation-dialog__btn confirmation-dialog__btn-cancel btn--cancel"
+            }
             onClick={handleCancel}
           >
             Cancel

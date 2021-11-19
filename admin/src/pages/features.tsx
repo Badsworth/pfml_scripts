@@ -1,4 +1,4 @@
-import Badge from "../components/Badge";
+import Badge, { Props as BadgeProps } from "../components/Badge";
 import ConfirmationDialog from "../components/ConfirmationDialog";
 import Table from "../components/Table";
 import StatusIcon from "../components/StatusIcon";
@@ -26,7 +26,8 @@ export default function Features() {
     status: boolean;
     title: string;
     description: string;
-    badges: string[];
+    badges: BadgeProps["type"][];
+    flagName: string;
   }) => {
     return (
       <div className="features-row__section1">
@@ -40,7 +41,7 @@ export default function Features() {
         </p>
 
         <div className="features-row__badges">
-          {badges.map((badge: string, index: number) => (
+          {badges.map((badge: BadgeProps["type"], index: number) => (
             <Badge key={index} type={badge} />
           ))}
         </div>

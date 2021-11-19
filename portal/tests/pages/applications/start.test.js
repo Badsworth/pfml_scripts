@@ -1,35 +1,42 @@
-import { simulateEvents, testHook } from "../../test-utils";
-import React from "react";
+import { screen, waitFor } from "@testing-library/react";
 import { Start } from "../../../src/pages/applications/start";
-import { shallow } from "enzyme";
-import useAppLogic from "../../../src/hooks/useAppLogic";
-
-jest.mock("../../../src/hooks/useAppLogic");
+import { renderPage } from "../../test-utils";
+import userEvent from "@testing-library/user-event";
 
 describe("Start", () => {
-  let appLogic, wrapper;
-
-  beforeEach(() => {
-    testHook(() => {
-      appLogic = useAppLogic();
-    });
-
-    wrapper = shallow(<Start appLogic={appLogic} />);
-  });
-
   it("renders the page", () => {
-    expect(wrapper).toMatchSnapshot();
+    const { container } = renderPage(Start);
+    expect(container).toMatchSnapshot();
   });
 
   it("renders descriptions with mass gov link", () => {
-    expect(wrapper.find("Trans").dive()).toMatchSnapshot();
+    renderPage(Start);
+    expect(
+      screen.getByRole("heading", { name: "Start your application" })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /We use this application to determine the leave time and benefit amount you will receive./
+      )
+    ).toBeInTheDocument();
+    expect(screen.getByRole("link")).toHaveAttribute(
+      "href",
+      "https://www.mass.gov/info-details/massachusetts-department-of-family-and-medical-leave-informed-consent-agreement"
+    );
   });
 
-  describe("when user clicks agree and submit", () => {
-    it("calls submitApplication", async () => {
-      const { submitForm } = simulateEvents(wrapper);
-      await submitForm();
-      expect(appLogic.benefitsApplications.create).toHaveBeenCalled();
+  it("creates application when user clicks agree and submit", async () => {
+    const create = jest.fn();
+    renderPage(Start, {
+      addCustomSetup: (appLogic) => {
+        appLogic.benefitsApplications.create = create;
+      },
+    });
+    userEvent.click(
+      screen.getByRole("button", { name: "I understand and agree" })
+    );
+    await waitFor(() => {
+      expect(create).toHaveBeenCalled();
     });
   });
 });

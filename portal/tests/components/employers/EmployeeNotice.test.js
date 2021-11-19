@@ -1,75 +1,78 @@
-import { mount, shallow } from "enzyme";
+import { render, screen } from "@testing-library/react";
 import AppErrorInfoCollection from "../../../src/models/AppErrorInfoCollection";
 import EmployeeNotice from "../../../src/components/employers/EmployeeNotice";
 import React from "react";
-import { act } from "react-dom/test-utils";
-import { testHook } from "../../test-utils";
+import { renderHook } from "@testing-library/react-hooks";
 import useFunctionalInputProps from "../../../src/hooks/useFunctionalInputProps";
 
-describe("EmployeeNotice", () => {
-  const updateFields = jest.fn();
+function setupGetFunctionalInputProps(updateFields) {
   let getFunctionalInputProps;
 
-  function render(givenProps = {}) {
-    const defaultProps = {
-      employeeNoticeInput: undefined,
-      fraudInput: undefined,
-      getFunctionalInputProps,
+  renderHook(() => {
+    getFunctionalInputProps = useFunctionalInputProps({
+      appErrors: new AppErrorInfoCollection(),
+      formState: {},
       updateFields,
-    };
-    const props = { ...defaultProps, ...givenProps };
-    return shallow(<EmployeeNotice {...props} />);
-  }
-
-  beforeEach(() => {
-    testHook(() => {
-      getFunctionalInputProps = useFunctionalInputProps({
-        appErrors: new AppErrorInfoCollection(),
-        formState: {},
-        updateFields,
-      });
     });
   });
 
+  return getFunctionalInputProps;
+}
+
+function renderComponent(customProps = {}) {
+  const updateFields = jest.fn();
+
+  const props = {
+    getFunctionalInputProps: setupGetFunctionalInputProps(updateFields),
+    updateFields,
+    ...customProps,
+  };
+
+  return render(<EmployeeNotice {...props} />);
+}
+
+describe("EmployeeNotice", () => {
   it("renders the component", () => {
-    const wrapper = render();
-    expect(wrapper).toMatchSnapshot();
+    const { container } = renderComponent();
+
+    expect(container).toMatchSnapshot();
   });
 
   it("does not select any option by default", () => {
-    const wrapper = render();
-    const choices = wrapper.find("InputChoiceGroup").prop("choices");
+    renderComponent();
+    const choices = screen.getAllByRole("radio");
 
     for (const choice of choices) {
       expect(choice.checked).toBe(false);
+      expect(choice).toBeEnabled();
     }
   });
 
   it("unselects and disables options if fraud is reported", () => {
-    const wrapper = render({ fraudInput: "Yes" });
-
-    const choices = wrapper.find("InputChoiceGroup").prop("choices");
+    renderComponent({ fraudInput: "Yes" });
+    const choices = screen.getAllByRole("radio");
 
     for (const choice of choices) {
       expect(choice.checked).toBe(false);
-      expect(choice.disabled).toBe(true);
+      expect(choice).toBeDisabled();
     }
   });
 
   it("resets form's 'employee_notice' if changing from fraud to not fraud", () => {
-    const wrapper = mount(
-      <EmployeeNotice
-        employeeNoticeInput={undefined}
-        fraudInput="Yes"
-        getFunctionalInputProps={getFunctionalInputProps}
-        updateFields={updateFields}
-      />
-    );
-    act(() => {
-      wrapper.setProps({ fraudInput: "No" });
-    });
-    wrapper.update();
+    const updateFields = jest.fn();
+    const props = {
+      getFunctionalInputProps: setupGetFunctionalInputProps(updateFields),
+      updateFields,
+    };
 
-    expect(updateFields).toHaveBeenCalledWith({ employee_notice: undefined });
+    const { rerender } = render(<EmployeeNotice {...props} fraudInput="Yes" />);
+    expect(props.updateFields).toHaveBeenCalledTimes(1); // on mount, because Fraud = Yes
+
+    rerender(<EmployeeNotice {...props} fraudInput="No" />);
+
+    expect(props.updateFields).toHaveBeenCalledTimes(2); // another time when Fraud prop changes
+    expect(props.updateFields).toHaveBeenLastCalledWith({
+      employee_notice: undefined,
+    });
   });
 });

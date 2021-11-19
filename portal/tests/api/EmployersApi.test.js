@@ -1,11 +1,9 @@
 import Address from "../../src/models/Address";
-import { Auth } from "@aws-amplify/auth";
-import Document from "../../src/models/Document";
 import DocumentCollection from "../../src/models/DocumentCollection";
 import EmployerClaim from "../../src/models/EmployerClaim";
 import EmployersApi from "../../src/api/EmployersApi";
+import { mockAuth } from "../test-utils";
 
-jest.mock("@aws-amplify/auth");
 jest.mock("../../src/services/tracker");
 
 const mockFetch = ({
@@ -101,11 +99,7 @@ describe("EmployersApi", () => {
   let employersApi;
   beforeEach(() => {
     jest.resetAllMocks();
-    jest.spyOn(Auth, "currentSession").mockImplementation(() =>
-      Promise.resolve({
-        accessToken: { jwtToken: accessTokenJwt },
-      })
-    );
+    mockAuth(true, accessTokenJwt);
     employersApi = new EmployersApi();
   });
 
@@ -181,10 +175,10 @@ describe("EmployersApi", () => {
       });
 
       it("sends GET request to /employers/claims/{absence_id}/documents/{document_id}", async () => {
-        const document = new Document({
+        const document = {
           fineos_document_id: 1234,
           content_type: "image/png",
-        });
+        };
 
         await employersApi.downloadDocument(absenceId, document);
 
@@ -198,10 +192,10 @@ describe("EmployersApi", () => {
       });
 
       it("returns a Blob object", async () => {
-        const document = new Document({
+        const document = {
           fineos_document_id: 1234,
           content_type: "image/png",
-        });
+        };
 
         const response = await employersApi.downloadDocument(
           absenceId,
@@ -237,14 +231,10 @@ describe("EmployersApi", () => {
       });
 
       it("resolves with documents", async () => {
-        const expectedDocuments = mockDocumentCollection.map(
-          (documentInfo) => new Document(documentInfo)
-        );
-
         const response = await employersApi.getDocuments(absenceId);
 
         expect(response.documents).toBeInstanceOf(DocumentCollection);
-        expect(response.documents.items).toEqual(expectedDocuments);
+        expect(response.documents.items).toEqual(mockDocumentCollection);
       });
     });
   });

@@ -16,9 +16,6 @@ from massgov.pfml.db.models.factories import (
 )
 from massgov.pfml.fineos.models.group_client_api import ManagedRequirementDetails
 
-# every test in here requires real resources
-pytestmark = pytest.mark.integration
-
 
 # Run `initialize_factories_session` for all tests,
 # so that it doesn't need to be manually included

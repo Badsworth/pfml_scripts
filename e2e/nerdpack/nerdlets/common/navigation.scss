@@ -1,0 +1,10 @@
+.nav {
+  display: flex;
+  flex-direction: row;
+
+  a {
+    padding: 5px 10px;
+    border: 1px #999 solid;
+    margin: 5px;
+  }
+}

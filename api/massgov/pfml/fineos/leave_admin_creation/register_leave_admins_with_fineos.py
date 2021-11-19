@@ -15,20 +15,6 @@ def find_user_and_register(
     leave_admin: UserLeaveAdministrator,
     fineos_client: fineos.AbstractFINEOSClient,
 ) -> None:
-    if leave_admin.user is None:
-        logger.error(
-            "No user found for record: ",
-            extra={"user_id": leave_admin.user_id, "employer_id": leave_admin.employer_id},
-        )
-        return
-
-    if leave_admin.employer is None:
-        logger.error(
-            "No employer found for record: ",
-            extra={"user_id": leave_admin.user_id, "employer_id": leave_admin.employer_id},
-        )
-        return
-
     if leave_admin.employer.fineos_employer_id is None:
         logger.error(
             "No FINEOS employer ID found for record: ",
@@ -39,6 +25,13 @@ def find_user_and_register(
     if not leave_admin.verified:
         logger.error(
             "Leave admin not verified: ",
+            extra={"user_id": leave_admin.user_id, "employer_id": leave_admin.employer_id},
+        )
+        return
+
+    if not leave_admin.user.email_address:
+        logger.error(
+            "No leave admin email address provided: ",
             extra={"user_id": leave_admin.user_id, "employer_id": leave_admin.employer_id},
         )
         return
@@ -56,7 +49,7 @@ def find_user_and_register(
     )
 
 
-def find_admins_without_registration(db_session: db.Session):
+def find_admins_without_registration(db_session: db.Session) -> None:
     # Get verified records with no fineos_web_id
     # For each record, lookup the user and employer
     # Register with fineos

@@ -351,6 +351,8 @@ class DocumentType(str, LookupEnum):
     child_bonding_evidence_form = "Child bonding evidence form"
     care_for_a_family_member_form = "Care for a family member form"
     military_exigency_form = "Military exigency form"
+    withdrawal_notice = "Pending Application Withdrawn"
+    appeal_acknowledgment = "Appeal Acknowledgment"
 
 
 class ContentType(str, LookupEnum):
@@ -413,7 +415,7 @@ class Phone(PydanticBaseModel):
                 )
             )
 
-        if not phonenumbers.is_valid_number(n):
+        if n is None or not phonenumbers.is_valid_number(n):
             error_list.append(
                 ValidationErrorDetail(
                     message="Phone number must be a valid number",
@@ -440,10 +442,14 @@ class MaskedPhone(Phone):
 
         if phone.phone_number:
             parsed_phone_number = phonenumbers.parse(phone.phone_number)
+            region_code = region_code_for_number(parsed_phone_number)
 
-            locally_formatted_number = phonenumbers.format_number(
-                parsed_phone_number, region_code_for_number(parsed_phone_number)
-            )
+            if region_code:
+                locally_formatted_number = phonenumbers.format_in_original_format(
+                    parsed_phone_number, region_code
+                )
+            else:
+                locally_formatted_number = phone.phone_number
 
             phone_response.phone_number = mask.mask_phone(locally_formatted_number)
             phone_response.int_code = str(parsed_phone_number.country_code)

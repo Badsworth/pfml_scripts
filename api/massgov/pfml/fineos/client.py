@@ -3,8 +3,8 @@
 #
 
 import abc
-import typing
 from decimal import Decimal
+from typing import List, Optional, Tuple, Union
 
 from massgov.pfml.fineos.transforms.to_fineos.base import EFormBody
 from massgov.pfml.types import Fein
@@ -69,7 +69,7 @@ class AbstractFINEOSClient(abc.ABC, metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
-    def get_absences(self, user_id: str) -> typing.List[models.customer_api.AbsenceCaseSummary]:
+    def get_absences(self, user_id: str) -> List[models.customer_api.AbsenceCaseSummary]:
         pass
 
     @abc.abstractmethod
@@ -97,13 +97,13 @@ class AbstractFINEOSClient(abc.ABC, metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def get_customer_occupations_customer_api(
         self, user_id: str, customer_id: str
-    ) -> typing.List[models.customer_api.ReadCustomerOccupation]:
+    ) -> List[models.customer_api.ReadCustomerOccupation]:
         pass
 
     @abc.abstractmethod
     def get_outstanding_information(
         self, user_id: str, case_id: str
-    ) -> typing.List[models.group_client_api.OutstandingInformationItem]:
+    ) -> List[models.group_client_api.OutstandingInformationItem]:
         """Get outstanding information"""
         pass
 
@@ -120,12 +120,12 @@ class AbstractFINEOSClient(abc.ABC, metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def get_eform_summary(
         self, user_id: str, absence_id: str
-    ) -> typing.List[models.group_client_api.EFormSummary]:
+    ) -> List[models.group_client_api.EFormSummary]:
         pass
 
     @abc.abstractmethod
     def get_eform(
-        self, user_id: str, absence_id: str, eform_id: str
+        self, user_id: str, absence_id: str, eform_id: int
     ) -> models.group_client_api.EForm:
         pass
 
@@ -138,7 +138,7 @@ class AbstractFINEOSClient(abc.ABC, metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def get_case_occupations(
         self, user_id: str, case_id: str
-    ) -> typing.List[models.customer_api.ReadCustomerOccupation]:
+    ) -> List[models.customer_api.ReadCustomerOccupation]:
         pass
 
     @abc.abstractmethod
@@ -151,8 +151,8 @@ class AbstractFINEOSClient(abc.ABC, metaclass=abc.ABCMeta):
     def update_occupation(
         self,
         occupation_id: int,
-        employment_status: typing.Optional[str],
-        hours_worked_per_week: typing.Optional[Decimal],
+        employment_status: Optional[str],
+        hours_worked_per_week: Optional[Decimal],
     ) -> None:
         pass
 
@@ -172,19 +172,17 @@ class AbstractFINEOSClient(abc.ABC, metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def group_client_get_documents(
         self, user_id: str, absence_id: str
-    ) -> typing.List[models.group_client_api.GroupClientDocument]:
+    ) -> List[models.group_client_api.GroupClientDocument]:
         pass
 
     @abc.abstractmethod
     def get_managed_requirements(
         self, user_id: str, absence_id: str
-    ) -> typing.List[models.group_client_api.ManagedRequirementDetails]:
+    ) -> List[models.group_client_api.ManagedRequirementDetails]:
         pass
 
     @abc.abstractmethod
-    def get_documents(
-        self, user_id: str, absence_id: str
-    ) -> typing.List[models.customer_api.Document]:
+    def get_documents(self, user_id: str, absence_id: str) -> List[models.customer_api.Document]:
         pass
 
     @abc.abstractmethod
@@ -207,7 +205,7 @@ class AbstractFINEOSClient(abc.ABC, metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def get_week_based_work_pattern(
-        self, user_id: str, occupation_id: typing.Union[str, int],
+        self, user_id: str, occupation_id: Union[str, int],
     ) -> models.customer_api.WeekBasedWorkPattern:
         pass
 
@@ -215,7 +213,7 @@ class AbstractFINEOSClient(abc.ABC, metaclass=abc.ABCMeta):
     def add_week_based_work_pattern(
         self,
         user_id: str,
-        occupation_id: typing.Union[str, int],
+        occupation_id: Union[str, int],
         week_based_work_pattern: models.customer_api.WeekBasedWorkPattern,
     ) -> models.customer_api.WeekBasedWorkPattern:
         pass
@@ -224,7 +222,7 @@ class AbstractFINEOSClient(abc.ABC, metaclass=abc.ABCMeta):
     def update_week_based_work_pattern(
         self,
         user_id: str,
-        occupation_id: typing.Union[str, int],
+        occupation_id: Union[str, int],
         week_based_work_pattern: models.customer_api.WeekBasedWorkPattern,
     ) -> models.customer_api.WeekBasedWorkPattern:
         pass
@@ -233,7 +231,7 @@ class AbstractFINEOSClient(abc.ABC, metaclass=abc.ABCMeta):
     def update_reflexive_questions(
         self,
         user_id: str,
-        absence_id: typing.Optional[str],
+        absence_id: Optional[str],
         additional_information: models.customer_api.AdditionalInformation,
     ) -> None:
         pass
@@ -242,22 +240,28 @@ class AbstractFINEOSClient(abc.ABC, metaclass=abc.ABCMeta):
     def create_or_update_employer(
         self,
         employer_creation: models.CreateOrUpdateEmployer,
-        existing_organization: typing.Optional[models.OCOrganisationItem] = None,
-    ) -> typing.Tuple[str, int]:
+        existing_organization: Optional[models.OCOrganisationItem] = None,
+    ) -> Tuple[str, int]:
         """Create or update an employer in FINEOS."""
         pass
 
     @abc.abstractmethod
     def create_or_update_leave_admin(
         self, leave_admin_create_or_update: models.CreateOrUpdateLeaveAdmin
-    ) -> None:
+    ) -> Tuple[Optional[str], Optional[str]]:
         """Create or update a leave admin in FINEOS."""
         pass
 
+    @abc.abstractmethod
     def create_service_agreement_for_employer(
         self,
         fineos_employer_id: int,
         service_agreement_inputs: models.CreateOrUpdateServiceAgreement,
     ) -> str:
         """Create Service Agreement For An Employer in FINEOS"""
+        pass
+
+    @abc.abstractmethod
+    def send_tax_withholding_preference(self, absence_id: str, is_withholding_tax: bool) -> None:
+        """Send tax withholding preference to FINEOS"""
         pass

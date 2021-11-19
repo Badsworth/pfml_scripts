@@ -28,7 +28,7 @@ def upgrade():
         AND u1.ctid <> u2.ctid
     """
 
-    op.execute(
+    op.execute(  # nosec
         f"""
         DELETE FROM link_user_role lur
             USING ({duplicate_user_ids_query}) u
@@ -36,7 +36,7 @@ def upgrade():
     """
     )
 
-    op.execute(
+    op.execute(  # nosec
         f"""
         DELETE FROM link_user_leave_administrator lula
             USING ({duplicate_user_ids_query}) u
@@ -44,7 +44,7 @@ def upgrade():
     """
     )
 
-    op.execute(
+    op.execute(  # nosec
         f"""
         DELETE FROM "user" u1
             USING ({duplicate_user_ids_query}) u2

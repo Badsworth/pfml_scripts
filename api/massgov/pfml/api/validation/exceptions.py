@@ -46,9 +46,15 @@ class IssueRule(str, Enum):
     disallow_12mo_intermittent_leave_period = "disallow_12mo_intermittent_leave_period"
     # Range between reduced leave period start date and end date can’t be 12 months or longer
     disallow_12mo_reduced_leave_period = "disallow_12mo_reduced_leave_period"
-    # If a claimant is awaiting approval for other incomes they can't also submit other incomes
-    disallow_has_other_incomes_when_awaiting_approval = (
-        "disallow_has_other_incomes_when_awaiting_approval"
+    # Leave periods and previous leaves cannot overlap
+    disallow_overlapping_leave_period_with_previous_leave = (
+        "disallow_overlapping_leave_period_with_previous_leave"
+    )
+    disallow_overlapping_waiting_period_and_concurrent_leave_end_date = (
+        "disallow_overlapping_waiting_period_and_concurrent_leave_end_date"
+    )
+    disallow_overlapping_waiting_period_and_concurrent_leave_start_date = (
+        "disallow_overlapping_waiting_period_and_concurrent_leave_start_date"
     )
     # Employer must be notified when employment status is Employed
     require_employer_notified = "require_employer_notified"
@@ -123,6 +129,8 @@ class IssueType(str, Enum):
     fineos_case_creation_issues = "fineos_case_creation_issues"
     # An unspecified error related to creating/completing the absence case in fineos
     fineos_case_error = "fineos_case_error"
+    # Indicates that the requested FINEOS claim has been withdrawn and can no longer be accessed
+    fineos_claim_withdrawn = "fineos_claim_withdrawn"
     # If duration of intermittent leave is in hours, hours must be less than a day (24)
     intermittent_duration_hours_maximum = "intermittent_duration_hours_maximum"
     # Total days in an intermittent interval cannot exceed total days in the leave period
@@ -148,6 +156,8 @@ class IssueType(str, Enum):
     # this moving forward.
     # TODO (EMPLOYER-1643): Remove this once the errors the reference it no longer use IssueRule
     pfml = ""
+    # Generic value error
+    value_error = "value_error"
 
 
 @dataclass

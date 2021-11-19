@@ -1,3 +1,8 @@
+import os
+import re
+from datetime import datetime
+from typing import Any
+
 import boto3
 import newrelic.agent
 from pydantic import BaseSettings, Field
@@ -54,6 +59,22 @@ def send_rows_to_nr(config, client, file):
 
         for row in CSVSourceWrapper(received_file):
             count += 1
+
+            # Adding extra attributes to the row
+
+            # E.g. For a file path s3://bucket/folder/2020-12-01-file-name.csv return file-name.csv
+            matches = re.search(r"(\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2})-(.*).csv", received_file)
+            if matches is not None:
+                # convert to date ob
+                row["file_timestamp"] = datetime.strptime(matches.group(1), "%Y-%m-%d-%H-%M-%S")
+                row["file_type"] = matches.group(2)
+            else:
+                logger.warning(
+                    "Failed to parse additional attributes from filename (%s)" % (received_file),
+                    exc_info=True,
+                )
+
+            row["environment"] = os.environ["ENVIRONMENT"]
             row["s3_filename"] = received_file
 
             # Avoid sending RAWLINE data, as it often contains PII
@@ -67,7 +88,7 @@ def send_rows_to_nr(config, client, file):
     logger.info(f"{count}rows sent to New Relic from {received_file}")
 
 
-def move_file_to_processed(client, file, config: CPSErrorsConfig):
+def move_file_to_processed(client: Any, file: str, config: CPSErrorsConfig) -> None:
     dest_bucket = config.cps_error_reports_processed_s3_path
     source = f"{config.cps_error_reports_received_s3_path}{file}"
     destination = f"{dest_bucket}{file}"

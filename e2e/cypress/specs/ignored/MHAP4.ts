@@ -1,5 +1,4 @@
 import { portal, fineos, fineosPages } from "../../actions";
-import { getLeaveAdminCredentials } from "../../config";
 import { Submission } from "../../../src/types";
 import { assertValidClaim } from "../../../src/util/typeUtils";
 import { getDocumentReviewTaskName } from "../../../src/util/documents";
@@ -18,7 +17,7 @@ describe("Submitting a Medical pregnancy claim and adding bonding leave in Fineo
         // Complete Employer Response
         assertValidClaim(claim.claim);
 
-        portal.login(getLeaveAdminCredentials(claim.claim.employer_fein));
+        portal.loginLeaveAdmin(claim.claim.employer_fein);
         portal.visitActionRequiredERFormPage(response.fineos_absence_id);
         portal.respondToLeaveAdminRequest(false, true, true);
       });

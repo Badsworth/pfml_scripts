@@ -1,46 +1,29 @@
+import { render, screen } from "@testing-library/react";
 import React from "react";
 import ReviewHeading from "../../src/components/ReviewHeading";
-import { shallow } from "enzyme";
 
-function render(customProps = {}) {
-  const props = Object.assign(
-    {
-      children: "Who is taking leave?",
-      level: "2",
-    },
-    customProps
-  );
-  const component = <ReviewHeading {...props} />;
-
-  return {
-    props,
-    wrapper: shallow(component),
+const renderComponent = (customProps) => {
+  const props = {
+    children: "Who is taking leave?",
+    level: "2",
+    ...customProps,
   };
-}
+  return render(<ReviewHeading {...props} />);
+};
 
 describe("ReviewHeading", () => {
-  it("renders a Heading", () => {
-    const { wrapper } = render();
-
-    expect(wrapper).toMatchSnapshot();
+  it("renders a Heading, no link if editHref not defined", () => {
+    const { container } = renderComponent();
+    expect(container.firstChild).toMatchSnapshot();
+    expect(screen.queryByRole("link")).not.toBeInTheDocument();
   });
 
-  describe("when editHref is defined", () => {
-    it("renders with an edit link", () => {
-      const { wrapper } = render({
-        editHref: "/name",
-        editText: "Edit",
-      });
-
-      expect(wrapper).toMatchSnapshot();
+  it("when editHref is defined renders with an edit link", () => {
+    const { container } = renderComponent({
+      editHref: "/name",
+      editText: "Edit",
     });
-  });
-
-  describe("when editHref is not defined", () => {
-    it("does not render an edit link", () => {
-      const { wrapper } = render();
-
-      expect(wrapper.find("a")).toHaveLength(0);
-    });
+    expect(container.firstChild).toMatchSnapshot();
+    expect(screen.queryByRole("link")).toBeInTheDocument();
   });
 });

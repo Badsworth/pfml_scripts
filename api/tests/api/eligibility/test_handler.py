@@ -15,9 +15,6 @@ from massgov.pfml.db.models.factories import (
 )
 from massgov.pfml.types import Fein, TaxId
 
-# every test in here requires real resources
-pytestmark = pytest.mark.integration
-
 
 class QuarterDates(Enum):
     CQ = date(2020, 12, 30)

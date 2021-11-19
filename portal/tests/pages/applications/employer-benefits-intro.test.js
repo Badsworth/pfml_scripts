@@ -1,41 +1,38 @@
-import { renderWithAppLogic, simulateEvents } from "../../test-utils";
+import { screen, waitFor } from "@testing-library/react";
 import EmployerBenefitsIntroIntro from "../../../src/pages/applications/employer-benefits-intro";
+import { renderPage } from "../../test-utils";
+import { setupBenefitsApplications } from "../../test-utils/helpers";
+import userEvent from "@testing-library/user-event";
 
-jest.mock("../../../src/hooks/useAppLogic");
+const goToNextPage = jest.fn(() => {
+  return Promise.resolve();
+});
 
-const setup = (claimAttrs = {}) => {
-  const { appLogic, claim, wrapper } = renderWithAppLogic(
+const setup = () => {
+  return renderPage(
     EmployerBenefitsIntroIntro,
     {
-      claimAttrs,
-    }
+      addCustomSetup: (appLogic) => {
+        setupBenefitsApplications(appLogic);
+        appLogic.portalFlow.goToNextPage = goToNextPage;
+      },
+    },
+    { query: { claim_id: "mock_application_id" } }
   );
-
-  const { submitForm } = simulateEvents(wrapper);
-
-  return {
-    appLogic,
-    claim,
-    submitForm,
-    wrapper,
-  };
 };
 
 describe("EmployerBenefitsIntroIntro", () => {
   it("renders the page", () => {
-    const { wrapper } = setup();
+    const { container } = setup();
 
-    expect(wrapper).toMatchSnapshot();
-
-    expect(wrapper.find("Trans").dive()).toMatchSnapshot();
+    expect(container).toMatchSnapshot();
   });
 
   it("calls goToNextPage when user submits form", async () => {
-    const { appLogic, wrapper } = setup();
-    const spy = jest.spyOn(appLogic.portalFlow, "goToNextPage");
-
-    const { submitForm } = simulateEvents(wrapper);
-    await submitForm();
-    expect(spy).toHaveBeenCalledTimes(1);
+    setup();
+    userEvent.click(screen.getByRole("button", { name: "Save and continue" }));
+    await waitFor(() => {
+      expect(goToNextPage).toHaveBeenCalledTimes(1);
+    });
   });
 });

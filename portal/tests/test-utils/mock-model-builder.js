@@ -24,12 +24,10 @@ import OtherIncome, {
   OtherIncomeFrequency,
   OtherIncomeType,
 } from "../../src/models/OtherIncome";
-
 import PreviousLeave, {
   PreviousLeaveReason,
   PreviousLeaveType,
 } from "../../src/models/PreviousLeave";
-
 import Address from "../../src/models/Address";
 import ConcurrentLeave from "../../src/models/ConcurrentLeave";
 import EmployerClaim from "../../src/models/EmployerClaim";
@@ -49,14 +47,15 @@ export class BaseMockBenefitsApplicationBuilder {
     return this;
   }
 
-  /**
-   * @returns {BaseMockBenefitsApplicationBuilder}
-   */
-  absenceId() {
-    set(this.claimAttrs, "fineos_absence_id", "NTN-111-ABS-01");
+  absenceId(absenceId = "NTN-111-ABS-01") {
+    set(this.claimAttrs, "fineos_absence_id", absenceId);
     return this;
   }
 
+  /**
+   * @param {object} [attrs]
+   * @returns {BaseMockBenefitsApplicationBuilder}
+   */
   address(attrs) {
     set(
       this.claimAttrs,
@@ -282,6 +281,7 @@ export class BaseMockBenefitsApplicationBuilder {
 export class MockEmployerClaimBuilder extends BaseMockBenefitsApplicationBuilder {
   constructor(middleName = "") {
     super();
+    // Defaults, can be overridden by calling instance methods
     this.claimAttrs = {
       employer_dba: "Work Inc.",
       employer_id: "dda903f-f093f-ff900",
@@ -291,6 +291,9 @@ export class MockEmployerClaimBuilder extends BaseMockBenefitsApplicationBuilder
       date_of_birth: "****-07-17",
       tax_identifier: "***-**-1234",
       follow_up_date: "2020-10-10",
+      fineos_absence_id: "NTN-111-ABS-01",
+      previous_leaves: [],
+      is_reviewable: false,
     };
   }
 
@@ -307,7 +310,6 @@ export class MockEmployerClaimBuilder extends BaseMockBenefitsApplicationBuilder
       this.reducedSchedule();
     }
     this.employerBenefit();
-    this.absenceId();
     set(this.claimAttrs, "leave_details.reason", LeaveReason.medical);
     return this;
   }
@@ -329,6 +331,7 @@ export class MockEmployerClaimBuilder extends BaseMockBenefitsApplicationBuilder
   }
 
   /**
+   * @param {string} status
    * @returns {MockEmployerClaimBuilder}
    */
   status(status = null) {
@@ -607,7 +610,7 @@ export class MockBenefitsApplicationBuilder extends BaseMockBenefitsApplicationB
    *
    * @returns {MockClaimBuilder}
    */
-  previousLeavesOtherReason(attrs = [{}]) {
+  previousLeavesOtherReason(attrs) {
     set(this.claimAttrs, "has_previous_leaves_other_reason", true);
     set(
       this.claimAttrs,
@@ -700,6 +703,7 @@ export class MockBenefitsApplicationBuilder extends BaseMockBenefitsApplicationB
   complete() {
     this.submitted();
     this.paymentPrefSubmitted();
+    this.taxPrefSubmitted();
     return this;
   }
 
@@ -746,7 +750,7 @@ export class MockBenefitsApplicationBuilder extends BaseMockBenefitsApplicationB
   }
 
   /**
-   * Part 2 step is completed and submitted to API
+   * Part 2 payment step is completed and submitted to API
    * @returns {MockBenefitsApplicationBuilder}
    */
   paymentPrefSubmitted() {
@@ -758,7 +762,18 @@ export class MockBenefitsApplicationBuilder extends BaseMockBenefitsApplicationB
   }
 
   /**
-   * @param {object} attrs Address object
+   * Part 2 tax preference step is completed and submitted to API
+   * @returns {MockBenefitsApplicationBuilder}
+   */
+  taxPrefSubmitted(selection = false) {
+    this.submitted();
+    set(this.claimAttrs, "is_withholding_tax", selection);
+
+    return this;
+  }
+
+  /**
+   * @param {object} [attrs] Address object
    * @returns {MockBenefitsApplicationBuilder}
    */
   address(attrs) {

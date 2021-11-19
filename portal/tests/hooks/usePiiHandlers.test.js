@@ -1,4 +1,5 @@
-import { createInputElement, testHook } from "../test-utils";
+import { createInputElement } from "../test-utils";
+import { renderHook } from "@testing-library/react-hooks";
 import usePiiHandlers from "../../src/hooks/usePiiHandlers";
 
 describe("usePiiHandlers", () => {
@@ -15,7 +16,7 @@ describe("usePiiHandlers", () => {
       onFocus: jest.fn(),
     };
 
-    testHook(() => {
+    renderHook(() => {
       ({ handleBlur, handleFocus } = usePiiHandlers(props));
     });
 
@@ -72,7 +73,6 @@ describe("usePiiHandlers", () => {
       handleFocus(event);
       expect(props.onChange).toHaveBeenCalledTimes(3);
       expect(props.onChange.mock.calls[2][0]).toEqual({
-        _originalEvent: event,
         target: expect.objectContaining({ value: "" }),
       });
     });

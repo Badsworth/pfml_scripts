@@ -1,74 +1,16 @@
 import NewRelicClient from "../NewRelicClient";
 import config from "../config";
-
-const fineosIDRE = /NTN-\d+[\-\dA-Z]*/;
+import { fineosAPICallSummary, getFineosEndpoints } from "../newrelic/queries";
 
 const accountId = parseInt(config("NEWRELIC_ACCOUNTID"));
 const client = new NewRelicClient(config("NEWRELIC_APIKEY"), accountId);
 
-type FineosAPIResult = { FINEOSUrl: string; FINEOSMethod: string };
 type Layout = {
   column?: number;
   row?: number;
   height?: number;
   width?: number;
 };
-
-/**
- * Replace the dynamic parts of any Fineos URL with placeholders.
- *
- * @param entry
- */
-function anonymizeEntry(entry: FineosAPIResult): FineosAPIResult {
-  return {
-    ...entry,
-    FINEOSUrl: entry.FINEOSUrl.replace(
-      /https:\/\/[a-z\d]+-api.masspfml.fineos.com/,
-      "%"
-    )
-      .replace(/\/occupations\/\d+/, "/occupations/%")
-      .replace(/\/documents\/\d+/, "/documents/%")
-      .replace(/\/customers\/\d+/, "/customers/%")
-      .replace(/userid=[A-Za-z]+/, "userid=%")
-      .replace(/\/documents\/base64Upload\/(.*)/, "/documents/base64Upload/%")
-      .replace(/\/addEForm\/(.*)/, "/addEForm/%")
-      .replace(fineosIDRE, "%"),
-  };
-}
-
-/**
- * Obtain a list of unique, anonymized Fineos API calls.
- *
- * This function operates by first selecting any request that's resulted in a 504 during a period in prod,
- * then retrieving all Fineos API calls during those requests. There's probably a better way to get
- * the list, but this is what I started trying to find out.
- *
- * @param environment
- * @param limiters
- */
-async function getFineosAPIEndpoints(
-  environment: string,
-  limiters: string
-): Promise<FineosAPIResult[]> {
-  const requestIds = await client.nrql<{ request_id: string }>(
-    `SELECT request_id FROM Log WHERE aws.logGroup LIKE 'API-Gateway-Execution-Logs_%/prod' AND status_code = '504' ${limiters} LIMIT MAX`
-  );
-  const requestIdString = requestIds.map((i) => `'${i.request_id}'`).join(",");
-  const results = await client.nrql<FineosAPIResult>(
-    `SELECT FINEOSUrl, FINEOSMethod FROM Log WHERE aws.logGroup = 'service/pfml-api-${environment}' AND name = 'massgov.pfml.fineos.fineos_client' AND funcName = '_request' AND levelname != 'DEBUG' AND request_id IN (${requestIdString}) ${limiters} LIMIT MAX`
-  );
-
-  // Anonymize the results, then filter uniques.
-  const seen = new Set();
-  return results.map(anonymizeEntry).filter((entry) => {
-    const key = `${entry.FINEOSMethod} ${entry.FINEOSUrl}`;
-    if (!seen.has(key)) {
-      seen.add(key);
-      return true;
-    }
-    return false;
-  });
-}
 
 /**
  * Make a New Relic visualization object for a line graph.
@@ -131,14 +73,24 @@ function makeTableViz(title: string, query: string, layout?: Layout) {
   };
 }
 
+function makeMarkdownViz(markdown: string, title?: string, layout?: Layout) {
+  return {
+    visualization: {
+      id: "viz.markdown",
+    },
+    layout,
+    title,
+    rawConfiguration: {
+      text: markdown,
+    },
+    linkedEntityGuids: null,
+  };
+}
+
 (async () => {
-  // Grab an "anonymized" list of all of the Fineos API endpoints that have been a part of any timeout
-  // in a specific time period. There are probably better ways to generate the list, but this is what
-  // I started trying to find out. Feel free to change if you've got a better idea.
-  const apiCalls = await getFineosAPIEndpoints(
-    "prod",
-    "SINCE '2021-08-01 00:00:00-0400' UNTIL '2021-08-04 00:00:00-0400'"
-  );
+  // Grab a pre-built static list of all of the Fineos API endpoints we've discovered.
+  // These can be updated using `npm run cli -- regenerate-fineos-endpoints`.
+  const endpoints = await getFineosEndpoints();
 
   const environments = ["prod", "performance", "test"];
   const promises = environments.map(async (environment) => {
@@ -146,7 +98,7 @@ function makeTableViz(title: string, query: string, layout?: Layout) {
     const widgets = [] as Record<string, unknown>[];
 
     // Build up a list of widgets we'll add to our dashboard.
-    apiCalls.forEach((call, i) => {
+    endpoints.forEach((call, i) => {
       whereClauses.push(
         `WHERE FINEOSMethod = '${call.FINEOSMethod}' AND FINEOSUrl LIKE '${call.FINEOSUrl}' AS '${call.FINEOSMethod} ${call.FINEOSUrl}'`
       );
@@ -209,9 +161,7 @@ function makeTableViz(title: string, query: string, layout?: Layout) {
     });
     const summaryWidget = makeTableViz(
       "Summary",
-      `SELECT average(numeric(FINEOSResponseTime)) AS 'Average Response', percentile(numeric(FINEOSResponseTime), 95) AS 'p95 Response', percentile(numeric(FINEOSResponseTime), 99) AS 'p99 Response', percentage(count(*), WHERE levelname ='WARNING' OR levelname = 'ERROR') AS 'Error Rate', COUNT(*) AS 'Call Count' FROM Log WHERE aws.logGroup = 'service/pfml-api-${environment}' AND name = 'massgov.pfml.fineos.fineos_client' AND funcName = '_request' AND levelname != 'DEBUG' FACET CASES(${whereClauses.join(
-        ", "
-      )}) LIMIT MAX`,
+      await fineosAPICallSummary(environment),
       {
         column: 1,
         row: 1,
@@ -222,6 +172,26 @@ function makeTableViz(title: string, query: string, layout?: Layout) {
     pages.unshift({
       name: "Summary",
       widgets: [summaryWidget],
+    });
+    pages.push({
+      name: "504s @Edge",
+      widgets: [
+        makeMarkdownViz(
+          "This graph tracks 504 errors that are sent out by the PFML API. These errors are typically caused by Fineos API slowness that does not otherwise get reflected as an error in other monitoring.",
+          undefined,
+          { column: 1, row: 1, height: 2, width: 12 }
+        ),
+        makeLineViz(
+          "504s @ PFML API Edge",
+          `SELECT percentage(COUNT(*), WHERE status_code = '504') AS fail_rate FROM Log WHERE aws.logGroup LIKE 'API-Gateway-Execution-Logs%/${environment}' AND status_code IS NOT NULL TIMESERIES`,
+          {
+            column: 1,
+            row: 3,
+            height: 5,
+            width: 12,
+          }
+        ),
+      ],
     });
     const dashboard = {
       name: `[${environment}] FINEOS API call breakdown`,

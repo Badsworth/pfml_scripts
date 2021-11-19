@@ -11,12 +11,13 @@ import datetime
 import pathlib
 import typing
 from decimal import Decimal
-from typing import Any, List, Optional, Union
+from typing import Any, List, Optional, Tuple, Union
 
 import faker
 import requests
 
 import massgov.pfml.util.logging
+import massgov.pfml.util.logging.wrapper
 from massgov.pfml.fineos.transforms.to_fineos.base import EFormBody
 from massgov.pfml.types import Fein
 from massgov.pfml.util.converters.json_to_obj import set_empty_dates_to_none
@@ -221,7 +222,7 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
         _capture_call("read_employer", None, employer_fein=employer_fein)
 
         if employer_fein == Fein("999999999"):
-            raise exception.FINEOSNotFound("Employer not found.")
+            raise exception.FINEOSEntityNotFound("Employer not found.")
 
         return models.OCOrganisation(
             OCOrganisation=[
@@ -237,7 +238,7 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
         _capture_call("find_employer", None, employer_fein=employer_fein)
 
         if employer_fein == Fein("999999999"):
-            raise exception.FINEOSNotFound("Employer not found.")
+            raise exception.FINEOSEntityNotFound("Employer not found.")
         else:
             # TODO: Match the FINEOS employer id format
             return employer_fein.to_unformatted_str() + "1000"
@@ -315,13 +316,6 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
             startDate=start_date,
             endDate=end_date,
         )
-        logger.info(
-            "mock: %r %r => %r %r",
-            user_id,
-            absence_case.additionalComments,
-            absence_case_summary.absenceId,
-            absence_case_summary.notificationCaseId,
-        )
         return absence_case_summary
 
     def complete_intake(
@@ -331,12 +325,6 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
 
         notification_case_summary = models.customer_api.NotificationCaseSummary(
             notificationCaseId=notification_case_id
-        )
-        logger.info(
-            "mock: %r %r => %r",
-            user_id,
-            notification_case_id,
-            notification_case_summary.notificationCaseId,
         )
         return notification_case_summary
 
@@ -440,7 +428,7 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
         ]
 
     def get_eform(
-        self, user_id: str, absence_id: str, eform_id: str
+        self, user_id: str, absence_id: str, eform_id: int
     ) -> models.group_client_api.EForm:
         return models.group_client_api.EForm(eformId=12345, eformAttributes=[])
 
@@ -568,6 +556,8 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
                 "pregnancy/maternity form",
                 "child bonding evidence form",
                 "military exigency form",
+                "pending application withdrawn",
+                "appeal acknowledgment",
             ]
 
             allowed_documents = [
@@ -655,7 +645,7 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
         )
 
         if user_id == "USER_WITH_EXISTING_WORK_PATTERN":
-            raise exception.FINEOSClientBadResponse("add_week_based_work_pattern", 200, 403)
+            raise exception.FINEOSForbidden("add_week_based_work_pattern", 200, 403)
         else:
             return week_based_work_pattern
 
@@ -701,8 +691,9 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
 
     def create_or_update_leave_admin(
         self, leave_admin_create_or_update: models.CreateOrUpdateLeaveAdmin
-    ) -> None:
+    ) -> Tuple[Optional[str], Optional[str]]:
         _capture_call("create_or_update_leave_admin", None)
+        return "", ""
 
     def update_reflexive_questions(
         self,
@@ -727,6 +718,17 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
         )
 
         return "SA-123"
+
+    def send_tax_withholding_preference(self, absence_id: str, is_withholding_tax: bool) -> None:
+        _capture_call(
+            "send_tax_withholding_preference",
+            None,
+            absence_id=absence_id,
+            is_withholding_tax=is_withholding_tax,
+        )
+
+
+massgov.pfml.util.logging.wrapper.log_all_method_calls(MockFINEOSClient, logger)
 
 
 def start_capture():

@@ -1,9 +1,9 @@
-import { mount, shallow } from "enzyme";
+import { render, screen, within } from "@testing-library/react";
 import AppErrorInfo from "../../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../../src/models/AppErrorInfoCollection";
 import Feedback from "../../../src/components/employers/Feedback";
 import React from "react";
-import { testHook } from "../../test-utils";
+import { renderHook } from "@testing-library/react-hooks";
 import useFunctionalInputProps from "../../../src/hooks/useFunctionalInputProps";
 
 jest.mock("../../../src/hooks/useAppLogic");
@@ -12,21 +12,17 @@ describe("Feedback", () => {
   const updateFields = jest.fn();
   let getFunctionalInputProps;
 
-  function render(givenProps = {}, renderMode = "shallow") {
+  const renderComponent = (customProps = {}) => {
     const defaultProps = {
       context: "",
       getFunctionalInputProps,
       shouldDisableNoOption: false,
       shouldShowCommentBox: false,
+      ...customProps,
     };
 
-    const props = { ...defaultProps, ...givenProps };
-    if (renderMode === "shallow") {
-      return shallow(<Feedback {...props} />);
-    } else {
-      return mount(<Feedback {...props} />);
-    }
-  }
+    return render(<Feedback {...defaultProps} />);
+  };
 
   function setUpFunctionalInputProps(customArgs = {}) {
     const defaultArgs = {
@@ -35,7 +31,7 @@ describe("Feedback", () => {
       updateFields,
     };
     const args = { ...defaultArgs, ...customArgs };
-    testHook(() => {
+    renderHook(() => {
       getFunctionalInputProps = useFunctionalInputProps(args);
     });
   }
@@ -45,85 +41,65 @@ describe("Feedback", () => {
   });
 
   it("renders the component", () => {
-    const wrapper = render();
-    expect(wrapper).toMatchSnapshot();
+    const { container } = renderComponent();
+    expect(container.firstChild).toMatchSnapshot();
   });
 
   it("disables the 'No' option based on 'shouldDisableNoOption' prop", () => {
-    const wrapper = render({
+    renderComponent({
       shouldDisableNoOption: true,
       shouldShowCommentBox: true,
     });
-    const noOption = wrapper
-      .find("InputChoiceGroup")
-      .prop("choices")
-      .find((choice) => choice.label === "No");
-    expect(noOption.disabled).toBe(true);
+
+    expect(screen.getByRole("radio", { name: "No" })).toBeDisabled();
   });
 
-  describe("when 'shouldShowCommentBox' is true", () => {
-    function renderWithCommentBoxShown(props = {}) {
-      return render({ ...props, shouldShowCommentBox: true });
-    }
+  it("when 'shouldShowCommentBox' is true, it shows the comment box", () => {
+    renderComponent({ shouldShowCommentBox: true });
+    expect(
+      screen.getByRole("textbox", { name: "Please tell us more." })
+    ).toBeInTheDocument();
+  });
 
-    function getSolicitationMessage(wrapper) {
-      return wrapper
-        .find({ "data-test": "feedback-comment-solicitation" })
-        .dive()
-        .text();
-    }
+  it("when 'shouldShowCommentBox' is true, displays the correct default help message", () => {
+    renderComponent({ shouldShowCommentBox: true });
+    expect(screen.getByText(/Please tell us more./)).toBeInTheDocument();
+  });
 
-    it("shows the comment box", () => {
-      const wrapper = renderWithCommentBoxShown();
-      expect(wrapper.find('textarea[name="comment"]').exists()).toBe(true);
+  it("Comment box displays the correct help message for 'fraud' context ", () => {
+    renderComponent({
+      shouldShowCommentBox: true,
+      context: "fraud",
     });
+    expect(
+      screen.getByText(/Please tell us why you believe this is fraudulent./)
+    ).toBeInTheDocument();
+  });
 
-    it("displays the correct default help message", () => {
-      const wrapper = renderWithCommentBoxShown();
-      const message = getSolicitationMessage(wrapper);
-
-      expect(message).toEqual("Please tell us more.");
+  it("displays the correct help message for 'employerDecision' context", () => {
+    renderComponent({
+      shouldShowCommentBox: true,
+      context: "employerDecision",
     });
+    expect(
+      screen.getByText(/Please tell us why you denied this leave request./)
+    ).toBeInTheDocument();
+  });
 
-    it("displays the correct help message for 'fraud' context ", () => {
-      const wrapper = render({
-        shouldShowCommentBox: true,
-        context: "fraud",
-      });
-      const message = getSolicitationMessage(wrapper);
-
-      expect(message).toEqual(
-        "Please tell us why you believe this is fraudulent."
-      );
+  it("displays the correct help message for 'employeeNotice' context", () => {
+    renderComponent({
+      shouldShowCommentBox: true,
+      context: "employeeNotice",
     });
-
-    it("displays the correct help message for 'employerDecision' context", () => {
-      const wrapper = render({
-        shouldShowCommentBox: true,
-        context: "employerDecision",
-      });
-      const message = getSolicitationMessage(wrapper);
-
-      expect(message).toEqual(
-        "Please tell us why you denied this leave request."
-      );
-    });
-
-    it("displays the correct help message for 'employeeNotice' context", () => {
-      const wrapper = render({
-        shouldShowCommentBox: true,
-        context: "employeeNotice",
-      });
-      const message = getSolicitationMessage(wrapper);
-
-      expect(message).toEqual(
-        "Please tell us when your employee notified you about their leave."
-      );
-    });
+    expect(
+      screen.getByText(
+        /Please tell us when your employee notified you about their leave./
+      )
+    ).toBeInTheDocument();
   });
 
   it("renders inline error message when the text exceeds the limit", () => {
-    testHook(() => {
+    renderHook(() => {
       getFunctionalInputProps = useFunctionalInputProps({
         appErrors: new AppErrorInfoCollection([
           new AppErrorInfo({
@@ -137,19 +113,15 @@ describe("Feedback", () => {
         updateFields,
       });
     });
-    const wrapper = render(
-      {
-        getFunctionalInputProps,
-        shouldShowCommentBox: true,
-      },
-      "mount"
-    );
-
-    expect(wrapper.find("FormLabel").find("span").text()).toMatchInlineSnapshot(
-      `"Please shorten your comment. We cannot accept comments that are longer than 9999 characters."`
-    );
+    renderComponent({
+      getFunctionalInputProps,
+      shouldShowCommentBox: true,
+    });
     expect(
-      wrapper.find("textarea[name='comment']").hasClass("usa-input--error")
-    ).toEqual(true);
+      within(screen.getByRole("alert")).getByText(
+        /Please shorten your comment. We cannot accept comments that are longer than 9999 characters./
+      )
+    ).toBeInTheDocument();
+    expect(screen.getByRole("textbox")).toHaveClass("usa-input--error");
   });
 });

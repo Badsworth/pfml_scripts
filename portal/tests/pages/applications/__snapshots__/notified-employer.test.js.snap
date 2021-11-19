@@ -1,64 +1,70 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`NotifiedEmployer renders the page 1`] = `
-<QuestionPage
-  onSave={[Function]}
-  title="Employment information"
->
-  <InputChoiceGroup
-    choices={
-      Array [
-        Object {
-          "checked": false,
-          "label": "Yes",
-          "value": "true",
-        },
-        Object {
-          "checked": false,
-          "label": "No",
-          "value": "false",
-        },
-      ]
-    }
-    label="Have you told your employer that you are taking leave?"
-    name="leave_details.employer_notified"
-    onChange={[Function]}
-    type="radio"
-    value=""
-  />
-  <ConditionalContent
-    clearField={[Function]}
-    fieldNamesClearedWhenHidden={
-      Array [
-        "leave_details.employer_notification_date",
-      ]
-    }
-    getField={[Function]}
-    updateFields={[Function]}
-    visible={false}
+<div>
+  <form
+    class="usa-form"
+    method="post"
   >
-    <InputDate
-      dayLabel="Day"
-      example="MM / DD / YYYY"
-      hint="This can be an approximate date."
-      label="When did you tell them?"
-      monthLabel="Month"
-      name="leave_details.employer_notification_date"
-      onChange={[Function]}
-      value=""
-      yearLabel="Year"
-    />
-  </ConditionalContent>
-  <ConditionalContent
-    visible={false}
-  >
-    <Alert
-      autoWidth={true}
-      role="alert"
-      state="warning"
+    <h1
+      class="js-title margin-top-0 margin-bottom-2 font-heading-sm line-height-sans-3"
+      tabindex="-1"
     >
-      You can continue to enter information about your leave. Before you can submit your application, you must tell your employer that you’re taking leave. Notify your employer at least 30 days before the start of your leave if possible.
-    </Alert>
-  </ConditionalContent>
-</QuestionPage>
+      Employment information
+    </h1>
+    <fieldset
+      class="usa-fieldset margin-top-3 usa-form-group"
+    >
+      <legend
+        class="usa-label text-bold usa-legend font-heading-lg line-height-sans-3 margin-bottom-1 maxw-tablet"
+      >
+        Have you told your employer that you are taking leave?
+      </legend>
+      <div
+        class="margin-top-3"
+      >
+        <div
+          class="usa-radio measure-5 bg-transparent"
+        >
+          <input
+            class="usa-radio__input"
+            id="InputChoice1"
+            name="leave_details.employer_notified"
+            type="radio"
+            value="true"
+          />
+          <label
+            class="usa-radio__label"
+            for="InputChoice1"
+          >
+            Yes
+          </label>
+        </div>
+        <div
+          class="usa-radio measure-5 bg-transparent"
+        >
+          <input
+            class="usa-radio__input"
+            id="InputChoice2"
+            name="leave_details.employer_notified"
+            type="radio"
+            value="false"
+          />
+          <label
+            class="usa-radio__label"
+            for="InputChoice2"
+          >
+            No
+          </label>
+        </div>
+      </div>
+    </fieldset>
+    <button
+      class="usa-button position-relative margin-top-4"
+      type="submit"
+    >
+      Save and continue
+    </button>
+  </form>
+</div>
 `;

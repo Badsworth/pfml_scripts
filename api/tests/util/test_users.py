@@ -9,7 +9,6 @@ from massgov.pfml.db.models.factories import UserFactory
 fake = faker.Faker()
 
 
-@pytest.mark.integration
 def test_register_user_success(test_db_session, mock_cognito, mock_cognito_user_pool):
     email_address = fake.email(domain="example.com")
 
@@ -34,7 +33,6 @@ def test_register_user_success(test_db_session, mock_cognito, mock_cognito_user_
     assert cognito_users["Users"][0]["Username"] == email_address
 
 
-@pytest.mark.integration
 def test_register_user_raises_sql_exception(
     initialize_factories_session, test_db_session, mock_cognito, mock_cognito_user_pool, monkeypatch
 ):
@@ -60,7 +58,6 @@ def test_register_user_raises_sql_exception(
         )
 
 
-@pytest.mark.integration
 def test_register_user_creates_missing_db_records(
     initialize_factories_session, test_db_session, mock_cognito, mock_cognito_user_pool, monkeypatch
 ):

@@ -1,75 +1,56 @@
-import { Auth } from "@aws-amplify/auth";
+import { mockAuth, renderPage } from "../test-utils";
+import { screen, waitFor } from "@testing-library/react";
 import Index from "../../src/pages/index";
-import { act } from "react-dom/test-utils";
-import { renderWithAppLogic } from "../test-utils";
 
-jest.mock("@aws-amplify/auth");
 jest.mock("../../src/hooks/useAppLogic");
 
 describe("Index", () => {
+  const options = { isLoggedIn: false };
+
   it("renders landing page content", () => {
-    const { wrapper } = renderWithAppLogic(Index, {
-      diveLevels: 0,
-    });
-    expect(wrapper).toMatchSnapshot();
-    wrapper
-      .find("Trans")
-      .forEach((trans) => expect(trans.dive()).toMatchSnapshot());
+    mockAuth(false);
+    const { container } = renderPage(Index, options);
+    expect(container.firstChild).toMatchSnapshot();
   });
 
   it("shows employer information ", () => {
-    const { wrapper } = renderWithAppLogic(Index, {
-      diveLevels: 0,
-    });
-
-    expect(wrapper).toMatchSnapshot();
-    wrapper
-      .find("Trans")
-      .forEach((trans) => expect(trans.dive()).toMatchSnapshot());
+    mockAuth(false);
+    renderPage(Index, options);
+    expect(
+      screen.getByRole("heading", { name: "Employers" })
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Manage leave for your team./)).toBeInTheDocument();
   });
 
-  describe("when user is logged in", () => {
-    beforeEach(() => {
-      Auth.currentUserInfo.mockResolvedValue({
-        attributes: {
-          email: "test@email.com",
-        },
-      });
-    });
+  it("when user is logged in, redirects to applications", async () => {
+    mockAuth();
+    const goTo = jest.fn();
 
-    it("redirects to applications", async () => {
-      const { appLogic, wrapper } = renderWithAppLogic(Index, {
-        diveLevels: 0,
-        render: "mount",
-      });
+    options.isLoggedIn = true;
+    options.addCustomSetup = (appLogicHook) => {
+      appLogicHook.portalFlow.goTo = goTo;
+    };
+    renderPage(Index, options);
 
-      await act(async () => {
-        await wrapper.update();
-      });
-
-      expect(appLogic.portalFlow.goTo).toHaveBeenCalledWith("/applications");
+    await waitFor(() => {
+      expect(goTo).toHaveBeenCalledWith(
+        "/applications",
+        {},
+        { redirect: true }
+      );
     });
   });
 
-  describe("when user is not logged in", () => {
-    beforeEach(() => {
-      Auth.currentUserInfo.mockResolvedValue();
-    });
+  it("does not redirect to applications when user isn't logged in", async () => {
+    const goTo = jest.fn();
+    mockAuth(false);
+    options.addCustomSetup = (appLogicHook) => {
+      appLogicHook.portalFlow.goTo = goTo;
+    };
+    renderPage(Index, options);
 
-    it("does not redirect to applications", async () => {
-      const { appLogic, wrapper } = renderWithAppLogic(Index, {
-        diveLevels: 0,
-        render: "mount",
-      });
-
-      await act(async () => {
-        // Wait for repaint
-        await new Promise((resolve) => setTimeout(resolve, 0));
-      });
-
-      wrapper.update();
-
-      expect(appLogic.portalFlow.goTo).not.toHaveBeenCalled();
+    await waitFor(() => {
+      expect(goTo).not.toHaveBeenCalled();
     });
   });
 });

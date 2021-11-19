@@ -1,13 +1,8 @@
-import pytest
-
 import massgov.pfml.fineos.leave_admin_creation.register_leave_admins_with_fineos as register_leave_admins_with_fineos
 import massgov.pfml.fineos.mock_client
 from massgov.pfml import fineos
 from massgov.pfml.db.models.employees import UserLeaveAdministrator
 from massgov.pfml.db.models.factories import EmployerFactory, VerificationFactory
-
-# every test in here requires real resources
-pytestmark = pytest.mark.integration
 
 
 class TestFindUserAndRegister:

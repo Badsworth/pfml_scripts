@@ -3,7 +3,7 @@
  * https://jestjs.io/docs/configuration
  */
 
-export default {
+const Config = {
   // All imported modules in your tests should be mocked automatically
   // automock: false,
 
@@ -129,7 +129,7 @@ export default {
 
   // The test environment that will be used for testing
   // testEnvironment: "jest-environment-node",
-  testEnvironment: "node",
+  testEnvironment: "jsdom",
 
   // Options that will be passed to the testEnvironment
   // testEnvironmentOptions: {},
@@ -186,3 +186,5 @@ export default {
   // Whether to use watchman for file crawling
   // watchman: true,
 };
+
+export default Config;

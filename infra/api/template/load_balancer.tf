@@ -27,7 +27,7 @@ resource "aws_lb_target_group" "app" {
   health_check {
     protocol            = "HTTP"
     path                = "/v1/status"
-    healthy_threshold   = var.service_app_count
-    unhealthy_threshold = var.service_app_count
+    healthy_threshold   = 8
+    unhealthy_threshold = 8
   }
 }

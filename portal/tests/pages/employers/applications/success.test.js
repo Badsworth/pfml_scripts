@@ -1,19 +1,21 @@
 import Success from "../../../../src/pages/employers/applications/success";
-import { mockRouter } from "next/router";
-import { renderWithAppLogic } from "../../../test-utils";
-import routes from "../../../../src/routes";
+import { renderPage } from "../../../test-utils/renderPage";
 
 describe("Success", () => {
-  mockRouter.pathname = routes.employers.success;
-  const query = { absence_id: "test-absence-id" };
-  let wrapper;
+  it("renders the page", () => {
+    const { container } = renderPage(
+      Success,
+      {
+        addCustomSetup: (appLogicHook) => {
+          appLogicHook.portalFlow.getNextPageRoute = jest.fn();
+          appLogicHook.pathname = "";
+        },
+      },
+      {
+        query: { absence_id: "my-absence-id" },
+      }
+    );
 
-  it("renders Success page", () => {
-    ({ wrapper } = renderWithAppLogic(Success, {
-      diveLevels: 1,
-      props: { query },
-    }));
-
-    expect(wrapper).toMatchSnapshot();
+    expect(container).toMatchSnapshot();
   });
 });

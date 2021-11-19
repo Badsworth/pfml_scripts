@@ -5,9 +5,10 @@ provider "aws" {
 terraform {
   required_providers {
     archive = "~> 1.3"
-    aws     = "~> 3.26.0"
+    aws     = "~> 3.64.2"
     newrelic = {
-      source = "newrelic/newrelic"
+      source  = "newrelic/newrelic"
+      version = "~> 2.15.0"
     }
   }
 }
@@ -25,7 +26,6 @@ locals {
 }
 
 provider "newrelic" {
-  version       = "~> 2.15.0"
   region        = "US"
   account_id    = "2837112"
   api_key       = data.aws_ssm_parameter.newrelic-api-key.value

@@ -91,9 +91,21 @@ class FINEOSClientBadResponse(FINEOSClientError):
         )
 
 
+class FINEOSUnprocessableEntity(FINEOSClientBadResponse):
+    """The FINEOS API returned an Unprocessable Entity (422) error"""
+
+
+class FINEOSNotFound(FINEOSClientBadResponse):
+    """The FINEOS API returned a Not Found (404) error"""
+
+
+class FINEOSForbidden(FINEOSClientBadResponse):
+    """The FINEOS API returned an authorization (403) error"""
+
+
 # NOTE: This is currently only thrown manually for missing employers in read_employer,
 #       and for missing employee occupations in register_api_user.
-class FINEOSNotFound(FINEOSClientBadResponse):
+class FINEOSEntityNotFound(FINEOSClientBadResponse):
     def __init__(self, message: str):
         self.message = message
 

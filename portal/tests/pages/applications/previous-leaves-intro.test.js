@@ -1,43 +1,42 @@
-import {
-  MockBenefitsApplicationBuilder,
-  renderWithAppLogic,
-  simulateEvents,
-} from "../../test-utils";
+import { MockBenefitsApplicationBuilder, renderPage } from "../../test-utils";
+import { screen, waitFor } from "@testing-library/react";
 import PreviousLeavesIntro from "../../../src/pages/applications/previous-leaves-intro";
+import { setupBenefitsApplications } from "../../test-utils/helpers";
+import userEvent from "@testing-library/user-event";
 
-jest.mock("../../../src/hooks/useAppLogic");
-
-const setup = (claimAttrs = {}) => {
-  const { appLogic, claim, wrapper } = renderWithAppLogic(PreviousLeavesIntro, {
-    claimAttrs,
+const setup = () => {
+  const claims = [new MockBenefitsApplicationBuilder().continuous().create()];
+  const goToNextPageSpy = jest.fn(() => {
+    return Promise.resolve();
   });
 
-  const { submitForm } = simulateEvents(wrapper);
+  const utils = renderPage(
+    PreviousLeavesIntro,
+    {
+      addCustomSetup: (appLogic) => {
+        setupBenefitsApplications(appLogic, claims);
+        appLogic.portalFlow.goToNextPage = goToNextPageSpy;
+      },
+    },
+    { query: { claim_id: "mock_application_id" } }
+  );
 
-  return {
-    appLogic,
-    claim,
-    submitForm,
-    wrapper,
-  };
+  return { goToNextPageSpy, ...utils };
 };
 
 describe("PreviousLeavesIntro", () => {
   it("renders the page", () => {
-    const { wrapper } = setup(
-      new MockBenefitsApplicationBuilder().continuous().create()
-    );
-
-    expect(wrapper).toMatchSnapshot();
-    expect(wrapper.find("Trans").dive()).toMatchSnapshot();
+    const { container } = setup();
+    expect(container).toMatchSnapshot();
   });
 
   it("calls goToNextPage when user submits form", async () => {
-    const { appLogic, wrapper } = setup();
-    const spy = jest.spyOn(appLogic.portalFlow, "goToNextPage");
+    const { goToNextPageSpy } = setup();
 
-    const { submitForm } = simulateEvents(wrapper);
-    await submitForm();
-    expect(spy).toHaveBeenCalledTimes(1);
+    userEvent.click(screen.getByRole("button", { name: "Save and continue" }));
+
+    await waitFor(() => {
+      expect(goToNextPageSpy).toHaveBeenCalledTimes(1);
+    });
   });
 });

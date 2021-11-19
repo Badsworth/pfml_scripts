@@ -11,13 +11,13 @@ export async function approveClaim(
   logger?: winston.Logger
 ): Promise<void> {
   // Visit the claim
+  logger?.debug("Searching for Claim ...");
   const claimPage = await Claim.visit(page, fineos_absence_id);
   // Start adjudication
   logger?.debug("Starting Adjudication Process in Fineos", {
     fineos_absence_id,
   });
   await claimPage.adjudicate(async (adjudication) => {
-    await adjudication.acceptLeavePlan();
     logger?.debug("Accept Leave Plan complete", {
       fineos_absence_id,
     });
@@ -34,6 +34,7 @@ export async function approveClaim(
     logger?.debug("Certification Periods have been pre-filled", {
       fineos_absence_id,
     });
+    await adjudication.acceptLeavePlan();
   });
   logger?.debug("Adjudication Completed w/o errors:", {
     fineos_absence_id,
@@ -103,6 +104,29 @@ export async function closeDocuments(
         await tasks.open("Escalate Employer Reported Other Income");
     } else if (claim.employerResponse?.employer_decision === "Approve") {
       await tasks.close("Employer Approval Received");
+    }
+  });
+}
+
+export async function closeDocumentsErOpen(
+  page: Page,
+  claim: GeneratedClaim,
+  fineos_absence_id: string
+): Promise<void> {
+  const claimPage = await Claim.visit(page, fineos_absence_id);
+  await claimPage.adjudicate(async (adjudication) => {
+    await adjudication.evidence(async (evidence) => {
+      for (const { document_type } of claim.documents)
+        await evidence.receive(document_type);
+    });
+
+    await adjudication.certificationPeriods((cert) => cert.prefill());
+  });
+
+  // Close all of the documentation review tasks.
+  await claimPage.tasks(async (tasks) => {
+    for (const { document_type } of claim.documents) {
+      await tasks.close(getDocumentReviewTaskName(document_type));
     }
   });
 }

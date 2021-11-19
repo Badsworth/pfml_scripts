@@ -150,7 +150,7 @@ class PubCheckResponseGenerator:
             bfc_code="CLMNT",
             payee_id=str(employee.employee_id),
             check_number=check_number,
-            payee_name=_format_employee_name_for_ez_check(employee),
+            payee_name=_format_employee_name_for_ez_check(payment),
         )
 
         response_date = (
@@ -214,7 +214,7 @@ class PubCheckResponseGenerator:
 
         create_csv_from_list(
             data=response_csv_data,
-            fieldnames=asdict(fieldnames).values(),
+            fieldnames=list(asdict(fieldnames).values()),
             file_name=file_name,
             folder_path=self.folder_path,
         )

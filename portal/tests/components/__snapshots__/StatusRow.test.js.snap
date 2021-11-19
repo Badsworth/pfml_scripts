@@ -2,17 +2,15 @@
 
 exports[`StatusRow renders the component 1`] = `
 <div
-  className="margin-bottom-2 padding-bottom-2"
+  class="margin-bottom-2 padding-bottom-2"
 >
-  <Heading
-    className="margin-bottom-1"
-    level="3"
-    size="4"
+  <h3
+    class="margin-bottom-1 font-heading-xs text-bold"
   >
     Test label
-  </Heading>
+  </h3>
   <p>
-    Testing
+    Children
   </p>
 </div>
 `;

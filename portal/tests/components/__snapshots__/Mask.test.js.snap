@@ -2,26 +2,43 @@
 
 exports[`Mask applies icon prefix to the child element when mask is currency 1`] = `
 <div
-  aria-hidden="true"
-  className="usa-input-prefix"
+  class="usa-input-group"
 >
-  <Icon
-    name="attach_money"
+  <div
+    aria-hidden="true"
+    class="usa-input-prefix"
+  >
+    <svg
+      aria-hidden="true"
+      class="usa-icon"
+      focusable="false"
+      role="img"
+    >
+      <use
+        xlink:href="/img/sprite.svg#attach_money"
+      />
+    </svg>
+  </div>
+  <input
+    class="padding-left-0"
+    inputmode="decimal"
+    name="foo"
+    type="text"
+    value="123456789"
   />
 </div>
 `;
 
 exports[`Mask renders ssn mask 1`] = `
 <div
-  className=""
+  class=""
 >
   <input
-    className=""
-    inputMode="numeric"
+    class=""
+    inputmode="numeric"
     name="foo"
-    onBlur={[Function]}
-    onKeyDown={[Function]}
     type="text"
+    value=""
   />
 </div>
 `;

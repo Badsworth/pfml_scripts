@@ -1,5 +1,4 @@
 import enum
-from typing import cast
 
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
@@ -70,7 +69,7 @@ class StateCleanupStep(Step):
                 end_state=State.DELEGATED_ADD_TO_FINEOS_WRITEBACK,
                 associated_model=payment,
                 outcome=state_log_util.build_outcome(
-                    cast(str, writeback_transaction_status.transaction_status_description,)
+                    writeback_transaction_status.transaction_status_description
                 ),
                 import_log_id=self.get_import_log_id(),
                 db_session=self.db_session,
@@ -93,15 +92,9 @@ class StateCleanupStep(Step):
         logger.info(
             "Beginning cleanup of payment state logs for payments in audit report pending states"
         )
-        try:
-            for audit_state in payments_util.Constants.REJECT_FILE_PENDING_STATES:
-                self._cleanup_state(audit_state)
-            self.db_session.commit()
-            logger.info(
-                "Completed cleanup of payment state logs for payments in audit report pending states"
-            )
-        except Exception:
-            self.db_session.rollback()
-            logger.exception("Error cleaning up audit report pending states")
-            # We do not want to run any subsequent steps if this fails
-            raise
+        for audit_state in payments_util.Constants.REJECT_FILE_PENDING_STATES:
+            self._cleanup_state(audit_state)
+        self.db_session.commit()
+        logger.info(
+            "Completed cleanup of payment state logs for payments in audit report pending states"
+        )

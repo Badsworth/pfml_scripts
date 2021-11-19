@@ -5,6 +5,8 @@ from typing import List, Optional
 import massgov.pfml.db as db
 import massgov.pfml.reductions.dia as dia
 import massgov.pfml.reductions.dua as dua
+import massgov.pfml.reductions.reports.consolidated_dia_payments.create as dia_consolidated_report_create
+import massgov.pfml.reductions.reports.consolidated_dia_payments.send as dia_consolidated_report_send
 import massgov.pfml.reductions.reports.dia_payments.create as dia_payments_reports_create
 import massgov.pfml.reductions.reports.dia_payments.send as dia_payments_reports_send
 import massgov.pfml.reductions.reports.dua_payments_reports as dua_reports
@@ -100,6 +102,12 @@ def main():
                     db_session, log_entry
                 )
                 dia_payments_reports_send.send_dia_reductions_report(db_session)
+
+            with LogEntry(db_session, "DIA send_consolidated_dia_payments_to_dfml") as log_entry:
+                dia_consolidated_report_create.create_report_consolidated_dia_payments_to_dfml(
+                    db_session
+                )
+                dia_consolidated_report_send.send_consolidated_dia_reductions_report(db_session)
 
         if config.dua_download_import or config.dua_download_import_and_generate_report:
             logger.info("Running DUA steps to check for and load payments")

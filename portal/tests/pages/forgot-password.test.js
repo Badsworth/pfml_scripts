@@ -1,36 +1,40 @@
-import { simulateEvents, testHook } from "../test-utils";
+import { mockAuth, renderPage } from "../test-utils";
+import { screen, waitFor } from "@testing-library/react";
 import ForgotPassword from "../../src/pages/forgot-password";
-import React from "react";
-import { act } from "react-dom/test-utils";
-import { shallow } from "enzyme";
-import useAppLogic from "../../src/hooks/useAppLogic";
-
-jest.mock("../../src/hooks/useAppLogic");
+import userEvent from "@testing-library/user-event";
 
 describe("ForgotPassword", () => {
-  let appLogic, changeField, submitForm, wrapper;
-
   beforeEach(() => {
-    testHook(() => {
-      appLogic = useAppLogic();
-    });
-    act(() => {
-      wrapper = shallow(<ForgotPassword appLogic={appLogic} />);
-    });
-    ({ changeField, submitForm } = simulateEvents(wrapper));
+    mockAuth(false);
   });
 
   it("renders form", () => {
-    expect(wrapper).toMatchSnapshot();
+    const { container } = renderPage(ForgotPassword, { isLoggedIn: false });
+    expect(container.firstChild).toMatchSnapshot();
+    expect(screen.getByText(/Forgot your password?/)).toBeInTheDocument();
+    expect(
+      screen.getByRole("textbox", { name: "Email address" })
+    ).toBeInTheDocument();
   });
 
-  describe("when the form is submitted", () => {
-    it("calls forgotPassword", async () => {
-      const email = "email@test.com";
+  it("when the form is submitted calls forgotPassword", async () => {
+    const email = "email@test.com";
+    const forgotPassword = jest.fn();
+    const options = {
+      isLoggedIn: false,
+      addCustomSetup: (appLogicHook) => {
+        appLogicHook.auth.forgotPassword = forgotPassword;
+      },
+    };
+    renderPage(ForgotPassword, options);
 
-      changeField("username", email);
-      await submitForm();
-      expect(appLogic.auth.forgotPassword).toHaveBeenCalledWith(email);
+    userEvent.type(
+      screen.getByRole("textbox", { name: "Email address" }),
+      email
+    );
+    userEvent.click(screen.getByRole("button", { name: "Send code" }));
+    await waitFor(() => {
+      expect(forgotPassword).toHaveBeenCalledWith(email);
     });
   });
 });
