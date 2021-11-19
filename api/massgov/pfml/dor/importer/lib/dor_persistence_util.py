@@ -20,13 +20,13 @@ from massgov.pfml.db.models.employees import (
     WagesAndContributions,
     WagesAndContributionsHistory,
 )
-from massgov.pfml.types import Fein, TaxId
 from massgov.pfml.dor.importer.dor_file_formats import (
     EmployerQuarterlyKey,
     ParsedEmployeeLine,
     ParsedEmployeeWageLine,
     ParsedEmployerLine,
 )
+from massgov.pfml.types import Fein, TaxId
 from massgov.pfml.util.datetime import to_datetime
 
 logger = logging.get_logger(__name__)
