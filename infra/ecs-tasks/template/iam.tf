@@ -1440,7 +1440,8 @@ data "aws_iam_policy_document" "bi_imports_bucket_policy_document" {
     ]
 
     resources = [
-      "arn:aws:s3:::massgov-pfml-${var.environment_name}-redshift-daily-import"
+      "arn:aws:s3:::massgov-pfml-${var.environment_name}-redshift-daily-import",
+      "arn:aws:s3:::massgov-pfml-${var.environment_name}-redshift-daily-import/*",
     ]
   }
   statement {
@@ -1458,6 +1459,7 @@ data "aws_iam_policy_document" "bi_imports_bucket_policy_document" {
     ]
 
     resources = [
+      "arn:aws:s3:::massgov-pfml-${var.environment_name}-redshift-daily-import",
       "arn:aws:s3:::massgov-pfml-${var.environment_name}-redshift-daily-import/*"
     ]
   }
