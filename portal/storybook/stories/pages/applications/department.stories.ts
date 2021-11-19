@@ -1,9 +1,10 @@
-import { MockBenefitsApplicationBuilder } from "tests/test-utils";
+import { MockBenefitsApplicationBuilder } from "tests/test-utils/mock-model-builder";
 import OrganizationUnit from "src/models/OrganizationUnit";
 import generateClaimPageStory from "storybook/utils/generateClaimPageStory";
+import { updateCookieWithFlag } from "src/services/featureFlags";
 
 // Mock data
-const employerDepartmentList = [
+const employerDepartmentList: OrganizationUnit[] = [
   {
     organization_unit_id: "dep-1",
     name: "Department One",
@@ -38,12 +39,14 @@ const employerDepartmentList = [
   },
 ];
 
-const singularDepartmentList: OrganizationUnit[] = [employerDepartmentList[0]];
-const shortDepartmentList: OrganizationUnit[] = [
+const singularDepartmentList = [employerDepartmentList[0]];
+
+const shortDepartmentList = [
   employerDepartmentList[0],
   employerDepartmentList[1],
 ];
-const longDepartmentList: OrganizationUnit[] = [
+
+const longDepartmentList = [
   employerDepartmentList[0],
   employerDepartmentList[1],
   employerDepartmentList[2],
@@ -52,6 +55,7 @@ const longDepartmentList: OrganizationUnit[] = [
   employerDepartmentList[5],
 ];
 
+// Helper
 const claimWithUnits = (employeeDepartmentList: OrganizationUnit[]) =>
   new MockBenefitsApplicationBuilder()
     .verifiedId()
@@ -61,15 +65,20 @@ const claimWithUnits = (employeeDepartmentList: OrganizationUnit[]) =>
     .create();
 
 const mockClaims = {
-  empty: claimWithUnits(longDepartmentList),
-  "Singular List": claimWithUnits(singularDepartmentList),
-  "Short List": claimWithUnits(shortDepartmentList),
-  "Long List": claimWithUnits(longDepartmentList),
+  Singular: claimWithUnits(singularDepartmentList),
+  Short: claimWithUnits(shortDepartmentList),
+  Long: claimWithUnits(longDepartmentList),
 };
+
+// Workaround to pass render stories test
+// The department page is currently behind a feature flag
+// and causes the stories test to fail due to empty story component
+updateCookieWithFlag("claimantShowOrganizationUnits", "true");
 
 const { config, DefaultStory } = generateClaimPageStory(
   "department",
   mockClaims
 );
+
 export default config;
 export const Default = DefaultStory;

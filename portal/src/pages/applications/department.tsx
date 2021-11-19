@@ -32,8 +32,8 @@ export const Department = (props: WithBenefitsApplicationProps) => {
   const initialFormState = pick(props, fields).claim;
 
   // Organization Units
-  const EEOrgUnits = claim.employee_organization_units;
-  const EROrgUnits = claim.employer_organization_units;
+  const EEOrgUnits = claim.employee_organization_units ?? [];
+  const EROrgUnits = claim.employer_organization_units ?? [];
   const YES: OrganizationUnit = {
     organization_unit_id: EEOrgUnits[0]?.organization_unit_id,
     name: t("pages.claimsOrganizationUnit.choiceYes"),
