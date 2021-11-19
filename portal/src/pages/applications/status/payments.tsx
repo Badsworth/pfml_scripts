@@ -13,23 +13,6 @@ import { isFeatureEnabled } from "../../../services/featureFlags";
 import routes from "../../../routes";
 import { useTranslation } from "../../../locales/i18n";
 
-interface SectionWrapperProps {
-  children: React.ReactNode;
-  heading: string;
-}
-
-const SectionWrapper = ({ children, heading }: SectionWrapperProps) => {
-  return (
-    <section className="margin-y-4">
-      <Heading className="margin-bottom-2" level="3">
-        {heading}
-      </Heading>
-
-      {children}
-    </section>
-  );
-};
-
 interface PaymentsProps {
   query: {
     absence_id?: string;
@@ -50,6 +33,11 @@ export const Payments = ({
     }
   }, [appLogic.portalFlow, absence_id]);
 
+  // Determine leave type
+  const isContinuous = appLogic.claims.claimDetail?.isContinuous;
+  const isIntermittent = appLogic.claims.claimDetail?.isIntermittent;
+  const isReducedSchedule = appLogic.claims.claimDetail?.isReducedSchedule;
+
   return (
     <React.Fragment>
       <BackButton
@@ -69,8 +57,52 @@ export const Payments = ({
           {t("pages.claimsStatus.yourPayments")}
         </Heading>
 
+        {/* When to expect payment section */}
+        <section className="margin-y-4" data-testid="when-to-expect-payments">
+          {(isContinuous || isReducedSchedule) && (
+            <Trans
+              components={{
+                "waiting-period-info": (
+                  <a
+                    href={routes.external.massgov.sevenDayWaitingPeriodInfo}
+                    rel="noopener noreferrer"
+                    target="_blank"
+                  />
+                ),
+              }}
+              i18nKey="pages.payments.whenToExpectPaymentContinuous"
+            />
+          )}
+
+          {isReducedSchedule && (
+            <Trans i18nKey="pages.payments.whenToExpectPaymentReducedSchedule" />
+          )}
+
+          {isIntermittent && (
+            <Trans
+              components={{
+                "waiting-period-info": (
+                  <a
+                    href={routes.external.massgov.sevenDayWaitingPeriodInfo}
+                    rel="noopener noreferrer"
+                    target="_blank"
+                  />
+                ),
+                "contact-center-report-hours-phone-link": (
+                  <a
+                    href={`tel:${t(
+                      "shared.contactCenterReportHoursPhoneNumber"
+                    )}`}
+                  />
+                ),
+              }}
+              i18nKey="pages.payments.whenToExpectPaymentIntermittent"
+            />
+          )}
+        </section>
+
         {/* Changes to payments FAQ section */}
-        <SectionWrapper heading={t("pages.payments.changesToPaymentsHeader")}>
+        <section className="margin-y-4" data-testid="changes-to-payments">
           <Accordion>
             <AccordionItem
               heading={t("pages.payments.changesToPaymentsScheduleQuestion")}
@@ -92,6 +124,13 @@ export const Payments = ({
                 components={{
                   li: <li />,
                   ul: <ul />,
+                  "using-other-leave-link": (
+                    <a
+                      href={routes.external.massgov.usingOtherLeave}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    />
+                  ),
                   "view-notices-link": (
                     <a
                       href={createRouteWithQuery(
@@ -120,10 +159,13 @@ export const Payments = ({
               />
             </AccordionItem>
           </Accordion>
-        </SectionWrapper>
+        </section>
 
         {/* Questions/Contact Us section */}
-        <SectionWrapper heading={t("pages.payments.questionsHeader")}>
+        <section className="margin-y-4" data-testid="questions">
+          <Heading className="margin-bottom-2" level="3">
+            {t("pages.payments.questionsHeader")}
+          </Heading>
           <Trans
             i18nKey="pages.payments.questionsDetails"
             components={{
@@ -132,7 +174,7 @@ export const Payments = ({
               ),
             }}
           />
-        </SectionWrapper>
+        </section>
       </div>
     </React.Fragment>
   );
