@@ -1,11 +1,6 @@
-import { Department } from "src/pages/applications/department";
 import { MockBenefitsApplicationBuilder } from "tests/test-utils";
 import OrganizationUnit from "src/models/OrganizationUnit";
-import { Props } from "storybook/types";
-import React from "react";
-import User from "src/models/User";
-import faker from "faker";
-import useMockableAppLogic from "lib/mock-helpers/useMockableAppLogic";
+import generateClaimPageStory from "storybook/utils/generateClaimPageStory";
 
 // Mock data
 const employerDepartmentList = [
@@ -57,10 +52,6 @@ const longDepartmentList: OrganizationUnit[] = [
   employerDepartmentList[5],
 ];
 
-const user = new User({
-  email_address: faker.internet.email(faker.name.findName()),
-});
-
 const claimWithUnits = (employeeDepartmentList: OrganizationUnit[]) =>
   new MockBenefitsApplicationBuilder()
     .verifiedId()
@@ -69,38 +60,16 @@ const claimWithUnits = (employeeDepartmentList: OrganizationUnit[]) =>
     .employerOrganizationUnits(employerDepartmentList)
     .create();
 
-const scenarios = {
-  "Singular List": {
-    claim: claimWithUnits(singularDepartmentList),
-  },
-  "Short List": {
-    claim: claimWithUnits(shortDepartmentList),
-  },
-  "Long List": {
-    claim: claimWithUnits(longDepartmentList),
-  },
+const mockClaims = {
+  empty: claimWithUnits(longDepartmentList),
+  "Singular List": claimWithUnits(singularDepartmentList),
+  "Short List": claimWithUnits(shortDepartmentList),
+  "Long List": claimWithUnits(longDepartmentList),
 };
 
-export default {
-  title: "Pages/Applications/Department",
-  component: Department,
-  argTypes: {
-    scenario: {
-      defaultValue: Object.keys(scenarios)[0],
-      control: {
-        type: "radio",
-        options: Object.keys(scenarios),
-      },
-    },
-  },
-};
-
-export const DefaultStory = (
-  args: Props<typeof Department> & { scenario: keyof typeof scenarios }
-) => {
-  const { claim } = scenarios[args.scenario];
-
-  const appLogic = useMockableAppLogic();
-
-  return <Department appLogic={appLogic} user={user} claim={claim} />;
-};
+const { config, DefaultStory } = generateClaimPageStory(
+  "department",
+  mockClaims
+);
+export default config;
+export const Default = DefaultStory;
