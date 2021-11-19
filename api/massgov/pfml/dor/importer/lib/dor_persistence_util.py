@@ -1,6 +1,6 @@
 import datetime
 import uuid
-from typing import Any, Dict, Iterable, List, Optional, Tuple
+from typing import Dict, Iterable, List, Optional, Tuple
 
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 

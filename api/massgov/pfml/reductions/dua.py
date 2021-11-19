@@ -9,6 +9,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.db as db
+from massgov.pfml.types import TaxId
 import massgov.pfml.util.batch.log as batch_log
 import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
@@ -179,7 +180,7 @@ def _format_claimants_for_dua_claimant_list(claimants: List[Employee]) -> List[D
 
         info = {
             Constants.CASE_ID_FIELD: fineos_customer_number,
-            Constants.SSN_FIELD: tax_id.tax_identifier.to_unformatted_str(),
+            Constants.SSN_FIELD: TaxId(str(tax_id.tax_identifier)).to_unformatted_str(),
             Constants.BENEFIT_START_DATE_FIELD: Constants.TEMPORARY_BENEFIT_START_DATE,
         }
 

@@ -35,6 +35,7 @@ from massgov.pfml.db.models.factories import (
     EmployeeWithFineosNumberFactory,
     ReferenceFileFactory,
 )
+from massgov.pfml.types import TaxId
 from massgov.pfml.util.batch.log import LogEntry
 
 fake = faker.Faker()
@@ -662,7 +663,7 @@ def test_format_claimants_for_dua_claimant_list_expected_structure_is_generated(
         {
             dua.Constants.CASE_ID_FIELD: employee.fineos_customer_number,
             dua.Constants.BENEFIT_START_DATE_FIELD: dua.Constants.TEMPORARY_BENEFIT_START_DATE,
-            dua.Constants.SSN_FIELD: employee.tax_identifier.tax_identifier.to_unformatted_str(),
+            dua.Constants.SSN_FIELD: TaxId(str(employee.tax_identifier.tax_identifier)).to_unformatted_str(),
         }
         for employee in employees
     ]
@@ -770,7 +771,7 @@ def test_create_list_of_claimants_uploads_csv_to_s3_and_adds_state_log(
         assert csv_line == ",".join(
             [
                 claim.employee.fineos_customer_number,
-                claim.employee.tax_identifier.tax_identifier.to_unformatted_str(),
+                TaxId(str(claim.employee.tax_identifier.tax_identifier)).to_unformatted_str(),
                 dua.Constants.TEMPORARY_BENEFIT_START_DATE,
             ]
         )
