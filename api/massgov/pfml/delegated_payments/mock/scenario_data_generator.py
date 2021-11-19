@@ -168,11 +168,13 @@ def create_employer(fein: str, fineos_employer_id: str, db_session: db.Session) 
 
 
 def create_employee(ssn: str, fineos_customer_number: str, db_session: db.Session) -> Employee:
+    tax_id = TaxId(ssn)
+
     employee = (
         db_session.query(Employee)
         .join(TaxIdentifier)
         .filter(
-            TaxIdentifier.tax_identifier == ssn,
+            TaxIdentifier.tax_identifier == tax_id,
             Employee.fineos_customer_number == fineos_customer_number,
         )
         .one_or_none()
@@ -188,10 +190,10 @@ def create_employee(ssn: str, fineos_customer_number: str, db_session: db.Sessio
             employee.last_name,
         )
         return employee
-    tax_identifier = TaxIdentifier(tax_identifier=ssn)
+    tax_identifier = TaxIdentifier(tax_identifier=tax_id)
     return EmployeeFactory.create(
         employee_id=uuid.uuid4(),
-        tax_identifier=TaxIdentifier(tax_identifier=TaxId(tax_identifier)),
+        tax_identifier=tax_identifier,
         fineos_customer_number=fineos_customer_number,
         ctr_address_pair=CtrAddressPairFactory.create(),
     )

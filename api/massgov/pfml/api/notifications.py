@@ -30,7 +30,7 @@ from massgov.pfml.db.queries.managed_requirements import (
 )
 from massgov.pfml.fineos import AbstractFINEOSClient, FINEOSClientError
 from massgov.pfml.fineos.models.customer_api import AbsenceDetails
-from massgov.pfml.types import Fein
+from massgov.pfml.types import Fein, TaxId
 from massgov.pfml.util.logging.managed_requirements import (
     get_fineos_managed_requirement_log_attributes,
 )
@@ -358,8 +358,8 @@ def handle_managed_requirements(
 def update_absence_period(
     absence_case_id: str,
     claim: Claim,
-    employee_ssn: str,
-    employer_fein: str,
+    employee_ssn: TaxId,
+    employer_fein: Fein,
     fineos_client: AbstractFINEOSClient,
     db_session: Session,
     log_attributes: dict,

@@ -33,6 +33,8 @@ from sqlalchemy.schema import Sequence
 from sqlalchemy.sql.expression import func
 from sqlalchemy.types import JSON
 
+from massgov.pfml.types import Fein, TaxId
+
 from ..lookup import LookupTable
 from .base import Base, TimestampMixin, utc_timestamp_gen, uuid_gen
 from .common import FeinColumn, PostgreSQLUUID, TaxIdColumn
@@ -748,7 +750,7 @@ class Claim(Base, TimestampMixin):
         )
 
     @typed_hybrid_property
-    def employee_tax_identifier(self) -> Optional[str]:
+    def employee_tax_identifier(self) -> Optional[TaxId]:
         if not self.employee:
             return None
 
@@ -758,7 +760,7 @@ class Claim(Base, TimestampMixin):
         return self.employee.tax_identifier.tax_identifier
 
     @typed_hybrid_property
-    def employer_fein(self) -> Optional[str]:
+    def employer_fein(self) -> Optional[Fein]:
         if not self.employer:
             return None
 
