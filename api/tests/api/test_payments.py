@@ -3,7 +3,7 @@ from urllib.parse import urlencode
 
 import pytest
 
-from massgov.pfml.api.services.payments import FEPaymentStatus
+from massgov.pfml.api.services.payments import FrontendPaymentStatus
 from massgov.pfml.db.models.employees import PaymentMethod
 from massgov.pfml.db.models.factories import ApplicationFactory
 from massgov.pfml.db.models.payments import FineosWritebackDetails, FineosWritebackTransactionStatus
@@ -16,29 +16,29 @@ from massgov.pfml.delegated_payments.mock.delegated_payments_factory import Dele
         # Pending Validation Scenario - display expected dates 5-7 days after pub_eft.prenote_sent_at
         (
             FineosWritebackTransactionStatus.PENDING_PRENOTE,
-            [FEPaymentStatus.DELAYED, None, None, 5, 7],
+            [FrontendPaymentStatus.DELAYED, None, None, 5, 7],
         ),
         # Paid Scenarios - display amount, sent_to_bank_date equal to writeback status created_at, expected dates equal to sent_to_bank_date
         (
             FineosWritebackTransactionStatus.PAID,
-            [FEPaymentStatus.SENT_TO_BANK, 750.67, str(date.today()), 0, 0],
+            [FrontendPaymentStatus.SENT_TO_BANK, 750.67, str(date.today()), 0, 0],
         ),
         (
             FineosWritebackTransactionStatus.POSTED,
-            [FEPaymentStatus.SENT_TO_BANK, 750.67, str(date.today()), 0, 0],
+            [FrontendPaymentStatus.SENT_TO_BANK, 750.67, str(date.today()), 0, 0],
         ),
         # Other Scenario - No dates displayed, only status of "Delayed"
         (
             FineosWritebackTransactionStatus.BANK_PROCESSING_ERROR,
-            [FEPaymentStatus.DELAYED, None, None, None, None],
+            [FrontendPaymentStatus.DELAYED, None, None, None, None],
         ),
         # Income Scenario - expected dates 2-4 days from writeback status created
         (
             FineosWritebackTransactionStatus.DIA_ADDITIONAL_INCOME,
-            [FEPaymentStatus.DELAYED, None, None, 2, 4],
+            [FrontendPaymentStatus.DELAYED, None, None, 2, 4],
         ),
         # No Writeback scenario - expected dates 1-3 days from today
-        (None, [FEPaymentStatus.PENDING, None, None, 1, 3]),
+        (None, [FrontendPaymentStatus.PENDING, None, None, 1, 3]),
     ],
 )
 def test_get_payments_200(
@@ -161,7 +161,7 @@ def test_get_payments_200_pending_validation_scenario_no_prenote_sent_at(
         "payment_method": payment.disb_method.payment_method_description,
         "expected_send_date_start": expected_start_date,
         "expected_send_date_end": expected_end_date,
-        "status": FEPaymentStatus.DELAYED,
+        "status": FrontendPaymentStatus.DELAYED,
     }
 
 
@@ -212,7 +212,7 @@ def test_get_payments_200_range_before_today(client, auth_token, user, test_db_s
         "payment_method": payment.disb_method.payment_method_description,
         "expected_send_date_start": None,
         "expected_send_date_end": None,
-        "status": FEPaymentStatus.DELAYED,
+        "status": FrontendPaymentStatus.DELAYED,
     }
 
 

@@ -17,7 +17,7 @@ from massgov.pfml.util import logging
 logger = logging.get_logger(__name__)
 
 
-class FEPaymentStatus:
+class FrontendPaymentStatus:
     SENT_TO_BANK = "Sent to bank"
     DELAYED = "Delayed"
     PENDING = "Pending"
@@ -29,7 +29,7 @@ class PaymentScenarioData:
     sent_date: Optional[date] = None
     expected_send_date_start: Optional[date] = None
     expected_send_date_end: Optional[date] = None
-    status: str = FEPaymentStatus.DELAYED
+    status: str = FrontendPaymentStatus.DELAYED
 
     SCENARIOS = {
         WritebackStatus.PENDING_PRENOTE.transaction_status_id: "pending_validation",
@@ -86,7 +86,7 @@ class PaymentScenarioData:
             sent_date=sent_date,
             expected_send_date_start=sent_date,
             expected_send_date_end=sent_date,
-            status=FEPaymentStatus.SENT_TO_BANK,
+            status=FrontendPaymentStatus.SENT_TO_BANK,
         )
 
     @classmethod
@@ -95,7 +95,7 @@ class PaymentScenarioData:
         return cls(
             expected_send_date_start=expected_send_date_start,
             expected_send_date_end=expected_send_date_end,
-            status=FEPaymentStatus.PENDING,
+            status=FrontendPaymentStatus.PENDING,
         )
 
     @classmethod
