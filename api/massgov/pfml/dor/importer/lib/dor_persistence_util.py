@@ -479,7 +479,9 @@ def get_employers_by_account_key(
 
 
 def get_employer_by_fein(db_session: massgov.pfml.db.Session, fein: str) -> Optional[Employer]:
-    employer_row = db_session.query(Employer).filter(Employer.employer_fein == Fein(fein)).one_or_none()
+    employer_row = (
+        db_session.query(Employer).filter(Employer.employer_fein == Fein(fein)).one_or_none()
+    )
     return employer_row
 
 
