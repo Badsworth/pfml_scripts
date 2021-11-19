@@ -34,10 +34,10 @@ class PaymentScenarioData:
 
     SCENARIOS = {
         WritebackStatus.PENDING_PRENOTE.transaction_status_id: "pending_validation",
-        WritebackStatus.DUA_ADDITIONAL_INCOME.transaction_status_id: "income",
-        WritebackStatus.DIA_ADDITIONAL_INCOME.transaction_status_id: "income",
-        WritebackStatus.WEEKLY_BENEFITS_AMOUNT_EXCEEDS_850.transaction_status_id: "income",
-        WritebackStatus.SELF_REPORTED_ADDITIONAL_INCOME.transaction_status_id: "income",
+        WritebackStatus.DUA_ADDITIONAL_INCOME.transaction_status_id: "reduction",
+        WritebackStatus.DIA_ADDITIONAL_INCOME.transaction_status_id: "reduction",
+        WritebackStatus.WEEKLY_BENEFITS_AMOUNT_EXCEEDS_850.transaction_status_id: "reduction",
+        WritebackStatus.SELF_REPORTED_ADDITIONAL_INCOME.transaction_status_id: "reduction",
         WritebackStatus.PAID.transaction_status_id: "paid",
         WritebackStatus.POSTED.transaction_status_id: "paid",
         None: "no_writeback",
@@ -56,12 +56,16 @@ class PaymentScenarioData:
         payment = kwargs["payment"]
         created_date = payment.pub_eft.prenote_sent_at if payment.pub_eft else None
         if created_date is None:
+            # If the EFT record hasn't been sent to PUB yet, pub_eft.prenote_sent_at won't be set yet.
+            # We'll assume we are going to send it within the next day, so up the 5-7 day date range by 1 to compensate.
             expected_send_date_start, expected_send_date_end = get_expected_dates(
                 date.today(), range_start=6, range_end=8
             )
         else:
+            # We must wait 5 days before we can approve a prenote,
+            # so we recommend waiting 5-7 days from when we sent it.
             expected_send_date_start, expected_send_date_end = get_expected_dates(
-                date.today(), range_start=5, range_end=7
+                created_date, range_start=5, range_end=7
             )
 
         return cls(
@@ -70,7 +74,12 @@ class PaymentScenarioData:
         )
 
     @classmethod
-    def income(cls, **kwargs):
+    def reduction(cls, **kwargs):
+        """
+        Reduction scenarios require someone to manually make a change in FINEOS
+        Which usually takes about 2 days. Note the payment could still be cancelled
+        if the reduction ends up greater than the amount remaining.
+        """
         writeback_detail = kwargs["writeback_detail"]
         created_date = to_est(writeback_detail.created_at).date()
         expected_send_date_start, expected_send_date_end = get_expected_dates(
@@ -84,6 +93,9 @@ class PaymentScenarioData:
 
     @classmethod
     def paid(cls, **kwargs):
+        """
+        The payment has been successfully paid
+        """
         payment, writeback_detail = kwargs["payment"], kwargs["writeback_detail"]
         sent_date = to_est(writeback_detail.created_at).date()
 
@@ -97,6 +109,11 @@ class PaymentScenarioData:
 
     @classmethod
     def no_writeback(cls, **_):
+        """
+        No writeback means the payment hasn't failed any validation,
+        but hasn't been sent to the bank yet. Likely it's waiting for the audit report
+        so we'll consider it a pending payment
+        """
         expected_send_date_start, expected_send_date_end = get_expected_dates(
             date.today(), range_start=1, range_end=3
         )
@@ -108,6 +125,10 @@ class PaymentScenarioData:
 
     @classmethod
     def other(cls, **_):
+        """
+        All payments that don't match one of the
+        other criteria end up with the defaults and display as delayed.
+        """
         return cls()
 
 
@@ -181,7 +202,7 @@ def get_latest_writeback_detail(payment: Payment) -> Optional[FineosWritebackDet
 
     if first_detail_record.transaction_status_id == WritebackStatus.POSTED.transaction_status_id:
         for record in reversed(writeback_details_records):
-            # TODO: Is it possible no preceding paid record will be found?
+            # TODO: Log error if no preceding paid record is found.
             if record.transaction_status_id == WritebackStatus.PAID.transaction_status_id:
                 return record
 
