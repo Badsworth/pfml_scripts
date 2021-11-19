@@ -37,7 +37,7 @@ output "environment_tags" {
     "breakfix"     = "qa"
     "cps-preview"  = "qa"
     "adhoc"        = "test"
-    "long-nonprod" = "test"
+    "long" = "test"
   }
 }
 
@@ -56,7 +56,7 @@ output "environment_shorthand" {
     "uat"          = "uat"
     "breakfix"     = "bfx"
     "cps-preview"  = "cpspr"
-    "long-nonprod" = "long"
+    "long" = "long"
   }
 }
 
@@ -77,7 +77,7 @@ output "smartronix_environment_tags" {
     "breakfix"     = "Breakfix"
     "cps-preview"  = "CPSPreview"
     "adhoc"        = "Adhoc"
-    "long-nonprod" = "LONG"
+    "long" = "LONG"
   }
 }
 
