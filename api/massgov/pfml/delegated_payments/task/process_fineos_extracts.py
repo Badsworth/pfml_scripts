@@ -159,12 +159,6 @@ def _process_fineos_extracts(
     if config.do_payment_extract:
         PaymentExtractStep(db_session=db_session, log_entry_db_session=log_entry_db_session).run()
 
-    if payments_util.is_withholding_payments_enabled():
-        if config.do_related_payment_processing:
-            RelatedPaymentsProcessingStep(
-                db_session=db_session, log_entry_db_session=log_entry_db_session
-            ).run()
-
     if config.validate_addresses:
         AddressValidationStep(
             db_session=db_session, log_entry_db_session=log_entry_db_session
@@ -174,6 +168,13 @@ def _process_fineos_extracts(
         PaymentPostProcessingStep(
             db_session=db_session, log_entry_db_session=log_entry_db_session
         ).run()
+
+    if payments_util.is_withholding_payments_enabled():
+        logger.info("Tax Withholding ENABLED")
+        if config.do_related_payment_processing:
+            RelatedPaymentsProcessingStep(
+                db_session=db_session, log_entry_db_session=log_entry_db_session
+            ).run()
 
     if config.make_audit_report:
         PaymentAuditReportStep(

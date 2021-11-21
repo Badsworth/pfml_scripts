@@ -1,20 +1,21 @@
 import enum
-from typing import List
-from uuid import UUID
-
-from sqlalchemy import func
+from typing import List, Optional
 
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml import db
 from massgov.pfml.db.models.employees import (
-    Claim,
     Flow,
     Payment,
     PaymentTransactionType,
     State,
+    StateLog,
 )
-from massgov.pfml.db.models.payments import LinkSplitPayment
+from massgov.pfml.db.models.payments import (
+    FineosWritebackDetails,
+    FineosWritebackTransactionStatus,
+    LinkSplitPayment,
+)
 from massgov.pfml.delegated_payments.step import Step
 
 logger = logging.get_logger(__package__)
@@ -42,26 +43,20 @@ class RelatedPaymentsProcessingStep(Step):
         for payment in payments:
 
             if payment.claim is None:
-                raise Exception(f"Claim not found for withholding payment id: {payment.payment_id}")
-            # get records for the absense id and check for duplicates
-            is_duplicate_records_exists = self.is_withholding_records_have_duplicate_records(
-                self.db_session, payment, str(payment.claim.fineos_absence_id)
-            )
+                raise Exception("Claim not found for withholding payment id: %s ", payment.payment_id)
 
-            if is_duplicate_records_exists:
+            primary_payment_records : List[Payment] = (
+                self.db_session.query(Payment)
+                .filter(Payment.claim_id == payment.claim_id)
+                .filter(Payment.period_start_date == payment.period_start_date)
+                .filter(Payment.period_end_date == payment.period_end_date)
+                .filter(Payment.payment_date == payment.payment_date)
+                .filter(Payment.payment_transaction_type_id == PaymentTransactionType.STANDARD.payment_transaction_type_id)
+                .filter(Payment.fineos_extract_import_log_id == payment.fineos_extract_import_log_id)
+                .all()
+            )
+            if len(primary_payment_records) > 1:
                 logger.info("Duplicate records exists for %s", payment.claim.fineos_absence_id)
-                # to update status we need payment so getting all the payment details from above query
-                # get duplicate payment records
-                duplicate_payment_records = (
-                    self.db_session.query(Payment)
-                    .filter(Payment.claim_id == payment.claim_id)
-                    .filter(Payment.period_start_date == payment.period_start_date)
-                    .filter(Payment.period_end_date == payment.period_end_date)
-                    .filter(Payment.payment_date == payment.payment_date)
-                    .filter(Payment.amount == payment.amount)
-                    .filter(Payment.fineos_extract_import_log_id == payment.fineos_extract_import_log_id)
-                    .all()
-                )
 
                 end_state = (
                     State.STATE_WITHHOLDING_PENDING_AUDIT
@@ -70,30 +65,76 @@ class RelatedPaymentsProcessingStep(Step):
                 )
                 message = "Duplicate records found for the payment."
 
-                for pmnt in duplicate_payment_records:
-                    state_log_util.create_finished_state_log(
-                        end_state=end_state,
-                        outcome=state_log_util.build_outcome(message),
-                        associated_model=pmnt,
-                        db_session=self.db_session,
-                    )
-                    logger.info(
-                        "Payment added to state %s", end_state.state_description,
-                    )
+                state_log_util.create_finished_state_log(
+                    end_state=end_state,
+                    outcome=state_log_util.build_outcome(message),
+                    associated_model=payment,
+                    db_session=self.db_session,
+                )
+                logger.info(
+                    "Payment added to state %s", end_state.state_description,
+                )
+                message = "Duplicate primay payment records found for the withholding record."
+                self._manage_pei_writeback_state(payment, message)
             else:
-                primary_payment_record = self._get_primary_payment_record(self.db_session, payment)
+                primary_payment_record = primary_payment_records[0].payment_id
                 if primary_payment_record == "":
                     raise Exception(
                         f"Primary payment id not found for withholding payment id: {payment.payment_id}"
                     )
 
+                #  if primary is in error state set withholding in error and don't enter in link table.
                 payment_id = primary_payment_record
                 related_payment_id = payment.payment_id
-                logger.info("payment_id: %s related_payment_id: %s",primary_payment_record,payment.payment_id)
                 link_payment = LinkSplitPayment()
                 link_payment.payment_id = payment_id
                 link_payment.related_payment_id = related_payment_id
                 self.db_session.add(link_payment)
+
+                #  If primary payment is has any validation error set withholidng state to error
+                payment_state_log: Optional[StateLog] = state_log_util.get_latest_state_log_in_flow(
+                    primary_payment_records[0], Flow.DELEGATED_PAYMENT, self.db_session
+                )
+                if payment_state_log is None:
+                    raise Exception(
+                        "State log record not found for the primary payment id: %s", primary_payment_records[0].payment_id
+                    )
+                if (
+                    payment_state_log.end_state_id != State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING.state_id
+                ):
+                    end_state = (
+                        State.STATE_WITHHOLDING_ERROR
+                        if (payment.payment_transaction_type_id == PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id)
+                        else State.FEDERAL_WITHHOLDING_ERROR
+                    )
+                    outcome = state_log_util.build_outcome("Primay payment has an error")
+                    state_log_util.create_finished_state_log(
+                        associated_model=payment,
+                        end_state=end_state,
+                        outcome=outcome,
+                        db_session=self.db_session,
+                    )
+                    logger.info(
+                        "Payment added to state %s", end_state.state_description,
+                    )
+                    message = "Withholding record error due to an issue with the primary payment."
+                    self._manage_pei_writeback_state(payment, message)
+
+    def _manage_pei_writeback_state(self, payment: Payment, message: str) -> None:
+        # Create the state log, note this is in the DELEGATED_PEI_WRITEBACK flow
+        # So it is added in addition to the state log added in _create_end_state_by_payment_type
+        state_log_util.create_finished_state_log(
+            end_state=State.DELEGATED_ADD_TO_FINEOS_WRITEBACK,
+            outcome=state_log_util.build_outcome(message),
+            associated_model=payment,
+            db_session=self.db_session,
+        )
+        writeback_details = FineosWritebackDetails(
+            payment=payment,
+            transaction_status_id=FineosWritebackTransactionStatus.WITHHOLDING_ERROR.transaction_status_id,
+            import_log_id=self.get_import_log_id(),
+        )
+        self.db_session.add(writeback_details)
 
     def _get_withholding_payments_records(self) -> List[Payment]:
         """this method appends fedral and state withholding payment records"""
@@ -124,67 +165,3 @@ class RelatedPaymentsProcessingStep(Step):
             db_session=db_session,
         )
         return [state_log.payment for state_log in state_logs]
-
-    # There is possibility we can get duplicate withholding records for same absence id.
-    # this function is finding those duplicates. we are setting states as FEDERAL_WITHHOLDING_PENDING_AUDIT
-    # or STATE_WITHHOLDING_PENDING_AUDIT and adding it to payment audit report.
-    def is_withholding_records_have_duplicate_records(
-        self, db_session: db.Session, payment: Payment, fineos_absence_id: str
-    ) -> bool:
-        num_payments_query = (
-            self.db_session.query(
-                Claim.fineos_absence_id,
-                Payment.period_start_date,
-                Payment.period_end_date,
-                Payment.payment_date,
-                Payment.amount,
-                Payment.fineos_extract_import_log_id,
-                func.count(Payment.amount).label("records_count"),
-            )
-            .join(Claim, Payment.claim_id == Claim.claim_id)
-            .filter(Claim.claim_id == payment.claim_id)
-            .filter(Claim.fineos_absence_id == fineos_absence_id)
-            .filter(Payment.fineos_extract_import_log_id == payment.fineos_extract_import_log_id)
-            .group_by(
-                Claim.fineos_absence_id,
-                Payment.period_start_date,
-                Payment.period_end_date,
-                Payment.payment_date,
-                Payment.amount,
-                Payment.fineos_extract_import_log_id,
-            )
-            .subquery()
-        )
-        items = (
-            self.db_session.query(num_payments_query)
-            .filter(num_payments_query.c.records_count > 1)
-            .all()
-        )
-        return len(items) > 0
-
-    def _get_primary_payment_record(self, db_session: db.Session, payment: Payment) -> UUID:
-        primary_payment_id: UUID
-        payment_records = (
-            db_session.query(Payment)
-            .filter(Payment.claim_id == payment.claim_id)
-            .filter(Payment.fineos_extract_import_log_id == payment.fineos_extract_import_log_id)
-            .all()
-        )
-        logger.info("all the payments for claim %s", payment_records)
-        for p in payment_records:
-
-            latest_state_log = state_log_util.get_latest_state_log_in_flow(
-                p, Flow.DELEGATED_PAYMENT, self.db_session
-            )
-            if latest_state_log is None:
-                raise Exception(
-                    f"State log not found for payment id: {payment.payment_id}"
-                )
-            if latest_state_log.end_state_id not in [
-                State.STATE_WITHHOLDING_READY_FOR_PROCESSING.state_id,
-                State.FEDERAL_WITHHOLDING_READY_FOR_PROCESSING.state_id,
-                State.STATE_WITHHOLDING_PENDING_AUDIT.state_id,
-                State.FEDERAL_WITHHOLDING_PENDING_AUDIT.state_id,
-            ]:
-                primary_payment_id = p.payment_id
-        return primary_payment_id

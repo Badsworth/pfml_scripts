@@ -938,6 +938,9 @@ class FineosWritebackTransactionStatus(LookupTable):
     NAME_MISMATCH = LkFineosWritebackTransactionStatus(
         23, "InvalidPayment NameMismatch", ACTIVE_WRITEBACK_RECORD_STATUS
     )
+    WITHHOLDING_ERROR = LkFineosWritebackTransactionStatus(
+        24, "PrimaryPayment ProcessingErr", ACTIVE_WRITEBACK_RECORD_STATUS
+    )
 
 
 class AuditReportAction(str, Enum):

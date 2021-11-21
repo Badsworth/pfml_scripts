@@ -51,19 +51,18 @@ class PaymentAuditReportStep(Step):
             self.db_session,
         )
 
-        logger.info("state_logs %s", state_logs)
         if len(state_logs) > 0:
             for item in state_logs:
                 state_logs_containers.append(item)
 
         if payments_util.is_withholding_payments_enabled():
+            logger.info("Tax Withholding ENABLED")
             federal_withholding_state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
                 state_log_util.AssociatedClass.PAYMENT,
                 State.FEDERAL_WITHHOLDING_PENDING_AUDIT,
                 self.db_session,
             )
 
-            logger.info("federal_withholding_state_logs %s", federal_withholding_state_logs)
             if len(federal_withholding_state_logs) > 0:
                 for item in federal_withholding_state_logs:
                     state_logs_containers.append(item)
@@ -74,7 +73,6 @@ class PaymentAuditReportStep(Step):
                 self.db_session,
             )
 
-            logger.info("state_withholding_state_logs %s", state_withholding_state_logs)
             if len(state_withholding_state_logs) > 0:
                 for item in state_withholding_state_logs:
                     state_logs_containers.append(item)

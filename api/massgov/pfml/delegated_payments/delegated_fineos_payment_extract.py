@@ -60,6 +60,10 @@ PROCESSED_FOLDER = "processed"
 SKIPPED_FOLDER = "skipped"
 
 CANCELLATION_PAYMENT_TRANSACTION_TYPE = "PaymentOut Cancellation"
+
+STATE_TAX_WITHHOLDING_TIN = "SITPAYEE001"
+FEDERAL_TAX_WITHHOLDING_TIN = "FITAMOUNTPAYEE001"
+
 # There are multiple types of overpayments
 OVERPAYMENT_PAYMENT_TRANSACTION_TYPES = [
     PaymentTransactionType.OVERPAYMENT,
@@ -329,19 +333,26 @@ class PaymentData:
         could potentially fall into multiple payment types.
         https://lwd.atlassian.net/wiki/spaces/API/pages/1336901700/Types+of+Payments
         """
-        # FICA
-        if payments_util.is_withholding_payments_enabled() and (
-            self.tin == "FICASOCIALSECURITYPAYEE001" or self.tin == "FICAMEDICAREPAYEE001"
-        ):
-            return PaymentTransactionType.STATE_TAX_WITHHOLDING
-
-        # FIT
-        if payments_util.is_withholding_payments_enabled() and self.tin == "MANDATORYFITPAYEE001":
-            return PaymentTransactionType.FEDERAL_TAX_WITHHOLDING
-
         # Zero dollar payments overrule all other payment types
         if self.payment_amount == Decimal("0"):
             return PaymentTransactionType.ZERO_DOLLAR
+
+        # Cancellations
+        if self.event_type == CANCELLATION_PAYMENT_TRANSACTION_TYPE:
+            return PaymentTransactionType.CANCELLATION
+
+        # FICA
+        if payments_util.is_withholding_payments_enabled():
+            logger.info("Tax Withholding ENABLED")
+            if(
+                self.tin == STATE_TAX_WITHHOLDING_TIN
+                #  or self.tin == "FICAMEDICAREPAYEE001"
+            ):
+                return PaymentTransactionType.STATE_TAX_WITHHOLDING
+
+            # FIT
+            if self.tin == FEDERAL_TAX_WITHHOLDING_TIN:
+                return PaymentTransactionType.FEDERAL_TAX_WITHHOLDING
 
         # Employer reimbursements reimbursements are a very specific set of records
         if (
@@ -355,10 +366,6 @@ class PaymentData:
         for overpayment_transaction_type in OVERPAYMENT_PAYMENT_TRANSACTION_TYPES:
             if self.event_type == overpayment_transaction_type.payment_transaction_type_description:
                 return overpayment_transaction_type
-
-        # Cancellations
-        if self.event_type == CANCELLATION_PAYMENT_TRANSACTION_TYPE:
-            return PaymentTransactionType.CANCELLATION
 
         # The bulk of the payments we process will be standard payments
         if (
@@ -1096,8 +1103,12 @@ class PaymentExtractStep(Step):
             and payment.payment_transaction_type_id
             == PaymentTransactionType.FEDERAL_TAX_WITHHOLDING.payment_transaction_type_id
         ):
+            logger.info("Tax Withholding ENABLED")
             end_state = State.FEDERAL_WITHHOLDING_READY_FOR_PROCESSING
             message = "Federal Withholding payment processed"
+            self._manage_pei_writeback_state(
+                payment, FineosWritebackTransactionStatus.PROCESSED, payment_data
+            )
             self.increment(self.Metrics.FEDERAL_WITHHOLDING_PAYMENT_COUNT)
 
         # set status  STATE_WITHHOLDING_READY_FOR_PROCESSING
@@ -1106,8 +1117,12 @@ class PaymentExtractStep(Step):
             and payment.payment_transaction_type_id
             == PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id
         ):
+            logger.info("Tax Withholding ENABLED")
             end_state = State.STATE_WITHHOLDING_READY_FOR_PROCESSING
             message = "State Withholding payment processed"
+            self._manage_pei_writeback_state(
+                payment, FineosWritebackTransactionStatus.PROCESSED, payment_data
+            )
             self.increment(self.Metrics.STATE_WITHHOLDING_PAYMENT_COUNT)
         else:
             end_state = State.PAYMENT_READY_FOR_ADDRESS_VALIDATION

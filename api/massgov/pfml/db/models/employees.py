@@ -2545,6 +2545,10 @@ class State(LookupTable):
         194, "State Withholding send funds to DOR", Flow.DELEGATED_PAYMENT.flow_id
     )
 
+    STATE_WITHHOLDING_ADD_TO_PAYMENT_REJECT_REPORT_RESTARTABLE = LkState(
+        199, "Add State Withholding to Payment Reject Report - RESTARTABLE", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
     FEDERAL_WITHHOLDING_READY_FOR_PROCESSING = LkState(
         195, "Federal Withholding ready for processing", Flow.DELEGATED_PAYMENT.flow_id
     )
@@ -2559,6 +2563,10 @@ class State(LookupTable):
 
     FEDERAL_WITHHOLDING_SEND_FUNDS = LkState(
         198, "Federal Withholding send funds to IRS", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    FEDERAL_WITHHOLDING_ADD_TO_PAYMENT_REJECT_REPORT_RESTARTABLE = LkState(
+        200, "Add Federal Withholding to Payment Reject Report - RESTARTABLE", Flow.DELEGATED_PAYMENT.flow_id
     )
 
 
