@@ -28,7 +28,7 @@ from massgov.pfml.db.models.factories import (
     OrganizationUnitFactory,
     WagesAndContributionsFactory,
 )
-from massgov.pfml.types import TaxId
+from massgov.pfml.types import Fein, TaxId
 
 
 class SpecialTestException(Exception):
@@ -874,7 +874,7 @@ def test_process_employee_updates_misses_failed_employer_if_other_employer_succe
     )
 
     # Missing employer (with more recent wages for good measure)
-    missing_employer_fein = "999999999"
+    missing_employer_fein = Fein("999999999")
     employer_missing = EmployerFactory.create(
         employer_fein=missing_employer_fein, fineos_employer_id=None
     )
@@ -919,7 +919,7 @@ def test_process_employee_updates_misses_failed_employer_if_other_employer_succe
         employee_id=employee.employee_id, action="INSERT",
     )
 
-    missing_employer_fein = "999999999"
+    missing_employer_fein = Fein("999999999")
     employer_missing = EmployerFactory.create(
         employer_fein=missing_employer_fein, fineos_employer_id=None
     )
@@ -1068,7 +1068,7 @@ def test_process_employee_updates_skips_nonexistent_employer(
     test_db_session, initialize_factories_session, tmp_path
 ):
     # Set fineos_employer_id to None for 'missing' employer to skip employer.
-    missing_employer_fein = "999999999"
+    missing_employer_fein = Fein("999999999")
     wages_employer_missing_fein = WagesAndContributionsFactory.create_batch(
         size=1,
         employer=EmployerFactory.create(
