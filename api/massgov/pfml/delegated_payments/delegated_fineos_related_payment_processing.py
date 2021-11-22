@@ -27,9 +27,9 @@ class RelatedPaymentsProcessingStep(Step):
         STATE_WITHHOLDING_RECORD_COUNT = "state_withholding_record_count"
 
     def run_step(self) -> None:
-        self.process_payments_for_split_payments()
+        self.process_payments_for_related_withholding_payments()
 
-    def process_payments_for_split_payments(self) -> None:
+    def process_payments_for_related_withholding_payments(self) -> None:
         """Top-level function that calls all the other functions in this file in order"""
         logger.info("Processing related payment processing step")
 
