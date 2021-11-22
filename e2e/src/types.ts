@@ -14,6 +14,7 @@ export type FeatureFlags = {
   employerShowReviewByStatus: boolean;
   employerShowDashboardSearch: boolean;
   claimantShowTaxWithholding: boolean;
+  claimantShowStatusPage?: boolean;
 };
 
 export type Credentials = {
