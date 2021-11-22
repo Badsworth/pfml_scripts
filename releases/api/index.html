@@ -1078,12 +1078,12 @@
 <tbody>
 <tr>
 <td>test</td>
-<td><a href="https://github.com/EOLWD/pfml/commits/45cb3b215">45cb3b215</a> (<a href="https://github.com/EOLWD/pfml/compare/api/v2.36.0-rc1...45cb3b215">41 commits ahead</a> of <a href="https://github.com/EOLWD/pfml/releases/tag/api/v2.36.0-rc1">api/v2.36.0-rc1</a>)</td>
+<td><a href="https://github.com/EOLWD/pfml/commits/078aa5173">078aa5173</a> (<a href="https://github.com/EOLWD/pfml/compare/api/v2.37.0-rc1...078aa5173">1 commits ahead</a> of <a href="https://github.com/EOLWD/pfml/releases/tag/api/v2.37.0-rc1">api/v2.37.0-rc1</a>)</td>
 <td><a href="https://github.com/EOLWD/pfml/deployments/activity_log?environment=api+(test)">GitHub</a></td>
 </tr>
 <tr>
 <td>stage</td>
-<td><a href="https://github.com/EOLWD/pfml/releases/tag/api/v2.36.0">api/v2.36.0</a></td>
+<td><a href="https://github.com/EOLWD/pfml/releases/tag/api/v2.37.0-rc1">api/v2.37.0-rc1</a></td>
 <td><a href="https://github.com/EOLWD/pfml/deployments/activity_log?environment=api+(stage)">GitHub</a></td>
 </tr>
 <tr>
@@ -1093,7 +1093,7 @@
 </tr>
 <tr>
 <td>performance</td>
-<td><a href="https://github.com/EOLWD/pfml/releases/tag/api/v2.36.0">api/v2.36.0</a></td>
+<td><a href="https://github.com/EOLWD/pfml/releases/tag/api/v2.37.0-rc1">api/v2.37.0-rc1</a></td>
 <td><a href="https://github.com/EOLWD/pfml/deployments/activity_log?environment=api+(performance)">GitHub</a></td>
 </tr>
 <tr>
@@ -1103,7 +1103,7 @@
 </tr>
 <tr>
 <td>uat</td>
-<td><a href="https://github.com/EOLWD/pfml/releases/tag/api/v2.36.0">api/v2.36.0</a></td>
+<td><a href="https://github.com/EOLWD/pfml/releases/tag/api/v2.37.0-rc1">api/v2.37.0-rc1</a></td>
 <td><a href="https://github.com/EOLWD/pfml/deployments/activity_log?environment=api+(uat)">GitHub</a></td>
 </tr>
 <tr>
@@ -1113,63 +1113,16 @@
 </tr>
 <tr>
 <td>cps-preview</td>
-<td><a href="https://github.com/EOLWD/pfml/releases/tag/api/v2.36.0">api/v2.36.0</a></td>
+<td><a href="https://github.com/EOLWD/pfml/releases/tag/api/v2.37.0-rc1">api/v2.37.0-rc1</a></td>
 <td><a href="https://github.com/EOLWD/pfml/deployments/activity_log?environment=api+(cps-preview)">GitHub</a></td>
 </tr>
 </tbody>
 </table>
 <p>Full release notes are available in <a href="https://lwd.atlassian.net/wiki/spaces/DD/pages/1086226543/2021+Releases">Confluence</a>.</p>
-<p>Next Release (<a href="https://lwd.atlassian.net/issues/?jql=id in (INFRA-834,INFRA-836,process-1099,PORTAL-965,API-2122,PAY-24,PORTAL-1146,API-2117,PORTAL-1138,PFMLPB-1958,API-2077,API-2047,PORTAL-1119,API-1966,API-2136,API-2118,API-2136,PORTAL-1141,PORTAL-1133,PAY-69,PAY-72,API-2059)">Jira List</a>):</p>
-<ul>
-<li>temporarily changing docker service tag env var to latest for local testing (<a href="https://github.com/EOLWD/pfml/pull/6228">#6228</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PORTAL-965">PORTAL-965</a>: Add <code>mfa_phone_number</code> to db User model (<a href="https://github.com/EOLWD/pfml/pull/6234">#6234</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PORTAL-1146">PORTAL-1146</a>: Bugfix - fix concurrent_leave TypeError when dates are None (<a href="https://github.com/EOLWD/pfml/pull/6233">#6233</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PORTAL-1141">PORTAL-1141</a>: Fix bug where is_reviewable was false when follow up date hasn't passed (<a href="https://github.com/EOLWD/pfml/pull/6211">#6211</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PORTAL-1138">PORTAL-1138</a>: Conditionally call add or update in upsert_week_based_work_pattern (<a href="https://github.com/EOLWD/pfml/pull/6232">#6232</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PORTAL-1133">PORTAL-1133</a>: Break down leave admin claim review logic (<a href="https://github.com/EOLWD/pfml/pull/6177">#6177</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PORTAL-1119">PORTAL-1119</a>: Ignore built venvs from host environment (<a href="https://github.com/EOLWD/pfml/pull/6181">#6181</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PFMLPB-1958">PFMLPB-1958</a>: Appeal Acknowledgment appears in Employer Portal (<a href="https://github.com/EOLWD/pfml/pull/6172">#6172</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PAY-72">PAY-72</a>: ECS task for Claimant Address Validation (<a href="https://github.com/EOLWD/pfml/pull/6062">#6062</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PAY-69">PAY-69</a>: Initial checkin. Changes query for 1099 claimants. (<a href="https://github.com/EOLWD/pfml/pull/6198">#6198</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PAY-24">PAY-24</a>: develop service generate pdf (<a href="https://github.com/EOLWD/pfml/pull/6210">#6210</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/INFRA-836">INFRA-836</a>: rename task definition <code>pub-payments-process-1099-documents</code> and fix run-tasks.sh for two containers (<a href="https://github.com/EOLWD/pfml/pull/6240">#6240</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/INFRA-834">INFRA-834</a>: - BI Imports S3/KMS Refactor (<a href="https://github.com/EOLWD/pfml/pull/6242">#6242</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-2136">API-2136</a>: Further fix to add writeback logic (<a href="https://github.com/EOLWD/pfml/pull/6226">#6226</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-2136">API-2136</a>: Add writeback for failed max weekly benefit cap validation.(<a href="https://github.com/EOLWD/pfml/pull/6215">#6215</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-2122">API-2122</a>: fix dua demographic request file format (<a href="https://github.com/EOLWD/pfml/pull/6248">#6248</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-2118">API-2118</a>: Add average weekly wage to absence period table (<a href="https://github.com/EOLWD/pfml/pull/6204">#6204</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-2117">API-2117</a>: Send updated orgunits to FINEOS eligibility feed (<a href="https://github.com/EOLWD/pfml/pull/6170">#6170</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-2077">API-2077</a>: Create benefit year tables (<a href="https://github.com/EOLWD/pfml/pull/6191">#6191</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-2059">API-2059</a>: remove state metrics table (<a href="https://github.com/EOLWD/pfml/pull/6186">#6186</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-2047">API-2047</a>: Payment Status Scenarios (<a href="https://github.com/EOLWD/pfml/pull/6208">#6208</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-1966">API-1966</a>: increase static types for DOR module (<a href="https://github.com/EOLWD/pfml/pull/6135">#6135</a>)</li>
-<li>Add Military Employee absence reason value (<a href="https://github.com/EOLWD/pfml/pull/6213">#6213</a>)</li>
-</ul>
+<p>Next Release (<a href="https://lwd.atlassian.net/issues/?jql=id in ()">Jira List</a>):</p>
 <details>
 <summary>Raw</summary>
- <br>* temporarily changing docker service tag env var to latest for local testing ([#6228](https://github.com/EOLWD/pfml/pull/6228))
- <br>* [PORTAL-965](https://lwd.atlassian.net/browse/PORTAL-965): Add `mfa_phone_number` to db User model ([#6234](https://github.com/EOLWD/pfml/pull/6234))
- <br>* [PORTAL-1146](https://lwd.atlassian.net/browse/PORTAL-1146): Bugfix - fix concurrent_leave TypeError when dates are None ([#6233](https://github.com/EOLWD/pfml/pull/6233))
- <br>* [PORTAL-1141](https://lwd.atlassian.net/browse/PORTAL-1141): Fix bug where is_reviewable was false when follow up date hasn't passed ([#6211](https://github.com/EOLWD/pfml/pull/6211))
- <br>* [PORTAL-1138](https://lwd.atlassian.net/browse/PORTAL-1138): Conditionally call add or update in upsert_week_based_work_pattern ([#6232](https://github.com/EOLWD/pfml/pull/6232))
- <br>* [PORTAL-1133](https://lwd.atlassian.net/browse/PORTAL-1133): Break down leave admin claim review logic ([#6177](https://github.com/EOLWD/pfml/pull/6177))
- <br>* [PORTAL-1119](https://lwd.atlassian.net/browse/PORTAL-1119): Ignore built venvs from host environment ([#6181](https://github.com/EOLWD/pfml/pull/6181))
- <br>* [PFMLPB-1958](https://lwd.atlassian.net/browse/PFMLPB-1958): Appeal Acknowledgment appears in Employer Portal ([#6172](https://github.com/EOLWD/pfml/pull/6172))
- <br>* [PAY-72](https://lwd.atlassian.net/browse/PAY-72): ECS task for Claimant Address Validation ([#6062](https://github.com/EOLWD/pfml/pull/6062))
- <br>* [PAY-69](https://lwd.atlassian.net/browse/PAY-69): Initial checkin. Changes query for 1099 claimants. ([#6198](https://github.com/EOLWD/pfml/pull/6198))
- <br>* [PAY-24](https://lwd.atlassian.net/browse/PAY-24): develop service generate pdf ([#6210](https://github.com/EOLWD/pfml/pull/6210))
- <br>* [INFRA-836](https://lwd.atlassian.net/browse/INFRA-836): rename task definition `pub-payments-process-1099-documents` and fix run-tasks.sh for two containers ([#6240](https://github.com/EOLWD/pfml/pull/6240))
- <br>* [INFRA-834](https://lwd.atlassian.net/browse/INFRA-834): - BI Imports S3/KMS Refactor ([#6242](https://github.com/EOLWD/pfml/pull/6242))
- <br>* [API-2136](https://lwd.atlassian.net/browse/API-2136): Further fix to add writeback logic ([#6226](https://github.com/EOLWD/pfml/pull/6226))
- <br>* [API-2136](https://lwd.atlassian.net/browse/API-2136): Add writeback for failed max weekly benefit cap validation.([#6215](https://github.com/EOLWD/pfml/pull/6215))
- <br>* [API-2122](https://lwd.atlassian.net/browse/API-2122): fix dua demographic request file format ([#6248](https://github.com/EOLWD/pfml/pull/6248))
- <br>* [API-2118](https://lwd.atlassian.net/browse/API-2118): Add average weekly wage to absence period table ([#6204](https://github.com/EOLWD/pfml/pull/6204))
- <br>* [API-2117](https://lwd.atlassian.net/browse/API-2117): Send updated orgunits to FINEOS eligibility feed ([#6170](https://github.com/EOLWD/pfml/pull/6170))
- <br>* [API-2077](https://lwd.atlassian.net/browse/API-2077): Create benefit year tables ([#6191](https://github.com/EOLWD/pfml/pull/6191))
- <br>* [API-2059](https://lwd.atlassian.net/browse/API-2059): remove state metrics table ([#6186](https://github.com/EOLWD/pfml/pull/6186))
- <br>* [API-2047](https://lwd.atlassian.net/browse/API-2047): Payment Status Scenarios ([#6208](https://github.com/EOLWD/pfml/pull/6208))
- <br>* [API-1966](https://lwd.atlassian.net/browse/API-1966): increase static types for DOR module ([#6135](https://github.com/EOLWD/pfml/pull/6135))
- <br>* Add Military Employee absence reason value ([#6213](https://github.com/EOLWD/pfml/pull/6213))
+
 </details>
 
               
