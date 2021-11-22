@@ -1421,7 +1421,7 @@ locals {
 }
 data "aws_iam_policy_document" "bi_imports_bucket_policy_document" {
   statement {
-    sid = "ReadListAccessToImportBucket"
+    sid = "LWD RedShift Access to Bucket"
 
     effect = "Allow"
 
@@ -1432,29 +1432,37 @@ data "aws_iam_policy_document" "bi_imports_bucket_policy_document" {
 
     actions = [
       "s3:ListBucket",
-      "s3:GetBucketLocation"
-    ]
-
-    resources = [
-      "arn:aws:s3:::massgov-pfml-${var.environment_name}-redshift-daily-import"
-    ]
-  }
-  statement {
-    sid = "AllowGetObject"
-
-    effect = "Allow"
-
-    principals {
-      type        = "AWS"
-      identifiers = var.environment_name == "prod" ? local.prod_roles : local.nonprod_roles
-    }
-
-    actions = [
+      "s3:GetBucketLocation",
       "s3:GetObject"
     ]
 
     resources = [
+      "arn:aws:s3:::massgov-pfml-${var.environment_name}-redshift-daily-import",
       "arn:aws:s3:::massgov-pfml-${var.environment_name}-redshift-daily-import/*"
+    ]
+  }
+}
+
+# KMS key policy for LWD account Redshift access to S3 bucket
+data "aws_iam_policy_document" "bi_imports_s3_kms_key_policy" {
+  statement {
+    sid    = "LWD account KMS Key decrypt"
+    effect = "Allow"
+    principals {
+      type        = "AWS"
+      identifiers = var.environment_name == "prod" ? local.prod_roles : local.nonprod_roles
+    }
+    principals {
+      type = "AWS"
+      identifiers = [
+        "arn:aws:iam::498823821309:root"
+      ]
+    }
+    actions = [
+      "kms:*"
+    ]
+    resources = [
+      "*"
     ]
   }
 }
