@@ -2691,6 +2691,18 @@ const components = {
       "Request for more information $t(shared.pdfNoticeSuffix)",
     noticeName_withdrawalNotice:
       "Pending Application Withdrawn $t(shared.pdfNoticeSuffix)",
+    noticeName_maximumWeeklyBenefitChangeNotice:
+      "Maximum Weekly Benefit Change Notice $(shared.pdfNoticeSuffix)",
+    noticeName_benefitAmountChangeNotice:
+      "Benefit Amount Change Notice $(shared.pdfNoticeSuffix)",
+    noticeName_leaveAllotmentChangeNotice:
+      "Leave Allotment Change Notice $(shared.pdfNoticeSuffix)",
+    noticeName_approvedTimeCancelled:
+      "Approved Time Cancelled $(shared.pdfNoticeSuffix)",
+    noticeName_changeRequestApproved:
+      "Change Request Approved $(shared.pdfNoticeSuffix)",
+    noticeName_changeRequestDenied:
+      "Change Request Denied $(shared.pdfNoticeSuffix)",
   },
   dropdown: {
     emptyChoiceLabel: "- Select an answer -",

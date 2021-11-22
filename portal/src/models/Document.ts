@@ -23,6 +23,12 @@ export const OtherDocumentType = {
   medicalCertification: "State managed Paid Leave Confirmation",
   requestForInfoNotice: "Request for more Information",
   withdrawalNotice: "Pending Application Withdrawn",
+  maximumWeeklyBenefitChangeNotice: "Maximum Weekly Benefit Change Notice",
+  benefitAmountChangeNotice: "Benefit Amount Change Notice",
+  leaveAllotmentChangeNotice: "Leave Allotment Change Notice",
+  approvedTimeCancelled: "Approved Time Cancelled",
+  changeRequestApproved: "Change Request Approved",
+  changeRequestDenied: "Change Request Denied",
 } as const;
 
 export type DocumentTypeEnum =
