@@ -4,7 +4,6 @@ import factory
 import pytest
 
 import massgov.pfml.db as db
-import massgov.pfml.delegated_payments.claimant_address_validation as claimant_address_validation
 import massgov.pfml.experian.address_validate_soap.client as soap_api
 from massgov.pfml.db.models.employees import Claim, Employee, ExperianAddressPair, GeoState, Payment
 from massgov.pfml.db.models.factories import (
@@ -15,14 +14,18 @@ from massgov.pfml.db.models.factories import (
     ExperianAddressPairFactory,
     PaymentFactory,
 )
-from massgov.pfml.db.models.payments import FineosExtractEmployeeFeed
 from massgov.pfml.delegated_payments.address_validation import Constants
+from massgov.pfml.delegated_payments.claimant_address_validation import (
+    ClaimantAddressValidationStep,
+)
+from massgov.pfml.delegated_payments.mock.fineos_extract_data import FineosClaimantData
 from massgov.pfml.experian.address_validate_soap.client import Client
 from massgov.pfml.experian.address_validate_soap.mock_caller import MockVerificationZeepCaller
 from massgov.pfml.experian.address_validate_soap.models import VerifyLevel
 from massgov.pfml.experian.address_validate_soap.service import (
     address_to_experian_verification_search,
 )
+from massgov.pfml.experian.experian_util import address_to_experian_search_text
 
 
 @pytest.fixture
@@ -31,7 +34,7 @@ def claimant_address_step(
     local_test_db_session: db.Session,
     local_test_db_other_session,
 ):
-    return claimant_address_validation.ClaimantAddressValidationStep(
+    return ClaimantAddressValidationStep(
         db_session=local_test_db_session, log_entry_db_session=local_test_db_other_session
     )
 
@@ -46,69 +49,8 @@ def employee_factory():
 
 @pytest.fixture
 def employee_extract_factory():
-    return FineosExtractEmployeeFeed(
-        c=11536,
-        i=77164,
-        lastupdatedate="2021-08-18 06:30:01",
-        firstnames="Cristal",
-        initials=None,
-        lastname="Wolf",
-        placeofbirth=None,
-        dateofbirth="1999-10-12 00:00:00",
-        dateofdeath=None,
-        isdeceased=0,
-        realdob=0,
-        title=480000,
-        nationality=3040000,
-        countryofbirt=672000,
-        sex=32000,
-        maritalstatus=64000,
-        disabled=0,
-        natinsno=425737659,
-        customerno="21962",
-        referenceno="fd81d170-62dc-45b5-9891-2109daf68fb8",
-        identificatio=8736001,
-        unverified=0,
-        staff=0,
-        groupclient=0,
-        securedclient=0,
-        selfserviceen=0,
-        sourcesystem=8032000,
-        c_ocprtad_correspondenc=11737,
-        i_ocprtad_correspondenc=None,
-        extconsent=1,
-        extconfirmflag=1,
-        extmassid=None,
-        extoutofstateid=None,
-        preferredcont=1056000,
-        c_bnkbrnch_bankbranch=None,
-        i_bnkbrnch_bankbranch=None,
-        preferred_contact_method=None,
-        defpaymentpref=None,
-        payment_preference=None,
-        paymentmethod=None,
-        paymentaddres=None,
-        address1="75 Main Road",
-        address2=None,
-        address3=None,
-        address4="Boston",
-        address5=None,
-        address6="MA",
-        address7=None,
-        postcode="75750",
-        country=672007,
-        verifications=7808000,
-        accountname=None,
-        accountno=5555555555,
-        bankcode=None,
-        sortcode="011401533",
-        accounttype="Checking",
-        active_absence_flag="Y",
-        created_at="2021-08-26 03:03:01.899211+00",
-        updated_at="2021-08-26 03:03:01.899211+00",
-        reference_file_id="f4015fbc-c217-4558-bb03-e44c586f63bb",
-        fineos_extract_import_log_id=41298,
-    )
+    claimant_data = FineosClaimantData()
+    return claimant_data
 
 
 @pytest.fixture
@@ -129,23 +71,20 @@ def experian_factory_with_experian_address(address_factory):
 def test_employee_exists_for_customer_number(local_test_db_session, employee_extract_factory):
 
     employee = local_test_db_session.query(Employee).filter(
-        Employee.fineos_customer_number == employee_extract_factory.customerno
+        Employee.fineos_customer_number == employee_extract_factory.customer_number
     )
-
-    # cno = '21962'
-    # assert employee_extract_factory.customerno == cno
     assert employee is not None
 
 
 def test_get_employee_record(employee_factory, employee_extract_factory):
-    assert employee_extract_factory.customerno != employee_factory.fineos_customer_number
+    assert employee_extract_factory.customer_number != employee_factory.fineos_customer_number
 
 
 def test_construct_address_data(employee_extract_factory):
-    AddressFactory.address_line_one = employee_extract_factory.address1
-    AddressFactory.city = employee_extract_factory.address4
-    AddressFactory.geo_state_id = employee_extract_factory.address6
-    AddressFactory.zip_code = employee_extract_factory.postcode
+    AddressFactory.address_line_one = employee_extract_factory.address_1
+    AddressFactory.city = employee_extract_factory.city
+    AddressFactory.geo_state_id = employee_extract_factory.state
+    AddressFactory.zip_code = employee_extract_factory.post_code
 
     assert len(AddressFactory.zip_code) == 5
 
@@ -153,10 +92,10 @@ def test_construct_address_data(employee_extract_factory):
 def is_address_same(address, employee_extract_factory):
     result = False
     if (
-        address.fineos_address.address_line_one == employee_extract_factory.address1
-        and address.city == employee_extract_factory.address4
-        and address.geo_state_id == employee_extract_factory.address6
-        and address.zip_code == employee_extract_factory.postcode
+        address.fineos_address.address_line_one == employee_extract_factory.address_1
+        and address.city == employee_extract_factory.city
+        and address.geo_state_id == employee_extract_factory.state
+        and address.zip_code == employee_extract_factory.post_code
     ):
         result = True
     assert result is False
@@ -170,28 +109,20 @@ def test_validate_claimant_address_already_validated(experian_factory_with_exper
 def test_validate_claimant_address_has_all_parts(employee_extract_factory):
     result = True
     if (
-        not employee_extract_factory.address1
-        or not employee_extract_factory.address4
-        or not employee_extract_factory.address6
-        or not employee_extract_factory.postcode
+        not employee_extract_factory.address_1
+        or not employee_extract_factory.city
+        or not employee_extract_factory.state
+        or not employee_extract_factory.post_code
     ):
         result = False
     assert result is True
 
 
-def test_process_address_via_soap_api(
-    employee_extract_factory, experian_factory_with_experian_address,
-) -> None:
+def test_process_address_via_soap_api(employee_extract_factory, address_factory,) -> None:
     mock_caller = MockVerificationZeepCaller()
 
-    address = AddressFactory.build(
-        address_line_one=employee_extract_factory.address1,
-        city=employee_extract_factory.address4,
-        geo_state_id=employee_extract_factory.address6,
-        zip_code=employee_extract_factory.postcode,
-    )
     client = Client(mock_caller)
-    search_response1 = client.search(address_to_experian_verification_search(address))
+    search_response1 = client.search(address_to_experian_verification_search(address_factory))
 
     assert search_response1.address
     assert search_response1.verify_level == VerifyLevel.VERIFIED
@@ -233,7 +164,7 @@ def test_create_address_report(claimant_address_step):
 
 def test_is_address_new_or_updated(local_test_db_session, employee_extract_factory):
     employee = local_test_db_session.query(Employee).filter(
-        Employee.fineos_customer_number == employee_extract_factory.customerno
+        Employee.fineos_customer_number == employee_extract_factory.customer_number
     )
     assert employee is not None
     # employee.employee_id='fc8b8d79-2fde-4128-b7b6-fc11fdd1855b'
@@ -261,10 +192,8 @@ def test_is_address_new_or_updated(local_test_db_session, employee_extract_facto
     )
     assert pay_id is not None
     experian_address_pairs = (
-        local_test_db_session.query(ExperianAddressPair).join(
-            Payment, Payment.experian_address_pair_id == ExperianAddressPair.fineos_address_id
-        )
-        # .filter(Payment.payment_id ==pay_id.payment_id)
+        local_test_db_session.query(ExperianAddressPair)
+        .join(Payment, Payment.experian_address_pair_id == ExperianAddressPair.fineos_address_id)
         .all()
     )
     for experian_address_pair in experian_address_pairs:
@@ -283,3 +212,16 @@ def test_is_address_new_or_updated(local_test_db_session, employee_extract_facto
             result = True
 
         assert result is True
+
+
+# This is a test to show that the existing address_to_experian_search_text format
+# is broken as the state code is not mapped correctly. The fix shows the state code
+# being mapped correctly. The results are different for the same address.
+
+
+def test_formatted_address(address_factory, claimant_address_step):
+    result_text_address_old = address_to_experian_search_text(address_factory)
+    result_text_address_new = claimant_address_step.address_to_experian_suggestion_text_format(
+        address_factory
+    )
+    assert result_text_address_old != result_text_address_new

@@ -24,8 +24,8 @@ from massgov.pfml.db.models.employees import (
 from massgov.pfml.db.models.payments import FineosExtractEmployeeFeed
 from massgov.pfml.delegated_payments.address_validation import _get_experian_soap_client
 from massgov.pfml.delegated_payments.step import Step
+from massgov.pfml.experian.address_validate_soap.layouts import Layout
 from massgov.pfml.experian.address_validate_soap.service import (
-    address_to_experian_verification_search,
     experian_verification_response_to_address,
 )
 
@@ -49,8 +49,8 @@ class Constants:
     MESSAGE_ALREADY_VALIDATED = "Address has already been validated"
     MESSAGE_INVALID_EXPERIAN_RESPONSE = "Invalid response from Experian search API"
     MESSAGE_INVALID_EXPERIAN_FORMAT_RESPONSE = "Invalid response from Experian format API"
-    MESSAGE_VALID_ADDRESS = "Address validated by Experian"
-    MESSAGE_VALID_MATCHING_ADDRESS = "Matching address validated by Experian"
+    # MESSAGE_VALID_ADDRESS = "Address validated by Experian"
+    # MESSAGE_VALID_MATCHING_ADDRESS = "Matching address validated by Experian"
     MESSAGE_INVALID_ADDRESS = "Address not valid in Experian"
     MESSAGE_EXPERIAN_EXCEPTION_FORMAT = "An exception was thrown by Experian: {}"
     MESSAGE_ADDRESS_MISSING_PART = (
@@ -140,7 +140,7 @@ class ClaimantAddressValidationStep(Step):
             )
         return employee
 
-    # Process all the logic needed to validate address if not validated and
+    # Validate address if not validated and
     # create a report that is uploaded to S3 bucket
     def process_address_data(self) -> None:
         address_pair = None
@@ -200,6 +200,7 @@ class ClaimantAddressValidationStep(Step):
                         self.increment(self.Metrics.VALIDATED_ADDRESS_COUNT)
                         if result_soap:
                             addressResults.append(result_soap.get("experian_result"))
+            logger.info("Uploading results ")
             ref_file = self.upload_results_s3(addressResults)
             self.increment(Constants.TRANSACTION_FILES_SENT_COUNT)
             self.db_session.add(ref_file)
@@ -211,7 +212,7 @@ class ClaimantAddressValidationStep(Step):
 
     # Constructs an address object from the FineosExtractEmployeeFeed address lines
     def construct_address_data(self, employee_data: FineosExtractEmployeeFeed) -> Address:
-        logger.debug("Constructing an address object from fineos employee address lines")
+        # logger.info("Constructing an address object from fineos employee address lines")
         employee_feed_data_address = Address(
             address_id=uuid.uuid4(),
             address_line_one=employee_data.address1,
@@ -223,7 +224,6 @@ class ClaimantAddressValidationStep(Step):
             zip_code=employee_data.postcode,
             address_type_id=AddressType.MAILING.address_type_id,
         )
-        logger.debug("Constructed an address object from finoes employee address lines")
         return employee_feed_data_address
 
     """Calls experian using SOAP call to validate address
@@ -279,6 +279,8 @@ class ClaimantAddressValidationStep(Step):
                     logger.debug(
                         "Experian return address has missing parts, wasnt supposed to occur"
                     )
+                    self.increment(self.Metrics.INVALID_EXPERIAN_FORMAT)
+                    return outcome
                 else:
                     if not new_address:
                         formatted_address.address_type_id = AddressType.MAILING.address_type_id
@@ -291,22 +293,22 @@ class ClaimantAddressValidationStep(Step):
                         self.db_session.add(formatted_address)
                     self.increment(self.Metrics.VALID_EXPERIAN_FORMAT)
                     logger.debug("Valid verified experian address was returned")
-                    return None
+                return None
 
         # Experian returned a non-verified scenario, all of these
         # are cases that are considered errors
-
-        self.increment(self.Metrics.NO_EXPERIAN_MATCH_COUNT)
-        outcome = self._outcome_for_search_result(
-            response,
-            Constants.MESSAGE_INVALID_ADDRESS,
-            address,
-            customer_number,
-            first_name,
-            last_name,
-        )
-        logger.debug("Outcome for search %s", outcome)
-        logger.debug("No matches for the search address%s", address)
+        else:
+            self.increment(self.Metrics.NO_EXPERIAN_MATCH_COUNT)
+            outcome = self._outcome_for_search_result(
+                response,
+                Constants.MESSAGE_INVALID_ADDRESS,
+                address,
+                customer_number,
+                first_name,
+                last_name,
+            )
+            logger.debug("Outcome for search %s", outcome)
+            logger.debug("No matches for the search address%s", address)
         return outcome
 
     """Checks if all required address lines exist
@@ -322,17 +324,6 @@ class ClaimantAddressValidationStep(Step):
             return False
 
         return True
-
-    """Formats the address lines to
-        one suitable for experian cal
-        self, experian_soap_client: soap_api.Cll and then makes the soap call
-    """
-
-    def _experian_soap_response_for_address(
-        self, experian_soap_client: soap_api.Client, address: Address
-    ) -> sm.SearchResponse:
-        request = address_to_experian_verification_search(address)
-        return experian_soap_client.search(request)
 
     """Massage the returned address and or error messages from experian
         and calls build_experian_outcome to save the result as dict
@@ -354,8 +345,11 @@ class ClaimantAddressValidationStep(Step):
             customer_no, first_name, last_name, msg, address, verify_level
         )
 
-        if result:
+        if result is None:
+            return outcome
+        else:
             logger.debug("Result Address is %s", result)
+            self.increment(self.Metrics.MULTIPLE_EXPERIAN_MATCHES)
             if result.picklist and result.picklist.picklist_entries is not None:
                 pList = list(result.picklist.picklist_entries)
                 for i, pickList in enumerate(pList):
@@ -364,15 +358,15 @@ class ClaimantAddressValidationStep(Step):
                         logger.debug(pickList.score)
                         label = Constants.OUTPUT_ADDRESS_KEY_PREFIX + str(1 + i)
                         outcome[Constants.EXPERIAN_RESULT_KEY][label] = pickList.partial_address
-                return outcome
 
-        # Right now we only have the one result.
-        response_address = experian_verification_response_to_address(result)
-        if response_address:
-            label = Constants.OUTPUT_ADDRESS_KEY_PREFIX + "1"
-            outcome[Constants.EXPERIAN_RESULT_KEY][
-                label
-            ] = self.address_to_experian_suggestion_text_format(response_address)
+            else:
+                # Right now we only have the one result.
+                response_address = experian_verification_response_to_address(result)
+                if response_address:
+                    label = Constants.OUTPUT_ADDRESS_KEY_PREFIX + "1"
+                    outcome[Constants.EXPERIAN_RESULT_KEY][
+                        label
+                    ] = self.address_to_experian_suggestion_text_format(response_address)
         return outcome
 
     """Builds a dicitonary object of messages and/or address returned from
@@ -387,7 +381,7 @@ class ClaimantAddressValidationStep(Step):
         address: Address,
         confidence: str,
     ) -> Dict[str, Any]:
-        # print(address, msg)
+
         logger.debug("Building experian address outcome...")
         exp_outcome: Dict[str, Any] = {
             Constants.EXPERIAN_RESULT_KEY: {
@@ -398,7 +392,7 @@ class ClaimantAddressValidationStep(Step):
                     address
                 ),
                 Constants.MESSAGE_KEY: confidence,
-                #Constants.MESSAGE_KEY: msg,
+                # Constants.MESSAGE_KEY: msg,
             },
         }
         return exp_outcome
@@ -446,13 +440,7 @@ class ClaimantAddressValidationStep(Step):
 
     # Updated the code as it was not pulling in the correct state description
     def address_to_experian_suggestion_text_format(self, address: Address) -> str:
-        """Format an Address object in a way that matches the address format that is returned by
-        Experian's AddressSearchV1MatchedResult.text field for the benefit of comparing input addresses
-        and addresses returned by the Experian API in CSV reports we create.
 
-        | line 1    | | line 2|  |city||st||zip|
-        125 Summer St Suite 200, Boston MA 02110
-        """
         address_lines = [address.address_line_one, address.address_line_two]
         address_line_str = " ".join([p for p in address_lines if p])
 
@@ -468,3 +456,22 @@ class ClaimantAddressValidationStep(Step):
         postal_part_str = " ".join([p for p in postal_parts if p])
 
         return ", ".join([address_line_str, postal_part_str])
+
+    """Formats the address lines to
+        one suitable for experian cal
+        self, experian_soap_client: soap_api.Cll and then makes the soap call.
+        This chain of methods had to be updated to pick up state code correctly.
+    """
+
+    def _experian_soap_response_for_address(
+        self, experian_soap_client: soap_api.Client, address: Address
+    ) -> sm.SearchResponse:
+        request = self.address_to_experian_verification_search(address)
+        return experian_soap_client.search(request)
+
+    def address_to_experian_verification_search(self, address: Address) -> sm.SearchRequest:
+        return sm.SearchRequest(
+            engine=sm.EngineEnum.VERIFICATION,
+            search=self.address_to_experian_suggestion_text_format(address),
+            layout=Layout.StateMA,
+        )
