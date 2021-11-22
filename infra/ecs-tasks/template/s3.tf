@@ -47,6 +47,29 @@ resource "aws_s3_bucket_policy" "bi_imports_bucket_policy" {
 
 resource "aws_kms_key" "s3_kms_key" {
   description = "KMS key for Redshift S3 buckets"
+  policy = jsonencode({
+    "Version" : "2012-10-17",
+    "Id" : "key-default-1",
+    "Statement" : [
+      {
+        "Sid" : "Enable IAM User Permissions",
+        "Effect" : "Allow",
+        "Principal" : {
+          "AWS" : [
+            "arn:aws:iam::018311717589:role/redshiftSpectrumRole",
+            "arn:aws:iam::018311717589:role/pfml-all-redshift-s3-daily-import-role",
+            "arn:aws:iam::018311717589:role/aws-service-role/redshift.amazonaws.com/AWSServiceRoleForRedshift",
+            "arn:aws:iam::498823821309:root",
+            "arn:aws:iam::498823821309:role/EOLWD-PFML-BusinessIntell-Redshift-Role"
+          ]
+        },
+        "Action" : "kms:*",
+        "Resource" : [
+          "massgov-pfml-${var.environment_name}-redshift-daily-import/*",
+        "massgov-pfml-${var.environment_name}-redshift-daily-import"]
+      }
+    ]
+  })
 }
 
 resource "aws_kms_alias" "s3_kms_key_alias" {
