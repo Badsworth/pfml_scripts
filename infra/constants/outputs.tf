@@ -38,6 +38,8 @@ output "environment_tags" {
     "cps-preview" = "qa"
     "adhoc"       = "test"
     "infra-test"  = "test"
+    "trn2"        = "train"
+    "long"        = "stage"
   }
 }
 
@@ -57,6 +59,8 @@ output "environment_shorthand" {
     "breakfix"    = "bfx"
     "cps-preview" = "cpspr"
     "infra-test"  = "itest"
+    "long"        = "long"
+    "trn2"        = "trn2"
   }
 }
 
@@ -78,6 +82,8 @@ output "smartronix_environment_tags" {
     "cps-preview" = "CPSPreview"
     "adhoc"       = "Adhoc"
     "infra-test"  = "Sandbox"
+    "long"        = "Staging"
+    "trn2"        = "Sandbox"
   }
 }
 
