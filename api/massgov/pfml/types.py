@@ -12,6 +12,7 @@ class TaxId:
     val: str
 
     def __init__(self, val: str) -> None:
+        print(val)
         if self.REGEX_FORMATTED.match(val):
             self.val = val
         elif self.REGEX_UNFORMATTED.match(val):
@@ -101,7 +102,7 @@ class Fein(dict):
             self.is_valid = False
 
             raise ValueError(
-                f"does not match one of: {self.REGEX_UNFORMATTED.pattern}, {self.REGEX_FORMATTED.pattern}"
+                f"does {val} not match one of: {self.REGEX_UNFORMATTED.pattern}, {self.REGEX_FORMATTED.pattern}"
             )
 
     def to_unformatted_str(self) -> str:

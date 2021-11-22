@@ -19,6 +19,8 @@ import massgov.pfml.db.models.applications as application_models
 import massgov.pfml.db.models.employees as employee_models
 import massgov.pfml.db.models.verifications as verification_models
 import massgov.pfml.util.datetime as datetime_util
+from massgov.pfml.types import Fein as FeinType
+from massgov.pfml.types import TaxId
 
 db_session = None
 
@@ -58,8 +60,8 @@ Session = scoped_session(lambda: get_db_session(), scopefunc=lambda: get_db_sess
 
 class Generators:
     AccountKey = factory.Sequence(lambda n: "%011d" % n)
-    Tin = factory.LazyFunction(lambda: fake.ssn().replace("-", ""))
-    Fein = Tin
+    Tin = factory.LazyFunction(lambda: TaxId(fake.ssn().replace("-", "")))
+    Fein = factory.LazyFunction(lambda: FeinType(fake.ssn().replace("-", "")))
     Money = factory.LazyFunction(lambda: Decimal(round(random.uniform(0, 50000), 2)))
     Now = factory.LazyFunction(datetime.now)
     ThisYear = factory.LazyFunction(datetime.now().year)

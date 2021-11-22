@@ -55,7 +55,7 @@ def test_employee_to_eligibility_feed_record(initialize_factories_session):
 
     assert (
         eligibility_feed_record.employeeNationalID
-        == TaxId(str(employee.tax_identifier.tax_identifier)).to_unformatted_str()
+        == employee.tax_identifier.tax_identifier.to_unformatted_str()
     )
     assert eligibility_feed_record.employeeNationalIDType == ef.NationalIdType.ssn
     assert eligibility_feed_record.employeeEmail == employee.email_address
@@ -381,7 +381,7 @@ def test_write_employees_to_csv(tmp_path, test_db_session, initialize_factories_
                 "employeeTitle": "",
                 "employeeSecondName": employees[0].middle_name,
                 "employeeNationalID": (
-                    TaxId(str(employees[0].tax_identifier.tax_identifier)).to_unformatted_str()
+                    employees[0].tax_identifier.tax_identifier.to_unformatted_str()
                 ),
                 "employeeNationalIDType": ef.NationalIdType.ssn.value,
                 "telephoneIntCode": phone_number.country_code,
@@ -405,7 +405,7 @@ def test_write_employees_to_csv(tmp_path, test_db_session, initialize_factories_
                 "employeeTitle": "",
                 "employeeSecondName": employees[1].middle_name,
                 "employeeNationalID": (
-                    TaxId(
+                    (
                         test_db_session.query(TaxIdentifier)
                         .filter(TaxIdentifier.tax_identifier_id == employees[1].tax_identifier_id)
                         .first()

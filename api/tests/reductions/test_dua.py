@@ -773,7 +773,7 @@ def test_create_list_of_claimants_uploads_csv_to_s3_and_adds_state_log(
         assert csv_line == ",".join(
             [
                 claim.employee.fineos_customer_number,
-                TaxId(str(claim.employee.tax_identifier.tax_identifier)).to_unformatted_str(),
+                claim.employee.tax_identifier.tax_identifier.to_unformatted_str(),
                 dua.Constants.TEMPORARY_BENEFIT_START_DATE,
             ]
         )

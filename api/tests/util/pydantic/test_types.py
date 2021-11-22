@@ -17,11 +17,19 @@ def test_masked_tax_id_formatted_str_with_str():
     assert model.tax_id.to_masked_str() == "***-**-2123"
 
 
+def test_tax_identifier_to_unformatted_str(test_db_session, initialize_factories_session):
+    tax_identifier = TaxIdentifierFactory.create()
+    assert (
+        tax_identifier.tax_identifier.to_unformatted_str()
+        == TaxId(tax_identifier.tax_identifier.to_unformatted_str()).to_unformatted_str()
+    )
+
+
 def test_masked_tax_id_formatted_str_with_tax_identifier(
     test_db_session, initialize_factories_session
 ):
     tax_identifier = TaxIdentifierFactory.create()
-    tax_id = tax_identifier.tax_identifier
+    tax_id = tax_identifier.tax_identifier.to_unformatted_str()
     model = PydanticTypesTestModel(tax_id=tax_id)
     assert model.tax_id.to_masked_str() == f"***-**-{model.tax_id.last4()}"
 

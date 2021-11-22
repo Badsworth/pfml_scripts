@@ -46,7 +46,6 @@ from massgov.pfml.db.models.employees import (
 )
 from massgov.pfml.fineos import AbstractFINEOSClient
 from massgov.pfml.fineos.exception import FINEOSEntityNotFound
-from massgov.pfml.types import TaxId
 from massgov.pfml.util.datetime import utcnow
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
@@ -1063,12 +1062,12 @@ def employee_to_eligibility_feed_record(
             else None
         ),
         employeeNationalID=(
-            TaxId(str(employee.tax_identifier.tax_identifier)).to_unformatted_str()
+            employee.tax_identifier.tax_identifier.to_unformatted_str()
             if employee.tax_identifier
             else None
         ),
         employeeNationalIDType=(
-            determine_national_id_type(TaxId(str(employee.tax_identifier.tax_identifier)).to_unformatted_str())
+            determine_national_id_type(employee.tax_identifier.tax_identifier.to_unformatted_str())
             if employee.tax_identifier
             else None
         ),
