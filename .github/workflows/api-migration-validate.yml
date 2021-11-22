@@ -8,10 +8,10 @@ on:
     inputs:
       baseref:
         required: true
-        description: 'The base ref to diff against, typically HEAD/main'
+        description: "The base ref to diff against, typically HEAD/main"
       headref:
         required: true
-        description: 'The head ref to diff against, typically HEAD of a feature branch'
+        description: "The head ref to diff against, typically HEAD of a feature branch"
 
 jobs:
   conflict-check:
@@ -26,20 +26,20 @@ jobs:
       pending_message: "Checking branch for migration conflicts..."
       success_message: "No migration conflicts detected."
       failure_message: "Your branch has migration conflicts."
-      oob_failure_message: "Base branch updates caused a migration conflict."
+      oob_failure_message: "Base branch updates caused a migration conflict. Merge in the base branch and run make db-migrate-merge-heads."
 
     steps:
       - uses: actions/checkout@v2
 
       # GitHub actions don't provide a self-link at execution time, but we can make an API call to retrieve one.
       # TODO (API-805): Repair or remove this code.
-#      - name: generate self link
-#        run: |
-#          self_link=$(curl -Ls "${{ env.github_api }}/commits/${{ github.sha }}/check-runs" \
-#          -H 'Authorization: Token ${{ env.pfml_devops_token }}' \
-#          -H 'Accept: application/vnd.github.v3+json' | \
-#          jq -c '.check_runs[] | select( .name == "conflict-check") | .details_url')
-#          echo "self_link=$self_link" >> $GITHUB_ENV
+      #      - name: generate self link
+      #        run: |
+      #          self_link=$(curl -Ls "${{ env.github_api }}/commits/${{ github.sha }}/check-runs" \
+      #          -H 'Authorization: Token ${{ env.pfml_devops_token }}' \
+      #          -H 'Accept: application/vnd.github.v3+json' | \
+      #          jq -c '.check_runs[] | select( .name == "conflict-check") | .details_url')
+      #          echo "self_link=$self_link" >> $GITHUB_ENV
 
       # Most of the GitHub checks API is only usable by GitHub Apps, so we cannot alter check statuses directly.
       # As a workaround, we create and maintain a pseudo-check using the statuses API.
