@@ -2157,6 +2157,12 @@ components:
             - Military exigency form
             - Pending Application Withdrawn
             - Appeal Acknowledgment
+            - Maximum Weekly Benefit Change Notice
+            - Benefit Amount Change Notice
+            - Leave Allotment Change Notice
+            - Approved Time Cancelled
+            - Change Request Approved
+            - Change Request Denied
             - Certification Form # Only used when Claimant Portal uploads certification docs
           example: "Passport"
         name:
@@ -2509,6 +2515,12 @@ components:
             - Military exigency form
             - Pending Application Withdrawn
             - Appeal Acknowledgment
+            - Maximum Weekly Benefit Change Notice
+            - Benefit Amount Change Notice
+            - Leave Allotment Change Notice
+            - Approved Time Cancelled
+            - Change Request Approved
+            - Change Request Denied
           example: "Denial Notice"
         content_type:
           type: string
@@ -2563,6 +2575,12 @@ components:
             - Military exigency form
             - Pending Application Withdrawn
             - Appeal Acknowledgment
+            - Maximum Weekly Benefit Change Notice
+            - Benefit Amount Change Notice
+            - Leave Allotment Change Notice
+            - Approved Time Cancelled
+            - Change Request Approved
+            - Change Request Denied
           example: "Passport"
         content_type:
           type: string

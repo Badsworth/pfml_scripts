@@ -353,6 +353,12 @@ class DocumentType(str, LookupEnum):
     military_exigency_form = "Military exigency form"
     withdrawal_notice = "Pending Application Withdrawn"
     appeal_acknowledgment = "Appeal Acknowledgment"
+    maximum_weekly_benefit_change_notice = "Maximum Weekly Benefit Change Notice"
+    benefit_amount_change_notice = "Benefit Amount Change Notice"
+    leave_allotment_change_notice = "Leave Allotment Change Notice"
+    approved_time_cancelled = "Approved Time Cancelled"
+    change_request_approved = "Change Request Approved"
+    change_request_denied = "Change Request Denied"
 
 
 class ContentType(str, LookupEnum):

@@ -730,6 +730,14 @@ class DocumentType(LookupTable):
     MILITARY_EXIGENCY_FORM = LkDocumentType(13, "Military exigency form")
     WITHDRAWAL_NOTICE = LkDocumentType(14, "Pending Application Withdrawn")
     APPEAL_ACKNOWLEDGMENT = LkDocumentType(15, "Appeal Acknowledgment")
+    MAXIMUM_WEEKLY_BENEFIT_CHANGE_NOTICE = LkDocumentType(
+        16, "Maximum Weekly Benefit Change Notice"
+    )
+    BENEFIT_AMOUNT_CHANGE_NOTICE = LkDocumentType(17, "Benefit Amount Change Notice")
+    LEAVE_ALLOTMENT_CHANGE_NOTICE = LkDocumentType(18, "Leave Allotment Change Notice")
+    APPROVED_TIME_CANCELLED = LkDocumentType(19, "Approved Time Cancelled")
+    CHANGE_REQUEST_APPROVED = LkDocumentType(20, "Change Request Approved")
+    CHANGE_REQUEST_DENIED = LkDocumentType(21, "Change Request Denied")
 
 
 class Document(Base, TimestampMixin):

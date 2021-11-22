@@ -74,6 +74,12 @@ def can_download(user: User, doc: Union[Document, DocumentResponse]) -> bool:
                 DocumentType.DENIAL_NOTICE.document_type_description,
                 DocumentType.WITHDRAWAL_NOTICE.document_type_description,
                 DocumentType.APPEAL_ACKNOWLEDGMENT.document_type_description,
+                DocumentType.MAXIMUM_WEEKLY_BENEFIT_CHANGE_NOTICE.document_type_description,
+                DocumentType.BENEFIT_AMOUNT_CHANGE_NOTICE.document_type_description,
+                DocumentType.LEAVE_ALLOTMENT_CHANGE_NOTICE.document_type_description,
+                DocumentType.APPROVED_TIME_CANCELLED.document_type_description,
+                DocumentType.CHANGE_REQUEST_APPROVED.document_type_description,
+                DocumentType.CHANGE_REQUEST_DENIED.document_type_description,
             ]
         ]
 
