@@ -108,7 +108,7 @@ class DelegatedPaymentFactory(MockData):
         self.routing_nbr = self.get_value(
             "routing_nbr", generate_routing_nbr_from_ssn(self.ssn.to_unformatted_str())
         )
-        self.account_nbr = self.get_value("account_nbr", self.ssn)
+        self.account_nbr = self.get_value("account_nbr", self.ssn.to_unformatted_str())
         self.prenote_sent_at = self.get_value("prenote_sent_at", None)
         self.prenote_response_at = self.get_value("prenote_response_at", None)
 
