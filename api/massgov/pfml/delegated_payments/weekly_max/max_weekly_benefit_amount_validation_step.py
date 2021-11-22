@@ -105,7 +105,19 @@ class MaxWeeklyBenefitAmountValidationStep(Step):
                     import_log_id=self.get_import_log_id(),
                 )
                 self.db_session.add(writeback_details)
+                # Create the writeback state
+                state_log_util.create_finished_state_log(
+                    end_state=State.DELEGATED_ADD_TO_FINEOS_WRITEBACK,
+                    outcome=state_log_util.build_outcome(
+                        maximum_weekly_audit_msg,
+                        validation_container=None,
+                        **additional_outcome_details,
+                    ),
+                    associated_model=payment_container.payment,
+                    db_session=self.db_session,
+                )
 
+                # Create the error state
                 state_log_util.create_finished_state_log(
                     end_state=State.PAYMENT_FAILED_MAX_WEEKLY_BENEFIT_AMOUNT_VALIDATION,
                     outcome=state_log_util.build_outcome(

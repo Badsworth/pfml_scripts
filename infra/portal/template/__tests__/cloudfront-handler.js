@@ -69,14 +69,4 @@ describe("Cloudfront Lambda@Edge Function", () => {
       });
     });
   });
-
-  describe("when eventType is viewer-response", () => {
-    it("sets security headers", async () => {
-      const event = simulateEvent("viewer-response");
-
-      const response = await handler(event);
-
-      expect(response.headers).toMatchSnapshot();
-    });
-  });
 });

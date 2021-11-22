@@ -786,6 +786,7 @@ const shared = {
   contactCenterPhoneNumber: "(833) 344-7365",
   contactCenterPhoneNumberNoBreak:
     "(833)$t(chars.nbsp)344$t(chars.nbhyphen)7365",
+  contactCenterReportHoursPhoneNumber: "(857) 972-9256",
   dateRangeDelimiter: "to",
   day_Friday: "Friday",
   day_Monday: "Monday",
@@ -2553,15 +2554,28 @@ const pages = {
   },
   payments: {
     changesToPaymentsAmountAnswer:
-      "<p>See your approval notice for your maximum weekly benefit. We may reduce your benefit amount based on other leave, income and benefits you reported to us. You will receive another notice in this application’s details if we reduce or offset your benefit amount.</p><p>Other scenarios that may change your benefit amount are:</p><ul> <li>You reach the $850 benefit total across multiple employers</li><li>If you transition from medical pregnancy to leave to bond with a child</li><li>Extending your leave</li></ul> <p>Check your <view-notices-link>application’s notices</view-notices-link> to see your approval notice and any updates to your approved benefit amount.</p>",
+      "<p>See your approval notice for your maximum weekly benefit. We may reduce your benefit amount based on <using-other-leave-link>other leave, income and benefits</using-other-leave-link> you reported to us. You will receive another notice in this application’s details if we reduce or offset your benefit amount.</p><p>Other scenarios that may change your benefit amount are:</p><ul> <li>You reach the $850 benefit total across multiple employers</li><li>If you transition from medical pregnancy to leave to bond with a child</li><li>Extending your leave</li></ul> <p>Check your <view-notices-link>application’s notices</view-notices-link> to see your approval notice and any updates to your approved benefit amount.</p>",
     changesToPaymentsAmountQuestion: "What may change your benefit amount",
-    changesToPaymentsHeader: "Changes to payments",
     changesToPaymentsScheduleAnswer:
       "<ul> <li>State and federal holidays</li><li>Your bank’s processes</li><li>Pay periods that end on a weekend</li><li>Payments may be delayed if we need to adjust your benefit amount based on extensions, other income or benefits you’ve reported and other process delays</li></ul>",
     changesToPaymentsScheduleQuestion: "What may change your payment schedule",
     changesToPaymentsYourPreferencesAnswer:
       "<p>To make changes to your application, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>. If you request a change to your start and end dates, we may need to review your application again.</p>",
     changesToPaymentsYourPreferencesQuestion: "Change your payment preference",
+    paymentsTable: {
+      amountSent: "{{amount, currency}}",
+      amountSentHeader: "Amount sent",
+      dateSentHeader: "Date sent",
+      estimatedScheduledDateHeader: "Estimated scheduled date",
+      leaveDatesHeader: "Leave dates",
+      paymentMethodHeader: "Payment Method",
+      paymentMethod_Check: "Check",
+      "paymentMethod_Electronic Funds Transfer": "EFT",
+      paymentStatus_Cancelled: "Cancelled",
+      paymentStatus_Delayed: "Delayed",
+      paymentStatus_Pending: "Pending",
+      paymentStatus_Sent: "Sent to bank",
+    },
     questionsDetails:
       "<p>Call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.</p>",
     questionsHeader: "Questions?",
@@ -2795,7 +2809,6 @@ const components = {
     amountFrequency_monthly: "$t(shared.amountFrequency_monthly)",
     amountFrequency_unknown: "$t(shared.amountFrequency_unknown)",
     amountFrequency_weekly: "$t(shared.amountFrequency_weekly)",
-    amountPerFrequency: "{{amount, currency}}",
     amountPerFrequency_daily: "$t(shared.amountPerFrequency_daily)",
     amountPerFrequency_inTotal: "$t(shared.amountPerFrequency_inTotal)",
     amountPerFrequency_monthly: "$t(shared.amountPerFrequency_monthly)",

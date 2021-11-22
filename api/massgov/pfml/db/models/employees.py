@@ -407,6 +407,9 @@ class Employer(Base, TimestampMixin):
     organization_units: "Query[OrganizationUnit]" = dynamic_loader(
         "OrganizationUnit", back_populates="employer"
     )
+    employee_benefit_year_contributions: "Query[BenefitYearContribution]" = dynamic_loader(
+        "BenefitYearContribution", back_populates="employer"
+    )
 
     lk_industry_code = relationship(LkIndustryCode)
 
@@ -653,6 +656,11 @@ class Employee(Base, TimestampMixin):
         "EmployeeOccupation", back_populates="employee"
     )
 
+    benefit_years: "Query[BenefitYear]" = dynamic_loader("BenefitYear", back_populates="employee")
+    employer_benefit_year_contributions: "Query[BenefitYearContribution]" = dynamic_loader(
+        "BenefitYearContribution", back_populates="employee"
+    )
+
 
 class EmployeePushToFineosQueue(Base, TimestampMixin):
     __tablename__ = "employee_push_to_fineos_queue"
@@ -780,6 +788,52 @@ class Claim(Base, TimestampMixin):
         )
 
         return paid_payments > 0
+
+
+class BenefitYear(Base, TimestampMixin):
+    __tablename__ = "benefit_year"
+    benefit_year_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+    employee_id = Column(
+        PostgreSQLUUID, ForeignKey("employee.employee_id"), nullable=False, index=True
+    )
+    employee = relationship("Employee", back_populates="benefit_years")
+    start_date = Column(Date, nullable=False)
+    end_date = Column(Date, nullable=False)
+    total_wages = Column(Numeric(asdecimal=True))
+    contributions = cast(
+        List["BenefitYearContribution"],
+        relationship("BenefitYearContribution", cascade="all, delete-orphan"),
+    )
+
+
+class BenefitYearContribution(Base, TimestampMixin):
+    __tablename__ = "benefit_year_contribution"
+    benefit_year_contribution_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+
+    benefit_year_id = Column(
+        PostgreSQLUUID, ForeignKey("benefit_year.benefit_year_id"), nullable=False, index=True
+    )
+    benefit_year = relationship("BenefitYear", back_populates="contributions")
+
+    employer_id = Column(
+        PostgreSQLUUID, ForeignKey("employer.employer_id"), nullable=False, index=True
+    )
+    employer = relationship("Employer", back_populates="employee_benefit_year_contributions")
+
+    employee_id = Column(
+        PostgreSQLUUID, ForeignKey("employee.employee_id"), nullable=False, index=True
+    )
+    employee = relationship("Employee", back_populates="employer_benefit_year_contributions")
+
+    average_weekly_wage = Column(Numeric(asdecimal=True), nullable=False)
+
+    Index(
+        "ix_benefit_year_id_employer_id_employee_id",
+        benefit_year_id,
+        employer_id,
+        employee_id,
+        unique=True,
+    )
 
 
 class Payment(Base, TimestampMixin):

@@ -48,7 +48,7 @@ resource "aws_ecs_task_definition" "ecs_tasks_1099" {
     },
     {
       name                   = "pub-payments-process-1099-dot-net-generator-service",
-      image                  = format("%s:%s", data.aws_ecr_repository.pdf_api.repository_url, var.service_docker_tag),
+      image                  = format("%s:%s", data.aws_ecr_repository.pdf_api.repository_url, "latest"),
       command                = ["dotnet", "PfmlPdfApi.dll"],
       cpu                    = 2048,
       memory                 = 4096,
