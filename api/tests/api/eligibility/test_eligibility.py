@@ -65,10 +65,10 @@ def test_compute_financial_eligibility_multiple_scenarios(
     In these scenarios thre is no data for 'current' quarter.
     """
 
-    employer_fein = 716779225
+    employer_fein = Fein("716779225")
     tax_id = TaxIdentifierFactory.create(tax_identifier=TaxId("088574541"))
     employee = EmployeeFactory.create(tax_identifier=tax_id)
-    employer = EmployerFactory.create(employer_fein=Fein(str(employer_fein)))
+    employer = EmployerFactory.create(employer_fein=employer_fein)
     application_submitted_date = date(2021, 1, 1)
     leave_start_date = date(2021, 1, 1)
     employee_id = employee.employee_id
@@ -137,10 +137,10 @@ def test_scenario_A_case_B(test_db_session, initialize_factories_session):
     In this scenario there is recorded wage data of 0 dollars for the current quarter
     """
 
-    employer_fein = 716779225
+    employer_fein = Fein("716779225")
     tax_id = TaxIdentifierFactory.create(tax_identifier=TaxId("088574541"))
     employee = EmployeeFactory.create(tax_identifier=tax_id)
-    employer = EmployerFactory.create(employer_fein=Fein(str(employer_fein)))
+    employer = EmployerFactory.create(employer_fein=employer_fein)
     application_submitted_date = date(2020, 10, 1)
     leave_start_date = date(2020, 10, 1)
     employee_id = employee.employee_id
