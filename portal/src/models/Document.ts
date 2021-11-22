@@ -18,17 +18,17 @@ const CertificationType = {
 export const OtherDocumentType = {
   appealAcknowledgment: "Appeal Acknowledgment",
   approvalNotice: "Approval Notice",
+  approvedTimeCancelled: "Approved Time Cancelled",
+  benefitAmountChangeNotice: "Benefit Amount Change Notice",
+  changeRequestApproved: "Change Request Approved",
+  changeRequestDenied: "Change Request Denied",
   denialNotice: "Denial Notice",
   identityVerification: "Identification Proof",
+  leaveAllotmentChangeNotice: "Leave Allotment Change Notice",
+  maximumWeeklyBenefitChangeNotice: "Maximum Weekly Benefit Change Notice",
   medicalCertification: "State managed Paid Leave Confirmation",
   requestForInfoNotice: "Request for more Information",
   withdrawalNotice: "Pending Application Withdrawn",
-  maximumWeeklyBenefitChangeNotice: "Maximum Weekly Benefit Change Notice",
-  benefitAmountChangeNotice: "Benefit Amount Change Notice",
-  leaveAllotmentChangeNotice: "Leave Allotment Change Notice",
-  approvedTimeCancelled: "Approved Time Cancelled",
-  changeRequestApproved: "Change Request Approved",
-  changeRequestDenied: "Change Request Denied",
 } as const;
 
 export type DocumentTypeEnum =
