@@ -30,6 +30,7 @@ from massgov.pfml.db.queries.managed_requirements import (
 from massgov.pfml.fineos import exception
 from massgov.pfml.fineos.models.customer_api import AbsenceDetails
 from massgov.pfml.fineos.models.group_client_api import ManagedRequirementDetails
+from massgov.pfml.types import Fein
 
 leave_admin_body = {
     "absence_case_id": "NTN-111-ABS-01",
@@ -119,7 +120,7 @@ def fineos_absence_details():
 
 @pytest.fixture
 def employer():
-    return EmployerFactory.create(employer_fein="716779225", fineos_employer_id=1005)
+    return EmployerFactory.create(employer_fein=Fein("716779225"), fineos_employer_id=1005)
 
 
 @pytest.fixture
@@ -351,7 +352,7 @@ def test_update_absence_period(
 
     fineos_user_id = "USER_WITH_EXISTING_WORK_PATTERN"
     fineos_web_id_ext = FINEOSWebIdExt()
-    fineos_web_id_ext.employee_tax_identifier = claim.employee.tax_identifier_id
+    fineos_web_id_ext.employee_tax_identifier = claim.employee.tax_identifier.tax_identifier
     fineos_web_id_ext.employer_fein = claim.employer.employer_fein
     fineos_web_id_ext.fineos_web_id = fineos_user_id
     test_db_session.add(fineos_web_id_ext)
@@ -363,7 +364,7 @@ def test_update_absence_period(
     update_absence_period(
         claim.fineos_absence_id,
         claim,
-        claim.employee.tax_identifier_id,
+        claim.employee.tax_identifier.tax_identifier,
         claim.employer.employer_fein,
         fineos_client,
         test_db_session,
