@@ -154,6 +154,14 @@ describe("Review", () => {
     expect(screen.getByText("Employer ID number (EIN)")).toMatchSnapshot();
   });
 
+  it("does not render the caring leave relationship question", () => {
+    expect(
+      screen.queryByRole("group", {
+        name: "Do you believe the listed relationship is described accurately? (Optional)",
+      })
+    ).not.toBeInTheDocument();
+  });
+
   it("hides organization name if employer_dba is falsy", () => {
     const noEmployerDba = clone(claimWithV1Eform);
     noEmployerDba.employer_dba = undefined;
@@ -791,6 +799,14 @@ describe("Review", () => {
         .create();
 
       setup(caringLeaveClaim);
+    });
+
+    it("renders the caring leave relationship question", () => {
+      expect(
+        screen.getByRole("group", {
+          name: "Do you believe the listed relationship is described accurately? (Optional)",
+        })
+      ).toBeInTheDocument();
     });
 
     it("submits a caring leave claim with the correct options", async () => {
