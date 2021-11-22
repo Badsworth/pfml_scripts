@@ -33,6 +33,7 @@ from massgov.pfml.db.models.factories import (
 )
 from massgov.pfml.db.models.payments import FineosWritebackDetails
 from massgov.pfml.delegated_payments.mock.mock_util import MockData, generate_routing_nbr_from_ssn
+from massgov.pfml.types import TaxId
 
 fake = faker.Faker()
 fake.seed_instance(2394)
@@ -99,12 +100,14 @@ class DelegatedPaymentFactory(MockData):
         )
 
         # pub eft defaults
-        self.ssn = self.get_value(
-            "ssn", str(fake.unique.random_int(min=100_000_000, max=200_000_000))
+        self.ssn = TaxId(
+            self.get_value("ssn", str(fake.unique.random_int(min=100_000_000, max=200_000_000)))
         )
         self.pub_individual_id = self.get_value("pub_individual_id", None)
         self.prenote_state = self.get_value("prenote_state", PrenoteState.PENDING_WITH_PUB)
-        self.routing_nbr = self.get_value("routing_nbr", generate_routing_nbr_from_ssn(self.ssn))
+        self.routing_nbr = self.get_value(
+            "routing_nbr", generate_routing_nbr_from_ssn(self.ssn.to_unformatted_str())
+        )
         self.account_nbr = self.get_value("account_nbr", self.ssn)
         self.prenote_sent_at = self.get_value("prenote_sent_at", None)
         self.prenote_response_at = self.get_value("prenote_response_at", None)
