@@ -1,16 +1,16 @@
 import pytest
 
 import massgov.pfml.api.util.state_log_util as state_log_util
+import massgov.pfml.delegated_payments.delegated_fineos_related_payment_processing as withholding_payments_process
 from massgov.pfml.db.models.employees import State
 from massgov.pfml.delegated_payments.mock.delegated_payments_factory import DelegatedPaymentFactory
-
-import massgov.pfml.delegated_payments.delegated_fineos_related_payment_processing as withholding_payments_process
 
 misc_states = [
     State.STATE_WITHHOLDING_READY_FOR_PROCESSING,
     State.FEDERAL_WITHHOLDING_READY_FOR_PROCESSING,
     State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING
 ]
+
 
 @pytest.fixture
 def related_withholding_payment_step(initialize_factories_session, test_db_session, test_db_other_session):
