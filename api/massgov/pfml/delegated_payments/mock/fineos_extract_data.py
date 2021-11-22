@@ -540,7 +540,7 @@ def generate_claimant_data_files(
 
         ssn = employee.tax_identifier.tax_identifier.to_unformatted_str()
         if scenario_descriptor.claim_extract_employee_identifier_unknown:
-            ssn = "UNKNOWNSSN"
+            ssn = "999999999"
 
         if round > 1 and scenario_descriptor.has_additional_payment_in_period:
             absence_case_number = scenario_data.additional_payment_absence_case_id
