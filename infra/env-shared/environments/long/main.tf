@@ -27,10 +27,10 @@ terraform {
 module "pfml" {
   source = "../../template"
 
-  environment_name     = "long"
-  nlb_name             = "${local.vpc}-nlb"
-  nlb_vpc_link_name    = "${local.vpc}-nlb-vpc-link"
-  nlb_port             = 3507
+  environment_name  = "long"
+  nlb_name          = "${local.vpc}-nlb"
+  nlb_vpc_link_name = "${local.vpc}-nlb-vpc-link"
+  nlb_port          = 3507
 
   # AWS WAF ACL settings
   enable_regional_rate_based_acl = true
