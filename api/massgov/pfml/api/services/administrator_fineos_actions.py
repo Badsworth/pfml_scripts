@@ -220,7 +220,33 @@ def download_document_as_leave_admin(
             data={"document.document_type": doc_type},
         )
     fineos = massgov.pfml.fineos.create_client()
-    return fineos.download_document_as_leave_admin(fineos_user_id, absence_id, fineos_document_id)
+    # Appeal Acknowledgement notices cannot be fetched from the absence case, but only from the appeal subcase
+    if doc_type == "appeal acknowledgment":
+        case_id = find_appeal_case_id(fineos, fineos_user_id, absence_id, fineos_document_id)
+    else:
+        case_id = absence_id
+
+    return fineos.download_document_as_leave_admin(fineos_user_id, case_id, fineos_document_id)
+
+
+def find_appeal_case_id(
+    fineos: massgov.pfml.fineos.AbstractFINEOSClient,
+    fineos_user_id: str,
+    absence_id: str,
+    fineos_document_id: str,
+) -> str:
+    fineos_documents = fineos.group_client_get_documents(fineos_user_id, absence_id)
+    for doc in fineos_documents:
+        if fineos_document_id == str(doc.documentId):
+            case_id = doc.caseId
+            break
+    if not case_id:
+        logger.warning(
+            "Document with that fineos_document_id could not be found",
+            extra={"absence_id": absence_id, "fineos_document_id": fineos_document_id,},
+        )
+        raise Exception("Document with that fineos_document_id could not be found")
+    return case_id
 
 
 def _get_document(

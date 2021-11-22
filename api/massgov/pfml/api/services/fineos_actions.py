@@ -180,7 +180,9 @@ def send_to_fineos(
 
         raise ValueError("customer occupation is None")
 
-    upsert_week_based_work_pattern(fineos, fineos_web_id, application, occupation.occupationId)
+    upsert_week_based_work_pattern(
+        fineos, fineos_web_id, application, occupation.occupationId, occupation.workPatternBasis
+    )
     update_occupation_details(fineos, application, str(occupation.occupationId))
 
     new_case = fineos.start_absence(fineos_web_id, absence_case)
@@ -886,15 +888,17 @@ def get_occupation(
         raise error
 
 
-def upsert_week_based_work_pattern(fineos_client, user_id, application, occupation_id):
+def upsert_week_based_work_pattern(
+    fineos_client, user_id, application, occupation_id, existing_work_pattern
+):
     """Add or update work pattern on an in progress absence case"""
     if occupation_id is None:
         raise ValueError("occupation_id is None")
-
     week_based_work_pattern = build_week_based_work_pattern(application)
     log_attributes = {
         "application.application_id": application.application_id,
         "occupation_id": occupation_id,
+        "work_pattern_basis": existing_work_pattern,
     }
 
     if application.claim is not None:
@@ -909,19 +913,8 @@ def upsert_week_based_work_pattern(fineos_client, user_id, application, occupati
             "upserting work_pattern for empty claim", extra=log_attributes,
         )
 
-    try:
-        add_week_based_work_pattern(
-            fineos_client, user_id, occupation_id, week_based_work_pattern, log_attributes
-        )
-
-        logger.info(
-            "added work_pattern successfully for customer occupation %s",
-            occupation_id,
-            extra=log_attributes,
-        )
-
-    except massgov.pfml.fineos.exception.FINEOSForbidden:
-        # FINEOS returns 403 when attempting to add a work pattern for an occupation when one already exists.
+    # if we already have the pattern, just update
+    if existing_work_pattern == "Week Based":
         update_week_based_work_pattern(
             fineos_client, user_id, occupation_id, week_based_work_pattern, log_attributes
         )
@@ -935,6 +928,16 @@ def upsert_week_based_work_pattern(fineos_client, user_id, application, occupati
             logger.info(
                 "updated work_pattern successfully", extra=log_attributes,
             )
+    # otherwise if unknown, add it
+    else:
+        add_week_based_work_pattern(
+            fineos_client, user_id, occupation_id, week_based_work_pattern, log_attributes
+        )
+        logger.info(
+            "added work_pattern successfully for customer occupation %s",
+            occupation_id,
+            extra=log_attributes,
+        )
 
 
 def add_week_based_work_pattern(
