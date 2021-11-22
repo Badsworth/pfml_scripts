@@ -33,7 +33,7 @@ async function generateClaimsPageStories() {
     claimsPageSubpaths.map(async (claimsPageSubpath) => {
       const customTsStoryPath = `${customStoriesDir}/${claimsPageSubpath}.stories.ts`;
       const customTsxStoryPath = `${customTsStoryPath}x`;
-      const autogenStoryPath = `${autogenStoriesDir}/${claimsPageSubpath}.stories.js`;
+      const autogenStoryPath = `${autogenStoriesDir}/${claimsPageSubpath}.stories.ts`;
       const customStoryExists =
         (await exists(customTsStoryPath)) || (await exists(customTsxStoryPath));
       if (customStoryExists) {

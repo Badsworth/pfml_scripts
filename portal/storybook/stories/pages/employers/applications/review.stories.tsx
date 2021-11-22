@@ -7,7 +7,7 @@ import { Props } from "storybook/types";
 import React from "react";
 import { Review } from "src/pages/employers/applications/review";
 import User from "src/models/User";
-import { createMockEmployerClaim } from "tests/test-utils";
+import { createMockEmployerClaim } from "tests/test-utils/createMockEmployerClaim";
 import useMockableAppLogic from "lib/mock-helpers/useMockableAppLogic";
 
 export default {
@@ -15,7 +15,6 @@ export default {
   component: Review,
   argTypes: {
     claimOption: {
-      defaultValue: "Continuous or reduced - documentation",
       control: {
         type: "radio",
         options: [
@@ -27,7 +26,6 @@ export default {
       },
     },
     "Leave reason": {
-      defaultValue: "Medical",
       control: {
         type: "radio",
         options: ["Bonding", "Medical", "Care", "Pregnancy"],
@@ -35,7 +33,6 @@ export default {
     },
     // Todo(EMPLOYER-1453): remove V1 eform functionality
     "Claimant EForm Version": {
-      defaultValue: "Version 2 (after 2021-07-14)",
       control: {
         type: "radio",
         options: [
@@ -56,6 +53,11 @@ export default {
         ],
       },
     },
+  },
+  args: {
+    claimOption: "Continuous or reduced - documentation",
+    "Leave reason": "Medical",
+    "Claimant EForm Version": "Version 2 (after 2021-07-14)",
   },
 };
 
@@ -107,7 +109,8 @@ export const Default = (
     employers: {
       claimDocumentsMap: getDocumentsMap(
         documentationOption,
-        claim.leave_details.reason
+        claim.leave_details.reason,
+        claim.fineos_absence_id
       ),
     },
   });
@@ -117,7 +120,8 @@ export const Default = (
 
 function getDocumentsMap(
   documentation: DocumentationOption,
-  leaveReason: string | null
+  leaveReason: string | null,
+  absenceId: string
 ) {
   const isWithoutDocumentation = documentation.includes(
     "without documentation"
@@ -128,7 +132,7 @@ function getDocumentsMap(
     !leaveReason ||
     !(leaveReason in DocumentType.certification)
   ) {
-    return new Map([["mock-absence-id", new DocumentCollection()]]);
+    return new Map([[absenceId, new DocumentCollection()]]);
   }
 
   const documentData: BenefitsApplicationDocument = {
@@ -145,7 +149,7 @@ function getDocumentsMap(
     user_id: "",
   };
 
-  return new Map([["mock-absence-id", new DocumentCollection([documentData])]]);
+  return new Map([[absenceId, new DocumentCollection([documentData])]]);
 }
 
 function getAppErrorInfoCollection(errorTypes: string[] = []) {

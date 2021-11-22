@@ -28,7 +28,7 @@ import {
   COMPONENTS_WIDTH,
   ENVS,
 } from "../common";
-import Navigation from "../common/navigation"
+import Navigation from "../common/navigation";
 
 function extractEnvironmentData(data) {
   const map = data
@@ -148,7 +148,7 @@ export default function EnvironmentsTable({ platformState }) {
           </Table>
         );
       }}
-    </NrqlQuery>
+    </NrqlQuery>,
   ];
 }
 

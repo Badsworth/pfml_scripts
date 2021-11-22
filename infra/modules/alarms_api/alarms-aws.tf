@@ -14,7 +14,8 @@ locals {
     "dua-generate-and-send-employee-request-file",
     "dua-import-employee-demographics",
     "pub-payments-process-snapshot",
-    "pub-payments-process-1099-documents"
+    "pub-payments-process-1099-documents",
+    "pub-claimant-address-validation"
   ]
 }
 

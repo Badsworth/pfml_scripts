@@ -39,6 +39,7 @@ def _create_payment_container(
     has_errored_state=False,
     is_adhoc_payment=False,
     is_overpayment=False,
+    is_ready_for_max_weekly_benefit_validation=False,
     later_failed=False,
     payment_transaction_type=PaymentTransactionType.STANDARD,
     claim=None,
@@ -79,6 +80,8 @@ def _create_payment_container(
         state = State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT
     elif is_overpayment:
         state = State.DELEGATED_PAYMENT_PROCESSED_OVERPAYMENT
+    elif is_ready_for_max_weekly_benefit_validation:
+        state = State.PAYMENT_READY_FOR_MAX_WEEKLY_BENEFIT_AMOUNT_VALIDATION
     else:
         state = State.DELEGATED_PAYMENT_POST_PROCESSING_CHECK
 

@@ -41,7 +41,9 @@ USER ${RUN_USER}
 WORKDIR /app
 
 # install dependencies
+# note: explicitly create a new virtualenv to avoid getting overridden by mounted .venv folders.
 COPY pyproject.toml poetry.lock ./
+RUN poetry config virtualenvs.in-project false && poetry env use python
 RUN poetry install --no-root --extras "api-only-dependencies"
 
 # grab the application

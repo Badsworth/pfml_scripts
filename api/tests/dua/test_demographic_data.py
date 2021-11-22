@@ -1,4 +1,5 @@
 import os
+import uuid
 
 import pytest
 from freezegun import freeze_time
@@ -8,6 +9,7 @@ from massgov.pfml.db.models.employees import (
     DuaEmployeeDemographics,
     DuaReportingUnit,
     EmployeeOccupation,
+    EmployeePushToFineosQueue,
     Gender,
     OrganizationUnit,
     ReferenceFile,
@@ -208,6 +210,16 @@ def test_set_employee_occupation_from_demographics_file(
         assert metrics["created_employee_occupation_count"] == 1
         assert metrics["dua_org_unit_skipped_count"] == 1
         assert metrics["dua_org_unit_set_count"] == 1
+
+        eligibility_updates = (
+            test_db_session.query(EmployeePushToFineosQueue)
+            .filter(EmployeePushToFineosQueue.action == "UPDATE_NEW_EMPLOYER")
+            .all()
+        )
+        assert len(eligibility_updates) == 1
+
+        assert eligibility_updates[0].employee_id == uuid.UUID(employee_one.employee_id)
+        assert eligibility_updates[0].employer_id == uuid.UUID(employer.employer_id)
 
 
 @freeze_time("2020-12-07")

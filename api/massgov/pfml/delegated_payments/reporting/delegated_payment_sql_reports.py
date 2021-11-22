@@ -8,6 +8,7 @@ class ReportName(str, Enum):
     CLAIMANT_EXTRACT_ERROR_REPORT = "claimant-extract-error-report"
     PAYMENT_EXTRACT_ERROR_REPORT = "payment-extract-error-report"
     ADDRESS_ERROR_REPORT = "address-error-report"
+    MAX_WEEKLY_BENEFIT_AMOUNT_ERROR_REPORT = "max-weekly-benefit-amount-error-report"
     OVERPAYMENT_REPORT = "overpayment-report"
     ZERO_DOLLAR_PAYMENT_REPORT = "zero-dollar-payment-report"
     CANCELLATION_REPORT = "cancellation-report"
@@ -32,6 +33,7 @@ PROCESS_FINEOS_EXTRACT_REPORTS: List[ReportName] = [
     ReportName.CLAIMANT_EXTRACT_ERROR_REPORT,
     ReportName.PAYMENT_EXTRACT_ERROR_REPORT,
     ReportName.ADDRESS_ERROR_REPORT,
+    ReportName.MAX_WEEKLY_BENEFIT_AMOUNT_ERROR_REPORT,
     ReportName.OVERPAYMENT_REPORT,
     ReportName.ZERO_DOLLAR_PAYMENT_REPORT,
     ReportName.CANCELLATION_REPORT,
@@ -79,6 +81,12 @@ REPORTS: List[Report] = [
     Report(
         sql_command=_get_report_sql_command_from_file(ReportName.ADDRESS_ERROR_REPORT),
         report_name=ReportName.ADDRESS_ERROR_REPORT,
+    ),
+    Report(
+        sql_command=_get_report_sql_command_from_file(
+            ReportName.MAX_WEEKLY_BENEFIT_AMOUNT_ERROR_REPORT
+        ),
+        report_name=ReportName.MAX_WEEKLY_BENEFIT_AMOUNT_ERROR_REPORT,
     ),
     Report(
         sql_command=_get_report_sql_command_from_file(ReportName.OVERPAYMENT_REPORT),

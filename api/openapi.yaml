@@ -1706,6 +1706,8 @@ components:
           type: string
         middle_name:
           type: string
+        uses_second_eform_version:
+          type: boolean
         previous_leaves:
           type: array
           items:
@@ -1716,7 +1718,24 @@ components:
           $ref: "#/components/schemas/MaskedSsnItin"
         follow_up_date:
           $ref: "#/components/schemas/Date"
+        absence_periods:
+          type: array
+          items:
+            $ref: "#/components/schemas/AbsencePeriodResponse"
       additionalProperties: false
+      required:
+        - employer_benefits
+        - employer_dba
+        - employer_fein
+        - employer_id
+        - fineos_absence_id
+        - leave_details
+        - previous_leaves
+        - residential_address
+        - is_reviewable
+        - status
+        - uses_second_eform_version
+        - absence_periods
 
     ConcurrentLeave:
       type: object
@@ -2378,7 +2397,7 @@ components:
         absence_periods:
             type: array
             items:
-              $ref: "#/components/schemas/AbsencePeriodStatusResponse"
+              $ref: "#/components/schemas/AbsencePeriodResponse"
         has_paid_payments:
           type: boolean
           example: false

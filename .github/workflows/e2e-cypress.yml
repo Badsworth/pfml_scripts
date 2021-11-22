@@ -15,22 +15,58 @@ on:
       target_environment:
         description: "Target Environment"
         required: true
-        default: "stage"
+        default: "test"
+        type: choice
+        options:
+        - test
+        - stage
+        - performance
+        - cps-preview
+        - training
+        - uat
+        - breakfix
       cypress_tags:
         description: "Cypress Run Tags"
         required: false
-        default: "Manual"
+        default: "Manual - Other"
+        type: choice
+        options:
+        - Manual - PR Re-run
+        - Manual - PR Env Check
+        - Manual - Post Morning Run Check
+        - Manual - Post API Deployment Check
+        - Manual - Post Portal Deployment Check
+        - Manual - Post Fineos Deployment Check
+        - Manual - Environment Sanity Check
+        - Manual - New Dataset Check
+        - Manual - Web Portal Flow Content Check
+        - Manual - Post Database Refresh Check
+        - Manual - Other
+        - Manual - PR Re-run (all envs)
+        - Manual - PR Env Check (all envs)
+        - Manual - Post Morning Run Check (all envs)
+        - Manual - Environment Sanity Check (all envs)
+        - Manual - New Dataset Check (all envs)
+        - Manual - Other (all envs)
+        - Deploy-Fineos
+        - Deploy,Deploy-API
+        - Deploy,Deploy-Portal
+        - Deploy,Deploy-Infra
+        - Morning Run
+        - PR
       title_override:
         description: "Title Override (replaces commit message in Cypress Dashboard)"
         required: false
       run_unstable:
         description: "Run tests in unstable group"
         required: false
-        default: "false"
+        default: false
+        type: boolean
       run_nightly:
         description: "Run tests in nightly group"
         required: false
-        default: "false"
+        default: false
+        type: boolean
 
 defaults:
   run:

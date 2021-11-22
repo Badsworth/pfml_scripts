@@ -1,7 +1,8 @@
+import User, { UserLeaveAdministrator } from "../../models/User";
 import DocumentCollection from "../../models/DocumentCollection";
 import { DocumentType } from "../../models/Document";
 import EmployerClaim from "../../models/EmployerClaim";
-import { UserLeaveAdministrator } from "../../models/User";
+import faker from "faker";
 import { uniqueId } from "lodash";
 
 const documentData = {
@@ -11,14 +12,10 @@ const documentData = {
   name: "mock doc",
   document_type: DocumentType.approvalNotice,
 };
-// Export mocked EmployersApi functions so we can spy on them
 
-export const addEmployerMock = jest.fn().mockResolvedValue(() => {
-  return {
-    data: new UserLeaveAdministrator({}),
-    status: 200,
-    success: true,
-  };
+// Export mocked EmployersApi functions so we can spy on them
+export const addEmployerMock = jest.fn().mockResolvedValue({
+  data: new UserLeaveAdministrator({}),
 });
 
 export const getClaimMock = jest.fn().mockResolvedValue((absenceId: string) => {
@@ -26,44 +23,40 @@ export const getClaimMock = jest.fn().mockResolvedValue((absenceId: string) => {
     claim: new EmployerClaim({
       fineos_absence_id: absenceId,
     }),
-    status: 200,
-    success: true,
   };
 });
 
-export const getDocumentsMock = jest.fn().mockResolvedValue(() => {
-  return {
-    documents: new DocumentCollection([
-      { ...documentData, fineos_document_id: uniqueId() },
-      { ...documentData, fineos_document_id: uniqueId() },
-      { ...documentData, fineos_document_id: uniqueId() },
-    ]),
-    status: 200,
-    success: true,
-  };
+export const getDocumentsMock = jest.fn().mockResolvedValue({
+  documents: new DocumentCollection([
+    { ...documentData, fineos_document_id: uniqueId() },
+    { ...documentData, fineos_document_id: uniqueId() },
+    { ...documentData, fineos_document_id: uniqueId() },
+  ]),
 });
 
-export const getWithholdingMock = jest.fn().mockResolvedValue(() => {
-  return {
-    filing_period: "2011-11-20",
-  };
+export const getWithholdingMock = jest.fn().mockResolvedValue({
+  filing_period: "2011-11-20",
 });
 
 export const downloadDocumentMock = jest.fn(() => new Blob());
 
-export const submitClaimReviewMock = jest.fn().mockResolvedValue(() => {
-  return {
-    claim: null,
-    status: 200,
-    success: true,
-  };
+export const submitClaimReviewMock = jest.fn().mockResolvedValue({
+  claim: null,
 });
 
-export const submitWithholdingMock = jest.fn().mockResolvedValue(() => {
-  return {
-    status: 200,
-    success: true,
-  };
+export const submitWithholdingMock = jest.fn().mockResolvedValue({
+  user: new User({
+    user_leave_administrators: [
+      {
+        employer_dba: faker.company.companyName(),
+        employer_fein: "12-3456789",
+        employer_id: uniqueId(),
+        has_fineos_registration: true,
+        has_verification_data: true,
+        verified: true,
+      },
+    ],
+  }),
 });
 
 const employersApi = jest.fn().mockImplementation(() => ({

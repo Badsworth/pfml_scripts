@@ -8,12 +8,14 @@ export default {
   component: ResetPassword,
   argTypes: {
     scenario: {
-      defaultValue: "With cached email",
       control: {
         type: "radio",
         options: ["With cached email", "Without cached email"],
       },
     },
+  },
+  args: {
+    scenario: "With cached email",
   },
 };
 

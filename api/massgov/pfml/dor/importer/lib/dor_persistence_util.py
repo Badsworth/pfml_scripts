@@ -1,11 +1,12 @@
 import datetime
 import uuid
-from typing import Any, Dict, Iterable, Tuple
+from typing import Dict, Iterable, List, Optional, Tuple
 
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 
 import massgov.pfml.db
 import massgov.pfml.util.logging as logging
+from massgov.pfml.db.models.base import uuid_gen
 from massgov.pfml.db.models.employees import (
     Address,
     AddressType,
@@ -19,19 +20,36 @@ from massgov.pfml.db.models.employees import (
     WagesAndContributions,
     WagesAndContributionsHistory,
 )
+from massgov.pfml.dor.importer.dor_file_formats import (
+    EmployerQuarterlyKey,
+    ParsedEmployeeLine,
+    ParsedEmployeeWageLine,
+    ParsedEmployerLine,
+)
 from massgov.pfml.util.datetime import to_datetime
 from massgov.pfml.util.pydantic.types import TaxIdUnformattedStr
 
 logger = logging.get_logger(__name__)
 
 
-def employer_id_address_id_to_model(employer_id, address_id):
+def employer_id_address_id_to_model(
+    employer_id: uuid.UUID, address_id: uuid.UUID
+) -> EmployerAddress:
     return EmployerAddress(employer_id=employer_id, address_id=address_id)
 
 
-def dict_to_employee(employee_info, import_log_entry_id, uuid=uuid.uuid4, tax_identifier_id=None):
+def dict_to_employee(
+    employee_info: ParsedEmployeeLine,
+    import_log_entry_id: int,
+    employee_id: Optional[uuid.UUID],
+    tax_identifier_id: Optional[uuid.UUID] = None,
+) -> Employee:
+
+    if employee_id is None:
+        employee_id = uuid_gen()
+
     employee = Employee(
-        employee_id=uuid,
+        employee_id=employee_id,
         first_name=employee_info["employee_first_name"].replace("_", " ").strip(),
         last_name=employee_info["employee_last_name"].replace("_", " ").strip(),
         latest_import_log_id=import_log_entry_id,
@@ -42,8 +60,11 @@ def dict_to_employee(employee_info, import_log_entry_id, uuid=uuid.uuid4, tax_id
 
 
 def dict_to_wages_and_contributions(
-    employee_wage_info, employee_id, employer_id, import_log_entry_id
-):
+    employee_wage_info: ParsedEmployeeWageLine,
+    employee_id: uuid.UUID,
+    employer_id: uuid.UUID,
+    import_log_entry_id: int,
+) -> WagesAndContributions:
     wage = WagesAndContributions(
         account_key=employee_wage_info["account_key"],
         filing_period=employee_wage_info["filing_period"],
@@ -63,7 +84,9 @@ def dict_to_wages_and_contributions(
     return wage
 
 
-def dict_to_employer_quarter_contribution(employer_info, employer_id, import_log_entry_id):
+def dict_to_employer_quarter_contribution(
+    employer_info: ParsedEmployerLine, employer_id: uuid.UUID, import_log_entry_id: int
+) -> EmployerQuarterlyContribution:
     return EmployerQuarterlyContribution(
         employer_id=employer_id,
         filing_period=employer_info["filing_period"],
@@ -75,7 +98,12 @@ def dict_to_employer_quarter_contribution(employer_info, employer_id, import_log
     )
 
 
-def dict_to_employer(employer_info, import_log_entry_id, uuid=uuid.uuid4):
+def dict_to_employer(
+    employer_info: ParsedEmployerLine, import_log_entry_id: int, employer_id: Optional[uuid.UUID]
+) -> Employer:
+    if employer_id is None:
+        employer_id = uuid_gen()
+
     return Employer(
         account_key=employer_info["account_key"],
         employer_fein=employer_info["fein"],
@@ -87,11 +115,13 @@ def dict_to_employer(employer_info, import_log_entry_id, uuid=uuid.uuid4):
         exemption_cease_date=employer_info["exemption_cease_date"],
         dor_updated_date=employer_info["updated_date"],
         latest_import_log_id=import_log_entry_id,
-        employer_id=uuid,
+        employer_id=employer_id,
     )
 
 
-def employer_dict_to_country_and_state_values(employer_info):
+def employer_dict_to_country_and_state_values(
+    employer_info: ParsedEmployerLine,
+) -> Tuple[Optional[int], Optional[int], Optional[str]]:
     """
     Get employer country and state values for persistence.
     Will throw a KeyError if state is invalid for a USA country code.
@@ -113,8 +143,11 @@ def employer_dict_to_country_and_state_values(employer_info):
     return country_id, state_id, state_text
 
 
-def dict_to_address(employer_info, uuid=uuid.uuid4):
+def dict_to_address(employer_info: ParsedEmployerLine, address_id: Optional[uuid.UUID]) -> Address:
     country_id, state_id, state_text = employer_dict_to_country_and_state_values(employer_info)
+
+    if address_id is None:
+        address_id = uuid_gen()
 
     return Address(
         address_type_id=AddressType.BUSINESS.address_type_id,
@@ -124,11 +157,16 @@ def dict_to_address(employer_info, uuid=uuid.uuid4):
         geo_state_text=state_text,
         zip_code=employer_info["employer_address_zip"],
         country_id=country_id,
-        address_id=uuid,
+        address_id=address_id,
     )
 
 
-def update_employer(db_session, existing_employer, employer_info, import_log_entry_id):
+def update_employer(
+    db_session: massgov.pfml.db.Session,
+    existing_employer: Employer,
+    employer_info: ParsedEmployerLine,
+    import_log_entry_id: int,
+) -> Employer:
     existing_employer.employer_name = employer_info["employer_name"]
     existing_employer.employer_dba = employer_info["employer_dba"]
     existing_employer.family_exemption = employer_info["family_exemption"]
@@ -168,14 +206,14 @@ def update_employer(db_session, existing_employer, employer_info, import_log_ent
     return existing_employer
 
 
-def tax_id_from_dict(employee_id, tax_identifier, uuid=uuid.uuid4):
-    formatted_tax_id = TaxIdUnformattedStr.validate_type(tax_identifier)
+def tax_id_from_dict(employee_id: uuid.UUID, tax_id: str) -> TaxIdentifier:
+    formatted_tax_id = TaxIdUnformattedStr.validate_type(tax_id)
     tax_identifier = TaxIdentifier(tax_identifier_id=employee_id, tax_identifier=formatted_tax_id,)
 
     return tax_identifier
 
 
-def create_tax_id(db_session, tax_id):
+def create_tax_id(db_session: massgov.pfml.db.Session, tax_id: str) -> TaxIdentifier:
     formatted_tax_id = TaxIdUnformattedStr.validate_type(tax_id)
     tax_identifier = TaxIdentifier(tax_identifier=formatted_tax_id)
     db_session.add(tax_identifier)
@@ -184,7 +222,9 @@ def create_tax_id(db_session, tax_id):
     return tax_identifier
 
 
-def create_employee(db_session, employee_info, import_log_entry_id):
+def create_employee(
+    db_session: massgov.pfml.db.Session, employee_info: ParsedEmployeeLine, import_log_entry_id: int
+) -> Employee:
     employee = Employee(
         first_name=employee_info["employee_first_name"],
         last_name=employee_info["employee_last_name"],
@@ -204,7 +244,9 @@ def create_employee(db_session, employee_info, import_log_entry_id):
     return employee
 
 
-def check_and_update_employee(db_session, existing_employee, employee_info, import_log_entry_id):
+def check_and_update_employee(
+    existing_employee: Employee, employee_info: ParsedEmployeeLine, import_log_entry_id: int,
+) -> bool:
     do_update = (
         existing_employee.first_name != employee_info["employee_first_name"]
         or existing_employee.last_name != employee_info["employee_last_name"]
@@ -213,11 +255,13 @@ def check_and_update_employee(db_session, existing_employee, employee_info, impo
     if not do_update:
         return False
 
-    update_employee(db_session, existing_employee, employee_info, import_log_entry_id)
+    update_employee(existing_employee, employee_info, import_log_entry_id)
     return True
 
 
-def update_employee(db_session, existing_employee, employee_info, import_log_entry_id):
+def update_employee(
+    existing_employee: Employee, employee_info: ParsedEmployeeLine, import_log_entry_id: int,
+) -> Employee:
     existing_employee.first_name = employee_info["employee_first_name"]
     existing_employee.last_name = employee_info["employee_last_name"]
     existing_employee.latest_import_log_id = import_log_entry_id
@@ -227,7 +271,7 @@ def update_employee(db_session, existing_employee, employee_info, import_log_ent
 
 def check_and_update_employer_quarterly_contribution(
     existing_employer_quarterly_contribution: EmployerQuarterlyContribution,
-    employer_info: Dict[str, Any],
+    employer_info: ParsedEmployeeLine,
     import_log_entry_id: int,
 ) -> bool:
     do_update = (
@@ -260,8 +304,12 @@ def check_and_update_employer_quarterly_contribution(
 
 
 def create_wages_and_contributions(
-    db_session, employee_wage_info, employee_id, employer_id, import_log_entry_id
-):
+    db_session: massgov.pfml.db.Session,
+    employee_wage_info: ParsedEmployeeWageLine,
+    employee_id: uuid.UUID,
+    employer_id: uuid.UUID,
+    import_log_entry_id: int,
+) -> WagesAndContributions:
     wage = dict_to_wages_and_contributions(
         employee_wage_info, employee_id, employer_id, import_log_entry_id
     )
@@ -288,12 +336,11 @@ def _capture_current_wage_and_contribution_state(
 
 
 def check_and_update_wages_and_contributions(
-    db_session,
-    existing_wages_and_contributions,
-    employee_wage_info,
-    import_log_entry_id,
-    wage_history_records,
-):
+    existing_wages_and_contributions: WagesAndContributions,
+    employee_wage_info: ParsedEmployeeWageLine,
+    import_log_entry_id: int,
+    wage_history_records: List[WagesAndContributionsHistory],
+) -> bool:
     do_update = (
         existing_wages_and_contributions.is_independent_contractor
         != employee_wage_info["independent_contractor"]
@@ -349,7 +396,7 @@ def check_and_update_wages_and_contributions(
 
 def get_employer_quarterly_info_by_employer_id(
     db_session: massgov.pfml.db.Session, employer_ids: Iterable[uuid.UUID]
-) -> Dict[Tuple[uuid.UUID, datetime.date], EmployerQuarterlyContribution]:
+) -> Dict[EmployerQuarterlyKey, EmployerQuarterlyContribution]:
     """Return a map from (employer id, period date) to EmployerQuarterlyContribution object."""
     employer_contributions = db_session.query(EmployerQuarterlyContribution).filter(
         EmployerQuarterlyContribution.employer_id.in_(employer_ids)
@@ -357,14 +404,14 @@ def get_employer_quarterly_info_by_employer_id(
     return {(c.employer_id, c.filing_period): c for c in employer_contributions}
 
 
-def get_tax_ids(db_session, ssns):
+def get_tax_ids(db_session: massgov.pfml.db.Session, ssns: List[str]) -> List[TaxIdentifier]:
     tax_id_rows = (
         db_session.query(TaxIdentifier).filter(TaxIdentifier.tax_identifier.in_(ssns)).all()
     )
     return tax_id_rows
 
 
-def get_employees_by_ssn(db_session, ssns):
+def get_employees_by_ssn(db_session: massgov.pfml.db.Session, ssns: List[str]) -> List[Employee]:
     employee_rows = (
         db_session.query(Employee)
         .join(TaxIdentifier)
@@ -374,7 +421,9 @@ def get_employees_by_ssn(db_session, ssns):
     return employee_rows
 
 
-def get_wages_and_contributions_by_employee_ids(db_session, employee_ids):
+def get_wages_and_contributions_by_employee_ids(
+    db_session: massgov.pfml.db.Session, employee_ids: List[uuid.UUID]
+) -> List[WagesAndContributions]:
     return list(
         db_session.query(WagesAndContributions).filter(
             WagesAndContributions.employee_id.in_(employee_ids),
@@ -383,8 +432,11 @@ def get_wages_and_contributions_by_employee_ids(db_session, employee_ids):
 
 
 def get_wages_and_contributions_by_employee_id_and_filling_period(
-    db_session, employee_id, employer_id, filing_period
-):
+    db_session: massgov.pfml.db.Session,
+    employee_id: uuid.UUID,
+    employer_id: uuid.UUID,
+    filing_period: datetime.date,
+) -> Optional[WagesAndContributions]:
     wage_row = (
         db_session.query(WagesAndContributions)
         .filter(
@@ -397,7 +449,7 @@ def get_wages_and_contributions_by_employee_id_and_filling_period(
     return wage_row
 
 
-def get_tax_id(db_session, tax_id):
+def get_tax_id(db_session: massgov.pfml.db.Session, tax_id: str) -> Optional[TaxIdentifier]:
     unformatted_tax_id = TaxIdUnformattedStr.validate_type(tax_id)
     tax_id_row = (
         db_session.query(TaxIdentifier)
@@ -407,7 +459,7 @@ def get_tax_id(db_session, tax_id):
     return tax_id_row
 
 
-def get_all_employers_fein(db_session):
+def get_all_employers_fein(db_session: massgov.pfml.db.Session) -> List[Employer]:
     employer_rows = (
         db_session.query(Employer)
         .with_entities(Employer.employer_id, Employer.employer_fein, Employer.dor_updated_date)
@@ -426,18 +478,20 @@ def get_employers_by_account_key(
     return dict(employer_rows)
 
 
-def get_employer_by_fein(db_session, fein):
+def get_employer_by_fein(db_session: massgov.pfml.db.Session, fein: str) -> Optional[Employer]:
     employer_row = db_session.query(Employer).filter(Employer.employer_fein == fein).one_or_none()
     return employer_row
 
 
-def get_employer_address(db_session, employer_id):
+def get_employer_address(
+    db_session: massgov.pfml.db.Session, employer_id: uuid.UUID
+) -> EmployerAddress:
     employer_address_row = (
         db_session.query(EmployerAddress).filter(EmployerAddress.employer_id == employer_id).one()
     )
     return employer_address_row
 
 
-def get_address(db_session, address_id):
+def get_address(db_session: massgov.pfml.db.Session, address_id: uuid.UUID) -> Address:
     address_row = db_session.query(Address).filter(Address.address_id == address_id).one()
     return address_row

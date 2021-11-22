@@ -17,6 +17,7 @@ from sqlalchemy.orm import scoped_session
 import massgov.pfml.db as db
 import massgov.pfml.db.models.applications as application_models
 import massgov.pfml.db.models.employees as employee_models
+import massgov.pfml.db.models.payments as payment_models
 import massgov.pfml.db.models.verifications as verification_models
 import massgov.pfml.util.datetime as datetime_util
 
@@ -925,3 +926,47 @@ class CaringLeaveMetadataFactory(BaseFactory):
 class ImportLogFactory(BaseFactory):
     class Meta:
         model = employee_models.ImportLog
+
+
+class Pfml1099BatchFactory(BaseFactory):
+    class Meta:
+        model = payment_models.Pfml1099Batch
+
+    pfml_1099_batch_id = Generators.UuidObj
+    tax_year = 2021
+    batch_run_date = Generators.Now
+    correction_ind = False
+    batch_status = "Created"
+
+
+class Pfml1099Factory(BaseFactory):
+    class Meta:
+        model = payment_models.Pfml1099
+
+    pfml_1099_id = Generators.UuidObj
+    pfml_1099_batch_id = Generators.UuidObj
+    tax_year = 2021
+    employee_id = Generators.UuidObj
+    tax_identifier_id = Generators.UuidObj
+    first_name = "Joe"
+    last_name = "Pel"
+    address_line_1 = "172 Pearl St"
+    address_line_2 = ""
+    city = "Somerville"
+    state = "MA"
+    zip = "02145"
+    gross_payments = 1000.00
+    state_tax_withholdings = 100.00
+    federal_tax_withholdings = 15.00
+    overpayment_repayments = 0.00
+    correction_ind = False
+
+
+class OrganizationUnitFactory(BaseFactory):
+    class Meta:
+        model = employee_models.OrganizationUnit
+
+    fineos_id = None
+    name = factory.Faker("company")
+    employer = factory.SubFactory(EmployerFactory)
+    employer_id = factory.LazyAttribute(lambda c: c.employer.employer_id)

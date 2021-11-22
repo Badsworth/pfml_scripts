@@ -12,6 +12,7 @@ import withEmployerClaim, {
 import Alert from "../../../components/core/Alert";
 import BackButton from "../../../components/BackButton";
 import Button from "../../../components/core/Button";
+import CaringLeaveQuestion from "src/components/employers/CaringLeaveQuestion";
 import ConcurrentLeave from "../../../components/employers/ConcurrentLeave";
 import ConcurrentLeaveModel from "../../../models/ConcurrentLeave";
 import EmployeeInformation from "../../../components/employers/EmployeeInformation";
@@ -51,9 +52,7 @@ export const Review = (props: WithEmployerClaimProps) => {
   const absenceId = claim.fineos_absence_id;
 
   const shouldShowV2 = !!claim.uses_second_eform_version;
-  // explicitly check for false as opposed to falsy values.
-  // temporarily allows the redirect behavior to work even
-  // if the API has not been updated to populate the field.
+
   if (claim.is_reviewable === false) {
     appLogic.portalFlow.goTo(routes.employers.status, {
       absence_id: absenceId,
@@ -431,19 +430,24 @@ export const Review = (props: WithEmployerClaimProps) => {
       </ReviewRow>
       <EmployeeInformation claim={claim} />
       <LeaveDetails
-        appErrors={appErrors}
         claim={claim}
         documents={certificationDocuments}
         downloadDocument={downloadDocument}
-        believeRelationshipAccurate={formState.believeRelationshipAccurate}
-        onChangeBelieveRelationshipAccurate={
-          handleBelieveRelationshipAccurateChange
-        }
-        relationshipInaccurateReason={formState.relationshipInaccurateReason}
-        onChangeRelationshipInaccurateReason={
-          handleRelationshipInaccurateReason
-        }
       />
+      {isCaringLeave && (
+        <CaringLeaveQuestion
+          errorMsg={appErrors.fieldErrorMessage(
+            "relationship_inaccurate_reason"
+          )}
+          believeRelationshipAccurate={formState.believeRelationshipAccurate}
+          onChangeBelieveRelationshipAccurate={
+            handleBelieveRelationshipAccurateChange
+          }
+          onChangeRelationshipInaccurateReason={
+            handleRelationshipInaccurateReason
+          }
+        />
+      )}
       <LeaveSchedule
         claim={claim}
         hasDocuments={!!certificationDocuments.length}

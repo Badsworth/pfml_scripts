@@ -249,6 +249,11 @@ variable "enable_pub_automation_process_returns" {
   default     = false
 }
 
+variable "enable_pub_automation_claimant_address_validation" {
+  description = "Enable scheduling for pub automation claimant address validation task"
+  default     = false
+}
+
 variable "enable_pub_automation_process_1099_documents" {
   description = "Enable scheduling for pub automation 1099 documents processing task"
   default     = false

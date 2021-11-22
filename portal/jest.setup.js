@@ -2,14 +2,12 @@
  * @file Sets up the testing framework for each test file
  * @see https://jestjs.io/docs/en/configuration#setupfilesafterenv-array
  */
-
 import "@testing-library/jest-dom";
 import { format } from "util";
 // Setup I18n globally for tests, so English strings are displayed in rendered components
 import { initializeI18n } from "./src/locales/i18n";
-initializeI18n();
 
-jest.mock("@aws-amplify/auth");
+initializeI18n();
 
 /**
  * Mock environment variables

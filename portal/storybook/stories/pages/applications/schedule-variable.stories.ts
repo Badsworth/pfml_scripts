@@ -1,4 +1,4 @@
-import { MockBenefitsApplicationBuilder } from "tests/test-utils";
+import { MockBenefitsApplicationBuilder } from "tests/test-utils/mock-model-builder";
 import { WorkPatternType } from "src/models/BenefitsApplication";
 import generateClaimPageStory from "storybook/utils/generateClaimPageStory";
 

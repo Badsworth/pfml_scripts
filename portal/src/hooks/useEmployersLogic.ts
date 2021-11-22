@@ -159,10 +159,10 @@ const useEmployersLogic = ({
     appErrorsLogic.clearErrors();
 
     try {
-      await employersApi.submitWithholding(data);
+      const { user } = await employersApi.submitWithholding(data);
       const params = { employer_id: data.employer_id, next };
-      // this forces the user to be refetched.
-      setUser(undefined);
+      // Update user state so the employer now shows as verified:
+      setUser(user);
       portalFlow.goToNextPage({}, params);
     } catch (error) {
       appErrorsLogic.catchError(error);

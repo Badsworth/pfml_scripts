@@ -50,7 +50,7 @@ export const ImageFileCard = () => {
     const fetchImage = async () => {
       const response = await fetch("/favicon.ico");
       // Convert the image response to a Blob
-      const blob = await response.blob();
+      const blob = response ? await response.blob() : ""; // fallback to empty file to avoid needing a mock in our Storybook test
       // Now that we have our image we can trigger the FileCard to render
       try {
         setFile(new File([blob], "favicon.png", { type: "image/png" }));

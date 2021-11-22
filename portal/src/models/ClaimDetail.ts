@@ -17,14 +17,7 @@ class ClaimDetail {
 
   payments: PaymentDetail[] = [];
 
-  constructor(
-    attrs?: Omit<
-      ClaimDetail,
-      | "absencePeriodsByReason"
-      | "managedRequirementByFollowUpDate"
-      | "hasApprovedStatus"
-    >
-  ) {
+  constructor(attrs?: Partial<ClaimDetail>) {
     if (!attrs) {
       return;
     }
@@ -46,6 +39,33 @@ class ClaimDetail {
    */
   get absencePeriodsByReason() {
     return groupBy(this.absence_periods, "reason");
+  }
+
+  /**
+   * Determine if claim is a continuous leave claim
+   */
+  get isContinuous(): boolean {
+    return this.absence_periods.some(
+      (absence_period) => absence_period.period_type === "Continuous"
+    );
+  }
+
+  /**
+   * Determine if claim is an intermittent leave claim
+   */
+  get isIntermittent(): boolean {
+    return this.absence_periods.some(
+      (absence_period) => absence_period.period_type === "Intermittent"
+    );
+  }
+
+  /**
+   * Determine if claim is a reduced schedule leave claim
+   */
+  get isReducedSchedule(): boolean {
+    return this.absence_periods.some(
+      (absence_period) => absence_period.period_type === "Reduced Schedule"
+    );
   }
 
   /**

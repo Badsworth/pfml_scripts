@@ -11,7 +11,6 @@ export default {
     isLoadingDocuments: {
       options: [true, false],
       control: { type: "radio" },
-      defaultValue: false,
     },
     documentType: {
       options: [
@@ -25,8 +24,11 @@ export default {
         "pregnancy-medical-certification",
       ],
       control: { type: "radio" },
-      defaultValue: "state-id",
     },
+  },
+  args: {
+    isLoadingDocuments: false,
+    documentType: "state-id",
   },
 };
 

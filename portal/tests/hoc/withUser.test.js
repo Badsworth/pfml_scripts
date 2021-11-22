@@ -44,6 +44,7 @@ function setup({ addCustomSetup, pathname = routes.applications.index } = {}) {
 
 describe("withUser", () => {
   it("shows spinner when loading authentication state", async () => {
+    mockAuth(false);
     setup();
 
     expect(await screen.findByRole("progressbar")).toBeInTheDocument();

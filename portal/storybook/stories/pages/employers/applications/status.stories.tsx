@@ -1,6 +1,6 @@
 import { BenefitsApplicationDocument, DocumentType } from "src/models/Document";
 import DocumentCollection from "src/models/DocumentCollection";
-import { MockEmployerClaimBuilder } from "tests/test-utils";
+import { MockEmployerClaimBuilder } from "tests/test-utils/mock-model-builder";
 import React from "react";
 import { Status } from "src/pages/employers/applications/status";
 import User from "src/models/User";
@@ -9,16 +9,19 @@ import useMockableAppLogic from "lib/mock-helpers/useMockableAppLogic";
 export default {
   title: "Pages/Employers/Applications/Status",
   component: Status,
+  args: {
+    document: "Approval notice",
+    leaveDurationType: ["Continuous"],
+    status: "Approved",
+  },
   argTypes: {
     leaveDurationType: {
-      defaultValue: ["Continuous"],
       control: {
         type: "check",
         options: ["Continuous", "Intermittent", "Reduced"],
       },
     },
     status: {
-      defaultValue: "Approved",
       control: {
         type: "radio",
         options: [
@@ -32,7 +35,6 @@ export default {
       },
     },
     document: {
-      defaultValue: "Approval notice",
       control: {
         type: "radio",
         options: [
@@ -93,14 +95,17 @@ export const Default = ({
   } else if (document === "Other") {
     documentData.document_type = DocumentType.identityVerification;
   }
+  const claim = claimBuilder.create();
 
   let documentsMap;
   if (document === "None") {
-    documentsMap = new Map([["mock-absence-id", new DocumentCollection()]]);
+    documentsMap = new Map([
+      [claim.fineos_absence_id, new DocumentCollection()],
+    ]);
   } else if (document === "Multiple") {
     documentsMap = new Map([
       [
-        "mock-absence-id",
+        claim.fineos_absence_id,
         new DocumentCollection([
           { ...documentData },
           {
@@ -112,11 +117,10 @@ export const Default = ({
     ]);
   } else {
     documentsMap = new Map([
-      ["mock-absence-id", new DocumentCollection([{ ...documentData }])],
+      [claim.fineos_absence_id, new DocumentCollection([{ ...documentData }])],
     ]);
   }
 
-  const claim = claimBuilder.create();
   const appLogic = useMockableAppLogic({
     employers: {
       claim,

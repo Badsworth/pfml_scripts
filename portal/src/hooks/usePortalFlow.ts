@@ -54,7 +54,7 @@ const usePortalFlow = () => {
     const url = createRouteWithQuery(route, params);
 
     if (options.redirect) {
-      router.replace(route);
+      router.replace(url);
       return;
     }
 

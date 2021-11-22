@@ -12,7 +12,6 @@ export default {
   component: AbsenceCaseStatusTag,
   argTypes: {
     status: {
-      defaultValue: "Approved",
       control: {
         type: "radio",
         options: [
@@ -25,12 +24,15 @@ export default {
       },
     },
     managedRequirements: {
-      defaultValue: "No Requirements",
       control: {
         type: "radio",
         options: ["No Requirements", "Open Requirements"],
       },
     },
+  },
+  args: {
+    status: "Approved",
+    managedRequirements: "No Requirements",
   },
 };
 
