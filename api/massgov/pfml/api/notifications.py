@@ -90,7 +90,7 @@ def notifications_post():
         try:
             employer = (
                 db_session.query(Employer)
-                .filter(Employer.employer_fein == Fein(notification_request.fein.replace("-", "")))
+                .filter(Employer.employer_fein == notification_request.fein.to_unformatted_str())
                 .one_or_none()
             )
 

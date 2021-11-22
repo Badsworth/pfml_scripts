@@ -73,7 +73,7 @@ claimant_body = {
 invalid_fein_body = {
     "absence_case_id": "NTN-111-ABS-01",
     "document_type": "Legal Notice",
-    "fein": "invalid-fein",
+    "fein": "999999999",
     "organization_name": "Wayne Enterprises",
     "trigger": "claim.approved",
     "source": "Self-Service",

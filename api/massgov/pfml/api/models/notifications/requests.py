@@ -8,6 +8,7 @@ from massgov.pfml.api.validation.exceptions import (
     ValidationErrorDetail,
     ValidationException,
 )
+from massgov.pfml.types import Fein
 from massgov.pfml.util.pydantic import PydanticBaseModel
 
 
@@ -29,7 +30,7 @@ class ClaimantInfo(PydanticBaseModel):
 class NotificationRequest(PydanticBaseModel):
     absence_case_id: str
     document_type: Optional[str]
-    fein: str
+    fein: Fein
     organization_name: str
     trigger: str
     source: str
