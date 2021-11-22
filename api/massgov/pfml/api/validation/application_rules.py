@@ -368,8 +368,7 @@ def get_concurrent_leave_issues(application: Application) -> List[ValidationErro
         PFML_PROGRAM_LAUNCH_DATE,
     )
 
-    if application.has_continuous_leave_periods or application.has_reduced_schedule_leave_periods:
-        issues += _check_concurrent_leave_overlapping_waiting_period(application)
+    issues += _check_concurrent_leave_overlapping_waiting_period(application)
 
     return issues
 
@@ -379,6 +378,9 @@ def _check_concurrent_leave_overlapping_waiting_period(
 ) -> List[ValidationErrorDetail]:
     concurrent_leave_start = application.concurrent_leave.leave_start_date
     concurrent_leave_end = application.concurrent_leave.leave_end_date
+
+    if concurrent_leave_start is None or concurrent_leave_end is None:
+        return []
 
     issues = []
 
@@ -403,7 +405,7 @@ def _check_concurrent_leave_overlapping_waiting_period(
     waiting_period_days = 7
     waiting_period_end = waiting_period_start + datetime.timedelta(days=waiting_period_days - 1)
 
-    if waiting_period_start <= concurrent_leave_start <= waiting_period_end:  # type: ignore
+    if waiting_period_start <= concurrent_leave_start <= waiting_period_end:
         issues.append(
             ValidationErrorDetail(
                 type=IssueType.conflicting,
@@ -413,7 +415,7 @@ def _check_concurrent_leave_overlapping_waiting_period(
             )
         )
 
-    if waiting_period_start <= concurrent_leave_end <= waiting_period_end:  # type: ignore
+    if waiting_period_start <= concurrent_leave_end <= waiting_period_end:
         issues.append(
             ValidationErrorDetail(
                 type=IssueType.conflicting,

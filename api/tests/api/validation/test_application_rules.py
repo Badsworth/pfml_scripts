@@ -2682,3 +2682,14 @@ class TestGetConcurrentLeaveIssues:
 
         issues = get_concurrent_leave_issues(application)
         assert concurrent_leave_start_issue in issues
+
+    def test_with_no_concurrent_leave_start_date_no_errors(
+        self, application, continuous_leave_periods
+    ):
+        application.has_continuous_leave_periods = True
+        application.continuous_leave_periods = continuous_leave_periods
+
+        application.concurrent_leave.leave_start_date = None
+
+        # should resolve without errors
+        get_concurrent_leave_issues(application)
