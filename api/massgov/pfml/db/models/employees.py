@@ -1041,6 +1041,7 @@ class User(Base, TimestampMixin):
     mfa_delivery_preference_id = Column(
         Integer, ForeignKey("lk_mfa_delivery_preference.mfa_delivery_preference_id")
     )
+    mfa_phone_number = Column(Text)  # Formatted in E.164
 
     roles = relationship("LkRole", secondary="link_user_role", uselist=True)
     user_leave_administrators = relationship(
