@@ -18,6 +18,7 @@ from massgov.pfml.api.models.claims.common import (
     IntermittentLeavePeriod,
     LeaveDetails,
     PreviousLeave,
+    ReducedLeavePeriod,
     StandardLeavePeriod,
 )
 from massgov.pfml.api.models.claims.responses import (
@@ -108,6 +109,7 @@ def _get_leave_details(absence_periods: Dict[str, Dict]) -> LeaveDetails:
     continuous_end_date: Optional[date] = None
     intermittent_start_date: Optional[date] = None
     intermittent_end_date: Optional[date] = None
+    time_deducted: Optional[int] = None
 
     for decision in absence_periods["decisions"]:
         start_date = decision["period"]["startDate"]
@@ -140,7 +142,11 @@ def _get_leave_details(absence_periods: Dict[str, Dict]) -> LeaveDetails:
 
     if reduced_start_date is not None and reduced_end_date is not None:
         leave_details["reduced_schedule_leave_periods"] = [
-            StandardLeavePeriod(start_date=reduced_start_date, end_date=reduced_end_date)
+            ReducedLeavePeriod(
+                start_date=reduced_start_date,
+                end_date=reduced_end_date,
+                time_deducted=time_deducted,
+            )
         ]
 
     if intermittent_start_date is not None and intermittent_end_date is not None:

@@ -20,6 +20,12 @@ class StandardLeavePeriod(PydanticBaseModel):
     end_date: date
 
 
+class ReducedLeavePeriod(PydanticBaseModel):
+    start_date: date
+    end_date: date
+    time_deducted: Optional[int]
+
+
 class IntermittentLeavePeriod(PydanticBaseModel):
     start_date: date
     end_date: date
