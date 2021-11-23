@@ -54,9 +54,11 @@ const LEAVE_SCENARIO_MAP: {
 function createClaimDetail({
   leaveScenario,
   requestDecision,
+  hasPaidPayments,
 }: {
   leaveScenario: keyof typeof LEAVE_SCENARIO_MAP;
   requestDecision: AbsencePeriodRequestDecision;
+  hasPaidPayments: boolean;
 }): ClaimDetail {
   const initialPartials = LEAVE_SCENARIO_MAP[leaveScenario] ?? [];
   // ensure that we see all request decisions.
@@ -87,6 +89,7 @@ function createClaimDetail({
     },
     fineos_absence_id: "NTN-12345-ABS-01",
     fineos_notification_id: faker.datatype.uuid(),
+    has_paid_payments: hasPaidPayments,
     managed_requirements: [],
     payments: [],
     outstanding_evidence: {
@@ -162,11 +165,17 @@ export default {
         type: "boolean",
       },
     },
+    "Has Paid Payments": {
+      control: {
+        type: "boolean",
+      },
+    },
   },
   args: {
     "Leave Scenario": "Medical-Pregnancy and Bonding",
     "Request Decision": "Approved",
     "Show Request for More Information": false,
+    "Has Paid Payments": true,
   },
 };
 
@@ -175,12 +184,18 @@ export const DefaultStory = (
     "Leave Scenario": keyof typeof LEAVE_SCENARIO_MAP;
     "Request Decision": AbsencePeriodRequestDecision;
     "Show Request for More Information": boolean;
+    "Has Paid Payments": boolean;
   }
 ) => {
   const leaveScenario = args["Leave Scenario"];
   const requestDecision = args["Request Decision"];
   const shouldIncludeRfiDocument = args["Show Request for More Information"];
-  const claimDetail = createClaimDetail({ leaveScenario, requestDecision });
+  const hasPaidPayments = args["Has Paid Payments"];
+  const claimDetail = createClaimDetail({
+    leaveScenario,
+    requestDecision,
+    hasPaidPayments,
+  });
 
   const appLogic = useMockableAppLogic({
     claims: {

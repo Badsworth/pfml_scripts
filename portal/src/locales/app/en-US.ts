@@ -2101,6 +2101,8 @@ const pages = {
     "uploadSuccessHeadingDocumentName_state-id":
       "$t(shared.documentCategory.identification)",
     viewNoticesHeading: "View your notices",
+    viewPaymentTimeline:
+      "<p>Once your application is approved, you can expect weekly payments to begin 2-4 weeks after your leave begins. If your leave has already begun, you can expect your first payment to arrive 2 weeks after it is approved. After that you will receive your payments every week.</p><p>You can see your expected payment timeline on your <payments-page-link>payments page</payments-page-link>.</p>",
     whatHappensNext: "What happens next",
     whatHappensNextButton_adoption: "Upload proof of adoption",
     whatHappensNextButton_fosterCare: "Upload proof of placement",
