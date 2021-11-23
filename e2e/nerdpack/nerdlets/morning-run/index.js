@@ -1,34 +1,31 @@
 import React from "react";
 import Navigation from "../common/components/Navigation";
-import {
-  NrqlQuery,
-  Spinner,
-  BillboardChart,
-  StackedBarChart,
-  GridItem,
-  Link,
-  navigation,
-  Grid,
-  PlatformStateContext,
-  SectionMessage,
-} from "nr1";
+import { NrqlQuery, Spinner, PlatformStateContext, SectionMessage } from "nr1";
 import { ENVS, labelEnv } from "../common";
-import { ListErrors } from "../common/components/ListErrors";
+import { ErrorsListWithOverview } from "../common/components/ListErrors";
 import { format as dateFormat } from "date-fns";
 import { MutiQuery } from "../common/MultiQuery";
-import { E2EVisualIndicator } from "../common/components/E2EVisualIndicator";
-import { DAOCypressRunsTimelineSummaryForEnvironment } from "../common/DAO";
+import { EnvironmentsTable } from "../common/components/EnvironmentsTable";
+import {
+  DAOCypressRunsTimelineSummaryForEnvironment,
+  DAOEnvironmentComponentVersion,
+} from "../common/DAO";
 import { processNRQLDataAsTable } from "../common/services";
 import { TagsFromArray } from "../common/components/Tags";
+import { FilterByEnv, FilterByTag } from "../common/components/Filters";
 
 class EnvSummaryView extends React.Component {
   state = {
+    limitRuns: "max",
+    envs: [],
     since: "",
     where: "",
   };
 
   static getDerivedStateFromProps(props) {
     return {
+      limitRuns: props.limitRuns,
+      envs: props.envs,
       since: props.since,
       where: props.where,
     };
@@ -44,41 +41,44 @@ class EnvSummaryView extends React.Component {
   };
 
   render() {
+    let queries = this.state.envs.map((env) => {
+      return DAOCypressRunsTimelineSummaryForEnvironment.QueryObject(
+        this.accountId,
+        `${this.state.where} ${
+          this.state.where.length ? "AND" : ""
+        } environment='${env}'`,
+        this.state.since,
+        1
+      );
+    });
+
+    queries.push(DAOEnvironmentComponentVersion.QueryObject(this.accountId));
+
     return (
-      <MutiQuery
-        nrqlQueries={[
-          DAOCypressRunsTimelineSummaryForEnvironment.QueryObject(
-            this.accountId,
-            this.state.where,
-            this.state.since
-          ),
-        ]}
-      >
-        {(chartData) => {
-          if (chartData[0].loading) {
-            return <Spinner />;
+      <MutiQuery nrqlQueries={queries}>
+        {(loading, chartData) => {
+          if (loading || this.state.envs.length === chartData.length) {
+            return (
+              <div className={"summary"}>
+                <h2>Summary</h2>
+                <Spinner />
+              </div>
+            );
           }
 
-          const rows = [...chartData[0].data];
-          // Sort records by timestamp, newest to oldest
-          rows.sort(function (a, b) {
-            return b.timestamp - a.timestamp;
-          });
-
           const byEnv = {};
-          rows.map((row) => {
-            if (!byEnv[row.environment]) {
-              byEnv[row.environment] = [];
+          this.state.envs.map((env, i) => {
+            if (!byEnv[env]) {
+              byEnv[env] = [];
             }
-            byEnv[row.environment].push(row);
+            byEnv[env] = chartData[i].data[0];
           });
 
           function status(run) {
             if (run.passPercent === 100) {
               return "✅"; //':white_check_mark:'
             } else {
-              let number = run.total - run.passCount;
-              return "❌".repeat(number); //':x:'
+              return "❌".repeat(run.failCount); //':x:'
             }
           }
 
@@ -86,67 +86,23 @@ class EnvSummaryView extends React.Component {
            * TODO: Split up this section into components
            */
           return [
-            <div>
-              <h2>Run Summary</h2>
-              {ENVS.map((env) => {
-                if (byEnv[env]) {
-                  let runidList = byEnv[env].map((run) => run.runId);
-                  const link = navigation.getOpenStackedNerdletLocation({
-                    id: "e2e-tests",
-                    urlState: { runIds: runidList },
-                  });
-                  return (
-                    <div className={"row"}>
-                      <div className={"env"}>
-                        <Link
-                          to={navigation.getOpenStackedNerdletLocation({
-                            id: "env-timeline",
-                            urlState: {
-                              environment: env,
-                            },
-                          })}
-                        >
-                          {labelEnv(env)}
-                        </Link>
-                      </div>
-                      <div className={"e2e-run-history"}>
-                        <span className={"allLink"}>
-                          <Link to={link}>All</Link>
-                        </span>
-                        {byEnv[env].map((run) => (
-                          <E2EVisualIndicator
-                            run={{
-                              pass_rate: run.passPercent / 100,
-                              timestamp: run.timestamp,
-                              tag: run.tag.join(","),
-                              runUrl: run.runUrl,
-                            }}
-                            runIds={[run.runId]}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  );
-                }
-              })}
-            </div>,
             <div className={"summary"}>
               <h2>Summary</h2>
-              {ENVS.map((env) => {
+              {this.state.envs.map((env) => {
                 if (byEnv[env]) {
                   let query = `SELECT count(*)
-                     FROM CypressTestResult FACET category, subCategory, file
-                     WHERE runId='${byEnv[env][0].runId}'
-                       AND pass is false
-                       AND subCategory != 'sync'
-                       SINCE 1 month ago`;
+                               FROM CypressTestResult FACET category, subCategory, file
+                               WHERE runId='${byEnv[env].runId}'
+                                 AND pass is false
+                                 AND subCategory != 'sync'
+                                 SINCE 1 month ago`;
 
                   return [
                     <div>
                       <h3>
-                        {labelEnv(env)} {status(byEnv[env][0])}{" "}
+                        {labelEnv(env)} {status(byEnv[env])}{" "}
                       </h3>
-                      <TagsFromArray tags={byEnv[env][0].tag} />
+                      <TagsFromArray tags={byEnv[env].tag} />
                       <NrqlQuery accountId={this.accountId} query={query}>
                         {({ data: runFileData, loading, error }) => {
                           if (loading) {
@@ -211,22 +167,23 @@ class EnvSummaryView extends React.Component {
             <h2>Latest Run Details</h2>,
             ENVS.map((env) => {
               if (byEnv[env]) {
-                let query = `SELECT *
-                             FROM CypressTestResult
-                             WHERE pass is false
-                               and subCategory != 'sync'
-                               AND runId = '${byEnv[env][0].runId}' SINCE 1 month ago`;
+                let where = `subCategory != 'sync'
+                               AND runId = '${byEnv[env].runId}'`;
+                let since = `1 month ago`;
                 return [
-                  <h3>
-                    {labelEnv(env)} {status(byEnv[env][0])}{" "}
-                    <TagsFromArray tags={byEnv[env][0].tag} />
-                  </h3>,
-                  <ListErrors
-                    open={true}
+                  <ErrorsListWithOverview
                     accountId={this.accountId}
-                    environment={env}
-                    query={query}
-                  ></ListErrors>,
+                    since={since}
+                    where={where}
+                    scrollable={false}
+                    overview={false}
+                    open={true}
+                  >
+                    <h3>
+                      {labelEnv(env)} {status(byEnv[env])}{" "}
+                      <TagsFromArray tags={byEnv[env].tag} />
+                    </h3>
+                  </ErrorsListWithOverview>,
                 ];
               }
             }),
@@ -237,127 +194,20 @@ class EnvSummaryView extends React.Component {
   }
 }
 
-class AllErrorsList extends React.Component {
+export default class MorningRunNerdlet extends React.Component {
   state = {
-    since: "",
-    where: "",
-    open: true,
+    envWhere: "",
+    env: [],
+    tagWhere: "",
+    tags: [],
   };
 
-  static getDerivedStateFromProps(props, current_state) {
-    if (current_state) {
-      if (current_state.open != props.open) {
-        return {
-          open: current_state.open,
-          since: props.since,
-          where: props.where,
-        };
-      }
-    }
-    return {
-      since: props.since,
-      where: props.where,
-    };
-  }
-
-  constructor(props) {
-    super(props);
-    this.accountId = props.accountId;
-  }
-
-  toggleShow = () => {
-    this.setState((state) => ({ open: !state.open }));
+  handleUpdateEnv = (nrql, envObject, envArray) => {
+    this.setState({ envWhere: nrql, env: envArray });
   };
 
-  render() {
-    const query = `FROM CypressTestResult
-                         WHERE pass is false
-                           ${this.state.where ? "AND" : ""} ${
-      this.state.where
-    } ${this.state.since ? "SINCE" : ""} ${this.state.since} LIMIT MAX`;
-    const querySelect = `SELECT * ${query}`;
-    const queryCount = `SELECT count(*) as Total ${query}`;
-    const queryBarClass = `SELECT count(*) as Total ${query} FACET category, subCategory`;
-    return (
-      <Grid className={"E2E-error-list"}>
-        <GridItem className={"ListHeader"} columnSpan={12}>
-          <h1>All Errors</h1>
-          <button onClick={this.toggleShow}>
-            Toggle All {this.state.open ? "Closed" : "Open"}
-          </button>
-        </GridItem>
-        <GridItem columnSpan={9}>
-          <ListErrors
-            accountId={this.accountId}
-            query={querySelect}
-            open={this.state.open}
-          ></ListErrors>
-        </GridItem>
-        <GridItem columnSpan={3}>
-          <BillboardChart
-            style={{ height: "100px" }}
-            accountId={this.accountId}
-            query={queryCount}
-          ></BillboardChart>
-          <StackedBarChart
-            style={{ height: "200px" }}
-            accountId={this.accountId}
-            query={queryBarClass}
-          ></StackedBarChart>
-        </GridItem>
-      </Grid>
-    );
-  }
-}
-
-export default class CategoriesNerdlet extends React.Component {
-  state = {
-    env: {
-      breakfix: true,
-      training: true,
-      uat: true,
-      performance: true,
-      stage: true,
-      "cps-preview": true,
-      test: true,
-    },
-    tags: {
-      morning: true,
-      manual: false,
-      deploy: false,
-      pr: false,
-    },
-  };
-
-  clearAll = (stateGroup) => {
-    const state = { ...this.state[stateGroup] };
-    Object.keys(state).map((key) => {
-      state[key] = false;
-    });
-    this.setState({
-      [stateGroup]: state,
-    });
-  };
-
-  checkAll = (stateGroup) => {
-    const state = { ...this.state[stateGroup] };
-    Object.keys(state).map((key) => {
-      state[key] = true;
-    });
-    this.setState({
-      [stateGroup]: state,
-    });
-  };
-
-  handleInputChange = (event, stateGroup) => {
-    const target = event.target;
-    const value = target.type === "checkbox" ? target.checked : target.value;
-    const name = target.name;
-
-    const state = { ...this.state[stateGroup], [name]: value };
-    this.setState({
-      [stateGroup]: state,
-    });
+  handleUpdateTag = (nrql, tagObject, tagArray) => {
+    this.setState({ tagWhere: nrql, tags: tagArray });
   };
 
   getFilters = () => {
@@ -370,29 +220,15 @@ export default class CategoriesNerdlet extends React.Component {
   };
 
   getFiltersEnv = () => {
-    let WHERE = [];
-    Object.keys(this.state.env).map((env) => {
-      if (this.state.env[env]) {
-        WHERE.push(`environment = '${env}'`);
-      }
-    });
-    if (WHERE.length) {
-      return `( ${WHERE.join(" OR ")} )`;
-    }
-    return "";
+    return this.state.envWhere;
+  };
+
+  getEnvsArray = () => {
+    return this.state.env;
   };
 
   getFiltersTags = () => {
-    let WHERE = [];
-    Object.keys(this.state.tags).map((env) => {
-      if (this.state.tags[env]) {
-        WHERE.push(`tag like '%${env}%'`);
-      }
-    });
-    if (WHERE.length) {
-      return `( ${WHERE.join(" OR ")} )`;
-    }
-    return "";
+    return this.state.tagWhere;
   };
 
   getTimelineCat = (where, since) => {
@@ -440,61 +276,40 @@ export default class CategoriesNerdlet extends React.Component {
     return [
       <Navigation></Navigation>,
       <h2>Morning run for {dateFormat(now, "MM/dd/yyyy")}</h2>,
-      <div className={"filters"}>
-        FILTERS:
-        <button onClick={()=>{this.clearAll('env')}}>Clear All</button>
-        <button onClick={()=>{this.checkAll('env')}}>Check All</button>
-        {Object.keys(this.state.env).map((status) => {
-          return (
-            <label>
-              <input
-                name={status}
-                type={"checkbox"}
-                checked={this.state.env[status]}
-                onChange={(e) => {
-                  this.handleInputChange(e, "env");
-                }}
-              />
-              {labelEnv(status)}
-            </label>
-          );
-        })}
-      </div>,
-      <div className={"filters"}>
-        TAGS:
-        <button onClick={()=>{this.clearAll('tags')}}>Clear All</button>
-        <button onClick={()=>{this.checkAll('tags')}}>Check All</button>
-        {Object.keys(this.state.tags).map((status) => {
-          return (
-            <label>
-              <input
-                name={status}
-                type={"checkbox"}
-                checked={this.state.tags[status]}
-                onChange={(e) => {
-                  this.handleInputChange(e, "tags");
-                }}
-              />
-              {status}
-            </label>
-          );
-        })}
-      </div>,
+      <FilterByEnv
+        handleUpdate={this.handleUpdateEnv}
+        returnType={FilterByEnv.RETURN_TYPES.ALL}
+      />,
+      <FilterByTag
+        handleUpdate={this.handleUpdateTag}
+        returnType={FilterByEnv.RETURN_TYPES.ALL}
+      />,
       <PlatformStateContext.Consumer>
         {(platformState) => {
           return [
             <div className={"E2E-morning-run"}>
+              <div>
+                <h2>Filtered Overview</h2>
+                <EnvironmentsTable
+                  accountId={platformState.accountId}
+                  since={since}
+                  where={this.getFiltersTags()}
+                  envs={this.state.env}
+                  limitRuns={"max"}
+                />
+              </div>
               <EnvSummaryView
                 accountId={platformState.accountId}
                 since={since}
-                where={where}
-              ></EnvSummaryView>
+                where={this.getFiltersTags()}
+                envs={this.getEnvsArray()}
+              />
             </div>,
-            <AllErrorsList
+            <ErrorsListWithOverview
               accountId={platformState.accountId}
               since={since}
               where={where}
-            ></AllErrorsList>,
+            />,
           ];
         }}
       </PlatformStateContext.Consumer>,

@@ -64,6 +64,12 @@ resource "aws_ecs_task_definition" "ecs_tasks_1099" {
         },
         initProcessEnabled = true
       },
+      portMappings = [
+        {
+          containerPort = 5000,
+          hostPort      = 5000
+        }
+      ],
       logConfiguration = {
         logDriver = "awslogs",
         options = {

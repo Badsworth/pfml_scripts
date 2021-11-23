@@ -90,7 +90,7 @@ module "tasks" {
   dor_fineos_etl_schedule_expression_standard         = "cron(5 * * * ? *)"
   dor_fineos_etl_schedule_expression_daylight_savings = "cron(5 * * * ? *)"
 
-  pdf_api_host             = "https://localhost:5001"
+  pdf_api_host             = "http://localhost:5000"
   enable_generate_1099_pdf = "0"
   enable_merge_1099_pdf    = "0"
 }

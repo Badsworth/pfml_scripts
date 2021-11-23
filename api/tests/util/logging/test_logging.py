@@ -12,7 +12,7 @@ import flask
 import pytest
 
 import massgov.pfml.util.logging
-from massgov.pfml.db.models.factories import UserFactory
+from massgov.pfml.db.models.factories import AzureUserFactory, UserFactory
 
 
 @pytest.fixture(autouse=True)
@@ -187,6 +187,7 @@ def test_log_message_with_flask_request_context(capsys, monkeypatch):
     )
 
     user = UserFactory.build()
+    azure_user = AzureUserFactory.build()
     monkeypatch.setattr(
         flask,
         "g",
@@ -194,6 +195,7 @@ def test_log_message_with_flask_request_context(capsys, monkeypatch):
             "current_user_user_id": str(user.user_id),
             "current_user_auth_id": str(user.sub_id),
             "current_user_role_ids": ",".join(str(role.role_id) for role in user.roles),
+            "azure_user_sub_id": str(azure_user.sub_id),
         },
     )
 
@@ -218,6 +220,7 @@ def test_log_message_with_flask_request_context(capsys, monkeypatch):
         "current_user.user_id",
         "current_user.auth_id",
         "current_user.role_ids",
+        "azure_user.sub_id",
     }
     assert last_line["name"] == "massgov.pfml.test.logging"
     assert last_line["levelname"] == "INFO"
@@ -229,6 +232,7 @@ def test_log_message_with_flask_request_context(capsys, monkeypatch):
     assert last_line["message"] == "test request context"
     assert last_line["current_user.user_id"] == str(user.user_id)
     assert last_line["current_user.auth_id"] == user.sub_id
+    assert last_line["azure_user.sub_id"] == azure_user.sub_id
 
 
 def test_log_message_with_exception_and_pii(capsys):
