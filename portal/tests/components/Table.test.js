@@ -37,6 +37,18 @@ describe("Table", () => {
     expect(screen.getByRole("table")).toHaveClass("usa-table--stacked-header");
   });
 
+  it("adds a stacked modifier class with headers included when the responsiveIncludeHeaders prop is set", () => {
+    render(<Table responsiveIncludeHeader />);
+
+    expect(screen.getByRole("table")).toHaveClass("usa-table--stacked");
+  });
+
+  it("adds a modifier class removing borders on mobile view when borderlessMobile prop is set", () => {
+    render(<Table borderlessMobile />);
+
+    expect(screen.getByRole("table")).toHaveClass("borderless-mobile");
+  });
+
   it("nests the table in a scrollable container when the scrollable prop is set", () => {
     const { container } = render(<Table scrollable />);
 

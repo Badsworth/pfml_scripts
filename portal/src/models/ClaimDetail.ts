@@ -17,12 +17,7 @@ class ClaimDetail {
 
   payments: PaymentDetail[] = [];
 
-  constructor(
-    attrs?: Omit<
-      ClaimDetail,
-      "absencePeriodsByReason" | "managedRequirementByFollowUpDate"
-    >
-  ) {
+  constructor(attrs?: Partial<ClaimDetail>) {
     if (!attrs) {
       return;
     }
@@ -47,6 +42,33 @@ class ClaimDetail {
   }
 
   /**
+   * Determine if claim is a continuous leave claim
+   */
+  get isContinuous(): boolean {
+    return this.absence_periods.some(
+      (absence_period) => absence_period.period_type === "Continuous"
+    );
+  }
+
+  /**
+   * Determine if claim is an intermittent leave claim
+   */
+  get isIntermittent(): boolean {
+    return this.absence_periods.some(
+      (absence_period) => absence_period.period_type === "Intermittent"
+    );
+  }
+
+  /**
+   * Determine if claim is a reduced schedule leave claim
+   */
+  get isReducedSchedule(): boolean {
+    return this.absence_periods.some(
+      (absence_period) => absence_period.period_type === "Reduced Schedule"
+    );
+  }
+
+  /**
    * Get managed requirements for claim by desc date
    */
   get managedRequirementByFollowUpDate(): ManagedRequirement[] {
@@ -54,6 +76,14 @@ class ClaimDetail {
       this.managed_requirements,
       [(managedRequirement) => managedRequirement.follow_up_date],
       ["desc"]
+    );
+  }
+
+  get hasApprovedStatus() {
+    return this.absence_periods.some(
+      (absence_period) =>
+        absence_period.request_decision ===
+        <AbsencePeriodRequestDecision>"Approved"
     );
   }
 }
@@ -86,7 +116,18 @@ interface OutstandingEvidence {
   is_document_received: boolean;
 }
 
-interface PaymentDetail {
+/**
+ * Payment response associated with the Claim from API
+ */
+export interface Payments {
+  absence_case_id: string;
+  payments: PaymentDetail[];
+}
+
+/**
+ * Payment details associated with the Claim
+ */
+export interface PaymentDetail {
   payment_id: string;
   period_start_date: string;
   period_end_date: string;

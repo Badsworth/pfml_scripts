@@ -26,9 +26,9 @@ import Review, {
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import AppErrorInfo from "../../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../../src/models/AppErrorInfoCollection";
-import { DateTime } from "luxon";
 import DocumentCollection from "../../../src/models/DocumentCollection";
 import { DocumentType } from "../../../src/models/Document";
+import dayjs from "dayjs";
 import { mockRouter } from "next/router";
 import routes from "../../../src/routes";
 import { setupBenefitsApplications } from "../../test-utils/helpers";
@@ -267,7 +267,7 @@ describe("Review Page", () => {
   });
 
   it("does not render certification document row when claim is for future bonding leave", () => {
-    const futureDate = DateTime.local().plus({ months: 1 }).toISODate();
+    const futureDate = dayjs().add(1, "Month").format("YYYY-MM-DD");
 
     setup({
       claim: new MockBenefitsApplicationBuilder()

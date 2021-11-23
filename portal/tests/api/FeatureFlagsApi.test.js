@@ -1,6 +1,6 @@
-import { DateTime } from "luxon";
 import FeatureFlagsApi from "../../src/api/FeatureFlagsApi";
 import Flag from "../../src/models/Flag";
+import dayjs from "dayjs";
 
 jest.mock("@aws-amplify/auth");
 jest.mock("../../src/services/tracker");
@@ -19,8 +19,8 @@ const mockFetch = ({
 
 describe("FeatureFlagsAPI", () => {
   let adminApi;
-  const start = DateTime.local().plus({ hours: 5 }).toISO(); // starts in 5 hours
-  const end = DateTime.local().plus({ hours: 10 }).toISO(); // ends in 10 hours
+  const start = dayjs().add(5, "hour").toISOString(); // starts in 5 hours
+  const end = dayjs().add(10, "hour").toISOString(); // ends in 10 hours
   const responseData = [
     {
       name: "maintenance",

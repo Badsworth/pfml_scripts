@@ -2,15 +2,13 @@ import withBenefitsApplications, {
   WithBenefitsApplicationsProps,
 } from "../../hoc/withBenefitsApplications";
 import Alert from "../../components/core/Alert";
-import ApplicationCardV1 from "../../components/ApplicationCard";
-import ApplicationCardV2 from "../../components/ApplicationCardV2";
+import ApplicationCard from "../../components/ApplicationCard";
 import ButtonLink from "../../components/ButtonLink";
 import Heading from "../../components/core/Heading";
 import Lead from "../../components/core/Lead";
 import React from "react";
 import Title from "../../components/core/Title";
 import { Trans } from "react-i18next";
-import { isFeatureEnabled } from "../../services/featureFlags";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
 
@@ -79,6 +77,7 @@ export const Index = (props: IndexProps) => {
                   <ApplicationCard
                     appLogic={appLogic}
                     key={claim.application_id}
+                    // @ts-expect-error PORTAL-1078
                     claim={claim}
                     number={index + 1}
                   />
@@ -97,6 +96,7 @@ export const Index = (props: IndexProps) => {
                   <ApplicationCard
                     appLogic={appLogic}
                     key={claim.application_id}
+                    // @ts-expect-error PORTAL-1078
                     claim={claim}
                     number={claims.inProgress.length + index + 1}
                   />
@@ -118,17 +118,5 @@ export const Index = (props: IndexProps) => {
     </React.Fragment>
   );
 };
-
-/**
- * Allowing claimantShowStatusPage feature flag
- */
-// @ts-expect-error TODO (PORTAL-287) Remove v1 application card
-function ApplicationCard(props) {
-  return isFeatureEnabled("claimantShowStatusPage") ? (
-    <ApplicationCardV2 {...props} />
-  ) : (
-    <ApplicationCardV1 {...props} />
-  );
-}
 
 export default withBenefitsApplications(Index);

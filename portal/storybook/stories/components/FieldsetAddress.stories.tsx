@@ -38,8 +38,7 @@ export const Default = (args: Props<typeof FieldsetAddress>) => {
 };
 
 export const WithErrors = () => {
-  // @ts-expect-error ts-migrate(2554) FIXME: Expected 1 arguments, but got 0.
-  const [formState, setFormState] = useState({ address: new Address() });
+  const [formState, setFormState] = useState({ address: new Address({}) });
 
   const handleOnChange = (evt: React.ChangeEvent<HTMLInputElement>) => {
     const newFormState = cloneDeep(formState);

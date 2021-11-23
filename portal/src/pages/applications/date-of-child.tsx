@@ -6,10 +6,10 @@ import { get, pick, set } from "lodash";
 import withBenefitsApplication, {
   WithBenefitsApplicationProps,
 } from "../../hoc/withBenefitsApplication";
-import { DateTime } from "luxon";
 import InputDate from "../../components/core/InputDate";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
+import dayjs from "dayjs";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
@@ -48,7 +48,7 @@ export const DateOfChild = (props: WithBenefitsApplicationProps) => {
 
   const handleSave = () => {
     // Assumes that the birth/placement date is in the same timezone as the user's browser
-    const now = DateTime.local().toISODate();
+    const now = dayjs().format("YYYY-MM-DD");
     // Compare the two dates lexicographically. This works since they're both in
     // ISO-8601 format, eg "2020-10-13"
     const isFutureChildDate = getField(dateFieldName) > now;

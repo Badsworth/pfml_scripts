@@ -1,7 +1,7 @@
 import { MockBenefitsApplicationBuilder, renderPage } from "../../test-utils";
 import { cleanup, screen } from "@testing-library/react";
-import { DateTime } from "luxon";
 import Success from "../../../src/pages/applications/success";
+import dayjs from "dayjs";
 import { setupBenefitsApplications } from "../../test-utils/helpers";
 
 const setup = ({ claim }) => {
@@ -17,7 +17,7 @@ const setup = ({ claim }) => {
 };
 
 describe("Success", () => {
-  const futureDate = DateTime.local().plus({ months: 1 }).toISODate();
+  const futureDate = dayjs().add(1, "month").format("YYYY-MM-DD");
   /**
    * Output a snapshot for each of these claim variations
    */

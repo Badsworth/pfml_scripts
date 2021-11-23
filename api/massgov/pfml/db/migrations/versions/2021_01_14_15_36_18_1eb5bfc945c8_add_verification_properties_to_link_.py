@@ -52,9 +52,9 @@ def downgrade():
         ["verification_code_id"],
         ["verification_code_id"],
     )
-    op.drop_constraint(None, "link_user_leave_administrator", type_="foreignkey")
+    op.drop_constraint(None, "link_user_leave_administrator", type_="foreignkey")  # type: ignore
     op.drop_column("link_user_leave_administrator", "verification_id")
-    op.drop_constraint(None, "link_ctr_address_pair", type_="unique")
+    op.drop_constraint(None, "link_ctr_address_pair", type_="unique")  # type: ignore
     op.create_table(
         "verification_code_log",
         sa.Column(

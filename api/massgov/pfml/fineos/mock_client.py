@@ -368,7 +368,7 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
         hrsWorkedPerWeek = 37 if customer_id == "1000" else 37.5
         return [
             models.customer_api.ReadCustomerOccupation(
-                occupationId=12345, hoursWorkedPerWeek=hrsWorkedPerWeek
+                occupationId=12345, hoursWorkedPerWeek=hrsWorkedPerWeek, workPatternBasis="Unknown"
             )
         ]
 
@@ -425,7 +425,7 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
         ]
 
     def get_eform(
-        self, user_id: str, absence_id: str, eform_id: str
+        self, user_id: str, absence_id: str, eform_id: int
     ) -> models.group_client_api.EForm:
         return models.group_client_api.EForm(eformId=12345, eformAttributes=[])
 

@@ -17,3 +17,30 @@
     padding-left: units(2);
   }
 }
+
+.c-table.borderless-mobile {
+  width: 100%;
+
+  @media (max-width: 480px) {
+    tr:first-child td:first-child {
+      border: none;
+    }
+
+    td:first-child {
+      margin-top: 1rem;
+      background-color: color($theme-table-header-background-color);
+    }
+
+    td {
+      border: none;
+    }
+
+    tr {
+      border: none;
+    }
+  }
+
+  th:first-child {
+    padding-left: units(2);
+  }
+}

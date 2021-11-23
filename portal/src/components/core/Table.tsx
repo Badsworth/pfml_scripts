@@ -3,6 +3,10 @@ import classnames from "classnames";
 
 interface TableProps {
   /**
+   * Apply styling to remove borders from stacked view on small screens.
+   */
+  borderlessMobile?: boolean;
+  /**
    * `caption`, `thead`, and `tbody` contents
    */
   children?: React.ReactNode;
@@ -14,6 +18,11 @@ interface TableProps {
    * attribute on each cell of the table that matches the column header.
    */
   responsive?: boolean;
+  /**
+   * This attibute mimics the behavior of responsive prop,
+   * and inclues the table headers within the stacked view.
+   */
+  responsiveIncludeHeader?: boolean;
   /**
    * Apply a horizontal scrollbar if the columns exceed the available width.
    */
@@ -31,6 +40,8 @@ export const Table = (props: TableProps) => {
     props.className,
     {
       "usa-table--stacked-header": props.responsive,
+      "usa-table--stacked": props.responsiveIncludeHeader,
+      "borderless-mobile": props.borderlessMobile,
     }
   );
 

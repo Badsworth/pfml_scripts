@@ -11,9 +11,10 @@ import { DehydratedClaim } from "./generation/Claim";
 export type FeatureFlags = {
   pfmlTerriyay: boolean;
   noMaintenance: boolean;
-  claimantShowStatusPage: boolean;
   employerShowReviewByStatus: boolean;
   employerShowDashboardSearch: boolean;
+  claimantShowTaxWithholding: boolean;
+  claimantShowStatusPage?: boolean;
 };
 
 export type Credentials = {

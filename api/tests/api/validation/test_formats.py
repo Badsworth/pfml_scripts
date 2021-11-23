@@ -59,3 +59,7 @@ def test_is_maskable_date_with_masked_non_date():
 def test_is_uuid():
     with pytest.raises(ValueError):
         is_uuid("undefined")
+
+
+def test_nonstring_is_uuid():
+    assert is_uuid(list())

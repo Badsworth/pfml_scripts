@@ -1,9 +1,12 @@
 from typing import Dict, Optional, Tuple, Union
 from uuid import UUID
 
+import newrelic.agent
 from sqlalchemy.orm.session import Session
 
 import massgov
+import massgov.pfml.util.newrelic.events as newrelic_util
+from massgov.pfml.api.models.claims.responses import AbsencePeriodResponse
 from massgov.pfml.api.validation.exceptions import (
     IssueType,
     ValidationErrorDetail,
@@ -156,3 +159,38 @@ def convert_fineos_absence_period_to_period(fineos_absence_period: FineosAbsence
         type=fineos_absence_period.absenceType,
         leaveRequest=leave_request,
     )
+
+
+def convert_fineos_absence_period_to_claim_response_absence_period(
+    period: Period, log_attributes: Dict
+) -> AbsencePeriodResponse:
+    absence_period = AbsencePeriodResponse()
+    if period.periodReference:
+        try:
+            class_id, index_id = split_fineos_absence_period_id(period.periodReference)
+            absence_period.fineos_absence_period_class_id = class_id
+            absence_period.fineos_absence_period_index_id = index_id
+        except ValidationException:
+            newrelic.agent.notice_error(attributes=log_attributes)
+
+    absence_period.absence_period_start_date = period.startDate
+    absence_period.absence_period_end_date = period.endDate
+    absence_period.type = period.type
+    if period.leaveRequest is None:
+        newrelic_util.log_and_capture_exception(
+            "Failed to extract leave request from fineos period.", extra=log_attributes
+        )
+        return absence_period
+    leave_request = period.leaveRequest
+    absence_period.reason = leave_request.reasonName
+    absence_period.reason_qualifier_one = leave_request.qualifier1
+    absence_period.reason_qualifier_two = leave_request.qualifier2
+    absence_period.request_decision = leave_request.decisionStatus
+    if leave_request.id:
+        try:
+            absence_period.fineos_leave_request_id = split_fineos_leave_request_id(
+                leave_request.id, log_attributes
+            )
+        except ValidationException:
+            newrelic.agent.notice_error(attributes=log_attributes)
+    return absence_period

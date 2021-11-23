@@ -9,10 +9,11 @@ import resource
 import sys
 import uuid
 from dataclasses import asdict, dataclass, field
-from datetime import datetime
-from typing import Any, Dict, List, Optional, Set
+from datetime import date, datetime
+from typing import Any, Callable, Dict, List, Optional, Sequence, Set
 
 import boto3
+import botocore
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm.session import Session
 
@@ -22,8 +23,11 @@ import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
 import massgov.pfml.util.newrelic.events
 from massgov.pfml import db
+from massgov.pfml.db.models.base import uuid_gen
 from massgov.pfml.db.models.employees import (
+    Employee,
     EmployeePushToFineosQueue,
+    Employer,
     EmployerPushToFineosQueue,
     ImportLog,
     WagesAndContributions,
@@ -35,6 +39,10 @@ from massgov.pfml.dor.importer.dor_file_formats import (
     EMPLOYER_FILE_FORMAT,
     EMPLOYER_FILE_ROW_LENGTH,
     EMPLOYER_QUARTER_INFO_FORMAT,
+    ParsedEmployeeLine,
+    ParsedEmployerLine,
+    ParsedEmployerQuarterLine,
+    WageKey,
 )
 from massgov.pfml.dor.importer.paths import ImportBatch, get_files_to_process
 from massgov.pfml.util.bg import background_task
@@ -46,7 +54,6 @@ logger = logging.get_logger("massgov.pfml.dor.importer.import_dor")
 s3 = boto3.client("s3")
 s3Bucket = boto3.resource("s3")
 aws_ssm = boto3.client("ssm", region_name="us-east-1")
-
 
 # TODO get these from environment variables
 RECEIVED_FOLDER = "dor/received/"
@@ -108,7 +115,7 @@ class ImportRunReport:
 
 
 @background_task("dor-import")
-def handler(event=None, context=None):
+def handler() -> None:
     """ECS task main method."""
     logger.addFilter(filter_add_memory_usage)
 
@@ -201,23 +208,27 @@ def process_import_batches(
 
 class EmployeeWriter(object):
     def __init__(
-        self, line_buffer_length, db_session, report, report_log_entry,
+        self,
+        line_buffer_length: int,
+        db_session: Session,
+        report: ImportReport,
+        report_log_entry: ImportLog,
     ):
-        self.line_count = 0
-        self.line_buffer_length = line_buffer_length
-        self.remainder = ""
-        self.remainder_encoded = b""
-        self.lines = []
-        self.parsed_employees_info_count = 0
-        self.parsed_employer_quarterly_info_count = 0
-        self.parsed_employer_quarter_exception_count = 0
-        self.db_session = db_session
-        self.report = report
-        self.report_log_entry = report_log_entry
-        self.employee_ssns_created_in_current_import_run = {}
+        self.line_count: int = 0
+        self.line_buffer_length: int = line_buffer_length
+        self.remainder: str = ""
+        self.remainder_encoded: bytes = b""
+        self.lines: List = []
+        self.parsed_employees_info_count: int = 0
+        self.parsed_employer_quarterly_info_count: int = 0
+        self.parsed_employer_quarter_exception_count: int = 0
+        self.db_session: Session = db_session
+        self.report: ImportReport = report
+        self.report_log_entry: ImportLog = report_log_entry
+        self.employee_ssns_created_in_current_import_run: Dict[str, uuid.UUID] = {}
         logger.info("Created EmployeeWriter, buffer length: %i", line_buffer_length)
 
-    def flush_buffer(self):
+    def flush_buffer(self) -> None:
         logger.info("Flushing buffer, %i lines", len(self.lines))
 
         employees_info = []
@@ -310,7 +321,7 @@ class EmployeeWriter(object):
 
         self.lines = []
 
-    def __call__(self, data):
+    def __call__(self, data: bytes) -> bool:
         if data:
             try:
                 to_decode = self.remainder_encoded + data
@@ -344,17 +355,17 @@ class EmployeeWriter(object):
 
 
 class Capturer(object):
-    def __init__(self, line_offset):
-        self.line_offset = line_offset
-        self.line_count = 0
+    def __init__(self, line_offset: int):
+        self.line_offset: int = line_offset
+        self.line_count: int = 0
 
-        self.remainder = ""
-        self.remainder_encoded = b""
-        self.lines = []
+        self.remainder: str = ""
+        self.remainder_encoded: bytes = b""
+        self.lines: List = []
 
         logger.info("Capturer initialized")
 
-    def append_line(self, line):
+    def append_line(self, line: str) -> None:
         if self.line_count < self.line_offset:
             self.line_count = self.line_count + 1
             return
@@ -362,7 +373,7 @@ class Capturer(object):
         self.lines.append(line)
         self.line_count = self.line_count + 1
 
-    def __call__(self, data):
+    def __call__(self, data: bytes) -> bool:
         if data:
             try:
                 to_decode = self.remainder_encoded + data
@@ -388,7 +399,7 @@ class Capturer(object):
         return False
 
 
-def decrypter_factory(decrypt_files):
+def decrypter_factory(decrypt_files: bool) -> Crypt:
     # Initialize the file decrypter
     decrypter: Crypt
     if decrypt_files:
@@ -444,7 +455,6 @@ def handle_import_exception(
 def process_daily_import(
     db_session: Session, employer_file_path: str, employee_file_path: str, decrypter: Crypt,
 ) -> ImportReport:
-
     logger.info("Starting to process files")
     report = ImportReport(
         start=datetime.now().isoformat(),
@@ -514,7 +524,12 @@ def process_daily_import(
     return report
 
 
-def batch_apply(items, batch_fn_name, batch_fn, batch_size=100000):
+def batch_apply(
+    items: Sequence[Any],
+    batch_fn_name: str,
+    batch_fn: Callable[[Sequence[Any]], Any],
+    batch_size: int = 100000,
+) -> None:
     size = len(items)
     start_index = 0
 
@@ -529,8 +544,14 @@ def batch_apply(items, batch_fn_name, batch_fn, batch_size=100000):
         start_index = end_index
 
 
-def bulk_save(db_session, models_list, model_name, commit=False, batch_size=10000):
-    def bulk_save_helper(models_batch):
+def bulk_save(
+    db_session: Session,
+    models_list: Sequence[Any],
+    model_name: str,
+    commit: bool = False,
+    batch_size: int = 10000,
+) -> None:
+    def bulk_save_helper(models_batch: Sequence[Any]) -> None:
         db_session.bulk_save_objects(models_batch)
         if commit:
             db_session.commit()
@@ -538,7 +559,7 @@ def bulk_save(db_session, models_list, model_name, commit=False, batch_size=1000
     batch_apply(models_list, f"Saving {model_name}", bulk_save_helper, batch_size=batch_size)
 
 
-def is_valid_employer_address(employer_info, report):
+def is_valid_employer_address(employer_info: ParsedEmployerLine, report: ImportReport) -> bool:
     try:
         dor_persistence_util.employer_dict_to_country_and_state_values(employer_info)
     except KeyError:
@@ -560,7 +581,7 @@ def is_valid_employer_address(employer_info, report):
 RE_FEIN = re.compile(r"^[0-9]{9}$")
 
 
-def is_valid_employer_fein(employer_info, report):
+def is_valid_employer_fein(employer_info: ParsedEmployerLine, report: ImportReport) -> bool:
     fein = str(employer_info.get("fein"))
     correct = RE_FEIN.fullmatch(fein) is not None
     if correct:
@@ -572,7 +593,12 @@ def is_valid_employer_fein(employer_info, report):
     return False
 
 
-def import_employers(db_session, employers, report, import_log_entry_id):
+def import_employers(
+    db_session: Session,
+    employers: List[ParsedEmployerLine],
+    report: ImportReport,
+    import_log_entry_id: int,
+) -> None:
     """Import employers into db"""
     logger.info("Importing employers")
 
@@ -580,7 +606,7 @@ def import_employers(db_session, employers, report, import_log_entry_id):
 
     # Get all employers in DB
     existing_employer_reference_models = dor_persistence_util.get_all_employers_fein(db_session)
-    fein_to_existing_employer_reference_models = {
+    fein_to_existing_employer_reference_models: Dict[str, Optional[Employer]] = {
         employer.employer_fein: employer for employer in existing_employer_reference_models
     }
 
@@ -630,8 +656,8 @@ def import_employers(db_session, employers, report, import_log_entry_id):
     fein_to_new_employer_id = {}
     fein_to_new_address_id = {}
     for emp in not_found_employer_info_list:
-        fein_to_new_employer_id[emp["fein"]] = uuid.uuid4()
-        fein_to_new_address_id[emp["fein"]] = uuid.uuid4()
+        fein_to_new_employer_id[emp["fein"]] = uuid_gen()
+        fein_to_new_address_id[emp["fein"]] = uuid_gen()
 
     employer_models_to_create = list(
         map(
@@ -681,11 +707,11 @@ def import_employers(db_session, employers, report, import_log_entry_id):
 
     employer_address_relationship_models_to_create = []
 
-    for emp in employer_models_to_create:
+    for employer in employer_models_to_create:
+        employer_fein = employer.employer_fein
         employer_address_relationship_models_to_create.append(
             dor_persistence_util.employer_id_address_id_to_model(
-                fein_to_new_employer_id[emp.employer_fein],
-                fein_to_new_address_id[emp.employer_fein],
+                fein_to_new_employer_id[employer_fein], fein_to_new_address_id[employer_fein],
             )
         )
 
@@ -726,13 +752,12 @@ def import_employers(db_session, employers, report, import_log_entry_id):
             )
             continue
 
-        if (
-            employer_info["updated_date"]
-            > fein_to_existing_employer_reference_models[fein].dor_updated_date
-        ):
-            found_employer_info_to_update_list.append(employer_info)
-        else:
-            found_employer_info_to_not_update_list.append(employer_info)
+        _employer = fein_to_existing_employer_reference_models[fein]
+        if _employer is not None:
+            if employer_info["updated_date"] > _employer.dor_updated_date:
+                found_employer_info_to_update_list.append(employer_info)
+            else:
+                found_employer_info_to_not_update_list.append(employer_info)
 
     logger.info("Employers to update: %i", len(found_employer_info_to_update_list))
 
@@ -745,20 +770,23 @@ def import_employers(db_session, employers, report, import_log_entry_id):
         existing_employer_model = dor_persistence_util.get_employer_by_fein(
             db_session, employer_info["fein"]
         )
-        # Enqueue updated employer for push to FINEOS
-        db_session.add(
-            EmployerPushToFineosQueue(
-                employer_id=existing_employer_model.employer_id,
-                action="UPDATE",
-                family_exemption=existing_employer_model.family_exemption,
-                medical_exemption=existing_employer_model.medical_exemption,
-                exemption_commence_date=existing_employer_model.exemption_commence_date,
-                exemption_cease_date=existing_employer_model.exemption_cease_date,
+
+        if existing_employer_model is not None:
+            # Enqueue updated employer for push to FINEOS
+            db_session.add(
+                EmployerPushToFineosQueue(
+                    employer_id=existing_employer_model.employer_id,
+                    action="UPDATE",
+                    family_exemption=existing_employer_model.family_exemption,
+                    medical_exemption=existing_employer_model.medical_exemption,
+                    exemption_commence_date=existing_employer_model.exemption_commence_date,
+                    exemption_cease_date=existing_employer_model.exemption_cease_date,
+                )
             )
-        )
-        dor_persistence_util.update_employer(
-            db_session, existing_employer_model, employer_info, import_log_entry_id
-        )
+
+            dor_persistence_util.update_employer(
+                db_session, existing_employer_model, employer_info, import_log_entry_id
+            )
 
     if len(found_employer_info_to_update_list) > 0:
         logger.info(
@@ -785,13 +813,13 @@ def import_employers(db_session, employers, report, import_log_entry_id):
 
 
 def import_employees(
-    db_session,
-    employee_info_list,
-    employee_ssns_to_id_created_in_current_import_run,
-    ssn_to_existing_employee_model,
-    report,
-    import_log_entry_id,
-):
+    db_session: Session,
+    employee_info_list: List[ParsedEmployeeLine],
+    employee_ssns_to_id_created_in_current_import_run: Dict[str, uuid.UUID],
+    ssn_to_existing_employee_model: Dict[str, Employee],
+    report: ImportReport,
+    import_log_entry_id: int,
+) -> None:
     """Create or update employees data in the db"""
     logger.info(
         "Start import of employees import - lines: %i", len(employee_info_list),
@@ -828,12 +856,12 @@ def import_employees(
             if tax_id.tax_identifier == emp["employee_ssn"]:
                 found = tax_id
 
-        ssn_to_new_employee_id[emp["employee_ssn"]] = uuid.uuid4()
+        ssn_to_new_employee_id[emp["employee_ssn"]] = uuid_gen()
 
         # If a tax identifier does not already exists, create a UUID
         # Else use the found one.
         if not found:
-            ssn_to_new_tax_id[emp["employee_ssn"]] = uuid.uuid4()
+            ssn_to_new_tax_id[emp["employee_ssn"]] = uuid_gen()
         else:
             ssn_to_new_tax_id[emp["employee_ssn"]] = found.tax_identifier_id
             logger.info(
@@ -851,12 +879,12 @@ def import_employees(
     # 2 - Create tax ids for new employees
     tax_id_models_to_create = []
     for ssn in ssn_to_new_employee_id:
-        found = False
+        tax_id_is_found = False
         for tax_id in previously_created_tax_ids:
             if tax_id.tax_identifier == ssn:
-                found = True
+                tax_id_is_found = True
 
-        if not found:
+        if not tax_id_is_found:
             tax_id_models_to_create.append(
                 dor_persistence_util.tax_id_from_dict(ssn_to_new_tax_id[ssn], ssn)
             )
@@ -945,7 +973,7 @@ def import_employees(
         existing_employee_model = ssn_to_existing_employee_model[ssn]
 
         is_updated = dor_persistence_util.check_and_update_employee(
-            db_session, existing_employee_model, employee_info, import_log_entry_id
+            existing_employee_model, employee_info, import_log_entry_id
         )
         if is_updated:
             updated_employees_count += 1
@@ -973,19 +1001,20 @@ def import_employees(
     )
 
 
-def get_wage_composite_key(employer_id, employee_id, filing_period):
-    return (employer_id, employee_id, filing_period)
+def get_wage_composite_key(
+    employer_id: uuid.UUID, employee_id: uuid.UUID, filing_period: date
+) -> WageKey:
+    return employer_id, employee_id, filing_period
 
 
 def log_employees_with_new_employers(
-    db_session,
-    employee_wage_info_list,
-    account_key_to_employer_id_map,
-    ssn_to_existing_employee_model,
-    report,
-    import_log_entry_id,
-):
-
+    db_session: Session,
+    employee_wage_info_list: List,
+    account_key_to_employer_id_map: Dict[str, uuid.UUID],
+    ssn_to_existing_employee_model: Dict[str, Employee],
+    report: ImportReport,
+    import_log_entry_id: int,
+) -> None:
     logger.info("Check and log employees with new employers")
 
     # Get existing wages for all existing employees in the current list
@@ -1071,14 +1100,14 @@ def log_employees_with_new_employers(
 
 
 def import_wage_data(
-    db_session,
-    wage_info_list,
-    account_key_to_employer_id_map,
-    employee_ssns_to_id_created_in_current_import_run,
-    ssn_to_existing_employee_model,
-    report,
-    import_log_entry_id,
-):
+    db_session: Session,
+    wage_info_list: List,
+    account_key_to_employer_id_map: Dict[str, uuid.UUID],
+    employee_ssns_to_id_created_in_current_import_run: Dict[str, uuid.UUID],
+    ssn_to_existing_employee_model: Dict[str, Employee],
+    report: ImportReport,
+    import_log_entry_id: int,
+) -> None:
     # 1 - Create new wage data
     # For employees just created in the current run, we can avoid checking for existing wage rows
     wage_info_list_for_creation = list(
@@ -1141,12 +1170,12 @@ def import_wage_data(
     existing_wages = []
     if len(existing_employee_ids) > 0:
         existing_wages = dor_persistence_util.get_wages_and_contributions_by_employee_ids(
-            db_session, existing_employee_ids
+            db_session, list(existing_employee_ids)
         )
 
-    employer_employee_filing_period_to_wage_model: Dict[Any, Any] = {}
+    employer_employee_filing_period_to_wage_model: Dict[WageKey, Any] = {}
     for existing_wage in existing_wages:
-        key: str = get_wage_composite_key(
+        key = get_wage_composite_key(
             existing_wage.employer_id, existing_wage.employee_id, existing_wage.filing_period
         )
         employer_employee_filing_period_to_wage_model[key] = existing_wage
@@ -1190,7 +1219,7 @@ def import_wage_data(
             )
             continue
 
-        existing_wage_composite_key: str = get_wage_composite_key(
+        existing_wage_composite_key = get_wage_composite_key(
             employer_id, existing_employee.employee_id, filing_period
         )
         existing_wage = employer_employee_filing_period_to_wage_model.get(
@@ -1204,7 +1233,7 @@ def import_wage_data(
             wages_contributions_models_existing_employees_to_create.append(wage_model)
         else:
             is_updated = dor_persistence_util.check_and_update_wages_and_contributions(
-                db_session, existing_wage, wage_info, import_log_entry_id, wage_history_records
+                existing_wage, wage_info, import_log_entry_id, wage_history_records
             )
 
             if is_updated:
@@ -1273,7 +1302,7 @@ def import_wage_data(
 
 def import_employer_pfml_contributions(
     db_session: massgov.pfml.db.Session,
-    employer_quarterly_info_list: List[Dict],
+    employer_quarterly_info_list: List[ParsedEmployerQuarterLine],
     report: ImportReport,
     import_log_entry_id: int,
 ) -> None:
@@ -1383,12 +1412,12 @@ def import_employer_pfml_contributions(
 
 
 def import_employees_and_wage_data(
-    db_session,
-    employee_and_wage_info_list,
-    employee_ssns_created_in_current_import_run,
-    report,
-    import_log_entry_id,
-):
+    db_session: Session,
+    employee_and_wage_info_list: List[ParsedEmployeeLine],
+    employee_ssns_created_in_current_import_run: Dict[str, uuid.UUID],
+    report: ImportReport,
+    import_log_entry_id: int,
+) -> None:
     # 1 - Create account key to existing employer id reference map
     account_keys = {employee_info["account_key"] for employee_info in employee_and_wage_info_list}
     account_key_to_employer_id_map = dor_persistence_util.get_employers_by_account_key(
@@ -1415,7 +1444,8 @@ def import_employees_and_wage_data(
 
     ssn_to_existing_employee_model = {}
     for employee in existing_employee_models:
-        ssn_to_existing_employee_model[employee.tax_identifier.tax_identifier] = employee
+        if employee.tax_identifier is not None:
+            ssn_to_existing_employee_model[employee.tax_identifier.tax_identifier] = employee
 
     logger.info(
         "Done - Create existing employee reference maps - checked ssns: %i, existing employees matched: %i",
@@ -1455,7 +1485,7 @@ def import_employees_and_wage_data(
     )
 
 
-def get_decrypted_file_stream(file_path, decrypter):
+def get_decrypted_file_stream(file_path: str, decrypter: Crypt) -> Any:
     file_stream = file_util.open_stream(file_path, "rb")
     logger.info("Finished getting file stream")
 
@@ -1469,7 +1499,7 @@ def get_decrypted_file_stream(file_path, decrypter):
 
 
 # TODO turn return dataclasses list instead of object list
-def parse_employer_file(employer_file_path, decrypter, report):
+def parse_employer_file(employer_file_path: str, decrypter: Crypt, report: ImportReport) -> List:
     """Parse employer file"""
     logger.info("Start parsing employer file", extra={"employer_file_path": employer_file_path})
     employers = []
@@ -1538,7 +1568,7 @@ def parse_employer_file(employer_file_path, decrypter, report):
     return employers
 
 
-def move_file_to_processed(file_path, s3_client):
+def move_file_to_processed(file_path: str, s3_client: botocore.client.BaseClient) -> None:
     """Move file from received to processed folder"""
     file_name = file_util.get_file_name(file_path)
     file_key = file_util.get_s3_file_key(file_path)
@@ -1551,14 +1581,6 @@ def move_file_to_processed(file_path, s3_client):
 
     s3_client.copy({"Bucket": bucket_name, "Key": file_key}, bucket_name, file_dest_key)
     s3_client.delete_object(Bucket=bucket_name, Key=file_key)
-
-
-def get_file_name(s3_file_key):
-    """Get file name without extension from an object key"""
-    file_name_index = s3_file_key.rfind("/") + 1
-    file_name_extension_index = s3_file_key.rfind(".txt")
-    file_name = s3_file_key[file_name_index:file_name_extension_index]
-    return file_name
 
 
 if __name__ == "__main__":

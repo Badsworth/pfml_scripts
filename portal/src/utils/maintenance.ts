@@ -1,5 +1,5 @@
-import { DateTime } from "luxon";
 import { ISO8601Timestamp } from "../../types/common";
+import dayjs from "dayjs";
 
 export const isInMaintenanceWindow = (
   start?: ISO8601Timestamp | null,
@@ -9,9 +9,9 @@ export const isInMaintenanceWindow = (
   // always open (when maintenance mode is On)
   if (!start && !end) return true;
 
-  const now = DateTime.local();
-  const isAfterStart = start ? now >= DateTime.fromISO(start) : true;
-  const isBeforeEnd = end ? now < DateTime.fromISO(end) : true;
+  const now = dayjs();
+  const isAfterStart = start ? now >= dayjs(start) : true;
+  const isBeforeEnd = end ? now < dayjs(end) : true;
 
   return isAfterStart && isBeforeEnd;
 };
@@ -21,11 +21,11 @@ export const isMaintenanceOneDayInFuture = (
 ) => {
   if (!start) return false;
 
-  const now = DateTime.local();
-  const maintenanceStartTime = DateTime.fromISO(start);
+  const now = dayjs();
+  const maintenanceStartTime = dayjs(start);
   // We want to avoid showing maintenance-related content too far ahead
   // of the beginning of the window, so we check if it's within a day.
-  const bannerWindow = DateTime.fromISO(start).minus({ days: 1 });
+  const bannerWindow = dayjs(start).subtract(1, "day");
   const isBeforeStart = start
     ? now < maintenanceStartTime && now >= bannerWindow
     : true;
@@ -57,6 +57,9 @@ export const isMaintenancePageRoute = (
  */
 export const maintenanceTime = (mTime?: ISO8601Timestamp | null) => {
   return mTime
-    ? DateTime.fromISO(mTime).toLocaleString(DateTime.DATETIME_FULL)
+    ? new Intl.DateTimeFormat("default", {
+        dateStyle: "long",
+        timeStyle: "short",
+      }).format(dayjs(mTime).toDate())
     : null;
 };

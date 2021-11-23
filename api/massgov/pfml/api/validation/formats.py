@@ -40,6 +40,11 @@ def is_maskable_date(val):
 
 @draft4_format_checker.checks("uuid", raises=ValueError)
 def is_uuid(val):
+    # If value is not a string, it will get caught by the type validator
+    # so we can skip format validation.
+    if not isinstance(val, str):
+        return True
+
     if not RE_UUID4.match(val):
         raise ValueError(f"'{val}' is not a valid uuid4")
     return True

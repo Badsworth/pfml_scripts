@@ -9,14 +9,6 @@ import {
   navigation,
   SectionMessage,
   Spinner,
-  Popover,
-  PopoverBody,
-  PopoverTrigger,
-  PopoverFooter,
-  Card,
-  CardBody,
-  BlockText,
-  HeadingText,
 } from "nr1";
 import React from "react";
 import { format } from "date-fns";
@@ -28,7 +20,8 @@ import {
   COMPONENTS_WIDTH,
   ENVS,
 } from "../common";
-import Navigation from "../common/navigation"
+import Navigation from "../common/components/Navigation";
+import { E2EVisualIndicator } from "../common/components/E2EVisualIndicator";
 
 function extractEnvironmentData(data) {
   const map = data
@@ -148,7 +141,7 @@ export default function EnvironmentsTable({ platformState }) {
           </Table>
         );
       }}
-    </NrqlQuery>
+    </NrqlQuery>,
   ];
 }
 
@@ -199,9 +192,16 @@ function LatestE2ERuns({ environment, accountId, count = 6 }) {
           );
         }
         const rows = extractRunData(data ?? []);
+        const link = navigation.getOpenStackedNerdletLocation({
+          id: "e2e-tests",
+          urlState: { runIds: runIDs },
+        });
         if (rows.length) {
           return (
             <div className={"e2e-run-history"}>
+              <span className={"allLink"}>
+                          <Link to={link}>All</Link>
+                        </span>
               {rows.map((row) => (
                 <E2EVisualIndicator
                   run={row}
@@ -257,50 +257,5 @@ function LatestDeploymentVersion({ environment, component, accountId }) {
         return "";
       }}
     </NrqlQuery>
-  );
-}
-
-function E2EVisualIndicator({ run, runIds }) {
-  let state = "error";
-  if (run.pass_rate >= 0.85) {
-    state = "warn";
-  }
-  if (run.pass_rate == 1) {
-    state = "ok";
-  }
-  const passRate = Math.round(run.pass_rate * 100);
-  const link = navigation.getOpenStackedNerdletLocation({
-    id: "e2e-tests",
-    urlState: { runIds: runIds },
-  });
-  return (
-    <Popover openOnHover={true}>
-      <PopoverTrigger>
-        <Link to={link} className={`e2e-run-indicator ${state}`}>
-          <span className={"visually-hidden"}>{state}</span>
-          {passRate}
-        </Link>
-      </PopoverTrigger>
-      <PopoverBody>
-        <Card style={{ width: "250px" }}>
-          <CardBody>
-            <HeadingText>{format(run.timestamp, "PPPppp")}</HeadingText>
-            <BlockText
-              spacingType={[
-                BlockText.SPACING_TYPE.MEDIUM,
-                BlockText.SPACING_TYPE.NONE,
-              ]}
-            >
-              {run.tag
-                .split(",")
-                .filter((tag) => !tag.includes("Env-") && tag != "Deploy")}
-            </BlockText>
-          </CardBody>
-        </Card>
-        <PopoverFooter style={{ textAlign: "right" }}>
-          <Link to={run.runUrl}>View in Cypress</Link>
-        </PopoverFooter>
-      </PopoverBody>
-    </Popover>
   );
 }

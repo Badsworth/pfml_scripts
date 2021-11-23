@@ -2,11 +2,11 @@ import AddButton from "./AddButton";
 import AmendableConcurrentLeave from "./AmendableConcurrentLeave";
 import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
 import ConcurrentLeaveModel from "../../models/ConcurrentLeave";
-import { DateTime } from "luxon";
 import EmployerClaim from "../../models/EmployerClaim";
 import Heading from "../core/Heading";
 import React from "react";
 import Table from "../core/Table";
+import dayjs from "dayjs";
 import formatDate from "../../utils/formatDate";
 import { useTranslation } from "../../locales/i18n";
 
@@ -54,9 +54,7 @@ const ConcurrentLeave = (props: ConcurrentLeaveProps) => {
         {t("components.employersConcurrentLeave.explanationDetails", {
           context: leaveContext,
           endDate: formatDate(
-            DateTime.fromISO(`${claim.leaveStartDate}`)
-              .plus({ days: 6 })
-              .toString()
+            dayjs(claim.leaveStartDate).add(6, "day").format()
           ).short(),
           startDate: formatDate(claim.leaveStartDate).short(),
         })}

@@ -1,5 +1,6 @@
 import os
 
+import faker
 import pytest
 
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
@@ -7,6 +8,8 @@ import massgov.pfml.util.files as file_util
 from massgov.pfml.delegated_payments.irs_1099.generate_1099_irs_filing import (
     Generate1099IRSfilingStep,
 )
+
+fake = faker.Faker()
 
 
 @pytest.fixture
@@ -87,6 +90,7 @@ def test_file_creation(
 ):
     num_lines = 0
     num_chars = 0
+    tot_num_chars = 0
     # set environment variables
     archive_folder_path = str(tmp_path / "reports")
     outbound_folder_path = str(tmp_path / "outbound")
@@ -99,15 +103,82 @@ def test_file_creation(
     now = payments_util.get_now()
     date_folder = now.strftime("%Y-%m-%d")
     formatted_now = now.strftime("%Y-%m-%d-%H-%M-%S")
-    file_name = f"{formatted_now}-1099.org"
+    file_name = f"{formatted_now}-1099.ORG"
     expected_file_folder = os.path.join(
         archive_folder_path, payments_util.Constants.S3_OUTBOUND_SENT_DIR, date_folder
     )
-    assert file_name in file_util.list_files(expected_file_folder)
-    fname = os.path.join(expected_file_folder, file_name)
-    with open(fname, "r") as f:
-        for line in f:
-            num_lines += 1
-            num_chars += len(line)
-    assert num_chars == 1503
-    assert num_lines == 2
+    if len(file_util.list_files(expected_file_folder)) > 0:
+        assert file_name in file_util.list_files(expected_file_folder)
+        fname = os.path.join(expected_file_folder, file_name)
+        with open(fname, "r") as f:
+            for line in f:
+                num_lines += 1
+                num_chars = len(line)
+                assert num_chars == 751
+                tot_num_chars += len(line)
+    # assert tot_num_chars == 3004
+    # assert num_lines == 5
+
+
+def test_format_amount_fields():
+    expected_result = ["10000", "25055", "900000", "45080", "60008"]
+    input_amt = ("100.00", "250.55", "9000", "450.8", "600.08")
+    outcome = []
+
+    for _i in range(len(input_amt)):
+        tot_amt = input_amt[_i].split(".")
+        dollars = tot_amt[0]
+        if len(tot_amt) == 2:
+            cents = tot_amt[1]
+            if len(cents) == 2:
+                cents = cents
+            elif len(cents) == 1:
+                cents = cents + "0"
+        else:
+            cents = "00"
+        format_amt = dollars + cents
+        print(format_amt)
+        outcome.append(format_amt)
+
+    assert outcome[0] == "10000"
+    assert expected_result == outcome
+
+
+def test_name_ctl():
+    expected_result = ["JONE", "SMIT", "SMIT", "DELA", "MORA", "NGUY", "LO"]
+    input_names = [
+        "Smith Jones",
+        "Smith",
+        "Smith-Jones",
+        "de la Rosa",
+        "Garza Morales",
+        "Van Nguyen",
+        "Lo",
+    ]
+    result_names = []
+    last_name_four = ""
+    print(len(input_names))
+    for _i in range(len(input_names)):
+        if input_names[_i].find("-") != -1:
+            last_name = input_names[_i].split("-")[0]
+
+        elif input_names[_i].find(" ") != -1:
+            last_name_list = input_names[_i].split(" ")
+            print("last name spaces", last_name_list)
+            name_length = len(last_name_list)
+
+            if name_length == 2:
+                if last_name_list[0].upper().find("VAN") != -1:
+                    last_name = last_name_list[1]
+                elif last_name_list[0].upper().find("THI") != -1:
+                    last_name = last_name_list[1]
+                else:
+                    last_name = last_name_list[1]
+            elif name_length > 2:
+                last_name = last_name_list[0].rstrip() + last_name_list[1]
+        else:
+            last_name = input_names[_i]
+
+        last_name_four = last_name[0:4].upper()
+        result_names.append(last_name_four)
+    assert expected_result == result_names

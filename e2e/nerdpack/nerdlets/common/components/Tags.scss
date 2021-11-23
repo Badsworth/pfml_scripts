@@ -1,0 +1,30 @@
+.E2E-tag {
+  padding: 2px 12px;
+  border: 0.1em #aaa solid;
+  border-radius: 5px;
+  margin-right: 5px;
+  color: #aaa;
+  font-size: 10px;
+
+  &.branch,
+  &.pr {
+    color: #333;
+    border-color: #333;
+    background: #dfe4f5;
+    font-weight: bold;
+  }
+
+  &.deploy {
+    color: #6a8de1;
+    border-color: #6a8de1;
+    background: #dfe4f5;
+    font-weight: bold;
+  }
+
+  &.morning {
+    color: #986ae1;
+    border-color: #986ae1;
+    background: #f0e6f5;
+    font-weight: bold;
+  }
+}

@@ -6,6 +6,17 @@ import useMockableAppLogic from "lib/mock-helpers/useMockableAppLogic";
 export default {
   title: "Pages/Auth/Login",
   component: Login,
+  argTypes: {
+    query: {
+      control: {
+        type: "radio",
+        options: ["Default", "Session timed out", "Verified account"],
+      },
+    },
+  },
+  args: {
+    query: "Default",
+  },
 };
 
 export const Page = (args: Props<typeof Login>) => {
@@ -19,14 +30,4 @@ export const Page = (args: Props<typeof Login>) => {
   const appLogic = useMockableAppLogic();
 
   return <Login appLogic={appLogic} query={query} />;
-};
-
-Page.argTypes = {
-  query: {
-    defaultValue: "Default",
-    control: {
-      type: "radio",
-      options: ["Default", "Session timed out", "Verified account"],
-    },
-  },
 };

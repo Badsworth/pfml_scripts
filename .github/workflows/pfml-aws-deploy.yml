@@ -6,8 +6,7 @@ name: pfml-aws deploy
 on:
   push:
     branches:
-      # - main
-      - Paz/INFRA-735-Automatically-deploy-pfml-aws-module-on-merge
+      - main
     paths:
       - infra/pfml-aws/**
       - infra/constants/**

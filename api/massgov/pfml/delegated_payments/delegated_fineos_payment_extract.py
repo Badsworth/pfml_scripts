@@ -567,7 +567,10 @@ class PaymentExtractStep(Step):
         )
 
         if active_state:
-            logger.warning(
+            # If you are seeing this error, the writebacks are not working
+            # properly. We need to verify that we have been correctly sending
+            # the writebacks, and that FINEOS has been properly consuming them.
+            logger.error(
                 "Payment with C=%s I=%s received from FINEOS that is already in active state: [%s] - active payment ID: %s",
                 payment.fineos_pei_c_value,
                 payment.fineos_pei_i_value,
@@ -1014,10 +1017,19 @@ class PaymentExtractStep(Step):
     def _setup_state_log(self, payment: Payment, payment_data: PaymentData) -> None:
         transaction_status = None
 
+        # If it has an active payment issue, we do not want
+        # to update the transaction status, the writebacks
+        # are probably not working, and we'd prefer the payment
+        # keep whatever its original status was.
+        if payment.exclude_from_payment_status:
+            message = "Active Payment Error - Contact FINEOS"
+            end_state = State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT
+            self.increment(self.Metrics.ERRORED_PAYMENT_COUNT)
+
         # https://lwd.atlassian.net/wiki/spaces/API/pages/1336901700/Types+of+Payments
         # Does the payment have validation issues
         # If so, add to that error state
-        if payment_data.validation_container.has_validation_issues():
+        elif payment_data.validation_container.has_validation_issues():
             message = "Error processing payment record"
 
             # https://lwd.atlassian.net/wiki/spaces/API/pages/1319272855/Payment+Transaction+Scenarios

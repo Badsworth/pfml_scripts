@@ -156,5 +156,20 @@ output "slackbot_channels" {
 }
 
 output "bucket_replication_environment" {
-  value = "prod"
+  value = "test"
+}
+
+# Env Var mappings for ECS Tasks 
+# Currently only used in aws_ecs_task_definition.ecs_tasks_1099 resource
+output "env_var_mappings" {
+  value = {
+    "test"        = "Test"
+    "stage"       = "Staging"
+    "prod"        = "Production"
+    "performance" = "Performance"
+    "training"    = "Training"
+    "uat"         = "UAT"
+    "breakfix"    = "Breakfix"
+    "cps-preview" = "CPSPreview"
+  }
 }

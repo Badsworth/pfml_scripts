@@ -61,7 +61,7 @@ def upgrade():
 
     # De-dupe reduction payments rows
     # Basically any row that matches on everything except absence_case_id and created_at
-    op.execute(
+    op.execute(  # nosec
         """
         DELETE FROM dua_reduction_payment
         WHERE dua_reduction_payment_id IN (

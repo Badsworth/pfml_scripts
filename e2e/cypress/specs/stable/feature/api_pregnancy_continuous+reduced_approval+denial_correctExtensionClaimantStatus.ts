@@ -21,7 +21,12 @@ describe("Submit medical pre-birth application via the web portal", () => {
     fineos.before();
     cy.unstash<DehydratedClaim>("claim").then((claim) => {
       cy.unstash<Submission>("submission").then((submission) => {
-        fineosPages.ClaimPage.visit(submission.fineos_absence_id)
+        const claimPage = fineosPages.ClaimPage.visit(
+          submission.fineos_absence_id
+        );
+        claimPage.triggerNotice("Preliminary Designation");
+        fineos.onTab("Absence Hub");
+        claimPage
           .adjudicate((adjudication) => {
             adjudication
               .evidence((evidence) => {
@@ -49,8 +54,6 @@ describe("Submit medical pre-birth application via the web portal", () => {
     () => {
       cy.dependsOnPreviousPass([submission]);
       fineos.before();
-      // wait 30s before modifying approved absence case, there's a good chance we'll see a fatal fineos error page without waiting here
-      cy.wait(1000 * 30);
       cy.unstash<Submission>("submission").then((submission) => {
         fineosPages.ClaimPage.visit(submission.fineos_absence_id)
           .benefitsExtension((benefitsExtension) => {

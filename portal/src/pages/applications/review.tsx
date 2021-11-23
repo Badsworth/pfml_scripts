@@ -33,7 +33,6 @@ import withClaimDocuments, {
 import Address from "../../models/Address";
 import Alert from "../../components/core/Alert";
 import BackButton from "../../components/BackButton";
-import { DateTime } from "luxon";
 import { DocumentType } from "../../models/Document";
 import Heading from "../../components/core/Heading";
 import HeadingPrefix from "../../components/core/HeadingPrefix";
@@ -51,6 +50,7 @@ import convertMinutesToHours from "../../utils/convertMinutesToHours";
 import findDocumentsByLeaveReason from "../../utils/findDocumentsByLeaveReason";
 import findDocumentsByTypes from "../../utils/findDocumentsByTypes";
 import findKeyByValue from "../../utils/findKeyByValue";
+import formatDate from "../../utils/formatDate";
 import formatDateRange from "../../utils/formatDateRange";
 import getI18nContextForIntermittentFrequencyDuration from "../../utils/getI18nContextForIntermittentFrequencyDuration";
 import getMissingRequiredFields from "../../utils/getMissingRequiredFields";
@@ -348,9 +348,9 @@ export const Review = (
               claim,
               "leave_details.employer_notified"
             )).toString(),
-            date: DateTime.fromISO(
+            date: formatDate(
               get(claim, "leave_details.employer_notification_date")
-            ).toLocaleString(),
+            ).short(),
           })}
         </ReviewRow>
       )}

@@ -6,6 +6,7 @@
 import "../styles/app.scss"; // Apply global styling to our stories
 import { Anchor, DocsContainer } from "@storybook/addon-docs";
 import React from "react";
+import { StorySortMethod } from "@storybook/addons";
 import { WithNextRouter } from "./decorators/WithNextRouter";
 import { initializeI18n } from "../src/locales/i18n";
 
@@ -34,7 +35,7 @@ export const parameters = {
   options: {
     // Sort stories alphabetically
     storySort: {
-      method: "alphabetical",
+      method: "alphabetical" as StorySortMethod,
     },
   },
 };

@@ -5,22 +5,9 @@ import React from "react";
 export default {
   title: "Core Components/Alert",
   component: Alert,
-  argTypes: {
-    state: {
-      control: "radio",
-    },
-    heading: {
-      defaultValue: "Please fix the following errors",
-      control: {
-        type: "text",
-      },
-    },
-    children: {
-      defaultValue: "Mailing address is required",
-      control: {
-        type: "text",
-      },
-    },
+  args: {
+    heading: "Please fix the following errors",
+    children: "Mailing address is required",
   },
 };
 

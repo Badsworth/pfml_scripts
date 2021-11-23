@@ -87,32 +87,6 @@ const props = {
 };
 
 describe("Status", () => {
-  beforeEach(() => {
-    process.env.featureFlags = {
-      claimantShowStatusPage: true,
-    };
-  });
-
-  it("redirects page if claimantShowStatusPage feature flag is not enabled", () => {
-    process.env.featureFlags = {
-      claimantShowStatusPage: false,
-    };
-
-    const goToSpy = jest.fn();
-    renderPage(
-      Status,
-      {
-        addCustomSetup: (appLogicHook) => {
-          appLogicHook.claims.loadClaimDetail = jest.fn();
-          appLogicHook.portalFlow.goTo = goToSpy;
-        },
-      },
-      props
-    );
-
-    expect(goToSpy).toHaveBeenCalledWith(routes.applications.index);
-  });
-
   it("shows StatusNavigationTabs if claimantShowPayments feature flag is enabled", () => {
     process.env.featureFlags = {
       claimantShowPayments: true,

@@ -18,22 +18,21 @@ class EmployerClaim extends BaseBenefitsApplication {
   employer_id: string;
   fineos_absence_id: string;
   created_at: string;
-
   first_name: string | null = null;
   middle_name: string | null = null;
   last_name: string | null = null;
   concurrent_leave: ConcurrentLeave | null = null;
-  employer_benefits: EmployerBenefit[] = [];
+  employer_benefits: EmployerBenefit[];
   date_of_birth: string | null = null;
   employer_fein: string;
   employer_dba: string;
   follow_up_date: string | null = null;
   hours_worked_per_week: number | null = null;
-  is_reviewable: boolean | null = null;
-  residential_address: Address = new Address({});
-  status: string | null = null;
+  is_reviewable: boolean;
+  residential_address: Address;
+  status: string;
   tax_identifier: string | null = null;
-  previous_leaves: PreviousLeave[] = [];
+  previous_leaves: PreviousLeave[];
   // does this claim use the old or new version of other leave / income eforms?
   // Todo(EMPLOYER-1453): remove V1 eform functionality
   uses_second_eform_version: boolean;
