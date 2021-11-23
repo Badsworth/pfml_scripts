@@ -137,6 +137,9 @@ class FINEOSClient(client.AbstractFINEOSClient):
         )
         self._init_oauth_session()
 
+    def __repr__(self):
+        return "<FINEOSClient %s>" % urllib.parse.urlparse(self.customer_api_url).hostname
+
     def _init_oauth_session(self):
         """Set up an OAuth session and get a token."""
         try:

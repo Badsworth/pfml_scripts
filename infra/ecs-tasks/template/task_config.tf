@@ -132,4 +132,11 @@ locals {
   apps_netcore_env = [
     { name : "ASPNETCORE_ENVIRONMENT", value : module.constants.env_var_mappings[var.environment_name] }
   ]
+
+  # 1099 variables
+  irs_1099_documents = [
+    { name : "PDF_API_HOST", value : var.pdf_api_host },
+    { name : "ENABLE_GENERATE_1099_PDF", value : var.enable_generate_1099_pdf },
+    { name : "ENABLE_MERGE_1099_PDF", value : var.enable_merge_1099_pdf }
+  ]
 }
