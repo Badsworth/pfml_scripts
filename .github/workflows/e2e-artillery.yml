@@ -70,7 +70,7 @@ jobs:
           aws-access-key-id: ${{ secrets.E2E_LST_AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.E2E_LST_AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
-          role-to-assume: execute-task-policy
+          role-to-assume: execute-task-main
           role-duration-seconds: 3600
 
       - name: Authenticate to ECR repository
