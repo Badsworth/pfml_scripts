@@ -137,6 +137,15 @@ table.runDetails {
   position: relative;
   border-radius: 15px;
   height: 30px;
+  min-width: 50px;
+
+  &.clickable {
+    cursor: pointer;
+    &:hover {
+      outline: 1px dotted #000;
+      outline-offset: 4px;
+    }
+  }
 
   .progress {
     left: 0;

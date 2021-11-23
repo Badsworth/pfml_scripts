@@ -1,6 +1,6 @@
 import React from "react";
 import { format } from "date-fns";
-import { labelEnv } from "./index";
+import { labelEnv } from "../index";
 import {
   Icon,
   Link,
