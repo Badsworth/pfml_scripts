@@ -32,7 +32,7 @@ type ContainerConfig = {
   image: string;
   command: string[];
   instances: number;
-  environment: Record<string, string>;
+  env_vars: Record<string, string>;
 };
 type ContainerConfigWithDefinition = ContainerConfig & {
   taskDefinitionArn: string;
@@ -106,7 +106,7 @@ export default class ArtilleryDeployer {
       const containerWithEnvironment = {
         ...container,
         environment: {
-          ...container.environment,
+          ...container.env_vars,
           INFLUX_URL: this.config.influx_url,
           INFLUX_TOKEN: this.config.influx_token,
           INFLUX_ORGANIZATION: this.config.influx_organization,
@@ -217,7 +217,7 @@ export default class ArtilleryDeployer {
           {
             name: "worker",
             command: container.command,
-            environment: Object.entries(container.environment).map(
+            environment: Object.entries(container.env_vars).map(
               ([name, value]) => ({
                 name,
                 value,

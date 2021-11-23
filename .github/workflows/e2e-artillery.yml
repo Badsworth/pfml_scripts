@@ -1,0 +1,84 @@
+name: E2E LST Artillery
+
+on:
+  # Manual runs.
+  workflow_dispatch:
+    inputs:
+      target_environment:
+        description: "Target Environment"
+        required: true
+        default: "performance"
+        type: choice
+        options:
+        - test
+        - performance
+      deploy_type:
+        description: "Set the deploy type"
+        required: true
+        default: "basic"
+        type: choice
+        options:
+        - default
+        - basic
+        - full_lst
+        - post_api_deploy
+  push:
+
+defaults:
+  run:
+    working-directory: e2e
+
+env:
+  # Caching/build performance
+  CYPRESS_CACHE_FOLDER: /home/runner/.npm/.cypress-cache
+  PLAYWRIGHT_BROWSERS_PATH: /home/runner/.npm/.playwright-cache
+  PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: 1 # We never actually need puppeteer chromium installed.
+
+# Prevent this workflow from running more than 1x concurrently in any environment.
+# This prevents us from overloading the environment with requests, which causes false failures.
+# Cypress & Flood share the same concurrency key to prevent E2E and Flood running concurrently.
+concurrency: E2E-${{ github.event.inputs.target_environment }}
+
+jobs:
+  deploy_lst:
+    name: Deploy LST
+    runs-on: ubuntu-latest
+    env:
+      # Setup any secret overrides that are necessary here.
+      # Most other environment variables will come from /e2e/config.json,
+      # as determined by the E2E_ENVIRONMENT variable set above.
+      E2E_FINEOS_USERS: ${{ secrets.E2E_FINEOS_USERS }}
+      E2E_EMPLOYER_PORTAL_USERNAME: ${{ secrets.E2E_EMPLOYER_PORTAL_USERNAME }}
+      E2E_EMPLOYER_PORTAL_PASSWORD: ${{ secrets.E2E_EMPLOYER_PORTAL_PASSWORD }}
+      E2E_FINEOS_PASSWORD: ${{ secrets.E2E_FINEOS_PASSWORD }}
+      E2E_PORTAL_PASSWORD: ${{ secrets.E2E_PORTAL_PASSWORD }}
+      E2E_TESTMAIL_APIKEY: ${{ secrets.E2E_TESTMAIL_APIKEY }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup Node
+        uses: actions/setup-node@v2
+        with: { node-version: "14.x" }
+      - name: "Install Node Modules"
+        uses: bahmutov/npm-install@v1
+        with:
+          working-directory: e2e
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.E2E_LST_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.E2E_LST_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+          role-to-assume: execute-task-policy
+          role-duration-seconds: 3600
+
+      - name: Authenticate to ECR repository
+        run: |
+          aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 233259245172.dkr.ecr.us-east-1.amazonaws.com
+        continue-on-error: false
+
+      # - name: "Deploy LST"
+      #   run: npm run cli -- deploy-lst -e ${{ github.event.inputs.target_environment }} -t ${{ github.event.inputs.deploy_type }}
+      - name: "Deploy LST"
+        run: npm run cli -- deploy-lst -e test -t basic

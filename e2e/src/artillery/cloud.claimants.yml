@@ -12,7 +12,7 @@ config:
     - ./employees
     - ./forms
   environments:
-    performance:
+    full_lst:
       phases:
         - duration: 300 # Run minutes 0-5
           arrivalRate: .25 # When starting our load test, we send one user per instance every 4 seconds until we reach maxVusers
@@ -42,7 +42,25 @@ config:
           maxVusers: 2
           arrivalRate: .5
           name: Cool Down
-    test:
+    post_api_deploy:
+      phases:
+        - duration: 300 # Run minutes 0-5
+          arrivalRate: .25 # When starting our load test, we send one user per instance every 4 seconds until we reach maxVusers
+          maxVusers: 1
+          name: Warm Up
+        - duration: 300 # Run minutes 5-10
+          maxVusers: 4
+          arrivalRate: 1
+          name: Steady State (Portal Claims Normal Traffic)
+        - duration: 600 # Run minutes 10-20
+          maxVusers: 2
+          arrivalRate: 1
+          name: Steady State (#2)
+        - duration: 300 # Run minutes 20-25
+          maxVusers: 2
+          arrivalRate: .5
+          name: Cool Down
+    basic:
       phases:
         - duration: 240
           arrivalRate: 1

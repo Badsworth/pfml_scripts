@@ -61,7 +61,7 @@ import ArtilleryDeployer from "../artillery/ArtilleryDeployer";
     "TESTMAIL_APIKEY" as const,
     "FINEOS_USERS" as const,
   ];
-  const environment = secretNames.reduce(
+  const env_vars = secretNames.reduce(
     (env, name) => {
       env[`E2E_${name}`] = config(name);
       return env;
@@ -85,7 +85,7 @@ import ArtilleryDeployer from "../artillery/ArtilleryDeployer";
         "dist/cloud.agents.yml",
       ],
       instances: 1,
-      environment,
+      env_vars,
     },
     {
       name: "artillery-claimant",
@@ -98,7 +98,7 @@ import ArtilleryDeployer from "../artillery/ArtilleryDeployer";
         "dist/cloud.claimants.yml",
       ],
       instances: 1,
-      environment,
+      env_vars,
     },
   ]);
   console.log(

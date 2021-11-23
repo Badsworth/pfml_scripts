@@ -12,7 +12,7 @@ config:
     - ./employees
     - ./forms
   environments:
-    performance:
+    full_lst:
       phases:
         # Agent traffic assumes that we have 180 real agents processing ~6 claims an hour. Our agents process 3 claims
         # a minute, or 180/hr. (180 agents * 6 claims per hour) = (6 agents * 180 claims per hour)
@@ -25,9 +25,21 @@ config:
         - duration: 3300
           arrivalRate: 1
           maxVusers: 6
-    test:
+    post_api_deploy:
       phases:
-        - duration: 240
+        # 2 Minute delay to start with. This allows claims to be queued before agents start work.
+        - duration: 115
+          arrivalRate: 0
+
+        # Ramp straight up to the max agents we'll have at once and hold steady till the test is over.
+        - duration: 1200
+          arrivalRate: 1
+          maxVusers: 4
+    basic:
+      phases:
+        - duration: 90
+          arrivalRate: 0
+        - duration: 180
           arrivalRate: 1
           maxVusers: 1
           name: Development
