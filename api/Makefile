@@ -278,6 +278,9 @@ lint-spectral: ## Run OpenAPI Spec linting
 login: start ## Start shell in running container
 	docker exec -it $(APP_NAME) bash
 
+login-root: start ## Start root shell in running container
+	docker exec --user 0 -it $(APP_NAME) bash
+
 login-db: ## Start psql with project environment variables
 	PGPASSWORD=$$DB_PASSWORD psql --host=$$DB_HOST --username=$$DB_USERNAME $$DB_NAME
 
