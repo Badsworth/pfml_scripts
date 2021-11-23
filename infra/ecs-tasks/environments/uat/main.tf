@@ -74,4 +74,8 @@ module "tasks" {
   # Daily at [20:30 Eastern]
   dor_fineos_etl_schedule_expression_standard         = "cron(30 1 * * ? *)"
   dor_fineos_etl_schedule_expression_daylight_savings = "cron(30 0 * * ? *)"
+
+  pdf_api_host             = "https://localhost:5001"
+  enable_generate_1099_pdf = "0"
+  enable_merge_1099_pdf    = "0"
 }
