@@ -125,6 +125,9 @@ create-leave-admin-and-claims: ## Create local API Leave Admin user and claims
 create-user: ## Create local API User
 	PYTHONPATH=$$PYTHONPATH:. $(PY_RUN_CMD) python bin/create-user.py $(args)
 
+console: ## Start interactive Python console
+	$(PY_RUN_CMD) python3 -i -m massgov.pfml.tool.console.interactive
+
 deps: ## Install dependencies
 	$(POETRY_CMD) install --no-root --extras "api-only-dependencies"
 
@@ -254,7 +257,10 @@ lint: ## Run linting
 lint: lint-spectral lint-py db-check-model-parity
 
 lint-py: ## Run python linting
-lint-py: lint-flake lint-mypy
+lint-py: lint-flake lint-mypy lint-poetry-version
+
+lint-poetry-version: ## Check poetry version
+	grep --quiet 'lock-version = "1.1"' poetry.lock
 
 lint-flake: ## Run flake8
 	$(PY_RUN_CMD) flake8 --format=$(FLAKE8_FORMAT) massgov tests bin
