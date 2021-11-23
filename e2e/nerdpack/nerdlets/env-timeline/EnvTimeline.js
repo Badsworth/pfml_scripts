@@ -166,8 +166,8 @@ export default function EnvTimelineWidget({ environment, accountId }) {
         ),
       ]}
     >
-      {(chartData) => {
-        if (chartData[0].loading) {
+      {(loading, chartData) => {
+        if (loading) {
           return <Spinner />;
         }
 

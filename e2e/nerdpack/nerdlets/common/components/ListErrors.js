@@ -1,6 +1,6 @@
 import React from "react";
 import { format } from "date-fns";
-import { labelEnv } from "../index";
+import { labelEnv, setDefault } from "../index";
 import {
   Icon,
   Link,
@@ -8,6 +8,10 @@ import {
   NrqlQuery,
   SectionMessage,
   Spinner,
+  BillboardChart,
+  Grid,
+  GridItem,
+  StackedBarChart,
 } from "nr1";
 import DOMPurify from "dompurify";
 
@@ -155,6 +159,7 @@ export class ListErrors extends React.Component {
   constructor(props) {
     super(props);
     this.accountId = props.accountId;
+    this.scrollable = setDefault(props.scrollable, true);
   }
 
   render() {
@@ -179,7 +184,9 @@ export class ListErrors extends React.Component {
           }
 
           return (
-            <div className={"ListErrors"}>
+            <div
+              className={`ListErrors ${this.scrollable ? "scrollable" : ""}`}
+            >
               {listData[0].data.map((item) => {
                 return (
                   <ListErrorsRow
@@ -192,6 +199,85 @@ export class ListErrors extends React.Component {
           );
         }}
       </NrqlQuery>
+    );
+  }
+}
+
+export class ErrorsListWithOverview extends React.Component {
+  state = {
+    since: "",
+    where: "",
+    open: true,
+  };
+
+  static getDerivedStateFromProps(props, current_state) {
+    if (current_state) {
+      if (current_state.open != props.open) {
+        return {
+          open: current_state.open,
+          since: props.since,
+          where: props.where,
+        };
+      }
+    }
+    return {
+      since: props.since,
+      where: props.where,
+    };
+  }
+
+  constructor(props) {
+    super(props);
+    this.accountId = props.accountId;
+    this.scrollable = setDefault(props.scrollable, true);
+    this.overview = setDefault(props.overview, true);
+    this.children = props.children;
+  }
+
+  toggleShow = () => {
+    this.setState((state) => ({ open: !state.open }));
+  };
+
+  render() {
+    const query = `FROM CypressTestResult
+                   WHERE pass is false
+                      ${this.state.where ? "AND" : ""} ${this.state.where}
+                   ${this.state.since ? "SINCE" : ""} ${this.state.since}
+                   LIMIT MAX`;
+    const querySelect = `SELECT * ${query}`;
+    const queryCount = `SELECT count(*) as Total ${query}`;
+    const queryBarClass = `SELECT count(*) as Total ${query} FACET category, subCategory`;
+    return (
+      <Grid className={"E2E-error-list"}>
+        <GridItem className={"ListHeader"} columnSpan={12}>
+          {this.children ? this.children : <h1>All Errors</h1>}
+          <button onClick={this.toggleShow}>
+            Toggle All {this.state.open ? "Closed" : "Open"}
+          </button>
+        </GridItem>
+        <GridItem columnSpan={this.overview ? 9 : 12}>
+          <ListErrors
+            accountId={this.accountId}
+            query={querySelect}
+            open={this.state.open}
+            scrollable={this.scrollable}
+          />
+        </GridItem>
+        {this.overview && (
+          <GridItem columnSpan={3}>
+            <BillboardChart
+              style={{ height: "100px" }}
+              accountId={this.accountId}
+              query={queryCount}
+            />
+            <StackedBarChart
+              style={{ height: "200px" }}
+              accountId={this.accountId}
+              query={queryBarClass}
+            />
+          </GridItem>
+        )}
+      </Grid>
     );
   }
 }
