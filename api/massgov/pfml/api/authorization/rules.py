@@ -31,6 +31,8 @@ def create_authorization(enable_employees: bool) -> Callable[[User, Any], None]:
             financial_eligibility(user, they)
             rmv_check(user, they)
             notifications(user, they)
+        elif has_role_in(user, [Role.SERVICE_NOW]):
+            pass
         else:
             users(user, they)
             applications(user, they)

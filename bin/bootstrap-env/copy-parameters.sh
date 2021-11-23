@@ -102,6 +102,9 @@ placeholders=(
     "/service/pfml-api/$NEW_ENV/fineos_oauth2_client_secret"
     "/service/pfml-api/$NEW_ENV/cognito_fineos_app_client_id"
     "/service/pfml-api/$NEW_ENV/cognito_internal_fineos_role_app_client_id"
+    "/service/pfml-api/$NEW_ENV/servicenow_oauth2_client_secret"
+    "/service/pfml-api/$NEW_ENV/cognito_servicenow_app_client_id"
+    "/service/pfml-api/$NEW_ENV/cognito_internal_servicenow_role_app_client_id"
 )
 
 
