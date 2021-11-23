@@ -135,6 +135,33 @@ resource "aws_cognito_user_pool_client" "internal_fineos_role_pfml_client" {
   allowed_oauth_flows_user_pool_client = true
 }
 
+
+// Cognito sets defaults when it's created - most you can ignore but
+// access tokens expire in 60 mins.
+resource "aws_cognito_user_pool_client" "servicenow_pfml_client" {
+  name         = "servicenow-${local.app_name}-${var.environment_name}"
+  user_pool_id = aws_cognito_user_pool.claimants_pool.id
+
+  allowed_oauth_flows                  = ["client_credentials"]
+  generate_secret                      = true
+  allowed_oauth_scopes                 = ["machine/admin"]
+  allowed_oauth_flows_user_pool_client = true
+}
+
+// Cognito sets defaults when it's created - most you can ignore but
+// access tokens expire in 60 mins.
+// The internal_ServiceNow_role_pfml_client is to be used internally
+// to test the OAuth endpoints that fineos_pfml_client has access to.
+resource "aws_cognito_user_pool_client" "internal_servicenow_role_pfml_client" {
+  name         = "internal-servicenow-role-oauth-${local.app_name}-${var.environment_name}"
+  user_pool_id = aws_cognito_user_pool.claimants_pool.id
+
+  allowed_oauth_flows                  = ["client_credentials"]
+  generate_secret                      = true
+  allowed_oauth_scopes                 = ["machine/admin"]
+  allowed_oauth_flows_user_pool_client = true
+}
+
 // We don't use the scope yet to validate permissions. We just validate the authenticity
 // of the token generated.
 // Future machine-level clients can reference this same scope.

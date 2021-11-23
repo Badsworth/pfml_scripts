@@ -35,43 +35,12 @@ class User {
   }
 
   /**
-   * Returns an unverifiable employer by employer id
-   */
-  getUnverifiableEmployerById(employerId: string) {
-    return this.user_leave_administrators.find((employer) => {
-      return (
-        employerId === employer.employer_id &&
-        this.isUnverifiableEmployer(employer)
-      );
-    });
-  }
-
-  /**
-   * Returns a verifiable employer by employer id
-   */
-  getVerifiableEmployerById(employerId: string) {
-    return this.user_leave_administrators.find((employer) => {
-      return (
-        employerId === employer.employer_id &&
-        this.isVerifiableEmployer(employer)
-      );
-    });
-  }
-
-  /**
    * Returns list of verified employers
    */
   get verifiedEmployers(): UserLeaveAdministrator[] {
     return this.user_leave_administrators.filter(
       (employer) => employer.verified === true
     );
-  }
-
-  /**
-   * Determines whether an employer is NOT verifiable (unverified and lacks verification data)
-   */
-  isUnverifiableEmployer(employer: UserLeaveAdministrator): boolean {
-    return !employer.verified && !employer.has_verification_data;
   }
 
   /**

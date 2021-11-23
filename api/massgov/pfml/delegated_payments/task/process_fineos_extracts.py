@@ -28,6 +28,9 @@ from massgov.pfml.delegated_payments.reporting.delegated_payment_sql_reports imp
     PROCESS_FINEOS_EXTRACT_REPORTS,
 )
 from massgov.pfml.delegated_payments.state_cleanup_step import StateCleanupStep
+from massgov.pfml.delegated_payments.weekly_max.max_weekly_benefit_amount_validation_step import (
+    MaxWeeklyBenefitAmountValidationStep,
+)
 from massgov.pfml.util.bg import background_task
 
 logger = logging.get_logger(__name__)
@@ -39,6 +42,7 @@ CLAIMANT_EXTRACT = "claimant-extract"
 CONSUME_FINEOS_PAYMENT = "consume-fineos-payment"
 PAYMENT_EXTRACT = "payment-extract"
 VALIDATE_ADDRESSES = "validate-addresses"
+VALIDATE_MAX_WEEKLY_BENEFIT_AMOUNT = "validate-max-weekly-benefit-amount"
 PAYMENT_POST_PROCESSING = "payment-post-processing"
 RELATED_PAYMENT_PROCESSING = "related-payment-processing"
 CREATE_AUDIT_REPORT = "audit-report"
@@ -67,6 +71,7 @@ class Configuration:
     consume_fineos_payment: bool
     do_payment_extract: bool
     validate_addresses: bool
+    validate_max_weekly_benefit_amount: bool
     do_payment_post_processing: bool
     do_related_payment_processing: bool
     make_audit_report: bool
@@ -95,6 +100,7 @@ class Configuration:
             self.consume_fineos_payment = True
             self.do_payment_extract = True
             self.validate_addresses = True
+            self.validate_max_weekly_benefit_amount = True
             self.do_payment_post_processing = True
             self.do_related_payment_processing = True
             self.make_audit_report = True
@@ -107,6 +113,7 @@ class Configuration:
             self.consume_fineos_payment = CONSUME_FINEOS_PAYMENT in steps
             self.do_payment_extract = PAYMENT_EXTRACT in steps
             self.validate_addresses = VALIDATE_ADDRESSES in steps
+            self.validate_max_weekly_benefit_amount = VALIDATE_MAX_WEEKLY_BENEFIT_AMOUNT in steps
             self.do_payment_post_processing = PAYMENT_POST_PROCESSING in steps
             self.do_related_payment_processing = RELATED_PAYMENT_PROCESSING in steps
             self.make_audit_report = CREATE_AUDIT_REPORT in steps
@@ -161,6 +168,11 @@ def _process_fineos_extracts(
 
     if config.validate_addresses:
         AddressValidationStep(
+            db_session=db_session, log_entry_db_session=log_entry_db_session
+        ).run()
+
+    if config.validate_max_weekly_benefit_amount:
+        MaxWeeklyBenefitAmountValidationStep(
             db_session=db_session, log_entry_db_session=log_entry_db_session
         ).run()
 

@@ -126,7 +126,6 @@ def test_parse_payment_rejects_file_missing_columns(
         # Just verify a few others aren't set
         assert row.rejected_by_program_integrity is None
         assert row.skipped_by_program_integrity is None
-        assert row.max_weekly_benefits_details is None
         assert row.dua_additional_income_details is None
         assert row.dia_additional_income_details is None
         assert row.dor_fineos_name_mismatch_details is None

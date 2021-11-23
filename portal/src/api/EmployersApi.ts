@@ -4,10 +4,10 @@ import BaseApi, {
   getAuthorizationHeader,
   handleNotOkResponse,
 } from "./BaseApi";
+import User, { UserLeaveAdministrator } from "../models/User";
 import { ClaimDocument } from "../models/Document";
 import DocumentCollection from "../models/DocumentCollection";
 import EmployerClaim from "../models/EmployerClaim";
-import { UserLeaveAdministrator } from "../models/User";
 import Withholding from "../models/Withholding";
 import routes from "../routes";
 
@@ -110,6 +110,14 @@ export default class EmployersApi extends BaseApi {
    * Submit withholding data for validation
    */
   submitWithholding = async (postData: { [key: string]: unknown }) => {
-    await this.request("POST", "verifications", postData);
+    const { data } = await this.request<User>(
+      "POST",
+      "verifications",
+      postData
+    );
+
+    return {
+      user: new User(data),
+    };
   };
 }

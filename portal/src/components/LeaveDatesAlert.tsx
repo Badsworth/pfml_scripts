@@ -1,6 +1,6 @@
 import Alert from "./core/Alert";
-import { DateTime } from "luxon";
 import React from "react";
+import dayjs from "dayjs";
 import formatDateRange from "../utils/formatDateRange";
 import { useTranslation } from "react-i18next";
 
@@ -50,11 +50,10 @@ function LeaveDatesAlert(props: LeaveDatesAlertProps) {
         >
           {formatDateRange(
             props.startDate,
-
             // Start date is day 1, so it's subtracted from waiting period days
-            `${DateTime.fromISO(props.startDate)
-              .plus({ days: waitingPeriodDays - 1 })
-              .toISO()}`
+            `${dayjs(props.startDate)
+              .add(waitingPeriodDays - 1, "day")
+              .format("YYYY-MM-DD")}`
           )}
         </Alert>
       )}

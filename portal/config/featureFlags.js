@@ -23,11 +23,12 @@ const flagsConfig = {
     // TODO (CP-534): Show all options when portal supports activeDutyFamily, serviceMemberFamily
     claimantShowMilitaryLeaveTypes: false,
 
-    // When this flag is enabled, the claim status page for claimants will show
-    claimantShowStatusPage: false,
-
     // When this flag is enabled, the claim payments section for claimants will show
     claimantShowPayments: false,
+
+    // Show multiple leave request UI updates to leave admins.
+    // TODO (PORTAL-1151) Remove flag
+    employerShowMultiLeave: false,
 
     // When this flag true, you can BYPASS maintenance pages that are currently present.
     // See docs/portal/maintenance-pages.md for more details.
@@ -51,31 +52,11 @@ const flagsConfig = {
   // Environments can optionally override a default feature flag below.
   // The environment keys should use the same envName defined in
   // environment config files.
-  "cps-preview": {
-    claimantShowStatusPage: true,
-  },
   development: {
-    claimantShowStatusPage: true,
     example: true,
     pfmlTerriyay: true,
   },
-  test: {
-    claimantShowStatusPage: true,
-  },
-  stage: {
-    claimantShowStatusPage: true,
-  },
-  training: {
-    claimantShowStatusPage: true,
-  },
-  performance: {
-    claimantShowStatusPage: true,
-  },
-  uat: {
-    claimantShowStatusPage: true,
-  },
   prod: {
-    claimantShowStatusPage: true,
     pfmlTerriyay: true,
   },
 };

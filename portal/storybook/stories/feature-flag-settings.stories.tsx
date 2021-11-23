@@ -13,11 +13,9 @@ export default {
 export const Default = () => {
   /**
    * Reads the feature flag values and generates the choice objects for the field component
-   * @returns {Array<{ label: string, value: string, checked: boolean }>}
    */
   const getFeatureFlagChoices = () => {
-    // @ts-expect-error ts-migrate(2554) FIXME: Expected 1 arguments, but got 0.
-    const flags = featureFlags();
+    const flags = featureFlags("");
     return Object.keys(flags).map((featureName) => ({
       label: featureName,
       value: featureName,

@@ -233,9 +233,6 @@ class PaymentRejectsStep(Step):
                     previously_skipped_payment_count=get_row(
                         row, PAYMENT_AUDIT_CSV_HEADERS.previously_skipped_payment_count
                     ),
-                    max_weekly_benefits_details=get_row(
-                        row, PAYMENT_AUDIT_CSV_HEADERS.max_weekly_benefits_details
-                    ),
                     dua_additional_income_details=get_row(
                         row, PAYMENT_AUDIT_CSV_HEADERS.dua_additional_income_details
                     ),

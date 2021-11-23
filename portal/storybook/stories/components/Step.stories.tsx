@@ -112,7 +112,6 @@ export const Completed = () => (
 );
 
 export const Submitted = () => (
-  // @ts-expect-error ts-migrate(2741) FIXME: Property 'editable' is missing in type '{ children... Remove this comment to see the full error message
   <Step
     number={1}
     screenReaderNumberPrefix="Step"
@@ -122,6 +121,7 @@ export const Submitted = () => (
     resumeText="Resume"
     completedText="Completed"
     editText="Edit"
+    editable={false}
     stepHref="/"
   >
     These are the instructions

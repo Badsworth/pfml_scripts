@@ -10,6 +10,10 @@ jobs:
   publish-fineos-deployments:
     name: "Publish Fineos Deployments"
     runs-on: ubuntu-latest
+    # Prevent runaway jobs from eating up a lot of CI time. There's no legitimate reason this job
+    # should take more than a couple of minutes. There have been instances where snap install was
+    # taking ~10 minutes, which is what we want to prevent.
+    timeout-minutes: 2
     strategy:
       fail-fast: false
       matrix:

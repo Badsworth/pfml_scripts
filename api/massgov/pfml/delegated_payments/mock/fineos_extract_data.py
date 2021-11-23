@@ -5,7 +5,7 @@ import os
 from collections import OrderedDict
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
-from typing import Dict, List, cast
+from typing import Dict, List, Optional, cast
 
 import faker
 
@@ -80,6 +80,8 @@ class FineosClaimantData(MockData):
         self.account_nbr = self.get_value("account_nbr", ssn)
         self.ssn = self.get_value("ssn", ssn)
         self.default_payment_pref = self.get_value("default_payment_pref", "Y")
+
+        # match with fineos_customer_number in scenario_data_generator.py
         self.customer_number = self.get_value("customer_number", fake.ssn().replace("-", ""))
 
         absence_num = str(fake.unique.random_int())
@@ -472,8 +474,8 @@ def generate_payment_extract_files(
             routing_nbr=routing_nbr,
             account_nbr=account_nbr,
             account_type=account_type,
-            payment_start_period=payment_start_period.strftime("%Y-%m-%d %H:%M:%S"),
-            payment_end_period=payment_end_period.strftime("%Y-%m-%d %H:%M:%S"),
+            payment_start=payment_start_period.strftime("%Y-%m-%d %H:%M:%S"),
+            payment_end=payment_end_period.strftime("%Y-%m-%d %H:%M:%S"),
             leave_request_decision=scenario_descriptor.leave_request_decision,
             event_type=event_type,
             event_reason=event_reason,
@@ -628,6 +630,15 @@ def generate_claimant_data_files(
         fineos_employer_id = employer.fineos_employer_id
         leave_type = scenario_descriptor.claim_type
 
+        fineos_employee_first_name: Optional[str] = employee.fineos_employee_first_name
+        fineos_employee_middle_name: Optional[str] = employee.fineos_employee_middle_name
+        fineos_employee_last_name: Optional[str] = employee.fineos_employee_last_name
+
+        if scenario_descriptor.dor_fineos_name_mismatch:
+            fineos_employee_first_name = "Mismatch"
+            fineos_employee_middle_name = "Mismatch"
+            fineos_employee_last_name = "Mismatch"
+
         # Auto generated: c_value, i_value, leave_request_id
         fineos_claimant_data = FineosClaimantData(
             generate_defaults=True,
@@ -653,9 +664,9 @@ def generate_claimant_data_files(
             leave_request_id=leave_request_id,
             notification_number=notification_number,
             employer_customer_num=fineos_employer_id,
-            fineos_employee_first_name=employee.fineos_employee_first_name,
-            fineos_employee_middle_name=employee.fineos_employee_first_name,
-            fineos_employee_last_name=employee.fineos_employee_last_name,
+            fineos_employee_first_name=fineos_employee_first_name,
+            fineos_employee_middle_name=fineos_employee_middle_name,
+            fineos_employee_last_name=fineos_employee_last_name,
         )
 
         fineos_claimant_dataset.append(fineos_claimant_data)

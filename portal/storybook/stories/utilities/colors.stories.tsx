@@ -1,4 +1,3 @@
-/* eslint-disable react/prop-types, react-hooks/exhaustive-deps  */
 /**
  * @file Visual examples of the Mayflower-themed U.S. Web Design System
  * color tokens.
@@ -11,18 +10,18 @@ export default {
 
 const Swatch = ({ token }: { token: string }) => {
   const bgClass = `bg-${token}`;
-  const bgElement = useRef();
+  const bgElement = useRef<HTMLDivElement>(null);
   const [colorValue, setColor] = useState("");
 
   useEffect(() => {
-    // @ts-expect-error ts-migrate(2345) FIXME: Argument of type 'undefined' is not assignable to ... Remove this comment to see the full error message
-    const { backgroundColor } = window.getComputedStyle(bgElement.current);
-    if (backgroundColor) setColor(backgroundColor);
-  });
+    if (bgElement.current instanceof HTMLElement) {
+      const { backgroundColor } = window.getComputedStyle(bgElement.current);
+      if (backgroundColor) setColor(backgroundColor);
+    }
+  }, [bgElement]);
 
   return (
     <div className="width-card margin-bottom-4">
-      {/* @ts-expect-error ts-migrate(2322) FIXME: Type 'MutableRefObject<undefined>' is not assignab... Remove this comment to see the full error message */}
       <div className={`${bgClass} height-card`} ref={bgElement} />
       <code className="font-mono-3xs">.{bgClass}</code>
       <br />

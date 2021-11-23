@@ -786,6 +786,7 @@ const shared = {
   contactCenterPhoneNumber: "(833) 344-7365",
   contactCenterPhoneNumberNoBreak:
     "(833)$t(chars.nbsp)344$t(chars.nbhyphen)7365",
+  contactCenterReportHoursPhoneNumber: "(857) 972-9256",
   dateRangeDelimiter: "to",
   day_Friday: "Friday",
   day_Monday: "Monday",
@@ -1624,7 +1625,7 @@ const pages = {
     intro:
       "<ul><li>Any previous leave for the same reason that you are applying for paid leave now</li><li>Any previous leave for a different qualifying reasons</li></ul>",
     introDontNeed:
-      "<ul><li>Leave that was taken through Massachusetts' PFML program</li><li>Leave that was taken between January 1, 2021 and {{startDate}}</li><li>Family leave to care for a family member taken before July 1, 2021</li></ul>",
+      "<ul><li>Leave that was taken through Massachusetts' PFML program</li><li>Leave that was taken before January 1, 2021</li><li>Family leave to care for a family member taken before July 1, 2021</li></ul>",
     introDontNeedHeader: "You don't need to report:",
     introHeader:
       "You'll need to report previous leave you may have taken between January 1, 2021 and {{startDate}}:",
@@ -2384,9 +2385,6 @@ const pages = {
     title: "Thanks for reviewing the application",
   },
   employersDashboard: {
-    betaHeader: "We're making it easier to manage paid leave applications",
-    betaMessage:
-      "You can now see all the applications you need to review using our new dashboard. Over the next few months, we'll be adding more features to the dashboard so you can easily find and manage paid leave applications. You can <user-feedback-link>use our feedback form</user-feedback-link> to tell us what you think of our new features.",
     filterNavLabel: "Filters:",
     filterOrgsLabel: "Organizations",
     filterRemove: "Remove filter:",
@@ -2488,9 +2486,6 @@ const pages = {
     learnMoreLinks:
       "<ul><li><mass-employer-role-link>Your role as a Massachusetts employer</mass-employer-role-link></li><li><reimbursements-link>Employer reimbursements</reimbursements-link></li></ul>",
     learnMoreTitle: "Learn more",
-    newTag: "New",
-    otherLeaveInfoAlertBody:
-      "The Department of Family and Medical Leave has updated the Review page. Employees can now report other leaves and benefits in their paid leave application. If your employee reported other leaves or benefits, you can review the information provided, and add any that they missed.",
     respondBody:
       "When an application is submitted, you have 10 business days to open the direct link from your email and review it online. You can comment on the application, approve or deny it, and report fraud if needed. Reviewing takes about 10 minutes. If we don’t hear from anyone at your company before the deadline, we’ll process the application solely based on the information the employee provided.",
     respondTitle: "Respond to applications within 10 business days",
@@ -2559,15 +2554,28 @@ const pages = {
   },
   payments: {
     changesToPaymentsAmountAnswer:
-      "<p>See your approval notice for your maximum weekly benefit. We may reduce your benefit amount based on other leave, income and benefits you reported to us. You will receive another notice in this application’s details if we reduce or offset your benefit amount.</p><p>Other scenarios that may change your benefit amount are:</p><ul> <li>You reach the $850 benefit total across multiple employers</li><li>If you transition from medical pregnancy to leave to bond with a child</li><li>Extending your leave</li></ul> <p>Check your <view-notices-link>application’s notices</view-notices-link> to see your approval notice and any updates to your approved benefit amount.</p>",
+      "<p>See your approval notice for your maximum weekly benefit. We may reduce your benefit amount based on <using-other-leave-link>other leave, income and benefits</using-other-leave-link> you reported to us. You will receive another notice in this application’s details if we reduce or offset your benefit amount.</p><p>Other scenarios that may change your benefit amount are:</p><ul> <li>You reach the $850 benefit total across multiple employers</li><li>If you transition from medical pregnancy to leave to bond with a child</li><li>Extending your leave</li></ul> <p>Check your <view-notices-link>application’s notices</view-notices-link> to see your approval notice and any updates to your approved benefit amount.</p>",
     changesToPaymentsAmountQuestion: "What may change your benefit amount",
-    changesToPaymentsHeader: "Changes to payments",
     changesToPaymentsScheduleAnswer:
       "<ul> <li>State and federal holidays</li><li>Your bank’s processes</li><li>Pay periods that end on a weekend</li><li>Payments may be delayed if we need to adjust your benefit amount based on extensions, other income or benefits you’ve reported and other process delays</li></ul>",
     changesToPaymentsScheduleQuestion: "What may change your payment schedule",
     changesToPaymentsYourPreferencesAnswer:
       "<p>To make changes to your application, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>. If you request a change to your start and end dates, we may need to review your application again.</p>",
     changesToPaymentsYourPreferencesQuestion: "Change your payment preference",
+    paymentsTable: {
+      amountSent: "{{amount, currency}}",
+      amountSentHeader: "Amount sent",
+      dateSentHeader: "Date sent",
+      estimatedScheduledDateHeader: "Estimated scheduled date",
+      leaveDatesHeader: "Leave dates",
+      paymentMethodHeader: "Payment Method",
+      paymentMethod_Check: "Check",
+      "paymentMethod_Electronic Funds Transfer": "EFT",
+      paymentStatus_Cancelled: "Cancelled",
+      paymentStatus_Delayed: "Delayed",
+      paymentStatus_Pending: "Pending",
+      paymentStatus_Sent: "Sent to bank",
+    },
     questionsDetails:
       "<p>Call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.</p>",
     questionsHeader: "Questions?",
@@ -2622,36 +2630,6 @@ const components = {
     cancel: "Cancel amendment",
   },
   applicationCard: {
-    actionsHeading: "Actions",
-    bondingLeaveDocsRequired_adopt_foster:
-      "Once your child arrives, submit proof of placement so that we can make a decision.",
-    bondingLeaveDocsRequired_newborn: "$t(shared.docsRequired.newborn)",
-    documentsLoadError: "$t(shared.documentsLoadError)",
-    feinHeading: "Employer EIN",
-    heading: "Application {{number}}",
-    leavePeriodLabel_continuous: "$t(shared.claimDurationTypeContinuous)",
-    leavePeriodLabel_intermittent: "$t(shared.claimDurationTypeIntermittent)",
-    leavePeriodLabel_reduced: "$t(shared.claimDurationTypeReducedSchedule)",
-    leaveReasonValue_activeDutyFamily: "$t(shared.leaveReasonActiveDutyFamily)",
-    leaveReasonValue_bonding: "$t(shared.leaveReasonBonding)",
-    leaveReasonValue_care: "$t(shared.leaveReasonCare)",
-    leaveReasonValue_medical: "$t(shared.leaveReasonMedical)",
-    leaveReasonValue_pregnancy: "$t(shared.leaveReasonMedical)",
-    leaveReasonValue_serviceMemberFamily:
-      "$t(shared.leaveReasonServiceMemberFamily)",
-    noticesDownload:
-      "When you click the notice link, the file will download to your device.",
-    noticesFallback:
-      "Once we’ve made a decision, you can download the decision notice here. You’ll also get an email notification.",
-    noticesHeading: "Download your notices",
-    reductionsInstructions:
-      "<p>If your plans for other benefits or income during your paid leave have changed, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>. Report changes to:</p><ul><li>Benefits from your employer that you plan to use in addition to paid leave from PFML. For example, if you are taking a different amount of sick days than you first planned, or if you are taking employer-sponsored parental leave on a different schedule than you expected, report this change.</li><li>Income from other sources during your leave. For example, if you got approved for a disability benefit or a worker’s compensation claim after you submitted your application, report this change.</li></ul>",
-    reductionsInstructions_missingData:
-      "<p>If you have other leave, benefits, and income to report, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>. Report any of these situations:</p><ul><li>You have already taken leave to care for a family member since July 1, 2021</li><li>You have already taken leave since January 1, 2021 for <when-can-i-use-pfml>any other reason that qualifies for PFML</when-can-i-use-pfml></li><li>You plan to use any accrued paid leave or any other benefits from your employer during your paid leave from PFML (for example: your employer’s parental leave program or paid sick time)</li><li>You expect to get income from any other sources during your leave (for example: disability insurance, retirement benefits, or another job)</li></ul>",
-    resumeClaimButton: "Continue application",
-    uploadDocsButton: "Upload additional documents",
-  },
-  applicationCardV2: {
     applicationID: "Application ID",
     continueApplication: "Continue application",
     employerEIN: "Employer Identification Number (EIN)",
@@ -2831,7 +2809,6 @@ const components = {
     amountFrequency_monthly: "$t(shared.amountFrequency_monthly)",
     amountFrequency_unknown: "$t(shared.amountFrequency_unknown)",
     amountFrequency_weekly: "$t(shared.amountFrequency_weekly)",
-    amountPerFrequency: "{{amount, currency}}",
     amountPerFrequency_daily: "$t(shared.amountPerFrequency_daily)",
     amountPerFrequency_inTotal: "$t(shared.amountPerFrequency_inTotal)",
     amountPerFrequency_monthly: "$t(shared.amountPerFrequency_monthly)",

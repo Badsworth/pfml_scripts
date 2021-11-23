@@ -1,12 +1,13 @@
 import Claim, { AbsenceCaseStatus } from "../models/Claim";
+import ClaimDetail, { Payments } from "../models/ClaimDetail";
 import BaseApi from "./BaseApi";
 import ClaimCollection from "../models/ClaimCollection";
-import ClaimDetail from "../models/ClaimDetail";
 import routes from "../routes";
 
 export default class ClaimsApi extends BaseApi {
+  // payments and claims calls use different base paths
   get basePath() {
-    return routes.api.claims;
+    return "";
   }
 
   get i18nPrefix() {
@@ -48,11 +49,15 @@ export default class ClaimsApi extends BaseApi {
       orderParams.order_by = "fineos_absence_status";
     }
 
-    const { data, meta } = await this.request<Claim[]>("GET", undefined, {
-      page_offset: pageOffset,
-      ...orderParams,
-      ...filterParams,
-    });
+    const { data, meta } = await this.request<Claim[]>(
+      "GET",
+      routes.api.claims,
+      {
+        page_offset: pageOffset,
+        ...orderParams,
+        ...filterParams,
+      }
+    );
 
     const claims = data.map((claimData) => new Claim(claimData));
 
@@ -66,10 +71,20 @@ export default class ClaimsApi extends BaseApi {
    * Fetches claim details given a FINEOS absence ID
    */
   getClaimDetail = async (absenceId: string) => {
-    const { data } = await this.request<ClaimDetail>("GET", absenceId);
-
+    const { data } = await this.request<ClaimDetail>(
+      "GET",
+      `${routes.api.claims}/${absenceId}`
+    );
     return {
       claimDetail: new ClaimDetail(data),
     };
+  };
+
+  getPayments = async (absenceId: string) => {
+    const { data } = await this.request<Payments>(
+      "GET",
+      `${routes.api.payments}?absence_case_id=${absenceId}`
+    );
+    return data;
   };
 }

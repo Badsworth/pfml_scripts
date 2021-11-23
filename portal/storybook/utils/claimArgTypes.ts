@@ -1,4 +1,4 @@
-import { MockBenefitsApplicationBuilder } from "tests/test-utils";
+import { MockBenefitsApplicationBuilder } from "tests/test-utils/mock-model-builder";
 import { PreviousLeaveReason } from "src/models/PreviousLeave";
 
 /**
@@ -7,33 +7,28 @@ import { PreviousLeaveReason } from "src/models/PreviousLeave";
  */
 export const claimArgTypes = {
   Status: {
-    defaultValue: "Part 1 not submitted",
     control: {
       type: "radio",
       options: ["Part 1 not submitted", "Part 1 and 2 are submitted"],
     },
   },
   "Has state ID": {
-    defaultValue: true,
     control: {
       type: "boolean",
     },
   },
   "Employer notified": {
-    defaultValue: true,
     control: {
       type: "boolean",
     },
   },
   "Work pattern": {
-    defaultValue: "fixed",
     control: {
       type: "radio",
       options: ["fixed", "variable"],
     },
   },
   "Leave reason": {
-    defaultValue: "Medical",
     control: {
       type: "radio",
       options: [
@@ -47,21 +42,18 @@ export const claimArgTypes = {
     },
   },
   "Leave period": {
-    defaultValue: "continuous",
     control: {
       type: "radio",
       options: ["continuous", "reduced", "intermittent", "hybrid"],
     },
   },
   "Previous leaves same reason": {
-    defaultValue: "None",
     control: {
       type: "radio",
       options: ["None", "From current employer", "From other employer"],
     },
   },
   "Previous leaves other reason": {
-    defaultValue: "None",
     control: {
       type: "radio",
       options: [
@@ -73,33 +65,44 @@ export const claimArgTypes = {
   },
 
   "Concurrent leave": {
-    defaultValue: "None",
     control: {
       type: "radio",
       options: ["None", "From current employer"],
     },
   },
   "Employer-sponsored benefit": {
-    defaultValue: "None",
     control: {
       type: "radio",
       options: ["None", "Yes (array)"],
     },
   },
   "Other income": {
-    defaultValue: "None",
     control: {
       type: "radio",
       options: ["None", "From other employer"],
     },
   },
   Payment: {
-    defaultValue: "Deposit",
     control: {
       type: "radio",
       options: ["Deposit", "Check"],
     },
   },
+};
+
+export const claimArgs = {
+  Status: "Part 1 not submitted",
+  "Has state ID": true,
+  "Employer notified": true,
+  "Work pattern": "fixed",
+  "Leave reason": "Medical",
+  "Leave period": "continuous",
+  "Previous leaves same reason": "None",
+  "Previous leaves other reason": "None",
+  "Concurrent leave": "None",
+  "Employer-sponsored benefit": "None",
+  "Other income": "None",
+  Payment: "Deposit",
 };
 
 /**

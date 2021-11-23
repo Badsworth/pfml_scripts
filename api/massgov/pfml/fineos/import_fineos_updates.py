@@ -21,6 +21,7 @@ from massgov.pfml.db.models.employees import (
     LkMaritalStatus,
     LkOccupation,
     LkTitle,
+    OrganizationUnit,
     TaxIdentifier,
 )
 from massgov.pfml.util.bg import background_task
@@ -325,8 +326,21 @@ def process_csv_row(
         employee_occupation.employment_status = emp_status
 
     org_unit_name = row.get("EMPLOYEEORGUNITNAME")
-    if org_unit_name is not None:
-        employee_occupation.org_unit_name = org_unit_name
+
+    if org_unit_name is not None and org_unit_name != "":
+        org_unit = (
+            db_session.query(OrganizationUnit)
+            .filter(
+                OrganizationUnit.name == org_unit_name, OrganizationUnit.employer_id == employer_id
+            )
+            .one_or_none()
+        )
+
+        if org_unit is None:
+            org_unit = OrganizationUnit(name=str(org_unit_name), employer_id=employer_id)
+            db_session.add(org_unit)
+
+        employee_occupation.organization_unit = org_unit
 
     hours_per_week = row.get("EMPLOYEEHOURSWORKEDPERWEEK")
     if hours_per_week is not None:

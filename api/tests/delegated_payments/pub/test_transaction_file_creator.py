@@ -34,19 +34,17 @@ fake = faker.Faker()
 
 
 @pytest.fixture
-def transaction_file_step(test_db_session, initialize_factories_session, test_db_other_session):
+def transaction_file_step(
+    local_test_db_session, local_initialize_factories_session, local_test_db_other_session
+):
     return TransactionFileCreatorStep(
-        db_session=test_db_session, log_entry_db_session=test_db_other_session
+        db_session=local_test_db_session, log_entry_db_session=local_test_db_other_session
     )
 
 
 @freeze_time("2021-01-01 12:00:00")
 def test_ach_file_creation(
-    transaction_file_step: TransactionFileCreatorStep,
-    test_db_session,
-    initialize_factories_session,
-    tmp_path,
-    monkeypatch,
+    transaction_file_step: TransactionFileCreatorStep, local_test_db_session, tmp_path, monkeypatch,
 ):
     # set environment variables
     archive_folder_path = str(tmp_path / "archive")
@@ -60,11 +58,11 @@ def test_ach_file_creation(
 
     # create employees ready for prenote
     for _ in range(prenote_count):
-        create_employee_for_prenote(test_db_session)
+        create_employee_for_prenote(local_test_db_session)
 
     # create payments ready for payment
     for _ in range(pub_eft_count):
-        create_payment_for_pub_transaction(test_db_session, PaymentMethod.ACH)
+        create_payment_for_pub_transaction(local_test_db_session, PaymentMethod.ACH)
 
     # generate the ach file
     transaction_file_step.run()
@@ -85,7 +83,7 @@ def test_ach_file_creation(
     # check that no check file was created because no check payments were in the correct state.
     assert transaction_file_step.check_file is None
     assert (
-        test_db_session.query(ReferenceFile)
+        local_test_db_session.query(ReferenceFile)
         .filter(
             ReferenceFile.reference_file_type_id
             == ReferenceFileType.PUB_EZ_CHECK.reference_file_type_id
@@ -96,7 +94,7 @@ def test_ach_file_creation(
 
     # check that corresponding reference file was created
     assert (
-        test_db_session.query(ReferenceFile)
+        local_test_db_session.query(ReferenceFile)
         .filter(
             ReferenceFile.file_location
             == str(os.path.join(expected_ach_file_folder, pub_ach_file_name)),
@@ -111,13 +109,15 @@ def test_ach_file_creation(
     payment_pub_eft_sent_states = state_log_util.get_all_latest_state_logs_in_end_state(
         state_log_util.AssociatedClass.PAYMENT,
         State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT,
-        test_db_session,
+        local_test_db_session,
     )
     assert len(payment_pub_eft_sent_states) == pub_eft_count
 
     # check that prenote states were transitioned for employee
     prenote_sent_states = state_log_util.get_all_latest_state_logs_in_end_state(
-        state_log_util.AssociatedClass.EMPLOYEE, State.DELEGATED_EFT_PRENOTE_SENT, test_db_session,
+        state_log_util.AssociatedClass.EMPLOYEE,
+        State.DELEGATED_EFT_PRENOTE_SENT,
+        local_test_db_session,
     )
     assert len(prenote_sent_states) == prenote_count
 
@@ -235,11 +235,11 @@ def test_check_file_creation(
 
 
 def test_get_eligible_eft_payments_error_states(
-    transaction_file_step: TransactionFileCreatorStep, test_db_session, initialize_factories_session
+    transaction_file_step: TransactionFileCreatorStep, local_test_db_session
 ):
-    create_payment_for_pub_transaction(test_db_session, PaymentMethod.CHECK)
+    create_payment_for_pub_transaction(local_test_db_session, PaymentMethod.CHECK)
 
-    test_db_session.commit()
+    local_test_db_session.commit()
 
     with pytest.raises(
         Exception, match=r"Non-ACH payment method detected in state log: .+",
@@ -248,7 +248,7 @@ def test_get_eligible_eft_payments_error_states(
 
 
 def test_get_pub_efts_for_pre_note(
-    transaction_file_step: TransactionFileCreatorStep, test_db_session, initialize_factories_session
+    transaction_file_step: TransactionFileCreatorStep, local_test_db_session
 ):
     employee = EmployeeFactory.create()
     assert len(transaction_file_step._get_pub_efts_for_prenote(employee)) == 0
@@ -279,7 +279,7 @@ def test_get_pub_efts_for_pre_note(
 
 
 def test_get_eft_eligible_employees_with_eft_error_states(
-    transaction_file_step: TransactionFileCreatorStep, test_db_session, initialize_factories_session
+    transaction_file_step: TransactionFileCreatorStep, local_test_db_session
 ):
     employee = EmployeeFactory.create()
 
@@ -287,7 +287,7 @@ def test_get_eft_eligible_employees_with_eft_error_states(
         employee,
         State.DELEGATED_EFT_SEND_PRENOTE,
         state_log_util.build_outcome("test"),
-        test_db_session,
+        local_test_db_session,
     )
 
     with pytest.raises(

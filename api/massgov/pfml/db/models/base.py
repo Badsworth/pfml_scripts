@@ -43,8 +43,15 @@ class Base:
 
         return json_valid_dict
 
+    def __rich_repr__(self):
+        """Rich repr for interactive console.
 
-def uuid_gen():
+        See https://rich.readthedocs.io/en/latest/pretty.html#rich-repr-protocol
+        """
+        return self.dict().items()
+
+
+def uuid_gen() -> uuid.UUID:
     return uuid.uuid4()
 
 

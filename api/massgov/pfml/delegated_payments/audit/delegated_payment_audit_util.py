@@ -38,7 +38,7 @@ from massgov.pfml.util.datetime import get_period_in_weeks
 # Specify an override for the notes to put if the
 # description on the audit report type doesn't match the message
 AUDIT_REPORT_NOTES_OVERRIDE = {
-    PaymentAuditReportType.MAX_WEEKLY_BENEFITS.payment_audit_report_type_id: "Weekly benefit amount exceeds $850"
+    PaymentAuditReportType.DEPRECATED_MAX_WEEKLY_BENEFITS.payment_audit_report_type_id: "Weekly benefit amount exceeds $850"
 }
 
 
@@ -193,7 +193,6 @@ def build_audit_report_row(
         previously_errored_payment_count=str(payment_audit_data.previously_errored_payment_count),
         previously_rejected_payment_count=str(payment_audit_data.previously_rejected_payment_count),
         previously_skipped_payment_count=str(payment_audit_data.previously_skipped_payment_count),
-        max_weekly_benefits_details=audit_report_details.max_weekly_benefits_details,
         dua_additional_income_details=audit_report_details.dua_additional_income_details,
         dia_additional_income_details=audit_report_details.dia_additional_income_details,
         dor_fineos_name_mismatch_details=audit_report_details.dor_fineos_name_mismatch_details,

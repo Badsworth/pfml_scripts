@@ -41,11 +41,11 @@ resource "aws_lambda_function" "task_trigger" {
 
 data "archive_file" "task_trigger_lambda" {
   type        = "zip"
-  output_path = "${abspath(path.module)}/.zip/${var.task_name}_handler.zip"
+  output_path = "${path.module}/.zip/${var.task_name}_handler.zip"
 
   source {
     filename = "handler.py"
-    content  = file("${abspath(path.module)}/handler.py")
+    content  = file("${path.module}/handler.py")
   }
 }
 

@@ -1,5 +1,6 @@
 import {
   claimArgTypes,
+  claimArgs,
   createClaimFromArgs,
 } from "storybook/utils/claimArgTypes";
 import DocumentCollection from "src/models/DocumentCollection";
@@ -16,11 +17,14 @@ export default {
   argTypes: {
     ...claimArgTypes,
     isLoadingDocuments: {
-      defaultValue: false,
       control: {
         type: "boolean",
       },
     },
+  },
+  args: {
+    ...claimArgs,
+    isLoadingDocuments: false,
   },
 };
 

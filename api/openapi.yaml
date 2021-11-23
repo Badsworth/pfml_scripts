@@ -1706,6 +1706,8 @@ components:
           type: string
         middle_name:
           type: string
+        uses_second_eform_version:
+          type: boolean
         previous_leaves:
           type: array
           items:
@@ -1716,7 +1718,24 @@ components:
           $ref: "#/components/schemas/MaskedSsnItin"
         follow_up_date:
           $ref: "#/components/schemas/Date"
+        absence_periods:
+          type: array
+          items:
+            $ref: "#/components/schemas/AbsencePeriodResponse"
       additionalProperties: false
+      required:
+        - employer_benefits
+        - employer_dba
+        - employer_fein
+        - employer_id
+        - fineos_absence_id
+        - leave_details
+        - previous_leaves
+        - residential_address
+        - is_reviewable
+        - status
+        - uses_second_eform_version
+        - absence_periods
 
     ConcurrentLeave:
       type: object
@@ -2378,7 +2397,7 @@ components:
         absence_periods:
             type: array
             items:
-              $ref: "#/components/schemas/AbsencePeriodStatusResponse"
+              $ref: "#/components/schemas/AbsencePeriodResponse"
         has_paid_payments:
           type: boolean
           example: false
@@ -2420,6 +2439,7 @@ components:
           format: date
           example: "1970-06-01"
           nullable: true
+          type: string
         payment_method:
             type: string
             enum:
@@ -2430,10 +2450,12 @@ components:
             example: "Elec Funds Transfer"
         expected_send_date_start:
           format: date
+          type: string
           nullable: true
           example: "1970-06-01"
         expected_send_date_end:
           format: date
+          type: string
           nullable: true
           example: "1970-06-01"
         status:
@@ -2473,6 +2495,7 @@ components:
       properties:
         created_at:
           format: date
+          type: string
           example: "1970-06-01"
           nullable: true
         document_type:
@@ -3312,11 +3335,6 @@ components:
       type: string
       example: "031111111"
       pattern: '^((0[0-9])|(1[0-2])|(2[1-9])|(3[0-2])|(6[1-9])|(7[0-2])|80)([0-9]{7})$|(\*{9})$'
-
-    Uuid:
-      type: string
-      example: "009fa369-291b-403f-a85a-15e938c26f2f"
-      format: uuid
 
     Date:
       type: string

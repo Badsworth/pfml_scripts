@@ -6,12 +6,12 @@ import { compact, get, isNil, merge, sum, sumBy, zip } from "lodash";
 import Address from "./Address";
 import BaseBenefitsApplication from "./BaseBenefitsApplication";
 import ConcurrentLeave from "./ConcurrentLeave";
-import { DateTime } from "luxon";
 import EmployerBenefit from "./EmployerBenefit";
 import OtherIncome from "./OtherIncome";
 import PaymentPreference from "./PaymentPreference";
 import PreviousLeave from "./PreviousLeave";
 import assert from "assert";
+import dayjs from "dayjs";
 import spreadMinutesOverWeek from "../utils/spreadMinutesOverWeek";
 
 class BenefitsApplication extends BaseBenefitsApplication {
@@ -97,7 +97,7 @@ class BenefitsApplication extends BaseBenefitsApplication {
 
     if (!startDates.length) return false;
 
-    const now = DateTime.local().toISODate();
+    const now = dayjs().format("YYYY-MM-DD"); // current date in ISO 8601 string in local time (by default day.js parses in local time)
     return startDates.every((startDate) => {
       // Compare the two dates lexicographically. This works since they're both in
       // ISO-8601 format, eg "2020-10-13"

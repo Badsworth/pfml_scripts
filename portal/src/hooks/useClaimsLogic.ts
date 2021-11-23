@@ -5,6 +5,7 @@ import ClaimDetail from "../models/ClaimDetail";
 import ClaimsApi from "../api/ClaimsApi";
 import PaginationMeta from "../models/PaginationMeta";
 import { isEqual } from "lodash";
+import { isFeatureEnabled } from "../services/featureFlags";
 import useCollectionState from "./useCollectionState";
 import { useState } from "react";
 
@@ -115,6 +116,14 @@ const useClaimsLogic = ({
     try {
       const data = await claimsApi.getClaimDetail(absenceId);
       loadedClaimDetail = data.claimDetail;
+
+      if (
+        isFeatureEnabled("claimantShowPayments") &&
+        loadedClaimDetail.hasApprovedStatus
+      ) {
+        const payments = await claimsApi.getPayments(absenceId);
+        loadedClaimDetail.payments = payments.payments;
+      }
 
       setClaimDetail(loadedClaimDetail);
     } catch (error) {

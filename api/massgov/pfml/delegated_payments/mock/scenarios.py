@@ -10,6 +10,10 @@ from massgov.pfml.db.models.employees import (
     PaymentMethod,
     PaymentTransactionType,
 )
+from massgov.pfml.delegated_payments.audit.delegated_payment_rejects import (
+    AUDIT_REJECT_NOTE_TO_WRITEBACK_STATUS,
+    AUDIT_SKIPPED_NOTE_TO_WRITEBACK_STATUS,
+)
 from massgov.pfml.delegated_payments.pub.check_return import PaidStatus
 
 
@@ -31,6 +35,11 @@ class ScenarioName(Enum):
 
     HAPPY_PATH_TWO_PAYMENTS_UNDER_WEEKLY_CAP = "HAPPY_PATH_TWO_PAYMENTS_UNDER_WEEKLY_CAP"
     HAPPY_PATH_TWO_ADHOC_PAYMENTS_OVER_CAP = "HAPPY_PATH_TWO_ADHOC_PAYMENTS_OVER_CAP"
+
+    # Audit scenarios
+    HAPPY_PATH_DOR_FINEOS_NAME_MISMATCH = "HAPPY_PATH_DOR_FINEOS_NAME_MISMATCH"
+    HAPPY_PATH_DUA_ADDITIONAL_INCOME = "HAPPY_PATH_DUA_ADDITIONAL_INCOME"
+    HAPPY_PATH_DIA_ADDITIONAL_INCOME = "HAPPY_PATH_DIA_ADDITIONAL_INCOME"
 
     # Non-Standard Payments
     ZERO_DOLLAR_PAYMENT = "ZERO_DOLLAR_PAYMENT"
@@ -67,9 +76,11 @@ class ScenarioName(Enum):
 
     # Audit
     AUDIT_REJECTED = "AUDIT_REJECTED"
+    AUDIT_REJECTED_WITH_NOTE = "AUDIT_REJECTED_WITH_NOTE"
     AUDIT_REJECTED_THEN_ACCEPTED = "AUDIT_REJECTED_THEN_ACCEPTED"
 
     AUDIT_SKIPPED = "AUDIT_SKIPPED"
+    AUDIT_SKIPPED_WITH_NOTE = "AUDIT_SKIPPED_WITH_NOTE"
     AUDIT_SKIPPED_THEN_ACCEPTED = "AUDIT_SKIPPED_THEN_ACCEPTED"
 
     # Returns
@@ -143,9 +154,15 @@ class ScenarioDescriptor:
 
     leave_request_decision: str = "Approved"
 
+    dor_fineos_name_mismatch: bool = False
+    dua_additional_income: bool = False
+    dia_additional_income: bool = False
+
     is_audit_rejected: bool = False
     is_audit_skipped: bool = False
     is_audit_approved_delayed: bool = False
+
+    audit_response_note: str = ""
 
     negative_payment_amount: bool = False
     payment_close_to_cap: bool = False
@@ -259,7 +276,17 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
         leave_request_decision="Rejected",
     ),
     ScenarioDescriptor(scenario_name=ScenarioName.AUDIT_REJECTED, is_audit_rejected=True),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.AUDIT_REJECTED_WITH_NOTE,
+        is_audit_rejected=True,
+        audit_response_note=list(AUDIT_REJECT_NOTE_TO_WRITEBACK_STATUS.keys())[0],
+    ),
     ScenarioDescriptor(scenario_name=ScenarioName.AUDIT_SKIPPED, is_audit_skipped=True),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.AUDIT_SKIPPED_WITH_NOTE,
+        is_audit_skipped=True,
+        audit_response_note=list(AUDIT_SKIPPED_NOTE_TO_WRITEBACK_STATUS.keys())[0],
+    ),
     ScenarioDescriptor(
         scenario_name=ScenarioName.PUB_ACH_PRENOTE_RETURN,
         existing_eft_account=False,
@@ -373,6 +400,16 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
     #     scenario_name=ScenarioName.TAX_WITHHOLDING_DUPLICATES,
     #     is_duplicate_tax_withholding_records_exists=True,
     # ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.HAPPY_PATH_DOR_FINEOS_NAME_MISMATCH,
+        dor_fineos_name_mismatch=True,
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.HAPPY_PATH_DUA_ADDITIONAL_INCOME, dua_additional_income=True,
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.HAPPY_PATH_DIA_ADDITIONAL_INCOME, dia_additional_income=True,
+    ),
 ]
 
 SCENARIO_DESCRIPTORS_BY_NAME: Dict[ScenarioName, ScenarioDescriptor] = {

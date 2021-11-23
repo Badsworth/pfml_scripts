@@ -241,4 +241,31 @@ describe("ClaimDetail", () => {
       ]);
     });
   });
+
+  it("hasApprovedStatus returns true if a claim has at least one approved status", () => {
+    const claimDetail = new ClaimDetail({
+      absence_periods: [
+        {
+          absence_period_start_date: "2021-01-01",
+          absence_period_end_date: "2021-06-30",
+          reason: "Child Bonding",
+          request_decision: "Approved",
+        },
+        {
+          absence_period_start_date: "2021-07-01",
+          absence_period_end_date: "2021-12-31",
+          reason: "Serious Health Condition - Employee",
+          request_decision: "Pending",
+        },
+        {
+          absence_period_start_date: "2021-10-01",
+          absence_period_end_date: "2021-12-31",
+          reason: "Serious Health Condition - Employee",
+          request_decision: "Pending",
+        },
+      ],
+    });
+
+    expect(claimDetail.hasApprovedStatus).toBeTruthy();
+  });
 });

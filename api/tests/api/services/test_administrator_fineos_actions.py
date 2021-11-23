@@ -12,11 +12,11 @@ from massgov.pfml.api.exceptions import ObjectNotFound
 from massgov.pfml.api.models.claims.common import PreviousLeave
 from massgov.pfml.api.models.common import ConcurrentLeave
 from massgov.pfml.api.services.administrator_fineos_actions import (
-    EFORM_TYPES,
+    EformTypes,
+    _get_leave_details,
     download_document_as_leave_admin,
     get_claim_as_leave_admin,
     get_documents_as_leave_admin,
-    get_leave_details,
     register_leave_admin_with_fineos,
 )
 from massgov.pfml.api.validation.exceptions import ContainsV1AndV2Eforms
@@ -1083,7 +1083,7 @@ def mock_fineos_other_leaves_v2_eform():
 
     def mock_eform_summary(*args, **kwargs):
         return [
-            group_client_api.EFormSummary(eformId=12345, eformType=EFORM_TYPES["OTHER_LEAVES"]),
+            group_client_api.EFormSummary(eformId=12345, eformType=EformTypes.OTHER_LEAVES),
         ]
 
     mock_client = create_client()
@@ -1366,7 +1366,7 @@ def mock_fineos_other_leaves_v2_accrued_leave_different_employer_eform():
 
     def mock_eform_summary(*args, **kwargs):
         return [
-            group_client_api.EFormSummary(eformId=12345, eformType=EFORM_TYPES["OTHER_LEAVES"]),
+            group_client_api.EFormSummary(eformId=12345, eformType=EformTypes.OTHER_LEAVES),
         ]
 
     mock_client = create_client()
@@ -1380,8 +1380,8 @@ def mock_fineos_other_leaves_v2_accrued_leave_different_employer_eform():
 def mock_fineos_other_income_eform_both_versions(period_decisions):
     def mock_eform_summary(*args, **kwargs):
         return [
-            group_client_api.EFormSummary(eformId=12345, eformType=EFORM_TYPES["OTHER_INCOME"]),
-            group_client_api.EFormSummary(eformId=12354, eformType=EFORM_TYPES["OTHER_INCOME_V2"]),
+            group_client_api.EFormSummary(eformId=12345, eformType=EformTypes.OTHER_INCOME),
+            group_client_api.EFormSummary(eformId=12354, eformType=EformTypes.OTHER_INCOME_V2),
         ]
 
     mock_client = create_client()
@@ -1394,7 +1394,7 @@ def mock_fineos_other_income_eform_both_versions(period_decisions):
 def mock_fineos_other_income_v1_eform():
     def mock_eform_summary(*args, **kwargs):
         return [
-            group_client_api.EFormSummary(eformId=12345, eformType=EFORM_TYPES["OTHER_INCOME"]),
+            group_client_api.EFormSummary(eformId=12345, eformType=EformTypes.OTHER_INCOME),
         ]
 
     def mock_get_eform(*args, **kwargs):
@@ -1736,7 +1736,7 @@ def test_register_previously_registered_leave_admin_with_fineos(
 
 
 def test_get_leave_details(period_decisions):
-    leave_details = get_leave_details(period_decisions.dict())
+    leave_details = _get_leave_details(period_decisions.dict())
 
     assert leave_details.continuous_leave_periods[0].start_date == date(2021, 2, 1)
     assert leave_details.continuous_leave_periods[0].end_date == date(2021, 2, 24)
@@ -1947,9 +1947,14 @@ def test_get_claim_with_open_managed_requirement(
     initialize_factories_session,
     mock_managed_requirements,
 ):
-    mock_get_req.return_value = [
-        ManagedRequirementDetails.parse_obj(mr) for mr in mock_managed_requirements
-    ]
+    returned_managed_req = []
+    for mr in mock_managed_requirements:
+        mr = ManagedRequirementDetails.parse_obj(mr)
+        # Ensure is_reviewable is True if the current date is the same as the followUpDate:
+        mr.followUpDate = datetime_util.utcnow().date()
+        returned_managed_req.append(mr)
+
+    mock_get_req.return_value = returned_managed_req
     fineos_user_id = "Friendly_HR"
     absence_id = "NTN-001-ABS-001"
     employer = EmployerFactory.create()
@@ -1995,7 +2000,7 @@ def test_get_claim_with_open_expired_managed_requirement(
     returned_managed_req = []
     for mr in mock_managed_requirements:
         mr = ManagedRequirementDetails.parse_obj(mr)
-        mr.followUpDate = datetime_util.utcnow().date() - timedelta(days=3)
+        mr.followUpDate = datetime_util.utcnow().date() - timedelta(days=1)
         returned_managed_req.append(mr)
     mock_get_req.return_value = returned_managed_req
     fineos_user_id = "Friendly_HR"

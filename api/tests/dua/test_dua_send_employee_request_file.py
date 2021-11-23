@@ -1,10 +1,9 @@
 import os
-import uuid
 
 import boto3
 import pytest
-import smart_open
 
+import massgov.pfml.util.files as file_util
 from massgov.pfml.db.models.factories import EmployeeFactory
 from massgov.pfml.dua.dua_generate_employee_request_file import (
     Constants,
@@ -17,12 +16,26 @@ from massgov.pfml.util.batch.log import LogEntry
 
 
 @pytest.fixture
+def expected_fineos_customer_numbers():
+    return (
+        "7c4bb5a5-095d-414a-a8b7-3a9c13f86c7d",
+        "c30298fe-838f-478d-9c74-79b3c4343d3e",
+        "165f188e-086b-4021-ac6c-897336e755e9",
+        "68d0c146-5a1e-4c1b-8755-f7255c97e66c",
+        "c08792b7-5281-4468-befe-7e918e7e7977",
+    )
+
+
+@pytest.fixture
 def add_test_employees(initialize_factories_session):
-    EmployeeFactory.create(fineos_customer_number=str(uuid.uuid4()))
-    EmployeeFactory.create(fineos_customer_number=str(uuid.uuid4()))
-    EmployeeFactory.create(fineos_customer_number=str(uuid.uuid4()))
-    EmployeeFactory.create(fineos_customer_number=str(uuid.uuid4()))
-    EmployeeFactory.create(fineos_customer_number=str(uuid.uuid4()))
+    EmployeeFactory.create(fineos_customer_number="7c4bb5a5-095d-414a-a8b7-3a9c13f86c7d")
+    EmployeeFactory.create(fineos_customer_number="c30298fe-838f-478d-9c74-79b3c4343d3e")
+    EmployeeFactory.create(fineos_customer_number="165f188e-086b-4021-ac6c-897336e755e9")
+    EmployeeFactory.create(fineos_customer_number="68d0c146-5a1e-4c1b-8755-f7255c97e66c")
+    EmployeeFactory.create(fineos_customer_number="c08792b7-5281-4468-befe-7e918e7e7977")
+
+    # employee with no fineos_customer_number
+    EmployeeFactory.create()
 
 
 def test_send_dua_employee_request_file(
@@ -32,6 +45,7 @@ def test_send_dua_employee_request_file(
     add_test_employees,
     mock_sftp_client,
     setup_mock_sftp_client,
+    expected_fineos_customer_numbers,
 ):
     s3_bucket_uri = "s3://" + mock_s3_bucket
     dest_dir = Constants.S3_DFML_OUTBOUND_PATH
@@ -55,8 +69,12 @@ def test_send_dua_employee_request_file(
     dest_filepath_and_prefix = os.path.join(dest_dir, Constants.FILE_PREFIX)
     assert s3_filename.startswith(dest_filepath_and_prefix)
 
-    with smart_open.open(full_s3_filepath) as s3_file:
-        assert 6 == len(list(s3_file))  # 5 employees + header row
+    file_content = list(file_util.read_file_lines(full_s3_filepath))
+    assert 6 == len(file_content)  # 5 employees + header row
+
+    for line in file_content[1::]:
+        tax_id = line.split(",")[0]
+        assert tax_id in expected_fineos_customer_numbers
 
     ref_files = copy_dua_files_from_s3_to_moveit(test_db_session, log_entry)
 

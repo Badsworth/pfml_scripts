@@ -262,6 +262,9 @@ def employer_get_claim_review(fineos_absence_id: str) -> flask.Response:
     log_attributes = get_employer_log_attributes(user_leave_admin.user)
     log_attributes = {"absence_case_id": fineos_absence_id, **log_attributes}
 
+    # TODO (PORTAL-1116): This condition can be removed. It's never reached because
+    # get_current_user_leave_admin_record does the same check, and raises an
+    # `VerificationRequired` exception if its met.
     if not user_leave_admin.fineos_web_id:
         logger.error(
             "employer_get_claim_review failure - user leave administrator does not have a fineos_web_id",

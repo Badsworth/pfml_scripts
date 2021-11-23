@@ -4,17 +4,13 @@ from decimal import Decimal
 import pytest
 
 import massgov.pfml.api.util.state_log_util as state_log_util
-from massgov.pfml.db.models.employees import DiaReductionPayment, DuaReductionPayment, Flow, State
+from massgov.pfml.db.models.employees import Flow, State
 from massgov.pfml.db.models.factories import (
     DiaReductionPaymentFactory,
     DuaReductionPaymentFactory,
     EmployeeFactory,
 )
-from massgov.pfml.db.models.payments import (
-    PaymentAuditReportDetails,
-    PaymentAuditReportType,
-    PaymentLog,
-)
+from massgov.pfml.db.models.payments import PaymentAuditReportDetails, PaymentAuditReportType
 from massgov.pfml.delegated_payments.postprocessing.payment_post_processing_step import (
     PaymentPostProcessingStep,
 )
@@ -37,59 +33,6 @@ def payment_post_processing_step(
     return PaymentPostProcessingStep(
         db_session=local_test_db_session, log_entry_db_session=local_test_db_other_session
     )
-
-
-def test_run_step_payment_over_cap(
-    payment_post_processing_step, local_test_db_session, monkeypatch
-):
-
-    employee = EmployeeFactory.create(fineos_customer_number="2")
-    payment_container = _create_payment_container(
-        employee, Decimal("600.00"), local_test_db_session
-    )
-    _create_payment_container(
-        employee, Decimal("500.00"), local_test_db_session, has_processed_state=True
-    )
-
-    local_test_db_session.commit()
-    local_test_db_session.query(DuaReductionPayment).all()
-    local_test_db_session.query(DiaReductionPayment).all()
-
-    payment_post_processing_step.run()
-
-    payment = payment_container.payment
-    # Despite failing the validation, it'll move onto the next step,
-    # but with some additional audit details.
-    payment_flow_log = state_log_util.get_latest_state_log_in_flow(
-        payment, Flow.DELEGATED_PAYMENT, local_test_db_session
-    )
-    assert (
-        payment_flow_log.end_state_id
-        == State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING.state_id
-    )
-    audit_report_details = (
-        local_test_db_session.query(PaymentAuditReportDetails)
-        .filter(PaymentAuditReportDetails.payment_id == payment.payment_id)
-        .all()
-    )
-
-    local_test_db_session.query(DuaReductionPayment).all()
-    local_test_db_session.query(DiaReductionPayment).all()
-
-    audit_report_details = (
-        local_test_db_session.query(PaymentAuditReportDetails)
-        .filter(PaymentAuditReportDetails.payment_id == payment.payment_id)
-        .one_or_none()
-    )
-    assert audit_report_details.details["message"]
-
-    payment_log = (
-        local_test_db_session.query(PaymentLog)
-        .filter(PaymentLog.payment_id == payment.payment_id)
-        .one_or_none()
-    )
-    assert payment_log and payment_log.details
-    assert "maximum_weekly_benefits" in payment_log.details
 
 
 def test_name_mismatch_post_processing(payment_post_processing_step, local_test_db_session):
@@ -196,8 +139,6 @@ def test_dua_dia_reductions_post_processing(payment_post_processing_step, local_
 def test_mixed_post_processing_scenarios(
     payment_post_processing_step, local_test_db_session, monkeypatch
 ):
-    monkeypatch.setenv("USE_NEW_MAXIMUM_WEEKLY_LOGIC", "1")
-
     fineos_customer_number = "1"
 
     employee = EmployeeFactory.create(fineos_customer_number=fineos_customer_number)
@@ -243,7 +184,7 @@ def test_mixed_post_processing_scenarios(
         .filter(PaymentAuditReportDetails.payment_id == payment.payment_id)
         .all()
     )
-    assert len(audit_report_details) == 3
+    assert len(audit_report_details) == 2
 
     audit_report_type_ids = [
         audit_report_detail.audit_report_type.payment_audit_report_type_id
@@ -255,9 +196,5 @@ def test_mixed_post_processing_scenarios(
     )
     assert (
         PaymentAuditReportType.DIA_ADDITIONAL_INCOME.payment_audit_report_type_id
-        in audit_report_type_ids
-    )
-    assert (
-        PaymentAuditReportType.MAX_WEEKLY_BENEFITS.payment_audit_report_type_id
         in audit_report_type_ids
     )

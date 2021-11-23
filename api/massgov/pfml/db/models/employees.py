@@ -344,6 +344,7 @@ class AbsencePeriod(Base, TimestampMixin):
     fineos_absence_period_class_id = Column(Integer, nullable=False, index=True)
     fineos_absence_period_index_id = Column(Integer, nullable=False, index=True)
     fineos_leave_request_id = Column(Integer)
+    fineos_average_weekly_wage = Column(Numeric(asdecimal=True))
     leave_request_decision_id = Column(
         Integer, ForeignKey("lk_leave_request_decision.leave_request_decision_id")
     )
@@ -406,6 +407,9 @@ class Employer(Base, TimestampMixin):
     organization_units: "Query[OrganizationUnit]" = dynamic_loader(
         "OrganizationUnit", back_populates="employer"
     )
+    employee_benefit_year_contributions: "Query[BenefitYearContribution]" = dynamic_loader(
+        "BenefitYearContribution", back_populates="employer"
+    )
 
     lk_industry_code = relationship(LkIndustryCode)
 
@@ -431,10 +435,15 @@ class Employer(Base, TimestampMixin):
 
 class OrganizationUnit(Base, TimestampMixin):
     __tablename__ = "organization_unit"
+    __table_args__ = (
+        UniqueConstraint("name", "employer_id", name="uix_organization_unit_name_employer_id",),
+    )
     organization_unit_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     fineos_id = Column(Text, nullable=True, unique=True)
-    name = Column(Text, unique=True, nullable=False)
-    employer_id = Column(PostgreSQLUUID, ForeignKey("employer.employer_id"), index=True)
+    name = Column(Text, nullable=False)
+    employer_id = Column(
+        PostgreSQLUUID, ForeignKey("employer.employer_id"), nullable=False, index=True
+    )
 
     employer = relationship("Employer", back_populates="organization_units")
     dua_reporting_units: "Query[DuaReportingUnit]" = dynamic_loader(
@@ -647,6 +656,11 @@ class Employee(Base, TimestampMixin):
         "EmployeeOccupation", back_populates="employee"
     )
 
+    benefit_years: "Query[BenefitYear]" = dynamic_loader("BenefitYear", back_populates="employee")
+    employer_benefit_year_contributions: "Query[BenefitYearContribution]" = dynamic_loader(
+        "BenefitYearContribution", back_populates="employee"
+    )
+
 
 class EmployeePushToFineosQueue(Base, TimestampMixin):
     __tablename__ = "employee_push_to_fineos_queue"
@@ -774,6 +788,52 @@ class Claim(Base, TimestampMixin):
         )
 
         return paid_payments > 0
+
+
+class BenefitYear(Base, TimestampMixin):
+    __tablename__ = "benefit_year"
+    benefit_year_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+    employee_id = Column(
+        PostgreSQLUUID, ForeignKey("employee.employee_id"), nullable=False, index=True
+    )
+    employee = relationship("Employee", back_populates="benefit_years")
+    start_date = Column(Date, nullable=False)
+    end_date = Column(Date, nullable=False)
+    total_wages = Column(Numeric(asdecimal=True))
+    contributions = cast(
+        List["BenefitYearContribution"],
+        relationship("BenefitYearContribution", cascade="all, delete-orphan"),
+    )
+
+
+class BenefitYearContribution(Base, TimestampMixin):
+    __tablename__ = "benefit_year_contribution"
+    benefit_year_contribution_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+
+    benefit_year_id = Column(
+        PostgreSQLUUID, ForeignKey("benefit_year.benefit_year_id"), nullable=False, index=True
+    )
+    benefit_year = relationship("BenefitYear", back_populates="contributions")
+
+    employer_id = Column(
+        PostgreSQLUUID, ForeignKey("employer.employer_id"), nullable=False, index=True
+    )
+    employer = relationship("Employer", back_populates="employee_benefit_year_contributions")
+
+    employee_id = Column(
+        PostgreSQLUUID, ForeignKey("employee.employee_id"), nullable=False, index=True
+    )
+    employee = relationship("Employee", back_populates="employer_benefit_year_contributions")
+
+    average_weekly_wage = Column(Numeric(asdecimal=True), nullable=False)
+
+    Index(
+        "ix_benefit_year_id_employer_id_employee_id",
+        benefit_year_id,
+        employer_id,
+        employee_id,
+        unique=True,
+    )
 
 
 class Payment(Base, TimestampMixin):
@@ -981,6 +1041,7 @@ class User(Base, TimestampMixin):
     mfa_delivery_preference_id = Column(
         Integer, ForeignKey("lk_mfa_delivery_preference.mfa_delivery_preference_id")
     )
+    mfa_phone_number = Column(Text)  # Formatted in E.164
 
     roles = relationship("LkRole", secondary="link_user_role", uselist=True)
     user_leave_administrators = relationship(
@@ -1174,7 +1235,6 @@ class EmployeeOccupation(Base, TimestampMixin):
     date_of_hire = Column(Date)
     date_job_ended = Column(Date)
     employment_status = Column(Text)
-    org_unit_name = Column(Text)
     hours_worked_per_week = Column(Numeric)
     days_worked_per_week = Column(Numeric)
     manager_id = Column(Text)
@@ -1550,6 +1610,7 @@ class AbsenceReason(LookupTable):
     MILITARY_EXIGENCY_FAMILY = LkAbsenceReason(12, "Military Exigency Family")
     PREVENTATIVE_CARE_FAMILY_MEMBER = LkAbsenceReason(13, "Preventative Care - Family Member")
     PUBLIC_HEALTH_EMERGENCY_FAMILY = LkAbsenceReason(14, "Public Health Emergency - Family")
+    MILITARY_EMPLOYEE = LkAbsenceReason(15, "Military - Employee")
 
 
 class AbsenceReasonQualifierOne(LookupTable):
@@ -2010,6 +2071,7 @@ class Role(LookupTable):
     USER = LkRole(1, "User")
     FINEOS = LkRole(2, "Fineos")
     EMPLOYER = LkRole(3, "Employer")
+    SERVICE_NOW = LkRole(4, "ServiceNow")
 
 
 class PaymentMethod(LookupTable):
@@ -2565,8 +2627,18 @@ class State(LookupTable):
         198, "Federal Withholding send funds to IRS", Flow.DELEGATED_PAYMENT.flow_id
     )
 
+    PAYMENT_READY_FOR_MAX_WEEKLY_BENEFIT_AMOUNT_VALIDATION = LkState(
+        199,
+        "Payment ready for max weekly benefit amount validation",
+        Flow.DELEGATED_PAYMENT.flow_id,
+    )
+
+    PAYMENT_FAILED_MAX_WEEKLY_BENEFIT_AMOUNT_VALIDATION = LkState(
+        200, "Payment failed max weekly benefit amount validation", Flow.DELEGATED_PAYMENT.flow_id,
+    )
+
     FEDERAL_WITHHOLDING_ADD_TO_PAYMENT_REJECT_REPORT_RESTARTABLE = LkState(
-        200, "Add Federal Withholding to Payment Reject Report - RESTARTABLE", Flow.DELEGATED_PAYMENT.flow_id
+        201, "Add Federal Withholding to Payment Reject Report - RESTARTABLE", Flow.DELEGATED_PAYMENT.flow_id
     )
 
 
@@ -2673,6 +2745,8 @@ class ReferenceFileType(LookupTable):
     DUA_DEMOGRAPHICS_FILE = LkReferenceFileType(32, "DUA demographics", 1)
 
     DUA_DEMOGRAPHICS_REQUEST_FILE = LkReferenceFileType(33, "DUA demographics request", 1)
+
+    IRS_1099_ORIG = LkReferenceFileType(34, "IRS 1099 org file", 1)
 
 
 class Title(LookupTable):

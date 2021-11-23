@@ -247,13 +247,15 @@ locals {
       ]
     },
 
-    "pub-payments-process-1099-documents" = {
-      command   = ["pub-payments-process-1099-documents"]
-      task_role = "arn:aws:iam::498823821309:role/${local.app_name}-${var.environment_name}-ecs-tasks-pub-payments-process-1099"
+    "pub-claimant-address-validation" = {
+      command   = ["pub-claimant-address-validation"]
+      task_role = aws_iam_role.pub_claimant_address_validation_task_role.arn
       env = [
         local.db_access,
         local.fineos_s3_access,
-        local.pub_s3_folders
+        local.pub_s3_folders,
+        { name : "USE_EXPERIAN_SOAP_CLIENT", value : "1" },
+        { name : "EXPERIAN_AUTH_TOKEN", valueFrom : "/service/${local.app_name}/common/experian-auth-token" }
       ]
     },
 
@@ -304,11 +306,11 @@ locals {
     },
 
     "dua-generate-and-send-employee-request-file" = {
-      command   = ["dua-generate-and-send-employee-request-file"]
-      task_role = aws_iam_role.dua_employee_workflow_task_role.arn
+      command        = ["dua-generate-and-send-employee-request-file"]
+      task_role      = aws_iam_role.dua_employee_workflow_task_role.arn
       execution_role = aws_iam_role.dua_employee_workflow_execution_role.arn
-      cpu       = 2048,
-      memory    = 4096,
+      cpu            = 2048,
+      memory         = 4096,
       env = [
         local.db_access,
         local.eolwd_moveit_access,
@@ -317,22 +319,22 @@ locals {
     }
 
     "dua-backfill-employee-gender" = {
-      command   = ["dua-backfill-employee-gender"]
-      task_role = aws_iam_role.dua_employee_workflow_task_role.arn
+      command        = ["dua-backfill-employee-gender"]
+      task_role      = aws_iam_role.dua_employee_workflow_task_role.arn
       execution_role = aws_iam_role.dua_employee_workflow_execution_role.arn
-      cpu       = 2048,
-      memory    = 4096,
+      cpu            = 2048,
+      memory         = 4096,
       env = [
         local.db_access
       ]
     }
 
     "dua-import-employee-demographics" = {
-      command   = ["dua-import-employee-demographics"]
-      task_role = aws_iam_role.dua_employee_workflow_task_role.arn
+      command        = ["dua-import-employee-demographics"]
+      task_role      = aws_iam_role.dua_employee_workflow_task_role.arn
       execution_role = aws_iam_role.dua_employee_workflow_execution_role.arn
-      cpu       = 2048,
-      memory    = 4096,
+      cpu            = 2048,
+      memory         = 4096,
       env = [
         local.db_access,
         local.eolwd_moveit_access,

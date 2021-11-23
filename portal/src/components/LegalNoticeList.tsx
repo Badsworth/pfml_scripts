@@ -50,7 +50,7 @@ export default function LegalNoticeList(props: LegalNoticeListProps) {
   return (
     <React.Fragment>
       <p className="padding-bottom-2 margin-top-05">
-        {t("components.applicationCardV2.noticeOnClickDetails")}
+        {t("components.applicationCard.noticeOnClickDetails")}
       </p>
       <ul className="add-list-reset">{legalNoticeList}</ul>
     </React.Fragment>

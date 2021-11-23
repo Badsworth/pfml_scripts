@@ -106,6 +106,9 @@ services:
       #- AWS_PROFILE=AWS-498823821309-Infrastructure-Admin_profile
       #- NEW_PLAN_PROOFS_ACTIVE_AT=2021-06-26 00:00:00+00:00
       #- FEATURES_FILE_PATH=file:///app/features.yaml
+      - PDF_API_HOST=https://mass-pfml-pdf-api
+      - ENABLE_GENERATE_1099_PDF=1
+      - ENABLE_MERGE_1099_PDF=1
 
     networks:
       main:

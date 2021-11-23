@@ -8,6 +8,7 @@ const routes = {
     applications: "/applications",
     claims: "/claims",
     employers: "/employers",
+    payments: "/payments",
     users: "/users",
   },
   applications: {
@@ -186,6 +187,8 @@ const routes = {
         "https://www.mass.gov/how-to/appealing-a-denied-paid-family-or-medical-leave-claim",
       schedulingLeaveGuide:
         "https://www.mass.gov/info-details/intermittent-and-reduced-leave-schedules",
+      sevenDayWaitingPeriodInfo:
+        "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#what-is-the-7-day-waiting-period?-",
       taxGuide:
         "https://www.mass.gov/service-details/find-a-tax-professional-to-help-with-your-taxes",
       taxLiability: "https://www.mass.gov/pfml-tax-liability",
@@ -193,6 +196,8 @@ const routes = {
         "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-application-approval-timeline",
       usingAccruedPaidLeave:
         "https://www.mass.gov/info-details/how-other-leave-and-benefits-can-affect-your-paid-family-and-medical-leave#paid-time-off-through-your-employer-",
+      usingOtherLeave:
+        "https://www.mass.gov/info-details/how-other-leave-and-benefits-can-affect-your-paid-family-and-medical-leave",
       verifyEmployer: "https://www.mass.gov/pfml-verify-employer",
       whenCanIUsePFML:
         "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-fact-sheet#when-can-i-use-pfml?-",

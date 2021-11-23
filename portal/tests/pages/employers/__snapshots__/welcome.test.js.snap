@@ -34,23 +34,6 @@ exports[`Employer welcome renders page 1`] = `
       >
         Welcome
       </h1>
-      <div
-        class="usa-alert usa-alert--info"
-        role="region"
-        tabindex="-1"
-      >
-        <div
-          class="usa-alert__body"
-        >
-          <div
-            class="usa-alert__text"
-          >
-            <p>
-              The Department of Family and Medical Leave has updated the Review page. Employees can now report other leaves and benefits in their paid leave application. If your employee reported other leaves or benefits, you can review the information provided, and add any that they missed.
-            </p>
-          </div>
-        </div>
-      </div>
       <p>
         Thanks for joining the paid leave program. Massachusetts workers can now apply for paid family and medical leave.
       </p>
@@ -69,11 +52,6 @@ exports[`Employer welcome renders page 1`] = `
           />
         </svg>
         View all applications
-        <span
-          class="usa-tag display-inline-block text-bold text-middle text-no-wrap margin-left-1"
-        >
-          New
-        </span>
       </h2>
       <p>
         When you log into your account you can now use the 

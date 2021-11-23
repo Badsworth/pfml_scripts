@@ -1,4 +1,4 @@
-import { MockBenefitsApplicationBuilder } from "tests/test-utils";
+import { MockBenefitsApplicationBuilder } from "tests/test-utils/mock-model-builder";
 import generateClaimPageStory from "storybook/utils/generateClaimPageStory";
 
 const leavePeriodAttrs = {
@@ -23,7 +23,6 @@ const mockClaims = {
 
 const { config, DefaultStory } = generateClaimPageStory(
   "previous-leaves-same-reason-details",
-  // @ts-expect-error ts-migrate(2345) FIXME: Argument of type '{ continuous: BenefitsApplicatio... Remove this comment to see the full error message
   mockClaims
 );
 export default config;

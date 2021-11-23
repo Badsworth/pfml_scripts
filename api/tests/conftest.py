@@ -180,6 +180,12 @@ def fineos_user(initialize_factories_session):
 
 
 @pytest.fixture
+def snow_user(initialize_factories_session):
+    user = UserFactory.create(roles=[employee_models.Role.SERVICE_NOW])
+    return user
+
+
+@pytest.fixture
 def employer_user(initialize_factories_session):
     user = UserFactory.create(roles=[employee_models.Role.EMPLOYER])
     return user
@@ -214,6 +220,17 @@ def fineos_user_claims(fineos_user):
         "a": "b",
         "exp": datetime.now() + timedelta(days=1),
         "sub": str(fineos_user.sub_id),
+    }
+
+    return claims
+
+
+@pytest.fixture
+def snow_user_claims(snow_user):
+    claims = {
+        "a": "b",
+        "exp": datetime.now() + timedelta(days=1),
+        "sub": str(snow_user.sub_id),
     }
 
     return claims
@@ -262,6 +279,12 @@ def consented_user_token(consented_user_claims, auth_private_key):
 @pytest.fixture
 def fineos_user_token(fineos_user_claims, auth_private_key):
     encoded = jwt.encode(fineos_user_claims, auth_private_key, algorithm=ALGORITHMS.RS256)
+    return encoded
+
+
+@pytest.fixture
+def snow_user_token(snow_user_claims, auth_private_key):
+    encoded = jwt.encode(snow_user_claims, auth_private_key, algorithm=ALGORITHMS.RS256)
     return encoded
 
 

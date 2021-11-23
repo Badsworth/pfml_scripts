@@ -12,8 +12,7 @@ export default {
 const sampleTitle = "Verify your identity";
 
 export const WithLegend = () => (
-  // @ts-expect-error ts-migrate(2322) FIXME: Type '() => void' is not assignable to type '() =>... Remove this comment to see the full error message
-  <QuestionPage title={sampleTitle} onSave={() => {}}>
+  <QuestionPage title={sampleTitle} onSave={() => Promise.resolve()}>
     <InputText
       name="ssn"
       label="What's your Social Security Number?"
@@ -23,8 +22,7 @@ export const WithLegend = () => (
 );
 
 export const WithFieldset = () => (
-  // @ts-expect-error ts-migrate(2322) FIXME: Type '() => void' is not assignable to type '() =>... Remove this comment to see the full error message
-  <QuestionPage title={sampleTitle} onSave={() => {}}>
+  <QuestionPage title={sampleTitle} onSave={() => Promise.resolve()}>
     <Fieldset>
       <FormLabel component="legend" hint="Some text here about names">
         Input your name here

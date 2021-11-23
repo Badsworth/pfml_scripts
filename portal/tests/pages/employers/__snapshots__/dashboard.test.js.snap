@@ -147,38 +147,7 @@ exports[`Employer dashboard renders the page with expected content and paginatio
   </h1>
   <div
     class="measure-6"
-  >
-    <div
-      class="usa-alert usa-alert--info"
-      role="region"
-      tabindex="-1"
-    >
-      <div
-        class="usa-alert__body"
-      >
-        <h2
-          class="usa-alert__heading font-heading-md text-bold"
-        >
-          We're making it easier to manage paid leave applications
-        </h2>
-        <div
-          class="usa-alert__text"
-        >
-          <p>
-            You can now see all the applications you need to review using our new dashboard. Over the next few months, we'll be adding more features to the dashboard so you can easily find and manage paid leave applications. You can 
-            <a
-              href="https://www.mass.gov/paidleave-employer-feedback"
-              rel="noopener"
-              target="_blank"
-            >
-              use our feedback form
-            </a>
-             to tell us what you think of our new features.
-          </p>
-        </div>
-      </div>
-    </div>
-  </div>
+  />
   <section
     class="margin-bottom-4 margin-top-2"
   >
