@@ -2737,6 +2737,7 @@ class ReferenceFileType(LookupTable):
 
     IRS_1099_ORIG = LkReferenceFileType(34, "IRS 1099 org file", 1)
 
+    # Claimant Address Report
     CLAIMANT_ADDRESS_VALIDATION_REPORT = LkReferenceFileType(
         35, "Claimant Address validation Report", 1
     )
