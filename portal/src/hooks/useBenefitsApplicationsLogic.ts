@@ -4,6 +4,7 @@ import BenefitsApplication from "../models/BenefitsApplication";
 import BenefitsApplicationCollection from "../models/BenefitsApplicationCollection";
 import BenefitsApplicationsApi from "../api/BenefitsApplicationsApi";
 import { NullableQueryParams } from "../utils/routeWithParams";
+import PaginationMeta from "../models/PaginationMeta";
 import PaymentPreference from "../models/PaymentPreference";
 import { PortalFlow } from "./usePortalFlow";
 import TaxWithholdingPreference from "../models/TaxWithholdingPreference";
@@ -35,9 +36,13 @@ const useBenefitsApplicationsLogic = ({
 
   // Track whether the loadAll method has been called. Checking that claims
   // is set isn't sufficient, since it may only include a subset of applications
-  // if loadAll hasn't been called yet
-  const [hasLoadedAll, setHasLoadedAll] = useState(false);
+  // if loadPage hasn't been called yet
+  const [isLoadingClaims, setIsLoadingClaims] = useState<boolean>();
 
+  // Pagination info associated with the current collection of claims
+  const [paginationMeta, setPaginationMeta] = useState<
+    PaginationMeta | { [key: string]: never }
+  >({});
   const applicationsApi = new BenefitsApplicationsApi();
 
   // Cache the validation warnings associated with each claim. Primarily
@@ -107,19 +112,25 @@ const useBenefitsApplicationsLogic = ({
   };
 
   /**
-   * Load all claims for the authenticated user
+   * Load a page of claims for the authenticated user
+   * @param [pageOffset] - Page number to load
    */
-  const loadAll = async () => {
+  const loadPage = async (pageOffset: number | string = 1) => {
     if (!user) throw new Error("Cannot load claims before user is loaded");
-    if (hasLoadedAll) return;
 
+    if (isLoadingClaims) return;
+    if (paginationMeta.page_offset === Number(pageOffset)) return;
+
+    setIsLoadingClaims(true);
     appErrorsLogic.clearErrors();
 
     try {
-      const { claims } = await applicationsApi.getClaims();
-
+      const { claims, paginationMeta } = await applicationsApi.getClaims(
+        pageOffset
+      );
       setBenefitsApplications(claims);
-      setHasLoadedAll(true);
+      setPaginationMeta(paginationMeta);
+      setIsLoadingClaims(false);
     } catch (error) {
       appErrorsLogic.catchError(error);
     }
@@ -299,10 +310,11 @@ const useBenefitsApplicationsLogic = ({
     benefitsApplications,
     complete,
     create,
-    hasLoadedAll,
     hasLoadedBenefitsApplicationAndWarnings,
+    isLoadingClaims,
     load,
-    loadAll,
+    loadPage,
+    paginationMeta,
     update,
     submit,
     submitPaymentPreference,
