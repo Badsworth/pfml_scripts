@@ -1,14 +1,17 @@
+import os
 from datetime import date
 from typing import Dict, Iterable, List, Optional
 
 from sqlalchemy import and_, func
 
+import massgov.pfml.api.app as app
 import massgov.pfml.db as db
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml.db.models.employees import Employee, Payment, StateLog
 from massgov.pfml.db.models.payments import (
     FineosExtractEmployeeFeed,
+    Pfml1099,
     Pfml1099Batch,
     Pfml1099MMARSPayment,
     Pfml1099Payment,
@@ -47,6 +50,29 @@ END_STATES = [
 
 
 logger = logging.get_logger(__package__)
+
+
+def is_generate_1099_pdf_enabled() -> bool:
+    return app.get_config().enable_generate_1099_pdf
+
+
+def is_merge_1099_pdf_enabled() -> bool:
+    return app.get_config().enable_merge_1099_pdf
+
+
+def get_pdf_api_generate_endpoint() -> str:
+    return f"{__get_pdf_api_endpoint()}/api/pdf/generate"
+
+
+def get_pdf_api_merge_endpoint() -> str:
+    return f"{__get_pdf_api_endpoint()}/api/pdf/merge"
+
+
+def __get_pdf_api_endpoint() -> Optional[str]:
+    if os.environ.get("PDF_API_HOST") is None:
+        raise Exception("Env var 'PDF_API_HOST' has not being defined.")
+
+    return os.environ.get("PDF_API_HOST")
 
 
 def get_payments(db_session: db.Session) -> List[Payment]:
@@ -256,3 +282,15 @@ def get_batch_counts(db_session: db.Session) -> Dict[int, int]:
         batch_counts[year] = count
 
     return batch_counts
+
+
+def get_1099_records(db_session: db.Session, batchId: str) -> List[Pfml1099]:
+
+    records = db_session.query(Pfml1099).filter(Pfml1099.pfml_1099_batch_id == batchId).all()
+    records = records[:5]
+    if records is not None:
+        logger.info(
+            "Number of 1099 Records for batch [%s]: %s", batchId, len(records),
+        )
+
+    return records
