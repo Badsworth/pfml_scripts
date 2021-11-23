@@ -1,18 +1,25 @@
 import withBenefitsApplications, {
   WithBenefitsApplicationsProps,
 } from "../../hoc/withBenefitsApplications";
+import withUser, { WithUserProps } from "../../hoc/withUser";
 import Alert from "../../components/core/Alert";
 import ApplicationCard from "../../components/ApplicationCard";
 import ButtonLink from "../../components/ButtonLink";
 import Heading from "../../components/core/Heading";
 import Lead from "../../components/core/Lead";
+import PaginationNavigation from "src/components/PaginationNavigation";
 import React from "react";
 import Title from "../../components/core/Title";
 import { Trans } from "react-i18next";
+import isBlank from "src/utils/isBlank";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
 
-interface IndexProps extends WithBenefitsApplicationsProps {
+interface PageQueryParam {
+  name: string;
+  value: number | null | string | string[];
+}
+interface IndexProps extends WithUserProps {
   query: { uploadedAbsenceId?: string };
 }
 
@@ -20,18 +27,44 @@ interface IndexProps extends WithBenefitsApplicationsProps {
  * List of all applications associated with the authenticated user
  */
 export const Index = (props: IndexProps) => {
-  const { appLogic, claims, query } = props;
+  const { appLogic, query } = props;
   const { t } = useTranslation();
+  const apiParams = {
+    order_direction: "ascending",
+    ...query,
+  } as const;
 
-  // Redirect users who do not have claims
-  if (props.claims.isEmpty) {
-    appLogic.portalFlow.goTo(routes.applications.getReady);
-    return null;
-  }
+  /**
+   * Update the page's query string, to load a different page number,
+   */
+  const updatePageQuery = (paramsToUpdate: PageQueryParam[]) => {
+    const params = new URLSearchParams(window.location.search);
 
-  const hasClaims = claims.items.length > 0;
-  const hasInProgressClaims = hasClaims && claims.inProgress.length > 0;
-  const hasCompletedClaims = hasClaims && claims.completed.length > 0;
+    paramsToUpdate.forEach(({ name, value }) => {
+      if (isBlank(value) || (typeof value !== "number" && value.length === 0)) {
+        // Remove param if its value is null, undefined, empty string, or empty array
+        params.delete(name);
+      } else {
+        params.set(name, value.toString());
+      }
+    });
+
+    const paramsObj: { [key: string]: string } = {};
+    for (const [paramKey, paramValue] of Array.from(params.entries())) {
+      paramsObj[paramKey] = paramValue;
+    }
+
+    // Our withBenefitsApplication component watches the query string and
+    // will trigger an API request when it changes.
+    appLogic.portalFlow.updateQuery(paramsObj);
+  };
+  const PaginatedIndexPageWithBenefitsApplications = withBenefitsApplications(
+    PaginatedIndexPage,
+    apiParams
+  );
+  const componentSpecificProps = {
+    updatePageQuery,
+  };
 
   return (
     <React.Fragment>
@@ -48,63 +81,10 @@ export const Index = (props: IndexProps) => {
       )}
 
       <div className="grid-row grid-gap-6">
-        <div className="desktop:grid-col">
-          <Title>{t("pages.applications.title")}</Title>
-
-          {hasInProgressClaims && (
-            <React.Fragment>
-              <div className="measure-6">
-                <Lead>
-                  <Trans
-                    i18nKey="pages.applications.claimsApprovalProcess"
-                    components={{
-                      "approval-process-link": (
-                        <a
-                          href={routes.external.massgov.approvalTimeline}
-                          rel="noopener noreferrer"
-                          target="_blank"
-                        />
-                      ),
-                    }}
-                  />
-                </Lead>
-              </div>
-              <Heading level="2">
-                {t("pages.applications.inProgressHeading")}
-              </Heading>
-              {claims.inProgress.map((claim, index) => {
-                return (
-                  <ApplicationCard
-                    appLogic={appLogic}
-                    key={claim.application_id}
-                    // @ts-expect-error PORTAL-1078
-                    claim={claim}
-                    number={index + 1}
-                  />
-                );
-              })}
-            </React.Fragment>
-          )}
-
-          {hasCompletedClaims && (
-            <React.Fragment>
-              <Heading level="2">
-                {t("pages.applications.submittedHeading")}
-              </Heading>
-              {claims.completed.map((claim, index) => {
-                return (
-                  <ApplicationCard
-                    appLogic={appLogic}
-                    key={claim.application_id}
-                    // @ts-expect-error PORTAL-1078
-                    claim={claim}
-                    number={claims.inProgress.length + index + 1}
-                  />
-                );
-              })}
-            </React.Fragment>
-          )}
-        </div>
+        <PaginatedIndexPageWithBenefitsApplications
+          appLogic={appLogic}
+          {...componentSpecificProps}
+        />
         <div className="desktop:grid-col-auto">
           <Heading level="2" className="usa-sr-only">
             {t("pages.applications.createApplicationHeading")}
@@ -119,4 +99,104 @@ export const Index = (props: IndexProps) => {
   );
 };
 
-export default withBenefitsApplications(Index);
+interface PaginatedIndexPageProps extends WithBenefitsApplicationsProps {
+  updatePageQuery: (params: PageQueryParam[]) => void;
+}
+
+const PaginatedIndexPage = (props: PaginatedIndexPageProps) => {
+  const { appLogic, claims, paginationMeta, updatePageQuery } = props;
+  const { t } = useTranslation();
+
+  // Redirect users who do not have claims
+  // if (props.claims.isEmpty) {
+  //   appLogic.portalFlow.goTo(routes.applications.getReady);
+  //   return null;
+  // }
+
+  const hasClaims = claims.items.length > 0;
+  const hasInProgressClaims = hasClaims && claims.inProgress.length > 0;
+  const hasCompletedClaims = hasClaims && claims.completed.length > 0;
+
+  /**
+   * Event handler for when a next/prev pagination button is clicked
+   */
+  const handlePaginationNavigationClick = (pageOffset: number | string) => {
+    updatePageQuery([
+      {
+        name: "page_offset",
+        value: pageOffset,
+      },
+    ]);
+  };
+
+  return (
+    <React.Fragment>
+      <div className="desktop:grid-col">
+        <Title>{t("pages.applications.title")}</Title>
+
+        {hasInProgressClaims && (
+          <React.Fragment>
+            <div className="measure-6">
+              <Lead>
+                <Trans
+                  i18nKey="pages.applications.claimsApprovalProcess"
+                  components={{
+                    "approval-process-link": (
+                      <a
+                        href={routes.external.massgov.approvalTimeline}
+                        rel="noopener noreferrer"
+                        target="_blank"
+                      />
+                    ),
+                  }}
+                />
+              </Lead>
+            </div>
+            <Heading level="2">
+              {t("pages.applications.inProgressHeading")}
+            </Heading>
+            {claims.inProgress.map((claim, index) => {
+              return (
+                <ApplicationCard
+                  appLogic={appLogic}
+                  key={claim.application_id}
+                  // @ts-expect-error PORTAL-1078
+                  claim={claim}
+                  number={index + 1}
+                />
+              );
+            })}
+          </React.Fragment>
+        )}
+
+        {hasCompletedClaims && (
+          <React.Fragment>
+            <Heading level="2">
+              {t("pages.applications.submittedHeading")}
+            </Heading>
+            {claims.completed.map((claim, index) => {
+              return (
+                <ApplicationCard
+                  appLogic={appLogic}
+                  key={claim.application_id}
+                  // @ts-expect-error PORTAL-1078
+                  claim={claim}
+                  number={claims.inProgress.length + index + 1}
+                />
+              );
+            })}
+          </React.Fragment>
+        )}
+        {paginationMeta.total_pages > 0 && (
+          <PaginationNavigation
+            pageOffset={paginationMeta.page_offset}
+            totalPages={paginationMeta.total_pages}
+            onClick={handlePaginationNavigationClick}
+          />
+        )}
+      </div>
+    </React.Fragment>
+  );
+};
+
+export default withUser(Index);
