@@ -277,6 +277,22 @@ variable "rmv_api_behavior" {
   default     = "fully_mocked"
 }
 
+variable "pdf_api_host" {
+  description = "URL of the PDF API"
+  type        = string
+  default     = ""
+}
+
+variable "enable_generate_1099_pdf" {
+  description = "Enable generation of 1099 documents"
+  default     = "0"
+}
+
+variable "enable_merge_1099_pdf" {
+  description = "Enable merging of 1099 documents for printing"
+  default     = "0"
+}
+
 ########## Variables for Step Functions ################
 
 variable "st_use_mock_dor_data" {
