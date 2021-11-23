@@ -4,9 +4,8 @@ import BenefitsApplication from "../models/BenefitsApplication";
 import { BenefitsApplicationDocument } from "../models/Document";
 import PageNotFound from "../components/PageNotFound";
 import assert from "assert";
-
 export interface QueryForWithClaimDocuments {
-  claim_id?: string;
+  claim_id: string;
 }
 
 export interface WithClaimDocumentsProps extends WithUserProps {
@@ -26,6 +25,7 @@ function withClaimDocuments<
     }
   ) => {
     const { appLogic, claim, query } = props;
+
     const {
       documents: { loadAll, documents, hasLoadedClaimDocuments },
       users,
@@ -37,14 +37,14 @@ function withClaimDocuments<
     const shouldLoad = !!(
       application_id && !hasLoadedClaimDocuments(application_id)
     );
+
     assert(documents);
     // Since we are within a withUser higher order component, user should always be set
     assert(users.user);
 
     useEffect(() => {
-      if (shouldLoad) {
-        loadAll(application_id);
-      }
+      loadAll(application_id);
+
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [shouldLoad]);
 

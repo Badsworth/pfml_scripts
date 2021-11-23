@@ -41,6 +41,7 @@ const useDocumentsLogic = ({
   const [loadedApplicationDocs, setLoadedApplicationDocs] = useState<string[]>(
     []
   );
+  const [isLoadingDocuments, setIsLoadingDocuments] = useState<boolean>();
 
   /**
    * Check if docs for this application have been loaded
@@ -56,10 +57,11 @@ const useDocumentsLogic = ({
    */
   const loadAll = async (application_id: string) => {
     // if documents already contains docs for application_id, don't load again
-    if (hasLoadedClaimDocuments(application_id)) {
-      return;
-    }
+    if (isLoadingDocuments) return;
+
     appErrorsLogic.clearErrors();
+
+    setIsLoadingDocuments(true);
 
     try {
       const { documents: loadedDocuments } = await documentsApi.getDocuments(
@@ -71,6 +73,7 @@ const useDocumentsLogic = ({
         application_id,
       ]);
       addDocuments(loadedDocuments.items);
+      setIsLoadingDocuments(true);
     } catch (error) {
       appErrorsLogic.catchError(new DocumentsLoadError(application_id));
     }
@@ -155,6 +158,7 @@ const useDocumentsLogic = ({
     attach,
     download,
     hasLoadedClaimDocuments,
+    isLoadingDocuments,
     documents,
     loadAll,
   };
