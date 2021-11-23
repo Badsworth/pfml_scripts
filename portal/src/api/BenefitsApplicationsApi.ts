@@ -65,13 +65,18 @@ export default class BenefitsApplicationsApi extends BaseApi {
   /**
    * Fetches the list of claims for a user
    */
-  getClaims = async () => {
-    const { data } = await this.request<BenefitsApplication[]>("GET");
+  getClaims = async (pageOffset: string | number = 1) => {
+    const { data, meta } = await this.request<BenefitsApplication[]>(
+      "GET",
+      "",
+      { page_offset: pageOffset }
+    );
 
     const claims = data.map((claimData) => new BenefitsApplication(claimData));
 
     return {
       claims: new BenefitsApplicationCollection(claims),
+      paginationMeta: meta?.paging ?? {},
     };
   };
 
