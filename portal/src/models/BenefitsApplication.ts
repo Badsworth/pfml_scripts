@@ -21,7 +21,7 @@ class BenefitsApplication extends BaseBenefitsApplication {
   application_id: string;
   fineos_absence_id: string | null = null;
   organization_unit_id: string | null = null;
-  organization_unit_selection: string | null = null;
+  organization_unit_selection: "not_listed" | "not_selected" | null = null;
   created_at: string;
 
   first_name: string | null = null;
@@ -84,8 +84,14 @@ class BenefitsApplication extends BaseBenefitsApplication {
     | typeof BenefitsApplicationStatus[keyof typeof BenefitsApplicationStatus]
     | null = null;
 
+  // Organization unit data selected by the user (used in review page)
   organization_unit: OrganizationUnit | null;
+
+  // The list of organization units that we know are connected
+  // to this employee based on their occupation and DUA data
   employee_organization_units: OrganizationUnit[];
+
+  // The list of organization units that are connected to this employer (in FINEOS)
   employer_organization_units: OrganizationUnit[];
 
   constructor(attrs: Partial<BenefitsApplication>) {

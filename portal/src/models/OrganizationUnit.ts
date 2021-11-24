@@ -1,6 +1,6 @@
+// Replicates the organization unit table structure
+// returned in the ApplicationResponse (used in class BenefitsApplication)
 export default interface OrganizationUnit {
   organization_unit_id: string;
-  fineos_id?: string | null;
   name: string;
-  employer_id?: string | null;
 }
