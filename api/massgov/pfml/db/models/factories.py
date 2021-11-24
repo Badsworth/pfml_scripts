@@ -979,7 +979,49 @@ class OrganizationUnitFactory(BaseFactory):
     class Meta:
         model = employee_models.OrganizationUnit
 
+    organization_unit_id = Generators.UuidObj
+
     fineos_id = None
     name = factory.Faker("company")
     employer = factory.SubFactory(EmployerFactory)
     employer_id = factory.LazyAttribute(lambda c: c.employer.employer_id)
+
+
+class DuaEmployeeDemographicsFactory(BaseFactory):
+    class Meta:
+        model = employee_models.DuaEmployeeDemographics
+
+    dua_employee_demographics_id = Generators.UuidObj
+
+    fineos_customer_number = factory.Faker("numerify", text="####")
+    date_of_birth = factory.Faker("date_object")
+    gender_code = random.choices(["F", "M", "U", None])
+    occupation_code = random.randint(1, 6000)
+    occupation_description = None
+    employer_fein = Generators.Fein
+    employer_reporting_unit_number = random.randint(1, 100000)
+
+
+class DuaReportingUnitFactory(BaseFactory):
+    class Meta:
+        model = employee_models.DuaReportingUnit
+
+    dua_reporting_unit_id = Generators.UuidObj
+    dua_id = factory.Sequence(lambda n: n)
+    dba = None
+
+    organization_unit = factory.SubFactory(OrganizationUnitFactory)
+    organization_unit_id = factory.LazyAttribute(lambda d: d.organization_unit.organization_unit_id)
+
+
+class EmployeeOccupationFactory(BaseFactory):
+    class Meta:
+        model = employee_models.EmployeeOccupation
+
+    employee_occupation_id = Generators.UuidObj
+
+    employee = factory.SubFactory(EmployeeFactory)
+    employee_id = factory.LazyAttribute(lambda d: d.employee.employee_id)
+
+    employer = factory.SubFactory(EmployerFactory)
+    employer_id = factory.LazyAttribute(lambda d: d.employer.employer_id)

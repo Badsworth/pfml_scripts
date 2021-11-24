@@ -608,7 +608,8 @@ class Employee(Base, TimestampMixin):
     preferred_comm_method_type = Column(Text)
     date_of_birth = Column(Date)
     date_of_death = Column(Date)
-    fineos_customer_number = Column(Text, nullable=True)
+    # https://lwd.atlassian.net/browse/PORTAL-439 will make this unique
+    fineos_customer_number = Column(Text, nullable=True, index=True)
     race_id = Column(Integer, ForeignKey("lk_race.race_id"))
     marital_status_id = Column(Integer, ForeignKey("lk_marital_status.marital_status_id"))
     gender_id = Column(Integer, ForeignKey("lk_gender.gender_id"))
