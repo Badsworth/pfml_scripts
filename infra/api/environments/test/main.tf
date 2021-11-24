@@ -105,4 +105,6 @@ module "api" {
   portal_base_url                                     = "https://paidleave-test.mass.gov"
   enable_application_fraud_check                      = "0"
   release_version                                     = var.release_version
+
+  enable_pdf_document_compression = "1"
 }

@@ -117,6 +117,8 @@ class IssueType(str, Enum):
     outstanding_information_request_required = "outstanding_information_request_required"
     # Masked field is not allowed
     invalid_masked_field = "invalid_masked_field"
+    # File is too large to be stored
+    file_size = "file_size"
     # File mime type is not a supported mime type
     file_type = "file_type"
     # Extension portion is required in the filename, but missing.

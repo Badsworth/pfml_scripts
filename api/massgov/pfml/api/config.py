@@ -35,6 +35,7 @@ class AppConfig:
     new_plan_proofs_active_at: datetime
     enable_generate_1099_pdf: bool
     enable_merge_1099_pdf: bool
+    enable_pdf_document_compression: bool
 
 
 def get_config() -> AppConfig:
@@ -60,4 +61,7 @@ def get_config() -> AppConfig:
         ),
         enable_generate_1099_pdf=os.environ.get("ENABLE_GENERATE_1099_PDF", "0") == "1",
         enable_merge_1099_pdf=os.environ.get("ENABLE_MERGE_1099_PDF", "0") == "1",
+        enable_pdf_document_compression=(
+            os.environ.get("ENABLE_PDF_DOCUMENT_COMPRESSION", "0") == "1"
+        ),
     )
