@@ -19,10 +19,13 @@ from . import formatters, network
 
 start_time = time.monotonic()
 
-LOGGING = {
+LOGGING: Dict[str, Any] = {
     "version": 1,
     "disable_existing_loggers": False,
-    "formatters": {"json": {"()": formatters.JsonFormatter},},
+    "formatters": {
+        "json": {"()": formatters.JsonFormatter},
+        "develop": {"()": formatters.DevelopFormatter},
+    },
     "handlers": {"console": {"class": "logging.StreamHandler", "formatter": "json"},},
     "root": {"handlers": ["console"], "level": "WARN"},
     "loggers": {
@@ -49,8 +52,10 @@ LOGGING = {
 }
 
 
-def init(program_name):
+def init(program_name, develop=False):
     """Initialize the logging system."""
+    if develop:
+        LOGGING["handlers"]["console"]["formatter"] = "develop"
     logging.config.dictConfig(LOGGING)
     logger.info(
         "start %s: %s %s %s, hostname %s, pid %i, user %i(%s)",

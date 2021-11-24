@@ -8,7 +8,6 @@ export default {
   component: VerifyAccount,
   argTypes: {
     scenario: {
-      defaultValue: "Claimant post-signup",
       control: {
         type: "radio",
         options: [
@@ -18,6 +17,9 @@ export default {
         ],
       },
     },
+  },
+  args: {
+    scenario: "Claimant post-signup",
   },
 };
 

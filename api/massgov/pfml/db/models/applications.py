@@ -793,48 +793,6 @@ class RMVCheck(Base, TimestampMixin):
     rmv_customer_key = Column(Text, nullable=True)
 
 
-class StateMetric(Base, TimestampMixin):
-    __tablename__ = "state_metric"
-    effective_date = Column(Date, primary_key=True, nullable=False)
-    unemployment_minimum_earnings = Column(Numeric, nullable=False)
-    average_weekly_wage = Column(Numeric, nullable=False)
-    maximum_weekly_benefit_amount = Column(Numeric, nullable=False)
-
-    def __init__(
-        self,
-        effective_date: datetime.date,
-        unemployment_minimum_earnings: str,
-        average_weekly_wage: str,
-        maximum_weekly_benefit_amount: Optional[str] = None,
-    ):
-        """Constructor that takes metric values as strings.
-
-        This ensures that the decimals are precise. For example compare Decimal(1431.66) to
-        Decimal("1431.66").
-        """
-        self.effective_date = effective_date
-        self.unemployment_minimum_earnings = Decimal(unemployment_minimum_earnings)
-        self.average_weekly_wage = Decimal(average_weekly_wage)
-
-        # When the maximum weekly benefit is not manually set, it will be calculated based on
-        # the average weekly wage, as per the regulation:
-        # https://malegislature.gov/Laws/GeneralLaws/PartI/TitleXXII/Chapter175M/Section3
-        if maximum_weekly_benefit_amount is None:
-            self.maximum_weekly_benefit_amount = round_nearest_hundredth(
-                self.average_weekly_wage * Decimal(".64")
-            )
-        else:
-            self.maximum_weekly_benefit_amount = Decimal(maximum_weekly_benefit_amount)
-
-    def __repr__(self):
-        return "StateMetric(%s, %s, %s, %s)" % (
-            self.effective_date,
-            self.unemployment_minimum_earnings,
-            self.average_weekly_wage,
-            self.maximum_weekly_benefit_amount,
-        )
-
-
 class UnemploymentMetric(Base, TimestampMixin):
     __tablename__ = "unemployment_metric"
     effective_date = Column(Date, primary_key=True, nullable=False)

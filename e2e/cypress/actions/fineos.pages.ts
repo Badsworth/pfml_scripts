@@ -384,13 +384,13 @@ export class ClaimPage {
    */
   removeSuppressCorrespondence(): this {
     cy.contains("Options").click();
-    cy.contains("Notifications").click({force: true});
+    cy.contains("Notifications").click({ force: true });
     cy.get("input[type='submit'][value='Suppress Notifications']").click();
     cy.contains(
       "Automatic Notifications and Correspondence have been suppressed."
     );
     cy.get("#alertsHeader").within(() => {
-      cy.contains("Open").click({force: true});
+      cy.contains("Open").click({ force: true });
       waitForAjaxComplete();
       cy.contains(
         "Automatic Notifications and Correspondence have been suppressed."
@@ -398,8 +398,10 @@ export class ClaimPage {
     });
     cy.contains("Close Task").click();
     cy.get("table.PopupBean").within(() => {
-      cy.get("input[type='submit'][value='Yes']").first().click( {force: true} );
-    })
+      cy.get("input[type='submit'][value='Yes']")
+        .first()
+        .click({ force: true });
+    });
     clickBottomWidgetButton("OK");
     return this;
   }

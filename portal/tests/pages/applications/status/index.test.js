@@ -87,7 +87,7 @@ const props = {
 };
 
 describe("Status", () => {
-  it("shows StatusNavigationTabs if claimantShowPayments feature flag is enabled", () => {
+  it("shows StatusNavigationTabs if claimantShowPayments feature flag is enabled and claim has_paid_payments  ", () => {
     process.env.featureFlags = {
       claimantShowPayments: true,
     };
@@ -96,6 +96,7 @@ describe("Status", () => {
       {
         addCustomSetup: setupHelper({
           ...defaultClaimDetail,
+          has_paid_payments: true,
           absence_periods: [
             {
               period_type: "Reduced",
@@ -116,6 +117,33 @@ describe("Status", () => {
   });
 
   it("does not show StatusNavigationTabs if claimantShowPayments feature flag is disabled", () => {
+    renderPage(
+      Status,
+      {
+        addCustomSetup: setupHelper({
+          ...defaultClaimDetail,
+          absence_periods: [
+            {
+              period_type: "Reduced",
+              reason: LeaveReason.bonding,
+              request_decision: "Approved",
+              reason_qualifier_one: "Newborn",
+            },
+          ],
+        }),
+      },
+      props
+    );
+
+    expect(
+      screen.queryByRole("link", { name: "Payments" })
+    ).not.toBeInTheDocument();
+  });
+
+  it("does not show StatusNavigationTabs if has_paid_payments is false for claim", () => {
+    process.env.featureFlags = {
+      claimantShowPayments: true,
+    };
     renderPage(
       Status,
       {

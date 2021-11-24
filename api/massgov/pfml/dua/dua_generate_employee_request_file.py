@@ -78,7 +78,7 @@ def get_employees_for_outbound(db_session: db.Session) -> List[Employee]:
     return (
         db_session.query(Employee)
         .join(TaxIdentifier)
-        .filter(Employee.tax_identifier_id == TaxIdentifier.tax_identifier_id)
+        .filter(Employee.fineos_customer_number.isnot(None))
         .all()
     )
 
@@ -87,9 +87,24 @@ def _format_employees_for_outbound(employees: List[Employee]) -> List[Dict[str, 
     formatted_employees = []
     for employee in employees:
         fineos_customer_number = employee.fineos_customer_number
-        ssn = employee.tax_identifier_id
+        tax_id = employee.tax_identifier
+
+        if not (fineos_customer_number and tax_id):
+            logger.warning(
+                "Employee missing required information. Skipping.",
+                extra={
+                    "employee_id": employee.employee_id,
+                    "has_fineos_customer_number": bool(fineos_customer_number),
+                    "has_tax_id": bool(tax_id),
+                },
+            )
+            continue
+
         formatted_employees.append(
-            {Constants.FINEOS_CUSTOMER_NUMBER: fineos_customer_number, Constants.SSN: ssn}
+            {
+                Constants.FINEOS_CUSTOMER_NUMBER: fineos_customer_number,
+                Constants.SSN: tax_id.tax_identifier.replace("-", ""),
+            }
         )
     return formatted_employees
 

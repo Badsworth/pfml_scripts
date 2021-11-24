@@ -22,6 +22,7 @@ import massgov.pfml.api.validation.formats
 import massgov.pfml.util.logging
 import massgov.pfml.util.logging.access
 from massgov.pfml import db
+from massgov.pfml.api.authentication.azure import AzureUser
 from massgov.pfml.api.config import AppConfig, get_config
 from massgov.pfml.api.validation import add_error_handlers_to_app, get_custom_validator_map
 from massgov.pfml.db.models.employees import User
@@ -77,6 +78,16 @@ def create_app(
     )
     bouncer = massgov.pfml.api.authorization.flask.Bouncer(flask_app)
     bouncer.authorization_method(authorization_path)
+
+    def user_loader():
+        if hasattr(g, "current_user"):
+            return g.current_user
+        elif hasattr(g, "azure_user"):
+            return g.azure_user
+        else:
+            raise Exception("Expecting current_user on flask's g")
+
+    bouncer.user_loader(user_loader)
 
     # Set up middleware to allow the Swagger UI to use the correct URL
     # when proxied behind the AWS API Gateway.
@@ -160,6 +171,10 @@ def db_session(close: bool = False) -> Generator[db.Session, None, None]:
 
 def current_user() -> Optional[User]:
     return g.get("current_user")
+
+
+def azure_user() -> Optional[AzureUser]:
+    return g.get("azure_user")
 
 
 def get_project_root_dir() -> str:

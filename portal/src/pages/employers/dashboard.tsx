@@ -118,8 +118,6 @@ export const Dashboard = (props: WithUserProps & { query: ApiParams }) => {
             </p>
           </Alert>
         )}
-
-        <DashboardInfoAlert />
       </div>
 
       <section className="margin-bottom-4 margin-top-2" ref={introElementRef}>
@@ -380,29 +378,6 @@ const ClaimTableRows = (props: ClaimTableRowsProps) => {
   };
 
   return <React.Fragment>{renderClaimItems()}</React.Fragment>;
-};
-
-const DashboardInfoAlert = () => {
-  const { t } = useTranslation();
-
-  return (
-    <Alert state="info" heading={t("pages.employersDashboard.betaHeader")}>
-      <p>
-        <Trans
-          i18nKey="pages.employersDashboard.betaMessage"
-          components={{
-            "user-feedback-link": (
-              <a
-                href={routes.external.massgov.feedbackEmployer}
-                target="_blank"
-                rel="noopener"
-              />
-            ),
-          }}
-        />
-      </p>
-    </Alert>
-  );
 };
 
 interface FiltersProps {

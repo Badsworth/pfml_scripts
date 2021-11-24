@@ -15,6 +15,7 @@ from massgov.pfml.db.models.employees import (
     DuaReportingUnit,
     Employee,
     EmployeeOccupation,
+    EmployeePushToFineosQueue,
     Employer,
     ReferenceFile,
     ReferenceFileType,
@@ -241,6 +242,13 @@ def set_employee_occupation_from_demographic_data(
             if not occupation.organization_unit_id:
                 log_entry.increment(Metrics.DUA_ORG_UNIT_SET_COUNT)
                 occupation.organization_unit_id = found_reporting_unit.organization_unit_id
+                db_session.add(
+                    EmployeePushToFineosQueue(
+                        employee_id=existing_employee.employee_id,
+                        employer_id=existing_employer.employer_id,
+                        action="UPDATE_NEW_EMPLOYER",
+                    )
+                )
             else:
                 log_entry.increment(Metrics.DUA_ORG_UNIT_SKIPPED_COUNT)
 

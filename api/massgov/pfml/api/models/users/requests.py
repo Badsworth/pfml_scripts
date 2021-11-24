@@ -1,5 +1,6 @@
 from typing import Optional
 
+from massgov.pfml.api.models.users.responses import AuthCodeResponse, AuthURIResponse
 from massgov.pfml.util.pydantic import PydanticBaseModel
 from massgov.pfml.util.pydantic.types import FEINUnformattedStr
 
@@ -27,3 +28,8 @@ class UserUpdateRequest(PydanticBaseModel):
 
 class UserConvertEmployerRequest(PydanticBaseModel):
     employer_fein: FEINUnformattedStr
+
+
+class AdminTokenRequest(PydanticBaseModel):
+    auth_uri_res: AuthURIResponse
+    auth_code_res: AuthCodeResponse

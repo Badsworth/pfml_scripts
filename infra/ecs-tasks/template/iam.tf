@@ -738,6 +738,78 @@ data "aws_iam_policy_document" "pub_payments_process_pub_returns_task_role_extra
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
+# IAM role and policies for pub-claimant-address-validation
+# ----------------------------------------------------------------------------------------------------------------------
+
+resource "aws_iam_role" "pub_claimant_address_validation_task_role" {
+  name               = "${local.app_name}-${var.environment_name}-ecs-tasks-pub-claimant-address-validation"
+  assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume_role_policy.json
+}
+
+# We may not always have a value for `fineos_aws_iam_role_arn` and a policy has
+# to list a resource, so make this part conditional with the count hack
+resource "aws_iam_role_policy" "pub_claimant_address_validation_task_fineos_role_policy" {
+  count = var.fineos_aws_iam_role_arn == "" ? 0 : 1
+
+  name   = "${local.app_name}-${var.environment_name}-ecs-tasks-pub-claimant-address-validation-fineos-assume-policy"
+  role   = aws_iam_role.pub_claimant_address_validation_task_role.id
+  policy = data.aws_iam_policy_document.fineos_feeds_role_policy[0].json
+}
+
+resource "aws_iam_role_policy" "pub_claimant_address_validation_task_role_extras" {
+  name   = "${local.app_name}-${var.environment_name}-ecs-tasks-pub-claimant-address-validation-extras"
+  role   = aws_iam_role.pub_claimant_address_validation_task_role.id
+  policy = data.aws_iam_policy_document.pub_claimant_address_validation_task_role_extras.json
+}
+
+data "aws_iam_policy_document" "pub_claimant_address_validation_task_role_extras" {
+  statement {
+    sid = "AllowListingOfBucket"
+    actions = [
+      "s3:ListBucket"
+    ]
+
+    resources = [
+      data.aws_s3_bucket.agency_transfer.arn,
+      "${data.aws_s3_bucket.agency_transfer.arn}/*",
+      data.aws_s3_bucket.reports.arn,
+      "${data.aws_s3_bucket.reports.arn}/*"
+    ]
+
+    effect = "Allow"
+  }
+
+  statement {
+    sid = "ReadWriteAccessToAgencyTransferBucket"
+    actions = [
+      "s3:ListBucket",
+      "s3:Get*",
+      "s3:List*",
+      "s3:PutObject",
+      "s3:DeleteObject",
+      "s3:AbortMultipartUpload"
+    ]
+
+    resources = [
+      "${data.aws_s3_bucket.agency_transfer.arn}/pub",
+      "${data.aws_s3_bucket.agency_transfer.arn}/pub/*",
+      "${data.aws_s3_bucket.agency_transfer.arn}/reports",
+      "${data.aws_s3_bucket.agency_transfer.arn}/reports/*",
+      "${data.aws_s3_bucket.agency_transfer.arn}/audit",
+      "${data.aws_s3_bucket.agency_transfer.arn}/audit/*",
+      "${data.aws_s3_bucket.agency_transfer.arn}/cps",
+      "${data.aws_s3_bucket.agency_transfer.arn}/cps/*",
+      "${data.aws_s3_bucket.reports.arn}/dfml-reports",
+      "${data.aws_s3_bucket.reports.arn}/dfml-reports/*",
+      "${data.aws_s3_bucket.reports.arn}/dfml-responses",
+      "${data.aws_s3_bucket.reports.arn}/dfml-responses/*"
+    ]
+
+    effect = "Allow"
+  }
+}
+
+# ----------------------------------------------------------------------------------------------------------------------
 # IAM role and policies for pub-payments-process-1099-documents
 # ----------------------------------------------------------------------------------------------------------------------
 
@@ -1349,7 +1421,7 @@ locals {
 }
 data "aws_iam_policy_document" "bi_imports_bucket_policy_document" {
   statement {
-    sid = "ReadListAccessToImportBucket"
+    sid = "LWD RedShift Access to Bucket"
 
     effect = "Allow"
 
@@ -1360,29 +1432,37 @@ data "aws_iam_policy_document" "bi_imports_bucket_policy_document" {
 
     actions = [
       "s3:ListBucket",
-      "s3:GetBucketLocation"
-    ]
-
-    resources = [
-      "arn:aws:s3:::massgov-pfml-${var.environment_name}-redshift-daily-import"
-    ]
-  }
-  statement {
-    sid = "AllowGetObject"
-
-    effect = "Allow"
-
-    principals {
-      type        = "AWS"
-      identifiers = var.environment_name == "prod" ? local.prod_roles : local.nonprod_roles
-    }
-
-    actions = [
+      "s3:GetBucketLocation",
       "s3:GetObject"
     ]
 
     resources = [
+      "arn:aws:s3:::massgov-pfml-${var.environment_name}-redshift-daily-import",
       "arn:aws:s3:::massgov-pfml-${var.environment_name}-redshift-daily-import/*"
+    ]
+  }
+}
+
+# KMS key policy for LWD account Redshift access to S3 bucket
+data "aws_iam_policy_document" "bi_imports_s3_kms_key_policy" {
+  statement {
+    sid    = "LWD account KMS Key decrypt"
+    effect = "Allow"
+    principals {
+      type        = "AWS"
+      identifiers = var.environment_name == "prod" ? local.prod_roles : local.nonprod_roles
+    }
+    principals {
+      type = "AWS"
+      identifiers = [
+        "arn:aws:iam::498823821309:root"
+      ]
+    }
+    actions = [
+      "kms:*"
+    ]
+    resources = [
+      "*"
     ]
   }
 }

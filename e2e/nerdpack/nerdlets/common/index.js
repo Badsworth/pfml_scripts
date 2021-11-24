@@ -45,3 +45,10 @@ export const labelEnv = (name) => {
       return name[0].toUpperCase() + name.substring(1);
   }
 };
+
+export function setDefault(val, def) {
+  if (val === undefined) {
+    return def;
+  }
+  return val;
+}

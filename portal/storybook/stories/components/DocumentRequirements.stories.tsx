@@ -7,12 +7,14 @@ export default {
   component: DocumentRequirements,
   argTypes: {
     type: {
-      defaultValue: "id",
       control: {
         type: "radio",
         options: ["id", "certification"],
       },
     },
+  },
+  args: {
+    type: "id",
   },
 };
 

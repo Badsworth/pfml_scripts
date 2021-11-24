@@ -33,7 +33,7 @@ class GunicornAppWrapper(gunicorn.app.base.BaseApplication):
         self.options = {
             # Bind the API to the provided port on 0.0.0.0 instead of 127.0.0.1.
             # This allows connections to originate from outside the container's network.
-            "bind": "%s:%s" % ("0.0.0.0", port),
+            "bind": "%s:%s" % ("0.0.0.0", port),  # nosec
             "workers": workers,
             "threads": threads,
             # Use the gthread class to enable multi-threading.

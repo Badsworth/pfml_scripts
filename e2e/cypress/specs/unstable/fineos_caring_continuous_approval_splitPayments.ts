@@ -77,7 +77,7 @@ import { config } from "../../actions/common";
             paidLeavePage.assertAmountsPending([
               { net_payment_amount: 230.77 },
               { net_payment_amount: 23.08 },
-              { net_payment_amount: 10.38 },
+              { net_payment_amount: 11.54 },
             ]);
           });
       });

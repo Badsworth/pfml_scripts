@@ -4,14 +4,21 @@
 
 import copy
 import datetime
-import uuid
+import random
 from decimal import Decimal
+from typing import List
 
 import pytest
 from sqlalchemy.orm.exc import NoResultFound
 
 import massgov.pfml.dor.importer.lib.dor_persistence_util as util
-from massgov.pfml.db.models.employees import Country, EmployerQuarterlyContribution, GeoState
+from massgov.pfml.db.models.base import uuid_gen
+from massgov.pfml.db.models.employees import (
+    Country,
+    EmployerQuarterlyContribution,
+    GeoState,
+    WagesAndContributionsHistory,
+)
 from massgov.pfml.db.models.factories import (
     EmployeeFactory,
     EmployerFactory,
@@ -50,7 +57,7 @@ def test_get_wages_and_contributions_by_employee_ids(test_db_session, initialize
 
 def test_get_wages_and_contributions_by_employee_id_and_filling_period(test_db_session):
     wage_row = util.get_wages_and_contributions_by_employee_id_and_filling_period(
-        test_db_session, uuid.uuid4(), uuid.uuid4(), datetime.date.today()
+        test_db_session, uuid_gen(), uuid_gen(), datetime.date.today()
     )
 
     assert wage_row is None
@@ -94,12 +101,12 @@ def test_employer_dict_to_country_and_state_values(test_db_session):
 
 def test_get_employer_address(test_db_session):
     with pytest.raises(NoResultFound):
-        util.get_employer_address(test_db_session, uuid.uuid4())
+        util.get_employer_address(test_db_session, uuid_gen())
 
 
 def test_get_address(test_db_session):
     with pytest.raises(NoResultFound):
-        util.get_address(test_db_session, uuid.uuid4())
+        util.get_address(test_db_session, uuid_gen())
 
 
 def test_check_and_update_employee(test_db_session, initialize_factories_session):
@@ -107,7 +114,7 @@ def test_check_and_update_employee(test_db_session, initialize_factories_session
 
     unmodified_employee_info = {"employee_first_name": "Jane", "employee_last_name": "Smith"}
     updated = util.check_and_update_employee(
-        test_db_session, employee, unmodified_employee_info, uuid.uuid4()
+        employee, unmodified_employee_info, random.randint(1, 100)
     )
 
     assert not updated
@@ -115,7 +122,7 @@ def test_check_and_update_employee(test_db_session, initialize_factories_session
 
     modified_employee_info = {"employee_first_name": "Jane", "employee_last_name": "Williams"}
     updated = util.check_and_update_employee(
-        test_db_session, employee, modified_employee_info, uuid.uuid4()
+        employee, modified_employee_info, random.randint(1, 100)
     )
 
     assert updated
@@ -145,11 +152,11 @@ def test_check_and_update_wages_and_contributions(test_db_session, initialize_fa
         employer_fam_contribution=payload["employer_family"],
     )
 
-    wage_history_records = []
+    wage_history_records: List[WagesAndContributionsHistory] = []
 
     existing_import_log = wages_row.latest_import_log_id
     updated = util.check_and_update_wages_and_contributions(
-        test_db_session, wages_row, payload, uuid.uuid4(), wage_history_records
+        wages_row, payload, random.randint(1, 100), wage_history_records
     )
 
     assert len(wage_history_records) == 0
@@ -160,7 +167,7 @@ def test_check_and_update_wages_and_contributions(test_db_session, initialize_fa
     updated_wages_payload["employer_medical"] = Decimal("1384.64")
 
     updated = util.check_and_update_wages_and_contributions(
-        test_db_session, wages_row, updated_wages_payload, uuid.uuid4(), wage_history_records
+        wages_row, updated_wages_payload, random.randint(1, 100), wage_history_records
     )
 
     assert len(wage_history_records) == 1
@@ -198,8 +205,8 @@ def test_check_and_update_employer_quarterly_contribution(
     employer_contribution_row = EmployerQuarterlyContribution(
         employer_id=employer.employer_id,
         filing_period=datetime.date(2020, 6, 30),
-        pfm_account_id=payload["pfm_account_id"],
-        employer_total_pfml_contribution=payload["total_pfml_contribution"],
+        pfm_account_id="12345678912345",
+        employer_total_pfml_contribution=Decimal("15234.58"),
         dor_received_date=datetime.datetime(2021, 6, 21, 0, 0, 0),
         dor_updated_date=datetime.datetime(2021, 6, 22, 19, 1, 12),
     )
@@ -240,7 +247,7 @@ def test_check_and_update_employer_quarterly_contribution_update_twice(
     employer_contribution_row = EmployerQuarterlyContribution(
         employer_id=employer.employer_id,
         filing_period=datetime.date(2020, 6, 30),
-        pfm_account_id=payload["pfm_account_id"],
+        pfm_account_id="12345678912345",
         employer_total_pfml_contribution=Decimal("10.00"),
         dor_received_date=datetime.datetime(2021, 6, 10, 0, 0, 0),
         dor_updated_date=datetime.datetime(2021, 6, 11, 18, 0, 12),
@@ -269,7 +276,7 @@ def test_dict_to_employee_removes_underscores_in_names():
         "employee_last_name": "Bar_Smith_",
     }
     underscored_employee = util.dict_to_employee(
-        underscored_employee_info, 1, uuid.uuid4(), TaxIdentifierFactory.tax_identifier_id
+        underscored_employee_info, 1, uuid_gen(), TaxIdentifierFactory.tax_identifier_id
     )
 
     assert underscored_employee.first_name == "Jane Foo"

@@ -1,5 +1,5 @@
 import { Confirmation } from "src/pages/employers/applications/confirmation";
-import { MockEmployerClaimBuilder } from "tests/test-utils";
+import { MockEmployerClaimBuilder } from "tests/test-utils/mock-model-builder";
 import React from "react";
 import User from "src/models/User";
 import useMockableAppLogic from "lib/mock-helpers/useMockableAppLogic";

@@ -1,6 +1,6 @@
 import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
 import { ApplicationCard } from "src/components/ApplicationCard";
-import { MockBenefitsApplicationBuilder } from "tests/test-utils";
+import { MockBenefitsApplicationBuilder } from "tests/test-utils/mock-model-builder";
 import { Props } from "storybook/types";
 import React from "react";
 import { generateNotice } from "storybook/utils/generateNotice";
@@ -10,10 +10,10 @@ export default {
   component: ApplicationCard,
   args: {
     number: 1,
+    scenario: "Bonding",
   },
   argTypes: {
     scenario: {
-      defaultValue: "Bonding",
       control: {
         type: "radio",
         options: [

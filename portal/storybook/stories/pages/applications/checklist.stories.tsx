@@ -1,7 +1,7 @@
 import Step, { ClaimSteps } from "src/models/Step";
 import { Checklist } from "src/pages/applications/checklist";
 import { DocumentType } from "src/models/Document";
-import { MockBenefitsApplicationBuilder } from "tests/test-utils";
+import { MockBenefitsApplicationBuilder } from "tests/test-utils/mock-model-builder";
 import { Props } from "storybook/types";
 import React from "react";
 import User from "src/models/User";
@@ -165,6 +165,17 @@ const scenarios = {
 export default {
   title: `Pages/Applications/Checklist`,
   component: Checklist,
+  argTypes: {
+    scenario: {
+      control: {
+        type: "radio",
+        options: Object.keys(scenarios),
+      },
+    },
+  },
+  args: {
+    scenario: Object.keys(scenarios)[0],
+  },
 };
 
 export const DefaultStory = (
@@ -189,14 +200,4 @@ export const DefaultStory = (
       user={new User({})}
     />
   );
-};
-
-DefaultStory.argTypes = {
-  scenario: {
-    defaultValue: Object.keys(scenarios)[0],
-    control: {
-      type: "radio",
-      options: Object.keys(scenarios),
-    },
-  },
 };

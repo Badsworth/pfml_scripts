@@ -16,6 +16,7 @@ import {
 import AppErrorInfo from "../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
 import DocumentCollection from "../../src/models/DocumentCollection";
+import User from "../../src/models/User";
 import { uniqueId } from "lodash";
 import useAppErrorsLogic from "../../src/hooks/useAppErrorsLogic";
 import useEmployersLogic from "../../src/hooks/useEmployersLogic";
@@ -507,12 +508,12 @@ describe("useEmployersLogic", () => {
       expect(submitWithholdingMock).toHaveBeenCalledWith(postData);
     });
 
-    it("clears the current user", async () => {
+    it("updates the user", async () => {
       await act(async () => {
         await employersLogic.submitWithholding(postData);
       });
 
-      expect(setUser).toHaveBeenCalledWith(undefined);
+      expect(setUser).toHaveBeenCalledWith(expect.any(User));
     });
 
     describe("errors", () => {

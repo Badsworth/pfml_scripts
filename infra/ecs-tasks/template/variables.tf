@@ -249,6 +249,11 @@ variable "enable_pub_automation_process_returns" {
   default     = false
 }
 
+variable "enable_pub_automation_claimant_address_validation" {
+  description = "Enable scheduling for pub automation claimant address validation task"
+  default     = false
+}
+
 variable "enable_pub_automation_process_1099_documents" {
   description = "Enable scheduling for pub automation 1099 documents processing task"
   default     = false
@@ -270,6 +275,22 @@ variable "rmv_api_behavior" {
   description = "Specifies if the RMV response is mocked"
   type        = string
   default     = "fully_mocked"
+}
+
+variable "pdf_api_host" {
+  description = "URL of the PDF API"
+  type        = string
+  default     = ""
+}
+
+variable "enable_generate_1099_pdf" {
+  description = "Enable generation of 1099 documents"
+  default     = "0"
+}
+
+variable "enable_merge_1099_pdf" {
+  description = "Enable merging of 1099 documents for printing"
+  default     = "0"
 }
 
 ########## Variables for Step Functions ################

@@ -11,8 +11,8 @@ export const CATEGORY_PRIORITY = {
     "failure-503": "MEDIUM",
     "failure-504": "LOW",
   },
-  known: {priority: "LOW"},
-  notification: {priority: "MEDIUM"},
+  known: { priority: "LOW" },
+  notification: { priority: "MEDIUM" },
 };
 
 export const ERROR_PRIORITY = ["EDM", "HIGH", "MEDIUM", "LOW"];
@@ -30,18 +30,18 @@ export function getErrorPriority(cat, sub) {
 }
 
 export function getCategoriesByPriority(priority) {
-  priority = priority.toUpperCase()
+  priority = priority.toUpperCase();
   let returnValues = [];
   Object.keys(CATEGORY_PRIORITY).map((cat) => {
     if (CATEGORY_PRIORITY[cat]?.priority === priority) {
-      returnValues.push({category: cat})
+      returnValues.push({ category: cat });
     } else {
       Object.keys(CATEGORY_PRIORITY[cat]).map((sub) => {
         if (CATEGORY_PRIORITY[cat][sub] === priority) {
-          returnValues.push({category: cat, subCategory: sub})
+          returnValues.push({ category: cat, subCategory: sub });
         }
-      })
+      });
     }
-  })
+  });
   return returnValues;
 }

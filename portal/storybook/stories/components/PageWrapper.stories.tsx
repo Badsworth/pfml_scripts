@@ -12,26 +12,28 @@ export default {
   component: PageWrapper,
   argTypes: {
     Authentication: {
-      defaultValue: "Logged out",
       control: {
         type: "radio",
         options: ["Logged out", "Logged in"],
       },
     },
     Errors: {
-      defaultValue: "No errors",
       control: {
         type: "radio",
         options: ["No errors", "Has errors"],
       },
     },
     "Maintenance Page": {
-      defaultValue: "Off",
       control: {
         type: "radio",
         options: ["Off", "On"],
       },
     },
+  },
+  args: {
+    Authentication: "Logged out",
+    Errors: "No errors",
+    "Maintenance Page": "Off",
   },
 };
 

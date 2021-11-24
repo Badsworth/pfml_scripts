@@ -26,6 +26,10 @@ const flagsConfig = {
     // When this flag is enabled, the claim payments section for claimants will show
     claimantShowPayments: false,
 
+    // Show multiple leave request UI updates to leave admins.
+    // TODO (PORTAL-1151) Remove flag
+    employerShowMultiLeave: false,
+
     // When this flag true, you can BYPASS maintenance pages that are currently present.
     // See docs/portal/maintenance-pages.md for more details.
     noMaintenance: false,

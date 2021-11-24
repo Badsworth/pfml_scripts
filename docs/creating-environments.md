@@ -38,6 +38,8 @@ The easiest way to set up resources in a new environment is using the templates 
 
 ## 2. Set up the API
 
+1. Request Domain certificates for new domain names Refer to the end of this document ## Setting up Custom Domains
+
 ### 2.0 Create the API Gateway
 
 1. Generate the terraform environment folder:
@@ -146,12 +148,45 @@ Note that the API will not be working until database migrations are run.
    ```
 
    The command above creates a new directory: `infra/ecs-tasks/environments/NEW_ENV`
+
+   ```
+   rename step_functions.tf to step_functions.bak
+   ```
+   
+   In ecs-tasks/environments/NEW_ENV/main.tf add 
+   rmv_client_certificate_binary_arn = '${ARN VALUE FROM SECRETS MANAGER}'
+   
+   ![image](https://user-images.githubusercontent.com/91554519/142467618-0fee729d-5435-40c7-9306-1635567e59b4.png)
+   
    
 1. Create a PR and run a deployment of this branch to the new environment. See [./deployment.md](deployment.md). This should automatically:
 
    - Initialize and apply the ECS tasks terraform.
    - Run database migrations.
    - Create the required database users for FINEOS and Smartronix Nessus scans. 
+   
+
+   ```
+   rename step_functions.bak to step_functions.tf
+   ```
+   ```sh
+     $ terraform plan \
+     -var='service_docker_tag=82043ae1e04621251fb9e7896176b38c884f027e'
+     ```
+     ```sh
+     $ terraform apply \
+     -var='service_docker_tag=82043ae1e04621251fb9e7896176b38c884f027e'
+     ```
+### 2.3 API pre-work
+ 1.Need to update the bootstrap script to omit these and add some others:
+   - ecs-tasks/main.tf:
+      - st_employer_update_limit = 1500 needs to be added
+   - api/envirnment/$env/:main.tf:
+      - st_use_mock_dor_data needs to be removed
+      - st_decrypt_dor_data needs to be removed
+      - st_file_limit_specified needs to be removed
+      - dor_fineos_etl_schedule_expression needs to be removed
+   - rmv_client_certificate is binary and has to be replicated using cli prior to running terraform
 
 ## 3. Setting up the Portal Environment
 

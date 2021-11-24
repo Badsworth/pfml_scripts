@@ -1434,3 +1434,18 @@ def test_tax_preference_payload():
     assert payload.__contains__("<value>NTN-111-111</value>")
     assert payload.__contains__("<name>FlagValue</name>")
     assert payload.__contains__("<value>True</value>")
+
+
+@pytest.mark.parametrize(
+    "existing_work_pattern, expected_fn_call",
+    [("Unknown", "add_week_based_work_pattern"), ("Week Based", "update_week_based_work_pattern")],
+)
+def test_upsert_week_based_work_pattern(existing_work_pattern, expected_fn_call, application, user):
+    application.work_pattern = WorkPatternFixedFactory.create()
+    fineos_mock_client = massgov.pfml.fineos.MockFINEOSClient()
+    fineos_mock.start_capture()
+    fineos_actions.upsert_week_based_work_pattern(
+        fineos_mock_client, user.user_id, application, 12345, existing_work_pattern
+    )
+    capture = fineos_mock.get_capture()
+    assert capture[0][0] == expected_fn_call

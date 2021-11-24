@@ -177,7 +177,7 @@ class DetailedClaimResponse(PydanticBaseModel):
 
 class ClaimReviewResponse(PydanticBaseModel):
     date_of_birth: Optional[MaskedDateStr]
-    employer_benefits: Optional[List[EmployerBenefit]]
+    employer_benefits: List[EmployerBenefit]
     employer_dba: str
     employer_fein: FEINFormattedStr
     employer_id: UUID4
@@ -185,17 +185,17 @@ class ClaimReviewResponse(PydanticBaseModel):
     first_name: Optional[str]
     hours_worked_per_week: Optional[Decimal]
     last_name: Optional[str]
-    leave_details: Optional[LeaveDetails]
+    leave_details: LeaveDetails
     middle_name: Optional[str]
-    previous_leaves: Optional[List[PreviousLeave]]
+    previous_leaves: List[PreviousLeave]
     concurrent_leave: Optional[ConcurrentLeave]
-    residential_address: Optional[Address]
+    residential_address: Address
     tax_identifier: Optional[MaskedTaxIdFormattedStr]
     follow_up_date: Optional[date]
-    is_reviewable: Optional[bool]
-    status: Optional[str]
+    is_reviewable: bool
+    status: str
     uses_second_eform_version: bool
-    absence_periods: Optional[List[AbsencePeriodResponse]] = None
+    absence_periods: List[AbsencePeriodResponse] = []
 
 
 class DocumentResponse(PydanticBaseModel):

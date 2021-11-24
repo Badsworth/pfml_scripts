@@ -112,22 +112,24 @@ const verificationScenarios = {
 export default {
   title: "Pages/Employers/Dashboard",
   component: Dashboard,
+  args: {
+    claims: "Has claims",
+    total_pages: 3,
+    verification: Object.keys(verificationScenarios)[0],
+  },
   argTypes: {
     claims: {
-      defaultValue: "Has claims",
       control: {
         type: "radio",
         options: ["Has claims", "No claims"],
       },
     },
     total_pages: {
-      defaultValue: 3,
       control: {
         type: "number",
       },
     },
     verification: {
-      defaultValue: Object.keys(verificationScenarios)[0],
       control: {
         type: "radio",
         options: Object.keys(verificationScenarios),

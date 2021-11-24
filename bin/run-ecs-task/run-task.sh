@@ -87,17 +87,20 @@ aws ecs wait tasks-stopped --region us-east-1 --cluster $ENV_NAME --tasks $TASK_
 TASK_STATUS=$(aws ecs describe-tasks --cluster $ENV_NAME --task $TASK_ARN | jq -r '.tasks[]')
 EXIT_CODE=$(echo $TASK_STATUS | jq '.containers[].exitCode')
 
-if [ $EXIT_CODE == "null" ]; then
-  STOPPED_REASON=$(echo $TASK_STATUS | jq '.stoppedReason')
+if [ "$EXIT_CODE" == "null" ]; then
+  STOPPED_REASON=$(echo "$TASK_STATUS" | jq '.stoppedReason')
   echo "ECS task failed to start:" >&2
   echo "$STOPPED_REASON" >&2
   exit 1
-
-elif [ $EXIT_CODE -ne 0 ]; then
-  echo "ECS task ran into an error. Please check cloudwatch logs." >&2
-  exit 1
-
-else
-  echo "ECS task completed successfully."
-  exit 0
 fi
+
+for CONTAINER_EXIT_CODE in $EXIT_CODE
+do
+  if [ "$CONTAINER_EXIT_CODE" -ne 0 ]; then
+    echo "ECS task ran into an error (exit codes $EXIT_CODE). Please check cloudwatch logs." >&2
+    exit 1
+  fi
+done
+
+echo "ECS task completed successfully."
+exit 0

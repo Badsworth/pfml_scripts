@@ -11,6 +11,7 @@ module.exports = {
   clearMocks: true,
   coveragePathIgnorePatterns: [
     "/node_modules/",
+    "<rootDir>/storybook/",
     "<rootDir>/tests/lib/",
     "<rootDir>/tests/test-utils/",
   ],
@@ -19,6 +20,12 @@ module.exports = {
   moduleNameMapper: {
     "\\.(png|svg)$": "<rootDir>/__mocks__/fileMock.js",
     "\\.(css|scss)$": "<rootDir>/__mocks__/styleMock.js",
+    // Support alias imports. Required for our Storybook tests, since our
+    // Storybook files utilize alias imports.
+    "^lib(.*)$": "<rootDir>/lib$1",
+    "^src(.*)$": "<rootDir>/src$1",
+    "^storybook(.*)$": "<rootDir>/storybook$1",
+    "^tests(.*)$": "<rootDir>/tests$1",
   },
   setupFilesAfterEnv: ["<rootDir>/jest.setup.js"],
   testEnvironment: "jsdom",
@@ -35,6 +42,11 @@ module.exports = {
     // https://nextjs.org/docs/advanced-features/customizing-babel-config
     "^.+\\.(js|jsx|ts|tsx)$": ["babel-jest", { presets: ["next/babel"] }],
   },
+  transformIgnorePatterns: [
+    // Some assets are ECMAScript Modules, which need transformed
+    // in our test environment. Those modules need listed here:
+    "node_modules/(?!(entity-decode)/)",
+  ],
   coverageThreshold: {
     global: {
       branches: 90,
