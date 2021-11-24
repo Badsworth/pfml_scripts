@@ -7,6 +7,7 @@ from freezegun import freeze_time
 import massgov.pfml.util.files as file_util
 from massgov.pfml.db.models.employees import (
     DuaEmployeeDemographics,
+    EmployeeOccupation,
     EmployeePushToFineosQueue,
     Gender,
     ReferenceFile,
@@ -126,7 +127,6 @@ def test_update_employee_demographics_file_mode(test_db_session, monkeypatch, mo
 def test_set_employee_occupation_from_demographics_data(
     test_db_session, initialize_factories_session
 ):
-
     with LogEntry(test_db_session, "test log entry") as log_entry:
         employer = EmployerFactory()
 
@@ -154,7 +154,7 @@ def test_set_employee_occupation_from_demographics_data(
         )
 
         employee_without_existing_org_unit_occupation = EmployeeOccupationFactory(
-            employee=employee_without_existing_org_unit, employer=employer
+            employee=employee_without_existing_org_unit, employer=employer, organization_unit=None
         )
 
         DuaEmployeeDemographicsFactory(
@@ -169,6 +169,10 @@ def test_set_employee_occupation_from_demographics_data(
 
         # Scenario where org unit id can't be found
         employee_no_matching_org_unit = EmployeeFactory(fineos_customer_number="7654321")
+
+        employee_no_matching_org_unit_occupation = EmployeeOccupationFactory(
+            employee=employee_no_matching_org_unit, employer=employer, organization_unit=None
+        )
 
         DuaEmployeeDemographicsFactory(
             fineos_customer_number=employee_no_matching_org_unit.fineos_customer_number,
@@ -185,7 +189,7 @@ def test_set_employee_occupation_from_demographics_data(
 
         employee_with_existing_org_unit = EmployeeFactory(fineos_customer_number="1111111")
 
-        employee_occupation_two = EmployeeOccupationFactory(
+        employee_with_existing_org_unit_occupation = EmployeeOccupationFactory(
             employee=employee_with_existing_org_unit,
             employer=employer,
             organization_unit_id=org_unit_not_dua.organization_unit_id,
@@ -201,7 +205,7 @@ def test_set_employee_occupation_from_demographics_data(
             employer_reporting_unit_number=reporting_unit_with_org_unit.dua_id,
         )
 
-        # Scenario where EmployeeOccupation is created
+        # Scenario where EmployeeOccupation is created and then Org Unit set
         employee_no_previous_occupation = EmployeeFactory(fineos_customer_number="4444444")
 
         assert employee_no_previous_occupation.employee_occupations.count() == 0
@@ -242,15 +246,18 @@ def test_set_employee_occupation_from_demographics_data(
         assert metrics["missing_dua_reporting_unit_count"] == 1
         assert metrics["created_employee_occupation_count"] == 1
         assert metrics["occupation_org_unit_skipped_count"] == 1
-        assert metrics["occupation_org_unit_set_count"] == 1
+        assert metrics["occupation_org_unit_set_count"] == 2
         assert metrics["dua_reporting_unit_missing_fineos_org_unit_count"] == 1
 
         assert (
             employee_without_existing_org_unit_occupation.organization_unit_id
             == org_unit.organization_unit_id
         )
-
-        assert employee_occupation_two.organization_unit_id == org_unit_not_dua.organization_unit_id
+        assert employee_no_matching_org_unit_occupation.organization_unit_id is None
+        assert (
+            employee_with_existing_org_unit_occupation.organization_unit_id
+            == org_unit_not_dua.organization_unit_id
+        )
         assert employee_occupation_no_matching_dua_reporting_unit.organization_unit_id is None
 
         assert employee_no_previous_occupation.employee_occupations.count() == 1
@@ -260,13 +267,15 @@ def test_set_employee_occupation_from_demographics_data(
             .filter(EmployeePushToFineosQueue.action == "UPDATE_NEW_EMPLOYER")
             .all()
         )
-        assert len(eligibility_updates) == 1
+        assert len(eligibility_updates) == 2
 
-        assert (
-            eligibility_updates[0].employee_id
-            == employee_without_existing_org_unit_occupation.employee_id
-        )
-        assert eligibility_updates[0].employer_id == employer.employer_id
+        assert {
+            (eligibility_updates[0].employee_id, eligibility_updates[0].employer_id),
+            (eligibility_updates[1].employee_id, eligibility_updates[1].employer_id),
+        } == {
+            (employee_without_existing_org_unit_occupation.employee_id, employer.employer_id),
+            (employee_no_previous_occupation.employee_id, employer.employer_id),
+        }
 
 
 def test_set_employee_occupation_from_demographics_data_multiple_dua_records(
@@ -494,6 +503,89 @@ def test_set_employee_occupation_from_demographics_data_missing_ids(
             .all()
         )
         assert len(eligibility_updates) == 0
+
+
+def test_set_employee_occupation_from_demographics_data_occupation_creation(
+    test_db_session, initialize_factories_session
+):
+    with LogEntry(test_db_session, "test log entry") as log_entry:
+        employer_one = EmployerFactory()
+        employer_two = EmployerFactory()
+        employer_three = EmployerFactory()
+
+        org_unit_one = OrganizationUnitFactory(employer=employer_one)
+        org_unit_two = OrganizationUnitFactory(employer=employer_two)
+
+        reporting_unit_one = DuaReportingUnitFactory(organization_unit=org_unit_one)
+        reporting_unit_two = DuaReportingUnitFactory(organization_unit=org_unit_two)
+        reporting_unit_three_no_org_unit = DuaReportingUnitFactory(organization_unit=None)
+
+        employee = EmployeeWithFineosNumberFactory()
+
+        employee_occupation_one = EmployeeOccupationFactory(
+            employee=employee, employer=employer_one
+        )
+
+        DuaEmployeeDemographicsFactory(
+            fineos_customer_number=employee.fineos_customer_number,
+            employer_fein=employer_one.employer_fein,
+            employer_reporting_unit_number=reporting_unit_one.dua_id,
+        )
+
+        DuaEmployeeDemographicsFactory(
+            fineos_customer_number=employee.fineos_customer_number,
+            employer_fein=employer_two.employer_fein,
+            employer_reporting_unit_number=reporting_unit_two.dua_id,
+        )
+
+        DuaEmployeeDemographicsFactory(
+            fineos_customer_number=employee.fineos_customer_number,
+            employer_fein=employer_three.employer_fein,
+            employer_reporting_unit_number=reporting_unit_three_no_org_unit.dua_id,
+        )
+
+        test_db_session.commit()
+
+        assert employee.employee_occupations.count() == 1
+
+        set_employee_occupation_from_demographic_data(test_db_session, log_entry=log_entry)
+
+        metrics = log_entry.metrics
+
+        assert metrics["created_employee_occupation_count"] == 2
+        assert metrics["occupation_org_unit_set_count"] == 2
+
+        assert employee.employee_occupations.count() == 3
+
+        assert employee_occupation_one.organization_unit_id == org_unit_one.organization_unit_id
+
+        created_occupation_two = employee.employee_occupations.filter(
+            EmployeeOccupation.employer == employer_two
+        ).first()
+        assert created_occupation_two.organization_unit_id == org_unit_two.organization_unit_id
+
+        created_occupation_three = employee.employee_occupations.filter(
+            EmployeeOccupation.employer == employer_three
+        ).first()
+        assert created_occupation_three.organization_unit_id is None
+
+        eligibility_updates = (
+            test_db_session.query(EmployeePushToFineosQueue)
+            .filter(EmployeePushToFineosQueue.action == "UPDATE_NEW_EMPLOYER")
+            .all()
+        )
+
+        assert len(eligibility_updates) == 3
+
+        assert {
+            (eligibility_updates[0].employee_id, eligibility_updates[0].employer_id),
+            (eligibility_updates[1].employee_id, eligibility_updates[1].employer_id),
+            (eligibility_updates[2].employee_id, eligibility_updates[2].employer_id),
+        } == {
+            (employee.employee_id, employer_one.employer_id),
+            (employee.employee_id, employer_two.employer_id),
+            (employee.employee_id, employer_three.employer_id),
+        }
 
 
 @freeze_time("2020-12-07")

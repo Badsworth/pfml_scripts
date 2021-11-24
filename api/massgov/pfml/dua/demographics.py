@@ -189,101 +189,119 @@ def set_employee_occupation_from_demographic_data(
     ).yield_per(1000)
 
     for row in demographic_data:
-        fineos_customer_number = row.fineos_customer_number
-        employer_reporting_unit_number = row.employer_reporting_unit_number
-        employer_fein = row.employer_fein
-
-        log_attributes = {
-            "employee_fineos_customer_number": fineos_customer_number,
-            "dua_employee_demographics_id": row.dua_employee_demographics_id,
-            "dua_reporting_unit_number": employer_reporting_unit_number,
-        }
-
-        # we *should* always have fineos_customer_number given this is how DUA
-        # identifies employees in the return file and a missing FEIN would seem
-        # very unlikely, but just in case...
-        if not fineos_customer_number or not employer_fein:
-            logger.warning(
-                "Employee FINEOS customer number or Employer FEIN missing. Skipping.",
-                extra=log_attributes,
-            )
-            continue
-
-        existing_employee = (
-            db_session.query(Employee).filter(
-                Employee.fineos_customer_number == fineos_customer_number
-            )
-        ).one_or_none()
-
-        existing_employer = (
-            db_session.query(Employer).filter(Employer.employer_fein == employer_fein)
-        ).one_or_none()
-
-        if not existing_employee:
-            logger.warning("No matching employee found", extra=log_attributes)
-            continue
-
-        log_attributes["employee_id"] = existing_employee.employee_id
-
-        if not existing_employer:
-            logger.warning("No matching employer found for employee", extra=log_attributes)
-            continue
-
-        log_attributes["employer_id"] = existing_employer.employer_id
-
-        employee_occupations = (
-            db_session.query(EmployeeOccupation).filter(
-                EmployeeOccupation.employee_id == existing_employee.employee_id,
-                EmployeeOccupation.employer_id == existing_employer.employer_id,
-            )
-        ).all()
-
-        found_reporting_unit = (
-            db_session.query(DuaReportingUnit).filter(
-                DuaReportingUnit.dua_id == employer_reporting_unit_number
-            )
-        ).one_or_none()
-
-        if not found_reporting_unit:
-            logger.warning("No matching DUA Reporting Unit found", extra=log_attributes)
-            log_entry.increment(Metrics.MISSING_DUA_REPORTING_UNIT_COUNT)
-            continue
-
-        if not found_reporting_unit.organization_unit_id:
-            logger.warning(
-                "DUA Reporting Unit has no FINEOS Org Unit associated", extra=log_attributes
-            )
-            log_entry.increment(Metrics.DUA_REPORTING_UNIT_MISSING_FINEOS_ORG_UNIT_COUNT)
-            continue
-
-        # Create an EmployeeOccupation if it doesn't exist
-        if len(employee_occupations) == 0:
-            employee_occupation = EmployeeOccupation()
-            employee_occupation.employee_id = existing_employee.employee_id
-            employee_occupation.organization_unit_id = found_reporting_unit.organization_unit_id
-            employee_occupation.employer_id = existing_employer.employer_id
-
-            db_session.add(employee_occupation)
-
-            log_entry.increment(Metrics.CREATED_EMPLOYEE_OCCUPATION_COUNT)
-        else:
-            # this should only ever be 1, although multiple are technically supported
-            for occupation in employee_occupations:
-                # do not act on records with an organization_unit_id already set
-                if not occupation.organization_unit_id:
-                    log_entry.increment(Metrics.OCCUPATION_ORG_UNIT_SET_COUNT)
-                    occupation.organization_unit_id = found_reporting_unit.organization_unit_id
-                    db_session.add(
-                        EmployeePushToFineosQueue(
-                            employee_id=existing_employee.employee_id,
-                            employer_id=existing_employer.employer_id,
-                            action="UPDATE_NEW_EMPLOYER",
-                        )
-                    )
-                else:
-                    log_entry.increment(Metrics.OCCUPATION_ORG_UNIT_SKIPPED_COUNT)
+        _process_demographics_row_for_employee(db_session, log_entry, row)
 
     db_session.commit()
+
+
+def _process_demographics_row_for_employee(
+    db_session: db.Session, log_entry: batch_log.LogEntry, row: DuaEmployeeDemographics
+) -> None:
+    fineos_customer_number = row.fineos_customer_number
+    employer_reporting_unit_number = row.employer_reporting_unit_number
+    employer_fein = row.employer_fein
+
+    log_attributes: Dict[str, Any] = {
+        "employee_fineos_customer_number": fineos_customer_number,
+        "dua_employee_demographics_id": row.dua_employee_demographics_id,
+        "dua_reporting_unit_number": employer_reporting_unit_number,
+    }
+
+    # we *should* always have fineos_customer_number given this is how DUA
+    # identifies employees in the return file and a missing FEIN would seem
+    # very unlikely, but just in case...
+    if not fineos_customer_number or not employer_fein:
+        logger.warning(
+            "Employee FINEOS customer number or Employer FEIN missing. Skipping.",
+            extra=log_attributes,
+        )
+        return
+
+    existing_employee = (
+        db_session.query(Employee).filter(Employee.fineos_customer_number == fineos_customer_number)
+    ).one_or_none()
+
+    existing_employer = (
+        db_session.query(Employer).filter(Employer.employer_fein == employer_fein)
+    ).one_or_none()
+
+    if not existing_employee:
+        logger.warning("No matching employee found", extra=log_attributes)
+        return
+
+    log_attributes["employee_id"] = existing_employee.employee_id
+
+    if not existing_employer:
+        logger.warning("No matching employer found for employee", extra=log_attributes)
+        return
+
+    log_attributes["employer_id"] = existing_employer.employer_id
+
+    employee_occupations = (
+        db_session.query(EmployeeOccupation).filter(
+            EmployeeOccupation.employee_id == existing_employee.employee_id,
+            EmployeeOccupation.employer_id == existing_employer.employer_id,
+        )
+    ).all()
+
+    # TODO: better name and explanation
+    #
+    # TODO: to only create one entry if we both create the occupation and set
+    # the org unit for same combo
+    #
+    # Entity to add to the session if an update to the EmployeeOccupation is
+    # needed, utilizing SQLAlchemy's built-in deduplication (adding the same
+    # entity to the session won't create multiple rows)
+    queue_item = EmployeePushToFineosQueue(
+        employee_id=existing_employee.employee_id,
+        employer_id=existing_employer.employer_id,
+        action="UPDATE_NEW_EMPLOYER",
+    )
+
+    # this should only ever be 1 or 0, although multiple are technically supported
+    if len(employee_occupations) > 1:
+        logger.warning(
+            "Multiple occupations found",
+            extra={"occupations_count": len(employee_occupations)} | log_attributes
+        )
+        return
+    elif len(employee_occupations) == 0:
+        # Create an EmployeeOccupation if it doesn't exist
+        employee_occupation = EmployeeOccupation()
+        employee_occupation.employee_id = existing_employee.employee_id
+        employee_occupation.employer_id = existing_employer.employer_id
+
+        db_session.add(employee_occupation)
+        db_session.add(queue_item)
+
+        log_entry.increment(Metrics.CREATED_EMPLOYEE_OCCUPATION_COUNT)
+    else:
+        employee_occupation = employee_occupations[0]
+
+    found_reporting_unit = (
+        db_session.query(DuaReportingUnit).filter(
+            DuaReportingUnit.dua_id == employer_reporting_unit_number
+        )
+    ).one_or_none()
+
+    if not found_reporting_unit:
+        logger.warning("No matching DUA Reporting Unit found", extra=log_attributes)
+        log_entry.increment(Metrics.MISSING_DUA_REPORTING_UNIT_COUNT)
+        return
+
+    if not found_reporting_unit.organization_unit_id:
+        logger.warning("DUA Reporting Unit has no FINEOS Org Unit associated", extra=log_attributes)
+        log_entry.increment(Metrics.DUA_REPORTING_UNIT_MISSING_FINEOS_ORG_UNIT_COUNT)
+        return
+
+    # do not act on records with an organization_unit_id already set
+    if employee_occupation.organization_unit_id:
+        log_entry.increment(Metrics.OCCUPATION_ORG_UNIT_SKIPPED_COUNT)
+        return
+
+    log_entry.increment(Metrics.OCCUPATION_ORG_UNIT_SET_COUNT)
+    employee_occupation.organization_unit_id = found_reporting_unit.organization_unit_id
+    db_session.add(queue_item)
 
 
 def _convert_dict_with_csv_keys_to_db_keys(csv_data: Dict[str, Any]) -> Dict[str, Any]:

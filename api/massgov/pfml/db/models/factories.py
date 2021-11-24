@@ -1011,7 +1011,9 @@ class DuaReportingUnitFactory(BaseFactory):
     dba = None
 
     organization_unit = factory.SubFactory(OrganizationUnitFactory)
-    organization_unit_id = factory.LazyAttribute(lambda d: d.organization_unit.organization_unit_id)
+    organization_unit_id = factory.LazyAttribute(
+        lambda d: d.organization_unit.organization_unit_id if d.organization_unit else None
+    )
 
 
 class EmployeeOccupationFactory(BaseFactory):
