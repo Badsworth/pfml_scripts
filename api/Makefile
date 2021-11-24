@@ -164,6 +164,9 @@ fineos-eligibility-feed-export: ## Run an eligibility feed export
 	mkdir -p eligibility_export/absence-eligibility/upload
 	OUTPUT_DIRECTORY_PATH=eligibility_export FINEOS_AWS_IAM_ROLE_ARN="arn" FINEOS_AWS_IAM_ROLE_EXTERNAL_ID="1" $(PY_RUN_CMD) fineos-eligibility-feed-export $(DECODE_LOG)
 
+dua-import-demographics-file:
+	$(PY_RUN_CMD) dua-import-employee-demographics $(args) $(DECODE_LOG)
+
 pub-payments-process-fineos:
 	$(PY_RUN_CMD) pub-payments-process-fineos --steps ALL $(DECODE_LOG)
 

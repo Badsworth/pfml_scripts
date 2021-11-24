@@ -338,7 +338,8 @@ locals {
       env = [
         local.db_access,
         local.eolwd_moveit_access,
-        local.reductions_folders
+        local.reductions_folders,
+        { name: "DUA_TRANSFER_BASE_PATH": value: "s3://massgov-pfml-${var.environment_name}-agency-transfer/" }
       ]
     }
 

@@ -20,7 +20,7 @@ from massgov.pfml.db.models.employees import (
     ReferenceFile,
     ReferenceFileType,
 )
-from massgov.pfml.dua.config import DUAMoveItConfig, DUAS3Config
+from massgov.pfml.dua.config import DUAMoveItConfig, DUATransferConfig
 from massgov.pfml.util.datetime import utcnow
 from massgov.pfml.util.sftp_s3_transfer import (
     SftpS3TransferConfig,
@@ -75,14 +75,14 @@ class Constants:
 def download_demographics_file_from_moveit(
     db_session: db.Session,
     log_entry: batch_log.LogEntry,
-    s3_config: DUAS3Config,
+    transfer_config: DUATransferConfig,
     moveit_config: DUAMoveItConfig,
 ) -> List[ReferenceFile]:
     transfer_config = SftpS3TransferConfig(
-        s3_bucket_uri=s3_config.s3_bucket_uri,
+        base_path=transfer_config.base_path,
         source_dir=moveit_config.moveit_inbound_path,
         archive_dir=moveit_config.moveit_archive_path,
-        dest_dir=s3_config.s3_pending_directory_path,
+        dest_dir=transfer_config.pending_directory_path,
         sftp_uri=moveit_config.moveit_sftp_uri,
         ssh_key_password=moveit_config.moveit_ssh_key_password,
         ssh_key=moveit_config.moveit_ssh_key,
@@ -117,11 +117,11 @@ def load_demographics_file(
     db_session: db.Session,
     ref_file: ReferenceFile,
     log_entry: batch_log.LogEntry,
-    s3_config: DUAS3Config,
+    transfer_config: DUATransferConfig,
     move_files: bool = False,
 ) -> Tuple[int, int]:
-    archive_dir = os.path.join(s3_config.s3_bucket_uri, s3_config.s3_archive_directory_path)
-    error_dir = os.path.join(s3_config.s3_bucket_uri, s3_config.s3_error_directory_path)
+    archive_dir = os.path.join(transfer_config.base_path, transfer_config.archive_directory_path)
+    error_dir = os.path.join(transfer_config.base_path, transfer_config.error_directory_path)
 
     log_entry.increment(Metrics.PENDING_DUA_DEMOGRAPHICS_REFERENCE_FILES_COUNT)
 
