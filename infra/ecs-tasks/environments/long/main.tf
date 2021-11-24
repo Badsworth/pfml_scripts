@@ -35,7 +35,7 @@ module "tasks" {
   st_employer_update_limit = 1500
 
   # TODO: Fill this in once the Portal is deployed.
-  cognito_user_pool_id = ""
+  cognito_user_pool_id = "us-east-1_FADLpF6um"
 
   # TODO: These values are provided by FINEOS.
   fineos_client_integration_services_api_url          = ""
