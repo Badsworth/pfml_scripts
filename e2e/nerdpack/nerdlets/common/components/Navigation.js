@@ -19,6 +19,13 @@ export default class Navigation extends React.PureComponent {
         >
           Error List
         </Link>
+        <Link
+          to={navigation.getOpenNerdletLocation({
+            id: "morning",
+          })}
+        >
+          Morning Run
+        </Link>
       </nav>
     );
   }

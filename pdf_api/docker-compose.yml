@@ -12,6 +12,7 @@ services:
     #   - mass-pfml-db
     platform: linux/amd64
     ports:
+      - "5000:5000"
       - "5001:5001"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development

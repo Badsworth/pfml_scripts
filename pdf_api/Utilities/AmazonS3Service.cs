@@ -87,7 +87,7 @@ namespace PfmlPdfApi.Utilities
 
         public async Task<Stream> GetFileAsync(string fileName)
         {
-            using (IAmazonS3 awsClient = await GetAWSClient(_amazonS3Setting.ProfileName))
+            using (IAmazonS3 awsClient = await GetAWSClient())
             {
                 Stream response = null;
 
@@ -109,7 +109,7 @@ namespace PfmlPdfApi.Utilities
 
         public async Task<IList<Stream>> GetFilesAsync(string folderName)
         {
-            using (IAmazonS3 awsClient = await GetAWSClient(_amazonS3Setting.ProfileName))
+            using (IAmazonS3 awsClient = await GetAWSClient())
             {
                 var files = new List<Stream>();
 
@@ -141,7 +141,7 @@ namespace PfmlPdfApi.Utilities
 
         private async Task CreateObjectAsync(PutObjectRequest request)
         {
-            using (IAmazonS3 awsClient = await GetAWSClient(_amazonS3Setting.ProfileName))
+            using (IAmazonS3 awsClient = await GetAWSClient())
             {
                 try
                 {
@@ -155,10 +155,9 @@ namespace PfmlPdfApi.Utilities
             }
         }
 
-        private async Task<IAmazonS3> GetAWSClient(string profileName)
+        private async Task<IAmazonS3> GetAWSClient()
         {
-            var credentials = GetAWSCredentials(profileName);
-            var awsClient = new AmazonS3Client(credentials);
+            var awsClient = new AmazonS3Client();
 
             bool bucketExists = await AmazonS3Util.DoesS3BucketExistV2Async(awsClient, _amazonS3Setting.BucketName);
 
@@ -166,15 +165,6 @@ namespace PfmlPdfApi.Utilities
                 throw new Exception($"Amazon S3 bucket with name '{_amazonS3Setting.BucketName}' does not exists");
 
             return awsClient;
-        }
-
-        private AWSCredentials GetAWSCredentials(string profileName)
-        {
-            var sharedFile = new SharedCredentialsFile();
-            sharedFile.TryGetProfile(profileName, out var profile);
-            AWSCredentialsFactory.TryGetAWSCredentials(profile, sharedFile, out var credentials);
-
-            return credentials;
         }
     }
 }

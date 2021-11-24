@@ -1,5 +1,5 @@
 import React from "react";
-import Navigation from "../common/navigation";
+import Navigation from "../common/components/Navigation";
 import {
   BillboardChart,
   StackedBarChart,
@@ -13,7 +13,7 @@ import {
 import { timeRangeToNrql } from "@newrelic/nr1-community";
 import { labelEnv } from "../common";
 import { getCategoriesByPriority } from "../common/ErrorPriority";
-import { ListErrors } from "../common/ListErrors";
+import { ListErrors } from "../common/components/ListErrors";
 
 class UncategorizedList extends React.Component {
   state = {

@@ -20,6 +20,7 @@ import massgov.pfml.db.models.employees as employee_models
 import massgov.pfml.db.models.payments as payment_models
 import massgov.pfml.db.models.verifications as verification_models
 import massgov.pfml.util.datetime as datetime_util
+from massgov.pfml.api.authentication.azure import AzureUser
 
 db_session = None
 
@@ -96,6 +97,18 @@ class BaseFactory(factory.alchemy.SQLAlchemyModelFactory):
         abstract = True
         sqlalchemy_session = Session
         sqlalchemy_session_persistence = "commit"
+
+
+class AzureUserFactory(factory.Factory):
+    class Meta:
+        model = AzureUser
+
+    sub_id = factory.Faker("uuid4")
+    first_name = factory.Faker("first_name")
+    last_name = factory.Faker("last_name")
+    email_address = factory.Faker("email")
+    groups = fake.pylist(3, True, "uuid4")
+    permissions = fake.pylist(10, True, "int")
 
 
 class UserFactory(BaseFactory):

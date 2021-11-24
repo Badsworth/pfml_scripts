@@ -38,15 +38,13 @@ resource "aws_s3_bucket" "bi_imports" {
 
 
 resource "aws_s3_bucket_policy" "bi_imports_bucket_policy" {
-  bucket = "massgov-pfml-${var.environment_name}-redshift-daily-import"
+  bucket = aws_s3_bucket.bi_imports.id
   policy = data.aws_iam_policy_document.bi_imports_bucket_policy_document.json
-  depends_on = [
-    aws_s3_bucket.bi_imports
-  ]
 }
 
 resource "aws_kms_key" "s3_kms_key" {
   description = "KMS key for Redshift S3 buckets"
+  policy      = data.aws_iam_policy_document.bi_imports_s3_kms_key_policy.json
 }
 
 resource "aws_kms_alias" "s3_kms_key_alias" {
