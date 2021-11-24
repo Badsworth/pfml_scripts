@@ -102,6 +102,7 @@ namespace PfmlPdfApi.Services
                     }
                     catch (Exception ex)
                     {
+                        Console.WriteLine(ex.ToString());
                         response.Status = MessageConstants.MsgStatusFailed;
                         response.ErrorMessage = $"IText Exception detected! - {ex.Message}";
                         throw;
@@ -123,6 +124,7 @@ namespace PfmlPdfApi.Services
             }
             catch (Exception ex)
             {
+                Console.WriteLine(ex.ToString());
                 response.Status = MessageConstants.MsgStatusFailed;
                 response.ErrorMessage = ex.Message;
             }
