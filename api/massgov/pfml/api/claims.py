@@ -262,17 +262,11 @@ def employer_get_claim_review(fineos_absence_id: str) -> flask.Response:
     log_attributes = get_employer_log_attributes(user_leave_admin.user)
     log_attributes = {"absence_case_id": fineos_absence_id, **log_attributes}
 
-    # TODO (PORTAL-1116): This condition can be removed. It's never reached because
-    # get_current_user_leave_admin_record does the same check, and raises an
-    # `VerificationRequired` exception if its met.
-    if not user_leave_admin.fineos_web_id:
-        logger.error(
-            "employer_get_claim_review failure - user leave administrator does not have a fineos_web_id",
-            extra={**log_attributes},
-        )
-        return response_util.error_response(
-            status_code=NotFound, message="ULA does not have a fineos_web_id", errors=[], data={},
-        ).to_api_response()
+    # get_claim_as_leave_admin takes str for the first argument;
+    # this effectively unwraps Optional[str] to be used as str,
+    # satisfying the type requirement for mypy.
+    # It is not expected that this will ever raise an AssertionError.
+    assert user_leave_admin.fineos_web_id is not None
 
     with app.db_session() as db_session:
         employer = get_or_404(db_session, Employer, user_leave_admin.employer_id)
