@@ -255,7 +255,7 @@ variable "portal_base_url" {
 }
 
 variable "admin_portal_base_url" {
-  description = "Admin Portal base URL to use when creating links"
+  description = "Admin Portal base URL for Azure log in and redirect URLs"
   type        = string
   default     = ""
 }
