@@ -59,7 +59,7 @@ export const Department = (props: WithBenefitsApplicationProps) => {
   // The length of the employee's org units is what determines
   // which "view" to show to the user
   const isSingular = EEOrgUnits.length === 1;
-  const isShort = !isSingular && EEOrgUnits.length > 1 && EEOrgUnits.length < 3;
+  const isShort = !isSingular && EEOrgUnits.length > 1 && EEOrgUnits.length < 5;
   const isLong = !isSingular && !isShort;
 
   // Compute default form state
@@ -192,7 +192,7 @@ export const Department = (props: WithBenefitsApplicationProps) => {
               <Trans
                 i18nKey="pages.claimsOrganizationUnit.confirmHint"
                 tOptions={{
-                  organization_unit: employeeOrgUnitOptions[0].label,
+                  organization_unit: employeeOrgUnitOptions[0]?.label,
                 }}
               />
             </React.Fragment>
@@ -231,10 +231,8 @@ export const Department = (props: WithBenefitsApplicationProps) => {
           <ConditionalContent visible={!comboBoxHasOnlyWorkarounds}>
             <Dropdown
               {...getFunctionalInputProps("combobox_org_unit")}
-              choices={extraOrgUnitOptions
-                .concat(
-                  hasSelectedRadioWorkaround ? employeeOrgUnitOptions : []
-                )
+              choices={(isLong ? employeeOrgUnitOptions : [])
+                .concat(extraOrgUnitOptions)
                 .concat(workaroundOptions)}
               autocomplete={true}
               label={t("pages.claimsOrganizationUnit.comboBoxLabel")}

@@ -27,8 +27,8 @@ exports[`DepartmentPage when claimantShowOrganizationUnits feature flag is enabl
       >
         <label
           class="usa-label text-bold font-heading-xs measure-5"
-          for="Dropdown80"
-          id="Dropdown80-label"
+          for="Dropdown58"
+          id="Dropdown58-label"
         >
           Select a department
         </label>
@@ -100,14 +100,14 @@ exports[`DepartmentPage when claimantShowOrganizationUnits feature flag is enabl
           </select>
           <input
             aria-autocomplete="list"
-            aria-describedby="Dropdown80--assistiveHint"
+            aria-describedby="Dropdown58--assistiveHint"
             aria-expanded="false"
-            aria-labelledby="Dropdown80_label Dropdown80_hint Dropdown80_error"
-            aria-owns="Dropdown80--list"
+            aria-labelledby="Dropdown58_label Dropdown58_hint Dropdown58_error"
+            aria-owns="Dropdown58--list"
             autocapitalize="off"
             autocomplete="off"
             class="usa-combo-box__input"
-            id="Dropdown80"
+            id="Dropdown58"
             role="combobox"
             type="text"
           />
@@ -150,10 +150,10 @@ exports[`DepartmentPage when claimantShowOrganizationUnits feature flag is enabl
       
           </span>
           <ul
-            aria-labelledby="Dropdown80-label"
+            aria-labelledby="Dropdown58-label"
             class="usa-combo-box__list"
             hidden=""
-            id="Dropdown80--list"
+            id="Dropdown58--list"
             role="listbox"
             tabindex="-1"
           >
@@ -166,7 +166,7 @@ exports[`DepartmentPage when claimantShowOrganizationUnits feature flag is enabl
           />
           <span
             class="usa-sr-only"
-            id="Dropdown80--assistiveHint"
+            id="Dropdown58--assistiveHint"
           >
             
         When autocomplete results are available use up and down arrows to review and enter to select.
@@ -292,14 +292,14 @@ exports[`DepartmentPage when claimantShowOrganizationUnits feature flag is enabl
         >
           <input
             class="usa-radio__input"
-            id="InputChoice30"
+            id="InputChoice22"
             name="radio_org_unit"
             type="radio"
             value="department_one"
           />
           <label
             class="usa-radio__label"
-            for="InputChoice30"
+            for="InputChoice22"
           >
             Department One
           </label>
@@ -309,14 +309,14 @@ exports[`DepartmentPage when claimantShowOrganizationUnits feature flag is enabl
         >
           <input
             class="usa-radio__input"
-            id="InputChoice31"
+            id="InputChoice23"
             name="radio_org_unit"
             type="radio"
             value="department_two"
           />
           <label
             class="usa-radio__label"
-            for="InputChoice31"
+            for="InputChoice23"
           >
             Department Two
           </label>
@@ -326,14 +326,14 @@ exports[`DepartmentPage when claimantShowOrganizationUnits feature flag is enabl
         >
           <input
             class="usa-radio__input"
-            id="InputChoice32"
+            id="InputChoice24"
             name="radio_org_unit"
             type="radio"
             value="not_listed"
           />
           <label
             class="usa-radio__label"
-            for="InputChoice32"
+            for="InputChoice24"
           >
             My department is not listed
           </label>
@@ -343,14 +343,14 @@ exports[`DepartmentPage when claimantShowOrganizationUnits feature flag is enabl
         >
           <input
             class="usa-radio__input"
-            id="InputChoice33"
+            id="InputChoice25"
             name="radio_org_unit"
             type="radio"
             value="not_selected"
           />
           <label
             class="usa-radio__label"
-            for="InputChoice33"
+            for="InputChoice25"
           >
             I'm not sure
           </label>

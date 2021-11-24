@@ -177,38 +177,6 @@ describe("DepartmentPage", () => {
           });
         });
       });
-
-      it("when user doesn't pick an option cannot submit department", async () => {
-        setup(singularOrganizationUnitsList);
-        // Click Save and continue button
-        userEvent.click(
-          screen.getByRole("button", { name: "Save and continue" })
-        );
-        // Shows error to the user, doesn't save
-        await waitFor(() => {
-          expect(updateClaim).toHaveBeenCalledTimes(0);
-        });
-        // Selects a workaround
-        userEvent.type(
-          screen.getByRole("combobox", {
-            name: "Select a department",
-          }),
-          "My department is not listed{enter}" // Needs {enter} to confirm option in combobox
-        );
-        // Additional information is displayed to the user
-        expect(screen.getByRole("region")).toBeInTheDocument();
-        // Click Save and continue button
-        userEvent.click(
-          screen.getByRole("button", { name: "Save and continue" })
-        );
-        // Check if the PATCH call to update the application was made
-        await waitFor(() => {
-          expect(updateClaim).toHaveBeenCalledWith("mock_application_id", {
-            organization_unit_id: null,
-            organization_unit_selection: "not_selected",
-          });
-        });
-      });
     });
 
     describe("when there is two to five linked departments", () => {
@@ -263,38 +231,6 @@ describe("DepartmentPage", () => {
           });
         });
       });
-
-      it("when user doesn't pick an option cannot submit department", async () => {
-        setup(shortOrganizationUnitsList);
-        // Click Save and continue button
-        userEvent.click(
-          screen.getByRole("button", { name: "Save and continue" })
-        );
-        // Shows error to the user, doesn't save
-        await waitFor(() => {
-          expect(updateClaim).toHaveBeenCalledTimes(0);
-        });
-        // Selects a workaround
-        userEvent.type(
-          screen.getByRole("combobox", {
-            name: "Select a department",
-          }),
-          "My department is not listed{enter}" // Needs {enter} to confirm option in combobox
-        );
-        // Additional information is displayed to the user
-        expect(screen.getByRole("region")).toBeInTheDocument();
-        // Click Save and continue button
-        userEvent.click(
-          screen.getByRole("button", { name: "Save and continue" })
-        );
-        // Check if the PATCH call to update the application was made
-        await waitFor(() => {
-          expect(updateClaim).toHaveBeenCalledWith("mock_application_id", {
-            organization_unit_id: null,
-            organization_unit_selection: "not_selected",
-          });
-        });
-      });
     });
 
     describe("when there is more than five linked departments", () => {
@@ -323,31 +259,6 @@ describe("DepartmentPage", () => {
           expect(updateClaim).toHaveBeenCalledWith("mock_application_id", {
             organization_unit_id: department.organization_unit_id,
             organization_unit_selection: null,
-          });
-        });
-      });
-
-      it("when user doesn't pick an option cannot submit department", async () => {
-        setup(longOrganizationUnitsList);
-        // Click Save and continue button
-        userEvent.click(
-          screen.getByRole("button", { name: "Save and continue" })
-        );
-        // Shows error to the user, doesn't save
-        await waitFor(() => {
-          expect(updateClaim).toHaveBeenCalledTimes(0);
-        });
-        // Additional information is displayed to the user
-        expect(screen.getByRole("region")).toBeInTheDocument();
-        // Click Save and continue button
-        userEvent.click(
-          screen.getByRole("button", { name: "Save and continue" })
-        );
-        // Check if the PATCH call to update the application was made
-        await waitFor(() => {
-          expect(updateClaim).toHaveBeenCalledWith("mock_application_id", {
-            organization_unit_id: null,
-            organization_unit_selection: "not_selected",
           });
         });
       });

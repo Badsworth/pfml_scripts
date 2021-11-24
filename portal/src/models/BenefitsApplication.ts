@@ -158,8 +158,11 @@ class BenefitsApplication extends BaseBenefitsApplication {
    * except for the ones connected to the employee
    */
   get extraEROrgUnits() {
-    return this.employer_organization_units.filter((o) =>
-      this.employee_organization_units.includes(o)
+    return this.employer_organization_units.filter(
+      (o) =>
+        !this.employee_organization_units
+          .map((o) => o.organization_unit_id)
+          .includes(o.organization_unit_id)
     );
   }
 }
