@@ -40,6 +40,7 @@ class Generate1099DocumentsStep(Step):
 
         try:
             documentDto = {
+                "id": str(record.pfml_1099_id),
                 "batchId": str(record.pfml_1099_batch_id),
                 "year": record.tax_year,
                 "corrected": record.correction_ind,
