@@ -35,7 +35,7 @@ namespace PfmlPdfApi.Services
             var response = new ResponseMessage<CreatedDocumentDto>(null);
             string folderName = $"Batch{dto.BatchId}";
             string formsFolderName = $"{folderName}/Forms";
-            string fileName = $"{formsFolderName}/{dto.BatchId}_{dto.Name}.pdf";
+            string fileName = $"{formsFolderName}/{dto.Id}_{dto.Name}.pdf";
 
             try
             {
@@ -49,8 +49,7 @@ namespace PfmlPdfApi.Services
 
                 var createdDocumentDto = new CreatedDocumentDto
                 {
-                    Name = fileName,
-                    Content = Convert.ToBase64String(stream.ToArray())
+                    Name = fileName
                 };
                 response.Payload = createdDocumentDto;
             }
@@ -88,21 +87,31 @@ namespace PfmlPdfApi.Services
                     var pdfMergedDocument = new PdfDocument(pdfWriter);
                     var merger = new PdfMerger(pdfMergedDocument);
 
-                    foreach (var file in filterFiles)
+                    try
                     {
-                        var pdfReader = new PdfReader(file);
-                        var pdfDocument = new PdfDocument(pdfReader);
-                        merger.Merge(pdfDocument, 1, pdfDocument.GetNumberOfPages());
-                    }
+                        foreach (var file in filterFiles)
+                        {
+                            var pdfReader = new PdfReader(file);
+                            var pdfDocument = new PdfDocument(pdfReader);
+                            merger.Merge(pdfDocument, 1, pdfDocument.GetNumberOfPages());
+                        }
 
-                    merger.Close();
+                        merger.Close();
+
+                        Console.WriteLine($"{fileName}: {filterFiles.Count} Pdfs were successfully merged.");
+                    }
+                    catch (Exception ex)
+                    {
+                        response.Status = MessageConstants.MsgStatusFailed;
+                        response.ErrorMessage = $"IText Exception detected! - {ex.Message}";
+                        throw;
+                    }
 
                     var fileCreated = await _amazonS3Service.CreateFileAsync(fileName, stream);
 
                     createdDocumentDtoList.Add(new CreatedDocumentDto
                     {
-                        Name = fileName,
-                        Content = Convert.ToBase64String(stream.ToArray())
+                        Name = fileName
                     });
 
                     skip = take * conMerge;

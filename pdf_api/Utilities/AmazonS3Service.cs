@@ -64,6 +64,8 @@ namespace PfmlPdfApi.Utilities
 
             await CreateObjectAsync(request);
 
+            Console.WriteLine($"Amazon S3 Service - {folderName} was successfully created.");
+
             return true;
         }
 
@@ -82,6 +84,8 @@ namespace PfmlPdfApi.Utilities
 
             await CreateObjectAsync(request);
 
+            Console.WriteLine($"Amazon S3 Service - {fileName} was successfully created.");
+
             return true;
         }
 
@@ -99,7 +103,7 @@ namespace PfmlPdfApi.Utilities
                 }
                 catch (Exception ex)
                 {
-                    var logMessage = $"Exception Detected! - {GetType().Name}/{MethodBase.GetCurrentMethod().Name}{Environment.NewLine}{ex.Message}";
+                    Console.WriteLine($"Exception Detected! - {GetType().Name}/{MethodBase.GetCurrentMethod().Name}{Environment.NewLine}{ex.Message}");
                     throw;
                 }
 
@@ -122,6 +126,7 @@ namespace PfmlPdfApi.Utilities
                     };
 
                     var objects = await awsClient.ListObjectsV2Async(request, new System.Threading.CancellationToken());
+                    Console.WriteLine($"Amazon S3 Service - {objects.S3Objects.Count} items were returned from S3 bucket");
 
                     foreach (var s3Object in objects.S3Objects)
                     {
@@ -131,7 +136,7 @@ namespace PfmlPdfApi.Utilities
                 }
                 catch (Exception ex)
                 {
-                    var logMessage = $"Exception Detected! - {GetType().Name}/{MethodBase.GetCurrentMethod().Name}{Environment.NewLine}{ex.Message}";
+                    Console.WriteLine($"Exception Detected! - {GetType().Name}/{MethodBase.GetCurrentMethod().Name}{Environment.NewLine}{ex.Message}");
                     throw;
                 }
 
@@ -149,7 +154,7 @@ namespace PfmlPdfApi.Utilities
                 }
                 catch (Exception ex)
                 {
-                    var logMessage = $"Amazon S3 Service Exception Detected! - {GetType().Name}/{MethodBase.GetCurrentMethod().Name}{Environment.NewLine}{ex.Message}";
+                    Console.WriteLine($"Amazon S3 Service Exception Detected! - {GetType().Name}/{MethodBase.GetCurrentMethod().Name}{Environment.NewLine}{ex.Message}");
                     throw;
                 }
             }

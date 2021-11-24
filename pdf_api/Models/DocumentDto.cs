@@ -6,6 +6,9 @@ namespace PfmlPdfApi.Models
     public class DocumentDto
     {
         [Required]
+        public string Id { get; set; }
+
+        [Required]
         public string BatchId { get; set; }
 
         [Required]
