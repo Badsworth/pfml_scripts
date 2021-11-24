@@ -92,35 +92,23 @@ export const Department = (props: WithBenefitsApplicationProps) => {
   });
 
   // Builds the radio/comboBox options for all the different page views
-  const getOrgUnitOptions = () => {
-    const workaroundOptions = [NOT_LISTED, NOT_SURE].map(orgUnitAsOption);
+const workaroundOptions = [NOT_LISTED, NOT_SURE].map(orgUnitAsOption);
 
-    const choices = {
-      singleOrgUnitOptions: [YES, NO].map(orgUnitAsOption),
-      employeeOrgUnitOptions: [
+const singleOrgUnitOptions = [YES, NO].map(orgUnitAsOption);
+const employeeOrgUnitOptions = [
         ...EEOrgUnits.map(orgUnitAsOption),
         ...workaroundOptions,
-      ],
-      employerOrgUnitOptions: [
+      ];
+const employerOrgUnitOptions= [
         ...EROrgUnits.map(orgUnitAsOption),
         ...workaroundOptions,
-      ],
-      extraOrgUnitOptions: [
+      ];
+const extraOrgUnitOptions = [
         ...EROrgUnits.filter((o) => !EEOrgUnits.includes(o)).map(
           orgUnitAsOption
         ),
         ...workaroundOptions,
-      ],
-    };
-    return choices;
-  };
-
-  const {
-    singleOrgUnitOptions,
-    extraOrgUnitOptions,
-    employeeOrgUnitOptions,
-    employerOrgUnitOptions,
-  } = getOrgUnitOptions();
+      ];
 
   // Determine whether user selected a "workaround" type option
   // while choosing from radio options
