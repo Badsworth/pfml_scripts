@@ -152,6 +152,16 @@ class BenefitsApplication extends BaseBenefitsApplication {
       this.status === BenefitsApplicationStatus.completed
     );
   }
+
+  /**
+   * Returns a list of the employer's organization units
+   * except for the ones connected to the employee
+   */
+  get extraEROrgUnits() {
+    return this.employer_organization_units.filter((o) =>
+      this.employee_organization_units.includes(o)
+    );
+  }
 }
 
 /**

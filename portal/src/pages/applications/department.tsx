@@ -33,7 +33,7 @@ export const Department = (props: WithBenefitsApplicationProps) => {
 
   // Organization Units (see class BenefitsApplication)
   const EEOrgUnits = claim.employee_organization_units ?? [];
-  const EROrgUnits = claim.employer_organization_units ?? [];
+  const extraOrgUnits = claim.extraEROrgUnits;
 
   // Below are radio/combobox options that are not real organization units,
   // which will be referred to as "workarounds", but are still available to the user
@@ -121,22 +121,12 @@ export const Department = (props: WithBenefitsApplicationProps) => {
   // First page view with Yes, No radio options
   const singleOrgUnitOptions = [YES, NO].map(orgUnitAsOption);
   // Second page view with multiple, but few radio options
-  const employeeOrgUnitOptions = [
-    ...EEOrgUnits.map(orgUnitAsOption),
-    ...workaroundOptions,
-  ];
+  const employeeOrgUnitOptions = EEOrgUnits.map(orgUnitAsOption);
   // Third page view all possible options in a combobox
-  const employerOrgUnitOptions = [
-    ...EROrgUnits.map(orgUnitAsOption),
-    ...workaroundOptions,
-  ];
   // After the user selects a "workaround" radio option
   // and combobox shows up, these are the remaining options
   // takes all possible options and filters out the ones shown in radio options
-  const extraOrgUnitOptions = [
-    ...EROrgUnits.filter((o) => !EEOrgUnits.includes(o)).map(orgUnitAsOption),
-    ...workaroundOptions,
-  ];
+  const extraOrgUnitOptions = extraOrgUnits.map(orgUnitAsOption);
 
   // Determine whether user selected a "workaround" option
   // while choosing from radio options
@@ -173,12 +163,12 @@ export const Department = (props: WithBenefitsApplicationProps) => {
   // Will only happen both the employer and employee organization unit lists
   // are equal and small
   const comboBoxHasOnlyWorkarounds =
-    hasSelectedRadioWorkaround && extraOrgUnitOptions.length <= 2;
+    hasSelectedRadioWorkaround && extraOrgUnitOptions.length === 0;
 
   // The claimant flow should already check both requirements below
   // but we still want to prevent direct access to this page
   // if the feature flag is False or this employer has zero org units
-  if (!showDepartments || EROrgUnits.length === 0) {
+  if (!showDepartments || claim.employer_organization_units.length === 0) {
     appLogic.portalFlow.goToNextPage(
       { claim },
       { claim_id: claim.application_id }
@@ -215,7 +205,7 @@ export const Department = (props: WithBenefitsApplicationProps) => {
       <ConditionalContent visible={isShort}>
         <InputChoiceGroup
           {...getFunctionalInputProps("radio_org_unit")}
-          choices={employeeOrgUnitOptions}
+          choices={employeeOrgUnitOptions.concat(workaroundOptions)}
           label={t("pages.claimsOrganizationUnit.sectionLabel")}
           type="radio"
         />
@@ -241,11 +231,11 @@ export const Department = (props: WithBenefitsApplicationProps) => {
           <ConditionalContent visible={!comboBoxHasOnlyWorkarounds}>
             <Dropdown
               {...getFunctionalInputProps("combobox_org_unit")}
-              choices={
-                hasSelectedRadioWorkaround
-                  ? extraOrgUnitOptions
-                  : employerOrgUnitOptions
-              }
+              choices={extraOrgUnitOptions
+                .concat(
+                  hasSelectedRadioWorkaround ? employeeOrgUnitOptions : []
+                )
+                .concat(workaroundOptions)}
               autocomplete={true}
               label={t("pages.claimsOrganizationUnit.comboBoxLabel")}
               smallLabel

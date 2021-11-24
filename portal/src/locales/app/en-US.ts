@@ -1528,14 +1528,6 @@ const pages = {
     confirmHint:
       "Based on what you’ve entered, our records show you work at <strong>{{organization_unit}}</strong>. Is this the department where you are applying to take leave?",
     confirmSectionLabel: "Confirm your department",
-    errors: {
-      missingConfirmation:
-        "Please confirm if this is the department you are taking leave from.",
-      missingOrganizationUnit:
-        "Please select the department you are taking leave from.",
-      organizationUnitsNotFound:
-        "We couldn't find any departments associated to you for this employer. Please go back and make sure you've entered the correct FEIN.",
-    },
     followupInfo:
       "We will follow up with you after you apply to make sure the right department reviews your application.",
     hint: "If you want to take leave from more than one department, you need to submit a separate application for each department.",
