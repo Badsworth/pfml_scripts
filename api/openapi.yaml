@@ -2379,12 +2379,6 @@ components:
     AbsencePeriodResponse:
       type: object
       properties:
-        class_id:
-          type: integer
-          example: 1234
-        index_id:
-          type: integer
-          example: 1234
         absence_period_start_date:
           type: string
           format: date
