@@ -28,7 +28,7 @@ terraform {
       source = "pagerduty/pagerduty"
     }
   }
-    
+
   backend "s3" {
     bucket         = "massgov-pfml-long-env-mgmt"
     key            = "terraform/api.tfstate"
@@ -44,33 +44,33 @@ data "aws_ecs_cluster" "long" {
 module "api" {
   source = "../../template"
 
-  environment_name                      = local.environment_name
+  environment_name = local.environment_name
   # st_use_mock_dor_data    = false
   # st_decrypt_dor_data     = false
   # st_file_limit_specified = true
-  service_app_count                     = 2
-  service_max_app_count                 = 10
-  service_docker_tag                    = local.service_docker_tag
-  service_ecs_cluster_arn               = data.aws_ecs_cluster.long.arn
-  vpc_id                                = data.aws_vpc.vpc.id
-  vpc_app_subnet_ids                    = data.aws_subnet_ids.vpc_app.ids
-  vpc_db_subnet_ids                     = data.aws_subnet_ids.vpc_db.ids
-  postgres_version                      = "12.5"
-  postgres_parameter_group_family       = "postgres12"
-  nlb_name                              = "${local.vpc}-nlb"
-  nlb_port                              = 3507
+  service_app_count               = 2
+  service_max_app_count           = 10
+  service_docker_tag              = local.service_docker_tag
+  service_ecs_cluster_arn         = data.aws_ecs_cluster.long.arn
+  vpc_id                          = data.aws_vpc.vpc.id
+  vpc_app_subnet_ids              = data.aws_subnet_ids.vpc_app.ids
+  vpc_db_subnet_ids               = data.aws_subnet_ids.vpc_db.ids
+  postgres_version                = "12.5"
+  postgres_parameter_group_family = "postgres12"
+  nlb_name                        = "${local.vpc}-nlb"
+  nlb_port                        = 3507
   cors_origins = [
     "https://paidleave-long.eol.mass.gov",
     "https://paidleave-api-long.eol.mass.gov",
   ]
-  enable_application_fraud_check                   = "0"
-  release_version = var.release_version
+  enable_application_fraud_check = "0"
+  release_version                = var.release_version
 
   # TODO: Fill this in after the portal is deployed.
-  cognito_user_pool_arn                            = null
-  cognito_user_pool_id                             = ""
-  cognito_user_pool_client_id                      = ""
-  cognito_user_pool_keys_url                       = ""
+  cognito_user_pool_arn       = null
+  cognito_user_pool_id        = ""
+  cognito_user_pool_client_id = ""
+  cognito_user_pool_keys_url  = ""
 
   # TODO: Connect to an RMV endpoint if desired. All nonprod environments are connected to the staging API
   #       in either a fully-mocked or partially-mocked setting.
@@ -80,18 +80,18 @@ module "api" {
   rmv_check_mock_success            = "1"
 
   # TODO: These values are provided by FINEOS.
-  fineos_client_integration_services_api_url       = ""
-  fineos_client_customer_api_url                   = ""
-  fineos_client_group_client_api_url               = ""
-  fineos_client_wscomposer_api_url                 = ""
-  fineos_client_wscomposer_user_id                 = ""
-  fineos_client_oauth2_url                         = ""
+  fineos_client_integration_services_api_url          = ""
+  fineos_client_customer_api_url                      = ""
+  fineos_client_group_client_api_url                  = ""
+  fineos_client_wscomposer_api_url                    = ""
+  fineos_client_wscomposer_user_id                    = ""
+  fineos_client_oauth2_url                            = ""
   fineos_import_employee_updates_input_directory_path = null
-  fineos_aws_iam_role_arn                          = null
-  fineos_aws_iam_role_external_id                  = null
+  fineos_aws_iam_role_arn                             = null
+  fineos_aws_iam_role_external_id                     = null
 
   # TODO: This value is provided by FINEOS over Interchange.
-  fineos_client_oauth2_client_id                   = ""
+  fineos_client_oauth2_client_id = ""
 
   # TODO: Connect to ServiceNow. Usually in nonprod you'll connect to stage.
   service_now_base_url = "https://savilinxstage.servicenowservices.com"
