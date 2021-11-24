@@ -130,13 +130,13 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
 </section>
 `;
 
-exports[`Payments renders the \`questions?\` section 1`] = `
+exports[`Payments renders the \`help\` section containing questions and feedback 1`] = `
 <section
-  class="margin-y-4"
-  data-testid="questions"
+  class="margin-y-6"
+  data-testid="helpSection"
 >
   <h3
-    class="margin-bottom-2 font-heading-sm text-bold"
+    class="font-heading-sm text-bold"
   >
     Questions?
   </h3>
@@ -148,6 +148,23 @@ exports[`Payments renders the \`questions?\` section 1`] = `
       (833) 344‑7365
     </a>
     .
+  </p>
+  <h3
+    class="font-heading-sm text-bold"
+  >
+    Help us improve payment information by giving feedback
+  </h3>
+  <p>
+    We’d like to hear more about your experience on this site. Please take a few minutes to share your feedback.
+  </p>
+  <p>
+    <a
+      href="https://www.mass.gov/paidleave-claimant-feedback"
+      rel="noopener noreferrer"
+      target="_blank"
+    >
+      Take the survey
+    </a>
   </p>
 </section>
 `;
