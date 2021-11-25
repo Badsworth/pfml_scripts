@@ -56,7 +56,7 @@ output "environment_shorthand" {
     "uat"         = "uat"
     "breakfix"    = "bfx"
     "cps-preview" = "cpspr"
-    "trn2" = "trn2"
+    "trn2"        = "trn2"
   }
 }
 
@@ -129,7 +129,7 @@ output "api_domains" {
     "cps-preview" = "paidleave-api-cps-preview.eol.mass.gov",
     "uat"         = "paidleave-api-uat.mass.gov",
     "prod"        = "paidleave-api.mass.gov",
-    "trn2" = "paidleave-api-trn2.mass.gov"
+    "trn2"        = "paidleave-api-trn2.mass.gov"
   }
 }
 
@@ -177,6 +177,6 @@ output "env_var_mappings" {
     "uat"         = "UAT"
     "breakfix"    = "Breakfix"
     "cps-preview" = "CPSPreview"
-    "trn2" = "training2"
+    "trn2"        = "training2"
   }
 }
