@@ -177,6 +177,6 @@ output "env_var_mappings" {
     "uat"         = "UAT"
     "breakfix"    = "Breakfix"
     "cps-preview" = "CPSPreview"
-    "trn2"        = "training2"
+    "trn2"        = "Training2"
   }
 }
