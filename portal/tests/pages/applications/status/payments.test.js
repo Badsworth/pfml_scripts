@@ -83,14 +83,14 @@ describe("Payments", () => {
     expect(section).toMatchSnapshot();
   });
 
-  it("renders the `questions?` section", () => {
+  it("renders the `help` section containing questions and feedback", () => {
     renderPage(
       Payments,
       { addCustomSetup: setupHelper(defaultClaimDetail) },
       props
     );
 
-    const section = screen.getByTestId("questions");
+    const section = screen.getByTestId("helpSection");
     expect(section).toMatchSnapshot();
 
     const details = screen.getAllByText(/call the contact center at/i);

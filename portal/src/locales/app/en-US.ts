@@ -2564,6 +2564,9 @@ const pages = {
     changesToPaymentsYourPreferencesAnswer:
       "<p>To make changes to your application, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>. If you request a change to your start and end dates, we may need to review your application again.</p>",
     changesToPaymentsYourPreferencesQuestion: "Change your payment preference",
+    feedbackDetails:
+      "<p>We’d like to hear more about your experience on this site. Please take a few minutes to share your feedback.</p><p><feedback-link>Take the survey</feedback-link></p>",
+    feedbackHeader: "Help us improve payment information by giving feedback",
     paymentsTable: {
       amountSent: "{{amount, currency}}",
       amountSentHeader: "Amount sent",

@@ -287,7 +287,6 @@ def get_batch_counts(db_session: db.Session) -> Dict[int, int]:
 def get_1099_records(db_session: db.Session, batchId: str) -> List[Pfml1099]:
 
     records = db_session.query(Pfml1099).filter(Pfml1099.pfml_1099_batch_id == batchId).all()
-    records = records[:5]
     if records is not None:
         logger.info(
             "Number of 1099 Records for batch [%s]: %s", batchId, len(records),
