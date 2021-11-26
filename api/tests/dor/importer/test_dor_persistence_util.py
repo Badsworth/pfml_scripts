@@ -26,6 +26,7 @@ from massgov.pfml.db.models.factories import (
     TaxIdentifierFactory,
     WagesAndContributionsFactory,
 )
+from massgov.pfml.types import Fein
 
 sample_employee_file = "DORDFML_20200519120622"
 sample_employer_file = "DORDFMLEMP_20200519120622"
@@ -63,7 +64,18 @@ def test_get_wages_and_contributions_by_employee_id_and_filling_period(test_db_s
     assert wage_row is None
 
 
-def test_get_employer_by_fein(test_db_session):
+def test_get_employer_by_fein(test_db_session, initialize_factories_session):
+    # Make sure valid FEIN returns `None` looking up employer
+    employer_row_valid_fein_not_found = util.get_employer_by_fein(test_db_session, "123456789")
+    assert employer_row_valid_fein_not_found is None
+
+    EmployerFactory.create(employer_fein=Fein("123456789"))
+
+    # Make sure valid FEIN returns a record looking up a known employer
+    employer_row_valid_fein_found = util.get_employer_by_fein(test_db_session, "123456789")
+    assert employer_row_valid_fein_found is not None
+
+    # Raise ValueError if invalid FEIN provided
     with pytest.raises(ValueError):
         employer_row = util.get_employer_by_fein(test_db_session, "00-000000000")
         assert employer_row is None
