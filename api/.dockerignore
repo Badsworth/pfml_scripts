@@ -17,3 +17,7 @@ jwks.json
 lambdas/
 Dockerfile
 docker-compose*
+
+# ignore local virtual environments that may be mounted from the host machine
+# to avoid overriding the built virtual environment.
+.venv

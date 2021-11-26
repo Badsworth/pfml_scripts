@@ -17,6 +17,7 @@ from massgov.pfml.delegated_payments.reporting.delegated_payment_sql_reports imp
     get_report_by_name,
 )
 from massgov.pfml.delegated_payments.step import Step
+from massgov.pfml.util.datetime import get_now_us_eastern
 
 logger = logging.get_logger(__name__)
 
@@ -82,7 +83,7 @@ class ReportStep(Step):
     ) -> None:
         logger.info("Generating report: %s", report_name)
 
-        now = payments_util.get_now()
+        now = get_now_us_eastern()
         timestamp_prefix = now.strftime("%Y-%m-%d-%H-%M-%S")
         base_file_name = f"{report_name}.csv"
         archive_file_name = f"{timestamp_prefix}-{base_file_name}"

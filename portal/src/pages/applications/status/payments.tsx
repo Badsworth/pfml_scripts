@@ -1,14 +1,15 @@
 import React, { useEffect } from "react";
 import withUser, { WithUserProps } from "../../../hoc/withUser";
-
 import Accordion from "../../../components/core/Accordion";
 import AccordionItem from "../../../components/core/AccordionItem";
 import BackButton from "../../../components/BackButton";
 import Heading from "../../../components/core/Heading";
 import StatusNavigationTabs from "../../../components/status/StatusNavigationTabs";
+import Table from "../../../components/core/Table";
 import Title from "../../../components/core/Title";
 import { Trans } from "react-i18next";
 import { createRouteWithQuery } from "../../../utils/routeWithParams";
+import formatDateRange from "../../../utils/formatDateRange";
 import { isFeatureEnabled } from "../../../services/featureFlags";
 import routes from "../../../routes";
 import { useTranslation } from "../../../locales/i18n";
@@ -20,24 +21,36 @@ interface PaymentsProps {
 }
 
 export const Payments = ({
-  appLogic,
+  appLogic: {
+    claims: { claimDetail, loadClaimDetail },
+    portalFlow,
+  },
   query: { absence_id },
 }: WithUserProps & PaymentsProps) => {
   const { t } = useTranslation();
 
   useEffect(() => {
+    if (absence_id) {
+      loadClaimDetail(absence_id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [absence_id]);
+
+  useEffect(() => {
     if (!isFeatureEnabled("claimantShowPayments")) {
-      appLogic.portalFlow.goTo(routes.applications.status.claim, {
+      portalFlow.goTo(routes.applications.status.claim, {
         absence_id,
       });
     }
-  }, [appLogic.portalFlow, absence_id]);
+  }, [portalFlow, absence_id]);
 
-  // Determine leave type
-  const isContinuous = appLogic.claims.claimDetail?.isContinuous;
-  const isIntermittent = appLogic.claims.claimDetail?.isIntermittent;
-  const isReducedSchedule = appLogic.claims.claimDetail?.isReducedSchedule;
-
+  const tableColumns = [
+    t("pages.payments.paymentsTable.leaveDatesHeader"),
+    t("pages.payments.paymentsTable.paymentMethodHeader"),
+    t("pages.payments.paymentsTable.estimatedScheduledDateHeader"),
+    t("pages.payments.paymentsTable.dateSentHeader"),
+    t("pages.payments.paymentsTable.amountSentHeader"),
+  ];
   return (
     <React.Fragment>
       <BackButton
@@ -46,7 +59,7 @@ export const Payments = ({
       />
       <div className="measure-6">
         <StatusNavigationTabs
-          activePath={appLogic.portalFlow.pathname}
+          activePath={portalFlow.pathname}
           absence_id={absence_id}
         />
 
@@ -57,49 +70,68 @@ export const Payments = ({
           {t("pages.claimsStatus.yourPayments")}
         </Heading>
 
-        {/* When to expect payment section */}
-        <section className="margin-y-4" data-testid="when-to-expect-payments">
-          {(isContinuous || isReducedSchedule) && (
-            <Trans
-              components={{
-                "waiting-period-info": (
-                  <a
-                    href={routes.external.massgov.sevenDayWaitingPeriodInfo}
-                    rel="noopener noreferrer"
-                    target="_blank"
-                  />
-                ),
-              }}
-              i18nKey="pages.payments.whenToExpectPaymentContinuous"
-            />
-          )}
-
-          {isReducedSchedule && (
-            <Trans i18nKey="pages.payments.whenToExpectPaymentReducedSchedule" />
-          )}
-
-          {isIntermittent && (
-            <Trans
-              components={{
-                "waiting-period-info": (
-                  <a
-                    href={routes.external.massgov.sevenDayWaitingPeriodInfo}
-                    rel="noopener noreferrer"
-                    target="_blank"
-                  />
-                ),
-                "contact-center-report-hours-phone-link": (
-                  <a
-                    href={`tel:${t(
-                      "shared.contactCenterReportHoursPhoneNumber"
-                    )}`}
-                  />
-                ),
-              }}
-              i18nKey="pages.payments.whenToExpectPaymentIntermittent"
-            />
-          )}
-        </section>
+        <Table borderlessMobile responsiveIncludeHeader>
+          <thead>
+            <tr>
+              {tableColumns.map((columnName) => (
+                <th key={columnName} scope="col">
+                  {columnName}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {claimDetail?.payments.map(
+              ({
+                payment_id,
+                period_start_date,
+                period_end_date,
+                amount,
+                sent_to_bank_date,
+                payment_method,
+                expected_send_date_start,
+                expected_send_date_end,
+                status,
+              }) => (
+                <tr key={payment_id}>
+                  <td data-label={tableColumns[0]}>
+                    {formatDateRange(period_start_date, period_end_date)}
+                  </td>
+                  <td data-label={tableColumns[1]}>
+                    {t("pages.payments.paymentsTable.paymentMethod", {
+                      context: payment_method,
+                    })}
+                  </td>
+                  <td data-label={tableColumns[2]}>
+                    {sent_to_bank_date
+                      ? t("pages.payments.paymentsTable.paymentStatus", {
+                          context: status,
+                        })
+                      : formatDateRange(
+                          expected_send_date_start,
+                          expected_send_date_end
+                        )}
+                  </td>
+                  <td data-label={tableColumns[3]}>
+                    {sent_to_bank_date ||
+                      t("pages.payments.paymentsTable.paymentStatus", {
+                        context: status,
+                      })}
+                  </td>
+                  <td data-label={tableColumns[4]}>
+                    {amount === null
+                      ? t("pages.payments.paymentsTable.paymentStatus", {
+                          context: status,
+                        })
+                      : t("pages.payments.paymentsTable.amountSent", {
+                          amount,
+                        })}
+                  </td>
+                </tr>
+              )
+            )}
+          </tbody>
+        </Table>
 
         {/* Changes to payments FAQ section */}
         <section className="margin-y-4" data-testid="changes-to-payments">
@@ -161,16 +193,28 @@ export const Payments = ({
           </Accordion>
         </section>
 
-        {/* Questions/Contact Us section */}
-        <section className="margin-y-4" data-testid="questions">
-          <Heading className="margin-bottom-2" level="3">
-            {t("pages.payments.questionsHeader")}
-          </Heading>
+        <section className="margin-y-6" data-testid="helpSection">
+          {/* Questions/Contact Us section */}
+          <Heading level="3">{t("pages.payments.questionsHeader")}</Heading>
           <Trans
             i18nKey="pages.payments.questionsDetails"
             components={{
               "contact-center-phone-link": (
                 <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
+              ),
+            }}
+          />
+          {/* Feedback section */}
+          <Heading level="3">{t("pages.payments.feedbackHeader")}</Heading>
+          <Trans
+            i18nKey="pages.payments.feedbackDetails"
+            components={{
+              "feedback-link": (
+                <a
+                  href={routes.external.massgov.feedbackClaimant}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                />
               ),
             }}
           />

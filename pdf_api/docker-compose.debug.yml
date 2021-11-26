@@ -1,0 +1,25 @@
+# Please refer https://aka.ms/HTTPSinContainer on how to setup an https developer certificate for your ASP .NET Core service.
+
+version: '3.4'
+
+services:
+  mass-pfml-pdf-api:
+    build:
+      context: .
+    image: mass-pfml-pdf-api:app
+    container_name: mass-pfml-pdf-api
+    platform: linux/amd64
+    ports:
+      - 5000:5000
+      - 5001:5001
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    networks:
+      main:
+        aliases:
+          - mass-pfml-pdf-api
+    volumes:
+      - ~/.vsdbg:/remote_debugger:rw
+
+networks:
+  main:

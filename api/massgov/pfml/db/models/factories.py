@@ -17,10 +17,12 @@ from sqlalchemy.orm import scoped_session
 import massgov.pfml.db as db
 import massgov.pfml.db.models.applications as application_models
 import massgov.pfml.db.models.employees as employee_models
+import massgov.pfml.db.models.payments as payment_models
 import massgov.pfml.db.models.verifications as verification_models
 import massgov.pfml.util.datetime as datetime_util
 from massgov.pfml.types import Fein as FeinType
 from massgov.pfml.types import TaxId
+from massgov.pfml.api.authentication.azure import AzureUser
 
 db_session = None
 
@@ -97,6 +99,18 @@ class BaseFactory(factory.alchemy.SQLAlchemyModelFactory):
         abstract = True
         sqlalchemy_session = Session
         sqlalchemy_session_persistence = "commit"
+
+
+class AzureUserFactory(factory.Factory):
+    class Meta:
+        model = AzureUser
+
+    sub_id = factory.Faker("uuid4")
+    first_name = factory.Faker("first_name")
+    last_name = factory.Faker("last_name")
+    email_address = factory.Faker("email")
+    groups = fake.pylist(3, True, "uuid4")
+    permissions = fake.pylist(10, True, "int")
 
 
 class UserFactory(BaseFactory):
@@ -929,11 +943,87 @@ class ImportLogFactory(BaseFactory):
         model = employee_models.ImportLog
 
 
+class Pfml1099BatchFactory(BaseFactory):
+    class Meta:
+        model = payment_models.Pfml1099Batch
+
+    pfml_1099_batch_id = Generators.UuidObj
+    tax_year = 2021
+    batch_run_date = Generators.Now
+    correction_ind = False
+    batch_status = "Created"
+
+
+class Pfml1099Factory(BaseFactory):
+    class Meta:
+        model = payment_models.Pfml1099
+
+    pfml_1099_id = Generators.UuidObj
+    pfml_1099_batch_id = Generators.UuidObj
+    tax_year = 2021
+    employee_id = Generators.UuidObj
+    tax_identifier_id = Generators.UuidObj
+    first_name = "Joe"
+    last_name = "Pel"
+    address_line_1 = "172 Pearl St"
+    address_line_2 = ""
+    city = "Somerville"
+    state = "MA"
+    zip = "02145"
+    gross_payments = 1000.00
+    state_tax_withholdings = 100.00
+    federal_tax_withholdings = 15.00
+    overpayment_repayments = 0.00
+    correction_ind = False
+
+
 class OrganizationUnitFactory(BaseFactory):
     class Meta:
         model = employee_models.OrganizationUnit
+
+    organization_unit_id = Generators.UuidObj
 
     fineos_id = None
     name = factory.Faker("company")
     employer = factory.SubFactory(EmployerFactory)
     employer_id = factory.LazyAttribute(lambda c: c.employer.employer_id)
+
+
+class DuaEmployeeDemographicsFactory(BaseFactory):
+    class Meta:
+        model = employee_models.DuaEmployeeDemographics
+
+    dua_employee_demographics_id = Generators.UuidObj
+
+    fineos_customer_number = factory.Faker("numerify", text="####")
+    date_of_birth = factory.Faker("date_object")
+    gender_code = random.choices(["F", "M", "U", None])
+    occupation_code = random.randint(1, 6000)
+    occupation_description = None
+    employer_fein = Generators.Fein
+    employer_reporting_unit_number = random.randint(1, 100000)
+
+
+class DuaReportingUnitFactory(BaseFactory):
+    class Meta:
+        model = employee_models.DuaReportingUnit
+
+    dua_reporting_unit_id = Generators.UuidObj
+    dua_id = factory.Sequence(lambda n: n)
+    dba = None
+
+    organization_unit = factory.SubFactory(OrganizationUnitFactory)
+    organization_unit_id = factory.LazyAttribute(lambda d: d.organization_unit.organization_unit_id)
+
+
+class EmployeeOccupationFactory(BaseFactory):
+    class Meta:
+        model = employee_models.EmployeeOccupation
+
+    employee_occupation_id = Generators.UuidObj
+
+    employee = factory.SubFactory(EmployeeFactory)
+    employee_id = factory.LazyAttribute(lambda d: d.employee.employee_id)
+
+    employer = factory.SubFactory(EmployerFactory)
+    employer_id = factory.LazyAttribute(lambda d: d.employer.employer_id)

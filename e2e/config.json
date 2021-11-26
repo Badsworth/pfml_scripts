@@ -17,7 +17,8 @@
     "LST_EMPLOYERS_FILE": "./employers/e2e-2021-08-05.json",
     "DOR_IMPORT_URI": "s3://massgov-pfml-test-agency-transfer/dor/received/",
     "DOR_ETL_ARN": "arn:aws:states:us-east-1:498823821309:stateMachine:pfml-api-test-dor-fineos-etl",
-    "FINEOS_HAS_TAX_WITHHOLDING": "true"
+    "FINEOS_HAS_TAX_WITHHOLDING": "true",
+    "HAS_UPDATED_MAX_BENFIT": "true"
   },
   "stage": {
     "PORTAL_BASEURL": "https://paidleave-stage.mass.gov",
@@ -31,7 +32,8 @@
     "EMPLOYERS_FILE": "./employers/e2e-2021-08-05.json",
     "DOR_IMPORT_URI": "s3://massgov-pfml-stage-agency-transfer/dor/received/",
     "DOR_ETL_ARN": "arn:aws:states:us-east-1:498823821309:stateMachine:pfml-api-stage-dor-fineos-etl",
-    "FINEOS_HAS_TAX_WITHHOLDING": "false"
+    "FINEOS_HAS_TAX_WITHHOLDING": "false",
+    "HAS_UPDATED_MAX_BENFIT": "false"
   },
   "training": {
     "PORTAL_BASEURL": "https://paidleave-training.mass.gov",
@@ -45,7 +47,8 @@
     "EMPLOYERS_FILE": "./employers/e2e-2021-09-08.json",
     "DOR_IMPORT_URI": "s3://massgov-pfml-training-agency-transfer/dor/received/",
     "DOR_ETL_ARN": "arn:aws:states:us-east-1:498823821309:stateMachine:pfml-api-training-dor-fineos-etl",
-    "FINEOS_HAS_TAX_WITHHOLDING": "false"
+    "FINEOS_HAS_TAX_WITHHOLDING": "false",
+    "HAS_UPDATED_MAX_BENFIT": "false"
   },
   "performance": {
     "PORTAL_BASEURL": "https://paidleave-performance.mass.gov",
@@ -61,7 +64,8 @@
     "LST_EMPLOYERS_FILE": "./employers/lst-2021-08-18.json",
     "DOR_IMPORT_URI": "s3://massgov-pfml-performance-agency-transfer/dor/received/",
     "DOR_ETL_ARN": "arn:aws:states:us-east-1:498823821309:stateMachine:pfml-api-performance-dor-fineos-etl",
-    "FINEOS_HAS_TAX_WITHHOLDING": "false"
+    "FINEOS_HAS_TAX_WITHHOLDING": "false",
+    "HAS_UPDATED_MAX_BENFIT": "false"
   },
   "uat": {
     "PORTAL_BASEURL": "https://paidleave-uat.mass.gov",
@@ -76,7 +80,8 @@
     "DOR_IMPORT_URI": "s3://massgov-pfml-uat-agency-transfer/dor/received/",
     "DOR_ETL_ARN": "arn:aws:states:us-east-1:498823821309:stateMachine:pfml-api-uat-dor-fineos-etl",
     "HAS_FINEOS_SP": "true",
-    "FINEOS_HAS_TAX_WITHHOLDING": "false"
+    "FINEOS_HAS_TAX_WITHHOLDING": "false",
+    "HAS_UPDATED_MAX_BENFIT": "false"
   },
   "cps-preview": {
     "PORTAL_BASEURL": "https://paidleave-cps-preview.eol.mass.gov",
@@ -90,7 +95,8 @@
     "EMPLOYERS_FILE": "./employers/e2e-2021-09-08.json",
     "DOR_IMPORT_URI": "s3://massgov-pfml-cps-preview-agency-transfer/dor/received/",
     "DOR_ETL_ARN": "arn:aws:states:us-east-1:498823821309:stateMachine:pfml-api-cps-preview-dor-fineos-etl",
-    "FINEOS_HAS_TAX_WITHHOLDING": "false"
+    "FINEOS_HAS_TAX_WITHHOLDING": "false",
+    "HAS_UPDATED_MAX_BENFIT": "false"
   },
   "breakfix": {
     "PORTAL_BASEURL": "https://paidleave-breakfix.eol.mass.gov",
@@ -106,7 +112,8 @@
     "DOR_IMPORT_URI": "s3://massgov-pfml-breakfix-agency-transfer/dor/received/",
     "DOR_ETL_ARN": "arn:aws:states:us-east-1:498823821309:stateMachine:pfml-api-breakfix-dor-fineos-etl",
     "HAS_FINEOS_SP": "true",
-    "FINEOS_HAS_TAX_WITHHOLDING": "false"
+    "FINEOS_HAS_TAX_WITHHOLDING": "false",
+    "HAS_UPDATED_MAX_BENFIT": "false"
   },
   "local": {
     "PORTAL_BASEURL": "http://localhost:3000",

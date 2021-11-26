@@ -14,6 +14,7 @@ from massgov.pfml.delegated_payments.reporting.delegated_payment_sql_reports imp
     PROCESS_FINEOS_RECONCILIATION_REPORTS,
 )
 from massgov.pfml.util.bg import background_task
+from massgov.pfml.util.datetime import get_now_us_eastern
 
 logger = logging.get_logger(__name__)
 
@@ -75,7 +76,7 @@ def _process_fineos_payment_reconciliation_extracts(
 ) -> None:
     """Process FINEOS Reconciliation Report Extracts"""
     logger.info("Start - FINEOS Reconciliation Report Extracts ECS Task")
-    start_time = payments_util.get_now()
+    start_time = get_now_us_eastern()
 
     if config.do_extract:
         FineosExtractStep(

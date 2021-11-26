@@ -23,6 +23,7 @@ from massgov.pfml.db.models.employees import (
 from massgov.pfml.db.models.payments import FineosWritebackDetails, FineosWritebackTransactionStatus
 from massgov.pfml.delegated_payments.check_issue_file import CheckIssueEntry, CheckIssueFile
 from massgov.pfml.delegated_payments.ez_check import EzCheckFile, EzCheckHeader, EzCheckRecord
+from massgov.pfml.util.datetime import get_now_us_eastern
 
 logger = logging.get_logger(__name__)
 
@@ -156,7 +157,7 @@ def create_check_file(
 def send_check_file(
     check_file: EzCheckFile, archive_folder_path: str, outgoing_folder_path: str
 ) -> ReferenceFile:
-    now = payments_util.get_now()
+    now = get_now_us_eastern()
     ez_check_file_name = now.strftime(Constants.EZ_CHECK_FILENAME_FORMAT)
     archive_s3_path = payments_util.build_archive_path(
         archive_folder_path, payments_util.Constants.S3_OUTBOUND_SENT_DIR, ez_check_file_name, now
@@ -180,7 +181,7 @@ def send_check_file(
 def send_positive_pay_file(
     check_file: CheckIssueFile, archive_folder_path: str, outgoing_folder_path: str
 ) -> ReferenceFile:
-    now = payments_util.get_now()
+    now = get_now_us_eastern()
     positive_pay_file_name = now.strftime(Constants.POSITIVE_PAY_FILENAME_FORMAT)
     archive_s3_path = payments_util.build_archive_path(
         archive_folder_path,

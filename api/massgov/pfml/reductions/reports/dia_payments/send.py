@@ -10,6 +10,7 @@ import massgov.pfml.util.logging as logging
 from massgov.pfml import db
 from massgov.pfml.db.models.employees import ReferenceFile, ReferenceFileType, State
 from massgov.pfml.util.aws.ses import EmailRecipient, send_email
+from massgov.pfml.util.datetime import get_now_us_eastern
 
 logger = logging.get_logger(__name__)
 
@@ -101,7 +102,7 @@ def _send_dia_payments_email(
     email_config = reductions_config.get_email_config()
     sender = email_config.pfml_email_address
     recipient = email_config.agency_reductions_email_address
-    subject = f"DIA reductions payments as of {payments_util.get_now():%m/%d/%Y}"
+    subject = f"DIA reductions payments as of {get_now_us_eastern():%m/%d/%Y}"
     body = "Attached please find a report that includes all DIA reductions payments for PFML claimants to date"
     bounce_forwarding_email_address_arn = email_config.bounce_forwarding_email_address_arn
 

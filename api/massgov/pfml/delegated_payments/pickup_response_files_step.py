@@ -7,6 +7,7 @@ import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging
 from massgov.pfml.delegated_payments.step import Step
+from massgov.pfml.util.datetime import get_now_us_eastern
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
@@ -121,7 +122,7 @@ class PickupResponseFilesStep(Step):
             if expected_file_name.lower() in file_name.lower():
                 files_to_move.append(file_name)
 
-        now = payments_util.get_now()
+        now = get_now_us_eastern()
         moved_files = []
         for file_to_move in files_to_move:
             source_path = os.path.join(source_directory, file_to_move)

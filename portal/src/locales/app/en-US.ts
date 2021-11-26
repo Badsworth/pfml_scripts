@@ -1625,7 +1625,7 @@ const pages = {
     intro:
       "<ul><li>Any previous leave for the same reason that you are applying for paid leave now</li><li>Any previous leave for a different qualifying reasons</li></ul>",
     introDontNeed:
-      "<ul><li>Leave that was taken through Massachusetts' PFML program</li><li>Leave that was taken between January 1, 2021 and {{startDate}}</li><li>Family leave to care for a family member taken before July 1, 2021</li></ul>",
+      "<ul><li>Leave that was taken through Massachusetts' PFML program</li><li>Leave that was taken before January 1, 2021</li><li>Family leave to care for a family member taken before July 1, 2021</li></ul>",
     introDontNeedHeader: "You don't need to report:",
     introHeader:
       "You'll need to report previous leave you may have taken between January 1, 2021 and {{startDate}}:",
@@ -2101,6 +2101,8 @@ const pages = {
     "uploadSuccessHeadingDocumentName_state-id":
       "$t(shared.documentCategory.identification)",
     viewNoticesHeading: "View your notices",
+    viewPaymentTimeline:
+      "<p>Once your application is approved, you can expect weekly payments to begin 2-4 weeks after your leave begins. If your leave has already begun, you can expect your first payment to arrive 2 weeks after it is approved. After that you will receive your payments every week.</p><p>You can see your expected payment timeline on your <payments-page-link>payments page</payments-page-link>.</p>",
     whatHappensNext: "What happens next",
     whatHappensNextButton_adoption: "Upload proof of adoption",
     whatHappensNextButton_fosterCare: "Upload proof of placement",
@@ -2562,15 +2564,26 @@ const pages = {
     changesToPaymentsYourPreferencesAnswer:
       "<p>To make changes to your application, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>. If you request a change to your start and end dates, we may need to review your application again.</p>",
     changesToPaymentsYourPreferencesQuestion: "Change your payment preference",
+    feedbackDetails:
+      "<p>We’d like to hear more about your experience on this site. Please take a few minutes to share your feedback.</p><p><feedback-link>Take the survey</feedback-link></p>",
+    feedbackHeader: "Help us improve payment information by giving feedback",
+    paymentsTable: {
+      amountSent: "{{amount, currency}}",
+      amountSentHeader: "Amount sent",
+      dateSentHeader: "Date sent",
+      estimatedScheduledDateHeader: "Estimated scheduled date",
+      leaveDatesHeader: "Leave dates",
+      paymentMethodHeader: "Payment Method",
+      paymentMethod_Check: "Check",
+      "paymentMethod_Electronic Funds Transfer": "EFT",
+      paymentStatus_Cancelled: "Cancelled",
+      paymentStatus_Delayed: "Delayed",
+      paymentStatus_Pending: "Pending",
+      paymentStatus_Sent: "Sent to bank",
+    },
     questionsDetails:
       "<p>Call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.</p>",
     questionsHeader: "Questions?",
-    whenToExpectPaymentContinuous:
-      "<p>You can expect your first payment to arrive at the beginning of your fourth week of leave, if your leave has already started. If your leave starts in the future, you can expect your first payment 2-4 weeks after your leave starts. After that, you will receive your payments every week.</p><p>Your application has a 7-day waiting period at the start of your leave. You won’t receive any PFML payments during this time. Read more about the <waiting-period-info>7-day waiting period</waiting-period-info>.</p>",
-    whenToExpectPaymentIntermittent:
-      "<p>Your application has a 7-day waiting period at the first day you use your intermittent leave. You won’t receive any PFML payments during this time. Read more about the <waiting-period-info>7-day waiting period</waiting-period-info>.</p><p>If your leave has not yet started, you can expect your first payment to be sent to you once you have reported at least 8 total leave hours taken or 30 days has passed since the start of your leave.</p><p>If your leave has started, you can expect to receive payment about one week after the hours are filed (as long as they add up to at least 8 hours). You can receive more than one payment in a week depending on how intermittent hours are reported.</p><p>You can report your hours by calling <contact-center-report-hours-phone-link>$t(shared.contactCenterReportHoursPhoneNumber)</contact-center-report-hours-phone-link>.</p>",
-    whenToExpectPaymentReducedSchedule:
-      "<p>You need to have taken 8 hours or more of leave, or 30 days has passed since the start of your leave to be eligible for a weekly benefit payment.</p>",
   },
   userConsentToDataSharing: {
     agreementBody:
@@ -2801,7 +2814,6 @@ const components = {
     amountFrequency_monthly: "$t(shared.amountFrequency_monthly)",
     amountFrequency_unknown: "$t(shared.amountFrequency_unknown)",
     amountFrequency_weekly: "$t(shared.amountFrequency_weekly)",
-    amountPerFrequency: "{{amount, currency}}",
     amountPerFrequency_daily: "$t(shared.amountPerFrequency_daily)",
     amountPerFrequency_inTotal: "$t(shared.amountPerFrequency_inTotal)",
     amountPerFrequency_monthly: "$t(shared.amountPerFrequency_monthly)",

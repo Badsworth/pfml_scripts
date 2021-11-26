@@ -52,7 +52,7 @@ services:
       - DB_USERNAME=pfml_api
       - DB_PASSWORD=secret123
       - DB_NESSUS_PASSWORD=nessussecret123
-      - CORS_ORIGINS=http://localhost:3000
+      - CORS_ORIGINS=http://localhost:3000,http://localhost:3001
       - COGNITO_USER_POOL_KEYS_URL=file:///app/jwks.json
       # Stage Cognito resource
       - COGNITO_USER_POOL_ID=us-east-1_HpL4XslLg
@@ -84,6 +84,7 @@ services:
       # - SERVICE_NOW_PASSWORD=...
       - PORTAL_BASE_URL=https://paidleave.mass.gov
       - ENABLE_APPLICATION_FRAUD_CHECK=0
+      - ENABLE_PDF_DOCUMENT_COMPRESSION=0
       # Payments env vars
       # - PAYMENTS_GAX_BIEVNT_EMAIL=
       # - PAYMENTS_DFML_BUSINESS_OPERATIONS_EMAIL=
@@ -104,6 +105,9 @@ services:
       #- AWS_PROFILE=AWS-498823821309-Infrastructure-Admin_profile
       #- NEW_PLAN_PROOFS_ACTIVE_AT=2021-06-26 00:00:00+00:00
       #- FEATURES_FILE_PATH=file:///app/features.yaml
+      - PDF_API_HOST=https://mass-pfml-pdf-api
+      - ENABLE_GENERATE_1099_PDF=1
+      - ENABLE_MERGE_1099_PDF=1
 
     networks:
       main:

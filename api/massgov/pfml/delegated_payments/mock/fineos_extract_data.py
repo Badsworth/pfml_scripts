@@ -19,6 +19,7 @@ from massgov.pfml.delegated_payments.mock.scenario_data_generator import (
     NO_MATCH_ADDRESS,
     ScenarioData,
 )
+from massgov.pfml.util.datetime import get_now_us_eastern
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
@@ -382,7 +383,7 @@ def generate_payment_extract_files(
 
         payment_method = scenario_descriptor.payment_method.payment_method_description
 
-        payment_date = payments_util.get_now()
+        payment_date = get_now_us_eastern()
 
         # This'll be a new payment based on different C/I values
         if round > 1 and scenario_descriptor.has_additional_payment_in_period and prior_payment:

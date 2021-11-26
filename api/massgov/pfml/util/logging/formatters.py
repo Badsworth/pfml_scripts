@@ -2,12 +2,15 @@
 # Custom logging formatters.
 #
 
+import datetime
 import json
 import logging  # noqa: B1
 import re
 
 import flask
 import newrelic.api.time_trace
+
+from . import decodelog
 
 # Attributes of LogRecord to exclude from the JSON formatted lines. An exclusion list approach is
 # used so that all "extra" attributes can be included in a line.
@@ -58,6 +61,7 @@ class JsonFormatter(logging.Formatter):  # noqa: B1
             # Warning: do not access current_user as that may result in SQLAlchemy calls, but this
             # logging call may have happened due to a database failure.
             user_id = flask.g.get("current_user_user_id")
+            azure_user_sub_id = flask.g.get("azure_user_sub_id")
             if user_id:
                 output.update(
                     {
@@ -65,6 +69,10 @@ class JsonFormatter(logging.Formatter):  # noqa: B1
                         "current_user.auth_id": flask.g.get("current_user_auth_id", ""),
                         "current_user.role_ids": flask.g.get("current_user_role_ids", ""),
                     }
+                )
+            if azure_user_sub_id:
+                output.update(
+                    {"azure_user.sub_id": azure_user_sub_id,}
                 )
 
         # Inject New Relic tracing metadata for Logs in Context features.
@@ -86,3 +94,19 @@ def str_mask_pii(key, value):
     if key in ALLOW_NO_MASK:
         return str(value)
     return TIN_RE.sub("*********", str(value))
+
+
+class DevelopFormatter(logging.Formatter):  # noqa: B1
+    """A logging formatter which formats each line as text."""
+
+    def format(self, record):
+        super(DevelopFormatter, self).format(record)
+
+        return decodelog.format_line(
+            datetime.datetime.utcfromtimestamp(record.created),
+            record.name,
+            record.funcName,
+            record.levelname,
+            record.message,
+            record.__dict__,
+        )

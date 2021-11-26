@@ -7,10 +7,10 @@ from dataclasses import asdict, dataclass
 from datetime import datetime
 from typing import List, Optional, Sequence
 
-import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml.util.aws.ses import EmailRecipient, send_email
+from massgov.pfml.util.datetime import get_now_us_eastern
 
 logger = logging.get_logger(__name__)
 
@@ -131,7 +131,7 @@ class ReportGroup:
         for report_file_path in report_file_paths:
             output_path = os.path.join(
                 self.file_config.file_prefix,
-                payments_util.get_now().strftime("%Y-%m-%d"),
+                get_now_us_eastern().strftime("%Y-%m-%d"),
                 report_file_path.name,
             )
             extra = {"report_file_path": str(report_file_path), "output_path": output_path}
@@ -163,7 +163,7 @@ class ReportGroup:
         report_files = []
 
         temp_directory = pathlib.Path(tempfile.mkdtemp())
-        now = payments_util.get_now()
+        now = get_now_us_eastern()
 
         for report in self.reports:
             report_file = report.create_report(temp_directory, now)

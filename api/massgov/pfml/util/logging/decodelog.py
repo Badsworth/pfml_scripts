@@ -17,6 +17,7 @@ from typing import Mapping, Optional
 RED = "\033[31m"
 GREEN = "\033[32m"
 BLUE = "\033[34m"
+ORANGE = "\033[38;5;208m"
 RESET = "\033[0m"
 NO_COLOUR = ""
 
@@ -57,18 +58,22 @@ def decode_json_line(line: str) -> Optional[str]:
     func_name = data.pop("funcName", "-")
     created = datetime.datetime.utcfromtimestamp(float(data.pop("created", 0)))
     message = data.pop("message", "-")
-    data.pop("thread", 0)
-    data.pop("threadName", "-")
-    data.pop("process", 0)
-    data.pop("entity.type", "-")
-    data.pop("entity.name", "-")
-    data.pop("entity.guid", "-")
-    data.pop("span.id", "-")
-    data.pop("trace.id", "-")
 
     if level == "AUDIT":
         return None
 
+    return format_line(created, name, func_name, level, message, data)
+
+
+def format_line(
+    created: datetime.datetime,
+    name: str,
+    func_name: str,
+    level: str,
+    message: str,
+    extra: Mapping[str, str],
+) -> str:
+    """Format log fields as a coloured string."""
     return "%s  %s%-36s%s %-28s %s%-8s %-80s %s%s%s" % (
         format_datetime(created),
         colour_for_name(name),
@@ -79,7 +84,7 @@ def decode_json_line(line: str) -> Optional[str]:
         level,
         message,
         BLUE,
-        format_extra(data),
+        format_extra(extra),
         RESET,
     )
 
@@ -87,6 +92,8 @@ def decode_json_line(line: str) -> Optional[str]:
 def colour_for_name(name: str) -> str:
     if name.startswith("massgov"):
         return GREEN
+    elif name.startswith("sqlalchemy"):
+        return ORANGE
     return NO_COLOUR
 
 
@@ -107,8 +114,40 @@ def format_datetime(created: datetime.datetime) -> str:
         return created.time().isoformat(timespec="milliseconds")
 
 
+EXCLUDE_EXTRA = {
+    "args",
+    "created",
+    "entity.guid",
+    "entity.name",
+    "entity.type",
+    "exc_info",
+    "filename",
+    "funcName",
+    "levelname",
+    "levelno",
+    "lineno",
+    "message",
+    "module",
+    "msecs",
+    "msg",
+    "name",
+    "pathname",
+    "process",
+    "processName",
+    "relativeCreated",
+    "span.id",
+    "thread",
+    "threadName",
+    "trace.id",
+}
+
+
 def format_extra(data: Mapping[str, str]) -> str:
-    return " ".join("%s=%s" % (key, value) for key, value in data.items())
+    return " ".join(
+        "%s=%s" % (key, value)
+        for key, value in data.items()
+        if key not in EXCLUDE_EXTRA and value is not None
+    )
 
 
 if __name__ == "__main__":

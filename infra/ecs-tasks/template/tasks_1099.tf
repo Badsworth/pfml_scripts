@@ -1,12 +1,15 @@
-# Templating and configurations for ECS tasks with multiple containers
+#
+# Terraform configuration for Payments 1099 processing task.
+#
+# This task is a special case because it contains two containers within one ECS task definition.
+#
 
 data "aws_ecr_repository" "pdf_api" {
   name = "pfml-pdf-api"
 }
 
-# this resource is used as a template to provision each ECS task in local.tasks
 resource "aws_ecs_task_definition" "ecs_tasks_1099" {
-  family                   = "${local.app_name}-${var.environment_name}-1099-form-generator"
+  family                   = "${local.app_name}-${var.environment_name}-pub-payments-process-1099-documents"
   task_role_arn            = aws_iam_role.pub_payments_process_1099_task_role.arn
   execution_role_arn       = aws_iam_role.task_executor.arn
   cpu                      = 4096
@@ -43,12 +46,12 @@ resource "aws_ecs_task_definition" "ecs_tasks_1099" {
         }
       },
 
-      environment = [for val in concat(local.common, local.db_access, local.fineos_s3_access, local.pub_s3_folders) : val if contains(keys(val), "value")]
-      secrets     = [for val in concat(local.common, local.db_access, local.fineos_s3_access, local.pub_s3_folders) : val if !contains(keys(val), "value")]
+      environment = [for val in concat(local.common, local.db_access, local.fineos_s3_access, local.pub_s3_folders, local.irs_1099_documents) : val if contains(keys(val), "value")]
+      secrets     = [for val in concat(local.common, local.db_access, local.fineos_s3_access, local.pub_s3_folders, local.irs_1099_documents) : val if !contains(keys(val), "value")]
     },
     {
       name                   = "pub-payments-process-1099-dot-net-generator-service",
-      image                  = format("%s:%s", data.aws_ecr_repository.pdf_api.repository_url, var.service_docker_tag),
+      image                  = format("%s:%s", data.aws_ecr_repository.pdf_api.repository_url, "latest"),
       command                = ["dotnet", "PfmlPdfApi.dll"],
       cpu                    = 2048,
       memory                 = 4096,
@@ -61,6 +64,12 @@ resource "aws_ecs_task_definition" "ecs_tasks_1099" {
         },
         initProcessEnabled = true
       },
+      portMappings = [
+        {
+          containerPort = 5000,
+          hostPort      = 5000
+        }
+      ],
       logConfiguration = {
         logDriver = "awslogs",
         options = {

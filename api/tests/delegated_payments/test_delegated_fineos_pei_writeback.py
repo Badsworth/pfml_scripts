@@ -9,7 +9,6 @@ from freezegun import freeze_time
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.db as db
 import massgov.pfml.delegated_payments.delegated_fineos_pei_writeback as writeback
-import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.files as file_util
 from massgov.pfml.db.models.employees import (
     Flow,
@@ -30,6 +29,7 @@ from massgov.pfml.db.models.payments import (
     LkFineosWritebackTransactionStatus,
 )
 from massgov.pfml.delegated_payments.mock.delegated_payments_factory import DelegatedPaymentFactory
+from massgov.pfml.util.datetime import get_now_us_eastern
 
 fake = faker.Faker()
 
@@ -377,7 +377,7 @@ def test_process_payments_for_writeback(
     )
     prog = re.compile(expected_line_pattern)
     assert len(all_payments) == len(writeback_file_lines)
-    now = payments_util.get_now().date()
+    now = get_now_us_eastern().date()
 
     for line in writeback_file_lines:
         # Expect that each line will match our pattern.

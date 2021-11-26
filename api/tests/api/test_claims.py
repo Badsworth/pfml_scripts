@@ -1077,8 +1077,6 @@ class TestGetClaimReview:
         for fineos_period_data, absence_data in zip(periods, absence_periods):
             class_id, index_id = split_fineos_absence_period_id(fineos_period_data.periodReference)
             leave_request_id = split_fineos_leave_request_id(fineos_period_data.leaveRequest.id, {})
-            assert class_id == absence_data["fineos_absence_period_class_id"]
-            assert index_id == absence_data["fineos_absence_period_index_id"]
             assert leave_request_id == absence_data["fineos_leave_request_id"]
             assert (
                 fineos_period_data.startDate.isoformat()

@@ -33,6 +33,9 @@ class AppConfig:
     enable_application_fraud_check: bool
     dashboard_password: str
     new_plan_proofs_active_at: datetime
+    enable_generate_1099_pdf: bool
+    enable_merge_1099_pdf: bool
+    enable_pdf_document_compression: bool
 
 
 def get_config() -> AppConfig:
@@ -55,5 +58,10 @@ def get_config() -> AppConfig:
         dashboard_password=os.environ.get("DASHBOARD_PASSWORD", ""),
         new_plan_proofs_active_at=datetime.fromisoformat(
             os.environ.get("NEW_PLAN_PROOFS_ACTIVE_AT", "2021-06-26 00:00:00+00:00")
+        ),
+        enable_generate_1099_pdf=os.environ.get("ENABLE_GENERATE_1099_PDF", "0") == "1",
+        enable_merge_1099_pdf=os.environ.get("ENABLE_MERGE_1099_PDF", "0") == "1",
+        enable_pdf_document_compression=(
+            os.environ.get("ENABLE_PDF_DOCUMENT_COMPRESSION", "0") == "1"
         ),
     )

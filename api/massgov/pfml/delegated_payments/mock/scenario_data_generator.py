@@ -6,7 +6,6 @@ from typing import Dict, List, Optional
 import faker
 
 import massgov.pfml.api.util.state_log_util as state_log_util
-import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.experian.address_validate_soap.client as soap_api
 import massgov.pfml.experian.address_validate_soap.models as sm
 import massgov.pfml.util.logging as logging
@@ -44,6 +43,7 @@ from massgov.pfml.delegated_payments.mock.scenarios import (
 )
 from massgov.pfml.experian.address_validate_soap.mock_caller import MockVerificationZeepCaller
 from massgov.pfml.types import TaxId
+from massgov.pfml.util.datetime import get_now_us_eastern
 
 logger = logging.get_logger(__name__)
 
@@ -200,7 +200,7 @@ def create_employee(ssn: str, fineos_customer_number: str, db_session: db.Sessio
 
 
 def create_dua_additional_income(fineos_customer_number: str) -> None:
-    payment_date = payments_util.get_now()
+    payment_date = get_now_us_eastern()
 
     DuaReductionPaymentFactory.create(
         fineos_customer_number=fineos_customer_number,

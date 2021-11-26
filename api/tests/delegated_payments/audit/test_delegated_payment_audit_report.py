@@ -37,7 +37,7 @@ from massgov.pfml.delegated_payments.audit.mock.delegated_payment_audit_generato
 )
 from massgov.pfml.delegated_payments.mock.delegated_payments_factory import DelegatedPaymentFactory
 from massgov.pfml.delegated_payments.pub.pub_check import _format_check_memo
-from massgov.pfml.util.datetime import get_period_in_weeks
+from massgov.pfml.util.datetime import get_now_us_eastern, get_period_in_weeks
 
 
 @pytest.fixture
@@ -139,7 +139,7 @@ def test_get_payment_audit_report_details(test_db_session, initialize_factories_
         test_db_session,
     )
 
-    audit_report_time = payments_util.get_now()
+    audit_report_time = get_now_us_eastern()
 
     audit_report_details = get_payment_audit_report_details(
         payment, audit_report_time, test_db_session
@@ -398,7 +398,7 @@ def test_write_audit_report(tmp_path, test_db_session, initialize_factories_sess
     expected_output_folder = os.path.join(
         str(tmp_path),
         payments_util.Constants.S3_OUTBOUND_SENT_DIR,
-        payments_util.get_now().strftime("%Y-%m-%d"),
+        get_now_us_eastern().strftime("%Y-%m-%d"),
     )
     files = file_util.list_files(expected_output_folder)
     assert len(files) == 1

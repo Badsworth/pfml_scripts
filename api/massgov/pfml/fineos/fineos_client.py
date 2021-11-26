@@ -138,6 +138,9 @@ class FINEOSClient(client.AbstractFINEOSClient):
         )
         self._init_oauth_session()
 
+    def __repr__(self):
+        return "<FINEOSClient %s>" % urllib.parse.urlparse(self.customer_api_url).hostname
+
     def _init_oauth_session(self):
         """Set up an OAuth session and get a token."""
         try:
@@ -928,7 +931,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
 
             response = self._group_client_api(
                 "GET",
-                f"groupClient/cases/{absence_id}/documents",
+                f"groupClient/cases/{absence_id}/documents?_filter=includeChildCases",
                 user_id,
                 "group_client_get_documents",
                 header_content_type=header_content_type,

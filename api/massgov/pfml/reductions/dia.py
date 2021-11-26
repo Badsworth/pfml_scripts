@@ -16,13 +16,11 @@ from massgov.pfml.db.models.employees import (
     ReferenceFileType,
     State,
 )
-from massgov.pfml.delegated_payments.delegated_payments_util import (
-    get_now,
-    move_file_and_update_ref_file,
-)
+from massgov.pfml.delegated_payments.delegated_payments_util import move_file_and_update_ref_file
 from massgov.pfml.reductions.common import AgencyLoadResult, get_claimants_for_outbound
 from massgov.pfml.reductions.config import get_moveit_config, get_s3_config
 from massgov.pfml.util.batch.log import LogEntry
+from massgov.pfml.util.datetime import get_now_us_eastern
 from massgov.pfml.util.files import upload_to_s3
 from massgov.pfml.util.sftp_s3_transfer import (
     SftpS3TransferConfig,
@@ -234,7 +232,7 @@ def create_list_of_claimants(db_session: db.Session, log_entry: batch_log.LogEnt
     # Upload info to s3
     file_name = (
         Constants.CLAIMAINT_LIST_FILENAME_PREFIX
-        + get_now().strftime(Constants.CLAIMAINT_LIST_FILENAME_TIME_FORMAT)
+        + get_now_us_eastern().strftime(Constants.CLAIMAINT_LIST_FILENAME_TIME_FORMAT)
         + ".csv"
     )
     s3_dest = os.path.join(

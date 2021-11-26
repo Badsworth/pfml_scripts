@@ -22,4 +22,4 @@ RUN npm i && npm cache clean --force
 COPY --chown=chrome --from=builder /e2e/dist ./dist
 COPY --chown=chrome --from=builder /e2e/employees ./employees
 COPY --chown=chrome --from=builder /e2e/forms ./forms
-CMD node_modules/.bin/artillery run -e test dist/spec.yml
+CMD node_modules/.bin/artillery run -e basic dist/development.yml

@@ -24,6 +24,7 @@ from massgov.pfml.delegated_payments.reporting.delegated_payment_sql_reports imp
     PROCESS_1099_DOCUMENT_REPORTS,
 )
 from massgov.pfml.util.bg import background_task
+from massgov.pfml.util.datetime import get_now_us_eastern
 
 logger = logging.get_logger(__name__)
 
@@ -128,7 +129,7 @@ def _process_1099_documents(
     db_session: db.Session, log_entry_db_session: db.Session, config: Configuration
 ) -> None:
     logger.info("Start - 1099 Documents ECS Task")
-    start_time = payments_util.get_now()
+    start_time = get_now_us_eastern()
 
     if config.db_audit_batch:
         AuditBatchStep(db_session=db_session, log_entry_db_session=log_entry_db_session).run()

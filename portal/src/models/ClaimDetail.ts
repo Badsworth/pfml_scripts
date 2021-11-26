@@ -9,6 +9,7 @@ class ClaimDetail {
   employer: ClaimEmployer | null;
   fineos_absence_id: string;
   fineos_notification_id: string;
+  has_paid_payments: boolean;
   managed_requirements: ManagedRequirement[] = [];
   outstanding_evidence: {
     employee_evidence: OutstandingEvidence[] | null;
