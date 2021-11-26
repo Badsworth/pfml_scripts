@@ -13,6 +13,7 @@ import massgov.pfml.util.logging
 from massgov.pfml.db.models.employees import ReferenceFile, ReferenceFileType, TaxIdentifier
 from massgov.pfml.db.models.payments import Pfml1099
 from massgov.pfml.delegated_payments.step import Step
+from massgov.pfml.util.datetime import get_now_us_eastern
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
@@ -149,7 +150,7 @@ class Generate1099IRSfilingStep(Step):
 
         logger.info("creating irs file")
         s3_config = paymentConfig.get_s3_config()
-        now = payments_util.get_now()
+        now = get_now_us_eastern()
         report_path = s3_config.pfml_error_reports_archive_path
         dfml_sharepoint_outgoing_path = s3_config.dfml_report_outbound_path
         source_path = payments_util.build_archive_path(

@@ -4,7 +4,6 @@
 
 import massgov.pfml.db
 import massgov.pfml.db.models.factories
-import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.logging
 from massgov.pfml.delegated_payments import delegated_config
 from massgov.pfml.delegated_payments.mock import (
@@ -12,6 +11,7 @@ from massgov.pfml.delegated_payments.mock import (
     scenario_data_generator,
     scenarios,
 )
+from massgov.pfml.util.datetime import get_now_us_eastern
 
 
 def main():
@@ -36,12 +36,12 @@ def main():
 
     # claimant extract
     fineos_extract_data.generate_claimant_data_files(
-        scenario_dataset, fineos_data_export_path, payments_util.get_now()
+        scenario_dataset, fineos_data_export_path, get_now_us_eastern()
     )
 
     # payment extract
     fineos_extract_data.generate_payment_extract_files(
-        scenario_dataset, fineos_data_export_path, payments_util.get_now(), round=1
+        scenario_dataset, fineos_data_export_path, get_now_us_eastern(), round=1,
     )
 
 

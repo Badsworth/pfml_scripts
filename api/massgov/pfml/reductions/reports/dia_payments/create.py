@@ -17,7 +17,6 @@ from massgov.pfml.db.models.employees import (
     ReferenceFileType,
     State,
 )
-from massgov.pfml.delegated_payments.delegated_payments_util import get_now
 from massgov.pfml.reductions.config import get_s3_config
 from massgov.pfml.reductions.dia import Metrics
 from massgov.pfml.reductions.reports.models.dia import (
@@ -26,6 +25,7 @@ from massgov.pfml.reductions.reports.models.dia import (
     make_report_row_from_payment,
 )
 from massgov.pfml.util.batch.log import LogEntry
+from massgov.pfml.util.datetime import get_now_us_eastern
 
 logger = logging.get_logger(__name__)
 
@@ -61,7 +61,7 @@ def _format_data_for_report(
 
 
 def _get_dfml_report_file_name() -> str:
-    return f"{DFML_REPORT_FILENAME_PREFIX}{get_now().strftime(DFML_REPORT_FILENAME_TIME_FORMAT)}"
+    return f"{DFML_REPORT_FILENAME_PREFIX}{get_now_us_eastern().strftime(DFML_REPORT_FILENAME_TIME_FORMAT)}"
 
 
 def _write_dfml_report_rows(

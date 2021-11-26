@@ -14,6 +14,7 @@ from massgov.pfml.delegated_payments.reporting.delegated_payment_sql_reports imp
     PROCESS_PUB_RESPONSES_REPORTS,
 )
 from massgov.pfml.util.bg import background_task
+from massgov.pfml.util.datetime import get_now_us_eastern
 
 logger = logging.get_logger("massgov.pfml.delegated_payments.task.process_pub_responses")
 
@@ -93,7 +94,7 @@ def _process_pub_responses(
 ) -> None:
     """Process PUB Responses"""
     logger.info("Start - PUB Responses ECS Task")
-    start_time = payments_util.get_now()
+    start_time = get_now_us_eastern()
 
     if config.pickup_files:
         PickupResponseFilesStep(

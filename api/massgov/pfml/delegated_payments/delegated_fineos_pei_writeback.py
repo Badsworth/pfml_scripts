@@ -25,8 +25,8 @@ from massgov.pfml.db.models.payments import (
     FineosWritebackDetails,
     LkFineosWritebackTransactionStatus,
 )
-from massgov.pfml.delegated_payments.delegated_payments_util import get_now
 from massgov.pfml.delegated_payments.step import Step
+from massgov.pfml.util.datetime import get_now_us_eastern
 
 logger = logging.get_logger(__package__)
 
@@ -138,7 +138,7 @@ class FineosPeiWritebackStep(Step):
         if writeback_details is None:
             return None
 
-        writeback_details.writeback_sent_at = get_now()
+        writeback_details.writeback_sent_at = get_now_us_eastern()
 
         return writeback_details.transaction_status
 
@@ -229,7 +229,7 @@ class FineosPeiWritebackStep(Step):
         """
         logger.info("Uploading writeback files to FINEOS S3")
 
-        current_datetime = get_now()
+        current_datetime = get_now_us_eastern()
         filename_to_upload = current_datetime.strftime("%Y-%m-%d-%H-%M-%S") + WRITEBACK_FILE_SUFFIX
 
         s3_config = payments_config.get_s3_config()
