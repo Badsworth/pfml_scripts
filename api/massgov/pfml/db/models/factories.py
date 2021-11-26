@@ -1000,7 +1000,7 @@ class DuaEmployeeDemographicsFactory(BaseFactory):
     gender_code = random.choices(["F", "M", "U", None])
     occupation_code = random.randint(1, 6000)
     occupation_description = None
-    employer_fein = Generators.Fein
+    employer_fein = fake.ssn().replace("-", "")
     employer_reporting_unit_number = random.randint(1, 100000)
 
 

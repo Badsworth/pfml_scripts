@@ -137,7 +137,7 @@ def test_set_employee_occupation_from_demographics_data(
         # Rows pointing to an employee we don't have a record of shouldn't crash things
         DuaEmployeeDemographicsFactory(
             fineos_customer_number="999",
-            employer_fein=employer.employer_fein,
+            employer_fein=employer.employer_fein.to_unformatted_str(),
             employer_reporting_unit_number=reporting_unit_with_org_unit.dua_id,
         )
 
@@ -163,7 +163,7 @@ def test_set_employee_occupation_from_demographics_data(
             gender_code="F",
             occupation_code=1120,
             occupation_description="Sales Managers",
-            employer_fein=employer.employer_fein,
+            employer_fein=employer.employer_fein.to_unformatted_str(),
             employer_reporting_unit_number=reporting_unit_with_org_unit.dua_id,
         )
 
@@ -176,7 +176,7 @@ def test_set_employee_occupation_from_demographics_data(
             gender_code="M",
             occupation_code=1120,
             occupation_description="Marketing Managers",
-            employer_fein=employer.employer_fein,
+            employer_fein=employer.employer_fein.to_unformatted_str(),
             employer_reporting_unit_number="1001",  # non existant dua_reporting_unit dua_id
         )
 
@@ -197,7 +197,7 @@ def test_set_employee_occupation_from_demographics_data(
             gender_code="M",
             occupation_code=5191,
             occupation_description="Packaging and Filling Machine Operators and Tenders",
-            employer_fein=employer.employer_fein,
+            employer_fein=employer.employer_fein.to_unformatted_str(),
             employer_reporting_unit_number=reporting_unit_with_org_unit.dua_id,
         )
 
@@ -212,7 +212,7 @@ def test_set_employee_occupation_from_demographics_data(
             gender_code="F",
             occupation_code=2920,
             occupation_description="Licensed Practical and Licensed Vocational Nurses",
-            employer_fein=employer.employer_fein,
+            employer_fein=employer.employer_fein.to_unformatted_str(),
             employer_reporting_unit_number=reporting_unit_with_org_unit.dua_id,
         )
 
@@ -229,7 +229,7 @@ def test_set_employee_occupation_from_demographics_data(
 
         DuaEmployeeDemographicsFactory(
             fineos_customer_number=employee_no_matching_dua_reporting_unit.fineos_customer_number,
-            employer_fein=employer.employer_fein,
+            employer_fein=employer.employer_fein.to_unformatted_str(),
             employer_reporting_unit_number=reporting_unit_no_org_unit.dua_id,
         )
 
@@ -287,14 +287,14 @@ def test_set_employee_occupation_from_demographics_data_multiple_dua_records(
 
         DuaEmployeeDemographicsFactory(
             fineos_customer_number=employee.fineos_customer_number,
-            employer_fein=employer.employer_fein,
+            employer_fein=employer.employer_fein.to_unformatted_str(),
             employer_reporting_unit_number=reporting_unit_one.dua_id,
             created_at=datetime(2021, 11, 1),
         )
 
         DuaEmployeeDemographicsFactory(
             fineos_customer_number=employee.fineos_customer_number,
-            employer_fein=employer.employer_fein,
+            employer_fein=employer.employer_fein.to_unformatted_str(),
             employer_reporting_unit_number=reporting_unit_two.dua_id,
             created_at=datetime(2021, 11, 2),
         )
@@ -344,14 +344,14 @@ def test_set_employee_occupation_from_demographics_data_multiple_dua_records_tim
 
         DuaEmployeeDemographicsFactory(
             fineos_customer_number=employee_not_updated.fineos_customer_number,
-            employer_fein=employer.employer_fein,
+            employer_fein=employer.employer_fein.to_unformatted_str(),
             employer_reporting_unit_number=reporting_unit_one.dua_id,
             created_at=datetime(2021, 11, 1),
         )
 
         DuaEmployeeDemographicsFactory(
             fineos_customer_number=employee.fineos_customer_number,
-            employer_fein=employer.employer_fein,
+            employer_fein=employer.employer_fein.to_unformatted_str(),
             employer_reporting_unit_number=reporting_unit_two.dua_id,
             created_at=datetime(2021, 11, 2),
         )
@@ -405,13 +405,13 @@ def test_set_employee_occupation_from_demographics_data_multiple_employers(
 
         DuaEmployeeDemographicsFactory(
             fineos_customer_number=employee.fineos_customer_number,
-            employer_fein=employer_one.employer_fein,
+            employer_fein=employer_one.employer_fein.to_unformatted_str(),
             employer_reporting_unit_number=reporting_unit_one.dua_id,
         )
 
         DuaEmployeeDemographicsFactory(
             fineos_customer_number=employee.fineos_customer_number,
-            employer_fein=employer_two.employer_fein,
+            employer_fein=employer_two.employer_fein.to_unformatted_str(),
             employer_reporting_unit_number=reporting_unit_two.dua_id,
         )
 
@@ -463,7 +463,7 @@ def test_set_employee_occupation_from_demographics_data_missing_ids(
 
         DuaEmployeeDemographicsFactory(
             fineos_customer_number=employee_one.fineos_customer_number,
-            employer_fein=employer.employer_fein,
+            employer_fein=employer.employer_fein.to_unformatted_str(),
             employer_reporting_unit_number=reporting_unit_one.dua_id,
             created_at=datetime(2021, 11, 1),
         )
@@ -475,7 +475,7 @@ def test_set_employee_occupation_from_demographics_data_missing_ids(
 
         DuaEmployeeDemographicsFactory(
             fineos_customer_number=employee_two.fineos_customer_number,
-            employer_fein=employer.employer_fein,
+            employer_fein=employer.employer_fein.to_unformatted_str(),
             employer_reporting_unit_number=reporting_unit_two.dua_id,
             created_at=datetime(2021, 11, 2),
         )
