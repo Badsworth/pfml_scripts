@@ -20,9 +20,9 @@ import massgov.pfml.db.models.employees as employee_models
 import massgov.pfml.db.models.payments as payment_models
 import massgov.pfml.db.models.verifications as verification_models
 import massgov.pfml.util.datetime as datetime_util
+from massgov.pfml.api.authentication.azure import AzureUser
 from massgov.pfml.types import Fein as FeinType
 from massgov.pfml.types import TaxId
-from massgov.pfml.api.authentication.azure import AzureUser
 
 db_session = None
 

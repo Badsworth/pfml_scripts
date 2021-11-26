@@ -1,7 +1,7 @@
 from typing import Optional
 
-from massgov.pfml.types import Fein
 from massgov.pfml.api.models.users.responses import AuthCodeResponse, AuthURIResponse
+from massgov.pfml.types import Fein
 from massgov.pfml.util.pydantic import PydanticBaseModel
 
 

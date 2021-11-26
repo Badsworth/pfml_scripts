@@ -85,7 +85,6 @@ class Fein(dict):
     REGEX_FORMATTED = re.compile(r"^\d{2}-\d{7}$")
 
     val: str
-    is_valid: bool = True
 
     def __init__(self, val: str) -> None:
         dict.__init__(self, val=val)
@@ -98,7 +97,6 @@ class Fein(dict):
             self.val = "{}-{}".format(val[:2], val[2:])
         else:
             self.val = val
-            self.is_valid = False
 
             raise ValueError(
                 f"does {val} not match one of: {self.REGEX_UNFORMATTED.pattern}, {self.REGEX_FORMATTED.pattern}"

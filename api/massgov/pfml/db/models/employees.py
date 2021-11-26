@@ -34,8 +34,8 @@ from sqlalchemy.schema import Sequence
 from sqlalchemy.sql.expression import func
 from sqlalchemy.types import JSON
 
-from massgov.pfml.types import Fein, TaxId
 import massgov.pfml.util.logging
+from massgov.pfml.types import Fein, TaxId
 
 from ..lookup import LookupTable
 from .base import Base, TimestampMixin, utc_timestamp_gen, uuid_gen

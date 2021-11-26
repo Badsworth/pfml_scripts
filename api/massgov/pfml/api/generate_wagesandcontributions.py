@@ -148,8 +148,8 @@ def main():
 
     args = parser.parse_args()
 
-    employer_fein = args.employer_fein
-    employee_ssn = args.employee_ssn
+    employer_fein: str = args.employer_fein
+    employee_ssn: str = args.employee_ssn
 
     if not employer_fein:
         raise ValueError("employer_fein required")
@@ -158,7 +158,7 @@ def main():
 
     db_session = db.init()
 
-    generate(employer_fein, employee_ssn, db_session)
+    generate(Fein(employer_fein), TaxId(employee_ssn), db_session)
 
 
 if __name__ == "__main__":

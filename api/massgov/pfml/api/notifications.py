@@ -102,8 +102,6 @@ def notifications_post():
                 newrelic.agent.add_custom_parameter("employer_id", employer.employer_id)
         except MultipleResultsFound:
             return _err400_multiple_employer_feins_found(notification_request, log_attributes)
-        except ValueError:
-            return _err400_employer_fein_not_found(notification_request, log_attributes)
 
         if employer is None:
             return _err400_employer_fein_not_found(notification_request, log_attributes)
