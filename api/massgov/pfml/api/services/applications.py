@@ -223,7 +223,7 @@ def remove_masked_fields_from_request(
         field_key="tax_identifier",
         body=body,
         existing_masked_field=masked_existing_tax_identifier,
-        masked_regex=Regexes.TAX_ID_MASKED,
+        masked_regex=TaxId.REGEX_FORMATTED_MASKED,
     )
 
     # mass ID - fully masked field

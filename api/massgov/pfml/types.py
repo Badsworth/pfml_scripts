@@ -8,6 +8,7 @@ class TaxId:
 
     REGEX_UNFORMATTED = re.compile(r"^\d{9}$")
     REGEX_FORMATTED = re.compile(r"^\d{3}-\d{2}-\d{4}$")
+    REGEX_FORMATTED_MASKED = re.compile(r"^((\*{3}-\*{2}-\d{4})|(\*{3}\*{2}\d{4}))$")
 
     _formatted_val: str
 
@@ -76,7 +77,7 @@ class TaxId:
 
 
 # inherit from dict to make the class JSON serializable
-class Fein(dict):
+class Fein:
     """
     Represents a FEIN
     """
@@ -87,8 +88,6 @@ class Fein(dict):
     val: str
 
     def __init__(self, val: str) -> None:
-        dict.__init__(self, val=val)
-
         val = str(val)
 
         if self.REGEX_FORMATTED.match(val):

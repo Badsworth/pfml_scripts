@@ -103,7 +103,7 @@ def _format_employees_for_outbound(employees: List[Employee]) -> List[Dict[str, 
         formatted_employees.append(
             {
                 Constants.FINEOS_CUSTOMER_NUMBER: fineos_customer_number,
-                Constants.SSN: tax_id.tax_identifier.replace("-", ""),
+                Constants.SSN: tax_id.tax_identifier.to_unformatted_str(),
             }
         )
     return formatted_employees
