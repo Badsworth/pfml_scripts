@@ -9,7 +9,7 @@ class TaxId:
     REGEX_UNFORMATTED = re.compile(r"^\d{9}$")
     REGEX_FORMATTED = re.compile(r"^\d{3}-\d{2}-\d{4}$")
 
-    val: str
+    _formatted_val: str
 
     def __init__(self, val: str) -> None:
         if self.REGEX_FORMATTED.match(val):
