@@ -1533,7 +1533,9 @@ class DuaEmployeeDemographics(Base, TimestampMixin):
     gender_code = Column(Text, nullable=True)
     occupation_code = Column(Text, nullable=True)
     occupation_description = Column(Text, nullable=True)
-    employer_fein = Column(FeinColumn, nullable=True)
+    # This is not an explicit FeinColumn because we want to capture raw data from DUA.
+    # It can be validated later.
+    employer_fein = Column(Text, nullable=True)
     employer_reporting_unit_number = Column(Text, nullable=True)
 
     # this Unique index is required since our test framework does not run migrations
