@@ -99,6 +99,7 @@ from massgov.pfml.delegated_payments.task.process_pub_responses import (
 from massgov.pfml.delegated_payments.task.process_pub_responses import (
     _process_pub_responses as run_process_pub_responses_ecs_task,
 )
+from massgov.pfml.util.datetime import get_now_us_eastern
 
 # == Data Structures ==
 
@@ -2375,7 +2376,7 @@ def generate_fineos_extract_files(scenario_dataset: List[ScenarioData], round: i
 
     # claimant extract
     generate_claimant_data_files(
-        scenario_dataset, fineos_data_export_path, payments_util.get_now(), round=round
+        scenario_dataset, fineos_data_export_path, get_now_us_eastern(), round=round
     )
     # Confirm expected claimant files were generated
     assert_files(
@@ -2386,7 +2387,7 @@ def generate_fineos_extract_files(scenario_dataset: List[ScenarioData], round: i
 
     # payment extract
     generate_payment_extract_files(
-        scenario_dataset, fineos_data_export_path, payments_util.get_now(), round=round
+        scenario_dataset, fineos_data_export_path, get_now_us_eastern(), round=round
     )
     # Confirm expected payment files were generated
     assert_files(
@@ -2797,7 +2798,7 @@ def assert_writeback_for_stage(
         .filter(
             FineosWritebackDetails.payment_id.in_(generic_flow_scenario_payment_ids),
             FineosWritebackDetails.created_at
-            >= payments_util.get_now(),  # get writeback items created during current time freeze
+            >= get_now_us_eastern(),  # get writeback items created during current time freeze
         )
         .all()
     )
@@ -2868,11 +2869,11 @@ def get_writeback_transaction_status_for_payment(
 
 
 def get_current_date_folder():
-    return payments_util.get_now().strftime("%Y-%m-%d")
+    return get_now_us_eastern().strftime("%Y-%m-%d")
 
 
 def get_current_timestamp_prefix():
-    return payments_util.get_now().strftime("%Y-%m-%d-%H-%M-%S-")
+    return get_now_us_eastern().strftime("%Y-%m-%d-%H-%M-%S-")
 
 
 def assert_ref_file(file_path: str, ref_file_type: ReferenceFileType, db_session: db.Session):

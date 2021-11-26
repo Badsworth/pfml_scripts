@@ -46,8 +46,8 @@ from massgov.pfml.db.models.payments import (
     FineosWritebackTransactionStatus,
     LkFineosWritebackTransactionStatus,
 )
-from massgov.pfml.delegated_payments.delegated_payments_util import get_now
 from massgov.pfml.delegated_payments.step import Step
+from massgov.pfml.util.datetime import get_now_us_eastern
 
 logger = logging.get_logger(__name__)
 
@@ -777,7 +777,7 @@ class PaymentExtractStep(Step):
 
         payment.fineos_pei_c_value = payment_data.c_value
         payment.fineos_pei_i_value = payment_data.i_value
-        payment.fineos_extraction_date = payments_util.get_now().date()
+        payment.fineos_extraction_date = get_now_us_eastern().date()
         payment.fineos_extract_import_log_id = self.get_import_log_id()
         payment.leave_request_decision = payment_data.leave_request_decision
 
@@ -880,12 +880,12 @@ class PaymentExtractStep(Step):
             elif (
                 (PrenoteState.PENDING_WITH_PUB.prenote_state_id == existing_eft.prenote_state_id)
                 and existing_eft.prenote_sent_at
-                and (get_now() - existing_eft.prenote_sent_at).days
+                and (get_now_us_eastern() - existing_eft.prenote_sent_at).days
                 >= PRENOTE_PRENDING_WAITING_PERIOD
             ):
                 # Set prenote to approved
                 existing_eft.prenote_state_id = PrenoteState.APPROVED.prenote_state_id
-                existing_eft.prenote_approved_at = payments_util.get_now()
+                existing_eft.prenote_approved_at = get_now_us_eastern()
 
                 self.increment(self.Metrics.PRENOTE_PAST_WAITING_PERIOD_APPROVED_COUNT)
             else:

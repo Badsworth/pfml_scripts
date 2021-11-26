@@ -17,9 +17,9 @@ from massgov.pfml.db.models.employees import (
     ReferenceFileType,
     State,
 )
-from massgov.pfml.delegated_payments.delegated_payments_util import get_now
 from massgov.pfml.reductions.config import get_s3_config
 from massgov.pfml.reductions.reports.models.dia import DFMLReportRow, make_report_row_from_payment
+from massgov.pfml.util.datetime import get_now_us_eastern
 
 logger = logging.get_logger(__name__)
 
@@ -38,11 +38,11 @@ PaymentGroupKey = collections.namedtuple("PaymentGroupKey", ("fineos_customer_nu
 
 
 def _get_dfml_report_file_name() -> str:
-    return f"{DFML_REPORT_FILENAME_PREFIX}{get_now().strftime(DFML_REPORT_FILENAME_TIME_FORMAT)}"
+    return f"{DFML_REPORT_FILENAME_PREFIX}{get_now_us_eastern().strftime(DFML_REPORT_FILENAME_TIME_FORMAT)}"
 
 
 def _get_dfml_error_report_file_name() -> str:
-    return f"{DFML_REPORT_FILENAME_PREFIX}ERRORS_{get_now().strftime(DFML_REPORT_FILENAME_TIME_FORMAT)}"
+    return f"{DFML_REPORT_FILENAME_PREFIX}ERRORS_{get_now_us_eastern().strftime(DFML_REPORT_FILENAME_TIME_FORMAT)}"
 
 
 def create_report_consolidated_dia_payments_to_dfml(db_session: db.Session) -> None:

@@ -6,6 +6,7 @@ from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.reductions.config as reductions_config
+import massgov.pfml.util.datetime as datetime_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml import db
 from massgov.pfml.db.models.employees import ReferenceFile, ReferenceFileType, State
@@ -103,7 +104,7 @@ def _send_dua_payments_email(
     email_config = reductions_config.get_email_config()
     sender = email_config.pfml_email_address
     recipient = email_config.agency_reductions_email_address
-    subject = f"DUA reductions payments as of {payments_util.get_now():%m/%d/%Y}"
+    subject = f"DUA reductions payments as of {datetime_util.get_now_us_eastern():%m/%d/%Y}"
     body = "Attached please find a report that includes all DUA reductions payments for PFML claimants to date"
     bounce_forwarding_email_address_arn = email_config.bounce_forwarding_email_address_arn
 

@@ -2,6 +2,8 @@ import math
 from datetime import date, datetime, time, timezone
 from typing import NamedTuple, Optional, Union
 
+import pytz
+
 
 class HoursAndMinutes(NamedTuple):
     hours: Optional[int]
@@ -55,6 +57,18 @@ def get_period_in_days(period_start: date, period_end: date) -> int:
     #    Jan 1st - Jan 8th is 8 days (eg. Monday -> the next Monday)
 
     return (period_end_date - period_start_date).days + 1
+
+
+def get_now_us_eastern() -> datetime:
+    """
+    Return the current time in the eastern time zone. DST is handled based on the local time.
+    For information on handling Daylight Savings Time, refer to this documentation on now() vs. utcnow():
+    http://pytz.sourceforge.net/#problems-with-localtime
+    """
+
+    # Note that this uses Eastern time (not UTC)
+    tz = pytz.timezone("America/New_York")
+    return datetime.now(tz)
 
 
 def get_period_in_weeks(period_start: date, period_end: date) -> int:
