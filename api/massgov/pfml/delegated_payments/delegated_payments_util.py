@@ -1202,7 +1202,9 @@ def filter_dict(dict: Dict[str, Any], allowed_keys: Set[str]) -> Dict[str, Any]:
     """
     new_dict = {}
     for k, v in dict.items():
-        if k in allowed_keys:
+        if k in allowed_keys and k == "employer_fein":
+            new_dict[k] = str(v)
+        elif k in allowed_keys:
             new_dict[k] = v
 
     return new_dict

@@ -10,6 +10,7 @@ from sqlalchemy.orm import deferred
 from sqlalchemy.sql.functions import now as sqlnow
 from sqlalchemy.types import TypeEngine
 
+from massgov.pfml.types import Fein
 from massgov.pfml.util.datetime import utcnow
 
 
@@ -34,7 +35,7 @@ class Base:
         json_valid_dict = {}
         dictionary = self.dict()
         for key, value in dictionary.items():
-            if isinstance(value, UUID) or isinstance(value, Decimal):
+            if isinstance(value, UUID) or isinstance(value, Decimal) or isinstance(value, Fein):
                 json_valid_dict[key] = str(value)
             elif isinstance(value, date) or isinstance(value, datetime):
                 json_valid_dict[key] = value.isoformat()

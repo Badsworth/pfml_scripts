@@ -144,7 +144,7 @@ def test_set_employee_occupation_from_demographics_data(
         # Rows pointing to an employer we don't have a record of shouldn't crash things
         DuaEmployeeDemographicsFactory(
             fineos_customer_number="1234567",
-            employer_fein="",
+            employer_fein="444444444",
             employer_reporting_unit_number=reporting_unit_with_org_unit.dua_id,
         )
 

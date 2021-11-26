@@ -1533,7 +1533,7 @@ class DuaEmployeeDemographics(Base, TimestampMixin):
     gender_code = Column(Text, nullable=True)
     occupation_code = Column(Text, nullable=True)
     occupation_description = Column(Text, nullable=True)
-    employer_fein = Column(Text, nullable=True)
+    employer_fein = Column(FeinColumn, nullable=True)
     employer_reporting_unit_number = Column(Text, nullable=True)
 
     # this Unique index is required since our test framework does not run migrations
