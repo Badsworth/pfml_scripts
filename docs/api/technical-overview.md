@@ -28,29 +28,24 @@ generally preferred.
 
 [oas-docs]: http://spec.openapis.org/oas/v3.0.3
 [oas-swagger-docs]: https://swagger.io/docs/specification/about/
-
 [connexion-home]: https://connexion.readthedocs.io/en/latest/
 [connexion-src]: https://github.com/zalando/connexion
-
-[pydantic-home]:https://pydantic-docs.helpmanual.io/
+[pydantic-home]: https://pydantic-docs.helpmanual.io/
 [pydantic-src]: https://github.com/samuelcolvin/pydantic/
-
 [sqlalchemy-home]: https://www.sqlalchemy.org/
 [sqlalchemy-src]: https://github.com/sqlalchemy/sqlalchemy
-
 [alembic-home]: https://alembic.sqlalchemy.org/en/latest/
 [alembic-src]: https://github.com/sqlalchemy/alembic
-
 
 ## Request operations
 
 - OpenAPI spec (`openapi.yaml`) defines API interface: routes, requests, responses, etc.
 - Connexion connects routes to handlers via `operationId` property on a route
-    - Connexion will run OAS validations before reaching handler
-    - Connexion will run authentication code and set user in the request context
-    - The handlers generally live in the top level files at
-      [massgov/pfml/api](/api/massgov/pfml/api/), with the `operationId` pointing
-      to the specific module and function
+  - Connexion will run OAS validations before reaching handler
+  - Connexion will run authentication code and set user in the request context
+  - The handlers generally live in the top level files at
+    [massgov/pfml/api](/api/massgov/pfml/api/), with the `operationId` pointing
+    to the specific module and function
 - Handlers check if user in request context is authorized to perform the action
   the request represents
 - Handlers use pydantic models to parse request bodies and construct response data
@@ -82,7 +77,6 @@ for use in the application, as we may eventually want to provide slightly
 modified versions of the functions provided by flask-bouncer directly) to check
 if the user in the current request context is authorized to perform the given
 action on the given subject.
-
 
 ## Running In Hosted Environments
 
@@ -122,10 +116,17 @@ Function, or manually through the [/bin/run-ecs-task](/bin/run-ecs-task/) tool).
 > These are auto-generated as part of our `api-create-erds` GitHub action.
 
 #### Applications
-[![applications erd diagram](./assets/api/erds/applications.png "application erd")](../assets/api/erds/applications.png)
+
+[![applications erd diagram](../assets/api/erds/applications.png "application erd")](../assets/api/erds/applications.png)
+
 #### Employees
-[![employees erd diagram](./assets/api/erds/employees.png "employees erd")](../assets/api/erds/employees.png)
+
+[![employees erd diagram](../assets/api/erds/employees.png "employees erd")](../assets/api/erds/employees.png)
+
 #### Payments
-[![payments erd diagram](./assets/api/erds/payments.png "payments erd")](../assets/api/erds/payments.png)
+
+[![payments erd diagram](../assets/api/erds/payments.png "payments erd")](../assets/api/erds/payments.png)
+
 #### Verifications
-[![verifications erd diagram](./assets/api/erds/verifications.png "verifications erd")](../assets/api/erds/verifications.png)
+
+[![verifications erd diagram](../assets/api/erds/verifications.png "verifications erd")](../assets/api/erds/verifications.png)
