@@ -139,19 +139,21 @@ class PaymentScenarioData:
 @dataclass
 class PaymentContainer:
     payment: Payment
+    claim: Claim
 
     def get_scenario_data(self) -> PaymentScenarioData:
         return PaymentScenarioData.compute(self.payment)
 
 
 def get_payments_with_status(db_session: Session, claim: Claim) -> Dict:
-    payment_containers = get_payments_from_db(db_session, claim.claim_id)
+    payments = get_payments_from_db(db_session, claim.claim_id)
+    payment_containers = [PaymentContainer(payment, claim) for payment in payments]
+    filtered_payments = filter_and_sort_payments(payment_containers)
+    return to_response_dict(filtered_payments, claim.fineos_absence_id)
 
-    return to_response_dict(payment_containers, claim.fineos_absence_id)
 
-
-def get_payments_from_db(db_session: Session, claim_id: uuid.UUID) -> List[PaymentContainer]:
-    payments = (
+def get_payments_from_db(db_session: Session, claim_id: uuid.UUID) -> List[Payment]:
+    return (
         db_session.query(Payment)
         .filter(Payment.claim_id == claim_id,)
         .filter(
@@ -164,8 +166,6 @@ def get_payments_from_db(db_session: Session, claim_id: uuid.UUID) -> List[Payme
         .options(joinedload(Payment.fineos_writeback_details))  # type: ignore
         .all()
     )
-
-    return [PaymentContainer(payment) for payment in payments]
 
 
 def to_response_dict(payment_data: List[PaymentContainer], absence_case_id: Optional[str]) -> Dict:
@@ -211,6 +211,36 @@ def get_latest_writeback_detail(payment: Payment) -> Optional[FineosWritebackDet
                 return record
 
     return first_detail_record
+
+
+def filter_and_sort_payments(payment_data: List[PaymentContainer]) -> List[PaymentContainer]:
+    payments_to_keep = []
+
+    for payment_container in payment_data:
+        payment = payment_container.payment
+        if (
+            payment.payment_transaction_type_id
+            == PaymentTransactionType.CANCELLATION.payment_transaction_type_id
+        ):
+            continue
+
+        # If a payment is not in a Paid state (Paid or Posted) and
+        # the payment falls during the waiting week, we need to filter it out
+        writeback_detail = get_latest_writeback_detail(payment)
+        if writeback_detail and (
+            writeback_detail.transaction_status_id == WritebackStatus.PAID.transaction_status_id
+        ):
+            payments_to_keep.append(payment_container)
+        # Waiting week calculation
+        elif (payment.period_start_date and payment_container.claim.absence_period_start_date) and (
+            payment.period_start_date - payment_container.claim.absence_period_start_date
+        ).days < 7:
+            continue
+
+        payments_to_keep.append(payment_container)
+
+    # TODO: sort payments when @chouinar's work on API-2045 is merged
+    return payments_to_keep
 
 
 def get_expected_dates(
