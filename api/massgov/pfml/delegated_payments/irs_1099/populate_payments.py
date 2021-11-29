@@ -20,7 +20,7 @@ class PopulatePaymentsStep(Step):
         logger.info("1099 Documents - Populate 1099 Payments Step")
 
         # Get all payment data for the 1099 batch
-        payments = pfml_1099_util.get_payments(self.db_session)
+        payment_results = pfml_1099_util.get_payments(self.db_session)
 
         # Get the current batch
         batch = pfml_1099_util.get_current_1099_batch(self.db_session)
@@ -30,9 +30,13 @@ class PopulatePaymentsStep(Step):
 
         try:
             # Create 1099 payment record for each payment
-            for payment in payments:
+            for payment_row in payment_results:
 
-                if payment.payment_date is None:
+                payment = payment_row.Payment
+                payment_date = payment_row.payment_date
+                # cancel_date = payment_row.cancel_date
+
+                if payment_date is None:
                     logger.debug(
                         "Payment: %s does not have a date associated with it.", payment.payment_id
                     )
@@ -45,7 +49,7 @@ class PopulatePaymentsStep(Step):
                     claim_id=payment.claim.claim_id,
                     employee_id=payment.claim.employee.employee_id,
                     payment_amount=payment.amount,
-                    payment_date=payment.payment_date,
+                    payment_date=payment_date,
                 )
 
                 self.db_session.add(pfml_1099_payment)
