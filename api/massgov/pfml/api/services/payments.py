@@ -44,12 +44,12 @@ class PaymentScenarioData:
     }
 
     @classmethod
-    def compute(cls, payment: Payment) -> "PaymentScenarioData":
-        writeback_detail = get_latest_writeback_detail(payment)
+    def compute(cls, payment_container: "PaymentContainer") -> "PaymentScenarioData":
+        writeback_detail = payment_container.writeback_detail
         detail_id = writeback_detail.transaction_status_id if writeback_detail else None
         method_to_call = getattr(cls, cls.SCENARIOS.get(detail_id, "other"))
 
-        return method_to_call(payment=payment, writeback_detail=writeback_detail)
+        return method_to_call(payment=payment_container.payment, writeback_detail=writeback_detail)
 
     @classmethod
     def pending_validation(cls, **kwargs):
@@ -141,8 +141,14 @@ class PaymentContainer:
     payment: Payment
     claim: Claim
 
-    def get_scenario_data(self) -> PaymentScenarioData:
-        return PaymentScenarioData.compute(self.payment)
+    writeback_detail: Optional[FineosWritebackDetails] = None
+
+    def __post_init__(self):
+        self.writeback_detail = get_latest_writeback_detail(self.payment)
+
+
+def get_scenario_data(payment_container: PaymentContainer) -> PaymentScenarioData:
+    return PaymentScenarioData.compute(payment_container)
 
 
 def get_payments_with_status(db_session: Session, claim: Claim) -> Dict:
@@ -172,7 +178,7 @@ def to_response_dict(payment_data: List[PaymentContainer], absence_case_id: Opti
     payments = []
     for payment_container in payment_data:
         payment = payment_container.payment
-        scenario_data = payment_container.get_scenario_data()
+        scenario_data = get_scenario_data(payment_container)
 
         payments.append(
             PaymentResponse(
@@ -226,7 +232,7 @@ def filter_and_sort_payments(payment_data: List[PaymentContainer]) -> List[Payme
 
         # If a payment is not in a Paid state (Paid or Posted) and
         # the payment falls during the waiting week, we need to filter it out
-        writeback_detail = get_latest_writeback_detail(payment)
+        writeback_detail = payment_container.writeback_detail
         if writeback_detail and (
             writeback_detail.transaction_status_id == WritebackStatus.PAID.transaction_status_id
         ):
