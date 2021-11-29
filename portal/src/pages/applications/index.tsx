@@ -8,7 +8,7 @@ import ButtonLink from "../../components/ButtonLink";
 import Heading from "../../components/core/Heading";
 import Lead from "../../components/core/Lead";
 import PaginationNavigation from "src/components/PaginationNavigation";
-import React from "react";
+import React, { useCallback, useMemo } from "react";
 import Title from "../../components/core/Title";
 import { Trans } from "react-i18next";
 import isBlank from "src/utils/isBlank";
@@ -103,6 +103,18 @@ interface PaginatedIndexPageProps extends WithBenefitsApplicationsProps {
   updatePageQuery: (params: PageQueryParam[]) => void;
 }
 
+const AppCard = (props) => {
+  return (
+    <ApplicationCard
+      appLogic={props.appLogic}
+      key={props.application_id}
+      // @ts-expect-error PORTAL-1078
+      claim={props.claim}
+      number={props.number}
+    />
+  );
+};
+
 const PaginatedIndexPage = (props: PaginatedIndexPageProps) => {
   const { appLogic, claims, paginationMeta, updatePageQuery } = props;
   const { t } = useTranslation();
@@ -157,12 +169,13 @@ const PaginatedIndexPage = (props: PaginatedIndexPageProps) => {
             </Heading>
             {claims.inProgress.map((claim, index) => {
               return (
-                <ApplicationCard
-                  appLogic={appLogic}
+                <AppCard
                   key={claim.application_id}
+                  appLogic={appLogic}
+                  application_id={claim.application_id}
                   // @ts-expect-error PORTAL-1078
                   claim={claim}
-                  number={index + 1}
+                  number={index}
                 />
               );
             })}
@@ -176,12 +189,13 @@ const PaginatedIndexPage = (props: PaginatedIndexPageProps) => {
             </Heading>
             {claims.completed.map((claim, index) => {
               return (
-                <ApplicationCard
-                  appLogic={appLogic}
+                <AppCard
                   key={claim.application_id}
+                  appLogic={appLogic}
+                  application_id={claim.application_id}
                   // @ts-expect-error PORTAL-1078
                   claim={claim}
-                  number={claims.inProgress.length + index + 1}
+                  number={index}
                 />
               );
             })}

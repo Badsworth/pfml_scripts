@@ -14,7 +14,6 @@ import DocumentsApi from "../api/DocumentsApi";
 import TempFile from "../models/TempFile";
 import assert from "assert";
 import useCollectionState from "./useCollectionState";
-import { has } from "lodash";
 
 const useDocumentsLogic = ({
   appErrorsLogic,
@@ -39,23 +38,24 @@ const useDocumentsLogic = ({
   } = useCollectionState(new DocumentCollection());
 
   const documentsApi = useMemo(() => new DocumentsApi(), []);
-  const [loadedApplicationDocs, setLoadedApplicationDocs] = useState<string[]>(
-    []
-  );
-  const [loadingApplicationDocs, setLoadingApplicationDocs] = useState<string[]>([]);
+  const [loadedApplicationDocs, setLoadedApplicationDocs] = useState<
+    Record<string, any>
+  >({});
 
   /**
    * Check if docs for this application have been loaded
    * We use a separate array and state here, rather than using the DocumentCollection,
    * because documents that don't have items won't be represented in the DocumentCollection.
-   * 
-   * 
+   *
+   *
    */
   const hasLoadedClaimDocuments = (application_id: string) =>
-    loadedApplicationDocs.includes(application_id);
+    application_id in loadedApplicationDocs &&
+    loadedApplicationDocs[application_id].isLoading === false;
 
   const isLoadingClaimDocuments = (application_id: string) =>
-    loadingApplicationDocs.includes(application_id)
+    application_id in loadedApplicationDocs &&
+    loadedApplicationDocs[application_id].isLoading === true;
 
   /**
    * Load all documents for a user's claim
@@ -64,17 +64,21 @@ const useDocumentsLogic = ({
   const loadAll = async (application_id: string) => {
     // if documents already contains docs for application_id, don't load again
     // or if we started making a request to the API to load documents, don't load again
-    console.log("a", hasLoadedClaimDocuments, isLoadingClaimDocuments)
-    if (hasLoadedClaimDocuments(application_id) || isLoadingClaimDocuments(application_id)) return;
+    if (
+      hasLoadedClaimDocuments(application_id) ||
+      isLoadingClaimDocuments(application_id)
+    )
+      return;
 
     appErrorsLogic.clearErrors();
 
-    setLoadingApplicationDocs((loadingClaimDocuments) => [
-      ...loadingClaimDocuments,
-      application_id
-    ]);
-
-    console.log("b", hasLoadedClaimDocuments, isLoadingClaimDocuments)
+    setLoadedApplicationDocs((loadingClaimDocuments) => {
+      const docs = { ...loadingClaimDocuments };
+      docs[application_id] = {
+        isLoading: true,
+      };
+      return docs;
+    });
 
     try {
       // Before the API request
@@ -86,20 +90,27 @@ const useDocumentsLogic = ({
       // loadedDocuments = [1234]
       // loadingDocuments = []
       //
+
       const { documents: loadedDocuments } = await documentsApi.getDocuments(
         application_id
       );
 
-      setLoadedApplicationDocs((loadedApplicationDocs) => [
-        ...loadedApplicationDocs,
-        application_id,
-      ]);
+      // setLoadedApplicationDocs((loadedApplicationDocs) => [
+      //   ...loadedApplicationDocs,
+      //   application_id,
+      // ]);
       addDocuments(loadedDocuments.items);
-      setLoadingApplicationDocs((loadingClaimDocuments) => {
-        return loadingClaimDocuments.filter(appId => appId === application_id)
-      });
     } catch (error) {
+      console.log(error);
       appErrorsLogic.catchError(new DocumentsLoadError(application_id));
+    } finally {
+      setLoadedApplicationDocs((loadingClaimDocuments) => {
+        const docs = { ...loadingClaimDocuments };
+        docs[application_id] = {
+          isLoading: false,
+        };
+        return docs;
+      });
     }
   };
 
