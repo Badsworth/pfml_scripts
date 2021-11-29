@@ -38,6 +38,7 @@ output "environment_tags" {
     "cps-preview" = "qa"
     "adhoc"       = "test"
     "long"        = "test"
+    "infra-test"  = "test"
   }
 }
 
@@ -57,6 +58,7 @@ output "environment_shorthand" {
     "breakfix"    = "bfx"
     "cps-preview" = "cpspr"
     "long"        = "long"
+    "infra-test"  = "itest"
   }
 }
 
@@ -78,6 +80,7 @@ output "smartronix_environment_tags" {
     "cps-preview" = "CPSPreview"
     "adhoc"       = "Adhoc"
     "long"        = "LONG"
+    "infra-test"  = "Sandbox"
   }
 }
 
@@ -107,6 +110,7 @@ output "nonprod_admin_roles" {
 #
 output "domains" {
   value = {
+    "infra-test"  = "paidleave-infra-test.dfml.eol.mass.gov",
     "test"        = "paidleave-test.mass.gov",
     "stage"       = "paidleave-stage.mass.gov",
     "performance" = "paidleave-performance.mass.gov",
@@ -121,6 +125,7 @@ output "domains" {
 
 output "api_domains" {
   value = {
+    "infra-test"  = "paidleave-api-infra-test.dfml.eol.mass.gov",
     "test"        = "paidleave-api-test.mass.gov",
     "stage"       = "paidleave-api-stage.mass.gov",
     "performance" = "paidleave-api-performance.mass.gov",
@@ -138,6 +143,7 @@ output "cert_domains" {
   # you cannot lookup certs by a SAN, so we lookup based on the first domain
   # that is specified in the certificate.
   value = {
+    "infra-test"  = "paidleave-infra-test.dfml.eol.mass.gov",
     "test"        = "paidleave-test.mass.gov",
     "stage"       = "paidleave-test.mass.gov",
     "performance" = "paidleave-performance.mass.gov",
@@ -178,5 +184,6 @@ output "env_var_mappings" {
     "breakfix"    = "Breakfix"
     "cps-preview" = "CPSPreview"
     "long"        = "Long"
+    "infra-test"  = "Test"
   }
 }

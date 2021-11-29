@@ -131,7 +131,12 @@ namespace PfmlPdfApi.Utilities
                     foreach (var s3Object in objects.S3Objects)
                     {
                         var file = await awsClient.GetObjectAsync(new GetObjectRequest { BucketName = s3Object.BucketName, Key = s3Object.Key }, new System.Threading.CancellationToken());
-                        files.Add(file.ResponseStream);
+                        
+                        if (s3Object.Key.EndsWith(".pdf"))
+                        {
+                            files.Add(file.ResponseStream);
+                            Console.WriteLine($"Amazon S3 Service - getting key: {s3Object.Key}");
+                        }
                     }
                 }
                 catch (Exception ex)

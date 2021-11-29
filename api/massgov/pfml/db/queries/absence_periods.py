@@ -165,13 +165,6 @@ def convert_fineos_absence_period_to_claim_response_absence_period(
     period: Period, log_attributes: Dict
 ) -> AbsencePeriodResponse:
     absence_period = AbsencePeriodResponse()
-    if period.periodReference:
-        try:
-            class_id, index_id = split_fineos_absence_period_id(period.periodReference)
-            absence_period.fineos_absence_period_class_id = class_id
-            absence_period.fineos_absence_period_index_id = index_id
-        except ValidationException:
-            newrelic.agent.notice_error(attributes=log_attributes)
 
     absence_period.absence_period_start_date = period.startDate
     absence_period.absence_period_end_date = period.endDate

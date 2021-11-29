@@ -33,7 +33,7 @@ from massgov.pfml.delegated_payments.reporting.delegated_abstract_reporting impo
     Report,
     ReportGroup,
 )
-from massgov.pfml.util.datetime import get_period_in_weeks
+from massgov.pfml.util.datetime import get_now_us_eastern, get_period_in_weeks
 
 # Specify an override for the notes to put if the
 # description on the audit report type doesn't match the message
@@ -66,7 +66,7 @@ def write_audit_report(
     payment_audit_report_rows: List[PaymentAuditCSV] = []
     for payment_audit_data in payment_audit_data_set:
         payment_audit_report_rows.append(
-            build_audit_report_row(payment_audit_data, payments_util.get_now(), db_session)
+            build_audit_report_row(payment_audit_data, get_now_us_eastern(), db_session)
         )
 
     return write_audit_report_rows(payment_audit_report_rows, output_path, db_session, report_name)

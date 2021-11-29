@@ -84,6 +84,7 @@ services:
       # - SERVICE_NOW_PASSWORD=...
       - PORTAL_BASE_URL=https://paidleave.mass.gov
       - ENABLE_APPLICATION_FRAUD_CHECK=0
+      - ENABLE_PDF_DOCUMENT_COMPRESSION=0
       # Payments env vars
       # - PAYMENTS_GAX_BIEVNT_EMAIL=
       # - PAYMENTS_DFML_BUSINESS_OPERATIONS_EMAIL=
