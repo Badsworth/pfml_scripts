@@ -9,7 +9,7 @@ export interface QueryForWithClaimDocuments {
 }
 
 export interface WithClaimDocumentsProps extends WithUserProps {
-  isLoadingDocuments: boolean;
+  isLoadingDocuments: (application_id: string) => boolean;
   documents: BenefitsApplicationDocument[];
 }
 
@@ -27,16 +27,16 @@ function withClaimDocuments<
     const { appLogic, claim, query } = props;
 
     const {
-      documents: { loadAll, documents, hasLoadedClaimDocuments },
+      documents: { loadAll, documents, isLoadingClaimDocuments },
       users,
     } = appLogic;
 
     // TODO (CP-2589): Clean up once application flow uses the same document upload components
     const application_id = claim ? claim.application_id : query.claim_id;
 
-    const shouldLoad = !!(
-      application_id && !hasLoadedClaimDocuments(application_id)
-    );
+    // const shouldLoad = !!(
+    //   application_id && !hasLoadedClaimDocuments(application_id)
+    // );
 
     assert(documents);
     // Since we are within a withUser higher order component, user should always be set
@@ -46,7 +46,7 @@ function withClaimDocuments<
       loadAll(application_id);
 
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [shouldLoad]);
+    }, [application_id]);
 
     if (!application_id) {
       return <PageNotFound />;
@@ -56,7 +56,7 @@ function withClaimDocuments<
       <Component
         {...(props as T & { query: QueryForWithClaimDocuments })}
         documents={documents.filterByApplication(application_id)}
-        isLoadingDocuments={shouldLoad}
+        isLoadingDocuments={isLoadingClaimDocuments}
       />
     );
   };

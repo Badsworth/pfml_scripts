@@ -135,7 +135,7 @@ interface LegalNoticeSectionProps {
   appLogic: AppLogic;
   claim: BenefitsApplication;
   documents: BenefitsApplicationDocument[];
-  isLoadingDocuments: boolean;
+  isLoadingDocuments: (application_id: string) => boolean;
 }
 
 /**
@@ -146,7 +146,7 @@ const LegalNoticeSection = (props: LegalNoticeSectionProps) => {
   const isSubmitted = props.claim.status === "Submitted";
   const legalNotices = getLegalNotices(props.documents);
   const shouldShowSpinner =
-    props.isLoadingDocuments &&
+    props.isLoadingDocuments(props.claim.application_id) &&
     !hasDocumentsLoadError(
       props.appLogic.appErrors,
       props.claim.application_id

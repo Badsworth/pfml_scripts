@@ -14,6 +14,7 @@ import DocumentsApi from "../api/DocumentsApi";
 import TempFile from "../models/TempFile";
 import assert from "assert";
 import useCollectionState from "./useCollectionState";
+import { has } from "lodash";
 
 const useDocumentsLogic = ({
   appErrorsLogic,
@@ -41,15 +42,20 @@ const useDocumentsLogic = ({
   const [loadedApplicationDocs, setLoadedApplicationDocs] = useState<string[]>(
     []
   );
-  const [isLoadingDocuments, setIsLoadingDocuments] = useState<boolean>();
+  const [loadingApplicationDocs, setLoadingApplicationDocs] = useState<string[]>([]);
 
   /**
    * Check if docs for this application have been loaded
    * We use a separate array and state here, rather than using the DocumentCollection,
    * because documents that don't have items won't be represented in the DocumentCollection.
+   * 
+   * 
    */
   const hasLoadedClaimDocuments = (application_id: string) =>
     loadedApplicationDocs.includes(application_id);
+
+  const isLoadingClaimDocuments = (application_id: string) =>
+    loadingApplicationDocs.includes(application_id)
 
   /**
    * Load all documents for a user's claim
@@ -57,13 +63,29 @@ const useDocumentsLogic = ({
    */
   const loadAll = async (application_id: string) => {
     // if documents already contains docs for application_id, don't load again
-    if (isLoadingDocuments) return;
+    // or if we started making a request to the API to load documents, don't load again
+    console.log("a", hasLoadedClaimDocuments, isLoadingClaimDocuments)
+    if (hasLoadedClaimDocuments(application_id) || isLoadingClaimDocuments(application_id)) return;
 
     appErrorsLogic.clearErrors();
 
-    setIsLoadingDocuments(true);
+    setLoadingApplicationDocs((loadingClaimDocuments) => [
+      ...loadingClaimDocuments,
+      application_id
+    ]);
+
+    console.log("b", hasLoadedClaimDocuments, isLoadingClaimDocuments)
 
     try {
+      // Before the API request
+      //
+      // loadedDocuments = []
+      // loadingDocuments = [1234]
+      //
+      // After the API request:
+      // loadedDocuments = [1234]
+      // loadingDocuments = []
+      //
       const { documents: loadedDocuments } = await documentsApi.getDocuments(
         application_id
       );
@@ -73,7 +95,9 @@ const useDocumentsLogic = ({
         application_id,
       ]);
       addDocuments(loadedDocuments.items);
-      setIsLoadingDocuments(true);
+      setLoadingApplicationDocs((loadingClaimDocuments) => {
+        return loadingClaimDocuments.filter(appId => appId === application_id)
+      });
     } catch (error) {
       appErrorsLogic.catchError(new DocumentsLoadError(application_id));
     }
@@ -158,7 +182,7 @@ const useDocumentsLogic = ({
     attach,
     download,
     hasLoadedClaimDocuments,
-    isLoadingDocuments,
+    isLoadingClaimDocuments,
     documents,
     loadAll,
   };
