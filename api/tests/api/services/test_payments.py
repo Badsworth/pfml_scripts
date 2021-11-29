@@ -26,9 +26,9 @@ def test_get_payments_from_db_dedups_pei_i_value(test_db_session, initialize_fac
     payments = get_payments_from_db(test_db_session, claim.claim_id)
 
     assert len(payments) == 1
-    assert payments[0].payment.payment_id == payment2.payment_id
-    assert payments[0].payment.fineos_extract_import_log == import_log_2
-    assert payments[0].payment.fineos_pei_i_value == "9999"
+    assert payments[0].payment_id == payment2.payment_id
+    assert payments[0].fineos_extract_import_log == import_log_2
+    assert payments[0].fineos_pei_i_value == "9999"
 
 
 def test_get_payments_from_db_filters_payments_with_flag(
@@ -61,9 +61,9 @@ def test_get_payments_from_db_filters_payments_with_flag(
     payments = get_payments_from_db(test_db_session, claim.claim_id)
     assert len(payments) == 1
 
-    assert payments[0].payment.payment_id == payment.payment_id
-    assert payments[0].payment.fineos_extract_import_log_id == import_log_1.import_log_id
-    assert payments[0].payment.fineos_pei_i_value == "1000"
+    assert payments[0].payment_id == payment.payment_id
+    assert payments[0].fineos_extract_import_log_id == import_log_1.import_log_id
+    assert payments[0].fineos_pei_i_value == "1000"
 
 
 def test_get_payments_from_db_allows_multiple_pei_i_values(
@@ -90,10 +90,10 @@ def test_get_payments_from_db_allows_multiple_pei_i_values(
 
     assert len(payments) == 2
 
-    assert payments[0].payment.payment_id == payment2.payment_id
-    assert payments[0].payment.fineos_extract_import_log == import_log_2
-    assert payments[0].payment.fineos_pei_i_value == "1000"
+    assert payments[0].payment_id == payment2.payment_id
+    assert payments[0].fineos_extract_import_log == import_log_2
+    assert payments[0].fineos_pei_i_value == "1000"
 
-    assert payments[1].payment.payment_id == payment.payment_id
-    assert payments[1].payment.fineos_extract_import_log == import_log_1
-    assert payments[1].payment.fineos_pei_i_value == "2000"
+    assert payments[1].payment_id == payment.payment_id
+    assert payments[1].fineos_extract_import_log == import_log_1
+    assert payments[1].fineos_pei_i_value == "2000"
