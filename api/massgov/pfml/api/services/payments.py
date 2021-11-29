@@ -147,10 +147,6 @@ class PaymentContainer:
         self.writeback_detail = get_latest_writeback_detail(self.payment)
 
 
-def get_scenario_data(payment_container: PaymentContainer) -> PaymentScenarioData:
-    return PaymentScenarioData.compute(payment_container)
-
-
 def get_payments_with_status(db_session: Session, claim: Claim) -> Dict:
     payments = get_payments_from_db(db_session, claim.claim_id)
     payment_containers = [PaymentContainer(payment, claim) for payment in payments]
@@ -178,7 +174,7 @@ def to_response_dict(payment_data: List[PaymentContainer], absence_case_id: Opti
     payments = []
     for payment_container in payment_data:
         payment = payment_container.payment
-        scenario_data = get_scenario_data(payment_container)
+        scenario_data = PaymentScenarioData.compute(payment_container)
 
         payments.append(
             PaymentResponse(
