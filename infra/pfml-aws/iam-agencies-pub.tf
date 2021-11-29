@@ -97,7 +97,7 @@ resource "aws_iam_policy" "pub_s3_access_policy_nonprod" {
 
 # Attach all the lower environment policies to the nonprod user.
 resource "aws_iam_user_policy_attachment" "pub_policy_attachment_nonprod" {
-  for_each   = setsubtract(toset(local.environments), ["prod"])
+  for_each   = setsubtract(toset(local.environments), ["prod", "infra-test"])
   user       = aws_iam_user.agency_pub["nonprod"].name
   policy_arn = aws_iam_policy.pub_s3_access_policy_nonprod[each.key].arn
 }
