@@ -37,6 +37,7 @@ output "environment_tags" {
     "breakfix"    = "qa"
     "cps-preview" = "qa"
     "adhoc"       = "test"
+    "long"        = "test"
     "infra-test"  = "test"
   }
 }
@@ -56,6 +57,7 @@ output "environment_shorthand" {
     "uat"         = "uat"
     "breakfix"    = "bfx"
     "cps-preview" = "cpspr"
+    "long"        = "long"
     "infra-test"  = "itest"
   }
 }
@@ -77,6 +79,7 @@ output "smartronix_environment_tags" {
     "breakfix"    = "Breakfix"
     "cps-preview" = "CPSPreview"
     "adhoc"       = "Adhoc"
+    "long"        = "LONG"
     "infra-test"  = "Sandbox"
   }
 }
@@ -115,7 +118,8 @@ output "domains" {
     "breakfix"    = "paidleave-breakfix.eol.mass.gov",
     "cps-preview" = "paidleave-cps-preview.eol.mass.gov",
     "uat"         = "paidleave-uat.mass.gov",
-    "prod"        = "paidleave.mass.gov"
+    "prod"        = "paidleave.mass.gov",
+    "long"        = "paidleave-long.dfml.eol.mass.gov"
   }
 }
 
@@ -129,7 +133,8 @@ output "api_domains" {
     "breakfix"    = "paidleave-api-breakfix.eol.mass.gov",
     "cps-preview" = "paidleave-api-cps-preview.eol.mass.gov",
     "uat"         = "paidleave-api-uat.mass.gov",
-    "prod"        = "paidleave-api.mass.gov"
+    "prod"        = "paidleave-api.mass.gov",
+    "long"        = "paidleave-long.dfml.eol.mass.gov"
   }
 }
 
@@ -146,7 +151,8 @@ output "cert_domains" {
     "breakfix"    = "paidleave-breakfix.eol.mass.gov",
     "cps-preview" = "paidleave-breakfix.eol.mass.gov",
     "uat"         = "paidleave-uat.mass.gov",
-    "prod"        = "paidleave.mass.gov"
+    "prod"        = "paidleave.mass.gov",
+    "long"        = "paidleave-long.dfml.eol.mass.gov"
   }
 }
 
@@ -177,6 +183,7 @@ output "env_var_mappings" {
     "uat"         = "UAT"
     "breakfix"    = "Breakfix"
     "cps-preview" = "CPSPreview"
+    "long"        = "Long"
     "infra-test"  = "Test"
   }
 }
