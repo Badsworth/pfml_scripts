@@ -37,6 +37,8 @@ output "environment_tags" {
     "breakfix"    = "qa"
     "cps-preview" = "qa"
     "adhoc"       = "test"
+    "long"        = "test"
+    "infra-test"  = "test"
     "trn2"        = "train2"
   }
 }
@@ -56,6 +58,8 @@ output "environment_shorthand" {
     "uat"         = "uat"
     "breakfix"    = "bfx"
     "cps-preview" = "cpspr"
+    "long"        = "long"
+    "infra-test"  = "itest"
     "trn2"        = "trn2"
   }
 }
@@ -77,6 +81,8 @@ output "smartronix_environment_tags" {
     "breakfix"    = "Breakfix"
     "cps-preview" = "CPSPreview"
     "adhoc"       = "Adhoc"
+    "long"        = "LONG"
+    "infra-test"  = "Sandbox"
     "trn2"        = "TRN2"
   }
 }
@@ -107,6 +113,7 @@ output "nonprod_admin_roles" {
 #
 output "domains" {
   value = {
+    "infra-test"  = "paidleave-infra-test.dfml.eol.mass.gov",
     "test"        = "paidleave-test.mass.gov",
     "stage"       = "paidleave-stage.mass.gov",
     "performance" = "paidleave-performance.mass.gov",
@@ -114,13 +121,15 @@ output "domains" {
     "breakfix"    = "paidleave-breakfix.eol.mass.gov",
     "cps-preview" = "paidleave-cps-preview.eol.mass.gov",
     "uat"         = "paidleave-uat.mass.gov",
-    "prod"        = "paidleave.mass.gov"
+    "prod"        = "paidleave.mass.gov",
+    "long"        = "paidleave-long.dfml.eol.mass.gov",
     "trn2"        = "paidleave-trn2.dfml.eol.mass.gov"
   }
 }
 
 output "api_domains" {
   value = {
+    "infra-test"  = "paidleave-api-infra-test.dfml.eol.mass.gov",
     "test"        = "paidleave-api-test.mass.gov",
     "stage"       = "paidleave-api-stage.mass.gov",
     "performance" = "paidleave-api-performance.mass.gov",
@@ -129,7 +138,8 @@ output "api_domains" {
     "cps-preview" = "paidleave-api-cps-preview.eol.mass.gov",
     "uat"         = "paidleave-api-uat.mass.gov",
     "prod"        = "paidleave-api.mass.gov",
-    "trn2"        = "paidleave-api-trn2.mass.gov"
+    "long"        = "paidleave-long.dfml.eol.mass.gov",
+    "long"        = "paidleave-long.dfml.eol.mass.gov"
   }
 }
 
@@ -138,6 +148,7 @@ output "cert_domains" {
   # you cannot lookup certs by a SAN, so we lookup based on the first domain
   # that is specified in the certificate.
   value = {
+    "infra-test"  = "paidleave-infra-test.dfml.eol.mass.gov",
     "test"        = "paidleave-test.mass.gov",
     "stage"       = "paidleave-test.mass.gov",
     "performance" = "paidleave-performance.mass.gov",
@@ -146,6 +157,7 @@ output "cert_domains" {
     "cps-preview" = "paidleave-breakfix.eol.mass.gov",
     "uat"         = "paidleave-uat.mass.gov",
     "prod"        = "paidleave.mass.gov",
+    "long"        = "paidleave-long.dfml.eol.mass.gov",
     "trn2"        = "paidleave-trn2.dfml.eol.mass.gov"
   }
 }
@@ -177,6 +189,8 @@ output "env_var_mappings" {
     "uat"         = "UAT"
     "breakfix"    = "Breakfix"
     "cps-preview" = "CPSPreview"
+    "long"        = "Long"
+    "infra-test"  = "Test"
     "trn2"        = "Training2"
   }
 }

@@ -12,6 +12,7 @@ import React, { useEffect } from "react";
 import Tag, { TagProps } from "../../../components/core/Tag";
 import { find, get, has, map } from "lodash";
 import withUser, { WithUserProps } from "../../../hoc/withUser";
+
 import Alert from "../../../components/core/Alert";
 import { AppLogic } from "../../../hooks/useAppLogic";
 import BackButton from "../../../components/BackButton";
@@ -485,12 +486,15 @@ export const LeaveDetails = ({
                     })}
                   </Heading>
                   <p>
-                    {`From ${formatDate(
-                      absence_period_start_date
-                    ).full()} to ${formatDate(absence_period_end_date).full()}`}
+                    {t("pages.claimsStatus.leavePeriodDates", {
+                      endDate: formatDate(absence_period_end_date).full(),
+                      startDate: formatDate(absence_period_start_date).full(),
+                    })}
                   </p>
                   <Tag
-                    label={request_decision}
+                    label={t("pages.claimsStatus.requestDecision", {
+                      context: request_decision,
+                    })}
                     state={StatusTagMap[request_decision]}
                   />
                   <Trans
