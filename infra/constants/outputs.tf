@@ -115,7 +115,7 @@ output "domains" {
     "cps-preview" = "paidleave-cps-preview.eol.mass.gov",
     "uat"         = "paidleave-uat.mass.gov",
     "prod"        = "paidleave.mass.gov",
-    "long"        = "paidleave-long.mass.gov"
+    "long"        = "paidleave-long.dfml.eol.mass.gov"
   }
 }
 
@@ -129,7 +129,7 @@ output "api_domains" {
     "cps-preview" = "paidleave-api-cps-preview.eol.mass.gov",
     "uat"         = "paidleave-api-uat.mass.gov",
     "prod"        = "paidleave-api.mass.gov",
-    "long"        = "paidleave-long.mass.gov"
+    "long"        = "paidleave-long.dfml.eol.mass.gov"
   }
 }
 
@@ -146,7 +146,7 @@ output "cert_domains" {
     "cps-preview" = "paidleave-breakfix.eol.mass.gov",
     "uat"         = "paidleave-uat.mass.gov",
     "prod"        = "paidleave.mass.gov",
-    "long"        = "paidleave-long.mass.gov"
+    "long"        = "paidleave-long.dfml.eol.mass.gov"
   }
 }
 
