@@ -1581,6 +1581,8 @@ const pages = {
   },
   claimsPaymentMethod: {
     accountNumberLabel: "Account number",
+    accountNumberWarning:
+      "Your account number looks similar to a routing number. Check that you entered your account number correctly.",
     achLead:
       "We need this information so you can receive your weekly benefit through Direct Deposit. Contact your bank if you are having trouble finding this information.",
     achSectionLabel: "Enter your bank account information",
