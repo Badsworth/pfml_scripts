@@ -98,7 +98,7 @@ class Fein:
             self.val = val
 
             raise ValueError(
-                f"does {val} not match one of: {self.REGEX_UNFORMATTED.pattern}, {self.REGEX_FORMATTED.pattern}"
+                f"{val} does not match one of: {self.REGEX_UNFORMATTED.pattern}, {self.REGEX_FORMATTED.pattern}"
             )
 
     def to_unformatted_str(self) -> str:
