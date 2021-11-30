@@ -111,7 +111,7 @@ class Fein:
         return f"Fein({self.val})"
 
     def __str__(self):
-        return self.val.replace("-", "")
+        return self.to_unformatted_str()
 
     def __hash__(self):
         return hash(repr(self))
