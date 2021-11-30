@@ -67,7 +67,7 @@ class TaxId:
     @classmethod
     def validate_type(cls, val):
 
-        if hasattr(val, "tax_identifier"):
+        if hasattr(val, "tax_identifier") and isinstance(val.tax_identifier, TaxId):
             return val.tax_identifier
 
         if not isinstance(val, str):
