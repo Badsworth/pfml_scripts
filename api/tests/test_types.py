@@ -43,14 +43,14 @@ def test_tax_id_equality_invalid():
 
 
 def test_fein_with_formatted_str():
-    fein = Fein("000-43-2123")
+    fein = Fein("00-4312123")
 
     assert fein.to_formatted_str() == "000-43-2123"
     assert fein.to_unformatted_str() == "000432123"
 
 
-def test_fein_with_formatted_str():
-    fein = Fein("00-0432123")
+def test_tax_id_with_unformatted_str():
+    fein = Fein("000432123")
 
     assert fein.to_formatted_str() == "00-0432123"
     assert fein.to_unformatted_str() == "000432123"
