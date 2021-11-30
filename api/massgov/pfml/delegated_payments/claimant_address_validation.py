@@ -414,7 +414,7 @@ class ClaimantAddressValidationStep(Step):
     def upload_results_s3(self, addr_reports: List[Any]) -> ReferenceFile:
 
         s3_config = payments_config.get_s3_config()
-        now = payments_util.get_now()
+        now = payments_util.get_now_us_eastern()
         file_name = now.strftime(Constants.CLAIMANT_ADDRESS_VALIDATION_FILENAME_FORMAT)
         address_report_source_path = s3_config.pfml_error_reports_archive_path
         dfml_sharepoint_outgoing_path = s3_config.dfml_report_outbound_path
