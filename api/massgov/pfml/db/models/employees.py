@@ -557,7 +557,7 @@ class TaxIdentifier(Base, TimestampMixin):
 
     @typed_hybrid_property
     def tax_identifier_last4(self) -> str:
-        return self.tax_identifier.to_unformatted_str()[-4:]
+        return self.tax_identifier.last4()
 
     @tax_identifier_last4.expression
     def tax_identifier_last4(self):
