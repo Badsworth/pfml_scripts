@@ -1001,10 +1001,9 @@ const pages = {
   },
   authTwoFactorSmsConfirm: {
     codeLabel: "6-digit code",
-    lead: "Enter the 6-digit code we sent to your phone number (123)$t(chars.nbsp)456$t(chars.nbhyphen)0012.",
+    lead: "Enter the 6-digit code we sent to your phone number {{mfaPhoneNumber}}.",
     resendCodeButton: "$t(shared.resendVerificationCodeLink)",
     saveButton: "$t(shared.saveAndContinue)",
-    skipButton: "$t(shared.auth.skip)",
     title: "Confirm your phone number",
   },
   authTwoFactorSmsSetup: {
