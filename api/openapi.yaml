@@ -97,7 +97,7 @@ paths:
           $ref: "#/components/responses/NotFound"
       requestBody:
         $ref: '#/components/requestBodies/EmployerAddFeinRequestBody'
-  
+
   /users/{user_id}:
     get:
       tags:
@@ -374,7 +374,7 @@ paths:
           schema:
             type: string
             pattern: '[a-zA-Z0-9 ,]+'
-          description: > 
+          description: >
             claim status used to filter the request,
             single claim status or a comma seperated list of claim status (i.e claim_status="Approved,Closed"),
             the valid status are "Approved", "Closed", "Completed", "Declined", "Open requirement" and "Pending - no action".
@@ -383,7 +383,7 @@ paths:
           in: query
           schema:
             type: string
-          description: > 
+          description: >
             A search string used to filter the request that,
             when provided, is used in a fuzzy search against the claims'
             Absence Case IDs, in addition to the employees' first, middle, and last names.
@@ -888,9 +888,9 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-  
+
   /applications/{application_id}/submit_tax_withholding_preference:
-    post: 
+    post:
       summary: Submit Tax Withholding Preference
       operationId: massgov.pfml.api.applications.submit_tax_withholding_preference
       tags:
@@ -905,12 +905,12 @@ paths:
             example: 5f91c12b-4d49-4eb0-b5d9-7fa0ce13eb32
           description: ID of the application to update
           required: true
-      requestBody: 
+      requestBody:
         $ref: "#/components/requestBodies/TaxWithholdingPreferenceRequestBody"
       responses:
         "201":
           description: Successful submission of tax withholding preference returns a 201
-          content: 
+          content:
             application/json:
               schema:
                 allOf:
@@ -936,7 +936,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-  
+
   /financial-eligibility:
     post:
       security:
@@ -1574,6 +1574,10 @@ components:
           type: string
           format: email
           example: "janedoe@example.com"
+        mfa_phone_number:
+          type: string
+          nullable: true
+          example: "123-456-7890"
         consented_to_data_sharing:
           type: boolean
           example: false
@@ -1684,6 +1688,8 @@ components:
             - Opt Out
           nullable: true
           example: "SMS"
+        mfa_phone_number:
+          $ref: "#/components/schemas/Phone"
 
     EmployeeUpdateRequest:
       type: object
@@ -2755,7 +2761,7 @@ components:
         payment_preference:
           nullable: false
           $ref: "#/components/schemas/PaymentPreference"
-    
+
     TaxWithholdingPreferenceRequestBody:
       type: object
       properties:
@@ -3558,6 +3564,7 @@ components:
             - Cell
             - Fax
             - Phone
+
     CaringLeaveMetadata:
       type: object
       properties:

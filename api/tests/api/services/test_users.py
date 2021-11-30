@@ -1,5 +1,6 @@
 import pytest
 
+from massgov.pfml.api.models.common import Phone
 from massgov.pfml.api.models.users.requests import UserUpdateRequest
 from massgov.pfml.api.services.users import update_user
 
@@ -48,3 +49,23 @@ class TestUpdateUser:
         test_db_session.refresh(user)
         assert user.mfa_delivery_preference_id is None
         assert user.mfa_delivery_preference is None
+
+    def test_set_mfa_phone_number(self, user, app, test_db_session):
+        mfa_phone_number = Phone(int_code="1", phone_number="510-928-3075")
+        update_request = UserUpdateRequest(mfa_phone_number=mfa_phone_number)
+        self.update_user_with_app_context(app, user, update_request)
+
+        test_db_session.refresh(user)
+        assert user.mfa_phone_number == "+15109283075"
+
+    def test_unset_mfa_phone_number(self, user, app, test_db_session):
+        # set mfa_phone_number
+        mfa_phone_number = Phone(int_code="1", phone_number="510-928-3075")
+        update_request = UserUpdateRequest(mfa_phone_number=mfa_phone_number)
+
+        # unset mfa_phone_number
+        update_request = UserUpdateRequest(mfa_phone_number=None)
+        self.update_user_with_app_context(app, user, update_request)
+
+        test_db_session.refresh(user)
+        assert user.mfa_phone_number is None
