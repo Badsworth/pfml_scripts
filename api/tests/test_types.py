@@ -1,6 +1,6 @@
 import pytest
 
-from massgov.pfml.types import TaxId
+from massgov.pfml.types import Fein, TaxId
 
 
 def test_tax_id_with_formatted_str():
@@ -40,3 +40,29 @@ def test_tax_id_inequality():
 def test_tax_id_equality_invalid():
     with pytest.raises(AssertionError):
         assert TaxId("000-43-2123") == "000-43-2123"
+
+
+def test_fein_with_formatted_str():
+    fein = Fein("000-43-2123")
+
+    assert fein.to_formatted_str() == "000-43-2123"
+    assert fein.to_unformatted_str() == "000432123"
+
+
+def test_fein_with_formatted_str():
+    fein = Fein("00-0432123")
+
+    assert fein.to_formatted_str() == "00-0432123"
+    assert fein.to_unformatted_str() == "000432123"
+
+
+def test_fein_with_invalid_type():
+    fein = 999432123
+    with pytest.raises(TypeError) as err:
+        Fein(fein)
+    assert "expected string" in str(err.value)
+
+
+def test_fein_with_invalid_str():
+    with pytest.raises(ValueError):
+        Fein("00043212")
