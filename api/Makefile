@@ -197,6 +197,9 @@ delegated-payment-check-response-generate:
 	mkdir -p mock_payment_check_response
 	$(PY_RUN_CMD) delegated-payment-check-response-generate --folder mock_payment_check_response $(DECODE_LOG)
 
+fineos-import-iaww:
+	$(PY_RUN_CMD) fineos-import-iaww --steps ALL $(DECODE_LOG)
+
 ecr-login: ## Login to ECR for Docker
 	@echo "Authenticating Docker with ECR"
 	aws ecr get-login-password --region 'us-east-1' | \
