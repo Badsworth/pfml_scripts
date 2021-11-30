@@ -21,7 +21,7 @@ class Generate1099DocumentsStep(Step):
             records = self.get_records()
 
             if len(records) > 0:
-                max_records_in_subbatch = 5
+                max_records_in_subbatch = 250
                 con_subbatch = 1
                 con = 1
 
