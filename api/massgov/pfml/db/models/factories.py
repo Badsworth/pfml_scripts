@@ -1046,7 +1046,7 @@ class MmarsPaymentDataFactory(BaseFactory):
     phase_name = "DEPARTMENT OF FAMILY AND MEDICAL LEAVE BENEFITS 2021"
     activity = "7246"
     activity_name = "Paid Medical Leave"
-    vendor_customer_code = "VC0001250508"
+    vendor_customer_code = "VC0001201168"
     legal_name = "JOHN Q. CLAIMANT"
     address_id = "AD010"
     address_type = "PA"

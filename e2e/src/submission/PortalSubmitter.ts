@@ -92,7 +92,7 @@ export default class PortalSubmitter {
       options
     );
 
-    if (config("FINEOS_HAS_TAX_WITHHOLDING"))
+    if (config("FINEOS_HAS_TAX_WITHHOLDING") === "true")
       await this.submitTaxPreference(
         application_id,
         { is_withholding_tax: claim.is_withholding_tax },

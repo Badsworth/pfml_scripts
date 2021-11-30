@@ -2791,7 +2791,6 @@ class ReferenceFileType(LookupTable):
     DIA_CONSOLIDATED_REDUCTION_REPORT_ERRORS = LkReferenceFileType(
         30, "Consolidated DIA payments for DFML reduction report", 1
     )
-
     FINEOS_PAYMENT_RECONCILIATION_EXTRACT = LkReferenceFileType(
         31, "Payment reconciliation extract", 3
     )
@@ -2801,6 +2800,11 @@ class ReferenceFileType(LookupTable):
     DUA_DEMOGRAPHICS_REQUEST_FILE = LkReferenceFileType(33, "DUA demographics request", 1)
 
     IRS_1099_ORIG = LkReferenceFileType(34, "IRS 1099 org file", 1)
+
+    # Claimant Address Report
+    CLAIMANT_ADDRESS_VALIDATION_REPORT = LkReferenceFileType(
+        35, "Claimant Address validation Report", 1
+    )
 
 
 class Title(LookupTable):
