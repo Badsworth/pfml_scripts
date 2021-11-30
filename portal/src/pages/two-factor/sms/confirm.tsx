@@ -1,11 +1,12 @@
 import { AppLogic } from "../../../hooks/useAppLogic";
+import BackButton from "../../../components/BackButton";
 import Button from "../../../components/core/Button";
 import InputText from "../../../components/core/InputText";
 import Lead from "../../../components/core/Lead";
 import PageNotFound from "../../../components/PageNotFound";
 import React from "react";
 import Title from "../../../components/core/Title";
-import { Trans } from "react-i18next";
+import User from "../../../models/User";
 import { isFeatureEnabled } from "../../../services/featureFlags";
 import useFormState from "../../../hooks/useFormState";
 import useFunctionalInputProps from "../../../hooks/useFunctionalInputProps";
@@ -14,10 +15,12 @@ import withUser from "../../../hoc/withUser";
 
 interface ConfirmSMSProps {
   appLogic: AppLogic;
+  user: User;
 }
 
 export const ConfirmSMS = (props: ConfirmSMSProps) => {
-  const { appLogic } = props;
+  const { appLogic, user } = props;
+  const mfaPhoneNumber = user.mfa_phone_number;
   const { t } = useTranslation();
 
   const { formState, updateFields } = useFormState({
@@ -26,10 +29,6 @@ export const ConfirmSMS = (props: ConfirmSMSProps) => {
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
-    // Do nothing for now
-  };
-
-  const handleSkip = () => {
     // Do nothing for now
   };
 
@@ -44,10 +43,9 @@ export const ConfirmSMS = (props: ConfirmSMSProps) => {
 
   return (
     <form className="usa-form" onSubmit={handleSubmit} method="post">
+      <BackButton />
       <Title>{t("pages.authTwoFactorSmsConfirm.title")}</Title>
-      <Lead>
-        <Trans i18nKey="pages.authTwoFactorSmsConfirm.lead" />
-      </Lead>
+      <Lead>{t("pages.authTwoFactorSmsConfirm.lead", { mfaPhoneNumber })}</Lead>
       <InputText
         {...getFunctionalInputProps("code")}
         autoComplete="one-time-code"
@@ -65,14 +63,6 @@ export const ConfirmSMS = (props: ConfirmSMSProps) => {
       </Button>
       <Button type="submit" className="display-block margin-top-3">
         {t("pages.authTwoFactorSmsConfirm.saveButton")}
-      </Button>
-      <Button
-        type="button"
-        onClick={handleSkip}
-        variation="outline"
-        className="display-block margin-top-1"
-      >
-        {t("pages.authTwoFactorSmsConfirm.skipButton")}
       </Button>
     </form>
   );

@@ -12,23 +12,28 @@ from massgov.pfml.db.models.payments import (
     FineosExtractEmployeeFeed,
     FineosExtractPaymentFullSnapshot,
     FineosExtractReplacedPayments,
+    FineosExtractVbiLeavePlanRequestedAbsence,
     FineosExtractVbiRequestedAbsence,
     FineosExtractVbiRequestedAbsenceSom,
+    FineosExtractVPaidLeaveInstruction,
     FineosExtractVpei,
     FineosExtractVpeiClaimDetails,
     FineosExtractVpeiPaymentDetails,
 )
 from massgov.pfml.delegated_payments.fineos_extract_step import (
     CLAIMANT_EXTRACT_CONFIG,
+    IAWW_EXTRACT_CONFIG,
     PAYMENT_EXTRACT_CONFIG,
     PAYMENT_RECONCILIATION_EXTRACT_CONFIG,
     FineosExtractStep,
 )
 from massgov.pfml.delegated_payments.mock.fineos_extract_data import (
     FineosClaimantData,
+    FineosIAWWData,
     FineosPaymentData,
     create_fineos_claimant_extract_files,
     create_fineos_payment_extract_files,
+    generate_iaww_extract_files,
     generate_payment_reconciliation_extract_files,
 )
 
@@ -354,6 +359,78 @@ def test_payment_reconciliation_extracts(
     validate_records(
         extract_records[payments_util.FineosExtractConstants.REPLACED_PAYMENTS_EXTRACT.file_name],
         FineosExtractReplacedPayments,
+        "I",
+        local_test_db_session,
+    )
+
+
+def test_iaww_extracts(
+    mock_s3_bucket,
+    mock_fineos_s3_bucket,
+    set_exporter_env_vars,
+    local_test_db_session,
+    local_test_db_other_session,
+    monkeypatch,
+):
+    monkeypatch.setenv("FINEOS_IAWW_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
+
+    # Create IAWW extract files
+    folder_path = os.path.join(f"s3://{mock_fineos_s3_bucket}", "DT2/dataexports/")
+    extract_records = generate_iaww_extract_files(
+        [
+            FineosIAWWData(aww_value="1331.66"),
+            FineosIAWWData(aww_value="1538"),
+            FineosIAWWData(aww_value="1700.50"),
+        ],
+        folder_path,
+        f"{date_str}-",
+    )
+
+    # Run the extract
+    fineos_extract_step = FineosExtractStep(
+        db_session=local_test_db_session,
+        log_entry_db_session=local_test_db_other_session,
+        extract_config=IAWW_EXTRACT_CONFIG,
+    )
+    fineos_extract_step.run()
+
+    # Verify files
+    expected_path_prefix = f"s3://{mock_s3_bucket}/cps/inbound/processed/"
+    files = file_util.list_files(expected_path_prefix, recursive=True)
+    assert len(files) == 2
+
+    iaww_prefix = f"{date_str}-iaww-extract/{date_str}"
+    assert (
+        f"{iaww_prefix}-{payments_util.FineosExtractConstants.VBI_LEAVE_PLAN_REQUESTED_ABSENCE.file_name}"
+        in files
+    )
+    assert (
+        f"{iaww_prefix}-{payments_util.FineosExtractConstants.PAID_LEAVE_INSTRUCTION.file_name}"
+        in files
+    )
+
+    iaww_reference_file = (
+        local_test_db_session.query(ReferenceFile)
+        .filter(ReferenceFile.file_location == expected_path_prefix + f"{date_str}-iaww-extract")
+        .one_or_none()
+    )
+    assert iaww_reference_file
+    assert (
+        iaww_reference_file.reference_file_type_id
+        == ReferenceFileType.FINEOS_IAWW_EXTRACT.reference_file_type_id
+    )
+
+    validate_records(
+        extract_records[
+            payments_util.FineosExtractConstants.VBI_LEAVE_PLAN_REQUESTED_ABSENCE.file_name
+        ],
+        FineosExtractVbiLeavePlanRequestedAbsence,
+        "SELECTEDPLAN_INDEXID",
+        local_test_db_session,
+    )
+    validate_records(
+        extract_records[payments_util.FineosExtractConstants.PAID_LEAVE_INSTRUCTION.file_name],
+        FineosExtractVPaidLeaveInstruction,
         "I",
         local_test_db_session,
     )

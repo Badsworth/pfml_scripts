@@ -259,6 +259,17 @@ locals {
       ]
     },
 
+    "fineos-import-iaww" = {
+      command   = ["fineos-import-iaww"]
+      task_role = aws_iam_role.pub_payments_process_fineos_task_role.arn
+      env = [
+        local.db_access,
+        local.fineos_s3_access,
+        local.pub_s3_folders,
+        { name : "FINEOS_IAWW_EXTRACT_MAX_HISTORY_DATE", value : "2021-11-15" }
+      ]
+    },
+
     "fineos-bucket-tool" = {
       command   = ["fineos-bucket-tool"]
       task_role = aws_iam_role.fineos_bucket_tool_role.arn

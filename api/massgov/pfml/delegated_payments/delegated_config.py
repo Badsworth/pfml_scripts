@@ -156,6 +156,10 @@ class PaymentsDateConfig(PydanticBaseSettings):
         NOT_SET,
         description="The earliest file we will copy from FINEOS for the payment reconciliation extract",
     )
+    # PFML API will not process FINEOS IAWW data older than this date
+    fineos_iaww_extract_max_history_date: str = Field(
+        NOT_SET, description="The earliest file we will copy from FINEOS for the IAWW extract",
+    )
 
 
 def get_date_config() -> PaymentsDateConfig:

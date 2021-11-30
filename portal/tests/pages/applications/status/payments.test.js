@@ -21,6 +21,7 @@ const defaultClaimDetail = {
   application_id: "mock-application-id",
   fineos_absence_id: "mock-absence-case-id",
   employer: { employer_fein: "12-1234567" },
+  payments: [],
 };
 
 const props = {
@@ -127,6 +128,10 @@ describe("Payments", () => {
               status: "Sent",
             },
           ],
+          appLogicHook: {
+            claims: { loadClaimDetail: jest.fn() },
+            appErrors: { items: [] },
+          },
         }),
       },
       {
@@ -138,5 +143,20 @@ describe("Payments", () => {
     expect(table).toBeInTheDocument();
     expect(table.children.length).toBe(2);
     expect(table).toMatchSnapshot();
+  });
+
+  it("redirects to 404 if there's no absence case ID", () => {
+    renderPage(
+      Payments,
+      {
+        addCustomSetup: setupHelper(),
+      },
+      { query: {} }
+    );
+
+    const pageNotFoundHeading = screen.getByRole("heading", {
+      name: /Page not found/,
+    });
+    expect(pageNotFoundHeading).toBeInTheDocument();
   });
 });

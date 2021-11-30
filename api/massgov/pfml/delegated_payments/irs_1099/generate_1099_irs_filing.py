@@ -10,7 +10,7 @@ import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.delegated_payments.irs_1099.pfml_1099_util as pfml_1099_util
 import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging
-from massgov.pfml.db.models.employees import ReferenceFile, ReferenceFileType, TaxIdentifier
+from massgov.pfml.db.models.employees import ReferenceFile, ReferenceFileType
 from massgov.pfml.db.models.payments import Pfml1099
 from massgov.pfml.delegated_payments.step import Step
 from massgov.pfml.util.datetime import get_now_us_eastern
@@ -272,7 +272,7 @@ class Generate1099IRSfilingStep(Step):
                 CORRECTION_IND=_get_correction_ind(records.correction_ind),
                 PAYEE_NAME_CTL=_get_name_ctl(records.last_name),
                 PAYEE_TIN_TYPE=Constants.TIN_TYPE,
-                PAYEE_TIN=_get_tax_id(self.db_session, records.tax_identifier_id),
+                PAYEE_TIN=pfml_1099_util.get_tax_id(self.db_session, records.tax_identifier_id),
                 PAYER_ACCT_NUMBER=Constants.PAYER_ACCT_NUMBER,
                 PAYER_OFFICE_CD=Constants.PAYER_OFFICE_CD,
                 B10=Constants.BLANK_SPACE,
@@ -387,22 +387,6 @@ def _get_correction_ind(correction_ind: Boolean) -> str:
         # TODO find which correction type to send and how to determine
         # G (1 correction) or C(2 correction)
         return "G"
-
-
-def _get_tax_id(db_session: Any, tax_id_str: str) -> str:
-    logger.debug("Incoming tax uuid is, %s", tax_id_str)
-    try:
-        tax_id = (
-            db_session.query(TaxIdentifier)
-            .filter(TaxIdentifier.tax_identifier_id == tax_id_str)
-            .one_or_none()
-        )
-        logger.debug("tax id is %s", tax_id.tax_identifier)
-        return tax_id.tax_identifier
-
-    except Exception:
-        logger.exception("Error accessing 1099 data")
-        raise
 
 
 def _get_full_name(fname: str, lname: str, field_name: str) -> str:

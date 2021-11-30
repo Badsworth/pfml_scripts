@@ -3,12 +3,20 @@ from decimal import Decimal
 from enum import Enum
 from typing import Optional
 
-from pydantic import UUID4
+import phonenumbers
+from phonenumbers.phonenumberutil import region_code_for_country_code, region_code_for_number
+from pydantic import UUID4, root_validator
 
 import massgov.pfml.db.models.applications as db_application_models
 import massgov.pfml.db.models.employees as db_employee_models
 import massgov.pfml.db.models.payments as db_payment_models
 import massgov.pfml.db.models.verifications as db_verification_models
+import massgov.pfml.util.pydantic.mask as mask
+from massgov.pfml.api.validation.exceptions import (
+    IssueType,
+    ValidationErrorDetail,
+    ValidationException,
+)
 from massgov.pfml.db.lookup import LookupTable
 from massgov.pfml.util.pydantic import PydanticBaseModel
 
@@ -117,3 +125,90 @@ class EmployerBenefit(PydanticBaseModel):
     # when ingesting from the Other Income eform. It isn't used by the portal and
     # isn't saved to the DB.
     program_type: Optional[str]
+
+
+# Phone I/O Types
+
+
+class PhoneType(str, LookupEnum):
+    Cell = "Cell"
+    Fax = "Fax"
+    Phone = "Phone"
+
+
+class Phone(PydanticBaseModel):
+    # Phone dict coming from front end contains int_code and phone_number separately
+    # Values are Optional, deviating from OpenAPI spec to allow for None values in Response
+    int_code: Optional[str]
+    phone_number: Optional[str]
+    phone_type: Optional[PhoneType]
+
+    @root_validator(pre=False)
+    def check_phone_number(cls, values):  # noqa: B902
+        error_list = []
+        n = None
+
+        int_code = values.get("int_code")
+        phone_number = values.get("phone_number")
+        if phone_number is None:
+            # if phone_number is removed by masking rules, skip validation
+            return values
+
+        try:
+            # int_code is present in the PATCH request, but not when the Response is being processed
+            if int_code:
+                n = phonenumbers.parse(phone_number, region_code_for_country_code(int(int_code)))
+            else:
+                n = phonenumbers.parse(phone_number)
+        except phonenumbers.NumberParseException:
+            error_list.append(
+                ValidationErrorDetail(
+                    message="Phone number must be a valid number",
+                    type=IssueType.invalid_phone_number,
+                    rule="phone_number_must_be_valid_number",
+                    field="phone.phone_number",
+                )
+            )
+
+        if n is None or not phonenumbers.is_valid_number(n):
+            error_list.append(
+                ValidationErrorDetail(
+                    message="Phone number must be a valid number",
+                    type=IssueType.invalid_phone_number,
+                    rule="phone_number_must_be_valid_number",
+                    field="phone.phone_number",
+                )
+            )
+
+        if error_list:
+            raise ValidationException(
+                errors=error_list,
+                message="Validation error",
+                data={"phone_number": phone_number, "int_code": int_code},
+            )
+
+        return values
+
+
+class MaskedPhone(Phone):
+    @classmethod
+    def from_orm(cls, phone: db_application_models.Phone) -> "MaskedPhone":
+        phone_response = super().from_orm(phone)
+
+        if phone.phone_number:
+            parsed_phone_number = phonenumbers.parse(phone.phone_number)
+            region_code = region_code_for_number(parsed_phone_number)
+
+            if region_code:
+                locally_formatted_number = phonenumbers.format_in_original_format(
+                    parsed_phone_number, region_code
+                )
+            else:
+                locally_formatted_number = phone.phone_number
+
+            phone_response.phone_number = mask.mask_phone(locally_formatted_number)
+            phone_response.int_code = str(parsed_phone_number.country_code)
+        if phone.phone_type_instance:
+            phone_response.phone_type = PhoneType[phone.phone_type_instance.phone_type_description]
+
+        return phone_response
