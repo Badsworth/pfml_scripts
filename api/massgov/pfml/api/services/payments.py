@@ -2,7 +2,8 @@ import uuid
 from dataclasses import dataclass
 from datetime import date, timedelta
 from decimal import Decimal
-from typing import Dict, List, Optional
+from functools import total_ordering
+from typing import Any, Dict, List, Optional, Tuple
 
 import pytz
 from sqlalchemy.orm import joinedload
@@ -22,6 +23,7 @@ class FrontendPaymentStatus:
     SENT_TO_BANK = "Sent to bank"
     DELAYED = "Delayed"
     PENDING = "Pending"
+    CANCELLED = "Cancelled"
 
 
 @dataclass
@@ -44,12 +46,22 @@ class PaymentScenarioData:
     }
 
     @classmethod
-    def compute(cls, payment: Payment) -> "PaymentScenarioData":
-        writeback_detail = get_latest_writeback_detail(payment)
+    def compute(cls, payment_container: "PaymentContainer") -> "PaymentScenarioData":
+        if payment_container.is_cancelled():
+            return cls.cancelled()
+
+        writeback_detail = payment_container.writeback_detail
         detail_id = writeback_detail.transaction_status_id if writeback_detail else None
         method_to_call = getattr(cls, cls.SCENARIOS.get(detail_id, "other"))
 
-        return method_to_call(payment=payment, writeback_detail=writeback_detail)
+        return method_to_call(payment=payment_container.payment, writeback_detail=writeback_detail)
+
+    @classmethod
+    def cancelled(cls, **kwargs):
+        return cls(
+            status=FrontendPaymentStatus.CANCELLED,
+            amount=Decimal("0.00"),  # The portal wants cancellations to be for $0
+        )
 
     @classmethod
     def pending_validation(cls, **kwargs):
@@ -136,18 +148,89 @@ class PaymentScenarioData:
         return cls()
 
 
+@total_ordering  # Handles supporting sort with just __eq__ and __lt__
 @dataclass
 class PaymentContainer:
     payment: Payment
 
+    writeback_detail: Optional[FineosWritebackDetails] = None
+
+    # The event that cancels this payment
+    cancellation_event: Optional["PaymentContainer"] = None
+
+    # (Only for payments that are themselves cancellations)
+    # Which payment it cancels
+    cancelled_payment: Optional["PaymentContainer"] = None
+
+    def __post_init__(self):
+        self.writeback_detail = get_latest_writeback_detail(self.payment)
+
     def get_scenario_data(self) -> PaymentScenarioData:
-        return PaymentScenarioData.compute(self.payment)
+        return PaymentScenarioData.compute(self)
+
+    def _get_sort_key(self) -> Any:
+        return (
+            self.payment.period_start_date,
+            self.import_log_id(),
+            int(self.payment.fineos_pei_i_value),  # type: ignore
+        )
+
+    def __eq__(self, other):
+        return self._get_sort_key() == other._get_sort_key()
+
+    def __lt__(self, other):
+        return self._get_sort_key() < other._get_sort_key()
+
+    def import_log_id(self) -> int:
+        # In a function so I can ignore mypy warnings
+        # The field is nullable, but a payment isn't ever
+        # created without this in a real environment
+        return self.payment.fineos_extract_import_log_id  # type: ignore
+
+    def is_zero_dollar_payment(self) -> bool:
+        return (
+            self.payment.payment_transaction_type_id
+            == PaymentTransactionType.ZERO_DOLLAR.payment_transaction_type_id
+        )
+
+    def is_cancelled(self) -> bool:
+        if self.cancellation_event:
+            return True
+
+        if self.is_zero_dollar_payment():
+            return True
+
+        return False
 
 
 def get_payments_with_status(db_session: Session, claim: Claim) -> Dict:
+    """
+    For a given claim, return all payments we want displayed on the
+    payment status endpoint.
+
+    1. Fetch all Standard/Cancellation/Zero Dollar payments for the claim
+       ignoring any payments with `exclude_from_payment_status` and deduping
+       C/I value to the latest version of the payment.
+
+    2. For each pay period, figure out what payments are cancelled. If
+       any un-cancelled payments remain, return those. Otherwise return
+       the most recent cancellation.
+
+    3. Filter payments that we don't want displayed such as raw-cancellation
+       events and payments in or before the waiting week (unless paid). Sort
+       the remaining payments in order of pay period and order processed.
+
+    4. Determine the status, and various fields for a payment based on
+       its writeback status and other fields. Depending on its scenario,
+       return differing fields for the payment.
+    """
     payment_containers = get_payments_from_db(db_session, claim.claim_id)
 
-    return to_response_dict(payment_containers, claim.fineos_absence_id)
+    consolidated_payments = consolidate_successors(payment_containers)
+
+    filtered_payments = filter_and_sort_payments(consolidated_payments)
+
+    return to_response_dict(filtered_payments, claim.fineos_absence_id)
 
 
 def get_payments_from_db(db_session: Session, claim_id: uuid.UUID) -> List[PaymentContainer]:
@@ -155,8 +238,13 @@ def get_payments_from_db(db_session: Session, claim_id: uuid.UUID) -> List[Payme
         db_session.query(Payment)
         .filter(Payment.claim_id == claim_id,)
         .filter(
-            Payment.payment_transaction_type_id
-            == PaymentTransactionType.STANDARD.payment_transaction_type_id,
+            Payment.payment_transaction_type_id.in_(
+                [
+                    PaymentTransactionType.STANDARD.payment_transaction_type_id,
+                    PaymentTransactionType.ZERO_DOLLAR.payment_transaction_type_id,
+                    PaymentTransactionType.CANCELLATION.payment_transaction_type_id,
+                ]
+            ),
         )
         .filter(Payment.exclude_from_payment_status != True)  # noqa: E712
         .order_by(Payment.fineos_pei_i_value, desc(Payment.fineos_extract_import_log_id))
@@ -165,7 +253,134 @@ def get_payments_from_db(db_session: Session, claim_id: uuid.UUID) -> List[Payme
         .all()
     )
 
-    return [PaymentContainer(payment) for payment in payments]
+    payment_containers = []
+    for payment in payments:
+        payment_containers.append(PaymentContainer(payment))
+    return payment_containers
+
+
+def consolidate_successors(payment_data: List[PaymentContainer]) -> List[PaymentContainer]:
+    """
+    Group payments by pay period, and figure out which payments
+    have been cancelled.
+
+    If a pay period has only cancelled payments, just return the latest one.
+    If a pay period has any uncancelled payments, return all of them.
+
+    For the purposes of this process, zero dollar payments are cancellations
+    as they are payments that aren't going to be paid.
+    """
+    pay_period_data: Dict[Tuple[date, date], List[PaymentContainer]] = {}
+
+    # First group payments by pay period
+    for payment_container in payment_data:
+        # Shouldn't be possible, but to make mypy happy:
+        if (
+            payment_container.payment.period_start_date is None
+            or payment_container.payment.period_end_date is None
+        ):
+            logger.warning("Payment %s has no pay periods", payment_container.payment.payment_id)
+            continue
+
+        key = (
+            payment_container.payment.period_start_date,
+            payment_container.payment.period_end_date,
+        )
+
+        if key not in pay_period_data:
+            pay_period_data[key] = []
+
+        pay_period_data[key].append(payment_container)
+
+    # Then for each pay period, we need to figure out
+    # what payments have been cancelled.
+    consolidated_payments = []
+    for payments in pay_period_data.values():
+        consolidated_payments.extend(_offset_cancellations(payments))
+
+    return consolidated_payments
+
+
+def _offset_cancellations(payment_containers: List[PaymentContainer]) -> List[PaymentContainer]:
+    # Sort, this puts payments in FINEOS creation order
+    payment_containers.sort()
+
+    # Separate the cancellation payments out of the list
+    regular_payments: List[PaymentContainer] = []
+    cancellation_events: List[PaymentContainer] = []
+    for payment_container in payment_containers:
+        if (
+            payment_container.payment.payment_transaction_type_id
+            == PaymentTransactionType.CANCELLATION.payment_transaction_type_id
+        ):
+            cancellation_events.append(payment_container)
+        else:
+            regular_payments.append(payment_container)
+
+    # For each regular payment, find the corresponding cancellation (if it exists)
+    cancelled_payments = []
+    processed_payments = []
+    for regular_payment in regular_payments:
+        is_cancelled = False
+
+        # Zero dollar payments are effectively cancelled payments
+        if regular_payment.is_zero_dollar_payment():
+            is_cancelled = True
+
+        else:
+            # We can match a cancellation event for a payment if:
+            # * Cancellation occurs later than the payment (based on import log ID)
+            # * Cancellation amount is the negative of the payments
+            # * Cancellation isn't already cancelling another payment
+            #
+            # FUTURE TODO - In FINEOS' tolpaymentoutevent table
+            # there are columns (C_PYMNTEIF_CANCELLATIONP and I_PYMNTEIF_CANCELLATIONP)
+            # that are populated with the C/I value of the cancellation for cancelled payments
+            # Having this would help let us exactly connect payments to their cancellations.
+            # A backend process that adds a cancelling_payment column to payments would help a lot.
+            for cancellation in cancellation_events:
+                if (
+                    cancellation.cancelled_payment is None
+                    and cancellation.import_log_id() > regular_payment.import_log_id()
+                    and abs(cancellation.payment.amount) == regular_payment.payment.amount
+                ):
+                    cancellation.cancelled_payment = regular_payment
+                    regular_payment.cancellation_event = cancellation
+                    is_cancelled = True
+                    break
+
+        if is_cancelled:
+            cancelled_payments.append(regular_payment)
+        else:
+            processed_payments.append(regular_payment)
+
+    # If there are only cancelled payments, return the last one
+    # No need to return multiple cancelled payments for a single pay period
+    if len(processed_payments) == 0 and len(cancelled_payments) > 0:
+        latest_cancelled_payment = cancelled_payments[-1]
+        return [latest_cancelled_payment]
+
+    # Otherwise return all uncancelled payments - note that these
+    # can still contain payments that have errored, they just aren't
+    # officially cancelled yet.
+    return processed_payments
+
+
+def filter_and_sort_payments(payment_data: List[PaymentContainer]) -> List[PaymentContainer]:
+    payments_to_keep = []
+
+    for payment_container in payment_data:
+        if (
+            payment_container.payment.payment_transaction_type_id
+            == PaymentTransactionType.CANCELLATION.payment_transaction_type_id
+        ):
+            continue
+
+        payments_to_keep.append(payment_container)
+
+    payments_to_keep.sort()
+
+    return payments_to_keep
 
 
 def to_response_dict(payment_data: List[PaymentContainer], absence_case_id: Optional[str]) -> Dict:
