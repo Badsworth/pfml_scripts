@@ -49,7 +49,7 @@ def test_fein_with_formatted_str():
     assert fein.to_unformatted_str() == "004312123"
 
 
-def test_tax_id_with_unformatted_str():
+def test_fein_with_unformatted_str():
     fein = Fein("000432123")
 
     assert fein.to_formatted_str() == "00-0432123"
