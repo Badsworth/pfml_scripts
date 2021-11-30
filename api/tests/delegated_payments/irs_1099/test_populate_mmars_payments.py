@@ -29,11 +29,19 @@ def test_populate_mmars_payments(populate_mmars_payments_step, local_test_db_ses
     populate_mmars_payments_step.run()
     after_payment_counts = pfml_1099_util.get_mmars_payment_counts(local_test_db_session)
 
-    # We should have one more batch
+    # We should have 9 payments
     assert after_payment_counts[batch.pfml_1099_batch_id] == 9
 
 
 def _mmars_payment_factory(pub_individual_id, test_db_session,) -> MmarsPaymentData:
+    employee = factories.EmployeeFactory.create(
+        ctr_vendor_customer_code="VC00012011" + str(pub_individual_id)
+    )
+    employer = factories.EmployerFactory.create()
+    factories.WagesAndContributionsFactory.create(employer=employer, employee=employee)
 
-    payment = factories.MmarsPaymentDataFactory()
+    payment = factories.MmarsPaymentDataFactory(
+        vendor_customer_code="VC00012011" + str(pub_individual_id)
+    )
+
     return payment

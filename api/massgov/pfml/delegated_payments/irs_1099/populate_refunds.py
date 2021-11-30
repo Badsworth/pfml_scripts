@@ -16,7 +16,7 @@ class PopulateRefundsStep(Step):
         logger.info("1099 Documents - Populate Refunds Step")
 
         # Get all overpayment data for the 1099 batch
-        overpayments = pfml_1099_util.get_overpayments(self.db_session)
+        overpayment_results = pfml_1099_util.get_overpayments(self.db_session)
 
         # Get the current batch
         batch = pfml_1099_util.get_current_1099_batch(self.db_session)
@@ -26,23 +26,30 @@ class PopulateRefundsStep(Step):
 
         try:
             # Create 1099 refund record for each overpayment
-            for overpayment in overpayments:
+            for overpayment_row in overpayment_results:
 
-                refund_date = overpayment.payment_date
+                refund_date = overpayment_row.payment_date
 
                 if refund_date is None:
                     logger.debug(
                         "Overpayment: %s does not have a date associated with it.",
-                        overpayment.payment_id,
+                        overpayment_row.payment_id,
+                    )
+                    continue
+
+                if overpayment_row.employee_id is None:
+                    logger.debug(
+                        "Overpayment: %s does not have an employee associated with it.",
+                        overpayment_row.payment_id,
                     )
                     continue
 
                 pfml_1099_overpayment = Pfml1099Refund(
                     pfml_1099_refund_id=uuid.uuid4(),
                     pfml_1099_batch_id=batch.pfml_1099_batch_id,
-                    payment_id=overpayment.payment_id,
-                    employee_id=overpayment.claim.employee.employee_id,
-                    refund_amount=overpayment.amount,
+                    payment_id=overpayment_row.payment_id,
+                    employee_id=overpayment_row.employee_id,
+                    refund_amount=overpayment_row.payment_amount,
                     refund_date=refund_date,
                 )
 

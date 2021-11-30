@@ -32,37 +32,13 @@ class PopulateMmarsPaymentsStep(Step):
             # Create 1099 payment record for each payment
             for payment_row in payment_results:
 
-                mmars_payment = payment_row.MmarsPaymentData
-                employee = payment_row.Employee
-
-                if employee is None:
-                    logger.debug(
-                        "Payment: %s does not have an employee associated with it.",
-                        mmars_payment.mmars_payment_data_id,
-                    )
-                    continue
-
-                if mmars_payment.warrant_select_date is None:
-                    logger.debug(
-                        "Payment: %s does not have a date associated with it.",
-                        mmars_payment.mmars_payment_data_id,
-                    )
-                    continue
-
-                if mmars_payment.pymt_actg_line_amount is None:
-                    logger.debug(
-                        "Payment: %s does not have an amount associated with it.",
-                        mmars_payment.mmars_payment_data_id,
-                    )
-                    continue
-
                 pfml_1099_payment = Pfml1099MMARSPayment(
                     pfml_1099_mmars_payment_id=uuid.uuid4(),
                     pfml_1099_batch_id=batch.pfml_1099_batch_id,
-                    mmars_payment_id=mmars_payment.pymt_doc_identifer,
-                    employee_id=employee.employee_id,
-                    payment_amount=mmars_payment.pymt_actg_line_amount,
-                    payment_date=mmars_payment.warrant_select_date,
+                    mmars_payment_id=payment_row.mmars_payment_id,
+                    employee_id=payment_row.employee_id,
+                    payment_amount=payment_row.payment_amount,
+                    payment_date=payment_row.payment_date,
                 )
 
                 self.db_session.add(pfml_1099_payment)
