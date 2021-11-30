@@ -2767,7 +2767,7 @@ components:
       properties:
         is_withholding_tax:
           type: boolean
-          nullable: false
+          nullable: true
 
     EmployerAddFeinRequestBody:
       type: object

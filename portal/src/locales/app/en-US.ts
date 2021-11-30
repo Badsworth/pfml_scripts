@@ -143,6 +143,11 @@ const errors = {
       required: "Enter how many hours you work on average each week.",
       type: "The average hours you work each week must be a number.",
     },
+    is_withholding_tax: {
+      duplicate:
+        "You have already submitted your tax withholding preference. If you need to edit your preference, call the Contact Center at $t(shared.contactCenterPhoneNumberNoBreak).",
+      required: "Select your tax withholding preference.",
+    },
     last_name: {
       maxLength: "Last name must be 50 characters or fewer.",
       required: "Enter a last name.",
