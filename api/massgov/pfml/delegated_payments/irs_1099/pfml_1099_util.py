@@ -1,6 +1,6 @@
 import os
 from datetime import date
-from typing import Dict, List, NamedTuple, Optional
+from typing import Any, Dict, List, NamedTuple, Optional
 
 from sqlalchemy import case, cast, func, or_
 from sqlalchemy.sql.sqltypes import Date
@@ -15,6 +15,7 @@ from massgov.pfml.db.models.employees import (
     PaymentTransactionType,
     State,
     StateLog,
+    TaxIdentifier,
 )
 from massgov.pfml.db.models.payments import (
     FineosExtractEmployeeFeed,
@@ -606,3 +607,19 @@ def get_1099_records(db_session: db.Session, batchId: str) -> List[Pfml1099]:
         )
 
     return records
+
+
+def get_tax_id(db_session: Any, tax_id_str: str) -> str:
+    logger.debug("Incoming tax uuid is, %s", tax_id_str)
+    try:
+        tax_id = (
+            db_session.query(TaxIdentifier)
+            .filter(TaxIdentifier.tax_identifier_id == tax_id_str)
+            .one_or_none()
+        )
+        logger.debug("tax id is %s", tax_id.tax_identifier)
+        return tax_id.tax_identifier
+
+    except Exception:
+        logger.exception("Error accessing 1099 data")
+        raise
