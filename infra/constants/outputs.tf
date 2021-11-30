@@ -139,7 +139,7 @@ output "api_domains" {
     "uat"         = "paidleave-api-uat.mass.gov",
     "prod"        = "paidleave-api.mass.gov",
     "long"        = "paidleave-long.dfml.eol.mass.gov",
-    "long"        = "paidleave-long.dfml.eol.mass.gov"
+    "trn2"        = "paidleave-trn2.dfml.eol.mass.gov"
   }
 }
 
