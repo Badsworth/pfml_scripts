@@ -5,10 +5,8 @@ from pydantic import BaseModel, ValidationError
 
 from massgov.pfml.db.models.factories import TaxIdentifierFactory
 from massgov.pfml.types import TaxId
+from massgov.pfml.util.pydantic.types import MaskedTaxIdFormattedStr
 
-from massgov.pfml.util.pydantic.types import (
-    MaskedTaxIdFormattedStr,
-)
 
 class PydanticTypesTestModel(BaseModel):
     tax_id: Optional[TaxId]
