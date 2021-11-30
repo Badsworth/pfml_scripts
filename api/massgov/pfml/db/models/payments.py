@@ -435,6 +435,7 @@ class FineosExtractEmployeeFeed(Base, TimestampMixin):
     reference_file_id = Column(
         PostgreSQLUUID, ForeignKey("reference_file.reference_file_id"), index=True
     )
+
     fineos_extract_import_log_id = Column(
         Integer, ForeignKey("import_log.import_log_id"), index=True
     )
