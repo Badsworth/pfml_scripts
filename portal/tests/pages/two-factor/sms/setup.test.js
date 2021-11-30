@@ -1,5 +1,5 @@
 import { mockAuth, renderPage } from "../../../test-utils";
-import SetupSMS from "../../../../src/pages/two-factor/sms/index";
+import SetupSMS from "../../../../src/pages/two-factor/sms/setup";
 import { screen } from "@testing-library/react";
 
 beforeEach(() => {

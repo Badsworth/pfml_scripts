@@ -1003,11 +1003,12 @@ const pages = {
     title: "Confirm your phone number",
   },
   authTwoFactorSmsSetup: {
-    lead: "We’ll send a 6-digit code by text message (SMS) to secure your account. This step is optional, but we can only show personal information like tax documents if you set this up.<br><br>If you skip this step now, you can secure your account later by going to the “Setting: Security” page.",
+    lead: "We’ll send a 6-digit code by text message (SMS) to secure your account.",
     phoneNumberLabel: "Phone number",
     saveButton: "$t(shared.saveAndContinue)",
     skipButton: "$t(shared.auth.skip)",
-    title: "Make your account more secure",
+    title:
+      "Provide a phone number we can use when we need to verify your login",
   },
   authTwoFactorSmsVerify: {
     callContactCenter:
