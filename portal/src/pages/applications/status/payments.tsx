@@ -4,6 +4,7 @@ import Accordion from "../../../components/core/Accordion";
 import AccordionItem from "../../../components/core/AccordionItem";
 import BackButton from "../../../components/BackButton";
 import Heading from "../../../components/core/Heading";
+import PageNotFound from "../../../components/PageNotFound";
 import StatusNavigationTabs from "../../../components/status/StatusNavigationTabs";
 import Table from "../../../components/core/Table";
 import Title from "../../../components/core/Title";
@@ -22,7 +23,8 @@ interface PaymentsProps {
 
 export const Payments = ({
   appLogic: {
-    claims: { claimDetail, loadClaimDetail },
+    appErrors: { items },
+    claims: { claimDetail, loadClaimDetail, hasLoadedPayments },
     portalFlow,
   },
   query: { absence_id },
@@ -43,6 +45,17 @@ export const Payments = ({
       });
     }
   }, [portalFlow, absence_id]);
+
+  /**
+   * If there is no absence_id query parameter,
+   * then return the PFML 404 page.
+   */
+  const isAbsenceCaseId = Boolean(absence_id?.length);
+  if (!isAbsenceCaseId) return <PageNotFound />;
+
+  const shouldShowPaymentsTable =
+    claimDetail?.payments !== null ||
+    (hasLoadedPayments(absence_id || "") && !items.length);
 
   const tableColumns = [
     t("pages.payments.paymentsTable.leaveDatesHeader"),
@@ -70,68 +83,70 @@ export const Payments = ({
           {t("pages.claimsStatus.yourPayments")}
         </Heading>
 
-        <Table borderlessMobile responsiveIncludeHeader>
-          <thead>
-            <tr>
-              {tableColumns.map((columnName) => (
-                <th key={columnName} scope="col">
-                  {columnName}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {claimDetail?.payments.map(
-              ({
-                payment_id,
-                period_start_date,
-                period_end_date,
-                amount,
-                sent_to_bank_date,
-                payment_method,
-                expected_send_date_start,
-                expected_send_date_end,
-                status,
-              }) => (
-                <tr key={payment_id}>
-                  <td data-label={tableColumns[0]}>
-                    {formatDateRange(period_start_date, period_end_date)}
-                  </td>
-                  <td data-label={tableColumns[1]}>
-                    {t("pages.payments.paymentsTable.paymentMethod", {
-                      context: payment_method,
-                    })}
-                  </td>
-                  <td data-label={tableColumns[2]}>
-                    {sent_to_bank_date
-                      ? t("pages.payments.paymentsTable.paymentStatus", {
-                          context: status,
-                        })
-                      : formatDateRange(
-                          expected_send_date_start,
-                          expected_send_date_end
-                        )}
-                  </td>
-                  <td data-label={tableColumns[3]}>
-                    {sent_to_bank_date ||
-                      t("pages.payments.paymentsTable.paymentStatus", {
-                        context: status,
+        {shouldShowPaymentsTable && (
+          <Table borderlessMobile responsiveIncludeHeader>
+            <thead>
+              <tr>
+                {tableColumns.map((columnName) => (
+                  <th key={columnName} scope="col">
+                    {columnName}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {claimDetail?.payments.map(
+                ({
+                  payment_id,
+                  period_start_date,
+                  period_end_date,
+                  amount,
+                  sent_to_bank_date,
+                  payment_method,
+                  expected_send_date_start,
+                  expected_send_date_end,
+                  status,
+                }) => (
+                  <tr key={payment_id}>
+                    <td data-label={tableColumns[0]}>
+                      {formatDateRange(period_start_date, period_end_date)}
+                    </td>
+                    <td data-label={tableColumns[1]}>
+                      {t("pages.payments.paymentsTable.paymentMethod", {
+                        context: payment_method,
                       })}
-                  </td>
-                  <td data-label={tableColumns[4]}>
-                    {amount === null
-                      ? t("pages.payments.paymentsTable.paymentStatus", {
+                    </td>
+                    <td data-label={tableColumns[2]}>
+                      {sent_to_bank_date
+                        ? t("pages.payments.paymentsTable.paymentStatus", {
+                            context: status,
+                          })
+                        : formatDateRange(
+                            expected_send_date_start,
+                            expected_send_date_end
+                          )}
+                    </td>
+                    <td data-label={tableColumns[3]}>
+                      {sent_to_bank_date ||
+                        t("pages.payments.paymentsTable.paymentStatus", {
                           context: status,
-                        })
-                      : t("pages.payments.paymentsTable.amountSent", {
-                          amount,
                         })}
-                  </td>
-                </tr>
-              )
-            )}
-          </tbody>
-        </Table>
+                    </td>
+                    <td data-label={tableColumns[4]}>
+                      {amount === null
+                        ? t("pages.payments.paymentsTable.paymentStatus", {
+                            context: status,
+                          })
+                        : t("pages.payments.paymentsTable.amountSent", {
+                            amount,
+                          })}
+                    </td>
+                  </tr>
+                )
+              )}
+            </tbody>
+          </Table>
+        )}
 
         {/* Changes to payments FAQ section */}
         <section className="margin-y-4" data-testid="changes-to-payments">

@@ -1,7 +1,7 @@
+import ClaimDetail, { Payments } from "../models/ClaimDetail";
 import { ClaimWithdrawnError, ValidationError } from "../errors";
 import { AppErrorsLogic } from "./useAppErrorsLogic";
 import ClaimCollection from "../models/ClaimCollection";
-import ClaimDetail from "../models/ClaimDetail";
 import ClaimsApi from "../api/ClaimsApi";
 import PaginationMeta from "../models/PaginationMeta";
 import { isEqual } from "lodash";
@@ -30,6 +30,15 @@ const useClaimsLogic = ({
   const [paginationMeta, setPaginationMeta] = useState<
     PaginationMeta | { [key: string]: never }
   >({});
+
+  // Payments data associated with claim
+  const [loadedPaymentsData, setLoadedPaymentsData] = useState<Payments>();
+
+  /**
+   * Check if payments have loaded for claim
+   */
+  const hasLoadedPayments = (absenceId: string) =>
+    loadedPaymentsData?.absence_case_id === absenceId;
 
   // Track the search and filter params currently applied for the collection of claims
   const [activeFilters, setActiveFilters] = useState({});
@@ -121,8 +130,16 @@ const useClaimsLogic = ({
         isFeatureEnabled("claimantShowPayments") &&
         loadedClaimDetail.hasApprovedStatus
       ) {
-        const payments = await claimsApi.getPayments(absenceId);
-        loadedClaimDetail.payments = payments.payments;
+        try {
+          const payments = await claimsApi.getPayments(absenceId);
+          loadedClaimDetail.payments = payments.payments;
+          setLoadedPaymentsData({
+            payments: loadedClaimDetail.payments,
+            absence_case_id: absenceId,
+          });
+        } catch (error) {
+          appErrorsLogic.catchError(error);
+        }
       }
 
       setClaimDetail(loadedClaimDetail);
@@ -155,6 +172,7 @@ const useClaimsLogic = ({
     loadClaimDetail,
     loadPage,
     paginationMeta,
+    hasLoadedPayments,
   };
 };
 
