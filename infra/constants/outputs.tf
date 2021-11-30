@@ -191,6 +191,6 @@ output "env_var_mappings" {
     "cps-preview" = "CPSPreview"
     "long"        = "Long"
     "infra-test"  = "Test"
-    "trn2"        = "Training2"
+    "trn2"        = "Training"
   }
 }
