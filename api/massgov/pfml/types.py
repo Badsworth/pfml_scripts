@@ -18,8 +18,6 @@ class TaxId:
         elif self.REGEX_UNFORMATTED.match(val):
             self.val = "{}-{}-{}".format(val[:3], val[3:5], val[5:])
         else:
-            self.val = val
-
             raise ValueError(
                 f"does not match one of: {self.REGEX_UNFORMATTED.pattern}, {self.REGEX_FORMATTED.pattern}"
             )
@@ -85,18 +83,14 @@ class Fein:
     REGEX_UNFORMATTED = re.compile(r"^\d{9}$")
     REGEX_FORMATTED = re.compile(r"^\d{2}-\d{7}$")
 
-    val: str
+    _formatted_val: str
 
     def __init__(self, val: str) -> None:
-        val = str(val)
-
         if self.REGEX_FORMATTED.match(val):
             self.val = val
         elif self.REGEX_UNFORMATTED.match(val):
             self.val = "{}-{}".format(val[:2], val[2:])
         else:
-            self.val = val
-
             raise ValueError(
                 f"{val} does not match one of: {self.REGEX_UNFORMATTED.pattern}, {self.REGEX_FORMATTED.pattern}"
             )
