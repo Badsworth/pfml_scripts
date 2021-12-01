@@ -97,10 +97,11 @@ export const TRNT: ScenarioSpecification = {
   claim: {
     label: "TRNT",
     reason: "Child Bonding",
-    reason_qualifier: "Foster Care",
+    reason_qualifier: "Newborn",
+    bondingDate: "far-past",
     docs: {
       MASSID: {},
-      FOSTERPLACEMENT: {},
+      BIRTHCERTIFICATE: {},
     },
     employerResponse: {
       hours_worked_per_week: 40,
