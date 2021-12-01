@@ -81,9 +81,7 @@ class Generate1099DocumentsStep(Step):
                     f"Pdf was successfully generated for {record.first_name} {record.last_name}"
                 )
             else:
-                logger.error(documentDto)
                 logger.error(response.json())
         except requests.exceptions.RequestException as error:
-            logger.error(documentDto)
             logger.error(error)
             raise Exception("Api error to generate Pdf.")
