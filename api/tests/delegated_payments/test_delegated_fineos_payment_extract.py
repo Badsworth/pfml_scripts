@@ -515,6 +515,46 @@ def test_process_extract_data_one_bad_record(
     )
 
 
+def test_process_extract_fica_tin(local_payment_extract_step, local_test_db_session, monkeypatch):
+    payment_data = FineosPaymentData(tin="FICAMEDICAREPAYEE001")
+    stage_data([payment_data], local_test_db_session)
+    local_payment_extract_step.run()
+
+    payment = (
+        local_test_db_session.query(Payment)
+        .filter(
+            Payment.fineos_pei_c_value == payment_data.c_value,
+            Payment.fineos_pei_i_value == payment_data.i_value,
+        )
+        .first()
+    )
+    # Payment is created even when employee cannot be found
+    assert payment
+
+    state_log = state_log_util.get_latest_state_log_in_flow(
+        payment, Flow.DELEGATED_PAYMENT, local_test_db_session
+    )
+
+    assert payment.claim_id is None
+    assert (
+        state_log.end_state_id
+        == State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT_RESTARTABLE.state_id
+    )
+    assert state_log.outcome == {
+        "message": "Error processing payment record",
+        "validation_container": {
+            "record_key": f"C={payment_data.c_value},I={payment_data.i_value}",
+            "validation_issues": [
+                {"reason": "MissingInDB", "details": f"tax_identifier: {payment_data.tin}"},
+                {"reason": "MissingInDB", "details": f"claim: {payment_data.absence_case_number}"},
+            ],
+        },
+    }
+    validate_pei_writeback_state_for_payment(
+        payment, local_test_db_session, is_issue_in_system=True
+    )
+
+
 def test_process_extract_data_rollback(
     local_payment_extract_step, local_test_db_session, monkeypatch,
 ):

@@ -3,7 +3,7 @@ from typing import Optional, Union
 
 import massgov.pfml.util.pydantic.mask as mask
 from massgov.pfml.db.models.employees import TaxIdentifier
-from massgov.pfml.types import Fein, TaxId
+from massgov.pfml.types import Fein
 
 
 class Regexes:

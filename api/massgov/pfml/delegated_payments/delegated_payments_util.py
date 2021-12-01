@@ -43,6 +43,7 @@ from massgov.pfml.db.models.payments import (
     FineosExtractVpeiPaymentDetails,
     PaymentLog,
 )
+from massgov.pfml.types import TaxId
 from massgov.pfml.util.csv import CSVSourceWrapper
 from massgov.pfml.util.datetime import get_now_us_eastern
 from massgov.pfml.util.routing_number_validation import validate_routing_number
@@ -445,6 +446,7 @@ class ValidationReason(str, Enum):
     PAYMENT_EXCEEDS_PAY_PERIOD_CAP = "PaymentExceedsPayPeriodCap"
     ROUTING_NUMBER_FAILS_CHECKSUM = "RoutingNumberFailsChecksum"
     LEAVE_REQUEST_IN_REVIEW = "LeaveRequestInReview"
+    TIN_INCORRECTLY_FORMATTED = "TinIncorrectlyFormatted"
 
 
 @dataclass(frozen=True, eq=True)
@@ -547,6 +549,14 @@ def amount_validator(amount_str: str) -> Optional[ValidationReason]:
         Decimal(amount_str)
     except (InvalidOperation, TypeError):  # Amount is not numeric
         return ValidationReason.INVALID_VALUE
+    return None
+
+
+def tin_validator(tin: str) -> Optional[ValidationReason]:
+    try:
+        TaxId(tin)
+    except ValueError:
+        return ValidationReason.TIN_INCORRECTLY_FORMATTED
     return None
 
 

@@ -265,7 +265,11 @@ class ClaimantData:
         # Shouldn't be possible, but making the linter happy
         if employee_feed_record:
             self.employee_tax_identifier = payments_util.validate_db_input(
-                "NATINSNO", employee_feed_record, self.validation_container, True
+                "NATINSNO",
+                employee_feed_record,
+                self.validation_container,
+                True,
+                custom_validator_func=payments_util.tin_validator,
             )
 
             self.date_of_birth = payments_util.validate_db_input(
@@ -359,6 +363,7 @@ class ClaimantExtractStep(Step):
         EMPLOYEE_FEED_RECORD_COUNT = "employee_feed_record_count"
         EMPLOYEE_NOT_FOUND_IN_FEED_COUNT = "employee_not_found_in_feed_count"
         EMPLOYEE_NOT_FOUND_IN_DATABASE_COUNT = "employee_not_found_in_database_count"
+        MALFORMED_TIN_COUNT = "malformed_tin_count"
         TAX_IDENTIFIER_MISSING_IN_DB_COUNT = "tax_identifier_missing_in_db_count"
         EMPLOYEE_PROCESSED_MULTIPLE_TIMES = "employee_processed_multiple_times"
         CLAIM_UPDATE_EXCEPTION_COUNT = "claim_update_exception_count"

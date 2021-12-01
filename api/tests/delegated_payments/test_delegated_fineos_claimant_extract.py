@@ -1070,6 +1070,41 @@ def test_run_step_minimal_viable_claim(
     ]
 
 
+def test_run_step_tin_malformed(
+    claimant_extract_step, test_db_session,
+):
+    # Create a record with only an absence case number
+    # This should still end up created in the DB, but with
+    # significant validation issues
+    fineos_data = FineosClaimantData(ssn="malformed_tin")
+
+    stage_data([fineos_data], test_db_session)
+
+    # Run the process
+    claimant_extract_step.run_step()
+
+    claim = test_db_session.query(Claim).one_or_none()
+    assert claim
+    assert claim.fineos_absence_id == fineos_data.absence_case_number
+    assert claim.employee_id is None
+
+    # Verify the state logs and outcome
+    assert len(claim.state_logs) == 1
+    state_log = claim.state_logs[0]
+    assert (
+        state_log.end_state_id == State.DELEGATED_CLAIM_ADD_TO_CLAIM_EXTRACT_ERROR_REPORT.state_id
+    )
+    validation_issues = state_log.outcome["validation_container"]["validation_issues"]
+
+    assert validation_issues == [
+        {"reason": "TinIncorrectlyFormatted", "details": "NATINSNO: malformed_tin"},
+        {
+            "reason": "MissingInDB",
+            "details": f"employer customer number: {fineos_data.employer_customer_num}",
+        },
+    ]
+
+
 def test_run_step_not_id_proofed(
     claimant_extract_step, test_db_session,
 ):

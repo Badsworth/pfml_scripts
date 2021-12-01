@@ -47,6 +47,7 @@ from massgov.pfml.db.models.payments import (
     LkFineosWritebackTransactionStatus,
 )
 from massgov.pfml.delegated_payments.step import Step
+from massgov.pfml.types import TaxId
 from massgov.pfml.util.datetime import get_now_us_eastern
 
 logger = logging.get_logger(__name__)
@@ -527,6 +528,7 @@ class PaymentExtractStep(Step):
         REQUESTED_ABSENCE_RECORD_COUNT = "requested_absence_record_count"
         STANDARD_VALID_PAYMENT_COUNT = "standard_valid_payment_count"
         TAX_IDENTIFIER_MISSING_IN_DB_COUNT = "tax_identifier_missing_in_db_count"
+        MALFORMED_TIN_COUNT = "malformed_tin_count"
         ZERO_DOLLAR_PAYMENT_COUNT = "zero_dollar_payment_count"
         ADHOC_PAYMENT_COUNT = "adhoc_payment_count"
         MULTIPLE_CLAIM_DETAILS_ERROR_COUNT = "multiple_claim_details_error_count"
@@ -586,6 +588,23 @@ class PaymentExtractStep(Step):
         self, payment_data: PaymentData
     ) -> Tuple[Optional[Employee], Optional[Claim]]:
 
+        # The TIN field for tax records isn't a valid format so error them
+        # TODO - when adding tax withholding logic in the future, this won't
+        # need to be an error, but for now, we want to filter these out.
+        is_valid_tin_format = True
+        try:
+            if payment_data.tin is None:
+                # This scenario already would have added an error
+                is_valid_tin_format = False
+            else:
+                TaxId(payment_data.tin)
+        except ValueError:
+            self.increment(self.Metrics.MALFORMED_TIN_COUNT)
+            payment_data.validation_container.add_validation_issue(
+                payments_util.ValidationReason.MISSING_IN_DB, f"tax_identifier: {payment_data.tin}",
+            )
+            is_valid_tin_format = False
+
         # Get the TIN, employee and claim associated with the payment to be made
         employee, claim = None, None
         try:
@@ -594,6 +613,7 @@ class PaymentExtractStep(Step):
             if (
                 payment_data.payment_transaction_type.payment_transaction_type_id
                 != PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id
+                and is_valid_tin_format
             ):
                 tax_identifier = (
                     self.db_session.query(TaxIdentifier)
