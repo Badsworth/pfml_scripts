@@ -19,6 +19,6 @@ locals {
 data "aws_acm_certificate" "domain" {
   count       = local.cert_domain == null ? 0 : 1
   domain      = local.cert_domain
-  statuses    = ["ISSUED"]
+  statuses    = ["ISSUED", "PENDING_VALIDATION"]
   most_recent = true
 }

@@ -7,7 +7,7 @@ locals {
 }
 
 resource "aws_wafv2_web_acl" "cloudfront_waf_acl" {
-  name  = "mass-pfml-${var.environment_name}-cloudfront-acl"
+  name  = "mass-pfml-${var.environment_name}-cloudfront-admin-acl"
   scope = "CLOUDFRONT"
 
   tags = merge(module.constants.common_tags, {

@@ -177,7 +177,7 @@ output "admin_portal_cert_domains" {
     "breakfix" = "paidleave-admin-test.dfml.eol.mass.gov",
     "uat"      = "paidleave-admin-test.dfml.eol.mass.gov",
     "prod"     = "paidleave-admin.dfml.eol.mass.gov",
-    "infra-test"= "paidleave-admin-test.dfml.eol.mass.gov"
+    "infra-test"= "paidleave-admin-infra-test.dfml.eol.mass.gov"
   }
 }
 
