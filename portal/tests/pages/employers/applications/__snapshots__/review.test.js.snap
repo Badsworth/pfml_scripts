@@ -226,7 +226,7 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
       This is your employee’s expected leave schedule.
     </p>
     <table
-      class="usa-table usa-table--borderless c-table width-full"
+      class="usa-table usa-table--borderless width-full"
     >
       <thead>
         <tr>
@@ -443,7 +443,7 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
         </div>
       </details>
       <table
-        class="usa-table usa-table--borderless c-table width-full"
+        class="usa-table usa-table--borderless width-full"
       >
         <thead>
           <tr>
@@ -501,7 +501,7 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
          report it.
       </p>
       <table
-        class="usa-table usa-table--borderless c-table width-full"
+        class="usa-table usa-table--borderless width-full"
       >
         <thead>
           <tr>
@@ -552,7 +552,7 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
         </a>
       </p>
       <table
-        class="usa-table usa-table--borderless c-table width-full"
+        class="usa-table usa-table--borderless width-full"
       >
         <thead>
           <tr>

@@ -2,7 +2,7 @@
 
 exports[`Employer dashboard renders a table of claims with links if employer is registered in FINEOS 1`] = `
 <table
-  class="usa-table usa-table--borderless c-table width-full usa-table--stacked-header"
+  class="usa-table usa-table--borderless width-full usa-table--stacked"
 >
   <thead>
     <tr>
@@ -432,7 +432,7 @@ exports[`Employer dashboard renders the page with expected content and paginatio
     class="usa-table-container--scrollable"
   >
     <table
-      class="usa-table usa-table--borderless c-table width-full usa-table--stacked-header"
+      class="usa-table usa-table--borderless width-full usa-table--stacked"
     >
       <thead>
         <tr>

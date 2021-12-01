@@ -18,7 +18,7 @@ exports[`EmployerBenefits renders the component for v1 eforms 1`] = `
     </a>
   </p>
   <table
-    class="usa-table usa-table--borderless c-table width-full"
+    class="usa-table usa-table--borderless width-full"
   >
     <thead>
       <tr>
@@ -130,7 +130,7 @@ exports[`EmployerBenefits renders the component for v2 eforms 1`] = `
     </a>
   </p>
   <table
-    class="usa-table usa-table--borderless c-table width-full"
+    class="usa-table usa-table--borderless width-full"
   >
     <thead>
       <tr>

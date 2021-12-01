@@ -62,7 +62,7 @@ exports[`PreviousLeaves when there are claimant-reported leaves shows a row for 
     </div>
   </details>
   <table
-    class="usa-table usa-table--borderless c-table width-full"
+    class="usa-table usa-table--borderless width-full"
   >
     <thead>
       <tr>
