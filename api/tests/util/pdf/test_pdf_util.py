@@ -6,8 +6,6 @@ import pytest
 
 import massgov.pfml.util.pdf as pdf_util
 
-MB = 1024 * 1024
-SIZE_CONSTRAINT = 4.5 * MB
 PROCESS_ERROR = "process error"
 
 

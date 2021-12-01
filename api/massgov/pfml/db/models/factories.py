@@ -941,15 +941,149 @@ class ImportLogFactory(BaseFactory):
         model = employee_models.ImportLog
 
 
-class Pfml1099BatchFactory(BaseFactory):
+class OrganizationUnitFactory(BaseFactory):
     class Meta:
-        model = payment_models.Pfml1099Batch
+        model = employee_models.OrganizationUnit
 
-    pfml_1099_batch_id = Generators.UuidObj
-    tax_year = 2021
-    batch_run_date = Generators.Now
-    correction_ind = False
-    batch_status = "Created"
+    fineos_id = None
+    name = factory.Faker("company")
+    employer = factory.SubFactory(EmployerFactory)
+    employer_id = factory.LazyAttribute(lambda c: c.employer.employer_id)
+
+
+class MmarsPaymentDataFactory(BaseFactory):
+    class Meta:
+        model = payment_models.MmarsPaymentData
+
+    mmars_payment_data_id = Generators.UuidObj
+
+    budget_fiscal_year = 2021
+    fiscal_year = 2021
+    fiscal_period = random.randint(1, 12)
+    pymt_doc_code = "GAX"
+    pymt_doc_department_code = "EOL"
+    pymt_doc_unit = "8770"
+    pymt_doc_identifier = "GAXMDFMLAAAAJUFG3FJO"
+    pymt_doc_version_no = "1"
+    pymt_doc_vendor_line_no = "1"
+    pymt_doc_comm_line_no = "0"
+    pymt_doc_actg_line_no = "1"
+    pymt_actg_line_amount = 100.00
+    pymt_discount_line_amount = 0
+    pymt_penalty_line_amount = 0
+    pymt_interest_line_amount = 0
+    pymt_backup_withholding_line_amount = 0
+    pymt_intercept_amount = 0
+    pymt_retainage_line_amount = 0
+    pymt_freight_amount = 0
+    pymt_default_intercept_fee_amount = 0
+    pymt_supplementary_intercept_fee_amount = 0
+    pymt_service_from_date = factory.Faker(
+        "date_between_dates", date_start=date(2021, 1, 1), date_end=date(2021, 1, 15)
+    )
+    pymt_service_to_date = factory.LazyAttribute(
+        lambda a: a.pymt_service_from_date + timedelta(days=7)
+    )
+    encumbrance_doc_code = "GAE"
+    encumbrance_doc_dept = "EOL"
+    encumbrance_doc_identifier = "PFMLFAMLFY2170030632"
+    encumbrance_vendor_line_no = "1"
+    encumbrance_accounting_line_no = "1"
+    disb_doc_code = "AD"
+    disb_doc_department_code = "CTR"
+    disb_doc_identifier = "DISB0301210000263380"
+    disb_doc_version_no = "1"
+    disb_vendor_line_no = "1"
+    disb_commodity_line_no = "0"
+    disb_actg_line_no = "1"
+    disb_actg_line_amount = 100.00
+    disb_check_amount = 100.00
+    disb_discount_line_amount = 0
+    disb_penalty_line_amount = 0
+    disb_interest_line_amount = 0
+    disb_backup_withholding_line_amount = 0
+    disb_intercept_amount = 0
+    disb_retainage_line_amount = 0
+    disb_freight_amount = 0
+    disb_default_intercept_fee_amount = 0
+    disb_supplementary_intercept_fee_amount = 0
+    disb_doc_phase_code = "3"
+    disb_doc_function_code = "1"
+    actg_line_descr = "REQ 18939"
+    check_descr = "Check Description - Factory"
+    warrant_no = "M11"
+    warrant_select_date = factory.LazyAttribute(
+        lambda a: a.pymt_service_to_date + timedelta(days=1)
+    )
+    check_eft_issue_date = factory.LazyAttribute(
+        lambda a: a.warrant_select_date + timedelta(days=2)
+    )
+    bank_account_code = "0"
+    check_eft_no = "1234456"
+    cleared_date = factory.LazyAttribute(lambda a: a.warrant_select_date + timedelta(days=10))
+    appropriation = "70030632"
+    appropriation_name = "Family and Medical Leave Benefit Payments"
+    object_class = "RR"
+    object_class_name = "BENEFIT PROGRAMS"
+    object = "R40"
+    object_name = "Paid Family Medical Leave"
+    income_type = "6"
+    income_type_name = "Taxable Grants"
+    form_type_indicator = "G"
+    form_typ_ind_descr = "1099-G"
+    disbursement_frequency = "1"
+    disbursement_frequency_name = "Daily"
+    payment_lag = "1"
+    fund = "631"
+    fund_name = "Family and Employment Secuirty Trust Fund"
+    fund_category = "5"
+    fund_category_name = "Trust and Agency"
+    major_program = "DF0632"
+    major_program_name = "DFML Benefit Payment"
+    program = "DFML2021B"
+    program_name = "DEPARTMENT OF FAMILY AND MEDICAL LEAVE COLLECTIONS 2021"
+    phase = "K165"
+    phase_name = "DEPARTMENT OF FAMILY AND MEDICAL LEAVE BENEFITS 2021"
+    activity = "7246"
+    activity_name = "Paid Medical Leave"
+    vendor_customer_code = "VC0001250508"
+    legal_name = "JOHN Q. CLAIMANT"
+    address_id = "AD010"
+    address_type = "PA"
+    address_line_1 = "1 MAIN ST."
+    city = "DARTMOUTH"
+    state = "MA"
+    zip_code = "02747-2722"
+    country = "USA"
+    vendor_invoice_no = "NTN-241347-ABS-01_14166"
+    vendor_invoice_date = warrant_select_date
+    scheduled_payment_date = warrant_select_date
+    doc_function_code = "1"
+    doc_function_code_name = "New"
+    doc_phase_code = "3"
+    doc_phase_name = "Final"
+    government_branch = "10"
+    government_branch_name = "EXECUTIVE BRANCH"
+    cabinet = "93"
+    cabinet_name = "EXECUTIVE OFFICE of LABOR and WORKFORCE DEVELOPMENT"
+    department = "EOL"
+    department_name = "Executive Office of Labor and Workforce Development"
+    division = "1000"
+    division_name = "EXECUTIVE OFFICE OF LABOR AND WORKFORCE DEVELOPMENT"
+    group_name = "DEPARTMENT OF FAMILY AND MEDICAL LEAVE"
+    section_name = "DEPARTMENT OF FAMILY AND MEDICAL LEAVE"
+    district = "8700"
+    district_name = "DEPARTMENT OF FAMILY AND MEDICAL LEAVE"
+    bureau = "8710"
+    bureau_name = "DFML ADMINISTRATION"
+    unit = "8770"
+    unit_name = "PFML Benefit Payments"
+    doc_record_date = warrant_select_date
+    acceptance_date = warrant_select_date
+    doc_created_by = "EOL Interface"
+    doc_created_on = warrant_select_date
+    doc_last_modified_by = "System Admin"
+    doc_last_modified_on = warrant_select_date
 
 
 class Pfml1099Factory(BaseFactory):
@@ -975,11 +1109,187 @@ class Pfml1099Factory(BaseFactory):
     correction_ind = False
 
 
-class OrganizationUnitFactory(BaseFactory):
+class Pfml1099BatchFactory(BaseFactory):
     class Meta:
-        model = employee_models.OrganizationUnit
+        model = payment_models.Pfml1099Batch
+
+    pfml_1099_batch_id = Generators.UuidObj
+
+    tax_year = 2021
+    batch_run_date = factory.Faker(
+        "date_between_dates", date_start=date(2021, 1, 1), date_end=date(2021, 1, 15)
+    )
+    correction_ind = False
+    batch_status = "Created"
+
+
+class Pfml1099MMARSPaymentFactory(BaseFactory):
+    class Meta:
+        model = payment_models.Pfml1099MMARSPayment
+
+    pfml_1099_mmars_payment_id = Generators.UuidObj
+
+    # Pfml1099Batch
+    batch = factory.SubFactory(Pfml1099BatchFactory)
+    pfml_1099_batch_id = factory.LazyAttribute(lambda a: a.batch.pfml_1099_batch_id)
+
+    # MmarsPaymentData
+    mmars_payment = factory.SubFactory(MmarsPaymentDataFactory)
+    mmars_payment_id = factory.LazyAttribute(lambda a: a.mmars_payment.mmars_payment_data_id)
+    payment_amount = factory.LazyAttribute(lambda a: a.mmars_payment.pymt_actg_line_amount)
+    payment_date = factory.LazyAttribute(lambda a: a.mmars_payment.warrant_select_date)
+
+    # Employee
+    employee = factory.SubFactory(EmployeeFactory)
+    employee_id = factory.LazyAttribute(lambda e: e.employee.employee_id)
+
+
+class Pfml1099PaymentFactory(BaseFactory):
+    class Meta:
+        model = payment_models.Pfml1099Payment
+
+    pfml_1099_payment_id = Generators.UuidObj
+
+    # Pfml1099Batch
+    batch = factory.SubFactory(Pfml1099BatchFactory)
+    pfml_1099_batch_id = factory.LazyAttribute(lambda a: a.batch.pfml_1099_batch_id)
+
+    # Payment
+    payment = factory.SubFactory(PaymentFactory)
+    payment_id = factory.LazyAttribute(lambda a: a.payment.payment_id)
+    payment_amount = factory.LazyAttribute(lambda a: a.payment.amount)
+    payment_date = factory.LazyAttribute(lambda a: a.payment.payment_date)
+
+    # Claim
+    claim = factory.SubFactory(ClaimFactory)
+    claim_id = factory.LazyAttribute(lambda a: a.claim.claim_id)
+
+    # Employee
+    employee = factory.SubFactory(EmployeeFactory)
+    employee_id = factory.LazyAttribute(lambda e: e.employee.employee_id)
+
+
+class Pfml1099RefundFactory(BaseFactory):
+    class Meta:
+        model = payment_models.Pfml1099Refund
+
+    pfml_1099_refund_id = Generators.UuidObj
+
+    # Pfml1099Batch
+    batch = factory.SubFactory(Pfml1099BatchFactory)
+    pfml_1099_batch_id = factory.LazyAttribute(lambda a: a.batch.pfml_1099_batch_id)
+
+    # Payment
+    payment = factory.SubFactory(PaymentFactory)
+    payment_id = factory.LazyAttribute(lambda a: a.payment.payment_id)
+    # Refund amount is a negative value
+    refund_amount = factory.LazyAttribute(lambda a: a.payment.amount)
+    refund_date = factory.LazyAttribute(lambda a: a.payment.payment_date)
+
+    # Employee
+    employee = factory.SubFactory(EmployeeFactory)
+    employee_id = factory.LazyAttribute(lambda e: e.employee.employee_id)
+
+
+class Pfml1099FederalWithholdingFactory(BaseFactory):
+    class Meta:
+        model = payment_models.Pfml1099Withholding
+
+    pfml_1099_refund_id = Generators.UuidObj
+
+    # Pfml1099Batch
+    batch = factory.SubFactory(Pfml1099BatchFactory)
+    pfml_1099_batch_id = factory.LazyAttribute(lambda a: a.batch.pfml_1099_batch_id)
+
+    # Payment
+    payment = factory.SubFactory(PaymentFactory)
+    payment_id = factory.LazyAttribute(lambda a: a.payment.payment_id)
+    withholding_amount = factory.LazyAttribute(lambda a: a.payment.amount)
+    withholding_date = factory.LazyAttribute(lambda a: a.payment.payment_date)
+
+    # Claim
+    claim = factory.SubFactory(ClaimFactory)
+    claim_id = factory.LazyAttribute(lambda a: a.claim.claim_id)
+
+    # Employee
+    employee = factory.SubFactory(EmployeeFactory)
+    employee_id = factory.LazyAttribute(lambda e: e.employee.employee_id)
+
+    # Withholding Type
+    withholding_type = payment_models.WithholdingType.FEDERAL
+    withholding_type_id = withholding_type.withholding_type_id
+
+
+class Pfml1099StateWithholdingFactory(BaseFactory):
+    class Meta:
+        model = payment_models.Pfml1099Withholding
+
+    pfml_1099_refund_id = Generators.UuidObj
+
+    # Pfml1099Batch
+    batch = factory.SubFactory(Pfml1099BatchFactory)
+    pfml_1099_batch_id = factory.LazyAttribute(lambda a: a.batch.pfml_1099_batch_id)
+
+    # Payment
+    payment = factory.SubFactory(PaymentFactory)
+    payment_id = factory.LazyAttribute(lambda a: a.payment.payment_id)
+    withholding_amount = factory.LazyAttribute(lambda a: a.payment.amount)
+    withholding_date = factory.LazyAttribute(lambda a: a.payment.payment_date)
+
+    # Claim
+    claim = factory.SubFactory(ClaimFactory)
+    claim_id = factory.LazyAttribute(lambda a: a.claim.claim_id)
+
+    # Employee
+    employee = factory.SubFactory(EmployeeFactory)
+    employee_id = factory.LazyAttribute(lambda e: e.employee.employee_id)
+
+    # Withholding Type
+    withholding_type = payment_models.WithholdingType.STATE
+    withholding_type_id = withholding_type.withholding_type_id
+    organization_unit_id = Generators.UuidObj
 
     fineos_id = None
     name = factory.Faker("company")
     employer = factory.SubFactory(EmployerFactory)
     employer_id = factory.LazyAttribute(lambda c: c.employer.employer_id)
+
+
+class DuaEmployeeDemographicsFactory(BaseFactory):
+    class Meta:
+        model = employee_models.DuaEmployeeDemographics
+
+    dua_employee_demographics_id = Generators.UuidObj
+
+    fineos_customer_number = factory.Faker("numerify", text="####")
+    date_of_birth = factory.Faker("date_object")
+    gender_code = random.choices(["F", "M", "U", None])
+    occupation_code = random.randint(1, 6000)
+    occupation_description = None
+    employer_fein = Generators.Fein
+    employer_reporting_unit_number = random.randint(1, 100000)
+
+
+class DuaReportingUnitFactory(BaseFactory):
+    class Meta:
+        model = employee_models.DuaReportingUnit
+
+    dua_reporting_unit_id = Generators.UuidObj
+    dua_id = factory.Sequence(lambda n: n)
+    dba = None
+
+    organization_unit = factory.SubFactory(OrganizationUnitFactory)
+    organization_unit_id = factory.LazyAttribute(lambda d: d.organization_unit.organization_unit_id)
+
+
+class EmployeeOccupationFactory(BaseFactory):
+    class Meta:
+        model = employee_models.EmployeeOccupation
+
+    employee_occupation_id = Generators.UuidObj
+
+    employee = factory.SubFactory(EmployeeFactory)
+    employee_id = factory.LazyAttribute(lambda d: d.employee.employee_id)
+
+    employer = factory.SubFactory(EmployerFactory)
+    employer_id = factory.LazyAttribute(lambda d: d.employer.employer_id)

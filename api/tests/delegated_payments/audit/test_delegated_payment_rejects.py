@@ -43,6 +43,7 @@ from massgov.pfml.delegated_payments.audit.mock.delegated_payment_audit_generato
     generate_payment_audit_data_set_and_rejects_file,
 )
 from massgov.pfml.delegated_payments.mock.delegated_payments_factory import DelegatedPaymentFactory
+from massgov.pfml.util.datetime import get_now_us_eastern
 
 
 @pytest.fixture
@@ -61,7 +62,7 @@ def test_parse_payment_rejects_file(tmp_path, test_db_session, payment_rejects_s
     expected_rejects_folder = os.path.join(
         str(tmp_path),
         payments_util.Constants.S3_OUTBOUND_SENT_DIR,
-        payments_util.get_now().strftime("%Y-%m-%d"),
+        get_now_us_eastern().strftime("%Y-%m-%d"),
     )
 
     file_path = os.path.join(
@@ -100,7 +101,7 @@ def test_parse_payment_rejects_file_missing_columns(
     expected_rejects_folder = os.path.join(
         str(tmp_path),
         payments_util.Constants.S3_OUTBOUND_SENT_DIR,
-        payments_util.get_now().strftime("%Y-%m-%d"),
+        get_now_us_eastern().strftime("%Y-%m-%d"),
     )
 
     file_path = os.path.join(
@@ -144,7 +145,7 @@ def test_rejects_column_validation(test_db_session, payment_rejects_step):
         previously_skipped_payment_count=0,
     )
     payment_rejects_row = build_audit_report_row(
-        payment_audit_data, payments_util.get_now(), test_db_session
+        payment_audit_data, get_now_us_eastern(), test_db_session
     )
 
     payment_rejects_row.pfml_payment_id = None
@@ -203,7 +204,7 @@ def test_valid_combination_of_reject_and_skip(
     )
 
     payment_rejects_row = build_audit_report_row(
-        payment_audit_data, payments_util.get_now(), test_db_session
+        payment_audit_data, get_now_us_eastern(), test_db_session
     )
     payment_rejects_row.rejected_by_program_integrity = rejected_by_program_integrity
     payment_rejects_row.skipped_by_program_integrity = skipped_by_program_integrity
@@ -537,7 +538,7 @@ def _generate_rejects_file(payment_rejects_received_folder_path, file_name, db_s
     dated_input_folder = os.path.join(
         payment_rejects_received_folder_path,
         payments_util.Constants.S3_OUTBOUND_SENT_DIR,
-        payments_util.get_now().strftime("%Y-%m-%d"),
+        get_now_us_eastern().strftime("%Y-%m-%d"),
     )
     files = file_util.list_files(dated_input_folder)
     assert len(files) == 1
@@ -564,7 +565,7 @@ def test_process_rejects(
 
     monkeypatch.setenv("PFML_PAYMENT_REJECTS_ARCHIVE_PATH", payment_rejects_archive_folder_path)
 
-    date_folder = payments_util.get_now().strftime("%Y-%m-%d")
+    date_folder = get_now_us_eastern().strftime("%Y-%m-%d")
     timestamp_file_prefix = "2021-01-15-12-00-00"
 
     # generate the rejects file
@@ -634,7 +635,7 @@ def test_process_rejects_error(
         payment_rejects_received_folder_path, "Payment-Audit-Report-Response-2", test_db_session
     )
 
-    current_timestamp = payments_util.get_now().strftime("%Y-%m-%d-%H-%M-%S")
+    current_timestamp = get_now_us_eastern().strftime("%Y-%m-%d-%H-%M-%S")
     rejects_file_name_1 = f"{current_timestamp}-Payment-Audit-Report-Response-1.csv"
     rejects_file_name_2 = f"{current_timestamp}-Payment-Audit-Report-Response-2.csv"
 
@@ -649,7 +650,7 @@ def test_process_rejects_error(
 
     # check rejects file was moved to processed folder
     expected_errored_folder_path = os.path.join(
-        payment_rejects_errored_folder_path, payments_util.get_now().strftime("%Y-%m-%d")
+        payment_rejects_errored_folder_path, get_now_us_eastern().strftime("%Y-%m-%d"),
     )
     assert_files(expected_errored_folder_path, [rejects_file_name_1, rejects_file_name_2])
 

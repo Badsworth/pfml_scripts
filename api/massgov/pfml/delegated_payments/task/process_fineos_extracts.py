@@ -29,6 +29,7 @@ from massgov.pfml.delegated_payments.weekly_max.max_weekly_benefit_amount_valida
     MaxWeeklyBenefitAmountValidationStep,
 )
 from massgov.pfml.util.bg import background_task
+from massgov.pfml.util.datetime import get_now_us_eastern
 
 logger = logging.get_logger(__name__)
 
@@ -134,7 +135,7 @@ def _process_fineos_extracts(
 ) -> None:
     """Process FINEOS Payments Extracts"""
     logger.info("Start - FINEOS Payment+Claimant Extract ECS Task")
-    start_time = payments_util.get_now()
+    start_time = get_now_us_eastern()
 
     if config.do_audit_cleanup:
         StateCleanupStep(db_session=db_session, log_entry_db_session=log_entry_db_session).run()

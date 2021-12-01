@@ -18,13 +18,15 @@ import {
   postApplicationsByApplication_idComplete_application,
   postApplicationsByApplication_idSubmit_payment_preference,
   EmployerClaimRequestBody,
+  postApplicationsByApplication_idSubmit_tax_withholding_preference,
+  TaxWithholdingPreferenceRequestBody,
 } from "../api";
 import pRetry from "p-retry";
 import AuthenticationManager from "./AuthenticationManager";
 import { ApplicationSubmissionResponse, Credentials } from "../types";
 import { GeneratedClaim } from "../generation/Claim";
 import { DocumentWithPromisedFile } from "../generation/documents";
-
+import config from "../config";
 if (!global.FormData) {
   // @ts-ignore
   global.FormData = FormData;
@@ -89,6 +91,14 @@ export default class PortalSubmitter {
       claim.paymentPreference,
       options
     );
+
+    if (config("FINEOS_HAS_TAX_WITHHOLDING"))
+      await this.submitTaxPreference(
+        application_id,
+        { is_withholding_tax: claim.is_withholding_tax },
+        options
+      );
+
     await this.completeApplication(application_id, options);
     if (claim.employerResponse) {
       if (!employerCredentials) {
@@ -278,6 +288,22 @@ export default class PortalSubmitter {
     return postApplicationsByApplication_idSubmit_payment_preference(
       { application_id },
       paymentPreference,
+      options
+    );
+  }
+
+  protected async submitTaxPreference(
+    application_id: string,
+    taxWithholdingPreferenceRequestBody: TaxWithholdingPreferenceRequestBody,
+    options?: RequestOptions
+  ): ReturnType<
+    typeof postApplicationsByApplication_idSubmit_tax_withholding_preference
+  > {
+    return postApplicationsByApplication_idSubmit_tax_withholding_preference(
+      {
+        application_id,
+      },
+      taxWithholdingPreferenceRequestBody,
       options
     );
   }

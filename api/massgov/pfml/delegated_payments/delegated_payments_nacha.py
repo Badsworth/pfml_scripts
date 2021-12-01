@@ -24,6 +24,7 @@ from massgov.pfml.delegated_payments.util.ach.nacha import (
     NachaEntry,
     NachaFile,
 )
+from massgov.pfml.util.datetime import get_now_us_eastern
 
 logger = logging.get_logger(__name__)
 
@@ -65,7 +66,7 @@ def send_nacha_file(
     logger.info("Creating NACHA files")
     nacha_file.finalize()
 
-    now = payments_util.get_now()
+    now = get_now_us_eastern()
     nacha_file_name = now.strftime(payments_util.Constants.NACHA_FILE_FORMAT)
     archive_s3_path = payments_util.build_archive_path(
         archive_folder_path, payments_util.Constants.S3_OUTBOUND_SENT_DIR, nacha_file_name, now

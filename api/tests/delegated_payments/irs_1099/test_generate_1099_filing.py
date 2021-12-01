@@ -8,6 +8,7 @@ import massgov.pfml.util.files as file_util
 from massgov.pfml.delegated_payments.irs_1099.generate_1099_irs_filing import (
     Generate1099IRSfilingStep,
 )
+from massgov.pfml.util.datetime import get_now_us_eastern
 
 fake = faker.Faker()
 
@@ -100,7 +101,7 @@ def test_file_creation(
     generate_1099_irs_filing_step.run_step()
 
     # check that ach archive file was generated
-    now = payments_util.get_now()
+    now = get_now_us_eastern()
     date_folder = now.strftime("%Y-%m-%d")
     formatted_now = now.strftime("%Y-%m-%d-%H-%M-%S")
     file_name = f"{formatted_now}-1099.ORG"

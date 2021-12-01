@@ -5,13 +5,7 @@ config:
     - ./employees
     - ./forms
   environments:
-    performance:
-      phases:
-        - duration: 240
-          arrivalRate: 1
-          maxVusers: 1
-          name: Development
-    test:
+    basic:
       phases:
         - duration: 1
           arrivalRate: 1

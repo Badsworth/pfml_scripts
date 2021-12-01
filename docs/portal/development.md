@@ -47,3 +47,6 @@ Similar to Question Pages, pages used in the Auth flow are also in the [`/portal
 ## `next.config.js`
 
 The [`next.config.js`](https://nextjs.org/docs/api-reference/next.config.js/introduction) file is a Node.js module that can be used to configure build and export behavior, such as Webpack settings.
+
+## Frontend <> Backend Configuration
+By default, portal is set up to connect to the backend staging environment. If you wish to connect local to local, please see detailed instructions [here](https://lwd.atlassian.net/wiki/spaces/DD/pages/2126872748/Local+Portal+to+Local+API+Development).

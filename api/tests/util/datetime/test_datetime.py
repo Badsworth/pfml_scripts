@@ -5,30 +5,31 @@
 from datetime import date, datetime, timedelta, timezone
 
 import pytest
+from freezegun import freeze_time
 
-import massgov.pfml.util.datetime
+import massgov.pfml.util.datetime as datetime_util
 
 
 def test_to_datetime_date():
-    assert massgov.pfml.util.datetime.to_datetime(date(2020, 3, 24)) == datetime(
+    assert datetime_util.to_datetime(date(2020, 3, 24)) == datetime(
         2020, 3, 24, 0, 0, 0, tzinfo=timezone.utc
     )
 
 
 def test_to_datetime_datetime():
-    assert massgov.pfml.util.datetime.to_datetime(datetime(2020, 3, 24, 12, 15, 30)) == datetime(
+    assert datetime_util.to_datetime(datetime(2020, 3, 24, 12, 15, 30)) == datetime(
         2020, 3, 24, 0, 0, 0, tzinfo=timezone.utc
     )
 
 
 def test_to_datetime_datetime_with_utc():
-    assert massgov.pfml.util.datetime.to_datetime(
+    assert datetime_util.to_datetime(
         datetime(2020, 3, 24, 12, 15, 30, tzinfo=timezone.utc)
     ) == datetime(2020, 3, 24, 0, 0, 0, tzinfo=timezone.utc)
 
 
 def test_to_datetime_datetime_with_other_timezone():
-    assert massgov.pfml.util.datetime.to_datetime(
+    assert datetime_util.to_datetime(
         datetime(2020, 3, 24, 12, 15, 30, tzinfo=timezone(timedelta(hours=13)))
     ) == datetime(2020, 3, 24, 0, 0, 0, tzinfo=timezone.utc)
 
@@ -55,4 +56,11 @@ def test_to_datetime_datetime_with_other_timezone():
     ),
 )
 def test_get_period_in_weeks(start, end, weeks):
-    assert massgov.pfml.util.datetime.get_period_in_weeks(start, end) == weeks
+    assert datetime_util.get_period_in_weeks(start, end) == weeks
+
+
+def test_getnow_est_edt():
+    with freeze_time("2021-01-01 19:00:00"):
+        assert "2021-01-01 14:00:00-05:00" == str(datetime_util.get_now_us_eastern())
+    with freeze_time("2021-08-01 19:00:00"):
+        assert "2021-08-01 15:00:00-04:00" == str(datetime_util.get_now_us_eastern())

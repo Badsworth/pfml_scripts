@@ -193,16 +193,28 @@ export const Payments = ({
           </Accordion>
         </section>
 
-        {/* Questions/Contact Us section */}
-        <section className="margin-y-4" data-testid="questions">
-          <Heading className="margin-bottom-2" level="3">
-            {t("pages.payments.questionsHeader")}
-          </Heading>
+        <section className="margin-y-6" data-testid="helpSection">
+          {/* Questions/Contact Us section */}
+          <Heading level="3">{t("pages.payments.questionsHeader")}</Heading>
           <Trans
             i18nKey="pages.payments.questionsDetails"
             components={{
               "contact-center-phone-link": (
                 <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
+              ),
+            }}
+          />
+          {/* Feedback section */}
+          <Heading level="3">{t("pages.payments.feedbackHeader")}</Heading>
+          <Trans
+            i18nKey="pages.payments.feedbackDetails"
+            components={{
+              "feedback-link": (
+                <a
+                  href={routes.external.massgov.feedbackClaimant}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                />
               ),
             }}
           />

@@ -1,4 +1,6 @@
 import base64
+import tempfile
+from typing import Any, Dict
 from uuid import UUID
 
 import connexion
@@ -15,6 +17,7 @@ import massgov.pfml.api.util.response as response_util
 import massgov.pfml.api.validation.application_rules as application_rules
 import massgov.pfml.util.datetime as datetime_util
 import massgov.pfml.util.logging
+import massgov.pfml.util.pdf as pdf_util
 from massgov.pfml.api.authorization.flask import CREATE, EDIT, READ, ensure
 from massgov.pfml.api.models.applications.common import ContentType as AllowedContentTypes
 from massgov.pfml.api.models.applications.common import DocumentType as IoDocumentTypes
@@ -63,6 +66,13 @@ from massgov.pfml.util.paginate.paginator import (
 from massgov.pfml.util.sqlalchemy import get_or_404
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
+
+UPLOAD_SIZE_CONSTRAINT = 4500000  # bytes
+
+FILE_TOO_LARGE_MSG = "File is too large."
+FILE_SIZE_VALIDATION_ERROR = ValidationErrorDetail(
+    message=FILE_TOO_LARGE_MSG, type=IssueType.file_size, field="file",
+)
 
 LEAVE_REASON_TO_DOCUMENT_TYPE_MAPPING = {
     LeaveReason.CHILD_BONDING.leave_reason_description: DocumentType.CHILD_BONDING_EVIDENCE_FORM,
@@ -473,6 +483,14 @@ def validate_file_name(file_name):
         raise ValidationException(errors=[validation_error], message=message, data={})
 
 
+def validate_file_size(file_size_bytes: int) -> None:
+    """Validate the file size is below the known upload size constraint for files in FINEOS."""
+    if file_size_bytes > UPLOAD_SIZE_CONSTRAINT:
+        raise ValidationException(
+            errors=[FILE_SIZE_VALIDATION_ERROR], message=FILE_TOO_LARGE_MSG, data={}
+        )
+
+
 def has_previous_state_managed_paid_leave(existing_application, db_session):
     # For now, if there are documents previously submitted for the application with the
     # STATE_MANAGED_PAID_LEAVE_CONFIRMATION document type, that document type must also
@@ -530,12 +548,51 @@ def document_upload(application_id, body, file):
         file.seek(0)
         file_content = file.read()
         file_size = len(file_content)
+
         file_name = document_details.name or file.filename
         file_description = ""
         if document_details.description:
             file_description = document_details.description
 
-        # To accomodate both State managed Paid Leave Confirmation and the new plan proof types, the front end will
+        try:
+            # If the file is a PDF larger than the upload size constraint,
+            # attempt to compress the PDF and update file meta data.
+            # A size constraint of 10MB is still enforced by the API gateway,
+            # so the API should not expect to receive anything above this size
+            if (
+                app.get_config().enable_pdf_document_compression
+                and content_type == AllowedContentTypes.pdf.value
+                and file_size > UPLOAD_SIZE_CONSTRAINT
+            ):
+                # tempfile.SpooledTemporaryFile writes the compressed file in-memory
+                with tempfile.SpooledTemporaryFile(mode="xb") as compressed_file:
+                    previous_file_size = file_size
+                    file_size = pdf_util.compress_pdf(file, compressed_file)
+                    file_name = f"Compressed_{file_name}"
+
+                    compressed_file.seek(0)
+                    file_content = compressed_file.read()
+
+                    log_attrs: Dict[str, Any] = {
+                        **get_application_log_attributes(existing_application),
+                        **pdf_util.pdf_compression_attrs(previous_file_size, file_size),
+                    }
+                    logger.info(
+                        "document_upload - PDF compressed", extra={**log_attrs,},
+                    )
+
+            # Validate file size, regardless of processing
+            validate_file_size(file_size)
+
+        except (pdf_util.PDFSizeError):
+            logger.warning("document_upload - file too large", exc_info=True)
+            return response_util.error_response(
+                status_code=BadRequest,
+                message="File validation error.",
+                errors=[FILE_SIZE_VALIDATION_ERROR],
+                data=document_details.dict(),
+            ).to_api_response()
+
         # use Certification Form when the feature flag for caring leave is active, but will otherwise use
         # State manage Paid Leave Confirmation. If the document type is Certification Form,
         # the API will map to the corresponding plan proof based on leave reason

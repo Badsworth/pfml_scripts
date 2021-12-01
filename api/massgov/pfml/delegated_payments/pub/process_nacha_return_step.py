@@ -10,7 +10,6 @@ import uuid
 from typing import Optional, Sequence, TextIO, cast
 
 import massgov.pfml.db
-import massgov.pfml.util.datetime
 import massgov.pfml.util.files
 import massgov.pfml.util.logging
 from massgov.pfml.api.util import state_log_util
@@ -29,6 +28,7 @@ from massgov.pfml.db.models.payments import FineosWritebackDetails, FineosWriteb
 from massgov.pfml.delegated_payments import delegated_config, delegated_payments_util
 from massgov.pfml.delegated_payments.pub import process_files_in_path_step
 from massgov.pfml.delegated_payments.util.ach import reader
+from massgov.pfml.util.datetime import get_now_us_eastern
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
@@ -236,13 +236,13 @@ class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
         # Transition to next state when set
         if next_state == PrenoteState.APPROVED:
             pub_eft.prenote_state_id = PrenoteState.APPROVED.prenote_state_id
-            pub_eft.prenote_approved_at = delegated_payments_util.get_now()
-            pub_eft.prenote_response_at = delegated_payments_util.get_now()
+            pub_eft.prenote_approved_at = get_now_us_eastern()
+            pub_eft.prenote_response_at = get_now_us_eastern()
             pub_eft.prenote_response_reason_code = ach_return.return_reason_code
 
         elif next_state == PrenoteState.REJECTED:
             pub_eft.prenote_state_id = PrenoteState.REJECTED.prenote_state_id
-            pub_eft.prenote_response_at = delegated_payments_util.get_now()
+            pub_eft.prenote_response_at = get_now_us_eastern()
             pub_eft.prenote_response_reason_code = ach_return.return_reason_code
 
     def process_payment_return(self, pub_individual_id: int, ach_return: reader.ACHReturn) -> None:
