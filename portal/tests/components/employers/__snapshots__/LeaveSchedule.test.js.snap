@@ -13,16 +13,5 @@ exports[`LeaveSchedule renders reduced schedule 1`] = `
   >
     Reduced leave schedule
   </td>
-  <td
-    data-label="Details"
-  >
-    Contact us at 
-    <a
-      href="tel:(833) 344-7365"
-    >
-      (833) 344‑7365
-    </a>
-     for details about the leave schedule.
-  </td>
 </tr>
 `;

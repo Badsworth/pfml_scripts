@@ -1360,3 +1360,7 @@ def validate_columns_present(record: Dict[str, Any], fineos_extract: FineosExtra
             "FINEOS extract %s is missing required fields: %s - found only %s"
             % (fineos_extract.file_name, missing_columns, list(record.keys()))
         )
+
+
+def is_withholding_payments_enabled() -> bool:
+    return os.environ.get("ENABLE_WITHHOLDING_PAYMENTS", "0") == "1"

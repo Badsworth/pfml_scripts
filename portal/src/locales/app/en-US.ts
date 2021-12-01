@@ -836,10 +836,6 @@ const shared = {
     "If something is incomplete, add a comment at the end of the page.",
   employerInstructions_followUpDate:
     "<strong>Review and respond by:</strong> {{date}} at 11:59 p.m. Eastern time",
-  employerLeaveScheduleLeadHasDocs:
-    "Download the attached documentation or contact us at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> for details about the leave schedule.",
-  employerLeaveScheduleLeadNoDocs:
-    "Contact us at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> for details about the leave schedule.",
   fileUpload_addAnotherFileButton: "Choose another file",
   fileUpload_addFirstFileButton: "Choose files",
   fileUpload_fileHeadingPrefix: "File",
@@ -2876,29 +2872,6 @@ const components = {
       "Using someone’s personal information to fraudulently collect benefits",
     heading: "Do you have any reason to suspect this is fraud?",
   },
-  employersIntermittentLeaveSchedule: {
-    claimDurationType_continuous: "$t(shared.claimDurationTypeContinuous)",
-    claimDurationType_intermittent: "$t(shared.claimDurationTypeIntermittent)",
-    claimDurationType_reducedSchedule:
-      "$t(shared.claimDurationTypeReducedSchedule)",
-    frequencyBasis_irregular: "Irregular over the next 6 months",
-    frequencyBasis_months: "At least once a month",
-    frequencyBasis_weeks: "At least once a week",
-    intermittentFrequencyDuration_irregularMonths_days:
-      "Estimated <strong>{{frequency}}</strong> absences over the next 6 months, each lasting <strong>at least a day</strong> for <strong>{{duration}}</strong> days.",
-    intermittentFrequencyDuration_irregularMonths_hours:
-      "Estimated <strong>{{frequency}}</strong> absences over the next 6 months, each lasting <strong>less than a full work day</strong> for <strong>{{duration}}</strong> hours.",
-    intermittentFrequencyDuration_months_days:
-      "Estimated <strong>{{frequency}}</strong> absences per month, each lasting <strong>at least a day</strong> for <strong>{{duration}}</strong> days.",
-    intermittentFrequencyDuration_months_hours:
-      "Estimated <strong>{{frequency}}</strong> absences per month, each lasting <strong>less than a full work day</strong> for <strong>{{duration}}</strong> hours.",
-    intermittentFrequencyDuration_weeks_days:
-      "Estimated <strong>{{frequency}}</strong> absences per week, each lasting <strong>at least a day</strong> for <strong>{{duration}}</strong> days.",
-    intermittentFrequencyDuration_weeks_hours:
-      "Estimated <strong>{{frequency}}</strong> absences per week, each lasting <strong>less than a full work day</strong> for <strong>{{duration}}</strong> hours.",
-    lead_hasDocs: "$t(shared.employerLeaveScheduleLeadHasDocs)",
-    lead_noDocs: "$t(shared.employerLeaveScheduleLeadNoDocs)",
-  },
   employersLeaveDetails: {
     applicationIdLabel: "Application ID",
     choiceNo: "No (comment required)",
@@ -2943,10 +2916,7 @@ const components = {
     claimDurationType_reducedSchedule:
       "$t(shared.claimDurationTypeReducedSchedule)",
     dateRangeLabel: "Date range",
-    detailsLabel: "Details",
     header: "Leave schedule",
-    lead_hasDocs: "$t(shared.employerLeaveScheduleLeadHasDocs)",
-    lead_noDocs: "$t(shared.employerLeaveScheduleLeadNoDocs)",
     leaveFrequencyLabel: "Leave frequency",
     reducedHoursPerWeek: "Reduced by {{numOfHours}} hours per week",
   },

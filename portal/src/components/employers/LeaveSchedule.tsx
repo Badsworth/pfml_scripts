@@ -28,7 +28,6 @@ const LeaveSchedule = ({ hasDocuments, claim }: LeaveScheduleProps) => {
   const tableHeadings = [
     t("components.employersLeaveSchedule.dateRangeLabel"),
     t("components.employersLeaveSchedule.leaveFrequencyLabel"),
-    t("components.employersLeaveSchedule.detailsLabel"),
   ];
 
   return (
@@ -74,7 +73,6 @@ const LeaveSchedule = ({ hasDocuments, claim }: LeaveScheduleProps) => {
                   "components.employersLeaveSchedule.claimDurationType_continuous"
                 )}
               </td>
-              <td></td>
             </tr>
           )}
           {isReducedSchedule && (
@@ -96,19 +94,6 @@ const LeaveSchedule = ({ hasDocuments, claim }: LeaveScheduleProps) => {
                   "components.employersLeaveSchedule.claimDurationType_reducedSchedule"
                 )}
               </td>
-              <td data-label={tableHeadings[2]}>
-                <Trans
-                  i18nKey="components.employersLeaveSchedule.lead"
-                  components={{
-                    "contact-center-phone-link": (
-                      <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
-                    ),
-                  }}
-                  tOptions={{
-                    context: hasDocuments ? "hasDocs" : "noDocs",
-                  }}
-                />
-              </td>
             </tr>
           )}
           {isIntermittent && (
@@ -121,25 +106,8 @@ const LeaveSchedule = ({ hasDocuments, claim }: LeaveScheduleProps) => {
               </th>
               <td data-label={tableHeadings[1]}>
                 {t(
-                  "components.employersIntermittentLeaveSchedule.claimDurationType_intermittent"
+                  "components.employersLeaveSchedule.claimDurationType_intermittent"
                 )}
-              </td>
-              <td data-label={tableHeadings[2]}>
-                <div>
-                  <Trans
-                    i18nKey="components.employersIntermittentLeaveSchedule.lead"
-                    components={{
-                      "contact-center-phone-link": (
-                        <a
-                          href={`tel:${t("shared.contactCenterPhoneNumber")}`}
-                        />
-                      ),
-                    }}
-                    tOptions={{
-                      context: hasDocuments ? "hasDocs" : "noDocs",
-                    }}
-                  />
-                </div>
               </td>
             </tr>
           )}

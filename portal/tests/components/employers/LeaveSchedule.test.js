@@ -48,18 +48,13 @@ describe("LeaveSchedule", () => {
     expect(
       screen.getByText(/Download the attached documentation for more details./)
     ).toBeInTheDocument();
-    expect(
-      screen.getByRole("cell", {
-        name: "Download the attached documentation or contact us at (833) 344‑7365 for details about the leave schedule.",
-      })
-    ).toBeInTheDocument();
   });
 
   it("renders intermittent schedule without documents", () => {
     render(<LeaveSchedule claim={INTERMITTENT_CLAIM} />);
     expect(
       screen.getByRole("row", {
-        name: "2/1/2021 to 7/1/2021 Intermittent leave Contact us at (833) 344‑7365 for details about the leave schedule.",
+        name: "2/1/2021 to 7/1/2021 Intermittent leave",
       })
     ).toBeInTheDocument();
   });
@@ -70,12 +65,6 @@ describe("LeaveSchedule", () => {
       screen.getByText(
         "Download the attached documentation for details about the employee’s intermittent leave schedule."
       )
-    ).toBeInTheDocument();
-
-    expect(
-      screen.getByRole("cell", {
-        name: "Download the attached documentation or contact us at (833) 344‑7365 for details about the leave schedule.",
-      })
     ).toBeInTheDocument();
   });
 
@@ -89,7 +78,7 @@ describe("LeaveSchedule", () => {
     ).toBeInTheDocument();
     expect(
       screen.getByRole("row", {
-        name: "2/1/2021 to 7/1/2021 Reduced leave schedule Contact us at (833) 344‑7365 for details about the leave schedule.",
+        name: "2/1/2021 to 7/1/2021 Reduced leave schedule",
       })
     ).toBeInTheDocument();
   });

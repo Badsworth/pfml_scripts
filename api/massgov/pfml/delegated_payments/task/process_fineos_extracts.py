@@ -12,6 +12,9 @@ from massgov.pfml.delegated_payments.audit.delegated_payment_audit_report import
 from massgov.pfml.delegated_payments.delegated_fineos_claimant_extract import ClaimantExtractStep
 from massgov.pfml.delegated_payments.delegated_fineos_payment_extract import PaymentExtractStep
 from massgov.pfml.delegated_payments.delegated_fineos_pei_writeback import FineosPeiWritebackStep
+from massgov.pfml.delegated_payments.delegated_fineos_related_payment_processing import (
+    RelatedPaymentsProcessingStep,
+)
 from massgov.pfml.delegated_payments.fineos_extract_step import (
     CLAIMANT_EXTRACT_CONFIG,
     PAYMENT_EXTRACT_CONFIG,
@@ -33,7 +36,6 @@ from massgov.pfml.util.datetime import get_now_us_eastern
 
 logger = logging.get_logger(__name__)
 
-
 ALL = "ALL"
 RUN_AUDIT_CLEANUP = "audit-cleanup"
 CONSUME_FINEOS_CLAIMANT = "consume-fineos-claimant"
@@ -43,6 +45,7 @@ PAYMENT_EXTRACT = "payment-extract"
 VALIDATE_ADDRESSES = "validate-addresses"
 VALIDATE_MAX_WEEKLY_BENEFIT_AMOUNT = "validate-max-weekly-benefit-amount"
 PAYMENT_POST_PROCESSING = "payment-post-processing"
+RELATED_PAYMENT_PROCESSING = "related-payment-processing"
 CREATE_AUDIT_REPORT = "audit-report"
 CREATE_PEI_WRITEBACK = "initial-writeback"
 REPORT = "report"
@@ -55,6 +58,7 @@ ALLOWED_VALUES = [
     PAYMENT_EXTRACT,
     VALIDATE_ADDRESSES,
     PAYMENT_POST_PROCESSING,
+    RELATED_PAYMENT_PROCESSING,
     CREATE_AUDIT_REPORT,
     CREATE_PEI_WRITEBACK,
     REPORT,
@@ -70,6 +74,7 @@ class Configuration:
     validate_addresses: bool
     validate_max_weekly_benefit_amount: bool
     do_payment_post_processing: bool
+    do_related_payment_processing: bool
     make_audit_report: bool
     create_pei_writeback: bool
     make_reports: bool
@@ -98,6 +103,7 @@ class Configuration:
             self.validate_addresses = True
             self.validate_max_weekly_benefit_amount = True
             self.do_payment_post_processing = True
+            self.do_related_payment_processing = True
             self.make_audit_report = True
             self.create_pei_writeback = True
             self.make_reports = True
@@ -110,6 +116,7 @@ class Configuration:
             self.validate_addresses = VALIDATE_ADDRESSES in steps
             self.validate_max_weekly_benefit_amount = VALIDATE_MAX_WEEKLY_BENEFIT_AMOUNT in steps
             self.do_payment_post_processing = PAYMENT_POST_PROCESSING in steps
+            self.do_related_payment_processing = RELATED_PAYMENT_PROCESSING in steps
             self.make_audit_report = CREATE_AUDIT_REPORT in steps
             self.create_pei_writeback = CREATE_PEI_WRITEBACK in steps
             self.make_reports = REPORT in steps
@@ -174,6 +181,13 @@ def _process_fineos_extracts(
         PaymentPostProcessingStep(
             db_session=db_session, log_entry_db_session=log_entry_db_session
         ).run()
+
+    if payments_util.is_withholding_payments_enabled():
+        logger.info("Tax Withholding ENABLED")
+        if config.do_related_payment_processing:
+            RelatedPaymentsProcessingStep(
+                db_session=db_session, log_entry_db_session=log_entry_db_session
+            ).run()
 
     if config.make_audit_report:
         PaymentAuditReportStep(
