@@ -96,7 +96,15 @@ def application_get(application_id):
         ensure(READ, existing_application)
         application_response = ApplicationResponse.from_orm(existing_application)
 
-    issues = application_rules.get_application_issues(existing_application)
+    # Only run these validations if the application hasn't already been submitted. This
+    # prevents warnings from showing in the response for rules added after the application
+    # was submitted, which would cause a Portal user's Checklist to revert back to showing
+    # steps as incomplete, and they wouldn't be able to fix this.
+    issues = (
+        application_rules.get_application_submit_issues(existing_application)
+        if not existing_application.submitted_time
+        else []
+    )
 
     return response_util.success_response(
         message="Successfully retrieved application",
@@ -193,7 +201,7 @@ def applications_update(application_id):
             db_session, application_request, existing_application
         )
 
-    issues = application_rules.get_application_issues(existing_application)
+    issues = application_rules.get_application_submit_issues(existing_application)
     employer_issue = get_contributing_employer_or_employee_issue(
         db_session, existing_application.employer_fein, existing_application.tax_identifier
     )
@@ -259,7 +267,7 @@ def applications_submit(application_id):
 
         log_attributes = get_application_log_attributes(existing_application)
 
-        issues = application_rules.get_application_issues(existing_application)
+        issues = application_rules.get_application_submit_issues(existing_application)
         employer_issue = get_contributing_employer_or_employee_issue(
             db_session, existing_application.employer_fein, existing_application.tax_identifier
         )
