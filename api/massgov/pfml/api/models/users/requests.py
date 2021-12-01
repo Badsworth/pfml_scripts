@@ -1,5 +1,6 @@
 from typing import Optional
 
+from massgov.pfml.api.models.common import Phone
 from massgov.pfml.api.models.users.responses import AuthCodeResponse, AuthURIResponse
 from massgov.pfml.types import Fein
 from massgov.pfml.util.pydantic import PydanticBaseModel
@@ -24,6 +25,7 @@ class UserCreateRequest(PydanticBaseModel):
 class UserUpdateRequest(PydanticBaseModel):
     consented_to_data_sharing: Optional[bool]
     mfa_delivery_preference: Optional[str]
+    mfa_phone_number: Optional[Phone]
 
 
 class UserConvertEmployerRequest(PydanticBaseModel):

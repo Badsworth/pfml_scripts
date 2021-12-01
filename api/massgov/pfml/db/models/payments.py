@@ -616,6 +616,76 @@ class FineosExtractReplacedPayments(Base, TimestampMixin):
     reference_file = relationship(ReferenceFile)
 
 
+class FineosExtractVbiLeavePlanRequestedAbsence(Base, TimestampMixin):
+    __tablename__ = "fineos_extract_vbi_leave_plan_requested_absence"
+
+    leave_plan_requested_absence_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+
+    selectedplan_classid = Column(Text)
+    selectedplan_indexid = Column(Text)
+    selectedplan_lastupdatedate = Column(Text)
+    selectedplan_adjudicat_result = Column(Text)
+    selectedplan_adjudication_note = Column(Text)
+    selectedplan_updatedbyuserid = Column(Text)
+    leaveplan_classid = Column(Text)
+    leaveplan_indexid = Column(Text)
+    leaveplan_displayreference = Column(Text)
+    leaveplan_shortname = Column(Text)
+    leaveplan_longname = Column(Text)
+    leaveplan_alias = Column(Text)
+    leaveplan_leavegroup = Column(Text)
+    leaveplan_leavecategory = Column(Text)
+    leaveplan_leavetype = Column(Text)
+    leaveplan_state = Column(Text)
+    leaveplan_jobprotection = Column(Text)
+    leaverequest_id = Column(Text)
+
+    reference_file_id = Column(
+        PostgreSQLUUID, ForeignKey("reference_file.reference_file_id"), index=True
+    )
+    fineos_extract_import_log_id = Column(
+        Integer, ForeignKey("import_log.import_log_id"), index=True
+    )
+
+    reference_file = relationship(ReferenceFile)
+
+
+class FineosExtractVPaidLeaveInstruction(Base, TimestampMixin):
+    __tablename__ = "fineos_extract_v_paid_leave_instruction"
+
+    paid_leave_instruction_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+
+    c = Column(Text)
+    i = Column(Text)
+    flags = Column(Text)
+    partitionid = Column(Text)
+    lastupdatedate = Column(Text)
+    boeversion = Column(Text)
+    c_osuser_updatedby = Column(Text)
+    i_osuser_updatedby = Column(Text)
+    averagedaysworked = Column(Text)
+    averageweeklywage_monamt = Column(Text)
+    averageweeklywage_moncur = Column(Text)
+    benefitwaitingperiod = Column(Text)
+    doesmandatoryfitapply = Column(Text)
+    notes = Column(Text)
+    policyreference = Column(Text)
+    taxablepercentage = Column(Text)
+    autoapprovebenefits = Column(Text)
+    benefitwaitingperiodbasis = Column(Text)
+    c_selectedleaveplan = Column(Text)
+    i_selectedleaveplan = Column(Text)
+
+    reference_file_id = Column(
+        PostgreSQLUUID, ForeignKey("reference_file.reference_file_id"), index=True
+    )
+    fineos_extract_import_log_id = Column(
+        Integer, ForeignKey("import_log.import_log_id"), index=True
+    )
+
+    reference_file = relationship(ReferenceFile)
+
+
 class MmarsPaymentData(Base, TimestampMixin):
     __tablename__ = "mmars_payment_data"
 

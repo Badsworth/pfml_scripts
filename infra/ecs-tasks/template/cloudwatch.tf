@@ -452,6 +452,29 @@ module "pub-payments-process-snapshot" {
   ecs_task_role              = aws_iam_role.pub_payments_process_fineos_task_role.arn
 }
 
+# TODO uncomment when ready
+# The task will process fineos extract files for IAWW data.
+# Run fineos-import-iaww at 3am EST (4am EDT) Monday through Friday
+
+# module "fineos-import-iaww" {
+#   source     = "../../modules/ecs_task_scheduler"
+#   is_enabled = var.enable_pub_automation_fineos
+
+#   task_name                            = "fineos-import-iaww"
+#   schedule_expression_standard         = "cron(0 8 ? * MON-FRI *)"
+#   schedule_expression_daylight_savings = "cron(0 7 ? * MON-FRI *)"
+#   environment_name                     = var.environment_name
+
+#   cluster_arn        = data.aws_ecs_cluster.cluster.arn
+#   app_subnet_ids     = var.app_subnet_ids
+#   security_group_ids = [aws_security_group.tasks.id]
+
+#   ecs_task_definition_arn    = aws_ecs_task_definition.ecs_tasks["fineos-import-iaww"].arn
+#   ecs_task_definition_family = aws_ecs_task_definition.ecs_tasks["fineos-import-iaww"].family
+#   ecs_task_executor_role     = aws_iam_role.task_executor.arn
+#   ecs_task_role              = aws_iam_role.fineos_import_iaww_task_role.arn
+# }
+
 # Run 1099-form-generator at <Every 3 hours Mon-Fri>
 # Defined in /pfml/infra/ecs_tasks/template/tasks_1099.tf
 # module "pub-payments-process-1099-form-generator" {

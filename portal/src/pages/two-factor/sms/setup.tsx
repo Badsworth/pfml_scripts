@@ -1,4 +1,5 @@
 import { AppLogic } from "../../../hooks/useAppLogic";
+import BackButton from "../../../components/BackButton";
 import Button from "../../../components/core/Button";
 import InputText from "../../../components/core/InputText";
 import Lead from "../../../components/core/Lead";
@@ -29,10 +30,6 @@ export const SetupSMS = (props: SetupSMSProps) => {
     // Do nothing for now
   };
 
-  const handleSkip = () => {
-    // Do nothing for now
-  };
-
   const getFunctionalInputProps = useFunctionalInputProps({
     appErrors: appLogic.appErrors,
     formState,
@@ -44,6 +41,7 @@ export const SetupSMS = (props: SetupSMSProps) => {
 
   return (
     <form className="usa-form" onSubmit={handleSubmit} method="post">
+      <BackButton />
       <Title>{t("pages.authTwoFactorSmsSetup.title")}</Title>
       <Lead>
         <Trans i18nKey="pages.authTwoFactorSmsSetup.lead" />
@@ -54,17 +52,8 @@ export const SetupSMS = (props: SetupSMSProps) => {
         label={t("pages.authTwoFactorSmsSetup.phoneNumberLabel")}
         smallLabel
       />
-
       <Button type="submit" className="display-block">
         {t("pages.authTwoFactorSmsSetup.saveButton")}
-      </Button>
-      <Button
-        type="button"
-        onClick={handleSkip}
-        variation="outline"
-        className="display-block margin-top-1"
-      >
-        {t("pages.authTwoFactorSmsSetup.skipButton")}
       </Button>
     </form>
   );

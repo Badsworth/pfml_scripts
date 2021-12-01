@@ -143,6 +143,11 @@ const errors = {
       required: "Enter how many hours you work on average each week.",
       type: "The average hours you work each week must be a number.",
     },
+    is_withholding_tax: {
+      duplicate:
+        "You have already submitted your tax withholding preference. If you need to edit your preference, call the Contact Center at $t(shared.contactCenterPhoneNumberNoBreak).",
+      required: "Select your tax withholding preference.",
+    },
     last_name: {
       maxLength: "Last name must be 50 characters or fewer.",
       required: "Enter a last name.",
@@ -996,18 +1001,18 @@ const pages = {
   },
   authTwoFactorSmsConfirm: {
     codeLabel: "6-digit code",
-    lead: "Enter the 6-digit code we sent to your phone number (123)$t(chars.nbsp)456$t(chars.nbhyphen)0012.",
+    lead: "Enter the 6-digit code we sent to your phone number {{mfaPhoneNumber}}.",
     resendCodeButton: "$t(shared.resendVerificationCodeLink)",
     saveButton: "$t(shared.saveAndContinue)",
-    skipButton: "$t(shared.auth.skip)",
     title: "Confirm your phone number",
   },
   authTwoFactorSmsSetup: {
-    lead: "We’ll send a 6-digit code by text message (SMS) to secure your account. This step is optional, but we can only show personal information like tax documents if you set this up.<br><br>If you skip this step now, you can secure your account later by going to the “Setting: Security” page.",
+    lead: "We’ll send a 6-digit code by text message (SMS) to secure your account.",
     phoneNumberLabel: "Phone number",
     saveButton: "$t(shared.saveAndContinue)",
     skipButton: "$t(shared.auth.skip)",
-    title: "Make your account more secure",
+    title:
+      "Provide a phone number we can use when we need to verify your login",
   },
   authTwoFactorSmsVerify: {
     callContactCenter:
@@ -2793,9 +2798,9 @@ const components = {
     explanation:
       "Your employee has told us about the following accrued paid leave they plan to use concurrent with their paid leave from PFML. This includes paid vacation time, sick time, personal time, and other paid time off. It does not include a family or medical leave policy or a disability program.",
     explanationDetails_continuousOrReduced:
-      "Your employee won’t receive PFML payments for the first 7 calendar days of their PFML leave from {{startDate}} to {{endDate}}. During those 7 days they may use accrued paid leave, and you and your employee shouldn’t report it.",
+      "Your employee won’t receive PFML payments for the first 7 calendar days of their PFML leave from {{startDate}} to {{endDate}}. During those 7 days they may use accrued paid leave, and you and your employee <strong>shouldn’t</strong> report it.",
     explanationDetails_intermittent:
-      "Your employee won’t receive PFML payments for the first 7 calendar days from the date of their first instance of leave. During those 7 days they may use accrued paid leave, and you and your employee shouldn’t report it.",
+      "Your employee won’t receive PFML payments for the first 7 calendar days from the date of their first instance of leave. During those 7 days they may use accrued paid leave, and you and your employee <strong>shouldn’t</strong> report it.",
     header: "Concurrent accrued paid leave",
   },
   employersEmployeeInformation: {
