@@ -240,11 +240,6 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
           >
             Leave frequency
           </th>
-          <th
-            scope="col"
-          >
-            Details
-          </th>
         </tr>
       </thead>
       <tbody>
@@ -260,7 +255,6 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
           >
             Continuous leave
           </td>
-          <td />
         </tr>
         <tr>
           <th
@@ -273,17 +267,6 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
             data-label="Leave frequency"
           >
             Reduced leave schedule
-          </td>
-          <td
-            data-label="Details"
-          >
-            Contact us at 
-            <a
-              href="tel:(833) 344-7365"
-            >
-              (833) 344‑7365
-            </a>
-             for details about the leave schedule.
           </td>
         </tr>
       </tbody>
