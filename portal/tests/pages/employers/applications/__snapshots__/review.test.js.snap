@@ -451,7 +451,7 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
         </div>
       </details>
       <table
-        class="usa-table usa-table--borderless width-full"
+        class="usa-table usa-table--borderless width-full usa-table--stacked"
       >
         <thead>
           <tr>
@@ -509,7 +509,7 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
          report it.
       </p>
       <table
-        class="usa-table usa-table--borderless width-full"
+        class="usa-table usa-table--borderless width-full usa-table--stacked"
       >
         <thead>
           <tr>
@@ -560,7 +560,7 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
         </a>
       </p>
       <table
-        class="usa-table usa-table--borderless width-full"
+        class="usa-table usa-table--borderless width-full usa-table--stacked"
       >
         <thead>
           <tr>
@@ -587,14 +587,19 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
             data-testid="benefit-details-row"
           >
             <th
+              data-label="Date range"
               scope="row"
             >
               1/1/2021 to 2/1/2021
             </th>
-            <td>
+            <td
+              data-label="Benefit type"
+            >
               Family or medical leave insurance
             </td>
-            <td>
+            <td
+              data-label="Details"
+            >
               $500.00 per week
             </td>
             <td>
@@ -620,14 +625,19 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
             data-testid="benefit-details-row"
           >
             <th
+              data-label="Date range"
               scope="row"
             >
               1/1/2021 to 2/1/2021
             </th>
-            <td>
+            <td
+              data-label="Benefit type"
+            >
               Family or medical leave insurance
             </td>
-            <td>
+            <td
+              data-label="Details"
+            >
               $200.00 (frequency unknown)
             </td>
             <td>
@@ -653,14 +663,19 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
             data-testid="benefit-details-row"
           >
             <th
+              data-label="Date range"
               scope="row"
             >
               1/1/2021 to 2/1/2021
             </th>
-            <td>
+            <td
+              data-label="Benefit type"
+            >
               Short-term disability insurance
             </td>
-            <td>
+            <td
+              data-label="Details"
+            >
               Full salary continuous
             </td>
             <td>
@@ -686,14 +701,19 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
             data-testid="benefit-details-row"
           >
             <th
+              data-label="Date range"
               scope="row"
             >
               1/1/2021 to 2/1/2021
             </th>
-            <td>
+            <td
+              data-label="Benefit type"
+            >
               Permanent disability insurance
             </td>
-            <td>
+            <td
+              data-label="Details"
+            >
               No amount reported
             </td>
             <td>

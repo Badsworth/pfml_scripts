@@ -63,7 +63,7 @@ const ConcurrentLeave = (props: ConcurrentLeaveProps) => {
           }}
         />
       </p>
-      <Table className="width-full">
+      <Table className="width-full" responsive>
         <thead>
           <tr>
             <th scope="col">
