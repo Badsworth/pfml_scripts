@@ -125,6 +125,7 @@ output "domains" {
 
 output "admin_domains" {
   value = {
+    "infra-test" = "paidleave-admin-infra-test.dfml.eol.mass.gov",
     "test"     = "paidleave-admin-test.dfml.eol.mass.gov",
     "stage"    = "paidleave-admin-stage.dfml.eol.mass.gov",
     "breakfix" = "paidleave-admin-breakfix.dfml.eol.mass.gov",
@@ -175,7 +176,8 @@ output "admin_portal_cert_domains" {
     "stage"    = "paidleave-admin-test.dfml.eol.mass.gov",
     "breakfix" = "paidleave-admin-test.dfml.eol.mass.gov",
     "uat"      = "paidleave-admin-test.dfml.eol.mass.gov",
-    "prod"     = "paidleave-admin.dfml.eol.mass.gov"
+    "prod"     = "paidleave-admin.dfml.eol.mass.gov",
+    "infra-test"= "paidleave-admin-test.dfml.eol.mass.gov"
   }
 }
 
