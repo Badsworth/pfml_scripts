@@ -226,7 +226,7 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
       This is your employee’s expected leave schedule.
     </p>
     <table
-      class="usa-table usa-table--borderless width-full"
+      class="usa-table usa-table--borderless width-full usa-table--stacked"
     >
       <thead>
         <tr>
@@ -250,25 +250,33 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
       <tbody>
         <tr>
           <th
+            data-label="Date range"
             scope="row"
           >
             1/1/2021 to 6/1/2021
           </th>
-          <td>
+          <td
+            data-label="Leave frequency"
+          >
             Continuous leave
           </td>
           <td />
         </tr>
         <tr>
           <th
+            data-label="Date range"
             scope="row"
           >
             2/1/2021 to 7/1/2021
           </th>
-          <td>
+          <td
+            data-label="Leave frequency"
+          >
             Reduced leave schedule
           </td>
-          <td>
+          <td
+            data-label="Details"
+          >
             Contact us at 
             <a
               href="tel:(833) 344-7365"
