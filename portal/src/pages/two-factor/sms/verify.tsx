@@ -1,4 +1,5 @@
 import { AppLogic } from "../../../hooks/useAppLogic";
+import BackButton from "../../../components/BackButton";
 import Button from "../../../components/core/Button";
 import InputText from "../../../components/core/InputText";
 import Lead from "../../../components/core/Lead";
@@ -47,6 +48,7 @@ export const VerifySMS = (props: VerifySMSProps) => {
   return (
     <div>
       <form className="usa-form" onSubmit={handleSubmit} method="post">
+        <BackButton />
         <Title>{t("pages.authTwoFactorSmsVerify.title")}</Title>
 
         <Lead>

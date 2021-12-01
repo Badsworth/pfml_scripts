@@ -1007,7 +1007,7 @@ const pages = {
     title: "Confirm your phone number",
   },
   authTwoFactorSmsSetup: {
-    lead: "We’ll send a 6-digit code by text message (SMS) to secure your account.",
+    lead: "Enter a number that can receive text messages and that you'll have consistent access to in case we need to verify your login. We’ll send a 6-digit code by text message (SMS) to secure your account.",
     phoneNumberLabel: "Phone number",
     saveButton: "$t(shared.saveAndContinue)",
     skipButton: "$t(shared.auth.skip)",
@@ -1018,7 +1018,7 @@ const pages = {
     callContactCenter:
       "Need help? Call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.",
     codeLabel: "$t(shared.verificationCodeLabel)",
-    lead: "We sent a 6-digit code to your phone number ending in {{lastFourDigits}}.",
+    lead: "We sent a 6-digit code to your phone number (###) ###-{{lastFourDigits}} as an additional security measure.",
     resendCodeLink: "$t(shared.resendVerificationCodeLink)",
     submitButton: "Submit",
     title: "Enter your security code",
