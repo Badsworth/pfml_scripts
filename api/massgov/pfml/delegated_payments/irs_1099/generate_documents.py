@@ -58,9 +58,7 @@ class Generate1099DocumentsStep(Step):
                 "year": record.tax_year,
                 "corrected": record.correction_ind,
                 "paymentAmount": str(record.gross_payments),
-                "socialNumber": pfml_1099_util.get_tax_id(
-                    self.db_session, str(record.tax_identifier_id)
-                ),
+                "socialNumber": "000-00-0000",
                 "federalTaxesWithheld": str(record.federal_tax_withholdings),
                 "stateTaxesWithheld": str(record.state_tax_withholdings),
                 "repayments": str(record.overpayment_repayments),
