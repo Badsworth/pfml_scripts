@@ -1365,9 +1365,9 @@
 </ul>
 <hr />
 <h3 id="how-application-validation-works">How Application validation works</h3>
-<p>A <code>get_application_issues</code> function exists for reporting potential "warnings" on an application. These are primarily rules related to required or conditionally required fields, but may also relate to rules that span multiple fields.</p>
+<p>A <code>get_application_submit_issues</code> function exists for reporting potential "warnings" on an application at the time part 1 is submitted. These are primarily rules related to required or conditionally required fields, but may also relate to rules that span multiple fields.</p>
 <p>For <code>GET</code> and <code>PATCH</code> requests to the <code>/applications/:application_id</code> endpoint, these validations result in data still saving to our database and a 200 status code with <code>warnings</code> rather than <code>errors</code>, since we expect requests to not always have a complete application, since a user will be filling out the application through a multi-page experience.</p>
-<p>For <code>POST</code> requests to /applications/:application_id/complete_application and /applications/:application_id/submit_application, these validations result in a 400 status code with <code>errors</code> when a rule is not fulfilled.</p>
+<p>For <code>POST</code> requests to <code>/applications/:application_id/*</code> endpoints, these validations result in a 400 status code with <code>errors</code> when a rule is not fulfilled.</p>
 <p>These validations are located in <code>application_rules.py</code>.</p>
 
               
