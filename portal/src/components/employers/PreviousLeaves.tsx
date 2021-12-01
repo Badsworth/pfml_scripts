@@ -118,7 +118,7 @@ const PreviousLeaves = (props: PreviousLeavesProps) => {
           </li>
         </ul>
       </Details>
-      <Table className="width-full">
+      <Table className="width-full" responsive>
         <thead>
           <tr>
             <th scope="col">

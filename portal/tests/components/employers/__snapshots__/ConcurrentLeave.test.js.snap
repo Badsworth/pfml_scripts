@@ -18,7 +18,7 @@ exports[`ConcurrentLeave renders the component 1`] = `
      report it.
   </p>
   <table
-    class="usa-table usa-table--borderless c-table width-full"
+    class="usa-table usa-table--borderless width-full usa-table--stacked"
   >
     <thead>
       <tr>
@@ -33,6 +33,7 @@ exports[`ConcurrentLeave renders the component 1`] = `
     <tbody>
       <tr>
         <th
+          data-label="Date range"
           scope="row"
         >
           3/1/2020 to 3/6/2020

@@ -27,26 +27,14 @@ describe("Table", () => {
     render(<Table className="some-style additional-style" />);
 
     expect(screen.getByRole("table")).toHaveClass(
-      "usa-table usa-table--borderless c-table some-style additional-style"
+      "usa-table usa-table--borderless some-style additional-style"
     );
   });
 
   it("adds a stacked modifier class when the responsive prop is set", () => {
     render(<Table responsive />);
 
-    expect(screen.getByRole("table")).toHaveClass("usa-table--stacked-header");
-  });
-
-  it("adds a stacked modifier class with headers included when the responsiveIncludeHeaders prop is set", () => {
-    render(<Table responsiveIncludeHeader />);
-
     expect(screen.getByRole("table")).toHaveClass("usa-table--stacked");
-  });
-
-  it("adds a modifier class removing borders on mobile view when borderlessMobile prop is set", () => {
-    render(<Table borderlessMobile />);
-
-    expect(screen.getByRole("table")).toHaveClass("borderless-mobile");
   });
 
   it("nests the table in a scrollable container when the scrollable prop is set", () => {

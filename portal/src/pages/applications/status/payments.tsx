@@ -84,7 +84,7 @@ export const Payments = ({
         </Heading>
 
         {shouldShowPaymentsTable && (
-          <Table borderlessMobile responsiveIncludeHeader>
+          <Table className="width-full" responsive>
             <thead>
               <tr>
                 {tableColumns.map((columnName) => (
