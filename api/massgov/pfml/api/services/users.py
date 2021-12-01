@@ -4,6 +4,7 @@ import massgov.pfml.api.app as app
 import massgov.pfml.db as db
 import massgov.pfml.db.lookups as db_lookups
 from massgov.pfml.api.models.users.requests import UserUpdateRequest
+from massgov.pfml.api.util.phone import convert_to_E164
 from massgov.pfml.db.models.employees import LkMFADeliveryPreference, User
 
 
@@ -15,6 +16,10 @@ def update_user(user: User, update_request: UserUpdateRequest) -> User:
             if key == "mfa_delivery_preference":
                 _add_or_update_mfa_delivery_preference(db_session, user, key, value)
                 continue
+
+            if key == "mfa_phone_number":
+                if value is not None:
+                    value = convert_to_E164(value)
 
             setattr(user, key, value)
 

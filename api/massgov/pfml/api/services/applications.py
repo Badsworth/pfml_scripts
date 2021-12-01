@@ -20,6 +20,7 @@ from massgov.pfml.api.models.applications.requests import ApplicationRequestBody
 from massgov.pfml.api.models.applications.responses import DocumentResponse
 from massgov.pfml.api.models.common import LookupEnum
 from massgov.pfml.api.services.fineos_actions import get_documents
+from massgov.pfml.api.util.phone import convert_to_E164
 from massgov.pfml.api.validation.exceptions import (
     IssueRule,
     IssueType,
@@ -855,21 +856,12 @@ def set_previous_leaves(
 
 
 def add_or_update_phone(
-    db_session: db.Session, phone: Optional[apps_common_io.Phone], application: Application,
+    db_session: db.Session, phone: Optional[common_io.Phone], application: Application,
 ) -> None:
     if not phone:
         return
 
-    int_code = phone.int_code
-    phone_number = phone.phone_number
-    internationalized_phone_number = None
-
-    # If the phone number wasn't removed during the masked value check, convert it to E.164
-    if phone_number:
-        parsed_phone_number = phonenumbers.parse(f"+{int_code}{phone_number}")
-        internationalized_phone_number = phonenumbers.format_number(
-            parsed_phone_number, phonenumbers.PhoneNumberFormat.E164
-        )
+    internationalized_phone_number = convert_to_E164(phone)
 
     # If Phone exists, update with what we have, otherwise, create a new Phone
     # if process_masked_phone_number did not remove the phone_number field, update the db

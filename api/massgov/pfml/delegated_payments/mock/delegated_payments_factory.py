@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 from typing import Any, Dict, Optional
 
@@ -14,6 +14,7 @@ from massgov.pfml.db.models.employees import (
     Employee,
     EmployeeAddress,
     Employer,
+    ImportLog,
     Payment,
     PaymentCheck,
     PaymentTransactionType,
@@ -27,6 +28,7 @@ from massgov.pfml.db.models.factories import (
     EmployeePubEftPairFactory,
     EmployerFactory,
     ExperianAddressPairFactory,
+    ImportLogFactory,
     PaymentFactory,
     PubEftFactory,
     TaxIdentifierFactory,
@@ -55,12 +57,14 @@ class DelegatedPaymentFactory(MockData):
         employer: Optional[Employer] = None,
         claim: Optional[Claim] = None,
         payment: Optional[Payment] = None,
+        import_log: Optional[ImportLog] = None,
         add_employee: bool = True,
         add_address: bool = True,
         add_employer: bool = True,
         add_claim: bool = True,
         add_pub_eft: bool = True,
         add_payment: bool = True,
+        add_import_log: bool = True,
         **kwargs: Any,
     ):
         super().__init__(generate_defaults, **kwargs)
@@ -73,6 +77,7 @@ class DelegatedPaymentFactory(MockData):
         self.claim = claim
         self.payment = payment
         self.pub_eft = None
+        self.import_log = import_log
         self.mailing_address: Optional[Address] = None
         self.add_employee = add_employee
         self.add_address = add_address
@@ -80,6 +85,7 @@ class DelegatedPaymentFactory(MockData):
         self.add_claim = add_claim
         self.add_pub_eft = add_pub_eft
         self.add_payment = add_payment
+        self.add_import_log = add_import_log
 
         # employee
         self.fineos_customer_number = self.get_value("fineos_customer_number", None)
@@ -135,7 +141,7 @@ class DelegatedPaymentFactory(MockData):
 
         self.payment_method = self.get_value("payment_method", None)
         self.payment_end_state_message = self.get_value("payment_end_state_message", "test")
-        self.period_start_date = self.get_value("period_start_date", date(2021, 1, 16))
+        self.period_start_date = self.get_value("period_start_date", date(2021, 1, 21))
         self.period_end_date = self.get_value("period_end_date", date(2021, 1, 28))
         self.payment_date = self.get_value("payment_date", date(2021, 1, 29))
         self.fineos_extraction_date = self.get_value("fineos_extraction_date", date(2021, 1, 28))
@@ -143,10 +149,13 @@ class DelegatedPaymentFactory(MockData):
         self.payment_transaction_type = self.get_value(
             "payment_transaction_type", PaymentTransactionType.STANDARD
         )
-        self.amount = self.get_value("amount", Decimal("0.00"))
+        self.amount = self.get_value("amount", Decimal("100.00"))
         self.experian_address_pair = self.get_value("experian_address_pair", None)
         self.check_number = self.get_value("check_number", None)
-        self.fineos_extract_import_log_id = self.get_value("fineos_extract_import_log_id", None)
+        self.fineos_extract_import_log_id = self.get_value(
+            "fineos_extract_import_log_id",
+            self.import_log.import_log_id if self.import_log else None,
+        )
         self.exclude_from_payment_status = self.get_value("exclude_from_payment_status", None)
 
     # only set if value was passed in constructor through kwarg
@@ -235,10 +244,54 @@ class DelegatedPaymentFactory(MockData):
 
         return self.claim
 
+    def get_or_create_import_log(self):
+        if self.fineos_extract_import_log_id is None and self.add_import_log:
+            import_log = ImportLogFactory.create()
+            self.import_log = import_log
+            self.fineos_extract_import_log_id = import_log.import_log_id
+
+        return self.import_log
+
+    def _payment_factory_call(self, **overrides):
+        args = (
+            {
+                "claim": self.claim,
+                "pub_individual_id": self.pub_individual_id,
+                "disb_method_id": self.payment_method.payment_method_id
+                if self.payment_method
+                else None,
+                "period_start_date": self.period_start_date,
+                "period_end_date": self.period_end_date,
+                "payment_date": self.payment_date,
+                "is_adhoc_payment": self.is_adhoc_payment,
+                "payment_transaction_type_id": self.payment_transaction_type.payment_transaction_type_id,
+                "amount": self.amount if self.amount else Decimal(0),
+                "pub_eft": self.pub_eft if self.set_pub_eft_in_payment else None,
+                "fineos_employee_first_name": self.employee.fineos_employee_first_name
+                if self.employee
+                else None,
+                "fineos_employee_last_name": self.employee.fineos_employee_last_name
+                if self.employee
+                else None,
+                "experian_address_pair": self.experian_address_pair,
+                "claim_type": self.claim.claim_type if self.claim else None,
+                "check": PaymentCheck(check_number=self.check_number)
+                if self.check_number
+                else None,
+                "fineos_extraction_date": self.fineos_extraction_date,
+                "fineos_extract_import_log_id": self.fineos_extract_import_log_id,
+                "exclude_from_payment_status": self.exclude_from_payment_status,
+            }
+            | self.payment_optional_kwargs
+            | overrides
+        )
+        return PaymentFactory.create(**args)
+
     def get_or_create_payment(self):
         if self.payment or not self.add_payment:
             return self.payment
 
+        self.get_or_create_import_log()
         self.get_or_create_claim()
 
         if self.add_address and self.experian_address_pair is None:
@@ -246,31 +299,7 @@ class DelegatedPaymentFactory(MockData):
                 fineos_address=self.get_or_create_address()
             )
 
-        self.payment = PaymentFactory.create(
-            claim=self.claim,
-            pub_individual_id=self.pub_individual_id,
-            disb_method_id=self.payment_method.payment_method_id if self.payment_method else None,
-            period_start_date=self.period_start_date,
-            period_end_date=self.period_end_date,
-            payment_date=self.payment_date,
-            is_adhoc_payment=self.is_adhoc_payment,
-            payment_transaction_type_id=self.payment_transaction_type.payment_transaction_type_id,
-            amount=self.amount if self.amount else Decimal(0),
-            pub_eft=self.pub_eft if self.set_pub_eft_in_payment else None,
-            fineos_employee_first_name=self.employee.fineos_employee_first_name
-            if self.employee
-            else None,
-            fineos_employee_last_name=self.employee.fineos_employee_last_name
-            if self.employee
-            else None,
-            experian_address_pair=self.experian_address_pair,
-            claim_type=self.claim.claim_type if self.claim else None,
-            check=PaymentCheck(check_number=self.check_number) if self.check_number else None,
-            fineos_extraction_date=self.fineos_extraction_date,
-            fineos_extract_import_log_id=self.fineos_extract_import_log_id,
-            exclude_from_payment_status=self.exclude_from_payment_status,
-            **self.payment_optional_kwargs,
-        )
+        self.payment = self._payment_factory_call()
 
         return self.payment
 
@@ -297,6 +326,68 @@ class DelegatedPaymentFactory(MockData):
             )
             self.db_session.add(writeback_details)
             return writeback_details
+
+    def create_related_payment(
+        self, weeks_later=0, amount=None, payment_transaction_type_id=None, import_log_id=None
+    ):
+        """ Roughly mimic creating another payment. Uses the original payment as a base
+            with only the specified values + C/I values updated.
+        """
+        self.get_or_create_payment()
+
+        if self.payment:
+            delta = timedelta(days=7 * weeks_later)
+
+            params = {
+                "period_start_date": self.payment.period_start_date + delta,  # type: ignore
+                "period_end_date": self.payment.period_end_date + delta,  # type: ignore
+                "amount": amount if amount is not None else self.payment.amount,
+                "payment_transaction_type_id": payment_transaction_type_id
+                if payment_transaction_type_id is not None
+                else self.payment.payment_transaction_type_id,
+                "fineos_extract_import_log_id": import_log_id
+                if import_log_id is not None
+                else self.payment.fineos_extract_import_log_id,
+            }
+
+            return self._payment_factory_call(**params)
+
+        return None
+
+    def create_cancellation_payment(self, reissuing_payment=None, import_log=None):
+        self.get_or_create_payment()
+
+        payment_to_reissue = reissuing_payment if reissuing_payment is not None else self.payment
+
+        if not import_log:
+            import_log = ImportLogFactory.create()
+
+        return self.create_related_payment(
+            amount=-payment_to_reissue.amount,
+            payment_transaction_type_id=PaymentTransactionType.CANCELLATION.payment_transaction_type_id,
+            import_log_id=import_log.import_log_id,
+        )
+
+    def create_reissued_payments(self, reissuing_payment=None, amount=None, import_log=None):
+        """ Create reissued equivalent payments.
+            This will return a cancellation + new payment both with a new import log ID
+        """
+        self.get_or_create_payment()
+
+        # If we call this a few times in a row, we might want to reissue
+        # a different payment than the one associated with the factory
+        payment_to_reissue = reissuing_payment if reissuing_payment is not None else self.payment
+
+        if not import_log:
+            import_log = ImportLogFactory.create()
+
+        cancellation_payment = self.create_cancellation_payment(payment_to_reissue, import_log)
+        successor_payment = self.create_related_payment(
+            amount=amount if amount is not None else payment_to_reissue.amount,
+            import_log_id=import_log.import_log_id,
+        )
+
+        return cancellation_payment, successor_payment
 
     def create_all(self):
         if self.add_pub_eft:

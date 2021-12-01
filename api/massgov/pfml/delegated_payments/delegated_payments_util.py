@@ -36,8 +36,10 @@ from massgov.pfml.db.models.payments import (
     FineosExtractEmployeeFeed,
     FineosExtractPaymentFullSnapshot,
     FineosExtractReplacedPayments,
+    FineosExtractVbiLeavePlanRequestedAbsence,
     FineosExtractVbiRequestedAbsence,
     FineosExtractVbiRequestedAbsenceSom,
+    FineosExtractVPaidLeaveInstruction,
     FineosExtractVpei,
     FineosExtractVpeiClaimDetails,
     FineosExtractVpeiPaymentDetails,
@@ -60,6 +62,8 @@ ExtractTable = Union[
     Type[FineosExtractCancelledPayments],
     Type[FineosExtractPaymentFullSnapshot],
     Type[FineosExtractReplacedPayments],
+    Type[FineosExtractVbiLeavePlanRequestedAbsence],
+    Type[FineosExtractVPaidLeaveInstruction],
 ]
 
 
@@ -389,6 +393,24 @@ class FineosExtractConstants:
         field_names=CANCELLED_OR_REPLACED_EXTRACT_FIELD_NAMES,
     )
 
+    VBI_LEAVE_PLAN_REQUESTED_ABSENCE = FineosExtract(
+        file_name="VBI_LEAVEPLANREQUESTEDABSENCE.csv",
+        table=FineosExtractVbiLeavePlanRequestedAbsence,
+        field_names=["SELECTEDPLAN_CLASSID", "SELECTEDPLAN_INDEXID", "LEAVEREQUEST_ID",],
+    )
+
+    PAID_LEAVE_INSTRUCTION = FineosExtract(
+        file_name="vpaidleaveinstruction.csv",
+        table=FineosExtractVPaidLeaveInstruction,
+        field_names=[
+            "C",
+            "I",
+            "AVERAGEWEEKLYWAGE_MONAMT",
+            "C_SELECTEDLEAVEPLAN",
+            "I_SELECTEDLEAVEPLAN",
+        ],
+    )
+
 
 CLAIMANT_EXTRACT_FILES = [
     FineosExtractConstants.VBI_REQUESTED_ABSENCE_SOM,
@@ -413,6 +435,12 @@ PAYMENT_RECONCILIATION_EXTRACT_FILES = [
 PAYMENT_RECONCILIATION_EXTRACT_FILE_NAMES = [
     extract_file.file_name for extract_file in PAYMENT_RECONCILIATION_EXTRACT_FILES
 ]
+
+IAWW_EXTRACT_FILES = [
+    FineosExtractConstants.VBI_LEAVE_PLAN_REQUESTED_ABSENCE,
+    FineosExtractConstants.PAID_LEAVE_INSTRUCTION,
+]
+IAWW_EXTRACT_FILES_NAMES = [extract_file.file_name for extract_file in IAWW_EXTRACT_FILES]
 
 
 class Regexes:
@@ -707,6 +735,7 @@ def get_fineos_max_history_date(export_type: LkReferenceFileType) -> datetime:
         - ReferenceFileType.FINEOS_CLAIMANT_EXTRACT
         - ReferenceFileType.FINEOS_PAYMENT_EXTRACT
         - ReferenceFileType.FINEOS_PAYMENT_RECONCILIATION_EXTRACT
+        - ReferenceFileType.FINEOS_IAWW_EXTRACT
 
     Raises:
         ValueError: An unacceptable ReferenceFileType or a bad datestring was
@@ -730,6 +759,11 @@ def get_fineos_max_history_date(export_type: LkReferenceFileType) -> datetime:
         == ReferenceFileType.FINEOS_PAYMENT_RECONCILIATION_EXTRACT.reference_file_type_id
     ):
         datestring = date_config.fineos_payment_reconciliation_extract_max_history_date
+    elif (
+        export_type.reference_file_type_id
+        == ReferenceFileType.FINEOS_IAWW_EXTRACT.reference_file_type_id
+    ):
+        datestring = date_config.fineos_iaww_extract_max_history_date
 
     else:
         raise ValueError(f"Incorrect export_type {export_type} provided")

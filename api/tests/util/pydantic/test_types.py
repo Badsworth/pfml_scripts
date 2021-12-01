@@ -5,13 +5,21 @@ from pydantic import BaseModel, ValidationError
 
 from massgov.pfml.db.models.factories import TaxIdentifierFactory
 from massgov.pfml.types import TaxId
+from massgov.pfml.util.pydantic.types import MaskedTaxIdFormattedStr
 
 
 class PydanticTypesTestModel(BaseModel):
     tax_id: Optional[TaxId]
+    masked_tax_id_formatted: Optional[MaskedTaxIdFormattedStr]
 
 
 def test_masked_tax_id_formatted_str_with_str():
+    tax_id = "000-43-2123"
+    model = PydanticTypesTestModel(masked_tax_id_formatted=tax_id)
+    assert model.masked_tax_id_formatted == "***-**-2123"
+
+
+def test_masked_tax_id_formatted_str_with_str_tax_id():
     tax_id = "000-43-2123"
     model = PydanticTypesTestModel(tax_id=tax_id)
     assert model.tax_id.to_masked_str() == "***-**-2123"

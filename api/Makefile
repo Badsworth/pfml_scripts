@@ -167,6 +167,9 @@ fineos-eligibility-feed-export: ## Run an eligibility feed export
 pub-payments-process-fineos:
 	$(PY_RUN_CMD) pub-payments-process-fineos --steps ALL $(DECODE_LOG)
 
+pub-claimant-address-validation:
+	$(PY_RUN_CMD) pub-claimant-address-validation --steps ALL $(DECODE_LOG)
+
 pub-payments-create-pub-files:
 	$(PY_RUN_CMD) pub-payments-create-pub-files --steps ALL $(DECODE_LOG)
 
@@ -193,6 +196,9 @@ delegated-payment-eft-response-generate:
 delegated-payment-check-response-generate:
 	mkdir -p mock_payment_check_response
 	$(PY_RUN_CMD) delegated-payment-check-response-generate --folder mock_payment_check_response $(DECODE_LOG)
+
+fineos-import-iaww:
+	$(PY_RUN_CMD) fineos-import-iaww --steps ALL $(DECODE_LOG)
 
 ecr-login: ## Login to ECR for Docker
 	@echo "Authenticating Docker with ECR"

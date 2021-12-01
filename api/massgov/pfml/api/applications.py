@@ -876,6 +876,17 @@ def validate_tax_withholding_request(db_session, application_id, tax_preference_
     existing_application = get_or_404(db_session, Application, application_id)
     ensure(EDIT, existing_application)
 
+    if not isinstance(tax_preference_body.is_withholding_tax, bool):
+        raise ValidationException(
+            errors=[
+                ValidationErrorDetail(
+                    type=IssueType.required,
+                    message="Tax withholding preference is required",
+                    field="is_withholding_tax",
+                )
+            ]
+        )
+
     if existing_application.is_withholding_tax is not None:
         logger.info(
             "submit_tax_withholding_preference failure - preference already set",
@@ -888,7 +899,13 @@ def validate_tax_withholding_request(db_session, application_id, tax_preference_
                     existing_application.application_id
                 ),
                 data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
-                errors=[],
+                errors=[
+                    ValidationErrorDetail(
+                        type=IssueType.duplicate,
+                        message="Tax withholding preference is already submitted",
+                        field="is_withholding_tax",
+                    )
+                ],
             ).to_api_response()
         )
 

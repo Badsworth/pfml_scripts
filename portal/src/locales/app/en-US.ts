@@ -143,6 +143,11 @@ const errors = {
       required: "Enter how many hours you work on average each week.",
       type: "The average hours you work each week must be a number.",
     },
+    is_withholding_tax: {
+      duplicate:
+        "You have already submitted your tax withholding preference. If you need to edit your preference, call the Contact Center at $t(shared.contactCenterPhoneNumberNoBreak).",
+      required: "Select your tax withholding preference.",
+    },
     last_name: {
       maxLength: "Last name must be 50 characters or fewer.",
       required: "Enter a last name.",
@@ -996,18 +1001,18 @@ const pages = {
   },
   authTwoFactorSmsConfirm: {
     codeLabel: "6-digit code",
-    lead: "Enter the 6-digit code we sent to your phone number (123)$t(chars.nbsp)456$t(chars.nbhyphen)0012.",
+    lead: "Enter the 6-digit code we sent to your phone number {{mfaPhoneNumber}}.",
     resendCodeButton: "$t(shared.resendVerificationCodeLink)",
     saveButton: "$t(shared.saveAndContinue)",
-    skipButton: "$t(shared.auth.skip)",
     title: "Confirm your phone number",
   },
   authTwoFactorSmsSetup: {
-    lead: "We’ll send a 6-digit code by text message (SMS) to secure your account. This step is optional, but we can only show personal information like tax documents if you set this up.<br><br>If you skip this step now, you can secure your account later by going to the “Setting: Security” page.",
+    lead: "We’ll send a 6-digit code by text message (SMS) to secure your account.",
     phoneNumberLabel: "Phone number",
     saveButton: "$t(shared.saveAndContinue)",
     skipButton: "$t(shared.auth.skip)",
-    title: "Make your account more secure",
+    title:
+      "Provide a phone number we can use when we need to verify your login",
   },
   authTwoFactorSmsVerify: {
     callContactCenter:
@@ -1581,6 +1586,8 @@ const pages = {
   },
   claimsPaymentMethod: {
     accountNumberLabel: "Account number",
+    accountNumberWarning:
+      "Your account number looks similar to a routing number. Check that you entered your account number correctly.",
     achLead:
       "We need this information so you can receive your weekly benefit through Direct Deposit. Contact your bank if you are having trouble finding this information.",
     achSectionLabel: "Enter your bank account information",
@@ -2030,6 +2037,7 @@ const pages = {
     infoRequestsBody_Pending:
       "If you have a request for more information, use this button to upload the requested documentation.",
     infoRequestsHeading: "Respond to requests for information",
+    leavePeriodDates: "From {{startDate}} to {{endDate}}",
     leavePeriodLabel_continuous: "$t(shared.claimDurationTypeContinuous)",
     leavePeriodLabel_intermittent: "$t(shared.claimDurationTypeIntermittent)",
     leavePeriodLabel_reduced: "$t(shared.claimDurationTypeReduced)",
@@ -2068,6 +2076,10 @@ const pages = {
     reportOtherBenefitsBody:
       "<p>If your plans for other benefits or income during your paid leave have changed, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>. Report changes to:</p><ul><li>Benefits from your employer that you plan to use in addition to paid leave from PFML. For example, if you are taking a different amount of sick days than you first planned, or if you are taking employer sponsored parental leave on a different schedule than you expected, report this change.</li><li>Income from other sources during your leave. For example, if you got approved for a disability benefit or a worker’s compensation claim after you submitted your application, report this change.</li></ul>",
     reportOtherBenefitsHeading: "Report other benefits or income",
+    requestDecision_Approved: "Approved",
+    requestDecision_Denied: "Denied",
+    requestDecision_Pending: "Pending",
+    requestDecision_Withdrawn: "Withdrawn",
     statusTimelineNotice:
       "Notices usually appear within 30 minutes after we update the status of your application.",
     timelineDescription:
@@ -2786,9 +2798,9 @@ const components = {
     explanation:
       "Your employee has told us about the following accrued paid leave they plan to use concurrent with their paid leave from PFML. This includes paid vacation time, sick time, personal time, and other paid time off. It does not include a family or medical leave policy or a disability program.",
     explanationDetails_continuousOrReduced:
-      "Your employee won’t receive PFML payments for the first 7 calendar days of their PFML leave from {{startDate}} to {{endDate}}. During those 7 days they may use accrued paid leave, and you and your employee shouldn’t report it.",
+      "Your employee won’t receive PFML payments for the first 7 calendar days of their PFML leave from {{startDate}} to {{endDate}}. During those 7 days they may use accrued paid leave, and you and your employee <strong>shouldn’t</strong> report it.",
     explanationDetails_intermittent:
-      "Your employee won’t receive PFML payments for the first 7 calendar days from the date of their first instance of leave. During those 7 days they may use accrued paid leave, and you and your employee shouldn’t report it.",
+      "Your employee won’t receive PFML payments for the first 7 calendar days from the date of their first instance of leave. During those 7 days they may use accrued paid leave, and you and your employee <strong>shouldn’t</strong> report it.",
     header: "Concurrent accrued paid leave",
   },
   employersEmployeeInformation: {

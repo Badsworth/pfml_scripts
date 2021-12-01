@@ -14,39 +14,37 @@ class TaxId:
 
     def __init__(self, val: str) -> None:
         if self.REGEX_FORMATTED.match(val):
-            self.val = val
+            self._formatted_val = val
         elif self.REGEX_UNFORMATTED.match(val):
-            self.val = "{}-{}-{}".format(val[:3], val[3:5], val[5:])
+            self._formatted_val = "{}-{}-{}".format(val[:3], val[3:5], val[5:])
         else:
-            self.val = val
-
             raise ValueError(
                 f"does not match one of: {self.REGEX_UNFORMATTED.pattern}, {self.REGEX_FORMATTED.pattern}"
             )
 
     def to_unformatted_str(self) -> str:
-        return self.val.replace("-", "")
+        return self._formatted_val.replace("-", "")
 
     def to_formatted_str(self) -> str:
-        return self.val
+        return self._formatted_val
 
     def last4(self) -> str:
-        return self.val[-4:]
+        return self._formatted_val[-4:]
 
     def to_masked_str(self) -> str:
-        return f"***-**-{self.val[-4:]}"
+        return f"***-**-{self._formatted_val[-4:]}"
 
     def __eq__(self, other):
         if not isinstance(other, TaxId):
             return NotImplemented
 
-        return self.val == other.val
+        return self._formatted_val == other._formatted_val
 
     def __str__(self):
         return self.to_unformatted_str()
 
     def __repr__(self):
-        return f"TaxId({self.val})"
+        return f"TaxId({self._formatted_val})"
 
     def __hash__(self):
         return hash(repr(self))
@@ -85,39 +83,35 @@ class Fein:
     REGEX_UNFORMATTED = re.compile(r"^\d{9}$")
     REGEX_FORMATTED = re.compile(r"^\d{2}-\d{7}$")
 
-    val: str
+    _formatted_val: str
 
     def __init__(self, val: str) -> None:
-        val = str(val)
-
         if self.REGEX_FORMATTED.match(val):
-            self.val = val
+            self._formatted_val = val
         elif self.REGEX_UNFORMATTED.match(val):
-            self.val = "{}-{}".format(val[:2], val[2:])
+            self._formatted_val = "{}-{}".format(val[:2], val[2:])
         else:
-            self.val = val
-
             raise ValueError(
                 f"{val} does not match one of: {self.REGEX_UNFORMATTED.pattern}, {self.REGEX_FORMATTED.pattern}"
             )
 
     def to_unformatted_str(self) -> str:
-        return self.val.replace("-", "")
+        return self._formatted_val.replace("-", "")
 
     def to_formatted_str(self) -> str:
-        return self.val
+        return self._formatted_val
 
     def __eq__(self, other):
         if not isinstance(other, Fein):
             return NotImplemented
 
-        return self.val == other.val
+        return self._formatted_val == other._formatted_val
 
     def __repr__(self):
-        return f"Fein({self.val})"
+        return f"Fein({self._formatted_val})"
 
     def __str__(self):
-        return self.val.replace("-", "")
+        return self.to_unformatted_str()
 
     def __hash__(self):
         return hash(repr(self))
