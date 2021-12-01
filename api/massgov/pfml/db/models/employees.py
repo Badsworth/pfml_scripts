@@ -2697,6 +2697,18 @@ class State(LookupTable):
         200, "Payment failed max weekly benefit amount validation", Flow.DELEGATED_PAYMENT.flow_id,
     )
 
+    STATE_WITHHOLDING_ADD_TO_PAYMENT_REJECT_REPORT_RESTARTABLE = LkState(
+        201,
+        "Add State Withholding to Payment Reject Report - RESTARTABLE",
+        Flow.DELEGATED_PAYMENT.flow_id,
+    )
+
+    FEDERAL_WITHHOLDING_ADD_TO_PAYMENT_REJECT_REPORT_RESTARTABLE = LkState(
+        202,
+        "Add Federal Withholding to Payment Reject Report - RESTARTABLE",
+        Flow.DELEGATED_PAYMENT.flow_id,
+    )
+
 
 class SharedPaymentConstants:
     """
@@ -2736,6 +2748,8 @@ class PaymentTransactionType(LookupTable):
     OVERPAYMENT_RECOVERY_CANCELLATION = LkPaymentTransactionType(
         11, "Overpayment Recovery Cancellation"
     )
+    FEDERAL_TAX_WITHHOLDING = LkPaymentTransactionType(12, "Federal Tax Withholding")
+    STATE_TAX_WITHHOLDING = LkPaymentTransactionType(13, "State Tax Withholding")
 
 
 class PaymentCheckStatus(LookupTable):
