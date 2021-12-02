@@ -173,6 +173,7 @@ describe("users API", () => {
           "auth_id": undefined,
           "consented_to_data_sharing": true,
           "email_address": undefined,
+          "mfa_delivery_preference": null,
           "mfa_phone_number": null,
           "roles": Array [
             UserRole {
