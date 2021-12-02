@@ -1095,6 +1095,8 @@ class Pfml1099Factory(BaseFactory):
     tax_year = 2021
     employee_id = Generators.UuidObj
     tax_identifier_id = Generators.UuidObj
+    c = "9999"
+    i = "9999"
     first_name = "Joe"
     last_name = "Pel"
     address_line_1 = "172 Pearl St"
