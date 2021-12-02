@@ -2583,11 +2583,13 @@ const pages = {
       leaveDatesHeader: "Leave dates",
       paymentMethodHeader: "Payment Method",
       paymentMethod_Check: "Check",
-      "paymentMethod_Electronic Funds Transfer": "EFT",
+      "paymentMethod_Elec Funds Transfer": "EFT",
       paymentStatus_Cancelled: "Cancelled",
       paymentStatus_Delayed: "Delayed",
       paymentStatus_Pending: "Pending",
-      paymentStatus_Sent: "Sent to bank",
+      "paymentStatus_Sent to bank": "Sent to bank",
+      waitingWeekText:
+        "This week is unpaid. Learn more about the <waiting-week-link>7-day waiting period</waiting-week-link>.",
     },
     questionsDetails:
       "<p>Call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.</p>",
