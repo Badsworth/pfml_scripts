@@ -59,7 +59,7 @@ if has_abbreviation:
     pre_template = re.sub("Entity 𝑋 ", f"{full_player_name}\n", templt)
     new_template = re.sub("Entity 𝑋a", abbreviation, pre_template)
 else:
-    new_template = re.sub(r"Entity 𝑋 |Entity 𝑋a", f"{full_player_name}\n", templt)
+    new_template = re.sub(r"Entity 𝑋 |Entity 𝑋a", f"{full_player_name}", templt)
 
 
 with open(f"{directory_name}/README.md", "w") as file:
