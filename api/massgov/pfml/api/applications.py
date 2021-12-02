@@ -4,6 +4,7 @@ from typing import Any, Dict
 from uuid import UUID
 
 import connexion
+import newrelic.agent
 import puremagic
 from flask import Response, abort, request
 from puremagic import PureError
@@ -601,6 +602,10 @@ def document_upload(application_id, body, file):
                 errors=[FILE_SIZE_VALIDATION_ERROR],
                 data=document_details.dict(),
             ).to_api_response()
+
+        except (pdf_util.PDFCompressionError):
+            newrelic.agent.notice_error(attributes={"document_id": document.document_id})
+            raise ValidationException(errors=[FILE_SIZE_VALIDATION_ERROR])
 
         # use Certification Form when the feature flag for caring leave is active, but will otherwise use
         # State manage Paid Leave Confirmation. If the document type is Certification Form,
