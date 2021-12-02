@@ -1200,6 +1200,7 @@ class Pfml1099Payment(Base, TimestampMixin):
     )
     payment_amount = Column(Numeric, nullable=False)
     payment_date = Column(Date, nullable=False)
+    cancel_date = Column(Date, nullable=True)
 
     payment = relationship(Payment)
     claim = relationship(Claim)

@@ -62,6 +62,12 @@ class Populate1099Step(Step):
             if overpayment_repayments is None:
                 overpayment_repayments = 0
 
+            # TODO: Add other credits to table and form.
+            # Other Credits will not apply in 2021.  PAY-73 is for tracking this work.
+            other_credits = claimant_row.OTHER_CREDITS
+            if other_credits is None:
+                other_credits = 0
+
             pfml_1099_payment = Pfml1099(
                 pfml_1099_id=uuid.uuid4(),
                 pfml_1099_batch_id=batch.pfml_1099_batch_id,

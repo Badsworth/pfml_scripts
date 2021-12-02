@@ -34,7 +34,7 @@ class PopulatePaymentsStep(Step):
 
                 payment = payment_row.Payment
                 payment_date = payment_row.payment_date
-                # cancel_date = payment_row.cancel_date
+                cancel_date = payment_row.cancel_date
 
                 if payment_date is None:
                     logger.debug(
@@ -50,6 +50,7 @@ class PopulatePaymentsStep(Step):
                     employee_id=payment.claim.employee.employee_id,
                     payment_amount=payment.amount,
                     payment_date=payment_date,
+                    cancel_date=cancel_date,
                 )
 
                 self.db_session.add(pfml_1099_payment)
