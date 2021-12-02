@@ -48,6 +48,7 @@ class PopulateMmarsPaymentsStep(Step):
                         "pfml_1099_mmars_payment_id": pfml_1099_payment.pfml_1099_mmars_payment_id
                     },
                 )
+                self.increment(self.Metrics.MMARS_PAYMENT_COUNT)
 
             self.db_session.commit()
         except Exception:
