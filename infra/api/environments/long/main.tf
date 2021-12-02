@@ -65,6 +65,7 @@ module "api" {
   ]
   enable_application_fraud_check = "0"
   release_version                = var.release_version
+  enable_pdf_document_compression = "0"
 
   # TODO: Fill this in after the portal is deployed.
   cognito_user_pool_arn       = null
