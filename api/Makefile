@@ -210,8 +210,12 @@ ecr-login: ## Login to ECR for Docker
 pre-commit: 
 	$(PY_RUN_CMD) isort --atomic --apply $(args)
 	$(PY_RUN_CMD) black $(args)
-	$(PY_RUN_CMD) flake8 $(args)
-	$(PY_RUN_CMD) mypy $(args)
+ifdef flake_args
+	$(PY_RUN_CMD) flake8 $(flake_args)
+endif
+ifdef mypy_args
+	$(PY_RUN_CMD) mypy $(mypy_args)
+endif
 
 format: ## Format code
 	$(PY_RUN_CMD) isort --atomic --apply
