@@ -1,3 +1,4 @@
+import { Auth, CognitoUser } from "@aws-amplify/auth";
 import {
   CognitoAuthError,
   CognitoError,
@@ -11,11 +12,11 @@ import {
 import { compact, trim } from "lodash";
 import { useMemo, useState } from "react";
 import { AppErrorsLogic } from "./useAppErrorsLogic";
-import { Auth } from "@aws-amplify/auth";
 import { PortalFlow } from "./usePortalFlow";
 import { RoleDescription } from "../models/User";
 import UsersApi from "../api/UsersApi";
 import assert from "assert";
+import { isFeatureEnabled } from "../services/featureFlags";
 import routes from "../routes";
 import tracker from "../services/tracker";
 
@@ -34,6 +35,8 @@ function isCognitoError(error: unknown): error is CognitoError {
 
   return false;
 }
+
+type CognitoMFAUser = CognitoUser & { preferredMFA: "NOMFA" | "SMS" };
 
 const useAuthLogic = ({
   appErrorsLogic,
@@ -118,6 +121,8 @@ const useAuthLogic = ({
 
   /**
    * Log in to Portal with the given username (email) and password.
+   * If the user has MFA configured, an SMS with a 6-digit verfication code will be sent
+   * to the phone number on file in Cognito.
    * If there are any errors, set app errors on the page.
    * @param password Password
    * @param [next] Redirect url after login
@@ -138,16 +143,21 @@ const useAuthLogic = ({
 
     try {
       trackAuthRequest("signIn");
-      await Auth.signIn(trimmedUsername, password);
+      const user = await Auth.signIn(trimmedUsername, password);
       tracker.markFetchRequestEnd();
 
-      setIsLoggedIn(true);
-
-      if (next) {
-        portalFlow.goTo(next);
-      } else {
-        portalFlow.goToPageFor("LOG_IN");
+      // TODO(PORTAL-1007): Remove claimantShowMFA feature flag
+      if (!isFeatureEnabled("claimantShowMFA")) {
+        finishLoginAndRedirect(next);
+        return;
       }
+
+      if (!user.challengeName || user.challengeName !== "SMS_MFA") {
+        // user is not being prompted for a verification code - log them in!
+        finishLoginAndRedirect(next);
+      }
+
+      return user;
     } catch (error) {
       if (!isCognitoError(error)) {
         appErrorsLogic.catchError(error);
@@ -160,6 +170,144 @@ const useAuthLogic = ({
       }
       const authError = getLoginError(error);
       appErrorsLogic.catchError(authError);
+    }
+  };
+
+  // TODO (PORTAL-1193): Add tests for new MFA Auth methods
+  /**
+   * Verifies the 6-digit MFA code and logs the user into the Portal.
+   * If there are any errors, set app errors on the page.
+   * @param code The 6-digit MFA verification code
+   * @param [next] Redirect url after login
+   */
+  const verifyMFACodeAndLogin = async (code: string, next?: string) => {
+    // TODO (PORTAL-909): Confirm this returns a CognitoUser when challenge is returned.
+    const user = Auth.currentAuthenticatedUser();
+
+    try {
+      trackAuthRequest("confirmSignIn");
+      await Auth.confirmSignIn(user, code, "SMS_MFA");
+      tracker.markFetchRequestEnd();
+    } catch (error) {
+      appErrorsLogic.catchError(error);
+      return;
+    }
+
+    finishLoginAndRedirect(next);
+  };
+
+  // TODO (PORTAL-1193): Add tests for new MFA Auth methods
+  /**
+   * Updates the user's MFA phone number in Cognito, and sends an SMS
+   * with a 6-digit code for verification.
+   * If there are any errors, set app errors on the page.
+   * @param user_id
+   * @param phoneNumber The user's 10-digit phone number, ie "2223334444"
+   */
+  const updateMFAPhoneNumber = async (user_id: string, phoneNumber: string) => {
+    const user = await Auth.currentAuthenticatedUser();
+
+    try {
+      trackAuthRequest("updateUserAttributes");
+      // TODO (PORTAL-1194): Convert phone number from user input to E164
+      await Auth.updateUserAttributes(user, {
+        phone_number: "+1" + phoneNumber,
+      });
+      tracker.markFetchRequestEnd();
+
+      trackAuthRequest("verifyUserAttribute");
+      // sends a verification code to the phone number via SMS
+      await Auth.verifyUserAttribute(user, "phone_number");
+      tracker.markFetchRequestEnd();
+    } catch (error) {
+      appErrorsLogic.catchError(error);
+    }
+  };
+
+  // TODO (PORTAL-1193): Add tests for new MFA Auth methods
+  /**
+   * Verifies the 6-digit MFA code and sets the status of the phone number to "verified".
+   * If there are any errors, set app errors on the page.
+   * @param phoneNumber The user's 10-digit phone number, ie "2223334444"
+   */
+  const verifyMFAPhoneNumber = async (code: string) => {
+    const user = await Auth.currentAuthenticatedUser();
+
+    try {
+      trackAuthRequest("verifyUserAttributeSubmit");
+      await Auth.verifyUserAttributeSubmit(user, "phone_number", code);
+      tracker.markFetchRequestEnd();
+    } catch (error) {
+      appErrorsLogic.catchError(error);
+    }
+  };
+
+  // TODO (PORTAL-1193): Add tests for new MFA Auth methods
+  /**
+   * Updates the users MFA preference.
+   * If there are any errors, set app errors on the page.
+   * @param user_id
+   * @param mfaPreference The user's MFA preference: "Opt Out" or "SMS"
+   */
+  const setMFAPreference = async (
+    user_id: string,
+    mfaPreference: "Opt Out" | "SMS"
+  ) => {
+    const user = await Auth.currentAuthenticatedUser();
+
+    if (mfaPreference === "Opt Out") {
+      await setMFAPreferenceOptOut(user_id, user);
+    } else if (mfaPreference === "SMS") {
+      await setMFAPreferenceSMS(user_id, user);
+    }
+  };
+
+  // TODO (PORTAL-1193): Add tests for new MFA Auth methods
+  /**
+   * Opts the user out of MFA.
+   * If there are any errors, set app errors on the page.
+   * @param user_id PFML-DB User id
+   * @param user The CognitoUser returned by an Auth call
+   * @private
+   */
+  const setMFAPreferenceOptOut = async (
+    user_id: string,
+    user: CognitoMFAUser
+  ) => {
+    if (user.preferredMFA === "NOMFA") {
+      // no MFA set in Cognito - no need to update
+      return;
+    }
+
+    try {
+      trackAuthRequest("setPreferredMFA");
+      await Auth.setPreferredMFA(user, "NOMFA");
+      await usersApi.updateUser(user_id, {
+        mfa_delivery_preference: "Opt Out",
+      });
+      tracker.markFetchRequestEnd();
+    } catch (error) {
+      appErrorsLogic.catchError(error);
+    }
+  };
+
+  // TODO (PORTAL-1193): Add tests for new MFA Auth methods
+  /**
+   * Opts the user in to MFA via SMS.
+   * If the user does not have an associated phone number, an error is thrown.
+   * If there are any errors, set app errors on the page.
+   * @param user_id PFML-DB User id
+   * @param user The CognitoUser returned by an Auth call
+   * @private
+   */
+  const setMFAPreferenceSMS = async (user_id: string, user: CognitoUser) => {
+    try {
+      trackAuthRequest("setPreferredMFA");
+      await Auth.setPreferredMFA(user, "SMS");
+      await usersApi.updateUser(user_id, { mfa_delivery_preference: "SMS" });
+      tracker.markFetchRequestEnd();
+    } catch (error) {
+      appErrorsLogic.catchError(error);
     }
   };
 
@@ -237,6 +385,21 @@ const useAuthLogic = ({
 
     portalFlow.goToPageFor("CREATE_ACCOUNT");
   };
+
+  /**
+   * Sets the current user as logged in, and redirects them to the next page.
+   * @param [next] Redirect url after login
+   * @private
+   */
+  function finishLoginAndRedirect(next?: string) {
+    setIsLoggedIn(true);
+
+    if (next) {
+      portalFlow.goTo(next);
+    } else {
+      portalFlow.goToPageFor("LOG_IN");
+    }
+  }
 
   /**
    * Create Portal account with the given username (email) and password.
@@ -452,7 +615,11 @@ const useAuthLogic = ({
     resendVerifyAccountCode,
     resetPassword,
     resendForgotPasswordCode,
+    setMFAPreference,
+    updateMFAPhoneNumber,
     verifyAccount,
+    verifyMFACodeAndLogin,
+    verifyMFAPhoneNumber,
   };
 };
 

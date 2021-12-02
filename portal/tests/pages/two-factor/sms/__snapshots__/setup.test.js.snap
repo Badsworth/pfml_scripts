@@ -14,7 +14,7 @@ exports[`Two-factor SMS Setup renders landing page content 1`] = `
   <p
     class="usa-intro"
   >
-    We’ll send a 6-digit code by text message (SMS) to secure your account.
+    Enter a number that can receive text messages and that you'll have consistent access to in case we need to verify your login. We’ll send a 6-digit code by text message (SMS) to secure your account.
   </p>
   <div
     class="usa-form-group"

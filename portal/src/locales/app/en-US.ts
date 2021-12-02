@@ -143,6 +143,11 @@ const errors = {
       required: "Enter how many hours you work on average each week.",
       type: "The average hours you work each week must be a number.",
     },
+    is_withholding_tax: {
+      duplicate:
+        "You have already submitted your tax withholding preference. If you need to edit your preference, call the Contact Center at $t(shared.contactCenterPhoneNumberNoBreak).",
+      required: "Select your tax withholding preference.",
+    },
     last_name: {
       maxLength: "Last name must be 50 characters or fewer.",
       required: "Enter a last name.",
@@ -831,10 +836,6 @@ const shared = {
     "If something is incomplete, add a comment at the end of the page.",
   employerInstructions_followUpDate:
     "<strong>Review and respond by:</strong> {{date}} at 11:59 p.m. Eastern time",
-  employerLeaveScheduleLeadHasDocs:
-    "Download the attached documentation or contact us at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> for details about the leave schedule.",
-  employerLeaveScheduleLeadNoDocs:
-    "Contact us at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> for details about the leave schedule.",
   fileUpload_addAnotherFileButton: "Choose another file",
   fileUpload_addFirstFileButton: "Choose files",
   fileUpload_fileHeadingPrefix: "File",
@@ -996,14 +997,13 @@ const pages = {
   },
   authTwoFactorSmsConfirm: {
     codeLabel: "6-digit code",
-    lead: "Enter the 6-digit code we sent to your phone number (123)$t(chars.nbsp)456$t(chars.nbhyphen)0012.",
+    lead: "Enter the 6-digit code we sent to your phone number {{mfaPhoneNumber}}.",
     resendCodeButton: "$t(shared.resendVerificationCodeLink)",
     saveButton: "$t(shared.saveAndContinue)",
-    skipButton: "$t(shared.auth.skip)",
     title: "Confirm your phone number",
   },
   authTwoFactorSmsSetup: {
-    lead: "We’ll send a 6-digit code by text message (SMS) to secure your account.",
+    lead: "Enter a number that can receive text messages and that you'll have consistent access to in case we need to verify your login. We’ll send a 6-digit code by text message (SMS) to secure your account.",
     phoneNumberLabel: "Phone number",
     saveButton: "$t(shared.saveAndContinue)",
     skipButton: "$t(shared.auth.skip)",
@@ -1014,7 +1014,7 @@ const pages = {
     callContactCenter:
       "Need help? Call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.",
     codeLabel: "$t(shared.verificationCodeLabel)",
-    lead: "We sent a 6-digit code to your phone number ending in {{lastFourDigits}}.",
+    lead: "We sent a 6-digit code to your phone number (###) ###-{{lastFourDigits}} as an additional security measure.",
     resendCodeLink: "$t(shared.resendVerificationCodeLink)",
     submitButton: "Submit",
     title: "Enter your security code",
@@ -2583,11 +2583,13 @@ const pages = {
       leaveDatesHeader: "Leave dates",
       paymentMethodHeader: "Payment Method",
       paymentMethod_Check: "Check",
-      "paymentMethod_Electronic Funds Transfer": "EFT",
+      "paymentMethod_Elec Funds Transfer": "EFT",
       paymentStatus_Cancelled: "Cancelled",
       paymentStatus_Delayed: "Delayed",
       paymentStatus_Pending: "Pending",
-      paymentStatus_Sent: "Sent to bank",
+      "paymentStatus_Sent to bank": "Sent to bank",
+      waitingWeekText:
+        "This week is unpaid. Learn more about the <waiting-week-link>7-day waiting period</waiting-week-link>.",
     },
     questionsDetails:
       "<p>Call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.</p>",
@@ -2794,9 +2796,9 @@ const components = {
     explanation:
       "Your employee has told us about the following accrued paid leave they plan to use concurrent with their paid leave from PFML. This includes paid vacation time, sick time, personal time, and other paid time off. It does not include a family or medical leave policy or a disability program.",
     explanationDetails_continuousOrReduced:
-      "Your employee won’t receive PFML payments for the first 7 calendar days of their PFML leave from {{startDate}} to {{endDate}}. During those 7 days they may use accrued paid leave, and you and your employee shouldn’t report it.",
+      "Your employee won’t receive PFML payments for the first 7 calendar days of their PFML leave from {{startDate}} to {{endDate}}. During those 7 days they may use accrued paid leave, and you and your employee <strong>shouldn’t</strong> report it.",
     explanationDetails_intermittent:
-      "Your employee won’t receive PFML payments for the first 7 calendar days from the date of their first instance of leave. During those 7 days they may use accrued paid leave, and you and your employee shouldn’t report it.",
+      "Your employee won’t receive PFML payments for the first 7 calendar days from the date of their first instance of leave. During those 7 days they may use accrued paid leave, and you and your employee <strong>shouldn’t</strong> report it.",
     header: "Concurrent accrued paid leave",
   },
   employersEmployeeInformation: {
@@ -2872,29 +2874,6 @@ const components = {
       "Using someone’s personal information to fraudulently collect benefits",
     heading: "Do you have any reason to suspect this is fraud?",
   },
-  employersIntermittentLeaveSchedule: {
-    claimDurationType_continuous: "$t(shared.claimDurationTypeContinuous)",
-    claimDurationType_intermittent: "$t(shared.claimDurationTypeIntermittent)",
-    claimDurationType_reducedSchedule:
-      "$t(shared.claimDurationTypeReducedSchedule)",
-    frequencyBasis_irregular: "Irregular over the next 6 months",
-    frequencyBasis_months: "At least once a month",
-    frequencyBasis_weeks: "At least once a week",
-    intermittentFrequencyDuration_irregularMonths_days:
-      "Estimated <strong>{{frequency}}</strong> absences over the next 6 months, each lasting <strong>at least a day</strong> for <strong>{{duration}}</strong> days.",
-    intermittentFrequencyDuration_irregularMonths_hours:
-      "Estimated <strong>{{frequency}}</strong> absences over the next 6 months, each lasting <strong>less than a full work day</strong> for <strong>{{duration}}</strong> hours.",
-    intermittentFrequencyDuration_months_days:
-      "Estimated <strong>{{frequency}}</strong> absences per month, each lasting <strong>at least a day</strong> for <strong>{{duration}}</strong> days.",
-    intermittentFrequencyDuration_months_hours:
-      "Estimated <strong>{{frequency}}</strong> absences per month, each lasting <strong>less than a full work day</strong> for <strong>{{duration}}</strong> hours.",
-    intermittentFrequencyDuration_weeks_days:
-      "Estimated <strong>{{frequency}}</strong> absences per week, each lasting <strong>at least a day</strong> for <strong>{{duration}}</strong> days.",
-    intermittentFrequencyDuration_weeks_hours:
-      "Estimated <strong>{{frequency}}</strong> absences per week, each lasting <strong>less than a full work day</strong> for <strong>{{duration}}</strong> hours.",
-    lead_hasDocs: "$t(shared.employerLeaveScheduleLeadHasDocs)",
-    lead_noDocs: "$t(shared.employerLeaveScheduleLeadNoDocs)",
-  },
   employersLeaveDetails: {
     applicationIdLabel: "Application ID",
     choiceNo: "No (comment required)",
@@ -2939,10 +2918,7 @@ const components = {
     claimDurationType_reducedSchedule:
       "$t(shared.claimDurationTypeReducedSchedule)",
     dateRangeLabel: "Date range",
-    detailsLabel: "Details",
     header: "Leave schedule",
-    lead_hasDocs: "$t(shared.employerLeaveScheduleLeadHasDocs)",
-    lead_noDocs: "$t(shared.employerLeaveScheduleLeadNoDocs)",
     leaveFrequencyLabel: "Leave frequency",
     reducedHoursPerWeek: "Reduced by {{numOfHours}} hours per week",
   },

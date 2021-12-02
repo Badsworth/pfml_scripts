@@ -226,7 +226,7 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
       This is your employee’s expected leave schedule.
     </p>
     <table
-      class="usa-table usa-table--borderless c-table width-full"
+      class="usa-table usa-table--borderless width-full usa-table--stacked"
     >
       <thead>
         <tr>
@@ -240,42 +240,33 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
           >
             Leave frequency
           </th>
-          <th
-            scope="col"
-          >
-            Details
-          </th>
         </tr>
       </thead>
       <tbody>
         <tr>
           <th
+            data-label="Date range"
             scope="row"
           >
             1/1/2021 to 6/1/2021
           </th>
-          <td>
+          <td
+            data-label="Leave frequency"
+          >
             Continuous leave
           </td>
-          <td />
         </tr>
         <tr>
           <th
+            data-label="Date range"
             scope="row"
           >
             2/1/2021 to 7/1/2021
           </th>
-          <td>
+          <td
+            data-label="Leave frequency"
+          >
             Reduced leave schedule
-          </td>
-          <td>
-            Contact us at 
-            <a
-              href="tel:(833) 344-7365"
-            >
-              (833) 344‑7365
-            </a>
-             for details about the leave schedule.
           </td>
         </tr>
       </tbody>
@@ -443,7 +434,7 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
         </div>
       </details>
       <table
-        class="usa-table usa-table--borderless c-table width-full"
+        class="usa-table usa-table--borderless width-full usa-table--stacked"
       >
         <thead>
           <tr>
@@ -494,10 +485,14 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
         Your employee has told us about the following accrued paid leave they plan to use concurrent with their paid leave from PFML. This includes paid vacation time, sick time, personal time, and other paid time off. It does not include a family or medical leave policy or a disability program.
       </p>
       <p>
-        Your employee won’t receive PFML payments for the first 7 calendar days of their PFML leave from 1/1/2021 to 1/7/2021. During those 7 days they may use accrued paid leave, and you and your employee shouldn’t report it.
+        Your employee won’t receive PFML payments for the first 7 calendar days of their PFML leave from 1/1/2021 to 1/7/2021. During those 7 days they may use accrued paid leave, and you and your employee 
+        <strong>
+          shouldn’t
+        </strong>
+         report it.
       </p>
       <table
-        class="usa-table usa-table--borderless c-table width-full"
+        class="usa-table usa-table--borderless width-full usa-table--stacked"
       >
         <thead>
           <tr>
@@ -548,7 +543,7 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
         </a>
       </p>
       <table
-        class="usa-table usa-table--borderless c-table width-full"
+        class="usa-table usa-table--borderless width-full usa-table--stacked"
       >
         <thead>
           <tr>
@@ -575,14 +570,19 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
             data-testid="benefit-details-row"
           >
             <th
+              data-label="Date range"
               scope="row"
             >
               1/1/2021 to 2/1/2021
             </th>
-            <td>
+            <td
+              data-label="Benefit type"
+            >
               Family or medical leave insurance
             </td>
-            <td>
+            <td
+              data-label="Details"
+            >
               $500.00 per week
             </td>
             <td>
@@ -608,14 +608,19 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
             data-testid="benefit-details-row"
           >
             <th
+              data-label="Date range"
               scope="row"
             >
               1/1/2021 to 2/1/2021
             </th>
-            <td>
+            <td
+              data-label="Benefit type"
+            >
               Family or medical leave insurance
             </td>
-            <td>
+            <td
+              data-label="Details"
+            >
               $200.00 (frequency unknown)
             </td>
             <td>
@@ -641,14 +646,19 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
             data-testid="benefit-details-row"
           >
             <th
+              data-label="Date range"
               scope="row"
             >
               1/1/2021 to 2/1/2021
             </th>
-            <td>
+            <td
+              data-label="Benefit type"
+            >
               Short-term disability insurance
             </td>
-            <td>
+            <td
+              data-label="Details"
+            >
               Full salary continuous
             </td>
             <td>
@@ -674,14 +684,19 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
             data-testid="benefit-details-row"
           >
             <th
+              data-label="Date range"
               scope="row"
             >
               1/1/2021 to 2/1/2021
             </th>
-            <td>
+            <td
+              data-label="Benefit type"
+            >
               Permanent disability insurance
             </td>
-            <td>
+            <td
+              data-label="Details"
+            >
               No amount reported
             </td>
             <td>

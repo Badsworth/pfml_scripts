@@ -11,10 +11,14 @@ exports[`ConcurrentLeave renders the component 1`] = `
     Your employee has told us about the following accrued paid leave they plan to use concurrent with their paid leave from PFML. This includes paid vacation time, sick time, personal time, and other paid time off. It does not include a family or medical leave policy or a disability program.
   </p>
   <p>
-    Your employee won’t receive PFML payments for the first 7 calendar days of their PFML leave from 1/1/2021 to 1/7/2021. During those 7 days they may use accrued paid leave, and you and your employee shouldn’t report it.
+    Your employee won’t receive PFML payments for the first 7 calendar days of their PFML leave from 1/1/2021 to 1/7/2021. During those 7 days they may use accrued paid leave, and you and your employee 
+    <strong>
+      shouldn’t
+    </strong>
+     report it.
   </p>
   <table
-    class="usa-table usa-table--borderless c-table width-full"
+    class="usa-table usa-table--borderless width-full usa-table--stacked"
   >
     <thead>
       <tr>
@@ -29,6 +33,7 @@ exports[`ConcurrentLeave renders the component 1`] = `
     <tbody>
       <tr>
         <th
+          data-label="Date range"
           scope="row"
         >
           3/1/2020 to 3/6/2020

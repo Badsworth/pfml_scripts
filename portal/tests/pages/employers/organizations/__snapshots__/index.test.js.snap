@@ -32,7 +32,7 @@ exports[`Index renders the page 1`] = `
     You can manage leave for these organizations. In the future, you’ll be able to invite other members of your team to review applications.
   </p>
   <table
-    class="usa-table usa-table--borderless c-table width-full usa-table--stacked-header"
+    class="usa-table usa-table--borderless width-full usa-table--stacked"
   >
     <thead>
       <tr>

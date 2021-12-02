@@ -1,6 +1,7 @@
 import { ClaimEmployee, ClaimEmployer, ManagedRequirement } from "./Claim";
 import { groupBy, orderBy } from "lodash";
 import { LeaveReasonType } from "./LeaveReason";
+import dayjs from "dayjs";
 
 class ClaimDetail {
   absence_periods: AbsencePeriod[] = [];
@@ -87,6 +88,33 @@ class ClaimDetail {
         <AbsencePeriodRequestDecision>"Approved"
     );
   }
+
+  get leaveDates(): AbsencePeriodDates[] {
+    return this.absence_periods.map(
+      ({ absence_period_start_date, absence_period_end_date }) => ({
+        absence_period_start_date,
+        absence_period_end_date,
+      })
+    );
+  }
+
+  get waitingWeek(): { startDate?: string; endDate?: string } {
+    if (this.leaveDates.length) {
+      return {
+        // API will return absence_periods sorted by start date, waiting week is the first week at the start of the claim
+        startDate: this.leaveDates[0].absence_period_start_date,
+        endDate: dayjs(this.leaveDates[0].absence_period_start_date)
+          .add(6, "days")
+          .format("YYYY-MM-DD"),
+      };
+    }
+    return {};
+  }
+}
+
+interface AbsencePeriodDates {
+  absence_period_start_date: string;
+  absence_period_end_date: string;
 }
 
 export type AbsencePeriodRequestDecision =

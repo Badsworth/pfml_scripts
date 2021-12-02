@@ -62,7 +62,7 @@ const EmployerBenefits = (props: EmployerBenefitsProps) => {
           }}
         />
       </p>
-      <Table className="width-full">
+      <Table className="width-full" responsive>
         <thead>
           <tr>
             <th scope="col">

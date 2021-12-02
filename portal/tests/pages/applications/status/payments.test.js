@@ -125,7 +125,7 @@ describe("Payments", () => {
               payment_method: "Check",
               expected_send_date_start: "2021-11-08",
               expected_send_date_end: "2021-11-11",
-              status: "Sent",
+              status: "Sent to bank",
             },
           ],
           appLogicHook: {

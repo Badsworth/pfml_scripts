@@ -17,7 +17,7 @@ TASKS_TO_IGNORE = [
     ".*register-leave-admins-with-fineos",
     # The PFML API is a service that will rotate containers when health checks
     # are failing. We should know about issues due to deployment failures.
-    "pfml-api(-[a-z]+){1,2}$",
+    "pfml-api(-[a-z0-9]+){1,2}$",
 ]
 
 # --------------------------------------------------------------------------- #

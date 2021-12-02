@@ -310,9 +310,6 @@ def mark_documents_as_received(
 ) -> None:
     """Mark documents attached to an application as received in FINEOS."""
 
-    if application.claim.fineos_absence_id is None:
-        raise ValueError("application.claim.fineos_absence_id is None")
-
     fineos = massgov.pfml.fineos.create_client()
     fineos_web_id = get_or_register_employee_fineos_web_id(fineos, application, db_session)
 

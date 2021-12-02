@@ -105,6 +105,15 @@ locals {
       ]
     },
 
+    "db-create-servicenow-user" = {
+      command = ["db-create-servicenow-user"],
+      env = [
+        local.db_access,
+        { name : "COGNITO_SERVICENOW_APP_CLIENT_ID", valueFrom : "/service/${local.app_name}/${var.environment_name}/cognito_servicenow_app_client_id" },
+        { name : "COGNITO_INTERNAL_SERVICENOW_ROLE_APP_CLIENT_ID", valueFrom : "/service/${local.app_name}/${var.environment_name}/cognito_internal_servicenow_role_app_client_id" }
+      ]
+    },
+
     "execute-sql" = {
       command   = ["execute-sql"]
       task_role = aws_iam_role.task_execute_sql_task_role.arn

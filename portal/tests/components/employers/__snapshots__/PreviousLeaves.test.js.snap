@@ -62,7 +62,7 @@ exports[`PreviousLeaves when there are claimant-reported leaves shows a row for 
     </div>
   </details>
   <table
-    class="usa-table usa-table--borderless c-table width-full"
+    class="usa-table usa-table--borderless width-full usa-table--stacked"
   >
     <thead>
       <tr>
@@ -82,11 +82,14 @@ exports[`PreviousLeaves when there are claimant-reported leaves shows a row for 
     <tbody>
       <tr>
         <th
+          data-label="Date range"
           scope="row"
         >
           3/1/2020 to 3/6/2020
         </th>
-        <td>
+        <td
+          data-label="Leave type"
+        >
           Caring for a family member who served in the armed forces
         </td>
         <td>
