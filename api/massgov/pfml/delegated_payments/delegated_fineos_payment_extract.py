@@ -341,13 +341,13 @@ class PaymentData:
         if self.event_type == CANCELLATION_PAYMENT_TRANSACTION_TYPE:
             return PaymentTransactionType.CANCELLATION
 
-        # FICA
+        # Tax Withholdings
         if payments_util.is_withholding_payments_enabled():
             logger.info("Tax Withholding ENABLED")
+            # SIT
             if (
                 self.tin
                 == STATE_TAX_WITHHOLDING_TIN
-                #  or self.tin == "FICAMEDICAREPAYEE001"
             ):
                 return PaymentTransactionType.STATE_TAX_WITHHOLDING
 
@@ -1037,11 +1037,23 @@ class PaymentExtractStep(Step):
     def _setup_state_log(self, payment: Payment, payment_data: PaymentData) -> None:
         transaction_status = None
 
+        # Cancellations are added to the FINEOS writeback + a report
+        if (
+            payment.payment_transaction_type_id
+            == PaymentTransactionType.CANCELLATION.payment_transaction_type_id
+        ):
+            end_state = State.DELEGATED_PAYMENT_PROCESSED_CANCELLATION
+            message = "Cancellation payment processed"
+            self._manage_pei_writeback_state(
+                payment, FineosWritebackTransactionStatus.PROCESSED, payment_data
+            )
+            self.increment(self.Metrics.CANCELLATION_COUNT)
+
         # If it has an active payment issue, we do not want
         # to update the transaction status, the writebacks
         # are probably not working, and we'd prefer the payment
         # keep whatever its original status was.
-        if payment.exclude_from_payment_status:
+        elif payment.exclude_from_payment_status:
             message = "Active Payment Error - Contact FINEOS"
             end_state = State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT
             self.increment(self.Metrics.ERRORED_PAYMENT_COUNT)
@@ -1098,18 +1110,6 @@ class PaymentExtractStep(Step):
             )
             self.increment(self.Metrics.OVERPAYMENT_COUNT)
 
-        # Cancellations are added to the FINEOS writeback + a report
-        elif (
-            payment.payment_transaction_type_id
-            == PaymentTransactionType.CANCELLATION.payment_transaction_type_id
-        ):
-            end_state = State.DELEGATED_PAYMENT_PROCESSED_CANCELLATION
-            message = "Cancellation payment processed"
-            self._manage_pei_writeback_state(
-                payment, FineosWritebackTransactionStatus.PROCESSED, payment_data
-            )
-            self.increment(self.Metrics.CANCELLATION_COUNT)
-
         # set status FEDERAL_WITHHOLDING_READY_FOR_PROCESSING
         elif (
             payments_util.is_withholding_payments_enabled()
@@ -1119,9 +1119,6 @@ class PaymentExtractStep(Step):
             logger.info("Tax Withholding ENABLED")
             end_state = State.FEDERAL_WITHHOLDING_READY_FOR_PROCESSING
             message = "Federal Withholding payment processed"
-            self._manage_pei_writeback_state(
-                payment, FineosWritebackTransactionStatus.PROCESSED, payment_data
-            )
             self.increment(self.Metrics.FEDERAL_WITHHOLDING_PAYMENT_COUNT)
 
         # set status  STATE_WITHHOLDING_READY_FOR_PROCESSING
@@ -1133,9 +1130,6 @@ class PaymentExtractStep(Step):
             logger.info("Tax Withholding ENABLED")
             end_state = State.STATE_WITHHOLDING_READY_FOR_PROCESSING
             message = "State Withholding payment processed"
-            self._manage_pei_writeback_state(
-                payment, FineosWritebackTransactionStatus.PROCESSED, payment_data
-            )
             self.increment(self.Metrics.STATE_WITHHOLDING_PAYMENT_COUNT)
         else:
             end_state = State.PAYMENT_READY_FOR_ADDRESS_VALIDATION
