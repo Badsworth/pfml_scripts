@@ -337,7 +337,7 @@ api-image-build: ## Build release image
 		--build-arg RUN_UID=4000 \
 		.
 
-pdf-api-image-build: ## Build release 1099 image
+pdf-api-image-build: ## Build release pdf-api image
 	docker build \
 		--tag $(APP_NAME)-pdf:latest \
 		--tag $(APP_NAME)-pdf:$(IMAGE_TAG) \
@@ -358,14 +358,14 @@ pre-flight-test: db-upgrade db-create-users release-start-api health-check
 api-image-publish: ## Tag and push release
 api-image-publish: ecr-login api-image-tag api-image-push
 
-pdf-api-image-publish: ## Tag and push 1099 release
+pdf-api-image-publish: ## Tag and push pdf-api release
 pdf-api-image-publish: ecr-login pdf-api-image-tag pdf-api-image-push
 
 api-image-push: ## Push release image to the registry
 	docker push $(DOCKER_REGISTRY)/$(DOCKER_REPO):$(IMAGE_TAG)
 	docker push $(DOCKER_REGISTRY)/$(DOCKER_REPO):$(INFO_TAG)
 
-pdf-api-image-push: ## Push release 1099 image to the registry
+pdf-api-image-push: ## Push release pdf-api image to the registry
 	docker push $(DOCKER_REGISTRY)/$(DOCKER_PDF_REPO):$(IMAGE_TAG)
 	docker push $(DOCKER_REGISTRY)/$(DOCKER_PDF_REPO):$(INFO_TAG)
 
@@ -373,9 +373,9 @@ api-image-tag: ## Tag release image for registry
 	docker tag $(APP_NAME):$(IMAGE_TAG) $(DOCKER_REGISTRY)/$(DOCKER_REPO):$(IMAGE_TAG)
 	docker tag $(APP_NAME):$(IMAGE_TAG) $(DOCKER_REGISTRY)/$(DOCKER_REPO):$(INFO_TAG)
 
-pdf-api-image-tag: ## Tag release 1099 image for registry
-	docker tag $(APP_NAME)-1099:$(IMAGE_TAG) $(DOCKER_REGISTRY)/$(DOCKER_PDF_REPO):$(IMAGE_TAG)
-	docker tag $(APP_NAME)-1099:$(IMAGE_TAG) $(DOCKER_REGISTRY)/$(DOCKER_PDF_REPO):$(INFO_TAG)
+pdf-api-image-tag: ## Tag release pdf-api image for registry
+	docker tag $(APP_NAME)-pdf:$(IMAGE_TAG) $(DOCKER_REGISTRY)/$(DOCKER_PDF_REPO):$(IMAGE_TAG)
+	docker tag $(APP_NAME)-pdf:$(IMAGE_TAG) $(DOCKER_REGISTRY)/$(DOCKER_PDF_REPO):$(INFO_TAG)
 
 runcmd: ## Run poetry command
 	$(PY_RUN_CMD) $(cmd)
