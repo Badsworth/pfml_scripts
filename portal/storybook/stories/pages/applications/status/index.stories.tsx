@@ -1,8 +1,9 @@
-import ClaimDetail, {
+import {
   AbsencePeriod,
   AbsencePeriodRequestDecision,
-} from "src/models/ClaimDetail";
+} from "src/models/AbsencePeriod";
 import { Status, StatusTagMap } from "src/pages/applications/status";
+import ClaimDetail from "src/models/ClaimDetail";
 import { ClaimEmployee } from "src/models/Claim";
 import DocumentCollection from "src/models/DocumentCollection";
 import LeaveReason from "src/models/LeaveReason";

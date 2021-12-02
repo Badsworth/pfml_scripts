@@ -61,7 +61,6 @@ export const DefaultStory = (
           {
             absence_period_start_date: "2021-10-23",
             absence_period_end_date: "2021-11-30",
-            evidence_status: "",
             fineos_leave_request_id: "fineos_id",
             period_type: "Continuous",
             reason: "Child Bonding",

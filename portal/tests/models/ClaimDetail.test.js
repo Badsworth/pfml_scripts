@@ -1,4 +1,5 @@
-import ClaimDetail, { AbsencePeriod } from "../../src/models/ClaimDetail";
+import { AbsencePeriod } from "../../src/models/AbsencePeriod";
+import ClaimDetail from "../../src/models/ClaimDetail";
 import { ClaimEmployee } from "../../src/models/Claim";
 
 describe("ClaimDetail", () => {

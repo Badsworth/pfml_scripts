@@ -1,8 +1,9 @@
-import ClaimDetail, { AbsencePeriod } from "../../../../src/models/ClaimDetail";
 import UploadDocsOptions, {
   UploadType,
 } from "../../../../src/pages/applications/upload/index";
 import { act, render, screen } from "@testing-library/react";
+import { AbsencePeriod } from "../../../../src/models/AbsencePeriod";
+import ClaimDetail from "../../../../src/models/ClaimDetail";
 import LeaveReason from "../../../../src/models/LeaveReason";
 import React from "react";
 import User from "../../../../src/models/User";

@@ -1,4 +1,5 @@
-import ClaimDetail, { AbsencePeriod } from "src/models/ClaimDetail";
+import { AbsencePeriod } from "src/models/AbsencePeriod";
+import ClaimDetail from "src/models/ClaimDetail";
 import DocumentUploadIndex from "src/pages/applications/upload/index";
 import LeaveReason from "src/models/LeaveReason";
 import React from "react";

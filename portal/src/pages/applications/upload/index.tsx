@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { TFunction, useTranslation } from "react-i18next";
-import { AbsencePeriod } from "../../../models/ClaimDetail";
+import { AbsencePeriod } from "../../../models/AbsencePeriod";
 import AppErrorInfo from "../../../models/AppErrorInfo";
 import AppErrorInfoCollection from "../../../models/AppErrorInfoCollection";
 import { AppLogic } from "../../../hooks/useAppLogic";

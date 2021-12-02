@@ -1,6 +1,6 @@
 import { ClaimEmployee, ClaimEmployer, ManagedRequirement } from "./Claim";
 import { groupBy, orderBy } from "lodash";
-import { LeaveReasonType } from "./LeaveReason";
+import { AbsencePeriod } from "./AbsencePeriod";
 import dayjs from "dayjs";
 
 class ClaimDetail {
@@ -83,9 +83,7 @@ class ClaimDetail {
 
   get hasApprovedStatus() {
     return this.absence_periods.some(
-      (absence_period) =>
-        absence_period.request_decision ===
-        <AbsencePeriodRequestDecision>"Approved"
+      (absence_period) => absence_period.request_decision === "Approved"
     );
   }
 
@@ -115,29 +113,6 @@ class ClaimDetail {
 interface AbsencePeriodDates {
   absence_period_start_date: string;
   absence_period_end_date: string;
-}
-
-export type AbsencePeriodRequestDecision =
-  | "Cancelled"
-  | "Pending"
-  | "Approved"
-  | "Denied"
-  | "Withdrawn";
-
-export class AbsencePeriod {
-  absence_period_end_date: string;
-  absence_period_start_date: string;
-  evidence_status: string | null = null;
-  fineos_leave_request_id: string | null = null;
-  period_type: "Continuous" | "Intermittent" | "Reduced Schedule";
-  reason: LeaveReasonType;
-  reason_qualifier_one = "";
-  reason_qualifier_two = "";
-  request_decision: AbsencePeriodRequestDecision;
-
-  constructor(attrs: Partial<AbsencePeriod> = {}) {
-    Object.assign(this, attrs);
-  }
 }
 
 interface OutstandingEvidence {
