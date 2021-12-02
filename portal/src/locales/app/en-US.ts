@@ -996,11 +996,19 @@ const pages = {
     usernameLabel: "$t(shared.usernameLabel)",
   },
   authTwoFactorSmsConfirm: {
-    codeLabel: "6-digit code",
+    codeLabel: "$t(shared.verificationCodeLabel)",
     lead: "Enter the 6-digit code we sent to your phone number {{mfaPhoneNumber}}.",
     resendCodeButton: "$t(shared.resendVerificationCodeLink)",
     saveButton: "$t(shared.saveAndContinue)",
     title: "Confirm your phone number",
+  },
+  authTwoFactorSmsIndex: {
+    hint: "<p>This is an optional step to make your account more secure. In the future, you’ll also be able to access sensitive information like tax documents once you set this up.</p><p>If you select Yes, we’ll ask for a phone number that can receive text messages (SMS). To protect your security, we'll send you a 6-digit code whenenever we need to verify it's really you. You’ll need to enter the code in order to log in to your account.</p><p>If you select No, you can add a phone number later by going to the Settings page.</p>",
+    optIn: "Yes, I want to add a phone number for verifying logins.",
+    optOut: "No, I do not want to add a phone number for verifying logins.",
+    saveButton: "$t(shared.saveAndContinue)",
+    title:
+      "Do you want to add a phone number to verify it's you when you log in to your account?",
   },
   authTwoFactorSmsSetup: {
     lead: "Enter a number that can receive text messages and that you'll have consistent access to in case we need to verify your login. We’ll send a 6-digit code by text message (SMS) to secure your account.",
