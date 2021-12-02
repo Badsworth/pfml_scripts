@@ -56,7 +56,7 @@ export const TRNG: ScenarioSpecification = {
 export const TRNG_JAN: ScenarioSpecification = {
   employee: { mass_id: true, wages: "eligible" },
   claim: {
-    label: "TRNG",
+    label: "TRNG_JAN",
     reason: "Serious Health Condition - Employee",
     has_continuous_leave_periods: true,
     docs: {
