@@ -1,7 +1,7 @@
 import {
   AbsencePeriod,
   AbsencePeriodRequestDecision,
-} from "../../../models/ClaimDetail";
+} from "../../../models/AbsencePeriod";
 import {
   BenefitsApplicationDocument,
   ClaimDocument,
@@ -436,10 +436,13 @@ export const StatusTagMap: {
   [status in AbsencePeriodRequestDecision]: TagProps["state"];
 } = {
   Approved: "success",
-  Denied: "error",
-  Pending: "pending",
-  Withdrawn: "inactive",
   Cancelled: "inactive",
+  Denied: "error",
+  "In Review": "pending",
+  Pending: "pending",
+  Projected: "pending",
+  Withdrawn: "inactive",
+  Voided: "inactive",
 } as const;
 
 interface LeaveDetailsProps {

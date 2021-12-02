@@ -799,14 +799,21 @@ class Claim(Base, TimestampMixin):
 
 class BenefitYear(Base, TimestampMixin):
     __tablename__ = "benefit_year"
+
     benefit_year_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+
     employee_id = Column(
         PostgreSQLUUID, ForeignKey("employee.employee_id"), nullable=False, index=True
     )
-    employee = relationship("Employee", back_populates="benefit_years")
+
+    employee = cast(Optional["Employee"], relationship("Employee", back_populates="benefit_years"))
+
     start_date = Column(Date, nullable=False)
+
     end_date = Column(Date, nullable=False)
+
     total_wages = Column(Numeric(asdecimal=True))
+
     contributions = cast(
         List["BenefitYearContribution"],
         relationship("BenefitYearContribution", cascade="all, delete-orphan"),

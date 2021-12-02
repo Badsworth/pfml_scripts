@@ -64,6 +64,14 @@ export const Payments = ({
     t("pages.payments.paymentsTable.dateSentHeader"),
     t("pages.payments.paymentsTable.amountSentHeader"),
   ];
+
+  const waitingWeek =
+    claimDetail?.waitingWeek?.startDate &&
+    formatDateRange(
+      claimDetail.waitingWeek.startDate,
+      claimDetail.waitingWeek.endDate
+    );
+
   return (
     <React.Fragment>
       <BackButton
@@ -95,55 +103,74 @@ export const Payments = ({
               </tr>
             </thead>
             <tbody>
-              {claimDetail?.payments.map(
-                ({
-                  payment_id,
-                  period_start_date,
-                  period_end_date,
-                  amount,
-                  sent_to_bank_date,
-                  payment_method,
-                  expected_send_date_start,
-                  expected_send_date_end,
-                  status,
-                }) => (
-                  <tr key={payment_id}>
-                    <td data-label={tableColumns[0]}>
-                      {formatDateRange(period_start_date, period_end_date)}
-                    </td>
-                    <td data-label={tableColumns[1]}>
-                      {t("pages.payments.paymentsTable.paymentMethod", {
-                        context: payment_method,
-                      })}
-                    </td>
-                    <td data-label={tableColumns[2]}>
-                      {sent_to_bank_date
-                        ? t("pages.payments.paymentsTable.paymentStatus", {
-                            context: status,
-                          })
-                        : formatDateRange(
-                            expected_send_date_start,
-                            expected_send_date_end
-                          )}
-                    </td>
-                    <td data-label={tableColumns[3]}>
-                      {sent_to_bank_date ||
-                        t("pages.payments.paymentsTable.paymentStatus", {
-                          context: status,
+              {claimDetail?.payments
+                .reverse()
+                .map(
+                  ({
+                    payment_id,
+                    period_start_date,
+                    period_end_date,
+                    amount,
+                    sent_to_bank_date,
+                    payment_method,
+                    expected_send_date_start,
+                    expected_send_date_end,
+                    status,
+                  }) => (
+                    <tr key={payment_id}>
+                      <td data-label={tableColumns[0]}>
+                        {formatDateRange(period_start_date, period_end_date)}
+                      </td>
+                      <td data-label={tableColumns[1]}>
+                        {t("pages.payments.paymentsTable.paymentMethod", {
+                          context: payment_method,
                         })}
-                    </td>
-                    <td data-label={tableColumns[4]}>
-                      {amount === null
-                        ? t("pages.payments.paymentsTable.paymentStatus", {
+                      </td>
+                      <td data-label={tableColumns[2]}>
+                        {sent_to_bank_date
+                          ? t("pages.payments.paymentsTable.paymentStatus", {
+                              context: status,
+                            })
+                          : formatDateRange(
+                              expected_send_date_start,
+                              expected_send_date_end
+                            )}
+                      </td>
+                      <td data-label={tableColumns[3]}>
+                        {sent_to_bank_date ||
+                          t("pages.payments.paymentsTable.paymentStatus", {
                             context: status,
-                          })
-                        : t("pages.payments.paymentsTable.amountSent", {
-                            amount,
                           })}
-                    </td>
-                  </tr>
-                )
-              )}
+                      </td>
+                      <td data-label={tableColumns[4]}>
+                        {amount === null
+                          ? t("pages.payments.paymentsTable.paymentStatus", {
+                              context: status,
+                            })
+                          : t("pages.payments.paymentsTable.amountSent", {
+                              amount,
+                            })}
+                      </td>
+                    </tr>
+                  )
+                )}
+              <tr>
+                <td>{waitingWeek}</td>
+                <td colSpan={4}>
+                  <Trans
+                    i18nKey="pages.payments.paymentsTable.waitingWeekText"
+                    components={{
+                      "waiting-week-link": (
+                        <a
+                          href={
+                            routes.external.massgov.sevenDayWaitingPeriodInfo
+                          }
+                        />
+                      ),
+                    }}
+                  />
+                </td>
+              </tr>
             </tbody>
           </Table>
         )}

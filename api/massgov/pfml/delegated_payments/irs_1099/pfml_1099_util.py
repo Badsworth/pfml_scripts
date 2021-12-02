@@ -369,6 +369,8 @@ def get_1099s(db_session: db.Session, batch: Pfml1099Batch) -> NamedTuple:
         db_session.query(
             Employee.employee_id.label("employee_id"),
             Employee.tax_identifier_id.label("tax_identifier_id"),
+            FineosExtractEmployeeFeed.c.label("c"),
+            FineosExtractEmployeeFeed.i.label("i"),
             FineosExtractEmployeeFeed.firstnames.label("first_name"),
             FineosExtractEmployeeFeed.lastname.label("last_name"),
             FineosExtractEmployeeFeed.customerno.label("customerno"),
@@ -394,8 +396,6 @@ def get_1099s(db_session: db.Session, batch: Pfml1099Batch) -> NamedTuple:
         .subquery()
     )
 
-    # TODO: Add cancel date filter
-    # func.to_char(func.coalesce(Pfml1099Payment.cancel_date, "01-01-1999"), "YYYY") != year
     payments = (
         db_session.query(
             Pfml1099Payment.employee_id,
@@ -404,13 +404,12 @@ def get_1099s(db_session: db.Session, batch: Pfml1099Batch) -> NamedTuple:
         .filter(
             Pfml1099Payment.pfml_1099_batch_id == batch.pfml_1099_batch_id,
             func.extract("YEAR", Pfml1099Payment.payment_date) == year,
+            func.extract("YEAR", func.coalesce(Pfml1099Payment.cancel_date, "01-01-1999")) != year,
         )
         .group_by(Pfml1099Payment.employee_id)
         .subquery()
     )
 
-    # TODO: Add cancel date filter
-    # func.to_char(func.coalesce(Pfml1099Payment.cancel_date, "01-01-1999"), "YYYY") == year
     credits = (
         db_session.query(
             Pfml1099Payment.employee_id,
@@ -419,6 +418,7 @@ def get_1099s(db_session: db.Session, batch: Pfml1099Batch) -> NamedTuple:
         .filter(
             Pfml1099Payment.pfml_1099_batch_id == batch.pfml_1099_batch_id,
             func.extract("YEAR", Pfml1099Payment.payment_date) != year,
+            func.extract("YEAR", func.coalesce(Pfml1099Payment.cancel_date, "01-01-1999")) == year,
         )
         .group_by(Pfml1099Payment.employee_id)
         .subquery()
