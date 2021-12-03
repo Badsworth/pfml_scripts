@@ -2587,6 +2587,8 @@ const pages = {
     feedbackDetails:
       "<p>We’d like to hear more about your experience on this site. Please take a few minutes to share your feedback.</p><p><feedback-link>Take the survey</feedback-link></p>",
     feedbackHeader: "Help us improve payment information by giving feedback",
+    paymentsPending:
+      "<p>Check back for your first payment’s estimated send date once your second week of leave ends.</p><p>Your application has a 7-day waiting period at the start of your leave. You won’t receive any PFML payments during this time. Read more about the <waiting-period-info-link>PFML 7-Day Waiting Period</waiting-period-info-link>.</p>",
     paymentsTable: {
       amountSent: "{{amount, currency}}",
       amountSentHeader: "Amount sent",
