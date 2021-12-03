@@ -2638,6 +2638,19 @@ const pages = {
       "The information you provide on this website will be used to administer the Paid Family and Medical Leave program. To continue using this website, you must agree to the terms of the user agreements updated as of June$t(chars.nbsp)25,$t(chars.nbsp)2021.",
     title: "How this website uses your information",
   },
+  userSettings: {
+    accountInformationHeading: "Account information",
+    addPhoneNumberButtonText: "Add phone number",
+    additionalVerificationHeading: "Additional login verification",
+    additionalVerificationNoMfaText:
+      "<p>Make your account more secure by providing a phone number to associate with your account. We'll send you a 6-digit code whenenever we need to verify it's really you. You’ll need to enter the code in order to log in to your account. In the future, you’ll also be able to access sensitive information like tax documents once you set this up.</p><p>You will need to provide a phone number that can receive text messages (SMS) and that you’ll have consistent access to in case we need to verify your login.</p><p><strong>Additional login verification is not enabled</strong></p>",
+    additionalVerificationWithMfaText:
+      "To protect your security, we'll send you a 6-digit code whenenever we need to verify it's really you. You’ll need to enter the code in order to log in to your account.",
+    emailLabel: "Email address",
+    mfaEnabledLabel: "Additional login verification is enabled",
+    mfaPhoneNumberLabel: "Phone number",
+    title: "Settings",
+  },
 };
 
 const components = {

@@ -209,9 +209,16 @@ const routes = {
       "https://travel.state.gov/content/travel/en/us-visas/employment/temporary-worker-visas.html",
   },
   index: "/",
+  twoFactor: {
+    smsConfirm: "/two-factor/sms/confirm",
+    smsIndex: "/two-factor/sms",
+    smsSetup: "/two-factor/sms/setup",
+    smsVerify: "/two-factor/sms/verify",
+  },
   user: {
     consentToDataSharing: "/user/consent-to-data-sharing",
     convert: "/user/convert-to-employer",
+    settings: "/user/settings",
   },
 };
 
