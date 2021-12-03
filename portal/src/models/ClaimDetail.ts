@@ -33,6 +33,17 @@ class ClaimDetail {
     this.absence_periods = this.absence_periods.map(
       (absence_period) => new AbsencePeriod(absence_period)
     );
+
+    /**
+     * Filtering to account for instances where a payment may be sent during the waiting week or prior to the leave start date
+     */
+
+    this.payments = this.payments.filter(
+      ({ period_start_date, status }) =>
+        (this.waitingWeek?.startDate &&
+          this.waitingWeek.startDate < period_start_date) ||
+        status === "Sent to bank"
+    );
   }
 
   /**
@@ -132,7 +143,9 @@ export interface PaymentDetail {
   payment_method: string;
   expected_send_date_start: string | null;
   expected_send_date_end: string | null;
-  status: string;
+  status: PaymentStatus;
 }
+
+type PaymentStatus = "Cancelled" | "Delayed" | "Pending" | "Sent to bank";
 
 export default ClaimDetail;

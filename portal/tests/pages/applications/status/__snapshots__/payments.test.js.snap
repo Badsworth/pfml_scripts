@@ -289,13 +289,38 @@ exports[`Payments renders the Payments table 1`] = `
       </td>
       <td
         data-label="Estimated scheduled date"
+      />
+      <td
+        data-label="Date sent"
       >
-        11/15/2021 to 11/21/2021
+        Pending
+      </td>
+      <td
+        data-label="Amount sent"
+      >
+        Pending
+      </td>
+    </tr>
+    <tr>
+      <td
+        data-label="Leave dates"
+      >
+        10/8/2021 to 10/15/2021
+      </td>
+      <td
+        data-label="Payment Method"
+      >
+        Check
+      </td>
+      <td
+        data-label="Estimated scheduled date"
+      >
+        Sent
       </td>
       <td
         data-label="Date sent"
       >
-        2021-11-15
+        2021-10-16
       </td>
       <td
         data-label="Amount sent"
@@ -304,7 +329,9 @@ exports[`Payments renders the Payments table 1`] = `
       </td>
     </tr>
     <tr>
-      <td />
+      <td>
+        10/21/2021 to 10/27/2021
+      </td>
       <td
         colspan="4"
       >
