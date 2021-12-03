@@ -127,8 +127,6 @@ const routes = {
         "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#about-family-leave-to-care-for-a-family-member-",
       benefitsGuide_aboutMedicalLeave:
         "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#about-medical-leave-",
-      benefitsGuide_aboutWaitingPeriod:
-        "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#:~:text=What%20is%20the%207-day%20waiting%20period%3F",
       benefitsGuide_benefitsAmountDetails:
         "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#benefit-amount-details-",
       benefitsGuide_seriousHealthCondition:

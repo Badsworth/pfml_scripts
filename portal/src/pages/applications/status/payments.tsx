@@ -1,6 +1,5 @@
 import React, { useEffect } from "react";
 import withUser, { WithUserProps } from "../../../hoc/withUser";
-
 import Accordion from "../../../components/core/Accordion";
 import AccordionItem from "../../../components/core/AccordionItem";
 import BackButton from "../../../components/BackButton";
@@ -24,6 +23,7 @@ interface PaymentsProps {
 
 export const Payments = ({
   appLogic: {
+    appErrors: { items },
     claims: { claimDetail, loadClaimDetail, hasLoadedPayments },
     portalFlow,
   },
@@ -53,7 +53,9 @@ export const Payments = ({
   const isAbsenceCaseId = Boolean(absence_id?.length);
   if (!isAbsenceCaseId) return <PageNotFound />;
 
-  const hasPayments = Boolean(claimDetail?.payments?.length);
+  const shouldShowPaymentsTable =
+    claimDetail?.payments !== null ||
+    (hasLoadedPayments(absence_id || "") && !items.length);
 
   const tableColumns = [
     t("pages.payments.paymentsTable.leaveDatesHeader"),
@@ -89,28 +91,7 @@ export const Payments = ({
           {t("pages.claimsStatus.yourPayments")}
         </Heading>
 
-        {/* Payments pending text */}
-        {!hasPayments && (
-          <aside data-testid="payment-pending-info">
-            <Trans
-              components={{
-                "waiting-period-info-link": (
-                  <a
-                    href={
-                      routes.external.massgov.benefitsGuide_aboutWaitingPeriod
-                    }
-                    rel="noopener"
-                    target="_blank"
-                  />
-                ),
-              }}
-              i18nKey="pages.payments.paymentsPending"
-            />
-          </aside>
-        )}
-
-        {/* Payments table */}
-        {hasPayments && (
+        {shouldShowPaymentsTable && (
           <Table className="width-full" responsive>
             <thead>
               <tr>

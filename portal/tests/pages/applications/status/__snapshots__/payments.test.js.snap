@@ -207,7 +207,7 @@ exports[`Payments renders the Payments table 1`] = `
       <td
         data-label="Leave dates"
       >
-        11/8/2021 to 11/15/2021
+        10/31/2021 to 11/7/2021
       </td>
       <td
         data-label="Payment Method"
@@ -222,7 +222,7 @@ exports[`Payments renders the Payments table 1`] = `
       <td
         data-label="Date sent"
       >
-        2021-11-15
+        2021-11-08
       </td>
       <td
         data-label="Amount sent"
