@@ -118,7 +118,9 @@ export const Status = ({
     );
   }
 
-  const absenceDetails = claimDetail.absencePeriodsByReason;
+  const absenceDetails = AbsencePeriod.groupByReason(
+    claimDetail.absence_periods
+  );
   const hasPendingStatus = claimDetail.absence_periods.some(
     (absenceItem) => absenceItem.request_decision === "Pending"
   );

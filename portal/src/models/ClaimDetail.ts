@@ -1,7 +1,7 @@
 import { ClaimEmployee, ClaimEmployer, ManagedRequirement } from "./Claim";
-import { groupBy, orderBy } from "lodash";
 import { AbsencePeriod } from "./AbsencePeriod";
 import dayjs from "dayjs";
+import { orderBy } from "lodash";
 
 class ClaimDetail {
   absence_periods: AbsencePeriod[] = [];
@@ -33,14 +33,6 @@ class ClaimDetail {
     this.absence_periods = this.absence_periods.map(
       (absence_period) => new AbsencePeriod(absence_period)
     );
-  }
-
-  /**
-   * Get absence_periods grouped by their leave reason
-   * @returns {Object} an object that keys arrays of absence periods by their reason e.g { "Child Bonding": [AbsencePeriod] }
-   */
-  get absencePeriodsByReason() {
-    return groupBy(this.absence_periods, "reason");
   }
 
   /**

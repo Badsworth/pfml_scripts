@@ -1,4 +1,3 @@
-import { AbsencePeriod } from "../../src/models/AbsencePeriod";
 import ClaimDetail from "../../src/models/ClaimDetail";
 import { ClaimEmployee } from "../../src/models/Claim";
 
@@ -183,22 +182,6 @@ describe("ClaimDetail", () => {
       expect(claimDetail.payments[1].status).toBe("Pending");
       expect(claimDetail.payments[1].sent_to_bank_date).toBeNull();
     });
-  });
-
-  it("groups absence periods by leave_details", () => {
-    expect(
-      Object.keys(claimDetailCollection.absencePeriodsByReason).length
-    ).toBe(2);
-    expect(
-      claimDetailCollection.absencePeriodsByReason[
-        "Serious Health Condition - Employee"
-      ]
-    ).toBeInstanceOf(Array);
-    expect(
-      claimDetailCollection.absencePeriodsByReason[
-        "Serious Health Condition - Employee"
-      ][0]
-    ).toBeInstanceOf(AbsencePeriod);
   });
 
   it("returns a list of leave dates for the claim", () => {

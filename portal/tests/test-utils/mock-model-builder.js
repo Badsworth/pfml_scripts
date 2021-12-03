@@ -283,6 +283,7 @@ export class MockEmployerClaimBuilder extends BaseMockBenefitsApplicationBuilder
     super();
     // Defaults, can be overridden by calling instance methods
     this.claimAttrs = {
+      absence_periods: [],
       employer_dba: "Work Inc.",
       employer_id: "dda903f-f093f-ff900",
       first_name: "Jane",
