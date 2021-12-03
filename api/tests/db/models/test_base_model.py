@@ -15,8 +15,8 @@ class OriginalModel(Base):
 class DeprecatedModel(Base):
     __tablename__ = "deprecated_columns"
     id = Column(Integer, primary_key=True, autoincrement=True)
-    text_field = deprecated_column(Column(Text, nullable=True))
-    uuid = deprecated_column(Column(PostgreSQLUUID))
+    text_field = deprecated_column(Text, nullable=True)
+    uuid = deprecated_column(PostgreSQLUUID)
 
 
 def test_deprecated_column(local_test_db_session):
@@ -37,3 +37,12 @@ def test_deprecated_column(local_test_db_session):
 
     assert "text_field" not in deprecated_result.__dict__.keys()
     assert "uuid" not in deprecated_result.__dict__.keys()
+
+    # The original implementation of deprecated_column accidentally removed the field completely. This test
+    # ensures that the deprecated columns are still present if queried directly
+    query_for_deprecated_field = local_test_db_session.query(DeprecatedModel.text_field).filter_by(
+        id=1
+    )
+    result_for_deprecated_field = query_for_deprecated_field.one()
+
+    assert "text_field" in result_for_deprecated_field.keys()

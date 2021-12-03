@@ -1,6 +1,5 @@
 import datetime
 from datetime import date
-from unittest import mock
 
 import pytest
 from freezegun import freeze_time
@@ -35,6 +34,7 @@ from massgov.pfml.db.models.employees import PaymentMethod
 from massgov.pfml.db.models.factories import (
     AddressFactory,
     ApplicationFactory,
+    ClaimFactory,
     ConcurrentLeaveFactory,
     ContinuousLeavePeriodFactory,
     EmployerBenefitFactory,
@@ -2502,16 +2502,38 @@ def test_previous_leaves_cannot_overlap_leave_periods():
     ],
 )
 def test_get_application_complete_issues(headers, is_withholding_tax, expected_issues):
-    with mock.patch(
-        "massgov.pfml.api.validation.application_rules.get_application_issues", return_value=[]
-    ) as mock_get_app_issues:
-        application = ApplicationFactory.build(is_withholding_tax=is_withholding_tax)
+    application = ApplicationFactory.build(
+        is_withholding_tax=is_withholding_tax, claim=ClaimFactory.build()
+    )
 
-        issues = get_application_complete_issues(application, headers)
+    issues = get_application_complete_issues(application, headers)
 
-        mock_get_app_issues.assert_called_once_with(application)
+    assert issues == expected_issues
 
-        assert issues == expected_issues
+
+def test_get_application_complete_issues_missing_absence_id():
+    claim = ClaimFactory.build(fineos_absence_id=None)
+    application = ApplicationFactory.build(is_withholding_tax=False, claim=claim)
+
+    issues = get_application_complete_issues(application, {})
+
+    assert issues == [
+        ValidationErrorDetail(
+            type=IssueType.object_not_found,
+            message="A case must exist before it can be marked as complete.",
+        )
+    ]
+
+
+def test_get_application_complete_issues_missing_part1_field():
+    # This validation doesn't care if a new "Submit" rule isn't fulfilled, as long as a claim
+    # with a Fineos absence ID exists.
+    application = ApplicationFactory.build(
+        is_withholding_tax=False, claim=ClaimFactory.build(), first_name=None
+    )
+    issues = get_application_complete_issues(application, {})
+
+    assert not issues
 
 
 class TestGetConcurrentLeaveIssues:

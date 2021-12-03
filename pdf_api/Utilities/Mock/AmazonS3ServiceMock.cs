@@ -1,15 +1,8 @@
-using System;
 using System.IO;
 using System.Threading.Tasks;
-using System.Net;
-using System.Reflection;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.Extensions.Configuration;
-using Amazon;
-using Amazon.S3;
-using Amazon.S3.Model;
-using Amazon.S3.Util;
-using PfmlPdfApi.Utilities;
 
 namespace PfmlPdfApi.Utilities.Mock
 {
@@ -33,11 +26,11 @@ namespace PfmlPdfApi.Utilities.Mock
         {
             var lstream = new MemoryStream(stream.ToArray());
             lstream.Seek(0, SeekOrigin.Begin);
-            
+
             var fileStream = File.Create($"{BASEFOLDER}//{_amazonS3Setting.Key}//{fileName}");
             lstream.CopyTo(fileStream);
             fileStream.Close();
-            
+
             return true;
         }
 
@@ -57,6 +50,13 @@ namespace PfmlPdfApi.Utilities.Mock
             }
 
             return streamList;
+        }
+
+        public async Task<IList<string>> GetFoldersAsync(string folderName)
+        {
+            string[] files = Directory.GetFiles($"{BASEFOLDER}//{_amazonS3Setting.Key}//{folderName}");
+
+            return files.ToList();
         }
     }
 }

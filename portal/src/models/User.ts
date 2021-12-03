@@ -6,6 +6,8 @@ class User {
   email_address: string;
   roles: UserRole[] = [];
   user_id: string;
+  mfa_phone_number: string | null = null;
+  mfa_delivery_preference: "SMS" | "Opt Out" | null = null;
   user_leave_administrators: UserLeaveAdministrator[] = [];
 
   constructor(attrs: Partial<User>) {

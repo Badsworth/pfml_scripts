@@ -54,7 +54,6 @@ function getRawEnvironment() {
     EMPLOYEES_FILE: process.env.E2E_EMPLOYEES_FILE,
     EMPLOYERS_FILE: process.env.E2E_EMPLOYERS_FILE,
 
-    FLOOD_API_TOKEN: process.env.E2E_FLOOD_API_TOKEN,
     LST_EMPLOYEES_FILE: process.env.E2E_LST_EMPLOYEES_FILE,
     LST_EMPLOYERS_FILE: process.env.E2E_LST_EMPLOYERS_FILE,
 

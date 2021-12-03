@@ -118,6 +118,7 @@ export interface BaseClaimSpecification {
   metadata?: GeneratedClaimMetadata;
   /** Makes a claim for an extremely short time period (1 day). */
   shortClaim?: boolean;
+  is_withholding_tax?: boolean | null;
 }
 
 type IntermittentLeaveSpec =
@@ -144,6 +145,7 @@ export type GeneratedClaim = {
   documents: DocumentWithPromisedFile[];
   employerResponse?: EmployerClaimRequestBody | null;
   paymentPreference: PaymentPreferenceRequestBody;
+  is_withholding_tax: boolean;
   metadata?: GeneratedClaimMetadata;
 };
 
@@ -251,6 +253,7 @@ export class ClaimGenerator {
       paymentPreference: {
         payment_preference: spec.payment ?? this.generatePaymentPreference(),
       },
+      is_withholding_tax: spec.is_withholding_tax || false,
       employerResponse: spec.employerResponse
         ? this.generateEmployerResponse(spec.employerResponse, leaveDetails)
         : null,

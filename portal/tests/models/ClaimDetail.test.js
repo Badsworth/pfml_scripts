@@ -1,7 +1,27 @@
-import ClaimDetail, { AbsencePeriod } from "../../src/models/ClaimDetail";
+import { AbsencePeriod } from "../../src/models/AbsencePeriod";
+import ClaimDetail from "../../src/models/ClaimDetail";
 import { ClaimEmployee } from "../../src/models/Claim";
 
 describe("ClaimDetail", () => {
+  const claimDetailCollection = new ClaimDetail({
+    absence_periods: [
+      {
+        absence_period_start_date: "2021-01-01",
+        absence_period_end_date: "2021-06-30",
+        reason: "Child Bonding",
+      },
+      {
+        absence_period_start_date: "2021-07-01",
+        absence_period_end_date: "2021-12-31",
+        reason: "Serious Health Condition - Employee",
+      },
+      {
+        absence_period_start_date: "2021-10-01",
+        absence_period_end_date: "2021-12-31",
+        reason: "Serious Health Condition - Employee",
+      },
+    ],
+  });
   it("creates an employee and an employer", () => {
     const claimDetail = new ClaimDetail({
       employee: { email_address: "alsofake@fake.com", first_name: "Baxter" },
@@ -166,34 +186,34 @@ describe("ClaimDetail", () => {
   });
 
   it("groups absence periods by leave_details", () => {
-    const claimDetail = new ClaimDetail({
-      absence_periods: [
-        {
-          absence_period_start_date: "2021-01-01",
-          absence_period_end_date: "2021-06-30",
-          reason: "Child Bonding",
-        },
-        {
-          absence_period_start_date: "2021-07-01",
-          absence_period_end_date: "2021-12-31",
-          reason: "Serious Health Condition - Employee",
-        },
-        {
-          absence_period_start_date: "2021-10-01",
-          absence_period_end_date: "2021-12-31",
-          reason: "Serious Health Condition - Employee",
-        },
-      ],
-    });
-    expect(Object.keys(claimDetail.absencePeriodsByReason).length).toBe(2);
     expect(
-      claimDetail.absencePeriodsByReason["Serious Health Condition - Employee"]
+      Object.keys(claimDetailCollection.absencePeriodsByReason).length
+    ).toBe(2);
+    expect(
+      claimDetailCollection.absencePeriodsByReason[
+        "Serious Health Condition - Employee"
+      ]
     ).toBeInstanceOf(Array);
     expect(
-      claimDetail.absencePeriodsByReason[
+      claimDetailCollection.absencePeriodsByReason[
         "Serious Health Condition - Employee"
       ][0]
     ).toBeInstanceOf(AbsencePeriod);
+  });
+
+  it("returns a list of leave dates for the claim", () => {
+    expect(claimDetailCollection.leaveDates.length).toBe(3);
+    expect(claimDetailCollection.leaveDates[0]).toMatchObject({
+      absence_period_end_date: "2021-06-30",
+      absence_period_start_date: "2021-01-01",
+    });
+  });
+
+  it("returns the waiting period for the claim", () => {
+    expect(claimDetailCollection.waitingWeek.startDate).toEqual(
+      claimDetailCollection.absence_periods[0].absence_period_start_date
+    );
+    expect(claimDetailCollection.waitingWeek.endDate).toEqual("2021-01-07");
   });
 
   it("creates employer managed requirements", () => {

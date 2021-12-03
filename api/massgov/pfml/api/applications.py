@@ -4,6 +4,7 @@ from typing import Any, Dict
 from uuid import UUID
 
 import connexion
+import newrelic.agent
 import puremagic
 from flask import Response, abort, request
 from puremagic import PureError
@@ -45,6 +46,7 @@ from massgov.pfml.api.validation.employment_validator import (
     get_contributing_employer_or_employee_issue,
 )
 from massgov.pfml.api.validation.exceptions import (
+    IssueRule,
     IssueType,
     ValidationErrorDetail,
     ValidationException,
@@ -96,7 +98,15 @@ def application_get(application_id):
         ensure(READ, existing_application)
         application_response = ApplicationResponse.from_orm(existing_application)
 
-    issues = application_rules.get_application_issues(existing_application)
+    # Only run these validations if the application hasn't already been submitted. This
+    # prevents warnings from showing in the response for rules added after the application
+    # was submitted, which would cause a Portal user's Checklist to revert back to showing
+    # steps as incomplete, and they wouldn't be able to fix this.
+    issues = (
+        application_rules.get_application_submit_issues(existing_application)
+        if not existing_application.submitted_time
+        else []
+    )
 
     return response_util.success_response(
         message="Successfully retrieved application",
@@ -193,7 +203,7 @@ def applications_update(application_id):
             db_session, application_request, existing_application
         )
 
-    issues = application_rules.get_application_issues(existing_application)
+    issues = application_rules.get_application_submit_issues(existing_application)
     employer_issue = get_contributing_employer_or_employee_issue(
         db_session, existing_application.employer_fein, existing_application.tax_identifier
     )
@@ -259,7 +269,7 @@ def applications_submit(application_id):
 
         log_attributes = get_application_log_attributes(existing_application)
 
-        issues = application_rules.get_application_issues(existing_application)
+        issues = application_rules.get_application_submit_issues(existing_application)
         employer_issue = get_contributing_employer_or_employee_issue(
             db_session, existing_application.employer_fein, existing_application.tax_identifier
         )
@@ -593,6 +603,10 @@ def document_upload(application_id, body, file):
                 data=document_details.dict(),
             ).to_api_response()
 
+        except (pdf_util.PDFCompressionError):
+            newrelic.agent.notice_error(attributes={"document_id": document.document_id})
+            raise ValidationException(errors=[FILE_SIZE_VALIDATION_ERROR])
+
         # use Certification Form when the feature flag for caring leave is active, but will otherwise use
         # State manage Paid Leave Confirmation. If the document type is Certification Form,
         # the API will map to the corresponding plan proof based on leave reason
@@ -651,7 +665,13 @@ def document_upload(application_id, body, file):
                 return response_util.error_response(
                     status_code=BadRequest,
                     message=message,
-                    errors=[ValidationErrorDetail(type=IssueType.fineos_client, message=message)],
+                    errors=[
+                        ValidationErrorDetail(
+                            type=IssueType.fineos_client,
+                            message=message,
+                            rule=IssueRule.document_requirement_already_satisfied,
+                        )
+                    ],
                     data=document_details.dict(),
                 ).to_api_response()
 
@@ -876,6 +896,17 @@ def validate_tax_withholding_request(db_session, application_id, tax_preference_
     existing_application = get_or_404(db_session, Application, application_id)
     ensure(EDIT, existing_application)
 
+    if not isinstance(tax_preference_body.is_withholding_tax, bool):
+        raise ValidationException(
+            errors=[
+                ValidationErrorDetail(
+                    type=IssueType.required,
+                    message="Tax withholding preference is required",
+                    field="is_withholding_tax",
+                )
+            ]
+        )
+
     if existing_application.is_withholding_tax is not None:
         logger.info(
             "submit_tax_withholding_preference failure - preference already set",
@@ -888,7 +919,13 @@ def validate_tax_withholding_request(db_session, application_id, tax_preference_
                     existing_application.application_id
                 ),
                 data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
-                errors=[],
+                errors=[
+                    ValidationErrorDetail(
+                        type=IssueType.duplicate,
+                        message="Tax withholding preference is already submitted",
+                        field="is_withholding_tax",
+                    )
+                ],
             ).to_api_response()
         )
 

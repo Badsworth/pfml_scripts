@@ -90,7 +90,7 @@ env:
   # Caching/build performance - Move Cypress, Playwright binary storage to .npm to leverage caching.
   CYPRESS_CACHE_FOLDER: /home/runner/.npm/.cypress-cache
   PLAYWRIGHT_BROWSERS_PATH: /home/runner/.npm/.playwright-cache
-  PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: 1 # We never actually need puppeteer chromium installed - it's for flood only.
+  PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: 1 # We never actually need puppeteer chromium installed
   TEST_RUN_ID: ${{ github.repository }}-${{ github.run_id }}-${{ github.run_attempt}}
 
 # Prevent this workflow from running more than 1x concurrently in any environment.
