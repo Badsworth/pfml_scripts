@@ -81,7 +81,7 @@ module "tasks" {
   enable_register_admins_job = true
 
   enable_pub_automation_fineos           = true
-  enable_pub_automation_create_pub_files = false
+  enable_pub_automation_create_pub_files = true
   enable_pub_automation_process_returns  = false
 
   rmv_client_base_url               = "https://atlas-staging-gateway.massdot.state.ma.us/vs"
@@ -97,4 +97,6 @@ module "tasks" {
   pdf_api_host             = "http://localhost:5000"
   enable_generate_1099_pdf = "0"
   enable_merge_1099_pdf    = "0"
+
+  enable_pub_payments_copy_audit_report_schedule = false
 }

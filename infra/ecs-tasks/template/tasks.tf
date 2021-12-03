@@ -370,6 +370,17 @@ locals {
         { name : "S3_BUCKET", value : "s3://massgov-pfml-${var.environment_name}-execute-sql-export" }
       ]
     },
+
+    "pub-payments-copy-audit-report" = {
+      command   = ["pub-payments-copy-audit-report"]
+      task_role = aws_iam_role.pub_payments_process_fineos_task_role.arn
+      cpu       = 2048,
+      memory    = 4096,
+      env = [
+        local.db_access,
+        local.pub_s3_folders,
+      ]
+    },
   }
 }
 
