@@ -63,6 +63,34 @@ class AbsencePeriodContainer:
         self.is_id_proofed = is_id_proofed
         self.leave_request_id = int(leave_request_id) if leave_request_id else None
 
+    def _members(self):
+        return (
+            self.start_date,
+            self.end_date,
+            self.class_id,
+            self.index_id,
+            self.is_id_proofed,
+            self.leave_request_id,
+        )
+
+    def __eq__(self, other):
+        if not isinstance(other, AbsencePeriodContainer):
+            return False
+
+        return self._members() == other._members()
+
+    def __hash__(self):
+        return hash(
+            (
+                self.start_date,
+                self.end_date,
+                self.class_id,
+                self.index_id,
+                self.is_id_proofed,
+                self.leave_request_id,
+            )
+        )
+
 
 class ClaimantData:
     """
@@ -122,6 +150,7 @@ class ClaimantData:
         start_dates: List[str] = []
         end_dates = []
 
+        absence_period_set = set()
         for requested_absence in requested_absences:
             # If any of the requested absence records are ID proofed, then
             # we consider the entire claim valid
@@ -183,8 +212,15 @@ class ClaimantData:
                 leave_request_id=fineos_leave_request_id,
             )
 
-            self.absence_period_data.append(absence_period)
+            # The absence period data has many duplicate records
+            # on values we don't need for our processing. To improve
+            # performance, we dedupe to avoid rewriting the same records
+            # to the DB hundreds of times potentially.
+            if absence_period in absence_period_set and self.count_incrementer:
+                self.count_incrementer(ClaimantExtractStep.Metrics.DUPLICATE_ABSENCE_PERIOD_COUNT)
+            absence_period_set.add(absence_period)
 
+        self.absence_period_data = list(absence_period_set)
         all_start_end_dates_valid = len(requested_absences) == len(start_dates) == len(end_dates)
 
         if all_start_end_dates_valid:
@@ -378,6 +414,7 @@ class ClaimantExtractStep(Step):
             "absence_period_class_id_or_index_id_not_found_count"
         )
         START_DATE_OR_END_DATE_NOT_FOUND_COUNT = "start_date_or_end_date_not_found_count"
+        DUPLICATE_ABSENCE_PERIOD_COUNT = "duplicate_absence_period_count"
 
     def run_step(self) -> None:
         self.process_claimant_extract_data()
