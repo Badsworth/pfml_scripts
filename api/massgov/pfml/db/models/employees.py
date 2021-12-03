@@ -812,6 +812,12 @@ class BenefitYear(Base, TimestampMixin):
 
     end_date = Column(Date, nullable=False)
 
+    # The base period used to calculate IAWW
+    # in order to recalculate IAWW for other employers
+    base_period_start_date = Column(Date)
+
+    base_period_end_date = Column(Date)
+
     total_wages = Column(Numeric(asdecimal=True))
 
     contributions = cast(
