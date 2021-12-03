@@ -459,8 +459,8 @@ module "pub-payments-copy-audit-report-scheduler" {
 
   task_name = "pub-payments-copy-audit-report"
   # Every day at 4am ET (9am UTC)
-  schedule_expression_standard         = "cron(0 9 * * MON-FRI *)"
-  schedule_expression_daylight_savings = "cron(0 8 * * MON-FRI *)"
+  schedule_expression_standard         = "cron(0 9 ? * MON-FRI *)"
+  schedule_expression_daylight_savings = "cron(0 8 ? * MON-FRI *)"
   environment_name                     = var.environment_name
 
   cluster_arn        = data.aws_ecs_cluster.cluster.arn
