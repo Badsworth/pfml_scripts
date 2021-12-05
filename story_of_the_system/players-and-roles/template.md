@@ -10,7 +10,7 @@
 
 ## Input:
 
-1. “The Entity 𝑋a requires…” (what information does this entity require to do its part)
+1. What data does Entity 𝑋a require?
 
 2. What/Who generates this information?
 
