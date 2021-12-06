@@ -29,10 +29,12 @@ What does the DOR do with this information?
     - Employee and Employer data... What data 
 
 2. Where is the output captured?(logs, stdout, file, return value to caller?)
-    - DOR sends files (what mechanism does DOR use to send files?)
+    - DOR sends files (what mechanism does DOR use to send files?)(To where?)
 
 3. Which part(s) of the system consume this information?
-    - The files DOR generates are consumed by the [DOR FINEOS ETL][DFE] which sends it to RDS ([PFML Prod DB][PDB])
+    - The files DOR generates are consumed by the [DOR FINEOS ETL][DFE] which sends them to RDS ([PFML Prod DB][PDB]) and FINEOS
+    - The API uses it too. For example there's a financial eligibility API (that FINEOS calls) which determines if eligibility and some other data. FINEOS calculates the payment amounts. https://lwd.atlassian.net/wiki/spaces/API/pages/636420178/Financial+Eligibility
+    - Some of the data fields (contribution amounts) never go to FINEOS so we have to keep it. It's also kept so we can determine what data from DOR is new and what is unmodified.
 
-[DFE]: linkToSomething
-[PDB]: linkToProdDBPage
+[DFE]: link-To-DOR-FINEOS-ETL
+[PDB]: link-To-Prod-DB-Page
