@@ -284,12 +284,22 @@ class DelegatedPaymentFactory(MockData):
         )
         return PaymentFactory.create(**args)
 
+    def _create_state_call(self, payment, payment_end_state):
+        state_log_util.create_finished_state_log(
+            payment,
+            payment_end_state,
+            state_log_util.build_outcome(self.payment_end_state_message),
+            self.db_session,
+        )
+
     def get_or_create_payment(self):
         if self.payment or not self.add_payment:
             return self.payment
 
         self.get_or_create_import_log()
         self.get_or_create_claim()
+
+        self.get_or_create_import_log()
 
         if self.add_address and self.experian_address_pair is None:
             self.experian_address_pair = ExperianAddressPairFactory.create(
@@ -304,12 +314,7 @@ class DelegatedPaymentFactory(MockData):
         self.get_or_create_payment()
 
         if self.payment and payment_end_state:
-            state_log_util.create_finished_state_log(
-                self.payment,
-                payment_end_state,
-                state_log_util.build_outcome(self.payment_end_state_message),
-                self.db_session,
-            )
+            self._create_state_call(self.payment, payment_end_state)
 
         return self.payment
 
@@ -325,7 +330,13 @@ class DelegatedPaymentFactory(MockData):
             return writeback_details
 
     def create_related_payment(
-        self, weeks_later=0, amount=None, payment_transaction_type_id=None, import_log_id=None
+        self,
+        weeks_later=0,
+        amount=None,
+        payment_transaction_type_id=None,
+        import_log_id=None,
+        payment_end_state=None,
+        writeback_transaction_status=None,
     ):
         """ Roughly mimic creating another payment. Uses the original payment as a base
             with only the specified values + C/I values updated.
@@ -347,7 +358,17 @@ class DelegatedPaymentFactory(MockData):
                 else self.payment.fineos_extract_import_log_id,
             }
 
-            return self._payment_factory_call(**params)
+            new_payment = self._payment_factory_call(**params)
+            if payment_end_state:
+                self._create_state_call(new_payment, payment_end_state)
+
+            if writeback_transaction_status:
+                writeback_details = FineosWritebackDetails(
+                    payment=new_payment,
+                    transaction_status_id=writeback_transaction_status.transaction_status_id,
+                )
+                self.db_session.add(writeback_details)
+            return new_payment
 
         return None
 
@@ -365,7 +386,14 @@ class DelegatedPaymentFactory(MockData):
             import_log_id=import_log.import_log_id,
         )
 
-    def create_reissued_payments(self, reissuing_payment=None, amount=None, import_log=None):
+    def create_reissued_payments(
+        self,
+        reissuing_payment=None,
+        amount=None,
+        import_log=None,
+        payment_end_state=None,
+        writeback_transaction_status=None,
+    ):
         """ Create reissued equivalent payments.
             This will return a cancellation + new payment both with a new import log ID
         """
@@ -382,6 +410,8 @@ class DelegatedPaymentFactory(MockData):
         successor_payment = self.create_related_payment(
             amount=amount if amount is not None else payment_to_reissue.amount,
             import_log_id=import_log.import_log_id,
+            payment_end_state=payment_end_state,
+            writeback_transaction_status=writeback_transaction_status,
         )
 
         return cancellation_payment, successor_payment
