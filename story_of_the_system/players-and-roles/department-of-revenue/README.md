@@ -36,5 +36,5 @@ What does the DOR do with this information?
     - The API uses it too. For example there's a financial eligibility API (that FINEOS calls) which determines if eligibility and some other data. FINEOS calculates the payment amounts. https://lwd.atlassian.net/wiki/spaces/API/pages/636420178/Financial+Eligibility
     - Some of the data fields (contribution amounts) never go to FINEOS so we have to keep it. It's also kept so we can determine what data from DOR is new and what is unmodified.
 
-[DFE]: link-To-DOR-FINEOS-ETL
+[DFE]: https://lwd.atlassian.net/wiki/spaces/API/pages/1159102703/DOR+FINEOS+ETL
 [PDB]: link-To-Prod-DB-Page
