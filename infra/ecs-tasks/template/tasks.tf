@@ -105,6 +105,15 @@ locals {
       ]
     },
 
+    "db-create-servicenow-user" = {
+      command = ["db-create-servicenow-user"],
+      env = [
+        local.db_access,
+        { name : "COGNITO_SERVICENOW_APP_CLIENT_ID", valueFrom : "/service/${local.app_name}/${var.environment_name}/cognito_servicenow_app_client_id" },
+        { name : "COGNITO_INTERNAL_SERVICENOW_ROLE_APP_CLIENT_ID", valueFrom : "/service/${local.app_name}/${var.environment_name}/cognito_internal_servicenow_role_app_client_id" }
+      ]
+    },
+
     "execute-sql" = {
       command   = ["execute-sql"]
       task_role = aws_iam_role.task_execute_sql_task_role.arn
@@ -256,6 +265,17 @@ locals {
         local.pub_s3_folders,
         { name : "USE_EXPERIAN_SOAP_CLIENT", value : "1" },
         { name : "EXPERIAN_AUTH_TOKEN", valueFrom : "/service/${local.app_name}/common/experian-auth-token" }
+      ]
+    },
+
+    "fineos-import-iaww" = {
+      command   = ["fineos-import-iaww"]
+      task_role = aws_iam_role.pub_payments_process_fineos_task_role.arn
+      env = [
+        local.db_access,
+        local.fineos_s3_access,
+        local.pub_s3_folders,
+        { name : "FINEOS_IAWW_EXTRACT_MAX_HISTORY_DATE", value : "2021-11-15" }
       ]
     },
 

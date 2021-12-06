@@ -6,6 +6,7 @@ import EmployerClaim from "../../models/EmployerClaim";
 import Heading from "../core/Heading";
 import React from "react";
 import Table from "../core/Table";
+import { Trans } from "react-i18next";
 import dayjs from "dayjs";
 import formatDate from "../../utils/formatDate";
 import { useTranslation } from "../../locales/i18n";
@@ -51,15 +52,18 @@ const ConcurrentLeave = (props: ConcurrentLeaveProps) => {
       </Heading>
       <p>{t("components.employersConcurrentLeave.explanation")}</p>
       <p>
-        {t("components.employersConcurrentLeave.explanationDetails", {
-          context: leaveContext,
-          endDate: formatDate(
-            dayjs(claim.leaveStartDate).add(6, "day").format()
-          ).short(),
-          startDate: formatDate(claim.leaveStartDate).short(),
-        })}
+        <Trans
+          i18nKey="components.employersConcurrentLeave.explanationDetails"
+          tOptions={{ context: leaveContext }}
+          values={{
+            endDate: formatDate(
+              dayjs(claim.leaveStartDate).add(6, "day").format()
+            ).short(),
+            startDate: formatDate(claim.leaveStartDate).short(),
+          }}
+        />
       </p>
-      <Table className="width-full">
+      <Table className="width-full" responsive>
         <thead>
           <tr>
             <th scope="col">

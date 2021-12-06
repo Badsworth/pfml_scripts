@@ -42,6 +42,12 @@ PAYMENT_RECONCILIATION_EXTRACT_CONFIG = ExtractConfig(
     "fineos_adhoc_data_export_path",
 )
 
+IAWW_EXTRACT_CONFIG = ExtractConfig(
+    payments_util.IAWW_EXTRACT_FILES,
+    ReferenceFileType.FINEOS_IAWW_EXTRACT,
+    "fineos_data_export_path",
+)
+
 
 class ExtractData:
     date_str: str

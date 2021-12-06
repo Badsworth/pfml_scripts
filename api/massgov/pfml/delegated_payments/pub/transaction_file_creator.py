@@ -25,6 +25,7 @@ from massgov.pfml.delegated_payments.delegated_payments_nacha import (
 from massgov.pfml.delegated_payments.ez_check import EzCheckFile
 from massgov.pfml.delegated_payments.step import Step
 from massgov.pfml.delegated_payments.util.ach.nacha import NachaFile
+from massgov.pfml.util.datetime import get_now_us_eastern
 
 logger = logging.get_logger(__name__)
 
@@ -112,7 +113,7 @@ class TransactionFileCreatorStep(Step):
             eft: PubEft = employee_with_eft[1]
 
             eft.prenote_state_id = PrenoteState.PENDING_WITH_PUB.prenote_state_id
-            eft.prenote_sent_at = payments_util.get_now()
+            eft.prenote_sent_at = get_now_us_eastern()
             self.db_session.add(eft)
 
             state_log_util.create_finished_state_log(

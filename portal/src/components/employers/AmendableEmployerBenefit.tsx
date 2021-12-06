@@ -156,14 +156,23 @@ const AmendableEmployerBenefit = ({
 
   const BenefitDetailsRow = () => (
     <tr data-testid="benefit-details-row">
-      <th scope="row">
+      <th
+        scope="row"
+        data-label={t("components.employersEmployerBenefits.dateRangeLabel")}
+      >
         {formatDateRange(
           employerBenefit.benefit_start_date,
           employerBenefit.benefit_end_date
         )}
       </th>
-      <td>{employerBenefit.benefit_type}</td>
-      <td>{getBenefitAmountByType()}</td>
+      <td
+        data-label={t("components.employersEmployerBenefits.benefitTypeLabel")}
+      >
+        {employerBenefit.benefit_type}
+      </td>
+      <td data-label={t("components.employersEmployerBenefits.detailsLabel")}>
+        {getBenefitAmountByType()}
+      </td>
       <td>
         <AmendButton onClick={() => setIsAmendmentFormDisplayed(true)} />
       </td>

@@ -14,7 +14,7 @@ exports[`Two-factor SMS Confirm renders landing page content 1`] = `
   <p
     class="usa-intro"
   >
-    Enter the 6-digit code we sent to your phone number (123) 456‑0012.
+    Enter the 6-digit code we sent to your phone number .
   </p>
   <div
     class="usa-form-group"
@@ -48,12 +48,6 @@ exports[`Two-factor SMS Confirm renders landing page content 1`] = `
     type="submit"
   >
     Save and continue
-  </button>
-  <button
-    class="usa-button position-relative display-block margin-top-1 usa-button--outline bg-white"
-    type="button"
-  >
-    Skip this step
   </button>
 </form>
 `;

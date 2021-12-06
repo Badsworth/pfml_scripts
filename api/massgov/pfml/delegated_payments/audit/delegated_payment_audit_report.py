@@ -43,16 +43,45 @@ class PaymentAuditReportStep(Step):
     def sample_payments_for_audit_report(self) -> Iterable[Payment]:
         logger.info("Start sampling payments for audit report")
 
+        state_logs_containers: List[StateLog] = []
+
         state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
             state_log_util.AssociatedClass.PAYMENT,
             State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING,
             self.db_session,
         )
-        state_log_count = len(state_logs)
+
+        if len(state_logs) > 0:
+            for item in state_logs:
+                state_logs_containers.append(item)
+
+        if payments_util.is_withholding_payments_enabled():
+            logger.info("Tax Withholding ENABLED")
+            federal_withholding_state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
+                state_log_util.AssociatedClass.PAYMENT,
+                State.FEDERAL_WITHHOLDING_PENDING_AUDIT,
+                self.db_session,
+            )
+
+            if len(federal_withholding_state_logs) > 0:
+                for item in federal_withholding_state_logs:
+                    state_logs_containers.append(item)
+
+            state_withholding_state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
+                state_log_util.AssociatedClass.PAYMENT,
+                State.STATE_WITHHOLDING_PENDING_AUDIT,
+                self.db_session,
+            )
+
+            if len(state_withholding_state_logs) > 0:
+                for item in state_withholding_state_logs:
+                    state_logs_containers.append(item)
+
+        state_log_count = len(state_logs_containers)
         self.set_metrics({self.Metrics.SAMPLED_PAYMENT_COUNT: state_log_count})
 
         payments: List[Payment] = []
-        for state_log in state_logs:
+        for state_log in state_logs_containers:
             payment = state_log.payment
 
             # Shouldn't happen as they should always have a payment attached

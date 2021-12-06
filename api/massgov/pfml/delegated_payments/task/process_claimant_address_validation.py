@@ -61,7 +61,10 @@ def _process_address_validations(
 ) -> None:
     """Process Address Validations"""
     logger.info("Start - Address Validation ECS Task")
+<<<<<<< HEAD
     # start_time = payments_util.get_now()
+=======
+>>>>>>> main
 
     if config.validate_addresses:
         ClaimantAddressValidationStep(

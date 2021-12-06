@@ -12,6 +12,7 @@ import React, { useEffect } from "react";
 import Tag, { TagProps } from "../../../components/core/Tag";
 import { find, get, has, map } from "lodash";
 import withUser, { WithUserProps } from "../../../hoc/withUser";
+
 import Alert from "../../../components/core/Alert";
 import { AppLogic } from "../../../hooks/useAppLogic";
 import BackButton from "../../../components/BackButton";
@@ -24,6 +25,7 @@ import Spinner from "../../../components/core/Spinner";
 import StatusNavigationTabs from "../../../components/status/StatusNavigationTabs";
 import Title from "../../../components/core/Title";
 import { Trans } from "react-i18next";
+import { createRouteWithQuery } from "../../../utils/routeWithParams";
 import findDocumentsByTypes from "../../../utils/findDocumentsByTypes";
 import findKeyByValue from "../../../utils/findKeyByValue";
 import formatDate from "../../../utils/formatDate";
@@ -285,12 +287,14 @@ export const Status = ({
       />
       <div className="measure-6">
         <Title hidden>{t("pages.claimsStatus.applicationTitle")}</Title>
-        {isFeatureEnabled("claimantShowPayments") && hasApprovedStatus && (
-          <StatusNavigationTabs
-            activePath={appLogic.portalFlow.pathname}
-            absence_id={absenceId}
-          />
-        )}
+        {isFeatureEnabled("claimantShowPayments") &&
+          hasApprovedStatus &&
+          claimDetail.has_paid_payments && (
+            <StatusNavigationTabs
+              activePath={appLogic.portalFlow.pathname}
+              absence_id={absenceId}
+            />
+          )}
 
         {/* Heading section */}
 
@@ -329,7 +333,11 @@ export const Status = ({
             appLogic={appLogic}
           />
         )}
-        <LeaveDetails absenceDetails={absenceDetails} />
+        <LeaveDetails
+          absenceDetails={absenceDetails}
+          absenceId={claimDetail.fineos_absence_id}
+          hasPaidPayments={claimDetail.has_paid_payments}
+        />
         {viewYourNotices()}
 
         {/* Upload documents section */}
@@ -436,9 +444,15 @@ export const StatusTagMap: {
 
 interface LeaveDetailsProps {
   absenceDetails?: { [key: string]: AbsencePeriod[] };
+  absenceId: string;
+  hasPaidPayments?: boolean;
 }
 
-export const LeaveDetails = ({ absenceDetails = {} }: LeaveDetailsProps) => {
+export const LeaveDetails = ({
+  absenceDetails = {},
+  absenceId,
+  hasPaidPayments,
+}: LeaveDetailsProps) => {
   const { t } = useTranslation();
 
   return (
@@ -472,12 +486,15 @@ export const LeaveDetails = ({ absenceDetails = {} }: LeaveDetailsProps) => {
                     })}
                   </Heading>
                   <p>
-                    {`From ${formatDate(
-                      absence_period_start_date
-                    ).full()} to ${formatDate(absence_period_end_date).full()}`}
+                    {t("pages.claimsStatus.leavePeriodDates", {
+                      endDate: formatDate(absence_period_end_date).full(),
+                      startDate: formatDate(absence_period_start_date).full(),
+                    })}
                   </p>
                   <Tag
-                    label={request_decision}
+                    label={t("pages.claimsStatus.requestDecision", {
+                      context: request_decision,
+                    })}
                     state={StatusTagMap[request_decision]}
                   />
                   <Trans
@@ -502,6 +519,21 @@ export const LeaveDetails = ({ absenceDetails = {} }: LeaveDetailsProps) => {
                       "request-decision-info": <p></p>,
                     }}
                   />
+                  {request_decision === "Approved" && hasPaidPayments && (
+                    <Trans
+                      i18nKey="pages.claimsStatus.viewPaymentTimeline"
+                      components={{
+                        "payments-page-link": (
+                          <a
+                            href={createRouteWithQuery(
+                              "/applications/status/payments",
+                              { absenceId }
+                            )}
+                          />
+                        ),
+                      }}
+                    />
+                  )}
                 </div>
               )
             )}

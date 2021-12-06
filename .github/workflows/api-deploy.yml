@@ -42,6 +42,7 @@ on:
       - main
     paths:
       - api/**
+      - pdf_api/**
       - infra/api/**
       - infra/ecs-tasks/**
       - infra/env-shared/**
@@ -289,22 +290,41 @@ jobs:
           role-to-assume: ci-run-deploys
           role-duration-seconds: 3600
 
-      - name: Check if the image exist in ECR
-        id: ecr-check
+      - name: Check if the image exist in pfml-api ECR
+        id: ecr-check-pfml-api
         run: |
           make ecr-login
           aws ecr describe-images --repository-name=pfml-api --image-ids=imageTag=${{ needs.update-the-deploy-branch.outputs.commit_hash }} --region us-east-1
         continue-on-error: true
         working-directory: ${{ env.working-dir }}
 
-      - name: Echo message
-        if: steps.ecr-check.outcome == 'success'
+      - name: Echo message pfml-api
+        if: steps.ecr-check-pfml-api.outcome == 'success'
         run: echo "Docker image already built; skipping rebuild."
 
-      - name: Build and upload docker image artifact
-        if: steps.ecr-check.outcome == 'failure'
+      - name: Build and upload api docker image artifact
+        if: steps.ecr-check-pfml-api.outcome == 'failure'
         run: make build-and-publish
         working-directory: ${{ env.working-dir }}
+
+      ### Steps below are copies of the above 3 steps but for the pfml-pdf-api image/container pertaining to 1099
+
+      - name: Check if the image exist in pfml-pdf-api ECR
+        id: ecr-check-pfml-pdf-api
+        run: |
+          make ecr-login
+          aws ecr describe-images --repository-name=pfml-pdf-api --image-ids=imageTag=${{ needs.update-the-deploy-branch.outputs.commit_hash }} --region us-east-1
+        continue-on-error: true
+        working-directory: ${{ env.working-dir }}
+
+      - name: Echo message pfml-pdf-api
+        if: steps.ecr-check-pfml-pdf-api.outcome == 'success'
+        run: echo "Docker image already built; skipping rebuild."
+
+      - name: Build and upload pdf-api docker image artifact
+        if: steps.ecr-check-pfml-pdf-api.outcome == 'failure'
+        run: make -f ../api/Makefile build-and-publish-pdf-api
+        working-directory: ./pdf_api
 
   api-db-migrate-up:
     name: Run migrations
@@ -717,17 +737,18 @@ jobs:
     needs: [ update-the-deploy-branch, api-release, api-gateway-release ]
     if: github.event.inputs.deployment_env == 'performance' && github.event.inputs.performLoadTest == 'true'
     steps:
-      - name: Trigger LST run with Base preset on Flood
+      - name: Trigger LST run with no Spikes using Artillery
         uses: aurelien-baudet/workflow-dispatch@v2
         with:
-          workflow: e2e-flood.yml
+          workflow: e2e-artillery.yml
           token: ${{ secrets.PFML_DEVOPS_TOKEN }}
           wait-for-completion: false
           ref: main
           inputs: |
             {
               "target_environment": "performance",
-              "preset": "base"
+              "deploy_type": "noSpikes_lst",
+              "debug": "false"
             }
 
   post-e2e-failures-to-slack:

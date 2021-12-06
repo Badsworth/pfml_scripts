@@ -26,6 +26,7 @@ export const BHAP1: ScenarioSpecification = {
     shortClaim: true,
     reason: "Child Bonding",
     reason_qualifier: "Foster Care",
+    work_pattern_spec: "0,720,0,720,0,720,0",
     docs: {
       MASSID: {},
       FOSTERPLACEMENT: {},

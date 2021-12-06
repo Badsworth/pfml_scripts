@@ -130,13 +130,13 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
 </section>
 `;
 
-exports[`Payments renders the \`questions?\` section 1`] = `
+exports[`Payments renders the \`help\` section containing questions and feedback 1`] = `
 <section
-  class="margin-y-4"
-  data-testid="questions"
+  class="margin-y-6"
+  data-testid="helpSection"
 >
   <h3
-    class="margin-bottom-2 font-heading-sm text-bold"
+    class="font-heading-sm text-bold"
   >
     Questions?
   </h3>
@@ -149,12 +149,29 @@ exports[`Payments renders the \`questions?\` section 1`] = `
     </a>
     .
   </p>
+  <h3
+    class="font-heading-sm text-bold"
+  >
+    Help us improve payment information by giving feedback
+  </h3>
+  <p>
+    We’d like to hear more about your experience on this site. Please take a few minutes to share your feedback.
+  </p>
+  <p>
+    <a
+      href="https://www.mass.gov/paidleave-claimant-feedback"
+      rel="noopener noreferrer"
+      target="_blank"
+    >
+      Take the survey
+    </a>
+  </p>
 </section>
 `;
 
 exports[`Payments renders the Payments table 1`] = `
 <table
-  class="usa-table usa-table--borderless c-table usa-table--stacked borderless-mobile"
+  class="usa-table usa-table--borderless width-full usa-table--stacked"
 >
   <thead>
     <tr>
@@ -190,6 +207,33 @@ exports[`Payments renders the Payments table 1`] = `
       <td
         data-label="Leave dates"
       >
+        10/31/2021 to 11/7/2021
+      </td>
+      <td
+        data-label="Payment Method"
+      >
+        Check
+      </td>
+      <td
+        data-label="Estimated scheduled date"
+      >
+        Sent to bank
+      </td>
+      <td
+        data-label="Date sent"
+      >
+        2021-11-08
+      </td>
+      <td
+        data-label="Amount sent"
+      >
+        $100.00
+      </td>
+    </tr>
+    <tr>
+      <td
+        data-label="Leave dates"
+      >
         11/8/2021 to 11/15/2021
       </td>
       <td
@@ -214,30 +258,17 @@ exports[`Payments renders the Payments table 1`] = `
       </td>
     </tr>
     <tr>
+      <td />
       <td
-        data-label="Leave dates"
+        colspan="4"
       >
-        10/31/2021 to 11/7/2021
-      </td>
-      <td
-        data-label="Payment Method"
-      >
-        Check
-      </td>
-      <td
-        data-label="Estimated scheduled date"
-      >
-        Sent to bank
-      </td>
-      <td
-        data-label="Date sent"
-      >
-        2021-11-08
-      </td>
-      <td
-        data-label="Amount sent"
-      >
-        $100.00
+        This week is unpaid. Learn more about the 
+        <a
+          href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#what-is-the-7-day-waiting-period?-"
+        >
+          7-day waiting period
+        </a>
+        .
       </td>
     </tr>
   </tbody>

@@ -99,8 +99,14 @@ def test_applications_get_invalid(client, user, auth_token):
 
 
 @freeze_time("2020-01-01")
-def test_applications_get_valid(client, user, auth_token):
-    application = ApplicationFactory.create(user=user, updated_at=datetime_util.utcnow())
+def test_applications_get_incomplete(client, user, auth_token):
+    application = ApplicationFactory.create(
+        user=user,
+        submitted_time=None,
+        updated_at=datetime_util.utcnow(),
+        # Cause at least one validation error to be present
+        first_name=None,
+    )
 
     response = client.get(
         "/v1/applications/{}".format(application.application_id),
@@ -108,12 +114,34 @@ def test_applications_get_valid(client, user, auth_token):
     )
 
     assert response.status_code == 200
+    assert len(response.get_json().get("warnings")) > 0
+
     response_body = response.get_json().get("data")
 
     assert response_body.get("employer_fein") is not None
     assert response_body.get("application_id") == str(application.application_id)
     assert response_body.get("updated_at") == "2020-01-01T00:00:00+00:00"
     assert response_body.get("status") == ApplicationStatus.Started.value
+
+
+def test_applications_get_incomplete_submitted(client, user, auth_token):
+    application = ApplicationFactory.create(
+        user=user,
+        updated_at=datetime_util.utcnow(),
+        # Put the application in a state where it is submitted
+        submitted_time=datetime_util.utcnow(),
+        # Simulate a validation error for pre-submission application
+        first_name=None,
+    )
+
+    response = client.get(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+
+    assert response.status_code == 200
+    # No warning about the first_name missing, because the application is submitted
+    assert len(response.get_json().get("warnings")) == 0
 
 
 def test_applications_unauthorized_get(client, user, auth_token):

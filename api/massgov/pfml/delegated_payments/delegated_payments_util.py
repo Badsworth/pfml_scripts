@@ -7,7 +7,6 @@ from decimal import Decimal, InvalidOperation
 from enum import Enum
 from typing import Any, Callable, Dict, List, Optional, Set, Type, Union, cast
 
-import pytz
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import ColumnProperty, class_mapper
 
@@ -37,14 +36,17 @@ from massgov.pfml.db.models.payments import (
     FineosExtractEmployeeFeed,
     FineosExtractPaymentFullSnapshot,
     FineosExtractReplacedPayments,
+    FineosExtractVbiLeavePlanRequestedAbsence,
     FineosExtractVbiRequestedAbsence,
     FineosExtractVbiRequestedAbsenceSom,
+    FineosExtractVPaidLeaveInstruction,
     FineosExtractVpei,
     FineosExtractVpeiClaimDetails,
     FineosExtractVpeiPaymentDetails,
     PaymentLog,
 )
 from massgov.pfml.util.csv import CSVSourceWrapper
+from massgov.pfml.util.datetime import get_now_us_eastern
 from massgov.pfml.util.routing_number_validation import validate_routing_number
 
 logger = logging.get_logger(__package__)
@@ -59,6 +61,8 @@ ExtractTable = Union[
     Type[FineosExtractCancelledPayments],
     Type[FineosExtractPaymentFullSnapshot],
     Type[FineosExtractReplacedPayments],
+    Type[FineosExtractVbiLeavePlanRequestedAbsence],
+    Type[FineosExtractVPaidLeaveInstruction],
 ]
 
 
@@ -388,6 +392,24 @@ class FineosExtractConstants:
         field_names=CANCELLED_OR_REPLACED_EXTRACT_FIELD_NAMES,
     )
 
+    VBI_LEAVE_PLAN_REQUESTED_ABSENCE = FineosExtract(
+        file_name="VBI_LEAVEPLANREQUESTEDABSENCE.csv",
+        table=FineosExtractVbiLeavePlanRequestedAbsence,
+        field_names=["SELECTEDPLAN_CLASSID", "SELECTEDPLAN_INDEXID", "LEAVEREQUEST_ID",],
+    )
+
+    PAID_LEAVE_INSTRUCTION = FineosExtract(
+        file_name="vpaidleaveinstruction.csv",
+        table=FineosExtractVPaidLeaveInstruction,
+        field_names=[
+            "C",
+            "I",
+            "AVERAGEWEEKLYWAGE_MONAMT",
+            "C_SELECTEDLEAVEPLAN",
+            "I_SELECTEDLEAVEPLAN",
+        ],
+    )
+
 
 CLAIMANT_EXTRACT_FILES = [
     FineosExtractConstants.VBI_REQUESTED_ABSENCE_SOM,
@@ -412,6 +434,12 @@ PAYMENT_RECONCILIATION_EXTRACT_FILES = [
 PAYMENT_RECONCILIATION_EXTRACT_FILE_NAMES = [
     extract_file.file_name for extract_file in PAYMENT_RECONCILIATION_EXTRACT_FILES
 ]
+
+IAWW_EXTRACT_FILES = [
+    FineosExtractConstants.VBI_LEAVE_PLAN_REQUESTED_ABSENCE,
+    FineosExtractConstants.PAID_LEAVE_INSTRUCTION,
+]
+IAWW_EXTRACT_FILES_NAMES = [extract_file.file_name for extract_file in IAWW_EXTRACT_FILES]
 
 
 class Regexes:
@@ -477,15 +505,9 @@ class ValidationIssueException(Exception):
         self.message = message
 
 
-def get_now() -> datetime:
-    # Note that this uses Eastern time (not UTC)
-    tz = pytz.timezone("America/New_York")
-    return datetime.now(tz)
-
-
 def get_date_folder(current_time: Optional[datetime] = None) -> str:
     if not current_time:
-        current_time = get_now()
+        current_time = get_now_us_eastern()
 
     return current_time.strftime("%Y-%m-%d")
 
@@ -495,7 +517,7 @@ def build_archive_path(
 ) -> str:
     """
     Construct the path to a file. In the format: prefix / file_status / current_time as date / file_name
-    If no current_time specified, will use get_now() method.
+    If no current_time specified, will use get_now_us_eastern() method.
     For example:
 
     build_archive_path("s3://bucket/path/archive", Constants.S3_INBOUND_RECEIVED_DIR, "2021-01-01-12-00-00-example-file.csv", datetime.datetime(2021, 1, 1, 12, 0, 0))
@@ -703,6 +725,7 @@ def get_fineos_max_history_date(export_type: LkReferenceFileType) -> datetime:
         - ReferenceFileType.FINEOS_CLAIMANT_EXTRACT
         - ReferenceFileType.FINEOS_PAYMENT_EXTRACT
         - ReferenceFileType.FINEOS_PAYMENT_RECONCILIATION_EXTRACT
+        - ReferenceFileType.FINEOS_IAWW_EXTRACT
 
     Raises:
         ValueError: An unacceptable ReferenceFileType or a bad datestring was
@@ -726,6 +749,11 @@ def get_fineos_max_history_date(export_type: LkReferenceFileType) -> datetime:
         == ReferenceFileType.FINEOS_PAYMENT_RECONCILIATION_EXTRACT.reference_file_type_id
     ):
         datestring = date_config.fineos_payment_reconciliation_extract_max_history_date
+    elif (
+        export_type.reference_file_type_id
+        == ReferenceFileType.FINEOS_IAWW_EXTRACT.reference_file_type_id
+    ):
+        datestring = date_config.fineos_iaww_extract_max_history_date
 
     else:
         raise ValueError(f"Incorrect export_type {export_type} provided")
@@ -1198,7 +1226,7 @@ def get_transaction_status_date(payment: Payment) -> date:
         return payment.check.check_posted_date
 
     # Otherwise the transaction status date is calculated using the current time.
-    return get_now().date()
+    return get_now_us_eastern().date()
 
 
 def filter_dict(dict: Dict[str, Any], allowed_keys: Set[str]) -> Dict[str, Any]:
@@ -1304,7 +1332,7 @@ def create_success_file(start_time: datetime, process_name: str) -> None:
     """
     s3_config = payments_config.get_s3_config()
 
-    end_time = get_now()
+    end_time = get_now_us_eastern()
     timestamp_prefix = end_time.strftime("%Y-%m-%d-%H-%M-%S")
     success_file_name = f"{timestamp_prefix}-{process_name}.SUCCESS"
 
@@ -1332,3 +1360,7 @@ def validate_columns_present(record: Dict[str, Any], fineos_extract: FineosExtra
             "FINEOS extract %s is missing required fields: %s - found only %s"
             % (fineos_extract.file_name, missing_columns, list(record.keys()))
         )
+
+
+def is_withholding_payments_enabled() -> bool:
+    return os.environ.get("ENABLE_WITHHOLDING_PAYMENTS", "0") == "1"

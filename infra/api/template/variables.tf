@@ -294,3 +294,8 @@ variable "use_claim_status_url" {
   type        = bool
   default     = true
 }
+
+variable "enable_pdf_document_compression" {
+  description = "Enable or disable PDF compression on document upload"
+  type        = string
+}

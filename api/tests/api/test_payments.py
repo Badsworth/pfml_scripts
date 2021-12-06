@@ -1,4 +1,5 @@
 from datetime import date, datetime, timedelta
+from decimal import Decimal
 from urllib.parse import urlencode
 
 import pytest
@@ -52,7 +53,7 @@ def test_get_payments_200(
         test_db_session,
         fineos_absence_id=absence_id,
         payment_method=PaymentMethod.ACH,
-        amount=750.67,
+        amount=Decimal("750.67"),
         set_pub_eft_in_payment=True,
         prenote_sent_at=date.today(),
     )
@@ -120,7 +121,7 @@ def test_get_payments_200_pending_validation_scenario_no_prenote_sent_at(
         test_db_session,
         fineos_absence_id=absence_id,
         payment_method=PaymentMethod.ACH,
-        amount=750.67,
+        amount=Decimal("750.67"),
         set_pub_eft_in_payment=True,
         prenote_sent_at=None,
     )
@@ -172,7 +173,7 @@ def test_get_payments_200_range_before_today(client, auth_token, user, test_db_s
         test_db_session,
         fineos_absence_id=absence_id,
         payment_method=PaymentMethod.ACH,
-        amount=750.67,
+        amount=Decimal("750.67"),
     )
     claim = payment_factory.get_or_create_claim()
     ApplicationFactory.create(claim=claim, user=user)
@@ -213,6 +214,54 @@ def test_get_payments_200_range_before_today(client, auth_token, user, test_db_s
         "expected_send_date_start": None,
         "expected_send_date_end": None,
         "status": FrontendPaymentStatus.DELAYED,
+    }
+
+
+def test_get_payments_200_cancelled_payments(client, auth_token, user, test_db_session):
+    absence_id = "NTN-12345-ABS-01"
+
+    payment_factory = DelegatedPaymentFactory(
+        test_db_session,
+        fineos_absence_id=absence_id,
+        payment_method=PaymentMethod.ACH,
+        amount=Decimal("750.67"),
+    )
+    claim = payment_factory.get_or_create_claim()
+    ApplicationFactory.create(claim=claim, user=user)
+
+    # Create the payment and a cancellation in the DB
+    transaction_status = FineosWritebackTransactionStatus.WAITING_WEEK
+    payment_factory.get_or_create_payment_with_writeback(transaction_status)
+    payment_factory.create_cancellation_payment()
+
+    test_db_session.commit()
+
+    querystring = urlencode({"absence_case_id": absence_id})
+    response = client.get(
+        "/v1/payments?{}".format(querystring), headers={"Authorization": f"Bearer {auth_token}"},
+    )
+
+    assert response.status_code == 200
+
+    response_body = response.get_json().get("data")
+    assert response_body["absence_case_id"] == absence_id
+
+    payment_response = response_body["payments"][0]
+
+    payment = payment_factory.payment
+
+    assert payment_response == {
+        "payment_id": str(payment.payment_id),
+        "fineos_c_value": str(payment.fineos_pei_c_value),
+        "fineos_i_value": str(payment.fineos_pei_i_value),
+        "period_start_date": str(payment.period_start_date),
+        "period_end_date": str(payment.period_end_date),
+        "amount": Decimal("0.00"),
+        "sent_to_bank_date": None,
+        "payment_method": payment.disb_method.payment_method_description,
+        "expected_send_date_start": None,
+        "expected_send_date_end": None,
+        "status": FrontendPaymentStatus.CANCELLED,
     }
 
 

@@ -99,6 +99,8 @@ cognitoUserPoolId: "{COGNITO_USER_POOL_ID}",
 cognitoUserPoolWebClientId: "{COGNITO_USER_POOL_CLIENT_ID}",
 ```
 
+More detailed explanation of how to setup local to local [here](https://lwd.atlassian.net/wiki/spaces/DD/pages/2126872748/Local+Portal+to+Local+API+Development)
+
 #### Login through a user account
 
 Option 1: Create a new account through the local portal directly

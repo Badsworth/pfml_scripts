@@ -42,6 +42,13 @@ namespace PfmlPdfApi.Utilities
         /// <param name="folderName">The folder name</param>
         /// <returns></returns>
         Task<IList<Stream>> GetFilesAsync(string folderName);
+
+        /// <summary>
+        /// Gets subfolders by folder
+        /// </summary>
+        /// <param name="folderName">The folder name</param>
+        /// <returns>A list of folders</returns>
+        Task<IList<string>> GetFoldersAsync(string folderName);
     }
 
     public class AmazonS3Service : IAmazonS3Service
@@ -64,6 +71,8 @@ namespace PfmlPdfApi.Utilities
 
             await CreateObjectAsync(request);
 
+            Console.WriteLine($"Amazon S3 Service: Prefix {folderName} was successfully created.");
+
             return true;
         }
 
@@ -82,12 +91,14 @@ namespace PfmlPdfApi.Utilities
 
             await CreateObjectAsync(request);
 
+            Console.WriteLine($"Amazon S3 Service: Key {fileName} was successfully created.");
+
             return true;
         }
 
         public async Task<Stream> GetFileAsync(string fileName)
         {
-            using (IAmazonS3 awsClient = await GetAWSClient(_amazonS3Setting.ProfileName))
+            using (IAmazonS3 awsClient = await GetAWSClient())
             {
                 Stream response = null;
 
@@ -99,7 +110,7 @@ namespace PfmlPdfApi.Utilities
                 }
                 catch (Exception ex)
                 {
-                    var logMessage = $"Exception Detected! - {GetType().Name}/{MethodBase.GetCurrentMethod().Name}{Environment.NewLine}{ex.Message}";
+                    Console.WriteLine($"Exception Detected! - {GetType().Name}/{MethodBase.GetCurrentMethod().Name}{Environment.NewLine}{ex.Message}");
                     throw;
                 }
 
@@ -109,7 +120,7 @@ namespace PfmlPdfApi.Utilities
 
         public async Task<IList<Stream>> GetFilesAsync(string folderName)
         {
-            using (IAmazonS3 awsClient = await GetAWSClient(_amazonS3Setting.ProfileName))
+            using (IAmazonS3 awsClient = await GetAWSClient())
             {
                 var files = new List<Stream>();
 
@@ -118,20 +129,26 @@ namespace PfmlPdfApi.Utilities
                     var request = new ListObjectsV2Request
                     {
                         BucketName = _amazonS3Setting.BucketName,
-                        Prefix = $"{_amazonS3Setting.Key}/{folderName}"
+                        Prefix = folderName
                     };
 
                     var objects = await awsClient.ListObjectsV2Async(request, new System.Threading.CancellationToken());
+                    Console.WriteLine($"Amazon S3 Service: Prefix {folderName} returned {objects.S3Objects.Count} keys.");
 
                     foreach (var s3Object in objects.S3Objects)
                     {
                         var file = await awsClient.GetObjectAsync(new GetObjectRequest { BucketName = s3Object.BucketName, Key = s3Object.Key }, new System.Threading.CancellationToken());
-                        files.Add(file.ResponseStream);
+
+                        if (s3Object.Key.EndsWith(".pdf"))
+                        {
+                            files.Add(file.ResponseStream);
+                            Console.WriteLine($"Amazon S3 Service: Prefix {folderName} - key {s3Object.Key}.");
+                        }
                     }
                 }
                 catch (Exception ex)
                 {
-                    var logMessage = $"Exception Detected! - {GetType().Name}/{MethodBase.GetCurrentMethod().Name}{Environment.NewLine}{ex.Message}";
+                    Console.WriteLine($"Exception Detected! - {GetType().Name}/{MethodBase.GetCurrentMethod().Name}{Environment.NewLine}{ex.Message}");
                     throw;
                 }
 
@@ -139,9 +156,44 @@ namespace PfmlPdfApi.Utilities
             }
         }
 
+        public async Task<IList<string>> GetFoldersAsync(string folderName)
+        {
+            using (IAmazonS3 awsClient = await GetAWSClient())
+            {
+                var folders = new List<string>();
+
+                try
+                {
+                    var request = new ListObjectsV2Request
+                    {
+                        BucketName = _amazonS3Setting.BucketName,
+                        Prefix = $"{_amazonS3Setting.Key}/{folderName}/",
+                        Delimiter = "/"
+                    };
+
+                    var objects = await awsClient.ListObjectsV2Async(request, new System.Threading.CancellationToken());
+
+                    Console.WriteLine($"Amazon S3 Service: {objects.CommonPrefixes.Count} prefixes returned.");
+
+                    foreach (var prefix in objects.CommonPrefixes)
+                    {
+                        folders.Add(prefix);
+                        Console.WriteLine($"Amazon S3 Service: Prefix: {prefix}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Exception Detected! - {GetType().Name}/{MethodBase.GetCurrentMethod().Name}{Environment.NewLine}{ex.Message}");
+                    throw;
+                }
+
+                return folders;
+            }
+        }
+
         private async Task CreateObjectAsync(PutObjectRequest request)
         {
-            using (IAmazonS3 awsClient = await GetAWSClient(_amazonS3Setting.ProfileName))
+            using (IAmazonS3 awsClient = await GetAWSClient())
             {
                 try
                 {
@@ -149,32 +201,23 @@ namespace PfmlPdfApi.Utilities
                 }
                 catch (Exception ex)
                 {
-                    var logMessage = $"Amazon S3 Service Exception Detected! - {GetType().Name}/{MethodBase.GetCurrentMethod().Name}{Environment.NewLine}{ex.Message}";
+                    Console.WriteLine($"Exception Detected! - {GetType().Name}/{MethodBase.GetCurrentMethod().Name}{Environment.NewLine}{ex.Message}");
                     throw;
                 }
             }
         }
 
-        private async Task<IAmazonS3> GetAWSClient(string profileName)
+        private async Task<IAmazonS3> GetAWSClient()
         {
-            var credentials = GetAWSCredentials(profileName);
-            var awsClient = new AmazonS3Client(credentials);
-
+            var awsClient = new AmazonS3Client();
             bool bucketExists = await AmazonS3Util.DoesS3BucketExistV2Async(awsClient, _amazonS3Setting.BucketName);
 
-            if (!bucketExists)
-                throw new Exception($"Amazon S3 bucket with name '{_amazonS3Setting.BucketName}' does not exists");
+            if (bucketExists)
+                Console.WriteLine($"Amazon S3 Service: Succesfully connected to S3 Bucket {_amazonS3Setting.BucketName}");
+            else
+                throw new Exception($"Amazon S3 Service: Amazon S3 bucket with name '{_amazonS3Setting.BucketName}' does not exist.");
 
             return awsClient;
-        }
-
-        private AWSCredentials GetAWSCredentials(string profileName)
-        {
-            var sharedFile = new SharedCredentialsFile();
-            sharedFile.TryGetProfile(profileName, out var profile);
-            AWSCredentialsFactory.TryGetAWSCredentials(profile, sharedFile, out var credentials);
-
-            return credentials;
         }
     }
 }

@@ -6,6 +6,8 @@ SHELL = /bin/bash -o pipefail
 export AWS_DEFAULT_REGION := us-east-1
 
 DOCKER_REPO ?= pfml-api
+# additional repo for 1099 image
+DOCKER_PDF_REPO ?= pfml-pdf-api
 DOCKER_REGISTRY ?= 498823821309.dkr.ecr.us-east-1.amazonaws.com
 
 # Generate a unique tag based solely on the git hash.
@@ -197,6 +199,9 @@ delegated-payment-check-response-generate:
 	mkdir -p mock_payment_check_response
 	$(PY_RUN_CMD) delegated-payment-check-response-generate --folder mock_payment_check_response $(DECODE_LOG)
 
+fineos-import-iaww:
+	$(PY_RUN_CMD) fineos-import-iaww --steps ALL $(DECODE_LOG)
+
 ecr-login: ## Login to ECR for Docker
 	@echo "Authenticating Docker with ECR"
 	aws ecr get-login-password --region 'us-east-1' | \
@@ -281,6 +286,9 @@ lint-spectral: ## Run OpenAPI Spec linting
 login: start ## Start shell in running container
 	docker exec -it $(APP_NAME) bash
 
+login-root: start ## Start root shell in running container
+	docker exec --user 0 -it $(APP_NAME) bash
+
 login-db: ## Start psql with project environment variables
 	PGPASSWORD=$$DB_PASSWORD psql --host=$$DB_HOST --username=$$DB_USERNAME $$DB_NAME
 
@@ -317,6 +325,9 @@ stop: ## Stop all running containers
 build-and-publish: ## Build and publish release image
 build-and-publish: api-image-build api-image-publish
 
+build-and-publish-pdf-api: ## Build and publish release image for PDF API
+build-and-publish-pdf-api: pdf-api-image-build pdf-api-image-publish
+
 api-image-build: ## Build release image
 	docker build \
 		--tag $(APP_NAME):latest \
@@ -324,6 +335,13 @@ api-image-build: ## Build release image
 		--target app \
 		--build-arg RUN_USER=container \
 		--build-arg RUN_UID=4000 \
+		.
+
+pdf-api-image-build: ## Build release pdf-api image
+	docker build \
+		--tag $(APP_NAME)-pdf:latest \
+		--tag $(APP_NAME)-pdf:$(IMAGE_TAG) \
+		--target final \
 		.
 
 release-start-api: jwks.json ## starts api container without an attached database
@@ -340,13 +358,24 @@ pre-flight-test: db-upgrade db-create-users release-start-api health-check
 api-image-publish: ## Tag and push release
 api-image-publish: ecr-login api-image-tag api-image-push
 
+pdf-api-image-publish: ## Tag and push pdf-api release
+pdf-api-image-publish: ecr-login pdf-api-image-tag pdf-api-image-push
+
 api-image-push: ## Push release image to the registry
 	docker push $(DOCKER_REGISTRY)/$(DOCKER_REPO):$(IMAGE_TAG)
 	docker push $(DOCKER_REGISTRY)/$(DOCKER_REPO):$(INFO_TAG)
 
+pdf-api-image-push: ## Push release pdf-api image to the registry
+	docker push $(DOCKER_REGISTRY)/$(DOCKER_PDF_REPO):$(IMAGE_TAG)
+	docker push $(DOCKER_REGISTRY)/$(DOCKER_PDF_REPO):$(INFO_TAG)
+
 api-image-tag: ## Tag release image for registry
 	docker tag $(APP_NAME):$(IMAGE_TAG) $(DOCKER_REGISTRY)/$(DOCKER_REPO):$(IMAGE_TAG)
 	docker tag $(APP_NAME):$(IMAGE_TAG) $(DOCKER_REGISTRY)/$(DOCKER_REPO):$(INFO_TAG)
+
+pdf-api-image-tag: ## Tag release pdf-api image for registry
+	docker tag $(APP_NAME)-pdf:$(IMAGE_TAG) $(DOCKER_REGISTRY)/$(DOCKER_PDF_REPO):$(IMAGE_TAG)
+	docker tag $(APP_NAME)-pdf:$(IMAGE_TAG) $(DOCKER_REGISTRY)/$(DOCKER_PDF_REPO):$(INFO_TAG)
 
 runcmd: ## Run poetry command
 	$(PY_RUN_CMD) $(cmd)

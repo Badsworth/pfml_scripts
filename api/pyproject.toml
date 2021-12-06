@@ -46,6 +46,7 @@ xmlschema = "^1.2.2"
 zeep = { version = "^3.4.0", optional = true }
 Flask = "^1.1.0"
 SQLAlchemy-Utils = "^0.37.8"
+msal = "^1.16.0"
 
 [tool.poetry.dev-dependencies]
 bandit = "^1.6.2"
@@ -106,6 +107,7 @@ db-migrate-down-all = "massgov.pfml.db.migrations.run:downall"
 db-admin-create-db-users = "massgov.pfml.db.admin:create_users"
 db-check-model-parity = "massgov.pfml.db.migrations.run:check_model_parity"
 db-create-fineos-user = "massgov.pfml.db.create_api_user:create_fineos_user"
+db-create-servicenow-user = "massgov.pfml.db.create_api_user:create_service_now_user"
 dua-generate-and-send-employee-request-file = "massgov.pfml.dua.dua_generate_employee_request_file:main"
 dua-backfill-employee-gender = "massgov.pfml.dua.gender_backfill:main"
 execute-sql = "massgov.pfml.db.execute_sql:execute_sql"
@@ -121,6 +123,7 @@ pub-payments-create-pub-files = "massgov.pfml.delegated_payments.task.process_pu
 pub-payments-process-pub-returns = "massgov.pfml.delegated_payments.task.process_pub_responses:main"
 pub-payments-process-snapshot = "massgov.pfml.delegated_payments.task.process_fineos_reconciliation_extracts:main"
 pub-payments-mock-generate = "massgov.pfml.delegated_payments.mock.mock_generate:main"
+fineos-import-iaww = "massgov.pfml.delegated_payments.task.process_iaww_from_fineos:main"
 ach-reader = "massgov.pfml.delegated_payments.util.ach.ach_tool:ach_reader"
 check-reader = "massgov.pfml.delegated_payments.pub.check_tool:check_reader"
 fineos-daily-generate = "massgov.pfml.fineos.mock.generate:main"

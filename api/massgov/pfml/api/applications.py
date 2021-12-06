@@ -1,4 +1,6 @@
 import base64
+import tempfile
+from typing import Any, Dict
 from uuid import UUID
 
 import connexion
@@ -15,6 +17,7 @@ import massgov.pfml.api.util.response as response_util
 import massgov.pfml.api.validation.application_rules as application_rules
 import massgov.pfml.util.datetime as datetime_util
 import massgov.pfml.util.logging
+import massgov.pfml.util.pdf as pdf_util
 from massgov.pfml.api.authorization.flask import CREATE, EDIT, READ, ensure
 from massgov.pfml.api.models.applications.common import ContentType as AllowedContentTypes
 from massgov.pfml.api.models.applications.common import DocumentType as IoDocumentTypes
@@ -64,6 +67,13 @@ from massgov.pfml.util.sqlalchemy import get_or_404
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
+UPLOAD_SIZE_CONSTRAINT = 4500000  # bytes
+
+FILE_TOO_LARGE_MSG = "File is too large."
+FILE_SIZE_VALIDATION_ERROR = ValidationErrorDetail(
+    message=FILE_TOO_LARGE_MSG, type=IssueType.file_size, field="file",
+)
+
 LEAVE_REASON_TO_DOCUMENT_TYPE_MAPPING = {
     LeaveReason.CHILD_BONDING.leave_reason_description: DocumentType.CHILD_BONDING_EVIDENCE_FORM,
     LeaveReason.SERIOUS_HEALTH_CONDITION_EMPLOYEE.leave_reason_description: DocumentType.OWN_SERIOUS_HEALTH_CONDITION_FORM,
@@ -86,7 +96,15 @@ def application_get(application_id):
         ensure(READ, existing_application)
         application_response = ApplicationResponse.from_orm(existing_application)
 
-    issues = application_rules.get_application_issues(existing_application)
+    # Only run these validations if the application hasn't already been submitted. This
+    # prevents warnings from showing in the response for rules added after the application
+    # was submitted, which would cause a Portal user's Checklist to revert back to showing
+    # steps as incomplete, and they wouldn't be able to fix this.
+    issues = (
+        application_rules.get_application_submit_issues(existing_application)
+        if not existing_application.submitted_time
+        else []
+    )
 
     return response_util.success_response(
         message="Successfully retrieved application",
@@ -183,7 +201,7 @@ def applications_update(application_id):
             db_session, application_request, existing_application
         )
 
-    issues = application_rules.get_application_issues(existing_application)
+    issues = application_rules.get_application_submit_issues(existing_application)
     employer_issue = get_contributing_employer_or_employee_issue(
         db_session, existing_application.employer_fein, existing_application.tax_identifier
     )
@@ -249,7 +267,7 @@ def applications_submit(application_id):
 
         log_attributes = get_application_log_attributes(existing_application)
 
-        issues = application_rules.get_application_issues(existing_application)
+        issues = application_rules.get_application_submit_issues(existing_application)
         employer_issue = get_contributing_employer_or_employee_issue(
             db_session, existing_application.employer_fein, existing_application.tax_identifier
         )
@@ -473,6 +491,14 @@ def validate_file_name(file_name):
         raise ValidationException(errors=[validation_error], message=message, data={})
 
 
+def validate_file_size(file_size_bytes: int) -> None:
+    """Validate the file size is below the known upload size constraint for files in FINEOS."""
+    if file_size_bytes > UPLOAD_SIZE_CONSTRAINT:
+        raise ValidationException(
+            errors=[FILE_SIZE_VALIDATION_ERROR], message=FILE_TOO_LARGE_MSG, data={}
+        )
+
+
 def has_previous_state_managed_paid_leave(existing_application, db_session):
     # For now, if there are documents previously submitted for the application with the
     # STATE_MANAGED_PAID_LEAVE_CONFIRMATION document type, that document type must also
@@ -530,12 +556,51 @@ def document_upload(application_id, body, file):
         file.seek(0)
         file_content = file.read()
         file_size = len(file_content)
+
         file_name = document_details.name or file.filename
         file_description = ""
         if document_details.description:
             file_description = document_details.description
 
-        # To accomodate both State managed Paid Leave Confirmation and the new plan proof types, the front end will
+        try:
+            # If the file is a PDF larger than the upload size constraint,
+            # attempt to compress the PDF and update file meta data.
+            # A size constraint of 10MB is still enforced by the API gateway,
+            # so the API should not expect to receive anything above this size
+            if (
+                app.get_config().enable_pdf_document_compression
+                and content_type == AllowedContentTypes.pdf.value
+                and file_size > UPLOAD_SIZE_CONSTRAINT
+            ):
+                # tempfile.SpooledTemporaryFile writes the compressed file in-memory
+                with tempfile.SpooledTemporaryFile(mode="xb") as compressed_file:
+                    previous_file_size = file_size
+                    file_size = pdf_util.compress_pdf(file, compressed_file)
+                    file_name = f"Compressed_{file_name}"
+
+                    compressed_file.seek(0)
+                    file_content = compressed_file.read()
+
+                    log_attrs: Dict[str, Any] = {
+                        **get_application_log_attributes(existing_application),
+                        **pdf_util.pdf_compression_attrs(previous_file_size, file_size),
+                    }
+                    logger.info(
+                        "document_upload - PDF compressed", extra={**log_attrs,},
+                    )
+
+            # Validate file size, regardless of processing
+            validate_file_size(file_size)
+
+        except (pdf_util.PDFSizeError):
+            logger.warning("document_upload - file too large", exc_info=True)
+            return response_util.error_response(
+                status_code=BadRequest,
+                message="File validation error.",
+                errors=[FILE_SIZE_VALIDATION_ERROR],
+                data=document_details.dict(),
+            ).to_api_response()
+
         # use Certification Form when the feature flag for caring leave is active, but will otherwise use
         # State manage Paid Leave Confirmation. If the document type is Certification Form,
         # the API will map to the corresponding plan proof based on leave reason
@@ -819,6 +884,17 @@ def validate_tax_withholding_request(db_session, application_id, tax_preference_
     existing_application = get_or_404(db_session, Application, application_id)
     ensure(EDIT, existing_application)
 
+    if not isinstance(tax_preference_body.is_withholding_tax, bool):
+        raise ValidationException(
+            errors=[
+                ValidationErrorDetail(
+                    type=IssueType.required,
+                    message="Tax withholding preference is required",
+                    field="is_withholding_tax",
+                )
+            ]
+        )
+
     if existing_application.is_withholding_tax is not None:
         logger.info(
             "submit_tax_withholding_preference failure - preference already set",
@@ -831,7 +907,13 @@ def validate_tax_withholding_request(db_session, application_id, tax_preference_
                     existing_application.application_id
                 ),
                 data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
-                errors=[],
+                errors=[
+                    ValidationErrorDetail(
+                        type=IssueType.duplicate,
+                        message="Tax withholding preference is already submitted",
+                        field="is_withholding_tax",
+                    )
+                ],
             ).to_api_response()
         )
 

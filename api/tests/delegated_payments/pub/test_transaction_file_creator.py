@@ -28,6 +28,7 @@ from massgov.pfml.delegated_payments.check_issue_file import CheckIssueFile
 from massgov.pfml.delegated_payments.ez_check import EzCheckFile
 from massgov.pfml.delegated_payments.mock.delegated_payments_factory import DelegatedPaymentFactory
 from massgov.pfml.delegated_payments.pub.transaction_file_creator import TransactionFileCreatorStep
+from massgov.pfml.util.datetime import get_now_us_eastern
 from tests.delegated_payments.pub.test_pub_check import _random_valid_check_payment_with_state_log
 
 fake = faker.Faker()
@@ -68,7 +69,7 @@ def test_ach_file_creation(
     transaction_file_step.run()
 
     # check that ach archive file was generated
-    now = payments_util.get_now()
+    now = get_now_us_eastern()
     date_folder = now.strftime("%Y-%m-%d")
     formatted_now = now.strftime("%Y-%m-%d-%H-%M-%S")
     pub_ach_file_name = f"{formatted_now}-EOLWD-DFML-NACHA"

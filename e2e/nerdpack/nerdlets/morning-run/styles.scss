@@ -1,13 +1,10 @@
 @import "../common/components/ListErrors";
 @import "../common/components/Navigation";
 @import "../common/components/Tags";
+@import "../common/components/EnvironmentsTable";
+@import "../common/components/Filters";
 
 .E2E-morning-run {
-  .ListErrors {
-    height: auto;
-    overflow-y: visible;
-  }
-
   h2 {
     margin-top: 20px;
     margin-bottom: 5px;
@@ -22,6 +19,7 @@
   .filelist {
     list-style: disc;
     margin-left: 23px;
+
     code {
       background: #fee;
       color: #e56b00;
@@ -29,6 +27,7 @@
       border-radius: 4px;
       padding: 2px;
     }
+
     li {
       margin-bottom: 8px;
     }
@@ -53,29 +52,6 @@
 
     h3 {
       display: inline-block;
-    }
-  }
-}
-
-.filters {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  flex-wrap: wrap;
-
-  label,
-  button {
-    margin: 5px;
-  }
-
-  label {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    cursor: pointer;
-
-    input {
-      margin-right: 5px;
     }
   }
 }

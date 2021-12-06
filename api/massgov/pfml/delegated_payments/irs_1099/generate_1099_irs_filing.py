@@ -10,9 +10,10 @@ import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.delegated_payments.irs_1099.pfml_1099_util as pfml_1099_util
 import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging
-from massgov.pfml.db.models.employees import ReferenceFile, ReferenceFileType, TaxIdentifier
+from massgov.pfml.db.models.employees import ReferenceFile, ReferenceFileType
 from massgov.pfml.db.models.payments import Pfml1099
 from massgov.pfml.delegated_payments.step import Step
+from massgov.pfml.util.datetime import get_now_us_eastern
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
@@ -104,6 +105,15 @@ class Generate1099IRSfilingStep(Step):
             entries = t_entries + a_entries
             for b_records in b_entries:
                 entries = entries + b_records
+            c_template = self._create_c_template()
+            ctl_total, st_tax, fed_tax = _get_totals(pfml_1099)
+            c_entries = self._load_c_rec_data(c_template, ctl_total)
+            k_template = self._create_k_template()
+            k_entries = self._load_k_rec_data(k_template, ctl_total, st_tax, fed_tax)
+            f_template = self._create_f_template()
+            f_entries = self._load_f_rec_data(f_template)
+            entries += c_entries + k_entries + f_entries
+            logger.info("Completed irs file data mapping")
             self._create_irs_file(entries)
             self.db_session.commit()
 
@@ -145,11 +155,35 @@ class Generate1099IRSfilingStep(Step):
         logger.debug("Template string is %s", temp)
         return temp
 
+    def _create_c_template(self) -> str:
+        temp = (
+            "{C_REC_TYPE:<1}{TOT_B_REC:0>8}{B6:<6}{CTL_TOTAL_1:0>12}{CTL_TOTAL:0>276}{B196:<196}{SEQ_NO:08}"
+            "{B243:<243}\n"
+        )
+        logger.debug("Template string is %s", temp)
+        return temp
+
+    def _create_k_template(self) -> str:
+        temp = (
+            "{K_REC_TYPE:<1}{TOT_B_REC:0>8}{B6:<6}{CTL_TOTAL_1:0>12}{CTL_TOTAL:0>276}{B196:<196}{SEQ_NO:08}"
+            "{B199:<199}{ST_TAX:0>18}{FED_TAX:0>18}{B4:<4}{CSF_CD:<2}{B2:<2}\n"
+        )
+        logger.debug("Template string is %s", temp)
+        return temp
+
+    def _create_f_template(self) -> str:
+        temp = (
+            "{F_REC_TYPE:<1}{TOT_A_REC:0>8}{ZERO_21:0<21}{B19:<19}{TOT_B_REC:0>8}{B442:<442}"
+            "{SEQ_NO:08}{B243:<243}"
+        )
+        logger.debug("Template string is %s", temp)
+        return temp
+
     def _create_irs_file(self, all_records: str) -> None:
 
         logger.info("creating irs file")
         s3_config = paymentConfig.get_s3_config()
-        now = payments_util.get_now()
+        now = get_now_us_eastern()
         report_path = s3_config.pfml_error_reports_archive_path
         dfml_sharepoint_outgoing_path = s3_config.dfml_report_outbound_path
         source_path = payments_util.build_archive_path(
@@ -238,7 +272,7 @@ class Generate1099IRSfilingStep(Step):
                 CORRECTION_IND=_get_correction_ind(records.correction_ind),
                 PAYEE_NAME_CTL=_get_name_ctl(records.last_name),
                 PAYEE_TIN_TYPE=Constants.TIN_TYPE,
-                PAYEE_TIN=_get_tax_id(self.db_session, records.tax_identifier_id),
+                PAYEE_TIN=pfml_1099_util.get_tax_id(self.db_session, records.tax_identifier_id),
                 PAYER_ACCT_NUMBER=Constants.PAYER_ACCT_NUMBER,
                 PAYER_OFFICE_CD=Constants.PAYER_OFFICE_CD,
                 B10=Constants.BLANK_SPACE,
@@ -287,6 +321,63 @@ class Generate1099IRSfilingStep(Step):
             b_dict_list.append(b_record)
         return b_dict_list
 
+    def _load_c_rec_data(self, template_str: str, ctl_total: decimal.Decimal) -> str:
+        c_seq = 3 + self.total_b_record
+        logger.debug("c_seq %s", c_seq)
+        c_dict = dict(
+            C_REC_TYPE=Constants.C_REC_TYPE,
+            TOT_B_REC=self.total_b_record,
+            B6=Constants.BLANK_SPACE,
+            CTL_TOTAL_1=ctl_total,
+            CTL_TOTAL=Constants.ZERO,
+            B196=Constants.BLANK_SPACE,
+            SEQ_NO=c_seq,
+            B243=Constants.BLANK_SPACE,
+        )
+        c_record = template_str.format_map(c_dict)
+        return c_record
+
+    def _load_k_rec_data(
+        self,
+        template_str: str,
+        ctl_total: decimal.Decimal,
+        st_tax: decimal.Decimal,
+        fed_tax: decimal.Decimal,
+    ) -> str:
+        k_seq = 4 + self.total_b_record
+        k_dict = dict(
+            K_REC_TYPE=Constants.K_REC_TYPE,
+            TOT_B_REC=self.total_b_record,
+            B6=Constants.BLANK_SPACE,
+            CTL_TOTAL_1=ctl_total,
+            CTL_TOTAL=Constants.ZERO,
+            B196=Constants.BLANK_SPACE,
+            SEQ_NO=k_seq,
+            B199=Constants.BLANK_SPACE,
+            ST_TAX=st_tax,
+            FED_TAX=fed_tax,
+            B4=Constants.BLANK_SPACE,
+            CSF_CD=Constants.COMBINED_ST_FED_CD,
+            B2=Constants.BLANK_SPACE,
+        )
+        k_record = template_str.format_map(k_dict)
+        return k_record
+
+    def _load_f_rec_data(self, template_str: str) -> str:
+        f_seq = 5 + self.total_b_record
+        f_dict = dict(
+            F_REC_TYPE=Constants.F_REC_TYPE,
+            TOT_A_REC=Constants.TOT_A_REC,
+            ZERO_21=Constants.ZERO,
+            B19=Constants.BLANK_SPACE,
+            TOT_B_REC=self.total_b_record,
+            B442=Constants.BLANK_SPACE,
+            SEQ_NO=f_seq,
+            B243=Constants.BLANK_SPACE,
+        )
+        f_record = template_str.format_map(f_dict)
+        return f_record
+
 
 def _get_correction_ind(correction_ind: Boolean) -> str:
 
@@ -296,22 +387,6 @@ def _get_correction_ind(correction_ind: Boolean) -> str:
         # TODO find which correction type to send and how to determine
         # G (1 correction) or C(2 correction)
         return "G"
-
-
-def _get_tax_id(db_session: Any, tax_id_str: str) -> str:
-    logger.debug("Incoming tax uuid is, %s", tax_id_str)
-    try:
-        tax_id = (
-            db_session.query(TaxIdentifier)
-            .filter(TaxIdentifier.tax_identifier_id == tax_id_str)
-            .one_or_none()
-        )
-        logger.debug("tax id is %s", tax_id.tax_identifier)
-        return tax_id.tax_identifier
-
-    except Exception:
-        logger.exception("Error accessing 1099 data")
-        raise
 
 
 def _get_full_name(fname: str, lname: str, field_name: str) -> str:
@@ -344,7 +419,7 @@ def _get_name_ctl(lname: str) -> str:
             last_name = last_name_list[0].rstrip() + last_name_list[1]
     else:
         last_name = lname
-    logger.info("Last name 4 chars is %s", last_name[0:4])
+    logger.debug("Last name 4 chars is %s", last_name[0:4])
     last_name_four = last_name[0:4].upper()
     return last_name_four
 
@@ -352,7 +427,6 @@ def _get_name_ctl(lname: str) -> str:
 def _format_amount_fields(amt: decimal.Decimal) -> str:
 
     amount = str(amt).split(".")
-    print(amount)
     dollars = amount[0]
     if len(amount) == 2:
         cents = amount[1]

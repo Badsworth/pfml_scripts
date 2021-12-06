@@ -40,6 +40,7 @@ from massgov.pfml.delegated_payments.delegated_payments_util import (
     is_same_eft,
     move_reference_file,
 )
+from massgov.pfml.util.datetime import get_now_us_eastern
 from tests.delegated_payments.conftest import upload_file_to_s3
 
 fake = faker.Faker()
@@ -1036,7 +1037,7 @@ def test_create_success_file(mock_s3_bucket, monkeypatch):
     # Make this act like the FINEOS extract process often does
     # Starting at 11pm, but finishing a bit after.
     with freeze_time("2021-08-01 23:00:00", tz_offset=4):
-        now = payments_util.get_now()
+        now = get_now_us_eastern()
     with freeze_time("2021-08-02 00:15:00", tz_offset=4):
         payments_util.create_success_file(now, "example-process")
 

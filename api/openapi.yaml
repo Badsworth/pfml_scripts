@@ -97,7 +97,7 @@ paths:
           $ref: "#/components/responses/NotFound"
       requestBody:
         $ref: '#/components/requestBodies/EmployerAddFeinRequestBody'
-  
+
   /users/{user_id}:
     get:
       tags:
@@ -374,7 +374,7 @@ paths:
           schema:
             type: string
             pattern: '[a-zA-Z0-9 ,]+'
-          description: > 
+          description: >
             claim status used to filter the request,
             single claim status or a comma seperated list of claim status (i.e claim_status="Approved,Closed"),
             the valid status are "Approved", "Closed", "Completed", "Declined", "Open requirement" and "Pending - no action".
@@ -383,7 +383,7 @@ paths:
           in: query
           schema:
             type: string
-          description: > 
+          description: >
             A search string used to filter the request that,
             when provided, is used in a fuzzy search against the claims'
             Absence Case IDs, in addition to the employees' first, middle, and last names.
@@ -888,9 +888,9 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-  
+
   /applications/{application_id}/submit_tax_withholding_preference:
-    post: 
+    post:
       summary: Submit Tax Withholding Preference
       operationId: massgov.pfml.api.applications.submit_tax_withholding_preference
       tags:
@@ -905,12 +905,12 @@ paths:
             example: 5f91c12b-4d49-4eb0-b5d9-7fa0ce13eb32
           description: ID of the application to update
           required: true
-      requestBody: 
+      requestBody:
         $ref: "#/components/requestBodies/TaxWithholdingPreferenceRequestBody"
       responses:
         "201":
           description: Successful submission of tax withholding preference returns a 201
-          content: 
+          content:
             application/json:
               schema:
                 allOf:
@@ -936,7 +936,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-  
+
   /financial-eligibility:
     post:
       security:
@@ -1066,6 +1066,78 @@ paths:
       requestBody:
         $ref: "#/components/requestBodies/VerificationRequest"
 
+  /admin/authorize:
+    get:
+      security:
+        - {} # no authentication required
+      tags:
+        - Admin
+      summary: Returns azure ad authentication url to initiate user auth code flow
+      operationId: massgov.pfml.api.admin.admin_authorization_url
+      responses:
+        "200":
+          description: Initiated authentication code flow
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthURIResponse"
+
+  /admin/token:
+    post:
+      security:
+        - {} # no authentication required
+      tags:
+        - Admin
+      summary: Trade an authentication code for an access token
+      operationId: massgov.pfml.api.admin.admin_token
+      requestBody:
+        $ref: "#/components/requestBodies/AdminTokenRequest"
+      responses:
+        "200":
+          $ref: "#/components/responses/AdminTokenResponse"
+        "401":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /admin/login:
+    get:
+      security:
+        - jwt: []
+      tags:
+        - Admin
+      summary: Login as admin user
+      operationId: massgov.pfml.api.admin.admin_login
+      responses:
+        "200":
+          description: Successfully logged in as admin account!
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUserResponse"
+        "400":
+          $ref: "#/components/responses/Unauthorized"
+        "401":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /admin/logout:
+    get:
+      security:
+        - {} # no authentication required
+      tags:
+        - Admin
+      summary: Logout admin user
+      operationId: massgov.pfml.api.admin.admin_logout
+      responses:
+        "200":
+          description: Retrieved logout url
+          content: 
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminLogoutResponse"
+
 tags:
   - name: Test Endpoints
   - name: Users
@@ -1077,6 +1149,7 @@ tags:
   - name: ID Proofing
   - name: Notifications
   - name: Feature Flags
+  - name: Admin
 
 components:
   securitySchemes:
@@ -1084,11 +1157,10 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
-      x-bearerInfoFunc: massgov.pfml.api.authentication.decode_cognito_token
+      x-bearerInfoFunc: massgov.pfml.api.authentication.decode_jwt
     oauth2:
       type: oauth2
-      description: AWS Cognito OAuth2
-      x-tokenInfoFunc: massgov.pfml.api.authentication.decode_cognito_token
+      x-tokenInfoFunc: massgov.pfml.api.authentication.decode_jwt
       flows:
         clientCredentials:
           tokenUrl: /api/v1/oauth2/token
@@ -1131,6 +1203,12 @@ components:
         enum: ["ascending", "descending"]
 
   requestBodies:
+    AdminTokenRequest:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/AdminTokenRequest"
+      required: true
     UserUpdateRequest:
       content:
         application/json:
@@ -1197,6 +1275,12 @@ components:
             $ref: "#/components/schemas/EmployerAddFeinRequestBody"
 
   responses:
+    AdminTokenResponse:
+      description: User has successfully logged into microsoft account
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/AdminTokenResponse"
     ApplicationResponse:
       description: Application found
       content:
@@ -1261,6 +1345,61 @@ components:
             $ref: "#/components/schemas/ErrorResponse"
 
   schemas:
+    AuthURIResponse:
+      type: object
+      properties:
+        auth_uri:
+          type: string
+        claims_challenge:
+          type: string
+          nullable: true
+        code_verifier:
+          type: string
+        nonce:
+          type: string
+        redirect_uri:
+          type: string
+        scope:
+          type: array
+          items:
+            type: string
+        state:
+          type: string
+
+    AdminLogoutResponse:
+      type: object
+      properties:
+        logout_uri:
+          type: string
+
+    AuthCodeResponse:
+      type: object
+      properties:
+        code:
+          type: string
+        session_state:
+          type: string
+        state:
+          type: string
+
+    AdminTokenRequest:
+      type: object
+      properties:
+        auth_uri_res:
+          $ref: "#/components/schemas/AuthURIResponse"
+        auth_code_res:
+          $ref: "#/components/schemas/AuthCodeResponse"
+
+    AdminTokenResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+        refresh_token:
+          type: string
+        id_token:
+          type: string
+
     SuccessfulResponse:
       type: object
       properties:
@@ -1435,6 +1574,10 @@ components:
           type: string
           format: email
           example: "janedoe@example.com"
+        mfa_phone_number:
+          type: string
+          nullable: true
+          example: "123-456-7890"
         consented_to_data_sharing:
           type: boolean
           example: false
@@ -1446,6 +1589,31 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/UserLeaveAdminResponse"
+
+    AdminUserResponse:
+      type: object
+      properties:
+        sub_id:
+          type: string
+          example: "QfbsFWS4NTwEUFQKUCmwipIyJiZOxxKBLGSQC0tNFAB"
+        first_name:
+          type: string
+          example: "Jane"
+        last_name:
+          type: string
+          example: "Doe"
+        email_address:
+          type: string
+          format: email
+          example: "janedoe@example.com"
+        groups:
+          type: array
+          items:
+            type: string
+        permissions:
+          type: array
+          items:
+            type: string
 
     RoleResponse:
       type: object
@@ -1520,6 +1688,8 @@ components:
             - Opt Out
           nullable: true
           example: "SMS"
+        mfa_phone_number:
+          $ref: "#/components/schemas/Phone"
 
     EmployeeUpdateRequest:
       type: object
@@ -2215,12 +2385,6 @@ components:
     AbsencePeriodResponse:
       type: object
       properties:
-        class_id:
-          type: integer
-          example: 1234
-        index_id:
-          type: integer
-          example: 1234
         absence_period_start_date:
           type: string
           format: date
@@ -2597,13 +2761,13 @@ components:
         payment_preference:
           nullable: false
           $ref: "#/components/schemas/PaymentPreference"
-    
+
     TaxWithholdingPreferenceRequestBody:
       type: object
       properties:
         is_withholding_tax:
           type: boolean
-          nullable: false
+          nullable: true
 
     EmployerAddFeinRequestBody:
       type: object
@@ -3400,6 +3564,7 @@ components:
             - Cell
             - Fax
             - Phone
+
     CaringLeaveMetadata:
       type: object
       properties:
