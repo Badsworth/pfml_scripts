@@ -13,6 +13,9 @@ from massgov.pfml.delegated_payments.mock import (
 )
 from massgov.pfml.util.datetime import get_now_us_eastern
 
+# Count = 50
+# New: 41.12s, 45s
+# Old: 77.9s
 
 def main():
     massgov.pfml.util.logging.init("pub-payments-mock-generate")
@@ -22,7 +25,7 @@ def main():
     config = scenario_data_generator.ScenarioDataConfig(
         scenarios_with_count=[
             scenario_data_generator.ScenarioNameWithCount(
-                scenario_name=scenario_descriptor.scenario_name, count=1
+                scenario_name=scenario_descriptor.scenario_name, count=50
             )
             for scenario_descriptor in scenarios.SCENARIO_DESCRIPTORS
         ]
@@ -39,10 +42,6 @@ def main():
         scenario_dataset, fineos_data_export_path, get_now_us_eastern()
     )
 
-    # payment extract
-    fineos_extract_data.generate_payment_extract_files(
-        scenario_dataset, fineos_data_export_path, get_now_us_eastern(), round=1,
-    )
 
 
 if __name__ == "__main__":

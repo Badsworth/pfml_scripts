@@ -102,9 +102,9 @@ class FineosClaimantData(MockData):
         self.leave_request_evidence = self.get_value("leave_request_evidence", "Satisfied")
         self.leave_request_start = self.get_value("leave_request_start", "2021-01-01 12:00:00")
         self.leave_request_end = self.get_value("leave_request_end", "2021-04-01 12:00:00")
-        self.leave_request_id = self.get_value("leave_request_id", str(fake.unique.random_int()))
+        self.leave_request_id = self.get_value("leave_request_id", str(fake.unique.random_int(min=1, max=1_000_000_000)))
         self.employer_customer_num = self.get_value(
-            "employer_customer_num", str(fake.unique.random_int())
+            "employer_customer_num", str(fake.unique.random_int(min=1, max=1_000_000_000))
         )
         self.fineos_employee_first_name = self.get_value(
             "fineos_employee_first_name", fake.first_name()
@@ -115,7 +115,7 @@ class FineosClaimantData(MockData):
         )
         self.absence_period_class_id = self.get_value("absence_period_c_value", "1440")
         self.absence_period_index_id = self.get_value(
-            "absence_period_i_value", str(fake.unique.random_int())
+            "absence_period_i_value", str(fake.unique.random_int(min=1, max=1_000_000_000))
         )
         self.fineos_address_effective_from = self.get_value(
             "fineos_address_effective_from", "2021-01-01 12:00:00"
@@ -196,9 +196,9 @@ class FineosPaymentData(MockData):
         self.kwargs = kwargs
 
         self.c_value = self.get_value("c_value", "7326")
-        self.i_value = self.get_value("i_value", str(fake.unique.random_int()))
+        self.i_value = self.get_value("i_value", str(fake.unique.random_int(min=1, max=1_000_000_000)))
         self.absence_case_number = self.get_value(
-            "absence_case_number", f"ABS-{fake.unique.random_int()}"
+            "absence_case_number", f"ABS-{fake.unique.random_int(min=1, max=1_000_000_000)}"
         )
 
         self.claim_type = self.get_value("claim_type", "Family")
@@ -231,7 +231,7 @@ class FineosPaymentData(MockData):
         self.payment_start_period = self.get_value("payment_start", "2021-01-01 12:00:00")
         self.payment_end_period = self.get_value("payment_end", "2021-01-07 12:00:00")
 
-        self.leave_request_id = self.get_value("leave_request_id", str(fake.unique.random_int()))
+        self.leave_request_id = self.get_value("leave_request_id", str(fake.unique.random_int(min=1, max=1_000_000_000)))
         self.leave_request_decision = self.get_value("leave_request_decision", "Approved")
 
     def get_vpei_record(self):
@@ -304,10 +304,10 @@ class FineosIAWWData(MockData):
         self.kwargs = kwargs
 
         self.c_value = self.get_value("c_value", "7326")
-        self.i_value = self.get_value("i_value", str(fake.unique.random_int()))
+        self.i_value = self.get_value("i_value", str(fake.unique.random_int(min=1, max=1_000_000_000)))
         self.leaveplan_c_value = self.get_value("leaveplan_c_value", "14437")
 
-        leaveplan_i_value = str(fake.unique.random_int())
+        leaveplan_i_value = str(fake.unique.random_int(min=1, max=1_000_000_000))
         self.leaveplan_i_value_instruction = self.get_value(
             "leaveplan_i_value_instruction", leaveplan_i_value
         )
@@ -315,9 +315,9 @@ class FineosIAWWData(MockData):
             "leaveplan_i_value_request", leaveplan_i_value
         )
         self.leave_request_id_value = self.get_value(
-            "leave_request_id_value", str(fake.unique.random_int())
+            "leave_request_id_value", str(fake.unique.random_int(min=1, max=1_000_000_000))
         )
-        self.aww_value = self.get_value("aww_value", str(fake.unique.random_int()))
+        self.aww_value = self.get_value("aww_value", str(fake.unique.random_int(min=1, max=1_000_000_000)))
 
     def get_leave_plan_request_absence_record(self):
         leave_plan_request_absence_record = OrderedDict()
@@ -553,12 +553,12 @@ def generate_payment_extract_files(
                 if item == 0:
                     withholding_payment.tin = "SITPAYEE001"
                     withholding_payment.payment_amount = "22.00"
-                    withholding_payment.i_value = str(fake.unique.random_int())
+                    withholding_payment.i_value = str(fake.unique.random_int(min=1, max=1_000_000_000))
 
                 if item == 1:
                     withholding_payment.tin = "FITAMOUNTPAYEE001"
                     withholding_payment.payment_amount = "35.00"
-                    withholding_payment.i_value = str(fake.unique.random_int())
+                    withholding_payment.i_value = str(fake.unique.random_int(min=1, max=1_000_000_000))
 
                 fineos_payments_dataset.append(withholding_payment)
         if scenario_descriptor.is_duplicate_tax_withholding_records_exists:
@@ -569,21 +569,21 @@ def generate_payment_extract_files(
                     withholding_payment.payee_identifier = "Social Security Number"
                     withholding_payment.event_reason = "Automatic Main Payment"
                     withholding_payment.amalgamationc = ""
-                    withholding_payment.i_value = str(fake.unique.random_int())
+                    withholding_payment.i_value = str(fake.unique.random_int(min=1, max=1_000_000_000))
                 if item in [1, 2]:
                     withholding_payment.event_reason = "Automatic Alternate Payment"
                     withholding_payment.payee_identifier = "ID"
                     withholding_payment.amalgamationc = "ScheduledAlternate65424"
                     withholding_payment.tin = "SITPAYEE001"
                     withholding_payment.payment_amount = "10.00"
-                    withholding_payment.i_value = str(fake.unique.random_int())
+                    withholding_payment.i_value = str(fake.unique.random_int(min=1, max=1_000_000_000))
                 if item in [3, 4]:
                     withholding_payment.event_reason = "Automatic Alternate Payment"
                     withholding_payment.payee_identifier = "ID"
                     withholding_payment.amalgamationc = "ScheduledAlternate65424"
                     withholding_payment.tin = "FITAMOUNTPAYEE001"
                     withholding_payment.payment_amount = "35.00"
-                    withholding_payment.i_value = str(fake.unique.random_int())
+                    withholding_payment.i_value = str(fake.unique.random_int(min=1, max=1_000_000_000))
                 fineos_payments_dataset.append(withholding_payment)
         fineos_payments_dataset.append(fineos_payments_data)
 
@@ -685,7 +685,7 @@ def generate_claimant_data_files(
         leave_request_evidence = "Satisfied" if scenario_descriptor.is_id_proofed else "Rejected"
         leave_request_start = "2021-01-01 12:00:00"
         leave_request_end = "2021-04-01 12:00:00"
-        leave_request_id = str(fake.unique.random_int())
+        leave_request_id = str(fake.unique.random_int(min=1, max=1_000_000_000))
         notification_number = f"NTN-{absence_case_number}"
         fineos_employer_id = employer.fineos_employer_id
         leave_type = scenario_descriptor.claim_type

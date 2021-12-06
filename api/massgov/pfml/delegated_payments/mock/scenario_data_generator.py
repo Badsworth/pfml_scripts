@@ -262,11 +262,6 @@ def generate_scenario_data_in_db(
 
     employee = create_employee(ssn, fineos_customer_number, db_session)
 
-    if scenario_descriptor.dua_additional_income:
-        create_dua_additional_income(fineos_customer_number)
-
-    if scenario_descriptor.dia_additional_income:
-        create_dia_additional_income(fineos_customer_number)
 
     add_eft = (
         scenario_descriptor.payment_method.payment_method_id == PaymentMethod.ACH.payment_method_id
@@ -377,11 +372,10 @@ def generate_scenario_dataset(
                 )
 
                 scenario_data.payment_c_value = "7326"
-                scenario_data.payment_i_value = str(fake.unique.random_int())
-
+                scenario_data.payment_i_value = "1"
                 if scenario_descriptor.has_additional_payment_in_period:
                     scenario_data.additional_payment_c_value = "7326"
-                    scenario_data.additional_payment_i_value = str(fake.unique.random_int())
+                    scenario_data.additional_payment_i_value = "1"
 
                     scenario_data.additional_payment_absence_case_id = (
                         f"{scenario_data.absence_case_id}_additional"

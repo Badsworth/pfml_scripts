@@ -167,7 +167,7 @@ fineos-eligibility-feed-export: ## Run an eligibility feed export
 	OUTPUT_DIRECTORY_PATH=eligibility_export FINEOS_AWS_IAM_ROLE_ARN="arn" FINEOS_AWS_IAM_ROLE_EXTERNAL_ID="1" $(PY_RUN_CMD) fineos-eligibility-feed-export $(DECODE_LOG)
 
 pub-payments-process-fineos:
-	$(PY_RUN_CMD) pub-payments-process-fineos --steps ALL $(DECODE_LOG)
+	$(PY_RUN_CMD) pub-payments-process-fineos --steps consume-fineos-claimant claimant-extract $(DECODE_LOG)
 
 pub-claimant-address-validation:
 	$(PY_RUN_CMD) pub-claimant-address-validation --steps ALL $(DECODE_LOG)

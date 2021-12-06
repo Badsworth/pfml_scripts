@@ -1,9 +1,10 @@
 import enum
 import uuid
 from datetime import date
-from typing import Any, Callable, Dict, List, Optional, cast
+from typing import Any, Callable, Dict, List, Optional, Sequence, cast
 
 from sqlalchemy.exc import SQLAlchemyError
+from massgov.pfml import db
 
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.logging as logging
@@ -416,8 +417,21 @@ class ClaimantExtractStep(Step):
         START_DATE_OR_END_DATE_NOT_FOUND_COUNT = "start_date_or_end_date_not_found_count"
         DUPLICATE_ABSENCE_PERIOD_COUNT = "duplicate_absence_period_count"
 
+    db_objects_to_add: List[Any]
+
+    def __init__(
+        self,
+        db_session: db.Session,
+        log_entry_db_session: db.Session) -> None:
+
+        super().__init__(db_session=db_session, log_entry_db_session=log_entry_db_session)
+
+        self.db_objects_to_add = []
+
     def run_step(self) -> None:
         self.process_claimant_extract_data()
+
+        self.bulk_save()
 
     def process_claimant_extract_data(self) -> None:
 
@@ -688,7 +702,8 @@ class ClaimantExtractStep(Step):
 
         # Return claim, we want to create this even if the employee
         # has issues or there were some validation issues
-        self.db_session.add(claim_pfml)
+        # self.db_session.add(claim_pfml)
+        self.add_to_session(claim_pfml)
         self.increment(self.Metrics.CLAIM_PROCESSED_COUNT)
 
         return claim_pfml
@@ -736,7 +751,8 @@ class ClaimantExtractStep(Step):
             db_absence_period.claim_id = claim.claim_id
             db_absence_period.fineos_absence_period_class_id = absence_period_info.class_id
             db_absence_period.fineos_absence_period_index_id = absence_period_info.index_id
-            self.db_session.add(db_absence_period)
+
+            # self.db_session.add(db_absence_period)
 
         if absence_period_info.is_id_proofed is not None:
             db_absence_period.is_id_proofed = absence_period_info.is_id_proofed
@@ -750,6 +766,7 @@ class ClaimantExtractStep(Step):
         if absence_period_info.leave_request_id is not None:
             db_absence_period.fineos_leave_request_id = absence_period_info.leave_request_id
 
+        self.add_to_session(db_absence_period)
         return db_absence_period
 
     def update_employee_info(self, claimant_data: ClaimantData, claim: Claim) -> Optional[Employee]:
@@ -827,7 +844,9 @@ class ClaimantExtractStep(Step):
         # TODO settle on approach after further investigation
         claim.employee = employee_pfml_entry
 
-        self.db_session.add(employee_pfml_entry)
+        self.add_to_session(employee_pfml_entry)
+        # self.db_session.add(employee_pfml_entry)
+        
 
         return employee_pfml_entry
 
@@ -885,8 +904,10 @@ class ClaimantExtractStep(Step):
                 employee_pub_eft_pair = EmployeePubEftPair(
                     employee_id=employee_pfml_entry.employee_id, pub_eft_id=new_eft.pub_eft_id
                 )
-                self.db_session.add(new_eft)
-                self.db_session.add(employee_pub_eft_pair)
+                # self.db_session.add(new_eft)
+                # self.db_session.add(employee_pub_eft_pair)
+
+                self.add_to_session(new_eft, employee_pub_eft_pair)
 
                 state_log_util.create_finished_state_log(
                     end_state=State.DELEGATED_EFT_SEND_PRENOTE,
@@ -960,3 +981,35 @@ class ClaimantExtractStep(Step):
                 db_session=self.db_session,
             )
             self.increment(self.Metrics.VALID_CLAIM_COUNT)
+
+    def add_to_session(self, *values: Any) -> None:
+        self.db_objects_to_add.extend(values)
+
+    def bulk_save(self,  batch_size: int = 10000) -> None:
+        def bulk_save_helper(models_batch: Sequence[Any]) -> None:
+            self.db_session.bulk_save_objects(models_batch)
+
+        model_name = "Yay"
+        self.batch_apply(self.db_objects_to_add, f"Saving {model_name}", bulk_save_helper, batch_size=batch_size)
+        self.db_objects_to_add = []
+
+
+    def batch_apply(
+        self,
+        items: Sequence[Any],
+        batch_fn_name: str,
+        batch_fn: Callable[[Sequence[Any]], Any],
+        batch_size: int = 100000,
+    ) -> None:
+        size = len(items)
+        start_index = 0
+
+        while start_index < size:
+            logger.info("batch: %s, count: %i", batch_fn_name, start_index)
+
+            end_index = start_index + batch_size
+            batch = items[start_index:end_index]
+
+            batch_fn(batch)
+
+            start_index = end_index
