@@ -84,7 +84,7 @@ def test_iaww_extracts(
         iaww_process_log_report.get("not_matching_leave_plan_requested_absence_record_count", None)
         == 1
     )
-    assert iaww_process_log_report.get("absence_periods_updated", None) == 4
+    assert iaww_process_log_report.get("absence_periods_iaww_added", None) == 4
     assert iaww_process_log_report.get("paid_leave_instruction_validation_issue_count", None) == 1
     assert (
         iaww_process_log_report.get(

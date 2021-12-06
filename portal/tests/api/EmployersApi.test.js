@@ -26,6 +26,7 @@ const headers = {
   "Content-Type": "application/json",
 };
 const mockClaim = new EmployerClaim({
+  absence_periods: [],
   date_of_birth: "1994-03-05",
   employer_benefits: [],
   employer_fein: "133701337",

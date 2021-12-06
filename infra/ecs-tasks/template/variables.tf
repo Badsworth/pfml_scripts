@@ -293,6 +293,12 @@ variable "enable_merge_1099_pdf" {
   default     = "0"
 }
 
+variable "enable_pub_payments_copy_audit_report_schedule" {
+  description = "Enable scheduling for 'pub-payments-copy-audit-report' ECS task"
+  type        = bool
+  default     = false
+}
+
 ########## Variables for Step Functions ################
 
 variable "st_use_mock_dor_data" {

@@ -1,6 +1,7 @@
 import copy
 import io
 from datetime import datetime, timedelta
+from unittest import mock
 
 import pytest
 
@@ -10,6 +11,7 @@ from massgov.pfml.api.models.applications.common import ContentType as AllowedCo
 from massgov.pfml.db.models.applications import DocumentType, LeaveReason
 from massgov.pfml.db.models.factories import ApplicationFactory, ClaimFactory, DocumentFactory
 from massgov.pfml.fineos import fineos_client, models
+from massgov.pfml.fineos.exception import FINEOSUnprocessableEntity
 
 CERTIFICATION_FORM_DATA = {
     "document_type": "Certification Form",
@@ -942,3 +944,21 @@ def test_documents_get_not_submitted_application(
     assert response["status_code"] == 200
     assert response["data"] is not None
     assert len(response["data"]) == 0
+
+
+@mock.patch("massgov.pfml.api.applications.upload_document")
+def test_document_upload_return_error_rule(
+    mock_upload, client, consented_user, consented_user_token, test_db_session
+):
+    error = FINEOSUnprocessableEntity("upload_document", 200, 422, "Unable to upload document")
+    mock_upload.side_effect = error
+
+    response = document_upload_helper(
+        client=client,
+        user=consented_user,
+        auth_token=consented_user_token,
+        form_data=document_upload_payload_helper(VALID_FORM_DATA, valid_file()),
+    )
+
+    assert response["status_code"] == 400
+    assert response["errors"][0]["rule"] == "document_requirement_already_satisfied"

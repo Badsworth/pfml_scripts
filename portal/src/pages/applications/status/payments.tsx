@@ -91,6 +91,7 @@ export const Payments = ({
           {t("pages.claimsStatus.yourPayments")}
         </Heading>
 
+        <Trans i18nKey="pages.payments.paymentsIntro" />
         {shouldShowPaymentsTable && (
           <Table className="width-full" responsive>
             <thead>
@@ -127,7 +128,7 @@ export const Payments = ({
                         })}
                       </td>
                       <td data-label={tableColumns[2]}>
-                        {sent_to_bank_date
+                        {status !== "Pending"
                           ? t("pages.payments.paymentsTable.paymentStatus", {
                               context: status,
                             })
@@ -198,6 +199,16 @@ export const Payments = ({
                 components={{
                   li: <li />,
                   ul: <ul />,
+                  "benefit-amount-details-link": (
+                    <a
+                      href={
+                        routes.external.massgov
+                          .benefitsGuide_benefitsAmountDetails
+                      }
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    />
+                  ),
                   "using-other-leave-link": (
                     <a
                       href={routes.external.massgov.usingOtherLeave}

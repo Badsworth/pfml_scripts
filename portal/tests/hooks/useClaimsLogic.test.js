@@ -250,7 +250,7 @@ describe("useClaimsLogic", () => {
       });
 
       expect(appLogic.current.claims.claimDetail).toBeInstanceOf(ClaimDetail);
-      expect(claimDetail).toBe(appLogic.current.claims.claimDetail);
+      expect(claimDetail).toStrictEqual(appLogic.current.claims.claimDetail);
     });
 
     it("it sets isLoadingClaimDetail to true when a claim is being loaded", async () => {

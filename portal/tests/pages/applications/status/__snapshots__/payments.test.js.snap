@@ -27,19 +27,54 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
       hidden=""
       id="accordion7"
     >
+      <p>
+        Once your payments have started, expect to be paid weekly for the duration of your leave.
+      </p>
+      <p>
+        <strong>
+          What may cause a delayed payment
+        </strong>
+      </p>
+      <p>
+        The exact day you receive payment can be delayed because of:
+      </p>
       <ul>
-         
         <li>
           State and federal holidays
+        </li>
+        <li>
+          Leave periods that end on weekends
         </li>
         <li>
           Your bank’s processes
         </li>
         <li>
-          Pay periods that end on a weekend
+          The process to adjust your benefit amount due to additional income or benefits you or your employer reported
         </li>
         <li>
-          Payments may be delayed if we need to adjust your benefit amount based on extensions, other income or benefits you’ve reported and other process delays
+          Changes to your leave’s start and end dates
+        </li>
+        <li>
+          Other processing issues such as issues with bank account information, or your address
+        </li>
+      </ul>
+      <p>
+        <strong>
+          What may cause a cancelled payment
+        </strong>
+      </p>
+      <p>
+        Payments can be canceled due to:
+      </p>
+      <ul>
+        <li>
+          Changes to when you end your leave
+        </li>
+        <li>
+          Paid time off taken on days you also receive PFML benefits.
+        </li>
+        <li>
+          The process to adjust your benefit amount due to additional income or benefits you or your employer reported may temporarily create a canceled payment
         </li>
       </ul>
     </div>
@@ -52,7 +87,7 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
         class="usa-accordion__button"
         type="button"
       >
-        What may change your benefit amount
+        Why your sent payment amount may be less than your approved benefit amount
       </button>
     </h2>
     <div
@@ -62,7 +97,16 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
       id="accordion8"
     >
       <p>
-        See your approval notice for your maximum weekly benefit. We may reduce your benefit amount based on 
+        To see your maximum weekly benefit amount, view your approval notice in your 
+        <a
+          href="/applications/status?absence_id=mock-absence-case-id/#view_notices"
+        >
+          application’s notices
+        </a>
+        .
+      </p>
+      <p>
+        The sent payment amount you see on this page may be less than the maximum benefit amount due to 
         <a
           href="https://www.mass.gov/info-details/how-other-leave-and-benefits-can-affect-your-paid-family-and-medical-leave"
           rel="noopener noreferrer"
@@ -70,33 +114,35 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
         >
           other leave, income and benefits
         </a>
-         you reported to us. You will receive another notice in this application’s details if we reduce or offset your benefit amount.
+         you reported. 
       </p>
       <p>
-        Other scenarios that may change your benefit amount are:
+        You will receive another notice in the mail if we reduce your benefit amount.
+      </p>
+      <p>
+        <strong>
+          Other scenarios that may change the payment amount you receive are:
+        </strong>
       </p>
       <ul>
-         
         <li>
-          You reach the $850 benefit total across multiple employers
+          You or your employer report additional other leave, income or benefits
         </li>
         <li>
-          If you transition from medical pregnancy to leave to bond with a child
+          You reach the maximum total amount that a person can receive in PFML benefits across multiple applications. Read more about 
+          <a
+            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#benefit-amount-details-"
+            rel="noopener noreferrer"
+            target="_blank"
+          >
+            benefit amount details
+          </a>
+          .
         </li>
         <li>
-          Extending your leave
+          You receive a payment for a pay period less than a full week
         </li>
       </ul>
-       
-      <p>
-        Check your 
-        <a
-          href="/applications/status?absence_id=mock-absence-case-id/#view_notices"
-        >
-          application’s notices
-        </a>
-         to see your approval notice and any updates to your approved benefit amount.
-      </p>
     </div>
     <h2
       class="usa-accordion__heading"
@@ -117,13 +163,13 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
       id="accordion9"
     >
       <p>
-        To make changes to your application, call the Contact Center at 
+        To make changes to your payment method or banking information, call the Contact Center at 
         <a
           href="tel:(833) 344-7365"
         >
           (833) 344‑7365
         </a>
-        . If you request a change to your start and end dates, we may need to review your application again.
+        .
       </p>
     </div>
   </div>
@@ -217,7 +263,7 @@ exports[`Payments renders the Payments table 1`] = `
       <td
         data-label="Estimated scheduled date"
       >
-        Sent to bank
+        Sent
       </td>
       <td
         data-label="Date sent"
@@ -243,13 +289,38 @@ exports[`Payments renders the Payments table 1`] = `
       </td>
       <td
         data-label="Estimated scheduled date"
+      />
+      <td
+        data-label="Date sent"
       >
         Pending
       </td>
       <td
+        data-label="Amount sent"
+      >
+        Pending
+      </td>
+    </tr>
+    <tr>
+      <td
+        data-label="Leave dates"
+      >
+        10/8/2021 to 10/15/2021
+      </td>
+      <td
+        data-label="Payment Method"
+      >
+        Check
+      </td>
+      <td
+        data-label="Estimated scheduled date"
+      >
+        Sent
+      </td>
+      <td
         data-label="Date sent"
       >
-        2021-11-15
+        2021-10-16
       </td>
       <td
         data-label="Amount sent"
@@ -258,7 +329,9 @@ exports[`Payments renders the Payments table 1`] = `
       </td>
     </tr>
     <tr>
-      <td />
+      <td>
+        10/21/2021 to 10/27/2021
+      </td>
       <td
         colspan="4"
       >

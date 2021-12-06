@@ -148,28 +148,12 @@ describe("Review", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("displays organization/employer information", () => {
-    setup();
-    expect(screen.getByText(/Organization/)).toMatchSnapshot();
-    expect(screen.getByText("Employer ID number (EIN)")).toMatchSnapshot();
-  });
-
   it("does not render the caring leave relationship question", () => {
     expect(
       screen.queryByRole("group", {
         name: "Do you believe the listed relationship is described accurately? (Optional)",
       })
     ).not.toBeInTheDocument();
-  });
-
-  it("hides organization name if employer_dba is falsy", () => {
-    const noEmployerDba = clone(claimWithV1Eform);
-    noEmployerDba.employer_dba = undefined;
-
-    setup(noEmployerDba);
-
-    expect(screen.queryByText(/Organization/)).not.toBeInTheDocument();
-    expect(screen.getByText("Employer ID number (EIN)")).toBeInTheDocument();
   });
 
   it("submits a claim with the correct options", async () => {
@@ -859,5 +843,25 @@ describe("Review", () => {
         );
       });
     });
+  });
+
+  it("does not render supporting work details  when employerShowMultiLeave is enabled", () => {
+    process.env.featureFlags = {
+      employerShowMultiLeave: true,
+    };
+    setup();
+    expect(
+      screen.queryByRole("heading", { name: "Supporting work details" })
+    ).not.toBeInTheDocument();
+  });
+
+  it("renders absence id above the title when employerShowMultiLeave is enabled", () => {
+    process.env.featureFlags = {
+      employerShowMultiLeave: true,
+    };
+    setup();
+    expect(
+      screen.getByText("Application ID: NTN-111-ABS-01")
+    ).toBeInTheDocument();
   });
 });

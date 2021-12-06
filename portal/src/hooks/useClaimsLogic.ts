@@ -142,7 +142,7 @@ const useClaimsLogic = ({
         }
       }
 
-      setClaimDetail(loadedClaimDetail);
+      setClaimDetail(new ClaimDetail(loadedClaimDetail));
     } catch (error) {
       if (
         error instanceof ValidationError &&

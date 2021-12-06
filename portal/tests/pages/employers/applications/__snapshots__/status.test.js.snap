@@ -260,7 +260,7 @@ exports[`Status shows only legal documents 1`] = `
       class="usa-button position-relative text-bold usa-button--unstyled"
       type="button"
     >
-      Denial notice (PDF)
+      Approved Time Cancelled $(shared.pdfNoticeSuffix)
     </button>
     <div
       class="text-base-dark"
@@ -275,7 +275,37 @@ exports[`Status shows only legal documents 1`] = `
       class="usa-button position-relative text-bold usa-button--unstyled"
       type="button"
     >
-      Request for more information (PDF)
+      Benefit Amount Change Notice $(shared.pdfNoticeSuffix)
+    </button>
+    <div
+      class="text-base-dark"
+    >
+      Posted 1/12/2021
+    </div>
+  </li>
+  <li
+    class="margin-bottom-2"
+  >
+    <button
+      class="usa-button position-relative text-bold usa-button--unstyled"
+      type="button"
+    >
+      Change Request Approved $(shared.pdfNoticeSuffix)
+    </button>
+    <div
+      class="text-base-dark"
+    >
+      Posted 1/13/2021
+    </div>
+  </li>
+  <li
+    class="margin-bottom-2"
+  >
+    <button
+      class="usa-button position-relative text-bold usa-button--unstyled"
+      type="button"
+    >
+      Change Request Denied $(shared.pdfNoticeSuffix)
     </button>
     <div
       class="text-base-dark"
@@ -290,12 +320,72 @@ exports[`Status shows only legal documents 1`] = `
       class="usa-button position-relative text-bold usa-button--unstyled"
       type="button"
     >
-      Pending Application Withdrawn (PDF)
+      Denial notice (PDF)
     </button>
     <div
       class="text-base-dark"
     >
       Posted 1/15/2021
+    </div>
+  </li>
+  <li
+    class="margin-bottom-2"
+  >
+    <button
+      class="usa-button position-relative text-bold usa-button--unstyled"
+      type="button"
+    >
+      Leave Allotment Change Notice $(shared.pdfNoticeSuffix)
+    </button>
+    <div
+      class="text-base-dark"
+    >
+      Posted 1/17/2021
+    </div>
+  </li>
+  <li
+    class="margin-bottom-2"
+  >
+    <button
+      class="usa-button position-relative text-bold usa-button--unstyled"
+      type="button"
+    >
+      Maximum Weekly Benefit Change Notice $(shared.pdfNoticeSuffix)
+    </button>
+    <div
+      class="text-base-dark"
+    >
+      Posted 1/18/2021
+    </div>
+  </li>
+  <li
+    class="margin-bottom-2"
+  >
+    <button
+      class="usa-button position-relative text-bold usa-button--unstyled"
+      type="button"
+    >
+      Request for more information (PDF)
+    </button>
+    <div
+      class="text-base-dark"
+    >
+      Posted 1/20/2021
+    </div>
+  </li>
+  <li
+    class="margin-bottom-2"
+  >
+    <button
+      class="usa-button position-relative text-bold usa-button--unstyled"
+      type="button"
+    >
+      Pending Application Withdrawn (PDF)
+    </button>
+    <div
+      class="text-base-dark"
+    >
+      Posted 1/21/2021
     </div>
   </li>
 </ul>

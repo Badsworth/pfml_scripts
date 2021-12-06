@@ -23,16 +23,17 @@ import EmployerDecision from "../../../components/employers/EmployerDecision";
 import Feedback from "../../../components/employers/Feedback";
 import FraudReport from "../../../components/employers/FraudReport";
 import Heading from "../../../components/core/Heading";
+import HeadingPrefix from "src/components/core/HeadingPrefix";
 import LeaveDetails from "../../../components/employers/LeaveDetails";
 import LeaveSchedule from "../../../components/employers/LeaveSchedule";
 import PreviousLeaves from "../../../components/employers/PreviousLeaves";
 import ReviewHeading from "../../../components/ReviewHeading";
-import ReviewRow from "../../../components/ReviewRow";
-import SupportingWorkDetails from "../../../components/employers/SupportingWorkDetails";
 import Title from "../../../components/core/Title";
 import { Trans } from "react-i18next";
+import WeeklyHoursWorkedRow from "../../../components/employers/WeeklyHoursWorkedRow";
 import findDocumentsByTypes from "../../../utils/findDocumentsByTypes";
 import formatDateRange from "../../../utils/formatDateRange";
+import { isFeatureEnabled } from "../../../services/featureFlags";
 import leaveReasonToPreviousLeaveReason from "../../../utils/leaveReasonToPreviousLeaveReason";
 import routes from "../../../routes";
 import updateAmendments from "../../../utils/updateAmendments";
@@ -52,6 +53,7 @@ export const Review = (props: WithEmployerClaimProps) => {
   const absenceId = claim.fineos_absence_id;
 
   const shouldShowV2 = !!claim.uses_second_eform_version;
+  const showMultipleLeave = isFeatureEnabled("employerShowMultiLeave");
 
   if (claim.is_reviewable === false) {
     appLogic.portalFlow.goTo(routes.employers.status, {
@@ -398,6 +400,13 @@ export const Review = (props: WithEmployerClaimProps) => {
   return (
     <div className="maxw-desktop-lg">
       <BackButton />
+      {showMultipleLeave && (
+        <HeadingPrefix>
+          {t("pages.employersClaimsReview.absenceIdLabel", {
+            absenceId: claim.fineos_absence_id,
+          })}
+        </HeadingPrefix>
+      )}
       <Title>
         {t("pages.employersClaimsReview.title", {
           name: claim.fullName,
@@ -410,48 +419,6 @@ export const Review = (props: WithEmployerClaimProps) => {
         />
       </Alert>
       <p>{t("pages.employersClaimsReview.instructionsAmendment")}</p>
-      {!!claim.employer_dba && (
-        <ReviewRow
-          level="2"
-          label={t("pages.employersClaimsReview.organizationNameLabel")}
-          noBorder
-          data-test="org-name-row"
-        >
-          {claim.employer_dba}
-        </ReviewRow>
-      )}
-      <ReviewRow
-        level="2"
-        label={t("pages.employersClaimsReview.employerIdentifierLabel")}
-        noBorder
-        data-test="ein-row"
-      >
-        {claim.employer_fein}
-      </ReviewRow>
-      <EmployeeInformation claim={claim} />
-      <LeaveDetails
-        claim={claim}
-        documents={certificationDocuments}
-        downloadDocument={downloadDocument}
-      />
-      {isCaringLeave && (
-        <CaringLeaveQuestion
-          errorMsg={appErrors.fieldErrorMessage(
-            "relationship_inaccurate_reason"
-          )}
-          believeRelationshipAccurate={formState.believeRelationshipAccurate}
-          onChangeBelieveRelationshipAccurate={
-            handleBelieveRelationshipAccurateChange
-          }
-          onChangeRelationshipInaccurateReason={
-            handleRelationshipInaccurateReason
-          }
-        />
-      )}
-      <LeaveSchedule
-        claim={claim}
-        hasDocuments={!!certificationDocuments.length}
-      />
       {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions */}
       <form
         id="employer-review-form"
@@ -459,14 +426,56 @@ export const Review = (props: WithEmployerClaimProps) => {
         method="post"
         onKeyDown={handleKeyDown}
       >
-        <SupportingWorkDetails
-          appErrors={appErrors}
-          clearField={clearField}
-          getField={getField}
-          getFunctionalInputProps={getFunctionalInputProps}
-          initialHoursWorkedPerWeek={claim.hours_worked_per_week}
-          updateFields={updateFields}
+        <EmployeeInformation claim={claim} />
+        {showMultipleLeave && (
+          <WeeklyHoursWorkedRow
+            appErrors={appErrors}
+            clearField={clearField}
+            getField={getField}
+            getFunctionalInputProps={getFunctionalInputProps}
+            initialHoursWorkedPerWeek={claim.hours_worked_per_week}
+            updateFields={updateFields}
+          />
+        )}
+        <LeaveDetails
+          claim={claim}
+          documents={certificationDocuments}
+          downloadDocument={downloadDocument}
         />
+        {isCaringLeave && (
+          <CaringLeaveQuestion
+            errorMsg={appErrors.fieldErrorMessage(
+              "relationship_inaccurate_reason"
+            )}
+            believeRelationshipAccurate={formState.believeRelationshipAccurate}
+            onChangeBelieveRelationshipAccurate={
+              handleBelieveRelationshipAccurateChange
+            }
+            onChangeRelationshipInaccurateReason={
+              handleRelationshipInaccurateReason
+            }
+          />
+        )}
+        <LeaveSchedule
+          claim={claim}
+          hasDocuments={!!certificationDocuments.length}
+        />
+
+        {!showMultipleLeave && (
+          <React.Fragment>
+            <ReviewHeading level="2">
+              {t("pages.employersClaimsReview.supportingWorkDetailsHeader")}
+            </ReviewHeading>
+            <WeeklyHoursWorkedRow
+              appErrors={appErrors}
+              clearField={clearField}
+              getField={getField}
+              getFunctionalInputProps={getFunctionalInputProps}
+              initialHoursWorkedPerWeek={claim.hours_worked_per_week}
+              updateFields={updateFields}
+            />
+          </React.Fragment>
+        )}
 
         <ReviewHeading level="2">
           {t("pages.employersClaimsReview.otherLeavesTitle")}
