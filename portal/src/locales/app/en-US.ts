@@ -2359,11 +2359,10 @@ const pages = {
     truthAttestationHeading: "Start the review process",
   },
   employersClaimsReview: {
-    employerIdentifierLabel: "Employer ID number (EIN)",
+    absenceIdLabel: "Application ID: {{absenceId}}",
     instructionsAmendment:
       "Please review the details of this application carefully. If anything is incorrect or incomplete, you can add an amendment or include specific comments at the end. Changes are not saved until you submit your review.",
     instructionsFollowUpDate: "$t(shared.employerInstructions_followUpDate)",
-    organizationNameLabel: "Organization",
     otherLeavesBody:
       "<p>Please review the leaves and benefits listed in the tables below. If everything looks correct, then there’s no action needed. If something looks incorrect or incomplete, you can:</p><ul><li>Amend reported leaves and benefits.</li><li>Add a leave or benefit that your employee used or will use.</li></ul><p>If you need to remove a leave or benefit, use the comment box at the end of this page.</p>",
     otherLeavesBodyV1:
@@ -2374,6 +2373,8 @@ const pages = {
     otherLeavesTitle: "Other leaves and benefits",
     submitButton: "Submit",
     submitLoadingMessage: "Submitting… Do not refresh or go back.",
+    // TODO (PORTAL-1151) Remove flag
+    supportingWorkDetailsHeader: "Supporting work details",
     title: "Review application from {{name}}",
   },
   employersClaimsStatus: {
@@ -2847,7 +2848,9 @@ const components = {
     addressLabel: "Mailing address",
     dobLabel: "Date of birth",
     employeeNameLabel: "Employee name",
+    employerIdentifierLabel: "Employer ID number (EIN)",
     header: "Employee information",
+    organizationNameLabel: "Organization",
     ssnOrItinLabel:
       "Social Security Number or Individual Taxpayer Identification Number",
   },
@@ -2989,8 +2992,7 @@ const components = {
     qualifyingReason_manageHealth:
       "Manage a <mass-benefits-guide-serious-health-condition-link>serious health condition</mass-benefits-guide-serious-health-condition-link>, including illness, injury, or pregnancy",
   },
-  employersSupportingWorkDetails: {
-    header: "Supporting work details",
+  employersWeeklyHoursWorkedRow: {
     heading_amend: "Amend weekly hours worked",
     leavePeriodDurationHint:
       "If their schedule varies, tell us the average number of hours worked over the past 52 weeks.",

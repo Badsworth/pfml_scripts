@@ -1,21 +1,5 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Review displays organization/employer information 1`] = `
-<h2
-  class="margin-bottom-1 font-heading-xs text-bold"
->
-  Organization
-</h2>
-`;
-
-exports[`Review displays organization/employer information 2`] = `
-<h2
-  class="margin-bottom-1 font-heading-xs text-bold"
->
-  Employer ID number (EIN)
-</h2>
-`;
-
 exports[`Review renders default view onload with v2 of claim 1`] = `
 <div>
   <div
@@ -48,233 +32,233 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
     <p>
       Please review the details of this application carefully. If anything is incorrect or incomplete, you can add an amendment or include specific comments at the end. Changes are not saved until you submit your review.
     </p>
-    <div
-      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify"
-    >
-      <div
-        class="margin-right-2"
-      >
-        <h2
-          class="margin-bottom-1 font-heading-xs text-bold"
-        >
-          Organization
-        </h2>
-        Work Inc.
-      </div>
-    </div>
-    <div
-      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify"
-    >
-      <div
-        class="margin-right-2"
-      >
-        <h2
-          class="margin-bottom-1 font-heading-xs text-bold"
-        >
-          Employer ID number (EIN)
-        </h2>
-        12-3456789
-      </div>
-    </div>
-    <div
-      class="display-flex flex-align-end margin-top-6 margin-bottom-3"
-    >
-      <h2
-        class="flex-fill margin-right-1 font-heading-md text-bold"
-      >
-        Employee information
-      </h2>
-    </div>
-    <div
-      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
-    >
-      <div
-        class="margin-right-2"
-      >
-        <h3
-          class="margin-bottom-1 font-heading-xs text-bold"
-        >
-          Employee name
-        </h3>
-        Jane
-         
-        
-         
-        Doe
-      </div>
-    </div>
-    <div
-      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
-    >
-      <div
-        class="margin-right-2"
-      >
-        <h3
-          class="margin-bottom-1 font-heading-xs text-bold"
-        >
-          Mailing address
-        </h3>
-        <span
-          class="residential-address"
-          data-testid="residential-address"
-        >
-          1234 My St.
-          <br />
-          Boston
-          , 
-          MA
-           
-          00000
-        </span>
-      </div>
-    </div>
-    <div
-      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
-    >
-      <div
-        class="margin-right-2"
-      >
-        <h3
-          class="margin-bottom-1 font-heading-xs text-bold"
-        >
-          Social Security Number or Individual Taxpayer Identification Number
-        </h3>
-        ***-**-1234
-      </div>
-    </div>
-    <div
-      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
-    >
-      <div
-        class="margin-right-2"
-      >
-        <h3
-          class="margin-bottom-1 font-heading-xs text-bold"
-        >
-          Date of birth
-        </h3>
-        7/17/****
-      </div>
-    </div>
-    <div
-      class="display-flex flex-align-end margin-top-6 margin-bottom-3"
-    >
-      <h2
-        class="flex-fill margin-right-1 font-heading-md text-bold"
-      >
-        Leave details
-      </h2>
-    </div>
-    <div
-      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
-    >
-      <div
-        class="margin-right-2"
-      >
-        <h3
-          class="margin-bottom-1 font-heading-xs text-bold"
-        >
-          Leave type
-        </h3>
-        <a
-          href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#about-medical-leave-"
-          rel="noopener"
-          target="_blank"
-        >
-          Medical leave
-        </a>
-      </div>
-    </div>
-    <div
-      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
-    >
-      <div
-        class="margin-right-2"
-      >
-        <h3
-          class="margin-bottom-1 font-heading-xs text-bold"
-        >
-          Application ID
-        </h3>
-        NTN-111-ABS-01
-      </div>
-    </div>
-    <div
-      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
-    >
-      <div
-        class="margin-right-2"
-      >
-        <h3
-          class="margin-bottom-1 font-heading-xs text-bold"
-        >
-          Leave duration
-        </h3>
-        1/1/2021 to 7/1/2021
-      </div>
-    </div>
-    <div
-      class="display-flex flex-align-end margin-top-6 margin-bottom-3"
-    >
-      <h2
-        class="flex-fill margin-right-1 font-heading-md text-bold"
-      >
-        Leave schedule
-      </h2>
-    </div>
-    <p>
-      This is your employee’s expected leave schedule.
-    </p>
-    <table
-      class="usa-table usa-table--borderless width-full usa-table--stacked"
-    >
-      <thead>
-        <tr>
-          <th
-            scope="col"
-          >
-            Date range
-          </th>
-          <th
-            scope="col"
-          >
-            Leave frequency
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <th
-            data-label="Date range"
-            scope="row"
-          >
-            1/1/2021 to 6/1/2021
-          </th>
-          <td
-            data-label="Leave frequency"
-          >
-            Continuous leave
-          </td>
-        </tr>
-        <tr>
-          <th
-            data-label="Date range"
-            scope="row"
-          >
-            2/1/2021 to 7/1/2021
-          </th>
-          <td
-            data-label="Leave frequency"
-          >
-            Reduced leave schedule
-          </td>
-        </tr>
-      </tbody>
-    </table>
     <form
       id="employer-review-form"
       method="post"
     >
+      <div
+        class="margin-bottom-2 padding-bottom-2 display-flex flex-justify"
+      >
+        <div
+          class="margin-right-2"
+        >
+          <h2
+            class="margin-bottom-1 font-heading-xs text-bold"
+          >
+            Organization
+          </h2>
+          Work Inc.
+        </div>
+      </div>
+      <div
+        class="margin-bottom-2 padding-bottom-2 display-flex flex-justify"
+      >
+        <div
+          class="margin-right-2"
+        >
+          <h2
+            class="margin-bottom-1 font-heading-xs text-bold"
+          >
+            Employer ID number (EIN)
+          </h2>
+          12-3456789
+        </div>
+      </div>
+      <div
+        class="display-flex flex-align-end margin-top-6 margin-bottom-3"
+      >
+        <h2
+          class="flex-fill margin-right-1 font-heading-md text-bold"
+        >
+          Employee information
+        </h2>
+      </div>
+      <div
+        class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+      >
+        <div
+          class="margin-right-2"
+        >
+          <h3
+            class="margin-bottom-1 font-heading-xs text-bold"
+          >
+            Employee name
+          </h3>
+          Jane
+           
+          
+           
+          Doe
+        </div>
+      </div>
+      <div
+        class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+      >
+        <div
+          class="margin-right-2"
+        >
+          <h3
+            class="margin-bottom-1 font-heading-xs text-bold"
+          >
+            Mailing address
+          </h3>
+          <span
+            class="residential-address"
+            data-testid="residential-address"
+          >
+            1234 My St.
+            <br />
+            Boston
+            , 
+            MA
+             
+            00000
+          </span>
+        </div>
+      </div>
+      <div
+        class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+      >
+        <div
+          class="margin-right-2"
+        >
+          <h3
+            class="margin-bottom-1 font-heading-xs text-bold"
+          >
+            Social Security Number or Individual Taxpayer Identification Number
+          </h3>
+          ***-**-1234
+        </div>
+      </div>
+      <div
+        class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+      >
+        <div
+          class="margin-right-2"
+        >
+          <h3
+            class="margin-bottom-1 font-heading-xs text-bold"
+          >
+            Date of birth
+          </h3>
+          7/17/****
+        </div>
+      </div>
+      <div
+        class="display-flex flex-align-end margin-top-6 margin-bottom-3"
+      >
+        <h2
+          class="flex-fill margin-right-1 font-heading-md text-bold"
+        >
+          Leave details
+        </h2>
+      </div>
+      <div
+        class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+      >
+        <div
+          class="margin-right-2"
+        >
+          <h3
+            class="margin-bottom-1 font-heading-xs text-bold"
+          >
+            Leave type
+          </h3>
+          <a
+            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#about-medical-leave-"
+            rel="noopener"
+            target="_blank"
+          >
+            Medical leave
+          </a>
+        </div>
+      </div>
+      <div
+        class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+      >
+        <div
+          class="margin-right-2"
+        >
+          <h3
+            class="margin-bottom-1 font-heading-xs text-bold"
+          >
+            Application ID
+          </h3>
+          NTN-111-ABS-01
+        </div>
+      </div>
+      <div
+        class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+      >
+        <div
+          class="margin-right-2"
+        >
+          <h3
+            class="margin-bottom-1 font-heading-xs text-bold"
+          >
+            Leave duration
+          </h3>
+          1/1/2021 to 7/1/2021
+        </div>
+      </div>
+      <div
+        class="display-flex flex-align-end margin-top-6 margin-bottom-3"
+      >
+        <h2
+          class="flex-fill margin-right-1 font-heading-md text-bold"
+        >
+          Leave schedule
+        </h2>
+      </div>
+      <p>
+        This is your employee’s expected leave schedule.
+      </p>
+      <table
+        class="usa-table usa-table--borderless width-full usa-table--stacked"
+      >
+        <thead>
+          <tr>
+            <th
+              scope="col"
+            >
+              Date range
+            </th>
+            <th
+              scope="col"
+            >
+              Leave frequency
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th
+              data-label="Date range"
+              scope="row"
+            >
+              1/1/2021 to 6/1/2021
+            </th>
+            <td
+              data-label="Leave frequency"
+            >
+              Continuous leave
+            </td>
+          </tr>
+          <tr>
+            <th
+              data-label="Date range"
+              scope="row"
+            >
+              2/1/2021 to 7/1/2021
+            </th>
+            <td
+              data-label="Leave frequency"
+            >
+              Reduced leave schedule
+            </td>
+          </tr>
+        </tbody>
+      </table>
       <div
         class="display-flex flex-align-end margin-top-6 margin-bottom-3"
       >

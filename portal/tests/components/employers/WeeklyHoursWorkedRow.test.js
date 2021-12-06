@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import AppErrorInfo from "../../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../../src/models/AppErrorInfoCollection";
 import React from "react";
-import SupportingWorkDetails from "../../../src/components/employers/SupportingWorkDetails";
+import WeeklyHoursWorkedRow from "../../../src/components/employers/WeeklyHoursWorkedRow";
 import userEvent from "@testing-library/user-event";
 
 const clickAmendButton = () =>
@@ -16,7 +16,7 @@ const getInputElement = () =>
     /On average, how many hours does the employee work each week\?/
   );
 
-describe("SupportingWorkDetails", () => {
+describe("WeeklyHoursWorkedRow", () => {
   const formState = { hours_worked_per_week: 40 };
   const clearField = jest.fn();
   const getField = jest.fn();
@@ -39,12 +39,12 @@ describe("SupportingWorkDetails", () => {
   };
 
   it("renders without the amendment form open", () => {
-    const { container } = render(<SupportingWorkDetails {...defaultProps} />);
+    const { container } = render(<WeeklyHoursWorkedRow {...defaultProps} />);
     expect(container).toMatchSnapshot();
   });
 
   it('opens the amendment form when "Amend" is clicked', () => {
-    const { container } = render(<SupportingWorkDetails {...defaultProps} />);
+    const { container } = render(<WeeklyHoursWorkedRow {...defaultProps} />);
 
     clickAmendButton();
 
@@ -59,7 +59,7 @@ describe("SupportingWorkDetails", () => {
   });
 
   it("updates the formState when the amendment form is typed in", () => {
-    render(<SupportingWorkDetails {...defaultProps} />);
+    render(<WeeklyHoursWorkedRow {...defaultProps} />);
     clickAmendButton();
 
     userEvent.type(getInputElement(), "78");
@@ -69,7 +69,7 @@ describe("SupportingWorkDetails", () => {
 
   describe('when "Cancel amendment" is clicked', () => {
     it("closes the amendment form", () => {
-      render(<SupportingWorkDetails {...defaultProps} />);
+      render(<WeeklyHoursWorkedRow {...defaultProps} />);
       clickAmendButton();
 
       clickCancelAmendButton();
@@ -80,7 +80,7 @@ describe("SupportingWorkDetails", () => {
     });
 
     it("restores the original value", () => {
-      render(<SupportingWorkDetails {...defaultProps} />);
+      render(<WeeklyHoursWorkedRow {...defaultProps} />);
       clickAmendButton();
       const inputElement = screen.getByLabelText(
         /On average, how many hours does the employee work each week\?/
@@ -102,7 +102,7 @@ describe("SupportingWorkDetails", () => {
         new AppErrorInfo({ name: "My error", message: "My message" }),
       ]);
 
-      render(<SupportingWorkDetails {...defaultProps} appErrors={appErrors} />);
+      render(<WeeklyHoursWorkedRow {...defaultProps} appErrors={appErrors} />);
 
       const amendTitle = screen.getByRole("heading", {
         level: 4,
@@ -115,7 +115,7 @@ describe("SupportingWorkDetails", () => {
       const appErrors = new AppErrorInfoCollection([
         new AppErrorInfo({ name: "My error", message: "My message" }),
       ]);
-      render(<SupportingWorkDetails {...defaultProps} appErrors={appErrors} />);
+      render(<WeeklyHoursWorkedRow {...defaultProps} appErrors={appErrors} />);
 
       clickCancelAmendButton();
 
