@@ -19,11 +19,29 @@ resource "aws_wafv2_web_acl" "cloudfront_waf_acl" {
   }
 
   #------------------------------------------------------------------------------#
+  #                        IP Whitelist AWS WAF rule                            #
+  #------------------------------------------------------------------------------#
+  rule {
+    name     = "mass-pfml-${var.environment_name}-ip-whitelist-acl"
+    priority = 0
+    statement {
+      ip_set_reference_statement {
+        arn = aws_wafv2_ip_set.workspaces_ip_whitelist.arn
+        ip_set_forwarded_ip_config {
+          fallback_behavior = "NO_MATCH"
+          header_name       = "X-Forwarded-For"
+          position          = "ANY"
+        }
+      }
+    }
+  }
+
+  #------------------------------------------------------------------------------#
   #                        Rate-limiting AWS WAF rule                            #
   #------------------------------------------------------------------------------#
   rule {
     name     = "mass-pfml-${var.environment_name}-rate-based-acl"
-    priority = 0
+    priority = 1
 
     dynamic "action" {
       for_each = var.enforce_cloudfront_rate_limit ? [1] : []
@@ -57,7 +75,7 @@ resource "aws_wafv2_web_acl" "cloudfront_waf_acl" {
   #------------------------------------------------------------------------------#
   rule {
     name     = "mass-pfml-${var.environment_name}-fortinet-managed-rules"
-    priority = 1
+    priority = 2
 
 
     dynamic "override_action" {
@@ -93,6 +111,17 @@ resource "aws_wafv2_web_acl" "cloudfront_waf_acl" {
     metric_name                = "mass-pfml-${var.environment_name}-cloudfront-acl"
     sampled_requests_enabled   = true
   }
+}
+
+resource "aws_wafv2_ip_set" "workspaces_ip_whitelist" {
+  name               = "mass-${local.app_name}-${var.environment_name}-ip-set"
+  description        = "IP Set for AWS Workspaces access to Admin Portal"
+  scope              = "CLOUDFRONT"
+  ip_address_version = "IPV4"
+  addresses = [
+    "10.206.0.0/21",  # LWD
+    "10.203.236.0/22" # PFML
+  ]
 }
 
 #------------------------------------------------------------------------------#
