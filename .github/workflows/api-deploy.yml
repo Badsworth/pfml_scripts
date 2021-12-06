@@ -526,6 +526,8 @@ jobs:
           training: "980608199"
           breakfix: "1298450359"
           cps-preview: "1386420590"
+          long: "1531932432"
+          trn2: "1545153521"
       - name: Create a custom deployment record
         run: |
           newrelic events post --event "{ \"eventType\": \"CustomDeploymentMarker\", \"component\": \"api\", \"environment\":\"${{ needs.deploy-info.outputs.api-env }}\", \"version\": \"${{ env.version || needs.update-the-deploy-branch.outputs.commit_hash }}\" }"
