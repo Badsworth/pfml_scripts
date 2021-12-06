@@ -49,6 +49,8 @@ module "api" {
     "https://paidleave-uat.mass.gov",
     "https://d31sked9ffq37g.cloudfront.net",
     "https://paidleave-api-uat.mass.gov",
+    # Allow requests from the Admin Portal
+    "https://paidleave-admin-test.dfml.eol.mass.gov",
     "https://0mv19lqx41.execute-api.us-east-1.amazonaws.com"
   ]
 
@@ -72,6 +74,7 @@ module "api" {
   fineos_import_employee_updates_input_directory_path = "s3://fin-sompre-data-export/UAT/dataexports"
   service_now_base_url                                = "https://savilinxstage.servicenowservices.com"
   portal_base_url                                     = "https://paidleave-uat.mass.gov"
+  admin_portal_base_url                               = "https://paidleave-admin-uat.dfml.eol.mass.gov"
   fineos_aws_iam_role_arn                             = "arn:aws:iam::016390658835:role/sompre-IAMRoles-CustomerAccountAccessRole-S0EP9ABIA02Z"
   fineos_aws_iam_role_external_id                     = "8jFBtjr4UA@"
   enable_application_fraud_check                      = "0"

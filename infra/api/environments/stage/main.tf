@@ -51,6 +51,9 @@ module "api" {
     "https://paidleave-api-stage.mass.gov",
     "https://hxrjel1aeb.execute-api.us-east-1.amazonaws.com",
 
+    # Allow requests from the Admin Portal
+    "https://paidleave-admin-stage.dfml.eol.mass.gov",
+
     # Since we're going to be pointing the Portal test environment to API staging
     # as well, allow requests to come from that origin.
     "https://paidleave-test.mass.gov",
@@ -82,6 +85,7 @@ module "api" {
   fineos_import_employee_updates_input_directory_path = "s3://fin-somdev-data-export/IDT/dataexports"
   service_now_base_url                                = "https://savilinxstage.servicenowservices.com"
   portal_base_url                                     = "https://paidleave-stage.mass.gov"
+  admin_portal_base_url                               = "https://paidleave-admin-stage.dfml.eol.mass.gov"
   fineos_aws_iam_role_arn                             = "arn:aws:iam::666444232783:role/somdev-IAMRoles-CustomerAccountAccessRole-BF05IBJSG74B"
   fineos_aws_iam_role_external_id                     = "12345"
   enable_application_fraud_check                      = "0"
