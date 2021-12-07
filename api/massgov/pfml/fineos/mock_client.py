@@ -559,6 +559,12 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
                 "military exigency form",
                 "pending application withdrawn",
                 "appeal acknowledgment",
+                "maximum weekly benefit change notice",
+                "benefit amount change notice",
+                "leave allotment change notice",
+                "approved time cancelled",
+                "change request approved",
+                "change request denied",
             ]
 
             allowed_documents = [
