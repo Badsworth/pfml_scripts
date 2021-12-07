@@ -15,7 +15,7 @@ import path from "path";
 const pipelineP = promisify(pipeline);
 
 (async () => {
-  const storage = dataDirectory("payments-2021-12-09-payments-develop");
+  const storage = dataDirectory("payments-2021-12-09-payments");
   await storage.prepare();
 
   const employerPool = await EmployerPool.load(
