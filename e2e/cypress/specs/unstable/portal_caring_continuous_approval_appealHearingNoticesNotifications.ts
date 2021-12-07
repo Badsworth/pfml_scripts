@@ -68,35 +68,45 @@ describe("Submit a claim through Portal: Verify it creates an absence case in Fi
     });
   });
 
-  it("CSR will process the appeal for schedule hearing", () => {
-    cy.dependsOnPreviousPass([fineosSubmission, employerApproval]);
-    fineos.before();
-    cy.unstash<Submission>("submission").then(({ fineos_absence_id }) => {
-      const claimPage = fineosPages.ClaimPage.visit(fineos_absence_id);
-      claimPage.addAppeal();
-      claimPage.triggerNotice("SOM Generate Appeals Notice");
-      claimPage.appealDocuments((docPage) => {
-        docPage.assertDocumentExists("Appeal Acknowledgment");
-      });
-      claimPage.appealTasks((tasks) => {
-        tasks.closeAppealReview();
-        tasks.close("Schedule Hearing");
-        tasks.close("Conduct Hearing");
-        tasks.closeConductHearing();
-        tasks.assertTaskExists("Send Decision Notice");
-      });
-      claimPage.appealDocuments((docPage) => {
-        docPage.uploadDocument("Appeal Notice - Claim Decision Changed");
-        docPage.assertDocumentUploads("Appeal Notice - Claim Decision Changed");
+  const csrAppeal =
+    it("CSR will process the appeal for schedule hearing", () => {
+      cy.dependsOnPreviousPass([fineosSubmission, employerApproval]);
+      fineos.before();
+      cy.unstash<DehydratedClaim>("claim").then((claim) => {
+        cy.unstash<Submission>("submission").then(({ fineos_absence_id }) => {
+          const claimPage = fineosPages.ClaimPage.visit(fineos_absence_id);
+          claimPage.addAppeal();
+          claimPage.addEmployer(<string>claim.claim.employer_fein);
+          claimPage.triggerNotice("SOM Generate Appeals Notice");
+          claimPage.appealDocuments((docPage) => {
+            docPage.assertDocumentExists("Appeal Acknowledgment");
+          });
+          claimPage.appealTasks((tasks) => {
+            tasks.closeAppealReview();
+            tasks.close("Schedule Hearing");
+            tasks.close("Conduct Hearing");
+            tasks.closeConductHearing();
+            tasks.assertTaskExists("Send Decision Notice");
+          });
+          claimPage.appealDocuments((docPage) => {
+            docPage.uploadDocument("Appeal Notice - Claim Decision Changed");
+            docPage.assertDocumentUploads(
+              "Appeal Notice - Claim Decision Changed"
+            );
+          });
+        });
       });
     });
-  });
   it(
     "Check the Claimant email for the appeal notification.",
     { retries: 0 },
     () => {
       {
-        cy.dependsOnPreviousPass([fineosSubmission, employerApproval]);
+        cy.dependsOnPreviousPass([
+          fineosSubmission,
+          employerApproval,
+          csrAppeal,
+        ]);
         cy.unstash<Submission>("submission").then((submission) => {
           cy.unstash<ApplicationRequestBody>("claim").then((claim) => {
             const subjectClaimant = email.getNotificationSubject(
@@ -114,7 +124,11 @@ describe("Submit a claim through Portal: Verify it creates an absence case in Fi
               },
               60000
             );
+            cy.screenshot("approval-claimant-email");
             cy.contains(submission.fineos_absence_id);
+            cy.get(
+              `a[href*="/applications/status/?absence_case_id=${submission.fineos_absence_id}#view-notices"]`
+            );
           });
         });
       }
@@ -125,7 +139,7 @@ describe("Submit a claim through Portal: Verify it creates an absence case in Fi
     { retries: 0 },
     () => {
       portal.before();
-      cy.dependsOnPreviousPass([fineosSubmission, employerApproval]);
+      cy.dependsOnPreviousPass([fineosSubmission, employerApproval, csrAppeal]);
       cy.unstash<Submission>("submission").then((submission) => {
         cy.unstash<ApplicationRequestBody>("claim").then((claim) => {
           const subjectEmployer = email.getNotificationSubject(
@@ -145,22 +159,48 @@ describe("Submit a claim through Portal: Verify it creates an absence case in Fi
               60000
             )
             .then(() => {
+              cy.screenshot("approval-leave-admin-email");
               cy.contains(submission.fineos_absence_id);
-              // @todo removed for the time being waiting on the the long term solution.
-              // cy.get(
-              //   `a[href*="/employers/applications/status/?absence_id=${submission.fineos_absence_id}"]`
-              // );
+              cy.get(
+                `a[href*="/employers/applications/status/?absence_id=${submission.fineos_absence_id}"]`
+              );
             });
         });
       });
     }
   );
-
+  it(
+    "Should generate a Appeal Acknowledgment that the Leave Admin can view",
+    { retries: 0 },
+    () => {
+      cy.dependsOnPreviousPass([fineosSubmission, employerApproval, csrAppeal]);
+      portal.before();
+      cy.unstash<Submission>("submission").then((submission) => {
+        cy.unstash<DehydratedClaim>("claim").then((claim) => {
+          if (!claim.claim.employer_fein) {
+            throw new Error("Claim must include employer FEIN");
+          }
+          const employeeFullName = `${claim.claim.first_name} ${claim.claim.last_name}`;
+          portal.loginLeaveAdmin(claim.claim.employer_fein);
+          portal.selectClaimFromEmployerDashboard(submission.fineos_absence_id);
+          portal.checkNoticeForLeaveAdmin(
+            submission.fineos_absence_id,
+            employeeFullName,
+            "appeals"
+          );
+          portal.downloadLegalNoticeSubcase(
+            submission.fineos_absence_id,
+            "-AP-02"
+          );
+        });
+      });
+    }
+  );
   it(
     "Check the Claimant Portal for the legal notice (Appeal Acknowledgment).",
     { retries: 0 },
     () => {
-      cy.dependsOnPreviousPass([fineosSubmission, employerApproval]);
+      cy.dependsOnPreviousPass([fineosSubmission, employerApproval, csrAppeal]);
       portal.before();
       portal.loginClaimant();
       cy.unstash<Submission>("submission").then((submission) => {
