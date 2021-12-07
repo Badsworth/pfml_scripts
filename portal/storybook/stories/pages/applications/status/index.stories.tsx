@@ -6,7 +6,7 @@ import ClaimDetail from "src/models/ClaimDetail";
 import { ClaimEmployee } from "src/models/Claim";
 import DocumentCollection from "src/models/DocumentCollection";
 import LeaveReason from "src/models/LeaveReason";
-import { Props } from "storybook/types";
+import { Props } from "types/common";
 import React from "react";
 import { ReasonQualifier } from "src/models/BenefitsApplication";
 import { Status } from "src/pages/applications/status";

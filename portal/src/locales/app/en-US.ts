@@ -2742,7 +2742,7 @@ const components = {
     header: "Document Requirements:",
   },
   downloadableDocument: {
-    createdAtDate: "Posted {{date}}",
+    createdAtDate: "Posted {{date}}.",
     noticeName: "Other notice $t(shared.pdfNoticeSuffix)", // it should fallback to this if we receive an unexpected or undefined enum
     noticeName_appealAcknowledgment:
       "Appeal Acknowledgment $t(shared.pdfNoticeSuffix)",
@@ -2847,6 +2847,24 @@ const components = {
       "This addition will get saved when you submit your review at the end of this page.",
     subtitle_amend:
       "This amendment will get saved when you submit your review. To remove this leave, include a comment at the end of the page.",
+  },
+  employersCertsAndPeriods: {
+    caringLeaveDocumentInstructions: "View the family relationship on page 3.",
+    documentName: "Your employee's certification document.",
+    documentationLabel: "Documentation",
+    header: "Leave details",
+    leaveDurationLabel: "Leave duration",
+    // Fallback in case some unexpected leave reason is sent from Fineos:
+    reasonHeading: "Leave periods",
+    reasonHeading_activeDutyFamily: "$t(shared.leaveReasonActiveDutyFamily)",
+    reasonHeading_bonding: "$t(shared.leaveReasonBonding)",
+    reasonHeading_care: "$t(shared.leaveReasonCare)",
+    reasonHeading_medical: "$t(shared.leaveReasonMedical)",
+    reasonHeading_pregnancy: "$t(shared.leaveReasonPregnancy)",
+    reasonHeading_serviceMemberFamily:
+      "$t(shared.leaveReasonServiceMemberFamily)",
+    recordkeepingInstructions:
+      "To meet <mass-employer-role-link>federal laws and regulations</mass-employer-role-link>, you must keep medical records separate and confidential from any personnel files.",
   },
   employersConcurrentLeave: {
     addButton: "Add an accrued paid leave",

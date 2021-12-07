@@ -1,4 +1,4 @@
-import { Props } from "storybook/types";
+import { Props } from "types/common";
 import React from "react";
 import { Settings } from "src/pages/user/settings";
 import User from "src/models/User";

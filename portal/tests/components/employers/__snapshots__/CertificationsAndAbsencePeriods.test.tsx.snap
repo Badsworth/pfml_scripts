@@ -1,0 +1,57 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`CertificationsAndAbsencePeriods renders Documentation section when documents exist 1`] = `
+<div
+  class="margin-right-2"
+>
+  <h3
+    class="margin-bottom-1 font-heading-xs text-bold"
+  >
+    Documentation
+  </h3>
+  To meet 
+  <a
+    href="https://www.mass.gov/info-details/employer-paid-leave-application-review-guide"
+    rel="noopener"
+    target="_blank"
+  >
+    federal laws and regulations
+  </a>
+  , you must keep medical records separate and confidential from any personnel files.
+  <ul
+    class="usa-list"
+  >
+    <li>
+      <button
+        class="usa-button position-relative text-bold usa-button--unstyled"
+        type="button"
+      >
+        Your employee's certification document.
+      </button>
+      <div
+        class="text-base-dark"
+      >
+        Posted 1/1/2021.
+      </div>
+    </li>
+    <li>
+      <button
+        class="usa-button position-relative text-bold usa-button--unstyled"
+        type="button"
+      >
+        Your employee's certification document.
+      </button>
+      <div
+        class="text-base-dark"
+      >
+        Posted 2/15/2021.
+      </div>
+      <div
+        class="text-base-dark"
+      >
+        View the family relationship on page 3.
+      </div>
+    </li>
+  </ul>
+</div>
+`;

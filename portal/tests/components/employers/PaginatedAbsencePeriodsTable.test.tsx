@@ -18,6 +18,8 @@ const absencePeriodsList = (
   Object.keys(StatusTagMap) as AbsencePeriodRequestDecision[]
 ).map((status, index) =>
   createAbsencePeriod({
+    absence_period_end_date: "2021-09-04",
+    absence_period_start_date: "2021-04-09",
     request_decision: status,
     period_type: periodTypes[index % 3],
   })

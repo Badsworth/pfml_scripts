@@ -13,6 +13,7 @@ import Alert from "../../../components/core/Alert";
 import BackButton from "../../../components/BackButton";
 import Button from "../../../components/core/Button";
 import CaringLeaveQuestion from "src/components/employers/CaringLeaveQuestion";
+import CertificationsAndAbsencePeriods from "../../../components/employers/CertificationsAndAbsencePeriods";
 import ConcurrentLeave from "../../../components/employers/ConcurrentLeave";
 import ConcurrentLeaveModel from "../../../models/ConcurrentLeave";
 import EmployeeInformation from "../../../components/employers/EmployeeInformation";
@@ -166,6 +167,7 @@ export const Review = (props: WithEmployerClaimProps) => {
       formState.relationshipInaccurateReason === "");
   const isCaringLeave = get(claim, "leave_details.reason") === LeaveReason.care;
 
+  // TODO (PORTAL-1234): Move documents loading and state
   useEffect(() => {
     loadDocuments(absenceId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -427,21 +429,31 @@ export const Review = (props: WithEmployerClaimProps) => {
         onKeyDown={handleKeyDown}
       >
         <EmployeeInformation claim={claim} />
-        {showMultipleLeave && (
-          <WeeklyHoursWorkedRow
-            appErrors={appErrors}
-            clearField={clearField}
-            getField={getField}
-            getFunctionalInputProps={getFunctionalInputProps}
-            initialHoursWorkedPerWeek={claim.hours_worked_per_week}
-            updateFields={updateFields}
+
+        {showMultipleLeave ? (
+          <React.Fragment>
+            <WeeklyHoursWorkedRow
+              appErrors={appErrors}
+              clearField={clearField}
+              getField={getField}
+              getFunctionalInputProps={getFunctionalInputProps}
+              initialHoursWorkedPerWeek={claim.hours_worked_per_week}
+              updateFields={updateFields}
+            />
+            <CertificationsAndAbsencePeriods
+              claim={claim}
+              documents={certificationDocuments}
+              downloadDocument={downloadDocument}
+            />
+          </React.Fragment>
+        ) : (
+          <LeaveDetails
+            claim={claim}
+            documents={certificationDocuments}
+            downloadDocument={downloadDocument}
           />
         )}
-        <LeaveDetails
-          claim={claim}
-          documents={certificationDocuments}
-          downloadDocument={downloadDocument}
-        />
+
         {isCaringLeave && (
           <CaringLeaveQuestion
             errorMsg={appErrors.fieldErrorMessage(
@@ -456,13 +468,13 @@ export const Review = (props: WithEmployerClaimProps) => {
             }
           />
         )}
-        <LeaveSchedule
-          claim={claim}
-          hasDocuments={!!certificationDocuments.length}
-        />
 
         {!showMultipleLeave && (
           <React.Fragment>
+            <LeaveSchedule
+              claim={claim}
+              hasDocuments={!!certificationDocuments.length}
+            />
             <ReviewHeading level="2">
               {t("pages.employersClaimsReview.supportingWorkDetailsHeader")}
             </ReviewHeading>

@@ -4,7 +4,7 @@ import Address from "src/models/Address";
 import AppErrorInfo from "src/models/AppErrorInfo";
 import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
 import FieldsetAddress from "src/components/FieldsetAddress";
-import { Props } from "storybook/types";
+import { Props } from "types/common";
 
 export default {
   title: "Components/Forms/FieldsetAddress",
