@@ -120,8 +120,7 @@ const routes = {
         "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-application-approval-timeline",
       benefitsCalculator:
         "https://calculator.digital.mass.gov/pfml/yourbenefits/",
-      benefitsGuide:
-        "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide",
+      benefitsGuide: "https://www.mass.gov/how-pfml-benefits-are-calculated",
       benefitsGuide_aboutBondingLeave:
         "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#about-family-leave-to-bond-with-a-child-",
       benefitsGuide_aboutCaringLeave:
@@ -129,9 +128,9 @@ const routes = {
       benefitsGuide_aboutMedicalLeave:
         "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#about-medical-leave-",
       benefitsGuide_benefitsAmountDetails:
-        "https://mass.gov/how-pfml-benefits-are-calculated",
+        "https://www.mass.gov/how-pfml-benefits-are-calculated",
       benefitsGuide_seriousHealthCondition:
-        "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#what-is-a-serious-health-condition?-",
+        "https://www.mass.gov/pfml-serious-health-condition",
       calculateHours: "https://www.mass.gov/pfml-calculate-hours",
       calculateReductions:
         "https://www.mass.gov/guides/what-to-expect-when-you-apply-for-paid-family-and-medical-leave-benefits#-calculate-any-reductions-",
