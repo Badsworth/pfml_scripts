@@ -7,7 +7,7 @@ locals {
 }
 
 resource "aws_wafv2_web_acl" "cloudfront_waf_acl" {
-  name  = "mass-pfml-${var.environment_name}-cloudfront-admin-acl"
+  name  = "mass-${local.app_name}-${var.environment_name}-cloudfront-admin-acl"
   scope = "CLOUDFRONT"
 
   tags = merge(module.constants.common_tags, {
@@ -22,7 +22,7 @@ resource "aws_wafv2_web_acl" "cloudfront_waf_acl" {
   #                        IP Whitelist AWS WAF rule                            #
   #------------------------------------------------------------------------------#
   rule {
-    name     = "mass-pfml-${var.environment_name}-ip-whitelist-acl"
+    name     = "mass-${local.app_name}-${var.environment_name}-ip-whitelist-acl"
     priority = 0
     
     statement {
@@ -51,7 +51,7 @@ resource "aws_wafv2_web_acl" "cloudfront_waf_acl" {
   #                        Rate-limiting AWS WAF rule                            #
   #------------------------------------------------------------------------------#
   rule {
-    name     = "mass-pfml-${var.environment_name}-rate-based-acl"
+    name     = "mass-${local.app_name}-${var.environment_name}-rate-based-acl"
     priority = 1
 
     dynamic "action" {
@@ -77,7 +77,7 @@ resource "aws_wafv2_web_acl" "cloudfront_waf_acl" {
 
     visibility_config {
       cloudwatch_metrics_enabled = true
-      metric_name                = "mass-pfml-${var.environment_name}-rate-limited"
+      metric_name                = "mass-${local.app_name}-${var.environment_name}-rate-limited"
       sampled_requests_enabled   = true
     }
   }
@@ -85,7 +85,7 @@ resource "aws_wafv2_web_acl" "cloudfront_waf_acl" {
   #                      Fortinet OWASP 10 AWS WAF rule                          #
   #------------------------------------------------------------------------------#
   rule {
-    name     = "mass-pfml-${var.environment_name}-fortinet-managed-rules"
+    name     = "mass-${local.app_name}-${var.environment_name}-fortinet-managed-rules"
     priority = 2
 
 
@@ -112,14 +112,14 @@ resource "aws_wafv2_web_acl" "cloudfront_waf_acl" {
 
     visibility_config {
       cloudwatch_metrics_enabled = true
-      metric_name                = "mass-pfml-${var.environment_name}-fortinet-rule-group"
+      metric_name                = "mass-${local.app_name}-${var.environment_name}-fortinet-rule-group"
       sampled_requests_enabled   = true
     }
   }
 
   visibility_config {
     cloudwatch_metrics_enabled = true
-    metric_name                = "mass-pfml-${var.environment_name}-cloudfront-acl"
+    metric_name                = "mass-${local.app_name}-${var.environment_name}-cloudfront-acl"
     sampled_requests_enabled   = true
   }
 }
