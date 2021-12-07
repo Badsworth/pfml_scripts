@@ -104,6 +104,18 @@ class NotificationMethod(str, LookupEnum):
     other = "Other"
 
 
+class OrganizationUnitSelection(str, Enum):
+    not_listed = "not_listed"
+    not_selected = "not_selected"
+
+
+class OrganizationUnit(PydanticBaseModel):
+    organization_unit_id: Optional[UUID4]
+    employer_id: Optional[UUID4]
+    fineos_id: Optional[str]
+    name: Optional[str]
+
+
 class ReducedScheduleLeavePeriods(PydanticBaseModel):
     leave_period_id: Optional[UUID4]
     start_date: Optional[date]

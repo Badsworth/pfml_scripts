@@ -244,7 +244,10 @@ module.exports = {
     "sort-vars": "error",
     "todo-plz/ticket-ref": [
       "error",
-      { pattern: "(API|CP|EMPLOYER|POL|PORTAL)-[0-9]+", terms: ["TODO"] },
+      {
+        pattern: "(API|CP|EMPLOYER|POL|PORTAL|PFMLPB)-[0-9]+",
+        terms: ["TODO"],
+      },
     ],
   },
   settings: {

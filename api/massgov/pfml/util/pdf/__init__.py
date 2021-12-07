@@ -64,7 +64,9 @@ def compress_pdf(source_file: IO[Any], dest_file: IO[Any]) -> int:
     source_file.seek(0)
     dest_file.seek(0)
 
-    proc = subprocess.run(gs_cli_command, stdin=source_file, stdout=dest_file)
+    proc = subprocess.run(
+        gs_cli_command, stdin=source_file, stdout=dest_file, stderr=subprocess.PIPE
+    )
     if proc.returncode != 0:
         error_message = str(proc.stderr).strip()
         logger.warning(error_message)

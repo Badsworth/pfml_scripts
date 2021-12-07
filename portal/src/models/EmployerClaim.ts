@@ -1,6 +1,7 @@
 import BaseBenefitsApplication, {
   BaseLeavePeriod,
 } from "./BaseBenefitsApplication";
+import { AbsencePeriod } from "./AbsencePeriod";
 import Address from "./Address";
 import ConcurrentLeave from "./ConcurrentLeave";
 import EmployerBenefit from "./EmployerBenefit";
@@ -15,6 +16,7 @@ import { merge } from "lodash";
  * TODO (EMPLOYER-1130): Rename this model to clarify this nuance.
  */
 class EmployerClaim extends BaseBenefitsApplication {
+  absence_periods: AbsencePeriod[];
   employer_id: string;
   fineos_absence_id: string;
   created_at: string;
@@ -49,6 +51,10 @@ class EmployerClaim extends BaseBenefitsApplication {
     super();
     // Recursively merge with the defaults
     merge(this, attrs);
+
+    this.absence_periods = this.absence_periods.map(
+      (absence_period) => new AbsencePeriod(absence_period)
+    );
   }
 }
 

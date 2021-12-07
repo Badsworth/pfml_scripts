@@ -104,16 +104,45 @@ describe("Payments", () => {
       {
         addCustomSetup: setupHelper({
           ...defaultClaimDetail,
+          absence_periods: [
+            {
+              absence_period_start_date: "2021-10-21",
+              absence_period_end_date: "2021-12-30",
+              reason: "Child Bonding",
+            },
+          ],
           payments: [
+            {
+              payment_id: "1231",
+              period_start_date: "2021-10-08",
+              period_end_date: "2021-10-15",
+              amount: 100,
+              sent_to_bank_date: "2021-10-16",
+              payment_method: "Check",
+              expected_send_date_start: "2021-10-15",
+              expected_send_date_end: "2021-10-21",
+              status: "Sent to bank",
+            },
+            {
+              payment_id: "1235",
+              period_start_date: "2021-10-16",
+              period_end_date: "2021-10-23",
+              amount: null,
+              sent_to_bank_date: null,
+              payment_method: "Check",
+              expected_send_date_start: null,
+              expected_send_date_end: null,
+              status: "Delayed",
+            },
             {
               payment_id: "1235",
               period_start_date: "2021-11-08",
               period_end_date: "2021-11-15",
-              amount: 100,
-              sent_to_bank_date: "2021-11-15",
+              amount: null,
+              sent_to_bank_date: null,
               payment_method: "Check",
-              expected_send_date_start: "2021-11-15",
-              expected_send_date_end: "2021-11-21",
+              expected_send_date_start: null,
+              expected_send_date_end: null,
               status: "Pending",
             },
             {

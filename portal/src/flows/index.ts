@@ -10,6 +10,7 @@ import claimant, { guards as claimantGuards } from "./claimant";
 import auth from "./auth";
 import employer from "./employer";
 import routes from "../routes";
+import user from "./user";
 
 export const guards = {
   ...claimantGuards,
@@ -22,6 +23,7 @@ export default {
     ...auth.states,
     ...claimant.states,
     ...employer.states,
+    ...user.states,
   },
   context: {},
 };

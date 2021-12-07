@@ -3,6 +3,7 @@ import {
   ClaimDocument,
   DocumentType,
 } from "../models/Document";
+
 import findDocumentsByTypes from "./findDocumentsByTypes";
 
 /**
@@ -17,6 +18,12 @@ const getLegalNotices = (
     DocumentType.denialNotice,
     DocumentType.requestForInfoNotice,
     DocumentType.withdrawalNotice,
+    DocumentType.maximumWeeklyBenefitChangeNotice,
+    DocumentType.benefitAmountChangeNotice,
+    DocumentType.leaveAllotmentChangeNotice,
+    DocumentType.approvedTimeCancelled,
+    DocumentType.changeRequestApproved,
+    DocumentType.changeRequestDenied,
   ]);
 };
 

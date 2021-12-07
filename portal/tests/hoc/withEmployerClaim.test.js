@@ -66,7 +66,10 @@ describe("withEmployerClaim", () => {
   });
 
   it("renders the page when claim state is loaded", async () => {
-    const mockClaim = new EmployerClaim({ fineos_absence_id: mockAbsenceId });
+    const mockClaim = new EmployerClaim({
+      absence_periods: [],
+      fineos_absence_id: mockAbsenceId,
+    });
 
     setup({
       addCustomSetup: (appLogic) => {

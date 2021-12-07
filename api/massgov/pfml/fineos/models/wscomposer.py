@@ -323,6 +323,28 @@ class OCOrganisationItem(pydantic.BaseModel):
 class OCOrganisation(pydantic.BaseModel):
     OCOrganisation: List[OCOrganisationItem]
 
+    def get_customer_number(self):
+        return str(self.OCOrganisation[0].CustomerNo)
+
+    def get_worksite_id(self):
+        units = self.OCOrganisation[0].organisationUnits
+        try:
+            worksite_id = (
+                units.OrganisationUnit[0]  # type: ignore
+                .orgUnitLocationLinks.OrgUnitLocationLink[0]
+                .partyLocationAssociation.OCPartyLocationAssociation[0]
+                .OID
+            )
+        except AttributeError:
+            worksite_id = None
+        return worksite_id
+
+    def get_organization_units(self) -> Optional[List[OCOrganisationUnitItem]]:
+        has_org_units = self.OCOrganisation[0].organisationUnits
+        if has_org_units is not None:
+            return has_org_units.OrganisationUnit
+        return None
+
 
 class PartyIntegrationDTOItem(pydantic.BaseModel):
     EffectiveDate: str = "1753-01-01T00:00:00"

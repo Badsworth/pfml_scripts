@@ -1,4 +1,4 @@
-import ClaimDetail, { AbsencePeriod } from "../../src/models/ClaimDetail";
+import ClaimDetail from "../../src/models/ClaimDetail";
 import { ClaimEmployee } from "../../src/models/Claim";
 
 describe("ClaimDetail", () => {
@@ -147,57 +147,79 @@ describe("ClaimDetail", () => {
       expect(claimDetail.payments.length).toBe(0);
     });
 
-    it("to populate model given ", () => {
+    it("to populate model given and filter payments with sent_to_bank_date prior to leave start date", () => {
+      const samplePayments = [
+        {
+          payment_id: "12342",
+          period_start_date: "2020-12-08",
+          period_end_date: "2020-12-15",
+          amount: null,
+          sent_to_bank_date: null,
+          payment_method: "Check",
+          expected_send_date_start: null,
+          expected_send_date_end: null,
+          status: "Cancelled",
+        },
+        {
+          payment_id: "12343",
+          period_start_date: "2020-12-01",
+          period_end_date: "2020-12-07",
+          amount: 124,
+          sent_to_bank_date: "2020-12-08",
+          payment_method: "Check",
+          expected_send_date_start: null,
+          expected_send_date_end: null,
+          status: "Sent to bank",
+        },
+        {
+          payment_id: "12344",
+          period_start_date: "2020-12-16",
+          period_end_date: "2020-12-23",
+          amount: null,
+          sent_to_bank_date: null,
+          payment_method: "Check",
+          expected_send_date_start: null,
+          expected_send_date_end: null,
+          status: "Delayed",
+        },
+        {
+          payment_id: "12345",
+          period_start_date: "2021-01-08",
+          period_end_date: "2021-01-15",
+          amount: 124,
+          sent_to_bank_date: "2021-01-16",
+          payment_method: "Check",
+          expected_send_date_start: null,
+          expected_send_date_end: null,
+          status: "Sent to bank",
+        },
+        {
+          payment_id: "12346",
+          period_start_date: "2021-01-16",
+          period_end_date: "2021-01-23",
+          amount: null,
+          sent_to_bank_date: null,
+          payment_method: "Check",
+          expected_send_date_start: "2021-01-24",
+          expected_send_date_end: "2021-01-27",
+          status: "Pending",
+        },
+      ];
       const claimDetail = new ClaimDetail({
         absence_periods: absencePeriod,
-        payments: [
-          {
-            payment_id: "12345",
-            period_start_date: "2021-01-08",
-            period_end_date: "2021-01-15",
-            amount: 124,
-            sent_to_bank_date: "2021-01-16",
-            payment_method: "Check",
-            expected_send_date_start: null,
-            expected_send_date_end: null,
-            status: "Sent to bank",
-          },
-          {
-            payment_id: "12346",
-            period_start_date: "2021-01-16",
-            period_end_date: "2021-01-23",
-            amount: 124,
-            sent_to_bank_date: null,
-            payment_method: "Check",
-            expected_send_date_start: "2021-01-24",
-            expected_send_date_end: "2021-01-27",
-            status: "Pending",
-          },
-        ],
+        payments: samplePayments,
       });
 
-      expect(claimDetail.payments.length).toBe(2);
-      expect(claimDetail.payments[0].period_start_date).toBe("2021-01-08");
-      expect(claimDetail.payments[0].period_end_date).toBe("2021-01-15");
-      expect(claimDetail.payments[1].status).toBe("Pending");
-      expect(claimDetail.payments[1].sent_to_bank_date).toBeNull();
+      expect(claimDetail.payments.length).not.toBe(samplePayments.length);
+      const filteredPayments = samplePayments.filter(
+        ({ period_start_date, status }) =>
+          claimDetail.waitingWeek.startDate < period_start_date ||
+          status === "Sent to bank"
+      );
+      expect(
+        filteredPayments.map(({ payment_id }) => payment_id)
+      ).toMatchObject(claimDetail.payments.map(({ payment_id }) => payment_id));
     });
-  });
-
-  it("groups absence periods by leave_details", () => {
-    expect(
-      Object.keys(claimDetailCollection.absencePeriodsByReason).length
-    ).toBe(2);
-    expect(
-      claimDetailCollection.absencePeriodsByReason[
-        "Serious Health Condition - Employee"
-      ]
-    ).toBeInstanceOf(Array);
-    expect(
-      claimDetailCollection.absencePeriodsByReason[
-        "Serious Health Condition - Employee"
-      ][0]
-    ).toBeInstanceOf(AbsencePeriod);
   });
 
   it("returns a list of leave dates for the claim", () => {

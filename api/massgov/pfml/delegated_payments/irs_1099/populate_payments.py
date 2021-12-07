@@ -58,6 +58,7 @@ class PopulatePaymentsStep(Step):
                     "Created 1099 payment.",
                     extra={"pfml_1099_payment_id": pfml_1099_payment.pfml_1099_payment_id},
                 )
+                self.increment(self.Metrics.PAYMENT_COUNT)
 
             self.db_session.commit()
         except Exception:

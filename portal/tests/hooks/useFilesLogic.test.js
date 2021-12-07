@@ -12,6 +12,11 @@ describe("useFilesLogic", () => {
   beforeEach(() => {
     clearErrors = jest.fn();
     catchError = jest.fn();
+
+    // This file depends on these env vars being present
+    process.env.fileSizeMaxBytesApiGateway = "10000000";
+    process.env.fileSizeMaxBytesFineos = "4500000";
+
     renderHook(() => {
       ({ processFiles, removeFile, files } = useFilesLogic({
         clearErrors,

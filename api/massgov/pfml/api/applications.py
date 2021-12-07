@@ -4,6 +4,7 @@ from typing import Any, Dict
 from uuid import UUID
 
 import connexion
+import newrelic.agent
 import puremagic
 from flask import Response, abort, request
 from puremagic import PureError
@@ -45,6 +46,7 @@ from massgov.pfml.api.validation.employment_validator import (
     get_contributing_employer_or_employee_issue,
 )
 from massgov.pfml.api.validation.exceptions import (
+    IssueRule,
     IssueType,
     ValidationErrorDetail,
     ValidationException,
@@ -601,6 +603,10 @@ def document_upload(application_id, body, file):
                 data=document_details.dict(),
             ).to_api_response()
 
+        except (pdf_util.PDFCompressionError):
+            newrelic.agent.notice_error(attributes={"document_id": document.document_id})
+            raise ValidationException(errors=[FILE_SIZE_VALIDATION_ERROR])
+
         # use Certification Form when the feature flag for caring leave is active, but will otherwise use
         # State manage Paid Leave Confirmation. If the document type is Certification Form,
         # the API will map to the corresponding plan proof based on leave reason
@@ -659,7 +665,13 @@ def document_upload(application_id, body, file):
                 return response_util.error_response(
                     status_code=BadRequest,
                     message=message,
-                    errors=[ValidationErrorDetail(type=IssueType.fineos_client, message=message)],
+                    errors=[
+                        ValidationErrorDetail(
+                            type=IssueType.fineos_client,
+                            message=message,
+                            rule=IssueRule.document_requirement_already_satisfied,
+                        )
+                    ],
                     data=document_details.dict(),
                 ).to_api_response()
 

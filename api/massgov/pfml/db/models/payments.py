@@ -1271,6 +1271,8 @@ class Pfml1099(Base, TimestampMixin):
         PostgreSQLUUID, ForeignKey("employee.employee_id"), index=True, nullable=False
     )
     tax_identifier_id = Column(PostgreSQLUUID, nullable=False)
+    c = Column(Text)
+    i = Column(Text)
     first_name = Column(Text, nullable=False)
     last_name = Column(Text, nullable=False)
     address_line_1 = Column(Text, nullable=False)

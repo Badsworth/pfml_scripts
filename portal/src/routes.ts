@@ -21,6 +21,7 @@ const routes = {
     concurrentLeavesIntro: "/applications/concurrent-leaves-intro",
     dateOfBirth: "/applications/date-of-birth",
     dateOfChild: "/applications/date-of-child",
+    department: "/applications/department",
     employerBenefits: "/applications/employer-benefits",
     employerBenefitsDetails: "/applications/employer-benefits-details",
     employerBenefitsIntro: "/applications/employer-benefits-intro",
@@ -209,9 +210,16 @@ const routes = {
       "https://travel.state.gov/content/travel/en/us-visas/employment/temporary-worker-visas.html",
   },
   index: "/",
+  twoFactor: {
+    smsConfirm: "/two-factor/sms/confirm",
+    smsIndex: "/two-factor/sms",
+    smsSetup: "/two-factor/sms/setup",
+    smsVerify: "/two-factor/sms/verify",
+  },
   user: {
     consentToDataSharing: "/user/consent-to-data-sharing",
     convert: "/user/convert-to-employer",
+    settings: "/user/settings",
   },
 };
 

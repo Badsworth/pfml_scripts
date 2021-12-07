@@ -369,6 +369,8 @@ def get_1099s(db_session: db.Session, batch: Pfml1099Batch) -> NamedTuple:
         db_session.query(
             Employee.employee_id.label("employee_id"),
             Employee.tax_identifier_id.label("tax_identifier_id"),
+            FineosExtractEmployeeFeed.c.label("c"),
+            FineosExtractEmployeeFeed.i.label("i"),
             FineosExtractEmployeeFeed.firstnames.label("first_name"),
             FineosExtractEmployeeFeed.lastname.label("last_name"),
             FineosExtractEmployeeFeed.customerno.label("customerno"),

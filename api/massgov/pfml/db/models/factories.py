@@ -381,6 +381,18 @@ class WagesAndContributionsFactory(BaseFactory):
     employee_id = factory.LazyAttribute(lambda w: w.employee.employee_id)
 
 
+class OrganizationUnitFactory(BaseFactory):
+    class Meta:
+        model = employee_models.OrganizationUnit
+
+    organization_unit_id = Generators.UuidObj
+
+    fineos_id = None
+    name = factory.Faker("company")
+    employer = factory.SubFactory(EmployerFactory)
+    employer_id = factory.LazyAttribute(lambda c: c.employer.employer_id)
+
+
 class ClaimFactory(BaseFactory):
     class Meta:
         model = employee_models.Claim
@@ -395,6 +407,10 @@ class ClaimFactory(BaseFactory):
     fineos_notification_id = None
     employee = factory.SubFactory(EmployeeFactory)
     employee_id = factory.LazyAttribute(lambda w: w.employee.employee_id)
+    organization_unit = None
+    organization_unit_id = factory.LazyAttribute(
+        lambda w: w.organization_unit.organization_unit_id if w.organization_unit else None
+    )
 
 
 class AbsencePeriodFactory(BaseFactory):
@@ -941,16 +957,6 @@ class ImportLogFactory(BaseFactory):
         model = employee_models.ImportLog
 
 
-class OrganizationUnitFactory(BaseFactory):
-    class Meta:
-        model = employee_models.OrganizationUnit
-
-    fineos_id = None
-    name = factory.Faker("company")
-    employer = factory.SubFactory(EmployerFactory)
-    employer_id = factory.LazyAttribute(lambda c: c.employer.employer_id)
-
-
 class MmarsPaymentDataFactory(BaseFactory):
     class Meta:
         model = payment_models.MmarsPaymentData
@@ -1095,6 +1101,8 @@ class Pfml1099Factory(BaseFactory):
     tax_year = 2021
     employee_id = Generators.UuidObj
     tax_identifier_id = Generators.UuidObj
+    c = "9999"
+    i = "9999"
     first_name = "Joe"
     last_name = "Pel"
     address_line_1 = "172 Pearl St"
