@@ -43,7 +43,7 @@ module "tasks" {
   fineos_client_group_client_api_url                  = ""
   fineos_client_wscomposer_api_url                    = ""
   fineos_client_oauth2_url                            = ""
-  fineos_client_oauth2_client_id                      = ""
+  fineos_client_oauth2_client_id                      = "2e9vsuq808h3tu4rf9tr1efuh5"
   fineos_aws_iam_role_arn                             = ""
   fineos_aws_iam_role_external_id                     = ""
   fineos_eligibility_feed_output_directory_path       = ""
