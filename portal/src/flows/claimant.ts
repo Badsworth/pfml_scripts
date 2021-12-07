@@ -103,6 +103,7 @@ export const guards: { [guardName: string]: ClaimFlowGuardFn } = {
     get(claim, "work_pattern.work_pattern_type") === WorkPatternType.fixed,
   isVariableWorkPattern: ({ claim }) =>
     get(claim, "work_pattern.work_pattern_type") === WorkPatternType.variable,
+  isMFAEnabled: () => isFeatureEnabled("claimantShowMFA"),
 };
 
 /**
@@ -185,10 +186,18 @@ const claimantFlow: {
     [routes.user.consentToDataSharing]: {
       meta: {},
       on: {
-        // Route to Applications page to support users who are re-consenting.
-        // If they're new users with no claims, the Applications page will
-        // handle redirecting them.
-        CONTINUE: routes.applications.index,
+        CONTINUE: [
+          {
+            target: routes.twoFactor.smsIndex,
+            cond: "isMFAEnabled",
+          },
+          {
+            // Route to Applications page to support users who are re-consenting.
+            // If they're new users with no claims, the Applications page will
+            // handle redirecting them.
+            target: routes.applications.index,
+          },
+        ],
       },
     },
     [routes.applications.index]: {
