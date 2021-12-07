@@ -182,13 +182,13 @@ def applications_update(application_id):
         logger.info(
             "applications_update failure - application already submitted", extra=log_attributes
         )
+        message = "Application {} could not be updated. Application already submitted on {}".format(
+            existing_application.application_id, existing_application.submitted_time.strftime("%x"),
+        )
         return response_util.error_response(
             status_code=Forbidden,
-            message="Application {} could not be updated. Application already submitted on {}".format(
-                existing_application.application_id,
-                existing_application.submitted_time.strftime("%x"),
-            ),
-            errors=[],
+            message=message,
+            errors=[ValidationErrorDetail(type=IssueType.exists, field="claim", message=message)],
             data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
         ).to_api_response()
 
@@ -311,13 +311,16 @@ def applications_submit(application_id):
             logger.info(
                 "applications_submit failure - application already submitted", extra=log_attributes
             )
+            message = "Application {} could not be submitted. Application already submitted on {}".format(
+                existing_application.application_id,
+                existing_application.submitted_time.strftime("%x"),
+            )
             return response_util.error_response(
                 status_code=Forbidden,
-                message="Application {} could not be submitted. Application already submitted on {}".format(
-                    existing_application.application_id,
-                    existing_application.submitted_time.strftime("%x"),
-                ),
-                errors=[],
+                message=message,
+                errors=[
+                    ValidationErrorDetail(type=IssueType.exists, field="claim", message=message)
+                ],
                 data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
             ).to_api_response()
 
@@ -876,13 +879,20 @@ def payment_preference_submit(application_id: UUID) -> Response:
             "payment_preference_submit failure - payment preference already submitted",
             extra=log_attributes,
         )
+        message = "Application {} could not be updated. Payment preference already submitted".format(
+            existing_application.application_id
+        )
         return response_util.error_response(
             status_code=Forbidden,
-            message="Application {} could not be updated. Payment preference already submitted".format(
-                existing_application.application_id
-            ),
+            message=message,
             data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
-            errors=[],
+            errors=[
+                ValidationErrorDetail(
+                    type=IssueType.exists,
+                    field="payment_preference.payment_method",
+                    message=message,
+                )
+            ],
         ).to_api_response()
 
 

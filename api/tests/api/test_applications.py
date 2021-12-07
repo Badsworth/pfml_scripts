@@ -3188,13 +3188,14 @@ def test_application_patch_failure_after_absence_case_creation(
         headers={"Authorization": f"Bearer {auth_token}"},
         json={},
     )
-
+    message = "Application {} could not be updated. Application already submitted on {}".format(
+        application.application_id, datetime_util.utcnow().strftime("%x")
+    )
     tests.api.validate_error_response(
         response,
         403,
-        message="Application {} could not be updated. Application already submitted on {}".format(
-            application.application_id, datetime_util.utcnow().strftime("%x")
-        ),
+        message=message,
+        errors=[{"type": "exists", "field": "claim", "message": message}],
     )
 
 

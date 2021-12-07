@@ -170,6 +170,15 @@ def test_submit_payment_preference_already_submitted(client, user, auth_token, t
         "Application {} could not be updated. Payment preference already submitted".format(
             application.application_id
         ),
+        [
+            {
+                "type": "exists",
+                "field": "payment_preference.payment_method",
+                "message": "Application {} could not be updated. Payment preference already submitted".format(
+                    application.application_id
+                ),
+            }
+        ],
     )
 
 
