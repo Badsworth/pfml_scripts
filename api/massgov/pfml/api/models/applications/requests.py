@@ -3,7 +3,7 @@ from decimal import Decimal
 from typing import List, Optional
 
 from dateutil.relativedelta import relativedelta
-from pydantic import validator
+from pydantic import UUID4, validator
 
 from massgov.pfml.api.models.applications.common import (
     Address,
@@ -12,6 +12,7 @@ from massgov.pfml.api.models.applications.common import (
     EmploymentStatus,
     Gender,
     Occupation,
+    OrganizationUnitSelection,
     OtherIncome,
     PaymentPreference,
     WorkPattern,
@@ -79,6 +80,8 @@ def future_date_of_birth_validator(date_of_birth, field):
 class ApplicationRequestBody(PydanticBaseModel):
     application_nickname: Optional[str]
     tax_identifier: Optional[TaxIdUnformattedStr]
+    organization_unit_id: Optional[UUID4]
+    organization_unit_selection: Optional[OrganizationUnitSelection]
     employer_fein: Optional[FEINUnformattedStr]
     first_name: Optional[str]
     middle_name: Optional[str]

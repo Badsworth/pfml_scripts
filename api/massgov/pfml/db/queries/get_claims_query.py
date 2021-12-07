@@ -2,7 +2,6 @@ import re
 from datetime import date
 from enum import Enum
 from typing import Any, Callable, List, Optional, Set, Type, Union
-from uuid import UUID
 
 from sqlalchemy import Column, and_, asc, desc, func, or_
 from sqlalchemy.orm import contains_eager
@@ -16,6 +15,7 @@ from massgov.pfml.db.models.employees import (
     AbsenceStatus,
     Claim,
     Employee,
+    Employer,
     LkAbsenceStatus,
     ManagedRequirement,
     ManagedRequirementStatus,
@@ -81,8 +81,36 @@ class GetClaimsQuery:
         else:
             self.query = self.query.join(model, isouter=isouter)
 
-    def add_employer_ids_filter(self, employer_ids: List[UUID]) -> None:
-        self.query = self.query.filter(Claim.employer_id.in_(employer_ids))
+    def add_employers_filter(self, employers: list[Employer], user: User) -> None:
+        employers_without_units = [
+            e.employer_id for e in employers if not e.uses_organization_units
+        ]
+        employers_with_units = [e.employer_id for e in employers if e.uses_organization_units]
+
+        claims_notified_last_day = (
+            user.get_leave_admin_notifications() if employers_with_units else []
+        )
+
+        employers_without_units_filter = and_(
+            Claim.employer_id.in_(employers_without_units), Claim.organization_unit_id.is_(None),
+        )
+        employers_with_units_filter = and_(
+            Claim.employer_id.in_(employers_with_units),
+            Claim.organization_unit_id.in_(
+                [
+                    org_unit.organization_unit_id
+                    for org_unit in user.get_verified_leave_admin_org_units()
+                ]
+            ),
+        )
+        claims_notified_last_day_filter = Claim.fineos_absence_id.in_(claims_notified_last_day)
+        employers_with_units_or_claims_notified_filter = or_(
+            employers_with_units_filter, claims_notified_last_day_filter
+        )
+
+        self.query = self.query.filter(
+            or_(employers_without_units_filter, employers_with_units_or_claims_notified_filter)
+        )
 
     # TODO: current_user shouldn't be Optional - `get_claims` should throw an error instead
     def add_user_owns_claim_filter(self, current_user: Optional[User]) -> None:

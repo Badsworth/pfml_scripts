@@ -30,6 +30,7 @@ import withBenefitsApplication, {
 import withClaimDocuments, {
   WithClaimDocumentsProps,
 } from "../../hoc/withClaimDocuments";
+
 import Address from "../../models/Address";
 import Alert from "../../components/core/Alert";
 import BackButton from "../../components/BackButton";
@@ -110,6 +111,8 @@ export const Review = (
   );
   const workPattern = new WorkPattern(get(claim, "work_pattern") || {});
   const gender = get(claim, "gender");
+  const isEmployed =
+    get(claim, "employment_status") === EmploymentStatus.employed;
 
   const steps = Step.createClaimStepsFromMachine(claimantConfigs, {
     claim: props.claim,
@@ -329,7 +332,7 @@ export const Review = (
           </ReviewRow>
         )}
 
-      {get(claim, "employment_status") === EmploymentStatus.employed && ( // only display this if the claimant is Employed
+      {isEmployed && ( // only display this if the claimant is Employed
         <ReviewRow
           level={reviewRowLevel}
           label={t("pages.claimsReview.employerFeinLabel")}
@@ -338,7 +341,16 @@ export const Review = (
         </ReviewRow>
       )}
 
-      {get(claim, "employment_status") === EmploymentStatus.employed && ( // only display this if the claimant is Employed
+      {get(claim, "organization_unit") && ( // only displays this if the claimant is Employed
+        <ReviewRow
+          level={reviewRowLevel}
+          label={t("pages.claimsReview.employeeOrganizationUnit")}
+        >
+          {get(claim, "organization_unit.name")}
+        </ReviewRow>
+      )}
+
+      {isEmployed && ( // only display this if the claimant is Employed
         <ReviewRow
           level={reviewRowLevel}
           label={t("pages.claimsReview.employerNotifiedLabel")}

@@ -7,17 +7,20 @@ from typing import Optional
 from sqlalchemy import TIMESTAMP, Boolean, Column, Date, ForeignKey, Integer, Numeric, Text, case
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.orm import backref, relationship
+from sqlalchemy.orm import backref, object_session, relationship
 
 import massgov.pfml.util.logging
 from massgov.pfml.db.models.employees import (
     Address,
     Claim,
     ClaimType,
+    Employee,
+    Employer,
     LkBankAccountType,
     LkGender,
     LkOccupation,
     LkPaymentMethod,
+    OrganizationUnit,
     TaxIdentifier,
     User,
 )
@@ -261,6 +264,9 @@ class Application(Base, TimestampMixin):
     __tablename__ = "application"
     application_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     user_id = Column(PostgreSQLUUID, ForeignKey("user.user_id"), nullable=False, index=True)
+    organization_unit_id = Column(
+        PostgreSQLUUID, ForeignKey("organization_unit.organization_unit_id"), nullable=True
+    )
     tax_identifier_id = Column(
         PostgreSQLUUID, ForeignKey("tax_identifier.tax_identifier_id"), index=True
     )
@@ -282,6 +288,7 @@ class Application(Base, TimestampMixin):
     has_state_id = Column(Boolean)
     mass_id = Column(Text)
     occupation_id = Column(Integer, ForeignKey("lk_occupation.occupation_id"))
+    organization_unit_selection = Column(Text)
     gender_id = Column(Integer, ForeignKey("lk_gender.gender_id"))
     hours_worked_per_week = Column(Numeric)
     relationship_to_caregiver_id = Column(
@@ -327,6 +334,7 @@ class Application(Base, TimestampMixin):
     caring_leave_metadata = relationship("CaringLeaveMetadata", back_populates="application")
     claim = relationship(Claim, backref=backref("application", uselist=False))
     occupation = relationship(LkOccupation)
+    organization_unit = relationship(OrganizationUnit)
     gender = relationship(LkGender)
     leave_reason = relationship(LkLeaveReason)
     leave_reason_qualifier = relationship(LkLeaveReasonQualifier)
@@ -373,6 +381,61 @@ class Application(Base, TimestampMixin):
         "PreviousLeaveSameReason", back_populates="application", uselist=True,
     )
     concurrent_leave = relationship("ConcurrentLeave", back_populates="application", uselist=False,)
+
+    @property
+    def employee(self) -> Optional[Employee]:
+        if not self.tax_identifier:
+            return None
+        return (
+            object_session(self)
+            .query(Employee)
+            .join(TaxIdentifier)
+            .filter(TaxIdentifier.tax_identifier == self.tax_identifier.tax_identifier)
+            .one_or_none()
+        )
+
+    @property
+    def employer(self) -> Optional[Employer]:
+        if not self.employer_fein:
+            return None
+        return (
+            object_session(self)
+            .query(Employer)
+            .filter(Employer.employer_fein == self.employer_fein)
+            .one_or_none()
+        )
+
+    @property
+    def employee_organization_units(self) -> list[OrganizationUnit]:
+        if not self.employee or not self.employer:
+            return []
+        units = self.employee.get_organization_units(self.employer)
+        logger.info(
+            "Application found Employee's organization units",
+            extra={
+                "employer.employer_id": self.employer.employer_id,
+                "employee.organization_unit_ids": ",".join(
+                    str(r.organization_unit_id) for r in units
+                ),
+            },
+        )
+        return units
+
+    @property
+    def employer_organization_units(self) -> list[OrganizationUnit]:
+        if not self.employer:
+            return []
+        units = self.employer.organization_units.all()
+        logger.info(
+            "Application found Employer's organization units",
+            extra={
+                "employer.employer_id": self.employer.employer_id,
+                "employer.organization_unit_ids": ",".join(
+                    str(r.organization_unit_id) for r in units
+                ),
+            },
+        )
+        return units
 
     @hybrid_property
     def all_leave_periods(self) -> Optional[list]:

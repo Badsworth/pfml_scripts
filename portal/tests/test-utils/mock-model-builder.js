@@ -28,6 +28,7 @@ import PreviousLeave, {
   PreviousLeaveReason,
   PreviousLeaveType,
 } from "../../src/models/PreviousLeave";
+
 import Address from "../../src/models/Address";
 import ConcurrentLeave from "../../src/models/ConcurrentLeave";
 import EmployerClaim from "../../src/models/EmployerClaim";
@@ -693,6 +694,22 @@ export class MockBenefitsApplicationBuilder extends BaseMockBenefitsApplicationB
    */
   pregnant() {
     set(this.claimAttrs, "leave_details.pregnant_or_recent_birth", true);
+    return this;
+  }
+
+  /**
+   * @returns {MockBenefitsApplicationBuilder}
+   */
+  employerOrganizationUnits(units) {
+    set(this.claimAttrs, "employer_organization_units", units);
+    return this;
+  }
+
+  /**
+   * @returns {MockBenefitsApplicationBuilder}
+   */
+  employeeOrganizationUnits(units) {
+    set(this.claimAttrs, "employee_organization_units", units);
     return this;
   }
 

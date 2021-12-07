@@ -237,7 +237,6 @@ def test_applications_get_all_for_user(client, user, auth_token):
     unassociated_application = ApplicationFactory.create()
 
     response = client.get("/v1/applications", headers={"Authorization": f"Bearer {auth_token}"})
-    print(response.get_json())
     assert response.status_code == 200
 
     response_data = response.get_json().get("data")
@@ -3664,7 +3663,7 @@ def test_application_post_submit_existing_work_pattern(
 
     capture = massgov.pfml.fineos.mock_client.get_capture()
 
-    assert capture[1] == (
+    assert capture[2] == (
         "update_week_based_work_pattern",
         fineos_user_id,
         {
@@ -3756,14 +3755,14 @@ def test_application_post_submit_to_fineos(client, user, auth_token, test_db_ses
     # This is generated randomly and changes each time.
     fineos_user_id = capture[2][1]
     assert capture == [
-        ("find_employer", None, {"employer_fein": application.employer_fein}),
+        ("read_employer", None, {"employer_fein": application.employer_fein}),
         (
             "register_api_user",
             None,
             {
                 "employee_registration": massgov.pfml.fineos.models.EmployeeRegistration(
                     user_id=fineos_user_id,
-                    employer_id=f"{application.employer_fein}1000",
+                    employer_id="999",
                     date_of_birth=date(1753, 1, 1),
                     national_insurance_no=application.tax_identifier.tax_identifier,
                 )
@@ -3849,8 +3848,10 @@ def test_application_post_submit_to_fineos(client, user, auth_token, test_db_ses
             None,
             {
                 "employment_status": "Terminated",
+                "fineos_org_unit_id": None,
                 "hours_worked_per_week": 70,
                 "occupation_id": 12345,
+                "worksite_id": None,
             },
         ),
         (
