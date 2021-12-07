@@ -19,7 +19,7 @@ data "terraform_remote_state" "current_cloudfront_origin_path" {
   backend = "s3"
 
   config = {
-    bucket = "massgov-pfml-test-env-mgmt"
+    bucket = "massgov-${local.app_name}-${local.environment_name}-env-mgmt"
     key    = "terraform/admin-portal.tfstate"
     region = "us-east-1"
   }

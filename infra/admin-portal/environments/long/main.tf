@@ -13,7 +13,7 @@ terraform {
   required_version = "0.14.7"
 
   backend "s3" {
-    bucket         = "massgov-pfml-infra-test-env-mgmt"
+    bucket         = "massgov-${local.app_name}-${local.environment_name}-env-mgmt"
     key            = "terraform/admin-portal.tfstate"
     region         = "us-east-1"
     dynamodb_table = "terraform_locks"
@@ -22,6 +22,7 @@ terraform {
 
 locals {
   environment_name = "long"
+  app_name = "pfml"
 }
 
 output "cloudfront_distribution_id" {
