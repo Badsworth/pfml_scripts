@@ -4629,6 +4629,14 @@ def test_application_post_complete_app(client, user, auth_token, test_db_session
         ContinuousLeavePeriodFactory.create(start_date=date(2021, 1, 1))
     ]
     application.has_continuous_leave_periods = True
+    application.is_withholding_tax = True
+    application.has_submitted_payment_preference = True
+    application.leave_reason_id = LeaveReason.PREGNANCY_MATERNITY.leave_reason_id
+    DocumentFactory.create(
+        user_id=user.user_id,
+        application_id=application.application_id,
+        document_type_id=DocumentType.DRIVERS_LICENSE_MASS.document_type_id,
+    )
 
     test_db_session.commit()
 
@@ -4669,6 +4677,14 @@ def test_application_post_complete_app_without_other_leave_fields(
         ContinuousLeavePeriodFactory.create(start_date=date(2021, 1, 1))
     ]
     application.has_continuous_leave_periods = True
+    application.is_withholding_tax = True
+    application.has_submitted_payment_preference = True
+    application.leave_reason_id = LeaveReason.PREGNANCY_MATERNITY.leave_reason_id
+    DocumentFactory.create(
+        user_id=user.user_id,
+        application_id=application.application_id,
+        document_type_id=DocumentType.DRIVERS_LICENSE_MASS.document_type_id,
+    )
 
     test_db_session.commit()
 
@@ -4705,6 +4721,14 @@ def test_application_complete_mark_document_received_fineos(
         )
     ]
     application.has_continuous_leave_periods = True
+    application.is_withholding_tax = True
+    application.has_submitted_payment_preference = True
+    application.leave_reason_id = LeaveReason.PREGNANCY_MATERNITY.leave_reason_id
+    DocumentFactory.create(
+        user_id=user.user_id,
+        application_id=application.application_id,
+        document_type_id=DocumentType.DRIVERS_LICENSE_MASS.document_type_id,
+    )
 
     test_db_session.add(application)
 

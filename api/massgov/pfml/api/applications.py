@@ -20,6 +20,7 @@ import massgov.pfml.util.datetime as datetime_util
 import massgov.pfml.util.logging
 import massgov.pfml.util.pdf as pdf_util
 from massgov.pfml.api.authorization.flask import CREATE, EDIT, READ, ensure
+from massgov.pfml.api.constants.application import ID_DOC_TYPES
 from massgov.pfml.api.models.applications.common import ContentType as AllowedContentTypes
 from massgov.pfml.api.models.applications.common import DocumentType as IoDocumentTypes
 from massgov.pfml.api.models.applications.requests import (
@@ -83,18 +84,10 @@ LEAVE_REASON_TO_DOCUMENT_TYPE_MAPPING = {
     LeaveReason.PREGNANCY_MATERNITY.leave_reason_description: DocumentType.PREGNANCY_MATERNITY_FORM,
 }
 
-ID_DOCS = [
-    DocumentType.PASSPORT.document_type_description,
-    DocumentType.DRIVERS_LICENSE_MASS.document_type_description,
-    DocumentType.DRIVERS_LICENSE_OTHER_STATE.document_type_description,
-    DocumentType.IDENTIFICATION_PROOF.document_type_description,
-]
-
 
 def application_get(application_id):
     with app.db_session() as db_session:
         existing_application = get_or_404(db_session, Application, application_id)
-
         ensure(READ, existing_application)
         application_response = ApplicationResponse.from_orm(existing_application)
 
@@ -398,7 +391,7 @@ def applications_complete(application_id):
         log_attributes = get_application_log_attributes(existing_application)
 
         issues = application_rules.get_application_complete_issues(
-            existing_application, request.headers
+            existing_application, request.headers, db_session
         )
         if issues:
             logger.info(
@@ -620,9 +613,9 @@ def document_upload(application_id, body, file):
                 existing_application.leave_reason.leave_reason_description
             ].document_type_description
 
-        if document_type not in ID_DOCS:
+        if document_type not in [doc_type.document_type_description for doc_type in ID_DOC_TYPES]:
             # Check for existing STATE_MANAGED_PAID_LEAVE_CONFIRMATION documents, and reuse the doc type if there are docs
-            # Because existng claims where only part 1 has been submitted should continue using old doc type, submitted_time
+            # Because existing claims where only part 1 has been submitted should continue using old doc type, submitted_time
             # rather than existing docs should be examined
 
             if has_previous_state_managed_paid_leave(existing_application, db_session) or (
