@@ -1531,6 +1531,14 @@ const pages = {
       "Have you told your employer that you are taking$t(chars.nbsp)leave?",
     title: "$t(shared.claimsEmploymentInfoTitle)",
   },
+  claimsOrganizationUnit: {
+    choiceNotListed: "My department is not listed",
+    choiceNotSure: "I'm not sure",
+    comboBoxLabel: "Select a department",
+    followupInfo:
+      "We will follow up with you after you apply to make sure the right department reviews your application.",
+    sectionLabel: "Which department are you applying to take leave from?",
+  },
   claimsOtherIncomes: {
     choiceNo: "$t(shared.choiceNo)",
     choiceNoAlert:
@@ -1814,6 +1822,7 @@ const pages = {
     concurrentLeaveLabel: "Accrued paid leave",
     documentsLoadError: "$t(shared.documentsLoadError)",
     editLink: "Edit",
+    employeeOrganizationUnit: "Department",
     employerBenefitEntryLabel:
       "$t(shared.employerBenefitEntryPrefix) {{count}}",
     employerBenefitIsFullSalaryContinuous: "Full wage replacement",
