@@ -13,7 +13,7 @@ terraform {
   required_version = "0.14.7"
 
   backend "s3" {
-    bucket         = "massgov-${local.app_name}-${local.environment_name}-env-mgmt"
+    bucket         = "massgov-pfml-cps-preview-env-mgmt"
     key            = "terraform/admin-portal.tfstate"
     region         = "us-east-1"
     dynamodb_table = "terraform_locks"

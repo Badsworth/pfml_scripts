@@ -24,7 +24,7 @@ resource "aws_wafv2_web_acl" "cloudfront_waf_acl" {
   rule {
     name     = "mass-${local.app_name}-${var.environment_name}-ip-whitelist-acl"
     priority = 0
-    
+
     statement {
       ip_set_reference_statement {
         arn = aws_wafv2_ip_set.workspaces_ip_whitelist.arn
@@ -130,7 +130,7 @@ resource "aws_wafv2_ip_set" "workspaces_ip_whitelist" {
   scope              = "CLOUDFRONT"
   ip_address_version = "IPV4"
   addresses = [
-    "10.206.0.0/21", # LWD 
+    "10.206.0.0/21",  # LWD 
     "10.203.236.0/24" # PFML
   ]
 }
