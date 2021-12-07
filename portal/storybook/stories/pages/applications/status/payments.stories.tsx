@@ -18,9 +18,15 @@ export default {
   title: "Pages/Applications/Status/Payments",
   component: Payments,
   args: {
+    "Has payments": true,
     "Leave type": LEAVE_TYPES.continuous,
   },
   argTypes: {
+    "Has payments": {
+      control: {
+        type: "boolean",
+      },
+    },
     "Leave type": {
       control: {
         type: "radio",
@@ -37,6 +43,7 @@ export default {
 
 export const DefaultStory = (
   args: Props<typeof Payments> & {
+    "Has payments": boolean;
     "Leave type": keyof typeof LEAVE_TYPES;
   }
 ) => {
@@ -52,6 +59,29 @@ export const DefaultStory = (
     [LEAVE_TYPES.reduced]: createMockBenefitsApplication("reducedSchedule"),
   }[args["Leave type"]];
 
+  const defaultPayments = [
+    createMockPayment({
+      payment_method: "Elec Funds Transfer",
+      status: "Sent to bank",
+    }),
+    createMockPayment({
+      sent_to_bank_date: null,
+      payment_method: "Check",
+      status: "Pending",
+    }),
+    createMockPayment({
+      sent_to_bank_date: null,
+      payment_method: "Check",
+      status: "Delayed",
+    }),
+    createMockPayment({
+      sent_to_bank_date: null,
+      payment_method: "Check",
+      status: "Cancelled",
+    }),
+  ];
+
+  const payments = args["Has payments"] ? defaultPayments : [];
   const appLogic = useMockableAppLogic({
     claims: {
       ...claimType,
@@ -68,27 +98,7 @@ export const DefaultStory = (
             request_decision: "Approved",
           },
         ],
-        payments: [
-          createMockPayment({
-            payment_method: "Elec Funds Transfer",
-            status: "Sent to bank",
-          }),
-          createMockPayment({
-            sent_to_bank_date: null,
-            payment_method: "Check",
-            status: "Pending",
-          }),
-          createMockPayment({
-            sent_to_bank_date: null,
-            payment_method: "Check",
-            status: "Delayed",
-          }),
-          createMockPayment({
-            sent_to_bank_date: null,
-            payment_method: "Check",
-            status: "Cancelled",
-          }),
-        ],
+        payments,
       },
       isLoadingClaimDetail: false,
     },
