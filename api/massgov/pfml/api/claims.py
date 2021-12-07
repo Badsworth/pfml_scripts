@@ -16,6 +16,7 @@ import massgov.pfml.util.logging
 from massgov.pfml.api.authorization.exceptions import NotAuthorizedForAccess
 from massgov.pfml.api.authorization.flask import READ, can, requires
 from massgov.pfml.api.exceptions import ClaimWithdrawn, ObjectNotFound
+from massgov.pfml.api.models.applications.common import OrganizationUnit
 from massgov.pfml.api.models.claims.common import EmployerClaimReview
 from massgov.pfml.api.models.claims.responses import ClaimResponse
 from massgov.pfml.api.services.administrator_fineos_actions import (
@@ -72,8 +73,6 @@ from massgov.pfml.util.paginate.paginator import PaginationAPIContext
 from massgov.pfml.util.sqlalchemy import get_or_404
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
-# HRD Employer FEIN. See https://lwd.atlassian.net/browse/EMPLOYER-1317
-CLAIMS_DASHBOARD_BLOCKED_FEINS = set(["046002284"])
 
 
 class VerificationRequired(Forbidden):
@@ -110,16 +109,12 @@ def get_current_user_leave_admin_record(fineos_absence_id: str) -> UserLeaveAdmi
         if current_user is None:
             raise Unauthorized()
 
-        claim = (
-            db_session.query(Claim)
-            .filter(Claim.fineos_absence_id == fineos_absence_id)
-            .one_or_none()
-        )
+        claim = get_claim_from_db(fineos_absence_id)
 
         if claim is not None:
             associated_employer_id = claim.employer_id
 
-        if associated_employer_id is None:
+        if claim is None or associated_employer_id is None:
             raise Forbidden(description="Claim does not exist for given absence ID")
 
         user_leave_admin = (
@@ -144,6 +139,23 @@ def get_current_user_leave_admin_record(fineos_absence_id: str) -> UserLeaveAdmi
 
         if not user_leave_admin.verified:
             raise VerificationRequired(user_leave_admin, "User is not Verified")
+
+        if not user_has_access_to_claim(claim, current_user):
+            data = {
+                "employer_id": user_leave_admin.employer_id,
+                "has_verification_data": user_leave_admin.employer.has_verification_data,
+                "claim_organization_unit": OrganizationUnit.from_orm(
+                    claim.organization_unit
+                ).dict(),
+                "leave_admin_organization_unit_ids": ",".join(
+                    [str(o.organization_unit_id) for o in user_leave_admin.organization_units]
+                ),
+            }
+            raise NotAuthorizedForAccess(
+                description="The leave admin cannot access claims of this organization unit",
+                error_type="unauthorized_leave_admin",
+                data=data,
+            )
 
         return user_leave_admin
 
@@ -294,11 +306,7 @@ def employer_get_claim_review(fineos_absence_id: str) -> flask.Response:
         except ClaimWithdrawn as error:
             return error.to_api_response()
 
-        claim_from_db = (
-            db_session.query(Claim)
-            .filter(Claim.fineos_absence_id == fineos_absence_id)
-            .one_or_none()
-        )
+        claim_from_db = get_claim_from_db(fineos_absence_id)
 
         if claim_from_db and claim_from_db.fineos_absence_status:
             claim_review_response.status = (
@@ -494,27 +502,22 @@ def get_claims() -> flask.Response:
             # The logic here is similar to that in user_has_access_to_claim (except it is applied to multiple claims)
             # so if something changes there it probably needs to be changed here
             if is_employer and current_user and current_user.employers:
-                filters = [
-                    Employer.employer_fein.notin_(CLAIMS_DASHBOARD_BLOCKED_FEINS),
-                    UserLeaveAdministrator.verification_id.isnot(None),
-                    User.user_id == current_user.user_id,
-                ]
                 if employer_id:
-                    filters.append(Employer.employer_id == employer_id)
-
-                employer_ids_list = (
-                    db_session.query(Employer.employer_id)
-                    .join(
-                        UserLeaveAdministrator,
-                        Employer.employer_id == UserLeaveAdministrator.employer_id,
+                    employers_list = (
+                        db_session.query(Employer).filter(Employer.employer_id == employer_id).all()
                     )
-                    .join(User, User.user_id == UserLeaveAdministrator.user_id)
-                    .filter(*filters)
-                    .all()
-                )
+                else:
+                    employers_list = list(current_user.employers)
 
-                # Get list of employers with non-blocked feins with left join for verified
-                query.add_employer_ids_filter(employer_ids_list)
+                verified_employers = [
+                    employer
+                    for employer in employers_list
+                    if current_user.verified_employer(employer)
+                ]
+
+                # filters claims by employer id - shows all claims of those employers
+                # if those employers use org units, then more filters are applied
+                query.add_employers_filter(verified_employers, current_user)
             else:
                 query.add_user_owns_claim_filter(current_user)
 

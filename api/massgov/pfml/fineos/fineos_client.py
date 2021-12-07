@@ -419,10 +419,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
         FINEOSEntityNotFound
             If no employer exists in FINEOS that matches the given FEIN.
         """
-        employer_response = self.read_employer(employer_fein)
-
-        customer_nbr = str(employer_response.OCOrganisation[0].CustomerNo)
-        return customer_nbr
+        return self.read_employer(employer_fein).get_customer_number()
 
     def register_api_user(self, employee_registration: models.EmployeeRegistration) -> None:
         """Creates the employee account registration.
@@ -828,9 +825,15 @@ class FINEOSClient(client.AbstractFINEOSClient):
         occupation_id: int,
         employment_status: Optional[str],
         hours_worked_per_week: Optional[Decimal],
+        fineos_org_unit_id: Optional[str],
+        worksite_id: Optional[str],
     ) -> None:
         xml_body = self._create_update_occupation_payload(
-            occupation_id, employment_status, hours_worked_per_week
+            occupation_id,
+            employment_status,
+            hours_worked_per_week,
+            fineos_org_unit_id,
+            worksite_id,
         )
         self._wscomposer_request(
             "POST",
@@ -845,6 +848,8 @@ class FINEOSClient(client.AbstractFINEOSClient):
         occupation_id: int,
         employment_status: Optional[str],
         hours_worked_per_week: Optional[Decimal],
+        fineos_org_unit_id: Optional[str],
+        worksite_id: Optional[str],
     ) -> str:
         additional_data_set = models.AdditionalDataSet()
 
@@ -863,6 +868,18 @@ class FINEOSClient(client.AbstractFINEOSClient):
         if employment_status:
             additional_data_set.additional_data.append(
                 models.AdditionalData(name="EmploymentStatus", value=employment_status)
+            )
+
+        if worksite_id:
+            additional_data_set.additional_data.append(
+                models.AdditionalData(name="workSiteId", value=worksite_id.split(":")[2])
+            )
+
+        if fineos_org_unit_id:
+            additional_data_set.additional_data.append(
+                models.AdditionalData(
+                    name="OrganizationUnitId", value=fineos_org_unit_id.split(":")[2]
+                )
             )
 
         # Put the XML object together properly.
