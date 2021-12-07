@@ -116,7 +116,7 @@ exports[`PaymentMethod renders the page 1`] = `
         </a>
         . To learn more about benefit payments, 
         <a
-          href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide"
+          href="https://www.mass.gov/how-pfml-benefits-are-calculated"
           rel="noreferrer noopener"
           target="_blank"
         >

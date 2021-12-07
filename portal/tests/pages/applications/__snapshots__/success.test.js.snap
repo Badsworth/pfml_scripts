@@ -161,7 +161,7 @@ exports[`Success renders content tailored to Caring Leave 1`] = `
     </h2>
     Review 
     <a
-      href="https://mass.gov/how-pfml-benefits-are-calculated"
+      href="https://www.mass.gov/how-pfml-benefits-are-calculated"
       rel="noreferrer noopener"
       target="_blank"
     >
@@ -369,7 +369,7 @@ exports[`Success renders content tailored to Family (Bonding Adoption) 1`] = `
     </h2>
     Review 
     <a
-      href="https://mass.gov/how-pfml-benefits-are-calculated"
+      href="https://www.mass.gov/how-pfml-benefits-are-calculated"
       rel="noreferrer noopener"
       target="_blank"
     >
@@ -552,7 +552,7 @@ exports[`Success renders content tailored to Family (Bonding Future Adoption) 1`
     </h2>
     Review 
     <a
-      href="https://mass.gov/how-pfml-benefits-are-calculated"
+      href="https://www.mass.gov/how-pfml-benefits-are-calculated"
       rel="noreferrer noopener"
       target="_blank"
     >
@@ -735,7 +735,7 @@ exports[`Success renders content tailored to Family (Bonding Future Newborn) 1`]
     </h2>
     Review 
     <a
-      href="https://mass.gov/how-pfml-benefits-are-calculated"
+      href="https://www.mass.gov/how-pfml-benefits-are-calculated"
       rel="noreferrer noopener"
       target="_blank"
     >
@@ -1009,7 +1009,7 @@ exports[`Success renders content tailored to Family (Bonding Newborn) 1`] = `
     </h2>
     Review 
     <a
-      href="https://mass.gov/how-pfml-benefits-are-calculated"
+      href="https://www.mass.gov/how-pfml-benefits-are-calculated"
       rel="noreferrer noopener"
       target="_blank"
     >
@@ -1283,7 +1283,7 @@ exports[`Success renders content tailored to Medical (Not pregnant) 1`] = `
     </h2>
     Review 
     <a
-      href="https://mass.gov/how-pfml-benefits-are-calculated"
+      href="https://www.mass.gov/how-pfml-benefits-are-calculated"
       rel="noreferrer noopener"
       target="_blank"
     >
@@ -1491,7 +1491,7 @@ exports[`Success renders content tailored to Medical (Pregnant) 1`] = `
     </h2>
     Review 
     <a
-      href="https://mass.gov/how-pfml-benefits-are-calculated"
+      href="https://www.mass.gov/how-pfml-benefits-are-calculated"
       rel="noreferrer noopener"
       target="_blank"
     >
@@ -1759,7 +1759,7 @@ exports[`Success renders content tailored to Medical (Pregnant, applying in adva
     </h2>
     Review 
     <a
-      href="https://mass.gov/how-pfml-benefits-are-calculated"
+      href="https://www.mass.gov/how-pfml-benefits-are-calculated"
       rel="noreferrer noopener"
       target="_blank"
     >

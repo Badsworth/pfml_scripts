@@ -131,7 +131,7 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
         <li>
           You reach the maximum total amount that a person can receive in PFML benefits across multiple applications. Read more about 
           <a
-            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#benefit-amount-details-"
+            href="https://www.mass.gov/how-pfml-benefits-are-calculated"
             rel="noopener noreferrer"
             target="_blank"
           >

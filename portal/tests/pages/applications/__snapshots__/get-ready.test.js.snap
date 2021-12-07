@@ -267,7 +267,7 @@ exports[`GetReady renders get ready content 1`] = `
     <p>
       The maximum benefit a person can receive per week is $850. Learn more about 
       <a
-        href="https://mass.gov/how-pfml-benefits-are-calculated"
+        href="https://www.mass.gov/how-pfml-benefits-are-calculated"
         rel="noopener"
         target="_blank"
       >
