@@ -2,7 +2,6 @@ import {
   AbsencePeriod,
   AbsencePeriodRequestDecision,
 } from "src/models/AbsencePeriod";
-import { Status, StatusTagMap } from "src/pages/applications/status";
 import ClaimDetail from "src/models/ClaimDetail";
 import { ClaimEmployee } from "src/models/Claim";
 import DocumentCollection from "src/models/DocumentCollection";
@@ -10,7 +9,9 @@ import LeaveReason from "src/models/LeaveReason";
 import { Props } from "storybook/types";
 import React from "react";
 import { ReasonQualifier } from "src/models/BenefitsApplication";
+import { Status } from "src/pages/applications/status";
 import User from "src/models/User";
+import { createAbsencePeriod } from "tests/test-utils/createAbsencePeriod";
 import faker from "faker";
 import { generateNotice } from "storybook/utils/generateNotice";
 import useMockableAppLogic from "lib/mock-helpers/useMockableAppLogic";
@@ -98,27 +99,6 @@ function createClaimDetail({
       employer_evidence: [],
     },
   });
-}
-
-/**
- * Create an absence period for use in testing. Any attributes that are not passed
- * in will have a random, faked value provided.
- */
-function createAbsencePeriod(partialAttrs: Partial<AbsencePeriod>) {
-  const defaultAbsencePeriod = {
-    absence_period_end_date: "2021-09-04",
-    absence_period_start_date: "2021-04-09",
-    fineos_leave_request_id: faker.datatype.uuid(),
-    period_type: faker.random.arrayElement<"Continuous" | "Reduced Schedule">([
-      "Continuous",
-      "Reduced Schedule",
-    ]),
-    request_decision: faker.random.arrayElement<keyof typeof StatusTagMap>(
-      Object.keys(StatusTagMap) as Array<keyof typeof StatusTagMap>
-    ),
-  };
-
-  return new AbsencePeriod({ ...defaultAbsencePeriod, ...partialAttrs });
 }
 
 function getDocuments({

@@ -4,7 +4,7 @@ import {
   MockEmployerClaimBuilder,
 } from "./mock-model-builder";
 import { createInputElement, makeFile } from "./makeFile";
-
+import { createAbsencePeriod } from "./createAbsencePeriod";
 import { createMockBenefitsApplication } from "./createMockBenefitsApplication";
 import { createMockEmployerClaim } from "./createMockEmployerClaim";
 import { createMockPayment } from "./createMockPayment";
@@ -14,6 +14,7 @@ import { renderPage } from "./renderPage";
 
 export {
   BaseMockBenefitsApplicationBuilder,
+  createAbsencePeriod,
   createInputElement,
   createMockBenefitsApplication,
   createMockEmployerClaim,
