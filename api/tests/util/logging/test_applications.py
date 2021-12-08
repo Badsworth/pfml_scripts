@@ -69,6 +69,7 @@ def test_get_application_log_attributes(user, test_db_session, initialize_factor
         "application.num_previous_leave_same_reason_reasons.Managing family affairs while a family member is on active duty in the armed forces": "0",
         "application.num_previous_leave_same_reason_reasons.Pregnancy": "0",
         "application.num_previous_leave_same_reason_reasons.An illness or injury": "0",
+        "application.organization_unit_id": None,
         "application.pregnant_or_recent_birth": "False",
         "application.created_at": str(application.created_at),
         "application.created_at.timestamp": str(application.created_at.timestamp()),

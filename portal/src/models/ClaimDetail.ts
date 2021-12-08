@@ -1,7 +1,8 @@
 import { ClaimEmployee, ClaimEmployer, ManagedRequirement } from "./Claim";
-import { groupBy, orderBy } from "lodash";
-import { LeaveReasonType } from "./LeaveReason";
+
+import { AbsencePeriod } from "./AbsencePeriod";
 import dayjs from "dayjs";
+import { orderBy } from "lodash";
 
 class ClaimDetail {
   absence_periods: AbsencePeriod[] = [];
@@ -33,14 +34,17 @@ class ClaimDetail {
     this.absence_periods = this.absence_periods.map(
       (absence_period) => new AbsencePeriod(absence_period)
     );
-  }
 
-  /**
-   * Get absence_periods grouped by their leave reason
-   * @returns {Object} an object that keys arrays of absence periods by their reason e.g { "Child Bonding": [AbsencePeriod] }
-   */
-  get absencePeriodsByReason() {
-    return groupBy(this.absence_periods, "reason");
+    /**
+     * Filtering to account for instances where a payment may be sent during the waiting week or prior to the leave start date
+     */
+
+    this.payments = this.payments.filter(
+      ({ period_start_date, status }) =>
+        (this.waitingWeek?.startDate &&
+          this.waitingWeek.startDate < period_start_date) ||
+        status === "Sent to bank"
+    );
   }
 
   /**
@@ -83,9 +87,7 @@ class ClaimDetail {
 
   get hasApprovedStatus() {
     return this.absence_periods.some(
-      (absence_period) =>
-        absence_period.request_decision ===
-        <AbsencePeriodRequestDecision>"Approved"
+      (absence_period) => absence_period.request_decision === "Approved"
     );
   }
 
@@ -117,29 +119,6 @@ interface AbsencePeriodDates {
   absence_period_end_date: string;
 }
 
-export type AbsencePeriodRequestDecision =
-  | "Cancelled"
-  | "Pending"
-  | "Approved"
-  | "Denied"
-  | "Withdrawn";
-
-export class AbsencePeriod {
-  absence_period_end_date: string;
-  absence_period_start_date: string;
-  evidence_status: string | null = null;
-  fineos_leave_request_id: string | null = null;
-  period_type: "Continuous" | "Intermittent" | "Reduced Schedule";
-  reason: LeaveReasonType;
-  reason_qualifier_one = "";
-  reason_qualifier_two = "";
-  request_decision: AbsencePeriodRequestDecision;
-
-  constructor(attrs: Partial<AbsencePeriod> = {}) {
-    Object.assign(this, attrs);
-  }
-}
-
 interface OutstandingEvidence {
   document_name: string;
   is_document_received: boolean;
@@ -165,7 +144,9 @@ export interface PaymentDetail {
   payment_method: string;
   expected_send_date_start: string | null;
   expected_send_date_end: string | null;
-  status: string;
+  status: PaymentStatus;
 }
+
+type PaymentStatus = "Cancelled" | "Delayed" | "Pending" | "Sent to bank";
 
 export default ClaimDetail;

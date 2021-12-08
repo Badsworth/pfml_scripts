@@ -153,8 +153,11 @@ const useAuthLogic = ({
       }
 
       if (!user.challengeName || user.challengeName !== "SMS_MFA") {
+        const apiUser = await usersApi.getCurrentUser();
+        // if delivery preference is null, redirect to set up MFA
+        const shouldSetMFA = apiUser.user.mfa_delivery_preference === null;
         // user is not being prompted for a verification code - log them in!
-        finishLoginAndRedirect(next);
+        finishLoginAndRedirect(next, shouldSetMFA);
       }
 
       return user;
@@ -389,12 +392,15 @@ const useAuthLogic = ({
   /**
    * Sets the current user as logged in, and redirects them to the next page.
    * @param [next] Redirect url after login
+   * @param [shouldSetMFA] Should a user be redirected to set up MFA?
    * @private
    */
-  function finishLoginAndRedirect(next?: string) {
+  function finishLoginAndRedirect(next?: string, shouldSetMFA?: boolean) {
     setIsLoggedIn(true);
 
-    if (next) {
+    if (shouldSetMFA) {
+      portalFlow.goToPageFor("ENABLE_MFA");
+    } else if (next) {
       portalFlow.goTo(next);
     } else {
       portalFlow.goToPageFor("LOG_IN");

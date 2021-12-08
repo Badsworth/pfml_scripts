@@ -22,6 +22,7 @@ export default {
     },
     [routes.auth.login]: {
       on: {
+        ENABLE_MFA: routes.twoFactor.smsIndex,
         LOG_IN: routes.applications.index,
         UNCONFIRMED_ACCOUNT: routes.auth.verifyAccount,
       },

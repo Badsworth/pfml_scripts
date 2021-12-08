@@ -34,7 +34,7 @@ exports[`LegalNoticeList renders only documents that are legal notices 1`] = `
         <div
           class="text-base-dark"
         >
-          Posted 4/5/2020
+          Posted 4/5/2020.
         </div>
       </div>
     </li>

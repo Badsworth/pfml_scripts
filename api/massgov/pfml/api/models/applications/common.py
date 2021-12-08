@@ -104,6 +104,18 @@ class NotificationMethod(str, LookupEnum):
     other = "Other"
 
 
+class OrganizationUnitSelection(str, Enum):
+    not_listed = "not_listed"
+    not_selected = "not_selected"
+
+
+class OrganizationUnit(PydanticBaseModel):
+    organization_unit_id: Optional[UUID4]
+    employer_id: Optional[UUID4]
+    fineos_id: Optional[str]
+    name: Optional[str]
+
+
 class ReducedScheduleLeavePeriods(PydanticBaseModel):
     leave_period_id: Optional[UUID4]
     start_date: Optional[date]
@@ -346,6 +358,12 @@ class DocumentType(str, LookupEnum):
     military_exigency_form = "Military exigency form"
     withdrawal_notice = "Pending Application Withdrawn"
     appeal_acknowledgment = "Appeal Acknowledgment"
+    maximum_weekly_benefit_change_notice = "Maximum Weekly Benefit Change Notice"
+    benefit_amount_change_notice = "Benefit Amount Change Notice"
+    leave_allotment_change_notice = "Leave Allotment Change Notice"
+    approved_time_cancelled = "Approved Time Cancelled"
+    change_request_approved = "Change Request Approved"
+    change_request_denied = "Change Request Denied"
 
 
 class ContentType(str, LookupEnum):

@@ -210,7 +210,7 @@ exports[`Status renders the page for a completed claim 1`] = `
         <div
           class="text-base-dark"
         >
-          Posted 1/2/2021
+          Posted 1/2/2021.
         </div>
       </li>
     </ul>
@@ -235,7 +235,7 @@ exports[`Status shows only legal documents 1`] = `
     <div
       class="text-base-dark"
     >
-      Posted 1/9/2021
+      Posted 1/9/2021.
     </div>
   </li>
   <li
@@ -250,7 +250,67 @@ exports[`Status shows only legal documents 1`] = `
     <div
       class="text-base-dark"
     >
-      Posted 1/10/2021
+      Posted 1/10/2021.
+    </div>
+  </li>
+  <li
+    class="margin-bottom-2"
+  >
+    <button
+      class="usa-button position-relative text-bold usa-button--unstyled"
+      type="button"
+    >
+      Approved Time Cancelled $(shared.pdfNoticeSuffix)
+    </button>
+    <div
+      class="text-base-dark"
+    >
+      Posted 1/11/2021.
+    </div>
+  </li>
+  <li
+    class="margin-bottom-2"
+  >
+    <button
+      class="usa-button position-relative text-bold usa-button--unstyled"
+      type="button"
+    >
+      Benefit Amount Change Notice $(shared.pdfNoticeSuffix)
+    </button>
+    <div
+      class="text-base-dark"
+    >
+      Posted 1/12/2021.
+    </div>
+  </li>
+  <li
+    class="margin-bottom-2"
+  >
+    <button
+      class="usa-button position-relative text-bold usa-button--unstyled"
+      type="button"
+    >
+      Change Request Approved $(shared.pdfNoticeSuffix)
+    </button>
+    <div
+      class="text-base-dark"
+    >
+      Posted 1/13/2021.
+    </div>
+  </li>
+  <li
+    class="margin-bottom-2"
+  >
+    <button
+      class="usa-button position-relative text-bold usa-button--unstyled"
+      type="button"
+    >
+      Change Request Denied $(shared.pdfNoticeSuffix)
+    </button>
+    <div
+      class="text-base-dark"
+    >
+      Posted 1/14/2021.
     </div>
   </li>
   <li
@@ -265,7 +325,37 @@ exports[`Status shows only legal documents 1`] = `
     <div
       class="text-base-dark"
     >
-      Posted 1/11/2021
+      Posted 1/15/2021.
+    </div>
+  </li>
+  <li
+    class="margin-bottom-2"
+  >
+    <button
+      class="usa-button position-relative text-bold usa-button--unstyled"
+      type="button"
+    >
+      Leave Allotment Change Notice $(shared.pdfNoticeSuffix)
+    </button>
+    <div
+      class="text-base-dark"
+    >
+      Posted 1/17/2021.
+    </div>
+  </li>
+  <li
+    class="margin-bottom-2"
+  >
+    <button
+      class="usa-button position-relative text-bold usa-button--unstyled"
+      type="button"
+    >
+      Maximum Weekly Benefit Change Notice $(shared.pdfNoticeSuffix)
+    </button>
+    <div
+      class="text-base-dark"
+    >
+      Posted 1/18/2021.
     </div>
   </li>
   <li
@@ -280,7 +370,7 @@ exports[`Status shows only legal documents 1`] = `
     <div
       class="text-base-dark"
     >
-      Posted 1/14/2021
+      Posted 1/20/2021.
     </div>
   </li>
   <li
@@ -295,7 +385,7 @@ exports[`Status shows only legal documents 1`] = `
     <div
       class="text-base-dark"
     >
-      Posted 1/15/2021
+      Posted 1/21/2021.
     </div>
   </li>
 </ul>

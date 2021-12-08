@@ -12,6 +12,8 @@ from massgov.pfml.api.models.applications.common import (
     MaskedApplicationLeaveDetails,
     MaskedPaymentPreference,
     Occupation,
+    OrganizationUnit,
+    OrganizationUnitSelection,
     OtherIncome,
     PaymentMethod,
     WorkPattern,
@@ -36,6 +38,8 @@ class ApplicationStatus(str, Enum):
 
 class ApplicationResponse(PydanticBaseModel):
     application_id: UUID4
+    organization_unit_id: Optional[UUID4]
+    organization_unit_selection: Optional[OrganizationUnitSelection]
     application_nickname: Optional[str]
     tax_identifier: Optional[MaskedTaxIdFormattedStr]
     employer_fein: Optional[FEINFormattedStr]
@@ -52,6 +56,7 @@ class ApplicationResponse(PydanticBaseModel):
     has_submitted_payment_preference: Optional[bool]
     mass_id: Optional[MaskedMassIdStr]
     occupation: Optional[Occupation]
+    organization_unit: Optional[OrganizationUnit]
     hours_worked_per_week: Optional[Decimal]
     employment_status: Optional[EmploymentStatus]
     leave_details: Optional[MaskedApplicationLeaveDetails]
@@ -64,6 +69,8 @@ class ApplicationResponse(PydanticBaseModel):
     residential_address: Optional[MaskedAddress]
     has_employer_benefits: Optional[bool]
     employer_benefits: Optional[List[EmployerBenefit]]
+    employee_organization_units: List[OrganizationUnit]
+    employer_organization_units: List[OrganizationUnit]
     has_other_incomes: Optional[bool]
     other_incomes: Optional[List[OtherIncome]]
     phone: Optional[MaskedPhone]

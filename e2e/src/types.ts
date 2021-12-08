@@ -217,4 +217,5 @@ export type Environment =
   | "training"
   | "performance"
   | "uat"
-  | "cps-preview";
+  | "cps-preview"
+  | "breakfix";

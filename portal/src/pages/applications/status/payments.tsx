@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
 import withUser, { WithUserProps } from "../../../hoc/withUser";
+
 import Accordion from "../../../components/core/Accordion";
 import AccordionItem from "../../../components/core/AccordionItem";
 import BackButton from "../../../components/BackButton";
@@ -91,6 +92,7 @@ export const Payments = ({
           {t("pages.claimsStatus.yourPayments")}
         </Heading>
 
+        <Trans i18nKey="pages.payments.paymentsIntro" />
         {shouldShowPaymentsTable && (
           <Table className="width-full" responsive>
             <thead>
@@ -127,7 +129,7 @@ export const Payments = ({
                         })}
                       </td>
                       <td data-label={tableColumns[2]}>
-                        {sent_to_bank_date
+                        {status !== "Pending"
                           ? t("pages.payments.paymentsTable.paymentStatus", {
                               context: status,
                             })
@@ -154,23 +156,25 @@ export const Payments = ({
                     </tr>
                   )
                 )}
-              <tr>
-                <td>{waitingWeek}</td>
-                <td colSpan={4}>
-                  <Trans
-                    i18nKey="pages.payments.paymentsTable.waitingWeekText"
-                    components={{
-                      "waiting-week-link": (
-                        <a
-                          href={
-                            routes.external.massgov.sevenDayWaitingPeriodInfo
-                          }
-                        />
-                      ),
-                    }}
-                  />
-                </td>
-              </tr>
+              {waitingWeek && (
+                <tr>
+                  <td>{waitingWeek}</td>
+                  <td colSpan={4}>
+                    <Trans
+                      i18nKey="pages.payments.paymentsTable.waitingWeekText"
+                      components={{
+                        "waiting-week-link": (
+                          <a
+                            href={
+                              routes.external.massgov.sevenDayWaitingPeriodInfo
+                            }
+                          />
+                        ),
+                      }}
+                    />
+                  </td>
+                </tr>
+              )}
             </tbody>
           </Table>
         )}
@@ -198,6 +202,16 @@ export const Payments = ({
                 components={{
                   li: <li />,
                   ul: <ul />,
+                  "benefit-amount-details-link": (
+                    <a
+                      href={
+                        routes.external.massgov
+                          .benefitsGuide_benefitsAmountDetails
+                      }
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    />
+                  ),
                   "using-other-leave-link": (
                     <a
                       href={routes.external.massgov.usingOtherLeave}

@@ -199,5 +199,8 @@ def test_upload_handles_pdf_compression_error(
         response = document_upload(pdf)
 
         mock_compress_pdf.assert_called()
-
-        assert response["status_code"] == 500
+        assert response["status_code"] == 400
+        assert response["errors"] == [
+            {"field": "file", "message": "File is too large.", "type": "file_size"}
+        ]
+        assert response["message"] == "Invalid request"

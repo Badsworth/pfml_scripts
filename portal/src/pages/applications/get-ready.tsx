@@ -10,6 +10,7 @@ import Link from "next/link";
 import React from "react";
 import Title from "../../components/core/Title";
 import { Trans } from "react-i18next";
+import { getMaxBenefitAmount } from "src/utils/getMaxBenefitAmount";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
 
@@ -28,6 +29,8 @@ export const GetReady = (props: WithBenefitsApplicationsProps) => {
     width: 20,
     fill: "currentColor",
   };
+
+  const maxBenefitAmount = getMaxBenefitAmount();
 
   return (
     <React.Fragment>
@@ -147,6 +150,7 @@ export const GetReady = (props: WithBenefitsApplicationsProps) => {
         </Heading>
         <Trans
           i18nKey="pages.getReady.stepThree"
+          values={{ maxBenefitAmount }}
           components={{
             "contact-center-phone-link": (
               <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />

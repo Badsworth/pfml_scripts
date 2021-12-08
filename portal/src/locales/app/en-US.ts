@@ -20,6 +20,10 @@ const chars = {
 
 const errors = {
   applications: {
+    claim: {
+      exists:
+        "You have already submitted this portion of your application. If you need to edit your information, call the Contact Center at $t(shared.contactCenterPhoneNumberNoBreak).",
+    },
     concurrent_leave: {
       is_for_current_employer: {
         required: "Select Yes if your leave is from this employer.",
@@ -366,6 +370,8 @@ const errors = {
       },
       payment_method: {
         required: "Select how you want to get your weekly benefit.",
+        exists:
+          "You have already submitted your payment preference. If you need to edit your preference, call the Contact Center at $t(shared.contactCenterPhoneNumberNoBreak).",
       },
       routing_number: {
         checksum:
@@ -596,6 +602,14 @@ const errors = {
   },
   documents: {
     file: {
+      clientSideError_size:
+        "We could not upload: {{disallowedFileNames}}. Files must be smaller than {{ sizeLimit }} MB.",
+      clientSideError_sizeAndType:
+        "We could not upload: {{disallowedFileNames}}. Choose a PDF or an image file (.jpg, .jpeg, .png) that is smaller than {{ sizeLimit }} MB.",
+      clientSideError_type:
+        "We could not upload: {{disallowedFileNames}}. Choose a PDF or an image file (.jpg, .jpeg, .png).",
+      file_size:
+        "We could not upload all files. Files must be smaller than {{ fileSizeMaxMB }} MB.",
       required: "Upload at least one file to continue.",
     },
     fineos_client: "$t(shared.documentsUploadError)",
@@ -650,12 +664,6 @@ const errors = {
       incorrect: "The amount does not match our records. Please try again.",
     },
   },
-  invalidFile_size:
-    "We could not upload: {{disallowedFileNames}}. Files must be smaller than {{ sizeLimit }} MB.",
-  invalidFile_sizeAndType:
-    "We could not upload: {{disallowedFileNames}}. Choose a PDF or an image file (.jpg, .jpeg, .png) that is smaller than {{ sizeLimit }} MB.",
-  invalidFile_type:
-    "We could not upload: {{disallowedFileNames}}. Choose a PDF or an image file (.jpg, .jpeg, .png).",
   network:
     "Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.contactCenterPhoneNumberNoBreak)",
   users: {
@@ -697,6 +705,12 @@ const shared = {
   absenceCaseStatus_denied: "Denied",
   absenceCaseStatus_noAction: "No action required",
   absenceCaseStatus_pending: "Pending",
+  absencePeriodStatus_Approved: "Approved",
+  absencePeriodStatus_Cancelled: "Cancelled",
+  absencePeriodStatus_Denied: "Denied",
+  absencePeriodStatus_Pending: "Pending",
+  absencePeriodStatus_Voided: "Voided",
+  absencePeriodStatus_Withdrawn: "Withdrawn",
   achTypeChecking: "Checking",
   achTypeSavings: "Savings",
   amountFrequencyLabel: "Frequency",
@@ -996,11 +1010,19 @@ const pages = {
     usernameLabel: "$t(shared.usernameLabel)",
   },
   authTwoFactorSmsConfirm: {
-    codeLabel: "6-digit code",
+    codeLabel: "$t(shared.verificationCodeLabel)",
     lead: "Enter the 6-digit code we sent to your phone number {{mfaPhoneNumber}}.",
     resendCodeButton: "$t(shared.resendVerificationCodeLink)",
     saveButton: "$t(shared.saveAndContinue)",
     title: "Confirm your phone number",
+  },
+  authTwoFactorSmsIndex: {
+    hint: "<p>This is an optional step to make your account more secure. In the future, you’ll also be able to access sensitive information like tax documents once you set this up.</p><p>If you select Yes, we’ll ask for a phone number that can receive text messages (SMS). To protect your security, we'll send you a 6-digit code whenenever we need to verify it's really you. You’ll need to enter the code in order to log in to your account.</p><p>If you select No, you can add a phone number later by going to the Settings page.</p>",
+    optIn: "Yes, I want to add a phone number for verifying logins.",
+    optOut: "No, I do not want to add a phone number for verifying logins.",
+    saveButton: "$t(shared.saveAndContinue)",
+    title:
+      "Do you want to add a phone number to verify it's you when you log in to your account?",
   },
   authTwoFactorSmsSetup: {
     lead: "Enter a number that can receive text messages and that you'll have consistent access to in case we need to verify your login. We’ll send a 6-digit code by text message (SMS) to secure your account.",
@@ -1521,6 +1543,14 @@ const pages = {
       "Have you told your employer that you are taking$t(chars.nbsp)leave?",
     title: "$t(shared.claimsEmploymentInfoTitle)",
   },
+  claimsOrganizationUnit: {
+    choiceNotListed: "My department is not listed",
+    choiceNotSure: "I'm not sure",
+    comboBoxLabel: "Select a department",
+    followupInfo:
+      "We will follow up with you after you apply to make sure the right department reviews your application.",
+    sectionLabel: "Which department are you applying to take leave from?",
+  },
   claimsOtherIncomes: {
     choiceNo: "$t(shared.choiceNo)",
     choiceNoAlert:
@@ -1804,6 +1834,7 @@ const pages = {
     concurrentLeaveLabel: "Accrued paid leave",
     documentsLoadError: "$t(shared.documentsLoadError)",
     editLink: "Edit",
+    employeeOrganizationUnit: "Department",
     employerBenefitEntryLabel:
       "$t(shared.employerBenefitEntryPrefix) {{count}}",
     employerBenefitIsFullSalaryContinuous: "Full wage replacement",
@@ -2072,10 +2103,14 @@ const pages = {
     reportOtherBenefitsBody:
       "<p>If your plans for other benefits or income during your paid leave have changed, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>. Report changes to:</p><ul><li>Benefits from your employer that you plan to use in addition to paid leave from PFML. For example, if you are taking a different amount of sick days than you first planned, or if you are taking employer sponsored parental leave on a different schedule than you expected, report this change.</li><li>Income from other sources during your leave. For example, if you got approved for a disability benefit or a worker’s compensation claim after you submitted your application, report this change.</li></ul>",
     reportOtherBenefitsHeading: "Report other benefits or income",
-    requestDecision_Approved: "Approved",
-    requestDecision_Denied: "Denied",
-    requestDecision_Pending: "Pending",
-    requestDecision_Withdrawn: "Withdrawn",
+    requestDecision_Approved: "$t(shared.absencePeriodStatus_Approved)",
+    requestDecision_Cancelled: "$t(shared.absencePeriodStatus_Cancelled)",
+    requestDecision_Denied: "$t(shared.absencePeriodStatus_Denied)",
+    "requestDecision_In Review": "$t(shared.absencePeriodStatus_Pending)",
+    requestDecision_Pending: "$t(shared.absencePeriodStatus_Pending)",
+    requestDecision_Projected: "$t(shared.absencePeriodStatus_Pending)",
+    requestDecision_Voided: "$t(shared.absencePeriodStatus_Voided)",
+    requestDecision_Withdrawn: "$t(shared.absencePeriodStatus_Withdrawn)",
     statusTimelineNotice:
       "Notices usually appear within 30 minutes after we update the status of your application.",
     timelineDescription:
@@ -2110,7 +2145,7 @@ const pages = {
       "$t(shared.documentCategory.identification)",
     viewNoticesHeading: "View your notices",
     viewPaymentTimeline:
-      "<p>Once your application is approved, you can expect weekly payments to begin 2-4 weeks after your leave begins. If your leave has already begun, you can expect your first payment to arrive 2 weeks after it is approved. After that you will receive your payments every week.</p><p>You can see your expected payment timeline on your <payments-page-link>payments page</payments-page-link>.</p>",
+      "<p>See your payments page to find information about when to expect payments.</p><p><payments-page-link>Track your payments</payments-page-link></p>",
     whatHappensNext: "What happens next",
     whatHappensNextButton_adoption: "Upload proof of adoption",
     whatHappensNextButton_fosterCare: "Upload proof of placement",
@@ -2142,7 +2177,7 @@ const pages = {
       "You may be able to take up to 12 weeks of paid family leave to bond with your child after your medical leave ends. <medical-bonding-link>Family leave to bond with your child</medical-bonding-link> can be easily added to your application by calling our Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> after your medical leave is approved. You should not submit a second application.",
     familyLeaveToBondHeading: "You may also be eligible for paid family leave",
     learnMore:
-      "Review <benefits-amount-details-link>our benefits guide</benefits-amount-details-link> to find out more about how benefits are determined. For a rough estimate of how much you might receive, <benefits-calculator-link>use this calculator</benefits-calculator-link>. The maximum total amount that a person can receive in PFML benefits is $850 per week, even if you have been approved for leave benefits from multiple employers.",
+      "Review <benefits-amount-details-link>our benefits guide</benefits-amount-details-link> to find out more about how benefits are determined. For a rough estimate of how much you might receive, <benefits-calculator-link>use this calculator</benefits-calculator-link>. The maximum total amount that a person can receive in PFML benefits is ${{maxBenefitAmount}} per week, even if you have been approved for leave benefits from multiple employers.", // eslint-disable-line no-template-curly-in-string
     learnMoreHeading: "Learn more about paid leave benefits",
     medicalLeaveAfterBirth:
       "You may be able to take up to 20 weeks of paid medical leave if you’re unable to work during your pregnancy or for your recovery from childbirth. Your health care provider determines how much medical leave you will need. Call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> if you need <medical-bonding-link>medical leave after giving birth</medical-bonding-link>.",
@@ -2345,11 +2380,10 @@ const pages = {
     truthAttestationHeading: "Start the review process",
   },
   employersClaimsReview: {
-    employerIdentifierLabel: "Employer ID number (EIN)",
+    absenceIdLabel: "Application ID: {{absenceId}}",
     instructionsAmendment:
       "Please review the details of this application carefully. If anything is incorrect or incomplete, you can add an amendment or include specific comments at the end. Changes are not saved until you submit your review.",
     instructionsFollowUpDate: "$t(shared.employerInstructions_followUpDate)",
-    organizationNameLabel: "Organization",
     otherLeavesBody:
       "<p>Please review the leaves and benefits listed in the tables below. If everything looks correct, then there’s no action needed. If something looks incorrect or incomplete, you can:</p><ul><li>Amend reported leaves and benefits.</li><li>Add a leave or benefit that your employee used or will use.</li></ul><p>If you need to remove a leave or benefit, use the comment box at the end of this page.</p>",
     otherLeavesBodyV1:
@@ -2360,6 +2394,8 @@ const pages = {
     otherLeavesTitle: "Other leaves and benefits",
     submitButton: "Submit",
     submitLoadingMessage: "Submitting… Do not refresh or go back.",
+    // TODO (PORTAL-1151) Remove flag
+    supportingWorkDetailsHeader: "Supporting work details",
     title: "Review application from {{name}}",
   },
   employersClaimsStatus: {
@@ -2528,7 +2564,7 @@ const pages = {
       "<p>If you can, tell your employer at least 30 days before your leave begins. If you need to take leave right away, tell your employer as soon as possible.</p><p>Once you tell your employer, you have the right to apply and your job is protected. Make a note of when you notified your employer. You will need to provide this date in your leave application.</p>",
     stepOneHeading: "1. Tell your employer that you need to take paid leave",
     stepThree:
-      "<p>Applying takes around 15 minutes. Your information will save as you go, so you can finish your application later if you need to.</p><p>If you give birth and plan to take both pregnancy-related medical leave and family leave to bond with your newborn, you should apply for medical leave first. Family leave to bond with your child can be <medical-bonding-link>easily added to your claim</medical-bonding-link> by calling our Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.</p><p>You need to create multiple leave applications if you are:</p><ul><li>Taking leave from multiple employers.</li><li>Taking time off in uneven blocks of time (intermittent leave), <strong>and</strong> taking time off completely or on a reduced schedule. You’ll need a separate application for the intermittent leave.</li></ul><p>PFML benefits are subject to reporting for tax purposes and may be subject to taxation. Withholding is not currently supported through the PFML program. Learn more about the <tax-liability-link>possible tax implications</tax-liability-link> of your paid leave benefits.</p><p>The maximum benefit a person can receive per week is $850. Learn more about <benefits-amount-details-link>how benefits are calculated.</benefits-amount-details-link></p>",
+      "<p>Applying takes around 15 minutes. Your information will save as you go, so you can finish your application later if you need to.</p><p>If you give birth and plan to take both pregnancy-related medical leave and family leave to bond with your newborn, you should apply for medical leave first. Family leave to bond with your child can be <medical-bonding-link>easily added to your claim</medical-bonding-link> by calling our Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.</p><p>You need to create multiple leave applications if you are:</p><ul><li>Taking leave from multiple employers.</li><li>Taking time off in uneven blocks of time (intermittent leave), <strong>and</strong> taking time off completely or on a reduced schedule. You’ll need a separate application for the intermittent leave.</li></ul><p>PFML benefits are subject to reporting for tax purposes and may be subject to taxation. Withholding is not currently supported through the PFML program. Learn more about the <tax-liability-link>possible tax implications</tax-liability-link> of your paid leave benefits.</p><p>The maximum benefit a person can receive per week is ${{maxBenefitAmount}}. Learn more about <benefits-amount-details-link>how benefits are calculated.</benefits-amount-details-link></p>", // eslint-disable-line no-template-curly-in-string
     stepThreeHeading: "3. Apply",
     stepTwoBondingLeaveBody:
       "<p>For family leave to bond with your child after birth, foster placement, or adoption you need a document that confirms your child’s date of birth or placement.</p><p>You can apply before your child is born or arrives in your home. You will need to provide proof of birth or placement for your application to be approved.</p>",
@@ -2564,17 +2600,20 @@ const pages = {
   },
   payments: {
     changesToPaymentsAmountAnswer:
-      "<p>See your approval notice for your maximum weekly benefit. We may reduce your benefit amount based on <using-other-leave-link>other leave, income and benefits</using-other-leave-link> you reported to us. You will receive another notice in this application’s details if we reduce or offset your benefit amount.</p><p>Other scenarios that may change your benefit amount are:</p><ul> <li>You reach the $850 benefit total across multiple employers</li><li>If you transition from medical pregnancy to leave to bond with a child</li><li>Extending your leave</li></ul> <p>Check your <view-notices-link>application’s notices</view-notices-link> to see your approval notice and any updates to your approved benefit amount.</p>",
-    changesToPaymentsAmountQuestion: "What may change your benefit amount",
+      "<p>To see your maximum weekly benefit amount, view your approval notice in your <view-notices-link>application’s notices</view-notices-link>.</p><p>The sent payment amount you see on this page may be less than the maximum benefit amount due to <using-other-leave-link>other leave, income and benefits</using-other-leave-link> you reported. </p><p>You will receive another notice in the mail if we reduce your benefit amount.</p><p><strong>Other scenarios that may change the payment amount you receive are:</strong></p><ul><li>You or your employer report additional other leave, income or benefits</li><li>You reach the maximum total amount that a person can receive in PFML benefits across multiple applications. Read more about <benefit-amount-details-link>benefit amount details</benefit-amount-details-link>.</li><li>You receive a payment for a pay period less than a full week</li></ul>",
+    changesToPaymentsAmountQuestion:
+      "Why your sent payment amount may be less than your approved benefit amount",
     changesToPaymentsScheduleAnswer:
-      "<ul> <li>State and federal holidays</li><li>Your bank’s processes</li><li>Pay periods that end on a weekend</li><li>Payments may be delayed if we need to adjust your benefit amount based on extensions, other income or benefits you’ve reported and other process delays</li></ul>",
+      "<p>Once your payments have started, expect to be paid weekly for the duration of your leave.</p><p><strong>What may cause a delayed payment</strong></p><p>The exact day you receive payment can be delayed because of:</p><ul><li>State and federal holidays</li><li>Leave periods that end on weekends</li><li>Your bank’s processes</li><li>The process to adjust your benefit amount due to additional income or benefits you or your employer reported</li><li>Changes to your leave’s start and end dates</li><li>Other processing issues such as issues with bank account information, or your address</li></ul><p><strong>What may cause a cancelled payment</strong></p><p>Payments can be canceled due to:</p><ul><li>Changes to when you end your leave</li><li>Paid time off taken on days you also receive PFML benefits.</li><li>The process to adjust your benefit amount due to additional income or benefits you or your employer reported may temporarily create a canceled payment</li></ul>",
     changesToPaymentsScheduleQuestion: "What may change your payment schedule",
     changesToPaymentsYourPreferencesAnswer:
-      "<p>To make changes to your application, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>. If you request a change to your start and end dates, we may need to review your application again.</p>",
+      "<p>To make changes to your payment method or banking information, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.</p>",
     changesToPaymentsYourPreferencesQuestion: "Change your payment preference",
     feedbackDetails:
       "<p>We’d like to hear more about your experience on this site. Please take a few minutes to share your feedback.</p><p><feedback-link>Take the survey</feedback-link></p>",
     feedbackHeader: "Help us improve payment information by giving feedback",
+    paymentsIntro:
+      "<p>Payments are scheduled weekly. Check back once your leave week has ended to see when you can expect payment for that week.</p><p><strong>What does estimated scheduled date mean?</strong></p><p>This is the date range we expect to process your direct deposit payment or send your check in the mail. Depending on your bank’s processes, expect to receive direct deposit payments in your account 2-3 days after this date.  Checks may take 7-11 days to arrive in the mail. Once your payment is processed or your check is sent, that date will be shown in the “date sent” column.</p>",
     paymentsTable: {
       amountSent: "{{amount, currency}}",
       amountSentHeader: "Amount sent",
@@ -2583,11 +2622,11 @@ const pages = {
       leaveDatesHeader: "Leave dates",
       paymentMethodHeader: "Payment Method",
       paymentMethod_Check: "Check",
-      "paymentMethod_Elec Funds Transfer": "EFT",
+      "paymentMethod_Elec Funds Transfer": "Direct Deposit",
       paymentStatus_Cancelled: "Cancelled",
       paymentStatus_Delayed: "Delayed",
       paymentStatus_Pending: "Pending",
-      "paymentStatus_Sent to bank": "Sent to bank",
+      "paymentStatus_Sent to bank": "Sent",
       waitingWeekText:
         "This week is unpaid. Learn more about the <waiting-week-link>7-day waiting period</waiting-week-link>.",
     },
@@ -2625,6 +2664,19 @@ const pages = {
     intro:
       "The information you provide on this website will be used to administer the Paid Family and Medical Leave program. To continue using this website, you must agree to the terms of the user agreements updated as of June$t(chars.nbsp)25,$t(chars.nbsp)2021.",
     title: "How this website uses your information",
+  },
+  userSettings: {
+    accountInformationHeading: "Account information",
+    addPhoneNumberButtonText: "Add phone number",
+    additionalVerificationHeading: "Additional login verification",
+    additionalVerificationNoMfaText:
+      "<p>Make your account more secure by providing a phone number to associate with your account. We'll send you a 6-digit code whenenever we need to verify it's really you. You’ll need to enter the code in order to log in to your account. In the future, you’ll also be able to access sensitive information like tax documents once you set this up.</p><p>You will need to provide a phone number that can receive text messages (SMS) and that you’ll have consistent access to in case we need to verify your login.</p><p><strong>Additional login verification is not enabled</strong></p>",
+    additionalVerificationWithMfaText:
+      "To protect your security, we'll send you a 6-digit code whenenever we need to verify it's really you. You’ll need to enter the code in order to log in to your account.",
+    emailLabel: "Email address",
+    mfaEnabledLabel: "Additional login verification is enabled",
+    mfaPhoneNumberLabel: "Phone number",
+    title: "Settings",
   },
 };
 
@@ -2696,12 +2748,24 @@ const components = {
     header: "Document Requirements:",
   },
   downloadableDocument: {
-    createdAtDate: "Posted {{date}}",
+    createdAtDate: "Posted {{date}}.",
     noticeName: "Other notice $t(shared.pdfNoticeSuffix)", // it should fallback to this if we receive an unexpected or undefined enum
     noticeName_appealAcknowledgment:
       "Appeal Acknowledgment $t(shared.pdfNoticeSuffix)",
     noticeName_approvalNotice: "Approval notice $t(shared.pdfNoticeSuffix)",
+    noticeName_approvedTimeCancelled:
+      "Approved Time Cancelled $(shared.pdfNoticeSuffix)",
+    noticeName_benefitAmountChangeNotice:
+      "Benefit Amount Change Notice $(shared.pdfNoticeSuffix)",
+    noticeName_changeRequestApproved:
+      "Change Request Approved $(shared.pdfNoticeSuffix)",
+    noticeName_changeRequestDenied:
+      "Change Request Denied $(shared.pdfNoticeSuffix)",
     noticeName_denialNotice: "Denial notice $t(shared.pdfNoticeSuffix)",
+    noticeName_leaveAllotmentChangeNotice:
+      "Leave Allotment Change Notice $(shared.pdfNoticeSuffix)",
+    noticeName_maximumWeeklyBenefitChangeNotice:
+      "Maximum Weekly Benefit Change Notice $(shared.pdfNoticeSuffix)",
     noticeName_requestForInfoNotice:
       "Request for more information $t(shared.pdfNoticeSuffix)",
     noticeName_withdrawalNotice:
@@ -2790,6 +2854,24 @@ const components = {
     subtitle_amend:
       "This amendment will get saved when you submit your review. To remove this leave, include a comment at the end of the page.",
   },
+  employersCertsAndPeriods: {
+    caringLeaveDocumentInstructions: "View the family relationship on page 3.",
+    documentName: "Your employee's certification document.",
+    documentationLabel: "Documentation",
+    header: "Leave details",
+    leaveDurationLabel: "Leave duration",
+    // Fallback in case some unexpected leave reason is sent from Fineos:
+    reasonHeading: "Leave periods",
+    reasonHeading_activeDutyFamily: "$t(shared.leaveReasonActiveDutyFamily)",
+    reasonHeading_bonding: "$t(shared.leaveReasonBonding)",
+    reasonHeading_care: "$t(shared.leaveReasonCare)",
+    reasonHeading_medical: "$t(shared.leaveReasonMedical)",
+    reasonHeading_pregnancy: "$t(shared.leaveReasonPregnancy)",
+    reasonHeading_serviceMemberFamily:
+      "$t(shared.leaveReasonServiceMemberFamily)",
+    recordkeepingInstructions:
+      "To meet <mass-employer-role-link>federal laws and regulations</mass-employer-role-link>, you must keep medical records separate and confidential from any personnel files.",
+  },
   employersConcurrentLeave: {
     addButton: "Add an accrued paid leave",
     dateRangeLabel: "Date range",
@@ -2805,7 +2887,9 @@ const components = {
     addressLabel: "Mailing address",
     dobLabel: "Date of birth",
     employeeNameLabel: "Employee name",
+    employerIdentifierLabel: "Employer ID number (EIN)",
     header: "Employee information",
+    organizationNameLabel: "Organization",
     ssnOrItinLabel:
       "Social Security Number or Individual Taxpayer Identification Number",
   },
@@ -2926,6 +3010,23 @@ const components = {
     dashboard: "Dashboard",
     welcome: "Welcome",
   },
+  employersPaginationAbsencePeriodsTable: {
+    claimDurationType_Continuous: "$t(shared.claimDurationTypeContinuous)",
+    claimDurationType_Intermittent: "$t(shared.claimDurationTypeIntermittent)",
+    "claimDurationType_Reduced Schedule":
+      "$t(shared.claimDurationTypeReducedSchedule)",
+    dateRangeLabel: "Date range",
+    leaveFrequencyLabel: "Leave frequency",
+    requestDecision_Approved: "$t(shared.absencePeriodStatus_Approved)",
+    requestDecision_Cancelled: "$t(shared.absencePeriodStatus_Cancelled)",
+    requestDecision_Denied: "$t(shared.absencePeriodStatus_Denied)",
+    "requestDecision_In Review": "$t(shared.absencePeriodStatus_Pending)",
+    requestDecision_Pending: "$t(shared.absencePeriodStatus_Pending)",
+    requestDecision_Projected: "$t(shared.absencePeriodStatus_Pending)",
+    requestDecision_Voided: "$t(shared.absencePeriodStatus_Voided)",
+    requestDecision_Withdrawn: "$t(shared.absencePeriodStatus_Withdrawn)",
+    statusLabel: "Status",
+  },
   employersPreviousLeaves: {
     addButton: "$t(shared.claimsPreviousLeaveDetails.addButton)",
     dateRangeLabel: "Date range",
@@ -2947,8 +3048,7 @@ const components = {
     qualifyingReason_manageHealth:
       "Manage a <mass-benefits-guide-serious-health-condition-link>serious health condition</mass-benefits-guide-serious-health-condition-link>, including illness, injury, or pregnancy",
   },
-  employersSupportingWorkDetails: {
-    header: "Supporting work details",
+  employersWeeklyHoursWorkedRow: {
     heading_amend: "Amend weekly hours worked",
     leavePeriodDurationHint:
       "If their schedule varies, tell us the average number of hours worked over the past 52 weeks.",

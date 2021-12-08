@@ -56,6 +56,8 @@ class IssueRule(str, Enum):
     disallow_overlapping_waiting_period_and_concurrent_leave_start_date = (
         "disallow_overlapping_waiting_period_and_concurrent_leave_start_date"
     )
+    # Document requirement has already been satisfied in Fineos
+    document_requirement_already_satisfied = "document_requirement_already_satisfied"
     # Employer must be notified when employment status is Employed
     require_employer_notified = "require_employer_notified"
     # Partially masked field does not match existing value

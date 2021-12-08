@@ -9,7 +9,7 @@
 # and seeding.
 #
 import re
-from datetime import date
+from datetime import date, timedelta
 from typing import TYPE_CHECKING, List, Optional, cast
 
 from bouncer.constants import EDIT, READ  # noqa: F401 F403
@@ -35,6 +35,7 @@ from sqlalchemy.sql.expression import func
 from sqlalchemy.types import JSON
 
 import massgov.pfml.util.logging
+from massgov.pfml.util.datetime import utcnow
 
 from ..lookup import LookupTable
 from .base import Base, TimestampMixin, utc_timestamp_gen, uuid_gen
@@ -419,6 +420,10 @@ class Employer(Base, TimestampMixin):
 
     lk_industry_code = relationship(LkIndustryCode)
 
+    @property
+    def uses_organization_units(self):
+        return any(self.organization_units)
+
     @typed_hybrid_property
     def has_verification_data(self) -> bool:
         current_date = date.today()
@@ -455,6 +460,16 @@ class OrganizationUnit(Base, TimestampMixin):
     dua_reporting_units: "Query[DuaReportingUnit]" = dynamic_loader(
         "DuaReportingUnit", back_populates="organization_unit"
     )
+
+    @validates("fineos_id")
+    def validate_fineos_id(self, key: str, fineos_id: Optional[str]) -> Optional[str]:
+        if not fineos_id:
+            return fineos_id
+        if not re.fullmatch(r"[A-Z]{2}:[0-9]{5}:[0-9]{10}", fineos_id):
+            raise ValueError(
+                f"Invalid fineos_id: {fineos_id}. Expected a format of AA:00001:0000000001"
+            )
+        return fineos_id
 
 
 class DuaReportingUnit(Base, TimestampMixin):
@@ -668,6 +683,30 @@ class Employee(Base, TimestampMixin):
         "BenefitYearContribution", back_populates="employee"
     )
 
+    @hybrid_method
+    def get_organization_units(self, employer: Employer) -> list[OrganizationUnit]:
+        if not self.fineos_customer_number:
+            return []
+        return (
+            object_session(self)
+            .query(OrganizationUnit)
+            .join(EmployeeOccupation)
+            .join(DuaReportingUnit)
+            .join(
+                DuaEmployeeDemographics,
+                DuaReportingUnit.dua_id == DuaEmployeeDemographics.employer_reporting_unit_number,
+            )
+            .filter(
+                EmployeeOccupation.employee_id == self.employee_id,
+                EmployeeOccupation.employer_id == employer.employer_id,
+                DuaReportingUnit.organization_unit_id is not None,
+                DuaEmployeeDemographics.fineos_customer_number == self.fineos_customer_number,
+                DuaEmployeeDemographics.employer_fein == employer.employer_fein,
+            )
+            .distinct()
+            .all()
+        )
+
 
 class EmployeePushToFineosQueue(Base, TimestampMixin):
     __tablename__ = "employee_push_to_fineos_queue"
@@ -700,6 +739,9 @@ class Claim(Base, TimestampMixin):
     absence_period_end_date = Column(Date)
     fineos_notification_id = Column(Text)
     is_id_proofed = Column(Boolean)
+    organization_unit_id = Column(
+        PostgreSQLUUID, ForeignKey("organization_unit.organization_unit_id"), nullable=True
+    )
 
     # Not sure if these are currently used.
     authorized_representative_id = Column(PostgreSQLUUID)
@@ -719,6 +761,7 @@ class Claim(Base, TimestampMixin):
     absence_periods = cast(
         Optional[List["AbsencePeriod"]], relationship("AbsencePeriod", back_populates="claim"),
     )
+    organization_unit = relationship(OrganizationUnit)
 
     @typed_hybrid_property
     def soonest_open_requirement_date(self) -> Optional[date]:
@@ -799,14 +842,27 @@ class Claim(Base, TimestampMixin):
 
 class BenefitYear(Base, TimestampMixin):
     __tablename__ = "benefit_year"
+
     benefit_year_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+
     employee_id = Column(
         PostgreSQLUUID, ForeignKey("employee.employee_id"), nullable=False, index=True
     )
-    employee = relationship("Employee", back_populates="benefit_years")
+
+    employee = cast(Optional["Employee"], relationship("Employee", back_populates="benefit_years"))
+
     start_date = Column(Date, nullable=False)
+
     end_date = Column(Date, nullable=False)
+
+    # The base period used to calculate IAWW
+    # in order to recalculate IAWW for other employers
+    base_period_start_date = Column(Date)
+
+    base_period_end_date = Column(Date)
+
     total_wages = Column(Numeric(asdecimal=True))
+
     contributions = cast(
         List["BenefitYearContribution"],
         relationship("BenefitYearContribution", cascade="all, delete-orphan"),
@@ -1049,6 +1105,7 @@ class User(Base, TimestampMixin):
         Integer, ForeignKey("lk_mfa_delivery_preference.mfa_delivery_preference_id")
     )
     mfa_phone_number = Column(Text)  # Formatted in E.164
+    mfa_delivery_preference_updated_at = Column(TIMESTAMP(timezone=True))
 
     roles = relationship("LkRole", secondary="link_user_role", uselist=True)
     user_leave_administrators = relationship(
@@ -1068,6 +1125,45 @@ class User(Base, TimestampMixin):
         return None
 
     @hybrid_method
+    def get_verified_leave_admin_org_units(self) -> list[OrganizationUnit]:
+        organization_units: list[OrganizationUnit] = []
+        for la in self.user_leave_administrators:
+            if not la.verified:
+                continue
+            organization_units.extend(la.organization_units)
+        return organization_units
+
+    @hybrid_method
+    def get_leave_admin_notifications(self) -> list[str]:
+        """
+        Check if notifications were sent to this leave admin
+        in the last 24 hours, to prevent leave admins
+        with notifications, but no org units assigned,
+        from seeing a blank page in the employer dashboard
+        """
+        # This is imported here to prevent circular import error
+        from massgov.pfml.db.models.applications import Notification
+
+        a_day_ago = utcnow() - timedelta(days=1)
+        notifications = (
+            object_session(self)
+            .query(Notification.fineos_absence_id)
+            # Filtering by date first lowers query execution cost substantially
+            .filter(Notification.created_at > a_day_ago)
+            .filter(
+                Notification.request_json.contains(
+                    {
+                        "recipients": [{"email_address": self.email_address}],
+                        "recipient_type": "Leave Administrator",
+                    }
+                )
+            )
+            .distinct()
+        )
+        # claims that this leave admin was notified about in the last 24 hours
+        return [n.fineos_absence_id for n in notifications]
+
+    @hybrid_method
     def verified_employer(self, employer: Employer) -> bool:
         # Return the `verified` state of the Employer (from the UserLeaveAdministrator record)
         user_leave_administrator = self.get_user_leave_admin_for_employer(employer=employer)
@@ -1081,6 +1177,24 @@ class UserRole(Base, TimestampMixin):
 
     user = relationship(User)
     role = relationship(LkRole)
+
+
+class UserLeaveAdministratorOrgUnit(Base):
+    __tablename__ = "link_user_leave_administrator_org_unit"
+    user_leave_administrator_id = Column(
+        PostgreSQLUUID,
+        ForeignKey("link_user_leave_administrator.user_leave_administrator_id"),
+        primary_key=True,
+    )
+    organization_unit_id = Column(
+        PostgreSQLUUID, ForeignKey("organization_unit.organization_unit_id"), primary_key=True,
+    )
+
+    organization_unit = relationship(OrganizationUnit)
+
+    def __init__(self, user_leave_administrator_id, organization_unit_id):
+        self.user_leave_administrator_id = user_leave_administrator_id
+        self.organization_unit_id = organization_unit_id
 
 
 class UserLeaveAdministrator(Base, TimestampMixin):
@@ -1097,6 +1211,12 @@ class UserLeaveAdministrator(Base, TimestampMixin):
     user = relationship(User)
     employer = relationship(Employer)
     verification = relationship(Verification)
+    organization_units = relationship(
+        OrganizationUnit,
+        secondary="link_user_leave_administrator_org_unit",
+        uselist=True,
+        lazy="joined",
+    )
 
     @typed_hybrid_property
     def has_fineos_registration(self) -> bool:
@@ -1527,13 +1647,13 @@ class DuaEmployeeDemographics(Base, TimestampMixin):
     __tablename__ = "dua_employee_demographics"
     dua_employee_demographics_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
 
-    fineos_customer_number = Column(Text, nullable=True)
+    fineos_customer_number = Column(Text, nullable=True, index=True)
     date_of_birth = Column(Date, nullable=True)
     gender_code = Column(Text, nullable=True)
     occupation_code = Column(Text, nullable=True)
     occupation_description = Column(Text, nullable=True)
-    employer_fein = Column(Text, nullable=True)
-    employer_reporting_unit_number = Column(Text, nullable=True)
+    employer_fein = Column(Text, nullable=True, index=True)
+    employer_reporting_unit_number = Column(Text, nullable=True, index=True)
 
     # this Unique index is required since our test framework does not run migrations
     # it is excluded from migrations. see api/massgov/pfml/db/migrations/env.py

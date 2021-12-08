@@ -452,6 +452,27 @@ module "pub-payments-process-snapshot" {
   ecs_task_role              = aws_iam_role.pub_payments_process_fineos_task_role.arn
 }
 
+
+module "pub-payments-copy-audit-report-scheduler" {
+  source     = "../../modules/ecs_task_scheduler"
+  is_enabled = var.enable_pub_payments_copy_audit_report_schedule
+
+  task_name = "pub-payments-copy-audit-report"
+  # Every day at 4am ET (9am UTC)
+  schedule_expression_standard         = "cron(0 9 ? * MON-FRI *)"
+  schedule_expression_daylight_savings = "cron(0 8 ? * MON-FRI *)"
+  environment_name                     = var.environment_name
+
+  cluster_arn        = data.aws_ecs_cluster.cluster.arn
+  app_subnet_ids     = var.app_subnet_ids
+  security_group_ids = [aws_security_group.tasks.id]
+
+  ecs_task_definition_arn    = aws_ecs_task_definition.ecs_tasks["pub-payments-copy-audit-report"].arn
+  ecs_task_definition_family = aws_ecs_task_definition.ecs_tasks["pub-payments-copy-audit-report"].family
+  ecs_task_executor_role     = aws_iam_role.task_executor.arn
+  ecs_task_role              = aws_iam_role.pub_payments_process_fineos_task_role.arn
+}
+
 # TODO uncomment when ready
 # The task will process fineos extract files for IAWW data.
 # Run fineos-import-iaww at 3am EST (4am EDT) Monday through Friday

@@ -1,7 +1,7 @@
 import {
   AbsencePeriod,
   AbsencePeriodRequestDecision,
-} from "../../../models/ClaimDetail";
+} from "../../../models/AbsencePeriod";
 import {
   BenefitsApplicationDocument,
   ClaimDocument,
@@ -118,7 +118,9 @@ export const Status = ({
     );
   }
 
-  const absenceDetails = claimDetail.absencePeriodsByReason;
+  const absenceDetails = AbsencePeriod.groupByReason(
+    claimDetail.absence_periods
+  );
   const hasPendingStatus = claimDetail.absence_periods.some(
     (absenceItem) => absenceItem.request_decision === "Pending"
   );
@@ -436,10 +438,13 @@ export const StatusTagMap: {
   [status in AbsencePeriodRequestDecision]: TagProps["state"];
 } = {
   Approved: "success",
-  Denied: "error",
-  Pending: "pending",
-  Withdrawn: "inactive",
   Cancelled: "inactive",
+  Denied: "error",
+  "In Review": "pending",
+  Pending: "pending",
+  Projected: "pending",
+  Withdrawn: "inactive",
+  Voided: "inactive",
 } as const;
 
 interface LeaveDetailsProps {

@@ -1,10 +1,12 @@
 import datetime
 from datetime import date
+from unittest import mock
 
 import pytest
 from freezegun import freeze_time
 
 from massgov.pfml.api.models.applications.common import DurationBasis, FrequencyIntervalBasis
+from massgov.pfml.api.models.applications.responses import DocumentResponse
 from massgov.pfml.api.validation.application_rules import (
     get_always_required_issues,
     get_application_complete_issues,
@@ -20,6 +22,7 @@ from massgov.pfml.api.validation.application_rules import (
 from massgov.pfml.api.validation.exceptions import IssueRule, IssueType, ValidationErrorDetail
 from massgov.pfml.db.models.applications import (
     ConcurrentLeave,
+    DocumentType,
     EmployerBenefit,
     EmploymentStatus,
     IntermittentLeavePeriod,
@@ -37,6 +40,7 @@ from massgov.pfml.db.models.factories import (
     ClaimFactory,
     ConcurrentLeaveFactory,
     ContinuousLeavePeriodFactory,
+    DocumentFactory,
     EmployerBenefitFactory,
     IntermittentLeavePeriodFactory,
     OtherIncomeFactory,
@@ -2483,12 +2487,14 @@ def test_previous_leaves_cannot_overlap_leave_periods():
 
 
 @pytest.mark.parametrize(
-    "headers, is_withholding_tax, expected_issues",
+    "headers, is_withholding_tax, has_submitted_payment_preference, include_id_document, expected_issues",
     [
-        ({}, None, []),
+        ({}, None, True, True, []),
         (
             {"X-FF-Tax-Withholding-Enabled": True},
             None,
+            True,
+            True,
             [
                 ValidationErrorDetail(
                     type=IssueType.required,
@@ -2497,25 +2503,152 @@ def test_previous_leaves_cannot_overlap_leave_periods():
                 ),
             ],
         ),
-        ({"X-FF-Tax-Withholding-Enabled": True}, True, []),
-        ({"X-FF-Tax-Withholding-Enabled": True}, False, []),
+        ({"X-FF-Tax-Withholding-Enabled": True}, True, True, True, []),
+        ({"X-FF-Tax-Withholding-Enabled": True}, False, True, True, []),
+        (
+            {},
+            None,
+            False,
+            True,
+            [
+                ValidationErrorDetail(
+                    message="Payment preference is required",
+                    type=IssueType.required,
+                    field="payment_method",
+                )
+            ],
+        ),
+        (
+            {},
+            None,
+            True,
+            False,
+            [
+                ValidationErrorDetail(
+                    type=IssueType.required, message="An identification document is required"
+                )
+            ],
+        ),
     ],
 )
-def test_get_application_complete_issues(headers, is_withholding_tax, expected_issues):
-    application = ApplicationFactory.build(
-        is_withholding_tax=is_withholding_tax, claim=ClaimFactory.build()
+@mock.patch("massgov.pfml.api.validation.application_rules.get_documents")
+def test_get_application_complete_issues(
+    mock_get_docs,
+    headers,
+    is_withholding_tax,
+    has_submitted_payment_preference,
+    include_id_document,
+    expected_issues,
+    test_db_session,
+    user,
+    initialize_factories_session,
+):
+    application = ApplicationFactory.create(
+        is_withholding_tax=is_withholding_tax,
+        has_submitted_payment_preference=has_submitted_payment_preference,
+        claim=ClaimFactory.build(),
+        user_id=user.user_id,
+        leave_reason_id=LeaveReason.PREGNANCY_MATERNITY.leave_reason_id,
     )
+    mock_get_docs.return_value = []
+    if include_id_document:
+        DocumentFactory.create(
+            user_id=application.user_id,
+            application_id=application.application_id,
+            document_type_id=DocumentType.PASSPORT.document_type_id,
+        )
 
-    issues = get_application_complete_issues(application, headers)
+    issues = get_application_complete_issues(application, headers, test_db_session)
 
     assert issues == expected_issues
 
 
-def test_get_application_complete_issues_missing_absence_id():
-    claim = ClaimFactory.build(fineos_absence_id=None)
-    application = ApplicationFactory.build(is_withholding_tax=False, claim=claim)
+def test_get_application_complete_issues_certification_validation(
+    initialize_factories_session, user, test_db_session,
+):
+    application = ApplicationFactory.create(
+        is_withholding_tax=None,
+        has_submitted_payment_preference=True,
+        claim=ClaimFactory.build(),
+        user_id=user.user_id,
+        leave_reason_id=LeaveReason.SERIOUS_HEALTH_CONDITION_EMPLOYEE.leave_reason_id,
+    )
+    DocumentFactory.create(
+        user_id=application.user_id,
+        application_id=application.application_id,
+        document_type_id=DocumentType.PASSPORT.document_type_id,
+    )
 
-    issues = get_application_complete_issues(application, {})
+    issues = get_application_complete_issues(application, {}, test_db_session)
+
+    assert issues == [
+        ValidationErrorDetail(
+            type=IssueType.required, message="A certification document is required"
+        )
+    ]
+
+
+@pytest.mark.parametrize(
+    "document_type, expected_issues",
+    [
+        (
+            DocumentType.PASSPORT.document_type_description,
+            [
+                ValidationErrorDetail(
+                    type=IssueType.required, message="A certification document is required"
+                )
+            ],
+        ),
+        (
+            DocumentType.CHILD_BONDING_EVIDENCE_FORM.document_type_description,
+            [
+                ValidationErrorDetail(
+                    type=IssueType.required, message="An identification document is required"
+                )
+            ],
+        ),
+    ],
+)
+@mock.patch("massgov.pfml.api.validation.application_rules.get_documents")
+def test_get_application_complete_issues_fineos_fallback(
+    mock_get_documents,
+    document_type,
+    expected_issues,
+    initialize_factories_session,
+    user,
+    test_db_session,
+):
+    application = ApplicationFactory.create(
+        is_withholding_tax=None,
+        has_submitted_payment_preference=True,
+        claim=ClaimFactory.build(),
+        user_id=user.user_id,
+        leave_reason_id=LeaveReason.SERIOUS_HEALTH_CONDITION_EMPLOYEE.leave_reason_id,
+    )
+
+    mock_get_documents.return_value = [
+        DocumentResponse(
+            user_id=user.user_id,
+            application_id=application.application_id,
+            document_type=document_type,
+            name="File.pdf",
+            description="my file",
+        )
+    ]
+
+    issues = get_application_complete_issues(application, {}, test_db_session)
+
+    assert issues == expected_issues
+
+
+@mock.patch("massgov.pfml.api.validation.application_rules.get_documents_issues", return_value=[])
+def test_get_application_complete_issues_missing_absence_id(test_db_session):
+    claim = ClaimFactory.build(fineos_absence_id=None)
+    application = ApplicationFactory.build(
+        is_withholding_tax=False, claim=claim, has_submitted_payment_preference=True
+    )
+
+    issues = get_application_complete_issues(application, {}, test_db_session)
 
     assert issues == [
         ValidationErrorDetail(
@@ -2525,13 +2658,17 @@ def test_get_application_complete_issues_missing_absence_id():
     ]
 
 
-def test_get_application_complete_issues_missing_part1_field():
+@mock.patch("massgov.pfml.api.validation.application_rules.get_documents_issues", return_value=[])
+def test_get_application_complete_issues_missing_part1_field(test_db_session):
     # This validation doesn't care if a new "Submit" rule isn't fulfilled, as long as a claim
     # with a Fineos absence ID exists.
     application = ApplicationFactory.build(
-        is_withholding_tax=False, claim=ClaimFactory.build(), first_name=None
+        is_withholding_tax=False,
+        claim=ClaimFactory.build(),
+        first_name=None,
+        has_submitted_payment_preference=True,
     )
-    issues = get_application_complete_issues(application, {})
+    issues = get_application_complete_issues(application, {}, test_db_session)
 
     assert not issues
 

@@ -34,4 +34,20 @@ describe("i18n", () => {
 
     expect(content).toBe("this.key.doesnt.exist");
   });
+
+  it("exposes fileSizeMaxMB as a global interpolation value, based on the fileSizeMaxBytesFineos env var", async () => {
+    process.env.fileSizeMaxBytesFineos = "1000000";
+
+    const t = await initializeI18n("en-US", {
+      "en-US": {
+        translation: {
+          testKey: "{{ fileSizeMaxMB }} MB",
+        },
+      },
+    });
+
+    const content = t("testKey");
+
+    expect(content).toBe("1 MB");
+  });
 });
