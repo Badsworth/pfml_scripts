@@ -168,6 +168,8 @@ export const Payments = ({
                             href={
                               routes.external.massgov.sevenDayWaitingPeriodInfo
                             }
+                            rel="noopener noreferrer"
+                            target="_blank"
                           />
                         ),
                       }}

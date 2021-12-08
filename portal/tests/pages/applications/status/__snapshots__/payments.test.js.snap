@@ -367,6 +367,8 @@ exports[`Payments renders the Payments table 1`] = `
         This week is unpaid. Learn more about the 
         <a
           href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#what-is-the-7-day-waiting-period?-"
+          rel="noopener noreferrer"
+          target="_blank"
         >
           7-day waiting period
         </a>
