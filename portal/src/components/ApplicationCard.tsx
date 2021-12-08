@@ -1,12 +1,8 @@
 import routeWithParams, {
   createRouteWithQuery,
 } from "../utils/routeWithParams";
-import withClaimDocuments, {
-  WithClaimDocumentsProps,
-} from "../hoc/withClaimDocuments";
 import { AppLogic } from "../hooks/useAppLogic";
 import BenefitsApplication from "../models/BenefitsApplication";
-import { BenefitsApplicationDocument } from "../models/Document";
 import ButtonLink from "./ButtonLink";
 import Heading from "./core/Heading";
 import LeaveReason from "../models/LeaveReason";
@@ -15,6 +11,7 @@ import React from "react";
 import Spinner from "./core/Spinner";
 import Tag from "./core/Tag";
 import ThrottledButton from "./ThrottledButton";
+import { WithUserProps } from "src/hoc/withUser";
 import findKeyByValue from "../utils/findKeyByValue";
 import getLegalNotices from "../utils/getLegalNotices";
 import hasDocumentsLoadError from "../utils/hasDocumentsLoadError";
@@ -134,8 +131,6 @@ const ManageDocumentSection = ({
 interface LegalNoticeSectionProps {
   appLogic: AppLogic;
   claim: BenefitsApplication;
-  documents: BenefitsApplicationDocument[];
-  isLoadingDocuments: boolean;
 }
 
 /**
@@ -144,9 +139,17 @@ interface LegalNoticeSectionProps {
 const LegalNoticeSection = (props: LegalNoticeSectionProps) => {
   const { t } = useTranslation();
   const isSubmitted = props.claim.status === "Submitted";
-  const legalNotices = getLegalNotices(props.documents);
+  const {
+    documents: { loadAll, isLoadingClaimDocuments },
+  } = props.appLogic;
+
+  React.useEffect(() => {
+    loadAll(props.claim.application_id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loadAll]);
+
   const shouldShowSpinner =
-    props.isLoadingDocuments &&
+    isLoadingClaimDocuments(props.claim.application_id) &&
     !hasDocumentsLoadError(
       props.appLogic.appErrors,
       props.claim.application_id
@@ -170,6 +173,12 @@ const LegalNoticeSection = (props: LegalNoticeSectionProps) => {
     );
   }
 
+  const legalNotices = getLegalNotices(
+    props.appLogic.documents.documents.filterByApplication(
+      props.claim.application_id
+    )
+  );
+
   if (!legalNotices.length) return null;
 
   return (
@@ -177,6 +186,9 @@ const LegalNoticeSection = (props: LegalNoticeSectionProps) => {
       <Heading level="3">{t("components.applicationCard.viewNotices")}</Heading>
       <LegalNoticeList
         onDownloadClick={props.appLogic.documents.download}
+        documents={props.appLogic.documents.documents.filterByApplication(
+          props.claim.application_id
+        )}
         {...props}
       />
     </div>
@@ -185,8 +197,6 @@ const LegalNoticeSection = (props: LegalNoticeSectionProps) => {
 
 interface InProgressStatusCardProps {
   claim: BenefitsApplication;
-  documents: BenefitsApplicationDocument[];
-  isLoadingDocuments: boolean;
   number: number;
   appLogic: AppLogic;
 }
@@ -279,7 +289,7 @@ const CompletedStatusCard = ({ appLogic, claim }: CompletedStatusCardProps) => {
   );
 };
 
-interface ApplicationCardProps extends WithClaimDocumentsProps {
+interface ApplicationCardProps extends WithUserProps {
   claim: BenefitsApplication;
   number: number;
 }
@@ -313,4 +323,4 @@ export const ApplicationCard = (props: ApplicationCardProps) => {
   );
 };
 
-export default withClaimDocuments(ApplicationCard);
+export default ApplicationCard;

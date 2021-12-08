@@ -25,6 +25,7 @@ const ApplicationCardWithAppLogic = ({
   appLogic.users.user = new User({ consented_to_data_sharing: true });
 
   appLogic.documents.loadAll = jest.fn();
+  appLogic.documents.isLoadingClaimDocuments = jest.fn();
 
   addAppLogicMocks(appLogic);
 
@@ -196,10 +197,12 @@ describe("ApplicationCard", () => {
 
     render(
       <ApplicationCardWithAppLogic
+        addAppLogicMocks={(appLogic) => {
+          appLogic.documents.isLoadingClaimDocuments = () => true;
+        }}
         claim={claim}
         number={2}
         documents={[]}
-        isLoadingDocuments
       />
     );
 
@@ -229,7 +232,6 @@ describe("ApplicationCard", () => {
         claim={claim}
         number={2}
         documents={[]}
-        isLoadingDocuments
       />
     );
 
@@ -242,14 +244,8 @@ describe("ApplicationCard", () => {
 
   it("does not show a spinner for completed applications", () => {
     const claim = new MockBenefitsApplicationBuilder().completed().create();
-
     render(
-      <ApplicationCardWithAppLogic
-        claim={claim}
-        number={2}
-        documents={[]}
-        isLoadingDocuments
-      />
+      <ApplicationCardWithAppLogic claim={claim} number={2} documents={[]} />
     );
 
     expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();

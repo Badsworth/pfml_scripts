@@ -4,6 +4,7 @@ import BenefitsApplicationCollection from "../../../src/models/BenefitsApplicati
 import Index from "../../../src/pages/applications/index";
 import { mockRouter } from "next/router";
 import routes from "../../../src/routes";
+import userEvent from "@testing-library/user-event";
 
 const inProgressClaim = new MockBenefitsApplicationBuilder()
   .id("mock_application_id_one")
@@ -19,10 +20,9 @@ const completedClaim = new MockBenefitsApplicationBuilder()
   .create();
 
 const setUpHelper = (appLogicHook) => {
-  appLogicHook.benefitsApplications.loadAll = jest.fn();
-  appLogicHook.benefitsApplications.hasLoadedAll = true;
   appLogicHook.benefitsApplications.benefitsApplications =
     new BenefitsApplicationCollection([]);
+  appLogicHook.benefitsApplications.loadPage = jest.fn();
 };
 
 describe("Applications", () => {
@@ -36,6 +36,7 @@ describe("Applications", () => {
     renderPage(Index, {
       addCustomSetup: (appLogicHook) => {
         setUpHelper(appLogicHook);
+        appLogicHook.benefitsApplications.isLoadingClaims = false;
         goToSpy = jest.spyOn(appLogicHook.portalFlow, "goTo");
       },
     });
@@ -66,18 +67,14 @@ describe("Applications", () => {
   });
 
   it("displays completed applications", () => {
-    renderPage(
-      Index,
-      {
-        addCustomSetup: (appLogicHook) => {
-          setUpHelper(appLogicHook);
-          appLogicHook.documents.loadAll = jest.fn();
-          appLogicHook.benefitsApplications.benefitsApplications =
-            new BenefitsApplicationCollection([completedClaim]);
-        },
+    renderPage(Index, {
+      addCustomSetup: (appLogicHook) => {
+        setUpHelper(appLogicHook);
+        appLogicHook.documents.loadAll = jest.fn();
+        appLogicHook.benefitsApplications.benefitsApplications =
+          new BenefitsApplicationCollection([completedClaim]);
       },
-      { query: {} }
-    );
+    });
 
     expect(screen.getByText(/Submitted applications/)).toBeInTheDocument();
     expect(screen.getByText(/View your notices/)).toBeInTheDocument();
@@ -170,5 +167,66 @@ describe("Applications", () => {
         /Our Contact Center staff will review your documents for mock_id./
       )
     ).toBeInTheDocument();
+  });
+
+  describe("Pagination Navigation", () => {
+    it("does not display when there is only 1 page of applications", () => {
+      renderPage(Index, {
+        addCustomSetup: (appLogicHook) => {
+          setUpHelper(appLogicHook);
+          appLogicHook.documents.loadAll = jest.fn();
+          appLogicHook.benefitsApplications.benefitsApplications =
+            new BenefitsApplicationCollection([inProgressClaim]);
+        },
+      });
+
+      expect(
+        screen.queryByRole("button", { name: /next/i })
+      ).not.toBeInTheDocument();
+    });
+
+    it("does display when there is more than 1 page of applications", () => {
+      renderPage(Index, {
+        addCustomSetup: (appLogicHook) => {
+          setUpHelper(appLogicHook);
+          appLogicHook.documents.loadAll = jest.fn();
+          appLogicHook.benefitsApplications.benefitsApplications =
+            new BenefitsApplicationCollection([inProgressClaim]);
+          appLogicHook.benefitsApplications.paginationMeta = {
+            total_records: 50,
+            total_pages: 2,
+          };
+        },
+      });
+
+      expect(
+        screen.queryByRole("button", { name: /next/i })
+      ).toBeInTheDocument();
+    });
+
+    it("changes page_offset when clicked", () => {
+      let updateQuerySpy;
+
+      renderPage(Index, {
+        addCustomSetup: (appLogicHook) => {
+          setUpHelper(appLogicHook);
+          appLogicHook.documents.loadAll = jest.fn();
+          appLogicHook.benefitsApplications.benefitsApplications =
+            new BenefitsApplicationCollection([inProgressClaim]);
+          appLogicHook.benefitsApplications.paginationMeta = {
+            total_records: 50,
+            total_pages: 2,
+            page_offset: 1,
+          };
+          updateQuerySpy = jest.spyOn(appLogicHook.portalFlow, "updateQuery");
+        },
+      });
+
+      userEvent.click(screen.getByRole("button", { name: /next/i }));
+
+      expect(updateQuerySpy).toHaveBeenCalledWith({
+        page_offset: "2",
+      });
+    });
   });
 });

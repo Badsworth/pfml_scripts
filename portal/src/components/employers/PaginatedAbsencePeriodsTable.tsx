@@ -39,13 +39,20 @@ const PaginatedAbsencePeriodsTable = ({
               : StatusTagMap[period.request_decision];
           return (
             <tr key={index}>
-              <th scope="row" data-label={tableHeadings[0]}>
+              <th
+                className="tablet:width-card-lg"
+                scope="row"
+                data-label={tableHeadings[0]}
+              >
                 {formatDateRange(
                   period.absence_period_start_date,
                   period.absence_period_end_date
                 )}
               </th>
-              <td data-label={tableHeadings[1]}>
+              <td
+                className="tablet:width-card-lg"
+                data-label={tableHeadings[1]}
+              >
                 {t(
                   "components.employersPaginationAbsencePeriodsTable.claimDurationType",
                   {
