@@ -22,7 +22,7 @@ resource "aws_cloudfront_distribution" "admin_portal_web_distribution" {
     domain_name = aws_s3_bucket.admin_portal_web.website_endpoint
     origin_id   = aws_s3_bucket.admin_portal_web.id
     # set as an environment variable during github workflow
-    origin_path = var.cloudfront_origin_path
+    #origin_path = var.cloudfront_origin_path
 
     # see s3 bucket iam policy
     custom_header {
@@ -85,7 +85,7 @@ resource "aws_cloudfront_distribution" "admin_portal_web_distribution" {
   }
 
   viewer_certificate {
-    acm_certificate_arn            = local.cert_domain == null ? null : data.aws_acm_certificate.domain[0].arn
+    acm_certificate_arn            = local.cert_domain == null ? null : data.aws_acm_certificate.admin_portal_cert_domains[0].arn
     cloudfront_default_certificate = (local.cert_domain == null)
 
     # SNI is recommended

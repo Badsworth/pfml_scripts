@@ -1,9 +1,9 @@
-variable "cloudfront_origin_path" {
-  description = "Path to latest portal release. Set through environment variable in Github worfklow."
-  type        = string
-}
+# variable "cloudfront_origin_path" {
+#   description = "Path to latest portal release. Set through environment variable in Github worfklow."
+#   type        = string
+# }
 
-variable "domain" {
+variable "admin_domains" {
   description = "Domain name to point to CloudFront distribution (including TLD)"
   type        = string
   default     = ""

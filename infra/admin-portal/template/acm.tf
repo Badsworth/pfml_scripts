@@ -16,9 +16,9 @@ locals {
 //       paidleave-api-test.mass.gov,
 //       paidleave-api-stage.mass.gov
 //
-data "aws_acm_certificate" "domain" {
+data "aws_acm_certificate" "admin_portal_cert_domains" {
   count       = local.cert_domain == null ? 0 : 1
   domain      = local.cert_domain
-  statuses    = ["ISSUED", "PENDING_VALIDATION"]
+  statuses    = ["ISSUED"]
   most_recent = true
 }
