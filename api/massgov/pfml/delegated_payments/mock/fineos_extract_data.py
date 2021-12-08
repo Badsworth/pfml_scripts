@@ -554,7 +554,6 @@ def generate_payment_extract_files(
                     withholding_payment.tin = "SITPAYEE001"
                     withholding_payment.payment_amount = "22.00"
                     withholding_payment.i_value = str(fake.unique.random_int())
-                    # withholding_payment.payment_start_period = 
                 if item == 1:
                     withholding_payment.tin = "FITAMOUNTPAYEE001"
                     withholding_payment.payment_amount = "35.00"
