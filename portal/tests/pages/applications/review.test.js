@@ -34,7 +34,12 @@ import routes from "../../../src/routes";
 import { setupBenefitsApplications } from "../../test-utils/helpers";
 import userEvent from "@testing-library/user-event";
 
-const setup = ({ appErrors, claim, documents } = {}) => {
+const setup = ({
+  appErrors,
+  claim,
+  documents,
+  hasLoadedClaimDocuments,
+} = {}) => {
   // Set the correct initial path so that generated URLs are correct
   mockRouter.pathname = routes.applications.review;
 
@@ -239,6 +244,7 @@ describe("Review Page", () => {
       .create();
 
     setup({
+      hasLoadedClaimDocuments: true,
       claim,
       documents: [
         {

@@ -54,9 +54,8 @@ describe("useAppLogic", () => {
     expect(clearErrors).toBeInstanceOf(Function);
     expect(clearRequiredFieldErrors).toBeInstanceOf(Function);
     expect(portalFlow).toEqual(expect.anything());
-    expect(benefitsApplications.hasLoadedAll).toEqual(expect.any(Boolean));
     expect(benefitsApplications.load).toBeInstanceOf(Function);
-    expect(benefitsApplications.loadAll).toBeInstanceOf(Function);
+    expect(benefitsApplications.loadPage).toBeInstanceOf(Function);
     expect(benefitsApplications.create).toBeInstanceOf(Function);
     expect(benefitsApplications.update).toBeInstanceOf(Function);
     expect(claims.claims).toBeInstanceOf(ClaimCollection);
