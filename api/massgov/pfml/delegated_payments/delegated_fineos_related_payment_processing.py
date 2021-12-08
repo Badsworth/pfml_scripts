@@ -44,9 +44,8 @@ class RelatedPaymentsProcessingStep(Step):
             primary_payment_records: List[Payment] = (
                 self.db_session.query(Payment)
                 .filter(Payment.claim_id == payment.claim_id)
-                .filter(Payment.period_start_date == payment.period_start_date)
-                .filter(Payment.period_end_date == payment.period_end_date)
-                .filter(Payment.payment_date == payment.payment_date)
+                .filter(Payment.period_start_date <= payment.period_start_date)
+                .filter(Payment.period_end_date >= payment.period_end_date)
                 .filter(
                     Payment.payment_transaction_type_id
                     == PaymentTransactionType.STANDARD.payment_transaction_type_id
