@@ -57,6 +57,7 @@ export const WITHHOLDING_RETRO: ScenarioSpecification = {
 
 export default scenarios.map((scenario) => {
   paymentScenarios[scenario].claim.leave_dates = [start, end];
+  paymentScenarios[scenario].claim.is_withholding_tax = true;
   paymentScenarios[scenario].claim.metadata = {
     ...paymentScenarios[scenario].claim.metadata,
     quantity: scenario !== "ADDRESS7" ? 30 : 5,
