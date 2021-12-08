@@ -1227,6 +1227,11 @@ def create_or_update_employer(
             "An Employer must have a employer_name in order to create or update an employer."
         )
 
+    if not employer.employer_dba:
+        raise ValueError(
+            "An Employer must have a employer_dba in order to create or update an employer."
+        )
+
     employer_request_body = massgov.pfml.fineos.models.CreateOrUpdateEmployer(
         # `fineos_customer_nbr` is used as the Organization's CustomerNo
         # attribute for the request, which FINEOS uses to determine if this is a
