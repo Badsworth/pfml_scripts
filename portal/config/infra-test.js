@@ -14,5 +14,5 @@
     },
     domain: "paidleave-infra-test.dfml.eol.mass.gov",
     gtmConfig: {},
-    newRelicAppId: "1545153521",
+    newRelicAppId: "847219405",
   };
