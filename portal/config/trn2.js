@@ -10,7 +10,7 @@
     awsConfig: {
       // Cognito Trn2 environment (must match whatever API environment we're targeting)
       cognitoUserPoolId: "us-east-1_oxOGrdAe8",
-      cognitoUserPoolWebClientId: "16oll6nm4ifkik83b7c3s2a0ro",
+      cognitoUserPoolWebClientId: "3dgp7vtcdt7bo0utlp2tqit1ee",
     },
     domain: "paidleave-trn2.dfml.eol.mass.gov",
     gtmConfig: {},
