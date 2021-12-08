@@ -12,7 +12,7 @@ const setup = (claims = []) => {
     addCustomSetup: (appLogic) => {
       appLogic.benefitsApplications.benefitsApplications =
         new BenefitsApplicationCollection(claims);
-      appLogic.benefitsApplications.hasLoadedAll = true;
+      appLogic.benefitsApplications.loadPage = jest.fn();
     },
   });
 };
