@@ -20,6 +20,10 @@ const chars = {
 
 const errors = {
   applications: {
+    claim: {
+      exists:
+        "You have already submitted this portion of your application. If you need to edit your information, call the Contact Center at $t(shared.contactCenterPhoneNumberNoBreak).",
+    },
     concurrent_leave: {
       is_for_current_employer: {
         required: "Select Yes if your leave is from this employer.",
@@ -366,6 +370,8 @@ const errors = {
       },
       payment_method: {
         required: "Select how you want to get your weekly benefit.",
+        exists:
+          "You have already submitted your payment preference. If you need to edit your preference, call the Contact Center at $t(shared.contactCenterPhoneNumberNoBreak).",
       },
       routing_number: {
         checksum:
@@ -699,6 +705,12 @@ const shared = {
   absenceCaseStatus_denied: "Denied",
   absenceCaseStatus_noAction: "No action required",
   absenceCaseStatus_pending: "Pending",
+  absencePeriodStatus_Approved: "Approved",
+  absencePeriodStatus_Cancelled: "Cancelled",
+  absencePeriodStatus_Denied: "Denied",
+  absencePeriodStatus_Pending: "Pending",
+  absencePeriodStatus_Voided: "Voided",
+  absencePeriodStatus_Withdrawn: "Withdrawn",
   achTypeChecking: "Checking",
   achTypeSavings: "Savings",
   amountFrequencyLabel: "Frequency",
@@ -2091,14 +2103,14 @@ const pages = {
     reportOtherBenefitsBody:
       "<p>If your plans for other benefits or income during your paid leave have changed, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>. Report changes to:</p><ul><li>Benefits from your employer that you plan to use in addition to paid leave from PFML. For example, if you are taking a different amount of sick days than you first planned, or if you are taking employer sponsored parental leave on a different schedule than you expected, report this change.</li><li>Income from other sources during your leave. For example, if you got approved for a disability benefit or a worker’s compensation claim after you submitted your application, report this change.</li></ul>",
     reportOtherBenefitsHeading: "Report other benefits or income",
-    requestDecision_Approved: "Approved",
-    requestDecision_Cancelled: "Cancelled",
-    requestDecision_Denied: "Denied",
-    "requestDecision_In Review": "Pending",
-    requestDecision_Pending: "Pending",
-    requestDecision_Projected: "Pending",
-    requestDecision_Voided: "Voided",
-    requestDecision_Withdrawn: "Withdrawn",
+    requestDecision_Approved: "$t(shared.absencePeriodStatus_Approved)",
+    requestDecision_Cancelled: "$t(shared.absencePeriodStatus_Cancelled)",
+    requestDecision_Denied: "$t(shared.absencePeriodStatus_Denied)",
+    "requestDecision_In Review": "$t(shared.absencePeriodStatus_Pending)",
+    requestDecision_Pending: "$t(shared.absencePeriodStatus_Pending)",
+    requestDecision_Projected: "$t(shared.absencePeriodStatus_Pending)",
+    requestDecision_Voided: "$t(shared.absencePeriodStatus_Voided)",
+    requestDecision_Withdrawn: "$t(shared.absencePeriodStatus_Withdrawn)",
     statusTimelineNotice:
       "Notices usually appear within 30 minutes after we update the status of your application.",
     timelineDescription:
@@ -2165,7 +2177,7 @@ const pages = {
       "You may be able to take up to 12 weeks of paid family leave to bond with your child after your medical leave ends. <medical-bonding-link>Family leave to bond with your child</medical-bonding-link> can be easily added to your application by calling our Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> after your medical leave is approved. You should not submit a second application.",
     familyLeaveToBondHeading: "You may also be eligible for paid family leave",
     learnMore:
-      "Review <benefits-amount-details-link>our benefits guide</benefits-amount-details-link> to find out more about how benefits are determined. For a rough estimate of how much you might receive, <benefits-calculator-link>use this calculator</benefits-calculator-link>. The maximum total amount that a person can receive in PFML benefits is $850 per week, even if you have been approved for leave benefits from multiple employers.",
+      "Review <benefits-amount-details-link>our benefits guide</benefits-amount-details-link> to find out more about how benefits are determined. For a rough estimate of how much you might receive, <benefits-calculator-link>use this calculator</benefits-calculator-link>. The maximum total amount that a person can receive in PFML benefits is ${{maxBenefitAmount}} per week, even if you have been approved for leave benefits from multiple employers.", // eslint-disable-line no-template-curly-in-string
     learnMoreHeading: "Learn more about paid leave benefits",
     medicalLeaveAfterBirth:
       "You may be able to take up to 20 weeks of paid medical leave if you’re unable to work during your pregnancy or for your recovery from childbirth. Your health care provider determines how much medical leave you will need. Call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> if you need <medical-bonding-link>medical leave after giving birth</medical-bonding-link>.",
@@ -2552,7 +2564,7 @@ const pages = {
       "<p>If you can, tell your employer at least 30 days before your leave begins. If you need to take leave right away, tell your employer as soon as possible.</p><p>Once you tell your employer, you have the right to apply and your job is protected. Make a note of when you notified your employer. You will need to provide this date in your leave application.</p>",
     stepOneHeading: "1. Tell your employer that you need to take paid leave",
     stepThree:
-      "<p>Applying takes around 15 minutes. Your information will save as you go, so you can finish your application later if you need to.</p><p>If you give birth and plan to take both pregnancy-related medical leave and family leave to bond with your newborn, you should apply for medical leave first. Family leave to bond with your child can be <medical-bonding-link>easily added to your claim</medical-bonding-link> by calling our Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.</p><p>You need to create multiple leave applications if you are:</p><ul><li>Taking leave from multiple employers.</li><li>Taking time off in uneven blocks of time (intermittent leave), <strong>and</strong> taking time off completely or on a reduced schedule. You’ll need a separate application for the intermittent leave.</li></ul><p>PFML benefits are subject to reporting for tax purposes and may be subject to taxation. Withholding is not currently supported through the PFML program. Learn more about the <tax-liability-link>possible tax implications</tax-liability-link> of your paid leave benefits.</p><p>The maximum benefit a person can receive per week is $850. Learn more about <benefits-amount-details-link>how benefits are calculated.</benefits-amount-details-link></p>",
+      "<p>Applying takes around 15 minutes. Your information will save as you go, so you can finish your application later if you need to.</p><p>If you give birth and plan to take both pregnancy-related medical leave and family leave to bond with your newborn, you should apply for medical leave first. Family leave to bond with your child can be <medical-bonding-link>easily added to your claim</medical-bonding-link> by calling our Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.</p><p>You need to create multiple leave applications if you are:</p><ul><li>Taking leave from multiple employers.</li><li>Taking time off in uneven blocks of time (intermittent leave), <strong>and</strong> taking time off completely or on a reduced schedule. You’ll need a separate application for the intermittent leave.</li></ul><p>PFML benefits are subject to reporting for tax purposes and may be subject to taxation. Withholding is not currently supported through the PFML program. Learn more about the <tax-liability-link>possible tax implications</tax-liability-link> of your paid leave benefits.</p><p>The maximum benefit a person can receive per week is ${{maxBenefitAmount}}. Learn more about <benefits-amount-details-link>how benefits are calculated.</benefits-amount-details-link></p>", // eslint-disable-line no-template-curly-in-string
     stepThreeHeading: "3. Apply",
     stepTwoBondingLeaveBody:
       "<p>For family leave to bond with your child after birth, foster placement, or adoption you need a document that confirms your child’s date of birth or placement.</p><p>You can apply before your child is born or arrives in your home. You will need to provide proof of birth or placement for your application to be approved.</p>",
@@ -2736,7 +2748,7 @@ const components = {
     header: "Document Requirements:",
   },
   downloadableDocument: {
-    createdAtDate: "Posted {{date}}",
+    createdAtDate: "Posted {{date}}.",
     noticeName: "Other notice $t(shared.pdfNoticeSuffix)", // it should fallback to this if we receive an unexpected or undefined enum
     noticeName_appealAcknowledgment:
       "Appeal Acknowledgment $t(shared.pdfNoticeSuffix)",
@@ -2841,6 +2853,24 @@ const components = {
       "This addition will get saved when you submit your review at the end of this page.",
     subtitle_amend:
       "This amendment will get saved when you submit your review. To remove this leave, include a comment at the end of the page.",
+  },
+  employersCertsAndPeriods: {
+    caringLeaveDocumentInstructions: "View the family relationship on page 3.",
+    documentName: "Your employee's certification document.",
+    documentationLabel: "Documentation",
+    header: "Leave details",
+    leaveDurationLabel: "Leave duration",
+    // Fallback in case some unexpected leave reason is sent from Fineos:
+    reasonHeading: "Leave periods",
+    reasonHeading_activeDutyFamily: "$t(shared.leaveReasonActiveDutyFamily)",
+    reasonHeading_bonding: "$t(shared.leaveReasonBonding)",
+    reasonHeading_care: "$t(shared.leaveReasonCare)",
+    reasonHeading_medical: "$t(shared.leaveReasonMedical)",
+    reasonHeading_pregnancy: "$t(shared.leaveReasonPregnancy)",
+    reasonHeading_serviceMemberFamily:
+      "$t(shared.leaveReasonServiceMemberFamily)",
+    recordkeepingInstructions:
+      "To meet <mass-employer-role-link>federal laws and regulations</mass-employer-role-link>, you must keep medical records separate and confidential from any personnel files.",
   },
   employersConcurrentLeave: {
     addButton: "Add an accrued paid leave",
@@ -2979,6 +3009,23 @@ const components = {
   employersNavigationTabs: {
     dashboard: "Dashboard",
     welcome: "Welcome",
+  },
+  employersPaginationAbsencePeriodsTable: {
+    claimDurationType_Continuous: "$t(shared.claimDurationTypeContinuous)",
+    claimDurationType_Intermittent: "$t(shared.claimDurationTypeIntermittent)",
+    "claimDurationType_Reduced Schedule":
+      "$t(shared.claimDurationTypeReducedSchedule)",
+    dateRangeLabel: "Date range",
+    leaveFrequencyLabel: "Leave frequency",
+    requestDecision_Approved: "$t(shared.absencePeriodStatus_Approved)",
+    requestDecision_Cancelled: "$t(shared.absencePeriodStatus_Cancelled)",
+    requestDecision_Denied: "$t(shared.absencePeriodStatus_Denied)",
+    "requestDecision_In Review": "$t(shared.absencePeriodStatus_Pending)",
+    requestDecision_Pending: "$t(shared.absencePeriodStatus_Pending)",
+    requestDecision_Projected: "$t(shared.absencePeriodStatus_Pending)",
+    requestDecision_Voided: "$t(shared.absencePeriodStatus_Voided)",
+    requestDecision_Withdrawn: "$t(shared.absencePeriodStatus_Withdrawn)",
+    statusLabel: "Status",
   },
   employersPreviousLeaves: {
     addButton: "$t(shared.claimsPreviousLeaveDetails.addButton)",

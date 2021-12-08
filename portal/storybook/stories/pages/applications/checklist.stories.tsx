@@ -2,7 +2,7 @@ import Step, { ClaimSteps } from "src/models/Step";
 import { Checklist } from "src/pages/applications/checklist";
 import { DocumentType } from "src/models/Document";
 import { MockBenefitsApplicationBuilder } from "tests/test-utils/mock-model-builder";
-import { Props } from "storybook/types";
+import { Props } from "types/common";
 import React from "react";
 import User from "src/models/User";
 import claimantConfig from "src/flows/claimant";

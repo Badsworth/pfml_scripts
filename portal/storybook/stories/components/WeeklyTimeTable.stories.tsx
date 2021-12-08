@@ -1,4 +1,4 @@
-import { Props } from "storybook/types";
+import { Props } from "types/common";
 import React from "react";
 import WeeklyTimeTable from "src/components/WeeklyTimeTable";
 import { WorkPattern } from "src/models/BenefitsApplication";

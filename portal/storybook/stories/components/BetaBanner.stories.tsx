@@ -1,5 +1,5 @@
 import BetaBanner from "src/components/BetaBanner";
-import { Props } from "storybook/types";
+import { Props } from "types/common";
 import React from "react";
 
 export default {

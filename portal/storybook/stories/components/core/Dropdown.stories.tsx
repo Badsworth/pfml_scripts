@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import Dropdown from "src/components/core/Dropdown";
-import { Props } from "storybook/types";
+import { Props } from "types/common";
 
 export default {
   title: "Core Components/Forms/Dropdown",

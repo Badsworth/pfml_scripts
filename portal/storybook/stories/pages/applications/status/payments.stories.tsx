@@ -1,11 +1,10 @@
-import ClaimDetail from "src/models/ClaimDetail";
 import { Payments } from "src/pages/applications/status/payments";
-import { Props } from "storybook/types";
+import { Props } from "types/common";
 import React from "react";
 import User from "src/models/User";
-
 // TODO (PORTAL-1148) Update to use createMockClaim instead of createMockBenefitsApplication when ready
 import { createMockBenefitsApplication } from "tests/test-utils/createMockBenefitsApplication";
+import { createMockPayment } from "tests/test-utils/createMockPayment";
 import useMockableAppLogic from "lib/mock-helpers/useMockableAppLogic";
 
 const LEAVE_TYPES = {
@@ -19,9 +18,15 @@ export default {
   title: "Pages/Applications/Status/Payments",
   component: Payments,
   args: {
+    "Has payments": true,
     "Leave type": LEAVE_TYPES.continuous,
   },
   argTypes: {
+    "Has payments": {
+      control: {
+        type: "boolean",
+      },
+    },
     "Leave type": {
       control: {
         type: "radio",
@@ -38,6 +43,7 @@ export default {
 
 export const DefaultStory = (
   args: Props<typeof Payments> & {
+    "Has payments": boolean;
     "Leave type": keyof typeof LEAVE_TYPES;
   }
 ) => {
@@ -53,10 +59,33 @@ export const DefaultStory = (
     [LEAVE_TYPES.reduced]: createMockBenefitsApplication("reducedSchedule"),
   }[args["Leave type"]];
 
+  const defaultPayments = [
+    createMockPayment({
+      payment_method: "Elec Funds Transfer",
+      status: "Sent to bank",
+    }),
+    createMockPayment({
+      sent_to_bank_date: null,
+      payment_method: "Check",
+      status: "Pending",
+    }),
+    createMockPayment({
+      sent_to_bank_date: null,
+      payment_method: "Check",
+      status: "Delayed",
+    }),
+    createMockPayment({
+      sent_to_bank_date: null,
+      payment_method: "Check",
+      status: "Cancelled",
+    }),
+  ];
+
+  const payments = args["Has payments"] ? defaultPayments : [];
   const appLogic = useMockableAppLogic({
     claims: {
       ...claimType,
-      claimDetail: new ClaimDetail({
+      claimDetail: {
         absence_periods: [
           {
             absence_period_start_date: "2021-10-23",
@@ -69,53 +98,8 @@ export const DefaultStory = (
             request_decision: "Approved",
           },
         ],
-        payments: [
-          {
-            payment_id: "1234",
-            period_start_date: "2021-10-31",
-            period_end_date: "2021-11-07",
-            amount: 100,
-            sent_to_bank_date: "2021-11-08",
-            payment_method: "Elec Funds Transfer",
-            expected_send_date_start: "2021-11-08",
-            expected_send_date_end: "2021-11-11",
-            status: "Sent to bank",
-          },
-          {
-            payment_id: "1235",
-            period_start_date: "2021-11-08",
-            period_end_date: "2021-11-15",
-            amount: null,
-            sent_to_bank_date: null,
-            payment_method: "Check",
-            expected_send_date_start: "2021-11-15",
-            expected_send_date_end: "2021-11-21",
-            status: "Pending",
-          },
-          {
-            payment_id: "1236",
-            period_start_date: "2021-11-16",
-            period_end_date: "2021-11-21",
-            amount: null,
-            sent_to_bank_date: null,
-            payment_method: "Check",
-            expected_send_date_start: null,
-            expected_send_date_end: null,
-            status: "Delayed",
-          },
-          {
-            payment_id: "1237",
-            period_start_date: "2021-11-22",
-            period_end_date: "2021-11-29",
-            amount: null,
-            sent_to_bank_date: null,
-            payment_method: "Check",
-            expected_send_date_start: null,
-            expected_send_date_end: null,
-            status: "Cancelled",
-          },
-        ],
-      }),
+        payments,
+      },
       isLoadingClaimDetail: false,
     },
   });

@@ -1,6 +1,6 @@
 import User, { UserLeaveAdministrator } from "src/models/User";
 import { Index } from "src/pages/employers/organizations";
-import { Props } from "storybook/types";
+import { Props } from "types/common";
 import React from "react";
 import useMockableAppLogic from "lib/mock-helpers/useMockableAppLogic";
 

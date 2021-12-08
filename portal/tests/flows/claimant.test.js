@@ -379,6 +379,11 @@ const machineTests = {
       test: () => {},
     },
   },
+  [routes.twoFactor.smsIndex]: {
+    meta: {
+      test: () => {},
+    },
+  },
 };
 
 const machineConfigsWithTests = {
@@ -458,8 +463,7 @@ describe("claimFlowConfigs", () => {
     {
       guards: {
         ...guards,
-        // TODO (CP-1447): Remove this guard once the feature flag is obsolete
-        showPhone: () => true,
+        isMFAEnabled: () => true,
         // TODO (PFMLPB-2615): Remove this guard once the feature flag is obsolete
         hasEmployerWithDepartments: ({ claim }) =>
           get(claim, "employment_status") === EmploymentStatus.employed &&

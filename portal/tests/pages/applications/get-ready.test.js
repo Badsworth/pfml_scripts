@@ -18,6 +18,15 @@ const setup = (claims = []) => {
 };
 
 describe("GetReady", () => {
+  beforeEach(() => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date(2022, 1, 1));
+  });
+
+  afterAll(() => {
+    jest.useRealTimers();
+  });
+
   it("renders get ready content", () => {
     const { container } = setup();
     expect(container).toMatchSnapshot();

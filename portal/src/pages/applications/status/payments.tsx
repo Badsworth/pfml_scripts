@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
 import withUser, { WithUserProps } from "../../../hoc/withUser";
+
 import Accordion from "../../../components/core/Accordion";
 import AccordionItem from "../../../components/core/AccordionItem";
 import BackButton from "../../../components/BackButton";
@@ -155,23 +156,25 @@ export const Payments = ({
                     </tr>
                   )
                 )}
-              <tr>
-                <td>{waitingWeek}</td>
-                <td colSpan={4}>
-                  <Trans
-                    i18nKey="pages.payments.paymentsTable.waitingWeekText"
-                    components={{
-                      "waiting-week-link": (
-                        <a
-                          href={
-                            routes.external.massgov.sevenDayWaitingPeriodInfo
-                          }
-                        />
-                      ),
-                    }}
-                  />
-                </td>
-              </tr>
+              {waitingWeek && (
+                <tr>
+                  <td>{waitingWeek}</td>
+                  <td colSpan={4}>
+                    <Trans
+                      i18nKey="pages.payments.paymentsTable.waitingWeekText"
+                      components={{
+                        "waiting-week-link": (
+                          <a
+                            href={
+                              routes.external.massgov.sevenDayWaitingPeriodInfo
+                            }
+                          />
+                        ),
+                      }}
+                    />
+                  </td>
+                </tr>
+              )}
             </tbody>
           </Table>
         )}

@@ -175,7 +175,7 @@ exports[`Success renders content tailored to Caring Leave 1`] = `
     >
       use this calculator
     </a>
-    . The maximum total amount that a person can receive in PFML benefits is $850 per week, even if you have been approved for leave benefits from multiple employers.
+    . The maximum total amount that a person can receive in PFML benefits is $1084 per week, even if you have been approved for leave benefits from multiple employers.
     <div
       class="border-top-2px border-base-lighter margin-top-4 padding-top-4"
     >
@@ -383,7 +383,7 @@ exports[`Success renders content tailored to Family (Bonding Adoption) 1`] = `
     >
       use this calculator
     </a>
-    . The maximum total amount that a person can receive in PFML benefits is $850 per week, even if you have been approved for leave benefits from multiple employers.
+    . The maximum total amount that a person can receive in PFML benefits is $1084 per week, even if you have been approved for leave benefits from multiple employers.
     <div
       class="border-top-2px border-base-lighter margin-top-4 padding-top-4"
     >
@@ -566,7 +566,7 @@ exports[`Success renders content tailored to Family (Bonding Future Adoption) 1`
     >
       use this calculator
     </a>
-    . The maximum total amount that a person can receive in PFML benefits is $850 per week, even if you have been approved for leave benefits from multiple employers.
+    . The maximum total amount that a person can receive in PFML benefits is $1084 per week, even if you have been approved for leave benefits from multiple employers.
     <div
       class="border-top-2px border-base-lighter margin-top-4 padding-top-4"
     >
@@ -749,7 +749,7 @@ exports[`Success renders content tailored to Family (Bonding Future Newborn) 1`]
     >
       use this calculator
     </a>
-    . The maximum total amount that a person can receive in PFML benefits is $850 per week, even if you have been approved for leave benefits from multiple employers.
+    . The maximum total amount that a person can receive in PFML benefits is $1084 per week, even if you have been approved for leave benefits from multiple employers.
     <div
       class="padding-top-2 margin-top-2"
     >
@@ -1023,7 +1023,7 @@ exports[`Success renders content tailored to Family (Bonding Newborn) 1`] = `
     >
       use this calculator
     </a>
-    . The maximum total amount that a person can receive in PFML benefits is $850 per week, even if you have been approved for leave benefits from multiple employers.
+    . The maximum total amount that a person can receive in PFML benefits is $1084 per week, even if you have been approved for leave benefits from multiple employers.
     <div
       class="padding-top-2 margin-top-2"
     >
@@ -1297,7 +1297,7 @@ exports[`Success renders content tailored to Medical (Not pregnant) 1`] = `
     >
       use this calculator
     </a>
-    . The maximum total amount that a person can receive in PFML benefits is $850 per week, even if you have been approved for leave benefits from multiple employers.
+    . The maximum total amount that a person can receive in PFML benefits is $1084 per week, even if you have been approved for leave benefits from multiple employers.
     <div
       class="border-top-2px border-base-lighter margin-top-4 padding-top-4"
     >
@@ -1505,7 +1505,7 @@ exports[`Success renders content tailored to Medical (Pregnant) 1`] = `
     >
       use this calculator
     </a>
-    . The maximum total amount that a person can receive in PFML benefits is $850 per week, even if you have been approved for leave benefits from multiple employers.
+    . The maximum total amount that a person can receive in PFML benefits is $1084 per week, even if you have been approved for leave benefits from multiple employers.
     <div
       class="padding-top-2 margin-top-2"
     >
@@ -1773,7 +1773,7 @@ exports[`Success renders content tailored to Medical (Pregnant, applying in adva
     >
       use this calculator
     </a>
-    . The maximum total amount that a person can receive in PFML benefits is $850 per week, even if you have been approved for leave benefits from multiple employers.
+    . The maximum total amount that a person can receive in PFML benefits is $1084 per week, even if you have been approved for leave benefits from multiple employers.
     <div
       class="padding-top-2 margin-top-2"
     >

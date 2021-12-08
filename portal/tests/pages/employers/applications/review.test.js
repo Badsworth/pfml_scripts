@@ -1,6 +1,16 @@
 /* eslint testing-library/prefer-user-event: 0 */
-import { MockEmployerClaimBuilder, renderPage } from "../../../test-utils";
-import { act, fireEvent, screen, waitFor } from "@testing-library/react";
+import {
+  MockEmployerClaimBuilder,
+  createAbsencePeriod,
+  renderPage,
+} from "../../../test-utils";
+import {
+  act,
+  fireEvent,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import ConcurrentLeave from "../../../../src/models/ConcurrentLeave";
 import DocumentCollection from "../../../../src/models/DocumentCollection";
 import { DocumentType } from "../../../../src/models/Document";
@@ -754,6 +764,39 @@ describe("Review", () => {
       expect(loadDocuments).toHaveBeenCalledWith("NTN-111-ABS-01");
     });
 
+    it("calls downloadDocument when a document's button is clicked", async () => {
+      const downloadDocument = jest.fn();
+      const document = {
+        content_type: "application/pdf",
+        created_at: "2021-01-01",
+        description: "",
+        document_type: DocumentType.certification[LeaveReason.medical],
+        fineos_document_id: "mock-id-1",
+        name: "",
+      };
+
+      setup(undefined, (appLogic) => {
+        appLogic.employers.downloadDocument = downloadDocument;
+        appLogic.employers.claimDocumentsMap = new Map([
+          [
+            claimWithV2Eform.fineos_absence_id,
+            new DocumentCollection([document]),
+          ],
+        ]);
+      });
+
+      const downloadButtons = await screen.findAllByRole("button", {
+        name: /Your employee's certification/i,
+      });
+
+      userEvent.click(downloadButtons[0]);
+
+      expect(downloadDocument).toHaveBeenCalledWith(
+        document,
+        claimWithV2Eform.fineos_absence_id
+      );
+    });
+
     describe("when the claim is a caring leave", () => {
       function render() {
         const caringLeaveClaim = clone(claimWithV2Eform);
@@ -845,7 +888,7 @@ describe("Review", () => {
     });
   });
 
-  it("does not render supporting work details  when employerShowMultiLeave is enabled", () => {
+  it("does not render supporting work details when employerShowMultiLeave is enabled", () => {
     process.env.featureFlags = {
       employerShowMultiLeave: true,
     };
@@ -863,5 +906,43 @@ describe("Review", () => {
     expect(
       screen.getByText("Application ID: NTN-111-ABS-01")
     ).toBeInTheDocument();
+  });
+
+  it("renders the absence periods sorted newest to oldest when employerShowMultiLeave is enabled", () => {
+    process.env.featureFlags = {
+      employerShowMultiLeave: true,
+    };
+
+    setup({
+      ...claimWithV2Eform,
+      absence_periods: [
+        createAbsencePeriod({
+          absence_period_start_date: "2020-01-01",
+          absence_period_end_date: "2020-01-30",
+          reason: LeaveReason.medical,
+        }),
+        createAbsencePeriod({
+          absence_period_start_date: "2020-02-15",
+          absence_period_end_date: "2020-02-28",
+          reason: LeaveReason.bonding,
+        }),
+      ],
+    });
+
+    const sections = screen.getAllByTestId("absence periods");
+    let headings = [];
+    sections.forEach((section) => {
+      headings = headings.concat(
+        within(section).getAllByRole("heading", { level: 3 })
+      );
+    });
+
+    expect(headings.map((heading) => heading.textContent))
+      .toMatchInlineSnapshot(`
+      Array [
+        "Bond with a child",
+        "Medical leave",
+      ]
+    `);
   });
 });

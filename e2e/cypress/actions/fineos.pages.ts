@@ -272,6 +272,28 @@ export class ClaimPage {
     return this;
   }
 
+  addEmployer(employer_fein: string): this {
+    //Select employer from drop down menu
+    cy.get("[id^=MENUBAR\\.CaseSubjectMenu]")
+      .findByText("Add Participant")
+      .click({ force: true })
+      .parents("li")
+      .findByText("Employer")
+      .click();
+
+    //change radio to Organization
+    cy.contains("label", "Organization").click();
+    // input employer FEIN
+    cy.get('input[type="text"][id$=_Social_Security_No\\._\\(SSN\\)]').type(
+      employer_fein?.replace("-", "")
+    );
+    //Search
+    cy.get('input[type="submit"][value="Search"]').click();
+    waitForAjaxComplete();
+    cy.get('input[type="submit"][value="OK"][id$=_searchPageOk]').click();
+    return this;
+  }
+
   withdraw(): this {
     cy.get('a[title="Withdraw the Pending Leave Request"').click({
       force: true,
