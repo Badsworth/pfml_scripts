@@ -1,7 +1,7 @@
 import ClaimPool from "../generation/Claim";
 import dataDirectory from "../generation/DataDirectory";
 import EmployeePool from "../generation/Employee";
-import scenarios from "../scenarios/payments-2021-12-09";
+import scenarios, { WITHHOLDING_RETRO } from "../scenarios/payments-2021-12-09";
 import describe from "../specification/describe";
 import * as fs from "fs";
 import { promisify } from "util";
@@ -25,7 +25,7 @@ const pipelineP = promisify(pipeline);
   await DOR.writeEmployersFile(employerPool, storage.dorFile("DORDFMLEMP"));
   await EmployerIndex.write(
     employerPool,
-    path.join(storage.dir, "employees.csv")
+    path.join(storage.dir, "employers.csv")
   );
 
   const employeePool = await EmployeePool.load(
@@ -56,12 +56,12 @@ const pipelineP = promisify(pipeline);
   );
   await EmployeeIndex.write(
     employeePool,
-    path.join(storage.dir, "employers.csv")
+    path.join(storage.dir, "employees.csv")
   );
 
   // Write a CSV description of the scenarios we're using for human consumption.
   await pipelineP(
-    describe(Object.values(scenarios)),
+    describe(Object.values([...scenarios, WITHHOLDING_RETRO])),
     fs.createWriteStream(storage.dir + "/scenarios.csv")
   );
 
@@ -75,8 +75,14 @@ const pipelineP = promisify(pipeline);
             employeePool,
             scenario.employee,
             scenario.claim,
-            (scenario.claim.metadata?.quantity as number) * 1.15
+            (scenario.claim.metadata?.quantity as number) * 1.2
           )
+        ),
+        ClaimPool.generate(
+          employeePool,
+          WITHHOLDING_RETRO.employee,
+          WITHHOLDING_RETRO.claim,
+          30 * 1.2
         )
       )
   );
