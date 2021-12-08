@@ -12,6 +12,7 @@ from massgov.pfml import db
 from massgov.pfml.db.models.employees import (
     LkState,
     Payment,
+    PaymentTransactionType,
     ReferenceFile,
     ReferenceFileType,
     State,
@@ -173,6 +174,118 @@ class PaymentAuditReportStep(Step):
         ]
         return _get_state_log_count_in_state(other_claim_payments, previous_states, self.db_session)
 
+    def calculate_gross_payment_amount(self, payment: Payment) -> str:
+        if (
+            payment.payment_transaction_type_id
+            != PaymentTransactionType.STANDARD.payment_transaction_type_id
+        ):
+            return ""
+        else:
+            other_claim_payments = _get_other_claim_payments_for_payment(
+                payment, same_payment_period=True
+            )
+
+            gross_payment_amount = payment.amount
+
+            for payment in other_claim_payments:
+                if payment.payment_transaction_type_id in [
+                    PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id,
+                    PaymentTransactionType.FEDERAL_TAX_WITHHOLDING.payment_transaction_type_id,
+                ]:
+                    gross_payment_amount += payment.amount
+
+            return str(gross_payment_amount)
+
+    def calculate_federal_withholding_amount(self, payment: Payment) -> str:
+        if (
+            payment.payment_transaction_type_id
+            != PaymentTransactionType.STANDARD.payment_transaction_type_id
+        ):
+            return ""
+        else:
+            other_claim_payments = _get_other_claim_payments_for_payment(
+                payment, same_payment_period=True
+            )
+
+            payment_amount = 0
+
+            for payment in other_claim_payments:
+                if payment.payment_transaction_type_id in [
+                    PaymentTransactionType.FEDERAL_TAX_WITHHOLDING.payment_transaction_type_id
+                ]:
+                    payment_amount += payment.amount
+
+            return str(payment_amount if payment_amount > 0 else "")
+
+    def calculate_state_withholding_amount(self, payment: Payment) -> str:
+        if (
+            payment.payment_transaction_type_id
+            != PaymentTransactionType.STANDARD.payment_transaction_type_id
+        ):
+            return ""
+        else:
+            other_claim_payments = _get_other_claim_payments_for_payment(
+                payment, same_payment_period=True
+            )
+
+            payment_amount = 0
+
+            for payment in other_claim_payments:
+                if payment.payment_transaction_type_id in [
+                    PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id
+                ]:
+                    payment_amount += payment.amount
+
+            return str(payment_amount if payment_amount > 0 else "")
+
+    def calculate_federal_withholding_i_value(self, payment: Payment) -> str:
+        if (
+            payment.payment_transaction_type_id
+            != PaymentTransactionType.STANDARD.payment_transaction_type_id
+        ):
+            return ""
+        else:
+            other_claim_payments = _get_other_claim_payments_for_payment(
+                payment, same_payment_period=True
+            )
+
+            federal_withholding_payments = []
+
+            for payment in other_claim_payments:
+                if payment.payment_transaction_type_id in [
+                    PaymentTransactionType.FEDERAL_TAX_WITHHOLDING.payment_transaction_type_id
+                ]:
+                    federal_withholding_payments.append(payment)
+
+            if len(federal_withholding_payments) == 1:
+                return str(federal_withholding_payments[0].fineos_pei_i_value)
+            else:
+                return ""
+
+    def calculate_state_withholding_i_value(self, payment: Payment) -> str:
+        if (
+            payment.payment_transaction_type_id
+            != PaymentTransactionType.STANDARD.payment_transaction_type_id
+        ):
+            return ""
+        else:
+            other_claim_payments = _get_other_claim_payments_for_payment(
+                payment, same_payment_period=True
+            )
+
+            state_withholding_payments = []
+
+            for payment in other_claim_payments:
+                if payment.payment_transaction_type_id in [
+                    PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id
+                ]:
+                    state_withholding_payments.append(payment)
+
+            if len(state_withholding_payments) == 1:
+                return str(state_withholding_payments[0].fineos_pei_i_value)
+            else:
+                return ""
+
     def build_payment_audit_data_set(
         self, payments: Iterable[Payment]
     ) -> Iterable[PaymentAuditData]:
@@ -193,6 +306,11 @@ class PaymentAuditReportStep(Step):
                 previously_errored_payment_count=self.previously_errored_payment_count(payment),
                 previously_rejected_payment_count=self.previously_rejected_payment_count(payment),
                 previously_skipped_payment_count=self.previously_skipped_payment_count(payment),
+                gross_payment_amount=self.calculate_gross_payment_amount(payment),
+                federal_withholding_amount=self.calculate_federal_withholding_amount(payment),
+                state_withholding_amount=self.calculate_state_withholding_amount(payment),
+                federal_withholding_i_value=self.calculate_federal_withholding_i_value(payment),
+                state_withholding_i_value=self.calculate_state_withholding_i_value(payment),
             )
             payment_audit_data_set.append(payment_audit_data)
 
