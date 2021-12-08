@@ -388,7 +388,7 @@ class Employer(Base, TimestampMixin):
     account_key = Column(Text, index=True)
     employer_fein = Column(Text, nullable=False, index=True)
     employer_name = Column(Text)
-    employer_dba = Column(Text, nullable=False)
+    employer_dba = Column(Text)
     family_exemption = Column(Boolean)
     medical_exemption = Column(Boolean)
     exemption_commence_date = Column(Date)
