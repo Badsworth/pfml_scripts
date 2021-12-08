@@ -146,7 +146,7 @@ output "api_domains" {
     "cps-preview" = "paidleave-api-cps-preview.eol.mass.gov",
     "uat"         = "paidleave-api-uat.mass.gov",
     "prod"        = "paidleave-api.mass.gov",
-    "long"        = "paidleave-long.dfml.eol.mass.gov"
+    "long"        = "paidleave-api-long.dfml.eol.mass.gov"
   }
 }
 
