@@ -15,6 +15,9 @@ const flagsConfig = {
     // When this flag is enabled optional MFA will be enabled for claimant users.
     claimantShowMFA: false,
 
+    // When this flag is enabled payment status phase two work will be displayed.
+    claimantShowPaymentsPhaseTwo: false,
+
     // When this flag is enabled, tax withholding option will be displayed to claimaints.
     claimantShowTaxWithholding: false,
 

@@ -15,3 +15,9 @@ const shortAbsencePeriodsList = (
 export const Default = () => (
   <PaginatedAbsencePeriodsTable absencePeriods={shortAbsencePeriodsList} />
 );
+
+export const WithPagination = () => (
+  <PaginatedAbsencePeriodsTable
+    absencePeriods={shortAbsencePeriodsList.concat(shortAbsencePeriodsList)}
+  />
+);
