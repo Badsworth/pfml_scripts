@@ -28,11 +28,11 @@ resource "aws_wafv2_web_acl" "cloudfront_waf_acl" {
     statement {
       ip_set_reference_statement {
         arn = aws_wafv2_ip_set.workspaces_ip_whitelist.arn
-        ip_set_forwarded_ip_config {
-          fallback_behavior = "NO_MATCH"
-          header_name       = "X-Forwarded-For"
-          position          = "ANY"
-        }
+        # ip_set_forwarded_ip_config {
+        #   fallback_behavior = "NO_MATCH"
+        #   header_name       = "X-Forwarded-For"
+        #   position          = "ANY"
+        # }
       }
     }
 
