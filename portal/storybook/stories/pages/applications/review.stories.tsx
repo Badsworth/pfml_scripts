@@ -25,6 +25,7 @@ export default {
   args: {
     ...claimArgs,
     isLoadingDocuments: false,
+    "Withhold taxes": true,
   },
 };
 
