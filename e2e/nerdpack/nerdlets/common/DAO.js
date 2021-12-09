@@ -113,7 +113,7 @@ export class DAODeploymentsTimelineForEnvironment extends BaseDAO {
 
 export class DAOEnvironmentComponentVersion extends BaseDAO {
   static QUERY(where, since, limit) {
-    since = since || "1 month ago";
+    since = since || "3 months ago";
     limit = limit || "max";
     return `SELECT ${COMPONENTS.map(
       (c) => `filter(latest(version), WHERE component = '${c}') AS '${c}'`
