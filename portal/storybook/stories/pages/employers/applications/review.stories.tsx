@@ -42,6 +42,11 @@ export default {
         options: ["Yes", "No"],
       },
     },
+    "Number of absence periods for each leave reason": {
+      control: {
+        type: "number",
+      },
+    },
     // Todo(EMPLOYER-1453): remove V1 eform functionality
     "Claimant EForm Version": {
       control: {
@@ -70,6 +75,7 @@ export default {
     "Absence period types": [absencePeriodTypes[0]],
     "Claimant EForm Version": "Version 2 (after 2021-07-14)",
     "Includes documentation": true,
+    "Number of absence periods for each leave reason": 1,
   },
 };
 
@@ -79,6 +85,7 @@ export const Default = (
     "Absence period types": Array<AbsencePeriod["period_type"]>;
     "Claimant EForm Version": string;
     "Includes documentation": boolean;
+    "Number of absence periods for each leave reason": number;
     errorTypes: string[];
   }
 ) => {
@@ -127,16 +134,22 @@ function createEmployerClaimFromArgs(args: {
   "Absence period reasons": LeaveReasonType[];
   "Absence period types": Array<AbsencePeriod["period_type"]>;
   "Claimant EForm Version": string;
+  "Number of absence periods for each leave reason": number;
 }): EmployerClaim {
   // Generate one absence period for each selected leave reason
-  const absence_periods = args["Absence period reasons"].map(
-    (reason: LeaveReasonType) => {
-      return createAbsencePeriod({
-        reason,
-        period_type: faker.random.arrayElement(args["Absence period types"]),
-      });
-    }
-  );
+  const absence_periods: AbsencePeriod[] = [];
+  args["Absence period reasons"].forEach((reason: LeaveReasonType) => {
+    Array.from(
+      Array(args["Number of absence periods for each leave reason"])
+    ).forEach(() => {
+      absence_periods.push(
+        createAbsencePeriod({
+          reason,
+          period_type: faker.random.arrayElement(args["Absence period types"]),
+        })
+      );
+    });
+  });
 
   let claimBuilder = new MockEmployerClaimBuilder()
     .completed()
