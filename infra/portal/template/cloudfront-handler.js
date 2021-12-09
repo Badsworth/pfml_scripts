@@ -1,34 +1,26 @@
-const path = require("path");
-
 /**
- * Lambda@Edge function
- * This Lambda function is intended to be hooked up to a response event from
+ * Cloudfront function
+ * This function is intended to be hooked up to a response event from
  * CloudFront in order to make tweaks to the response that can't be done by an
  * S3 website origin.
  *
- * Since this is a CloudFront Lambda@Edge function, it has some tougher
- * restrictions than a typical Lambda, such as which runtimes can be used,
- * execution timeouts, memory limits, etc.
- * @see https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/lambda-event-structure.html#response-event-fields
- * @see https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/lambda-requirements-limits.html
- * @see https://docs.aws.amazon.com/lambda/latest/dg/nodejs-handler.html#nodejs-handler-async
- * @param {object} event
- * @param {object[]} event.Records
- * @param {object} event.Records.cf
- * @param {object} event.Records.cf.response
- * @param {object} event.Records.cf.response.headers - headers for response
- * @param {*} _context - not used
- * @returns {Promise<object>} mutated request/response
+ * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ * IMPORTANT: We don't have a build step for this file. What's in here is literally what gets
+ * deployed. JS written here must be compliant with ECMAScript version 5.1. This means no usage of
+ * more modern JS features like `const` or destructuring (with a few exceptions).
+ * You can test your code here: https://jshint.com
+ * Runtime support: https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/functions-javascript-runtime-features.html
+ * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ *
+ * @see https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/writing-function-code.html
+ * @param {object} event - https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/functions-event-structure.html
+ * @returns {object} mutated request/response (depends on the eventType)
  */
-exports.handler = async function (event, _context) {
-  // https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/lambda-event-structure.html#lambda-event-structure-response
-  const data = event.Records[0].cf;
-  const { eventType } = data.config;
-
-  if (eventType === "origin-request") {
-    return await addTrailingSlashToRequest(data.request);
+function handler(event) {
+  if (event.context.eventType === "viewer-request") {
+    return addTrailingSlashToRequest(event.request);
   }
-};
+}
 
 /**
  * Add trailing slashes to origin requests so that S3 doesn't return a 302 redirect,
@@ -37,11 +29,14 @@ exports.handler = async function (event, _context) {
  * @returns {object} updated request
  */
 function addTrailingSlashToRequest(request) {
-  const { uri } = request;
+  var uri = request.uri;
 
-  // Don't add a slash if there's already a slash, or if the
-  // URI includes a file extension
-  if (uri.endsWith("/") || path.extname(uri)) {
+  if (
+    // Don't add a slash if there's already a slash
+    uri.endsWith("/") ||
+    // or if the URI includes a file extension
+    uri.match(/\.[\w\d?-_]+$/i)
+  ) {
     return request;
   }
 
