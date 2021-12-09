@@ -44,6 +44,8 @@ export const Story = ({
     },
     documents: {
       download: () => {},
+      isLoadingClaimDocuments: () => undefined,
+      loadAll: () => {},
     },
   };
 

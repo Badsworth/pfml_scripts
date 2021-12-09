@@ -269,12 +269,10 @@ describe("useBenefitsApplicationsLogic", () => {
         jest.spyOn(console, "error").mockImplementationOnce(jest.fn());
       });
 
-      it("throws an error if user has not been loaded", async () => {
+      it("does not make API request if user has not been loaded", async () => {
         user = null;
         setup();
-        await expect(claimsLogic.loadPage).rejects.toThrow(
-          /Cannot load claims/
-        );
+        await expect(getClaimsMock).not.toHaveBeenCalled();
       });
 
       it("catches exceptions thrown from the API module", async () => {

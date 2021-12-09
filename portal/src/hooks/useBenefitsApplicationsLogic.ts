@@ -115,7 +115,7 @@ const useBenefitsApplicationsLogic = ({
    * @param [pageOffset] - Page number to load
    */
   const loadPage = async (pageOffset: number | string = 1) => {
-    if (!user) throw new Error("Cannot load claims before user is loaded");
+    if (!user) return;
 
     if (isLoadingClaims) return;
     if (paginationMeta.page_offset === Number(pageOffset)) return;
