@@ -735,6 +735,7 @@ const shared = {
     skip: "Skip this step",
   },
   backToLoginLink: "Back to log in",
+  backToYourApplicationsLink: "Back to your applications",
   certificationFormCare:
     "Certification of Your Family Member’s Serious Health Condition",
   certificationFormMedical: "Certification of Your Serious Health Condition",
@@ -2051,7 +2052,7 @@ const pages = {
     applicationID: "Application ID",
     applicationTitle: "Application details",
     applicationUpdatesHeading: "Application updates",
-    backButtonLabel: "Back to your applications",
+    backButtonLabel: "$t(shared.backToYourApplicationsLink)",
     employerEIN: "Employer Identification Number (EIN)",
     infoAlertBody_bonding:
       "You may be able to take up to 20 weeks of paid medical leave if you’re unable to work during your pregnancy or for your recovery from childbirth. Your health care provider determines how much medical leave you will need. Call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> if you need <about-bonding-leave-link>medical leave after giving birth</about-bonding-leave-link>. You should not submit a second application.",
@@ -2101,7 +2102,6 @@ const pages = {
     manageApplicationHeading: "Manage your application",
     manageApprovedApplicationText:
       "<p>See more <manage-approved-app-link>examples of how to manage your approved application.</manage-approved-app-link></p>",
-    paymentsTitle: "Payments",
     reportOtherBenefitsBody:
       "<p>If your plans for other benefits or income during your paid leave have changed, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>. Report changes to:</p><ul><li>Benefits from your employer that you plan to use in addition to paid leave from PFML. For example, if you are taking a different amount of sick days than you first planned, or if you are taking employer sponsored parental leave on a different schedule than you expected, report this change.</li><li>Income from other sources during your leave. For example, if you got approved for a disability benefit or a worker’s compensation claim after you submitted your application, report this change.</li></ul>",
     reportOtherBenefitsHeading: "Report other benefits or income",
@@ -2158,7 +2158,6 @@ const pages = {
     whatYouNeedToDoText_fosterCare:
       "Once your child is placed, submit a certificate of proof, including the date of the placement, so that we can review your application. Learn more about the <proof-document-link>proof of placement documents</proof-document-link> we accept.",
     whatYouNeedToDoText_newborn: "$t(shared.docsRequired.newborn)",
-    yourPayments: "Your payments",
   },
   claimsSuccess: {
     adjudicationProcess:
@@ -2601,10 +2600,12 @@ const pages = {
       "Massachusetts workers can now apply for Paid Family and Medical Leave. Learn more about this <mass-paid-leave-link>new paid leave program</mass-paid-leave-link>.",
   },
   payments: {
+    backButtonLabel: "$t(shared.backToYourApplicationsLink)",
     changesToPaymentsAmountAnswer:
       "<p>To see your maximum weekly benefit amount, view your approval notice in your <view-notices-link>application’s notices</view-notices-link>.</p><p>The sent payment amount you see on this page may be less than the maximum benefit amount due to <using-other-leave-link>other leave, income and benefits</using-other-leave-link> you reported. You will receive another notice in the mail if we reduce your benefit amount.</p><p><strong>Other scenarios that may change the payment amount you receive are:</strong></p><ul><li>You or your employer report additional other leave, income or benefits</li><li>You reach the maximum total amount that you can receive in PFML benefits across multiple applications. The maximum weekly benefit amount is {{maxBenefitAmount}} per week.</li><li>You receive a payment for a pay period less than a full week</li></ul>",
     changesToPaymentsAmountQuestion:
       "Why your sent payment amount may be less than your approved benefit amount",
+    changesToPaymentsHeading: "Changes to payments",
     changesToPaymentsYourPreferencesAnswer:
       "<p>To make changes to your payment method or banking information, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.</p>",
     changesToPaymentsYourPreferencesQuestion: "Change your payment preference",
@@ -2625,7 +2626,7 @@ const pages = {
       amountSent: "{{amount, currency}}",
       amountSentHeader: "Amount sent",
       dateSentHeader: "Date sent",
-      estimatedScheduledDateHeader: "Estimated scheduled date",
+      estimatedDateHeader: "Estimated date",
       leaveDatesHeader: "Leave dates",
       paymentMethodHeader: "Payment Method",
       paymentMethod_Check: "Check",
@@ -2638,11 +2639,13 @@ const pages = {
       waitingWeekText:
         "This week is unpaid. Learn more about the <waiting-week-link>7-day waiting period</waiting-week-link>.",
     },
+    paymentsTitle: "Payments",
     questionsDetails:
       "<p>Call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.</p>",
     questionsHeader: "Questions?",
     whatDoesEstimatedDateMean:
       "<p><strong>What does estimated scheduled date mean?</strong></p><p>This is the date range we expect to process your direct deposit payment or send your check in the mail. Depending on your bank, expect to receive direct deposit payments in your account 2-3 days after this date.  Checks may take 7-11 days to arrive in the mail. Once your payment is processed or your check is sent, that date will be shown in the “date processed” column.</p>",
+    yourPayments: "Your payments",
   },
   userConsentToDataSharing: {
     agreementBody:

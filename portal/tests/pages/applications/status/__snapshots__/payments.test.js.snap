@@ -2,15 +2,20 @@
 
 exports[`Payments renders the \`changes to payments\` section 1`] = `
 <section
-  class="margin-y-4"
+  class="margin-y-5"
   data-testid="changes-to-payments"
 >
+  <h2
+    class="margin-bottom-3 font-heading-md text-bold"
+  >
+    Changes to payments
+  </h2>
   <div
     aria-multiselectable="true"
     class="usa-accordion usa-accordion--bordered"
   >
     <h2
-      class="usa-accordion__heading"
+      class="usa-accordion__heading margin-y-2"
     >
       <button
         aria-controls="accordion7"
@@ -79,7 +84,7 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
       </ul>
     </div>
     <h2
-      class="usa-accordion__heading"
+      class="usa-accordion__heading margin-y-2"
     >
       <button
         aria-controls="accordion8"
@@ -134,7 +139,7 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
       </ul>
     </div>
     <h2
-      class="usa-accordion__heading"
+      class="usa-accordion__heading margin-y-2"
     >
       <button
         aria-controls="accordion9"
@@ -167,14 +172,14 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
 
 exports[`Payments renders the \`help\` section containing questions and feedback 1`] = `
 <section
-  class="margin-y-6"
+  class="margin-y-5"
   data-testid="helpSection"
 >
-  <h3
-    class="font-heading-sm text-bold"
+  <h2
+    class="font-heading-md text-bold"
   >
     Questions?
-  </h3>
+  </h2>
   <p>
     Call the Contact Center at 
     <a
@@ -184,11 +189,11 @@ exports[`Payments renders the \`help\` section containing questions and feedback
     </a>
     .
   </p>
-  <h3
-    class="font-heading-sm text-bold"
+  <h2
+    class="font-heading-md text-bold"
   >
     Help us improve payment information by giving feedback
-  </h3>
+  </h2>
   <p>
     We’d like to hear more about your experience on this site. Please take a few minutes to share your feedback.
   </p>
@@ -223,7 +228,7 @@ exports[`Payments renders the Payments table 1`] = `
       <th
         scope="col"
       >
-        Estimated scheduled date
+        Estimated date
       </th>
       <th
         scope="col"
@@ -250,7 +255,7 @@ exports[`Payments renders the Payments table 1`] = `
         Check
       </td>
       <td
-        data-label="Estimated scheduled date"
+        data-label="Estimated date"
       >
         Sent
       </td>
@@ -277,7 +282,7 @@ exports[`Payments renders the Payments table 1`] = `
         Check
       </td>
       <td
-        data-label="Estimated scheduled date"
+        data-label="Estimated date"
       >
         11/15/2021 to 11/21/2021
       </td>
@@ -304,7 +309,7 @@ exports[`Payments renders the Payments table 1`] = `
         Check
       </td>
       <td
-        data-label="Estimated scheduled date"
+        data-label="Estimated date"
       >
         Delayed
       </td>
@@ -331,7 +336,7 @@ exports[`Payments renders the Payments table 1`] = `
         Check
       </td>
       <td
-        data-label="Estimated scheduled date"
+        data-label="Estimated date"
       >
         Sent
       </td>
