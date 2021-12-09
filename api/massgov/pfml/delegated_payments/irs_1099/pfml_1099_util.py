@@ -610,16 +610,30 @@ def get_1099_records(db_session: db.Session, batchId: str) -> List[Pfml1099]:
 
 
 def get_tax_id(db_session: Any, tax_id_str: str) -> str:
-    logger.debug("Incoming tax uuid is, %s", tax_id_str)
+    logger.info("Incoming tax uuid is, %s", tax_id_str)
+    tax_identifer=""
+    #tax_id_str = 'c588edbd-c203-4dfb-a240-75c3d63e5846'
     try:
         tax_id = (
             db_session.query(TaxIdentifier)
             .filter(TaxIdentifier.tax_identifier_id == tax_id_str)
             .one_or_none()
         )
-        logger.debug("tax id is %s", tax_id.tax_identifier)
-        return tax_id.tax_identifier
+        if tax_id :
+            logger.info("tax id is %s", tax_id.tax_identifier)
+            tax_identifer = tax_id.tax_identifier
+        else:
+            logger.info("could not find tax id for the uuid %s",tax_id_str)
+            
+        return tax_identifer
 
     except Exception:
         logger.exception("Error accessing 1099 data")
         raise
+    
+def is_test_file() -> str:
+    if os.environ.get("TEST_FILE_1099_ORG", "0") == "1":
+        return "T"
+    else:
+        return ""
+

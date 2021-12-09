@@ -1,7 +1,12 @@
+import decimal
 import os
+import random
+from massgov.pfml.db.models.factories import Pfml1099Factory
+from massgov.pfml.delegated_payments.irs_1099 import pfml_1099_util
 
 import faker
 import pytest
+
 
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.files as file_util
@@ -20,7 +25,26 @@ def generate_1099_irs_filing_step(
     return Generate1099IRSfilingStep(
         db_session=local_test_db_session, log_entry_db_session=local_test_db_other_session
     )
-
+    
+@pytest.fixture
+def pfml1099_factory():
+    pfml_1099=[]
+    for _ in range(10):
+        rec_1099 = Pfml1099Factory.build(
+            first_name=fake.first_name(),
+            first_last=fake.last_name(),
+            #gross_payments = decimal(round(random.uniform(0, 50000), 2)),
+            #state_tax_withholdings = decimal(round(random.uniform(0, 50000), 2)),
+            #federal_tax_withholdings = decimal(round(random.uniform(0, 50000), 2)),
+            correction_ind = random.choice([True, False])
+        )
+        pfml_1099.append(rec_1099)
+    return pfml_1099
+        
+@pytest.fixture
+def enable_test_file_generation(monkeypatch):
+    new_env = monkeypatch.setenv("TEST_FILE_1099_ORG", "1")
+    return new_env
 
 def test_T_Template():
     expected_dict = {
@@ -183,3 +207,16 @@ def test_name_ctl():
         last_name_four = last_name[0:4].upper()
         result_names.append(last_name_four)
     assert expected_result == result_names
+    
+def test_b_record_types(pfml1099_factory):
+    correction=[]
+    original=[]
+    for i in range(len(pfml1099_factory)):
+        if pfml1099_factory[i].correction_ind == True:
+            correction.append(pfml1099_factory[i])
+        else:
+            original.append(pfml1099_factory[i])
+    assert 5 == len(correction)        
+
+
+    
