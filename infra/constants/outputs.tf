@@ -125,16 +125,16 @@ output "domains" {
 
 output "admin_domains" {
   value = {
-    "breakfix"   = "paidleave-admin-breakfix.dfml.eol.mass.gov",
-    "cps-preview"   = "paidleave-admin-cpspreview.dfml.eol.mass.gov",
-    "infra-test" = "paidleave-admin-infra-test.dfml.eol.mass.gov",
-    "long"       = "paidleave-admin-long.dfml.eol.mass.gov",
-    "performance"   = "paidleave-admin-performance.dfml.eol.mass.gov",
-    "prod"       = "paidleave-admin.dfml.eol.mass.gov",
-    "stage"      = "paidleave-admin-stage.dfml.eol.mass.gov",
-    "test"       = "paidleave-admin-test.dfml.eol.mass.gov",
-    "training"   = "paidleave-admin-training.dfml.eol.mass.gov",
-    "uat"        = "paidleave-admin-uat.dfml.eol.mass.gjoitov",
+    "breakfix"    = "paidleave-admin-breakfix.dfml.eol.mass.gov",
+    "cps-preview" = "paidleave-admin-cpspreview.dfml.eol.mass.gov",
+    "infra-test"  = "paidleave-admin-infra-test.dfml.eol.mass.gov",
+    "long"        = "paidleave-admin-long.dfml.eol.mass.gov",
+    "performance" = "paidleave-admin-performance.dfml.eol.mass.gov",
+    "prod"        = "paidleave-admin.dfml.eol.mass.gov",
+    "stage"       = "paidleave-admin-stage.dfml.eol.mass.gov",
+    "test"        = "paidleave-admin-test.dfml.eol.mass.gov",
+    "training"    = "paidleave-admin-training.dfml.eol.mass.gov",
+    "uat"         = "paidleave-admin-uat.dfml.eol.mass.gjoitov",
   }
 }
 
