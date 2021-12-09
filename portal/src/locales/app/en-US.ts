@@ -1154,7 +1154,7 @@ const pages = {
     stepHTMLDescription_reviewAndConfirm:
       "<p>Once you confirm your leave information, we’ll notify your employer. Your job will be protected. To complete your application, you will need to finish the following three steps and submit.</p><p>If you need to edit your information in Part 1 after completing this step, you’ll need to call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.</p>",
     stepHTMLDescription_taxWithholding:
-      "<p>Tell us if you want to withhold state and federal taxes from your paid leave benefits. If you're unsure, we recommend speaking with a tax professional.</p>",
+      "<p>You need to decide if you want to withhold state and federal taxes from this benefit. If you're unsure, we recommend speaking with a tax professional.</p>",
     stepHTMLDescription_uploadId:
       "<p>Upload proof of identity. If you entered a Massachusetts driver’s license or Mass ID number in step 1, upload the same$t(chars.nbsp)ID.</p><p>For other IDs, follow the instructions for acceptable proof of identity on the upload page.</p>",
     stepHTMLDescription_verifyId:
@@ -1172,13 +1172,13 @@ const pages = {
     stepListTitlePrefix: "Part {{number}}",
     stepListTitle_1: "Tell us about yourself and your leave",
     stepListTitle_2: "Enter your payment information",
-    stepListTitle_2_tax: "Tell us how you want to receive your payment",
+    stepListTitle_2_tax: "Tell us how you want to receive your benefit",
     stepListTitle_3: "Upload your documents",
     stepTitle_employerInformation: "Enter employment information",
     stepTitle_leaveDetails: "Enter leave details",
     stepTitle_otherLeave: "Report other leave, benefits, and income",
     stepTitle_payment: "Add payment information",
-    stepTitle_payment_tax: "Enter payment information",
+    stepTitle_payment_tax: "Enter payment method",
     stepTitle_reviewAndConfirm: "Review and confirm",
     stepTitle_taxWithholding: "Enter tax withholding preference",
     stepTitle_uploadCertification: "Upload leave certification documents",
