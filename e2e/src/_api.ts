@@ -904,6 +904,7 @@ export interface ApplicationRequestBody {
   previous_leaves_other_reason?: PreviousLeave[] | null;
   previous_leaves_same_reason?: PreviousLeave[] | null;
   concurrent_leave?: ConcurrentLeave | null;
+  is_withholding_tax?: boolean;
 }
 export interface PATCHApplicationsByApplicationIdResponse
   extends SuccessfulResponse {
