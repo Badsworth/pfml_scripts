@@ -470,7 +470,7 @@ module "pub-payments-copy-audit-report-scheduler" {
   ecs_task_definition_arn    = aws_ecs_task_definition.ecs_tasks["pub-payments-copy-audit-report"].arn
   ecs_task_definition_family = aws_ecs_task_definition.ecs_tasks["pub-payments-copy-audit-report"].family
   ecs_task_executor_role     = aws_iam_role.task_executor.arn
-  ecs_task_role              = aws_iam_role.pub_payments_process_fineos_task_role.arn
+  ecs_task_role              = aws_iam_role.pub_payments_copy_audit_report_task_role.arn
 }
 
 # TODO uncomment when ready
