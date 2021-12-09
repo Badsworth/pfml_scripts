@@ -3,6 +3,7 @@ from decimal import Decimal
 from urllib.parse import urlencode
 
 import pytest
+from freezegun import freeze_time
 
 from massgov.pfml.api.services.payments import FrontendPaymentStatus
 from massgov.pfml.db.models.employees import PaymentMethod
@@ -11,6 +12,8 @@ from massgov.pfml.db.models.payments import FineosWritebackDetails, FineosWriteb
 from massgov.pfml.delegated_payments.mock.delegated_payments_factory import DelegatedPaymentFactory
 
 
+# Set to noon eastern.
+@freeze_time("2021-12-09 12:00:00", tz_offset=5)
 @pytest.mark.parametrize(
     "transaction_status,scenario_details",
     [

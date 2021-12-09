@@ -913,6 +913,8 @@ const shared = {
   passwordLabel: "Password",
   paymentMethodAch: "Direct deposit into my bank account",
   paymentMethodCheck: "Paper check",
+  paymentsIntroNonIntermittentNorRetro:
+    "<p>Payments are scheduled weekly. Check back once each week of your leave ends to see when you can expect payment for that week.</p>",
   pdfNoticeSuffix: "(PDF)",
   previousLeaveEntryPrefix: "Previous leave",
   qualifyingReasonDetailsLabel: "What counts as a qualifying reason?",
@@ -2080,7 +2082,7 @@ const pages = {
     leaveReasonValue_serviceMemberFamily:
       "$t(shared.leaveReasonServiceMemberFamily)",
     leaveStatusMessage_Approved:
-      "<request-decision-info><strong>This leave was approved.</strong></request-decision-info><p>View your approval notice below for more details about your benefit amount, payment schedule, and how to appeal if your benefits appear incorrect.</p><p>Learn more about the <request-appeal-link>appeal process</request-appeal-link>.</p>",
+      "<request-decision-info><strong>This leave was approved.</strong></request-decision-info><p>View your approval notice below for more details about your benefit amount, and how to appeal if your benefits appear incorrect.</p><p>Learn more about the <request-appeal-link>appeal process</request-appeal-link>.</p>",
     leaveStatusMessage_Cancelled:
       "<request-decision-info><strong>This leave was cancelled.</strong></request-decision-info><p>This application will no longer be processed. If you want to apply for paid leave again, you can begin another application.</p><p><application-link>Start another application</application-link></p>",
     leaveStatusMessage_Denied:
@@ -2600,20 +2602,25 @@ const pages = {
   },
   payments: {
     changesToPaymentsAmountAnswer:
-      "<p>To see your maximum weekly benefit amount, view your approval notice in your <view-notices-link>application’s notices</view-notices-link>.</p><p>The sent payment amount you see on this page may be less than the maximum benefit amount due to <using-other-leave-link>other leave, income and benefits</using-other-leave-link> you reported. </p><p>You will receive another notice in the mail if we reduce your benefit amount.</p><p><strong>Other scenarios that may change the payment amount you receive are:</strong></p><ul><li>You or your employer report additional other leave, income or benefits</li><li>You reach the maximum total amount that a person can receive in PFML benefits across multiple applications. Read more about <benefit-amount-details-link>benefit amount details</benefit-amount-details-link>.</li><li>You receive a payment for a pay period less than a full week</li></ul>",
+      "<p>To see your maximum weekly benefit amount, view your approval notice in your <view-notices-link>application’s notices</view-notices-link>.</p><p>The sent payment amount you see on this page may be less than the maximum benefit amount due to <using-other-leave-link>other leave, income and benefits</using-other-leave-link> you reported. You will receive another notice in the mail if we reduce your benefit amount.</p><p><strong>Other scenarios that may change the payment amount you receive are:</strong></p><ul><li>You or your employer report additional other leave, income or benefits</li><li>You reach the maximum total amount that you can receive in PFML benefits across multiple applications. The maximum weekly benefit amount is {{maxBenefitAmount}} per week.</li><li>You receive a payment for a pay period less than a full week</li></ul>",
     changesToPaymentsAmountQuestion:
       "Why your sent payment amount may be less than your approved benefit amount",
-    changesToPaymentsScheduleAnswer:
-      "<p>Once your payments have started, expect to be paid weekly for the duration of your leave.</p><p><strong>What may cause a delayed payment</strong></p><p>The exact day you receive payment can be delayed because of:</p><ul><li>State and federal holidays</li><li>Leave periods that end on weekends</li><li>Your bank’s processes</li><li>The process to adjust your benefit amount due to additional income or benefits you or your employer reported</li><li>Changes to your leave’s start and end dates</li><li>Other processing issues such as issues with bank account information, or your address</li></ul><p><strong>What may cause a cancelled payment</strong></p><p>Payments can be canceled due to:</p><ul><li>Changes to when you end your leave</li><li>Paid time off taken on days you also receive PFML benefits.</li><li>The process to adjust your benefit amount due to additional income or benefits you or your employer reported may temporarily create a canceled payment</li></ul>",
-    changesToPaymentsScheduleQuestion: "What may change your payment schedule",
     changesToPaymentsYourPreferencesAnswer:
       "<p>To make changes to your payment method or banking information, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.</p>",
     changesToPaymentsYourPreferencesQuestion: "Change your payment preference",
+    delaysToPaymentsScheduleAnswer:
+      "<p>Once your payments have started, expect to be paid weekly for the duration of your leave.</p><p><strong>What may cause a delayed payment</strong></p><p>The exact day you receive payment can be delayed because of:</p><ul><li>State and federal holidays</li><li>Leave periods that end on weekends</li><li>Your bank’s processes</li><li>The process to adjust your benefit amount due to additional income or benefits you or your employer reported</li><li>Changes to your leave’s start and end dates</li><li>Other processing issues such as issues with bank account information, or your address</li></ul><p><strong>What may lead to a cancelled payment</strong></p><p>Payments can be cancelled due to:</p><ul><li>Changes to when you end your leave</li><li>Paid time off taken on days you also receive PFML benefits</li><li>The process to adjust your benefit amount due to additional income or benefits you or your employer reported may temporarily create a cancelled payment</li></ul>",
+    delaysToPaymentsScheduleQuestion:
+      "What may cause a delayed or cancelled payment",
     feedbackDetails:
       "<p>We’d like to hear more about your experience on this site. Please take a few minutes to share your feedback.</p><p><feedback-link>Take the survey</feedback-link></p>",
     feedbackHeader: "Help us improve payment information by giving feedback",
-    paymentsIntro:
-      "<p>Payments are scheduled weekly. Check back once your leave week has ended to see when you can expect payment for that week.</p><p><strong>What does estimated scheduled date mean?</strong></p><p>This is the date range we expect to process your direct deposit payment or send your check in the mail. Depending on your bank’s processes, expect to receive direct deposit payments in your account 2-3 days after this date.  Checks may take 7-11 days to arrive in the mail. Once your payment is processed or your check is sent, that date will be shown in the “date sent” column.</p>",
+    paymentsIntro_Intermittent:
+      "Once you report at least 8 hours, you can expect to receive a payment about one week later. You can receive more than one payment in a week depending on how your hours are reported. You can report your hours by calling <contact-center-report-phone-link>$t(shared.contactCenterReportHoursPhoneNumber)<contact-center-report-phone-link>.",
+    paymentsIntro_NonIntermittent_NonRetro:
+      "$t(shared.paymentsIntroNonIntermittentNorRetro)",
+    paymentsIntro_NonIntermittent_Retro:
+      "Since you were approved after your leave ended, you’ll receive one payment for your entire leave.",
     paymentsTable: {
       amountSent: "{{amount, currency}}",
       amountSentHeader: "Amount sent",
@@ -2627,12 +2634,15 @@ const pages = {
       paymentStatus_Delayed: "Delayed",
       paymentStatus_Pending: "Pending",
       "paymentStatus_Sent to bank": "Sent",
+      waitingWeekHeader: "Waiting week",
       waitingWeekText:
         "This week is unpaid. Learn more about the <waiting-week-link>7-day waiting period</waiting-week-link>.",
     },
     questionsDetails:
       "<p>Call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.</p>",
     questionsHeader: "Questions?",
+    whatDoesEstimatedDateMean:
+      "<p><strong>What does estimated scheduled date mean?</strong></p><p>This is the date range we expect to process your direct deposit payment or send your check in the mail. Depending on your bank, expect to receive direct deposit payments in your account 2-3 days after this date.  Checks may take 7-11 days to arrive in the mail. Once your payment is processed or your check is sent, that date will be shown in the “date processed” column.</p>",
   },
   userConsentToDataSharing: {
     agreementBody:
