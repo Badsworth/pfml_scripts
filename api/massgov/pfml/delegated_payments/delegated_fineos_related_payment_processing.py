@@ -1,16 +1,24 @@
 import enum
-from typing import List, Optional
+from typing import List, Optional, cast
 
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml import db
-from massgov.pfml.db.models.employees import Flow, Payment, PaymentTransactionType, State, StateLog
+from massgov.pfml.db.models.employees import (
+    Flow,
+    LkState,
+    Payment,
+    PaymentTransactionType,
+    State,
+    StateLog,
+)
 from massgov.pfml.db.models.payments import (
     FineosWritebackDetails,
-    FineosWritebackTransactionStatus,
     LinkSplitPayment,
+    LkFineosWritebackTransactionStatus,
 )
 from massgov.pfml.delegated_payments.step import Step
+from massgov.pfml.util.datetime import get_now_us_eastern
 
 logger = logging.get_logger(__package__)
 
@@ -44,9 +52,8 @@ class RelatedPaymentsProcessingStep(Step):
             primary_payment_records: List[Payment] = (
                 self.db_session.query(Payment)
                 .filter(Payment.claim_id == payment.claim_id)
-                .filter(Payment.period_start_date == payment.period_start_date)
-                .filter(Payment.period_end_date == payment.period_end_date)
-                .filter(Payment.payment_date == payment.payment_date)
+                .filter(Payment.period_start_date <= payment.period_start_date)
+                .filter(Payment.period_end_date >= payment.period_end_date)
                 .filter(
                     Payment.payment_transaction_type_id
                     == PaymentTransactionType.STANDARD.payment_transaction_type_id
@@ -78,8 +85,32 @@ class RelatedPaymentsProcessingStep(Step):
                 logger.info(
                     "Payment added to state %s", end_state.state_description,
                 )
-                message = "Duplicate primay payment records found for the withholding record."
-                self._manage_pei_writeback_state(payment, message)
+                message = "Duplicate primary payment records found for the withholding record."
+            elif len(primary_payment_records) == 0:
+                logger.info(
+                    "No primary payment record exists for %s", payment.claim.fineos_absence_id
+                )
+
+                end_state = (
+                    State.STATE_WITHHOLDING_PENDING_AUDIT
+                    if (
+                        payment.payment_transaction_type_id
+                        == PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id
+                    )
+                    else State.FEDERAL_WITHHOLDING_PENDING_AUDIT
+                )
+                message = "No primary payment found for the withholding payment record."
+
+                state_log_util.create_finished_state_log(
+                    end_state=end_state,
+                    outcome=state_log_util.build_outcome(message),
+                    associated_model=payment,
+                    db_session=self.db_session,
+                )
+                logger.info(
+                    "Payment added to state %s", end_state.state_description,
+                )
+                message = "No primary payment record found for the withholding record."
             else:
                 primary_payment_record = primary_payment_records[0].payment_id
                 if primary_payment_record == "":
@@ -87,7 +118,6 @@ class RelatedPaymentsProcessingStep(Step):
                         f"Primary payment id not found for withholding payment id: {payment.payment_id}"
                     )
 
-                #  if primary is in error state set withholding in error and don't enter in link table.
                 payment_id = primary_payment_record
                 related_payment_id = payment.payment_id
                 link_payment = LinkSplitPayment()
@@ -116,7 +146,7 @@ class RelatedPaymentsProcessingStep(Step):
                         )
                         else State.FEDERAL_WITHHOLDING_ERROR
                     )
-                    outcome = state_log_util.build_outcome("Primay payment has an error")
+                    outcome = state_log_util.build_outcome("Primary payment has an error")
                     state_log_util.create_finished_state_log(
                         associated_model=payment,
                         end_state=end_state,
@@ -127,9 +157,42 @@ class RelatedPaymentsProcessingStep(Step):
                         "Payment added to state %s", end_state.state_description,
                     )
                     message = "Withholding record error due to an issue with the primary payment."
-                    self._manage_pei_writeback_state(payment, message)
 
-    def _manage_pei_writeback_state(self, payment: Payment, message: str) -> None:
+                    transaction_status: Optional[
+                        LkFineosWritebackTransactionStatus
+                    ] = self._get_payment_writeback_transaction_status(primary_payment_records[0])
+                    if (
+                        transaction_status is None
+                        or transaction_status.transaction_status_description is None
+                    ):
+                        raise Exception(
+                            f"Can not find writeback details for payment {payment.payment_id} with state {cast(LkState, primary_payment_records[0].state_logs.end_state).state_description} and outcome {primary_payment_records[0].state_logs.outcome}"
+                        )
+
+                    self._manage_pei_writeback_state(
+                        payment, message, transaction_status.transaction_status_id
+                    )
+
+    def _get_payment_writeback_transaction_status(
+        self, payment: Payment
+    ) -> Optional[LkFineosWritebackTransactionStatus]:
+        writeback_details = (
+            self.db_session.query(FineosWritebackDetails)
+            .filter(FineosWritebackDetails.payment_id == payment.payment_id)
+            .order_by(FineosWritebackDetails.created_at.desc())
+            .first()
+        )
+
+        if writeback_details is None:
+            return None
+
+        writeback_details.writeback_sent_at = get_now_us_eastern()
+
+        return writeback_details.transaction_status
+
+    def _manage_pei_writeback_state(
+        self, payment: Payment, message: str, transaction_status_id: int
+    ) -> None:
         # Create the state log, note this is in the DELEGATED_PEI_WRITEBACK flow
         # So it is added in addition to the state log added in _create_end_state_by_payment_type
         state_log_util.create_finished_state_log(
@@ -140,7 +203,7 @@ class RelatedPaymentsProcessingStep(Step):
         )
         writeback_details = FineosWritebackDetails(
             payment=payment,
-            transaction_status_id=FineosWritebackTransactionStatus.WITHHOLDING_ERROR.transaction_status_id,
+            transaction_status_id=transaction_status_id,
             import_log_id=self.get_import_log_id(),
         )
         self.db_session.add(writeback_details)

@@ -279,9 +279,7 @@ class PaymentRejectsStep(Step):
             )
 
         if payment_state_log.end_state_id not in [
-            State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT.state_id,
-            State.STATE_WITHHOLDING_PENDING_AUDIT.state_id,
-            State.FEDERAL_WITHHOLDING_PENDING_AUDIT.state_id,
+            State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT.state_id
         ]:
             self.increment(self.Metrics.PAYMENT_STATE_LOG_NOT_IN_AUDIT_RESPONSE_PENDING_COUNT)
             raise PaymentRejectsException(
