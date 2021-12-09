@@ -23,16 +23,16 @@ resource "aws_wafv2_web_acl" "cloudfront_waf_acl" {
   #------------------------------------------------------------------------------#
   rule {
     name     = "mass-${local.app_name}-${var.environment_name}-ip-whitelist-acl"
-    priority = 0
+    priority = 1
 
     statement {
       ip_set_reference_statement {
         arn = aws_wafv2_ip_set.workspaces_ip_whitelist.arn
-        ip_set_forwarded_ip_config {
-          fallback_behavior = "NO_MATCH"
-          header_name       = "X-Forwarded-For"
-          position          = "ANY"
-        }
+        # ip_set_forwarded_ip_config {
+        #   fallback_behavior = "NO_MATCH"
+        #   header_name       = "X-Forwarded-For"
+        #   position          = "ANY"
+        # }
       }
     }
 
@@ -52,7 +52,7 @@ resource "aws_wafv2_web_acl" "cloudfront_waf_acl" {
   #------------------------------------------------------------------------------#
   rule {
     name     = "mass-${local.app_name}-${var.environment_name}-rate-based-acl"
-    priority = 1
+    priority = 0
 
     dynamic "action" {
       for_each = var.enforce_cloudfront_rate_limit ? [1] : []
@@ -130,6 +130,8 @@ resource "aws_wafv2_ip_set" "workspaces_ip_whitelist" {
   scope              = "CLOUDFRONT"
   ip_address_version = "IPV4"
   addresses = [
+    "47.200.176.201/32", # Ben WFH
+    "47.199.161.99/32", # Jamie WFH
     "10.206.0.0/21",  # LWD 
     "10.203.236.0/24" # PFML
   ]
