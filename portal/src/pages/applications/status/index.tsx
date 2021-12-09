@@ -233,8 +233,22 @@ export const Status = ({
 
     return "";
   };
+
   const infoAlertContext = getInfoAlertContext(absenceDetails);
   const [firstAbsenceDetail] = Object.keys(absenceDetails);
+
+  // Determines if phase two payment features are displayed
+  const showPhaseOneFeatures =
+    isFeatureEnabled("claimantShowPayments") &&
+    hasApprovedStatus &&
+    claimDetail.has_paid_payments;
+
+  // Determines if phase two payment features are displayed
+  const showPhaseTwoFeatures =
+    isFeatureEnabled("claimantShowPaymentsPhaseTwo") && hasApprovedStatus;
+
+  // Determines if payment tab is displayed
+  const isPaymentsTab = showPhaseOneFeatures || showPhaseTwoFeatures;
 
   return (
     <React.Fragment>
@@ -289,17 +303,14 @@ export const Status = ({
       />
       <div className="measure-6">
         <Title hidden>{t("pages.claimsStatus.applicationTitle")}</Title>
-        {isFeatureEnabled("claimantShowPayments") &&
-          hasApprovedStatus &&
-          claimDetail.has_paid_payments && (
-            <StatusNavigationTabs
-              activePath={appLogic.portalFlow.pathname}
-              absence_id={absenceId}
-            />
-          )}
+        {isPaymentsTab && (
+          <StatusNavigationTabs
+            activePath={appLogic.portalFlow.pathname}
+            absence_id={absenceId}
+          />
+        )}
 
         {/* Heading section */}
-
         <Heading level="2" size="1">
           {t("pages.claimsStatus.leaveReasonValueHeader", {
             context: findKeyByValue(LeaveReason, firstAbsenceDetail),

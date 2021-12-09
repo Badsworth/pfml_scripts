@@ -92,12 +92,43 @@ describe("Status", () => {
     process.env.featureFlags = {
       claimantShowPayments: true,
     };
+
     renderPage(
       Status,
       {
         addCustomSetup: setupHelper({
           ...defaultClaimDetail,
           has_paid_payments: true,
+          absence_periods: [
+            {
+              period_type: "Reduced",
+              reason: LeaveReason.bonding,
+              request_decision: "Approved",
+              reason_qualifier_one: "Newborn",
+            },
+          ],
+        }),
+      },
+      props
+    );
+
+    expect(screen.getByRole("link", { name: "Payments" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Application" })
+    ).toBeInTheDocument();
+  });
+
+  it("shows StatusNavigationTabs if claimantShowPaymentsPhaseTwo feature flag is enabled and claim", () => {
+    process.env.featureFlags = {
+      claimantShowPaymentsPhaseTwo: true,
+    };
+
+    renderPage(
+      Status,
+      {
+        addCustomSetup: setupHelper({
+          ...defaultClaimDetail,
+          has_paid_payments: false,
           absence_periods: [
             {
               period_type: "Reduced",
