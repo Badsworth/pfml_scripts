@@ -10,7 +10,7 @@ import {
 } from "../../../models/Document";
 import React, { useEffect } from "react";
 import Tag, { TagProps } from "../../../components/core/Tag";
-import { find, get, has, map } from "lodash";
+import { find, has, map } from "lodash";
 import withUser, { WithUserProps } from "../../../hoc/withUser";
 
 import Alert from "../../../components/core/Alert";
@@ -58,7 +58,7 @@ export const Status = ({
     },
   } = appLogic;
   const { absence_case_id, absence_id, uploaded_document_type } = query;
-  const application_id = get(claimDetail, "application_id");
+  const application_id = claimDetail?.application_id;
   const absenceId = absence_id || absence_case_id;
 
   useEffect(() => {

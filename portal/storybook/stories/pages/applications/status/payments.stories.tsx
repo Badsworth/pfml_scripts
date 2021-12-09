@@ -1,3 +1,4 @@
+import DocumentCollection from "src/models/DocumentCollection";
 import { Payments } from "src/pages/applications/status/payments";
 import { Props } from "types/common";
 import React from "react";
@@ -5,6 +6,7 @@ import User from "src/models/User";
 // TODO (PORTAL-1148) Update to use createMockClaim instead of createMockBenefitsApplication when ready
 import { createMockBenefitsApplication } from "tests/test-utils/createMockBenefitsApplication";
 import { createMockPayment } from "tests/test-utils/createMockPayment";
+import { generateNotice } from "storybook/utils/generateNotice";
 import useMockableAppLogic from "lib/mock-helpers/useMockableAppLogic";
 
 const LEAVE_TYPES = {
@@ -19,10 +21,16 @@ export default {
   component: Payments,
   args: {
     "Has payments": true,
+    "Is retroactive": true,
     "Leave type": LEAVE_TYPES.continuous,
   },
   argTypes: {
     "Has payments": {
+      control: {
+        type: "boolean",
+      },
+    },
+    "Is retroactive": {
       control: {
         type: "boolean",
       },
@@ -44,6 +52,7 @@ export default {
 export const DefaultStory = (
   args: Props<typeof Payments> & {
     "Has payments": boolean;
+    "Is retroactive": boolean;
     "Leave type": keyof typeof LEAVE_TYPES;
   }
 ) => {
@@ -81,17 +90,33 @@ export const DefaultStory = (
     }),
   ];
 
-  const payments = args["Has payments"] ? defaultPayments : [];
+  const retroPayment = [
+    createMockPayment({
+      payment_method: "Elec Funds Transfer",
+      status: "Sent to bank",
+      sent_to_bank_date: "2021-12-07",
+    }),
+  ];
+
+  const isRetroactive = args["Is retroactive"];
+
+  const payments = args["Has payments"]
+    ? isRetroactive
+      ? retroPayment
+      : defaultPayments
+    : [];
+
   const appLogic = useMockableAppLogic({
     claims: {
       ...claimType,
       claimDetail: {
+        application_id: "mock-application-id",
         absence_periods: [
           {
             absence_period_start_date: "2021-10-23",
             absence_period_end_date: "2021-11-30",
             fineos_leave_request_id: "fineos_id",
-            period_type: "Continuous",
+            period_type: args["Leave type"],
             reason: "Child Bonding",
             reason_qualifier_one: "Bonding",
             reason_qualifier_two: "",
@@ -101,6 +126,16 @@ export const DefaultStory = (
         payments,
       },
       isLoadingClaimDetail: false,
+    },
+
+    documents: {
+      documents: new DocumentCollection([
+        generateNotice(
+          "approvalNotice",
+          isRetroactive ? "2021-12-01" : "2021-10-01"
+        ),
+      ]),
+      hasLoadedClaimDocuments: () => true,
     },
   });
 
