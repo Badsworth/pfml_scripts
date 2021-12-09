@@ -27,18 +27,18 @@ output "infra_admin_sso_arn" {
 #       https://lwd.atlassian.net/wiki/spaces/DD/pages/272072807/Tagging+Standards.
 output "environment_tags" {
   value = {
-    "test"        = "test"
-    "stage"       = "stage"
-    "prod"        = "prod"
-    "nonprod"     = "stage"
-    "performance" = "qa"
-    "training"    = "train"
-    "uat"         = "uat"
+    "adhoc"       = "test"
     "breakfix"    = "qa"
     "cps-preview" = "qa"
-    "adhoc"       = "test"
-    "long"        = "test"
     "infra-test"  = "test"
+    "long"        = "test"
+    "nonprod"     = "stage"
+    "performance" = "qa"
+    "prod"        = "prod"
+    "stage"       = "stage"
+    "test"        = "test"
+    "training"    = "train"
+    "uat"         = "uat"
   }
 }
 
@@ -49,16 +49,16 @@ output "environment_tags" {
 #
 output "environment_shorthand" {
   value = {
-    "test"        = "test"
-    "stage"       = "stage"
-    "prod"        = "prod"
-    "performance" = "perf"
-    "training"    = "train"
-    "uat"         = "uat"
     "breakfix"    = "bfx"
     "cps-preview" = "cpspr"
-    "long"        = "long"
     "infra-test"  = "itest"
+    "long"        = "long"
+    "performance" = "perf"
+    "prod"        = "prod"
+    "stage"       = "stage"
+    "test"        = "test"
+    "training"    = "train"
+    "uat"         = "uat"
   }
 }
 
@@ -70,17 +70,17 @@ output "environment_shorthand" {
 #
 output "smartronix_environment_tags" {
   value = {
-    "test"        = "Development"
-    "stage"       = "Staging"
-    "prod"        = "Production"
-    "performance" = "QA"
-    "training"    = "Sandbox"
-    "uat"         = "UAT"
+    "adhoc"       = "Adhoc"
     "breakfix"    = "Breakfix"
     "cps-preview" = "CPSPreview"
-    "adhoc"       = "Adhoc"
-    "long"        = "LONG"
     "infra-test"  = "Sandbox"
+    "long"        = "LONG"
+    "prod"        = "Production"
+    "performance" = "QA"
+    "stage"       = "Staging"
+    "test"        = "Development"
+    "training"    = "Sandbox"
+    "uat"         = "UAT"
   }
 }
 
@@ -110,43 +110,43 @@ output "nonprod_admin_roles" {
 #
 output "domains" {
   value = {
-    "infra-test"  = "paidleave-infra-test.dfml.eol.mass.gov",
-    "test"        = "paidleave-test.mass.gov",
-    "stage"       = "paidleave-stage.mass.gov",
-    "performance" = "paidleave-performance.mass.gov",
-    "training"    = "paidleave-training.mass.gov",
     "breakfix"    = "paidleave-breakfix.eol.mass.gov",
     "cps-preview" = "paidleave-cps-preview.eol.mass.gov",
-    "uat"         = "paidleave-uat.mass.gov",
-    "prod"        = "paidleave.mass.gov",
     "long"        = "paidleave-long.dfml.eol.mass.gov"
+    "performance" = "paidleave-performance.mass.gov",
+    "prod"        = "paidleave.mass.gov",
+    "infra-test"  = "paidleave-infra-test.dfml.eol.mass.gov",
+    "stage"       = "paidleave-stage.mass.gov",
+    "test"        = "paidleave-test.mass.gov",
+    "training"    = "paidleave-training.mass.gov",
+    "uat"         = "paidleave-uat.mass.gov",
   }
 }
 
 output "admin_domains" {
   value = {
-    "infra-test" = "paidleave-admin-infra-test.dfml.eol.mass.gov",
-    "test"       = "paidleave-admin-test.dfml.eol.mass.gov",
-    "stage"      = "paidleave-admin-stage.dfml.eol.mass.gov",
     "breakfix"   = "paidleave-admin-breakfix.dfml.eol.mass.gov",
-    "uat"        = "paidleave-admin-uat.dfml.eol.mass.gov",
-    "prod"       = "paidleave-admin.dfml.eol.mass.gov",
+    "infra-test" = "paidleave-admin-infra-test.dfml.eol.mass.gov",
     "long"       = "paidleave-admin-long.dfml.eol.mass.gov",
+    "prod"       = "paidleave-admin.dfml.eol.mass.gov",
+    "stage"      = "paidleave-admin-stage.dfml.eol.mass.gov",
+    "test"       = "paidleave-admin-test.dfml.eol.mass.gov",
+    "uat"        = "paidleave-admin-uat.dfml.eol.mass.gjoitov",
   }
 }
 
 output "api_domains" {
   value = {
-    "infra-test"  = "paidleave-api-infra-test.dfml.eol.mass.gov",
-    "test"        = "paidleave-api-test.mass.gov",
-    "stage"       = "paidleave-api-stage.mass.gov",
-    "performance" = "paidleave-api-performance.mass.gov",
-    "training"    = "paidleave-api-training.mass.gov",
     "breakfix"    = "paidleave-api-breakfix.eol.mass.gov",
     "cps-preview" = "paidleave-api-cps-preview.eol.mass.gov",
-    "uat"         = "paidleave-api-uat.mass.gov",
-    "prod"        = "paidleave-api.mass.gov",
+    "infra-test"  = "paidleave-api-infra-test.dfml.eol.mass.gov",
     "long"        = "paidleave-api-long.dfml.eol.mass.gov"
+    "performance" = "paidleave-api-performance.mass.gov",
+    "prod"        = "paidleave-api.mass.gov",
+    "stage"       = "paidleave-api-stage.mass.gov",
+    "test"        = "paidleave-api-test.mass.gov",
+    "training"    = "paidleave-api-training.mass.gov",
+    "uat"         = "paidleave-api-uat.mass.gov",
   }
 }
 
@@ -155,16 +155,16 @@ output "cert_domains" {
   # you cannot lookup certs by a SAN, so we lookup based on the first domain
   # that is specified in the certificate.
   value = {
-    "infra-test"  = "paidleave-infra-test.dfml.eol.mass.gov",
-    "test"        = "paidleave-test.mass.gov",
-    "stage"       = "paidleave-test.mass.gov",
-    "performance" = "paidleave-performance.mass.gov",
-    "training"    = "paidleave-performance.mass.gov",
     "breakfix"    = "paidleave-breakfix.eol.mass.gov",
     "cps-preview" = "paidleave-breakfix.eol.mass.gov",
-    "uat"         = "paidleave-uat.mass.gov",
-    "prod"        = "paidleave.mass.gov",
+    "infra-test"  = "paidleave-infra-test.dfml.eol.mass.gov",
     "long"        = "paidleave-long.dfml.eol.mass.gov"
+    "performance" = "paidleave-performance.mass.gov",
+    "prod"        = "paidleave.mass.gov",
+    "stage"       = "paidleave-test.mass.gov",
+    "test"        = "paidleave-test.mass.gov",
+    "training"    = "paidleave-performance.mass.gov",
+    "uat"         = "paidleave-uat.mass.gov",
   }
 }
 
@@ -173,16 +173,16 @@ output "admin_portal_cert_domains" {
   # you cannot lookup certs by a SAN, so we lookup based on the first domain
   # that is specified in the certificate.
   value = {
-    "test"        = "paidleave-admin-test.dfml.eol.mass.gov",
-    "stage"       = "paidleave-admin-stage.dfml.eol.mass.gov",
     "breakfix"    = "paidleave-admin-breakfix.dfml.eol.mass.gov",
-    "uat"         = "paidleave-admin-test.dfml.eol.mass.gov",
-    "prod"        = "paidleave-admin.dfml.eol.mass.gov",
-    "infra-test"  = "paidleave-admin-infra-test.dfml.eol.mass.gov",
     "cps-preview" = "paidleave-admin-cps-preview.dfml.eol.mass.gov",
+    "infra-test"  = "paidleave-admin-infra-test.dfml.eol.mass.gov",
     "long"        = "paidleave-admin-long.dfml.eol.mass.gov",
     "performance" = "paidleave-admin-performance.dfml.eol.mass.gov",
+    "prod"        = "paidleave-admin.dfml.eol.mass.gov",
+    "stage"       = "paidleave-admin-stage.dfml.eol.mass.gov",
     "training"    = "paidleave-admin-training.dfml.eol.mass.gov"
+    "test"        = "paidleave-admin-test.dfml.eol.mass.gov",
+    "uat"         = "paidleave-admin-test.dfml.eol.mass.gov",
   }
 }
 
@@ -201,19 +201,19 @@ output "bucket_replication_environment" {
   value = "test"
 }
 
-# Env Var mappings for ECS Tasks 
+# Env Var mappings for ECS Tasks
 # Currently only used in aws_ecs_task_definition.ecs_tasks_1099 resource
 output "env_var_mappings" {
   value = {
-    "test"        = "Test"
-    "stage"       = "Staging"
-    "prod"        = "Production"
-    "performance" = "Performance"
-    "training"    = "Training"
-    "uat"         = "UAT"
     "breakfix"    = "Breakfix"
     "cps-preview" = "CPSPreview"
-    "long"        = "Long"
     "infra-test"  = "Test"
+    "long"        = "Long"
+    "performance" = "Performance"
+    "prod"        = "Production"
+    "stage"       = "Staging"
+    "test"        = "Test"
+    "training"    = "Training"
+    "uat"         = "UAT"
   }
 }
