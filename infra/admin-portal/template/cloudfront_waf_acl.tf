@@ -15,7 +15,7 @@ resource "aws_wafv2_web_acl" "cloudfront_waf_acl" {
   })
 
   default_action {
-    allow {}
+    block {}
   }
 
   #------------------------------------------------------------------------------#
