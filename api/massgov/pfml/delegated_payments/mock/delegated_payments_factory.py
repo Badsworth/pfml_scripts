@@ -122,6 +122,9 @@ class DelegatedPaymentFactory(MockData):
         )
         self.is_id_proofed = self.get_value("is_id_proofed", True)
         self.fineos_absence_status_id = self.get_value("fineos_absence_status_id", None)
+        self.absence_period_start_date = self.get_value(
+            "absence_period_start_date", date(2021, 1, 7)
+        )
 
         # payment defaults
         self.payment_optional_kwargs: Dict[str, Any] = (
@@ -239,6 +242,7 @@ class DelegatedPaymentFactory(MockData):
                 is_id_proofed=self.is_id_proofed,
                 employee_id=self.employee.employee_id if self.employee else None,
                 fineos_absence_status_id=self.fineos_absence_status_id,
+                absence_period_start_date=self.absence_period_start_date,
             )
 
         return self.claim

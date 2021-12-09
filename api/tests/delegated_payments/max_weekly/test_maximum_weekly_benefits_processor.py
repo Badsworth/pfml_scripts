@@ -49,39 +49,39 @@ def test_get_maximum_amount_for_week(maximum_weekly_processor, local_test_db_ses
         BenefitsMetrics(date(2021, 2, 1), "312.50", "200.00"),
         BenefitsMetrics(date(2021, 1, 1), "156.25", "100.00"),
     ]
-    maximum_weekly_processor.maximum_amount_for_week = maximum_amounts
+    maximum_weekly_processor.benefits_metrics_cache = maximum_amounts
 
-    assert maximum_weekly_processor._get_maximum_amount_for_week(date(2021, 1, 1)) == Decimal(
+    assert maximum_weekly_processor._get_maximum_amount_for_start_date(date(2021, 1, 1)) == Decimal(
         "100.00"
     )
-    assert maximum_weekly_processor._get_maximum_amount_for_week(date(2021, 1, 15)) == Decimal(
-        "100.00"
-    )
-    assert maximum_weekly_processor._get_maximum_amount_for_week(date(2021, 1, 31)) == Decimal(
-        "100.00"
-    )
-    assert maximum_weekly_processor._get_maximum_amount_for_week(date(2021, 2, 1)) == Decimal(
+    assert maximum_weekly_processor._get_maximum_amount_for_start_date(
+        date(2021, 1, 15)
+    ) == Decimal("100.00")
+    assert maximum_weekly_processor._get_maximum_amount_for_start_date(
+        date(2021, 1, 31)
+    ) == Decimal("100.00")
+    assert maximum_weekly_processor._get_maximum_amount_for_start_date(date(2021, 2, 1)) == Decimal(
         "200.00"
     )
-    assert maximum_weekly_processor._get_maximum_amount_for_week(date(2021, 2, 2)) == Decimal(
+    assert maximum_weekly_processor._get_maximum_amount_for_start_date(date(2021, 2, 2)) == Decimal(
         "200.00"
     )
-    assert maximum_weekly_processor._get_maximum_amount_for_week(date(2021, 2, 28)) == Decimal(
-        "200.00"
-    )
-    assert maximum_weekly_processor._get_maximum_amount_for_week(date(2021, 3, 1)) == Decimal(
+    assert maximum_weekly_processor._get_maximum_amount_for_start_date(
+        date(2021, 2, 28)
+    ) == Decimal("200.00")
+    assert maximum_weekly_processor._get_maximum_amount_for_start_date(date(2021, 3, 1)) == Decimal(
         "300.00"
     )
-    assert maximum_weekly_processor._get_maximum_amount_for_week(date(2021, 6, 25)) == Decimal(
-        "300.00"
-    )
-    assert maximum_weekly_processor._get_maximum_amount_for_week(date(2031, 1, 1)) == Decimal(
+    assert maximum_weekly_processor._get_maximum_amount_for_start_date(
+        date(2021, 6, 25)
+    ) == Decimal("300.00")
+    assert maximum_weekly_processor._get_maximum_amount_for_start_date(date(2031, 1, 1)) == Decimal(
         "300.00"
     )
 
     # Will error if given a date before the earliest configured date.
     with pytest.raises(Exception, match="No maximum weekly amount configured for 2020-12-31"):
-        maximum_weekly_processor._get_maximum_amount_for_week(date(2020, 12, 31))
+        maximum_weekly_processor._get_maximum_amount_for_start_date(date(2020, 12, 31))
 
 
 def test_validate_payments_not_exceeding_cap(maximum_weekly_processor, local_test_db_session):
@@ -468,3 +468,51 @@ def test_validate_payments_not_exceeding_cap_other_payment_types(
     # caused any sort of interference
     validate_payment_success(payment_container1)
     validate_payment_success(payment_container2)
+
+
+def test_validate_payments_use_correct_maximum_benefit(
+    maximum_weekly_processor, local_test_db_session
+):
+    # payments in 2022 for claims starting in 2022 have a maximum payment of $1084.31,
+    # so this should be paid in full
+    employee = EmployeeFactory.create()
+    payment_container1 = _create_payment_container(
+        employee, Decimal("750"), local_test_db_session, start_date=date(2022, 1, 14)
+    )
+    payment_container2 = _create_payment_container(
+        employee, Decimal("250"), local_test_db_session, start_date=date(2022, 1, 14)
+    )
+    maximum_weekly_processor.process(employee, [payment_container1, payment_container2])
+    validate_payment_success(payment_container1)
+
+    # payments in 2022 for claims starting in 2021 have a maximum payment of $850,
+    # so the second payment should be reduced
+    employee2 = EmployeeFactory.create()
+    claim3 = ClaimFactory.create(absence_period_start_date=date(2021, 12, 2))
+    claim4 = ClaimFactory.create(absence_period_start_date=date(2021, 12, 17))
+    payment_container3 = _create_payment_container(
+        employee2, Decimal("750"), local_test_db_session, start_date=date(2022, 1, 14), claim=claim3
+    )
+    payment_container4 = _create_payment_container(
+        employee2, Decimal("250"), local_test_db_session, start_date=date(2022, 1, 14), claim=claim4
+    )
+    maximum_weekly_processor.process(employee, [payment_container3, payment_container4])
+    validate_payment_success(payment_container3)
+    validate_payment_failed(payment_container4)
+
+    # when payments are for claims in different years, the higher maxmium amount applies,
+    # so this should be paid in full
+    employee3 = EmployeeFactory.create()
+    claim5 = ClaimFactory.create(absence_period_start_date=date(2022, 1, 7))
+    claim6 = ClaimFactory.create(absence_period_start_date=date(2021, 12, 10))
+    payment_container5 = _create_payment_container(
+        employee3, Decimal("750"), local_test_db_session, start_date=date(2022, 1, 14), claim=claim5
+    )
+    maximum_weekly_processor.process(employee, [payment_container5])
+    validate_payment_success(payment_container5)
+
+    payment_container6 = _create_payment_container(
+        employee3, Decimal("250"), local_test_db_session, start_date=date(2022, 1, 14), claim=claim6
+    )
+    maximum_weekly_processor.process(employee, [payment_container6])
+    validate_payment_success(payment_container6)

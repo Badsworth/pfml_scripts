@@ -4,7 +4,7 @@ from typing import Dict, List, Optional, cast
 
 import massgov.pfml.util.logging
 from massgov.pfml.db.models.applications import BenefitsMetrics
-from massgov.pfml.db.models.employees import Employee, PaymentDetails
+from massgov.pfml.db.models.employees import Claim, Employee, PaymentDetails
 from massgov.pfml.delegated_payments.abstract_step_processor import AbstractStepProcessor
 from massgov.pfml.delegated_payments.postprocessing.payment_post_processing_util import (
     MaximumWeeklyBenefitsAuditMessageBuilder,
@@ -36,7 +36,7 @@ class MaximumWeeklyBenefitsStepProcessor(AbstractStepProcessor):
     """
 
     Metrics = MaxWeeklyBenefitAmountMetrics
-    maximum_amount_for_week: Optional[List[BenefitsMetrics]] = None
+    benefits_metrics_cache: Optional[List[BenefitsMetrics]] = None
 
     def process(self, employee: Employee, payment_containers: List[PaymentContainer]) -> None:
         """
@@ -110,20 +110,20 @@ class MaximumWeeklyBenefitsStepProcessor(AbstractStepProcessor):
         payment_containers_to_process.sort()
         return payment_containers_to_process
 
-    def _get_maximum_amount_for_week(self, start_date: date) -> Decimal:
-        # Determine the maximum amount allowed for a given week
-        # Cache the result from the DB and use that for processing.
+    def _get_maximum_amount_for_start_date(self, start_date: date) -> Decimal:
+        # Determine the maximum amount allowed for a given start date
 
-        if not self.maximum_amount_for_week:
+        # Cache the result from the DB and use that for processing.
+        if not self.benefits_metrics_cache:
             results = (
                 self.db_session.query(BenefitsMetrics)
                 .order_by(BenefitsMetrics.effective_date.desc())
                 .all()
             )
-            self.maximum_amount_for_week = results
+            self.benefits_metrics_cache = results
 
         # Find the closest maximum weekly amount that comes before the payments start date
-        for record in self.maximum_amount_for_week:
+        for record in self.benefits_metrics_cache:
             if record.effective_date <= start_date:
                 return record.maximum_weekly_benefit_amount
 
@@ -154,6 +154,7 @@ class MaximumWeeklyBenefitsStepProcessor(AbstractStepProcessor):
                     pay_period.add_payment_from_details(
                         payment_detail, PaymentScenario.PREVIOUS_PAYMENT
                     )
+                    self._update_maximum_amount(pay_period, payment_detail.payment.claim)
 
         return pay_periods
 
@@ -164,7 +165,7 @@ class MaximumWeeklyBenefitsStepProcessor(AbstractStepProcessor):
         For each payment, we want any 7-day period that starts with a Sunday
         and that overlaps with the payments we are actively processing.
         """
-        pay_periods = set()
+        pay_periods: dict[date, PayPeriodGroup] = {}
         for payment_container in payment_containers:
             date_iter = cast(date, payment_container.payment.period_start_date) - timedelta(days=6)
 
@@ -174,18 +175,36 @@ class MaximumWeeklyBenefitsStepProcessor(AbstractStepProcessor):
                 # We only want 7-day periods beginning with Sunday which is weekday 6:
                 # https://docs.python.org/3/library/datetime.html#datetime.date.weekday
                 if start_date.weekday() == 6:
-                    pay_period = PayPeriodGroup(start_date, end_date)
-                    # pay_period is hashed on just the dates.
-                    if pay_period not in pay_periods:
-                        # Determine the maximum for the week
-                        pay_period.maximum_weekly_amount = self._get_maximum_amount_for_week(
-                            pay_period.start_date
-                        )
-                        pay_periods.add(pay_period)
+                    if start_date not in pay_periods:
+                        pay_periods[start_date] = PayPeriodGroup(start_date, end_date)
+
+                    self._update_maximum_amount(
+                        pay_periods[start_date], payment_container.payment.claim
+                    )
 
                 date_iter = date_iter + timedelta(days=1)
 
-        return sorted(pay_periods, key=lambda pay_period: pay_period.start_date)
+        return sorted(pay_periods.values(), key=lambda pay_period: pay_period.start_date)
+
+    def _update_maximum_amount(self, pay_period: PayPeriodGroup, absence_case: Claim) -> None:
+        max_amount = (
+            self._get_maximum_amount_for_start_date(absence_case.absence_period_start_date)
+            if absence_case.absence_period_start_date
+            else Decimal(0)
+        )
+
+        if max_amount > pay_period.maximum_weekly_amount:
+            pay_period.maximum_weekly_amount = max_amount
+            logger.info(
+                "Pay period maximum weekly amount updated",
+                extra={
+                    "pay_period_start_date": pay_period.start_date,
+                    "pay_period_end_date": pay_period.end_date,
+                    "new_maximum_amount": max_amount,
+                    "absence_case_id": absence_case.fineos_absence_id,
+                    "fineos_customer_number": absence_case.employee.fineos_customer_number,
+                },
+            )
 
     def _determine_payments_over_cap(
         self,

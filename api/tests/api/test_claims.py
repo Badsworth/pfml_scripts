@@ -1836,8 +1836,18 @@ class TestUpdateClaim:
 def assert_claim_response_equal_to_claim_query(
     claim_response, claim_query, has_paid_payments=False
 ) -> bool:
-    assert claim_response["absence_period_end_date"] == claim_query.absence_period_end_date
-    assert claim_response["absence_period_start_date"] == claim_query.absence_period_start_date
+    if claim_query.absence_period_end_date:
+        assert claim_response[
+            "absence_period_end_date"
+        ] == claim_query.absence_period_end_date.strftime("%Y-%m-%d")
+    else:
+        assert claim_response["absence_period_end_date"] is None
+    if claim_query.absence_period_start_date:
+        assert claim_response[
+            "absence_period_start_date"
+        ] == claim_query.absence_period_start_date.strftime("%Y-%m-%d")
+    else:
+        assert claim_response["absence_period_start_date"] is None
     assert claim_response["fineos_absence_id"] == claim_query.fineos_absence_id
     assert claim_response["fineos_notification_id"] == claim_query.fineos_notification_id
     assert claim_response["employer"]["employer_dba"] == claim_query.employer.employer_dba
