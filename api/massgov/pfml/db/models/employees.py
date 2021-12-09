@@ -2939,7 +2939,7 @@ class ReferenceFileType(LookupTable):
 
     # Claimant Address Report
     CLAIMANT_ADDRESS_VALIDATION_REPORT = LkReferenceFileType(
-        35, "Claimant Address validation Report", 1
+        36, "Claimant Address validation Report", 1
     )
 
 
