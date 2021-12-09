@@ -18,46 +18,44 @@ const pipelineP = promisify(pipeline);
   const storage = dataDirectory("payments-2021-12-09-payments");
   await storage.prepare();
 
-  const employerPool = await EmployerPool.load(
-    storage.employers
-  ).orGenerateAndSave(() => EmployerPool.generate(3, { size: "small" }));
+  const employerPool = await EmployerPool.load(storage.employers);
+  // .orGenerateAndSave(() => EmployerPool.generate(3, { size: "small" }));
 
-  await DOR.writeEmployersFile(employerPool, storage.dorFile("DORDFMLEMP"));
-  await EmployerIndex.write(
-    employerPool,
-    path.join(storage.dir, "employers.csv")
-  );
+  // await DOR.writeEmployersFile(employerPool, storage.dorFile("DORDFMLEMP"));
+  // await EmployerIndex.write(
+  //   employerPool,
+  //   path.join(storage.dir, "employers.csv")
+  // );
 
-  const employeePool = await EmployeePool.load(
-    storage.employees
-  ).orGenerateAndSave(() =>
-    EmployeePool.merge(
-      EmployeePool.generate(600, employerPool, {
-        mass_id: true,
-        wages: 30000,
-        metadata: { prenoted: "no" },
-      }),
-      EmployeePool.generate(300, employerPool, {
-        mass_id: true,
-        wages: 30000,
-        metadata: { prenoted: "yes" },
-      }),
-      EmployeePool.generate(60, employerPool, {
-        mass_id: true,
-        wages: 30000,
-        metadata: { prenoted: "pending" },
-      })
-    )
-  );
-  await DOR.writeEmployeesFile(
-    employerPool,
-    employeePool,
-    storage.dorFile("DORDFML")
-  );
-  await EmployeeIndex.write(
-    employeePool,
-    path.join(storage.dir, "employees.csv")
-  );
+  const employeePool = await EmployeePool.load(storage.employees);
+  // .orGenerateAndSave(() =>
+  //   EmployeePool.merge(
+  //     EmployeePool.generate(600, employerPool, {
+  //       mass_id: true,
+  //       wages: 30000,
+  //       metadata: { prenoted: "no" },
+  //     }),
+  //     EmployeePool.generate(300, employerPool, {
+  //       mass_id: true,
+  //       wages: 30000,
+  //       metadata: { prenoted: "yes" },
+  //     }),
+  //     EmployeePool.generate(60, employerPool, {
+  //       mass_id: true,
+  //       wages: 30000,
+  //       metadata: { prenoted: "pending" },
+  //     })
+  //   )
+  // );
+  // await DOR.writeEmployeesFile(
+  //   employerPool,
+  //   employeePool,
+  //   storage.dorFile("DORDFML")
+  // );
+  // await EmployeeIndex.write(
+  //   employeePool,
+  //   path.join(storage.dir, "employees.csv")
+  // );
 
   // Write a CSV description of the scenarios we're using for human consumption.
   await pipelineP(
