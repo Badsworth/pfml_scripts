@@ -117,7 +117,9 @@ class DelegatedPaymentFactory(MockData):
 
         # claim defaults
         self.claim_type = self.get_value("claim_type", ClaimType.FAMILY_LEAVE)
-        self.fineos_absence_id = self.get_value("fineos_absence_id", str(fake.unique.random_int()))
+        self.fineos_absence_id = self.get_value(
+            "fineos_absence_id", f"NTN-{fake.unique.random_int()}-ABS-01"
+        )
         self.is_id_proofed = self.get_value("is_id_proofed", True)
         self.fineos_absence_status_id = self.get_value("fineos_absence_status_id", None)
 
@@ -372,7 +374,7 @@ class DelegatedPaymentFactory(MockData):
 
         return None
 
-    def create_cancellation_payment(self, reissuing_payment=None, import_log=None):
+    def create_cancellation_payment(self, reissuing_payment=None, import_log=None, weeks_later=0):
         self.get_or_create_payment()
 
         payment_to_reissue = reissuing_payment if reissuing_payment is not None else self.payment
@@ -381,6 +383,7 @@ class DelegatedPaymentFactory(MockData):
             import_log = ImportLogFactory.create()
 
         return self.create_related_payment(
+            weeks_later=weeks_later,
             amount=-payment_to_reissue.amount,
             payment_transaction_type_id=PaymentTransactionType.CANCELLATION.payment_transaction_type_id,
             import_log_id=import_log.import_log_id,

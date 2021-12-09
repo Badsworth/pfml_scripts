@@ -1,7 +1,9 @@
 import uuid
-from dataclasses import dataclass
+from collections import defaultdict
+from dataclasses import dataclass, field
 from datetime import date, timedelta
 from decimal import Decimal
+from enum import Enum
 from functools import total_ordering
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -19,11 +21,27 @@ from massgov.pfml.util import logging
 logger = logging.get_logger(__name__)
 
 
-class FrontendPaymentStatus:
+class FrontendPaymentStatus(str, Enum):
     SENT_TO_BANK = "Sent to bank"
     DELAYED = "Delayed"
     PENDING = "Pending"
     CANCELLED = "Cancelled"
+
+    def get_metric_count_name(self) -> str:
+        camelcased_str = self.lower().replace(" ", "_")
+        return f"payment_status_{camelcased_str}_count"
+
+
+# Enum used for tracking+logging why we excluded payments
+# that were fetched from the DB.
+class PaymentFilterReason(str, Enum):
+    UNKNOWN = "Unknown"
+    HAS_SUCCESSOR = "Has successor"
+    CANCELLATION_EVENT = "Cancellation event"
+
+    def get_metric_count_name(self) -> str:
+        camelcased_str = self.lower().replace(" ", "_")
+        return f"payment_filtered_{camelcased_str}_count"
 
 
 @dataclass
@@ -32,7 +50,7 @@ class PaymentScenarioData:
     sent_date: Optional[date] = None
     expected_send_date_start: Optional[date] = None
     expected_send_date_end: Optional[date] = None
-    status: str = FrontendPaymentStatus.DELAYED
+    status: FrontendPaymentStatus = FrontendPaymentStatus.DELAYED
 
     SCENARIOS = {
         WritebackStatus.PENDING_PRENOTE.transaction_status_id: "pending_validation",
@@ -162,6 +180,17 @@ class PaymentContainer:
     # Which payment it cancels
     cancelled_payment: Optional["PaymentContainer"] = None
 
+    # Whether the payment is being returned in the API response (ie. not filtered)
+    is_valid_for_response: bool = False
+
+    # For any payments filtered, display a reason, defaults to unknown
+    # in case a reason was not configured.
+    payment_filter_reason: PaymentFilterReason = PaymentFilterReason.UNKNOWN
+
+    # Used for tracking/logging purposes. For some filtered payments
+    # indicates the payments that we instead returned.
+    successors: List["PaymentContainer"] = field(default_factory=list)
+
     def __post_init__(self):
         self.writeback_detail = get_latest_writeback_detail(self.payment)
 
@@ -230,7 +259,13 @@ def get_payments_with_status(db_session: Session, claim: Claim) -> Dict:
 
     filtered_payments = filter_and_sort_payments(consolidated_payments)
 
-    return to_response_dict(filtered_payments, claim.fineos_absence_id)
+    response = to_response_dict(filtered_payments, claim.fineos_absence_id)
+
+    log_payment_status(
+        claim, payment_containers
+    )  # We pass in the raw, unfiltered payments for full metrics
+
+    return response
 
 
 def get_payments_from_db(db_session: Session, claim_id: uuid.UUID) -> List[PaymentContainer]:
@@ -279,7 +314,11 @@ def consolidate_successors(payment_data: List[PaymentContainer]) -> List[Payment
             payment_container.payment.period_start_date is None
             or payment_container.payment.period_end_date is None
         ):
-            logger.warning("Payment %s has no pay periods", payment_container.payment.payment_id)
+            logger.warning(
+                "get_payments Payment %s has no pay periods",
+                payment_container.payment.payment_id,
+                extra={"payment_id": payment_container.payment.payment_id},
+            )
             continue
 
         key = (
@@ -313,6 +352,7 @@ def _offset_cancellations(payment_containers: List[PaymentContainer]) -> List[Pa
             payment_container.payment.payment_transaction_type_id
             == PaymentTransactionType.CANCELLATION.payment_transaction_type_id
         ):
+            payment_container.payment_filter_reason = PaymentFilterReason.CANCELLATION_EVENT
             cancellation_events.append(payment_container)
         else:
             regular_payments.append(payment_container)
@@ -357,12 +397,21 @@ def _offset_cancellations(payment_containers: List[PaymentContainer]) -> List[Pa
     # If there are only cancelled payments, return the last one
     # No need to return multiple cancelled payments for a single pay period
     if len(processed_payments) == 0 and len(cancelled_payments) > 0:
-        latest_cancelled_payment = cancelled_payments[-1]
+        latest_cancelled_payment = cancelled_payments.pop()
+        for cancelled_payment in cancelled_payments:
+            cancelled_payment.payment_filter_reason = PaymentFilterReason.HAS_SUCCESSOR
+            cancelled_payment.successors = [latest_cancelled_payment]
+
         return [latest_cancelled_payment]
 
     # Otherwise return all uncancelled payments - note that these
     # can still contain payments that have errored, they just aren't
     # officially cancelled yet.
+
+    # We also want to mark the filter reason for logging purposes
+    for cancelled_payment_container in cancelled_payments:
+        cancelled_payment_container.payment_filter_reason = PaymentFilterReason.HAS_SUCCESSOR
+        cancelled_payment_container.successors = processed_payments
     return processed_payments
 
 
@@ -374,6 +423,7 @@ def filter_and_sort_payments(payment_data: List[PaymentContainer]) -> List[Payme
             payment_container.payment.payment_transaction_type_id
             == PaymentTransactionType.CANCELLATION.payment_transaction_type_id
         ):
+            payment_container.payment_filter_reason = PaymentFilterReason.CANCELLATION_EVENT
             continue
 
         payments_to_keep.append(payment_container)
@@ -386,6 +436,7 @@ def filter_and_sort_payments(payment_data: List[PaymentContainer]) -> List[Payme
 def to_response_dict(payment_data: List[PaymentContainer], absence_case_id: Optional[str]) -> Dict:
     payments = []
     for payment_container in payment_data:
+        payment_container.is_valid_for_response = True
         payment = payment_container.payment
         scenario_data = payment_container.get_scenario_data()
 
@@ -405,6 +456,7 @@ def to_response_dict(payment_data: List[PaymentContainer], absence_case_id: Opti
                 status=scenario_data.status,
             ).dict()
         )
+
     return {
         "payments": payments,
         "absence_case_id": absence_case_id,
@@ -443,3 +495,110 @@ def get_expected_dates(
 def to_est(datetime_obj):
     est = pytz.timezone("US/Eastern")
     return datetime_obj.astimezone(est)
+
+
+def log_payment_status(claim: Claim, payment_containers: List[PaymentContainer]) -> None:
+    log_attributes: Dict[str, Any] = defaultdict(int)
+    log_attributes["absence_id"] = claim.fineos_absence_id
+
+    # For the various payment scenarios, initialize the counts to 0
+    # New enums defined above automatically get added here
+    for reason in PaymentFilterReason:
+        log_attributes[reason.get_metric_count_name()] = 0
+
+    for status in FrontendPaymentStatus:
+        log_attributes[status.get_metric_count_name()] = 0
+
+    returned_payments = []
+    filtered_payments = []
+
+    # Figure out what we did with the payment.
+    for payment_container in payment_containers:
+        # We are returning it
+        if payment_container.is_valid_for_response:
+            returned_payments.append(payment_container)
+        else:
+            # Or it was filtered prior to getting that far
+            filtered_payments.append(payment_container)
+
+    log_attributes["payments_returned_count"] = len(returned_payments)
+    log_attributes["payments_filtered_count"] = len(filtered_payments)
+    returned_payments.sort()
+    filtered_payments.sort()
+
+    for i, returned_payment in enumerate(returned_payments):
+        scenario_data = returned_payment.get_scenario_data()
+        log_attributes[scenario_data.status.get_metric_count_name()] += 1
+
+        log_attributes[f"payment[{i}].id"] = returned_payment.payment.payment_id
+        log_attributes[f"payment[{i}].c_value"] = returned_payment.payment.fineos_pei_c_value
+        log_attributes[f"payment[{i}].i_value"] = returned_payment.payment.fineos_pei_i_value
+        log_attributes[f"payment[{i}].period_start_date"] = (
+            returned_payment.payment.period_start_date.isoformat()
+            if returned_payment.payment.period_start_date
+            else None
+        )
+        log_attributes[f"payment[{i}].period_end_date"] = (
+            returned_payment.payment.period_end_date.isoformat()
+            if returned_payment.payment.period_end_date
+            else None
+        )
+        log_attributes[
+            f"payment[{i}].payment_type"
+        ] = returned_payment.payment.payment_transaction_type.payment_transaction_type_description
+        log_attributes[f"payment[{i}].status"] = scenario_data.status.value
+
+        if returned_payment.cancellation_event:
+            log_attributes[
+                f"payment[{i}].cancellation_event.c_value"
+            ] = returned_payment.cancellation_event.payment.fineos_pei_c_value
+            log_attributes[
+                f"payment[{i}].cancellation_event.i_value"
+            ] = returned_payment.cancellation_event.payment.fineos_pei_i_value
+
+    for i, filtered_payment in enumerate(filtered_payments):
+        log_attributes[filtered_payment.payment_filter_reason.get_metric_count_name()] += 1
+
+        log_attributes[f"filtered_payment[{i}].id"] = filtered_payment.payment.payment_id
+        log_attributes[
+            f"filtered_payment[{i}].c_value"
+        ] = filtered_payment.payment.fineos_pei_c_value
+        log_attributes[
+            f"filtered_payment[{i}].i_value"
+        ] = filtered_payment.payment.fineos_pei_i_value
+        log_attributes[f"filtered_payment[{i}].period_start_date"] = (
+            filtered_payment.payment.period_start_date.isoformat()
+            if filtered_payment.payment.period_start_date
+            else None
+        )
+        log_attributes[f"filtered_payment[{i}].period_end_date"] = (
+            filtered_payment.payment.period_end_date.isoformat()
+            if filtered_payment.payment.period_end_date
+            else None
+        )
+        log_attributes[
+            f"filtered_payment[{i}].payment_type"
+        ] = filtered_payment.payment.payment_transaction_type.payment_transaction_type_description
+        log_attributes[
+            f"filtered_payment[{i}].filter_reason"
+        ] = filtered_payment.payment_filter_reason.value
+
+        # Also log which C/I values succeeded the filtered payment if present
+        for successor_i, successor_payment in enumerate(filtered_payment.successors):
+            log_attributes[
+                f"filtered_payment[{i}].successor[{successor_i}].c_value"
+            ] = successor_payment.payment.fineos_pei_c_value
+            log_attributes[
+                f"filtered_payment[{i}].successor[{successor_i}].i_value"
+            ] = successor_payment.payment.fineos_pei_i_value
+
+        # If it's a cancellation event, add what it cancelled
+        if filtered_payment.cancelled_payment:
+            log_attributes[
+                f"filtered_payment[{i}].cancels.c_value"
+            ] = filtered_payment.cancelled_payment.payment.fineos_pei_c_value
+            log_attributes[
+                f"filtered_payment[{i}].cancels.i_value"
+            ] = filtered_payment.cancelled_payment.payment.fineos_pei_i_value
+
+    logger.info("get_payments success", extra=log_attributes)
