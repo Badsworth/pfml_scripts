@@ -1021,12 +1021,7 @@ export function submitClaimPartsTwoThree(
   onPage("checklist");
   if (useWithholdingFlow) {
     clickChecklistButton("Enter tax withholding preference");
-    /*
-    @todo: Ideally in the future, this value would come from the application.
-    We don't yet have the support to generate claims with tax withholding values
-    Once that is complete we should update this to be dynamic
-    */
-    addWithholdingPreference(true);
+    addWithholdingPreference(application.is_withholding_tax ?? false);
   }
   clickChecklistButton("Upload identification document");
   addId("MA ID");
@@ -1039,7 +1034,10 @@ export function submitClaimPartsTwoThree(
   reviewAndSubmit();
   onPage("review");
   useWithholdingFlow &&
-    cy.contains("Withhold state and federal taxes?").parent().contains("Yes");
+    cy
+      .contains("Withhold state and federal taxes?")
+      .parent()
+      .contains(application.is_withholding_tax ? "Yes" : "No");
   confirmSubmit();
   goToDashboardFromSuccessPage();
   cy.wait(3000);

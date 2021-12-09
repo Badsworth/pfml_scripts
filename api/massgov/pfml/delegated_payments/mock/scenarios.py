@@ -111,6 +111,7 @@ class ScenarioName(Enum):
     # Tax withholding payments
     HAPPY_PATH_TAX_WITHHOLDING = "HAPPY_PATH_TAX_WITHHOLDING"
     TAX_WITHHOLDING_DUPLICATES = "TAX_WITHHOLDING_DUPLICATES"
+    TAX_WITHHOLDING_WITH_ERRORED_PRIMARY = "TAX_WITHHOLDING_WITH_ERRORED_PRIMARY"
 
 
 @dataclass
@@ -399,6 +400,11 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
     # ScenarioDescriptor(
     #     scenario_name=ScenarioName.TAX_WITHHOLDING_DUPLICATES,
     #     is_duplicate_tax_withholding_records_exists=True,
+    # ),
+    # ScenarioDescriptor(
+    #     scenario_name=ScenarioName.TAX_WITHHOLDING_WITH_ERRORED_PRIMARY,
+    #     is_tax_withholding_records_exists=True,
+    #     leave_request_decision="Rejected"
     # ),
     ScenarioDescriptor(
         scenario_name=ScenarioName.HAPPY_PATH_DOR_FINEOS_NAME_MISMATCH,

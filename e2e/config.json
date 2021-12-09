@@ -64,7 +64,7 @@
     "LST_EMPLOYERS_FILE": "./employers/lst-2021-08-18.json",
     "DOR_IMPORT_URI": "s3://massgov-pfml-performance-agency-transfer/dor/received/",
     "DOR_ETL_ARN": "arn:aws:states:us-east-1:498823821309:stateMachine:pfml-api-performance-dor-fineos-etl",
-    "FINEOS_HAS_TAX_WITHHOLDING": "false",
+    "FINEOS_HAS_TAX_WITHHOLDING": "true",
     "HAS_UPDATED_MAX_BENFIT": "false"
   },
   "uat": {
@@ -80,7 +80,7 @@
     "DOR_IMPORT_URI": "s3://massgov-pfml-uat-agency-transfer/dor/received/",
     "DOR_ETL_ARN": "arn:aws:states:us-east-1:498823821309:stateMachine:pfml-api-uat-dor-fineos-etl",
     "HAS_FINEOS_SP": "true",
-    "FINEOS_HAS_TAX_WITHHOLDING": "false",
+    "FINEOS_HAS_TAX_WITHHOLDING": "true",
     "HAS_UPDATED_MAX_BENFIT": "false"
   },
   "cps-preview": {
