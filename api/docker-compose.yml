@@ -110,7 +110,6 @@ services:
       - PDF_API_HOST=https://mass-pfml-pdf-api
       - ENABLE_GENERATE_1099_PDF=1
       - ENABLE_MERGE_1099_PDF=1
-
     networks:
       main:
         aliases:
