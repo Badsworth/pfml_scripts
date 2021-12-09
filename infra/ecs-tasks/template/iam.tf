@@ -737,6 +737,58 @@ data "aws_iam_policy_document" "pub_payments_process_pub_returns_task_role_extra
   }
 }
 
+#####
+
+resource "aws_iam_role" "pub_payments_copy_audit_report_task_role" {
+  name               = "${local.app_name}-${var.environment_name}-pub-payments-copy-audit-report"
+  assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume_role_policy.json
+}
+
+resource "aws_iam_role_policy" "pub_payments_copy_audit_report_task_role_extras" {
+  name   = "${local.app_name}-${var.environment_name}-pub-payments-copy-audit-report-extras"
+  role   = aws_iam_role.pub_payments_copy_audit_report_task_role.id
+  policy = data.aws_iam_policy_document.pub_payments_copy_audit_report_task_role_extras.json
+}
+
+data "aws_iam_policy_document" "pub_payments_copy_audit_report_task_role_extras" {
+  statement {
+    sid = "AllowListingOfBucket"
+    actions = [
+      "s3:ListBucket"
+    ]
+
+    resources = [
+      data.aws_s3_bucket.agency_transfer.arn,
+      "${data.aws_s3_bucket.agency_transfer.arn}/*",
+      data.aws_s3_bucket.reports.arn,
+      "${data.aws_s3_bucket.reports.arn}/*"
+    ]
+
+    effect = "Allow"
+  }
+
+  statement {
+    sid = "ReadWriteAccessToAgencyTransferBucket"
+    actions = [
+      "s3:ListBucket",
+      "s3:Get*",
+      "s3:List*",
+      "s3:PutObject",
+      "s3:DeleteObject",
+      "s3:AbortMultipartUpload"
+    ]
+
+    resources = [
+      "${data.aws_s3_bucket.agency_transfer.arn}/reports",
+      "${data.aws_s3_bucket.agency_transfer.arn}/reports/*",
+      "${data.aws_s3_bucket.reports.arn}/dfml-responses",
+      "${data.aws_s3_bucket.reports.arn}/dfml-responses/*"
+    ]
+
+    effect = "Allow"
+  }
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # IAM role and policies for pub-claimant-address-validation
 # ----------------------------------------------------------------------------------------------------------------------

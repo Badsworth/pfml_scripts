@@ -543,7 +543,7 @@ export const LeaveDetails = ({
                           <a
                             href={createRouteWithQuery(
                               "/applications/status/payments",
-                              { absenceId }
+                              { absence_id: absenceId }
                             )}
                           />
                         ),
