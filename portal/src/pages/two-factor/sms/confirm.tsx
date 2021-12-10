@@ -5,12 +5,14 @@ import InputText from "../../../components/core/InputText";
 import Lead from "../../../components/core/Lead";
 import PageNotFound from "../../../components/PageNotFound";
 import React from "react";
+import ThrottledButton from "src/components/ThrottledButton";
 import Title from "../../../components/core/Title";
 import User from "../../../models/User";
 import { isFeatureEnabled } from "../../../services/featureFlags";
 import useFormState from "../../../hooks/useFormState";
 import useFunctionalInputProps from "../../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../../locales/i18n";
+import { verifyMFAPhoneNumber } from "../../../services/mfa";
 import withUser from "../../../hoc/withUser";
 
 interface ConfirmSMSProps {
@@ -27,9 +29,19 @@ export const ConfirmSMS = (props: ConfirmSMSProps) => {
     code: "",
   });
 
-  const handleSubmit = (event: React.FormEvent) => {
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    // Do nothing for now
+
+    try {
+      await verifyMFAPhoneNumber(formState.code);
+    } catch (error) {
+      appLogic.catchError(error);
+      return;
+    }
+
+    await appLogic.users.updateUser(user.user_id, {
+      mfa_delivery_preference: "SMS",
+    });
   };
 
   const getFunctionalInputProps = useFunctionalInputProps({
@@ -42,7 +54,7 @@ export const ConfirmSMS = (props: ConfirmSMSProps) => {
   if (!isFeatureEnabled("claimantShowMFA")) return <PageNotFound />;
 
   return (
-    <form className="usa-form" onSubmit={handleSubmit} method="post">
+    <form className="usa-form">
       <BackButton />
       <Title>{t("pages.authTwoFactorSmsConfirm.title")}</Title>
       <Lead>{t("pages.authTwoFactorSmsConfirm.lead", { mfaPhoneNumber })}</Lead>
@@ -61,9 +73,13 @@ export const ConfirmSMS = (props: ConfirmSMSProps) => {
       >
         {t("pages.authTwoFactorSmsConfirm.resendCodeButton")}
       </Button>
-      <Button type="submit" className="display-block margin-top-3">
+      <ThrottledButton
+        type="submit"
+        onClick={handleSubmit}
+        className="display-block margin-top-3"
+      >
         {t("pages.authTwoFactorSmsConfirm.saveButton")}
-      </Button>
+      </ThrottledButton>
     </form>
   );
 };

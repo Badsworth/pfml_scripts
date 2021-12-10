@@ -6,7 +6,19 @@
  * settings flow.
  */
 
+import BenefitsApplication from "src/models/BenefitsApplication";
+import User from "src/models/User";
 import routes from "../routes";
+
+export interface UserFlowContext {
+  user?: User;
+  claim?: BenefitsApplication;
+}
+
+export const guards = {
+  hasOptedOutOfMFA: (context: UserFlowContext) =>
+    context.user?.mfa_delivery_preference === "Opt Out",
+};
 
 export default {
   states: {
@@ -18,7 +30,14 @@ export default {
     },
     [routes.twoFactor.smsIndex]: {
       on: {
-        CONTINUE: routes.twoFactor.smsSetup,
+        CONTINUE: [
+          {
+            target: routes.applications.index,
+            cond: "hasOptedOutOfMFA",
+          },
+          { target: routes.twoFactor.smsSetup },
+        ],
+        EDIT_MFA_PHONE: routes.twoFactor.smsSetup,
       },
     },
     [routes.twoFactor.smsSetup]: {

@@ -21,7 +21,11 @@ export const Page = (
   args: Props<typeof Settings> & { mfaEnabled: boolean }
 ) => {
   const user = new User({
-    mfa_phone_number: "555-111-****",
+    mfa_phone_number: {
+      int_code: "1",
+      phone_number: "***-***-1234",
+      phone_type: "Cell",
+    },
     email_address: "mock@gmail.com",
     mfa_delivery_preference: args.mfaEnabled ? "SMS" : "Opt Out",
   });

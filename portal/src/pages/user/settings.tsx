@@ -64,7 +64,7 @@ export const Settings = (props: UserSettingsProps) => {
             label={t("pages.userSettings.mfaPhoneNumberLabel")}
             editHref={appLogic.portalFlow.getNextPageRoute("EDIT_MFA_PHONE")}
           >
-            {user.mfa_phone_number}
+            {user.mfa_phone_number?.phone_number}
           </ReviewRow>
         </React.Fragment>
       )}
