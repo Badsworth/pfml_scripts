@@ -35,13 +35,13 @@ Changes to the following components take effect immediately in all environments 
 If you are testing a feature branch on the test environment, please go through the following additional steps:
 
 #### During Testing
-- [ ] Communicate to #mass-pfml-deploys-shared. "⚠️ I'll be using the API/Portal test environment soon, please let me know if you have any concerns."
+- [ ] Communicate to the Deployments channel in Teams: "⚠️ I'll be using the API/Portal test environment soon, please let me know if you have any concerns."
 - [ ] After running the workflow, click the "Disable Workflow" button to prevent auto-deploys from overriding your deployment.
 
 #### After Testing
 - [ ] Click the "Enable Workflow" button.
 - [ ] Re-deploy `main` to test.
-- [ ] Notify the Slack channel.
+- [ ] Notify the Teams channel.
 
 ### Branch-to-environment mapping
 
