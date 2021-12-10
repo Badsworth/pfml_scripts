@@ -67,10 +67,10 @@ module "api" {
   release_version                = var.release_version
 
   # TODO: Fill this in after the portal is deployed.
-  cognito_user_pool_arn       = null
-  cognito_user_pool_id        = ""
-  cognito_user_pool_client_id = ""
-  cognito_user_pool_keys_url  = ""
+  cognito_user_pool_arn       = "arn:aws:cognito-idp:us-east-1:498823821309:userpool/us-east-1_FADLpF6um"
+  cognito_user_pool_id        = "us-east-1_FADLpF6um"
+  cognito_user_pool_client_id = "1ufb6r40s1ad0evjffvdtl3113"
+  cognito_user_pool_keys_url  = "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_FADLpF6um/.well-known/jwks.json"
 
   # TODO: Connect to an RMV endpoint if desired. All nonprod environments are connected to the staging API
   #       in either a fully-mocked or partially-mocked setting.
@@ -80,18 +80,18 @@ module "api" {
   rmv_check_mock_success            = "1"
 
   # TODO: These values are provided by FINEOS.
-  fineos_client_integration_services_api_url          = ""
-  fineos_client_customer_api_url                      = ""
-  fineos_client_group_client_api_url                  = ""
-  fineos_client_wscomposer_api_url                    = ""
+  fineos_client_integration_services_api_url          = "https://dt4-api.masspfml.fineos.com/integration-services"
+  fineos_client_customer_api_url                      = "https://dt4-api.masspfml.fineos.com/customerapi/customer"
+  fineos_client_group_client_api_url                  = "https://dt4-api.masspfml.fineos.com/groupclientapi/groupClient"
+  fineos_client_wscomposer_api_url                    = "https://dt4-api.masspfml.fineos.com/integration-services/wscomposer/webservice"
   fineos_client_wscomposer_user_id                    = ""
-  fineos_client_oauth2_url                            = ""
-  fineos_import_employee_updates_input_directory_path = null
+  fineos_client_oauth2_url                            = "https://dt4-api.masspfml.fineos.com/oauth2/token"
+  fineos_import_employee_updates_input_directory_path = "s3://fin-somdev-data-import/DT4/absence-eligibility/upload/"
   fineos_aws_iam_role_arn                             = null
   fineos_aws_iam_role_external_id                     = null
 
   # TODO: This value is provided by FINEOS over Interchange.
-  fineos_client_oauth2_client_id = ""
+  fineos_client_oauth2_client_id = "5744bq9dpveko6jie4ma1e4g93"
 
   # TODO: Connect to ServiceNow. Usually in nonprod you'll connect to stage.
   service_now_base_url = "https://savilinxstage.servicenowservices.com"
