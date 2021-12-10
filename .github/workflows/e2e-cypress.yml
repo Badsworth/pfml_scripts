@@ -25,6 +25,9 @@ on:
         - training
         - uat
         - breakfix
+        - infra-test
+        - long
+        - trn2
       cypress_tags:
         description: "Cypress Run Tags"
         required: false
