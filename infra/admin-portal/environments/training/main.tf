@@ -22,7 +22,7 @@ terraform {
 
 locals {
   environment_name = "training"
-  app_name = "pfml"
+  app_name         = "pfml"
 }
 
 output "cloudfront_distribution_id" {
@@ -38,7 +38,7 @@ module "massgov_pfml" {
   enforce_cloudfront_fortinet_rules = true
 
   # You probably don't need to change the variables below:
-  source                 = "../../template"
-  environment_name       = local.environment_name
+  source           = "../../template"
+  environment_name = local.environment_name
   # cloudfront_origin_path = local.cloudfront_origin_path
 }

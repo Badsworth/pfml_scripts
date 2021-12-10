@@ -233,7 +233,7 @@ output "admin_portal_waf_whitelist" {
     "47.200.176.201/32", # Ben WFH
     "47.199.161.99/32",  # Jamie WFH
     "76.202.246.67/32",  # Mark WFH
-    "70.122.162.186/32",    # Jake WFH
+    "70.122.162.186/32", # Jake WFH
     "10.206.0.0/21",     # LWD
     "10.203.236.0/24"    # PFML
   ]
