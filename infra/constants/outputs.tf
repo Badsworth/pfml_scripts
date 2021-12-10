@@ -38,6 +38,7 @@ output "environment_tags" {
     "stage"       = "stage"
     "test"        = "test"
     "training"    = "train"
+    "trn2"        = "trn2"
     "uat"         = "uat"
   }
 }
