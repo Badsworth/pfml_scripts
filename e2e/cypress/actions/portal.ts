@@ -305,7 +305,10 @@ export function assertLoggedIn(): void {
 }
 
 export function startClaim(): void {
-  cy.contains("a", "Start a new application").click();
+  if (config("ENVIRONMENT") == "test") {
+    cy.contains("a", "Start a new application").click();
+  }
+  cy.get('[href="/applications/start/"]').click();
   cy.findByText("I understand and agree").click();
   cy.location({ timeout: 30000 }).should((location) => {
     expect(location.pathname, "Expect to be on the checklist page").to.equal(
