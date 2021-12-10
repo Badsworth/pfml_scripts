@@ -84,6 +84,7 @@ module "api" {
   fineos_client_customer_api_url                      = "https://trn2-api.masspfml.fineos.com/customerapi/customer"
   fineos_client_group_client_api_url                  = "https://trn2-api.masspfml.fineos.com/groupclientapi/groupClient"
   fineos_client_wscomposer_api_url                    = "https://trn2-api.masspfml.fineos.com/integration-services/wscomposer/webservice"
+  fineos_client_wscomposer_user_id                    = ""
   fineos_client_oauth2_url                            = "https://trn2-api.masspfml.fineos.com/oauth2/token"
   fineos_import_employee_updates_input_directory_path = "s3://fin-somdev-data-import/TRN2/absence-eligibility/upload/"
   fineos_aws_iam_role_arn                             = null
