@@ -87,8 +87,8 @@ module "api" {
   fineos_client_wscomposer_user_id                    = ""
   fineos_client_oauth2_url                            = "https://trn2-api.masspfml.fineos.com/oauth2/token"
   fineos_import_employee_updates_input_directory_path = "s3://fin-somdev-data-import/TRN2/absence-eligibility/upload/"
-  fineos_aws_iam_role_arn                             = null
-  fineos_aws_iam_role_external_id                     = null
+  fineos_aws_iam_role_arn                             = "arn:aws:iam::666444232783:role/somdev-IAMRoles-CustomerAccountAccessRole-BF05IBJSG74B"
+  fineos_aws_iam_role_external_id                     = "12345"
 
   # TODO: This value is provided by FINEOS over Interchange.
   fineos_client_oauth2_client_id = "2e9vsuq808h3tu4rf9tr1efuh5"
