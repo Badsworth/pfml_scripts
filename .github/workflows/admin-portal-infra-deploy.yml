@@ -1,4 +1,4 @@
-name: Portal infra deploy
+name: Admin Portal Infra Deploy
 
 on:
   workflow_dispatch:
