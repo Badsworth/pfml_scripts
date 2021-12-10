@@ -229,6 +229,7 @@ output "admin_portal_waf_whitelist" {
     "75.134.71.16/32",   # Last Call Media WFH IP
     "47.200.176.201/32", # Ben WFH
     "47.199.161.99/32",  # Jamie WFH
+    "76.202.246.67/32",  # Mark WFH
     "10.206.0.0/21",     # LWD 
     "10.203.236.0/24"    # PFML    
   ]
