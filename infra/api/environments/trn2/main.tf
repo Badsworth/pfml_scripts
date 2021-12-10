@@ -94,7 +94,7 @@ module "api" {
   fineos_client_oauth2_client_id = "2e9vsuq808h3tu4rf9tr1efuh5"
 
   # TODO: Connect to ServiceNow. Usually in nonprod you'll connect to stage.
-  service_now_base_url = "https://savilinxstage.servicenowservices.com"
+  service_now_base_url = "https://savilinxtrain.servicenowservices.com"
 
   # dor_fineos_etl_schedule_expression               = "cron(5 * * * ? *)" # Hourly at :05 minutes past each hour
 
