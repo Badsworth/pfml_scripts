@@ -1,0 +1,105 @@
+name: Admin Portal Infra Deploy
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      # - main
+      # - deploy/admin-portal/stage
+      # - deploy/admin-portal/prod
+      # - deploy/admin-portal/performance
+      # - deploy/admin-portal/training
+      # - deploy/admin-portal/uat
+      # - deploy/admin-portal/cps-preview
+      # - deploy/admin-portal/test
+      # - deploy/admin-portal/infra-test
+      # - deploy/admin-portal/long
+      # - deploy/admin-portal/trn2
+      # - deploy/admin-portal/breakfix
+      - bdlake/INFRA-821
+    # paths:
+    #   - infra/admin-portal/**
+
+env:
+  terraformVersion: 0.14.7
+  terraformBaseDir: ./infra/admin-portal/environments/
+  # Map branch name to environment name. This is used to set the admin_portal_env variable below in combination with git refs.
+  refs/heads/main: test
+  refs/heads/deploy/admin-portal/stage: stage
+  refs/heads/deploy/admin-portal/prod: prod
+  refs/heads/deploy/admin-portal/performance: performance
+  refs/heads/deploy/admin-portal/training: training
+  refs/heads/deploy/admin-portal/uat: uat
+  refs/heads/deploy/admin-portal/cps-preview: cps-preview
+  refs/heads/deploy/admin-portal/test: test
+  refs/heads/deploy/admin-portal/infra-test: infra-test
+  refs/heads/deploy/admin-portal/long: long
+  refs/heads/deploy/admin-portal/trn2: trn2
+  refs/heads/deploy/admin-portal/breakfix: breakfix
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    env:
+      TF_CLI_ARGS: '-lock-timeout=120s'
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set admin_portal_env Value
+        # see https://help.github.com/en/actions/reference/context-and-expression-syntax-for-github-actions#github-context
+        # github.ref will give the branch or tag reference that triggered the workflow
+        # e.g refs/heads/main or refs/heads/deploy/admin-portal/stage
+        run: echo "admin_portal_env=${{ env[github.ref] || 'test' }}" >> $GITHUB_ENV
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+          role-duration-seconds: 3600
+          role-to-assume: ci-run-deploys
+
+      - uses: hashicorp/setup-terraform@v1.2.1
+        with:
+          terraform_version: ${{ env.terraformVersion }}
+          terraform_wrapper: false
+
+      - name: Terraform Init
+        id: terraform_init
+        run: terraform init
+        working-directory: ${{ env.terraformBaseDir }}${{ env.admin_portal_env }}
+
+      - name: Terraform Plan with new Cloudfront path
+        id: terraform_plan
+        run: terraform plan -out=plan.tfplan
+        working-directory: ${{ env.terraformBaseDir }}${{ env.admin_portal_env }}
+
+      - name: Terraform Apply from execution plan
+        id: terraform_apply
+        run: terraform apply plan.tfplan
+        working-directory: ${{ env.terraformBaseDir }}${{ env.admin_portal_env }}
+
+  end-to-end:
+    name: End-to-End Test Deployment
+    runs-on: ubuntu-latest
+    needs: [ release ]
+    if: github.ref != 'refs/heads/deploy/admin-portal/prod'
+    steps:
+      - name: Trigger E2E Workflow
+        uses: aurelien-baudet/workflow-dispatch@v2
+        with:
+          workflow: e2e-cypress.yml
+          token: ${{ secrets.PFML_DEVOPS_TOKEN }}
+          wait-for-completion: true
+          ref: "main"
+          inputs: |
+            {
+              "target_environment": ${{ toJSON(env[github.ref] || 'test') }},
+              "cypress_tags": "Deploy,Deploy-Infra",
+              "run_unstable": "${{ (env[github.ref] || 'test') != 'test' && 'false' || 'true' }}",
+              "run_nightly": "false",
+              "title_override": ${{ toJSON(format('Infra Deploy: {0} to {1}', env.version, (env[github.ref] || 'test'))) }}
+            }
