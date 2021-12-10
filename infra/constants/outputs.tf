@@ -134,8 +134,8 @@ output "admin_domains" {
     "stage"       = "paidleave-admin-stage.dfml.eol.mass.gov",
     "test"        = "paidleave-admin-test.dfml.eol.mass.gov",
     "training"    = "paidleave-admin-training.dfml.eol.mass.gov",
-    "uat"         = "paidleave-admin-uat.dfml.eol.mass.gov",
     "trn2"        = "paidleave-admin-trn2.dfml.eol.mass.gov"
+    "uat"         = "paidleave-admin-uat.dfml.eol.mass.gov",
   }
 }
 
@@ -185,6 +185,7 @@ output "admin_portal_cert_domains" {
     "prod"        = "paidleave-admin.dfml.eol.mass.gov",
     "stage"       = "paidleave-admin-stage.dfml.eol.mass.gov",
     "training"    = "paidleave-admin-training.dfml.eol.mass.gov"
+    "trn2"        = "paidleave-admin-trn2.dfml.eol.mass.gov",
     "test"        = "paidleave-admin-test.dfml.eol.mass.gov",
     "uat"         = "paidleave-admin-test.dfml.eol.mass.gov",
   }
