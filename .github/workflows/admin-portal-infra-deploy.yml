@@ -23,7 +23,7 @@ on:
 env:
   terraformVersion: 0.14.7
   terraformBaseDir: ./infra/admin-portal/environments/
-  # Map branch name to environment name. This is used to set the portal_env variable below in combination with git refs.
+  # Map branch name to environment name. This is used to set the admin_portal_env variable below in combination with git refs.
   refs/heads/main: test
   refs/heads/deploy/admin-portal/stage: stage
   refs/heads/deploy/admin-portal/prod: prod
@@ -75,12 +75,12 @@ jobs:
       - name: Terraform Plan with new Cloudfront path
         id: terraform_plan
         run: terraform plan -out=plan.tfplan
-        working-directory: ${{ env.terraformBaseDir }}${{ env.portal_env }}
+        working-directory: ${{ env.terraformBaseDir }}${{ env.admin_portal_env }}
 
       - name: Terraform Apply from execution plan
         id: terraform_apply
         run: terraform apply plan.tfplan
-        working-directory: ${{ env.terraformBaseDir }}${{ env.portal_env }}
+        working-directory: ${{ env.terraformBaseDir }}${{ env.admin_portal_env }}
 
   end-to-end:
     name: End-to-End Test Deployment
