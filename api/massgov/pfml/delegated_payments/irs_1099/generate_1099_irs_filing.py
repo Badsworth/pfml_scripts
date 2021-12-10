@@ -17,15 +17,14 @@ from massgov.pfml.util.datetime import get_now_us_eastern
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
-total_b_records = 0
-total_b_original_record = 0
-total_b_ccorrection_record = 0
-total_b_gcorrection_record = 0
-original_returns=[]
-c_corrected_returns=[]
-g_corrected_returns=[]
-total_a_record = 0
-b_seq= 0
+# total_b_records = 0
+# total_b_original_record = 0
+# total_b_ccorrection_record = 0
+# total_b_gcorrection_record = 0
+original_returns = []
+c_corrected_returns = []
+g_corrected_returns = []
+payment_amt_zero = False
 
 
 class Constants:
@@ -81,6 +80,16 @@ class Constants:
 
 
 class Generate1099IRSfilingStep(Step):
+
+    last_seq = 1
+    a_seq = 0
+    b_seq = 0
+    c_seq = 0
+    k_seq = 0
+    f_seq = 0
+
+    total_b_records = 0
+
     def run_step(self) -> None:
         self._generate_1099_irs_filing()
 
@@ -101,71 +110,77 @@ class Generate1099IRSfilingStep(Step):
             except Exception:
                 logger.exception("Error accessing 1099 data")
                 raise
-            self.total_b_records = len(pfml_1099)
-            logger.info("Total b records are, %s", self.total_b_records)
-            original_returns, g_corrected_returns = _split_data_orig_correction(pfml_1099)
-            #self.total_b_records,self.total_b_ccorrection,self.total_b_gcorrection = tot_b_records(pfml_1099)
-            self.total_b_original_record = len(original_returns)
-            logger.info("Total b records are, %s", self.total_b_original_record)
-            
+            self.b_records_len = len(pfml_1099)
+            logger.info("Total records are, %s", self.b_records_len)
+            (
+                original_returns,
+                g_corrected_returns,
+                c_corrected_returns,
+            ) = _split_data_orig_correction(pfml_1099)
+
             t_template = self._create_t_template()
             t_entries = self._load_t_rec_data(t_template)
-            b_template = self._create_b_template()
-            
+            entries = t_entries
+
             if len(original_returns) > 0:
-                self.total_a_record += self.total_a_record
-                ctl_total, st_tax, fed_tax = _get_totals(original_returns)
-                b_entries = self._load_b_rec_data(b_template, original_returns)
-                a_template = self._create_a_template()
-                a_entries = self._load_a_rec_data(a_template)
-                entries = t_entries + a_entries
-                for b_records in b_entries:
-                    entries = entries + b_records
-                c_template = self._create_c_template()
-                c_entries = self._load_c_rec_data(c_template, ctl_total)
-                entries = entries+c_entries
-                k_template = self._create_k_template()
-                k_entries = self._load_k_rec_data(k_template, ctl_total, st_tax, fed_tax)
-                entries += c_entries + k_entries
-                
+                logger.info("Total original records are, %s", len(original_returns))
+                entries = self._create_record_entries(original_returns, entries)
+
             if len(g_corrected_returns) > 0:
-                self.total_a_record += self.total_a_record
-                ctl_total, st_tax, fed_tax = _get_totals(original_returns)
-                b_entries_corrected_g = self._load_b_rec_data(b_template, g_corrected_returns)
-                a_template = self._create_a_template()
-                a_entries = self._load_a_rec_data(a_template)
-                entries = t_entries + a_entries
-                for b_records in b_entries_corrected_g:
-                    entries = entries + b_records
-                c_template = self._create_c_template()
-                c_entries = self._load_c_rec_data(c_template, ctl_total)
-                entries = entries+c_entries
-                k_template = self._create_k_template()
-                k_entries = self._load_k_rec_data(k_template, ctl_total, st_tax, fed_tax)   
-                entries += c_entries + k_entries
-                
+                logger.info("Total G corrected records are %s", len(g_corrected_returns))
+                entries = self._create_record_entries(g_corrected_returns, entries)
+
             if len(c_corrected_returns) > 0:
-                self.total_a_record += self.total_a_record
-                ctl_total, st_tax, fed_tax = _get_totals(c_corrected_returns)
-                b_entries_corrected_c = self._load_b_rec_data(b_template, c_corrected_returns)
-                a_template = self._create_a_template()
-                a_entries = self._load_a_rec_data(a_template)
-                entries = t_entries + a_entries
-                for b_records in b_entries_corrected_c:
-                    entries = entries + b_records
-                c_template = self._create_c_template()
-                c_entries = self._load_c_rec_data(c_template, ctl_total)
-                entries = entries+c_entries
-                k_template = self._create_k_template()
-                k_entries = self._load_k_rec_data(k_template, ctl_total, st_tax, fed_tax)
-                entries += c_entries + k_entries
-                
+                logger.info("Total C corrected records are %s", len(c_corrected_returns))
+                original = _get_original_records_two_trans_correction()
+                payment_amt_zero = True
+                # Remove the below line after testing
+                original = c_corrected_returns
+                entries = self._create_record_entries(original, entries)
+                payment_amt_zero = False
+                entries = self._create_record_entries(c_corrected_returns, entries)
+
             f_template = self._create_f_template()
+            self.f_seq = self.last_seq + 1
             f_entries = self._load_f_rec_data(f_template)
             entries += f_entries
             logger.info("Completed irs file data mapping")
             self._create_irs_file(entries)
             self.db_session.commit()
+
+    def _create_record_entries(self, records: List[Any], entries: str) -> str:
+
+        amt = _format_amount_fields(decimal.Decimal(0.0))
+        self.a_seq = self.last_seq + 1
+        ctl_total, st_tax, fed_tax = _get_totals(records)
+        a_template = self._create_a_template()
+        a_entries = self._load_a_rec_data(a_template)
+        entries = entries + a_entries
+        self.b_seq = self.a_seq + 1
+        b_template = self._create_b_template()
+        b_entries = self._load_b_rec_data(b_template, records)
+        for b_records in b_entries:
+            entries = entries + b_records
+
+        logger.info("Last b sequence is %s", self.b_seq)
+        c_template = self._create_c_template()
+        self.c_seq = self.b_seq
+        self.total_b_records = len(records)
+        if payment_amt_zero:
+            c_entries = self._load_c_rec_data(c_template, amt)
+        else:
+            c_entries = self._load_c_rec_data(c_template, ctl_total)
+        entries = entries + c_entries
+        k_template = self._create_k_template()
+        self.k_seq = self.c_seq + 1
+        if payment_amt_zero:
+            k_entries = self._load_k_rec_data(k_template, amt, amt, amt)
+        else:
+            k_entries = self._load_k_rec_data(k_template, ctl_total, st_tax, fed_tax)
+        entries = entries + k_entries
+        self.last_seq = self.k_seq
+
+        return entries
 
     def _create_t_template(self) -> str:
         temp = (
@@ -306,7 +321,7 @@ class Generate1099IRSfilingStep(Step):
             PYR_ZC=Constants.COM_ZIP_CD,
             PYR_PHONE=Constants.PYR_PHONE,
             B260=Constants.BLANK_SPACE,
-            SEQ_NO=2,
+            SEQ_NO=self.a_seq,
             B243=Constants.BLANK_SPACE,
         )
         a_record = template_str.format_map(a_dict)
@@ -314,7 +329,7 @@ class Generate1099IRSfilingStep(Step):
 
     def _load_b_rec_data(self, template_str: str, tax_data: List[Any]) -> List[str]:
         b_dict_list = []
-        b_seq = 3
+
         for records in tax_data:
             b_dict = dict(
                 B_REC_TYPE=Constants.B_REC_TYPE,
@@ -352,7 +367,7 @@ class Generate1099IRSfilingStep(Step):
                 PAYEE_ST=records.state.upper(),
                 PAYEE_ZC=records.zip,
                 B1=Constants.BLANK_SPACE,
-                SEQ_NO=b_seq,
+                SEQ_NO=self.b_seq,
                 B36=Constants.BLANK_SPACE,
                 SEC_TIN_NOTICE=Constants.BLANK_SPACE,
                 B2=Constants.BLANK_SPACE,
@@ -367,13 +382,13 @@ class Generate1099IRSfilingStep(Step):
             )
             b_record = template_str.format_map(b_dict)
             # logger.info(b_record)
-            b_seq = b_seq + 1
+            self.b_seq = self.b_seq + 1
             b_dict_list.append(b_record)
         return b_dict_list
 
     def _load_c_rec_data(self, template_str: str, ctl_total: decimal.Decimal) -> str:
-        c_seq = 3 + self.total_b_records
-        logger.debug("c_seq %s", c_seq)
+        # c_seq = 3 + self.total_b_records
+        logger.info("c_seq %s", self.c_seq)
         c_dict = dict(
             C_REC_TYPE=Constants.C_REC_TYPE,
             TOT_B_REC=self.total_b_records,
@@ -381,7 +396,7 @@ class Generate1099IRSfilingStep(Step):
             CTL_TOTAL_1=ctl_total,
             CTL_TOTAL=Constants.ZERO,
             B196=Constants.BLANK_SPACE,
-            SEQ_NO=c_seq,
+            SEQ_NO=self.c_seq,
             B243=Constants.BLANK_SPACE,
         )
         c_record = template_str.format_map(c_dict)
@@ -394,7 +409,7 @@ class Generate1099IRSfilingStep(Step):
         st_tax: decimal.Decimal,
         fed_tax: decimal.Decimal,
     ) -> str:
-        k_seq = 4 + self.total_b_records
+        # k_seq = 4 + self.total_b_records
         k_dict = dict(
             K_REC_TYPE=Constants.K_REC_TYPE,
             TOT_B_REC=self.total_b_records,
@@ -402,7 +417,7 @@ class Generate1099IRSfilingStep(Step):
             CTL_TOTAL_1=ctl_total,
             CTL_TOTAL=Constants.ZERO,
             B196=Constants.BLANK_SPACE,
-            SEQ_NO=k_seq,
+            SEQ_NO=self.k_seq,
             B199=Constants.BLANK_SPACE,
             ST_TAX=st_tax,
             FED_TAX=fed_tax,
@@ -414,7 +429,7 @@ class Generate1099IRSfilingStep(Step):
         return k_record
 
     def _load_f_rec_data(self, template_str: str) -> str:
-        f_seq = 5 + self.total_b_records
+        # f_seq = 5 + self.total_b_records
         f_dict = dict(
             F_REC_TYPE=Constants.F_REC_TYPE,
             TOT_A_REC=Constants.TOT_A_REC,
@@ -422,7 +437,7 @@ class Generate1099IRSfilingStep(Step):
             B19=Constants.BLANK_SPACE,
             TOT_B_REC=self.total_b_records,
             B442=Constants.BLANK_SPACE,
-            SEQ_NO=f_seq,
+            SEQ_NO=self.f_seq,
             B243=Constants.BLANK_SPACE,
         )
         f_record = template_str.format_map(f_dict)
@@ -436,7 +451,7 @@ def _get_correction_ind(correction_ind: Boolean) -> str:
     else:
         # TODO find which correction type to send and how to determine
         # G (1 correction) or C(2 correction)
-        return "G"
+        return "C"
 
 
 def _get_full_name(fname: str, lname: str, field_name: str) -> str:
@@ -476,6 +491,11 @@ def _get_name_ctl(lname: str) -> str:
 
 def _format_amount_fields(amt: decimal.Decimal) -> str:
 
+    logger.info("payment_amt_zero %s",payment_amt_zero)
+    if payment_amt_zero:
+        logger.info("Payment is set to zero for 2 step original records")
+        amt = decimal.Decimal(0.0)
+    
     amount = str(amt).split(".")
     dollars = amount[0]
     if len(amount) == 2:
@@ -487,6 +507,7 @@ def _format_amount_fields(amt: decimal.Decimal) -> str:
     else:
         cents = "00"
     format_amt = dollars + cents
+    #logger.info("Formated amt is:"+format_amt)
     return format_amt
 
 
@@ -499,37 +520,54 @@ def _get_totals(tax_data: List[Any]) -> Tuple:
         ctl_total += records.gross_payments
         st_tax += records.state_tax_withholdings
         fed_tax += records.federal_tax_withholdings
+   
     return (
         _format_amount_fields(ctl_total),
         _format_amount_fields(st_tax),
         _format_amount_fields(fed_tax),
     )
+
+
 def _get_zip(zip_code: str) -> str:
     zip_code_five = ""
-    zip_code_four =""
-    zcode =""
+    zip_code_four = ""
+    zcode = ""
     if zip_code.find("-") != -1:
         zip_code_five = zip_code.split("-")[0]
         zip_code_four = zip_code.split("-")[1]
-        zcode = zip_code_five[:5]+zip_code_four[:4]
+        zcode = zip_code_five[:5] + zip_code_four[:4]
     else:
         # There are no '-' in the 9 digit zip code
         zcode = zip_code[:9]
-        
+
     return zcode
 
+
 def _split_data_orig_correction(tax_data: List[Any]) -> Tuple:
-    
+
     for pfml_record in tax_data:
-        if not pfml_record.correction_ind :
+        if not pfml_record.correction_ind:
             original_returns.append(pfml_record)
         else:
-        # TODO find which correction type to send and add to the list
-        # G (1 correction) or C(2 correction)
+            # TODO find which correction type to send and add to the list
+            # G (1 correction) or C(2 correction)
             g_corrected_returns.append(pfml_record)
-            #c_corrected_returns.append(pfml_record)
-            #self.total_b_gcorrection_record += self.total_b_gcorrection_record
+            c_corrected_returns.append(pfml_record)
+            # self.total_b_gcorrection_record += self.total_b_gcorrection_record
     logger.info("Total number of original records %s", len(original_returns))
     logger.info("Total number of G corrected records %s", len(g_corrected_returns))
-    #logger.info("Total number of C corrected records %s", len(c_corrected_returns))
-    return original_returns,g_corrected_returns
+    # logger.info("Total number of C corrected records %s", len(c_corrected_returns))
+    return original_returns, g_corrected_returns, c_corrected_returns
+
+
+def _is_two_transaction_correction() -> bool:
+    is_two_transaction = False
+    # TODO check if it is a 2 transaction correction
+    return is_two_transaction
+
+
+def _get_original_records_two_trans_correction() -> List:
+    orig_records = List[Any]
+    # TODO Query the data to retreive the original records for
+    # the 2 step correction
+    return orig_records
