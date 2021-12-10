@@ -571,7 +571,7 @@ def document_upload(application_id, body, file):
                 and file_size > UPLOAD_SIZE_CONSTRAINT
             ):
                 # tempfile.SpooledTemporaryFile writes the compressed file in-memory
-                with tempfile.SpooledTemporaryFile(mode="xb") as compressed_file:
+                with tempfile.SpooledTemporaryFile(mode="wb+") as compressed_file:
                     previous_file_size = file_size
                     file_size = pdf_util.compress_pdf(file, compressed_file)
                     file_name = f"Compressed_{file_name}"
