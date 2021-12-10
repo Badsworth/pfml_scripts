@@ -25,11 +25,11 @@ from massgov.pfml.delegated_payments.mock.delegated_payments_factory import Dele
         # Paid Scenarios - display amount, sent_to_bank_date equal to writeback status created_at, expected dates equal to sent_to_bank_date
         (
             FineosWritebackTransactionStatus.PAID,
-            [FrontendPaymentStatus.SENT_TO_BANK, 750.67, str(date.today()), 0, 0],
+            [FrontendPaymentStatus.SENT_TO_BANK, 750.67, str(date(2021, 12, 9)), 0, 0],
         ),
         (
             FineosWritebackTransactionStatus.POSTED,
-            [FrontendPaymentStatus.SENT_TO_BANK, 750.67, str(date.today()), 0, 0],
+            [FrontendPaymentStatus.SENT_TO_BANK, 750.67, str(date(2021, 12, 9)), 0, 0],
         ),
         # Other Scenario - No dates displayed, only status of "Delayed"
         (
