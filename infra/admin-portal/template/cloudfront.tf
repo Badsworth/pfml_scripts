@@ -23,6 +23,7 @@ resource "aws_cloudfront_distribution" "admin_portal_web_distribution" {
     origin_id   = aws_s3_bucket.admin_portal_web.id
     # set as an environment variable during github workflow
     #origin_path = var.cloudfront_origin_path
+    origin_path = "/server/pages"
 
     # see s3 bucket iam policy
     custom_header {
