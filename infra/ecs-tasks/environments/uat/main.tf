@@ -83,5 +83,7 @@ module "tasks" {
   enable_generate_1099_pdf = "0"
   enable_merge_1099_pdf    = "0"
 
+  enable_withholding_payments = "0"
+
   enable_pub_payments_copy_audit_report_schedule = true
 }

@@ -46,4 +46,15 @@ describe("GetReady", () => {
       screen.getByRole("link", { name: "View all applications" })
     ).toBeInTheDocument();
   });
+
+  it("displays different copy when tax withholding is enabled", () => {
+    process.env.featureFlags = {
+      claimantShowTaxWithholding: true,
+    };
+    const { container } = setup();
+    expect(container).toMatchSnapshot();
+    expect(
+      screen.getByRole("link", { name: "tax professional" })
+    ).toBeInTheDocument();
+  });
 });

@@ -200,7 +200,8 @@ locals {
         local.pub_s3_folders,
         { name : "PUB_PAYMENT_STARTING_CHECK_NUMBER", value : "106" },
         { name : "DFML_PUB_ROUTING_NUMBER", valueFrom : "/service/${local.app_name}/${var.environment_name}/dfml_pub_routing_number" },
-        { name : "DFML_PUB_ACCOUNT_NUMBER", valueFrom : "/service/${local.app_name}/${var.environment_name}/dfml_pub_account_number" }
+        { name : "DFML_PUB_ACCOUNT_NUMBER", valueFrom : "/service/${local.app_name}/${var.environment_name}/dfml_pub_account_number" },
+        { "name" : "ENABLE_WITHHOLDING_PAYMENTS", "value" : var.enable_withholding_payments }
       ]
     },
 
@@ -239,7 +240,8 @@ locals {
         { name : "FINEOS_CLAIMANT_EXTRACT_MAX_HISTORY_DATE", value : "2021-06-12" },
         { name : "FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", value : "2021-06-12" },
         { name : "USE_EXPERIAN_SOAP_CLIENT", value : "1" },
-        { name : "EXPERIAN_AUTH_TOKEN", valueFrom : "/service/${local.app_name}/common/experian-auth-token" }
+        { name : "EXPERIAN_AUTH_TOKEN", valueFrom : "/service/${local.app_name}/common/experian-auth-token" },
+        { "name" : "ENABLE_WITHHOLDING_PAYMENTS", "value" : var.enable_withholding_payments }
       ]
     },
 
