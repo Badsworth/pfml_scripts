@@ -1,7 +1,7 @@
+import React, { useRef } from "react";
 import { AbsencePeriod } from "../../models/AbsencePeriod";
 import PaginationNavigation from "../PaginationNavigation";
 import PaginationSummary from "../PaginationSummary";
-import React from "react";
 import { StatusTagMap } from "src/pages/applications/status";
 import Table from "../core/Table";
 import Tag from "../core/Tag";
@@ -42,8 +42,14 @@ const PaginatedAbsencePeriodsTable = ({
   );
 
   const [currentPage, setCurrentPage] = React.useState<number>(1);
+  const tableRef = useRef<null | HTMLTableSectionElement>(null);
 
   const handlePaginationNavigationClick = (pageOffset: number) => {
+    const topOfTableCoordinate = Number(
+      tableRef.current?.getBoundingClientRect().top
+    );
+    // only scroll into view if table is not in view
+    if (topOfTableCoordinate < 0) tableRef.current?.scrollIntoView();
     setCurrentPage(pageOffset);
   };
 
@@ -57,7 +63,7 @@ const PaginatedAbsencePeriodsTable = ({
         />
       )}
       <Table className="width-full" responsive>
-        <thead>
+        <thead ref={tableRef}>
           <tr>
             {tableHeadings.map((heading) => (
               <th key={heading} scope="col">
