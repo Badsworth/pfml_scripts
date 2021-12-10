@@ -80,18 +80,17 @@ module "api" {
   rmv_check_mock_success            = "1"
 
   # TODO: These values are provided by FINEOS.
-  fineos_client_integration_services_api_url          = ""
-  fineos_client_customer_api_url                      = ""
-  fineos_client_group_client_api_url                  = ""
-  fineos_client_wscomposer_api_url                    = ""
-  fineos_client_wscomposer_user_id                    = ""
-  fineos_client_oauth2_url                            = ""
-  fineos_import_employee_updates_input_directory_path = null
+  fineos_client_integration_services_api_url          = "https://trn2-api.masspfml.fineos.com/integration-services"
+  fineos_client_customer_api_url                      = "https://trn2-api.masspfml.fineos.com/customerapi/customer"
+  fineos_client_group_client_api_url                  = "https://trn2-api.masspfml.fineos.com/groupclientapi/groupClient"
+  fineos_client_wscomposer_api_url                    = "https://trn2-api.masspfml.fineos.com/integration-services/wscomposer/webservice"
+  fineos_client_oauth2_url                            = "https://trn2-api.masspfml.fineos.com/oauth2/token"
+  fineos_import_employee_updates_input_directory_path = "s3://fin-somdev-data-import/TRN2/absence-eligibility/upload/"
   fineos_aws_iam_role_arn                             = null
   fineos_aws_iam_role_external_id                     = null
 
   # TODO: This value is provided by FINEOS over Interchange.
-  fineos_client_oauth2_client_id = ""
+  fineos_client_oauth2_client_id = "2e9vsuq808h3tu4rf9tr1efuh5"
 
   # TODO: Connect to ServiceNow. Usually in nonprod you'll connect to stage.
   service_now_base_url = "https://savilinxstage.servicenowservices.com"
