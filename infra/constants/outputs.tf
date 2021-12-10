@@ -220,3 +220,16 @@ output "env_var_mappings" {
     "uat"         = "UAT"
   }
 }
+
+# Master list of IPs to whitelist for the Admin Portal WAF
+output "admin_portal_waf_whitelist" {
+  value = [
+    "72.234.3.211/32",   # Last Call Media WFH IP
+    "86.107.55.213/32",  # Last Call Media WFH IP
+    "75.134.71.16/32",   # Last Call Media WFH IP
+    "47.200.176.201/32", # Ben WFH
+    "47.199.161.99/32",  # Jamie WFH
+    "10.206.0.0/21",     # LWD 
+    "10.203.236.0/24"    # PFML    
+  ]
+}

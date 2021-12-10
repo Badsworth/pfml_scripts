@@ -127,15 +127,10 @@ resource "aws_wafv2_web_acl" "cloudfront_waf_acl" {
 
 resource "aws_wafv2_ip_set" "workspaces_ip_whitelist" {
   name               = "mass-${local.app_name}-${var.environment_name}-ip-set"
-  description        = "IP Set for AWS Workspaces access to Admin Portal"
+  description        = "IP Set for AWS Workspaces and WFH IPs to access to Admin Portal lower envs"
   scope              = "CLOUDFRONT"
   ip_address_version = "IPV4"
-  addresses = [
-    "47.200.176.201/32", # Ben WFH
-    "47.199.161.99/32", # Jamie WFH
-    "10.206.0.0/21",  # LWD 
-    "10.203.236.0/24" # PFML
-  ]
+  addresses          = module.constants.admin_portal_waf_whitelist
 }
 
 #------------------------------------------------------------------------------#
