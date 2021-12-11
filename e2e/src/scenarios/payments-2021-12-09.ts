@@ -1,4 +1,4 @@
-import { parseISO, subWeeks, startOfWeek, addWeeks } from "date-fns";
+import { parseISO } from "date-fns";
 import { ScenarioSpecification } from "generation/Scenario";
 import * as paymentScenarios from "./payments-2021-04-02";
 
@@ -26,7 +26,6 @@ const scenarios = [
   "PMT6",
   "PMT7",
   "PRENOTE1",
-  "PRENOTE2",
   "PRENOTE5",
   "ADDRESS1",
   "ADDRESS2",
