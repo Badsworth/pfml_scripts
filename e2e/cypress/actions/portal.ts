@@ -81,7 +81,9 @@ export function before(flags?: Partial<FeatureFlags>): void {
   cy.intercept(/\/api\/v1\/claims\?page_offset=\d+$/).as(
     "dashboardDefaultQuery"
   );
-  cy.intercept(/\/api\/v1\/applications$/).as("getApplications");
+  cy.intercept(/\/api\/v1\/(applications\?|applications$)/).as(
+    "getApplications"
+  );
   cy.intercept(/\/api\/v1\/claims\?(page_offset=\d+)?&?(order_by)/).as(
     "dashboardClaimQueries"
   );
@@ -1015,7 +1017,7 @@ export function submitClaimPartsTwoThree(
 ): void {
   const reason = application.leave_details && application.leave_details.reason;
   clickChecklistButton(
-    useWithholdingFlow ? "Enter payment information" : "Add payment information"
+    useWithholdingFlow ? "Enter payment method" : "Add payment information"
   );
   addPaymentInfo(paymentPreference);
   onPage("checklist");
@@ -1968,9 +1970,9 @@ export function sortClaims(
 }
 
 export function claimantGoToClaimStatus(fineosAbsenceId: string): void {
-  cy.wait("@getApplications").wait(150);
+  cy.wait("@getApplications").wait(300);
   cy.contains("article", fineosAbsenceId).within(() => {
-    cy.contains("View status updates and details").click();
+    cy.contains("View status updates and details", { timeout: 20000 }).click();
     cy.url()
       .should("include", "/applications/status/")
       .and("include", `${fineosAbsenceId}`);
@@ -2006,12 +2008,16 @@ export function claimantAssertClaimStatus(leaves: LeaveStatus[]): void {
  * Claimant is redirected straight to "Start Application" page if he has no open aplications.
  */
 export const skipLoadingClaimantApplications = (): void => {
-  cy.intercept(/\/api\/v1\/applications$/, { times: 1 }, (req) => {
-    req.reply((res) => {
-      res.body.data = [];
-      res.send();
-    });
-  });
+  cy.intercept(
+    /\/api\/v1\/(applications\?|applications$)/,
+    { times: 1 },
+    (req) => {
+      req.reply((res) => {
+        res.body.data = [];
+        res.send();
+      });
+    }
+  );
 };
 
 /**
@@ -2049,7 +2055,7 @@ export function clearSearch(): void {
 
 export function addWithholdingPreference(withholding: boolean) {
   cy.contains(
-    "Do you want us to withhold state and federal taxes from your paid leave benefits?"
+    "Do you want us to withhold state and federal taxes from this paid leave benefit?"
   );
   cy.get("label")
     .contains(withholding ? "Yes" : "No")
