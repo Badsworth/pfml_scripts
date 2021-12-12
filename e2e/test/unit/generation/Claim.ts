@@ -731,8 +731,8 @@ describe("Claim Generator", () => {
         { is_for_current_employer: true },
         {
           is_for_current_employer: true,
-          leave_end_date: END_LEAVE,
-          leave_start_date: START_LEAVE,
+          leave_end_date: "2021-04-13",
+          leave_start_date: "2021-03-13",
         },
       ],
       [
