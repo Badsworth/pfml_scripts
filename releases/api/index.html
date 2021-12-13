@@ -9,7 +9,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.2.3, mkdocs-material-8.1.0">
+      <meta name="generator" content="mkdocs-1.2.3, mkdocs-material-8.1.1">
     
     
       
@@ -17,10 +17,10 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.82f3c0b9.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.23b6d78a.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.9204c3b2.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.e6a45f82.min.css">
         
       
     
@@ -1077,7 +1077,7 @@
 <tbody>
 <tr>
 <td>test</td>
-<td><a href="https://github.com/EOLWD/pfml/commits/7fc1da5df">7fc1da5df</a> (<a href="https://github.com/EOLWD/pfml/compare/api/v2.40.0...7fc1da5df">43 commits ahead</a> of <a href="https://github.com/EOLWD/pfml/releases/tag/api/v2.40.0">api/v2.40.0</a>)</td>
+<td><a href="https://github.com/EOLWD/pfml/commits/7cbea76fc">7cbea76fc</a> (<a href="https://github.com/EOLWD/pfml/compare/api/v2.40.0...7cbea76fc">44 commits ahead</a> of <a href="https://github.com/EOLWD/pfml/releases/tag/api/v2.40.0">api/v2.40.0</a>)</td>
 <td><a href="https://github.com/EOLWD/pfml/deployments/activity_log?environment=api+(test)">GitHub</a></td>
 </tr>
 <tr>
@@ -1118,7 +1118,7 @@
 </tbody>
 </table>
 <p>Full release notes are available in <a href="https://lwd.atlassian.net/wiki/spaces/DD/pages/1086226543/2021+Releases">Confluence</a>.</p>
-<p>Next Release (<a href="https://lwd.atlassian.net/issues/?jql=id in (PSD-2385,PAY-131,INFRA-745,API-2181,PAY-129,PAY-127,PAY-126,PAY-123,API-1984,API-2176,PAY-116,API-2123)">Jira List</a>):</p>
+<p>Next Release (<a href="https://lwd.atlassian.net/issues/?jql=id in (API-2162,PSD-2385,PAY-131,INFRA-745,API-2181,PAY-129,PAY-127,PAY-126,PAY-123,API-1984,API-2176,PAY-116,API-2123)">Jira List</a>):</p>
 <ul>
 <li>fix permission issue in pdf compression (<a href="https://github.com/EOLWD/pfml/pull/6406">#6406</a>)</li>
 <li><a href="https://lwd.atlassian.net/browse/PSD-2385">PSD-2385</a>: Only use org units with a fineos id (<a href="https://github.com/EOLWD/pfml/pull/6443">#6443</a>)</li>
@@ -1131,6 +1131,7 @@
 <li><a href="https://lwd.atlassian.net/browse/INFRA-745">INFRA-745</a>: Create Lambda for BI (<a href="https://github.com/EOLWD/pfml/pull/6271">#6271</a>)</li>
 <li><a href="https://lwd.atlassian.net/browse/API-2181">API-2181</a>: Fix weekend PUB ECS task definition (<a href="https://github.com/EOLWD/pfml/pull/6434">#6434</a>)</li>
 <li><a href="https://lwd.atlassian.net/browse/API-2176">API-2176</a>: Update roles for PUB audit copy task (<a href="https://github.com/EOLWD/pfml/pull/6412">#6412</a>)</li>
+<li><a href="https://lwd.atlassian.net/browse/API-2162">API-2162</a>: Set base period on benefit year (<a href="https://github.com/EOLWD/pfml/pull/6383">#6383</a>)</li>
 <li><a href="https://lwd.atlassian.net/browse/API-2123">API-2123</a>: Add metrics and logging to the payment status API (<a href="https://github.com/EOLWD/pfml/pull/6336">#6336</a>)</li>
 <li><a href="https://lwd.atlassian.net/browse/API-1984">API-1984</a>: Use the correct maximum benefit amount in the payments audit (<a href="https://github.com/EOLWD/pfml/pull/6394">#6394</a>)</li>
 <li>Freeze time to us/eastern at noon (<a href="https://github.com/EOLWD/pfml/pull/6411">#6411</a>)</li>
@@ -1149,6 +1150,7 @@
  <br>* [INFRA-745](https://lwd.atlassian.net/browse/INFRA-745): Create Lambda for BI ([#6271](https://github.com/EOLWD/pfml/pull/6271))
  <br>* [API-2181](https://lwd.atlassian.net/browse/API-2181): Fix weekend PUB ECS task definition ([#6434](https://github.com/EOLWD/pfml/pull/6434))
  <br>* [API-2176](https://lwd.atlassian.net/browse/API-2176): Update roles for PUB audit copy task ([#6412](https://github.com/EOLWD/pfml/pull/6412))
+ <br>* [API-2162](https://lwd.atlassian.net/browse/API-2162): Set base period on benefit year ([#6383](https://github.com/EOLWD/pfml/pull/6383))
  <br>* [API-2123](https://lwd.atlassian.net/browse/API-2123): Add metrics and logging to the payment status API ([#6336](https://github.com/EOLWD/pfml/pull/6336))
  <br>* [API-1984](https://lwd.atlassian.net/browse/API-1984): Use the correct maximum benefit amount in the payments audit ([#6394](https://github.com/EOLWD/pfml/pull/6394))
  <br>* Freeze time to us/eastern at noon ([#6411](https://github.com/EOLWD/pfml/pull/6411))
@@ -1219,10 +1221,10 @@
     <div class="md-dialog" data-md-component="dialog">
       <div class="md-dialog__inner md-typeset"></div>
     </div>
-    <script id="__config" type="application/json">{"base": "../..", "features": [], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "search": "../../assets/javascripts/workers/search.cefbb252.min.js"}</script>
+    <script id="__config" type="application/json">{"base": "../..", "features": [], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "search": "../../assets/javascripts/workers/search.c7dec7e7.min.js"}</script>
     
     
-      <script src="../../assets/javascripts/bundle.17f42bbf.min.js"></script>
+      <script src="../../assets/javascripts/bundle.da79ceb7.min.js"></script>
       
     
   </body>
