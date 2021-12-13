@@ -19,11 +19,49 @@ resource "aws_wafv2_web_acl" "cloudfront_waf_acl" {
   }
 
   #------------------------------------------------------------------------------#
+  #                        log4j-ZDE AWS WAF rule                            #
+  #------------------------------------------------------------------------------#
+  rule {
+    name     = "mass-pfml-${var.environment_name}-log4j-ZDE-acl"
+    priority = 0
+
+
+    override_action {
+      none {}
+    }
+
+    statement {
+      managed_rule_group_statement {
+        name        = "AWSManagedRulesKnownBadInputsRuleSet"
+        vendor_name = "AWS"
+
+        excluded_rule {
+          name = "Host_localhost_HEADER"
+        }
+
+        excluded_rule {
+          name = "PROPFIND_METHOD"
+        }
+
+        excluded_rule {
+          name = "ExploitablePaths_URIPATH"
+        }
+
+      }
+    }
+    visibility_config {
+      cloudwatch_metrics_enabled = true
+      metric_name                = "log4j-ZDE"
+      sampled_requests_enabled   = true
+    }
+  }
+
+  #------------------------------------------------------------------------------#
   #                        Rate-limiting AWS WAF rule                            #
   #------------------------------------------------------------------------------#
   rule {
     name     = "mass-pfml-${var.environment_name}-rate-based-acl"
-    priority = 0
+    priority = 1
 
     dynamic "action" {
       for_each = var.enforce_cloudfront_rate_limit ? [1] : []
@@ -57,7 +95,7 @@ resource "aws_wafv2_web_acl" "cloudfront_waf_acl" {
   #------------------------------------------------------------------------------#
   rule {
     name     = "mass-pfml-${var.environment_name}-fortinet-managed-rules"
-    priority = 1
+    priority = 2
 
 
     dynamic "override_action" {
