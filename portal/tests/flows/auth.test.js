@@ -10,6 +10,7 @@ const createAccountStates = [
   routes.auth.verifyAccount,
   routes.auth.login,
   routes.twoFactor.smsIndex,
+  routes.twoFactor.smsVerify,
   routes.applications.index,
 ];
 
@@ -18,6 +19,7 @@ const forgotPasswordStates = [
   routes.applications.index,
   routes.auth.login,
   routes.twoFactor.smsIndex,
+  routes.twoFactor.smsVerify,
   routes.auth.verifyAccount,
   routes.auth.resetPassword,
 ];
@@ -102,6 +104,7 @@ describe("createAccountFlow", () => {
     {
       CREATE_ACCOUNT: {},
       LOG_IN: {},
+      VERIFY_CODE: {},
       SUBMIT: {},
       ENABLE_MFA: {},
     },
@@ -124,6 +127,7 @@ describe("forgotPasswordFlow", () => {
     {
       UNCONFIRMED_ACCOUNT: {},
       LOG_IN: {},
+      VERIFY_CODE: {},
       SEND_CODE: {},
       ENABLE_MFA: {},
       SET_NEW_PASSWORD: {},
