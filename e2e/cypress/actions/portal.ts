@@ -318,7 +318,7 @@ export function startClaim(): void {
 }
 
 export function clickChecklistButton(label: string): void {
-  cy.contains(label)
+  cy.contains(RegExp(label))
     .parents(".display-flex.border-bottom.border-base-light.padding-y-3")
     .contains("a", "Start")
     .click();
@@ -1017,7 +1017,9 @@ export function submitClaimPartsTwoThree(
 ): void {
   const reason = application.leave_details && application.leave_details.reason;
   clickChecklistButton(
-    useWithholdingFlow ? "Enter payment method" : "Add payment information"
+    useWithholdingFlow
+      ? "Enter payment (method|information)"
+      : "Add payment information"
   );
   addPaymentInfo(paymentPreference);
   onPage("checklist");
@@ -2055,7 +2057,7 @@ export function clearSearch(): void {
 
 export function addWithholdingPreference(withholding: boolean) {
   cy.contains(
-    "Do you want us to withhold state and federal taxes from this paid leave benefit?"
+    /Do you want us to withhold state and federal taxes from (this|your) paid leave benefit?/
   );
   cy.get("label")
     .contains(withholding ? "Yes" : "No")
