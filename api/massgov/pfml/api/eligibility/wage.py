@@ -8,6 +8,8 @@ import uuid
 from collections import defaultdict
 from typing import Any, DefaultDict, Dict, List, Tuple
 
+from sqlalchemy.orm.query import Query
+
 import massgov.pfml.db
 import massgov.pfml.util.logging
 from massgov.pfml.db.models import employees
@@ -18,15 +20,11 @@ from . import base_period
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
 
-def query_employee_wages(
+def _employee_wages_query(
     db_session: massgov.pfml.db.Session, effective_quarter: quarter.Quarter, employee_id: uuid.UUID
-) -> List[Any]:
-    """Read DOR wage data from database, going back up to 6 quarters inclusive.
-
-    6 quarters is the maximum possible needed to compute eligibility.
-    """
+) -> "Query[employees.WagesAndContributions]":
     earliest_quarter = effective_quarter.subtract_quarters(5)
-    rows = (
+    query = (
         db_session.query(employees.WagesAndContributions)
         .filter(
             employees.WagesAndContributions.employee_id == employee_id,
@@ -39,10 +37,19 @@ def query_employee_wages(
             employees.WagesAndContributions.employer_id,
             employees.WagesAndContributions.filing_period,
         )
-        .all()
     )
+    return query
 
-    return rows
+
+def query_employee_wages(
+    db_session: massgov.pfml.db.Session, effective_quarter: quarter.Quarter, employee_id: uuid.UUID
+) -> List[Any]:
+    """Read DOR wage data from database, going back up to 6 quarters inclusive.
+
+    6 quarters is the maximum possible needed to compute eligibility.
+    """
+    qry = _employee_wages_query(db_session, effective_quarter, employee_id)
+    return qry.all()
 
 
 class WageCalculator:
@@ -217,15 +224,20 @@ class WageCalculator:
         return total_quarterly_wages
 
 
+def _get_wage_calculator(effective_date: datetime.date) -> WageCalculator:
+    effective_quarter = quarter.Quarter.from_date(effective_date)
+    calculator = WageCalculator()
+    calculator.set_effective_quarter(effective_quarter)
+    return calculator
+
+
 def get_wage_calculator(
     employee_id: uuid.UUID, effective_date: datetime.date, db_session: massgov.pfml.db.Session
 ) -> WageCalculator:
     """Read DOR wage data from database and setup a calculator for the given employee."""
-    effective_quarter = quarter.Quarter.from_date(effective_date)
-    calculator = WageCalculator()
-    calculator.set_effective_quarter(effective_quarter)
+    calculator = _get_wage_calculator(effective_date)
 
-    rows = query_employee_wages(db_session, effective_quarter, employee_id)
+    rows = query_employee_wages(db_session, calculator.effective_quarter, employee_id)
     for row in rows:
         calculator.set_quarter_wage(
             row.employer_id, quarter.Quarter.from_date(row.filing_period), row.employee_qtr_wages
@@ -233,3 +245,23 @@ def get_wage_calculator(
     calculator.set_base_period()
 
     return calculator
+
+
+def get_retroactive_base_period(
+    db_session: massgov.pfml.db.Session, employee_id: uuid.UUID, effective_date: datetime.date
+) -> Tuple[quarter.Quarter, ...]:
+    """
+    Get the base period for a given effective date using
+    wages in the system at the time of the effective date.
+    """
+    calculator = _get_wage_calculator(effective_date)
+
+    qry = _employee_wages_query(db_session, calculator.effective_quarter, employee_id)
+    rows = qry.filter(employees.WagesAndContributions.created_at < effective_date)
+    for row in rows:
+        calculator.set_quarter_wage(
+            row.employer_id, quarter.Quarter.from_date(row.filing_period), row.employee_qtr_wages
+        )
+    calculator.set_base_period()
+
+    return calculator.base_period_quarters

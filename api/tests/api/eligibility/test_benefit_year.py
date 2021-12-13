@@ -2,14 +2,17 @@ from datetime import date, timedelta
 from typing import List, Optional
 
 import pytest
+from freezegun.api import freeze_time
 from werkzeug.exceptions import NotFound
 
 from massgov.pfml import db
 from massgov.pfml.api.eligibility.benefit_year import (
     AbsenceStatusesWithBenefitYear,
     CreateBenefitYearContribution,
+    _get_earliest_claim_in_benefit_year,
     create_benefit_year_by_ssn,
     get_benefit_year_by_ssn,
+    set_base_period_for_benefit_year,
 )
 from massgov.pfml.api.eligibility.benefit_year_dates import get_benefit_year_dates
 from massgov.pfml.db.models.employees import (
@@ -28,6 +31,8 @@ from massgov.pfml.db.models.factories import (
     ClaimFactory,
     EmployeeFactory,
     EmployerFactory,
+    TaxIdentifierFactory,
+    WagesAndContributionsFactory,
 )
 
 
@@ -545,3 +550,146 @@ def test_create_benefit_year_by_ssn__should_raise_value_error_when_attempting_to
     )
 
     assert len(benefit_years_after) == len(benefit_years_before)
+
+
+def test_set_base_period_for_benefit_year(test_db_session, initialize_factories_session):
+    """
+    Test setup reused from eligibility tests.
+    In this scenario, there are no wages during the quarter of the effective_date (absence_period_start_date).
+    We are relying on behavior implemented in wage.py and the corresponding tests.
+    """
+    employer_fein = 716779225
+    tax_id = TaxIdentifierFactory.create(tax_identifier="088574541")
+    employee = EmployeeFactory.create(tax_identifier=tax_id)
+    employer = EmployerFactory.create(employer_fein=employer_fein)
+    # Ensure eligibility_date/effective_date is set to 12/1
+    with freeze_time("2019-12-1"):
+        ClaimFactory.create(
+            absence_period_start_date=date(2019, 12, 15), employee=employee, employer=employer
+        )
+
+    # Add a claim later in the benefit year
+    # This claim will be ignored, since the first claim is earlier in the benefit year.
+    with freeze_time("2020-1-1"):
+        ClaimFactory.create(
+            absence_period_start_date=date(2020, 1, 1), employee=employee, employer=employer
+        )
+
+    by_start_date = date(2019, 10, 1)
+    by_end_date = date(2020, 10, 1)
+    benefit_year = BenefitYear(
+        employee_id=employee.employee_id, start_date=by_start_date, end_date=by_end_date
+    )
+    test_db_session.add(benefit_year)
+    test_db_session.commit()
+
+    # Simulate wages being added a reasonable amount of time after they were earned
+    with freeze_time("2019-10-1"):
+        WagesAndContributionsFactory.create(
+            employee=employee,
+            employer=employer,
+            filing_period=date(2019, 7, 1),
+            employee_qtr_wages=1000,
+        )
+        WagesAndContributionsFactory.create(
+            employee=employee,
+            employer=employer,
+            filing_period=date(2019, 9, 1),
+            employee_qtr_wages=1000,
+        )
+
+        # Add wages for Q4 2019
+        # This causes the base period to end in Q4
+        WagesAndContributionsFactory.create(
+            employee=employee,
+            employer=employer,
+            filing_period=date(2019, 12, 1),
+            employee_qtr_wages=1000,
+        )
+
+    assert benefit_year.base_period_start_date is None
+    assert benefit_year.base_period_end_date is None
+
+    updated_benefit_year = set_base_period_for_benefit_year(test_db_session, benefit_year)
+
+    assert updated_benefit_year.base_period_start_date == date(2019, 1, 1)
+    assert updated_benefit_year.base_period_end_date == date(2019, 12, 31)
+
+
+def test_set_base_period_for_benefit_year_ignores_retroactively_added_wages(
+    test_db_session, initialize_factories_session
+):
+    """
+    Ignore wages added after the eligibility date
+    """
+    employer_fein = 716779225
+    tax_id = TaxIdentifierFactory.create(tax_identifier="088574541")
+    employee = EmployeeFactory.create(tax_identifier=tax_id)
+    employer = EmployerFactory.create(employer_fein=employer_fein)
+
+    # Ensure eligibility_date/effective_date is set to 12/1
+    with freeze_time("2019-12-1"):
+        ClaimFactory.create(
+            absence_period_start_date=date(2019, 12, 15), employee=employee, employer=employer
+        )
+
+    by_start_date = date(2019, 10, 1)
+    by_end_date = date(2020, 10, 1)
+    benefit_year = BenefitYear(
+        employee_id=employee.employee_id, start_date=by_start_date, end_date=by_end_date
+    )
+    test_db_session.add(benefit_year)
+    test_db_session.commit()
+
+    with freeze_time("2019-10-1"):
+        # No wages in Q4 2019 - the quarter eligibility/effective date is in,
+        # so the base period ends on the last day of the previous quarter (Q3)
+        WagesAndContributionsFactory.create(
+            employee=employee,
+            employer=employer,
+            filing_period=date(2019, 9, 1),
+            employee_qtr_wages=1000,
+        )
+        WagesAndContributionsFactory.create(
+            employee=employee,
+            employer=employer,
+            filing_period=date(2019, 7, 1),
+            employee_qtr_wages=1000,
+        )
+
+    # Add wages that would move the end of the base_period
+    # to Q4 2019. These wages will be ignored due to
+    # being added retroactively, and the base period will be set to end in Q3.
+    WagesAndContributionsFactory.create(
+        employee=employee,
+        employer=employer,
+        filing_period=date(2019, 12, 1),
+        employee_qtr_wages=1000,
+    )
+
+    assert benefit_year.base_period_start_date is None
+    assert benefit_year.base_period_end_date is None
+
+    updated_benefit_year = set_base_period_for_benefit_year(test_db_session, benefit_year)
+
+    assert updated_benefit_year.base_period_start_date == date(2018, 10, 1)
+    assert updated_benefit_year.base_period_end_date == date(2019, 9, 30)
+
+
+def test_get_earliest_claim_in_benefit_year(test_db_session, initialize_factories_session):
+    employee = EmployeeFactory.create()
+    by_start_date = date(2019, 10, 1)
+    by_end_date = date(2020, 10, 1)
+    benefit_year = BenefitYear(
+        employee_id=employee.employee_id, start_date=by_start_date, end_date=by_end_date
+    )
+
+    with freeze_time("2019-12-1"):
+        claim1 = ClaimFactory.create(
+            absence_period_start_date=date(2019, 12, 15), employee=employee
+        )
+
+    with freeze_time("2020-1-1"):
+        ClaimFactory.create(absence_period_start_date=date(2020, 1, 1), employee=employee)
+
+    assert _get_earliest_claim_in_benefit_year(test_db_session, benefit_year) == claim1

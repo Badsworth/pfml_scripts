@@ -9,6 +9,7 @@ from werkzeug.exceptions import NotFound
 import massgov.pfml.util.logging
 from massgov.pfml import db
 from massgov.pfml.api.eligibility.benefit_year_dates import get_benefit_year_dates
+from massgov.pfml.api.eligibility.wage import get_retroactive_base_period
 from massgov.pfml.db.models.employees import (
     AbsenceStatus,
     BenefitYear,
@@ -235,3 +236,60 @@ def create_benefit_year_by_ssn(
         total_wages,
         employer_contributions,
     )
+
+
+def _get_earliest_claim_in_benefit_year(
+    db_session: db.Session, benefit_year: BenefitYear
+) -> Optional[Claim]:
+    return (
+        db_session.query(Claim)
+        .filter(Claim.employee_id == benefit_year.employee_id)
+        .filter(Claim.absence_period_start_date.isnot(None))
+        .filter(
+            Claim.absence_period_start_date.between(benefit_year.start_date, benefit_year.end_date)
+        )
+        .order_by(Claim.absence_period_start_date)
+        .first()
+    )
+
+
+def set_base_period_for_benefit_year(
+    db_session: db.Session, benefit_year: BenefitYear
+) -> Optional[BenefitYear]:
+    earilest_claim_in_benefit_year = _get_earliest_claim_in_benefit_year(db_session, benefit_year)
+
+    if earilest_claim_in_benefit_year is None:
+        logger.info(
+            "No claim found for benefit year",
+            extra={"benefit_year_id": benefit_year.benefit_year_id},
+        )
+        return None
+
+    application_submitted_date = earilest_claim_in_benefit_year.created_at.date()
+    leave_start_date = earilest_claim_in_benefit_year.absence_period_start_date
+
+    # This guard clause is to satisfy the linter.
+    # Since we filter out null absence_period_start_dates in
+    # _get_earliest_claim_in_benefit_year, this is unreachable.
+    if leave_start_date is None:
+        raise Exception
+
+    # Choose earliest date
+    effective_date = (
+        application_submitted_date
+        if leave_start_date > application_submitted_date
+        else leave_start_date
+    )
+
+    base_period_qtrs = get_retroactive_base_period(
+        db_session, benefit_year.employee_id, effective_date
+    )
+    base_period_start, base_period_end = base_period_qtrs[-1], base_period_qtrs[0]
+
+    benefit_year.base_period_start_date = base_period_start.start_date()
+    benefit_year.base_period_end_date = base_period_end.as_date()
+
+    db_session.add(benefit_year)
+    db_session.commit()
+
+    return benefit_year
