@@ -459,6 +459,8 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
         occupation_id: int,
         employment_status: Optional[str],
         hours_worked_per_week: Optional[Decimal],
+        fineos_org_unit_id: Optional[str],
+        worksite_id: Optional[str],
     ) -> None:
         _capture_call(
             "update_occupation",
@@ -466,6 +468,8 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
             employment_status=employment_status,
             hours_worked_per_week=hours_worked_per_week,
             occupation_id=occupation_id,
+            fineos_org_unit_id=fineos_org_unit_id,
+            worksite_id=worksite_id,
         )
 
     def upload_document(
@@ -555,6 +559,12 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
                 "military exigency form",
                 "pending application withdrawn",
                 "appeal acknowledgment",
+                "maximum weekly benefit change notice",
+                "benefit amount change notice",
+                "leave allotment change notice",
+                "approved time cancelled",
+                "change request approved",
+                "change request denied",
             ]
 
             allowed_documents = [

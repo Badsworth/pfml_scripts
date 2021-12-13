@@ -10,7 +10,7 @@ import {
 } from "../../../models/Document";
 import React, { useEffect } from "react";
 import Tag, { TagProps } from "../../../components/core/Tag";
-import { find, get, has, map } from "lodash";
+import { find, has, map } from "lodash";
 import withUser, { WithUserProps } from "../../../hoc/withUser";
 
 import Alert from "../../../components/core/Alert";
@@ -58,7 +58,7 @@ export const Status = ({
     },
   } = appLogic;
   const { absence_case_id, absence_id, uploaded_document_type } = query;
-  const application_id = get(claimDetail, "application_id");
+  const application_id = claimDetail?.application_id;
   const absenceId = absence_id || absence_case_id;
 
   useEffect(() => {
@@ -118,7 +118,9 @@ export const Status = ({
     );
   }
 
-  const absenceDetails = claimDetail.absencePeriodsByReason;
+  const absenceDetails = AbsencePeriod.groupByReason(
+    claimDetail.absence_periods
+  );
   const hasPendingStatus = claimDetail.absence_periods.some(
     (absenceItem) => absenceItem.request_decision === "Pending"
   );
@@ -231,8 +233,22 @@ export const Status = ({
 
     return "";
   };
+
   const infoAlertContext = getInfoAlertContext(absenceDetails);
   const [firstAbsenceDetail] = Object.keys(absenceDetails);
+
+  // Determines if phase two payment features are displayed
+  const showPhaseOneFeatures =
+    isFeatureEnabled("claimantShowPayments") &&
+    hasApprovedStatus &&
+    claimDetail.has_paid_payments;
+
+  // Determines if phase two payment features are displayed
+  const showPhaseTwoFeatures =
+    isFeatureEnabled("claimantShowPaymentsPhaseTwo") && hasApprovedStatus;
+
+  // Determines if payment tab is displayed
+  const isPaymentsTab = showPhaseOneFeatures || showPhaseTwoFeatures;
 
   return (
     <React.Fragment>
@@ -287,17 +303,14 @@ export const Status = ({
       />
       <div className="measure-6">
         <Title hidden>{t("pages.claimsStatus.applicationTitle")}</Title>
-        {isFeatureEnabled("claimantShowPayments") &&
-          hasApprovedStatus &&
-          claimDetail.has_paid_payments && (
-            <StatusNavigationTabs
-              activePath={appLogic.portalFlow.pathname}
-              absence_id={absenceId}
-            />
-          )}
+        {isPaymentsTab && (
+          <StatusNavigationTabs
+            activePath={appLogic.portalFlow.pathname}
+            absence_id={absenceId}
+          />
+        )}
 
         {/* Heading section */}
-
         <Heading level="2" size="1">
           {t("pages.claimsStatus.leaveReasonValueHeader", {
             context: findKeyByValue(LeaveReason, firstAbsenceDetail),
@@ -530,7 +543,7 @@ export const LeaveDetails = ({
                           <a
                             href={createRouteWithQuery(
                               "/applications/status/payments",
-                              { absenceId }
+                              { absence_id: absenceId }
                             )}
                           />
                         ),

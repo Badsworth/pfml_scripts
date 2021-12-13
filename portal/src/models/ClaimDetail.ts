@@ -1,7 +1,8 @@
 import { ClaimEmployee, ClaimEmployer, ManagedRequirement } from "./Claim";
-import { groupBy, orderBy } from "lodash";
+
 import { AbsencePeriod } from "./AbsencePeriod";
 import dayjs from "dayjs";
+import { orderBy } from "lodash";
 
 class ClaimDetail {
   absence_periods: AbsencePeriod[] = [];
@@ -33,14 +34,17 @@ class ClaimDetail {
     this.absence_periods = this.absence_periods.map(
       (absence_period) => new AbsencePeriod(absence_period)
     );
-  }
 
-  /**
-   * Get absence_periods grouped by their leave reason
-   * @returns {Object} an object that keys arrays of absence periods by their reason e.g { "Child Bonding": [AbsencePeriod] }
-   */
-  get absencePeriodsByReason() {
-    return groupBy(this.absence_periods, "reason");
+    /**
+     * Filtering to account for instances where a payment may be sent during the waiting week or prior to the leave start date
+     */
+
+    this.payments = this.payments.filter(
+      ({ period_start_date, status }) =>
+        (this.waitingWeek?.startDate &&
+          this.waitingWeek.startDate < period_start_date) ||
+        status === "Sent to bank"
+    );
   }
 
   /**
@@ -140,7 +144,9 @@ export interface PaymentDetail {
   payment_method: string;
   expected_send_date_start: string | null;
   expected_send_date_end: string | null;
-  status: string;
+  status: PaymentStatus;
 }
+
+type PaymentStatus = "Cancelled" | "Delayed" | "Pending" | "Sent to bank";
 
 export default ClaimDetail;

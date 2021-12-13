@@ -12,12 +12,21 @@ const setup = (claims = []) => {
     addCustomSetup: (appLogic) => {
       appLogic.benefitsApplications.benefitsApplications =
         new BenefitsApplicationCollection(claims);
-      appLogic.benefitsApplications.hasLoadedAll = true;
+      appLogic.benefitsApplications.loadPage = jest.fn();
     },
   });
 };
 
 describe("GetReady", () => {
+  beforeEach(() => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date(2022, 1, 1));
+  });
+
+  afterAll(() => {
+    jest.useRealTimers();
+  });
+
   it("renders get ready content", () => {
     const { container } = setup();
     expect(container).toMatchSnapshot();
@@ -35,6 +44,17 @@ describe("GetReady", () => {
     setup(claims);
     expect(
       screen.getByRole("link", { name: "View all applications" })
+    ).toBeInTheDocument();
+  });
+
+  it("displays different copy when tax withholding is enabled", () => {
+    process.env.featureFlags = {
+      claimantShowTaxWithholding: true,
+    };
+    const { container } = setup();
+    expect(container).toMatchSnapshot();
+    expect(
+      screen.getByRole("link", { name: "tax professional" })
     ).toBeInTheDocument();
   });
 });

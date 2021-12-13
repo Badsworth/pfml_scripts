@@ -63,7 +63,7 @@ describe("DownloadableDocument", () => {
 
   it("renders notice date", () => {
     renderComponent({ showCreatedAt: true });
-    expect(screen.getByText("Posted 4/5/2020")).toBeInTheDocument();
+    expect(screen.getByText(/Posted 4\/5\/2020/)).toBeInTheDocument();
   });
 
   it("calls download function without absence id when there isn't an absence id", () => {

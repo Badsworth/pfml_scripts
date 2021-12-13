@@ -462,9 +462,10 @@ def make_claimant_data_from_fineos_data(fineos_data):
     employee_feed = payments_util.create_staging_table_instance(
         fineos_data.get_employee_feed_record(), FineosExtractEmployeeFeed, reference_file, None
     )
+    requested_absences = [requested_absence]
 
     return claimant_extract.ClaimantData(
-        fineos_data.absence_case_number, [requested_absence], employee_feed
+        fineos_data.absence_case_number, requested_absences, employee_feed
     )
 
 
@@ -521,6 +522,48 @@ def test_create_or_update_claim_happy_path_update_claim(claimant_extract_step, f
     assert claim.absence_period_start_date == datetime.date(2021, 2, 14)
     assert claim.absence_period_end_date == datetime.date(2021, 2, 28)
     assert claim.is_id_proofed is True
+
+
+def test_absence_period_deduplication(claimant_extract_step, test_db_session):
+    # If the same requested absence appears multiple times, we dedupe that to a single one
+    claimant_data = FineosClaimantData(absence_period_i_value="1234")
+
+    reference_file = ReferenceFileFactory.build()
+    requested_absence = payments_util.create_staging_table_instance(
+        claimant_data.get_requested_absence_record(),
+        FineosExtractVbiRequestedAbsenceSom,
+        reference_file,
+        None,
+    )
+    employee_feed = payments_util.create_staging_table_instance(
+        claimant_data.get_employee_feed_record(), FineosExtractEmployeeFeed, reference_file, None
+    )
+    # Add an exact duplicate of the first absence record
+    requested_absence2 = payments_util.create_staging_table_instance(
+        claimant_data.get_requested_absence_record(),
+        FineosExtractVbiRequestedAbsenceSom,
+        reference_file,
+        None,
+    )
+
+    requested_absence3 = payments_util.create_staging_table_instance(
+        FineosClaimantData(absence_period_i_value="5678").get_requested_absence_record(),
+        FineosExtractVbiRequestedAbsenceSom,
+        reference_file,
+        None,
+    )
+
+    requested_absences = [requested_absence, requested_absence2, requested_absence3]
+
+    claimant_data = claimant_extract.ClaimantData(
+        claimant_data.absence_case_number, requested_absences, employee_feed
+    )
+
+    # Despite passing in 3 requested absences, one gets deduped away (the 2nd)
+    assert len(claimant_data.absence_period_data) == 2
+    assert set(
+        [absence_period_data.index_id for absence_period_data in claimant_data.absence_period_data]
+    ) == set([1234, 5678])
 
 
 def test_create_or_update_claim_invalid_values(claimant_extract_step):

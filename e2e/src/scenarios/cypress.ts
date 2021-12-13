@@ -198,6 +198,7 @@ export const BIAP60: ScenarioSpecification = {
       duration: 5,
       duration_basis: "Days",
     },
+    is_withholding_tax: false,
     // This scenario requires a 4 week leave time for payment calculation purposes.
     leave_dates: [subWeeks(mostRecentSunday, 3), addWeeks(mostRecentSunday, 1)],
     metadata: {
@@ -417,6 +418,7 @@ export const BHAP1_OLB: ScenarioSpecification = {
         worked_per_week_minutes: 1200,
       },
     ],
+    is_withholding_tax: true,
     concurrent_leave: { is_for_current_employer: true },
     metadata: { expected_weekly_payment: "850.00" },
   },
@@ -516,7 +518,10 @@ export const HIST_CASE: ScenarioSpecification = {
     shortClaim: true,
     has_continuous_leave_periods: true,
     reason: "Care for a Family Member",
-    docs: {},
+    docs: {
+      MASSID: {},
+      CARING: {},
+    },
   },
 };
 

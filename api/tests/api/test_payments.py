@@ -3,6 +3,7 @@ from decimal import Decimal
 from urllib.parse import urlencode
 
 import pytest
+from freezegun import freeze_time
 
 from massgov.pfml.api.services.payments import FrontendPaymentStatus
 from massgov.pfml.db.models.employees import PaymentMethod
@@ -11,6 +12,8 @@ from massgov.pfml.db.models.payments import FineosWritebackDetails, FineosWriteb
 from massgov.pfml.delegated_payments.mock.delegated_payments_factory import DelegatedPaymentFactory
 
 
+# Set to noon eastern.
+@freeze_time("2021-12-09 12:00:00", tz_offset=5)
 @pytest.mark.parametrize(
     "transaction_status,scenario_details",
     [
@@ -22,11 +25,11 @@ from massgov.pfml.delegated_payments.mock.delegated_payments_factory import Dele
         # Paid Scenarios - display amount, sent_to_bank_date equal to writeback status created_at, expected dates equal to sent_to_bank_date
         (
             FineosWritebackTransactionStatus.PAID,
-            [FrontendPaymentStatus.SENT_TO_BANK, 750.67, str(date.today()), 0, 0],
+            [FrontendPaymentStatus.SENT_TO_BANK, 750.67, str(date(2021, 12, 9)), 0, 0],
         ),
         (
             FineosWritebackTransactionStatus.POSTED,
-            [FrontendPaymentStatus.SENT_TO_BANK, 750.67, str(date.today()), 0, 0],
+            [FrontendPaymentStatus.SENT_TO_BANK, 750.67, str(date(2021, 12, 9)), 0, 0],
         ),
         # Other Scenario - No dates displayed, only status of "Delayed"
         (

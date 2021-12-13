@@ -1,10 +1,11 @@
 import { AppLogic } from "../../../hooks/useAppLogic";
 
-import Button from "../../../components/core/Button";
 import InputChoiceGroup from "../../../components/core/InputChoiceGroup";
 import PageNotFound from "../../../components/PageNotFound";
 import React from "react";
+import ThrottledButton from "src/components/ThrottledButton";
 import { Trans } from "react-i18next";
+import User from "src/models/User";
 import { get } from "lodash";
 import { isFeatureEnabled } from "../../../services/featureFlags";
 import useFormState from "../../../hooks/useFormState";
@@ -14,6 +15,7 @@ import withUser from "../../../hoc/withUser";
 
 interface IndexSMSProps {
   appLogic: AppLogic;
+  user: User;
 }
 
 export const IndexSMS = (props: IndexSMSProps) => {
@@ -24,9 +26,14 @@ export const IndexSMS = (props: IndexSMSProps) => {
     enterMFASetupFlow: null,
   });
 
-  const handleSubmit = (event: React.FormEvent) => {
-    event.preventDefault();
-    // Do nothing for now
+  const handleSubmit = async () => {
+    if (formState.enterMFASetupFlow) {
+      await appLogic.portalFlow.goToPageFor("EDIT_MFA_PHONE");
+    } else {
+      await appLogic.users.updateUser(props.user.user_id, {
+        mfa_delivery_preference: "Opt Out",
+      });
+    }
   };
 
   const getFunctionalInputProps = useFunctionalInputProps({
@@ -39,7 +46,7 @@ export const IndexSMS = (props: IndexSMSProps) => {
   if (!isFeatureEnabled("claimantShowMFA")) return <PageNotFound />;
 
   return (
-    <form className="usa-form" onSubmit={handleSubmit} method="post">
+    <form className="usa-form">
       <InputChoiceGroup
         {...getFunctionalInputProps("enterMFASetupFlow")}
         label={t("pages.authTwoFactorSmsIndex.title")}
@@ -58,9 +65,13 @@ export const IndexSMS = (props: IndexSMSProps) => {
         ]}
         type="radio"
       />
-      <Button type="submit" className="display-block">
+      <ThrottledButton
+        type="submit"
+        className="display-block"
+        onClick={handleSubmit}
+      >
         {t("pages.authTwoFactorSmsIndex.saveButton")}
-      </Button>
+      </ThrottledButton>
     </form>
   );
 };

@@ -20,6 +20,7 @@ import massgov.pfml.util.datetime as datetime_util
 import massgov.pfml.util.logging
 import massgov.pfml.util.pdf as pdf_util
 from massgov.pfml.api.authorization.flask import CREATE, EDIT, READ, ensure
+from massgov.pfml.api.constants.application import ID_DOC_TYPES
 from massgov.pfml.api.models.applications.common import ContentType as AllowedContentTypes
 from massgov.pfml.api.models.applications.common import DocumentType as IoDocumentTypes
 from massgov.pfml.api.models.applications.requests import (
@@ -83,18 +84,10 @@ LEAVE_REASON_TO_DOCUMENT_TYPE_MAPPING = {
     LeaveReason.PREGNANCY_MATERNITY.leave_reason_description: DocumentType.PREGNANCY_MATERNITY_FORM,
 }
 
-ID_DOCS = [
-    DocumentType.PASSPORT.document_type_description,
-    DocumentType.DRIVERS_LICENSE_MASS.document_type_description,
-    DocumentType.DRIVERS_LICENSE_OTHER_STATE.document_type_description,
-    DocumentType.IDENTIFICATION_PROOF.document_type_description,
-]
-
 
 def application_get(application_id):
     with app.db_session() as db_session:
         existing_application = get_or_404(db_session, Application, application_id)
-
         ensure(READ, existing_application)
         application_response = ApplicationResponse.from_orm(existing_application)
 
@@ -182,13 +175,13 @@ def applications_update(application_id):
         logger.info(
             "applications_update failure - application already submitted", extra=log_attributes
         )
+        message = "Application {} could not be updated. Application already submitted on {}".format(
+            existing_application.application_id, existing_application.submitted_time.strftime("%x"),
+        )
         return response_util.error_response(
             status_code=Forbidden,
-            message="Application {} could not be updated. Application already submitted on {}".format(
-                existing_application.application_id,
-                existing_application.submitted_time.strftime("%x"),
-            ),
-            errors=[],
+            message=message,
+            errors=[ValidationErrorDetail(type=IssueType.exists, field="claim", message=message)],
             data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
         ).to_api_response()
 
@@ -311,13 +304,16 @@ def applications_submit(application_id):
             logger.info(
                 "applications_submit failure - application already submitted", extra=log_attributes
             )
+            message = "Application {} could not be submitted. Application already submitted on {}".format(
+                existing_application.application_id,
+                existing_application.submitted_time.strftime("%x"),
+            )
             return response_util.error_response(
                 status_code=Forbidden,
-                message="Application {} could not be submitted. Application already submitted on {}".format(
-                    existing_application.application_id,
-                    existing_application.submitted_time.strftime("%x"),
-                ),
-                errors=[],
+                message=message,
+                errors=[
+                    ValidationErrorDetail(type=IssueType.exists, field="claim", message=message)
+                ],
                 data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
             ).to_api_response()
 
@@ -395,7 +391,7 @@ def applications_complete(application_id):
         log_attributes = get_application_log_attributes(existing_application)
 
         issues = application_rules.get_application_complete_issues(
-            existing_application, request.headers
+            existing_application, request.headers, db_session
         )
         if issues:
             logger.info(
@@ -575,7 +571,7 @@ def document_upload(application_id, body, file):
                 and file_size > UPLOAD_SIZE_CONSTRAINT
             ):
                 # tempfile.SpooledTemporaryFile writes the compressed file in-memory
-                with tempfile.SpooledTemporaryFile(mode="xb") as compressed_file:
+                with tempfile.SpooledTemporaryFile(mode="wb+") as compressed_file:
                     previous_file_size = file_size
                     file_size = pdf_util.compress_pdf(file, compressed_file)
                     file_name = f"Compressed_{file_name}"
@@ -617,9 +613,9 @@ def document_upload(application_id, body, file):
                 existing_application.leave_reason.leave_reason_description
             ].document_type_description
 
-        if document_type not in ID_DOCS:
+        if document_type not in [doc_type.document_type_description for doc_type in ID_DOC_TYPES]:
             # Check for existing STATE_MANAGED_PAID_LEAVE_CONFIRMATION documents, and reuse the doc type if there are docs
-            # Because existng claims where only part 1 has been submitted should continue using old doc type, submitted_time
+            # Because existing claims where only part 1 has been submitted should continue using old doc type, submitted_time
             # rather than existing docs should be examined
 
             if has_previous_state_managed_paid_leave(existing_application, db_session) or (
@@ -876,13 +872,20 @@ def payment_preference_submit(application_id: UUID) -> Response:
             "payment_preference_submit failure - payment preference already submitted",
             extra=log_attributes,
         )
+        message = "Application {} could not be updated. Payment preference already submitted".format(
+            existing_application.application_id
+        )
         return response_util.error_response(
             status_code=Forbidden,
-            message="Application {} could not be updated. Payment preference already submitted".format(
-                existing_application.application_id
-            ),
+            message=message,
             data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
-            errors=[],
+            errors=[
+                ValidationErrorDetail(
+                    type=IssueType.exists,
+                    field="payment_preference.payment_method",
+                    message=message,
+                )
+            ],
         ).to_api_response()
 
 

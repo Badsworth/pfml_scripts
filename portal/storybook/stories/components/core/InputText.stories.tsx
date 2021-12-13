@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import InputText from "src/components/core/InputText";
-import { Props } from "storybook/types";
+import { Props } from "types/common";
 import { useTranslation } from "src/locales/i18n";
 
 export default {

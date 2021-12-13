@@ -42,6 +42,10 @@ Additionally, we have several components that are duplicated within each environ
 └── portal              🏡 infrastructure for a PFML portal environment
     └── template        🏗  shared template for portal env
     └── environments
+
+└── bi                  🏡 infrastructure for Buisness Intelligence services, such as Qlik
+    └── template        🏗 shared template for buisness intelligence tools
+    └── environments
 ```
 
 Several re-usable modules have also been created for use by the terraform folders above:

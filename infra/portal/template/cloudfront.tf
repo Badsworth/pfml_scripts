@@ -149,27 +149,10 @@ resource "aws_cloudfront_distribution" "portal_web_distribution" {
     compress                   = true
     response_headers_policy_id = aws_cloudfront_response_headers_policy.portal_response_header_policy.id
 
-
-    lambda_function_association {
-      # Executes only when CloudFront forwards a request to S3. When the requested
-      # object is in the CloudFront cache, the function doesn’t execute.
-      event_type = "origin-request"
-      # The Amazon Resource Name (ARN) identifying your Lambda Function Version
-      # when publish = true
-      lambda_arn = aws_lambda_function.cloudfront_handler.qualified_arn
+    function_association {
+      event_type   = "viewer-request"
+      function_arn = aws_cloudfront_function.portal_web_distribution.arn
     }
-
-    # TODO: INFRA-785 
-    # # remove this code
-    # lambda_function_association {
-    #   # The function executes before CloudFront returns the requested object to the viewer.
-    #   # The function executes regardless of whether the object was already in the edge cache.
-    #   # If the origin returns an HTTP status code other than HTTP 200 (OK), the function doesn't execute.
-    #   event_type = "viewer-response"
-    #   # The Amazon Resource Name (ARN) identifying your Lambda Function Version
-    #   # when publish = true
-    #   lambda_arn = aws_lambda_function.cloudfront_handler.qualified_arn
-    # }
   }
 
   custom_error_response {
@@ -196,4 +179,12 @@ resource "aws_cloudfront_distribution" "portal_web_distribution" {
       restriction_type = "none"
     }
   }
+}
+
+resource "aws_cloudfront_function" "portal_web_distribution" {
+  name    = "mass-pfml-${var.environment_name}-cf-func"
+  comment = "Customizes Cloudfront requests and responses"
+  runtime = "cloudfront-js-1.0"
+  code    = file("${path.module}/cloudfront-handler.js")
+  publish = true
 }

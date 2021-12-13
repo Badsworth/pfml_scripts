@@ -20,9 +20,7 @@ from massgov.pfml.delegated_payments.irs_1099.populate_refunds import PopulateRe
 from massgov.pfml.delegated_payments.irs_1099.populate_withholdings import PopulateWithholdingsStep
 from massgov.pfml.delegated_payments.irs_1099.upload_documents import Upload1099DocumentsStep
 from massgov.pfml.delegated_payments.reporting.delegated_payment_sql_report_step import ReportStep
-from massgov.pfml.delegated_payments.reporting.delegated_payment_sql_reports import (
-    PROCESS_1099_DOCUMENT_REPORTS,
-)
+from massgov.pfml.delegated_payments.reporting.delegated_payment_sql_reports import IRS_1099_REPORTS
 from massgov.pfml.util.bg import background_task
 from massgov.pfml.util.datetime import get_now_us_eastern
 
@@ -175,7 +173,7 @@ def _process_1099_documents(
         ReportStep(
             db_session=db_session,
             log_entry_db_session=log_entry_db_session,
-            report_names=PROCESS_1099_DOCUMENT_REPORTS,
+            report_names=IRS_1099_REPORTS,
         ).run()
 
     payments_util.create_success_file(start_time, "pub-payments-process-1099-documents")

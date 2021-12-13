@@ -63,6 +63,10 @@ module "tasks" {
   fineos_error_export_path      = "s3://fin-sompre-data-export/UAT/errorExtracts"
   fineos_report_export_path     = "s3://fin-sompre-data-export/UAT/reportExtract"
 
+  enable_pub_automation_fineos           = true
+  enable_pub_automation_create_pub_files = true
+  enable_pub_automation_process_returns  = false
+
   rmv_client_base_url               = "https://atlas-staging-gateway.massdot.state.ma.us/vs"
   rmv_client_certificate_binary_arn = "arn:aws:secretsmanager:us-east-1:498823821309:secret:/service/pfml-api-uat/rmv_client_certificate-LWvMFe"
   rmv_api_behavior                  = "partially_mocked"
@@ -78,4 +82,8 @@ module "tasks" {
   pdf_api_host             = "http://localhost:5000"
   enable_generate_1099_pdf = "0"
   enable_merge_1099_pdf    = "0"
+
+  enable_withholding_payments = "0"
+
+  enable_pub_payments_copy_audit_report_schedule = true
 }

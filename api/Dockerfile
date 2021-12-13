@@ -111,6 +111,11 @@ COPY --from=app-build --chown=${RUN_USER} /tmp/ /tmp/
 
 # Include ghostscript executable
 COPY --from=app-build  /usr/bin/gs /usr/bin/gs
+COPY --from=app-build /usr/share/ghostscript /usr/share/ghostscript
+COPY --from=app-build /usr/share/man /usr/share/man
+COPY --from=app-build /usr/share/fonts /usr/share/fonts
+COPY --from=app-build /usr/share/fontconfig /usr/share/fontconfig
+COPY --from=app-build /usr/share/color /usr/share/color
 
 ENV PATH="/app/.venv/bin:$PATH"
 

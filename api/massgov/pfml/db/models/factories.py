@@ -381,6 +381,18 @@ class WagesAndContributionsFactory(BaseFactory):
     employee_id = factory.LazyAttribute(lambda w: w.employee.employee_id)
 
 
+class OrganizationUnitFactory(BaseFactory):
+    class Meta:
+        model = employee_models.OrganizationUnit
+
+    organization_unit_id = Generators.UuidObj
+
+    fineos_id = factory.Faker("numerify", text="PE:#####:##########")
+    name = factory.Faker("company")
+    employer = factory.SubFactory(EmployerFactory)
+    employer_id = factory.LazyAttribute(lambda c: c.employer.employer_id)
+
+
 class ClaimFactory(BaseFactory):
     class Meta:
         model = employee_models.Claim
@@ -395,6 +407,10 @@ class ClaimFactory(BaseFactory):
     fineos_notification_id = None
     employee = factory.SubFactory(EmployeeFactory)
     employee_id = factory.LazyAttribute(lambda w: w.employee.employee_id)
+    organization_unit = None
+    organization_unit_id = factory.LazyAttribute(
+        lambda w: w.organization_unit.organization_unit_id if w.organization_unit else None
+    )
 
 
 class AbsencePeriodFactory(BaseFactory):
@@ -939,16 +955,6 @@ class CaringLeaveMetadataFactory(BaseFactory):
 class ImportLogFactory(BaseFactory):
     class Meta:
         model = employee_models.ImportLog
-
-
-class OrganizationUnitFactory(BaseFactory):
-    class Meta:
-        model = employee_models.OrganizationUnit
-
-    fineos_id = None
-    name = factory.Faker("company")
-    employer = factory.SubFactory(EmployerFactory)
-    employer_id = factory.LazyAttribute(lambda c: c.employer.employer_id)
 
 
 class MmarsPaymentDataFactory(BaseFactory):

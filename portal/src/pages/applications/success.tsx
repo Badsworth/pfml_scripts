@@ -17,6 +17,7 @@ import Title from "../../components/core/Title";
 import { Trans } from "react-i18next";
 import UserFeedback from "../../components/UserFeedback";
 import { get } from "lodash";
+import { getMaxBenefitAmount } from "src/utils/getMaxBenefitAmount";
 import routeWithParams from "../../utils/routeWithParams";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
@@ -83,6 +84,8 @@ export const Success = (props: WithBenefitsApplicationProps) => {
     get(claim, "has_previous_leaves_other_reason") !== null ||
     get(claim, "has_concurrent_leave") !== null;
   const showReportReductions = !hasReductionsData;
+
+  const maxBenefitAmount = getMaxBenefitAmount();
 
   return (
     <React.Fragment>
@@ -188,6 +191,7 @@ export const Success = (props: WithBenefitsApplicationProps) => {
 
         <Trans
           i18nKey="pages.claimsSuccess.learnMore"
+          values={{ maxBenefitAmount }}
           components={{
             "benefits-amount-details-link": (
               <a

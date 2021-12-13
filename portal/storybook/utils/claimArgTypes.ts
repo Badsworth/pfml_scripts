@@ -88,6 +88,11 @@ export const claimArgTypes = {
       options: ["Deposit", "Check"],
     },
   },
+  "Withhold taxes": {
+    control: {
+      type: "boolean",
+    },
+  },
 };
 
 export const claimArgs = {
@@ -140,6 +145,12 @@ export function createClaimFromArgs(
     claim = claim.fixedWorkPattern();
   } else {
     claim = claim.variableWorkPattern();
+  }
+
+  if (args["Withhold taxes"] === true) {
+    claim = claim.taxPrefSubmitted(true);
+  } else {
+    claim = claim.taxPrefSubmitted(false);
   }
 
   switch (args["Leave reason"]) {

@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import withEmployerClaim, {
   WithEmployerClaimProps,
 } from "../../../hoc/withEmployerClaim";
+
 import { AbsenceCaseStatus } from "../../../models/Claim";
 import AbsenceCaseStatusTag from "../../../components/AbsenceCaseStatusTag";
 import BackButton from "../../../components/BackButton";
@@ -42,6 +43,12 @@ export const Status = (props: WithEmployerClaimProps) => {
     DocumentType.requestForInfoNotice,
     DocumentType.withdrawalNotice,
     DocumentType.appealAcknowledgment,
+    DocumentType.maximumWeeklyBenefitChangeNotice,
+    DocumentType.benefitAmountChangeNotice,
+    DocumentType.leaveAllotmentChangeNotice,
+    DocumentType.approvedTimeCancelled,
+    DocumentType.changeRequestApproved,
+    DocumentType.changeRequestDenied,
   ]);
 
   return (

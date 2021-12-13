@@ -17,6 +17,11 @@ module.exports = {
     cognitoUserPoolId: "us-east-1_HpL4XslLg",
     cognitoUserPoolWebClientId: "10rjcp71r8bnk4459c67bn18t8",
   },
+  // PFML API Gateway has a 10mb payload size limit, so we shouldn't attempt to send files beyond this.
+  // https://docs.aws.amazon.com/apigateway/latest/developerguide/limits.html#http-api-quotas
+  fileSizeMaxBytesApiGateway: "10000000",
+  // Fineos uploads are Base64-encoded. Their limit is 6mb. 4.5mb is the max size before base64 encoding.
+  fileSizeMaxBytesFineos: "4500000",
   newRelicAppId: null,
   gtmConfig: {
     // Google Tag Manager Stage environment

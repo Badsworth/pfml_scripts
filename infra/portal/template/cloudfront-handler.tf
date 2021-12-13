@@ -1,11 +1,14 @@
 #
 # Lambda@Edge configuration for modifying Cloudfront response headers
+# TODO (PORTAL-1284): Remove these Terraform resources
 #
 
 data "archive_file" "cloudfront_handler" {
   type        = "zip"
-  source_file = "${path.module}/cloudfront-handler.js"
   output_path = "${path.module}/.zip/cloudfront-handler.zip"
+  # Do not delete this .js file as part of PORTAL-1284 since
+  # it's still depended upon by the Cloudfront Function:
+  source_file = "${path.module}/cloudfront-handler.js"
 }
 
 resource "aws_lambda_function" "cloudfront_handler" {

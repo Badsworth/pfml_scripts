@@ -127,7 +127,7 @@ describe("useBenefitsApplicationsLogic", () => {
 
     it("makes API request when claim is loaded but its warnings haven't been stored in warningsLists", async () => {
       await act(async () => {
-        await claimsLogic.loadAll();
+        await claimsLogic.loadPage();
         await claimsLogic.load(applicationId);
       });
 
@@ -187,14 +187,14 @@ describe("useBenefitsApplicationsLogic", () => {
     });
   });
 
-  describe("loadAll", () => {
+  describe("loadPage", () => {
     beforeEach(() => {
       setup();
     });
 
     it("asynchronously fetches all claims and adds to claims collection", async () => {
       await act(async () => {
-        await claimsLogic.loadAll();
+        await claimsLogic.loadPage();
       });
 
       expect(claimsLogic.benefitsApplications.items[0]).toBeInstanceOf(
@@ -205,12 +205,21 @@ describe("useBenefitsApplicationsLogic", () => {
 
     it("only makes api request if all claims have not been loaded", async () => {
       await act(async () => {
-        // load a single application so that the claims collection is not empty
-        await claimsLogic.load(getClaimMockApplicationId);
+        const claim = new BenefitsApplication({
+          application_id: getClaimMockApplicationId,
+        });
+        getClaimsMock.mockImplementationOnce(() => {
+          return {
+            claim,
+            paginationMeta: {
+              page_offset: 1,
+            },
+          };
+        });
         // this should make an API request since ALL claims haven't been loaded yet
-        await claimsLogic.loadAll();
+        await claimsLogic.loadPage();
         // but this shouldn't, since we've already loaded all claims
-        await claimsLogic.loadAll();
+        await claimsLogic.loadPage();
       });
 
       expect(getClaimsMock).toHaveBeenCalledTimes(1);
@@ -224,10 +233,35 @@ describe("useBenefitsApplicationsLogic", () => {
       });
 
       await act(async () => {
-        await claimsLogic.loadAll();
+        await claimsLogic.loadPage();
       });
 
       expect(appErrorsLogic.appErrors.items).toHaveLength(0);
+    });
+
+    it("makes api request when page_offset is changed", async () => {
+      await act(async () => {
+        const claim = new BenefitsApplication({
+          application_id: getClaimMockApplicationId,
+        });
+        getClaimsMock.mockImplementationOnce(() => {
+          return {
+            claim,
+            paginationMeta: {
+              page_offset: 1,
+            },
+          };
+        });
+
+        // makes initial api request
+        await claimsLogic.loadPage();
+        // does not make this call since page_offset is the same
+        await claimsLogic.loadPage();
+        // makes api call due to page_offset changing
+        await claimsLogic.loadPage(2);
+      });
+
+      expect(getClaimsMock).toHaveBeenCalledTimes(2);
     });
 
     describe("when request is unsuccessful", () => {
@@ -235,10 +269,10 @@ describe("useBenefitsApplicationsLogic", () => {
         jest.spyOn(console, "error").mockImplementationOnce(jest.fn());
       });
 
-      it("throws an error if user has not been loaded", async () => {
+      it("does not make API request if user has not been loaded", async () => {
         user = null;
         setup();
-        await expect(claimsLogic.loadAll).rejects.toThrow(/Cannot load claims/);
+        await expect(getClaimsMock).not.toHaveBeenCalled();
       });
 
       it("catches exceptions thrown from the API module", async () => {
@@ -247,7 +281,7 @@ describe("useBenefitsApplicationsLogic", () => {
         });
 
         await act(async () => {
-          await claimsLogic.loadAll();
+          await claimsLogic.loadPage();
         });
 
         expect(appErrorsLogic.appErrors.items[0].name).toEqual(
@@ -351,7 +385,7 @@ describe("useBenefitsApplicationsLogic", () => {
         });
 
         await act(async () => {
-          await claimsLogic.loadAll();
+          await claimsLogic.loadPage();
           await claimsLogic.create();
         });
       });

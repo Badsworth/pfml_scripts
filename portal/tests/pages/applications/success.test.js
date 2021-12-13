@@ -1,7 +1,6 @@
 import { MockBenefitsApplicationBuilder, renderPage } from "../../test-utils";
 import { cleanup, screen } from "@testing-library/react";
 import Success from "../../../src/pages/applications/success";
-import dayjs from "dayjs";
 import { setupBenefitsApplications } from "../../test-utils/helpers";
 
 const setup = ({ claim }) => {
@@ -17,7 +16,16 @@ const setup = ({ claim }) => {
 };
 
 describe("Success", () => {
-  const futureDate = dayjs().add(1, "month").format("YYYY-MM-DD");
+  beforeEach(() => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date(2022, 1, 1));
+  });
+
+  afterAll(() => {
+    jest.useRealTimers();
+  });
+
+  const futureDate = new Date(2022, 3, 1).toISOString();
   /**
    * Output a snapshot for each of these claim variations
    */

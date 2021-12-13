@@ -10,12 +10,16 @@ import Link from "next/link";
 import React from "react";
 import Title from "../../components/core/Title";
 import { Trans } from "react-i18next";
+import { getMaxBenefitAmount } from "src/utils/getMaxBenefitAmount";
+import { isFeatureEnabled } from "../../services/featureFlags";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
 
 export const GetReady = (props: WithBenefitsApplicationsProps) => {
   const { appLogic, claims } = props;
   const { t } = useTranslation();
+  // TODO(Portal-1001): - Remove featureFlag
+  const taxWithholdingEnabled = isFeatureEnabled("claimantShowTaxWithholding");
 
   const hasClaims = !claims.isEmpty;
 
@@ -28,6 +32,8 @@ export const GetReady = (props: WithBenefitsApplicationsProps) => {
     width: 20,
     fill: "currentColor",
   };
+
+  const maxBenefitAmount = getMaxBenefitAmount();
 
   return (
     <React.Fragment>
@@ -147,6 +153,10 @@ export const GetReady = (props: WithBenefitsApplicationsProps) => {
         </Heading>
         <Trans
           i18nKey="pages.getReady.stepThree"
+          tOptions={{
+            context: taxWithholdingEnabled ? "tax" : null,
+          }}
+          values={{ maxBenefitAmount }}
           components={{
             "contact-center-phone-link": (
               <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
@@ -160,6 +170,13 @@ export const GetReady = (props: WithBenefitsApplicationsProps) => {
             ),
             ul: <ul className="usa-list" />,
             li: <li />,
+            "tax-guide-link": (
+              <a
+                href={routes.external.massgov.taxGuide}
+                target="_blank"
+                rel="noopener"
+              />
+            ),
             "tax-liability-link": (
               <a
                 href={routes.external.massgov.taxLiability}

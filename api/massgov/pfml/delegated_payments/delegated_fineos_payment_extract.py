@@ -333,22 +333,19 @@ class PaymentData:
         could potentially fall into multiple payment types.
         https://lwd.atlassian.net/wiki/spaces/API/pages/1336901700/Types+of+Payments
         """
-        # Zero dollar payments overrule all other payment types
-        if self.payment_amount == Decimal("0"):
-            return PaymentTransactionType.ZERO_DOLLAR
-
         # Cancellations
         if self.event_type == CANCELLATION_PAYMENT_TRANSACTION_TYPE:
             return PaymentTransactionType.CANCELLATION
 
-        # FICA
+        # Zero dollar payments overrule all other payment types
+        if self.payment_amount == Decimal("0"):
+            return PaymentTransactionType.ZERO_DOLLAR
+
+        # Tax Withholdings
         if payments_util.is_withholding_payments_enabled():
             logger.info("Tax Withholding ENABLED")
-            if (
-                self.tin
-                == STATE_TAX_WITHHOLDING_TIN
-                #  or self.tin == "FICAMEDICAREPAYEE001"
-            ):
+            # SIT
+            if self.tin == STATE_TAX_WITHHOLDING_TIN:
                 return PaymentTransactionType.STATE_TAX_WITHHOLDING
 
             # FIT
@@ -1119,9 +1116,6 @@ class PaymentExtractStep(Step):
             logger.info("Tax Withholding ENABLED")
             end_state = State.FEDERAL_WITHHOLDING_READY_FOR_PROCESSING
             message = "Federal Withholding payment processed"
-            self._manage_pei_writeback_state(
-                payment, FineosWritebackTransactionStatus.PROCESSED, payment_data
-            )
             self.increment(self.Metrics.FEDERAL_WITHHOLDING_PAYMENT_COUNT)
 
         # set status  STATE_WITHHOLDING_READY_FOR_PROCESSING
@@ -1133,9 +1127,6 @@ class PaymentExtractStep(Step):
             logger.info("Tax Withholding ENABLED")
             end_state = State.STATE_WITHHOLDING_READY_FOR_PROCESSING
             message = "State Withholding payment processed"
-            self._manage_pei_writeback_state(
-                payment, FineosWritebackTransactionStatus.PROCESSED, payment_data
-            )
             self.increment(self.Metrics.STATE_WITHHOLDING_PAYMENT_COUNT)
         else:
             end_state = State.PAYMENT_READY_FOR_ADDRESS_VALIDATION

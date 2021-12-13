@@ -3,6 +3,7 @@ import Status, {
 } from "../../../../src/pages/applications/status/index";
 import { cleanup, render, screen } from "@testing-library/react";
 
+import { AbsencePeriod } from "../../../../src/models/AbsencePeriod";
 import AppErrorInfo from "../../../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../../../src/models/AppErrorInfoCollection";
 import ClaimDetail from "../../../../src/models/ClaimDetail";
@@ -91,12 +92,43 @@ describe("Status", () => {
     process.env.featureFlags = {
       claimantShowPayments: true,
     };
+
     renderPage(
       Status,
       {
         addCustomSetup: setupHelper({
           ...defaultClaimDetail,
           has_paid_payments: true,
+          absence_periods: [
+            {
+              period_type: "Reduced",
+              reason: LeaveReason.bonding,
+              request_decision: "Approved",
+              reason_qualifier_one: "Newborn",
+            },
+          ],
+        }),
+      },
+      props
+    );
+
+    expect(screen.getByRole("link", { name: "Payments" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Application" })
+    ).toBeInTheDocument();
+  });
+
+  it("shows StatusNavigationTabs if claimantShowPaymentsPhaseTwo feature flag is enabled and claim", () => {
+    process.env.featureFlags = {
+      claimantShowPaymentsPhaseTwo: true,
+    };
+
+    renderPage(
+      Status,
+      {
+        addCustomSetup: setupHelper({
+          ...defaultClaimDetail,
+          has_paid_payments: false,
           absence_periods: [
             {
               period_type: "Reduced",
@@ -650,7 +682,11 @@ describe("Status", () => {
 
     it("renders page separated by keys if object of absenceDetails has more keys", () => {
       const { container } = render(
-        <LeaveDetails absenceDetails={CLAIM_DETAIL.absencePeriodsByReason} />
+        <LeaveDetails
+          absenceDetails={AbsencePeriod.groupByReason(
+            CLAIM_DETAIL.absence_periods
+          )}
+        />
       );
 
       expect(container).toMatchSnapshot();
@@ -660,8 +696,9 @@ describe("Status", () => {
       const { container } = render(
         <LeaveDetails
           absenceDetails={{
-            [LeaveReason.medical]:
-              CLAIM_DETAIL.absencePeriodsByReason[LeaveReason.medical],
+            [LeaveReason.medical]: AbsencePeriod.groupByReason(
+              CLAIM_DETAIL.absence_periods
+            )[LeaveReason.medical],
           }}
         />
       );

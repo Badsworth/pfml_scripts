@@ -231,11 +231,11 @@ describe("Checklist", () => {
       ).not.toBeInTheDocument();
       expect(
         screen.getByRole("heading", {
-          name: "Part 2 Tell us how you want to receive your payment",
+          name: "Part 2 Tell us how you want to receive your benefit",
         })
       ).toBeInTheDocument();
       expect(
-        screen.getByRole("heading", { name: "Enter payment information" })
+        screen.getByRole("heading", { name: "Enter payment method" })
       ).toBeInTheDocument();
       expect(
         screen.getByRole("heading", {

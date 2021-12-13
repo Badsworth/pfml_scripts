@@ -117,9 +117,14 @@ class DelegatedPaymentFactory(MockData):
 
         # claim defaults
         self.claim_type = self.get_value("claim_type", ClaimType.FAMILY_LEAVE)
-        self.fineos_absence_id = self.get_value("fineos_absence_id", str(fake.unique.random_int()))
+        self.fineos_absence_id = self.get_value(
+            "fineos_absence_id", f"NTN-{fake.unique.random_int()}-ABS-01"
+        )
         self.is_id_proofed = self.get_value("is_id_proofed", True)
         self.fineos_absence_status_id = self.get_value("fineos_absence_status_id", None)
+        self.absence_period_start_date = self.get_value(
+            "absence_period_start_date", date(2021, 1, 7)
+        )
 
         # payment defaults
         self.payment_optional_kwargs: Dict[str, Any] = (
@@ -237,6 +242,7 @@ class DelegatedPaymentFactory(MockData):
                 is_id_proofed=self.is_id_proofed,
                 employee_id=self.employee.employee_id if self.employee else None,
                 fineos_absence_status_id=self.fineos_absence_status_id,
+                absence_period_start_date=self.absence_period_start_date,
             )
 
         return self.claim
@@ -284,12 +290,22 @@ class DelegatedPaymentFactory(MockData):
         )
         return PaymentFactory.create(**args)
 
+    def _create_state_call(self, payment, payment_end_state):
+        state_log_util.create_finished_state_log(
+            payment,
+            payment_end_state,
+            state_log_util.build_outcome(self.payment_end_state_message),
+            self.db_session,
+        )
+
     def get_or_create_payment(self):
         if self.payment or not self.add_payment:
             return self.payment
 
         self.get_or_create_import_log()
         self.get_or_create_claim()
+
+        self.get_or_create_import_log()
 
         if self.add_address and self.experian_address_pair is None:
             self.experian_address_pair = ExperianAddressPairFactory.create(
@@ -304,12 +320,7 @@ class DelegatedPaymentFactory(MockData):
         self.get_or_create_payment()
 
         if self.payment and payment_end_state:
-            state_log_util.create_finished_state_log(
-                self.payment,
-                payment_end_state,
-                state_log_util.build_outcome(self.payment_end_state_message),
-                self.db_session,
-            )
+            self._create_state_call(self.payment, payment_end_state)
 
         return self.payment
 
@@ -325,7 +336,13 @@ class DelegatedPaymentFactory(MockData):
             return writeback_details
 
     def create_related_payment(
-        self, weeks_later=0, amount=None, payment_transaction_type_id=None, import_log_id=None
+        self,
+        weeks_later=0,
+        amount=None,
+        payment_transaction_type_id=None,
+        import_log_id=None,
+        payment_end_state=None,
+        writeback_transaction_status=None,
     ):
         """ Roughly mimic creating another payment. Uses the original payment as a base
             with only the specified values + C/I values updated.
@@ -347,11 +364,21 @@ class DelegatedPaymentFactory(MockData):
                 else self.payment.fineos_extract_import_log_id,
             }
 
-            return self._payment_factory_call(**params)
+            new_payment = self._payment_factory_call(**params)
+            if payment_end_state:
+                self._create_state_call(new_payment, payment_end_state)
+
+            if writeback_transaction_status:
+                writeback_details = FineosWritebackDetails(
+                    payment=new_payment,
+                    transaction_status_id=writeback_transaction_status.transaction_status_id,
+                )
+                self.db_session.add(writeback_details)
+            return new_payment
 
         return None
 
-    def create_cancellation_payment(self, reissuing_payment=None, import_log=None):
+    def create_cancellation_payment(self, reissuing_payment=None, import_log=None, weeks_later=0):
         self.get_or_create_payment()
 
         payment_to_reissue = reissuing_payment if reissuing_payment is not None else self.payment
@@ -360,12 +387,20 @@ class DelegatedPaymentFactory(MockData):
             import_log = ImportLogFactory.create()
 
         return self.create_related_payment(
+            weeks_later=weeks_later,
             amount=-payment_to_reissue.amount,
             payment_transaction_type_id=PaymentTransactionType.CANCELLATION.payment_transaction_type_id,
             import_log_id=import_log.import_log_id,
         )
 
-    def create_reissued_payments(self, reissuing_payment=None, amount=None, import_log=None):
+    def create_reissued_payments(
+        self,
+        reissuing_payment=None,
+        amount=None,
+        import_log=None,
+        payment_end_state=None,
+        writeback_transaction_status=None,
+    ):
         """ Create reissued equivalent payments.
             This will return a cancellation + new payment both with a new import log ID
         """
@@ -382,6 +417,8 @@ class DelegatedPaymentFactory(MockData):
         successor_payment = self.create_related_payment(
             amount=amount if amount is not None else payment_to_reissue.amount,
             import_log_id=import_log.import_log_id,
+            payment_end_state=payment_end_state,
+            writeback_transaction_status=writeback_transaction_status,
         )
 
         return cancellation_payment, successor_payment

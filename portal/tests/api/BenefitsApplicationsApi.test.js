@@ -115,7 +115,7 @@ describe("BenefitsApplicationsApi", () => {
       it("sends GET request to /applications", async () => {
         await claimsApi.getClaims();
         expect(fetch).toHaveBeenCalledWith(
-          `${process.env.apiUrl}/applications`,
+          `${process.env.apiUrl}/applications?page_offset=1`,
           {
             body: null,
             headers: baseRequestHeaders,

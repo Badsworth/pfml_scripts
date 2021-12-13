@@ -1,49 +1,17 @@
-from typing import Optional
-
 import connexion
-from pydantic import UUID4
 from werkzeug.exceptions import NotFound
 
 import massgov.pfml.api.app as app
 import massgov.pfml.api.util.response as response_util
+import massgov.pfml.util.logging
 from massgov.pfml.api.authorization.flask import EDIT, READ, ensure
+from massgov.pfml.api.models.employees.requests import EmployeeSearchRequest, EmployeeUpdateRequest
+from massgov.pfml.api.models.employees.responses import EmployeeResponse
+from massgov.pfml.api.validation.exceptions import IssueType, ValidationErrorDetail
 from massgov.pfml.db.models.employees import Employee, TaxIdentifier
-from massgov.pfml.util.pydantic import PydanticBaseModel
 from massgov.pfml.util.sqlalchemy import get_or_404
 
-
-class EmployeeUpdateRequest(PydanticBaseModel):
-    first_name: Optional[str]
-    middle_name: Optional[str]
-    last_name: Optional[str]
-    email_address: Optional[str]
-
-
-class EmployeeSearchRequest(PydanticBaseModel):
-    first_name: str
-    middle_name: Optional[str]
-    last_name: str
-    tax_identifier_last4: str
-
-
-class EmployeeResponse(PydanticBaseModel):
-    employee_id: UUID4
-    tax_identifier_last4: Optional[str]
-    first_name: Optional[str]
-    middle_name: Optional[str]
-    last_name: Optional[str]
-    other_name: Optional[str]
-    email_address: Optional[str]
-    phone_number: Optional[str]
-
-    @classmethod
-    def from_orm(cls, employee: Employee) -> "EmployeeResponse":
-        employee_response = super().from_orm(employee)
-
-        if employee.tax_identifier:
-            employee_response.tax_identifier_last4 = employee.tax_identifier.tax_identifier_last4
-
-        return employee_response
+logger = massgov.pfml.util.logging.get_logger(__name__)
 
 
 def employees_get(employee_id):
@@ -93,10 +61,20 @@ def employees_search():
 
         employee = employee_query.first()
 
-    if employee is None:
-        raise NotFound()
+        if employee is None:
+            return response_util.error_response(
+                status_code=NotFound,
+                message="Could not find Employee with the given details",
+                errors=[
+                    ValidationErrorDetail(
+                        message="Could not find Employee with the given details",
+                        type=IssueType.object_not_found,
+                    )
+                ],
+                data={},
+            ).to_api_response()
 
-    ensure(READ, employee)
+        ensure(READ, employee)
 
     return response_util.success_response(
         message="Successfully found employee", data=EmployeeResponse.from_orm(employee).dict(),

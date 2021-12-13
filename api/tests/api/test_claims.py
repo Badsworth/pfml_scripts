@@ -1,4 +1,5 @@
 import copy
+from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from typing import Dict, List, Optional
 from unittest import mock
@@ -31,6 +32,7 @@ from massgov.pfml.db.models.employees import (
     Role,
     State,
     UserLeaveAdministrator,
+    UserLeaveAdministratorOrgUnit,
 )
 from massgov.pfml.db.models.factories import (
     AbsencePeriodFactory,
@@ -39,6 +41,7 @@ from massgov.pfml.db.models.factories import (
     EmployeeFactory,
     EmployerFactory,
     ManagedRequirementFactory,
+    OrganizationUnitFactory,
     TaxIdentifierFactory,
     UserFactory,
     VerificationFactory,
@@ -256,6 +259,17 @@ class TestNotAuthorizedForAccess:
 
 
 # testing class for employer_get_claim_documents
+@dataclass
+class GetClaimDocumentsRequestParams:
+    absence_id: str
+    auth_token: str
+
+
+def get_documents(client, params):
+    return client.get(
+        f"/v1/employers/claims/{params.absence_id}/documents",
+        headers={"Authorization": f"Bearer {params.auth_token}"},
+    )
 
 
 class TestEmployerGetClaimDocuments:
@@ -266,33 +280,47 @@ class TestEmployerGetClaimDocuments:
 
     @pytest.fixture
     def request_params(self, claim, employer_auth_token):
-        class GetClaimDocumentsRequestParams(object):
-            __slots__ = ["absence_id", "auth_token"]
-
-            def __init__(self, absence_id, auth_token):
-                self.absence_id = absence_id
-                self.auth_token = auth_token
-
         return GetClaimDocumentsRequestParams(claim.fineos_absence_id, employer_auth_token)
-
-    def get_documents(self, client, params):
-        return client.get(
-            f"/v1/employers/claims/{params.absence_id}/documents",
-            headers={"Authorization": f"Bearer {params.auth_token}"},
-        )
 
     def test_non_employers_cannot_access(self, client, request_params, auth_token):
         request_params.auth_token = auth_token
 
-        response = self.get_documents(client, request_params)
+        response = get_documents(client, request_params)
         assert response.status_code == 403
 
     def test_employers_receive_200(self, client, request_params):
-        response = self.get_documents(client, request_params)
+        response = get_documents(client, request_params)
         assert response.status_code == 200
 
 
 # testing class for employer_document_download
+@dataclass
+class EmployerDocumentDownloadRequestParams:
+    absence_id: str
+    document_id: str
+    auth_token: str
+
+
+def download_document(client, params):
+    return client.get(
+        f"/v1/employers/claims/{params.absence_id}/documents/{params.document_id}",
+        headers={"Authorization": f"Bearer {params.auth_token}"},
+    )
+
+
+@pytest.fixture
+def document_data():
+    return Base64EncodedFileData(
+        fileName="test.pdf",
+        fileExtension="pdf",
+        base64EncodedFileContents="Zm9v",  # decodes to "foo"
+        contentType="application/pdf",
+        description=None,
+        fileSizeInBytes=0,
+        managedReqId=None,
+    )
+
+
 class TestEmployerDocumentDownload:
     @pytest.fixture(autouse=True)
     def setup_db(self, claim, employer, user_leave_admin, test_db_session):
@@ -300,41 +328,15 @@ class TestEmployerDocumentDownload:
         test_db_session.commit()
 
     @pytest.fixture
-    def document_data(self):
-        return Base64EncodedFileData(
-            fileName="test.pdf",
-            fileExtension="pdf",
-            base64EncodedFileContents="Zm9v",  # decodes to "foo"
-            contentType="application/pdf",
-            description=None,
-            fileSizeInBytes=0,
-            managedReqId=None,
-        )
-
-    @pytest.fixture
     def request_params(self, claim, employer_auth_token):
-        class EmployerDocumentDownloadRequestParams(object):
-            __slots__ = ["absence_id", "document_id", "auth_token"]
-
-            def __init__(self, absence_id, document_id, auth_token):
-                self.absence_id = absence_id
-                self.document_id = document_id
-                self.auth_token = auth_token
-
         return EmployerDocumentDownloadRequestParams(
             claim.fineos_absence_id, "doc_id", employer_auth_token
-        )
-
-    def download_document(self, client, params):
-        return client.get(
-            f"/v1/employers/claims/{params.absence_id}/documents/{params.document_id}",
-            headers={"Authorization": f"Bearer {params.auth_token}"},
         )
 
     def test_non_employers_receive_403(self, client, request_params, auth_token):
         request_params.auth_token = auth_token
 
-        response = self.download_document(client, request_params)
+        response = download_document(client, request_params)
         assert response.status_code == 403
 
         response_json = response.get_json()
@@ -345,7 +347,7 @@ class TestEmployerDocumentDownload:
     def test_employers_receive_200(self, mock_download, document_data, client, request_params):
         mock_download.return_value = document_data
 
-        response = self.download_document(client, request_params)
+        response = download_document(client, request_params)
         assert response.status_code == 200
 
     @mock.patch("massgov.pfml.api.claims.download_document_as_leave_admin")
@@ -356,7 +358,7 @@ class TestEmployerDocumentDownload:
             description="Unable to find FINEOS document for user"
         )
 
-        response = self.download_document(client, request_params)
+        response = download_document(client, request_params)
         assert response.status_code == 404
 
         response_json = response.get_json()
@@ -376,7 +378,7 @@ class TestEmployerDocumentDownload:
             data={"doc_type": "identification proof"},
         )
 
-        response = self.download_document(client, request_params)
+        response = download_document(client, request_params)
         assert response.status_code == 403
 
         response_json = response.get_json()
@@ -1834,8 +1836,18 @@ class TestUpdateClaim:
 def assert_claim_response_equal_to_claim_query(
     claim_response, claim_query, has_paid_payments=False
 ) -> bool:
-    assert claim_response["absence_period_end_date"] == claim_query.absence_period_end_date
-    assert claim_response["absence_period_start_date"] == claim_query.absence_period_start_date
+    if claim_query.absence_period_end_date:
+        assert claim_response[
+            "absence_period_end_date"
+        ] == claim_query.absence_period_end_date.strftime("%Y-%m-%d")
+    else:
+        assert claim_response["absence_period_end_date"] is None
+    if claim_query.absence_period_start_date:
+        assert claim_response[
+            "absence_period_start_date"
+        ] == claim_query.absence_period_start_date.strftime("%Y-%m-%d")
+    else:
+        assert claim_response["absence_period_start_date"] is None
     assert claim_response["fineos_absence_id"] == claim_query.fineos_absence_id
     assert claim_response["fineos_notification_id"] == claim_query.fineos_notification_id
     assert claim_response["employer"]["employer_dba"] == claim_query.employer.employer_dba
@@ -2775,66 +2787,6 @@ class TestGetClaimsEndpoint:
         claim_data = response_body.get("data")
         for i in range(3):
             assert_claim_response_equal_to_claim_query(claim_data[i], generated_claims[2 - i])
-
-    def test_get_claims_with_blocked_fein(
-        self,
-        client,
-        employer_auth_token,
-        employer_user,
-        test_db_session,
-        test_verification,
-        monkeypatch,
-    ):
-        employer = EmployerFactory.create()
-        employee = EmployeeFactory.create()
-
-        for _ in range(5):
-            ClaimFactory.create(
-                employer=employer, employee=employee, fineos_absence_status_id=1, claim_type_id=1,
-            )
-
-        link = UserLeaveAdministrator(
-            user_id=employer_user.user_id,
-            employer_id=employer.employer_id,
-            fineos_web_id="fake-fineos-web-id",
-            verification=test_verification,
-        )
-        test_db_session.add(link)
-
-        other_employer = EmployerFactory.create()
-        other_link = UserLeaveAdministrator(
-            user_id=employer_user.user_id,
-            employer_id=other_employer.employer_id,
-            fineos_web_id="fake-fineos-web-id",
-            verification=test_verification,
-        )
-        test_db_session.add(other_employer)
-        test_db_session.add(other_link)
-
-        for _ in range(5):
-            ClaimFactory.create(
-                employer=other_employer,
-                employee=employee,
-                fineos_absence_status_id=1,
-                claim_type_id=1,
-            )
-
-        test_db_session.commit()
-        monkeypatch.setattr(
-            massgov.pfml.api.claims,
-            "CLAIMS_DASHBOARD_BLOCKED_FEINS",
-            set([employer.employer_fein]),
-        )
-        response = client.get(
-            "/v1/claims", headers={"Authorization": f"Bearer {employer_auth_token}"},
-        )
-
-        assert response.status_code == 200
-        response_body = response.get_json()
-
-        assert len(response_body["data"]) == 5
-        for claim in response_body["data"]:
-            assert claim["employer"]["employer_fein"] == format_fein(other_employer.employer_fein)
 
     def test_get_claims_no_employee(
         self, client, employer_auth_token, employer_user, test_db_session, test_verification
@@ -3917,3 +3869,203 @@ class TestGetClaimsEndpoint:
                 self._assert_400_error_response(response)
                 err_details = response.get_json()["detail"]
                 assert "Invalid claim status" in err_details or "does not match" in err_details
+
+
+class TestEmployerWithOrgUnitsAccess:
+    """
+    This class groups the tests that ensure that the user leave administrators of employers
+    that use organization units can only access claims of an organization unit they service
+    """
+
+    @pytest.fixture()
+    def employer(self):
+        employer = EmployerFactory.create(employer_fein="112222222")
+        return employer
+
+    @pytest.fixture()
+    def user_leave_admin(self, employer_user, employer, test_verification):
+        return UserLeaveAdministrator(
+            user_id=employer_user.user_id,
+            employer_id=employer.employer_id,
+            fineos_web_id="fake-fineos-web-id",
+            verification=test_verification,
+        )
+
+    @pytest.fixture()
+    def non_leave_admin_org_unit(self, employer):
+        organization_unit = OrganizationUnitFactory.create(employer=employer,)
+        return organization_unit
+
+    @pytest.fixture
+    def leave_admin_org_unit(self, test_db_session, employer, user_leave_admin):
+        test_db_session.add(user_leave_admin)
+        test_db_session.commit()
+        org_unit = OrganizationUnitFactory.create(employer=employer,)
+        la_org_unit = UserLeaveAdministratorOrgUnit(
+            user_leave_administrator_id=user_leave_admin.user_leave_administrator_id,
+            organization_unit_id=org_unit.organization_unit_id,
+        )
+        test_db_session.add(la_org_unit)
+        test_db_session.commit()
+        return org_unit
+
+    @pytest.fixture
+    def claim_with_same_org_unit(self, leave_admin_org_unit):
+        claim = ClaimFactory.create(
+            employer_id=leave_admin_org_unit.employer_id, organization_unit=leave_admin_org_unit,
+        )
+        return claim
+
+    @pytest.fixture
+    def claim_with_different_org_unit(self, leave_admin_org_unit, non_leave_admin_org_unit):
+        claim = ClaimFactory.create(
+            employer_id=non_leave_admin_org_unit.employer_id,
+            organization_unit=non_leave_admin_org_unit,
+        )
+        return claim
+
+    def test_employers_cannot_access_claim_without_claims_organization_unit(
+        self, client, employer_auth_token, claim_with_different_org_unit
+    ):
+        response = client.get(
+            f"/v1/employers/claims/{claim_with_different_org_unit.fineos_absence_id}/review",
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+        )
+
+        assert response.status_code == 403
+        assert (
+            response.get_json()["message"]
+            == "The leave admin cannot access claims of this organization unit"
+        )
+
+    def test_employers_can_access_claim_with_claims_organization_unit(
+        self, client, employer_auth_token, claim_with_same_org_unit
+    ):
+        response = client.get(
+            f"/v1/employers/claims/{claim_with_same_org_unit.fineos_absence_id}/review",
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+        )
+
+        assert response.status_code == 200
+
+    def test_employers_cannot_view_claims_not_in_their_organization_units(
+        self, client, employer_auth_token, claim_with_same_org_unit, non_leave_admin_org_unit,
+    ):
+        generated_claims = ClaimFactory.create_batch(
+            size=3,
+            employer=claim_with_same_org_unit.employer,
+            employee=claim_with_same_org_unit.employee,
+            organization_unit=non_leave_admin_org_unit,
+            fineos_absence_status_id=1,
+            claim_type_id=1,
+        )
+
+        response = client.get(
+            "/v1/claims", headers={"Authorization": f"Bearer {employer_auth_token}"},
+        )
+
+        response_body = response.get_json()
+        claim_data = response_body.get("data")
+        assert response.status_code == 200
+        assert len(claim_data) == 1
+        assert claim_data[0].get("fineos_absence_id") not in [
+            c.fineos_absence_id for c in generated_claims
+        ]
+        assert claim_data[0].get("fineos_absence_id") == claim_with_same_org_unit.fineos_absence_id
+
+    def test_employers_can_view_claims_with_their_organization_units(
+        self, client, employer_auth_token, claim_with_same_org_unit,
+    ):
+        generated_claims = [claim_with_same_org_unit]
+        generated_claims.extend(
+            ClaimFactory.create_batch(
+                size=3,
+                employer=claim_with_same_org_unit.employer,
+                employee=claim_with_same_org_unit.employee,
+                organization_unit=claim_with_same_org_unit.organization_unit,
+                fineos_absence_status_id=1,
+                claim_type_id=1,
+            )
+        )
+        response = client.get(
+            "/v1/claims", headers={"Authorization": f"Bearer {employer_auth_token}"},
+        )
+
+        response_body = response.get_json()
+        claim_data = response_body.get("data")
+        assert response.status_code == 200
+        assert len(claim_data) == len(generated_claims)
+
+    def test_employers_cannot_get_documents_without_claims_organization_unit(
+        self, client, employer_auth_token, claim_with_different_org_unit
+    ):
+        request_params = GetClaimDocumentsRequestParams(
+            claim_with_different_org_unit.fineos_absence_id, employer_auth_token
+        )
+        response = get_documents(client, request_params)
+        assert response.status_code == 403
+
+    def test_employers_can_get_documents_with_claims_organization_unit(
+        self, client, employer_auth_token, claim_with_same_org_unit
+    ):
+        request_params = GetClaimDocumentsRequestParams(
+            claim_with_same_org_unit.fineos_absence_id, employer_auth_token
+        )
+        response = get_documents(client, request_params)
+        assert response.status_code == 200
+
+    def test_employers_cannot_download_documents_without_claims_organization_unit(
+        self, client, employer_auth_token, claim_with_different_org_unit
+    ):
+        request_params = EmployerDocumentDownloadRequestParams(
+            claim_with_different_org_unit.fineos_absence_id, "doc_id", employer_auth_token
+        )
+        response = download_document(client, request_params)
+        assert response.status_code == 403
+        assert (
+            response.get_json()["message"]
+            == "The leave admin cannot access claims of this organization unit"
+        )
+
+    @mock.patch("massgov.pfml.api.claims.download_document_as_leave_admin")
+    def test_employers_can_download_documents_with_claims_organization_unit(
+        self, mock_download, document_data, client, employer_auth_token, claim_with_same_org_unit,
+    ):
+        mock_download.return_value = document_data
+        request_params = EmployerDocumentDownloadRequestParams(
+            claim_with_same_org_unit.fineos_absence_id, "doc_id", employer_auth_token
+        )
+        response = download_document(client, request_params)
+        assert response.status_code == 200
+
+    def test_employers_cannot_update_claim_without_claims_organization_unit(
+        self, client, claim_with_different_org_unit, employer_auth_token, update_claim_body,
+    ):
+        response = client.patch(
+            f"/v1/employers/claims/{claim_with_different_org_unit.fineos_absence_id}/review",
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+            json=update_claim_body,
+        )
+        assert response.status_code == 403
+        assert (
+            response.get_json()["message"]
+            == "The leave admin cannot access claims of this organization unit"
+        )
+
+    @mock.patch(
+        "massgov.pfml.api.claims.claim_rules.get_employer_claim_review_issues", return_value=[]
+    )
+    def test_employers_can_update_claim_with_claims_organization_unit(
+        self,
+        mock_get_issues,
+        client,
+        claim_with_same_org_unit,
+        employer_auth_token,
+        update_claim_body,
+    ):
+        response = client.patch(
+            f"/v1/employers/claims/{claim_with_same_org_unit.fineos_absence_id}/review",
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+            json=update_claim_body,
+        )
+        assert response.status_code == 200

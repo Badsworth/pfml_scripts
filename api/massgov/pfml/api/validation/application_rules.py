@@ -8,20 +8,24 @@ from werkzeug.datastructures import Headers
 
 import massgov.pfml.db as db
 import massgov.pfml.util.logging
+from massgov.pfml.api.constants.application import CERTIFICATION_DOC_TYPES, ID_DOC_TYPES
 from massgov.pfml.api.models.applications.common import DurationBasis, FrequencyIntervalBasis
 from massgov.pfml.api.services.applications import (
     ContinuousLeavePeriod,
     IntermittentLeavePeriod,
     ReducedScheduleLeavePeriod,
 )
+from massgov.pfml.api.services.fineos_actions import get_documents
 from massgov.pfml.api.util.deepgetattr import deepgetattr
 from massgov.pfml.api.validation.exceptions import IssueRule, IssueType, ValidationErrorDetail
 from massgov.pfml.db.models.applications import (
     Application,
+    Document,
     EmployerBenefit,
     EmploymentStatus,
     LeaveReason,
     LeaveReasonQualifier,
+    LkDocumentType,
     OtherIncome,
     PreviousLeave,
 )
@@ -50,12 +54,14 @@ def get_application_submit_issues(application: Application) -> List[ValidationEr
 
 
 def get_application_complete_issues(
-    application: Application, headers: Headers
+    application: Application, headers: Headers, db_session: db.Session
 ) -> List[ValidationErrorDetail]:
     """Takes in an application and outputs any validation issues.
         Validates only the data entered post-submit (Parts 2-3) are present, allowing an application to be completed.
     """
     issues = []
+    issues += get_app_complete_payments_issues(application, headers)
+    issues += get_documents_issues(application, db_session)
 
     # Application must have a case in Fineos in order to be completed. This is equivalent to saying
     # that "Part 1" of the application flow in the Portal has been fulfilled. We don't run the
@@ -66,18 +72,6 @@ def get_application_complete_issues(
             ValidationErrorDetail(
                 type=IssueType.object_not_found,
                 message="A case must exist before it can be marked as complete.",
-            )
-        )
-
-    # only verify tax when tax is enabled
-    if headers.get("X-FF-Tax-Withholding-Enabled") and not isinstance(
-        application.is_withholding_tax, bool
-    ):
-        issues.append(
-            ValidationErrorDetail(
-                type=IssueType.required,
-                message="Tax withholding preference is required",
-                field="is_withholding_tax",
             )
         )
     return issues
@@ -1350,3 +1344,85 @@ def validate_application_state(
             extra={"application.application_id": existing_application.application_id},
         )
     return issues
+
+
+def get_app_complete_payments_issues(
+    application: Application, headers: Headers
+) -> List[ValidationErrorDetail]:
+    """Validate payments related selections are complete. Called from application complete endpoint."""
+    issues = []
+
+    if not application.has_submitted_payment_preference:
+        issues.append(
+            ValidationErrorDetail(
+                message="Payment preference is required",
+                type=IssueType.required,
+                field="payment_method",
+            )
+        )
+
+    # only verify tax when tax is enabled
+    if headers.get("X-FF-Tax-Withholding-Enabled") and not isinstance(
+        application.is_withholding_tax, bool
+    ):
+        issues.append(
+            ValidationErrorDetail(
+                type=IssueType.required,
+                message="Tax withholding preference is required",
+                field="is_withholding_tax",
+            )
+        )
+    return issues
+
+
+def get_documents_issues(
+    application: Application, db_session: db.Session
+) -> List[ValidationErrorDetail]:
+    """Validate document selections are complete. Called from application complete endpoint."""
+    issues = []
+
+    has_id_doc = has_type_of_document(ID_DOC_TYPES, db_session, application)
+
+    if not has_id_doc:
+        issues.append(
+            ValidationErrorDetail(
+                type=IssueType.required, message="An identification document is required"
+            )
+        )
+    ## Currently leaving out validation for bonding due to more complex business logic around child start date
+    if application.leave_reason_id == LeaveReason.SERIOUS_HEALTH_CONDITION_EMPLOYEE.leave_reason_id:
+        has_cert_doc = has_type_of_document(CERTIFICATION_DOC_TYPES, db_session, application)
+        if not has_cert_doc:
+            issues.append(
+                ValidationErrorDetail(
+                    type=IssueType.required, message="A certification document is required"
+                )
+            )
+    return issues
+
+
+def has_type_of_document(
+    doc_types: List[LkDocumentType], db_session: db.Session, application: Application
+) -> bool:
+    """Helper to retrieve if an application has a particular type of document associated with it."""
+    doc_type_identifiers = [doc_type.document_type_id for doc_type in doc_types]
+    doc_type_descriptions = [doc_type.document_type_description.lower() for doc_type in doc_types]
+    has_doc = bool(
+        (
+            db_session.query(Document)
+            .filter(
+                Document.application_id == application.application_id,
+                Document.document_type_id.in_(doc_type_identifiers),
+            )
+            .first()
+        )
+    )
+
+    if not has_doc:
+        fineos_documents = get_documents(application, db_session)
+        for doc_response_obj in fineos_documents:
+            if doc_response_obj.document_type:
+                if doc_response_obj.document_type.lower() in doc_type_descriptions:
+                    has_doc = True
+
+    return has_doc
