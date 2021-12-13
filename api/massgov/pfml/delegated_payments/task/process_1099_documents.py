@@ -36,7 +36,7 @@ POPULATE_1099 = "populate-1099"
 GENERATE_1099_DOCUMENTS = "generate-1099-documents"
 UPLOAD_1099_DOCUMENTS = "upload-1099-documents"
 MERGE_1099_DOCUMENTS = "merge-1099-documents"
-GENERATE_1099_IRS_FILING = "generate_1099_irs_filing"
+GENERATE_1099_IRS_FILING = "generate-1099-irs-filing"
 REPORT = "report"
 ALLOWED_VALUES = [
     ALL,
