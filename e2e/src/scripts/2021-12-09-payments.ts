@@ -11,6 +11,7 @@ import DOR from "../generation/writers/DOR";
 import EmployerIndex from "../generation/writers/EmployerIndex";
 import EmployeeIndex from "../generation/writers/EmployeeIndex";
 import path from "path";
+import { collect, map, filter } from "streaming-iterables";
 const pipelineP = promisify(pipeline);
 
 (async () => {
@@ -64,24 +65,41 @@ const pipelineP = promisify(pipeline);
   // Attempt to load a claim pool if one has already been generated and saved.
   // If we error out here, we go into generating and saving the pool.
 
-  await ClaimPool.load(storage.claims, storage.documents).orGenerateAndSave(
-    () =>
-      ClaimPool.merge(
-        ...scenarios.map((scenario) =>
-          ClaimPool.generate(
-            employeePool,
-            scenario.employee,
-            scenario.claim,
-            (scenario.claim.metadata?.quantity as number) * 1.2
-          )
-        ),
+  const claims = await ClaimPool.load(
+    storage.claims,
+    storage.documents
+  ).orGenerateAndSave(() =>
+    ClaimPool.merge(
+      ...scenarios.map((scenario) =>
         ClaimPool.generate(
           employeePool,
-          WITHHOLDING_RETRO.employee,
-          WITHHOLDING_RETRO.claim,
-          30 * 1.2
+          scenario.employee,
+          scenario.claim,
+          (scenario.claim.metadata?.quantity as number) * 1.2
         )
+      ),
+      ClaimPool.generate(
+        employeePool,
+        WITHHOLDING_RETRO.employee,
+        WITHHOLDING_RETRO.claim,
+        30 * 1.2
       )
+    )
+  );
+
+  const usedSSNS = await (
+    await collect(claims)
+  ).reduce((ssns, claim) => {
+    ssns.add(claim.claim.tax_identifier as string);
+    return ssns;
+  }, new Set<string>());
+
+  const freshEmployees = new EmployeePool(
+    await collect(
+      await filter((emp) => {
+        return !usedSSNS.has(emp.ssn);
+      }, employeePool)
+    )
   );
 
   const used = process.memoryUsage().heapUsed / 1024 / 1024;

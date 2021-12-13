@@ -2,14 +2,14 @@ import { parseISO } from "date-fns";
 import { ScenarioSpecification } from "generation/Scenario";
 import * as paymentScenarios from "./payments-2021-04-02";
 
-const startJan = parseISO("2022-01-04");
-const endJan = parseISO("2022-02-18");
+const startJan = parseISO("2021-11-01");
+const endJan = parseISO("2021-12-13");
 
-const startDec = parseISO("2021-12-17");
-const endDec = parseISO("2022-02-11");
+const startDec = parseISO("2021-11-01");
+const endDec = parseISO("2021-12-13");
 
-const startMidJan = parseISO("2022-01-17");
-const endMidJan = parseISO("2022-02-18");
+const startMidJan = parseISO("2021-11-08");
+const endMidJan = parseISO("2021-12-13");
 
 const leavePeriodOpts: [Date, Date][] = [
   [startMidJan, endMidJan],
