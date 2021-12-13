@@ -180,4 +180,4 @@ def _process_1099_documents(
 
     payments_util.create_success_file(start_time, "pub-payments-process-1099-documents")
 
-    logger.info("End - 1099 Documents Extract ECS Task")
+    logger.info("End - 1099 Documents ECS Task")

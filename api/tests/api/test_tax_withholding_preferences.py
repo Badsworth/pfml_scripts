@@ -42,7 +42,7 @@ def test_submit_withholding_preference_success(
     mock_send_tax_preference.assert_called_once_with(application, True)
 
 
-def test_submit_withholding_preference_poorly_formatted(client, application, auth_token):
+def test_submit_withholding_preference_selection_missing(client, application, auth_token):
     response = client.post(
         "/v1/applications/{}/submit_tax_withholding_preference".format(application.application_id),
         headers={"Authorization": "Bearer {}".format(auth_token)},
@@ -51,14 +51,13 @@ def test_submit_withholding_preference_poorly_formatted(client, application, aut
     tests.api.validate_error_response(
         response,
         400,
-        message="Request Validation Error",
+        message="Invalid request",
         errors=[
             {
                 "field": "is_withholding_tax",
-                "message": "None is not of type 'boolean'",
-                "rule": "boolean",
-                "type": "type",
-            },
+                "message": "Tax withholding preference is required",
+                "type": "required",
+            }
         ],
     )
 
@@ -82,6 +81,13 @@ def test_submit_withholding_preference_already_set(
         "Application {} could not be updated. Tax withholding preference already submitted".format(
             application_id
         ),
+        errors=[
+            {
+                "field": "is_withholding_tax",
+                "message": "Tax withholding preference is already submitted",
+                "type": "duplicate",
+            }
+        ],
     )
     assert application.is_withholding_tax is False
     assert mock_info_logger.call_count == 1

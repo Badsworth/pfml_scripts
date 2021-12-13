@@ -93,7 +93,10 @@ const AmendableConcurrentLeave = ({
 
   const ConcurrentLeaveDetailsRow = () => (
     <tr>
-      <th scope="row">
+      <th
+        scope="row"
+        data-label={t("components.employersConcurrentLeave.dateRangeLabel")}
+      >
         {formatDateRange(
           concurrentLeave.leave_start_date,
           concurrentLeave.leave_end_date

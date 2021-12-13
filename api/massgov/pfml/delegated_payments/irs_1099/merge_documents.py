@@ -1,3 +1,5 @@
+import enum
+
 import requests
 
 import massgov.pfml.delegated_payments.irs_1099.pfml_1099_util as pfml_1099_util
@@ -8,6 +10,10 @@ logger = massgov.pfml.util.logging.get_logger(__name__)
 
 
 class Merge1099Step(Step):
+    class Metrics(str, enum.Enum):
+        DOCUMENT_COUNT = "document_count"
+        DOCUMENT_ERROR = "document_errors"
+
     def run_step(self) -> None:
         self.pdfApiEndpoint = pfml_1099_util.get_pdf_api_merge_endpoint()
         self._merge_1099_documents()
@@ -43,8 +49,10 @@ class Merge1099Step(Step):
 
             if response.ok:
                 logger.info(f"Pdfs were successfully merged for batchId: {batchId}")
+                self.increment(self.Metrics.DOCUMENT_COUNT)
             else:
                 logger.error(response.json())
+                self.increment(self.Metrics.DOCUMENT_ERROR)
         except requests.exceptions.RequestException as error:
             logger.error(error)
             raise Exception("Api error to merge Pdf.")

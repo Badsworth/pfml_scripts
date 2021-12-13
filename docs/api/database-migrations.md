@@ -3,6 +3,9 @@
 - [Running migrations](#running-migrations)
 - [Creating new migrations](#creating-new-migrations)
 - [Multi-head situations](#multi-head-situations)
+- [Deployment](#deployment)
+  - [Removing a column](#removing-a-column)
+  - [Removing a table](#removing-a-table)
 
 ## Running migrations
 
@@ -88,3 +91,37 @@ pulling them all together.
 When branched migrations do need to happen in a defined order, then manually
 update the `down_revision` of one that should happen second to reference to the
 migration that should happen first.
+
+## Deployment
+Our deployment is a two-step process:
+
+1. Run database migrations, which will update table schemas.
+2. Update API code.
+
+Since we're updating two independent services, we should consider how code changes across the API and database might cause integration issues during rollout (similar to code changes across the portal and api).
+
+Part of the reason DB migrations run before app deploys (instead of after) is so that additions don’t need to be split out, i.e. migrations that add columns for new features don’t need delayed treatment. A new column can be added to the DB before the app code using it is deployed so they can go out in the same commit/release.
+
+However, if we are removing a column or table from the DB, we need to split this across two deploys. Otherwise, the app is likely to break, since in between steps 1 & 2 above, the app may try to access a table or column that no longer exists in our databse.
+
+### Removing a column
+
+**First Deploy**
+
+In order to remove a column, we'll first need to remove all usage of the column in the API code base. 
+
+However, since the column will still be in the database model, SQLAlchemy will still include it in `SELECT`s and `INSERT`s for the table. We'll need to set this column to `deferred`, in order to exclude it from queries, and to `evaluates_none`, to stop inserting null for it. We have a function `deprecated_column` that handles both of those changes, so we can easily make this change by updating `column_to_remove = Column(...)` to `column_to_remove = deprecated_column(...)`.
+
+**Second Deploy**
+
+Once the column usage removal has been deployed (including deprecating the column in the database model), we can safely remove the column from the database model and the actual database. To do so, simply delete the deprecated column from the database model and create a corresponding database migration.
+
+### Removing a table
+
+**First Deploy**
+
+Removing a table is similar to, but simpler than, removing a column. You'll still start by removing all usage of the table in the API code base. No further steps are required at this point, since SQLAlchemy won't be interacting with the table at this point.
+
+**Second Deploy**
+
+Once the table usage removal has been deployed, we can safely remove the table from the database model and the actual database. Again, simply delete the table from the database model and create a corresponding migration.

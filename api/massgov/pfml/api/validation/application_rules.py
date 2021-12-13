@@ -37,7 +37,7 @@ MAX_MINUTES_IN_WEEK = 10080  # 60 * 24 * 7
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
 
-def get_application_issues(application: Application) -> List[ValidationErrorDetail]:
+def get_application_submit_issues(application: Application) -> List[ValidationErrorDetail]:
     """Takes in application and outputs any validation issues.
     These issues are either fields that are always required for an application or fields that are conditionally required based on previous input.
     """
@@ -53,9 +53,21 @@ def get_application_complete_issues(
     application: Application, headers: Headers
 ) -> List[ValidationErrorDetail]:
     """Takes in an application and outputs any validation issues.
-        Goes beyond get_application_issues to validate fields required only by complete step, usually steps later in the application process.
+        Validates only the data entered post-submit (Parts 2-3) are present, allowing an application to be completed.
     """
-    issues = get_application_issues(application)
+    issues = []
+
+    # Application must have a case in Fineos in order to be completed. This is equivalent to saying
+    # that "Part 1" of the application flow in the Portal has been fulfilled. We don't run the
+    # validations in get_application_submit_issues here, because there are scenarios where new
+    # rules may be introduced, but those rules don't apply if the application was already "submitted".
+    if not application.claim or not application.claim.fineos_absence_id:
+        issues.append(
+            ValidationErrorDetail(
+                type=IssueType.object_not_found,
+                message="A case must exist before it can be marked as complete.",
+            )
+        )
 
     # only verify tax when tax is enabled
     if headers.get("X-FF-Tax-Withholding-Enabled") and not isinstance(

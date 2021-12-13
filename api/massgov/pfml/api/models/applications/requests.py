@@ -14,10 +14,9 @@ from massgov.pfml.api.models.applications.common import (
     Occupation,
     OtherIncome,
     PaymentPreference,
-    Phone,
     WorkPattern,
 )
-from massgov.pfml.api.models.common import ConcurrentLeave, EmployerBenefit, PreviousLeave
+from massgov.pfml.api.models.common import ConcurrentLeave, EmployerBenefit, Phone, PreviousLeave
 from massgov.pfml.api.validation.exceptions import (
     IssueType,
     ValidationErrorDetail,
@@ -224,4 +223,4 @@ class PaymentPreferenceRequestBody(PydanticBaseModel):
 
 
 class TaxWithholdingPreferenceRequestBody(PydanticBaseModel):
-    is_withholding_tax: bool
+    is_withholding_tax: Optional[bool]

@@ -107,6 +107,7 @@ db-migrate-down-all = "massgov.pfml.db.migrations.run:downall"
 db-admin-create-db-users = "massgov.pfml.db.admin:create_users"
 db-check-model-parity = "massgov.pfml.db.migrations.run:check_model_parity"
 db-create-fineos-user = "massgov.pfml.db.create_api_user:create_fineos_user"
+db-create-servicenow-user = "massgov.pfml.db.create_api_user:create_service_now_user"
 dua-generate-and-send-employee-request-file = "massgov.pfml.dua.dua_generate_employee_request_file:main"
 dua-backfill-employee-gender = "massgov.pfml.dua.gender_backfill:main"
 execute-sql = "massgov.pfml.db.execute_sql:execute_sql"
@@ -122,6 +123,7 @@ pub-payments-create-pub-files = "massgov.pfml.delegated_payments.task.process_pu
 pub-payments-process-pub-returns = "massgov.pfml.delegated_payments.task.process_pub_responses:main"
 pub-payments-process-snapshot = "massgov.pfml.delegated_payments.task.process_fineos_reconciliation_extracts:main"
 pub-payments-mock-generate = "massgov.pfml.delegated_payments.mock.mock_generate:main"
+fineos-import-iaww = "massgov.pfml.delegated_payments.task.process_iaww_from_fineos:main"
 ach-reader = "massgov.pfml.delegated_payments.util.ach.ach_tool:ach_reader"
 check-reader = "massgov.pfml.delegated_payments.pub.check_tool:check_reader"
 fineos-daily-generate = "massgov.pfml.fineos.mock.generate:main"
@@ -139,6 +141,7 @@ report-sequential-employment = "massgov.pfml.report.sequential_employment:main"
 update-gender-data-from-rmv = "massgov.pfml.rmv.update_gender_data:main"
 dua-import-employee-demographics = "massgov.pfml.dua.import_employee_demographics:main"
 pub-payments-process-1099-documents = "massgov.pfml.delegated_payments.task.process_1099_documents:main"
+pub-claimant-address-validation = "massgov.pfml.delegated_payments.task.process_claimant_address_validation:main"
 
 [tool.black]
 line-length = 100

@@ -1,17 +1,19 @@
+import enum
 import uuid
-from decimal import Decimal
-from typing import Iterable
+from typing import NamedTuple
 
 import massgov.pfml.delegated_payments.irs_1099.pfml_1099_util as pfml_1099_util
 import massgov.pfml.util.logging
-from massgov.pfml.db.models.payments import FineosExtractEmployeeFeed, Pfml1099, Pfml1099Batch
-from massgov.pfml.delegated_payments.irs_1099.pfml_1099_util import Constants as Constants
+from massgov.pfml.db.models.payments import Pfml1099, Pfml1099Batch
 from massgov.pfml.delegated_payments.step import Step
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
 
 class Populate1099Step(Step):
+    class Metrics(str, enum.Enum):
+        IRS_1099_COUNT = "irs_1099_count"
+
     def run_step(self) -> None:
 
         # Get the current batch
@@ -22,10 +24,10 @@ class Populate1099Step(Step):
             raise Exception("Batch cannot be empty at this point.")
 
         # Get all relevant claimants for the 1099 batch
-        claimants = pfml_1099_util.get_1099_claimants(self.db_session)
+        claimant_results = pfml_1099_util.get_1099s(self.db_session, batch)
 
         try:
-            self._populate_1099(batch, claimants)
+            self._populate_1099(batch, claimant_results)
             self.db_session.commit()
         except Exception:
             self.db_session.rollback()
@@ -38,114 +40,62 @@ class Populate1099Step(Step):
 
         logger.info("Successfully moved claimants to 1099 payments batch.")
 
-    def _populate_1099(
-        self, batch: Pfml1099Batch, claimants: Iterable[FineosExtractEmployeeFeed]
-    ) -> None:
+    def _populate_1099(self, batch: Pfml1099Batch, claimant_results: NamedTuple) -> None:
         logger.info("1099 Documents - Populate 1099 Step")
 
-        # NEED TO REVISIT ADDRESS BEING APPLIED HERE
-        # When the address validation is finalized, this logic should reference the
-        # validated address for the claimant, not the address data on the extract.
+        # Create 1099 records for each claimant
+        for claimant_row in claimant_results:
 
-        # Create 1099 record for each claimant
-        for claimant in claimants:
+            gross_payments = claimant_row.GROSS_PAYMENTS
+            if gross_payments is None:
+                gross_payments = 0
 
-            employee = pfml_1099_util.get_employee(self.db_session, claimant)
+            gross_mmars_payments = claimant_row.GROSS_MMARS_PAYMENTS
+            if gross_mmars_payments is None:
+                gross_mmars_payments = 0
 
-            if (
-                not claimant.address1
-                or not claimant.address4
-                or not claimant.address6
-                or not claimant.postcode
-            ):
-                logger.info("Address is not valid.")
-                continue
+            state_tax_withholdings = claimant_row.STATE_TAX_WITHHOLDINGS
+            if state_tax_withholdings is None:
+                state_tax_withholdings = 0
 
-            address_line_2 = ""
-            if claimant.address2 is not None:
-                address_line_2 = claimant.address2
+            federal_tax_withholdings = claimant_row.FEDERAL_TAX_WITHHOLDINGS
+            if federal_tax_withholdings is None:
+                federal_tax_withholdings = 0
 
-            if employee is not None:
-                payments = pfml_1099_util.get_1099_payments(self.db_session, batch, employee)
+            overpayment_repayments = claimant_row.OVERPAYMENT_REPAYMENTS
+            if overpayment_repayments is None:
+                overpayment_repayments = 0
 
-                if (
-                    not employee.tax_identifier
-                    or not employee.fineos_employee_first_name
-                    or not employee.fineos_employee_last_name
-                ):
-                    logger.error("Invalid employee: %s", employee.employee_id)
-                    continue
+            # TODO: Add other credits to table and form.
+            # Other Credits will not apply in 2021.  PAY-73 is for tracking this work.
+            other_credits = claimant_row.OTHER_CREDITS
+            if other_credits is None:
+                other_credits = 0
 
-                if len(payments) == 0:
-                    logger.debug("No Payments for claimant: %s", employee.employee_id)
-                    continue
+            pfml_1099_payment = Pfml1099(
+                pfml_1099_id=uuid.uuid4(),
+                pfml_1099_batch_id=batch.pfml_1099_batch_id,
+                tax_year=batch.tax_year,
+                employee_id=claimant_row.employee_id,
+                tax_identifier_id=claimant_row.tax_identifier_id,
+                c=claimant_row.c,
+                i=claimant_row.i,
+                first_name=claimant_row.first_name,
+                last_name=claimant_row.last_name,
+                address_line_1=claimant_row.address1,
+                address_line_2=claimant_row.address2,
+                city=claimant_row.address4,
+                state=claimant_row.address6,
+                zip=claimant_row.postcode,
+                gross_payments=gross_payments + gross_mmars_payments,
+                state_tax_withholdings=state_tax_withholdings,
+                federal_tax_withholdings=federal_tax_withholdings,
+                overpayment_repayments=overpayment_repayments,
+                correction_ind=batch.correction_ind,
+            )
 
-                payments_gross = Decimal(sum((payment.payment_amount for payment in payments), 0))
-                logger.debug(
-                    "Payments Gross for %s: %s", employee.employee_id, payments_gross,
-                )
-
-                mmars_payments = pfml_1099_util.get_1099_mmars_payments(
-                    self.db_session, batch, employee
-                )
-                mmars_gross = Decimal(
-                    sum((payment.payment_amount for payment in mmars_payments), 0)
-                )
-                logger.debug(
-                    "MMARS Payments Gross for %s: %s", employee.employee_id, mmars_gross,
-                )
-
-                refunds = pfml_1099_util.get_1099_refunds(self.db_session, batch, employee)
-                refunds_gross = Decimal(sum((refund.refund_amount for refund in refunds), 0))
-                logger.debug(
-                    "Refunds Gross for %s: %s", employee.employee_id, refunds_gross,
-                )
-
-                state_withholdings = pfml_1099_util.get_1099_withholdings(
-                    self.db_session, batch, employee, Constants.STATE_WITHHOLDING_TYPE
-                )
-                state_withholdings_gross = Decimal(
-                    sum((payment.withholding_amount for payment in state_withholdings), 0)
-                )
-                logger.debug(
-                    "State Withholdings Gross for %s: %s",
-                    employee.employee_id,
-                    state_withholdings_gross,
-                )
-
-                federal_withholdings = pfml_1099_util.get_1099_withholdings(
-                    self.db_session, batch, employee, Constants.FEDERAL_WITHHOLDING_TYPE
-                )
-                federal_withholdings_gross = Decimal(
-                    sum(payment.withholding_amount for payment in federal_withholdings)
-                )
-                logger.debug(
-                    "Federal Withholdings Gross for %s: %s",
-                    employee.employee_id,
-                    federal_withholdings_gross,
-                )
-
-                pfml_1099_payment = Pfml1099(
-                    pfml_1099_id=uuid.uuid4(),
-                    pfml_1099_batch_id=batch.pfml_1099_batch_id,
-                    tax_year=batch.tax_year,
-                    employee_id=employee.employee_id,
-                    tax_identifier_id=employee.tax_identifier.tax_identifier_id,
-                    first_name=employee.fineos_employee_first_name,
-                    last_name=employee.fineos_employee_last_name,
-                    address_line_1=claimant.address1,
-                    address_line_2=address_line_2,
-                    city=claimant.address4,
-                    state=claimant.address6,
-                    zip=claimant.postcode,
-                    gross_payments=payments_gross + mmars_gross,
-                    state_tax_withholdings=state_withholdings_gross,
-                    federal_tax_withholdings=federal_withholdings_gross,
-                    overpayment_repayments=refunds_gross,
-                    correction_ind=batch.correction_ind,
-                )
-
-                self.db_session.add(pfml_1099_payment)
-                logger.debug(
-                    "Created 1099.", extra={"pfml_1099_id": pfml_1099_payment.pfml_1099_id},
-                )
+            self.db_session.add(pfml_1099_payment)
+            logger.debug(
+                "Created 1099.", extra={"pfml_1099_id": pfml_1099_payment.pfml_1099_id},
+            )
+            self.increment(self.Metrics.IRS_1099_COUNT)

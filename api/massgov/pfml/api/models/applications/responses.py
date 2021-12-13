@@ -11,14 +11,13 @@ from massgov.pfml.api.models.applications.common import (
     MaskedAddress,
     MaskedApplicationLeaveDetails,
     MaskedPaymentPreference,
-    MaskedPhone,
     Occupation,
     OtherIncome,
     PaymentMethod,
     WorkPattern,
 )
 from massgov.pfml.api.models.claims.common import PreviousLeave
-from massgov.pfml.api.models.common import ConcurrentLeave, EmployerBenefit
+from massgov.pfml.api.models.common import ConcurrentLeave, EmployerBenefit, MaskedPhone
 from massgov.pfml.db.models.applications import Application, ApplicationPaymentPreference, Document
 from massgov.pfml.util.pydantic import PydanticBaseModel
 from massgov.pfml.util.pydantic.types import (

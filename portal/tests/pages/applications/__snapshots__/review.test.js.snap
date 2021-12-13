@@ -603,7 +603,7 @@ exports[`Review Page PreviousLeaveList renders same reason list 1`] = `
 
 exports[`Review Page Work patterns displays correct work pattern details when pattern type is Fixed 1`] = `
 <table
-  class="usa-table usa-table--borderless c-table"
+  class="usa-table usa-table--borderless"
 >
   <thead>
     <tr>
@@ -915,7 +915,7 @@ exports[`Review Page renders Review page with Part 1 content and edit links when
           Weekly work hours
         </h4>
         <table
-          class="usa-table usa-table--borderless c-table"
+          class="usa-table usa-table--borderless"
         >
           <thead>
             <tr>
@@ -1977,7 +1977,7 @@ exports[`Review Page renders WeeklyTimeTable for the reduced leave period when w
     Hours off per week
   </h4>
   <table
-    class="usa-table usa-table--borderless c-table margin-bottom-0"
+    class="usa-table usa-table--borderless margin-bottom-0"
   >
     <thead>
       <tr>

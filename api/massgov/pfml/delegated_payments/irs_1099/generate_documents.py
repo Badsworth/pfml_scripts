@@ -1,3 +1,5 @@
+import enum
+
 import requests
 
 import massgov.pfml.delegated_payments.irs_1099.pfml_1099_util as pfml_1099_util
@@ -9,6 +11,10 @@ logger = massgov.pfml.util.logging.get_logger(__name__)
 
 
 class Generate1099DocumentsStep(Step):
+    class Metrics(str, enum.Enum):
+        DOCUMENT_COUNT = "document_count"
+        DOCUMENT_ERROR = "document_errors"
+
     def run_step(self) -> None:
         self.pdfApiEndpoint = pfml_1099_util.get_pdf_api_generate_endpoint()
         self._generate_1099_documents()
@@ -20,8 +26,21 @@ class Generate1099DocumentsStep(Step):
             logger.info("Generate 1099 Pdf flag is enabled")
             records = self.get_records()
 
-            for record in records:
-                self.generate_document(record, self.pdfApiEndpoint)
+            if len(records) > 0:
+                max_records_in_subbatch = 250
+                con_subbatch = 1
+                con = 1
+
+                for i in range(len(records)):
+                    self.generate_document(
+                        records[i], f"Sub-batch-{con_subbatch}", self.pdfApiEndpoint
+                    )
+                    con += 1
+
+                    if con > max_records_in_subbatch:
+                        con = 1
+                        con_subbatch += 1
+
         else:
             logger.info("Generate 1099 Pdf flag is not enabled")
 
@@ -36,7 +55,7 @@ class Generate1099DocumentsStep(Step):
             self.db_session, batchId=str(batch.pfml_1099_batch_id)
         )
 
-    def generate_document(self, record: Pfml1099, url: str) -> None:
+    def generate_document(self, record: Pfml1099, sub_bacth: str, url: str) -> None:
 
         try:
             documentDto = {
@@ -49,7 +68,7 @@ class Generate1099DocumentsStep(Step):
                 "federalTaxesWithheld": str(record.federal_tax_withholdings),
                 "stateTaxesWithheld": str(record.state_tax_withholdings),
                 "repayments": str(record.overpayment_repayments),
-                "name": f"{record.first_name} {record.last_name}",
+                "name": f"{sub_bacth}/{record.first_name} {record.last_name}",
                 "address": record.address_line_1,
                 "city": record.city,
                 "state": record.state,
@@ -67,8 +86,10 @@ class Generate1099DocumentsStep(Step):
                 logger.info(
                     f"Pdf was successfully generated for {record.first_name} {record.last_name}"
                 )
+                self.increment(self.Metrics.DOCUMENT_COUNT)
             else:
                 logger.error(response.json())
+                self.increment(self.Metrics.DOCUMENT_ERROR)
         except requests.exceptions.RequestException as error:
             logger.error(error)
             raise Exception("Api error to generate Pdf.")

@@ -66,6 +66,44 @@ describe("PaymentMethod", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("renders a warning when a routing-like account number is entered", () => {
+    setup();
+
+    userEvent.click(
+      screen.getByRole("radio", {
+        name: /Direct deposit into my bank account/i,
+      })
+    );
+    expect(
+      screen.queryByText(
+        /Your account number looks similar to a routing number/
+      )
+    ).not.toBeInTheDocument();
+
+    userEvent.type(
+      screen.getByRole("textbox", { name: /Account number/i }),
+      "121000358"
+    );
+    expect(
+      screen.getByText(/Your account number looks similar to a routing number/)
+    ).toBeInTheDocument();
+
+    userEvent.type(
+      screen.getByRole("textbox", { name: /Account number/i }),
+      "987654321" // typical account number
+    );
+    userEvent.click(
+      screen.getByRole("radio", {
+        name: /Checking/i,
+      })
+    );
+    expect(
+      screen.queryByText(
+        /Your account number looks similar to a routing number/
+      )
+    ).not.toBeInTheDocument();
+  });
+
   it("submits direct deposit answers", async () => {
     const { submitPaymentPreferenceSpy } = setup();
     const account_number = "987654321";

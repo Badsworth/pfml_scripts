@@ -6,6 +6,7 @@ import { cloneDeep, get, pick, set } from "lodash";
 import withBenefitsApplication, {
   WithBenefitsApplicationProps,
 } from "../../hoc/withBenefitsApplication";
+import Alert from "../../components/core/Alert";
 import ConditionalContent from "../../components/ConditionalContent";
 import Details from "../../components/core/Details";
 import Fieldset from "../../components/core/Fieldset";
@@ -17,7 +18,9 @@ import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import { Trans } from "react-i18next";
 import { isFeatureEnabled } from "../../services/featureFlags";
+import { isPotentialRoutingNumber } from "../../utils/isPotentialRoutingNumber";
 import routes from "../../routes";
+import tracker from "src/services/tracker";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
@@ -43,6 +46,8 @@ export const PaymentMethod = (props: WithBenefitsApplicationProps) => {
   const { formState, getField, updateFields, clearField } = useFormState(
     pick(props, fields).claim
   );
+  const [displayAccountNumWarning, setDisplayAccountNumWarning] =
+    React.useState(false);
 
   const bank_account_type = get(formState, bankAccountTypeField);
   const payment_method = get(formState, paymentMethodField);
@@ -65,6 +70,28 @@ export const PaymentMethod = (props: WithBenefitsApplicationProps) => {
     formState,
     updateFields,
   });
+
+  /**
+   * Previously we received a lot of account numbers that were invalid bc they were actually routing numbers.
+   * So, here we are checking for that to guide the user.
+   */
+  const validateAccountNumber = React.useCallback((accountNum) => {
+    const potientialRouting = isPotentialRoutingNumber(accountNum);
+    setDisplayAccountNumWarning(potientialRouting);
+    if (potientialRouting === true) {
+      tracker.trackEvent(
+        "Claimant potentially entered a routing number in place of account number."
+      );
+    }
+  }, []);
+
+  const handleAccountNumberChange = (
+    evt: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const { onChange } = getFunctionalInputProps(accountNumberField);
+    onChange(evt);
+    validateAccountNumber(evt.target.value);
+  };
 
   return (
     <QuestionPage
@@ -140,9 +167,14 @@ export const PaymentMethod = (props: WithBenefitsApplicationProps) => {
             label={t("pages.claimsPaymentMethod.accountNumberLabel")}
             inputMode="numeric"
             smallLabel
+            onChange={handleAccountNumberChange}
             pii
           />
-
+          <ConditionalContent visible={displayAccountNumWarning}>
+            <Alert state="warning" autoWidth>
+              {t("pages.claimsPaymentMethod.accountNumberWarning")}
+            </Alert>
+          </ConditionalContent>
           <InputChoiceGroup
             {...getFunctionalInputProps("payment_preference.bank_account_type")}
             choices={[

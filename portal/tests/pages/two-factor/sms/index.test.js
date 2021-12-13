@@ -1,5 +1,5 @@
 import { mockAuth, renderPage } from "../../../test-utils";
-import SetupSMS from "../../../../src/pages/two-factor/sms/index";
+import IndexSMS from "../../../../src/pages/two-factor/sms/index";
 import { screen } from "@testing-library/react";
 
 beforeEach(() => {
@@ -7,15 +7,15 @@ beforeEach(() => {
   process.env.featureFlags = { claimantShowMFA: true };
 });
 
-describe("Two-factor SMS Setup", () => {
+describe("Two-factor SMS Index", () => {
   it("renders landing page content", () => {
-    const { container } = renderPage(SetupSMS);
+    const { container } = renderPage(IndexSMS);
     expect(container.firstChild).toMatchSnapshot();
   });
 
   it("renders PageNotFound if the claimantShowMFA feature flag is not set", () => {
     process.env.featureFlags = { claimantShowMFA: false };
-    renderPage(SetupSMS);
+    renderPage(IndexSMS);
 
     const pageNotFoundHeading = screen.getByRole("heading", {
       name: /Page not found/,

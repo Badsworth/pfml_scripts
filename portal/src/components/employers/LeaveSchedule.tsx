@@ -1,5 +1,4 @@
 import EmployerClaim from "../../models/EmployerClaim";
-import IntermittentLeaveSchedule from "./IntermittentLeaveSchedule";
 import React from "react";
 import ReviewHeading from "../ReviewHeading";
 import Table from "../core/Table";
@@ -26,6 +25,11 @@ const LeaveSchedule = ({ hasDocuments, claim }: LeaveScheduleProps) => {
     if (!isIntermittent && hasDocuments) return "documents";
   };
 
+  const tableHeadings = [
+    t("components.employersLeaveSchedule.dateRangeLabel"),
+    t("components.employersLeaveSchedule.leaveFrequencyLabel"),
+  ];
+
   return (
     <React.Fragment>
       <ReviewHeading level="2">
@@ -39,24 +43,20 @@ const LeaveSchedule = ({ hasDocuments, claim }: LeaveScheduleProps) => {
           }}
         />
       </p>
-      <Table className="width-full">
+      <Table className="width-full" responsive>
         <thead>
           <tr>
-            <th scope="col">
-              {t("components.employersLeaveSchedule.dateRangeLabel")}
-            </th>
-            <th scope="col">
-              {t("components.employersLeaveSchedule.leaveFrequencyLabel")}
-            </th>
-            <th scope="col">
-              {t("components.employersLeaveSchedule.detailsLabel")}
-            </th>
+            {tableHeadings.map((heading) => (
+              <th key={heading} scope="col">
+                {heading}
+              </th>
+            ))}
           </tr>
         </thead>
         <tbody>
           {isContinuous && (
             <tr>
-              <th scope="row">
+              <th scope="row" data-label={tableHeadings[0]}>
                 {formatDateRange(
                   get(
                     claim,
@@ -68,17 +68,16 @@ const LeaveSchedule = ({ hasDocuments, claim }: LeaveScheduleProps) => {
                   )
                 )}
               </th>
-              <td>
+              <td data-label={tableHeadings[1]}>
                 {t(
                   "components.employersLeaveSchedule.claimDurationType_continuous"
                 )}
               </td>
-              <td></td>
             </tr>
           )}
           {isReducedSchedule && (
             <tr>
-              <th scope="row">
+              <th scope="row" data-label={tableHeadings[0]}>
                 {formatDateRange(
                   get(
                     claim,
@@ -90,33 +89,27 @@ const LeaveSchedule = ({ hasDocuments, claim }: LeaveScheduleProps) => {
                   )
                 )}
               </th>
-              <td>
+              <td data-label={tableHeadings[1]}>
                 {t(
                   "components.employersLeaveSchedule.claimDurationType_reducedSchedule"
                 )}
               </td>
-              <td>
-                <Trans
-                  i18nKey="components.employersLeaveSchedule.lead"
-                  components={{
-                    "contact-center-phone-link": (
-                      <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
-                    ),
-                  }}
-                  tOptions={{
-                    context: hasDocuments ? "hasDocs" : "noDocs",
-                  }}
-                />
-              </td>
             </tr>
           )}
           {isIntermittent && (
-            <IntermittentLeaveSchedule
-              hasDocuments={hasDocuments}
-              intermittentLeavePeriods={
-                claim.leave_details.intermittent_leave_periods
-              }
-            />
+            <tr>
+              <th scope="row" data-label={tableHeadings[0]}>
+                {formatDateRange(
+                  claim.leave_details.intermittent_leave_periods[0].start_date,
+                  claim.leave_details.intermittent_leave_periods[0].end_date
+                )}
+              </th>
+              <td data-label={tableHeadings[1]}>
+                {t(
+                  "components.employersLeaveSchedule.claimDurationType_intermittent"
+                )}
+              </td>
+            </tr>
           )}
         </tbody>
       </Table>

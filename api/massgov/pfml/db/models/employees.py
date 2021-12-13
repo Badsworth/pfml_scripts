@@ -799,14 +799,21 @@ class Claim(Base, TimestampMixin):
 
 class BenefitYear(Base, TimestampMixin):
     __tablename__ = "benefit_year"
+
     benefit_year_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+
     employee_id = Column(
         PostgreSQLUUID, ForeignKey("employee.employee_id"), nullable=False, index=True
     )
-    employee = relationship("Employee", back_populates="benefit_years")
+
+    employee = cast(Optional["Employee"], relationship("Employee", back_populates="benefit_years"))
+
     start_date = Column(Date, nullable=False)
+
     end_date = Column(Date, nullable=False)
+
     total_wages = Column(Numeric(asdecimal=True))
+
     contributions = cast(
         List["BenefitYearContribution"],
         relationship("BenefitYearContribution", cascade="all, delete-orphan"),
@@ -2697,6 +2704,18 @@ class State(LookupTable):
         200, "Payment failed max weekly benefit amount validation", Flow.DELEGATED_PAYMENT.flow_id,
     )
 
+    STATE_WITHHOLDING_ADD_TO_PAYMENT_REJECT_REPORT_RESTARTABLE = LkState(
+        201,
+        "Add State Withholding to Payment Reject Report - RESTARTABLE",
+        Flow.DELEGATED_PAYMENT.flow_id,
+    )
+
+    FEDERAL_WITHHOLDING_ADD_TO_PAYMENT_REJECT_REPORT_RESTARTABLE = LkState(
+        202,
+        "Add Federal Withholding to Payment Reject Report - RESTARTABLE",
+        Flow.DELEGATED_PAYMENT.flow_id,
+    )
+
 
 class SharedPaymentConstants:
     """
@@ -2736,6 +2755,8 @@ class PaymentTransactionType(LookupTable):
     OVERPAYMENT_RECOVERY_CANCELLATION = LkPaymentTransactionType(
         11, "Overpayment Recovery Cancellation"
     )
+    FEDERAL_TAX_WITHHOLDING = LkPaymentTransactionType(12, "Federal Tax Withholding")
+    STATE_TAX_WITHHOLDING = LkPaymentTransactionType(13, "State Tax Withholding")
 
 
 class PaymentCheckStatus(LookupTable):
@@ -2791,7 +2812,6 @@ class ReferenceFileType(LookupTable):
     DIA_CONSOLIDATED_REDUCTION_REPORT_ERRORS = LkReferenceFileType(
         30, "Consolidated DIA payments for DFML reduction report", 1
     )
-
     FINEOS_PAYMENT_RECONCILIATION_EXTRACT = LkReferenceFileType(
         31, "Payment reconciliation extract", 3
     )
@@ -2801,6 +2821,13 @@ class ReferenceFileType(LookupTable):
     DUA_DEMOGRAPHICS_REQUEST_FILE = LkReferenceFileType(33, "DUA demographics request", 1)
 
     IRS_1099_ORIG = LkReferenceFileType(34, "IRS 1099 org file", 1)
+
+    FINEOS_IAWW_EXTRACT = LkReferenceFileType(35, "IAWW extract", 2)
+
+    # Claimant Address Report
+    CLAIMANT_ADDRESS_VALIDATION_REPORT = LkReferenceFileType(
+        35, "Claimant Address validation Report", 1
+    )
 
 
 class Title(LookupTable):

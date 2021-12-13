@@ -1,5 +1,6 @@
 # Tools
 
+<<<<<<< HEAD
 ### [AWS Console](aws-console/README.md)
 ### [AWS Workspace](aws-workspace/README.md)
 ### [Authentication Tools](authentication-tools/README.md)
@@ -8,6 +9,9 @@
 ### [PGAdmin](pgadmin/README.md)
 ### [Storybook](storybook/README.md)
 ### [Swagger](swagger/README.md)
+=======
+### [git](git/README.md)
+>>>>>>> chrisashton/SOTSCM-33
 
 ---
 ## Notes for Contributing

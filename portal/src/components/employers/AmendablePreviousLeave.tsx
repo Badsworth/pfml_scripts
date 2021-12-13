@@ -110,13 +110,16 @@ const AmendablePreviousLeave = ({
 
   const LeaveDetailsRow = () => (
     <tr>
-      <th scope="row">
+      <th
+        scope="row"
+        data-label={t("components.employersPreviousLeaves.dateRangeLabel")}
+      >
         {formatDateRange(
           previousLeave.leave_start_date,
           previousLeave.leave_end_date
         )}
       </th>
-      <td>
+      <td data-label={t("components.employersPreviousLeaves.leaveTypeLabel")}>
         {t("components.employersAmendablePreviousLeave.leaveReasonValue", {
           context: findKeyByValue(
             PreviousLeaveReason,
