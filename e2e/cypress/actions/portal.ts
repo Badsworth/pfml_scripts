@@ -1974,7 +1974,9 @@ export function sortClaims(
 export function claimantGoToClaimStatus(fineosAbsenceId: string): void {
   cy.wait("@getApplications").wait(300);
   cy.contains("article", fineosAbsenceId).within(() => {
-    cy.contains("View status updates and details", { timeout: 20000 }).click();
+    cy.contains("View status updates and details", { timeout: 20000 }).click({
+      timeout: 20000,
+    });
     cy.url()
       .should("include", "/applications/status/")
       .and("include", `${fineosAbsenceId}`);
