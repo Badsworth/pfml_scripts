@@ -139,7 +139,7 @@ exports[`ComponentWithUser shows mfa configuration when MFA is enabled 1`] = `
         >
           Phone number
         </h3>
-        555-111-****
+        ***-***-1234
       </div>
       <a
         aria-label="undefined: Phone number"

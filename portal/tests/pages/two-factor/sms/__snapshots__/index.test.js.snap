@@ -3,7 +3,6 @@
 exports[`Two-factor SMS Index renders landing page content 1`] = `
 <form
   class="usa-form"
-  method="post"
 >
   <fieldset
     class="usa-fieldset margin-top-3 usa-form-group"

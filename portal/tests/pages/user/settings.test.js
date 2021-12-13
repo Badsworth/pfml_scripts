@@ -28,7 +28,11 @@ describe(Settings, () => {
       addCustomSetup: (appLogic) => {
         appLogic.users.user = new User({
           mfa_delivery_preference: "SMS",
-          mfa_phone_number: "555-111-****",
+          mfa_phone_number: {
+            int_code: "1",
+            phone_type: "Cell",
+            phone_number: "***-***-1234",
+          },
           email_address: "mock@gmail.com",
           consented_to_data_sharing: true,
         });

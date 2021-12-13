@@ -387,7 +387,7 @@ class OrganizationUnitFactory(BaseFactory):
 
     organization_unit_id = Generators.UuidObj
 
-    fineos_id = None
+    fineos_id = factory.Faker("numerify", text="PE:#####:##########")
     name = factory.Faker("company")
     employer = factory.SubFactory(EmployerFactory)
     employer_id = factory.LazyAttribute(lambda c: c.employer.employer_id)

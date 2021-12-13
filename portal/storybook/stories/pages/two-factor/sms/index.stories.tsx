@@ -1,5 +1,6 @@
 import { IndexSMS } from "src/pages/two-factor/sms/index";
 import React from "react";
+import User from "src/models/User";
 import useMockableAppLogic from "lib/mock-helpers/useMockableAppLogic";
 
 export default {
@@ -9,5 +10,5 @@ export default {
 
 export const Page = () => {
   const appLogic = useMockableAppLogic();
-  return <IndexSMS appLogic={appLogic} />;
+  return <IndexSMS appLogic={appLogic} user={new User({})} />;
 };

@@ -1,4 +1,5 @@
 import routes, { isApplicationsRoute, isEmployersRoute } from "../routes";
+import { setMFAPreference, updateMFAPhoneNumber } from "src/services/mfa";
 import { useMemo, useState } from "react";
 import { AppErrorsLogic } from "./useAppErrorsLogic";
 import BenefitsApplication from "../models/BenefitsApplication";
@@ -33,6 +34,26 @@ const useUsersLogic = ({
     claim?: BenefitsApplication
   ) => {
     appErrorsLogic.clearErrors();
+
+    const { mfa_delivery_preference, mfa_phone_number } = patchData;
+
+    if (mfa_delivery_preference) {
+      try {
+        await setMFAPreference(mfa_delivery_preference);
+      } catch (error) {
+        appErrorsLogic.catchError(error);
+        return;
+      }
+    }
+
+    if (mfa_phone_number?.phone_number) {
+      try {
+        await updateMFAPhoneNumber(mfa_phone_number.phone_number);
+      } catch (error) {
+        appErrorsLogic.catchError(error);
+        return;
+      }
+    }
 
     try {
       const { user } = await usersApi.updateUser(user_id, patchData);

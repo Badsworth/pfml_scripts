@@ -422,7 +422,7 @@ class Employer(Base, TimestampMixin):
 
     @property
     def uses_organization_units(self):
-        return any(self.organization_units)
+        return any([unit for unit in self.organization_units if unit.fineos_id is not None])
 
     @typed_hybrid_property
     def has_verification_data(self) -> bool:
