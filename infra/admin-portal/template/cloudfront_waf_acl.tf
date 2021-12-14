@@ -22,7 +22,7 @@ resource "aws_wafv2_web_acl" "cloudfront_waf_acl" {
   #                        Rate-limiting AWS WAF rule                            #
   #------------------------------------------------------------------------------#
   rule {
-    name     = "mass-${local.app_name}-${var.environment_name}-rate-based-acl"
+    name     = "mass-${local.app_name}-${var.environment_name}-rate-based-rule"
     priority = 0
 
     dynamic "action" {
@@ -57,7 +57,7 @@ resource "aws_wafv2_web_acl" "cloudfront_waf_acl" {
   #                        IP Whitelist AWS WAF rule                            #
   #------------------------------------------------------------------------------#
   rule {
-    name     = "mass-${local.app_name}-${var.environment_name}-ip-whitelist-acl"
+    name     = "mass-${local.app_name}-${var.environment_name}-ip-whitelist-rule"
     priority = 1
 
     statement {
@@ -115,6 +115,42 @@ resource "aws_wafv2_web_acl" "cloudfront_waf_acl" {
     visibility_config {
       cloudwatch_metrics_enabled = true
       metric_name                = "mass-${local.app_name}-${var.environment_name}-fortinet-rule-group"
+      sampled_requests_enabled   = true
+    }
+  }
+
+  #--------------------------------------------------------------------------#
+  #                        log4j-ZDE AWS WAF rule                            #
+  #--------------------------------------------------------------------------#
+
+  rule {
+    name     = "mass-pfml-${var.environment_name}-log4j-ZDE-rules"
+    priority = 3
+
+    override_action {
+      none {}
+    }
+
+    statement {
+      managed_rule_group_statement {
+        name        = "AWSManagedRulesKnownBadInputsRuleSet"
+        vendor_name = "AWS"
+
+        excluded_rule {
+          name = "Host_localhost_HEADER"
+        }
+        excluded_rule {
+          name = "PROPFIND_METHOD"
+        }
+        excluded_rule {
+          name = "ExploitablePaths_URIPATH"
+        }
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = true
+      metric_name                = "log4j-ZDE"
       sampled_requests_enabled   = true
     }
   }
