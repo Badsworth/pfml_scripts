@@ -8,7 +8,6 @@ import PaginationMeta from "../models/PaginationMeta";
 import PaymentPreference from "../models/PaymentPreference";
 import { PortalFlow } from "./usePortalFlow";
 import TaxWithholdingPreference from "../models/TaxWithholdingPreference";
-import User from "../models/User";
 import getRelevantIssues from "../utils/getRelevantIssues";
 import routes from "../routes";
 import useCollectionState from "./useCollectionState";
@@ -17,11 +16,9 @@ import { useState } from "react";
 const useBenefitsApplicationsLogic = ({
   appErrorsLogic,
   portalFlow,
-  user,
 }: {
   appErrorsLogic: AppErrorsLogic;
   portalFlow: PortalFlow;
-  user?: User;
 }) => {
   // State representing the collection of applications for the current user.
   // Initialize to empty collection, but will eventually store the applications
@@ -78,8 +75,6 @@ const useBenefitsApplicationsLogic = ({
    * Load a single claim
    */
   const load = async (application_id: string) => {
-    if (!user) throw new Error("Cannot load claim before user is loaded");
-
     // Skip API request if we already have the claim AND its validation warnings.
     // It's important we load the claim if warnings haven't been fetched yet,
     // since the Checklist needs those to be present in order to accurately
@@ -115,8 +110,6 @@ const useBenefitsApplicationsLogic = ({
    * @param [pageOffset] - Page number to load
    */
   const loadPage = async (pageOffset: number | string = 1) => {
-    if (!user) return;
-
     if (isLoadingClaims) return;
     if (paginationMeta.page_offset === Number(pageOffset)) return;
 
@@ -145,7 +138,6 @@ const useBenefitsApplicationsLogic = ({
     application_id: string,
     patchData: Partial<BenefitsApplication>
   ) => {
-    if (!user) return;
     appErrorsLogic.clearErrors();
 
     try {
@@ -180,14 +172,13 @@ const useBenefitsApplicationsLogic = ({
    * Complete the claim in the API
    */
   const complete = async (application_id: string) => {
-    if (!user) return;
     appErrorsLogic.clearErrors();
 
     try {
       const { claim } = await applicationsApi.completeClaim(application_id);
 
       setBenefitsApplication(claim);
-      const context = { claim, user };
+      const context = { claim };
       const params = { claim_id: claim.application_id };
       portalFlow.goToNextPage(context, params);
     } catch (error) {
@@ -199,7 +190,6 @@ const useBenefitsApplicationsLogic = ({
    * Create the claim in the API. Handles errors and routing.
    */
   const create = async () => {
-    if (!user) return;
     appErrorsLogic.clearErrors();
 
     try {
@@ -207,7 +197,7 @@ const useBenefitsApplicationsLogic = ({
 
       addBenefitsApplication(claim);
 
-      const context = { claim, user };
+      const context = { claim };
       const params = { claim_id: claim.application_id };
       portalFlow.goToPageFor("CREATE_CLAIM", context, params);
     } catch (error) {
@@ -219,7 +209,6 @@ const useBenefitsApplicationsLogic = ({
    * Submit the claim in the API and set application errors if any
    */
   const submit = async (application_id: string) => {
-    if (!user) return;
     appErrorsLogic.clearErrors();
 
     try {
@@ -227,7 +216,7 @@ const useBenefitsApplicationsLogic = ({
 
       setBenefitsApplication(claim);
 
-      const context = { claim, user };
+      const context = { claim };
       const params = {
         claim_id: claim.application_id,
         "part-one-submitted": "true",
@@ -242,7 +231,6 @@ const useBenefitsApplicationsLogic = ({
     application_id: string,
     paymentPreferenceData: Partial<PaymentPreference>
   ) => {
-    if (!user) return;
     appErrorsLogic.clearErrors();
 
     try {
@@ -261,7 +249,7 @@ const useBenefitsApplicationsLogic = ({
         throw new ValidationError(issues, applicationsApi.i18nPrefix);
       }
 
-      const context = { claim, user };
+      const context = { claim };
       const params: NullableQueryParams = {
         claim_id: claim.application_id,
         "payment-pref-submitted": "true",
@@ -277,7 +265,6 @@ const useBenefitsApplicationsLogic = ({
     application_id: string,
     data: TaxWithholdingPreference
   ) => {
-    if (!user) return;
     appErrorsLogic.clearErrors();
 
     try {
@@ -295,7 +282,7 @@ const useBenefitsApplicationsLogic = ({
         throw new ValidationError(issues, applicationsApi.i18nPrefix);
       }
 
-      const context = { claim, user };
+      const context = { claim };
       const params: NullableQueryParams = {
         claim_id: claim.application_id,
         "tax-pref-submitted": "true",
