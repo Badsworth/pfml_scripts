@@ -53,7 +53,6 @@ export const Status = ({
     documents: {
       documents: allClaimDocuments,
       download: downloadDocument,
-      hasLoadedClaimDocuments,
       loadAll: loadAllClaimDocuments,
     },
   } = appLogic;
