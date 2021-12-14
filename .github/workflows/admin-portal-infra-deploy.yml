@@ -24,7 +24,7 @@ env:
   terraformVersion: 0.14.7
   terraformBaseDir: ./infra/admin-portal/environments/
   # Map branch name to environment name. This is used to set the admin_portal_env variable below in combination with git refs.
-  refs/heads/main: test
+  refs/heads/main: infra-test
   refs/heads/deploy/admin-portal/stage: stage
   refs/heads/deploy/admin-portal/prod: prod
   refs/heads/deploy/admin-portal/performance: performance
@@ -51,7 +51,7 @@ jobs:
         # see https://help.github.com/en/actions/reference/context-and-expression-syntax-for-github-actions#github-context
         # github.ref will give the branch or tag reference that triggered the workflow
         # e.g refs/heads/main or refs/heads/deploy/admin-portal/stage
-        run: echo "admin_portal_env=${{ env[github.ref] || 'test' }}" >> $GITHUB_ENV
+        run: echo "admin_portal_env=${{ env[github.ref] || 'infra-test' }}" >> $GITHUB_ENV
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -97,9 +97,9 @@ jobs:
           ref: "main"
           inputs: |
             {
-              "target_environment": ${{ toJSON(env[github.ref] || 'test') }},
+              "target_environment": ${{ toJSON(env[github.ref] || 'infra-test') }},
               "cypress_tags": "Deploy,Deploy-Infra",
-              "run_unstable": "${{ (env[github.ref] || 'test') != 'test' && 'false' || 'true' }}",
+              "run_unstable": "${{ (env[github.ref] || 'infra-test') != 'infra-test' && 'false' || 'true' }}",
               "run_nightly": "false",
-              "title_override": ${{ toJSON(format('Infra Deploy: {0} to {1}', env.version, (env[github.ref] || 'test'))) }}
+              "title_override": ${{ toJSON(format('Infra Deploy: {0} to {1}', env.version, (env[github.ref] || 'infra-test'))) }}
             }
