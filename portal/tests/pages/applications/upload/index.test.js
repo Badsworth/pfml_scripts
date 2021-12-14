@@ -1,12 +1,12 @@
-import ClaimDetail, { AbsencePeriod } from "../../../../src/models/ClaimDetail";
 import UploadDocsOptions, {
   UploadType,
 } from "../../../../src/pages/applications/upload/index";
 import { act, render, screen } from "@testing-library/react";
+import { AbsencePeriod } from "../../../../src/models/AbsencePeriod";
+import ClaimDetail from "../../../../src/models/ClaimDetail";
 import LeaveReason from "../../../../src/models/LeaveReason";
 import React from "react";
 import User from "../../../../src/models/User";
-import { map } from "lodash";
 import useAppLogic from "../../../../src/hooks/useAppLogic";
 import userEvent from "@testing-library/user-event";
 
@@ -78,9 +78,8 @@ const absencePeriodScenarios = {
 describe("UploadDocsOptions", () => {
   it("renders the page and all input choices when claim has an absence period for each leave reason", () => {
     const claimDetail = new ClaimDetail({
-      absence_periods: map(
-        Object.values(absencePeriodScenarios),
-        "absencePeriod"
+      absence_periods: Object.values(absencePeriodScenarios).map(
+        (scenario) => scenario.absencePeriod
       ),
       application_id: "mock-claim-id",
       fineos_absence_id: "mock-absence-id",
@@ -209,9 +208,8 @@ describe("UploadDocsOptions", () => {
     expect(appLogic.portalFlow.goToNextPage).not.toHaveBeenCalled();
   });
 
-  map(
-    absencePeriodScenarios,
-    ({ absencePeriod, uploadType, labelText }, key) => {
+  Object.entries(absencePeriodScenarios).forEach(
+    ([key, { absencePeriod, uploadType, labelText }]) => {
       describe(`when absence period is ${key}`, () => {
         let appLogic;
 

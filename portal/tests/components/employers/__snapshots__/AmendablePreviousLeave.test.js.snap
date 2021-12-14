@@ -5,11 +5,14 @@ exports[`AmendablePreviousLeave for amended leaves renders the component with a 
   <tbody>
     <tr>
       <th
+        data-label="Date range"
         scope="row"
       >
         3/1/2020 to 3/6/2020
       </th>
-      <td>
+      <td
+        data-label="Leave type"
+      >
         Caring for a family member who served in the armed forces
       </td>
       <td>

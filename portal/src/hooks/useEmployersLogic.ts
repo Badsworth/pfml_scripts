@@ -1,4 +1,3 @@
-import { get, isNil } from "lodash";
 import { useMemo, useState } from "react";
 import { AppErrorsLogic } from "./useAppErrorsLogic";
 import { ClaimDocument } from "../models/Document";
@@ -9,6 +8,7 @@ import EmployersApi from "../api/EmployersApi";
 import { LeaveAdminForbiddenError } from "../errors";
 import { PortalFlow } from "./usePortalFlow";
 import { UsersLogic } from "./useUsersLogic";
+import { get } from "lodash";
 
 const useEmployersLogic = ({
   appErrorsLogic,
@@ -62,7 +62,7 @@ const useEmployersLogic = ({
         "responseData.has_verification_data"
       );
 
-      if (!isNil(employer_id) && !isNil(has_verification_data)) {
+      if (employer_id && typeof has_verification_data === "boolean") {
         appErrorsLogic.catchError(
           new LeaveAdminForbiddenError(
             employer_id,

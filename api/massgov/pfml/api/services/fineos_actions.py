@@ -99,6 +99,7 @@ def register_employee(
     employee_ssn: str,
     employer_fein: str,
     db_session: massgov.pfml.db.Session,
+    employer_id: Optional[str] = None,
 ) -> str:
     # If a FINEOS Id exists for SSN/FEIN return it.
     fineos_web_id_ext = (
@@ -122,7 +123,9 @@ def register_employee(
         return fineos_web_id_ext.fineos_web_id
 
     # Find FINEOS employer id using employer FEIN
-    employer_id = fineos.find_employer(employer_fein)
+    if employer_id is None:
+        employer_id = fineos.find_employer(employer_fein)
+
     logger.info("found employer_id %s", employer_id)
 
     # Generate external id
@@ -168,7 +171,12 @@ def send_to_fineos(
     # Create the FINEOS client.
     fineos = massgov.pfml.fineos.create_client()
 
-    fineos_web_id = register_employee(fineos, tax_identifier, application.employer_fein, db_session)
+    fineos_employer = fineos.read_employer(application.employer_fein)
+    fineos_employer_id = fineos_employer.get_customer_number()
+
+    fineos_web_id = register_employee(
+        fineos, tax_identifier, application.employer_fein, db_session, fineos_employer_id
+    )
 
     fineos.update_customer_details(fineos_web_id, customer)
 
@@ -177,13 +185,16 @@ def send_to_fineos(
         logger.error(
             "Did not find customer occupation.", extra={"fineos_web_id": fineos_web_id,},
         )
-
         raise ValueError("customer occupation is None")
 
     upsert_week_based_work_pattern(
         fineos, fineos_web_id, application, occupation.occupationId, occupation.workPatternBasis
     )
-    update_occupation_details(fineos, application, str(occupation.occupationId))
+    # Only pick a worksite if an organization unit was picked
+    worksite_id = None
+    if application.organization_unit_id:
+        worksite_id = fineos_employer.get_worksite_id()
+    update_occupation_details(fineos, application, occupation.occupationId, worksite_id)
 
     new_case = fineos.start_absence(fineos_web_id, absence_case)
 
@@ -235,6 +246,9 @@ def send_to_fineos(
 
     if application.leave_reason_id:
         new_claim.claim_type_id = application.leave_reason.absence_to_claim_type
+
+    if application.organization_unit_id:
+        new_claim.organization_unit_id = application.organization_unit_id
 
     application.claim = new_claim
 
@@ -309,9 +323,6 @@ def mark_documents_as_received(
     application: Application, db_session: massgov.pfml.db.Session
 ) -> None:
     """Mark documents attached to an application as received in FINEOS."""
-
-    if application.claim.fineos_absence_id is None:
-        raise ValueError("application.claim.fineos_absence_id is None")
 
     fineos = massgov.pfml.fineos.create_client()
     fineos_web_id = get_or_register_employee_fineos_web_id(fineos, application, db_session)
@@ -977,7 +988,8 @@ def update_week_based_work_pattern(
 def update_occupation_details(
     fineos_client: massgov.pfml.fineos.AbstractFINEOSClient,
     application: Application,
-    occupation_id: Optional[str],
+    occupation_id: Optional[int],
+    worksite_id: Optional[str],
 ) -> None:
     if occupation_id is None:
         raise ValueError("occupation_id is None")
@@ -986,8 +998,16 @@ def update_occupation_details(
     if application.employment_status:
         employment_status_label = application.employment_status.fineos_label
 
+    fineos_org_unit_id = None
+    if application.organization_unit:
+        fineos_org_unit_id = application.organization_unit.fineos_id
+
     fineos_client.update_occupation(
-        int(occupation_id), employment_status_label, application.hours_worked_per_week,
+        occupation_id,
+        employment_status_label,
+        application.hours_worked_per_week,
+        fineos_org_unit_id,
+        worksite_id,
     )
 
 
@@ -1205,6 +1225,11 @@ def create_or_update_employer(
     if not employer.employer_name:
         raise ValueError(
             "An Employer must have a employer_name in order to create or update an employer."
+        )
+
+    if not employer.employer_dba:
+        raise ValueError(
+            "An Employer must have a employer_dba in order to create or update an employer."
         )
 
     employer_request_body = massgov.pfml.fineos.models.CreateOrUpdateEmployer(

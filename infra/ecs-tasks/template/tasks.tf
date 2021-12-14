@@ -105,6 +105,15 @@ locals {
       ]
     },
 
+    "db-create-servicenow-user" = {
+      command = ["db-create-servicenow-user"],
+      env = [
+        local.db_access,
+        { name : "COGNITO_SERVICENOW_APP_CLIENT_ID", valueFrom : "/service/${local.app_name}/${var.environment_name}/cognito_servicenow_app_client_id" },
+        { name : "COGNITO_INTERNAL_SERVICENOW_ROLE_APP_CLIENT_ID", valueFrom : "/service/${local.app_name}/${var.environment_name}/cognito_internal_servicenow_role_app_client_id" }
+      ]
+    },
+
     "execute-sql" = {
       command   = ["execute-sql"]
       task_role = aws_iam_role.task_execute_sql_task_role.arn
@@ -191,7 +200,8 @@ locals {
         local.pub_s3_folders,
         { name : "PUB_PAYMENT_STARTING_CHECK_NUMBER", value : "106" },
         { name : "DFML_PUB_ROUTING_NUMBER", valueFrom : "/service/${local.app_name}/${var.environment_name}/dfml_pub_routing_number" },
-        { name : "DFML_PUB_ACCOUNT_NUMBER", valueFrom : "/service/${local.app_name}/${var.environment_name}/dfml_pub_account_number" }
+        { name : "DFML_PUB_ACCOUNT_NUMBER", valueFrom : "/service/${local.app_name}/${var.environment_name}/dfml_pub_account_number" },
+        { "name" : "ENABLE_WITHHOLDING_PAYMENTS", "value" : var.enable_withholding_payments }
       ]
     },
 
@@ -230,7 +240,8 @@ locals {
         { name : "FINEOS_CLAIMANT_EXTRACT_MAX_HISTORY_DATE", value : "2021-06-12" },
         { name : "FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", value : "2021-06-12" },
         { name : "USE_EXPERIAN_SOAP_CLIENT", value : "1" },
-        { name : "EXPERIAN_AUTH_TOKEN", valueFrom : "/service/${local.app_name}/common/experian-auth-token" }
+        { name : "EXPERIAN_AUTH_TOKEN", valueFrom : "/service/${local.app_name}/common/experian-auth-token" },
+        { "name" : "ENABLE_WITHHOLDING_PAYMENTS", "value" : var.enable_withholding_payments }
       ]
     },
 
@@ -262,6 +273,8 @@ locals {
     "fineos-import-iaww" = {
       command   = ["fineos-import-iaww"]
       task_role = aws_iam_role.pub_payments_process_fineos_task_role.arn
+      cpu       = 2048
+      memory    = 8192
       env = [
         local.db_access,
         local.fineos_s3_access,
@@ -359,6 +372,17 @@ locals {
       env = [
         local.db_access,
         { name : "S3_BUCKET", value : "s3://massgov-pfml-${var.environment_name}-execute-sql-export" }
+      ]
+    },
+
+    "pub-payments-copy-audit-report" = {
+      command   = ["pub-payments-copy-audit-report"]
+      task_role = aws_iam_role.pub_payments_copy_audit_report_task_role.arn
+      cpu       = 2048,
+      memory    = 4096,
+      env = [
+        local.db_access,
+        local.pub_s3_folders,
       ]
     },
   }

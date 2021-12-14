@@ -1,5 +1,7 @@
 # Tools
 
+### [git](git/README.md)
+
 ---
 ## Notes for Contributing
 - Be sure to link to existing documentation whenever it answers the questions in the README template. A short summary of the linked information should accompany the link.

@@ -1,3 +1,4 @@
+import * as MFAService from "../../src/services/mfa";
 import User, { RoleDescription, UserRole } from "../../src/models/User";
 import { act, renderHook } from "@testing-library/react-hooks";
 import AppErrorInfo from "../../src/models/AppErrorInfo";
@@ -12,6 +13,10 @@ import usePortalFlow from "../../src/hooks/usePortalFlow";
 import useUsersLogic from "../../src/hooks/useUsersLogic";
 
 jest.mock("../../src/api/UsersApi");
+jest.mock("../../src/services/mfa", () => ({
+  setMFAPreference: jest.fn(),
+  updateMFAPhoneNumber: jest.fn(),
+}));
 jest.mock("next/router");
 
 describe("useUsersLogic", () => {
@@ -120,6 +125,63 @@ describe("useUsersLogic", () => {
         expect(appErrorsLogic.appErrors.items[0].name).toEqual(
           NetworkError.name
         );
+      });
+    });
+
+    describe("when mfa_delivery_preference is updated", () => {
+      const patchData = { mfa_delivery_preference: "SMS" };
+      it("sets MFA preferences and updates user", async () => {
+        await act(async () => {
+          await usersLogic.updateUser(user_id, patchData);
+        });
+
+        expect(MFAService.setMFAPreference).toHaveBeenCalledWith("SMS");
+        expect(usersApi.updateUser).toHaveBeenCalledWith(user_id, patchData);
+      });
+
+      it("does not update user if MFA service fails to update", async () => {
+        MFAService.setMFAPreference.mockImplementation(() =>
+          Promise.reject(new Error())
+        );
+        usersApi.updateUser.mockClear();
+        await act(async () => {
+          await usersLogic.updateUser(user_id, patchData);
+        });
+
+        expect(usersApi.updateUser).not.toHaveBeenCalled();
+      });
+    });
+
+    describe("when mfa_phone_number is updated", () => {
+      const patchData = {
+        mfa_phone_number: {
+          int_code: "1",
+          phone_type: "Cell",
+          phone_number: "555-555-5555",
+        },
+      };
+
+      it("sets MFA phone number and updates user", async () => {
+        await act(async () => {
+          await usersLogic.updateUser(user_id, patchData);
+        });
+
+        expect(MFAService.updateMFAPhoneNumber).toHaveBeenCalledWith(
+          "555-555-5555"
+        );
+        expect(usersApi.updateUser).toHaveBeenCalledWith(user_id, patchData);
+      });
+
+      it("does not update user if MFA service fails to update", async () => {
+        MFAService.updateMFAPhoneNumber.mockImplementation(() =>
+          Promise.reject(new Error())
+        );
+        usersApi.updateUser.mockClear();
+        await act(async () => {
+          await usersLogic.updateUser(user_id, patchData);
+        });
+
+        expect(usersApi.updateUser).not.toHaveBeenCalled();
       });
     });
   });

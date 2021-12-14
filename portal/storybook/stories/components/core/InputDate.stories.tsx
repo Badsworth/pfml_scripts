@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import InputDate from "src/components/core/InputDate";
-import { Props } from "storybook/types";
+import { Props } from "types/common";
 
 export default {
   title: "Core Components/Forms/InputDate",

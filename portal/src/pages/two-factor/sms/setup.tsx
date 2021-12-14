@@ -1,10 +1,11 @@
+import User, { PhoneType } from "src/models/User";
 import { AppLogic } from "../../../hooks/useAppLogic";
 import BackButton from "../../../components/BackButton";
-import Button from "../../../components/core/Button";
 import InputText from "../../../components/core/InputText";
 import Lead from "../../../components/core/Lead";
 import PageNotFound from "../../../components/PageNotFound";
 import React from "react";
+import ThrottledButton from "src/components/ThrottledButton";
 import Title from "../../../components/core/Title";
 import { Trans } from "react-i18next";
 import { isFeatureEnabled } from "../../../services/featureFlags";
@@ -15,6 +16,7 @@ import withUser from "../../../hoc/withUser";
 
 interface SetupSMSProps {
   appLogic: AppLogic;
+  user: User;
 }
 
 export const SetupSMS = (props: SetupSMSProps) => {
@@ -25,9 +27,15 @@ export const SetupSMS = (props: SetupSMSProps) => {
     phone_number: "",
   });
 
-  const handleSubmit = (event: React.FormEvent) => {
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    // Do nothing for now
+    await appLogic.users.updateUser(props.user.user_id, {
+      mfa_phone_number: {
+        int_code: "1",
+        phone_type: PhoneType.cell,
+        phone_number: formState.phone_number,
+      },
+    });
   };
 
   const getFunctionalInputProps = useFunctionalInputProps({
@@ -40,7 +48,7 @@ export const SetupSMS = (props: SetupSMSProps) => {
   if (!isFeatureEnabled("claimantShowMFA")) return <PageNotFound />;
 
   return (
-    <form className="usa-form" onSubmit={handleSubmit} method="post">
+    <form className="usa-form">
       <BackButton />
       <Title>{t("pages.authTwoFactorSmsSetup.title")}</Title>
       <Lead>
@@ -52,9 +60,13 @@ export const SetupSMS = (props: SetupSMSProps) => {
         label={t("pages.authTwoFactorSmsSetup.phoneNumberLabel")}
         smallLabel
       />
-      <Button type="submit" className="display-block">
+      <ThrottledButton
+        type="submit"
+        onClick={handleSubmit}
+        className="display-block"
+      >
         {t("pages.authTwoFactorSmsSetup.saveButton")}
-      </Button>
+      </ThrottledButton>
     </form>
   );
 };

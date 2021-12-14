@@ -1,3 +1,4 @@
+import enum
 import uuid
 from typing import NamedTuple
 
@@ -10,6 +11,9 @@ logger = massgov.pfml.util.logging.get_logger(__name__)
 
 
 class Populate1099Step(Step):
+    class Metrics(str, enum.Enum):
+        IRS_1099_COUNT = "irs_1099_count"
+
     def run_step(self) -> None:
 
         # Get the current batch
@@ -62,12 +66,21 @@ class Populate1099Step(Step):
             if overpayment_repayments is None:
                 overpayment_repayments = 0
 
+            # TODO: Add other credits to table and form.
+            # Other Credits will not apply in 2021.  PAY-73 is for tracking this work.
+            other_credits = claimant_row.OTHER_CREDITS
+            if other_credits is None:
+                other_credits = 0
+
             pfml_1099_payment = Pfml1099(
                 pfml_1099_id=uuid.uuid4(),
                 pfml_1099_batch_id=batch.pfml_1099_batch_id,
                 tax_year=batch.tax_year,
                 employee_id=claimant_row.employee_id,
                 tax_identifier_id=claimant_row.tax_identifier_id,
+                account_number=claimant_row.customerno,
+                c=claimant_row.c,
+                i=claimant_row.i,
                 first_name=claimant_row.first_name,
                 last_name=claimant_row.last_name,
                 address_line_1=claimant_row.address1,
@@ -86,3 +99,4 @@ class Populate1099Step(Step):
             logger.debug(
                 "Created 1099.", extra={"pfml_1099_id": pfml_1099_payment.pfml_1099_id},
             )
+            self.increment(self.Metrics.IRS_1099_COUNT)

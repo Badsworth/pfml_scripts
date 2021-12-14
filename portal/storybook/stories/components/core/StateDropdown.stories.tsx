@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Props } from "storybook/types";
+import { Props } from "types/common";
 import StateDropdown from "src/components/core/StateDropdown";
 
 export default {

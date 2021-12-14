@@ -1,6 +1,9 @@
 // TODO (PORTAL-1148) Update to use createMockClaim when ready
 import ClaimDetail from "../../../../src/models/ClaimDetail";
+import DocumentCollection from "../../../../src/models/DocumentCollection";
+import { DocumentType } from "../../../../src/models/Document";
 import { Payments } from "../../../../src/pages/applications/status/payments";
+import { createMockPayment } from "../../../test-utils/createMockPayment";
 import { mockRouter } from "next/router";
 import { renderPage } from "../../../test-utils";
 import routes from "../../../../src/routes";
@@ -10,17 +13,41 @@ jest.mock("next/router");
 
 mockRouter.asPath = routes.applications.status.payments;
 
-const setupHelper = (claimDetailAttrs) => (appLogicHook) => {
+const renderWithApprovalNotice = (appLogicHook, isRetroactive = true) => {
+  appLogicHook.documents.loadAll = jest.fn();
+  appLogicHook.documents.documents = new DocumentCollection([
+    {
+      application_id: "mock-application-id",
+      content_type: "image/png",
+      created_at: isRetroactive ? "2022-12-30" : "2021-11-30",
+      document_type: DocumentType.approvalNotice,
+      fineos_document_id: "fineos-id-7",
+      name: "legal notice 3",
+    },
+  ]);
+  appLogicHook.documents.hasLoadedClaimDocuments = () => true;
+};
+
+const setupHelper = (claimDetailAttrs, isRetroactive) => (appLogicHook) => {
   appLogicHook.claims.claimDetail = claimDetailAttrs
     ? new ClaimDetail(claimDetailAttrs)
     : null;
   appLogicHook.claims.loadClaimDetail = jest.fn();
+  renderWithApprovalNotice(appLogicHook, isRetroactive);
 };
 
 const defaultClaimDetail = {
   application_id: "mock-application-id",
   fineos_absence_id: "mock-absence-case-id",
   employer: { employer_fein: "12-1234567" },
+  absence_periods: [
+    {
+      period_type: "Continuous",
+      absence_period_start_date: "2021-10-21",
+      absence_period_end_date: "2021-12-30",
+      reason: "Child Bonding",
+    },
+  ],
   payments: [],
 };
 
@@ -105,28 +132,16 @@ describe("Payments", () => {
         addCustomSetup: setupHelper({
           ...defaultClaimDetail,
           payments: [
-            {
-              payment_id: "1235",
-              period_start_date: "2021-11-08",
-              period_end_date: "2021-11-15",
-              amount: 100,
-              sent_to_bank_date: "2021-11-15",
-              payment_method: "Check",
-              expected_send_date_start: "2021-11-15",
-              expected_send_date_end: "2021-11-21",
-              status: "Pending",
-            },
-            {
-              payment_id: "1234",
-              period_start_date: "2021-10-31",
-              period_end_date: "2021-11-07",
-              amount: 100,
-              sent_to_bank_date: "2021-11-08",
-              payment_method: "Check",
-              expected_send_date_start: "2021-11-08",
-              expected_send_date_end: "2021-11-11",
-              status: "Sent",
-            },
+            createMockPayment({ status: "Sent to bank" }, true),
+            createMockPayment(
+              { status: "Delayed", sent_to_bank_date: null },
+              true
+            ),
+            createMockPayment(
+              { status: "Pending", sent_to_bank_date: null },
+              true
+            ),
+            createMockPayment({ status: "Sent to bank" }, true),
           ],
           appLogicHook: {
             claims: { loadClaimDetail: jest.fn() },

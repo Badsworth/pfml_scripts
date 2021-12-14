@@ -52,7 +52,7 @@ describe("TaxWithholding", () => {
       name: "Yes, withhold state and federal taxes",
     });
     const noRadio = screen.getByRole("radio", {
-      name: "No, don’t withhold taxes",
+      name: "No, don’t withhold state and federal taxes",
     });
     userEvent.click(noRadio);
     expect(noRadio).toBeChecked();

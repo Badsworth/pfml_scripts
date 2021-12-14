@@ -767,6 +767,7 @@ def copy_fineos_data_to_archival_bucket(
     expected_file_names: List[str],
     export_type: LkReferenceFileType,
     source_folder_s3_config_key: str = "fineos_data_export_path",
+    allow_missing: bool = False,
 ) -> Dict[str, Dict[str, str]]:
     # stage source and destination folders
     s3_config = payments_config.get_s3_config()
@@ -914,7 +915,7 @@ def copy_fineos_data_to_archival_bucket(
             if not destination:
                 missing_files.append(f"{date_str}-{expected_file_name}")
 
-    if missing_files:
+    if missing_files and not allow_missing:
         message = f"Error while copying fineos extracts - The following expected files were not found {','.join(missing_files)}"
         logger.info(message)
         raise Exception(message)
@@ -1360,3 +1361,7 @@ def validate_columns_present(record: Dict[str, Any], fineos_extract: FineosExtra
             "FINEOS extract %s is missing required fields: %s - found only %s"
             % (fineos_extract.file_name, missing_columns, list(record.keys()))
         )
+
+
+def is_withholding_payments_enabled() -> bool:
+    return os.environ.get("ENABLE_WITHHOLDING_PAYMENTS", "0") == "1"

@@ -1,16 +1,7 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`SupportingWorkDetails opens the amendment form when "Amend" is clicked 1`] = `
+exports[`WeeklyHoursWorkedRow opens the amendment form when "Amend" is clicked 1`] = `
 <div>
-  <div
-    class="display-flex flex-align-end margin-top-6 margin-bottom-3"
-  >
-    <h2
-      class="flex-fill margin-right-1 font-heading-md text-bold"
-    >
-      Supporting work details
-    </h2>
-  </div>
   <div
     class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
   >
@@ -109,17 +100,8 @@ exports[`SupportingWorkDetails opens the amendment form when "Amend" is clicked 
 </div>
 `;
 
-exports[`SupportingWorkDetails renders without the amendment form open 1`] = `
+exports[`WeeklyHoursWorkedRow renders without the amendment form open 1`] = `
 <div>
-  <div
-    class="display-flex flex-align-end margin-top-6 margin-bottom-3"
-  >
-    <h2
-      class="flex-fill margin-right-1 font-heading-md text-bold"
-    >
-      Supporting work details
-    </h2>
-  </div>
   <div
     class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
   >

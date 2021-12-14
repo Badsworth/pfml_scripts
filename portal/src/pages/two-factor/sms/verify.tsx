@@ -4,6 +4,7 @@ import InputText from "../../../components/core/InputText";
 import Lead from "../../../components/core/Lead";
 import PageNotFound from "../../../components/PageNotFound";
 import React from "react";
+import ThrottledButton from "src/components/ThrottledButton";
 import Title from "../../../components/core/Title";
 import { Trans } from "react-i18next";
 import { isFeatureEnabled } from "../../../services/featureFlags";
@@ -13,23 +14,26 @@ import { useTranslation } from "../../../locales/i18n";
 
 interface VerifySMSProps {
   appLogic: AppLogic;
+  query: {
+    next?: string;
+  };
 }
 
 export const VerifySMS = (props: VerifySMSProps) => {
   const { appLogic } = props;
+  const mfaPhoneNumber =
+    appLogic.auth.cognitoUser?.challengeParam?.CODE_DELIVERY_DESTINATION;
+  const lastFourDigits = mfaPhoneNumber ? mfaPhoneNumber.slice(-4) : "****";
   const { t } = useTranslation();
 
   const { formState, updateFields } = useFormState({
     code: "",
   });
 
-  const handleSubmit = (event: React.FormEvent) => {
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     // Do nothing for now
-  };
-
-  const handleResendCodeClick = async () => {
-    // Do nothing for now
+    await appLogic.auth.verifyMFACodeAndLogin(formState.code, props.query.next);
   };
 
   const getFunctionalInputProps = useFunctionalInputProps({
@@ -38,21 +42,16 @@ export const VerifySMS = (props: VerifySMSProps) => {
     updateFields,
   });
 
-  // Use last four digits of actual claim phone number
-  const lastFourDigits = "6789";
-
   // TODO(PORTAL-1007): Remove claimantShowMFA feature flag
   if (!isFeatureEnabled("claimantShowMFA")) return <PageNotFound />;
 
   return (
     <div>
-      <form className="usa-form" onSubmit={handleSubmit} method="post">
+      <form className="usa-form" method="post">
         <Title>{t("pages.authTwoFactorSmsVerify.title")}</Title>
 
         <Lead>
-          {t("pages.authTwoFactorSmsVerify.lead", {
-            lastFourDigits,
-          })}
+          {t("pages.authTwoFactorSmsVerify.lead", { lastFourDigits })}
         </Lead>
 
         <InputText
@@ -67,18 +66,17 @@ export const VerifySMS = (props: VerifySMSProps) => {
           type="button"
           className="display-block margin-top-1"
           variation="unstyled"
-          onClick={handleResendCodeClick}
         >
           {t("pages.authTwoFactorSmsVerify.resendCodeLink")}
         </Button>
 
-        <Button
+        <ThrottledButton
           type="submit"
           onClick={handleSubmit}
           className="display-block margin-top-3"
         >
           {t("pages.authTwoFactorSmsVerify.submitButton")}
-        </Button>
+        </ThrottledButton>
       </form>
       <p className="display-block margin-top-3">
         <Trans

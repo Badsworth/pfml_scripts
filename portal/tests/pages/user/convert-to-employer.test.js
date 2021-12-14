@@ -22,7 +22,8 @@ const getOptions = (cb) => {
       });
       appLogic.benefitsApplications.benefitsApplications =
         new BenefitsApplicationCollection([]);
-      appLogic.benefitsApplications.hasLoadedAll = true;
+      appLogic.benefitsApplications.isLoadingClaims = false;
+      appLogic.benefitsApplications.loadPage = jest.fn();
       if (cb) {
         cb(appLogic);
       }

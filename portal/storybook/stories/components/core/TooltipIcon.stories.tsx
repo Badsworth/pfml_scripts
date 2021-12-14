@@ -1,4 +1,4 @@
-import { Props } from "storybook/types";
+import { Props } from "types/common";
 import React from "react";
 import TooltipIcon from "src/components/core/TooltipIcon";
 

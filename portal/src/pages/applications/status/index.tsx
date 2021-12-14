@@ -1,7 +1,7 @@
 import {
   AbsencePeriod,
   AbsencePeriodRequestDecision,
-} from "../../../models/ClaimDetail";
+} from "../../../models/AbsencePeriod";
 import {
   BenefitsApplicationDocument,
   ClaimDocument,
@@ -10,7 +10,6 @@ import {
 } from "../../../models/Document";
 import React, { useEffect } from "react";
 import Tag, { TagProps } from "../../../components/core/Tag";
-import { find, get, has, map } from "lodash";
 import withUser, { WithUserProps } from "../../../hoc/withUser";
 
 import Alert from "../../../components/core/Alert";
@@ -58,7 +57,7 @@ export const Status = ({
     },
   } = appLogic;
   const { absence_case_id, absence_id, uploaded_document_type } = query;
-  const application_id = get(claimDetail, "application_id");
+  const application_id = claimDetail?.application_id;
   const absenceId = absence_id || absence_case_id;
 
   useEffect(() => {
@@ -118,7 +117,9 @@ export const Status = ({
     );
   }
 
-  const absenceDetails = claimDetail.absencePeriodsByReason;
+  const absenceDetails = AbsencePeriod.groupByReason(
+    claimDetail.absence_periods
+  );
   const hasPendingStatus = claimDetail.absence_periods.some(
     (absenceItem) => absenceItem.request_decision === "Pending"
   );
@@ -214,8 +215,8 @@ export const Status = ({
   const getInfoAlertContext = (absenceDetails: {
     [key: string]: AbsencePeriod[];
   }) => {
-    const hasBondingReason = has(absenceDetails, LeaveReason.bonding);
-    const hasPregnancyReason = has(absenceDetails, LeaveReason.pregnancy);
+    const hasBondingReason = LeaveReason.bonding in absenceDetails;
+    const hasPregnancyReason = LeaveReason.pregnancy in absenceDetails;
     const hasNewBorn = claimDetail.absence_periods.some(
       (absenceItem) =>
         (absenceItem.reason_qualifier_one ||
@@ -231,8 +232,22 @@ export const Status = ({
 
     return "";
   };
+
   const infoAlertContext = getInfoAlertContext(absenceDetails);
   const [firstAbsenceDetail] = Object.keys(absenceDetails);
+
+  // Determines if phase two payment features are displayed
+  const showPhaseOneFeatures =
+    isFeatureEnabled("claimantShowPayments") &&
+    hasApprovedStatus &&
+    claimDetail.has_paid_payments;
+
+  // Determines if phase two payment features are displayed
+  const showPhaseTwoFeatures =
+    isFeatureEnabled("claimantShowPaymentsPhaseTwo") && hasApprovedStatus;
+
+  // Determines if payment tab is displayed
+  const isPaymentsTab = showPhaseOneFeatures || showPhaseTwoFeatures;
 
   return (
     <React.Fragment>
@@ -287,17 +302,14 @@ export const Status = ({
       />
       <div className="measure-6">
         <Title hidden>{t("pages.claimsStatus.applicationTitle")}</Title>
-        {isFeatureEnabled("claimantShowPayments") &&
-          hasApprovedStatus &&
-          claimDetail.has_paid_payments && (
-            <StatusNavigationTabs
-              activePath={appLogic.portalFlow.pathname}
-              absence_id={absenceId}
-            />
-          )}
+        {isPaymentsTab && (
+          <StatusNavigationTabs
+            activePath={appLogic.portalFlow.pathname}
+            absence_id={absenceId}
+          />
+        )}
 
         {/* Heading section */}
-
         <Heading level="2" size="1">
           {t("pages.claimsStatus.leaveReasonValueHeader", {
             context: findKeyByValue(LeaveReason, firstAbsenceDetail),
@@ -436,10 +448,13 @@ export const StatusTagMap: {
   [status in AbsencePeriodRequestDecision]: TagProps["state"];
 } = {
   Approved: "success",
-  Denied: "error",
-  Pending: "pending",
-  Withdrawn: "inactive",
   Cancelled: "inactive",
+  Denied: "error",
+  "In Review": "pending",
+  Pending: "pending",
+  Projected: "pending",
+  Withdrawn: "inactive",
+  Voided: "inactive",
 } as const;
 
 interface LeaveDetailsProps {
@@ -457,7 +472,7 @@ export const LeaveDetails = ({
 
   return (
     <React.Fragment>
-      {map(absenceDetails, (absenceItem, absenceItemName) => (
+      {Object.entries(absenceDetails).map(([absenceItemName, absenceItem]) => (
         <div key={absenceItemName} className={containerClassName}>
           <Heading level="2">
             {t("pages.claimsStatus.leaveReasonValue", {
@@ -527,7 +542,7 @@ export const LeaveDetails = ({
                           <a
                             href={createRouteWithQuery(
                               "/applications/status/payments",
-                              { absenceId }
+                              { absence_id: absenceId }
                             )}
                           />
                         ),
@@ -570,8 +585,7 @@ export const Timeline = ({
       DocumentType.certification[absencePeriodReason],
     ]).length;
 
-  const bondingAbsencePeriod = find(
-    absencePeriods,
+  const bondingAbsencePeriod = absencePeriods.find(
     (absencePeriod) => absencePeriod.reason === LeaveReason.bonding
   );
   interface FollowUpStepsProps {

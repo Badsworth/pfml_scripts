@@ -80,6 +80,9 @@ class Constants:
 
 
 class ClaimantAddressValidationStep(Step):
+
+    validation_container: payments_util.ValidationContainer
+
     class Metrics(str, enum.Enum):
         EXPERIAN_SEARCH_EXCEPTION_COUNT = "experian_search_exception_count"
         INVALID_EXPERIAN_FORMAT = "invalid_experian_format"
@@ -165,10 +168,12 @@ class ClaimantAddressValidationStep(Step):
                         employee, employee_feed_address_data, self.db_session
                     )
                     if address_pair and address_pair.experian_address is not None:
-                        logger.debug("Address has been previously validated")
                         self.increment(self.Metrics.PREVIOUSLY_VALIDATED_MATCH_COUNT)
                     # Does it have all the address lines
                     elif not self._does_address_have_all_parts(employee_feed_address_data):
+                        logger.info(
+                            "Address missing parts for customer %s", f_employee_data.customerno
+                        )
                         self.increment(self.Metrics.ADDRESS_MISSING_COMPONENT_COUNT)
                         result = self._outcome_for_search_result(
                             None,
@@ -181,7 +186,6 @@ class ClaimantAddressValidationStep(Step):
                         addressResults.append(result.get("experian_result"))
                     else:
                         if not address_pair:
-                            logger.debug("Address is new or updated")
                             address_pair = ExperianAddressPair(
                                 fineos_address=employee_feed_address_data
                             )
@@ -213,18 +217,7 @@ class ClaimantAddressValidationStep(Step):
 
     # Constructs an address object from the FineosExtractEmployeeFeed address lines
     def construct_address_data(self, employee_data: FineosExtractEmployeeFeed) -> Address:
-        # logger.info("Constructing an address object from fineos employee address lines")
-        employee_feed_data_address = Address(
-            address_id=uuid.uuid4(),
-            address_line_one=employee_data.address1,
-            address_line_two=employee_data.address2 if employee_data.address2 else None,
-            city=employee_data.address4,
-            geo_state_id=GeoState.get_id(employee_data.address6)
-            if employee_data.address6
-            else None,
-            zip_code=employee_data.postcode,
-            address_type_id=AddressType.MAILING.address_type_id,
-        )
+        employee_feed_data_address = self._validate_incoming_address(employee_data)
         return employee_feed_data_address
 
     """Calls experian using SOAP call to validate address
@@ -316,6 +309,7 @@ class ClaimantAddressValidationStep(Step):
     Returns a boolean value, True is all lines exist, False if missing"""
 
     def _does_address_have_all_parts(self, address: Address) -> bool:
+
         if (
             not address.address_line_one
             or not address.city
@@ -339,9 +333,7 @@ class ClaimantAddressValidationStep(Step):
         first_name: str,
         last_name: str,
     ) -> Dict[str, Any]:
-        verify_level = (
-            result.verify_level.value if result and result.verify_level else Constants.UNKNOWN
-        )
+        verify_level = result.verify_level.value if result and result.verify_level else msg
         outcome: Dict[str, Any] = self._build_experian_outcome(
             customer_no, first_name, last_name, msg, address, verify_level
         )
@@ -476,3 +468,54 @@ class ClaimantAddressValidationStep(Step):
             search=self.address_to_experian_suggestion_text_format(address),
             layout=Layout.StateMA,
         )
+
+    def _validate_incoming_address(self, employee_data: FineosExtractEmployeeFeed) -> Address:
+        address_required = True
+        c_value = employee_data.c
+        i_value = employee_data.i
+        self.validation_container = payments_util.ValidationContainer(
+            str(f"C={c_value},I={i_value}")
+        )
+        address_line_one = payments_util.validate_db_input(
+            "address1", employee_data, self.validation_container, address_required
+        )
+        address_line_two = payments_util.validate_db_input(
+            "address2", employee_data, self.validation_container, False,
+        )
+        city = payments_util.validate_db_input(
+            "address4", employee_data, self.validation_container, address_required
+        )
+
+        state = payments_util.validate_db_input(
+            "address6",
+            employee_data,
+            self.validation_container,
+            address_required,
+            custom_validator_func=payments_util.lookup_validator(GeoState),
+        )
+
+        zip_code = payments_util.validate_db_input(
+            "postcode",
+            employee_data,
+            self.validation_container,
+            address_required,
+            min_length=5,
+            max_length=10,
+            custom_validator_func=payments_util.zip_code_validator,
+        )
+        if self.validation_container.has_validation_issues():
+            logger.error(
+                "Address validation issues for employee %s", employee_data.employee_feed_id
+            )
+            logger.error(self.validation_container.validation_issues)
+        empty_string = ""
+        employee_address = Address(
+            address_id=uuid.uuid4(),
+            address_line_one=address_line_one if address_line_one else empty_string,
+            address_line_two=address_line_two if address_line_two else empty_string,
+            city=city if city else empty_string,
+            geo_state_id=GeoState.get_id(state) if state else empty_string,
+            zip_code=zip_code if zip_code else empty_string,
+            address_type_id=AddressType.MAILING.address_type_id,
+        )
+        return employee_address

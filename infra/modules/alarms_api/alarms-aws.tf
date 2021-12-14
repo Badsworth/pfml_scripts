@@ -15,7 +15,8 @@ locals {
     "dua-import-employee-demographics",
     "pub-payments-process-snapshot",
     "pub-payments-process-1099-documents",
-    "pub-claimant-address-validation"
+    "pub-claimant-address-validation",
+    "pub-payments-copy-audit-report",
   ]
 }
 

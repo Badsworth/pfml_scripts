@@ -1,7 +1,6 @@
 import { MockBenefitsApplicationBuilder } from "../test-utils";
 import Step from "../../src/models/Step";
 import claimantConfig from "../../src/flows/claimant";
-import { map } from "lodash";
 
 describe("Step Model", () => {
   const step = "step";
@@ -286,10 +285,12 @@ Array [
         { claim: new MockBenefitsApplicationBuilder().create() },
         []
       );
-      const machinePages = map(claimantConfig.states, (value, key) => ({
-        route: key,
-        meta: value.meta,
-      }));
+      const machinePages = Object.entries(claimantConfig.states).map(
+        (key, value) => ({
+          route: key,
+          meta: value.meta,
+        })
+      );
 
       steps.forEach((s) => {
         expect(s).toBeInstanceOf(Step);

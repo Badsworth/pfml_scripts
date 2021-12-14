@@ -152,6 +152,8 @@ class AbstractFINEOSClient(abc.ABC, metaclass=abc.ABCMeta):
         occupation_id: int,
         employment_status: Optional[str],
         hours_worked_per_week: Optional[Decimal],
+        fineos_org_unit_id: Optional[str],
+        worksite_id: Optional[str],
     ) -> None:
         pass
 

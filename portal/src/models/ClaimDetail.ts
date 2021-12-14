@@ -1,6 +1,8 @@
 import { ClaimEmployee, ClaimEmployer, ManagedRequirement } from "./Claim";
-import { groupBy, orderBy } from "lodash";
-import { LeaveReasonType } from "./LeaveReason";
+
+import { AbsencePeriod } from "./AbsencePeriod";
+import dayjs from "dayjs";
+import { orderBy } from "lodash";
 
 class ClaimDetail {
   absence_periods: AbsencePeriod[] = [];
@@ -32,14 +34,17 @@ class ClaimDetail {
     this.absence_periods = this.absence_periods.map(
       (absence_period) => new AbsencePeriod(absence_period)
     );
-  }
 
-  /**
-   * Get absence_periods grouped by their leave reason
-   * @returns {Object} an object that keys arrays of absence periods by their reason e.g { "Child Bonding": [AbsencePeriod] }
-   */
-  get absencePeriodsByReason() {
-    return groupBy(this.absence_periods, "reason");
+    /**
+     * Filtering to account for instances where a payment may be sent during the waiting week or prior to the leave start date
+     */
+
+    this.payments = this.payments.filter(
+      ({ period_start_date, status }) =>
+        (this.waitingWeek?.startDate &&
+          this.waitingWeek.startDate < period_start_date) ||
+        status === "Sent to bank"
+    );
   }
 
   /**
@@ -82,34 +87,36 @@ class ClaimDetail {
 
   get hasApprovedStatus() {
     return this.absence_periods.some(
-      (absence_period) =>
-        absence_period.request_decision ===
-        <AbsencePeriodRequestDecision>"Approved"
+      (absence_period) => absence_period.request_decision === "Approved"
     );
+  }
+
+  get leaveDates(): AbsencePeriodDates[] {
+    return this.absence_periods.map(
+      ({ absence_period_start_date, absence_period_end_date }) => ({
+        absence_period_start_date,
+        absence_period_end_date,
+      })
+    );
+  }
+
+  get waitingWeek(): { startDate?: string; endDate?: string } {
+    if (this.leaveDates.length) {
+      return {
+        // API will return absence_periods sorted by start date, waiting week is the first week at the start of the claim
+        startDate: this.leaveDates[0].absence_period_start_date,
+        endDate: dayjs(this.leaveDates[0].absence_period_start_date)
+          .add(6, "days")
+          .format("YYYY-MM-DD"),
+      };
+    }
+    return {};
   }
 }
 
-export type AbsencePeriodRequestDecision =
-  | "Cancelled"
-  | "Pending"
-  | "Approved"
-  | "Denied"
-  | "Withdrawn";
-
-export class AbsencePeriod {
-  absence_period_end_date: string;
+interface AbsencePeriodDates {
   absence_period_start_date: string;
-  evidence_status: string | null = null;
-  fineos_leave_request_id: string | null = null;
-  period_type: "Continuous" | "Intermittent" | "Reduced Schedule";
-  reason: LeaveReasonType;
-  reason_qualifier_one = "";
-  reason_qualifier_two = "";
-  request_decision: AbsencePeriodRequestDecision;
-
-  constructor(attrs: Partial<AbsencePeriod> = {}) {
-    Object.assign(this, attrs);
-  }
+  absence_period_end_date: string;
 }
 
 interface OutstandingEvidence {
@@ -137,7 +144,9 @@ export interface PaymentDetail {
   payment_method: string;
   expected_send_date_start: string | null;
   expected_send_date_end: string | null;
-  status: string;
+  status: PaymentStatus;
 }
+
+type PaymentStatus = "Cancelled" | "Delayed" | "Pending" | "Sent to bank";
 
 export default ClaimDetail;

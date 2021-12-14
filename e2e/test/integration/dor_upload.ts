@@ -19,6 +19,7 @@ const envs: Environment[] = [
   "performance",
   "uat",
   "cps-preview",
+  "breakfix",
 ];
 // wait for 20 minutes to complete dor processing
 jest.setTimeout(1000 * 60 * 20);

@@ -1,3 +1,4 @@
+import logging  # noqa: B1
 from datetime import date
 from decimal import Decimal
 
@@ -5,7 +6,7 @@ import pytest
 from sqlalchemy.sql.expression import null
 
 import massgov.pfml.api.services.payments as payment_services
-from massgov.pfml.db.models.employees import PaymentTransactionType
+from massgov.pfml.db.models.employees import PaymentMethod, PaymentTransactionType
 from massgov.pfml.db.models.factories import ImportLogFactory, PaymentFactory
 from massgov.pfml.delegated_payments.mock.delegated_payments_factory import DelegatedPaymentFactory
 
@@ -444,3 +445,149 @@ def test_consolidate_successors_cancelled_and_regular(test_db_session):
     # Only the uncancelled payment is returned
     assert len(consolidated_payment_containers) == 1
     assert original_payment2.payment_id == consolidated_payment_containers[0].payment.payment_id
+
+
+def test_get_payments_with_status(test_db_session, caplog):
+    caplog.set_level(logging.INFO)  # noqa: B1
+
+    # Create a reiussed payment
+    payment_factory1 = DelegatedPaymentFactory(
+        test_db_session,
+        amount=100,
+        period_start_date=date(2021, 11, 1),
+        period_end_date=date(2021, 11, 7),
+        payment_method=PaymentMethod.ACH,
+    )
+    claim = payment_factory1.get_or_create_claim()
+
+    payment1 = payment_factory1.get_or_create_payment()
+    payment1_cancellation, payment1_successor = payment_factory1.create_reissued_payments()
+
+    # Create two payments in a later pay period
+    payment2a = payment_factory1.create_related_payment(weeks_later=1, amount=200)
+    payment2b = payment_factory1.create_related_payment(weeks_later=1, amount=300)
+
+    # Create a payment that is just cancelled (but in its own week, so returned)
+    payment3 = payment_factory1.create_related_payment(weeks_later=2, amount=400)
+    payment3_cancellation = payment_factory1.create_cancellation_payment(
+        reissuing_payment=payment3, weeks_later=2
+    )
+
+    expected_valid_payments = [payment1_successor, payment2a, payment2b, payment3]
+    filtered_payments = [payment1, payment1_cancellation, payment3_cancellation]
+
+    payment_response = payment_services.get_payments_with_status(test_db_session, claim)
+
+    log_dict = caplog.records[0].__dict__
+
+    assert len(payment_response["payments"]) == len(expected_valid_payments)
+    for i, expected_payment in enumerate(expected_valid_payments):
+        resp_payment = payment_response["payments"][i]
+
+        assert resp_payment["payment_id"] == expected_payment.payment_id
+        assert resp_payment["fineos_c_value"] == expected_payment.fineos_pei_c_value
+        assert resp_payment["fineos_i_value"] == expected_payment.fineos_pei_i_value
+        assert resp_payment["period_start_date"] == expected_payment.period_start_date
+        assert resp_payment["period_end_date"] == expected_payment.period_end_date
+
+        assert log_dict[f"payment[{i}].id"] == expected_payment.payment_id
+        assert log_dict[f"payment[{i}].c_value"] == expected_payment.fineos_pei_c_value
+        assert log_dict[f"payment[{i}].i_value"] == expected_payment.fineos_pei_i_value
+        assert (
+            log_dict[f"payment[{i}].period_start_date"]
+            == expected_payment.period_start_date.isoformat()
+        )
+        assert (
+            log_dict[f"payment[{i}].period_end_date"]
+            == expected_payment.period_end_date.isoformat()
+        )
+        assert (
+            log_dict[f"payment[{i}].payment_type"]
+            == expected_payment.payment_transaction_type.payment_transaction_type_description
+        )
+
+        # payment 3 is cancelled, so a few values are different
+        if i == 3:
+            assert resp_payment["status"] == payment_services.FrontendPaymentStatus.CANCELLED
+            assert (
+                log_dict[f"payment[{i}].status"]
+                == payment_services.FrontendPaymentStatus.CANCELLED.value
+            )
+            assert (
+                log_dict[f"payment[{i}].cancellation_event.c_value"]
+                == payment3_cancellation.fineos_pei_c_value
+            )
+            assert (
+                log_dict[f"payment[{i}].cancellation_event.i_value"]
+                == payment3_cancellation.fineos_pei_i_value
+            )
+
+        else:
+            assert resp_payment["status"] == payment_services.FrontendPaymentStatus.PENDING
+            assert (
+                log_dict[f"payment[{i}].status"]
+                == payment_services.FrontendPaymentStatus.PENDING.value
+            )
+
+    for i, filtered_payment in enumerate(filtered_payments):
+
+        assert log_dict[f"filtered_payment[{i}].id"] == filtered_payment.payment_id
+        assert log_dict[f"filtered_payment[{i}].c_value"] == filtered_payment.fineos_pei_c_value
+        assert log_dict[f"filtered_payment[{i}].i_value"] == filtered_payment.fineos_pei_i_value
+        assert (
+            log_dict[f"filtered_payment[{i}].period_start_date"]
+            == filtered_payment.period_start_date.isoformat()
+        )
+        assert (
+            log_dict[f"filtered_payment[{i}].period_end_date"]
+            == filtered_payment.period_end_date.isoformat()
+        )
+        assert (
+            log_dict[f"filtered_payment[{i}].payment_type"]
+            == filtered_payment.payment_transaction_type.payment_transaction_type_description
+        )
+
+        # Payment 1 was succeeded
+        if i == 0:
+            assert (
+                log_dict[f"filtered_payment[{i}].filter_reason"]
+                == payment_services.PaymentFilterReason.HAS_SUCCESSOR
+            )
+            assert (
+                log_dict[f"filtered_payment[{i}].successor[0].c_value"]
+                == payment1_successor.fineos_pei_c_value
+            )
+            assert (
+                log_dict[f"filtered_payment[{i}].successor[0].i_value"]
+                == payment1_successor.fineos_pei_i_value
+            )
+
+        # Cancellation for Payment 1
+        if i == 1:
+            assert (
+                log_dict[f"filtered_payment[{i}].filter_reason"]
+                == payment_services.PaymentFilterReason.CANCELLATION_EVENT
+            )
+            assert log_dict[f"filtered_payment[{i}].cancels.c_value"] == payment1.fineos_pei_c_value
+            assert log_dict[f"filtered_payment[{i}].cancels.i_value"] == payment1.fineos_pei_i_value
+
+        # Cancellation for payment 3
+        if i == 2:
+            assert (
+                log_dict[f"filtered_payment[{i}].filter_reason"]
+                == payment_services.PaymentFilterReason.CANCELLATION_EVENT
+            )
+            assert log_dict[f"filtered_payment[{i}].cancels.c_value"] == payment3.fineos_pei_c_value
+            assert log_dict[f"filtered_payment[{i}].cancels.i_value"] == payment3.fineos_pei_i_value
+
+    assert log_dict["payments_returned_count"] == 4
+    assert log_dict["payments_filtered_count"] == 3
+
+    assert log_dict["payment_status_delayed_count"] == 0
+    assert log_dict["payment_status_pending_count"] == 3
+    assert log_dict["payment_status_sent_to_bank_count"] == 0
+    assert log_dict["payment_status_cancelled_count"] == 1
+
+    assert log_dict["payment_filtered_has_successor_count"] == 1
+    assert log_dict["payment_filtered_cancellation_event_count"] == 2
+    assert log_dict["payment_filtered_unknown_count"] == 0

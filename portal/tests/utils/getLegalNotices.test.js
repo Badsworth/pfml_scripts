@@ -10,6 +10,12 @@ describe("getLegalNotices", () => {
       DocumentType.denialNotice,
       DocumentType.requestForInfoNotice,
       DocumentType.withdrawalNotice,
+      DocumentType.maximumWeeklyBenefitChangeNotice,
+      DocumentType.benefitAmountChangeNotice,
+      DocumentType.leaveAllotmentChangeNotice,
+      DocumentType.approvedTimeCancelled,
+      DocumentType.changeRequestApproved,
+      DocumentType.changeRequestDenied,
     ]);
     const manyDocumentTypes = [
       DocumentType.appealAcknowledgment,
@@ -22,6 +28,12 @@ describe("getLegalNotices", () => {
       DocumentType.medicalCertification,
       DocumentType.requestForInfoNotice,
       DocumentType.withdrawalNotice,
+      DocumentType.maximumWeeklyBenefitChangeNotice,
+      DocumentType.benefitAmountChangeNotice,
+      DocumentType.leaveAllotmentChangeNotice,
+      DocumentType.approvedTimeCancelled,
+      DocumentType.changeRequestApproved,
+      DocumentType.changeRequestDenied,
     ];
     const documents = manyDocumentTypes.map((document_type) => {
       return { document_type };

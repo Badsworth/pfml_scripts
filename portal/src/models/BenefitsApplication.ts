@@ -1,12 +1,15 @@
 /**
  * @file Benefits application model and enum values
  */
+
 import LeaveReason, { LeaveReasonType } from "./LeaveReason";
-import { compact, get, isNil, merge, sum, sumBy, zip } from "lodash";
+import { compact, get, merge, sum, sumBy, zip } from "lodash";
+
 import Address from "./Address";
 import BaseBenefitsApplication from "./BaseBenefitsApplication";
 import ConcurrentLeave from "./ConcurrentLeave";
 import EmployerBenefit from "./EmployerBenefit";
+import OrganizationUnit from "./OrganizationUnit";
 import OtherIncome from "./OtherIncome";
 import PaymentPreference from "./PaymentPreference";
 import PreviousLeave from "./PreviousLeave";
@@ -17,6 +20,8 @@ import spreadMinutesOverWeek from "../utils/spreadMinutesOverWeek";
 class BenefitsApplication extends BaseBenefitsApplication {
   application_id: string;
   fineos_absence_id: string | null = null;
+  organization_unit_id: string | null = null;
+  organization_unit_selection: "not_listed" | "not_selected" | null = null;
   created_at: string;
 
   first_name: string | null = null;
@@ -79,6 +84,16 @@ class BenefitsApplication extends BaseBenefitsApplication {
     | typeof BenefitsApplicationStatus[keyof typeof BenefitsApplicationStatus]
     | null = null;
 
+  // Organization unit data selected by the user (used in review page)
+  organization_unit: OrganizationUnit | null;
+
+  // The list of organization units that we know are connected
+  // to this employee based on their occupation and DUA data
+  employee_organization_units: OrganizationUnit[] = [];
+
+  // The list of organization units that are connected to this employer (in FINEOS)
+  employer_organization_units: OrganizationUnit[] = [];
+
   constructor(attrs: Partial<BenefitsApplication>) {
     super();
     // Recursively merge with the defaults
@@ -135,6 +150,19 @@ class BenefitsApplication extends BaseBenefitsApplication {
     return (
       this.status === BenefitsApplicationStatus.submitted ||
       this.status === BenefitsApplicationStatus.completed
+    );
+  }
+
+  /**
+   * Returns a list of the employer's organization units
+   * except for the ones connected to the employee
+   */
+  get extraOrgUnits() {
+    return this.employer_organization_units.filter(
+      (o) =>
+        !this.employee_organization_units
+          .map((o) => o.organization_unit_id)
+          .includes(o.organization_unit_id)
     );
   }
 }
@@ -268,7 +296,6 @@ export class WorkPattern {
     minutesWorkedPerWeek: number,
     workPattern: WorkPattern | { [key: string]: never } = {}
   ) {
-    assert(!isNil(minutesWorkedPerWeek));
     const minutesOverWeek = spreadMinutesOverWeek(minutesWorkedPerWeek);
 
     const newWeek = zip(OrderedDaysOfWeek, minutesOverWeek).map(

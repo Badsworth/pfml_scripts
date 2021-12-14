@@ -3,21 +3,15 @@
 exports[`LeaveSchedule renders reduced schedule 1`] = `
 <tr>
   <th
+    data-label="Date range"
     scope="row"
   >
     2/1/2021 to 7/1/2021
   </th>
-  <td>
+  <td
+    data-label="Leave frequency"
+  >
     Reduced leave schedule
-  </td>
-  <td>
-    Contact us at 
-    <a
-      href="tel:(833) 344-7365"
-    >
-      (833) 344‑7365
-    </a>
-     for details about the leave schedule.
   </td>
 </tr>
 `;

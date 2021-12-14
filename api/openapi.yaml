@@ -1974,6 +1974,17 @@ components:
       allOf:
         - type: object
           properties:
+            organization_unit_selection:
+              type: string
+              nullable: true
+              enum:
+                - not_listed
+                - not_selected
+            organization_unit_id:
+              type: string
+              format: uuid
+              example: "2f0f58a0-fcad-465b-b474-ee6c961cd6e3"
+              nullable: true
             application_nickname:
               type: string
               nullable: true
@@ -2130,6 +2141,11 @@ components:
           type: string
           example: "My bonding leave request"
           nullable: true
+        organization_unit_id:
+          type: string
+          format: uuid
+          example: "2f0f58a0-fcad-465b-b474-ee6c961cd6e3"
+          nullable: true
         application_id:
           type: string
           format: uuid
@@ -2223,6 +2239,24 @@ components:
             - Health Care
           example: "Sales Clerk"
           nullable: true
+        employee_organization_units:
+          type: array
+          items:
+            $ref: "#/components/schemas/OrganizationUnit"
+        employer_organization_units:
+          type: array
+          items:
+            $ref: "#/components/schemas/OrganizationUnit"
+        organization_unit:
+          nullable: true
+          allOf:
+            - $ref: "#/components/schemas/OrganizationUnit"
+        organization_unit_selection:
+          type: string
+          nullable: true
+          enum:
+            - not_listed
+            - not_selected
         gender:
           type: string
           nullable: true
@@ -2327,6 +2361,12 @@ components:
             - Military exigency form
             - Pending Application Withdrawn
             - Appeal Acknowledgment
+            - Maximum Weekly Benefit Change Notice
+            - Benefit Amount Change Notice
+            - Leave Allotment Change Notice
+            - Approved Time Cancelled
+            - Change Request Approved
+            - Change Request Denied
             - Certification Form # Only used when Claimant Portal uploads certification docs
           example: "Passport"
         name:
@@ -2552,6 +2592,10 @@ components:
         claim_type_description:
           format: string
           example: "Medical Leave"
+        organization_unit_id:
+          type: string
+          format: uuid
+          example: "2f0f58a0-fcad-465b-b474-ee6c961cd6e3"
         created_at:
           format: date
         managed_requirements:
@@ -2677,6 +2721,12 @@ components:
             - Military exigency form
             - Pending Application Withdrawn
             - Appeal Acknowledgment
+            - Maximum Weekly Benefit Change Notice
+            - Benefit Amount Change Notice
+            - Leave Allotment Change Notice
+            - Approved Time Cancelled
+            - Change Request Approved
+            - Change Request Denied
           example: "Denial Notice"
         content_type:
           type: string
@@ -2731,6 +2781,12 @@ components:
             - Military exigency form
             - Pending Application Withdrawn
             - Appeal Acknowledgment
+            - Maximum Weekly Benefit Change Notice
+            - Benefit Amount Change Notice
+            - Leave Allotment Change Notice
+            - Approved Time Cancelled
+            - Change Request Approved
+            - Change Request Denied
           example: "Passport"
         content_type:
           type: string
@@ -3474,6 +3530,20 @@ components:
         - employer_id
         - withholding_amount
         - withholding_quarter
+
+    OrganizationUnit:
+      type: object
+      properties:
+        organization_unit_id:
+          type: string
+          format: uuid
+          example: "2f0f58a0-fcad-465b-b474-ee6c961cd6e3"
+        name:
+          type: string
+          example: "Sales"
+      required:
+        - organization_unit_id
+        - name
 
     SsnItin:
       type: string

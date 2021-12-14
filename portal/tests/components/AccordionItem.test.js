@@ -42,4 +42,12 @@ describe("AccordionItem", () => {
     expect(screen.getByText(/Hello world/)).toBeInTheDocument();
     expect(screen.getByTestId("mock-unique-id")).not.toHaveAttribute("hidden");
   });
+
+  it("supports className prop", () => {
+    const { container } = render(
+      <AccordionItem label="accordion" className="margin-left-1" />
+    );
+
+    expect(container.firstChild).toHaveClass("margin-left-1");
+  });
 });

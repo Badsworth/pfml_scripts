@@ -4,6 +4,7 @@ import {
   DocumentType,
   isClaimDocument,
 } from "../models/Document";
+
 import Button from "./core/Button";
 import React from "react";
 import classnames from "classnames";
@@ -101,6 +102,12 @@ function getDocumentName(
     DocumentType.denialNotice,
     DocumentType.requestForInfoNotice,
     DocumentType.withdrawalNotice,
+    DocumentType.maximumWeeklyBenefitChangeNotice,
+    DocumentType.benefitAmountChangeNotice,
+    DocumentType.leaveAllotmentChangeNotice,
+    DocumentType.approvedTimeCancelled,
+    DocumentType.changeRequestApproved,
+    DocumentType.changeRequestDenied,
   ];
   if (docTypes.includes(document.document_type)) {
     return t("components.downloadableDocument.noticeName", {

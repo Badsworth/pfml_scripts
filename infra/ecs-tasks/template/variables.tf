@@ -254,6 +254,11 @@ variable "enable_pub_automation_claimant_address_validation" {
   default     = false
 }
 
+variable "enable_fineos_import_iaww" {
+  description = "Enable scheduling for fineos IAWW processing task"
+  default     = false
+}
+
 variable "enable_pub_automation_process_1099_documents" {
   description = "Enable scheduling for pub automation 1099 documents processing task"
   default     = false
@@ -291,6 +296,17 @@ variable "enable_generate_1099_pdf" {
 variable "enable_merge_1099_pdf" {
   description = "Enable merging of 1099 documents for printing"
   default     = "0"
+}
+
+variable "enable_withholding_payments" {
+  description = "Enable tax withholding payments within the API system."
+  default     = "0"
+}
+
+variable "enable_pub_payments_copy_audit_report_schedule" {
+  description = "Enable scheduling for 'pub-payments-copy-audit-report' ECS task"
+  type        = bool
+  default     = false
 }
 
 ########## Variables for Step Functions ################

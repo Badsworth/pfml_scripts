@@ -15,6 +15,9 @@ const flagsConfig = {
     // When this flag is enabled optional MFA will be enabled for claimant users.
     claimantShowMFA: false,
 
+    // When this flag is enabled payment status phase two work will be displayed.
+    claimantShowPaymentsPhaseTwo: false,
+
     // When this flag is enabled, tax withholding option will be displayed to claimaints.
     claimantShowTaxWithholding: false,
 
@@ -33,6 +36,9 @@ const flagsConfig = {
     // When this flag true, you can BYPASS maintenance pages that are currently present.
     // See docs/portal/maintenance-pages.md for more details.
     noMaintenance: false,
+
+    // When this flag is false, you can bypass the deparment capture form when applying
+    claimantShowOrganizationUnits: false,
 
     // When this flag is enabled, the user can see the site.
     // To immediately hide the site from people who previously overrode this

@@ -5,14 +5,13 @@ import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
 import ConditionalContent from "../ConditionalContent";
 import Heading from "../core/Heading";
 import InputNumber from "../core/InputNumber";
-import ReviewHeading from "../ReviewHeading";
 import ReviewRow from "../ReviewRow";
 import { get } from "lodash";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import usePreviousValue from "../../hooks/usePreviousValue";
 import { useTranslation } from "../../locales/i18n";
 
-interface SupportingWorkDetailsProps {
+interface WeeklyHoursWorkedRowProps {
   appErrors: AppErrorInfoCollection;
   clearField: (arg: string) => void;
   getField: (arg: string) => string;
@@ -26,7 +25,7 @@ interface SupportingWorkDetailsProps {
  * in the Leave Admin claim review page.
  */
 
-const SupportingWorkDetails = (props: SupportingWorkDetailsProps) => {
+const WeeklyHoursWorkedRow = (props: WeeklyHoursWorkedRowProps) => {
   const { t } = useTranslation();
   const [isAmendmentFormDisplayed, setIsAmendmentFormDisplayed] =
     useState(false);
@@ -56,13 +55,10 @@ const SupportingWorkDetails = (props: SupportingWorkDetailsProps) => {
 
   return (
     <React.Fragment>
-      <ReviewHeading level="2">
-        {t("components.employersSupportingWorkDetails.header")}
-      </ReviewHeading>
       <ReviewRow
         level="3"
         label={t(
-          "components.employersSupportingWorkDetails.weeklyHoursWorkedLabel"
+          "components.employersWeeklyHoursWorkedRow.weeklyHoursWorkedLabel"
         )}
         action={
           <AmendButton onClick={() => setIsAmendmentFormDisplayed(true)} />
@@ -83,16 +79,16 @@ const SupportingWorkDetails = (props: SupportingWorkDetailsProps) => {
           className="bg-base-lightest border-base-lighter"
         >
           <Heading level="4" size="3">
-            {t("components.employersSupportingWorkDetails.heading_amend")}
+            {t("components.employersWeeklyHoursWorkedRow.heading_amend")}
           </Heading>
-          <p>{t("components.employersSupportingWorkDetails.subtitle_amend")}</p>
+          <p>{t("components.employersWeeklyHoursWorkedRow.subtitle_amend")}</p>
           <InputNumber
             {...functionalInputProps}
             label={t(
-              "components.employersSupportingWorkDetails.leavePeriodDurationLabel"
+              "components.employersWeeklyHoursWorkedRow.leavePeriodDurationLabel"
             )}
             hint={t(
-              "components.employersSupportingWorkDetails.leavePeriodDurationHint"
+              "components.employersWeeklyHoursWorkedRow.leavePeriodDurationHint"
             )}
             mask="hours"
             width="small"
@@ -105,4 +101,4 @@ const SupportingWorkDetails = (props: SupportingWorkDetailsProps) => {
   );
 };
 
-export default SupportingWorkDetails;
+export default WeeklyHoursWorkedRow;

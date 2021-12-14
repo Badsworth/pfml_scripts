@@ -23,13 +23,14 @@ import OtherIncome, {
 import PreviousLeave, { PreviousLeaveReason } from "../../models/PreviousLeave";
 import React, { useEffect, useState } from "react";
 import Step, { ClaimSteps } from "../../models/Step";
-import { compact, get, isBoolean, isNil } from "lodash";
+import { compact, get } from "lodash";
 import withBenefitsApplication, {
   WithBenefitsApplicationProps,
 } from "../../hoc/withBenefitsApplication";
 import withClaimDocuments, {
   WithClaimDocumentsProps,
 } from "../../hoc/withClaimDocuments";
+
 import Address from "../../models/Address";
 import Alert from "../../components/core/Alert";
 import BackButton from "../../components/BackButton";
@@ -110,6 +111,8 @@ export const Review = (
   );
   const workPattern = new WorkPattern(get(claim, "work_pattern") || {});
   const gender = get(claim, "gender");
+  const isEmployed =
+    get(claim, "employment_status") === EmploymentStatus.employed;
 
   const steps = Step.createClaimStepsFromMachine(claimantConfigs, {
     claim: props.claim,
@@ -329,7 +332,7 @@ export const Review = (
           </ReviewRow>
         )}
 
-      {get(claim, "employment_status") === EmploymentStatus.employed && ( // only display this if the claimant is Employed
+      {isEmployed && ( // only display this if the claimant is Employed
         <ReviewRow
           level={reviewRowLevel}
           label={t("pages.claimsReview.employerFeinLabel")}
@@ -338,7 +341,16 @@ export const Review = (
         </ReviewRow>
       )}
 
-      {get(claim, "employment_status") === EmploymentStatus.employed && ( // only display this if the claimant is Employed
+      {get(claim, "organization_unit") && ( // only displays this if the claimant is Employed
+        <ReviewRow
+          level={reviewRowLevel}
+          label={t("pages.claimsReview.employeeOrganizationUnit")}
+        >
+          {get(claim, "organization_unit.name")}
+        </ReviewRow>
+      )}
+
+      {isEmployed && ( // only display this if the claimant is Employed
         <ReviewRow
           level={reviewRowLevel}
           label={t("pages.claimsReview.employerNotifiedLabel")}
@@ -384,7 +396,7 @@ export const Review = (
           level={reviewRowLevel}
           label={t("pages.claimsReview.workPatternDaysVariableLabel")}
         >
-          {!isNil(workPattern.minutesWorkedPerWeek) &&
+          {!isBlank(workPattern.minutesWorkedPerWeek) &&
             t("pages.claimsReview.workPatternVariableTime", {
               context:
                 convertMinutesToHours(workPattern.minutesWorkedPerWeek)
@@ -775,7 +787,7 @@ export const Review = (
               </ReviewRow>
             </React.Fragment>
           )}
-          {isBoolean(claim.is_withholding_tax) && (
+          {typeof claim.is_withholding_tax === "boolean" && (
             <React.Fragment>
               <ReviewHeading level={reviewHeadingLevel}>
                 {t("pages.claimsReview.stepHeading", { context: "tax" })}

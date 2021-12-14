@@ -1,5 +1,5 @@
 import { ConsentToDataSharing } from "src/pages/user/consent-to-data-sharing";
-import { Props } from "storybook/types";
+import { Props } from "types/common";
 import React from "react";
 import User from "src/models/User";
 import useMockableAppLogic from "lib/mock-helpers/useMockableAppLogic";

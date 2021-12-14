@@ -1,4 +1,4 @@
-import { get, isNil, omitBy } from "lodash";
+import { get, omitBy } from "lodash";
 import routes from "../routes";
 
 // A param with a null/undefined value will be excluded from the query string ultimately created
@@ -20,7 +20,10 @@ export const createRouteWithQuery = (
 ) => {
   const formattedHash = hash ? `/#${hash}` : "";
   // Remove null and undefined
-  const params = omitBy(nullableParams, isNil);
+  const params = omitBy(
+    nullableParams,
+    (value) => value === null || value === undefined
+  );
   let queryString = new URLSearchParams(
     params as { [name: string]: string }
   ).toString();

@@ -1,12 +1,9 @@
 import { Integer } from "../../types/common";
-import assert from "assert";
-import { isNil } from "lodash";
 
 /**
  * Split provided minutes across a 7 day week
  */
 function spreadMinutesOverWeek(minutesWorkedPerWeek: Integer) {
-  assert(!isNil(minutesWorkedPerWeek));
   const dailyMinutes: Integer[] = [];
   const incrementMinutes = 15;
 

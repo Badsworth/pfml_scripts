@@ -1,3 +1,4 @@
+import enum
 import uuid
 
 import massgov.pfml.delegated_payments.irs_1099.pfml_1099_util as pfml_1099_util
@@ -9,6 +10,9 @@ logger = massgov.pfml.util.logging.get_logger(__name__)
 
 
 class PopulateRefundsStep(Step):
+    class Metrics(str, enum.Enum):
+        REFUND_COUNT = "refund_count"
+
     def run_step(self) -> None:
         self._populate_refunds()
 
@@ -58,6 +62,7 @@ class PopulateRefundsStep(Step):
                     "Created 1099 refund.",
                     extra={"pfml_1099_refund_id": pfml_1099_overpayment.pfml_1099_refund_id},
                 )
+                self.increment(self.Metrics.REFUND_COUNT)
 
             self.db_session.commit()
         except Exception:

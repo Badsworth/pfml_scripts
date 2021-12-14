@@ -4,7 +4,7 @@ import User, { UserLeaveAdministrator } from "src/models/User";
 import ClaimCollection from "src/models/ClaimCollection";
 import { Dashboard } from "src/pages/employers/dashboard";
 import { NullableQueryParams } from "src/utils/routeWithParams";
-import { Props } from "storybook/types";
+import { Props } from "types/common";
 import dayjs from "dayjs";
 import faker from "faker";
 import routes from "src/routes";

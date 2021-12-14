@@ -21,6 +21,7 @@ export const addEmployerMock = jest.fn().mockResolvedValue({
 export const getClaimMock = jest.fn().mockResolvedValue((absenceId: string) => {
   return {
     claim: new EmployerClaim({
+      absence_periods: [],
       fineos_absence_id: absenceId,
     }),
   };

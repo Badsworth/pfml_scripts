@@ -66,7 +66,7 @@ export const LSTOLB1: ScenarioSpecification = {
   ...CypressScenarios.BHAP1,
   claim: {
     ...CypressScenarios.BHAP1.claim,
-    label: "PortalClaimSubmit",
+    label: "PortalClaimSubmit - Other Leaves/Benefits",
     employerResponse: {
       hours_worked_per_week: 40,
       employer_decision: "Approve",
@@ -81,7 +81,7 @@ export const LSTBHAP1: ScenarioSpecification = {
   ...CypressScenarios.BHAP1,
   claim: {
     ...CypressScenarios.BHAP1.claim,
-    label: "PortalClaimSubmit",
+    label: "PortalClaimSubmit - Bonding",
     employerResponse: {
       hours_worked_per_week: 40,
       employer_decision: "Approve",
@@ -95,7 +95,7 @@ export const LSTCHAP1: ScenarioSpecification = {
     mass_id: true,
   },
   claim: {
-    label: "CCAP90",
+    label: "PortalClaimSubmit - Caring",
     reason: "Care for a Family Member",
     work_pattern_spec: "0,720,0,720,0,720,0",
     docs: { MASSID: {}, CARING: {} },
@@ -104,6 +104,7 @@ export const LSTCHAP1: ScenarioSpecification = {
       hours_worked_per_week: 40,
       employer_decision: "Approve",
     },
+    is_withholding_tax: true,
   },
 };
 

@@ -20,6 +20,7 @@ module.exports = {
     "prettier",
     "plugin:jsx-a11y/recommended",
     "plugin:react/recommended",
+    "plugin:you-dont-need-lodash-underscore/all",
   ],
   plugins: ["jest", "jsdoc", "lodash", "todo-plz", "jsx-a11y", "react-hooks"],
   parser: "babel-eslint",
@@ -75,7 +76,7 @@ module.exports = {
         "@typescript-eslint/no-parameter-properties": "error",
         "@typescript-eslint/no-unused-vars": [
           "error",
-          { argsIgnorePattern: "^_" },
+          { argsIgnorePattern: "^_", ignoreRestSiblings: true },
         ],
         // conflicts with @typescript-eslint/strict-boolean-expressions:
         "no-extra-boolean-cast": "off",
@@ -244,8 +245,13 @@ module.exports = {
     "sort-vars": "error",
     "todo-plz/ticket-ref": [
       "error",
-      { pattern: "(API|CP|EMPLOYER|POL|PORTAL)-[0-9]+", terms: ["TODO"] },
+      {
+        pattern: "(API|CP|EMPLOYER|POL|PORTAL|PFMLPB)-[0-9]+",
+        terms: ["TODO"],
+      },
     ],
+    // We use _.get() a lot to get deeply nested nullable values
+    "you-dont-need-lodash-underscore/get": "off",
   },
   settings: {
     jest: {

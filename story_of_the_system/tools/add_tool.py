@@ -59,7 +59,7 @@ if has_abbreviation:
     pre_template = re.sub("Tool X ", f"{full_tool_name}\n", templt)
     new_template = re.sub("Tool Xa", abbreviation, pre_template)
 else:
-    new_template = re.sub(r"Tool X |Tool Xa", f"{full_tool_name}\n", templt)
+    new_template = re.sub(r"Tool X |Tool Xa", f"{full_tool_name}", templt)
 
 
 with open(f"{directory_name}/README.md", "w") as file:

@@ -79,6 +79,8 @@ services:
       # - OAUTHLIB_INSECURE_TRANSPORT=1
       # Disable this variable and set the following three variables to use a real Service Now API instead of a mock:
       - ENABLE_MOCK_SERVICE_NOW_CLIENT=1
+
+      - ENABLE_WITHHOLDING_PAYMENTS=0
       # - SERVICE_NOW_BASE_URL=...
       # - SERVICE_NOW_USERNAME=...
       # - SERVICE_NOW_PASSWORD=...
@@ -108,7 +110,6 @@ services:
       - PDF_API_HOST=https://mass-pfml-pdf-api
       - ENABLE_GENERATE_1099_PDF=1
       - ENABLE_MERGE_1099_PDF=1
-
     networks:
       main:
         aliases:

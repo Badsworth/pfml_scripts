@@ -28,6 +28,7 @@ import PreviousLeave, {
   PreviousLeaveReason,
   PreviousLeaveType,
 } from "../../src/models/PreviousLeave";
+
 import Address from "../../src/models/Address";
 import ConcurrentLeave from "../../src/models/ConcurrentLeave";
 import EmployerClaim from "../../src/models/EmployerClaim";
@@ -283,6 +284,7 @@ export class MockEmployerClaimBuilder extends BaseMockBenefitsApplicationBuilder
     super();
     // Defaults, can be overridden by calling instance methods
     this.claimAttrs = {
+      absence_periods: [],
       employer_dba: "Work Inc.",
       employer_id: "dda903f-f093f-ff900",
       first_name: "Jane",
@@ -692,6 +694,22 @@ export class MockBenefitsApplicationBuilder extends BaseMockBenefitsApplicationB
    */
   pregnant() {
     set(this.claimAttrs, "leave_details.pregnant_or_recent_birth", true);
+    return this;
+  }
+
+  /**
+   * @returns {MockBenefitsApplicationBuilder}
+   */
+  employerOrganizationUnits(units) {
+    set(this.claimAttrs, "employer_organization_units", units);
+    return this;
+  }
+
+  /**
+   * @returns {MockBenefitsApplicationBuilder}
+   */
+  employeeOrganizationUnits(units) {
+    set(this.claimAttrs, "employee_organization_units", units);
     return this;
   }
 

@@ -2,7 +2,7 @@ import PaginationNavigation, {
   truncationStates,
 } from "src/components/PaginationNavigation";
 import FlowDiagram from "../../utils/FlowDiagram";
-import { Props } from "storybook/types";
+import { Props } from "types/common";
 import React from "react";
 
 export default {
