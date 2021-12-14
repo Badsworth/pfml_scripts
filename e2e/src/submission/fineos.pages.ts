@@ -152,7 +152,7 @@ export class Claim extends FineosPage {
       // This sometimes takes a while. Wait for it to complete.
       timeout: 60000,
     });
-    await this.assertClaimStatus("Approved");
+    await this.assertClaimStatus("Completed");
   }
 
   async assertClaimStatus(expected: ClaimStatus): Promise<void> {

@@ -15,7 +15,7 @@ import { collect, map, filter } from "streaming-iterables";
 const pipelineP = promisify(pipeline);
 
 (async () => {
-  const storage = dataDirectory("payments-2021-12-09-payments");
+  const storage = dataDirectory("payments-2021-12-13-payments-dt2");
   await storage.prepare();
 
   const employerPool = await EmployerPool.load(storage.employers);
@@ -64,28 +64,16 @@ const pipelineP = promisify(pipeline);
 
   // Attempt to load a claim pool if one has already been generated and saved.
   // If we error out here, we go into generating and saving the pool.
-
-  const claims = await ClaimPool.load(
-    storage.claims,
+  const claimsFirst = await ClaimPool.load(
+    storage.dir + "/claims_mon.ndjson",
     storage.documents
-  ).orGenerateAndSave(() =>
-    ClaimPool.merge(
-      ...scenarios.map((scenario) =>
-        ClaimPool.generate(
-          employeePool,
-          scenario.employee,
-          scenario.claim,
-          (scenario.claim.metadata?.quantity as number) * 1.2
-        )
-      ),
-      ClaimPool.generate(
-        employeePool,
-        WITHHOLDING_RETRO.employee,
-        WITHHOLDING_RETRO.claim,
-        30 * 1.2
-      )
-    )
   );
+  const claimsSecond = await ClaimPool.load(
+    storage.dir + "/claims_tues.ndjson",
+    storage.documents
+  );
+
+  const claims = ClaimPool.merge(...[claimsFirst, claimsSecond]);
 
   const usedSSNS = await (
     await collect(claims)
@@ -100,6 +88,26 @@ const pipelineP = promisify(pipeline);
         return !usedSSNS.has(emp.ssn);
       }, employeePool)
     )
+  );
+
+  await ClaimPool.load(storage.claims, storage.documents).orGenerateAndSave(
+    () =>
+      ClaimPool.merge(
+        ...scenarios.map((scenario) =>
+          ClaimPool.generate(
+            freshEmployees,
+            scenario.employee,
+            scenario.claim,
+            8
+          )
+        ),
+        ClaimPool.generate(
+          freshEmployees,
+          WITHHOLDING_RETRO.employee,
+          WITHHOLDING_RETRO.claim,
+          8
+        )
+      )
   );
 
   const used = process.memoryUsage().heapUsed / 1024 / 1024;
