@@ -6,7 +6,6 @@ import { Props } from "types/common";
 import React from "react";
 import User from "src/models/User";
 import claimantConfig from "src/flows/claimant";
-import { find } from "lodash";
 import useMockableAppLogic from "lib/mock-helpers/useMockableAppLogic";
 
 /**
@@ -17,7 +16,7 @@ import useMockableAppLogic from "lib/mock-helpers/useMockableAppLogic";
 function generateWarningsForStep(name: string) {
   const allSteps = Step.createClaimStepsFromMachine(claimantConfig);
 
-  const step = find(allSteps, { name });
+  const step = allSteps.find((s) => s.name === name);
 
   return step?.fields.map((field) => {
     return { field: field.replace(/^claim./, ""), message: "Mocked warning" };

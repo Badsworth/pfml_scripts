@@ -10,7 +10,6 @@ import {
 } from "../../../models/Document";
 import React, { useEffect } from "react";
 import Tag, { TagProps } from "../../../components/core/Tag";
-import { find, has, map } from "lodash";
 import withUser, { WithUserProps } from "../../../hoc/withUser";
 
 import Alert from "../../../components/core/Alert";
@@ -216,8 +215,8 @@ export const Status = ({
   const getInfoAlertContext = (absenceDetails: {
     [key: string]: AbsencePeriod[];
   }) => {
-    const hasBondingReason = has(absenceDetails, LeaveReason.bonding);
-    const hasPregnancyReason = has(absenceDetails, LeaveReason.pregnancy);
+    const hasBondingReason = LeaveReason.bonding in absenceDetails;
+    const hasPregnancyReason = LeaveReason.pregnancy in absenceDetails;
     const hasNewBorn = claimDetail.absence_periods.some(
       (absenceItem) =>
         (absenceItem.reason_qualifier_one ||
@@ -473,7 +472,7 @@ export const LeaveDetails = ({
 
   return (
     <React.Fragment>
-      {map(absenceDetails, (absenceItem, absenceItemName) => (
+      {Object.entries(absenceDetails).map(([absenceItemName, absenceItem]) => (
         <div key={absenceItemName} className={containerClassName}>
           <Heading level="2">
             {t("pages.claimsStatus.leaveReasonValue", {
@@ -586,8 +585,7 @@ export const Timeline = ({
       DocumentType.certification[absencePeriodReason],
     ]).length;
 
-  const bondingAbsencePeriod = find(
-    absencePeriods,
+  const bondingAbsencePeriod = absencePeriods.find(
     (absencePeriod) => absencePeriod.reason === LeaveReason.bonding
   );
   interface FollowUpStepsProps {

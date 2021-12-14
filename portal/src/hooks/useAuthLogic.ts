@@ -9,13 +9,13 @@ import {
   NullableQueryParams,
   createRouteWithQuery,
 } from "../utils/routeWithParams";
-import { compact, trim } from "lodash";
 import { useMemo, useState } from "react";
 import { AppErrorsLogic } from "./useAppErrorsLogic";
 import { PortalFlow } from "./usePortalFlow";
 import { RoleDescription } from "../models/User";
 import UsersApi from "../api/UsersApi";
 import assert from "assert";
+import { compact } from "lodash";
 import { isFeatureEnabled } from "../services/featureFlags";
 import routes from "../routes";
 import tracker from "../services/tracker";
@@ -98,7 +98,7 @@ const useAuthLogic = ({
    */
   const sendForgotPasswordConfirmation = async (username = "") => {
     appErrorsLogic.clearErrors();
-    const trimmedUsername = trim(username);
+    const trimmedUsername = username.trim();
 
     const validationIssues = combineValidationIssues(
       validateUsername(trimmedUsername)
@@ -137,7 +137,7 @@ const useAuthLogic = ({
    */
   const login = async (username = "", password: string, next?: string) => {
     appErrorsLogic.clearErrors();
-    const trimmedUsername = trim(username);
+    const trimmedUsername = username.trim();
 
     const validationIssues = combineValidationIssues(
       validateUsername(trimmedUsername),
@@ -374,7 +374,7 @@ const useAuthLogic = ({
     employer_fein?: string
   ) => {
     appErrorsLogic.clearErrors();
-    const trimmedEmail = trim(email_address);
+    const trimmedEmail = email_address.trim();
 
     const requestData = {
       email_address: trimmedEmail,
@@ -477,7 +477,7 @@ const useAuthLogic = ({
 
   const resendVerifyAccountCode = async (username = "") => {
     appErrorsLogic.clearErrors();
-    const trimmedUsername = trim(username);
+    const trimmedUsername = username.trim();
 
     const validationIssues = combineValidationIssues(
       validateUsername(trimmedUsername)
@@ -511,8 +511,8 @@ const useAuthLogic = ({
   const resetPassword = async (username = "", code = "", password = "") => {
     appErrorsLogic.clearErrors();
 
-    const trimmedUsername = trim(username);
-    const trimmedCode = trim(code);
+    const trimmedUsername = username.trim();
+    const trimmedCode = code.trim();
 
     const validationIssues = combineValidationIssues(
       validateCode(trimmedCode),
@@ -608,8 +608,8 @@ const useAuthLogic = ({
   const verifyAccount = async (username = "", code = "") => {
     appErrorsLogic.clearErrors();
 
-    const trimmedUsername = trim(username);
-    const trimmedCode = trim(code);
+    const trimmedUsername = username.trim();
+    const trimmedCode = code.trim();
 
     const validationIssues = combineValidationIssues(
       validateCode(trimmedCode),

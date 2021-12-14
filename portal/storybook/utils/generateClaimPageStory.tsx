@@ -1,5 +1,4 @@
-import { chain, find, first, get, map, upperFirst } from "lodash";
-
+import { chain, get, upperFirst } from "lodash";
 import AppErrorInfo from "src/models/AppErrorInfo";
 import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
 import BenefitsApplication from "src/models/BenefitsApplication";
@@ -103,8 +102,7 @@ function generateDefaultStory(Component, mockClaims, possibleErrors) {
   }
 
   // Just take the first claim in the list of claims as the defaultClaim
-  // @ts-expect-error ts-migrate(2532) FIXME: Object is possibly 'undefined'.
-  const defaultClaim = first(Object.entries(claims))[0];
+  const defaultClaim = Object.keys(claims)[0];
 
   // @ts-expect-error ts-migrate(7006) FIXME: Parameter 'args' implicitly has an 'any' type.
   const DefaultStory = (args) => {
@@ -116,7 +114,10 @@ function generateDefaultStory(Component, mockClaims, possibleErrors) {
     const appErrors = new AppErrorInfoCollection(
       // @ts-expect-error ts-migrate(7006) FIXME: Parameter 'displayStr' implicitly has an 'any' typ... Remove this comment to see the full error message
       errorDisplayStrs.map((displayStr) => {
-        const errorInfo = find(possibleErrors, { displayStr });
+        const errorInfo = possibleErrors.find(
+          // @ts-expect-error ts-migrate(7006) FIXME: Parameter 'error' implicitly has an 'any'
+          (error) => error.displayStr === displayStr
+        );
         const { field, i18nKey } = errorInfo;
         return new AppErrorInfo({
           message: t(i18nKey),
@@ -153,7 +154,8 @@ function generateDefaultStory(Component, mockClaims, possibleErrors) {
     errors: {
       control: {
         type: "check",
-        options: map(possibleErrors, "displayStr"),
+        // @ts-expect-error FIXME: err is `any`
+        options: possibleErrors.map((error) => error.displayStr),
       },
     },
   };

@@ -1,5 +1,6 @@
-import { every, zip } from "lodash";
 import TempFileCollection from "../models/TempFileCollection";
+import { zip } from "lodash";
+
 /**
  * Convenience function for code shared on upload pages.  If we combine the upload-id and upload-certification
  * pages, this logic can be moved into the combined page, instead.
@@ -15,23 +16,21 @@ const uploadDocumentsHelper = async (
     return { success: false };
   }
 
-  const success = every(
-    await Promise.all(
-      zip(tempFiles.items, uploadPromises).map(
-        async ([successfullyUploadedFile, uploadPromise]) => {
-          if (!uploadPromise || !successfullyUploadedFile) return true;
-          const { success } = await uploadPromise;
-          if (success) {
-            removeTempFile(successfullyUploadedFile.id);
-            return success;
-          }
-          return false;
+  const results = await Promise.all(
+    zip(tempFiles.items, uploadPromises).map(
+      async ([successfullyUploadedFile, uploadPromise]) => {
+        if (!uploadPromise || !successfullyUploadedFile) return true;
+        const { success } = await uploadPromise;
+        if (success) {
+          removeTempFile(successfullyUploadedFile.id);
+          return success;
         }
-      )
+        return false;
+      }
     )
   );
 
-  return { success };
+  return { success: results.every((result) => result === true) };
 };
 
 export default uploadDocumentsHelper;

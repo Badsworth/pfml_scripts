@@ -155,7 +155,7 @@ describe("useEmployersLogic", () => {
           throw new ForbiddenError(
             {
               employer_id: "some-employer-id",
-              has_verification_data: "true",
+              has_verification_data: true,
             },
             "User is not Verified"
           );

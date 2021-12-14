@@ -4,7 +4,7 @@ import PreviousLeave, {
   PreviousLeaveType,
 } from "../../../models/PreviousLeave";
 import React, { useEffect, useState } from "react";
-import { get, isEqual, isNil, omit } from "lodash";
+import { get, isEqual } from "lodash";
 import withEmployerClaim, {
   WithEmployerClaimProps,
 } from "../../../hoc/withEmployerClaim";
@@ -34,6 +34,7 @@ import { Trans } from "react-i18next";
 import WeeklyHoursWorkedRow from "../../../components/employers/WeeklyHoursWorkedRow";
 import findDocumentsByTypes from "../../../utils/findDocumentsByTypes";
 import formatDateRange from "../../../utils/formatDateRange";
+import isBlank from "../../../utils/isBlank";
 import { isFeatureEnabled } from "../../../services/featureFlags";
 import leaveReasonToPreviousLeaveReason from "../../../utils/leaveReasonToPreviousLeaveReason";
 import routes from "../../../routes";
@@ -337,16 +338,18 @@ export const Review = (props: WithEmployerClaimProps) => {
 
     const concurrent_leave =
       formState.amendedConcurrentLeave || formState.addedConcurrentLeave;
-    const employer_benefits = allEmployerBenefits.map((benefit) =>
-      omit(benefit, ["employer_benefit_id"])
-    );
-    const previous_leaves = allPreviousLeaves.map((leave) =>
-      omit(leave, ["previous_leave_id"])
-    );
+    const employer_benefits = allEmployerBenefits.map((benefit) => {
+      const { employer_benefit_id, ...rest } = benefit;
+      return rest;
+    });
+    const previous_leaves = allPreviousLeaves.map((leave) => {
+      const { previous_leave_id, ...rest } = leave;
+      return rest;
+    });
 
     // canceling amendments causes their values in formState to be null.
     // in these cases, we want to restore the claimant-provided, original values.
-    const hours_worked_per_week = isNil(formState.hours_worked_per_week)
+    const hours_worked_per_week = isBlank(formState.hours_worked_per_week)
       ? claim.hours_worked_per_week
       : formState.hours_worked_per_week;
 
