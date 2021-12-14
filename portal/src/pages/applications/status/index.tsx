@@ -134,13 +134,9 @@ export const Status = ({
   const viewYourNotices = () => {
     const legalNotices = getLegalNotices(documentsForApplication);
 
-    const shouldShowSpinner =
-      !hasLoadedClaimDocuments(claimDetail.application_id) &&
-      !hasDocumentsLoadError(appLogic.appErrors, claimDetail.application_id);
     const hasNothingToShow =
       hasDocumentsLoadError(appLogic.appErrors, claimDetail.application_id) ||
       legalNotices.length === 0;
-
     interface SectionWrapperProps {
       children: React.ReactNode;
     }
@@ -148,7 +144,7 @@ export const Status = ({
       <div className={containerClassName}>{children}</div>
     );
 
-    if (shouldShowSpinner) {
+    if (isLoadingClaimDetail) {
       // claim documents are loading.
       return (
         <SectionWrapper>
