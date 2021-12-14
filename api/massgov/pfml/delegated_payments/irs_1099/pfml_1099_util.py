@@ -19,6 +19,7 @@ from massgov.pfml.db.models.employees import (
 )
 from massgov.pfml.db.models.payments import (
     FineosExtractEmployeeFeed,
+    FineosExtractVpei,
     MmarsPaymentData,
     Pfml1099,
     Pfml1099Batch,
@@ -239,43 +240,75 @@ def get_overpayments(db_session: db.Session) -> NamedTuple:
 
     year = get_tax_year()
 
+    # WITH OVER_PAYMENTS      AS (SELECT PAYMENT_ID, CAST(ENDED_AT AS DATE) FROM STATE_LOG WHERE END_STATE_ID = 125),
+    # VPEI               AS (SELECT RANK() OVER (PARTITION BY I ORDER BY FINEOS_EXTRACT_IMPORT_LOG_ID DESC) R, PEI.*
+    # FROM FINEOS_EXTRACT_VPEI PEI)
     # SELECT CURRENT_TIMESTAMP CREATED_AT,
-    #     CURRENT_TIMESTAMP UPDATED_AT,
-    #     GEN_RANDOM_UUID() PFML_1099_REFUND_ID,
-    #     PFML_1099_BATCH_ID,
-    #     E.EMPLOYEE_ID EMPLOYEE_ID,
-    #     P.PAYMENT_ID PAYMENT_ID,
-    #     P.AMOUNT REFUND_AMOUNT
-    #     P.PAYMENT_DATE
-    # FROM PAYMENT P
-    # INNER JOIN EMPLOYEE E ON E.EMPLOYEE_ID = P.EMPLOYEE_ID
+    #       CURRENT_TIMESTAMP UPDATED_AT,
+    #       GEN_RANDOM_UUID() PFML_1099_REFUND_ID,
+    #       XXX PFML_1099_BATCH_ID,
+    #       E.EMPLOYEE_ID EMPLOYEE_ID,
+    #       NULL CLAIM_ID,
+    #       P.PAYMENT_ID PAYMENT_ID,
+    #       P.AMOUNT REFUND_AMOUNT
+    # FROM OVER_PAYMENTS OP
+    # INNER JOIN PAYMENT P ON OP.PAYMENT_ID = P.PAYMENT_ID
+    # INNER JOIN VPEI ON P.FINEOS_PEI_C_VALUE = VPEI.C
+    # AND P.FINEOS_PEI_I_VALUE = VPEI.I
+    # INNER JOIN EMPLOYEE E ON VPEI.PAYEECUSTOMER = E.FINEOS_CUSTOMER_NUMBER
     # INNER JOIN LK_PAYMENT_TRANSACTION_TYPE PTT ON P.PAYMENT_TRANSACTION_TYPE_ID = PTT.PAYMENT_TRANSACTION_TYPE_ID
-    # WHERE PTT.PAYMENT_TRANSACTION_TYPE_DESCRIPTION IN (Overpayment Actual Recovery,
-    #                                                 Overpayment Recovery,
-    #                                                 Overpayment Recovery Reverse,
-    #                                                 Overpayment Recovery Cancellation)
+    # WHERE PTT.PAYMENT_TRANSACTION_TYPE_DESCRIPTION IN ('Overpayment Actual Recovery',
+    #                                                   'Overpayment Recovery',
+    #                                                   'Overpayment Recovery Reverse',
+    #                                                   'Overpayment Recovery Cancellation')
+    # AND DATE_PART('YEAR', OP.ENDED_AT) = 2021
+    # AND VPEI.PAYMENTMETHOD <> 'Inflight Recovery'
+    # AND VPEI.R = 1
     overpayments = (
+        db_session.query(StateLog.payment_id, cast(StateLog.ended_at, Date).label("ended_at"))
+        .filter(StateLog.end_state_id == State.DELEGATED_PAYMENT_PROCESSED_OVERPAYMENT.state_id)
+        .subquery()
+    )
+    vpei = db_session.query(
+        FineosExtractVpei,
+        func.rank()
+        .over(
+            order_by=[FineosExtractVpei.fineos_extract_import_log_id.desc(),],
+            partition_by=FineosExtractVpei.i,
+        )
+        .label("R"),
+    ).subquery()
+
+    refunds = (
         db_session.query(
+            overpayments,
             Payment.payment_id.label("payment_id"),
             Payment.amount.label("payment_amount"),
             Employee.employee_id.label("employee_id"),
             Payment.payment_date.label("payment_date"),
-            Payment.payment_transaction_type_id,
-            Payment.employee_id,
         )
-        .join(Employee, Payment.employee_id == Employee.employee_id)
+        .join(Payment, overpayments.c.payment_id == Payment.payment_id)
+        .join(
+            vpei, Payment.fineos_pei_c_value == vpei.c.c and Payment.fineos_pei_i_value == vpei.c.i,
+        )
+        .join(Employee, vpei.c.payeecustomer == Employee.fineos_customer_number)
         .join(
             LkPaymentTransactionType,
             Payment.payment_transaction_type_id
             == LkPaymentTransactionType.payment_transaction_type_id,
         )
-        .filter(Payment.payment_transaction_type_id.in_(OVERPAYMENT_TYPES_1099_IDS))
+        .filter(
+            Payment.payment_transaction_type_id.in_(OVERPAYMENT_TYPES_1099_IDS),
+            func.extract("YEAR", overpayments.c.ended_at) == year,
+            vpei.c.paymentmethod != "Inflight Recovery",
+            vpei.c.R == 1,
+        )
         .all()
     )
 
-    logger.info("Number of Overpayments for %s: %s", year, len(overpayments))
+    logger.info("Number of Overpayments for %s: %s", year, len(refunds))
 
-    return overpayments
+    return refunds
 
 
 def get_1099s(db_session: db.Session, batch: Pfml1099Batch) -> NamedTuple:
