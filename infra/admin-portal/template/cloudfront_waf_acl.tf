@@ -21,6 +21,7 @@ resource "aws_wafv2_web_acl" "cloudfront_waf_acl" {
   #------------------------------------------------------------------------------#
   #                        Rate-limiting AWS WAF rule                            #
   #------------------------------------------------------------------------------#
+  # Must be the lowest priority - 0
   rule {
     name     = "mass-${local.app_name}-${var.environment_name}-rate-based-rule"
     priority = 0
