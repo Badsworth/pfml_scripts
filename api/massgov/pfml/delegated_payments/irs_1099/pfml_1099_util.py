@@ -297,7 +297,8 @@ def get_overpayments(db_session: db.Session) -> NamedTuple:
         )
         .join(Payment, overpayments.c.payment_id == Payment.payment_id)
         .join(
-            vpei, Payment.fineos_pei_c_value == vpei.c.c and Payment.fineos_pei_i_value == vpei.c.i,
+            vpei,
+            (Payment.fineos_pei_c_value == vpei.c.c) & (Payment.fineos_pei_i_value == vpei.c.i),
         )
         .join(Employee, vpei.c.payeecustomer == Employee.fineos_customer_number)
         .join(
