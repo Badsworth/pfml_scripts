@@ -1,3 +1,10 @@
+
+# ----------------------------------------------------------------------------------------------------------------------------- #
+# Workflow that triggers an automated code deployment of the infra/admin-portal/* directories                                   #
+# Anytime a branch is merged to main or one of the numerous "deploy/admin-portal/<env>" this workflow kicks off a deployment    #
+# This workflow (once merged to main) can be ran manually from the GH Actions UI with configurable inputs                       #
+# ----------------------------------------------------------------------------------------------------------------------------- #
+
 name: Admin Portal Infra Deploy
 
 on:
