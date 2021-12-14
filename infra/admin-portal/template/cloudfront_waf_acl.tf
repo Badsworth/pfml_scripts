@@ -19,36 +19,6 @@ resource "aws_wafv2_web_acl" "cloudfront_waf_acl" {
   }
 
   #------------------------------------------------------------------------------#
-  #                        IP Whitelist AWS WAF rule                            #
-  #------------------------------------------------------------------------------#
-  rule {
-    name     = "mass-${local.app_name}-${var.environment_name}-ip-whitelist-acl"
-    priority = 1
-
-    statement {
-      ip_set_reference_statement {
-        arn = aws_wafv2_ip_set.workspaces_ip_whitelist.arn
-        # Commented out for now as the WAF isn't able to pick up the IP in the XFF header
-        # ip_set_forwarded_ip_config {
-        #   fallback_behavior = "NO_MATCH"
-        #   header_name       = "X-Forwarded-For"
-        #   position          = "ANY"
-        # }
-      }
-    }
-
-    action {
-      allow {}
-    }
-
-    visibility_config {
-      cloudwatch_metrics_enabled = true
-      metric_name                = "mass-${local.app_name}-${var.environment_name}-ip-whitelist-metric"
-      sampled_requests_enabled   = true
-    }
-  }
-
-  #------------------------------------------------------------------------------#
   #                        Rate-limiting AWS WAF rule                            #
   #------------------------------------------------------------------------------#
   rule {
@@ -82,6 +52,37 @@ resource "aws_wafv2_web_acl" "cloudfront_waf_acl" {
       sampled_requests_enabled   = true
     }
   }
+
+  #------------------------------------------------------------------------------#
+  #                        IP Whitelist AWS WAF rule                            #
+  #------------------------------------------------------------------------------#
+  rule {
+    name     = "mass-${local.app_name}-${var.environment_name}-ip-whitelist-acl"
+    priority = 1
+
+    statement {
+      ip_set_reference_statement {
+        arn = aws_wafv2_ip_set.workspaces_ip_whitelist.arn
+        # Commented out for now as the WAF isn't able to pick up the IP in the XFF header
+        # ip_set_forwarded_ip_config {
+        #   fallback_behavior = "NO_MATCH"
+        #   header_name       = "X-Forwarded-For"
+        #   position          = "ANY"
+        # }
+      }
+    }
+
+    action {
+      allow {}
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = true
+      metric_name                = "mass-${local.app_name}-${var.environment_name}-ip-whitelist-metric"
+      sampled_requests_enabled   = true
+    }
+  }
+
   #------------------------------------------------------------------------------#
   #                      Fortinet OWASP 10 AWS WAF rule                          #
   #------------------------------------------------------------------------------#
