@@ -83,7 +83,7 @@ class Generate1099DocumentsStep(Step):
                 "city": record.city,
                 "state": record.state,
                 "zipCode": record.zip,
-                "accountNumber": None,
+                "accountNumber": record.account_number,
             }
 
             response = requests.post(
