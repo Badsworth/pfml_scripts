@@ -22,7 +22,7 @@ namespace PfmlPdfApi.Utilities.Mock
             return true;
         }
 
-        public async Task<bool> CreateFileAsync(string fileName, MemoryStream stream)
+        public async Task<bool> CreateFileAsync(string fileName, MemoryStream stream, string contentType = "application/pdf")
         {
             var lstream = new MemoryStream(stream.ToArray());
             lstream.Seek(0, SeekOrigin.Begin);

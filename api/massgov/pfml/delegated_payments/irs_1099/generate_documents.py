@@ -19,7 +19,17 @@ class Generate1099DocumentsStep(Step):
 
     def run_step(self) -> None:
         self.pdfApiEndpoint = pfml_1099_util.get_pdf_api_generate_endpoint()
+        self._update_1099_template()
         self._generate_1099_documents()
+
+    def _update_1099_template(self) -> None:
+        url = pfml_1099_util.get_pdf_api_update_template_endpoint()
+        response = requests.get(url)
+
+        if response.ok:
+            logger.info("1099 Template was successfully updated.")
+        else:
+            logger.error(response.json())
 
     def _generate_1099_documents(self) -> None:
         logger.info("1099 Documents - Generate 1099 Documents Step")
