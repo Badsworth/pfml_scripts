@@ -77,6 +77,7 @@ module "tasks" {
   pdf_api_host             = "https://localhost:5001"
   enable_generate_1099_pdf = "1"
   enable_merge_1099_pdf    = "1"
+  enable_upload_1099_pdf   = "1"
 
   enable_withholding_payments = "0"
 }

@@ -125,6 +125,11 @@ class PaymentsS3Config(PydanticBaseSettings):
         NOT_SET, description="This is where we store a copy of the payment reject response file"
     )
 
+    # TODO: Add some description
+    pfml_1099_document_archive_path: str = Field(
+        NOT_SET, description="This is where we store all 1099 pdf documents"
+    )
+
 
 def get_s3_config() -> PaymentsS3Config:
     return PaymentsS3Config()

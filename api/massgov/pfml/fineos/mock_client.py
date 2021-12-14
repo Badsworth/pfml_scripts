@@ -15,6 +15,7 @@ from typing import Any, List, Optional, Tuple, Union
 
 import faker
 import requests
+from requests.models import Response
 
 import massgov.pfml.util.logging
 import massgov.pfml.util.logging.wrapper
@@ -733,6 +734,12 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
             absence_id=absence_id,
             is_withholding_tax=is_withholding_tax,
         )
+
+    def upload_document_to_dms(self, file_name: str, file: bytes, data: Any) -> Response:
+        _capture_call("upload_document_to_dms", None)
+
+        response = Response()
+        return response
 
 
 massgov.pfml.util.logging.wrapper.log_all_method_calls(MockFINEOSClient, logger)

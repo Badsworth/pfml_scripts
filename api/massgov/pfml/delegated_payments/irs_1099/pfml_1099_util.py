@@ -83,6 +83,10 @@ def is_merge_1099_pdf_enabled() -> bool:
     return app.get_config().enable_merge_1099_pdf
 
 
+def is_upload_1099_pdf_enabled() -> bool:
+    return app.get_config().enable_upload_1099_pdf
+
+
 def get_pdf_api_generate_endpoint() -> str:
     return f"{__get_pdf_api_endpoint()}/api/pdf/generate"
 
@@ -657,3 +661,8 @@ def get_tax_id(db_session: Any, tax_id_str: str) -> str:
     except Exception:
         logger.exception("Error accessing 1099 data")
         raise
+
+
+def get_1099_record(db_session: db.Session, id: str) -> Optional[Pfml1099]:
+    """Get pfml 1099 record by id"""
+    return db_session.query(Pfml1099).get(id)
