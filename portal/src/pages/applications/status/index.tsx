@@ -277,22 +277,26 @@ export const Status = ({
           noIcon
           state="info"
         >
-          <Trans
-            i18nKey="pages.claimsStatus.infoAlertBody"
-            tOptions={{ context: infoAlertContext }}
-            components={{
-              "about-bonding-leave-link": (
-                <a
-                  href={routes.external.massgov.benefitsGuide_aboutBondingLeave}
-                  target="_blank"
-                  rel="noreferrer noopener"
-                />
-              ),
-              "contact-center-phone-link": (
-                <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
-              ),
-            }}
-          />
+          <p>
+            <Trans
+              i18nKey="pages.claimsStatus.infoAlertBody"
+              tOptions={{ context: infoAlertContext }}
+              components={{
+                "about-bonding-leave-link": (
+                  <a
+                    href={
+                      routes.external.massgov.benefitsGuide_aboutBondingLeave
+                    }
+                    target="_blank"
+                    rel="noreferrer noopener"
+                  />
+                ),
+                "contact-center-phone-link": (
+                  <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
+                ),
+              }}
+            />
+          </p>
         </Alert>
       )}
       <BackButton

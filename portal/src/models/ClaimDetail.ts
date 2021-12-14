@@ -132,6 +132,12 @@ export interface Payments {
   payments: PaymentDetail[];
 }
 
+export type PaymentStatus =
+  | "Cancelled"
+  | "Delayed"
+  | "Pending"
+  | "Sent to bank";
+
 /**
  * Payment details associated with the Claim
  */
@@ -146,7 +152,5 @@ export interface PaymentDetail {
   expected_send_date_end: string | null;
   status: PaymentStatus;
 }
-
-type PaymentStatus = "Cancelled" | "Delayed" | "Pending" | "Sent to bank";
 
 export default ClaimDetail;

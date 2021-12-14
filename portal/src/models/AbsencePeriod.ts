@@ -13,11 +13,16 @@ export type AbsencePeriodRequestDecision =
   | "Voided"
   | "Withdrawn";
 
+export type AbsencePeriodTypes =
+  | "Continuous"
+  | "Intermittent"
+  | "Reduced Schedule";
+
 export class AbsencePeriod {
   absence_period_end_date: string;
   absence_period_start_date: string;
   fineos_leave_request_id: string | null = null;
-  period_type: "Continuous" | "Intermittent" | "Reduced Schedule";
+  period_type: AbsencePeriodTypes;
   reason: LeaveReasonType;
   reason_qualifier_one = "";
   reason_qualifier_two = "";

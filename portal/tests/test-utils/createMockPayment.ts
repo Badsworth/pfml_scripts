@@ -1,3 +1,4 @@
+import { PaymentDetail } from "../../src/models/ClaimDetail";
 import dayjs from "dayjs";
 import faker from "faker";
 import formatDate from "../../src/utils/formatDate";
@@ -31,7 +32,7 @@ interface CreateMockPaymentProps {
 export const createMockPayment = (
   customDetails: CreateMockPaymentProps,
   isConstant = false
-) => {
+): PaymentDetail => {
   // Creates random number up to limit {number} value
   interface GetRandomIntegerProps {
     length?: number;
@@ -86,7 +87,7 @@ export const createMockPayment = (
     payment_id: uniqueId("1234"),
     period_start_date: startDate,
     period_end_date: endDate,
-    amount: getRandomInteger({ limit: 500, length: 3 }),
+    amount: Number(getRandomInteger({ limit: 500, length: 3 })),
     sent_to_bank_date: endDate,
     payment_method: faker.random.arrayElement<string>([
       "Check",
