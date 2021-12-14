@@ -53,12 +53,16 @@ export const Status = ({
     documents: {
       documents: allClaimDocuments,
       download: downloadDocument,
+      hasLoadedClaimDocuments,
       loadAll: loadAllClaimDocuments,
     },
   } = appLogic;
   const { absence_case_id, absence_id, uploaded_document_type } = query;
   const application_id = claimDetail?.application_id;
   const absenceId = absence_id || absence_case_id;
+  const hasDocuments =
+    !hasLoadedClaimDocuments(claimDetail?.application_id || "") &&
+    !hasDocumentsLoadError(appLogic.appErrors, claimDetail?.application_id || "");
 
   useEffect(() => {
     if (absenceId) {
@@ -84,7 +88,7 @@ export const Status = ({
       const anchorId = document.getElementById(location.hash.substring(1));
       if (anchorId) anchorId.scrollIntoView();
     }
-  }, [isLoadingClaimDetail]);
+  }, [hasDocuments, isLoadingClaimDetail]);
 
   /**
    * If there is no absence_id query parameter,
@@ -143,7 +147,7 @@ export const Status = ({
       <div className={containerClassName}>{children}</div>
     );
 
-    if (isLoadingClaimDetail) {
+    if (hasDocuments || isLoadingClaimDetail) {
       // claim documents are loading.
       return (
         <SectionWrapper>
