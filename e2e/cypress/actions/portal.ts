@@ -1026,7 +1026,6 @@ export function submitClaimPartsTwoThree(
   onPage("checklist");
   if (useWithholdingFlow) {
     clickChecklistButton("Enter tax withholding preference");
-    cy.pause()
     addWithholdingPreference(is_withholding_tax ?? false);
   }
   clickChecklistButton("Upload identification document");
@@ -2064,7 +2063,7 @@ export function addWithholdingPreference(withholding: boolean) {
     /Do you want us to withhold state and federal taxes from (this|your) paid leave benefit?/
   );
   cy.get("label")
-    .contains(withholding ? "Yes, withhold state and federal taxes" : "No, don’t withhold state and federal taxes")
+    .contains(withholding ? "Yes" : "No")
     .click();
   cy.get("button").contains("Submit tax withholding preference").click();
 }
