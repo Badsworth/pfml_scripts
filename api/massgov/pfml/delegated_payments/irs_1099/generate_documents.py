@@ -1,9 +1,11 @@
 import enum
+from typing import Optional
 
 import requests
 
 import massgov.pfml.delegated_payments.irs_1099.pfml_1099_util as pfml_1099_util
 import massgov.pfml.util.logging
+import massgov.pfml.util.pydantic.mask as mask_util
 from massgov.pfml.db.models.payments import Pfml1099
 from massgov.pfml.delegated_payments.step import Step
 
@@ -56,6 +58,14 @@ class Generate1099DocumentsStep(Step):
         )
 
     def generate_document(self, record: Pfml1099, sub_bacth: str, url: str) -> None:
+        ssn: Optional[str] = pfml_1099_util.get_tax_id(
+            self.db_session, str(record.tax_identifier_id)
+        )
+        ssn = mask_util.mask_tax_identifier(ssn)
+
+        if ssn is None or len(ssn) == 0:
+            logger.error("%s has an invalid tax identifier.", str(record.tax_identifier_id))
+            return
 
         try:
             documentDto = {
@@ -64,7 +74,7 @@ class Generate1099DocumentsStep(Step):
                 "year": record.tax_year,
                 "corrected": record.correction_ind,
                 "paymentAmount": str(record.gross_payments),
-                "socialNumber": "000-00-0000",
+                "socialNumber": ssn,
                 "federalTaxesWithheld": str(record.federal_tax_withholdings),
                 "stateTaxesWithheld": str(record.state_tax_withholdings),
                 "repayments": str(record.overpayment_repayments),

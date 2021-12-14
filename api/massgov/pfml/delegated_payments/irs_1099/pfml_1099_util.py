@@ -650,12 +650,8 @@ def get_1099_records(db_session: db.Session, batchId: str) -> List[Pfml1099]:
 def get_tax_id(db_session: Any, tax_id_str: str) -> str:
     logger.debug("Incoming tax uuid is, %s", tax_id_str)
     try:
-        tax_id = (
-            db_session.query(TaxIdentifier)
-            .filter(TaxIdentifier.tax_identifier_id == tax_id_str)
-            .one_or_none()
-        )
-        logger.debug("tax id is %s", tax_id.tax_identifier)
+        tax_id = db_session.query(TaxIdentifier).get(tax_id_str)
+
         return tax_id.tax_identifier
 
     except Exception:
