@@ -59,6 +59,13 @@ export const Status = ({
   const { absence_case_id, absence_id, uploaded_document_type } = query;
   const application_id = claimDetail?.application_id;
   const absenceId = absence_id || absence_case_id;
+  const hasDocuments = hasLoadedClaimDocuments(
+    claimDetail?.application_id || ""
+  );
+  const hasDocumentsError = hasDocumentsLoadError(
+    appLogic.appErrors,
+    claimDetail?.application_id || ""
+  );
 
   useEffect(() => {
     if (absenceId) {
@@ -84,7 +91,7 @@ export const Status = ({
       const anchorId = document.getElementById(location.hash.substring(1));
       if (anchorId) anchorId.scrollIntoView();
     }
-  }, [isLoadingClaimDetail]);
+  }, [hasDocuments, hasDocumentsError, isLoadingClaimDetail]);
 
   /**
    * If there is no absence_id query parameter,
@@ -132,14 +139,7 @@ export const Status = ({
 
   const viewYourNotices = () => {
     const legalNotices = getLegalNotices(documentsForApplication);
-
-    const shouldShowSpinner =
-      !hasLoadedClaimDocuments(claimDetail.application_id) &&
-      !hasDocumentsLoadError(appLogic.appErrors, claimDetail.application_id);
-    const hasNothingToShow =
-      hasDocumentsLoadError(appLogic.appErrors, claimDetail.application_id) ||
-      legalNotices.length === 0;
-
+    const hasNothingToShow = hasDocumentsError || legalNotices.length === 0;
     interface SectionWrapperProps {
       children: React.ReactNode;
     }
@@ -147,8 +147,7 @@ export const Status = ({
       <div className={containerClassName}>{children}</div>
     );
 
-    if (shouldShowSpinner) {
-      // claim documents are loading.
+    if (!hasDocuments && !hasDocumentsError) {
       return (
         <SectionWrapper>
           <Spinner
