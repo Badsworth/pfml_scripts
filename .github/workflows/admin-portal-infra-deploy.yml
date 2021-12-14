@@ -98,24 +98,24 @@ jobs:
         run: terraform apply plan.tfplan
         working-directory: ${{ env.terraformBaseDir }}${{ env.admin_portal_env }}
 
-  end-to-end:
-    name: End-to-End Test Deployment
-    runs-on: ubuntu-latest
-    needs: [ release ]
-    if: github.ref != 'refs/heads/deploy/admin-portal/prod'
-    steps:
-      - name: Trigger E2E Workflow
-        uses: aurelien-baudet/workflow-dispatch@v2
-        with:
-          workflow: e2e-cypress.yml
-          token: ${{ secrets.PFML_DEVOPS_TOKEN }}
-          wait-for-completion: true
-          ref: "main"
-          inputs: |
-            {
-              "target_environment": ${{ toJSON(env[github.ref] || 'test') }},
-              "cypress_tags": "Deploy,Deploy-Infra",
-              "run_unstable": "${{ (env[github.ref] || 'test') != 'test' && 'false' || 'true' }}",
-              "run_nightly": "false",
-              "title_override": ${{ toJSON(format('Infra Deploy: {0} to {1}', env.version, (env[github.ref] || 'test'))) }}
-            }
+  # end-to-end:
+  #   name: End-to-End Test Deployment
+  #   runs-on: ubuntu-latest
+  #   needs: [ release ]
+  #   if: github.ref != 'refs/heads/deploy/admin-portal/prod'
+  #   steps:
+  #     - name: Trigger E2E Workflow
+  #       uses: aurelien-baudet/workflow-dispatch@v2
+  #       with:
+  #         workflow: e2e-cypress.yml
+  #         token: ${{ secrets.PFML_DEVOPS_TOKEN }}
+  #         wait-for-completion: true
+  #         ref: "main"
+  #         inputs: |
+  #           {
+  #             "target_environment": ${{ toJSON(env[github.ref] || 'test') }},
+  #             "cypress_tags": "Deploy,Deploy-Infra",
+  #             "run_unstable": "${{ (env[github.ref] || 'test') != 'test' && 'false' || 'true' }}",
+  #             "run_nightly": "false",
+  #             "title_override": ${{ toJSON(format('Infra Deploy: {0} to {1}', env.version, (env[github.ref] || 'test'))) }}
+  #           }
