@@ -2,6 +2,22 @@ name: Admin Portal Infra Deploy
 
 on:
   workflow_dispatch:
+    inputs:
+      deployment_env:
+        required: true
+        default: "infra-test"
+        description: |
+          🛑 The above value dictates which env's workflow to use. Default is main's workflows.     
+          --------------------------------------
+          ⬇️ Environment to be deployed.
+            (test, performance, stage, training, uat, prod, breakfix, cps-preview).
+      version:
+        required: true
+        default: "main"
+        description: |
+          --------------------------------------
+          ⬇️ Tag or branch to be deployed.
+
   push:
     branches:
       # - main
