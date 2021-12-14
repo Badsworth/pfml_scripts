@@ -327,6 +327,7 @@ def get_1099s(db_session: db.Session, batch: Pfml1099Batch) -> NamedTuple:
     #     2021 TAX_YEAR,
     #     E.EMPLOYEE_ID EMPLOYEE_ID,
     #     TAX_IDENTIFIER_ID,
+    #     EF.CUSTOMERNO,
     #     EF.FIRSTNAMES FIRST_NAME,
     #     EF.LASTNAME LAST_NAME,
     #     EF.ADDRESS1 ADDRESS_LINE_1,

@@ -78,6 +78,7 @@ class Populate1099Step(Step):
                 tax_year=batch.tax_year,
                 employee_id=claimant_row.employee_id,
                 tax_identifier_id=claimant_row.tax_identifier_id,
+                account_number=claimant_row.customerno,
                 c=claimant_row.c,
                 i=claimant_row.i,
                 first_name=claimant_row.first_name,
