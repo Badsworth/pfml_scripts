@@ -100,6 +100,17 @@ describe("Payments", () => {
     expect(backButton).toBeInTheDocument();
   });
 
+  it("renders the `Your payments` intro content section", () => {
+    renderPage(
+      Payments,
+      { addCustomSetup: setupHelper(defaultClaimDetail) },
+      props
+    );
+
+    const section = screen.getByTestId("your-payments-intro");
+    expect(section).toMatchSnapshot();
+  });
+
   it("renders the `changes to payments` section", () => {
     renderPage(
       Payments,

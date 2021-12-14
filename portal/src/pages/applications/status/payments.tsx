@@ -114,6 +114,11 @@ export const Payments = ({
   const isIntermittent =
     claimDetail?.absence_periods[0].period_type === "Intermittent";
 
+  const isIntermittentUnpaid =
+    isIntermittent &&
+    isFeatureEnabled("claimantShowPaymentsPhaseTwo") &&
+    claimDetail?.payments?.length === 0;
+
   const maxBenefitAmount = `$${getMaxBenefitAmount()}`;
 
   return (
@@ -135,28 +140,31 @@ export const Payments = ({
           <Heading level="2" className="margin-bottom-3">
             {t("pages.payments.yourPayments")}
           </Heading>
-
-          <Trans
-            i18nKey="pages.payments.paymentsIntro"
-            tOptions={{
-              context: `${
-                isIntermittent
-                  ? "Intermittent"
-                  : isRetroactive
-                  ? "NonIntermittent_Retro"
-                  : "NonIntermittent_NonRetro"
-              }`,
-            }}
-            components={{
-              "contact-center-report-phone-link": (
-                <a
-                  href={`tel:${t(
-                    "shared.contactCenterReportHoursPhoneNumber"
-                  )}`}
-                />
-              ),
-            }}
-          />
+          <section data-testid="your-payments-intro">
+            <Trans
+              i18nKey="pages.payments.paymentsIntro"
+              tOptions={{
+                context: `${
+                  isIntermittentUnpaid
+                    ? "Intermittent_Unpaid"
+                    : isIntermittent
+                    ? "Intermittent"
+                    : isRetroactive
+                    ? "NonIntermittent_Retro"
+                    : "NonIntermittent_NonRetro"
+                }`,
+              }}
+              components={{
+                "contact-center-report-phone-link": (
+                  <a
+                    href={`tel:${t(
+                      "shared.contactCenterReportHoursPhoneNumber"
+                    )}`}
+                  />
+                ),
+              }}
+            />
+          </section>
 
           {shouldShowPaymentsTable && (
             <Table className="width-full" responsive>

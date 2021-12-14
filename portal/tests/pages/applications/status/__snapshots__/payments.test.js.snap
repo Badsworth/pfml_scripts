@@ -1,5 +1,13 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`Payments renders the \`Your payments\` intro content section 1`] = `
+<section
+  data-testid="your-payments-intro"
+>
+  Since you were approved after your leave ended, you’ll receive one payment for your entire leave.
+</section>
+`;
+
 exports[`Payments renders the \`changes to payments\` section 1`] = `
 <section
   class="margin-y-5"
@@ -18,7 +26,7 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
       class="usa-accordion__heading margin-y-2"
     >
       <button
-        aria-controls="accordion7"
+        aria-controls="accordion10"
         aria-expanded="false"
         class="usa-accordion__button"
         type="button"
@@ -28,9 +36,9 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
     </h2>
     <div
       class="usa-accordion__content usa-prose"
-      data-testid="accordion7"
+      data-testid="accordion10"
       hidden=""
-      id="accordion7"
+      id="accordion10"
     >
       <p>
         Once your payments have started, expect to be paid weekly for the duration of your leave.
@@ -87,7 +95,7 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
       class="usa-accordion__heading margin-y-2"
     >
       <button
-        aria-controls="accordion8"
+        aria-controls="accordion11"
         aria-expanded="false"
         class="usa-accordion__button"
         type="button"
@@ -97,9 +105,9 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
     </h2>
     <div
       class="usa-accordion__content usa-prose"
-      data-testid="accordion8"
+      data-testid="accordion11"
       hidden=""
-      id="accordion8"
+      id="accordion11"
     >
       <p>
         To see your maximum weekly benefit amount, view your approval notice in your 
@@ -142,7 +150,7 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
       class="usa-accordion__heading margin-y-2"
     >
       <button
-        aria-controls="accordion9"
+        aria-controls="accordion12"
         aria-expanded="false"
         class="usa-accordion__button"
         type="button"
@@ -152,9 +160,9 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
     </h2>
     <div
       class="usa-accordion__content usa-prose"
-      data-testid="accordion9"
+      data-testid="accordion12"
       hidden=""
-      id="accordion9"
+      id="accordion12"
     >
       <p>
         To make changes to your payment method or banking information, call the Contact Center at 
