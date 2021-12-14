@@ -23,6 +23,7 @@ export default {
     [routes.auth.login]: {
       on: {
         ENABLE_MFA: routes.twoFactor.smsIndex,
+        VERIFY_CODE: routes.twoFactor.smsVerify,
         LOG_IN: routes.applications.index,
         UNCONFIRMED_ACCOUNT: routes.auth.verifyAccount,
       },
@@ -35,6 +36,11 @@ export default {
     [routes.auth.verifyAccount]: {
       on: {
         SUBMIT: routes.auth.login,
+      },
+    },
+    [routes.twoFactor.smsVerify]: {
+      on: {
+        LOG_IN: routes.applications.index,
       },
     },
   },

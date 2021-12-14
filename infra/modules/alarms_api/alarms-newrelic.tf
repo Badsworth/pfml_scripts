@@ -469,6 +469,39 @@ module "pub_delegated_payments_ecs_task_failures" {
   NRQL
 }
 
+# ----------------------------------------------------------------------------------------------------------------------
+# Alarms relating to problems in the IAWW processing task
+
+module "fineos_import_iaww_errors" {
+  count  = (var.environment_name == "prod") ? 1 : 0
+  source = "../newrelic_single_error_alarm"
+
+  enabled   = true
+  name      = "Errors encountered by a Fineos import IAWW ECS task"
+  policy_id = newrelic_alert_policy.low_priority_api_alerts.id
+
+  nrql = <<-NRQL
+    SELECT count(*) FROM Log
+    WHERE aws.logGroup = 'service/pfml-api-${var.environment_name}/ecs-tasks'
+      AND aws.logStream LIKE '${var.environment_name}/fineos-import-iaww%'
+      AND levelname = 'ERROR'
+  NRQL
+}
+
+module "fineos_import_iaww_ecs_task_failures" {
+  source    = "../newrelic_single_error_alarm"
+  policy_id = newrelic_alert_policy.low_priority_api_alerts.id
+
+  enabled = true
+  name    = "Fineos imiport IAWW ECS task failed"
+  nrql    = <<-NRQL
+    SELECT count(*) FROM Log
+    WHERE aws.logGroup = 'service/pfml-api-${var.environment_name}/ecs-tasks'
+      AND aws.logStream LIKE '${var.environment_name}/fineos-import-iaww%'
+      AND message LIKE 'Traceback%'
+  NRQL
+}
+
 # ------------------------------------------------------------------------------------------------------------------------------
 
 resource "newrelic_nrql_alert_condition" "unsuccessful_register_leave_admin_job" {

@@ -254,6 +254,11 @@ variable "enable_pub_automation_claimant_address_validation" {
   default     = false
 }
 
+variable "enable_fineos_import_iaww" {
+  description = "Enable scheduling for fineos IAWW processing task"
+  default     = false
+}
+
 variable "enable_pub_automation_process_1099_documents" {
   description = "Enable scheduling for pub automation 1099 documents processing task"
   default     = false

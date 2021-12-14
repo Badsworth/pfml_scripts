@@ -889,6 +889,7 @@ const shared = {
   leaveReasonPregnancyHeader: "Medical leave for pregnancy",
   leaveReasonServiceMemberFamily: "Military family",
   loadingDocumentsLabel: "Loading documents",
+  maskedPhoneNumber: "***-***-{{lastFourDigits}}",
   maxEmployerCommentLengthError:
     "Please shorten your comment. We cannot accept comments that are longer than 9999 characters.",
   maximumReducedLeaveMinutes:
@@ -1039,7 +1040,7 @@ const pages = {
     callContactCenter:
       "Need help? Call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.",
     codeLabel: "$t(shared.verificationCodeLabel)",
-    lead: "We sent a 6-digit code to your phone number (###) ###-{{lastFourDigits}} as an additional security measure.",
+    lead: "We sent a 6-digit code to your phone number $t(shared.maskedPhoneNumber) as an additional security measure.",
     resendCodeLink: "$t(shared.resendVerificationCodeLink)",
     submitButton: "Submit",
     title: "Enter your security code",

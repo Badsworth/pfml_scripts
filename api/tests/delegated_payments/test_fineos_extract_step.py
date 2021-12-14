@@ -37,6 +37,7 @@ from massgov.pfml.delegated_payments.mock.fineos_extract_data import (
     generate_payment_reconciliation_extract_files,
 )
 
+earlier_date_str = "2020-07-01-12-00-00"
 date_str = "2020-08-01-12-00-00"
 
 
@@ -515,10 +516,7 @@ def test_run_with_missing_fineos_file(
         extract_config=CLAIMANT_EXTRACT_CONFIG,
     )
 
-    with pytest.raises(
-        Exception,
-        match="Error while copying fineos extracts - The following expected files were not found",
-    ):
+    with pytest.raises(Exception, match="Expected to find files"):
         fineos_extract_step.run()
 
     # No reference files created because it failed before that was created
@@ -534,6 +532,64 @@ def test_run_with_missing_fineos_file(
     validate_records([], FineosExtractVpeiClaimDetails, "LEAVEREQUESTI", local_test_db_session)
     validate_records([], FineosExtractVpeiPaymentDetails, "PEINDEXID", local_test_db_session)
     validate_records([], FineosExtractVbiRequestedAbsence, "LEAVEREQUEST_ID", local_test_db_session)
+
+
+def test_run_with_missing_files_skipped_run(
+    mock_s3_bucket,
+    mock_fineos_s3_bucket,
+    set_exporter_env_vars,
+    local_test_db_session,
+    local_test_db_other_session,
+    monkeypatch,
+):
+    # Validate that if we're missing files that are going to be skipped
+    # that the process won't fail.
+    monkeypatch.setenv("FINEOS_CLAIMANT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
+
+    prior_claimant_data = [FineosClaimantData(), FineosClaimantData()]
+    upload_fineos_claimant_data(
+        mock_fineos_s3_bucket, prior_claimant_data, timestamp=earlier_date_str
+    )
+
+    claimant_data = [FineosClaimantData(), FineosClaimantData(), FineosClaimantData()]
+    upload_fineos_claimant_data(mock_fineos_s3_bucket, claimant_data)
+
+    # Delete the employee feed file for the older skipped record
+    expected_fineos_path_prefix = f"s3://{mock_fineos_s3_bucket}/DT2/dataexports/"
+    file_util.delete_file(
+        expected_fineos_path_prefix
+        + f"{earlier_date_str}-{payments_util.Constants.EMPLOYEE_FEED_FILE_NAME}"
+    )
+
+    fineos_extract_step = FineosExtractStep(
+        db_session=local_test_db_session,
+        log_entry_db_session=local_test_db_other_session,
+        extract_config=CLAIMANT_EXTRACT_CONFIG,
+    )
+
+    fineos_extract_step.run()
+
+    # Verify that the skipped file ended up in the right place
+    expected_path_prefix = f"s3://{mock_s3_bucket}/cps/inbound/skipped/"
+    files = file_util.list_files(expected_path_prefix, recursive=True)
+    assert len(files) == 1
+
+    claimant_prefix = f"{earlier_date_str}-claimant-extract/{earlier_date_str}"
+    assert f"{claimant_prefix}-{payments_util.Constants.REQUESTED_ABSENCE_SOM_FILE_NAME}" in files
+
+    # Verify the unskipped file was still loaded properly
+    employee_feed_records = [record.get_employee_feed_record() for record in claimant_data]
+    validate_records(employee_feed_records, FineosExtractEmployeeFeed, "I", local_test_db_session)
+
+    requested_absence_som_records = [
+        record.get_requested_absence_record() for record in claimant_data
+    ]
+    validate_records(
+        requested_absence_som_records,
+        FineosExtractVbiRequestedAbsenceSom,
+        "ABSENCE_CASENUMBER",
+        local_test_db_session,
+    )
 
 
 @pytest.mark.parametrize(

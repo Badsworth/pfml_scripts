@@ -83,6 +83,7 @@ module "tasks" {
   enable_pub_automation_fineos           = true
   enable_pub_automation_create_pub_files = true
   enable_pub_automation_process_returns  = true
+  enable_fineos_import_iaww              = true
 
   enable_reductions_send_claimant_lists_to_agencies_schedule = true
   enable_reductions_process_agency_data_schedule             = true

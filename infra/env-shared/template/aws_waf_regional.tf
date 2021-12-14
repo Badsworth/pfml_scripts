@@ -13,6 +13,7 @@ locals {
   api_gateway_deployment = "aws_api_gateway_deployment.${var.environment_name}"
 }
 
+# Rate-based rule for API Gateway not in use.
 resource "aws_wafv2_web_acl" "regional_rate_based_acl" {
   name  = "mass-pfml-${var.environment_name}-regional-rate-based-acl"
   scope = "REGIONAL"
@@ -114,6 +115,7 @@ resource "aws_wafregional_web_acl" "fortinet_managed_rules" {
       type = var.enforce_fortinet_managed_rules ? "NONE" : "COUNT"
     }
   }
+
 }
 
 resource "aws_wafregional_web_acl_association" "fortinet_managed_rules" {
