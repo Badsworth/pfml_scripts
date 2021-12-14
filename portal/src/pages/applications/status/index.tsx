@@ -140,10 +140,7 @@ export const Status = ({
 
   const viewYourNotices = () => {
     const legalNotices = getLegalNotices(documentsForApplication);
-
-    const hasNothingToShow =
-      hasDocumentsLoadError(appLogic.appErrors, claimDetail.application_id) ||
-      legalNotices.length === 0;
+    const hasNothingToShow = hasDocumentsError || legalNotices.length === 0;
     interface SectionWrapperProps {
       children: React.ReactNode;
     }
@@ -151,7 +148,7 @@ export const Status = ({
       <div className={containerClassName}>{children}</div>
     );
 
-    if ((!hasDocuments && !hasDocumentsError) || isLoadingClaimDetail) {
+    if (!hasDocuments && !hasDocumentsError) {
       return (
         <SectionWrapper>
           <Spinner
