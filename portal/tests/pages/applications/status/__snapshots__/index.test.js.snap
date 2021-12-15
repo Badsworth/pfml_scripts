@@ -349,10 +349,10 @@ exports[`Status renders the page if the only errors are DocumentsLoadError 1`] =
       pages.claimsStatus.leaveReasonValueHeader
     </h2>
     <div
-      class="bg-base-lightest padding-2 tablet:display-flex tablet:padding-bottom-0"
+      class="bg-base-lightest tablet:display-flex padding-3"
     >
       <div
-        class="padding-bottom-3 padding-right-6"
+        class=" padding-right-6"
       >
         <h2
           class="font-heading-xs text-normal"
@@ -452,10 +452,10 @@ exports[`Status renders the page with claim detail 1`] = `
       pages.claimsStatus.leaveReasonValueHeader
     </h2>
     <div
-      class="bg-base-lightest padding-2 tablet:display-flex tablet:padding-bottom-0"
+      class="bg-base-lightest tablet:display-flex padding-3"
     >
       <div
-        class="padding-bottom-3 padding-right-6"
+        class=" padding-right-6"
       >
         <h2
           class="font-heading-xs text-normal"
@@ -555,10 +555,10 @@ exports[`Status renders the page with claim detail when there is absence_case_id
       pages.claimsStatus.leaveReasonValueHeader
     </h2>
     <div
-      class="bg-base-lightest padding-2 tablet:display-flex tablet:padding-bottom-0"
+      class="bg-base-lightest tablet:display-flex padding-3"
     >
       <div
-        class="padding-bottom-3 padding-right-6"
+        class=" padding-right-6"
       >
         <h2
           class="font-heading-xs text-normal"

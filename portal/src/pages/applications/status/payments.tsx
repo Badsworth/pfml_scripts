@@ -210,17 +210,16 @@ export const Payments = ({
         label={t("pages.payments.backButtonLabel")}
         href={routes.applications.index}
       />
+      <Title hidden>{t("pages.payments.paymentsTitle")}</Title>
       <div className="measure-6">
         <StatusNavigationTabs
           activePath={portalFlow.pathname}
           absence_id={absence_id}
         />
 
-        <Title hidden>{t("pages.payments.paymentsTitle")}</Title>
-
         <section className="margin-y-5" data-testid="your-payments">
           {/* Heading section */}
-          <Heading level="2" className="margin-bottom-3">
+          <Heading level="2" size="1" className="margin-bottom-3">
             {t("pages.payments.yourPayments")}
           </Heading>
           <section data-testid="your-payments-intro">
