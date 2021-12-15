@@ -22,6 +22,7 @@ from massgov.pfml.api.validation.exceptions import ValidationErrorDetail
 from massgov.pfml.db.models.applications import FINEOSWebIdExt
 from massgov.pfml.db.models.employees import (
     AbsencePeriod,
+    AbsencePeriodType,
     AbsenceStatus,
     Claim,
     LkManagedRequirementStatus,
@@ -1081,11 +1082,14 @@ class TestGetClaimReview:
             leave_request_id = split_fineos_leave_request_id(fineos_period_data.leaveRequest.id, {})
             assert leave_request_id == absence_data["fineos_leave_request_id"]
             assert (
+                absence_data["period_type"]
+                == AbsencePeriodType.CONTINUOUS.absence_period_type_description
+            )
+            assert (
                 fineos_period_data.startDate.isoformat()
                 == absence_data["absence_period_start_date"]
             )
             assert fineos_period_data.endDate.isoformat() == absence_data["absence_period_end_date"]
-            assert fineos_period_data.type == absence_data["type"]
             assert fineos_period_data.leaveRequest.reasonName == absence_data["reason"]
             assert (
                 fineos_period_data.leaveRequest.qualifier1 == absence_data["reason_qualifier_one"]

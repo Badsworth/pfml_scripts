@@ -28,7 +28,10 @@ import massgov.pfml.util.logging as logging
 from massgov.pfml.api.models.applications.common import LeaveReason as LeaveReasonApi
 from massgov.pfml.api.models.applications.common import OtherIncome
 from massgov.pfml.api.models.applications.responses import DocumentResponse
-from massgov.pfml.api.models.claims.responses import AbsencePeriodStatusResponse
+from massgov.pfml.api.models.claims.responses import (
+    AbsencePeriodStatusResponse,
+    remap_absence_period_type,
+)
 from massgov.pfml.api.models.common import ConcurrentLeave, EmployerBenefit, PreviousLeave
 from massgov.pfml.db.models.applications import (
     Application,
@@ -1471,7 +1474,7 @@ def parse_fineos_absence_periods_to_absence_period_status_response(
         absence_period_status = AbsencePeriodStatusResponse(
             absence_period_start_date=absence_period.startDate,
             absence_period_end_date=absence_period.endDate,
-            period_type=absence_period.absenceType,
+            period_type=remap_absence_period_type(absence_period.absenceType),
             reason=absence_period.reason,
             reason_qualifier_one=absence_period.reasonQualifier1,
             reason_qualifier_two=absence_period.reasonQualifier2,

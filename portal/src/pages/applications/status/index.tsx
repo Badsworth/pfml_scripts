@@ -319,8 +319,8 @@ export const Status = ({
           })}
         </Heading>
 
-        <div className="bg-base-lightest padding-2 tablet:display-flex tablet:padding-bottom-0">
-          <div className="padding-bottom-3 padding-right-6">
+        <div className="bg-base-lightest tablet:display-flex padding-3">
+          <div className=" padding-right-6">
             <Heading weight="normal" level="2" size="4">
               {t("pages.claimsStatus.applicationID")}
             </Heading>
