@@ -1977,6 +1977,7 @@ export function claimantGoToClaimStatus(fineosAbsenceId: string): void {
   cy.contains("article", fineosAbsenceId).within(() => {
     cy.contains("View status updates and details", { timeout: 20000 }).click({
       timeout: 20000,
+      force: true,
     });
     cy.url()
       .should("include", "/applications/status/")
