@@ -39,7 +39,7 @@ output "environment_tags" {
     "adhoc"       = "test"
     "long"        = "test"
     "infra-test"  = "test"
-    "trn2"        = "train2"
+    "trn2"        = "train"
   }
 }
 
