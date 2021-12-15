@@ -195,7 +195,7 @@ class ConvertMmarsDataStep(Step):
         employee = (
             self.db_session.query(Employee)
             .filter(Employee.ctr_vendor_customer_code == mmars_payment_data.vendor_customer_code)
-            .one_or_none()
+            .first()
         )
         if employee:
             self.increment(self.Metrics.EMPLOYEE_FOUND_BY_VENDOR_CODE_COUNT)
