@@ -6,7 +6,10 @@ from sqlalchemy.orm.session import Session
 
 import massgov
 import massgov.pfml.util.newrelic.events as newrelic_util
-from massgov.pfml.api.models.claims.responses import AbsencePeriodResponse
+from massgov.pfml.api.models.claims.responses import (
+    AbsencePeriodResponse,
+    remap_absence_period_type,
+)
 from massgov.pfml.api.validation.exceptions import (
     IssueType,
     ValidationErrorDetail,
@@ -169,7 +172,7 @@ def convert_fineos_absence_period_to_claim_response_absence_period(
 
     absence_period.absence_period_start_date = period.startDate
     absence_period.absence_period_end_date = period.endDate
-    absence_period.type = period.type
+    absence_period.period_type = remap_absence_period_type(period.type)
     if period.leaveRequest is None:
         newrelic_util.log_and_capture_exception(
             "Failed to extract leave request from fineos period.", extra=log_attributes

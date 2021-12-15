@@ -3,6 +3,7 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
+from freezegun.api import freeze_time
 from sqlalchemy.sql.expression import null
 
 import massgov.pfml.api.services.payments as payment_services
@@ -38,12 +39,16 @@ def test_get_payments_from_db_dedups_pei_i_value(test_db_session):
 
     assert import_log_2.import_log_id > import_log_1.import_log_id
 
-    payment_containers = payment_services.get_payments_from_db(test_db_session, claim.claim_id)
+    payment_containers, legacy_containers = payment_services.get_payments_from_db(
+        test_db_session, claim.claim_id
+    )
 
     assert len(payment_containers) == 1
     assert payment_containers[0].payment.payment_id == payment2.payment_id
     assert payment_containers[0].payment.fineos_extract_import_log == import_log_2
     assert payment_containers[0].payment.fineos_pei_i_value == "9999"
+
+    assert len(legacy_containers) == 0
 
 
 def test_get_payments_from_db_filters_payments_with_flag(test_db_session):
@@ -71,8 +76,11 @@ def test_get_payments_from_db_filters_payments_with_flag(test_db_session):
         exclude_from_payment_status=True,
     )
 
-    payment_containers = payment_services.get_payments_from_db(test_db_session, claim.claim_id)
+    payment_containers, legacy_containers = payment_services.get_payments_from_db(
+        test_db_session, claim.claim_id
+    )
     assert len(payment_containers) == 1
+    assert len(legacy_containers) == 0
 
     assert payment_containers[0].payment.payment_id == payment.payment_id
     assert payment_containers[0].payment.fineos_extract_import_log_id == import_log_1.import_log_id
@@ -97,9 +105,12 @@ def test_get_payments_from_db_allows_multiple_pei_i_values(test_db_session):
         payment_transaction_type=payment.payment_transaction_type,
     )
 
-    payment_containers = payment_services.get_payments_from_db(test_db_session, claim.claim_id)
+    payment_containers, legacy_containers = payment_services.get_payments_from_db(
+        test_db_session, claim.claim_id
+    )
 
     assert len(payment_containers) == 2
+    assert len(legacy_containers) == 0
 
     assert payment_containers[0].payment.payment_id == payment2.payment_id
     assert payment_containers[0].payment.fineos_extract_import_log == import_log_2
@@ -108,6 +119,29 @@ def test_get_payments_from_db_allows_multiple_pei_i_values(test_db_session):
     assert payment_containers[1].payment.payment_id == payment.payment_id
     assert payment_containers[1].payment.fineos_extract_import_log == import_log_1
     assert payment_containers[1].payment.fineos_pei_i_value == "2000"
+
+
+def test_get_payments_from_db_legacy_payments_separated(test_db_session):
+    payment_factory = DelegatedPaymentFactory(test_db_session,)
+    claim = payment_factory.get_or_create_claim()
+    payment_pub = payment_factory.get_or_create_payment()
+
+    legacy_payment_factory = DelegatedPaymentFactory(
+        test_db_session,
+        claim=claim,  # Same claim
+        payment_transaction_type=PaymentTransactionType.STANDARD_LEGACY_MMARS,
+    )
+    payment_legacy = legacy_payment_factory.get_or_create_payment()
+
+    payment_containers, legacy_containers = payment_services.get_payments_from_db(
+        test_db_session, claim.claim_id
+    )
+
+    assert len(payment_containers) == 1
+    assert len(legacy_containers) == 1
+
+    assert payment_containers[0].payment.payment_id == payment_pub.payment_id
+    assert legacy_containers[0].payment.payment_id == payment_legacy.payment_id
 
 
 def test_consolidate_successors_simple(test_db_session):
@@ -591,3 +625,95 @@ def test_get_payments_with_status(test_db_session, caplog):
     assert log_dict["payment_filtered_has_successor_count"] == 1
     assert log_dict["payment_filtered_cancellation_event_count"] == 2
     assert log_dict["payment_filtered_unknown_count"] == 0
+
+
+@freeze_time("2021-12-09 12:00:00", tz_offset=5)
+def test_get_payments_with_legacy_and_regular(test_db_session):
+    # Create a reiussed payment for the regular one
+    payment_factory = DelegatedPaymentFactory(
+        test_db_session,
+        amount=100,
+        period_start_date=date(2021, 11, 1),
+        period_end_date=date(2021, 11, 7),
+        payment_method=PaymentMethod.ACH,
+    )
+    claim = payment_factory.get_or_create_claim()
+
+    payment_factory.get_or_create_payment()
+    _, payment_successor = payment_factory.create_reissued_payments()
+
+    # Create a legacy payment
+    legacy_send_date = date(2021, 6, 14)
+    legacy_payment_factory = DelegatedPaymentFactory(
+        test_db_session,
+        claim=claim,  # Same claim
+        payment_transaction_type=PaymentTransactionType.STANDARD_LEGACY_MMARS,
+        payment_method=PaymentMethod.ACH,
+        disb_check_eft_issue_date=legacy_send_date,
+    )
+
+    legacy_payment = legacy_payment_factory.get_or_create_payment()
+
+    payment_response = payment_services.get_payments_with_status(test_db_session, claim)
+
+    assert len(payment_response["payments"]) == 2
+    validate_payment_matches(
+        payment_response["payments"][0],
+        payment_successor,
+        status="Pending",
+        expected_send_date_start=date(2021, 12, 10),
+        expected_send_date_end=date(2021, 12, 12),
+    )
+    validate_payment_matches(
+        payment_response["payments"][1],
+        legacy_payment,
+        status="Sent to bank",
+        has_amount=True,
+        sent_to_bank_date=legacy_send_date,
+        expected_send_date_start=legacy_send_date,
+        expected_send_date_end=legacy_send_date,
+    )
+
+
+def validate_payment_matches(
+    payment_response,
+    expected_payment,
+    status,
+    has_amount=False,
+    sent_to_bank_date=None,
+    expected_send_date_start=None,
+    expected_send_date_end=None,
+):
+    # These fields never vary and are just passed through from the payment itself
+    assert payment_response["payment_id"] == expected_payment.payment_id
+    assert payment_response["fineos_c_value"] == expected_payment.fineos_pei_c_value
+    assert payment_response["fineos_i_value"] == expected_payment.fineos_pei_i_value
+    assert payment_response["period_start_date"] == expected_payment.period_start_date
+    assert payment_response["period_end_date"] == expected_payment.period_end_date
+    assert (
+        payment_response["payment_method"]
+        == expected_payment.disb_method.payment_method_description
+    )
+
+    # These fields vary based on different scenarios of the payment
+    assert payment_response["status"] == status
+
+    if sent_to_bank_date:
+        assert payment_response["sent_to_bank_date"] == sent_to_bank_date
+    else:
+        assert payment_response["sent_to_bank_date"] is None
+
+    if expected_send_date_start:
+        assert payment_response["expected_send_date_start"] == expected_send_date_start
+    else:
+        assert payment_response["expected_send_date_start"] is None
+
+    if expected_send_date_end:
+        assert payment_response["expected_send_date_end"] == expected_send_date_end
+    else:
+        assert payment_response["expected_send_date_end"] is None
+
+    if has_amount:
+        assert payment_response["amount"] == expected_payment.amount
+    else:
+        assert payment_response["amount"] is None

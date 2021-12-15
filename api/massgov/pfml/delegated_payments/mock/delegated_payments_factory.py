@@ -160,6 +160,9 @@ class DelegatedPaymentFactory(MockData):
         )
         self.exclude_from_payment_status = self.get_value("exclude_from_payment_status", None)
 
+        # Only set this for legacy payments
+        self.disb_check_eft_issue_date = self.get_value("disb_check_eft_issue_date", None)
+
     # only set if value was passed in constructor through kwarg
     # else defer to lazy factory initialization
     def set_optional_kwargs(self, kwargs_map, key, value):
@@ -284,6 +287,7 @@ class DelegatedPaymentFactory(MockData):
                 "fineos_extraction_date": self.fineos_extraction_date,
                 "fineos_extract_import_log_id": self.fineos_extract_import_log_id,
                 "exclude_from_payment_status": self.exclude_from_payment_status,
+                "disb_check_eft_issue_date": self.disb_check_eft_issue_date,
             }
             | self.payment_optional_kwargs
             | overrides

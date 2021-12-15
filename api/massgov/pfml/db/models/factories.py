@@ -988,7 +988,7 @@ class MmarsPaymentDataFactory(BaseFactory):
         "date_between_dates", date_start=date(2021, 1, 1), date_end=date(2021, 1, 15)
     )
     pymt_service_to_date = factory.LazyAttribute(
-        lambda a: a.pymt_service_from_date + timedelta(days=7)
+        lambda a: a.pymt_service_from_date + timedelta(days=7) if a.pymt_service_from_date else None
     )
     encumbrance_doc_code = "GAE"
     encumbrance_doc_dept = "EOL"
@@ -1019,14 +1019,16 @@ class MmarsPaymentDataFactory(BaseFactory):
     check_descr = "Check Description - Factory"
     warrant_no = "M11"
     warrant_select_date = factory.LazyAttribute(
-        lambda a: a.pymt_service_to_date + timedelta(days=1)
+        lambda a: a.pymt_service_to_date + timedelta(days=1) if a.pymt_service_to_date else None
     )
     check_eft_issue_date = factory.LazyAttribute(
-        lambda a: a.warrant_select_date + timedelta(days=2)
+        lambda a: a.warrant_select_date + timedelta(days=2) if a.warrant_select_date else None
     )
     bank_account_code = "0"
     check_eft_no = "1234456"
-    cleared_date = factory.LazyAttribute(lambda a: a.warrant_select_date + timedelta(days=10))
+    cleared_date = factory.LazyAttribute(
+        lambda a: a.warrant_select_date + timedelta(days=10) if a.warrant_select_date else None
+    )
     appropriation = "70030632"
     appropriation_name = "Family and Medical Leave Benefit Payments"
     object_class = "RR"
@@ -1301,3 +1303,15 @@ class EmployeeOccupationFactory(BaseFactory):
 
     employer = factory.SubFactory(EmployerFactory)
     employer_id = factory.LazyAttribute(lambda d: d.employer.employer_id)
+
+
+class UserLeaveAdministratorFactory(BaseFactory):
+    class Meta:
+        model = employee_models.UserLeaveAdministrator
+
+    user = factory.SubFactory(UserFactory, roles=[employee_models.Role.EMPLOYER])
+    user_id = factory.LazyAttribute(lambda u: u.user.user_id)
+    employer = factory.SubFactory(EmployerFactory)
+    employer_id = factory.LazyAttribute(lambda u: u.employer.employer_id)
+    fineos_web_id = factory.Faker("numerify", text="pfml_leave_admin_#####")
+    verification = None

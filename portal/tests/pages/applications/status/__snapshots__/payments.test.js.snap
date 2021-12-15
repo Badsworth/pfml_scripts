@@ -190,7 +190,7 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
       <p>
         To see your maximum weekly benefit amount, view your approval notice in your 
         <a
-          href="/applications/status?absence_id=mock-absence-case-id/#view_notices"
+          href="/applications/status?absence_id=mock-absence-case-id#view_notices"
         >
           application’s notices
         </a>

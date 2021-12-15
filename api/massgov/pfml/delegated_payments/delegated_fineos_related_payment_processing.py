@@ -2,6 +2,7 @@ import enum
 from typing import List, Optional, cast
 
 import massgov.pfml.api.util.state_log_util as state_log_util
+import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml import db
 from massgov.pfml.db.models.employees import (
@@ -63,16 +64,17 @@ class RelatedPaymentsProcessingStep(Step):
                 )
                 .all()
             )
+
             if len(primary_payment_records) > 1:
                 logger.info("Duplicate records exists for %s", payment.claim.fineos_absence_id)
 
                 end_state = (
-                    State.STATE_WITHHOLDING_PENDING_AUDIT
+                    State.STATE_WITHHOLDING_ORPHANED_PENDING_AUDIT
                     if (
                         payment.payment_transaction_type_id
                         == PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id
                     )
-                    else State.FEDERAL_WITHHOLDING_PENDING_AUDIT
+                    else State.FEDERAL_WITHHOLDING_ORPHANED_PENDING_AUDIT
                 )
                 message = "Duplicate records found for the payment."
 
@@ -92,12 +94,12 @@ class RelatedPaymentsProcessingStep(Step):
                 )
 
                 end_state = (
-                    State.STATE_WITHHOLDING_PENDING_AUDIT
+                    State.STATE_WITHHOLDING_ORPHANED_PENDING_AUDIT
                     if (
                         payment.payment_transaction_type_id
                         == PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id
                     )
-                    else State.FEDERAL_WITHHOLDING_PENDING_AUDIT
+                    else State.FEDERAL_WITHHOLDING_ORPHANED_PENDING_AUDIT
                 )
                 message = "No primary payment found for the withholding payment record."
 
@@ -125,6 +127,12 @@ class RelatedPaymentsProcessingStep(Step):
                 link_payment.related_payment_id = related_payment_id
                 self.db_session.add(link_payment)
 
+                logger.info(
+                    "Added related payment to link_payment: Primary payment id %s , Related Payment Id %s",
+                    payment_id,
+                    related_payment_id,
+                )
+
                 #  If primary payment is has any validation error set withholidng state to error
                 payment_state_log: Optional[StateLog] = state_log_util.get_latest_state_log_in_flow(
                     primary_payment_records[0], Flow.DELEGATED_PAYMENT, self.db_session
@@ -138,15 +146,32 @@ class RelatedPaymentsProcessingStep(Step):
                     payment_state_log.end_state_id
                     != State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING.state_id
                 ):
-                    end_state = (
-                        State.STATE_WITHHOLDING_ERROR
-                        if (
-                            payment.payment_transaction_type_id
-                            == PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id
+
+                    if (
+                        payment_state_log.end_state_id
+                        in payments_util.Constants.RESTARTABLE_PAYMENT_STATE_IDS
+                    ):
+                        end_state = (
+                            State.STATE_WITHHOLDING_ERROR_RESTARTABLE
+                            if (
+                                payment.payment_transaction_type_id
+                                == PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id
+                            )
+                            else State.FEDERAL_WITHHOLDING_ERROR_RESTARTABLE
                         )
-                        else State.FEDERAL_WITHHOLDING_ERROR
-                    )
-                    outcome = state_log_util.build_outcome("Primary payment has an error")
+                        outcome = state_log_util.build_outcome(
+                            "Primary payment is in Error restartable state"
+                        )
+                    else:
+                        end_state = (
+                            State.STATE_WITHHOLDING_ERROR
+                            if (
+                                payment.payment_transaction_type_id
+                                == PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id
+                            )
+                            else State.FEDERAL_WITHHOLDING_ERROR
+                        )
+                        outcome = state_log_util.build_outcome("Primary payment has an error")
                     state_log_util.create_finished_state_log(
                         associated_model=payment,
                         end_state=end_state,
