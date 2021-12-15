@@ -2779,7 +2779,7 @@ class State(LookupTable):
         191, "State Withholding ready for processing", Flow.DELEGATED_PAYMENT.flow_id
     )
 
-    STATE_WITHHOLDING_PENDING_AUDIT = LkState(
+    STATE_WITHHOLDING_ORPHANED_PENDING_AUDIT = LkState(
         192, "State Withholding awaiting Audit Report", Flow.DELEGATED_PAYMENT.flow_id
     )
 
@@ -2795,7 +2795,7 @@ class State(LookupTable):
         195, "Federal Withholding ready for processing", Flow.DELEGATED_PAYMENT.flow_id
     )
 
-    FEDERAL_WITHHOLDING_PENDING_AUDIT = LkState(
+    FEDERAL_WITHHOLDING_ORPHANED_PENDING_AUDIT = LkState(
         196, "Federal Withholding awaiting Audit Report", Flow.DELEGATED_PAYMENT.flow_id
     )
 
@@ -2827,6 +2827,22 @@ class State(LookupTable):
         202,
         "Add Federal Withholding to Payment Reject Report - RESTARTABLE",
         Flow.DELEGATED_PAYMENT.flow_id,
+    )
+
+    STATE_WITHHOLDING_RELATED_PENDING_AUDIT = LkState(
+        203, "State Withholding Related Pending Audit", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    FEDERAL_WITHHOLDING_RELATED_PENDING_AUDIT = LkState(
+        204, "Federal Withholding Related Pending Audit", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    STATE_WITHHOLDING_ERROR_RESTARTABLE = LkState(
+        205, "State Withholding Error Restartable", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    FEDERAL_WITHHOLDING_ERROR_RESTARTABLE = LkState(
+        206, "Federal Withholding Error Restartable", Flow.DELEGATED_PAYMENT.flow_id
     )
 
 
