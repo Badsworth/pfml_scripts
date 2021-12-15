@@ -65,6 +65,7 @@ jobs:
     name: Release
     runs-on: ubuntu-latest
     env:
+      TF_VAR_cloudfront_origin_path: /${{ needs.update-the-deploy-branch.outputs.commit_hash }}
       TF_CLI_ARGS: '-lock-timeout=120s'
 
     steps:
