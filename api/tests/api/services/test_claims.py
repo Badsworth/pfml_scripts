@@ -1,15 +1,32 @@
 import json
+from datetime import date
 from unittest import mock
 
 import pytest
 
 from massgov.pfml.api.services.claims import ClaimWithdrawnError, get_claim_detail
+from massgov.pfml.api.services.fineos_actions import (
+    parse_fineos_absence_periods_to_absence_period_status_response,
+)
 from massgov.pfml.db.models.factories import ManagedRequirementFactory
 from massgov.pfml.fineos import exception
+from massgov.pfml.fineos.models.customer_api.spec import AbsencePeriod as FineosAbsencePeriod
 from massgov.pfml.util.pydantic.types import FEINFormattedStr
 
 
 class TestGetClaimDetail:
+    @pytest.fixture
+    def fineos_absence_period(self):
+        return FineosAbsencePeriod(
+            id="PL-14449-0000002237",
+            reason="Child Bonding",
+            reasonQualifier1="Foster Care",
+            reasonQualifier2="",
+            startDate=date(2021, 1, 29),
+            endDate=date(2021, 1, 30),
+            absenceType="Continuous",
+        )
+
     @pytest.fixture
     def managed_requirements(self, claim):
         requirements = []
@@ -26,7 +43,7 @@ class TestGetClaimDetail:
         with app.app.test_request_context(f"/v1/claims/{claim.fineos_absence_id}"):
             app.app.preprocess_request()
 
-            return get_claim_detail(claim)
+            return get_claim_detail(claim, {})
 
     def test_no_absence_id_exception(self, app, claim):
         claim.fineos_absence_id = None
@@ -92,23 +109,25 @@ class TestGetClaimDetail:
         assert error_msg == "No absence periods found for claim"
 
     @mock.patch("massgov.pfml.api.services.claims.get_absence_periods")
-    def test_success(self, mock_get_absence_periods, app, claim, absence_period):
-        mock_get_absence_periods.return_value = [absence_period]
+    def test_success(self, mock_get_absence_periods, app, claim, fineos_absence_period):
+        mock_get_absence_periods.return_value = [fineos_absence_period]
 
         claim_detail = self.get_claim_detail_with_app_context(claim, app)
 
         assert claim_detail_matches_claim(claim_detail, claim)
 
         period = claim_detail.absence_periods[0]
-        expected_period = absence_period
+        expected_period = parse_fineos_absence_periods_to_absence_period_status_response(
+            [fineos_absence_period]
+        )[0]
 
         assert period == expected_period
 
     @mock.patch("massgov.pfml.api.services.claims.get_absence_periods")
     def test_success_with_managed_requirements(
-        self, mock_get_absence_periods, app, claim, absence_period, managed_requirements
+        self, mock_get_absence_periods, app, claim, fineos_absence_period, managed_requirements
     ):
-        mock_get_absence_periods.return_value = [absence_period]
+        mock_get_absence_periods.return_value = [fineos_absence_period]
 
         claim_detail = self.get_claim_detail_with_app_context(claim, app)
 

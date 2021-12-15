@@ -5,6 +5,7 @@ import Button from "../components/Button";
 import UserLookup from "./users";
 import SlideOut, { Props as SlideOutProps } from "../components/SlideOut";
 import usePopup from "../hooks/usePopup";
+import { StaticPropsPermissions } from "../menus";
 
 export default function Home() {
   const [showConfirmationDialog, setShowConfirmationDialog] = useState(false);
@@ -51,4 +52,12 @@ export default function Home() {
       {showUserLookup && <UserLookup />}
     </>
   );
+}
+
+export async function getStaticProps(): Promise<StaticPropsPermissions> {
+  return {
+    props: {
+      permissions: ["USER_READ"],
+    },
+  };
 }

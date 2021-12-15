@@ -90,6 +90,7 @@ resource "aws_wafv2_web_acl" "cloudfront_waf_acl" {
       sampled_requests_enabled   = true
     }
   }
+
   #------------------------------------------------------------------------------#
   #                      Fortinet OWASP 10 AWS WAF rule                          #
   #------------------------------------------------------------------------------#

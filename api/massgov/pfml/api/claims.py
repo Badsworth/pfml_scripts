@@ -451,7 +451,7 @@ def get_claim(fineos_absence_id: str) -> flask.Response:
         return error.to_api_response()
 
     try:
-        detailed_claim = get_claim_detail(claim)
+        detailed_claim = get_claim_detail(claim, {"absence_case_id": fineos_absence_id})
     except ClaimWithdrawnError:
         logger.warning(
             "get_claim failure - Claim has been withdrawn. Unable to display claim status.",

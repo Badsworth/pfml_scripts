@@ -1380,10 +1380,12 @@ class TestGetAbsencePeriods:
         employer_fein = "12-3456789"
         # TODO (PORTAL-752): don't use magic string here
         absence_case_id = "NTN-304363-ABS-01"
-        absence_periods = fineos_actions.get_absence_periods(
+        fineos_absence_periods = fineos_actions.get_absence_periods(
             employee_tax_id, employer_fein, absence_case_id, test_db_session
         )
-
+        absence_periods = fineos_actions.parse_fineos_absence_periods_to_absence_period_status_response(
+            fineos_absence_periods
+        )
         assert type(absence_periods[0]) == AbsencePeriodStatusResponse
         assert absence_periods == [
             AbsencePeriodStatusResponse(

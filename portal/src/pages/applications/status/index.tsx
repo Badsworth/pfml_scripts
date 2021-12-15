@@ -10,7 +10,6 @@ import {
 } from "../../../models/Document";
 import React, { useEffect } from "react";
 import Tag, { TagProps } from "../../../components/core/Tag";
-import { find, has, map } from "lodash";
 import withUser, { WithUserProps } from "../../../hoc/withUser";
 
 import Alert from "../../../components/core/Alert";
@@ -60,6 +59,13 @@ export const Status = ({
   const { absence_case_id, absence_id, uploaded_document_type } = query;
   const application_id = claimDetail?.application_id;
   const absenceId = absence_id || absence_case_id;
+  const hasDocuments = hasLoadedClaimDocuments(
+    claimDetail?.application_id || ""
+  );
+  const hasDocumentsError = hasDocumentsLoadError(
+    appLogic.appErrors,
+    claimDetail?.application_id || ""
+  );
 
   useEffect(() => {
     if (absenceId) {
@@ -85,7 +91,7 @@ export const Status = ({
       const anchorId = document.getElementById(location.hash.substring(1));
       if (anchorId) anchorId.scrollIntoView();
     }
-  }, [isLoadingClaimDetail]);
+  }, [hasDocuments, hasDocumentsError, isLoadingClaimDetail]);
 
   /**
    * If there is no absence_id query parameter,
@@ -133,14 +139,7 @@ export const Status = ({
 
   const viewYourNotices = () => {
     const legalNotices = getLegalNotices(documentsForApplication);
-
-    const shouldShowSpinner =
-      !hasLoadedClaimDocuments(claimDetail.application_id) &&
-      !hasDocumentsLoadError(appLogic.appErrors, claimDetail.application_id);
-    const hasNothingToShow =
-      hasDocumentsLoadError(appLogic.appErrors, claimDetail.application_id) ||
-      legalNotices.length === 0;
-
+    const hasNothingToShow = hasDocumentsError || legalNotices.length === 0;
     interface SectionWrapperProps {
       children: React.ReactNode;
     }
@@ -148,8 +147,7 @@ export const Status = ({
       <div className={containerClassName}>{children}</div>
     );
 
-    if (shouldShowSpinner) {
-      // claim documents are loading.
+    if (!hasDocuments && !hasDocumentsError) {
       return (
         <SectionWrapper>
           <Spinner
@@ -216,8 +214,8 @@ export const Status = ({
   const getInfoAlertContext = (absenceDetails: {
     [key: string]: AbsencePeriod[];
   }) => {
-    const hasBondingReason = has(absenceDetails, LeaveReason.bonding);
-    const hasPregnancyReason = has(absenceDetails, LeaveReason.pregnancy);
+    const hasBondingReason = LeaveReason.bonding in absenceDetails;
+    const hasPregnancyReason = LeaveReason.pregnancy in absenceDetails;
     const hasNewBorn = claimDetail.absence_periods.some(
       (absenceItem) =>
         (absenceItem.reason_qualifier_one ||
@@ -279,22 +277,26 @@ export const Status = ({
           noIcon
           state="info"
         >
-          <Trans
-            i18nKey="pages.claimsStatus.infoAlertBody"
-            tOptions={{ context: infoAlertContext }}
-            components={{
-              "about-bonding-leave-link": (
-                <a
-                  href={routes.external.massgov.benefitsGuide_aboutBondingLeave}
-                  target="_blank"
-                  rel="noreferrer noopener"
-                />
-              ),
-              "contact-center-phone-link": (
-                <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
-              ),
-            }}
-          />
+          <p>
+            <Trans
+              i18nKey="pages.claimsStatus.infoAlertBody"
+              tOptions={{ context: infoAlertContext }}
+              components={{
+                "about-bonding-leave-link": (
+                  <a
+                    href={
+                      routes.external.massgov.benefitsGuide_aboutBondingLeave
+                    }
+                    target="_blank"
+                    rel="noreferrer noopener"
+                  />
+                ),
+                "contact-center-phone-link": (
+                  <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
+                ),
+              }}
+            />
+          </p>
         </Alert>
       )}
       <BackButton
@@ -473,7 +475,7 @@ export const LeaveDetails = ({
 
   return (
     <React.Fragment>
-      {map(absenceDetails, (absenceItem, absenceItemName) => (
+      {Object.entries(absenceDetails).map(([absenceItemName, absenceItem]) => (
         <div key={absenceItemName} className={containerClassName}>
           <Heading level="2">
             {t("pages.claimsStatus.leaveReasonValue", {
@@ -586,8 +588,7 @@ export const Timeline = ({
       DocumentType.certification[absencePeriodReason],
     ]).length;
 
-  const bondingAbsencePeriod = find(
-    absencePeriods,
+  const bondingAbsencePeriod = absencePeriods.find(
     (absencePeriod) => absencePeriod.reason === LeaveReason.bonding
   );
   interface FollowUpStepsProps {

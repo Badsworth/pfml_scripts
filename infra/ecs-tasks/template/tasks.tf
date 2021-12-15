@@ -272,7 +272,7 @@ locals {
 
     "fineos-import-iaww" = {
       command   = ["fineos-import-iaww"]
-      task_role = aws_iam_role.pub_payments_process_fineos_task_role.arn
+      task_role = aws_iam_role.fineos_import_iaww_task_role.arn
       cpu       = 2048
       memory    = 8192
       env = [

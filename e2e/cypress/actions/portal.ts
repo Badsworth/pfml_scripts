@@ -1013,7 +1013,8 @@ export function submitPartsTwoThreeNoLeaveCert(
 export function submitClaimPartsTwoThree(
   application: ApplicationRequestBody,
   paymentPreference: PaymentPreferenceRequestBody,
-  useWithholdingFlow = false
+  useWithholdingFlow = false,
+  is_withholding_tax = false
 ): void {
   const reason = application.leave_details && application.leave_details.reason;
   clickChecklistButton(
@@ -1025,7 +1026,7 @@ export function submitClaimPartsTwoThree(
   onPage("checklist");
   if (useWithholdingFlow) {
     clickChecklistButton("Enter tax withholding preference");
-    addWithholdingPreference(application.is_withholding_tax ?? false);
+    addWithholdingPreference(is_withholding_tax ?? false);
   }
   clickChecklistButton("Upload identification document");
   addId("MA ID");
@@ -1041,7 +1042,7 @@ export function submitClaimPartsTwoThree(
     cy
       .contains("Withhold state and federal taxes?")
       .parent()
-      .contains(application.is_withholding_tax ? "Yes" : "No");
+      .contains(is_withholding_tax ? "Yes" : "No");
   confirmSubmit();
   goToDashboardFromSuccessPage();
   cy.wait(3000);
