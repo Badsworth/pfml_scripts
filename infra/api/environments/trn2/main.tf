@@ -66,20 +66,16 @@ module "api" {
   enable_application_fraud_check = "0"
   release_version                = var.release_version
 
-  # TODO: Fill this in after the portal is deployed.
   cognito_user_pool_arn       = "arn:aws:cognito-idp:us-east-1:498823821309:userpool/us-east-1_oxOGrdAe8"
   cognito_user_pool_id        = "us-east-1_oxOGrdAe8"
   cognito_user_pool_client_id = "3dgp7vtcdt7bo0utlp2tqit1ee"
   cognito_user_pool_keys_url  = "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_oxOGrdAe8/.well-known/jwks.json"
 
-  # TODO: Connect to an RMV endpoint if desired. All nonprod environments are connected to the staging API
-  #       in either a fully-mocked or partially-mocked setting.
   rmv_client_base_url               = "https://atlas-staging-gateway.massdot.state.ma.us/vs"
   rmv_client_certificate_binary_arn = "arn:aws:secretsmanager:us-east-1:498823821309:secret:/service/pfml-api-trn2/rmv_client_certificate-D5TPeE"
   rmv_api_behavior                  = "fully_mocked"
   rmv_check_mock_success            = "1"
 
-  # TODO: These values are provided by FINEOS.
   fineos_client_integration_services_api_url          = "https://trn2-api.masspfml.fineos.com/integration-services"
   fineos_client_customer_api_url                      = "https://trn2-api.masspfml.fineos.com/customerapi/customer"
   fineos_client_group_client_api_url                  = "https://trn2-api.masspfml.fineos.com/groupclientapi/groupClient"
@@ -89,10 +85,8 @@ module "api" {
   fineos_aws_iam_role_arn                             = "arn:aws:iam::666444232783:role/somdev-IAMRoles-CustomerAccountAccessRole-BF05IBJSG74B"
   fineos_aws_iam_role_external_id                     = "12345"
 
-  # TODO: This value is provided by FINEOS over Interchange.
   fineos_client_oauth2_client_id = "2e9vsuq808h3tu4rf9tr1efuh5"
 
-  # TODO: Connect to ServiceNow. Usually in nonprod you'll connect to stage.
   service_now_base_url = "https://savilinxtrain.servicenowservices.com"
 
   # dor_fineos_etl_schedule_expression               = "cron(5 * * * ? *)" # Hourly at :05 minutes past each hour
