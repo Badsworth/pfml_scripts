@@ -187,3 +187,21 @@ output "env_var_mappings" {
     "infra-test"  = "Test"
   }
 }
+
+#
+# Environments where multi-factor authentication / 2FA should be enabled
+#
+output "env_mfa_enabled" {
+  value = [
+    "test",
+    "stage",
+    "performance",
+    "training",
+    "uat",
+    "breakfix",
+    "cps-preview",
+    "long",
+    "trn2",
+    "infra-test"
+  ]
+}
