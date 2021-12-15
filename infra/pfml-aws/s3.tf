@@ -195,3 +195,82 @@ resource "aws_s3_bucket_public_access_block" "ses_to_newrelic_dlq" {
   ignore_public_acls      = true
   restrict_public_buckets = true
 }
+
+# ----------------------------------------------------------------------------------------------------------------------
+# Create S3 buckets for SNS text messaging usage reports.
+# Marking this bucket as prod, so only people with prod privs have access.
+#
+
+resource "aws_s3_bucket" "sns_sms_usage_reports" {
+  bucket = "massgov-pfml-sns-sms-usage-reports"
+  tags = merge(module.constants.common_tags, {
+    environment = "prod"
+    public      = "no"
+    Name        = "massgov-pfml-sns-sms-usage-reports"
+  })
+
+  server_side_encryption_configuration {
+    rule {
+      apply_server_side_encryption_by_default {
+        sse_algorithm = "AES256"
+      }
+    }
+  }
+}
+
+resource "aws_s3_bucket_public_access_block" "sns_sms_usage_reports" {
+  bucket                  = aws_s3_bucket.sns_sms_usage_reports.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+# Documentation: https://docs.aws.amazon.com/sns/latest/dg/sms_stats_usage.html
+resource "aws_s3_bucket_policy" "sns_sms_usage_reports" {
+  bucket = aws_s3_bucket.sns_sms_usage_reports.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Id      = "SnsSmsUsageReportsPolicy"
+    Statement = [
+      {
+        "Sid" : "AllowPutObject",
+        "Effect" : "Allow",
+        "Principal" : {
+          "Service" : "sns.amazonaws.com"
+        },
+        "Action" : "s3:PutObject",
+        "Resource" : "arn:aws:s3:::massgov-pfml-sns-sms-usage-reports/*",
+        "Condition" : {
+          "StringEquals" : {
+            "aws:SourceAccount" : "${data.aws_caller_identity.current.account_id}"
+          }
+        }
+      },
+      {
+        "Sid" : "AllowGetBucketLocation",
+        "Effect" : "Allow",
+        "Principal" : {
+          "Service" : "sns.amazonaws.com"
+        },
+        "Action" : "s3:GetBucketLocation",
+        "Resource" : "arn:aws:s3:::massgov-pfml-sns-sms-usage-reports",
+        "Condition" : {
+          "StringEquals" : {
+            "aws:SourceAccount" : "${data.aws_caller_identity.current.account_id}"
+          }
+        }
+      },
+      {
+        "Sid" : "AllowListBucket",
+        "Effect" : "Allow",
+        "Principal" : {
+          "Service" : "sns.amazonaws.com"
+        },
+        "Action" : "s3:ListBucket",
+        "Resource" : "arn:aws:s3:::massgov-pfml-sns-sms-usage-reports"
+      }
+    ]
+  })
+}
