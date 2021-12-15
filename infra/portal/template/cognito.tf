@@ -13,6 +13,9 @@ locals {
   prod_from_email_address     = "Department of Family and Medical Leave <${var.ses_email_address}>"
   non_prod_from_email_address = "${upper(local.shorthand_env_name)}_${local.prod_from_email_address}"
   from_email_address          = var.environment_name == "prod" ? local.prod_from_email_address : local.non_prod_from_email_address
+
+  # Going to be moved to constants
+  env_mfa_enabled = ["infra-test"]
 }
 
 # It should noted that 'claimants_pool' is a misnomer as this user pool will also contain Leave Administrators
@@ -20,6 +23,18 @@ resource "aws_cognito_user_pool" "claimants_pool" {
   name                     = "massgov-${local.app_name}-${var.environment_name}"
   username_attributes      = ["email"]
   auto_verified_attributes = ["email"]
+
+  # This can break environment deployments if we are not carful, so we are taking extra precautions.
+  # Currently supported environments:
+  #   - infra-test
+  mfa_configuration = contains(local.env_mfa_enabled, var.environment_name) ? "OPTIONAL" : "OFF"
+  dynamic "sms_configuration" {
+    for_each = contains(local.env_mfa_enabled, var.environment_name) ? [var.environment_name] : []
+    content {
+      external_id    = "massgov-${local.app_name}-portal-${local.shorthand_env_name}-mfa-sms"
+      sns_caller_arn = aws_iam_role.cognito_mfa_sms_messages.arn
+    }
+  }
 
   account_recovery_setting {
     recovery_mechanism {
