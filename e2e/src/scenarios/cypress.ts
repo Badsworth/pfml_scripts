@@ -559,3 +559,27 @@ export const CARE_TAXES: ScenarioSpecification<CaringLeaveClaim> = {
     docs: { CARING: {}, MASSID: {} },
   },
 };
+
+export const MED_CONT_ER_APPROVE: ScenarioSpecification = {
+  employee: { mass_id: true, wages: "eligible" },
+  claim: {
+    reason: "Serious Health Condition - Employee",
+    label: "MED_CONT_ER_APPROVE",
+    address: {
+      city: "Quincy",
+      line_1: "47 Washington St",
+      state: "MA",
+      zip: "02169",
+    },
+    leave_dates: [
+      startOfWeek(subWeeks(new Date(), 2)),
+      startOfWeek(new Date()),
+    ],
+    work_pattern_spec: "standard",
+    docs: { MASSID: {}, HCP: {} },
+    employerResponse: {
+      hours_worked_per_week: 40,
+      employer_decision: "Approve",
+    },
+  },
+};

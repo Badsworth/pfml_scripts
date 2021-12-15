@@ -49,6 +49,7 @@ function setFeatureFlags(flags?: Partial<FeatureFlags>): void {
     employerShowReviewByStatus: true,
     claimantShowStatusPage: true,
     claimantShowTaxWithholding: false,
+    claimantShowPayments: config("HAS_PAYMENT_STATUS") === "true",
   };
   cy.setCookie("_ff", JSON.stringify({ ...defaults, ...flags }), { log: true });
 }

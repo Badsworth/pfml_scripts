@@ -25,10 +25,7 @@ describe("Submit bonding application via the web portal: Adjudication Approval, 
             timestamp_from: Date.now(),
           });
         });
-        portal.submitClaimPartsTwoThree(
-          application,
-          paymentPreference
-        );
+        portal.submitClaimPartsTwoThree(application, paymentPreference);
       });
     });
 
@@ -65,9 +62,9 @@ describe("Submit bonding application via the web portal: Adjudication Approval, 
               })
               .certificationPeriods((certPeriods) => certPeriods.prefill())
               .acceptLeavePlan();
-              adjudication.paidBenefits((paidBenefits) => {
-                paidBenefits.assertSitFitOptIn(claim.is_withholding_tax);
-              });
+            adjudication.paidBenefits((paidBenefits) => {
+              paidBenefits.assertSitFitOptIn(claim.is_withholding_tax);
+            });
           });
           claimPage.shouldHaveStatus("Availability", "As Certified");
           claimPage.approve();

@@ -121,15 +121,12 @@ export const submitAndAdjudicate = wrap(
 export const submitAndStore = wrap(
   async (context: ArtilleryContext, ee: EventEmitter, logger: Logger) => {
     const body = await timeRequest(context, ee, async () => {
-      const claim = await interactor.generateClaim(
-        ee,
-        shuffle(scenariosLST)[0],
-        logger
-      );
+      const creds = await interactor.registerClaimant(ee, logger);
+      const claim = await interactor.generateClaim(ee, "LSTPAYSTATUS", logger);
       logger = logger.child({ claim_id: claim.id });
       logger.info("Claim data:", getDataFromClaim(claim));
       const submission = await interactor.submitClaim(claim, ee, logger);
-      return { claim, submission };
+      return { claim, submission, creds };
     });
 
     // Store the claim and response for later processing. We do this outside the request/response
@@ -137,6 +134,13 @@ export const submitAndStore = wrap(
     await sqs.send(
       new SendMessageCommand({
         QueueUrl: process.env.CLAIMS_SQS_QUEUE,
+        MessageBody: JSON.stringify(body),
+      })
+    );
+    // Store claimant account creds and NTN
+    await sqs.send(
+      new SendMessageCommand({
+        QueueUrl: process.env.CREDSNTN_SQS_QUEUE,
         MessageBody: JSON.stringify(body),
       })
     );

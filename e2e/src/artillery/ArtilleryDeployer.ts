@@ -25,6 +25,7 @@ type ECSLSTRunnerConfig = {
   influx_organization: string;
   influx_bucket: string;
   sqs_queue: string;
+  creds_queue: string;
 };
 
 type ContainerConfig = {
@@ -112,6 +113,7 @@ export default class ArtilleryDeployer {
           INFLUX_ORGANIZATION: this.config.influx_organization,
           INFLUX_BUCKET: this.config.influx_bucket,
           CLAIMS_SQS_QUEUE: this.config.sqs_queue,
+          CREDSNTN_SQS_QUEUE: this.config.creds_queue,
         },
       };
       await this.runTask(containerWithEnvironment);

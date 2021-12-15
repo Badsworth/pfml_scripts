@@ -313,10 +313,12 @@ export class ClaimGenerator {
   }
   private static generatePaymentPreference(): PaymentPreference {
     return {
-      payment_method: "Elec Funds Transfer",
-      account_number: "5555555555",
-      routing_number: "011401533",
-      bank_account_type: "Checking",
+      payment_method: "Check",
+      // Removing for the purposes of LST payment status
+      // payment_method: "Elec Funds Transfer",
+      // account_number: "5555555555",
+      // routing_number: "011401533",
+      // bank_account_type: "Checking",
     };
   }
 

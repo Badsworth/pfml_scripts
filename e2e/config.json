@@ -65,7 +65,8 @@
     "DOR_IMPORT_URI": "s3://massgov-pfml-performance-agency-transfer/dor/received/",
     "DOR_ETL_ARN": "arn:aws:states:us-east-1:498823821309:stateMachine:pfml-api-performance-dor-fineos-etl",
     "FINEOS_HAS_TAX_WITHHOLDING": "true",
-    "HAS_UPDATED_MAX_BENFIT": "true"
+    "HAS_UPDATED_MAX_BENFIT": "true",
+    "HAS_PAYMENT_STATUS": "true"
   },
   "uat": {
     "PORTAL_BASEURL": "https://paidleave-uat.mass.gov",
