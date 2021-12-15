@@ -14,6 +14,7 @@ import { Helmet } from "react-helmet-async";
 import React from "react";
 import Tooltip from "../../components/Tooltip";
 import moment from "moment";
+import { StaticPropsPermissions } from "../../menus";
 
 export default function Maintenance() {
   const router = useRouter();
@@ -419,4 +420,12 @@ export default function Maintenance() {
       </div>
     </>
   );
+}
+
+export async function getStaticProps(): Promise<StaticPropsPermissions> {
+  return {
+    props: {
+      permissions: ["MAINTENANCE_READ"],
+    },
+  };
 }

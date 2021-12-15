@@ -17,7 +17,6 @@ import AppErrorInfo from "../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
 import BenefitsApplicationCollection from "../../src/models/BenefitsApplicationCollection";
 import { MockBenefitsApplicationBuilder } from "../test-utils";
-import User from "../../src/models/User";
 import { mockRouter } from "next/router";
 import routes from "../../src/routes";
 import useAppErrorsLogic from "../../src/hooks/useAppErrorsLogic";
@@ -28,7 +27,7 @@ jest.mock("../../src/api/BenefitsApplicationsApi");
 jest.mock("../../src/services/tracker");
 
 describe("useBenefitsApplicationsLogic", () => {
-  let appErrorsLogic, applicationId, claimsLogic, portalFlow, user;
+  let appErrorsLogic, applicationId, claimsLogic, portalFlow;
 
   function setup() {
     renderHook(() => {
@@ -36,7 +35,6 @@ describe("useBenefitsApplicationsLogic", () => {
       appErrorsLogic = useAppErrorsLogic({ portalFlow });
       claimsLogic = useBenefitsApplicationsLogic({
         appErrorsLogic,
-        user,
         portalFlow,
       });
     });
@@ -45,7 +43,6 @@ describe("useBenefitsApplicationsLogic", () => {
   beforeEach(() => {
     applicationId = "mock-application-id";
     mockRouter.pathname = routes.getReady;
-    user = new User({ user_id: "mock-user-id" });
   });
 
   afterEach(() => {
@@ -151,12 +148,6 @@ describe("useBenefitsApplicationsLogic", () => {
     describe("when request is unsuccessful", () => {
       beforeEach(() => {
         jest.spyOn(console, "error").mockImplementationOnce(jest.fn());
-      });
-
-      it("throws an error if user has not been loaded", async () => {
-        user = null;
-        setup();
-        await expect(claimsLogic.load).rejects.toThrow(/Cannot load claim/);
       });
 
       it("redirects to /applications page if claim wasn't found", async () => {
@@ -267,12 +258,6 @@ describe("useBenefitsApplicationsLogic", () => {
     describe("when request is unsuccessful", () => {
       beforeEach(() => {
         jest.spyOn(console, "error").mockImplementationOnce(jest.fn());
-      });
-
-      it("does not make API request if user has not been loaded", async () => {
-        user = null;
-        setup();
-        await expect(getClaimsMock).not.toHaveBeenCalled();
       });
 
       it("catches exceptions thrown from the API module", async () => {

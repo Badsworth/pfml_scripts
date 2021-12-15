@@ -36,6 +36,7 @@ class AppConfig:
     enable_generate_1099_pdf: bool
     enable_merge_1099_pdf: bool
     enable_pdf_document_compression: bool
+    enable_upload_1099_pdf: bool
 
 
 def get_config() -> AppConfig:
@@ -64,4 +65,5 @@ def get_config() -> AppConfig:
         enable_pdf_document_compression=(
             os.environ.get("ENABLE_PDF_DOCUMENT_COMPRESSION", "0") == "1"
         ),
+        enable_upload_1099_pdf=os.environ.get("ENABLE_UPLOAD_1099_PDF", "0") == "1",
     )

@@ -10,7 +10,6 @@ import {
 } from "../../../models/Document";
 import React, { useEffect } from "react";
 import Tag, { TagProps } from "../../../components/core/Tag";
-import { find, has, map } from "lodash";
 import withUser, { WithUserProps } from "../../../hoc/withUser";
 
 import Alert from "../../../components/core/Alert";
@@ -215,8 +214,8 @@ export const Status = ({
   const getInfoAlertContext = (absenceDetails: {
     [key: string]: AbsencePeriod[];
   }) => {
-    const hasBondingReason = has(absenceDetails, LeaveReason.bonding);
-    const hasPregnancyReason = has(absenceDetails, LeaveReason.pregnancy);
+    const hasBondingReason = LeaveReason.bonding in absenceDetails;
+    const hasPregnancyReason = LeaveReason.pregnancy in absenceDetails;
     const hasNewBorn = claimDetail.absence_periods.some(
       (absenceItem) =>
         (absenceItem.reason_qualifier_one ||
@@ -278,22 +277,26 @@ export const Status = ({
           noIcon
           state="info"
         >
-          <Trans
-            i18nKey="pages.claimsStatus.infoAlertBody"
-            tOptions={{ context: infoAlertContext }}
-            components={{
-              "about-bonding-leave-link": (
-                <a
-                  href={routes.external.massgov.benefitsGuide_aboutBondingLeave}
-                  target="_blank"
-                  rel="noreferrer noopener"
-                />
-              ),
-              "contact-center-phone-link": (
-                <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
-              ),
-            }}
-          />
+          <p>
+            <Trans
+              i18nKey="pages.claimsStatus.infoAlertBody"
+              tOptions={{ context: infoAlertContext }}
+              components={{
+                "about-bonding-leave-link": (
+                  <a
+                    href={
+                      routes.external.massgov.benefitsGuide_aboutBondingLeave
+                    }
+                    target="_blank"
+                    rel="noreferrer noopener"
+                  />
+                ),
+                "contact-center-phone-link": (
+                  <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
+                ),
+              }}
+            />
+          </p>
         </Alert>
       )}
       <BackButton
@@ -316,8 +319,8 @@ export const Status = ({
           })}
         </Heading>
 
-        <div className="bg-base-lightest padding-2 tablet:display-flex tablet:padding-bottom-0">
-          <div className="padding-bottom-3 padding-right-6">
+        <div className="bg-base-lightest tablet:display-flex padding-3">
+          <div className=" padding-right-6">
             <Heading weight="normal" level="2" size="4">
               {t("pages.claimsStatus.applicationID")}
             </Heading>
@@ -472,7 +475,7 @@ export const LeaveDetails = ({
 
   return (
     <React.Fragment>
-      {map(absenceDetails, (absenceItem, absenceItemName) => (
+      {Object.entries(absenceDetails).map(([absenceItemName, absenceItem]) => (
         <div key={absenceItemName} className={containerClassName}>
           <Heading level="2">
             {t("pages.claimsStatus.leaveReasonValue", {
@@ -585,8 +588,7 @@ export const Timeline = ({
       DocumentType.certification[absencePeriodReason],
     ]).length;
 
-  const bondingAbsencePeriod = find(
-    absencePeriods,
+  const bondingAbsencePeriod = absencePeriods.find(
     (absencePeriod) => absencePeriod.reason === LeaveReason.bonding
   );
   interface FollowUpStepsProps {

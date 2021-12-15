@@ -1,14 +1,11 @@
 import copy
 from datetime import date, timedelta
-from typing import List
 from unittest import mock
 
 import pytest
 
-import massgov.pfml.fineos
 import tests.api
-from massgov.pfml.api.notifications import update_absence_period
-from massgov.pfml.db.models.applications import FINEOSWebIdExt, Notification
+from massgov.pfml.db.models.applications import Notification
 from massgov.pfml.db.models.employees import (
     AbsencePeriod,
     Claim,
@@ -344,45 +341,6 @@ def test_notification_post_unauthorized(client, test_db_session, auth_token, emp
     assert len(notifications) == 0
 
 
-def test_update_absence_period(
-    test_db_session, fineos_absence_details, fineos_user_token, claim_with_employer, mocker,
-):
-    claim = claim_with_employer
-
-    fineos_user_id = "USER_WITH_EXISTING_WORK_PATTERN"
-    fineos_web_id_ext = FINEOSWebIdExt()
-    fineos_web_id_ext.employee_tax_identifier = claim.employee.tax_identifier_id
-    fineos_web_id_ext.employer_fein = claim.employer.employer_fein
-    fineos_web_id_ext.fineos_web_id = fineos_user_id
-    test_db_session.add(fineos_web_id_ext)
-    test_db_session.commit()
-
-    fineos_client = massgov.pfml.fineos.MockFINEOSClient()
-    mocker.patch.object(fineos_client, "get_absence", return_value=fineos_absence_details)
-
-    update_absence_period(
-        claim.fineos_absence_id,
-        claim,
-        claim.employee.tax_identifier_id,
-        claim.employer.employer_fein,
-        fineos_client,
-        test_db_session,
-        {},
-    )
-
-    absence_periods: List[AbsencePeriod] = (
-        test_db_session.query(AbsencePeriod)
-        .filter(
-            AbsencePeriod.claim_id == claim.claim_id,
-            AbsencePeriod.fineos_absence_period_class_id == 14449,
-            AbsencePeriod.fineos_absence_period_index_id == 28064,
-        )
-        .all()
-    )
-
-    assert len(absence_periods) == 1
-
-
 class TestNotificationAbsencePeriod:
     def _assert_absence_period_data(self, test_db_session, claim, period):
         period_id = period.id.split("-")
@@ -571,12 +529,12 @@ class TestNotificationAbsencePeriod:
         assert response.status_code == 201
         self._assert_no_absence_period_data_for_claim(test_db_session, claim)
 
-    @mock.patch("massgov.pfml.api.notifications.update_absence_period")
+    @mock.patch("massgov.pfml.db.queries.absence_periods.sync_customer_api_absence_periods_to_db")
     @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_absence")
     def test_notification_creates_absence_period_unexpected_error(
         self,
         mock_get_absence,
-        mock_update_abence_period,
+        mock_sync_abence_period,
         client,
         test_db_session,
         fineos_user_token,
@@ -585,7 +543,7 @@ class TestNotificationAbsencePeriod:
     ):
         self._assert_no_absence_period_data_for_claim(test_db_session, claim)
         mock_get_absence.return_value = invalid_lookup_value_fineos_absence_details
-        mock_update_abence_period.side_effect = Exception("Unexpected failure")
+        mock_sync_abence_period.side_effect = Exception("Unexpected failure")
         response = self._api_call(client, fineos_user_token)
         assert response.status_code == 201
         self._assert_no_absence_period_data_for_claim(test_db_session, claim)

@@ -291,7 +291,7 @@ resource "newrelic_nrql_alert_condition" "server_networkerror_surge" {
   warning {
     # Warn if two 5-minute periods have error rate > 39% (at least 4/10 requests)
     threshold_duration    = 600
-    threshold             = 0.39
+    threshold             = 39
     operator              = "above"
     threshold_occurrences = "ALL"
   }
@@ -299,7 +299,7 @@ resource "newrelic_nrql_alert_condition" "server_networkerror_surge" {
   critical {
     # Set the alarm off if two 5-minute periods have error rate > 59% (at least 6/10 requests)
     threshold_duration    = 600
-    threshold             = 0.59
+    threshold             = 59
     operator              = "above"
     threshold_occurrences = "ALL"
   }

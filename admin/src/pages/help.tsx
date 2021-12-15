@@ -1,4 +1,5 @@
 import { Helmet } from "react-helmet-async";
+import { StaticPropsPermissions } from "../menus";
 
 export default function Help() {
   return (
@@ -9,4 +10,12 @@ export default function Help() {
       <h1> This is the help page</h1>
     </>
   );
+}
+
+export async function getStaticProps(): Promise<StaticPropsPermissions> {
+  return {
+    props: {
+      permissions: [],
+    },
+  };
 }

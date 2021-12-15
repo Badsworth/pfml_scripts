@@ -1,5 +1,91 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`Payments displays info alert if claimant has bonding-newborn but not pregnancy claims 1`] = `
+<div
+  class="usa-alert usa-alert--info usa-alert--no-icon margin-bottom-3"
+  role="region"
+  tabindex="-1"
+>
+  <div
+    class="usa-alert__body"
+  >
+    <h2
+      class="usa-alert__heading font-heading-xs text-bold"
+    >
+      If you are giving birth, you may also be eligible for paid medical leave
+    </h2>
+    <div
+      class="usa-alert__text"
+    >
+      <p>
+        You may be able to take up to 20 weeks of paid medical leave if you’re unable to work during your pregnancy or for your recovery from childbirth. Your health care provider determines how much medical leave you will need. Call the Contact Center at 
+        <a
+          href="tel:(833) 344-7365"
+        >
+          (833) 344‑7365
+        </a>
+         if you need 
+        <a
+          href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#about-family-leave-to-bond-with-a-child-"
+          rel="noreferrer noopener"
+          target="_blank"
+        >
+          medical leave after giving birth
+        </a>
+        . You should not submit a second application.
+      </p>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`Payments displays info alert if claimant has pregnancy but not bonding claims 1`] = `
+<div
+  class="usa-alert usa-alert--info usa-alert--no-icon margin-bottom-3"
+  role="region"
+  tabindex="-1"
+>
+  <div
+    class="usa-alert__body"
+  >
+    <h2
+      class="usa-alert__heading font-heading-xs text-bold"
+    >
+      You may also be eligible for paid family leave
+    </h2>
+    <div
+      class="usa-alert__text"
+    >
+      <p>
+        You may be able to take up to 12 weeks of paid family leave to bond with your child after your medical leave ends. 
+        <a
+          href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#about-family-leave-to-bond-with-a-child-"
+          rel="noreferrer noopener"
+          target="_blank"
+        >
+          Family leave to bond with your child
+        </a>
+         can be easily added to your claim by calling our Contact Center at 
+        <a
+          href="tel:(833) 344-7365"
+        >
+          (833) 344‑7365
+        </a>
+        . You should not submit a second application.
+      </p>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`Payments renders the \`Your payments\` intro content section 1`] = `
+<section
+  data-testid="your-payments-intro"
+>
+  Since you were approved after your leave ended, you’ll receive one payment for your entire leave.
+</section>
+`;
+
 exports[`Payments renders the \`changes to payments\` section 1`] = `
 <section
   class="margin-y-5"
@@ -18,7 +104,7 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
       class="usa-accordion__heading margin-y-2"
     >
       <button
-        aria-controls="accordion7"
+        aria-controls="accordion16"
         aria-expanded="false"
         class="usa-accordion__button"
         type="button"
@@ -28,9 +114,9 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
     </h2>
     <div
       class="usa-accordion__content usa-prose"
-      data-testid="accordion7"
+      data-testid="accordion16"
       hidden=""
-      id="accordion7"
+      id="accordion16"
     >
       <p>
         Once your payments have started, expect to be paid weekly for the duration of your leave.
@@ -87,7 +173,7 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
       class="usa-accordion__heading margin-y-2"
     >
       <button
-        aria-controls="accordion8"
+        aria-controls="accordion17"
         aria-expanded="false"
         class="usa-accordion__button"
         type="button"
@@ -97,9 +183,9 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
     </h2>
     <div
       class="usa-accordion__content usa-prose"
-      data-testid="accordion8"
+      data-testid="accordion17"
       hidden=""
-      id="accordion8"
+      id="accordion17"
     >
       <p>
         To see your maximum weekly benefit amount, view your approval notice in your 
@@ -142,7 +228,7 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
       class="usa-accordion__heading margin-y-2"
     >
       <button
-        aria-controls="accordion9"
+        aria-controls="accordion18"
         aria-expanded="false"
         class="usa-accordion__button"
         type="button"
@@ -152,9 +238,9 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
     </h2>
     <div
       class="usa-accordion__content usa-prose"
-      data-testid="accordion9"
+      data-testid="accordion18"
       hidden=""
-      id="accordion9"
+      id="accordion18"
     >
       <p>
         To make changes to your payment method or banking information, call the Contact Center at 

@@ -861,6 +861,13 @@ const shared = {
   genderPreferNotToAnswer: "Prefer not to answer",
   genderWoman: "Woman",
   hoursLabel: "Hours",
+  infoAlertBody_bonding:
+    "You may be able to take up to 20 weeks of paid medical leave if you’re unable to work during your pregnancy or for your recovery from childbirth. Your health care provider determines how much medical leave you will need. Call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> if you need <about-bonding-leave-link>medical leave after giving birth</about-bonding-leave-link>. You should not submit a second application.",
+  infoAlertBody_pregnancy:
+    "You may be able to take up to 12 weeks of paid family leave to bond with your child after your medical leave ends. <about-bonding-leave-link>Family leave to bond with your child</about-bonding-leave-link> can be easily added to your claim by calling our Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>. You should not submit a second application.",
+  infoAlertHeading_bonding:
+    "If you are giving birth, you may also be eligible for paid medical leave",
+  infoAlertHeading_pregnancy: "You may also be eligible for paid family leave",
   leavePeriodCaringAlert:
     "You will need a completed <caregiver-certification-form-link>$t(shared.certificationFormCare)</caregiver-certification-form-link> for this$t(chars.nbsp)section.",
   leavePeriodContinuousDatesLeadMedicalOrPregnancy:
@@ -888,7 +895,9 @@ const shared = {
   leaveReasonPregnancy: "Medical leave for pregnancy or birth",
   leaveReasonPregnancyHeader: "Medical leave for pregnancy",
   leaveReasonServiceMemberFamily: "Military family",
+  loadingClaimDetailLabel: "Loading claim details",
   loadingDocumentsLabel: "Loading documents",
+  maskedPhoneNumber: "***-***-{{lastFourDigits}}",
   maxEmployerCommentLengthError:
     "Please shorten your comment. We cannot accept comments that are longer than 9999 characters.",
   maximumReducedLeaveMinutes:
@@ -1039,7 +1048,7 @@ const pages = {
     callContactCenter:
       "Need help? Call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.",
     codeLabel: "$t(shared.verificationCodeLabel)",
-    lead: "We sent a 6-digit code to your phone number (###) ###-{{lastFourDigits}} as an additional security measure.",
+    lead: "We sent a 6-digit code to your phone number $t(shared.maskedPhoneNumber) as an additional security measure.",
     resendCodeLink: "$t(shared.resendVerificationCodeLink)",
     submitButton: "Submit",
     title: "Enter your security code",
@@ -2054,14 +2063,10 @@ const pages = {
     applicationUpdatesHeading: "Application updates",
     backButtonLabel: "$t(shared.backToYourApplicationsLink)",
     employerEIN: "Employer Identification Number (EIN)",
-    infoAlertBody_bonding:
-      "You may be able to take up to 20 weeks of paid medical leave if you’re unable to work during your pregnancy or for your recovery from childbirth. Your health care provider determines how much medical leave you will need. Call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> if you need <about-bonding-leave-link>medical leave after giving birth</about-bonding-leave-link>. You should not submit a second application.",
-    infoAlertBody_pregnancy:
-      "You may be able to take up to 12 weeks of paid family leave to bond with your child after your medical leave ends. <about-bonding-leave-link>Family leave to bond with your child</about-bonding-leave-link> can be easily added to your claim by calling our Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>. You should not submit a second application.",
-    infoAlertHeading_bonding:
-      "If you are giving birth, you may also be eligible for paid medical leave",
-    infoAlertHeading_pregnancy:
-      "You may also be eligible for paid family leave",
+    infoAlertBody_bonding: "$t(shared.infoAlertBody_bonding)",
+    infoAlertBody_pregnancy: "$t(shared.infoAlertBody_pregnancy)",
+    infoAlertHeading_bonding: "$t(shared.infoAlertHeading_bonding)",
+    infoAlertHeading_pregnancy: "$t(shared.infoAlertHeading_pregnancy)",
     infoRequestsBody_Decision:
       "We have made a final decision for this application. Your final decision notice has more details about the appeals process.<p>If you would like to appeal the final decision, you can do so using mail, fax, or our <online-appeals-form>online appeals form</online-appeals-form>.</p>",
     infoRequestsBody_Pending:
@@ -2094,7 +2099,7 @@ const pages = {
       "<request-decision-info><strong>This leave was withdrawn.</strong></request-decision-info><p>You have withdrawn your application from the review process. If you want to apply for paid leave again, you can begin another application.</p><p><application-link>Start another application</application-link></p>",
     legalNoticesFallback:
       "Once we’ve made a decision, you can download the decision notice here. You’ll also get an email notification.",
-    loadingClaimDetailLabel: "Loading claim details",
+    loadingClaimDetailLabel: "$t(shared.loadingClaimDetailLabel)",
     loadingLegalNoticesLabel: "Loading legal notices",
     makeChangesBody:
       "<p>To make changes to your application, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>. If you request a change to your start and end dates, we may need to review your application again.</p>",
@@ -2618,8 +2623,15 @@ const pages = {
     feedbackDetails:
       "<p>We’d like to hear more about your experience on this site. Please take a few minutes to share your feedback.</p><p><feedback-link>Take the survey</feedback-link></p>",
     feedbackHeader: "Help us improve payment information by giving feedback",
+    infoAlertBody_bonding: "$t(shared.infoAlertBody_bonding)",
+    infoAlertBody_pregnancy: "$t(shared.infoAlertBody_pregnancy)",
+    infoAlertHeading_bonding: "$t(shared.infoAlertHeading_bonding)",
+    infoAlertHeading_pregnancy: "$t(shared.infoAlertHeading_pregnancy)",
+    loadingClaimDetailLabel: "$t(shared.loadingClaimDetailLabel)",
     paymentsIntro_Intermittent:
       "Once you report at least 8 hours, you can expect to receive a payment about one week later. You can receive more than one payment in a week depending on how your hours are reported. You can report your hours by calling <contact-center-report-phone-link>$t(shared.contactCenterReportHoursPhoneNumber)<contact-center-report-phone-link>.",
+    paymentsIntro_Intermittent_Unpaid:
+      "<p>Your application has a 7-day waiting period after the first day you report taking leave. You won’t receive any PFML payments for these 7 days of leave.</p><p>After your waiting period, once you report at least 8 hours of leave you can expect to receive payment about one week later. You can receive more than one payment in a week depending on how your hours are reported.</p><p>You can report your hours by calling <contact-center-report-phone-link>$t(shared.contactCenterReportHoursPhoneNumber)</contact-center-report-phone-link>.</p>",
     paymentsIntro_NonIntermittent_NonRetro:
       "$t(shared.paymentsIntroNonIntermittentNorRetro)",
     paymentsIntro_NonIntermittent_Retro:

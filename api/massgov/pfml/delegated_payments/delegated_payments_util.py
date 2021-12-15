@@ -120,6 +120,10 @@ class Constants:
         [
             State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT_RESTARTABLE,
             State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT_RESTARTABLE,
+            State.STATE_WITHHOLDING_ADD_TO_PAYMENT_REJECT_REPORT_RESTARTABLE,
+            State.FEDERAL_WITHHOLDING_ADD_TO_PAYMENT_REJECT_REPORT_RESTARTABLE,
+            State.STATE_WITHHOLDING_ERROR_RESTARTABLE,
+            State.FEDERAL_WITHHOLDING_ERROR_RESTARTABLE,
         ]
     )
     RESTARTABLE_PAYMENT_STATE_IDS = frozenset(
@@ -132,6 +136,10 @@ class Constants:
     REJECT_FILE_PENDING_STATES = [
         State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT,
         State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_NOT_SAMPLED,
+        State.FEDERAL_WITHHOLDING_RELATED_PENDING_AUDIT,
+        State.STATE_WITHHOLDING_RELATED_PENDING_AUDIT,
+        State.FEDERAL_WITHHOLDING_ORPHANED_PENDING_AUDIT,
+        State.STATE_WITHHOLDING_ORPHANED_PENDING_AUDIT,
     ]
 
     # These overpayment transaction types don't have payment details
@@ -767,6 +775,7 @@ def copy_fineos_data_to_archival_bucket(
     expected_file_names: List[str],
     export_type: LkReferenceFileType,
     source_folder_s3_config_key: str = "fineos_data_export_path",
+    allow_missing: bool = False,
 ) -> Dict[str, Dict[str, str]]:
     # stage source and destination folders
     s3_config = payments_config.get_s3_config()
@@ -914,7 +923,7 @@ def copy_fineos_data_to_archival_bucket(
             if not destination:
                 missing_files.append(f"{date_str}-{expected_file_name}")
 
-    if missing_files:
+    if missing_files and not allow_missing:
         message = f"Error while copying fineos extracts - The following expected files were not found {','.join(missing_files)}"
         logger.info(message)
         raise Exception(message)

@@ -18,6 +18,7 @@ import oauthlib.oauth2
 import pydantic
 import requests
 import xmlschema
+from requests.models import Response
 
 import massgov.pfml.util.logging
 from massgov.pfml.fineos.transforms.to_fineos.base import EFormBody
@@ -1520,6 +1521,25 @@ class FINEOSClient(client.AbstractFINEOSClient):
             user_id,
             "update_reflexive_questions",
             data=additional_information.json(exclude_none=True),
+        )
+
+    def upload_document_to_dms(self, file_name: str, file: bytes, data: Any) -> Response:
+        """Upload document to FINEOS"""
+
+        return self._integration_services_api(
+            "POST",
+            "api/v1/document/uploadAndIndexDocumentToFineosDMS",
+            self.wscomposer_user_id,
+            "upload_document_to_dms",
+            header_content_type=None,
+            files={
+                "file": (file_name, file, "application/pdf"),
+                "documentCreationRequest": (
+                    "documentCreationRequest",
+                    json.dumps(data),
+                    "application/json",
+                ),
+            },
         )
 
     def _decode_xml_response(self, schema: xmlschema.XMLSchema, text: str) -> Dict[str, Any]:

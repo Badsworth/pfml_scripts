@@ -299,14 +299,7 @@ class PaymentRejectsStep(Step):
             ]:
                 if is_rejected_payment:
                     self.increment(self.Metrics.REJECTED_PAYMENT_COUNT)
-                    end_state = (
-                        State.STATE_WITHHOLDING_ERROR
-                        if (
-                            payment.payment_transaction_type_id
-                            == PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id
-                        )
-                        else State.FEDERAL_WITHHOLDING_ERROR
-                    )
+                    end_state = State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT
                     outcome = state_log_util.build_outcome(
                         f"Payment rejected with notes: {rejected_notes}"
                     )
@@ -606,18 +599,6 @@ class PaymentRejectsStep(Step):
 
             rejected_notes = payment_rejects_row.rejected_notes
 
-            # if payments_util.is_withholding_payments_enabled() and payment.payment_transaction_type_id in [PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id,PaymentTransactionType.FEDERAL_TAX_WITHHOLDING.payment_transaction_type_id]:
-            #     self.transition_audit_pending_withholding_payment_state(
-            #         payment,
-            #         is_rejected_payment,
-            #         is_skipped_payment,
-            #         rejected_notes,
-            #     )
-            # else:
-            #     self.transition_audit_pending_payment_state(
-            #         payment, is_rejected_payment, is_skipped_payment, rejected_notes
-            #     )
-
             self.transition_audit_pending_payment_state(
                 payment, is_rejected_payment, is_skipped_payment, rejected_notes
             )
@@ -651,14 +632,24 @@ class PaymentRejectsStep(Step):
         if rejected_notes:
             rejected_notes = rejected_notes.replace("\ufffd", " ")
 
-        if is_rejected_payment or is_skipped_payment:
+        if is_rejected_payment:
             state_log_util.create_finished_state_log(
                 payment,
                 State.STATE_WITHHOLDING_ERROR
                 if payment.payment_transaction_type_id
                 == PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id
                 else State.FEDERAL_WITHHOLDING_ERROR,
-                state_log_util.build_outcome("Payment rejected or skipped"),
+                state_log_util.build_outcome("Payment rejected"),
+                self.db_session,
+            )
+        elif is_skipped_payment:
+            state_log_util.create_finished_state_log(
+                payment,
+                State.STATE_WITHHOLDING_ERROR_RESTARTABLE
+                if payment.payment_transaction_type_id
+                == PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id
+                else State.FEDERAL_WITHHOLDING_ERROR_RESTARTABLE,
+                state_log_util.build_outcome("Payment skipped"),
                 self.db_session,
             )
         else:

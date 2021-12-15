@@ -1,4 +1,4 @@
-from typing import Dict, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union
 from uuid import UUID
 
 import newrelic.agent
@@ -6,7 +6,10 @@ from sqlalchemy.orm.session import Session
 
 import massgov
 import massgov.pfml.util.newrelic.events as newrelic_util
-from massgov.pfml.api.models.claims.responses import AbsencePeriodResponse
+from massgov.pfml.api.models.claims.responses import (
+    AbsencePeriodResponse,
+    remap_absence_period_type,
+)
 from massgov.pfml.api.validation.exceptions import (
     IssueType,
     ValidationErrorDetail,
@@ -18,6 +21,7 @@ from massgov.pfml.db.models.employees import (
     AbsenceReason,
     AbsenceReasonQualifierOne,
     AbsenceReasonQualifierTwo,
+    Claim,
     LeaveRequestDecision,
 )
 from massgov.pfml.fineos.models.customer_api import AbsencePeriod as FineosAbsencePeriod
@@ -168,7 +172,7 @@ def convert_fineos_absence_period_to_claim_response_absence_period(
 
     absence_period.absence_period_start_date = period.startDate
     absence_period.absence_period_end_date = period.endDate
-    absence_period.type = period.type
+    absence_period.period_type = remap_absence_period_type(period.type)
     if period.leaveRequest is None:
         newrelic_util.log_and_capture_exception(
             "Failed to extract leave request from fineos period.", extra=log_attributes
@@ -187,3 +191,25 @@ def convert_fineos_absence_period_to_claim_response_absence_period(
         except ValidationException:
             newrelic.agent.notice_error(attributes=log_attributes)
     return absence_period
+
+
+def sync_customer_api_absence_periods_to_db(
+    absence_periods: List[FineosAbsencePeriod],
+    claim: Claim,
+    db_session: Session,
+    log_attributes: Dict,
+) -> None:
+    # add/update absence period table
+    try:
+        for absence_period in absence_periods:
+            upsert_absence_period_from_fineos_period(
+                db_session, claim.claim_id, absence_period, log_attributes
+            )
+    except Exception as error:
+        logger.exception(
+            "Failed while populating AbsencePeriod Table", extra={**log_attributes},
+        )
+        raise error
+    # only commit if there were no errors
+    db_session.commit()
+    return

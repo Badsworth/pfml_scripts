@@ -6,7 +6,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { camelCase, compact, find, get, isEqual, startCase } from "lodash";
+import { camelCase, compact, get, isEqual, startCase } from "lodash";
 import withClaims, { ApiParams, WithClaimsProps } from "../../hoc/withClaims";
 import withUser, { WithUserProps } from "../../hoc/withUser";
 import AbsenceCaseStatusTag from "../../components/AbsenceCaseStatusTag";
@@ -596,9 +596,9 @@ const Filters = (props: FiltersProps) => {
               onClick={() => handleRemoveFilterClick("employer_id")}
             >
               {
-                find(user.verifiedEmployers, {
-                  employer_id: activeFilters.employer_id,
-                })?.employer_dba
+                user.verifiedEmployers.find(
+                  ({ employer_id }) => employer_id === activeFilters.employer_id
+                )?.employer_dba
               }
             </FilterMenuButton>
           )}

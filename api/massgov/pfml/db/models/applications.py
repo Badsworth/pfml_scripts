@@ -801,6 +801,7 @@ class DocumentType(LookupTable):
     APPROVED_TIME_CANCELLED = LkDocumentType(19, "Approved Time Cancelled")
     CHANGE_REQUEST_APPROVED = LkDocumentType(20, "Change Request Approved")
     CHANGE_REQUEST_DENIED = LkDocumentType(21, "Change Request Denied")
+    IRS_1099G_TAX_FORM_FOR_CLAIMANTS = LkDocumentType(22, "1099G Tax Form for Claimants")
 
 
 class Document(Base, TimestampMixin):

@@ -15,6 +15,7 @@ from typing import Any, List, Optional, Tuple, Union
 
 import faker
 import requests
+from requests.models import Response
 
 import massgov.pfml.util.logging
 import massgov.pfml.util.logging.wrapper
@@ -223,10 +224,30 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
         if employer_fein == "999999999":
             raise exception.FINEOSEntityNotFound("Employer not found.")
 
+        organisationUnits = None
+        if employer_fein == "999999998":
+            organisationUnits = models.OCOrganisationUnit(
+                OrganisationUnit=[
+                    models.OCOrganisationUnitItem(OID="PE:00001:0000000001", Name="OrgUnitOne",),
+                    models.OCOrganisationUnitItem(OID="PE:00001:0000000002", Name="OrgUnitTwo",),
+                ]
+            )
+
+        if employer_fein == "999999997":
+            organisationUnits = models.OCOrganisationUnit(
+                OrganisationUnit=[
+                    models.OCOrganisationUnitItem(OID="PE:00002:0000000001", Name="OrgUnitThree",),
+                    models.OCOrganisationUnitItem(OID="PE:00002:0000000002", Name="OrgUnitFour",),
+                ]
+            )
+
         return models.OCOrganisation(
             OCOrganisation=[
                 models.OCOrganisationItem(
-                    CustomerNo="999", CorporateTaxNumber=employer_fein, Name="Foo"
+                    CustomerNo="999",
+                    CorporateTaxNumber=employer_fein,
+                    Name="Foo",
+                    organisationUnits=organisationUnits,
                 )
             ]
         )
@@ -733,6 +754,12 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
             absence_id=absence_id,
             is_withholding_tax=is_withholding_tax,
         )
+
+    def upload_document_to_dms(self, file_name: str, file: bytes, data: Any) -> Response:
+        _capture_call("upload_document_to_dms", None)
+
+        response = Response()
+        return response
 
 
 massgov.pfml.util.logging.wrapper.log_all_method_calls(MockFINEOSClient, logger)

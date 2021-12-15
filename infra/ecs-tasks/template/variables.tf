@@ -254,6 +254,11 @@ variable "enable_pub_automation_claimant_address_validation" {
   default     = false
 }
 
+variable "enable_fineos_import_iaww" {
+  description = "Enable scheduling for fineos IAWW processing task"
+  default     = false
+}
+
 variable "enable_pub_automation_process_1099_documents" {
   description = "Enable scheduling for pub automation 1099 documents processing task"
   default     = false
@@ -290,6 +295,11 @@ variable "enable_generate_1099_pdf" {
 
 variable "enable_merge_1099_pdf" {
   description = "Enable merging of 1099 documents for printing"
+  default     = "0"
+}
+
+variable "enable_upload_1099_pdf" {
+  description = "Enable uploading of 1099 documents to Fineos API"
   default     = "0"
 }
 

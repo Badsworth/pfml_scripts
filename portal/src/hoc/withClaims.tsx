@@ -1,9 +1,9 @@
 import React, { useEffect } from "react";
-import { isNil, omitBy } from "lodash";
 import withUser, { WithUserProps } from "./withUser";
 import ClaimCollection from "../models/ClaimCollection";
 import PaginationMeta from "../models/PaginationMeta";
 import Spinner from "../components/core/Spinner";
+import { omitBy } from "lodash";
 import { useTranslation } from "../locales/i18n";
 
 export interface ApiParams {
@@ -44,7 +44,7 @@ function withClaims<T extends WithClaimsProps>(
         order_by: apiParams.order_by,
         order_direction: apiParams.order_direction,
       },
-      isNil
+      (value) => value === null || value === undefined
     );
     const filters = omitBy(
       {
@@ -52,7 +52,7 @@ function withClaims<T extends WithClaimsProps>(
         employer_id: apiParams.employer_id,
         search: apiParams.search,
       },
-      isNil
+      (value) => value === null || value === undefined
     );
 
     useEffect(() => {

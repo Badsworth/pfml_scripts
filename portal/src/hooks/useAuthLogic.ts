@@ -9,13 +9,13 @@ import {
   NullableQueryParams,
   createRouteWithQuery,
 } from "../utils/routeWithParams";
-import { compact, trim } from "lodash";
 import { useMemo, useState } from "react";
 import { AppErrorsLogic } from "./useAppErrorsLogic";
 import { PortalFlow } from "./usePortalFlow";
 import { RoleDescription } from "../models/User";
 import UsersApi from "../api/UsersApi";
 import assert from "assert";
+import { compact } from "lodash";
 import { isFeatureEnabled } from "../services/featureFlags";
 import routes from "../routes";
 import tracker from "../services/tracker";
@@ -36,7 +36,13 @@ function isCognitoError(error: unknown): error is CognitoError {
   return false;
 }
 
-type CognitoMFAUser = CognitoUser & { preferredMFA: "NOMFA" | "SMS" };
+interface MFAChallenge {
+  challengeName: string;
+  challengeParam: { CODE_DELIVERY_DESTINATION: string };
+}
+type CognitoMFAUser = CognitoUser & {
+  preferredMFA: "NOMFA" | "SMS";
+} & MFAChallenge;
 
 const useAuthLogic = ({
   appErrorsLogic,
@@ -57,6 +63,8 @@ const useAuthLogic = ({
    * @property authData - data to store between page transitions
    */
   const [authData, setAuthData] = useState({});
+
+  const [cognitoUser, setCognitoUser] = useState<CognitoMFAUser>();
 
   /**
    * @property isLoggedIn - Whether the user is logged in or not, or null if logged in status has not been checked yet
@@ -90,7 +98,7 @@ const useAuthLogic = ({
    */
   const sendForgotPasswordConfirmation = async (username = "") => {
     appErrorsLogic.clearErrors();
-    const trimmedUsername = trim(username);
+    const trimmedUsername = username.trim();
 
     const validationIssues = combineValidationIssues(
       validateUsername(trimmedUsername)
@@ -129,7 +137,7 @@ const useAuthLogic = ({
    */
   const login = async (username = "", password: string, next?: string) => {
     appErrorsLogic.clearErrors();
-    const trimmedUsername = trim(username);
+    const trimmedUsername = username.trim();
 
     const validationIssues = combineValidationIssues(
       validateUsername(trimmedUsername),
@@ -143,7 +151,8 @@ const useAuthLogic = ({
 
     try {
       trackAuthRequest("signIn");
-      const user = await Auth.signIn(trimmedUsername, password);
+      const currentUser = await Auth.signIn(trimmedUsername, password);
+      setCognitoUser(currentUser);
       tracker.markFetchRequestEnd();
 
       // TODO(PORTAL-1007): Remove claimantShowMFA feature flag
@@ -152,15 +161,25 @@ const useAuthLogic = ({
         return;
       }
 
-      if (!user.challengeName || user.challengeName !== "SMS_MFA") {
+      if (
+        !currentUser.challengeName ||
+        currentUser.challengeName !== "SMS_MFA"
+      ) {
         const apiUser = await usersApi.getCurrentUser();
         // if delivery preference is null, redirect to set up MFA
         const shouldSetMFA = apiUser.user.mfa_delivery_preference === null;
         // user is not being prompted for a verification code - log them in!
         finishLoginAndRedirect(next, shouldSetMFA);
+      } else {
+        portalFlow.goToPageFor(
+          "VERIFY_CODE",
+          {},
+          {
+            next,
+          }
+        );
+        return;
       }
-
-      return user;
     } catch (error) {
       if (!isCognitoError(error)) {
         appErrorsLogic.catchError(error);
@@ -184,18 +203,14 @@ const useAuthLogic = ({
    * @param [next] Redirect url after login
    */
   const verifyMFACodeAndLogin = async (code: string, next?: string) => {
-    // TODO (PORTAL-909): Confirm this returns a CognitoUser when challenge is returned.
-    const user = Auth.currentAuthenticatedUser();
-
     try {
       trackAuthRequest("confirmSignIn");
-      await Auth.confirmSignIn(user, code, "SMS_MFA");
+      await Auth.confirmSignIn(cognitoUser, code, "SMS_MFA");
       tracker.markFetchRequestEnd();
     } catch (error) {
       appErrorsLogic.catchError(error);
       return;
     }
-
     finishLoginAndRedirect(next);
   };
 
@@ -359,7 +374,7 @@ const useAuthLogic = ({
     employer_fein?: string
   ) => {
     appErrorsLogic.clearErrors();
-    const trimmedEmail = trim(email_address);
+    const trimmedEmail = email_address.trim();
 
     const requestData = {
       email_address: trimmedEmail,
@@ -462,7 +477,7 @@ const useAuthLogic = ({
 
   const resendVerifyAccountCode = async (username = "") => {
     appErrorsLogic.clearErrors();
-    const trimmedUsername = trim(username);
+    const trimmedUsername = username.trim();
 
     const validationIssues = combineValidationIssues(
       validateUsername(trimmedUsername)
@@ -496,8 +511,8 @@ const useAuthLogic = ({
   const resetPassword = async (username = "", code = "", password = "") => {
     appErrorsLogic.clearErrors();
 
-    const trimmedUsername = trim(username);
-    const trimmedCode = trim(code);
+    const trimmedUsername = username.trim();
+    const trimmedCode = code.trim();
 
     const validationIssues = combineValidationIssues(
       validateCode(trimmedCode),
@@ -593,8 +608,8 @@ const useAuthLogic = ({
   const verifyAccount = async (username = "", code = "") => {
     appErrorsLogic.clearErrors();
 
-    const trimmedUsername = trim(username);
-    const trimmedCode = trim(code);
+    const trimmedUsername = username.trim();
+    const trimmedCode = code.trim();
 
     const validationIssues = combineValidationIssues(
       validateCode(trimmedCode),
@@ -611,6 +626,7 @@ const useAuthLogic = ({
 
   return {
     authData,
+    cognitoUser,
     createAccount,
     createEmployerAccount,
     forgotPassword,

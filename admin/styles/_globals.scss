@@ -31,6 +31,19 @@ a:focus {
   text-decoration: underline;
 }
 
+.page {
+  background: #e5e5e5;
+  display: grid;
+  grid-template-columns: 15.79em auto;
+  grid-template-rows: minmax(min-content, max-content) auto;
+  height: 100vh;
+}
+
+.page--login {
+  display: flex;
+  flex-direction: column;
+}
+
 // general input styling:
 // changes here will apply to all inputs, therefore
 // custom overrides should happen at the component level
@@ -107,12 +120,4 @@ input[type='checkbox'] {
   height: 224px;
   position: relative;
   width: 400px;
-}
-
-.page {
-  background: #e5e5e5;
-  display: grid;
-  grid-template-columns: 15.79em auto;
-  grid-template-rows: minmax(min-content, max-content) auto;
-  height: 100vh;
 }

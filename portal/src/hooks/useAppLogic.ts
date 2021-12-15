@@ -26,13 +26,9 @@ const useAppLogic = () => {
     portalFlow,
   });
 
-  // user will be eventually set through a `login` method
-  // const [user, setUser] = useState();
-  // TODO (CP-885): remove user from configs and write login method
   const benefitsApplications = useBenefitsApplicationsLogic({
     appErrorsLogic,
     portalFlow,
-    user: users.user,
   });
 
   const claims = useClaimsLogic({

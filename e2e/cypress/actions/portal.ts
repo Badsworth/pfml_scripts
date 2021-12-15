@@ -81,7 +81,9 @@ export function before(flags?: Partial<FeatureFlags>): void {
   cy.intercept(/\/api\/v1\/claims\?page_offset=\d+$/).as(
     "dashboardDefaultQuery"
   );
-  cy.intercept(/\/api\/v1\/applications$/).as("getApplications");
+  cy.intercept(/\/api\/v1\/(applications\?|applications$)/).as(
+    "getApplications"
+  );
   cy.intercept(/\/api\/v1\/claims\?(page_offset=\d+)?&?(order_by)/).as(
     "dashboardClaimQueries"
   );
@@ -316,7 +318,7 @@ export function startClaim(): void {
 }
 
 export function clickChecklistButton(label: string): void {
-  cy.contains(label)
+  cy.contains(RegExp(label))
     .parents(".display-flex.border-bottom.border-base-light.padding-y-3")
     .contains("a", "Start")
     .click();
@@ -1011,17 +1013,20 @@ export function submitPartsTwoThreeNoLeaveCert(
 export function submitClaimPartsTwoThree(
   application: ApplicationRequestBody,
   paymentPreference: PaymentPreferenceRequestBody,
-  useWithholdingFlow = false
+  useWithholdingFlow = false,
+  is_withholding_tax = false
 ): void {
   const reason = application.leave_details && application.leave_details.reason;
   clickChecklistButton(
-    useWithholdingFlow ? "Enter payment information" : "Add payment information"
+    useWithholdingFlow
+      ? "Enter payment (method|information)"
+      : "Add payment information"
   );
   addPaymentInfo(paymentPreference);
   onPage("checklist");
   if (useWithholdingFlow) {
     clickChecklistButton("Enter tax withholding preference");
-    addWithholdingPreference(application.is_withholding_tax ?? false);
+    addWithholdingPreference(is_withholding_tax ?? false);
   }
   clickChecklistButton("Upload identification document");
   addId("MA ID");
@@ -1037,7 +1042,7 @@ export function submitClaimPartsTwoThree(
     cy
       .contains("Withhold state and federal taxes?")
       .parent()
-      .contains(application.is_withholding_tax ? "Yes" : "No");
+      .contains(is_withholding_tax ? "Yes" : "No");
   confirmSubmit();
   goToDashboardFromSuccessPage();
   cy.wait(3000);
@@ -1968,9 +1973,11 @@ export function sortClaims(
 }
 
 export function claimantGoToClaimStatus(fineosAbsenceId: string): void {
-  cy.wait("@getApplications").wait(150);
+  cy.wait("@getApplications").wait(300);
   cy.contains("article", fineosAbsenceId).within(() => {
-    cy.contains("View status updates and details").click();
+    cy.contains("View status updates and details", { timeout: 20000 }).click({
+      timeout: 20000,
+    });
     cy.url()
       .should("include", "/applications/status/")
       .and("include", `${fineosAbsenceId}`);
@@ -2006,12 +2013,16 @@ export function claimantAssertClaimStatus(leaves: LeaveStatus[]): void {
  * Claimant is redirected straight to "Start Application" page if he has no open aplications.
  */
 export const skipLoadingClaimantApplications = (): void => {
-  cy.intercept(/\/api\/v1\/applications$/, { times: 1 }, (req) => {
-    req.reply((res) => {
-      res.body.data = [];
-      res.send();
-    });
-  });
+  cy.intercept(
+    /\/api\/v1\/(applications\?|applications$)/,
+    { times: 1 },
+    (req) => {
+      req.reply((res) => {
+        res.body.data = [];
+        res.send();
+      });
+    }
+  );
 };
 
 /**
@@ -2049,7 +2060,7 @@ export function clearSearch(): void {
 
 export function addWithholdingPreference(withholding: boolean) {
   cy.contains(
-    "Do you want us to withhold state and federal taxes from your paid leave benefits?"
+    /Do you want us to withhold state and federal taxes from (this|your) paid leave benefit?/
   );
   cy.get("label")
     .contains(withholding ? "Yes" : "No")

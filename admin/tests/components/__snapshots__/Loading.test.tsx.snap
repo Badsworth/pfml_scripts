@@ -1,0 +1,22 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Loading renders the default component 1`] = `
+<div
+  className="loading"
+>
+  <div
+    className="loading__container"
+  >
+    <h1
+      className="loading__title"
+    >
+      Test loading title
+    </h1>
+    <p
+      className="loading__description"
+    >
+      This may take a few seconds, please don’t close this page.
+    </p>
+  </div>
+</div>
+`;

@@ -19,6 +19,7 @@ from massgov.pfml.db.models.applications import (
     RelationshipToCaregiver,
 )
 from massgov.pfml.db.models.employees import (
+    AbsencePeriodType,
     AddressType,
     BankAccountType,
     Country,
@@ -50,6 +51,7 @@ from massgov.pfml.fineos.exception import (
 from massgov.pfml.fineos.models import CreateOrUpdateEmployer, CreateOrUpdateServiceAgreement
 from massgov.pfml.fineos.models.customer_api import Address as FineosAddress
 from massgov.pfml.fineos.models.customer_api import CustomerAddress
+from massgov.pfml.fineos.models.customer_api.spec import AbsencePeriod as FineosAbsencePeriod
 
 
 @pytest.fixture
@@ -1380,10 +1382,12 @@ class TestGetAbsencePeriods:
         employer_fein = "12-3456789"
         # TODO (PORTAL-752): don't use magic string here
         absence_case_id = "NTN-304363-ABS-01"
-        absence_periods = fineos_actions.get_absence_periods(
+        fineos_absence_periods = fineos_actions.get_absence_periods(
             employee_tax_id, employer_fein, absence_case_id, test_db_session
         )
-
+        absence_periods = fineos_actions.parse_fineos_absence_periods_to_absence_period_status_response(
+            fineos_absence_periods
+        )
         assert type(absence_periods[0]) == AbsencePeriodStatusResponse
         assert absence_periods == [
             AbsencePeriodStatusResponse(
@@ -1398,6 +1402,29 @@ class TestGetAbsencePeriods:
                 evidence_status=None,
             )
         ]
+
+    def test_period_type_mapping(self):
+        fineos_absence_periods = [
+            FineosAbsencePeriod(
+                absenceType=AbsencePeriodType.TIME_OFF_PERIOD.absence_period_type_description
+            ),
+            FineosAbsencePeriod(
+                absenceType=AbsencePeriodType.EPISODIC.absence_period_type_description
+            ),
+        ]
+
+        absence_periods = fineos_actions.parse_fineos_absence_periods_to_absence_period_status_response(
+            fineos_absence_periods
+        )
+
+        assert (
+            absence_periods[0].period_type
+            == AbsencePeriodType.CONTINUOUS.absence_period_type_description
+        )
+        assert (
+            absence_periods[1].period_type
+            == AbsencePeriodType.INTERMITTENT.absence_period_type_description
+        )
 
     @mock.patch("massgov.pfml.api.services.fineos_actions.register_employee")
     def test_with_fineos_error(self, mock_register, test_db_session, user, caplog):

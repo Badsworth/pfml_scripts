@@ -112,6 +112,11 @@ def _get_leave_details(absence_periods: Dict[str, Dict]) -> LeaveDetails:
     for decision in absence_periods["decisions"]:
         start_date = decision["period"]["startDate"]
         end_date = decision["period"]["endDate"]
+
+        # Note: Fineos gives us a wider range of period types than what's
+        # accounted for below. We'll be removing leave_details in the future
+        # though (PORTAL-1118), so this is being left as is.
+        # More context: https://lwd.atlassian.net/browse/PORTAL-1296
         if decision["period"]["type"] == "Time off period":
             if continuous_start_date is None or start_date < continuous_start_date:
                 continuous_start_date = start_date

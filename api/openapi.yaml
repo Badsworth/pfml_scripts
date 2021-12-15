@@ -2450,7 +2450,7 @@ components:
           example: "Newborn"
         reason_qualifier_two:
           type: string
-        type:
+        period_type:
           type: string
           enum:
             - Continuous

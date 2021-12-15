@@ -3,7 +3,7 @@
  */
 
 import LeaveReason, { LeaveReasonType } from "./LeaveReason";
-import { compact, get, isNil, merge, sum, sumBy, zip } from "lodash";
+import { compact, get, merge, sum, sumBy, zip } from "lodash";
 
 import Address from "./Address";
 import BaseBenefitsApplication from "./BaseBenefitsApplication";
@@ -296,7 +296,6 @@ export class WorkPattern {
     minutesWorkedPerWeek: number,
     workPattern: WorkPattern | { [key: string]: never } = {}
   ) {
-    assert(!isNil(minutesWorkedPerWeek));
     const minutesOverWeek = spreadMinutesOverWeek(minutesWorkedPerWeek);
 
     const newWeek = zip(OrderedDaysOfWeek, minutesOverWeek).map(

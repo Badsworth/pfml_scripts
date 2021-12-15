@@ -38,6 +38,8 @@ npm run dev
 - [Integrate ESLint into your IDE or a git hook](https://eslint.org/docs/user-guide/integrations) if you'd like to catch linting errors before it reaches the CI.
 - [Setup your IDE to run Prettier upon save.](https://prettier.io/docs/en/editors.html)
 
+If you're using VS Code, it's recommended that you configure the `typescript.preferences.importModuleSpecifier` setting to `"project-relative"`, so that VS Code's auto-import behavior is more accurate. You can configure this as a [workspace setting](https://code.visualstudio.com/docs/getstarted/settings) by creating a local `.vscode/settings.json` file at the root of the repo's directory on your machine.
+
 ## Build and Export the static site
 
 In deployed environments, this app is served as static pages.

@@ -1,12 +1,15 @@
 import React, { useEffect } from "react";
 import withUser, { WithUserProps } from "../../../hoc/withUser";
-
+import { AbsencePeriod } from "../../../models/AbsencePeriod";
 import Accordion from "../../../components/core/Accordion";
 import AccordionItem from "../../../components/core/AccordionItem";
+import Alert from "../../../components/core/Alert";
 import BackButton from "../../../components/BackButton";
 import Heading from "../../../components/core/Heading";
+import LeaveReason from "../../../models/LeaveReason";
 import { OtherDocumentType } from "../../../models/Document";
 import PageNotFound from "../../../components/PageNotFound";
+import Spinner from "../../../components/core/Spinner";
 import StatusNavigationTabs from "../../../components/status/StatusNavigationTabs";
 import Table from "../../../components/core/Table";
 import Title from "../../../components/core/Title";
@@ -19,29 +22,27 @@ import { isFeatureEnabled } from "../../../services/featureFlags";
 import routes from "../../../routes";
 import { useTranslation } from "../../../locales/i18n";
 
-interface PaymentsProps {
+export const Payments = ({
+  appLogic,
+  query,
+}: WithUserProps & {
   query: {
     absence_id?: string;
   };
-}
-
-export const Payments = ({
-  appLogic: {
+}) => {
+  const { t } = useTranslation();
+  const { absence_id } = query;
+  const {
     appErrors: { items },
-    claims: { claimDetail, loadClaimDetail, hasLoadedPayments },
+    claims: {
+      claimDetail,
+      isLoadingClaimDetail,
+      loadClaimDetail,
+      hasLoadedPayments,
+    },
     documents: { documents: allClaimDocuments, loadAll: loadAllClaimDocuments },
     portalFlow,
-  },
-  query: { absence_id },
-}: WithUserProps & PaymentsProps) => {
-  const { t } = useTranslation();
-
-  useEffect(() => {
-    if (absence_id) {
-      loadClaimDetail(absence_id);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [absence_id]);
+  } = appLogic;
 
   useEffect(() => {
     if (!isFeatureEnabled("claimantShowPayments")) {
@@ -52,6 +53,14 @@ export const Payments = ({
   }, [portalFlow, absence_id]);
 
   const application_id = claimDetail?.application_id;
+  const absenceId = absence_id;
+  useEffect(() => {
+    if (absenceId) {
+      loadClaimDetail(absenceId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [absenceId]);
+
   useEffect(() => {
     if (application_id) {
       loadAllClaimDocuments(application_id);
@@ -59,7 +68,15 @@ export const Payments = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [application_id]);
 
-  const hasNonDocumentsLoadError: boolean = items.some(
+  /**
+   * If there is no absence_id query parameter,
+   * then return the PFML 404 page.
+   */
+  const isAbsenceCaseId = Boolean(absenceId?.length);
+  if (!isAbsenceCaseId) return <PageNotFound />;
+
+  // only hide page content if there is an error that's not DocumentsLoadError.
+  const hasNonDocumentsLoadError: boolean = appLogic.appErrors.items.some(
     (error) => error.name !== "DocumentsLoadError"
   );
 
@@ -72,28 +89,60 @@ export const Payments = ({
     );
   }
 
-  const documentsForApplication = allClaimDocuments.filterByApplication(
-    application_id || ""
+  // Check both because claimDetail could be cached from a different status page.
+  if (isLoadingClaimDetail || !claimDetail) {
+    return (
+      <div className="text-center">
+        <Spinner aria-valuetext={t("pages.payments.loadingClaimDetailLabel")} />
+      </div>
+    );
+  }
+
+  const absenceDetails = AbsencePeriod.groupByReason(
+    claimDetail.absence_periods
   );
+  const hasPendingStatus = claimDetail.absence_periods.some(
+    (absenceItem) => absenceItem.request_decision === "Pending"
+  );
+  const hasApprovedStatus = claimDetail.absence_periods.some(
+    (absenceItem) => absenceItem.request_decision === "Approved"
+  );
+  const documentsForApplication = allClaimDocuments.filterByApplication(
+    claimDetail.application_id
+  );
+
+  const getInfoAlertContext = (absenceDetails: {
+    [reason: string]: AbsencePeriod[];
+  }) => {
+    const hasBondingReason = LeaveReason.bonding in absenceDetails;
+    const hasPregnancyReason = LeaveReason.pregnancy in absenceDetails;
+    const hasNewBorn = claimDetail.absence_periods.some(
+      (absenceItem) => absenceItem.reason_qualifier_one === "Newborn"
+    );
+    if (hasBondingReason && !hasPregnancyReason && hasNewBorn) {
+      return "bonding";
+    }
+
+    if (hasPregnancyReason && !hasBondingReason) {
+      return "pregnancy";
+    }
+
+    return "";
+  };
+
+  const infoAlertContext = getInfoAlertContext(absenceDetails);
+
   const approvalDate = documentsForApplication.find(
     (document: { document_type: string }) =>
       document.document_type === OtherDocumentType.approvalNotice
   )?.created_at;
 
-  const isRetroactive =
-    approvalDate && claimDetail
-      ? claimDetail?.absence_periods[0]?.absence_period_end_date < approvalDate
-      : false;
-
-  /**
-   * If there is no absence_id query parameter,
-   * then return the PFML 404 page.
-   */
-  const isAbsenceCaseId = Boolean(absence_id?.length);
-  if (!isAbsenceCaseId) return <PageNotFound />;
+  const isRetroactive = approvalDate
+    ? claimDetail.absence_periods[0]?.absence_period_end_date < approvalDate
+    : false;
 
   const shouldShowPaymentsTable =
-    claimDetail?.payments !== null ||
+    Boolean(claimDetail?.payments?.length) ||
     (hasLoadedPayments(absence_id || "") && !items.length);
 
   const tableColumns = [
@@ -105,58 +154,99 @@ export const Payments = ({
   ];
 
   const waitingWeek =
-    claimDetail?.waitingWeek?.startDate &&
+    claimDetail.waitingWeek?.startDate &&
     formatDateRange(
       claimDetail.waitingWeek.startDate,
       claimDetail.waitingWeek.endDate
     );
 
-  const isIntermittent =
-    claimDetail?.absence_periods[0].period_type === "Intermittent";
+  const isIntermittent = claimDetail.isIntermittent;
+
+  const isIntermittentUnpaid =
+    isIntermittent &&
+    isFeatureEnabled("claimantShowPaymentsPhaseTwo") &&
+    claimDetail?.payments?.length === 0;
 
   const maxBenefitAmount = `$${getMaxBenefitAmount()}`;
 
   return (
     <React.Fragment>
+      {!!infoAlertContext && (hasPendingStatus || hasApprovedStatus) && (
+        <Alert
+          className="margin-bottom-3"
+          data-test="info-alert"
+          heading={t("pages.payments.infoAlertHeading", {
+            context: infoAlertContext,
+          })}
+          headingLevel="2"
+          headingSize="4"
+          noIcon
+          state="info"
+        >
+          <p>
+            <Trans
+              i18nKey="pages.payments.infoAlertBody"
+              tOptions={{ context: infoAlertContext }}
+              components={{
+                "about-bonding-leave-link": (
+                  <a
+                    href={
+                      routes.external.massgov.benefitsGuide_aboutBondingLeave
+                    }
+                    target="_blank"
+                    rel="noreferrer noopener"
+                  />
+                ),
+                "contact-center-phone-link": (
+                  <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
+                ),
+              }}
+            />
+          </p>
+        </Alert>
+      )}
+
       <BackButton
         label={t("pages.payments.backButtonLabel")}
         href={routes.applications.index}
       />
+      <Title hidden>{t("pages.payments.paymentsTitle")}</Title>
       <div className="measure-6">
         <StatusNavigationTabs
           activePath={portalFlow.pathname}
           absence_id={absence_id}
         />
 
-        <Title hidden>{t("pages.payments.paymentsTitle")}</Title>
-
         <section className="margin-y-5" data-testid="your-payments">
           {/* Heading section */}
-          <Heading level="2" className="margin-bottom-3">
+          <Heading level="2" size="1" className="margin-bottom-3">
             {t("pages.payments.yourPayments")}
           </Heading>
-
-          <Trans
-            i18nKey="pages.payments.paymentsIntro"
-            tOptions={{
-              context: `${
-                isIntermittent
-                  ? "Intermittent"
-                  : isRetroactive
-                  ? "NonIntermittent_Retro"
-                  : "NonIntermittent_NonRetro"
-              }`,
-            }}
-            components={{
-              "contact-center-report-phone-link": (
-                <a
-                  href={`tel:${t(
-                    "shared.contactCenterReportHoursPhoneNumber"
-                  )}`}
-                />
-              ),
-            }}
-          />
+          <section data-testid="your-payments-intro">
+            <Trans
+              i18nKey="pages.payments.paymentsIntro"
+              tOptions={{
+                context: `${
+                  isIntermittentUnpaid
+                    ? "Intermittent_Unpaid"
+                    : isIntermittent
+                    ? "Intermittent"
+                    : isRetroactive
+                    ? "NonIntermittent_Retro"
+                    : "NonIntermittent_NonRetro"
+                }`,
+              }}
+              components={{
+                "contact-center-report-phone-link": (
+                  <a
+                    href={`tel:${t(
+                      "shared.contactCenterReportHoursPhoneNumber"
+                    )}`}
+                  />
+                ),
+              }}
+            />
+          </section>
 
           {shouldShowPaymentsTable && (
             <Table className="width-full" responsive>
@@ -170,7 +260,7 @@ export const Payments = ({
                 </tr>
               </thead>
               <tbody>
-                {claimDetail?.payments
+                {claimDetail.payments
                   .reverse()
                   .map(
                     ({

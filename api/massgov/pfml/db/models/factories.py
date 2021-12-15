@@ -387,7 +387,7 @@ class OrganizationUnitFactory(BaseFactory):
 
     organization_unit_id = Generators.UuidObj
 
-    fineos_id = None
+    fineos_id = factory.Faker("numerify", text="PE:#####:##########")
     name = factory.Faker("company")
     employer = factory.SubFactory(EmployerFactory)
     employer_id = factory.LazyAttribute(lambda c: c.employer.employer_id)
@@ -1301,3 +1301,15 @@ class EmployeeOccupationFactory(BaseFactory):
 
     employer = factory.SubFactory(EmployerFactory)
     employer_id = factory.LazyAttribute(lambda d: d.employer.employer_id)
+
+
+class UserLeaveAdministratorFactory(BaseFactory):
+    class Meta:
+        model = employee_models.UserLeaveAdministrator
+
+    user = factory.SubFactory(UserFactory, roles=[employee_models.Role.EMPLOYER])
+    user_id = factory.LazyAttribute(lambda u: u.user.user_id)
+    employer = factory.SubFactory(EmployerFactory)
+    employer_id = factory.LazyAttribute(lambda u: u.employer.employer_id)
+    fineos_web_id = factory.Faker("numerify", text="pfml_leave_admin_#####")
+    verification = None

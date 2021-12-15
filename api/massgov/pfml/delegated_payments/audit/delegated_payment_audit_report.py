@@ -12,11 +12,13 @@ from massgov.pfml import db
 from massgov.pfml.db.models.employees import (
     LkState,
     Payment,
+    PaymentTransactionType,
     ReferenceFile,
     ReferenceFileType,
     State,
     StateLog,
 )
+from massgov.pfml.db.models.payments import LinkSplitPayment
 from massgov.pfml.delegated_payments.audit.delegated_payment_audit_util import (
     PaymentAuditData,
     write_audit_report,
@@ -59,7 +61,7 @@ class PaymentAuditReportStep(Step):
             logger.info("Tax Withholding ENABLED")
             federal_withholding_state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
                 state_log_util.AssociatedClass.PAYMENT,
-                State.FEDERAL_WITHHOLDING_PENDING_AUDIT,
+                State.FEDERAL_WITHHOLDING_ORPHANED_PENDING_AUDIT,
                 self.db_session,
             )
 
@@ -69,7 +71,7 @@ class PaymentAuditReportStep(Step):
 
             state_withholding_state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
                 state_log_util.AssociatedClass.PAYMENT,
-                State.STATE_WITHHOLDING_PENDING_AUDIT,
+                State.STATE_WITHHOLDING_ORPHANED_PENDING_AUDIT,
                 self.db_session,
             )
 
@@ -136,6 +138,34 @@ class PaymentAuditReportStep(Step):
                 state_log_util.build_outcome("Payment Audit Report sent"),
                 self.db_session,
             )
+            if payments_util.is_withholding_payments_enabled():
+                if (
+                    payment.payment_transaction_type_id
+                    == PaymentTransactionType.STANDARD.payment_transaction_type_id
+                ):
+                    linked_payments = _get_split_payments(self.db_session, payment)
+                    for payment in linked_payments:
+                        if payment.payment_transaction_type_id in [
+                            PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id,
+                            PaymentTransactionType.FEDERAL_TAX_WITHHOLDING.payment_transaction_type_id,
+                        ]:
+                            end_state = (
+                                State.STATE_WITHHOLDING_RELATED_PENDING_AUDIT
+                                if (
+                                    payment.payment_transaction_type_id
+                                    == PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id
+                                )
+                                else State.FEDERAL_WITHHOLDING_RELATED_PENDING_AUDIT
+                            )
+                            outcome = state_log_util.build_outcome(
+                                "Related Payment Audit report sent"
+                            )
+                            state_log_util.create_finished_state_log(
+                                associated_model=payment,
+                                end_state=end_state,
+                                outcome=outcome,
+                                db_session=self.db_session,
+                            )
 
         logger.info("Done setting sampled payments to sent state: %i", len(state_logs))
 
@@ -283,6 +313,16 @@ def _get_other_claim_payments_for_payment(
         )
 
     return other_claim_payments
+
+
+def _get_split_payments(db_session: db.Session, payment: Payment) -> List[Payment]:
+    linked_split_payments: List[Payment] = (
+        db_session.query(Payment)
+        .join(LinkSplitPayment, Payment.payment_id == LinkSplitPayment.related_payment_id)
+        .filter(LinkSplitPayment.payment_id == payment.payment_id)
+        .all()
+    )
+    return linked_split_payments
 
 
 def _get_date_tuple(payment: Payment) -> Tuple[date, date]:

@@ -3,7 +3,7 @@ import BenefitsApplication, {
   ReasonQualifier,
 } from "../../models/BenefitsApplication";
 import StepModel, { ClaimSteps } from "../../models/Step";
-import { camelCase, filter, findIndex, get, isBoolean } from "lodash";
+import { camelCase, get } from "lodash";
 import withBenefitsApplication, {
   WithBenefitsApplicationProps,
 } from "../../hoc/withBenefitsApplication";
@@ -113,7 +113,10 @@ export const Checklist = (props: ChecklistProps) => {
    */
   const stepGroups = [1, 2, 3].map(
     (number) =>
-      new StepGroup({ number, steps: filter(allSteps, { group: number }) })
+      new StepGroup({
+        number,
+        steps: allSteps.filter((step) => step.group === number),
+      })
   );
 
   const sharedStepListProps = {
@@ -130,7 +133,7 @@ export const Checklist = (props: ChecklistProps) => {
    * Get the number of a Step for display in the checklist.
    */
   function getStepNumber(step: StepModel) {
-    const index = findIndex(allSteps, { name: step.name });
+    const index = allSteps.findIndex((s) => s.name === step.name);
     return index + 1;
   }
 
@@ -326,7 +329,7 @@ export const Checklist = (props: ChecklistProps) => {
     if (
       stepGroup.number === 2 &&
       (claim.has_submitted_payment_preference === true ||
-        isBoolean(claim.is_withholding_tax))
+        typeof claim.is_withholding_tax === "boolean")
     ) {
       // Description for the second part changes after it's been submitted
       context += "_submitted";

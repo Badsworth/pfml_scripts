@@ -15,6 +15,7 @@ namespace PfmlPdfApi.Services
 {
     public interface IPdfDocumentService
     {
+        Task<ResponseMessage<CreatedDocumentDto>> UpdateTemplate();
         Task<ResponseMessage<CreatedDocumentDto>> Generate(DocumentDto dto);
         Task<ResponseMessage<IList<CreatedDocumentDto>>> Merge(MergeDto dto);
     }
@@ -28,6 +29,25 @@ namespace PfmlPdfApi.Services
         {
             _amazonS3Service = amazonS3Service;
             template1099 = configuration.GetValue<string>("AppSettings:Template1099");
+        }
+
+        public async Task<ResponseMessage<CreatedDocumentDto>> UpdateTemplate(){
+            var response = new ResponseMessage<CreatedDocumentDto>(null);
+            string srcFileName = $"Assets/1099/{template1099}";
+            string desFileName = template1099;
+
+            try
+            {
+                var mStream = new MemoryStream(await File.ReadAllBytesAsync(srcFileName));
+                var fileCreated = await _amazonS3Service.CreateFileAsync(desFileName, mStream, "text/html");
+            }
+            catch (Exception ex)
+            {
+                response.Status = MessageConstants.MsgStatusFailed;
+                response.ErrorMessage = ex.Message;
+            }
+
+            return response;
         }
 
         public async Task<ResponseMessage<CreatedDocumentDto>> Generate(DocumentDto dto)

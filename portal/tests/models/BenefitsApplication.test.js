@@ -4,7 +4,6 @@ import {
 } from "../../src/models/BenefitsApplication";
 import { MockBenefitsApplicationBuilder } from "../test-utils";
 import MockDate from "mockdate";
-import { map } from "lodash";
 
 describe("Claim", () => {
   let emptyClaim;
@@ -153,9 +152,9 @@ describe("Claim", () => {
           expect(day.minutes).toEqual(660);
         });
 
-        expect(map(workPattern2.work_pattern_days, "minutes")).toEqual([
-          675, 675, 675, 675, 670, 660, 660,
-        ]);
+        expect(
+          workPattern2.work_pattern_days.map((day) => day.minutes)
+        ).toEqual([675, 675, 675, 675, 670, 660, 660]);
       });
 
       it("returns week with 0 minutes when 0 minutes are provided", () => {
@@ -169,9 +168,9 @@ describe("Claim", () => {
       it("divides minutes in increments of 15 and adds remainders to the next day", () => {
         const workPattern = WorkPattern.createWithWeek(77 * 60 + 18); // 77 hours and 18 minutes
 
-        expect(map(workPattern.work_pattern_days, "minutes")).toEqual([
-          675, 663, 660, 660, 660, 660, 660,
-        ]);
+        expect(workPattern.work_pattern_days.map((day) => day.minutes)).toEqual(
+          [675, 663, 660, 660, 660, 660, 660]
+        );
       });
 
       it("passes provided attributes to new WorkPattern", () => {
@@ -187,9 +186,9 @@ describe("Claim", () => {
       it("totals minutes worked across all work pattern days", () => {
         const workPattern = WorkPattern.createWithWeek(70 * 60 + 4); // 70 hours and 4 minutes
 
-        expect(map(workPattern.work_pattern_days, "minutes")).toEqual([
-          604, 600, 600, 600, 600, 600, 600,
-        ]);
+        expect(workPattern.work_pattern_days.map((day) => day.minutes)).toEqual(
+          [604, 600, 600, 600, 600, 600, 600]
+        );
       });
 
       it("returns null if work_pattern_days are empty", () => {
