@@ -32,14 +32,14 @@ class Upload1099DocumentsStep(Step):
             document_type = self._get_document_type()
             batch_id = self._get_batch_id()
             directory_path = self._get_1099_documents_directory(batch_id)
-            sub_directories = self._get_1099_sub_batches(directory_path)
+            sub_directories = self._get_1099_sub_directories(directory_path)
             fineos = massgov.pfml.fineos.create_client()
             temp_limit_to = 10
             temp_con = 0
 
             for sub_directory in sub_directories:
                 sub_directory_path = os.path.join(directory_path, sub_directory)
-                documents = self._get_1099_documents_in_sub_batch(sub_directory_path)
+                documents = self._get_1099_documents_in_sub_directory(sub_directory_path)
 
                 for document in documents:
                     temp_con = temp_con + 1
@@ -83,12 +83,12 @@ class Upload1099DocumentsStep(Step):
         logger.info(directory)
         return directory
 
-    def _get_1099_sub_batches(self, directory: str) -> List[str]:
-        sub_directories = file_util.list_files(directory)
+    def _get_1099_sub_directories(self, directory: str) -> List[str]:
+        sub_directories = file_util.list_folders(directory)
         logger.info(f"{len(sub_directories)} sub directories found.")
         return sub_directories
 
-    def _get_1099_documents_in_sub_batch(self, sub_directory_path: str) -> List[str]:
+    def _get_1099_documents_in_sub_directory(self, sub_directory_path: str) -> List[str]:
         documents = file_util.list_files(sub_directory_path)
         logger.info(f"{len(documents)} 1099 forms found in sub directory {sub_directory_path}.")
         return documents
