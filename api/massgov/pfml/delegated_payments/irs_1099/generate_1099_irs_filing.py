@@ -24,7 +24,6 @@ logger = massgov.pfml.util.logging.get_logger(__name__)
 original_returns = []
 c_corrected_returns = []
 g_corrected_returns = []
-payment_amt_zero = False
 
 
 class Constants:
@@ -87,7 +86,7 @@ class Generate1099IRSfilingStep(Step):
     c_seq = 0
     k_seq = 0
     f_seq = 0
-
+    payment_amt_zero = False
     total_b_records = 0
 
     def run_step(self) -> None:
@@ -133,11 +132,11 @@ class Generate1099IRSfilingStep(Step):
             if len(c_corrected_returns) > 0:
                 logger.info("Total C corrected records are %s", len(c_corrected_returns))
                 original = _get_original_records_two_trans_correction()
-                payment_amt_zero = True
+                self.payment_amt_zero = True
                 # Remove the below line after testing
                 original = c_corrected_returns
                 entries = self._create_record_entries(original, entries)
-                payment_amt_zero = False
+                self.payment_amt_zero = False
                 entries = self._create_record_entries(c_corrected_returns, entries)
 
             f_template = self._create_f_template()
@@ -149,10 +148,10 @@ class Generate1099IRSfilingStep(Step):
             self.db_session.commit()
 
     def _create_record_entries(self, records: List[Any], entries: str) -> str:
-
-        amt = _format_amount_fields(decimal.Decimal(0.0))
+        amt = 0.0
+        amt = self._format_amount_fields(amt)
         self.a_seq = self.last_seq + 1
-        ctl_total, st_tax, fed_tax = _get_totals(records)
+        ctl_total, st_tax, fed_tax = self._get_totals(records)
         a_template = self._create_a_template()
         a_entries = self._load_a_rec_data(a_template)
         entries = entries + a_entries
@@ -166,14 +165,14 @@ class Generate1099IRSfilingStep(Step):
         c_template = self._create_c_template()
         self.c_seq = self.b_seq
         self.total_b_records = len(records)
-        if payment_amt_zero:
+        if self.payment_amt_zero:
             c_entries = self._load_c_rec_data(c_template, amt)
         else:
             c_entries = self._load_c_rec_data(c_template, ctl_total)
         entries = entries + c_entries
         k_template = self._create_k_template()
         self.k_seq = self.c_seq + 1
-        if payment_amt_zero:
+        if self.payment_amt_zero:
             k_entries = self._load_k_rec_data(k_template, amt, amt, amt)
         else:
             k_entries = self._load_k_rec_data(k_template, ctl_total, st_tax, fed_tax)
@@ -341,7 +340,7 @@ class Generate1099IRSfilingStep(Step):
                 PAYER_ACCT_NUMBER=Constants.PAYER_ACCT_NUMBER,
                 PAYER_OFFICE_CD=Constants.PAYER_OFFICE_CD,
                 B10=Constants.BLANK_SPACE,
-                AMT_CD_1=_format_amount_fields(records.gross_payments),
+                AMT_CD_1=self._format_amount_fields(records.gross_payments),
                 AMT_CD_2=Constants.AMT_CD_1,
                 AMT_CD_3=Constants.AMT_CD_1,
                 AMT_CD_4=Constants.AMT_CD_1,
@@ -365,7 +364,7 @@ class Generate1099IRSfilingStep(Step):
                 B40_1=Constants.BLANK_SPACE,
                 PAYEE_CTY=records.city.upper(),
                 PAYEE_ST=records.state.upper(),
-                PAYEE_ZC=records.zip,
+                PAYEE_ZC=_get_zip(records.zip),
                 B1=Constants.BLANK_SPACE,
                 SEQ_NO=self.b_seq,
                 B36=Constants.BLANK_SPACE,
@@ -375,8 +374,8 @@ class Generate1099IRSfilingStep(Step):
                 TAX_YR_OF_REFUND=Constants.BLANK_SPACE,
                 B111=Constants.BLANK_SPACE,
                 SP_DATA_ENTRIES=Constants.BLANK_SPACE,
-                ST_TAX=_format_amount_fields(records.state_tax_withholdings),
-                LOCAL_TAX=_format_amount_fields(records.federal_tax_withholdings),
+                ST_TAX=self._format_amount_fields(records.state_tax_withholdings),
+                LOCAL_TAX=self._format_amount_fields(records.federal_tax_withholdings),
                 CSF_CD=Constants.COMBINED_ST_FED_CD,
                 B2_1=Constants.BLANK_SPACE,
             )
@@ -443,6 +442,43 @@ class Generate1099IRSfilingStep(Step):
         f_record = template_str.format_map(f_dict)
         return f_record
 
+    def _format_amount_fields(self, amt: decimal.Decimal) -> str:
+
+        logger.info("payment_amt_zero %s", self.payment_amt_zero)
+        if self.payment_amt_zero:
+            # logger.info("Payment is set to zero for 2 step original records")
+            amt = decimal.Decimal(0.0)
+
+        amount = str(amt).split(".")
+        dollars = amount[0]
+        if len(amount) == 2:
+            cents = amount[1]
+            if len(cents) == 2:
+                cents = cents
+            elif len(cents) == 1:
+                cents = cents + "0"
+        else:
+            cents = "00"
+        format_amt = dollars + cents
+        # logger.info("Formated amt is:"+format_amt)
+        return format_amt
+
+    def _get_totals(self, tax_data: List[Any]) -> Tuple:
+        ctl_total = decimal.Decimal(0.0)
+        st_tax = decimal.Decimal(0.0)
+        fed_tax = decimal.Decimal(0.0)
+
+        for records in tax_data:
+            ctl_total += records.gross_payments
+            st_tax += records.state_tax_withholdings
+            fed_tax += records.federal_tax_withholdings
+
+        return (
+            self._format_amount_fields(ctl_total),
+            self._format_amount_fields(st_tax),
+            self._format_amount_fields(fed_tax),
+        )
+
 
 def _get_correction_ind(correction_ind: Boolean) -> str:
 
@@ -489,45 +525,6 @@ def _get_name_ctl(lname: str) -> str:
     return last_name_four
 
 
-def _format_amount_fields(amt: decimal.Decimal) -> str:
-
-    logger.info("payment_amt_zero %s",payment_amt_zero)
-    if payment_amt_zero:
-        logger.info("Payment is set to zero for 2 step original records")
-        amt = decimal.Decimal(0.0)
-    
-    amount = str(amt).split(".")
-    dollars = amount[0]
-    if len(amount) == 2:
-        cents = amount[1]
-        if len(cents) == 2:
-            cents = cents
-        elif len(cents) == 1:
-            cents = cents + "0"
-    else:
-        cents = "00"
-    format_amt = dollars + cents
-    #logger.info("Formated amt is:"+format_amt)
-    return format_amt
-
-
-def _get_totals(tax_data: List[Any]) -> Tuple:
-    ctl_total = decimal.Decimal(0.0)
-    st_tax = decimal.Decimal(0.0)
-    fed_tax = decimal.Decimal(0.0)
-
-    for records in tax_data:
-        ctl_total += records.gross_payments
-        st_tax += records.state_tax_withholdings
-        fed_tax += records.federal_tax_withholdings
-   
-    return (
-        _format_amount_fields(ctl_total),
-        _format_amount_fields(st_tax),
-        _format_amount_fields(fed_tax),
-    )
-
-
 def _get_zip(zip_code: str) -> str:
     zip_code_five = ""
     zip_code_four = ""
@@ -544,6 +541,9 @@ def _get_zip(zip_code: str) -> str:
 
 
 def _split_data_orig_correction(tax_data: List[Any]) -> Tuple:
+    original_returns = []
+    g_corrected_returns = []
+    c_corrected_returns = []
 
     for pfml_record in tax_data:
         if not pfml_record.correction_ind:

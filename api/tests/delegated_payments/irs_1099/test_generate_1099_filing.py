@@ -1,5 +1,7 @@
+import decimal
 import os
 import random
+from typing import Tuple
 
 import faker
 import pytest
@@ -24,16 +26,16 @@ def generate_1099_irs_filing_step(
     )
 
 
-@pytest.fixture
 def pfml1099_factory():
     pfml_1099 = []
+    # db_session=local_test_db_session
     for _ in range(10):
         rec_1099 = Pfml1099Factory.build(
             first_name=fake.first_name(),
-            first_last=fake.last_name(),
-            # gross_payments = decimal(round(random.uniform(0, 50000), 2)),
-            # state_tax_withholdings = decimal(round(random.uniform(0, 50000), 2)),
-            # federal_tax_withholdings = decimal(round(random.uniform(0, 50000), 2)),
+            last_name=fake.last_name(),
+            gross_payments=decimal.Decimal(round(random.uniform(0, 50000), 2)),
+            state_tax_withholdings=decimal.Decimal(round(random.uniform(0, 50000), 2)),
+            federal_tax_withholdings=decimal.Decimal(round(random.uniform(0, 50000), 2)),
             correction_ind=random.choice([True, False]),
         )
         pfml_1099.append(rec_1099)
@@ -106,6 +108,17 @@ def test_A_Template():
         assert True
 
 
+def test_t_entries(
+    generate_1099_irs_filing_step: Generate1099IRSfilingStep,
+    test_db_session,
+    enable_test_file_generation,
+):
+
+    t_template = generate_1099_irs_filing_step._create_t_template()
+    t_entries = generate_1099_irs_filing_step._load_t_rec_data(t_template)
+    assert len(t_entries) == 753
+
+
 def test_file_creation(
     generate_1099_irs_filing_step: Generate1099IRSfilingStep,
     test_db_session,
@@ -116,19 +129,31 @@ def test_file_creation(
     num_lines = 0
     num_chars = 0
     tot_num_chars = 0
+    # generate_1099_irs_filing_step.a_seq = generate_1099_irs_filing_step
     # set environment variables
     archive_folder_path = str(tmp_path / "reports")
     outbound_folder_path = str(tmp_path / "outbound")
     monkeypatch.setenv("pfml_error_reports_archive_path", archive_folder_path)
     monkeypatch.setenv("dfml_report_outbound_path", outbound_folder_path)
-    # generate the 1099.org file
-    generate_1099_irs_filing_step.run_step()
 
-    # check that ach archive file was generated
+    # generate the 1099.org file
+    orig, ccorrect, gcorrect = split_b_record_types()
+    # print(len(orig))
+    t_template = generate_1099_irs_filing_step._create_t_template()
+    t_entries = generate_1099_irs_filing_step._load_t_rec_data(t_template)
+    assert len(t_entries) == 751
+    entries = generate_1099_irs_filing_step._create_record_entries(orig, t_entries)
+    # entries = generate_1099_irs_filing_step._create_record_entries(ccorrect,entries)
+    # entries = generate_1099_irs_filing_step._create_record_entries(gcorrect,entries)
+    f_template = generate_1099_irs_filing_step._create_f_template()
+    f_entries = generate_1099_irs_filing_step._load_f_rec_data(f_template)
+    assert len(f_entries) == 750
+    entries += f_entries
+    generate_1099_irs_filing_step._create_irs_file(entries)
     now = get_now_us_eastern()
     date_folder = now.strftime("%Y-%m-%d")
     formatted_now = now.strftime("%Y-%m-%d-%H-%M-%S")
-    file_name = f"{formatted_now}-1099.ORG"
+    file_name = f"{formatted_now}-1099.txt"
     expected_file_folder = os.path.join(
         archive_folder_path, payments_util.Constants.S3_OUTBOUND_SENT_DIR, date_folder
     )
@@ -142,7 +167,7 @@ def test_file_creation(
                 assert num_chars == 751
                 tot_num_chars += len(line)
     # assert tot_num_chars == 3004
-    # assert num_lines == 5
+    assert num_lines > 5
 
 
 def test_format_amount_fields():
@@ -209,13 +234,18 @@ def test_name_ctl():
     assert expected_result == result_names
 
 
-def test_b_record_types(pfml1099_factory):
-    correction = []
+def split_b_record_types() -> Tuple:
+    correction_c = []
     original = []
-    expected_correction = 5
-    for i in range(len(pfml1099_factory)):
-        if pfml1099_factory[i].correction_ind:
-            correction.append(pfml1099_factory[i])
+    correction_g = []
+
+    pfml_1099 = pfml1099_factory()
+    # assert list == type(pfml_1099)
+    for i in range(len(pfml_1099)):
+        if pfml_1099[i].correction_ind:
+            # correction_c.append(pfml_1099[i])
+            correction_g.append(pfml_1099[i])
         else:
-            original.append(pfml1099_factory[i])
-    assert expected_correction == len(correction)
+            original.append(pfml_1099[i])
+    # assert expected_correction == len(correction)
+    return original, correction_c, correction_g
