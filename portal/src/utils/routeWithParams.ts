@@ -33,8 +33,8 @@ export const createRouteWithQuery = (
     params as { [name: string]: string }
   ).toString()}`;
 
-  // Only use '/' hash prefix without query string 
-  const hashPrefix = (hash && queryString) ? "" : "/";
+  // Only use '/' hash prefix without query string
+  const hashPrefix = hash && queryString ? "" : "/";
   const formattedHash = hash ? `${hashPrefix}#${hash}` : "";
 
   return `${route}${queryString}${formattedHash}`;
