@@ -131,7 +131,7 @@ class Upload1099DocumentsStep(Step):
 
     def _get_document_content(self, document_path: str) -> bytes:
         logger.info(f"Getting file content: {document_path}")
-        return open(document_path, "rb").read()
+        return file_util.open_stream(document_path, "rb").read()
 
     def _get_document_type(self) -> str:
         return DocumentType.IRS_1099G_TAX_FORM_FOR_CLAIMANTS.document_type_description
