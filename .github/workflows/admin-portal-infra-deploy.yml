@@ -35,7 +35,7 @@ on:
 env:
   github_api: "https://api.github.com/repos/EOLWD/pfml"
   workflow_self_link: "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-  version: ${{ github.event.inputs.version || 'main' }}
+  version: ${{ github.event.inputs.version || 'bdlake/INFRA-821' }}
   deployment_env: ${{ github.event.inputs.deployment_env || 'infra-test' }}
   deploys_channel: "C01PADH2BJ8" # massgov-pfml-teamx
   nodeVersion: 15.x
