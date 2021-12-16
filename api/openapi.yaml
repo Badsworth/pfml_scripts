@@ -1574,6 +1574,13 @@ components:
           type: string
           format: email
           example: "janedoe@example.com"
+        mfa_delivery_preference:
+          type: string
+          enum:
+            - SMS
+            - Opt Out
+          nullable: true
+          example: "SMS"
         mfa_phone_number:
           type: string
           nullable: true
