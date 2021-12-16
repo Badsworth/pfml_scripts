@@ -66,17 +66,15 @@ while IFS= read -r row; do
     new_name=$(echo $name | sed "s/$COPY_FROM_ENV/$NEW_ENV/g")
 
     echo "Creating $new_name from $name ($type)"
+    set +e
     aws ssm put-parameter \
         --name $new_name \
         --value "$value" \
         --type $type \
-        --overwrite
-
-    aws ssm add-tags-to-resource \
-        --resource-type "Parameter" \
-        --resource-id "$new_name" \
-        --tags Key=environment,Value=$NEW_ENV
- 
+        --tags Key=environment,Value=$NEW_ENV \
+    || \
+    echo "Parameter already exists!"
+    set -e
 done <<< "$parameters"
 
 # Generate random values for these parameters and insert them into parameter store.
@@ -89,16 +87,14 @@ DASHBOARD_PASS=$(< /dev/urandom LC_ALL=C tr -dc 'a-zA-Z0-9' | fold -w 16 | head 
 set -euo pipefail
 echo "Creating /service/pfml-api/$NEW_ENV/dashboard_password"
 
+set +e
 aws ssm put-parameter \
     --name "/service/pfml-api/$NEW_ENV/dashboard_password" \
     --value "$DASHBOARD_PASS" \
     --type "SecureString" \
-    --overwrite
-
-aws ssm add-tags-to-resource \
-    --resource-type "Parameter" \
-    --resource-id "/service/pfml-api/$NEW_ENV/dashboard_password" \
-    --tags Key=environment,Value=$NEW_ENV
+    --tags Key=environment,Value=$NEW_ENV \
+    || \
+    echo "Parameter already exists!"
 
 echo "Creating /service/pfml-api/$NEW_ENV/db-nessus-password"
 
@@ -106,14 +102,12 @@ aws ssm put-parameter \
     --name "/service/pfml-api/$NEW_ENV/db-nessus-password" \
     --value "$DB_NESSUS_PASS" \
     --type "SecureString" \
-    --overwrite
-
-aws ssm add-tags-to-resource \
-    --resource-type "Parameter" \
-    --resource-id "/service/pfml-api/$NEW_ENV/db-nessus-password" \
-    --tags Key=environment,Value=$NEW_ENV
+    --tags Key=environment,Value=$NEW_ENV \
+    || \
+    echo "Parameter already exists!"
 
 echo "done"
+set -e
 
 # Add placeholders for values that we need to spin up the API/ECS tasks.
 # These can be filled out in later steps of the environment creation process.
@@ -126,7 +120,7 @@ placeholders=(
     "/service/pfml-api/$NEW_ENV/cognito_internal_servicenow_role_app_client_id"
 )
 
-
+set +e
 for placeholder in ${placeholders[*]}; do
     echo "Creating placeholder for $placeholder"
 
@@ -134,14 +128,12 @@ for placeholder in ${placeholders[*]}; do
         --name "$placeholder" \
         --value "TODO" \
         --type "SecureString" \
-        --overwrite
-
-    aws ssm add-tags-to-resource \
-        --resource-type "Parameter" \
-        --resource-id "$placeholder" \
-        --tags Key=environment,Value=$NEW_ENV
+        --tags Key=environment,Value=$NEW_ENV \
+    || \
+    echo "Parameter already exists!"
 
 done
+set -e
 
 # Copy the binary RMV client certificate in Secrets Manager.
 # This is used to authenticate with the stage RMV API.
@@ -154,15 +146,12 @@ aws secretsmanager get-secret-value \
     | jq -r ".SecretBinary" | base64 --decode >> .rmv-cert
 
 # Create when none exist or update when exists
-set +oeu pipefail
+set +e
 aws secretsmanager create-secret \
     --name "/service/pfml-api-$NEW_ENV/rmv_client_certificate" \
     --secret-binary fileb://.rmv-cert \
     || \
-    echo Secret already exists, updating with new value && \
-    aws secretsmanager put-secret-value \
-    --secret-id "/service/pfml-api-$NEW_ENV/rmv_client_certificate" \
-    --secret-binary fileb://.rmv-cert
+    echo Client certificate already exists!
 
 rm .rmv-cert
 
