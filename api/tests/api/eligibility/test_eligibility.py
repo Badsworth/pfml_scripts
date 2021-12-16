@@ -23,8 +23,8 @@ def test_compute_financial_eligibility_no_data(test_db_session):
         UUID(int=1),
         UUID(int=2),
         "100000055",
-        date(2021, 1, 1),
-        date(2021, 1, 1),
+        date(2021, 1, 5),
+        date(2021, 1, 5),
         "Employed",
     )
 
@@ -34,6 +34,32 @@ def test_compute_financial_eligibility_no_data(test_db_session):
         total_wages=Decimal("0"),
         state_average_weekly_wage=Decimal("1487.78"),
         unemployment_minimum=Decimal("5400"),
+        employer_average_weekly_wage=Decimal("0"),
+    )
+
+
+def test_state_metrics_based_on_benefit_year_start_date(test_db_session):
+    result = eligibility.compute_financial_eligibility(
+        test_db_session,
+        UUID(int=1),
+        UUID(int=2),
+        "100000055",
+        date(2021, 1, 2),
+        date(2021, 1, 2),
+        "Employed",
+    )
+
+    # 01/02/2021 is a Saturday, so we should be using the prior Sunday
+    # (12/27/2020) to look up the SAWW and the UI minimum.
+    # For reference, if we were incorrectly using the leave start date to
+    # look these up, we would get a SAWW of 1487.78 and a UI minimum of
+    # 5400 instead.
+    assert result == eligibility.EligibilityResponse(
+        financially_eligible=False,
+        description="Claimant wages under minimum",
+        total_wages=Decimal("0"),
+        state_average_weekly_wage=Decimal("1431.66"),
+        unemployment_minimum=Decimal("5100.00"),
         employer_average_weekly_wage=Decimal("0"),
     )
 
@@ -68,8 +94,8 @@ def test_compute_financial_eligibility_multiple_scenarios(
     tax_id = TaxIdentifierFactory.create(tax_identifier="088574541")
     employee = EmployeeFactory.create(tax_identifier=tax_id)
     employer = EmployerFactory.create(employer_fein=employer_fein)
-    application_submitted_date = date(2021, 1, 1)
-    leave_start_date = date(2021, 1, 1)
+    application_submitted_date = date(2021, 1, 5)
+    leave_start_date = date(2021, 1, 5)
     employee_id = employee.employee_id
     employer_id = employer.employer_id
     employment_status = "Employed"
@@ -140,8 +166,8 @@ def test_scenario_A_case_B(test_db_session, initialize_factories_session):
     tax_id = TaxIdentifierFactory.create(tax_identifier="088574541")
     employee = EmployeeFactory.create(tax_identifier=tax_id)
     employer = EmployerFactory.create(employer_fein=employer_fein)
-    application_submitted_date = date(2020, 10, 1)
-    leave_start_date = date(2020, 10, 1)
+    application_submitted_date = date(2020, 10, 5)
+    leave_start_date = date(2020, 10, 5)
     employee_id = employee.employee_id
     employer_id = employer.employer_id
     employment_status = "Employed"
@@ -194,4 +220,83 @@ def test_scenario_A_case_B(test_db_session, initialize_factories_session):
         state_average_weekly_wage=Decimal("1431.66"),
         unemployment_minimum=Decimal("5100.00"),
         employer_average_weekly_wage=Decimal("615.38"),
+    )
+
+
+def test_compute_financial_leave_start_date_future_year(
+    test_db_session, initialize_factories_session,
+):
+    last_6_quarters_wages = [0, 0, 2000, 3000, 5000, 5000]
+    is_eligible = True
+    expected_description = "Financially eligible"
+    expected_total_wages = "10000"
+    expected_weekly_avg = "307.69"
+
+    employer_fein = 716779225
+    tax_id = TaxIdentifierFactory.create(tax_identifier="088574541")
+    employee = EmployeeFactory.create(tax_identifier=tax_id)
+    employer = EmployerFactory.create(employer_fein=employer_fein)
+
+    application_submitted_date = date(2021, 12, 15)
+    leave_start_date = date(2022, 1, 10)
+    employee_id = employee.employee_id
+    employer_id = employer.employer_id
+    employment_status = "Employed"
+
+    WagesAndContributionsFactory.create(
+        employee=employee,
+        employer=employer,
+        filing_period=date(2021, 10, 1),
+        employee_qtr_wages=last_6_quarters_wages[0],
+    )
+    WagesAndContributionsFactory.create(
+        employee=employee,
+        employer=employer,
+        filing_period=date(2021, 7, 1),
+        employee_qtr_wages=last_6_quarters_wages[1],
+    )
+    WagesAndContributionsFactory.create(
+        employee=employee,
+        employer=employer,
+        filing_period=date(2021, 4, 1),
+        employee_qtr_wages=last_6_quarters_wages[2],
+    )
+    WagesAndContributionsFactory.create(
+        employee=employee,
+        employer=employer,
+        filing_period=date(2021, 1, 1),
+        employee_qtr_wages=last_6_quarters_wages[3],
+    )
+    WagesAndContributionsFactory.create(
+        employee=employee,
+        employer=employer,
+        filing_period=date(2010, 10, 1),
+        employee_qtr_wages=last_6_quarters_wages[4],
+    )
+    WagesAndContributionsFactory.create(
+        employee=employee,
+        employer=employer,
+        filing_period=date(2020, 7, 1),
+        employee_qtr_wages=last_6_quarters_wages[5],
+    )
+
+    result = eligibility.compute_financial_eligibility(
+        test_db_session,
+        employee_id,
+        employer_id,
+        employer_fein,
+        leave_start_date,
+        application_submitted_date,
+        employment_status,
+    )
+
+    # Since the leave start date is in 2022, the SAWW & unemployment minimum should use the
+    # 2022 metrics even though the effective date is in 2021
+    assert result == eligibility.EligibilityResponse(
+        financially_eligible=is_eligible,
+        description=expected_description,
+        total_wages=Decimal(expected_total_wages),
+        state_average_weekly_wage=Decimal("1694.24"),
+        unemployment_minimum=Decimal("5700.00"),
+        employer_average_weekly_wage=Decimal(expected_weekly_avg),
     )
