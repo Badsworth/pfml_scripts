@@ -48,7 +48,7 @@ resource "aws_api_gateway_usage_plan_key" "business_intellegence_usage_plan_key"
 
 resource "aws_api_gateway_method" "business_intelligence_get" {
   rest_api_id      = aws_api_gateway_rest_api.pfml.id
-  resource_id      = "something"
+  resource_id      = aws_api_gateway_resource.business_intelligence_file.id
   http_method      = "GET"
   authorization    = "NONE"
   api_key_required = true
