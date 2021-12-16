@@ -39,6 +39,7 @@ output "environment_tags" {
     "adhoc"       = "test"
     "long"        = "test"
     "infra-test"  = "test"
+    "trn2"        = "train"
   }
 }
 
@@ -59,6 +60,7 @@ output "environment_shorthand" {
     "cps-preview" = "cpspr"
     "long"        = "long"
     "infra-test"  = "itest"
+    "trn2"        = "trn2"
   }
 }
 
@@ -81,6 +83,7 @@ output "smartronix_environment_tags" {
     "adhoc"       = "Adhoc"
     "long"        = "LONG"
     "infra-test"  = "Sandbox"
+    "trn2"        = "TRN2"
   }
 }
 
@@ -119,7 +122,8 @@ output "domains" {
     "cps-preview" = "paidleave-cps-preview.eol.mass.gov",
     "uat"         = "paidleave-uat.mass.gov",
     "prod"        = "paidleave.mass.gov",
-    "long"        = "paidleave-long.dfml.eol.mass.gov"
+    "long"        = "paidleave-long.dfml.eol.mass.gov",
+    "trn2"        = "paidleave-trn2.dfml.eol.mass.gov"
   }
 }
 
@@ -134,7 +138,8 @@ output "api_domains" {
     "cps-preview" = "paidleave-api-cps-preview.eol.mass.gov",
     "uat"         = "paidleave-api-uat.mass.gov",
     "prod"        = "paidleave-api.mass.gov",
-    "long"        = "paidleave-long.dfml.eol.mass.gov"
+    "long"        = "paidleave-api-long.dfml.eol.mass.gov",
+    "trn2"        = "paidleave-api-trn2.dfml.eol.mass.gov"
   }
 }
 
@@ -152,7 +157,8 @@ output "cert_domains" {
     "cps-preview" = "paidleave-breakfix.eol.mass.gov",
     "uat"         = "paidleave-uat.mass.gov",
     "prod"        = "paidleave.mass.gov",
-    "long"        = "paidleave-long.dfml.eol.mass.gov"
+    "long"        = "paidleave-long.dfml.eol.mass.gov",
+    "trn2"        = "paidleave-trn2.dfml.eol.mass.gov"
   }
 }
 
@@ -185,5 +191,24 @@ output "env_var_mappings" {
     "cps-preview" = "CPSPreview"
     "long"        = "Long"
     "infra-test"  = "Test"
+    "trn2"        = "Training"
   }
+}
+
+#
+# Environments where multi-factor authentication / 2FA should be enabled
+#
+output "env_mfa_enabled" {
+  value = [
+    "test",
+    "stage",
+    "performance",
+    "training",
+    "uat",
+    "breakfix",
+    "cps-preview",
+    "long",
+    "trn2",
+    "infra-test"
+  ]
 }

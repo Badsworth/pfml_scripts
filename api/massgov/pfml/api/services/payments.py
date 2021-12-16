@@ -68,6 +68,9 @@ class PaymentScenarioData:
         if payment_container.is_cancelled():
             return cls.cancelled()
 
+        if payment_container.is_legacy_payment():
+            return cls.legacy_mmars_paid(payment=payment_container.payment)
+
         writeback_detail = payment_container.writeback_detail
         detail_id = writeback_detail.transaction_status_id if writeback_detail else None
         method_to_call = getattr(cls, cls.SCENARIOS.get(detail_id, "other"))
@@ -158,6 +161,22 @@ class PaymentScenarioData:
         )
 
     @classmethod
+    def legacy_mmars_paid(cls, **kwargs):
+        """
+        Payment is a legacy payment from MMARS which stores
+        the send date in a dedicated column
+        """
+        payment = kwargs["payment"]
+        sent_date = payment.disb_check_eft_issue_date
+        return cls(
+            amount=payment.amount,
+            sent_date=sent_date,
+            expected_send_date_start=sent_date,
+            expected_send_date_end=sent_date,
+            status=FrontendPaymentStatus.SENT_TO_BANK,
+        )
+
+    @classmethod
     def other(cls, **_):
         """
         All payments that don't match one of the
@@ -231,13 +250,19 @@ class PaymentContainer:
 
         return False
 
+    def is_legacy_payment(self) -> bool:
+        return (
+            self.payment.payment_transaction_type_id
+            == PaymentTransactionType.STANDARD_LEGACY_MMARS.payment_transaction_type_id
+        )
+
 
 def get_payments_with_status(db_session: Session, claim: Claim) -> Dict:
     """
     For a given claim, return all payments we want displayed on the
     payment status endpoint.
 
-    1. Fetch all Standard/Cancellation/Zero Dollar payments for the claim
+    1. Fetch all Standard/Legacy MMARS Standard/Cancellation/Zero Dollar payments for the claim
        ignoring any payments with `exclude_from_payment_status` and deduping
        C/I value to the latest version of the payment.
 
@@ -253,13 +278,18 @@ def get_payments_with_status(db_session: Session, claim: Claim) -> Dict:
        its writeback status and other fields. Depending on its scenario,
        return differing fields for the payment.
     """
-    payment_containers = get_payments_from_db(db_session, claim.claim_id)
+    # Note that legacy payments do not require additional processing
+    # as they only exist in our system if they were successfully paid
+    # and do not have successors or require filtering.
+    payment_containers, legacy_payment_containers = get_payments_from_db(db_session, claim.claim_id)
 
     consolidated_payments = consolidate_successors(payment_containers)
 
     filtered_payments = filter_and_sort_payments(consolidated_payments)
 
-    response = to_response_dict(filtered_payments, claim.fineos_absence_id)
+    response = to_response_dict(
+        filtered_payments + legacy_payment_containers, claim.fineos_absence_id
+    )
 
     log_payment_status(
         claim, payment_containers
@@ -268,7 +298,9 @@ def get_payments_with_status(db_session: Session, claim: Claim) -> Dict:
     return response
 
 
-def get_payments_from_db(db_session: Session, claim_id: uuid.UUID) -> List[PaymentContainer]:
+def get_payments_from_db(
+    db_session: Session, claim_id: uuid.UUID
+) -> Tuple[List[PaymentContainer], List[PaymentContainer]]:
     payments = (
         db_session.query(Payment)
         .filter(Payment.claim_id == claim_id,)
@@ -276,6 +308,7 @@ def get_payments_from_db(db_session: Session, claim_id: uuid.UUID) -> List[Payme
             Payment.payment_transaction_type_id.in_(
                 [
                     PaymentTransactionType.STANDARD.payment_transaction_type_id,
+                    PaymentTransactionType.STANDARD_LEGACY_MMARS.payment_transaction_type_id,
                     PaymentTransactionType.ZERO_DOLLAR.payment_transaction_type_id,
                     PaymentTransactionType.CANCELLATION.payment_transaction_type_id,
                 ]
@@ -289,9 +322,16 @@ def get_payments_from_db(db_session: Session, claim_id: uuid.UUID) -> List[Payme
     )
 
     payment_containers = []
+    legacy_mmars_payment_containers = []
     for payment in payments:
-        payment_containers.append(PaymentContainer(payment))
-    return payment_containers
+        payment_container = PaymentContainer(payment)
+
+        if payment_container.is_legacy_payment():
+            legacy_mmars_payment_containers.append(payment_container)
+        else:
+            payment_containers.append(payment_container)
+
+    return payment_containers, legacy_mmars_payment_containers
 
 
 def consolidate_successors(payment_data: List[PaymentContainer]) -> List[PaymentContainer]:

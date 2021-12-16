@@ -600,6 +600,327 @@ describe("useAuthLogic", () => {
         );
       });
     });
+
+    describe("with claimantShowMFA feature flag enabled", () => {
+      const next = "/applications";
+      const portalFlow = mockPortalFlow();
+
+      beforeEach(() => {
+        process.env.featureFlags = {
+          claimantShowMFA: true,
+        };
+      });
+
+      describe("with no MFA challenge", () => {
+        let usersApi;
+
+        beforeAll(() => {
+          // The mock of UsersApi returns an object with references to a singleton
+          // of getCurrentUser and updateUser so this will reference the same
+          // jest.fn mocks that are used in the hook.
+          usersApi = new UsersApi();
+
+          jest.spyOn(Auth, "signIn").mockImplementation(() => {
+            const cognitoUser = {};
+            return cognitoUser;
+          });
+        });
+
+        it("sets isLoggedIn to true", async () => {
+          const { result } = render();
+
+          await act(async () => {
+            await result.current.login(username, password);
+          });
+
+          expect(result.current.isLoggedIn).toBe(true);
+        });
+
+        it("redirects to the ENABLE_MFA page if user has not made an MFA selection", async () => {
+          const { result } = render(portalFlow);
+
+          usersApi.getCurrentUser.mockImplementationOnce(() => {
+            const apiUser = {
+              user: {
+                mfa_delivery_preference: null,
+              },
+            };
+
+            return apiUser;
+          });
+
+          await act(async () => {
+            await result.current.login(username, password, next);
+          });
+
+          expect(portalFlow.goToPageFor).toHaveBeenCalledWith("ENABLE_MFA");
+        });
+
+        it("redirects to the next page if user has made MFA selection", async () => {
+          const { result } = render(portalFlow);
+
+          usersApi.getCurrentUser.mockImplementationOnce(() => {
+            const apiUser = {
+              user: {
+                mfa_delivery_preference: "SMS",
+              },
+            };
+
+            return apiUser;
+          });
+
+          await act(async () => {
+            await result.current.login(username, password, next);
+          });
+
+          expect(portalFlow.goTo).toHaveBeenCalledWith(next);
+        });
+      });
+
+      describe("with an MFA challenge", () => {
+        beforeAll(() => {
+          jest.spyOn(Auth, "signIn").mockImplementation(() => {
+            const cognitoUser = {
+              challengeName: "SMS_MFA",
+            };
+            return cognitoUser;
+          });
+        });
+
+        it("does not mark the user as logged in", async () => {
+          const { result } = render();
+
+          await act(async () => {
+            await result.current.login(username, password);
+          });
+
+          expect(result.current.isLoggedIn).not.toBe(true);
+        });
+
+        it("redirects to the VERIFY_CODE page", async () => {
+          const { result } = render(portalFlow);
+
+          await act(async () => {
+            await result.current.login(username, password, next);
+          });
+
+          expect(portalFlow.goToPageFor).toHaveBeenCalledWith(
+            "VERIFY_CODE",
+            {},
+            { next: "/applications" }
+          );
+        });
+      });
+    });
+  });
+
+  describe("verifyMFACodeAndLogin", () => {
+    const next = "/applications";
+
+    it("calls Auth.confirmSignIn", async () => {
+      const { result } = render();
+
+      await act(async () => {
+        await result.current.verifyMFACodeAndLogin(verificationCode, next);
+      });
+
+      expect(Auth.confirmSignIn).toHaveBeenCalledWith(
+        undefined,
+        verificationCode,
+        "SMS_MFA"
+      );
+    });
+
+    it("tracks request", async () => {
+      const { result } = render();
+
+      await act(async () => {
+        await result.current.verifyMFACodeAndLogin(verificationCode, next);
+      });
+
+      expect(tracker.trackFetchRequest).toHaveBeenCalledTimes(1);
+      expect(tracker.markFetchRequestEnd).toHaveBeenCalledTimes(1);
+    });
+
+    it("sets isLoggedIn to true", async () => {
+      const { result } = render();
+
+      await act(async () => {
+        await result.current.verifyMFACodeAndLogin(verificationCode, next);
+      });
+
+      expect(result.current.isLoggedIn).toBe(true);
+    });
+  });
+
+  describe("updateMFAPhoneNumber", () => {
+    const phoneNumber = "2223334444";
+
+    beforeAll(() => {
+      jest.spyOn(Auth, "currentAuthenticatedUser").mockImplementation(() => {
+        const cognitoUser = {};
+        return cognitoUser;
+      });
+    });
+
+    it("calls Auth.updateUserAttributes", async () => {
+      const { result } = render();
+
+      await act(async () => {
+        await result.current.updateMFAPhoneNumber(null, phoneNumber);
+      });
+
+      expect(Auth.updateUserAttributes).toHaveBeenCalledWith(
+        {},
+        { phone_number: "+1" + phoneNumber }
+      );
+    });
+
+    it("calls Auth.verifyUserAttribute", async () => {
+      const { result } = render();
+
+      await act(async () => {
+        await result.current.updateMFAPhoneNumber(null, phoneNumber);
+      });
+
+      expect(Auth.verifyUserAttribute).toHaveBeenCalledWith({}, "phone_number");
+    });
+
+    it("tracks requests", async () => {
+      const { result } = render();
+
+      await act(async () => {
+        await result.current.updateMFAPhoneNumber(null, phoneNumber);
+      });
+
+      expect(tracker.trackFetchRequest).toHaveBeenCalledTimes(2);
+      expect(tracker.markFetchRequestEnd).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe("verifyMFAPhoneNumber", () => {
+    beforeAll(() => {
+      jest.spyOn(Auth, "currentAuthenticatedUser").mockImplementation(() => {
+        const cognitoUser = {};
+        return cognitoUser;
+      });
+    });
+
+    it("calls Auth.verifyUserAttributeSubmit", async () => {
+      const { result } = render();
+
+      await act(async () => {
+        await result.current.verifyMFAPhoneNumber(verificationCode);
+      });
+
+      expect(Auth.verifyUserAttributeSubmit).toHaveBeenCalledWith(
+        {},
+        "phone_number",
+        verificationCode
+      );
+    });
+
+    it("tracks request", async () => {
+      const { result } = render();
+
+      await act(async () => {
+        await result.current.verifyMFAPhoneNumber(verificationCode);
+      });
+
+      expect(tracker.trackFetchRequest).toHaveBeenCalledTimes(1);
+      expect(tracker.markFetchRequestEnd).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe("setMFAPreference", () => {
+    let usersApi;
+    const user_id = "foo";
+
+    beforeAll(() => {
+      // The mock of UsersApi returns an object with references to a singleton
+      // of getCurrentUser and updateUser so this will reference the same
+      // jest.fn mocks that are used in the hook.
+      usersApi = new UsersApi();
+
+      jest.spyOn(Auth, "currentAuthenticatedUser").mockImplementation(() => {
+        const cognitoUser = {};
+        return cognitoUser;
+      });
+    });
+
+    describe("with user opting out of MFA", () => {
+      const mfaPreference = "Opt Out";
+
+      it("calls Auth.setPreferredMFA with NOMFA", async () => {
+        const { result } = render();
+
+        await act(async () => {
+          await result.current.setMFAPreference(user_id, mfaPreference);
+        });
+
+        expect(Auth.setPreferredMFA).toHaveBeenCalledWith({}, "NOMFA");
+      });
+
+      it("calls usersApi.updateUser with Opt Out", async () => {
+        const { result } = render();
+
+        await act(async () => {
+          await result.current.setMFAPreference(user_id, mfaPreference);
+        });
+
+        expect(usersApi.updateUser).toHaveBeenCalledWith(user_id, {
+          mfa_delivery_preference: "Opt Out",
+        });
+      });
+
+      it("tracks request", async () => {
+        const { result } = render();
+
+        await act(async () => {
+          await result.current.setMFAPreference(user_id, mfaPreference);
+        });
+
+        expect(tracker.trackFetchRequest).toHaveBeenCalledTimes(1);
+        expect(tracker.markFetchRequestEnd).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    describe("with user opting in to MFA", () => {
+      const mfaPreference = "SMS";
+
+      it("calls Auth.setPreferredMFA with SMS", async () => {
+        const { result } = render();
+
+        await act(async () => {
+          await result.current.setMFAPreference(user_id, mfaPreference);
+        });
+
+        expect(Auth.setPreferredMFA).toHaveBeenCalledWith({}, "SMS");
+      });
+
+      it("calls usersApi.updateUser with SMS", async () => {
+        const { result } = render();
+
+        await act(async () => {
+          await result.current.setMFAPreference(user_id, mfaPreference);
+        });
+
+        expect(usersApi.updateUser).toHaveBeenCalledWith(user_id, {
+          mfa_delivery_preference: "SMS",
+        });
+      });
+
+      it("tracks request", async () => {
+        const { result } = render();
+
+        await act(async () => {
+          await result.current.setMFAPreference(user_id, mfaPreference);
+        });
+
+        expect(tracker.trackFetchRequest).toHaveBeenCalledTimes(1);
+        expect(tracker.markFetchRequestEnd).toHaveBeenCalledTimes(1);
+      });
+    });
   });
 
   describe("logout", () => {

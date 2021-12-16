@@ -5,7 +5,6 @@ import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
 import { ApplicationCard } from "../../src/components/ApplicationCard";
 import ClaimDetail from "../../src/models/ClaimDetail";
 import { DocumentType } from "../../src/models/Document";
-
 import { MockBenefitsApplicationBuilder } from "../test-utils";
 import React from "react";
 import User from "../../src/models/User";
@@ -141,10 +140,10 @@ describe("ApplicationCard", () => {
     };
 
     await expectButtonToRedirect(/View status updates and details/);
-    await expectButtonToRedirect(/View your notices/, "/#view_notices");
+    await expectButtonToRedirect(/View your notices/, "#view_notices");
     await expectButtonToRedirect(
       /Respond to a request for information/,
-      "/#upload_documents"
+      "#upload_documents"
     );
   });
 

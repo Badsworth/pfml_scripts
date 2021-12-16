@@ -7,6 +7,7 @@ from typing import Optional
 
 import massgov.pfml.api.eligibility.eligibility_util as eligibility_util
 import massgov.pfml.api.eligibility.wage as wage
+from massgov.pfml.api.eligibility.benefit_year_dates import get_benefit_year_dates
 from massgov.pfml.api.eligibility.eligibility_date import eligibility_date
 from massgov.pfml.api.models.applications.common import EligibilityEmploymentStatus
 from massgov.pfml.util.pydantic import PydanticBaseModel
@@ -30,9 +31,10 @@ def compute_financial_eligibility(
     application_submitted_date,
     employment_status,
 ):
-    effective_date = eligibility_date(leave_start_date, application_submitted_date)
+    benefit_year_dates = get_benefit_year_dates(leave_start_date)
+    effective_date = eligibility_date(benefit_year_dates.start_date, application_submitted_date)
     (benefits_metrics_data, unemployment_metric_data) = eligibility_util.fetch_state_metric(
-        db_session, effective_date
+        db_session, benefit_year_dates.start_date
     )
     state_average_weekly_wage = benefits_metrics_data.average_weekly_wage
     maximum_weekly_benefit_amount = benefits_metrics_data.maximum_weekly_benefit_amount

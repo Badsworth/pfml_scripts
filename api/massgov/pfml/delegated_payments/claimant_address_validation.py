@@ -8,6 +8,7 @@ from sqlalchemy.sql.functions import func
 
 import massgov.pfml.delegated_payments.delegated_config as payments_config
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
+import massgov.pfml.delegated_payments.irs_1099.pfml_1099_util as pfml_1099_util
 import massgov.pfml.experian.address_validate_soap.client as soap_api
 import massgov.pfml.experian.address_validate_soap.models as sm
 import massgov.pfml.util.files as file_util
@@ -15,13 +16,16 @@ import massgov.pfml.util.logging as logging
 from massgov.pfml.db.models.employees import (
     Address,
     AddressType,
+    Claim,
     Employee,
     ExperianAddressPair,
     GeoState,
+    Payment,
     ReferenceFile,
     ReferenceFileType,
+    StateLog,
 )
-from massgov.pfml.db.models.payments import FineosExtractEmployeeFeed
+from massgov.pfml.db.models.payments import FineosExtractEmployeeFeed, MmarsPaymentData
 from massgov.pfml.delegated_payments.address_validation import _get_experian_soap_client
 from massgov.pfml.delegated_payments.step import Step
 from massgov.pfml.experian.address_validate_soap.layouts import Layout
@@ -61,6 +65,7 @@ class Constants:
     CLAIMANT_ADDRESS_VALIDATION_FILENAME_FORMAT = (
         f"%Y-%m-%d-%H-%M-%S-{CLAIMANT_ADDRESS_VALIDATION_FILENAME}"
     )
+
     CLAIMANT_ADDRESS_VALIDATION_FIELDS = [
         CUSTOMER_NUMBER,
         FIRST_NAME,
@@ -104,8 +109,54 @@ class ClaimantAddressValidationStep(Step):
     # Query the database table and get latest customer records
     def get_fineos_employee_feed(self) -> List[Any]:
         employee_feed_data = [Any]
+
+        year = pfml_1099_util.get_tax_year()
+
         try:
-            subquery = self.db_session.query(
+
+            # SELECT *
+            # FROM (
+            #   SELECT FINEOS_EXTRACT_EMPLOYEE_FEED.*,
+            #       RANK() OVER (
+            #           PARTITION BY FINEOS_EXTRACT_EMPLOYEE_FEED.CUSTOMERNO
+            #           ORDER BY FINEOS_EXTRACT_EMPLOYEE_FEED.FINEOS_EXTRACT_IMPORT_LOG_ID DESC,
+            #                   FINEOS_EXTRACT_EMPLOYEE_FEED.EFFECTIVEFROM DESC,
+            #                   FINEOS_EXTRACT_EMPLOYEE_FEED.EFFECTIVETO DESC,
+            #                   FINEOS_EXTRACT_EMPLOYEE_FEED.CREATED_AT DESC
+            #       ) AS R
+            # FROM FINEOS_EXTRACT_EMPLOYEE_FEED) AS EF
+            # INNER JOIN EMPLOYEE E ON E.FINEOS_CUSTOMER_NUMBER = EF.CUSTOMERNO
+            # WHERE EF.R = 1
+            # AND E.EMPLOYEE_ID IN (
+            #   SELECT E.EMPLOYEE_ID
+            #   FROM MMARS_PAYMENT_DATA MPD
+            #   INNER JOIN EMPLOYEE E ON MPD.VENDOR_CUSTOMER_CODE = E.CTR_VENDOR_CUSTOMER_CODE
+            #   UNION ALL
+            #   SELECT E.EMPLOYEE_ID
+            #   FROM EMPLOYEE E
+            #   INNER JOIN CLAIM CL ON CL.EMPLOYEE_ID = E.EMPLOYEE_ID
+            #   INNER JOIN PAYMENT P ON P.CLAIM_ID = CL.CLAIM_ID
+            #   INNER JOIN STATE_LOG SL ON P.PAYMENT_ID = SL.PAYMENT_ID
+            #   AND SL.END_STATE_ID IN (137, 139)
+            #   AND DATE_PART('YEAR', SL.ENDED_AT) = 2021)
+            mmars_employees = self.db_session.query(Employee.employee_id).join(
+                MmarsPaymentData,
+                Employee.ctr_vendor_customer_code == MmarsPaymentData.vendor_customer_code,
+            )
+            pub_employees = (
+                self.db_session.query(Employee.employee_id)
+                .join(Claim)
+                .join(Payment)
+                .join(StateLog)
+                .filter(
+                    StateLog.end_state_id.in_(payments_util.Constants.PAYMENT_SENT_STATE_IDS),
+                    func.extract("YEAR", StateLog.ended_at) == year,
+                )
+            )
+
+            employees = mmars_employees.union_all(pub_employees)
+
+            employee_subquery = self.db_session.query(
                 FineosExtractEmployeeFeed,
                 func.rank()
                 .over(
@@ -119,9 +170,13 @@ class ClaimantAddressValidationStep(Step):
                 )
                 .label("R"),
             ).subquery()
-            logger.debug("Subquery for employee feed %s", subquery)
-            employee_feed_data = list(self.db_session.query(subquery).filter(subquery.c.R == 1))
-            logger.debug(employee_feed_data)
+
+            employee_feed_data = list(
+                self.db_session.query(employee_subquery)
+                .join(Employee, employee_subquery.c.customerno == Employee.fineos_customer_number,)
+                .filter(employee_subquery.c.R == 1)
+                .filter(Employee.employee_id.in_(employees))
+            )
 
         except Exception:
             self.db_session.rollback()
@@ -409,20 +464,24 @@ class ClaimantAddressValidationStep(Step):
         s3_config = payments_config.get_s3_config()
         now = get_now_us_eastern()
         file_name = now.strftime(Constants.CLAIMANT_ADDRESS_VALIDATION_FILENAME_FORMAT)
-        address_report_source_path = s3_config.pfml_error_reports_archive_path
+        address_report_path = s3_config.pfml_error_reports_archive_path
         dfml_sharepoint_outgoing_path = s3_config.dfml_report_outbound_path
-        address_report_source_path = payments_util.build_archive_path(
-            address_report_source_path,
+
+        address_report_source_path = os.path.join(
+            address_report_path,
             payments_util.Constants.S3_OUTBOUND_SENT_DIR,
             now.strftime("%Y-%m-%d"),
         )
+        logger.info("address_report_path %s", address_report_path)
+
         address_report_csv_path = self.create_address_report(
             addr_reports, file_name, address_report_source_path
         )
-        logger.debug("File path is %s", address_report_csv_path)
+        logger.info("File path is %s", address_report_csv_path)
         outgoing_s3_path = os.path.join(
             dfml_sharepoint_outgoing_path, Constants.CLAIMANT_ADDRESS_VALIDATION_FILENAME
         )
+        logger.info("Outgoing file path is %s", outgoing_s3_path)
         file_util.copy_file(str(address_report_csv_path), outgoing_s3_path)
         logger.info("claimant address validation report file added")
         return ReferenceFile(

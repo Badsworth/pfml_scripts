@@ -1,9 +1,11 @@
 import enum
+from typing import Optional
 
 import requests
 
 import massgov.pfml.delegated_payments.irs_1099.pfml_1099_util as pfml_1099_util
 import massgov.pfml.util.logging
+import massgov.pfml.util.pydantic.mask as mask_util
 from massgov.pfml.db.models.payments import Pfml1099
 from massgov.pfml.delegated_payments.step import Step
 
@@ -17,7 +19,17 @@ class Generate1099DocumentsStep(Step):
 
     def run_step(self) -> None:
         self.pdfApiEndpoint = pfml_1099_util.get_pdf_api_generate_endpoint()
+        self._update_1099_template()
         self._generate_1099_documents()
+
+    def _update_1099_template(self) -> None:
+        url = pfml_1099_util.get_pdf_api_update_template_endpoint()
+        response = requests.get(url)
+
+        if response.ok:
+            logger.info("1099 Template was successfully updated.")
+        else:
+            logger.error(response.json())
 
     def _generate_1099_documents(self) -> None:
         logger.info("1099 Documents - Generate 1099 Documents Step")
@@ -56,6 +68,14 @@ class Generate1099DocumentsStep(Step):
         )
 
     def generate_document(self, record: Pfml1099, sub_bacth: str, url: str) -> None:
+        ssn: Optional[str] = pfml_1099_util.get_tax_id(
+            self.db_session, str(record.tax_identifier_id)
+        )
+        ssn = mask_util.mask_tax_identifier(ssn)
+
+        if ssn is None or len(ssn) == 0:
+            logger.error("%s has an invalid tax identifier.", str(record.tax_identifier_id))
+            return
 
         try:
             documentDto = {
@@ -64,7 +84,7 @@ class Generate1099DocumentsStep(Step):
                 "year": record.tax_year,
                 "corrected": record.correction_ind,
                 "paymentAmount": str(record.gross_payments),
-                "socialNumber": "000-00-0000",
+                "socialNumber": ssn,
                 "federalTaxesWithheld": str(record.federal_tax_withholdings),
                 "stateTaxesWithheld": str(record.state_tax_withholdings),
                 "repayments": str(record.overpayment_repayments),
@@ -73,7 +93,7 @@ class Generate1099DocumentsStep(Step):
                 "city": record.city,
                 "state": record.state,
                 "zipCode": record.zip,
-                "accountNumber": None,
+                "accountNumber": record.account_number,
             }
 
             response = requests.post(

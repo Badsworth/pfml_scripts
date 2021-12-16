@@ -2,6 +2,7 @@
 import ClaimDetail from "../../../../src/models/ClaimDetail";
 import DocumentCollection from "../../../../src/models/DocumentCollection";
 import { DocumentType } from "../../../../src/models/Document";
+import LeaveReason from "../../../../src/models/LeaveReason";
 import { Payments } from "../../../../src/pages/applications/status/payments";
 import { createMockPayment } from "../../../test-utils/createMockPayment";
 import { mockRouter } from "next/router";
@@ -98,6 +99,85 @@ describe("Payments", () => {
     });
 
     expect(backButton).toBeInTheDocument();
+  });
+
+  it("displays info alert if claimant has bonding-newborn but not pregnancy claims", () => {
+    renderPage(
+      Payments,
+      {
+        addCustomSetup: setupHelper({
+          ...defaultClaimDetail,
+          absence_periods: [
+            {
+              period_type: "Reduced",
+              reason: LeaveReason.bonding,
+              request_decision: "Pending",
+              reason_qualifier_one: "Newborn",
+            },
+          ],
+        }),
+      },
+      props
+    );
+
+    expect(screen.getByRole("region")).toMatchSnapshot();
+  });
+
+  it("displays info alert if claimant has pregnancy but not bonding claims", () => {
+    renderPage(
+      Payments,
+      {
+        addCustomSetup: setupHelper({
+          ...defaultClaimDetail,
+          absence_periods: [
+            {
+              period_type: "Reduced",
+              reason: LeaveReason.pregnancy,
+              request_decision: "Approved",
+            },
+          ],
+        }),
+      },
+      props
+    );
+
+    expect(screen.getByRole("region")).toMatchSnapshot();
+  });
+
+  it("does not display info alert if claimant has bonding AND pregnancy claims", () => {
+    renderPage(
+      Payments,
+      {
+        addCustomSetup: setupHelper({
+          ...defaultClaimDetail,
+          absence_periods: [
+            {
+              period_type: "Reduced",
+              reason: LeaveReason.pregnancy,
+              request_decision: "Approved",
+            },
+            {
+              period_type: "Reduced",
+              reason: LeaveReason.bonding,
+              request_decision: "Approved",
+            },
+          ],
+        }),
+      },
+      props
+    );
+    expect(screen.queryByRole("region")).not.toBeInTheDocument();
+  });
+
+  it("renders the `Your payments` intro content section", () => {
+    renderPage(
+      Payments,
+      { addCustomSetup: setupHelper(defaultClaimDetail) },
+      props
+    );
+
+    const section = screen.getByTestId("your-payments-intro");
+    expect(section).toMatchSnapshot();
   });
 
   it("renders the `changes to payments` section", () => {

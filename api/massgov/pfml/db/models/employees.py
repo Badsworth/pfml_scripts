@@ -917,8 +917,12 @@ class Payment(Base, TimestampMixin):
     fineos_pei_i_value = Column(Text, index=True)
     is_adhoc_payment = Column(Boolean, default=False, server_default="FALSE")
     fineos_extraction_date = Column(Date)
+
+    # Backfilled legacy MMARS payments use this for check number and EFT transaction number, all new payments leave null
     disb_check_eft_number = Column(Text)
+    # Backfilled legacy MMARS payments use this for the paid date, all new payments leave null
     disb_check_eft_issue_date = Column(Date)
+
     disb_method_id = Column(Integer, ForeignKey("lk_payment_method.payment_method_id"))
     disb_amount = Column(Numeric(asdecimal=True))
     leave_request_decision = Column(Text)
@@ -2311,6 +2315,8 @@ class Flow(LookupTable):
     DELEGATED_CLAIM_VALIDATION = LkFlow(23, "Claim Validation")
     DELEGATED_PEI_WRITEBACK = LkFlow(24, "Payment PEI Writeback")
 
+    LEGACY_MMARS_PAYMENTS = LkFlow(25, "Legacy MMARS Payment")
+
 
 class State(LookupTable):
     model = LkState
@@ -2779,7 +2785,7 @@ class State(LookupTable):
         191, "State Withholding ready for processing", Flow.DELEGATED_PAYMENT.flow_id
     )
 
-    STATE_WITHHOLDING_PENDING_AUDIT = LkState(
+    STATE_WITHHOLDING_ORPHANED_PENDING_AUDIT = LkState(
         192, "State Withholding awaiting Audit Report", Flow.DELEGATED_PAYMENT.flow_id
     )
 
@@ -2795,7 +2801,7 @@ class State(LookupTable):
         195, "Federal Withholding ready for processing", Flow.DELEGATED_PAYMENT.flow_id
     )
 
-    FEDERAL_WITHHOLDING_PENDING_AUDIT = LkState(
+    FEDERAL_WITHHOLDING_ORPHANED_PENDING_AUDIT = LkState(
         196, "Federal Withholding awaiting Audit Report", Flow.DELEGATED_PAYMENT.flow_id
     )
 
@@ -2827,6 +2833,26 @@ class State(LookupTable):
         202,
         "Add Federal Withholding to Payment Reject Report - RESTARTABLE",
         Flow.DELEGATED_PAYMENT.flow_id,
+    )
+
+    STATE_WITHHOLDING_RELATED_PENDING_AUDIT = LkState(
+        203, "State Withholding Related Pending Audit", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    FEDERAL_WITHHOLDING_RELATED_PENDING_AUDIT = LkState(
+        204, "Federal Withholding Related Pending Audit", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    STATE_WITHHOLDING_ERROR_RESTARTABLE = LkState(
+        205, "State Withholding Error Restartable", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    FEDERAL_WITHHOLDING_ERROR_RESTARTABLE = LkState(
+        206, "Federal Withholding Error Restartable", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    LEGACY_MMARS_PAYMENT_PAID = LkState(
+        210, "Legacy MMARS Payment Paid", Flow.LEGACY_MMARS_PAYMENTS.flow_id
     )
 
 
@@ -2870,6 +2896,7 @@ class PaymentTransactionType(LookupTable):
     )
     FEDERAL_TAX_WITHHOLDING = LkPaymentTransactionType(12, "Federal Tax Withholding")
     STATE_TAX_WITHHOLDING = LkPaymentTransactionType(13, "State Tax Withholding")
+    STANDARD_LEGACY_MMARS = LkPaymentTransactionType(14, "Standard Legacy MMARS")
 
 
 class PaymentCheckStatus(LookupTable):

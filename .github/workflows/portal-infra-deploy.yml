@@ -11,6 +11,9 @@ on:
       - deploy/portal/training
       - deploy/portal/uat
       - deploy/portal/cps-preview
+      - deploy/portal/infra-test
+      - deploy/portal/long
+      - deploy/portal/trn2
     paths:
       - infra/portal/**
 
@@ -25,6 +28,9 @@ env:
   refs/heads/deploy/portal/training: training
   refs/heads/deploy/portal/uat: uat
   refs/heads/deploy/portal/cps-preview: cps-preview
+  refs/heads/deploy/portal/infra-test: infra-test
+  refs/heads/deploy/portal/long: long
+  refs/heads/deploy/portal/trn2: trn2
 
 jobs:
   release:

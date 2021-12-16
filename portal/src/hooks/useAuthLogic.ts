@@ -195,7 +195,6 @@ const useAuthLogic = ({
     }
   };
 
-  // TODO (PORTAL-1193): Add tests for new MFA Auth methods
   /**
    * Verifies the 6-digit MFA code and logs the user into the Portal.
    * If there are any errors, set app errors on the page.
@@ -214,7 +213,6 @@ const useAuthLogic = ({
     finishLoginAndRedirect(next);
   };
 
-  // TODO (PORTAL-1193): Add tests for new MFA Auth methods
   /**
    * Updates the user's MFA phone number in Cognito, and sends an SMS
    * with a 6-digit code for verification.
@@ -242,7 +240,6 @@ const useAuthLogic = ({
     }
   };
 
-  // TODO (PORTAL-1193): Add tests for new MFA Auth methods
   /**
    * Verifies the 6-digit MFA code and sets the status of the phone number to "verified".
    * If there are any errors, set app errors on the page.
@@ -260,7 +257,6 @@ const useAuthLogic = ({
     }
   };
 
-  // TODO (PORTAL-1193): Add tests for new MFA Auth methods
   /**
    * Updates the users MFA preference.
    * If there are any errors, set app errors on the page.
@@ -280,7 +276,6 @@ const useAuthLogic = ({
     }
   };
 
-  // TODO (PORTAL-1193): Add tests for new MFA Auth methods
   /**
    * Opts the user out of MFA.
    * If there are any errors, set app errors on the page.
@@ -309,7 +304,6 @@ const useAuthLogic = ({
     }
   };
 
-  // TODO (PORTAL-1193): Add tests for new MFA Auth methods
   /**
    * Opts the user in to MFA via SMS.
    * If the user does not have an associated phone number, an error is thrown.

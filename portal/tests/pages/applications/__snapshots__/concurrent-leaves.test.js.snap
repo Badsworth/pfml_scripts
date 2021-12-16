@@ -71,7 +71,7 @@ exports[`ConcurrentLeaves renders the continuous page content 1`] = `
           >
             <svg
               aria-hidden="true"
-              class="usa-icon--size-3 margin-right-2px flex-auto text-green"
+              class="usa-icon usa-icon--size-3 margin-right-2px flex-auto text-green"
               fill="currentColor"
               focusable="false"
               role="img"
@@ -96,7 +96,7 @@ exports[`ConcurrentLeaves renders the continuous page content 1`] = `
           >
             <svg
               aria-hidden="true"
-              class="usa-icon--size-3 margin-right-2px flex-auto text-red"
+              class="usa-icon usa-icon--size-3 margin-right-2px flex-auto text-red"
               fill="currentColor"
               focusable="false"
               role="img"
@@ -225,7 +225,7 @@ exports[`ConcurrentLeaves renders the intermittent reduced page content 1`] = `
           >
             <svg
               aria-hidden="true"
-              class="usa-icon--size-3 margin-right-2px flex-auto text-green"
+              class="usa-icon usa-icon--size-3 margin-right-2px flex-auto text-green"
               fill="currentColor"
               focusable="false"
               role="img"
@@ -302,7 +302,7 @@ exports[`ConcurrentLeaves renders the intermittent reduced page content 1`] = `
           >
             <svg
               aria-hidden="true"
-              class="usa-icon--size-3 margin-right-2px flex-auto text-red"
+              class="usa-icon usa-icon--size-3 margin-right-2px flex-auto text-red"
               fill="currentColor"
               focusable="false"
               role="img"
@@ -451,7 +451,7 @@ exports[`ConcurrentLeaves renders the page 1`] = `
           >
             <svg
               aria-hidden="true"
-              class="usa-icon--size-3 margin-right-2px flex-auto text-green"
+              class="usa-icon usa-icon--size-3 margin-right-2px flex-auto text-green"
               fill="currentColor"
               focusable="false"
               role="img"
@@ -476,7 +476,7 @@ exports[`ConcurrentLeaves renders the page 1`] = `
           >
             <svg
               aria-hidden="true"
-              class="usa-icon--size-3 margin-right-2px flex-auto text-red"
+              class="usa-icon usa-icon--size-3 margin-right-2px flex-auto text-red"
               fill="currentColor"
               focusable="false"
               role="img"
@@ -626,7 +626,7 @@ exports[`ConcurrentLeaves renders the page when the claim does not contain concu
           >
             <svg
               aria-hidden="true"
-              class="usa-icon--size-3 margin-right-2px flex-auto text-green"
+              class="usa-icon usa-icon--size-3 margin-right-2px flex-auto text-green"
               fill="currentColor"
               focusable="false"
               role="img"
@@ -651,7 +651,7 @@ exports[`ConcurrentLeaves renders the page when the claim does not contain concu
           >
             <svg
               aria-hidden="true"
-              class="usa-icon--size-3 margin-right-2px flex-auto text-red"
+              class="usa-icon usa-icon--size-3 margin-right-2px flex-auto text-red"
               fill="currentColor"
               focusable="false"
               role="img"
@@ -800,7 +800,7 @@ exports[`ConcurrentLeaves renders the reduced page content 1`] = `
           >
             <svg
               aria-hidden="true"
-              class="usa-icon--size-3 margin-right-2px flex-auto text-green"
+              class="usa-icon usa-icon--size-3 margin-right-2px flex-auto text-green"
               fill="currentColor"
               focusable="false"
               role="img"
@@ -877,7 +877,7 @@ exports[`ConcurrentLeaves renders the reduced page content 1`] = `
           >
             <svg
               aria-hidden="true"
-              class="usa-icon--size-3 margin-right-2px flex-auto text-red"
+              class="usa-icon usa-icon--size-3 margin-right-2px flex-auto text-red"
               fill="currentColor"
               focusable="false"
               role="img"

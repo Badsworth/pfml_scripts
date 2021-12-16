@@ -74,6 +74,9 @@ from massgov.pfml.util.sqlalchemy import get_or_404
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
+# HRD Employer FEIN. See https://lwd.atlassian.net/browse/PSD-2401
+CLAIMS_DASHBOARD_BLOCKED_FEINS = set(["046002284"])
+
 
 class VerificationRequired(Forbidden):
     user_leave_admin: UserLeaveAdministrator
@@ -451,7 +454,7 @@ def get_claim(fineos_absence_id: str) -> flask.Response:
         return error.to_api_response()
 
     try:
-        detailed_claim = get_claim_detail(claim)
+        detailed_claim = get_claim_detail(claim, {"absence_case_id": fineos_absence_id})
     except ClaimWithdrawnError:
         logger.warning(
             "get_claim failure - Claim has been withdrawn. Unable to display claim status.",
@@ -512,7 +515,8 @@ def get_claims() -> flask.Response:
                 verified_employers = [
                     employer
                     for employer in employers_list
-                    if current_user.verified_employer(employer)
+                    if employer.employer_fein not in CLAIMS_DASHBOARD_BLOCKED_FEINS
+                    and current_user.verified_employer(employer)
                 ]
 
                 # filters claims by employer id - shows all claims of those employers

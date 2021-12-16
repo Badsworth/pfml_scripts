@@ -24,6 +24,13 @@ variable "enable_regional_rate_based_acl" {
   default     = false
 }
 
+variable "enable_regional_api_acl" {
+  description = "Test if current environment gets an API ACL"
+  type        = bool
+  default     = false
+}
+
+
 variable "enable_fortinet_managed_rules" {
   description = "Test if current environment gets the Fortinet Managed Rules ACL on the API Gateway"
   type        = bool

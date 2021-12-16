@@ -56,7 +56,8 @@ describe("Claimant uses portal to report other leaves and benefits, receives cor
         portal.submitClaimPartsTwoThree(
           application,
           paymentPreference,
-          config("FINEOS_HAS_TAX_WITHHOLDING") === "true"
+          config("FINEOS_HAS_TAX_WITHHOLDING") === "true",
+          true
         );
       });
     });

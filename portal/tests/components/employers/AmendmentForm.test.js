@@ -1,10 +1,11 @@
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import AmendmentForm from "../../../src/components/employers/AmendmentForm";
 import React from "react";
 import userEvent from "@testing-library/user-event";
 
 describe("AmendmentForm", () => {
   const onDestroy = jest.fn();
+  const handleSave = jest.fn().mockImplementation(() => Promise.resolve(null));
   const destroyButtonLabel = "Destroy";
 
   it("renders the component", () => {
@@ -43,5 +44,37 @@ describe("AmendmentForm", () => {
     );
     userEvent.click(screen.getByRole("button", { name: "Destroy" }));
     expect(onDestroy).toHaveBeenCalled();
+  });
+
+  it("shows a button labeled with saveButtonText", () => {
+    render(
+      <AmendmentForm
+        onDestroy={onDestroy}
+        destroyButtonLabel={destroyButtonLabel}
+        saveButtonText="Save"
+        onSave={handleSave}
+      >
+        <p>Testing</p>
+      </AmendmentForm>
+    );
+    expect(screen.getByRole("button", { name: "Save" })).toBeInTheDocument();
+  });
+
+  it("calls 'onSave' when the save button is clicked", async () => {
+    render(
+      <AmendmentForm
+        onDestroy={onDestroy}
+        destroyButtonLabel={destroyButtonLabel}
+        saveButtonText="Save"
+        onSave={handleSave}
+      >
+        <p>Testing</p>
+      </AmendmentForm>
+    );
+    await act(
+      async () =>
+        await userEvent.click(screen.getByRole("button", { name: "Save" }))
+    );
+    expect(handleSave).toHaveBeenCalled();
   });
 });

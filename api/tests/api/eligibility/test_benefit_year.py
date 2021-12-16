@@ -575,8 +575,8 @@ def test_set_base_period_for_benefit_year(test_db_session, initialize_factories_
             absence_period_start_date=date(2020, 1, 1), employee=employee, employer=employer
         )
 
-    by_start_date = date(2019, 10, 1)
-    by_end_date = date(2020, 10, 1)
+    by_start_date = date(2019, 12, 15)
+    by_end_date = date(2020, 12, 12)
     benefit_year = BenefitYear(
         employee_id=employee.employee_id, start_date=by_start_date, end_date=by_end_date
     )
@@ -633,8 +633,8 @@ def test_set_base_period_for_benefit_year_ignores_retroactively_added_wages(
             absence_period_start_date=date(2019, 12, 15), employee=employee, employer=employer
         )
 
-    by_start_date = date(2019, 10, 1)
-    by_end_date = date(2020, 10, 1)
+    by_start_date = date(2019, 12, 15)
+    by_end_date = date(2020, 12, 12)
     benefit_year = BenefitYear(
         employee_id=employee.employee_id, start_date=by_start_date, end_date=by_end_date
     )

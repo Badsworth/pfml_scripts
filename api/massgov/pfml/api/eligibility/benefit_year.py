@@ -266,20 +266,9 @@ def set_base_period_for_benefit_year(
         return None
 
     application_submitted_date = earilest_claim_in_benefit_year.created_at.date()
-    leave_start_date = earilest_claim_in_benefit_year.absence_period_start_date
-
-    # This guard clause is to satisfy the linter.
-    # Since we filter out null absence_period_start_dates in
-    # _get_earliest_claim_in_benefit_year, this is unreachable.
-    if leave_start_date is None:
-        raise Exception
 
     # Choose earliest date
-    effective_date = (
-        application_submitted_date
-        if leave_start_date > application_submitted_date
-        else leave_start_date
-    )
+    effective_date = min(application_submitted_date, benefit_year.start_date)
 
     base_period_qtrs = get_retroactive_base_period(
         db_session, benefit_year.employee_id, effective_date

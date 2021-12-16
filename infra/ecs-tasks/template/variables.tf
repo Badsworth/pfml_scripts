@@ -298,6 +298,11 @@ variable "enable_merge_1099_pdf" {
   default     = "0"
 }
 
+variable "enable_upload_1099_pdf" {
+  description = "Enable uploading of 1099 documents to Fineos API"
+  default     = "0"
+}
+
 variable "enable_withholding_payments" {
   description = "Enable tax withholding payments within the API system."
   default     = "0"
