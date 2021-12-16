@@ -130,7 +130,7 @@ export const Status = ({
   const hasPendingStatus = claimDetail.absence_periods.some(
     (absenceItem) => absenceItem.request_decision === "Pending"
   );
-  const hasApprovedStatus = claimDetail?.hasApprovedOrCompletedStatus;
+  const hasApprovedStatus = claimDetail?.hasApprovedStatus;
 
   const documentsForApplication = allClaimDocuments.filterByApplication(
     claimDetail.application_id
@@ -451,7 +451,6 @@ export const StatusTagMap: {
 } = {
   Approved: "success",
   Cancelled: "inactive",
-  Completed: "success",
   Denied: "error",
   "In Review": "pending",
   Pending: "pending",

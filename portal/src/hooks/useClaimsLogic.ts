@@ -4,6 +4,7 @@ import { AppErrorsLogic } from "./useAppErrorsLogic";
 import ClaimCollection from "../models/ClaimCollection";
 import ClaimsApi from "../api/ClaimsApi";
 import PaginationMeta from "../models/PaginationMeta";
+import { PortalFlow } from "./usePortalFlow";
 import { isEqual } from "lodash";
 import { isFeatureEnabled } from "../services/featureFlags";
 import useCollectionState from "./useCollectionState";
@@ -11,8 +12,10 @@ import { useState } from "react";
 
 const useClaimsLogic = ({
   appErrorsLogic,
+  portalFlow,
 }: {
   appErrorsLogic: AppErrorsLogic;
+  portalFlow: PortalFlow;
 }) => {
   const claimsApi = new ClaimsApi();
 
@@ -127,8 +130,10 @@ const useClaimsLogic = ({
       loadedClaimDetail = data.claimDetail;
 
       if (
-        isFeatureEnabled("claimantShowPayments") &&
-        loadedClaimDetail.hasApprovedStatus
+        (isFeatureEnabled("claimantShowPayments") ||
+          isFeatureEnabled("claimantShowPaymentsPhaseTwo")) &&
+        loadedClaimDetail.hasApprovedStatus &&
+        portalFlow.pageRoute === "/applications/status/payments"
       ) {
         try {
           const payments = await claimsApi.getPayments(absenceId);
@@ -141,7 +146,6 @@ const useClaimsLogic = ({
           appErrorsLogic.catchError(error);
         }
       }
-
       setClaimDetail(new ClaimDetail(loadedClaimDetail));
     } catch (error) {
       if (

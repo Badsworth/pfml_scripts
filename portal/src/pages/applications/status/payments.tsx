@@ -47,13 +47,13 @@ export const Payments = ({
   // Determines if phase one payment features are displayed
   const showPhaseOneFeatures =
     isFeatureEnabled("claimantShowPayments") &&
-    claimDetail?.hasApprovedOrCompletedStatus &&
+    claimDetail?.hasApprovedStatus &&
     claimDetail?.has_paid_payments;
 
   // Determines if phase two payment features are displayed
   const showPhaseTwoFeatures =
     isFeatureEnabled("claimantShowPaymentsPhaseTwo") &&
-    claimDetail?.hasApprovedOrCompletedStatus;
+    claimDetail?.hasApprovedStatus;
 
   useEffect(() => {
     if (!showPhaseOneFeatures && !showPhaseTwoFeatures) {
