@@ -4,6 +4,11 @@ export const PhoneType = {
   phone: "Phone",
 } as const;
 
+export const MFAPreference = {
+  optOut: "Opt Out",
+  sms: "SMS",
+} as const;
+
 class User {
   auth_id: string;
   consented_to_data_sharing: boolean;
@@ -16,7 +21,10 @@ class User {
     phone_type: typeof PhoneType[keyof typeof PhoneType] | null;
   } | null = null;
 
-  mfa_delivery_preference: "SMS" | "Opt Out" | null = null;
+  mfa_delivery_preference:
+    | typeof MFAPreference[keyof typeof MFAPreference]
+    | null = null;
+
   user_leave_administrators: UserLeaveAdministrator[] = [];
 
   constructor(attrs: Partial<User>) {
