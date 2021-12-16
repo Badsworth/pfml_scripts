@@ -15,7 +15,7 @@ import { collect, map, filter } from "streaming-iterables";
 const pipelineP = promisify(pipeline);
 
 (async () => {
-  const storage = dataDirectory("payments-2021-12-13-payments-dt2");
+  const storage = dataDirectory("payments-2021-12-13-payments-perf");
   await storage.prepare();
 
   const employerPool = await EmployerPool.load(storage.employers);
@@ -62,18 +62,19 @@ const pipelineP = promisify(pipeline);
     fs.createWriteStream(storage.dir + "/scenarios.csv")
   );
 
-  // Attempt to load a claim pool if one has already been generated and saved.
-  // If we error out here, we go into generating and saving the pool.
-  const claimsFirst = await ClaimPool.load(
-    storage.dir + "/claims_mon.ndjson",
-    storage.documents
-  );
-  const claimsSecond = await ClaimPool.load(
-    storage.dir + "/claims_tues.ndjson",
-    storage.documents
-  );
+  const files = fs
+    .readdirSync(storage.dir)
+    .filter((fn) => fn.endsWith(".ndjson"));
 
-  const claims = ClaimPool.merge(...[claimsFirst, claimsSecond]);
+  const claims = ClaimPool.merge(
+    ...(await collect(
+      await map(
+        async (file) =>
+          await ClaimPool.load(path.join(storage.dir, file), storage.documents),
+        files
+      )
+    ))
+  );
 
   const usedSSNS = await (
     await collect(claims)
