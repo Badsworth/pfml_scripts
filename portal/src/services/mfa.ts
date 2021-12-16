@@ -1,5 +1,3 @@
-// TODO (PORTAL-1193): Add tests for new MFA Auth methods
-
 import Auth, { CognitoUser } from "@aws-amplify/auth";
 import tracker from "./tracker";
 
@@ -27,7 +25,6 @@ export const updateMFAPhoneNumber = async (phoneNumber: string) => {
   tracker.markFetchRequestEnd();
 };
 
-// TODO (PORTAL-1193): Add tests for new MFA Auth methods
 /**
  * Verifies the 6-digit MFA code and sets the status of the phone number to "verified".
  * @param phoneNumber The user's 10-digit phone number, ie "2223334444"
@@ -40,7 +37,6 @@ export const verifyMFAPhoneNumber = async (code: string) => {
   tracker.markFetchRequestEnd();
 };
 
-// TODO (PORTAL-1193): Add tests for new MFA Auth methods
 /**
  * Updates the users MFA preference.
  * @param user_id
@@ -56,7 +52,6 @@ export const setMFAPreference = async (mfaPreference: "Opt Out" | "SMS") => {
   }
 };
 
-// TODO (PORTAL-1193): Add tests for new MFA Auth methods
 /**
  * Opts the user out of MFA.
  * @param user The CognitoUser returned by an Auth call
@@ -73,7 +68,6 @@ const setMFAPreferenceOptOut = async (user: CognitoMFAUser) => {
   tracker.markFetchRequestEnd();
 };
 
-// TODO (PORTAL-1193): Add tests for new MFA Auth methods
 /**
  * Opts the user in to MFA via SMS.
  * If the user does not have an associated phone number, an error is thrown.
