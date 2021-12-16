@@ -28,39 +28,144 @@ on:
   push:
     branches:
       # - main
-      # - deploy/admin-portal/stage
-      # - deploy/admin-portal/prod
-      # - deploy/admin-portal/performance
-      # - deploy/admin-portal/training
-      # - deploy/admin-portal/uat
-      # - deploy/admin-portal/cps-preview
-      # - deploy/admin-portal/test
-      # - deploy/admin-portal/infra-test
-      # - deploy/admin-portal/long
-      # - deploy/admin-portal/trn2
-      # - deploy/admin-portal/breakfix
-      # - bdlake/INFRA-821
+      - bdlake/INFRA-821
     # paths:
     #   - infra/admin-portal/**
 
 env:
+  github_api: "https://api.github.com/repos/EOLWD/pfml"
+  workflow_self_link: "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+  version: ${{ github.event.inputs.version || 'main' }}
+  deployment_env: ${{ github.event.inputs.deployment_env || 'infra-test' }}
+  deploys_channel: "C01PADH2BJ8" # massgov-pfml-teamx
+  nodeVersion: 15.x
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   terraformVersion: 0.14.7
   terraformBaseDir: ./infra/admin-portal/environments/
-  # Map branch name to environment name. This is used to set the admin_portal_env variable below in combination with git refs.
-  refs/heads/main: infra-test
-  refs/heads/deploy/admin-portal/stage: stage
-  refs/heads/deploy/admin-portal/prod: prod
-  refs/heads/deploy/admin-portal/performance: performance
-  refs/heads/deploy/admin-portal/training: training
-  refs/heads/deploy/admin-portal/uat: uat
-  refs/heads/deploy/admin-portal/cps-preview: cps-preview
-  refs/heads/deploy/admin-portal/test: test
-  refs/heads/deploy/admin-portal/infra-test: infra-test
-  refs/heads/deploy/admin-portal/long: long
-  refs/heads/deploy/admin-portal/trn2: trn2
-  refs/heads/deploy/admin-portal/breakfix: breakfix
 
 jobs:
+
+  prod-check:
+    # run if environment is production
+    runs-on: ubuntu-latest
+    steps:
+      - name: check users
+        if: contains(env.deployment_env, 'prod')
+        id: get_teams
+        env:
+          GITHUB_TOKEN: ${{ secrets.PFML_DEVOPS_TOKEN }}
+        uses: octokit/graphql-action@v2.x
+        with:
+          query: |
+            query {
+              organization(login:"EOLWD"){
+                team(slug:"pfml-devops"){
+                  members(membership: ALL, query:"${{ github.actor }}"){
+                    nodes {
+                      login
+                    }
+                  }
+                }
+              }
+            }
+
+      - name: fail if not a member
+        if: contains(env.deployment_env, 'prod') && contains('', fromJSON(steps.get_teams.outputs.data).organization.team.members.nodes[0])
+        run: |
+          echo "Not part of pfml-devops, cancelling workflow"
+          exit 1
+
+  update-the-deploy-branch:
+    name: Update archival branch
+    needs: prod-check
+    runs-on: ubuntu-latest
+
+    outputs:
+      commit_hash: ${{ steps.calculate_commit_hash.outputs.commit_hash }}
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Calculate commit hash
+        id: calculate_commit_hash
+        run: |
+          if commit_hash=$(git rev-parse origin/${{env.version}} 2>/dev/null); then
+            echo "Received branch"
+          else
+            commit_hash=$(git rev-parse ${{env.version}})
+            echo "Received tag"
+          fi
+
+          if [[ -z $commit_hash ]]; then
+            echo "💣 No valid commit hash could be found in Git for the provided branch or tag '${{env.version}}'. This deploy can't proceed."
+            exit 1
+          fi
+
+          echo "::set-output name=commit_hash::$commit_hash"
+
+      - name: Commit and push new code to archival branch
+        if: "!contains(env.deployment_env, 'test')"
+        run: |
+          git config user.name "PFMLDevOps"
+          git config user.email "68565627+PFMLDevOps@users.noreply.github.com"
+          branch=deploy/admin-portal/${{env.deployment_env}}
+          echo "about to commit ${{steps.calculate_commit_hash.outputs.commit_hash}} to $branch..."
+          git checkout $branch
+          git reset --hard ${{steps.calculate_commit_hash.outputs.commit_hash}}
+          git push -f origin HEAD
+
+  deploy-info:
+    name: Gather deploy info
+    needs: update-the-deploy-branch
+    runs-on: ubuntu-latest
+    outputs:
+      admin-portal-env: ${{ steps.admin-portal-env.outputs.admin-portal-env }}
+      deployed-url: ${{ steps.deployed-url.outputs.deployed-url }}
+    steps:
+      - name: Set admin-portal-env value
+        id: admin-portal-env
+        run: |
+          echo "::set-output name=admin-portal-env::${{ env.deployment_env || 'test' }}"
+
+      - name: Set deployed-url value
+        id: deployed-url
+        # steps cannot refer to an output from a previous step in the same job, so admin-portal-env has to be calculated again
+        run: |
+          if [[ "${{ env.deployment_env || 'test' }}" == 'prod' ]]; then
+            echo "::set-output name=deployed-url::https://paidleave-admin.eol.mass.gov/"
+          else
+            echo "::set-output name=deployed-url::https://paidleave-admin-${{ env.deployment_env || 'test' }}.eol.mass.gov/"
+          fi
+
+  start-comms-github:
+    name: Start deploy comms (GitHub)
+    needs: [update-the-deploy-branch, deploy-info]
+    runs-on: ubuntu-latest
+    outputs:
+      deploy-id: ${{ steps.create-deployment.outputs.deployment_id }}
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - uses: chrnorm/deployment-action@releases/v1
+        name: Create GitHub deployment
+        id: create-deployment
+        with:
+          # NOTE: If you are intending for this GitHub deployment to trigger another
+          #       workflow that's listening for on: [deployment], you need to update this
+          #       to secrets.PFML_DEVOPS_TOKEN (same for the update step at the end.)
+          #
+          #       This is intentionally using the github.token right now to avoid unintended
+          #       side-effects from happening off of the automated deployments.
+          #
+          token: "${{ github.token }}"
+          target_url: ${{ needs.deploy-info.outputs.deployed-url }}
+          environment: "Admin Portal (${{ needs.deploy-info.outputs.admin-portal-env }})"
+          ref: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
+
   release:
     name: Release
     runs-on: ubuntu-latest

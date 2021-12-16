@@ -7,7 +7,7 @@ on:
     inputs:
       deployment_env:
         required: true
-        default: "infra-test"
+        default: "test"
         description: |
           🛑 DO NOT CHANGE THE DROPDOWN ABOVE FOR THE WORKFLOW. KEEP IT ON "main" BRANCH.
           --------------------------------------
@@ -21,12 +21,12 @@ on:
           ⬇️ Tag or branch to be deployed.
   push:
     branches:
-      - bdlake/INFRA-821
-    # paths:
-    #   - "admin/**"
-    #   - "!admin/__mocks__/**"
-    #   - "!admin/storybook/**"
-    #   - "!admin/tests/**"
+      - main
+    paths:
+      - "admin/**"
+      - "!admin/__mocks__/**"
+      - "!admin/storybook/**"
+      - "!admin/tests/**"
 
 env:
   github_api: "https://api.github.com/repos/EOLWD/pfml"
