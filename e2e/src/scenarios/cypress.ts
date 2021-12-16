@@ -480,9 +480,9 @@ export const CPS_SP: ScenarioSpecification = {
     // @todo If care leave use the start, end.
     // leave_dates: [startDate, endDate],
     // @todo If you want certain days from today.
-    leave_dates: [subDays(currentDate, 10), addDays(currentDate, 10)],
+    // leave_dates: [subDays(currentDate, 10), addDays(currentDate, 10)],
     // @todo this will start most recent Sunday with weeks.
-    // leave_dates: [subWeeks(mostRecentSunday, 2), addWeeks(mostRecentSunday, 3)],
+    leave_dates: [subWeeks(mostRecentSunday, 2), addWeeks(mostRecentSunday, 2)],
   },
 };
 
