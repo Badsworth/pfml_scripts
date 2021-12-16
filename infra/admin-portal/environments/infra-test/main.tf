@@ -40,5 +40,5 @@ module "massgov_pfml" {
   # You probably don't need to change the variables below:
   source           = "../../template"
   environment_name = local.environment_name
-  #cloudfront_origin_path = "/"
+  #cloudfront_origin_path = var.cloudfront_origin_path
 }
