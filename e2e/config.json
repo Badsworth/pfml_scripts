@@ -32,8 +32,8 @@
     "EMPLOYERS_FILE": "./employers/e2e-2021-08-05.json",
     "DOR_IMPORT_URI": "s3://massgov-pfml-stage-agency-transfer/dor/received/",
     "DOR_ETL_ARN": "arn:aws:states:us-east-1:498823821309:stateMachine:pfml-api-stage-dor-fineos-etl",
-    "FINEOS_HAS_TAX_WITHHOLDING": "false",
-    "HAS_UPDATED_MAX_BENFIT": "false"
+    "FINEOS_HAS_TAX_WITHHOLDING": "true",
+    "HAS_UPDATED_MAX_BENFIT": "true"
   },
   "training": {
     "PORTAL_BASEURL": "https://paidleave-training.mass.gov",
