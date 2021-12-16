@@ -75,7 +75,9 @@ jobs:
         # see https://help.github.com/en/actions/reference/context-and-expression-syntax-for-github-actions#github-context
         # github.ref will give the branch or tag reference that triggered the workflow
         # e.g refs/heads/main or refs/heads/deploy/admin-portal/stage
-        run: echo "admin_portal_env=${{ env[github.ref] || 'infra-test' }}" >> $GITHUB_ENV
+        run: |
+          echo "admin_portal_env=${{ env[github.ref] || 'infra-test' }}" >> $GITHUB_ENV
+          echo "CF Origin Path = ${{ env.TF_VAR_cloudfront_origin_path }}"
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
