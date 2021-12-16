@@ -1,3 +1,4 @@
+import decimal
 import enum
 import os
 from datetime import date
@@ -203,6 +204,49 @@ class PaymentAuditReportStep(Step):
         ]
         return _get_state_log_count_in_state(other_claim_payments, previous_states, self.db_session)
 
+    def calculate_federal_withholding_amount(self, link_payments: List[Payment]) -> decimal.Decimal:
+        payment_amount: decimal.Decimal = decimal.Decimal(0)
+
+        for payment in link_payments:
+            if payment.payment_transaction_type_id in [
+                PaymentTransactionType.FEDERAL_TAX_WITHHOLDING.payment_transaction_type_id
+            ]:
+                payment_amount += payment.amount
+
+        return payment_amount
+
+    def calculate_state_withholding_amount(self, link_payments: List[Payment]) -> decimal.Decimal:
+
+        payment_amount: decimal.Decimal = decimal.Decimal(0)
+
+        for payment in link_payments:
+            if payment.payment_transaction_type_id in [
+                PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id
+            ]:
+                payment_amount += payment.amount
+
+        return payment_amount
+
+    def get_federal_withholding_i_value(self, link_payments: List[Payment]) -> str:
+        federal_withholding_i_values = []
+
+        for payment in link_payments:
+            if payment.payment_transaction_type_id in [
+                PaymentTransactionType.FEDERAL_TAX_WITHHOLDING.payment_transaction_type_id
+            ]:
+                federal_withholding_i_values.append(payment.fineos_pei_i_value)
+        return " ".join(str(v) for v in federal_withholding_i_values)
+
+    def get_state_withholding_i_value(self, link_payments: List[Payment]) -> str:
+        state_withholding_i_values = []
+
+        for payment in link_payments:
+            if payment.payment_transaction_type_id in [
+                PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id
+            ]:
+                state_withholding_i_values.append(payment.fineos_pei_i_value)
+        return " ".join(str(v) for v in state_withholding_i_values)
+
     def build_payment_audit_data_set(
         self, payments: Iterable[Payment]
     ) -> Iterable[PaymentAuditData]:
@@ -216,13 +260,44 @@ class PaymentAuditReportStep(Step):
             # populate payment audit data by inspecting the currently sampled payment's history
             previously_audit_sent_count = self.previously_audit_sent_count(payment)
             is_first_time_payment = previously_audit_sent_count == 0
-
+            linked_payments = _get_split_payments(self.db_session, payment)
+            federal_withholding_amount: decimal.Decimal = (
+                self.calculate_federal_withholding_amount(linked_payments)
+                if payments_util.is_withholding_payments_enabled()
+                else decimal.Decimal(0)
+            )
+            state_withholding_amount: decimal.Decimal = (
+                self.calculate_state_withholding_amount(linked_payments)
+                if payments_util.is_withholding_payments_enabled()
+                else decimal.Decimal(0)
+            )
             payment_audit_data = PaymentAuditData(
                 payment=payment,
                 is_first_time_payment=is_first_time_payment,
                 previously_errored_payment_count=self.previously_errored_payment_count(payment),
                 previously_rejected_payment_count=self.previously_rejected_payment_count(payment),
                 previously_skipped_payment_count=self.previously_skipped_payment_count(payment),
+                gross_payment_amount=str(
+                    payment.amount + federal_withholding_amount + state_withholding_amount
+                )
+                if payments_util.is_withholding_payments_enabled()
+                else "",
+                federal_withholding_amount=str(
+                    federal_withholding_amount
+                    if decimal.Decimal(federal_withholding_amount) > 0
+                    else ""
+                ),
+                state_withholding_amount=str(
+                    state_withholding_amount
+                    if decimal.Decimal(state_withholding_amount) > 0
+                    else ""
+                ),
+                federal_withholding_i_value=self.get_federal_withholding_i_value(linked_payments)
+                if payments_util.is_withholding_payments_enabled()
+                else "",
+                state_withholding_i_value=self.get_state_withholding_i_value(linked_payments)
+                if payments_util.is_withholding_payments_enabled()
+                else "",
             )
             payment_audit_data_set.append(payment_audit_data)
 

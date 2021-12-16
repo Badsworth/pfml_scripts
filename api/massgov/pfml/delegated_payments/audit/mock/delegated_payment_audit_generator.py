@@ -435,6 +435,11 @@ def generate_scenario_data(
         previously_errored_payment_count=previous_error_count,
         previously_rejected_payment_count=previously_rejected_payment_count,
         previously_skipped_payment_count=previously_skipped_payment_count,
+        gross_payment_amount="",
+        federal_withholding_amount="",
+        state_withholding_amount="",
+        federal_withholding_i_value="",
+        state_withholding_i_value="",
     )
 
     if scenario_descriptor.audit_report_detail_informational:
