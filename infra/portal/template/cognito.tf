@@ -119,7 +119,7 @@ resource "aws_cognito_user_pool_client" "massgov_pfml_client" {
   prevent_user_existence_errors = "ENABLED"
 
   read_attributes  = ["email", "email_verified", "phone_number", "phone_number_verified", "updated_at"]
-  write_attributes = ["email", "updated_at"]
+  write_attributes = ["email", "updated_at", "phone_number"]
 }
 
 // Cognito sets defaults when it's created - most you can ignore but
