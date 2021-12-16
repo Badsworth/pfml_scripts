@@ -20,7 +20,7 @@ on:
             (test, performance, stage, training, uat, prod, breakfix, cps-preview).
       version:
         required: true
-        default: "main"
+        default: "bdlake/INFRA-821"
         description: |
           --------------------------------------
           ⬇️ Tag or branch to be deployed.
