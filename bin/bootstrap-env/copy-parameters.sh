@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+#
 # Utility script for setting up parameter store values for new environments.
 # You should be a prod admin to run the script in production environment
 #
@@ -11,7 +13,8 @@ Usage: copy-parameters.sh [--source COPY_FROM_ENV] NEW_ENV
   
   e.g. copy-parameters.sh breakfix
   e.g. copy-parameters.sh --source test breakfix
-EOF)
+EOF
+)
 
 # Verify that the usage looks roughly correct.
 if [ "$#" -ne 1 ] && [ "$#" -ne 3 ]; then
@@ -75,9 +78,10 @@ done <<< "$parameters"
 #
 # Nessus password: 32 random alphanumeric characters
 # ImportLog dashboard password: 16 random alphanumeric characters
+set +o pipefail
 DB_NESSUS_PASS=$(< /dev/urandom LC_ALL=C tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1)
 DASHBOARD_PASS=$(< /dev/urandom LC_ALL=C tr -dc 'a-zA-Z0-9' | fold -w 16 | head -n 1)
-
+set -euo pipefail
 echo "Creating /service/pfml-api/$NEW_ENV/dashboard_password"
 
 aws ssm put-parameter \
@@ -126,11 +130,14 @@ rm -f .rmv-cert
 
 aws secretsmanager get-secret-value \
     --secret-id "/service/pfml-api-$COPY_FROM_ENV/rmv_client_certificate" \
-    | jq -r ".SecretBinary" | base64 -D >> .rmv-cert
+    | jq -r ".SecretBinary" | base64 --decode >> .rmv-cert
 
+# Create when none exist or update when exists
+set +oeu pipefail
 aws secretsmanager create-secret \
-  --name "/service/pfml-api-$NEW_ENV/rmv_client_certificate"
-
+  --name "/service/pfml-api-$NEW_ENV/rmv_client_certificate" \
+  --secret-binary fileb://.rmv-cert \
+  || \
 aws secretsmanager put-secret-value \
   --secret-id "/service/pfml-api-$NEW_ENV/rmv_client_certificate" \
   --secret-binary fileb://.rmv-cert
