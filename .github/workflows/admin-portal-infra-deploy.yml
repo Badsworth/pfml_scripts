@@ -127,7 +127,7 @@ jobs:
       - name: Set admin-portal-env value
         id: admin-portal-env
         run: |
-          echo "::set-output name=admin-portal-env::${{ env.deployment_env || 'test' }}"
+          echo "::set-output name=admin-portal-env::${{ env.deployment_env }}"
 
       - name: Set deployed-url value
         id: deployed-url
@@ -136,7 +136,7 @@ jobs:
           if [[ "${{ env.deployment_env || 'test' }}" == 'prod' ]]; then
             echo "::set-output name=deployed-url::https://paidleave-admin.eol.mass.gov/"
           else
-            echo "::set-output name=deployed-url::https://paidleave-admin-${{ env.deployment_env || 'test' }}.eol.mass.gov/"
+            echo "::set-output name=deployed-url::https://paidleave-admin-${{ env.deployment_env }}.eol.mass.gov/"
           fi
 
   start-comms-github:
