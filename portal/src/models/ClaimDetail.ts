@@ -91,6 +91,14 @@ class ClaimDetail {
     );
   }
 
+  get hasApprovedOrCompletedStatus() {
+    return this.absence_periods.some(
+      (absence_period) =>
+        absence_period.request_decision === "Approved" ||
+        absence_period.request_decision === "Completed"
+    );
+  }
+
   get leaveDates(): AbsencePeriodDates[] {
     return this.absence_periods.map(
       ({ absence_period_start_date, absence_period_end_date }) => ({

@@ -44,12 +44,24 @@ export const Payments = ({
     portalFlow,
   } = appLogic;
 
+  // Determines if phase one payment features are displayed
+  const showPhaseOneFeatures =
+    isFeatureEnabled("claimantShowPayments") &&
+    claimDetail?.hasApprovedOrCompletedStatus &&
+    claimDetail?.has_paid_payments;
+
+  // Determines if phase two payment features are displayed
+  const showPhaseTwoFeatures =
+    isFeatureEnabled("claimantShowPaymentsPhaseTwo") &&
+    claimDetail?.hasApprovedOrCompletedStatus;
+
   useEffect(() => {
-    if (!isFeatureEnabled("claimantShowPayments")) {
+    if (!showPhaseOneFeatures && !showPhaseTwoFeatures) {
       portalFlow.goTo(routes.applications.status.claim, {
         absence_id,
       });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [portalFlow, absence_id]);
 
   const application_id = claimDetail?.application_id;

@@ -7,6 +7,7 @@ export type AbsencePeriodRequestDecision =
   | "Denied"
   | "In Review"
   | "Pending"
+  | "Completed"
   // Projected is (at least) used for Bonding Leave periods created automatically
   // for periods with Birth Disability as the reason qualifier
   | "Projected"
