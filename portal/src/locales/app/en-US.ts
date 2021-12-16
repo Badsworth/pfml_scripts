@@ -3163,8 +3163,9 @@ const components = {
     optional: "(optional)",
   },
   header: {
-    skipToContent: "Skip to main content",
     appTitle: "Paid Family and Medical Leave",
+    settingsLinkText: "Settings",
+    skipToContent: "Skip to main content",
   },
   inputPassword: {
     toggleLabel: "Show password",

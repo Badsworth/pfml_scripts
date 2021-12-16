@@ -65,7 +65,7 @@ exports[`OtherIncomes renders the page 1`] = `
       >
         <svg
           aria-hidden="true"
-          class="usa-icon--size-3 text-secondary text-middle margin-right-05 margin-top-neg-05"
+          class="usa-icon usa-icon--size-3 text-secondary text-middle margin-right-05 margin-top-neg-05"
           fill="currentColor"
           focusable="false"
           role="img"
@@ -106,7 +106,7 @@ exports[`OtherIncomes renders the page 1`] = `
       >
         <svg
           aria-hidden="true"
-          class="usa-icon--size-3 text-error text-middle margin-right-05 margin-top-neg-05"
+          class="usa-icon usa-icon--size-3 text-error text-middle margin-right-05 margin-top-neg-05"
           fill="currentColor"
           focusable="false"
           role="img"
