@@ -39,7 +39,7 @@ on:
       # - deploy/admin-portal/long
       # - deploy/admin-portal/trn2
       # - deploy/admin-portal/breakfix
-      - bdlake/INFRA-821
+      # - bdlake/INFRA-821
     # paths:
     #   - infra/admin-portal/**
 
