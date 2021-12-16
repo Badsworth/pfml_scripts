@@ -876,8 +876,6 @@ const shared = {
     "Your answer must match the $t(shared.certificationFormCare).",
   leavePeriodHasLeaveHintMedicalOrPregnancy:
     "Your answer must match the $t(shared.certificationFormMedical).",
-  leavePeriodHasLeaveHintUpdateMedicalCertForm:
-    "Your answer must match the corresponding checkbox of Question 14 in the $t(shared.certificationFormMedical).",
   leavePeriodIntermittentDatesLeadMedicalOrPregnancy:
     "If you have already taken leave for this condition in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your answer must match the intermittent leave start and end dates in the $t(shared.certificationFormMedical).",
   leavePeriodMedicalAlert:
@@ -1397,8 +1395,6 @@ const pages = {
       "Your answers must match the intermittent leave section in the $t(shared.certificationFormMedical).",
     frequencyHint_pregnancy:
       "Your answers must match the intermittent leave section in the $t(shared.certificationFormMedical).",
-    frequencyHint_updateMedicalCertForm:
-      "Your answers must match Questions 21 and 22 in the $t(shared.certificationFormMedical).",
     frequencyLabel_irregular:
       "Estimate how many absences over the next 6 months.",
     frequencyLabel_months: "Estimate how many absences per month.",
@@ -1421,8 +1417,6 @@ const pages = {
       "$t(shared.leavePeriodContinuousDatesLeadMedicalOrPregnancy)",
     datesLead_pregnancy:
       "$t(shared.leavePeriodContinuousDatesLeadMedicalOrPregnancy)",
-    datesLead_updateMedicalCertForm:
-      "If you have already taken leave for this condition in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your answer must match Question 16 in the $t(shared.certificationFormMedical).",
     datesSectionLabel:
       "Enter the start and end dates for your continuous leave.",
     endDateLabel: "Last day of leave",
@@ -1431,8 +1425,6 @@ const pages = {
       "$t(shared.leavePeriodHasLeaveHintMedicalOrPregnancy)",
     hasLeaveHint_pregnancy:
       "$t(shared.leavePeriodHasLeaveHintMedicalOrPregnancy)",
-    hasLeaveHint_updateMedicalCertForm:
-      "$t(shared.leavePeriodHasLeaveHintUpdateMedicalCertForm)",
     hasLeaveLabel:
       "Do you need to take off work completely for a period of time (continuous leave)?",
     needDocumentAlert_care: "$t(shared.leavePeriodCaringAlert)",
@@ -1452,8 +1444,6 @@ const pages = {
       "$t(shared.leavePeriodIntermittentDatesLeadMedicalOrPregnancy)",
     datesLead_pregnancy:
       "$t(shared.leavePeriodIntermittentDatesLeadMedicalOrPregnancy)",
-    datesLead_updateMedicalCertForm:
-      "If you have already taken leave for this condition in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your answer must match Question 20 in the $t(shared.certificationFormMedical).",
     datesSectionLabel:
       "Enter the start and end dates for your intermittent leave.",
     endDateLabel: "Last day of leave",
@@ -1465,8 +1455,6 @@ const pages = {
       "$t(shared.leavePeriodHasLeaveHintMedicalOrPregnancy)",
     hasLeaveHint_pregnancy:
       "$t(shared.leavePeriodHasLeaveHintMedicalOrPregnancy)",
-    hasLeaveHint_updateMedicalCertForm:
-      "$t(shared.leavePeriodHasLeaveHintUpdateMedicalCertForm)",
     hasLeaveLabel:
       "Do you need to take off work in uneven blocks of time (<scheduling-leave-guide-link>intermittent leave</scheduling-leave-guide-link>)?",
     hybridLeaveWarning:
@@ -1488,8 +1476,6 @@ const pages = {
       "$t(shared.leavePeriodReducedDatesLeadMedicalOrPregnancy)",
     datesLead_pregnancy:
       "$t(shared.leavePeriodReducedDatesLeadMedicalOrPregnancy)",
-    datesLead_updateMedicalCertForm:
-      "If you have already taken leave for this condition in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your answer must match Question 18 in the $t(shared.certificationFormMedical).",
     datesSectionLabel:
       "Enter the start and end dates for your reduced leave schedule.",
     endDateLabel: "Last day of leave",
@@ -1499,8 +1485,6 @@ const pages = {
       "$t(shared.leavePeriodHasLeaveHintMedicalOrPregnancy)",
     hasLeaveHint_pregnancy:
       "$t(shared.leavePeriodHasLeaveHintMedicalOrPregnancy)",
-    hasLeaveHint_updateMedicalCertForm:
-      "$t(shared.leavePeriodHasLeaveHintUpdateMedicalCertForm)",
     hasLeaveLabel:
       "Do you need to work fewer hours than usual for a period of time (<scheduling-leave-guide-link>reduced leave schedule</scheduling-leave-guide-link>)?",
     needDocumentAlert_care: "$t(shared.leavePeriodCaringAlert)",
@@ -1817,8 +1801,6 @@ const pages = {
       "$t(shared.reducedLeaveScheduleLeadCertGuidanceMedicalOrPregnancy)",
     leadCertGuidance_pregnancy:
       "$t(shared.reducedLeaveScheduleLeadCertGuidanceMedicalOrPregnancy)",
-    leadCertGuidance_updateMedicalCertForm:
-      "The total number of hours you enter must match Question 19 in the $t(shared.certificationFormMedical).",
     minutesLabel: "$t(shared.minutesLabel)",
     needDocumentAlert_care: "$t(shared.leavePeriodCaringAlert)",
     needDocumentAlert_medical: "$t(shared.leavePeriodMedicalAlert)",
