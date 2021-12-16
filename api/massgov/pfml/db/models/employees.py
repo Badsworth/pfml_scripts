@@ -2851,6 +2851,14 @@ class State(LookupTable):
         206, "Federal Withholding Error Restartable", Flow.DELEGATED_PAYMENT.flow_id
     )
 
+    STATE_WITHHOLDING_FUNDS_SENT = LkState(
+        207, "State Withholding Funds Sent", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    FEDERAL_WITHHOLDING_FUNDS_SENT = LkState(
+        208, "Federal Withholding Funds Sent", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
     LEGACY_MMARS_PAYMENT_PAID = LkState(
         210, "Legacy MMARS Payment Paid", Flow.LEGACY_MMARS_PAYMENTS.flow_id
     )
