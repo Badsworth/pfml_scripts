@@ -195,7 +195,9 @@ jobs:
 
       - name: Terraform Init
         id: terraform_init
-        run: terraform init
+        run: |
+          echo "Directory: ${{ env.terraformBaseDir }}${{ needs.deploy-info.outputs.admin-portal-env }}"
+          terraform init
         working-directory: ${{ env.terraformBaseDir }}${{ needs.deploy-info.outputs.admin-portal-env }}
 
       - name: Terraform Plan with new Cloudfront path
