@@ -5,7 +5,7 @@ import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml import db
-from massgov.pfml.db.models.employees import Payment, State
+from massgov.pfml.db.models.employees import Payment, State, PaymentTransactionType
 from massgov.pfml.db.models.payments import FineosWritebackDetails, FineosWritebackTransactionStatus
 from massgov.pfml.delegated_payments.step import Step
 
@@ -33,6 +33,22 @@ class RelatedPaymentsPostProcessingStep(Step):
 
         for payment in payments:
             outcome = state_log_util.build_outcome("PUB transaction sent")
+
+            end_state = (
+                State.STATE_WITHHOLDING_FUNDS_SENT
+                if (
+                    payment.payment_transaction_type_id
+                    == PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id
+                )
+                else State.FEDERAL_WITHHOLDING_FUNDS_SENT
+            )
+            state_log_util.create_finished_state_log(
+                associated_model=payment,
+                end_state=end_state,
+                outcome=outcome,
+                db_session=self.db_session,
+            )
+
             transaction_status = FineosWritebackTransactionStatus.PAID
             state_log_util.create_finished_state_log(
                 end_state=State.DELEGATED_ADD_TO_FINEOS_WRITEBACK,
