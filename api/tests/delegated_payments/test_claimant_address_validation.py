@@ -159,7 +159,8 @@ def test_create_address_report(claimant_address_step):
     report_path = "local_s3/agency-transfer/reports/"
     file_name = "Claimant_address_report"
     out_path = claimant_address_step.create_address_report(results, file_name, report_path)
-    assert out_path
+    full_path = report_path + out_path.name
+    assert str(out_path) == full_path
 
 
 def test_is_address_new_or_updated(local_test_db_session, employee_extract_factory):
