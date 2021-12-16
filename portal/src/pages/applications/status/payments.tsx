@@ -246,8 +246,17 @@ export const Payments = ({
                 ),
               }}
             />
+
+            {/* Estimated Date section */}
+            <section className="margin-y-5" data-testid="estimated-date">
+              <Heading level="3">
+                {t("pages.payments.estimatedDateHeading")}
+              </Heading>
+              <p>{t("pages.payments.estimatedDate")}</p>
+            </section>
           </section>
 
+          {/* Table section */}
           {shouldShowPaymentsTable && (
             <Table className="width-full" responsive>
               <thead>
