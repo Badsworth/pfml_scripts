@@ -17,14 +17,6 @@ from massgov.pfml.util.datetime import get_now_us_eastern
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
-# total_b_records = 0
-# total_b_original_record = 0
-# total_b_ccorrection_record = 0
-# total_b_gcorrection_record = 0
-original_returns = []
-c_corrected_returns = []
-g_corrected_returns = []
-
 
 class Constants:
     T_REC_TYPE = "T"
@@ -131,7 +123,7 @@ class Generate1099IRSfilingStep(Step):
 
             if len(c_corrected_returns) > 0:
                 logger.info("Total C corrected records are %s", len(c_corrected_returns))
-                original = _get_original_records_two_trans_correction()
+                original = _get_original_records_two_trans_correction(c_corrected_returns)
                 self.payment_amt_zero = True
                 # Remove the below line after testing
                 original = c_corrected_returns
@@ -148,8 +140,7 @@ class Generate1099IRSfilingStep(Step):
             self.db_session.commit()
 
     def _create_record_entries(self, records: List[Any], entries: str) -> str:
-        amt = 0.0
-        amt = self._format_amount_fields(amt)
+
         self.a_seq = self.last_seq + 1
         ctl_total, st_tax, fed_tax = self._get_totals(records)
         a_template = self._create_a_template()
@@ -165,17 +156,11 @@ class Generate1099IRSfilingStep(Step):
         c_template = self._create_c_template()
         self.c_seq = self.b_seq
         self.total_b_records = len(records)
-        if self.payment_amt_zero:
-            c_entries = self._load_c_rec_data(c_template, amt)
-        else:
-            c_entries = self._load_c_rec_data(c_template, ctl_total)
+        c_entries = self._load_c_rec_data(c_template, ctl_total)
         entries = entries + c_entries
         k_template = self._create_k_template()
         self.k_seq = self.c_seq + 1
-        if self.payment_amt_zero:
-            k_entries = self._load_k_rec_data(k_template, amt, amt, amt)
-        else:
-            k_entries = self._load_k_rec_data(k_template, ctl_total, st_tax, fed_tax)
+        k_entries = self._load_k_rec_data(k_template, ctl_total, st_tax, fed_tax)
         entries = entries + k_entries
         self.last_seq = self.k_seq
 
@@ -428,7 +413,7 @@ class Generate1099IRSfilingStep(Step):
         return k_record
 
     def _load_f_rec_data(self, template_str: str) -> str:
-        # f_seq = 5 + self.total_b_records
+
         f_dict = dict(
             F_REC_TYPE=Constants.F_REC_TYPE,
             TOT_A_REC=Constants.TOT_A_REC,
@@ -468,10 +453,11 @@ class Generate1099IRSfilingStep(Step):
         st_tax = decimal.Decimal(0.0)
         fed_tax = decimal.Decimal(0.0)
 
-        for records in tax_data:
-            ctl_total += records.gross_payments
-            st_tax += records.state_tax_withholdings
-            fed_tax += records.federal_tax_withholdings
+        if not self.payment_amt_zero:
+            for records in tax_data:
+                ctl_total += records.gross_payments
+                st_tax += records.state_tax_withholdings
+                fed_tax += records.federal_tax_withholdings
 
         return (
             self._format_amount_fields(ctl_total),
@@ -566,8 +552,11 @@ def _is_two_transaction_correction() -> bool:
     return is_two_transaction
 
 
-def _get_original_records_two_trans_correction() -> List:
-    orig_records = List[Any]
+def _get_original_records_two_trans_correction(tax_data: List[Any]) -> List[Any]:
+    orig_records = []
     # TODO Query the data to retreive the original records for
     # the 2 step correction
+    for pfml_record in tax_data:
+        if not pfml_record.correction_ind:
+            orig_records.append(pfml_record)
     return orig_records
