@@ -23,8 +23,6 @@ from .wscomposer import (  # noqa: F401
     OCOrganisationItem,
     OCOrganisationName,
     OCOrganisationNameItem,
-    OCOrganisationUnit,
-    OCOrganisationUnitItem,
     OCOrganisationWithDefault,
     PartyIntegrationDTOItem,
     ServiceAgreementData,
