@@ -38,6 +38,7 @@ export const Payments = ({
       claimDetail,
       isLoadingClaimDetail,
       loadClaimDetail,
+      loadedPaymentsData,
       hasLoadedPayments,
     },
     documents: { documents: allClaimDocuments, loadAll: loadAllClaimDocuments },
@@ -66,12 +67,19 @@ export const Payments = ({
 
   const application_id = claimDetail?.application_id;
   const absenceId = absence_id;
+
+  // const [shouldShowPaymentsTable, setShouldShowPaymentsTable] = useState(false);
+
   useEffect(() => {
-    if (absenceId) {
+    const loadPayments = (absenceId: string) =>
+      !hasLoadedPayments(absenceId) ||
+      (loadedPaymentsData?.absence_case_id &&
+        Boolean(claimDetail?.payments.length === 0));
+    if (absenceId && Boolean(loadPayments(absenceId))) {
       loadClaimDetail(absenceId);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [absenceId]);
+  }, [absenceId, loadedPaymentsData?.absence_case_id]);
 
   useEffect(() => {
     if (application_id) {
@@ -177,10 +185,9 @@ export const Payments = ({
   const isIntermittentUnpaid =
     isIntermittent &&
     isFeatureEnabled("claimantShowPaymentsPhaseTwo") &&
-    claimDetail?.payments?.length === 0;
+    Boolean(claimDetail?.payments?.length);
 
   const maxBenefitAmount = `$${getMaxBenefitAmount()}`;
-
   return (
     <React.Fragment>
       {!!infoAlertContext && (hasPendingStatus || hasApprovedStatus) && (

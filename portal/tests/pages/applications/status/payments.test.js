@@ -211,6 +211,9 @@ describe("Payments", () => {
       {
         addCustomSetup: setupHelper({
           ...defaultClaimDetail,
+          loadedPaymentsData: {
+            absence_case_id: "fineos_id",
+          },
           payments: [
             createMockPayment({ status: "Sent to bank" }, true),
             createMockPayment(
