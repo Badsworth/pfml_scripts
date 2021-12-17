@@ -339,7 +339,7 @@ export const Payments = ({
                       </tr>
                     )
                   )}
-                {waitingWeek && (
+                {waitingWeek && !isIntermittent && (
                   <tr>
                     <td
                       data-label={t(
