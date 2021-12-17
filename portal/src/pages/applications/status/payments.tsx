@@ -169,7 +169,7 @@ export const Payments = ({
     t("pages.payments.paymentsTable.leaveDatesHeader"),
     t("pages.payments.paymentsTable.paymentMethodHeader"),
     t("pages.payments.paymentsTable.estimatedDateHeader"),
-    t("pages.payments.paymentsTable.dateSentHeader"),
+    t("pages.payments.paymentsTable.dateProcessedHeader"),
     t("pages.payments.paymentsTable.amountSentHeader"),
   ];
 

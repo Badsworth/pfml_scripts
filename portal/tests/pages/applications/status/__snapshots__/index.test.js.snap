@@ -21,30 +21,29 @@ exports[`Status LeaveDetails renders page separated by keys if object of absence
       <p>
         From June 1, 2021 to June 8, 2021
       </p>
-      <span
-        class="usa-tag display-inline-block text-bold text-middle text-no-wrap text-success-dark bg-success-lighter"
-      >
-        Approved
-      </span>
       <p>
+        <span
+          class="usa-tag display-inline-block text-bold text-middle text-no-wrap text-success-dark bg-success-lighter"
+        >
+          Approved
+        </span>
+      </p>
+      <div>
         <strong>
           This leave was approved.
         </strong>
-      </p>
-      <p>
-        View your approval notice below for more details about your benefit amount, and how to appeal if your benefits appear incorrect.
-      </p>
-      <p>
-        Learn more about the 
-        <a
-          href="https://www.mass.gov/how-to/appealing-a-denied-paid-family-or-medical-leave-claim"
-          rel="noopener noreferrer"
-          target="_blank"
-        >
-          appeal process
-        </a>
-        .
-      </p>
+        <p>
+          View your approval notice below for more details about your benefit amount, and how to appeal if your benefits appear incorrect. Learn more about the 
+          <a
+            href="https://www.mass.gov/how-to/appealing-a-denied-paid-family-or-medical-leave-claim"
+            rel="noopener noreferrer"
+            target="_blank"
+          >
+            appeal process
+          </a>
+          .
+        </p>
+      </div>
     </div>
   </div>
   <div
@@ -66,16 +65,18 @@ exports[`Status LeaveDetails renders page separated by keys if object of absence
       <p>
         From August 1, 2021 to August 8, 2021
       </p>
-      <span
-        class="usa-tag display-inline-block text-bold text-middle text-no-wrap bg-primary-lighter text-primary"
-      >
-        Pending
-      </span>
       <p>
+        <span
+          class="usa-tag display-inline-block text-bold text-middle text-no-wrap bg-primary-lighter text-primary"
+        >
+          Pending
+        </span>
+      </p>
+      <div>
         <strong>
           This leave is being reviewed.
         </strong>
-      </p>
+      </div>
     </div>
   </div>
   <div
@@ -97,28 +98,28 @@ exports[`Status LeaveDetails renders page separated by keys if object of absence
       <p>
         From August 1, 2021 to August 8, 2021
       </p>
-      <span
-        class="usa-tag display-inline-block text-bold text-middle text-no-wrap text-base-darker bg-base-lightest"
-      >
-        Withdrawn
-      </span>
       <p>
+        <span
+          class="usa-tag display-inline-block text-bold text-middle text-no-wrap text-base-darker bg-base-lightest"
+        >
+          Withdrawn
+        </span>
+      </p>
+      <div>
         <strong>
           This leave was withdrawn.
         </strong>
-      </p>
-      <p>
-        You have withdrawn your application from the review process. If you want to apply for paid leave again, you can begin another application.
-      </p>
-      <p>
-        <a
-          href="/applications/get-ready"
-          rel="noopener noreferrer"
-          target="_blank"
-        >
-          Start another application
-        </a>
-      </p>
+        <p>
+          You have withdrawn your application from the review process. If you want to apply for paid leave again, you can begin another application.
+        </p>
+        <p>
+          <a
+            href="/applications/get-ready"
+          >
+            Start another application
+          </a>
+        </p>
+      </div>
     </div>
   </div>
 </div>
@@ -145,28 +146,28 @@ exports[`Status LeaveDetails renders page with one section if absenceDetails has
       <p>
         From August 1, 2021 to August 8, 2021
       </p>
-      <span
-        class="usa-tag display-inline-block text-bold text-middle text-no-wrap text-base-darker bg-base-lightest"
-      >
-        Withdrawn
-      </span>
       <p>
+        <span
+          class="usa-tag display-inline-block text-bold text-middle text-no-wrap text-base-darker bg-base-lightest"
+        >
+          Withdrawn
+        </span>
+      </p>
+      <div>
         <strong>
           This leave was withdrawn.
         </strong>
-      </p>
-      <p>
-        You have withdrawn your application from the review process. If you want to apply for paid leave again, you can begin another application.
-      </p>
-      <p>
-        <a
-          href="/applications/get-ready"
-          rel="noopener noreferrer"
-          target="_blank"
-        >
-          Start another application
-        </a>
-      </p>
+        <p>
+          You have withdrawn your application from the review process. If you want to apply for paid leave again, you can begin another application.
+        </p>
+        <p>
+          <a
+            href="/applications/get-ready"
+          >
+            Start another application
+          </a>
+        </p>
+      </div>
     </div>
   </div>
 </div>

@@ -332,7 +332,7 @@ exports[`Payments renders the Payments table 1`] = `
       <th
         scope="col"
       >
-        Date sent
+        Date processed
       </th>
       <th
         scope="col"
@@ -359,7 +359,7 @@ exports[`Payments renders the Payments table 1`] = `
         Sent
       </td>
       <td
-        data-label="Date sent"
+        data-label="Date processed"
       >
         11/15/2021
       </td>
@@ -386,7 +386,7 @@ exports[`Payments renders the Payments table 1`] = `
         11/15/2021 to 11/21/2021
       </td>
       <td
-        data-label="Date sent"
+        data-label="Date processed"
       >
         Pending
       </td>
@@ -413,7 +413,7 @@ exports[`Payments renders the Payments table 1`] = `
         Delayed
       </td>
       <td
-        data-label="Date sent"
+        data-label="Date processed"
       >
         Delayed
       </td>
@@ -440,7 +440,7 @@ exports[`Payments renders the Payments table 1`] = `
         Sent
       </td>
       <td
-        data-label="Date sent"
+        data-label="Date processed"
       >
         11/15/2021
       </td>

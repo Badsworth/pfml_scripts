@@ -921,8 +921,6 @@ const shared = {
   passwordLabel: "Password",
   paymentMethodAch: "Direct deposit into my bank account",
   paymentMethodCheck: "Paper check",
-  paymentsIntroNonIntermittentNorRetro:
-    "<p>Payments are scheduled weekly. Check back once each week of your leave ends to see when you can expect payment for that week.</p>",
   pdfNoticeSuffix: "(PDF)",
   previousLeaveEntryPrefix: "Previous leave",
   qualifyingReasonDetailsLabel: "What counts as a qualifying reason?",
@@ -2070,15 +2068,15 @@ const pages = {
     leaveReasonValue_serviceMemberFamily:
       "$t(shared.leaveReasonServiceMemberFamily)",
     leaveStatusMessage_Approved:
-      "<request-decision-info><strong>This leave was approved.</strong></request-decision-info><p>View your approval notice below for more details about your benefit amount, and how to appeal if your benefits appear incorrect.</p><p>Learn more about the <request-appeal-link>appeal process</request-appeal-link>.</p>",
+      "<strong>This leave was approved.</strong><p>View your approval notice below for more details about your benefit amount, and how to appeal if your benefits appear incorrect. Learn more about the <request-appeal-link>appeal process</request-appeal-link>.</p>",
     leaveStatusMessage_Cancelled:
-      "<request-decision-info><strong>This leave was cancelled.</strong></request-decision-info><p>This application will no longer be processed. If you want to apply for paid leave again, you can begin another application.</p><p><application-link>Start another application</application-link></p>",
+      "<strong>This leave was cancelled.</strong><p>This application will no longer be processed. If you want to apply for paid leave again, you can begin another application.</p><p><application-link>Start another application</application-link></p>",
     leaveStatusMessage_Denied:
-      "<request-decision-info><strong>This leave was denied.</strong></request-decision-info><p>View your denial notice below for more details and an explanation of the appeal process.</p><p>If you would like to appeal, you must submit your request within 10 calendar days of the date on your denial notice.</p><p>Learn more about the <request-appeal-link>appeal process</request-appeal-link>.</p>",
+      "<strong>This leave was denied.</strong><p>View your denial notice below for more details and an explanation of the appeal process.</p><p>If you would like to appeal, you must submit your request within 10 calendar days of the date on your denial notice. Learn more about the <request-appeal-link>appeal process</request-appeal-link>.</p>",
     leaveStatusMessage_Pending:
-      "<request-decision-info><strong>This leave is being reviewed.</strong></request-decision-info>",
+      "<strong>This leave is being reviewed.</strong>",
     leaveStatusMessage_Withdrawn:
-      "<request-decision-info><strong>This leave was withdrawn.</strong></request-decision-info><p>You have withdrawn your application from the review process. If you want to apply for paid leave again, you can begin another application.</p><p><application-link>Start another application</application-link></p>",
+      "<strong>This leave was withdrawn.</strong><p>You have withdrawn your application from the review process. If you want to apply for paid leave again, you can begin another application.</p><p><application-link>Start another application</application-link></p>",
     legalNoticesFallback:
       "Once we’ve made a decision, you can download the decision notice here. You’ll also get an email notification.",
     loadingClaimDetailLabel: "$t(shared.loadingClaimDetailLabel)",
@@ -2134,7 +2132,7 @@ const pages = {
       "$t(shared.documentCategory.identification)",
     viewNoticesHeading: "View your notices",
     viewPaymentTimeline:
-      "<p>See your payments page to find information about when to expect payments.</p><p><payments-page-link>Track your payments</payments-page-link></p>",
+      "<p>See your payment status and estimated payment date on your payments page.</p><p><payments-page-link>Track your payments</payments-page-link></p>",
     whatHappensNext: "What happens next",
     whatHappensNextButton_adoption: "Upload proof of adoption",
     whatHappensNextButton_fosterCare: "Upload proof of placement",
@@ -2618,13 +2616,13 @@ const pages = {
     paymentsIntro_Intermittent_Unpaid:
       "<p>Your application has a 7-day waiting period after the first day you report taking leave. You won’t receive any PFML payments for these 7 days of leave.</p><p>After your waiting period, once you report at least 8 hours of leave you can expect to receive payment about one week later. You can receive more than one payment in a week depending on how your hours are reported.</p><p>You can report your hours by calling <contact-center-report-phone-link>$t(shared.contactCenterReportHoursPhoneNumber)</contact-center-report-phone-link>.</p>",
     paymentsIntro_NonIntermittent_NonRetro:
-      "$t(shared.paymentsIntroNonIntermittentNorRetro)",
+      "Payments are scheduled to be paid after each week of your leave. Check back weekly to see when your next payment will be scheduled.",
     paymentsIntro_NonIntermittent_Retro:
       "Since you were approved after your leave ended, you’ll receive one payment for your entire leave.",
     paymentsTable: {
       amountSent: "{{amount, currency}}",
       amountSentHeader: "Amount sent",
-      dateSentHeader: "Date sent",
+      dateProcessedHeader: "Date processed",
       estimatedDateHeader: "Estimated date",
       leaveDatesHeader: "Leave dates",
       paymentMethodHeader: "Payment Method",

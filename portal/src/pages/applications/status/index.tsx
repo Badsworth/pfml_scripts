@@ -508,34 +508,35 @@ export const LeaveDetails = ({
                       startDate: formatDate(absence_period_start_date).full(),
                     })}
                   </p>
-                  <Tag
-                    label={t("pages.claimsStatus.requestDecision", {
-                      context: request_decision,
-                    })}
-                    state={StatusTagMap[request_decision]}
-                  />
-                  <Trans
-                    i18nKey="pages.claimsStatus.leaveStatusMessage"
-                    tOptions={{ context: request_decision }}
-                    components={{
-                      "application-link": (
-                        <a
-                          href={routes.applications.getReady}
-                          rel="noopener noreferrer"
-                          target="_blank"
-                        />
-                      ),
-                      p: <p></p>,
-                      "request-appeal-link": (
-                        <a
-                          href={routes.external.massgov.requestAnAppealForPFML}
-                          rel="noopener noreferrer"
-                          target="_blank"
-                        />
-                      ),
-                      "request-decision-info": <p></p>,
-                    }}
-                  />
+                  <p>
+                    <Tag
+                      label={t("pages.claimsStatus.requestDecision", {
+                        context: request_decision,
+                      })}
+                      state={StatusTagMap[request_decision]}
+                    />
+                  </p>
+                  <div>
+                    <Trans
+                      i18nKey="pages.claimsStatus.leaveStatusMessage"
+                      tOptions={{ context: request_decision }}
+                      components={{
+                        "application-link": (
+                          <a href={routes.applications.getReady} />
+                        ),
+                        "request-appeal-link": (
+                          <a
+                            href={
+                              routes.external.massgov.requestAnAppealForPFML
+                            }
+                            rel="noopener noreferrer"
+                            target="_blank"
+                          />
+                        ),
+                      }}
+                    />
+                  </div>
+
                   {request_decision === "Approved" && hasPaidPayments && (
                     <Trans
                       i18nKey="pages.claimsStatus.viewPaymentTimeline"
