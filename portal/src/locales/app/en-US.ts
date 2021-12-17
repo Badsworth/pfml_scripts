@@ -3184,6 +3184,7 @@ const components = {
     previousLabel: "Previous",
     summary:
       "Viewing {{firstRecordNumber}} to {{lastRecordNumber}} of {{totalRecords}} results",
+    summary_empty: "0 results",
   },
   signUp: {
     createAccountButton: "Create an account to apply for paid leave",
