@@ -6,7 +6,9 @@ import decimal
 import math
 import uuid
 from collections import defaultdict
-from typing import Any, DefaultDict, Dict, List, Tuple
+from dataclasses import dataclass
+from decimal import Decimal
+from typing import Any, DefaultDict, Dict, List, Optional, Tuple
 
 from sqlalchemy.orm.query import Query
 
@@ -123,9 +125,27 @@ class WageCalculator:
             self.effective_quarter, possible_quarters, multiple_employers_bool
         )
 
-    def get_employer_average_weekly_wage(self, employer_id):
-        """Get average weekly wage for a specific employer, or raise KeyError if not found."""
-        return self.employer_average_weekly_wage[employer_id]
+    def get_employer_average_weekly_wage(
+        self,
+        employer_id: uuid.UUID,
+        default: Optional[decimal.Decimal] = None,
+        should_round: Optional[bool] = None,
+    ) -> decimal.Decimal:
+        """ Get average weekly wage for a specific employer.
+            If not found and no default is supplied, raise KeyError.
+            Round to two decimal places if should_round supplied.
+        """
+        employer_average_weekly_wage = default
+        if employer_id in self.employer_average_weekly_wage:
+            employer_average_weekly_wage = self.employer_average_weekly_wage[employer_id]
+
+        if employer_average_weekly_wage is None:
+            raise KeyError
+
+        if should_round:
+            employer_average_weekly_wage = round(employer_average_weekly_wage, 2)
+
+        return employer_average_weekly_wage
 
     def set_each_employers_average_weekly_wage(self):
         """Compute the average weekly wage, summed across all employers."""
@@ -223,6 +243,23 @@ class WageCalculator:
 
         return total_quarterly_wages
 
+    def get_base_period_quarters_as_dates(self) -> Tuple[datetime.date, datetime.date]:
+        # raises IndexError
+        base_period_qtrs = self.base_period_quarters
+        base_period_start, base_period_end = base_period_qtrs[-1], base_period_qtrs[0]
+
+        base_period_start_date = base_period_start.start_date()
+        base_period_end_date = base_period_end.as_date()
+
+        return (base_period_start_date, base_period_end_date)
+
+    def compute_employee_dor_wage_data(self):
+        total_wages = self.compute_total_wage()
+        consolidated_weekly_wage = self.compute_consolidated_aww()
+        self.set_each_employers_average_weekly_wage()
+        quarterly_wages = self.compute_total_quarterly_wages()
+        return ComputeDORWageData(total_wages, consolidated_weekly_wage, quarterly_wages)
+
 
 def _get_wage_calculator(effective_date: datetime.date) -> WageCalculator:
     effective_quarter = quarter.Quarter.from_date(effective_date)
@@ -265,3 +302,10 @@ def get_retroactive_base_period(
     calculator.set_base_period()
 
     return calculator.base_period_quarters
+
+
+@dataclass
+class ComputeDORWageData:
+    total_wages: Decimal
+    consolidated_weekly_wage: Decimal
+    quarterly_wages: Dict[quarter.Quarter, Decimal]

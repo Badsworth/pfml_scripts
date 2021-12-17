@@ -4,7 +4,7 @@ import pytest
 
 import massgov.pfml.delegated_payments.delegated_fineos_iaww_extract as extractor
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
-from massgov.pfml.api.eligibility.benefit_year import _get_benefit_year_by_employee_id
+from massgov.pfml.api.eligibility.benefit_year import get_benefit_year_by_employee_id
 from massgov.pfml.db.models.employees import AbsenceStatus, ReferenceFileType
 from massgov.pfml.db.models.factories import (
     AbsencePeriodFactory,
@@ -110,7 +110,7 @@ def test_run_overwrite_existing_iaww_data(
     assert absence_case_1.fineos_average_weekly_wage == decimal.Decimal("1000")
     assert absence_case_2.fineos_average_weekly_wage == decimal.Decimal("1200")
 
-    benefit_year = _get_benefit_year_by_employee_id(
+    benefit_year = get_benefit_year_by_employee_id(
         local_test_db_session, claim.employee_id, claim.absence_period_start_date
     )
 
