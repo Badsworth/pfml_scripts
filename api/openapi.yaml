@@ -1582,9 +1582,8 @@ components:
           nullable: true
           example: "SMS"
         mfa_phone_number:
-          type: string
+          $ref: "#/components/schemas/MaskedPhone"
           nullable: true
-          example: "123-456-7890"
         consented_to_data_sharing:
           type: boolean
           example: false

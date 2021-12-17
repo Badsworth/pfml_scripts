@@ -3,6 +3,7 @@ from typing import Any, Dict, List, Optional
 from pydantic import UUID4, Field
 from sqlalchemy.orm import contains_eager
 
+from massgov.pfml.api.models.common import MaskedPhone
 from massgov.pfml.db import Session
 from massgov.pfml.db.models.employees import (
     Employer,
@@ -45,7 +46,7 @@ class UserResponse(PydanticBaseModel):
     auth_id: str = Field(alias="sub_id")
     email_address: str
     mfa_delivery_preference: Optional[MfaDeliveryPreferenceResponse]
-    mfa_phone_number: Optional[str]
+    mfa_phone_number: Optional[MaskedPhone]
     consented_to_data_sharing: bool
     roles: List[RoleResponse]
     user_leave_administrators: List[UserLeaveAdminResponse]

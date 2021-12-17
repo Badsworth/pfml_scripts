@@ -21,3 +21,10 @@ class TestUserResponse:
         response = user_response(user, test_db_session)
 
         assert response["mfa_delivery_preference"] == "SMS"
+
+    def test_returns_masked_phone(self, user, test_db_session):
+        user.mfa_phone_number = "+15109283075"
+
+        response = user_response(user, test_db_session)
+
+        assert response["mfa_phone_number"]["phone_number"] == "***-***-3075"

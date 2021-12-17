@@ -1,10 +1,10 @@
 from datetime import date
 from decimal import Decimal
 from enum import Enum
-from typing import Optional
+from typing import Optional, Union
 
 import phonenumbers
-from phonenumbers.phonenumberutil import region_code_for_country_code, region_code_for_number
+from phonenumbers.phonenumberutil import region_code_for_country_code
 from pydantic import UUID4, root_validator
 
 import massgov.pfml.db.models.applications as db_application_models
@@ -192,23 +192,26 @@ class Phone(PydanticBaseModel):
 
 class MaskedPhone(Phone):
     @classmethod
-    def from_orm(cls, phone: db_application_models.Phone) -> "MaskedPhone":
-        phone_response = super().from_orm(phone)
+    def from_orm(cls, phone: Union[db_application_models.Phone, str]) -> "MaskedPhone":
+        if isinstance(phone, db_application_models.Phone):
+            phone_response = super().from_orm(phone)
+            if phone.phone_type_instance:
+                phone_response.phone_type = PhoneType[
+                    phone.phone_type_instance.phone_type_description
+                ]
+        else:
+            phone_response = cls(phone_number=phone)
 
-        if phone.phone_number:
-            parsed_phone_number = phonenumbers.parse(phone.phone_number)
-            region_code = region_code_for_number(parsed_phone_number)
-
+        if phone_response.phone_number:
+            parsed_phone_number = phonenumbers.parse(phone_response.phone_number)
+            region_code = phonenumbers.region_code_for_number(parsed_phone_number)
             if region_code:
                 locally_formatted_number = phonenumbers.format_in_original_format(
                     parsed_phone_number, region_code
                 )
             else:
-                locally_formatted_number = phone.phone_number
-
+                locally_formatted_number = phone_response.phone_number
             phone_response.phone_number = mask.mask_phone(locally_formatted_number)
             phone_response.int_code = str(parsed_phone_number.country_code)
-        if phone.phone_type_instance:
-            phone_response.phone_type = PhoneType[phone.phone_type_instance.phone_type_description]
 
         return phone_response
