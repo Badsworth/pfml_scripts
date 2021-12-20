@@ -55,7 +55,6 @@ const pipelineP = promisify(pipeline);
     employeePool,
     path.join(storage.dir, "employers.csv")
   );
-
   // Write a CSV description of the scenarios we're using for human consumption.
   await pipelineP(
     describe(Object.values([...scenarios, WITHHOLDING_RETRO])),
