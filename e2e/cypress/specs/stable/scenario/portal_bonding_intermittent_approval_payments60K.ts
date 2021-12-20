@@ -7,7 +7,9 @@ import { config } from "../../../actions/common";
 describe("Submit bonding application via the web portal: Adjudication Approval, recording actual hours & payment checking", () => {
   const submissionTest =
     it("As a claimant, I should be able to submit a intermittent bonding application through the portal", () => {
-      portal.before();
+      portal.before({
+        claimantShowTaxWithholding: false,
+      });
       cy.task("generateClaim", "BIAP60").then((claim) => {
         cy.stash("claim", claim);
         const application = claim.claim;
@@ -26,10 +28,7 @@ describe("Submit bonding application via the web portal: Adjudication Approval, 
             timestamp_from: Date.now(),
           });
         });
-        portal.submitClaimPartsTwoThree(
-          application,
-          paymentPreference
-        );
+        portal.submitClaimPartsTwoThree(application, paymentPreference);
       });
     });
 

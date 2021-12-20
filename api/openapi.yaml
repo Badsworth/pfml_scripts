@@ -1574,10 +1574,16 @@ components:
           type: string
           format: email
           example: "janedoe@example.com"
-        mfa_phone_number:
+        mfa_delivery_preference:
           type: string
+          enum:
+            - SMS
+            - Opt Out
           nullable: true
-          example: "123-456-7890"
+          example: "SMS"
+        mfa_phone_number:
+          $ref: "#/components/schemas/MaskedPhone"
+          nullable: true
         consented_to_data_sharing:
           type: boolean
           example: false

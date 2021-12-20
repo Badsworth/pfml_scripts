@@ -130,9 +130,8 @@ export const Status = ({
   const hasPendingStatus = claimDetail.absence_periods.some(
     (absenceItem) => absenceItem.request_decision === "Pending"
   );
-  const hasApprovedStatus = claimDetail.absence_periods.some(
-    (absenceItem) => absenceItem.request_decision === "Approved"
-  );
+  const hasApprovedStatus = claimDetail?.hasApprovedStatus;
+
   const documentsForApplication = allClaimDocuments.filterByApplication(
     claimDetail.application_id
   );
@@ -351,7 +350,7 @@ export const Status = ({
         <LeaveDetails
           absenceDetails={absenceDetails}
           absenceId={claimDetail.fineos_absence_id}
-          hasPaidPayments={claimDetail.has_paid_payments}
+          isPaymentsTab={isPaymentsTab}
         />
         {viewYourNotices()}
 
@@ -463,13 +462,13 @@ export const StatusTagMap: {
 interface LeaveDetailsProps {
   absenceDetails?: { [key: string]: AbsencePeriod[] };
   absenceId: string;
-  hasPaidPayments?: boolean;
+  isPaymentsTab?: boolean;
 }
 
 export const LeaveDetails = ({
   absenceDetails = {},
   absenceId,
-  hasPaidPayments,
+  isPaymentsTab,
 }: LeaveDetailsProps) => {
   const { t } = useTranslation();
 
@@ -509,35 +508,36 @@ export const LeaveDetails = ({
                       startDate: formatDate(absence_period_start_date).full(),
                     })}
                   </p>
-                  <Tag
-                    label={t("pages.claimsStatus.requestDecision", {
-                      context: request_decision,
-                    })}
-                    state={StatusTagMap[request_decision]}
-                  />
-                  <Trans
-                    i18nKey="pages.claimsStatus.leaveStatusMessage"
-                    tOptions={{ context: request_decision }}
-                    components={{
-                      "application-link": (
-                        <a
-                          href={routes.applications.getReady}
-                          rel="noopener noreferrer"
-                          target="_blank"
-                        />
-                      ),
-                      p: <p></p>,
-                      "request-appeal-link": (
-                        <a
-                          href={routes.external.massgov.requestAnAppealForPFML}
-                          rel="noopener noreferrer"
-                          target="_blank"
-                        />
-                      ),
-                      "request-decision-info": <p></p>,
-                    }}
-                  />
-                  {request_decision === "Approved" && hasPaidPayments && (
+                  <p>
+                    <Tag
+                      label={t("pages.claimsStatus.requestDecision", {
+                        context: request_decision,
+                      })}
+                      state={StatusTagMap[request_decision]}
+                    />
+                  </p>
+                  <div>
+                    <Trans
+                      i18nKey="pages.claimsStatus.leaveStatusMessage"
+                      tOptions={{ context: request_decision }}
+                      components={{
+                        "application-link": (
+                          <a href={routes.applications.getReady} />
+                        ),
+                        "request-appeal-link": (
+                          <a
+                            href={
+                              routes.external.massgov.requestAnAppealForPFML
+                            }
+                            rel="noopener noreferrer"
+                            target="_blank"
+                          />
+                        ),
+                      }}
+                    />
+                  </div>
+
+                  {request_decision === "Approved" && isPaymentsTab && (
                     <Trans
                       i18nKey="pages.claimsStatus.viewPaymentTimeline"
                       components={{

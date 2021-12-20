@@ -49,11 +49,6 @@ const flagsConfig = {
 
     // When this flag is true, PDF files up to 10mb are sent to the API.
     sendLargePdfToApi: false,
-
-    // When this flag is enabled, the medical leave question numbers for leave periods
-    // are updated to reflect the new "Certification of Your Serious Health Condition"
-    // TODO (CP-2205): Remove this flag once updated medical leave form is effective
-    updateMedicalCertForm: false,
   },
   // Environments can optionally override a default feature flag below.
   // The environment keys should use the same envName defined in

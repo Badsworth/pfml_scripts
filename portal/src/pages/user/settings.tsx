@@ -79,7 +79,7 @@ export const Settings = (props: UserSettingsProps) => {
   const { t } = useTranslation();
   const hasMFAEnabled = user.mfa_delivery_preference === MFAPreference.sms;
 
-  if (!isFeatureEnabled("claimantShowMFA")) {
+  if (!isFeatureEnabled("claimantShowMFA") || user.hasEmployerRole) {
     return <PageNotFound />;
   }
 

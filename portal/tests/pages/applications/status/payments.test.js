@@ -29,11 +29,14 @@ const renderWithApprovalNotice = (appLogicHook, isRetroactive = true) => {
   appLogicHook.documents.hasLoadedClaimDocuments = () => true;
 };
 
+let goToSpy;
+
 const setupHelper = (claimDetailAttrs, isRetroactive) => (appLogicHook) => {
   appLogicHook.claims.claimDetail = claimDetailAttrs
     ? new ClaimDetail(claimDetailAttrs)
     : null;
   appLogicHook.claims.loadClaimDetail = jest.fn();
+  goToSpy = jest.spyOn(appLogicHook.portalFlow, "goTo");
   renderWithApprovalNotice(appLogicHook, isRetroactive);
 };
 
@@ -65,19 +68,18 @@ describe("Payments", () => {
     };
   });
 
-  it("redirects to status page if feature flag is not enabled", () => {
+  it("redirects to status page if feature flag is not enabled and claim has loaded", () => {
     process.env.featureFlags = {
       claimantShowPayments: false,
+      claimantShowPaymentsPhaseTwo: false,
     };
 
-    const goToSpy = jest.fn();
     renderPage(
       Payments,
       {
-        addCustomSetup: (appLogicHook) => {
-          appLogicHook.claims.loadClaimDetail = jest.fn();
-          appLogicHook.portalFlow.goTo = goToSpy;
-        },
+        addCustomSetup: setupHelper({
+          ...defaultClaimDetail,
+        }),
       },
       props
     );
@@ -211,6 +213,9 @@ describe("Payments", () => {
       {
         addCustomSetup: setupHelper({
           ...defaultClaimDetail,
+          loadedPaymentsData: {
+            absence_case_id: "fineos_id",
+          },
           payments: [
             createMockPayment({ status: "Sent to bank" }, true),
             createMockPayment(

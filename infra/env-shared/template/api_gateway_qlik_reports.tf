@@ -71,7 +71,7 @@ resource "aws_api_gateway_integration" "s3_integration_get_business_intelligence
 
   # See uri description: https://docs.aws.amazon.com/apigateway/api-reference/resource/integration/
   uri         = "arn:aws:apigateway:us-east-1:s3:path/${aws_s3_bucket.pfml_reports.bucket}/dfml-qlikdownloads/{file}"
-  credentials = aws_iam_role.executor.arn
+  credentials = aws_iam_role.qlikdata_executor_role.arn
 
   request_parameters = {
     "integration.request.path.file" = "method.request.path.file"
@@ -147,7 +147,7 @@ resource "aws_api_gateway_integration" "s3_integration_put_business_intelligence
 
   # See uri description: https://docs.aws.amazon.com/apigateway/api-reference/resource/integration/
   uri         = "arn:aws:apigateway:us-east-1:s3:path/${aws_s3_bucket.pfml_reports.bucket}/dfml-qlikuploads/{file}"
-  credentials = aws_iam_role.executor.arn
+  credentials = aws_iam_role.qlikdata_executor_role.arn
 
   request_parameters = {
     "integration.request.path.file" = "method.request.path.file"
@@ -201,7 +201,7 @@ resource "aws_api_gateway_integration" "s3_integration_delete_business_intellige
 
   # See uri description: https://docs.aws.amazon.com/apigateway/api-reference/resource/integration/
   uri         = "arn:aws:apigateway:us-east-1:s3:path/${aws_s3_bucket.pfml_reports.bucket}/dfml-qlikdownloads/{file}"
-  credentials = aws_iam_role.executor.arn
+  credentials = aws_iam_role.qlikdata_executor_role.arn
 
   request_parameters = {
     "integration.request.path.file" = "method.request.path.file"

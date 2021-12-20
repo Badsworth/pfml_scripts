@@ -22,7 +22,7 @@ interface ConfirmSMSProps {
 
 export const ConfirmSMS = (props: ConfirmSMSProps) => {
   const { appLogic, user } = props;
-  const mfaPhoneNumber = user.mfa_phone_number;
+  const mfaPhoneNumber = user.mfa_phone_number?.phone_number;
   const { t } = useTranslation();
 
   const { formState, updateFields } = useFormState({

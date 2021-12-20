@@ -183,3 +183,18 @@ def test_name_ctl():
         last_name_four = last_name[0:4].upper()
         result_names.append(last_name_four)
     assert expected_result == result_names
+
+
+def test_zip_code():
+    zip_codes = ["02412", "02412-3456", "024123456", "0241234567"]
+    expected_result = ["02412", "024123456", "024123456", "024123456"]
+    results = []
+    for _i in range(len(zip_codes)):
+        if zip_codes[_i].find("-") != -1:
+            zip_code_five = zip_codes[_i].split("-")[0]
+            zip_code_four = zip_codes[_i].split("-")[1]
+            results.append(zip_code_five[:5] + zip_code_four[:4])
+        else:
+            results.append(zip_codes[_i][:9])
+
+    assert results == expected_result

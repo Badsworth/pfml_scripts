@@ -33,6 +33,7 @@ const useAppLogic = () => {
 
   const claims = useClaimsLogic({
     appErrorsLogic,
+    portalFlow,
   });
 
   const documents = useDocumentsLogic({

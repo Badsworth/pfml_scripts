@@ -166,8 +166,10 @@ const useAuthLogic = ({
         currentUser.challengeName !== "SMS_MFA"
       ) {
         const apiUser = await usersApi.getCurrentUser();
-        // if delivery preference is null, redirect to set up MFA
-        const shouldSetMFA = apiUser.user.mfa_delivery_preference === null;
+        // if delivery preference is null and user is not an employer, redirect to set up MFA
+        const shouldSetMFA =
+          apiUser.user.mfa_delivery_preference === null &&
+          !apiUser.user.hasEmployerRole;
         // user is not being prompted for a verification code - log them in!
         finishLoginAndRedirect(next, shouldSetMFA);
       } else {
@@ -211,116 +213,6 @@ const useAuthLogic = ({
       return;
     }
     finishLoginAndRedirect(next);
-  };
-
-  /**
-   * Updates the user's MFA phone number in Cognito, and sends an SMS
-   * with a 6-digit code for verification.
-   * If there are any errors, set app errors on the page.
-   * @param user_id
-   * @param phoneNumber The user's 10-digit phone number, ie "2223334444"
-   */
-  const updateMFAPhoneNumber = async (user_id: string, phoneNumber: string) => {
-    const user = await Auth.currentAuthenticatedUser();
-
-    try {
-      trackAuthRequest("updateUserAttributes");
-      // TODO (PORTAL-1194): Convert phone number from user input to E164
-      await Auth.updateUserAttributes(user, {
-        phone_number: "+1" + phoneNumber,
-      });
-      tracker.markFetchRequestEnd();
-
-      trackAuthRequest("verifyUserAttribute");
-      // sends a verification code to the phone number via SMS
-      await Auth.verifyUserAttribute(user, "phone_number");
-      tracker.markFetchRequestEnd();
-    } catch (error) {
-      appErrorsLogic.catchError(error);
-    }
-  };
-
-  /**
-   * Verifies the 6-digit MFA code and sets the status of the phone number to "verified".
-   * If there are any errors, set app errors on the page.
-   * @param phoneNumber The user's 10-digit phone number, ie "2223334444"
-   */
-  const verifyMFAPhoneNumber = async (code: string) => {
-    const user = await Auth.currentAuthenticatedUser();
-
-    try {
-      trackAuthRequest("verifyUserAttributeSubmit");
-      await Auth.verifyUserAttributeSubmit(user, "phone_number", code);
-      tracker.markFetchRequestEnd();
-    } catch (error) {
-      appErrorsLogic.catchError(error);
-    }
-  };
-
-  /**
-   * Updates the users MFA preference.
-   * If there are any errors, set app errors on the page.
-   * @param user_id
-   * @param mfaPreference The user's MFA preference: "Opt Out" or "SMS"
-   */
-  const setMFAPreference = async (
-    user_id: string,
-    mfaPreference: "Opt Out" | "SMS"
-  ) => {
-    const user = await Auth.currentAuthenticatedUser();
-
-    if (mfaPreference === "Opt Out") {
-      await setMFAPreferenceOptOut(user_id, user);
-    } else if (mfaPreference === "SMS") {
-      await setMFAPreferenceSMS(user_id, user);
-    }
-  };
-
-  /**
-   * Opts the user out of MFA.
-   * If there are any errors, set app errors on the page.
-   * @param user_id PFML-DB User id
-   * @param user The CognitoUser returned by an Auth call
-   * @private
-   */
-  const setMFAPreferenceOptOut = async (
-    user_id: string,
-    user: CognitoMFAUser
-  ) => {
-    if (user.preferredMFA === "NOMFA") {
-      // no MFA set in Cognito - no need to update
-      return;
-    }
-
-    try {
-      trackAuthRequest("setPreferredMFA");
-      await Auth.setPreferredMFA(user, "NOMFA");
-      await usersApi.updateUser(user_id, {
-        mfa_delivery_preference: "Opt Out",
-      });
-      tracker.markFetchRequestEnd();
-    } catch (error) {
-      appErrorsLogic.catchError(error);
-    }
-  };
-
-  /**
-   * Opts the user in to MFA via SMS.
-   * If the user does not have an associated phone number, an error is thrown.
-   * If there are any errors, set app errors on the page.
-   * @param user_id PFML-DB User id
-   * @param user The CognitoUser returned by an Auth call
-   * @private
-   */
-  const setMFAPreferenceSMS = async (user_id: string, user: CognitoUser) => {
-    try {
-      trackAuthRequest("setPreferredMFA");
-      await Auth.setPreferredMFA(user, "SMS");
-      await usersApi.updateUser(user_id, { mfa_delivery_preference: "SMS" });
-      tracker.markFetchRequestEnd();
-    } catch (error) {
-      appErrorsLogic.catchError(error);
-    }
   };
 
   /**
@@ -631,11 +523,8 @@ const useAuthLogic = ({
     resendVerifyAccountCode,
     resetPassword,
     resendForgotPasswordCode,
-    setMFAPreference,
-    updateMFAPhoneNumber,
     verifyAccount,
     verifyMFACodeAndLogin,
-    verifyMFAPhoneNumber,
   };
 };
 
