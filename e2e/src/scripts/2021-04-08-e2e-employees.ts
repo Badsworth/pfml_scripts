@@ -1,6 +1,7 @@
 import dataDirectory from "../generation/DataDirectory";
 import EmployerPool from "../generation/Employer";
 import EmployeePool from "../generation/Employee";
+import {Employer} from "../generation/Employer";
 import DOR from "../generation/writers/DOR";
 import EmployeeIndex from "../generation/writers/EmployeeIndex";
 import EmployerIndex from "../generation/writers/EmployerIndex";

@@ -18,42 +18,48 @@ const pipelineP = promisify(pipeline);
   const storage = dataDirectory("payments-2021-12-13-payments-perf");
   await storage.prepare();
 
-  const employerPool = await EmployerPool.load(storage.employers);
-  await DOR.writeEmployersFile(employerPool, storage.dorFile("DORDFMLEMP"));
+  const employerPool = await EmployerPool.load(storage.employers).orGenerateAndSave(
+    () => EmployerPool.generate(
+      3, {}
+    )
+  );
+  //ONLY RUN THIS ONCE
+  //await DOR.writeEmployersFile(employerPool, storage.dorFile("DORDFMLEMP"));
   await EmployerIndex.write(
     employerPool,
-    path.join(storage.dir, "employees.csv")
+    path.join(storage.dir, "employers.csv")
   );
 
   const employeePool = await EmployeePool.load(
     storage.employees
   ).orGenerateAndSave(() =>
     EmployeePool.merge(
-      EmployeePool.generate(600, employerPool, {
+      EmployeePool.generate(1200, employerPool, {
         mass_id: true,
         wages: 30000,
         metadata: { prenoted: "no" },
       }),
-      EmployeePool.generate(300, employerPool, {
+      EmployeePool.generate(600, employerPool, {
         mass_id: true,
         wages: 30000,
         metadata: { prenoted: "yes" },
       }),
-      EmployeePool.generate(60, employerPool, {
+      EmployeePool.generate(120, employerPool, {
         mass_id: true,
         wages: 30000,
         metadata: { prenoted: "pending" },
       })
     )
   );
-  await DOR.writeEmployeesFile(
-    employerPool,
-    employeePool,
-    storage.dorFile("DORDFML")
-  );
+  //ONLY RUN THIS ONCE
+  // await DOR.writeEmployeesFile(
+  //   employerPool,
+  //   employeePool,
+  //   storage.dorFile("DORDFML")
+  // );
   await EmployeeIndex.write(
     employeePool,
-    path.join(storage.dir, "employers.csv")
+    path.join(storage.dir, "employee.csv")
   );
   // Write a CSV description of the scenarios we're using for human consumption.
   await pipelineP(
