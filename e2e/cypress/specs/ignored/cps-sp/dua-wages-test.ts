@@ -4,18 +4,17 @@ import {assertValidClaim} from "../../../../src/util/typeUtils";
 import {getLeaveAdminCredentials} from "../../../config";
 import {FineosSecurityGroups} from "../../../../src/submission/fineos.pages";
 
-Cypress.env({
-  E2E_EMPLOYEES_FILE: "./employees/e2e-dua-wage.json",
-  E2E_EMPLOYERS_FILE: "./employers/e2e-dua-wage.json",
-});
+// Cypress.env({
+//   E2E_EMPLOYEES_FILE: "./employees/e2e-dua-wage.json",
+//   E2E_EMPLOYERS_FILE: "./employers/e2e-dua-wage.json",
+// });
 
 describe("Submit a claim through Portal: Verify it creates an absence case in Fineos", () => {
   // claims.forEach((userPermission) => {
     const submissionTest =
-      it("As a claimant, I should be able to submit a claim application through the portal", () => {
+      it("As a claimant, I should be able to submit a claim application through the Portal", () => {
         portal.before();
-        //@TODO adjust the generate claim for multiple different types and leave periods
-        // Go to cypress.ts and adjust the CPS_SP by uncomment lines for what is needed to be tested.
+        //@TODO adjust the generate claim for multiple different types of claims
         cy.task("generateClaim", "CPS_SP").then((claim) => {
           cy.stash("claim", claim);
           const application: ApplicationRequestBody = claim.claim;
@@ -53,7 +52,7 @@ describe("Submit a claim through Portal: Verify it creates an absence case in Fi
     //   });
 
     //Fineos check absence case here.
-    it("Should check the claim in Fineos.", () => {
+    it("Should check the claim in Fineos to see if the Eligibilty is Met for quarterly wages.", () => {
       cy.dependsOnPreviousPass([submissionTest]);
       fineos.before();
       cy.unstash<DehydratedClaim>("claim").then((claim) => {
