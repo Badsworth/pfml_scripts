@@ -40,24 +40,26 @@ class ConvertMmarsDataStep(Step):
         self.process_mmars_payment_records(mmars_payment_records)
 
     def fetch_unprocessed_mmars_payment_records(self) -> Iterable[MmarsPaymentData]:
-        # Because we will be processing ~150k records, we
-        # want to be careful about blowing up memory, so we'll only yield 1000 records
-        # before going back to the DB for more.
-
         # We also only fetch payments that don't have an attached payment ID
         return (
             self.db_session.query(MmarsPaymentData)
             .filter(MmarsPaymentData.payment_id == None)  # noqa: E711
-            .yield_per(1000)
+            .all()
         )
 
     def process_mmars_payment_records(
         self, mmars_payment_records: Iterable[MmarsPaymentData]
     ) -> None:
         self.validation_containers_with_issues = []
-        for mmars_payment_data in mmars_payment_records:
+        for count, mmars_payment_data in enumerate(mmars_payment_records):
             self.process_mmars_payment_data(mmars_payment_data)
             self.increment(self.Metrics.PAYMENTS_PROCESSED_COUNT)
+
+            # To mitigate the risk of this long running task
+            # we are going to commit every 1000 records. This
+            # also makes any failures much more minor.
+            if count % 1000 == 0:
+                self.db_session.commit()
 
         logger.warning("The following records failed validation and were not created")
         for validation_container in self.validation_containers_with_issues:
