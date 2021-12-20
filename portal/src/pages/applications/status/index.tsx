@@ -350,7 +350,7 @@ export const Status = ({
         <LeaveDetails
           absenceDetails={absenceDetails}
           absenceId={claimDetail.fineos_absence_id}
-          hasPaidPayments={claimDetail.has_paid_payments}
+          isPaymentsTab={isPaymentsTab}
         />
         {viewYourNotices()}
 
@@ -462,13 +462,13 @@ export const StatusTagMap: {
 interface LeaveDetailsProps {
   absenceDetails?: { [key: string]: AbsencePeriod[] };
   absenceId: string;
-  hasPaidPayments?: boolean;
+  isPaymentsTab?: boolean;
 }
 
 export const LeaveDetails = ({
   absenceDetails = {},
   absenceId,
-  hasPaidPayments,
+  isPaymentsTab,
 }: LeaveDetailsProps) => {
   const { t } = useTranslation();
 
@@ -537,7 +537,7 @@ export const LeaveDetails = ({
                     />
                   </div>
 
-                  {request_decision === "Approved" && hasPaidPayments && (
+                  {request_decision === "Approved" && isPaymentsTab && (
                     <Trans
                       i18nKey="pages.claimsStatus.viewPaymentTimeline"
                       components={{

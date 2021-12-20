@@ -56,30 +56,33 @@ export const Payments = ({
     isFeatureEnabled("claimantShowPaymentsPhaseTwo") &&
     claimDetail?.hasApprovedStatus;
 
-  useEffect(() => {
-    if (!showPhaseOneFeatures && !showPhaseTwoFeatures) {
-      portalFlow.goTo(routes.applications.status.claim, {
-        absence_id,
-      });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [portalFlow, absence_id]);
-
   const application_id = claimDetail?.application_id;
   const absenceId = absence_id;
-
-  // const [shouldShowPaymentsTable, setShouldShowPaymentsTable] = useState(false);
 
   useEffect(() => {
     const loadPayments = (absenceId: string) =>
       !hasLoadedPayments(absenceId) ||
       (loadedPaymentsData?.absence_case_id &&
         Boolean(claimDetail?.payments.length === 0));
-    if (absenceId && Boolean(loadPayments(absenceId))) {
-      loadClaimDetail(absenceId);
+
+    if (claimDetail && !showPhaseOneFeatures && !showPhaseTwoFeatures) {
+      portalFlow.goTo(routes.applications.status.claim, {
+        absence_id,
+      });
+    } else if (
+      absenceId &&
+      (!claimDetail || Boolean(loadPayments(absenceId)))
+    ) {
+      loadClaimDetail(absence_id);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [absenceId, loadedPaymentsData?.absence_case_id]);
+  }, [
+    portalFlow,
+    absence_id,
+    claimDetail,
+    absenceId,
+    loadedPaymentsData?.absence_case_id,
+  ]);
 
   useEffect(() => {
     if (application_id) {
