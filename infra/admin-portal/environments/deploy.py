@@ -10,9 +10,9 @@ def environments():
         # 'performance',
         # 'stage',
         'test',
-        'training',
-        'trn2',
-        'uat',
+        'training', # no state file found
+        'trn2',     # no state file found
+        'uat',      # no state file found
     )
 
 def deploy_waf_to_prod():
@@ -27,16 +27,15 @@ def terraform(command):
     return os.system(f'~/bin/terraform {command}')
 
 def deploy_to(environment):
-    if environment in os.listdir():
-        os.system('clear')
-        header(f'\tDeploying Terraform Configuration to {environment}...')
-        os.chdir(environment)
-        print(f'\tcurrently in {os.getcwd()}...')
-        terraform('init')
-        terraform('plan')
-        input('\tPress Enter to continue...')
-        approve_plan()
-        os.chdir('..')
+    os.system('clear')
+    header(f'\tDeploying Terraform Configuration to {environment}...')
+    os.chdir(environment)
+    print(f'\tcurrently in {os.getcwd()}...')
+    terraform('init')
+    terraform('plan')
+    input('\tReview Plan and Press Enter to continue...')
+    approve_plan()
+    os.chdir('..')
 
 def approve_plan():
     if input('Approve Plan? (y)es or (n)o:') == 'y':
