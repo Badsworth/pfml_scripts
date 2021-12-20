@@ -324,6 +324,20 @@ class LkMFADeliveryPreference(Base):
         self.mfa_delivery_preference_description = mfa_delivery_preference_description
 
 
+class LkMFADeliveryPreferenceUpdatedBy(Base):
+    __tablename__ = "lk_mfa_delivery_preference_updated_by"
+    mfa_delivery_preference_updated_by_id = Column(Integer, primary_key=True, autoincrement=True)
+    mfa_delivery_preference_updated_by_description = Column(Text, nullable=False)
+
+    def __init__(
+        self, mfa_delivery_preference_updated_by_id, mfa_delivery_preference_updated_by_description
+    ):
+        self.mfa_delivery_preference_updated_by_id = mfa_delivery_preference_updated_by_id
+        self.mfa_delivery_preference_updated_by_description = (
+            mfa_delivery_preference_updated_by_description
+        )
+
+
 class AbsencePeriod(Base, TimestampMixin):
     __tablename__ = "absence_period"
     __table_args__ = (
@@ -1110,6 +1124,10 @@ class User(Base, TimestampMixin):
     )
     mfa_phone_number = Column(Text)  # Formatted in E.164
     mfa_delivery_preference_updated_at = Column(TIMESTAMP(timezone=True))
+    mfa_delivery_preference_updated_by_id = Column(
+        Integer,
+        ForeignKey("lk_mfa_delivery_preference_updated_by.mfa_delivery_preference_updated_by_id"),
+    )
 
     roles = relationship("LkRole", secondary="link_user_role", uselist=True)
     user_leave_administrators = relationship(
@@ -1117,6 +1135,7 @@ class User(Base, TimestampMixin):
     )
     employers = relationship("Employer", secondary="link_user_leave_administrator", uselist=True)
     mfa_delivery_preference = relationship(LkMFADeliveryPreference)
+    mfa_delivery_preference_updated_by = relationship(LkMFADeliveryPreferenceUpdatedBy)
 
     @hybrid_method
     def get_user_leave_admin_for_employer(
@@ -3091,6 +3110,17 @@ class MFADeliveryPreference(LookupTable):
     OPT_OUT = LkMFADeliveryPreference(2, "Opt Out")
 
 
+class MFADeliveryPreferenceUpdatedBy(LookupTable):
+    model = LkMFADeliveryPreferenceUpdatedBy
+    column_names = (
+        "mfa_delivery_preference_updated_by_id",
+        "mfa_delivery_preference_updated_by_description",
+    )
+
+    USER = LkMFADeliveryPreferenceUpdatedBy(1, "User")
+    ADMIN = LkMFADeliveryPreferenceUpdatedBy(2, "Admin")
+
+
 def sync_azure_permissions(db_session):
     """Insert every permission for non_prod and prod admin groups."""
     group_ids = [
@@ -3158,4 +3188,5 @@ def sync_lookup_tables(db_session):
     AzureGroup.sync_to_database(db_session)
     AzurePermission.sync_to_database(db_session)
     MFADeliveryPreference.sync_to_database(db_session)
+    MFADeliveryPreferenceUpdatedBy.sync_to_database(db_session)
     db_session.commit()
