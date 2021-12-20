@@ -23,7 +23,7 @@ import { useTranslation } from "../locales/i18n";
  * current page rather than redirecting and showing the
  * error on a new page.
  */
-const navigateToPage = async (
+const navigateToPage = (
   claim: BenefitsApplication,
   appLogic: AppLogic,
   href: string
@@ -31,15 +31,13 @@ const navigateToPage = async (
   const { fineos_absence_id } = claim;
 
   if (fineos_absence_id) {
-    const claimDetail = await appLogic.claims.loadClaimDetail(
-      fineos_absence_id
-    );
-    const isValidClaim = claimDetail?.fineos_absence_id === fineos_absence_id;
-    // navigate to page if claim loads w/o errors
-    if (isValidClaim) appLogic.portalFlow.goTo(href);
+    // Functionality that called loadClaimDetail was removed from here in a hotfix
+    appLogic.portalFlow.goTo(href);
   } else {
     tracker.trackEvent("fineos_absence_id is missing");
   }
+
+  return Promise.resolve();
 };
 
 interface HeaderSectionProps {

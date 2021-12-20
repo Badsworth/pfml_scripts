@@ -56,7 +56,9 @@ describe("ApplicationCard", () => {
     expect(button).toBeInTheDocument();
   });
 
-  it("with a completed application when the user clicks the view status button disables the button", async () => {
+  // Functionality removed in a hotfix
+  // eslint-disable-next-line jest/no-disabled-tests
+  it.skip("with a completed application when the user clicks the view status button disables the button", async () => {
     let appLogic;
     const claim = new MockBenefitsApplicationBuilder().completed().create();
     render(
@@ -82,7 +84,9 @@ describe("ApplicationCard", () => {
     expect(button).toBeDisabled();
   });
 
-  it("with a completed application when the user clicks the view status button loads claim details", async () => {
+  // Functionality removed in a hotfix
+  // eslint-disable-next-line jest/no-disabled-tests
+  it.skip("with a completed application when the user clicks the view status button loads claim details", async () => {
     let appLogic;
     const claim = new MockBenefitsApplicationBuilder().completed().create();
     render(
@@ -148,7 +152,9 @@ describe("ApplicationCard", () => {
     );
   });
 
-  it("with a completed application when the claim has failed the navigation buttons do not go to the next page", async () => {
+  // Functionality removed in a hotfix
+  // eslint-disable-next-line jest/no-disabled-tests
+  it.skip("with a completed application when the claim has failed the navigation buttons do not go to the next page", async () => {
     let appLogic;
     const claim = new MockBenefitsApplicationBuilder().completed().create();
     render(
