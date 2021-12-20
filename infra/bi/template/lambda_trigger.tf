@@ -1,3 +1,10 @@
+locals {
+  # This ARN describes a 3rd-party lambda installed outside of Terraform thru the AWS Serverless Application Repository.
+  # This lambda ingests CloudWatch logs from several sources, and packages them for transmission to New Relic's servers.
+  # This lambda was modified post-installation to fix an apparent bug in the processing/packaging of its telemetry data.
+  newrelic_log_ingestion_lambda = module.constants.newrelic_log_ingestion_arn
+}
+# ------------------------------------------------------------------------------------------
 data "aws_iam_policy_document" "bi_reporting_lambda_assumed_role" {
   statement {
     actions = [
@@ -56,6 +63,14 @@ resource "aws_lambda_permission" "run_bi_reporting_lambda" {
   function_name = aws_lambda_function.bi_reporting_lambda.function_name
   principal     = "s3.amazonaws.com"
   source_arn    = data.aws_s3_bucket.business_intelligence_tool.arn
+}
+
+resource "aws_cloudwatch_log_subscription_filter" "nr_bi_reporting_lambda" {
+  name            = "nr_bi_reporting_lambda"
+  log_group_name  = "/aws/lambda/massgov-pfml-${var.environment_name}-bi-reporting-lambda"
+  filter_pattern  = ""
+  destination_arn = module.constants.newrelic_log_ingestion_arn
+  depends_on      = [aws_lambda_function.bi_reporting_lambda]
 }
 
 resource "aws_s3_bucket_notification" "bi_reporting_lambda_trigger" {
