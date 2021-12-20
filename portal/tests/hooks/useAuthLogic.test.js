@@ -656,6 +656,27 @@ describe("useAuthLogic", () => {
           expect(portalFlow.goToPageFor).toHaveBeenCalledWith("ENABLE_MFA");
         });
 
+        it("does not redirect to MFA setup if user is an Employer", async () => {
+          const { result } = render(portalFlow);
+
+          usersApi.getCurrentUser.mockImplementationOnce(() => {
+            const apiUser = {
+              user: {
+                mfa_delivery_preference: null,
+                hasEmployerRole: true,
+              },
+            };
+
+            return apiUser;
+          });
+
+          await act(async () => {
+            await result.current.login(username, password, next);
+          });
+
+          expect(portalFlow.goTo).toHaveBeenCalledWith(next);
+        });
+
         it("redirects to the next page if user has made MFA selection", async () => {
           const { result } = render(portalFlow);
 

@@ -166,8 +166,10 @@ const useAuthLogic = ({
         currentUser.challengeName !== "SMS_MFA"
       ) {
         const apiUser = await usersApi.getCurrentUser();
-        // if delivery preference is null, redirect to set up MFA
-        const shouldSetMFA = apiUser.user.mfa_delivery_preference === null;
+        // if delivery preference is null and user is not an employer, redirect to set up MFA
+        const shouldSetMFA =
+          apiUser.user.mfa_delivery_preference === null &&
+          !apiUser.user.hasEmployerRole;
         // user is not being prompted for a verification code - log them in!
         finishLoginAndRedirect(next, shouldSetMFA);
       } else {

@@ -1,6 +1,6 @@
+import User, { RoleDescription } from "../../../src/models/User";
 import { act, screen } from "@testing-library/react";
 import Settings from "../../../src/pages/user/settings";
-import User from "../../../src/models/User";
 import { renderPage } from "../../test-utils";
 import userEvent from "@testing-library/user-event";
 
@@ -132,6 +132,26 @@ describe(Settings, () => {
     process.env.featureFlags = { claimantShowMFA: false };
     renderPage(Settings);
 
+    const pageNotFoundHeading = screen.getByRole("heading", {
+      name: /Page not found/,
+    });
+    expect(pageNotFoundHeading).toBeInTheDocument();
+  });
+
+  it("renders 404 when user has employer role", () => {
+    const user = new User({
+      user_id: "mock-user-id",
+      mfa_delivery_preference: "SMS",
+      mfa_phone_number: {
+        int_code: "1",
+        phone_number: "***-***-1234",
+        phone_type: "Cell",
+      },
+      email_address: "mock@gmail.com",
+      consented_to_data_sharing: true,
+      roles: [{ role_description: RoleDescription.employer, role_id: 1 }],
+    });
+    renderWithUser(user);
     const pageNotFoundHeading = screen.getByRole("heading", {
       name: /Page not found/,
     });
