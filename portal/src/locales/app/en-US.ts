@@ -3148,7 +3148,7 @@ const components = {
   },
   maintenanceTakeover: {
     noSchedule:
-      "We’re performing some maintenance on our system. Please check back in a few hours, or call the Contact Center at $t(shared.contactCenterPhoneNumberNoBreak) between 8 a.m.-5 p.m. ET.",
+      "We’re performing some maintenance on our system and some features may currently be unavailable. Please check back in a few hours.",
     scheduledWithEndAndNoStart:
       "We're performing some maintenance on our system, so you can't log in or work on any applications right now. The system will be back online and available on <strong>{{end}}</strong>.",
     scheduledWithStartAndEnd:

@@ -66,7 +66,7 @@ exports[`MaintenanceTakeover renders the correct message text when start/end tim
     <p
       class="usa-intro margin-x-auto measure-2"
     >
-      We’re performing some maintenance on our system. Please check back in a few hours, or call the Contact Center at (833) 344‑7365 between 8 a.m.-5 p.m. ET.
+      We’re performing some maintenance on our system and some features may currently be unavailable. Please check back in a few hours.
     </p>
   </div>
 </div>
