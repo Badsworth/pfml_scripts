@@ -92,6 +92,7 @@ locals {
   #
   # The paths may be made consistent in the future:
   # https://lwd.atlassian.net/browse/API-1626
+  # TODO (API 2200): refactor reductions_folders variable.
   reductions_folders = [
     { name : "MOVEIT_DIA_INBOUND_PATH", value : "/DFML/DIA/Inbound" },
     { name : "MOVEIT_DUA_INBOUND_PATH", value : "/DFML/DUA/Outbound" },
@@ -99,7 +100,8 @@ locals {
     { name : "MOVEIT_DUA_OUTBOUND_PATH", value : "/DFML/DUA/Inbound" },
     { name : "MOVEIT_DIA_ARCHIVE_PATH", value : "/DFML/DIA/Archive" },
     { name : "MOVEIT_DUA_ARCHIVE_PATH", value : "/DFML/DUA/Archive" },
-    { name : "S3_BUCKET", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/" }
+    { name : "S3_BUCKET", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/" },
+    { name : "DUA_TRANSFER_BASE_PATH", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/" }
   ]
 
   # Basic configuration for sender email

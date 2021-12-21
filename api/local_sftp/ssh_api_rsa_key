@@ -1,59 +1,4 @@
-#
-# Default configuration for local development.
-#
-
-# FINEOS import (inbound)
-FINEOS_DATA_EXPORT_PATH=local_s3/fin-data-export/LCL/dataexports
-
-# FINEOS export (outbound)
-FINEOS_DATA_IMPORT_PATH=local_s3/fin-data-import/LCL/peiupdate
-
-# PUB payments
-PFML_FINEOS_WRITEBACK_ARCHIVE_PATH=local_s3/agency-transfer/cps/pei-writeback
-PFML_FINEOS_EXTRACT_ARCHIVE_PATH=local_s3/agency-transfer/cps/extracts
-DFML_REPORT_OUTBOUND_PATH=local_s3/reports/dfml-reports
-DFML_RESPONSE_INBOUND_PATH=local_s3/reports/dfml-responses
-PUB_MOVEIT_INBOUND_PATH=local_s3/agency-transfer/pub/inbound
-PUB_MOVEIT_OUTBOUND_PATH=local_s3/agency-transfer/pub/outbound
-PFML_PUB_ACH_ARCHIVE_PATH=local_s3/agency-transfer/pub/ach
-PFML_PUB_CHECK_ARCHIVE_PATH=local_s3/agency-transfer/pub/check
-PFML_ERROR_REPORTS_ARCHIVE_PATH=local_s3/agency-transfer/reports
-PFML_PAYMENT_REJECTS_ARCHIVE_PATH=local_s3/agency-transfer/audit
-PFML_1099_DOCUMENT_ARCHIVE_PATH=local_s3/1099
-
-# Old payments
-PFML_FINEOS_INBOUND_PATH=payments_files/cps/inbound/
-PFML_FINEOS_OUTBOUND_PATH=payments_files/cps/outbound/
-PFML_ERROR_REPORTS_PATH=payments_files/error-reports/outbound
-
-# Earliest FINEOS extract files processed
-FINEOS_CLAIMANT_EXTRACT_MAX_HISTORY_DATE=2021-06-12
-FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE=2021-06-12
-FINEOS_IAWW_EXTRACT_MAX_HISTORY_DATE=2021-11-15
-
-# Experian API
-USE_EXPERIAN_SOAP_CLIENT=1
-EXPERIAN_AUTH_TOKEN=replace_me_with_auth_token
-
-# Audit / Rejects report
-PAYMENT_AUDIT_REPORT_OUTBOUND_FOLDER_PATH=payments_files/audit/outbound/
-PAYMENT_AUDIT_REPORT_SENT_FOLDER_PATH=payments_files/audit/sent/
-
-# Azure SSO used for the Admin Portal
-AZURE_AD_CLIENT_ID=ecc75e15-cd60-4e28-b62f-d1bf80e05d4d
-AZURE_AD_TENANT_ID=3e861d16-48b7-4a0e-9806-8c04d81b7b2a
-AZURE_AD_AUTHORITY_DOMAIN=login.microsoftonline.com
-ADMIN_PORTAL_BASE_URL=http://localhost:3001
-AZURE_AD_PARENT_GROUP=TSS-SG-PFML_ADMIN_PORTAL_NON_PROD
-AZURE_AD_CLIENT_SECRET=replace_with_client_secret
-
-# DUA data (non-reductions) processing
-DUA_TRANSFER_BASE_PATH=local_s3/agency_transfer
-MOVEIT_SFTP_URI=sftp://foo@localhost:2222
-MOVEIT_DUA_INBOUND_PATH=upload/DFML/DUA/Inbound
-MOVEIT_DUA_OUTBOUND_PATH=upload/DFML/DUA/Outbound
-MOVEIT_DUA_ARCHIVE_PATH=upload/DFML/DUA/Archive
-MOVEIT_SSH_KEY='-----BEGIN OPENSSH PRIVATE KEY-----
+-----BEGIN OPENSSH PRIVATE KEY-----
 b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAACFwAAAAdzc2gtcn
 NhAAAAAwEAAQAAAgEAslklW60/7ijOfD+yoeZmAeMo0pj10B85anl/IhO+mumOYoWwYYTS
 NdIRm21edxEFRNA1rt+EKCXRTU6+qI3fQ3Utpe3UudPW5Jtc6LEKSIGth0TeA5YV/8dEej
@@ -101,4 +46,4 @@ qklG8GkvhKiI2yrF9zF0WLrzYTwvYZjXqdP701D+OEP93qnghW7N8PuZ8XiU6eAeTtjMGJ
 mC+vPFjGBZTgIJqLDEIWjGcm90IYELbOzzBCtBqbKho/TsTfOPFvB0wrXEExVPFTvBBowB
 Gi5nT3qhT3maoLDOnBMfZBUtTythv35eFxu87C/ulPLQg4kW4hth7ol24SXPFZpikviU7a
 RLqEcTCjXZypAAAADm1hc3MtcGZtbC1zZnRwAQIDBA==
------END OPENSSH PRIVATE KEY-----'
+-----END OPENSSH PRIVATE KEY-----

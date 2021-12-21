@@ -430,15 +430,20 @@ def copy_file_from_s3_to_sftp(source: str, dest: str, sftp: paramiko.SFTPClient)
 # Copy the file through a local tempfile instead of streaming from SFTP directly to S3 to reduce the
 # number of network connections open at any given time (1 at a time instead of 2).
 def copy_file_from_sftp_to_s3(source: str, dest: str, sftp: paramiko.SFTPClient) -> None:
-    if not is_s3_path(dest):
-        raise ValueError("dest must be an S3 URI")
 
     # Download file from SFTP to a tempfile.
     _handle, tempfile_path = tempfile.mkstemp()
     sftp.get(source, tempfile_path)
 
-    # Copy the file from the local tempfile to S3 destination.
-    upload_to_s3(tempfile_path, dest)
+    upload_file(tempfile_path, dest)
+
+
+def upload_file(src: str, dest: str) -> None:
+    if not is_s3_path(dest):
+        copy_file(src, dest)
+    else:
+        # Copy the file from the local tempfile to S3 destination.
+        upload_to_s3(src, dest)
 
 
 def remove_if_exists(path: str) -> None:

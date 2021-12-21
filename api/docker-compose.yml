@@ -1,6 +1,21 @@
 version: "3.8"
 
 services:
+  sftp:
+    image: atmoz/sftp
+    container_name: "mass-pfml-sftp"
+    ports:
+      - "2222:22"
+    command: foo:pass:1001
+    volumes:
+      - ./local_sftp/ssh_host_ed25519_key:/etc/ssh/ssh_host_ed25519_key
+      - ./local_sftp/ssh_host_rsa_key:/etc/ssh/ssh_host_rsa_key
+      - ./local_sftp/ssh_api_rsa_key.pub:/home/foo/.ssh/keys/ssh_api_rsa_key.pub:ro
+      - ./local_sftp/upload:/home/foo/upload
+    networks:
+      main:
+        aliases:
+          - mass-pfml-sftp
   mass-pfml-db:
     image: postgres:12.4-alpine
     container_name: "mass-pfml-db"
@@ -113,6 +128,7 @@ services:
       - ENABLE_UPLOAD_1099_PDF=1
       - UPLOAD_MAX_FILES_TO_FINEOS=10
       - TEST_FILE_GENERATION_1099=0
+      - MOVEIT_SFTP_URI=sftp://foo@mass-pfml-sftp:22
 
     networks:
       main:
