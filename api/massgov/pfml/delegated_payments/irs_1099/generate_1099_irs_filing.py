@@ -80,6 +80,7 @@ class Generate1099IRSfilingStep(Step):
     f_seq = 0
     payment_amt_zero = False
     total_b_records = 0
+    tax_year = pfml_1099_util.get_tax_year()
 
     def run_step(self) -> None:
         self._generate_1099_irs_filing()
@@ -111,6 +112,7 @@ class Generate1099IRSfilingStep(Step):
 
             t_template = self._create_t_template()
             t_entries = self._load_t_rec_data(t_template)
+            logger.info(len(t_entries))
             entries = t_entries
 
             if len(original_returns) > 0:
@@ -145,6 +147,7 @@ class Generate1099IRSfilingStep(Step):
         ctl_total, st_tax, fed_tax = self._get_totals(records)
         a_template = self._create_a_template()
         a_entries = self._load_a_rec_data(a_template)
+        logger.info(a_entries)
         entries = entries + a_entries
         self.b_seq = self.a_seq + 1
         b_template = self._create_b_template()
@@ -257,7 +260,7 @@ class Generate1099IRSfilingStep(Step):
         t_dict = dict(
             T_REC_TYPE=Constants.T_REC_TYPE,
             PREV_YR_IND=Constants.PREV_YR_IND,
-            TAX_YEAR=pfml_1099_util.get_tax_year(),
+            TAX_YEAR=self.tax_year,
             TX_TIN=Constants.PAYER_TIN,
             TX_CTL_NO=Constants.TX_CTL_NO,
             B7=Constants.BLANK_SPACE,
@@ -287,7 +290,7 @@ class Generate1099IRSfilingStep(Step):
 
         a_dict = dict(
             A_REC_TYPE=Constants.A_REC_TYPE,
-            TAX_YEAR=pfml_1099_util.get_tax_year(),
+            TAX_YEAR=self.tax_year,
             CSF_IND=Constants.COMBINED_ST_FED_IND,
             B5=Constants.BLANK_SPACE,
             PYR_TIN=Constants.PAYER_TIN,

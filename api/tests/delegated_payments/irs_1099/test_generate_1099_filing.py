@@ -19,7 +19,7 @@ fake = faker.Faker()
 
 @pytest.fixture
 def generate_1099_irs_filing_step(
-    local_initialize_factories_session, local_test_db_session, local_test_db_other_session,
+    local_test_db_session, local_test_db_other_session,
 ):
     return Generate1099IRSfilingStep(
         db_session=local_test_db_session, log_entry_db_session=local_test_db_other_session
@@ -28,7 +28,6 @@ def generate_1099_irs_filing_step(
 
 def pfml1099_factory():
     pfml_1099 = []
-    # db_session=local_test_db_session
     for _ in range(10):
         rec_1099 = Pfml1099Factory.build(
             first_name=fake.first_name(),
@@ -39,6 +38,7 @@ def pfml1099_factory():
             correction_ind=random.choice([True, False]),
         )
         pfml_1099.append(rec_1099)
+        
     return pfml_1099
 
 
@@ -116,9 +116,28 @@ def test_t_entries(
 
     t_template = generate_1099_irs_filing_step._create_t_template()
     t_entries = generate_1099_irs_filing_step._load_t_rec_data(t_template)
-    assert len(t_entries) == 753
+    assert len(t_entries) == 751
 
+def test_a_entries( generate_1099_irs_filing_step: Generate1099IRSfilingStep,
+    test_db_session,
+    enable_test_file_generation,
+):
 
+    a_template = generate_1099_irs_filing_step._create_a_template()
+    a_entries = generate_1099_irs_filing_step._load_a_rec_data(a_template)
+    assert len(a_entries) == 751
+
+def test_b_entries( generate_1099_irs_filing_step: Generate1099IRSfilingStep,
+    test_db_session,
+    enable_test_file_generation,
+):
+    pfml_1099 = pfml1099_factory()
+    b_template = generate_1099_irs_filing_step._create_b_template()
+    b_entries = generate_1099_irs_filing_step._load_b_rec_data(b_template,pfml_1099)
+    for b_records in b_entries:
+            #entries = entries + b_records
+            assert len(b_records) == 753
+     
 def test_file_creation(
     generate_1099_irs_filing_step: Generate1099IRSfilingStep,
     test_db_session,
@@ -135,7 +154,7 @@ def test_file_creation(
     outbound_folder_path = str(tmp_path / "outbound")
     monkeypatch.setenv("pfml_error_reports_archive_path", archive_folder_path)
     monkeypatch.setenv("dfml_report_outbound_path", outbound_folder_path)
-
+    #monkeypatch.setenv("tax_year","2021")
     # generate the 1099.org file
     orig, ccorrect, gcorrect = split_b_record_types()
     # print(len(orig))
@@ -164,6 +183,7 @@ def test_file_creation(
             for line in f:
                 num_lines += 1
                 num_chars = len(line)
+                print(f.readline)
                 assert num_chars == 751
                 tot_num_chars += len(line)
     # assert tot_num_chars == 3004
