@@ -554,6 +554,7 @@ export const CARE_TAXES: ScenarioSpecification<CaringLeaveClaim> = {
       startOfWeek(addDays(new Date(), 60)), // claims must start in 2022 in order to test SIT/FIT withholdings
       startOfWeek(addDays(new Date(), 74)),
     ],
+    is_withholding_tax: true,
     work_pattern_spec: "standard",
     reduced_leave_spec: "0,240,240,240,240,240,0",
     docs: { CARING: {}, MASSID: {} },
