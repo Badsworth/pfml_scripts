@@ -57,6 +57,9 @@ const flagsConfig = {
     example: true,
     pfmlTerriyay: true,
   },
+  local: {
+    pfmlTerriyay: true,
+  },
   prod: {
     pfmlTerriyay: true,
   },

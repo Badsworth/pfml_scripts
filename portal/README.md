@@ -33,6 +33,8 @@ Run the development server with live reloading:
 npm run dev
 ```
 
+If you wish to connect your local portal to local backend run `npm run dev:local` (paired with `make logs-local` to run the local configured api server for the backend).
+
 ### Configure your code editor
 
 - [Integrate ESLint into your IDE or a git hook](https://eslint.org/docs/user-guide/integrations) if you'd like to catch linting errors before it reaches the CI.

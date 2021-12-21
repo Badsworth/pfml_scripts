@@ -308,6 +308,11 @@ login-db-admin: ## Start psql with project environment variables and admin user
 logs: start ## View API logs
 	docker-compose logs --follow --no-color $(APP_NAME) $(DECODE_LOG)
 
+
+logs-local: ## Run start-local, with API logs
+logs-local: start-local
+	docker-compose logs --follow --no-color $(APP_NAME) $(DECODE_LOG)
+
 logs-db: start ## View DB logs
 	docker-compose logs --follow mass-pfml-db
 
@@ -325,6 +330,10 @@ psql: login-db
 start: ## Start all containers
 start: jwks.json
 	docker-compose up --detach
+
+start-local: ## Start all containers using a cognito instance, in order to match local-to-local development with portal
+start-local: 
+	docker-compose --env-file .env.local up --detach
 
 start-db: ## Start DB container
 	docker-compose up --detach mass-pfml-db
@@ -570,3 +579,4 @@ help: ## Displays this help screen
 	@echo "RUN_USER=$(RUN_USER)"
 	@echo "SHELL=$(SHELL)"
 	@echo "MAKE_VERSION=$(MAKE_VERSION)"
+	@echo "COGNITO_USER_POOL_KEYS_URL=$(COGNITO_USER_POOL_KEYS_URL)"
