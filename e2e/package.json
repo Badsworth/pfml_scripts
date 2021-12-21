@@ -23,7 +23,7 @@
     "pilot4:gen": "ts-node src/cli.ts simulation generate -f ./src/simulation/scenarios/pilot4.ts -d ./data/pilot4",
     "pilot4:sim": "ts-node src/cli.ts simulation run -d ./data/pilot4",
     "generate:api": "npx @spec2ts/openapi-client ../api/openapi.yaml -o src/_api.ts",
-    "artillery:dev": "npm run artillery:bundle&& artillery run -e test -q dist/development.yml",
+    "artillery:dev": "npm run artillery:bundle && artillery run -e basic dist/development.yml",
     "artillery:run": "E2E_ENVIRONMENT=performance npm run artillery:bundle && artillery run -e performance dist/development.yml",
     "artillery:bundle": "rm -rf ./dist && webpack --config=webpack.artillery.config.ts",
     "newrelic:generate-fineos-dashboards": "ts-node src/scripts/2021-07-19-generate-nr-api-dashboards.ts"
