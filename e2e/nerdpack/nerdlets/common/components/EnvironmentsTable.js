@@ -134,31 +134,37 @@ export class EnvironmentsTable extends React.Component {
                             />
                           ))}
                         </td>
-                        {COMPONENTS.map((component) => (
-                          <td>
-                            <div className={"version"}>
-                              <Link
-                                to={navigation.getOpenStackedNerdletLocation({
-                                  id: "deployments",
-                                  urlState: {
-                                    environment: env,
-                                    component: component,
-                                  },
-                                })}
-                              >
-                                {envVersions[env][component].status}
-                              </Link>
-                              <span>
-                                {envVersions[env][component]?.timestamp
-                                  ? dateFormat(
-                                      envVersions[env][component].timestamp,
-                                      "PPPp"
-                                    )
-                                  : ""}
-                              </span>
-                            </div>
-                          </td>
-                        ))}
+                        {COMPONENTS.map((component) => {
+                          if (envVersions[env] && envVersions[env][component]) {
+                            return (
+                              <td>
+                                <div className={"version"}>
+                                  <Link
+                                    to={navigation.getOpenStackedNerdletLocation(
+                                      {
+                                        id: "deployments",
+                                        urlState: {
+                                          environment: env,
+                                          component: component,
+                                        },
+                                      }
+                                    )}
+                                  >
+                                    {envVersions[env][component].status}
+                                  </Link>
+                                  <span>
+                                    {envVersions[env][component]?.timestamp
+                                      ? dateFormat(
+                                          envVersions[env][component].timestamp,
+                                          "PPPp"
+                                        )
+                                      : ""}
+                                  </span>
+                                </div>
+                              </td>
+                            );
+                          }
+                        })}
                       </tr>
                     );
                   }

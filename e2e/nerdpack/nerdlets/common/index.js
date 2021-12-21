@@ -4,9 +4,11 @@ export const ENVS = [
   "prod",
   "breakfix",
   "training",
+  "trn2",
   "uat",
   "performance",
   "stage",
+  "long",
   "cps-preview",
   "test",
 ];
@@ -41,6 +43,12 @@ export const labelEnv = (name) => {
       return "Breakfix/PFX";
     case "uat":
       return "UAT";
+    case "long":
+      return "LONG/DT4";
+    case "training":
+      return "Training/TRN";
+    case "trn2":
+      return "Training2/TRN2";
     default:
       return name[0].toUpperCase() + name.substring(1);
   }
