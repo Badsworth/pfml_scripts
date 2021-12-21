@@ -988,13 +988,23 @@ def get_tax_id(db_session: Any, tax_id_str: str) -> str:
         raise
 
 
+def get_upload_max_files_to_fineos() -> int:
+    return app.get_config().upload_max_files_to_fineos
+
+
+def get_1099_record(db_session: db.Session, status: str, batch_id: str) -> Optional[Pfml1099]:
+    """Get a 1099 record based on specific status and order by Created_at Asc"""
+    return (
+        db_session.query(Pfml1099)
+        .order_by(Pfml1099.created_at.asc())
+        .filter(Pfml1099.pfml_1099_batch_id == batch_id)
+        .filter(Pfml1099.fineos_status == status)
+        .first()
+    )
+
+
 def is_test_file() -> str:
     if os.environ.get("TEST_FILE_GENERATION_1099", "0") == "1":
         return "T"
     else:
         return ""
-
-
-def get_1099_record(db_session: db.Session, id: str) -> Optional[Pfml1099]:
-    """Get pfml 1099 record by id"""
-    return db_session.query(Pfml1099).get(id)

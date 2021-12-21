@@ -1286,6 +1286,8 @@ class Pfml1099(Base, TimestampMixin):
     federal_tax_withholdings = Column(Numeric(asdecimal=True), nullable=False)
     overpayment_repayments = Column(Numeric(asdecimal=True), nullable=False)
     correction_ind = Column(Boolean, nullable=False)
+    s3_location = Column(Text, nullable=True)
+    fineos_status = Column(Text, nullable=True, default="New")
 
     employee = relationship(Employee)
 

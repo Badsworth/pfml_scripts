@@ -1,7 +1,7 @@
 import enum
 import os
 from datetime import datetime
-from typing import List, Optional
+from typing import Optional
 
 import massgov.pfml.delegated_payments.delegated_config as payments_config
 import massgov.pfml.delegated_payments.irs_1099.pfml_1099_util as pfml_1099_util
@@ -14,6 +14,17 @@ from massgov.pfml.delegated_payments.step import Step
 from massgov.pfml.fineos.client import AbstractFINEOSClient
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
+
+
+class FineosUploadStatus(str, enum.Enum):
+    # Default value when a 1099 record is created
+    NEW = "New"
+    # When a 1099 record is in the process to be uploaded to Fineos API
+    IN_PROGRESS = "In Progress"
+    # When a 1099 record was successfully uploaded to Fineos API
+    SUCCESS = "Success"
+    # When a 1099 record failed to be uploaded to Fineos API
+    FAILED = "Failed"
 
 
 class Upload1099DocumentsStep(Step):
@@ -29,41 +40,50 @@ class Upload1099DocumentsStep(Step):
 
         if pfml_1099_util.is_upload_1099_pdf_enabled():
             logger.info("Upload 1099 Pdf flag is enabled")
+            batch = pfml_1099_util.get_current_1099_batch(self.db_session)
+            if batch is None:
+                return
+
             document_type = self._get_document_type()
-            batch_id = self._get_batch_id()
-            directory_path = self._get_1099_documents_directory(batch_id)
-            sub_directories = self._get_1099_sub_directories(directory_path)
             fineos = massgov.pfml.fineos.create_client()
-            temp_limit_to = 10
-            temp_con = 0
+            temp_limit_to = pfml_1099_util.get_upload_max_files_to_fineos()
+            temp_con = 1
 
-            for sub_directory in sub_directories:
-                sub_directory_path = os.path.join(directory_path, sub_directory)
-                documents = self._get_1099_documents_in_sub_directory(sub_directory_path)
+            while temp_con <= temp_limit_to:
+                record1099: Optional[Pfml1099] = pfml_1099_util.get_1099_record(
+                    self.db_session, FineosUploadStatus.NEW, str(batch.pfml_1099_batch_id)
+                )
 
-                for document in documents:
+                if record1099 is None:
+                    logger.warning("No more pfml 1099 records found.")
+                    break
+
+                if record1099.s3_location is None or len(record1099.s3_location) == 0:
+                    logger.warning(
+                        f"Pfml 1099 record with id {record1099.pfml_1099_id} cannot be upload to FIneos API because it was not successfully generated."
+                    )
+                    self.update_status(record1099, FineosUploadStatus.FAILED)
+                    self.increment(self.Metrics.DOCUMENT_ERROR)
+                    continue
+
+                self.update_status(record1099, FineosUploadStatus.IN_PROGRESS)
+
+                try:
+                    document_path = os.path.join(
+                        payments_config.get_s3_config().pfml_1099_document_archive_path,
+                        record1099.s3_location,
+                    )
+                    document_name = document_path.split("/")[5]
+                    self._upload_document(
+                        fineos, document_path, document_name, document_type, record1099
+                    )
+                    self.update_status(record1099, FineosUploadStatus.SUCCESS)
+                    self.increment(self.Metrics.DOCUMENT_COUNT)
                     temp_con = temp_con + 1
-
-                    if temp_con <= temp_limit_to:
-                        document_path = os.path.join(directory_path, sub_directory, document)
-                        document_id = document.split("_")[0]
-                        record1099: Optional[Pfml1099] = pfml_1099_util.get_1099_record(
-                            self.db_session, document_id
-                        )
-
-                        if record1099 is None:
-                            logger.error(f"No pfml 1099 record found for id: {document_id}")
-                        else:
-                            try:
-                                self._upload_document(
-                                    fineos, document_path, document, document_type, record1099
-                                )
-                            except (Exception) as error:
-                                logger.error(error)
-                    else:
-                        temp_con = 0
-                        break
-
+                except Exception as error:
+                    logger.error(error)
+                    self.update_status(record1099, FineosUploadStatus.FAILED)
+                    self.increment(self.Metrics.DOCUMENT_ERROR)
         else:
             logger.info("Upload 1099 Pdf flag is not enabled")
 
@@ -75,23 +95,6 @@ class Upload1099DocumentsStep(Step):
             raise Exception("Batch cannot be empty at this point.")
 
         return str(batch.pfml_1099_batch_id)
-
-    def _get_1099_documents_directory(self, batch_id: str) -> str:
-        directory = payments_config.get_s3_config().pfml_1099_document_archive_path.replace(
-            "[id]", batch_id
-        )
-        logger.info(directory)
-        return directory
-
-    def _get_1099_sub_directories(self, directory: str) -> List[str]:
-        sub_directories = file_util.list_folders(directory)
-        logger.info(f"{len(sub_directories)} sub directories found.")
-        return sub_directories
-
-    def _get_1099_documents_in_sub_directory(self, sub_directory_path: str) -> List[str]:
-        documents = file_util.list_files(sub_directory_path)
-        logger.info(f"{len(documents)} 1099 forms found in sub directory {sub_directory_path}.")
-        return documents
 
     def _upload_document(
         self,
@@ -126,7 +129,7 @@ class Upload1099DocumentsStep(Step):
                 logger.info(f"File {file_name} was successfully uploaded to Fineos Api.")
             else:
                 logger.error(f"Error when uploading file {file_name} to Fineos Api.")
-        except (Exception) as error:
+        except Exception as error:
             raise error
 
     def _get_document_content(self, document_path: str) -> bytes:
@@ -135,3 +138,7 @@ class Upload1099DocumentsStep(Step):
 
     def _get_document_type(self) -> str:
         return DocumentType.IRS_1099G_TAX_FORM_FOR_CLAIMANTS.document_type_description
+
+    def update_status(self, record: Pfml1099, status: FineosUploadStatus) -> None:
+        record.fineos_status = status
+        self.db_session.commit()

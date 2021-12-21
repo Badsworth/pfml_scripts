@@ -139,6 +139,7 @@ locals {
     { name : "ENABLE_GENERATE_1099_PDF", value : var.enable_generate_1099_pdf },
     { name : "ENABLE_MERGE_1099_PDF", value : var.enable_merge_1099_pdf },
     { name : "ENABLE_UPLOAD_1099_PDF", value : var.enable_upload_1099_pdf },
-    { name : "PFML_1099_DOCUMENT_ARCHIVE_PATH", value : "s3://pfml-api-${var.environment_name}-1099-form-generator/1099/Batch-[id]/Forms" }
+    { name : "PFML_1099_DOCUMENT_ARCHIVE_PATH", value : "s3://pfml-api-${var.environment_name}-1099-form-generator/1099" },
+    { name : "UPLOAD_MAX_FILES_TO_FINEOS", value : var.upload_max_files_to_fineos }
   ]
 }
