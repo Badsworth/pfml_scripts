@@ -481,6 +481,7 @@ class ValidationReason(str, Enum):
     PAYMENT_EXCEEDS_PAY_PERIOD_CAP = "PaymentExceedsPayPeriodCap"
     ROUTING_NUMBER_FAILS_CHECKSUM = "RoutingNumberFailsChecksum"
     LEAVE_REQUEST_IN_REVIEW = "LeaveRequestInReview"
+    UNEXPECTED_RECORD_VARIANCE = "UnexpectedRecordVariance"
 
 
 @dataclass(frozen=True, eq=True)
