@@ -258,7 +258,7 @@ export class ClaimPage {
     return this;
   }
 
-  addAppeal(): this {
+  addAppeal(stashAppealCase: boolean): this {
     // This button turns out to be unclickable without force, because selecting
     // it seems to scroll it out of view. Force works around that.
     cy.get('a[title="Add Sub Case"]').click({
@@ -269,6 +269,11 @@ export class ClaimPage {
       force: true,
     });
     waitForAjaxComplete();
+    if (stashAppealCase) {
+      fineos.findAppealNumber("Appeal").then((appeal_case_id) => {
+        cy.stash("appeal_case_id", appeal_case_id);
+      });
+    }
     return this;
   }
 

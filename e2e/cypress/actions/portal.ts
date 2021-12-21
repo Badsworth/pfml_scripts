@@ -209,10 +209,7 @@ export function downloadLegalNotice(claim_id: string): void {
  *
  * Also does basic assertion on contents of legal notice doc
  */
-export function downloadLegalNoticeSubcase(
-  claim_id: string,
-  sub_case: string
-): void {
+export function downloadLegalNoticeSubcase(sub_case: string): void {
   const downloadsFolder = Cypress.config("downloadsFolder");
   cy.wait("@documentDownload", { timeout: 30000 });
   cy.task("getNoticeFileName", downloadsFolder).then((filename) => {
@@ -234,7 +231,7 @@ export function downloadLegalNoticeSubcase(
         expect(
           application_id_from_notice,
           `The claim_id within the legal notice should be: ${application_id_from_notice}`
-        ).to.equal(claim_id + sub_case);
+        ).to.equal(sub_case);
       }
     );
   });
