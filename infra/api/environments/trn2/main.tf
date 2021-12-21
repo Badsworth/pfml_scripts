@@ -60,8 +60,8 @@ module "api" {
   nlb_name                        = "${local.vpc}-nlb"
   nlb_port                        = 3508
   cors_origins = [
-    "https://paidleave-trn2.eol.mass.gov",
-    "https://paidleave-api-trn2.eol.mass.gov",
+    "https://paidleave-trn2.dfml.eol.mass.gov",
+    "https://paidleave-api-trn2.dfml.eol.mass.gov",
   ]
   enable_application_fraud_check = "0"
   release_version                = var.release_version

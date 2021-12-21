@@ -60,9 +60,13 @@ module "api" {
   postgres_parameter_group_family = "postgres12"
   nlb_name                        = "${local.vpc}-nlb"
   nlb_port                        = 3506
-  cors_origins                    = ["https://zj5brufqrj.execute-api.us-east-1.amazonaws.com/infra-test"]
-  enable_application_fraud_check  = "0"
-  release_version                 = var.release_version
+  cors_origins = [
+    "https://zj5brufqrj.execute-api.us-east-1.amazonaws.com/infra-test",
+    "https://paidleave-infra-test.dfml.eol.mass.gov",
+    "https://paidleave-api-infra-test.dfml.eol.mass.gov",
+  ]
+  enable_application_fraud_check = "0"
+  release_version                = var.release_version
 
   # TODO: Fill this in after the portal is deployed.
   cognito_user_pool_arn       = null
