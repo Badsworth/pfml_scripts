@@ -138,6 +138,17 @@ locals {
       ]
     },
 
+    "dor_create_pending_filing_submission" = {
+      command   = ["dor_create_pending_filing_submission"],
+      task_role = aws_iam_role.dor_pending_filing_sub_task_role.arn,
+      cpu       = 4096,
+      memory    = 18432,
+      env = [
+        local.db_access,
+        { name : "FOLDER_PATH", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/dfml" }
+      ]
+    },
+
     "dor-pending-filing-response-import" = {
       command        = ["dor-pending-filing-response-import"],
       task_role      = aws_iam_role.dor_import_task_role.arn,
