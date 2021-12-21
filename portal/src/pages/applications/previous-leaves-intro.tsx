@@ -1,6 +1,7 @@
 import withBenefitsApplication, {
   WithBenefitsApplicationProps,
 } from "../../hoc/withBenefitsApplication";
+import Details from "../../components/core/Details";
 import Heading from "../../components/core/Heading";
 import IconHeading from "../../components/core/IconHeading";
 import QuestionPage from "../../components/QuestionPage";
@@ -13,6 +14,7 @@ export const PreviousLeavesIntro = (props: WithBenefitsApplicationProps) => {
   const { t } = useTranslation();
   const { appLogic, claim } = props;
   const startDate = formatDate(claim.leaveStartDate).full();
+  const otherLeaveStartDate = formatDate(claim.otherLeaveStartDate).full();
 
   const handleSave = async () => {
     return await appLogic.portalFlow.goToNextPage(
@@ -32,30 +34,57 @@ export const PreviousLeavesIntro = (props: WithBenefitsApplicationProps) => {
 
       <IconHeading name="check_circle">
         <Trans
-          i18nKey="pages.claimsPreviousLeavesIntro.introHeader"
-          values={{ startDate }}
+          i18nKey="pages.claimsPreviousLeavesIntro.needHeader"
+          values={{ startDate, otherLeaveStartDate }}
         />
       </IconHeading>
       <Trans
-        i18nKey="pages.claimsPreviousLeavesIntro.intro"
+        i18nKey="pages.claimsPreviousLeavesIntro.need"
         values={{ startDate }}
         components={{
-          ul: <ul className="usa-list margin-left-2" />,
+          ul: <ul className="usa-list margin-left-4" />,
           li: <li />,
         }}
       />
-      <br />
+      <div className="margin-left-4 margin-bottom-4">
+        <Details
+          label={t(
+            "pages.claimsPreviousLeavesIntro.detailsQualifyingReasonHeader"
+          )}
+        >
+          <Trans
+            i18nKey="pages.claimsPreviousLeavesIntro.detailsQualifyingReason"
+            components={{
+              ul: <ul className="usa-list" />,
+              li: <li />,
+            }}
+          />
+        </Details>
+      </div>
+
       <IconHeading name="cancel">
-        {t("pages.claimsPreviousLeavesIntro.introDontNeedHeader")}
+        {t("pages.claimsPreviousLeavesIntro.dontNeedHeader")}
       </IconHeading>
       <Trans
-        i18nKey="pages.claimsPreviousLeavesIntro.introDontNeed"
-        values={{ startDate }}
+        i18nKey="pages.claimsPreviousLeavesIntro.dontNeed"
         components={{
-          ul: <ul className="usa-list margin-left-2" />,
+          ul: <ul className="usa-list margin-left-4" />,
           li: <li />,
         }}
       />
+      <div className="margin-left-4 margin-bottom-4">
+        <Details
+          label={t("pages.claimsPreviousLeavesIntro.detailsBenefitYearHeader")}
+        >
+          <Trans
+            i18nKey="pages.claimsPreviousLeavesIntro.detailsBenefitYear"
+            components={{
+              ul: <ul className="usa-list" />,
+              li: <li />,
+            }}
+          />
+        </Details>
+      </div>
     </QuestionPage>
   );
 };

@@ -33,6 +33,7 @@ import Title from "../../../components/core/Title";
 import { Trans } from "react-i18next";
 import WeeklyHoursWorkedRow from "../../../components/employers/WeeklyHoursWorkedRow";
 import findDocumentsByTypes from "../../../utils/findDocumentsByTypes";
+import formatDate from "../../../utils/formatDate";
 import formatDateRange from "../../../utils/formatDateRange";
 import isBlank from "../../../utils/isBlank";
 import { isFeatureEnabled } from "../../../services/featureFlags";
@@ -402,6 +403,8 @@ export const Review = (props: WithEmployerClaimProps) => {
     }
   };
 
+  const otherLeaveStartDate = formatDate(claim.otherLeaveStartDate).full();
+
   return (
     <div className="maxw-desktop-lg">
       <BackButton />
@@ -535,6 +538,7 @@ export const Review = (props: WithEmployerClaimProps) => {
               onChange={handlePreviousLeavesChange}
               onRemove={handlePreviousLeaveRemove}
               shouldShowV2={shouldShowV2}
+              otherLeaveStartDate={otherLeaveStartDate}
             />
             <ConcurrentLeave
               appErrors={appErrors}

@@ -19,7 +19,7 @@ describe("IconHeading", () => {
     expect(icon).toMatchInlineSnapshot(`
       <svg
         aria-hidden="true"
-        class="usa-icon usa-icon--size-3 margin-right-2px flex-auto text-red"
+        class="usa-icon usa-icon--size-3 margin-right-1 flex-auto text-red"
         fill="currentColor"
         focusable="false"
         role="img"

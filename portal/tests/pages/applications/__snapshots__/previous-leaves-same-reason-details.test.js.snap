@@ -20,7 +20,7 @@ exports[`PreviousLeavesSameReasonDetails renders the page 1`] = `
     <span
       class="display-block line-height-sans-5 measure-5 margin-bottom-3 usa-intro"
     >
-      Enter details about each period of leave taken between January 1, 2021 and January 1, 2021. A leave period begins on the day you first went on leave and ends on the last day of leave. If you were on leave intermittently, your leave period begins on the first day you went on leave and ends on the very last day.
+      Enter details about each period of leave taken between January 1, 2021 and January 1, 2022. A leave period begins on the day you first went on leave and ends on the last day of leave. If you were on leave intermittently, your leave period begins on the first day you went on leave and ends on the very last day.
       <br />
       <br />
       You don't need to tell us about previous leave you’ve taken through Massachusetts’ PFML program.

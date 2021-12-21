@@ -56,7 +56,7 @@ exports[`LeaveDetails renders the component 1`] = `
       >
         Leave duration
       </h3>
-      1/1/2021 to 7/1/2021
+      1/1/2022 to 7/1/2022
     </div>
   </div>
 </div>

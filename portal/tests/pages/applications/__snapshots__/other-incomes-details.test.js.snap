@@ -33,7 +33,7 @@ exports[`OtherIncomesDetails when the user's claim has no other incomes renders 
         <div
           class="usa-alert__text"
         >
-          1/1/2021 to 6/1/2021
+          1/1/2022 to 6/1/2022
         </div>
       </div>
     </div>
@@ -495,7 +495,7 @@ exports[`OtherIncomesDetails when the user's claim has other incomes renders the
         <div
           class="usa-alert__text"
         >
-          1/1/2021 to 6/1/2021
+          1/1/2022 to 6/1/2022
         </div>
       </div>
     </div>

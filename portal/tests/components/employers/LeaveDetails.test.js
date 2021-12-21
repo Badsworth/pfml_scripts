@@ -81,9 +81,9 @@ describe("LeaveDetails", () => {
     expect(screen.getByText("Medical leave")).toBeInTheDocument();
   });
 
-  it("renders formatted date range for leave duration", () => {
+  it("`renders formatted date range for leave duration`", () => {
     renderComponent();
-    expect(screen.getByText("1/1/2021 to 7/1/2021")).toBeInTheDocument();
+    expect(screen.getByText("1/1/2022 to 7/1/2022")).toBeInTheDocument();
   });
 
   it("does not render documentation row", () => {

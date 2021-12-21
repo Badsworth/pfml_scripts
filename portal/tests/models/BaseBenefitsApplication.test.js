@@ -160,4 +160,44 @@ describe("BaseBenefitsApplication", () => {
       expect(claimWithReducedLeave.leaveEndDate).toEqual("2021-08-01");
     });
   });
+
+  describe("#otherLeaveStartDate", () => {
+    it("returns program start date if leaveStartDate is null", () => {
+      const claimWithoutStartDate = new TestClaim();
+      expect(claimWithoutStartDate.otherLeaveStartDate).toContain("2021-01-01");
+    });
+
+    it("returns program start date if leaveStartDate is prior to program launch in Jan 2021", () => {
+      const claimWithEarlyStart = new TestClaim({
+        leave_details: {
+          continuous_leave_periods: [
+            { start_date: "2020-12-25", end_date: "2021-02-01" },
+          ],
+        },
+      });
+      expect(claimWithEarlyStart.otherLeaveStartDate).toContain("2021-01-01");
+    });
+
+    it("returns 52 week ago date if leaveStartDate is a sunday", () => {
+      const claimWithSundayStart = new TestClaim({
+        leave_details: {
+          continuous_leave_periods: [
+            { start_date: "2022-01-09", end_date: "2022-02-01" }, // Jan 9 is a Sunday
+          ],
+        },
+      });
+      expect(claimWithSundayStart.otherLeaveStartDate).toContain("2021-01-10");
+    });
+
+    it("returns 52 weeks prior to sunday prior to leaveStartDate if leaveStartDate *not* a Sunday", () => {
+      const claimWithSundayStart = new TestClaim({
+        leave_details: {
+          continuous_leave_periods: [
+            { start_date: "2022-01-10", end_date: "2022-02-01" }, // Jan 10 is a Monday
+          ],
+        },
+      });
+      expect(claimWithSundayStart.otherLeaveStartDate).toContain("2021-01-10");
+    });
+  });
 });

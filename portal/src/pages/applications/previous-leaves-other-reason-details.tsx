@@ -55,11 +55,12 @@ export const PreviousLeavesOtherReasonDetails = (
   );
 
   const leaveStartDate = formatDate(claim.leaveStartDate).full();
+  const otherLeaveStartDate = formatDate(claim.otherLeaveStartDate).full();
 
   const isCaringLeave = get(claim, "leave_details.reason") === LeaveReason.care;
   const previousLeaveStartDate = isCaringLeave
     ? formatDate("2021-07-01").full()
-    : formatDate("2021-01-01").full();
+    : otherLeaveStartDate;
 
   const handleSave = () => {
     return appLogic.benefitsApplications.update(

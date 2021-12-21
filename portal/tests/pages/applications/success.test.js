@@ -25,7 +25,7 @@ describe("Success", () => {
     jest.useRealTimers();
   });
 
-  const futureDate = new Date(2022, 3, 1).toISOString();
+  const futureDate = new Date(2022, 3, 1).toISOString().split("T")[0]; // hack to e.g. 2021-01-01 format
   /**
    * Output a snapshot for each of these claim variations
    */
