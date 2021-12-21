@@ -66,11 +66,17 @@ class Populate1099Step(Step):
             if overpayment_repayments is None:
                 overpayment_repayments = 0
 
+            address_line_2 = claimant_row.ADDRESS_LINE_2
+            if address_line_2 is None:
+                address_line_2 = ""
+
             # TODO: Add other credits to table and form.
             # Other Credits will not apply in 2021.  PAY-73 is for tracking this work.
             other_credits = claimant_row.OTHER_CREDITS
             if other_credits is None:
                 other_credits = 0
+
+            logger.info("[%s]: %s", claimant_row.employee_id, claimant_row.ADDRESS_SOURCE)
 
             pfml_1099_payment = Pfml1099(
                 pfml_1099_id=uuid.uuid4(),
@@ -83,11 +89,11 @@ class Populate1099Step(Step):
                 i=claimant_row.i,
                 first_name=claimant_row.first_name,
                 last_name=claimant_row.last_name,
-                address_line_1=claimant_row.address1,
-                address_line_2=claimant_row.address2,
-                city=claimant_row.address4,
-                state=claimant_row.address6,
-                zip=claimant_row.postcode,
+                address_line_1=claimant_row.ADDRESS_LINE_1,
+                address_line_2=address_line_2,
+                city=claimant_row.CITY,
+                state=claimant_row.STATE,
+                zip=claimant_row.ZIP_CODE,
                 gross_payments=gross_payments + gross_mmars_payments,
                 state_tax_withholdings=state_tax_withholdings,
                 federal_tax_withholdings=federal_tax_withholdings,
