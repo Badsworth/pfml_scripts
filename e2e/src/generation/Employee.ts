@@ -185,6 +185,7 @@ export default class EmployeePool implements Iterable<Employee> {
         return loadPromise.catch(async (e) => {
           if (e.code !== "ENOENT") return Promise.reject(e);
           // Invoke the generator here, and save the pool it returns to `filename`
+          console.log(`Creating new employee file ${filename}`)
           const pool = generator();
           await pool.save(filename, usedFileName);
           return await EmployeePool.load(filename, usedFileName);
@@ -206,6 +207,9 @@ export default class EmployeePool implements Iterable<Employee> {
     this.used = new Set<string>(used);
   }
 
+  size(): number{
+    return this.employees.length
+  }
   /**
    * Save the pool to JSON format.
    */

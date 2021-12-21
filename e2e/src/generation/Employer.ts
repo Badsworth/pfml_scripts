@@ -134,6 +134,7 @@ export default class EmployerPool implements Iterable<Employer> {
       orGenerateAndSave: async (generator: () => EmployerPool) => {
         return employerProm.catch(async (e) => {
           if (e.code !== "ENOENT") throw e;
+          console.log(`Creating new employer file ${filename}`)
           const employerPool = generator();
           await employerPool.save(filename);
           return employerPool;

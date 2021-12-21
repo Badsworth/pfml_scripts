@@ -31,7 +31,11 @@ export default function directory(
     claims: path.join(dir, "claims.ndjson"),
     state: path.join(dir, "state.json"),
     async prepare(): Promise<void> {
-      await fs.promises.mkdir(documents, { recursive: true });
+      await fs.promises.mkdir(documents, { recursive: true }).then((ret)=>{
+        if(ret) {
+          console.log(`Folder Created ${ret}`)
+        }
+      });
     },
     join(...parts: string[]): string {
       return path.join(dir, ...parts);
