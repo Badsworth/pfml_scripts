@@ -55,6 +55,8 @@ class PaymentAuditData:
     previously_errored_payment_count: int
     previously_rejected_payment_count: int
     previously_skipped_payment_count: int
+    previously_paid_payment_count: int
+    previously_paid_payments_string: Optional[str]
     gross_payment_amount: str
     federal_withholding_amount: str
     state_withholding_amount: str
@@ -206,6 +208,8 @@ def build_audit_report_row(
         ],
         skipped_by_program_integrity=bool_to_str[audit_report_details.skipped_by_program_integrity],
         rejected_notes=audit_report_details.rejected_notes,
+        previously_paid_payment_count=str(payment_audit_data.previously_paid_payment_count),
+        previously_paid_payments=payment_audit_data.previously_paid_payments_string,
     )
 
     return payment_audit_row
