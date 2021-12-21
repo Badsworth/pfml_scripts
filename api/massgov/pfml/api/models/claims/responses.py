@@ -213,6 +213,7 @@ class ClaimReviewResponse(PydanticBaseModel):
     status: str
     uses_second_eform_version: bool
     absence_periods: List[AbsencePeriodResponse] = []
+    managed_requirements: List[ManagedRequirementResponse] = []
 
 
 class DocumentResponse(PydanticBaseModel):

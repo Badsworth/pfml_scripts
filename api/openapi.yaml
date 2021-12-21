@@ -1898,6 +1898,10 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/AbsencePeriodResponse"
+        managed_requirements:
+          type: array
+          items:
+            $ref: "#/components/schemas/ManagedRequirementResponse"
       additionalProperties: false
       required:
         - employer_benefits
