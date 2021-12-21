@@ -334,6 +334,11 @@ export interface UserCreateRequest {
     employer_fein?: Fein | null;
   } | null;
 }
+export interface MaskedPhone {
+  int_code?: string;
+  phone_number?: string;
+  phone_type?: "Cell" | "Fax" | "Phone";
+}
 export interface RoleResponse {
   role_id?: number;
   role_description?: string;
@@ -349,6 +354,11 @@ export interface UserResponse {
   user_id?: string;
   auth_id?: string;
   email_address?: string;
+  first_name?: string;
+  middle_name?: string;
+  last_name?: string;
+  mfa_delivery_preference?: ("SMS" | "Opt Out") | null;
+  mfa_phone_number?: MaskedPhone | null;
   consented_to_data_sharing?: boolean;
   roles?: RoleResponse[];
   user_leave_administrators?: UserLeaveAdminResponse[];
@@ -356,9 +366,15 @@ export interface UserResponse {
 export interface EmployerAddFeinRequestBody {
   employer_fein?: Fein | null;
 }
+export interface Phone {
+  int_code?: string | null;
+  phone_number?: string | null;
+  phone_type?: ("Cell" | "Fax" | "Phone") | null;
+}
 export interface UserUpdateRequest {
   consented_to_data_sharing?: boolean;
   mfa_delivery_preference?: ("SMS" | "Opt Out") | null;
+  mfa_phone_number?: Phone;
 }
 export interface EmployeeResponse {
   employee_id: string;
@@ -464,8 +480,6 @@ export interface ManagedRequirementResponse {
   created_at?: any;
 }
 export interface AbsencePeriodResponse {
-  class_id?: number;
-  index_id?: number;
   absence_period_start_date?: string;
   absence_period_end_date?: string;
   reason?:
@@ -475,7 +489,7 @@ export interface AbsencePeriodResponse {
     | "Serious Health Condition - Employ";
   reason_qualifier_one?: "Newborn" | "Adoption" | "Foster Care";
   reason_qualifier_two?: string;
-  type?: "Continuous" | "Intermittent" | "Reduced Schedule";
+  period_type?: "Continuous" | "Intermittent" | "Reduced Schedule";
   request_decision?: "Pending" | "Approved" | "Denied" | "Withdrawn";
   fineos_leave_request_id?: number;
   is_id_proofed?: boolean;
@@ -489,6 +503,7 @@ export interface ClaimResponse {
   absence_period_end_date?: any;
   claim_status?: any;
   claim_type_description?: any;
+  organization_unit_id?: string;
   created_at?: any;
   managed_requirements?: ManagedRequirementResponse[];
   absence_periods?: AbsencePeriodResponse[];
@@ -503,10 +518,10 @@ export interface PaymentResponse {
   period_start_date?: any;
   period_end_date?: any;
   amount?: number | null;
-  sent_to_bank_date?: any | null;
+  sent_to_bank_date?: string | null;
   payment_method?: ("Elec Funds Transfer" | "Check" | "Debit") | null;
-  expected_send_date_start?: any | null;
-  expected_send_date_end?: any | null;
+  expected_send_date_start?: string | null;
+  expected_send_date_end?: string | null;
   status?: "Sent to bank" | "Pending" | "Cancelled" | "Delayed";
 }
 export interface PaymentsResponse {
@@ -517,7 +532,7 @@ export interface GETPaymentsResponse extends SuccessfulResponse {
   data?: PaymentsResponse;
 }
 export interface ClaimDocumentResponse {
-  created_at: any | null;
+  created_at: string | null;
   document_type:
     | "State managed Paid Leave Confirmation"
     | "Approval Notice"
@@ -530,7 +545,13 @@ export interface ClaimDocumentResponse {
     | "Care for a family member form"
     | "Military exigency form"
     | "Pending Application Withdrawn"
-    | "Appeal Acknowledgment";
+    | "Appeal Acknowledgment"
+    | "Maximum Weekly Benefit Change Notice"
+    | "Benefit Amount Change Notice"
+    | "Leave Allotment Change Notice"
+    | "Approved Time Cancelled"
+    | "Change Request Approved"
+    | "Change Request Denied";
   content_type: string | null;
   fineos_document_id: string;
   name: string | null;
@@ -665,6 +686,10 @@ export interface PATCHEmployersClaimsByFineosAbsenceIdReviewResponse
   extends SuccessfulResponse {
   data?: UpdateClaimReviewResponse;
 }
+export interface OrganizationUnit {
+  organization_unit_id: string;
+  name: string;
+}
 export interface ReducedScheduleLeavePeriods {
   leave_period_id?: string | null;
   start_date?: Date | null;
@@ -791,13 +816,9 @@ export interface OtherIncome {
       )
     | null;
 }
-export interface MaskedPhone {
-  int_code?: string;
-  phone_number?: string;
-  phone_type?: "Cell" | "Fax" | "Phone";
-}
 export interface ApplicationResponse {
   application_nickname?: string | null;
+  organization_unit_id?: string | null;
   application_id?: string;
   fineos_absence_id?: string;
   tax_identifier?: MaskedSsnItin | null;
@@ -822,6 +843,10 @@ export interface ApplicationResponse {
   occupation?:
     | ("Sales Clerk" | "Administrative" | "Engineer" | "Health Care")
     | null;
+  employee_organization_units?: OrganizationUnit[];
+  employer_organization_units?: OrganizationUnit[];
+  organization_unit?: OrganizationUnit | null;
+  organization_unit_selection?: ("not_listed" | "not_selected") | null;
   gender?:
     | (
         | "Woman"
@@ -858,12 +883,9 @@ export interface GETApplicationsResponse extends SuccessfulResponse {
 }
 export type SsnItin = string;
 export type MassId = string;
-export interface Phone {
-  int_code?: string | null;
-  phone_number?: string | null;
-  phone_type?: ("Cell" | "Fax" | "Phone") | null;
-}
 export interface ApplicationRequestBody {
+  organization_unit_selection?: ("not_listed" | "not_selected") | null;
+  organization_unit_id?: string | null;
   application_nickname?: string | null;
   tax_identifier?: SsnItin | null;
   employer_fein?: Fein | null;
@@ -943,7 +965,13 @@ export interface DocumentResponse {
     | "Care for a family member form"
     | "Military exigency form"
     | "Pending Application Withdrawn"
-    | "Appeal Acknowledgment";
+    | "Appeal Acknowledgment"
+    | "Maximum Weekly Benefit Change Notice"
+    | "Benefit Amount Change Notice"
+    | "Leave Allotment Change Notice"
+    | "Approved Time Cancelled"
+    | "Change Request Approved"
+    | "Change Request Denied";
   content_type: string;
   fineos_document_id: string;
   name: string;
@@ -970,6 +998,12 @@ export interface DocumentUploadRequest {
     | "Military exigency form"
     | "Pending Application Withdrawn"
     | "Appeal Acknowledgment"
+    | "Maximum Weekly Benefit Change Notice"
+    | "Benefit Amount Change Notice"
+    | "Leave Allotment Change Notice"
+    | "Approved Time Cancelled"
+    | "Change Request Approved"
+    | "Change Request Denied"
     | "Certification Form";
   name?: string;
   description?: string;
@@ -988,7 +1022,7 @@ export interface POSTApplicationsByApplicationIdSubmitPaymentPreferenceResponse
   data?: ApplicationResponse;
 }
 export interface TaxWithholdingPreferenceRequestBody {
-  is_withholding_tax?: boolean;
+  is_withholding_tax?: boolean | null;
 }
 export interface POSTApplicationsByApplicationIdSubmitTaxWithholdingPreferenceResponse
   extends SuccessfulResponse {
@@ -1100,6 +1134,7 @@ export interface AdminUserResponse {
 export interface AdminLogoutResponse {
   logout_uri?: string;
 }
+export type GETAdminUsersResponse = UserResponse[];
 /**
  * Get the API status
  */
@@ -1752,4 +1787,32 @@ export async function getAdminLogout(
   return await http.fetchJson("/admin/logout", {
     ...options,
   });
+}
+/**
+ * Retrieve a User accounts
+ */
+export async function getAdminUsers(
+  {
+    page_size,
+    page_offset,
+    email_address,
+  }: {
+    page_size?: number;
+    page_offset?: number;
+    email_address?: string;
+  } = {},
+  options?: RequestOptions,
+): Promise<ApiResponse<GETAdminUsersResponse>> {
+  return await http.fetchJson(
+    `/admin/users${QS.query(
+      QS.form({
+        page_size,
+        page_offset,
+        email_address,
+      }),
+    )}`,
+    {
+      ...options,
+    },
+  );
 }

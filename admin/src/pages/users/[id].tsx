@@ -9,15 +9,17 @@ import React from "react";
 import Link from "next/link";
 import isClient from "../../utils/isClient";
 
-import { tempUsers } from "./index";
-
 type AccountInfoRow = {
   title: string;
 } & InfoRowProps;
 
 export default function AccountInfo() {
   const router = useRouter();
-  const user = tempUsers[Number(router.query.id)];
+  const user = {
+    name: "Fake",
+    type: "Employee",
+    email_address: "jane@example.com",
+  };
 
   const rows: AccountInfoRow[] = [
     {
@@ -32,32 +34,8 @@ export default function AccountInfo() {
     },
     {
       title: "Email",
-      children: user.email,
+      children: user.email_address,
       showLogButton: false,
-    },
-    {
-      title: "On the Suppression List?",
-      children: user.onSuppressionList ? "Yes" : "No",
-      showLogButton: true,
-      onClickViewLog: () => {},
-    },
-    {
-      title: "Emails Bouncing?",
-      children: user.emailsBouncing ? "Yes" : "No",
-      showLogButton: true,
-      onClickViewLog: () => {},
-    },
-    {
-      title: "Verified Cognito User?",
-      children: user.verifiedCognitoUser ? "Yes" : "No",
-      showLogButton: true,
-      onClickViewLog: () => {},
-    },
-    {
-      title: "Has an email been delivered?",
-      children: user.emailDelivered ? "Yes" : "No",
-      showLogButton: true,
-      onClickViewLog: () => {},
     },
   ];
 

@@ -1,105 +1,56 @@
 import Search from "../../components/Search";
+import {
+  ApiResponse,
+  UserResponse,
+  getAdminUsers,
+  GETAdminUsersResponse,
+} from "../../api";
 import Table from "../../components/Table";
 import Tag from "../../components/Tag";
 import Button from "../../components/Button";
 import Alert from "../../components/Alert";
 import SlideOut, { Props as SlideOutProps } from "../../components/SlideOut";
 import usePopup from "../../hooks/usePopup";
+import { getAuthorizationHeader } from "../../utils/azure_sso_authorization";
 import { Helmet } from "react-helmet-async";
 import { useState } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import { StaticPropsPermissions } from "../../menus";
 
-type User = {
-  id?: number;
-  name: string;
-  email: string;
-  type: string;
-  onSuppressionList: boolean;
-  emailsBouncing: boolean;
-  verifiedCognitoUser: boolean;
-  emailDelivered: boolean;
-};
-
-// @todo: remove when api can be queried for users
-export const tempUsers = [
-  {
-    id: 0,
-    name: "yep name1",
-    email: "yep email1",
-    type: "Employee",
-    onSuppressionList: false,
-    emailsBouncing: false,
-    verifiedCognitoUser: true,
-    emailDelivered: true,
-  },
-  {
-    id: 1,
-    name: "yep name2",
-    email: "yep email2",
-    type: "Employee",
-    onSuppressionList: false,
-    emailsBouncing: false,
-    verifiedCognitoUser: true,
-    emailDelivered: true,
-  },
-  {
-    id: 2,
-    name: "yep name3",
-    email: "yep email3",
-    type: "Employee",
-    onSuppressionList: false,
-    emailsBouncing: false,
-    verifiedCognitoUser: true,
-    emailDelivered: true,
-  },
-  {
-    id: 3,
-    name: "yep name4",
-    email: "yep email4",
-    type: "Employee",
-    onSuppressionList: false,
-    emailsBouncing: false,
-    verifiedCognitoUser: true,
-    emailDelivered: true,
-  },
-  {
-    id: 4,
-    name: "yep name5",
-    email: "yep email5",
-    type: "Employee",
-    onSuppressionList: false,
-    emailsBouncing: false,
-    verifiedCognitoUser: true,
-    emailDelivered: true,
-  },
-];
-
 function UserLookup() {
   const router = useRouter();
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<UserResponse[]>([]);
   const { Popup: SlideOutPopup, open: openSlideOut } = usePopup<
-    SlideOutProps<User>,
-    User
+    SlideOutProps<UserResponse>,
+    UserResponse
   >(SlideOut);
 
   const findUsers = async (searchTerm: string) => {
-    return new Promise((resolve) => {
-      resolve(tempUsers.filter((u) => u.name.includes(searchTerm)));
-    });
+    const returnedUsers = (
+      await getAdminUsers(
+        { email_address: searchTerm, page_size: 10 },
+        { headers: await getAuthorizationHeader() },
+      )
+    ).data;
+    setUsers(returnedUsers);
+    return returnedUsers;
   };
 
-  const getUsersName = (u: User) => <>{u.name}</>;
-  const getUsersEmail = (u: User) => <>{u.email}</>;
-  const getUsersType = (u: User) => <Tag text={u.type} color="green" />;
-  const getUsersOptions = (u: User) => (
+  const getUsersName = (u: UserResponse) => {
+    return [u?.first_name, u?.middle_name, u?.last_name].join(" ");
+  };
+  const getUsersEmail = (u: UserResponse) => <>{u.email_address}</>;
+  const getUsersType = (u: UserResponse) => (
+    <Tag text={"Employee"} color="green" />
+  );
+  const getUsersOptions = (u: UserResponse) => (
     <>
       <Button className="btn--plain" onClick={openSlideOut(u)}>
         Quick view
       </Button>
       &nbsp; |&nbsp;
-      <Link href={`/users/${u.id}`}>
+      <Link href={`/users/${u.user_id}`}>
         <a className="btn btn--plain">View account</a>
       </Link>
     </>
@@ -112,7 +63,7 @@ function UserLookup() {
       </Helmet>
       <h1 className="page__title">User Lookup</h1>
       <SlideOutPopup title="Account Information">
-        {(data: User) => {
+        {(data: UserResponse) => {
           return (
             data && (
               <div className="slide-out--account-info">
@@ -120,48 +71,24 @@ function UserLookup() {
                   <img
                     className="slide-out--account-info-image"
                     src="https://via.placeholder.com/32"
-                    alt={data?.name}
+                    alt={data?.last_name}
                   />
                 </div>
                 <div className="slide-out--account-info-content-wrapper">
                   <div className="slide-out--account-info-header">
                     <div>
                       <p className="slide-out--account-info-name">
-                        {data?.name}
+                        {data?.last_name}
                       </p>
                       <p className="slide-out--account-info-email">
-                        {data?.email}
+                        {data?.email_address}
                       </p>
                     </div>
 
                     <div className="slide-out__tab-container">
-                      <Tag text={data.type} color="green" />
+                      <Tag text={"employee"} color="green" />
                     </div>
                   </div>
-
-                  <section className="slide-out__section">
-                    <p className="slide-out__paragraph">
-                      On the Suppression List?
-                    </p>
-                    {data.onSuppressionList ? "Yes" : "No"}
-                  </section>
-
-                  <section className="slide-out__section">
-                    <p className="slide-out__paragraph">Emails Bouncing?</p>
-                    {data.emailsBouncing ? "Yes" : "No"}
-                  </section>
-
-                  <section className="slide-out__section">
-                    <p className="slide-out__paragraph">Cognito User?</p>
-                    {data.verifiedCognitoUser ? "Yes" : "No"}
-                  </section>
-
-                  <section className="slide-out__section">
-                    <p className="slide-out__paragraph">
-                      Has an email been delivered?
-                    </p>
-                    {data.emailDelivered ? "Yes" : "No"}
-                  </section>
 
                   <div className="slide-out--account-info-button-wrapper">
                     <Button
