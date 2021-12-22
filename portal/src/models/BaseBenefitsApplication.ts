@@ -146,7 +146,7 @@ abstract class BaseBenefitsApplication {
     const d = new Date(
       this.leaveStartDate ? this.leaveStartDate : programLaunch.toISOString()
     );
-    console.log(d);
+
     if (!this.leaveStartDate) {
       return programLaunch.toISOString().split("T")[0];
     }
