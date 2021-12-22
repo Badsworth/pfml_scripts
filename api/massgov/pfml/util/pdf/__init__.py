@@ -56,6 +56,7 @@ def compress_pdf(source_file: IO[Any], dest_file: IO[Any]) -> int:
         "-dNOPAUSE",
         "-dQUIET",
         "-dBATCH",
+        "-r144",
         "-sOutputFile=%stdout",
         "-q",
         "-_",
