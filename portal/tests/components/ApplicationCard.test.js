@@ -1,16 +1,13 @@
-import { act, render, screen } from "@testing-library/react";
-
+import { render, screen } from "@testing-library/react";
 import AppErrorInfo from "../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
 import { ApplicationCard } from "../../src/components/ApplicationCard";
-import ClaimDetail from "../../src/models/ClaimDetail";
 import { DocumentType } from "../../src/models/Document";
 import { MockBenefitsApplicationBuilder } from "../test-utils";
 import React from "react";
 import User from "../../src/models/User";
 import { merge } from "lodash";
 import useAppLogic from "../../src/hooks/useAppLogic";
-import userEvent from "@testing-library/user-event";
 
 const ApplicationCardWithAppLogic = ({
   // eslint-disable-next-line react/prop-types
@@ -49,136 +46,10 @@ describe("ApplicationCard", () => {
     const claim = new MockBenefitsApplicationBuilder().completed().create();
     render(<ApplicationCardWithAppLogic claim={claim} />);
 
-    const button = screen.getByRole("button", {
+    const button = screen.getByRole("link", {
       name: /View status updates and details/,
     });
     expect(button).toBeInTheDocument();
-  });
-
-  it("with a completed application when the user clicks the view status button disables the button", async () => {
-    let appLogic;
-    const claim = new MockBenefitsApplicationBuilder().completed().create();
-    render(
-      <ApplicationCardWithAppLogic
-        addAppLogicMocks={(_appLogic) => {
-          appLogic = _appLogic;
-          appLogic.claims.isLoadingClaimDetail = true;
-          appLogic.claims.loadClaimDetail = jest.fn(
-            () => new Promise((resolve, reject) => {})
-          );
-        }}
-        claim={claim}
-      />
-    );
-
-    const button = screen.getByRole("button", {
-      name: /View status updates and details/,
-    });
-    expect(button).toBeEnabled();
-    await act(async () => {
-      await userEvent.click(button);
-    });
-    expect(button).toBeDisabled();
-  });
-
-  it("with a completed application when the user clicks the view status button loads claim details", async () => {
-    let appLogic;
-    const claim = new MockBenefitsApplicationBuilder().completed().create();
-    render(
-      <ApplicationCardWithAppLogic
-        addAppLogicMocks={(_appLogic) => {
-          appLogic = _appLogic;
-          appLogic.claims.loadClaimDetail = jest.fn(
-            () => new Promise((resolve, reject) => {})
-          );
-        }}
-        claim={claim}
-      />
-    );
-
-    const button = screen.getByRole("button", {
-      name: /View status updates and details/,
-    });
-    await act(async () => {
-      await userEvent.click(button);
-    });
-    expect(appLogic.claims.loadClaimDetail).toHaveBeenCalled();
-  });
-
-  it("with a completed application when the claim has loaded successfully, buttons redirect the user to the correct claim status link", async () => {
-    let appLogic;
-    const claim = new MockBenefitsApplicationBuilder().completed().create();
-    render(
-      <ApplicationCardWithAppLogic
-        addAppLogicMocks={(_appLogic) => {
-          appLogic = _appLogic;
-          appLogic.claims.loadClaimDetail = jest.fn(() =>
-            Promise.resolve(
-              new ClaimDetail({
-                fineos_absence_id: claim.fineos_absence_id,
-              })
-            )
-          );
-          appLogic.portalFlow.goTo = jest.fn();
-        }}
-        claim={claim}
-      />
-    );
-
-    const expectButtonToRedirect = async (name, hash = "") => {
-      const button = screen.getByRole("button", { name });
-      await act(async () => {
-        await userEvent.click(button);
-      });
-
-      expect(appLogic.portalFlow.goTo).toHaveBeenCalledWith(
-        `/applications/status${hash ? "/" : ""}?absence_id=${
-          claim.fineos_absence_id
-        }${hash}`
-      );
-      jest.clearAllMocks();
-    };
-
-    await expectButtonToRedirect(/View status updates and details/);
-    await expectButtonToRedirect(/View your notices/, "#view_notices");
-    await expectButtonToRedirect(
-      /Respond to a request for information/,
-      "#upload_documents"
-    );
-  });
-
-  it("with a completed application when the claim has failed the navigation buttons do not go to the next page", async () => {
-    let appLogic;
-    const claim = new MockBenefitsApplicationBuilder().completed().create();
-    render(
-      <ApplicationCardWithAppLogic
-        addAppLogicMocks={(_appLogic) => {
-          appLogic = _appLogic;
-          appLogic.claims.loadClaimDetail = jest.fn(
-            () =>
-              new Promise((resolve, reject) => {
-                resolve();
-              })
-          );
-          appLogic.portalFlow.goTo = jest.fn();
-        }}
-        claim={claim}
-      />
-    );
-
-    const expectButtonNotToRedirect = async (name) => {
-      const button = screen.getByRole("button", { name });
-      await act(async () => {
-        await userEvent.click(button);
-      });
-
-      expect(appLogic.portalFlow.goTo).not.toHaveBeenCalled();
-      jest.clearAllMocks();
-    };
-
-    await expectButtonNotToRedirect(/View status updates and details/);
-    await expectButtonNotToRedirect(/View your notices/);
-    await expectButtonNotToRedirect(/Respond to a request for information/);
   });
 
   it("in progress claims don't show EIN in the title section", () => {
@@ -270,7 +141,7 @@ describe("ApplicationCard", () => {
       />
     );
     expect(
-      screen.getByRole("button", { name: /View your notices/ })
+      screen.getByRole("link", { name: /View your notices/ })
     ).toBeInTheDocument();
   });
 

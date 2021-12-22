@@ -42,12 +42,12 @@ exports[`ApplicationCard with a completed application renders the component 1`] 
     <div
       class="border-top border-base-lighter padding-y-2 margin-y-2 margin-bottom-0"
     >
-      <button
-        class="usa-button position-relative width-full display-flex flex-align-center flex-justify-center flex-column margin-right-0"
-        type="button"
+      <a
+        class="usa-button width-full display-flex flex-align-center flex-justify-center flex-column margin-right-0"
+        href="/applications/status?absence_id=NTN-111-ABS-01"
       >
         View status updates and details
-      </button>
+      </a>
     </div>
     <div
       class="border-top border-base-lighter"
@@ -57,18 +57,18 @@ exports[`ApplicationCard with a completed application renders the component 1`] 
       >
         Other actions
       </h4>
-      <button
-        class="usa-button position-relative display-block margin-bottom-3 usa-button--unstyled"
-        type="button"
+      <a
+        class="usa-button display-block margin-bottom-3 usa-button--unstyled"
+        href="/applications/status?absence_id=NTN-111-ABS-01#view_notices"
       >
         View your notices
-      </button>
-      <button
-        class="usa-button position-relative display-block margin-bottom-2 usa-button--unstyled"
-        type="button"
+      </a>
+      <a
+        class="usa-button display-block margin-bottom-2 usa-button--unstyled"
+        href="/applications/status?absence_id=NTN-111-ABS-01#upload_documents"
       >
         Respond to a request for information
-      </button>
+      </a>
     </div>
   </article>
 </div>
