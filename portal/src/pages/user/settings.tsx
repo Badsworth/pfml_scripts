@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import User, { MFAPreference } from "src/models/User";
 import AmendmentForm from "src/components/employers/AmendmentForm";
 import { AppLogic } from "src/hooks/useAppLogic";
+import BackButton from "src/components/BackButton";
 import Button from "src/components/core/Button";
 import ButtonLink from "src/components/ButtonLink";
 import InputChoiceGroup from "src/components/core/InputChoiceGroup";
@@ -12,6 +13,7 @@ import Title from "src/components/core/Title";
 import { Trans } from "react-i18next";
 import { isFeatureEnabled } from "src/services/featureFlags";
 import { pick } from "lodash";
+import routes from "src/routes";
 import useFormState from "src/hooks/useFormState";
 import useFunctionalInputProps from "src/hooks/useFunctionalInputProps";
 import { useTranslation } from "src/locales/i18n";
@@ -85,6 +87,10 @@ export const Settings = (props: UserSettingsProps) => {
 
   return (
     <div className="measure-6">
+      <BackButton
+        href={routes.applications.index}
+        label={t("pages.userSettings.backToApplicationsLinkText")}
+      />
       <Title marginBottom="6">{t("pages.userSettings.title")}</Title>
 
       <ReviewHeading level="3">
