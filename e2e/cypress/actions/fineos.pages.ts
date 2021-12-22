@@ -464,6 +464,9 @@ class AdjudicationPage {
     cb(new RequestInformationPage());
     return this;
   }
+  requestEmploymentInformation() {
+    this.onTab("Request Information", "Employment Information")
+  }
   acceptLeavePlan() {
     this.onTab("Manage Request");
     cy.get("input[type='submit'][value='Accept']").click({ force: true });

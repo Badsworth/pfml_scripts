@@ -45,6 +45,7 @@ import { chooseRolePreset } from "../../src/util/fineosRoleSwitching";
 import { FineosSecurityGroups } from "../../src/submission/fineos.pages";
 import { Fineos } from "../../src/submission/fineos.pages";
 import { beforeRunCollectMetadata } from "../reporters/new-relic-collect-metadata";
+import EmployeePool from "../../src/generation/Employee";
 
 export default function (
   on: Cypress.PluginEvents,
@@ -157,13 +158,13 @@ export default function (
     waitForClaimDocuments:
       documentWaiter.waitForClaimDocuments.bind(documentWaiter),
 
-    async generateClaim(scenarioID: Scenarios): Promise<DehydratedClaim> {
+    async generateClaim(scenarioID: Scenarios, employeePool?: EmployeePool): Promise<DehydratedClaim> {
       if (!(scenarioID in scenarios)) {
         throw new Error(`Invalid scenario: ${scenarioID}`);
       }
       const scenario = scenarios[scenarioID];
       const claim = ClaimGenerator.generate(
-        await getEmployeePool(),
+        employeePool ?? await getEmployeePool(),
         scenario.employee,
         scenario.claim as APIClaimSpec
       );

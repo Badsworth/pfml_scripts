@@ -15,10 +15,13 @@
     "EMPLOYERS_FILE": "./employers/e2e-2021-09-08.json",
     "LST_EMPLOYEES_FILE": "./employees/e2e-2021-08-05.json",
     "LST_EMPLOYERS_FILE": "./employers/e2e-2021-08-05.json",
+    "ORGUNIT_EMPLOYEES_FILE": "./employees/e2e-2021-12-20-orgunits.employees.json",
+    "ORGUNIT_EMPLOYERS_FILE": "./employers/e2e-2021-12-20-orgunits.json",
     "DOR_IMPORT_URI": "s3://massgov-pfml-test-agency-transfer/dor/received/",
     "DOR_ETL_ARN": "arn:aws:states:us-east-1:498823821309:stateMachine:pfml-api-test-dor-fineos-etl",
     "FINEOS_HAS_TAX_WITHHOLDING": "true",
-    "HAS_UPDATED_MAX_BENFIT": "true"
+    "HAS_UPDATED_MAX_BENFIT": "true",
+    "ORGUNITS_SETUP": "true"
   },
   "stage": {
     "PORTAL_BASEURL": "https://paidleave-stage.mass.gov",
@@ -92,6 +95,8 @@
     "EMPLOYERS_FILE": "./employers/e2e-2021-09-08.json",
     "LST_EMPLOYEES_FILE": "./employees/lst-2021-08-18.employees.json",
     "LST_EMPLOYERS_FILE": "./employers/lst-2021-08-18.json",
+    "ORGUNIT_EMPLOYEES_FILE": "./employees/e2e-2021-12-20-orgunits.employees.json",
+    "ORGUNIT_EMPLOYERS_FILE": "./employers/e2e-2021-12-20-orgunits.json",
     "DOR_IMPORT_URI": "s3://massgov-pfml-performance-agency-transfer/dor/received/",
     "DOR_ETL_ARN": "arn:aws:states:us-east-1:498823821309:stateMachine:pfml-api-performance-dor-fineos-etl",
     "FINEOS_HAS_TAX_WITHHOLDING": "true",
@@ -123,6 +128,8 @@
     "COGNITO_CLIENTID": "59oeobfn0759c8166pjh381joc",
     "EMPLOYEES_FILE": "./employees/e2e-2021-09-08.json",
     "EMPLOYERS_FILE": "./employers/e2e-2021-09-08.json",
+    "ORGUNIT_EMPLOYEES_FILE": "./employees/e2e-2021-12-20-orgunits.employees.json",
+    "ORGUNIT_EMPLOYERS_FILE": "./employers/e2e-2021-12-20-orgunits.json",
     "DOR_IMPORT_URI": "s3://massgov-pfml-cps-preview-agency-transfer/dor/received/",
     "DOR_ETL_ARN": "arn:aws:states:us-east-1:498823821309:stateMachine:pfml-api-cps-preview-dor-fineos-etl",
     "FINEOS_HAS_TAX_WITHHOLDING": "false",

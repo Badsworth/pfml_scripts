@@ -24,6 +24,7 @@ type Scenarios = import("./src/types").Scenarios;
 type ScenarioSpecs = import("./src/types").ScenarioSpecs;
 type APIClaimSpec = import("./src/generation/Claim").APIClaimSpec;
 type GeneratedClaim = import("./src/generation/Claim").GeneratedClaim;
+type EmployeePool = import("./src/generation/Employee");
 type FineosExclusiveLeaveReasons =
   import("./src/generation/Claim").FineosExclusiveLeaveReasons;
 type ApplicationSubmissionResponse =
@@ -53,6 +54,14 @@ declare namespace Cypress {
         ? DehydratedClaim
         : GeneratedClaim
     >;
+    task<T extends Scenarios>(
+      event: "generateClaim",
+      args: {scenario: T, employeePool: EmployeePool}
+    ): Chainable<
+      ScenarioSpecs[T]["claim"] extends APIClaimSpec
+        ? DehydratedClaim
+        : GeneratedClaim
+      >;
     task(event: "getAuthVerification", mail: string): Chainable<string>;
     task(
       event: "completeSSOLoginFineos",

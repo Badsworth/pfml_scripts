@@ -251,6 +251,21 @@ export const CDENY2: ScenarioSpecification = {
   },
 };
 
+export const ORGUNIT: ScenarioSpecification = {
+  employee: { mass_id: true, wages: "eligible" },
+  claim: {
+    label: "ORGUNIT",
+    shortClaim: true,
+    has_continuous_leave_periods: true,
+    reason: "Care for a Family Member",
+    docs: {
+      MASSID: {},
+      CARING: {},
+    },
+    metadata: { orgunit: "Division of Administrative Law Appeals" },
+  },
+};
+
 // only used in ignored `reductions.ts` spec
 export const MED_OLB: ScenarioSpecification = {
   employee: { mass_id: true, wages: 90000 },

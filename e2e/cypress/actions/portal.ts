@@ -49,6 +49,7 @@ function setFeatureFlags(flags?: Partial<FeatureFlags>): void {
     employerShowReviewByStatus: true,
     claimantShowStatusPage: true,
     claimantShowTaxWithholding: false,
+    claimantShowOrganizationUnits: false,
   };
   cy.setCookie("_ff", JSON.stringify({ ...defaults, ...flags }), { log: true });
 }
@@ -574,6 +575,10 @@ export function enterEmployerInfo(application: ApplicationRequestBody): void {
     ).type(application.employer_fein as string);
   }
   cy.contains("button", "Save and continue").click();
+  if (config("ORGUNITS_SETUP") == true) {
+    cy.get('combobox_org_unit').contains("Division of Administrative Law Appeals").click( {force: true});
+    cy.contains("button", "Save and continue").click();
+  }
   if (application.employment_status === "Employed") {
     cy.contains(
       "fieldset",
