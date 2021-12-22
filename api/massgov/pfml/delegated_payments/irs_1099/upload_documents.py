@@ -58,7 +58,11 @@ class Upload1099DocumentsStep(Step):
                     logger.warning("No more pfml 1099 records found.")
                     break
 
-                if record1099.s3_location is None or len(record1099.s3_location) == 0:
+                if (
+                    record1099.s3_location is None
+                    or len(record1099.s3_location) == 0
+                    or record1099.s3_location == "NULL"
+                ):
                     logger.warning(
                         f"Pfml 1099 record with id {record1099.pfml_1099_id} cannot be upload to FIneos API because it was not successfully generated."
                     )
@@ -73,7 +77,7 @@ class Upload1099DocumentsStep(Step):
                         payments_config.get_s3_config().pfml_1099_document_archive_path,
                         record1099.s3_location,
                     )
-                    document_name = document_path.split("/")[5]
+                    document_name = record1099.s3_location.split("/")[3]
                     self._upload_document(
                         fineos, document_path, document_name, document_type, record1099
                     )
@@ -81,7 +85,9 @@ class Upload1099DocumentsStep(Step):
                     self.increment(self.Metrics.DOCUMENT_COUNT)
                     temp_con = temp_con + 1
                 except Exception as error:
-                    logger.error(error)
+                    logger.error(
+                        f"Pfml 1099 record with id {record1099.pfml_1099_id} generated the error: {error}"
+                    )
                     self.update_status(record1099, FineosUploadStatus.FAILED)
                     self.increment(self.Metrics.DOCUMENT_ERROR)
         else:
