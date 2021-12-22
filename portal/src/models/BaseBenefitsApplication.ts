@@ -150,7 +150,15 @@ abstract class BaseBenefitsApplication {
     );
 
     if (!this.leaveStartDate) {
-      return programLaunch.toISOString();
+      return programLaunch.toISOString().split("T")[0];
+    }
+
+    // Handle invalid date edge-cases
+    if (!(d instanceof Date) || isNaN(d.getTime())) {
+      tracker.trackEvent("otherLeaveStartDate calculated invalid", {
+        leaveStartDate: this.leaveStartDate,
+      });
+      return programLaunch.toISOString().split("T")[0];
     }
 
     // calculate a year before given date if given date is sunday
@@ -163,18 +171,10 @@ abstract class BaseBenefitsApplication {
 
     // If calculated date is earlier, return the program start date
     if (d < programLaunch) {
-      return programLaunch.toISOString();
+      return programLaunch.toISOString().split("T")[0];
     }
 
-    // Handle invalid date edge-cases
-    if (!(d instanceof Date) || isNaN(d.getTime())) {
-      tracker.trackEvent("otherLeaveStartDate calculated invalid", {
-        leaveStartDate: this.leaveStartDate,
-      });
-      return programLaunch.toISOString();
-    }
-
-    return d.toISOString();
+    return d.toDateString();
   }
 }
 
