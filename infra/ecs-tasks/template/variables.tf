@@ -314,6 +314,11 @@ variable "enable_pub_payments_copy_audit_report_schedule" {
   default     = false
 }
 
+variable "upload_max_files_to_fineos" {
+  description = "max number of 1099 documents to upload to Fineos API"
+  default     = "10"
+}
+
 ########## Variables for Step Functions ################
 
 variable "st_use_mock_dor_data" {

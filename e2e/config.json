@@ -18,7 +18,8 @@
     "DOR_IMPORT_URI": "s3://massgov-pfml-test-agency-transfer/dor/received/",
     "DOR_ETL_ARN": "arn:aws:states:us-east-1:498823821309:stateMachine:pfml-api-test-dor-fineos-etl",
     "FINEOS_HAS_TAX_WITHHOLDING": "true",
-    "HAS_UPDATED_MAX_BENFIT": "true"
+    "HAS_UPDATED_MAX_BENFIT": "true",
+    "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "true"
   },
   "stage": {
     "PORTAL_BASEURL": "https://paidleave-stage.mass.gov",
@@ -33,7 +34,8 @@
     "DOR_IMPORT_URI": "s3://massgov-pfml-stage-agency-transfer/dor/received/",
     "DOR_ETL_ARN": "arn:aws:states:us-east-1:498823821309:stateMachine:pfml-api-stage-dor-fineos-etl",
     "FINEOS_HAS_TAX_WITHHOLDING": "true",
-    "HAS_UPDATED_MAX_BENFIT": "true"
+    "HAS_UPDATED_MAX_BENFIT": "true",
+    "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "false"
   },
   "training": {
     "PORTAL_BASEURL": "https://paidleave-training.mass.gov",
@@ -48,7 +50,8 @@
     "DOR_IMPORT_URI": "s3://massgov-pfml-training-agency-transfer/dor/received/",
     "DOR_ETL_ARN": "arn:aws:states:us-east-1:498823821309:stateMachine:pfml-api-training-dor-fineos-etl",
     "FINEOS_HAS_TAX_WITHHOLDING": "false",
-    "HAS_UPDATED_MAX_BENFIT": "false"
+    "HAS_UPDATED_MAX_BENFIT": "false",
+    "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "false"
   },
   "trn2": {
     "PORTAL_BASEURL": "https://paidleave-trn2.dfml.eol.mass.gov",
@@ -63,7 +66,8 @@
     "DOR_IMPORT_URI": "s3://massgov-pfml-trn2-agency-transfer/dor/received/",
     "DOR_ETL_ARN": "arn:aws:states:us-east-1:498823821309:stateMachine:pfml-api-trn2-dor-fineos-etl",
     "FINEOS_HAS_TAX_WITHHOLDING": "false",
-    "HAS_UPDATED_MAX_BENFIT": "false"
+    "HAS_UPDATED_MAX_BENFIT": "false",
+    "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "false"
   },
   "long": {
     "PORTAL_BASEURL": "https://paidleave-long.dfml.eol.mass.gov",
@@ -78,7 +82,8 @@
     "DOR_IMPORT_URI": "s3://massgov-pfml-long-agency-transfer/dor/received/",
     "DOR_ETL_ARN": "arn:aws:states:us-east-1:498823821309:stateMachine:pfml-api-long-dor-fineos-etl",
     "FINEOS_HAS_TAX_WITHHOLDING": "false",
-    "HAS_UPDATED_MAX_BENFIT": "false"
+    "HAS_UPDATED_MAX_BENFIT": "false",
+    "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "false"
   },
   "performance": {
     "PORTAL_BASEURL": "https://paidleave-performance.mass.gov",
@@ -95,7 +100,8 @@
     "DOR_IMPORT_URI": "s3://massgov-pfml-performance-agency-transfer/dor/received/",
     "DOR_ETL_ARN": "arn:aws:states:us-east-1:498823821309:stateMachine:pfml-api-performance-dor-fineos-etl",
     "FINEOS_HAS_TAX_WITHHOLDING": "true",
-    "HAS_UPDATED_MAX_BENFIT": "true"
+    "HAS_UPDATED_MAX_BENFIT": "true",
+    "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "false"
   },
   "uat": {
     "PORTAL_BASEURL": "https://paidleave-uat.mass.gov",
@@ -111,7 +117,8 @@
     "DOR_ETL_ARN": "arn:aws:states:us-east-1:498823821309:stateMachine:pfml-api-uat-dor-fineos-etl",
     "HAS_FINEOS_SP": "true",
     "FINEOS_HAS_TAX_WITHHOLDING": "true",
-    "HAS_UPDATED_MAX_BENFIT": "true"
+    "HAS_UPDATED_MAX_BENFIT": "true",
+    "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "false"
   },
   "cps-preview": {
     "PORTAL_BASEURL": "https://paidleave-cps-preview.eol.mass.gov",
@@ -126,7 +133,8 @@
     "DOR_IMPORT_URI": "s3://massgov-pfml-cps-preview-agency-transfer/dor/received/",
     "DOR_ETL_ARN": "arn:aws:states:us-east-1:498823821309:stateMachine:pfml-api-cps-preview-dor-fineos-etl",
     "FINEOS_HAS_TAX_WITHHOLDING": "false",
-    "HAS_UPDATED_MAX_BENFIT": "false"
+    "HAS_UPDATED_MAX_BENFIT": "false",
+    "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "false"
   },
   "breakfix": {
     "PORTAL_BASEURL": "https://paidleave-breakfix.eol.mass.gov",
@@ -143,7 +151,8 @@
     "DOR_ETL_ARN": "arn:aws:states:us-east-1:498823821309:stateMachine:pfml-api-breakfix-dor-fineos-etl",
     "HAS_FINEOS_SP": "true",
     "FINEOS_HAS_TAX_WITHHOLDING": "false",
-    "HAS_UPDATED_MAX_BENFIT": "false"
+    "HAS_UPDATED_MAX_BENFIT": "false",
+    "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "false"
   },
   "local": {
     "PORTAL_BASEURL": "http://localhost:3000",

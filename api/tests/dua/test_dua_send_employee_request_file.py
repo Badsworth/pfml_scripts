@@ -5,6 +5,7 @@ import pytest
 
 import massgov.pfml.util.files as file_util
 from massgov.pfml.db.models.factories import EmployeeFactory
+from massgov.pfml.dua.config import get_transfer_config
 from massgov.pfml.dua.dua_generate_employee_request_file import (
     Constants,
     _format_employees_for_outbound,
@@ -47,11 +48,13 @@ def test_send_dua_employee_request_file(
     setup_mock_sftp_client,
     expected_fineos_customer_numbers,
 ):
+    transfer_config = get_transfer_config()
+
     s3_bucket_uri = "s3://" + mock_s3_bucket
-    dest_dir = Constants.S3_DFML_OUTBOUND_PATH
-    monkeypatch.setenv("S3_BUCKET", s3_bucket_uri)
-    monkeypatch.setenv("S3_DUA_OUTBOUND_DIRECTORY_PATH", dest_dir)
-    monkeypatch.setenv("S3_DUA_ARCHIVE_DIRECTORY_PATH", Constants.S3_DFML_ARCHIVE_PATH)
+    dest_dir = transfer_config.outbound_directory_path
+    monkeypatch.setenv("DUA_TRANSFER_BASE_PATH", s3_bucket_uri)
+    monkeypatch.setenv("OUTBOUND_DIRECTORY_PATH", dest_dir)
+    monkeypatch.setenv("ARCHIVE_DIRECTORY_PATH", transfer_config.archive_directory_path)
     monkeypatch.setenv("MOVEIT_SFTP_URI", "sftp://foo@bar.com")
     monkeypatch.setenv("MOVEIT_SSH_KEY", "foo")
 

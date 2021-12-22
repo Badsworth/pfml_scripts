@@ -51,6 +51,7 @@ import {
 import { DocumentUploadRequest } from "../../src/api";
 import { fineos } from ".";
 import { LeaveReason } from "../../src/generation/Claim";
+import { config } from "./common";
 
 type StatusCategory =
   | "Applicability"
@@ -1893,7 +1894,10 @@ export class ClaimantPage {
    *    //Further actions here...
    *  })
    */
-  createNotification(claim: ValidClaim): Cypress.Chainable<string> {
+  createNotification(
+    claim: ValidClaim,
+    withholdingPreference?: boolean
+  ): Cypress.Chainable<string> {
     if (!claim.leave_details.reason) throw new Error(`Missing leave reason.`);
     const reason = claim.leave_details.reason as NonNullable<LeaveReason>;
     // Start the process
@@ -2006,6 +2010,25 @@ export class ClaimantPage {
                   )
                   .applyStandardWorkWeek();
                 return absenceDetails.nextStep((wrapUp) => {
+                  // tax withholdings
+                  if (
+                    config("FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION") ===
+                    "true"
+                  ) {
+                    fineos.waitForAjaxComplete();
+                    if (withholdingPreference) {
+                      cy.get(
+                        "input[type='checkbox'][name$='_somSITFITOptIn_CHECKBOX']"
+                      ).click();
+                    }
+                    cy.pause();
+                    // must be selected to proceed
+                    cy.get(
+                      "input[type='checkbox'][name$='_somSITFITVerification_CHECKBOX']"
+                    ).click();
+
+                    fineos.waitForAjaxComplete();
+                  }
                   // Fill military Caregiver description if needed.
                   if (reason === "Military Caregiver")
                     absenceDetails.addMilitaryCaregiverDescription();
@@ -2018,6 +2041,7 @@ export class ClaimantPage {
                     reason === "Child Bonding"
                   )
                     wrapUp.clickNext(20000);
+
                   return wrapUp.finishNotificationCreation();
                 });
               });

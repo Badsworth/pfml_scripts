@@ -77,9 +77,11 @@ export class FilterByEnv extends BaseFilter {
   state = {
     breakfix: true,
     training: true,
+    training2: true,
     uat: true,
     performance: true,
     stage: true,
+    long: true,
     "cps-preview": true,
     test: true,
   };
@@ -149,7 +151,7 @@ export class FilterByTag extends BaseFilter {
   whereMatch = {
     morning: `(tag like '%Morning%' OR tag like '%Sanity Check%' OR tag like '%Post Morning Run Check%' )`,
     deploy: `tag like '%deploy%'`,
-    pr: `tag like 'PR,%'`,
+    pr: `(tag like 'PR,%' OR tag like '% - PR%')`,
     manual: `(tag LIKE 'Manual%' AND branch = 'main')`,
   };
 

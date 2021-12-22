@@ -30,7 +30,7 @@ import { config } from "../../actions/common";
                 "MM/dd/yyyy"
               ),
             })
-            .createNotification(claim.claim)
+            .createNotification(claim.claim, claim.is_withholding_tax)
             .then((fineos_absence_id) => {
               cy.log(fineos_absence_id);
               cy.stash("submission", {

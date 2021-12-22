@@ -21,7 +21,7 @@ from massgov.pfml.db.models.factories import (
     EmployerFactory,
     OrganizationUnitFactory,
 )
-from massgov.pfml.dua.config import get_moveit_config, get_s3_config
+from massgov.pfml.dua.config import get_moveit_config, get_transfer_config
 from massgov.pfml.dua.demographics import (
     download_demographics_file_from_moveit,
     load_demographics_file,
@@ -68,8 +68,8 @@ def test_import_multiple_files_new_data(test_db_session, monkeypatch, mock_s3_bu
     with LogEntry(test_db_session, "test log entry") as log_entry:
 
         reference_file = get_mock_data()
-        s3_config = get_s3_config()
-        load_demographics_file(test_db_session, reference_file, log_entry, s3_config=s3_config)
+        transfer_config = get_transfer_config()
+        load_demographics_file(test_db_session, reference_file, log_entry, transfer_config)
 
         metrics = log_entry.metrics
 
@@ -96,7 +96,7 @@ def test_import_multiple_files_new_data(test_db_session, monkeypatch, mock_s3_bu
         assert len(processed_records) == 10
 
         reference_file_next = get_mock_data_next()
-        load_demographics_file(test_db_session, reference_file_next, log_entry, s3_config=s3_config)
+        load_demographics_file(test_db_session, reference_file_next, log_entry, transfer_config)
 
         # 2 new rows in this file
         assert metrics["inserted_dua_demographics_row_count"] == 12
@@ -108,8 +108,8 @@ def test_update_employee_demographics_file_mode(test_db_session, monkeypatch, mo
     with LogEntry(test_db_session, "test log entry") as log_entry:
 
         reference_file = get_mock_data()
-        s3_config = get_s3_config()
-        load_demographics_file(test_db_session, reference_file, log_entry, s3_config=s3_config)
+        transfer_config = get_transfer_config()
+        load_demographics_file(test_db_session, reference_file, log_entry, transfer_config)
 
         metrics = log_entry.metrics
 
@@ -508,16 +508,16 @@ def test_update_employee_demographics_moveit_mode(
 
     source_directory_path = "dua/pending"
     archive_directory_path = "dua/archive"
-    moveit_pickup_path = "/DFML/DUA/Inbound"
+    moveit_pickup_path = "upload/DFML/DUA/Inbound"
 
-    monkeypatch.setenv("S3_BUCKET", f"s3://{mock_s3_bucket}")
-    monkeypatch.setenv("S3_DUA_OUTBOUND_DIRECTORY_PATH", source_directory_path)
-    monkeypatch.setenv("S3_DUA_ARCHIVE_DIRECTORY_PATH", archive_directory_path)
+    monkeypatch.setenv("DUA_TRANSFER_BASE_PATH", "local_s3/agency_transfer")
+    monkeypatch.setenv("OUTBOUND_DIRECTORY_PATH", source_directory_path)
+    monkeypatch.setenv("ARCHIVE_DIRECTORY_PATH", archive_directory_path)
     monkeypatch.setenv("MOVEIT_SFTP_URI", "sftp://foo@bar.com")
     monkeypatch.setenv("MOVEIT_SSH_KEY", "foo")
 
-    pending_directory = f"s3://{mock_s3_bucket}/{source_directory_path}"
-    archive_directory = f"s3://{mock_s3_bucket}/{archive_directory_path}"
+    pending_directory = f"local_s3/agency_transfer/{source_directory_path}"
+    archive_directory = f"local_s3/agency_transfer/{archive_directory_path}"
 
     with LogEntry(test_db_session, "test log entry") as log_entry:
         reference_file = get_mock_data()
@@ -525,15 +525,17 @@ def test_update_employee_demographics_moveit_mode(
         filepath = os.path.join(moveit_pickup_path, filename)
         mock_sftp_client._add_file(filepath, file_util.read_file(reference_file.file_location))
 
-        s3_config = get_s3_config()
+        transfer_config = get_transfer_config()
         moveit_config = get_moveit_config()
 
         reference_files = (
             download_demographics_file_from_moveit(
-                test_db_session, log_entry, s3_config=s3_config, moveit_config=moveit_config
+                test_db_session,
+                log_entry,
+                transfer_config=transfer_config,
+                moveit_config=moveit_config,
             ),
         )
-
         assert len(file_util.list_files(pending_directory)) == 1
         assert len(file_util.list_files(archive_directory)) == 0
         assert len(reference_files) == 1
@@ -546,7 +548,7 @@ def test_update_employee_demographics_moveit_mode(
         ).all()
         for file in reference_files:
             load_demographics_file(
-                test_db_session, file, log_entry, move_files=True, s3_config=s3_config
+                test_db_session, file, log_entry, move_files=True, transfer_config=transfer_config
             )
 
         assert len(file_util.list_files(pending_directory)) == 0
@@ -561,6 +563,6 @@ def test_update_employee_demographics_moveit_mode(
         assert metrics["pending_dua_demographics_reference_files_count"] == 1
 
         reference_files = download_demographics_file_from_moveit(
-            test_db_session, log_entry, s3_config=s3_config, moveit_config=moveit_config
+            test_db_session, log_entry, transfer_config=transfer_config, moveit_config=moveit_config
         )
         assert len(reference_files) == 0

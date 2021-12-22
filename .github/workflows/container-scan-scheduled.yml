@@ -3,6 +3,8 @@
 name: Daily Tenable Container Scan
 
 on:
+  workflow_dispatch:
+   
   schedule:
   # run daily at 8am EST
     - cron: '0 13 * * *'

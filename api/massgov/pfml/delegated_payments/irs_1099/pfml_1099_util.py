@@ -9,7 +9,10 @@ import massgov.pfml.api.app as app
 import massgov.pfml.db as db
 import massgov.pfml.util.logging as logging
 from massgov.pfml.db.models.employees import (
+    Address,
     Employee,
+    ExperianAddressPair,
+    LkGeoState,
     LkPaymentTransactionType,
     Payment,
     PaymentTransactionType,
@@ -324,6 +327,8 @@ def get_1099s(db_session: db.Session, batch: Pfml1099Batch) -> NamedTuple:
 
     year = get_tax_year()
 
+    is_none = None
+
     # WITH TXNS           AS (SELECT EMPLOYEE_ID FROM PFML_1099_PAYMENT WHERE PFML_BATCH_ID = ''
     #                         UNION ALL
     #                         SELECT EMPLOYEE_ID FROM PFML_1099_MMARS_PAYMENT WHERE PFML_BATCH_ID = ''
@@ -361,6 +366,23 @@ def get_1099s(db_session: db.Session, batch: Pfml1099Batch) -> NamedTuple:
     #                             SUM(CASE WHEN WITHHOLDING_TYPE_ID = 1 THEN WITHHOLDING_AMOUNT ELSE 0 END) FEDERAL_TAX_WITHHOLDINGS
     #                         FROM PFML_1099_WITHHOLDING
     #                         WHERE PFML_BATCH_ID = ''
+    #     MMARS_PMT_ADD  AS (SELECT MP.EMPLOYEE_ID, CAST(MPD.SCHEDULED_PAYMENT_DATE AS DATE) PAYMENT_DATE, MPD.ADDRESS_LINE_1, MPD.ADDRESS_LINE_2, MPD.CITY,
+    #                            MPD.STATE, MPD.ZIP_CODE,
+    #                            RANK() OVER(PARTITION BY MP.EMPLOYEE_ID ORDER BY MPD.SCHEDULED_PAYMENT_DATE DESC, MPD.CREATED_AT DESC, MP.MMARS_PAYMENT_ID) R
+    #                         FROM MMARS_PAYMENT_DATA MPD
+    #                         INNER JOIN PFML_1099_MMARS_PAYMENT MP ON MPD.MMARS_PAYMENT_DATA_ID = MP.MMARS_PAYMENT_ID
+    #                         WHERE MP.PFML_1099_BATCH_ID = ''),
+    #     PUB_PMT_ADD    AS (SELECT PPD.EMPLOYEE_ID, P.PAYMENT_DATE, A.ADDRESS_LINE_ONE, A.ADDRESS_LINE_TWO, A.CITY, GS.GEO_STATE_DESCRIPTION STATE, A.ZIP_CODE,
+    #                            RANK() OVER(PARTITION BY PPD.EMPLOYEE_ID ORDER BY P.PAYMENT_DATE DESC, P.FINEOS_EXTRACT_IMPORT_LOG_ID DESC, P.PAYMENT_ID) R
+    #                         FROM PFML_1099_PAYMENT PPD
+    #                         INNER JOIN PAYMENT P ON PPD.PAYMENT_ID = P.PAYMENT_ID
+    #                         INNER JOIN LINK_EXPERIAN_ADDRESS_PAIR EAP ON P.EXPERIAN_ADDRESS_PAIR_ID = EAP.FINEOS_ADDRESS_ID
+    #                         INNER JOIN ADDRESS A ON A.ADDRESS_ID =
+    #                               CASE WHEN EAP.EXPERIAN_ADDRESS_ID IS NOT NULL
+    #                               THEN EAP.EXPERIAN_ADDRESS_ID
+    #                               ELSE EAP.FINEOS_ADDRESS_ID END
+    #                         INNER JOIN LK_GEO_STATE GS ON A.GEO_STATE_ID = GS.GEO_STATE_ID
+    #                         WHERE PPD.PFML_1099_BATCH_ID = '')
     # SELECT CURRENT_TIMESTAMP CREATED_AT,
     #                         GROUP BY EMPLOYEE_ID)
     #     CURRENT_TIMESTAMP UPDATED_AT,
@@ -372,11 +394,33 @@ def get_1099s(db_session: db.Session, batch: Pfml1099Batch) -> NamedTuple:
     #     EF.CUSTOMERNO,
     #     EF.FIRSTNAMES FIRST_NAME,
     #     EF.LASTNAME LAST_NAME,
-    #     EF.ADDRESS1 ADDRESS_LINE_1,
-    #     EF.ADDRESS2 ADDRESS_LINE_2,
-    #     EF.ADDRESS4 CITY,
-    #     EF.ADDRESS6 STATE,
-    #     EF.POSTCODE ZIP,
+    #     ADDRESS_DATE EMPLOYEE_FEED_ADDRESS_DATE,
+    #     MPA.PAYMENT_DATE MMARS_ADDRESS_DATE,
+    #     PPA.PAYMENT_DATE PUB_ADDRESS_DATE,
+    #     CASE WHEN EF.ADDRESS_DATE = GREATEST(EF.ADDRESS_DATE, MPA.PAYMENT_DATE, PPA.PAYMENT_DATE) THEN 'Using Employee Feed Address'
+    #         WHEN MPA.PAYMENT_DATE = GREATEST(EF.ADDRESS_DATE, MPA.PAYMENT_DATE, PPA.PAYMENT_DATE) THEN 'Using MMARS Payment Address'
+    #         WHEN PPA.PAYMENT_DATE = GREATEST(EF.ADDRESS_DATE, MPA.PAYMENT_DATE, PPA.PAYMENT_DATE) THEN 'Using PUB Payment Address'
+    #     END ADDRESS_SOURCE,
+    #     CASE WHEN EF.ADDRESS_DATE = GREATEST(EF.ADDRESS_DATE, MPA.PAYMENT_DATE, PPA.PAYMENT_DATE) THEN EF.ADDRESS1
+    #         WHEN MPA.PAYMENT_DATE = GREATEST(EF.ADDRESS_DATE, MPA.PAYMENT_DATE, PPA.PAYMENT_DATE) THEN MPA.ADDRESS_LINE_1
+    #         WHEN PPA.PAYMENT_DATE = GREATEST(EF.ADDRESS_DATE, MPA.PAYMENT_DATE, PPA.PAYMENT_DATE) THEN PPA.ADDRESS_LINE_ONE
+    #     END ADDRESS_LINE_1,
+    #     CASE WHEN EF.ADDRESS_DATE = GREATEST(EF.ADDRESS_DATE, MPA.PAYMENT_DATE, PPA.PAYMENT_DATE) THEN EF.ADDRESS2
+    #         WHEN MPA.PAYMENT_DATE = GREATEST(EF.ADDRESS_DATE, MPA.PAYMENT_DATE, PPA.PAYMENT_DATE) THEN MPA.ADDRESS_LINE_2
+    #         WHEN PPA.PAYMENT_DATE = GREATEST(EF.ADDRESS_DATE, MPA.PAYMENT_DATE, PPA.PAYMENT_DATE) THEN PPA.ADDRESS_LINE_TWO
+    #     END ADDRESS_LINE_2,
+    #     CASE WHEN EF.ADDRESS_DATE = GREATEST(EF.ADDRESS_DATE, MPA.PAYMENT_DATE, PPA.PAYMENT_DATE) THEN EF.ADDRESS4
+    #         WHEN MPA.PAYMENT_DATE = GREATEST(EF.ADDRESS_DATE, MPA.PAYMENT_DATE, PPA.PAYMENT_DATE) THEN MPA.CITY
+    #         WHEN PPA.PAYMENT_DATE = GREATEST(EF.ADDRESS_DATE, MPA.PAYMENT_DATE, PPA.PAYMENT_DATE) THEN PPA.CITY
+    #     END CITY,
+    #     CASE WHEN EF.ADDRESS_DATE = GREATEST(EF.ADDRESS_DATE, MPA.PAYMENT_DATE, PPA.PAYMENT_DATE) THEN EF.ADDRESS6
+    #         WHEN MPA.PAYMENT_DATE = GREATEST(EF.ADDRESS_DATE, MPA.PAYMENT_DATE, PPA.PAYMENT_DATE) THEN MPA.STATE
+    #         WHEN PPA.PAYMENT_DATE = GREATEST(EF.ADDRESS_DATE, MPA.PAYMENT_DATE, PPA.PAYMENT_DATE) THEN PPA.STATE
+    #     END STATE,
+    #     CASE WHEN EF.ADDRESS_DATE = GREATEST(EF.ADDRESS_DATE, MPA.PAYMENT_DATE, PPA.PAYMENT_DATE) THEN EF.POSTCODE
+    #         WHEN MPA.PAYMENT_DATE = GREATEST(EF.ADDRESS_DATE, MPA.PAYMENT_DATE, PPA.PAYMENT_DATE) THEN MPA.ZIP_CODE
+    #         WHEN PPA.PAYMENT_DATE = GREATEST(EF.ADDRESS_DATE, MPA.PAYMENT_DATE, PPA.PAYMENT_DATE) THEN PPA.ZIP_CODE
+    #     END ZIP_CODE,
     #     PT.GROSS_PAYMENTS + MPT.GROSS_PAYMENTS GROSS_PAYMENTS,
     #     TT.STATE_TAX_WITHHOLDINGS STATE_TAX_WITHHOLDINGS,
     #     TT.FEDERAL_TAX_WITHHOLDINGS FEDERAL_TAX_WITHHOLDINGS,
@@ -390,6 +434,10 @@ def get_1099s(db_session: db.Session, batch: Pfml1099Batch) -> NamedTuple:
     # LEFT OUTER JOIN MMARS_PMT_TXNS MPT ON E.EMPLOYEE_ID = MPT.EMPLOYEE_ID
     # LEFT OUTER JOIN OP_RPMT_TXNS OPT ON E.EMPLOYEE_ID = OPT.EMPLOYEE_ID
     # LEFT OUTER JOIN TAX_TXNS TT ON E.EMPLOYEE_ID = TT.EMPLOYEE_ID
+    # LEFT OUTER JOIN MMARS_PMT_ADD MPA ON E.EMPLOYEE_ID = MPA.EMPLOYEE_ID
+    #                                AND MPA.R = 1
+    # LEFT OUTER JOIN PUB_PMT_ADD PPA ON E.EMPLOYEE_ID = PPA.EMPLOYEE_ID
+    #                                AND PPA.R = 1
     # WHERE EF.R = 1
     payments_employees = db_session.query(Pfml1099Payment.employee_id.label("EMPLOYEE_ID")).filter(
         Pfml1099Payment.pfml_1099_batch_id == batch.pfml_1099_batch_id
@@ -422,6 +470,7 @@ def get_1099s(db_session: db.Session, batch: Pfml1099Batch) -> NamedTuple:
             FineosExtractEmployeeFeed.address4.label("address4"),
             FineosExtractEmployeeFeed.address6.label("address6"),
             FineosExtractEmployeeFeed.postcode.label("postcode"),
+            cast(FineosExtractEmployeeFeed.effectivefrom, Date).label("ADDRESS_DATE"),
             func.rank()
             .over(
                 order_by=[
@@ -518,15 +567,282 @@ def get_1099s(db_session: db.Session, batch: Pfml1099Batch) -> NamedTuple:
         .subquery()
     )
 
+    mmars_addresses = (
+        db_session.query(
+            Pfml1099MMARSPayment.employee_id,
+            cast(MmarsPaymentData.scheduled_payment_date, Date).label("PAYMENT_DATE"),
+            MmarsPaymentData.address_line_1,
+            MmarsPaymentData.address_line_2,
+            MmarsPaymentData.city,
+            MmarsPaymentData.state,
+            MmarsPaymentData.zip_code,
+            func.rank()
+            .over(
+                order_by=[
+                    MmarsPaymentData.scheduled_payment_date.desc(),
+                    MmarsPaymentData.created_at.desc(),
+                    MmarsPaymentData.mmars_payment_data_id.desc(),
+                ],
+                partition_by=Pfml1099MMARSPayment.employee_id,
+            )
+            .label("R"),
+        )
+        .join(
+            Pfml1099MMARSPayment,
+            MmarsPaymentData.mmars_payment_data_id == Pfml1099MMARSPayment.mmars_payment_id,
+        )
+        .filter(Pfml1099MMARSPayment.pfml_1099_batch_id == batch.pfml_1099_batch_id,)
+        .subquery()
+    )
+
+    pub_addresses = (
+        db_session.query(
+            Pfml1099Payment.employee_id,
+            Payment.payment_date.label("PAYMENT_DATE"),
+            Address.address_line_one,
+            Address.address_line_two,
+            Address.city,
+            LkGeoState.geo_state_description.label("state"),
+            Address.zip_code,
+            func.rank()
+            .over(
+                order_by=[
+                    Pfml1099Payment.payment_date.desc(),
+                    Payment.fineos_extract_import_log_id.desc(),
+                    Payment.payment_id.desc(),
+                ],
+                partition_by=Pfml1099Payment.employee_id,
+            )
+            .label("R"),
+        )
+        .join(Payment, Pfml1099Payment.payment_id == Payment.payment_id)
+        .join(
+            ExperianAddressPair,
+            Payment.experian_address_pair_id == ExperianAddressPair.fineos_address_id,
+        )
+        .join(
+            Address,
+            Address.address_id
+            == case(
+                [
+                    (
+                        ExperianAddressPair.experian_address_id != is_none,
+                        ExperianAddressPair.experian_address_id,
+                    )
+                ],
+                else_=ExperianAddressPair.fineos_address_id,
+            ),
+        )
+        .join(LkGeoState, Address.geo_state_id == LkGeoState.geo_state_id)
+        .filter(Pfml1099Payment.pfml_1099_batch_id == batch.pfml_1099_batch_id,)
+        .subquery()
+    )
+
     irs_1099s = (
-        db_session.query(employees)
-        .add_columns(
+        db_session.query(
+            employees.c.employee_id,
+            employees.c.tax_identifier_id,
+            employees.c.c,
+            employees.c.i,
+            employees.c.first_name,
+            employees.c.last_name,
+            employees.c.customerno,
+            employees.c.ADDRESS_DATE,
+            employees.c.R,
             payments.c.GROSS_PAYMENTS.label("GROSS_PAYMENTS"),
             mmars_payments.c.GROSS_PAYMENTS.label("GROSS_MMARS_PAYMENTS"),
             taxes.c.STATE_TAX_WITHHOLDINGS,
             taxes.c.FEDERAL_TAX_WITHHOLDINGS,
             overpayments.c.OVERPAYMENT_REPAYMENTS,
             credits.c.OTHER_CREDITS,
+            mmars_addresses.c.PAYMENT_DATE.label("MMARS_ADDRESS_DATE"),
+            pub_addresses.c.PAYMENT_DATE.label("PUB_ADDRESS_DATE"),
+            case(
+                [
+                    (
+                        employees.c.ADDRESS_DATE
+                        == func.greatest(
+                            employees.c.ADDRESS_DATE,
+                            mmars_addresses.c.PAYMENT_DATE,
+                            pub_addresses.c.PAYMENT_DATE,
+                        ),
+                        "Using Employee Feed Address",
+                    ),
+                    (
+                        mmars_addresses.c.PAYMENT_DATE
+                        == func.greatest(
+                            employees.c.ADDRESS_DATE,
+                            mmars_addresses.c.PAYMENT_DATE,
+                            pub_addresses.c.PAYMENT_DATE,
+                        ),
+                        "Using MMARS Payment Address",
+                    ),
+                    (
+                        pub_addresses.c.PAYMENT_DATE
+                        == func.greatest(
+                            employees.c.ADDRESS_DATE,
+                            mmars_addresses.c.PAYMENT_DATE,
+                            pub_addresses.c.PAYMENT_DATE,
+                        ),
+                        "Using PUB Payment Address",
+                    ),
+                ]
+            ).label("ADDRESS_SOURCE"),
+            case(
+                [
+                    (
+                        employees.c.ADDRESS_DATE
+                        == func.greatest(
+                            employees.c.ADDRESS_DATE,
+                            mmars_addresses.c.PAYMENT_DATE,
+                            pub_addresses.c.PAYMENT_DATE,
+                        ),
+                        employees.c.address1,
+                    ),
+                    (
+                        mmars_addresses.c.PAYMENT_DATE
+                        == func.greatest(
+                            employees.c.ADDRESS_DATE,
+                            mmars_addresses.c.PAYMENT_DATE,
+                            pub_addresses.c.PAYMENT_DATE,
+                        ),
+                        mmars_addresses.c.address_line_1,
+                    ),
+                    (
+                        pub_addresses.c.PAYMENT_DATE
+                        == func.greatest(
+                            employees.c.ADDRESS_DATE,
+                            mmars_addresses.c.PAYMENT_DATE,
+                            pub_addresses.c.PAYMENT_DATE,
+                        ),
+                        pub_addresses.c.address_line_one,
+                    ),
+                ]
+            ).label("ADDRESS_LINE_1"),
+            case(
+                [
+                    (
+                        employees.c.ADDRESS_DATE
+                        == func.greatest(
+                            employees.c.ADDRESS_DATE,
+                            mmars_addresses.c.PAYMENT_DATE,
+                            pub_addresses.c.PAYMENT_DATE,
+                        ),
+                        employees.c.address2,
+                    ),
+                    (
+                        mmars_addresses.c.PAYMENT_DATE
+                        == func.greatest(
+                            employees.c.ADDRESS_DATE,
+                            mmars_addresses.c.PAYMENT_DATE,
+                            pub_addresses.c.PAYMENT_DATE,
+                        ),
+                        mmars_addresses.c.address_line_2,
+                    ),
+                    (
+                        pub_addresses.c.PAYMENT_DATE
+                        == func.greatest(
+                            employees.c.ADDRESS_DATE,
+                            mmars_addresses.c.PAYMENT_DATE,
+                            pub_addresses.c.PAYMENT_DATE,
+                        ),
+                        pub_addresses.c.address_line_two,
+                    ),
+                ]
+            ).label("ADDRESS_LINE_2"),
+            case(
+                [
+                    (
+                        employees.c.ADDRESS_DATE
+                        == func.greatest(
+                            employees.c.ADDRESS_DATE,
+                            mmars_addresses.c.PAYMENT_DATE,
+                            pub_addresses.c.PAYMENT_DATE,
+                        ),
+                        employees.c.address4,
+                    ),
+                    (
+                        mmars_addresses.c.PAYMENT_DATE
+                        == func.greatest(
+                            employees.c.ADDRESS_DATE,
+                            mmars_addresses.c.PAYMENT_DATE,
+                            pub_addresses.c.PAYMENT_DATE,
+                        ),
+                        mmars_addresses.c.city,
+                    ),
+                    (
+                        pub_addresses.c.PAYMENT_DATE
+                        == func.greatest(
+                            employees.c.ADDRESS_DATE,
+                            mmars_addresses.c.PAYMENT_DATE,
+                            pub_addresses.c.PAYMENT_DATE,
+                        ),
+                        pub_addresses.c.city,
+                    ),
+                ]
+            ).label("CITY"),
+            case(
+                [
+                    (
+                        employees.c.ADDRESS_DATE
+                        == func.greatest(
+                            employees.c.ADDRESS_DATE,
+                            mmars_addresses.c.PAYMENT_DATE,
+                            pub_addresses.c.PAYMENT_DATE,
+                        ),
+                        employees.c.address6,
+                    ),
+                    (
+                        mmars_addresses.c.PAYMENT_DATE
+                        == func.greatest(
+                            employees.c.ADDRESS_DATE,
+                            mmars_addresses.c.PAYMENT_DATE,
+                            pub_addresses.c.PAYMENT_DATE,
+                        ),
+                        mmars_addresses.c.state,
+                    ),
+                    (
+                        pub_addresses.c.PAYMENT_DATE
+                        == func.greatest(
+                            employees.c.ADDRESS_DATE,
+                            mmars_addresses.c.PAYMENT_DATE,
+                            pub_addresses.c.PAYMENT_DATE,
+                        ),
+                        pub_addresses.c.state,
+                    ),
+                ]
+            ).label("STATE"),
+            case(
+                [
+                    (
+                        employees.c.ADDRESS_DATE
+                        == func.greatest(
+                            employees.c.ADDRESS_DATE,
+                            mmars_addresses.c.PAYMENT_DATE,
+                            pub_addresses.c.PAYMENT_DATE,
+                        ),
+                        employees.c.postcode,
+                    ),
+                    (
+                        mmars_addresses.c.PAYMENT_DATE
+                        == func.greatest(
+                            employees.c.ADDRESS_DATE,
+                            mmars_addresses.c.PAYMENT_DATE,
+                            pub_addresses.c.PAYMENT_DATE,
+                        ),
+                        mmars_addresses.c.zip_code,
+                    ),
+                    (
+                        pub_addresses.c.PAYMENT_DATE
+                        == func.greatest(
+                            employees.c.ADDRESS_DATE,
+                            mmars_addresses.c.PAYMENT_DATE,
+                            pub_addresses.c.PAYMENT_DATE,
+                        ),
+                        pub_addresses.c.zip_code,
+                    ),
+                ]
+            ).label("ZIP_CODE"),
         )
         .join(Employee, employees.c.customerno == Employee.fineos_customer_number)
         .outerjoin(payments, Employee.employee_id == payments.c.employee_id)
@@ -534,6 +850,14 @@ def get_1099s(db_session: db.Session, batch: Pfml1099Batch) -> NamedTuple:
         .outerjoin(mmars_payments, Employee.employee_id == mmars_payments.c.employee_id)
         .outerjoin(overpayments, Employee.employee_id == overpayments.c.employee_id)
         .outerjoin(taxes, Employee.employee_id == taxes.c.employee_id)
+        .outerjoin(
+            mmars_addresses,
+            (Employee.employee_id == mmars_addresses.c.employee_id) & (mmars_addresses.c.R == 1),
+        )
+        .outerjoin(
+            pub_addresses,
+            (Employee.employee_id == pub_addresses.c.employee_id) & (pub_addresses.c.R == 1),
+        )
         .filter(employees.c.R == 1)
         .all()
     )
@@ -664,13 +988,23 @@ def get_tax_id(db_session: Any, tax_id_str: str) -> str:
         raise
 
 
+def get_upload_max_files_to_fineos() -> int:
+    return app.get_config().upload_max_files_to_fineos
+
+
+def get_1099_record(db_session: db.Session, status: str, batch_id: str) -> Optional[Pfml1099]:
+    """Get a 1099 record based on specific status and order by Created_at Asc"""
+    return (
+        db_session.query(Pfml1099)
+        .order_by(Pfml1099.created_at.asc())
+        .filter(Pfml1099.pfml_1099_batch_id == batch_id)
+        .filter(Pfml1099.fineos_status == status)
+        .first()
+    )
+
+
 def is_test_file() -> str:
     if os.environ.get("TEST_FILE_GENERATION_1099", "0") == "1":
         return "T"
     else:
         return ""
-
-
-def get_1099_record(db_session: db.Session, id: str) -> Optional[Pfml1099]:
-    """Get pfml 1099 record by id"""
-    return db_session.query(Pfml1099).get(id)

@@ -1117,6 +1117,8 @@ class Pfml1099Factory(BaseFactory):
     federal_tax_withholdings = 15.00
     overpayment_repayments = 0.00
     correction_ind = False
+    s3_location = "local_s3"
+    fineos_status = "New"
 
 
 class Pfml1099BatchFactory(BaseFactory):
