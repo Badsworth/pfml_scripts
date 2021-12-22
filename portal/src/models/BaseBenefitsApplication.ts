@@ -1,5 +1,6 @@
 import { compact, get } from "lodash";
 import LeaveReason from "./LeaveReason";
+import dayjs from "dayjs";
 import formatDateRange from "../utils/formatDateRange";
 import tracker from "../services/tracker";
 
@@ -142,39 +143,32 @@ abstract class BaseBenefitsApplication {
    * Returns a date a year before the start date (or Jan 1, 2021)
    */
   get otherLeaveStartDate(): string {
-    const programLaunch = new Date("2021-01-01T00:00:00-0500"); // hard code to ET so math will work
-    const d = new Date(
-      this.leaveStartDate
-        ? this.leaveStartDate + "T00:00:00-0500" // hard code to ET so math will work
-        : programLaunch.toISOString()
-    );
-
+    const programLaunchIsoDate = "2021-01-01";
     if (!this.leaveStartDate) {
-      return programLaunch.toISOString();
+      return programLaunchIsoDate;
     }
 
-    // calculate a year before given date if given date is sunday
-    // otherwise calculate a year before sunday prior to given date
-    d.setDate(
-      d.getDate() -
-        d.getDay() - // minus days since Sunday
-        364 // minus 52 weeks
-    );
+    try {
+      const startDate = dayjs(this.leaveStartDate);
+      if (!startDate.isValid()) {
+        throw new Error(`Invalid date: ${this.leaveStartDate}`);
+      }
 
-    // If calculated date is earlier, return the program start date
-    if (d < programLaunch) {
-      return programLaunch.toISOString();
+      const startingSunday = startDate.startOf("week");
+      const yearBeforeStartingSundayIsoDate = startingSunday
+        .subtract(364, "days")
+        .format("YYYY-MM-DD"); // Don't use toISOString() because it adds a timezone offset
+
+      // If calculated date is earlier, return the program start date
+      if (yearBeforeStartingSundayIsoDate < programLaunchIsoDate) {
+        return programLaunchIsoDate;
+      }
+
+      return yearBeforeStartingSundayIsoDate;
+    } catch (error) {
+      tracker.noticeError(error);
+      return programLaunchIsoDate;
     }
-
-    // Handle invalid date edge-cases
-    if (!(d instanceof Date) || isNaN(d.getTime())) {
-      tracker.trackEvent("otherLeaveStartDate calculated invalid", {
-        leaveStartDate: this.leaveStartDate,
-      });
-      return programLaunch.toISOString();
-    }
-
-    return d.toISOString();
   }
 }
 
