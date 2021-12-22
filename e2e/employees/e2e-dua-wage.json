@@ -1,5 +1,9 @@
 [
-  {"first_name":"Gilberto","last_name":"Jast","ssn":"466-38-2674","date_of_birth":"1982-01-15","occupations":[{"fein":"27-5646999","wages":4473}],"mass_id":null}
+  {"first_name":"Mary","last_name":"Doe","ssn":"111-11-1110","date_of_birth":"1982-01-15","occupations":[{"fein":"12-3456799","wages":}],"mass_id":null}
 ,
-  {"first_name":"Jaiden","last_name":"Bailey","ssn":"679-12-7240","date_of_birth":"1968-07-01","occupations":[{"fein":"81-1861445","wages":5287}],"mass_id":null}
+  {"first_name":"Joanne","last_name":"Doe","ssn":"111-11-1111","date_of_birth":"1991-08-21","occupations":[{"fein":"12-3456999","wages":5287}],"mass_id":null}
+,
+  {"first_name":"Test","last_name":"Doe","ssn":"111-11-1000","date_of_birth":"1975-04-18","occupations":[{"fein":"12-3456999","wages":5287}],"mass_id":null}
+,
+  {"first_name":"Test","last_name":"Case","ssn":"111-11-1100","date_of_birth":"1969-10-03","occupations":[{"fein":"12-3456999","wages":5287}],"mass_id":null}
 ]
