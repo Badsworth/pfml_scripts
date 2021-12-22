@@ -565,7 +565,10 @@ export function answerIntermittentLeaveQuestion(
   }
 }
 
-export function enterEmployerInfo(application: ApplicationRequestBody): void {
+export function enterEmployerInfo(
+  application: ApplicationRequestBody,
+  useOrgUnitFlow: false
+): void {
   // Preceeded by - "I am on the claims Checklist page";
   // Preceeded by - "I click on the checklist button called {string}"
   //                with the label "Enter employment information"
@@ -575,8 +578,8 @@ export function enterEmployerInfo(application: ApplicationRequestBody): void {
     ).type(application.employer_fein as string);
   }
   cy.contains("button", "Save and continue").click();
-  if (config("ORGUNITS_SETUP") == true) {
-    cy.get('combobox_org_unit').contains("Division of Administrative Law Appeals").click( {force: true});
+  if (useOrgUnitFlow === true && config("ORGUNITS_SETUP") === true) {
+    cy.get('usa-combo-box__input').contains("Division of Administrative Law Appeals").click( {force: true});
     cy.contains("button", "Save and continue").click();
   }
   if (application.employment_status === "Employed") {
@@ -932,14 +935,17 @@ export function confirmEligibleClaimant(): void {
   cy.findByText("I understand and agree").click();
 }
 
-export function submitClaimPartOne(application: ApplicationRequestBody): void {
+export function submitClaimPartOne(
+  application: ApplicationRequestBody,
+  useOrgUnitFlow: false
+): void {
   const reason = application.leave_details?.reason;
 
   clickChecklistButton("Verify your identification");
   verifyIdentity(application);
   onPage("checklist");
   clickChecklistButton("Enter employment information");
-  enterEmployerInfo(application);
+  enterEmployerInfo(application, useOrgUnitFlow);
 
   onPage("checklist");
   clickChecklistButton("Enter leave details");

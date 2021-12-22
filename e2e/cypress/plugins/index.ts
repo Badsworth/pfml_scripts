@@ -158,13 +158,26 @@ export default function (
     waitForClaimDocuments:
       documentWaiter.waitForClaimDocuments.bind(documentWaiter),
 
-    async generateClaim(scenarioID: Scenarios, employeePool?: EmployeePool): Promise<DehydratedClaim> {
+    async generateClaim(
+      arg: Scenarios | { scenario: Scenarios, employeePoolFileName?: string }
+    ): Promise<DehydratedClaim> {
+      let scenarioID: Scenarios;
+      let employeePoolFileName: string | null = null;
+
+      if (typeof arg === "object") {
+        scenarioID = arg.scenario;
+        employeePoolFileName = arg.employeePoolFileName || null;
+      } else {
+        scenarioID = arg;
+      }
       if (!(scenarioID in scenarios)) {
         throw new Error(`Invalid scenario: ${scenarioID}`);
       }
       const scenario = scenarios[scenarioID];
       const claim = ClaimGenerator.generate(
-        employeePool ?? await getEmployeePool(),
+        employeePoolFileName
+          ? await EmployeePool.load(employeePoolFileName)
+          : await getEmployeePool(),
         scenario.employee,
         scenario.claim as APIClaimSpec
       );
