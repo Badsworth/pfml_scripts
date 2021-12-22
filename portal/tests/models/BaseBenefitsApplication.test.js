@@ -200,4 +200,18 @@ describe("BaseBenefitsApplication", () => {
       expect(claimWithSundayStart.otherLeaveStartDate).toContain("2021-01-10");
     });
   });
+
+  it("gracefully handles invalid date receipt", () => {
+    const wonkyClaim = new TestClaim({
+      leave_details: {
+        continuous_leave_periods: [
+          {
+            end_date: "2021-05-30",
+            start_date: "2nn1",
+          },
+        ],
+      },
+    });
+    expect(wonkyClaim.otherLeaveStartDate).toContain("2021-01-01");
+  });
 });

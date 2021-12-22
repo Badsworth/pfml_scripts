@@ -1,6 +1,7 @@
 import { compact, get } from "lodash";
 import LeaveReason from "./LeaveReason";
 import formatDateRange from "../utils/formatDateRange";
+import tracker from "../services/tracker";
 
 export interface BaseLeavePeriod {
   start_date: string | null;
@@ -141,11 +142,11 @@ abstract class BaseBenefitsApplication {
    * Returns a date a year before the start date (or Jan 1, 2021)
    */
   get otherLeaveStartDate(): string {
-    const programLaunch = new Date("2021-01-01 GMT-0500"); // hard code to ET so math will work
+    const programLaunch = new Date("2021-01-01T00:00:00-0500"); // hard code to ET so math will work
     const d = new Date(
       this.leaveStartDate
-        ? this.leaveStartDate + " " + "GMT-0500"
-        : programLaunch.toISOString() // hard code leave start date to ET so math will work
+        ? this.leaveStartDate + "T00:00:00-0500" // hard code to ET so math will work
+        : programLaunch.toISOString()
     );
 
     if (!this.leaveStartDate) {
@@ -162,6 +163,14 @@ abstract class BaseBenefitsApplication {
 
     // If calculated date is earlier, return the program start date
     if (d < programLaunch) {
+      return programLaunch.toISOString();
+    }
+
+    // Handle invalid date edge-cases
+    if (!(d instanceof Date) || isNaN(d.getTime())) {
+      tracker.trackEvent("otherLeaveStartDate calculated invalid", {
+        leaveStartDate: this.leaveStartDate,
+      });
       return programLaunch.toISOString();
     }
 
