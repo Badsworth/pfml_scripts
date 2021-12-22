@@ -950,6 +950,9 @@ const pages = {
     getReadyLink: "Start a new application",
     inProgressHeading: "In-progress applications",
     noClaims: "You don’t have any applications yet.",
+    phoneNumberConfirmedHeading: "Phone number confirmed",
+    phoneNumberConfirmedMessage:
+      "To protect your security, we'll send you a 6-digit code whenever we need to verify it's really you.",
     submittedHeading: "Submitted applications",
     title: "Your applications",
     uploadSuccessHeading: "You successfully submitted your documents",

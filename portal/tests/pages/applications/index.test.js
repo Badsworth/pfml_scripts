@@ -169,6 +169,26 @@ describe("Applications", () => {
     ).toBeInTheDocument();
   });
 
+  it("displays success alert when user sets up SMS MFA", () => {
+    renderPage(
+      Index,
+      {
+        addCustomSetup: (appLogicHook) => {
+          setUpHelper(appLogicHook);
+          appLogicHook.documents.loadAll = jest.fn();
+          appLogicHook.benefitsApplications.benefitsApplications =
+            new BenefitsApplicationCollection([inProgressClaim]);
+        },
+      },
+      { query: { smsMfaConfirmed: "true" } }
+    );
+    expect(
+      screen.getByText(
+        /To protect your security, we'll send you a 6-digit code whenever we need to verify it's really you./
+      )
+    ).toBeInTheDocument();
+  });
+
   describe("Pagination Navigation", () => {
     it("does not display when there is only 1 page of applications", () => {
       renderPage(Index, {

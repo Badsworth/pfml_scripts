@@ -3,6 +3,7 @@ import { setMFAPreference, updateMFAPhoneNumber } from "src/services/mfa";
 import { useMemo, useState } from "react";
 import { AppErrorsLogic } from "./useAppErrorsLogic";
 import BenefitsApplication from "../models/BenefitsApplication";
+import { NullableQueryParams } from "../utils/routeWithParams";
 import { PortalFlow } from "./usePortalFlow";
 import User from "../models/User";
 import UsersApi from "../api/UsersApi";
@@ -60,7 +61,14 @@ const useUsersLogic = ({
       setUser(user);
 
       const context = claim ? { claim, user } : { user };
-      const params = claim ? { claim_id: claim.application_id } : {};
+
+      const params: NullableQueryParams = claim
+        ? { claim_id: claim.application_id }
+        : {};
+      // Used to display a special alert when a user enables SMS MFA
+      if (patchData.mfa_delivery_preference === "SMS") {
+        params.smsMfaConfirmed = "true";
+      }
       portalFlow.goToNextPage(context, params);
     } catch (error) {
       appErrorsLogic.catchError(error);

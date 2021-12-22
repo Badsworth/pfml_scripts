@@ -55,24 +55,46 @@ describe("useUsersLogic", () => {
     const user_id = "mock-user-id";
     const patchData = { path: "data" };
 
-    beforeEach(async () => {
+    beforeEach(() => {
       setup();
+    });
 
+    it("updates user to the api", async () => {
       await act(async () => {
         await usersLogic.updateUser(user_id, patchData);
       });
-    });
 
-    it("updates user to the api", () => {
       expect(usersApi.updateUser).toHaveBeenCalledWith(user_id, patchData);
     });
 
-    it("sets user state", () => {
+    it("sets user state", async () => {
+      await act(async () => {
+        await usersLogic.updateUser(user_id, patchData);
+      });
+
       expect(usersLogic.user).toBeInstanceOf(User);
     });
 
-    it("goes to next page", () => {
+    it("goes to next page", async () => {
+      await act(async () => {
+        await usersLogic.updateUser(user_id, patchData);
+      });
+
       expect(mockRouter.push).toHaveBeenCalled();
+    });
+
+    describe("when the user turns on SMS MFA", () => {
+      const mfaPreferences = { mfa_delivery_preference: "SMS" };
+
+      it("goes to next page with a smsMfaConfirmed query parameter", async () => {
+        await act(async () => {
+          await usersLogic.updateUser(user_id, mfaPreferences);
+        });
+
+        expect(mockRouter.push).toHaveBeenCalledWith(
+          expect.stringMatching(/smsMfaConfirmed=true/)
+        );
+      });
     });
 
     describe("when errors exist", () => {
