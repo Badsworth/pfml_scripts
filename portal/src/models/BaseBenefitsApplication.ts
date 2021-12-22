@@ -146,9 +146,9 @@ abstract class BaseBenefitsApplication {
     const d = new Date(
       this.leaveStartDate ? this.leaveStartDate : programLaunch.toISOString()
     );
-
+    console.log(d);
     if (!this.leaveStartDate) {
-      return programLaunch.toISOString();
+      return programLaunch.toISOString().split("T")[0];
     }
 
     // Handle invalid date edge-cases
@@ -156,7 +156,7 @@ abstract class BaseBenefitsApplication {
       tracker.trackEvent("otherLeaveStartDate calculated invalid", {
         leaveStartDate: this.leaveStartDate,
       });
-      return programLaunch.toISOString();
+      return programLaunch.toISOString().split("T")[0];
     }
 
     // calculate a year before given date if given date is sunday
@@ -169,10 +169,10 @@ abstract class BaseBenefitsApplication {
 
     // If calculated date is earlier, return the program start date
     if (d < programLaunch) {
-      return programLaunch.toISOString();
+      return programLaunch.toISOString().split("T")[0];
     }
 
-    return d.toISOString();
+    return d.toISOString().split("T")[0];
   }
 }
 
