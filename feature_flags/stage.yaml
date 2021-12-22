@@ -1,5 +1,7 @@
 maintenance:
-     enabled: 1
-     options:
-         page_routes:
-             - /applications/status
+    enabled: 1
+    options:
+        start: "2021-12-18T21:59:00-05:00"
+        end: "2021-12-19T05:00:00-05:00"
+        page_routes:
+            - /*
