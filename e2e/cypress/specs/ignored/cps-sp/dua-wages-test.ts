@@ -9,6 +9,7 @@ import {FineosSecurityGroups} from "../../../../src/submission/fineos.pages";
 //   E2E_EMPLOYERS_FILE: "./employers/e2e-dua-wage.json",
 // });
 
+//@TODO I've adjusted the config.json to use the e2e-dua-wage.json for employees and employers within Test.
 describe("Submit a claim through Portal: Verify it creates an absence case in Fineos", () => {
   // claims.forEach((userPermission) => {
     const submissionTest =
@@ -36,6 +37,7 @@ describe("Submit a claim through Portal: Verify it creates an absence case in Fi
         });
       });
 
+    //@TODO the Leave Admin will need to be verified to check part. Its not needed in the this test so far.
     // const employerApproval =
     //   it("Leave admin will submit ER denial for employee", () => {
     //     cy.dependsOnPreviousPass([submissionTest]);
@@ -51,6 +53,7 @@ describe("Submit a claim through Portal: Verify it creates an absence case in Fi
     //     });
     //   });
 
+    //@TODO if this works correctly with the employees withholding the Financial Eligibility should be met in FINEOS
     //Fineos check absence case here.
     it("Should check the claim in Fineos to see if the Eligibilty is Met for quarterly wages.", () => {
       cy.dependsOnPreviousPass([submissionTest]);
