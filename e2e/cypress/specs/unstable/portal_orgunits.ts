@@ -1,20 +1,14 @@
 import { fineos, fineosPages, portal } from "../../actions";
 import { config } from "../../actions/common"
 import {Submission} from "../../../src/types";
-import EmployeePool from "../../../src/generation/Employee";
-import {getDocumentReviewTaskName} from "../../../src/util/documents";
-import {onTab} from "../../actions/fineos";
-import {getEmployeePool} from "../../../src/util/common";
 
-let employeePool: EmployeePool;
 describe("Submit a claim through the Portal that has OrgUnits associated with the Employer", () => {
-  before(async () => employeePool = await EmployeePool.load(config("ORGUNIT_EMPLOYEES_FILE")))
   it("As a claimant, I should be able to submit a claim application through the portal", () => {
     portal.before({
         claimantShowOrganizationUnits:
           config("ORGUNITS_SETUP") === "true",
       });
-    cy.task("generateClaim", { scenario: "ORGUNIT" as Scenarios, employeePool }).then((claim) => {
+    cy.task("generateClaim", { scenario: "ORGUNIT", employeePoolFileName: config("ORGUNIT_EMPLOYEES_FILE") }).then((claim) => {
       cy.stash("claim", claim);
       const application: ApplicationRequestBody = claim.claim;
       const paymentPreference = claim.paymentPreference;

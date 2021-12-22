@@ -24,7 +24,6 @@ type Scenarios = import("./src/types").Scenarios;
 type ScenarioSpecs = import("./src/types").ScenarioSpecs;
 type APIClaimSpec = import("./src/generation/Claim").APIClaimSpec;
 type GeneratedClaim = import("./src/generation/Claim").GeneratedClaim;
-type EmployeePool = import("./src/generation/Employee");
 type FineosExclusiveLeaveReasons =
   import("./src/generation/Claim").FineosExclusiveLeaveReasons;
 type ApplicationSubmissionResponse =
@@ -48,15 +47,7 @@ declare namespace Cypress {
     dependsOnPreviousPass(dependencies?: Mocha.Test[]): null;
     task<T extends Scenarios>(
       event: "generateClaim",
-      scenario: T
-    ): Chainable<
-      ScenarioSpecs[T]["claim"] extends APIClaimSpec
-        ? DehydratedClaim
-        : GeneratedClaim
-    >;
-    task<T extends Scenarios>(
-      event: "generateClaim",
-      args: {scenario: T, employeePool: EmployeePool}
+      arg: T | { scenario: T, employeePoolFileName: string }
     ): Chainable<
       ScenarioSpecs[T]["claim"] extends APIClaimSpec
         ? DehydratedClaim

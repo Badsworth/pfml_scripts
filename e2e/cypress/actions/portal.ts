@@ -5,6 +5,7 @@ import {
   ValidEmployerBenefit,
   ValidOtherIncome,
   FeatureFlags,
+  Scenarios,
 } from "../../src/types";
 import {
   isNotNull,
@@ -96,8 +97,8 @@ export function onPage(page: string): void {
   cy.url().should("include", `/applications/${page}`);
 }
 
-export function submitClaimDirectlyToAPI(scenario: string): void {
-  cy.task("generateClaim", scenario).then({ timeout: 40000 }, (claim) => {
+export function submitClaimDirectlyToAPI(scenario: Scenarios): void {
+  cy.task("generateClaim", { scenario }).then({ timeout: 40000 }, (claim) => {
     cy.log("submitting", claim);
     cy.task("submitClaimToAPI", claim)
       .then((responseData: unknown) => responseData as ApplicationResponse)
