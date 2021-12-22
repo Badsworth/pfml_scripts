@@ -142,15 +142,13 @@ abstract class BaseBenefitsApplication {
    * Returns a date a year before the start date (or Jan 1, 2021)
    */
   get otherLeaveStartDate(): string {
-    const programLaunch = new Date("2021-01-01T00:00:00-0500"); // hard code to ET so math will work
+    const programLaunch = new Date("2021-01-01");
     const d = new Date(
-      this.leaveStartDate
-        ? this.leaveStartDate + "T00:00:00-0500" // hard code to ET so math will work
-        : programLaunch.toISOString()
+      this.leaveStartDate ? this.leaveStartDate : programLaunch.toISOString()
     );
 
     if (!this.leaveStartDate) {
-      return programLaunch.toISOString().split("T")[0];
+      return programLaunch.toISOString();
     }
 
     // Handle invalid date edge-cases
@@ -158,7 +156,7 @@ abstract class BaseBenefitsApplication {
       tracker.trackEvent("otherLeaveStartDate calculated invalid", {
         leaveStartDate: this.leaveStartDate,
       });
-      return programLaunch.toISOString().split("T")[0];
+      return programLaunch.toISOString();
     }
 
     // calculate a year before given date if given date is sunday
@@ -171,10 +169,10 @@ abstract class BaseBenefitsApplication {
 
     // If calculated date is earlier, return the program start date
     if (d < programLaunch) {
-      return programLaunch.toISOString().split("T")[0];
+      return programLaunch.toISOString();
     }
 
-    return d.toDateString();
+    return d.toISOString();
   }
 }
 
