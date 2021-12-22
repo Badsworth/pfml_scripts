@@ -101,6 +101,6 @@ module "tasks" {
 
   enable_withholding_payments = "1"
 
-  enable_pub_payments_copy_audit_report_schedule = true
+  enable_pub_payments_copy_audit_report_schedule = false
   upload_max_files_to_fineos                     = "10"
 }
