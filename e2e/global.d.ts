@@ -24,7 +24,7 @@ type Scenarios = import("./src/types").Scenarios;
 type ScenarioSpecs = import("./src/types").ScenarioSpecs;
 type APIClaimSpec = import("./src/generation/Claim").APIClaimSpec;
 type GeneratedClaim = import("./src/generation/Claim").GeneratedClaim;
-type EmployeePool = import("./src/generation/Employee");
+type EmployeePool = import("./src/generation/Employee").default;
 type FineosExclusiveLeaveReasons =
   import("./src/generation/Claim").FineosExclusiveLeaveReasons;
 type ApplicationSubmissionResponse =
