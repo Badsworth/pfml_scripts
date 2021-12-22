@@ -138,19 +138,7 @@ describe("ErrorsSummary", () => {
   });
 
   describe("when the component mounts", () => {
-    it("focuses the Alert", () => {
-      // Hide warning about rendering in the body, since we need to for this test
-      jest.spyOn(console, "error").mockImplementationOnce(jest.fn());
-      const errors = new AppErrorInfoCollection([
-        new AppErrorInfo({ message: "Mock error message" }),
-      ]);
-
-      renderComponent({ errors });
-      const alert = screen.getByRole("alert");
-      expect(alert).toHaveFocus();
-    });
-
-    it("scrolls to the top of the window", () => {
+    it("scrolls to the top of the window when there are errors", () => {
       renderComponent({
         errors: new AppErrorInfoCollection([
           new AppErrorInfo({ message: "Mock error message #1" }),

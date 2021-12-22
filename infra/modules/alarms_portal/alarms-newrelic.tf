@@ -33,6 +33,9 @@ locals {
     "uat"         = local.low_priority_channel_key,
     "breakfix"    = local.low_priority_channel_key,
     "cps-preview" = local.low_priority_channel_key,
+    "infra-test"  = local.low_priority_channel_key,
+    "long"        = local.low_priority_channel_key,
+    "trn2"        = local.low_priority_channel_key,
     "prod"        = local.high_priority_channel_key,
   }
 }

@@ -57,6 +57,8 @@ class PaymentAuditCSV(AbstractRecord):
     rejected_by_program_integrity: Optional[str] = None
     skipped_by_program_integrity: Optional[str] = None
     rejected_notes: Optional[str] = None
+    previously_paid_payment_count: str = "0"
+    previously_paid_payments: Optional[str] = None
 
 
 @dataclass
@@ -120,4 +122,6 @@ PAYMENT_AUDIT_CSV_HEADERS = PaymentAuditCSV(
     rejected_by_program_integrity="Reject",
     skipped_by_program_integrity="Skip",
     rejected_notes="Reject Notes",
+    previously_paid_payment_count="Previously Paid Payment Count",
+    previously_paid_payments="List of Previously Paid Payments",
 )

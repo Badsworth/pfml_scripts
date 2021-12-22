@@ -30,7 +30,7 @@ const renderComponent = (
 describe("CertificationsAndAbsencePeriods", () => {
   it("renders formatted date range for leave duration", () => {
     renderComponent();
-    expect(screen.getByText("1/1/2021 to 7/1/2021")).toBeInTheDocument();
+    expect(screen.getByText("1/1/2022 to 7/1/2022")).toBeInTheDocument();
   });
 
   it("renders Documentation section when documents exist", () => {

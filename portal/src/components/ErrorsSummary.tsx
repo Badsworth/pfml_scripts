@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect } from "react";
 import Alert from "./core/Alert";
 import AppErrorInfo from "../models/AppErrorInfo";
 import AppErrorInfoCollection from "../models/AppErrorInfoCollection";
@@ -18,17 +18,16 @@ interface ErrorsSummaryProps {
  */
 function ErrorsSummary(props: ErrorsSummaryProps) {
   const { errors } = props;
-  const alertRef = useRef<HTMLDivElement>(null);
   const { t } = useTranslation();
 
   /**
-   * Make sure the user sees the errors summary anytime the list of errors changes
+   * Screen readers are made aware of the errors because we're using role="alert"
+   * on the element, however we also want to scroll to the top of the page so
+   * sighted users are made aware of the errors anytime they change.
    */
   useEffect(() => {
     if (!errors.isEmpty) {
       window.scrollTo(0, 0);
-      // Move focus to the alert so screen readers immediately announce that there are errors
-      alertRef.current?.focus();
     }
   }, [errors]);
 
@@ -74,7 +73,6 @@ function ErrorsSummary(props: ErrorsSummaryProps) {
       heading={t("components.errorsSummary.genericHeading", {
         count: visibleErrorMessages.length,
       })}
-      ref={alertRef}
       role="alert"
     >
       {errorMessages()}

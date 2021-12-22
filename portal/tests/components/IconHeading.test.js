@@ -17,18 +17,18 @@ describe("IconHeading", () => {
     render(<IconHeading name="cancel">Foobar</IconHeading>);
     const icon = screen.getByRole("img", { hidden: true });
     expect(icon).toMatchInlineSnapshot(`
-<svg
-  aria-hidden="true"
-  class="usa-icon--size-3 margin-right-2px flex-auto text-red"
-  fill="currentColor"
-  focusable="false"
-  role="img"
->
-  <use
-    xlink:href="/img/sprite.svg#cancel"
-  />
-</svg>
-`);
+      <svg
+        aria-hidden="true"
+        class="usa-icon usa-icon--size-3 margin-right-1 flex-auto text-red"
+        fill="currentColor"
+        focusable="false"
+        role="img"
+      >
+        <use
+          xlink:href="/img/sprite.svg#cancel"
+        />
+      </svg>
+    `);
   });
 
   it("applies the red color when name is `cancel`", () => {

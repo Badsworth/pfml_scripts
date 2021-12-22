@@ -143,6 +143,13 @@ def test_rejects_column_validation(test_db_session, payment_rejects_step):
         previously_rejected_payment_count=1,
         previously_errored_payment_count=1,
         previously_skipped_payment_count=0,
+        previously_paid_payment_count=0,
+        previously_paid_payments_string=None,
+        gross_payment_amount="",
+        federal_withholding_amount="",
+        state_withholding_amount="",
+        federal_withholding_i_value="",
+        state_withholding_i_value="",
     )
     payment_rejects_row = build_audit_report_row(
         payment_audit_data, get_now_us_eastern(), test_db_session
@@ -201,6 +208,13 @@ def test_valid_combination_of_reject_and_skip(
         previously_rejected_payment_count=1,
         previously_errored_payment_count=1,
         previously_skipped_payment_count=0,
+        previously_paid_payment_count=0,
+        previously_paid_payments_string=None,
+        gross_payment_amount="",
+        federal_withholding_amount="",
+        state_withholding_amount="",
+        federal_withholding_i_value="",
+        state_withholding_i_value="",
     )
 
     payment_rejects_row = build_audit_report_row(

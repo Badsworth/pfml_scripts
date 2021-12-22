@@ -1,0 +1,69 @@
+# Action for deploying the infra in the infra/bi module
+# The infrastructure in this module is isolated from the rest of the application. This workflow ensures that it gets deployed on a regular basis
+
+name: Business Intelligence CI Deploy
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - infra/bi/**
+      - .github/workflows/bi-infra-deploy.yml
+
+env:
+  working-dir: ./infra
+  terraform-bi-dir: ./infra/bi/environments
+  tf-version-default: 0.14.7
+
+jobs:
+  tf-format-check:
+    name: "tf format (run 'terraform fmt -recursive infra/' if this fails)"
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: ${{ env.tf-version-default }} 
+
+      - run: terraform fmt -recursive -check ${{ env.working-dir }}
+     
+  deploy-bi-infra:
+  # Deploy changes to lowers on PR
+    name: "deploy bi infra"
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        environment: ["test", "stage", "uat"]
+
+    steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+          role-to-assume: ci-run-deploys
+          role-duration-seconds: 3600
+
+      - uses: actions/checkout@v2
+      - uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: ${{ env.tf-version-default }}
+
+      - name: tf-init
+        id: terraform_init
+        run: terraform init
+        working-directory: ${{ env.terraform-bi-dir }}/${{ matrix.environment }} 
+
+      - name: tf-plan
+        id: terraform_plan
+        run: terraform plan -out=plan.tfplan
+        working-directory: ${{ env.terraform-bi-dir }}/${{ matrix.environment }} 
+
+      - name: apply from tf-plan
+        id: terraform_apply
+        run: terraform apply plan.tfplan
+        working-directory: ${{ env.terraform-bi-dir }}/${{ matrix.environment }}

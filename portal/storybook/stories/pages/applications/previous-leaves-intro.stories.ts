@@ -2,7 +2,7 @@ import { MockBenefitsApplicationBuilder } from "tests/test-utils/mock-model-buil
 import generateClaimPageStory from "storybook/utils/generateClaimPageStory";
 
 const leavePeriodAttrs = {
-  start_date: "2021-03-07",
+  start_date: "2022-01-09",
 };
 
 const mockClaims = {

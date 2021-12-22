@@ -1,5 +1,7 @@
 from datetime import date, timedelta
+from decimal import Decimal
 from typing import List, Optional
+from uuid import uuid4
 
 import pytest
 from freezegun.api import freeze_time
@@ -10,7 +12,9 @@ from massgov.pfml.api.eligibility.benefit_year import (
     AbsenceStatusesWithBenefitYear,
     CreateBenefitYearContribution,
     _get_earliest_claim_in_benefit_year,
+    create_benefit_year_by_employee_id,
     create_benefit_year_by_ssn,
+    create_employer_contribution_for_benefit_year,
     get_benefit_year_by_ssn,
     set_base_period_for_benefit_year,
 )
@@ -155,6 +159,7 @@ def include_employee_benefit_years(
             test_db_session.add(by)
             benefit_years.append(by)
 
+    test_db_session.commit()
     return benefit_years
 
 
@@ -516,7 +521,7 @@ def test_create_benefit_year_by_ssn__should_raise_exception_when_employee_not_fo
         date(2022, 12, 31),
     ],
 )
-def test_create_benefit_year_by_ssn__should_raise_value_error_when_attempting_to_overwrite_benefit_year__with_previous_claims_and_persisted_benefit_years(
+def test_create_benefit_year_by_ssn__should_return_none_when_attempting_to_overwrite_benefit_year__with_previous_claims_and_persisted_benefit_years(
     test_db_session: db.Session,
     include_dummy_claims,
     include_employee_claims: List[Claim],
@@ -534,14 +539,15 @@ def test_create_benefit_year_by_ssn__should_raise_value_error_when_attempting_to
         .all()
     )
 
-    with pytest.raises(ValueError):
-        create_benefit_year_by_ssn(
-            test_db_session,
-            include_employee.tax_identifier.tax_identifier,
-            leave_start_date,
-            total_wages,
-            employer_contributions,
-        )
+    benefit_year = create_benefit_year_by_ssn(
+        test_db_session,
+        include_employee.tax_identifier.tax_identifier,
+        leave_start_date,
+        total_wages,
+        employer_contributions,
+    )
+
+    assert benefit_year is None
 
     benefit_years_after = (
         test_db_session.query(BenefitYear)
@@ -550,6 +556,149 @@ def test_create_benefit_year_by_ssn__should_raise_value_error_when_attempting_to
     )
 
     assert len(benefit_years_after) == len(benefit_years_before)
+
+
+def test_create_benefit_year_by_employee_id__should_not_fail_committing_to_db_when_invalid_employee_id_provided__with_previous_claims_and_persisted_benefit_years(
+    test_db_session: db.Session,
+    include_dummy_claims,
+    include_employee_claims: List[Claim],
+    include_employee_benefit_years: List[Claim],
+    include_employers: List[Employer],
+    include_employee: Employee,
+):
+    leave_start_date = date(2023, 1, 1)
+    total_wages = None
+    employer_contributions = []
+
+    benefit_years_before = test_db_session.query(BenefitYear).all()
+    assert len(benefit_years_before) == 4
+
+    create_benefit_year_by_employee_id(
+        test_db_session, uuid4(), leave_start_date, total_wages, employer_contributions,
+    )
+
+    benefit_years_after = test_db_session.query(BenefitYear).all()
+
+    assert len(benefit_years_after) == len(benefit_years_before)
+
+
+def test_create_benefit_year_by_employee_id__should_not_fail_committing_to_db_when_invalid_employer_id_provided__with_previous_claims_and_persisted_benefit_years(
+    test_db_session: db.Session,
+    include_dummy_claims,
+    include_employee_claims: List[Claim],
+    include_employee_benefit_years: List[Claim],
+    include_employers: List[Employer],
+    include_employee: Employee,
+):
+    leave_start_date = date(2023, 1, 1)
+    total_wages = None
+    employer_contributions = [
+        CreateBenefitYearContribution(employer_id=uuid4(), average_weekly_wage=1234)
+    ]
+
+    benefit_years_before = (
+        test_db_session.query(BenefitYear)
+        .filter(BenefitYear.employee_id == include_employee.employee_id)
+        .all()
+    )
+    assert len(benefit_years_before) == 4
+
+    create_benefit_year_by_employee_id(
+        test_db_session,
+        include_employee.employee_id,
+        leave_start_date,
+        total_wages,
+        employer_contributions,
+    )
+
+    benefit_years_after = (
+        test_db_session.query(BenefitYear)
+        .filter(BenefitYear.employee_id == include_employee.employee_id)
+        .all()
+    )
+
+    assert len(benefit_years_after) == len(benefit_years_before)
+
+
+def test_get_benefit_year_should_update_benefit_year_if_new_claim_is_before_start_date(
+    test_db_session: db.Session, include_employee: Employee, include_employers: List[Employer],
+):
+    # Benefit Year does not exist, but should based on an existing (future) claim
+    start_date = date(2022, 2, 1)
+    end_date = date(2022, 2, 15)
+    ClaimFactory.create(
+        employee=include_employee,
+        employer=include_employers[0],
+        claim_type_id=ClaimType.FAMILY_LEAVE.claim_type_id,
+        fineos_absence_status_id=AbsenceStatus.APPROVED.absence_status_id,
+        absence_period_start_date=start_date,
+        absence_period_end_date=end_date,
+    )
+
+    benefit_years_before = (
+        test_db_session.query(BenefitYear)
+        .filter(BenefitYear.employee_id == include_employee.employee_id)
+        .all()
+    )
+    assert len(benefit_years_before) == 0
+
+    # Starting on a Sunday so that the benefit year start date should be equal to the
+    # leave start date
+    new_leave_start_date = date(2021, 11, 28)
+    benefit_year = get_benefit_year_by_ssn(
+        test_db_session, include_employee.tax_identifier.tax_identifier, new_leave_start_date
+    )
+
+    assert benefit_year
+    assert benefit_year.start_date == new_leave_start_date
+
+    updated_benefit_years = (
+        test_db_session.query(BenefitYear)
+        .filter(BenefitYear.employee_id == include_employee.employee_id)
+        .all()
+    )
+    assert len(updated_benefit_years) == 1
+
+    # Benefit Year already exists (using the one we just created)
+
+    # Starting on a Sunday so that the benefit year start date should be equal to the
+    # leave start date
+    newest_leave_start_date = date(2021, 11, 14)
+    benefit_year = get_benefit_year_by_ssn(
+        test_db_session, include_employee.tax_identifier.tax_identifier, newest_leave_start_date
+    )
+
+    assert benefit_year
+    assert benefit_year.start_date == newest_leave_start_date
+
+    updated_benefit_years = (
+        test_db_session.query(BenefitYear)
+        .filter(BenefitYear.employee_id == include_employee.employee_id)
+        .all()
+    )
+    assert len(updated_benefit_years) == 1
+
+    # New claim is more than 52 weeks before the start of the existing benefit year, so it should
+    # not return (or update) the existing benefit year
+    # Note: this scenario is actually not possible under the current regulations, but we still want
+    # to validate that this logic is in place and works correctly
+    early_leave_start_date = date(2020, 6, 28)
+    benefit_year = get_benefit_year_by_ssn(
+        test_db_session, include_employee.tax_identifier.tax_identifier, early_leave_start_date
+    )
+
+    assert benefit_year is None
+
+    # rollback the DB session to make sure we're only querying what's been commited
+    test_db_session.rollback()
+
+    updated_benefit_years = (
+        test_db_session.query(BenefitYear)
+        .filter(BenefitYear.employee_id == include_employee.employee_id)
+        .all()
+    )
+    assert len(updated_benefit_years) == 1
+    assert updated_benefit_years[0].start_date == newest_leave_start_date
 
 
 def test_set_base_period_for_benefit_year(test_db_session, initialize_factories_session):
@@ -575,8 +724,8 @@ def test_set_base_period_for_benefit_year(test_db_session, initialize_factories_
             absence_period_start_date=date(2020, 1, 1), employee=employee, employer=employer
         )
 
-    by_start_date = date(2019, 10, 1)
-    by_end_date = date(2020, 10, 1)
+    by_start_date = date(2019, 12, 15)
+    by_end_date = date(2020, 12, 12)
     benefit_year = BenefitYear(
         employee_id=employee.employee_id, start_date=by_start_date, end_date=by_end_date
     )
@@ -633,8 +782,8 @@ def test_set_base_period_for_benefit_year_ignores_retroactively_added_wages(
             absence_period_start_date=date(2019, 12, 15), employee=employee, employer=employer
         )
 
-    by_start_date = date(2019, 10, 1)
-    by_end_date = date(2020, 10, 1)
+    by_start_date = date(2019, 12, 15)
+    by_end_date = date(2020, 12, 12)
     benefit_year = BenefitYear(
         employee_id=employee.employee_id, start_date=by_start_date, end_date=by_end_date
     )
@@ -693,3 +842,80 @@ def test_get_earliest_claim_in_benefit_year(test_db_session, initialize_factorie
         ClaimFactory.create(absence_period_start_date=date(2020, 1, 1), employee=employee)
 
     assert _get_earliest_claim_in_benefit_year(test_db_session, benefit_year) == claim1
+
+
+def test_create_employer_contribution_for_benefit_year(
+    test_db_session: db.Session, initialize_factories_session
+):
+    employee: Employee = EmployeeFactory.create()
+    employer: Employer = EmployerFactory.create()
+    absence_period_start_date = date(2021, 1, 1)
+    benefit_year_dates = get_benefit_year_dates(absence_period_start_date)
+    by = BenefitYear()
+    by.start_date = benefit_year_dates.start_date
+    by.end_date = benefit_year_dates.end_date
+    by.employee_id = employee.employee_id
+    by.total_wages = 123
+    employer_iaww = Decimal("13")
+
+    test_db_session.add(by)
+    test_db_session.commit()
+
+    contribution = create_employer_contribution_for_benefit_year(
+        test_db_session,
+        by.benefit_year_id,
+        employee.employee_id,
+        employer.employer_id,
+        employer_iaww,
+    )
+
+    by = test_db_session.query(BenefitYear).one()
+    assert len(by.contributions) == 1
+    assert by.contributions[0].employee_id == employee.employee_id
+    assert by.contributions[0].employer_id == employer.employer_id
+    assert by.contributions[0].average_weekly_wage == employer_iaww
+
+    assert contribution.employee_id == employee.employee_id
+    assert contribution.employer_id == employer.employer_id
+    assert contribution.average_weekly_wage == employer_iaww
+
+
+@pytest.mark.parametrize("use_benefit_year_id", [True, False])
+@pytest.mark.parametrize("use_employee_id", [True, False])
+@pytest.mark.parametrize("use_employer_id", [True, False])
+def test_create_employer_contribution_for_benefit_year_should_return_none_if_invalid_data(
+    test_db_session: db.Session,
+    initialize_factories_session,
+    use_benefit_year_id: bool,
+    use_employee_id: bool,
+    use_employer_id: bool,
+):
+    employee: Employee = EmployeeFactory.create()
+    employer: Employer = EmployerFactory.create()
+    absence_period_start_date = date(2021, 1, 1)
+    benefit_year_dates = get_benefit_year_dates(absence_period_start_date)
+    by = BenefitYear()
+    by.start_date = benefit_year_dates.start_date
+    by.end_date = benefit_year_dates.end_date
+    by.employee_id = employee.employee_id
+    by.total_wages = 123
+    employer_iaww = Decimal("13")
+
+    test_db_session.add(by)
+    test_db_session.commit()
+
+    benefit_year_id = by.benefit_year_id if use_benefit_year_id else uuid4()
+    employee_id = employee.employee_id if use_employee_id else uuid4()
+    employer_id = employer.employer_id if use_employer_id else uuid4()
+
+    contribution = create_employer_contribution_for_benefit_year(
+        test_db_session, benefit_year_id, employee_id, employer_id, employer_iaww,
+    )
+    by = test_db_session.query(BenefitYear).one()
+
+    if use_benefit_year_id and use_employee_id and use_employer_id:
+        assert contribution is not None
+        assert len(by.contributions) == 1
+    else:
+        assert contribution is None
+        assert len(by.contributions) == 0

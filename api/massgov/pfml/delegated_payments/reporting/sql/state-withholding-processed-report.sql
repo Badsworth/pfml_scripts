@@ -41,5 +41,5 @@ SELECT PBT.FINEOS_CUSTOMER_NUMBER "Customer Number",
        PBT.PAYMENT_ID "Payment ID"
 FROM PAYMENT_BATCH_TRANSACTIONS PBT
 WHERE PBT.IS_CURRENT = 'Y'
-  AND PBT.CURRENT_STATE_ID IN (194)
--- State-withholding-processed-report sent (State Withholding send funds to DOR) (194)
+  AND PBT.CURRENT_STATE_ID IN (207)
+-- State-withholding-processed-report sent (State Withholding send funds to DOR) (207)

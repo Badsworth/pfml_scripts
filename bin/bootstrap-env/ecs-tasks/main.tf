@@ -80,4 +80,5 @@ module "tasks" {
   enable_upload_1099_pdf   = "1"
 
   enable_withholding_payments = "0"
+  upload_max_files_to_fineos = "10"
 }

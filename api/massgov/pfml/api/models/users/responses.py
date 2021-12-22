@@ -3,6 +3,7 @@ from typing import Any, Dict, List, Optional
 from pydantic import UUID4, Field
 from sqlalchemy.orm import contains_eager
 
+from massgov.pfml.api.models.common import MaskedPhone
 from massgov.pfml.db import Session
 from massgov.pfml.db.models.employees import (
     Employer,
@@ -33,13 +34,19 @@ class UserLeaveAdminResponse(PydanticBaseModel):
     verified: bool
 
 
+class MfaDeliveryPreferenceResponse(PydanticBaseModel):
+    mfa_delivery_preference_id: int
+    mfa_delivery_preference_description: str
+
+
 class UserResponse(PydanticBaseModel):
     """Response object for a given User result """
 
     user_id: UUID4
     auth_id: str = Field(alias="sub_id")
     email_address: str
-    mfa_phone_number: Optional[str]
+    mfa_delivery_preference: Optional[MfaDeliveryPreferenceResponse]
+    mfa_phone_number: Optional[MaskedPhone]
     consented_to_data_sharing: bool
     roles: List[RoleResponse]
     user_leave_administrators: List[UserLeaveAdminResponse]
@@ -107,6 +114,11 @@ def user_response(user: User, db: Session) -> Dict[str, Any]:
     ]
     response_data = response.dict()
     response_data["user_leave_administrators"] = user_leave_administrators_data
+
+    if user.mfa_delivery_preference is not None:
+        mfa_preference = user.mfa_delivery_preference.mfa_delivery_preference_description
+        response_data["mfa_delivery_preference"] = mfa_preference
+
     return response_data
 
 

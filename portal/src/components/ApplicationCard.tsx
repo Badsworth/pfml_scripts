@@ -1,6 +1,3 @@
-import routeWithParams, {
-  createRouteWithQuery,
-} from "../utils/routeWithParams";
 import { AppLogic } from "../hooks/useAppLogic";
 import BenefitsApplication from "../models/BenefitsApplication";
 import ButtonLink from "./ButtonLink";
@@ -10,37 +7,13 @@ import LegalNoticeList from "./LegalNoticeList";
 import React from "react";
 import Spinner from "./core/Spinner";
 import Tag from "./core/Tag";
-import ThrottledButton from "./ThrottledButton";
 import { WithUserProps } from "src/hoc/withUser";
+import { createRouteWithQuery } from "../utils/routeWithParams";
 import findKeyByValue from "../utils/findKeyByValue";
 import getLegalNotices from "../utils/getLegalNotices";
 import hasDocumentsLoadError from "../utils/hasDocumentsLoadError";
-import tracker from "../services/tracker";
+import routes from "../routes";
 import { useTranslation } from "../locales/i18n";
-
-/**
- * Assists with page navigation, displays errors on the
- * current page rather than redirecting and showing the
- * error on a new page.
- */
-const navigateToPage = async (
-  claim: BenefitsApplication,
-  appLogic: AppLogic,
-  href: string
-) => {
-  const { fineos_absence_id } = claim;
-
-  if (fineos_absence_id) {
-    const claimDetail = await appLogic.claims.loadClaimDetail(
-      fineos_absence_id
-    );
-    const isValidClaim = claimDetail?.fineos_absence_id === fineos_absence_id;
-    // navigate to page if claim loads w/o errors
-    if (isValidClaim) appLogic.portalFlow.goTo(href);
-  } else {
-    tracker.trackEvent("fineos_absence_id is missing");
-  }
-};
 
 interface HeaderSectionProps {
   title: string;
@@ -74,32 +47,24 @@ const TitleAndDetailSectionItem = ({
 );
 
 interface ManageDocumentSectionProps {
-  appLogic: AppLogic;
   claim: BenefitsApplication;
 }
 
 /**
  * Section to view notices and upload documents
  */
-const ManageDocumentSection = ({
-  appLogic,
-  claim,
-}: ManageDocumentSectionProps) => {
+const ManageDocumentSection = ({ claim }: ManageDocumentSectionProps) => {
   const { t } = useTranslation();
   const { fineos_absence_id: absence_id } = claim;
 
-  const onClickHandler = async (href: string) => {
-    await navigateToPage(claim, appLogic, href);
-  };
-
   const viewNoticesLink = createRouteWithQuery(
-    "/applications/status/",
+    routes.applications.status.claim,
     { absence_id },
     "view_notices"
   );
 
   const uploadDocumentsLink = createRouteWithQuery(
-    "/applications/status/",
+    routes.applications.status.claim,
     { absence_id },
     "upload_documents"
   );
@@ -109,21 +74,21 @@ const ManageDocumentSection = ({
       <Heading className="padding-y-3" level="4">
         {t("components.applicationCard.otherActions")}
       </Heading>
-      <ThrottledButton
+      <ButtonLink
         className="display-block margin-bottom-3"
-        onClick={() => onClickHandler(viewNoticesLink)}
+        href={viewNoticesLink}
         variation="unstyled"
       >
         {t("components.applicationCard.viewNotices")}
-      </ThrottledButton>
+      </ButtonLink>
 
-      <ThrottledButton
+      <ButtonLink
         className="display-block margin-bottom-2"
-        onClick={() => onClickHandler(uploadDocumentsLink)}
+        href={uploadDocumentsLink}
         variation="unstyled"
       >
         {t("components.applicationCard.respondToRequest")}
-      </ThrottledButton>
+      </ButtonLink>
     </div>
   );
 };
@@ -230,7 +195,7 @@ const InProgressStatusCard = (props: InProgressStatusCardProps) => {
       <div className="border-top border-base-lighter padding-top-2">
         <ButtonLink
           className="display-flex flex-align-center flex-justify-center flex-column margin-right-0"
-          href={routeWithParams("applications.checklist", {
+          href={createRouteWithQuery(routes.applications.checklist, {
             claim_id: claim.application_id,
           })}
         >
@@ -243,26 +208,22 @@ const InProgressStatusCard = (props: InProgressStatusCardProps) => {
 
 interface CompletedStatusCardProps {
   claim: BenefitsApplication;
-  appLogic: AppLogic;
 }
 
 /**
  * Status card for claim.status = "Completed"
  */
-const CompletedStatusCard = ({ appLogic, claim }: CompletedStatusCardProps) => {
+const CompletedStatusCard = ({ claim }: CompletedStatusCardProps) => {
   const { t } = useTranslation();
 
   const leaveReasonText = t("components.applicationCard.leaveReasonValue", {
     context: findKeyByValue(LeaveReason, claim.leave_details?.reason),
   });
 
-  const statusPage = routeWithParams("applications.status.claim", {
-    absence_id: claim.fineos_absence_id,
-  });
-
-  const onClickHandler = async () => {
-    await navigateToPage(claim, appLogic, statusPage);
-  };
+  const statusPageLink = createRouteWithQuery(
+    routes.applications.status.claim,
+    { absence_id: claim.fineos_absence_id }
+  );
 
   return (
     <React.Fragment>
@@ -277,14 +238,14 @@ const CompletedStatusCard = ({ appLogic, claim }: CompletedStatusCardProps) => {
       />
 
       <div className="border-top border-base-lighter padding-y-2 margin-y-2 margin-bottom-0">
-        <ThrottledButton
+        <ButtonLink
           className="width-full display-flex flex-align-center flex-justify-center flex-column margin-right-0"
-          onClick={onClickHandler}
+          href={statusPageLink}
         >
           {t("components.applicationCard.viewStatusUpdatesAndDetails")}
-        </ThrottledButton>
+        </ButtonLink>
       </div>
-      <ManageDocumentSection appLogic={appLogic} claim={claim} />
+      <ManageDocumentSection claim={claim} />
     </React.Fragment>
   );
 };

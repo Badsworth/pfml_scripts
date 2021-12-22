@@ -42,7 +42,7 @@ exports[`Employer welcome renders page 1`] = `
       >
         <svg
           aria-hidden="true"
-          class="usa-icon--size-4 margin-right-2 text-secondary text-middle"
+          class="usa-icon usa-icon--size-4 margin-right-2 text-secondary text-middle"
           fill="currentColor"
           focusable="false"
           role="img"

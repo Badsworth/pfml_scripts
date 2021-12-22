@@ -24,6 +24,7 @@ export default {
   states: {
     [routes.user.settings]: {
       on: {
+        CONTINUE: routes.user.settings,
         ENABLE_MFA: routes.twoFactor.smsIndex,
         EDIT_MFA_PHONE: routes.twoFactor.smsSetup,
       },

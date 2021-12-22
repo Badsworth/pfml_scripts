@@ -90,7 +90,7 @@ export const ConcurrentLeaves = (props: WithBenefitsApplicationProps) => {
               {t("pages.claimsConcurrentLeaves.hintWhatKindHeading")}
             </IconHeading>
 
-            <div className="margin-top-1 margin-left-3 margin-bottom-2">
+            <div className="margin-top-1 margin-left-4 margin-bottom-2">
               <Trans
                 i18nKey={`pages.claimsConcurrentLeaves.intro`}
                 components={{ div: <div />, li: <li />, ul: <ul /> }}

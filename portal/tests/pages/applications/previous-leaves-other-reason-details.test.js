@@ -70,34 +70,57 @@ describe("PreviousLeavesOtherReasonDetails", () => {
     ).toBeInTheDocument();
   });
 
-  it("changes date in hint text when claim is for caring leave", () => {
-    const julyTextMatch = /leave taken between July 1, 2021/i;
+  it("changes hint date if claim is caring leave or starts in 2021", () => {
     const januaryTextMatch = /leave taken between January 1, 2021/i;
+    const marchTextMatch = /leave taken between March 7, 2021/i;
+    const julyTextMatch = /leave taken between July 1, 2021/i;
 
     setup(
       new MockBenefitsApplicationBuilder()
-        .continuous()
-        .employed()
-        .previousLeavesSameReason()
-        .caringLeaveReason()
-        .create()
-    );
-
-    expect(screen.queryByText(julyTextMatch)).toBeInTheDocument();
-    expect(screen.queryByText(januaryTextMatch)).not.toBeInTheDocument();
-
-    cleanup();
-    setup(
-      new MockBenefitsApplicationBuilder()
-        .continuous()
+        .continuous({
+          start_date: "2021-11-01",
+        })
         .employed()
         .previousLeavesSameReason()
         .medicalLeaveReason()
         .create()
     );
 
-    expect(screen.queryByText(julyTextMatch)).not.toBeInTheDocument();
     expect(screen.queryByText(januaryTextMatch)).toBeInTheDocument();
+    expect(screen.queryByText(marchTextMatch)).not.toBeInTheDocument();
+    expect(screen.queryByText(julyTextMatch)).not.toBeInTheDocument();
+
+    cleanup();
+    setup(
+      new MockBenefitsApplicationBuilder()
+        .continuous({
+          start_date: "2022-03-07",
+        })
+        .employed()
+        .previousLeavesSameReason()
+        .caringLeaveReason()
+        .create()
+    );
+
+    expect(screen.queryByText(januaryTextMatch)).not.toBeInTheDocument();
+    expect(screen.queryByText(marchTextMatch)).not.toBeInTheDocument();
+    expect(screen.queryByText(julyTextMatch)).toBeInTheDocument();
+
+    cleanup();
+    setup(
+      new MockBenefitsApplicationBuilder()
+        .continuous({
+          start_date: "2022-03-07",
+        })
+        .employed()
+        .previousLeavesSameReason()
+        .medicalLeaveReason()
+        .create()
+    );
+
+    expect(screen.queryByText(januaryTextMatch)).not.toBeInTheDocument();
+    expect(screen.queryByText(marchTextMatch)).toBeInTheDocument();
+    expect(screen.queryByText(julyTextMatch)).not.toBeInTheDocument();
   });
 
   it("calls update when user submits form with new data", async () => {
@@ -125,10 +148,10 @@ describe("PreviousLeavesOtherReasonDetails", () => {
 
     userEvent.type(startDayInput, "1");
     userEvent.type(startMonthInput, "3");
-    userEvent.type(startYearInput, "2021");
+    userEvent.type(startYearInput, "2022");
     userEvent.type(endDayInput, "2");
     userEvent.type(endMonthInput, "4");
-    userEvent.type(endYearInput, "2021");
+    userEvent.type(endYearInput, "2022");
 
     userEvent.type(
       within(
@@ -154,10 +177,10 @@ describe("PreviousLeavesOtherReasonDetails", () => {
         previous_leaves_other_reason: [
           {
             is_for_current_employer: true,
-            leave_end_date: "2021-04-02",
+            leave_end_date: "2022-04-02",
             leave_minutes: 840,
             leave_reason: "An illness or injury",
-            leave_start_date: "2021-03-01",
+            leave_start_date: "2022-03-01",
             previous_leave_id: null,
             type: null,
             worked_per_week_minutes: 2400,

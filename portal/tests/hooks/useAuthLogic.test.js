@@ -600,6 +600,178 @@ describe("useAuthLogic", () => {
         );
       });
     });
+
+    describe("with claimantShowMFA feature flag enabled", () => {
+      const next = "/applications";
+      const portalFlow = mockPortalFlow();
+
+      beforeEach(() => {
+        process.env.featureFlags = {
+          claimantShowMFA: true,
+        };
+      });
+
+      describe("with no MFA challenge", () => {
+        let usersApi;
+
+        beforeAll(() => {
+          // The mock of UsersApi returns an object with references to a singleton
+          // of getCurrentUser and updateUser so this will reference the same
+          // jest.fn mocks that are used in the hook.
+          usersApi = new UsersApi();
+
+          jest.spyOn(Auth, "signIn").mockImplementation(() => {
+            const cognitoUser = {};
+            return cognitoUser;
+          });
+        });
+
+        it("sets isLoggedIn to true", async () => {
+          const { result } = render();
+
+          await act(async () => {
+            await result.current.login(username, password);
+          });
+
+          expect(result.current.isLoggedIn).toBe(true);
+        });
+
+        it("redirects to the ENABLE_MFA page if user has not made an MFA selection", async () => {
+          const { result } = render(portalFlow);
+
+          usersApi.getCurrentUser.mockImplementationOnce(() => {
+            const apiUser = {
+              user: {
+                mfa_delivery_preference: null,
+              },
+            };
+
+            return apiUser;
+          });
+
+          await act(async () => {
+            await result.current.login(username, password, next);
+          });
+
+          expect(portalFlow.goToPageFor).toHaveBeenCalledWith("ENABLE_MFA");
+        });
+
+        it("does not redirect to MFA setup if user is an Employer", async () => {
+          const { result } = render(portalFlow);
+
+          usersApi.getCurrentUser.mockImplementationOnce(() => {
+            const apiUser = {
+              user: {
+                mfa_delivery_preference: null,
+                hasEmployerRole: true,
+              },
+            };
+
+            return apiUser;
+          });
+
+          await act(async () => {
+            await result.current.login(username, password, next);
+          });
+
+          expect(portalFlow.goTo).toHaveBeenCalledWith(next);
+        });
+
+        it("redirects to the next page if user has made MFA selection", async () => {
+          const { result } = render(portalFlow);
+
+          usersApi.getCurrentUser.mockImplementationOnce(() => {
+            const apiUser = {
+              user: {
+                mfa_delivery_preference: "SMS",
+              },
+            };
+
+            return apiUser;
+          });
+
+          await act(async () => {
+            await result.current.login(username, password, next);
+          });
+
+          expect(portalFlow.goTo).toHaveBeenCalledWith(next);
+        });
+      });
+
+      describe("with an MFA challenge", () => {
+        beforeAll(() => {
+          jest.spyOn(Auth, "signIn").mockImplementation(() => {
+            const cognitoUser = {
+              challengeName: "SMS_MFA",
+            };
+            return cognitoUser;
+          });
+        });
+
+        it("does not mark the user as logged in", async () => {
+          const { result } = render();
+
+          await act(async () => {
+            await result.current.login(username, password);
+          });
+
+          expect(result.current.isLoggedIn).not.toBe(true);
+        });
+
+        it("redirects to the VERIFY_CODE page", async () => {
+          const { result } = render(portalFlow);
+
+          await act(async () => {
+            await result.current.login(username, password, next);
+          });
+
+          expect(portalFlow.goToPageFor).toHaveBeenCalledWith(
+            "VERIFY_CODE",
+            {},
+            { next: "/applications" }
+          );
+        });
+      });
+    });
+  });
+
+  describe("verifyMFACodeAndLogin", () => {
+    const next = "/applications";
+
+    it("calls Auth.confirmSignIn", async () => {
+      const { result } = render();
+
+      await act(async () => {
+        await result.current.verifyMFACodeAndLogin(verificationCode, next);
+      });
+
+      expect(Auth.confirmSignIn).toHaveBeenCalledWith(
+        undefined,
+        verificationCode,
+        "SMS_MFA"
+      );
+    });
+
+    it("tracks request", async () => {
+      const { result } = render();
+
+      await act(async () => {
+        await result.current.verifyMFACodeAndLogin(verificationCode, next);
+      });
+
+      expect(tracker.trackFetchRequest).toHaveBeenCalledTimes(1);
+      expect(tracker.markFetchRequestEnd).toHaveBeenCalledTimes(1);
+    });
+
+    it("sets isLoggedIn to true", async () => {
+      const { result } = render();
+
+      await act(async () => {
+        await result.current.verifyMFACodeAndLogin(verificationCode, next);
+      });
+
+      expect(result.current.isLoggedIn).toBe(true);
+    });
   });
 
   describe("logout", () => {

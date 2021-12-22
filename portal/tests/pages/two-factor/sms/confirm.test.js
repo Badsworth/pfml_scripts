@@ -2,12 +2,23 @@ import * as MFAService from "../../../../src/services/mfa";
 import { act, screen } from "@testing-library/react";
 import { mockAuth, renderPage } from "../../../test-utils";
 import ConfirmSMS from "../../../../src/pages/two-factor/sms/confirm";
+import User from "../../../../src/models/User";
+import faker from "faker";
 import userEvent from "@testing-library/user-event";
 
 const updateUser = jest.fn();
 jest.mock("../../../../src/services/mfa", () => ({
   verifyMFAPhoneNumber: jest.fn(),
 }));
+
+const user = new User({
+  auth_id: faker.datatype.uuid(),
+  consented_to_data_sharing: true,
+  email_address: faker.internet.email(),
+  mfa_phone_number: {
+    phone_number: "***-***-1234",
+  },
+});
 
 beforeEach(() => {
   mockAuth(true);
@@ -16,7 +27,11 @@ beforeEach(() => {
 
 describe("Two-factor SMS Confirm", () => {
   it("renders landing page content", () => {
-    const { container } = renderPage(ConfirmSMS);
+    const { container } = renderPage(ConfirmSMS, {
+      addCustomSetup: (appLogic) => {
+        appLogic.users.user = user;
+      },
+    });
     expect(container.firstChild).toMatchSnapshot();
   });
 

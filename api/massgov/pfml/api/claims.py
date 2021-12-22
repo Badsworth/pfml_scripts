@@ -4,7 +4,6 @@ from uuid import UUID
 
 import connexion
 import flask
-import newrelic.agent
 from sqlalchemy.orm.session import Session
 from sqlalchemy_utils import escape_like
 from werkzeug.exceptions import BadRequest, Forbidden, NotFound, Unauthorized
@@ -18,7 +17,7 @@ from massgov.pfml.api.authorization.flask import READ, can, requires
 from massgov.pfml.api.exceptions import ClaimWithdrawn, ObjectNotFound
 from massgov.pfml.api.models.applications.common import OrganizationUnit
 from massgov.pfml.api.models.claims.common import EmployerClaimReview
-from massgov.pfml.api.models.claims.responses import ClaimResponse
+from massgov.pfml.api.models.claims.responses import ClaimResponse, ManagedRequirementResponse
 from massgov.pfml.api.services.administrator_fineos_actions import (
     awaiting_leave_info,
     complete_claim_review,
@@ -40,6 +39,7 @@ from massgov.pfml.db.models.employees import (
     AbsenceStatus,
     Claim,
     Employer,
+    ManagedRequirement,
     ManagedRequirementType,
     User,
     UserLeaveAdministrator,
@@ -73,6 +73,9 @@ from massgov.pfml.util.paginate.paginator import PaginationAPIContext
 from massgov.pfml.util.sqlalchemy import get_or_404
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
+
+# HRD Employer FEIN. See https://lwd.atlassian.net/browse/PSD-2401
+CLAIMS_DASHBOARD_BLOCKED_FEINS = set(["046002284"])
 
 
 class VerificationRequired(Forbidden):
@@ -285,8 +288,8 @@ def employer_get_claim_review(fineos_absence_id: str) -> flask.Response:
 
         try:
             (
-                claim_review_response,
-                managed_requirements,
+                fineos_claim_review_response,
+                fineos_managed_requirements,
                 absence_period_decisions,
             ) = get_claim_as_leave_admin(
                 user_leave_admin.fineos_web_id, fineos_absence_id, employer,
@@ -309,7 +312,7 @@ def employer_get_claim_review(fineos_absence_id: str) -> flask.Response:
         claim_from_db = get_claim_from_db(fineos_absence_id)
 
         if claim_from_db and claim_from_db.fineos_absence_status:
-            claim_review_response.status = (
+            fineos_claim_review_response.status = (
                 claim_from_db.fineos_absence_status.absence_status_description
             )
 
@@ -320,24 +323,29 @@ def employer_get_claim_review(fineos_absence_id: str) -> flask.Response:
             sync_absence_periods(
                 db_session, claim_from_db, absence_period_decisions, log_attributes
             )
+        handle_managed_requirements(
+            db_session, claim_from_db, fineos_managed_requirements, log_attributes,
+        )
 
-        try:
-            handle_managed_requirements(
-                db_session, claim_from_db, managed_requirements, log_attributes,
+        managed_requirements = (
+            db_session.query(ManagedRequirement)
+            .filter(
+                ManagedRequirement.fineos_managed_requirement_id.in_(
+                    [str(mr.managedReqId) for mr in fineos_managed_requirements]
+                )
             )
-        except Exception as error:  # catch all exception handler
-            db_session.rollback()
-            logger.error(
-                "Failed to handle the claim's managed requirements in employer claim review call",
-                extra=log_attributes,
-                exc_info=error,
-            )
+            .all()
+        )
+        fineos_claim_review_response.managed_requirements = [
+            ManagedRequirementResponse.from_orm(mr) for mr in managed_requirements
+        ]
+
         logger.info(
             "employer_get_claim_review success", extra=log_attributes,
         )
         return response_util.success_response(
             message="Successfully retrieved claim",
-            data=claim_review_response.dict(),
+            data=fineos_claim_review_response.dict(),
             status_code=200,
         ).to_api_response()
 
@@ -451,7 +459,7 @@ def get_claim(fineos_absence_id: str) -> flask.Response:
         return error.to_api_response()
 
     try:
-        detailed_claim = get_claim_detail(claim)
+        detailed_claim = get_claim_detail(claim, {"absence_case_id": fineos_absence_id})
     except ClaimWithdrawnError:
         logger.warning(
             "get_claim failure - Claim has been withdrawn. Unable to display claim status.",
@@ -512,7 +520,8 @@ def get_claims() -> flask.Response:
                 verified_employers = [
                     employer
                     for employer in employers_list
-                    if current_user.verified_employer(employer)
+                    if employer.employer_fein not in CLAIMS_DASHBOARD_BLOCKED_FEINS
+                    and current_user.verified_employer(employer)
                 ]
 
                 # filters claims by employer id - shows all claims of those employers
@@ -593,6 +602,9 @@ def handle_managed_requirements(
     managed_requirements: List[ManagedRequirementDetails],
     log_attributes: dict,
 ) -> None:
+    """
+    Note that commit to db is the responsibility of called functions.
+    """
     if claim is None:
         return
     for mr in managed_requirements:
@@ -614,27 +626,18 @@ def handle_managed_requirements(
 def sync_absence_periods(
     db_session: Session, claim: Claim, decisions: PeriodDecisions, log_attributes: dict
 ) -> None:
+    """
+    Note that commit to db is responsibility of the caller
+    """
     if not decisions.decisions:
         return
-    try:
-        absence_periods = [
-            decision.period for decision in decisions.decisions if decision.period is not None
-        ]
-        for absence_period in absence_periods:
-            upsert_absence_period_from_fineos_period(
-                db_session, claim.claim_id, absence_period, log_attributes
-            )
-        # only commit to db when every absence period has been succesfully synced
-        # otherwise rollback changes if any absence period upsert throws an exception
-        db_session.commit()
-    except Exception as e:
-        db_session.rollback()
-        message = "Failed to update fineos absence periods"
-        logger.exception(
-            message, extra={"fineos_absence_id": claim.fineos_absence_id, **log_attributes},
+    absence_periods = [
+        decision.period for decision in decisions.decisions if decision.period is not None
+    ]
+    for absence_period in absence_periods:
+        upsert_absence_period_from_fineos_period(
+            db_session, claim.claim_id, absence_period, log_attributes
         )
-        newrelic.agent.record_exception(
-            exc=e,
-            value=message,
-            params={"fineos_absence_id": claim.fineos_absence_id, **log_attributes},
-        )
+    # only commit to db when every absence period has been succesfully synced
+    # otherwise rollback changes if any absence period upsert throws an exception
+    db_session.commit()

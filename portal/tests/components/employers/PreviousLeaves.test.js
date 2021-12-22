@@ -39,6 +39,7 @@ describe("PreviousLeaves", () => {
     onRemove,
     previousLeaves: generatePreviousLeaves(),
     shouldShowV2: true,
+    otherLeaveStartDate: "March 15, 2021",
   };
 
   const queryAmendmentFormHeader = () =>

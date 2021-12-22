@@ -1,5 +1,5 @@
 import enum
-from typing import Optional
+from typing import List, Optional
 
 import requests
 
@@ -36,7 +36,8 @@ class Generate1099DocumentsStep(Step):
 
         if pfml_1099_util.is_generate_1099_pdf_enabled():
             logger.info("Generate 1099 Pdf flag is enabled")
-            records = self.get_records()
+            batch_id = self.get_1099_batch_id()
+            records = self.get_records(batch_id)
 
             if len(records) > 0:
                 max_records_in_subbatch = 250
@@ -44,30 +45,39 @@ class Generate1099DocumentsStep(Step):
                 con = 1
 
                 for i in range(len(records)):
-                    self.generate_document(
-                        records[i], f"Sub-batch-{con_subbatch}", self.pdfApiEndpoint
-                    )
-                    con += 1
+                    try:
+                        batch_folder = f"Batch-{batch_id}"
+                        sub_batch_folder = f"Sub-batch-{con_subbatch}"
+                        s3_location = f"{batch_folder}/Forms/{sub_batch_folder}/{records[i].pfml_1099_id}_{records[i].first_name} {records[i].last_name}.pdf"
+                        self.generate_document(
+                            records[i], sub_batch_folder, self.pdfApiEndpoint, s3_location
+                        )
+                        con += 1
 
-                    if con > max_records_in_subbatch:
-                        con = 1
-                        con_subbatch += 1
+                        if con > max_records_in_subbatch:
+                            con = 1
+                            con_subbatch += 1
+                    except (Exception) as error:
+                        logger.error(error)
 
         else:
             logger.info("Generate 1099 Pdf flag is not enabled")
 
-    def get_records(self):
+    def get_1099_batch_id(self) -> str:
         batch = pfml_1099_util.get_current_1099_batch(self.db_session)
 
         if batch is None:
             logger.error("No current batch exists. This should never happen.")
             raise Exception("Batch cannot be empty at this point.")
 
-        return pfml_1099_util.get_1099_records(
-            self.db_session, batchId=str(batch.pfml_1099_batch_id)
-        )
+        return str(batch.pfml_1099_batch_id)
 
-    def generate_document(self, record: Pfml1099, sub_bacth: str, url: str) -> None:
+    def get_records(self, batch_id: str) -> List[Pfml1099]:
+        return pfml_1099_util.get_1099_records(self.db_session, batchId=batch_id)
+
+    def generate_document(
+        self, record: Pfml1099, sub_bacth: str, url: str, s3_location: str
+    ) -> None:
         ssn: Optional[str] = pfml_1099_util.get_tax_id(
             self.db_session, str(record.tax_identifier_id)
         )
@@ -103,6 +113,8 @@ class Generate1099DocumentsStep(Step):
             )
 
             if response.ok:
+                record.s3_location = s3_location
+                self.db_session.commit()
                 logger.info(
                     f"Pdf was successfully generated for {record.first_name} {record.last_name}"
                 )
@@ -111,5 +123,4 @@ class Generate1099DocumentsStep(Step):
                 logger.error(response.json())
                 self.increment(self.Metrics.DOCUMENT_ERROR)
         except requests.exceptions.RequestException as error:
-            logger.error(error)
-            raise Exception("Api error to generate Pdf.")
+            raise error

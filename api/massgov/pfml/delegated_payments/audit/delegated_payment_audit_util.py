@@ -55,6 +55,13 @@ class PaymentAuditData:
     previously_errored_payment_count: int
     previously_rejected_payment_count: int
     previously_skipped_payment_count: int
+    previously_paid_payment_count: int
+    previously_paid_payments_string: Optional[str]
+    gross_payment_amount: str
+    federal_withholding_amount: str
+    state_withholding_amount: str
+    federal_withholding_i_value: str
+    state_withholding_i_value: str
 
 
 def write_audit_report(
@@ -159,17 +166,17 @@ def build_audit_report_row(
         payment_period_start_date=payment_period_start_date,
         payment_period_end_date=payment_period_end_date,
         payment_period_weeks=str(payment_period_weeks),
-        gross_payment_amount=None,
+        gross_payment_amount=str(payment_audit_data.gross_payment_amount),
         payment_amount=str(payment.amount),
-        federal_withholding_amount=None,
-        state_withholding_amount=None,
+        federal_withholding_amount=str(payment_audit_data.federal_withholding_amount),
+        state_withholding_amount=str(payment_audit_data.state_withholding_amount),
         employer_reimbursement_amount=None,
         child_support_amount=None,
         absence_case_number=claim.fineos_absence_id,
         c_value=payment.fineos_pei_c_value,
         i_value=payment.fineos_pei_i_value,
-        federal_withholding_i_value=None,
-        state_withholding_i_value=None,
+        federal_withholding_i_value=str(payment_audit_data.federal_withholding_i_value),
+        state_withholding_i_value=str(payment_audit_data.state_withholding_i_value),
         employer_reimbursement_i_value=None,
         child_support_i_value=None,
         employer_id=str(employer.fineos_employer_id) if employer else None,
@@ -201,6 +208,8 @@ def build_audit_report_row(
         ],
         skipped_by_program_integrity=bool_to_str[audit_report_details.skipped_by_program_integrity],
         rejected_notes=audit_report_details.rejected_notes,
+        previously_paid_payment_count=str(payment_audit_data.previously_paid_payment_count),
+        previously_paid_payments=payment_audit_data.previously_paid_payments_string,
     )
 
     return payment_audit_row

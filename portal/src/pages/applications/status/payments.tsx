@@ -38,28 +38,51 @@ export const Payments = ({
       claimDetail,
       isLoadingClaimDetail,
       loadClaimDetail,
+      loadedPaymentsData,
       hasLoadedPayments,
     },
     documents: { documents: allClaimDocuments, loadAll: loadAllClaimDocuments },
     portalFlow,
   } = appLogic;
 
-  useEffect(() => {
-    if (!isFeatureEnabled("claimantShowPayments")) {
-      portalFlow.goTo(routes.applications.status.claim, {
-        absence_id,
-      });
-    }
-  }, [portalFlow, absence_id]);
+  // Determines if phase one payment features are displayed
+  const showPhaseOneFeatures =
+    isFeatureEnabled("claimantShowPayments") &&
+    claimDetail?.hasApprovedStatus &&
+    claimDetail?.has_paid_payments;
+
+  // Determines if phase two payment features are displayed
+  const showPhaseTwoFeatures =
+    isFeatureEnabled("claimantShowPaymentsPhaseTwo") &&
+    claimDetail?.hasApprovedStatus;
 
   const application_id = claimDetail?.application_id;
   const absenceId = absence_id;
+
   useEffect(() => {
-    if (absenceId) {
-      loadClaimDetail(absenceId);
+    const loadPayments = (absenceId: string) =>
+      !hasLoadedPayments(absenceId) ||
+      (loadedPaymentsData?.absence_case_id &&
+        Boolean(claimDetail?.payments.length === 0));
+
+    if (claimDetail && !showPhaseOneFeatures && !showPhaseTwoFeatures) {
+      portalFlow.goTo(routes.applications.status.claim, {
+        absence_id,
+      });
+    } else if (
+      absenceId &&
+      (!claimDetail || Boolean(loadPayments(absenceId)))
+    ) {
+      loadClaimDetail(absence_id);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [absenceId]);
+  }, [
+    portalFlow,
+    absence_id,
+    claimDetail,
+    absenceId,
+    loadedPaymentsData?.absence_case_id,
+  ]);
 
   useEffect(() => {
     if (application_id) {
@@ -149,7 +172,7 @@ export const Payments = ({
     t("pages.payments.paymentsTable.leaveDatesHeader"),
     t("pages.payments.paymentsTable.paymentMethodHeader"),
     t("pages.payments.paymentsTable.estimatedDateHeader"),
-    t("pages.payments.paymentsTable.dateSentHeader"),
+    t("pages.payments.paymentsTable.dateProcessedHeader"),
     t("pages.payments.paymentsTable.amountSentHeader"),
   ];
 
@@ -165,10 +188,9 @@ export const Payments = ({
   const isIntermittentUnpaid =
     isIntermittent &&
     isFeatureEnabled("claimantShowPaymentsPhaseTwo") &&
-    claimDetail?.payments?.length === 0;
+    Boolean(claimDetail?.payments?.length);
 
   const maxBenefitAmount = `$${getMaxBenefitAmount()}`;
-
   return (
     <React.Fragment>
       {!!infoAlertContext && (hasPendingStatus || hasApprovedStatus) && (
@@ -210,17 +232,16 @@ export const Payments = ({
         label={t("pages.payments.backButtonLabel")}
         href={routes.applications.index}
       />
+      <Title hidden>{t("pages.payments.paymentsTitle")}</Title>
       <div className="measure-6">
         <StatusNavigationTabs
           activePath={portalFlow.pathname}
           absence_id={absence_id}
         />
 
-        <Title hidden>{t("pages.payments.paymentsTitle")}</Title>
-
         <section className="margin-y-5" data-testid="your-payments">
           {/* Heading section */}
-          <Heading level="2" className="margin-bottom-3">
+          <Heading level="2" size="1" className="margin-bottom-3">
             {t("pages.payments.yourPayments")}
           </Heading>
           <section data-testid="your-payments-intro">
@@ -247,8 +268,17 @@ export const Payments = ({
                 ),
               }}
             />
+
+            {/* Estimated Date section */}
+            <section className="margin-y-5" data-testid="estimated-date">
+              <Heading level="3">
+                {t("pages.payments.estimatedDateHeading")}
+              </Heading>
+              <p>{t("pages.payments.estimatedDate")}</p>
+            </section>
           </section>
 
+          {/* Table section */}
           {shouldShowPaymentsTable && (
             <Table className="width-full" responsive>
               <thead>
@@ -312,7 +342,7 @@ export const Payments = ({
                       </tr>
                     )
                   )}
-                {waitingWeek && (
+                {waitingWeek && !isIntermittent && (
                   <tr>
                     <td
                       data-label={t(

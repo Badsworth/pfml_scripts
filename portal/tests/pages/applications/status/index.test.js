@@ -705,6 +705,23 @@ describe("Status", () => {
 
       expect(container).toMatchSnapshot();
     });
+
+    it("renders track your payments link if isPaymentsTab is true", () => {
+      render(
+        <LeaveDetails
+          isPaymentsTab
+          absenceDetails={{
+            [LeaveReason.medical]: AbsencePeriod.groupByReason(
+              CLAIM_DETAIL.absence_periods
+            )[LeaveReason.bonding],
+          }}
+        />
+      );
+
+      expect(
+        screen.getByRole("link", { name: /Track your payment/ })
+      ).toBeInTheDocument();
+    });
   });
 
   describe("timeline", () => {

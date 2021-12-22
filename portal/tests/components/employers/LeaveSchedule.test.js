@@ -20,7 +20,7 @@ describe("LeaveSchedule", () => {
   it("renders continuous schedule without documents", () => {
     render(<LeaveSchedule claim={CONTINUOUS_CLAIM} />);
     expect(
-      screen.getByRole("row", { name: "1/1/2021 to 6/1/2021 Continuous leave" })
+      screen.getByRole("row", { name: "1/1/2022 to 6/1/2022 Continuous leave" })
     ).toBeInTheDocument();
     expect(
       screen.getByText("This is your employee’s expected leave schedule.")
@@ -54,7 +54,7 @@ describe("LeaveSchedule", () => {
     render(<LeaveSchedule claim={INTERMITTENT_CLAIM} />);
     expect(
       screen.getByRole("row", {
-        name: "2/1/2021 to 7/1/2021 Intermittent leave",
+        name: "2/1/2022 to 7/1/2022 Intermittent leave",
       })
     ).toBeInTheDocument();
   });
@@ -74,11 +74,11 @@ describe("LeaveSchedule", () => {
       .create();
     render(<LeaveSchedule claim={multipleLeaveClaim} />);
     expect(
-      screen.getByRole("row", { name: "1/1/2021 to 6/1/2021 Continuous leave" })
+      screen.getByRole("row", { name: "1/1/2022 to 6/1/2022 Continuous leave" })
     ).toBeInTheDocument();
     expect(
       screen.getByRole("row", {
-        name: "2/1/2021 to 7/1/2021 Reduced leave schedule",
+        name: "2/1/2022 to 7/1/2022 Reduced leave schedule",
       })
     ).toBeInTheDocument();
   });

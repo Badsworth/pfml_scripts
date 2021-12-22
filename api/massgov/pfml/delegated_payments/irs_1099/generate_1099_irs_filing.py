@@ -29,7 +29,6 @@ class Constants:
     F_REC_TYPE = "F"
     # Will be 'P' for previous year and blank for current year
     PREV_YR_IND = ""
-    TAX_YEAR = 2021
     # TRANSMITTER INFO
     TX_CTL_NO = "08025"
     TX_NAME = "COMMONWEALTH OF MASSACHUSETTS"
@@ -67,7 +66,7 @@ class Constants:
     # Will be set to 'T' for test file only
     TST_FILE_IND = ""
     BLANK_SPACE = ""
-    FILE_NAME = "1099.ORG"
+    FILE_NAME = "1099.txt"
     G1099_FILENAME_FORMAT = f"%Y-%m-%d-%H-%M-%S-{FILE_NAME}"
     ZERO = 0
     AMT_CD_1 = 0
@@ -208,11 +207,11 @@ class Generate1099IRSfilingStep(Step):
         t_dict = dict(
             T_REC_TYPE=Constants.T_REC_TYPE,
             PREV_YR_IND=Constants.PREV_YR_IND,
-            TAX_YEAR=Constants.TAX_YEAR,
+            TAX_YEAR=pfml_1099_util.get_tax_year(),
             TX_TIN=Constants.PAYER_TIN,
             TX_CTL_NO=Constants.TX_CTL_NO,
             B7=Constants.BLANK_SPACE,
-            TST_FILE_IND=Constants.TST_FILE_IND,
+            TST_FILE_IND=pfml_1099_util.is_test_file(),
             FOR_IND=Constants.BLANK_SPACE,
             TX_NAME=Constants.TX_NAME,
             COMP_NAME=Constants.COM_NM,
@@ -238,7 +237,7 @@ class Generate1099IRSfilingStep(Step):
 
         a_dict = dict(
             A_REC_TYPE=Constants.A_REC_TYPE,
-            TAX_YEAR=Constants.TAX_YEAR,
+            TAX_YEAR=pfml_1099_util.get_tax_year(),
             CSF_IND=Constants.COMBINED_ST_FED_IND,
             B5=Constants.BLANK_SPACE,
             PYR_TIN=Constants.PAYER_TIN,
@@ -268,7 +267,7 @@ class Generate1099IRSfilingStep(Step):
         for records in tax_data:
             b_dict = dict(
                 B_REC_TYPE=Constants.B_REC_TYPE,
-                TAX_YEAR=Constants.TAX_YEAR,
+                TAX_YEAR=pfml_1099_util.get_tax_year(),
                 CORRECTION_IND=_get_correction_ind(records.correction_ind),
                 PAYEE_NAME_CTL=_get_name_ctl(records.last_name),
                 PAYEE_TIN_TYPE=Constants.TIN_TYPE,
@@ -300,7 +299,7 @@ class Generate1099IRSfilingStep(Step):
                 B40_1=Constants.BLANK_SPACE,
                 PAYEE_CTY=records.city.upper(),
                 PAYEE_ST=records.state.upper(),
-                PAYEE_ZC=records.zip,
+                PAYEE_ZC=_get_zip(records.zip),
                 B1=Constants.BLANK_SPACE,
                 SEQ_NO=b_seq,
                 B36=Constants.BLANK_SPACE,
@@ -454,3 +453,16 @@ def _get_totals(tax_data: List[Any]) -> Tuple:
         _format_amount_fields(st_tax),
         _format_amount_fields(fed_tax),
     )
+
+
+def _get_zip(zip_code: str) -> str:
+    zip_code_five = ""
+    zip_code_four = ""
+    zcode = ""
+    if zip_code.find("-") != -1:
+        zip_code_five = zip_code.split("-")[0]
+        zip_code_four = zip_code.split("-")[1]
+        zcode = zip_code_five[:5] + zip_code_four[:4]
+    else:
+        zcode = zip_code[:9]
+    return zcode

@@ -92,7 +92,7 @@ describe("ConcurrentLeave", () => {
 
     expect(
       screen.getByText(
-        /your employee won’t receive pfml payments for the first 7 calendar days of their pfml leave from 2\/1\/2021 to 2\/7\/2021\./i
+        /your employee won’t receive pfml payments for the first 7 calendar days of their pfml leave from 2\/1\/2022 to 2\/7\/2022\./i
       )
     ).toBeInTheDocument();
   });
@@ -106,7 +106,7 @@ describe("ConcurrentLeave", () => {
 
     expect(
       screen.getByText(
-        /your employee won’t receive pfml payments for the first 7 calendar days of their pfml leave from 1\/1\/2021 to 1\/7\/2021\./i
+        /your employee won’t receive pfml payments for the first 7 calendar days of their pfml leave from 1\/1\/2022 to 1\/7\/2022\./i
       )
     ).toBeInTheDocument();
   });

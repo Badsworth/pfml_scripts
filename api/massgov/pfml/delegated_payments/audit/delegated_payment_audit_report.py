@@ -1,7 +1,10 @@
+import decimal
 import enum
 import os
 from datetime import date
-from typing import Iterable, List, Tuple, cast
+from typing import Iterable, List, Optional, Tuple, cast
+
+from sqlalchemy.orm import joinedload
 
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.delegated_payments.delegated_config as payments_config
@@ -12,10 +15,16 @@ from massgov.pfml import db
 from massgov.pfml.db.models.employees import (
     LkState,
     Payment,
+    PaymentTransactionType,
     ReferenceFile,
     ReferenceFileType,
     State,
     StateLog,
+)
+from massgov.pfml.db.models.payments import (
+    FineosWritebackDetails,
+    FineosWritebackTransactionStatus,
+    LinkSplitPayment,
 )
 from massgov.pfml.delegated_payments.audit.delegated_payment_audit_util import (
     PaymentAuditData,
@@ -59,7 +68,7 @@ class PaymentAuditReportStep(Step):
             logger.info("Tax Withholding ENABLED")
             federal_withholding_state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
                 state_log_util.AssociatedClass.PAYMENT,
-                State.FEDERAL_WITHHOLDING_PENDING_AUDIT,
+                State.FEDERAL_WITHHOLDING_ORPHANED_PENDING_AUDIT,
                 self.db_session,
             )
 
@@ -69,7 +78,7 @@ class PaymentAuditReportStep(Step):
 
             state_withholding_state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
                 state_log_util.AssociatedClass.PAYMENT,
-                State.STATE_WITHHOLDING_PENDING_AUDIT,
+                State.STATE_WITHHOLDING_ORPHANED_PENDING_AUDIT,
                 self.db_session,
             )
 
@@ -136,6 +145,34 @@ class PaymentAuditReportStep(Step):
                 state_log_util.build_outcome("Payment Audit Report sent"),
                 self.db_session,
             )
+            if payments_util.is_withholding_payments_enabled():
+                if (
+                    payment.payment_transaction_type_id
+                    == PaymentTransactionType.STANDARD.payment_transaction_type_id
+                ):
+                    linked_payments = _get_split_payments(self.db_session, payment)
+                    for payment in linked_payments:
+                        if payment.payment_transaction_type_id in [
+                            PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id,
+                            PaymentTransactionType.FEDERAL_TAX_WITHHOLDING.payment_transaction_type_id,
+                        ]:
+                            end_state = (
+                                State.STATE_WITHHOLDING_RELATED_PENDING_AUDIT
+                                if (
+                                    payment.payment_transaction_type_id
+                                    == PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id
+                                )
+                                else State.FEDERAL_WITHHOLDING_RELATED_PENDING_AUDIT
+                            )
+                            outcome = state_log_util.build_outcome(
+                                "Related Payment Audit report sent"
+                            )
+                            state_log_util.create_finished_state_log(
+                                associated_model=payment,
+                                end_state=end_state,
+                                outcome=outcome,
+                                db_session=self.db_session,
+                            )
 
         logger.info("Done setting sampled payments to sent state: %i", len(state_logs))
 
@@ -173,6 +210,110 @@ class PaymentAuditReportStep(Step):
         ]
         return _get_state_log_count_in_state(other_claim_payments, previous_states, self.db_session)
 
+    def previously_paid_payments(
+        self, payment: Payment
+    ) -> List[Tuple[Payment, Optional[FineosWritebackDetails]]]:
+        related_payments = (
+            self.db_session.query(Payment)
+            .filter(
+                Payment.period_start_date == payment.period_start_date,
+                Payment.period_end_date == payment.period_end_date,
+                Payment.claim_id == payment.claim_id,
+                Payment.payment_id != payment.payment_id,
+            )
+            .options(joinedload(Payment.fineos_writeback_details))  # type: ignore
+            .all()
+        )
+        previously_paid_payments = []
+
+        for payment in related_payments:
+            writeback_detail = (
+                payment.fineos_writeback_details[-1]  # type: ignore
+                if len(payment.fineos_writeback_details) > 0  # type: ignore
+                else None
+            )
+            # In the case writeback_detail is not populated, skip the payment.
+            # Filter invalid writeback details in code since we need
+            # to look for paid payments that may have errored afterwards.
+            if writeback_detail and writeback_detail.transaction_status_id not in [
+                FineosWritebackTransactionStatus.PAID.transaction_status_id,
+                FineosWritebackTransactionStatus.POSTED.transaction_status_id,
+            ]:
+                continue
+
+            previously_paid_payments.append((payment, writeback_detail))
+
+        return previously_paid_payments
+
+    def format_previously_paid_payments(
+        self, payments: list[Tuple[Payment, Optional[FineosWritebackDetails]]]
+    ) -> Optional[str]:
+        if len(payments) == 0:
+            return None
+
+        output = ""
+        for payment, writeback_detail in payments:
+            c_val = payment.fineos_pei_c_value
+            i_val = payment.fineos_pei_i_value
+            amount = payment.amount
+
+            writeback_time = writeback_detail.writeback_sent_at if writeback_detail else "N/A"
+            writeback_status = (
+                writeback_detail.transaction_status.transaction_status_description
+                if writeback_detail
+                else "N/A"
+            )
+            output = output + (
+                f"Payment C={c_val}, I={i_val}: "
+                f"amount={amount}, transaction_status={writeback_status}, "
+                f"writeback_sent_at={writeback_time}\n"
+            )
+
+        return output
+
+    def calculate_federal_withholding_amount(self, link_payments: List[Payment]) -> decimal.Decimal:
+        payment_amount: decimal.Decimal = decimal.Decimal(0)
+
+        for payment in link_payments:
+            if payment.payment_transaction_type_id in [
+                PaymentTransactionType.FEDERAL_TAX_WITHHOLDING.payment_transaction_type_id
+            ]:
+                payment_amount += payment.amount
+
+        return payment_amount
+
+    def calculate_state_withholding_amount(self, link_payments: List[Payment]) -> decimal.Decimal:
+
+        payment_amount: decimal.Decimal = decimal.Decimal(0)
+
+        for payment in link_payments:
+            if payment.payment_transaction_type_id in [
+                PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id
+            ]:
+                payment_amount += payment.amount
+
+        return payment_amount
+
+    def get_federal_withholding_i_value(self, link_payments: List[Payment]) -> str:
+        federal_withholding_i_values = []
+
+        for payment in link_payments:
+            if payment.payment_transaction_type_id in [
+                PaymentTransactionType.FEDERAL_TAX_WITHHOLDING.payment_transaction_type_id
+            ]:
+                federal_withholding_i_values.append(payment.fineos_pei_i_value)
+        return " ".join(str(v) for v in federal_withholding_i_values)
+
+    def get_state_withholding_i_value(self, link_payments: List[Payment]) -> str:
+        state_withholding_i_values = []
+
+        for payment in link_payments:
+            if payment.payment_transaction_type_id in [
+                PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id
+            ]:
+                state_withholding_i_values.append(payment.fineos_pei_i_value)
+        return " ".join(str(v) for v in state_withholding_i_values)
+
     def build_payment_audit_data_set(
         self, payments: Iterable[Payment]
     ) -> Iterable[PaymentAuditData]:
@@ -187,12 +328,50 @@ class PaymentAuditReportStep(Step):
             previously_audit_sent_count = self.previously_audit_sent_count(payment)
             is_first_time_payment = previously_audit_sent_count == 0
 
+            previously_paid_payments = self.previously_paid_payments(payment)
+
+            linked_payments = _get_split_payments(self.db_session, payment)
+            federal_withholding_amount: decimal.Decimal = (
+                self.calculate_federal_withholding_amount(linked_payments)
+                if payments_util.is_withholding_payments_enabled()
+                else decimal.Decimal(0)
+            )
+            state_withholding_amount: decimal.Decimal = (
+                self.calculate_state_withholding_amount(linked_payments)
+                if payments_util.is_withholding_payments_enabled()
+                else decimal.Decimal(0)
+            )
             payment_audit_data = PaymentAuditData(
                 payment=payment,
                 is_first_time_payment=is_first_time_payment,
                 previously_errored_payment_count=self.previously_errored_payment_count(payment),
                 previously_rejected_payment_count=self.previously_rejected_payment_count(payment),
                 previously_skipped_payment_count=self.previously_skipped_payment_count(payment),
+                previously_paid_payment_count=len(previously_paid_payments),
+                previously_paid_payments_string=self.format_previously_paid_payments(
+                    previously_paid_payments
+                ),
+                gross_payment_amount=str(
+                    payment.amount + federal_withholding_amount + state_withholding_amount
+                )
+                if payments_util.is_withholding_payments_enabled()
+                else "",
+                federal_withholding_amount=str(
+                    federal_withholding_amount
+                    if decimal.Decimal(federal_withholding_amount) > 0
+                    else ""
+                ),
+                state_withholding_amount=str(
+                    state_withholding_amount
+                    if decimal.Decimal(state_withholding_amount) > 0
+                    else ""
+                ),
+                federal_withholding_i_value=self.get_federal_withholding_i_value(linked_payments)
+                if payments_util.is_withholding_payments_enabled()
+                else "",
+                state_withholding_i_value=self.get_state_withholding_i_value(linked_payments)
+                if payments_util.is_withholding_payments_enabled()
+                else "",
             )
             payment_audit_data_set.append(payment_audit_data)
 
@@ -283,6 +462,16 @@ def _get_other_claim_payments_for_payment(
         )
 
     return other_claim_payments
+
+
+def _get_split_payments(db_session: db.Session, payment: Payment) -> List[Payment]:
+    linked_split_payments: List[Payment] = (
+        db_session.query(Payment)
+        .join(LinkSplitPayment, Payment.payment_id == LinkSplitPayment.related_payment_id)
+        .filter(LinkSplitPayment.payment_id == payment.payment_id)
+        .all()
+    )
+    return linked_split_payments
 
 
 def _get_date_tuple(payment: Payment) -> Tuple[date, date]:

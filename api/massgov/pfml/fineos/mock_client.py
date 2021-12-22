@@ -513,7 +513,7 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
             models.group_client_api.ManagedRequirementDetails.parse_obj(
                 {
                     "managedReqId": 123,
-                    "category": "Fake Category",
+                    "category": "Employer Confirmation",
                     "type": "Employer Confirmation of Leave Data",
                     "followUpDate": datetime.date(2021, 2, 1),
                     "documentReceived": True,
@@ -522,12 +522,13 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
                     "sourceOfInfoPartyName": "Fake Sourcee",
                     "creationDate": datetime.date(2020, 1, 1),
                     "dateSuppressed": datetime.date(2020, 3, 1),
+                    "status": "Open",
                 }
             ),
             models.group_client_api.ManagedRequirementDetails.parse_obj(
                 {
                     "managedReqId": 123,
-                    "category": "Fake Category",
+                    "category": "Employer Confirmation",
                     "type": "Fake Type",
                     "followUpDate": datetime.date(2021, 2, 1),
                     "documentReceived": True,
@@ -536,6 +537,7 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
                     "sourceOfInfoPartyName": "Fake Sourcee",
                     "creationDate": datetime.date(2020, 1, 1),
                     "dateSuppressed": datetime.date(2020, 3, 1),
+                    "status": "Complete",
                 }
             ),
         ]

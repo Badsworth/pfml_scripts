@@ -16,7 +16,7 @@ on:
           🛑 DO NOT CHANGE THE DROPDOWN ABOVE FOR THE WORKFLOW. KEEP IT ON "main" BRANCH.     
           --------------------------------------
           ⬇️ Environment to be deployed.
-            (test, performance, stage, training, uat, prod, breakfix, cps-preview).
+            (test, performance, stage, training, uat, prod, breakfix, cps-preview, long, trn2).
       version:
         required: true
         default: "main"
@@ -526,6 +526,8 @@ jobs:
           training: "980608199"
           breakfix: "1298450359"
           cps-preview: "1386420590"
+          long: "1531932432"
+          trn2: "1545153521"
       - name: Create a custom deployment record
         run: |
           newrelic events post --event "{ \"eventType\": \"CustomDeploymentMarker\", \"component\": \"api\", \"environment\":\"${{ needs.deploy-info.outputs.api-env }}\", \"version\": \"${{ env.version || needs.update-the-deploy-branch.outputs.commit_hash }}\" }"
@@ -711,7 +713,7 @@ jobs:
     name: End-to-End Test Deployment
     runs-on: ubuntu-latest
     needs: [update-the-deploy-branch, api-release, api-gateway-release]
-    if: github.event.inputs.deployment_env != 'prod'
+    if: github.event.inputs.deployment_env != 'prod' || github.event.inputs.deployment_env != 'infra-test'
     steps:
       - name: Trigger E2E Workflow
         uses: aurelien-baudet/workflow-dispatch@v2

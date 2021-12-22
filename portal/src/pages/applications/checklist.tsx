@@ -27,6 +27,7 @@ import { Trans } from "react-i18next";
 import claimantConfig from "../../flows/claimant";
 import findDocumentsByLeaveReason from "../../utils/findDocumentsByLeaveReason";
 import findDocumentsByTypes from "../../utils/findDocumentsByTypes";
+import formatDate from "../../utils/formatDate";
 import hasDocumentsLoadError from "../../utils/hasDocumentsLoadError";
 import { isFeatureEnabled } from "../../services/featureFlags";
 import routeWithParams from "../../utils/routeWithParams";
@@ -61,6 +62,7 @@ export const Checklist = (props: ChecklistProps) => {
   const { t } = useTranslation();
   const { appLogic, claim, documents, isLoadingDocuments, query } = props;
   const { appErrors } = appLogic;
+  const otherLeaveStartDate = formatDate(claim.otherLeaveStartDate).full();
 
   const hasLoadingDocumentsError = hasDocumentsLoadError(
     appErrors,
@@ -177,6 +179,7 @@ export const Checklist = (props: ChecklistProps) => {
                 ul: <ul className="usa-list" />,
                 li: <li />,
               }}
+              values={{ otherLeaveStartDate }}
             />
           </Details>
         </React.Fragment>
@@ -259,6 +262,7 @@ export const Checklist = (props: ChecklistProps) => {
             tOptions={{
               context: description,
             }}
+            values={{ otherLeaveStartDate }}
           />
         </Step>
       );

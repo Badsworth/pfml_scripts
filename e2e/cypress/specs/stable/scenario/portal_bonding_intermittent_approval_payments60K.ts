@@ -2,11 +2,14 @@ import { portal, fineos, fineosPages } from "../../../actions";
 import { Submission } from "../../../../src/types";
 import { assertValidClaim } from "../../../../src/util/typeUtils";
 import { addDays, formatISO, startOfWeek, subDays } from "date-fns";
+import { config } from "../../../actions/common";
 
 describe("Submit bonding application via the web portal: Adjudication Approval, recording actual hours & payment checking", () => {
   const submissionTest =
     it("As a claimant, I should be able to submit a intermittent bonding application through the portal", () => {
-      portal.before();
+      portal.before({
+        claimantShowTaxWithholding: false,
+      });
       cy.task("generateClaim", "BIAP60").then((claim) => {
         cy.stash("claim", claim);
         const application = claim.claim;
@@ -25,10 +28,7 @@ describe("Submit bonding application via the web portal: Adjudication Approval, 
             timestamp_from: Date.now(),
           });
         });
-        portal.submitClaimPartsTwoThree(
-          application,
-          paymentPreference
-        );
+        portal.submitClaimPartsTwoThree(application, paymentPreference);
       });
     });
 
@@ -65,9 +65,11 @@ describe("Submit bonding application via the web portal: Adjudication Approval, 
               })
               .certificationPeriods((certPeriods) => certPeriods.prefill())
               .acceptLeavePlan();
+            if (config("FINEOS_HAS_TAX_WITHHOLDING") === "true") {
               adjudication.paidBenefits((paidBenefits) => {
                 paidBenefits.assertSitFitOptIn(claim.is_withholding_tax);
               });
+            }
           });
           claimPage.shouldHaveStatus("Availability", "As Certified");
           claimPage.approve();

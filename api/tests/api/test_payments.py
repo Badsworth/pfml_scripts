@@ -6,7 +6,7 @@ import pytest
 from freezegun import freeze_time
 
 from massgov.pfml.api.services.payments import FrontendPaymentStatus
-from massgov.pfml.db.models.employees import PaymentMethod
+from massgov.pfml.db.models.employees import PaymentMethod, PaymentTransactionType
 from massgov.pfml.db.models.factories import ApplicationFactory
 from massgov.pfml.db.models.payments import FineosWritebackDetails, FineosWritebackTransactionStatus
 from massgov.pfml.delegated_payments.mock.delegated_payments_factory import DelegatedPaymentFactory
@@ -265,6 +265,50 @@ def test_get_payments_200_cancelled_payments(client, auth_token, user, test_db_s
         "expected_send_date_start": None,
         "expected_send_date_end": None,
         "status": FrontendPaymentStatus.CANCELLED,
+    }
+
+
+def test_get_payments_200_legacy_payments(client, auth_token, user, test_db_session):
+    # Legacy payments fetch values from different places, so validate separately
+    absence_id = "NTN-12345-ABS-01"
+
+    payment_factory = DelegatedPaymentFactory(
+        test_db_session,
+        fineos_absence_id=absence_id,
+        payment_method=PaymentMethod.ACH,
+        amount=Decimal("750.67"),
+        payment_transaction_type=PaymentTransactionType.STANDARD_LEGACY_MMARS,
+        disb_check_eft_issue_date=date(2021, 6, 14),
+    )
+    claim = payment_factory.get_or_create_claim()
+    payment = payment_factory.get_or_create_payment()
+    ApplicationFactory.create(claim=claim, user=user)
+    test_db_session.commit()
+
+    querystring = urlencode({"absence_case_id": absence_id})
+    response = client.get(
+        "/v1/payments?{}".format(querystring), headers={"Authorization": f"Bearer {auth_token}"},
+    )
+
+    assert response.status_code == 200
+
+    response_body = response.get_json().get("data")
+    assert response_body["absence_case_id"] == absence_id
+
+    payment_response = response_body["payments"][0]
+
+    assert payment_response == {
+        "payment_id": str(payment.payment_id),
+        "fineos_c_value": str(payment.fineos_pei_c_value),
+        "fineos_i_value": str(payment.fineos_pei_i_value),
+        "period_start_date": str(payment.period_start_date),
+        "period_end_date": str(payment.period_end_date),
+        "amount": 750.67,
+        "sent_to_bank_date": str(payment.disb_check_eft_issue_date),
+        "payment_method": payment.disb_method.payment_method_description,
+        "expected_send_date_start": str(payment.disb_check_eft_issue_date),
+        "expected_send_date_end": str(payment.disb_check_eft_issue_date),
+        "status": FrontendPaymentStatus.SENT_TO_BANK,
     }
 
 

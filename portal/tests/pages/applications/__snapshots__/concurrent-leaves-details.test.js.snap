@@ -39,7 +39,7 @@ exports[`ConcurrentLeavesDetails renders the page 1`] = `
             <div
               class="usa-alert__text"
             >
-              1/1/2021 to 6/1/2021
+              1/1/2022 to 6/1/2022
             </div>
           </div>
         </div>
@@ -59,7 +59,7 @@ exports[`ConcurrentLeavesDetails renders the page 1`] = `
             <div
               class="usa-alert__text"
             >
-              1/1/2021 to 1/7/2021
+              1/1/2022 to 1/7/2022
             </div>
           </div>
         </div>

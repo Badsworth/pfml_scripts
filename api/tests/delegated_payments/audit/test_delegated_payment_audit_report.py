@@ -1,7 +1,7 @@
 import csv
 import os
 import tempfile
-from datetime import date
+from datetime import date, datetime
 from typing import List
 
 import pytest
@@ -12,7 +12,12 @@ import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.files as file_util
 from massgov.pfml.db.models.employees import Payment, ReferenceFile, ReferenceFileType, State
 from massgov.pfml.db.models.factories import ClaimFactory, PaymentFactory
-from massgov.pfml.db.models.payments import PaymentAuditReportDetails, PaymentAuditReportType
+from massgov.pfml.db.models.payments import (
+    FineosWritebackDetails,
+    FineosWritebackTransactionStatus,
+    PaymentAuditReportDetails,
+    PaymentAuditReportType,
+)
 from massgov.pfml.delegated_payments.audit.delegated_payment_audit_csv import (
     PAYMENT_AUDIT_CSV_HEADERS,
     PaymentAuditCSV,
@@ -381,6 +386,118 @@ def test_previously_rejected_payment_count(
     )
 
     assert payment_audit_report_step.previously_skipped_payment_count(payment) == 2
+
+
+def test_previously_paid_payments(test_db_session, initialize_factories_session):
+    claim = ClaimFactory()
+    date_start = date(2021, 1, 1)
+    date_end = date(2021, 1, 16)
+    initial_payment = PaymentFactory(
+        period_start_date=date_start, period_end_date=date_end, claim=claim
+    )
+    second_payment = PaymentFactory(
+        period_start_date=date_start, period_end_date=date_end, claim=claim
+    )
+    third_payment = PaymentFactory(
+        period_start_date=date_start, period_end_date=date_end, claim=claim
+    )
+
+    # Second payment will be returned because it has a PAID writeback detail
+    second_payment_wb_detail = FineosWritebackDetails(
+        payment=second_payment,
+        transaction_status_id=FineosWritebackTransactionStatus.PAID.transaction_status_id,
+    )
+    # Third payment will NOT be returned because of it's error status
+    # Which happens chronologically after it's paid status
+    third_payment_wb_detail1 = FineosWritebackDetails(
+        payment=third_payment,
+        transaction_status_id=FineosWritebackTransactionStatus.PAID.transaction_status_id,
+    )
+
+    third_payment_wb_detail2 = FineosWritebackDetails(
+        payment=third_payment,
+        transaction_status_id=FineosWritebackTransactionStatus.BANK_PROCESSING_ERROR.transaction_status_id,
+    )
+
+    test_db_session.add_all(
+        [second_payment_wb_detail, third_payment_wb_detail1, third_payment_wb_detail2]
+    )
+    test_db_session.commit()
+
+    payment_audit_report_step = PaymentAuditReportStep(
+        db_session=test_db_session, log_entry_db_session=test_db_session
+    )
+
+    previous_payments = payment_audit_report_step.previously_paid_payments(initial_payment)
+
+    assert len(previous_payments) == 1
+    assert previous_payments[0][0] == second_payment
+    assert previous_payments[0][1] == second_payment_wb_detail
+
+
+def test_build_payment_audit_data_set_with_previously_paid_payments(
+    test_db_session, payment_audit_report_step, initialize_factories_session
+):
+    claim = ClaimFactory()
+    date_start = date(2021, 1, 1)
+    date_end = date(2021, 1, 16)
+    initial_payment = PaymentFactory(
+        period_start_date=date_start, period_end_date=date_end, claim=claim
+    )
+    second_payment = PaymentFactory(
+        period_start_date=date_start, period_end_date=date_end, claim=claim
+    )
+    third_payment = PaymentFactory(
+        period_start_date=date_start, period_end_date=date_end, claim=claim
+    )
+    # Fourth payment will have no writeback detail and will be shown in the new columns
+    fourth_payment = PaymentFactory(
+        period_start_date=date_start, period_end_date=date_end, claim=claim
+    )
+
+    # Second payment will be returned because it has a PAID writeback detail
+    second_payment_wb_detail = FineosWritebackDetails(
+        payment=second_payment,
+        transaction_status_id=FineosWritebackTransactionStatus.PAID.transaction_status_id,
+        writeback_sent_at=datetime.now(),
+    )
+    # Third payment will NOT be returned because of it's error status
+    # Which happens chronologically after it's paid status
+    third_payment_wb_detail1 = FineosWritebackDetails(
+        payment=third_payment,
+        transaction_status_id=FineosWritebackTransactionStatus.PAID.transaction_status_id,
+    )
+
+    third_payment_wb_detail2 = FineosWritebackDetails(
+        payment=third_payment,
+        transaction_status_id=FineosWritebackTransactionStatus.BANK_PROCESSING_ERROR.transaction_status_id,
+    )
+
+    test_db_session.add_all(
+        [second_payment_wb_detail, third_payment_wb_detail1, third_payment_wb_detail2]
+    )
+    test_db_session.commit()
+
+    payment_audit_report_step = PaymentAuditReportStep(
+        db_session=test_db_session, log_entry_db_session=test_db_session
+    )
+
+    audit_data = payment_audit_report_step.build_payment_audit_data_set([initial_payment])
+
+    assert len(audit_data) == 1
+    assert audit_data[0].previously_paid_payment_count == 2
+
+    paid_payments_column_string = (
+        f"Payment C={second_payment.fineos_pei_c_value}, "
+        f"I={second_payment.fineos_pei_i_value}: amount={second_payment.amount}, "
+        f"transaction_status={FineosWritebackTransactionStatus.PAID.transaction_status_description}, "
+        f"writeback_sent_at={second_payment_wb_detail.writeback_sent_at}\n"
+        f"Payment C={fourth_payment.fineos_pei_c_value}, "
+        f"I={fourth_payment.fineos_pei_i_value}: amount={fourth_payment.amount}, "
+        f"transaction_status=N/A, "
+        f"writeback_sent_at=N/A\n"
+    )
+    assert audit_data[0].previously_paid_payments_string == paid_payments_column_string
 
 
 def test_write_audit_report(tmp_path, test_db_session, initialize_factories_session):

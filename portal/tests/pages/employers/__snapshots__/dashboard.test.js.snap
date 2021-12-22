@@ -370,6 +370,7 @@ exports[`Employer dashboard renders the page with expected content and paginatio
       class="grid-col grid-col-12 margin-bottom-2 mobile-lg:grid-col-fill mobile-lg:margin-bottom-0"
     >
       <p
+        aria-live="polite"
         class="line-height-sans-2"
       >
         Viewing 1 to 25 of 75 results

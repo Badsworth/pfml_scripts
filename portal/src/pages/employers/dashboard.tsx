@@ -204,15 +204,13 @@ const PaginatedClaimsTable = (props: PaginatedClaimsTableProps) => {
   return (
     <React.Fragment>
       <div className="margin-y-2 grid-row grid-gap flex-align-center">
-        {paginationMeta.total_records > 0 && (
-          <div className="grid-col grid-col-12 margin-bottom-2 mobile-lg:grid-col-fill mobile-lg:margin-bottom-0">
-            <PaginationSummary
-              pageOffset={paginationMeta.page_offset}
-              pageSize={paginationMeta.page_size}
-              totalRecords={paginationMeta.total_records}
-            />
-          </div>
-        )}
+        <div className="grid-col grid-col-12 margin-bottom-2 mobile-lg:grid-col-fill mobile-lg:margin-bottom-0">
+          <PaginationSummary
+            pageOffset={paginationMeta.page_offset}
+            pageSize={paginationMeta.page_size}
+            totalRecords={paginationMeta.total_records}
+          />
+        </div>
         <div className="grid-col grid-col-auto">{props.sort}</div>
       </div>
       <Table className="width-full" responsive scrollable>

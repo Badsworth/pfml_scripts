@@ -11,7 +11,12 @@ from massgov.pfml.api.models.claims.common import (
     PreviousLeave,
 )
 from massgov.pfml.api.models.common import ConcurrentLeave
-from massgov.pfml.db.models.employees import AbsencePeriod, Claim, ManagedRequirement
+from massgov.pfml.db.models.employees import (
+    AbsencePeriod,
+    AbsencePeriodType,
+    Claim,
+    ManagedRequirement,
+)
 from massgov.pfml.util.pydantic import PydanticBaseModel
 from massgov.pfml.util.pydantic.types import (
     FEINFormattedStr,
@@ -75,24 +80,38 @@ class AbsencePeriodStatusResponse(PydanticBaseModel):
     evidence_status: Optional[str]
 
 
+def remap_absence_period_type(period_type: Optional[str]) -> Optional[str]:
+    """Fineos uses different values to represent the same period type. Rather
+    than expose that confusing behavior in our API response, we simplify things
+    for the Portal by remapping to a smaller set of possible period types."""
+
+    if period_type == AbsencePeriodType.EPISODIC.absence_period_type_description:
+        return AbsencePeriodType.INTERMITTENT.absence_period_type_description
+
+    if period_type == AbsencePeriodType.TIME_OFF_PERIOD.absence_period_type_description:
+        return AbsencePeriodType.CONTINUOUS.absence_period_type_description
+
+    return period_type
+
+
 class AbsencePeriodResponse(PydanticBaseModel):
     """Pydantic Model for absence period returned by the database"""
 
+    fineos_leave_request_id: Optional[int]
     absence_period_start_date: Optional[date]
     absence_period_end_date: Optional[date]
-    type: Optional[str]
     reason: Optional[str]
     reason_qualifier_one: Optional[str]
     reason_qualifier_two: Optional[str]
+    period_type: Optional[str]
     request_decision: Optional[str]
-    fineos_leave_request_id: Optional[int]
     is_id_proofed: Optional[bool]
 
     @classmethod
     def from_orm(cls, absence_period: AbsencePeriod) -> "AbsencePeriodResponse":
         absence_response = super().from_orm(absence_period)
         if absence_period.absence_period_type:
-            absence_response.type = (
+            absence_response.period_type = remap_absence_period_type(
                 absence_period.absence_period_type.absence_period_type_description
             )
         if absence_period.absence_reason:
@@ -194,6 +213,7 @@ class ClaimReviewResponse(PydanticBaseModel):
     status: str
     uses_second_eform_version: bool
     absence_periods: List[AbsencePeriodResponse] = []
+    managed_requirements: List[ManagedRequirementResponse] = []
 
 
 class DocumentResponse(PydanticBaseModel):

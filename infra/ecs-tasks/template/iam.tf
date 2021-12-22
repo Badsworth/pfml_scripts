@@ -341,6 +341,42 @@ data "aws_iam_policy_document" "dor_import_execution_role_extras" {
   }
 }
 
+# ------------------------------------------------------------------------------------------------------
+# DOR Pending Filing Submission File task stuff
+# ------------------------------------------------------------------------------------------------------
+
+resource "aws_iam_role" "dor_pending_filing_sub_task_role" {
+  name               = "${local.app_name}-${var.environment_name}-ecs-tasks-dor_pending_filing_sub-task-role"
+  assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume_role_policy.json
+}
+
+resource "aws_iam_role_policy_attachment" "dor_pending_filing_sub_task_role_extras" {
+  role       = aws_iam_role.dor_pending_filing_sub_task_role.name
+  policy_arn = aws_iam_policy.dor_pending_filing_sub_task_role_extras.arn
+}
+
+resource "aws_iam_policy" "dor_pending_filing_sub_task_role_extras" {
+  name        = "${local.app_name}-${var.environment_name}-ecs-tasks-dor_pending_filing_sub-ecs-policy"
+  description = "All the things the DOR Pending Filing Submision File task needs to be allowed to do"
+  policy      = data.aws_iam_policy_document.dor_pending_filing_sub_task_role_extras.json
+}
+
+data "aws_iam_policy_document" "dor_pending_filing_sub_task_role_extras" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "s3:PutObject",
+      "s3:GetObject",
+      "s3:ListBucket",
+      "s3:DeleteObject"
+    ]
+    resources = [
+      data.aws_s3_bucket.agency_transfer.arn,
+      "${data.aws_s3_bucket.agency_transfer.arn}/*"
+    ]
+  }
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # IAM role and policies for FINEOS Eligibility Feed export
 # ----------------------------------------------------------------------------------------------------------------------

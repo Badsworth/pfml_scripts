@@ -324,6 +324,20 @@ class LkMFADeliveryPreference(Base):
         self.mfa_delivery_preference_description = mfa_delivery_preference_description
 
 
+class LkMFADeliveryPreferenceUpdatedBy(Base):
+    __tablename__ = "lk_mfa_delivery_preference_updated_by"
+    mfa_delivery_preference_updated_by_id = Column(Integer, primary_key=True, autoincrement=True)
+    mfa_delivery_preference_updated_by_description = Column(Text, nullable=False)
+
+    def __init__(
+        self, mfa_delivery_preference_updated_by_id, mfa_delivery_preference_updated_by_description
+    ):
+        self.mfa_delivery_preference_updated_by_id = mfa_delivery_preference_updated_by_id
+        self.mfa_delivery_preference_updated_by_description = (
+            mfa_delivery_preference_updated_by_description
+        )
+
+
 class AbsencePeriod(Base, TimestampMixin):
     __tablename__ = "absence_period"
     __table_args__ = (
@@ -917,8 +931,12 @@ class Payment(Base, TimestampMixin):
     fineos_pei_i_value = Column(Text, index=True)
     is_adhoc_payment = Column(Boolean, default=False, server_default="FALSE")
     fineos_extraction_date = Column(Date)
+
+    # Backfilled legacy MMARS payments use this for check number and EFT transaction number, all new payments leave null
     disb_check_eft_number = Column(Text)
+    # Backfilled legacy MMARS payments use this for the paid date, all new payments leave null
     disb_check_eft_issue_date = Column(Date)
+
     disb_method_id = Column(Integer, ForeignKey("lk_payment_method.payment_method_id"))
     disb_amount = Column(Numeric(asdecimal=True))
     leave_request_decision = Column(Text)
@@ -1106,6 +1124,10 @@ class User(Base, TimestampMixin):
     )
     mfa_phone_number = Column(Text)  # Formatted in E.164
     mfa_delivery_preference_updated_at = Column(TIMESTAMP(timezone=True))
+    mfa_delivery_preference_updated_by_id = Column(
+        Integer,
+        ForeignKey("lk_mfa_delivery_preference_updated_by.mfa_delivery_preference_updated_by_id"),
+    )
 
     roles = relationship("LkRole", secondary="link_user_role", uselist=True)
     user_leave_administrators = relationship(
@@ -1113,6 +1135,7 @@ class User(Base, TimestampMixin):
     )
     employers = relationship("Employer", secondary="link_user_leave_administrator", uselist=True)
     mfa_delivery_preference = relationship(LkMFADeliveryPreference)
+    mfa_delivery_preference_updated_by = relationship(LkMFADeliveryPreferenceUpdatedBy)
 
     @hybrid_method
     def get_user_leave_admin_for_employer(
@@ -2311,6 +2334,8 @@ class Flow(LookupTable):
     DELEGATED_CLAIM_VALIDATION = LkFlow(23, "Claim Validation")
     DELEGATED_PEI_WRITEBACK = LkFlow(24, "Payment PEI Writeback")
 
+    LEGACY_MMARS_PAYMENTS = LkFlow(25, "Legacy MMARS Payment")
+
 
 class State(LookupTable):
     model = LkState
@@ -2779,7 +2804,7 @@ class State(LookupTable):
         191, "State Withholding ready for processing", Flow.DELEGATED_PAYMENT.flow_id
     )
 
-    STATE_WITHHOLDING_PENDING_AUDIT = LkState(
+    STATE_WITHHOLDING_ORPHANED_PENDING_AUDIT = LkState(
         192, "State Withholding awaiting Audit Report", Flow.DELEGATED_PAYMENT.flow_id
     )
 
@@ -2795,7 +2820,7 @@ class State(LookupTable):
         195, "Federal Withholding ready for processing", Flow.DELEGATED_PAYMENT.flow_id
     )
 
-    FEDERAL_WITHHOLDING_PENDING_AUDIT = LkState(
+    FEDERAL_WITHHOLDING_ORPHANED_PENDING_AUDIT = LkState(
         196, "Federal Withholding awaiting Audit Report", Flow.DELEGATED_PAYMENT.flow_id
     )
 
@@ -2827,6 +2852,34 @@ class State(LookupTable):
         202,
         "Add Federal Withholding to Payment Reject Report - RESTARTABLE",
         Flow.DELEGATED_PAYMENT.flow_id,
+    )
+
+    STATE_WITHHOLDING_RELATED_PENDING_AUDIT = LkState(
+        203, "State Withholding Related Pending Audit", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    FEDERAL_WITHHOLDING_RELATED_PENDING_AUDIT = LkState(
+        204, "Federal Withholding Related Pending Audit", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    STATE_WITHHOLDING_ERROR_RESTARTABLE = LkState(
+        205, "State Withholding Error Restartable", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    FEDERAL_WITHHOLDING_ERROR_RESTARTABLE = LkState(
+        206, "Federal Withholding Error Restartable", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    STATE_WITHHOLDING_FUNDS_SENT = LkState(
+        207, "State Withholding Funds Sent", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    FEDERAL_WITHHOLDING_FUNDS_SENT = LkState(
+        208, "Federal Withholding Funds Sent", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    LEGACY_MMARS_PAYMENT_PAID = LkState(
+        210, "Legacy MMARS Payment Paid", Flow.LEGACY_MMARS_PAYMENTS.flow_id
     )
 
 
@@ -2870,6 +2923,7 @@ class PaymentTransactionType(LookupTable):
     )
     FEDERAL_TAX_WITHHOLDING = LkPaymentTransactionType(12, "Federal Tax Withholding")
     STATE_TAX_WITHHOLDING = LkPaymentTransactionType(13, "State Tax Withholding")
+    STANDARD_LEGACY_MMARS = LkPaymentTransactionType(14, "Standard Legacy MMARS")
 
 
 class PaymentCheckStatus(LookupTable):
@@ -3056,6 +3110,17 @@ class MFADeliveryPreference(LookupTable):
     OPT_OUT = LkMFADeliveryPreference(2, "Opt Out")
 
 
+class MFADeliveryPreferenceUpdatedBy(LookupTable):
+    model = LkMFADeliveryPreferenceUpdatedBy
+    column_names = (
+        "mfa_delivery_preference_updated_by_id",
+        "mfa_delivery_preference_updated_by_description",
+    )
+
+    USER = LkMFADeliveryPreferenceUpdatedBy(1, "User")
+    ADMIN = LkMFADeliveryPreferenceUpdatedBy(2, "Admin")
+
+
 def sync_azure_permissions(db_session):
     """Insert every permission for non_prod and prod admin groups."""
     group_ids = [
@@ -3123,4 +3188,5 @@ def sync_lookup_tables(db_session):
     AzureGroup.sync_to_database(db_session)
     AzurePermission.sync_to_database(db_session)
     MFADeliveryPreference.sync_to_database(db_session)
+    MFADeliveryPreferenceUpdatedBy.sync_to_database(db_session)
     db_session.commit()

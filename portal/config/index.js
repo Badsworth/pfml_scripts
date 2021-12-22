@@ -14,4 +14,8 @@ module.exports = {
   uat: merge({}, defaultEnvVariables, require("./uat")),
   breakfix: merge({}, defaultEnvVariables, require("./breakfix")),
   "cps-preview": merge({}, defaultEnvVariables, require("./cps-preview")),
+  long: merge({}, defaultEnvVariables, require("./long")),
+  trn2: merge({}, defaultEnvVariables, require("./trn2")),
+  "infra-test": merge({}, defaultEnvVariables, require("./infra-test")),
+  local: merge({}, defaultEnvVariables, require("./local")),
 };
