@@ -48,15 +48,19 @@ def get_file_size(f: IO[Any]) -> int:
 
 
 def compress_pdf(source_file: IO[Any], dest_file: IO[Any]) -> int:
+    import time
+
+    settings = os.environ.get("PDF_COMPRESSION_SETTINGS", "/screen")
+    ppi = os.environ.get("PDF_COMPRESSION_PPI", 144)
     gs_cli_command = [
         "gs",
         "-sDEVICE=pdfwrite",
-        f"-dPDFSETTINGS={PDF_SETTINGS}",
+        f"-dPDFSETTINGS={settings}",
         "-dSAFER",
         "-dNOPAUSE",
         "-dQUIET",
         "-dBATCH",
-        "-r144",
+        f"-r{ppi}",
         "-sOutputFile=%stdout",
         "-q",
         "-_",
@@ -65,9 +69,14 @@ def compress_pdf(source_file: IO[Any], dest_file: IO[Any]) -> int:
     source_file.seek(0)
     dest_file.seek(0)
 
+    start = time.time()
     proc = subprocess.run(
         gs_cli_command, stdin=source_file, stdout=dest_file, stderr=subprocess.PIPE
     )
+    end = time.time()
+
+    logger.info(f"PDF compression time: {end - start}")
+
     if proc.returncode != 0:
         error_message = str(proc.stderr).strip()
         logger.warning(error_message)
