@@ -798,11 +798,14 @@ class PaymentExtractStep(Step):
         payment.fineos_extract_import_log_id = self.get_import_log_id()
         payment.leave_request_decision = payment_data.leave_request_decision
 
-        # A payment is considered adhoc if it's marked as "Adhoc"
+        # A payment is considered adhoc if it's marked as "Adhoc" often with
+        # a random number suffixed to it.
         # This column can be empty/missing, and that's fine. This is used
         # later in the post-processing step to filter out adhoc payments from
         # the weekly maximum check.
-        payment.is_adhoc_payment = payment_data.amalgamation_c == "Adhoc"
+        payment.is_adhoc_payment = (
+            payment_data.amalgamation_c is not None and "Adhoc" in payment_data.amalgamation_c
+        )
         if payment.is_adhoc_payment:
             self.increment(self.Metrics.ADHOC_PAYMENT_COUNT)
 

@@ -959,7 +959,7 @@ def test_process_extract_no_fineos_name(local_test_db_session, local_payment_ext
 def test_process_extract_is_adhoc(
     local_payment_extract_step, local_test_db_session,
 ):
-    fineos_adhoc_data = FineosPaymentData(amalgamationc="Adhoc")
+    fineos_adhoc_data = FineosPaymentData(amalgamationc="Adhoc1234")
     add_db_records_from_fineos_data(local_test_db_session, fineos_adhoc_data)
     fineos_standard_data = FineosPaymentData(amalgamationc="Some other value")
     add_db_records_from_fineos_data(local_test_db_session, fineos_standard_data)
