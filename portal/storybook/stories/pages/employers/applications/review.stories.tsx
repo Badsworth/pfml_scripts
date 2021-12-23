@@ -5,6 +5,7 @@ import AppErrorInfo from "src/models/AppErrorInfo";
 import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
 import DocumentCollection from "src/models/DocumentCollection";
 import EmployerClaim from "src/models/EmployerClaim";
+import { ManagedRequirement } from "src/models/Claim";
 import { MockEmployerClaimBuilder } from "tests/test-utils/mock-model-builder";
 import { Props } from "types/common";
 import React from "react";
@@ -69,6 +70,11 @@ export default {
         ],
       },
     },
+    "Reviewed Previously": {
+      control: {
+        type: "boolean",
+      },
+    },
   },
   args: {
     "Absence period reasons": [LeaveReason.medical],
@@ -76,6 +82,7 @@ export default {
     "Claimant EForm Version": "Version 2 (after 2021-07-14)",
     "Includes documentation": true,
     "Number of absence periods for each leave reason": 1,
+    "Reviewed Previously": false,
   },
 };
 
@@ -86,6 +93,7 @@ export const Default = (
     "Claimant EForm Version": string;
     "Includes documentation": boolean;
     "Number of absence periods for each leave reason": number;
+    "Reviewed Previously": boolean;
     errorTypes: string[];
   }
 ) => {
@@ -95,6 +103,33 @@ export const Default = (
     .length
     ? args["Absence period reasons"]
     : [LeaveReason.medical];
+
+  const managedRequirements: ManagedRequirement[] = [
+    {
+      type: "",
+      created_at: "",
+      follow_up_date: "",
+      category: "",
+      responded_at: args["Reviewed Previously"] ? "2021-09-01" : "",
+      status: "Complete",
+    },
+    {
+      type: "",
+      created_at: "",
+      follow_up_date: "",
+      category: "",
+      responded_at: args["Reviewed Previously"] ? "2021-10-01" : "",
+      status: "Complete",
+    },
+    {
+      type: "",
+      created_at: "",
+      follow_up_date: "",
+      category: "",
+      responded_at: args["Reviewed Previously"] ? "2021-11-01" : "",
+      status: "Complete",
+    },
+  ];
 
   const selectedLeaveTypes: Array<AbsencePeriod["period_type"]> = args[
     "Absence period types"
@@ -106,6 +141,7 @@ export const Default = (
     ...args,
     "Absence period reasons": selectedLeaveReasons,
     "Absence period types": selectedLeaveTypes,
+    "Managed Requirements": managedRequirements,
   });
 
   const errorTypes = args.errorTypes || [];
@@ -135,6 +171,7 @@ function createEmployerClaimFromArgs(args: {
   "Absence period types": Array<AbsencePeriod["period_type"]>;
   "Claimant EForm Version": string;
   "Number of absence periods for each leave reason": number;
+  "Managed Requirements": ManagedRequirement[];
 }): EmployerClaim {
   // Generate one absence period for each selected leave reason
   const absence_periods: AbsencePeriod[] = [];
@@ -195,6 +232,7 @@ function createEmployerClaimFromArgs(args: {
       })),
   };
 
+  claim.managed_requirements = args["Managed Requirements"];
   return claim;
 }
 

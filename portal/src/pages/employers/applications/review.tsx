@@ -4,7 +4,7 @@ import PreviousLeave, {
   PreviousLeaveType,
 } from "../../../models/PreviousLeave";
 import React, { useEffect, useState } from "react";
-import { get, isEqual } from "lodash";
+import { compact, get, isEqual, sortBy } from "lodash";
 import withEmployerClaim, {
   WithEmployerClaimProps,
 } from "../../../hoc/withEmployerClaim";
@@ -403,6 +403,20 @@ export const Review = (props: WithEmployerClaimProps) => {
     }
   };
 
+  /**
+   * Checks through the managed_requirements array if value exists within
+   * key: responded_at and return the most recent date
+   */
+  const previouslyReviewed = () => {
+    if (!claim.managed_requirements?.length) return;
+
+    const respondedAtDate = claim.managed_requirements.map(
+      (managedRequirement) => managedRequirement.responded_at
+    );
+
+    return formatDate(sortBy(compact(respondedAtDate)).reverse()[0]).short();
+  };
+
   const otherLeaveStartDate = formatDate(claim.otherLeaveStartDate).full();
 
   return (
@@ -421,6 +435,17 @@ export const Review = (props: WithEmployerClaimProps) => {
         })}
       </Title>
       <Alert state="warning" noIcon>
+        {showMultipleLeave && previouslyReviewed() && (
+          <p>
+            <strong>
+              <Trans
+                i18nKey="pages.employersClaimsReview.managedRequirementsRespondedAt"
+                values={{ date: previouslyReviewed() }}
+              />
+            </strong>
+          </p>
+        )}
+
         <Trans
           i18nKey="pages.employersClaimsReview.instructionsFollowUpDate"
           values={{ date: formatDateRange(claim.follow_up_date) }}
