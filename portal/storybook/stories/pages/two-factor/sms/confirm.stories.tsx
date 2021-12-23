@@ -18,5 +18,5 @@ export const Page = () => {
       phone_number: "***-***-7891",
     },
   });
-  return <ConfirmSMS appLogic={appLogic} user={user} />;
+  return <ConfirmSMS appLogic={appLogic} user={user} query={{}} />;
 };

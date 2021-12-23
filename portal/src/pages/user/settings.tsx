@@ -107,7 +107,11 @@ export const Settings = (props: UserSettingsProps) => {
         <React.Fragment>
           <Trans i18nKey="pages.userSettings.additionalVerificationNoMfaText" />
           <ButtonLink
-            href={appLogic.portalFlow.getNextPageRoute("EDIT_MFA_PHONE")}
+            href={appLogic.portalFlow.getNextPageRoute(
+              "EDIT_MFA_PHONE",
+              undefined,
+              { returnToSettings: "true" }
+            )}
           >
             {t("pages.userSettings.addPhoneNumberButtonText")}
           </ButtonLink>
@@ -143,7 +147,11 @@ export const Settings = (props: UserSettingsProps) => {
             level="3"
             label={t("pages.userSettings.mfaPhoneNumberLabel")}
             editText={t("pages.userSettings.rowEditText")}
-            editHref={appLogic.portalFlow.getNextPageRoute("EDIT_MFA_PHONE")}
+            editHref={appLogic.portalFlow.getNextPageRoute(
+              "EDIT_MFA_PHONE",
+              undefined,
+              { returnToSettings: "true" }
+            )}
           >
             {user.mfa_phone_number?.phone_number}
           </ReviewRow>

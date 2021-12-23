@@ -9,6 +9,7 @@ import ThrottledButton from "src/components/ThrottledButton";
 import Title from "../../../components/core/Title";
 import { Trans } from "react-i18next";
 import { isFeatureEnabled } from "../../../services/featureFlags";
+import { pick } from "lodash";
 import useFormState from "../../../hooks/useFormState";
 import useFunctionalInputProps from "../../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../../locales/i18n";
@@ -17,11 +18,18 @@ import withUser from "../../../hoc/withUser";
 interface SetupSMSProps {
   appLogic: AppLogic;
   user: User;
+  query: {
+    returnToSettings?: string;
+  };
 }
 
 export const SetupSMS = (props: SetupSMSProps) => {
   const { appLogic } = props;
   const { t } = useTranslation();
+  const returnToSettings = !!props.query?.returnToSettings;
+  const additionalParams = returnToSettings
+    ? pick(props.query, "returnToSettings")
+    : undefined;
 
   const { formState, updateFields } = useFormState({
     phone_number: "",
@@ -29,13 +37,18 @@ export const SetupSMS = (props: SetupSMSProps) => {
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    await appLogic.users.updateUser(props.user.user_id, {
-      mfa_phone_number: {
-        int_code: "1",
-        phone_type: PhoneType.cell,
-        phone_number: formState.phone_number,
+    await appLogic.users.updateUser(
+      props.user.user_id,
+      {
+        mfa_phone_number: {
+          int_code: "1",
+          phone_type: PhoneType.cell,
+          phone_number: formState.phone_number,
+        },
       },
-    });
+      undefined,
+      additionalParams
+    );
   };
 
   const getFunctionalInputProps = useFunctionalInputProps({

@@ -50,9 +50,46 @@ describe("Two-factor SMS Confirm", () => {
     await act(async () => await userEvent.click(submitButton));
 
     expect(MFAService.verifyMFAPhoneNumber).toHaveBeenCalledWith("123456");
-    expect(updateUser).toHaveBeenCalledWith(expect.any(String), {
-      mfa_delivery_preference: "SMS",
+    expect(updateUser).toHaveBeenCalledWith(
+      expect.any(String),
+      {
+        mfa_delivery_preference: "SMS",
+      },
+      undefined,
+      undefined,
+      undefined
+    );
+  });
+
+  it("returns the user to the settings page if they reached they initiated mfa changes from there", async () => {
+    renderPage(
+      ConfirmSMS,
+      {
+        addCustomSetup: (appLogic) => {
+          appLogic.users.updateUser = updateUser;
+        },
+      },
+      {
+        query: { returnToSettings: "true" },
+      }
+    );
+
+    const codeField = screen.getByLabelText("6-digit code");
+    userEvent.type(codeField, "123456");
+    const submitButton = screen.getByRole("button", {
+      name: "Save and continue",
     });
+    await act(async () => await userEvent.click(submitButton));
+
+    expect(updateUser).toHaveBeenCalledWith(
+      expect.any(String),
+      {
+        mfa_delivery_preference: "SMS",
+      },
+      undefined,
+      undefined,
+      "RETURN_TO_SETTINGS"
+    );
   });
 
   it("does not update MFA preference when verification code fails", async () => {

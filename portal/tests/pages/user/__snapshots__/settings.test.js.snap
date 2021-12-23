@@ -74,7 +74,7 @@ exports[`ComponentWithUser renders the page 1`] = `
     </p>
     <a
       class="usa-button"
-      href="/applications"
+      href="/applications?returnToSettings=true"
     >
       Add phone number
     </a>
@@ -183,7 +183,7 @@ exports[`ComponentWithUser when MFA is enabled shows MFA configuration 1`] = `
       <a
         aria-label="Edit: Phone number"
         class="usa-link"
-        href="/applications"
+        href="/applications?returnToSettings=true"
       >
         Edit
       </a>

@@ -18,11 +18,15 @@ import withUser from "../../../hoc/withUser";
 interface ConfirmSMSProps {
   appLogic: AppLogic;
   user: User;
+  query: {
+    returnToSettings?: string;
+  };
 }
 
 export const ConfirmSMS = (props: ConfirmSMSProps) => {
   const { appLogic, user } = props;
   const mfaPhoneNumber = user.mfa_phone_number?.phone_number;
+  const returnToSettings = !!props.query?.returnToSettings;
   const { t } = useTranslation();
 
   const { formState, updateFields } = useFormState({
@@ -39,9 +43,16 @@ export const ConfirmSMS = (props: ConfirmSMSProps) => {
       return;
     }
 
-    await appLogic.users.updateUser(user.user_id, {
-      mfa_delivery_preference: "SMS",
-    });
+    const nextPage = returnToSettings ? "RETURN_TO_SETTINGS" : undefined;
+    await appLogic.users.updateUser(
+      user.user_id,
+      {
+        mfa_delivery_preference: "SMS",
+      },
+      undefined,
+      undefined,
+      nextPage
+    );
   };
 
   const getFunctionalInputProps = useFunctionalInputProps({
