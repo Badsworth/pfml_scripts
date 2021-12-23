@@ -379,10 +379,14 @@ def import_employers(
     """Import employers into db"""
     logger.info("Importing employers")
 
+    # Existing employers must have a 1/1/2022 cease date
+    existing_employer_cease_date = datetime.strptime("1/1/2022", "%m/%d/%Y").date()
+
     # 1 - Stage employers for creation and update
 
     # Get all employers in DB
     existing_employer_reference_models = dor_persistence_util.get_all_employers_fein(db_session)
+
     fein_to_existing_employer_reference_models: Dict[str, Optional[Employer]] = {
         employer.employer_fein: employer for employer in existing_employer_reference_models
     }
@@ -470,7 +474,6 @@ def import_employers(
 
     # 3 - Update existing employers
     found_employer_info_to_update_list = []
-    found_employer_info_to_not_update_list = []
 
     for employer_info in found_employer_info_list:
         fein = employer_info["fein"]
@@ -492,13 +495,7 @@ def import_employers(
 
         _employer = fein_to_existing_employer_reference_models[fein]
         if _employer is not None:
-            if (
-                employer_info["updated_date"] is not None
-                and employer_info["updated_date"] > _employer.dor_updated_date
-            ):
-                found_employer_info_to_update_list.append(employer_info)
-            else:
-                found_employer_info_to_not_update_list.append(employer_info)
+            found_employer_info_to_update_list.append(employer_info)
 
     logger.info("Employers to update: %i", len(found_employer_info_to_update_list))
 
@@ -513,6 +510,8 @@ def import_employers(
         )
 
         if existing_employer_model is not None:
+            existing_employer_model.exemption_cease_date = existing_employer_cease_date
+
             # Enqueue updated employer for push to FINEOS
             db_session.add(
                 EmployerPushToFineosQueue(
@@ -525,10 +524,6 @@ def import_employers(
                 )
             )
 
-            dor_persistence_util.update_employer(
-                db_session, existing_employer_model, employer_info, import_log_entry_id
-            )
-
     if len(found_employer_info_to_update_list) > 0:
         logger.info(
             "Batch committing employer updates: %i", len(found_employer_info_to_update_list)
@@ -538,17 +533,12 @@ def import_employers(
     report.updated_employers_count += len(found_employer_info_to_update_list)
     logger.info("Done - Updating employers: %i", len(found_employer_info_to_update_list))
 
-    # 7 - Track and report not updated employers
-    report.unmodified_employers_count += len(found_employer_info_to_not_update_list)
-    logger.info("Employers not updated: %i", len(found_employer_info_to_not_update_list))
-
-    # 8 - Done
+    # 7 - Done
     logger.info(
         "Finished importing employers",
         extra={
             "created_employers_count": report.created_employers_count,
             "updated_employers_count": report.updated_employers_count,
-            "unmodified_employers_count": report.unmodified_employers_count,
         },
     )
 

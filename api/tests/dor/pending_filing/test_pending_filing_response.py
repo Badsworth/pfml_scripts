@@ -3,11 +3,14 @@
 #
 
 import pathlib
+from datetime import datetime
 
 import boto3
 import pytest
 
 import massgov.pfml.dor.pending_filing.pending_filing_response as import_dor
+from massgov.pfml.db.models.employees import EmployerPushToFineosQueue
+from massgov.pfml.db.models.factories import EmployerFactory
 from massgov.pfml.dor.importer.import_dor import PROCESSED_FOLDER, RECEIVED_FOLDER, ImportReport
 from massgov.pfml.dor.importer.paths import get_pending_filing_files_to_process
 from massgov.pfml.util.encryption import GpgCrypt, Utf8Crypt
@@ -68,6 +71,43 @@ def test_account_key_set_single_file(monkeypatch, test_db_session):
     assert employees[0]["account_key"] == employers[0]["account_key"]
     assert employers[0]["account_key"] != employers[3]["account_key"]
     assert employees[3]["account_key"] == employers[3]["account_key"]
+
+
+def test_update_existing_employer_cease_date(
+    initialize_factories_session, monkeypatch, test_db_session
+):
+    monkeypatch.setenv("DECRYPT", "true")
+
+    decryption_key = open(TEST_FOLDER / "importer" / "encryption" / "test_private.key").read()
+    passphrase = "bb8d58fa-d781-11ea-87d0-0242ac130003"
+    test_email = "pfml-test@example.com"
+
+    decrypter = GpgCrypt(decryption_key, passphrase, test_email)
+
+    cease_date = datetime.strptime("1/1/2025", "%m/%d/%Y").date()
+
+    employer = EmployerFactory.create(employer_fein="100000001", exemption_cease_date=cease_date)
+
+    employer_file_path = TEST_FOLDER / "importer" / "encryption" / "DORDUADFMLEMP_20211210131901"
+
+    import_files = list()
+    import_files.append(str(employer_file_path))
+
+    import_dor.process_pending_filing_employer_files(
+        import_files=import_files,
+        decrypt_files=True,
+        optional_decrypter=decrypter,
+        optional_db_session=test_db_session,
+    )
+
+    queue_item = (
+        test_db_session.query(EmployerPushToFineosQueue)
+        .filter(EmployerPushToFineosQueue.employer_id == employer.employer_id)
+        .first()
+    )
+
+    cease_date = datetime.strptime("1/1/2022", "%m/%d/%Y").date()
+    assert queue_item.exemption_cease_date == cease_date
 
 
 @pytest.mark.timeout(60)
