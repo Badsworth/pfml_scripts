@@ -578,8 +578,12 @@ export function enterEmployerInfo(
     ).type(application.employer_fein as string);
   }
   cy.contains("button", "Save and continue").click();
-  if (useOrgUnitFlow === true && config("ORGUNITS_SETUP") === true) {
-    cy.get('usa-combo-box__input').contains("Division of Administrative Law Appeals").click( {force: true});
+  if (useOrgUnitFlow === true) {
+    cy.findByLabelText("Select a department")
+      .get("select")
+      .select(
+        "Division of Administrative Law Appeals", {force: true}
+      );
     cy.contains("button", "Save and continue").click();
   }
   if (application.employment_status === "Employed") {

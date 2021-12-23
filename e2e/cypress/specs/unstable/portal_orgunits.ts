@@ -18,7 +18,10 @@ describe("Submit a claim through the Portal that has OrgUnits associated with th
 
       // Submit Claim
       portal.startClaim();
-      portal.submitClaimPartOne(application, true);
+      portal.submitClaimPartOne(
+        application,
+        config("ORGUNITS_SETUP") === "true"
+      );
       portal.waitForClaimSubmission().then((data) => {
         cy.stash("submission", {
           application_id: data.application_id,
@@ -26,7 +29,7 @@ describe("Submit a claim through the Portal that has OrgUnits associated with th
           timestamp_from: Date.now(),
         });
       });
-      // portal.submitClaimPartsTwoThree(application, paymentPreference);
+      portal.submitClaimPartsTwoThree(application, paymentPreference);
     });
   });
 
@@ -41,13 +44,11 @@ describe("Submit a claim through the Portal that has OrgUnits associated with th
           fineosPages.ClaimPage.visit(fineos_absence_id)
             .adjudicate((adjudication) => {
               adjudication.requestEmploymentInformation()
-              cy.findByLabelText("Organization Unit").should((input) => {
+              cy.get('span[id*="occupationDetailsProxy_un201_Organisation_Unit_Label"]').should((element) => {
                 expect(
-                  input,
+                  element,
                   `Organization Unit should be the Division of Administrative Law Appeals`
-                )
-                  .attr("value")
-                  .equal(String("Division of Administrative Law Appeals"));
+                ).to.have.text("Division of Administrative Law Appeals");
               });
             })
           })
