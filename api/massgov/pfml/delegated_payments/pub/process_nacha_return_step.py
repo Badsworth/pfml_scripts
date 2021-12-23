@@ -24,10 +24,13 @@ from massgov.pfml.db.models.employees import (
     ReferenceFileType,
     State,
 )
-from massgov.pfml.db.models.payments import FineosWritebackDetails, FineosWritebackTransactionStatus
+from massgov.pfml.db.models.payments import FineosWritebackTransactionStatus
 from massgov.pfml.delegated_payments import delegated_config, delegated_payments_util
 from massgov.pfml.delegated_payments.pub import process_files_in_path_step
 from massgov.pfml.delegated_payments.util.ach import reader
+from massgov.pfml.delegated_payments.util.fineos_writeback_util import (
+    create_payment_finished_state_log_with_writeback,
+)
 from massgov.pfml.util.datetime import get_now_us_eastern
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
@@ -288,34 +291,18 @@ class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
 
         if end_state_id == State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT.state_id:
             # Expected normal state for an ACH returned payment.
-            state_log_util.create_finished_state_log(
-                payment,
-                State.DELEGATED_PAYMENT_ERROR_FROM_BANK,
-                state_log_util.build_outcome(
+            create_payment_finished_state_log_with_writeback(
+                payment=payment,
+                payment_end_state=State.DELEGATED_PAYMENT_ERROR_FROM_BANK,
+                payment_outcome=state_log_util.build_outcome(
                     "Bank Processing Error",
                     ach_return_reason_code=str(ach_return.return_reason_code),
                     ach_return_line_number=str(ach_return.line_number),
                 ),
-                self.db_session,
-            )
-
-            writeback_transaction_status = FineosWritebackTransactionStatus.BANK_PROCESSING_ERROR
-            state_log_util.create_finished_state_log(
-                end_state=State.DELEGATED_ADD_TO_FINEOS_WRITEBACK,
-                associated_model=payment,
-                outcome=state_log_util.build_outcome(
-                    writeback_transaction_status.transaction_status_description
-                ),
-                import_log_id=self.get_import_log_id(),
+                writeback_transaction_status=FineosWritebackTransactionStatus.BANK_PROCESSING_ERROR,
                 db_session=self.db_session,
-            )
-
-            writeback_details = FineosWritebackDetails(
-                payment=payment,
-                transaction_status_id=writeback_transaction_status.transaction_status_id,
                 import_log_id=self.get_import_log_id(),
             )
-            self.db_session.add(writeback_details)
 
             logger.warning(
                 "ACH Return: Payment bank processing error",
@@ -384,35 +371,19 @@ class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
 
         if end_state_id == State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT.state_id:
             # Expected normal state for an ACH change notification payment.
-            state_log_util.create_finished_state_log(
-                payment,
-                State.DELEGATED_PAYMENT_COMPLETE_WITH_CHANGE_NOTIFICATION,
-                state_log_util.build_outcome(
+            create_payment_finished_state_log_with_writeback(
+                payment=payment,
+                payment_end_state=State.DELEGATED_PAYMENT_COMPLETE_WITH_CHANGE_NOTIFICATION,
+                payment_outcome=state_log_util.build_outcome(
                     "Payment complete with change notification",
                     ach_return_reason_code=str(change_notification.return_reason_code),
                     ach_return_line_number=str(change_notification.line_number),
                     ach_return_change_information=change_notification.addenda_information,
                 ),
-                self.db_session,
-            )
-
-            # Add the payment to the writeback
-            writeback_transaction_status = FineosWritebackTransactionStatus.POSTED
-            state_log_util.create_finished_state_log(
-                end_state=State.DELEGATED_ADD_TO_FINEOS_WRITEBACK,
-                associated_model=payment,
-                outcome=state_log_util.build_outcome(
-                    writeback_transaction_status.transaction_status_description
-                ),
-                import_log_id=self.get_import_log_id(),
+                writeback_transaction_status=FineosWritebackTransactionStatus.POSTED,
                 db_session=self.db_session,
-            )
-            writeback_details = FineosWritebackDetails(
-                payment=payment,
-                transaction_status_id=writeback_transaction_status.transaction_status_id,
                 import_log_id=self.get_import_log_id(),
             )
-            self.db_session.add(writeback_details)
 
             logger.warning(
                 "ACH Notification: Payment complete with change notification",

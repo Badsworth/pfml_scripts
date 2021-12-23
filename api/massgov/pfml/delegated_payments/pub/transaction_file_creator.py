@@ -14,7 +14,7 @@ from massgov.pfml.db.models.employees import (
     PubEft,
     State,
 )
-from massgov.pfml.db.models.payments import FineosWritebackDetails, FineosWritebackTransactionStatus
+from massgov.pfml.db.models.payments import FineosWritebackTransactionStatus
 from massgov.pfml.delegated_payments.check_issue_file import CheckIssueFile
 from massgov.pfml.delegated_payments.delegated_payments_nacha import (
     add_eft_prenote_to_nacha_file,
@@ -25,6 +25,9 @@ from massgov.pfml.delegated_payments.delegated_payments_nacha import (
 from massgov.pfml.delegated_payments.ez_check import EzCheckFile
 from massgov.pfml.delegated_payments.step import Step
 from massgov.pfml.delegated_payments.util.ach.nacha import NachaFile
+from massgov.pfml.delegated_payments.util.fineos_writeback_util import (
+    create_payment_finished_state_log_with_writeback,
+)
 from massgov.pfml.util.datetime import get_now_us_eastern
 
 logger = logging.get_logger(__name__)
@@ -146,27 +149,17 @@ class TransactionFileCreatorStep(Step):
             self.increment(self.Metrics.ACH_PAYMENT_COUNT)
 
             outcome = state_log_util.build_outcome("PUB transaction sent")
-            state_log_util.create_finished_state_log(
-                associated_model=payment,
-                end_state=State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT,
-                outcome=outcome,
+
+            create_payment_finished_state_log_with_writeback(
+                payment=payment,
+                payment_end_state=State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT,
+                payment_outcome=outcome,
+                writeback_transaction_status=FineosWritebackTransactionStatus.PAID,
+                writeback_outcome=outcome,
                 db_session=self.db_session,
+                import_log_id=self.get_import_log_id(),
             )
 
-            transaction_status = FineosWritebackTransactionStatus.PAID
-            state_log_util.create_finished_state_log(
-                end_state=State.DELEGATED_ADD_TO_FINEOS_WRITEBACK,
-                outcome=outcome,
-                associated_model=payment,
-                import_log_id=self.get_import_log_id(),
-                db_session=self.db_session,
-            )
-            writeback_details = FineosWritebackDetails(
-                payment=payment,
-                transaction_status_id=transaction_status.transaction_status_id,
-                import_log_id=self.get_import_log_id(),
-            )
-            self.db_session.add(writeback_details)
             payments_util.create_payment_log(payment, self.get_import_log_id(), self.db_session)
 
         logger.info("Done adding ACH payments to PUB transaction file: %i", len(payments))

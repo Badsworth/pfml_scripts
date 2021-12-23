@@ -20,9 +20,12 @@ from massgov.pfml.db.models.employees import (
     ReferenceFileType,
     State,
 )
-from massgov.pfml.db.models.payments import FineosWritebackDetails, FineosWritebackTransactionStatus
+from massgov.pfml.db.models.payments import FineosWritebackTransactionStatus
 from massgov.pfml.delegated_payments.check_issue_file import CheckIssueEntry, CheckIssueFile
 from massgov.pfml.delegated_payments.ez_check import EzCheckFile, EzCheckHeader, EzCheckRecord
+from massgov.pfml.delegated_payments.util.fineos_writeback_util import (
+    create_payment_finished_state_log_with_writeback,
+)
 from massgov.pfml.util.datetime import get_now_us_eastern
 
 logger = logging.get_logger(__name__)
@@ -128,27 +131,17 @@ def create_check_file(
         check_issue_file.add_entry(record.positive_pay_record)
 
         outcome = state_log_util.build_outcome("Payment added to PUB EZ Check file")
-        state_log_util.create_finished_state_log(
-            associated_model=payment,
-            end_state=State.DELEGATED_PAYMENT_PUB_TRANSACTION_CHECK_SENT,
-            outcome=outcome,
+
+        create_payment_finished_state_log_with_writeback(
+            payment=payment,
+            payment_end_state=State.DELEGATED_PAYMENT_PUB_TRANSACTION_CHECK_SENT,
+            payment_outcome=outcome,
+            writeback_transaction_status=FineosWritebackTransactionStatus.PAID,
+            writeback_outcome=outcome,
             db_session=db_session,
+            import_log_id=import_log_id,
         )
 
-        transaction_status = FineosWritebackTransactionStatus.PAID
-        state_log_util.create_finished_state_log(
-            end_state=State.DELEGATED_ADD_TO_FINEOS_WRITEBACK,
-            outcome=outcome,
-            associated_model=payment,
-            import_log_id=import_log_id,
-            db_session=db_session,
-        )
-        writeback_details = FineosWritebackDetails(
-            payment=payment,
-            transaction_status_id=transaction_status.transaction_status_id,
-            import_log_id=import_log_id,
-        )
-        db_session.add(writeback_details)
         payments_util.create_payment_log(payment, import_log_id, db_session)
 
     return ez_check_file, check_issue_file

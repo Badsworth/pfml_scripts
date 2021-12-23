@@ -19,6 +19,9 @@ from massgov.pfml.db.models.payments import (
     LkFineosWritebackTransactionStatus,
 )
 from massgov.pfml.delegated_payments.step import Step
+from massgov.pfml.delegated_payments.util.fineos_writeback_util import (
+    stage_payment_fineos_writeback,
+)
 from massgov.pfml.util.datetime import get_now_us_eastern
 
 logger = logging.get_logger(__package__)
@@ -194,8 +197,12 @@ class RelatedPaymentsProcessingStep(Step):
                             f"Can not find writeback details for payment {payment.payment_id} with state {cast(LkState, primary_payment_records[0].state_logs.end_state).state_description} and outcome {primary_payment_records[0].state_logs.outcome}"
                         )
 
-                    self._manage_pei_writeback_state(
-                        payment, message, transaction_status.transaction_status_id
+                    stage_payment_fineos_writeback(
+                        payment=payment,
+                        writeback_transaction_status=transaction_status,
+                        outcome=state_log_util.build_outcome(message),
+                        db_session=self.db_session,
+                        import_log_id=self.get_import_log_id(),
                     )
 
     def _get_payment_writeback_transaction_status(
@@ -214,24 +221,6 @@ class RelatedPaymentsProcessingStep(Step):
         writeback_details.writeback_sent_at = get_now_us_eastern()
 
         return writeback_details.transaction_status
-
-    def _manage_pei_writeback_state(
-        self, payment: Payment, message: str, transaction_status_id: int
-    ) -> None:
-        # Create the state log, note this is in the DELEGATED_PEI_WRITEBACK flow
-        # So it is added in addition to the state log added in _create_end_state_by_payment_type
-        state_log_util.create_finished_state_log(
-            end_state=State.DELEGATED_ADD_TO_FINEOS_WRITEBACK,
-            outcome=state_log_util.build_outcome(message),
-            associated_model=payment,
-            db_session=self.db_session,
-        )
-        writeback_details = FineosWritebackDetails(
-            payment=payment,
-            transaction_status_id=transaction_status_id,
-            import_log_id=self.get_import_log_id(),
-        )
-        self.db_session.add(writeback_details)
 
     def _get_withholding_payments_records(self) -> List[Payment]:
         """this method appends fedral and state withholding payment records"""
