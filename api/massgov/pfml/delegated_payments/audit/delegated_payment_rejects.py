@@ -339,7 +339,7 @@ class PaymentRejectsStep(Step):
                     "Payment added to state %s", end_state.state_description,
                 )
                 if is_rejected_payment or is_skipped_payment:
-                    self._manage_pei_writeback_state(payment, rejected_notes)
+                    self._manage_pei_writeback_state(payment, is_rejected_payment, rejected_notes)
 
         if payment.payment_transaction_type_id not in [
             PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id,
@@ -466,14 +466,14 @@ class PaymentRejectsStep(Step):
             )
 
             if is_rejected or is_skipped:
-                self._manage_pei_writeback_state(withhold_payment, rejected_notes)
+                self._manage_pei_writeback_state(withhold_payment, is_rejected, rejected_notes)
 
     def _manage_pei_writeback_state(
-        self, payment: Payment, rejected_notes: Optional[str] = None
+        self, payment: Payment, is_rejected: bool, rejected_notes: Optional[str] = None
     ) -> None:
 
         writeback_transaction_status = self.convert_reject_notes_to_writeback_status(
-            payment, is_rejected=False, rejected_notes=rejected_notes
+            payment, is_rejected=is_rejected, rejected_notes=rejected_notes
         )
         stage_payment_fineos_writeback(
             payment=payment,
