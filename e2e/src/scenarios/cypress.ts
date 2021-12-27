@@ -560,3 +560,30 @@ export const CARE_TAXES: ScenarioSpecification<CaringLeaveClaim> = {
     docs: { CARING: {}, MASSID: {} },
   },
 };
+
+export const MED_CONT_ER_APPROVE: ScenarioSpecification = {
+  employee: { wages: 60000 },
+  claim: {
+    reason: "Serious Health Condition - Employee",
+    label: "MED_CONT_ER_APPROVE",
+    leave_dates: [
+      startOfWeek(subWeeks(new Date(), 3)),
+      startOfWeek(subWeeks(new Date(), 1)),
+    ],
+    address: {
+      city: "Washington",
+      line_1: "1600 Pennsylvania Avenue NW",
+      state: "DC",
+      zip: "20500",
+    },
+    work_pattern_spec: "standard",
+    docs: { MASSID: {}, HCP: {} },
+    payment: {
+      payment_method: "Check",
+    },
+    employerResponse: {
+      hours_worked_per_week: 40,
+      employer_decision: "Approve",
+    },
+  },
+};

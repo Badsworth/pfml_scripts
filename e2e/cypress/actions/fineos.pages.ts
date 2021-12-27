@@ -212,14 +212,14 @@ export class ClaimPage {
 
     return this;
   }
-  approve(): this {
+  approve(status: "Approved" | "Completed" = "Approved"): this {
     // This button turns out to be unclickable without force, because selecting
     // it seems to scroll it out of view. Force works around that.
     cy.get('a[title="Approve the Pending Leaving Request"]').click({
       force: true,
     });
     waitForAjaxComplete();
-    assertClaimStatus("Approved");
+    assertClaimStatus(status);
     return this;
   }
   deny(reason: string, assertStatus = true): this {

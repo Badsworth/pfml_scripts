@@ -45,6 +45,7 @@ import { chooseRolePreset } from "../../src/util/fineosRoleSwitching";
 import { FineosSecurityGroups } from "../../src/submission/fineos.pages";
 import { Fineos } from "../../src/submission/fineos.pages";
 import { beforeRunCollectMetadata } from "../reporters/new-relic-collect-metadata";
+import { getClaimsByFineos_absence_id } from "_api";
 
 export default function (
   on: Cypress.PluginEvents,
@@ -210,6 +211,42 @@ export default function (
         console.log(arg);
       }
       return null;
+    },
+
+    async findFirstApprovedClaim({
+      applications,
+      credentials,
+    }: {
+      applications: ApplicationResponse[];
+      credentials: Credentials;
+    }): Promise<ApplicationResponse | 0> {
+      const authManager = getAuthManager();
+      const session = await authManager.authenticate(
+        credentials.username,
+        credentials.password
+      );
+      for (let i = 0; i < applications.length && i < 15; i++) {
+        const response = await getClaimsByFineos_absence_id(
+          {
+            fineos_absence_id: applications[i].fineos_absence_id as string,
+          },
+          {
+            baseUrl: authManager.apiBaseUrl,
+            headers: {
+              Authorization: `Bearer ${session.getAccessToken().getJwtToken()}`,
+              "User-Agent": "PFML Business Simulation Bot",
+            },
+          }
+        );
+        if (
+          // @ts-ignore - @todo _api.ts file needs to be regenerated to update the types for this response
+          response?.data.data.claim_status === "Approved" ||
+          // @ts-ignore - @todo _api.ts file needs to be regenerated to update the types for this response
+          response?.data.data.claim_status === "Completed"
+        )
+          return applications[i];
+      }
+      return 0;
     },
   });
 
