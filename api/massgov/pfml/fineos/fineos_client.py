@@ -907,6 +907,13 @@ class FINEOSClient(client.AbstractFINEOSClient):
         content_type: str,
         description: str,
     ) -> models.customer_api.Document:
+        """ Upload a document to FINEOS using the Base64 endpoint, which accepts document content
+            through a Base64-encoded string. 
+           
+            FINEOS document uploads occur through an API Gateway --> Lambda function, so the max
+            request size is 6MB. However, since base64 encoding can bloat the file size by up to
+            33%, the effective file size is 4.5MB.
+           """
         file_size = len(file_content)
         encoded_file_contents = base64.b64encode(file_content).decode("utf-8")
         file_name_root, file_extension = os.path.splitext(file_name)
@@ -928,6 +935,44 @@ class FINEOSClient(client.AbstractFINEOSClient):
             user_id,
             "upload_documents",
             json=data,
+        )
+
+        response_json = response.json()
+
+        return models.customer_api.Document.parse_obj(
+            fineos_document_empty_dates_to_none(response_json)
+        )
+
+    def upload_document_multipart(
+        self,
+        user_id: str,
+        absence_id: str,
+        document_type: str,
+        file_content: bytes,
+        file_name: str,
+        content_type: str,
+        description: str,
+    ) -> models.customer_api.Document:
+        """ Upload a document through the multipart/form-data API endpoint.
+
+            FINEOS document uploads occur through an API Gateway --> Lambda function, 
+            so the max request size is 6MB. 
+        """
+        multipart_data = (
+            ("documentContents", (file_name, file_content, content_type)),
+            ("documentDescription", (None, description)),
+        )
+
+        response = self._customer_api(
+            "POST",
+            f"customer/cases/{absence_id}/documents/upload/{document_type}",
+            user_id,
+            "upload_document_multipart",
+            # Ensure that the Content-Type is not set manually;
+            # the requests library automatically adds the multipart/form-data header
+            # and includes a generated boundary that separates the data parts specified above.
+            header_content_type=None,
+            files=multipart_data,
         )
 
         response_json = response.json()
@@ -1062,6 +1107,29 @@ class FINEOSClient(client.AbstractFINEOSClient):
             )
         return models.group_client_api.Base64EncodedFileData.parse_obj(response_json)
 
+    def download_document_as_leave_admin_multipart(
+        self, user_id: str, absence_id: str, fineos_document_id: str
+    ) -> models.group_client_api.Base64EncodedFileData:
+        try:
+            header_content_type = None
+
+            response = self._group_client_api(
+                "GET",
+                f"groupClient/cases/{absence_id}/documents/{fineos_document_id}/download",
+                user_id,
+                "download_document_as_leave_admin",
+            )
+        except exception.FINEOSClientError as error:
+            logger.error(
+                "FINEOS Client Exception: download_document_as_leave_admin",
+                extra={"method_name": "download_document_as_leave_admin"},
+                exc_info=error,
+            )
+            error.method_name = "download_document_as_leave_admin"
+            raise error
+
+        return response
+
     def download_document(
         self, user_id: str, absence_id: str, fineos_document_id: str
     ) -> models.customer_api.Base64EncodedFileData:
@@ -1083,6 +1151,20 @@ class FINEOSClient(client.AbstractFINEOSClient):
             )
 
         return models.customer_api.Base64EncodedFileData.parse_obj(response_json)
+
+    def download_document_multipart(
+        self, user_id: str, absence_id: str, fineos_document_id: str
+    ) -> None:
+        header_content_type = None
+
+        response = self._customer_api(
+            "GET",
+            f"customer/cases/{absence_id}/documents/{fineos_document_id}/download",
+            user_id,
+            "download_document_multipart",
+        )
+
+        return response
 
     def mark_document_as_received(
         self, user_id: str, absence_id: str, fineos_document_id: str

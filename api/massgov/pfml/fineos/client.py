@@ -173,6 +173,19 @@ class AbstractFINEOSClient(abc.ABC, metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
+    def upload_document_multipart(
+        self,
+        user_id: str,
+        absence_id: str,
+        document_type: str,
+        file_content: bytes,
+        file_name: str,
+        content_type: str,
+        description: str,
+    ) -> models.customer_api.Document:
+        pass
+
+    @abc.abstractmethod
     def group_client_get_documents(
         self, user_id: str, absence_id: str
     ) -> List[models.group_client_api.GroupClientDocument]:

@@ -42,6 +42,7 @@ from massgov.pfml.api.services.fineos_actions import (
     send_to_fineos,
     submit_payment_preference,
     upload_document,
+    upload_document_multipart,
 )
 from massgov.pfml.api.validation.employment_validator import (
     get_contributing_employer_or_employee_issue,
@@ -635,8 +636,13 @@ def document_upload(application_id, body, file):
         }
 
         # Upload document to fineos
+        if app.get_config().enable_document_multipart_upload:
+            upload_fn = upload_document_multipart
+        else:
+            upload_fn = upload_document
+
         try:
-            fineos_document = upload_document(
+            fineos_document = upload_fn(
                 existing_application,
                 document_type,
                 file_content,
