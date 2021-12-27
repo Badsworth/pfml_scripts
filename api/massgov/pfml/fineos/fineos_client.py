@@ -1107,29 +1107,6 @@ class FINEOSClient(client.AbstractFINEOSClient):
             )
         return models.group_client_api.Base64EncodedFileData.parse_obj(response_json)
 
-    def download_document_as_leave_admin_multipart(
-        self, user_id: str, absence_id: str, fineos_document_id: str
-    ) -> models.group_client_api.Base64EncodedFileData:
-        try:
-            header_content_type = None
-
-            response = self._group_client_api(
-                "GET",
-                f"groupClient/cases/{absence_id}/documents/{fineos_document_id}/download",
-                user_id,
-                "download_document_as_leave_admin",
-            )
-        except exception.FINEOSClientError as error:
-            logger.error(
-                "FINEOS Client Exception: download_document_as_leave_admin",
-                extra={"method_name": "download_document_as_leave_admin"},
-                exc_info=error,
-            )
-            error.method_name = "download_document_as_leave_admin"
-            raise error
-
-        return response
-
     def download_document(
         self, user_id: str, absence_id: str, fineos_document_id: str
     ) -> models.customer_api.Base64EncodedFileData:
@@ -1151,20 +1128,6 @@ class FINEOSClient(client.AbstractFINEOSClient):
             )
 
         return models.customer_api.Base64EncodedFileData.parse_obj(response_json)
-
-    def download_document_multipart(
-        self, user_id: str, absence_id: str, fineos_document_id: str
-    ) -> None:
-        header_content_type = None
-
-        response = self._customer_api(
-            "GET",
-            f"customer/cases/{absence_id}/documents/{fineos_document_id}/download",
-            user_id,
-            "download_document_multipart",
-        )
-
-        return response
 
     def mark_document_as_received(
         self, user_id: str, absence_id: str, fineos_document_id: str
