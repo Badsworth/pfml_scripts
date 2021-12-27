@@ -1,5 +1,5 @@
 import enum
-from typing import List, Optional, cast
+from typing import List, Optional
 
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
@@ -7,7 +7,6 @@ import massgov.pfml.util.logging as logging
 from massgov.pfml import db
 from massgov.pfml.db.models.employees import (
     Flow,
-    LkState,
     Payment,
     PaymentTransactionType,
     State,
@@ -184,26 +183,21 @@ class RelatedPaymentsProcessingStep(Step):
                     logger.info(
                         "Payment added to state %s", end_state.state_description,
                     )
-                    message = "Withholding record error due to an issue with the primary payment."
 
                     transaction_status: Optional[
                         LkFineosWritebackTransactionStatus
                     ] = self._get_payment_writeback_transaction_status(primary_payment_records[0])
-                    if (
-                        transaction_status is None
-                        or transaction_status.transaction_status_description is None
-                    ):
-                        raise Exception(
-                            f"Can not find writeback details for payment {payment.payment_id} with state {cast(LkState, primary_payment_records[0].state_logs.end_state).state_description} and outcome {primary_payment_records[0].state_logs.outcome}"
+                    if transaction_status and transaction_status.transaction_status_description:
+                        message = (
+                            "Withholding record error due to an issue with the primary payment."
                         )
-
-                    stage_payment_fineos_writeback(
-                        payment=payment,
-                        writeback_transaction_status=transaction_status,
-                        outcome=state_log_util.build_outcome(message),
-                        db_session=self.db_session,
-                        import_log_id=self.get_import_log_id(),
-                    )
+                        stage_payment_fineos_writeback(
+                            payment=payment,
+                            writeback_transaction_status=transaction_status,
+                            outcome=state_log_util.build_outcome(message),
+                            db_session=self.db_session,
+                            import_log_id=self.get_import_log_id(),
+                        )
 
     def _get_payment_writeback_transaction_status(
         self, payment: Payment
