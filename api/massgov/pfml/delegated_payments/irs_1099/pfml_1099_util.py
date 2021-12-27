@@ -366,6 +366,7 @@ def get_1099s(db_session: db.Session, batch: Pfml1099Batch) -> NamedTuple:
     #                             SUM(CASE WHEN WITHHOLDING_TYPE_ID = 1 THEN WITHHOLDING_AMOUNT ELSE 0 END) FEDERAL_TAX_WITHHOLDINGS
     #                         FROM PFML_1099_WITHHOLDING
     #                         WHERE PFML_BATCH_ID = ''
+    #                         GROUP BY EMPLOYEE_ID)
     #     MMARS_PMT_ADD  AS (SELECT MP.EMPLOYEE_ID, CAST(MPD.SCHEDULED_PAYMENT_DATE AS DATE) PAYMENT_DATE, MPD.ADDRESS_LINE_1, MPD.ADDRESS_LINE_2, MPD.CITY,
     #                            MPD.STATE, MPD.ZIP_CODE,
     #                            RANK() OVER(PARTITION BY MP.EMPLOYEE_ID ORDER BY MPD.SCHEDULED_PAYMENT_DATE DESC, MPD.CREATED_AT DESC, MP.MMARS_PAYMENT_ID) R
@@ -384,7 +385,6 @@ def get_1099s(db_session: db.Session, batch: Pfml1099Batch) -> NamedTuple:
     #                         INNER JOIN LK_GEO_STATE GS ON A.GEO_STATE_ID = GS.GEO_STATE_ID
     #                         WHERE PPD.PFML_1099_BATCH_ID = '')
     # SELECT CURRENT_TIMESTAMP CREATED_AT,
-    #                         GROUP BY EMPLOYEE_ID)
     #     CURRENT_TIMESTAMP UPDATED_AT,
     #     GEN_RANDOM_UUID() PFML_1099_ID,
     #     PFML_1099_BATCH_ID,
@@ -470,7 +470,9 @@ def get_1099s(db_session: db.Session, batch: Pfml1099Batch) -> NamedTuple:
             FineosExtractEmployeeFeed.address4.label("address4"),
             FineosExtractEmployeeFeed.address6.label("address6"),
             FineosExtractEmployeeFeed.postcode.label("postcode"),
-            cast(FineosExtractEmployeeFeed.effectivefrom, Date).label("ADDRESS_DATE"),
+            func.coalesce(
+                cast(FineosExtractEmployeeFeed.effectivefrom, Date), cast("1900-01-01", Date)
+            ).label("ADDRESS_DATE"),
             func.rank()
             .over(
                 order_by=[

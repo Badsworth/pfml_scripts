@@ -66,6 +66,38 @@ class Populate1099Step(Step):
             if overpayment_repayments is None:
                 overpayment_repayments = 0
 
+            # We do not want to generate a 1099 if the claimaint had $0 in payments
+            if (
+                gross_payments == 0
+                and gross_mmars_payments == 0
+                and state_tax_withholdings == 0
+                and federal_tax_withholdings == 0
+                and overpayment_repayments == 0
+            ):
+                logger.info(
+                    "[%s]: A 1099 is not necessary.  The payment amounts are $0.",
+                    claimant_row.employee_id,
+                )
+                continue
+
+            # We do not want to generate a 1099 if the we could not determine the claimant address
+            if (
+                claimant_row.ADDRESS_LINE_1 is None
+                or claimant_row.CITY is None
+                or claimant_row.STATE is None
+                or claimant_row.ZIP_CODE is None
+            ):
+                logger.info(
+                    "[%s]: Address could not be determined. %s: Line 1: %s, City: %s, State: %s, Zip: %s",
+                    claimant_row.employee_id,
+                    claimant_row.ADDRESS_SOURCE,
+                    claimant_row.ADDRESS_LINE_1,
+                    claimant_row.CITY,
+                    claimant_row.STATE,
+                    claimant_row.ZIP_CODE,
+                )
+                continue
+
             address_line_2 = claimant_row.ADDRESS_LINE_2
             if address_line_2 is None:
                 address_line_2 = ""
