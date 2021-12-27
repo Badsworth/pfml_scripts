@@ -497,6 +497,30 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
         document = mock_document(absence_id, document_type, file_name, description)
         return models.customer_api.Document.parse_obj(document)
 
+    def upload_document_multipart(
+        self,
+        user_id: str,
+        absence_id: str,
+        document_type: str,
+        file_content: bytes,
+        file_name: str,
+        content_type: str,
+        description: str,
+    ) -> models.customer_api.Document:
+        _capture_call(
+            "upload_document_multipart",
+            user_id,
+            absence_id=absence_id,
+            document_type=document_type,
+            file_content=file_content,
+            file_name=file_name,
+            content_type=content_type,
+            description=description,
+        )
+
+        document = mock_document(absence_id, document_type, file_name, description)
+        return models.customer_api.Document.parse_obj(document)
+
     def get_documents(self, user_id: str, absence_id: str) -> List[models.customer_api.Document]:
         document = mock_document(absence_id)
         return [
