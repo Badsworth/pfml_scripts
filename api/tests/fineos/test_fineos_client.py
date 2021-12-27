@@ -15,6 +15,7 @@ import pytest
 import requests
 
 import massgov.pfml.fineos.fineos_client
+from massgov.pfml.fineos.mock_client import mock_document
 import massgov.pfml.fineos.models
 from massgov.pfml.fineos.exception import FINEOSClientError
 from massgov.pfml.fineos.models.customer_api.spec import AbsenceDetails
@@ -748,3 +749,26 @@ def test_customer_api_documents_403(httpserver, fineos_client):
 
     documents = fineos_client.get_documents("FINEOS_WEB_ID", "123456789")
     assert len(documents) == 0
+
+
+from massgov.pfml.api.models.applications.common import DocumentType
+
+
+def test_customer_api_document_upload_multipart_success(httpserver, fineos_client):
+    case_id = "NTN-464041-ABS-01"
+    document_type = DocumentType.identification_proof
+    description = "test document"
+    filename = "test.pdf"
+    file_content = b""
+
+    document_response = mock_document(case_id, document_type, filename, description)
+
+    httpserver.expect_request(
+        f"/customerapi/customer/cases/{case_id}/documents/{document_type}", method="GET",
+    ).respond_with_data(document_response, status=200, content_type="application/json")
+
+    document = fineos_client.upload_document_multipart(
+        "FINEOS_WEB_ID", case_id, document_type, file_content, filename, description
+    )
+    assert document.documentId == document_response["documentId"]
+    assert document.caseId == document_response["caseId"]
