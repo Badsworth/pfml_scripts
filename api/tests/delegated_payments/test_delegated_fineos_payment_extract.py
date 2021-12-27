@@ -1,5 +1,6 @@
 import copy
 import json
+import os
 from datetime import date
 
 import pytest
@@ -164,6 +165,31 @@ def validate_non_standard_payment_state(non_standard_payment: Payment, payment_s
     assert len(non_standard_payment.state_logs) == 2
     assert set([state_log.end_state_id for state_log in non_standard_payment.state_logs]) == set(
         [payment_state.state_id, State.DELEGATED_ADD_TO_FINEOS_WRITEBACK.state_id,]
+    )
+
+
+def validate_withholding(
+    withholding_payment: Payment,
+    withholding_payment_data: FineosPaymentData,
+    payment_state: LkState,
+    payment_transaction_type: PaymentTransactionType,
+):
+    assert withholding_payment.claim_id
+    assert withholding_payment.employee_id is None
+    assert str(withholding_payment.amount) == withholding_payment_data.payment_amount
+    assert withholding_payment.period_start_date == payments_util.datetime_str_to_date(
+        withholding_payment_data.payment_start_period
+    )
+    assert withholding_payment.period_end_date == payments_util.datetime_str_to_date(
+        withholding_payment_data.payment_end_period
+    )
+    assert (
+        withholding_payment.payment_transaction_type.payment_transaction_type_id
+        == payment_transaction_type.payment_transaction_type_id
+    )
+    assert len(withholding_payment.state_logs) == 1
+    assert set([state_log.end_state_id for state_log in withholding_payment.state_logs]) == set(
+        [payment_state.state_id,]
     )
 
 
@@ -1541,6 +1567,177 @@ def test_process_extract_additional_payment_types_still_require_employee(
     validate_non_standard_payment_state(
         zero_dollar_payment, State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT_RESTARTABLE
     )
+
+
+@freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
+def test_process_extract_tax_withholding_payment_types(
+    local_test_db_session, local_payment_extract_step,
+):
+    datasets = []
+
+    # Turn on Tax Withholding Feature Flag for this test.
+    os.environ["ENABLE_WITHHOLDING_PAYMENTS"] = "1"
+
+    # This tests that the behavior of tax withholding payment types are handled properly
+    # All of these are setup as EFT payments, but we won't create EFT information for them
+    # or reject them for not being prenoted yet.
+
+    # Create a State Tax Withholding
+    state_withholding_amount = "20.50"
+    state_start = "2021-01-14 12:00:00"
+    state_end = "2021-01-20 12:00:00"
+    state_withholding_data = FineosPaymentData(
+        event_type="PaymentOut",
+        tin=extractor.STATE_TAX_WITHHOLDING_TIN,
+        payment_amount=state_withholding_amount,
+        payment_start=state_start,
+        payment_end=state_end,
+        payment_method="Elec Funds Transfer",
+    )
+
+    add_db_records_from_fineos_data(local_test_db_session, state_withholding_data, add_eft=False)
+    datasets.append(state_withholding_data)
+
+    # Create a Federal Tax Withholding
+    federal_withholding_amount = "110.00"
+    federal_start = "2021-01-14 12:00:00"
+    federal_end = "2021-01-20 12:00:00"
+    federal_withholding_data = FineosPaymentData(
+        event_type="PaymentOut",
+        tin=extractor.FEDERAL_TAX_WITHHOLDING_TIN,
+        payment_amount=federal_withholding_amount,
+        payment_start=federal_start,
+        payment_end=federal_end,
+        payment_method="Elec Funds Transfer",
+    )
+
+    add_db_records_from_fineos_data(local_test_db_session, federal_withholding_data, add_eft=False)
+    datasets.append(federal_withholding_data)
+
+    stage_data(datasets, local_test_db_session)
+
+    # Run the extract process
+    local_payment_extract_step.run()
+
+    # Validate Tax Withholding, and state should be in STATE_WITHHOLDING_READY_FOR_PROCESSING
+    state_withholding = (
+        local_test_db_session.query(Payment)
+        .filter(Payment.fineos_pei_i_value == state_withholding_data.i_value)
+        .one_or_none()
+    )
+    validate_withholding(
+        state_withholding,
+        state_withholding_data,
+        State.STATE_WITHHOLDING_READY_FOR_PROCESSING,
+        PaymentTransactionType.STATE_TAX_WITHHOLDING,
+    )
+
+    # Validate Tax Withholding, and state should be in FEDERAL_WITHHOLDING_READY_FOR_PROCESSING
+    federal_withholding = (
+        local_test_db_session.query(Payment)
+        .filter(Payment.fineos_pei_i_value == federal_withholding_data.i_value)
+        .one_or_none()
+    )
+    validate_withholding(
+        federal_withholding,
+        federal_withholding_data,
+        State.FEDERAL_WITHHOLDING_READY_FOR_PROCESSING,
+        PaymentTransactionType.FEDERAL_TAX_WITHHOLDING,
+    )
+
+
+@freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
+def test_process_extract_invalid_tax_withholding_payment_types(
+    local_test_db_session, local_payment_extract_step,
+):
+    datasets = []
+
+    # Turn on Tax Withholding Feature Flag for this test.
+    os.environ["ENABLE_WITHHOLDING_PAYMENTS"] = "1"
+
+    # This tests that invalid tax withholding payment types are handled properly
+    # All of these are setup as EFT payments, but we won't create EFT information for them
+    # or reject them for not being prenoted yet.
+
+    # Create a State Tax Withholding
+    state_withholding_amount = None
+    state_start = "2021-01-14 12:00:00"
+    state_end = "2021-01-20 12:00:00"
+    state_withholding_data = FineosPaymentData(
+        event_type="PaymentOut",
+        tin=extractor.STATE_TAX_WITHHOLDING_TIN,
+        payment_amount=state_withholding_amount,
+        payment_start=state_start,
+        payment_end=state_end,
+        payment_method="Elec Funds Transfer",
+    )
+
+    add_db_records_from_fineos_data(local_test_db_session, state_withholding_data, add_eft=False)
+    datasets.append(state_withholding_data)
+
+    stage_data(datasets, local_test_db_session)
+
+    # Run the extract process
+    local_payment_extract_step.run()
+
+    # Validate Tax Withholding, and state should be in:
+    # DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT
+    # DELEGATED_ADD_TO_FINEOS_WRITEBACK
+    state_withholding = (
+        local_test_db_session.query(Payment)
+        .filter(Payment.fineos_pei_i_value == state_withholding_data.i_value)
+        .one_or_none()
+    )
+    assert len(state_withholding.state_logs) == 2
+    assert set([state_log.end_state_id for state_log in state_withholding.state_logs]) == set(
+        [
+            State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT.state_id,
+            State.DELEGATED_ADD_TO_FINEOS_WRITEBACK.state_id,
+        ]
+    )
+
+
+@freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
+def test_process_extract_data_minimal_viable_withholding_payment(
+    local_payment_extract_step, local_test_db_session,
+):
+    # Setup enough to make a tax withholding payment
+    # This test creates a tax withholding with absolutely no data besides the bare
+    # minimum to be viable to create a payment, this is done in order
+    # to test that all of our validations work, and all of the missing data
+    # edge cases are accounted for and handled appropriately.
+
+    # C & I value are the bare minimum to have a payment
+    fineos_data = FineosPaymentData(
+        False,
+        c_value="1000",
+        i_value="1",
+        event_type="PaymentOut",
+        tin=extractor.STATE_TAX_WITHHOLDING_TIN,
+        payment_amount="100.00",
+    )
+    stage_data([fineos_data], local_test_db_session)
+    # We deliberately do no DB setup, there will not be any prior employee or claim
+    local_payment_extract_step.run()
+
+    payment = local_test_db_session.query(Payment).one_or_none()
+    assert payment
+    assert payment.vpei_id is not None
+    assert payment.claim is None
+
+    state_log = state_log_util.get_latest_state_log_in_flow(
+        payment, Flow.DELEGATED_PAYMENT, local_test_db_session
+    )
+    assert state_log.end_state_id == State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT.state_id
+
+    assert state_log.outcome["message"] == "Error processing payment record"
+    assert state_log.outcome["validation_container"]["record_key"] == "C=1000,I=1"
+    # Not going to exactly match the errors here as there are many
+    # and they may adjust in the future
+    assert len(state_log.outcome["validation_container"]["validation_issues"]) >= 5
+
+    # Payment is also added to the PEI writeback error flow
+    validate_pei_writeback_state_for_payment(payment, local_test_db_session, is_invalid=True)
 
 
 def make_payment_data_from_fineos_data(fineos_data):
