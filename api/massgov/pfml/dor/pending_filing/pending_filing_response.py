@@ -395,6 +395,7 @@ def import_employers(
 
     not_found_employer_info_list = []
     found_employer_info_list = []
+    additional_employer_wage_rows = []
 
     staged_not_found_employer_ssns = set()
     for employer_info in employers:
@@ -406,10 +407,8 @@ def import_employers(
         if fein in staged_not_found_employer_ssns:
             # this means there is more than one line for the same employer
             # add it to the found list for later possible update processing
-            logger.warning(
-                "Found multiple lines for same employer: %s", employer_info["account_key"]
-            )
             found_employer_info_list.append(employer_info)
+            additional_employer_wage_rows.append(employer_info)
             continue
 
         if fein not in fein_to_existing_employer_reference_models:
@@ -457,6 +456,27 @@ def import_employers(
         "Employer Quarterly Contributions",
     )
 
+    additional_employer_quarterly_contribution_models_to_create = list(
+        map(
+            lambda employer_info: EmployerQuarterlyContribution(
+                employer_id=fein_to_new_employer_id[employer_info["fein"]],
+                filing_period=employer_info["filing_period"],
+                employer_total_pfml_contribution=decimal.Decimal(0),
+                pfm_account_id=employer_info["fein"],
+                dor_received_date=employer_info["updated_date"],
+                dor_updated_date=employer_info["updated_date"],
+                latest_import_log_id=import_log_entry_id,
+            ),
+            additional_employer_wage_rows,
+        )
+    )
+
+    bulk_save(
+        db_session,
+        additional_employer_quarterly_contribution_models_to_create,
+        "Employer Quarterly Contributions",
+    )
+
     logger.info("Done - Creating new employers: %i", len(employer_models_to_create))
 
     report.created_employers_count += len(employer_models_to_create)
@@ -500,6 +520,10 @@ def import_employers(
     logger.info("Employers to update: %i", len(found_employer_info_to_update_list))
 
     count = 0
+
+    # Don't insert multiple records to EmployerPushToFineosQueue
+    added_push_queue: Dict[uuid.UUID, bool] = dict()
+
     for employer_info in found_employer_info_to_update_list:
         count += 1
         if count % 10000 == 0:
@@ -509,7 +533,14 @@ def import_employers(
             db_session, employer_info["fein"]
         )
 
-        if existing_employer_model is not None:
+        # Only insert one Push record even if there are multiple
+        if (
+            existing_employer_model is not None
+            and added_push_queue.get(existing_employer_model.employer_id, None) is None
+        ):
+            print(existing_employer_model.employer_id)
+            added_push_queue[existing_employer_model.employer_id] = True
+
             existing_employer_model.exemption_cease_date = existing_employer_cease_date
 
             # Enqueue updated employer for push to FINEOS
@@ -1132,6 +1163,8 @@ def parse_pending_filing_employer_file(
     employers = []
     employees = []
 
+    employer_uuids: Dict[str, str] = dict()
+
     decrypt_files = os.getenv("DECRYPT") == "true"
 
     invalid_employer_key_line_nums = []
@@ -1164,8 +1197,14 @@ def parse_pending_filing_employer_file(
                         )
                         report.invalid_employer_lines_count += 1
 
-                    last_employer_account_key = "pending_filing_" + str(uuid_gen())
                     last_employer_filing_period = employer["fdtmQuarterYear"]
+
+                    last_employer_account_key = employer_uuids.get(employer["fstrEmployerID"], "")
+                    if last_employer_account_key == "":
+                        employer_uuids[employer["fstrEmployerID"]] = "pending_filing_" + str(
+                            uuid_gen()
+                        )
+                        last_employer_account_key = employer_uuids[employer["fstrEmployerID"]]
 
                     transformed_dict = {
                         "fein": employer["fstrEmployerID"],
@@ -1246,8 +1285,11 @@ def parse_pending_filing_employer_file(
                     continue
 
                 employer = EMPLOYER_PENDING_FILING_RESPONSE_FILE_FORMAT_A.parse_line(row)
-                last_employer_account_key = "pending_filing_" + str(uuid_gen())
                 last_employer_filing_period = employer["fdtmQuarterYear"]
+                last_employer_account_key = employer_uuids.get(employer["fstrEmployerID"], "")
+                if last_employer_account_key == "":
+                    employer_uuids[employer["fstrEmployerID"]] = "pending_filing_" + str(uuid_gen())
+                    last_employer_account_key = employer_uuids[employer["fstrEmployerID"]]
 
                 transformed_dict = {
                     "fein": employer["fstrEmployerID"],

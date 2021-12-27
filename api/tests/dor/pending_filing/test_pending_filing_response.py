@@ -9,7 +9,13 @@ import boto3
 import pytest
 
 import massgov.pfml.dor.pending_filing.pending_filing_response as import_dor
-from massgov.pfml.db.models.employees import EmployerPushToFineosQueue
+from massgov.pfml.db.models.employees import (
+    Employee,
+    Employer,
+    EmployerPushToFineosQueue,
+    EmployerQuarterlyContribution,
+    WagesAndContributions,
+)
 from massgov.pfml.db.models.factories import EmployerFactory
 from massgov.pfml.dor.importer.import_dor import PROCESSED_FOLDER, RECEIVED_FOLDER, ImportReport
 from massgov.pfml.dor.importer.paths import get_pending_filing_files_to_process
@@ -71,6 +77,69 @@ def test_account_key_set_single_file(monkeypatch, test_db_session):
     assert employees[0]["account_key"] == employers[0]["account_key"]
     assert employers[0]["account_key"] != employers[3]["account_key"]
     assert employees[3]["account_key"] == employers[3]["account_key"]
+
+
+def test_employer_multiple_wage_rows(initialize_factories_session, monkeypatch, test_db_session):
+    monkeypatch.setenv("DECRYPT", "false")
+
+    employer_file_path = TEST_FOLDER / "importer" / "DORDUADFML_SUBMISSION_20212216"
+
+    import_files = list()
+    import_files.append(str(employer_file_path))
+
+    import_dor.process_pending_filing_employer_files(
+        import_files=import_files,
+        decrypt_files=True,
+        optional_decrypter=decrypter,
+        optional_db_session=test_db_session,
+    )
+
+    employer = test_db_session.query(Employer).filter(Employer.employer_fein == "123456999").first()
+
+    employee = (
+        test_db_session.query(Employee)
+        .filter(Employee.first_name == "TEST" and Employee.last_name == "DOE")
+        .first()
+    )
+
+    wages = (
+        test_db_session.query(WagesAndContributions)
+        .filter(
+            WagesAndContributions.employee_id == employee.employee_id
+            and WagesAndContributions.employer_id == employer.employer_id
+        )
+        .all()
+    )
+
+    assert len(wages) == 4
+
+    employer = test_db_session.query(Employer).filter(Employer.employer_fein == "123456789").first()
+    employer2 = (
+        test_db_session.query(Employer).filter(Employer.employer_fein == "123456799").first()
+    )
+    employer3 = (
+        test_db_session.query(Employer).filter(Employer.employer_fein == "123456999").first()
+    )
+
+    wage_rows = (
+        test_db_session.query(EmployerQuarterlyContribution)
+        .filter(EmployerQuarterlyContribution.employer_id == employer.employer_id)
+        .all()
+    )
+    wage_rows2 = (
+        test_db_session.query(EmployerQuarterlyContribution)
+        .filter(EmployerQuarterlyContribution.employer_id == employer2.employer_id)
+        .all()
+    )
+    wage_rows3 = (
+        test_db_session.query(EmployerQuarterlyContribution)
+        .filter(EmployerQuarterlyContribution.employer_id == employer3.employer_id)
+        .all()
+    )
+
+    assert len(wage_rows) == 3
+    assert len(wage_rows2) == 2
+    assert len(wage_rows3) == 4
 
 
 def test_update_existing_employer_cease_date(
