@@ -99,7 +99,7 @@ export const RoleDescription = {
 } as const;
 
 export class UserLeaveAdministrator {
-  employer_dba: string;
+  employer_dba: string | null;
   employer_fein: string;
   employer_id: string;
   has_fineos_registration: boolean;

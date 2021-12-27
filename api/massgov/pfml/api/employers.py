@@ -11,7 +11,7 @@ import massgov.pfml.api.util.response as response_util
 import massgov.pfml.util.logging
 from massgov.pfml.api.authorization.flask import READ, requires
 from massgov.pfml.api.models.employers.requests import EmployerAddFeinRequest
-from massgov.pfml.api.models.employers.responses import EmployerAddFeinResponse
+from massgov.pfml.api.models.employers.responses import EmployerResponse
 from massgov.pfml.api.validation.employer_rules import (
     EmployerRequiresVerificationDataException,
     validate_employer_being_added,
@@ -127,5 +127,5 @@ def employer_add_fein() -> flask.Response:
         return response_util.success_response(
             message="Successfully added FEIN to user",
             status_code=201,
-            data=EmployerAddFeinResponse.from_orm(employer).dict(),
+            data=EmployerResponse.from_orm(employer).dict(),
         ).to_api_response()

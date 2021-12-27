@@ -50,7 +50,7 @@ export class ClaimEmployee {
  * Employer record associated to the Claim
  */
 export interface ClaimEmployer {
-  employer_dba: string;
+  employer_dba: string | null;
   employer_fein: string;
   employer_id: string;
 }

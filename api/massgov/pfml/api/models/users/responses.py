@@ -21,15 +21,15 @@ class RoleResponse(PydanticBaseModel):
     role_description: str
 
 
-class EmployerResponse(PydanticBaseModel):
-    employer_dba: str
+class UserEmployerResponse(PydanticBaseModel):
+    employer_dba: Optional[str]
     employer_fein: FEINFormattedStr
     employer_id: UUID4
     has_verification_data: bool
 
 
 class UserLeaveAdminResponse(PydanticBaseModel):
-    employer: EmployerResponse
+    employer: UserEmployerResponse
     has_fineos_registration: bool
     verified: bool
 
