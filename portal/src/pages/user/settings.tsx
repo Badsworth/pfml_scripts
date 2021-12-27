@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import User, { MFAPreference } from "src/models/User";
+import Alert from "src/components/core/Alert";
 import AmendmentForm from "src/components/employers/AmendmentForm";
 import { AppLogic } from "src/hooks/useAppLogic";
 import BackButton from "src/components/BackButton";
@@ -22,6 +23,7 @@ import withUser from "src/hoc/withUser";
 interface UserSettingsProps {
   user: User;
   appLogic: AppLogic;
+  query: { smsMfaConfirmed?: string };
 }
 
 const MFAAmendmentForm = (props: {
@@ -76,7 +78,7 @@ const MFAAmendmentForm = (props: {
 };
 
 export const Settings = (props: UserSettingsProps) => {
-  const { user, appLogic } = props;
+  const { user, appLogic, query } = props;
   const [showMFAAmendmentForm, setShowMFAAmendmentForm] = useState(false);
   const { t } = useTranslation();
   const hasMFAEnabled = user.mfa_delivery_preference === MFAPreference.sms;
@@ -91,6 +93,15 @@ export const Settings = (props: UserSettingsProps) => {
         href={routes.applications.index}
         label={t("pages.userSettings.backToApplicationsLinkText")}
       />
+      {query.smsMfaConfirmed && (
+        <Alert
+          className="margin-bottom-3"
+          heading={t("pages.userSettings.phoneNumberConfirmedHeading")}
+          state="success"
+        >
+          {t("pages.userSettings.phoneNumberConfirmedMessage")}
+        </Alert>
+      )}
       <Title marginBottom="6">{t("pages.userSettings.title")}</Title>
 
       <ReviewHeading level="3">
