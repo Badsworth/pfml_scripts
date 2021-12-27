@@ -114,6 +114,11 @@ variable "enable_alarm_api_ram" {
   default     = true
 }
 
+variable "enable_document_multipart_upload" {
+  description = "Enable document uploads through the FINEOS multipart endpoint"
+  type        = bool
+  default     = false
+}
 
 variable "cors_origins" {
   description = "A list of origins to allow CORS requests from."
