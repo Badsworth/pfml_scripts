@@ -165,6 +165,8 @@ const useAuthLogic = ({
         !currentUser.challengeName ||
         currentUser.challengeName !== "SMS_MFA"
       ) {
+        //Auth.forgetDevice();
+
         const apiUser = await usersApi.getCurrentUser();
         // if delivery preference is null and user is not an employer, redirect to set up MFA
         const shouldSetMFA =
@@ -207,6 +209,7 @@ const useAuthLogic = ({
     try {
       trackAuthRequest("confirmSignIn");
       await Auth.confirmSignIn(cognitoUser, code, "SMS_MFA");
+      await rememberDevice();
       tracker.markFetchRequestEnd();
     } catch (error) {
       appErrorsLogic.catchError(error);
@@ -214,6 +217,22 @@ const useAuthLogic = ({
     }
     finishLoginAndRedirect(next);
   };
+
+  const rememberDevice = async () => {
+    console.log("Calling Auth.fetchDevices");
+    var devices = await Auth.fetchDevices();
+    console.log(devices);
+
+    // remember the device
+    console.log("Calling Auth.rememberDevice");
+    var response = await Auth.rememberDevice();
+    console.log(response)
+
+    // check to see that it was added correctly
+    console.log("Calling Auth.fetchDevices");
+    var devices = await Auth.fetchDevices();
+    console.log(devices);
+  }
 
   /**
    * Log out of the Portal
