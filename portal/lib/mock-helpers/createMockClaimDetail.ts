@@ -8,7 +8,7 @@ import ClaimDetail, { PaymentDetail } from "src/models/ClaimDetail";
 import { ClaimEmployee } from "src/models/Claim";
 import LeaveReason from "src/models/LeaveReason";
 import { ReasonQualifier } from "src/models/BenefitsApplication";
-import { createAbsencePeriod } from "tests/test-utils/createAbsencePeriod";
+import { createAbsencePeriod } from "lib/mock-helpers/createAbsencePeriod";
 import faker from "faker";
 
 export const leaveScenarioMap: {

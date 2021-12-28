@@ -70,7 +70,6 @@ module.exports = {
       lib: path.resolve(__dirname, "../lib"),
       src: path.resolve(__dirname, "../src"),
       storybook: path.resolve(__dirname),
-      tests: path.resolve(__dirname, "../tests"),
     });
 
     return config;

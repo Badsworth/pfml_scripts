@@ -4,8 +4,7 @@
     "paths": {
       "lib/*": ["../lib/*"],
       "src/*": ["../src/*"],
-      "storybook/*": ["../storybook/*"],
-      "tests/*": ["../tests/*"]
+      "storybook/*": ["../storybook/*"]
     }
   },
   "exclude": ["node_modules", "**/node_modules/*"]

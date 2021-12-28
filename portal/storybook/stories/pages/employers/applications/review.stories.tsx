@@ -6,12 +6,12 @@ import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
 import DocumentCollection from "src/models/DocumentCollection";
 import EmployerClaim from "src/models/EmployerClaim";
 import { ManagedRequirement } from "src/models/Claim";
-import { MockEmployerClaimBuilder } from "tests/test-utils/mock-model-builder";
+import { MockEmployerClaimBuilder } from "lib/mock-helpers/mock-model-builder";
 import { Props } from "types/common";
 import React from "react";
 import { Review } from "src/pages/employers/applications/review";
 import User from "src/models/User";
-import createAbsencePeriod from "tests/test-utils/createAbsencePeriod";
+import createAbsencePeriod from "lib/mock-helpers/createAbsencePeriod";
 import faker from "faker";
 import useMockableAppLogic from "lib/mock-helpers/useMockableAppLogic";
 

@@ -1,7 +1,7 @@
 import PaginatedAbsencePeriodsTable from "src/components/employers/PaginatedAbsencePeriodsTable";
 import React from "react";
 import { StatusTagMap } from "src/pages/applications/status";
-import { createAbsencePeriod } from "tests/test-utils/createAbsencePeriod";
+import { createAbsencePeriod } from "lib/mock-helpers/createAbsencePeriod";
 
 export default {
   title: "Components/PaginatedAbsencePeriodsTable",

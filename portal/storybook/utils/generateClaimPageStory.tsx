@@ -4,7 +4,7 @@ import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
 import BenefitsApplication from "src/models/BenefitsApplication";
 import React from "react";
 import User from "../../src/models/User";
-import { createMockBenefitsApplication } from "tests/test-utils/createMockBenefitsApplication";
+import { createMockBenefitsApplication } from "lib/mock-helpers/createMockBenefitsApplication";
 import englishLocale from "src/locales/app/en-US";
 import useMockableAppLogic from "lib/mock-helpers/useMockableAppLogic";
 import { useTranslation } from "src/locales/i18n";

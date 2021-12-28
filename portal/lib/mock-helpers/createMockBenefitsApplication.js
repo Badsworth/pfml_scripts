@@ -11,6 +11,7 @@ import { MockBenefitsApplicationBuilder } from "./mock-model-builder";
 export const createMockBenefitsApplication = (...types) => {
   return types
     .reduce(
+      // eslint-disable-next-line no-param-reassign
       (acc, type) => (acc = acc[type]()),
       new MockBenefitsApplicationBuilder()
     )

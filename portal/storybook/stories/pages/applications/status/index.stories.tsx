@@ -6,7 +6,7 @@ import createMockClaimDetail, {
   leaveScenarioMap,
   leaveTypes,
   requestTypes,
-} from "tests/test-utils/createMockClaimDetail";
+} from "lib/mock-helpers/createMockClaimDetail";
 
 import DocumentCollection from "src/models/DocumentCollection";
 import { Props } from "types/common";
