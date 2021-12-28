@@ -220,6 +220,9 @@ def test_e2e_pub_payments(
     # Configuration / Setup
     # ========================================================================
 
+    # Turn on Tax Withholding Feature Flag for e2e test.
+    os.environ["ENABLE_WITHHOLDING_PAYMENTS"] = "1"
+
     caplog.set_level(logging.ERROR)  # noqa: B1
     setup_common_env_variables(monkeypatch)
     s3_config = payments_config.get_s3_config()
@@ -267,7 +270,16 @@ def test_e2e_pub_payments(
                 lambda sd: not sd.scenario_descriptor.create_payment, test_dataset.scenario_dataset
             )
         )
-        assert len(payments) == len(test_dataset.scenario_dataset) - len(missing_payment)
+
+        # split payments added for withholding
+        split_payment_records = [
+            ScenarioName.HAPPY_PATH_TAX_WITHHOLDING,
+            ScenarioName.HAPPY_PATH_TAX_WITHHOLDING,
+        ]
+
+        assert len(payments) == len(test_dataset.scenario_dataset) + len(
+            split_payment_records
+        ) - len(missing_payment)
 
         # Payment staging tables
         assert len(test_db_session.query(FineosExtractVbiRequestedAbsence).all()) == len(payments)
@@ -304,6 +316,7 @@ def test_e2e_pub_payments(
             ScenarioName.HAPPY_PATH_DOR_FINEOS_NAME_MISMATCH,
             ScenarioName.HAPPY_PATH_DUA_ADDITIONAL_INCOME,
             ScenarioName.HAPPY_PATH_DIA_ADDITIONAL_INCOME,
+            ScenarioName.HAPPY_PATH_TAX_WITHHOLDING,
         ]
 
         stage_1_non_standard_payments = [
@@ -531,6 +544,7 @@ def test_e2e_pub_payments(
                 ScenarioName.HAPPY_PATH_DOR_FINEOS_NAME_MISMATCH,
                 ScenarioName.HAPPY_PATH_DUA_ADDITIONAL_INCOME,
                 ScenarioName.HAPPY_PATH_DIA_ADDITIONAL_INCOME,
+                ScenarioName.HAPPY_PATH_TAX_WITHHOLDING,
             ]
         )
 
@@ -674,7 +688,8 @@ def test_e2e_pub_payments(
                 "vbi_requested_absence_som_record_count": len(SCENARIO_DESCRIPTORS),
             },
         )
-
+        # Number of absence records created for withholding scenerios
+        withholding_requested_absence_records_count = 8
         assert_metrics(
             test_db_other_session,
             "PaymentExtractStep",
@@ -701,10 +716,12 @@ def test_e2e_pub_payments(
                         ScenarioName.HAPPY_PATH_DOR_FINEOS_NAME_MISMATCH,
                         ScenarioName.HAPPY_PATH_DUA_ADDITIONAL_INCOME,
                         ScenarioName.HAPPY_PATH_DIA_ADDITIONAL_INCOME,
+                        ScenarioName.HAPPY_PATH_TAX_WITHHOLDING,
                     ]
                 ),
                 "cancellation_count": len([ScenarioName.CANCELLATION_PAYMENT]),
                 "claim_details_record_count": len(SCENARIO_DESCRIPTORS)
+                + len(split_payment_records)
                 - len(
                     [
                         ScenarioName.OVERPAYMENT_MISSING_NON_VPEI_RECORDS,
@@ -741,6 +758,7 @@ def test_e2e_pub_payments(
                         ScenarioName.HAPPY_PATH_DOR_FINEOS_NAME_MISMATCH,
                         ScenarioName.HAPPY_PATH_DUA_ADDITIONAL_INCOME,
                         ScenarioName.HAPPY_PATH_DIA_ADDITIONAL_INCOME,
+                        ScenarioName.HAPPY_PATH_TAX_WITHHOLDING,
                     ]
                 ),
                 "employee_in_payment_extract_missing_in_db_count": 0,
@@ -782,11 +800,14 @@ def test_e2e_pub_payments(
                 ),
                 "overpayment_count": len(stage_1_overpayment_scenarios),
                 "payment_details_record_count": len(SCENARIO_DESCRIPTORS)
+                + len(split_payment_records)
                 - len([ScenarioName.CLAIMANT_PRENOTED_NO_PAYMENT_RECEIVED]),
                 "pei_record_count": len(SCENARIO_DESCRIPTORS)
+                + len(split_payment_records)
                 - len([ScenarioName.CLAIMANT_PRENOTED_NO_PAYMENT_RECEIVED]),
                 "prenote_past_waiting_period_approved_count": 0,
                 "processed_payment_count": len(SCENARIO_DESCRIPTORS)
+                + len(split_payment_records)
                 - len([ScenarioName.CLAIMANT_PRENOTED_NO_PAYMENT_RECEIVED]),
                 "requested_absence_record_count": len(SCENARIO_DESCRIPTORS)
                 - len(
@@ -794,7 +815,8 @@ def test_e2e_pub_payments(
                         ScenarioName.OVERPAYMENT_MISSING_NON_VPEI_RECORDS,
                         ScenarioName.CLAIMANT_PRENOTED_NO_PAYMENT_RECEIVED,
                     ]
-                ),
+                )
+                + withholding_requested_absence_records_count,
                 "standard_valid_payment_count": len(
                     [
                         ScenarioName.HAPPY_PATH_MEDICAL_ACH_PRENOTED,
@@ -824,10 +846,11 @@ def test_e2e_pub_payments(
                         ScenarioName.HAPPY_PATH_DOR_FINEOS_NAME_MISMATCH,
                         ScenarioName.HAPPY_PATH_DUA_ADDITIONAL_INCOME,
                         ScenarioName.HAPPY_PATH_DIA_ADDITIONAL_INCOME,
+                        ScenarioName.HAPPY_PATH_TAX_WITHHOLDING,
                     ]
                 ),
                 "tax_identifier_missing_in_db_count": len(
-                    [ScenarioName.PAYMENT_EXTRACT_EMPLOYEE_MISSING_IN_DB]
+                    [ScenarioName.PAYMENT_EXTRACT_EMPLOYEE_MISSING_IN_DB,]
                 ),
                 "zero_dollar_payment_count": len([ScenarioName.ZERO_DOLLAR_PAYMENT]),
             },
@@ -874,6 +897,7 @@ def test_e2e_pub_payments(
                         ScenarioName.HAPPY_PATH_DOR_FINEOS_NAME_MISMATCH,
                         ScenarioName.HAPPY_PATH_DUA_ADDITIONAL_INCOME,
                         ScenarioName.HAPPY_PATH_DIA_ADDITIONAL_INCOME,
+                        ScenarioName.HAPPY_PATH_TAX_WITHHOLDING,
                     ]
                 ),
                 "validated_address_count": len(
@@ -905,6 +929,7 @@ def test_e2e_pub_payments(
                         ScenarioName.HAPPY_PATH_DOR_FINEOS_NAME_MISMATCH,
                         ScenarioName.HAPPY_PATH_DUA_ADDITIONAL_INCOME,
                         ScenarioName.HAPPY_PATH_DIA_ADDITIONAL_INCOME,
+                        ScenarioName.HAPPY_PATH_TAX_WITHHOLDING,
                     ]
                 ),
                 "verified_experian_match": len(
@@ -934,8 +959,18 @@ def test_e2e_pub_payments(
                         ScenarioName.HAPPY_PATH_DOR_FINEOS_NAME_MISMATCH,
                         ScenarioName.HAPPY_PATH_DUA_ADDITIONAL_INCOME,
                         ScenarioName.HAPPY_PATH_DIA_ADDITIONAL_INCOME,
+                        ScenarioName.HAPPY_PATH_TAX_WITHHOLDING,
                     ]
                 ),
+            },
+        )
+
+        assert_metrics(
+            test_db_other_session,
+            "RelatedPaymentsProcessingStep",
+            {
+                "federal_withholding_record_count": len([ScenarioName.HAPPY_PATH_TAX_WITHHOLDING,]),
+                "state_withholding_record_count": len([ScenarioName.HAPPY_PATH_TAX_WITHHOLDING,]),
             },
         )
 
@@ -971,6 +1006,7 @@ def test_e2e_pub_payments(
                         ScenarioName.HAPPY_PATH_DOR_FINEOS_NAME_MISMATCH,
                         ScenarioName.HAPPY_PATH_DUA_ADDITIONAL_INCOME,
                         ScenarioName.HAPPY_PATH_DIA_ADDITIONAL_INCOME,
+                        ScenarioName.HAPPY_PATH_TAX_WITHHOLDING,
                     ]
                 ),
                 "payment_sampled_for_audit_count": len(
@@ -1001,6 +1037,7 @@ def test_e2e_pub_payments(
                         ScenarioName.HAPPY_PATH_DOR_FINEOS_NAME_MISMATCH,
                         ScenarioName.HAPPY_PATH_DUA_ADDITIONAL_INCOME,
                         ScenarioName.HAPPY_PATH_DIA_ADDITIONAL_INCOME,
+                        ScenarioName.HAPPY_PATH_TAX_WITHHOLDING,
                     ]
                 ),
                 "sampled_payment_count": len(
@@ -1031,6 +1068,7 @@ def test_e2e_pub_payments(
                         ScenarioName.HAPPY_PATH_DOR_FINEOS_NAME_MISMATCH,
                         ScenarioName.HAPPY_PATH_DUA_ADDITIONAL_INCOME,
                         ScenarioName.HAPPY_PATH_DIA_ADDITIONAL_INCOME,
+                        ScenarioName.HAPPY_PATH_TAX_WITHHOLDING,
                     ]
                 ),
             },
@@ -1149,6 +1187,7 @@ def test_e2e_pub_payments(
             ScenarioName.HAPPY_PATH_DOR_FINEOS_NAME_MISMATCH,
             ScenarioName.HAPPY_PATH_DUA_ADDITIONAL_INCOME,
             ScenarioName.HAPPY_PATH_DIA_ADDITIONAL_INCOME,
+            ScenarioName.HAPPY_PATH_TAX_WITHHOLDING,
         ]
 
         assert_payment_state_for_scenarios(
@@ -1415,9 +1454,12 @@ def test_e2e_pub_payments(
             {
                 "errored_writeback_record_during_file_creation_count": 0,
                 "errored_writeback_record_during_file_transfer_count": 0,
-                "successful_writeback_record_count": len(stage_2_writeback_scenarios),
-                "writeback_record_count": len(stage_2_writeback_scenarios),
-                "generic_flow_writeback_items_count": len(stage_2_writeback_scenarios),
+                "successful_writeback_record_count": len(stage_2_writeback_scenarios)
+                + len(split_payment_records),
+                "writeback_record_count": len(stage_2_writeback_scenarios)
+                + len(split_payment_records),
+                "generic_flow_writeback_items_count": len(stage_2_writeback_scenarios)
+                + len(split_payment_records),
                 "payment_audit_error_writeback_transaction_status_count": len(
                     [ScenarioName.AUDIT_REJECTED,]
                 ),
@@ -1431,7 +1473,8 @@ def test_e2e_pub_payments(
                     ]
                 ),
                 "paid_writeback_transaction_status_count": len(stage_2_ach_scenarios)
-                + len(stage_2_check_scenarios),
+                + len(stage_2_check_scenarios)
+                + len(split_payment_records),
                 "dua_additional_income_writeback_transaction_status_count": len(
                     [ScenarioName.AUDIT_REJECTED_WITH_NOTE,]
                 ),
@@ -1910,6 +1953,7 @@ def test_e2e_pub_payments(
     # ===============================================================================
 
     with freeze_time("2021-05-07 21:30:00", tz_offset=5):
+
         process_fineos_extracts(
             test_dataset, mock_experian_client, test_db_session, test_db_other_session
         )
@@ -2582,7 +2626,6 @@ def assert_payment_state_for_scenarios(
 ):
     for scenario_name in scenario_names:
         scenario_data_items = test_dataset.get_scenario_data_by_name(scenario_name)
-
         assert scenario_data_items is not None, f"No data found for scenario: {scenario_name}"
 
         for scenario_data in scenario_data_items:
@@ -2590,7 +2633,6 @@ def assert_payment_state_for_scenarios(
                 payment = scenario_data.additional_payment
             else:
                 payment = scenario_data.payment
-
             assert payment is not None
 
             state_log = state_log_util.get_latest_state_log_in_flow(payment, flow, db_session)
