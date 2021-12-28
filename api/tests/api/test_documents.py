@@ -168,7 +168,8 @@ def test_document_upload_uses_multipart_upload_when_flag_enabled(
     assert response["status_code"] == 200
 
     capture = massgov.pfml.fineos.mock_client.get_capture()
-    assert capture[0][0] == "upload_document_multipart"
+    actions = [fineos_action[0] for fineos_action in capture]
+    assert "upload_document_multipart" in actions
 
 
 def test_document_upload_unauthorized_application_user(

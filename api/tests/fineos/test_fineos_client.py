@@ -757,16 +757,17 @@ def test_customer_api_document_upload_multipart_success(httpserver, fineos_clien
     document_type = DocumentType.identification_proof
     description = "test document"
     filename = "test.pdf"
+    content_type = "application/pdf"
     file_content = b""
 
     document_response = mock_document(case_id, document_type, filename, description)
 
     httpserver.expect_request(
-        f"/customerapi/customer/cases/{case_id}/documents/{document_type}", method="GET",
-    ).respond_with_data(document_response, status=200, content_type="application/json")
+        f"/customerapi/customer/cases/{case_id}/documents/upload/{document_type}", method="POST",
+    ).respond_with_data(json.dumps(document_response), status=200, content_type="application/json")
 
     document = fineos_client.upload_document_multipart(
-        "FINEOS_WEB_ID", case_id, document_type, file_content, filename, description
+        "FINEOS_WEB_ID", case_id, document_type, file_content, filename, content_type, description
     )
     assert document.documentId == document_response["documentId"]
     assert document.caseId == document_response["caseId"]
