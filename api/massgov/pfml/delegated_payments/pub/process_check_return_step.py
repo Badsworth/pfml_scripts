@@ -24,9 +24,12 @@ from massgov.pfml.db.models.employees import (
     ReferenceFileType,
     State,
 )
-from massgov.pfml.db.models.payments import FineosWritebackDetails, FineosWritebackTransactionStatus
+from massgov.pfml.db.models.payments import FineosWritebackTransactionStatus
 from massgov.pfml.delegated_payments import delegated_config, delegated_payments_util
 from massgov.pfml.delegated_payments.pub import check_return, process_files_in_path_step
+from massgov.pfml.delegated_payments.util.fineos_writeback_util import (
+    create_payment_finished_state_log_with_writeback,
+)
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
@@ -251,38 +254,26 @@ class ProcessCheckReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
 
             return
 
-        state_log_util.create_finished_state_log(
-            payment,
-            State.DELEGATED_PAYMENT_COMPLETE,
-            state_log_util.build_outcome(
+        writeback_transaction_status = FineosWritebackTransactionStatus.POSTED
+
+        create_payment_finished_state_log_with_writeback(
+            payment=payment,
+            payment_end_state=State.DELEGATED_PAYMENT_COMPLETE,
+            payment_outcome=state_log_util.build_outcome(
                 "Payment complete by paid check",
                 check_paid_date=str(check_payment.paid_date),
                 check_line_number=str(check_payment.line_number),
             ),
-            self.db_session,
+            writeback_transaction_status=writeback_transaction_status,
+            db_session=self.db_session,
+            import_log_id=self.get_import_log_id(),
         )
+
         payment.check.check_posted_date = check_payment.paid_date
         payment.check.payment_check_status_id = PaymentCheckStatus.PAID.payment_check_status_id
         logger.info(
             "payment complete by paid check", extra=extra,
         )
-
-        writeback_transaction_status = FineosWritebackTransactionStatus.POSTED
-        state_log_util.create_finished_state_log(
-            end_state=State.DELEGATED_ADD_TO_FINEOS_WRITEBACK,
-            associated_model=payment,
-            outcome=state_log_util.build_outcome(
-                writeback_transaction_status.transaction_status_description
-            ),
-            import_log_id=self.get_import_log_id(),
-            db_session=self.db_session,
-        )
-        writeback_details = FineosWritebackDetails(
-            payment=payment,
-            transaction_status_id=writeback_transaction_status.transaction_status_id,
-            import_log_id=self.get_import_log_id(),
-        )
-        self.db_session.add(writeback_details)
 
         self.increment(self.Metrics.PAYMENT_COMPLETE_BY_PAID_CHECK)
 
@@ -317,34 +308,20 @@ class ProcessCheckReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
             description=check_payment.status.value
         )
 
-        state_log_util.create_finished_state_log(
-            payment,
-            State.DELEGATED_PAYMENT_ERROR_FROM_BANK,
-            state_log_util.build_outcome(
+        writeback_transaction_status = FineosWritebackTransactionStatus.BANK_PROCESSING_ERROR
+
+        create_payment_finished_state_log_with_writeback(
+            payment=payment,
+            payment_end_state=State.DELEGATED_PAYMENT_ERROR_FROM_BANK,
+            payment_outcome=state_log_util.build_outcome(
                 "Payment failed by check status %s" % check_payment.status.name,
                 check_line_number=str(check_payment.line_number),
                 check_status=check_payment.status.name,
             ),
-            self.db_session,
-        )
-
-        writeback_transaction_status = FineosWritebackTransactionStatus.BANK_PROCESSING_ERROR
-        state_log_util.create_finished_state_log(
-            end_state=State.DELEGATED_ADD_TO_FINEOS_WRITEBACK,
-            associated_model=payment,
-            outcome=state_log_util.build_outcome(
-                writeback_transaction_status.transaction_status_description
-            ),
-            import_log_id=self.get_import_log_id(),
+            writeback_transaction_status=writeback_transaction_status,
             db_session=self.db_session,
-        )
-
-        writeback_details = FineosWritebackDetails(
-            payment=payment,
-            transaction_status_id=writeback_transaction_status.transaction_status_id,
             import_log_id=self.get_import_log_id(),
         )
-        self.db_session.add(writeback_details)
 
         logger.info(
             "payment failed by check", extra=extra,

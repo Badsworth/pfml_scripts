@@ -138,6 +138,32 @@ locals {
       ]
     },
 
+    "dor_create_pending_filing_submission" = {
+      command   = ["dor_create_pending_filing_submission"],
+      task_role = aws_iam_role.dor_pending_filing_sub_task_role.arn,
+      cpu       = 4096,
+      memory    = 18432,
+      env = [
+        local.db_access,
+        { name : "FOLDER_PATH", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/dfml" }
+      ]
+    },
+
+    "dor-pending-filing-response-import" = {
+      command        = ["dor-pending-filing-response-import"],
+      task_role      = aws_iam_role.dor_import_task_role.arn,
+      execution_role = aws_iam_role.dor_import_execution_role.arn,
+      cpu            = 4096,
+      memory         = 18432,
+      env = [
+        local.db_access,
+        { name : "DECRYPT", value : "true" },
+        { name : "FOLDER_PATH", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/dor/received" },
+        { name : "GPG_DECRYPTION_KEY", valueFrom : "/service/${local.app_name}-dor-import/${var.environment_name}/gpg_decryption_key" },
+        { name : "GPG_DECRYPTION_KEY_PASSPHRASE", valueFrom : "/service/${local.app_name}-dor-import/${var.environment_name}/gpg_decryption_key_passphrase" }
+      ]
+    },
+
     "fineos-import-employee-updates" = {
       command   = ["fineos-import-employee-updates"]
       task_role = aws_iam_role.fineos_import_employee_updates_task_role.arn

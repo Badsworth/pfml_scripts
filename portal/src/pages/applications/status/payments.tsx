@@ -188,7 +188,7 @@ export const Payments = ({
   const isIntermittentUnpaid =
     isIntermittent &&
     isFeatureEnabled("claimantShowPaymentsPhaseTwo") &&
-    Boolean(claimDetail?.payments?.length);
+    Boolean(claimDetail?.payments?.length) === false;
 
   const maxBenefitAmount = `$${getMaxBenefitAmount()}`;
   return (

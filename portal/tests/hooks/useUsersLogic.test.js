@@ -55,24 +55,79 @@ describe("useUsersLogic", () => {
     const user_id = "mock-user-id";
     const patchData = { path: "data" };
 
-    beforeEach(async () => {
+    beforeEach(() => {
       setup();
+    });
 
+    it("updates user to the api", async () => {
       await act(async () => {
         await usersLogic.updateUser(user_id, patchData);
       });
-    });
 
-    it("updates user to the api", () => {
       expect(usersApi.updateUser).toHaveBeenCalledWith(user_id, patchData);
     });
 
-    it("sets user state", () => {
+    it("sets user state", async () => {
+      await act(async () => {
+        await usersLogic.updateUser(user_id, patchData);
+      });
+
       expect(usersLogic.user).toBeInstanceOf(User);
     });
 
-    it("goes to next page", () => {
+    it("goes to next page", async () => {
+      await act(async () => {
+        await usersLogic.updateUser(user_id, patchData);
+      });
+
       expect(mockRouter.push).toHaveBeenCalled();
+    });
+
+    it("goes to custom page if a nextPageEvent is supplied", async () => {
+      const goToNextPage = jest
+        .spyOn(portalFlow, "goToNextPage")
+        .mockImplementationOnce(jest.fn());
+      await act(async () => {
+        await usersLogic.updateUser(
+          user_id,
+          patchData,
+          undefined,
+          undefined,
+          "RETURN_TO_SETTINGS"
+        );
+      });
+
+      expect(goToNextPage).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.anything(),
+        "RETURN_TO_SETTINGS"
+      );
+    });
+
+    it("passes query string arguments to the next page if they are supplied", async () => {
+      await act(async () => {
+        await usersLogic.updateUser(user_id, patchData, undefined, {
+          someArg: "someValue",
+        });
+      });
+
+      expect(mockRouter.push).toHaveBeenCalledWith(
+        expect.stringMatching(/someArg=someValue/)
+      );
+    });
+
+    describe("when the user turns on SMS MFA", () => {
+      const mfaPreferences = { mfa_delivery_preference: "SMS" };
+
+      it("goes to next page with a smsMfaConfirmed query parameter", async () => {
+        await act(async () => {
+          await usersLogic.updateUser(user_id, mfaPreferences);
+        });
+
+        expect(mockRouter.push).toHaveBeenCalledWith(
+          expect.stringMatching(/smsMfaConfirmed=true/)
+        );
+      });
     });
 
     describe("when errors exist", () => {
@@ -107,7 +162,8 @@ describe("useUsersLogic", () => {
 
         expect(nextPageSpy).toHaveBeenCalledWith(
           { user: usersLogic.user, claim },
-          expect.objectContaining({ claim_id: claim.application_id })
+          expect.objectContaining({ claim_id: claim.application_id }),
+          undefined
         );
       });
     });

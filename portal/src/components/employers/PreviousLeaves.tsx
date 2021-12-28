@@ -21,6 +21,7 @@ interface PreviousLeavesProps {
   onRemove: (arg: PreviousLeave) => void;
   previousLeaves: PreviousLeave[];
   shouldShowV2: boolean;
+  otherLeaveStartDate: string;
 }
 
 /**
@@ -38,6 +39,7 @@ const PreviousLeaves = (props: PreviousLeavesProps) => {
     onRemove,
     previousLeaves,
     shouldShowV2,
+    otherLeaveStartDate,
   } = props;
   const limit = 4;
 
@@ -58,6 +60,7 @@ const PreviousLeaves = (props: PreviousLeavesProps) => {
               />
             ),
           }}
+          values={{ otherLeaveStartDate }}
         />
       </p>
       <Details

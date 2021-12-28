@@ -6,6 +6,7 @@ import Address from "./Address";
 import ConcurrentLeave from "./ConcurrentLeave";
 import EmployerBenefit from "./EmployerBenefit";
 import { IntermittentLeavePeriod } from "./BenefitsApplication";
+import { ManagedRequirement } from "../models/Claim";
 import PreviousLeave from "./PreviousLeave";
 import { merge } from "lodash";
 
@@ -27,10 +28,11 @@ class EmployerClaim extends BaseBenefitsApplication {
   employer_benefits: EmployerBenefit[];
   date_of_birth: string | null = null;
   employer_fein: string;
-  employer_dba: string;
+  employer_dba: string | null;
   follow_up_date: string | null = null;
   hours_worked_per_week: number | null = null;
   is_reviewable: boolean;
+  managed_requirements: ManagedRequirement[];
   residential_address: Address;
   status: string;
   tax_identifier: string | null = null;

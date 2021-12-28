@@ -17,4 +17,5 @@ module.exports = {
   long: merge({}, defaultEnvVariables, require("./long")),
   trn2: merge({}, defaultEnvVariables, require("./trn2")),
   "infra-test": merge({}, defaultEnvVariables, require("./infra-test")),
+  local: merge({}, defaultEnvVariables, require("./local")),
 };

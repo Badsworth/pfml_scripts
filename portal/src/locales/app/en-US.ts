@@ -128,7 +128,7 @@ const errors = {
     },
     has_previous_leaves_other_reason: {
       required:
-        "Select Yes if you have taken any other leave since January 1, 2021 for a different qualifying reason.",
+        "Select Yes if you have taken previous leave that you must report.",
     },
     has_previous_leaves_same_reason: {
       required:
@@ -871,17 +871,17 @@ const shared = {
   leavePeriodCaringAlert:
     "You will need a completed <caregiver-certification-form-link>$t(shared.certificationFormCare)</caregiver-certification-form-link> for this$t(chars.nbsp)section.",
   leavePeriodContinuousDatesLeadMedicalOrPregnancy:
-    "If you have already taken leave for this condition in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your answer must match the continuous leave period start and end dates in the $t(shared.certificationFormMedical).",
+    "Your answer must match the continuous leave period start and end dates in the $t(shared.certificationFormMedical).",
   leavePeriodHasLeaveHintCare:
     "Your answer must match the $t(shared.certificationFormCare).",
   leavePeriodHasLeaveHintMedicalOrPregnancy:
     "Your answer must match the $t(shared.certificationFormMedical).",
   leavePeriodIntermittentDatesLeadMedicalOrPregnancy:
-    "If you have already taken leave for this condition in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your answer must match the intermittent leave start and end dates in the $t(shared.certificationFormMedical).",
+    "Your answer must match the intermittent leave start and end dates in the $t(shared.certificationFormMedical).",
   leavePeriodMedicalAlert:
     "You will need a completed <healthcare-provider-form-link>$t(shared.certificationFormMedical)</healthcare-provider-form-link> for this$t(chars.nbsp)section.",
   leavePeriodReducedDatesLeadMedicalOrPregnancy:
-    "If you have already taken leave for this condition in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your answer must match the reduced leave start and end dates in the $t(shared.certificationFormMedical).",
+    "Your answer must match the reduced leave start and end dates in the $t(shared.certificationFormMedical).",
   leaveReasonActiveDutyFamily: "Active duty",
   leaveReasonBonding: "Bond with a child",
   leaveReasonBondingHeader: "Leave to bond with a child",
@@ -930,6 +930,9 @@ const shared = {
   saveAndContinue: "Save and continue",
   siteDescription:
     "Apply for this Commonwealth-offered benefit here, or log in to review your applications.",
+  smsPhoneNumberConfirmedHeading: "Phone number confirmed",
+  smsPhoneNumberConfirmedMessage:
+    "To protect your security, we'll send you a 6-digit code whenever we need to verify it's really you.",
   submitApplicationButton: "I understand and agree",
   trackStatus:
     "<track-status-link>Track the status of your application here</track-status-link>.",
@@ -950,6 +953,8 @@ const pages = {
     getReadyLink: "Start a new application",
     inProgressHeading: "In-progress applications",
     noClaims: "You don’t have any applications yet.",
+    phoneNumberConfirmedHeading: "$t(shared.smsPhoneNumberConfirmedHeading)",
+    phoneNumberConfirmedMessage: "$t(shared.smsPhoneNumberConfirmedMessage)",
     submittedHeading: "Submitted applications",
     title: "Your applications",
     uploadSuccessHeading: "You successfully submitted your documents",
@@ -1124,7 +1129,7 @@ const pages = {
     edit: "Edit",
     // TODO (CP-2354) Remove CC guidance for claims with Part 1 submitted without reductions data
     otherLeaveSubmittedDetailsBody:
-      "<ul><li>You have already taken leave to care for a family member since July 1, 2021</li><li>You have already taken leave since January 1, 2021 <when-can-i-use-pfml>for any other reason that qualifies for PFML</when-can-i-use-pfml></li><li>You plan to use any accrued paid leave or any other benefits from your employer during your paid leave from PFML (for example: your employer’s parental leave program or paid sick time)</li><li>You expect to get income from any other sources during your leave (for example: disability insurance, retirement benefits, or another job)</li></ul>",
+      "<ul><li>You have already taken leave to care for a family member since July 1, 2021</li><li>You have already taken leave since {{otherLeaveStartDate}} <when-can-i-use-pfml>for any other reason that qualifies for PFML</when-can-i-use-pfml></li><li>You plan to use any accrued paid leave or any other benefits from your employer during your paid leave from PFML (for example: your employer’s parental leave program or paid sick time)</li><li>You expect to get income from any other sources during your leave (for example: disability insurance, retirement benefits, or another job)</li></ul>",
     otherLeaveSubmittedDetailsLabel: "What do I need to report?",
     otherLeaveSubmittedIntro:
       "<p>If you have any other leaves, benefits, or income to report, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.</p>",
@@ -1151,7 +1156,7 @@ const pages = {
     stepHTMLDescription_medical:
       "<p>You need to provide your completed <healthcare-provider-form-link>$t(shared.certificationFormMedical)</healthcare-provider-form-link>.</p><p>Your certification documents will be shared with your employer as part of your leave application.</p>",
     stepHTMLDescription_otherLeave:
-      "You will need to know:<ul><li>If you will use any benefits from your employer because you are taking leave.</li><li>If you will receive income from any other sources during your leave.</li><li>The dates for any leave you’ve taken since January 1, 2021 for a condition that is covered by Paid Family and Medical Leave.</li></ul>",
+      "You will need to know:<ul><li>If you will use any benefits from your employer because you are taking leave.</li><li>If you will receive income from any other sources during your leave.</li><li>The dates for any leave you’ve taken since {{otherLeaveStartDate}} for a reason that is covered by Paid Family and Medical Leave.</li></ul>",
     stepHTMLDescription_payment:
       "<p>Tell us how you want to receive payment.</p><p>If you want to receive payment by direct deposit, you will need to provide your bank account information, including a routing number and account number.</p>",
     stepHTMLDescription_payment_tax:
@@ -1408,9 +1413,9 @@ const pages = {
     choiceNo: "$t(shared.choiceNo)",
     choiceYes: "$t(shared.choiceYes)",
     datesLead_bonding:
-      "If you have already taken some or all of your family leave in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your paid leave must end before the child’s first birthday or the one year anniversary of when they arrived in your home (for foster care and adoption).",
+      "If you have already taken family leave to bond with a child since their date of birth, or the date of their adoption or foster care placement, tell us the first day you missed work, and the last day you expect to be on leave.<br /><br />You must complete your leave before the child’s first birthday, or the one-year anniversary of their adoption or foster care placement.",
     datesLead_care:
-      "If you have already taken some or all of your leave in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your answer must match the continuous leave period start and end dates in the $t(shared.certificationFormCare).",
+      "Your answer must match the continuous leave period start and end dates in the $t(shared.certificationFormCare).",
     datesLead_medical:
       "$t(shared.leavePeriodContinuousDatesLeadMedicalOrPregnancy)",
     datesLead_pregnancy:
@@ -1435,9 +1440,9 @@ const pages = {
     choiceNo: "$t(shared.choiceNo)",
     choiceYes: "$t(shared.choiceYes)",
     datesLead_bonding:
-      "If you have already taken some or all of your family leave in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your paid leave must end before the child’s first birthday or the one year anniversary of when they arrived in your home (for foster care and adoption).",
+      "If you have already taken family leave to bond with a child since their date of birth, or the date of their adoption or foster care placement, tell us the first day you missed work, and the last day you expect to be on leave.<br /><br />You must complete your leave before the child’s first birthday, or the one-year anniversary of their adoption or foster care placement.",
     datesLead_care:
-      "If you have already taken some or all of your leave in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your answer must match the intermittent leave start and end dates in the $t(shared.certificationFormCare).",
+      "Your answer must match the intermittent leave start and end dates in the $t(shared.certificationFormCare).",
     datesLead_medical:
       "$t(shared.leavePeriodIntermittentDatesLeadMedicalOrPregnancy)",
     datesLead_pregnancy:
@@ -1467,9 +1472,9 @@ const pages = {
     choiceNo: "$t(shared.choiceNo)",
     choiceYes: "$t(shared.choiceYes)",
     datesLead_bonding:
-      "If you have already taken some or all of your family leave in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your paid leave must end before the child’s first birthday or the one year anniversary of when they arrived in your home (for foster care and adoption).",
+      "If you have already taken family leave to bond with a child since their date of birth, or the date of their adoption or foster care placement, tell us the first day you missed work, and the last day you expect to be on leave.<br /><br />You must complete your leave before the child’s first birthday, or the one-year anniversary of their adoption or foster care placement.",
     datesLead_care:
-      "If you have already taken some or all of your leave in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your answer must match the reduced leave start and end dates in the $t(shared.certificationFormCare).",
+      "Your answer must match the reduced leave start and end dates in the $t(shared.certificationFormCare).",
     datesLead_medical:
       "$t(shared.leavePeriodReducedDatesLeadMedicalOrPregnancy)",
     datesLead_pregnancy:
@@ -1505,7 +1510,7 @@ const pages = {
     bondingTypeMultipleBirthsDetailsLabel:
       "What if I’ve had multiple births or placements within one year?",
     bondingTypeMultipleBirthsDetailsSummary:
-      "Leave is determined based on benefit year (365 days from the start of the first week you take leave), not based on number of children. You have 1 year to take your family leave from the date of the birth/placement of the child. <multiple-births-link>Learn more about taking leave for multiple childbirths or placements</multiple-births-link>.",
+      "Leave is determined based on your benefit year (a period of 52 weeks starting on the Sunday prior to your first day of paid leave through any leave program), not based on the number of children. You have 1 year to take your family leave from the date of the birth/placement of your child. <multiple-births-link>Learn more about taking leave for multiple childbirths or placements</multiple-births-link>.",
     bondingTypeNewbornLabel: "Birth",
     caringLeaveLabel: "I need to care for my family member.",
     leaveReasonChangedAlertBody:
@@ -1649,13 +1654,18 @@ const pages = {
     title: "$t(shared.claimsVerifyIdTitle)",
   },
   claimsPreviousLeavesIntro: {
-    intro:
-      "<ul><li>Any previous leave for the same reason that you are applying for paid leave now</li><li>Any previous leave for a different qualifying reasons</li></ul>",
-    introDontNeed:
-      "<ul><li>Leave that was taken through Massachusetts' PFML program</li><li>Leave that was taken before January 1, 2021</li><li>Family leave to care for a family member taken before July 1, 2021</li></ul>",
-    introDontNeedHeader: "You don't need to report:",
-    introHeader:
-      "You'll need to report previous leave you may have taken between January 1, 2021 and {{startDate}}:",
+    detailsBenefitYear:
+      "<p>The benefit year is a period of 52 weeks that starts on the Sunday before when you first miss work for a qualifying reason. You are entitled to up to 20 weeks of medical leave, 12 weeks of family leave, or 26 weeks for a combination of both during a single benefit year.</p><p>You can submit an application for leave that crosses into a new benefit year. We will review the request as if it is two separate applications. The Department's determination for one application may be different from its determination for the other.</p><p>Example: The first time you took leave for a qualifying reason began on Thursday, April 1, 2021. The benefit year began on the Sunday before, which is March 28, 2021. The benefit year lasts 52 weeks and ends on Saturday, which is March 26, 2022.</p><ul><li>Your example first day of leave: 4/1/2021</li><li>Your example benefit year: 3/28/2021 to 3/26/2022</li></ul>",
+    detailsBenefitYearHeader: "What is a benefit year?",
+    detailsQualifyingReason:
+      "<p>A qualifying reason is the cause or event that makes you unable to work and eligible for Paid Family and Medical Leave benefits.</p><p>Qualifying reasons include:</p><ul><li>Bonding with your child during the first 12 months after birth, adoption, or placement</li><li>Caring for a family member with a serious health condition as certified by a health care provider, including illness, injury, or pregnancy</li><li>Managing affairs while a family member is on active duty</li><li>Caring for a family member who was injured serving in the armed forces</li><li>Caring for your own serious health condition as certified by a health care provider, including illness, injury, or pregnancy</li></ul>",
+    detailsQualifyingReasonHeader: "What is a qualifying reason?",
+    dontNeed:
+      "<ul><li>Leave that was taken through Massachusetts’ PFML program</li><li>Leave that was taken outside of your current benefit year</li><li>Family leave to care for a family member before July 1, 2021</li></ul>",
+    dontNeedHeader: "You don’t need to report:",
+    need: "<ul><li>Any previous leave (paid or unpaid) for the same reason that you are applying for paid leave now</li><li>Any previous leave for a different qualifying reason</li></ul>",
+    needHeader:
+      "You’ll need to report previous leave you have taken between {{otherLeaveStartDate}} and {{startDate}}:",
     sectionLabel: "Tell us about your previous leave.",
     title: "$t(shared.claimsOtherLeaveTitle)",
   },
@@ -1683,7 +1693,7 @@ const pages = {
     leaveTakenThroughPFML:
       "Leave that was taken through Massachusetts' PFML program",
     sectionLabel:
-      "Did you take any previous leave between January 1, 2021 and {{leaveStartDate}} for a different qualifying reason?",
+      "Did you take any previous leave between {{otherLeaveStartDate}} and {{leaveStartDate}} and for a different qualifying reason?",
     title: "$t(shared.claimsOtherLeaveTitle)",
   },
   claimsPreviousLeavesOtherReasonDetails: {
@@ -2370,6 +2380,8 @@ const pages = {
     instructionsAmendment:
       "Please review the details of this application carefully. If anything is incorrect or incomplete, you can add an amendment or include specific comments at the end. Changes are not saved until you submit your review.",
     instructionsFollowUpDate: "$t(shared.employerInstructions_followUpDate)",
+    managedRequirementsRespondedAt:
+      "This application has changed since it was reviewed on {{date}}.",
     otherLeavesBody:
       "<p>Please review the leaves and benefits listed in the tables below. If everything looks correct, then there’s no action needed. If something looks incorrect or incomplete, you can:</p><ul><li>Amend reported leaves and benefits.</li><li>Add a leave or benefit that your employee used or will use.</li></ul><p>If you need to remove a leave or benefit, use the comment box at the end of this page.</p>",
     otherLeavesBodyV1:
@@ -2683,6 +2695,7 @@ const pages = {
       "<p>Make your account more secure by providing a phone number to associate with your account. We'll send you a 6-digit code whenenever we need to verify it's really you. You’ll need to enter the code in order to log in to your account. In the future, you’ll also be able to access sensitive information like tax documents once you set this up.</p><p>You will need to provide a phone number that can receive text messages (SMS) and that you’ll have consistent access to in case we need to verify your login.</p><p><strong>Additional login verification is not enabled</strong></p>",
     additionalVerificationWithMfaText:
       "To protect your security, we'll send you a 6-digit code whenenever we need to verify it's really you. You’ll need to enter the code in order to log in to your account.",
+    backToApplicationsLinkText: "Back to applications",
     cancelEditLoginVerificationLinkText: "Cancel",
     editLoginVerificationLabel: "Edit login verification preferences",
     emailLabel: "Email address",
@@ -2690,6 +2703,8 @@ const pages = {
     mfaChoiceEnable: "Enable additional login verification",
     mfaEnabledLabel: "Additional login verification is enabled",
     mfaPhoneNumberLabel: "Phone number",
+    phoneNumberConfirmedHeading: "$t(shared.smsPhoneNumberConfirmedHeading)",
+    phoneNumberConfirmedMessage: "$t(shared.smsPhoneNumberConfirmedMessage)",
     rowEditText: "Edit",
     saveLoginVerificationButtonText: "Save preference",
     title: "Settings",
@@ -3047,7 +3062,7 @@ const components = {
     addButton: "$t(shared.claimsPreviousLeaveDetails.addButton)",
     dateRangeLabel: "Date range",
     explanation:
-      "Your employee has listed leave they have taken for a qualified reason. Only leave since January 1, 2021 is included. This includes both paid leave, such as paid vacation or sick days, and unpaid leave, such as FMLA leave. When possible, verify that a previous leave was for a reason that qualifies for paid leave under PFML.",
+      "Your employee has listed leave they have taken for qualified reasons. Only leave since {{otherLeaveStartDate}} is included. This includes both paid leave (for example: paid vacation or sick days) and unpaid leave (for example: FMLA leave). When possible, verify that this previous leave was for reasons that qualify for paid leave under PFML.",
     header: "Previous leave",
     leaveTypeLabel: "Leave type",
     qualifyingReasonContent:
@@ -3165,7 +3180,7 @@ const components = {
   },
   maintenanceTakeover: {
     noSchedule:
-      "We’re performing some maintenance on our system. Please check back in a few hours, or call the Contact Center at $t(shared.contactCenterPhoneNumberNoBreak) between 8 a.m.-5 p.m. ET.",
+      "We’re performing some maintenance on our system and some features may currently be unavailable. Please check back in a few hours.",
     scheduledWithEndAndNoStart:
       "We're performing some maintenance on our system, so you can't log in or work on any applications right now. The system will be back online and available on <strong>{{end}}</strong>.",
     scheduledWithStartAndEnd:

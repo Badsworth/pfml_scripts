@@ -1,7 +1,9 @@
 import React, { useState } from "react";
 import User, { MFAPreference } from "src/models/User";
+import Alert from "src/components/core/Alert";
 import AmendmentForm from "src/components/employers/AmendmentForm";
 import { AppLogic } from "src/hooks/useAppLogic";
+import BackButton from "src/components/BackButton";
 import Button from "src/components/core/Button";
 import ButtonLink from "src/components/ButtonLink";
 import InputChoiceGroup from "src/components/core/InputChoiceGroup";
@@ -12,6 +14,7 @@ import Title from "src/components/core/Title";
 import { Trans } from "react-i18next";
 import { isFeatureEnabled } from "src/services/featureFlags";
 import { pick } from "lodash";
+import routes from "src/routes";
 import useFormState from "src/hooks/useFormState";
 import useFunctionalInputProps from "src/hooks/useFunctionalInputProps";
 import { useTranslation } from "src/locales/i18n";
@@ -20,6 +23,7 @@ import withUser from "src/hoc/withUser";
 interface UserSettingsProps {
   user: User;
   appLogic: AppLogic;
+  query: { smsMfaConfirmed?: string };
 }
 
 const MFAAmendmentForm = (props: {
@@ -74,7 +78,7 @@ const MFAAmendmentForm = (props: {
 };
 
 export const Settings = (props: UserSettingsProps) => {
-  const { user, appLogic } = props;
+  const { user, appLogic, query } = props;
   const [showMFAAmendmentForm, setShowMFAAmendmentForm] = useState(false);
   const { t } = useTranslation();
   const hasMFAEnabled = user.mfa_delivery_preference === MFAPreference.sms;
@@ -85,6 +89,19 @@ export const Settings = (props: UserSettingsProps) => {
 
   return (
     <div className="measure-6">
+      <BackButton
+        href={routes.applications.index}
+        label={t("pages.userSettings.backToApplicationsLinkText")}
+      />
+      {query.smsMfaConfirmed && (
+        <Alert
+          className="margin-bottom-3"
+          heading={t("pages.userSettings.phoneNumberConfirmedHeading")}
+          state="success"
+        >
+          {t("pages.userSettings.phoneNumberConfirmedMessage")}
+        </Alert>
+      )}
       <Title marginBottom="6">{t("pages.userSettings.title")}</Title>
 
       <ReviewHeading level="3">
@@ -101,7 +118,11 @@ export const Settings = (props: UserSettingsProps) => {
         <React.Fragment>
           <Trans i18nKey="pages.userSettings.additionalVerificationNoMfaText" />
           <ButtonLink
-            href={appLogic.portalFlow.getNextPageRoute("EDIT_MFA_PHONE")}
+            href={appLogic.portalFlow.getNextPageRoute(
+              "EDIT_MFA_PHONE",
+              undefined,
+              { returnToSettings: "true" }
+            )}
           >
             {t("pages.userSettings.addPhoneNumberButtonText")}
           </ButtonLink>
@@ -137,7 +158,11 @@ export const Settings = (props: UserSettingsProps) => {
             level="3"
             label={t("pages.userSettings.mfaPhoneNumberLabel")}
             editText={t("pages.userSettings.rowEditText")}
-            editHref={appLogic.portalFlow.getNextPageRoute("EDIT_MFA_PHONE")}
+            editHref={appLogic.portalFlow.getNextPageRoute(
+              "EDIT_MFA_PHONE",
+              undefined,
+              { returnToSettings: "true" }
+            )}
           >
             {user.mfa_phone_number?.phone_number}
           </ReviewRow>

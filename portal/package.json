@@ -10,6 +10,7 @@
   "scripts": {
     "analyze-bundle": "ANALYZE_BUNDLE=true next build",
     "dev": "NEXT_TELEMETRY_DISABLED=1 next",
+    "dev:local": "NEXT_TELEMETRY_DISABLED=1 BUILD_ENV=local next",
     "docs": "start-storybook -p 6006 -c ./storybook -s ./public",
     "docs:build": "build-storybook -c ./storybook -s ./public -o out-storybook",
     "docs:smoke-test": "npm run docs -- --ci --smoke-test --quiet",

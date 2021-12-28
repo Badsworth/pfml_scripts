@@ -103,5 +103,9 @@ declare namespace Cypress {
       waitParams: Parameters<waitForClaimDocuments>[0],
       options?: Partial<Timeoutable & Loggable>
     ): Chainable<boolean>;
+    task(
+      event: "findFirstApprovedClaim",
+      args: { applications: ApplicationResponse[]; credentials: Credentials }
+    ): Chainable<ApplicationResponse | 0>;
   }
 }

@@ -61,7 +61,7 @@ describe("Create a new continuous leave, caring leave claim in FINEOS", () => {
     cy.unstash<DehydratedClaim>("claim").then((claim) => {
       cy.unstash<Submission>("submission").then(({ fineos_absence_id }) => {
         const claimPage = fineosPages.ClaimPage.visit(fineos_absence_id);
-        claimPage.addAppeal();
+        claimPage.addAppeal(true);
         claimPage.addEmployer(<string>claim.claim.employer_fein);
         claimPage.triggerNotice("SOM Generate Appeals Notice");
         claimPage.appealDocuments((docPage) => {
@@ -127,22 +127,23 @@ describe("Create a new continuous leave, caring leave claim in FINEOS", () => {
       cy.dependsOnPreviousPass([fineosSubmission, employerDenial, csrAppeal]);
       portal.before();
       cy.unstash<Submission>("submission").then((submission) => {
-        cy.unstash<DehydratedClaim>("claim").then((claim) => {
-          if (!claim.claim.employer_fein) {
-            throw new Error("Claim must include employer FEIN");
-          }
-          const employeeFullName = `${claim.claim.first_name} ${claim.claim.last_name}`;
-          portal.loginLeaveAdmin(claim.claim.employer_fein);
-          portal.selectClaimFromEmployerDashboard(submission.fineos_absence_id);
-          portal.checkNoticeForLeaveAdmin(
-            submission.fineos_absence_id,
-            employeeFullName,
-            "appeals"
-          );
-          portal.downloadLegalNoticeSubcase(
-            submission.fineos_absence_id,
-            "-AP-01"
-          );
+        cy.unstash<string>("appeal_case_id").then((appeal_case_id) => {
+          cy.unstash<DehydratedClaim>("claim").then((claim) => {
+            if (!claim.claim.employer_fein) {
+              throw new Error("Claim must include employer FEIN");
+            }
+            const employeeFullName = `${claim.claim.first_name} ${claim.claim.last_name}`;
+            portal.loginLeaveAdmin(claim.claim.employer_fein);
+            portal.selectClaimFromEmployerDashboard(
+              submission.fineos_absence_id
+            );
+            portal.checkNoticeForLeaveAdmin(
+              submission.fineos_absence_id,
+              employeeFullName,
+              "appeals"
+            );
+            portal.downloadLegalNoticeSubcase(appeal_case_id);
+          });
         });
       });
     }

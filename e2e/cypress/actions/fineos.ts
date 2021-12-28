@@ -374,6 +374,23 @@ export function assertDocumentsInFolder(
 }
 
 /**
+ * Find the Appeals claim subcase number
+ * @return appeal_case_id
+ */
+export function findAppealNumber(type: string): Cypress.Chainable<string> {
+  const appealmatcher = new RegExp(
+    `${type} - (NTN-[0-9]{1,6}-[A-Z]{3}-[0-9]{2}-[A-Z]{2}-[0-9]{2})`
+  );
+  return cy.findAllByText(appealmatcher).then((el) => {
+    const match = el.text().match(appealmatcher);
+    if (!match) {
+      throw new Error();
+    }
+    return cy.wrap(match[1]);
+  });
+}
+
+/**
  * Returns claim adjudication status wrapped in Cypress.Chainable.
  * @returns Adjudication status of the claim
  * @example

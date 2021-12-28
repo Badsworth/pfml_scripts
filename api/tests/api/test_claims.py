@@ -400,7 +400,7 @@ class TestGetClaimReview:
 
     @freeze_time("2020-12-07")
     def test_employers_receive_200_from_get_claim_review(
-        self, client, employer_user, employer_auth_token, test_db_session, test_verification
+        self, client, employer_user, employer_auth_token, test_db_session, test_verification,
     ):
         employer = EmployerFactory.create(employer_fein="999999999", employer_dba="Acme Co")
         claim = ClaimFactory.create(employer_id=employer.employer_id)
@@ -428,7 +428,7 @@ class TestGetClaimReview:
         assert response_data["employer_dba"] == "Acme Co"
         assert response_data["employer_fein"] == "99-9999999"
         assert response_data["employer_id"] == str(employer.employer_id)
-        assert response_data["is_reviewable"] is False
+        assert response_data["is_reviewable"] is True
         # The fields below are set in mock_client.py::mock_customer_info
         assert response_data["date_of_birth"] == "****-12-25"
         assert response_data["tax_identifier"] == "***-**-1234"
@@ -441,7 +441,7 @@ class TestGetClaimReview:
 
     @freeze_time("2020-12-07")
     def test_second_eform_version_defaults_to_true(
-        self, client, employer_user, employer_auth_token, test_db_session, test_verification
+        self, client, employer_user, employer_auth_token, test_db_session, test_verification,
     ):
         employer = EmployerFactory.create(employer_fein="999999999", employer_dba="Acme Co")
         claim = ClaimFactory.create(employer_id=employer.employer_id)
@@ -491,7 +491,7 @@ class TestGetClaimReview:
                 models.group_client_api.ManagedRequirementDetails.parse_obj(
                     {
                         "managedReqId": 123,
-                        "category": "Fake Category",
+                        "category": "Employer Confirmation",
                         "type": "Employer Confirmation of Leave Data",
                         "followUpDate": date(2021, 2, 1),
                         "documentReceived": True,
@@ -519,7 +519,7 @@ class TestGetClaimReview:
 
     @freeze_time("2020-12-07")
     def test_employers_with_int_hours_worked_per_week_receive_200_from_get_claim_review(
-        self, client, employer_user, employer_auth_token, test_db_session, test_verification
+        self, client, employer_user, employer_auth_token, test_db_session, test_verification,
     ):
         employer = EmployerFactory.create(employer_fein="999999999", employer_dba="Acme Co")
         ClaimFactory.create(
@@ -548,7 +548,7 @@ class TestGetClaimReview:
         assert response_data["hours_worked_per_week"] == 37
         assert response_data["employer_dba"] == "Acme Co"
         assert response_data["employer_fein"] == "99-9999999"
-        assert response_data["is_reviewable"] is False
+        assert response_data["is_reviewable"] is True
         # The fields below are set in mock_client.py::mock_customer_info
         assert response_data["date_of_birth"] == "****-12-25"
         assert response_data["tax_identifier"] == "***-**-1234"
@@ -558,8 +558,15 @@ class TestGetClaimReview:
         assert response_data["residential_address"]["state"] == "GA"
         assert response_data["residential_address"]["zip"] == "30303"
 
+    @mock.patch("massgov.pfml.api.claims.upsert_absence_period_from_fineos_period")
     def test_employers_receive_proper_claim_using_correct_fineos_web_id(
-        self, client, employer_user, employer_auth_token, test_db_session, test_verification
+        self,
+        mock_upsert_absence_period,
+        client,
+        employer_user,
+        employer_auth_token,
+        test_db_session,
+        test_verification,
     ):
         employer1 = EmployerFactory.create()
         employer2 = EmployerFactory.create()
@@ -650,7 +657,7 @@ class TestGetClaimReview:
     def fineos_managed_requirements(self, managed_requirements):
         return [ManagedRequirementDetails.parse_obj(mr) for mr in managed_requirements]
 
-    def _managed_requirements_by_fineos_absence_id(
+    def _retrieve_managed_requirements_by_fineos_absence_id(
         self, db_session, fineos_absence_id
     ) -> List[ManagedRequirement]:
         return (
@@ -689,7 +696,7 @@ class TestGetClaimReview:
         )
 
         assert response.status_code == 200
-        requirements = self._managed_requirements_by_fineos_absence_id(
+        requirements = self._retrieve_managed_requirements_by_fineos_absence_id(
             test_db_session, claim.fineos_absence_id
         )
         assert len(requirements) == len(fineos_managed_requirements)
@@ -722,6 +729,7 @@ class TestGetClaimReview:
         test_db_session,
         test_verification,
     ):
+        ## Test set up
         employer = EmployerFactory.create()
         claim = ClaimFactory.create(employer_id=employer.employer_id)
         link = UserLeaveAdministrator(
@@ -739,13 +747,24 @@ class TestGetClaimReview:
             mr.status = ManagedRequirementStatus.SUPPRESSED.managed_requirement_status_description
         mock_get_req.return_value = fineos_managed_requirements
 
+        requirements = self._retrieve_managed_requirements_by_fineos_absence_id(
+            test_db_session, claim.fineos_absence_id
+        )
+
+        ## Test that after call managed requirements changes are reflected in db and that mr returned from endpoint
         response = client.get(
             f"/v1/employers/claims/{claim.fineos_absence_id}/review",
             headers={"Authorization": f"Bearer {employer_auth_token}"},
         )
 
         assert response.status_code == 200
-        requirements = self._managed_requirements_by_fineos_absence_id(
+        assert len(response.get_json()["data"]["managed_requirements"]) == 2
+        for managed_requirement in response.get_json()["data"]["managed_requirements"]:
+            assert "responded_at" in managed_requirement
+            assert managed_requirement["category"] == ManagedRequirementCategory.get_description(1)
+            assert "classExtensionInformation" not in managed_requirement
+
+        requirements = self._retrieve_managed_requirements_by_fineos_absence_id(
             test_db_session, claim.fineos_absence_id
         )
         assert len(requirements) == len(fineos_managed_requirements)
@@ -767,8 +786,8 @@ class TestGetClaimReview:
                 == db_mr.managed_requirement_category.managed_requirement_category_description
             )
 
-    @mock.patch("massgov.pfml.api.claims.handle_managed_requirements")
-    def test_employer_get_claim_review_failure_managed_requirement_handling(
+    @mock.patch("massgov.pfml.api.claims.get_managed_requirement_by_fineos_managed_requirement_id")
+    def test_employer_get_claim_review_managed_requirement_failure_errors(
         self,
         mock_handle,
         client,
@@ -793,8 +812,7 @@ class TestGetClaimReview:
             f"/v1/employers/claims/{claim.fineos_absence_id}/review",
             headers={"Authorization": f"Bearer {employer_auth_token}"},
         )
-
-        assert response.status_code == 200
+        assert response.status_code == 500
 
     @pytest.fixture
     def absence_id(self):
@@ -1041,7 +1059,7 @@ class TestGetClaimReview:
             f"/v1/employers/claims/{claim.fineos_absence_id}/review",
             headers={"Authorization": f"Bearer {employer_auth_token}"},
         )
-        assert response.status_code == 200
+        assert response.status_code == 500  # err is 500 b/c exception bubbles up
         self._assert_no_absence_period_data_for_claim(test_db_session, claim)
 
     @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_absence_period_decisions")
@@ -1061,7 +1079,7 @@ class TestGetClaimReview:
             headers={"Authorization": f"Bearer {employer_auth_token}"},
         )
 
-        assert response.status_code == 200
+        assert response.status_code == 400
         self._assert_no_absence_period_data_for_claim(test_db_session, claim)
 
     @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_absence_period_decisions")

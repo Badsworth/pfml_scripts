@@ -261,7 +261,7 @@ paths:
                   - $ref: "#/components/schemas/SuccessfulResponse"
                   - properties:
                       data:
-                        $ref: "#/components/schemas/EmployerAddFeinResponse"
+                        $ref: "#/components/schemas/EmployerResponse"
         "400":
           $ref: "#/components/responses/BadRequest"
         "402":
@@ -1644,6 +1644,7 @@ components:
         employer_dba:
           type: string
           example: "The Super Store"
+          nullable: true
         has_fineos_registration:
           type: boolean
         verified:
@@ -1860,6 +1861,7 @@ components:
             $ref: "#/components/schemas/EmployerBenefit"
         employer_dba:
           type: string
+          nullable: true
         employer_id:
           type: string
           format: uuid
@@ -1898,6 +1900,10 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/AbsencePeriodResponse"
+        managed_requirements:
+          type: array
+          items:
+            $ref: "#/components/schemas/ManagedRequirementResponse"
       additionalProperties: false
       required:
         - employer_benefits
@@ -2400,14 +2406,6 @@ components:
           format: date
           example: "1970-06-01"
 
-    EmployerResponse:
-      type: object
-      properties:
-        employer_dba:
-          type: string
-        employer_fein:
-          type: string
-
     ManagedRequirementResponse:
       type: object
       properties:
@@ -2691,7 +2689,7 @@ components:
           type: boolean
           example: true
 
-    EmployerAddFeinResponse:
+    EmployerResponse:
       type: object
       properties:
         employer_id:
@@ -2703,6 +2701,7 @@ components:
           example: "12-3456789"
         employer_dba:
           type: string
+          nullable: true
 
     ClaimDocumentResponse:
       type: object

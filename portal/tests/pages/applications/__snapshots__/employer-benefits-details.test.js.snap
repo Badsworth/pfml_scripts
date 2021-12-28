@@ -33,7 +33,7 @@ exports[`EmployerBenefitsDetails when the user's claim has employer benefits ren
         <div
           class="usa-alert__text"
         >
-          1/1/2021 to 6/1/2021
+          1/1/2022 to 6/1/2022
         </div>
       </div>
     </div>
@@ -822,7 +822,7 @@ exports[`EmployerBenefitsDetails when the user's claim has no employer benefits 
         <div
           class="usa-alert__text"
         >
-          1/1/2021 to 6/1/2021
+          1/1/2022 to 6/1/2022
         </div>
       </div>
     </div>

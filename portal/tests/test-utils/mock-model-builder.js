@@ -43,7 +43,7 @@ export class BaseMockBenefitsApplicationBuilder {
     set(
       this.claimAttrs,
       "leave_details.employer_notification_date",
-      "2021-01-01"
+      "2022-01-01"
     );
     return this;
   }
@@ -82,8 +82,8 @@ export class BaseMockBenefitsApplicationBuilder {
         Object.assign(
           {
             leave_period_id: "mock-leave-period-id",
-            start_date: "2021-01-01",
-            end_date: "2021-06-01",
+            start_date: "2022-01-01",
+            end_date: "2022-06-01",
           },
           leavePeriodAttrs
         )
@@ -100,8 +100,8 @@ export class BaseMockBenefitsApplicationBuilder {
         Object.assign(
           {
             leave_period_id: "mock-leave-period-id",
-            start_date: "2021-02-01",
-            end_date: "2021-07-01",
+            start_date: "2022-02-01",
+            end_date: "2022-07-01",
             duration: 3,
             duration_basis: DurationBasis.hours,
             frequency: 6,
@@ -123,8 +123,8 @@ export class BaseMockBenefitsApplicationBuilder {
         Object.assign(
           {
             leave_period_id: "mock-leave-period-id",
-            start_date: "2021-02-01",
-            end_date: "2021-07-01",
+            start_date: "2022-02-01",
+            end_date: "2022-07-01",
           },
           leavePeriodAttrs
         )
@@ -172,8 +172,8 @@ export class BaseMockBenefitsApplicationBuilder {
             new OtherIncome({
               income_amount_dollars: 125,
               income_amount_frequency: OtherIncomeFrequency.weekly,
-              income_end_date: "2021-01-01",
-              income_start_date: "2021-01-30",
+              income_end_date: "2022-01-01",
+              income_start_date: "2022-01-30",
               income_type: OtherIncomeType.otherEmployer,
             }),
           ]
@@ -187,8 +187,8 @@ export class BaseMockBenefitsApplicationBuilder {
       new OtherIncome({
         income_amount_dollars: 125,
         income_amount_frequency: OtherIncomeFrequency.weekly,
-        income_end_date: "2021-01-01",
-        income_start_date: "2021-01-30",
+        income_end_date: "2022-01-01",
+        income_start_date: "2022-01-30",
         income_type: OtherIncomeType.unemployment,
       }),
     ]);
@@ -204,8 +204,8 @@ export class BaseMockBenefitsApplicationBuilder {
         ? new ConcurrentLeave(attrs)
         : new ConcurrentLeave({
             is_for_current_employer: true,
-            leave_start_date: "2021-01-01",
-            leave_end_date: "2021-03-01",
+            leave_start_date: "2022-01-01",
+            leave_end_date: "2022-03-01",
           })
     );
 
@@ -227,8 +227,8 @@ export class BaseMockBenefitsApplicationBuilder {
             new EmployerBenefit({
               benefit_amount_dollars: 500,
               benefit_amount_frequency: EmployerBenefitFrequency.weekly,
-              benefit_end_date: "2021-02-01",
-              benefit_start_date: "2021-01-01",
+              benefit_end_date: "2022-02-01",
+              benefit_start_date: "2022-01-01",
               benefit_type: EmployerBenefitType.familyOrMedicalLeave,
               employer_benefit_id: 1,
               is_full_salary_continuous: false,
@@ -236,8 +236,8 @@ export class BaseMockBenefitsApplicationBuilder {
             new EmployerBenefit({
               benefit_amount_dollars: 200,
               benefit_amount_frequency: EmployerBenefitFrequency.unknown,
-              benefit_end_date: "2021-02-01",
-              benefit_start_date: "2021-01-01",
+              benefit_end_date: "2022-02-01",
+              benefit_start_date: "2022-01-01",
               benefit_type: EmployerBenefitType.familyOrMedicalLeave,
               employer_benefit_id: 2,
               is_full_salary_continuous: false,
@@ -245,8 +245,8 @@ export class BaseMockBenefitsApplicationBuilder {
             new EmployerBenefit({
               benefit_amount_dollars: 0,
               benefit_amount_frequency: EmployerBenefitFrequency.unknown,
-              benefit_end_date: "2021-02-01",
-              benefit_start_date: "2021-01-01",
+              benefit_end_date: "2022-02-01",
+              benefit_start_date: "2022-01-01",
               benefit_type: EmployerBenefitType.shortTermDisability,
               employer_benefit_id: 3,
               is_full_salary_continuous: true,
@@ -254,8 +254,8 @@ export class BaseMockBenefitsApplicationBuilder {
             new EmployerBenefit({
               benefit_amount_dollars: 0,
               benefit_amount_frequency: EmployerBenefitFrequency.unknown,
-              benefit_end_date: "2021-02-01",
-              benefit_start_date: "2021-01-01",
+              benefit_end_date: "2022-02-01",
+              benefit_start_date: "2022-01-01",
               benefit_type: EmployerBenefitType.permanentDisability,
               employer_benefit_id: 4,
               is_full_salary_continuous: false,
@@ -596,8 +596,8 @@ export class MockBenefitsApplicationBuilder extends BaseMockBenefitsApplicationB
         : [
             new PreviousLeave({
               is_for_current_employer: true,
-              leave_end_date: "2021-05-01",
-              leave_start_date: "2021-07-01",
+              leave_end_date: "2022-05-01",
+              leave_start_date: "2022-07-01",
               leave_minutes: 20 * 60,
               leave_reason: null,
               type: PreviousLeaveType.sameReason,
@@ -628,8 +628,8 @@ export class MockBenefitsApplicationBuilder extends BaseMockBenefitsApplicationB
         : [
             new PreviousLeave({
               is_for_current_employer: true,
-              leave_end_date: "2021-05-01",
-              leave_start_date: "2021-07-01",
+              leave_end_date: "2022-05-01",
+              leave_start_date: "2022-07-01",
               leave_minutes: 20 * 60,
               leave_reason: PreviousLeaveReason.care,
               type: PreviousLeaveType.otherReason,

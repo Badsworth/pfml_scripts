@@ -581,21 +581,21 @@ def test_e2e_pub_payments(
         assert_csv_content(audit_report_parsed_csv_rows, audit_report_expected_rows)
 
         # == Writeback
-        stage_1_generic_flow_writeback_scenarios = []
-        stage_1_generic_flow_writeback_scenarios.extend(stage_1_non_standard_payments)
-        stage_1_generic_flow_writeback_scenarios.extend(state_1_invalid_payment_scenarios)
-        stage_1_generic_flow_writeback_scenarios.extend(
+        stage_1_writeback_scenarios = []
+        stage_1_writeback_scenarios.extend(stage_1_non_standard_payments)
+        stage_1_writeback_scenarios.extend(state_1_invalid_payment_scenarios)
+        stage_1_writeback_scenarios.extend(
             [
                 ScenarioName.REJECTED_LEAVE_REQUEST_DECISION,
                 ScenarioName.UNKNOWN_LEAVE_REQUEST_DECISION,
             ]
         )
-        stage_1_generic_flow_writeback_scenarios.append(
+        stage_1_writeback_scenarios.append(
             ScenarioName.CHECK_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN
         )
 
         assert_writeback_for_stage(
-            test_dataset, [], stage_1_generic_flow_writeback_scenarios, test_db_session,
+            test_dataset, stage_1_writeback_scenarios, test_db_session,
         )
 
         # Validate reference files
@@ -1066,9 +1066,9 @@ def test_e2e_pub_payments(
             {
                 "errored_writeback_record_during_file_creation_count": 0,
                 "errored_writeback_record_during_file_transfer_count": 0,
-                "successful_writeback_record_count": len(stage_1_generic_flow_writeback_scenarios),
-                "writeback_record_count": len(stage_1_generic_flow_writeback_scenarios),
-                "generic_flow_writeback_items_count": len(stage_1_generic_flow_writeback_scenarios),
+                "successful_writeback_record_count": len(stage_1_writeback_scenarios),
+                "writeback_record_count": len(stage_1_writeback_scenarios),
+                "generic_flow_writeback_items_count": len(stage_1_writeback_scenarios),
                 "address_validation_error_writeback_transaction_status_count": len(
                     [ScenarioName.CHECK_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN]
                 ),
@@ -1354,23 +1354,18 @@ def test_e2e_pub_payments(
         )
 
         # == Writeback
-        stage_2_legacy_writeback_scenario_names = []
-
-        stage_2_generic_flow_writeback_scenarios = [
+        stage_2_writeback_scenarios = [
             ScenarioName.AUDIT_REJECTED,
             ScenarioName.AUDIT_SKIPPED,
             ScenarioName.AUDIT_REJECTED_WITH_NOTE,
             ScenarioName.AUDIT_SKIPPED_WITH_NOTE,
             ScenarioName.IN_REVIEW_LEAVE_REQUEST_DECISION,
         ]
-        stage_2_generic_flow_writeback_scenarios.extend(stage_2_ach_scenarios)
-        stage_2_generic_flow_writeback_scenarios.extend(stage_2_check_scenarios)
+        stage_2_writeback_scenarios.extend(stage_2_ach_scenarios)
+        stage_2_writeback_scenarios.extend(stage_2_check_scenarios)
 
         assert_writeback_for_stage(
-            test_dataset,
-            stage_2_legacy_writeback_scenario_names,
-            stage_2_generic_flow_writeback_scenarios,
-            test_db_session,
+            test_dataset, stage_2_writeback_scenarios, test_db_session,
         )
 
         # == Reports
@@ -1397,7 +1392,7 @@ def test_e2e_pub_payments(
             "PaymentRejectsStep",
             {
                 "accepted_payment_count": len(stage_2_ach_scenarios) + len(stage_2_check_scenarios),
-                "parsed_rows_count": len(stage_2_generic_flow_writeback_scenarios),
+                "parsed_rows_count": len(stage_2_writeback_scenarios),
                 "payment_state_log_missing_count": 0,
                 "payment_state_log_not_in_audit_response_pending_count": 0,
                 "rejected_payment_count": len(
@@ -1410,7 +1405,7 @@ def test_e2e_pub_payments(
                         ScenarioName.IN_REVIEW_LEAVE_REQUEST_DECISION,
                     ]
                 ),
-                "state_logs_count": len(stage_2_generic_flow_writeback_scenarios),
+                "state_logs_count": len(stage_2_writeback_scenarios),
             },
         )
 
@@ -1445,11 +1440,9 @@ def test_e2e_pub_payments(
             {
                 "errored_writeback_record_during_file_creation_count": 0,
                 "errored_writeback_record_during_file_transfer_count": 0,
-                "successful_writeback_record_count": len(stage_2_legacy_writeback_scenario_names) 
-                + len(stage_2_generic_flow_writeback_scenarios) + len(split_payment_records),
-                "writeback_record_count": len(stage_2_legacy_writeback_scenario_names)
-                + len(stage_2_generic_flow_writeback_scenarios) + len(split_payment_records),
-                "generic_flow_writeback_items_count": len(stage_2_generic_flow_writeback_scenarios) + len(split_payment_records),
+                "successful_writeback_record_count": len(stage_2_writeback_scenarios),
+                "writeback_record_count": len(stage_2_writeback_scenarios),
+                "generic_flow_writeback_items_count": len(stage_2_writeback_scenarios),
                 "payment_audit_error_writeback_transaction_status_count": len(
                     [ScenarioName.AUDIT_REJECTED,]
                 ),
@@ -1742,7 +1735,7 @@ def test_e2e_pub_payments(
         )
 
         assert_writeback_for_stage(
-            test_dataset, [], stage_3_all_writeback_scenarios, test_db_session,
+            test_dataset, stage_3_all_writeback_scenarios, test_db_session,
         )
 
         # == Reports
@@ -1998,15 +1991,10 @@ def test_e2e_pub_payments(
         )
 
         # Writeback
-        stage_4_legacy_writeback_scenario_names = []
-
-        stage_4_generic_flow_writeback_scenarios = [ScenarioName.PUB_ACH_PRENOTE_RETURN]
+        stage_4_writeback_scenarios = [ScenarioName.PUB_ACH_PRENOTE_RETURN]
 
         assert_writeback_for_stage(
-            test_dataset,
-            stage_4_legacy_writeback_scenario_names,
-            stage_4_generic_flow_writeback_scenarios,
-            test_db_session,
+            test_dataset, stage_4_writeback_scenarios, test_db_session,
         )
 
         # Metrics
@@ -2088,6 +2076,15 @@ def test_e2e_pub_payments_delayed_scenarios(
             db_session=local_test_db_session,
         )
 
+        stage_1_writeback_scenarios = [
+            ScenarioName.CHECK_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN_FIXED,
+            ScenarioName.INVALID_ADDRESS_FIXED,
+        ]
+
+        assert_writeback_for_stage(
+            test_dataset, stage_1_writeback_scenarios, local_test_db_session,
+        )
+
     # ===============================================================================
     # [Day 2 - Before 5:00 PM] Payment Integrity Team returns Payment Rejects File
     # ===============================================================================
@@ -2127,16 +2124,15 @@ def test_e2e_pub_payments_delayed_scenarios(
         )
 
         # == Validate FINEOS status writeback states
-        assert_payment_state_for_scenarios(
-            test_dataset=test_dataset,
-            scenario_names=[
-                ScenarioName.AUDIT_REJECTED_THEN_ACCEPTED,
-                ScenarioName.AUDIT_SKIPPED_THEN_ACCEPTED,
-                ScenarioName.CHECK_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN_FIXED,
-            ],
-            end_state=State.DELEGATED_FINEOS_WRITEBACK_SENT,
-            flow=Flow.DELEGATED_PEI_WRITEBACK,
-            db_session=local_test_db_session,
+        stage_2_writeback_scenarios = [
+            ScenarioName.HAPPY_PATH_TWO_PAYMENTS_UNDER_WEEKLY_CAP,
+            ScenarioName.HAPPY_PATH_TWO_ADHOC_PAYMENTS_OVER_CAP,
+            ScenarioName.AUDIT_REJECTED_THEN_ACCEPTED,
+            ScenarioName.AUDIT_SKIPPED_THEN_ACCEPTED,
+        ]
+
+        assert_writeback_for_stage(
+            test_dataset, stage_2_writeback_scenarios, local_test_db_session,
         )
 
     # ===============================================================================
@@ -2175,6 +2171,14 @@ def test_e2e_pub_payments_delayed_scenarios(
             end_state=State.PAYMENT_FAILED_MAX_WEEKLY_BENEFIT_AMOUNT_VALIDATION,
             db_session=local_test_db_session,
             check_additional_payment=True,
+        )
+
+        stage_3_writeback_scenarios = [
+            ScenarioName.SECOND_PAYMENT_FOR_PERIOD_OVER_CAP,
+        ]
+
+        assert_writeback_for_stage(
+            test_dataset, stage_3_writeback_scenarios, local_test_db_session,
         )
 
     # ===============================================================================
@@ -2218,6 +2222,17 @@ def test_e2e_pub_payments_delayed_scenarios(
             end_state=State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT,
             db_session=local_test_db_session,
             check_additional_payment=True,
+        )
+
+        stage_4_writeback_scenarios = [
+            ScenarioName.AUDIT_REJECTED_THEN_ACCEPTED,
+            ScenarioName.AUDIT_SKIPPED_THEN_ACCEPTED,
+            ScenarioName.HAPPY_PATH_TWO_PAYMENTS_UNDER_WEEKLY_CAP,
+            ScenarioName.HAPPY_PATH_TWO_ADHOC_PAYMENTS_OVER_CAP,
+        ]
+
+        assert_writeback_for_stage(
+            test_dataset, stage_4_writeback_scenarios, local_test_db_session,
         )
 
     # ===============================================================================
@@ -2609,8 +2624,10 @@ def assert_payment_state_for_scenarios(
             assert payment is not None
 
             state_log = state_log_util.get_latest_state_log_in_flow(payment, flow, db_session)
-            # print("state_log %s", state_log)
-            assert state_log is not None
+
+            assert (
+                state_log is not None
+            ), f"No payment state log found for scenario: {scenario_name}"
             assert (
                 state_log.end_state_id == end_state.state_id
             ), f"Unexpected payment state for scenario: {scenario_name}, expected: {end_state.state_description}, found: {state_log.end_state.state_description}, validation: {state_log.outcome}"
@@ -2772,10 +2789,7 @@ def assert_metrics(
 
 
 def assert_writeback_for_stage(
-    test_dataset: TestDataSet,
-    legacy_writeback_scenario_names: List[ScenarioName],
-    generic_writeback_scenario_names: List[ScenarioName],
-    db_session: db.Session,
+    test_dataset: TestDataSet, writeback_scenario_names: List[ScenarioName], db_session: db.Session,
 ):
 
     # Validate file creation
@@ -2794,17 +2808,13 @@ def assert_writeback_for_stage(
     # Validate FINEOS status writeback states
     assert_payment_state_for_scenarios(
         test_dataset=test_dataset,
-        scenario_names=generic_writeback_scenario_names,
+        scenario_names=writeback_scenario_names,
         end_state=State.DELEGATED_FINEOS_WRITEBACK_SENT,
         flow=Flow.DELEGATED_PEI_WRITEBACK,
         db_session=db_session,
     )
 
     # Validate counts
-    writeback_scenario_names = []
-    writeback_scenario_names.extend(legacy_writeback_scenario_names)
-    writeback_scenario_names.extend(generic_writeback_scenario_names)
-
     writeback_scenario_payments = []
     for writeback_scenario_name in writeback_scenario_names:
         scenario_payments = test_dataset.get_scenario_payments_by_scenario_name(
@@ -2815,7 +2825,7 @@ def assert_writeback_for_stage(
     assert len(writeback_scenario_names) == len(writeback_scenario_payments)
 
     generic_flow_scenario_payments = []
-    for writeback_scenario_name in generic_writeback_scenario_names:
+    for writeback_scenario_name in writeback_scenario_names:
         scenario_payments = test_dataset.get_scenario_payments_by_scenario_name(
             writeback_scenario_name
         )
@@ -2833,7 +2843,7 @@ def assert_writeback_for_stage(
         .all()
     )
 
-    assert len(writeback_details) == len(generic_writeback_scenario_names)
+    assert len(writeback_details) == len(writeback_scenario_names)
 
     # Validate csv content
     expected_csv_rows = []

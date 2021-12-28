@@ -166,6 +166,50 @@ describe("Review", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("Updates Alert text if claim has been reviewed previously", () => {
+    process.env.featureFlags = {
+      employerShowMultiLeave: true,
+    };
+
+    setup({
+      ...claimWithV2Eform,
+      managed_requirements: [
+        {
+          type: "",
+          created_at: "",
+          follow_up_date: "",
+          category: "",
+          responded_at: "2021-11-01",
+          status: "Complete",
+        },
+        {
+          type: "",
+          created_at: "",
+          follow_up_date: "",
+          category: "",
+          responded_at: "2021-10-01",
+          status: "Complete",
+        },
+        {
+          type: null,
+          created_at: null,
+          follow_up_date: null,
+          category: null,
+          responded_at: null,
+          status: null,
+        },
+      ],
+    });
+
+    // Text gets formatted before displaying thus why the date looks slightly different here
+    // & should display the most recent date
+    expect(
+      screen.queryByText(
+        "This application has changed since it was reviewed on 11/1/2021."
+      )
+    ).toBeInTheDocument();
+  });
+
   it("submits a claim with the correct options", async () => {
     setup();
     userEvent.click(screen.getByRole("button", { name: "Submit" }));
@@ -563,8 +607,8 @@ describe("Review", () => {
         expect.objectContaining({
           concurrent_leave: new ConcurrentLeave({
             is_for_current_employer: true,
-            leave_start_date: "2021-01-01",
-            leave_end_date: "2021-03-01",
+            leave_start_date: "2022-01-01",
+            leave_end_date: "2022-03-01",
           }),
         })
       );

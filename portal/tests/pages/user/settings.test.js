@@ -19,13 +19,21 @@ const renderWithUser = (
     consented_to_data_sharing: true,
   })
 ) => {
-  return renderPage(Settings, {
-    addCustomSetup: (appLogic) => {
-      appLogic.users.user = user;
-      appLogic.users.updateUser = updateUser;
-      appLogic.auth.setMFAPreference = setMFAPreference;
+  const props = {
+    user,
+    query: {},
+  };
+  return renderPage(
+    Settings,
+    {
+      addCustomSetup: (appLogic) => {
+        appLogic.users.user = user;
+        appLogic.users.updateUser = updateUser;
+        appLogic.auth.setMFAPreference = setMFAPreference;
+      },
     },
-  });
+    props
+  );
 };
 
 describe(Settings, () => {
@@ -126,6 +134,11 @@ describe(Settings, () => {
         ).not.toBeInTheDocument();
       });
     });
+  });
+
+  it("displays success alert when user sets up SMS MFA", () => {
+    renderPage(Settings, {}, { query: { smsMfaConfirmed: "true" } });
+    expect(screen.getByRole("region")).toMatchSnapshot();
   });
 
   it("renders 404 when claimantShowMFA feature flag is disabled", () => {

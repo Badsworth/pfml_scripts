@@ -198,7 +198,7 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
           >
             Leave duration
           </h3>
-          1/1/2021 to 7/1/2021
+          1/1/2022 to 7/1/2022
         </div>
       </div>
       <div
@@ -236,7 +236,7 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
               data-label="Date range"
               scope="row"
             >
-              1/1/2021 to 6/1/2021
+              1/1/2022 to 6/1/2022
             </th>
             <td
               data-label="Leave frequency"
@@ -249,7 +249,7 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
               data-label="Date range"
               scope="row"
             >
-              2/1/2021 to 7/1/2021
+              2/1/2022 to 7/1/2022
             </th>
             <td
               data-label="Leave frequency"
@@ -364,7 +364,7 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
         Previous leave
       </h3>
       <p>
-        Your employee has listed leave they have taken for a qualified reason. Only leave since January 1, 2021 is included. This includes both paid leave, such as paid vacation or sick days, and unpaid leave, such as FMLA leave. When possible, verify that a previous leave was for a reason that qualifies for paid leave under PFML.
+        Your employee has listed leave they have taken for qualified reasons. Only leave since January 1, 2021 is included. This includes both paid leave (for example: paid vacation or sick days) and unpaid leave (for example: FMLA leave). When possible, verify that this previous leave was for reasons that qualify for paid leave under PFML.
       </p>
       <details
         class="c-details"
@@ -469,7 +469,7 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
         Your employee has told us about the following accrued paid leave they plan to use concurrent with their paid leave from PFML. This includes paid vacation time, sick time, personal time, and other paid time off. It does not include a family or medical leave policy or a disability program.
       </p>
       <p>
-        Your employee won’t receive PFML payments for the first 7 calendar days of their PFML leave from 1/1/2021 to 1/7/2021. During those 7 days they may use accrued paid leave, and you and your employee 
+        Your employee won’t receive PFML payments for the first 7 calendar days of their PFML leave from 1/1/2022 to 1/7/2022. During those 7 days they may use accrued paid leave, and you and your employee 
         <strong>
           shouldn’t
         </strong>
@@ -557,7 +557,7 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
               data-label="Date range"
               scope="row"
             >
-              1/1/2021 to 2/1/2021
+              1/1/2022 to 2/1/2022
             </th>
             <td
               data-label="Benefit type"
@@ -595,7 +595,7 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
               data-label="Date range"
               scope="row"
             >
-              1/1/2021 to 2/1/2021
+              1/1/2022 to 2/1/2022
             </th>
             <td
               data-label="Benefit type"
@@ -633,7 +633,7 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
               data-label="Date range"
               scope="row"
             >
-              1/1/2021 to 2/1/2021
+              1/1/2022 to 2/1/2022
             </th>
             <td
               data-label="Benefit type"
@@ -671,7 +671,7 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
               data-label="Date range"
               scope="row"
             >
-              1/1/2021 to 2/1/2021
+              1/1/2022 to 2/1/2022
             </th>
             <td
               data-label="Benefit type"

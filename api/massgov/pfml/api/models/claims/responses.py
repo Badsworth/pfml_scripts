@@ -11,6 +11,7 @@ from massgov.pfml.api.models.claims.common import (
     PreviousLeave,
 )
 from massgov.pfml.api.models.common import ConcurrentLeave
+from massgov.pfml.api.models.employers.responses import EmployerResponse
 from massgov.pfml.db.models.employees import (
     AbsencePeriod,
     AbsencePeriodType,
@@ -23,12 +24,6 @@ from massgov.pfml.util.pydantic.types import (
     MaskedDateStr,
     MaskedTaxIdFormattedStr,
 )
-
-
-class EmployerResponse(PydanticBaseModel):
-    employer_dba: str
-    employer_fein: FEINFormattedStr
-    employer_id: UUID4
 
 
 class EmployeeResponse(PydanticBaseModel):
@@ -195,7 +190,7 @@ class DetailedClaimResponse(PydanticBaseModel):
 class ClaimReviewResponse(PydanticBaseModel):
     date_of_birth: Optional[MaskedDateStr]
     employer_benefits: List[EmployerBenefit]
-    employer_dba: str
+    employer_dba: Optional[str]
     employer_fein: FEINFormattedStr
     employer_id: UUID4
     fineos_absence_id: str
@@ -213,6 +208,7 @@ class ClaimReviewResponse(PydanticBaseModel):
     status: str
     uses_second_eform_version: bool
     absence_periods: List[AbsencePeriodResponse] = []
+    managed_requirements: List[ManagedRequirementResponse] = []
 
 
 class DocumentResponse(PydanticBaseModel):

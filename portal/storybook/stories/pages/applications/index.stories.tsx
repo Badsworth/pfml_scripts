@@ -5,15 +5,33 @@ import React from "react";
 import User from "src/models/User";
 import useMockableAppLogic from "lib/mock-helpers/useMockableAppLogic";
 
+const queries = {
+  Default: {},
+  SmsMfaConfirmed: { smsMfaConfirmed: "true" },
+  UploadedAbsenceId: { uploadedAbsenceId: "NTN-111-ABS-01" },
+};
+
 export default {
   title: "Pages/Applications/Index",
   component: Index,
+  argTypes: {
+    query: {
+      control: {
+        type: "radio",
+        options: Object.keys(queries),
+      },
+    },
+  },
   args: {
     total_pages: 2,
+    query: "Default",
   },
 };
 
-export const Default = (args: { total_pages: number }) => {
+export const Default = (args: {
+  total_pages: number;
+  query: keyof typeof queries;
+}) => {
   const claims = () => {
     const inProgressClaims = [];
     const completedClaims = [];
@@ -49,5 +67,7 @@ export const Default = (args: { total_pages: number }) => {
     },
   });
 
-  return <Index appLogic={appLogic} user={user} query={{}} />;
+  const query = queries[args.query];
+
+  return <Index appLogic={appLogic} user={user} query={query} />;
 };

@@ -15,7 +15,7 @@ import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
 
 interface IndexProps extends WithUserProps {
-  query: { uploadedAbsenceId?: string };
+  query: { uploadedAbsenceId?: string; smsMfaConfirmed?: string };
 }
 
 /**
@@ -43,6 +43,15 @@ export const Index = (props: IndexProps) => {
           {t("pages.applications.uploadSuccessMessage", {
             absence_id: query.uploadedAbsenceId,
           })}
+        </Alert>
+      )}
+      {query?.smsMfaConfirmed && (
+        <Alert
+          className="margin-bottom-3"
+          heading={t("pages.applications.phoneNumberConfirmedHeading")}
+          state="success"
+        >
+          {t("pages.applications.phoneNumberConfirmedMessage")}
         </Alert>
       )}
 

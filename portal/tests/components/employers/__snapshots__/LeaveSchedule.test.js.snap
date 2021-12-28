@@ -6,7 +6,7 @@ exports[`LeaveSchedule renders reduced schedule 1`] = `
     data-label="Date range"
     scope="row"
   >
-    2/1/2021 to 7/1/2021
+    2/1/2022 to 7/1/2022
   </th>
   <td
     data-label="Leave frequency"

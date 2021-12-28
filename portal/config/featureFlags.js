@@ -53,12 +53,36 @@ const flagsConfig = {
   // Environments can optionally override a default feature flag below.
   // The environment keys should use the same envName defined in
   // environment config files.
+  "cps-preview": {
+    claimantShowTaxWithholding: true,
+  },
   development: {
     example: true,
     pfmlTerriyay: true,
+    claimantShowTaxWithholding: true,
+  },
+  test: {
+    claimantShowTaxWithholding: true,
+  },
+  stage: {
+    claimantShowTaxWithholding: true,
+  },
+  training: {
+    claimantShowTaxWithholding: true,
+  },
+  performance: {
+    claimantShowTaxWithholding: true,
+  },
+  uat: {
+    claimantShowTaxWithholding: true,
+  },
+  local: {
+    pfmlTerriyay: true,
+    claimantShowTaxWithholding: true,
   },
   prod: {
     pfmlTerriyay: true,
+    claimantShowTaxWithholding: true,
   },
 };
 

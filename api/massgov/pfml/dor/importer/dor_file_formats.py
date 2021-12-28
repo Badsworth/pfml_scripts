@@ -27,6 +27,13 @@ def parse_dollar_amount(dollar_amount_str: str) -> Decimal:
     return Decimal(dollar_amount_str)
 
 
+def parse_optional_dollar_amount(dollar_amount_str: str) -> Decimal:
+    if len(dollar_amount_str) == 0:
+        return Decimal(0)
+
+    return Decimal(dollar_amount_str)
+
+
 EMPLOYER_FILE_FORMAT = FileFormat(
     (
         FieldFormat("account_key", 11),
@@ -84,6 +91,32 @@ EMPLOYEE_FORMAT = FileFormat(
 )
 
 EMPLOYEE_FILE_ROW_LENGTH = 1 + 11 + 8 + 255 + 255 + 9 + 1 + 1 + 20 + 20 + 20 + 20 + 20 + 20
+
+EMPLOYER_PENDING_FILING_RESPONSE_FILE_FORMAT_A = FileFormat(
+    (
+        FieldFormat("fstrRecordType", 1),
+        FieldFormat("fstrEmployerIDType", 10),
+        FieldFormat("fstrEmployerID", 14),
+        FieldFormat("fdtmQuarterYear", 8),
+        FieldFormat("fstrEmployerName", 255),
+        FieldFormat("fcurEmployeeWages", 20, parse_optional_dollar_amount),
+    )
+)
+
+EMPLOYER_PENDING_FILING_RESPONSE_FILE_A_ROW_LENGTH = 1 + 10 + 14 + 8 + 255 + 20
+
+EMPLOYER_PENDING_FILING_RESPONSE_FILE_FORMAT_B = FileFormat(
+    (
+        FieldFormat("fstrRecordType", 1),
+        FieldFormat("fstrIDType", 10),
+        FieldFormat("fstrID", 9),
+        FieldFormat("fstrFirstName", 255),
+        FieldFormat("fstrLastName", 255),
+        FieldFormat("fcurQuarterWages", 20, parse_optional_dollar_amount),
+    )
+)
+
+EMPLOYER_PENDING_FILING_RESPONSE_FILE_B_ROW_LENGTH = 1 + 10 + 9 + 255 + 255 + 20
 
 # alias types
 WageKey = Tuple[uuid.UUID, uuid.UUID, date]

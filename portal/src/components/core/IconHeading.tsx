@@ -27,7 +27,7 @@ const IconHeading = ({ children, name }: IconHeadingProps) => {
       size="3"
     >
       <Icon
-        className={classnames("margin-right-2px", "flex-auto", color)}
+        className={classnames("margin-right-1", "flex-auto", color)}
         name={name}
         fill="currentColor"
         size={3}

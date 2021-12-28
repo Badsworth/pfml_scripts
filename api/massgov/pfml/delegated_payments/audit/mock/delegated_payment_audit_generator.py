@@ -435,6 +435,8 @@ def generate_scenario_data(
         previously_errored_payment_count=previous_error_count,
         previously_rejected_payment_count=previously_rejected_payment_count,
         previously_skipped_payment_count=previously_skipped_payment_count,
+        previously_paid_payment_count=0,
+        previously_paid_payments_string=None,
         gross_payment_amount="",
         federal_withholding_amount="",
         state_withholding_amount="",

@@ -49,6 +49,7 @@ function setFeatureFlags(flags?: Partial<FeatureFlags>): void {
     employerShowReviewByStatus: true,
     claimantShowStatusPage: true,
     claimantShowTaxWithholding: false,
+    claimantShowPayments: config("HAS_PAYMENT_STATUS") === "true",
   };
   cy.setCookie("_ff", JSON.stringify({ ...defaults, ...flags }), { log: true });
 }
@@ -209,10 +210,7 @@ export function downloadLegalNotice(claim_id: string): void {
  *
  * Also does basic assertion on contents of legal notice doc
  */
-export function downloadLegalNoticeSubcase(
-  claim_id: string,
-  sub_case: string
-): void {
+export function downloadLegalNoticeSubcase(sub_case: string): void {
   const downloadsFolder = Cypress.config("downloadsFolder");
   cy.wait("@documentDownload", { timeout: 30000 });
   cy.task("getNoticeFileName", downloadsFolder).then((filename) => {
@@ -234,7 +232,7 @@ export function downloadLegalNoticeSubcase(
         expect(
           application_id_from_notice,
           `The claim_id within the legal notice should be: ${application_id_from_notice}`
-        ).to.equal(claim_id + sub_case);
+        ).to.equal(sub_case);
       }
     );
   });
@@ -1972,8 +1970,11 @@ export function sortClaims(
   });
 }
 
-export function claimantGoToClaimStatus(fineosAbsenceId: string): void {
-  cy.wait("@getApplications").wait(300);
+export function claimantGoToClaimStatus(
+  fineosAbsenceId: string,
+  waitForApps = true
+): void {
+  waitForApps && cy.wait("@getApplications").wait(300);
   cy.contains("article", fineosAbsenceId).within(() => {
     cy.contains("View status updates and details", { timeout: 20000 }).click({
       timeout: 20000,
@@ -2066,4 +2067,46 @@ export function addWithholdingPreference(withholding: boolean) {
     .contains(withholding ? "Yes" : "No")
     .click();
   cy.get("button").contains("Submit tax withholding preference").click();
+}
+
+export function viewPaymentStatus() {
+  cy.contains("a", "Payments").click();
+  cy.contains("Your payments");
+}
+
+type PaymentStatus = {
+  leaveDates?: string;
+  paymentMethod?: "Check" | "Direct Deposit";
+  estimatedScheduledDate?: string;
+  dateSent?: string;
+  amount?: string;
+};
+
+export function assertPayments(spec: PaymentStatus[]) {
+  const mapColumnsToAssertionProperties: Record<keyof PaymentStatus, string> = {
+    leaveDates: "Leave dates",
+    paymentMethod: "Payment Method",
+    amount: "Amount sent",
+    estimatedScheduledDate: "Estimated date",
+    dateSent: "Date processed",
+  };
+
+  cy.get("section[data-testid='your-payments']").within(() => {
+    cy.get("tbody")
+      .children()
+      .then((children) => {
+        const rows = children.toArray();
+        spec.forEach((status, idx) => {
+          cy.wrap(rows[idx]).within(() => {
+            let key: keyof PaymentStatus;
+            for (key in status) {
+              const content = status[key];
+              const selector = `td[data-label='${mapColumnsToAssertionProperties[key]}']`;
+              if (!content) throw Error("No payment information to assert for");
+              cy.contains(selector, content);
+            }
+          });
+        });
+      });
+  });
 }

@@ -1,6 +1,9 @@
-/* 
-  Note: Parts of the test are commented out due to functionality not being ready
-  for testing.  Once feature is ready for testing we'll remove comments
+/*
+  @Note: Parts of the test are commented out due to functionality not being ready
+  for testing.  Once feature is ready for testing we'll remove comments.
+
+  We can uncomment uploads when NAVA API team has completed implementation
+  for the new API upload using multipart: https://lwd.atlassian.net/browse/PORTAL-1390
 
   This file also contains other util functions/variables specifically for integration tests
 */
@@ -75,12 +78,12 @@ export const badFileTypes = [
     "File validation error.",
     400,
   ],
-  [
-    "Should receive error when trying to submit an incorrect file type (.bmp)",
-    "./cypress/fixtures/docTesting/small-1MB.bmp",
-    "File validation error.",
-    400,
-  ],
+  // [
+  //   "Should receive error when trying to submit an incorrect file type (.bmp)",
+  //   "./cypress/fixtures/docTesting/small-1MB.bmp",
+  //   "File validation error.",
+  //   400,
+  // ],
   [
     "Should receive error when trying to submit an incorrect file type (.svg)",
     "./cypress/fixtures/docTesting/small-387KB.svg",

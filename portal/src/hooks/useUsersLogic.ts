@@ -3,6 +3,7 @@ import { setMFAPreference, updateMFAPhoneNumber } from "src/services/mfa";
 import { useMemo, useState } from "react";
 import { AppErrorsLogic } from "./useAppErrorsLogic";
 import BenefitsApplication from "../models/BenefitsApplication";
+import { NullableQueryParams } from "../utils/routeWithParams";
 import { PortalFlow } from "./usePortalFlow";
 import User from "../models/User";
 import UsersApi from "../api/UsersApi";
@@ -26,12 +27,16 @@ const useUsersLogic = ({
    * Update user through a PATCH request to /users
    * @param user_id - ID of user being updated
    * @param patchData - User fields to update
-   * @param [claim] - Update user in the context of a claim to determine the next page route.
+   * @param [claim] - Update user in the context of a claim to determine the next page route
+   * @param [additionalParams] - Query string arguments to use when we route to the next page
+   * @param [nextPageEvent] - A next page flow event to pass to portalFlow. Only necessary if you don't want to use the default one
    */
   const updateUser = async (
     user_id: User["user_id"],
     patchData: Partial<User>,
-    claim?: BenefitsApplication
+    claim?: BenefitsApplication,
+    additionalParams?: NullableQueryParams,
+    nextPageEvent: undefined | string = undefined
   ) => {
     appErrorsLogic.clearErrors();
 
@@ -60,8 +65,16 @@ const useUsersLogic = ({
       setUser(user);
 
       const context = claim ? { claim, user } : { user };
-      const params = claim ? { claim_id: claim.application_id } : {};
-      portalFlow.goToNextPage(context, params);
+
+      const params = {
+        ...additionalParams,
+      };
+      if (claim) params.claim_id = claim.application_id;
+      // Used to display a special alert when a user enables SMS MFA
+      if (patchData.mfa_delivery_preference === "SMS") {
+        params.smsMfaConfirmed = "true";
+      }
+      portalFlow.goToNextPage(context, params, nextPageEvent);
     } catch (error) {
       appErrorsLogic.catchError(error);
     }

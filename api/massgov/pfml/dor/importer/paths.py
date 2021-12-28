@@ -23,6 +23,21 @@ class ImportBatch:
     employee_file: str
 
 
+def get_pending_filing_files_to_process(path: str) -> List[str]:
+    import_files: List[str] = []
+
+    files_for_import = massgov.pfml.util.files.list_files(str(path))
+    files_for_import.sort()
+
+    for filename in files_for_import:
+        match = re.match(r"(DORDUADFML.*_)(\d+)", filename)
+
+        if match is not None:
+            import_files.append("{}{}".format(path, filename))
+
+    return import_files
+
+
 def get_files_to_process(path: str) -> List[ImportBatch]:
     employer_files, employee_files = get_files_for_import(path)
     import_batches: List[ImportBatch] = []

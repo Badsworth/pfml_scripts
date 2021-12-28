@@ -27,6 +27,7 @@ export const PreviousLeavesOtherReason = (
   });
 
   const leaveStartDate = formatDate(claim.leaveStartDate).full();
+  const otherLeaveStartDate = formatDate(claim.otherLeaveStartDate).full();
 
   const hintList = t<string, string[]>(
     "pages.claimsPreviousLeavesOtherReason.hintList",
@@ -73,13 +74,14 @@ export const PreviousLeavesOtherReason = (
         ]}
         label={t("pages.claimsPreviousLeavesOtherReason.sectionLabel", {
           leaveStartDate,
+          otherLeaveStartDate,
         })}
         hint={
           <React.Fragment>
             <IconHeading name="check_circle">
               {t("pages.claimsPreviousLeavesOtherReason.hintDoHeader")}
             </IconHeading>
-            <ul className="usa-list margin-left-2">
+            <ul className="usa-list margin-left-4">
               {hintList.map((listItem, index) => (
                 <li key={index}>{listItem}</li>
               ))}
@@ -87,7 +89,7 @@ export const PreviousLeavesOtherReason = (
             <IconHeading name="cancel">
               {t("pages.claimsPreviousLeavesOtherReason.hintDontHeader")}
             </IconHeading>
-            <ul className="usa-list margin-left-2">
+            <ul className="usa-list margin-left-4">
               <li>
                 {t(
                   "pages.claimsPreviousLeavesOtherReason.leaveTakenThroughPFML"
