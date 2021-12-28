@@ -1334,7 +1334,7 @@ data "aws_iam_policy_document" "cps_errors_crawler_role_policy_document" {
     ]
 
     condition {
-      test     = "StringEquals"
+      test     = "StringLike"
       variable = "s3:prefix"
       values = [
         "cps-errors/received/",
