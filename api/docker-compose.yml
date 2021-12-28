@@ -129,6 +129,7 @@ services:
       - UPLOAD_MAX_FILES_TO_FINEOS=10
       - TEST_FILE_GENERATION_1099=0
       - MOVEIT_SFTP_URI=sftp://foo@mass-pfml-sftp:22
+      - SFTP_URI=sftp://foo@mass-pfml-sftp:22
 
     networks:
       main:

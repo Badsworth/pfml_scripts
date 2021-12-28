@@ -318,6 +318,15 @@ locals {
       ]
     },
 
+    "sftp-tool" = {
+      command        = ["sftp-tool"]
+      task_role      = aws_iam_role.sftp_tool_role.arn
+      execution_role = aws_iam_role.sftp_tool_execution_role.arn
+      env = [
+        local.base_sftp_access
+      ]
+    }
+
     "cps-errors-crawler" = {
       command             = ["cps-errors-crawler"]
       containers_template = "default_template.json"

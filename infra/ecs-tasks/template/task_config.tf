@@ -65,6 +65,14 @@ locals {
     { name : "MOVEIT_SSH_KEY_PASSWORD", valueFrom : "/service/${local.app_name}-comptroller/${var.environment_name}/eolwd-moveit-ssh-key-password" }
   ]
 
+  # Generic baseline SFTP server - defaults to EOLWD settings for now
+  base_sftp_access = [
+    { name : "SFTP_URI", value : var.eolwd_moveit_sftp_uri },
+    { name : "SFTP_SSH_KEY", valueFrom : "/service/${local.app_name}-comptroller/${var.environment_name}/eolwd-moveit-ssh-key" },
+    { name : "SFTP_SSH_KEY_PASSWORD", valueFrom : "/service/${local.app_name}-comptroller/${var.environment_name}/eolwd-moveit-ssh-key-password" }
+  ]
+
+
   # S3 path configurations for PUB
   pub_s3_folders = [
     { name : "PFML_FINEOS_WRITEBACK_ARCHIVE_PATH", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/cps/pei-writeback" },
