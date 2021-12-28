@@ -18,7 +18,15 @@ from massgov.pfml.db.models.employees import (
 )
 from massgov.pfml.db.models.factories import EmployerFactory
 from massgov.pfml.dor.importer.import_dor import PROCESSED_FOLDER, RECEIVED_FOLDER, ImportReport
-from massgov.pfml.dor.importer.paths import get_pending_filing_files_to_process
+from massgov.pfml.dor.importer.paths import (
+    get_exemption_file_to_process,
+    get_pending_filing_files_to_process,
+)
+from massgov.pfml.dor.pending_filing.pending_filing_response import (
+    DFML_PROCESSED_FOLDER,
+    DFML_RECEIVED_FOLDER,
+)
+from massgov.pfml.util.csv import CSVSourceWrapper
 from massgov.pfml.util.encryption import GpgCrypt, Utf8Crypt
 
 decrypter = Utf8Crypt()
@@ -39,12 +47,14 @@ def test_decryption(monkeypatch, test_db_session):
     decrypter = GpgCrypt(decryption_key, passphrase, test_email)
 
     employer_file_path = TEST_FOLDER / "importer" / "encryption" / "DORDUADFMLEMP_20211210131901"
+    exemption_file_path = TEST_FOLDER / "importer" / "CompaniesReturningToStatePlan.csv"
 
     import_files = list()
     import_files.append(str(employer_file_path))
 
     reports = import_dor.process_pending_filing_employer_files(
         import_files=import_files,
+        exemption_file_path=str(exemption_file_path),
         decrypt_files=True,
         optional_decrypter=decrypter,
         optional_db_session=test_db_session,
@@ -60,6 +70,7 @@ def test_decryption(monkeypatch, test_db_session):
 
 def test_account_key_set_single_file(monkeypatch, test_db_session):
     employer_file_path = TEST_FOLDER / "importer" / "encryption" / "DORDUADFMLEMP_20211210131901"
+    exemption_file_path = TEST_FOLDER / "importer" / "CompaniesReturningToStatePlan.csv"
 
     monkeypatch.setenv("DECRYPT", "true")
 
@@ -70,8 +81,10 @@ def test_account_key_set_single_file(monkeypatch, test_db_session):
     decrypter = GpgCrypt(decryption_key, passphrase, test_email)
 
     report = ImportReport()
+    exemption_data = CSVSourceWrapper(str(exemption_file_path))
+
     employers, employees = import_dor.parse_pending_filing_employer_file(
-        str(employer_file_path), decrypter, report
+        str(employer_file_path), exemption_data, decrypter, report
     )
 
     assert employees[0]["account_key"] == employers[0]["account_key"]
@@ -83,12 +96,14 @@ def test_employer_multiple_wage_rows(initialize_factories_session, monkeypatch, 
     monkeypatch.setenv("DECRYPT", "false")
 
     employer_file_path = TEST_FOLDER / "importer" / "DORDUADFML_SUBMISSION_20212216"
+    exemption_file_path = TEST_FOLDER / "importer" / "CompaniesReturningToStatePlan.csv"
 
     import_files = list()
     import_files.append(str(employer_file_path))
 
     import_dor.process_pending_filing_employer_files(
         import_files=import_files,
+        exemption_file_path=str(exemption_file_path),
         decrypt_files=True,
         optional_decrypter=decrypter,
         optional_db_session=test_db_session,
@@ -121,6 +136,12 @@ def test_employer_multiple_wage_rows(initialize_factories_session, monkeypatch, 
         test_db_session.query(Employer).filter(Employer.employer_fein == "123456999").first()
     )
 
+    assert employer2.family_exemption is True
+    assert employer2.medical_exemption is True
+
+    assert employer3.family_exemption is False
+    assert employer3.medical_exemption is False
+
     wage_rows = (
         test_db_session.query(EmployerQuarterlyContribution)
         .filter(EmployerQuarterlyContribution.employer_id == employer.employer_id)
@@ -141,6 +162,18 @@ def test_employer_multiple_wage_rows(initialize_factories_session, monkeypatch, 
     assert len(wage_rows2) == 2
     assert len(wage_rows3) == 4
 
+    queue_item = (
+        test_db_session.query(EmployerPushToFineosQueue)
+        .filter(
+            EmployerPushToFineosQueue.employer_id == employer2.employer_id
+            and EmployerPushToFineosQueue.action == "INSERT"
+        )
+        .first()
+    )
+
+    cease_date = datetime.strptime("1/30/2022", "%m/%d/%Y").date()
+    assert queue_item.exemption_cease_date == cease_date
+
 
 def test_update_existing_employer_cease_date(
     initialize_factories_session, monkeypatch, test_db_session
@@ -154,16 +187,17 @@ def test_update_existing_employer_cease_date(
     decrypter = GpgCrypt(decryption_key, passphrase, test_email)
 
     cease_date = datetime.strptime("1/1/2025", "%m/%d/%Y").date()
-
     employer = EmployerFactory.create(employer_fein="100000001", exemption_cease_date=cease_date)
 
     employer_file_path = TEST_FOLDER / "importer" / "encryption" / "DORDUADFMLEMP_20211210131901"
+    exemption_file_path = TEST_FOLDER / "importer" / "CompaniesReturningToStatePlan.csv"
 
     import_files = list()
     import_files.append(str(employer_file_path))
 
     import_dor.process_pending_filing_employer_files(
         import_files=import_files,
+        exemption_file_path=str(exemption_file_path),
         decrypt_files=True,
         optional_decrypter=decrypter,
         optional_db_session=test_db_session,
@@ -179,12 +213,28 @@ def test_update_existing_employer_cease_date(
     assert queue_item.exemption_cease_date == cease_date
 
 
+@pytest.fixture
+def mock_s3_bucket_resource(mock_s3):
+    bucket = mock_s3.Bucket("test_dfml_bucket")
+    bucket.create()
+    yield bucket
+
+
+@pytest.fixture
+def mock_dfml_s3_bucket(mock_s3_bucket_resource):
+    yield mock_s3_bucket_resource.name
+
+
 @pytest.mark.timeout(60)
-def test_e2e(monkeypatch, test_db_session, mock_s3_bucket):
+def test_e2e(monkeypatch, test_db_session, mock_s3_bucket, mock_dfml_s3_bucket):
     file_name = "DORDUADFMLEMP_20211210131901"
+    exemption_file_name = "CompaniesReturningToStatePlan.csv"
 
     employer_file_path = TEST_FOLDER / "importer" / "encryption" / "DORDUADFMLEMP_20211210131901"
+    exemption_file_path = TEST_FOLDER / "importer" / "CompaniesReturningToStatePlan.csv"
+
     employer_file = open(employer_file_path, "rb")
+    exemption_file = open(exemption_file_path, "rb")
 
     monkeypatch.setenv("DECRYPT", "true")
 
@@ -195,20 +245,31 @@ def test_e2e(monkeypatch, test_db_session, mock_s3_bucket):
     decrypter = GpgCrypt(decryption_key, passphrase, test_email)
 
     key = "{}{}".format(RECEIVED_FOLDER, file_name)
+    exemption_key = "{}{}".format(DFML_RECEIVED_FOLDER, exemption_file_name)
+
     moved_key = "{}{}".format(PROCESSED_FOLDER, file_name)
+    moved_exemption_key = "{}{}".format(DFML_PROCESSED_FOLDER, exemption_file_name)
     full_received_folder_path = "s3://{}/{}".format(mock_s3_bucket, RECEIVED_FOLDER)
+    full_dfml_received_folder_path = "s3://{}/{}".format(mock_s3_bucket, DFML_RECEIVED_FOLDER)
 
     s3 = boto3.client("s3")
     s3.put_object(Bucket=mock_s3_bucket, Key=key, Body=employer_file.read())
+    s3.put_object(Bucket=mock_dfml_s3_bucket, Key=exemption_key, Body=exemption_file.read())
 
     should_exist_1 = s3.head_object(Bucket=mock_s3_bucket, Key=key)
     assert should_exist_1 is not None
 
+    should_exist_2 = s3.head_object(Bucket=mock_dfml_s3_bucket, Key=exemption_key)
+    assert should_exist_2 is not None
+
     import_files = get_pending_filing_files_to_process(full_received_folder_path)
     assert len(import_files) == 1
 
+    exception_file = get_exemption_file_to_process(full_dfml_received_folder_path)
+
     reports = import_dor.process_pending_filing_employer_files(
         import_files=import_files,
+        exemption_file_path=exception_file,
         decrypt_files=True,
         optional_decrypter=decrypter,
         optional_db_session=test_db_session,
@@ -222,5 +283,8 @@ def test_e2e(monkeypatch, test_db_session, mock_s3_bucket):
     assert reports[0].created_employees_count == employee_count
     assert reports[0].created_wages_and_contributions_count == employee_count
 
-    should_exist_2 = s3.head_object(Bucket=mock_s3_bucket, Key=moved_key)
-    assert should_exist_2 is not None
+    should_exist_3 = s3.head_object(Bucket=mock_s3_bucket, Key=moved_key)
+    assert should_exist_3 is not None
+
+    should_exist_4 = s3.head_object(Bucket=mock_dfml_s3_bucket, Key=moved_exemption_key)
+    assert should_exist_4 is not None
