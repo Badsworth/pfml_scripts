@@ -1,7 +1,7 @@
 import os
 from typing import Any, Optional
 
-from massgov.pfml.util.aws_ssm import get_secret
+from massgov.pfml.util.aws.ssm import get_secret
 
 
 def get_secret_from_env(aws_ssm: Any, key: str) -> Optional[str]:
