@@ -56,7 +56,7 @@ namespace PfmlPdfApi.Services
             string folderName = $"Batch-{dto.BatchId}";
             string formsFolderName = $"{folderName}/Forms";
             string subBatchFolderName = $"{formsFolderName}/{dto.Name.Split("/")[0]}";
-            string fileName = $"{subBatchFolderName}/{dto.Id}_{dto.Name.Split("/")[1]}.pdf";
+            string fileName = $"{subBatchFolderName}/{dto.Id}.pdf";
 
             try
             {

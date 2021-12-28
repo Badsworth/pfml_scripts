@@ -48,7 +48,9 @@ class Generate1099DocumentsStep(Step):
                     try:
                         batch_folder = f"Batch-{batch_id}"
                         sub_batch_folder = f"Sub-batch-{con_subbatch}"
-                        s3_location = f"{batch_folder}/Forms/{sub_batch_folder}/{records[i].pfml_1099_id}_{records[i].first_name} {records[i].last_name}.pdf"
+                        s3_location = (
+                            f"{batch_folder}/Forms/{sub_batch_folder}/{records[i].pfml_1099_id}.pdf"
+                        )
                         self.generate_document(
                             records[i], sub_batch_folder, self.pdfApiEndpoint, s3_location
                         )
