@@ -908,8 +908,8 @@ class FINEOSClient(client.AbstractFINEOSClient):
         description: str,
     ) -> models.customer_api.Document:
         """ Upload a document to FINEOS using the Base64 endpoint, which accepts document content
-            through a Base64-encoded string. 
-           
+            through a Base64-encoded string.
+
             FINEOS document uploads occur through an API Gateway --> Lambda function, so the max
             request size is 6MB. However, since base64 encoding can bloat the file size by up to
             33%, the effective file size is 4.5MB.
@@ -955,8 +955,8 @@ class FINEOSClient(client.AbstractFINEOSClient):
     ) -> models.customer_api.Document:
         """ Upload a document through the multipart/form-data API endpoint.
 
-            FINEOS document uploads occur through an API Gateway --> Lambda function, 
-            so the max request size is 6MB. 
+            FINEOS document uploads occur through an API Gateway --> Lambda function,
+            so the max request size is 6MB.
         """
         multipart_data = (
             ("documentContents", (file_name, file_content, content_type)),
