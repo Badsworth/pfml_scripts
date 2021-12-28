@@ -1,6 +1,6 @@
 import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
 import { ApplicationCard } from "src/components/ApplicationCard";
-import { MockBenefitsApplicationBuilder } from "tests/test-utils/mock-model-builder";
+import { MockBenefitsApplicationBuilder } from "lib/mock-helpers/mock-model-builder";
 import { Props } from "types/common";
 import React from "react";
 import { generateNotice } from "storybook/utils/generateNotice";

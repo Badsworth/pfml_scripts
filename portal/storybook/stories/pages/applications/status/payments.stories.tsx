@@ -6,15 +6,15 @@ import createMockClaimDetail, {
   leaveScenarioMap,
   leaveTypes,
   requestTypes,
-} from "tests/test-utils/createMockClaimDetail";
+} from "lib/mock-helpers/createMockClaimDetail";
 
 import DocumentCollection from "src/models/DocumentCollection";
 import { Payments } from "src/pages/applications/status/payments";
 import { Props } from "types/common";
 import React from "react";
 import User from "src/models/User";
-import { createAbsencePeriod } from "tests/test-utils/createAbsencePeriod";
-import { createMockPayment } from "tests/test-utils/createMockPayment";
+import { createAbsencePeriod } from "lib/mock-helpers/createAbsencePeriod";
+import { createMockPayment } from "lib/mock-helpers/createMockPayment";
 import dayjs from "dayjs";
 import { generateNotice } from "storybook/utils/generateNotice";
 import useMockableAppLogic from "lib/mock-helpers/useMockableAppLogic";

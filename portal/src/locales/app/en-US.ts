@@ -664,6 +664,13 @@ const errors = {
       incorrect: "The amount does not match our records. Please try again.",
     },
   },
+  mfa: {
+    code: {
+      pattern:
+        "Enter the 6-digit code sent to your phone number and ensure it does not include any punctuation.",
+      required: "Enter the 6-digit code sent to your phone number",
+    },
+  },
   network:
     "Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.contactCenterPhoneNumberNoBreak)",
   users: {
@@ -1030,7 +1037,7 @@ const pages = {
     title: "Confirm your phone number",
   },
   authTwoFactorSmsIndex: {
-    hint: "<p>This is an optional step to make your account more secure. In the future, you’ll also be able to access sensitive information like tax documents once you set this up.</p><p>If you select Yes, we’ll ask for a phone number that can receive text messages (SMS). To protect your security, we'll send you a 6-digit code whenenever we need to verify it's really you. You’ll need to enter the code in order to log in to your account.</p><p>If you select No, you can add a phone number later by going to the Settings page.</p>",
+    hint: "<p>This is an optional step to make your account more secure. In the future, you’ll also be able to access sensitive information like tax documents once you set this up.</p><p>If you select Yes, we’ll ask for a phone number that can receive text messages (SMS). To protect your security, we'll send you a 6-digit code whenever we need to verify it's really you. You’ll need to enter the code in order to log in to your account.</p><p>If you select No, you can add a phone number later by going to the Settings page.</p>",
     optIn: "Yes, I want to add a phone number for verifying logins.",
     optOut: "No, I do not want to add a phone number for verifying logins.",
     saveButton: "$t(shared.saveAndContinue)",
@@ -2692,9 +2699,9 @@ const pages = {
     addPhoneNumberButtonText: "Add phone number",
     additionalVerificationHeading: "Additional login verification",
     additionalVerificationNoMfaText:
-      "<p>Make your account more secure by providing a phone number to associate with your account. We'll send you a 6-digit code whenenever we need to verify it's really you. You’ll need to enter the code in order to log in to your account. In the future, you’ll also be able to access sensitive information like tax documents once you set this up.</p><p>You will need to provide a phone number that can receive text messages (SMS) and that you’ll have consistent access to in case we need to verify your login.</p><p><strong>Additional login verification is not enabled</strong></p>",
+      "<p>Make your account more secure by providing a phone number to associate with your account. We'll send you a 6-digit code whenever we need to verify it's really you. You’ll need to enter the code in order to log in to your account. In the future, you’ll also be able to access sensitive information like tax documents once you set this up.</p><p>You will need to provide a phone number that can receive text messages (SMS) and that you’ll have consistent access to in case we need to verify your login.</p><p><strong>Additional login verification is not enabled</strong></p>",
     additionalVerificationWithMfaText:
-      "To protect your security, we'll send you a 6-digit code whenenever we need to verify it's really you. You’ll need to enter the code in order to log in to your account.",
+      "To protect your security, we'll send you a 6-digit code whenever we need to verify it's really you. You’ll need to enter the code in order to log in to your account.",
     backToApplicationsLinkText: "Back to applications",
     cancelEditLoginVerificationLinkText: "Cancel",
     editLoginVerificationLabel: "Edit login verification preferences",

@@ -1,6 +1,6 @@
 import { BenefitsApplicationDocument, DocumentType } from "src/models/Document";
 import DocumentCollection from "src/models/DocumentCollection";
-import { MockEmployerClaimBuilder } from "tests/test-utils/mock-model-builder";
+import { MockEmployerClaimBuilder } from "lib/mock-helpers/mock-model-builder";
 import React from "react";
 import { Status } from "src/pages/employers/applications/status";
 import User from "src/models/User";

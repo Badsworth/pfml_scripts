@@ -458,6 +458,72 @@ class Employer(Base, TimestampMixin):
         return employer_fein
 
 
+class DuaEmployer(Base, TimestampMixin):
+    __tablename__ = "dua_employer_data"
+    __table_args__ = (
+        UniqueConstraint(
+            "fineos_employer_id",
+            "dba",
+            "attention",
+            "email",
+            "phone_number",
+            "address_line_1",
+            "address_line_2",
+            "address_city",
+            "address_zip_code",
+            "address_state",
+            "naics_code",
+            "naics_description",
+            name="uix_dua_employer",
+        ),
+    )
+    dua_employer_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+    fineos_employer_id = Column(Text, nullable=False)
+    dba = Column(Text, nullable=True)
+    attention = Column(Text, nullable=True)
+    email = Column(Text, nullable=True)
+    phone_number = Column(Text, nullable=False)
+    address_line_1 = Column(Text, nullable=True)
+    address_line_2 = Column(Text, nullable=True)
+    address_city = Column(Text, nullable=True)
+    address_zip_code = Column(Text, nullable=True)
+    address_state = Column(Text, nullable=True)
+    naics_code = Column(Text, nullable=True)
+    naics_description = Column(Text, nullable=True)
+
+
+class DuaReportingUnitRaw(Base, TimestampMixin):
+    __tablename__ = "dua_reporting_unit_data"
+    __table_args__ = (
+        UniqueConstraint(
+            "fineos_employer_id",
+            "dua_id",
+            "dba",
+            "attention",
+            "email",
+            "phone_number",
+            "address_line_1",
+            "address_line_2",
+            "address_city",
+            "address_zip_code",
+            "address_state",
+            name="uix_dua_reporting_unit_data",
+        ),
+    )
+    dua_reporting_unit_data_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+    fineos_employer_id = Column(Text, nullable=False)
+    dua_id = Column(Text, nullable=True)
+    dba = Column(Text, nullable=True)
+    attention = Column(Text, nullable=True)
+    email = Column(Text, nullable=True)
+    phone_number = Column(Text, nullable=False)
+    address_line_1 = Column(Text, nullable=True)
+    address_line_2 = Column(Text, nullable=True)
+    address_city = Column(Text, nullable=True)
+    address_zip_code = Column(Text, nullable=True)
+    address_state = Column(Text, nullable=True)
+
+
 class OrganizationUnit(Base, TimestampMixin):
     __tablename__ = "organization_unit"
     __table_args__ = (

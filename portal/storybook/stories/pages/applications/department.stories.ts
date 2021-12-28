@@ -1,4 +1,4 @@
-import { MockBenefitsApplicationBuilder } from "tests/test-utils/mock-model-builder";
+import { MockBenefitsApplicationBuilder } from "lib/mock-helpers/mock-model-builder";
 import OrganizationUnit from "src/models/OrganizationUnit";
 import generateClaimPageStory from "storybook/utils/generateClaimPageStory";
 import { updateCookieWithFlag } from "src/services/featureFlags";

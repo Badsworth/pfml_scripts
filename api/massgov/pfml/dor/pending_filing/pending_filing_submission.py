@@ -85,7 +85,7 @@ def get_file_to_process(folder_path: str) -> Optional[str]:
 
 
 def setup_output_file(folder_path, start_time):
-    output_file_name = f"{SUBMISSION_FILE_NAME}_{start_time.strftime('%Y%M%d')}"
+    output_file_name = f"{SUBMISSION_FILE_NAME}_{start_time.strftime('%Y%m%d%H%M%S')}"
     output_path = "{}/{}/{}".format(folder_path, "sentToDor", output_file_name)
     return file_utils.write_file(output_path, "w")
 
@@ -146,12 +146,12 @@ def process_csv_row(
     if not first_requested_quarter or first_requested_quarter == "":
         raise ValueError("First Requested Quarter missing.")
     try:
-        requested_quarter_date = datetime.datetime.strptime(first_requested_quarter, "%M/%d/%Y")
+        requested_quarter_date = datetime.datetime.strptime(first_requested_quarter, "%m/%d/%Y")
     except Exception:
         raise ValueError(
             "First requested quarter date is an invalid date, or is not in the expected format 'MM/DD/YYYY'."
         )
-    formatted_requested_quarter = requested_quarter_date.strftime("%Y%M%d")
+    formatted_requested_quarter = requested_quarter_date.strftime("%Y%m%d")
     write_to_submission_file(employer_fein, formatted_requested_quarter, output_file)
 
     report.total_employers_written_count += 1

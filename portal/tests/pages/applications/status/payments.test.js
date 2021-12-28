@@ -4,7 +4,7 @@ import DocumentCollection from "../../../../src/models/DocumentCollection";
 import { DocumentType } from "../../../../src/models/Document";
 import LeaveReason from "../../../../src/models/LeaveReason";
 import { Payments } from "../../../../src/pages/applications/status/payments";
-import { createMockPayment } from "../../../test-utils/createMockPayment";
+import { createMockPayment } from "lib/mock-helpers/createMockPayment";
 import { mockRouter } from "next/router";
 import { renderPage } from "../../../test-utils";
 import routes from "../../../../src/routes";
