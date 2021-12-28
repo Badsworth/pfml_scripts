@@ -35,6 +35,37 @@ describe("Two-factor SMS Confirm", () => {
     expect(container.firstChild).toMatchSnapshot();
   });
 
+  it("throws validation errors when the code was not entered", async () => {
+    renderPage(ConfirmSMS);
+
+    // don't enter anything in the code field
+    const submitButton = screen.getByRole("button", {
+      name: "Save and continue",
+    });
+    await act(async () => await userEvent.click(submitButton));
+
+    expect(
+      screen.getByText(/Enter the 6-digit code sent to your phone number/)
+    ).toBeInTheDocument();
+  });
+
+  it("throws validation errors when an incorrectly formatted code was entered", async () => {
+    renderPage(ConfirmSMS);
+
+    const codeField = screen.getByLabelText("6-digit code");
+    userEvent.type(codeField, "aaaa");
+    const submitButton = screen.getByRole("button", {
+      name: "Save and continue",
+    });
+    await act(async () => await userEvent.click(submitButton));
+
+    expect(
+      screen.getByText(
+        /Enter the 6-digit code sent to your phone number and ensure it does not include any punctuation./
+      )
+    ).toBeInTheDocument();
+  });
+
   it("sends verification code and updates MFA preference when user saves and continues", async () => {
     renderPage(ConfirmSMS, {
       addCustomSetup: (appLogic) => {

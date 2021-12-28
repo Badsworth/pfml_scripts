@@ -738,6 +738,46 @@ describe("useAuthLogic", () => {
   describe("verifyMFACodeAndLogin", () => {
     const next = "/applications";
 
+    it("validates the code was entered", async () => {
+      const { result } = render();
+
+      await act(async () => {
+        await result.current.verifyMFACodeAndLogin("", next);
+      });
+
+      expect(appErrors.items).toHaveLength(1);
+      expect(appErrors.items.map((e) => e.message)).toMatchInlineSnapshot(`
+        Array [
+          "Enter the 6-digit code sent to your phone number",
+        ]
+      `);
+      expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
+        issueField: "code",
+        issueRule: "",
+        issueType: "required",
+      });
+    });
+
+    it("validates the code format", async () => {
+      const { result } = render();
+
+      await act(async () => {
+        await result.current.verifyMFACodeAndLogin("aaaa", next);
+      });
+
+      expect(appErrors.items).toHaveLength(1);
+      expect(appErrors.items.map((e) => e.message)).toMatchInlineSnapshot(`
+        Array [
+          "Enter the 6-digit code sent to your phone number and ensure it does not include any punctuation.",
+        ]
+      `);
+      expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
+        issueField: "code",
+        issueRule: "",
+        issueType: "pattern",
+      });
+    });
+
     it("calls Auth.confirmSignIn", async () => {
       const { result } = render();
 

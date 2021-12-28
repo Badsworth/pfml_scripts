@@ -8,10 +8,12 @@ import React from "react";
 import ThrottledButton from "src/components/ThrottledButton";
 import Title from "../../../components/core/Title";
 import User from "../../../models/User";
+import { ValidationError } from "../../../errors";
 import { isFeatureEnabled } from "../../../services/featureFlags";
 import useFormState from "../../../hooks/useFormState";
 import useFunctionalInputProps from "../../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../../locales/i18n";
+import validateCode from "../../../utils/validateCode";
 import { verifyMFAPhoneNumber } from "../../../services/mfa";
 import withUser from "../../../hoc/withUser";
 
@@ -35,12 +37,18 @@ export const ConfirmSMS = (props: ConfirmSMSProps) => {
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+    appLogic.clearErrors();
+    const trimmedCode = formState.code ? formState.code.trim() : "";
+    const validationIssues = validateCode(trimmedCode);
+    if (validationIssues) {
+      appLogic.catchError(new ValidationError([validationIssues], "mfa"));
+      return;
+    }
 
     try {
-      await verifyMFAPhoneNumber(formState.code);
+      await verifyMFAPhoneNumber(trimmedCode);
     } catch (error) {
       appLogic.catchError(error);
-      return;
     }
 
     const nextPage = returnToSettings ? "RETURN_TO_SETTINGS" : undefined;
