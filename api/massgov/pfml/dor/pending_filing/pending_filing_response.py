@@ -45,14 +45,19 @@ from massgov.pfml.dor.importer.dor_file_formats import (
     WageKey,
 )
 from massgov.pfml.dor.importer.import_dor import (
+    PROCESSED_FOLDER,
     Capturer,
     ImportException,
     ImportReport,
     ImportRunReport,
 )
-from massgov.pfml.dor.importer.paths import get_pending_filing_files_to_process
+from massgov.pfml.dor.importer.paths import (
+    get_exemption_file_to_process,
+    get_pending_filing_files_to_process,
+)
 from massgov.pfml.util.bg import background_task
 from massgov.pfml.util.config import get_secret_from_env
+from massgov.pfml.util.csv import CSVSourceWrapper
 from massgov.pfml.util.encryption import Crypt, GpgCrypt, Utf8Crypt
 
 logger = logging.get_logger("massgov.pfml.dor.importer.import_dor")
@@ -60,8 +65,8 @@ logger = logging.get_logger("massgov.pfml.dor.importer.import_dor")
 aws_ssm = boto3.client("ssm", region_name="us-east-1")
 
 # TODO get these from environment variables
-RECEIVED_FOLDER = "dor/received/"
-PROCESSED_FOLDER = "dor/processed/"
+DFML_RECEIVED_FOLDER = "dfml/received/"
+DFML_PROCESSED_FOLDER = "dfml/processed/"
 
 EMPLOYEE_LINE_LIMIT = 25000
 
@@ -69,19 +74,25 @@ EMPLOYEE_LINE_LIMIT = 25000
 @dataclass
 class Configuration:
     file_path: str
+    exemption_file_path: str
 
     def __init__(self, input_args: List[str]):
         parser = argparse.ArgumentParser(description="Process DOR Pending Filing Response file")
 
         parser.add_argument(
-            "--file", help="Path to DORDUADFML file to process.",
+            "--responsefile", help="Path to DORDUADFML file to process.",
+        )
+
+        parser.add_argument(
+            "--exemptionfile", help="Path to exemption file to process.",
         )
 
         args = parser.parse_args(input_args)
-        self.file_path = args.file
+        self.file_path = args.responsefile
+        self.exemption_file_path = args.exemptionfile
 
-        if args.file is None:
-            raise Exception("File is required.")
+        if args.responsefile is None or args.exemptionfile is None:
+            raise Exception("Response file and exemption files are required.")
 
 
 @background_task("dor-pending-filing-response-file")
@@ -98,7 +109,7 @@ def main():
 
             decrypt_files = os.getenv("DECRYPT") == "true"
             import_reports = process_pending_filing_employer_files(
-                file_list, decrypt_files, db_session
+                file_list, decrypt_files, config.exemption_file_path, db_session
             )
             report.imports = import_reports
             report.message = "files imported"
@@ -129,19 +140,23 @@ def handler() -> None:
 
     try:
         folder_path = os.environ["FOLDER_PATH"]
+        csv_folder_path = os.environ["CSV_FOLDER_PATH"]
 
         logger.info(
             "Starting import run", extra={"folder_path": folder_path},
         )
 
         import_files = get_pending_filing_files_to_process(folder_path)
+        exemption_file = get_exemption_file_to_process(csv_folder_path)
 
         if not import_files:
             logger.info("no files found to import")
             report.message = "no files found to import"
         else:
             decrypt_files = os.getenv("DECRYPT") == "true"
-            import_reports = process_pending_filing_employer_files(import_files, decrypt_files)
+            import_reports = process_pending_filing_employer_files(
+                import_files, decrypt_files, exemption_file
+            )
 
             report.imports = import_reports
             report.message = "files imported"
@@ -172,6 +187,7 @@ def filter_add_memory_usage(record):
 def process_pending_filing_employer_files(
     import_files: List[str],
     decrypt_files: bool,
+    exemption_file_path: str,
     optional_db_session: Optional[Session] = None,
     optional_decrypter: Optional[Crypt] = None,
     optional_s3: Optional[boto3.Session] = None,
@@ -201,7 +217,7 @@ def process_pending_filing_employer_files(
                 )
 
                 import_report = process_pending_filing_employer_import(
-                    db_session, employer_file, decrypter, s3
+                    db_session, employer_file, exemption_file_path, decrypter, s3
                 )
                 import_reports.append(import_report)
     except ImportException as ie:
@@ -266,12 +282,18 @@ def handle_import_exception(
 
 
 def process_pending_filing_employer_import(
-    db_session: Session, employer_file_path: str, decrypter: Crypt, s3: boto3.Session
+    db_session: Session,
+    employer_file_path: str,
+    employer_exemption_file_path: str,
+    decrypter: Crypt,
+    s3: boto3.Session,
 ) -> ImportReport:
     logger.info("Starting to process files")
     report = ImportReport(
         start=datetime.now().isoformat(), status="in progress", employer_file=employer_file_path,
     )
+
+    exemption_data = CSVSourceWrapper(employer_exemption_file_path)
 
     report.sample_employers_line_lengths = {}
     report.parsed_employers_exception_line_nums = []
@@ -288,12 +310,14 @@ def process_pending_filing_employer_import(
         # If an employer file is given, parse and import
         if employer_file_path:
             employers, employees = parse_pending_filing_employer_file(
-                employer_file_path, decrypter, report
+                employer_file_path, exemption_data, decrypter, report
             )
             parsed_employers_count = len(employers)
             parsed_employees_count = len(employees)
 
-            import_employers(db_session, employers, report, report_log_entry.import_log_id)
+            import_employers(
+                db_session, employers, exemption_data, report, report_log_entry.import_log_id
+            )
 
             import_employees_and_wage_data(
                 db_session, employees, dict(), report, report_log_entry.import_log_id,
@@ -311,8 +335,12 @@ def process_pending_filing_employer_import(
         logger.info("Sample Employer line lengths: %s", repr(report.sample_employers_line_lengths))
 
         # move file to processed folder unless explicitly told not to.
-        if os.getenv("RETAIN_RECEIVED_FILES") is None and file_util.is_s3_path(employer_file_path):
-            move_file_to_processed(employer_file_path, s3)
+        if os.getenv("RETAIN_RECEIVED_FILES") is None:
+            if file_util.is_s3_path(employer_file_path):
+                move_file_to_processed(PROCESSED_FOLDER, employer_file_path, s3)
+
+            if file_util.is_s3_path(employer_exemption_file_path):
+                move_file_to_processed(DFML_PROCESSED_FOLDER, employer_exemption_file_path, s3)
 
     except Exception as e:
         handle_import_exception(e, db_session, report_log_entry, report)
@@ -370,17 +398,31 @@ def is_valid_employer_fein(employer_info: ParsedEmployerLine, report: ImportRepo
     return False
 
 
+def get_employer_cease_date(employer: Employer, exemption_data: CSVSourceWrapper) -> date:
+    # Existing employers have a 1/1/2022 cease date if no exemptions
+    employer_cease_date = datetime.strptime("1/1/2022", "%m/%d/%Y").date()
+
+    # All employers should be covered in the CSV so a value is guaranteed to be found
+    for exemption_info in exemption_data:
+        if exemption_info["FEIN"] == employer.employer_fein:
+            return datetime.strptime(
+                exemption_info["'Effective date with State'"], "%m/%d/%Y"
+            ).date()
+
+    # Warn if this scenario happens
+    logger.warning("Employer not found in csv file: %s", employer.employer_id)
+    return employer_cease_date
+
+
 def import_employers(
     db_session: Session,
     employers: List[ParsedEmployerLine],
+    exemption_data: CSVSourceWrapper,
     report: ImportReport,
     import_log_entry_id: int,
 ) -> None:
     """Import employers into db"""
     logger.info("Importing employers")
-
-    # Existing employers must have a 1/1/2022 cease date
-    existing_employer_cease_date = datetime.strptime("1/1/2022", "%m/%d/%Y").date()
 
     # 1 - Stage employers for creation and update
 
@@ -485,7 +527,11 @@ def import_employers(
     employer_insert_logs_to_create = list(
         map(
             lambda employer: EmployerPushToFineosQueue(
-                employer_id=employer.employer_id, action="INSERT"
+                employer_id=employer.employer_id,
+                action="INSERT",
+                family_exemption=employer.family_exemption,
+                medical_exemption=employer.medical_exemption,
+                exemption_cease_date=get_employer_cease_date(employer, exemption_data),
             ),
             employer_models_to_create,
         )
@@ -497,6 +543,10 @@ def import_employers(
 
     for employer_info in found_employer_info_list:
         fein = employer_info["fein"]
+
+        # this means the employer already exists in this file and do not reprocess
+        if fein in fein_to_new_employer_id:
+            continue
 
         # this means the same employer was created previously in the current import run
         # fetch the existing employer for an update check
@@ -538,10 +588,7 @@ def import_employers(
             existing_employer_model is not None
             and added_push_queue.get(existing_employer_model.employer_id, None) is None
         ):
-            print(existing_employer_model.employer_id)
             added_push_queue[existing_employer_model.employer_id] = True
-
-            existing_employer_model.exemption_cease_date = existing_employer_cease_date
 
             # Enqueue updated employer for push to FINEOS
             db_session.add(
@@ -551,7 +598,9 @@ def import_employers(
                     family_exemption=existing_employer_model.family_exemption,
                     medical_exemption=existing_employer_model.medical_exemption,
                     exemption_commence_date=existing_employer_model.exemption_commence_date,
-                    exemption_cease_date=existing_employer_model.exemption_cease_date,
+                    exemption_cease_date=get_employer_cease_date(
+                        existing_employer_model, exemption_data
+                    ),
                 )
             )
 
@@ -1150,7 +1199,10 @@ def get_decrypted_file_stream(file_path: str, decrypter: Crypt) -> Any:
 
 
 def parse_pending_filing_employer_file(
-    employer_file_path: str, decrypter: Crypt, report: ImportReport
+    employer_file_path: str,
+    exemption_data: CSVSourceWrapper,
+    decrypter: Crypt,
+    report: ImportReport,
 ) -> Tuple[List, List]:
     """Parse employer file"""
     # DOR has a 'magic date' of 12/31/9999 if employer has no exemptions.
@@ -1206,6 +1258,14 @@ def parse_pending_filing_employer_file(
                         )
                         last_employer_account_key = employer_uuids[employer["fstrEmployerID"]]
 
+                    employer_cease_date = exemption_date
+                    family_exemption = False
+                    medical_exemption = False
+                    for exemption_info in exemption_data:
+                        if exemption_info["FEIN"] == employer["fstrEmployerID"]:
+                            family_exemption = exemption_info["'Family Exemption'"] == "Yes"
+                            medical_exemption = exemption_info["'Medical Exemption'"] == "Yes"
+
                     transformed_dict = {
                         "fein": employer["fstrEmployerID"],
                         "employer_name": employer["fstrEmployerName"],
@@ -1213,10 +1273,10 @@ def parse_pending_filing_employer_file(
                         "total_pfml_contribution": employer["fcurEmployeeWages"],
                         "employer_dba": employer["fstrEmployerName"],
                         "account_key": last_employer_account_key,
-                        "family_exemption": False,  # these will be set in a subsequent SQL command
-                        "medical_exemption": False,  # these will be set in a subsequent SQL command
+                        "family_exemption": family_exemption,
+                        "medical_exemption": medical_exemption,
                         "exemption_commence_date": exemption_date,
-                        "exemption_cease_date": exemption_date,
+                        "exemption_cease_date": employer_cease_date,
                         "updated_date": None,
                         "employer_address_state": None,
                         "employer_address_city": None,
@@ -1291,6 +1351,14 @@ def parse_pending_filing_employer_file(
                     employer_uuids[employer["fstrEmployerID"]] = "pending_filing_" + str(uuid_gen())
                     last_employer_account_key = employer_uuids[employer["fstrEmployerID"]]
 
+                employer_cease_date = exemption_date
+                family_exemption = False
+                medical_exemption = False
+                for exemption_info in exemption_data:
+                    if exemption_info["FEIN"] == employer["fstrEmployerID"]:
+                        family_exemption = exemption_info["'Family Exemption'"] == "Yes"
+                        medical_exemption = exemption_info["'Medical Exemption'"] == "Yes"
+
                 transformed_dict = {
                     "fein": employer["fstrEmployerID"],
                     "employer_name": employer["fstrEmployerName"],
@@ -1298,10 +1366,10 @@ def parse_pending_filing_employer_file(
                     "total_pfml_contribution": employer["fcurEmployeeWages"],
                     "employer_dba": employer["fstrEmployerName"],
                     "account_key": last_employer_account_key,
-                    "family_exemption": False,  # these will be set in a subsequent SQL command
-                    "medical_exemption": False,  # these will be set in a subsequent SQL command
+                    "family_exemption": family_exemption,
+                    "medical_exemption": medical_exemption,
                     "exemption_commence_date": exemption_date,
-                    "exemption_cease_date": exemption_date,
+                    "exemption_cease_date": employer_cease_date,
                     "updated_date": None,
                     "employer_address_state": None,
                     "employer_address_city": None,
@@ -1348,7 +1416,9 @@ def parse_pending_filing_employer_file(
     return employers, employees
 
 
-def move_file_to_processed(file_path: str, s3_client: botocore.client.BaseClient) -> None:
+def move_file_to_processed(
+    folder: str, file_path: str, s3_client: botocore.client.BaseClient
+) -> None:
     """Move file from received to processed folder"""
     file_name = file_util.get_file_name(file_path)
     file_key = file_util.get_s3_file_key(file_path)
@@ -1357,7 +1427,7 @@ def move_file_to_processed(file_path: str, s3_client: botocore.client.BaseClient
 
     logger.info("Moving file to processed folder. Bucket: %s, file: %s", bucket_name, file_key)
 
-    file_dest_key = PROCESSED_FOLDER + file_name
+    file_dest_key = folder + file_name
 
     s3_client.copy({"Bucket": bucket_name, "Key": file_key}, bucket_name, file_dest_key)
     s3_client.delete_object(Bucket=bucket_name, Key=file_key)
