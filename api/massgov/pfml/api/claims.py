@@ -63,7 +63,9 @@ from massgov.pfml.fineos.transforms.to_fineos.eforms.employer import (
 from massgov.pfml.util.logging.claims import (
     get_claim_log_attributes,
     get_claim_review_log_attributes,
+    get_managed_requirements_log_attributes,
     log_get_claim_metrics,
+    log_managed_requirement,
 )
 from massgov.pfml.util.logging.employers import get_employer_log_attributes
 from massgov.pfml.util.logging.managed_requirements import (
@@ -339,6 +341,15 @@ def employer_get_claim_review(fineos_absence_id: str) -> flask.Response:
         fineos_claim_review_response.managed_requirements = [
             ManagedRequirementResponse.from_orm(mr) for mr in managed_requirements
         ]
+
+        log_attributes.update(
+            get_managed_requirements_log_attributes(
+                fineos_claim_review_response.managed_requirements
+            )
+        )
+
+        for requirement in fineos_claim_review_response.managed_requirements:
+            log_managed_requirement(requirement, fineos_absence_id)
 
         logger.info(
             "employer_get_claim_review success", extra=log_attributes,
