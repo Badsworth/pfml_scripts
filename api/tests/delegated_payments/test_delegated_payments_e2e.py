@@ -220,6 +220,9 @@ def test_e2e_pub_payments(
     # Configuration / Setup
     # ========================================================================
 
+    # Turn off Tax Withholding Feature Flag for this test.
+    os.environ["ENABLE_WITHHOLDING_PAYMENTS"] = "1"
+
     caplog.set_level(logging.ERROR)  # noqa: B1
     setup_common_env_variables(monkeypatch)
     s3_config = payments_config.get_s3_config()
@@ -683,7 +686,8 @@ def test_e2e_pub_payments(
                 "vbi_requested_absence_som_record_count": len(SCENARIO_DESCRIPTORS),
             },
         )
-
+        # Number of absence records created for withholding scenerios
+        withholding_requested_absence_records_count =8
         assert_metrics(
             test_db_other_session,
             "PaymentExtractStep",
@@ -808,7 +812,7 @@ def test_e2e_pub_payments(
                         ScenarioName.CLAIMANT_PRENOTED_NO_PAYMENT_RECEIVED,
                     ]
                 )
-                + 8 # need to find why this discrepency
+                + withholding_requested_absence_records_count
                 ,
                 "standard_valid_payment_count": len(
                     [
@@ -954,6 +958,23 @@ def test_e2e_pub_payments(
                         ScenarioName.HAPPY_PATH_DOR_FINEOS_NAME_MISMATCH,
                         ScenarioName.HAPPY_PATH_DUA_ADDITIONAL_INCOME,
                         ScenarioName.HAPPY_PATH_DIA_ADDITIONAL_INCOME,
+                        ScenarioName.HAPPY_PATH_TAX_WITHHOLDING,
+                    ]
+                ),
+            },
+        )
+
+        assert_metrics(
+            test_db_other_session,
+            "RelatedPaymentsProcessingStep",
+            {
+                "federal_withholding_record_count": len(
+                    [
+                        ScenarioName.HAPPY_PATH_TAX_WITHHOLDING,
+                    ]
+                ),
+                "state_withholding_record_count": len(
+                    [
                         ScenarioName.HAPPY_PATH_TAX_WITHHOLDING,
                     ]
                 ),
@@ -1440,9 +1461,9 @@ def test_e2e_pub_payments(
             {
                 "errored_writeback_record_during_file_creation_count": 0,
                 "errored_writeback_record_during_file_transfer_count": 0,
-                "successful_writeback_record_count": len(stage_2_writeback_scenarios),
-                "writeback_record_count": len(stage_2_writeback_scenarios),
-                "generic_flow_writeback_items_count": len(stage_2_writeback_scenarios),
+                "successful_writeback_record_count": len(stage_2_writeback_scenarios) + len(split_payment_records),
+                "writeback_record_count": len(stage_2_writeback_scenarios) + len(split_payment_records),
+                "generic_flow_writeback_items_count": len(stage_2_writeback_scenarios) + len(split_payment_records),
                 "payment_audit_error_writeback_transaction_status_count": len(
                     [ScenarioName.AUDIT_REJECTED,]
                 ),
@@ -1935,9 +1956,6 @@ def test_e2e_pub_payments(
     # ===============================================================================
 
     with freeze_time("2021-05-07 21:30:00", tz_offset=5):
-
-        # Turn off Tax Withholding Feature Flag for this test.
-        # os.environ["ENABLE_WITHHOLDING_PAYMENTS"] = "1"
 
         process_fineos_extracts(
             test_dataset, mock_experian_client, test_db_session, test_db_other_session
