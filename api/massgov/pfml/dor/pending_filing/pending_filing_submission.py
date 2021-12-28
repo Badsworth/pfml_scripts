@@ -45,13 +45,11 @@ def handler_with_return():
 
     db_session_raw = make_db_session()
 
-    folder_path = os.environ["FOLDER_PATH"]
-
     try:
         with massgov.pfml.util.batch.log.log_entry(
             db_session_raw, "DOR Pending Filing Submission", ""
         ) as log_entry:
-            report = process_pending_filing_employers(folder_path)
+            report = process_pending_filing_employers()
             log_entry.report = json.dumps(asdict(report), indent=2)
     except Exception:
         logger.exception("Error creating pending filing submission file.")
@@ -64,7 +62,8 @@ def handler_with_return():
     return report
 
 
-def get_file_to_process(folder_path: str) -> Optional[str]:
+def get_file_to_process() -> Optional[str]:
+    folder_path = os.environ["INPUT_FOLDER_PATH"]
     files_for_import = file_utils.list_files(f"{str(folder_path)}/received")
 
     update_files = []
@@ -84,17 +83,18 @@ def get_file_to_process(folder_path: str) -> Optional[str]:
     return file_path
 
 
-def setup_output_file(folder_path, start_time):
+def setup_output_file(start_time):
+    folder_path = os.environ["OUTPUT_FOLDER_PATH"]
     output_file_name = f"{SUBMISSION_FILE_NAME}_{start_time.strftime('%Y%m%d%H%M%S')}"
-    output_path = "{}/{}/{}".format(folder_path, "sentToDor", output_file_name)
+    output_path = "{}/{}/{}".format(folder_path, "send", output_file_name)
     return file_utils.write_file(output_path, "w")
 
 
-def process_pending_filing_employers(folder_path: str) -> PendingFilingSubmissionReport:
+def process_pending_filing_employers() -> PendingFilingSubmissionReport:
     start_time = utcnow()
     report = PendingFilingSubmissionReport(start=start_time.isoformat())
 
-    file_path = get_file_to_process(folder_path)
+    file_path = get_file_to_process()
 
     if file_path is None:
         end_time = utcnow()
@@ -108,7 +108,7 @@ def process_pending_filing_employers(folder_path: str) -> PendingFilingSubmissio
 
     csv_input = CSVSourceWrapper(file_path)
 
-    output_file = setup_output_file(folder_path, start_time)
+    output_file = setup_output_file(start_time)
 
     line_count = 0
     for row in log_every(logger, csv_input, count=10, item_name="CSV row"):
