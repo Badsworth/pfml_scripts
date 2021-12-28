@@ -145,7 +145,8 @@ locals {
       memory    = 18432,
       env = [
         local.db_access,
-        { name : "FOLDER_PATH", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/dfml" }
+        { name : "INPUT_FOLDER_PATH", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/dfml" },
+        { name : "OUTPUT_FOLDER_PATH", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/dor" }
       ]
     },
 
