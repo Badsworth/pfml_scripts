@@ -2628,9 +2628,7 @@ def assert_payment_state_for_scenarios(
     check_additional_payment: bool = False,
 ):
     for scenario_name in scenario_names:
-        # print("scenario_name %s", scenario_name)
         scenario_data_items = test_dataset.get_scenario_data_by_name(scenario_name)
-        # print("scenario_data_items %s", scenario_data_items)
         assert scenario_data_items is not None, f"No data found for scenario: {scenario_name}"
 
         for scenario_data in scenario_data_items:
@@ -2638,7 +2636,6 @@ def assert_payment_state_for_scenarios(
                 payment = scenario_data.additional_payment
             else:
                 payment = scenario_data.payment
-            # print("payment %s",payment)
             assert payment is not None
 
             state_log = state_log_util.get_latest_state_log_in_flow(payment, flow, db_session)
