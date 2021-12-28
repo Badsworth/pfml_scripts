@@ -15,9 +15,10 @@ import pytest
 import requests
 
 import massgov.pfml.fineos.fineos_client
-from massgov.pfml.fineos.mock_client import mock_document
 import massgov.pfml.fineos.models
+from massgov.pfml.api.models.applications.common import DocumentType
 from massgov.pfml.fineos.exception import FINEOSClientError
+from massgov.pfml.fineos.mock_client import mock_document
 from massgov.pfml.fineos.models.customer_api.spec import AbsenceDetails
 from massgov.pfml.fineos.models.group_client_api import EForm, EFormAttribute, ModelEnum
 
@@ -749,9 +750,6 @@ def test_customer_api_documents_403(httpserver, fineos_client):
 
     documents = fineos_client.get_documents("FINEOS_WEB_ID", "123456789")
     assert len(documents) == 0
-
-
-from massgov.pfml.api.models.applications.common import DocumentType
 
 
 def test_customer_api_document_upload_multipart_success(httpserver, fineos_client):
