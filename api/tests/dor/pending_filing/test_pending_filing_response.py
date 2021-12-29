@@ -4,6 +4,7 @@
 
 import pathlib
 from datetime import datetime
+from decimal import Decimal
 
 import boto3
 import pytest
@@ -16,7 +17,7 @@ from massgov.pfml.db.models.employees import (
     EmployerQuarterlyContribution,
     WagesAndContributions,
 )
-from massgov.pfml.db.models.factories import EmployerFactory
+from massgov.pfml.db.models.factories import EmployeeFactory, EmployerFactory, TaxIdentifierFactory
 from massgov.pfml.dor.importer.import_dor import PROCESSED_FOLDER, RECEIVED_FOLDER, ImportReport
 from massgov.pfml.dor.importer.paths import (
     get_exemption_file_to_process,
@@ -84,7 +85,7 @@ def test_account_key_set_single_file(monkeypatch, test_db_session):
     exemption_data = CSVSourceWrapper(str(exemption_file_path))
 
     employers, employees = import_dor.parse_pending_filing_employer_file(
-        str(employer_file_path), exemption_data, decrypter, report
+        str(employer_file_path), exemption_data, decrypter, report, test_db_session
     )
 
     assert employees[0]["account_key"] == employers[0]["account_key"]
@@ -139,8 +140,8 @@ def test_employer_multiple_wage_rows(initialize_factories_session, monkeypatch, 
     assert employer2.family_exemption is True
     assert employer2.medical_exemption is True
 
-    assert employer3.family_exemption is False
-    assert employer3.medical_exemption is False
+    assert employer3.family_exemption is True
+    assert employer3.medical_exemption is True
 
     wage_rows = (
         test_db_session.query(EmployerQuarterlyContribution)
@@ -241,6 +242,93 @@ def mock_s3_bucket_resource(mock_s3):
 @pytest.fixture
 def mock_dfml_s3_bucket(mock_s3_bucket_resource):
     yield mock_s3_bucket_resource.name
+
+
+def test_insert_wage_rows_existing_employee(
+    initialize_factories_session, monkeypatch, test_db_session
+):
+    monkeypatch.setenv("DECRYPT", "false")
+
+    employer_file_path = TEST_FOLDER / "importer" / "DORDUADFML_SUBMISSION_20212216"
+    exemption_file_path = TEST_FOLDER / "importer" / "CompaniesReturningToStatePlan.csv"
+
+    account_key = "123456999"
+    employer = EmployerFactory.create(account_key=account_key, employer_fein="123456999")
+    tax_identifier = TaxIdentifierFactory.create(tax_identifier="111111111")
+    employee = EmployeeFactory.create(tax_identifier=tax_identifier, email_address="foo@bar.com")
+    filing_period = datetime.strptime("9/30/2020", "%m/%d/%Y").date()
+    wage_row = WagesAndContributions()
+    wage_row.account_key = account_key
+    wage_row.is_independent_contractor = False
+    wage_row.is_opted_in = False
+    wage_row.employer_med_contribution = Decimal(12345)
+    wage_row.employer_fam_contribution = Decimal(67890)
+    wage_row.employee_med_contribution = Decimal(12345)
+    wage_row.employee_fam_contribution = Decimal(67890)
+    wage_row.employee_ytd_wages = Decimal(100)
+    wage_row.employee_qtr_wages = Decimal(100)
+    wage_row.filing_period = filing_period
+    wage_row.employer_id = employer.employer_id
+    wage_row.employee_id = employee.employee_id
+    test_db_session.add(wage_row)
+
+    test_db_session.commit()
+
+    wages = (
+        test_db_session.query(WagesAndContributions)
+        .filter(
+            WagesAndContributions.employee_id == employee.employee_id
+            and WagesAndContributions.employer_id == employer.employer_id
+        )
+        .all()
+    )
+
+    assert len(wages) == 1
+
+    import_files = list()
+    import_files.append(str(employer_file_path))
+
+    import_dor.process_pending_filing_employer_files(
+        import_files=import_files,
+        exemption_file_path=str(exemption_file_path),
+        decrypt_files=True,
+        optional_decrypter=decrypter,
+        optional_db_session=test_db_session,
+    )
+
+    employer = test_db_session.query(Employer).filter(Employer.employer_fein == "123456999").first()
+
+    assert employer.account_key == account_key
+
+    employee = (
+        test_db_session.query(Employee)
+        .filter(Employee.tax_identifier_id == tax_identifier.tax_identifier_id)
+        .first()
+    )
+
+    wages = (
+        test_db_session.query(WagesAndContributions)
+        .filter(
+            WagesAndContributions.employee_id == employee.employee_id
+            and WagesAndContributions.employer_id == employer.employer_id
+        )
+        .all()
+    )
+
+    # this means 3 new wages rows were created and the previously created one was unmodified
+    assert len(wages) == 4
+
+    assert wages[0].filing_period == filing_period
+    assert wages[0].employer_med_contribution == Decimal(12345)
+    assert wages[0].employer_fam_contribution == Decimal(67890)
+
+    unmodified_employee = (
+        test_db_session.query(Employee)
+        .filter(Employee.employee_id == employee.employee_id)
+        .one_or_none()
+    )
+
+    assert unmodified_employee.email_address == "foo@bar.com"
 
 
 @pytest.mark.timeout(60)
