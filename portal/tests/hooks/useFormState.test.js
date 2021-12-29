@@ -48,13 +48,13 @@ describe("useFormState", () => {
       });
 
       expect(formState.formState).toMatchInlineSnapshot(`
-        Object {
+        {
           "application_nickname": "Hip replacement",
-          "leave_details": Object {
+          "leave_details": {
             "employer_notification_method": "In writing",
             "employer_notified": true,
           },
-          "payment_preference": Object {
+          "payment_preference": {
             "payment_method": "Elec Funds Transfer",
           },
         }

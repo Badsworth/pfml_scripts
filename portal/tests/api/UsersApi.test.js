@@ -175,9 +175,9 @@ describe("users API", () => {
           "email_address": undefined,
           "mfa_delivery_preference": null,
           "mfa_phone_number": null,
-          "roles": Array [
+          "roles": [
             UserRole {
-              "role": Object {
+              "role": {
                 "role_description": "Employer",
                 "role_id": 1,
               },
@@ -186,7 +186,7 @@ describe("users API", () => {
             },
           ],
           "user_id": "mock-user_id",
-          "user_leave_administrators": Array [],
+          "user_leave_administrators": [],
         }
       `);
     });

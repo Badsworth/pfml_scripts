@@ -28,6 +28,9 @@ module.exports = {
     "^tests(.*)$": "<rootDir>/tests$1",
   },
   setupFilesAfterEnv: ["<rootDir>/jest.setup.js"],
+  snapshotFormat: {
+    printBasicPrototype: false,
+  },
   testEnvironment: "jsdom",
   testPathIgnorePatterns: [
     "<rootDir>/.next/",

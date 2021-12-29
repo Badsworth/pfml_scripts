@@ -983,7 +983,7 @@ describe("Review", () => {
 
     expect(headings.map((heading) => heading.textContent))
       .toMatchInlineSnapshot(`
-      Array [
+      [
         "Bond with a child",
         "Medical leave",
       ]

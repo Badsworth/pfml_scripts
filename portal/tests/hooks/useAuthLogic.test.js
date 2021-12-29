@@ -317,11 +317,11 @@ describe("useAuthLogic", () => {
       });
       expect(appErrors.items).toHaveLength(2);
       expect(appErrors.items.map((e) => e.message)).toMatchInlineSnapshot(`
-            Array [
-              "Enter your email address",
-              "Enter your password",
-            ]
-          `);
+        [
+          "Enter your email address",
+          "Enter your password",
+        ]
+      `);
 
       expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
         issueField: "username",
@@ -747,7 +747,7 @@ describe("useAuthLogic", () => {
 
       expect(appErrors.items).toHaveLength(1);
       expect(appErrors.items.map((e) => e.message)).toMatchInlineSnapshot(`
-        Array [
+        [
           "Enter the 6-digit code sent to your phone number",
         ]
       `);
@@ -767,7 +767,7 @@ describe("useAuthLogic", () => {
 
       expect(appErrors.items).toHaveLength(1);
       expect(appErrors.items.map((e) => e.message)).toMatchInlineSnapshot(`
-        Array [
+        [
           "Enter the 6-digit code sent to your phone number and ensure it does not include any punctuation.",
         ]
       `);
@@ -1227,7 +1227,7 @@ describe("useAuthLogic", () => {
 
       expect(appErrors.items).toHaveLength(3);
       expect(appErrors.items.map((e) => e.message)).toMatchInlineSnapshot(`
-        Array [
+        [
           "Enter the 6-digit code sent to your email",
           "Enter your email address",
           "Enter your password",
@@ -1488,7 +1488,7 @@ describe("useAuthLogic", () => {
 
       expect(appErrors.items).toHaveLength(2);
       expect(appErrors.items.map((e) => e.message)).toMatchInlineSnapshot(`
-        Array [
+        [
           "Enter the 6-digit code sent to your email",
           "Enter your email address",
         ]

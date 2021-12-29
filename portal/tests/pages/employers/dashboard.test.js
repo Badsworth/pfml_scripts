@@ -181,7 +181,7 @@ describe("Employer dashboard", () => {
 
     expect(screen.getAllByRole("columnheader").map((el) => el.textContent))
       .toMatchInlineSnapshot(`
-      Array [
+      [
         "Employee name",
         "Application ID",
         "Employer ID number",
@@ -204,7 +204,7 @@ describe("Employer dashboard", () => {
 
     expect(screen.getAllByRole("columnheader").map((el) => el.textContent))
       .toMatchInlineSnapshot(`
-      Array [
+      [
         "Employee name",
         "Application ID",
         "Organization",
