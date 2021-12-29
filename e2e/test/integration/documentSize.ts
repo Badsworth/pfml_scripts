@@ -81,7 +81,7 @@ describe("API Documents Test of various file sizes", () => {
 
   // Added logic to establish baseline of failures for Files right at limit
   if (
-    config("ENVIRONMENT") === "test" ||
+    config("ENVIRONMENT") === "stage" ||
     config("ENVIRONMENT") === "performance"
   ) {
     tests = [
