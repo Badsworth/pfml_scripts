@@ -49,7 +49,7 @@ export const Slim = () => (
   </Alert>
 );
 
-export const neutral = () => (
+export const Neutral = () => (
   <Alert state="info" neutral>
     This info alert has a neutral background color.
   </Alert>
