@@ -213,6 +213,24 @@ def test_update_existing_employer_cease_date(
     assert queue_item.exemption_cease_date == cease_date
 
 
+def test_get_csv_regex(monkeypatch, mock_dfml_s3_bucket):
+    exemption_file_name = "CompaniesReturningToStatePlan1.csv"
+
+    exemption_file_path = TEST_FOLDER / "importer" / "CompaniesReturningToStatePlan.csv"
+    exemption_file = open(exemption_file_path, "rb")
+    exemption_key = "{}{}".format(DFML_RECEIVED_FOLDER, exemption_file_name)
+
+    s3 = boto3.client("s3")
+    s3.put_object(Bucket=mock_dfml_s3_bucket, Key=exemption_key, Body=exemption_file.read())
+    full_dfml_received_folder_path = "s3://{}/{}".format(mock_dfml_s3_bucket, DFML_RECEIVED_FOLDER)
+
+    exception_file_found = get_exemption_file_to_process(full_dfml_received_folder_path)
+    assert (
+        exception_file_found
+        == "s3://test_dfml_bucket/dfml/received/CompaniesReturningToStatePlan1.csv"
+    )
+
+
 @pytest.fixture
 def mock_s3_bucket_resource(mock_s3):
     bucket = mock_s3.Bucket("test_dfml_bucket")
@@ -250,7 +268,7 @@ def test_e2e(monkeypatch, test_db_session, mock_s3_bucket, mock_dfml_s3_bucket):
     moved_key = "{}{}".format(PROCESSED_FOLDER, file_name)
     moved_exemption_key = "{}{}".format(DFML_PROCESSED_FOLDER, exemption_file_name)
     full_received_folder_path = "s3://{}/{}".format(mock_s3_bucket, RECEIVED_FOLDER)
-    full_dfml_received_folder_path = "s3://{}/{}".format(mock_s3_bucket, DFML_RECEIVED_FOLDER)
+    full_dfml_received_folder_path = "s3://{}/{}".format(mock_dfml_s3_bucket, DFML_RECEIVED_FOLDER)
 
     s3 = boto3.client("s3")
     s3.put_object(Bucket=mock_s3_bucket, Key=key, Body=employer_file.read())
@@ -263,6 +281,16 @@ def test_e2e(monkeypatch, test_db_session, mock_s3_bucket, mock_dfml_s3_bucket):
     assert should_exist_2 is not None
 
     import_files = get_pending_filing_files_to_process(full_received_folder_path)
+    assert import_files[0] == "s3://test_dfml_bucket/dor/received/DORDUADFMLEMP_20211210131901"
+
+    path_without_slash = full_received_folder_path[:-1]
+    assert path_without_slash == "s3://test_dfml_bucket/dor/received"
+    import_files_without_slash = get_pending_filing_files_to_process(path_without_slash)
+    assert (
+        import_files_without_slash[0]
+        == "s3://test_dfml_bucket/dor/received/DORDUADFMLEMP_20211210131901"
+    )
+
     assert len(import_files) == 1
 
     exception_file = get_exemption_file_to_process(full_dfml_received_folder_path)

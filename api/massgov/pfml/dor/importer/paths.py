@@ -33,7 +33,10 @@ def get_pending_filing_files_to_process(path: str) -> List[str]:
         match = re.match(r"(DORDUADFML.*_)(\d+)", filename)
 
         if match is not None:
-            import_files.append("{}{}".format(path, filename))
+            if path.endswith("/"):
+                import_files.append("{}{}".format(path, filename))
+            else:
+                import_files.append("{}/{}".format(path, filename))
 
     return import_files
 
@@ -43,7 +46,7 @@ def get_exemption_file_to_process(path: str) -> str:
     files_for_import.sort()
 
     for filename in files_for_import:
-        match = re.match(r"CompaniesReturningToStatePlan.csv", filename)
+        match = re.match(r"CompaniesReturningToStatePlan.*.csv", filename)
 
         if match is not None:
             return "{}{}".format(path, filename)
