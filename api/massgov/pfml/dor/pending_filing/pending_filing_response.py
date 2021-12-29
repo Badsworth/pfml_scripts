@@ -33,7 +33,6 @@ from massgov.pfml.db.models.employees import (
     EmployerQuarterlyContribution,
     ImportLog,
     WagesAndContributions,
-    WagesAndContributionsHistory,
 )
 from massgov.pfml.dor.importer.dor_file_formats import (
     EMPLOYER_PENDING_FILING_RESPONSE_FILE_A_ROW_LENGTH,
@@ -310,7 +309,7 @@ def process_pending_filing_employer_import(
         # If an employer file is given, parse and import
         if employer_file_path:
             employers, employees = parse_pending_filing_employer_file(
-                employer_file_path, exemption_data, decrypter, report
+                employer_file_path, exemption_data, decrypter, report, db_session
             )
             parsed_employers_count = len(employers)
             parsed_employees_count = len(employees)
@@ -590,6 +589,13 @@ def import_employers(
         ):
             added_push_queue[existing_employer_model.employer_id] = True
 
+            existing_employer_model.family_exemption = employer_info["family_exemption"]
+            existing_employer_model.medical_exemption = employer_info["medical_exemption"]
+            existing_employer_model.exemption_commence_date = employer_info[
+                "exemption_commence_date"
+            ]
+            existing_employer_model.exemption_cease_date = employer_info["exemption_cease_date"]
+
             # Enqueue updated employer for push to FINEOS
             db_session.add(
                 EmployerPushToFineosQueue(
@@ -744,73 +750,6 @@ def import_employees(
 
     logger.info("Done - Creating new employees: %i", len(employee_models_to_create))
 
-    # 4 - Update all existing employees
-    found_employee_and_wage_info_list = list(
-        filter(
-            lambda employee: employee["employee_ssn"] in ssn_to_existing_employee_model,
-            employee_info_list,
-        )
-    )
-    logger.info(
-        "Updating existing employees from total records: %i", len(found_employee_and_wage_info_list)
-    )
-
-    employee_ssns_updated_in_current_loop = set()
-    found_employee_rows_count = len(found_employee_and_wage_info_list)
-    count = 0
-    updated_employees_count = 0
-    unmodified_employees_count = 0
-
-    for employee_info in found_employee_and_wage_info_list:
-        ssn = employee_info["employee_ssn"]
-        count += 1
-
-        if count % 10000 == 0:
-            logger.info(
-                "Updating existing employees - count: %i/%i (%.1f%%), updated: %i, report id: %i",
-                count,
-                found_employee_rows_count,
-                100.0 * count / found_employee_rows_count,
-                updated_employees_count,
-                import_log_entry_id,
-            )
-
-        # since there are multiple rows with the same employee information ignore all but the first one
-        if ssn in employee_ssns_updated_in_current_loop:
-            continue
-
-        employee_ssns_updated_in_current_loop.add(ssn)
-
-        existing_employee_model = ssn_to_existing_employee_model[ssn]
-
-        is_updated = dor_persistence_util.check_and_update_employee(
-            existing_employee_model, employee_info, import_log_entry_id
-        )
-        if is_updated:
-            updated_employees_count += 1
-            report.updated_employees_count += 1
-
-            # Enqueue updated employee for push to FINEOS
-            db_session.add(
-                EmployeePushToFineosQueue(
-                    employee_id=existing_employee_model.employee_id, action="UPDATE"
-                )
-            )
-
-        else:
-            unmodified_employees_count += 1
-            report.unmodified_employees_count += 1
-
-    if updated_employees_count > 0:
-        logger.info("Batch committing employee updates: %i", updated_employees_count)
-        db_session.commit()
-
-    logger.info(
-        "Done - Updating existing employees: %i, unmodified: %i",
-        updated_employees_count,
-        unmodified_employees_count,
-    )
-
 
 def get_wage_composite_key(
     employer_id: uuid.UUID, employee_id: uuid.UUID, filing_period: date
@@ -935,10 +874,24 @@ def import_wage_data(
             report.skipped_wages_count += 1
             continue
 
+        # Check if we just created the employee. If we did, get the employee_id, else it must already exist
+        employee_id = None
+        if (
+            employee_ssns_to_id_created_in_current_import_run.get(
+                employee_info["employee_ssn"], None
+            )
+            is not None
+        ):
+            employee_id = employee_ssns_to_id_created_in_current_import_run[
+                employee_info["employee_ssn"]
+            ]
+        else:
+            employee_id = ssn_to_existing_employee_model[employee_info["employee_ssn"]].employee_id
+
         wages_contributions_models_to_create.append(
             dor_persistence_util.dict_to_wages_and_contributions(
                 employee_info,
-                employee_ssns_to_id_created_in_current_import_run[employee_info["employee_ssn"]],
+                employee_id,
                 account_key_to_employer_id_map[employee_info["account_key"]],
                 import_log_entry_id,
             )
@@ -954,7 +907,7 @@ def import_wage_data(
         "Done - Creating new wage information: %i", len(wages_contributions_models_to_create)
     )
 
-    # 2. Create or update wage rows for existing employees
+    # 2. Create wage rows for existing employees
 
     # Get the list of wages to check (any rows with employees not created in current run)
     wage_info_list_to_create_or_update = list(
@@ -1003,7 +956,6 @@ def import_wage_data(
     count = 0
     updated_count = 0
     unmodified_count = 0
-    wage_history_records: List[WagesAndContributionsHistory] = []
 
     for wage_info in wage_info_list_to_create_or_update:
         count += 1
@@ -1042,17 +994,6 @@ def import_wage_data(
                 wage_info, existing_employee.employee_id, employer_id, import_log_entry_id
             )
             wages_contributions_models_existing_employees_to_create.append(wage_model)
-        else:
-            is_updated = dor_persistence_util.check_and_update_wages_and_contributions(
-                existing_wage, wage_info, import_log_entry_id, wage_history_records
-            )
-
-            if is_updated:
-                updated_count += 1
-                report.updated_wages_and_contributions_count += 1
-            else:
-                unmodified_count += 1
-                report.unmodified_wages_and_contributions_count += 1
 
         if count % 10000 == 0:
             logger.info(
@@ -1064,30 +1005,6 @@ def import_wage_data(
                 unmodified_count,
                 len(wages_contributions_models_existing_employees_to_create),
             )
-
-    if updated_count > 0:
-        logger.info(
-            "Batch committing wage updates: %i, unmodified: %i", updated_count, unmodified_count
-        )
-
-        db_session.commit()
-
-        logger.info(
-            "Batch saving wages and contribution history",
-            extra={"record_count": len(wage_history_records)},
-        )
-        bulk_save(
-            db_session, wage_history_records, "Batch creating WagesAndContributionsHistory records",
-        )
-
-        db_session.commit()
-
-    logger.info(
-        "Wage data for existing employees - done with check: %i, updated: %i , collected for creation: %i",
-        count,
-        updated_count,
-        len(wages_contributions_models_existing_employees_to_create),
-    )
 
     logger.info(
         "Creating new wage information for existing employees: %i",
@@ -1203,6 +1120,7 @@ def parse_pending_filing_employer_file(
     exemption_data: CSVSourceWrapper,
     decrypter: Crypt,
     report: ImportReport,
+    db_session: Session,
 ) -> Tuple[List, List]:
     """Parse employer file"""
     # DOR has a 'magic date' of 12/31/9999 if employer has no exemptions.
@@ -1222,13 +1140,13 @@ def parse_pending_filing_employer_file(
     invalid_employer_key_line_nums = []
     line_count = 0
 
+    last_employer_account_key = ""
+    last_employer_filing_period: Optional[date] = None
+
     if decrypt_files:
         employer_capturer = Capturer(line_offset=0)
         decrypter.set_on_data(employer_capturer)
         get_decrypted_file_stream(employer_file_path, decrypter)
-
-        last_employer_account_key = ""
-        last_employer_filing_period = ""
 
         for row in employer_capturer.lines:
             if not row:  # skip empty end of file lines
@@ -1249,13 +1167,26 @@ def parse_pending_filing_employer_file(
                         )
                         report.invalid_employer_lines_count += 1
 
-                    last_employer_filing_period = employer["fdtmQuarterYear"]
-
+                    last_employer_filing_period = datetime.strptime(
+                        employer["fdtmQuarterYear"], "%Y%m%d"
+                    ).date()
                     last_employer_account_key = employer_uuids.get(employer["fstrEmployerID"], "")
+
                     if last_employer_account_key == "":
-                        employer_uuids[employer["fstrEmployerID"]] = "pending_filing_" + str(
-                            uuid_gen()
+                        existing_employer = dor_persistence_util.get_employer_by_fein(
+                            db_session, employer["fstrEmployerID"]
                         )
+                        if (
+                            existing_employer is not None
+                            and existing_employer.account_key is not None
+                        ):
+                            employer_uuids[
+                                employer["fstrEmployerID"]
+                            ] = existing_employer.account_key
+                        else:
+                            employer_uuids[employer["fstrEmployerID"]] = "pending_filing_" + str(
+                                uuid_gen()
+                            )
                         last_employer_account_key = employer_uuids[employer["fstrEmployerID"]]
 
                     employer_cease_date = exemption_date
@@ -1320,9 +1251,6 @@ def parse_pending_filing_employer_file(
                     logger.exception(e)
     else:
 
-        last_employer_account_key = ""
-        last_employer_filing_period = ""
-
         for row in get_decrypted_file_stream(employer_file_path, decrypter):
             if not row:  # skip empty end of file lines
                 continue
@@ -1345,10 +1273,21 @@ def parse_pending_filing_employer_file(
                     continue
 
                 employer = EMPLOYER_PENDING_FILING_RESPONSE_FILE_FORMAT_A.parse_line(row)
-                last_employer_filing_period = employer["fdtmQuarterYear"]
+                last_employer_filing_period = datetime.strptime(
+                    employer["fdtmQuarterYear"], "%Y%m%d"
+                ).date()
                 last_employer_account_key = employer_uuids.get(employer["fstrEmployerID"], "")
+
                 if last_employer_account_key == "":
-                    employer_uuids[employer["fstrEmployerID"]] = "pending_filing_" + str(uuid_gen())
+                    existing_employer = dor_persistence_util.get_employer_by_fein(
+                        db_session, employer["fstrEmployerID"]
+                    )
+                    if existing_employer is not None and existing_employer.account_key is not None:
+                        employer_uuids[employer["fstrEmployerID"]] = existing_employer.account_key
+                    else:
+                        employer_uuids[employer["fstrEmployerID"]] = "pending_filing_" + str(
+                            uuid_gen()
+                        )
                     last_employer_account_key = employer_uuids[employer["fstrEmployerID"]]
 
                 employer_cease_date = exemption_date
