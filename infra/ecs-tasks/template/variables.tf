@@ -293,6 +293,11 @@ variable "enable_generate_1099_pdf" {
   default     = "0"
 }
 
+variable "generate_1099_max_files" {
+  description = "Maximum number of 1099s to generate"
+  default     = "1000"
+}
+
 variable "enable_merge_1099_pdf" {
   description = "Enable merging of 1099 documents for printing"
   default     = "0"

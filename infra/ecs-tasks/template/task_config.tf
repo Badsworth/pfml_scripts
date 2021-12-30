@@ -139,6 +139,7 @@ locals {
   irs_1099_documents = [
     { name : "PDF_API_HOST", value : var.pdf_api_host },
     { name : "ENABLE_GENERATE_1099_PDF", value : var.enable_generate_1099_pdf },
+    { name : "GENERATE_1099_MAX_FILES", value : var.generate_1099_max_files },
     { name : "ENABLE_MERGE_1099_PDF", value : var.enable_merge_1099_pdf },
     { name : "ENABLE_UPLOAD_1099_PDF", value : var.enable_upload_1099_pdf },
     { name : "PFML_1099_DOCUMENT_ARCHIVE_PATH", value : "s3://pfml-api-${var.environment_name}-1099-form-generator/1099" },
