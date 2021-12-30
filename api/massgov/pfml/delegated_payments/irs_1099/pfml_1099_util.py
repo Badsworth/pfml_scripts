@@ -1006,7 +1006,7 @@ def get_1099_record(db_session: db.Session, status: str, batch_id: str) -> Optio
 
 
 def is_test_file() -> str:
-    if os.environ.get("TEST_FILE_GENERATION_1099", "0") == "1":
+    if app.get_config().enable_1099_testfile_generation:
         return "T"
     else:
         return ""

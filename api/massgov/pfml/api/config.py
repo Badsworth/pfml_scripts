@@ -38,6 +38,7 @@ class AppConfig:
     enable_pdf_document_compression: bool
     enable_upload_1099_pdf: bool
     upload_max_files_to_fineos: int
+    enable_1099_testfile_generation: bool
 
 
 def get_config() -> AppConfig:
@@ -68,4 +69,5 @@ def get_config() -> AppConfig:
         ),
         enable_upload_1099_pdf=os.environ.get("ENABLE_UPLOAD_1099_PDF", "0") == "1",
         upload_max_files_to_fineos=int(os.environ.get("UPLOAD_MAX_FILES_TO_FINEOS", 10)),
+        enable_1099_testfile_generation=os.environ.get("TEST_FILE_GENERATION_1099", "0") == "1",
     )

@@ -94,12 +94,13 @@ module "tasks" {
   dor_fineos_etl_schedule_expression_standard         = "cron(5 * * * ? *)"
   dor_fineos_etl_schedule_expression_daylight_savings = "cron(5 * * * ? *)"
 
-  pdf_api_host               = "http://localhost:5000"
-  enable_generate_1099_pdf   = "1"
-  generate_1099_max_files    = "1000"
-  enable_merge_1099_pdf      = "1"
-  enable_upload_1099_pdf     = "1"
-  upload_max_files_to_fineos = "10"
+  pdf_api_host                    = "http://localhost:5000"
+  enable_generate_1099_pdf        = "1"
+  generate_1099_max_files         = "1000"
+  enable_merge_1099_pdf           = "1"
+  enable_upload_1099_pdf          = "1"
+  upload_max_files_to_fineos      = "10"
+  enable_1099_testfile_generation = "0"
 
   enable_withholding_payments = "1"
 

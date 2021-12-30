@@ -324,6 +324,11 @@ variable "upload_max_files_to_fineos" {
   default     = "10"
 }
 
+variable "enable_1099_testfile_generation" {
+  description = "Enable IRS 1099 test file generation"
+  default     = "0"
+}
+
 ########## Variables for Step Functions ################
 
 variable "st_use_mock_dor_data" {
