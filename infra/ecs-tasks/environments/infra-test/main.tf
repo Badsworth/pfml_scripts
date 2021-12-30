@@ -75,4 +75,13 @@ module "tasks" {
   enable_register_admins_job = true
 
   task_failure_email_address_list = ["mass-pfml-api-low-priority@navapbc.pagerduty.com"]
+
+  pdf_api_host               = "http://localhost:5000"
+  enable_generate_1099_pdf   = "0"
+  generate_1099_max_files    = "1000"
+  enable_merge_1099_pdf      = "0"
+  enable_upload_1099_pdf     = "0"
+  upload_max_files_to_fineos = "10"
+
+  enable_withholding_payments = "1"
 }
