@@ -966,16 +966,38 @@ def get_mmars_payment_counts(db_session: db.Session) -> Dict[str, int]:
     return payment_counts
 
 
-def get_1099_records(db_session: db.Session, batchId: str) -> List[Pfml1099]:
+def get_1099_records_to_generate(db_session: db.Session, batchId: str) -> List[Pfml1099]:
 
-    records = db_session.query(Pfml1099).filter(Pfml1099.pfml_1099_batch_id == batchId).all()
-    records = records[:1000]
+    is_none = None
+
+    records = (
+        db_session.query(Pfml1099)
+        .filter(Pfml1099.pfml_1099_batch_id == batchId, Pfml1099.s3_location == is_none)
+        .all()
+    )
     if records is not None:
         logger.info(
             "Number of 1099 Records for batch [%s]: %s", batchId, len(records),
         )
 
     return records
+
+
+def get_1099_generated_count(db_session: db.Session, batchId: str) -> int:
+
+    is_none = None
+
+    records = (
+        db_session.query(Pfml1099)
+        .filter(Pfml1099.pfml_1099_batch_id == batchId, Pfml1099.s3_location != is_none)
+        .all()
+    )
+    if records is not None:
+        logger.info(
+            "Number of 1099 Records generated prior [%s]: %s", batchId, len(records),
+        )
+
+    return len(records)
 
 
 def get_tax_id(db_session: Any, tax_id_str: str) -> str:
@@ -992,6 +1014,10 @@ def get_tax_id(db_session: Any, tax_id_str: str) -> str:
 
 def get_upload_max_files_to_fineos() -> int:
     return app.get_config().upload_max_files_to_fineos
+
+
+def get_generate_1099_max_files() -> int:
+    return app.get_config().generate_1099_max_files
 
 
 def get_1099_record(db_session: db.Session, status: str, batch_id: str) -> Optional[Pfml1099]:
