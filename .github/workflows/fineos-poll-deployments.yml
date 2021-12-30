@@ -39,7 +39,7 @@ jobs:
         id: publish-deployments
 
       - name: Trigger E2E Workflow
-        uses: aurelien-baudet/workflow-dispatch@v2
+        uses: aurelien-baudet/workflow-dispatch@v2.1.1
         if: steps.publish-deployments.outputs.was_deployed == 'true'
         with:
           workflow: e2e-cypress.yml
