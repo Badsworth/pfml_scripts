@@ -199,6 +199,34 @@ function RunQuery({ accountId, runIds, children }) {
   );
 }
 
+const httpUrlRegex = new RegExp(
+  /(https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b[-a-zA-Z0-9()@:%_\\+.~#?&//=]*)/
+);
+
+function RichErroMessage({ children }) {
+  return <>
+    {
+      React.Children.map(children, (errorMessage) => {
+        if (typeof errorMessage !== 'string') {
+          return errorMessage;
+        }
+        return errorMessage
+          .split(httpUrlRegex)
+          .map((substring) => {
+            if(httpUrlRegex.test(substring)) {
+              return (
+                <a href={encodeURI(substring)} target="_blank">
+                  {substring}
+                </a>
+              );
+            }
+            return substring;
+          })
+      })
+    }
+  </>
+}
+
 class GridRow extends React.Component {
   state = {
     open: false,
@@ -344,7 +372,9 @@ class GridRow extends React.Component {
                               >
                                 <div className={"display-linebreak"}>
                                   {r.errorClass}:&nbsp;
-                                  {r.errorMessage}
+                                  <RichErroMessage>
+                                    {r.errorMessage}
+                                  </RichErroMessage>
                                 </div>
                               </td>
                             </tr>
