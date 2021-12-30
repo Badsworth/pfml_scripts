@@ -96,16 +96,16 @@ describe("ClaimDetail", () => {
     ).toBe(false);
   });
 
-  it("creates absence periods", () => {
+  it("creates absence periods and sorts by absence_period_start_date", () => {
     const claimDetail = new ClaimDetail({
       absence_periods: [
         {
-          absence_period_start_date: "2021-01-01",
-          absence_period_end_date: "2021-06-30",
-        },
-        {
           absence_period_start_date: "2021-07-01",
           absence_period_end_date: "2021-12-31",
+        },
+        {
+          absence_period_start_date: "2021-01-01",
+          absence_period_end_date: "2021-06-30",
         },
       ],
     });

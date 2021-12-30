@@ -20,7 +20,7 @@ const renderWithApprovalNotice = (appLogicHook, isRetroactive = true) => {
     {
       application_id: "mock-application-id",
       content_type: "image/png",
-      created_at: isRetroactive ? "2022-12-30" : "2021-11-30",
+      created_at: isRetroactive ? "2021-11-30" : "2022-12-30",
       document_type: DocumentType.approvalNotice,
       fineos_document_id: "fineos-id-7",
       name: "legal notice 3",
@@ -180,6 +180,66 @@ describe("Payments", () => {
 
     const section = screen.getByTestId("your-payments-intro");
     expect(section).toMatchSnapshot();
+  });
+
+  it("renders non-retroactive text if latest absence period date is not retroactive", () => {
+    renderPage(
+      Payments,
+      {
+        addCustomSetup: setupHelper({
+          ...defaultClaimDetail,
+          absence_periods: [
+            ...defaultClaimDetail.absence_periods,
+            {
+              period_type: "Reduced",
+              absence_period_start_date: "2022-10-21",
+              absence_period_end_date: "2022-12-30",
+              reason: "Child Bonding",
+            },
+          ],
+        }),
+      },
+      props
+    );
+
+    expect(
+      screen.queryByText(/receive one payment for your entire leave/)
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /expect to be paid weekly for the duration of your leave/
+      )
+    ).toBeInTheDocument();
+  });
+
+  it("renders retroactive text if latest absence period date is retroactive", () => {
+    renderPage(
+      Payments,
+      {
+        addCustomSetup: setupHelper({
+          ...defaultClaimDetail,
+          absence_periods: [
+            {
+              period_type: "Reduced",
+              absence_period_start_date: "2021-07-21",
+              absence_period_end_date: "2021-18-30",
+              reason: "Child Bonding",
+            },
+            {
+              period_type: "Reduced",
+              absence_period_start_date: "2021-09-21",
+              absence_period_end_date: "2021-10-30",
+              reason: "Child Bonding",
+            },
+          ],
+        }),
+      },
+      props
+    );
+
+    expect(
+      screen.getByText(/receive one payment for your entire leave/)
+    ).toBeInTheDocument();
   });
 
   it("renders the `changes to payments` section", () => {

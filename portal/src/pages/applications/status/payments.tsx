@@ -161,7 +161,8 @@ export const Payments = ({
   )?.created_at;
 
   const isRetroactive = approvalDate
-    ? claimDetail.absence_periods[0]?.absence_period_end_date < approvalDate
+    ? claimDetail.absence_periods[claimDetail.absence_periods.length - 1]
+        ?.absence_period_end_date < approvalDate
     : false;
 
   const shouldShowPaymentsTable =
