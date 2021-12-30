@@ -133,7 +133,6 @@ locals {
         local.db_access,
         { name : "DECRYPT", value : "true" },
         { name : "FOLDER_PATH", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/dor/received" },
-        { name : "CSV_FOLDER_PATH", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/dfml/received" },
         { name : "GPG_DECRYPTION_KEY", valueFrom : "/service/${local.app_name}-dor-import/${var.environment_name}/gpg_decryption_key" },
         { name : "GPG_DECRYPTION_KEY_PASSPHRASE", valueFrom : "/service/${local.app_name}-dor-import/${var.environment_name}/gpg_decryption_key_passphrase" }
       ]
@@ -161,6 +160,7 @@ locals {
         local.db_access,
         { name : "DECRYPT", value : "true" },
         { name : "FOLDER_PATH", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/dor/received" },
+        { name : "CSV_FOLDER_PATH", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/dfml/received/" },
         { name : "GPG_DECRYPTION_KEY", valueFrom : "/service/${local.app_name}-dor-import/${var.environment_name}/gpg_decryption_key" },
         { name : "GPG_DECRYPTION_KEY_PASSPHRASE", valueFrom : "/service/${local.app_name}-dor-import/${var.environment_name}/gpg_decryption_key_passphrase" }
       ]
