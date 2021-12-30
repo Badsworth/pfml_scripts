@@ -578,66 +578,6 @@ class PaymentRejectsStep(Step):
                 payment, is_rejected_payment, is_skipped_payment, rejected_notes
             )
 
-    def transition_audit_pending_withholding_payment_state(
-        self,
-        payment: Payment,
-        is_rejected_payment: bool,
-        is_skipped_payment: bool,
-        rejected_notes: Optional[str] = None,
-    ) -> None:
-        payment_state_log: Optional[StateLog] = state_log_util.get_latest_state_log_in_flow(
-            payment, Flow.DELEGATED_PAYMENT, self.db_session
-        )
-
-        if payment_state_log is None:
-            self.increment(self.Metrics.PAYMENT_STATE_LOG_MISSING_COUNT)
-            raise PaymentRejectsException(
-                f"No state log found for payment found in audit reject file: {payment.payment_id}"
-            )
-
-        if (
-            payment_state_log.end_state_id
-            != State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT.state_id
-        ):
-            self.increment(self.Metrics.PAYMENT_STATE_LOG_NOT_IN_AUDIT_RESPONSE_PENDING_COUNT)
-            raise PaymentRejectsException(
-                f"Found payment state log not in audit response pending state: {payment_state_log.end_state.state_description if payment_state_log.end_state else None}, payment_id: {payment.payment_id}"
-            )
-
-        if rejected_notes:
-            rejected_notes = rejected_notes.replace("\ufffd", " ")
-
-        if is_rejected_payment:
-            state_log_util.create_finished_state_log(
-                payment,
-                State.STATE_WITHHOLDING_ERROR
-                if payment.payment_transaction_type_id
-                == PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id
-                else State.FEDERAL_WITHHOLDING_ERROR,
-                state_log_util.build_outcome("Payment rejected"),
-                self.db_session,
-            )
-        elif is_skipped_payment:
-            state_log_util.create_finished_state_log(
-                payment,
-                State.STATE_WITHHOLDING_ERROR_RESTARTABLE
-                if payment.payment_transaction_type_id
-                == PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id
-                else State.FEDERAL_WITHHOLDING_ERROR_RESTARTABLE,
-                state_log_util.build_outcome("Payment skipped"),
-                self.db_session,
-            )
-        else:
-            state_log_util.create_finished_state_log(
-                payment,
-                State.STATE_WITHHOLDING_SEND_FUNDS
-                if payment.payment_transaction_type_id
-                == PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id
-                else State.FEDERAL_WITHHOLDING_SEND_FUNDS,
-                ACCEPTED_OUTCOME,
-                self.db_session,
-            )
-
     def _transition_not_sampled_payment_audit_pending_state(self, pending_state: LkState) -> None:
         state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
             state_log_util.AssociatedClass.PAYMENT, pending_state, self.db_session
