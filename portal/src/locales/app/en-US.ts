@@ -1570,6 +1570,7 @@ const pages = {
     doNotReportHintList: [
       "Other income that you've applied for but are not yet receiving",
       "Income from past PFML benefits",
+      "Income received through a bonus, like a holiday bonus or an annual sum paid out at the end of the year",
     ],
     doReportHintHeading: "You must report these sources of income:",
     doReportHintList: [
