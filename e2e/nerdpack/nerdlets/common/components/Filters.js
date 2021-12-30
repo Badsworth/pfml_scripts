@@ -77,7 +77,7 @@ export class FilterByEnv extends BaseFilter {
   state = {
     breakfix: true,
     training: true,
-    training2: true,
+    trn2: true,
     uat: true,
     performance: true,
     stage: true,

@@ -162,6 +162,37 @@ function buildRuns(data) {
   return { rows, uniqueRuns };
 }
 
+function RunQueryIntegration({ accountId, runIds, children }) {
+  const query = `SELECT *
+                  FROM IntegrationTestResult
+                  WHERE runId IN (${runIds.map((i) => `'${i}'`).join(", ")})
+                  SINCE 1 month ago until now LIMIT MAX`;
+
+  return (
+    <NrqlQuery accountId={accountId} query={query}>
+      {({ data, loading, error }) => {
+        if (loading) {
+          return <Spinner />;
+        }
+        if (error) {
+          return (
+            <SectionMessage
+              title={"There was an error executing the query"}
+              description={error}
+              type={SectionMessage.TYPE.CRITICAL}
+            />
+          );
+        }
+        const runData = buildRuns(data);
+        if (!runData) {
+          return children({ rows: [], uniqueRuns: [] });
+        }
+        return children(runData);
+      }}
+    </NrqlQuery>
+  );
+}
+
 function RunQuery({ accountId, runIds, children }) {
   const query = `SELECT *
                  FROM CypressTestResult SINCE 1 month ago
@@ -196,6 +227,74 @@ function RunQuery({ accountId, runIds, children }) {
         return children(runData);
       }}
     </NrqlQuery>
+  );
+}
+
+function GridTable({ uniqueRuns, rows, accountId, runIds }) {
+  return (
+    <div>
+      {uniqueRuns.map(({ runId, environment, runUrl, branch }, i) => (
+        <div className={"run-notes"}>
+          <span>
+            {`${i + 1} Run ID: ${runId}, Environment: ${labelEnv(environment)}`}
+          </span>
+          <Link to={runUrl}>View in Cypress</Link>
+          {branch != "main" && (
+            <Link to={`https://github.com/EOLWD/pfml/compare/main...${branch}`}>
+              {branch}
+            </Link>
+          )}
+        </div>
+      ))}
+      <table className={"e2e-status"}>
+        <thead>
+          <tr>
+            <th></th>
+            <th>File</th>
+            {uniqueRuns.map(({ runId, environment, runUrl, timestamp }, i) => [
+              <th></th>,
+              <th width={"150px"} additionalValue={timestamp}>
+                <Tooltip
+                  text={`Run ID: ${runId}, Environment: ${environment}`}
+                  additionalInfoLink={{
+                    to: runUrl,
+                    label: "View in Cypress",
+                  }}
+                >
+                  {i + 1}
+                </Tooltip>
+              </th>,
+            ])}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((item) => {
+            return <GridRow item={item}></GridRow>;
+          })}
+        </tbody>
+      </table>
+      <div className={`charts`}>
+        <PieChart
+          fullWidth
+          accountId={accountId}
+          query={`SELECT count(*)
+                    FROM CypressTestResult since 1 month ago
+                    WHERE runId IN (${runIds.map((i) => `'${i}'`).join(", ")})
+                      AND pass is false
+                      FACET category`}
+        ></PieChart>
+        <PieChart
+          fullWidth
+          accountId={accountId}
+          query={`SELECT count(*)
+                    FROM CypressTestResult since 1 month ago
+                    WHERE runId IN (${runIds.map((i) => `'${i}'`).join(", ")})
+                      AND pass is false
+                      FACET category
+                        , subCategory`}
+        ></PieChart>
+      </div>
+    </div>
   );
 }
 
@@ -249,10 +348,14 @@ class GridRow extends React.Component {
         return;
       }
       run.results.map((result) => {
-        if (!sub[result.test]) {
-          sub[result.test] = [];
+        let title = result.test;
+        if (!title) {
+          title = result.title;
         }
-        sub[result.test].push(result);
+        if (!sub[title]) {
+          sub[title] = [];
+        }
+        sub[title].push(result);
       });
     });
     this.sub = sub;
@@ -394,85 +497,23 @@ class GridRow extends React.Component {
 }
 
 export default function TestGrid({ accountId, environment, runIds }) {
-  const children = ({ rows, uniqueRuns }) => {
-    return (
-      <div>
-        {uniqueRuns.map(({ runId, environment, runUrl, branch }, i) => (
-          <div className={"run-notes"}>
-            <span>
-              {`${i + 1} Run ID: ${runId}, Environment: ${labelEnv(
-                environment
-              )}`}
-            </span>
-            <Link to={runUrl}>View in Cypress</Link>
-            {branch != "main" && (
-              <Link
-                to={`https://github.com/EOLWD/pfml/compare/main...${branch}`}
-              >
-                {branch}
-              </Link>
-            )}
-          </div>
-        ))}
-        <table className={"e2e-status"}>
-          <thead>
-            <tr>
-              <th></th>
-              <th>File</th>
-              {uniqueRuns.map(
-                ({ runId, environment, runUrl, timestamp }, i) => [
-                  <th></th>,
-                  <th width={"150px"} additionalValue={timestamp}>
-                    <Tooltip
-                      text={`Run ID: ${runId}, Environment: ${environment}`}
-                      additionalInfoLink={{
-                        to: runUrl,
-                        label: "View in Cypress",
-                      }}
-                    >
-                      {i + 1}
-                    </Tooltip>
-                  </th>,
-                ]
-              )}
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((item) => {
-              return <GridRow item={item}></GridRow>;
-            })}
-          </tbody>
-        </table>
-        <div className={`charts`}>
-          <PieChart
-            fullWidth
-            accountId={accountId}
-            query={`SELECT count(*)
-                    FROM CypressTestResult since 1 month ago
-                    WHERE runId IN (${runIds.map((i) => `'${i}'`).join(", ")})
-                      AND pass is false
-                      FACET category`}
-          ></PieChart>
-          <PieChart
-            fullWidth
-            accountId={accountId}
-            query={`SELECT count(*)
-                    FROM CypressTestResult since 1 month ago
-                    WHERE runId IN (${runIds.map((i) => `'${i}'`).join(", ")})
-                      AND pass is false
-                      FACET category
-                        , subCategory`}
-          ></PieChart>
-        </div>
-      </div>
-    );
-  };
   // If we have explicit run IDs we're trying to look at, just query for those directly.
   if (runIds) {
     return (
-      <RunQuery runIds={runIds} accountId={accountId}>
-        {children}
-      </RunQuery>
+      <RunQueryIntegration runIds={runIds} accountId={accountId}>
+        {(IntegrationRuns) => (
+          <RunQuery runIds={runIds} accountId={accountId}>
+            {(CypressRuns) => (
+              <GridTable
+                uniqueRuns={CypressRuns.uniqueRuns}
+                rows={[...CypressRuns.rows, ...IntegrationRuns.rows]}
+                accountId={accountId}
+                runIds={runIds}
+              />
+            )}
+          </RunQuery>
+        )}
+      </RunQueryIntegration>
     );
   }
 
@@ -480,9 +521,20 @@ export default function TestGrid({ accountId, environment, runIds }) {
   return (
     <RunIdsQuery environment={environment} accountId={accountId}>
       {({ runIds }) => (
-        <RunQuery runIds={runIds} accountId={accountId}>
-          {children}
-        </RunQuery>
+        <RunQueryIntegration runIds={runIds} accountId={accountId}>
+          {(IntegrationRuns) => (
+            <RunQuery runIds={runIds} accountId={accountId}>
+              {(CypressRuns) => (
+                <GridTable
+                  uniqueRuns={CypressRuns.uniqueRuns}
+                  rows={[...CypressRuns.rows, ...IntegrationRuns.rows]}
+                  accountId={accountId}
+                  runIds={runIds}
+                />
+              )}
+            </RunQuery>
+          )}
+        </RunQueryIntegration>
       )}
     </RunIdsQuery>
   );
