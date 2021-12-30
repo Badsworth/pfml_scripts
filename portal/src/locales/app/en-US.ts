@@ -937,9 +937,6 @@ const shared = {
   saveAndContinue: "Save and continue",
   siteDescription:
     "Apply for this Commonwealth-offered benefit here, or log in to review your applications.",
-  smsPhoneNumberConfirmedHeading: "Phone number confirmed",
-  smsPhoneNumberConfirmedMessage:
-    "To protect your security, we'll send you a 6-digit code whenever we need to verify it's really you.",
   submitApplicationButton: "I understand and agree",
   trackStatus:
     "<track-status-link>Track the status of your application here</track-status-link>.",
@@ -960,8 +957,6 @@ const pages = {
     getReadyLink: "Start a new application",
     inProgressHeading: "In-progress applications",
     noClaims: "You don’t have any applications yet.",
-    phoneNumberConfirmedHeading: "$t(shared.smsPhoneNumberConfirmedHeading)",
-    phoneNumberConfirmedMessage: "$t(shared.smsPhoneNumberConfirmedMessage)",
     submittedHeading: "Submitted applications",
     title: "Your applications",
     uploadSuccessHeading: "You successfully submitted your documents",
@@ -2711,8 +2706,6 @@ const pages = {
     mfaChoiceEnable: "Enable additional login verification",
     mfaEnabledLabel: "Additional login verification is enabled",
     mfaPhoneNumberLabel: "Phone number",
-    phoneNumberConfirmedHeading: "$t(shared.smsPhoneNumberConfirmedHeading)",
-    phoneNumberConfirmedMessage: "$t(shared.smsPhoneNumberConfirmedMessage)",
     rowEditText: "Edit",
     saveLoginVerificationButtonText: "Save preference",
     title: "Settings",
@@ -3194,6 +3187,11 @@ const components = {
     scheduledWithStartAndEnd:
       "We're performing some maintenance on our system, so you can't log in or work on any applications right now. The system will be offline from <strong>{{start}}</strong> to <strong>{{end}}</strong>.",
     title: "We’re undergoing maintenance",
+  },
+  mfaSetupSuccessAlert: {
+    heading: "Phone number confirmed",
+    message:
+      "To protect your security, we'll send you a 6-digit code whenever we need to verify it's really you.",
   },
   pageNotFound: {
     body: "<p>The page you’re looking for might have been removed, have a new name, or is otherwise unavailable.</p><p>If you typed the URL directly, check your spelling and capitalization. Our URLs look like this: <url-example>{{ url }}</url-example></p>",

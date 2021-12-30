@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 import User, { MFAPreference } from "src/models/User";
-import Alert from "src/components/core/Alert";
 import AmendmentForm from "src/components/employers/AmendmentForm";
 import { AppLogic } from "src/hooks/useAppLogic";
 import BackButton from "src/components/BackButton";
 import Button from "src/components/core/Button";
 import ButtonLink from "src/components/ButtonLink";
 import InputChoiceGroup from "src/components/core/InputChoiceGroup";
+import MfaSetupSuccessAlert from "src/components/MfaSetupSuccessAlert";
 import PageNotFound from "src/components/PageNotFound";
 import ReviewHeading from "src/components/ReviewHeading";
 import ReviewRow from "src/components/ReviewRow";
@@ -93,15 +93,7 @@ export const Settings = (props: UserSettingsProps) => {
         href={routes.applications.index}
         label={t("pages.userSettings.backToApplicationsLinkText")}
       />
-      {query.smsMfaConfirmed && (
-        <Alert
-          className="margin-bottom-3"
-          heading={t("pages.userSettings.phoneNumberConfirmedHeading")}
-          state="success"
-        >
-          {t("pages.userSettings.phoneNumberConfirmedMessage")}
-        </Alert>
-      )}
+      {query.smsMfaConfirmed && <MfaSetupSuccessAlert />}
       <Title marginBottom="6">{t("pages.userSettings.title")}</Title>
 
       <ReviewHeading level="3">

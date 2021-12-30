@@ -5,16 +5,20 @@ import { mockRouter } from "next/router";
 import routes from "../../../src/routes";
 import { screen } from "@testing-library/react";
 
-const setup = (claims = []) => {
+const setup = (claims = [], queryParams) => {
   mockRouter.pathname = routes.applications.getReady;
 
-  return renderPage(GetReady, {
-    addCustomSetup: (appLogic) => {
-      appLogic.benefitsApplications.benefitsApplications =
-        new BenefitsApplicationCollection(claims);
-      appLogic.benefitsApplications.loadPage = jest.fn();
+  return renderPage(
+    GetReady,
+    {
+      addCustomSetup: (appLogic) => {
+        appLogic.benefitsApplications.benefitsApplications =
+          new BenefitsApplicationCollection(claims);
+        appLogic.benefitsApplications.loadPage = jest.fn();
+      },
     },
-  });
+    { query: queryParams }
+  );
 };
 
 describe("GetReady", () => {
@@ -56,5 +60,10 @@ describe("GetReady", () => {
     expect(
       screen.getByRole("link", { name: "tax professional" })
     ).toBeInTheDocument();
+  });
+
+  it("displays success alert when user sets up SMS MFA", () => {
+    setup([], { smsMfaConfirmed: "true" });
+    expect(screen.getAllByRole("region")[0]).toMatchSnapshot();
   });
 });
