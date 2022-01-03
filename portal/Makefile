@@ -21,7 +21,7 @@ hotfix: ## Alters a release series that already went to prod. Increments the Por
 	pushd ../bin/ci && poetry run scripted-releases --app portal hotfix $(args) && popd
 
 release-notes: refs=origin/deploy/portal/prod..HEAD
-release-notes: ## Generate PORTAL release notes for $refs (defaults between prod and HEAD)
+release-notes: ## Generate PORTAL release notes for the current commit as compared to production (use this when on a release branch)
 	@git log --pretty='format: * %s' $(refs) -- $(PORTAL_PATHS) | \
 	sed -E 's;^ \* \[*([A-Za-z]{2,}-[0-9]+)[] :]*(.*); \* [\1](https://lwd.atlassian.net/browse/\1): \2;' | \
 	sed -E 's;\(#([0-9]+)\);([#\1](https://github.com/EOLWD/pfml/pull/\1));'
