@@ -7,6 +7,7 @@ import React from "react";
 import Title from "../../components/core/Title";
 import { Trans } from "react-i18next";
 import User from "../../models/User";
+import { isFeatureEnabled } from "../../services/featureFlags";
 import routes from "../../routes";
 import tracker from "../../services/tracker";
 import useThrottledHandler from "../../hooks/useThrottledHandler";
@@ -32,6 +33,9 @@ export const ConsentToDataSharing = (props: ConsentToDataSharingProps) => {
     event.preventDefault();
     await handleSave();
     tracker.trackEvent("User consented to data sharing", {});
+    if (isFeatureEnabled("claimantShowMFA") && !user.hasEmployerRole) {
+      appLogic.portalFlow.goToPageFor("ENABLE_MFA");
+    }
   });
 
   const roleContext = user.hasEmployerRole ? "employer" : "user";

@@ -230,7 +230,7 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
           You or your employer report additional other leave, income or benefits
         </li>
         <li>
-          You reach the maximum total amount that you can receive in PFML benefits across multiple applications. The maximum weekly benefit amount is $850 per week.
+          You reach the maximum total amount that you can receive in PFML benefits across multiple applications. The maximum weekly benefit amount is $1084 per week.
         </li>
         <li>
           You receive a payment for a pay period less than a full week

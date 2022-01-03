@@ -463,7 +463,6 @@ describe("claimFlowConfigs", () => {
     {
       guards: {
         ...guards,
-        isMFAEnabled: () => true,
         // TODO (PFMLPB-2615): Remove this guard once the feature flag is obsolete
         hasEmployerWithDepartments: ({ claim }) =>
           get(claim, "employment_status") === EmploymentStatus.employed &&
@@ -482,6 +481,7 @@ describe("claimFlowConfigs", () => {
     CONTINUE: {},
     CREATE_CLAIM: {},
     EMPLOYER_INFORMATION: {},
+    ENABLE_MFA: {},
     LEAVE_DETAILS: {},
     OTHER_LEAVE: {},
     PAYMENT: {},
