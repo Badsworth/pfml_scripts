@@ -2202,13 +2202,13 @@ const pages = {
     choiceNo: "No, don’t withhold state and federal taxes",
     choiceYes: "Yes, withhold state and federal taxes",
     explanation:
-      "<p>You have the option to have state and federal taxes withheld from your weekly benefit. This preference cannot be changed once your application has been approved. If you choose to have taxes withheld, we will withhold 5% for state taxes and 10% for federal taxes. These percentages cannot be adjusted.</p><p>The IRS hasn’t decided if paid leave benefits are considered taxable income. Massachusetts tax treatment will follow the guidance provided by the IRS.</p><p>If you're unsure whether you want to withhold taxes, we recommend speaking with a <tax-professional-link>tax professional</tax-professional-link> about how IRS decisions could affect your personal tax liability. We cannot offer guidance or advice for individual tax situations.</p>",
+      "<p>You have the option to have state and federal taxes withheld from your weekly benefit. If you choose to have taxes withheld, we will withhold 5% for state taxes and 10% for federal taxes. These percentages can’t be adjusted.</p><p>The IRS hasn’t decided if paid leave benefits are considered taxable income. Massachusetts tax treatment will follow the guidance provided by the IRS.</p><p>If you're unsure whether you want to withhold taxes, we recommend speaking with a <tax-professional-link>tax professional</tax-professional-link> about how IRS decisions could affect your personal tax liability. We cannot offer guidance or advice for individual tax situations.</p>",
     sectionLabel:
       "Do you want us to withhold state and federal taxes from this paid leave benefit?",
     submit: "Submit tax withholding preference",
     title: "Tax withholding",
     warning:
-      "After you submit your tax withholding preference, it can’t be edited on this website. To change it, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> before your application has been approved.",
+      "<p>After you submit your tax withholding preference, it can’t be edited on this website. To change it before your application has been approved, you will need to call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.</p><p><strong>Attention: This selection can’t be changed once your application has been approved.</strong></p>",
   },
   claimsUploadCertification: {
     addAnotherFileButton: "Choose another file",
