@@ -1,5 +1,8 @@
 resource "aws_sns_sms_preferences" "update_sms_prefs" {
-  monthly_spend_limit                   = 10 # Must be set in AWS Pinpoint (manually through the console) first
+  # Additionally, this must be set in AWS Pinpoint (manually through the console).
+  # Service limit increase support tickets must be opened for both SNS and Pinpoint.
+  monthly_spend_limit = 9180
+
   delivery_status_iam_role_arn          = aws_iam_role.sns_sms_deliveries.arn
   delivery_status_success_sampling_rate = 100
   default_sender_id                     = "pfml"
