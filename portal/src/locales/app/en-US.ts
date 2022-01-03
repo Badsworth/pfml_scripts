@@ -670,6 +670,10 @@ const errors = {
         "Enter the 6-digit code sent to your phone number and ensure it does not include any punctuation.",
       required: "Enter the 6-digit code sent to your phone number",
     },
+    enterMFASetupFlow: {
+      required:
+        "Select Yes if you want to add a phone number for verifying logins.",
+    },
   },
   network:
     "Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.contactCenterPhoneNumberNoBreak)",

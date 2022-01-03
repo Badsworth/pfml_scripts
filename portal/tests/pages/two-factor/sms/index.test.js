@@ -17,6 +17,30 @@ describe("Two-factor SMS Index", () => {
     expect(container.firstChild).toMatchSnapshot();
   });
 
+  it("requires the user to select an option", async () => {
+    renderPage(IndexSMS, {
+      addCustomSetup: (appLogic) => {
+        appLogic.portalFlow.goToPageFor = goToPageFor;
+        appLogic.users.updateUser = updateUser;
+      },
+    });
+
+    const submitButton = screen.getByRole("button", {
+      name: "Save and continue",
+    });
+    await act(async () => await userEvent.click(submitButton));
+
+    // User should not be updated, should still be on the same page
+    expect(goToPageFor).not.toHaveBeenCalled();
+    expect(updateUser).not.toHaveBeenCalled();
+    // Error text should now appear
+    expect(
+      screen.queryByText(
+        /Select Yes if you want to add a phone number for verifying logins./
+      )
+    ).toBeInTheDocument();
+  });
+
   it("navigates to MFA phone setup page when use selects the enable mfa option", async () => {
     renderPage(IndexSMS, {
       addCustomSetup: (appLogic) => {
