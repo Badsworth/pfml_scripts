@@ -260,7 +260,7 @@ exports[`Status shows only legal documents 1`] = `
       class="usa-button position-relative text-bold usa-button--unstyled"
       type="button"
     >
-      Approved Time Cancelled $(shared.pdfNoticeSuffix)
+      Approved Time Cancelled (PDF)
     </button>
     <div
       class="text-base-dark"
@@ -275,7 +275,7 @@ exports[`Status shows only legal documents 1`] = `
       class="usa-button position-relative text-bold usa-button--unstyled"
       type="button"
     >
-      Benefit Amount Change Notice $(shared.pdfNoticeSuffix)
+      Benefit Amount Change Notice (PDF)
     </button>
     <div
       class="text-base-dark"
@@ -290,7 +290,7 @@ exports[`Status shows only legal documents 1`] = `
       class="usa-button position-relative text-bold usa-button--unstyled"
       type="button"
     >
-      Change Request Approved $(shared.pdfNoticeSuffix)
+      Change Request Approved (PDF)
     </button>
     <div
       class="text-base-dark"
@@ -305,7 +305,7 @@ exports[`Status shows only legal documents 1`] = `
       class="usa-button position-relative text-bold usa-button--unstyled"
       type="button"
     >
-      Change Request Denied $(shared.pdfNoticeSuffix)
+      Change Request Denied (PDF)
     </button>
     <div
       class="text-base-dark"
@@ -335,7 +335,7 @@ exports[`Status shows only legal documents 1`] = `
       class="usa-button position-relative text-bold usa-button--unstyled"
       type="button"
     >
-      Leave Allotment Change Notice $(shared.pdfNoticeSuffix)
+      Leave Allotment Change Notice (PDF)
     </button>
     <div
       class="text-base-dark"
@@ -350,7 +350,7 @@ exports[`Status shows only legal documents 1`] = `
       class="usa-button position-relative text-bold usa-button--unstyled"
       type="button"
     >
-      Maximum Weekly Benefit Change Notice $(shared.pdfNoticeSuffix)
+      Maximum Weekly Benefit Change Notice (PDF)
     </button>
     <div
       class="text-base-dark"

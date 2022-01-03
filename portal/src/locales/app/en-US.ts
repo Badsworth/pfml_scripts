@@ -2786,18 +2786,18 @@ const components = {
       "Appeal Acknowledgment $t(shared.pdfNoticeSuffix)",
     noticeName_approvalNotice: "Approval notice $t(shared.pdfNoticeSuffix)",
     noticeName_approvedTimeCancelled:
-      "Approved Time Cancelled $(shared.pdfNoticeSuffix)",
+      "Approved Time Cancelled $t(shared.pdfNoticeSuffix)",
     noticeName_benefitAmountChangeNotice:
-      "Benefit Amount Change Notice $(shared.pdfNoticeSuffix)",
+      "Benefit Amount Change Notice $t(shared.pdfNoticeSuffix)",
     noticeName_changeRequestApproved:
-      "Change Request Approved $(shared.pdfNoticeSuffix)",
+      "Change Request Approved $t(shared.pdfNoticeSuffix)",
     noticeName_changeRequestDenied:
-      "Change Request Denied $(shared.pdfNoticeSuffix)",
+      "Change Request Denied $t(shared.pdfNoticeSuffix)",
     noticeName_denialNotice: "Denial notice $t(shared.pdfNoticeSuffix)",
     noticeName_leaveAllotmentChangeNotice:
-      "Leave Allotment Change Notice $(shared.pdfNoticeSuffix)",
+      "Leave Allotment Change Notice $t(shared.pdfNoticeSuffix)",
     noticeName_maximumWeeklyBenefitChangeNotice:
-      "Maximum Weekly Benefit Change Notice $(shared.pdfNoticeSuffix)",
+      "Maximum Weekly Benefit Change Notice $t(shared.pdfNoticeSuffix)",
     noticeName_requestForInfoNotice:
       "Request for more information $t(shared.pdfNoticeSuffix)",
     noticeName_withdrawalNotice:
