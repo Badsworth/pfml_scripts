@@ -53,7 +53,7 @@ resource "aws_cognito_user_pool" "claimants_pool" {
     from_email_address = var.ses_email_address == "" ? null : local.from_email_address
   }
 
-  sms_authentication_message = "Your 6-digit code is {####}. Enter this code to log in to your paidleave.mass.gov account. The code expires in 24 hours."
+  sms_authentication_message = var.sms_mfa_message
 
   # Use aliases (for provisioned concurrency) in perf and prod. Elsewhere, use the lambda's $LATEST version directly.
   lambda_config {
@@ -82,7 +82,7 @@ resource "aws_cognito_user_pool" "claimants_pool" {
 
   verification_message_template {
     default_email_option = "CONFIRM_WITH_CODE"
-    sms_message          = "Your Paid Family and Medical Leave verification code is {####}"
+    sms_message          = var.sms_mfa_message
   }
 
   schema {
