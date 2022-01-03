@@ -72,7 +72,8 @@ export const Payments = ({
       });
     } else if (
       absenceId &&
-      (!claimDetail || Boolean(loadPayments(absenceId)))
+      (!claimDetail || Boolean(loadPayments(absenceId))) &&
+      !items.find((item) => item.name === "NotFoundError")
     ) {
       loadClaimDetail(absence_id);
     }

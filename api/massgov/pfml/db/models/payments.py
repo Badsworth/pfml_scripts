@@ -1260,6 +1260,16 @@ class Pfml1099Refund(Base, TimestampMixin):
     employee = relationship(Employee)
 
 
+class Pfml1099RefundBackup(Base, TimestampMixin):
+    __tablename__ = "pfml_1099_refund_backup"
+    pfml_1099_refund_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+    pfml_1099_batch_id = Column(PostgreSQLUUID, nullable=True)
+    payment_id = Column(PostgreSQLUUID, nullable=True)
+    employee_id = Column(PostgreSQLUUID, nullable=True)
+    refund_amount = Column(Numeric, nullable=True)
+    refund_date = Column(Date, nullable=True)
+
+
 class Pfml1099(Base, TimestampMixin):
     __tablename__ = "pfml_1099"
     pfml_1099_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)

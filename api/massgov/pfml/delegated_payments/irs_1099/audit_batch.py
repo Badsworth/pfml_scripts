@@ -23,10 +23,8 @@ class AuditBatchStep(Step):
         # Get existing batch
         existing_batch = pfml_1099_util.get_current_1099_batch(self.db_session)
 
-        if existing_batch is None:
-            correction_indicator = False
-        else:
-            correction_indicator = True
+        # Determine Correction Indicator
+        correction_indicator = pfml_1099_util.is_correction_batch()
 
         # Establish the batch for this run.
         new_batch = Pfml1099Batch(

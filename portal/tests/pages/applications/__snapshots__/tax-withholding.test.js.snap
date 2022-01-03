@@ -24,7 +24,7 @@ exports[`TaxWithholding renders the page 1`] = `
         class="display-block line-height-sans-5 measure-5 usa-intro"
       >
         <p>
-          You have the option to have state and federal taxes withheld from your weekly benefit. This preference cannot be changed once your application has been approved. If you choose to have taxes withheld, we will withhold 5% for state taxes and 10% for federal taxes. These percentages cannot be adjusted.
+          You have the option to have state and federal taxes withheld from your weekly benefit. If you choose to have taxes withheld, we will withhold 5% for state taxes and 10% for federal taxes. These percentages can’t be adjusted.
         </p>
         <p>
           The IRS hasn’t decided if paid leave benefits are considered taxable income. Massachusetts tax treatment will follow the guidance provided by the IRS.
@@ -83,13 +83,20 @@ exports[`TaxWithholding renders the page 1`] = `
     <div
       class="margin-top-6 margin-bottom-2"
     >
-      After you submit your tax withholding preference, it can’t be edited on this website. To change it, call the Contact Center at 
-      <a
-        href="tel:(833) 344-7365"
-      >
-        (833) 344‑7365
-      </a>
-       before your application has been approved.
+      <p>
+        After you submit your tax withholding preference, it can’t be edited on this website. To change it before your application has been approved, you will need to call the Contact Center at 
+        <a
+          href="tel:(833) 344-7365"
+        >
+          (833) 344‑7365
+        </a>
+        .
+      </p>
+      <p>
+        <strong>
+          Attention: This selection can’t be changed once your application has been approved.
+        </strong>
+      </p>
     </div>
     <button
       class="usa-button position-relative margin-top-4"

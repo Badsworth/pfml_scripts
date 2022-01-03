@@ -152,6 +152,7 @@ locals {
     { name : "ENABLE_UPLOAD_1099_PDF", value : var.enable_upload_1099_pdf },
     { name : "PFML_1099_DOCUMENT_ARCHIVE_PATH", value : "s3://pfml-api-${var.environment_name}-1099-form-generator/1099" },
     { name : "UPLOAD_MAX_FILES_TO_FINEOS", value : var.upload_max_files_to_fineos },
-    { name : "TEST_FILE_GENERATION_1099", value : var.enable_1099_testfile_generation }
+    { name : "TEST_FILE_GENERATION_1099", value : var.enable_1099_testfile_generation },
+    { name : "IRS_1099_CORRECTION_IND", value : var.irs_1099_correction_ind }
   ]
 }

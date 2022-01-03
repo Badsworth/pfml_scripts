@@ -58,7 +58,8 @@
       { "name": "USE_CLAIM_STATUS_URL", "value": "${use_claim_status_url}" },
       { "name": "ENABLE_PDF_DOCUMENT_COMPRESSION", "value": "${enable_pdf_document_compression}" },
       { "name": "PDF_COMPRESSION_SETTINGS", "value": "screen" },
-      { "name": "PDF_COMPRESSION_PPI", "value": "144" }
+      { "name": "PDF_COMPRESSION_PPI", "value": "144" },
+      { "name": "ENABLE_DOCUMENT_MULTIPART_UPLOAD", "value": "${enable_document_multipart_upload}" }
     ],
     "secrets": [
       { "name": "NEW_RELIC_LICENSE_KEY", "valueFrom": "/service/${app_name}/common/newrelic-license-key"},

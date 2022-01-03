@@ -94,5 +94,6 @@ module "api" {
   # TODO: Connect to ServiceNow.
   service_now_base_url = "https://savilinxstage.servicenowservices.com"
 
-  enable_pdf_document_compression = "0"
+  enable_pdf_document_compression  = "0"
+  enable_document_multipart_upload = "1"
 }

@@ -123,45 +123,51 @@ const useClaimsLogic = ({
       portalFlow.pageRoute === "/applications/status/payments" &&
       !hasLoadedPayments(absenceId);
 
+    let loadedClaimDetail = claimDetail;
     // Have we already loaded this claim? If claim is loaded we check for payments being loaded as well
     if (claimDetail?.fineos_absence_id === absenceId) {
       if (shouldPaymentsLoad) {
-        const claimDetailWithPayments = fetchPayments(absenceId, claimDetail);
-        setClaimDetail(await claimDetailWithPayments);
-        return claimDetailWithPayments;
+        try {
+          const claimDetailWithPayments = await fetchPayments(
+            absenceId,
+            claimDetail
+          );
+          setClaimDetail(claimDetailWithPayments);
+          return claimDetailWithPayments;
+        } catch (error) {
+          appErrorsLogic.catchError(error);
+        } finally {
+          setIsLoadingClaimDetail(false);
+        }
       }
-      return claimDetail;
+    } else {
+      try {
+        setIsLoadingClaimDetail(true);
+        appErrorsLogic.clearErrors();
+        const data = await claimsApi.getClaimDetail(absenceId);
+        loadedClaimDetail = data.claimDetail;
+        if (shouldPaymentsLoad) {
+          const claimDetailWithPayments = fetchPayments(absenceId, claimDetail);
+          setClaimDetail(await claimDetailWithPayments);
+          return claimDetailWithPayments;
+        }
+        setClaimDetail(loadedClaimDetail);
+      } catch (error) {
+        if (
+          error instanceof ValidationError &&
+          error.issues[0].type === "fineos_claim_withdrawn"
+        ) {
+          // The claim was withdrawn -- we'll need to show an error message to the user
+          appErrorsLogic.catchError(
+            new ClaimWithdrawnError(absenceId, error.issues[0])
+          );
+        } else {
+          appErrorsLogic.catchError(error);
+        }
+      } finally {
+        setIsLoadingClaimDetail(false);
+      }
     }
-
-    setIsLoadingClaimDetail(true);
-    appErrorsLogic.clearErrors();
-
-    let loadedClaimDetail;
-    try {
-      const data = await claimsApi.getClaimDetail(absenceId);
-      loadedClaimDetail = data.claimDetail;
-      if (shouldPaymentsLoad) {
-        const claimDetailWithPayments = fetchPayments(absenceId, claimDetail);
-        setClaimDetail(await claimDetailWithPayments);
-        return;
-      }
-      setClaimDetail(loadedClaimDetail);
-    } catch (error) {
-      if (
-        error instanceof ValidationError &&
-        error.issues[0].type === "fineos_claim_withdrawn"
-      ) {
-        // The claim was withdrawn -- we'll need to show an error message to the user
-        appErrorsLogic.catchError(
-          new ClaimWithdrawnError(absenceId, error.issues[0])
-        );
-      } else {
-        appErrorsLogic.catchError(error);
-      }
-    } finally {
-      setIsLoadingClaimDetail(false);
-    }
-
     return loadedClaimDetail;
   };
 

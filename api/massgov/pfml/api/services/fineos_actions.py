@@ -1058,13 +1058,19 @@ def upload_document(
     content_type: str,
     description: str,
     db_session: massgov.pfml.db.Session,
+    with_multipart: bool = False,
 ) -> massgov.pfml.fineos.models.customer_api.Document:
     fineos = massgov.pfml.fineos.create_client()
 
     fineos_web_id = get_or_register_employee_fineos_web_id(fineos, application, db_session)
     absence_id = get_fineos_absence_id_from_application(application)
 
-    fineos_document = fineos.upload_document(
+    if with_multipart:
+        upload_fn = fineos.upload_document_multipart
+    else:
+        upload_fn = fineos.upload_document
+
+    fineos_document = upload_fn(
         fineos_web_id,
         absence_id,
         document_type,

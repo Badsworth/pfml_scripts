@@ -329,6 +329,11 @@ variable "enable_1099_testfile_generation" {
   default     = "0"
 }
 
+variable "irs_1099_correction_ind" {
+  description = "Declares if the 1099 batch should be a correction run"
+  default     = "0"
+}
+
 ########## Variables for Step Functions ################
 
 variable "st_use_mock_dor_data" {
