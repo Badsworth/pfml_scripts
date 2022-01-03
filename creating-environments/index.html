@@ -1348,7 +1348,7 @@
 <li>environment_shorthand</li>
 <li>smartronix_environment_tags</li>
 </ol>
-<p>You do not need to update domains, api_domains, or cert_domains at this time.</p>
+<p>Domains, api_domains, or cert_domains do not need to be updated unless there are new domains. Please check with Chris Griffith or tech lead to confirm.   </p>
 <p>For smartronix_environment_tags, reach out to Ron Lovell, Karen Grant, Andy Rodriguez, and Chris Griffith and ask what the new tag should be based on the environment name. They will kick off the Smartronix CAMS infra-monitoring harness for the new environment as well as start any manual DBA steps for the database.</p>
 <p>If you need a new EOTSS-approved tag for environment_tags, send an email to <a href="&#109;&#97;&#105;&#108;&#116;&#111;&#58;&#84;&#105;&#109;&#46;&#76;&#46;&#83;&#104;&#97;&#114;&#112;&#101;&#64;&#109;&#97;&#115;&#115;&#46;&#103;&#111;&#118;">&#84;&#105;&#109;&#46;&#76;&#46;&#83;&#104;&#97;&#114;&#112;&#101;&#64;&#109;&#97;&#115;&#115;&#46;&#103;&#111;&#118;</a> requesting a new tag.</p>
 <ol>
@@ -1394,14 +1394,15 @@
 <p>Create the environment:</p>
 <div class="highlight"><pre><span></span><code>terraform plan
 </code></pre></div>
-<div class="highlight"><pre><span></span><code>terraform apply
+<p><div class="highlight"><pre><span></span><code>terraform apply
 </code></pre></div>
+   *** you might run into some permission issue on creating IAM roles. In this case, please reach out an engineer with admin permission.    </p>
 </li>
 </ol>
 <h3 id="21-create-the-api">2.1 Create the API</h3>
 <ol>
 <li>
-<p>Manually create <code>/service/pfml-api-dor-import/NEW_ENV/gpg_decryption_key</code> in Parameter Store. Copy the value from TEST and use a SecureString on the Advanced Tier.</p>
+<p>Manually create <code>/service/pfml-api-dor-import/NEW_ENV/gpg_decryption_key</code> in AWS Systems Manager Parameter Store. Copy the value from TEST and use a SecureString on the Advanced Tier.</p>
 </li>
 <li>
 <p>Setup the rest of the secrets in Parameter Store by running ./bin/bootstrap-env/copy-parameters.sh NEW_ENV</p>
@@ -1469,11 +1470,20 @@ Received from FINEOS (more details below):
 <ol>
 <li>
 <p>Create the environment, providing an initial application version to deploy. Since this requires a version that is built and pushed to ECR, it's easiest to use the latest version that was <a href="https://github.com/EOLWD/pfml/deployments/activity_log?environment=API+%28test%29">deployed in TEST</a>. This is a Docker image tag that is equivalent to a commit hash.</p>
-<div class="highlight"><pre><span></span><code>$ terraform apply <span class="se">\</span>
--var<span class="o">=</span><span class="s1">&#39;service_docker_tag=82043ae1e04621251fb9e7896176b38c884f027e&#39;</span>
+<p><div class="highlight"><pre><span></span><code>$ terraform apply \
+-var=&#39;service_docker_tag=82043ae1e04621251fb9e7896176b38c884f027e&#39;
 </code></pre></div>
+   *** you might run into some permission issue on creating IAM roles. In this case, please reach out to an engineer with admin permission.    </p>
+</li>
+<li>
+<p>You need to ask Database team to create password(db-password-readonly) for readonly(pfml_svc_readonly) user and create corresponding entries in AWS SSM Parameter Store.  </p>
+</li>
+<li>
+<p>If the new environment is based on a new domain other than "eol.mass.gov", you have to update CORS origin in file <code>infra/api/environments/NEW_ENV/main.tf</code> with corrct domains.</p>
 </li>
 </ol>
+<div class="highlight"><pre><span></span><code>cors_origins = [&quot;https://paidleave-NEW_ENV.NEW_DOMAIN&quot;
+</code></pre></div>
 <p>Note that the API will not be working until database migrations are run.</p>
 <h3 id="22-create-the-ecs-tasks">2.2 Create the ECS Tasks</h3>
 <ol>
@@ -1504,7 +1514,8 @@ Received from FINEOS (more details below):
      -var='service_docker_tag=82043ae1e04621251fb9e7896176b38c884f027e'</code>
      <code>sh
      $ terraform apply \
-     -var='service_docker_tag=82043ae1e04621251fb9e7896176b38c884f027e'</code></p>
+     -var='service_docker_tag=82043ae1e04621251fb9e7896176b38c884f027e'</code>
+   *** you might run into some permission issue on creating IAM roles. In this case, please reach out to an engineer with admin permission.</p>
 <h3 id="23-api-pre-work">2.3 API pre-work</h3>
 <p>1.Need to update the bootstrap script to omit these and add some others:
    - ecs-tasks/main.tf:
@@ -1522,7 +1533,7 @@ Received from FINEOS (more details below):
 <div class="highlight"><pre><span></span><code>pfml$ bin/bootstrap-env/bootstrap-env.sh NEW_ENV portal
 </code></pre></div>
 <p>The command above creates a new directory: <code>infra/portal/environments/NEW_ENV</code>
-1. From the new directory, run:</p>
+2. From the new directory, run:</p>
 <div class="highlight"><pre><span></span><code>terraform init
 </code></pre></div>
 <ol>
@@ -1530,8 +1541,9 @@ Received from FINEOS (more details below):
 <p>Create the environment, providing a specific <code>cloudfront_origin_path</code> since nothing will be deployed yet. You can use a blank path for now:</p>
 <div class="highlight"><pre><span></span><code>terraform plan -var<span class="o">=</span><span class="s1">&#39;cloudfront_origin_path=&#39;</span>
 </code></pre></div>
-<div class="highlight"><pre><span></span><code>terraform apply -var<span class="o">=</span><span class="s1">&#39;cloudfront_origin_path=&#39;</span>
+<p><div class="highlight"><pre><span></span><code>terraform apply -var<span class="o">=</span><span class="s1">&#39;cloudfront_origin_path=&#39;</span>
 </code></pre></div>
+   *** you might run into some permission issue on creating IAM roles. In this case, please reach out to an engineer with admin permission.</p>
 </li>
 <li>
 <p>Sync the cognito secrets to parameter store: </p>
@@ -1581,6 +1593,7 @@ cognito_user_pool_keys_url = &quot;https://cognito-idp.us-east-1.amazonaws.com/$
 <li>VPC ID (Should be nonprod IP: VPC-EOLWD-PFML-NonProd, vpc-097793bd468be1c65, 10.203.224.0/22)</li>
 <li>VPC S3 Endpoint ID (Should be nonprod endpoint: vpce-057c4dd758ba5ccb1)</li>
 </ol>
+<p>*** Some engineers in Fineos side might not have access to Interchange (https://ics.mass.gov/DynIC/) platform. You need to ask them to create account on that platform. It is a self service. Engineers can also reach out to Chris Griffith on the details.  </p>
 <h3 id="configure-fineos-credentials-for-pfml">Configure FINEOS credentials for PFML</h3>
 <ol>
 <li>FINEOS should send a file to us with an oauth client ID and secret. If not, ping Howard Teasley and Darnel.</li>
@@ -1597,6 +1610,7 @@ cognito_user_pool_keys_url = &quot;https://cognito-idp.us-east-1.amazonaws.com/$
 <ol>
 <li>Add the new environment to the <a href="https://github.com/EOLWD/pfml/tree/main/.github/workflows/infra-validate.yml">CI build matrix</a> so it can be validated when it's changed.</li>
 <li>Add the environment to the <a href="https://github.com/EOLWD/pfml/tree/main/infra/monitoring/alarms.tf">monitoring module</a> to create API and Portal alarms that are linked to PagerDuty.</li>
+<li>Reach out to e2e team to update their test script with new environment.</li>
 </ol>
 <h2 id="setting-up-custom-domains">Setting up Custom Domains</h2>
 <p>If we expect FINEOS to call the PFML API, you'll need a custom mass.gov domain for the environment. Please follow these steps:</p>
@@ -1621,13 +1635,13 @@ cognito_user_pool_keys_url = &quot;https://cognito-idp.us-east-1.amazonaws.com/$
 <ol>
 <li>Send an email to Vijay with the domain name/SANs, so he can request approval from Sarah Bourne / Chris Velluto / Bill Cole. Boilerplate:</li>
 </ol>
-<div class="highlight"><pre><span></span><code>To: Rajagopalan, Vijay (DFML) &lt;Vijay.Rajagopalan2@mass.gov&gt;; 
+<p><div class="highlight"><pre><span></span><code>To: Rajagopalan, Vijay (DFML) &lt;Vijay.Rajagopalan2@mass.gov&gt;; 
     Griffith, Christopher (EOL) &lt;Christopher.Griffith@detma.org&gt;;
     Bourne, Sarah (EOTSS) &lt;sarah.bourne@mass.gov&gt;; 
     Velluto, Christopher (EOTSS) &lt;christopher.velluto@mass.gov&gt;; 
     Cole, William (EOTSS) &lt;william.cole@mass.gov&gt;
 
-cc: Yeh, Kevin (DFML) &lt;Kevin.Yeh@mass.gov&gt;
+cc: Taschetti, Jamie (DFML) &lt;jamie.taschetti@mass.gov&gt;
 
 Hi all,
 
@@ -1642,6 +1656,7 @@ SANs: paidleave-api-ENV.eol.mass.gov, paidleave-OTHER_ENV.eol.mass.gov, paidleav
 
 Thanks.
 </code></pre></div>
+*** As described above, this domain might change. Please confirm with Tech leads and Chris Griffth</p>
 <ol>
 <li>
 <p>Once EOTSS has approved the certificate, update the domains, api_domains, and cert_domains map in the following file:</p>
