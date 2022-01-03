@@ -536,8 +536,8 @@ major-release: ## Creates a new release series. Increments the API's MAJOR versi
 	pushd ../bin/ci && poetry run scripted-releases --app api major-release $(args) && popd
 
 API_PATHS := . ../infra/api ../infra/ecs-tasks ../infra/env-shared ../infra/modules/ecs_task_scheduler ../infra/modules/s3_ecs_trigger
-release-notes: refs=origin/deploy/api/stage..origin/main
-release-notes: ## Generate API release notes for $refs (defaults between stage and test)
+release-notes: refs=origin/deploy/portal/prod..HEAD
+release-notes: ## Generate API release notes for $refs (defaults between prod and HEAD)
 	@git log --pretty='format: * %s' $(refs) -- $(API_PATHS) | \
 	sed -E 's;^ \* \[*([A-Za-z]{2,}-[0-9]+)[] :]*(.*); \* [\1](https://lwd.atlassian.net/browse/\1): \2;' | \
 	sed -E 's;\(#([0-9]+)\);([#\1](https://github.com/EOLWD/pfml/pull/\1));'

@@ -20,8 +20,8 @@ finalize-release: ## Marks a release series as approved to go to prod. Enables h
 hotfix: ## Alters a release series that already went to prod. Increments the Portal's minor version number.
 	pushd ../bin/ci && poetry run scripted-releases --app portal hotfix $(args) && popd
 
-release-notes: refs=origin/deploy/portal/stage..origin/main
-release-notes: ## Generate PORTAL release notes for $refs (defaults between stage and test)
+release-notes: refs=origin/deploy/portal/prod..HEAD
+release-notes: ## Generate PORTAL release notes for $refs (defaults between prod and HEAD)
 	@git log --pretty='format: * %s' $(refs) -- $(PORTAL_PATHS) | \
 	sed -E 's;^ \* \[*([A-Za-z]{2,}-[0-9]+)[] :]*(.*); \* [\1](https://lwd.atlassian.net/browse/\1): \2;' | \
 	sed -E 's;\(#([0-9]+)\);([#\1](https://github.com/EOLWD/pfml/pull/\1));'
