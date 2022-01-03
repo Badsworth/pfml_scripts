@@ -7,6 +7,8 @@ import faker from "faker";
 import userEvent from "@testing-library/user-event";
 
 const updateUser = jest.fn();
+const goToPageFor = jest.fn();
+
 jest.mock("../../../../src/services/mfa", () => ({
   verifyMFAPhoneNumber: jest.fn(),
 }));
@@ -124,12 +126,18 @@ describe("Two-factor SMS Confirm", () => {
   });
 
   it("does not update MFA preference when verification code fails", async () => {
-    MFAService.verifyMFAPhoneNumber.mockImplementation(() =>
+    MFAService.verifyMFAPhoneNumber.mockImplementationOnce(() =>
       Promise.reject(new Error())
     );
-    jest.spyOn(console, "error").mockImplementation(jest.fn());
+    jest.spyOn(console, "error").mockImplementationOnce(jest.fn());
 
-    renderPage(ConfirmSMS);
+    renderPage(ConfirmSMS, {
+      addCustomSetup: (appLogic) => {
+        appLogic.users.updateUser = updateUser;
+        appLogic.portalFlow.goToPageFor = goToPageFor;
+      },
+    });
+
     const codeField = screen.getByLabelText("6-digit code");
     userEvent.type(codeField, "123456");
     const submitButton = screen.getByRole("button", {
@@ -139,6 +147,7 @@ describe("Two-factor SMS Confirm", () => {
 
     expect(MFAService.verifyMFAPhoneNumber).toHaveBeenCalledWith("123456");
     expect(updateUser).not.toHaveBeenCalled();
+    expect(goToPageFor).not.toHaveBeenCalled();
   });
 
   it("renders PageNotFound if the claimantShowMFA feature flag is not set", () => {

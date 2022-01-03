@@ -47,20 +47,19 @@ export const ConfirmSMS = (props: ConfirmSMSProps) => {
 
     try {
       await verifyMFAPhoneNumber(trimmedCode);
+      const nextPage = returnToSettings ? "RETURN_TO_SETTINGS" : undefined;
+      await appLogic.users.updateUser(
+        user.user_id,
+        {
+          mfa_delivery_preference: "SMS",
+        },
+        undefined,
+        undefined,
+        nextPage
+      );
     } catch (error) {
       appLogic.catchError(error);
     }
-
-    const nextPage = returnToSettings ? "RETURN_TO_SETTINGS" : undefined;
-    await appLogic.users.updateUser(
-      user.user_id,
-      {
-        mfa_delivery_preference: "SMS",
-      },
-      undefined,
-      undefined,
-      nextPage
-    );
   };
 
   const getFunctionalInputProps = useFunctionalInputProps({
