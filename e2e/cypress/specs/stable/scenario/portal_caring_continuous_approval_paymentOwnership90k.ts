@@ -17,7 +17,10 @@ describe("Submit caring application via the web portal: Adjudication Approval & 
 
         // Submit Claim
         portal.startClaim();
-        portal.submitClaimPartOne(application);
+        portal.submitClaimPartOne(
+          application,
+          false
+        );
         portal.waitForClaimSubmission().then((data) => {
           cy.stash("submission", {
             application_id: data.application_id,

@@ -45,7 +45,10 @@ describe("Claimant uses portal to report other leaves and benefits, receives cor
 
         // Submit Claim
         portal.startClaim();
-        portal.submitClaimPartOne(application);
+        portal.submitClaimPartOne(
+          application,
+          false
+        );
         portal.waitForClaimSubmission().then((data) => {
           cy.stash("submission", {
             application_id: data.application_id,

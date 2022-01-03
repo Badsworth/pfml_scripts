@@ -465,6 +465,9 @@ class AdjudicationPage {
     cb(new CertificationPeriodsPage());
     return this;
   }
+  requestEmploymentInformation() {
+    this.onTab("Request Information", "Employment Information")
+  }
   requestInformation(cb: (page: RequestInformationPage) => unknown): this {
     this.onTab("Request Information", "Request Details");
     cb(new RequestInformationPage());

@@ -16,6 +16,7 @@ export type FeatureFlags = {
   claimantShowTaxWithholding: boolean;
   claimantShowStatusPage?: boolean;
   claimantShowPayments: boolean;
+  claimantShowOrganizationUnits: boolean;
 };
 
 export type Credentials = {

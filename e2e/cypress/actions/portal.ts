@@ -50,6 +50,7 @@ function setFeatureFlags(flags?: Partial<FeatureFlags>): void {
     claimantShowStatusPage: true,
     claimantShowTaxWithholding: false,
     claimantShowPayments: config("HAS_PAYMENT_STATUS") === "true",
+    claimantShowOrganizationUnits: false,
   };
   cy.setCookie("_ff", JSON.stringify({ ...defaults, ...flags }), { log: true });
 }
@@ -562,7 +563,10 @@ export function answerIntermittentLeaveQuestion(
   }
 }
 
-export function enterEmployerInfo(application: ApplicationRequestBody): void {
+export function enterEmployerInfo(
+  application: ApplicationRequestBody,
+  useOrgUnitFlow: boolean
+): void {
   // Preceeded by - "I am on the claims Checklist page";
   // Preceeded by - "I click on the checklist button called {string}"
   //                with the label "Enter employment information"
@@ -572,6 +576,14 @@ export function enterEmployerInfo(application: ApplicationRequestBody): void {
     ).type(application.employer_fein as string);
   }
   cy.contains("button", "Save and continue").click();
+  if (useOrgUnitFlow === true) {
+    cy.findByLabelText("Select a department")
+      .get("select")
+      .select(
+        "Division of Administrative Law Appeals", {force: true}
+      );
+    cy.contains("button", "Save and continue").click();
+  }
   if (application.employment_status === "Employed") {
     cy.contains(
       "fieldset",
@@ -925,14 +937,17 @@ export function confirmEligibleClaimant(): void {
   cy.findByText("I understand and agree").click();
 }
 
-export function submitClaimPartOne(application: ApplicationRequestBody): void {
+export function submitClaimPartOne(
+  application: ApplicationRequestBody,
+  useOrgUnitFlow: boolean
+): void {
   const reason = application.leave_details?.reason;
 
   clickChecklistButton("Verify your identification");
   verifyIdentity(application);
   onPage("checklist");
   clickChecklistButton("Enter employment information");
-  enterEmployerInfo(application);
+  enterEmployerInfo(application, useOrgUnitFlow);
 
   onPage("checklist");
   clickChecklistButton("Enter leave details");
