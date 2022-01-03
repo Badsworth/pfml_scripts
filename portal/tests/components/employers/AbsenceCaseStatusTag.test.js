@@ -39,8 +39,8 @@ describe("AbsenceCaseStatusTag", () => {
 
   it("renders the component with 'Review By {{date}}' when managedRequirements is not empty", () => {
     const managedRequirementsData = [
-      { follow_up_date: "2021-08-22" },
-      { follow_up_date: "2021-07-22" },
+      { follow_up_date: "2021-08-22", status: "Open" },
+      { follow_up_date: "2021-07-22", status: "Open" },
     ];
     const { container } = renderComponent(
       AbsenceCaseStatus.approved,

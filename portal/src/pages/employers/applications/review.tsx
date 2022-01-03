@@ -34,7 +34,7 @@ import { Trans } from "react-i18next";
 import WeeklyHoursWorkedRow from "../../../components/employers/WeeklyHoursWorkedRow";
 import findDocumentsByTypes from "../../../utils/findDocumentsByTypes";
 import formatDate from "../../../utils/formatDate";
-import formatDateRange from "../../../utils/formatDateRange";
+import getClosestOpenFollowUpDate from "../../../utils/getClosestOpenFollowUpDate";
 import isBlank from "../../../utils/isBlank";
 import { isFeatureEnabled } from "../../../services/featureFlags";
 import leaveReasonToPreviousLeaveReason from "../../../utils/leaveReasonToPreviousLeaveReason";
@@ -448,7 +448,9 @@ export const Review = (props: WithEmployerClaimProps) => {
 
         <Trans
           i18nKey="pages.employersClaimsReview.instructionsFollowUpDate"
-          values={{ date: formatDateRange(claim.follow_up_date) }}
+          values={{
+            date: getClosestOpenFollowUpDate(claim.managed_requirements),
+          }}
         />
       </Alert>
       <p>{t("pages.employersClaimsReview.instructionsAmendment")}</p>

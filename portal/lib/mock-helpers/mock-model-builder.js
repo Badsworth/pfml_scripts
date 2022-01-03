@@ -33,6 +33,7 @@ import Address from "../../src/models/Address";
 import ConcurrentLeave from "../../src/models/ConcurrentLeave";
 import EmployerClaim from "../../src/models/EmployerClaim";
 import LeaveReason from "../../src/models/LeaveReason";
+import dayjs from "dayjs";
 import { set } from "lodash";
 
 export class BaseMockBenefitsApplicationBuilder {
@@ -292,10 +293,9 @@ export class MockEmployerClaimBuilder extends BaseMockBenefitsApplicationBuilder
       last_name: "Doe",
       date_of_birth: "****-07-17",
       tax_identifier: "***-**-1234",
-      follow_up_date: "2020-10-10",
       fineos_absence_id: "NTN-111-ABS-01",
       previous_leaves: [],
-      is_reviewable: false,
+      managed_requirements: [],
     };
   }
 
@@ -325,10 +325,16 @@ export class MockEmployerClaimBuilder extends BaseMockBenefitsApplicationBuilder
   }
 
   /**
+   * claim with open managed requirements
    * @returns {MockEmployerClaimBuilder}
    */
-  reviewable(setting = true) {
-    set(this.claimAttrs, "is_reviewable", !!setting);
+  reviewable(date) {
+    set(this.claimAttrs, "managed_requirements", [
+      {
+        follow_up_date: date || dayjs().add(10, "day").format("YYYY-MM-DD"),
+        status: "Open",
+      },
+    ]);
     return this;
   }
 

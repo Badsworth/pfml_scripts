@@ -17,6 +17,7 @@ import { DocumentType } from "../../../../src/models/Document";
 import { EmployerBenefitFrequency } from "../../../../src/models/EmployerBenefit";
 import EmployerClaim from "../../../../src/models/EmployerClaim";
 import LeaveReason from "../../../../src/models/LeaveReason";
+import MockDate from "mockdate";
 import Review from "../../../../src/pages/employers/applications/review";
 import { clone } from "lodash";
 import userEvent from "@testing-library/user-event";
@@ -56,7 +57,7 @@ const CLAIMDOCUMENTSMAP = new Map([
 
 const baseClaimBuilder = new MockEmployerClaimBuilder()
   .completed()
-  .reviewable();
+  .reviewable("2020-10-10");
 const claimWithV1Eform = baseClaimBuilder.eformsV1().create();
 const claimWithV2Eform = baseClaimBuilder.eformsV2().create();
 const submitClaimReview = jest.fn(() => {
@@ -87,6 +88,10 @@ const setup = (employerClaimAttrs = claimWithV2Eform, cb) => {
 };
 
 describe("Review", () => {
+  beforeEach(() => {
+    MockDate.set("2020-10-01");
+  });
+
   it("renders the page for v1 eforms", () => {
     setup(claimWithV1Eform);
     expect(screen.getByText(/Employee information/)).toBeInTheDocument();
@@ -665,7 +670,6 @@ describe("Review", () => {
   it("redirects to the status page if is_reviewable is false", () => {
     const falseIsReviewableClaim = new MockEmployerClaimBuilder()
       .completed()
-      .reviewable(false)
       .create();
 
     setup(falseIsReviewableClaim);

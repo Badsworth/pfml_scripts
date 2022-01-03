@@ -543,6 +543,7 @@ describe("Employer dashboard", () => {
     const claims = getClaims(verifiedUserLeaveAdministrator);
     claims[0].managed_requirements = [
       {
+        status: "Open",
         follow_up_date: "2050-01-30",
       },
     ];

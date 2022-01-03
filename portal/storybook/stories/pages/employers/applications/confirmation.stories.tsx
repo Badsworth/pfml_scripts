@@ -15,10 +15,7 @@ export const Default = () => {
   return (
     <Confirmation
       appLogic={appLogic}
-      claim={new MockEmployerClaimBuilder()
-        .completed()
-        .reviewable(true)
-        .create()}
+      claim={new MockEmployerClaimBuilder().completed().reviewable().create()}
       user={new User({})}
     />
   );

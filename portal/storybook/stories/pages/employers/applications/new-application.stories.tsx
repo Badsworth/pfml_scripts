@@ -16,10 +16,7 @@ export const Default = () => {
     <NewApplication
       appLogic={appLogic}
       user={new User({})}
-      claim={new MockEmployerClaimBuilder()
-        .completed()
-        .reviewable(true)
-        .create()}
+      claim={new MockEmployerClaimBuilder().completed().reviewable().create()}
     />
   );
 };
