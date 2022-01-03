@@ -634,7 +634,7 @@ def document_upload(application_id, body, file):
             "document.document_type": document_type,
         }
 
-        # Upload document to fineos
+        # Upload document to FINEOS
         try:
             fineos_document = upload_document(
                 existing_application,
@@ -644,6 +644,7 @@ def document_upload(application_id, body, file):
                 content_type,
                 file_description,
                 db_session,
+                with_multipart=app.get_config().enable_document_multipart_upload,
             ).dict()
             logger.info(
                 "document_upload - document uploaded to claims processing system",

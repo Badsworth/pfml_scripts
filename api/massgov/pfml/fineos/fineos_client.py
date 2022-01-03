@@ -907,6 +907,16 @@ class FINEOSClient(client.AbstractFINEOSClient):
         content_type: str,
         description: str,
     ) -> models.customer_api.Document:
+        """ Upload a document to FINEOS using the Base64 endpoint, which accepts document content
+            through a Base64-encoded string.
+
+            FINEOS document uploads occur through an API Gateway --> Lambda function, so the max
+            request size is 6MB. However, since base64 encoding can bloat the file size by up to
+            33%, the effective file size is 4.5MB.
+
+            The binary upload flag should be disabled on the FINEOS side when using this method;
+            if it's enabled, the effective file size reduces even further to 3.4-3.6MB.
+           """
         file_size = len(file_content)
         encoded_file_contents = base64.b64encode(file_content).decode("utf-8")
         file_name_root, file_extension = os.path.splitext(file_name)
@@ -928,6 +938,48 @@ class FINEOSClient(client.AbstractFINEOSClient):
             user_id,
             "upload_documents",
             json=data,
+        )
+
+        response_json = response.json()
+
+        return models.customer_api.Document.parse_obj(
+            fineos_document_empty_dates_to_none(response_json)
+        )
+
+    def upload_document_multipart(
+        self,
+        user_id: str,
+        absence_id: str,
+        document_type: str,
+        file_content: bytes,
+        file_name: str,
+        content_type: str,
+        description: str,
+    ) -> models.customer_api.Document:
+        """ Upload a document through the multipart/form-data API endpoint.
+
+            FINEOS document uploads occur through an API Gateway --> Lambda function.
+            The binary upload flag must be enabled on the FINEOS side in order for this
+            to function correctly; otherwise the documents will be blank when uploaded.
+
+            The max request size is 6MB (limited by AWS Lambda); however, in practice,
+            testing indicates that 4.5MB is the effective file size limit.
+        """
+        multipart_data = (
+            ("documentContents", (file_name, file_content, content_type)),
+            ("documentDescription", (None, description)),
+        )
+
+        response = self._customer_api(
+            "POST",
+            f"customer/cases/{absence_id}/documents/upload/{document_type}",
+            user_id,
+            "upload_document_multipart",
+            # Ensure that the Content-Type is not set manually;
+            # the requests library automatically adds the multipart/form-data header
+            # and includes a generated boundary that separates the data parts specified above.
+            header_content_type=None,
+            files=multipart_data,
         )
 
         response_json = response.json()

@@ -13,6 +13,19 @@ from massgov.pfml.db.models.factories import ApplicationFactory, ClaimFactory, D
 from massgov.pfml.fineos import fineos_client, models
 from massgov.pfml.fineos.exception import FINEOSUnprocessableEntity
 
+
+@pytest.fixture(autouse=True)
+def disable_docs_multipart_upload(monkeypatch):
+    new_env = monkeypatch.setenv("ENABLE_DOCUMENT_MULTIPART_UPLOAD", "0")
+    return new_env
+
+
+@pytest.fixture
+def enable_docs_multipart_upload(monkeypatch):
+    new_env = monkeypatch.setenv("ENABLE_DOCUMENT_MULTIPART_UPLOAD", "1")
+    return new_env
+
+
 CERTIFICATION_FORM_DATA = {
     "document_type": "Certification Form",
     "name": "certification_form.png",
@@ -138,6 +151,25 @@ def test_document_upload_success(client, consented_user, consented_user_token, t
     assert response_data["name"] == "passport.png"
     assert response_data["user_id"] == str(consented_user.user_id)
     assert response_data["created_at"] is not None
+
+
+def test_document_upload_uses_multipart_upload_when_flag_enabled(
+    enable_docs_multipart_upload, client, consented_user, consented_user_token, test_db_session
+):
+    massgov.pfml.fineos.mock_client.start_capture()
+
+    response = document_upload_helper(
+        client=client,
+        user=consented_user,
+        auth_token=consented_user_token,
+        form_data=document_upload_payload_helper(VALID_FORM_DATA, valid_file()),
+    )
+
+    assert response["status_code"] == 200
+
+    capture = massgov.pfml.fineos.mock_client.get_capture()
+    actions = [fineos_action[0] for fineos_action in capture]
+    assert "upload_document_multipart" in actions
 
 
 def test_document_upload_unauthorized_application_user(
