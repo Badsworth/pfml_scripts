@@ -1036,3 +1036,7 @@ def is_test_file() -> str:
         return "T"
     else:
         return ""
+
+
+def is_correction_batch() -> bool:
+    return os.environ.get("IRS_1099_CORRECTION_IND", "0") == "1"

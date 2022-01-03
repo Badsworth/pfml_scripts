@@ -87,6 +87,7 @@ module "tasks" {
   enable_upload_1099_pdf          = "0"
   upload_max_files_to_fineos      = "10"
   enable_1099_testfile_generation = "0"
+  irs_1099_correction_ind         = "0"
 
   enable_withholding_payments = "1"
 
