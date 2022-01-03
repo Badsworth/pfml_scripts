@@ -73,8 +73,8 @@ describe("useFilesLogic", () => {
       const error = catchError.mock.calls[0][0];
       expect(error).toBeInstanceOf(ValidationError);
       expect(error.issues).toMatchInlineSnapshot(`
-        Array [
-          Object {
+        [
+          {
             "message": "We could not upload: file1. Files must be smaller than 4.5 MB.",
           },
         ]
@@ -121,8 +121,8 @@ describe("useFilesLogic", () => {
       const error = catchError.mock.calls[0][0];
       expect(error).toBeInstanceOf(ValidationError);
       expect(error.issues).toMatchInlineSnapshot(`
-        Array [
-          Object {
+        [
+          {
             "message": "We could not upload: file1. Files must be smaller than 10 MB.",
           },
         ]
@@ -141,8 +141,8 @@ describe("useFilesLogic", () => {
       const error = catchError.mock.calls[0][0];
       expect(error).toBeInstanceOf(ValidationError);
       expect(error.issues).toMatchInlineSnapshot(`
-        Array [
-          Object {
+        [
+          {
             "message": "We could not upload: file1. Choose a PDF or an image file (.jpg, .jpeg, .png).",
           },
         ]
@@ -170,8 +170,8 @@ describe("useFilesLogic", () => {
       const error = catchError.mock.calls[0][0];
       expect(error).toBeInstanceOf(ValidationError);
       expect(error.issues).toMatchInlineSnapshot(`
-        Array [
-          Object {
+        [
+          {
             "message": "We could not upload: file1. Choose a PDF or an image file (.jpg, .jpeg, .png) that is smaller than 4.5 MB.",
           },
         ]

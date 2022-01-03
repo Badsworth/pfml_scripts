@@ -7,10 +7,13 @@ import ApplicationCard from "../../components/ApplicationCard";
 import ButtonLink from "../../components/ButtonLink";
 import Heading from "../../components/core/Heading";
 import Lead from "../../components/core/Lead";
+import MfaSetupSuccessAlert from "src/components/MfaSetupSuccessAlert";
+import { NullableQueryParams } from "src/utils/routeWithParams";
 import PaginationNavigation from "src/components/PaginationNavigation";
 import React from "react";
 import Title from "../../components/core/Title";
 import { Trans } from "react-i18next";
+import { pick } from "lodash";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
 
@@ -29,8 +32,13 @@ export const Index = (props: IndexProps) => {
     ...query,
   } as const;
 
+  const PaginatedApplicationCardsWithRedirect = withRedirectToGetReadyPage(
+    PaginatedApplicationCards,
+    pick(query, "smsMfaConfirmed")
+  );
+
   const PaginatedApplicationCardsWithBenefitsApplications =
-    withBenefitsApplications(PaginatedApplicationCards, apiParams);
+    withBenefitsApplications(PaginatedApplicationCardsWithRedirect, apiParams);
 
   return (
     <React.Fragment>
@@ -45,15 +53,7 @@ export const Index = (props: IndexProps) => {
           })}
         </Alert>
       )}
-      {query?.smsMfaConfirmed && (
-        <Alert
-          className="margin-bottom-3"
-          heading={t("pages.applications.phoneNumberConfirmedHeading")}
-          state="success"
-        >
-          {t("pages.applications.phoneNumberConfirmedMessage")}
-        </Alert>
-      )}
+      {query?.smsMfaConfirmed && <MfaSetupSuccessAlert />}
 
       <div className="grid-row grid-gap-6">
         <div className="desktop:grid-col">
@@ -76,6 +76,27 @@ export const Index = (props: IndexProps) => {
   );
 };
 
+// Redirect users who don't yet have any claims to the Get Ready page
+function withRedirectToGetReadyPage<T extends WithBenefitsApplicationsProps>(
+  Component: React.ComponentType<T>,
+  nextPageParams: NullableQueryParams
+) {
+  const ComponentWithRedirect = (props: WithBenefitsApplicationsProps) => {
+    const { appLogic, claims } = props;
+    const { isLoadingClaims } = appLogic.benefitsApplications;
+
+    // Redirect users who do not have claims
+    if (isLoadingClaims === false && claims.isEmpty) {
+      appLogic.portalFlow.goTo(routes.applications.getReady, nextPageParams);
+      return null;
+    }
+
+    return <Component {...(props as T)} />;
+  };
+
+  return ComponentWithRedirect;
+}
+
 const PaginatedApplicationCards = (props: WithBenefitsApplicationsProps) => {
   const { appLogic, claims, paginationMeta } = props;
   const { t } = useTranslation();
@@ -93,20 +114,12 @@ const PaginatedApplicationCards = (props: WithBenefitsApplicationsProps) => {
   const hasInProgressClaims = hasClaims && claims.inProgress.length > 0;
   const hasCompletedClaims = hasClaims && claims.completed.length > 0;
 
-  const { isLoadingClaims } = appLogic.benefitsApplications;
-
   /**
    * Event handler for when a next/prev pagination button is clicked
    */
   const handlePaginationNavigationClick = (pageOffset: number) => {
     updatePageQuery(pageOffset);
   };
-
-  // Redirect users who do not have claims
-  if (isLoadingClaims === false && claims.isEmpty) {
-    appLogic.portalFlow.goTo(routes.applications.getReady);
-    return null;
-  }
 
   return (
     <React.Fragment>

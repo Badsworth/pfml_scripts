@@ -21,7 +21,6 @@ from massgov.pfml.db.models.employees import (
     StateLog,
 )
 from massgov.pfml.db.models.payments import (
-    FineosWritebackDetails,
     FineosWritebackTransactionStatus,
     LinkSplitPayment,
     LkFineosWritebackTransactionStatus,
@@ -32,6 +31,10 @@ from massgov.pfml.delegated_payments.audit.delegated_payment_audit_csv import (
     PaymentAuditCSV,
 )
 from massgov.pfml.delegated_payments.step import Step
+from massgov.pfml.delegated_payments.util.fineos_writeback_util import (
+    create_payment_finished_state_log_with_writeback,
+    stage_payment_fineos_writeback,
+)
 
 logger = logging.get_logger(__name__)
 
@@ -336,7 +339,7 @@ class PaymentRejectsStep(Step):
                     "Payment added to state %s", end_state.state_description,
                 )
                 if is_rejected_payment or is_skipped_payment:
-                    self._manage_pei_writeback_state(payment, rejected_notes)
+                    self._manage_pei_writeback_state(payment, is_rejected_payment, rejected_notes)
 
         if payment.payment_transaction_type_id not in [
             PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id,
@@ -344,31 +347,21 @@ class PaymentRejectsStep(Step):
         ]:
             if is_rejected_payment:
                 self.increment(self.Metrics.REJECTED_PAYMENT_COUNT)
-                state_log_util.create_finished_state_log(
-                    payment,
-                    State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT,
-                    state_log_util.build_outcome(f"Payment rejected with notes: {rejected_notes}"),
-                    self.db_session,
-                )
 
                 writeback_transaction_status = self.convert_reject_notes_to_writeback_status(
                     payment, is_rejected=True, rejected_notes=rejected_notes
                 )
 
-                state_log_util.create_finished_state_log(
-                    payment,
-                    State.DELEGATED_ADD_TO_FINEOS_WRITEBACK,
-                    state_log_util.build_outcome(
-                        writeback_transaction_status.transaction_status_description
-                    ),
-                    self.db_session,
-                )
-                writeback_details = FineosWritebackDetails(
+                create_payment_finished_state_log_with_writeback(
                     payment=payment,
-                    transaction_status_id=writeback_transaction_status.transaction_status_id,
+                    payment_end_state=State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT,
+                    payment_outcome=state_log_util.build_outcome(
+                        f"Payment rejected with notes: {rejected_notes}"
+                    ),
+                    writeback_transaction_status=writeback_transaction_status,
+                    db_session=self.db_session,
                     import_log_id=self.get_import_log_id(),
                 )
-                self.db_session.add(writeback_details)
 
                 if payments_util.is_withholding_payments_enabled():
                     logger.info("Tax Withholding ENABLED")
@@ -382,30 +375,19 @@ class PaymentRejectsStep(Step):
 
             elif is_skipped_payment:
                 self.increment(self.Metrics.SKIPPED_PAYMENT_COUNT)
-                state_log_util.create_finished_state_log(
-                    payment,
-                    State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT_RESTARTABLE,
-                    state_log_util.build_outcome("Payment skipped"),
-                    self.db_session,
-                )
 
                 writeback_transaction_status = self.convert_reject_notes_to_writeback_status(
                     payment, is_rejected=False, rejected_notes=rejected_notes
                 )
-                state_log_util.create_finished_state_log(
-                    payment,
-                    State.DELEGATED_ADD_TO_FINEOS_WRITEBACK,
-                    state_log_util.build_outcome(
-                        writeback_transaction_status.transaction_status_description
-                    ),
-                    self.db_session,
-                )
-                writeback_details = FineosWritebackDetails(
+
+                create_payment_finished_state_log_with_writeback(
                     payment=payment,
-                    transaction_status_id=writeback_transaction_status.transaction_status_id,
+                    payment_end_state=State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT_RESTARTABLE,
+                    payment_outcome=state_log_util.build_outcome("Payment skipped"),
+                    writeback_transaction_status=writeback_transaction_status,
+                    db_session=self.db_session,
                     import_log_id=self.get_import_log_id(),
                 )
-                self.db_session.add(writeback_details)
 
                 if payments_util.is_withholding_payments_enabled():
                     logger.info("Tax Withholding ENABLED")
@@ -484,33 +466,26 @@ class PaymentRejectsStep(Step):
             )
 
             if is_rejected or is_skipped:
-                self._manage_pei_writeback_state(withhold_payment, rejected_notes)
+                self._manage_pei_writeback_state(withhold_payment, is_rejected, rejected_notes)
 
     def _manage_pei_writeback_state(
-        self, payment: Payment, rejected_notes: Optional[str] = None
+        self, payment: Payment, is_rejected: bool, rejected_notes: Optional[str] = None
     ) -> None:
 
         writeback_transaction_status = self.convert_reject_notes_to_writeback_status(
-            payment, is_rejected=False, rejected_notes=rejected_notes
+            payment, is_rejected=is_rejected, rejected_notes=rejected_notes
         )
-        state_log_util.create_finished_state_log(
-            payment,
-            State.DELEGATED_ADD_TO_FINEOS_WRITEBACK,
-            state_log_util.build_outcome(
-                writeback_transaction_status.transaction_status_description
-            ),
-            self.db_session,
+        stage_payment_fineos_writeback(
+            payment=payment,
+            writeback_transaction_status=writeback_transaction_status,
+            db_session=self.db_session,
+            import_log_id=self.get_import_log_id(),
         )
+
         logger.info(
             "writeback for WITHHOLDING rejected and skipped %s",
             writeback_transaction_status.transaction_status_description,
         )
-        writeback_details = FineosWritebackDetails(
-            payment=payment,
-            transaction_status_id=writeback_transaction_status.transaction_status_id,
-            import_log_id=self.get_import_log_id(),
-        )
-        self.db_session.add(writeback_details)
 
     def convert_reject_notes_to_writeback_status(
         self, payment: Payment, is_rejected: bool, rejected_notes: Optional[str] = None
@@ -601,66 +576,6 @@ class PaymentRejectsStep(Step):
 
             self.transition_audit_pending_payment_state(
                 payment, is_rejected_payment, is_skipped_payment, rejected_notes
-            )
-
-    def transition_audit_pending_withholding_payment_state(
-        self,
-        payment: Payment,
-        is_rejected_payment: bool,
-        is_skipped_payment: bool,
-        rejected_notes: Optional[str] = None,
-    ) -> None:
-        payment_state_log: Optional[StateLog] = state_log_util.get_latest_state_log_in_flow(
-            payment, Flow.DELEGATED_PAYMENT, self.db_session
-        )
-
-        if payment_state_log is None:
-            self.increment(self.Metrics.PAYMENT_STATE_LOG_MISSING_COUNT)
-            raise PaymentRejectsException(
-                f"No state log found for payment found in audit reject file: {payment.payment_id}"
-            )
-
-        if (
-            payment_state_log.end_state_id
-            != State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT.state_id
-        ):
-            self.increment(self.Metrics.PAYMENT_STATE_LOG_NOT_IN_AUDIT_RESPONSE_PENDING_COUNT)
-            raise PaymentRejectsException(
-                f"Found payment state log not in audit response pending state: {payment_state_log.end_state.state_description if payment_state_log.end_state else None}, payment_id: {payment.payment_id}"
-            )
-
-        if rejected_notes:
-            rejected_notes = rejected_notes.replace("\ufffd", " ")
-
-        if is_rejected_payment:
-            state_log_util.create_finished_state_log(
-                payment,
-                State.STATE_WITHHOLDING_ERROR
-                if payment.payment_transaction_type_id
-                == PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id
-                else State.FEDERAL_WITHHOLDING_ERROR,
-                state_log_util.build_outcome("Payment rejected"),
-                self.db_session,
-            )
-        elif is_skipped_payment:
-            state_log_util.create_finished_state_log(
-                payment,
-                State.STATE_WITHHOLDING_ERROR_RESTARTABLE
-                if payment.payment_transaction_type_id
-                == PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id
-                else State.FEDERAL_WITHHOLDING_ERROR_RESTARTABLE,
-                state_log_util.build_outcome("Payment skipped"),
-                self.db_session,
-            )
-        else:
-            state_log_util.create_finished_state_log(
-                payment,
-                State.STATE_WITHHOLDING_SEND_FUNDS
-                if payment.payment_transaction_type_id
-                == PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id
-                else State.FEDERAL_WITHHOLDING_SEND_FUNDS,
-                ACCEPTED_OUTCOME,
-                self.db_session,
             )
 
     def _transition_not_sampled_payment_audit_pending_state(self, pending_state: LkState) -> None:

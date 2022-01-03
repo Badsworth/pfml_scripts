@@ -313,7 +313,7 @@ describe("useDocumentsLogic", () => {
       expect(appErrorInfos).toHaveLength(2);
       expect(appErrorInfos[0].name).toBe("DocumentsUploadError");
       expect(appErrorInfos[0].meta).toMatchInlineSnapshot(`
-        Object {
+        {
           "application_id": "mock-application-id-1",
           "file_id": "2",
         }

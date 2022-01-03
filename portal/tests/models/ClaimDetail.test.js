@@ -1,5 +1,6 @@
 import ClaimDetail from "../../src/models/ClaimDetail";
 import { ClaimEmployee } from "../../src/models/Claim";
+import createMockClaimDetail from "../../lib/mock-helpers/createMockClaimDetail";
 
 describe("ClaimDetail", () => {
   const claimDetailCollection = new ClaimDetail({
@@ -95,16 +96,16 @@ describe("ClaimDetail", () => {
     ).toBe(false);
   });
 
-  it("creates absence periods", () => {
+  it("creates absence periods and sorts by absence_period_start_date", () => {
     const claimDetail = new ClaimDetail({
       absence_periods: [
         {
-          absence_period_start_date: "2021-01-01",
-          absence_period_end_date: "2021-06-30",
-        },
-        {
           absence_period_start_date: "2021-07-01",
           absence_period_end_date: "2021-12-31",
+        },
+        {
+          absence_period_start_date: "2021-01-01",
+          absence_period_end_date: "2021-06-30",
         },
       ],
     });
@@ -309,4 +310,41 @@ describe("ClaimDetail", () => {
 
     expect(claimDetail.hasApprovedStatus).toBeTruthy();
   });
+
+  // Getters return true when associated leave type is used
+  it.each([
+    ["isContinuous", "Continuous"],
+    ["isIntermittent", "Intermittent"],
+    ["isReducedSchedule", "Reduced Schedule"],
+  ])("%s getter returns true when claim is %s", (leaveGetter, leaveType) => {
+    const claimDetail = createMockClaimDetail({ leaveType });
+    expect(claimDetail[leaveGetter]).toBe(true);
+  });
+
+  // Getters return false when associated leave type is not used
+  it.each([
+    {
+      leaveTypeGetter: "isContinuous",
+      leaveTypes: ["Intermittent", "Reduced Schedule"],
+      leaveTypeTest: "Continuous",
+    },
+    {
+      leaveTypeGetter: "isIntermittent",
+      leaveTypes: ["Continuous", "Reduced Schedule"],
+      leaveTypeTest: "Intermittent",
+    },
+    {
+      leaveTypeGetter: "isReducedSchedule",
+      leaveTypes: ["Continuous", "Intermittent"],
+      leaveTypeTest: "Reduced Schedule",
+    },
+  ])(
+    "$leaveTypeGetter getter returns false when claim is not $leaveTypeTest",
+    ({ leaveTypeGetter, leaveTypes }) => {
+      leaveTypes.forEach((leaveType) => {
+        const claimDetail = createMockClaimDetail({ leaveType });
+        expect(claimDetail[leaveTypeGetter]).toBe(false);
+      });
+    }
+  );
 });

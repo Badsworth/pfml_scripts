@@ -1307,6 +1307,149 @@ data "aws_iam_policy_document" "fineos_bucket_tool_task_policy_document" {
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
+# IAM role and policies for S3 buckets for SFTP (agency transfer) tool
+# ----------------------------------------------------------------------------------------------------------------------
+
+resource "aws_iam_role" "sftp_tool_role" {
+  name               = "${local.app_name}-${var.environment_name}-ecs-tasks-sftp-tool"
+  assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume_role_policy.json
+}
+
+resource "aws_iam_role_policy" "sftp_tool_assume_role_policy" {
+  name   = "${local.app_name}-${var.environment_name}-ecs-tasks-sftp-tool-assume-role-policy"
+  role   = aws_iam_role.sftp_tool_role.id
+  policy = data.aws_iam_policy_document.sftp_tool_task_policy_document.json
+}
+
+resource "aws_iam_role_policy" "sftp_tool_role_policy" {
+  name   = "${local.app_name}-${var.environment_name}-ecs-tasks-sftp-tool-role-policy"
+  role   = aws_iam_role.sftp_tool_role.id
+  policy = data.aws_iam_policy_document.sftp_tool_task_policy_document.json
+}
+
+data "aws_iam_policy_document" "sftp_tool_task_policy_document" {
+  statement {
+    sid = "AllowListingOfBucket"
+    actions = [
+      "s3:ListBucket"
+    ]
+
+    resources = [
+      data.aws_s3_bucket.agency_transfer.arn
+    ]
+
+    effect = "Allow"
+  }
+
+  statement {
+    sid = "AllowS3ReadOnBucket"
+    actions = [
+      "s3:Get*",
+      "s3:List*"
+    ]
+
+    resources = [
+      "${data.aws_s3_bucket.agency_transfer.arn}/",
+      "${data.aws_s3_bucket.agency_transfer.arn}/*"
+    ]
+
+    effect = "Allow"
+  }
+
+  statement {
+    sid = "AllowS3WriteOnBucket"
+    actions = [
+      "s3:PutObject",
+      "s3:DeleteObject",
+      "s3:AbortMultipartUpload"
+    ]
+
+    resources = [
+      "${data.aws_s3_bucket.agency_transfer.arn}/",
+      "${data.aws_s3_bucket.agency_transfer.arn}/*"
+    ]
+
+    effect = "Allow"
+  }
+}
+
+resource "aws_iam_role" "sftp_tool_execution_role" {
+  name               = "${local.app_name}-${var.environment_name}-sftp-tool-execution-role"
+  assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume_role_policy.json
+}
+
+resource "aws_iam_role_policy_attachment" "sftp_tool_execution_role_extras" {
+  role       = aws_iam_role.sftp_tool_execution_role.name
+  policy_arn = aws_iam_policy.sftp_tool_execution_role_extras.arn
+}
+
+resource "aws_iam_policy" "sftp_tool_execution_role_extras" {
+  name        = "${local.app_name}-${var.environment_name}-sftp-tool-execution-policy"
+  description = "A clone of the standard execution role with extra SSM permissions for SFTP agency transfer."
+  policy      = data.aws_iam_policy_document.sftp_tool_execution_role_extras.json
+}
+
+data "aws_iam_policy_document" "sftp_tool_execution_role_extras" {
+  # Allow ECS to log to Cloudwatch.
+  statement {
+    actions = [
+      "logs:CreateLogStream",
+      "logs:PutLogEvents",
+      "logs:DescribeLogStreams"
+    ]
+
+    resources = [
+      "${aws_cloudwatch_log_group.ecs_tasks.arn}:*"
+    ]
+  }
+
+  # Allow ECS to authenticate with ECR and download images.
+  statement {
+    actions = [
+      "ecr:GetAuthorizationToken",
+      "ecr:BatchCheckLayerAvailability",
+      "ecr:GetDownloadUrlForLayer",
+      "ecr:BatchGetImage",
+    ]
+
+    # ECS Fargate doesn't like it when you restrict the access to a single
+    # repository. Instead, it needs access to all of them.
+    resources = [
+      "*"
+    ]
+  }
+
+  # Allow ECS to access secrets from parameter store.
+  statement {
+    actions = [
+      "ssm:GetParameter",
+      "ssm:GetParameters",
+    ]
+
+    resources = [
+      "${local.ssm_arn_prefix}/${local.app_name}/common/*",
+      "${local.ssm_arn_prefix}/${local.app_name}/${var.environment_name}/*",
+      "${local.ssm_arn_prefix}/${local.app_name}-comptroller/${var.environment_name}/*",
+      "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/admin/*",
+    ]
+  }
+
+  statement {
+    actions = [
+      "ssm:GetParametersByPath",
+    ]
+
+    resources = [
+      "${local.ssm_arn_prefix}/${local.app_name}/common",
+      "${local.ssm_arn_prefix}/${local.app_name}/${var.environment_name}",
+      "${local.ssm_arn_prefix}/${local.app_name}-comptroller/${var.environment_name}",
+      "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/admin"
+    ]
+  }
+}
+
+
+# ----------------------------------------------------------------------------------------------------------------------
 # IAM role and policies for cps-errors-crawler
 # ----------------------------------------------------------------------------------------------------------------------
 
@@ -1334,7 +1477,7 @@ data "aws_iam_policy_document" "cps_errors_crawler_role_policy_document" {
     ]
 
     condition {
-      test     = "StringEquals"
+      test     = "StringLike"
       variable = "s3:prefix"
       values = [
         "cps-errors/received/",

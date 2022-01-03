@@ -25,7 +25,6 @@ export default {
     [routes.user.settings]: {
       on: {
         CONTINUE: routes.user.settings,
-        ENABLE_MFA: routes.twoFactor.smsIndex,
         EDIT_MFA_PHONE: routes.twoFactor.smsSetup,
       },
     },
@@ -49,6 +48,7 @@ export default {
     [routes.twoFactor.smsConfirm]: {
       on: {
         CONTINUE: routes.applications.index,
+        RETURN_TO_SETTINGS: routes.user.settings,
       },
     },
   },

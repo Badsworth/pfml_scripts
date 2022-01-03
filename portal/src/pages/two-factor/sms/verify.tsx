@@ -32,7 +32,6 @@ export const VerifySMS = (props: VerifySMSProps) => {
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    // Do nothing for now
     await appLogic.auth.verifyMFACodeAndLogin(formState.code, props.query.next);
   };
 

@@ -65,6 +65,14 @@ locals {
     { name : "MOVEIT_SSH_KEY_PASSWORD", valueFrom : "/service/${local.app_name}-comptroller/${var.environment_name}/eolwd-moveit-ssh-key-password" }
   ]
 
+  # Generic baseline SFTP server - defaults to EOLWD settings for now
+  base_sftp_access = [
+    { name : "SFTP_URI", value : var.eolwd_moveit_sftp_uri },
+    { name : "SFTP_SSH_KEY", valueFrom : "/service/${local.app_name}-comptroller/${var.environment_name}/eolwd-moveit-ssh-key" },
+    { name : "SFTP_SSH_KEY_PASSWORD", valueFrom : "/service/${local.app_name}-comptroller/${var.environment_name}/eolwd-moveit-ssh-key-password" }
+  ]
+
+
   # S3 path configurations for PUB
   pub_s3_folders = [
     { name : "PFML_FINEOS_WRITEBACK_ARCHIVE_PATH", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/cps/pei-writeback" },
@@ -139,9 +147,11 @@ locals {
   irs_1099_documents = [
     { name : "PDF_API_HOST", value : var.pdf_api_host },
     { name : "ENABLE_GENERATE_1099_PDF", value : var.enable_generate_1099_pdf },
+    { name : "GENERATE_1099_MAX_FILES", value : var.generate_1099_max_files },
     { name : "ENABLE_MERGE_1099_PDF", value : var.enable_merge_1099_pdf },
     { name : "ENABLE_UPLOAD_1099_PDF", value : var.enable_upload_1099_pdf },
     { name : "PFML_1099_DOCUMENT_ARCHIVE_PATH", value : "s3://pfml-api-${var.environment_name}-1099-form-generator/1099" },
-    { name : "UPLOAD_MAX_FILES_TO_FINEOS", value : var.upload_max_files_to_fineos }
+    { name : "UPLOAD_MAX_FILES_TO_FINEOS", value : var.upload_max_files_to_fineos },
+    { name : "TEST_FILE_GENERATION_1099", value : var.enable_1099_testfile_generation }
   ]
 }

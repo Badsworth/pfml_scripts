@@ -12,6 +12,7 @@ import StatusRow from "../../../components/StatusRow";
 import Title from "../../../components/core/Title";
 import { Trans } from "react-i18next";
 import formatDateRange from "../../../utils/formatDateRange";
+import getClosestOpenFollowUpDate from "../../../utils/getClosestOpenFollowUpDate";
 import { useTranslation } from "../../../locales/i18n";
 
 export const NewApplication = (props: WithEmployerClaimProps) => {
@@ -72,7 +73,9 @@ export const NewApplication = (props: WithEmployerClaimProps) => {
       <Alert state="warning">
         <Trans
           i18nKey="pages.employersClaimsNewApplication.instructionsFollowUpDate"
-          values={{ date: formatDateRange(claim.follow_up_date) }}
+          values={{
+            date: getClosestOpenFollowUpDate(claim.managed_requirements),
+          }}
         />
       </Alert>
       <form

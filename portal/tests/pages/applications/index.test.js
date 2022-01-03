@@ -40,7 +40,26 @@ describe("Applications", () => {
         goToSpy = jest.spyOn(appLogicHook.portalFlow, "goTo");
       },
     });
-    expect(goToSpy).toHaveBeenCalledWith("/applications/get-ready");
+    expect(goToSpy).toHaveBeenCalledWith("/applications/get-ready", {});
+  });
+
+  it("passes mfaSetupSuccess value when it redirects to getReady", () => {
+    let goToSpy;
+
+    renderPage(
+      Index,
+      {
+        addCustomSetup: (appLogicHook) => {
+          setUpHelper(appLogicHook);
+          appLogicHook.benefitsApplications.isLoadingClaims = false;
+          goToSpy = jest.spyOn(appLogicHook.portalFlow, "goTo");
+        },
+      },
+      { query: { smsMfaConfirmed: "true" } }
+    );
+    expect(goToSpy).toHaveBeenCalledWith("/applications/get-ready", {
+      smsMfaConfirmed: "true",
+    });
   });
 
   it("user can view their in-progress + submitted applications", () => {
@@ -182,11 +201,7 @@ describe("Applications", () => {
       },
       { query: { smsMfaConfirmed: "true" } }
     );
-    expect(
-      screen.getByText(
-        /To protect your security, we'll send you a 6-digit code whenever we need to verify it's really you./
-      )
-    ).toBeInTheDocument();
+    expect(screen.getByRole("region")).toMatchSnapshot();
   });
 
   describe("Pagination Navigation", () => {

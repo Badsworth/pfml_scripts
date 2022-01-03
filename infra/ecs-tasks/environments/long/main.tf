@@ -46,8 +46,8 @@ module "tasks" {
   fineos_client_oauth2_client_id                      = "5744bq9dpveko6jie4ma1e4g93"
   fineos_aws_iam_role_arn                             = "arn:aws:iam::666444232783:role/somdev-IAMRoles-CustomerAccountAccessRole-BF05IBJSG74B"
   fineos_aws_iam_role_external_id                     = "12345"
-  fineos_eligibility_feed_output_directory_path       = "s3://fin-somdev-data-import/DT4/absence-eligibility/processed/"
-  fineos_import_employee_updates_input_directory_path = "s3://fin-somdev-data-import/DT4/absence-eligibility/upload/"
+  fineos_eligibility_feed_output_directory_path       = "s3://fin-somdev-data-import/DT4"
+  fineos_import_employee_updates_input_directory_path = "s3://fin-somdev-data-import/DT4/dataexports"
 
   # These can be kept blank.
   eolwd_moveit_sftp_uri   = ""
@@ -78,4 +78,14 @@ module "tasks" {
   rmv_api_behavior                  = "partially_mocked"
 
   task_failure_email_address_list = ["mass-pfml-api-low-priority@navapbc.pagerduty.com"]
+
+  pdf_api_host                    = "http://localhost:5000"
+  enable_generate_1099_pdf        = "0"
+  generate_1099_max_files         = "1000"
+  enable_merge_1099_pdf           = "0"
+  enable_upload_1099_pdf          = "0"
+  upload_max_files_to_fineos      = "10"
+  enable_1099_testfile_generation = "0"
+
+  enable_withholding_payments = "1"
 }

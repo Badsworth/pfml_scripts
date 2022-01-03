@@ -145,7 +145,8 @@ locals {
       memory    = 18432,
       env = [
         local.db_access,
-        { name : "FOLDER_PATH", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/dfml" }
+        { name : "INPUT_FOLDER_PATH", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/dfml" },
+        { name : "OUTPUT_FOLDER_PATH", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/dor" }
       ]
     },
 
@@ -159,6 +160,7 @@ locals {
         local.db_access,
         { name : "DECRYPT", value : "true" },
         { name : "FOLDER_PATH", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/dor/received" },
+        { name : "CSV_FOLDER_PATH", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/dfml/received/" },
         { name : "GPG_DECRYPTION_KEY", valueFrom : "/service/${local.app_name}-dor-import/${var.environment_name}/gpg_decryption_key" },
         { name : "GPG_DECRYPTION_KEY_PASSPHRASE", valueFrom : "/service/${local.app_name}-dor-import/${var.environment_name}/gpg_decryption_key_passphrase" }
       ]
@@ -316,6 +318,15 @@ locals {
         local.fineos_s3_access
       ]
     },
+
+    "sftp-tool" = {
+      command        = ["sftp-tool"]
+      task_role      = aws_iam_role.sftp_tool_role.arn
+      execution_role = aws_iam_role.sftp_tool_execution_role.arn
+      env = [
+        local.base_sftp_access
+      ]
+    }
 
     "cps-errors-crawler" = {
       command             = ["cps-errors-crawler"]

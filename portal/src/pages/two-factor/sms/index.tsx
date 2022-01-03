@@ -6,6 +6,7 @@ import React from "react";
 import ThrottledButton from "src/components/ThrottledButton";
 import { Trans } from "react-i18next";
 import User from "src/models/User";
+import { ValidationError } from "../../../errors";
 import { get } from "lodash";
 import { isFeatureEnabled } from "../../../services/featureFlags";
 import useFormState from "../../../hooks/useFormState";
@@ -26,7 +27,23 @@ export const IndexSMS = (props: IndexSMSProps) => {
     enterMFASetupFlow: null,
   });
 
-  const handleSubmit = async () => {
+  const showNoValueSelectedError = (appLogic: AppLogic) => {
+    const validation_issue = {
+      field: "enterMFASetupFlow",
+      type: "required",
+    };
+    appLogic.catchError(new ValidationError([validation_issue], "mfa"));
+  };
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    // Show an error and dont leave the page when no value selected
+    event.preventDefault();
+    appLogic.clearErrors();
+    if (formState.enterMFASetupFlow === null) {
+      showNoValueSelectedError(appLogic);
+      return;
+    }
+
     if (formState.enterMFASetupFlow) {
       await appLogic.portalFlow.goToPageFor("EDIT_MFA_PHONE");
     } else {

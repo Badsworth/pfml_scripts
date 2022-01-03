@@ -19,6 +19,7 @@ import { compact } from "lodash";
 import { isFeatureEnabled } from "../services/featureFlags";
 import routes from "../routes";
 import tracker from "../services/tracker";
+import validateCode from "../utils/validateCode";
 
 interface ErrorCodeMap {
   [code: string]: { field?: string; type: string } | undefined;
@@ -204,9 +205,18 @@ const useAuthLogic = ({
    * @param [next] Redirect url after login
    */
   const verifyMFACodeAndLogin = async (code: string, next?: string) => {
+    appErrorsLogic.clearErrors();
+
+    const trimmedCode = code ? code.trim() : "";
+    const validationIssues = combineValidationIssues(validateCode(trimmedCode));
+    if (validationIssues) {
+      appErrorsLogic.catchError(new ValidationError(validationIssues, "mfa"));
+      return;
+    }
+
     try {
       trackAuthRequest("confirmSignIn");
-      await Auth.confirmSignIn(cognitoUser, code, "SMS_MFA");
+      await Auth.confirmSignIn(cognitoUser, trimmedCode, "SMS_MFA");
       tracker.markFetchRequestEnd();
     } catch (error) {
       appErrorsLogic.catchError(error);
@@ -532,20 +542,6 @@ function combineValidationIssues(...issues: Array<Issue | undefined>) {
   const combinedIssues = compact(issues);
   if (combinedIssues.length === 0) return;
   return combinedIssues;
-}
-
-function validateCode(code?: string) {
-  if (!code) {
-    return {
-      field: "code",
-      type: "required",
-    };
-  } else if (!code.match(/^\d{6}$/)) {
-    return {
-      field: "code",
-      type: "pattern", // matches same type as API regex pattern validations
-    };
-  }
 }
 
 function validateUsername(username?: string) {

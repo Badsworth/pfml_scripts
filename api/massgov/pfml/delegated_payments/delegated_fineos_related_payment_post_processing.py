@@ -6,8 +6,11 @@ import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml import db
 from massgov.pfml.db.models.employees import Payment, PaymentTransactionType, State
-from massgov.pfml.db.models.payments import FineosWritebackDetails, FineosWritebackTransactionStatus
+from massgov.pfml.db.models.payments import FineosWritebackTransactionStatus
 from massgov.pfml.delegated_payments.step import Step
+from massgov.pfml.delegated_payments.util.fineos_writeback_util import (
+    create_payment_finished_state_log_with_writeback,
+)
 
 logger = logging.get_logger(__package__)
 
@@ -33,7 +36,6 @@ class RelatedPaymentsPostProcessingStep(Step):
 
         for payment in payments:
             outcome = state_log_util.build_outcome("PUB transaction sent")
-
             end_state = (
                 State.STATE_WITHHOLDING_FUNDS_SENT
                 if (
@@ -42,27 +44,18 @@ class RelatedPaymentsPostProcessingStep(Step):
                 )
                 else State.FEDERAL_WITHHOLDING_FUNDS_SENT
             )
-            state_log_util.create_finished_state_log(
-                associated_model=payment,
-                end_state=end_state,
-                outcome=outcome,
+            transaction_status = FineosWritebackTransactionStatus.PAID
+
+            create_payment_finished_state_log_with_writeback(
+                payment=payment,
+                payment_end_state=end_state,
+                payment_outcome=outcome,
+                writeback_transaction_status=transaction_status,
+                writeback_outcome=outcome,
                 db_session=self.db_session,
+                import_log_id=self.get_import_log_id(),
             )
 
-            transaction_status = FineosWritebackTransactionStatus.PAID
-            state_log_util.create_finished_state_log(
-                end_state=State.DELEGATED_ADD_TO_FINEOS_WRITEBACK,
-                outcome=outcome,
-                associated_model=payment,
-                import_log_id=self.get_import_log_id(),
-                db_session=self.db_session,
-            )
-            writeback_details = FineosWritebackDetails(
-                payment=payment,
-                transaction_status_id=transaction_status.transaction_status_id,
-                import_log_id=self.get_import_log_id(),
-            )
-            self.db_session.add(writeback_details)
             payments_util.create_payment_log(payment, self.get_import_log_id(), self.db_session)
 
     def _get_withholding_payments_records(self) -> List[Payment]:

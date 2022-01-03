@@ -1,4 +1,5 @@
 {
+  "extends": ["plugin:storybook/recommended"],
   "rules": {
     "@typescript-eslint/no-empty-function": "off",
     "@typescript-eslint/strict-boolean-expressions": "off",

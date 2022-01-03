@@ -6,6 +6,7 @@ import BackButton from "src/components/BackButton";
 import Button from "src/components/core/Button";
 import ButtonLink from "src/components/ButtonLink";
 import InputChoiceGroup from "src/components/core/InputChoiceGroup";
+import MfaSetupSuccessAlert from "src/components/MfaSetupSuccessAlert";
 import PageNotFound from "src/components/PageNotFound";
 import ReviewHeading from "src/components/ReviewHeading";
 import ReviewRow from "src/components/ReviewRow";
@@ -22,6 +23,7 @@ import withUser from "src/hoc/withUser";
 interface UserSettingsProps {
   user: User;
   appLogic: AppLogic;
+  query: { smsMfaConfirmed?: string };
 }
 
 const MFAAmendmentForm = (props: {
@@ -76,7 +78,7 @@ const MFAAmendmentForm = (props: {
 };
 
 export const Settings = (props: UserSettingsProps) => {
-  const { user, appLogic } = props;
+  const { user, appLogic, query } = props;
   const [showMFAAmendmentForm, setShowMFAAmendmentForm] = useState(false);
   const { t } = useTranslation();
   const hasMFAEnabled = user.mfa_delivery_preference === MFAPreference.sms;
@@ -91,6 +93,7 @@ export const Settings = (props: UserSettingsProps) => {
         href={routes.applications.index}
         label={t("pages.userSettings.backToApplicationsLinkText")}
       />
+      {query.smsMfaConfirmed && <MfaSetupSuccessAlert />}
       <Title marginBottom="6">{t("pages.userSettings.title")}</Title>
 
       <ReviewHeading level="3">
@@ -107,7 +110,11 @@ export const Settings = (props: UserSettingsProps) => {
         <React.Fragment>
           <Trans i18nKey="pages.userSettings.additionalVerificationNoMfaText" />
           <ButtonLink
-            href={appLogic.portalFlow.getNextPageRoute("EDIT_MFA_PHONE")}
+            href={appLogic.portalFlow.getNextPageRoute(
+              "EDIT_MFA_PHONE",
+              undefined,
+              { returnToSettings: "true" }
+            )}
           >
             {t("pages.userSettings.addPhoneNumberButtonText")}
           </ButtonLink>
@@ -143,7 +150,11 @@ export const Settings = (props: UserSettingsProps) => {
             level="3"
             label={t("pages.userSettings.mfaPhoneNumberLabel")}
             editText={t("pages.userSettings.rowEditText")}
-            editHref={appLogic.portalFlow.getNextPageRoute("EDIT_MFA_PHONE")}
+            editHref={appLogic.portalFlow.getNextPageRoute(
+              "EDIT_MFA_PHONE",
+              undefined,
+              { returnToSettings: "true" }
+            )}
           >
             {user.mfa_phone_number?.phone_number}
           </ReviewRow>

@@ -71,6 +71,7 @@ class Upload1099DocumentsStep(Step):
                     continue
 
                 self.update_status(record1099, FineosUploadStatus.IN_PROGRESS)
+                current_retry = 0
 
                 try:
                     document_path = os.path.join(
@@ -79,7 +80,12 @@ class Upload1099DocumentsStep(Step):
                     )
                     document_name = record1099.s3_location.split("/")[3]
                     self._upload_document(
-                        fineos, document_path, document_name, document_type, record1099
+                        fineos,
+                        document_path,
+                        document_name,
+                        document_type,
+                        record1099,
+                        current_retry,
                     )
                     self.update_status(record1099, FineosUploadStatus.SUCCESS)
                     self.increment(self.Metrics.DOCUMENT_COUNT)
@@ -109,6 +115,7 @@ class Upload1099DocumentsStep(Step):
         file_name: str,
         document_type: str,
         record: Pfml1099,
+        current_retry: int,
     ) -> None:
         file = self._get_document_content(document_path)
 
@@ -128,15 +135,34 @@ class Upload1099DocumentsStep(Step):
             },
         }
 
+        current_retry += 1
         try:
             response = fineos.upload_document_to_dms(file_name, file, data)
 
             if response.status_code == 200:
                 logger.info(f"File {file_name} was successfully uploaded to Fineos Api.")
             else:
-                logger.error(f"Error when uploading file {file_name} to Fineos Api.")
+                if current_retry <= 1:
+                    logger.info(
+                        f"RETRY ({current_retry}) to upload document {file_name} to Fineos Api."
+                    )
+                    self._upload_document(
+                        fineos, document_path, file_name, document_type, record, current_retry
+                    )
+                else:
+                    logger.error(
+                        f"Retrying Upload document: {current_retry}. Error when uploading file {file_name} to Fineos Api."
+                    )
         except Exception as error:
-            raise error
+            if current_retry <= 1:
+                logger.info(
+                    f"RETRY ({current_retry}) to upload document {file_name} to Fineos Api."
+                )
+                self._upload_document(
+                    fineos, document_path, file_name, document_type, record, current_retry
+                )
+            else:
+                raise error
 
     def _get_document_content(self, document_path: str) -> bytes:
         logger.info(f"Getting file content: {document_path}")

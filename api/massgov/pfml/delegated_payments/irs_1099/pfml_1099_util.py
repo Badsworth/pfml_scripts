@@ -366,6 +366,7 @@ def get_1099s(db_session: db.Session, batch: Pfml1099Batch) -> NamedTuple:
     #                             SUM(CASE WHEN WITHHOLDING_TYPE_ID = 1 THEN WITHHOLDING_AMOUNT ELSE 0 END) FEDERAL_TAX_WITHHOLDINGS
     #                         FROM PFML_1099_WITHHOLDING
     #                         WHERE PFML_BATCH_ID = ''
+    #                         GROUP BY EMPLOYEE_ID)
     #     MMARS_PMT_ADD  AS (SELECT MP.EMPLOYEE_ID, CAST(MPD.SCHEDULED_PAYMENT_DATE AS DATE) PAYMENT_DATE, MPD.ADDRESS_LINE_1, MPD.ADDRESS_LINE_2, MPD.CITY,
     #                            MPD.STATE, MPD.ZIP_CODE,
     #                            RANK() OVER(PARTITION BY MP.EMPLOYEE_ID ORDER BY MPD.SCHEDULED_PAYMENT_DATE DESC, MPD.CREATED_AT DESC, MP.MMARS_PAYMENT_ID) R
@@ -384,7 +385,6 @@ def get_1099s(db_session: db.Session, batch: Pfml1099Batch) -> NamedTuple:
     #                         INNER JOIN LK_GEO_STATE GS ON A.GEO_STATE_ID = GS.GEO_STATE_ID
     #                         WHERE PPD.PFML_1099_BATCH_ID = '')
     # SELECT CURRENT_TIMESTAMP CREATED_AT,
-    #                         GROUP BY EMPLOYEE_ID)
     #     CURRENT_TIMESTAMP UPDATED_AT,
     #     GEN_RANDOM_UUID() PFML_1099_ID,
     #     PFML_1099_BATCH_ID,
@@ -470,7 +470,9 @@ def get_1099s(db_session: db.Session, batch: Pfml1099Batch) -> NamedTuple:
             FineosExtractEmployeeFeed.address4.label("address4"),
             FineosExtractEmployeeFeed.address6.label("address6"),
             FineosExtractEmployeeFeed.postcode.label("postcode"),
-            cast(FineosExtractEmployeeFeed.effectivefrom, Date).label("ADDRESS_DATE"),
+            func.coalesce(
+                cast(FineosExtractEmployeeFeed.effectivefrom, Date), cast("1900-01-01", Date)
+            ).label("ADDRESS_DATE"),
             func.rank()
             .over(
                 order_by=[
@@ -964,16 +966,38 @@ def get_mmars_payment_counts(db_session: db.Session) -> Dict[str, int]:
     return payment_counts
 
 
-def get_1099_records(db_session: db.Session, batchId: str) -> List[Pfml1099]:
+def get_1099_records_to_generate(db_session: db.Session, batchId: str) -> List[Pfml1099]:
 
-    records = db_session.query(Pfml1099).filter(Pfml1099.pfml_1099_batch_id == batchId).all()
-    records = records[:1000]
+    is_none = None
+
+    records = (
+        db_session.query(Pfml1099)
+        .filter(Pfml1099.pfml_1099_batch_id == batchId, Pfml1099.s3_location == is_none)
+        .all()
+    )
     if records is not None:
         logger.info(
             "Number of 1099 Records for batch [%s]: %s", batchId, len(records),
         )
 
     return records
+
+
+def get_1099_generated_count(db_session: db.Session, batchId: str) -> int:
+
+    is_none = None
+
+    records = (
+        db_session.query(Pfml1099)
+        .filter(Pfml1099.pfml_1099_batch_id == batchId, Pfml1099.s3_location != is_none)
+        .all()
+    )
+    if records is not None:
+        logger.info(
+            "Number of 1099 Records generated prior [%s]: %s", batchId, len(records),
+        )
+
+    return len(records)
 
 
 def get_tax_id(db_session: Any, tax_id_str: str) -> str:
@@ -992,6 +1016,10 @@ def get_upload_max_files_to_fineos() -> int:
     return app.get_config().upload_max_files_to_fineos
 
 
+def get_generate_1099_max_files() -> int:
+    return app.get_config().generate_1099_max_files
+
+
 def get_1099_record(db_session: db.Session, status: str, batch_id: str) -> Optional[Pfml1099]:
     """Get a 1099 record based on specific status and order by Created_at Asc"""
     return (
@@ -1004,7 +1032,7 @@ def get_1099_record(db_session: db.Session, status: str, batch_id: str) -> Optio
 
 
 def is_test_file() -> str:
-    if os.environ.get("TEST_FILE_GENERATION_1099", "0") == "1":
+    if app.get_config().enable_1099_testfile_generation:
         return "T"
     else:
         return ""

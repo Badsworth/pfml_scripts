@@ -161,14 +161,14 @@ describe("usePortalFlow", () => {
       });
 
       expect(portalFlow.page).toMatchInlineSnapshot(`
-        Object {
-          "meta": Object {
-            "fields": Array [
+        {
+          "meta": {
+            "fields": [
               "claim.tax_identifier",
             ],
             "step": "VERIFY_ID",
           },
-          "on": Object {
+          "on": {
             "CONTINUE": "/applications/checklist",
           },
         }

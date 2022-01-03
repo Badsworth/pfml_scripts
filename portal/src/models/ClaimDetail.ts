@@ -31,8 +31,11 @@ class ClaimDetail {
       this.employee = new ClaimEmployee(attrs.employee);
     }
 
-    this.absence_periods = this.absence_periods.map(
-      (absence_period) => new AbsencePeriod(absence_period)
+    this.absence_periods = orderBy(
+      this.absence_periods.map(
+        (absence_period) => new AbsencePeriod(absence_period)
+      ),
+      "absence_period_start_date"
     );
 
     /**

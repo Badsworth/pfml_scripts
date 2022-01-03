@@ -98,7 +98,7 @@ jobs:
     if: needs.changed-files.outputs.has-cypress-changes == 'true'
     steps:
       - name: Trigger E2E Workflow
-        uses: aurelien-baudet/workflow-dispatch@v2
+        uses: aurelien-baudet/workflow-dispatch@v2.1.1
         with:
           workflow: e2e-cypress.yml
           token: ${{ secrets.PFML_DEVOPS_TOKEN }}

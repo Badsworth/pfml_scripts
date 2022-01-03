@@ -42,11 +42,13 @@ from massgov.pfml.db.models.payments import (
     FineosExtractVpei,
     FineosExtractVpeiClaimDetails,
     FineosExtractVpeiPaymentDetails,
-    FineosWritebackDetails,
     FineosWritebackTransactionStatus,
     LkFineosWritebackTransactionStatus,
 )
 from massgov.pfml.delegated_payments.step import Step
+from massgov.pfml.delegated_payments.util.fineos_writeback_util import (
+    stage_payment_fineos_writeback,
+)
 from massgov.pfml.util.datetime import get_now_us_eastern
 
 logger = logging.get_logger(__name__)
@@ -798,11 +800,14 @@ class PaymentExtractStep(Step):
         payment.fineos_extract_import_log_id = self.get_import_log_id()
         payment.leave_request_decision = payment_data.leave_request_decision
 
-        # A payment is considered adhoc if it's marked as "Adhoc"
+        # A payment is considered adhoc if it's marked as "Adhoc" often with
+        # a random number suffixed to it.
         # This column can be empty/missing, and that's fine. This is used
         # later in the post-processing step to filter out adhoc payments from
         # the weekly maximum check.
-        payment.is_adhoc_payment = payment_data.amalgamation_c == "Adhoc"
+        payment.is_adhoc_payment = (
+            payment_data.amalgamation_c is not None and "Adhoc" in payment_data.amalgamation_c
+        )
         if payment.is_adhoc_payment:
             self.increment(self.Metrics.ADHOC_PAYMENT_COUNT)
 
@@ -1164,21 +1169,13 @@ class PaymentExtractStep(Step):
 
         message = f"Payment {payment_data.get_payment_message_str()} added to DELEGATED_PEI_WRITEBACK flow with transaction status {transaction_status.transaction_status_description}"
 
-        # Create the state log, note this is in the DELEGATED_PEI_WRITEBACK flow
-        # So it is added in addition to the state log added in manage_state_log
-        state_log_util.create_finished_state_log(
-            end_state=State.DELEGATED_ADD_TO_FINEOS_WRITEBACK,
-            outcome=state_log_util.build_outcome(message, payment_data.validation_container),
-            associated_model=payment,
-            import_log_id=self.get_import_log_id(),
-            db_session=self.db_session,
-        )
-        writeback_details = FineosWritebackDetails(
+        stage_payment_fineos_writeback(
             payment=payment,
-            transaction_status_id=transaction_status.transaction_status_id,
+            writeback_transaction_status=transaction_status,
+            outcome=state_log_util.build_outcome(message, payment_data.validation_container),
+            db_session=self.db_session,
             import_log_id=self.get_import_log_id(),
         )
-        self.db_session.add(writeback_details)
         logger.info(message, extra=payment_data.get_traceable_details())
 
     def _determine_pei_transaction_status(

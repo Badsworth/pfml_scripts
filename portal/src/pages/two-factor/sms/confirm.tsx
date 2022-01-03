@@ -8,21 +8,27 @@ import React from "react";
 import ThrottledButton from "src/components/ThrottledButton";
 import Title from "../../../components/core/Title";
 import User from "../../../models/User";
+import { ValidationError } from "../../../errors";
 import { isFeatureEnabled } from "../../../services/featureFlags";
 import useFormState from "../../../hooks/useFormState";
 import useFunctionalInputProps from "../../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../../locales/i18n";
+import validateCode from "../../../utils/validateCode";
 import { verifyMFAPhoneNumber } from "../../../services/mfa";
 import withUser from "../../../hoc/withUser";
 
 interface ConfirmSMSProps {
   appLogic: AppLogic;
   user: User;
+  query: {
+    returnToSettings?: string;
+  };
 }
 
 export const ConfirmSMS = (props: ConfirmSMSProps) => {
   const { appLogic, user } = props;
   const mfaPhoneNumber = user.mfa_phone_number?.phone_number;
+  const returnToSettings = !!props.query?.returnToSettings;
   const { t } = useTranslation();
 
   const { formState, updateFields } = useFormState({
@@ -31,17 +37,29 @@ export const ConfirmSMS = (props: ConfirmSMSProps) => {
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-
-    try {
-      await verifyMFAPhoneNumber(formState.code);
-    } catch (error) {
-      appLogic.catchError(error);
+    appLogic.clearErrors();
+    const trimmedCode = formState.code ? formState.code.trim() : "";
+    const validationIssues = validateCode(trimmedCode);
+    if (validationIssues) {
+      appLogic.catchError(new ValidationError([validationIssues], "mfa"));
       return;
     }
 
-    await appLogic.users.updateUser(user.user_id, {
-      mfa_delivery_preference: "SMS",
-    });
+    try {
+      await verifyMFAPhoneNumber(trimmedCode);
+      const nextPage = returnToSettings ? "RETURN_TO_SETTINGS" : undefined;
+      await appLogic.users.updateUser(
+        user.user_id,
+        {
+          mfa_delivery_preference: "SMS",
+        },
+        undefined,
+        undefined,
+        nextPage
+      );
+    } catch (error) {
+      appLogic.catchError(error);
+    }
   };
 
   const getFunctionalInputProps = useFunctionalInputProps({

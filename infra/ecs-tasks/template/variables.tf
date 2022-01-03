@@ -293,6 +293,11 @@ variable "enable_generate_1099_pdf" {
   default     = "0"
 }
 
+variable "generate_1099_max_files" {
+  description = "Maximum number of 1099s to generate"
+  default     = "1000"
+}
+
 variable "enable_merge_1099_pdf" {
   description = "Enable merging of 1099 documents for printing"
   default     = "0"
@@ -317,6 +322,11 @@ variable "enable_pub_payments_copy_audit_report_schedule" {
 variable "upload_max_files_to_fineos" {
   description = "max number of 1099 documents to upload to Fineos API"
   default     = "10"
+}
+
+variable "enable_1099_testfile_generation" {
+  description = "Enable IRS 1099 test file generation"
+  default     = "0"
 }
 
 ########## Variables for Step Functions ################

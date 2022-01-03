@@ -18,6 +18,7 @@ import { createRouteWithQuery } from "../../../utils/routeWithParams";
 import formatDate from "../../../utils/formatDate";
 import formatDateRange from "../../../utils/formatDateRange";
 import { getMaxBenefitAmount } from "../../../utils/getMaxBenefitAmount";
+import isBlank from "../../../utils/isBlank";
 import { isFeatureEnabled } from "../../../services/featureFlags";
 import routes from "../../../routes";
 import { useTranslation } from "../../../locales/i18n";
@@ -161,7 +162,8 @@ export const Payments = ({
   )?.created_at;
 
   const isRetroactive = approvalDate
-    ? claimDetail.absence_periods[0]?.absence_period_end_date < approvalDate
+    ? claimDetail.absence_periods[claimDetail.absence_periods.length - 1]
+        ?.absence_period_end_date < approvalDate
     : false;
 
   const shouldShowPaymentsTable =
@@ -176,19 +178,14 @@ export const Payments = ({
     t("pages.payments.paymentsTable.amountSentHeader"),
   ];
 
-  const waitingWeek =
-    claimDetail.waitingWeek?.startDate &&
-    formatDateRange(
-      claimDetail.waitingWeek.startDate,
-      claimDetail.waitingWeek.endDate
-    );
+  const waitingWeek = !isBlank(claimDetail.waitingWeek?.startDate);
 
   const isIntermittent = claimDetail.isIntermittent;
 
   const isIntermittentUnpaid =
     isIntermittent &&
     isFeatureEnabled("claimantShowPaymentsPhaseTwo") &&
-    Boolean(claimDetail?.payments?.length);
+    Boolean(claimDetail?.payments?.length) === false;
 
   const maxBenefitAmount = `$${getMaxBenefitAmount()}`;
   return (
@@ -349,7 +346,7 @@ export const Payments = ({
                         "pages.payments.paymentsTable.waitingWeekHeader"
                       )}
                     >
-                      {waitingWeek}
+                      {t("pages.payments.paymentsTable.waitingWeekGeneric")}
                     </td>
                     <td colSpan={4}>
                       <Trans

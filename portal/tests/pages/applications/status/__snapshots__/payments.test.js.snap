@@ -82,7 +82,7 @@ exports[`Payments renders the \`Your payments\` intro content section 1`] = `
 <section
   data-testid="your-payments-intro"
 >
-  Since you were approved after your leave ended, you’ll receive one payment for your entire leave.
+  Payments are scheduled to be paid after each week of your leave. Check back weekly to see when your next payment will be scheduled.
   <section
     class="margin-y-5"
     data-testid="estimated-date"
@@ -117,7 +117,7 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
       class="usa-accordion__heading margin-y-2"
     >
       <button
-        aria-controls="accordion19"
+        aria-controls="accordion25"
         aria-expanded="false"
         class="usa-accordion__button"
         type="button"
@@ -127,9 +127,9 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
     </h2>
     <div
       class="usa-accordion__content usa-prose"
-      data-testid="accordion19"
+      data-testid="accordion25"
       hidden=""
-      id="accordion19"
+      id="accordion25"
     >
       <p>
         Once your payments have started, expect to be paid weekly for the duration of your leave.
@@ -186,7 +186,7 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
       class="usa-accordion__heading margin-y-2"
     >
       <button
-        aria-controls="accordion20"
+        aria-controls="accordion26"
         aria-expanded="false"
         class="usa-accordion__button"
         type="button"
@@ -196,9 +196,9 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
     </h2>
     <div
       class="usa-accordion__content usa-prose"
-      data-testid="accordion20"
+      data-testid="accordion26"
       hidden=""
-      id="accordion20"
+      id="accordion26"
     >
       <p>
         To see your maximum weekly benefit amount, view your approval notice in your 
@@ -230,7 +230,7 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
           You or your employer report additional other leave, income or benefits
         </li>
         <li>
-          You reach the maximum total amount that you can receive in PFML benefits across multiple applications. The maximum weekly benefit amount is $850 per week.
+          You reach the maximum total amount that you can receive in PFML benefits across multiple applications. The maximum weekly benefit amount is $1084 per week.
         </li>
         <li>
           You receive a payment for a pay period less than a full week
@@ -241,7 +241,7 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
       class="usa-accordion__heading margin-y-2"
     >
       <button
-        aria-controls="accordion21"
+        aria-controls="accordion27"
         aria-expanded="false"
         class="usa-accordion__button"
         type="button"
@@ -251,9 +251,9 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
     </h2>
     <div
       class="usa-accordion__content usa-prose"
-      data-testid="accordion21"
+      data-testid="accordion27"
       hidden=""
-      id="accordion21"
+      id="accordion27"
     >
       <p>
         To make changes to your payment method or banking information, call the Contact Center at 
@@ -454,12 +454,12 @@ exports[`Payments renders the Payments table 1`] = `
       <td
         data-label="Waiting week"
       >
-        10/21/2021 to 10/27/2021
+        The first seven (7) days of approved leave are unpaid
       </td>
       <td
         colspan="4"
       >
-        This week is unpaid. Learn more about the 
+        Learn more about the 
         <a
           href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#what-is-the-7-day-waiting-period?-"
           rel="noopener noreferrer"

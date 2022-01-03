@@ -1305,3 +1305,14 @@ class EmployeeOccupationFactory(BaseFactory):
 
     employer = factory.SubFactory(EmployerFactory)
     employer_id = factory.LazyAttribute(lambda d: d.employer.employer_id)
+
+
+class LinkSplitPaymentFactory(BaseFactory):
+    class Meta:
+        model = payment_models.LinkSplitPayment
+
+    payment = factory.SubFactory(PaymentFactory)
+    payment_id = factory.LazyAttribute(lambda c: c.payment.payment_id)
+
+    related_payment = factory.SubFactory(PaymentFactory)
+    related_payment_id = factory.LazyAttribute(lambda c: c.related_payment.payment_id)

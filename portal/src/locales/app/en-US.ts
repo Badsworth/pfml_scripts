@@ -664,6 +664,17 @@ const errors = {
       incorrect: "The amount does not match our records. Please try again.",
     },
   },
+  mfa: {
+    code: {
+      pattern:
+        "Enter the 6-digit code sent to your phone number and ensure it does not include any punctuation.",
+      required: "Enter the 6-digit code sent to your phone number",
+    },
+    enterMFASetupFlow: {
+      required:
+        "Select Yes if you want to add a phone number for verifying logins.",
+    },
+  },
   network:
     "Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.contactCenterPhoneNumberNoBreak)",
   users: {
@@ -950,9 +961,6 @@ const pages = {
     getReadyLink: "Start a new application",
     inProgressHeading: "In-progress applications",
     noClaims: "You don’t have any applications yet.",
-    phoneNumberConfirmedHeading: "Phone number confirmed",
-    phoneNumberConfirmedMessage:
-      "To protect your security, we'll send you a 6-digit code whenever we need to verify it's really you.",
     submittedHeading: "Submitted applications",
     title: "Your applications",
     uploadSuccessHeading: "You successfully submitted your documents",
@@ -1028,7 +1036,7 @@ const pages = {
     title: "Confirm your phone number",
   },
   authTwoFactorSmsIndex: {
-    hint: "<p>This is an optional step to make your account more secure. In the future, you’ll also be able to access sensitive information like tax documents once you set this up.</p><p>If you select Yes, we’ll ask for a phone number that can receive text messages (SMS). To protect your security, we'll send you a 6-digit code whenenever we need to verify it's really you. You’ll need to enter the code in order to log in to your account.</p><p>If you select No, you can add a phone number later by going to the Settings page.</p>",
+    hint: "<p>This is an optional step to make your account more secure. In the future, you’ll also be able to access sensitive information like tax documents once you set this up.</p><p>If you select Yes, we’ll ask for a phone number that can receive text messages (SMS). To protect your security, we'll send you a 6-digit code whenever we need to verify it's really you. You’ll need to enter the code in order to log in to your account.</p><p>If you select No, you can add a phone number later by going to the Settings page.</p>",
     optIn: "Yes, I want to add a phone number for verifying logins.",
     optOut: "No, I do not want to add a phone number for verifying logins.",
     saveButton: "$t(shared.saveAndContinue)",
@@ -1561,6 +1569,7 @@ const pages = {
     doNotReportHintList: [
       "Other income that you've applied for but are not yet receiving",
       "Income from past PFML benefits",
+      "Income received through a bonus, like a holiday bonus or an annual sum paid out at the end of the year",
     ],
     doReportHintHeading: "You must report these sources of income:",
     doReportHintList: [
@@ -2378,6 +2387,8 @@ const pages = {
     instructionsAmendment:
       "Please review the details of this application carefully. If anything is incorrect or incomplete, you can add an amendment or include specific comments at the end. Changes are not saved until you submit your review.",
     instructionsFollowUpDate: "$t(shared.employerInstructions_followUpDate)",
+    managedRequirementsRespondedAt:
+      "This application has changed since it was reviewed on {{date}}.",
     otherLeavesBody:
       "<p>Please review the leaves and benefits listed in the tables below. If everything looks correct, then there’s no action needed. If something looks incorrect or incomplete, you can:</p><ul><li>Amend reported leaves and benefits.</li><li>Add a leave or benefit that your employee used or will use.</li></ul><p>If you need to remove a leave or benefit, use the comment box at the end of this page.</p>",
     otherLeavesBodyV1:
@@ -2640,9 +2651,11 @@ const pages = {
       paymentStatus_Delayed: "Delayed",
       paymentStatus_Pending: "Pending",
       "paymentStatus_Sent to bank": "Sent",
+      waitingWeekGeneric:
+        "The first seven (7) days of approved leave are unpaid",
       waitingWeekHeader: "Waiting week",
       waitingWeekText:
-        "This week is unpaid. Learn more about the <waiting-week-link>7-day waiting period</waiting-week-link>.",
+        "Learn more about the <waiting-week-link>7-day waiting period</waiting-week-link>.",
     },
     paymentsTitle: "Payments",
     questionsDetails:
@@ -2688,9 +2701,9 @@ const pages = {
     addPhoneNumberButtonText: "Add phone number",
     additionalVerificationHeading: "Additional login verification",
     additionalVerificationNoMfaText:
-      "<p>Make your account more secure by providing a phone number to associate with your account. We'll send you a 6-digit code whenenever we need to verify it's really you. You’ll need to enter the code in order to log in to your account. In the future, you’ll also be able to access sensitive information like tax documents once you set this up.</p><p>You will need to provide a phone number that can receive text messages (SMS) and that you’ll have consistent access to in case we need to verify your login.</p><p><strong>Additional login verification is not enabled</strong></p>",
+      "<p>Make your account more secure by providing a phone number to associate with your account. We'll send you a 6-digit code whenever we need to verify it's really you. You’ll need to enter the code in order to log in to your account. In the future, you’ll also be able to access sensitive information like tax documents once you set this up.</p><p>You will need to provide a phone number that can receive text messages (SMS) and that you’ll have consistent access to in case we need to verify your login.</p><p><strong>Additional login verification is not enabled</strong></p>",
     additionalVerificationWithMfaText:
-      "To protect your security, we'll send you a 6-digit code whenenever we need to verify it's really you. You’ll need to enter the code in order to log in to your account.",
+      "To protect your security, we'll send you a 6-digit code whenever we need to verify it's really you. You’ll need to enter the code in order to log in to your account.",
     backToApplicationsLinkText: "Back to applications",
     cancelEditLoginVerificationLinkText: "Cancel",
     editLoginVerificationLabel: "Edit login verification preferences",
@@ -2779,18 +2792,18 @@ const components = {
       "Appeal Acknowledgment $t(shared.pdfNoticeSuffix)",
     noticeName_approvalNotice: "Approval notice $t(shared.pdfNoticeSuffix)",
     noticeName_approvedTimeCancelled:
-      "Approved Time Cancelled $(shared.pdfNoticeSuffix)",
+      "Approved Time Cancelled $t(shared.pdfNoticeSuffix)",
     noticeName_benefitAmountChangeNotice:
-      "Benefit Amount Change Notice $(shared.pdfNoticeSuffix)",
+      "Benefit Amount Change Notice $t(shared.pdfNoticeSuffix)",
     noticeName_changeRequestApproved:
-      "Change Request Approved $(shared.pdfNoticeSuffix)",
+      "Change Request Approved $t(shared.pdfNoticeSuffix)",
     noticeName_changeRequestDenied:
-      "Change Request Denied $(shared.pdfNoticeSuffix)",
+      "Change Request Denied $t(shared.pdfNoticeSuffix)",
     noticeName_denialNotice: "Denial notice $t(shared.pdfNoticeSuffix)",
     noticeName_leaveAllotmentChangeNotice:
-      "Leave Allotment Change Notice $(shared.pdfNoticeSuffix)",
+      "Leave Allotment Change Notice $t(shared.pdfNoticeSuffix)",
     noticeName_maximumWeeklyBenefitChangeNotice:
-      "Maximum Weekly Benefit Change Notice $(shared.pdfNoticeSuffix)",
+      "Maximum Weekly Benefit Change Notice $t(shared.pdfNoticeSuffix)",
     noticeName_requestForInfoNotice:
       "Request for more information $t(shared.pdfNoticeSuffix)",
     noticeName_withdrawalNotice:
@@ -3180,6 +3193,11 @@ const components = {
     scheduledWithStartAndEnd:
       "We're performing some maintenance on our system, so you can't log in or work on any applications right now. The system will be offline from <strong>{{start}}</strong> to <strong>{{end}}</strong>.",
     title: "We’re undergoing maintenance",
+  },
+  mfaSetupSuccessAlert: {
+    heading: "Phone number confirmed",
+    message:
+      "To protect your security, we'll send you a 6-digit code whenever we need to verify it's really you.",
   },
   pageNotFound: {
     body: "<p>The page you’re looking for might have been removed, have a new name, or is otherwise unavailable.</p><p>If you typed the URL directly, check your spelling and capitalization. Our URLs look like this: <url-example>{{ url }}</url-example></p>",

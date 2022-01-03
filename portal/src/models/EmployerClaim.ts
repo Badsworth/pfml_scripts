@@ -6,7 +6,10 @@ import Address from "./Address";
 import ConcurrentLeave from "./ConcurrentLeave";
 import EmployerBenefit from "./EmployerBenefit";
 import { IntermittentLeavePeriod } from "./BenefitsApplication";
+import { ManagedRequirement } from "../models/Claim";
 import PreviousLeave from "./PreviousLeave";
+import dayjs from "dayjs";
+import getClosestOpenFollowUpDate from "../utils/getClosestOpenFollowUpDate";
 import { merge } from "lodash";
 
 /**
@@ -27,10 +30,9 @@ class EmployerClaim extends BaseBenefitsApplication {
   employer_benefits: EmployerBenefit[];
   date_of_birth: string | null = null;
   employer_fein: string;
-  employer_dba: string;
-  follow_up_date: string | null = null;
+  employer_dba: string | null;
   hours_worked_per_week: number | null = null;
-  is_reviewable: boolean;
+  managed_requirements: ManagedRequirement[] = [];
   residential_address: Address;
   status: string;
   tax_identifier: string | null = null;
@@ -55,6 +57,17 @@ class EmployerClaim extends BaseBenefitsApplication {
     this.absence_periods = this.absence_periods.map(
       (absence_period) => new AbsencePeriod(absence_period)
     );
+  }
+
+  get is_reviewable() {
+    const followUpDate = getClosestOpenFollowUpDate(
+      this.managed_requirements,
+      false
+    );
+    if (followUpDate) {
+      return dayjs().format("YYYY-MM-DD") <= followUpDate;
+    }
+    return false;
   }
 }
 

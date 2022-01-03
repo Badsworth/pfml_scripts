@@ -459,31 +459,89 @@ def mock_sftp_client():
     class MockSftpClient:
         calls = []
         files = {}
+        _dirs = {}
+
+        def _append_dir(self, new_dir):
+            dirs = set(self._dirs)
+            dirs.add(new_dir)
+            self._dirs = list(dirs)
+            return self._dirs
+
+        def _remove_dir(self, dir):
+            dirs = set(self._dirs)
+            dirs.discard(dir)
+            self._dirs = list(dirs)
+            return self._dirs
+
+        def _rename_dir(self, olddir, newdir):
+            self._remove_dir(olddir)
+            self._append_dir(newdir)
 
         def get(self, src: str, dest: str):
             self.calls.append(("get", src, dest))
-            body = self.files.get(src)
-            if body is not None:
-                with open(dest, "w") as f:
-                    f.write(body)
+            if src in self._dirs:
+                try:
+                    os.mkdir(dest)
+                except FileExistsError:
+                    pass
+                target_dir = dest
+                dir_files = self.listdir(src)
+                for file in dir_files:
+                    self.get(f"{src}/{file}", f"{target_dir}/{file}")
+            else:
+                body = self.files.get(src)
+                if body is not None:
+                    with open(dest, "w") as f:
+                        f.write(body)
 
         def put(self, src: str, dest: str, confirm: bool):
+            """
+            This isn't recursive, i.e. you can put /dir and it will contain
+            - /dir/f1
+            - /dir/f2
+            - ...
+            But it will NOT contain
+            - /dir/subdir/file
+
+            For testing, if you put a single file to /dir/target.txt, it will not register
+            the directory.  You should put /dir
+            """
             self.calls.append(("put", src, dest))
-            with open(src) as f:
-                self.files[dest] = f.read()
+            if os.path.isfile(src):
+                with open(src) as f:
+                    self.files[dest] = f.read()
+            else:
+                self._append_dir(dest)
+                files = os.listdir(src)
+                for file in files:
+                    file_path = f"{src}/{file}"
+                    with open(file_path) as f:
+                        self.files[f"{dest}/{file}"] = f.read()
 
         def remove(self, filename: str):
             self.calls.append(("remove", filename))
-            body = self.files.get(filename)
-            if body is not None:
-                del self.files[filename]
+            if filename in self._dirs:
+                dir_files = self.listdir(filename)
+                for file in dir_files:
+                    self.remove(f"{filename}/{file}")
+                self._remove_dir(filename)
+            else:
+                body = self.files.get(filename)
+                if body is not None:
+                    del self.files[filename]
 
         def rename(self, oldpath: str, newpath: str):
             self.calls.append(("rename", oldpath, newpath))
-            body = self.files.get(oldpath)
-            if body is not None:
-                self.files[newpath] = body
-                del self.files[oldpath]
+            if oldpath in self._dirs:
+                dir_files = self.listdir(oldpath)
+                for file in dir_files:
+                    self.rename(f"{oldpath}/{file}", f"{newpath}/{file}")
+                self._rename_dir(oldpath, newpath)
+            else:
+                body = self.files.get(oldpath)
+                if body is not None:
+                    self.files[newpath] = body
+                    del self.files[oldpath]
 
         def listdir(self, dir: str):
             self.calls.append(("listdir", dir))

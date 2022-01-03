@@ -83,6 +83,39 @@ describe("useUsersLogic", () => {
       expect(mockRouter.push).toHaveBeenCalled();
     });
 
+    it("goes to custom page if a nextPageEvent is supplied", async () => {
+      const goToNextPage = jest
+        .spyOn(portalFlow, "goToNextPage")
+        .mockImplementationOnce(jest.fn());
+      await act(async () => {
+        await usersLogic.updateUser(
+          user_id,
+          patchData,
+          undefined,
+          undefined,
+          "RETURN_TO_SETTINGS"
+        );
+      });
+
+      expect(goToNextPage).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.anything(),
+        "RETURN_TO_SETTINGS"
+      );
+    });
+
+    it("passes query string arguments to the next page if they are supplied", async () => {
+      await act(async () => {
+        await usersLogic.updateUser(user_id, patchData, undefined, {
+          someArg: "someValue",
+        });
+      });
+
+      expect(mockRouter.push).toHaveBeenCalledWith(
+        expect.stringMatching(/someArg=someValue/)
+      );
+    });
+
     describe("when the user turns on SMS MFA", () => {
       const mfaPreferences = { mfa_delivery_preference: "SMS" };
 
@@ -129,7 +162,8 @@ describe("useUsersLogic", () => {
 
         expect(nextPageSpy).toHaveBeenCalledWith(
           { user: usersLogic.user, claim },
-          expect.objectContaining({ claim_id: claim.application_id })
+          expect.objectContaining({ claim_id: claim.application_id }),
+          undefined
         );
       });
     });

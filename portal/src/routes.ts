@@ -175,11 +175,9 @@ const routes = {
       paidLeave:
         "https://www.mass.gov/topics/paid-family-and-medical-leave-in-massachusetts",
       pfml: "https://www.mass.gov/pfml",
-      preparingToVerifyEmployer:
-        "https://www.mass.gov/info-details/preparing-to-verify-your-employer-paid-family-and-medical-leave-account",
       privacyPolicy: "https://www.mass.gov/privacypolicy",
       proofOfBirthOrPlacement:
-        "https://www.mass.gov/info-details/documents-needed-to-complete-your-paid-family-and-medical-leave-pfml-application#for-family-leave-applications-",
+        "https://www.mass.gov/info-details/required-documents-for-your-paid-family-and-medical-leave-pfml-application#for-family-leave-applications-",
       reductionsEmployerBenefits:
         "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions#earned-time-off-through-your-employer-",
       reductionsOverview:

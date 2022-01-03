@@ -92,7 +92,7 @@ class EmployerInfoForReview(PydanticBaseModel):
     """Data parsed from PFML DB employer for leave admin review and claim status page"""
 
     employer_fein: FEINFormattedStr
-    employer_dba: str
+    employer_dba: Optional[str]
     employer_id: UUID4
 
 

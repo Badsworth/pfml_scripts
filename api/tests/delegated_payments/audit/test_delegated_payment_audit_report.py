@@ -2,6 +2,7 @@ import csv
 import os
 import tempfile
 from datetime import date, datetime
+from decimal import Decimal
 from typing import List
 
 import pytest
@@ -10,8 +11,14 @@ from freezegun import freeze_time
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.files as file_util
-from massgov.pfml.db.models.employees import Payment, ReferenceFile, ReferenceFileType, State
-from massgov.pfml.db.models.factories import ClaimFactory, PaymentFactory
+from massgov.pfml.db.models.employees import (
+    Payment,
+    PaymentTransactionType,
+    ReferenceFile,
+    ReferenceFileType,
+    State,
+)
+from massgov.pfml.db.models.factories import ClaimFactory, LinkSplitPaymentFactory, PaymentFactory
 from massgov.pfml.db.models.payments import (
     FineosWritebackDetails,
     FineosWritebackTransactionStatus,
@@ -767,6 +774,224 @@ def test_generate_audit_report(test_db_session, payment_audit_report_step, monke
 
     # check that audit report file was generated in outgoing folder without any timestamps in path/name
     assert_files(outgoing_folder_path, ["Payment-Audit-Report.csv"])
+
+
+def test_orphaned_withholding_payments(
+    initialize_factories_session, test_db_session, test_db_other_session
+):
+
+    payments: List[Payment] = []
+
+    # Create a bunch of payments
+    payment_audit_report_step = PaymentAuditReportStep(
+        db_session=test_db_session, log_entry_db_session=test_db_other_session
+    )
+
+    claim = ClaimFactory.create()
+    payment = DelegatedPaymentFactory(
+        test_db_session, claim=claim,
+    ).get_or_create_payment_with_state(
+        State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING
+    )
+
+    withholding_payment_1 = DelegatedPaymentFactory(
+        test_db_session,
+        claim=claim,
+        payment_transaction_type=PaymentTransactionType.FEDERAL_TAX_WITHHOLDING,
+    ).get_or_create_payment_with_state(State.FEDERAL_WITHHOLDING_ORPHANED_PENDING_AUDIT)
+
+    withholding_payment_2 = DelegatedPaymentFactory(
+        test_db_session,
+        claim=claim,
+        payment_transaction_type=PaymentTransactionType.STATE_TAX_WITHHOLDING,
+    ).get_or_create_payment_with_state(State.STATE_WITHHOLDING_ORPHANED_PENDING_AUDIT)
+
+    withholding_payment_3 = DelegatedPaymentFactory(
+        test_db_session,
+        claim=claim,
+        payment_transaction_type=PaymentTransactionType.FEDERAL_TAX_WITHHOLDING,
+    ).get_or_create_payment_with_state(State.FEDERAL_WITHHOLDING_ORPHANED_PENDING_AUDIT)
+
+    withholding_payment_4 = DelegatedPaymentFactory(
+        test_db_session,
+        claim=claim,
+        payment_transaction_type=PaymentTransactionType.STATE_TAX_WITHHOLDING,
+    ).get_or_create_payment_with_state(State.STATE_WITHHOLDING_ORPHANED_PENDING_AUDIT)
+
+    payments.append(payment)
+    payments.append(withholding_payment_1)
+    payments.append(withholding_payment_2)
+    payments.append(withholding_payment_3)
+    payments.append(withholding_payment_4)
+
+    assert payment_audit_report_step.audit_sent_count(payments) == 0
+    payment_audit_report_step.run_step()
+    assert payment_audit_report_step.audit_sent_count(payments) == 5
+
+
+def test_related_withholding_payments(
+    initialize_factories_session, test_db_session, test_db_other_session
+):
+
+    payments: List[Payment] = []
+
+    # Create a bunch of payments
+    payment_audit_report_step = PaymentAuditReportStep(
+        db_session=test_db_session, log_entry_db_session=test_db_other_session
+    )
+
+    claim = ClaimFactory.create()
+    payment = DelegatedPaymentFactory(
+        test_db_session, claim=claim,
+    ).get_or_create_payment_with_state(
+        State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING
+    )
+
+    withholding_payment_1 = DelegatedPaymentFactory(
+        test_db_session,
+        claim=claim,
+        payment_transaction_type=PaymentTransactionType.FEDERAL_TAX_WITHHOLDING,
+    ).get_or_create_payment_with_state(State.FEDERAL_WITHHOLDING_RELATED_PENDING_AUDIT)
+
+    withholding_payment_2 = DelegatedPaymentFactory(
+        test_db_session,
+        claim=claim,
+        payment_transaction_type=PaymentTransactionType.STATE_TAX_WITHHOLDING,
+    ).get_or_create_payment_with_state(State.FEDERAL_WITHHOLDING_RELATED_PENDING_AUDIT)
+
+    withholding_payment_3 = DelegatedPaymentFactory(
+        test_db_session,
+        claim=claim,
+        payment_transaction_type=PaymentTransactionType.FEDERAL_TAX_WITHHOLDING,
+    ).get_or_create_payment_with_state(State.FEDERAL_WITHHOLDING_RELATED_PENDING_AUDIT)
+
+    withholding_payment_4 = DelegatedPaymentFactory(
+        test_db_session,
+        claim=claim,
+        payment_transaction_type=PaymentTransactionType.STATE_TAX_WITHHOLDING,
+    ).get_or_create_payment_with_state(State.FEDERAL_WITHHOLDING_RELATED_PENDING_AUDIT)
+
+    # Create the Payment Relationships
+    related_1 = LinkSplitPaymentFactory.create(
+        payment=payment, related_payment=withholding_payment_1
+    )
+    related_2 = LinkSplitPaymentFactory.create(
+        payment=payment, related_payment=withholding_payment_2
+    )
+    related_3 = LinkSplitPaymentFactory.create(
+        payment=payment, related_payment=withholding_payment_3
+    )
+    related_4 = LinkSplitPaymentFactory.create(
+        payment=payment, related_payment=withholding_payment_4
+    )
+
+    assert related_1 is not None
+    assert related_2 is not None
+    assert related_3 is not None
+    assert related_4 is not None
+
+    payments.append(payment)
+    payments.append(withholding_payment_1)
+    payments.append(withholding_payment_2)
+    payments.append(withholding_payment_3)
+    payments.append(withholding_payment_4)
+
+    assert payment_audit_report_step.audit_sent_count(payments) == 0
+    payment_audit_report_step.run_step()
+    assert payment_audit_report_step.audit_sent_count(payments) == 1
+
+
+def test_calculate_withholding_amounts(test_db_session, initialize_factories_session):
+
+    claim = ClaimFactory()
+    date_start = date(2021, 1, 1)
+    date_end = date(2021, 1, 16)
+
+    # Create a bunch of Payments
+    payments: List[Payment] = []
+    payment_1 = PaymentFactory(
+        period_start_date=date_start,
+        period_end_date=date_end,
+        claim=claim,
+        amount=Decimal("100.00"),
+        fineos_pei_i_value="58001",
+        payment_transaction_type_id=PaymentTransactionType.FEDERAL_TAX_WITHHOLDING.payment_transaction_type_id,
+    )
+    payment_2 = PaymentFactory(
+        period_start_date=date_start,
+        period_end_date=date_end,
+        claim=claim,
+        amount=Decimal("20.00"),
+        fineos_pei_i_value="58002",
+        payment_transaction_type_id=PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id,
+    )
+    payment_3 = PaymentFactory(
+        period_start_date=date_start,
+        period_end_date=date_end,
+        claim=claim,
+        amount=Decimal("110.00"),
+        fineos_pei_i_value="58003",
+        payment_transaction_type_id=PaymentTransactionType.FEDERAL_TAX_WITHHOLDING.payment_transaction_type_id,
+    )
+    payment_4 = PaymentFactory(
+        period_start_date=date_start,
+        period_end_date=date_end,
+        claim=claim,
+        amount=Decimal("21.00"),
+        fineos_pei_i_value="58004",
+        payment_transaction_type_id=PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id,
+    )
+    payment_5 = PaymentFactory(
+        period_start_date=date_start,
+        period_end_date=date_end,
+        claim=claim,
+        amount=Decimal("120.00"),
+        fineos_pei_i_value="58005",
+        payment_transaction_type_id=PaymentTransactionType.FEDERAL_TAX_WITHHOLDING.payment_transaction_type_id,
+    )
+    payment_6 = PaymentFactory(
+        period_start_date=date_start,
+        period_end_date=date_end,
+        claim=claim,
+        amount=Decimal("22.00"),
+        fineos_pei_i_value="58006",
+        payment_transaction_type_id=PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id,
+    )
+
+    payments.append(payment_1)
+    payments.append(payment_2)
+    payments.append(payment_3)
+    payments.append(payment_4)
+    payments.append(payment_5)
+    payments.append(payment_6)
+
+    payment_audit_report_step = PaymentAuditReportStep(
+        db_session=test_db_session, log_entry_db_session=test_db_session
+    )
+
+    # Test Federal Withholding Amount
+    federal_tax_amount = payment_audit_report_step.calculate_federal_withholding_amount(
+        link_payments=payments
+    )
+    assert federal_tax_amount == 330.00
+
+    # Test State Withholding Amount
+    state_tax_amount = payment_audit_report_step.calculate_state_withholding_amount(
+        link_payments=payments
+    )
+    assert state_tax_amount == 63.00
+
+    # Test Federal Withholding I Values
+    federal_tax_values = payment_audit_report_step.get_federal_withholding_i_value(
+        link_payments=payments
+    )
+    assert federal_tax_values == "58001 58003 58005"
+
+    # Test State Withholding I Values
+    state_tax_values = payment_audit_report_step.get_state_withholding_i_value(
+        link_payments=payments
+    )
+    assert state_tax_values == "58002 58004 58006"
 
 
 # Assertion helpers

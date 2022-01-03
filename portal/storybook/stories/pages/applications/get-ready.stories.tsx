@@ -9,9 +9,19 @@ import useMockableAppLogic from "lib/mock-helpers/useMockableAppLogic";
 export default {
   title: `Pages/Applications/Get Ready`,
   component: GetReady,
+  argTypes: {
+    smsMfaConfirmed: {
+      control: {
+        type: "boolean",
+      },
+    },
+  },
+  args: {
+    smsMfaConfirmed: false,
+  },
 };
 
-export const Page = () => {
+export const Page = (args: { smsMfaConfirmed: boolean }) => {
   const appLogic = useMockableAppLogic({
     portalFlow: {
       pathname: routes.applications.getReady,
@@ -27,12 +37,15 @@ export const Page = () => {
     total_records: 20,
   };
 
+  const query = args.smsMfaConfirmed ? { smsMfaConfirmed: "true" } : {};
+
   return (
     <GetReady
       claims={new BenefitsApplicationCollection()}
       appLogic={appLogic}
       user={new User({})}
       paginationMeta={paginationMeta}
+      query={query}
     />
   );
 };

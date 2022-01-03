@@ -41,3 +41,9 @@ variable "enforce_cloudfront_fortinet_rules" {
   type    = bool
   default = true
 }
+
+variable "sms_mfa_message" {
+  description = "Message sent to user with MFA code"
+  type        = string
+  default     = "Your 6-digit code is {####}. Enter this code to log in to your paidleave.mass.gov account. The code expires in 3 minutes."
+}

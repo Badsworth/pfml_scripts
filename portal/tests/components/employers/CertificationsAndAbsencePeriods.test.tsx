@@ -100,7 +100,7 @@ describe("CertificationsAndAbsencePeriods", () => {
 
     expect(headings.map((heading) => heading.textContent))
       .toMatchInlineSnapshot(`
-      Array [
+      [
         "Active duty",
         "Bond with a child",
         "Care for a family member",

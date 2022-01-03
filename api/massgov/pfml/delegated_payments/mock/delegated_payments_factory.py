@@ -19,7 +19,6 @@ from massgov.pfml.db.models.employees import (
     PaymentCheck,
     PaymentTransactionType,
     PrenoteState,
-    State,
 )
 from massgov.pfml.db.models.factories import (
     AddressFactory,
@@ -33,8 +32,10 @@ from massgov.pfml.db.models.factories import (
     PubEftFactory,
     TaxIdentifierFactory,
 )
-from massgov.pfml.db.models.payments import FineosWritebackDetails
 from massgov.pfml.delegated_payments.mock.mock_util import MockData, generate_routing_nbr_from_ssn
+from massgov.pfml.delegated_payments.util.fineos_writeback_util import (
+    stage_payment_fineos_writeback,
+)
 
 fake = faker.Faker()
 fake.seed_instance(2394)
@@ -329,14 +330,14 @@ class DelegatedPaymentFactory(MockData):
         return self.payment
 
     def get_or_create_payment_with_writeback(self, writeback_transaction_status):
-        self.get_or_create_payment_with_state(State.DELEGATED_ADD_TO_FINEOS_WRITEBACK)
+        self.get_or_create_payment()
 
         if self.payment and writeback_transaction_status:
-            writeback_details = FineosWritebackDetails(
+            writeback_details = stage_payment_fineos_writeback(
                 payment=self.payment,
-                transaction_status_id=writeback_transaction_status.transaction_status_id,
+                writeback_transaction_status=writeback_transaction_status,
+                db_session=self.db_session,
             )
-            self.db_session.add(writeback_details)
             return writeback_details
 
     def create_related_payment(
@@ -373,11 +374,11 @@ class DelegatedPaymentFactory(MockData):
                 self._create_state_call(new_payment, payment_end_state)
 
             if writeback_transaction_status:
-                writeback_details = FineosWritebackDetails(
+                stage_payment_fineos_writeback(
                     payment=new_payment,
-                    transaction_status_id=writeback_transaction_status.transaction_status_id,
+                    writeback_transaction_status=writeback_transaction_status,
+                    db_session=self.db_session,
                 )
-                self.db_session.add(writeback_details)
             return new_payment
 
         return None

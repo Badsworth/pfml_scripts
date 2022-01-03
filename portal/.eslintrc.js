@@ -204,6 +204,23 @@ module.exports = {
         ],
       },
     },
+    {
+      files: ["lib/**", "src/**", "storybook/**"],
+      rules: {
+        "no-restricted-imports": [
+          "error",
+          {
+            patterns: [
+              {
+                group: ["**/tests/*"],
+                message:
+                  "Test files should not be imported in files outside of the tests/ directory. Code shared between Storybook and Tests should be in the lib/ directory.",
+              },
+            ],
+          },
+        ],
+      },
+    },
   ],
   rules: {
     camelcase: "off",

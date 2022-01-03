@@ -43,6 +43,7 @@ class EligibilityLogExtra(TypedDict):
     base_period_calculated: Optional[Tuple[Optional[date], Optional[date]]]
     was_iaww_calculated: bool
     iaww_base_period_used: Optional[Tuple[Optional[date], Optional[date]]]
+    quarterly_wages: str
 
 
 def _compute_financial_eligibility(
@@ -148,6 +149,7 @@ def retrieve_financial_eligibility(
         "base_period_calculated": None,
         "was_iaww_calculated": False,
         "iaww_base_period_used": None,
+        "quarterly_wages": "",
     }
 
     # Determine if the new given leave date falls within an existing benefit year
@@ -203,6 +205,7 @@ def retrieve_financial_eligibility(
             )
             meta["was_iaww_calculated"] = True
             meta["iaww_base_period_used"] = base_period
+            meta["quarterly_wages"] = str(dict(wage_calculator.employer_quarter_wage))
 
         eligibilty_response = EligibilityResponse(
             financially_eligible=True,
@@ -224,6 +227,9 @@ def retrieve_financial_eligibility(
     employer_average_weekly_wage = wage_calculator.get_employer_average_weekly_wage(
         employer_id, default=Decimal("0"), should_round=True
     )
+
+    # Convert to dict from default dict to remove defaultdict type from string
+    meta["quarterly_wages"] = str(dict(wage_calculator.employer_quarter_wage))
 
     eligibilty_response = _compute_financial_eligibility(
         employment_status=employment_status,

@@ -32,13 +32,54 @@ describe("Two-factor SMS Setup", () => {
 
     await act(async () => await userEvent.click(submitButton));
 
-    expect(updateUser).toHaveBeenCalledWith(expect.any(String), {
-      mfa_phone_number: {
-        int_code: "1",
-        phone_type: "Cell",
-        phone_number: "555-555-5555",
+    expect(updateUser).toHaveBeenCalledWith(
+      expect.any(String),
+      {
+        mfa_phone_number: {
+          int_code: "1",
+          phone_type: "Cell",
+          phone_number: "555-555-5555",
+        },
       },
+      undefined,
+      undefined
+    );
+  });
+
+  it("passes the returnToSettings query param to the next page if it is set", async () => {
+    renderPage(
+      SetupSMS,
+      {
+        addCustomSetup: (appLogic) => {
+          appLogic.users.updateUser = updateUser;
+        },
+      },
+      {
+        query: { returnToSettings: "true" },
+      }
+    );
+
+    const phoneNumberField = screen.getByLabelText(/Phone number/);
+    userEvent.type(phoneNumberField, "555-555-5555");
+
+    const submitButton = screen.getByRole("button", {
+      name: "Save and continue",
     });
+
+    await act(async () => await userEvent.click(submitButton));
+
+    expect(updateUser).toHaveBeenCalledWith(
+      expect.any(String),
+      {
+        mfa_phone_number: {
+          int_code: "1",
+          phone_type: "Cell",
+          phone_number: "555-555-5555",
+        },
+      },
+      undefined,
+      { returnToSettings: "true" }
+    );
   });
 
   it("renders PageNotFound if the claimantShowMFA feature flag is not set", () => {

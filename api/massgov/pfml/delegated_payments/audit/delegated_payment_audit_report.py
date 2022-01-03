@@ -181,6 +181,10 @@ class PaymentAuditReportStep(Step):
         previous_states = [State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT]
         return _get_state_log_count_in_state(other_claim_payments, previous_states, self.db_session)
 
+    def audit_sent_count(self, payments: List[Payment]) -> int:
+        states = [State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT]
+        return _get_state_log_count_in_state(payments, states, self.db_session)
+
     def previously_errored_payment_count(self, payment: Payment) -> int:
         other_claim_payments = _get_other_claim_payments_for_payment(
             payment, same_payment_period=True

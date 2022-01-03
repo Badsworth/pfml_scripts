@@ -10,5 +10,5 @@ export default {
 
 export const Page = () => {
   const appLogic = useMockableAppLogic();
-  return <SetupSMS appLogic={appLogic} user={new User({})} />;
+  return <SetupSMS appLogic={appLogic} user={new User({})} query={{}} />;
 };

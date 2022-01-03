@@ -126,6 +126,9 @@ exports[`OtherIncomes renders the page 1`] = `
         <li>
           Income from past PFML benefits
         </li>
+        <li>
+          Income received through a bonus, like a holiday bonus or an annual sum paid out at the end of the year
+        </li>
       </ul>
     </span>
     <div

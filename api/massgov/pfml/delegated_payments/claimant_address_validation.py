@@ -480,7 +480,8 @@ class ClaimantAddressValidationStep(Step):
         logger.info("File name from path is %s", file_name_path)
         file_source_path = os.path.join(address_report_source_path, file_name_path)
         logger.info("Source file path is %s", file_source_path)
-        outgoing_s3_path = os.path.join(dfml_sharepoint_outgoing_path, file_name_path)
+        out_file_name = Constants.CLAIMANT_ADDRESS_VALIDATION_FILENAME + ".csv"
+        outgoing_s3_path = os.path.join(dfml_sharepoint_outgoing_path, out_file_name)
         logger.info("Destination file path is %s", outgoing_s3_path)
         if file_util.is_s3_path(outgoing_s3_path):
             if file_util.is_s3_path(file_source_path):

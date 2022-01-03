@@ -1,3 +1,6 @@
+from datetime import datetime
+from unittest import mock
+
 import pytest
 
 from massgov.pfml.api.models.common import Phone
@@ -49,6 +52,7 @@ class TestUpdateUser:
         test_db_session.refresh(user)
         assert user.mfa_delivery_preference_id is None
         assert user.mfa_delivery_preference is None
+        assert user.mfa_delivery_preference_updated_by_id == 1
 
     def test_set_mfa_phone_number(self, user, app, test_db_session):
         mfa_phone_number = Phone(int_code="1", phone_number="510-928-3075")
@@ -69,3 +73,29 @@ class TestUpdateUser:
 
         test_db_session.refresh(user)
         assert user.mfa_phone_number is None
+
+    def test_updating_mfa_preference_updates_audit_trail(self, user, app, test_db_session):
+        update_request = UserUpdateRequest(mfa_delivery_preference="SMS")
+        self.update_user_with_app_context(app, user, update_request)
+
+        test_db_session.refresh(user)
+        curr_date = datetime.utcnow().strftime("%Y-%m-%d")
+        assert user.mfa_delivery_preference_updated_at.strftime("%Y-%m-%d") == curr_date
+        assert user.mfa_delivery_preference_updated_by_id == 1
+        assert (
+            user.mfa_delivery_preference_updated_by.mfa_delivery_preference_updated_by_description
+            == "User"
+        )
+
+    @mock.patch("massgov.pfml.api.services.users._update_mfa_preference_audit_trail")
+    def test_audit_trail_not_updated_if_mfa_preference_isnt_updated(
+        self, mock_audit_trail, user, app, test_db_session,
+    ):
+        update_request = UserUpdateRequest(mfa_delivery_preference="SMS")
+        self.update_user_with_app_context(app, user, update_request)
+
+        assert mock_audit_trail.call_count == 1
+
+        self.update_user_with_app_context(app, user, update_request)
+
+        assert mock_audit_trail.call_count == 1

@@ -7,8 +7,8 @@ import massgov.pfml.util.files as file_utils
 
 
 @pytest.fixture
-def test_fs_path(tmp_path):
-    test_folder = tmp_path / "test_folder"
+def test_input_path(tmp_path):
+    test_folder = tmp_path / "dfml"
     test_folder.mkdir()
     received_folder = test_folder / "received"
     received_folder.mkdir()
@@ -32,18 +32,23 @@ def get_input_file_content():
 
 
 @pytest.fixture
-def test_output_file(tmp_path):
-    test_folder = tmp_path / "test_folder"
-    test_folder.mkdir(exist_ok=True)
-    output_folder = test_folder / "sentToDor"
+def test_output_path(tmp_path):
+    return tmp_path / "dor"
+
+
+@pytest.fixture
+def test_output_file(test_output_path):
+    test_output_path.mkdir(exist_ok=True)
+    output_folder = test_output_path / "send"
     output_folder.mkdir(exist_ok=True)
     output_file_name = f"{pending_filing_submission.SUBMISSION_FILE_NAME}_20211228_100900"
     output_path = "{}/{}".format(output_folder, output_file_name)
     return file_utils.write_file(output_path, "w")
 
 
-def test_get_file_to_process(test_fs_path):
-    file_to_process = pending_filing_submission.get_file_to_process(test_fs_path)
+def test_get_file_to_process(monkeypatch, test_input_path):
+    monkeypatch.setenv("INPUT_FOLDER_PATH", test_input_path)
+    file_to_process = pending_filing_submission.get_file_to_process()
     assert file_to_process.__contains__("CompaniesReturningToStatePlan")
 
 
@@ -57,11 +62,14 @@ def test_write_to_submission_file(test_output_file):
     assert output_list[0] == "FEIN      987987987     20210930"
 
 
-def test_process_pending_filing_employers(test_fs_path):
-    report = pending_filing_submission.process_pending_filing_employers(test_fs_path)
+def test_process_pending_filing_employers(monkeypatch, test_input_path, test_output_path):
+    monkeypatch.setenv("INPUT_FOLDER_PATH", test_input_path)
+    monkeypatch.setenv("OUTPUT_FOLDER_PATH", test_output_path)
+
+    report = pending_filing_submission.process_pending_filing_employers()
     assert report.total_employers_written_count == 2
 
-    output_path = f"{str(test_fs_path)}/sentToDor"
+    output_path = f"{str(test_output_path)}/send"
 
     file_list = file_utils.list_files(output_path)
 
@@ -86,25 +94,31 @@ def test_main_success_s3_location(
 ):
     monkeypatch.setattr(pending_filing_submission, "make_db_session", lambda: local_test_db_session)
 
-    mock_bucket_name = "agency-transfer-foo"
+    # Not exact match to actual S3 buckets but just to
+    # simulate separate locations for input and output.
+    mock_bucket_name_dfml = "agency-transfer-dfml"
+    mock_bucket_name_dor = "agency-transfer-dor"
 
     s3_client = boto3.client("s3")
-    s3_client.create_bucket(Bucket=mock_bucket_name)
+    s3_client.create_bucket(Bucket=mock_bucket_name_dfml)
+    s3_client.create_bucket(Bucket=mock_bucket_name_dor)
+
     s3_client.put_object(
-        Bucket=f"{mock_bucket_name}",
+        Bucket=f"{mock_bucket_name_dfml}",
         Key="received/CompaniesReturningToStatePlan_20211228_1009.csv",
         Body=get_input_file_content(),
     )
 
-    monkeypatch.setenv("FOLDER_PATH", f"s3://{mock_bucket_name}")
+    monkeypatch.setenv("INPUT_FOLDER_PATH", f"s3://{mock_bucket_name_dfml}")
+    monkeypatch.setenv("OUTPUT_FOLDER_PATH", f"s3://{mock_bucket_name_dor}")
 
     report = pending_filing_submission.handler_with_return()
 
-    object_list = s3_client.list_objects(Bucket=f"{mock_bucket_name}")["Contents"]
+    object_list = s3_client.list_objects(Bucket=f"{mock_bucket_name_dor}")["Contents"]
     found_output_file = False
     for output_file in object_list:
         found_output_file = output_file["Key"].__contains__(
-            pending_filing_submission.SUBMISSION_FILE_NAME
+            f"send/{pending_filing_submission.SUBMISSION_FILE_NAME}"
         )
 
     assert found_output_file is True

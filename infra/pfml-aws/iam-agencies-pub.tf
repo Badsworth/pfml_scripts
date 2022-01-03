@@ -29,7 +29,7 @@ data "aws_iam_policy_document" "pub_s3_access_policy" {
     ]
 
     condition {
-      test     = "StringEquals"
+      test     = "StringLike"
       variable = "s3:prefix"
       values = [
         "pub/",

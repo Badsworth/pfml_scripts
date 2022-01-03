@@ -80,9 +80,9 @@ describe("BenefitsApplicationsApi", () => {
       expect(claimResponse).toBeInstanceOf(BenefitsApplication);
       expect(claimResponse).toEqual(claim);
       expect(rest).toMatchInlineSnapshot(`
-        Object {
-          "warnings": Array [
-            Object {
+        {
+          "warnings": [
+            {
               "field": "first_name",
               "message": "First name is required",
               "type": "required",
@@ -257,8 +257,8 @@ describe("BenefitsApplicationsApi", () => {
       expect(claimResponse).toBeInstanceOf(BenefitsApplication);
       expect(claimResponse).toEqual(claim);
       expect(rest).toMatchInlineSnapshot(`
-        Object {
-          "warnings": Array [],
+        {
+          "warnings": [],
         }
       `);
     });
@@ -341,8 +341,8 @@ describe("BenefitsApplicationsApi", () => {
       expect(claimResponse).toBeInstanceOf(BenefitsApplication);
       expect(claimResponse).toEqual(claim);
       expect(rest).toMatchInlineSnapshot(`
-        Object {
-          "warnings": Array [],
+        {
+          "warnings": [],
         }
       `);
     });
@@ -387,8 +387,8 @@ describe("BenefitsApplicationsApi", () => {
       expect(claimResponse).toBeInstanceOf(BenefitsApplication);
       expect(claimResponse).toEqual(claim);
       expect(rest).toMatchInlineSnapshot(`
-        Object {
-          "warnings": Array [],
+        {
+          "warnings": [],
         }
       `);
     });
