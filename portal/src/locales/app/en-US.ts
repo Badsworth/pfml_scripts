@@ -2647,9 +2647,11 @@ const pages = {
       paymentStatus_Delayed: "Delayed",
       paymentStatus_Pending: "Pending",
       "paymentStatus_Sent to bank": "Sent",
+      waitingWeekGeneric:
+        "The first seven (7) days of approved leave are unpaid",
       waitingWeekHeader: "Waiting week",
       waitingWeekText:
-        "This week is unpaid. Learn more about the <waiting-week-link>7-day waiting period</waiting-week-link>.",
+        "Learn more about the <waiting-week-link>7-day waiting period</waiting-week-link>.",
     },
     paymentsTitle: "Payments",
     questionsDetails:

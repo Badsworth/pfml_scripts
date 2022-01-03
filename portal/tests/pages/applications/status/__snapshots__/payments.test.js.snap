@@ -454,12 +454,12 @@ exports[`Payments renders the Payments table 1`] = `
       <td
         data-label="Waiting week"
       >
-        10/21/2021 to 10/27/2021
+        The first seven (7) days of approved leave are unpaid
       </td>
       <td
         colspan="4"
       >
-        This week is unpaid. Learn more about the 
+        Learn more about the 
         <a
           href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#what-is-the-7-day-waiting-period?-"
           rel="noopener noreferrer"
