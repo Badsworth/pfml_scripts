@@ -1,4 +1,6 @@
 // TODO (PORTAL-1148) Update to use createMockClaim when ready
+import AppErrorInfo from "../../../../src/models/AppErrorInfo";
+import AppErrorInfoCollection from "../../../../src/models/AppErrorInfoCollection";
 import ClaimDetail from "../../../../src/models/ClaimDetail";
 import DocumentCollection from "../../../../src/models/DocumentCollection";
 import { DocumentType } from "../../../../src/models/Document";
@@ -15,6 +17,7 @@ jest.mock("next/router");
 mockRouter.asPath = routes.applications.status.payments;
 
 const renderWithApprovalNotice = (appLogicHook, isRetroactive = true) => {
+  appLogicHook.appErrors = new AppErrorInfoCollection();
   appLogicHook.documents.loadAll = jest.fn();
   appLogicHook.documents.documents = new DocumentCollection([
     {
@@ -32,9 +35,8 @@ const renderWithApprovalNotice = (appLogicHook, isRetroactive = true) => {
 let goToSpy;
 
 const setupHelper = (claimDetailAttrs, isRetroactive) => (appLogicHook) => {
-  appLogicHook.claims.claimDetail = claimDetailAttrs
-    ? new ClaimDetail(claimDetailAttrs)
-    : null;
+  appLogicHook.claims.claimDetail =
+    claimDetailAttrs && new ClaimDetail(claimDetailAttrs);
   appLogicHook.claims.loadClaimDetail = jest.fn();
   goToSpy = jest.spyOn(appLogicHook.portalFlow, "goTo");
   renderWithApprovalNotice(appLogicHook, isRetroactive);
@@ -305,7 +307,7 @@ describe("Payments", () => {
     expect(table).toMatchSnapshot();
   });
 
-  it("redirects to 404 if there's no absence case ID", () => {
+  it("displays page not found alert if there's no absence case ID", () => {
     renderPage(
       Payments,
       {
@@ -318,5 +320,41 @@ describe("Payments", () => {
       name: /Page not found/,
     });
     expect(pageNotFoundHeading).toBeInTheDocument();
+  });
+
+  it("does not render payments if the is a 404 status", () => {
+    const { container } = renderPage(
+      Payments,
+      {
+        addCustomSetup: setupHelper(),
+      },
+      {
+        query: { absence_id: "foo" },
+        appLogic: {
+          claims: {
+            loadClaimDetail: jest.fn(),
+            claimDetail: undefined,
+            isLoadingClaimDetail: false,
+          },
+          appErrors: new AppErrorInfoCollection([
+            new AppErrorInfo({
+              meta: { application_id: "foo" },
+              key: "AppErrorInfo1",
+              message:
+                "Sorry, we were unable to retrieve what you were looking for. Check that the link you are visiting is correct. If this continues to happen, please log out and try again.",
+              name: "NotFoundError",
+            }),
+          ]),
+
+          documents: {
+            documents: null,
+            loadAll: { loadAllClaimDocuments: jest.fn() },
+          },
+        },
+      }
+    );
+
+    expect(screen.queryByText(/Payments/)).not.toBeInTheDocument();
+    expect(container.firstChild).toMatchSnapshot();
   });
 });
