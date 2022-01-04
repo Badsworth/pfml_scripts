@@ -148,7 +148,7 @@
     "FINEOS_HAS_TAX_WITHHOLDING": "false",
     "HAS_UPDATED_MAX_BENFIT": "false",
     "HAS_PAYMENT_STATUS": "true",
-    "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "false",
+    "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "true",
     "HAS_ORGUNITS_SETUP": "false"
   },
   "breakfix": {
