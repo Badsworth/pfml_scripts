@@ -8,7 +8,7 @@ import pytest
 
 import massgov.pfml.fineos
 import massgov.pfml.fineos.mock_client as fineos_mock
-from massgov.pfml.api.models.claims.responses import AbsencePeriodStatusResponse
+from massgov.pfml.api.models.claims.responses import AbsencePeriodResponse
 from massgov.pfml.api.services import fineos_actions
 from massgov.pfml.db.models.applications import (
     Application,
@@ -40,6 +40,9 @@ from massgov.pfml.db.models.factories import (
     PreviousLeaveSameReasonFactory,
     ReducedScheduleLeavePeriodFactory,
     WorkPatternFixedFactory,
+)
+from massgov.pfml.db.queries.absence_periods import (
+    convert_fineos_absence_period_to_claim_response_absence_period,
 )
 from massgov.pfml.fineos import FINEOSClient, exception
 from massgov.pfml.fineos.exception import (
@@ -1385,13 +1388,15 @@ class TestGetAbsencePeriods:
         fineos_absence_periods = fineos_actions.get_absence_periods(
             employee_tax_id, employer_fein, absence_case_id, test_db_session
         )
-        absence_periods = fineos_actions.parse_fineos_absence_periods_to_absence_period_status_response(
-            fineos_absence_periods
-        )
-        assert type(absence_periods[0]) == AbsencePeriodStatusResponse
+        absence_periods = [
+            convert_fineos_absence_period_to_claim_response_absence_period(
+                fineos_absence_period, {}
+            )
+            for fineos_absence_period in fineos_absence_periods
+        ]
+        assert type(absence_periods[0]) == AbsencePeriodResponse
         assert absence_periods == [
-            AbsencePeriodStatusResponse(
-                fineos_leave_period_id="PL-14449-0000002237",
+            AbsencePeriodResponse(
                 absence_period_start_date=datetime.date(2021, 1, 29),
                 absence_period_end_date=datetime.date(2021, 1, 30),
                 reason="Child Bonding",
@@ -1413,9 +1418,12 @@ class TestGetAbsencePeriods:
             ),
         ]
 
-        absence_periods = fineos_actions.parse_fineos_absence_periods_to_absence_period_status_response(
-            fineos_absence_periods
-        )
+        absence_periods = [
+            convert_fineos_absence_period_to_claim_response_absence_period(
+                fineos_absence_period, {}
+            )
+            for fineos_absence_period in fineos_absence_periods
+        ]
 
         assert (
             absence_periods[0].period_type

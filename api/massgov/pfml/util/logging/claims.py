@@ -5,7 +5,7 @@ from typing import Any, Dict, List, Optional
 import massgov.pfml.util.logging
 from massgov.pfml.api.models.claims.common import EmployerClaimReview
 from massgov.pfml.api.models.claims.responses import (
-    AbsencePeriodStatusResponse,
+    AbsencePeriodResponse,
     DetailedClaimResponse,
     ManagedRequirementResponse,
 )
@@ -113,11 +113,11 @@ def log_get_claim_metrics(claim: DetailedClaimResponse) -> None:
 
 
 def _log_get_claim_absence_period(
-    claim: DetailedClaimResponse, absence_period: AbsencePeriodStatusResponse
+    claim: DetailedClaimResponse, absence_period: AbsencePeriodResponse
 ) -> None:
     log_attributes = {
         "absence_id": claim.fineos_absence_id,
-        "leave_period_id": absence_period.fineos_leave_period_id,
+        "leave_request_id": absence_period.fineos_leave_request_id,
         "reason": absence_period.reason,
         "request_decision": absence_period.request_decision,
         "start_date": absence_period.absence_period_start_date,

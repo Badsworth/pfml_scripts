@@ -27,7 +27,7 @@ import massgov.pfml.api.employees
 import massgov.pfml.db.models.employees as employee_models
 import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging
-from massgov.pfml.api.models.claims.responses import AbsencePeriodStatusResponse
+from massgov.pfml.api.models.claims.responses import AbsencePeriodResponse
 from massgov.pfml.db.models.factories import (
     ClaimFactory,
     EmployeeFactory,
@@ -121,8 +121,8 @@ def claim(employer, employee):
 
 @pytest.fixture
 def absence_period():
-    return AbsencePeriodStatusResponse(
-        fineos_leave_period_id="PL-14449-0000002237",
+    return AbsencePeriodResponse(
+        fineos_leave_request_id="PL-14449-0000002237",
         absence_period_start_date=date(2021, 1, 29),
         absence_period_end_date=date(2021, 1, 30),
         reason="Child Bonding",

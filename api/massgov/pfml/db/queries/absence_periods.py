@@ -112,9 +112,7 @@ def upsert_absence_period_from_fineos_period(
     Update or Insert Fineos Period from the Group Client API
     or Fineos Absence Period from the Customer Client API
     """
-    # convert from Customer Client API model to Group Client API model
-    if isinstance(fineos_period, FineosAbsencePeriod):
-        fineos_period = convert_fineos_absence_period_to_period(fineos_period)
+    fineos_period = convert_customer_api_period_to_group_client_period(fineos_period)
 
     if fineos_period.leaveRequest is None:
         logger.error(
@@ -146,10 +144,14 @@ def upsert_absence_period_from_fineos_period(
     return
 
 
-def convert_fineos_absence_period_to_period(fineos_absence_period: FineosAbsencePeriod,) -> Period:
+def convert_customer_api_period_to_group_client_period(
+    fineos_absence_period: Union[Period, FineosAbsencePeriod]
+) -> Period:
     """
     convert from Customer Client API model to Group Client API model
     """
+    if isinstance(fineos_absence_period, Period):
+        return fineos_absence_period
     leave_request = LeaveRequest(
         qualifier1=fineos_absence_period.reasonQualifier1,
         qualifier2=fineos_absence_period.reasonQualifier2,
@@ -166,19 +168,21 @@ def convert_fineos_absence_period_to_period(fineos_absence_period: FineosAbsence
 
 
 def convert_fineos_absence_period_to_claim_response_absence_period(
-    period: Period, log_attributes: Dict
+    period: Union[Period, FineosAbsencePeriod], log_attributes: Dict
 ) -> AbsencePeriodResponse:
+
+    fineos_period = convert_customer_api_period_to_group_client_period(period)
     absence_period = AbsencePeriodResponse()
 
-    absence_period.absence_period_start_date = period.startDate
-    absence_period.absence_period_end_date = period.endDate
-    absence_period.period_type = remap_absence_period_type(period.type)
-    if period.leaveRequest is None:
+    absence_period.absence_period_start_date = fineos_period.startDate
+    absence_period.absence_period_end_date = fineos_period.endDate
+    absence_period.period_type = remap_absence_period_type(fineos_period.type)
+    if fineos_period.leaveRequest is None:
         newrelic_util.log_and_capture_exception(
             "Failed to extract leave request from fineos period.", extra=log_attributes
         )
         return absence_period
-    leave_request = period.leaveRequest
+    leave_request = fineos_period.leaveRequest
     absence_period.reason = leave_request.reasonName
     absence_period.reason_qualifier_one = leave_request.qualifier1
     absence_period.reason_qualifier_two = leave_request.qualifier2

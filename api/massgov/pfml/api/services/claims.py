@@ -5,12 +5,12 @@ import newrelic.agent
 import massgov
 import massgov.pfml.api.app as app
 from massgov.pfml.api.models.claims.responses import DetailedClaimResponse
-from massgov.pfml.api.services.fineos_actions import (
-    get_absence_periods,
-    parse_fineos_absence_periods_to_absence_period_status_response,
-)
+from massgov.pfml.api.services.fineos_actions import get_absence_periods
 from massgov.pfml.db.models.employees import Claim
-from massgov.pfml.db.queries.absence_periods import sync_customer_api_absence_periods_to_db
+from massgov.pfml.db.queries.absence_periods import (
+    convert_fineos_absence_period_to_claim_response_absence_period,
+    sync_customer_api_absence_periods_to_db,
+)
 from massgov.pfml.fineos import exception
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
@@ -61,10 +61,12 @@ def get_claim_detail(claim: Claim, log_attributes: Dict) -> DetailedClaimRespons
             db_session.rollback()  # handle insert errors
 
     detailed_claim = DetailedClaimResponse.from_orm(claim)
-    detailed_claim.absence_periods = parse_fineos_absence_periods_to_absence_period_status_response(
-        absence_periods
-    )
-
+    detailed_claim.absence_periods = [
+        convert_fineos_absence_period_to_claim_response_absence_period(
+            absence_period, log_attributes
+        )
+        for absence_period in absence_periods
+    ]
     if claim.application:  # type: ignore
         detailed_claim.application_id = claim.application.application_id  # type: ignore
 
