@@ -1041,6 +1041,26 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#storybook-and-accessibility-tests" class="md-nav__link">
+    Storybook and Accessibility tests
+  </a>
+  
+    <nav class="md-nav" aria-label="Storybook and Accessibility tests">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#accessibility-tests" class="md-nav__link">
+    Accessibility tests
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1240,6 +1260,26 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#storybook-and-accessibility-tests" class="md-nav__link">
+    Storybook and Accessibility tests
+  </a>
+  
+    <nav class="md-nav" aria-label="Storybook and Accessibility tests">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#accessibility-tests" class="md-nav__link">
+    Accessibility tests
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1259,7 +1299,7 @@
 
 <h1 id="tests">Tests</h1>
 <h2 id="introduction">Introduction</h2>
-<p><a href="https://jestjs.io/">Jest</a> is used as our JS test runner and is very similar to Jasmine.  We also use <a href="https://github.com/testing-library/jest-dom">jest-dom</a> custom matchers.</p>
+<p><a href="https://jestjs.io/">Jest</a> is used as our JS test runner and is very similar to Jasmine. We also use <a href="https://github.com/testing-library/jest-dom">jest-dom</a> custom matchers.</p>
 <p><strong>Read the <a href="https://jestjs.io/en/">Jest documentation</a> to learn how to write assertions.</strong> A good place to start if you are new to JS testing is to learn about <a href="https://jestjs.io/docs/en/using-matchers">Using Matchers</a>.</p>
 <p>Below is an example of a test:</p>
 <div class="highlight"><pre><span></span><code><span class="k">import</span> <span class="nx">sum</span> <span class="kr">from</span> <span class="s2">&quot;./sum&quot;</span><span class="p">;</span>
@@ -1273,13 +1313,18 @@
 <span class="p">});</span>
 </code></pre></div>
 <h2 id="creating-new-test-files">Creating new test files</h2>
-<p>A test file should be placed in the appropriate <code>tests</code> directory (e.g. <code>portal/tests</code>) rather than alongside the file it tests. These test files should have the same name as the file they're testing, and have <code>.test.js</code> as the extension. For example, <code>pages/index.js</code> and <code>tests/pages/index.test.js</code>.</p>
+<p>A test file should be placed in the appropriate <code>tests</code> directory (e.g. <code>portal/tests</code>) rather than alongside the file it tests. These test files should have the same name as the file they're testing, and have <code>.test.tsx</code> as the extension. For example, <code>pages/index.tsx</code> and <code>tests/pages/index.test.tsx</code>.</p>
+<blockquote>
+<p>You'll notice some existing test files written in <code>.js</code>. These were created before we migrated the codebase to TypeScript. We recommend that any new tests be written in TypeScript, in order to reduce the introduction of more <code>.js</code> files into the codebase.</p>
+</blockquote>
 <h2 id="unit-tests">Unit tests</h2>
-<p>We use <a href="https://testing-library.com/docs/react-testing-library/intro/">React Testing Library</a> alongside Jest. React Testing Library (RTL), enables us to interact with rendered DOM nodes directly in our tests. This helps us to write tests that resemble the way our software is used (more on that in the <a href="https://testing-library.com/docs/guiding-principles">RTL guiding principles</a>). </p>
-<p><strong>React Testing Library Resources:</strong>
-- <a href="https://testing-library.com/docs/react-testing-library/intro/">React Testing Library Docs</a>
-- <a href="https://testing-library.com/docs/react-testing-library/cheatsheet/">Cheatsheet guide</a> to reference all the available React Testing Library fucntions
-- <a href="https://testing-playground.com/">Playground</a> to test out your queries</p>
+<p>We use <a href="https://testing-library.com/docs/react-testing-library/intro/">React Testing Library</a> alongside Jest. React Testing Library (RTL), enables us to interact with rendered DOM nodes directly in our tests. This helps us to write tests that resemble the way our software is used (more on that in the <a href="https://testing-library.com/docs/guiding-principles">RTL guiding principles</a>).</p>
+<p><strong>React Testing Library Resources:</strong></p>
+<ul>
+<li><a href="https://testing-library.com/docs/react-testing-library/intro/">React Testing Library Docs</a></li>
+<li><a href="https://testing-library.com/docs/react-testing-library/cheatsheet/">Cheatsheet guide</a> to reference all the available React Testing Library fucntions</li>
+<li><a href="https://testing-playground.com/">Playground</a> to test out your queries</li>
+</ul>
 <p>Below is an example of a React component test:</p>
 <div class="highlight"><pre><span></span><code><span class="k">import</span> <span class="p">{</span> <span class="nx">fireEvent</span><span class="p">,</span> <span class="nx">render</span><span class="p">,</span> <span class="nx">screen</span> <span class="p">}</span> <span class="kr">from</span> <span class="s2">&quot;@testing-library/react&quot;</span><span class="p">;</span>
 <span class="k">import</span> <span class="nx">Button</span> <span class="kr">from</span> <span class="s2">&quot;./Button&quot;</span><span class="p">;</span>
@@ -1311,10 +1356,10 @@
 </code></pre></div>
 <h4 id="react-snapshot-example">React snapshot example</h4>
 <div class="highlight"><pre><span></span><code><span class="nx">it</span><span class="p">(</span><span class="s2">&quot;renders the component as expected&quot;</span><span class="p">,</span> <span class="p">()</span> <span class="p">=&gt;</span> <span class="p">{</span>
-    <span class="kd">const</span> <span class="p">{</span> <span class="nx">container</span> <span class="p">}</span> <span class="o">=</span> <span class="nx">render</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">ExampleComponent</span> <span class="o">/&gt;</span><span class="p">);</span>
+  <span class="kd">const</span> <span class="p">{</span> <span class="nx">container</span> <span class="p">}</span> <span class="o">=</span> <span class="nx">render</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">ExampleComponent</span> <span class="o">/&gt;</span><span class="p">);</span>
 
-    <span class="nx">expect</span><span class="p">(</span><span class="nx">container</span><span class="p">.</span><span class="nx">firstChild</span><span class="p">).</span><span class="nx">toMatchSnapshot</span><span class="p">();</span>
-  <span class="p">});</span>
+  <span class="nx">expect</span><span class="p">(</span><span class="nx">container</span><span class="p">.</span><span class="nx">firstChild</span><span class="p">).</span><span class="nx">toMatchSnapshot</span><span class="p">();</span>
+<span class="p">});</span>
 </code></pre></div>
 <h3 id="mocks">Mocks</h3>
 <p>Mock functions make it easy to test the links between code by erasing the actual implementation of a function, capturing calls to the function (and the parameters passed in those calls), capturing instances of constructor functions when instantiated with new, and allowing test-time configuration of return values.</p>
@@ -1324,6 +1369,29 @@
 <p><a href="https://jestjs.io/docs/en/mock-functions">Learn more about Mock Functions</a>.</p>
 <h3 id="test-coverage">Test coverage</h3>
 <p>Jest includes <a href="https://jestjs.io/docs/en/cli#coverage">built-in support for measuring test coverage</a>, using <a href="https://istanbul.js.org/">Istanbul</a>. The <a href="https://jestjs.io/docs/en/configuration#coveragereporters-array-string"><code>coverageReporters</code></a> Jest setting can be modified for more advanced test coverage use cases.</p>
+<h2 id="storybook-and-accessibility-tests">Storybook and Accessibility tests</h2>
+<p>A test is generated for each story in the Storybook. The test asserts:</p>
+<ol>
+<li>The story renders without crashing</li>
+<li>The story has no accessibility violations.</li>
+</ol>
+<h3 id="accessibility-tests">Accessibility tests</h3>
+<p>We use <a href="https://github.com/nickcolley/jest-axe"><code>jest-axe</code></a> to run automated accessibility tests. <strong>You shouldn't rely heavily on these tests.</strong> The Accessibility team from the UK Government Digital Service (GDS) found that <a href="https://accessibility.blog.gov.uk/2017/02/24/what-we-found-when-we-tested-tools-on-the-worlds-least-accessible-webpage">only ~30% of issues are found by automated testing</a>.</p>
+<p>For the most part, you can rely on the generated Storybook test to run the accessibility tests. The error reports can sometimes make it difficult to identify what aspect of the page it's referring to. In these cases, it can be easier to view the Accessibility tab in the Storybook UI, where you can then toggle highlighting of the offending element(s):</p>
+<p><img alt="Storybook a11y addon" src="../../assets/storybook-a11y-addon.png" /></p>
+<p>If you want to introduce a unique test that's not dependent on Storybook, you can add your own accessibility assertion. For example:</p>
+<div class="highlight"><pre><span></span><code>// tests/pages/index.test.tsx
+import Page from &quot;src/pages/index&quot;;
+import { axe } from &quot;jest-axe&quot;;
+import { render } from &quot;@testing-library/react&quot;;
+
+it(&quot;renders page without accessibility violations&quot;, async () =&gt; {
+  const { container } = render(&lt;Page /&gt;);
+  const results = await axe(container);
+
+  expect(results).toHaveNoViolations();
+});
+</code></pre></div>
 
               
             </article>

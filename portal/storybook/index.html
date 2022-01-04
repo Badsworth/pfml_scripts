@@ -979,6 +979,19 @@
     Previewing entire pages
   </a>
   
+    <nav class="md-nav" aria-label="Previewing entire pages">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#application-flow" class="md-nav__link">
+    Application flow
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
         
           <li class="md-nav__item">
@@ -1172,6 +1185,19 @@
     Previewing entire pages
   </a>
   
+    <nav class="md-nav" aria-label="Previewing entire pages">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#application-flow" class="md-nav__link">
+    Application flow
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
         
           <li class="md-nav__item">
@@ -1256,7 +1282,9 @@ export const Primary = (args: Props&lt;typeof Button&gt;) =&gt; {
 </ul>
 <h3 id="previewing-entire-pages">Previewing entire pages</h3>
 <p>In Next.js, <a href="https://nextjs.org/docs/basic-features/pages">a page is just a React component</a>. This enables some pretty cool capabilities when combined with Storybook. Specifically, this means we can create a Story that renders a Page component, which allows us to preview an entire page without navigating through the entire application flow to preview the page.</p>
-<p>For the Create Claim flow, we're <a href="https://github.com/EOLWD/pfml/tree/main/portal/bin/generate-claims-page-stories.js">generating a Storybook page for each page in the flow</a>. Engineers can override the generated story by adding a <code>*.stories.tsx</code> file for the page in the <code>storybook/stories/pages/applications</code> directory.</p>
+<p>An additional benefit of including a Story for a Page component is that this page will receive an automated accessibility scan as part of the tests generated for each story.</p>
+<h4 id="application-flow">Application flow</h4>
+<p>For the "Create Application" claimant flow, we're <a href="https://github.com/EOLWD/pfml/tree/main/portal/bin/generate-claims-page-stories.js">generating a Storybook page for each page in the flow</a>. Engineers can override the generated story by adding a <code>*.stories.tsx</code> file for the page in the <code>storybook/stories/pages/applications</code> directory.</p>
 <h3 id="how-storybook-interacts-with-our-source-code">How Storybook interacts with our source code</h3>
 <p>Storybook stories import and render the same components used in the live site. Below is a visualization attempting to demonstrate how assets are shared between our web application and the Storybook site.</p>
 <p><img alt="Storybook diagram" src="../assets/storybook.jpeg" /></p>
