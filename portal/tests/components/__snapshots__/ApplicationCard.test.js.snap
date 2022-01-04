@@ -4,7 +4,7 @@ exports[`ApplicationCard with a completed application renders the component 1`] 
 <div
   class="maxw-mobile-lg margin-bottom-3"
 >
-  <aside
+  <div
     class="border-top-1 border-primary"
   />
   <article

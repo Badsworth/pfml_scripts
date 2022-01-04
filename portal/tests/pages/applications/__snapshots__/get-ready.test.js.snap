@@ -9,6 +9,7 @@ exports[`GetReady displays different copy when tax withholding is enabled 1`] = 
     Get ready to apply
   </h1>
   <div
+    aria-labelledby="alert-heading4"
     class="usa-alert usa-alert--info c-alert--neutral margin-bottom-3"
     role="region"
     tabindex="-1"
@@ -18,6 +19,7 @@ exports[`GetReady displays different copy when tax withholding is enabled 1`] = 
     >
       <h2
         class="usa-alert__heading font-heading-md text-bold"
+        id="alert-heading4"
       >
         Only some people can apply online for now
       </h2>
@@ -294,6 +296,7 @@ exports[`GetReady displays different copy when tax withholding is enabled 1`] = 
 
 exports[`GetReady displays success alert when user sets up SMS MFA 1`] = `
 <div
+  aria-labelledby="alert-heading5"
   class="usa-alert usa-alert--success margin-bottom-3"
   role="region"
   tabindex="-1"
@@ -303,6 +306,7 @@ exports[`GetReady displays success alert when user sets up SMS MFA 1`] = `
   >
     <h2
       class="usa-alert__heading font-heading-md text-bold"
+      id="alert-heading5"
     >
       Phone number confirmed
     </h2>
@@ -324,6 +328,7 @@ exports[`GetReady renders get ready content 1`] = `
     Get ready to apply
   </h1>
   <div
+    aria-labelledby="alert-heading1"
     class="usa-alert usa-alert--info c-alert--neutral margin-bottom-3"
     role="region"
     tabindex="-1"
@@ -333,6 +338,7 @@ exports[`GetReady renders get ready content 1`] = `
     >
       <h2
         class="usa-alert__heading font-heading-md text-bold"
+        id="alert-heading1"
       >
         Only some people can apply online for now
       </h2>

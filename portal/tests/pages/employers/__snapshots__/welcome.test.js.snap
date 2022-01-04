@@ -6,6 +6,7 @@ exports[`Employer welcome renders page 1`] = `
     class="grid-row"
   >
     <nav
+      aria-label="Employer menu"
       class="border-bottom border-base-lighter margin-bottom-5 display-flex width-full"
     >
       <a
@@ -200,6 +201,7 @@ exports[`Employer welcome shows Verification alert when user has a verifiable em
 >
   <h2
     class="usa-alert__heading font-heading-md text-bold"
+    id="alert-heading1"
   >
     Verify your account to continue
   </h2>

@@ -68,6 +68,7 @@ exports[`Index renders the page 1`] = `
 
 exports[`Index shows a success message telling the user they are now a leave admin 1`] = `
 <div
+  aria-labelledby="alert-heading4"
   class="usa-alert usa-alert--success"
   role="region"
   tabindex="-1"
@@ -77,6 +78,7 @@ exports[`Index shows a success message telling the user they are now a leave adm
   >
     <h2
       class="usa-alert__heading font-heading-md text-bold"
+      id="alert-heading4"
     >
       Success
     </h2>
@@ -91,6 +93,7 @@ exports[`Index shows a success message telling the user they are now a leave adm
 
 exports[`Index shows an Alert telling the user to start verification if there are unverified employers 1`] = `
 <div
+  aria-labelledby="alert-heading2"
   class="usa-alert usa-alert--warning"
   role="region"
   tabindex="-1"
@@ -100,6 +103,7 @@ exports[`Index shows an Alert telling the user to start verification if there ar
   >
     <h2
       class="usa-alert__heading font-heading-md text-bold"
+      id="alert-heading2"
     >
       Verify your account
     </h2>

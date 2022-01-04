@@ -302,7 +302,7 @@ export const DocumentUpload = (props: DocumentUploadProps) => {
       {isLoadingDocuments && !hasLoadingDocumentsError && (
         <div className="margin-top-8 text-center">
           <Spinner
-            aria-valuetext={t("components.withClaimDocuments.loadingLabel")}
+            aria-label={t("components.withClaimDocuments.loadingLabel")}
           />
         </div>
       )}

@@ -91,7 +91,7 @@ const PageWrapper = (props: PageWrapperProps) => {
   if (isLoading) {
     pageBody = (
       <section id="page" className="margin-top-8 text-center">
-        <Spinner aria-valuetext={t("components.spinner.label")} />
+        <Spinner aria-label={t("components.spinner.label")} />
       </section>
     );
   } else if (showMaintenancePageBody && !isFeatureEnabled("noMaintenance")) {

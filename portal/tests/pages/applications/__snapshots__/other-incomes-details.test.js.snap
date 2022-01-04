@@ -18,6 +18,7 @@ exports[`OtherIncomesDetails when the user's claim has no other incomes renders 
       Tell us about your other sources of income during your leave dates for paid leave from PFML.
     </h2>
     <div
+      aria-labelledby="alert-heading1"
       class="usa-alert usa-alert--info usa-alert--no-icon c-alert--neutral margin-top-2 margin-bottom-4"
       role="region"
       tabindex="-1"
@@ -27,6 +28,7 @@ exports[`OtherIncomesDetails when the user's claim has no other incomes renders 
       >
         <h3
           class="usa-alert__heading font-heading-md text-bold"
+          id="alert-heading1"
         >
           Your leave dates for paid leave from PFML
         </h3>
@@ -42,7 +44,7 @@ exports[`OtherIncomesDetails when the user's claim has no other incomes renders 
     >
       <div
         class="margin-bottom-3 measure-5 padding-3 border-2px border-base-lighter js-repeated-fieldset-card"
-        data-key="RepeatableFieldsetCard2"
+        data-key="RepeatableFieldsetCard3"
         data-testid="repeatable-fieldset-card"
       >
         <fieldset
@@ -69,33 +71,16 @@ exports[`OtherIncomesDetails when the user's claim has no other incomes renders 
               >
                 <input
                   class="usa-radio__input"
-                  id="InputChoice3"
+                  id="InputChoice4"
                   name="other_incomes[0].income_type"
                   type="radio"
                   value="Workers Compensation"
                 />
                 <label
                   class="usa-radio__label"
-                  for="InputChoice3"
-                >
-                  Workers Compensation
-                </label>
-              </div>
-              <div
-                class="usa-radio measure-5 bg-transparent"
-              >
-                <input
-                  class="usa-radio__input"
-                  id="InputChoice4"
-                  name="other_incomes[0].income_type"
-                  type="radio"
-                  value="Unemployment Insurance"
-                />
-                <label
-                  class="usa-radio__label"
                   for="InputChoice4"
                 >
-                  Unemployment Insurance
+                  Workers Compensation
                 </label>
               </div>
               <div
@@ -106,13 +91,13 @@ exports[`OtherIncomesDetails when the user's claim has no other incomes renders 
                   id="InputChoice5"
                   name="other_incomes[0].income_type"
                   type="radio"
-                  value="SSDI"
+                  value="Unemployment Insurance"
                 />
                 <label
                   class="usa-radio__label"
                   for="InputChoice5"
                 >
-                  Social Security Disability Insurance
+                  Unemployment Insurance
                 </label>
               </div>
               <div
@@ -123,13 +108,13 @@ exports[`OtherIncomesDetails when the user's claim has no other incomes renders 
                   id="InputChoice6"
                   name="other_incomes[0].income_type"
                   type="radio"
-                  value="Disability benefits under Gov't retirement plan"
+                  value="SSDI"
                 />
                 <label
                   class="usa-radio__label"
                   for="InputChoice6"
                 >
-                  Disability benefits under a governmental retirement plan
+                  Social Security Disability Insurance
                 </label>
               </div>
               <div
@@ -140,13 +125,13 @@ exports[`OtherIncomesDetails when the user's claim has no other incomes renders 
                   id="InputChoice7"
                   name="other_incomes[0].income_type"
                   type="radio"
-                  value="Jones Act benefits"
+                  value="Disability benefits under Gov't retirement plan"
                 />
                 <label
                   class="usa-radio__label"
                   for="InputChoice7"
                 >
-                  Jones Act benefits
+                  Disability benefits under a governmental retirement plan
                 </label>
               </div>
               <div
@@ -157,13 +142,13 @@ exports[`OtherIncomesDetails when the user's claim has no other incomes renders 
                   id="InputChoice8"
                   name="other_incomes[0].income_type"
                   type="radio"
-                  value="Railroad Retirement benefits"
+                  value="Jones Act benefits"
                 />
                 <label
                   class="usa-radio__label"
                   for="InputChoice8"
                 >
-                  Railroad Retirement benefits
+                  Jones Act benefits
                 </label>
               </div>
               <div
@@ -174,11 +159,28 @@ exports[`OtherIncomesDetails when the user's claim has no other incomes renders 
                   id="InputChoice9"
                   name="other_incomes[0].income_type"
                   type="radio"
-                  value="Earnings from another employment/self-employment"
+                  value="Railroad Retirement benefits"
                 />
                 <label
                   class="usa-radio__label"
                   for="InputChoice9"
+                >
+                  Railroad Retirement benefits
+                </label>
+              </div>
+              <div
+                class="usa-radio measure-5 bg-transparent"
+              >
+                <input
+                  class="usa-radio__input"
+                  id="InputChoice10"
+                  name="other_incomes[0].income_type"
+                  type="radio"
+                  value="Earnings from another employment/self-employment"
+                />
+                <label
+                  class="usa-radio__label"
+                  for="InputChoice10"
                 >
                   Earnings or benefits from another employer, or through self-employment
                 </label>
@@ -206,15 +208,15 @@ exports[`OtherIncomesDetails when the user's claim has no other incomes renders 
               >
                 <label
                   class="usa-label text-normal margin-top-05 font-heading-xs measure-5"
-                  for="InputText10"
-                  id="InputText10_label"
+                  for="InputText11"
+                  id="InputText11_label"
                 >
                   Month
                 </label>
                 <input
-                  aria-labelledby="InputText10_label InputText10_hint InputText10_error"
+                  aria-labelledby="InputText11_label InputText11_hint InputText11_error"
                   class="usa-input usa-input--inline maxw-mobile-lg"
-                  id="InputText10"
+                  id="InputText11"
                   inputmode="numeric"
                   maxlength="2"
                   name="other_incomes[0].income_start_date_month"
@@ -227,15 +229,15 @@ exports[`OtherIncomesDetails when the user's claim has no other incomes renders 
               >
                 <label
                   class="usa-label text-normal margin-top-05 font-heading-xs measure-5"
-                  for="InputText11"
-                  id="InputText11_label"
+                  for="InputText12"
+                  id="InputText12_label"
                 >
                   Day
                 </label>
                 <input
-                  aria-labelledby="InputText11_label InputText11_hint InputText11_error"
+                  aria-labelledby="InputText12_label InputText12_hint InputText12_error"
                   class="usa-input usa-input--inline maxw-mobile-lg"
-                  id="InputText11"
+                  id="InputText12"
                   inputmode="numeric"
                   maxlength="2"
                   name="other_incomes[0].income_start_date_day"
@@ -248,15 +250,15 @@ exports[`OtherIncomesDetails when the user's claim has no other incomes renders 
               >
                 <label
                   class="usa-label text-normal margin-top-05 font-heading-xs measure-5"
-                  for="InputText12"
-                  id="InputText12_label"
+                  for="InputText13"
+                  id="InputText13_label"
                 >
                   Year
                 </label>
                 <input
-                  aria-labelledby="InputText12_label InputText12_hint InputText12_error"
+                  aria-labelledby="InputText13_label InputText13_hint InputText13_error"
                   class="usa-input usa-input--inline maxw-mobile-lg"
-                  id="InputText12"
+                  id="InputText13"
                   inputmode="numeric"
                   maxlength="4"
                   name="other_incomes[0].income_start_date_year"
@@ -287,15 +289,15 @@ exports[`OtherIncomesDetails when the user's claim has no other incomes renders 
               >
                 <label
                   class="usa-label text-normal margin-top-05 font-heading-xs measure-5"
-                  for="InputText13"
-                  id="InputText13_label"
+                  for="InputText14"
+                  id="InputText14_label"
                 >
                   Month
                 </label>
                 <input
-                  aria-labelledby="InputText13_label InputText13_hint InputText13_error"
+                  aria-labelledby="InputText14_label InputText14_hint InputText14_error"
                   class="usa-input usa-input--inline maxw-mobile-lg"
-                  id="InputText13"
+                  id="InputText14"
                   inputmode="numeric"
                   maxlength="2"
                   name="other_incomes[0].income_end_date_month"
@@ -308,15 +310,15 @@ exports[`OtherIncomesDetails when the user's claim has no other incomes renders 
               >
                 <label
                   class="usa-label text-normal margin-top-05 font-heading-xs measure-5"
-                  for="InputText14"
-                  id="InputText14_label"
+                  for="InputText15"
+                  id="InputText15_label"
                 >
                   Day
                 </label>
                 <input
-                  aria-labelledby="InputText14_label InputText14_hint InputText14_error"
+                  aria-labelledby="InputText15_label InputText15_hint InputText15_error"
                   class="usa-input usa-input--inline maxw-mobile-lg"
-                  id="InputText14"
+                  id="InputText15"
                   inputmode="numeric"
                   maxlength="2"
                   name="other_incomes[0].income_end_date_day"
@@ -329,15 +331,15 @@ exports[`OtherIncomesDetails when the user's claim has no other incomes renders 
               >
                 <label
                   class="usa-label text-normal margin-top-05 font-heading-xs measure-5"
-                  for="InputText15"
-                  id="InputText15_label"
+                  for="InputText16"
+                  id="InputText16_label"
                 >
                   Year
                 </label>
                 <input
-                  aria-labelledby="InputText15_label InputText15_hint InputText15_error"
+                  aria-labelledby="InputText16_label InputText16_hint InputText16_error"
                   class="usa-input usa-input--inline maxw-mobile-lg"
-                  id="InputText15"
+                  id="InputText16"
                   inputmode="numeric"
                   maxlength="4"
                   name="other_incomes[0].income_end_date_year"
@@ -360,8 +362,8 @@ exports[`OtherIncomesDetails when the user's claim has no other incomes renders 
             >
               <label
                 class="usa-label text-normal margin-top-0 font-heading-xs measure-5"
-                for="InputText16"
-                id="InputText16_label"
+                for="InputText17"
+                id="InputText17_label"
               >
                 Amount
               </label>
@@ -384,10 +386,10 @@ exports[`OtherIncomesDetails when the user's claim has no other incomes renders 
                   </svg>
                 </div>
                 <input
-                  aria-labelledby="InputText16_label InputText16_hint InputText16_error"
+                  aria-labelledby="InputText17_label InputText17_hint InputText17_error"
                   class="usa-input usa-input--medium padding-left-0"
                   data-value-type="float"
-                  id="InputText16"
+                  id="InputText17"
                   inputmode="decimal"
                   name="other_incomes[0].income_amount_dollars"
                   type="text"
@@ -400,8 +402,8 @@ exports[`OtherIncomesDetails when the user's claim has no other incomes renders 
             >
               <label
                 class="usa-label text-normal margin-top-0 font-heading-xs measure-5"
-                for="Dropdown17"
-                id="Dropdown17_label"
+                for="Dropdown18"
+                id="Dropdown18_label"
               >
                 Frequency
               </label>
@@ -410,9 +412,9 @@ exports[`OtherIncomesDetails when the user's claim has no other incomes renders 
                 data-default-value=""
               >
                 <select
-                  aria-labelledby="Dropdown17_label Dropdown17_hint Dropdown17_error"
+                  aria-labelledby="Dropdown18_label Dropdown18_hint Dropdown18_error"
                   class="usa-select maxw-mobile-lg"
-                  id="Dropdown17"
+                  id="Dropdown18"
                   name="other_incomes[0].income_amount_frequency"
                 >
                   <option
@@ -480,6 +482,7 @@ exports[`OtherIncomesDetails when the user's claim has other incomes renders the
       Tell us about your other sources of income during your leave dates for paid leave from PFML.
     </h2>
     <div
+      aria-labelledby="alert-heading1847"
       class="usa-alert usa-alert--info usa-alert--no-icon c-alert--neutral margin-top-2 margin-bottom-4"
       role="region"
       tabindex="-1"
@@ -489,6 +492,7 @@ exports[`OtherIncomesDetails when the user's claim has other incomes renders the
       >
         <h3
           class="usa-alert__heading font-heading-md text-bold"
+          id="alert-heading1847"
         >
           Your leave dates for paid leave from PFML
         </h3>
@@ -504,7 +508,7 @@ exports[`OtherIncomesDetails when the user's claim has other incomes renders the
     >
       <div
         class="margin-bottom-3 measure-5 padding-3 border-2px border-base-lighter js-repeated-fieldset-card"
-        data-key="RepeatableFieldsetCard1757"
+        data-key="RepeatableFieldsetCard1850"
         data-testid="repeatable-fieldset-card"
       >
         <fieldset
@@ -531,14 +535,14 @@ exports[`OtherIncomesDetails when the user's claim has other incomes renders the
               >
                 <input
                   class="usa-radio__input"
-                  id="InputChoice1758"
+                  id="InputChoice1851"
                   name="other_incomes[0].income_type"
                   type="radio"
                   value="Workers Compensation"
                 />
                 <label
                   class="usa-radio__label"
-                  for="InputChoice1758"
+                  for="InputChoice1851"
                 >
                   Workers Compensation
                 </label>
@@ -549,14 +553,14 @@ exports[`OtherIncomesDetails when the user's claim has other incomes renders the
                 <input
                   checked=""
                   class="usa-radio__input"
-                  id="InputChoice1759"
+                  id="InputChoice1852"
                   name="other_incomes[0].income_type"
                   type="radio"
                   value="Unemployment Insurance"
                 />
                 <label
                   class="usa-radio__label"
-                  for="InputChoice1759"
+                  for="InputChoice1852"
                 >
                   Unemployment Insurance
                 </label>
@@ -566,14 +570,14 @@ exports[`OtherIncomesDetails when the user's claim has other incomes renders the
               >
                 <input
                   class="usa-radio__input"
-                  id="InputChoice1760"
+                  id="InputChoice1853"
                   name="other_incomes[0].income_type"
                   type="radio"
                   value="SSDI"
                 />
                 <label
                   class="usa-radio__label"
-                  for="InputChoice1760"
+                  for="InputChoice1853"
                 >
                   Social Security Disability Insurance
                 </label>
@@ -583,14 +587,14 @@ exports[`OtherIncomesDetails when the user's claim has other incomes renders the
               >
                 <input
                   class="usa-radio__input"
-                  id="InputChoice1761"
+                  id="InputChoice1854"
                   name="other_incomes[0].income_type"
                   type="radio"
                   value="Disability benefits under Gov't retirement plan"
                 />
                 <label
                   class="usa-radio__label"
-                  for="InputChoice1761"
+                  for="InputChoice1854"
                 >
                   Disability benefits under a governmental retirement plan
                 </label>
@@ -600,14 +604,14 @@ exports[`OtherIncomesDetails when the user's claim has other incomes renders the
               >
                 <input
                   class="usa-radio__input"
-                  id="InputChoice1762"
+                  id="InputChoice1855"
                   name="other_incomes[0].income_type"
                   type="radio"
                   value="Jones Act benefits"
                 />
                 <label
                   class="usa-radio__label"
-                  for="InputChoice1762"
+                  for="InputChoice1855"
                 >
                   Jones Act benefits
                 </label>
@@ -617,14 +621,14 @@ exports[`OtherIncomesDetails when the user's claim has other incomes renders the
               >
                 <input
                   class="usa-radio__input"
-                  id="InputChoice1763"
+                  id="InputChoice1856"
                   name="other_incomes[0].income_type"
                   type="radio"
                   value="Railroad Retirement benefits"
                 />
                 <label
                   class="usa-radio__label"
-                  for="InputChoice1763"
+                  for="InputChoice1856"
                 >
                   Railroad Retirement benefits
                 </label>
@@ -634,14 +638,14 @@ exports[`OtherIncomesDetails when the user's claim has other incomes renders the
               >
                 <input
                   class="usa-radio__input"
-                  id="InputChoice1764"
+                  id="InputChoice1857"
                   name="other_incomes[0].income_type"
                   type="radio"
                   value="Earnings from another employment/self-employment"
                 />
                 <label
                   class="usa-radio__label"
-                  for="InputChoice1764"
+                  for="InputChoice1857"
                 >
                   Earnings or benefits from another employer, or through self-employment
                 </label>
@@ -669,15 +673,15 @@ exports[`OtherIncomesDetails when the user's claim has other incomes renders the
               >
                 <label
                   class="usa-label text-normal margin-top-05 font-heading-xs measure-5"
-                  for="InputText1765"
-                  id="InputText1765_label"
+                  for="InputText1858"
+                  id="InputText1858_label"
                 >
                   Month
                 </label>
                 <input
-                  aria-labelledby="InputText1765_label InputText1765_hint InputText1765_error"
+                  aria-labelledby="InputText1858_label InputText1858_hint InputText1858_error"
                   class="usa-input usa-input--inline maxw-mobile-lg"
-                  id="InputText1765"
+                  id="InputText1858"
                   inputmode="numeric"
                   maxlength="2"
                   name="other_incomes[0].income_start_date_month"
@@ -690,15 +694,15 @@ exports[`OtherIncomesDetails when the user's claim has other incomes renders the
               >
                 <label
                   class="usa-label text-normal margin-top-05 font-heading-xs measure-5"
-                  for="InputText1766"
-                  id="InputText1766_label"
+                  for="InputText1859"
+                  id="InputText1859_label"
                 >
                   Day
                 </label>
                 <input
-                  aria-labelledby="InputText1766_label InputText1766_hint InputText1766_error"
+                  aria-labelledby="InputText1859_label InputText1859_hint InputText1859_error"
                   class="usa-input usa-input--inline maxw-mobile-lg"
-                  id="InputText1766"
+                  id="InputText1859"
                   inputmode="numeric"
                   maxlength="2"
                   name="other_incomes[0].income_start_date_day"
@@ -711,15 +715,15 @@ exports[`OtherIncomesDetails when the user's claim has other incomes renders the
               >
                 <label
                   class="usa-label text-normal margin-top-05 font-heading-xs measure-5"
-                  for="InputText1767"
-                  id="InputText1767_label"
+                  for="InputText1860"
+                  id="InputText1860_label"
                 >
                   Year
                 </label>
                 <input
-                  aria-labelledby="InputText1767_label InputText1767_hint InputText1767_error"
+                  aria-labelledby="InputText1860_label InputText1860_hint InputText1860_error"
                   class="usa-input usa-input--inline maxw-mobile-lg"
-                  id="InputText1767"
+                  id="InputText1860"
                   inputmode="numeric"
                   maxlength="4"
                   name="other_incomes[0].income_start_date_year"
@@ -750,15 +754,15 @@ exports[`OtherIncomesDetails when the user's claim has other incomes renders the
               >
                 <label
                   class="usa-label text-normal margin-top-05 font-heading-xs measure-5"
-                  for="InputText1768"
-                  id="InputText1768_label"
+                  for="InputText1861"
+                  id="InputText1861_label"
                 >
                   Month
                 </label>
                 <input
-                  aria-labelledby="InputText1768_label InputText1768_hint InputText1768_error"
+                  aria-labelledby="InputText1861_label InputText1861_hint InputText1861_error"
                   class="usa-input usa-input--inline maxw-mobile-lg"
-                  id="InputText1768"
+                  id="InputText1861"
                   inputmode="numeric"
                   maxlength="2"
                   name="other_incomes[0].income_end_date_month"
@@ -771,15 +775,15 @@ exports[`OtherIncomesDetails when the user's claim has other incomes renders the
               >
                 <label
                   class="usa-label text-normal margin-top-05 font-heading-xs measure-5"
-                  for="InputText1769"
-                  id="InputText1769_label"
+                  for="InputText1862"
+                  id="InputText1862_label"
                 >
                   Day
                 </label>
                 <input
-                  aria-labelledby="InputText1769_label InputText1769_hint InputText1769_error"
+                  aria-labelledby="InputText1862_label InputText1862_hint InputText1862_error"
                   class="usa-input usa-input--inline maxw-mobile-lg"
-                  id="InputText1769"
+                  id="InputText1862"
                   inputmode="numeric"
                   maxlength="2"
                   name="other_incomes[0].income_end_date_day"
@@ -792,15 +796,15 @@ exports[`OtherIncomesDetails when the user's claim has other incomes renders the
               >
                 <label
                   class="usa-label text-normal margin-top-05 font-heading-xs measure-5"
-                  for="InputText1770"
-                  id="InputText1770_label"
+                  for="InputText1863"
+                  id="InputText1863_label"
                 >
                   Year
                 </label>
                 <input
-                  aria-labelledby="InputText1770_label InputText1770_hint InputText1770_error"
+                  aria-labelledby="InputText1863_label InputText1863_hint InputText1863_error"
                   class="usa-input usa-input--inline maxw-mobile-lg"
-                  id="InputText1770"
+                  id="InputText1863"
                   inputmode="numeric"
                   maxlength="4"
                   name="other_incomes[0].income_end_date_year"
@@ -823,8 +827,8 @@ exports[`OtherIncomesDetails when the user's claim has other incomes renders the
             >
               <label
                 class="usa-label text-normal margin-top-0 font-heading-xs measure-5"
-                for="InputText1771"
-                id="InputText1771_label"
+                for="InputText1864"
+                id="InputText1864_label"
               >
                 Amount
               </label>
@@ -847,10 +851,10 @@ exports[`OtherIncomesDetails when the user's claim has other incomes renders the
                   </svg>
                 </div>
                 <input
-                  aria-labelledby="InputText1771_label InputText1771_hint InputText1771_error"
+                  aria-labelledby="InputText1864_label InputText1864_hint InputText1864_error"
                   class="usa-input usa-input--medium padding-left-0"
                   data-value-type="float"
-                  id="InputText1771"
+                  id="InputText1864"
                   inputmode="decimal"
                   name="other_incomes[0].income_amount_dollars"
                   type="text"
@@ -863,8 +867,8 @@ exports[`OtherIncomesDetails when the user's claim has other incomes renders the
             >
               <label
                 class="usa-label text-normal margin-top-0 font-heading-xs measure-5"
-                for="Dropdown1772"
-                id="Dropdown1772_label"
+                for="Dropdown1865"
+                id="Dropdown1865_label"
               >
                 Frequency
               </label>
@@ -873,9 +877,9 @@ exports[`OtherIncomesDetails when the user's claim has other incomes renders the
                 data-default-value="Per Week"
               >
                 <select
-                  aria-labelledby="Dropdown1772_label Dropdown1772_hint Dropdown1772_error"
+                  aria-labelledby="Dropdown1865_label Dropdown1865_hint Dropdown1865_error"
                   class="usa-select maxw-mobile-lg"
-                  id="Dropdown1772"
+                  id="Dropdown1865"
                   name="other_incomes[0].income_amount_frequency"
                 >
                   <option
@@ -920,7 +924,7 @@ exports[`OtherIncomesDetails when the user's claim has other incomes renders the
       </div>
       <div
         class="margin-bottom-3 measure-5 padding-3 border-2px border-base-lighter js-repeated-fieldset-card"
-        data-key="RepeatableFieldsetCard1773"
+        data-key="RepeatableFieldsetCard1866"
         data-testid="repeatable-fieldset-card"
       >
         <fieldset
@@ -947,14 +951,14 @@ exports[`OtherIncomesDetails when the user's claim has other incomes renders the
               >
                 <input
                   class="usa-radio__input"
-                  id="InputChoice1774"
+                  id="InputChoice1867"
                   name="other_incomes[1].income_type"
                   type="radio"
                   value="Workers Compensation"
                 />
                 <label
                   class="usa-radio__label"
-                  for="InputChoice1774"
+                  for="InputChoice1867"
                 >
                   Workers Compensation
                 </label>
@@ -964,14 +968,14 @@ exports[`OtherIncomesDetails when the user's claim has other incomes renders the
               >
                 <input
                   class="usa-radio__input"
-                  id="InputChoice1775"
+                  id="InputChoice1868"
                   name="other_incomes[1].income_type"
                   type="radio"
                   value="Unemployment Insurance"
                 />
                 <label
                   class="usa-radio__label"
-                  for="InputChoice1775"
+                  for="InputChoice1868"
                 >
                   Unemployment Insurance
                 </label>
@@ -981,14 +985,14 @@ exports[`OtherIncomesDetails when the user's claim has other incomes renders the
               >
                 <input
                   class="usa-radio__input"
-                  id="InputChoice1776"
+                  id="InputChoice1869"
                   name="other_incomes[1].income_type"
                   type="radio"
                   value="SSDI"
                 />
                 <label
                   class="usa-radio__label"
-                  for="InputChoice1776"
+                  for="InputChoice1869"
                 >
                   Social Security Disability Insurance
                 </label>
@@ -998,14 +1002,14 @@ exports[`OtherIncomesDetails when the user's claim has other incomes renders the
               >
                 <input
                   class="usa-radio__input"
-                  id="InputChoice1777"
+                  id="InputChoice1870"
                   name="other_incomes[1].income_type"
                   type="radio"
                   value="Disability benefits under Gov't retirement plan"
                 />
                 <label
                   class="usa-radio__label"
-                  for="InputChoice1777"
+                  for="InputChoice1870"
                 >
                   Disability benefits under a governmental retirement plan
                 </label>
@@ -1016,14 +1020,14 @@ exports[`OtherIncomesDetails when the user's claim has other incomes renders the
                 <input
                   checked=""
                   class="usa-radio__input"
-                  id="InputChoice1778"
+                  id="InputChoice1871"
                   name="other_incomes[1].income_type"
                   type="radio"
                   value="Jones Act benefits"
                 />
                 <label
                   class="usa-radio__label"
-                  for="InputChoice1778"
+                  for="InputChoice1871"
                 >
                   Jones Act benefits
                 </label>
@@ -1033,14 +1037,14 @@ exports[`OtherIncomesDetails when the user's claim has other incomes renders the
               >
                 <input
                   class="usa-radio__input"
-                  id="InputChoice1779"
+                  id="InputChoice1872"
                   name="other_incomes[1].income_type"
                   type="radio"
                   value="Railroad Retirement benefits"
                 />
                 <label
                   class="usa-radio__label"
-                  for="InputChoice1779"
+                  for="InputChoice1872"
                 >
                   Railroad Retirement benefits
                 </label>
@@ -1050,14 +1054,14 @@ exports[`OtherIncomesDetails when the user's claim has other incomes renders the
               >
                 <input
                   class="usa-radio__input"
-                  id="InputChoice1780"
+                  id="InputChoice1873"
                   name="other_incomes[1].income_type"
                   type="radio"
                   value="Earnings from another employment/self-employment"
                 />
                 <label
                   class="usa-radio__label"
-                  for="InputChoice1780"
+                  for="InputChoice1873"
                 >
                   Earnings or benefits from another employer, or through self-employment
                 </label>
@@ -1085,15 +1089,15 @@ exports[`OtherIncomesDetails when the user's claim has other incomes renders the
               >
                 <label
                   class="usa-label text-normal margin-top-05 font-heading-xs measure-5"
-                  for="InputText1781"
-                  id="InputText1781_label"
+                  for="InputText1874"
+                  id="InputText1874_label"
                 >
                   Month
                 </label>
                 <input
-                  aria-labelledby="InputText1781_label InputText1781_hint InputText1781_error"
+                  aria-labelledby="InputText1874_label InputText1874_hint InputText1874_error"
                   class="usa-input usa-input--inline maxw-mobile-lg"
-                  id="InputText1781"
+                  id="InputText1874"
                   inputmode="numeric"
                   maxlength="2"
                   name="other_incomes[1].income_start_date_month"
@@ -1106,15 +1110,15 @@ exports[`OtherIncomesDetails when the user's claim has other incomes renders the
               >
                 <label
                   class="usa-label text-normal margin-top-05 font-heading-xs measure-5"
-                  for="InputText1782"
-                  id="InputText1782_label"
+                  for="InputText1875"
+                  id="InputText1875_label"
                 >
                   Day
                 </label>
                 <input
-                  aria-labelledby="InputText1782_label InputText1782_hint InputText1782_error"
+                  aria-labelledby="InputText1875_label InputText1875_hint InputText1875_error"
                   class="usa-input usa-input--inline maxw-mobile-lg"
-                  id="InputText1782"
+                  id="InputText1875"
                   inputmode="numeric"
                   maxlength="2"
                   name="other_incomes[1].income_start_date_day"
@@ -1127,15 +1131,15 @@ exports[`OtherIncomesDetails when the user's claim has other incomes renders the
               >
                 <label
                   class="usa-label text-normal margin-top-05 font-heading-xs measure-5"
-                  for="InputText1783"
-                  id="InputText1783_label"
+                  for="InputText1876"
+                  id="InputText1876_label"
                 >
                   Year
                 </label>
                 <input
-                  aria-labelledby="InputText1783_label InputText1783_hint InputText1783_error"
+                  aria-labelledby="InputText1876_label InputText1876_hint InputText1876_error"
                   class="usa-input usa-input--inline maxw-mobile-lg"
-                  id="InputText1783"
+                  id="InputText1876"
                   inputmode="numeric"
                   maxlength="4"
                   name="other_incomes[1].income_start_date_year"
@@ -1166,15 +1170,15 @@ exports[`OtherIncomesDetails when the user's claim has other incomes renders the
               >
                 <label
                   class="usa-label text-normal margin-top-05 font-heading-xs measure-5"
-                  for="InputText1784"
-                  id="InputText1784_label"
+                  for="InputText1877"
+                  id="InputText1877_label"
                 >
                   Month
                 </label>
                 <input
-                  aria-labelledby="InputText1784_label InputText1784_hint InputText1784_error"
+                  aria-labelledby="InputText1877_label InputText1877_hint InputText1877_error"
                   class="usa-input usa-input--inline maxw-mobile-lg"
-                  id="InputText1784"
+                  id="InputText1877"
                   inputmode="numeric"
                   maxlength="2"
                   name="other_incomes[1].income_end_date_month"
@@ -1187,15 +1191,15 @@ exports[`OtherIncomesDetails when the user's claim has other incomes renders the
               >
                 <label
                   class="usa-label text-normal margin-top-05 font-heading-xs measure-5"
-                  for="InputText1785"
-                  id="InputText1785_label"
+                  for="InputText1878"
+                  id="InputText1878_label"
                 >
                   Day
                 </label>
                 <input
-                  aria-labelledby="InputText1785_label InputText1785_hint InputText1785_error"
+                  aria-labelledby="InputText1878_label InputText1878_hint InputText1878_error"
                   class="usa-input usa-input--inline maxw-mobile-lg"
-                  id="InputText1785"
+                  id="InputText1878"
                   inputmode="numeric"
                   maxlength="2"
                   name="other_incomes[1].income_end_date_day"
@@ -1208,15 +1212,15 @@ exports[`OtherIncomesDetails when the user's claim has other incomes renders the
               >
                 <label
                   class="usa-label text-normal margin-top-05 font-heading-xs measure-5"
-                  for="InputText1786"
-                  id="InputText1786_label"
+                  for="InputText1879"
+                  id="InputText1879_label"
                 >
                   Year
                 </label>
                 <input
-                  aria-labelledby="InputText1786_label InputText1786_hint InputText1786_error"
+                  aria-labelledby="InputText1879_label InputText1879_hint InputText1879_error"
                   class="usa-input usa-input--inline maxw-mobile-lg"
-                  id="InputText1786"
+                  id="InputText1879"
                   inputmode="numeric"
                   maxlength="4"
                   name="other_incomes[1].income_end_date_year"
@@ -1239,8 +1243,8 @@ exports[`OtherIncomesDetails when the user's claim has other incomes renders the
             >
               <label
                 class="usa-label text-normal margin-top-0 font-heading-xs measure-5"
-                for="InputText1787"
-                id="InputText1787_label"
+                for="InputText1880"
+                id="InputText1880_label"
               >
                 Amount
               </label>
@@ -1263,10 +1267,10 @@ exports[`OtherIncomesDetails when the user's claim has other incomes renders the
                   </svg>
                 </div>
                 <input
-                  aria-labelledby="InputText1787_label InputText1787_hint InputText1787_error"
+                  aria-labelledby="InputText1880_label InputText1880_hint InputText1880_error"
                   class="usa-input usa-input--medium padding-left-0"
                   data-value-type="float"
-                  id="InputText1787"
+                  id="InputText1880"
                   inputmode="decimal"
                   name="other_incomes[1].income_amount_dollars"
                   type="text"
@@ -1279,8 +1283,8 @@ exports[`OtherIncomesDetails when the user's claim has other incomes renders the
             >
               <label
                 class="usa-label text-normal margin-top-0 font-heading-xs measure-5"
-                for="Dropdown1788"
-                id="Dropdown1788_label"
+                for="Dropdown1881"
+                id="Dropdown1881_label"
               >
                 Frequency
               </label>
@@ -1289,9 +1293,9 @@ exports[`OtherIncomesDetails when the user's claim has other incomes renders the
                 data-default-value="Per Month"
               >
                 <select
-                  aria-labelledby="Dropdown1788_label Dropdown1788_hint Dropdown1788_error"
+                  aria-labelledby="Dropdown1881_label Dropdown1881_hint Dropdown1881_error"
                   class="usa-select maxw-mobile-lg"
-                  id="Dropdown1788"
+                  id="Dropdown1881"
                   name="other_incomes[1].income_amount_frequency"
                 >
                   <option

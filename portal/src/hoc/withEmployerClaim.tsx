@@ -45,7 +45,7 @@ function withEmployerClaim<T extends WithEmployerClaimProps>(
       return (
         <div className="margin-top-8 text-center">
           <Spinner
-            aria-valuetext={t("components.withEmployerClaim.loadingLabel")}
+            aria-label={t("components.withEmployerClaim.loadingLabel")}
           />
         </div>
       );

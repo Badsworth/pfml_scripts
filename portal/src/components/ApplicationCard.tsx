@@ -132,7 +132,7 @@ const LegalNoticeSection = (props: LegalNoticeSectionProps) => {
       <div className="text-center">
         <Spinner
           small
-          aria-valuetext={t("components.applicationCard.loadingLabel")}
+          aria-label={t("components.applicationCard.loadingLabel")}
         />
       </div>
     );
@@ -268,7 +268,7 @@ export const ApplicationCard = (props: ApplicationCardProps) => {
 
   return (
     <div className="maxw-mobile-lg margin-bottom-3">
-      <aside
+      <div
         className={`border-top-1 ${
           status === "Completed" ? "border-primary" : "border-gold"
         }`}

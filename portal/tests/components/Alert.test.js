@@ -14,6 +14,20 @@ describe("Alert", () => {
     expect(screen.getByText("This is an alert")).toBeInTheDocument();
   });
 
+  it("uses the heading as landmark name, when aria-label isn't defined", () => {
+    renderComponent({ heading: "Alert heading" });
+    expect(
+      screen.getByRole("region", { name: "Alert heading" })
+    ).toBeInTheDocument();
+  });
+
+  it("uses aria-label as landmark name, when aria-label is defined", () => {
+    renderComponent({ heading: "Alert heading", "aria-label": "Custom label" });
+    expect(
+      screen.getByRole("region", { name: "Custom label" })
+    ).toBeInTheDocument();
+  });
+
   it("renders an h2 when the heading prop is set", () => {
     renderComponent({ heading: "Alert heading" });
     expect(

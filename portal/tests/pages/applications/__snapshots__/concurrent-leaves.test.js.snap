@@ -27,6 +27,7 @@ exports[`ConcurrentLeaves renders the continuous page content 1`] = `
           class="margin-bottom-5"
         >
           <div
+            aria-labelledby="alert-heading5"
             class="usa-alert usa-alert--info usa-alert--no-icon c-alert--neutral margin-top-2 margin-bottom-0"
             role="region"
             tabindex="-1"
@@ -36,6 +37,7 @@ exports[`ConcurrentLeaves renders the continuous page content 1`] = `
             >
               <h2
                 class="usa-alert__heading font-heading-md text-bold"
+                id="alert-heading5"
               >
                 Your leave dates for paid leave from PFML
               </h2>
@@ -47,6 +49,7 @@ exports[`ConcurrentLeaves renders the continuous page content 1`] = `
             </div>
           </div>
           <div
+            aria-labelledby="alert-heading6"
             class="usa-alert usa-alert--info usa-alert--no-icon c-alert--neutral margin-top-0 margin-bottom-4"
             role="region"
             tabindex="-1"
@@ -56,6 +59,7 @@ exports[`ConcurrentLeaves renders the continuous page content 1`] = `
             >
               <h2
                 class="usa-alert__heading font-heading-md text-bold"
+                id="alert-heading6"
               >
                 Your 7-day waiting period dates
               </h2>
@@ -121,14 +125,14 @@ exports[`ConcurrentLeaves renders the continuous page content 1`] = `
         >
           <input
             class="usa-radio__input"
-            id="InputChoice3"
+            id="InputChoice7"
             name="has_concurrent_leave"
             type="radio"
             value="true"
           />
           <label
             class="usa-radio__label"
-            for="InputChoice3"
+            for="InputChoice7"
           >
             Yes
             <span
@@ -144,14 +148,14 @@ exports[`ConcurrentLeaves renders the continuous page content 1`] = `
         >
           <input
             class="usa-radio__input"
-            id="InputChoice4"
+            id="InputChoice8"
             name="has_concurrent_leave"
             type="radio"
             value="false"
           />
           <label
             class="usa-radio__label"
-            for="InputChoice4"
+            for="InputChoice8"
           >
             No
             <span
@@ -201,6 +205,7 @@ exports[`ConcurrentLeaves renders the intermittent reduced page content 1`] = `
           class="margin-bottom-5"
         >
           <div
+            aria-labelledby="alert-heading13"
             class="usa-alert usa-alert--info usa-alert--no-icon c-alert--neutral margin-top-2 margin-bottom-4"
             role="region"
             tabindex="-1"
@@ -210,6 +215,7 @@ exports[`ConcurrentLeaves renders the intermittent reduced page content 1`] = `
             >
               <h2
                 class="usa-alert__heading font-heading-md text-bold"
+                id="alert-heading13"
               >
                 Your leave dates for paid leave from PFML
               </h2>
@@ -327,14 +333,14 @@ exports[`ConcurrentLeaves renders the intermittent reduced page content 1`] = `
         >
           <input
             class="usa-radio__input"
-            id="InputChoice7"
+            id="InputChoice14"
             name="has_concurrent_leave"
             type="radio"
             value="true"
           />
           <label
             class="usa-radio__label"
-            for="InputChoice7"
+            for="InputChoice14"
           >
             Yes
             <span
@@ -350,14 +356,14 @@ exports[`ConcurrentLeaves renders the intermittent reduced page content 1`] = `
         >
           <input
             class="usa-radio__input"
-            id="InputChoice8"
+            id="InputChoice15"
             name="has_concurrent_leave"
             type="radio"
             value="false"
           />
           <label
             class="usa-radio__label"
-            for="InputChoice8"
+            for="InputChoice15"
           >
             No
             <span
@@ -407,6 +413,7 @@ exports[`ConcurrentLeaves renders the page 1`] = `
           class="margin-bottom-5"
         >
           <div
+            aria-labelledby="alert-heading1"
             class="usa-alert usa-alert--info usa-alert--no-icon c-alert--neutral margin-top-2 margin-bottom-0"
             role="region"
             tabindex="-1"
@@ -416,6 +423,7 @@ exports[`ConcurrentLeaves renders the page 1`] = `
             >
               <h2
                 class="usa-alert__heading font-heading-md text-bold"
+                id="alert-heading1"
               >
                 Your leave dates for paid leave from PFML
               </h2>
@@ -427,6 +435,7 @@ exports[`ConcurrentLeaves renders the page 1`] = `
             </div>
           </div>
           <div
+            aria-labelledby="alert-heading2"
             class="usa-alert usa-alert--info usa-alert--no-icon c-alert--neutral margin-top-0 margin-bottom-4"
             role="region"
             tabindex="-1"
@@ -436,6 +445,7 @@ exports[`ConcurrentLeaves renders the page 1`] = `
             >
               <h2
                 class="usa-alert__heading font-heading-md text-bold"
+                id="alert-heading2"
               >
                 Your 7-day waiting period dates
               </h2>
@@ -502,14 +512,14 @@ exports[`ConcurrentLeaves renders the page 1`] = `
           <input
             checked=""
             class="usa-radio__input"
-            id="InputChoice1"
+            id="InputChoice3"
             name="has_concurrent_leave"
             type="radio"
             value="true"
           />
           <label
             class="usa-radio__label"
-            for="InputChoice1"
+            for="InputChoice3"
           >
             Yes
             <span
@@ -525,14 +535,14 @@ exports[`ConcurrentLeaves renders the page 1`] = `
         >
           <input
             class="usa-radio__input"
-            id="InputChoice2"
+            id="InputChoice4"
             name="has_concurrent_leave"
             type="radio"
             value="false"
           />
           <label
             class="usa-radio__label"
-            for="InputChoice2"
+            for="InputChoice4"
           >
             No
             <span
@@ -582,6 +592,7 @@ exports[`ConcurrentLeaves renders the page when the claim does not contain concu
           class="margin-bottom-5"
         >
           <div
+            aria-labelledby="alert-heading28"
             class="usa-alert usa-alert--info usa-alert--no-icon c-alert--neutral margin-top-2 margin-bottom-0"
             role="region"
             tabindex="-1"
@@ -591,6 +602,7 @@ exports[`ConcurrentLeaves renders the page when the claim does not contain concu
             >
               <h2
                 class="usa-alert__heading font-heading-md text-bold"
+                id="alert-heading28"
               >
                 Your leave dates for paid leave from PFML
               </h2>
@@ -602,6 +614,7 @@ exports[`ConcurrentLeaves renders the page when the claim does not contain concu
             </div>
           </div>
           <div
+            aria-labelledby="alert-heading29"
             class="usa-alert usa-alert--info usa-alert--no-icon c-alert--neutral margin-top-0 margin-bottom-4"
             role="region"
             tabindex="-1"
@@ -611,6 +624,7 @@ exports[`ConcurrentLeaves renders the page when the claim does not contain concu
             >
               <h2
                 class="usa-alert__heading font-heading-md text-bold"
+                id="alert-heading29"
               >
                 Your 7-day waiting period dates
               </h2>
@@ -676,14 +690,14 @@ exports[`ConcurrentLeaves renders the page when the claim does not contain concu
         >
           <input
             class="usa-radio__input"
-            id="InputChoice15"
+            id="InputChoice30"
             name="has_concurrent_leave"
             type="radio"
             value="true"
           />
           <label
             class="usa-radio__label"
-            for="InputChoice15"
+            for="InputChoice30"
           >
             Yes
             <span
@@ -699,14 +713,14 @@ exports[`ConcurrentLeaves renders the page when the claim does not contain concu
         >
           <input
             class="usa-radio__input"
-            id="InputChoice16"
+            id="InputChoice31"
             name="has_concurrent_leave"
             type="radio"
             value="false"
           />
           <label
             class="usa-radio__label"
-            for="InputChoice16"
+            for="InputChoice31"
           >
             No
             <span
@@ -756,6 +770,7 @@ exports[`ConcurrentLeaves renders the reduced page content 1`] = `
           class="margin-bottom-5"
         >
           <div
+            aria-labelledby="alert-heading9"
             class="usa-alert usa-alert--info usa-alert--no-icon c-alert--neutral margin-top-2 margin-bottom-0"
             role="region"
             tabindex="-1"
@@ -765,6 +780,7 @@ exports[`ConcurrentLeaves renders the reduced page content 1`] = `
             >
               <h2
                 class="usa-alert__heading font-heading-md text-bold"
+                id="alert-heading9"
               >
                 Your leave dates for paid leave from PFML
               </h2>
@@ -776,6 +792,7 @@ exports[`ConcurrentLeaves renders the reduced page content 1`] = `
             </div>
           </div>
           <div
+            aria-labelledby="alert-heading10"
             class="usa-alert usa-alert--info usa-alert--no-icon c-alert--neutral margin-top-0 margin-bottom-4"
             role="region"
             tabindex="-1"
@@ -785,6 +802,7 @@ exports[`ConcurrentLeaves renders the reduced page content 1`] = `
             >
               <h2
                 class="usa-alert__heading font-heading-md text-bold"
+                id="alert-heading10"
               >
                 Your 7-day waiting period dates
               </h2>
@@ -902,14 +920,14 @@ exports[`ConcurrentLeaves renders the reduced page content 1`] = `
         >
           <input
             class="usa-radio__input"
-            id="InputChoice5"
+            id="InputChoice11"
             name="has_concurrent_leave"
             type="radio"
             value="true"
           />
           <label
             class="usa-radio__label"
-            for="InputChoice5"
+            for="InputChoice11"
           >
             Yes
             <span
@@ -925,14 +943,14 @@ exports[`ConcurrentLeaves renders the reduced page content 1`] = `
         >
           <input
             class="usa-radio__input"
-            id="InputChoice6"
+            id="InputChoice12"
             name="has_concurrent_leave"
             type="radio"
             value="false"
           />
           <label
             class="usa-radio__label"
-            for="InputChoice6"
+            for="InputChoice12"
           >
             No
             <span

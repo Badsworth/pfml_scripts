@@ -55,7 +55,7 @@ function withUser<T extends WithUserProps>(Component: React.ComponentType<T>) {
     if (!users.user)
       return (
         <div className="margin-top-8 text-center">
-          <Spinner aria-valuetext={t("components.withUser.loadingLabel")} />
+          <Spinner aria-label={t("components.withUser.loadingLabel")} />
         </div>
       );
 

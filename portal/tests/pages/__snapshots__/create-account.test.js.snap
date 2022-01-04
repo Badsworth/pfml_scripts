@@ -6,6 +6,7 @@ exports[`CreateAccount renders the empty page 1`] = `
   method="post"
 >
   <div
+    aria-labelledby="alert-heading1"
     class="usa-alert usa-alert--info c-alert--neutral margin-bottom-3"
     role="region"
     tabindex="-1"
@@ -15,6 +16,7 @@ exports[`CreateAccount renders the empty page 1`] = `
     >
       <h2
         class="usa-alert__heading font-heading-md text-bold"
+        id="alert-heading1"
       >
         You can now apply for paid family and medical leave.
       </h2>
@@ -55,15 +57,15 @@ exports[`CreateAccount renders the empty page 1`] = `
   >
     <label
       class="usa-label text-bold font-heading-xs measure-5"
-      for="InputText1"
-      id="InputText1_label"
+      for="InputText2"
+      id="InputText2_label"
     >
       Email address
     </label>
     <input
-      aria-labelledby="InputText1_label InputText1_hint InputText1_error"
+      aria-labelledby="InputText2_label InputText2_hint InputText2_error"
       class="usa-input maxw-mobile-lg"
-      id="InputText1"
+      id="InputText2"
       name="email_address"
       type="email"
       value=""
@@ -74,22 +76,22 @@ exports[`CreateAccount renders the empty page 1`] = `
   >
     <label
       class="usa-label text-bold font-heading-xs measure-5"
-      for="InputPassword2"
-      id="InputPassword2_label"
+      for="InputPassword3"
+      id="InputPassword3_label"
     >
       Password
     </label>
     <span
       class="display-block line-height-sans-5 measure-5 usa-hint text-base-darkest"
-      id="InputPassword2_hint"
+      id="InputPassword3_hint"
     >
       Your password must be at least 12 characters long and include at least 1 number, 1 symbol, and both uppercase and lowercase letters.
     </span>
     <input
-      aria-labelledby="InputPassword2_label InputPassword2_hint InputPassword2_error"
+      aria-labelledby="InputPassword3_label InputPassword3_hint InputPassword3_error"
       autocomplete="new-password"
       class="usa-input maxw-mobile-lg"
-      id="InputPassword2"
+      id="InputPassword3"
       name="password"
       type="password"
       value=""
@@ -99,16 +101,16 @@ exports[`CreateAccount renders the empty page 1`] = `
     class="usa-checkbox measure-5 bg-transparent"
   >
     <input
-      aria-controls="InputPassword2"
+      aria-controls="InputPassword3"
       class="usa-checkbox__input"
-      id="InputChoice4"
-      name="InputPassword2-toggle"
+      id="InputChoice5"
+      name="InputPassword3-toggle"
       type="checkbox"
       value="password"
     />
     <label
       class="usa-checkbox__label"
-      for="InputChoice4"
+      for="InputChoice5"
     >
       Show password
     </label>

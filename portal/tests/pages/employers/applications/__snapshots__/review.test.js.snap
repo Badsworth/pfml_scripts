@@ -774,14 +774,14 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
           >
             <input
               class="usa-radio__input"
-              id="InputChoice33"
+              id="InputChoice38"
               name="fraud"
               type="radio"
               value="Yes"
             />
             <label
               class="usa-radio__label"
-              for="InputChoice33"
+              for="InputChoice38"
             >
               Yes (explain below)
             </label>
@@ -791,14 +791,14 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
           >
             <input
               class="usa-radio__input"
-              id="InputChoice34"
+              id="InputChoice39"
               name="fraud"
               type="radio"
               value="No"
             />
             <label
               class="usa-radio__label"
-              for="InputChoice34"
+              for="InputChoice39"
             >
               No
             </label>
@@ -829,14 +829,14 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
           >
             <input
               class="usa-radio__input"
-              id="InputChoice35"
+              id="InputChoice40"
               name="employee_notice"
               type="radio"
               value="Yes"
             />
             <label
               class="usa-radio__label"
-              for="InputChoice35"
+              for="InputChoice40"
             >
               Yes
             </label>
@@ -846,14 +846,14 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
           >
             <input
               class="usa-radio__input"
-              id="InputChoice36"
+              id="InputChoice41"
               name="employee_notice"
               type="radio"
               value="No"
             />
             <label
               class="usa-radio__label"
-              for="InputChoice36"
+              for="InputChoice41"
             >
               No (explain below)
             </label>
@@ -898,14 +898,14 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
             <input
               checked=""
               class="usa-radio__input"
-              id="InputChoice37"
+              id="InputChoice42"
               name="employer_decision"
               type="radio"
               value="Approve"
             />
             <label
               class="usa-radio__label"
-              for="InputChoice37"
+              for="InputChoice42"
             >
               Approve
             </label>
@@ -915,14 +915,14 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
           >
             <input
               class="usa-radio__input"
-              id="InputChoice38"
+              id="InputChoice43"
               name="employer_decision"
               type="radio"
               value="Deny"
             />
             <label
               class="usa-radio__label"
-              for="InputChoice38"
+              for="InputChoice43"
             >
               Deny (explain below)
             </label>
@@ -953,14 +953,14 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
           >
             <input
               class="usa-radio__input"
-              id="InputChoice39"
+              id="InputChoice44"
               name="should_show_comment_box"
               type="radio"
               value="true"
             />
             <label
               class="usa-radio__label"
-              for="InputChoice39"
+              for="InputChoice44"
             >
               Yes
             </label>
@@ -971,14 +971,14 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
             <input
               checked=""
               class="usa-radio__input"
-              id="InputChoice40"
+              id="InputChoice45"
               name="should_show_comment_box"
               type="radio"
               value="false"
             />
             <label
               class="usa-radio__label"
-              for="InputChoice40"
+              for="InputChoice45"
             >
               No
             </label>

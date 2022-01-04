@@ -74,7 +74,9 @@ export const Default = () => {
             {messageKeys.map((messageKey) => (
               <div key={messageKey}>
                 <code className="font-code-2xs text-base">{messageKey}</code>
-                <Alert className="margin-bottom-3">{t(messageKey)}</Alert>
+                <Alert className="margin-bottom-3" aria-label={messageKey}>
+                  {t(messageKey)}
+                </Alert>
               </div>
             ))}
           </section>

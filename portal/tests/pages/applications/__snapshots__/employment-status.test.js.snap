@@ -43,14 +43,14 @@ exports[`EmploymentStatusPage when claimantShowEmploymentStatus feature flag is 
     >
       <label
         class="usa-label text-bold font-heading-lg line-height-sans-3 margin-bottom-1 maxw-tablet"
-        for="InputText1"
-        id="InputText1_label"
+        for="InputText2"
+        id="InputText2_label"
       >
         What is your employer’s Employer Identification Number (EIN)?
       </label>
       <span
         class="display-block line-height-sans-5 measure-5 usa-intro"
-        id="InputText1_hint"
+        id="InputText2_hint"
       >
         This number is 9 digits. You can find this number on all notices your employer sent about Paid Family and Medical Leave. You can also find it on your W‑2 or 1099‑MISC. Ask your employer if you need help getting this information.
       </span>
@@ -58,9 +58,9 @@ exports[`EmploymentStatusPage when claimantShowEmploymentStatus feature flag is 
         class=""
       >
         <input
-          aria-labelledby="InputText1_label InputText1_hint InputText1_error"
+          aria-labelledby="InputText2_label InputText2_hint InputText2_error"
           class="usa-input maxw-mobile-lg"
-          id="InputText1"
+          id="InputText2"
           inputmode="numeric"
           name="employer_fein"
           type="text"
@@ -124,14 +124,14 @@ exports[`EmploymentStatusPage when claimantShowEmploymentStatus feature flag is 
         >
           <input
             class="usa-radio__input"
-            id="InputChoice13"
+            id="InputChoice25"
             name="employment_status"
             type="radio"
             value="Employed"
           />
           <label
             class="usa-radio__label"
-            for="InputChoice13"
+            for="InputChoice25"
           >
             I’m employed in Massachusetts
           </label>
@@ -141,14 +141,14 @@ exports[`EmploymentStatusPage when claimantShowEmploymentStatus feature flag is 
         >
           <input
             class="usa-radio__input"
-            id="InputChoice14"
+            id="InputChoice26"
             name="employment_status"
             type="radio"
             value="Unemployed"
           />
           <label
             class="usa-radio__label"
-            for="InputChoice14"
+            for="InputChoice26"
           >
             I’m unemployed
           </label>
@@ -158,14 +158,14 @@ exports[`EmploymentStatusPage when claimantShowEmploymentStatus feature flag is 
         >
           <input
             class="usa-radio__input"
-            id="InputChoice15"
+            id="InputChoice27"
             name="employment_status"
             type="radio"
             value="Self-Employed"
           />
           <label
             class="usa-radio__label"
-            for="InputChoice15"
+            for="InputChoice27"
           >
             I’m self-employed
           </label>

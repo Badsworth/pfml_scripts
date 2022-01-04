@@ -417,7 +417,7 @@ export const Checklist = (props: ChecklistProps) => {
               />
             </Alert>
           ) : stepGroup.number === 3 && isLoadingDocuments ? (
-            <Spinner aria-valuetext={t("components.spinner.label")} />
+            <Spinner aria-label={t("components.spinner.label")} />
           ) : (
             renderSteps(stepGroup.steps)
           )}

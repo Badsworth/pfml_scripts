@@ -3046,6 +3046,7 @@ const components = {
   },
   employersNavigationTabs: {
     dashboard: "Dashboard",
+    label: "Employer menu",
     welcome: "Welcome",
   },
   employersPaginationAbsencePeriodsTable: {

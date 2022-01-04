@@ -118,7 +118,7 @@ export const Payments = ({
   if (isLoadingClaimDetail || !claimDetail) {
     return (
       <div className="text-center">
-        <Spinner aria-valuetext={t("pages.payments.loadingClaimDetailLabel")} />
+        <Spinner aria-label={t("pages.payments.loadingClaimDetailLabel")} />
       </div>
     );
   }

@@ -84,7 +84,7 @@ export const EmployerBenefits = (props: WithBenefitsApplicationProps) => {
               startDate={claim.leaveStartDate}
               endDate={claim.leaveEndDate}
             />
-            <Heading level="3">
+            <Heading level="2" size="3">
               <Icon
                 name="check_circle"
                 size={3}
@@ -98,7 +98,7 @@ export const EmployerBenefits = (props: WithBenefitsApplicationProps) => {
                 <li key={index}>{listItem}</li>
               ))}
             </ul>
-            <Heading level="3">
+            <Heading level="2" size="3">
               <Icon
                 name="cancel"
                 size={3}
