@@ -53,21 +53,23 @@ def compress_pdf(source_file: IO[Any], dest_file: IO[Any], timeout: int = DEFAUL
     import time
 
     settings = os.environ.get("PDF_COMPRESSION_SETTINGS", "/screen")
-    ppi = os.environ.get("PDF_COMPRESSION_PPI", 144)
+    more_options_str = os.environ.get("PDF_COMPRESSION_OPTIONS", "")
+    logger.info("PDF Compression options: " + settings + " " + more_options_str)
+    more_options = more_options_str.split(",")
 
-    gs_cli_command = [
-        "gs",
-        "-sDEVICE=pdfwrite",
-        f"-dPDFSETTINGS={settings}",
-        "-dSAFER",
-        "-dNOPAUSE",
-        "-dQUIET",
-        "-dBATCH",
-        f"-r{ppi}",
-        "-sOutputFile=%stdout",
-        "-q",
-        "-_",
-    ]
+    gs_cli_command = (
+        [
+            "gs",
+            "-sDEVICE=pdfwrite",
+            f"-dPDFSETTINGS={settings}",
+            "-dSAFER",
+            "-dNOPAUSE",
+            "-dQUIET",
+            "-dBATCH",
+        ]
+        + more_options
+        + ["-sOutputFile=%stdout", "-q", "-_",]
+    )
 
     source_file.seek(0)
     dest_file.seek(0)
