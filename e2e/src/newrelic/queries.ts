@@ -29,7 +29,7 @@ export async function buildFineosAPIEndpoints(
   limiters: string
 ): Promise<FineosAPIResult[]> {
   const requestIds = await client.nrql<{ request_id: string }>(
-    `SELECT request_id FROM Log WHERE aws.logGroup LIKE 'API-Gateway-Execution-Logs_%/prod' AND status_code = '504' ${limiters} LIMIT MAX`
+    `SELECT request_id FROM Log WHERE aws.logGroup LIKE 'API-Gateway-Execution-Logs_%/${environment}' AND status_code = '504' ${limiters} LIMIT MAX`
   );
   const requestIdString = requestIds.map((i) => `'${i.request_id}'`).join(",");
   const results = await client.nrql<FineosAPIResult>(
