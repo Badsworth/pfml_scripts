@@ -38,10 +38,10 @@ module "tasks" {
   cognito_user_pool_id = "us-east-1_FADLpF6um"
 
   # TODO: These values are provided by FINEOS.
-  fineos_client_integration_services_api_url          = "https://dt4-api.masspfml.fineos.com/integration-services"
-  fineos_client_customer_api_url                      = "https://dt4-api.masspfml.fineos.com/customerapi/customer"
-  fineos_client_group_client_api_url                  = "https://dt4-api.masspfml.fineos.com/groupclientapi/groupClient"
-  fineos_client_wscomposer_api_url                    = "https://dt4-api.masspfml.fineos.com/integration-services/wscomposer/webservice"
+  fineos_client_integration_services_api_url          = "https://dt4-api.masspfml.fineos.com/integration-services/"
+  fineos_client_customer_api_url                      = "https://dt4-api.masspfml.fineos.com/customerapi/customer/"
+  fineos_client_group_client_api_url                  = "https://dt4-api.masspfml.fineos.com/groupclientapi/groupClient/"
+  fineos_client_wscomposer_api_url                    = "https://dt4-api.masspfml.fineos.com/integration-services/wscomposer/"
   fineos_client_oauth2_url                            = "https://dt4-api.masspfml.fineos.com/oauth2/token"
   fineos_client_oauth2_client_id                      = "5744bq9dpveko6jie4ma1e4g93"
   fineos_aws_iam_role_arn                             = "arn:aws:iam::666444232783:role/somdev-IAMRoles-CustomerAccountAccessRole-BF05IBJSG74B"
