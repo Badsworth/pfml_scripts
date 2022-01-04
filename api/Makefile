@@ -319,7 +319,7 @@ logs: start ## View API logs
 
 
 logs-local: ## Run start-local, with API logs
-logs-local: start-local
+logs-local: db-upgrade start-local
 	docker-compose logs --follow --no-color $(APP_NAME) $(DECODE_LOG)
 
 logs-db: start ## View DB logs
