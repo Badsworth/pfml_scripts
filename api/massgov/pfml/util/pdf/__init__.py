@@ -16,6 +16,8 @@ logger = logging.get_logger(__name__)
 PDF_SETTINGS = "/screen"
 SUCCESS_MESSAGE = "PDF successfully compressed"
 ERROR_MESSAGE = "PDF could not be compressed"
+TIMEOUT_ERROR_MESSAGE = "pdf compression timeout before compression was completed"
+DEFAULT_TIMEOUT = 25
 
 
 class PDFUtilError(RuntimeError):
@@ -47,7 +49,7 @@ def get_file_size(f: IO[Any]) -> int:
     return f.tell()
 
 
-def compress_pdf(source_file: IO[Any], dest_file: IO[Any]) -> int:
+def compress_pdf(source_file: IO[Any], dest_file: IO[Any], timeout: int = DEFAULT_TIMEOUT) -> int:
     gs_cli_command = [
         "gs",
         "-sDEVICE=pdfwrite",
@@ -63,10 +65,17 @@ def compress_pdf(source_file: IO[Any], dest_file: IO[Any]) -> int:
 
     source_file.seek(0)
     dest_file.seek(0)
+    try:
+        proc = subprocess.run(
+            gs_cli_command,
+            stdin=source_file,
+            stdout=dest_file,
+            stderr=subprocess.PIPE,
+            timeout=timeout,
+        )
+    except subprocess.TimeoutExpired:
+        raise PDFCompressionError(TIMEOUT_ERROR_MESSAGE)
 
-    proc = subprocess.run(
-        gs_cli_command, stdin=source_file, stdout=dest_file, stderr=subprocess.PIPE
-    )
     if proc.returncode != 0:
         error_message = str(proc.stderr).strip()
         logger.warning(error_message)

@@ -46,6 +46,17 @@ def test_compress_pdf(test_pdf_path):
         assert resulting_size < pdf_util.get_file_size(test_pdf)
 
 
+@pytest.mark.parametrize("test_pdf_path", ["small_pdf", "large_pdf"], indirect=True)
+def test_compress_pdf_timeout(test_pdf_path):
+    with test_pdf_path.open("rb") as test_pdf, tempfile.SpooledTemporaryFile(
+        mode="xb"
+    ) as output_pdf:
+        with pytest.raises(pdf_util.PDFCompressionError) as e:
+            pdf_util.compress_pdf(test_pdf, output_pdf, timeout=0)
+
+        assert pdf_util.TIMEOUT_ERROR_MESSAGE in str(e.value)
+
+
 @mock.patch("massgov.pfml.util.pdf.subprocess.run")
 def test_compress_pdf_fails_on_subprocess_fail(mock_run, pdf_doc_string):
     mock_proc = mock.Mock()
