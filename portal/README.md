@@ -33,7 +33,17 @@ Run the development server with live reloading:
 npm run dev
 ```
 
-If you wish to connect your local portal to local backend run `npm run dev:local` (paired with `make logs-local` to run the local configured api server for the backend).
+Run the local api connected to the local portal (Experimental, Jan 2022):
+
+```
+# Start the api in one terminal
+cd ./api
+make logs-local
+
+# Start the portal in another terminal:
+cd ./portal
+npm run dev:local
+```
 
 ### Configure your code editor
 
