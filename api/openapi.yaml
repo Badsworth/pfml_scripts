@@ -2303,6 +2303,11 @@ components:
           items:
             $ref: "#/components/schemas/OtherIncome"
           nullable: true
+        imported_from_fineos_at:
+          type: string
+          format: date-time
+          nullable: true
+          example: "2020-06-26T01:02:03.967736+00:00"
         updated_at:
           type: string
           format: date-time
@@ -2472,65 +2477,7 @@ components:
         fineos_leave_request_id:
           type: integer
           example: 1234
-        is_id_proofed:
-          type: boolean
-          example: true
 
-    AbsencePeriodStatusResponse:
-      type: object
-      properties:
-        fineos_leave_period_id:
-          type: string
-          example: "PL-14432-0000002026"
-        absence_period_start_date:
-          type: string
-          format: date
-          example: "2021-06-01"
-        absence_period_end_date:
-          type: string
-          format: date
-          example: "2021-06-08"
-        reason:
-          type: string
-          enum:
-            - Care for a Family Member
-            - Pregnancy/Maternity
-            - Child Bonding
-            - Serious Health Condition - Employ
-          example: "Child Bonding"
-        reason_qualifier_one:
-          type: string
-          enum:
-            - Newborn
-            - Adoption
-            - Foster Care
-          example: "Newborn"
-        reason_qualifier_two:
-          type: string
-        period_type:
-          type: string
-          enum:
-            - Continuous
-            - Intermittent
-            - Reduced Schedule
-          example: "Continuous"
-        request_decision:
-          type: string
-          enum:
-            - Pending
-            - Approved
-            - Denied
-            - Withdrawn
-          example: "Approved"
-        evidence_status:
-          type: string
-          enum:
-            - Pending
-            - Waived
-            - Satisfied
-            - Not Satisfied
-            - Not Required
-          example: "Satisfied"
 
     DetailedClaimResponse:
       type: object
@@ -2554,7 +2501,7 @@ components:
         absence_periods:
             type: array
             items:
-              $ref: "#/components/schemas/AbsencePeriodStatusResponse"
+              $ref: "#/components/schemas/AbsencePeriodResponse"
         outstanding_evidence:
           type: object
           properties:

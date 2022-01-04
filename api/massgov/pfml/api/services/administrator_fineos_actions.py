@@ -2,6 +2,7 @@ import mimetypes
 import uuid
 from datetime import date
 from enum import Enum
+from itertools import groupby
 from typing import Dict, List, Optional, Tuple
 
 import pydantic
@@ -354,6 +355,64 @@ def _parse_eform_data(
     )
 
 
+def _group_by_absence_period_reference(
+    ungrouped_decisions: List[Decision], log_attributes: Dict
+) -> List[Decision]:
+    """The group client's absence-period-decisions endpoint returns absence periods in
+    a more granular fashion than the Customer API's absence-periods endpoint. We prefer
+    one absence period per leave request, which is the behavior of the absence-periods endpoint.
+    This method mimics the Customer API absence-periods endpoint's behavior."""
+
+    transformed_decisions: List[Decision] = []
+    groups = groupby(
+        ungrouped_decisions, key=lambda d: d.period.periodReference if d.period else None
+    )
+
+    for _period_reference, decisions_iterator in groups:
+        decisions_group = list(decisions_iterator)
+
+        start_dates = filter(
+            None, [d.period.startDate if d.period else None for d in decisions_group]
+        )
+        earliest_start_date = min(start_dates, default=None)
+
+        end_dates = filter(None, [d.period.endDate if d.period else None for d in decisions_group])
+        latest_end_date = max(end_dates, default=None)
+
+        # We assume that the first decision has the same period type and status as
+        # the other decisions with the same period reference. We're introducing a
+        # check and logging here to help validate this assumption.
+        unique_period_types = set(d.period.type if d.period else None for d in decisions_group)
+        unique_period_statuses = set(d.period.status if d.period else None for d in decisions_group)
+        if len(unique_period_types) != 1 or len(unique_period_statuses) != 1:
+            newrelic_util.log_and_capture_exception(
+                "Multiple decisions with the same period reference have different period types or statuses",
+                extra={
+                    **log_attributes,
+                    "unique_period_types": str(unique_period_types),
+                    "unique_period_statuses": str(unique_period_statuses),
+                },
+            )
+
+        decision = decisions_group[0]
+        if decision.period:
+            decision.period.startDate = earliest_start_date
+            decision.period.endDate = latest_end_date
+
+        transformed_decisions.append(decision)
+
+    logger.info(
+        "Grouped absence case decisions by period reference",
+        extra={
+            **log_attributes,
+            "fineos_decisions_count": len(ungrouped_decisions),
+            "grouped_decisions_count": len(transformed_decisions),
+        },
+    )
+
+    return transformed_decisions
+
+
 def _parse_absence_period_responses(
     absence_period_decisions: List[Decision], log_attributes: Dict,
 ) -> List[AbsencePeriodResponse]:
@@ -402,7 +461,8 @@ def get_claim_as_leave_admin(
         raise ClaimWithdrawn()
 
     absence_period_responses = _parse_absence_period_responses(
-        absence_periods.decisions, log_attributes
+        _group_by_absence_period_reference(absence_periods.decisions, log_attributes),
+        log_attributes,
     )
 
     # TODO (PORTAL-1118):

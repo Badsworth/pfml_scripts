@@ -46,6 +46,7 @@ import { FineosSecurityGroups } from "../../src/submission/fineos.pages";
 import { Fineos } from "../../src/submission/fineos.pages";
 import { beforeRunCollectMetadata } from "../reporters/new-relic-collect-metadata";
 import { getClaimsByFineos_absence_id } from "_api";
+import EmployeePool from "../../src/generation/Employee";
 
 export default function (
   on: Cypress.PluginEvents,
@@ -158,13 +159,26 @@ export default function (
     waitForClaimDocuments:
       documentWaiter.waitForClaimDocuments.bind(documentWaiter),
 
-    async generateClaim(scenarioID: Scenarios): Promise<DehydratedClaim> {
+    async generateClaim(
+      arg: Scenarios | { scenario: Scenarios, employeePoolFileName?: string }
+    ): Promise<DehydratedClaim> {
+      let scenarioID: Scenarios;
+      let employeePoolFileName: string | null = null;
+
+      if (typeof arg === "object") {
+        scenarioID = arg.scenario;
+        employeePoolFileName = arg.employeePoolFileName || null;
+      } else {
+        scenarioID = arg;
+      }
       if (!(scenarioID in scenarios)) {
         throw new Error(`Invalid scenario: ${scenarioID}`);
       }
       const scenario = scenarios[scenarioID];
       const claim = ClaimGenerator.generate(
-        await getEmployeePool(),
+        employeePoolFileName
+          ? await EmployeePool.load(employeePoolFileName)
+          : await getEmployeePool(),
         scenario.employee,
         scenario.claim as APIClaimSpec
       );

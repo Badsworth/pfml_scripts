@@ -1912,9 +1912,7 @@ def leave_period_response_equal_leave_period_query(
     leave_period_response, leave_period_query
 ) -> bool:
     return (
-        leave_period_response["fineos_leave_period_id"]
-        == leave_period_query["fineos_leave_period_id"]
-        and leave_period_response["absence_period_start_date"]
+        leave_period_response["absence_period_start_date"]
         == leave_period_query["absence_period_start_date"]
         and leave_period_response["absence_period_end_date"]
         == leave_period_query["absence_period_end_date"]
@@ -2076,7 +2074,7 @@ class TestGetClaimEndpoint:
             "absence_period_end_date": "2021-01-30",
             "absence_period_start_date": "2021-01-29",
             "evidence_status": None,
-            "fineos_leave_period_id": "PL-14449-0000002237",
+            "fineos_leave_request_id": None,
             "period_type": "Continuous",
             "reason": "Child Bonding",
             "reason_qualifier_one": "Foster Care",

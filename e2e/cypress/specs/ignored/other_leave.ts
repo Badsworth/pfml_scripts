@@ -19,7 +19,10 @@ describe("Submit a bonding claim with other income and other leave - BHAP1", () 
 
         // Submit Claim
         portal.startClaim();
-        portal.submitClaimPartOne(application);
+        portal.submitClaimPartOne(
+          application,
+          false
+        );
         portal.waitForClaimSubmission().then((data) => {
           cy.stash("submission", {
             application_id: data.application_id,

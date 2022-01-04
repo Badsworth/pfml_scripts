@@ -60,21 +60,6 @@ class ManagedRequirementResponse(PydanticBaseModel):
         return managed_requirement_response
 
 
-class AbsencePeriodStatusResponse(PydanticBaseModel):
-    """Pydantic Model for absence period returned by fineos"""
-
-    fineos_leave_period_id: Optional[str]
-    absence_period_start_date: Optional[date]
-    absence_period_end_date: Optional[date]
-    reason: Optional[str]
-    reason_qualifier_one: Optional[str]
-    reason_qualifier_two: Optional[str]
-    period_type: Optional[str]
-    request_decision: Optional[str]
-    # Not in absence_period yet. Should be N/A, Pending, Waived, Satisfied, Not Satisfied, Not Required
-    evidence_status: Optional[str]
-
-
 def remap_absence_period_type(period_type: Optional[str]) -> Optional[str]:
     """Fineos uses different values to represent the same period type. Rather
     than expose that confusing behavior in our API response, we simplify things
@@ -100,7 +85,6 @@ class AbsencePeriodResponse(PydanticBaseModel):
     reason_qualifier_two: Optional[str]
     period_type: Optional[str]
     request_decision: Optional[str]
-    is_id_proofed: Optional[bool]
 
     @classmethod
     def from_orm(cls, absence_period: AbsencePeriod) -> "AbsencePeriodResponse":
@@ -170,7 +154,7 @@ class DetailedClaimResponse(PydanticBaseModel):
     fineos_notification_id: Optional[str]
     claim_status: Optional[str]
     created_at: Optional[date]
-    absence_periods: Optional[List[AbsencePeriodStatusResponse]]
+    absence_periods: Optional[List[AbsencePeriodResponse]]
     managed_requirements: Optional[List[ManagedRequirementResponse]]
     # Place holder for future implementation.
     outstanding_evidence: Optional[OutstandingEvidenceResponse]

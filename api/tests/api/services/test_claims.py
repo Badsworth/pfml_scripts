@@ -5,10 +5,10 @@ from unittest import mock
 import pytest
 
 from massgov.pfml.api.services.claims import ClaimWithdrawnError, get_claim_detail
-from massgov.pfml.api.services.fineos_actions import (
-    parse_fineos_absence_periods_to_absence_period_status_response,
-)
 from massgov.pfml.db.models.factories import ManagedRequirementFactory
+from massgov.pfml.db.queries.absence_periods import (
+    convert_fineos_absence_period_to_claim_response_absence_period,
+)
 from massgov.pfml.fineos import exception
 from massgov.pfml.fineos.models.customer_api.spec import AbsencePeriod as FineosAbsencePeriod
 from massgov.pfml.util.pydantic.types import FEINFormattedStr
@@ -117,9 +117,9 @@ class TestGetClaimDetail:
         assert claim_detail_matches_claim(claim_detail, claim)
 
         period = claim_detail.absence_periods[0]
-        expected_period = parse_fineos_absence_periods_to_absence_period_status_response(
-            [fineos_absence_period]
-        )[0]
+        expected_period = convert_fineos_absence_period_to_claim_response_absence_period(
+            fineos_absence_period, {}
+        )
 
         assert period == expected_period
 

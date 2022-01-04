@@ -1,4 +1,5 @@
 import copy
+import datetime
 import logging  # noqa: B1
 from datetime import date, timedelta
 from unittest import mock
@@ -30,12 +31,14 @@ from massgov.pfml.fineos.models.group_client_api import (
 )
 
 
-def create_mock_period_decision(startDate: str, endDate: str, periodType: str):
+def create_mock_period_decision(
+    startDate: str, endDate: str, periodType: str, periodReference: str = "PL-14448-0000004930"
+):
     return {
         "absence": {"id": "NTN-3769-ABS-01", "caseReference": "NTN-3769-ABS-01"},
         "employee": {"id": "2957", "name": "Emilie Muller"},
         "period": {
-            "periodReference": "PL-14448-0000004930",
+            "periodReference": periodReference,
             "parentPeriodReference": "",
             "relatedToEpisodic": periodType
             == AbsencePeriodType.EPISODIC.absence_period_type_description,
@@ -1714,6 +1717,58 @@ def test_get_claim_absence_period_types(input_period_type, output_period_type):
     )
 
     assert claim.absence_periods[0].period_type == output_period_type
+
+
+def test_get_claim_absence_period_grouped_by_reference():
+    mock_period_decisions = group_client_api.PeriodDecisions.parse_obj(
+        {
+            "startDate": "2021-01-01",
+            "endDate": "2021-01-31",
+            "decisions": [
+                create_mock_period_decision(
+                    startDate="2020-01-01",
+                    endDate="2020-01-02",
+                    periodType=AbsencePeriodType.INTERMITTENT.absence_period_type_description,
+                    periodReference="PL-1-1",
+                ),
+                create_mock_period_decision(
+                    startDate="2020-01-03",
+                    endDate="2020-01-04",
+                    periodType=AbsencePeriodType.INTERMITTENT.absence_period_type_description,
+                    periodReference="PL-1-1",
+                ),
+                # Different periodReference, so shouldn't be merged with the periods above.
+                create_mock_period_decision(
+                    startDate="2020-01-05",
+                    endDate="2020-01-31",
+                    periodType=AbsencePeriodType.CONTINUOUS.absence_period_type_description,
+                    periodReference="PL-2-2",
+                ),
+            ],
+        }
+    )
+    mock_client = mock_fineos_client_period_decisions(mock_period_decisions)
+    employer = EmployerFactory.build()
+
+    claim, _, _ = get_claim_as_leave_admin(
+        employer.fineos_employer_id, "NTN-001-ABS-001", employer, fineos_client=mock_client
+    )
+
+    assert len(claim.absence_periods) == 2
+    assert (
+        claim.absence_periods[0].period_type
+        == AbsencePeriodType.INTERMITTENT.absence_period_type_description
+    )
+    assert (
+        claim.absence_periods[1].period_type
+        == AbsencePeriodType.CONTINUOUS.absence_period_type_description
+    )
+
+    assert claim.absence_periods[0].absence_period_start_date == datetime.date(2020, 1, 1)
+    assert claim.absence_periods[0].absence_period_end_date == datetime.date(2020, 1, 4)
+
+    assert claim.absence_periods[1].absence_period_start_date == datetime.date(2020, 1, 5)
+    assert claim.absence_periods[1].absence_period_end_date == datetime.date(2020, 1, 31)
 
 
 def test_get_claim_plan(mock_fineos_period_decisions):

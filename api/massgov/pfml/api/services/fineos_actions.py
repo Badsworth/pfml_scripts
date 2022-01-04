@@ -28,10 +28,6 @@ import massgov.pfml.util.logging as logging
 from massgov.pfml.api.models.applications.common import LeaveReason as LeaveReasonApi
 from massgov.pfml.api.models.applications.common import OtherIncome
 from massgov.pfml.api.models.applications.responses import DocumentResponse
-from massgov.pfml.api.models.claims.responses import (
-    AbsencePeriodStatusResponse,
-    remap_absence_period_type,
-)
 from massgov.pfml.api.models.common import ConcurrentLeave, EmployerBenefit, PreviousLeave
 from massgov.pfml.db.models.applications import (
     Application,
@@ -1469,28 +1465,6 @@ def get_absence_periods(
         logger.warn("Unable to get absence periods", exc_info=ex, extra={"absence_id": absence_id})
         raise
     return response.absencePeriods or []
-
-
-def parse_fineos_absence_periods_to_absence_period_status_response(
-    fineos_absence_periods: List[FineosAbsencePeriod],
-) -> List[AbsencePeriodStatusResponse]:
-    # Map FINEOS response to PFML response
-    absence_periods = []
-    for absence_period in fineos_absence_periods:
-        absence_period_status = AbsencePeriodStatusResponse(
-            absence_period_start_date=absence_period.startDate,
-            absence_period_end_date=absence_period.endDate,
-            period_type=remap_absence_period_type(absence_period.absenceType),
-            reason=absence_period.reason,
-            reason_qualifier_one=absence_period.reasonQualifier1,
-            reason_qualifier_two=absence_period.reasonQualifier2,
-            request_decision=absence_period.requestStatus,
-            fineos_leave_period_id=absence_period.id,
-        )
-
-        absence_periods.append(absence_period_status)
-
-    return absence_periods
 
 
 def send_tax_withholding_preference(
