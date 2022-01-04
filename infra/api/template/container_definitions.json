@@ -57,8 +57,8 @@
       { "name": "NEW_PLAN_PROOFS_ACTIVE_AT", "value": "${new_plan_proofs_active_at}" },
       { "name": "USE_CLAIM_STATUS_URL", "value": "${use_claim_status_url}" },
       { "name": "ENABLE_PDF_DOCUMENT_COMPRESSION", "value": "${enable_pdf_document_compression}" },
-      { "name": "PDF_COMPRESSION_SETTINGS", "value": "/ebook" },
-      { "name": "PDF_COMPRESSION_OPTIONS", "value": "-dDownsampleColorImages=false,-dDownsampleGrayImages=false,-dDownsampleMonoImages=false" },
+      { "name": "PDF_COMPRESSION_SETTINGS", "value": "/printer" },
+      { "name": "PDF_COMPRESSION_OPTIONS", "value": "-r150,-dDownsampleColorImages=true,-dDownsampleGrayImages=true,-dDownsampleMonoImages=true,-dColorConversionStrategy=/Gray"},
       { "name": "ENABLE_DOCUMENT_MULTIPART_UPLOAD", "value": "${enable_document_multipart_upload}" }
     ],
     "secrets": [
