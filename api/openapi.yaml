@@ -2303,6 +2303,11 @@ components:
           items:
             $ref: "#/components/schemas/OtherIncome"
           nullable: true
+        imported_from_fineos_at:
+          type: string
+          format: date-time
+          nullable: true
+          example: "2020-06-26T01:02:03.967736+00:00"
         updated_at:
           type: string
           format: date-time

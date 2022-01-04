@@ -82,6 +82,7 @@ class ApplicationResponse(PydanticBaseModel):
     has_previous_leaves_same_reason: Optional[bool]
     has_concurrent_leave: Optional[bool]
     is_withholding_tax: Optional[bool]
+    imported_from_fineos_at: Optional[datetime]
     updated_at: datetime
 
     @classmethod
