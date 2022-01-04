@@ -559,6 +559,8 @@ const errors = {
         "We encountered an error while sending the verification code. Try again.",
       expired:
         "Sorry, your verification code has expired or has already been used.",
+      invalidMFACode:
+        "The security code you entered is invalid. Make sure the code matches the security code we texted to you.",
       mismatchException:
         "Invalid verification code. Make sure the code matches the code emailed to you.",
       pattern:

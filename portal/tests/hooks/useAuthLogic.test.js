@@ -792,6 +792,22 @@ describe("useAuthLogic", () => {
       );
     });
 
+    it("throws an invalid code error when the code is rejected", async () => {
+      jest.spyOn(Auth, "confirmSignIn").mockImplementationOnce(() => {
+        throw new Error("invalid code");
+      });
+      const { result } = render();
+
+      await act(async () => {
+        await result.current.verifyMFACodeAndLogin(verificationCode, next);
+      });
+
+      expect(appErrors.items).toHaveLength(1);
+      expect(appErrors.items[0].message).toMatchInlineSnapshot(
+        `"The security code you entered is invalid. Make sure the code matches the security code we texted to you."`
+      );
+    });
+
     it("tracks request", async () => {
       const { result } = render();
 

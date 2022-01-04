@@ -1,3 +1,4 @@
+import { CognitoAuthError, ValidationError } from "../../../errors";
 import { AppLogic } from "../../../hooks/useAppLogic";
 import BackButton from "../../../components/BackButton";
 import Button from "../../../components/core/Button";
@@ -8,7 +9,6 @@ import React from "react";
 import ThrottledButton from "src/components/ThrottledButton";
 import Title from "../../../components/core/Title";
 import User from "../../../models/User";
-import { ValidationError } from "../../../errors";
 import { isFeatureEnabled } from "../../../services/featureFlags";
 import useFormState from "../../../hooks/useFormState";
 import useFunctionalInputProps from "../../../hooks/useFunctionalInputProps";
@@ -58,7 +58,12 @@ export const ConfirmSMS = (props: ConfirmSMSProps) => {
         nextPage
       );
     } catch (error) {
-      appLogic.catchError(error);
+      if (!appLogic.auth.isCognitoError(error)) {
+        appLogic.catchError(error);
+        return;
+      }
+      const issue = { field: "code", type: "invalidMFACode" };
+      appLogic.catchError(new CognitoAuthError(error, issue));
     }
   };
 

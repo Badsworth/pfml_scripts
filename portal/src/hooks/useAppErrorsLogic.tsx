@@ -372,6 +372,7 @@ const useAppErrorsLogic = ({ portalFlow }: { portalFlow: PortalFlow }) => {
    */
   const handleCognitoAuthError = (error: CognitoAuthError) => {
     const appError = new AppErrorInfo({
+      field: error.issue?.field,
       name: error.name,
       message: error.issue
         ? getMessageFromIssue(error.issue, "auth")

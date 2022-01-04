@@ -219,7 +219,12 @@ const useAuthLogic = ({
       await Auth.confirmSignIn(cognitoUser, trimmedCode, "SMS_MFA");
       tracker.markFetchRequestEnd();
     } catch (error) {
-      appErrorsLogic.catchError(error);
+      if (!isCognitoError(error)) {
+        appErrorsLogic.catchError(error);
+        return;
+      }
+      const issue = { field: "code", type: "invalidMFACode" };
+      appErrorsLogic.catchError(new CognitoAuthError(error, issue));
       return;
     }
     finishLoginAndRedirect(next);
@@ -528,6 +533,7 @@ const useAuthLogic = ({
     forgotPassword,
     login,
     logout,
+    isCognitoError,
     isLoggedIn,
     requireLogin,
     resendVerifyAccountCode,

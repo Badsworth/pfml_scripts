@@ -125,7 +125,7 @@ describe("Two-factor SMS Confirm", () => {
     );
   });
 
-  it("does not update MFA preference when verification code fails", async () => {
+  it("does not update MFA preference and displays an error when verification code fails", async () => {
     MFAService.verifyMFAPhoneNumber.mockImplementationOnce(() =>
       Promise.reject(new Error())
     );
@@ -148,6 +148,12 @@ describe("Two-factor SMS Confirm", () => {
     expect(MFAService.verifyMFAPhoneNumber).toHaveBeenCalledWith("123456");
     expect(updateUser).not.toHaveBeenCalled();
     expect(goToPageFor).not.toHaveBeenCalled();
+
+    expect(
+      screen.getByText(
+        /The security code you entered is invalid. Make sure the code matches the security code we texted to you./
+      )
+    ).toBeInTheDocument();
   });
 
   it("renders PageNotFound if the claimantShowMFA feature flag is not set", () => {
