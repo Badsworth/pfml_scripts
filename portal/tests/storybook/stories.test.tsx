@@ -13,6 +13,7 @@ import {
 } from "@storybook/testing-react";
 import { render, waitFor } from "@testing-library/react/pure";
 import React from "react";
+import { axe } from "jest-axe";
 import path from "path";
 import recursiveReadSync from "recursive-readdir-sync";
 
@@ -28,7 +29,7 @@ setupStorybook({
 type RelativeFilePath = string;
 type AbsoluteFilePath = string;
 
-const STORIES_DIR = "../storybook/stories/";
+const STORIES_DIR = "../../storybook/stories/";
 
 // Uncomment and set the relative path of a story, if you want to run only its tests:
 const ISOLATED_STORY_PATH = undefined; // `components/core/Button.stories.tsx`;
@@ -54,6 +55,9 @@ describe("Storybook", () => {
     // will cause all test suites to fail if one of the tests below fails, so we don't want that.
     // Comment this line for further info when debugging failing tests:
     jest.spyOn(console, "error").mockImplementation();
+
+    // Axe tests can sometimes take longer than the default 5 seconds
+    jest.setTimeout(10000);
   });
 
   const filePathsToTest = storyFilePaths.filter(
@@ -67,22 +71,31 @@ describe("Storybook", () => {
         relativePath === ISOLATED_STORY_PATH)
   );
 
-  it.each(filePathsToTest)(
-    "renders stories in %s",
-    async (relativePath, filePath) => {
+  // For each Story file, generate a test suite:
+  filePathsToTest.forEach(([relativePath, absolutePath]) => {
+    describe(`${relativePath}`, () => {
       // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const stories = require(filePath);
+      const stories = require(absolutePath);
       const composedStories = composeStories(stories);
-      const storyComponents = Object.values(composedStories) as Story[];
+      const storyNamesAndComponents = Object.entries(composedStories) as Array<
+        [string, Story]
+      >;
 
-      for (const StoryComponent of storyComponents) {
-        const { container } = render(<StoryComponent />);
+      // For each story exported from the file, generate a test:
+      it.each(storyNamesAndComponents)(
+        "renders %s story",
+        async (_storyName, StoryComponent) => {
+          const { container } = render(<StoryComponent />);
 
-        // Note: argTypes defaultValue is not supported and your story's test
-        // is likely to fail. Set the value in args instead.
-        // https://github.com/storybookjs/testing-react/issues/56
-        await waitFor(() => expect(container).not.toBeEmptyDOMElement());
-      }
-    }
-  );
+          // Note: argTypes defaultValue is not supported and your story's test
+          // is likely to fail. Set the value in args instead.
+          // https://github.com/storybookjs/testing-react/issues/56
+          await waitFor(() => expect(container).not.toBeEmptyDOMElement());
+
+          const a11yResults = await axe(container);
+          expect(a11yResults).toHaveNoViolations();
+        }
+      );
+    });
+  });
 });

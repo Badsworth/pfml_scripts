@@ -84,6 +84,14 @@ Updates _all_ [Jest snapshots](../docs/portal/tests.md#Snapshot%20tests), accept
 
 Runs the project's test suite in watch mode. By default, this will attempt to identify which tests to run based on which files have changed in the current repository. After running, you can interact with the prompt to configure or filter which test files are ran.
 
+### `npm run test:ci:src`
+
+Run the project's test suite against the source code (excludes generated Storybook tests) and produce a coverage report.
+
+### `npm run test:ci:storybook`
+
+Run just the Storybook tests. We run this separately in the CI since it can take several minutes to run.
+
 ## Design tooling commands
 
 ### `npm run docs`
