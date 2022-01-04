@@ -6,8 +6,11 @@ import "@testing-library/jest-dom";
 import { format } from "util";
 // Setup I18n globally for tests, so English strings are displayed in rendered components
 import { initializeI18n } from "./src/locales/i18n";
+import { toHaveNoViolations } from "jest-axe";
 
 initializeI18n();
+
+expect.extend(toHaveNoViolations);
 
 /**
  * Mock environment variables

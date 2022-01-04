@@ -63,7 +63,7 @@ function withClaims<T extends WithClaimsProps>(
     if (isLoadingClaims) {
       return (
         <div className="margin-top-8 text-center">
-          <Spinner aria-valuetext={t("components.withClaims.loadingLabel")} />
+          <Spinner aria-label={t("components.withClaims.loadingLabel")} />
         </div>
       );
     }

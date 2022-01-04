@@ -54,14 +54,14 @@ exports[`NewApplication initially renders without any option selection 1`] = `
           >
             <input
               class="usa-radio__input"
-              id="InputChoice3"
+              id="InputChoice5"
               name="hasReviewerVerified"
               type="radio"
               value="true"
             />
             <label
               class="usa-radio__label"
-              for="InputChoice3"
+              for="InputChoice5"
             >
               Yes
             </label>
@@ -71,14 +71,14 @@ exports[`NewApplication initially renders without any option selection 1`] = `
           >
             <input
               class="usa-radio__input"
-              id="InputChoice4"
+              id="InputChoice6"
               name="hasReviewerVerified"
               type="radio"
               value="false"
             />
             <label
               class="usa-radio__label"
-              for="InputChoice4"
+              for="InputChoice6"
             >
               No
             </label>

@@ -75,7 +75,7 @@ describe("Series of test that verifies LAs are properly registered in Fineos", (
     } catch (e) {
       throw new Error(`Unable to register/verify Leave Admins: ${e}`);
     }
-  }, 60000);
+  }, 90000);
 
   test("Check LA user object for has_fineos_registration property", async () => {
     const session_1 = await authenticator.authenticate(

@@ -22,7 +22,13 @@ const EmployerNavigationTabs = ({
     },
   ];
 
-  return <NavigationTabs tabs={tabs} activePath={activePath} />;
+  return (
+    <NavigationTabs
+      aria-label={t("components.employersNavigationTabs.label")}
+      tabs={tabs}
+      activePath={activePath}
+    />
+  );
 };
 
 export default EmployerNavigationTabs;

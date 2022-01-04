@@ -2,6 +2,7 @@
 
 exports[`EmployerNavigationTabs renders the component 1`] = `
 <nav
+  aria-label="Employer menu"
   class="border-bottom border-base-lighter margin-bottom-5 display-flex width-full"
 >
   <a

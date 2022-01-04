@@ -16,7 +16,7 @@ exports[`PageWrapper renders Spinner when isLoading is true 1`] = `
         id="page"
       >
         <span
-          aria-valuetext="Loading"
+          aria-label="Loading"
           class="c-spinner"
           role="progressbar"
         />

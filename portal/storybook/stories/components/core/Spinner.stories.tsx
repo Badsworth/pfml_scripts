@@ -6,4 +6,4 @@ export default {
   component: Spinner,
 };
 
-export const Default = () => <Spinner aria-valuetext="Loading" />;
+export const Default = () => <Spinner aria-label="Loading" />;

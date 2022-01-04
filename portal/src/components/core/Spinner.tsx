@@ -2,7 +2,7 @@ import React from "react";
 import classnames from "classnames";
 
 interface SpinnerProps {
-  "aria-valuetext": string;
+  "aria-label": string;
   small?: boolean;
 }
 
@@ -18,7 +18,7 @@ export const Spinner = (props: SpinnerProps) => {
   return (
     <span
       className={classes}
-      aria-valuetext={props["aria-valuetext"]}
+      aria-label={props["aria-label"]}
       role="progressbar"
     />
   );

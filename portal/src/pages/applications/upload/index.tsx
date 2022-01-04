@@ -70,9 +70,7 @@ export const UploadDocsOptions = (props: Props) => {
   if (isLoadingClaimDetail || !claimDetail)
     return (
       <div className="margin-top-8 text-center">
-        <Spinner
-          aria-valuetext={t("pages.claimsStatus.loadingClaimDetailLabel")}
-        />
+        <Spinner aria-label={t("pages.claimsStatus.loadingClaimDetailLabel")} />
       </div>
     );
 

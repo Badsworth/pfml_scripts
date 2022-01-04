@@ -23,8 +23,17 @@ const renderTabs = (customProps) => {
 
 describe("NavigationTabs", () => {
   it("renders the component", () => {
-    const { container } = renderTabs();
-    expect(container.firstChild).toMatchSnapshot();
+    renderTabs();
+
+    expect(screen.getByRole("navigation")).toMatchSnapshot();
+  });
+
+  it("renders the nav landmark with a custom name", () => {
+    renderTabs({ "aria-label": "Claims menu" });
+
+    expect(
+      screen.getByRole("navigation", { name: "Claims menu" })
+    ).toBeInTheDocument();
   });
 
   it("shows a link for each route", () => {

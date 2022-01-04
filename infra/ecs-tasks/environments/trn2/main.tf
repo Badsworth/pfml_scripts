@@ -38,10 +38,10 @@ module "tasks" {
   cognito_user_pool_id = "us-east-1_oxOGrdAe8"
 
   # TODO: These values are provided by FINEOS.
-  fineos_client_integration_services_api_url          = "https://trn2-api.masspfml.fineos.com/integration-services"
-  fineos_client_customer_api_url                      = "https://trn2-api.masspfml.fineos.com/customerapi/customer"
-  fineos_client_group_client_api_url                  = "https://trn2-api.masspfml.fineos.com/groupclientapi/groupClient"
-  fineos_client_wscomposer_api_url                    = "https://trn2-api.masspfml.fineos.com/integration-services/wscomposer/webservice"
+  fineos_client_integration_services_api_url          = "https://trn2-api.masspfml.fineos.com/integration-services/"
+  fineos_client_customer_api_url                      = "https://trn2-api.masspfml.fineos.com/customerapi/customer/"
+  fineos_client_group_client_api_url                  = "https://trn2-api.masspfml.fineos.com/groupclientapi/groupClient/"
+  fineos_client_wscomposer_api_url                    = "https://trn2-api.masspfml.fineos.com/integration-services/wscomposer/"
   fineos_client_oauth2_url                            = "https://trn2-api.masspfml.fineos.com/oauth2/token"
   fineos_client_oauth2_client_id                      = "2e9vsuq808h3tu4rf9tr1efuh5"
   fineos_aws_iam_role_arn                             = "arn:aws:iam::666444232783:role/somdev-IAMRoles-CustomerAccountAccessRole-BF05IBJSG74B"
@@ -86,7 +86,6 @@ module "tasks" {
   enable_upload_1099_pdf          = "0"
   upload_max_files_to_fineos      = "10"
   enable_1099_testfile_generation = "0"
-  irs_1099_correction_ind         = "0"
 
   enable_withholding_payments = "1"
 }

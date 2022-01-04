@@ -35,7 +35,11 @@ def test_get_file_size(pdf_doc_string):
         assert len(pdf_doc_string) == pdf_util.get_file_size(temp_pdf)
 
 
-@pytest.mark.parametrize("test_pdf_path", ["small_pdf", "large_pdf"], indirect=True)
+# TODO:
+# PORTAL-1349
+# add large_pdf to the list of parametrized fixtures in this test
+# once the pdf compression performance has improved enough
+@pytest.mark.parametrize("test_pdf_path", ["small_pdf"], indirect=True)
 def test_compress_pdf(test_pdf_path):
     with test_pdf_path.open("rb") as test_pdf, tempfile.SpooledTemporaryFile(
         mode="xb"

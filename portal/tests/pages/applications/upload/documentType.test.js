@@ -90,7 +90,7 @@ describe(UploadDocument, () => {
       const spinner = screen.getByRole("progressbar");
 
       expect(spinner).toBeInTheDocument();
-      expect(spinner).toHaveAttribute("aria-valuetext", "Loading documents");
+      expect(spinner).toHaveAttribute("aria-label", "Loading documents");
     });
 
     it("does not show file card rows", () => {

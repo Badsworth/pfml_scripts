@@ -28,6 +28,7 @@ describe("ErrorsSummary", () => {
 
       expect(container.firstChild).toMatchInlineSnapshot(`
         <div
+          aria-labelledby="alert-heading3"
           class="usa-alert usa-alert--error margin-bottom-3"
           role="alert"
           tabindex="-1"
@@ -37,6 +38,7 @@ describe("ErrorsSummary", () => {
           >
             <h2
               class="usa-alert__heading font-heading-md text-bold"
+              id="alert-heading3"
             >
               An error occurred
             </h2>

@@ -24,6 +24,7 @@ exports[`ConcurrentLeavesDetails renders the page 1`] = `
         class="display-block line-height-sans-5 measure-5 usa-intro"
       >
         <div
+          aria-labelledby="alert-heading1"
           class="usa-alert usa-alert--info usa-alert--no-icon c-alert--neutral margin-top-2 margin-bottom-0"
           role="region"
           tabindex="-1"
@@ -33,6 +34,7 @@ exports[`ConcurrentLeavesDetails renders the page 1`] = `
           >
             <h2
               class="usa-alert__heading font-heading-md text-bold"
+              id="alert-heading1"
             >
               Your leave dates for paid leave from PFML
             </h2>
@@ -44,6 +46,7 @@ exports[`ConcurrentLeavesDetails renders the page 1`] = `
           </div>
         </div>
         <div
+          aria-labelledby="alert-heading2"
           class="usa-alert usa-alert--info usa-alert--no-icon c-alert--neutral margin-top-0 margin-bottom-4"
           role="region"
           tabindex="-1"
@@ -53,6 +56,7 @@ exports[`ConcurrentLeavesDetails renders the page 1`] = `
           >
             <h2
               class="usa-alert__heading font-heading-md text-bold"
+              id="alert-heading2"
             >
               Your 7-day waiting period dates
             </h2>
@@ -75,14 +79,14 @@ exports[`ConcurrentLeavesDetails renders the page 1`] = `
         >
           <input
             class="usa-radio__input"
-            id="InputChoice1"
+            id="InputChoice3"
             name="concurrent_leave.is_for_current_employer"
             type="radio"
             value="true"
           />
           <label
             class="usa-radio__label"
-            for="InputChoice1"
+            for="InputChoice3"
           >
             Yes
           </label>
@@ -92,14 +96,14 @@ exports[`ConcurrentLeavesDetails renders the page 1`] = `
         >
           <input
             class="usa-radio__input"
-            id="InputChoice2"
+            id="InputChoice4"
             name="concurrent_leave.is_for_current_employer"
             type="radio"
             value="false"
           />
           <label
             class="usa-radio__label"
-            for="InputChoice2"
+            for="InputChoice4"
           >
             No
           </label>
@@ -127,15 +131,15 @@ exports[`ConcurrentLeavesDetails renders the page 1`] = `
         >
           <label
             class="usa-label text-normal margin-top-05 font-heading-xs measure-5"
-            for="InputText3"
-            id="InputText3_label"
+            for="InputText5"
+            id="InputText5_label"
           >
             Month
           </label>
           <input
-            aria-labelledby="InputText3_label InputText3_hint InputText3_error"
+            aria-labelledby="InputText5_label InputText5_hint InputText5_error"
             class="usa-input usa-input--inline maxw-mobile-lg"
-            id="InputText3"
+            id="InputText5"
             inputmode="numeric"
             maxlength="2"
             name="concurrent_leave.leave_start_date_month"
@@ -148,15 +152,15 @@ exports[`ConcurrentLeavesDetails renders the page 1`] = `
         >
           <label
             class="usa-label text-normal margin-top-05 font-heading-xs measure-5"
-            for="InputText4"
-            id="InputText4_label"
+            for="InputText6"
+            id="InputText6_label"
           >
             Day
           </label>
           <input
-            aria-labelledby="InputText4_label InputText4_hint InputText4_error"
+            aria-labelledby="InputText6_label InputText6_hint InputText6_error"
             class="usa-input usa-input--inline maxw-mobile-lg"
-            id="InputText4"
+            id="InputText6"
             inputmode="numeric"
             maxlength="2"
             name="concurrent_leave.leave_start_date_day"
@@ -169,15 +173,15 @@ exports[`ConcurrentLeavesDetails renders the page 1`] = `
         >
           <label
             class="usa-label text-normal margin-top-05 font-heading-xs measure-5"
-            for="InputText5"
-            id="InputText5_label"
+            for="InputText7"
+            id="InputText7_label"
           >
             Year
           </label>
           <input
-            aria-labelledby="InputText5_label InputText5_hint InputText5_error"
+            aria-labelledby="InputText7_label InputText7_hint InputText7_error"
             class="usa-input usa-input--inline maxw-mobile-lg"
-            id="InputText5"
+            id="InputText7"
             inputmode="numeric"
             maxlength="4"
             name="concurrent_leave.leave_start_date_year"
@@ -208,15 +212,15 @@ exports[`ConcurrentLeavesDetails renders the page 1`] = `
         >
           <label
             class="usa-label text-normal margin-top-05 font-heading-xs measure-5"
-            for="InputText6"
-            id="InputText6_label"
+            for="InputText8"
+            id="InputText8_label"
           >
             Month
           </label>
           <input
-            aria-labelledby="InputText6_label InputText6_hint InputText6_error"
+            aria-labelledby="InputText8_label InputText8_hint InputText8_error"
             class="usa-input usa-input--inline maxw-mobile-lg"
-            id="InputText6"
+            id="InputText8"
             inputmode="numeric"
             maxlength="2"
             name="concurrent_leave.leave_end_date_month"
@@ -229,15 +233,15 @@ exports[`ConcurrentLeavesDetails renders the page 1`] = `
         >
           <label
             class="usa-label text-normal margin-top-05 font-heading-xs measure-5"
-            for="InputText7"
-            id="InputText7_label"
+            for="InputText9"
+            id="InputText9_label"
           >
             Day
           </label>
           <input
-            aria-labelledby="InputText7_label InputText7_hint InputText7_error"
+            aria-labelledby="InputText9_label InputText9_hint InputText9_error"
             class="usa-input usa-input--inline maxw-mobile-lg"
-            id="InputText7"
+            id="InputText9"
             inputmode="numeric"
             maxlength="2"
             name="concurrent_leave.leave_end_date_day"
@@ -250,15 +254,15 @@ exports[`ConcurrentLeavesDetails renders the page 1`] = `
         >
           <label
             class="usa-label text-normal margin-top-05 font-heading-xs measure-5"
-            for="InputText8"
-            id="InputText8_label"
+            for="InputText10"
+            id="InputText10_label"
           >
             Year
           </label>
           <input
-            aria-labelledby="InputText8_label InputText8_hint InputText8_error"
+            aria-labelledby="InputText10_label InputText10_hint InputText10_error"
             class="usa-input usa-input--inline maxw-mobile-lg"
-            id="InputText8"
+            id="InputText10"
             inputmode="numeric"
             maxlength="4"
             name="concurrent_leave.leave_end_date_year"

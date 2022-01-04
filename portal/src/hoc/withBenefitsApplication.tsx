@@ -65,9 +65,7 @@ function withBenefitsApplication<T extends WithBenefitsApplicationProps>(
       return (
         <div className="margin-top-8 text-center">
           <Spinner
-            aria-valuetext={t(
-              "components.withBenefitsApplications.loadingLabel"
-            )}
+            aria-label={t("components.withBenefitsApplications.loadingLabel")}
           />
         </div>
       );

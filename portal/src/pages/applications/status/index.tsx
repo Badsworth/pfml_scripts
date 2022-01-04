@@ -117,9 +117,7 @@ export const Status = ({
   if (isLoadingClaimDetail || !claimDetail) {
     return (
       <div className="text-center">
-        <Spinner
-          aria-valuetext={t("pages.claimsStatus.loadingClaimDetailLabel")}
-        />
+        <Spinner aria-label={t("pages.claimsStatus.loadingClaimDetailLabel")} />
       </div>
     );
   }
@@ -150,7 +148,7 @@ export const Status = ({
       return (
         <SectionWrapper>
           <Spinner
-            aria-valuetext={t("pages.claimsStatus.loadingLegalNoticesLabel")}
+            aria-label={t("pages.claimsStatus.loadingLegalNoticesLabel")}
           />
         </SectionWrapper>
       );

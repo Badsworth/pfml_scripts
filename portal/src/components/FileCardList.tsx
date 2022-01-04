@@ -141,7 +141,7 @@ const FileCardList = (props: FileCardListProps) => {
       <ul className="usa-list usa-list--unstyled measure-5">{fileCards}</ul>
       {isLoading ? (
         <div className="text-center measure-5">
-          <Spinner aria-valuetext={t("components.fileCardList.loadingLabel")} />
+          <Spinner aria-label={t("components.fileCardList.loadingLabel")} />
         </div>
       ) : (
         <label className="margin-top-2 usa-button usa-button--outline">

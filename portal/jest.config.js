@@ -32,14 +32,7 @@ module.exports = {
     printBasicPrototype: false,
   },
   testEnvironment: "jsdom",
-  testPathIgnorePatterns: [
-    "<rootDir>/.next/",
-    "<rootDir>/node_modules/",
-    "<rootDir>/config",
-    "<rootDir>/tests/lib/",
-    "<rootDir>/tests/test-utils/",
-  ],
-  testRegex: "(/(tests)/.*|(\\.|/)(test|spec))\\.[jt]sx?$",
+  testRegex: "tests/.*test.[jt]sx?$",
   transform: {
     // `next/babel` is required for our React tests to work
     // https://nextjs.org/docs/advanced-features/customizing-babel-config

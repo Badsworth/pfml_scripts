@@ -169,7 +169,7 @@ exports[`ConsentToDataSharing shows the correct contents for employers 1`] = `
         class="usa-accordion__heading"
       >
         <button
-          aria-controls="accordion4"
+          aria-controls="accordion5"
           aria-expanded="false"
           class="usa-accordion__button"
           type="button"
@@ -179,9 +179,9 @@ exports[`ConsentToDataSharing shows the correct contents for employers 1`] = `
       </h2>
       <div
         class="usa-accordion__content usa-prose"
-        data-testid="accordion4"
+        data-testid="accordion5"
         hidden=""
-        id="accordion4"
+        id="accordion5"
       >
         <p>
           We need this information to:
@@ -207,7 +207,7 @@ exports[`ConsentToDataSharing shows the correct contents for employers 1`] = `
         class="usa-accordion__heading"
       >
         <button
-          aria-controls="accordion5"
+          aria-controls="accordion6"
           aria-expanded="false"
           class="usa-accordion__button"
           type="button"
@@ -217,9 +217,9 @@ exports[`ConsentToDataSharing shows the correct contents for employers 1`] = `
       </h2>
       <div
         class="usa-accordion__content usa-prose"
-        data-testid="accordion5"
+        data-testid="accordion6"
         hidden=""
-        id="accordion5"
+        id="accordion6"
       >
         <p>
           We’ll keep your information private as required by law. As a part of the application process, we may check the information you give with other state agencies. We may share information related to an application with health care providers and contracted private partners.
@@ -229,7 +229,7 @@ exports[`ConsentToDataSharing shows the correct contents for employers 1`] = `
         class="usa-accordion__heading"
       >
         <button
-          aria-controls="accordion6"
+          aria-controls="accordion7"
           aria-expanded="false"
           class="usa-accordion__button"
           type="button"
@@ -239,9 +239,9 @@ exports[`ConsentToDataSharing shows the correct contents for employers 1`] = `
       </h2>
       <div
         class="usa-accordion__content usa-prose"
-        data-testid="accordion6"
+        data-testid="accordion7"
         hidden=""
-        id="accordion6"
+        id="accordion7"
       >
         <p>
           To find out more about how the Commonwealth might use the information you share with the Department of Family and Medical Leave, please read the 

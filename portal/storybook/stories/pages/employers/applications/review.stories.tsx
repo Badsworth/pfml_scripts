@@ -108,15 +108,15 @@ export const Default = (
     {
       type: "",
       created_at: "",
-      follow_up_date: "",
+      follow_up_date: "2021-12-10",
       category: "",
-      responded_at: args["Reviewed Previously"] ? "2021-09-01" : "",
-      status: "Complete",
+      responded_at: "",
+      status: "Open",
     },
     {
       type: "",
       created_at: "",
-      follow_up_date: "",
+      follow_up_date: "2021-08-30",
       category: "",
       responded_at: args["Reviewed Previously"] ? "2021-10-01" : "",
       status: "Complete",
@@ -124,7 +124,7 @@ export const Default = (
     {
       type: "",
       created_at: "",
-      follow_up_date: "",
+      follow_up_date: "2021-07-20",
       category: "",
       responded_at: args["Reviewed Previously"] ? "2021-11-01" : "",
       status: "Complete",
@@ -190,8 +190,7 @@ function createEmployerClaimFromArgs(args: {
 
   let claimBuilder = new MockEmployerClaimBuilder()
     .completed()
-    .previousLeaves()
-    .reviewable();
+    .previousLeaves();
 
   if (args["Claimant EForm Version"] === "Version 1 (before 2021-07-14)") {
     claimBuilder = claimBuilder.eformsV1();

@@ -78,7 +78,7 @@ describe("ApplicationCard", () => {
 
     expect(
       screen.queryByRole("progressbar", {
-        "aria-valuetext": "Loading documents",
+        "aria-label": "Loading documents",
       })
     ).toBeInTheDocument();
   });
@@ -107,7 +107,7 @@ describe("ApplicationCard", () => {
 
     expect(
       screen.queryByRole("progressbar", {
-        "aria-valuetext": "Loading documents",
+        "aria-label": "Loading documents",
       })
     ).not.toBeInTheDocument();
   });
