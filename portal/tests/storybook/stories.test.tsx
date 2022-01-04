@@ -43,6 +43,9 @@ const storyFilePaths: Array<[RelativeFilePath, AbsoluteFilePath]> =
     ]
   );
 
+// Axe tests can sometimes take longer than the default 5 seconds
+jest.setTimeout(10000);
+
 /**
  * Generated tests for each Storybook story, to ensure our stories are
  * rendering and not showing a blank screen. This doesn't comprehensively
@@ -55,9 +58,6 @@ describe("Storybook", () => {
     // will cause all test suites to fail if one of the tests below fails, so we don't want that.
     // Comment this line for further info when debugging failing tests:
     jest.spyOn(console, "error").mockImplementation();
-
-    // Axe tests can sometimes take longer than the default 5 seconds
-    jest.setTimeout(10000);
   });
 
   const filePathsToTest = storyFilePaths.filter(
