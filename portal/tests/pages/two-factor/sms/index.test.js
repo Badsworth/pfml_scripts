@@ -81,7 +81,7 @@ describe("Two-factor SMS Index", () => {
     });
     await act(async () => await userEvent.click(submitButton));
 
-    expect(goToPageFor).not.toHaveBeenCalled();
+    expect(goToPageFor).toHaveBeenCalledWith("CONTINUE");
     expect(updateUser).toHaveBeenCalledWith(expect.any(String), {
       mfa_delivery_preference: "Opt Out",
     });

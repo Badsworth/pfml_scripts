@@ -176,27 +176,6 @@ const claimantFlow: {
         CONTINUE: routes.applications.index,
       },
     },
-    [routes.user.convert]: {
-      meta: {},
-      on: {
-        PREVENT_CONVERSION: routes.applications.getReady,
-        /* We cannot move between 2 different flows due to
-         * claimant test only using claimant state, therefore,
-         * we have no access to redirect to employer pages
-         */
-        // CONTINUE: routes.employers.organizations,
-      },
-    },
-    [routes.user.consentToDataSharing]: {
-      meta: {},
-      on: {
-        ENABLE_MFA: routes.twoFactor.smsIndex,
-        // Route to Applications page to support users who are re-consenting.
-        // If they're new users with no claims, the Applications page will
-        // handle redirecting them
-        CONTINUE: routes.applications.index,
-      },
-    },
     [routes.applications.index]: {
       meta: {},
       on: {
