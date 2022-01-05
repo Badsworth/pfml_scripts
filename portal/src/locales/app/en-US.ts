@@ -1578,21 +1578,11 @@ const pages = {
     choiceYesHint:
       "I will recieve other income from other sources during my paid leave",
     doNotReportHintHeading: "You don't need to report:",
-    doNotReportHintList: [
-      "Other income that you've applied for but are not yet receiving",
-      "Income from past PFML benefits",
-      "Income received through a bonus, like a holiday bonus or an annual sum paid out at the end of the year",
-    ],
+    doNotReportHintList:
+      "<ul><li>Other income that you've applied for but are not yet receiving</li><li>Income from past PFML benefits</li><li>Income received through a bonus, like a holiday bonus or an annual sum paid out at the end of the year</li></ul>",
     doReportHintHeading: "You must report these sources of income:",
-    doReportHintList: [
-      "Workers Compensation",
-      "Unemployment Insurance",
-      "Social Security Disability Insurance",
-      "Disability benefits under a governmental retirement plan such as STRS or PERS",
-      "Jones Act benefits",
-      "Railroad Retirement benefits",
-      "Earnings or benefits from another employer, or through self-employment",
-    ],
+    doReportHintList:
+      "<ul><li>Workers Compensation</li><li>Unemployment Insurance</li><li>Social Security Disability Insurance</li><li>Disability benefits under a governmental retirement plan such as STRS or PERS</li><li>Jones Act benefits</li><li>Railroad Retirement benefits</li><li>Earnings or benefits from another employer, or through self-employment<ul>",
     sectionLabel:
       "Will you receive income from any other sources during your leave dates for paid$t(chars.nbsp)leave?",
     title: "$t(shared.claimsOtherLeaveTitle)",
@@ -1697,20 +1687,14 @@ const pages = {
     hintDontHeader: "You don't need to report:",
     hintHeader:
       "Answer yes if you took paid or unpaid leave for a qualifying reason that is not the reason you are applying for paid leave now. The following are qualifying reasons:",
-    hintList: [
-      "You had a serious health condition, including illness, injury, or pregnancy.",
-      "If you were sick, you were out of work for at least 3 days and needed continuing care from your health care provider or needed inpatient care.",
-      "You bonded with your child after birth or placement.",
-      "You needed to manage family affairs while a family member is on active duty in the armed forces.",
-      "You needed to care for a family member who serves in the armed forces.",
-      "You needed to care for a family member with a serious health condition and your leave began on or after July 1, 2021.",
-    ],
+    hintList:
+      "<ul><li>You had a serious health condition, including illness, injury, or pregnancy.</li><li>If you were sick, you were out of work for at least 3 days and needed continuing care from your health care provider or needed inpatient care.</li><li>You bonded with your child after birth or placement.</li><li>You needed to manage family affairs while a family member is on active duty in the armed forces.</li><li>You needed to care for a family member who serves in the armed forces.</li><li>You needed to care for a family member with a serious health condition and your leave began on or after July 1, 2021.</li></ul>",
     hintTextNo:
       "I haven’t taken previous leave for a qualifying reason, or my other leave was through Massachusetts’ PFML program",
     hintTextYes:
       "I have taken previous leave for one or more qualifying reasons",
     leaveTakenThroughPFML:
-      "Leave that was taken through Massachusetts' PFML program",
+      "<ul><li>Leave that was taken through Massachusetts' PFML program</li></ul>",
     sectionLabel:
       "Did you take any previous leave between {{otherLeaveStartDate}} and {{leaveStartDate}} and for a different qualifying reason?",
     title: "$t(shared.claimsOtherLeaveTitle)",

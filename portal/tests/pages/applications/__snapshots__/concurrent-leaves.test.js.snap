@@ -18,7 +18,11 @@ exports[`ConcurrentLeaves renders the continuous page content 1`] = `
       <legend
         class="usa-label text-bold usa-legend font-heading-lg line-height-sans-3 margin-bottom-1 maxw-tablet"
       >
-        Will you use any employer-sponsored accrued paid leave during your paid leave from PFML?
+        <h2
+          class="font-heading-lg text-bold"
+        >
+          Will you use any employer-sponsored accrued paid leave during your paid leave from PFML?
+        </h2>
       </legend>
       <span
         class="display-block line-height-sans-5 measure-5 usa-intro"
@@ -70,51 +74,41 @@ exports[`ConcurrentLeaves renders the continuous page content 1`] = `
               </div>
             </div>
           </div>
-          <h2
-            class="display-flex flex-row flex-align-start font-heading-sm text-bold"
+          <h3
+            class="font-heading-sm text-bold"
           >
             <svg
               aria-hidden="true"
-              class="usa-icon usa-icon--size-3 margin-right-1 flex-auto text-green"
-              fill="currentColor"
+              class="usa-icon usa-icon--size-3 text-secondary text-middle margin-right-1 margin-top-neg-05"
               focusable="false"
               role="img"
             >
               <use
-                xlink:href="/img/sprite.svg#check_circle"
+                xlink:href="/img/sprite.svg#check"
               />
             </svg>
-            <span
-              class="flex-1"
-            >
-              What kinds of accrued paid leave to report
-            </span>
-          </h2>
+            What kinds of accrued paid leave to report
+          </h3>
           <div
             class="margin-top-1 margin-left-4 margin-bottom-2"
           >
             Employer-sponsored paid vacation time, sick time, and personal time you plan to take during your paid leave from PFML.
           </div>
-          <h2
-            class="display-flex flex-row flex-align-center font-heading-sm text-bold"
+          <h3
+            class="font-heading-sm text-bold"
           >
             <svg
               aria-hidden="true"
-              class="usa-icon usa-icon--size-3 margin-right-1 flex-auto text-red"
-              fill="currentColor"
+              class="usa-icon usa-icon--size-3 text-error text-middle margin-right-1 margin-top-neg-05"
               focusable="false"
               role="img"
             >
               <use
-                xlink:href="/img/sprite.svg#cancel"
+                xlink:href="/img/sprite.svg#close"
               />
             </svg>
-            <span
-              class="flex-1"
-            >
-              You don't need to report accrued paid leave that you use during the 7-day waiting period
-            </span>
-          </h2>
+            You don't need to report accrued paid leave that you use during the 7-day waiting period
+          </h3>
         </div>
       </span>
       <div
@@ -196,7 +190,11 @@ exports[`ConcurrentLeaves renders the intermittent reduced page content 1`] = `
       <legend
         class="usa-label text-bold usa-legend font-heading-lg line-height-sans-3 margin-bottom-1 maxw-tablet"
       >
-        Will you use any employer-sponsored accrued paid leave during your paid leave from PFML?
+        <h2
+          class="font-heading-lg text-bold"
+        >
+          Will you use any employer-sponsored accrued paid leave during your paid leave from PFML?
+        </h2>
       </legend>
       <span
         class="display-block line-height-sans-5 measure-5 usa-intro"
@@ -226,26 +224,21 @@ exports[`ConcurrentLeaves renders the intermittent reduced page content 1`] = `
               </div>
             </div>
           </div>
-          <h2
-            class="display-flex flex-row flex-align-start font-heading-sm text-bold"
+          <h3
+            class="font-heading-sm text-bold"
           >
             <svg
               aria-hidden="true"
-              class="usa-icon usa-icon--size-3 margin-right-1 flex-auto text-green"
-              fill="currentColor"
+              class="usa-icon usa-icon--size-3 text-secondary text-middle margin-right-1 margin-top-neg-05"
               focusable="false"
               role="img"
             >
               <use
-                xlink:href="/img/sprite.svg#check_circle"
+                xlink:href="/img/sprite.svg#check"
               />
             </svg>
-            <span
-              class="flex-1"
-            >
-              What kinds of accrued paid leave to report
-            </span>
-          </h2>
+            What kinds of accrued paid leave to report
+          </h3>
           <div
             class="margin-top-1 margin-left-4 margin-bottom-2"
           >
@@ -303,26 +296,21 @@ exports[`ConcurrentLeaves renders the intermittent reduced page content 1`] = `
               </ul>
             </div>
           </details>
-          <h2
-            class="display-flex flex-row flex-align-center font-heading-sm text-bold"
+          <h3
+            class="font-heading-sm text-bold"
           >
             <svg
               aria-hidden="true"
-              class="usa-icon usa-icon--size-3 margin-right-1 flex-auto text-red"
-              fill="currentColor"
+              class="usa-icon usa-icon--size-3 text-error text-middle margin-right-1 margin-top-neg-05"
               focusable="false"
               role="img"
             >
               <use
-                xlink:href="/img/sprite.svg#cancel"
+                xlink:href="/img/sprite.svg#close"
               />
             </svg>
-            <span
-              class="flex-1"
-            >
-              You don't need to report accrued paid leave that you use during the 7-day waiting period, which is 7 consecutive calendar days from the date of the first instance of leave from your employer
-            </span>
-          </h2>
+            You don't need to report accrued paid leave that you use during the 7-day waiting period, which is 7 consecutive calendar days from the date of the first instance of leave from your employer
+          </h3>
         </div>
       </span>
       <div
@@ -404,7 +392,11 @@ exports[`ConcurrentLeaves renders the page 1`] = `
       <legend
         class="usa-label text-bold usa-legend font-heading-lg line-height-sans-3 margin-bottom-1 maxw-tablet"
       >
-        Will you use any employer-sponsored accrued paid leave during your paid leave from PFML?
+        <h2
+          class="font-heading-lg text-bold"
+        >
+          Will you use any employer-sponsored accrued paid leave during your paid leave from PFML?
+        </h2>
       </legend>
       <span
         class="display-block line-height-sans-5 measure-5 usa-intro"
@@ -456,51 +448,41 @@ exports[`ConcurrentLeaves renders the page 1`] = `
               </div>
             </div>
           </div>
-          <h2
-            class="display-flex flex-row flex-align-start font-heading-sm text-bold"
+          <h3
+            class="font-heading-sm text-bold"
           >
             <svg
               aria-hidden="true"
-              class="usa-icon usa-icon--size-3 margin-right-1 flex-auto text-green"
-              fill="currentColor"
+              class="usa-icon usa-icon--size-3 text-secondary text-middle margin-right-1 margin-top-neg-05"
               focusable="false"
               role="img"
             >
               <use
-                xlink:href="/img/sprite.svg#check_circle"
+                xlink:href="/img/sprite.svg#check"
               />
             </svg>
-            <span
-              class="flex-1"
-            >
-              What kinds of accrued paid leave to report
-            </span>
-          </h2>
+            What kinds of accrued paid leave to report
+          </h3>
           <div
             class="margin-top-1 margin-left-4 margin-bottom-2"
           >
             Employer-sponsored paid vacation time, sick time, and personal time you plan to take during your paid leave from PFML.
           </div>
-          <h2
-            class="display-flex flex-row flex-align-center font-heading-sm text-bold"
+          <h3
+            class="font-heading-sm text-bold"
           >
             <svg
               aria-hidden="true"
-              class="usa-icon usa-icon--size-3 margin-right-1 flex-auto text-red"
-              fill="currentColor"
+              class="usa-icon usa-icon--size-3 text-error text-middle margin-right-1 margin-top-neg-05"
               focusable="false"
               role="img"
             >
               <use
-                xlink:href="/img/sprite.svg#cancel"
+                xlink:href="/img/sprite.svg#close"
               />
             </svg>
-            <span
-              class="flex-1"
-            >
-              You don't need to report accrued paid leave that you use during the 7-day waiting period
-            </span>
-          </h2>
+            You don't need to report accrued paid leave that you use during the 7-day waiting period
+          </h3>
         </div>
       </span>
       <div
@@ -583,7 +565,11 @@ exports[`ConcurrentLeaves renders the page when the claim does not contain concu
       <legend
         class="usa-label text-bold usa-legend font-heading-lg line-height-sans-3 margin-bottom-1 maxw-tablet"
       >
-        Will you use any employer-sponsored accrued paid leave during your paid leave from PFML?
+        <h2
+          class="font-heading-lg text-bold"
+        >
+          Will you use any employer-sponsored accrued paid leave during your paid leave from PFML?
+        </h2>
       </legend>
       <span
         class="display-block line-height-sans-5 measure-5 usa-intro"
@@ -635,51 +621,41 @@ exports[`ConcurrentLeaves renders the page when the claim does not contain concu
               </div>
             </div>
           </div>
-          <h2
-            class="display-flex flex-row flex-align-start font-heading-sm text-bold"
+          <h3
+            class="font-heading-sm text-bold"
           >
             <svg
               aria-hidden="true"
-              class="usa-icon usa-icon--size-3 margin-right-1 flex-auto text-green"
-              fill="currentColor"
+              class="usa-icon usa-icon--size-3 text-secondary text-middle margin-right-1 margin-top-neg-05"
               focusable="false"
               role="img"
             >
               <use
-                xlink:href="/img/sprite.svg#check_circle"
+                xlink:href="/img/sprite.svg#check"
               />
             </svg>
-            <span
-              class="flex-1"
-            >
-              What kinds of accrued paid leave to report
-            </span>
-          </h2>
+            What kinds of accrued paid leave to report
+          </h3>
           <div
             class="margin-top-1 margin-left-4 margin-bottom-2"
           >
             Employer-sponsored paid vacation time, sick time, and personal time you plan to take during your paid leave from PFML.
           </div>
-          <h2
-            class="display-flex flex-row flex-align-center font-heading-sm text-bold"
+          <h3
+            class="font-heading-sm text-bold"
           >
             <svg
               aria-hidden="true"
-              class="usa-icon usa-icon--size-3 margin-right-1 flex-auto text-red"
-              fill="currentColor"
+              class="usa-icon usa-icon--size-3 text-error text-middle margin-right-1 margin-top-neg-05"
               focusable="false"
               role="img"
             >
               <use
-                xlink:href="/img/sprite.svg#cancel"
+                xlink:href="/img/sprite.svg#close"
               />
             </svg>
-            <span
-              class="flex-1"
-            >
-              You don't need to report accrued paid leave that you use during the 7-day waiting period
-            </span>
-          </h2>
+            You don't need to report accrued paid leave that you use during the 7-day waiting period
+          </h3>
         </div>
       </span>
       <div
@@ -761,7 +737,11 @@ exports[`ConcurrentLeaves renders the reduced page content 1`] = `
       <legend
         class="usa-label text-bold usa-legend font-heading-lg line-height-sans-3 margin-bottom-1 maxw-tablet"
       >
-        Will you use any employer-sponsored accrued paid leave during your paid leave from PFML?
+        <h2
+          class="font-heading-lg text-bold"
+        >
+          Will you use any employer-sponsored accrued paid leave during your paid leave from PFML?
+        </h2>
       </legend>
       <span
         class="display-block line-height-sans-5 measure-5 usa-intro"
@@ -813,26 +793,21 @@ exports[`ConcurrentLeaves renders the reduced page content 1`] = `
               </div>
             </div>
           </div>
-          <h2
-            class="display-flex flex-row flex-align-start font-heading-sm text-bold"
+          <h3
+            class="font-heading-sm text-bold"
           >
             <svg
               aria-hidden="true"
-              class="usa-icon usa-icon--size-3 margin-right-1 flex-auto text-green"
-              fill="currentColor"
+              class="usa-icon usa-icon--size-3 text-secondary text-middle margin-right-1 margin-top-neg-05"
               focusable="false"
               role="img"
             >
               <use
-                xlink:href="/img/sprite.svg#check_circle"
+                xlink:href="/img/sprite.svg#check"
               />
             </svg>
-            <span
-              class="flex-1"
-            >
-              What kinds of accrued paid leave to report
-            </span>
-          </h2>
+            What kinds of accrued paid leave to report
+          </h3>
           <div
             class="margin-top-1 margin-left-4 margin-bottom-2"
           >
@@ -890,26 +865,21 @@ exports[`ConcurrentLeaves renders the reduced page content 1`] = `
               </ul>
             </div>
           </details>
-          <h2
-            class="display-flex flex-row flex-align-center font-heading-sm text-bold"
+          <h3
+            class="font-heading-sm text-bold"
           >
             <svg
               aria-hidden="true"
-              class="usa-icon usa-icon--size-3 margin-right-1 flex-auto text-red"
-              fill="currentColor"
+              class="usa-icon usa-icon--size-3 text-error text-middle margin-right-1 margin-top-neg-05"
               focusable="false"
               role="img"
             >
               <use
-                xlink:href="/img/sprite.svg#cancel"
+                xlink:href="/img/sprite.svg#close"
               />
             </svg>
-            <span
-              class="flex-1"
-            >
-              You don't need to report accrued paid leave that you use during the 7-day waiting period
-            </span>
-          </h2>
+            You don't need to report accrued paid leave that you use during the 7-day waiting period
+          </h3>
         </div>
       </span>
       <div

@@ -3,7 +3,7 @@ import withBenefitsApplication, {
 } from "../../hoc/withBenefitsApplication";
 import Details from "../../components/core/Details";
 import Heading from "../../components/core/Heading";
-import IconHeading from "../../components/core/IconHeading";
+import Icon from "../../components/core/Icon";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import { Trans } from "react-i18next";
@@ -32,21 +32,26 @@ export const PreviousLeavesIntro = (props: WithBenefitsApplicationProps) => {
         {t("pages.claimsPreviousLeavesIntro.sectionLabel")}
       </Heading>
 
-      <IconHeading name="check_circle">
+      <Heading level="3">
+        <Icon
+          name="check"
+          size={3}
+          className="text-secondary text-middle margin-right-1 margin-top-neg-05"
+        />
         <Trans
           i18nKey="pages.claimsPreviousLeavesIntro.needHeader"
           values={{ startDate, otherLeaveStartDate }}
         />
-      </IconHeading>
-      <Trans
-        i18nKey="pages.claimsPreviousLeavesIntro.need"
-        values={{ startDate }}
-        components={{
-          ul: <ul className="usa-list margin-left-4" />,
-          li: <li />,
-        }}
-      />
-      <div className="margin-left-4 margin-bottom-4">
+      </Heading>
+      <div className="margin-left-4">
+        <Trans
+          i18nKey="pages.claimsPreviousLeavesIntro.need"
+          values={{ startDate }}
+          components={{
+            ul: <ul className="usa-list" />,
+            li: <li />,
+          }}
+        />
         <Details
           label={t(
             "pages.claimsPreviousLeavesIntro.detailsQualifyingReasonHeader"
@@ -62,17 +67,22 @@ export const PreviousLeavesIntro = (props: WithBenefitsApplicationProps) => {
         </Details>
       </div>
 
-      <IconHeading name="cancel">
-        {t("pages.claimsPreviousLeavesIntro.dontNeedHeader")}
-      </IconHeading>
-      <Trans
-        i18nKey="pages.claimsPreviousLeavesIntro.dontNeed"
-        components={{
-          ul: <ul className="usa-list margin-left-4" />,
-          li: <li />,
-        }}
-      />
-      <div className="margin-left-4 margin-bottom-4">
+      <Heading level="3">
+        <Icon
+          name="close"
+          size={3}
+          className="text-error text-middle margin-right-1 margin-top-neg-05"
+        />
+        <Trans i18nKey="pages.claimsPreviousLeavesIntro.dontNeedHeader" />
+      </Heading>
+      <div className="margin-left-4">
+        <Trans
+          i18nKey="pages.claimsPreviousLeavesIntro.dontNeed"
+          components={{
+            ul: <ul className="usa-list" />,
+            li: <li />,
+          }}
+        />
         <Details
           label={t("pages.claimsPreviousLeavesIntro.detailsBenefitYearHeader")}
         >

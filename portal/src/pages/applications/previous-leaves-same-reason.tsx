@@ -2,6 +2,7 @@ import { get, pick } from "lodash";
 import withBenefitsApplication, {
   WithBenefitsApplicationProps,
 } from "../../hoc/withBenefitsApplication";
+import Heading from "../../components/core/Heading";
 import InputChoiceGroup from "../../components/core/InputChoiceGroup";
 import LeaveReason from "../../models/LeaveReason";
 import QuestionPage from "../../components/QuestionPage";
@@ -74,11 +75,15 @@ export const PreviousLeavesSameReason = (
             ? t("pages.claimsPreviousLeavesSameReason.sectionHint")
             : null
         }
-        label={t("pages.claimsPreviousLeavesSameReason.sectionLabel", {
-          context: isCaringLeave ? "caring" : undefined,
-          previousLeaveStartDate,
-          leaveStartDate,
-        })}
+        label={
+          <Heading level="2" size="1">
+            {t("pages.claimsPreviousLeavesSameReason.sectionLabel", {
+              context: isCaringLeave ? "caring" : undefined,
+              previousLeaveStartDate,
+              leaveStartDate,
+            })}
+          </Heading>
+        }
       />
     </QuestionPage>
   );
