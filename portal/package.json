@@ -35,7 +35,7 @@
     "test": "NODE_ENV=test jest",
     "test:ci:src": "npm test -- --ci --coverage --coverage-reporters=lcov --coverage-reporters=text --testPathIgnorePatterns=tests/storybook/",
     "test:ci:storybook": "npm test -- --ci tests/storybook/",
-    "pretest:storybook": "npm run generate-claims-page-stories",
+    "pretest:ci:storybook": "npm run generate-claims-page-stories",
     "test:update-snapshots": "npm test -- -u",
     "test:watch": "npm test -- --watch",
     "ts:check": "tsc --noEmit",
