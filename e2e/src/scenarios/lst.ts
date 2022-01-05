@@ -67,6 +67,14 @@ export const LSTOLB1: ScenarioSpecification = {
   claim: {
     ...CypressScenarios.BHAP1.claim,
     label: "PortalClaimSubmit - Other Leaves/Benefits",
+    docs: {
+      FOSTERPLACEMENT: {
+        filename: "limit-4.5MB.pdf",
+      },
+      MASSID: {
+        filename: "limit-4.5MB.pdf",
+      },
+    },
     employerResponse: {
       hours_worked_per_week: 40,
       employer_decision: "Approve",
@@ -86,6 +94,14 @@ export const LSTBHAP1: ScenarioSpecification = {
       hours_worked_per_week: 40,
       employer_decision: "Approve",
     },
+    docs: {
+      FOSTERPLACEMENT: {
+        filename: "limit-4.5MB.pdf",
+      },
+      MASSID: {
+        filename: "limit-4.5MB.pdf",
+      },
+    },
   },
 };
 
@@ -98,7 +114,14 @@ export const LSTCHAP1: ScenarioSpecification = {
     label: "PortalClaimSubmit - Caring",
     reason: "Care for a Family Member",
     work_pattern_spec: "0,720,0,720,0,720,0",
-    docs: { MASSID: {}, CARING: {} },
+    docs: {
+      MASSID: {
+        filename: "limit-4.5MB.pdf",
+      },
+      CARING: {
+        filename: "limit-4.5MB.pdf",
+      },
+    },
     shortClaim: true,
     employerResponse: {
       hours_worked_per_week: 40,

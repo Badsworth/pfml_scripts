@@ -1,4 +1,5 @@
 import {
+  BondingFosterClaim,
   CaringLeaveClaim,
   MilitaryCaregiverClaim,
   MilitaryExigencyClaim,
@@ -19,7 +20,7 @@ import * as faker from "faker";
  * 99% of our Cypress scenarios are short claims (1 day). If you add a new scenario here, please ensure it is a
  * short claim, or you explain why it is not.
  */
-export const BHAP1: ScenarioSpecification = {
+export const BHAP1: ScenarioSpecification<BondingFosterClaim> = {
   employee: { mass_id: true, wages: "eligible" },
   claim: {
     label: "BHAP1",

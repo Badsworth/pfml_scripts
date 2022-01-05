@@ -243,6 +243,14 @@ export class ClaimGenerator {
       has_previous_leaves_other_reason: !!previous_leaves_other_reason,
       has_previous_leaves_same_reason: !!previous_leaves_same_reason,
     };
+    if (
+      spec.metadata?.doc_filename &&
+      typeof spec.metadata?.doc_filename !== "string"
+    ) {
+      throw Error(
+        "Invalid value for property doc_filename - type must be 'string'"
+      );
+    }
     return {
       id: uuid(),
       // @todo: Rename to label?
