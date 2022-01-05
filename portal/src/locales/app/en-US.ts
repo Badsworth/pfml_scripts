@@ -957,9 +957,12 @@ const pages = {
     seoDescription: "$t(shared.siteDescription)",
   },
   applications: {
+    claimAssociatedSuccessfully:
+      "Your application has been successfully linked to your account.",
     claimsApprovalProcess:
       "Learn more about the <approval-process-link>application review and approval process</approval-process-link>.",
     createApplicationHeading: "Create a new application",
+    findLink: "Find my application",
     getReadyLink: "Start a new application",
     inProgressHeading: "In-progress applications",
     noClaims: "You don’t have any applications yet.",
@@ -1088,6 +1091,13 @@ const pages = {
     mailingAddressLabel: "What is your mailing address?",
     sectionLabel: "What is your current residential address?",
     title: "$t(shared.claimsVerifyIdTitle)",
+  },
+  claimsAssociate: {
+    absenceIdLabel: "Application ID",
+    lead: "To locate your application, please enter information for each field.",
+    submitButton: "Continue",
+    taxIdLabel: "Last 4 digits of Social Security Number",
+    title: "Find My Application",
   },
   claimsBondingDateOfChild: {
     birthHint:

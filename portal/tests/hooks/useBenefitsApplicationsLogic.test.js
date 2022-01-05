@@ -60,6 +60,59 @@ describe("useBenefitsApplicationsLogic", () => {
     expect(claimsLogic.benefitsApplications.items).toHaveLength(0);
   });
 
+  describe("associate", () => {
+    const mockAssociateFormState = {
+      absence_id: "mock-absence-id",
+      tax_identifier_last4: "1234",
+    };
+
+    beforeEach(() => {
+      mockRouter.pathname = routes.applications.find;
+      setup();
+    });
+
+    it("causes a new API request the next time loadPage is called, after an application has been associated successfully", async () => {
+      await act(async () => {
+        await claimsLogic.loadPage();
+        await claimsLogic.associate(mockAssociateFormState);
+      });
+
+      expect(getClaimsMock).toHaveBeenCalledTimes(1);
+
+      await act(async () => {
+        await claimsLogic.loadPage();
+      });
+
+      expect(getClaimsMock).toHaveBeenCalledTimes(2);
+    });
+
+    it("routes to applications index page when the request succeeds", async () => {
+      await act(async () => {
+        await claimsLogic.associate(mockAssociateFormState);
+      });
+
+      expect(mockRouter.push).toHaveBeenCalledWith(
+        expect.stringContaining(
+          `${routes.applications.index}?applicationAssociated=mock-absence-id`
+        )
+      );
+    });
+
+    it("clears prior errors", async () => {
+      act(() => {
+        appErrorsLogic.setAppErrors(
+          new AppErrorInfoCollection([new AppErrorInfo()])
+        );
+      });
+
+      await act(async () => {
+        await claimsLogic.associate(mockAssociateFormState);
+      });
+
+      expect(appErrorsLogic.appErrors.items).toHaveLength(0);
+    });
+  });
+
   describe("hasLoadedBenefitsApplicationAndWarnings", () => {
     beforeEach(() => {
       // Make sure the ID we're loading matches what the API will return to us so caching works as

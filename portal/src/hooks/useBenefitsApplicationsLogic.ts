@@ -72,6 +72,32 @@ const useBenefitsApplicationsLogic = ({
   };
 
   /**
+   * Associate a claim created through the contact center with this user.
+   */
+  const associate = async (formState: { [key: string]: string }) => {
+    appErrorsLogic.clearErrors();
+
+    try {
+      // TODO (PORTAL-1454) - Connect to the API endpoint
+      await Promise.resolve();
+    } catch (error) {
+      // TODO (PORTAL-1454) - Add a test for this error handler once API endpoint is connected
+      appErrorsLogic.catchError(error);
+    }
+
+    // Reset the applications pagination state to force applications to be refetched,
+    // so that this newly associated application is listed
+    setPaginationMeta({});
+
+    portalFlow.goToNextPage(
+      {},
+      {
+        applicationAssociated: formState.absence_id,
+      }
+    );
+  };
+
+  /**
    * Load a single claim
    */
   const load = async (application_id: string) => {
@@ -294,6 +320,7 @@ const useBenefitsApplicationsLogic = ({
   };
 
   return {
+    associate,
     benefitsApplications,
     complete,
     create,

@@ -21,6 +21,22 @@ describe("QuestionPage", () => {
     expect(container.firstChild).toMatchSnapshot();
   });
 
+  it("renders a large heading when titleSize is 'large'", () => {
+    render(
+      <QuestionPage
+        title={sampleTitle}
+        titleSize="large"
+        onSave={jest.fn(() => Promise.resolve())}
+      >
+        <div>Some stuff here</div>
+      </QuestionPage>
+    );
+
+    expect(screen.getByRole("heading", { level: 1 })).toHaveClass(
+      "font-heading-lg"
+    );
+  });
+
   it("supports custom continue button text", () => {
     render(
       <QuestionPage

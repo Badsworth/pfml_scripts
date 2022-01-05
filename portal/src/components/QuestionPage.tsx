@@ -17,6 +17,11 @@ interface QuestionPageProps {
    */
   title: React.ReactNode;
   /**
+   * Defaults to small, since most question pages are within a sequence,
+   * where the title is repeated across pages.
+   */
+  titleSize?: "small" | "regular";
+  /**
    * Function that performs the save operation. Can be asynchronous.
    */
   onSave: () => Promise<void>;
@@ -35,6 +40,7 @@ interface QuestionPageProps {
  */
 export const QuestionPage = (props: QuestionPageProps) => {
   const { t } = useTranslation();
+  const { titleSize = "small" } = props;
 
   const handleSubmit = useThrottledHandler(async (event) => {
     event.preventDefault();
@@ -59,7 +65,7 @@ export const QuestionPage = (props: QuestionPageProps) => {
         className="usa-form"
         method="post"
       >
-        <Title small>{props.title}</Title>
+        <Title small={titleSize === "small"}>{props.title}</Title>
         {props.children}
         <Button
           className="margin-top-4"

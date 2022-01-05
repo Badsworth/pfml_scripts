@@ -29,6 +29,7 @@ const routes = {
     familyMemberDateOfBirth: "/applications/family-member-date-of-birth",
     familyMemberName: "/applications/family-member-name",
     familyMemberRelationship: "/applications/family-member-relationship",
+    find: "/applications/find",
     gender: "/applications/gender",
     getReady: "/applications/get-ready",
     index: "/applications",
