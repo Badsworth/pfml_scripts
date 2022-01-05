@@ -4,6 +4,7 @@ import SetupSMS from "../../../../src/pages/two-factor/sms/setup";
 import userEvent from "@testing-library/user-event";
 
 const updateUser = jest.fn();
+const goToNextPage = jest.fn();
 
 beforeEach(() => {
   mockAuth(true);
@@ -32,18 +33,33 @@ describe("Two-factor SMS Setup", () => {
 
     await act(async () => await userEvent.click(submitButton));
 
-    expect(updateUser).toHaveBeenCalledWith(
-      expect.any(String),
-      {
-        mfa_phone_number: {
-          int_code: "1",
-          phone_type: "Cell",
-          phone_number: "555-555-5555",
-        },
+    expect(updateUser).toHaveBeenCalledWith(expect.any(String), {
+      mfa_phone_number: {
+        int_code: "1",
+        phone_type: "Cell",
+        phone_number: "555-555-5555",
       },
-      undefined,
-      undefined
-    );
+    });
+  });
+
+  it("routes the user to the  next page when they submit", async () => {
+    renderPage(SetupSMS, {
+      addCustomSetup: (appLogic) => {
+        appLogic.users.updateUser = updateUser;
+        appLogic.portalFlow.goToNextPage = goToNextPage;
+      },
+    });
+
+    const phoneNumberField = screen.getByLabelText(/Phone number/);
+    userEvent.type(phoneNumberField, "555-555-5555");
+
+    const submitButton = screen.getByRole("button", {
+      name: "Save and continue",
+    });
+
+    await act(async () => await userEvent.click(submitButton));
+
+    expect(goToNextPage).toHaveBeenCalledWith({}, undefined);
   });
 
   it("passes the returnToSettings query param to the next page if it is set", async () => {
@@ -52,6 +68,7 @@ describe("Two-factor SMS Setup", () => {
       {
         addCustomSetup: (appLogic) => {
           appLogic.users.updateUser = updateUser;
+          appLogic.portalFlow.goToNextPage = goToNextPage;
         },
       },
       {
@@ -68,17 +85,11 @@ describe("Two-factor SMS Setup", () => {
 
     await act(async () => await userEvent.click(submitButton));
 
-    expect(updateUser).toHaveBeenCalledWith(
-      expect.any(String),
+    expect(goToNextPage).toHaveBeenCalledWith(
+      {},
       {
-        mfa_phone_number: {
-          int_code: "1",
-          phone_type: "Cell",
-          phone_number: "555-555-5555",
-        },
-      },
-      undefined,
-      { returnToSettings: "true" }
+        returnToSettings: "true",
+      }
     );
   });
 

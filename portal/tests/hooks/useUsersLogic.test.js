@@ -3,7 +3,6 @@ import User, { RoleDescription, UserRole } from "../../src/models/User";
 import { act, renderHook } from "@testing-library/react-hooks";
 import AppErrorInfo from "../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
-import BenefitsApplication from "../../src/models/BenefitsApplication";
 import { NetworkError } from "../../src/errors";
 import UsersApi from "../../src/api/UsersApi";
 import { mockRouter } from "next/router";
@@ -75,61 +74,6 @@ describe("useUsersLogic", () => {
       expect(usersLogic.user).toBeInstanceOf(User);
     });
 
-    it("goes to next page", async () => {
-      await act(async () => {
-        await usersLogic.updateUser(user_id, patchData);
-      });
-
-      expect(mockRouter.push).toHaveBeenCalled();
-    });
-
-    it("goes to custom page if a nextPageEvent is supplied", async () => {
-      const goToNextPage = jest
-        .spyOn(portalFlow, "goToNextPage")
-        .mockImplementationOnce(jest.fn());
-      await act(async () => {
-        await usersLogic.updateUser(
-          user_id,
-          patchData,
-          undefined,
-          undefined,
-          "RETURN_TO_SETTINGS"
-        );
-      });
-
-      expect(goToNextPage).toHaveBeenCalledWith(
-        expect.anything(),
-        expect.anything(),
-        "RETURN_TO_SETTINGS"
-      );
-    });
-
-    it("passes query string arguments to the next page if they are supplied", async () => {
-      await act(async () => {
-        await usersLogic.updateUser(user_id, patchData, undefined, {
-          someArg: "someValue",
-        });
-      });
-
-      expect(mockRouter.push).toHaveBeenCalledWith(
-        expect.stringMatching(/someArg=someValue/)
-      );
-    });
-
-    describe("when the user turns on SMS MFA", () => {
-      const mfaPreferences = { mfa_delivery_preference: "SMS" };
-
-      it("goes to next page with a smsMfaConfirmed query parameter", async () => {
-        await act(async () => {
-          await usersLogic.updateUser(user_id, mfaPreferences);
-        });
-
-        expect(mockRouter.push).toHaveBeenCalledWith(
-          expect.stringMatching(/smsMfaConfirmed=true/)
-        );
-      });
-    });
-
     describe("when errors exist", () => {
       beforeEach(async () => {
         act(() => {
@@ -145,26 +89,6 @@ describe("useUsersLogic", () => {
 
       it("clears errors", () => {
         expect(appErrorsLogic.appErrors.items).toHaveLength(0);
-      });
-    });
-
-    describe("when a claim is passed", () => {
-      const claim = new BenefitsApplication({
-        application_id: "mock-claim-id",
-      });
-
-      it("adds claim to context and a claim_id parameter", async () => {
-        const nextPageSpy = jest.spyOn(portalFlow, "goToNextPage");
-
-        await act(async () => {
-          await usersLogic.updateUser(user_id, patchData, claim);
-        });
-
-        expect(nextPageSpy).toHaveBeenCalledWith(
-          { user: usersLogic.user, claim },
-          expect.objectContaining({ claim_id: claim.application_id }),
-          undefined
-        );
       });
     });
 

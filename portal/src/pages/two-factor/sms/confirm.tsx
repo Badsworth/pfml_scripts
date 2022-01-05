@@ -48,13 +48,12 @@ export const ConfirmSMS = (props: ConfirmSMSProps) => {
     try {
       await verifyMFAPhoneNumber(trimmedCode);
       const nextPage = returnToSettings ? "RETURN_TO_SETTINGS" : undefined;
-      await appLogic.users.updateUser(
-        user.user_id,
-        {
-          mfa_delivery_preference: "SMS",
-        },
-        undefined,
-        undefined,
+      await appLogic.users.updateUser(user.user_id, {
+        mfa_delivery_preference: "SMS",
+      });
+      appLogic.portalFlow.goToNextPage(
+        {},
+        { smsMfaConfirmed: "true" },
         nextPage
       );
     } catch (error) {
