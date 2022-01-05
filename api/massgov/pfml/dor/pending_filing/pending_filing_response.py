@@ -11,7 +11,7 @@ import sys
 import uuid
 from dataclasses import asdict, dataclass
 from datetime import date, datetime
-from typing import Any, Callable, Dict, List, Optional, Sequence, Set, Tuple
+from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
 
 import boto3
 import botocore
@@ -601,8 +601,8 @@ def import_employers(
                 EmployerPushToFineosQueue(
                     employer_id=existing_employer_model.employer_id,
                     action="UPDATE",
-                    family_exemption=existing_employer_model.family_exemption,
-                    medical_exemption=existing_employer_model.medical_exemption,
+                    family_exemption=True,  # These two fields are intentioanlly set to True since
+                    medical_exemption=True,  # these folks are always going from exempt to non-exempt
                     exemption_commence_date=existing_employer_model.exemption_commence_date,
                     exemption_cease_date=get_employer_cease_date(
                         existing_employer_model, exemption_data
@@ -755,98 +755,6 @@ def get_wage_composite_key(
     employer_id: uuid.UUID, employee_id: uuid.UUID, filing_period: date
 ) -> WageKey:
     return employer_id, employee_id, filing_period
-
-
-def log_employees_with_new_employers(
-    db_session: Session,
-    employee_wage_info_list: List,
-    account_key_to_employer_id_map: Dict[str, uuid.UUID],
-    ssn_to_existing_employee_model: Dict[str, Employee],
-    report: ImportReport,
-    import_log_entry_id: int,
-) -> None:
-    logger.info("Check and log employees with new employers")
-
-    # Get existing wages for all existing employees in the current list
-    ssn_to_existing_employee_id = {}
-    for ssn in ssn_to_existing_employee_model:
-        ssn_to_existing_employee_id[ssn] = ssn_to_existing_employee_model[ssn].employee_id
-
-    existing_employee_ids = list(ssn_to_existing_employee_id.values())
-    existing_wages = dor_persistence_util.get_wages_and_contributions_by_employee_ids(
-        db_session, existing_employee_ids
-    )
-
-    # Group existing employer ids by employee id from existing wages
-    employee_id_to_employer_id_set: Dict[uuid.UUID, Set[uuid.UUID]] = {}
-    for existing_wage in existing_wages:
-        employer_id = account_key_to_employer_id_map.get(existing_wage.account_key, None)
-        if employer_id is None:
-            continue
-
-        employee_id = existing_wage.employee_id
-
-        employer_id_set = employee_id_to_employer_id_set.get(employee_id, None)
-        if employer_id_set:
-            employer_id_set.add(employer_id)
-        else:
-            employee_id_to_employer_id_set[employee_id] = {employer_id}
-
-    # Check current list for new employers
-    # Filter current list to existing employees only.
-    # New employees will have an insert log already, so no need to check here.
-    # Note: duplicate entries for the same employer may be created across batches
-    employee_wage_info_for_existing_employees = list(
-        filter(
-            lambda employee_wage_info: employee_wage_info["employee_ssn"]
-            in ssn_to_existing_employee_id,
-            employee_wage_info_list,
-        )
-    )
-
-    push_to_fineos_queue_items_to_create = []
-    already_logged_employee_id_employer_id_tuples = set()
-
-    for employee_wage_info in employee_wage_info_for_existing_employees:
-        account_key = employee_wage_info["account_key"]
-        employee_id = ssn_to_existing_employee_id[employee_wage_info["employee_ssn"]]
-        employer_id = account_key_to_employer_id_map.get(account_key, None)
-
-        if employer_id is None:
-            logger.warning(
-                "Attempted to check an employee wage row for unknown employer: %s",
-                account_key,
-                extra={"account_key": account_key},
-            )
-            continue
-
-        if (employee_id, employer_id) in already_logged_employee_id_employer_id_tuples:
-            continue
-
-        employer_id_set = employee_id_to_employer_id_set.get(employee_id, None)
-        if employer_id_set is None or employer_id not in employer_id_set:
-            push_to_fineos_queue_item = EmployeePushToFineosQueue(
-                employee_id=employee_id, employer_id=employer_id, action="UPDATE_NEW_EMPLOYER",
-            )
-            push_to_fineos_queue_items_to_create.append(push_to_fineos_queue_item)
-            already_logged_employee_id_employer_id_tuples.add((employee_id, employer_id))
-
-    push_to_fineos_queue_items_count = len(push_to_fineos_queue_items_to_create)
-    if push_to_fineos_queue_items_count > 0:
-        logger.info(
-            "Logging employees as updated for new employer: %i", push_to_fineos_queue_items_count,
-        )
-        bulk_save(
-            db_session,
-            push_to_fineos_queue_items_to_create,
-            "Employee Logs (New Employer Update)",
-            commit=True,
-        )
-
-    report.logged_employees_for_new_employer += push_to_fineos_queue_items_count
-    logger.info(
-        "Done - Check and log employees with new employers: %i", push_to_fineos_queue_items_count,
-    )
 
 
 def import_wage_data(
@@ -1080,17 +988,7 @@ def import_employees_and_wage_data(
         import_log_entry_id,
     )
 
-    # 4 - Log new employers for existing employees
-    log_employees_with_new_employers(
-        db_session,
-        employee_and_wage_info_list,
-        account_key_to_employer_id_map,
-        ssn_to_existing_employee_model,
-        report,
-        import_log_entry_id,
-    )
-
-    # 5 - Import wages
+    # 4 - Import wages
     import_wage_data(
         db_session,
         employee_and_wage_info_list,
