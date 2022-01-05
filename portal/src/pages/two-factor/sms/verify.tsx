@@ -8,6 +8,7 @@ import ThrottledButton from "src/components/ThrottledButton";
 import Title from "../../../components/core/Title";
 import { Trans } from "react-i18next";
 import { isFeatureEnabled } from "../../../services/featureFlags";
+import routes from "../../../routes";
 import useFormState from "../../../hooks/useFormState";
 import useFunctionalInputProps from "../../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../../locales/i18n";
@@ -43,6 +44,11 @@ export const VerifySMS = (props: VerifySMSProps) => {
 
   // TODO(PORTAL-1007): Remove claimantShowMFA feature flag
   if (!isFeatureEnabled("claimantShowMFA")) return <PageNotFound />;
+
+  // if there is no Cognito user defined, we cannot log in. Direct them back to login
+  if (!appLogic.auth.cognitoUser && typeof window !== "undefined") {
+    appLogic.portalFlow.goTo(routes.auth.login, {}, { redirect: true });
+  }
 
   return (
     <div>

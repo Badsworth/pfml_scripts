@@ -26,6 +26,21 @@ describe("Two-factor SMS Verify", () => {
     expect(pageNotFoundHeading).toBeInTheDocument();
   });
 
+  it("routes to the login page if the Cognito User is not defined", () => {
+    const mockGoTo = jest.fn();
+    renderPage(
+      VerifySMS,
+      {
+        addCustomSetup: (appLogic) => {
+          appLogic.portalFlow.goTo = mockGoTo;
+        },
+      },
+      { query: { next: "next" } }
+    );
+    // Didn't mock the Cognito user in setup, so we can expect to redirect
+    expect(mockGoTo).toHaveBeenCalledWith("/login", {}, { redirect: true });
+  });
+
   it("sends verification code and updates MFA preference when user saves and continues", async () => {
     const mockVerify = jest.fn();
     renderPage(
