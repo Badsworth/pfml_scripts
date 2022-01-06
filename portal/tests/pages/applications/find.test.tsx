@@ -5,12 +5,14 @@ import userEvent from "@testing-library/user-event";
 
 describe("Find", () => {
   beforeEach(() => {
+    // @ts-expect-error Known issue with format of our env vars
     process.env.featureFlags = {
       channelSwitching: true,
     };
   });
 
   it("renders page not found when feature flag isn't enabled", () => {
+    // @ts-expect-error Known issue with format of our env vars
     process.env.featureFlags = { channelSwitching: false };
     renderPage(Find);
 
