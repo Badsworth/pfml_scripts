@@ -1049,7 +1049,7 @@ const pages = {
       "Do you want to add a phone number to verify it's you when you log in to your account?",
   },
   authTwoFactorSmsSetup: {
-    lead: "Enter a number that can receive text messages and that you'll have consistent access to in case we need to verify your login. We’ll send a 6-digit code by text message (SMS) to secure your account.",
+    lead: "Enter a number that can receive text messages and that you'll have consistent access to. We’ll send a 6-digit code by text message (SMS) to confirm your phone number.",
     phoneNumberLabel: "Phone number",
     saveButton: "$t(shared.saveAndContinue)",
     skipButton: "$t(shared.auth.skip)",
