@@ -6,12 +6,20 @@
 # See: https://help.github.com/en/github/creating-cloning-and-archiving-repositories/about-code-owners#example-of-a-codeowners-file
 # ProTip: https://help.github.com/en/github/setting-up-and-managing-organizations-and-teams/managing-code-review-assignment-for-your-team
 
-/portal/ @EOLWD/pfml-portal
-/docs/portal/ @EOLWD/pfml-portal
-/infra/portal/ @EOLWD/pfml-portal
-/e2e/ @EOLWD/pfml-e2e
+# Commented groups for future scope
 /.github/ @EOLWD/pfml-infra
-
+#/admin/ @EOLWD/pfml-admin-portal
+#/api/ defined below 
+/bin/ @EOLWD/pfml-infra
+#/docs/ open
+/docs/portal/ @EOLWD/pfml-portal
+/e2e/ @EOLWD/pfml-e2e
+#/feature_flags/ open
+/infra/portal/ @EOLWD/pfml-portal @EOLWD/pfml-infra
+/infra/admin-portal/ @EOLWD/pfml-infra @EOLWD/pfml-admin-portal
+#/infra/bi/ @EOLWD/pfml-infra @EOLWD/pfml-business-intel
+#/pdf_api/ @EOLWD/pfml-pdf-api 
+#/portal/ @EOLWD/pfml-portal
 /portal/src/pages/applications/status.js @EOLWD/pfml-acorn-street
 /portal/src/components/ApplicationCard.js @EOLWD/pfml-acorn-street
 
