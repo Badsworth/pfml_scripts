@@ -679,6 +679,12 @@ const errors = {
       format: "Enter a valid email address",
       required: "$t(shared.auth.emailError_required)",
     },
+    mfa_phone_number: {
+      phone_number: {
+        pattern: "Enter a valid phone number",
+        required: "Enter a phone number",
+      },
+    },
     password: {
       insecure: "$t(shared.auth.passwordError_insecure)",
       invalid: "$t(shared.auth.passwordError_invalid)",

@@ -1,15 +1,14 @@
+import { cloneDeep, pick, set } from "lodash";
 import User, { PhoneType } from "src/models/User";
 import { AppLogic } from "../../../hooks/useAppLogic";
-import BackButton from "../../../components/BackButton";
 import InputText from "../../../components/core/InputText";
 import Lead from "../../../components/core/Lead";
 import PageNotFound from "../../../components/PageNotFound";
+import QuestionPage from "../../../components/QuestionPage";
 import React from "react";
-import ThrottledButton from "src/components/ThrottledButton";
 import Title from "../../../components/core/Title";
 import { Trans } from "react-i18next";
 import { isFeatureEnabled } from "../../../services/featureFlags";
-import { pick } from "lodash";
 import useFormState from "../../../hooks/useFormState";
 import useFunctionalInputProps from "../../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../../locales/i18n";
@@ -35,8 +34,12 @@ export const SetupSMS = (props: SetupSMSProps) => {
     phone_number: "",
   });
 
-  const handleSubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
+  const handleSave = async () => {
+    const requestData = cloneDeep(formState);
+
+    // TODO (CP-1455): Add support for international phone numbers
+    set(requestData, "phone.int_code", "1");
+
     await appLogic.users.updateUser(
       props.user.user_id,
       {
@@ -61,8 +64,7 @@ export const SetupSMS = (props: SetupSMSProps) => {
   if (!isFeatureEnabled("claimantShowMFA")) return <PageNotFound />;
 
   return (
-    <form className="usa-form">
-      <BackButton />
+    <QuestionPage onSave={handleSave}>
       <Title>{t("pages.authTwoFactorSmsSetup.title")}</Title>
       <Lead>
         <Trans i18nKey="pages.authTwoFactorSmsSetup.lead" />
@@ -73,14 +75,7 @@ export const SetupSMS = (props: SetupSMSProps) => {
         label={t("pages.authTwoFactorSmsSetup.phoneNumberLabel")}
         smallLabel
       />
-      <ThrottledButton
-        type="submit"
-        onClick={handleSubmit}
-        className="display-block"
-      >
-        {t("pages.authTwoFactorSmsSetup.saveButton")}
-      </ThrottledButton>
-    </form>
+    </QuestionPage>
   );
 };
 
