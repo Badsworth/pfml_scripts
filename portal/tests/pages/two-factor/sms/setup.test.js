@@ -93,6 +93,7 @@ describe("Two-factor SMS Setup", () => {
     expect(pageNotFoundHeading).toBeInTheDocument();
   });
 
+  // TODO: These errors will never happen because they're provided by the backend
   it("shows appropriate error when no phone number entered", async () => {
     renderPage(SetupSMS, {
       addCustomSetup: (appLogic) => {
@@ -115,6 +116,7 @@ describe("Two-factor SMS Setup", () => {
     expect(screen.queryByText(error_text)).toBeInTheDocument();
   });
 
+  // TODO: These errors will never happen because they're provided by the backend
   it("shows appropriate error when wrong number of digits entered", async () => {
     renderPage(SetupSMS, {
       addCustomSetup: (appLogic) => {
@@ -141,6 +143,7 @@ describe("Two-factor SMS Setup", () => {
     expect(screen.queryByText(error_text)).toBeInTheDocument();
   });
 
+  // TODO: These errors will never happen because they're provided by the backend
   it("shows appropriate error when international number entered", async () => {
     renderPage(SetupSMS, {
       addCustomSetup: (appLogic) => {
