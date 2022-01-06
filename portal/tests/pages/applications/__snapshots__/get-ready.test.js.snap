@@ -313,7 +313,7 @@ exports[`GetReady displays success alert when user sets up SMS MFA 1`] = `
     <div
       class="usa-alert__text"
     >
-      To protect your security, we'll send you a 6-digit code whenever we need to verify it's really you.
+      To protect your security, we'll send you a 6-digit code when you log in to verify it's really you.
     </div>
   </div>
 </div>
