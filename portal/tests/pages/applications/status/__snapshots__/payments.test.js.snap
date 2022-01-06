@@ -243,7 +243,7 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
         >
           other leave, income and benefits
         </a>
-         you reported. You will receive another notice in the mail if we reduce your benefit amount.
+         you reported. You will receive another notice if we reduce your benefit amount for any reason other than tax withholding. Please note that you can not change your tax withholding status at this point, since your application has been approved.
       </p>
       <p>
         <strong>
@@ -259,6 +259,12 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
         </li>
         <li>
           You receive a payment for a pay period less than a full week
+        </li>
+        <li>
+          You elected to have taxes withheld
+        </li>
+        <li>
+          You received an overpayment
         </li>
       </ul>
     </div>
