@@ -277,7 +277,7 @@ exports[`GetReady displays different copy when tax withholding is enabled 1`] = 
     <p>
       The maximum benefit a person can receive per week is $1084. Learn more about 
       <a
-        href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#benefit-amount-details-"
+        href="https://www.mass.gov/how-much-will-i-get-paid"
         rel="noopener"
         target="_blank"
       >
@@ -588,7 +588,7 @@ exports[`GetReady renders get ready content 1`] = `
     <p>
       The maximum benefit a person can receive per week is $1084. Learn more about 
       <a
-        href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#benefit-amount-details-"
+        href="https://www.mass.gov/how-much-will-i-get-paid"
         rel="noopener"
         target="_blank"
       >

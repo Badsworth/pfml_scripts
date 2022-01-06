@@ -1281,7 +1281,7 @@ const pages = {
       "I won’t receive employer-sponsored benefits, I've applied but it hasn't been approved, or I don’t know the benefit amount yet",
     choiceYes: "$t(shared.choiceYes)",
     choiceYesHint:
-      "I will recieve employer-sponsored benefits during my paid leave",
+      "I will receive employer-sponsored benefits during my paid leave",
     doNotReportHintHeading: "You don’t need to report:",
     doNotReportHintList: [
       "Benefits from any other employers",
@@ -1576,7 +1576,7 @@ const pages = {
       "I won't receive other income from the above sources during my paid leave,  I've applied but it hasn't been approved, or I don’t know the income amount yet",
     choiceYes: "$t(shared.choiceYes)",
     choiceYesHint:
-      "I will recieve other income from other sources during my paid leave",
+      "I will receive other income from other sources during my paid leave",
     doNotReportHintHeading: "You don't need to report:",
     doNotReportHintList:
       "<ul><li>Other income that you've applied for but are not yet receiving</li><li>Income from past PFML benefits</li><li>Income received through a bonus, like a holiday bonus or an annual sum paid out at the end of the year</li></ul>",

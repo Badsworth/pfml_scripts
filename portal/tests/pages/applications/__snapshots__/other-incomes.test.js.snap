@@ -160,7 +160,7 @@ exports[`OtherIncomes renders the page 1`] = `
             class="usa-hint text-base-dark"
           >
             <br />
-            I will recieve other income from other sources during my paid leave
+            I will receive other income from other sources during my paid leave
           </span>
         </label>
       </div>
