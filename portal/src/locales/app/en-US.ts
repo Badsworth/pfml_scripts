@@ -2694,10 +2694,10 @@ const pages = {
   },
   userSettings: {
     accountInformationHeading: "Account information",
-    addPhoneNumberButtonText: "Add phone number",
+    addPhoneNumberButtonText: "Add additional verification",
     additionalVerificationHeading: "Additional login verification",
     additionalVerificationNoMfaText:
-      "<p>Make your account more secure by providing a phone number to associate with your account. We'll send you a 6-digit code whenever we need to verify it's really you. You’ll need to enter the code in order to log in to your account. In the future, you’ll also be able to access sensitive information like tax documents once you set this up.</p><p>You will need to provide a phone number that can receive text messages (SMS) and that you’ll have consistent access to in case we need to verify your login.</p><p><strong>Additional login verification is not enabled</strong></p>",
+      "<p>Make your account more secure by providing a phone number to associate with your account. We'll send you a 6-digit code whenever we need to verify it's really you. You’ll need to enter the code in order to log in to your account. In the future, you’ll also be able to access sensitive information like tax documents (when available) once you set this up.</p><p>You will need to provide a phone number that can receive text messages (SMS) and that you’ll have consistent access to in case we need to verify your login.</p><p><strong>Additional login verification is not enabled</strong></p>",
     additionalVerificationWithMfaText:
       "To protect your security, we'll send you a 6-digit code whenever we need to verify it's really you. You’ll need to enter the code in order to log in to your account.",
     backToApplicationsLinkText: "Back to applications",
