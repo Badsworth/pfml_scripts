@@ -15,6 +15,7 @@ from massgov.pfml.db.models.employees import (
     State,
 )
 from massgov.pfml.db.models.payments import FineosWritebackTransactionStatus
+from massgov.pfml.delegated_payments.delegated_payments_util import get_traceable_payment_details
 from massgov.pfml.delegated_payments.step import Step
 from massgov.pfml.delegated_payments.util.fineos_writeback_util import (
     stage_payment_fineos_writeback,
@@ -73,6 +74,9 @@ class AddressValidationStep(Step):
 
         payments = _get_payments_awaiting_address_validation(self.db_session)
         for payment in payments:
+            logger.info(
+                "Doing address validation for payment", extra=get_traceable_payment_details(payment)
+            )
             self._validate_address_for_payment(payment, experian_soap_client)
             self.increment(self.Metrics.VALIDATED_ADDRESS_COUNT)
 
@@ -96,6 +100,10 @@ class AddressValidationStep(Step):
                 db_session=self.db_session,
             )
             self.increment(self.Metrics.PREVIOUSLY_VALIDATED_MATCH_COUNT)
+            logger.info(
+                "Address previously validated for payment, skipping Experian call",
+                extra=get_traceable_payment_details(payment, Constants.SUCCESS_STATE),
+            )
 
             return None
 
@@ -208,6 +216,11 @@ class AddressValidationStep(Step):
                 # Update the message to mention that for EFT we do not
                 # require the address to be valid.
                 message += " but not required for EFT payment"
+
+                logger.info(
+                    "EFT Payment has an invalid address, but address is not required for EFT",
+                    extra=get_traceable_payment_details(payment),
+                )
             end_state = Constants.SUCCESS_STATE
 
         outcome = _outcome_for_search_result(address_validation_result, message, address)
@@ -225,6 +238,15 @@ class AddressValidationStep(Step):
                 outcome=outcome,
                 db_session=self.db_session,
                 import_log_id=self.get_import_log_id(),
+            )
+            logger.info(
+                "Payment failed address validation",
+                extra=get_traceable_payment_details(payment, Constants.ERROR_STATE),
+            )
+        else:
+            logger.info(
+                "Payment passed address validation",
+                extra=get_traceable_payment_details(payment, Constants.SUCCESS_STATE),
             )
 
 

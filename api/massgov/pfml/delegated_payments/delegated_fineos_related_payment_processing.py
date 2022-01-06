@@ -61,8 +61,13 @@ class RelatedPaymentsProcessingStep(Step):
                 .all()
             )
 
+            payment_log_details = payments_util.get_traceable_payment_details(payment)
             if len(primary_payment_records) > 1:
-                logger.info("Duplicate records exists for %s", payment.claim.fineos_absence_id)
+                logger.info(
+                    "Duplicate primary records exist for related payment %s",
+                    payment.claim.fineos_absence_id,
+                    extra=payment_log_details,
+                )
 
                 end_state = (
                     State.STATE_WITHHOLDING_ORPHANED_PENDING_AUDIT
@@ -81,12 +86,16 @@ class RelatedPaymentsProcessingStep(Step):
                     db_session=self.db_session,
                 )
                 logger.info(
-                    "Payment added to state %s", end_state.state_description,
+                    "Payment added to state %s",
+                    end_state.state_description,
+                    extra=payment_log_details,
                 )
                 message = "Duplicate primary payment records found for the withholding record."
             elif len(primary_payment_records) == 0:
                 logger.info(
-                    "No primary payment record exists for %s", payment.claim.fineos_absence_id
+                    "No primary payment record exists for related payment %s",
+                    payment.claim.fineos_absence_id,
+                    extra=payment_log_details,
                 )
 
                 end_state = (
@@ -106,7 +115,9 @@ class RelatedPaymentsProcessingStep(Step):
                     db_session=self.db_session,
                 )
                 logger.info(
-                    "Payment added to state %s", end_state.state_description,
+                    "Payment added to state %s",
+                    end_state.state_description,
+                    extra=payment_log_details,
                 )
                 message = "No primary payment record found for the withholding record."
             else:
@@ -127,6 +138,7 @@ class RelatedPaymentsProcessingStep(Step):
                     "Added related payment to link_payment: Primary payment id %s , Related Payment Id %s",
                     payment_id,
                     related_payment_id,
+                    extra=payment_log_details,
                 )
 
                 #  If primary payment is has any validation error set withholidng state to error
@@ -175,7 +187,9 @@ class RelatedPaymentsProcessingStep(Step):
                         db_session=self.db_session,
                     )
                     logger.info(
-                        "Payment added to state %s", end_state.state_description,
+                        "Payment added to state %s",
+                        end_state.state_description,
+                        extra=payment_log_details,
                     )
 
                     transaction_status: Optional[

@@ -348,6 +348,7 @@ def extra_for_log(
     check_payment: check_return.CheckPayment, payment: Payment
 ) -> Dict[str, Union[None, int, str]]:
     return {
+        **delegated_payments_util.get_traceable_payment_details(payment),
         "absence_case_id": payment.claim.fineos_absence_id if payment.claim else None,
         "payments.check.line_number": check_payment.line_number,
         "payments.check.check_number": check_payment.check_number,

@@ -111,6 +111,12 @@ class PaymentAuditReportStep(Step):
                 state_log_util.build_outcome("Add to Payment Audit Report"),
                 self.db_session,
             )
+            logger.info(
+                "Sampled payment into the audit report",
+                extra=payments_util.get_traceable_payment_details(
+                    payment, State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_AUDIT_REPORT
+                ),
+            )
 
             payments.append(payment)
             self.increment(self.Metrics.PAYMENT_SAMPLED_FOR_AUDIT_COUNT)
@@ -145,6 +151,13 @@ class PaymentAuditReportStep(Step):
                 state_log_util.build_outcome("Payment Audit Report sent"),
                 self.db_session,
             )
+            logger.info(
+                "Adding payment to the audit report",
+                extra=payments_util.get_traceable_payment_details(
+                    payment, State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_AUDIT_REPORT
+                ),
+            )
+
             if payments_util.is_withholding_payments_enabled():
                 if (
                     payment.payment_transaction_type_id

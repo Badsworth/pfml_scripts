@@ -288,8 +288,10 @@ class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
         )
         if payment_state_log is None:
             end_state_id = None
+            end_state = None
         else:
             end_state_id = payment_state_log.end_state_id
+            end_state = payment_state_log.end_state
 
         if end_state_id == State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT.state_id:
             # Expected normal state for an ACH returned payment.
@@ -310,8 +312,7 @@ class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
                 "ACH Return: Payment bank processing error",
                 extra={
                     **ach_return.get_details_for_log(),
-                    "payments.payment_id": payment.payment_id,
-                    "payments.state": end_state_id,
+                    **delegated_payments_util.get_traceable_payment_details(payment, end_state),
                 },
             )
             self.increment(self.Metrics.PAYMENT_REJECTED_COUNT)
@@ -331,8 +332,7 @@ class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
                 "payment already in a bank processing error state",
                 extra={
                     **ach_return.get_details_for_log(),
-                    "payments.payment_id": payment.payment_id,
-                    "payments.state": end_state_id,
+                    **delegated_payments_util.get_traceable_payment_details(payment, end_state),
                 },
             )
             self.increment(self.Metrics.PAYMENT_ALREADY_REJECTED_COUNT)
@@ -340,8 +340,7 @@ class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
             # The latest state for this payment is not compatible with receiving an ACH return.
             details = {
                 **ach_return.get_details_for_log(),
-                "payments.payment_id": payment.payment_id,
-                "payments.state": end_state_id,
+                **delegated_payments_util.get_traceable_payment_details(payment, end_state),
             }
 
             logger.error(
@@ -368,8 +367,10 @@ class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
         )
         if payment_state_log is None:
             end_state_id = None
+            end_state = None
         else:
             end_state_id = payment_state_log.end_state_id
+            end_state = payment_state_log.end_state
 
         if end_state_id == State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT.state_id:
             # Expected normal state for an ACH change notification payment.
@@ -407,9 +408,8 @@ class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
             logger.info(
                 "payment already in DELEGATED_PAYMENT_COMPLETE_WITH_CHANGE_NOTIFICATION state",
                 extra={
-                    "payments.ach.id_number": change_notification.id_number,
-                    "payments.state": end_state_id,
-                    "payments.payment_id": payment.payment_id,
+                    **change_notification.get_details_for_log(),
+                    **delegated_payments_util.get_traceable_payment_details(payment, end_state),
                 },
             )
             self.increment(self.Metrics.PAYMENT_ALREADY_COMPLETE_COUNT)
@@ -418,7 +418,7 @@ class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
             # notification.
             details = {
                 **change_notification.get_details_for_log(),
-                "payments.state": end_state_id,
+                **delegated_payments_util.get_traceable_payment_details(payment, end_state),
             }
 
             logger.error(

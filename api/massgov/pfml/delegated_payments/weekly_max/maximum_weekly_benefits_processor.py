@@ -2,6 +2,7 @@ from datetime import date, timedelta
 from decimal import Decimal
 from typing import Dict, List, Optional, cast
 
+import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.logging
 from massgov.pfml.db.models.applications import BenefitsMetrics
 from massgov.pfml.db.models.employees import Claim, Employee, PaymentDetails
@@ -302,6 +303,7 @@ class MaximumWeeklyBenefitsStepProcessor(AbstractStepProcessor):
             logger.warning(
                 "Payment details for payment %s missing.",
                 make_payment_log(payment_container.payment),
+                extra=payments_util.get_traceable_payment_details(payment_container.payment),
             )
 
             if validate_payment_details:
