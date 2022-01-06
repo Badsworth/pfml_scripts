@@ -683,6 +683,14 @@ const errors = {
       format: "Enter a valid email address",
       required: "$t(shared.auth.emailError_required)",
     },
+    mfa_phone_number: {
+      phone_number: {
+        // TODO add backend throw: international_number: "Sorry, we don't support international phone numbers yet. Enter a U.S. phone number to set up additional login verifications.",
+        // TODO add backend throw: required: "Enter a phone number",
+        // TODO does this happen: invalid_phone_number: "Enter a valid phone number",
+        pattern: "Enter a valid phone number", // Checks that there are 10 digits
+      },
+    },
     password: {
       insecure: "$t(shared.auth.passwordError_insecure)",
       invalid: "$t(shared.auth.passwordError_invalid)",
