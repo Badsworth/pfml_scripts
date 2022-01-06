@@ -580,6 +580,11 @@ paths:
         - Applications
       summary: Retrieve all Applications for the specified user
       operationId: massgov.pfml.api.applications.applications_get
+      parameters:
+        - $ref: "#/components/parameters/pageSize"
+        - $ref: "#/components/parameters/pageOffset"
+        - $ref: "#/components/parameters/orderBy"
+        - $ref: "#/components/parameters/orderDirection"
       responses:
         "200":
           $ref: "#/components/responses/ApplicationSearchResponse"
