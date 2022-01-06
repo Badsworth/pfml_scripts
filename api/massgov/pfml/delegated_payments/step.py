@@ -2,6 +2,7 @@ import abc
 import collections
 import enum
 import uuid
+from datetime import datetime
 from typing import Any, Dict, Optional, Set
 
 import massgov.pfml.api.util.state_log_util as state_log_util
@@ -14,7 +15,8 @@ from massgov.pfml.db.models.employees import (
     PaymentReferenceFile,
     ReferenceFile,
 )
-from massgov.pfml.util.batch.log import LogEntry
+from massgov.pfml.util.batch.log import LogEntry, latest_import_log_for_metric
+from massgov.pfml.util.datetime.business_day import BusinessDay
 
 logger = logging.get_logger(__name__)
 
@@ -147,6 +149,29 @@ class Step(abc.ABC, metaclass=abc.ABCMeta):
             employee=employee, reference_file=reference_file,
         )
         self.db_session.add(employee_reference_file)
+
+    @classmethod
+    def check_if_processed_within_x_days(
+        cls, db_session: db.Session, metric: str, business_days: int
+    ) -> bool:
+        import_type = cls.__name__
+        found_import_log = latest_import_log_for_metric(
+            db_session=db_session, import_type=import_type, metric=metric
+        )
+
+        if found_import_log is None:
+            logger.error(f"No data was found for step {cls.__name__} with results for {metric}.")
+        else:
+            business_day = BusinessDay(found_import_log.created_at)
+            days = business_day.days_between(datetime.utcnow())
+            if days <= business_days:
+                return True
+
+            logger.error(
+                f"Last time processing step {cls.__name__} with results for {metric} was greater than {business_days} days.",
+                extra={"import_log_created_at": found_import_log.created_at},
+            )
+        return False
 
 
 def calculate_state_log_count_diff(

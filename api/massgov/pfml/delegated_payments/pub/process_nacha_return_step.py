@@ -62,6 +62,7 @@ class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
         PAYMENT_UNEXPECTED_STATE_COUNT = "payment_unexpected_state_count"
         UNKNOWN_ID_FORMAT_COUNT = "unknown_id_format_count"
         WARNING_COUNT = "warning_count"
+        PROCESSED_ACH_FILE = "processed_ach_file"
 
     def __init__(
         self, db_session: massgov.pfml.db.Session, log_entry_db_session: massgov.pfml.db.Session,
@@ -99,6 +100,7 @@ class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
     def process_stream(self, stream: TextIO) -> None:
         ach_reader = reader.ACHReader(stream)
         self.process_parsed(ach_reader)
+        self.increment(self.Metrics.PROCESSED_ACH_FILE)
 
     def process_parsed(self, ach_reader: reader.ACHReader) -> None:
         for warning in ach_reader.get_warnings():

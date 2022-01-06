@@ -64,6 +64,8 @@ class ProcessCheckReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
         PAYMENT_ALREADY_FAILED_BY_CHECK = "payment_already_failed_by_check"
         PAYMENT_SWITCHING_ERROR_TO_SUCCESS = "payment_switching_error_to_success"
         PAYMENT_SWITCHING_SUCCESS_TO_ERROR = "payment_switching_success_to_error"
+        PROCESSED_CHECKS_PAID_FILE = "processed_checks_paid_file"
+        PROCESSED_CHECKS_OUTSTANDING_FILE = "processed_checks_outstanding_file"
 
     def __init__(
         self,
@@ -117,6 +119,11 @@ class ProcessCheckReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
             )
 
         self.process_check_payments(check_reader.get_check_payments())
+
+        if check_reader.is_outstanding_issues:
+            self.increment(self.Metrics.PROCESSED_CHECKS_OUTSTANDING_FILE)
+        elif check_reader.is_paid_checks:
+            self.increment(self.Metrics.PROCESSED_CHECKS_PAID_FILE)
 
     def process_check_payments(self, check_payments: Sequence[check_return.CheckPayment]) -> None:
         """Process each check payment record."""
