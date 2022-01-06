@@ -66,7 +66,7 @@
     "PORTAL_USERNAME": "zanson+pfml+default@lastcallmedia.com",
     "FINEOS_USERNAME": "CONTENT",
     "COGNITO_POOL": "us-east-1_oxOGrdAe8",
-    "COGNITO_CLIENTID": "16oll6nm4ifkik83b7c3s2a0ro",
+    "COGNITO_CLIENTID": "3dgp7vtcdt7bo0utlp2tqit1ee",
     "EMPLOYEES_FILE": "./employees/e2e-2022-01-03.json",
     "EMPLOYERS_FILE": "./employers/e2e-2022-01-03.json",
     "DOR_IMPORT_URI": "s3://massgov-pfml-trn2-agency-transfer/dor/received/",
