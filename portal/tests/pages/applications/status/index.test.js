@@ -320,7 +320,8 @@ describe("Status", () => {
           },
         }
       );
-      expect(screen.getByRole("region")).toBeInTheDocument();
+
+      expect(screen.getByRole("region")).toMatchSnapshot();
       expect(
         screen.getByRole("heading", {
           name: "You've successfully submitted your proof of birth documents",

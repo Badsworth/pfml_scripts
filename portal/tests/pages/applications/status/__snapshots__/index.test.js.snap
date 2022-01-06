@@ -628,6 +628,31 @@ exports[`Status renders the page with claim detail when there is absence_case_id
 </div>
 `;
 
+exports[`Status success alert renders success alert when document type param is given 1`] = `
+<div
+  aria-labelledby="alert-heading7"
+  class="usa-alert usa-alert--success"
+  role="region"
+  tabindex="-1"
+>
+  <div
+    class="usa-alert__body"
+  >
+    <h2
+      class="usa-alert__heading font-heading-md text-bold"
+      id="alert-heading7"
+    >
+      You've successfully submitted your proof of birth documents
+    </h2>
+    <div
+      class="usa-alert__text"
+    >
+      Our Contact Center staff will review your documents for mock-absence-case-id.
+    </div>
+  </div>
+</div>
+`;
+
 exports[`Status timeline is displayed if there is a pending absence period 1`] = `
 <div
   class="border-bottom border-base-lighter padding-y-4"
