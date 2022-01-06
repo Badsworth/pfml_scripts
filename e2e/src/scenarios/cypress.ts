@@ -263,7 +263,10 @@ export const ORGUNIT: ScenarioSpecification = {
       MASSID: {},
       CARING: {},
     },
-    metadata: { orgunit: "Division of Administrative Law Appeals" },
+    metadata: {
+      orgunits: "Division of Administrative Law Appeals",
+      worksite: "Holistic Synergize Deliverables and Sons",
+    },
   },
 };
 
