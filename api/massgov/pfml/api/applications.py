@@ -1,6 +1,5 @@
 import base64
 import tempfile
-from typing import Any, Dict
 from uuid import UUID
 
 import connexion
@@ -572,20 +571,11 @@ def document_upload(application_id, body, file):
             ):
                 # tempfile.SpooledTemporaryFile writes the compressed file in-memory
                 with tempfile.SpooledTemporaryFile(mode="wb+") as compressed_file:
-                    previous_file_size = file_size
                     file_size = pdf_util.compress_pdf(file, compressed_file)
                     file_name = f"Compressed_{file_name}"
 
                     compressed_file.seek(0)
                     file_content = compressed_file.read()
-
-                    log_attrs: Dict[str, Any] = {
-                        **get_application_log_attributes(existing_application),
-                        **pdf_util.pdf_compression_attrs(previous_file_size, file_size),
-                    }
-                    logger.info(
-                        "document_upload - PDF compressed", extra={**log_attrs,},
-                    )
 
             # Validate file size, regardless of processing
             validate_file_size(file_size)
