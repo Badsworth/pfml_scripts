@@ -14,6 +14,7 @@ import useFormState from "../../../hooks/useFormState";
 import useFunctionalInputProps from "../../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../../locales/i18n";
 import withUser from "../../../hoc/withUser";
+import { ValidationError } from "../../../errors";
 
 interface SetupSMSProps {
   appLogic: AppLogic;
@@ -35,8 +36,37 @@ export const SetupSMS = (props: SetupSMSProps) => {
     phone_number: "",
   });
 
+  const showPhoneNumberError = (appLogic: AppLogic, type: string) => {
+    const validation_issue = {
+      field: "mfa_phone_number.phone_number",
+      type,
+    };
+    appLogic.catchError(new ValidationError([validation_issue], "users"));
+  };
+  const showNoNumberEnteredError = (appLogic: AppLogic) =>
+    showPhoneNumberError(appLogic, "required");
+  const showInternationalNumberError = (appLogic: AppLogic) =>
+    showPhoneNumberError(appLogic, "international_number");
+
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+    appLogic.clearErrors();
+
+    //Front-end validation to handle missing phone number
+    if (formState.phone_number === "") {
+      showNoNumberEnteredError(appLogic);
+      return;
+    }
+
+    // Front-end validation: Assume long numbers that don't start with 1 are international
+    if (
+      formState.phone_number.length > 11 &&
+      formState.phone_number[0] !== "1"
+    ) {
+      showInternationalNumberError(appLogic);
+      return;
+    }
+
     await appLogic.users.updateUser(props.user.user_id, {
       mfa_phone_number: {
         int_code: "1",
