@@ -40,28 +40,15 @@ const useUsersLogic = ({
   ) => {
     appErrorsLogic.clearErrors();
 
-    const { mfa_delivery_preference, mfa_phone_number } = patchData;
-
-    if (mfa_delivery_preference) {
-      try {
-        await setMFAPreference(mfa_delivery_preference);
-      } catch (error) {
-        appErrorsLogic.catchError(error);
-        return;
-      }
-    }
-
-    if (mfa_phone_number?.phone_number) {
-      try {
-        await updateMFAPhoneNumber(mfa_phone_number.phone_number);
-      } catch (error) {
-        appErrorsLogic.catchError(error);
-        return;
-      }
-    }
-
     try {
+      // Try updating the user first to get validation errors
       const { user } = await usersApi.updateUser(user_id, patchData);
+      const { mfa_delivery_preference, mfa_phone_number } = patchData;
+      // Then update Cognito
+      if (mfa_delivery_preference)
+        await setMFAPreference(mfa_delivery_preference);
+      if (mfa_phone_number?.phone_number)
+        await updateMFAPhoneNumber(mfa_phone_number.phone_number);
       setUser(user);
 
       const context = claim ? { claim, user } : { user };
