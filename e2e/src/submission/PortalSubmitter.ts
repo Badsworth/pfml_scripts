@@ -85,6 +85,15 @@ export default class PortalSubmitter {
     );
 
     const { fineos_absence_id, first_name, last_name } = submitResponseData;
+
+    if (claim.documents.length < 2)
+      return {
+        fineos_absence_id: fineos_absence_id,
+        application_id: application_id,
+        first_name: first_name,
+        last_name: last_name,
+      };
+
     await this.uploadDocuments(application_id, claim.documents, options);
     await this.uploadPaymentPreference(
       application_id,

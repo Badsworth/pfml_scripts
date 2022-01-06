@@ -46,6 +46,7 @@ export const TRNA: ScenarioSpecification = {
       // MASSID: {},
       // HCP: {},
     },
+    is_withholding_tax: true,
     metadata: {
       postSubmit: "DENY",
       // include leave description here
@@ -64,6 +65,7 @@ export const TRNB: ScenarioSpecification = {
     work_pattern_spec: "standard",
     reduced_leave_spec: "0,240,240,240,240,240,0",
     leave_dates: () => generateRandomLeave(),
+    is_withholding_tax: true,
     docs: {
       MASSID: { invalid: false },
       HCP: { invalid: true },
@@ -108,6 +110,7 @@ export const TRND: ScenarioSpecification = {
       hours_worked_per_week: 40,
       employer_decision: "Approve",
     },
+    is_withholding_tax: true,
     metadata: {
       postSubmit: "APPROVE",
       leaveDescription: FIRST_OF_MONTH_START_MAX_LEAVE_DESCRIPTION,
@@ -131,6 +134,7 @@ export const TRNG: ScenarioSpecification = {
       hours_worked_per_week: 40,
       employer_decision: "Approve",
     },
+    is_withholding_tax: true,
     metadata: {
       postSubmit: "APPROVEDOCSEROPEN",
       leaveDescription: GENERATE_LEAVE_DATES_DESCRIPTION,
@@ -170,6 +174,7 @@ export const TRNH: ScenarioSpecification = {
       MASSID: {},
       HCP: {},
     },
+    is_withholding_tax: true,
     metadata: {
       leaveDescription: GENERATE_LEAVE_DATES_DESCRIPTION,
       quantity: 300,
@@ -214,6 +219,7 @@ export const TRNL: ScenarioSpecification = {
       hours_worked_per_week: 40,
       employer_decision: "Approve",
     },
+    is_withholding_tax: true,
     metadata: {
       postSubmit: "APPROVEDOCSEROPEN",
       leaveDescription: GENERATE_LEAVE_DATES_DESCRIPTION,
@@ -251,6 +257,7 @@ export const TRNO: ScenarioSpecification = {
       MASSID: {},
       HCP: {},
     },
+    is_withholding_tax: true,
     employerResponse: {
       hours_worked_per_week: 40,
       employer_decision: "Approve",
@@ -303,6 +310,7 @@ export const TRNQ: ScenarioSpecification = {
       hours_worked_per_week: 40,
       employer_decision: "Approve",
     },
+    is_withholding_tax: true,
     metadata: {
       postSubmit: "APPROVE",
       leaveDescription: FIRST_OF_MONTH_START_MAX_LEAVE_DESCRIPTION,
@@ -336,6 +344,7 @@ export const TRNS: ScenarioSpecification = {
     label: "TRNS",
     reason: "Child Bonding",
     reason_qualifier: "Foster Care",
+    is_withholding_tax: true,
     docs: {
       // MASSID: {},
       // FOSTERPLACEMENT: {},
@@ -402,6 +411,7 @@ export const TRNX: ScenarioSpecification = {
     label: "TRNX",
     reason: "Child Bonding",
     reason_qualifier: "Foster Care",
+    is_withholding_tax: true,
     docs: {
       MASSID: {},
       FOSTERPLACEMENT: {},
@@ -421,6 +431,7 @@ export const TRNY: ScenarioSpecification = {
     label: "TRNY",
     reason: "Child Bonding",
     reason_qualifier: "Foster Care",
+    is_withholding_tax: true,
     docs: {
       MASSID: {},
       FOSTERPLACEMENT: {},
@@ -439,6 +450,7 @@ export const TRNZ: ScenarioSpecification = {
     label: "TRNZ",
     reason: "Child Bonding",
     reason_qualifier: "Foster Care",
+    is_withholding_tax: true,
     reduced_leave_spec: "0,240,240,240,240,240,0",
     docs: {
       MASSID: {},
@@ -488,6 +500,7 @@ export const TRNAC: ScenarioSpecification = {
     reason: "Child Bonding",
     reason_qualifier: "Foster Care",
     reduced_leave_spec: "0,240,240,240,240,240,0",
+    is_withholding_tax: true,
     docs: {
       MASSID: {},
       FOSTERPLACEMENT: {},
@@ -511,7 +524,7 @@ export const TRNAD: ScenarioSpecification = {
     pregnant_or_recent_birth: true,
     docs: {
       MASSID: {},
-      PREGNANCY_MATERNITY_FORM: {},
+      HCP: {},
     },
     employerResponse: {
       hours_worked_per_week: 40,
@@ -536,7 +549,7 @@ export const TRNAE: ScenarioSpecification = {
     pregnant_or_recent_birth: true,
     docs: {
       MASSID: {},
-      PREGNANCY_MATERNITY_FORM: {},
+      HCP: {},
     },
     employerResponse: {
       hours_worked_per_week: 40,
@@ -555,6 +568,7 @@ export const TRNAF: ScenarioSpecification = {
   claim: {
     label: "TRNAF",
     reason: "Care for a Family Member",
+    is_withholding_tax: true,
     work_pattern_spec: "standard",
     leave_dates: () => generateRandomLeave(),
     docs: {
@@ -573,6 +587,7 @@ export const TRNAG: ScenarioSpecification = {
   claim: {
     label: "TRNAG",
     reason: "Care for a Family Member",
+    is_withholding_tax: true,
     work_pattern_spec: "standard",
     docs: {
       MASSID: {},
@@ -596,6 +611,7 @@ export const TRNAJ: ScenarioSpecification = {
   claim: {
     label: "TRNAJ",
     reason: "Care for a Family Member",
+    is_withholding_tax: true,
     has_continuous_leave_periods: true,
     leave_dates: () => generateRandomLeave(),
     docs: {
@@ -619,6 +635,7 @@ export const TRNAK: ScenarioSpecification = {
   claim: {
     label: "TRNAK",
     reason: "Care for a Family Member",
+    is_withholding_tax: true,
     has_continuous_leave_periods: true,
     leave_dates: () => generateRandomLeave(),
     docs: {
@@ -678,6 +695,7 @@ export const TRNAO: ScenarioSpecification = {
   claim: {
     label: "TRNAO",
     reason: "Care for a Family Member",
+    is_withholding_tax: true,
     reduced_leave_spec: "0,240,240,240,240,240,0",
     leave_dates: () => generateRandomLeave(),
     docs: {
@@ -702,6 +720,7 @@ export const TRNAP: ScenarioSpecification = {
     label: "TRNAP",
     reason: "Care for a Family Member",
     reduced_leave_spec: "0,240,240,240,240,240,0",
+    is_withholding_tax: true,
     leave_dates: () => generateRandomLeave(),
     docs: {
       MASSID: {},
@@ -823,6 +842,7 @@ export const TRNOI2: ScenarioSpecification = {
     reason: "Serious Health Condition - Employee",
     work_pattern_spec: "standard",
     leave_dates: [parseISO("2022-01-15"), parseISO("2022-02-14")],
+    is_withholding_tax: true,
     docs: {
       MASSID: {},
       HCP: {},
@@ -837,7 +857,7 @@ export const TRNOI2: ScenarioSpecification = {
       {
         benefit_type: "Short-term disability insurance",
         benefit_start_date: "2022-01-15",
-        benefit_end_date: "2023-01-31",
+        benefit_end_date: "2022-01-31",
         benefit_amount_dollars: 100,
         benefit_amount_frequency: "Per Week",
         is_full_salary_continuous: false,
@@ -856,7 +876,8 @@ export const TRNOI3: ScenarioSpecification = {
     label: "TRNOI3",
     reason: "Pregnancy/Maternity",
     work_pattern_spec: "standard",
-    leave_dates: [parseISO("2021-02-14"), parseISO("2021-04-15")],
+    is_withholding_tax: true,
+    leave_dates: [parseISO("2022-02-14"), parseISO("2022-04-15")],
     docs: {
       MASSID: {},
       PREGNANCY_MATERNITY_FORM: {},
@@ -894,6 +915,7 @@ export const TRNOI4: ScenarioSpecification = {
       MASSID: {},
       PREGNANCY_MATERNITY_FORM: {},
     },
+    is_withholding_tax: true,
     employerResponse: {
       has_amendments: false,
       fraud: "No",
@@ -928,6 +950,7 @@ export const TRNOL1: ScenarioSpecification = {
       MASSID: {},
       HCP: {},
     },
+    is_withholding_tax: true,
     employerResponse: {
       has_amendments: false,
       fraud: "No",
@@ -958,7 +981,7 @@ export const TRNOL2: ScenarioSpecification = {
     label: "TRNOL2",
     reason: "Serious Health Condition - Employee",
     work_pattern_spec: "standard",
-    leave_dates: [parseISO("2021-02-14"), parseISO("2022-04-15")],
+    leave_dates: [parseISO("2022-02-14"), parseISO("2022-04-15")],
     docs: {
       MASSID: {},
       HCP: {},
@@ -972,7 +995,7 @@ export const TRNOL2: ScenarioSpecification = {
     concurrent_leave: {
       is_for_current_employer: true,
       leave_start_date: "2022-01-01",
-      leave_end_date: "2022-02-14",
+      leave_end_date: "2022-02-13",
     },
 
     metadata: {
@@ -988,9 +1011,10 @@ export const TRNOL3: ScenarioSpecification = {
     label: "TRNOL3",
     reason: "Child Bonding",
     reason_qualifier: "Newborn",
+    is_withholding_tax: true,
     bondingDate: "past",
     work_pattern_spec: "standard",
-    leave_dates: [parseISO("2021-01-24"), parseISO("2021-03-25")],
+    leave_dates: [parseISO("2022-01-24"), parseISO("2022-03-25")],
     docs: {
       MASSID: {},
       BIRTHCERTIFICATE: {},
@@ -1054,6 +1078,7 @@ export const TRNER1: ScenarioSpecification = {
     label: "TRNER1",
     reason: "Serious Health Condition - Employee",
     work_pattern_spec: "standard",
+    is_withholding_tax: true,
     leave_dates: [parseISO("2022-02-14"), parseISO("2022-04-15")],
     docs: {
       MASSID: {},
@@ -1118,6 +1143,7 @@ export const TRNER2: ScenarioSpecification = {
   employee: { mass_id: true, wages: "eligible" },
   claim: {
     label: "TRNER2",
+    is_withholding_tax: true,
     reason: "Care for a Family Member",
     work_pattern_spec: "standard",
     leave_dates: [parseISO("2022-01-15"), parseISO("2022-02-14")],
@@ -1197,6 +1223,7 @@ export const TRNER3: ScenarioSpecification = {
       MASSID: {},
       BIRTHCERTIFICATE: {},
     },
+    is_withholding_tax: true,
     employerResponse: {
       has_amendments: true,
       fraud: "No",
