@@ -10,13 +10,13 @@ exports[`Two-factor SMS Index renders landing page content 1`] = `
     <legend
       class="usa-label text-bold usa-legend font-heading-lg line-height-sans-3 margin-bottom-1 maxw-tablet"
     >
-      Do you want to add a phone number to verify it's you when you log in to your account?
+      Do you want to add a cell phone number to verify it's you when you log in to your account?
     </legend>
     <span
       class="display-block line-height-sans-5 measure-5 usa-intro"
     >
       <p>
-        This is an optional step to make your account more secure. In the future, you’ll also be able to access sensitive information like tax documents once you set this up.
+        This is an optional step to make your account more secure. In the future, you’ll also be able to access sensitive information like tax documents (when available) once you set this up.
       </p>
       <p>
         If you select Yes, we’ll ask for a phone number that can receive text messages (SMS). To protect your security, we'll send you a 6-digit code whenever we need to verify it's really you. You’ll need to enter the code in order to log in to your account.
