@@ -220,6 +220,8 @@ class FineosPaymentData(MockData):
             "absence_case_creation_date", "2020-12-01 07:00:00"
         )
         self.payment_amount = self.get_value("payment_amount", "100.00")
+        self.balancing_amount = self.get_value("balancing_amount", self.payment_amount)
+        self.business_net_amount = self.get_value("business_net_amount", self.payment_amount)
         self.routing_nbr = self.get_value("routing_nbr", generate_routing_nbr_from_ssn(ssn))
         self.account_nbr = self.get_value("account_nbr", ssn)
         self.account_type = self.get_value("account_type", "Checking")
@@ -275,7 +277,8 @@ class FineosPaymentData(MockData):
             payment_detail_record["PAYMENTSTARTP"] = self.payment_start_period
             payment_detail_record["PAYMENTENDPER"] = self.payment_end_period
 
-            payment_detail_record["BALANCINGAMOU_MONAMT"] = self.payment_amount
+            payment_detail_record["BALANCINGAMOU_MONAMT"] = self.balancing_amount
+            payment_detail_record["BUSINESSNETBE_MONAMT"] = self.business_net_amount
 
         return payment_detail_record
 

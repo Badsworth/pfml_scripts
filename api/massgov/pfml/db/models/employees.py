@@ -1060,6 +1060,7 @@ class PaymentDetails(Base, TimestampMixin):
     period_start_date = Column(Date)
     period_end_date = Column(Date)
     amount = Column(Numeric(asdecimal=True), nullable=False)
+    business_net_amount = Column(Numeric(asdecimal=True), nullable=False)
 
     payment = relationship(Payment)
 

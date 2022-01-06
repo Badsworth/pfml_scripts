@@ -267,6 +267,7 @@ class FineosExtractConstants:
             "PAYMENTSTARTP",
             "PAYMENTENDPER",
             "BALANCINGAMOU_MONAMT",
+            "BUSINESSNETBE_MONAMT",
         ],
     )
 

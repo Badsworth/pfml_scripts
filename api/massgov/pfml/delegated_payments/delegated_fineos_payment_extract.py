@@ -468,8 +468,21 @@ class PaymentData:
                 True,
                 custom_validator_func=self.payment_period_date_validator,
             )
-            row_amount = payments_util.validate_db_input(
+
+            # This amount will sum to the amount we pay the claimant
+            # across all of the payment periods of a payment
+            row_amount_post_tax = payments_util.validate_db_input(
                 "BALANCINGAMOU_MONAMT",
+                payment_detail_row,
+                self.validation_container,
+                True,
+                custom_validator_func=payments_util.amount_validator,
+            )
+
+            # This amount is prior to taxes being taken out and
+            # also includes overpayments that have been paid back in some scenarios
+            business_net_amount = payments_util.validate_db_input(
+                "BUSINESSNETBE_MONAMT",
                 payment_detail_row,
                 self.validation_container,
                 True,
@@ -481,12 +494,21 @@ class PaymentData:
             if row_end_period is not None:
                 end_periods.append(row_end_period)
 
-            if all(field is not None for field in [row_start_period, row_end_period, row_amount]):
+            if all(
+                field is not None
+                for field in [
+                    row_start_period,
+                    row_end_period,
+                    row_amount_post_tax,
+                    business_net_amount,
+                ]
+            ):
                 self.payment_detail_records.append(
                     PaymentDetails(
                         period_start_date=payments_util.datetime_str_to_date(row_start_period),
                         period_end_date=payments_util.datetime_str_to_date(row_end_period),
-                        amount=Decimal(cast(str, row_amount)),
+                        amount=Decimal(cast(str, row_amount_post_tax)),
+                        business_net_amount=Decimal(cast(str, business_net_amount)),
                     )
                 )
 

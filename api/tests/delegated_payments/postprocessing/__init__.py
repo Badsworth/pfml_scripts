@@ -17,7 +17,10 @@ def _create_payment_periods(total_amount, start_date, periods, length_of_period)
         end_date = start_date + timedelta(length_of_period - 1)
 
         payment_period = PaymentDetailsFactory.create(
-            amount=amount_per_period, period_start_date=start_date, period_end_date=end_date,
+            business_net_amount=amount_per_period,
+            period_start_date=start_date,
+            period_end_date=end_date,
+            amount=100000,
         )
         payment_periods.append(payment_period)
 

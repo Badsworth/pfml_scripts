@@ -235,7 +235,8 @@ class MaximumWeeklyBenefitsStepProcessor(AbstractStepProcessor):
                     # that are under the cap when you look at a claim as a whole (which we can't see).
                     if (
                         absence_case_id not in pay_period.absence_case_ids
-                        and pay_period.get_amount_available_in_pay_period() < payment_detail.amount
+                        and pay_period.get_amount_available_in_pay_period()
+                        < payment_detail.business_net_amount
                     ):
                         is_payable = False
                         payment_container.pay_periods_over_cap.append((pay_period, payment_detail))
