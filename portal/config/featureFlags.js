@@ -24,7 +24,7 @@ const flagsConfig = {
     claimantShowOrganizationUnits: false,
 
     // When this flag is enabled, the claim payments section for claimants will show
-    claimantShowPayments: false,
+    claimantShowPayments: true,
 
     // When this flag is enabled payment status phase two work will be displayed.
     claimantShowPaymentsPhaseTwo: false,
@@ -59,29 +59,37 @@ const flagsConfig = {
   development: {
     example: true,
     pfmlTerriyay: true,
+    claimantShowPayments: true,
     claimantShowTaxWithholding: true,
   },
   test: {
+    claimantShowPayments: true,
     claimantShowTaxWithholding: true,
   },
   stage: {
+    claimantShowPayments: true,
     claimantShowTaxWithholding: true,
   },
   training: {
+    claimantShowPayments: true,
     claimantShowTaxWithholding: true,
   },
   performance: {
+    claimantShowPayments: true,
     claimantShowTaxWithholding: true,
   },
   uat: {
+    claimantShowPayments: true,
     claimantShowTaxWithholding: true,
   },
   local: {
     pfmlTerriyay: true,
+    claimantShowPayments: true,
     claimantShowTaxWithholding: true,
   },
   prod: {
     pfmlTerriyay: true,
+    claimantShowPayments: true,
     claimantShowTaxWithholding: true,
   },
 };
