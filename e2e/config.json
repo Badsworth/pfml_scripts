@@ -73,6 +73,7 @@
     "DOR_ETL_ARN": "arn:aws:states:us-east-1:498823821309:stateMachine:pfml-api-trn2-dor-fineos-etl",
     "FINEOS_HAS_TAX_WITHHOLDING": "false",
     "HAS_UPDATED_MAX_BENFIT": "false",
+    "HAS_PAYMENT_STATUS": "false",
     "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "false"
   },
   "long": {
@@ -89,6 +90,7 @@
     "DOR_ETL_ARN": "arn:aws:states:us-east-1:498823821309:stateMachine:pfml-api-long-dor-fineos-etl",
     "FINEOS_HAS_TAX_WITHHOLDING": "false",
     "HAS_UPDATED_MAX_BENFIT": "false",
+    "HAS_PAYMENT_STATUS": "false",
     "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "false"
   },
   "performance": {
