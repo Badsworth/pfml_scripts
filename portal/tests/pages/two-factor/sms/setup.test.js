@@ -4,6 +4,7 @@ import SetupSMS from "../../../../src/pages/two-factor/sms/setup";
 import userEvent from "@testing-library/user-event";
 
 const updateUser = jest.fn();
+const goToPageFor = jest.fn();
 
 beforeEach(() => {
   mockAuth(true);
@@ -90,5 +91,80 @@ describe("Two-factor SMS Setup", () => {
       name: /Page not found/,
     });
     expect(pageNotFoundHeading).toBeInTheDocument();
+  });
+
+  it("shows appropriate error when no phone number entered", async () => {
+    renderPage(SetupSMS, {
+      addCustomSetup: (appLogic) => {
+        appLogic.portalFlow.goToPageFor = goToPageFor;
+        appLogic.users.updateUser = updateUser;
+      },
+    });
+
+    // Click submit without typing anything into the phone number field
+    const submitButton = screen.getByRole("button", {
+      name: "Save and continue",
+    });
+    await act(async () => await userEvent.click(submitButton));
+
+    // User should not be updated, should still be on the same page
+    expect(goToPageFor).not.toHaveBeenCalled();
+    expect(updateUser).not.toHaveBeenCalled();
+    // The phone number format error is displayed
+    const error_text = "Enter a phone number";
+    expect(screen.queryByText(error_text)).toBeInTheDocument();
+  });
+
+  it("shows appropriate error when wrong number of digits entered", async () => {
+    renderPage(SetupSMS, {
+      addCustomSetup: (appLogic) => {
+        appLogic.portalFlow.goToPageFor = goToPageFor;
+        appLogic.users.updateUser = updateUser;
+      },
+    });
+
+    // Correct phone numbers have 10 digits, enter a number with 9 digits
+    const phoneNumberField = screen.getByLabelText(/Phone number/);
+    userEvent.type(phoneNumberField, "802-573-222");
+
+    // Click submit
+    const submitButton = screen.getByRole("button", {
+      name: "Save and continue",
+    });
+    await act(async () => await userEvent.click(submitButton));
+
+    // User should not be updated, should still be on the same page
+    expect(goToPageFor).not.toHaveBeenCalled();
+    expect(updateUser).not.toHaveBeenCalled();
+    // The phone number format error is displayed
+    const error_text = "Enter a valid phone number";
+    expect(screen.queryByText(error_text)).toBeInTheDocument();
+  });
+
+  it("shows appropriate error when international number entered", async () => {
+    renderPage(SetupSMS, {
+      addCustomSetup: (appLogic) => {
+        appLogic.portalFlow.goToPageFor = goToPageFor;
+        appLogic.users.updateUser = updateUser;
+      },
+    });
+
+    // Enter an international number starting with [+countrycode]
+    const phoneNumberField = screen.getByLabelText(/Phone number/);
+    userEvent.type(phoneNumberField, "+61 1300 133 655");
+
+    // Click submit
+    const submitButton = screen.getByRole("button", {
+      name: "Save and continue",
+    });
+    await act(async () => await userEvent.click(submitButton));
+
+    // User should not be updated, should still be on the same page
+    expect(goToPageFor).not.toHaveBeenCalled();
+    expect(updateUser).not.toHaveBeenCalled();
+    // The phone number format error is displayed
+    const error_text =
+      "Sorry, we don't support international phone numbers yet. Enter a U.S. phone number to set up additional login verifications.";
+    expect(screen.queryByText(error_text)).toBeInTheDocument();
   });
 });
