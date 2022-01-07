@@ -80,10 +80,10 @@ def _decode_jwt(token: str, is_azure_token: bool = False) -> dict[str, Any]:
 
 
 def _is_azure_token(token: str) -> bool:
-    azure_config = configure_azure_ad()
     # Assume cognito is being used if azure is not configured.
     if not azure_config or not azure_config.public_keys:
         return False
+    azure_config.update_keys()
     headers = jwt.get_unverified_header(token)
     pick_public_key = [
         key for key in azure_config.public_keys if key.get("kid") == headers.get("kid")
@@ -202,7 +202,6 @@ def build_auth_code_flow() -> Optional[dict[str, Optional[Union[str, list]]]]:
     The first step in the authentication code flow
     Returns state, code verifier and auth_uri
     """
-    azure_config = configure_azure_ad()
     if azure_config is None:
         return None
     msal_app = _build_msal_app()
@@ -231,7 +230,6 @@ def _build_msal_app() -> Optional[msal.ConfidentialClientApplication]:
     Build the Confidential Client Application
     """
 
-    azure_config = configure_azure_ad()
     if azure_config is None:
         return None
 
@@ -243,7 +241,6 @@ def _build_msal_app() -> Optional[msal.ConfidentialClientApplication]:
 
 
 def build_logout_flow() -> Optional[str]:
-    azure_config = configure_azure_ad()
     if azure_config is None:
         return None
     return azure_config.logout_uri
