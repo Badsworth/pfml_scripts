@@ -41,7 +41,7 @@ def test_employees_get_snow_user_valid(client, employee, snow_user_token):
     # ServiceNow role cannot access this endpoint
     response = client.get(
         "/v1/employees/{}".format(employee.employee_id),
-        headers={"Authorization": "Bearer {}".format(snow_user_token)},
+        headers={"Authorization": "Bearer {}".format(snow_user_token), "Mass-PFML-Agent-ID": "123"},
     )
 
     assert response.status_code == 403
@@ -52,7 +52,7 @@ def test_employees_patch_snow_user_forbidden(client, employee, snow_user_token):
     response = client.patch(
         "/v1/employees/{}".format(employee.employee_id),
         json=body,
-        headers={"Authorization": "Bearer {}".format(snow_user_token)},
+        headers={"Authorization": "Bearer {}".format(snow_user_token), "Mass-PFML-Agent-ID": "123"},
     )
     assert response.status_code == 403
 

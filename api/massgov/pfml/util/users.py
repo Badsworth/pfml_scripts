@@ -1,11 +1,18 @@
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 
 import botocore
 
 import massgov.pfml.util.logging
 from massgov.pfml import db
 from massgov.pfml.cognito.exceptions import CognitoUserExistsValidationError
-from massgov.pfml.db.models.employees import Employer, Role, User, UserLeaveAdministrator, UserRole
+from massgov.pfml.db.models.employees import (
+    Employer,
+    LkRole,
+    Role,
+    User,
+    UserLeaveAdministrator,
+    UserRole,
+)
 from massgov.pfml.util.aws.cognito import create_cognito_account
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
@@ -113,3 +120,12 @@ def register_user(
     )
 
     return user
+
+
+def has_role_in(user: User, accepted_roles: List[LkRole]) -> bool:
+    accepted_role_ids = set(role.role_id for role in accepted_roles)
+    for role in user.roles:
+        if role.role_id in accepted_role_ids:
+            return True
+
+    return False
