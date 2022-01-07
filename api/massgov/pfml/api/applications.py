@@ -389,9 +389,7 @@ def applications_complete(application_id):
 
         log_attributes = get_application_log_attributes(existing_application)
 
-        issues = application_rules.get_application_complete_issues(
-            existing_application, request.headers, db_session
-        )
+        issues = application_rules.get_application_complete_issues(existing_application, db_session)
         if issues:
             logger.info(
                 "applications_complete failure - application failed validation",
