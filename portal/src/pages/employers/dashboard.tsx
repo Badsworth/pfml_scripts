@@ -1,3 +1,4 @@
+import Tag from "../../components/core/Tag";
 import Claim, { AbsenceCaseStatus } from "../../models/Claim";
 import React, {
   FormEvent,
@@ -151,6 +152,84 @@ export const Dashboard = (props: WithUserProps & { query: ApiParams }) => {
         updatePageQuery={updatePageQuery}
         user={props.user}
       />
+
+      <div className="l-main grid-container margin-top-5 margin-bottom-8">
+        <div className="grid-row">
+          <div className="grid-col-fill">
+            <table className="usa-table usa-table--borderless width-full usa-table--stacked">
+              <thead>
+                <tr>
+                  <th>Employee/Claim ID</th>
+                  <th>Organization</th>
+                  <th>Leave details</th>
+                  <th>Review date</th>
+                </tr>
+              </thead>
+              <tbody className="text-top">
+                <tr>
+                  <td>
+                    <a>
+                      <b>Stephanie Longlastname</b>
+                      <br />
+                      <span className="font-body-2xs">NTN-12122-ABS-99</span>
+                    </a>
+                  </td>
+                  <td>
+                    Globex Corporation, Incorporated
+                    <br />
+                    <span className="font-body-2xs">67-7542549</span>
+                  </td>
+                  <td>
+                    <p class="grid-row grid-gap-1">
+                      <div class="grid-col-auto">
+                        <Tag
+                          label="Pending"
+                          state="warning"
+                          className="width-15 text-center"
+                        />
+                      </div>
+                      <div class="grid-col-fill minw-15">
+                        <b>Leave to bond with a child</b>
+                        <br />
+                        11/15/2021 to 11/30/2021
+                        <br />
+                        <span className="font-body-2xs">
+                          Continuous leave schedule
+                        </span>
+                      </div>
+                    </p>
+
+                    <p class="grid-row grid-gap-1">
+                      <div class="grid-col-auto">
+                        <Tag
+                          label="Approved"
+                          state="success"
+                          className="width-15 text-center"
+                        />
+                      </div>
+                      <div class="grid-col-fill minw-15">
+                        <b>Medical leave for pregnancy</b>
+                        <br />
+                        10/15/2021 to 11/14/2021
+                        <br />
+                        <span className="font-body-2xs">
+                          Continuous leave schedule
+                        </span>
+                      </div>
+                    </p>
+                  </td>
+                  <td className="text-center">
+                    <Button>Review Application</Button>
+                    <br />
+                    <span className="font-body-2xs">Respond by 2/15/2022</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
       <PaginatedClaimsTableWithClaims
         appLogic={props.appLogic}
         {...componentSpecificProps}
