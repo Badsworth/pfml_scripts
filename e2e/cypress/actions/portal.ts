@@ -80,6 +80,11 @@ export function before(flags?: Partial<FeatureFlags>): void {
     method: "POST",
   }).as("documentUpload");
 
+  cy.intercept({
+    url: /\/api\/v1\/applications\/.*\/documents/,
+    method: "GET",
+  }).as("getDocuments");
+
   cy.intercept(/\/api\/v1\/claims\?page_offset=\d+$/).as(
     "dashboardDefaultQuery"
   );
@@ -1989,10 +1994,11 @@ export function claimantGoToClaimStatus(
   fineosAbsenceId: string,
   waitForApps = true
 ): void {
-  waitForApps && cy.wait("@getApplications").wait(300);
+  waitForApps && cy.wait("@getApplications")
+  waitForApps && cy.wait("@getDocuments").wait(300)
   cy.contains("article", fineosAbsenceId).within(() => {
-    cy.contains("View status updates and details", { timeout: 20000 }).click({
-      timeout: 20000,
+    cy.contains("View status updates and details").click({
+      force: true
     });
     cy.url()
       .should("include", "/applications/status/")
