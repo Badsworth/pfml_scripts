@@ -1207,10 +1207,11 @@
 <p>Environment variables include <a href="../feature-flags/">feature flags</a>, <a href="../maintenance-pages/">maintenance pages</a>, and URLs and keys for external resources such as Cognito and the API.</p>
 <h2 id="configuring-environment-variables">Configuring environment variables</h2>
 <p>Default environment variables live in <a href="https://github.com/EOLWD/pfml/tree/main/portal/config/default.js"><code>portal/config/default.js</code></a>.</p>
-<p>Each environment has a corresponding configuration file in <a href="https://github.com/EOLWD/pfml/tree/main/portal/config/"><code>portal/config</code></a>, for example <code>production.js</code></p>
+<p>Each environment has a corresponding configuration file in <a href="https://github.com/EOLWD/pfml/tree/main/portal/config/"><code>portal/config</code></a>, for example <code>prod.js</code></p>
 <p>The default environment variables are merged with the environment-specific config file in <a href="https://github.com/EOLWD/pfml/tree/main/portal/config/index.js"><code>portal/config/index.js</code></a>. A default environment variable can be overridden in the environment-specific config file.</p>
 <ul>
 <li><strong>Portal environment variables should never include a secret!</strong> Since the Portal is only served on the client-side, these environment variables will be publicly accessible.</li>
+<li>Environment variable values must be strings.</li>
 <li>Each time you add a new environment variable, ensure that you add it to each environment's config file, so that an environment isn't missing anything. If the variable value is shared across many environments, consider adding it as a default environment variable in <a href="https://github.com/EOLWD/pfml/tree/main/portal/config/default.js"><code>portal/config/default.js</code></a>.</li>
 </ul>
 <h2 id="referencing-an-environment-variable">Referencing an environment variable</h2>
