@@ -71,6 +71,7 @@ module "api" {
   cognito_user_pool_client_id = "3dgp7vtcdt7bo0utlp2tqit1ee"
   cognito_user_pool_keys_url  = "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_oxOGrdAe8/.well-known/jwks.json"
 
+
   rmv_client_base_url               = "https://atlas-staging-gateway.massdot.state.ma.us/vs"
   rmv_client_certificate_binary_arn = "arn:aws:secretsmanager:us-east-1:498823821309:secret:/service/pfml-api-trn2/rmv_client_certificate-D5TPeE"
   rmv_api_behavior                  = "fully_mocked"
@@ -88,6 +89,7 @@ module "api" {
   fineos_client_oauth2_client_id = "2e9vsuq808h3tu4rf9tr1efuh5"
 
   service_now_base_url = "https://savilinxtrain.servicenowservices.com"
+  portal_base_url      = "https://paidleave-trn2.dfml.eol.mass.gov"
 
   # dor_fineos_etl_schedule_expression               = "cron(5 * * * ? *)" # Hourly at :05 minutes past each hour
 
