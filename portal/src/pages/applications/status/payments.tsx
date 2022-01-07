@@ -15,6 +15,8 @@ import Table from "../../../components/core/Table";
 import Title from "../../../components/core/Title";
 import { Trans } from "react-i18next";
 import { createRouteWithQuery } from "../../../utils/routeWithParams";
+import dayjs from "dayjs";
+import dayjsBusinessTime from "dayjs-business-time";
 import formatDate from "../../../utils/formatDate";
 import formatDateRange from "../../../utils/formatDateRange";
 import { getMaxBenefitAmount } from "../../../utils/getMaxBenefitAmount";
@@ -22,6 +24,10 @@ import isBlank from "../../../utils/isBlank";
 import { isFeatureEnabled } from "../../../services/featureFlags";
 import routes from "../../../routes";
 import { useTranslation } from "../../../locales/i18n";
+
+// TODO(PORTAL-1482): remove test cases for checkback dates
+// remove dayjs and dayjsBusinessTime imports
+dayjs.extend(dayjsBusinessTime);
 
 export const Payments = ({
   appLogic,
@@ -46,11 +52,13 @@ export const Payments = ({
     portalFlow,
   } = appLogic;
 
+  const hasPaidPayments = claimDetail?.has_paid_payments;
+
   // Determines if phase one payment features are displayed
   const showPhaseOneFeatures =
     isFeatureEnabled("claimantShowPayments") &&
     claimDetail?.hasApprovedStatus &&
-    claimDetail?.has_paid_payments;
+    hasPaidPayments;
 
   // Determines if phase two payment features are displayed
   const showPhaseTwoFeatures =
@@ -60,6 +68,8 @@ export const Payments = ({
   const application_id = claimDetail?.application_id;
   const absenceId = absence_id;
 
+  const initialClaimStartDate =
+    claimDetail?.leaveDates[0].absence_period_start_date;
   useEffect(() => {
     const loadPayments = (absenceId: string) =>
       !hasLoadedPayments(absenceId) ||
@@ -79,9 +89,8 @@ export const Payments = ({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
-    portalFlow,
     absence_id,
-    claimDetail,
+    initialClaimStartDate,
     absenceId,
     loadedPaymentsData?.absence_case_id,
   ]);
@@ -186,9 +195,51 @@ export const Payments = ({
   const isIntermittentUnpaid =
     isIntermittent &&
     isFeatureEnabled("claimantShowPaymentsPhaseTwo") &&
-    Boolean(claimDetail?.payments?.length) === false;
+    !hasPaidPayments;
 
   const maxBenefitAmount = `$${getMaxBenefitAmount()}`;
+
+  // TODO(PORTAL-1482): remove test cases for checkback dates
+
+  let checkbackDate;
+  let checkbackDateContext = isIntermittentUnpaid
+    ? "Intermittent_Unpaid"
+    : isIntermittent
+    ? "Intermittent"
+    : isRetroactive
+    ? "NonIntermittent_Retro"
+    : "NonIntermittent_NonRetro";
+
+  if (
+    isFeatureEnabled("claimantShowPaymentsPhaseTwo") &&
+    !isIntermittent &&
+    !hasPaidPayments
+  ) {
+    if (!hasPaidPayments && approvalDate) {
+      checkbackDateContext = claimDetail?.isContinuous
+        ? "Continuous_"
+        : "ReducedSchedule_";
+      const fourteenthDayOfClaim = dayjs(initialClaimStartDate)
+        .add(13, "day")
+        .format("YYYY-MM-DD");
+
+      if (isRetroactive || approvalDate >= fourteenthDayOfClaim) {
+        checkbackDate = dayjs(approvalDate)
+          .addBusinessDays(3)
+          .format("MM/DD/YYYY");
+        checkbackDateContext += isRetroactive
+          ? "Retroactive"
+          : "PostFourteenthClaimDate";
+      } else {
+        checkbackDate = dayjs(initialClaimStartDate)
+          .add(13, "day")
+          .addBusinessDays(3)
+          .format("MM/DD/YYYY");
+        checkbackDateContext += "PreFourteenthClaimDate";
+      }
+    }
+  }
+
   return (
     <React.Fragment>
       {!!infoAlertContext && (hasPendingStatus || hasApprovedStatus) && (
@@ -246,15 +297,8 @@ export const Payments = ({
             <Trans
               i18nKey="pages.payments.paymentsIntro"
               tOptions={{
-                context: `${
-                  isIntermittentUnpaid
-                    ? "Intermittent_Unpaid"
-                    : isIntermittent
-                    ? "Intermittent"
-                    : isRetroactive
-                    ? "NonIntermittent_Retro"
-                    : "NonIntermittent_NonRetro"
-                }`,
+                context: checkbackDateContext,
+                checkbackDate,
               }}
               components={{
                 "contact-center-report-phone-link": (
@@ -266,7 +310,6 @@ export const Payments = ({
                 ),
               }}
             />
-
             {/* Estimated Date section */}
             <section className="margin-y-5" data-testid="estimated-date">
               <Heading level="3">

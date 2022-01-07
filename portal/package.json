@@ -51,6 +51,7 @@
     "compressorjs": "^1.0.7",
     "core-js": "^3.12.1",
     "dayjs": "^1.10.7",
+    "dayjs-business-time": "^1.0.4",
     "downloadjs": "^1.4.7",
     "i18next": "^20.2.2",
     "js-cookie": "^2.2.1",

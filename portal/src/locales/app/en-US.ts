@@ -2616,6 +2616,12 @@ const pages = {
     infoAlertHeading_bonding: "$t(shared.infoAlertHeading_bonding)",
     infoAlertHeading_pregnancy: "$t(shared.infoAlertHeading_pregnancy)",
     loadingClaimDetailLabel: "$t(shared.loadingClaimDetailLabel)",
+    paymentsIntro_Continuous_PostFourteenthClaimDate:
+      "<p>Check back on {{checkbackDate}} to see when you can expect your first payment. Your first payment will include multiple weeks of leave. After your first payment, payments are scheduled weekly.</p>",
+    paymentsIntro_Continuous_PreFourteenthClaimDate:
+      "<p>Check back on {{checkbackDate}} to see when you can expect your first payment. After your first payment, payments are scheduled weekly. Your application has a 7-day waiting period at the start of your leave. You won’t receive any PFML payments for this week of leave.</p>",
+    paymentsIntro_Continuous_Retroactive:
+      "<p>Check back on {{checkbackDate}} to see when you can expect your first payment. You’ll receive one payment for your entire leave.</p>",
     paymentsIntro_Intermittent:
       "Once you report at least 8 hours, you can expect to receive a payment about one week later. You can receive more than one payment in a week depending on how your hours are reported. You can report your hours by calling <contact-center-report-phone-link>$t(shared.contactCenterReportHoursPhoneNumber)<contact-center-report-phone-link>.",
     paymentsIntro_Intermittent_Unpaid:

@@ -1,5 +1,74 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`Payments Phase 2 Checkback date implementation  renders intro text for continuous leaves approved after fourteenth claim date  1`] = `
+<section
+  data-testid="your-payments-intro"
+>
+  <p>
+    Check back on 11/09/2021 to see when you can expect your first payment. Your first payment will include multiple weeks of leave. After your first payment, payments are scheduled weekly.
+  </p>
+  <section
+    class="margin-y-5"
+    data-testid="estimated-date"
+  >
+    <h3
+      class="font-heading-sm text-bold"
+    >
+      What does the estimated date mean?
+    </h3>
+    <p>
+      This is the date range we expect to process your direct deposit payment or send your check in the mail. Depending on your bank, expect to receive direct deposit payments in your account 2-3 days after this date. Checks may take 7-11 days to arrive in the mail. Once your payment is processed or your check is sent, that date will be shown in the “date processed” column.
+    </p>
+  </section>
+</section>
+`;
+
+exports[`Payments Phase 2 Checkback date implementation  renders intro text for continuous leaves approved before fourteenth claim date  1`] = `
+<section
+  data-testid="your-payments-intro"
+>
+  <p>
+    Check back on 11/08/2021 to see when you can expect your first payment. After your first payment, payments are scheduled weekly. Your application has a 7-day waiting period at the start of your leave. You won’t receive any PFML payments for this week of leave.
+  </p>
+  <section
+    class="margin-y-5"
+    data-testid="estimated-date"
+  >
+    <h3
+      class="font-heading-sm text-bold"
+    >
+      What does the estimated date mean?
+    </h3>
+    <p>
+      This is the date range we expect to process your direct deposit payment or send your check in the mail. Depending on your bank, expect to receive direct deposit payments in your account 2-3 days after this date. Checks may take 7-11 days to arrive in the mail. Once your payment is processed or your check is sent, that date will be shown in the “date processed” column.
+    </p>
+  </section>
+</section>
+`;
+
+exports[`Payments Phase 2 Checkback date implementation  renders intro text for continuous leaves with retroactive claim date  1`] = `
+<section
+  data-testid="your-payments-intro"
+>
+  <p>
+    Check back on 01/18/2022 to see when you can expect your first payment. You’ll receive one payment for your entire leave.
+  </p>
+  <section
+    class="margin-y-5"
+    data-testid="estimated-date"
+  >
+    <h3
+      class="font-heading-sm text-bold"
+    >
+      What does the estimated date mean?
+    </h3>
+    <p>
+      This is the date range we expect to process your direct deposit payment or send your check in the mail. Depending on your bank, expect to receive direct deposit payments in your account 2-3 days after this date. Checks may take 7-11 days to arrive in the mail. Once your payment is processed or your check is sent, that date will be shown in the “date processed” column.
+    </p>
+  </section>
+</section>
+`;
+
 exports[`Payments displays info alert if claimant has bonding-newborn but not pregnancy claims 1`] = `
 <div
   aria-labelledby="alert-heading7"
