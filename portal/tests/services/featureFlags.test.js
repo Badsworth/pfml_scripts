@@ -18,10 +18,10 @@ describe("isFeatureEnabled", () => {
 
   describe("when a flag is only defined at the environment level", () => {
     it("returns the value of the feature flag defined in the environment variables", () => {
-      process.env.featureFlags = {
+      process.env.featureFlags = JSON.stringify({
         featureA: true,
         featureB: false,
-      };
+      });
 
       expect(isFeatureEnabled("featureA")).toBe(true);
       expect(isFeatureEnabled("featureB")).toBe(false);
@@ -30,10 +30,10 @@ describe("isFeatureEnabled", () => {
 
   describe("when a flag is overridden in a cookie", () => {
     it("returns the value of the feature flag defined in the cookie", () => {
-      process.env.featureFlags = {
+      process.env.featureFlags = JSON.stringify({
         featureA: true,
         featureB: false,
-      };
+      });
 
       Cookies.set("_ff", {
         featureA: false,
@@ -80,7 +80,7 @@ describe("storeFeatureFlagsFromQuery", () => {
 
   describe("when the URL includes the feature flag query string", () => {
     it("adds the flags in the querystring to the cookie", () => {
-      process.env.featureFlags = { flagA: false, flagB: true };
+      process.env.featureFlags = JSON.stringify({ flagA: false, flagB: true });
       const searchParams = new URLSearchParams("_ff=flagA:true;flagB:false");
 
       storeFeatureFlagsFromQuery(searchParams);
@@ -97,7 +97,7 @@ describe("storeFeatureFlagsFromQuery", () => {
 
     it("does not include a flag in the cookie if the flag doesn't exist at the environment-level", () => {
       jest.spyOn(console, "warn").mockImplementationOnce(jest.fn());
-      process.env.featureFlags = { flagA: true };
+      process.env.featureFlags = JSON.stringify({ flagA: true });
       const searchParams = new URLSearchParams(
         "_ff=flagA:true;unknownFlag:true"
       );
@@ -114,7 +114,7 @@ describe("storeFeatureFlagsFromQuery", () => {
     });
 
     it("does not include a flag in the cookie when its value is 'reset'", () => {
-      process.env.featureFlags = { flagC: true, flagD: false };
+      process.env.featureFlags = JSON.stringify({ flagC: true, flagD: false });
       const searchParams = new URLSearchParams("_ff=flagC:reset;flagD:true");
 
       storeFeatureFlagsFromQuery(searchParams);
@@ -129,7 +129,7 @@ describe("storeFeatureFlagsFromQuery", () => {
     });
 
     it("tracks an event", () => {
-      process.env.featureFlags = { flagA: false, flagB: true };
+      process.env.featureFlags = JSON.stringify({ flagA: false, flagB: true });
       const searchParams = new URLSearchParams("_ff=flagA:true");
 
       storeFeatureFlagsFromQuery(searchParams);
@@ -142,7 +142,7 @@ describe("storeFeatureFlagsFromQuery", () => {
 
   describe("when the URL includes a feature flag query string param and some other unrelated param", () => {
     it("adds the flags to the cookie, and isn't affected by the other query string param", () => {
-      process.env.featureFlags = { flagA: false };
+      process.env.featureFlags = JSON.stringify({ flagA: false });
       const searchParams = new URLSearchParams(
         "_ff=flagA:true&anotherParam=123"
       );

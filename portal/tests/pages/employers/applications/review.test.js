@@ -172,9 +172,9 @@ describe("Review", () => {
   });
 
   it("Updates Alert text if claim has been reviewed previously", () => {
-    process.env.featureFlags = {
+    process.env.featureFlags = JSON.stringify({
       employerShowMultiLeave: true,
-    };
+    });
 
     setup({
       ...claimWithV2Eform,
@@ -937,9 +937,9 @@ describe("Review", () => {
   });
 
   it("does not render supporting work details when employerShowMultiLeave is enabled", () => {
-    process.env.featureFlags = {
+    process.env.featureFlags = JSON.stringify({
       employerShowMultiLeave: true,
-    };
+    });
     setup();
     expect(
       screen.queryByRole("heading", { name: "Supporting work details" })
@@ -947,9 +947,9 @@ describe("Review", () => {
   });
 
   it("renders absence id above the title when employerShowMultiLeave is enabled", () => {
-    process.env.featureFlags = {
+    process.env.featureFlags = JSON.stringify({
       employerShowMultiLeave: true,
-    };
+    });
     setup();
     expect(
       screen.getByText("Application ID: NTN-111-ABS-01")
@@ -957,9 +957,9 @@ describe("Review", () => {
   });
 
   it("renders the absence periods sorted newest to oldest when employerShowMultiLeave is enabled", () => {
-    process.env.featureFlags = {
+    process.env.featureFlags = JSON.stringify({
       employerShowMultiLeave: true,
-    };
+    });
 
     setup({
       ...claimWithV2Eform,

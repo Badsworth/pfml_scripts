@@ -18,7 +18,7 @@ expect.extend(toHaveNoViolations);
 process.env.apiUrl = "http://localhost/jest-mock-api";
 process.env.buildEnv = "mock-build-env";
 process.env.domain = "localhost";
-process.env.featureFlags = {};
+process.env.featureFlags = "{}";
 process.env.newRelicAppId = "mock-new-relic-id";
 process.env.gtmConfigAuth = "mock-gtm-auth";
 process.env.secondsOfInactivityUntilLogout = "10";

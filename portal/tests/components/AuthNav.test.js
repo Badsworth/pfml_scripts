@@ -49,7 +49,7 @@ describe("AuthNav", () => {
   });
 
   it("does not render settings link when user role is employer and MFA feature flag is enabled", () => {
-    process.env.featureFlags = { claimantShowMFA: true };
+    process.env.featureFlags = JSON.stringify({ claimantShowMFA: true });
     render(
       <AuthNav
         user={
@@ -71,7 +71,7 @@ describe("AuthNav", () => {
   });
 
   it("renders settings link and not email when user role is not employer and MFA feature flag is enabled", () => {
-    process.env.featureFlags = { claimantShowMFA: true };
+    process.env.featureFlags = JSON.stringify({ claimantShowMFA: true });
     render(
       <AuthNav
         user={

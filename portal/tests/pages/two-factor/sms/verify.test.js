@@ -7,7 +7,7 @@ jest.mock("../../../../src/services/tracker");
 
 beforeEach(() => {
   mockAuth(true);
-  process.env.featureFlags = { claimantShowMFA: true };
+  process.env.featureFlags = JSON.stringify({ claimantShowMFA: true });
 });
 
 describe("Two-factor SMS Verify", () => {
@@ -17,7 +17,7 @@ describe("Two-factor SMS Verify", () => {
   });
 
   it("renders PageNotFound if the claimantShowMFA feature flag is not set", () => {
-    process.env.featureFlags = { claimantShowMFA: false };
+    process.env.featureFlags = JSON.stringify({ claimantShowMFA: false });
     renderPage(VerifySMS);
 
     const pageNotFoundHeading = screen.getByRole("heading", {

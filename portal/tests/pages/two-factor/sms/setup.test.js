@@ -8,7 +8,7 @@ const goToNextPage = jest.fn();
 
 beforeEach(() => {
   mockAuth(true);
-  process.env.featureFlags = { claimantShowMFA: true };
+  process.env.featureFlags = JSON.stringify({ claimantShowMFA: true });
 });
 
 describe("Two-factor SMS Setup", () => {
@@ -94,7 +94,7 @@ describe("Two-factor SMS Setup", () => {
   });
 
   it("renders PageNotFound if the claimantShowMFA feature flag is not set", () => {
-    process.env.featureFlags = { claimantShowMFA: false };
+    process.env.featureFlags = JSON.stringify({ claimantShowMFA: false });
     renderPage(SetupSMS);
 
     const pageNotFoundHeading = screen.getByRole("heading", {

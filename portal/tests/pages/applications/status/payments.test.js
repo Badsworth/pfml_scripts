@@ -65,16 +65,16 @@ const props = {
 
 describe("Payments", () => {
   beforeEach(() => {
-    process.env.featureFlags = {
+    process.env.featureFlags = JSON.stringify({
       claimantShowPayments: true,
-    };
+    });
   });
 
   it("redirects to status page if feature flag is not enabled and claim has loaded", () => {
-    process.env.featureFlags = {
+    process.env.featureFlags = JSON.stringify({
       claimantShowPayments: false,
       claimantShowPaymentsPhaseTwo: false,
-    };
+    });
 
     renderPage(
       Payments,

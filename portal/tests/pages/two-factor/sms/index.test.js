@@ -5,7 +5,7 @@ import userEvent from "@testing-library/user-event";
 
 beforeEach(() => {
   mockAuth(true);
-  process.env.featureFlags = { claimantShowMFA: true };
+  process.env.featureFlags = JSON.stringify({ claimantShowMFA: true });
 });
 
 const goToPageFor = jest.fn();
@@ -88,7 +88,7 @@ describe("Two-factor SMS Index", () => {
   });
 
   it("renders PageNotFound if the claimantShowMFA feature flag is not set", () => {
-    process.env.featureFlags = { claimantShowMFA: false };
+    process.env.featureFlags = JSON.stringify({ claimantShowMFA: false });
     renderPage(IndexSMS);
 
     const pageNotFoundHeading = screen.getByRole("heading", {

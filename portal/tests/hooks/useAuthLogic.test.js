@@ -606,9 +606,9 @@ describe("useAuthLogic", () => {
       const portalFlow = mockPortalFlow();
 
       beforeEach(() => {
-        process.env.featureFlags = {
+        process.env.featureFlags = JSON.stringify({
           claimantShowMFA: true,
-        };
+        });
       });
 
       describe("with no MFA challenge", () => {

@@ -102,7 +102,7 @@ describe("useFilesLogic", () => {
       expect(files.items).toEqual([]);
 
       // After feature flag
-      process.env.featureFlags = { sendLargePdfToApi: true };
+      process.env.featureFlags = JSON.stringify({ sendLargePdfToApi: true });
       await act(async () => await processFiles([compressiblePdf]));
       expect(files.items).toEqual([
         { id: expect.any(String), file: compressiblePdf },
@@ -110,7 +110,7 @@ describe("useFilesLogic", () => {
     });
 
     it("prevents PDF files when sendLargePdfToApi feature flag is enabled and PDF is more than 10mb", async () => {
-      process.env.featureFlags = { sendLargePdfToApi: true };
+      process.env.featureFlags = JSON.stringify({ sendLargePdfToApi: true });
       const tooBigPdf = makeFile({ name: "file1", type: "application/pdf" });
       Object.defineProperty(tooBigPdf, "size", {
         get: () => 10000000,

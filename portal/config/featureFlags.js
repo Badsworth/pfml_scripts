@@ -88,10 +88,13 @@ const flagsConfig = {
 /**
  * Merges the default feature flags with any environment-specific overrides
  * @param {string} env - Environment name
- * @returns {object} Feature flags for the given environment
+ * @returns {string} Stringified JSON representation of the feature flags for the given environment
  */
 function featureFlags(env) {
-  return Object.assign({}, flagsConfig.defaults, flagsConfig[env]);
+  const envFlags = Object.assign({}, flagsConfig.defaults, flagsConfig[env]);
+
+  // This gets passed into the app as an environment variable, which *must* be a string.
+  return JSON.stringify(envFlags);
 }
 
 module.exports = featureFlags;

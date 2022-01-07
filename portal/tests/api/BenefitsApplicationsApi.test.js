@@ -34,7 +34,6 @@ describe("BenefitsApplicationsApi", () => {
   };
 
   beforeEach(() => {
-    process.env.featureFlags = {};
     jest.resetAllMocks();
     mockAuth(true, accessTokenJwt);
 
