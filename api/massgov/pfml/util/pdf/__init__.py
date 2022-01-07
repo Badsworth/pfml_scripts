@@ -14,7 +14,7 @@ import massgov.pfml.util.logging as logging
 
 logger = logging.get_logger(__name__)
 
-PDF_SETTINGS = "/screen"
+PDF_SETTINGS = "/ebook"
 SUCCESS_MESSAGE = "PDF successfully compressed"
 ERROR_MESSAGE = "PDF could not be compressed"
 TIMEOUT_ERROR_MESSAGE = "pdf compression timeout before compression was completed"
