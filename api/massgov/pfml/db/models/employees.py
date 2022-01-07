@@ -3054,7 +3054,7 @@ class ReferenceFileType(LookupTable):
 
     DUA_DEMOGRAPHICS_REQUEST_FILE = LkReferenceFileType(33, "DUA demographics request", 1)
 
-    IRS_1099_ORIG = LkReferenceFileType(34, "IRS 1099 org file", 1)
+    IRS_1099_FILE = LkReferenceFileType(34, "IRS 1099 file", 1)
 
     FINEOS_IAWW_EXTRACT = LkReferenceFileType(35, "IAWW extract", 2)
 
