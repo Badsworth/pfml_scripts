@@ -5,7 +5,7 @@ from uuid import UUID
 import connexion
 import newrelic.agent
 import puremagic
-from flask import Response, abort, request
+from flask import Response, request
 from puremagic import PureError
 from pydantic import ValidationError
 from sqlalchemy import asc, desc
@@ -906,21 +906,14 @@ def validate_tax_withholding_request(db_session, application_id, tax_preference_
             "submit_tax_withholding_preference failure - preference already set",
             extra=get_application_log_attributes(existing_application),
         )
-        abort(
-            response_util.error_response(
-                status_code=Forbidden,
-                message="Application {} could not be updated. Tax withholding preference already submitted".format(
-                    existing_application.application_id
-                ),
-                data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
-                errors=[
-                    ValidationErrorDetail(
-                        type=IssueType.duplicate,
-                        message="Tax withholding preference is already submitted",
-                        field="is_withholding_tax",
-                    )
-                ],
-            ).to_api_response()
+        raise ValidationException(
+            errors=[
+                ValidationErrorDetail(
+                    type=IssueType.duplicate,
+                    message="Tax withholding preference is already set",
+                    field="is_withholding_tax",
+                )
+            ]
         )
 
     return existing_application
