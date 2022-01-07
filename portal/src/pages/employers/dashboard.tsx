@@ -159,8 +159,13 @@ export const Dashboard = (props: WithUserProps & { query: ApiParams }) => {
             <table className="usa-table usa-table--borderless width-full usa-table--stacked">
               <thead>
                 <tr>
-                  <th>Employee/Claim ID</th>
-                  <th>Organization</th>
+                  <th>
+                    Employee{" "}
+                    <span className="font-body-2xs">(Application ID)</span>
+                  </th>
+                  <th>
+                    Organization <span className="font-body-2xs">(FEIN)</span>
+                  </th>
                   <th>Leave details</th>
                   <th>Review date</th>
                 </tr>
@@ -169,13 +174,13 @@ export const Dashboard = (props: WithUserProps & { query: ApiParams }) => {
                 <tr>
                   <td>
                     <a>
-                      <b>Stephanie Longlastname</b>
+                      <b>Stephanie Longastname</b>
                       <br />
                       <span className="font-body-2xs">NTN-12122-ABS-99</span>
                     </a>
                   </td>
                   <td>
-                    Globex Corporation, Incorporated
+                    Globex Corporation
                     <br />
                     <span className="font-body-2xs">67-7542549</span>
                   </td>
@@ -219,7 +224,7 @@ export const Dashboard = (props: WithUserProps & { query: ApiParams }) => {
                     </p>
                   </td>
                   <td className="text-center">
-                    <Button>Review Application</Button>
+                    <Button className="width-full">Review Application</Button>
                     <br />
                     <span className="font-body-2xs">Respond by 2/15/2022</span>
                   </td>
