@@ -907,6 +907,16 @@ def test_calculate_withholding_amounts(test_db_session, initialize_factories_ses
     date_start = date(2021, 1, 1)
     date_end = date(2021, 1, 16)
 
+    # Create a Primary Payment
+    payment = PaymentFactory(
+        period_start_date=date_start,
+        period_end_date=date_end,
+        claim=claim,
+        amount=Decimal("700.00"),
+        fineos_pei_i_value="58000",
+        payment_transaction_type_id=PaymentTransactionType.STANDARD.payment_transaction_type_id,
+    )
+
     # Create a bunch of Payments
     payments: List[Payment] = []
     payment_1 = PaymentFactory(
@@ -971,13 +981,13 @@ def test_calculate_withholding_amounts(test_db_session, initialize_factories_ses
 
     # Test Federal Withholding Amount
     federal_tax_amount = payment_audit_report_step.calculate_federal_withholding_amount(
-        link_payments=payments
+        payment=payment, link_payments=payments
     )
     assert federal_tax_amount == 330.00
 
     # Test State Withholding Amount
     state_tax_amount = payment_audit_report_step.calculate_state_withholding_amount(
-        link_payments=payments
+        payment=payment, link_payments=payments
     )
     assert state_tax_amount == 63.00
 
