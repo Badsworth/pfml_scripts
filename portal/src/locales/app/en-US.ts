@@ -908,7 +908,6 @@ const shared = {
   leaveReasonServiceMemberFamily: "Military family",
   loadingClaimDetailLabel: "Loading claim details",
   loadingDocumentsLabel: "Loading documents",
-  maskedPhoneNumber: "***-***-{{lastFourDigits}}",
   maxEmployerCommentLengthError:
     "Please shorten your comment. We cannot accept comments that are longer than 9999 characters.",
   maximumReducedLeaveMinutes:
@@ -1060,7 +1059,7 @@ const pages = {
     callContactCenter:
       "Need help? Call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.",
     codeLabel: "$t(shared.verificationCodeLabel)",
-    lead: "We sent a 6-digit code to your phone number $t(shared.maskedPhoneNumber) as an additional security measure.",
+    lead: "To protect your security we sent a 6-digit code to the phone number we have on file for verification.  Don’t share this code with anyone. We’ll never call or text you for this code.",
     resendCodeLink: "$t(shared.resendVerificationCodeLink)",
     submitButton: "Submit",
     title: "Enter your security code",
