@@ -187,8 +187,6 @@ class ClaimReviewResponse(PydanticBaseModel):
     concurrent_leave: Optional[ConcurrentLeave]
     residential_address: Address
     tax_identifier: Optional[MaskedTaxIdFormattedStr]
-    follow_up_date: Optional[date]
-    is_reviewable: bool
     status: str
     uses_second_eform_version: bool
     absence_periods: List[AbsencePeriodResponse] = []
