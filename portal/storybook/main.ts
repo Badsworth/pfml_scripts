@@ -28,7 +28,7 @@ module.exports = {
    */
   webpackFinal: (config: webpack.Configuration) => {
     // Set our environment variables so things like Cognito integration works in the sandbox
-    config.plugins?.push(new webpack.EnvironmentPlugin(nextConfig.env));
+    config.plugins?.push(new webpack.EnvironmentPlugin(nextConfig.env || {}));
 
     config.module?.rules.push({
       test: /\.scss$/,

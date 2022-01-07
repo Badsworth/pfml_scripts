@@ -1,3 +1,5 @@
+// @ts-check
+
 /**
  * Default environment variables for all environments. Individual
  * environment files (e.g production.js) can override these variables,
@@ -6,8 +8,9 @@
  *
  * WARNING: No secrets!
  * Only store non-secrets here. Everything in this file can be included in build artifacts.
+ * @type {Record<string, string>}
  */
-module.exports = {
+const config = {
   // We target the API stage environment for the systems we're dependent on,
   // even in dev and test. Read more here: https://lwd.atlassian.net/wiki/spaces/DD/pages/246612440/Environments
   apiUrl: "https://paidleave-api-stage.mass.gov/api/v1",
@@ -20,10 +23,12 @@ module.exports = {
   fileSizeMaxBytesApiGateway: "10000000",
   // Fineos uploads are Base64-encoded. Their limit is 6mb. 4.5mb is the max size before base64 encoding.
   fileSizeMaxBytesFineos: "4500000",
-  newRelicAppId: null,
+  newRelicAppId: "",
   // Google Tag Manager Stage environment
   gtmConfigAuth: "9Gb_47rccihIuwtcFdJy4w",
   gtmConfigPreview: "env-4",
   // 30 minutes:
   secondsOfInactivityUntilLogout: "1800",
 };
+
+module.exports = config;

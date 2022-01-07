@@ -1,10 +1,12 @@
+// @ts-check
 const defaultEnvVariables = require("./default");
 const { merge } = require("lodash");
 
 /**
  * Dictionary of environment configs
+ * @type {Record<string, Record<string, string>>}
  */
-module.exports = {
+const environments = {
   development: merge({}, defaultEnvVariables, require("./development")),
   test: merge({}, defaultEnvVariables, require("./test")),
   stage: merge({}, defaultEnvVariables, require("./stage")),
@@ -19,3 +21,5 @@ module.exports = {
   "infra-test": merge({}, defaultEnvVariables, require("./infra-test")),
   local: merge({}, defaultEnvVariables, require("./local")),
 };
+
+module.exports = environments;

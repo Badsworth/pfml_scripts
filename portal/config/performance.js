@@ -1,9 +1,12 @@
+// @ts-check
+
 /**
  * Performance environment's public environment variables.
  * WARNING: No secrets!
  * Only store non-secrets here. Everything in this file can be included in build artifacts.
+ * @type {Record<string, string>}
  */
-module.exports = {
+const config = {
   envName: "performance",
   // API Performance environment (https://lwd.atlassian.net/wiki/spaces/DD/pages/246612440/Environments)
   apiUrl: "https://paidleave-api-performance.mass.gov/api/v1",
@@ -14,3 +17,5 @@ module.exports = {
   gtmConfigAuth: "",
   newRelicAppId: "982305384",
 };
+
+module.exports = config;

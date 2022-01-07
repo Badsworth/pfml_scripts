@@ -1,9 +1,12 @@
+// @ts-check
+
 /**
  * Prod environment's public environment variables.
  * WARNING: No secrets!
  * Only store non-secrets here. Everything in this file can be included in build artifacts.
+ * @type {Record<string, string>}
  */
-module.exports = {
+const config = {
   envName: "prod",
   // API Production environment (https://lwd.atlassian.net/wiki/spaces/DD/pages/246612440/Environments)
   apiUrl: "https://paidleave-api.mass.gov/api/v1",
@@ -16,3 +19,5 @@ module.exports = {
   gtmConfigPreview: "env-3",
   newRelicAppId: "847045300",
 };
+
+module.exports = config;

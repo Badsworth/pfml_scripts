@@ -1,9 +1,12 @@
+// @ts-check
+
 /**
  * Test environment's public environment variables.
  * WARNING: No secrets!
  * Only store non-secrets here. Everything in this file can be included in build artifacts.
+ * @type {Record<string, string>}
  */
-module.exports = {
+const config = {
   // Not finding what you're looking for? Check default.js
   // apiUrl: "https://paidleave-api-test.mass.gov/api/v1",
   envName: "test",
@@ -17,3 +20,5 @@ module.exports = {
   // TODO (CP-1362): Revert temporary switch to Test environment
   awsCognitoUserPoolWebClientId: "7sjb96tvg8251lrq5vdk7de9",
 };
+
+module.exports = config;

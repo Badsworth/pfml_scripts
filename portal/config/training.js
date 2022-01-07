@@ -1,9 +1,12 @@
+// @ts-check
+
 /**
  * Training environment's public environment variables.
  * WARNING: No secrets!
  * Only store non-secrets here. Everything in this file can be included in build artifacts.
+ * @type {Record<string, string>}
  */
-module.exports = {
+const config = {
   envName: "training",
   // API Training environment (https://lwd.atlassian.net/wiki/spaces/DD/pages/246612440/Environments)
   apiUrl: "https://paidleave-api-training.mass.gov/api/v1",
@@ -14,3 +17,5 @@ module.exports = {
   gtmConfigAuth: "",
   newRelicAppId: "982303878",
 };
+
+module.exports = config;

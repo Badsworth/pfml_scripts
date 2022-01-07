@@ -1,9 +1,12 @@
+// @ts-check
+
 /**
  * CPS-Preview environment's public environment variables.
  * WARNING: No secrets!
  * Only store non-secrets here. Everything in this file can be included in build artifacts.
+ * @type {Record<string, string>}
  */
-module.exports = {
+const config = {
   envName: "cps-preview",
   // API CPS-Preview environment (https://lwd.atlassian.net/wiki/spaces/DD/pages/246612440/Environments)
   apiUrl: "https://paidleave-api-cps-preview.eol.mass.gov/api/v1",
@@ -14,3 +17,5 @@ module.exports = {
   gtmConfigAuth: "",
   newRelicAppId: "1275659093",
 };
+
+module.exports = config;

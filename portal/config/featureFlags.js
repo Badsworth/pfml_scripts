@@ -1,7 +1,10 @@
+// @ts-check
+
 /**
  * Feature flags. A feature flag can be enabled/disabled at the environment level.
  * Its value will either be true or false. Environments can override this value.
- * @see ../../docs/portal/feature-flags.md
+ * See: ../../docs/portal/feature-flags.md
+ * @type {Record<string, Record<string, boolean>>}
  */
 const flagsConfig = {
   // Define a default or all feature flags here.

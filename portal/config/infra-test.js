@@ -1,9 +1,12 @@
+// @ts-check
+
 /**
  * Infra-test environment's public environment variables.
  * WARNING: No secrets!
  * Only store non-secrets here. Everything in this file can be included in build artifacts.
+ * @type {Record<string, string>}
  */
-module.exports = {
+const config = {
   envName: "infra-test",
   // API Trn2 environment (https://lwd.atlassian.net/wiki/spaces/DD/pages/246612440/Environments)
   apiUrl: "https://paidleave-api-infra-test.dfml.eol.mass.gov/api/v1",
@@ -14,3 +17,5 @@ module.exports = {
   gtmConfigAuth: "",
   newRelicAppId: "847219405",
 };
+
+module.exports = config;
