@@ -88,7 +88,7 @@
     "EMPLOYERS_FILE": "./employers/e2e-2022-01-03.json",
     "DOR_IMPORT_URI": "s3://massgov-pfml-long-agency-transfer/dor/received/",
     "DOR_ETL_ARN": "arn:aws:states:us-east-1:498823821309:stateMachine:pfml-api-long-dor-fineos-etl",
-    "FINEOS_HAS_TAX_WITHHOLDING": "false",
+    "FINEOS_HAS_TAX_WITHHOLDING": "true",
     "HAS_UPDATED_MAX_BENFIT": "false",
     "HAS_PAYMENT_STATUS": "false",
     "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "false"
