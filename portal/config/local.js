@@ -7,10 +7,7 @@ module.exports = {
   envName: "local",
   domain: "localhost",
   apiUrl: "http://localhost:1550/v1",
-  awsConfig: {
-    cognitoRegion: "us-east-1",
-    // Cognito Stage environment (to match backend local defaults)
-    cognitoUserPoolId: "us-east-1_HpL4XslLg",
-    cognitoUserPoolWebClientId: "10rjcp71r8bnk4459c67bn18t8",
-  },
+  // Cognito Stage environment (to match backend local defaults)
+  awsCognitoUserPoolId: "us-east-1_HpL4XslLg",
+  awsCognitoUserPoolWebClientId: "10rjcp71r8bnk4459c67bn18t8",
 };

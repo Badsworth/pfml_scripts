@@ -7,11 +7,10 @@ module.exports = {
   // Not finding what you're looking for? Check default.js
   envName: "development",
   domain: "localhost",
-  gtmConfig: {
-    // Google Tag Manager Test environment (for testing changes to GTM configuration)
-    // auth: "SiSVu0U7VjoUiceaFWQeqA",
-    // preview: "env-5",
-  },
+  gtmConfigAuth: "",
+  // Google Tag Manager Test environment (for testing changes to GTM configuration)
+  // gtmConfigAuth: "SiSVu0U7VjoUiceaFWQeqA",
+  // gtmConfigPreview: "env-5",
   // This is the same New Relic app as the Test environment
   newRelicAppId: "847038274",
 };

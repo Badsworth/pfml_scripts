@@ -26,12 +26,9 @@ Auth.configure({
     // path: '/', (optional)
   },
   mandatorySignIn: false,
-  // @ts-expect-error TODO (PORTAL-353): Environment variables should be strings
-  region: process.env.awsConfig.cognitoRegion,
-  // @ts-expect-error TODO (PORTAL-353): Environment variables should be strings
-  userPoolId: process.env.awsConfig.cognitoUserPoolId,
-  // @ts-expect-error TODO (PORTAL-353): Environment variables should be strings
-  userPoolWebClientId: process.env.awsConfig.cognitoUserPoolWebClientId,
+  region: process.env.awsCognitoRegion,
+  userPoolId: process.env.awsCognitoUserPoolId,
+  userPoolWebClientId: process.env.awsCognitoUserPoolWebClientId,
 });
 initializeI18n();
 tracker.initialize();
@@ -47,8 +44,7 @@ export const App = ({ Component, pageProps }: AppProps) => {
 
   const appLogic = useAppLogic();
   useSessionTimeout(
-    // @ts-expect-error TODO (PORTAL-353): Environment variables should be strings
-    process.env.session.secondsOfInactivityUntilLogout,
+    Number(process.env.secondsOfInactivityUntilLogout),
     appLogic.auth
   );
 
