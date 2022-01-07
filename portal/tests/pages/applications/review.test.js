@@ -139,9 +139,6 @@ describe("Review Page", () => {
   });
 
   it("displays tax information for review when tax Pref is set", () => {
-    process.env.featureFlags = {
-      claimantShowTaxWithholding: true,
-    };
     setup({
       claim: new MockBenefitsApplicationBuilder()
         .complete()
@@ -157,9 +154,6 @@ describe("Review Page", () => {
   });
 
   it("displays tax information for review, including No if no selected", () => {
-    process.env.featureFlags = {
-      claimantShowTaxWithholding: true,
-    };
     setup({
       claim: new MockBenefitsApplicationBuilder()
         .complete()

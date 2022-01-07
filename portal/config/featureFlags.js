@@ -33,9 +33,6 @@ const flagsConfig = {
     // When this flag is enabled payment status phase two work will be displayed.
     claimantShowPaymentsPhaseTwo: false,
 
-    // When this flag is enabled, tax withholding option will be displayed to claimaints.
-    claimantShowTaxWithholding: false,
-
     // Show multiple leave request UI updates to leave admins.
     // TODO (PORTAL-1151) Remove flag
     employerShowMultiLeave: false,
@@ -57,44 +54,34 @@ const flagsConfig = {
   // Environments can optionally override a default feature flag below.
   // The environment keys should use the same envName defined in
   // environment config files.
-  "cps-preview": {
-    claimantShowTaxWithholding: true,
-  },
+  "cps-preview": {},
   development: {
     example: true,
     pfmlTerriyay: true,
     claimantShowPayments: true,
-    claimantShowTaxWithholding: true,
   },
   test: {
     claimantShowPayments: true,
-    claimantShowTaxWithholding: true,
   },
   stage: {
     claimantShowPayments: true,
-    claimantShowTaxWithholding: true,
   },
   training: {
     claimantShowPayments: true,
-    claimantShowTaxWithholding: true,
   },
   performance: {
     claimantShowPayments: true,
-    claimantShowTaxWithholding: true,
   },
   uat: {
     claimantShowPayments: true,
-    claimantShowTaxWithholding: true,
   },
   local: {
     pfmlTerriyay: true,
     claimantShowPayments: true,
-    claimantShowTaxWithholding: true,
   },
   prod: {
     pfmlTerriyay: true,
     claimantShowPayments: true,
-    claimantShowTaxWithholding: true,
   },
 };
 

@@ -12,7 +12,6 @@ import React from "react";
 import Title from "../../components/core/Title";
 import { Trans } from "react-i18next";
 import { getMaxBenefitAmount } from "src/utils/getMaxBenefitAmount";
-import { isFeatureEnabled } from "../../services/featureFlags";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
 
@@ -23,8 +22,6 @@ interface GetReadyProps extends WithBenefitsApplicationsProps {
 export const GetReady = (props: GetReadyProps) => {
   const { appLogic, claims, query } = props;
   const { t } = useTranslation();
-  // TODO(Portal-1001): - Remove featureFlag
-  const taxWithholdingEnabled = isFeatureEnabled("claimantShowTaxWithholding");
 
   const hasClaims = !claims.isEmpty;
 
@@ -159,9 +156,6 @@ export const GetReady = (props: GetReadyProps) => {
         </Heading>
         <Trans
           i18nKey="pages.getReady.stepThree"
-          tOptions={{
-            context: taxWithholdingEnabled ? "tax" : null,
-          }}
           values={{ maxBenefitAmount }}
           components={{
             "contact-center-phone-link": (

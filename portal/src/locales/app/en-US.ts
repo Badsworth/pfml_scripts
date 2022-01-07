@@ -1176,8 +1176,6 @@ const pages = {
     stepHTMLDescription_otherLeave:
       "You will need to know:<ul><li>If you will use any benefits from your employer because you are taking leave.</li><li>If you will receive income from any other sources during your leave.</li><li>The dates for any leave you’ve taken since {{otherLeaveStartDate}} for a reason that is covered by Paid Family and Medical Leave.</li></ul>",
     stepHTMLDescription_payment:
-      "<p>Tell us how you want to receive payment.</p><p>If you want to receive payment by direct deposit, you will need to provide your bank account information, including a routing number and account number.</p>",
-    stepHTMLDescription_payment_tax:
       "<p>If you want to receive payment by direct deposit, you will need to provide your bank account information, including a routing number and account number.</p>",
     stepHTMLDescription_reviewAndConfirm:
       "<p>Once you confirm your leave information, we’ll notify your employer. Your job will be protected. To complete your application, you will need to finish the following three steps and submit.</p><p>If you need to edit your information in Part 1 after completing this step, you’ll need to call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.</p>",
@@ -1199,14 +1197,12 @@ const pages = {
       "Uploading documents online leads to faster processing, but you can also <mail-fax-instructions-link>fax or mail documents</mail-fax-instructions-link>.",
     stepListTitlePrefix: "Part {{number}}",
     stepListTitle_1: "Tell us about yourself and your leave",
-    stepListTitle_2: "Enter your payment information",
-    stepListTitle_2_tax: "Tell us how you want to receive your benefit",
+    stepListTitle_2: "Tell us how you want to receive your benefit",
     stepListTitle_3: "Upload your documents",
     stepTitle_employerInformation: "Enter employment information",
     stepTitle_leaveDetails: "Enter leave details",
     stepTitle_otherLeave: "Report other leave, benefits, and income",
-    stepTitle_payment: "Add payment information",
-    stepTitle_payment_tax: "Enter payment method",
+    stepTitle_payment: "Enter payment method",
     stepTitle_reviewAndConfirm: "Review and confirm",
     stepTitle_taxWithholding: "Enter tax withholding preference",
     stepTitle_uploadCertification: "Upload leave certification documents",
@@ -1634,15 +1630,12 @@ const pages = {
       "It can take us additional time to set up direct deposit with your bank. Your first payment might be a check sent to the address you listed as your mailing address.",
     choiceHintCheck:
       "You will receive your checks at the address you listed as your mailing address.",
-    partTwoNextSteps:
-      "<p>Once you submit Part 2, your payment information will be viewable by our Contact Center staff. To make edits to Part 2, you’ll need to call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>. To learn more about benefit payments, <benefits-guide-link>see our benefits guide</benefits-guide-link>.</p><p>Next, you’ll work on Part 3, and submit your application.</p>",
     routingNumberHint:
       "This is the 9-digit number found on the lower left corner of a check or deposit slip.",
     routingNumberLabel: "Routing number",
     sectionLabel: "How do you want to get your weekly benefit?",
     sectionLabelHint:
       "Your choice will be applied to any previous applications you have submitted.",
-    submitPart2Button: "Submit Part 2",
     submitPayment: "Submit payment method",
     title: "Payment method",
     warning:
@@ -2565,10 +2558,8 @@ const pages = {
       "<p>If you can, tell your employer at least 30 days before your leave begins. If you need to take leave right away, tell your employer as soon as possible.</p><p>Once you tell your employer, you have the right to apply and your job is protected. Make a note of when you notified your employer. You will need to provide this date in your leave application.</p>",
     stepOneHeading: "1. Tell your employer that you need to take paid leave",
     stepThree:
-      "<p>Applying takes around 15 minutes. Your information will save as you go, so you can finish your application later if you need to.</p><p>If you give birth and plan to take both pregnancy-related medical leave and family leave to bond with your newborn, you should apply for medical leave first. Family leave to bond with your child can be <medical-bonding-link>easily added to your claim</medical-bonding-link> by calling our Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.</p><p>You need to create multiple leave applications if you are:</p><ul><li>Taking leave from multiple employers.</li><li>Taking time off in uneven blocks of time (intermittent leave), <strong>and</strong> taking time off completely or on a reduced schedule. You’ll need a separate application for the intermittent leave.</li></ul><p>PFML benefits are subject to reporting for tax purposes and may be subject to taxation. Withholding is not currently supported through the PFML program. Learn more about the <tax-liability-link>possible tax implications</tax-liability-link> of your paid leave benefits.</p><p>The maximum benefit a person can receive per week is ${{maxBenefitAmount}}. Learn more about <benefits-amount-details-link>how benefits are calculated.</benefits-amount-details-link></p>", // eslint-disable-line no-template-curly-in-string
-    stepThreeHeading: "3. Apply",
-    stepThree_tax:
       "<p>Applying takes around 15 minutes. Your information will save as you go, so you can finish your application later if you need to.</p><p>If you give birth and plan to take both pregnancy-related medical leave and family leave to bond with your newborn, you should apply for medical leave first. Family leave to bond with your child can be <medical-bonding-link>easily added to your claim</medical-bonding-link> by calling our Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.</p><p>You need to create multiple leave applications if you are:</p><ul><li>Taking leave from multiple employers.</li><li>Taking time off in uneven blocks of time (intermittent leave), <strong>and</strong> taking time off completely or on a reduced schedule. You’ll need a separate application for the intermittent leave.</li></ul><p>PFML benefits are subject to reporting for tax purposes and may be subject to taxation. Your decision to have taxes withheld from your benefit may affect your personal tax liability. If you’re unsure whether you want to withhold taxes, we recommend speaking with a <tax-guide-link>tax professional</tax-guide-link>. Learn more about the <tax-liability-link>possible tax implications</tax-liability-link> of paid leave benefits.</p><p>The maximum benefit a person can receive per week is ${{maxBenefitAmount}}. Learn more about <benefits-amount-details-link>how benefits are calculated.</benefits-amount-details-link></p>", // eslint-disable-line no-template-curly-in-string
+    stepThreeHeading: "3. Apply",
     stepTwoBondingLeaveBody:
       "<p>For family leave to bond with your child after birth, foster placement, or adoption you need a document that confirms your child’s date of birth or placement.</p><p>You can apply before your child is born or arrives in your home. You will need to provide proof of birth or placement for your application to be approved.</p>",
     stepTwoBondingLeaveSubhead: "To bond with a child",

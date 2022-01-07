@@ -4,7 +4,6 @@ import { get, groupBy, isEmpty } from "lodash";
 import BenefitsApplication from "./BenefitsApplication";
 import { Issue } from "../errors";
 import getRelevantIssues from "../utils/getRelevantIssues";
-import { isFeatureEnabled } from "../services/featureFlags";
 
 interface Context {
   [key: string]: unknown;
@@ -264,10 +263,6 @@ export default class Step {
       context,
     });
 
-    // TODO(PORTAL-1001): - Remove Feature Flag
-    const taxWithholdingEnabled = isFeatureEnabled(
-      "claimantShowTaxWithholding"
-    );
     const uploadDependsOn = [
       verifyId,
       employerInformation,
@@ -275,10 +270,9 @@ export default class Step {
       otherLeave,
       reviewAndConfirm,
       payment,
+      taxWithholding,
     ];
-    if (taxWithholdingEnabled) {
-      uploadDependsOn.push(taxWithholding);
-    }
+
     const uploadId = new Step({
       completeCond: (context) => {
         return (
