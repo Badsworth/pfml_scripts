@@ -9,7 +9,7 @@ from massgov.pfml.delegated_payments.postprocessing.payment_post_processing_util
 )
 
 
-def _create_payment_periods(total_amount, start_date, periods, length_of_period):
+def _create_payment_periods(payment, total_amount, start_date, periods, length_of_period):
     amount_per_period = total_amount / periods
 
     payment_periods = []
@@ -17,6 +17,7 @@ def _create_payment_periods(total_amount, start_date, periods, length_of_period)
         end_date = start_date + timedelta(length_of_period - 1)
 
         payment_period = PaymentDetailsFactory.create(
+            payment=payment,
             business_net_amount=amount_per_period,
             period_start_date=start_date,
             period_end_date=end_date,
@@ -52,11 +53,7 @@ def _create_payment_container(
         # We use this day because it's a Sunday that starts on the 1st so easier to conceptualize
         start_date = date(2021, 8, 1)
 
-    if not skip_pay_periods:
-        payment_periods = _create_payment_periods(amount, start_date, periods, length_of_period)
-        end_date = payment_periods[-1].period_end_date
-    else:
-        end_date = start_date + timedelta(length_of_period - 1)
+    end_date = start_date + timedelta((periods * length_of_period) - 1)
 
     factory = DelegatedPaymentFactory(
         db_session,
@@ -74,8 +71,7 @@ def _create_payment_container(
     payment = factory.get_or_create_payment()
 
     if not skip_pay_periods:
-        for payment_period in payment_periods:
-            payment_period.payment_id = payment.payment_id
+        _create_payment_periods(payment, amount, start_date, periods, length_of_period)
 
     if has_processed_state:
         state = random.choice(list(SharedPaymentConstants.PAID_STATES))
