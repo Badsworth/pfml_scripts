@@ -6,7 +6,7 @@ import massgov.pfml.api.util.response as response_util
 import massgov.pfml.util.logging
 from massgov.pfml.api.models.flags.requests import FlagRequest
 from massgov.pfml.api.models.flags.responses import FlagResponse
-from massgov.pfml.db.models.flags import LkFeatureFlag, FeatureFlagValue
+from massgov.pfml.db.models.flags import FeatureFlagValue, LkFeatureFlag
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
