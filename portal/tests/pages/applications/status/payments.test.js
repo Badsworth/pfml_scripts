@@ -1,5 +1,6 @@
 // TODO (PORTAL-1148) Update to use createMockClaim when ready
 import { cleanup, screen } from "@testing-library/react";
+
 import AppErrorInfo from "../../../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../../../src/models/AppErrorInfoCollection";
 import ClaimDetail from "../../../../src/models/ClaimDetail";
@@ -322,57 +323,6 @@ describe("Payments", () => {
     expect(table).toBeInTheDocument();
     expect(table.children.length).toBe(2);
     expect(table).toMatchSnapshot();
-  });
-
-  it("displays page not found alert if there's no absence case ID", () => {
-    renderPage(
-      Payments,
-      {
-        addCustomSetup: setupHelper(),
-      },
-      { query: {} }
-    );
-
-    const pageNotFoundHeading = screen.getByRole("heading", {
-      name: /Page not found/,
-    });
-    expect(pageNotFoundHeading).toBeInTheDocument();
-  });
-
-  it("does not render payments if the is a 404 status", () => {
-    const { container } = renderPage(
-      Payments,
-      {
-        addCustomSetup: setupHelper(),
-      },
-      {
-        query: { absence_id: "foo" },
-        appLogic: {
-          claims: {
-            loadClaimDetail: jest.fn(),
-            claimDetail: undefined,
-            isLoadingClaimDetail: false,
-          },
-          appErrors: new AppErrorInfoCollection([
-            new AppErrorInfo({
-              meta: { application_id: "foo" },
-              key: "AppErrorInfo1",
-              message:
-                "Sorry, we were unable to retrieve what you were looking for. Check that the link you are visiting is correct. If this continues to happen, please log out and try again.",
-              name: "NotFoundError",
-            }),
-          ]),
-
-          documents: {
-            documents: null,
-            loadAll: { loadAllClaimDocuments: jest.fn() },
-          },
-        },
-      }
-    );
-
-    expect(screen.queryByText(/Payments/)).not.toBeInTheDocument();
-    expect(container.firstChild).toMatchSnapshot();
   });
 
   cleanup();
