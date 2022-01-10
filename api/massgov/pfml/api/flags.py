@@ -33,8 +33,6 @@ def flag_get_logs(name):
     with app.db_session() as db_session:
         # TODO return updated at?
         logs = db_session.query(LkFeatureFlag).filter_by(name=name).one().logs()
-        if not logs:
-            raise NotFound(description="Could not find logs for {} feature flag".format(name))
         response = response_util.success_response(
             data=[FlagResponse.from_orm(flag_log).dict() for flag_log in logs],
             message="Successfully retrieved flag",
