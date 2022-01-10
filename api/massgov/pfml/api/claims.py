@@ -64,6 +64,7 @@ from massgov.pfml.util.logging.claims import (
     get_claim_log_attributes,
     get_claim_review_log_attributes,
     get_managed_requirements_log_attributes,
+    log_absence_period,
     log_get_claim_metrics,
     log_managed_requirement,
 )
@@ -350,6 +351,15 @@ def employer_get_claim_review(fineos_absence_id: str) -> flask.Response:
 
         for requirement in fineos_claim_review_response.managed_requirements:
             log_managed_requirement(requirement, fineos_absence_id)
+
+        log_attributes.update(
+            {"num_absence_periods": len(fineos_claim_review_response.absence_periods),}
+        )
+
+        for period in fineos_claim_review_response.absence_periods:
+            log_absence_period(
+                fineos_absence_id, period, "get_claim_review - Found absence period for claim"
+            )
 
         logger.info(
             "employer_get_claim_review success", extra=log_attributes,
