@@ -152,6 +152,8 @@ class Constants:
             PaymentTransactionType.OVERPAYMENT_RECOVERY_CANCELLATION,
             PaymentTransactionType.OVERPAYMENT_RECOVERY_REVERSE,
             PaymentTransactionType.OVERPAYMENT_ADJUSTMENT,
+            PaymentTransactionType.OVERPAYMENT_ACTUAL_RECOVERY_CANCELLATION,
+            PaymentTransactionType.OVERPAYMENT_ADJUSTMENT_CANCELLATION,
         ]
     )
     OVERPAYMENT_TYPES_WITHOUT_PAYMENT_DETAILS_IDS = frozenset(

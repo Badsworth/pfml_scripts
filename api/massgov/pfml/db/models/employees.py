@@ -2992,6 +2992,13 @@ class PaymentTransactionType(LookupTable):
     STATE_TAX_WITHHOLDING = LkPaymentTransactionType(13, "State Tax Withholding")
     STANDARD_LEGACY_MMARS = LkPaymentTransactionType(14, "Standard Legacy MMARS")
 
+    OVERPAYMENT_ACTUAL_RECOVERY_CANCELLATION = LkPaymentTransactionType(
+        15, "Overpayment Actual Recovery Cancellation"
+    )
+    OVERPAYMENT_ADJUSTMENT_CANCELLATION = LkPaymentTransactionType(
+        16, "Overpayment Adjustment Cancellation"
+    )
+
 
 class PaymentCheckStatus(LookupTable):
     model = LkPaymentCheckStatus
