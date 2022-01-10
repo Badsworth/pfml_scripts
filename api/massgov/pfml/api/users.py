@@ -187,10 +187,10 @@ def users_patch(user_id):
     with app.db_session() as db_session:
         user = get_or_404(db_session, User, user_id)
 
-    ensure(EDIT, user)
+        ensure(EDIT, user)
 
-    updated_user = update_user(user, body)
-    data = user_response(updated_user, db_session)
+        updated_user = update_user(db_session, user, body)
+        data = user_response(updated_user, db_session)
 
     return response_util.success_response(
         message="Successfully updated user", data=data,
