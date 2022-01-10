@@ -8,9 +8,7 @@ import {
   DocumentType,
   DocumentTypeEnum,
 } from "../../../models/Document";
-import React, { useEffect } from "react";
 import Tag, { TagProps } from "../../../components/core/Tag";
-import withUser, { WithUserProps } from "../../../hoc/withUser";
 
 import Alert from "../../../components/core/Alert";
 import { AppLogic } from "../../../hooks/useAppLogic";
@@ -19,11 +17,12 @@ import ButtonLink from "../../../components/ButtonLink";
 import Heading from "../../../components/core/Heading";
 import LeaveReason from "../../../models/LeaveReason";
 import LegalNoticeList from "../../../components/LegalNoticeList";
-import PageNotFound from "../../../components/PageNotFound";
+import React from "react";
 import Spinner from "../../../components/core/Spinner";
 import StatusNavigationTabs from "../../../components/status/StatusNavigationTabs";
 import Title from "../../../components/core/Title";
 import { Trans } from "react-i18next";
+import { WithUserProps } from "../../../hoc/withUser";
 import { createRouteWithQuery } from "../../../utils/routeWithParams";
 import findDocumentsByTypes from "../../../utils/findDocumentsByTypes";
 import findKeyByValue from "../../../utils/findKeyByValue";
@@ -33,6 +32,7 @@ import hasDocumentsLoadError from "../../../utils/hasDocumentsLoadError";
 import { isFeatureEnabled } from "../../../services/featureFlags";
 import routes from "../../../routes";
 import { useTranslation } from "../../../locales/i18n";
+import withClaimDetail from "src/hoc/withClaimDetail";
 
 const containerClassName = "border-bottom border-base-lighter padding-y-4";
 
@@ -48,93 +48,37 @@ export const Status = ({
 }) => {
   const { t } = useTranslation();
   const {
-    claims: { claimDetail, isLoadingClaimDetail, loadClaimDetail },
+    claims: { claimDetail },
     documents: {
       documents: allClaimDocuments,
       download: downloadDocument,
       hasLoadedClaimDocuments,
-      loadAll: loadAllClaimDocuments,
     },
   } = appLogic;
+
   const { absence_case_id, absence_id, uploaded_document_type } = query;
-  const application_id = claimDetail?.application_id;
+  const absencePeriods = claimDetail?.absence_periods || [];
+  const application_id = claimDetail?.application_id || "";
+  const fineosAbsenceId = claimDetail?.fineos_absence_id || "";
   const absenceId = absence_id || absence_case_id;
-  const hasDocuments = hasLoadedClaimDocuments(
-    claimDetail?.application_id || ""
-  );
-  const hasDocumentsError = hasDocumentsLoadError(
-    appLogic.appErrors,
-    claimDetail?.application_id || ""
-  );
 
-  useEffect(() => {
-    if (absenceId) {
-      loadClaimDetail(absenceId);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [absenceId]);
-
-  useEffect(() => {
-    if (application_id) {
-      loadAllClaimDocuments(application_id);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [application_id]);
-
-  useEffect(() => {
-    /**
-     * If URL includes a location.hash then page
-     * should scroll into view on that id tag,
-     * provided the id tag exists.
-     */
-    if (location.hash) {
-      const anchorId = document.getElementById(location.hash.substring(1));
-      if (anchorId) anchorId.scrollIntoView();
-    }
-  }, [hasDocuments, hasDocumentsError, isLoadingClaimDetail]);
-
-  /**
-   * If there is no absence_id query parameter,
-   * then return the PFML 404 page.
-   */
-  const isAbsenceCaseId = Boolean(absenceId?.length);
-  if (!isAbsenceCaseId) return <PageNotFound />;
-
-  // only hide page content if there is an error that's not DocumentsLoadError.
-  const hasNonDocumentsLoadError: boolean = appLogic.appErrors.items.some(
-    (error) => error.name !== "DocumentsLoadError"
-  );
-  if (hasNonDocumentsLoadError) {
-    return (
-      <BackButton
-        label={t("pages.claimsStatus.backButtonLabel")}
-        href={routes.applications.index}
-      />
-    );
-  }
-
-  // Check both because claimDetail could be cached from a different status page.
-  if (isLoadingClaimDetail || !claimDetail) {
-    return (
-      <div className="text-center">
-        <Spinner aria-label={t("pages.claimsStatus.loadingClaimDetailLabel")} />
-      </div>
-    );
-  }
-
-  const absenceDetails = AbsencePeriod.groupByReason(
-    claimDetail.absence_periods
-  );
-  const hasPendingStatus = claimDetail.absence_periods.some(
+  // Retrieve claim details
+  const hasDocuments = hasLoadedClaimDocuments(application_id);
+  const absenceDetails = AbsencePeriod.groupByReason(absencePeriods);
+  const hasPendingStatus = absencePeriods.some(
     (absenceItem) => absenceItem.request_decision === "Pending"
   );
   const hasApprovedStatus = claimDetail?.hasApprovedStatus;
 
-  const documentsForApplication = allClaimDocuments.filterByApplication(
-    claimDetail.application_id
-  );
+  const documentsForApplication =
+    allClaimDocuments.filterByApplication(application_id);
 
   const viewYourNotices = () => {
+    const hasDocumentsError = hasDocumentsLoadError(
+      appLogic.appErrors,
+      application_id
+    );
+
     const legalNotices = getLegalNotices(documentsForApplication);
     const hasNothingToShow = hasDocumentsError || legalNotices.length === 0;
     interface SectionWrapperProps {
@@ -164,7 +108,7 @@ export const Status = ({
     );
 
     // How many claim decisions
-    const expectedNoticeCount = claimDetail.absence_periods.reduce(
+    const expectedNoticeCount = absencePeriods.reduce(
       (previousValue, { request_decision }) => {
         const shouldHaveNotice =
           request_decision === "Approved" ||
@@ -213,7 +157,7 @@ export const Status = ({
   }) => {
     const hasBondingReason = LeaveReason.bonding in absenceDetails;
     const hasPregnancyReason = LeaveReason.pregnancy in absenceDetails;
-    const hasNewBorn = claimDetail.absence_periods.some(
+    const hasNewBorn = absencePeriods.some(
       (absenceItem) =>
         (absenceItem.reason_qualifier_one ||
           absenceItem.reason_qualifier_two) === "Newborn"
@@ -236,7 +180,7 @@ export const Status = ({
   const showPhaseOneFeatures =
     isFeatureEnabled("claimantShowPayments") &&
     hasApprovedStatus &&
-    claimDetail.has_paid_payments;
+    claimDetail?.has_paid_payments;
 
   // Determines if phase two payment features are displayed
   const showPhaseTwoFeatures =
@@ -323,31 +267,32 @@ export const Status = ({
             </Heading>
             <p className="text-bold">{absenceId}</p>
           </div>
-          {claimDetail.employer && (
+          {claimDetail?.employer && (
             <div>
               <Heading weight="normal" level="2" size="4">
                 {t("pages.claimsStatus.employerEIN")}
               </Heading>
-              <p className="text-bold">{claimDetail.employer.employer_fein}</p>
+              <p className="text-bold">{claimDetail?.employer.employer_fein}</p>
             </div>
           )}
         </div>
 
         {hasPendingStatus && (
           <Timeline
-            absencePeriods={claimDetail.absence_periods}
+            absencePeriods={absencePeriods}
             employerFollowUpDate={
-              claimDetail.managedRequirementByFollowUpDate[0]?.follow_up_date
+              claimDetail?.managedRequirementByFollowUpDate[0]
+                ?.follow_up_date || null
             }
-            applicationId={claimDetail.application_id}
+            applicationId={claimDetail?.application_id}
             docList={documentsForApplication}
-            absenceId={claimDetail.fineos_absence_id}
+            absenceId={fineosAbsenceId}
             appLogic={appLogic}
           />
         )}
         <LeaveDetails
           absenceDetails={absenceDetails}
-          absenceId={claimDetail.fineos_absence_id}
+          absenceId={fineosAbsenceId}
           isPaymentsTab={isPaymentsTab}
         />
         {viewYourNotices()}
@@ -379,7 +324,7 @@ export const Status = ({
               href={appLogic.portalFlow.getNextPageRoute(
                 "UPLOAD_DOC_OPTIONS",
                 {},
-                { absence_id: claimDetail.fineos_absence_id }
+                { absence_id: fineosAbsenceId }
               )}
             >
               {t("pages.claimsStatus.uploadDocumentsButton")}
@@ -442,7 +387,7 @@ export const Status = ({
   );
 };
 
-export default withUser(Status);
+export default withClaimDetail(Status);
 
 export const StatusTagMap: {
   [status in AbsencePeriodRequestDecision]: TagProps["state"];

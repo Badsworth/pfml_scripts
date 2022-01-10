@@ -22,5 +22,4 @@
       "pre-commit": "lint-staged --shell"
     }
   }
- }
- 
+}

@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import withUser, { WithUserProps } from "../../../hoc/withUser";
+
 import { AbsencePeriod } from "../../../models/AbsencePeriod";
 import Accordion from "../../../components/core/Accordion";
 import AccordionItem from "../../../components/core/AccordionItem";
@@ -8,12 +8,11 @@ import BackButton from "../../../components/BackButton";
 import Heading from "../../../components/core/Heading";
 import LeaveReason from "../../../models/LeaveReason";
 import { OtherDocumentType } from "../../../models/Document";
-import PageNotFound from "../../../components/PageNotFound";
-import Spinner from "../../../components/core/Spinner";
 import StatusNavigationTabs from "../../../components/status/StatusNavigationTabs";
 import Table from "../../../components/core/Table";
 import Title from "../../../components/core/Title";
 import { Trans } from "react-i18next";
+import { WithUserProps } from "../../../hoc/withUser";
 import { createRouteWithQuery } from "../../../utils/routeWithParams";
 import formatDate from "../../../utils/formatDate";
 import formatDateRange from "../../../utils/formatDateRange";
@@ -22,6 +21,7 @@ import isBlank from "../../../utils/isBlank";
 import { isFeatureEnabled } from "../../../services/featureFlags";
 import routes from "../../../routes";
 import { useTranslation } from "../../../locales/i18n";
+import withClaimDetail from "src/hoc/withClaimDetail";
 
 export const Payments = ({
   appLogic,
@@ -37,12 +37,11 @@ export const Payments = ({
     appErrors: { items },
     claims: {
       claimDetail,
-      isLoadingClaimDetail,
       loadClaimDetail,
       loadedPaymentsData,
       hasLoadedPayments,
     },
-    documents: { documents: allClaimDocuments, loadAll: loadAllClaimDocuments },
+    documents: { documents: allClaimDocuments },
     portalFlow,
   } = appLogic;
 
@@ -57,7 +56,8 @@ export const Payments = ({
     isFeatureEnabled("claimantShowPaymentsPhaseTwo") &&
     claimDetail?.hasApprovedStatus;
 
-  const application_id = claimDetail?.application_id;
+  const application_id = claimDetail?.application_id || "";
+  const absencePeriods = claimDetail?.absence_periods || [];
   const absenceId = absence_id;
 
   useEffect(() => {
@@ -86,62 +86,22 @@ export const Payments = ({
     loadedPaymentsData?.absence_case_id,
   ]);
 
-  useEffect(() => {
-    if (application_id) {
-      loadAllClaimDocuments(application_id);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [application_id]);
-
-  /**
-   * If there is no absence_id query parameter,
-   * then return the PFML 404 page.
-   */
-  const isAbsenceCaseId = Boolean(absenceId?.length);
-  if (!isAbsenceCaseId) return <PageNotFound />;
-
-  // only hide page content if there is an error that's not DocumentsLoadError.
-  const hasNonDocumentsLoadError: boolean = appLogic.appErrors.items.some(
-    (error) => error.name !== "DocumentsLoadError"
-  );
-
-  if (hasNonDocumentsLoadError) {
-    return (
-      <BackButton
-        label={t("pages.payments.backButtonLabel")}
-        href={routes.applications.index}
-      />
-    );
-  }
-
-  // Check both because claimDetail could be cached from a different status page.
-  if (isLoadingClaimDetail || !claimDetail) {
-    return (
-      <div className="text-center">
-        <Spinner aria-label={t("pages.payments.loadingClaimDetailLabel")} />
-      </div>
-    );
-  }
-
-  const absenceDetails = AbsencePeriod.groupByReason(
-    claimDetail.absence_periods
-  );
-  const hasPendingStatus = claimDetail.absence_periods.some(
+  const absenceDetails = AbsencePeriod.groupByReason(absencePeriods);
+  const hasPendingStatus = absencePeriods.some(
     (absenceItem) => absenceItem.request_decision === "Pending"
   );
-  const hasApprovedStatus = claimDetail.absence_periods.some(
+  const hasApprovedStatus = absencePeriods.some(
     (absenceItem) => absenceItem.request_decision === "Approved"
   );
-  const documentsForApplication = allClaimDocuments.filterByApplication(
-    claimDetail.application_id
-  );
+  const documentsForApplication =
+    allClaimDocuments.filterByApplication(application_id);
 
   const getInfoAlertContext = (absenceDetails: {
     [reason: string]: AbsencePeriod[];
   }) => {
     const hasBondingReason = LeaveReason.bonding in absenceDetails;
     const hasPregnancyReason = LeaveReason.pregnancy in absenceDetails;
-    const hasNewBorn = claimDetail.absence_periods.some(
+    const hasNewBorn = absencePeriods.some(
       (absenceItem) => absenceItem.reason_qualifier_one === "Newborn"
     );
     if (hasBondingReason && !hasPregnancyReason && hasNewBorn) {
@@ -163,8 +123,8 @@ export const Payments = ({
   )?.created_at;
 
   const isRetroactive = approvalDate
-    ? claimDetail.absence_periods[claimDetail.absence_periods.length - 1]
-        ?.absence_period_end_date < approvalDate
+    ? absencePeriods[absencePeriods.length - 1]?.absence_period_end_date <
+      approvalDate
     : false;
 
   const shouldShowPaymentsTable =
@@ -179,9 +139,9 @@ export const Payments = ({
     t("pages.payments.paymentsTable.amountSentHeader"),
   ];
 
-  const waitingWeek = !isBlank(claimDetail.waitingWeek?.startDate);
+  const waitingWeek = !isBlank(claimDetail?.waitingWeek?.startDate);
 
-  const isIntermittent = claimDetail.isIntermittent;
+  const isIntermittent = claimDetail?.isIntermittent;
 
   const isIntermittentUnpaid =
     isIntermittent &&
@@ -472,4 +432,4 @@ export const Payments = ({
   );
 };
 
-export default withUser(Payments);
+export default withClaimDetail(Payments);

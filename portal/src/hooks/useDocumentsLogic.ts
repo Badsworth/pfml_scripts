@@ -8,6 +8,7 @@ import {
   ValidationError,
 } from "../errors";
 import { useMemo, useState } from "react";
+
 import { AppErrorsLogic } from "./useAppErrorsLogic";
 import DocumentCollection from "../models/DocumentCollection";
 import DocumentsApi from "../api/DocumentsApi";
@@ -59,14 +60,22 @@ const useDocumentsLogic = ({
    * Load all documents for a user's claim
    * This must be called before documents are available
    */
-  const loadAll = async (application_id: string) => {
-    // if documents already contains docs for application_id, don't load again
-    // or if we started making a request to the API to load documents, don't load again
-    if (
+  const loadAll = async (
+    application_id: string,
+    hasNavigationTabs?: boolean
+  ) => {
+    const hasOrGettingDocuments =
       hasLoadedClaimDocuments(application_id) ||
-      isLoadingClaimDocuments(application_id)
-    )
+      isLoadingClaimDocuments(application_id);
+
+    /**
+     * If docs are loading or available, don't
+     * check again - unless there are navigation tabs
+     * that way error(s) persists on other tab(s)
+     */
+    if (hasOrGettingDocuments && !hasNavigationTabs) {
       return;
+    }
 
     appErrorsLogic.clearErrors();
 
