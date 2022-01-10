@@ -42,16 +42,9 @@ def update_managed_requirement_from_fineos(
         **log_attributes,
         **get_fineos_managed_requirement_log_attributes(fineos_requirement),
     }
-    try:
-        db_requirement.managed_requirement_status_id = ManagedRequirementStatus.get_id(
-            fineos_requirement.status
-        )
-    except KeyError:
-        logger.warning(
-            "Managed requirement failed to update. Unsupported Fineos Managed Requirement status received.",
-            extra=log_attributes,
-        )
-        return None
+    db_requirement.managed_requirement_status_id = ManagedRequirementStatus.get_id(
+        fineos_requirement.status
+    )
 
     fineos_follow_up_date = fineos_requirement.followUpDate
     if fineos_follow_up_date != db_requirement.follow_up_date:
@@ -72,17 +65,10 @@ def create_managed_requirement_from_fineos(
     fineos_requirement: ManagedRequirementDetails,
     log_attributes: dict,
 ) -> Optional[ManagedRequirement]:
-    try:
-        status_id = ManagedRequirementStatus.get_id(fineos_requirement.status)
-        category_id = ManagedRequirementCategory.get_id(fineos_requirement.category)
-        type_id = ManagedRequirementType.get_id(fineos_requirement.type)
-    except KeyError:
-        logger.warning(
-            "Managed requirement failed to create. Unsupported Fineos Managed Requirement lookup received.",
-            extra=log_attributes,
-            exc_info=True,
-        )
-        return None
+    status_id = ManagedRequirementStatus.get_id(fineos_requirement.status)
+    category_id = ManagedRequirementCategory.get_id(fineos_requirement.category)
+    type_id = ManagedRequirementType.get_id(fineos_requirement.type)
+
     managed_requirement = ManagedRequirement(
         claim_id=claim_id,
         fineos_managed_requirement_id=str(fineos_requirement.managedReqId),

@@ -1,3 +1,4 @@
+import { Auth, CognitoUser } from "@aws-amplify/auth";
 import {
   CognitoAuthError,
   CognitoError,
@@ -8,16 +9,21 @@ import {
   NullableQueryParams,
   createRouteWithQuery,
 } from "../utils/routeWithParams";
-import { compact, trim } from "lodash";
 import { useMemo, useState } from "react";
 import { AppErrorsLogic } from "./useAppErrorsLogic";
-import { Auth } from "@aws-amplify/auth";
 import { PortalFlow } from "./usePortalFlow";
 import { RoleDescription } from "../models/User";
 import UsersApi from "../api/UsersApi";
 import assert from "assert";
+import { compact } from "lodash";
+import { isFeatureEnabled } from "../services/featureFlags";
 import routes from "../routes";
 import tracker from "../services/tracker";
+import validateCode from "../utils/validateCode";
+
+interface ErrorCodeMap {
+  [code: string]: { field?: string; type: string } | undefined;
+}
 
 function isCognitoError(error: unknown): error is CognitoError {
   if (
@@ -30,6 +36,14 @@ function isCognitoError(error: unknown): error is CognitoError {
 
   return false;
 }
+
+interface MFAChallenge {
+  challengeName: string;
+  challengeParam: { CODE_DELIVERY_DESTINATION: string };
+}
+type CognitoMFAUser = CognitoUser & {
+  preferredMFA: "NOMFA" | "SMS";
+} & MFAChallenge;
 
 const useAuthLogic = ({
   appErrorsLogic,
@@ -50,6 +64,8 @@ const useAuthLogic = ({
    * @property authData - data to store between page transitions
    */
   const [authData, setAuthData] = useState({});
+
+  const [cognitoUser, setCognitoUser] = useState<CognitoMFAUser>();
 
   /**
    * @property isLoggedIn - Whether the user is logged in or not, or null if logged in status has not been checked yet
@@ -83,10 +99,10 @@ const useAuthLogic = ({
    */
   const sendForgotPasswordConfirmation = async (username = "") => {
     appErrorsLogic.clearErrors();
-    username = trim(username);
+    const trimmedUsername = username.trim();
 
     const validationIssues = combineValidationIssues(
-      validateUsername(username)
+      validateUsername(trimmedUsername)
     );
 
     if (validationIssues) {
@@ -96,7 +112,7 @@ const useAuthLogic = ({
 
     try {
       trackAuthRequest("forgotPassword");
-      await Auth.forgotPassword(username);
+      await Auth.forgotPassword(trimmedUsername);
       tracker.markFetchRequestEnd();
 
       return true;
@@ -114,16 +130,18 @@ const useAuthLogic = ({
 
   /**
    * Log in to Portal with the given username (email) and password.
+   * If the user has MFA configured, an SMS with a 6-digit verfication code will be sent
+   * to the phone number on file in Cognito.
    * If there are any errors, set app errors on the page.
    * @param password Password
    * @param [next] Redirect url after login
    */
   const login = async (username = "", password: string, next?: string) => {
     appErrorsLogic.clearErrors();
-    username = trim(username);
+    const trimmedUsername = username.trim();
 
     const validationIssues = combineValidationIssues(
-      validateUsername(username),
+      validateUsername(trimmedUsername),
       validatePassword(password)
     );
 
@@ -134,15 +152,36 @@ const useAuthLogic = ({
 
     try {
       trackAuthRequest("signIn");
-      await Auth.signIn(username, password);
+      const currentUser = await Auth.signIn(trimmedUsername, password);
+      setCognitoUser(currentUser);
       tracker.markFetchRequestEnd();
 
-      setIsLoggedIn(true);
+      // TODO(PORTAL-1007): Remove claimantShowMFA feature flag
+      if (!isFeatureEnabled("claimantShowMFA")) {
+        finishLoginAndRedirect(next);
+        return;
+      }
 
-      if (next) {
-        portalFlow.goTo(next);
+      if (
+        !currentUser.challengeName ||
+        currentUser.challengeName !== "SMS_MFA"
+      ) {
+        const apiUser = await usersApi.getCurrentUser();
+        // if delivery preference is null and user is not an employer, redirect to set up MFA
+        const shouldSetMFA =
+          apiUser.user.mfa_delivery_preference === null &&
+          !apiUser.user.hasEmployerRole;
+        // user is not being prompted for a verification code - log them in!
+        finishLoginAndRedirect(next, shouldSetMFA);
       } else {
-        portalFlow.goToPageFor("LOG_IN");
+        portalFlow.goToPageFor(
+          "VERIFY_CODE",
+          {},
+          {
+            next,
+          }
+        );
+        return;
       }
     } catch (error) {
       if (!isCognitoError(error)) {
@@ -157,6 +196,38 @@ const useAuthLogic = ({
       const authError = getLoginError(error);
       appErrorsLogic.catchError(authError);
     }
+  };
+
+  /**
+   * Verifies the 6-digit MFA code and logs the user into the Portal.
+   * If there are any errors, set app errors on the page.
+   * @param code The 6-digit MFA verification code
+   * @param [next] Redirect url after login
+   */
+  const verifyMFACodeAndLogin = async (code: string, next?: string) => {
+    appErrorsLogic.clearErrors();
+
+    const trimmedCode = code ? code.trim() : "";
+    const validationIssues = combineValidationIssues(validateCode(trimmedCode));
+    if (validationIssues) {
+      appErrorsLogic.catchError(new ValidationError(validationIssues, "mfa"));
+      return;
+    }
+
+    try {
+      trackAuthRequest("confirmSignIn");
+      await Auth.confirmSignIn(cognitoUser, trimmedCode, "SMS_MFA");
+      tracker.markFetchRequestEnd();
+    } catch (error) {
+      if (!isCognitoError(error)) {
+        appErrorsLogic.catchError(error);
+        return;
+      }
+      const issue = { field: "code", type: "invalidMFACode" };
+      appErrorsLogic.catchError(new CognitoAuthError(error, issue));
+      return;
+    }
+    finishLoginAndRedirect(next);
   };
 
   /**
@@ -204,10 +275,10 @@ const useAuthLogic = ({
     employer_fein?: string
   ) => {
     appErrorsLogic.clearErrors();
-    email_address = trim(email_address);
+    const trimmedEmail = email_address.trim();
 
     const requestData = {
-      email_address,
+      email_address: trimmedEmail,
       password,
       user_leave_administrator: {},
       role: { role_description },
@@ -226,13 +297,31 @@ const useAuthLogic = ({
 
     // Store the username so the user doesn't need to reenter it on the Verify page
     setAuthData({
-      createAccountUsername: email_address,
+      createAccountUsername: trimmedEmail,
       createAccountFlow:
         role_description === RoleDescription.employer ? "employer" : "claimant",
     });
 
     portalFlow.goToPageFor("CREATE_ACCOUNT");
   };
+
+  /**
+   * Sets the current user as logged in, and redirects them to the next page.
+   * @param [next] Redirect url after login
+   * @param [shouldSetMFA] Should a user be redirected to set up MFA?
+   * @private
+   */
+  function finishLoginAndRedirect(next?: string, shouldSetMFA?: boolean) {
+    setIsLoggedIn(true);
+
+    if (shouldSetMFA) {
+      portalFlow.goToPageFor("ENABLE_MFA");
+    } else if (next) {
+      portalFlow.goTo(next);
+    } else {
+      portalFlow.goToPageFor("LOG_IN");
+    }
+  }
 
   /**
    * Create Portal account with the given username (email) and password.
@@ -289,10 +378,10 @@ const useAuthLogic = ({
 
   const resendVerifyAccountCode = async (username = "") => {
     appErrorsLogic.clearErrors();
-    username = trim(username);
+    const trimmedUsername = username.trim();
 
     const validationIssues = combineValidationIssues(
-      validateUsername(username)
+      validateUsername(trimmedUsername)
     );
 
     if (validationIssues) {
@@ -302,7 +391,7 @@ const useAuthLogic = ({
 
     try {
       trackAuthRequest("resendSignUp");
-      await Auth.resendSignUp(username);
+      await Auth.resendSignUp(trimmedUsername);
       tracker.markFetchRequestEnd();
 
       // TODO (CP-600): Show success message
@@ -323,12 +412,12 @@ const useAuthLogic = ({
   const resetPassword = async (username = "", code = "", password = "") => {
     appErrorsLogic.clearErrors();
 
-    username = trim(username);
-    code = trim(code);
+    const trimmedUsername = username.trim();
+    const trimmedCode = code.trim();
 
     const validationIssues = combineValidationIssues(
-      validateCode(code),
-      validateUsername(username),
+      validateCode(trimmedCode),
+      validateUsername(trimmedUsername),
       validatePassword(password)
     );
 
@@ -337,7 +426,7 @@ const useAuthLogic = ({
       return;
     }
 
-    await resetPasswordInCognito(username, code, password);
+    await resetPasswordInCognito(trimmedUsername, trimmedCode, password);
   };
 
   /**
@@ -420,12 +509,12 @@ const useAuthLogic = ({
   const verifyAccount = async (username = "", code = "") => {
     appErrorsLogic.clearErrors();
 
-    username = trim(username);
-    code = trim(code);
+    const trimmedUsername = username.trim();
+    const trimmedCode = code.trim();
 
     const validationIssues = combineValidationIssues(
-      validateCode(code),
-      validateUsername(username)
+      validateCode(trimmedCode),
+      validateUsername(trimmedUsername)
     );
 
     if (validationIssues) {
@@ -433,22 +522,25 @@ const useAuthLogic = ({
       return;
     }
 
-    await verifyAccountInCognito(username, code);
+    await verifyAccountInCognito(trimmedUsername, trimmedCode);
   };
 
   return {
     authData,
+    cognitoUser,
     createAccount,
     createEmployerAccount,
     forgotPassword,
     login,
     logout,
+    isCognitoError,
     isLoggedIn,
     requireLogin,
     resendVerifyAccountCode,
     resetPassword,
     resendForgotPasswordCode,
     verifyAccount,
+    verifyMFACodeAndLogin,
   };
 };
 
@@ -456,20 +548,6 @@ function combineValidationIssues(...issues: Array<Issue | undefined>) {
   const combinedIssues = compact(issues);
   if (combinedIssues.length === 0) return;
   return combinedIssues;
-}
-
-function validateCode(code?: string) {
-  if (!code) {
-    return {
-      field: "code",
-      type: "required",
-    };
-  } else if (!code.match(/^\d{6}$/)) {
-    return {
-      field: "code",
-      type: "pattern", // matches same type as API regex pattern validations
-    };
-  }
 }
 
 function validateUsername(username?: string) {
@@ -498,7 +576,7 @@ function validatePassword(password?: string) {
  */
 function getForgotPasswordError(error: CognitoError) {
   let issue;
-  const errorCodeToIssueMap = {
+  const errorCodeToIssueMap: ErrorCodeMap = {
     CodeDeliveryFailureException: { field: "code", type: "deliveryFailure" },
     InvalidParameterException: { type: "invalidParametersFallback" },
     UserNotFoundException: { type: "userNotFound" },
@@ -548,7 +626,7 @@ function getLoginError(error: CognitoError) {
  */
 function getResetPasswordError(error: CognitoError) {
   let issue;
-  const errorCodeToIssueMap = {
+  const errorCodeToIssueMap: ErrorCodeMap = {
     CodeMismatchException: { field: "code", type: "mismatchException" },
     ExpiredCodeException: { field: "code", type: "expired" },
     InvalidParameterException: {
@@ -575,7 +653,7 @@ function getResetPasswordError(error: CognitoError) {
  */
 function getVerifyAccountError(error: CognitoError) {
   let issue;
-  const errorCodeToIssueMap = {
+  const errorCodeToIssueMap: ErrorCodeMap = {
     CodeMismatchException: { field: "code", type: "mismatchException" },
     ExpiredCodeException: { field: "code", type: "expired" },
   };

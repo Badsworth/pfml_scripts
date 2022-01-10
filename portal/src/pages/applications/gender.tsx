@@ -1,24 +1,18 @@
-import BenefitsApplication, {
-  Gender as GenderDescription,
-} from "../../models/BenefitsApplication";
-
-import InputChoiceGroup from "../../components/InputChoiceGroup";
+import withBenefitsApplication, {
+  WithBenefitsApplicationProps,
+} from "../../hoc/withBenefitsApplication";
+import { Gender as GenderDescription } from "../../models/BenefitsApplication";
+import InputChoiceGroup from "../../components/core/InputChoiceGroup";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import { get } from "lodash";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = ["claim.gender"];
 
-interface GenderProps {
-  appLogic: any;
-  claim: BenefitsApplication;
-}
-
-export const Gender = (props: GenderProps) => {
+export const Gender = (props: WithBenefitsApplicationProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 

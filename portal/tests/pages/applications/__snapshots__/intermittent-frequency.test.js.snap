@@ -61,14 +61,14 @@ exports[`IntermittentFrequency renders the page 1`] = `
         >
           <input
             class="usa-radio__input"
-            id="InputChoice1"
+            id="InputChoice2"
             name="leave_details.intermittent_leave_periods[0].frequency_interval_basis"
             type="radio"
             value="Weeks"
           />
           <label
             class="usa-radio__label"
-            for="InputChoice1"
+            for="InputChoice2"
           >
             Once or more per week
           </label>
@@ -78,14 +78,14 @@ exports[`IntermittentFrequency renders the page 1`] = `
         >
           <input
             class="usa-radio__input"
-            id="InputChoice2"
+            id="InputChoice3"
             name="leave_details.intermittent_leave_periods[0].frequency_interval_basis"
             type="radio"
             value="Months"
           />
           <label
             class="usa-radio__label"
-            for="InputChoice2"
+            for="InputChoice3"
           >
             Once or more per month
           </label>
@@ -115,16 +115,16 @@ exports[`IntermittentFrequency renders the page 1`] = `
     >
       <label
         class="usa-label text-bold font-heading-xs measure-5"
-        for="InputText4"
-        id="InputText4_label"
+        for="InputText5"
+        id="InputText5_label"
       >
         Estimate how many absences over the next 6 months.
       </label>
       <input
-        aria-labelledby="InputText4_label InputText4_hint InputText4_error"
+        aria-labelledby="InputText5_label InputText5_hint InputText5_error"
         class="usa-input usa-input--small"
         data-value-type="integer"
-        id="InputText4"
+        id="InputText5"
         inputmode="numeric"
         name="leave_details.intermittent_leave_periods[0].frequency"
         type="text"
@@ -147,14 +147,14 @@ exports[`IntermittentFrequency renders the page 1`] = `
         >
           <input
             class="usa-radio__input"
-            id="InputChoice5"
+            id="InputChoice6"
             name="leave_details.intermittent_leave_periods[0].duration_basis"
             type="radio"
             value="Days"
           />
           <label
             class="usa-radio__label"
-            for="InputChoice5"
+            for="InputChoice6"
           >
             At least one day
           </label>
@@ -165,14 +165,14 @@ exports[`IntermittentFrequency renders the page 1`] = `
           <input
             checked=""
             class="usa-radio__input"
-            id="InputChoice6"
+            id="InputChoice7"
             name="leave_details.intermittent_leave_periods[0].duration_basis"
             type="radio"
             value="Hours"
           />
           <label
             class="usa-radio__label"
-            for="InputChoice6"
+            for="InputChoice7"
           >
             Less than one full work day
           </label>
@@ -184,16 +184,16 @@ exports[`IntermittentFrequency renders the page 1`] = `
     >
       <label
         class="usa-label text-bold font-heading-xs measure-5"
-        for="InputText7"
-        id="InputText7_label"
+        for="InputText8"
+        id="InputText8_label"
       >
         How many hours of work will you miss per absence?
       </label>
       <input
-        aria-labelledby="InputText7_label InputText7_hint InputText7_error"
+        aria-labelledby="InputText8_label InputText8_hint InputText8_error"
         class="usa-input usa-input--small"
         data-value-type="integer"
-        id="InputText7"
+        id="InputText8"
         inputmode="numeric"
         name="leave_details.intermittent_leave_periods[0].duration"
         type="text"

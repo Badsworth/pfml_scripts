@@ -1,0 +1,109 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`TaxWithholding renders the page 1`] = `
+<div>
+  <form
+    class="usa-form"
+    method="post"
+  >
+    <h1
+      class="js-title margin-top-0 margin-bottom-2 font-heading-sm line-height-sans-3"
+      tabindex="-1"
+    >
+      Tax withholding
+    </h1>
+    <fieldset
+      class="usa-fieldset margin-top-3 usa-form-group"
+    >
+      <legend
+        class="usa-label text-bold usa-legend font-heading-lg line-height-sans-3 margin-bottom-1 maxw-tablet"
+      >
+        Do you want us to withhold state and federal taxes from this paid leave benefit?
+      </legend>
+      <span
+        class="display-block line-height-sans-5 measure-5 usa-intro"
+      >
+        <p>
+          You have the option to have state and federal taxes withheld from your weekly benefit. If you choose to have taxes withheld, we will withhold 5% for state taxes and 10% for federal taxes. These percentages can’t be adjusted.
+        </p>
+        <p>
+          The IRS hasn’t decided if paid leave benefits are considered taxable income. Massachusetts tax treatment will follow the guidance provided by the IRS.
+        </p>
+        <p>
+          If you're unsure whether you want to withhold taxes, we recommend speaking with a 
+          <a
+            href="https://www.mass.gov/service-details/find-a-tax-professional-to-help-with-your-taxes"
+            rel="noreferrer noopener"
+            target="_blank"
+          >
+            tax professional
+          </a>
+           about how IRS decisions could affect your personal tax liability. We cannot offer guidance or advice for individual tax situations.
+        </p>
+      </span>
+      <div
+        class="margin-top-3"
+      >
+        <div
+          class="usa-radio measure-5 bg-transparent"
+        >
+          <input
+            class="usa-radio__input"
+            id="InputChoice1"
+            name="is_withholding_tax"
+            type="radio"
+            value="true"
+          />
+          <label
+            class="usa-radio__label"
+            for="InputChoice1"
+          >
+            Yes, withhold state and federal taxes
+          </label>
+        </div>
+        <div
+          class="usa-radio measure-5 bg-transparent"
+        >
+          <input
+            class="usa-radio__input"
+            id="InputChoice2"
+            name="is_withholding_tax"
+            type="radio"
+            value="false"
+          />
+          <label
+            class="usa-radio__label"
+            for="InputChoice2"
+          >
+            No, don’t withhold state and federal taxes
+          </label>
+        </div>
+      </div>
+    </fieldset>
+    <div
+      class="margin-top-6 margin-bottom-2"
+    >
+      <p>
+        After you submit your tax withholding preference, it can’t be edited on this website. To change it before your application has been approved, you will need to call the Contact Center at 
+        <a
+          href="tel:(833) 344-7365"
+        >
+          (833) 344‑7365
+        </a>
+        .
+      </p>
+      <p>
+        <strong>
+          Attention: This selection can’t be changed once your application has been approved.
+        </strong>
+      </p>
+    </div>
+    <button
+      class="usa-button position-relative margin-top-4"
+      type="submit"
+    >
+      Submit tax withholding preference
+    </button>
+  </form>
+</div>
+`;

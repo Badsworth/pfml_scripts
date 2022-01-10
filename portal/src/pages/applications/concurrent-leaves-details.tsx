@@ -1,7 +1,9 @@
-import BenefitsApplication from "../../models/BenefitsApplication";
+import withBenefitsApplication, {
+  WithBenefitsApplicationProps,
+} from "../../hoc/withBenefitsApplication";
 import ConcurrentLeave from "../../models/ConcurrentLeave";
-import InputChoiceGroup from "../../components/InputChoiceGroup";
-import InputDate from "../../components/InputDate";
+import InputChoiceGroup from "../../components/core/InputChoiceGroup";
+import InputDate from "../../components/core/InputDate";
 import LeaveDatesAlert from "../../components/LeaveDatesAlert";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
@@ -9,7 +11,6 @@ import { get } from "lodash";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = [
   "claim.concurrent_leave",
@@ -18,21 +19,15 @@ export const fields = [
   "claim.concurrent_leave.leave_end_date",
 ];
 
-interface ConcurrentLeavesDetailsProps {
-  appLogic: any;
-  claim: BenefitsApplication;
-  query: any;
-}
-
 export const ConcurrentLeavesDetails = (
-  props: ConcurrentLeavesDetailsProps
+  props: WithBenefitsApplicationProps
 ) => {
   const { t } = useTranslation();
   const { appLogic, claim } = props;
   const employer_fein = claim.employer_fein;
 
   const { formState, updateFields } = useFormState({
-    concurrent_leave: new ConcurrentLeave(get(claim, "concurrent_leave")),
+    concurrent_leave: new ConcurrentLeave(get(claim, "concurrent_leave") || {}),
   });
   const getFunctionalInputProps = useFunctionalInputProps({
     appErrors: appLogic.appErrors,
@@ -46,6 +41,8 @@ export const ConcurrentLeavesDetails = (
       formState
     );
   };
+
+  const { isIntermittent } = claim;
 
   return (
     <QuestionPage
@@ -77,9 +74,9 @@ export const ConcurrentLeavesDetails = (
         hint={
           <React.Fragment>
             <LeaveDatesAlert
-              showWaitingDayPeriod
               startDate={claim.leaveStartDate}
               endDate={claim.leaveEndDate}
+              showWaitingDayPeriod={!isIntermittent}
             />
             <p>{t("pages.claimsConcurrentLeavesDetails.hintHeader")}</p>
           </React.Fragment>

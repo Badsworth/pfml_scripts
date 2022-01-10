@@ -23,6 +23,37 @@ class ImportBatch:
     employee_file: str
 
 
+def get_pending_filing_files_to_process(path: str) -> List[str]:
+    import_files: List[str] = []
+
+    files_for_import = massgov.pfml.util.files.list_files(str(path))
+    files_for_import.sort()
+
+    for filename in files_for_import:
+        match = re.match(r"(DORDUADFML.*_)(\d+)", filename)
+
+        if match is not None:
+            if path.endswith("/"):
+                import_files.append("{}{}".format(path, filename))
+            else:
+                import_files.append("{}/{}".format(path, filename))
+
+    return import_files
+
+
+def get_exemption_file_to_process(path: str) -> str:
+    files_for_import = massgov.pfml.util.files.list_files(str(path))
+    files_for_import.sort()
+
+    for filename in files_for_import:
+        match = re.match(r"CompaniesReturningToStatePlan.*.csv", filename)
+
+        if match is not None:
+            return "{}{}".format(path, filename)
+
+    raise ValueError("Exemption file not found")
+
+
 def get_files_to_process(path: str) -> List[ImportBatch]:
     employer_files, employee_files = get_files_for_import(path)
     import_batches: List[ImportBatch] = []
@@ -62,7 +93,7 @@ def get_files_for_import(path: str) -> Tuple[Iterator[Any], Iterator[Any]]:
     files_for_import = massgov.pfml.util.files.list_files(str(path))
     files_for_import.sort()
 
-    def employer_filter(filename):
+    def employer_filter(filename: str) -> bool:
         match = re.match(r"(DORDFML.*_)(\d+)", filename)
 
         if not match:
@@ -71,7 +102,7 @@ def get_files_for_import(path: str) -> Tuple[Iterator[Any], Iterator[Any]]:
         prefix = match[1]
         return prefix == EMPLOYER_FILE_PREFIX
 
-    def employee_filter(filename):
+    def employee_filter(filename: str) -> bool:
         match = re.match(r"(DORDFML.*_)(\d+)", filename)
 
         if not match:

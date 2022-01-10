@@ -429,10 +429,13 @@ class FineosExtractEmployeeFeed(Base, TimestampMixin):
     sortcode = Column(Text)
     accounttype = Column(Text)
     active_absence_flag = Column(Text)
+    effectivefrom = Column(Text)
+    effectiveto = Column(Text)
 
     reference_file_id = Column(
         PostgreSQLUUID, ForeignKey("reference_file.reference_file_id"), index=True
     )
+
     fineos_extract_import_log_id = Column(
         Integer, ForeignKey("import_log.import_log_id"), index=True
     )
@@ -602,6 +605,76 @@ class FineosExtractReplacedPayments(Base, TimestampMixin):
     stocknumber = Column(Text)
     claimnumber = Column(Text)
     benefitcasenumber = Column(Text)
+
+    reference_file_id = Column(
+        PostgreSQLUUID, ForeignKey("reference_file.reference_file_id"), index=True
+    )
+    fineos_extract_import_log_id = Column(
+        Integer, ForeignKey("import_log.import_log_id"), index=True
+    )
+
+    reference_file = relationship(ReferenceFile)
+
+
+class FineosExtractVbiLeavePlanRequestedAbsence(Base, TimestampMixin):
+    __tablename__ = "fineos_extract_vbi_leave_plan_requested_absence"
+
+    leave_plan_requested_absence_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+
+    selectedplan_classid = Column(Text)
+    selectedplan_indexid = Column(Text)
+    selectedplan_lastupdatedate = Column(Text)
+    selectedplan_adjudicat_result = Column(Text)
+    selectedplan_adjudication_note = Column(Text)
+    selectedplan_updatedbyuserid = Column(Text)
+    leaveplan_classid = Column(Text)
+    leaveplan_indexid = Column(Text)
+    leaveplan_displayreference = Column(Text)
+    leaveplan_shortname = Column(Text)
+    leaveplan_longname = Column(Text)
+    leaveplan_alias = Column(Text)
+    leaveplan_leavegroup = Column(Text)
+    leaveplan_leavecategory = Column(Text)
+    leaveplan_leavetype = Column(Text)
+    leaveplan_state = Column(Text)
+    leaveplan_jobprotection = Column(Text)
+    leaverequest_id = Column(Text)
+
+    reference_file_id = Column(
+        PostgreSQLUUID, ForeignKey("reference_file.reference_file_id"), index=True
+    )
+    fineos_extract_import_log_id = Column(
+        Integer, ForeignKey("import_log.import_log_id"), index=True
+    )
+
+    reference_file = relationship(ReferenceFile)
+
+
+class FineosExtractVPaidLeaveInstruction(Base, TimestampMixin):
+    __tablename__ = "fineos_extract_v_paid_leave_instruction"
+
+    paid_leave_instruction_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+
+    c = Column(Text)
+    i = Column(Text)
+    flags = Column(Text)
+    partitionid = Column(Text)
+    lastupdatedate = Column(Text)
+    boeversion = Column(Text)
+    c_osuser_updatedby = Column(Text)
+    i_osuser_updatedby = Column(Text)
+    averagedaysworked = Column(Text)
+    averageweeklywage_monamt = Column(Text)
+    averageweeklywage_moncur = Column(Text)
+    benefitwaitingperiod = Column(Text)
+    doesmandatoryfitapply = Column(Text)
+    notes = Column(Text)
+    policyreference = Column(Text)
+    taxablepercentage = Column(Text)
+    autoapprovebenefits = Column(Text)
+    benefitwaitingperiodbasis = Column(Text)
+    c_selectedleaveplan = Column(Text)
+    i_selectedleaveplan = Column(Text)
 
     reference_file_id = Column(
         PostgreSQLUUID, ForeignKey("reference_file.reference_file_id"), index=True
@@ -792,17 +865,6 @@ class MmarsPaymentRefunds(Base, TimestampMixin):
     payment = relationship(Payment)
 
 
-# TO-DO: this has been consolidated into the applications.state_metric table and can be removed
-# after the app code (including the initial migration) has been deployed
-class MaximumWeeklyBenefitAmount(Base):
-    # See regulations for how this is calculated:
-    # https://malegislature.gov/Laws/GeneralLaws/PartI/TitleXXII/Chapter175M/Section3
-    __tablename__ = "maximum_weekly_benefit_amount"
-
-    effective_date = Column(Date, primary_key=True, nullable=False)
-    maximum_weekly_benefit_amount = Column(Numeric, nullable=False)
-
-
 class FineosWritebackDetails(Base, TimestampMixin):
     __tablename__ = "fineos_writeback_details"
     fineos_writeback_details_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
@@ -818,9 +880,16 @@ class FineosWritebackDetails(Base, TimestampMixin):
     import_log_id = Column(Integer, ForeignKey("import_log.import_log_id"), index=True)
     writeback_sent_at = Column(TIMESTAMP(timezone=True), nullable=True,)
 
-    payment = relationship(Payment)
+    payment = relationship(Payment, back_populates="fineos_writeback_details")
     transaction_status = relationship("LkFineosWritebackTransactionStatus")
     import_log = relationship(ImportLog)
+
+
+# Because of how the app is loaded, we need
+# to define this here, after both classes are registered
+Payment.fineos_writeback_details = relationship(  # type: ignore
+    FineosWritebackDetails, back_populates="payment", order_by="FineosWritebackDetails.created_at",
+)
 
 
 class LkFineosWritebackTransactionStatus(Base):
@@ -947,6 +1016,9 @@ class FineosWritebackTransactionStatus(LookupTable):
     NAME_MISMATCH = LkFineosWritebackTransactionStatus(
         23, "InvalidPayment NameMismatch", ACTIVE_WRITEBACK_RECORD_STATUS
     )
+    WITHHOLDING_ERROR = LkFineosWritebackTransactionStatus(
+        24, "PrimaryPayment ProcessingErr", ACTIVE_WRITEBACK_RECORD_STATUS
+    )
 
 
 class AuditReportAction(str, Enum):
@@ -1028,17 +1100,23 @@ class PaymentAuditReportType(LookupTable):
         "payment_audit_report_action",
     )
 
-    MAX_WEEKLY_BENEFITS = LkPaymentAuditReportType(
-        1, "Max Weekly Benefits", AuditReportAction.REJECTED
+    DEPRECATED_MAX_WEEKLY_BENEFITS = LkPaymentAuditReportType(
+        1, "Deprecated - Max Weekly Benefits", AuditReportAction.REJECTED
     )
-    DUA_DIA_REDUCTION = LkPaymentAuditReportType(
-        2, "DUA DIA Reduction", AuditReportAction.INFORMATIONAL
+    DEPRECATED_DUA_DIA_REDUCTION = LkPaymentAuditReportType(
+        2, "DUA DIA Reduction (Deprecated)", AuditReportAction.INFORMATIONAL
     )
     LEAVE_PLAN_IN_REVIEW = LkPaymentAuditReportType(
         3, "Leave Plan In Review", AuditReportAction.SKIPPED_NO_COLUMN
     )
     DOR_FINEOS_NAME_MISMATCH = LkPaymentAuditReportType(
         4, "DOR FINEOS Name Mismatch", AuditReportAction.INFORMATIONAL
+    )
+    DUA_ADDITIONAL_INCOME = LkPaymentAuditReportType(
+        5, "DUA Additional Income", AuditReportAction.INFORMATIONAL
+    )
+    DIA_ADDITIONAL_INCOME = LkPaymentAuditReportType(
+        6, "DIA Additional Income", AuditReportAction.INFORMATIONAL
     )
 
 
@@ -1062,19 +1140,48 @@ class PaymentAuditReportDetails(Base, TimestampMixin):
     import_log = relationship(ImportLog)
 
 
+class LkWithholdingType(Base):
+    __tablename__ = "lk_withholding_type"
+    withholding_type_id = Column(Integer, primary_key=True, autoincrement=True)
+    withholding_type_description = Column(Text, nullable=False)
+
+    def __init__(
+        self, withholding_type_id, withholding_type_description,
+    ):
+        self.withholding_type_id = withholding_type_id
+        self.withholding_type_description = withholding_type_description
+
+
+class WithholdingType(LookupTable):
+    model = LkWithholdingType
+    column_names = (
+        "withholding_type_id",
+        "withholding_type_description",
+    )
+
+    FEDERAL = LkWithholdingType(1, "Federal Tax")
+    STATE = LkWithholdingType(2, "State Tax")
+
+
 class Pfml1099MMARSPayment(Base, TimestampMixin):
     __tablename__ = "pfml_1099_mmars_payment"
     pfml_1099_mmars_payment_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     pfml_1099_batch_id = Column(
         PostgreSQLUUID, ForeignKey("pfml_1099_batch.pfml_1099_batch_id"), index=True, nullable=False
     )
-    mmars_payment_id = Column(Integer, nullable=False)
+    mmars_payment_id = Column(
+        PostgreSQLUUID,
+        ForeignKey("mmars_payment_data.mmars_payment_data_id"),
+        index=True,
+        nullable=False,
+    )
     employee_id = Column(
         PostgreSQLUUID, ForeignKey("employee.employee_id"), index=True, nullable=False
     )
     payment_amount = Column(Numeric, nullable=False)
     payment_date = Column(Date, nullable=False)
 
+    mmars_payment_data = relationship(MmarsPaymentData)
     employee = relationship(Employee)
 
 
@@ -1093,6 +1200,7 @@ class Pfml1099Payment(Base, TimestampMixin):
     )
     payment_amount = Column(Numeric, nullable=False)
     payment_date = Column(Date, nullable=False)
+    cancel_date = Column(Date, nullable=True)
 
     payment = relationship(Payment)
     claim = relationship(Claim)
@@ -1123,10 +1231,14 @@ class Pfml1099Withholding(Base, TimestampMixin):
     )
     withholding_amount = Column(Numeric, nullable=False)
     withholding_date = Column(Date, nullable=False)
+    withholding_type_id = Column(
+        Integer, ForeignKey("lk_withholding_type.withholding_type_id"), index=True, nullable=False
+    )
 
     payment = relationship(Payment)
     claim = relationship(Claim)
     employee = relationship(Employee)
+    withholding_type = relationship(LkWithholdingType)
 
 
 class Pfml1099Refund(Base, TimestampMixin):
@@ -1148,6 +1260,16 @@ class Pfml1099Refund(Base, TimestampMixin):
     employee = relationship(Employee)
 
 
+class Pfml1099RefundBackup(Base, TimestampMixin):
+    __tablename__ = "pfml_1099_refund_backup"
+    pfml_1099_refund_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+    pfml_1099_batch_id = Column(PostgreSQLUUID, nullable=True)
+    payment_id = Column(PostgreSQLUUID, nullable=True)
+    employee_id = Column(PostgreSQLUUID, nullable=True)
+    refund_amount = Column(Numeric, nullable=True)
+    refund_date = Column(Date, nullable=True)
+
+
 class Pfml1099(Base, TimestampMixin):
     __tablename__ = "pfml_1099"
     pfml_1099_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
@@ -1159,6 +1281,9 @@ class Pfml1099(Base, TimestampMixin):
         PostgreSQLUUID, ForeignKey("employee.employee_id"), index=True, nullable=False
     )
     tax_identifier_id = Column(PostgreSQLUUID, nullable=False)
+    account_number = Column(Text)
+    c = Column(Text)
+    i = Column(Text)
     first_name = Column(Text, nullable=False)
     last_name = Column(Text, nullable=False)
     address_line_1 = Column(Text, nullable=False)
@@ -1171,6 +1296,8 @@ class Pfml1099(Base, TimestampMixin):
     federal_tax_withholdings = Column(Numeric(asdecimal=True), nullable=False)
     overpayment_repayments = Column(Numeric(asdecimal=True), nullable=False)
     correction_ind = Column(Boolean, nullable=False)
+    s3_location = Column(Text, nullable=True)
+    fineos_status = Column(Text, nullable=True, default="New")
 
     employee = relationship(Employee)
 
@@ -1189,5 +1316,6 @@ class LinkSplitPayment(Base, TimestampMixin):
 def sync_lookup_tables(db_session):
     FineosWritebackTransactionStatus.sync_to_database(db_session)
     PaymentAuditReportType.sync_to_database(db_session)
+    WithholdingType.sync_to_database(db_session)
 
     db_session.commit()

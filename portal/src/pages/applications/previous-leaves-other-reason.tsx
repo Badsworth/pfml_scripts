@@ -1,25 +1,22 @@
 import { get, pick } from "lodash";
-
-import BenefitsApplication from "../../models/BenefitsApplication";
-import IconHeading from "../../components/IconHeading";
-import InputChoiceGroup from "../../components/InputChoiceGroup";
+import withBenefitsApplication, {
+  WithBenefitsApplicationProps,
+} from "../../hoc/withBenefitsApplication";
+import Heading from "../../components/core/Heading";
+import Icon from "../../components/core/Icon";
+import InputChoiceGroup from "../../components/core/InputChoiceGroup";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
+import { Trans } from "react-i18next";
 import formatDate from "../../utils/formatDate";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = ["claim.has_previous_leaves_other_reason"];
 
-interface PreviousLeavesOtherReasonProps {
-  appLogic: any;
-  claim: BenefitsApplication;
-}
-
 export const PreviousLeavesOtherReason = (
-  props: PreviousLeavesOtherReasonProps
+  props: WithBenefitsApplicationProps
 ) => {
   const { t } = useTranslation();
   const { appLogic, claim } = props;
@@ -32,13 +29,7 @@ export const PreviousLeavesOtherReason = (
   });
 
   const leaveStartDate = formatDate(claim.leaveStartDate).full();
-
-  const hintList = t<string, string[]>(
-    "pages.claimsPreviousLeavesOtherReason.hintList",
-    {
-      returnObjects: true,
-    }
-  );
+  const otherLeaveStartDate = formatDate(claim.otherLeaveStartDate).full();
 
   const handleSave = async () => {
     const patchData = { ...formState };
@@ -76,29 +67,46 @@ export const PreviousLeavesOtherReason = (
             value: "false",
           },
         ]}
-        label={t("pages.claimsPreviousLeavesOtherReason.sectionLabel", {
-          leaveStartDate,
-        })}
+        label={
+          <Heading level="2" size="1">
+            {t("pages.claimsPreviousLeavesOtherReason.sectionLabel", {
+              leaveStartDate,
+              otherLeaveStartDate,
+            })}
+          </Heading>
+        }
         hint={
           <React.Fragment>
-            <IconHeading name="check_circle">
+            <Heading level="3">
+              <Icon
+                name="check"
+                size={3}
+                className="text-secondary text-middle margin-right-1 margin-top-neg-05"
+              />
               {t("pages.claimsPreviousLeavesOtherReason.hintDoHeader")}
-            </IconHeading>
-            <ul className="usa-list margin-left-2">
-              {hintList.map((listItem, index) => (
-                <li key={index}>{listItem}</li>
-              ))}
-            </ul>
-            <IconHeading name="cancel">
+            </Heading>
+            <Trans
+              i18nKey="pages.claimsPreviousLeavesOtherReason.hintList"
+              components={{
+                ul: <ul className="usa-list margin-left-4" />,
+                li: <li />,
+              }}
+            />
+            <Heading level="3">
+              <Icon
+                name="close"
+                size={3}
+                className="text-error text-middle margin-right-1 margin-top-neg-05"
+              />
               {t("pages.claimsPreviousLeavesOtherReason.hintDontHeader")}
-            </IconHeading>
-            <ul className="usa-list margin-left-2">
-              <li>
-                {t(
-                  "pages.claimsPreviousLeavesOtherReason.leaveTakenThroughPFML"
-                )}
-              </li>
-            </ul>
+            </Heading>
+            <Trans
+              i18nKey="pages.claimsPreviousLeavesOtherReason.leaveTakenThroughPFML"
+              components={{
+                ul: <ul className="usa-list margin-left-4" />,
+                li: <li />,
+              }}
+            />
           </React.Fragment>
         }
       />

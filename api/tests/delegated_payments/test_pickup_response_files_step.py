@@ -11,6 +11,7 @@ from massgov.pfml.delegated_payments.pickup_response_files_step import (
     FILE_NAME_FORMAT,
     PickupResponseFilesStep,
 )
+from massgov.pfml.util.datetime import get_now_us_eastern
 
 fake = faker.Faker()
 
@@ -38,7 +39,7 @@ def generate_files(file_name, s3_path):
 def verify_files(directory, file_names, add_timestamps=False):
     directory_contents = file_util.list_files(directory)
 
-    now = payments_util.get_now()
+    now = get_now_us_eastern()
     expected_files = []
     for file_name in file_names:
         if add_timestamps:

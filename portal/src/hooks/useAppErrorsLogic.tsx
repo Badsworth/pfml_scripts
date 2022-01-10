@@ -91,7 +91,7 @@ const useAppErrorsLogic = ({ portalFlow }: { portalFlow: PortalFlow }) => {
   const getMessageFromIssue = (
     issue: Issue,
     i18nPrefix: string,
-    tOptions?: Record<string, unknown>
+    tOptions?: { [key: string]: unknown }
   ) => {
     const { field, message, rule, type } = issue;
     let issueMessageKey;
@@ -144,7 +144,7 @@ const useAppErrorsLogic = ({ portalFlow }: { portalFlow: PortalFlow }) => {
   const maybeGetHtmlErrorMessage = (
     type?: string,
     issueMessageKey?: string,
-    tOptions?: Record<string, unknown>
+    tOptions?: { [key: string]: unknown }
   ) => {
     if (!type || !issueMessageKey || !i18n.exists(issueMessageKey)) return;
 
@@ -372,6 +372,7 @@ const useAppErrorsLogic = ({ portalFlow }: { portalFlow: PortalFlow }) => {
    */
   const handleCognitoAuthError = (error: CognitoAuthError) => {
     const appError = new AppErrorInfo({
+      field: error.issue?.field,
       name: error.name,
       message: error.issue
         ? getMessageFromIssue(error.issue, "auth")
@@ -400,14 +401,22 @@ const useAppErrorsLogic = ({ portalFlow }: { portalFlow: PortalFlow }) => {
     });
 
     if (error.has_verification_data) {
-      portalFlow.goTo(routes.employers.verifyContributions, {
-        employer_id: error.employer_id,
-        next: portalFlow.pathWithParams,
-      });
+      portalFlow.goTo(
+        routes.employers.verifyContributions,
+        {
+          employer_id: error.employer_id,
+          next: portalFlow.pathWithParams,
+        },
+        { redirect: true }
+      );
     } else {
-      portalFlow.goTo(routes.employers.cannotVerify, {
-        employer_id: error.employer_id,
-      });
+      portalFlow.goTo(
+        routes.employers.cannotVerify,
+        {
+          employer_id: error.employer_id,
+        },
+        { redirect: true }
+      );
     }
   };
 

@@ -1,9 +1,5 @@
-class Withholding {
-  filing_period: string | null = null;
-
-  constructor(attrs: Withholding) {
-    Object.assign(this, attrs);
-  }
+interface Withholding {
+  filing_period: string;
 }
 
 export default Withholding;

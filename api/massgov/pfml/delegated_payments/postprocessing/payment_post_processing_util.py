@@ -15,6 +15,7 @@ from massgov.pfml.db.models.employees import (
     Payment,
     PaymentDetails,
     PaymentTransactionType,
+    SharedPaymentConstants,
     State,
     StateLog,
 )
@@ -27,13 +28,7 @@ DATE_FORMAT = "%Y-%m-%d"
 class PostProcessingMetrics(str, enum.Enum):
     # General metrics
     PAYMENTS_PROCESSED_COUNT = "payments_processed_count"
-    PAYMENTS_FAILED_VALIDATION_COUNT = "payments_failed_validation_count"
-    PAYMENTS_PASSED_VALIDATION_COUNT = "payments_passed_valdiation_count"
-    # Metrics specific to the payment cap check
-    PAYMENT_CAP_PAYMENT_ERROR_COUNT = "payment_cap_payment_error_count"
-    PAYMENT_CAP_PAYMENT_ACCEPTED_COUNT = "payment_cap_payment_accepted_count"
-
-    PAYMENT_SKIPPED_FOR_CAP_ADHOC_COUNT = "payment_excluded_for_cap_adhoc_count"
+    PAYMENT_DETAIL_MISSING_COUNT = "payment_detail_missing_count"
 
     # DUA / DIA reductions
     PAYMENT_DUA_REDUCTION_OVERLAP = "payment_dua_reduction_overlap"
@@ -41,8 +36,6 @@ class PostProcessingMetrics(str, enum.Enum):
 
     # DOR <> FINEOS name mismatch
     PAYMENT_DOR_FINEOS_NAME_MISMATCH = "payment_dor_fineos_name_mismatch"
-
-    PAYMENT_DETAIL_MISSING_COUNT = "payment_detail_missing_count"
 
     # Metrics specific to the in review processor
     PAYMENT_LEAVE_PLAN_IN_REVIEW_COUNT = "payment_leave_plan_in_review"
@@ -201,7 +194,7 @@ class PayPeriodGroup:
     def add_payment_from_details(
         self, payment_details: PaymentDetails, payment_scenario: PaymentScenario
     ) -> None:
-        amount = payment_details.amount
+        amount = payment_details.business_net_amount
         payment = payment_details.payment
         self.absence_case_ids.add(str(payment.claim.fineos_absence_id))
 
@@ -257,7 +250,7 @@ def get_all_paid_payments_associated_with_employee(
         .join(LatestStateLog)
         .filter(
             Payment.payment_id.in_(subquery),
-            StateLog.end_state_id.in_(payments_util.Constants.PAID_STATE_IDS),
+            StateLog.end_state_id.in_(SharedPaymentConstants.PAID_STATE_IDS),
         )
         .all()
     )
@@ -320,10 +313,12 @@ def get_reduction_amount(payment_amount: Decimal, amount_available: Decimal) -> 
 def make_payment_detail_log(
     payment_detail: PaymentDetails, amount_available: Optional[Decimal] = None
 ) -> str:
-    msg = f"[StartDate={payment_detail.period_start_date},EndDate={payment_detail.period_end_date},Amount=${payment_detail.amount}]"
+    msg = f"[StartDate={payment_detail.period_start_date},EndDate={payment_detail.period_end_date},Amount=${payment_detail.business_net_amount}]"
 
     if amount_available is not None:
-        reduction_amount = get_reduction_amount(payment_detail.amount, amount_available)
+        reduction_amount = get_reduction_amount(
+            payment_detail.business_net_amount, amount_available
+        )
         if reduction_amount == Decimal(0):
             msg += " does not require a reduction for this pay period."
         else:
@@ -443,7 +438,7 @@ class MaximumWeeklyBenefitsAuditMessageBuilder:
                     continue
 
                 for payment_details in payment_detail_group.payment_details:
-                    amount_attempting_to_pay += payment_details.amount
+                    amount_attempting_to_pay += payment_details.business_net_amount
 
             reduction_amount = get_reduction_amount(amount_attempting_to_pay, amount_available)
             pay_period_overview_msg += f"; Over the cap by ${reduction_amount}"

@@ -4,9 +4,11 @@ import BaseApi, {
   getAuthorizationHeader,
   handleNotOkResponse,
 } from "./BaseApi";
-import BenefitsApplicationDocument from "../models/BenefitsApplicationDocument";
+import {
+  BenefitsApplicationDocument,
+  DocumentTypeEnum,
+} from "../models/Document";
 import DocumentCollection from "../models/DocumentCollection";
-import { DocumentTypeEnum } from "../models/Document";
 import assert from "assert";
 import routes from "../routes";
 
@@ -32,9 +34,6 @@ export default class DocumentsApi extends BaseApi {
   ) => {
     const formData = new FormData();
     formData.append("document_type", document_type);
-    if (file.name.includes("Compressed_")) {
-      formData.append("description", "Compressed Image");
-    }
 
     assert(file);
     // we use Blob to support IE 11, formData is using "blob" as the default file name,
@@ -56,7 +55,7 @@ export default class DocumentsApi extends BaseApi {
     );
 
     return {
-      document: new BenefitsApplicationDocument(data),
+      document: data,
     };
   };
 
@@ -68,12 +67,9 @@ export default class DocumentsApi extends BaseApi {
       "GET",
       `${application_id}/documents`
     );
-    const documents = data.map(
-      (documentData) => new BenefitsApplicationDocument(documentData)
-    );
 
     return {
-      documents: new DocumentCollection(documents),
+      documents: new DocumentCollection(data),
     };
   };
 

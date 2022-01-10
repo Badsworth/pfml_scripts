@@ -1,29 +1,23 @@
-import Alert from "../../components/Alert";
-import BenefitsApplication from "../../models/BenefitsApplication";
+import withBenefitsApplication, {
+  WithBenefitsApplicationProps,
+} from "../../hoc/withBenefitsApplication";
+import Alert from "../../components/core/Alert";
 import ConditionalContent from "../../components/ConditionalContent";
-import Heading from "../../components/Heading";
-import Icon from "../../components/Icon";
-import InputChoiceGroup from "../../components/InputChoiceGroup";
+import Heading from "../../components/core/Heading";
+import Icon from "../../components/core/Icon";
+import InputChoiceGroup from "../../components/core/InputChoiceGroup";
 import LeaveDatesAlert from "../../components/LeaveDatesAlert";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
+import { Trans } from "react-i18next";
 import { pick } from "lodash";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = ["claim.has_other_incomes"];
 
-interface OtherIncomesProps {
-  claim?: BenefitsApplication;
-  query?: {
-    claim_id?: string;
-  };
-  appLogic: any;
-}
-
-export const OtherIncomes = (props: OtherIncomesProps) => {
+export const OtherIncomes = (props: WithBenefitsApplicationProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
@@ -44,18 +38,6 @@ export const OtherIncomes = (props: OtherIncomesProps) => {
     formState,
     updateFields,
   });
-  const doReportHintList = t<string, string[]>(
-    "pages.claimsOtherIncomes.doReportHintList",
-    {
-      returnObjects: true,
-    }
-  );
-  const doNotReportHintList = t<string, string[]>(
-    "pages.claimsOtherIncomes.doNotReportHintList",
-    {
-      returnObjects: true,
-    }
-  );
 
   return (
     <QuestionPage
@@ -78,7 +60,11 @@ export const OtherIncomes = (props: OtherIncomesProps) => {
             value: "false",
           },
         ]}
-        label={t("pages.claimsOtherIncomes.sectionLabel")}
+        label={
+          <Heading level="2" size="1">
+            {t("pages.claimsOtherIncomes.sectionLabel")}
+          </Heading>
+        }
         type="radio"
         hint={
           <React.Fragment>
@@ -88,32 +74,34 @@ export const OtherIncomes = (props: OtherIncomesProps) => {
             />
             <Heading level="3">
               <Icon
-                name="check_circle"
+                name="check"
                 size={3}
-                className="text-secondary text-middle margin-right-05 margin-top-neg-05"
-                fill="currentColor"
+                className="text-secondary text-middle margin-right-1 margin-top-neg-05"
               />
               {t("pages.claimsOtherIncomes.doReportHintHeading")}
             </Heading>
-            <ul className="usa-list margin-top-0 margin-left-4 margin-bottom-4">
-              {doReportHintList.map((listItem, index) => (
-                <li key={index}>{listItem}</li>
-              ))}
-            </ul>
+            <Trans
+              i18nKey="pages.claimsOtherIncomes.doReportHintList"
+              components={{
+                ul: <ul className="usa-list margin-left-4" />,
+                li: <li />,
+              }}
+            />
             <Heading level="3">
               <Icon
-                name="cancel"
+                name="close"
                 size={3}
-                className="text-error text-middle margin-right-05 margin-top-neg-05"
-                fill="currentColor"
+                className="text-error text-middle margin-right-1 margin-top-neg-05"
               />
               {t("pages.claimsOtherIncomes.doNotReportHintHeading")}
             </Heading>
-            <ul className="usa-list margin-top-0 margin-left-4">
-              {doNotReportHintList.map((listItem, index) => (
-                <li key={index}>{listItem}</li>
-              ))}
-            </ul>
+            <Trans
+              i18nKey="pages.claimsOtherIncomes.doNotReportHintList"
+              components={{
+                ul: <ul className="usa-list margin-left-4" />,
+                li: <li />,
+              }}
+            />
           </React.Fragment>
         }
       />

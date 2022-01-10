@@ -42,7 +42,7 @@ describe("OtherIncomes", () => {
 
     userEvent.click(
       screen.getByRole("radio", {
-        name: "Yes I will recieve other income from other sources during my paid leave",
+        name: "Yes I will receive other income from other sources during my paid leave",
       })
     );
     userEvent.click(screen.getByRole("button", { name: "Save and continue" }));
@@ -106,7 +106,7 @@ describe("OtherIncomes", () => {
     // conditional alert should not render if the choice is "Yes"
     userEvent.click(
       screen.getByRole("radio", {
-        name: "Yes I will recieve other income from other sources during my paid leave",
+        name: "Yes I will receive other income from other sources during my paid leave",
       })
     );
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();

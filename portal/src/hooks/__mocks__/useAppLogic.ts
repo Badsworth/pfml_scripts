@@ -7,7 +7,6 @@ import ClaimDetail from "../../models/ClaimDetail";
 import DocumentCollection from "../../models/DocumentCollection";
 import EmployerClaim from "../../models/EmployerClaim";
 import Flag from "../../models/Flag";
-import PaginationMeta from "../../models/PaginationMeta";
 import { uniqueId } from "lodash";
 
 export default jest.fn(() => ({
@@ -50,14 +49,14 @@ export default jest.fn(() => ({
     isLoadingClaims: null,
     isLoadingClaimDetail: null,
     loadClaimDetail: jest.fn(),
-    paginationMeta: new PaginationMeta(),
+    paginationMeta: {},
     loadPage: jest.fn(),
   },
   clearErrors: jest.fn(),
   clearRequiredFieldErrors: jest.fn(),
   documents: {
     attach: jest.fn((application_id, files) => {
-      const uploadPromises = [];
+      const uploadPromises: Array<Promise<{ success: boolean }>> = [];
       for (let i = 0; i < files.length; i++) {
         uploadPromises.push(Promise.resolve({ success: true }));
       }
@@ -72,7 +71,11 @@ export default jest.fn(() => ({
     addEmployer: jest.fn(),
     downloadDocument: jest.fn(() => new Blob()),
     loadClaim: jest.fn(
-      () => new EmployerClaim({ fineos_absence_id: "NTN-111-ABS-01" })
+      () =>
+        new EmployerClaim({
+          absence_periods: [],
+          fineos_absence_id: "NTN-111-ABS-01",
+        })
     ),
     loadDocuments: jest.fn(() => new DocumentCollection()),
     loadWithholding: jest.fn(() => ({ filing_period: "2011-11-20" })),

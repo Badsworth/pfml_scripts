@@ -11,6 +11,9 @@ on:
       - deploy/portal/training
       - deploy/portal/uat
       - deploy/portal/cps-preview
+      - deploy/portal/infra-test
+      - deploy/portal/long
+      - deploy/portal/trn2
     paths:
       - infra/portal/**
 
@@ -25,6 +28,9 @@ env:
   refs/heads/deploy/portal/training: training
   refs/heads/deploy/portal/uat: uat
   refs/heads/deploy/portal/cps-preview: cps-preview
+  refs/heads/deploy/portal/infra-test: infra-test
+  refs/heads/deploy/portal/long: long
+  refs/heads/deploy/portal/trn2: trn2
 
 jobs:
   release:
@@ -78,7 +84,7 @@ jobs:
     if: github.ref != 'refs/heads/deploy/portal/prod'
     steps:
       - name: Trigger E2E Workflow
-        uses: aurelien-baudet/workflow-dispatch@v2
+        uses: aurelien-baudet/workflow-dispatch@v2.1.1
         with:
           workflow: e2e-cypress.yml
           token: ${{ secrets.PFML_DEVOPS_TOKEN }}
@@ -89,5 +95,6 @@ jobs:
               "target_environment": ${{ toJSON(env[github.ref] || 'test') }},
               "cypress_tags": "Deploy,Deploy-Infra",
               "run_unstable": "${{ (env[github.ref] || 'test') != 'test' && 'false' || 'true' }}",
+              "run_nightly": "false",
               "title_override": ${{ toJSON(format('Infra Deploy: {0} to {1}', env.version, (env[github.ref] || 'test'))) }}
             }

@@ -4,7 +4,7 @@ import {
   isMaintenancePageRoute,
   maintenanceTime,
 } from "../../src/utils/maintenance";
-import { DateTime } from "luxon";
+import dayjs from "dayjs";
 
 describe("maintenance helpers", () => {
   describe("isInMaintenanceWindow", () => {
@@ -15,38 +15,38 @@ describe("maintenance helpers", () => {
     });
 
     it("returns true when current time is within a scheduled maintenance window", () => {
-      const startTime = DateTime.local().minus({ hours: 1 }); // Started an hour ago
-      const endTime = DateTime.local().plus({ hours: 1 }); // Ends in an hour
+      const startTime = dayjs().subtract(1, "hour").toISOString(); // Started an hour ago
+      const endTime = dayjs().add(1, "hour").toISOString(); // Ends in an hour
       const value = isInMaintenanceWindow(startTime, endTime);
 
       expect(value).toBe(true);
     });
 
     it("returns true when start is provided but end is omitted", () => {
-      const startTime = DateTime.local().minus({ hours: 1 }); // Started an hour ago
+      const startTime = dayjs().subtract(1, "hour").toISOString(); // Started an hour ago
       const value = isInMaintenanceWindow(startTime, null);
 
       expect(value).toBe(true);
     });
 
     it("returns true when end is provided but start is omitted", () => {
-      const endTime = DateTime.local().plus({ hours: 1 }); // Ends in an hour
+      const endTime = dayjs().add(1, "hour").toISOString(); // Ends in an hour
       const value = isInMaintenanceWindow(null, endTime);
 
       expect(value).toBe(true);
     });
 
     it("returns false when current time is before a scheduled maintenance window", () => {
-      const startTime = DateTime.local().plus({ hours: 1 }); // Starts in an hour
-      const endTime = DateTime.local().plus({ hours: 2 }); // Ends in 2 hours
+      const startTime = dayjs().add(1, "hour").toISOString(); // Starts in an hour
+      const endTime = dayjs().add(2, "hour").toISOString(); // Ends in 2 hours
       const value = isInMaintenanceWindow(startTime, endTime);
 
       expect(value).toBe(false);
     });
 
     it("returns false when current time is after a scheduled maintenance window", () => {
-      const startTime = DateTime.local().minus({ hours: 2 }); // Started 2 hours ago
-      const endTime = DateTime.local().minus({ hours: 1 }); // Ended an hour ago
+      const startTime = dayjs().subtract(2, "hour"); // Started 2 hours ago
+      const endTime = dayjs().subtract(1, "hour"); // Ended an hour ago
       const value = isInMaintenanceWindow(startTime, endTime);
 
       expect(value).toBe(false);
@@ -61,21 +61,21 @@ describe("maintenance helpers", () => {
     });
 
     it("returns true if current time is before a scheduled maintenance window", () => {
-      const providedStartTime = DateTime.local().plus({ hours: 1 }); // Maintenance starts in an hour
+      const providedStartTime = dayjs().add(1, "hour"); // Maintenance starts in an hour
       const value = isMaintenanceOneDayInFuture(providedStartTime);
 
       expect(value).toBe(true);
     });
 
     it("returns false if current time is within or after a scheduled maintenance window", () => {
-      const providedStartTime = DateTime.local().minus({ hours: 1 }); // Maintenance started an hour ago
+      const providedStartTime = dayjs().subtract(1, "hour"); // Maintenance started an hour ago
       const value = isMaintenanceOneDayInFuture(providedStartTime);
 
       expect(value).toBe(false);
     });
 
     it("returns false if current time is more than 24 hours before a scheduled maintenance window", () => {
-      const providedStartTime = DateTime.local().minus({ hours: 25 }); // Maintenance starts in 25 hours
+      const providedStartTime = dayjs().subtract(25, "hour"); // Maintenance starts in 25 hours
       const value = isMaintenanceOneDayInFuture(providedStartTime);
 
       expect(value).toBe(false);
@@ -115,15 +115,16 @@ describe("maintenance helpers", () => {
       expect(value).toBe(null);
     });
 
-    it("returns a formatted date and time when ISO 8601 timestamp is passed", () => {
-      const providedDateTime = "2021-08-24T03:30:00-04:00";
-      const value = maintenanceTime(providedDateTime);
-
-      expect(value).toBe(
-        DateTime.fromISO(providedDateTime).toLocaleString(
-          DateTime.DATETIME_FULL
-        )
-      );
-    });
+    it.each([
+      ["2021-08-24T03:30:00-04:00", "August 24, 2021 at 3:30 AM"],
+      ["2021-11-10T20:59:00-05:00", "November 10, 2021 at 8:59 PM"],
+      ["2020-01-01T08:15:30-05:00", "January 1, 2020 at 8:15 AM"],
+    ])(
+      "returns a formatted date and time when ISO 8601 timestamp %providedDateTime is passed",
+      (providedDateTime, expectedDisplayString) => {
+        const value = maintenanceTime(providedDateTime);
+        expect(value).toBe(expectedDisplayString);
+      }
+    );
   });
 });

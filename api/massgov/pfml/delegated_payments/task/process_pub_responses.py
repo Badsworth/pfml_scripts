@@ -14,6 +14,7 @@ from massgov.pfml.delegated_payments.reporting.delegated_payment_sql_reports imp
     PROCESS_PUB_RESPONSES_REPORTS,
 )
 from massgov.pfml.util.bg import background_task
+from massgov.pfml.util.datetime import get_now_us_eastern
 
 logger = logging.get_logger("massgov.pfml.delegated_payments.task.process_pub_responses")
 
@@ -85,6 +86,7 @@ def main():
     with db.session_scope(make_db_session(), close=True) as db_session, db.session_scope(
         make_db_session(), close=True
     ) as log_entry_db_session:
+        _check_for_files_not_recieved(db_session)
         _process_pub_responses(db_session, log_entry_db_session, config)
 
 
@@ -93,7 +95,7 @@ def _process_pub_responses(
 ) -> None:
     """Process PUB Responses"""
     logger.info("Start - PUB Responses ECS Task")
-    start_time = payments_util.get_now()
+    start_time = get_now_us_eastern()
 
     if config.pickup_files:
         PickupResponseFilesStep(
@@ -142,6 +144,26 @@ def _process_pub_responses(
 
     payments_util.create_success_file(start_time, "pub-payments-process-pub-returns")
     logger.info("Done - PUB Responses ECS Task")
+
+
+def _check_for_files_not_recieved(db_session: db.Session) -> None:
+    ProcessNachaReturnFileStep.check_if_processed_within_x_days(
+        db_session=db_session,
+        metric=ProcessNachaReturnFileStep.Metrics.PROCESSED_ACH_FILE,
+        business_days=3,
+    )
+
+    ProcessCheckReturnFileStep.check_if_processed_within_x_days(
+        db_session=db_session,
+        metric=ProcessCheckReturnFileStep.Metrics.PROCESSED_CHECKS_PAID_FILE,
+        business_days=3,
+    )
+
+    ProcessCheckReturnFileStep.check_if_processed_within_x_days(
+        db_session=db_session,
+        metric=ProcessCheckReturnFileStep.Metrics.PROCESSED_CHECKS_OUTSTANDING_FILE,
+        business_days=3,
+    )
 
 
 if __name__ == "__main__":

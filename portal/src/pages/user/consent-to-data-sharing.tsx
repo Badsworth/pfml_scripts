@@ -1,12 +1,13 @@
-import Accordion from "../../components/Accordion";
-import AccordionItem from "../../components/AccordionItem";
-import Alert from "../../components/Alert";
+import Accordion from "../../components/core/Accordion";
+import AccordionItem from "../../components/core/AccordionItem";
+import Alert from "../../components/core/Alert";
 import { AppLogic } from "../../hooks/useAppLogic";
-import Button from "../../components/Button";
+import Button from "../../components/core/Button";
 import React from "react";
-import Title from "../../components/Title";
+import Title from "../../components/core/Title";
 import { Trans } from "react-i18next";
 import User from "../../models/User";
+import { isFeatureEnabled } from "../../services/featureFlags";
 import routes from "../../routes";
 import tracker from "../../services/tracker";
 import useThrottledHandler from "../../hooks/useThrottledHandler";
@@ -23,15 +24,17 @@ export const ConsentToDataSharing = (props: ConsentToDataSharingProps) => {
   const { appLogic, user } = props;
   const { updateUser } = appLogic.users;
 
-  const handleSave = () =>
-    updateUser(user.user_id, {
-      consented_to_data_sharing: true,
-    });
-
   const handleSubmit = useThrottledHandler(async (event) => {
     event.preventDefault();
-    await handleSave();
+    await updateUser(user.user_id, {
+      consented_to_data_sharing: true,
+    });
     tracker.trackEvent("User consented to data sharing", {});
+    if (isFeatureEnabled("claimantShowMFA") && !user.hasEmployerRole) {
+      appLogic.portalFlow.goToPageFor("ENABLE_MFA");
+    } else {
+      appLogic.portalFlow.goToNextPage({});
+    }
   });
 
   const roleContext = user.hasEmployerRole ? "employer" : "user";

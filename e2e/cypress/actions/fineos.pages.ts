@@ -5,10 +5,10 @@ import {
   ReducedScheduleLeavePeriods,
 } from "../../src/_api";
 import {
-  AllNotNull,
   FineosTasks,
   NonEmptyArray,
   PersonalIdentificationDetails,
+  RequireNotNull,
   ValidClaim,
   ValidConcurrentLeave,
   ValidEmployerBenefit,
@@ -51,6 +51,7 @@ import {
 import { DocumentUploadRequest } from "../../src/api";
 import { fineos } from ".";
 import { LeaveReason } from "../../src/generation/Claim";
+import { config } from "./common";
 
 type StatusCategory =
   | "Applicability"
@@ -211,14 +212,14 @@ export class ClaimPage {
 
     return this;
   }
-  approve(): this {
+  approve(status: "Approved" | "Completed" = "Approved"): this {
     // This button turns out to be unclickable without force, because selecting
     // it seems to scroll it out of view. Force works around that.
     cy.get('a[title="Approve the Pending Leaving Request"]').click({
       force: true,
     });
     waitForAjaxComplete();
-    assertClaimStatus("Approved");
+    assertClaimStatus(status);
     return this;
   }
   deny(reason: string, assertStatus = true): this {
@@ -258,7 +259,7 @@ export class ClaimPage {
     return this;
   }
 
-  addAppeal(): this {
+  addAppeal(stashAppealCase: boolean): this {
     // This button turns out to be unclickable without force, because selecting
     // it seems to scroll it out of view. Force works around that.
     cy.get('a[title="Add Sub Case"]').click({
@@ -269,6 +270,33 @@ export class ClaimPage {
       force: true,
     });
     waitForAjaxComplete();
+    if (stashAppealCase) {
+      fineos.findAppealNumber("Appeal").then((appeal_case_id) => {
+        cy.stash("appeal_case_id", appeal_case_id);
+      });
+    }
+    return this;
+  }
+
+  addEmployer(employer_fein: string): this {
+    //Select employer from drop down menu
+    cy.get("[id^=MENUBAR\\.CaseSubjectMenu]")
+      .findByText("Add Participant")
+      .click({ force: true })
+      .parents("li")
+      .findByText("Employer")
+      .click();
+
+    //change radio to Organization
+    cy.contains("label", "Organization").click();
+    // input employer FEIN
+    cy.get('input[type="text"][id$=_Social_Security_No\\._\\(SSN\\)]').type(
+      employer_fein?.replace("-", "")
+    );
+    //Search
+    cy.get('input[type="submit"][value="Search"]').click();
+    waitForAjaxComplete();
+    cy.get('input[type="submit"][value="OK"][id$=_searchPageOk]').click();
     return this;
   }
 
@@ -347,16 +375,20 @@ export class ClaimPage {
     return this;
   }
 
+  /**
+   * This is used for the secure action testing in CPS ignored folder with security groups.
+   * @param hasAction
+   */
   suppressCorrespondence(hasAction: boolean): this {
     cy.contains("Options").click();
     if (hasAction) {
-      cy.contains("Notifications").click();
+      cy.contains("Notifications").click({ force: true });
       cy.get("input[type='submit'][value='Suppress Notifications']").click();
       cy.contains(
         "Automatic Notifications and Correspondence have been suppressed."
       );
       cy.get("#alertsHeader").within(() => {
-        cy.contains("Open").click();
+        cy.contains("Open").click({ force: true });
         waitForAjaxComplete();
         cy.contains(
           "Automatic Notifications and Correspondence have been suppressed."
@@ -369,6 +401,36 @@ export class ClaimPage {
         "Notifications"
       ).should("have.attr", "disabled");
     }
+    return this;
+  }
+
+  /**
+   * To test secure action task only with our current E2E test suite.
+   * Suppress and remove suppression in the same task. Two options on how to remove the suppression when
+   * clicking the Notification to remove the suppression in the pop-up widget is very flaky in the headless browser.
+   * So the second option is to cancel the suppress notification instead.
+   */
+  removeSuppressCorrespondence(): this {
+    cy.contains("Options").click();
+    cy.contains("Notifications").click({ force: true });
+    cy.get("input[type='submit'][value='Suppress Notifications']").click();
+    cy.contains(
+      "Automatic Notifications and Correspondence have been suppressed."
+    );
+    cy.get("#alertsHeader").within(() => {
+      cy.contains("Open").click({ force: true });
+      waitForAjaxComplete();
+      cy.contains(
+        "Automatic Notifications and Correspondence have been suppressed."
+      );
+    });
+    cy.contains("Close Task").click();
+    cy.get("table.PopupBean").within(() => {
+      cy.get("input[type='submit'][value='Yes']")
+        .first()
+        .click({ force: true });
+    });
+    clickBottomWidgetButton("OK");
     return this;
   }
 }
@@ -403,6 +465,9 @@ class AdjudicationPage {
     cb(new CertificationPeriodsPage());
     return this;
   }
+  requestEmploymentInformation() {
+    this.onTab("Request Information", "Employment Information")
+  }
   requestInformation(cb: (page: RequestInformationPage) => unknown): this {
     this.onTab("Request Information", "Request Details");
     cb(new RequestInformationPage());
@@ -426,6 +491,12 @@ class AdjudicationPage {
   availability(cb: (page: AvailabilityPage) => unknown): this {
     this.onTab("Availability");
     cb(new AvailabilityPage());
+    this.onTab("Manage Request");
+    return this;
+  }
+  paidBenefits(cb: (page: PaidBenefitsPage) => unknown): this {
+    this.onTab("Paid Benefits");
+    cb(new PaidBenefitsPage());
     this.onTab("Manage Request");
     return this;
   }
@@ -587,8 +658,7 @@ class RequestInformationPage {
 }
 class OutstandingRequirementsPage {
   add() {
-    cy.wait("@ajaxRender");
-    cy.wait(200);
+    waitForAjaxComplete();
     cy.get("input[value='Add']").click();
     cy.get(
       "#AddManagedRequirementPopupWidget_PopupWidgetWrapper input[type='submit'][value='Ok']"
@@ -610,7 +680,11 @@ class OutstandingRequirementsPage {
     } else {
       cy.wait("@ajaxRender");
       cy.wait(200);
-      cy.get("input[value='Complete']").should("be.disabled");
+      cy.get("input[value='Complete']").click();
+      cy.get(`span[id^="PageMessage1"]`).should(
+        "contain.text",
+        "You do not have the required secured action to mark all of the selected Outstanding Requirements as Complete."
+      );
     }
     return this;
   }
@@ -626,10 +700,15 @@ class OutstandingRequirementsPage {
         );
         cy.findByText("Ok").click({ force: true });
       });
+      cy.wait(200);
     } else {
       cy.wait("@ajaxRender");
       cy.wait(200);
-      cy.get("input[value='Suppress']").should("be.disabled");
+      cy.get("input[value='Suppress']").click();
+      cy.get(`span[id^="PageMessage1"]`).should(
+        "contain.text",
+        "You do not have the required secured action to mark all of the selected Outstanding Requirements as Suppressed."
+      );
     }
     return this;
   }
@@ -642,7 +721,11 @@ class OutstandingRequirementsPage {
     } else {
       cy.wait("@ajaxRender");
       cy.wait(200);
-      cy.get("input[value='Remove']").should("be.disabled");
+      cy.get("input[value='Remove']").click();
+      cy.get(`span[id^="PageMessage1"]`).should(
+        "contain.text",
+        "You do not have the required secured action to remove all of the selected Outstanding Requirements"
+      );
     }
     return this;
   }
@@ -654,7 +737,6 @@ class OutstandingRequirementsPage {
     } else {
       cy.wait("@ajaxRender");
       cy.wait(200);
-      cy.get("input[value='Reopen']").should("be.disabled");
     }
     return this;
   }
@@ -1311,6 +1393,17 @@ class AvailabilityPage {
   }
 }
 
+class PaidBenefitsPage {
+  assertSitFitOptIn(isParticipating: boolean): this {
+    cy.contains("td[id*='SIT/FIT Opt In']", isParticipating ? "true" : "false");
+    return this;
+  }
+  edit(): this {
+    cy.get("input[type='submit'][value='Edit']").click();
+    return this;
+  }
+}
+
 const reductionCategories = {
   ["Accrued paid leave" as const]: "",
   ["Earnings from another employment/self-employment" as const]: "",
@@ -1458,7 +1551,9 @@ class PaidLeavePage {
     cy.findByLabelText("Start Date")
       .focus()
       .type(`${dateToMMddyyyy(start_date)}{enter}`);
-    cy.findByLabelText("Start Date").should("have.focus");
+
+    waitForAjaxComplete();
+    cy.findByLabelText("Start Date").focus().should("have.focus");
 
     cy.findByLabelText("End Date")
       .focus()
@@ -1615,7 +1710,7 @@ class PaidLeavePage {
 
   assertOwnershipAssignTo(assign: string): this {
     this.onTab("General Claim");
-    cy.get('span[id="CaseDetails_un29_AssignedTo"]').should((element) => {
+    cy.get('span[id*="AssignedTo"]').should((element) => {
       expect(
         element,
         `Expected the Assigned To display the following "${assign}"`
@@ -1761,12 +1856,16 @@ export class ClaimantPage {
     return this;
   }
 
-  addAddress(address: AllNotNull<Address>): this {
+  addAddress(
+    address: RequireNotNull<Address, "city" | "line_1" | "state" | "zip">
+  ): this {
     cy.findByText(`+ Add address`).click({ force: true });
     waitForAjaxComplete();
     cy.get(`#addressPopupWidget_PopupWidgetWrapper`).within(() => {
       cy.findByLabelText(`Address line 1`).type(`${address.line_1}`);
-      cy.findByLabelText(`Address line 2`).type(`${address.line_2}`);
+      if (address.line_2) {
+        cy.findByLabelText(`Address line 2`).type(`${address.line_2}`);
+      }
       cy.findByLabelText(`City`).type(`${address.city}`);
       cy.findByLabelText(`State`).select(`${address.state}`);
       cy.findByLabelText(`Zip code`).type(`${address.zip}`);
@@ -1798,7 +1897,10 @@ export class ClaimantPage {
    *    //Further actions here...
    *  })
    */
-  createNotification(claim: ValidClaim): Cypress.Chainable<string> {
+  createNotification(
+    claim: ValidClaim,
+    withholdingPreference?: boolean
+  ): Cypress.Chainable<string> {
     if (!claim.leave_details.reason) throw new Error(`Missing leave reason.`);
     const reason = claim.leave_details.reason as NonNullable<LeaveReason>;
     // Start the process
@@ -1911,6 +2013,25 @@ export class ClaimantPage {
                   )
                   .applyStandardWorkWeek();
                 return absenceDetails.nextStep((wrapUp) => {
+                  // tax withholdings
+                  if (
+                    config("FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION") ===
+                    "true"
+                  ) {
+                    fineos.waitForAjaxComplete();
+                    if (withholdingPreference) {
+                      cy.get(
+                        "input[type='checkbox'][name$='_somSITFITOptIn_CHECKBOX']"
+                      ).click();
+                    }
+                    cy.pause();
+                    // must be selected to proceed
+                    cy.get(
+                      "input[type='checkbox'][name$='_somSITFITVerification_CHECKBOX']"
+                    ).click();
+
+                    fineos.waitForAjaxComplete();
+                  }
                   // Fill military Caregiver description if needed.
                   if (reason === "Military Caregiver")
                     absenceDetails.addMilitaryCaregiverDescription();
@@ -1923,6 +2044,7 @@ export class ClaimantPage {
                     reason === "Child Bonding"
                   )
                     wrapUp.clickNext(20000);
+
                   return wrapUp.finishNotificationCreation();
                 });
               });
@@ -1948,6 +2070,19 @@ export class ClaimantPage {
     onTab("Payment Preferences");
     waitForAjaxComplete();
     return new PaymentPreferencePage();
+  }
+
+  addCase(hasAccess: boolean): this {
+    if (hasAccess) {
+      cy.get(
+        `div[id^="MENUBAR.PartySubjectMenu_"][id$="_MENUBAR.PartySubjectMenu"] div[title="Add Case"]`
+      ).should("be.visible");
+    } else {
+      cy.get(
+        `div[id^="MENUBAR.PartySubjectMenu_"][id$="_MENUBAR.PartySubjectMenu"] div[title="Add Case"]`
+      ).should("not.be.visible");
+    }
+    return this;
   }
 }
 /**Contains utilities used within multiple pages throughout the intake process */
@@ -2486,7 +2621,7 @@ class HistoricalAbsence {
       qualifier_2: "Sickness",
     };
     cy.contains("Options").click();
-    cy.contains("Add Historical Absence").click();
+    cy.contains("Add Historical Absence").click({ force: true });
     HistoricalAbsence.fillAbsenceDescription(historicalPeriodDescription);
     cy.contains("div", "timeOffHistoricalAbsencePeriodsListviewWidget")
       .find("input")

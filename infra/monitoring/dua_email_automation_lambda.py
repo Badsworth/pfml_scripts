@@ -21,6 +21,7 @@ EMAIL_RECIPIENTS = [
     "Sye Chanthaboun <sye.chanthaboun2@mass.gov>",
     "Clinika Hylton <clinika.m.hylton@mass.gov>",
     "Carl Lamour <carl.h.lamour@mass.gov>",
+    "EOL-DL-DFML-Agency-Reductions@MassMail.State.MA.US",
 ]
 # The email body for recipients with non-HTML email clients.
 BODY_TEXT = "Hello,\r\nDUA_DFML file attached."

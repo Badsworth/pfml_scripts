@@ -114,6 +114,11 @@ variable "enable_alarm_api_ram" {
   default     = true
 }
 
+variable "enable_document_multipart_upload" {
+  description = "Enable document uploads through the FINEOS multipart endpoint"
+  type        = string
+  default     = "0"
+}
 
 variable "cors_origins" {
   description = "A list of origins to allow CORS requests from."
@@ -293,4 +298,9 @@ variable "use_claim_status_url" {
   description = "Whether or not to direct claimants to the claim status page. Can enable this when Claim Status is launched."
   type        = bool
   default     = true
+}
+
+variable "enable_pdf_document_compression" {
+  description = "Enable or disable PDF compression on document upload"
+  type        = string
 }

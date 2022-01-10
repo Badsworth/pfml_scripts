@@ -6,7 +6,6 @@ import {
 import { act, screen, waitFor } from "@testing-library/react";
 import AppErrorInfo from "../../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../../src/models/AppErrorInfoCollection";
-import BenefitsApplicationDocument from "../../../src/models/BenefitsApplicationDocument";
 import DocumentCollection from "../../../src/models/DocumentCollection";
 import { DocumentType } from "../../../src/models/Document";
 import UploadCertification from "../../../src/pages/applications/upload-certification";
@@ -21,7 +20,7 @@ const goToNextPage = jest.fn(() => {
 
 const catchError = jest.fn();
 
-let attach = jest.fn();
+let attach = jest.fn().mockResolvedValue([]);
 
 const setup = (claim, props = {}, cb) => {
   if (!claim) {
@@ -133,12 +132,12 @@ describe("UploadCertification", () => {
         return Promise.resolve(true);
       });
       appLogic.documents.documents = new DocumentCollection([
-        new BenefitsApplicationDocument({
+        {
           application_id: "mock_application_id",
           fineos_document_id: uuidv4(),
           document_type: DocumentType.certification.medicalCertification,
           created_at: "2020-11-26",
-        }),
+        },
       ]);
     };
     it("renders unremovable FileCard", () => {
@@ -274,9 +273,15 @@ describe("UploadCertification", () => {
           tempFiles
         );
       });
+      expect(
+        screen.getAllByRole("button", { name: "Remove file" })[0]
+      ).toBeEnabled();
       userEvent.click(
         screen.getByRole("button", { name: "Save and continue" })
       );
+      expect(
+        screen.getAllByRole("button", { name: "Remove file" })[0]
+      ).toBeDisabled();
 
       await waitFor(() => {
         expect(attach).toHaveBeenCalledWith(
@@ -310,7 +315,7 @@ describe("UploadCertification", () => {
     const claim = new MockBenefitsApplicationBuilder()
       .medicalLeaveReason()
       .create();
-    attach = jest.fn();
+    attach = jest.fn().mockResolvedValue([]);
 
     setup(claim, {
       query: { claim_id: claim.application_id, additionalDoc: "true" },

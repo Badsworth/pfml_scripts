@@ -1,11 +1,13 @@
 import { MockEmployerClaimBuilder, renderPage } from "../../../test-utils";
 import Confirmation from "../../../../src/pages/employers/applications/confirmation";
+import MockDate from "mockdate";
 
 describe("Confirmation", () => {
   it("renders the component", () => {
+    MockDate.set("2020-10-01");
     const claim = new MockEmployerClaimBuilder()
       .completed()
-      .reviewable(true)
+      .reviewable("2020-10-10")
       .absenceId("my-absence-id")
       .create();
 

@@ -1,0 +1,34 @@
+# This workflow generates database erds files for the api schema
+
+name: Update API ERD Diagrams
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - api/massgov/pfml/db/models/**
+      - api/bin/create-erds.py
+
+defaults:
+  run:
+    working-directory: ./api
+
+concurrency: 
+  group: ${{ github.head_ref }}-erds
+  cancel-in-progress: true
+
+jobs:
+  update-erds:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: "Create ERDs"
+        run: make create-erds
+
+      - uses: EndBug/add-and-commit@v6
+        with:
+          add: './docs/assets/api/erds'
+          message: 'ERD generation auto-commit'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -107,32 +107,19 @@ exports[`PaymentMethod renders the page 1`] = `
     <div
       class="margin-top-6 margin-bottom-2"
     >
-      <p>
-        Once you submit Part 2, your payment information will be viewable by our Contact Center staff. To make edits to Part 2, you’ll need to call the Contact Center at 
-        <a
-          href="tel:(833) 344-7365"
-        >
-          (833) 344‑7365
-        </a>
-        . To learn more about benefit payments, 
-        <a
-          href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide"
-          rel="noreferrer noopener"
-          target="_blank"
-        >
-          see our benefits guide
-        </a>
-        .
-      </p>
-      <p>
-        Next, you’ll work on Part 3, and submit your application.
-      </p>
+      After you submit your payment method, it can’t be edited on this website. To change it, call the Contact Center at 
+      <a
+        href="tel:(833) 344-7365"
+      >
+        (833) 344‑7365
+      </a>
+      .
     </div>
     <button
       class="usa-button position-relative margin-top-4"
       type="submit"
     >
-      Submit Part 2
+      Submit payment method
     </button>
   </form>
 </div>

@@ -1,8 +1,10 @@
 import { render, screen } from "@testing-library/react";
+
 import AppErrorInfoCollection from "../../../src/models/AppErrorInfoCollection";
 import ConcurrentLeave from "../../../src/components/employers/ConcurrentLeave";
 import ConcurrentLeaveModel from "../../../src/models/ConcurrentLeave";
 import React from "react";
+import { createMockEmployerClaim } from "../../test-utils";
 
 const CONCURRENT_LEAVE = new ConcurrentLeaveModel({
   is_for_current_employer: true,
@@ -14,6 +16,7 @@ const defaultProps = {
   addedConcurrentLeave: null,
   appErrors: new AppErrorInfoCollection(),
   concurrentLeave: CONCURRENT_LEAVE,
+  claim: createMockEmployerClaim("completed"),
   onAdd: jest.fn(),
   onChange: jest.fn(),
   onRemove: jest.fn(),
@@ -78,5 +81,46 @@ describe("ConcurrentLeave", () => {
     expect(
       screen.queryByRole("button", { name: "Add an accrued paid leave" })
     ).not.toBeInTheDocument();
+  });
+
+  it("displays correct conditional text for reduced concurrent leave", () => {
+    renderComponent({
+      addedConcurrentLeave: CONCURRENT_LEAVE,
+      claim: createMockEmployerClaim("reducedSchedule"),
+      concurrentLeave: null,
+    });
+
+    expect(
+      screen.getByText(
+        /your employee won’t receive pfml payments for the first 7 calendar days of their pfml leave from 2\/1\/2022 to 2\/7\/2022\./i
+      )
+    ).toBeInTheDocument();
+  });
+
+  it("displays correct conditional text for continuous concurrent leave", () => {
+    renderComponent({
+      addedConcurrentLeave: CONCURRENT_LEAVE,
+      claim: createMockEmployerClaim("continuous"),
+      concurrentLeave: null,
+    });
+
+    expect(
+      screen.getByText(
+        /your employee won’t receive pfml payments for the first 7 calendar days of their pfml leave from 1\/1\/2022 to 1\/7\/2022\./i
+      )
+    ).toBeInTheDocument();
+  });
+
+  it("displays correct conditional text for intermittent concurrent leave", () => {
+    renderComponent({
+      addedConcurrentLeave: CONCURRENT_LEAVE,
+      claim: createMockEmployerClaim("intermittent"),
+      concurrentLeave: null,
+    });
+    expect(
+      screen.getByText(
+        /your employee won’t receive pfml payments for the first 7 calendar days from the date of their first instance of leave\./i
+      )
+    ).toBeInTheDocument();
   });
 });

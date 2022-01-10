@@ -1,23 +1,15 @@
-import { AppLogic } from "../../../hooks/useAppLogic";
-import Button from "../../../components/Button";
+import withUser, { WithUserProps } from "../../../hoc/withUser";
+import Button from "../../../components/core/Button";
+import PageNotFound from "../../../components/PageNotFound";
 import React from "react";
-import Title from "../../../components/Title";
+import Title from "../../../components/core/Title";
 import { Trans } from "react-i18next";
-import User from "../../../models/User";
 import routes from "../../../routes";
 import { useTranslation } from "../../../locales/i18n";
-import withUser from "../../../hoc/withUser";
 
-interface SuccessProps {
-  appLogic: AppLogic;
-  query: {
-    employer_id: string;
-    next: string;
-  };
-  user?: User;
-}
-
-export const Success = (props: SuccessProps) => {
+export const Success = (
+  props: WithUserProps & { query: { employer_id?: string; next?: string } }
+) => {
   const { appLogic, query, user } = props;
   const { t } = useTranslation();
 
@@ -28,6 +20,10 @@ export const Success = (props: SuccessProps) => {
     const route = query.next || routes.employers.organizations;
     appLogic.portalFlow.goTo(route);
   };
+
+  if (!employer) {
+    return <PageNotFound />;
+  }
 
   return (
     <React.Fragment>

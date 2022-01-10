@@ -9,7 +9,7 @@
 # and seeding.
 #
 import re
-from datetime import date
+from datetime import date, timedelta
 from typing import TYPE_CHECKING, List, Optional, cast
 
 from bouncer.constants import EDIT, READ  # noqa: F401 F403
@@ -29,10 +29,13 @@ from sqlalchemy import (
     select,
 )
 from sqlalchemy.ext.hybrid import hybrid_method
-from sqlalchemy.orm import Query, aliased, dynamic_loader, relationship, validates
+from sqlalchemy.orm import Query, aliased, dynamic_loader, object_session, relationship, validates
 from sqlalchemy.schema import Sequence
 from sqlalchemy.sql.expression import func
 from sqlalchemy.types import JSON
+
+import massgov.pfml.util.logging
+from massgov.pfml.util.datetime import utcnow
 
 from ..lookup import LookupTable
 from .base import Base, TimestampMixin, utc_timestamp_gen, uuid_gen
@@ -46,6 +49,9 @@ if TYPE_CHECKING:
     typed_hybrid_property = property
 else:
     from sqlalchemy.ext.hybrid import hybrid_property as typed_hybrid_property
+
+
+logger = massgov.pfml.util.logging.get_logger(__name__)
 
 
 class LkAbsencePeriodType(Base):
@@ -308,6 +314,30 @@ class LkLeaveRequestDecision(Base):
         self.leave_request_decision_description = leave_request_decision_description
 
 
+class LkMFADeliveryPreference(Base):
+    __tablename__ = "lk_mfa_delivery_preference"
+    mfa_delivery_preference_id = Column(Integer, primary_key=True, autoincrement=True)
+    mfa_delivery_preference_description = Column(Text, nullable=False)
+
+    def __init__(self, mfa_delivery_preference_id, mfa_delivery_preference_description):
+        self.mfa_delivery_preference_id = mfa_delivery_preference_id
+        self.mfa_delivery_preference_description = mfa_delivery_preference_description
+
+
+class LkMFADeliveryPreferenceUpdatedBy(Base):
+    __tablename__ = "lk_mfa_delivery_preference_updated_by"
+    mfa_delivery_preference_updated_by_id = Column(Integer, primary_key=True, autoincrement=True)
+    mfa_delivery_preference_updated_by_description = Column(Text, nullable=False)
+
+    def __init__(
+        self, mfa_delivery_preference_updated_by_id, mfa_delivery_preference_updated_by_description
+    ):
+        self.mfa_delivery_preference_updated_by_id = mfa_delivery_preference_updated_by_id
+        self.mfa_delivery_preference_updated_by_description = (
+            mfa_delivery_preference_updated_by_description
+        )
+
+
 class AbsencePeriod(Base, TimestampMixin):
     __tablename__ = "absence_period"
     __table_args__ = (
@@ -335,6 +365,7 @@ class AbsencePeriod(Base, TimestampMixin):
     fineos_absence_period_class_id = Column(Integer, nullable=False, index=True)
     fineos_absence_period_index_id = Column(Integer, nullable=False, index=True)
     fineos_leave_request_id = Column(Integer)
+    fineos_average_weekly_wage = Column(Numeric(asdecimal=True))
     leave_request_decision_id = Column(
         Integer, ForeignKey("lk_leave_request_decision.leave_request_decision_id")
     )
@@ -371,7 +402,7 @@ class Employer(Base, TimestampMixin):
     account_key = Column(Text, index=True)
     employer_fein = Column(Text, nullable=False, index=True)
     employer_name = Column(Text)
-    employer_dba = Column(Text, nullable=False)
+    employer_dba = Column(Text)
     family_exemption = Column(Boolean)
     medical_exemption = Column(Boolean)
     exemption_commence_date = Column(Date)
@@ -391,14 +422,21 @@ class Employer(Base, TimestampMixin):
     employer_occupations: "Query[EmployeeOccupation]" = dynamic_loader(
         "EmployeeOccupation", back_populates="employer"
     )
-    employer_quarterly_contribution: "Query[EmployerQuarterlyContribution]" = dynamic_loader(
+    employer_quarterly_contribution = relationship(
         "EmployerQuarterlyContribution", back_populates="employer"
     )
     organization_units: "Query[OrganizationUnit]" = dynamic_loader(
         "OrganizationUnit", back_populates="employer"
     )
+    employee_benefit_year_contributions: "Query[BenefitYearContribution]" = dynamic_loader(
+        "BenefitYearContribution", back_populates="employer"
+    )
 
     lk_industry_code = relationship(LkIndustryCode)
+
+    @property
+    def uses_organization_units(self):
+        return any([unit for unit in self.organization_units if unit.fineos_id is not None])
 
     @typed_hybrid_property
     def has_verification_data(self) -> bool:
@@ -408,7 +446,7 @@ class Employer(Base, TimestampMixin):
             quarter.employer_total_pfml_contribution > 0
             and quarter.filing_period >= last_years_date
             and quarter.filing_period < current_date
-            for quarter in self.employer_quarterly_contribution
+            for quarter in self.employer_quarterly_contribution  # type: ignore
         )
 
     @validates("employer_fein")
@@ -420,17 +458,98 @@ class Employer(Base, TimestampMixin):
         return employer_fein
 
 
+class DuaEmployer(Base, TimestampMixin):
+    __tablename__ = "dua_employer_data"
+    __table_args__ = (
+        UniqueConstraint(
+            "fineos_employer_id",
+            "dba",
+            "attention",
+            "email",
+            "phone_number",
+            "address_line_1",
+            "address_line_2",
+            "address_city",
+            "address_zip_code",
+            "address_state",
+            "naics_code",
+            "naics_description",
+            name="uix_dua_employer",
+        ),
+    )
+    dua_employer_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+    fineos_employer_id = Column(Text, nullable=False)
+    dba = Column(Text, nullable=True)
+    attention = Column(Text, nullable=True)
+    email = Column(Text, nullable=True)
+    phone_number = Column(Text, nullable=False)
+    address_line_1 = Column(Text, nullable=True)
+    address_line_2 = Column(Text, nullable=True)
+    address_city = Column(Text, nullable=True)
+    address_zip_code = Column(Text, nullable=True)
+    address_state = Column(Text, nullable=True)
+    naics_code = Column(Text, nullable=True)
+    naics_description = Column(Text, nullable=True)
+
+
+class DuaReportingUnitRaw(Base, TimestampMixin):
+    __tablename__ = "dua_reporting_unit_data"
+    __table_args__ = (
+        UniqueConstraint(
+            "fineos_employer_id",
+            "dua_id",
+            "dba",
+            "attention",
+            "email",
+            "phone_number",
+            "address_line_1",
+            "address_line_2",
+            "address_city",
+            "address_zip_code",
+            "address_state",
+            name="uix_dua_reporting_unit_data",
+        ),
+    )
+    dua_reporting_unit_data_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+    fineos_employer_id = Column(Text, nullable=False)
+    dua_id = Column(Text, nullable=True)
+    dba = Column(Text, nullable=True)
+    attention = Column(Text, nullable=True)
+    email = Column(Text, nullable=True)
+    phone_number = Column(Text, nullable=False)
+    address_line_1 = Column(Text, nullable=True)
+    address_line_2 = Column(Text, nullable=True)
+    address_city = Column(Text, nullable=True)
+    address_zip_code = Column(Text, nullable=True)
+    address_state = Column(Text, nullable=True)
+
+
 class OrganizationUnit(Base, TimestampMixin):
     __tablename__ = "organization_unit"
+    __table_args__ = (
+        UniqueConstraint("name", "employer_id", name="uix_organization_unit_name_employer_id",),
+    )
     organization_unit_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     fineos_id = Column(Text, nullable=True, unique=True)
-    name = Column(Text, unique=True, nullable=False)
-    employer_id = Column(PostgreSQLUUID, ForeignKey("employer.employer_id"), index=True)
+    name = Column(Text, nullable=False)
+    employer_id = Column(
+        PostgreSQLUUID, ForeignKey("employer.employer_id"), nullable=False, index=True
+    )
 
     employer = relationship("Employer", back_populates="organization_units")
     dua_reporting_units: "Query[DuaReportingUnit]" = dynamic_loader(
         "DuaReportingUnit", back_populates="organization_unit"
     )
+
+    @validates("fineos_id")
+    def validate_fineos_id(self, key: str, fineos_id: Optional[str]) -> Optional[str]:
+        if not fineos_id:
+            return fineos_id
+        if not re.fullmatch(r"[A-Z]{2}:[0-9]{5}:[0-9]{10}", fineos_id):
+            raise ValueError(
+                f"Invalid fineos_id: {fineos_id}. Expected a format of AA:00001:0000000001"
+            )
+        return fineos_id
 
 
 class DuaReportingUnit(Base, TimestampMixin):
@@ -584,7 +703,8 @@ class Employee(Base, TimestampMixin):
     preferred_comm_method_type = Column(Text)
     date_of_birth = Column(Date)
     date_of_death = Column(Date)
-    fineos_customer_number = Column(Text, nullable=True)
+    # https://lwd.atlassian.net/browse/PORTAL-439 will make this unique
+    fineos_customer_number = Column(Text, nullable=True, index=True)
     race_id = Column(Integer, ForeignKey("lk_race.race_id"))
     marital_status_id = Column(Integer, ForeignKey("lk_marital_status.marital_status_id"))
     gender_id = Column(Integer, ForeignKey("lk_gender.gender_id"))
@@ -638,6 +758,35 @@ class Employee(Base, TimestampMixin):
         "EmployeeOccupation", back_populates="employee"
     )
 
+    benefit_years: "Query[BenefitYear]" = dynamic_loader("BenefitYear", back_populates="employee")
+    employer_benefit_year_contributions: "Query[BenefitYearContribution]" = dynamic_loader(
+        "BenefitYearContribution", back_populates="employee"
+    )
+
+    @hybrid_method
+    def get_organization_units(self, employer: Employer) -> list[OrganizationUnit]:
+        if not self.fineos_customer_number:
+            return []
+        return (
+            object_session(self)
+            .query(OrganizationUnit)
+            .join(EmployeeOccupation)
+            .join(DuaReportingUnit)
+            .join(
+                DuaEmployeeDemographics,
+                DuaReportingUnit.dua_id == DuaEmployeeDemographics.employer_reporting_unit_number,
+            )
+            .filter(
+                EmployeeOccupation.employee_id == self.employee_id,
+                EmployeeOccupation.employer_id == employer.employer_id,
+                DuaReportingUnit.organization_unit_id is not None,
+                DuaEmployeeDemographics.fineos_customer_number == self.fineos_customer_number,
+                DuaEmployeeDemographics.employer_fein == employer.employer_fein,
+            )
+            .distinct()
+            .all()
+        )
+
 
 class EmployeePushToFineosQueue(Base, TimestampMixin):
     __tablename__ = "employee_push_to_fineos_queue"
@@ -670,6 +819,9 @@ class Claim(Base, TimestampMixin):
     absence_period_end_date = Column(Date)
     fineos_notification_id = Column(Text)
     is_id_proofed = Column(Boolean)
+    organization_unit_id = Column(
+        PostgreSQLUUID, ForeignKey("organization_unit.organization_unit_id"), nullable=True
+    )
 
     # Not sure if these are currently used.
     authorized_representative_id = Column(PostgreSQLUUID)
@@ -689,6 +841,7 @@ class Claim(Base, TimestampMixin):
     absence_periods = cast(
         Optional[List["AbsencePeriod"]], relationship("AbsencePeriod", back_populates="claim"),
     )
+    organization_unit = relationship(OrganizationUnit)
 
     @typed_hybrid_property
     def soonest_open_requirement_date(self) -> Optional[date]:
@@ -750,6 +903,81 @@ class Claim(Base, TimestampMixin):
 
         return self.employer.employer_fein
 
+    @typed_hybrid_property
+    def has_paid_payments(self) -> bool:
+        # Joining to LatestStateLog filters out StateLogs
+        # which are no longer the most recent state for a given payment
+        paid_payments = (
+            object_session(self)
+            .query(func.count(Payment.payment_id))
+            .join(StateLog)
+            .join(LatestStateLog)
+            .filter(Payment.claim_id == self.claim_id)
+            .filter(StateLog.end_state_id.in_(SharedPaymentConstants.PAID_STATE_IDS))
+            .scalar()
+        )
+
+        return paid_payments > 0
+
+
+class BenefitYear(Base, TimestampMixin):
+    __tablename__ = "benefit_year"
+
+    benefit_year_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+
+    employee_id = Column(
+        PostgreSQLUUID, ForeignKey("employee.employee_id"), nullable=False, index=True
+    )
+
+    employee = cast(Optional["Employee"], relationship("Employee", back_populates="benefit_years"))
+
+    start_date = Column(Date, nullable=False)
+
+    end_date = Column(Date, nullable=False)
+
+    # The base period used to calculate IAWW
+    # in order to recalculate IAWW for other employers
+    base_period_start_date = Column(Date)
+
+    base_period_end_date = Column(Date)
+
+    total_wages = Column(Numeric(asdecimal=True))
+
+    contributions = cast(
+        List["BenefitYearContribution"],
+        relationship("BenefitYearContribution", cascade="all, delete-orphan"),
+    )
+
+
+class BenefitYearContribution(Base, TimestampMixin):
+    __tablename__ = "benefit_year_contribution"
+    benefit_year_contribution_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+
+    benefit_year_id = Column(
+        PostgreSQLUUID, ForeignKey("benefit_year.benefit_year_id"), nullable=False, index=True
+    )
+    benefit_year = relationship("BenefitYear", back_populates="contributions")
+
+    employer_id = Column(
+        PostgreSQLUUID, ForeignKey("employer.employer_id"), nullable=False, index=True
+    )
+    employer = relationship("Employer", back_populates="employee_benefit_year_contributions")
+
+    employee_id = Column(
+        PostgreSQLUUID, ForeignKey("employee.employee_id"), nullable=False, index=True
+    )
+    employee = relationship("Employee", back_populates="employer_benefit_year_contributions")
+
+    average_weekly_wage = Column(Numeric(asdecimal=True), nullable=False)
+
+    Index(
+        "ix_benefit_year_id_employer_id_employee_id",
+        benefit_year_id,
+        employer_id,
+        employee_id,
+        unique=True,
+    )
+
 
 class Payment(Base, TimestampMixin):
     __tablename__ = "payment"
@@ -769,8 +997,12 @@ class Payment(Base, TimestampMixin):
     fineos_pei_i_value = Column(Text, index=True)
     is_adhoc_payment = Column(Boolean, default=False, server_default="FALSE")
     fineos_extraction_date = Column(Date)
+
+    # Backfilled legacy MMARS payments use this for check number and EFT transaction number, all new payments leave null
     disb_check_eft_number = Column(Text)
+    # Backfilled legacy MMARS payments use this for the paid date, all new payments leave null
     disb_check_eft_issue_date = Column(Date)
+
     disb_method_id = Column(Integer, ForeignKey("lk_payment_method.payment_method_id"))
     disb_amount = Column(Numeric(asdecimal=True))
     leave_request_decision = Column(Text)
@@ -794,6 +1026,9 @@ class Payment(Base, TimestampMixin):
     leave_request_id = Column(PostgreSQLUUID, ForeignKey("absence_period.absence_period_id"))
 
     vpei_id = Column(PostgreSQLUUID, ForeignKey("fineos_extract_vpei.vpei_id"))
+    exclude_from_payment_status = Column(
+        Boolean, default=False, server_default="FALSE", nullable=False
+    )
 
     fineos_employee_first_name = Column(Text)
     fineos_employee_middle_name = Column(Text)
@@ -825,6 +1060,7 @@ class PaymentDetails(Base, TimestampMixin):
     period_start_date = Column(Date)
     period_end_date = Column(Date)
     amount = Column(Numeric(asdecimal=True), nullable=False)
+    business_net_amount = Column(Numeric(asdecimal=True), nullable=False)
 
     payment = relationship(Payment)
 
@@ -969,12 +1205,23 @@ class User(Base, TimestampMixin):
     sub_id = Column(Text, index=True, unique=True)
     email_address = Column(Text, unique=True)
     consented_to_data_sharing = Column(Boolean, default=False, nullable=False)
+    mfa_delivery_preference_id = Column(
+        Integer, ForeignKey("lk_mfa_delivery_preference.mfa_delivery_preference_id")
+    )
+    mfa_phone_number = Column(Text)  # Formatted in E.164
+    mfa_delivery_preference_updated_at = Column(TIMESTAMP(timezone=True))
+    mfa_delivery_preference_updated_by_id = Column(
+        Integer,
+        ForeignKey("lk_mfa_delivery_preference_updated_by.mfa_delivery_preference_updated_by_id"),
+    )
 
     roles = relationship("LkRole", secondary="link_user_role", uselist=True)
     user_leave_administrators = relationship(
         "UserLeaveAdministrator", back_populates="user", uselist=True
     )
     employers = relationship("Employer", secondary="link_user_leave_administrator", uselist=True)
+    mfa_delivery_preference = relationship(LkMFADeliveryPreference)
+    mfa_delivery_preference_updated_by = relationship(LkMFADeliveryPreferenceUpdatedBy)
 
     @hybrid_method
     def get_user_leave_admin_for_employer(
@@ -985,6 +1232,45 @@ class User(Base, TimestampMixin):
             if user_leave_administrator.employer == employer:
                 return user_leave_administrator
         return None
+
+    @hybrid_method
+    def get_verified_leave_admin_org_units(self) -> list[OrganizationUnit]:
+        organization_units: list[OrganizationUnit] = []
+        for la in self.user_leave_administrators:
+            if not la.verified:
+                continue
+            organization_units.extend(la.organization_units)
+        return organization_units
+
+    @hybrid_method
+    def get_leave_admin_notifications(self) -> list[str]:
+        """
+        Check if notifications were sent to this leave admin
+        in the last 24 hours, to prevent leave admins
+        with notifications, but no org units assigned,
+        from seeing a blank page in the employer dashboard
+        """
+        # This is imported here to prevent circular import error
+        from massgov.pfml.db.models.applications import Notification
+
+        a_day_ago = utcnow() - timedelta(days=1)
+        notifications = (
+            object_session(self)
+            .query(Notification.fineos_absence_id)
+            # Filtering by date first lowers query execution cost substantially
+            .filter(Notification.created_at > a_day_ago)
+            .filter(
+                Notification.request_json.contains(
+                    {
+                        "recipients": [{"email_address": self.email_address}],
+                        "recipient_type": "Leave Administrator",
+                    }
+                )
+            )
+            .distinct()
+        )
+        # claims that this leave admin was notified about in the last 24 hours
+        return [n.fineos_absence_id for n in notifications]
 
     @hybrid_method
     def verified_employer(self, employer: Employer) -> bool:
@@ -1002,6 +1288,24 @@ class UserRole(Base, TimestampMixin):
     role = relationship(LkRole)
 
 
+class UserLeaveAdministratorOrgUnit(Base):
+    __tablename__ = "link_user_leave_administrator_org_unit"
+    user_leave_administrator_id = Column(
+        PostgreSQLUUID,
+        ForeignKey("link_user_leave_administrator.user_leave_administrator_id"),
+        primary_key=True,
+    )
+    organization_unit_id = Column(
+        PostgreSQLUUID, ForeignKey("organization_unit.organization_unit_id"), primary_key=True,
+    )
+
+    organization_unit = relationship(OrganizationUnit)
+
+    def __init__(self, user_leave_administrator_id, organization_unit_id):
+        self.user_leave_administrator_id = user_leave_administrator_id
+        self.organization_unit_id = organization_unit_id
+
+
 class UserLeaveAdministrator(Base, TimestampMixin):
     __tablename__ = "link_user_leave_administrator"
     __table_args__ = (UniqueConstraint("user_id", "employer_id"),)
@@ -1016,6 +1320,12 @@ class UserLeaveAdministrator(Base, TimestampMixin):
     user = relationship(User)
     employer = relationship(Employer)
     verification = relationship(Verification)
+    organization_units = relationship(
+        OrganizationUnit,
+        secondary="link_user_leave_administrator_org_unit",
+        uselist=True,
+        lazy="joined",
+    )
 
     @typed_hybrid_property
     def has_fineos_registration(self) -> bool:
@@ -1031,18 +1341,25 @@ class UserLeaveAdministrator(Base, TimestampMixin):
 class LkAzurePermission(Base):
     __tablename__ = "lk_azure_permission"
     azure_permission_id = Column(Integer, primary_key=True, autoincrement=True)
+    azure_permission_description = Column(Text, nullable=False)
     azure_permission_resource = Column(Text, nullable=False)
     azure_permission_action = Column(Text, nullable=False)
 
-    def __init__(self, azure_permission_id, azure_permission_resource, azure_permission_action):
+    def __init__(
+        self,
+        azure_permission_id,
+        azure_permission_description,
+        azure_permission_resource,
+        azure_permission_action,
+    ):
         self.azure_permission_id = azure_permission_id
+        self.azure_permission_description = azure_permission_description
         self.azure_permission_resource = azure_permission_resource
         self.azure_permission_action = azure_permission_action
 
 
-class AzureGroupPermission(Base):
+class AzureGroupPermission(Base, TimestampMixin):
     __tablename__ = "link_azure_group_permission"
-    __table_args__ = (UniqueConstraint("azure_permission_id", "azure_group_id"),)
     azure_permission_id = Column(
         Integer, ForeignKey("lk_azure_permission.azure_permission_id"), primary_key=True
     )
@@ -1054,7 +1371,9 @@ class LkAzureGroup(Base):
     azure_group_id = Column(Integer, primary_key=True, autoincrement=True)
     azure_group_name = Column(Text, nullable=False)
     azure_group_guid = Column(Text, nullable=False)
-    azure_group_parent_id = Column(Integer, nullable=True)
+    azure_group_parent_id = Column(
+        Integer, ForeignKey("lk_azure_group.azure_group_id"), nullable=True
+    )
     permissions = relationship(AzureGroupPermission, uselist=True)
 
     def __init__(self, azure_group_id, azure_group_name, azure_group_guid, azure_group_parent_id):
@@ -1209,7 +1528,6 @@ class EmployeeOccupation(Base, TimestampMixin):
     date_of_hire = Column(Date)
     date_job_ended = Column(Date)
     employment_status = Column(Text)
-    org_unit_name = Column(Text)
     hours_worked_per_week = Column(Numeric)
     days_worked_per_week = Column(Numeric)
     manager_id = Column(Text)
@@ -1438,13 +1756,13 @@ class DuaEmployeeDemographics(Base, TimestampMixin):
     __tablename__ = "dua_employee_demographics"
     dua_employee_demographics_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
 
-    fineos_customer_number = Column(Text, nullable=True)
+    fineos_customer_number = Column(Text, nullable=True, index=True)
     date_of_birth = Column(Date, nullable=True)
     gender_code = Column(Text, nullable=True)
     occupation_code = Column(Text, nullable=True)
     occupation_description = Column(Text, nullable=True)
-    employer_fein = Column(Text, nullable=True)
-    employer_reporting_unit_number = Column(Text, nullable=True)
+    employer_fein = Column(Text, nullable=True, index=True)
+    employer_reporting_unit_number = Column(Text, nullable=True, index=True)
 
     # this Unique index is required since our test framework does not run migrations
     # it is excluded from migrations. see api/massgov/pfml/db/migrations/env.py
@@ -1585,6 +1903,7 @@ class AbsenceReason(LookupTable):
     MILITARY_EXIGENCY_FAMILY = LkAbsenceReason(12, "Military Exigency Family")
     PREVENTATIVE_CARE_FAMILY_MEMBER = LkAbsenceReason(13, "Preventative Care - Family Member")
     PUBLIC_HEALTH_EMERGENCY_FAMILY = LkAbsenceReason(14, "Public Health Emergency - Family")
+    MILITARY_EMPLOYEE = LkAbsenceReason(15, "Military - Employee")
 
 
 class AbsenceReasonQualifierOne(LookupTable):
@@ -2045,6 +2364,7 @@ class Role(LookupTable):
     USER = LkRole(1, "User")
     FINEOS = LkRole(2, "Fineos")
     EMPLOYER = LkRole(3, "Employer")
+    SERVICE_NOW = LkRole(4, "ServiceNow")
 
 
 class PaymentMethod(LookupTable):
@@ -2099,6 +2419,8 @@ class Flow(LookupTable):
     DELEGATED_EFT = LkFlow(22, "EFT")
     DELEGATED_CLAIM_VALIDATION = LkFlow(23, "Claim Validation")
     DELEGATED_PEI_WRITEBACK = LkFlow(24, "Payment PEI Writeback")
+
+    LEGACY_MMARS_PAYMENTS = LkFlow(25, "Legacy MMARS Payment")
 
 
 class State(LookupTable):
@@ -2568,7 +2890,7 @@ class State(LookupTable):
         191, "State Withholding ready for processing", Flow.DELEGATED_PAYMENT.flow_id
     )
 
-    STATE_WITHHOLDING_PENDING_AUDIT = LkState(
+    STATE_WITHHOLDING_ORPHANED_PENDING_AUDIT = LkState(
         192, "State Withholding awaiting Audit Report", Flow.DELEGATED_PAYMENT.flow_id
     )
 
@@ -2584,7 +2906,7 @@ class State(LookupTable):
         195, "Federal Withholding ready for processing", Flow.DELEGATED_PAYMENT.flow_id
     )
 
-    FEDERAL_WITHHOLDING_PENDING_AUDIT = LkState(
+    FEDERAL_WITHHOLDING_ORPHANED_PENDING_AUDIT = LkState(
         196, "Federal Withholding awaiting Audit Report", Flow.DELEGATED_PAYMENT.flow_id
     )
 
@@ -2595,6 +2917,77 @@ class State(LookupTable):
     FEDERAL_WITHHOLDING_SEND_FUNDS = LkState(
         198, "Federal Withholding send funds to IRS", Flow.DELEGATED_PAYMENT.flow_id
     )
+
+    PAYMENT_READY_FOR_MAX_WEEKLY_BENEFIT_AMOUNT_VALIDATION = LkState(
+        199,
+        "Payment ready for max weekly benefit amount validation",
+        Flow.DELEGATED_PAYMENT.flow_id,
+    )
+
+    PAYMENT_FAILED_MAX_WEEKLY_BENEFIT_AMOUNT_VALIDATION = LkState(
+        200, "Payment failed max weekly benefit amount validation", Flow.DELEGATED_PAYMENT.flow_id,
+    )
+
+    STATE_WITHHOLDING_ADD_TO_PAYMENT_REJECT_REPORT_RESTARTABLE = LkState(
+        201,
+        "Add State Withholding to Payment Reject Report - RESTARTABLE",
+        Flow.DELEGATED_PAYMENT.flow_id,
+    )
+
+    FEDERAL_WITHHOLDING_ADD_TO_PAYMENT_REJECT_REPORT_RESTARTABLE = LkState(
+        202,
+        "Add Federal Withholding to Payment Reject Report - RESTARTABLE",
+        Flow.DELEGATED_PAYMENT.flow_id,
+    )
+
+    STATE_WITHHOLDING_RELATED_PENDING_AUDIT = LkState(
+        203, "State Withholding Related Pending Audit", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    FEDERAL_WITHHOLDING_RELATED_PENDING_AUDIT = LkState(
+        204, "Federal Withholding Related Pending Audit", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    STATE_WITHHOLDING_ERROR_RESTARTABLE = LkState(
+        205, "State Withholding Error Restartable", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    FEDERAL_WITHHOLDING_ERROR_RESTARTABLE = LkState(
+        206, "Federal Withholding Error Restartable", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    STATE_WITHHOLDING_FUNDS_SENT = LkState(
+        207, "State Withholding Funds Sent", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    FEDERAL_WITHHOLDING_FUNDS_SENT = LkState(
+        208, "Federal Withholding Funds Sent", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    LEGACY_MMARS_PAYMENT_PAID = LkState(
+        210, "Legacy MMARS Payment Paid", Flow.LEGACY_MMARS_PAYMENTS.flow_id
+    )
+
+
+class SharedPaymentConstants:
+    """
+    A class to hold Payment-Specific constants relevant
+    to more than one part of the application.
+    Definining constants here allows them to be shared
+    throughout the application without creating circular dependencies
+    """
+
+    # States that indicate we have sent a payment to PUB
+    # and it has not yet errored.
+    PAID_STATES = frozenset(
+        [
+            State.DELEGATED_PAYMENT_PUB_TRANSACTION_CHECK_SENT,
+            State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT,
+            State.DELEGATED_PAYMENT_COMPLETE,
+            State.DELEGATED_PAYMENT_COMPLETE_WITH_CHANGE_NOTIFICATION,
+        ]
+    )
+    PAID_STATE_IDS = frozenset([state.state_id for state in PAID_STATES])
 
 
 class PaymentTransactionType(LookupTable):
@@ -2614,6 +3007,9 @@ class PaymentTransactionType(LookupTable):
     OVERPAYMENT_RECOVERY_CANCELLATION = LkPaymentTransactionType(
         11, "Overpayment Recovery Cancellation"
     )
+    FEDERAL_TAX_WITHHOLDING = LkPaymentTransactionType(12, "Federal Tax Withholding")
+    STATE_TAX_WITHHOLDING = LkPaymentTransactionType(13, "State Tax Withholding")
+    STANDARD_LEGACY_MMARS = LkPaymentTransactionType(14, "Standard Legacy MMARS")
 
 
 class PaymentCheckStatus(LookupTable):
@@ -2669,12 +3065,22 @@ class ReferenceFileType(LookupTable):
     DIA_CONSOLIDATED_REDUCTION_REPORT_ERRORS = LkReferenceFileType(
         30, "Consolidated DIA payments for DFML reduction report", 1
     )
-
     FINEOS_PAYMENT_RECONCILIATION_EXTRACT = LkReferenceFileType(
         31, "Payment reconciliation extract", 3
     )
 
     DUA_DEMOGRAPHICS_FILE = LkReferenceFileType(32, "DUA demographics", 1)
+
+    DUA_DEMOGRAPHICS_REQUEST_FILE = LkReferenceFileType(33, "DUA demographics request", 1)
+
+    IRS_1099_FILE = LkReferenceFileType(34, "IRS 1099 file", 1)
+
+    FINEOS_IAWW_EXTRACT = LkReferenceFileType(35, "IAWW extract", 2)
+
+    # Claimant Address Report
+    CLAIMANT_ADDRESS_VALIDATION_REPORT = LkReferenceFileType(
+        36, "Claimant Address validation Report", 1
+    )
 
 
 class Title(LookupTable):
@@ -2718,52 +3124,118 @@ class AzureGroup(LookupTable):
         1, "TSS-SG-PFML_ADMIN_PORTAL_NON_PROD", "67f909a7-049b-4844-98eb-beec1bd35fc0", None
     )
     NON_PROD_ADMIN = LkAzureGroup(
-        2, "TSS-SG-PFML_ADMIN_PORTAL_NON_PROD_ADMIN", "1af1bd6d-2a32-405d-9d90-7b126be8b9fa", 1
+        2,
+        "TSS-SG-PFML_ADMIN_PORTAL_NON_PROD_ADMIN",
+        "1af1bd6d-2a32-405d-9d90-7b126be8b9fa",
+        NON_PROD.azure_group_id,
     )
     NON_PROD_DEV = LkAzureGroup(
-        3, "TSS-SG-PFML_ADMIN_PORTAL_NON_PROD_DEV", "d268edaa-4c0e-48ff-82c0-012e224ddda3", 1
+        3,
+        "TSS-SG-PFML_ADMIN_PORTAL_NON_PROD_DEV",
+        "d268edaa-4c0e-48ff-82c0-012e224ddda3",
+        NON_PROD.azure_group_id,
     )
     NON_PROD_CONTACT_CENTER = LkAzureGroup(
         4,
         "TSS-SG-PFML_ADMIN_PORTAL_NON_PROD_CONTACT_CENTER",
         "13d579da-bb84-4c5f-a382-93584fc9e91f",
-        1,
+        NON_PROD.azure_group_id,
     )
     NON_PROD_SERVICE_DESK = LkAzureGroup(
         5,
         "TSS-SG-PFML_ADMIN_PORTAL_NON_PROD_SERVICE_DESK",
         "e483a1df-5ce4-4e94-a9bc-48dacf4a14f4",
-        1,
+        NON_PROD.azure_group_id,
     )
     NON_PROD_DFML_OPS = LkAzureGroup(
-        6, "TSS-SG-PFML_ADMIN_PORTAL_NON_PROD_DFML_OPS", "be96c3c2-5d2b-4845-9ed5-bb0aa109009e", 1
+        6,
+        "TSS-SG-PFML_ADMIN_PORTAL_NON_PROD_DFML_OPS",
+        "be96c3c2-5d2b-4845-9ed5-bb0aa109009e",
+        NON_PROD.azure_group_id,
     )
     PROD = LkAzureGroup(7, "TSS-SG-PFML_ADMIN_PORTAL_PROD", "7", None)
-    PROD_ADMIN = LkAzureGroup(8, "TSS-SG-PFML_ADMIN_PORTAL_PROD_ADMIN", "8", 7)
-    PROD_DEV = LkAzureGroup(9, "TSS-SG-PFML_ADMIN_PORTAL_PROD_DEV", "9", 7)
-    PROD_CONTACT_CENTER = LkAzureGroup(10, "TSS-SG-PFML_ADMIN_PORTAL_PROD_CONTACT_CENTER", "10", 7)
-    PROD_SERVICE_DESK = LkAzureGroup(11, "TSS-SG-PFML_ADMIN_PORTAL_PROD_SERVICE_DESK", "11", 7)
-    PROD_DFML_OPS = LkAzureGroup(12, "TSS-SG-PFML_ADMIN_PORTAL_PROD_DFML_OPS", "12", 7)
+    PROD_ADMIN = LkAzureGroup(8, "TSS-SG-PFML_ADMIN_PORTAL_PROD_ADMIN", "8", PROD.azure_group_id)
+    PROD_DEV = LkAzureGroup(9, "TSS-SG-PFML_ADMIN_PORTAL_PROD_DEV", "9", PROD.azure_group_id)
+    PROD_CONTACT_CENTER = LkAzureGroup(
+        10, "TSS-SG-PFML_ADMIN_PORTAL_PROD_CONTACT_CENTER", "10", PROD.azure_group_id
+    )
+    PROD_SERVICE_DESK = LkAzureGroup(
+        11, "TSS-SG-PFML_ADMIN_PORTAL_PROD_SERVICE_DESK", "11", PROD.azure_group_id
+    )
+    PROD_DFML_OPS = LkAzureGroup(
+        12, "TSS-SG-PFML_ADMIN_PORTAL_PROD_DFML_OPS", "12", PROD.azure_group_id
+    )
 
 
 class AzurePermission(LookupTable):
     model = LkAzurePermission
-    column_names = ("azure_permission_id", "azure_permission_resource", "azure_permission_action")
+    column_names = (
+        "azure_permission_id",
+        "azure_permission_description",
+        "azure_permission_resource",
+        "azure_permission_action",
+    )
 
-    USER_READ = LkAzurePermission(1, "USER", READ)
-    USER_EDIT = LkAzurePermission(2, "USER", EDIT)
-    LOG_READ = LkAzurePermission(3, "LOG", READ)
-    DASHBOARD_READ = LkAzurePermission(4, "DASHBOARD", READ)
-    SETTINGS_READ = LkAzurePermission(5, "SETTINGS", READ)
-    SETTINGS_EDIT = LkAzurePermission(6, "SETTINGS", EDIT)
-    MAINTENANCE_READ = LkAzurePermission(7, "MAINTENANCE", READ)
-    MAINTENANCE_EDIT = LkAzurePermission(8, "MAINTENANCE", EDIT)
-    FEATURES_READ = LkAzurePermission(9, "FEATURES", READ)
-    FEATURES_EDIT = LkAzurePermission(10, "FEATURES", EDIT)
+    USER_READ = LkAzurePermission(1, "USER_READ", "USER", READ)
+    USER_EDIT = LkAzurePermission(2, "USER_EDIT", "USER", EDIT)
+    LOG_READ = LkAzurePermission(3, "LOG_READ", "LOG", READ)
+    DASHBOARD_READ = LkAzurePermission(4, "DASHBOARD_READ", "DASHBOARD", READ)
+    SETTINGS_READ = LkAzurePermission(5, "SETTINGS_READ", "SETTINGS", READ)
+    SETTINGS_EDIT = LkAzurePermission(6, "SETTINGS_EDIT", "SETTINGS", EDIT)
+    MAINTENANCE_READ = LkAzurePermission(7, "MAINTENANCE_READ", "MAINTENANCE", READ)
+    MAINTENANCE_EDIT = LkAzurePermission(8, "MAINTENANCE_EDIT", "MAINTENANCE", EDIT)
+    FEATURES_READ = LkAzurePermission(9, "FEATURES_READ", "FEATURES", READ)
+    FEATURES_EDIT = LkAzurePermission(10, "FEATURES_EDIT", "FEATURES", EDIT)
 
-    @classmethod
-    def get_all(cls):
-        return [p for p in vars(cls).values() if isinstance(p, cls.model)]
+
+class MFADeliveryPreference(LookupTable):
+    model = LkMFADeliveryPreference
+    column_names = ("mfa_delivery_preference_id", "mfa_delivery_preference_description")
+
+    SMS = LkMFADeliveryPreference(1, "SMS")
+    OPT_OUT = LkMFADeliveryPreference(2, "Opt Out")
+
+
+class MFADeliveryPreferenceUpdatedBy(LookupTable):
+    model = LkMFADeliveryPreferenceUpdatedBy
+    column_names = (
+        "mfa_delivery_preference_updated_by_id",
+        "mfa_delivery_preference_updated_by_description",
+    )
+
+    USER = LkMFADeliveryPreferenceUpdatedBy(1, "User")
+    ADMIN = LkMFADeliveryPreferenceUpdatedBy(2, "Admin")
+
+
+def sync_azure_permissions(db_session):
+    """Insert every permission for non_prod and prod admin groups."""
+    group_ids = [
+        AzureGroup.NON_PROD_ADMIN.azure_group_id,
+        AzureGroup.PROD_ADMIN.azure_group_id,
+    ]
+    permissions = AzurePermission.get_all()
+    for group_id in group_ids:
+        group_permission_ids = [
+            p_id[0]
+            for p_id in db_session.query(AzureGroupPermission.azure_permission_id).filter(
+                AzureGroupPermission.azure_group_id == group_id
+            )
+        ]
+        for permission in permissions:
+            if permission.azure_permission_id not in group_permission_ids:
+                logger.info(
+                    "Adding AzureGroupPermission record",
+                    extra={
+                        "azure_permission_id": permission.azure_permission_id,
+                        "azure_group_id": group_id,
+                    },
+                )
+                db_session.add(
+                    AzureGroupPermission(
+                        azure_group_id=group_id, azure_permission_id=permission.azure_permission_id,
+                    )
+                )
+    db_session.commit()
 
 
 def sync_lookup_tables(db_session):
@@ -2801,4 +3273,6 @@ def sync_lookup_tables(db_session):
     ManagedRequirementType.sync_to_database(db_session)
     AzureGroup.sync_to_database(db_session)
     AzurePermission.sync_to_database(db_session)
+    MFADeliveryPreference.sync_to_database(db_session)
+    MFADeliveryPreferenceUpdatedBy.sync_to_database(db_session)
     db_session.commit()

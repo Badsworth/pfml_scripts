@@ -1,22 +1,24 @@
 import { get, pick } from "lodash";
+import withBenefitsApplication, {
+  WithBenefitsApplicationProps,
+} from "../../hoc/withBenefitsApplication";
 import BenefitsApplication from "../../models/BenefitsApplication";
-import Details from "../../components/Details";
-import Heading from "../../components/Heading";
-import Hint from "../../components/Hint";
-import InputChoiceGroup from "../../components/InputChoiceGroup";
-import InputDate from "../../components/InputDate";
-import InputHours from "../../components/InputHours";
+import Details from "../../components/core/Details";
+import Heading from "../../components/core/Heading";
+import Hint from "../../components/core/Hint";
+import InputChoiceGroup from "../../components/core/InputChoiceGroup";
+import InputDate from "../../components/core/InputDate";
+import InputHours from "../../components/core/InputHours";
 import LeaveReason from "../../models/LeaveReason";
 import PreviousLeave from "../../models/PreviousLeave";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
-import RepeatableFieldset from "../../components/RepeatableFieldset";
+import RepeatableFieldset from "../../components/core/RepeatableFieldset";
 import { Trans } from "react-i18next";
 import formatDate from "../../utils/formatDate";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = [
   "claim.previous_leaves_same_reason",
@@ -27,19 +29,17 @@ export const fields = [
   "claim.previous_leaves_same_reason[*].worked_per_week_minutes",
 ];
 
-interface PreviousLeavesSameReasonDetailsProps {
-  appLogic: any;
-  claim: BenefitsApplication;
-}
-
 export const PreviousLeavesSameReasonDetails = (
-  props: PreviousLeavesSameReasonDetailsProps
+  props: WithBenefitsApplicationProps
 ) => {
   const { t } = useTranslation();
   const { appLogic, claim } = props;
   const limit = 6;
 
-  const initialEntries = pick(props, fields).claim;
+  const initialEntries = pick(props, fields).claim || {
+    previous_leaves_same_reason: [],
+  };
+
   if (initialEntries.previous_leaves_same_reason.length === 0) {
     initialEntries.previous_leaves_same_reason = [new PreviousLeave({})];
   }
@@ -53,11 +53,12 @@ export const PreviousLeavesSameReasonDetails = (
   );
 
   const leaveStartDate = formatDate(claim.leaveStartDate).full();
+  const otherLeaveStartDate = formatDate(claim.otherLeaveStartDate).full();
 
   const isCaringLeave = get(claim, "leave_details.reason") === LeaveReason.care;
   const previousLeaveStartDate = isCaringLeave
     ? formatDate("2021-07-01").full()
-    : formatDate("2021-01-01").full();
+    : otherLeaveStartDate;
 
   const handleSave = () => {
     return appLogic.benefitsApplications.update(
@@ -75,7 +76,7 @@ export const PreviousLeavesSameReasonDetails = (
     });
   };
 
-  const handleRemoveClick = (_entry, index) => {
+  const handleRemoveClick = (_entry: PreviousLeave, index: number) => {
     const updatedLeaves = [...previous_leaves_same_reason];
     updatedLeaves.splice(index, 1);
     updateFields({ previous_leaves_same_reason: updatedLeaves });
@@ -87,7 +88,7 @@ export const PreviousLeavesSameReasonDetails = (
     updateFields,
   });
 
-  const render = (entry, index) => {
+  const render = (entry: PreviousLeave, index: number) => {
     return (
       <PreviousLeaveSameReasonDetailsCard
         claim={claim}
@@ -143,7 +144,7 @@ export const PreviousLeavesSameReasonDetails = (
 interface PreviousLeaveSameReasonDetailsCardProps {
   claim: BenefitsApplication;
   entry: PreviousLeave;
-  getFunctionalInputProps: (...args: any[]) => any;
+  getFunctionalInputProps: ReturnType<typeof useFunctionalInputProps>;
   index: number;
 }
 

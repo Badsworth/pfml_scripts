@@ -1,15 +1,15 @@
 import uuid
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Any
+from typing import Any, Type
 from uuid import UUID
 
 from sqlalchemy import TIMESTAMP, Column, inspect
 from sqlalchemy.ext.declarative import as_declarative
 from sqlalchemy.orm import deferred
 from sqlalchemy.sql.functions import now as sqlnow
-from sqlalchemy.types import TypeEngine
 
+from massgov.pfml.db.models.common import PostgreSQLUUID
 from massgov.pfml.util.datetime import utcnow
 
 
@@ -18,11 +18,11 @@ def same_as_created_at(context):
 
 
 # This ensures that deprecated columns won't be read or included as part of an INSERT on the table
-def deprecated_column(column):
-    def wrapper(type: TypeEngine, *args: Any, **kwargs: Any) -> Column:
-        return deferred(column(type.evaluates_none(), *args, **kwargs))
-
-    return wrapper
+def deprecated_column(type: Type, *args: Any, **kwargs: Any) -> Column:
+    if type == PostgreSQLUUID:
+        return deferred(Column(type.evaluates_none(), *args, **kwargs))
+    else:
+        return deferred(Column(type().evaluates_none(), *args, **kwargs))
 
 
 @as_declarative()
@@ -43,8 +43,15 @@ class Base:
 
         return json_valid_dict
 
+    def __rich_repr__(self):
+        """Rich repr for interactive console.
 
-def uuid_gen():
+        See https://rich.readthedocs.io/en/latest/pretty.html#rich-repr-protocol
+        """
+        return self.dict().items()
+
+
+def uuid_gen() -> uuid.UUID:
     return uuid.uuid4()
 
 

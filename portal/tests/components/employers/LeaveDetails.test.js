@@ -1,7 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import AppErrorInfo from "../../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../../src/models/AppErrorInfoCollection";
-import ClaimDocument from "../../../src/models/ClaimDocument";
 import { DocumentType } from "../../../src/models/Document";
 import LeaveDetails from "../../../src/components/employers/LeaveDetails";
 import { MockEmployerClaimBuilder } from "../../test-utils";
@@ -9,20 +7,20 @@ import React from "react";
 import userEvent from "@testing-library/user-event";
 
 const DOCUMENTS = [
-  new ClaimDocument({
+  {
     content_type: "image/png",
     created_at: "2020-04-05",
     document_type: DocumentType.certification.medicalCertification,
     fineos_document_id: "fineos-id-4",
     name: "Medical cert doc",
-  }),
-  new ClaimDocument({
+  },
+  {
     content_type: "application/pdf",
     created_at: "2020-02-01",
     document_type: DocumentType.certification.medicalCertification,
     fineos_document_id: "fineos-id-9",
     // intentionally omit name
-  }),
+  },
 ];
 
 const claimWithCaringLeave = new MockEmployerClaimBuilder()
@@ -83,17 +81,9 @@ describe("LeaveDetails", () => {
     expect(screen.getByText("Medical leave")).toBeInTheDocument();
   });
 
-  it("renders formatted date range for leave duration", () => {
+  it("`renders formatted date range for leave duration`", () => {
     renderComponent();
-    expect(screen.getByText("1/1/2021 to 7/1/2021")).toBeInTheDocument();
-  });
-
-  it("renders dash for leave duration if intermittent leave", () => {
-    const claimWithIntermittentLeave = new MockEmployerClaimBuilder()
-      .completed(true)
-      .create();
-    renderComponent({ claim: claimWithIntermittentLeave });
-    expect(screen.getByText("—")).toBeInTheDocument();
+    expect(screen.getByText("1/1/2022 to 7/1/2022")).toBeInTheDocument();
   });
 
   it("does not render documentation row", () => {
@@ -135,14 +125,14 @@ describe("LeaveDetails", () => {
     userEvent.click(screen.getAllByRole("button")[0]);
 
     expect(downloadDocumentSpy).toHaveBeenCalledWith(
-      "NTN-111-ABS-01",
       expect.objectContaining({
         content_type: "image/png",
         created_at: "2020-04-05",
         document_type: "State managed Paid Leave Confirmation",
         fineos_document_id: "fineos-id-4",
         name: "Medical cert doc",
-      })
+      }),
+      "NTN-111-ABS-01"
     );
   });
 
@@ -155,97 +145,5 @@ describe("LeaveDetails", () => {
     expect(
       screen.getByText(/View the family relationship on page 3./)
     ).toBeInTheDocument();
-  });
-
-  it("renders the relationship question", () => {
-    renderComponent({
-      claim: claimWithCaringLeave,
-    });
-    expect(
-      screen.getByRole("group", {
-        name: "Do you believe the listed relationship is described accurately? (Optional)",
-      })
-    ).toBeInTheDocument();
-  });
-
-  it("initially renders with all conditional comment boxes hidden", () => {
-    renderComponent({
-      claim: claimWithCaringLeave,
-    });
-    expect(
-      screen.queryByRole("textbox", {
-        name: "Tell us why you think this relationship is inaccurate.",
-      })
-    ).not.toBeInTheDocument();
-  });
-
-  it("calls onChangeBelieveRelationshipAccurate when user changes the relation answer", () => {
-    const onChangeMock = jest.fn();
-    renderComponent({
-      claim: claimWithCaringLeave,
-      onChangeBelieveRelationshipAccurate: onChangeMock,
-    });
-
-    userEvent.click(screen.getByRole("radio", { name: "I don't know" }));
-
-    expect(onChangeMock).toHaveBeenCalledWith("Unknown");
-  });
-
-  it("renders the comment box and the alert when user indicates the relationship is inaccurate ", () => {
-    renderComponent({
-      claim: claimWithCaringLeave,
-      believeRelationshipAccurate: "No",
-    });
-
-    expect(
-      screen.getByRole("textbox", {
-        name: "Tell us why you think this relationship is inaccurate.",
-      })
-    ).toBeInTheDocument();
-    expect(screen.getByRole("region")).toMatchSnapshot();
-  });
-
-  it("calls onChangeRelationshipInaccurateReason when user leaves a comment", () => {
-    const onChangeMock = jest.fn();
-    renderComponent({
-      claim: claimWithCaringLeave,
-      believeRelationshipAccurate: "No",
-      onChangeRelationshipInaccurateReason: onChangeMock,
-    });
-
-    userEvent.type(screen.getByRole("textbox"), "This is a comment");
-
-    expect(onChangeMock).toHaveBeenCalledWith("This is a comment");
-  });
-
-  it("renders the alert info when user indicates the relationship status is unknown ", () => {
-    renderComponent({
-      claim: claimWithCaringLeave,
-      believeRelationshipAccurate: "Unknown",
-    });
-
-    expect(screen.getByRole("region")).toMatchSnapshot();
-  });
-
-  it("renders inline error message when the text exceeds the limit", () => {
-    const appErrors = new AppErrorInfoCollection([
-      new AppErrorInfo({
-        field: "relationship_inaccurate_reason",
-        type: "maxLength",
-        message:
-          "Please shorten your comment. We cannot accept comments that are longer than 9999 characters.",
-      }),
-    ]);
-    renderComponent({
-      claim: claimWithCaringLeave,
-      believeRelationshipAccurate: "No",
-      appErrors,
-    });
-
-    expect(
-      screen.getByRole("textbox", {
-        name: "Tell us why you think this relationship is inaccurate.",
-      })
-    ).toHaveClass("usa-input--error");
   });
 });

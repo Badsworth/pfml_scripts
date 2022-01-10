@@ -10,7 +10,6 @@ import uuid
 from typing import Optional, Sequence, TextIO, cast
 
 import massgov.pfml.db
-import massgov.pfml.util.datetime
 import massgov.pfml.util.files
 import massgov.pfml.util.logging
 from massgov.pfml.api.util import state_log_util
@@ -25,10 +24,14 @@ from massgov.pfml.db.models.employees import (
     ReferenceFileType,
     State,
 )
-from massgov.pfml.db.models.payments import FineosWritebackDetails, FineosWritebackTransactionStatus
+from massgov.pfml.db.models.payments import FineosWritebackTransactionStatus
 from massgov.pfml.delegated_payments import delegated_config, delegated_payments_util
 from massgov.pfml.delegated_payments.pub import process_files_in_path_step
 from massgov.pfml.delegated_payments.util.ach import reader
+from massgov.pfml.delegated_payments.util.fineos_writeback_util import (
+    create_payment_finished_state_log_with_writeback,
+)
+from massgov.pfml.util.datetime import get_now_us_eastern
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
@@ -59,6 +62,7 @@ class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
         PAYMENT_UNEXPECTED_STATE_COUNT = "payment_unexpected_state_count"
         UNKNOWN_ID_FORMAT_COUNT = "unknown_id_format_count"
         WARNING_COUNT = "warning_count"
+        PROCESSED_ACH_FILE = "processed_ach_file"
 
     def __init__(
         self, db_session: massgov.pfml.db.Session, log_entry_db_session: massgov.pfml.db.Session,
@@ -96,6 +100,7 @@ class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
     def process_stream(self, stream: TextIO) -> None:
         ach_reader = reader.ACHReader(stream)
         self.process_parsed(ach_reader)
+        self.increment(self.Metrics.PROCESSED_ACH_FILE)
 
     def process_parsed(self, ach_reader: reader.ACHReader) -> None:
         for warning in ach_reader.get_warnings():
@@ -236,13 +241,13 @@ class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
         # Transition to next state when set
         if next_state == PrenoteState.APPROVED:
             pub_eft.prenote_state_id = PrenoteState.APPROVED.prenote_state_id
-            pub_eft.prenote_approved_at = delegated_payments_util.get_now()
-            pub_eft.prenote_response_at = delegated_payments_util.get_now()
+            pub_eft.prenote_approved_at = get_now_us_eastern()
+            pub_eft.prenote_response_at = get_now_us_eastern()
             pub_eft.prenote_response_reason_code = ach_return.return_reason_code
 
         elif next_state == PrenoteState.REJECTED:
             pub_eft.prenote_state_id = PrenoteState.REJECTED.prenote_state_id
-            pub_eft.prenote_response_at = delegated_payments_util.get_now()
+            pub_eft.prenote_response_at = get_now_us_eastern()
             pub_eft.prenote_response_reason_code = ach_return.return_reason_code
 
     def process_payment_return(self, pub_individual_id: int, ach_return: reader.ACHReturn) -> None:
@@ -283,46 +288,31 @@ class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
         )
         if payment_state_log is None:
             end_state_id = None
+            end_state = None
         else:
             end_state_id = payment_state_log.end_state_id
+            end_state = payment_state_log.end_state
 
         if end_state_id == State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT.state_id:
             # Expected normal state for an ACH returned payment.
-            state_log_util.create_finished_state_log(
-                payment,
-                State.DELEGATED_PAYMENT_ERROR_FROM_BANK,
-                state_log_util.build_outcome(
+            create_payment_finished_state_log_with_writeback(
+                payment=payment,
+                payment_end_state=State.DELEGATED_PAYMENT_ERROR_FROM_BANK,
+                payment_outcome=state_log_util.build_outcome(
                     "Bank Processing Error",
                     ach_return_reason_code=str(ach_return.return_reason_code),
                     ach_return_line_number=str(ach_return.line_number),
                 ),
-                self.db_session,
-            )
-
-            writeback_transaction_status = FineosWritebackTransactionStatus.BANK_PROCESSING_ERROR
-            state_log_util.create_finished_state_log(
-                end_state=State.DELEGATED_ADD_TO_FINEOS_WRITEBACK,
-                associated_model=payment,
-                outcome=state_log_util.build_outcome(
-                    writeback_transaction_status.transaction_status_description
-                ),
-                import_log_id=self.get_import_log_id(),
+                writeback_transaction_status=FineosWritebackTransactionStatus.BANK_PROCESSING_ERROR,
                 db_session=self.db_session,
-            )
-
-            writeback_details = FineosWritebackDetails(
-                payment=payment,
-                transaction_status_id=writeback_transaction_status.transaction_status_id,
                 import_log_id=self.get_import_log_id(),
             )
-            self.db_session.add(writeback_details)
 
             logger.warning(
                 "ACH Return: Payment bank processing error",
                 extra={
                     **ach_return.get_details_for_log(),
-                    "payments.payment_id": payment.payment_id,
-                    "payments.state": end_state_id,
+                    **delegated_payments_util.get_traceable_payment_details(payment, end_state),
                 },
             )
             self.increment(self.Metrics.PAYMENT_REJECTED_COUNT)
@@ -342,8 +332,7 @@ class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
                 "payment already in a bank processing error state",
                 extra={
                     **ach_return.get_details_for_log(),
-                    "payments.payment_id": payment.payment_id,
-                    "payments.state": end_state_id,
+                    **delegated_payments_util.get_traceable_payment_details(payment, end_state),
                 },
             )
             self.increment(self.Metrics.PAYMENT_ALREADY_REJECTED_COUNT)
@@ -351,8 +340,7 @@ class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
             # The latest state for this payment is not compatible with receiving an ACH return.
             details = {
                 **ach_return.get_details_for_log(),
-                "payments.payment_id": payment.payment_id,
-                "payments.state": end_state_id,
+                **delegated_payments_util.get_traceable_payment_details(payment, end_state),
             }
 
             logger.error(
@@ -379,40 +367,26 @@ class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
         )
         if payment_state_log is None:
             end_state_id = None
+            end_state = None
         else:
             end_state_id = payment_state_log.end_state_id
+            end_state = payment_state_log.end_state
 
         if end_state_id == State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT.state_id:
             # Expected normal state for an ACH change notification payment.
-            state_log_util.create_finished_state_log(
-                payment,
-                State.DELEGATED_PAYMENT_COMPLETE_WITH_CHANGE_NOTIFICATION,
-                state_log_util.build_outcome(
+            create_payment_finished_state_log_with_writeback(
+                payment=payment,
+                payment_end_state=State.DELEGATED_PAYMENT_COMPLETE_WITH_CHANGE_NOTIFICATION,
+                payment_outcome=state_log_util.build_outcome(
                     "Payment complete with change notification",
                     ach_return_reason_code=str(change_notification.return_reason_code),
                     ach_return_line_number=str(change_notification.line_number),
                     ach_return_change_information=change_notification.addenda_information,
                 ),
-                self.db_session,
-            )
-
-            # Add the payment to the writeback
-            writeback_transaction_status = FineosWritebackTransactionStatus.POSTED
-            state_log_util.create_finished_state_log(
-                end_state=State.DELEGATED_ADD_TO_FINEOS_WRITEBACK,
-                associated_model=payment,
-                outcome=state_log_util.build_outcome(
-                    writeback_transaction_status.transaction_status_description
-                ),
-                import_log_id=self.get_import_log_id(),
+                writeback_transaction_status=FineosWritebackTransactionStatus.POSTED,
                 db_session=self.db_session,
-            )
-            writeback_details = FineosWritebackDetails(
-                payment=payment,
-                transaction_status_id=writeback_transaction_status.transaction_status_id,
                 import_log_id=self.get_import_log_id(),
             )
-            self.db_session.add(writeback_details)
 
             logger.warning(
                 "ACH Notification: Payment complete with change notification",
@@ -434,9 +408,8 @@ class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
             logger.info(
                 "payment already in DELEGATED_PAYMENT_COMPLETE_WITH_CHANGE_NOTIFICATION state",
                 extra={
-                    "payments.ach.id_number": change_notification.id_number,
-                    "payments.state": end_state_id,
-                    "payments.payment_id": payment.payment_id,
+                    **change_notification.get_details_for_log(),
+                    **delegated_payments_util.get_traceable_payment_details(payment, end_state),
                 },
             )
             self.increment(self.Metrics.PAYMENT_ALREADY_COMPLETE_COUNT)
@@ -445,7 +418,7 @@ class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
             # notification.
             details = {
                 **change_notification.get_details_for_log(),
-                "payments.state": end_state_id,
+                **delegated_payments_util.get_traceable_payment_details(payment, end_state),
             }
 
             logger.error(

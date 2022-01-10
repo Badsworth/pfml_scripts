@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import AppErrorInfo from "../models/AppErrorInfo";
-import BenefitsApplicationDocument from "../models/BenefitsApplicationDocument";
+import { BenefitsApplicationDocument } from "../models/Document";
 import FileCard from "./FileCard";
-import Spinner from "./Spinner";
+import Spinner from "./core/Spinner";
 import TempFile from "../models/TempFile";
 import TempFileCollection from "../models/TempFileCollection";
 import { useTranslation } from "../locales/i18n";
@@ -20,7 +20,8 @@ function renderFileCard(
   index: number,
   onRemoveTempFile: (id: string) => void,
   fileHeadingPrefix: string,
-  errorMsg: React.ReactNode = null
+  errorMsg: React.ReactNode = null,
+  disableRemove: boolean | undefined
 ) {
   const handleRemoveClick = () => onRemoveTempFile(tempFile.id);
   const heading = `${fileHeadingPrefix} ${index + 1}`;
@@ -32,6 +33,7 @@ function renderFileCard(
         file={tempFile.file}
         onRemoveClick={handleRemoveClick}
         errorMsg={errorMsg}
+        disableRemove={disableRemove}
       />
     </li>
   );
@@ -61,13 +63,14 @@ function renderDocumentFileCard(
 
 interface FileCardListProps {
   tempFiles: TempFileCollection;
-  fileErrors?: AppErrorInfo[];
-  onChange: (files: Blob[]) => Promise<void>;
+  fileErrors: AppErrorInfo[];
+  onChange: (files: File[]) => Promise<void>;
   onRemoveTempFile: (id: string) => void;
   fileHeadingPrefix: string;
   addFirstFileButtonText: string;
   addAnotherFileButtonText: string;
-  documents?: BenefitsApplicationDocument[];
+  documents: BenefitsApplicationDocument[];
+  disableRemove?: boolean;
 }
 /**
  * A list of previously uploaded files and a button to upload additional files. This component
@@ -84,21 +87,16 @@ const FileCardList = (props: FileCardListProps) => {
     onRemoveTempFile,
     fileHeadingPrefix,
     fileErrors,
+    disableRemove,
   } = props;
-
-  let documentFileCount = 0;
-  let documentFileCards = [];
-
-  if (documents) {
-    documentFileCount = documents.length;
-    documentFileCards = documents.map((file, index) =>
-      renderDocumentFileCard(file, index, fileHeadingPrefix)
-    );
-  }
+  const documentFileCount = documents.length;
+  const documentFileCards = documents.map((file, index) =>
+    renderDocumentFileCard(file, index, fileHeadingPrefix)
+  );
 
   const fileCards = tempFiles.items.map((file, index) => {
     const fileError = fileErrors.find(
-      (appErrorInfo) => appErrorInfo.meta.file_id === file.id
+      (appErrorInfo) => appErrorInfo.meta?.file_id === file.id
     );
     const errorMsg = fileError ? fileError.message : null;
     return renderFileCard(
@@ -106,7 +104,8 @@ const FileCardList = (props: FileCardListProps) => {
       index + documentFileCount,
       onRemoveTempFile,
       fileHeadingPrefix,
-      errorMsg
+      errorMsg,
+      disableRemove
     );
   });
 
@@ -118,7 +117,7 @@ const FileCardList = (props: FileCardListProps) => {
     // This will only have files selected this time, not previously selected files
     // e.target.files is a FileList type which isn't an array, but we can turn it into one
     // @see https://developer.mozilla.org/en-US/docs/Web/API/FileList
-    const files = Array.from(event.target.files);
+    const files = event.target.files ? Array.from(event.target.files) : [];
 
     // Reset the input element's value. When a user selects a file which was already
     // selected it normally won't trigger the onChange event, but that's not what we want.
@@ -142,7 +141,7 @@ const FileCardList = (props: FileCardListProps) => {
       <ul className="usa-list usa-list--unstyled measure-5">{fileCards}</ul>
       {isLoading ? (
         <div className="text-center measure-5">
-          <Spinner aria-valuetext={t("components.fileCardList.loadingLabel")} />
+          <Spinner aria-label={t("components.fileCardList.loadingLabel")} />
         </div>
       ) : (
         <label className="margin-top-2 usa-button usa-button--outline">

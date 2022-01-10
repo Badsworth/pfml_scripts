@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import React from "react";
-import Table from "../../src/components/Table";
+import Table from "../../src/components/core/Table";
 
 describe("Table", () => {
   it("renders children within a table", () => {
@@ -27,14 +27,14 @@ describe("Table", () => {
     render(<Table className="some-style additional-style" />);
 
     expect(screen.getByRole("table")).toHaveClass(
-      "usa-table usa-table--borderless c-table some-style additional-style"
+      "usa-table usa-table--borderless some-style additional-style"
     );
   });
 
   it("adds a stacked modifier class when the responsive prop is set", () => {
     render(<Table responsive />);
 
-    expect(screen.getByRole("table")).toHaveClass("usa-table--stacked-header");
+    expect(screen.getByRole("table")).toHaveClass("usa-table--stacked");
   });
 
   it("nests the table in a scrollable container when the scrollable prop is set", () => {

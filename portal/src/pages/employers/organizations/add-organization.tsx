@@ -1,9 +1,9 @@
 import { AppLogic } from "../../../hooks/useAppLogic";
 import BackButton from "../../../components/BackButton";
-import Button from "../../../components/Button";
-import InputText from "../../../components/InputText";
+import Button from "../../../components/core/Button";
+import InputText from "../../../components/core/InputText";
 import React from "react";
-import Title from "../../../components/Title";
+import Title from "../../../components/core/Title";
 import routes from "../../../routes";
 import useFormState from "../../../hooks/useFormState";
 import useFunctionalInputProps from "../../../hooks/useFunctionalInputProps";

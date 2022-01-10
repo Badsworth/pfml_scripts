@@ -11,7 +11,8 @@
  * is complete, in progress, or not started
  * @see ../models/Step
  */
-import {
+
+import BenefitsApplication, {
   EmploymentStatus,
   WorkPatternType,
 } from "../models/BenefitsApplication";
@@ -23,6 +24,7 @@ import { fields as concurrentLeavesDetailsFields } from "../pages/applications/c
 import { fields as concurrentLeavesFields } from "../pages/applications/concurrent-leaves";
 import { fields as dateOfBirthFields } from "../pages/applications/date-of-birth";
 import { fields as dateOfChildFields } from "../pages/applications/date-of-child";
+import { fields as departmentFields } from "../pages/applications/department";
 import { fields as employerBenefitsDetailsFields } from "../pages/applications/employer-benefits-details";
 import { fields as employerBenefitsFields } from "../pages/applications/employer-benefits";
 import { fields as employmentStatusFields } from "../pages/applications/employment-status";
@@ -32,6 +34,7 @@ import { fields as familyMemberRelationshipFields } from "../pages/applications/
 import { fields as genderFields } from "../pages/applications/gender";
 import { get } from "lodash";
 import { fields as intermittentFrequencyFields } from "../pages/applications/intermittent-frequency";
+import { isFeatureEnabled } from "../services/featureFlags";
 import { fields as leavePeriodContinuousFields } from "../pages/applications/leave-period-continuous";
 import { fields as leavePeriodIntermittentFields } from "../pages/applications/leave-period-intermittent";
 import { fields as leavePeriodReducedScheduleFields } from "../pages/applications/leave-period-reduced-schedule";
@@ -53,34 +56,49 @@ import { fields as scheduleFixedFields } from "../pages/applications/schedule-fi
 import { fields as scheduleVariableFields } from "../pages/applications/schedule-variable";
 import { fields as ssnFields } from "../pages/applications/ssn";
 import { fields as stateIdFields } from "../pages/applications/state-id";
+import { fields as taxWithholdingFields } from "../pages/applications/tax-withholding";
 import { fields as workPatternTypeFields } from "../pages/applications/work-pattern-type";
+
+export interface ClaimantFlowContext {
+  claim?: BenefitsApplication;
+  isAdditionalDoc?: boolean;
+}
+
+type ClaimFlowGuardFn = (context: ClaimantFlowContext) => boolean;
 
 /**
  * @see https://xstate.js.org/docs/guides/guards.html
+ *
  */
-export const guards = {
+export const guards: { [guardName: string]: ClaimFlowGuardFn } = {
   // claimants upload additional docs after the claim is completed.
   // claimants will either be routed to the status page vs. the checklist
   // if they are uploading an additional doc.
   isAdditionalDoc: ({ isAdditionalDoc }) => isAdditionalDoc === true,
-  isCaringLeave: ({ claim }) => claim.isCaringLeave,
-  isMedicalOrPregnancyLeave: ({ claim }) => claim.isMedicalOrPregnancyLeave,
-  isBondingLeave: ({ claim }) => claim.isBondingLeave,
+  isCaringLeave: ({ claim }) => claim?.isCaringLeave === true,
+  isMedicalOrPregnancyLeave: ({ claim }) =>
+    claim?.isMedicalOrPregnancyLeave === true,
+  isBondingLeave: ({ claim }) => claim?.isBondingLeave === true,
+  // TODO (PFMLPB-2615): Remove isFeatureEnabled check once feature flag is obsolete
+  hasEmployerWithDepartments: ({ claim }) =>
+    isFeatureEnabled("claimantShowOrganizationUnits") &&
+    get(claim, "employment_status") === EmploymentStatus.employed &&
+    get(claim, "employer_organization_units", []).length > 0,
   isEmployed: ({ claim }) =>
     get(claim, "employment_status") === EmploymentStatus.employed,
-  isCompleted: ({ claim }) => claim.isCompleted,
-  hasStateId: ({ claim }) => claim.has_state_id === true,
-  hasConcurrentLeave: ({ claim }) => claim.has_concurrent_leave === true,
-  hasEmployerBenefits: ({ claim }) => claim.has_employer_benefits === true,
+  isCompleted: ({ claim }) => claim?.isCompleted === true,
+  hasStateId: ({ claim }) => claim?.has_state_id === true,
+  hasConcurrentLeave: ({ claim }) => claim?.has_concurrent_leave === true,
+  hasEmployerBenefits: ({ claim }) => claim?.has_employer_benefits === true,
   hasIntermittentLeavePeriods: ({ claim }) =>
-    claim.has_intermittent_leave_periods === true,
+    claim?.has_intermittent_leave_periods === true,
   hasPreviousLeavesOtherReason: ({ claim }) =>
-    claim.has_previous_leaves_other_reason === true,
+    claim?.has_previous_leaves_other_reason === true,
   hasPreviousLeavesSameReason: ({ claim }) =>
-    claim.has_previous_leaves_same_reason === true,
+    claim?.has_previous_leaves_same_reason === true,
   hasReducedScheduleLeavePeriods: ({ claim }) =>
-    claim.has_reduced_schedule_leave_periods === true,
-  hasOtherIncomes: ({ claim }) => claim.has_other_incomes === true,
+    claim?.has_reduced_schedule_leave_periods === true,
+  hasOtherIncomes: ({ claim }) => claim?.has_other_incomes === true,
   isFixedWorkPattern: ({ claim }) =>
     get(claim, "work_pattern.work_pattern_type") === WorkPatternType.fixed,
   isVariableWorkPattern: ({ claim }) =>
@@ -96,6 +114,7 @@ const checklistEvents = {
   OTHER_LEAVE: routes.applications.previousLeavesIntro,
   EMPLOYER_INFORMATION: routes.applications.employmentStatus,
   PAYMENT: routes.applications.paymentMethod,
+  TAX_WITHHOLDING: routes.applications.taxWithholding,
   UPLOAD_CERTIFICATION: routes.applications.uploadCertification,
   UPLOAD_ID: routes.applications.uploadId,
 };
@@ -106,7 +125,7 @@ const checklistEvents = {
 const uploadDocEvents = {
   CONTINUE: [
     {
-      target: routes.applications.status,
+      target: routes.applications.status.claim,
       cond: "isAdditionalDoc",
     },
     {
@@ -126,11 +145,11 @@ export interface ClaimantFlowState {
     fields?: string[];
     step?: string;
   };
-  on: Record<string, string | ConditionalEvent[]>;
+  on: { [event: string]: string | ConditionalEvent[] };
 }
 
 const claimantFlow: {
-  states: Record<string, ClaimantFlowState>;
+  states: { [route: string]: ClaimantFlowState };
 } = {
   states: {
     [routes.applications.getReady]: {
@@ -152,23 +171,8 @@ const claimantFlow: {
         CREATE_CLAIM: routes.applications.checklist,
       },
     },
-    [routes.user.convert]: {
-      meta: {},
+    [routes.applications.find]: {
       on: {
-        PREVENT_CONVERSION: routes.applications.getReady,
-        /* We cannot move between 2 different flows due to
-         * claimant test only using claimant state, therefore,
-         * we have no access to redirect to employer pages
-         */
-        // CONTINUE: routes.employers.organizations,
-      },
-    },
-    [routes.user.consentToDataSharing]: {
-      meta: {},
-      on: {
-        // Route to Applications page to support users who are re-consenting.
-        // If they're new users with no claims, the Applications page will
-        // handle redirecting them.
         CONTINUE: routes.applications.index,
       },
     },
@@ -176,7 +180,10 @@ const claimantFlow: {
       meta: {},
       on: {
         CONTINUE: routes.applications.uploadDocsOptions,
-        STATUS: routes.applications.status,
+        FIND_APPLICATION: routes.applications.find,
+        NEW_APPLICATION: routes.applications.getReady,
+        PAYMENT: routes.applications.status.payments,
+        STATUS: routes.applications.status.claim,
       },
     },
     [routes.applications.checklist]: {
@@ -622,6 +629,27 @@ const claimantFlow: {
       on: {
         CONTINUE: [
           {
+            target: routes.applications.department,
+            cond: "hasEmployerWithDepartments",
+          },
+          {
+            target: routes.applications.notifiedEmployer,
+            cond: "isEmployed",
+          },
+          {
+            target: routes.applications.checklist,
+          },
+        ],
+      },
+    },
+    [routes.applications.department]: {
+      meta: {
+        step: ClaimSteps.employerInformation,
+        fields: departmentFields,
+      },
+      on: {
+        CONTINUE: [
+          {
             target: routes.applications.notifiedEmployer,
             cond: "isEmployed",
           },
@@ -644,6 +672,15 @@ const claimantFlow: {
       meta: {
         step: ClaimSteps.payment,
         fields: paymentMethodFields,
+      },
+      on: {
+        CONTINUE: routes.applications.checklist,
+      },
+    },
+    [routes.applications.taxWithholding]: {
+      meta: {
+        step: ClaimSteps.taxWithholding,
+        fields: taxWithholdingFields,
       },
       on: {
         CONTINUE: routes.applications.checklist,
@@ -757,12 +794,18 @@ const claimantFlow: {
         CONTINUE: routes.applications.review,
       },
     },
-    [routes.applications.status]: {
+    [routes.applications.status.claim]: {
       on: {
         UPLOAD_PROOF_OF_BIRTH: routes.applications.upload.bondingProofOfBirth,
         UPLOAD_PROOF_OF_PLACEMENT:
           routes.applications.upload.bondingProofOfPlacement,
         UPLOAD_DOC_OPTIONS: routes.applications.upload.index,
+        VIEW_PAYMENTS: routes.applications.status.payments,
+      },
+    },
+    [routes.applications.status.payments]: {
+      on: {
+        STATUS: routes.applications.status.claim,
       },
     },
   },

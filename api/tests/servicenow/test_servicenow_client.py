@@ -3,7 +3,8 @@ import uuid
 import pytest
 import responses
 
-from massgov.pfml.servicenow.client import ServiceNowClient, ServiceNowException
+from massgov.pfml.servicenow.client import ServiceNowClient
+from massgov.pfml.servicenow.exception import ServiceNowError, ServiceNowUnavailable
 from massgov.pfml.servicenow.models import Claimant, OutboundMessage, Recipient
 
 
@@ -58,6 +59,17 @@ def test_response():
 
 class TestServiceNowClient:
     @responses.activate
+    def test_service_now_unavailable_request(self, test_client, test_message):
+        responses.add(
+            responses.POST,
+            "https://imaginary.com/api/now/table/bogus",
+            json={"error": "bad request"},
+            status=503,
+        )
+        with pytest.raises(ServiceNowUnavailable):
+            test_client.send_message(message=test_message, table="bogus")
+
+    @responses.activate
     def test_bad_request(self, test_client, test_message):
         responses.add(
             responses.POST,
@@ -65,7 +77,7 @@ class TestServiceNowClient:
             json={"error": "bad request"},
             status=400,
         )
-        with pytest.raises(ServiceNowException):
+        with pytest.raises(ServiceNowError):
             test_client.send_message(message=test_message, table="bogus")
 
     @responses.activate

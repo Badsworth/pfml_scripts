@@ -37,6 +37,9 @@ output "environment_tags" {
     "breakfix"    = "qa"
     "cps-preview" = "qa"
     "adhoc"       = "test"
+    "long"        = "test"
+    "infra-test"  = "test"
+    "trn2"        = "train"
   }
 }
 
@@ -55,6 +58,9 @@ output "environment_shorthand" {
     "uat"         = "uat"
     "breakfix"    = "bfx"
     "cps-preview" = "cpspr"
+    "long"        = "long"
+    "infra-test"  = "itest"
+    "trn2"        = "trn2"
   }
 }
 
@@ -75,6 +81,9 @@ output "smartronix_environment_tags" {
     "breakfix"    = "Breakfix"
     "cps-preview" = "CPSPreview"
     "adhoc"       = "Adhoc"
+    "long"        = "LONG"
+    "infra-test"  = "Sandbox"
+    "trn2"        = "TRN2"
   }
 }
 
@@ -83,7 +92,8 @@ output "prod_admin_roles" {
   value = [
     "arn:aws:iam::498823821309:role/AWS-498823821309-CloudOps-Engineer",
     "arn:aws:iam::498823821309:role/ci-run-deploys",
-    "arn:aws:iam::498823821309:role/aws-reserved/sso.amazonaws.com/AWSReservedSSO_eolwd-pfml-infrastructure-admin_9049548fba1c97b7"
+    "arn:aws:iam::498823821309:role/aws-reserved/sso.amazonaws.com/AWSReservedSSO_eolwd-pfml-infrastructure-admin_9049548fba1c97b7",
+    "arn:aws:iam::498823821309:role/ADFS-Admin"
   ]
 }
 
@@ -93,7 +103,8 @@ output "nonprod_admin_roles" {
     "arn:aws:iam::498823821309:role/AWS-498823821309-CloudOps-Engineer",
     "arn:aws:iam::498823821309:role/ci-run-deploys",
     "arn:aws:iam::498823821309:role/aws-reserved/sso.amazonaws.com/AWSReservedSSO_eolwd-pfml-infrastructure-admin_9049548fba1c97b7",
-    "arn:aws:iam::498823821309:role/aws-reserved/sso.amazonaws.com/AWSReservedSSO_eolwd-pfml-nonprod-admins_d9b2995c1106dfbb"
+    "arn:aws:iam::498823821309:role/aws-reserved/sso.amazonaws.com/AWSReservedSSO_eolwd-pfml-nonprod-admins_d9b2995c1106dfbb",
+    "arn:aws:iam::498823821309:role/ADFS-Admin"
   ]
 }
 
@@ -102,6 +113,7 @@ output "nonprod_admin_roles" {
 #
 output "domains" {
   value = {
+    "infra-test"  = "paidleave-infra-test.dfml.eol.mass.gov",
     "test"        = "paidleave-test.mass.gov",
     "stage"       = "paidleave-stage.mass.gov",
     "performance" = "paidleave-performance.mass.gov",
@@ -109,12 +121,15 @@ output "domains" {
     "breakfix"    = "paidleave-breakfix.eol.mass.gov",
     "cps-preview" = "paidleave-cps-preview.eol.mass.gov",
     "uat"         = "paidleave-uat.mass.gov",
-    "prod"        = "paidleave.mass.gov"
+    "prod"        = "paidleave.mass.gov",
+    "long"        = "paidleave-long.dfml.eol.mass.gov",
+    "trn2"        = "paidleave-trn2.dfml.eol.mass.gov"
   }
 }
 
 output "api_domains" {
   value = {
+    "infra-test"  = "paidleave-api-infra-test.dfml.eol.mass.gov",
     "test"        = "paidleave-api-test.mass.gov",
     "stage"       = "paidleave-api-stage.mass.gov",
     "performance" = "paidleave-api-performance.mass.gov",
@@ -122,7 +137,9 @@ output "api_domains" {
     "breakfix"    = "paidleave-api-breakfix.eol.mass.gov",
     "cps-preview" = "paidleave-api-cps-preview.eol.mass.gov",
     "uat"         = "paidleave-api-uat.mass.gov",
-    "prod"        = "paidleave-api.mass.gov"
+    "prod"        = "paidleave-api.mass.gov",
+    "long"        = "paidleave-api-long.dfml.eol.mass.gov",
+    "trn2"        = "paidleave-api-trn2.dfml.eol.mass.gov"
   }
 }
 
@@ -131,6 +148,7 @@ output "cert_domains" {
   # you cannot lookup certs by a SAN, so we lookup based on the first domain
   # that is specified in the certificate.
   value = {
+    "infra-test"  = "paidleave-infra-test.dfml.eol.mass.gov",
     "test"        = "paidleave-test.mass.gov",
     "stage"       = "paidleave-test.mass.gov",
     "performance" = "paidleave-performance.mass.gov",
@@ -138,7 +156,9 @@ output "cert_domains" {
     "breakfix"    = "paidleave-breakfix.eol.mass.gov",
     "cps-preview" = "paidleave-breakfix.eol.mass.gov",
     "uat"         = "paidleave-uat.mass.gov",
-    "prod"        = "paidleave.mass.gov"
+    "prod"        = "paidleave.mass.gov",
+    "long"        = "paidleave-long.dfml.eol.mass.gov",
+    "trn2"        = "paidleave-trn2.dfml.eol.mass.gov"
   }
 }
 
@@ -154,5 +174,41 @@ output "slackbot_channels" {
 }
 
 output "bucket_replication_environment" {
-  value = "prod"
+  value = "test"
+}
+
+# Env Var mappings for ECS Tasks 
+# Currently only used in aws_ecs_task_definition.ecs_tasks_1099 resource
+output "env_var_mappings" {
+  value = {
+    "test"        = "Test"
+    "stage"       = "Staging"
+    "prod"        = "Production"
+    "performance" = "Performance"
+    "training"    = "Training"
+    "uat"         = "UAT"
+    "breakfix"    = "Breakfix"
+    "cps-preview" = "CPSPreview"
+    "long"        = "Long"
+    "infra-test"  = "Test"
+    "trn2"        = "Training"
+  }
+}
+
+#
+# Environments where multi-factor authentication / 2FA should be enabled
+#
+output "env_mfa_enabled" {
+  value = [
+    "test",
+    "stage",
+    "performance",
+    "training",
+    "uat",
+    "breakfix",
+    "cps-preview",
+    "long",
+    "trn2",
+    "infra-test"
+  ]
 }

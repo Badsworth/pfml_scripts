@@ -1,0 +1,3 @@
+**/nerdpack/node_modules/*
+**/nerdpack/tmp/*
+**/nerdpack/dist/*

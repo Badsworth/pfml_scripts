@@ -1,15 +1,16 @@
 import React, { useEffect } from "react";
+import withBenefitsApplication, {
+  WithBenefitsApplicationProps,
+} from "../../hoc/withBenefitsApplication";
 import AddressModel from "../../models/Address";
-import BenefitsApplication from "../../models/BenefitsApplication";
 import ConditionalContent from "../../components/ConditionalContent";
 import FieldsetAddress from "../../components/FieldsetAddress";
-import InputChoiceGroup from "../../components/InputChoiceGroup";
+import InputChoiceGroup from "../../components/core/InputChoiceGroup";
 import QuestionPage from "../../components/QuestionPage";
 import { pick } from "lodash";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = [
   "claim.has_mailing_address",
@@ -24,19 +25,11 @@ export const fields = [
   "claim.mailing_address.line_1",
   "claim.mailing_address.line_2",
   "claim.mailing_address.city",
-  "claim.mailing_address.state",
+  "claim.mailing_address.sate",
   "claim.mailing_address.zip",
 ];
 
-interface AddressProps {
-  claim?: BenefitsApplication;
-  appLogic: any;
-  query?: {
-    claim_id?: string;
-  };
-}
-
-export const Address = (props: AddressProps) => {
+export const Address = (props: WithBenefitsApplicationProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 

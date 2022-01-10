@@ -3,6 +3,8 @@ import { AppErrorsLogic } from "./useAppErrorsLogic";
 import Compressor from "compressorjs";
 import TempFile from "../models/TempFile";
 import TempFileCollection from "../models/TempFileCollection";
+import bytesToMb from "../utils/bytesToMb";
+import { isFeatureEnabled } from "../services/featureFlags";
 import { snakeCase } from "lodash";
 import { t } from "../locales/i18n";
 import tracker from "../services/tracker";
@@ -15,12 +17,10 @@ const defaultAllowedFileTypes = [
   "application/pdf",
 ] as const;
 
-// Max file size in bytes
-const defaultMaximumFileSize = 4500000;
-
 // Exclusion reasons
 const disallowedReasons = {
   size: "size",
+  apiGatewaySize: "apiGatewaySize",
   sizeAndType: "sizeAndType",
   type: "type",
 } as const;
@@ -29,10 +29,12 @@ const disallowedReasons = {
  * Compress an image which size is greater than maximum file size and  returns a promise
  * @param maximumFileSize - Size at which compression will be attempted
  */
-function optimizeFileSize(file: File, maximumFileSize: number): Promise<File> {
+function optimizeImageSize(file: File): Promise<File> {
+  const maximumImageSize = Number(process.env.fileSizeMaxBytesFineos);
+
   return new Promise((resolve) => {
     if (
-      file.size <= maximumFileSize ||
+      file.size <= maximumImageSize ||
       !["image/png", "image/jpeg"].includes(file.type)
     ) {
       return resolve(file);
@@ -41,18 +43,13 @@ function optimizeFileSize(file: File, maximumFileSize: number): Promise<File> {
     new Compressor(file, {
       quality: 0.6,
       checkOrientation: false, // Improves compression speed for larger files
-      convertSize: maximumFileSize,
+      convertSize: maximumImageSize,
       success: (compressedBlob: File) => {
-        const fileName = compressedBlob.name;
-        const fileNameWithPrefix = "Compressed_" + fileName;
-
         tracker.trackEvent("CompressorSize", {
           originalSize: file.size,
           compressedSize: compressedBlob.size,
         });
-        // TODO (PORTAL-25): Stop referencing/setting the name
-        // @ts-expect-error Cannot assign to 'name' because it is a read-only property
-        compressedBlob.name = fileNameWithPrefix;
+
         resolve(compressedBlob);
       },
       error: (error) => {
@@ -76,10 +73,8 @@ function optimizeFileSize(file: File, maximumFileSize: number): Promise<File> {
  * Attempt to reduce the size of files
  * @param maximumFileSize - Size at which compression will be attempted
  */
-function optimizeFiles(files: File[], maximumFileSize: number) {
-  const compressPromises = files.map((file) =>
-    optimizeFileSize(file, maximumFileSize)
-  );
+function optimizeFiles(files: File[]) {
+  const compressPromises = files.map((file) => optimizeImageSize(file));
 
   return Promise.all(compressPromises);
 }
@@ -93,10 +88,8 @@ function filterAllowedFiles(
   files: File[],
   {
     allowedFileTypes,
-    maximumFileSize,
   }: {
     allowedFileTypes: readonly string[];
-    maximumFileSize: number;
   }
 ) {
   const allowedFiles: File[] = [];
@@ -104,9 +97,17 @@ function filterAllowedFiles(
 
   files.forEach((file) => {
     let disallowedReason = "";
+    const useApiGatewaySizeLimit =
+      file.type === "application/pdf" && isFeatureEnabled("sendLargePdfToApi");
 
-    if (file.size > maximumFileSize) {
-      disallowedReason = disallowedReasons.size;
+    const exceedsSizeLimit = useApiGatewaySizeLimit
+      ? file.size >= Number(process.env.fileSizeMaxBytesApiGateway)
+      : file.size > Number(process.env.fileSizeMaxBytesFineos);
+
+    if (exceedsSizeLimit) {
+      disallowedReason = useApiGatewaySizeLimit
+        ? disallowedReasons.apiGatewaySize
+        : disallowedReasons.size;
     }
     if (!allowedFileTypes.includes(file.type)) {
       if (disallowedReason === disallowedReasons.size) {
@@ -149,11 +150,18 @@ function getIssueForDisallowedFile(
   disallowedFile: File,
   disallowedReason: string
 ): Issue {
-  const i18nKey = `errors.invalidFile_${disallowedReason}`;
+  const context =
+    disallowedReason === disallowedReasons.apiGatewaySize
+      ? disallowedReasons.size
+      : disallowedReason;
 
   return {
-    message: t(i18nKey, {
-      context: disallowedReason,
+    message: t("errors.documents.file.clientSideError", {
+      context,
+      sizeLimit:
+        disallowedReason === disallowedReasons.apiGatewaySize
+          ? bytesToMb(Number(process.env.fileSizeMaxBytesApiGateway))
+          : bytesToMb(Number(process.env.fileSizeMaxBytesFineos)),
       disallowedFileNames:
         disallowedFile instanceof File ? disallowedFile.name : "",
     }),
@@ -164,12 +172,10 @@ const useFilesLogic = ({
   allowedFileTypes = defaultAllowedFileTypes,
   catchError,
   clearErrors,
-  maximumFileSize = defaultMaximumFileSize,
 }: {
   allowedFileTypes?: readonly string[];
   catchError: AppErrorsLogic["catchError"];
   clearErrors: AppErrorsLogic["clearErrors"];
-  maximumFileSize?: number;
 }) => {
   const {
     collection: files,
@@ -182,10 +188,9 @@ const useFilesLogic = ({
    */
   const processFiles = async (files: File[]) => {
     clearErrors();
-    const compressedFiles = await optimizeFiles(files, maximumFileSize);
+    const compressedFiles = await optimizeFiles(files);
 
     const { allowedFiles, issues } = filterAllowedFiles(compressedFiles, {
-      maximumFileSize,
       allowedFileTypes,
     });
 

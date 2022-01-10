@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import AlertBar from "../../src/components/AlertBar";
+import AlertBar from "../../src/components/core/AlertBar";
 import React from "react";
 
 describe("AlertBar", () => {

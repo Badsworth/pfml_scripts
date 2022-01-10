@@ -26,16 +26,20 @@ import Review, {
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import AppErrorInfo from "../../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../../src/models/AppErrorInfoCollection";
-import BenefitsApplicationDocument from "../../../src/models/BenefitsApplicationDocument";
-import { DateTime } from "luxon";
 import DocumentCollection from "../../../src/models/DocumentCollection";
 import { DocumentType } from "../../../src/models/Document";
+import dayjs from "dayjs";
 import { mockRouter } from "next/router";
 import routes from "../../../src/routes";
 import { setupBenefitsApplications } from "../../test-utils/helpers";
 import userEvent from "@testing-library/user-event";
 
-const setup = ({ appErrors, claim, documents } = {}) => {
+const setup = ({
+  appErrors,
+  claim,
+  documents,
+  hasLoadedClaimDocuments,
+} = {}) => {
   // Set the correct initial path so that generated URLs are correct
   mockRouter.pathname = routes.applications.review;
 
@@ -123,6 +127,44 @@ describe("Review Page", () => {
     expect(completeSpy).not.toHaveBeenCalled();
   });
 
+  it("doesn't display tax information for review when boolean is not set", () => {
+    setup({
+      claim: new MockBenefitsApplicationBuilder()
+        .submitted()
+        .paymentPrefSubmitted()
+        .create(),
+    });
+
+    expect(screen.queryByText(/Tax withholding/)).not.toBeInTheDocument();
+  });
+
+  it("displays tax information for review when tax Pref is set", () => {
+    setup({
+      claim: new MockBenefitsApplicationBuilder()
+        .complete()
+        .taxPrefSubmitted(true)
+        .create(),
+    });
+
+    const label = screen.getByRole("heading", {
+      name: "Withhold state and federal taxes?",
+    });
+    expect(label.nextSibling).toHaveTextContent(/Yes/);
+    expect(screen.getAllByText("No")).toHaveLength(7);
+  });
+
+  it("displays tax information for review, including No if no selected", () => {
+    setup({
+      claim: new MockBenefitsApplicationBuilder()
+        .complete()
+        .taxPrefSubmitted(false)
+        .create(),
+    });
+    expect(screen.getByText(/Tax withholding/)).toBeInTheDocument();
+    expect(screen.queryByText("Yes")).not.toBeInTheDocument();
+    expect(screen.getAllByText("No")).toHaveLength(8);
+  });
+
   it("completes the application when the user clicks Submit for a Part 3 review", async () => {
     const { completeSpy, submitSpy } = setup({
       claim: new MockBenefitsApplicationBuilder().complete().create(),
@@ -196,20 +238,21 @@ describe("Review Page", () => {
       .create();
 
     setup({
+      hasLoadedClaimDocuments: true,
       claim,
       documents: [
-        new BenefitsApplicationDocument({
+        {
           application_id: claim.application_id,
           document_type: DocumentType.certification[claim.leave_details.reason],
-        }),
-        new BenefitsApplicationDocument({
+        },
+        {
           application_id: claim.application_id,
           document_type: DocumentType.certification[claim.leave_details.reason],
-        }),
-        new BenefitsApplicationDocument({
+        },
+        {
           application_id: claim.application_id,
           document_type: DocumentType.identityVerification,
-        }),
+        },
       ],
     });
 
@@ -224,7 +267,7 @@ describe("Review Page", () => {
   });
 
   it("does not render certification document row when claim is for future bonding leave", () => {
-    const futureDate = DateTime.local().plus({ months: 1 }).toISODate();
+    const futureDate = dayjs().add(1, "Month").format("YYYY-MM-DD");
 
     setup({
       claim: new MockBenefitsApplicationBuilder()

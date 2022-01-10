@@ -16,7 +16,7 @@ on:
           🛑 DO NOT CHANGE THE DROPDOWN ABOVE FOR THE WORKFLOW. KEEP IT ON "main" BRANCH.     
           --------------------------------------
           ⬇️ Environment to be deployed.
-            (test, performance, stage, training, uat, prod, breakfix, cps-preview).
+            (test, performance, stage, training, uat, prod, breakfix, cps-preview, long, trn2).
       version:
         required: true
         default: "main"
@@ -42,6 +42,7 @@ on:
       - main
     paths:
       - api/**
+      - pdf_api/**
       - infra/api/**
       - infra/ecs-tasks/**
       - infra/env-shared/**
@@ -289,22 +290,41 @@ jobs:
           role-to-assume: ci-run-deploys
           role-duration-seconds: 3600
 
-      - name: Check if the image exist in ECR
-        id: ecr-check
+      - name: Check if the image exist in pfml-api ECR
+        id: ecr-check-pfml-api
         run: |
           make ecr-login
           aws ecr describe-images --repository-name=pfml-api --image-ids=imageTag=${{ needs.update-the-deploy-branch.outputs.commit_hash }} --region us-east-1
         continue-on-error: true
         working-directory: ${{ env.working-dir }}
 
-      - name: Echo message
-        if: steps.ecr-check.outcome == 'success'
+      - name: Echo message pfml-api
+        if: steps.ecr-check-pfml-api.outcome == 'success'
         run: echo "Docker image already built; skipping rebuild."
 
-      - name: Build and upload docker image artifact
-        if: steps.ecr-check.outcome == 'failure'
+      - name: Build and upload api docker image artifact
+        if: steps.ecr-check-pfml-api.outcome == 'failure'
         run: make build-and-publish
         working-directory: ${{ env.working-dir }}
+
+      ### Steps below are copies of the above 3 steps but for the pfml-pdf-api image/container pertaining to 1099
+
+      - name: Check if the image exist in pfml-pdf-api ECR
+        id: ecr-check-pfml-pdf-api
+        run: |
+          make ecr-login
+          aws ecr describe-images --repository-name=pfml-pdf-api --image-ids=imageTag=${{ needs.update-the-deploy-branch.outputs.commit_hash }} --region us-east-1
+        continue-on-error: true
+        working-directory: ${{ env.working-dir }}
+
+      - name: Echo message pfml-pdf-api
+        if: steps.ecr-check-pfml-pdf-api.outcome == 'success'
+        run: echo "Docker image already built; skipping rebuild."
+
+      - name: Build and upload pdf-api docker image artifact
+        if: steps.ecr-check-pfml-pdf-api.outcome == 'failure'
+        run: make -f ../api/Makefile build-and-publish-pdf-api
+        working-directory: ./pdf_api
 
   api-db-migrate-up:
     name: Run migrations
@@ -506,6 +526,8 @@ jobs:
           training: "980608199"
           breakfix: "1298450359"
           cps-preview: "1386420590"
+          long: "1531932432"
+          trn2: "1545153521"
       - name: Create a custom deployment record
         run: |
           newrelic events post --event "{ \"eventType\": \"CustomDeploymentMarker\", \"component\": \"api\", \"environment\":\"${{ needs.deploy-info.outputs.api-env }}\", \"version\": \"${{ env.version || needs.update-the-deploy-branch.outputs.commit_hash }}\" }"
@@ -691,10 +713,10 @@ jobs:
     name: End-to-End Test Deployment
     runs-on: ubuntu-latest
     needs: [update-the-deploy-branch, api-release, api-gateway-release]
-    if: github.event.inputs.deployment_env != 'prod'
+    if: github.event.inputs.deployment_env != 'prod' && github.event.inputs.deployment_env != 'infra-test'
     steps:
       - name: Trigger E2E Workflow
-        uses: aurelien-baudet/workflow-dispatch@v2
+        uses: aurelien-baudet/workflow-dispatch@v2.1.1
         with:
           workflow: e2e-cypress.yml
           token: ${{ secrets.PFML_DEVOPS_TOKEN }}
@@ -705,6 +727,7 @@ jobs:
               "target_environment": ${{ toJSON(env.deployment_env) }},
               "cypress_tags": "Deploy,Deploy-API",
               "run_unstable": "${{ env.deployment_env != 'test' && 'false' || 'true' }}",
+              "run_nightly": "false",
               "title_override": ${{ toJSON(format('API Deploy: {0} to {1}', env.version, env.deployment_env)) }}
             }
 
@@ -716,17 +739,18 @@ jobs:
     needs: [ update-the-deploy-branch, api-release, api-gateway-release ]
     if: github.event.inputs.deployment_env == 'performance' && github.event.inputs.performLoadTest == 'true'
     steps:
-      - name: Trigger LST run with Base preset on Flood
-        uses: aurelien-baudet/workflow-dispatch@v2
+      - name: Trigger LST run with no Spikes using Artillery
+        uses: aurelien-baudet/workflow-dispatch@v2.1.1
         with:
-          workflow: e2e-flood.yml
+          workflow: e2e-artillery.yml
           token: ${{ secrets.PFML_DEVOPS_TOKEN }}
           wait-for-completion: false
           ref: main
           inputs: |
             {
               "target_environment": "performance",
-              "preset": "base"
+              "deploy_type": "noSpikes_lst",
+              "debug": "false"
             }
 
   post-e2e-failures-to-slack:

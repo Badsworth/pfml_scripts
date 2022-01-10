@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import React from "react";
-import RepeatableFieldsetCard from "../../src/components/RepeatableFieldsetCard";
+import RepeatableFieldsetCard from "../../src/components/core/RepeatableFieldsetCard";
 import userEvent from "@testing-library/user-event";
 
 const renderComponent = (customProps = {}) => {

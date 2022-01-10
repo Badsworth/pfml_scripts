@@ -1,7 +1,7 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`UploadDocsOptions renders document options for leave reason: Care for a Family Member  1`] = `
-Array [
+[
   <input
     class="usa-radio__input"
     id="InputChoice4"
@@ -27,7 +27,7 @@ Array [
 `;
 
 exports[`UploadDocsOptions renders document options for leave reason: Child Bonding Adoption 1`] = `
-Array [
+[
   <input
     class="usa-radio__input"
     id="InputChoice10"
@@ -53,7 +53,7 @@ Array [
 `;
 
 exports[`UploadDocsOptions renders document options for leave reason: Child Bonding Newborn 1`] = `
-Array [
+[
   <input
     class="usa-radio__input"
     id="InputChoice7"
@@ -79,7 +79,7 @@ Array [
 `;
 
 exports[`UploadDocsOptions renders document options for leave reason: Serious Health Condition - Employee  1`] = `
-Array [
+[
   <input
     class="usa-radio__input"
     id="InputChoice1"

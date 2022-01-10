@@ -1,10 +1,9 @@
 import routes, { isApplicationsRoute, isEmployersRoute } from "../routes";
+import { setMFAPreference, updateMFAPhoneNumber } from "src/services/mfa";
 import { useMemo, useState } from "react";
 import { AppErrorsLogic } from "./useAppErrorsLogic";
-import BenefitsApplication from "../models/BenefitsApplication";
 import { PortalFlow } from "./usePortalFlow";
 import User from "../models/User";
-import { UserNotReceivedError } from "../errors";
 import UsersApi from "../api/UsersApi";
 
 /**
@@ -26,22 +25,36 @@ const useUsersLogic = ({
    * Update user through a PATCH request to /users
    * @param user_id - ID of user being updated
    * @param patchData - User fields to update
-   * @param [claim] - Update user in the context of a claim to determine the next page route.
    */
   const updateUser = async (
     user_id: User["user_id"],
-    patchData: Partial<User>,
-    claim?: BenefitsApplication
+    patchData: Partial<User>
   ) => {
     appErrorsLogic.clearErrors();
+
+    const { mfa_delivery_preference, mfa_phone_number } = patchData;
+
+    if (mfa_delivery_preference) {
+      try {
+        await setMFAPreference(mfa_delivery_preference);
+      } catch (error) {
+        appErrorsLogic.catchError(error);
+        return;
+      }
+    }
+
+    if (mfa_phone_number?.phone_number) {
+      try {
+        await updateMFAPhoneNumber(mfa_phone_number.phone_number);
+      } catch (error) {
+        appErrorsLogic.catchError(error);
+        return;
+      }
+    }
 
     try {
       const { user } = await usersApi.updateUser(user_id, patchData);
       setUser(user);
-
-      const context = claim ? { claim, user } : { user };
-      const params = claim ? { claim_id: claim.application_id } : {};
-      portalFlow.goToNextPage(context, params);
     } catch (error) {
       appErrorsLogic.catchError(error);
     }
@@ -61,11 +74,6 @@ const useUsersLogic = ({
     appErrorsLogic.clearErrors();
     try {
       const { user } = await usersApi.getCurrentUser();
-
-      if (!user) {
-        throw new UserNotReceivedError("User not received in loadUser");
-      }
-
       setUser(user);
     } catch (error) {
       appErrorsLogic.catchError(error);

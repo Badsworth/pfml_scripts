@@ -16,9 +16,9 @@ FAKE_AUTH_URI_RESPONSE = {
 }
 
 
-@patch("massgov.pfml.api.authentication.configure_azure_ad")
-def test_admin_authorize_unavailable(mock_configure, client):
-    mock_configure.return_value = None
+@patch("massgov.pfml.api.admin.build_auth_code_flow")
+def test_admin_authorize_unavailable(mock_build, client):
+    mock_build.return_value = None
     response = client.get("/v1/admin/authorize")
     assert response.status_code == 503
     json = response.get_json()
@@ -40,18 +40,18 @@ def test_admin_login_success(
     azure_token = auth_claims_unit.copy()
     azure_token["groups"] = [
         AzureGroup.NON_PROD.azure_group_guid,
-        AzureGroup.NON_PROD_ADMIN.azure_group_guid,
+        AzureGroup.NON_PROD_DEV.azure_group_guid,
     ]
     azure_token["unique_name"] = "email@example.com"
     test_db_session.add(
         AzureGroupPermission(
-            azure_group_id=AzureGroup.NON_PROD_ADMIN.azure_group_id,
+            azure_group_id=AzureGroup.NON_PROD_DEV.azure_group_id,
             azure_permission_id=AzurePermission.USER_READ.azure_permission_id,
         )
     )
     test_db_session.add(
         AzureGroupPermission(
-            azure_group_id=AzureGroup.NON_PROD_ADMIN.azure_group_id,
+            azure_group_id=AzureGroup.NON_PROD_DEV.azure_group_id,
             azure_permission_id=AzurePermission.USER_EDIT.azure_permission_id,
         )
     )
@@ -92,9 +92,9 @@ def test_admin_login_unauthorized_no_permissions(client, app, mock_azure, azure_
         assert response.status_code == 401
 
 
-@patch("massgov.pfml.api.authentication.configure_azure_ad")
-def test_admin_logout_service_unavailable(mock_configure, client):
-    mock_configure.return_value = None
+@patch("massgov.pfml.api.admin.build_logout_flow")
+def test_admin_logout_service_unavailable(mock_build, client):
+    mock_build.return_value = None
     response = client.get("/v1/admin/logout")
     assert response.status_code == 503
     json = response.get_json()
@@ -107,7 +107,7 @@ def test_admin_logout_success(client, mock_azure):
     json = response.get_json()
     assert (
         json.get("data").get("logout_uri")
-        == "https://login.microsoftonline.com/tenant_id/oauth2/v2.0/logout?post_logout_redirect_uri=http://localhost:3000?logged_out=true"
+        == "https://example.com/tenant_id/oauth2/v2.0/logout?post_logout_redirect_uri=http://localhost:3001?logged_out=true"
     )
     assert json.get("message") == "Retrieved logout url!"
 
@@ -116,8 +116,8 @@ def test_admin_logout_success(client, mock_azure):
 def test_admin_token_error_in_tokens(mock_build, client):
     mock_build.return_value = {"error": "Test error"}
     post_body = {
-        "authURIRes": FAKE_AUTH_URI_RESPONSE,
-        "authCodeRes": {"code": "test", "session_state": "test", "state": "test"},
+        "auth_uri_res": FAKE_AUTH_URI_RESPONSE,
+        "auth_code_res": {"code": "test", "session_state": "test", "state": "test"},
     }
     response = client.post("/v1/admin/token", json=post_body)
     json = response.get_json()
@@ -125,7 +125,7 @@ def test_admin_token_error_in_tokens(mock_build, client):
     assert errors is not None
     assert len(errors) == 1
     assert errors[0].get("message") == "Test error"
-    assert errors[0].get("field") == "authURIRes"
+    assert errors[0].get("field") == "auth_uri_res"
     assert errors[0].get("type") == "invalid"
     assert response.status_code == 400
 
@@ -144,8 +144,8 @@ def test_admin_token_missing_request_body(client):
 def test_admin_token_service_unavailable(mock_build, client):
     mock_build.return_value = None
     post_body = {
-        "authURIRes": FAKE_AUTH_URI_RESPONSE,
-        "authCodeRes": {"code": "test", "session_state": "test", "state": "test"},
+        "auth_uri_res": FAKE_AUTH_URI_RESPONSE,
+        "auth_code_res": {"code": "test", "session_state": "test", "state": "test"},
     }
     response = client.post("/v1/admin/token", json=post_body)
     json = response.get_json()
@@ -162,8 +162,8 @@ def test_admin_token_success(mock_build, client):
         "id_token": "test",
     }
     post_body = {
-        "authURIRes": FAKE_AUTH_URI_RESPONSE,
-        "authCodeRes": {"code": "test", "session_state": "test", "state": "test"},
+        "auth_uri_res": FAKE_AUTH_URI_RESPONSE,
+        "auth_code_res": {"code": "test", "session_state": "test", "state": "test"},
     }
     response = client.post("/v1/admin/token", json=post_body)
     json = response.get_json()
@@ -182,14 +182,14 @@ def test_admin_token_value_error(mock_build, client):
     mock_build.side_effect = ValueError
     mock_build.return_value = None
     post_body = {
-        "authURIRes": FAKE_AUTH_URI_RESPONSE,
-        "authCodeRes": {"code": "test", "session_state": "test", "state": "test"},
+        "auth_uri_res": FAKE_AUTH_URI_RESPONSE,
+        "auth_code_res": {"code": "test", "session_state": "test", "state": "test"},
     }
     response = client.post("/v1/admin/token", json=post_body)
     errors = response.get_json().get("errors")
     assert errors is not None
     assert len(errors) == 1
-    assert errors[0].get("field") == "authURIRes"
+    assert errors[0].get("field") == "auth_uri_res"
     assert errors[0].get("message") == "Value error"
     assert errors[0].get("type") == "invalid"
     assert response.status_code == 400

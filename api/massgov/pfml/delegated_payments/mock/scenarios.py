@@ -10,6 +10,10 @@ from massgov.pfml.db.models.employees import (
     PaymentMethod,
     PaymentTransactionType,
 )
+from massgov.pfml.delegated_payments.audit.delegated_payment_rejects import (
+    AUDIT_REJECT_NOTE_TO_WRITEBACK_STATUS,
+    AUDIT_SKIPPED_NOTE_TO_WRITEBACK_STATUS,
+)
 from massgov.pfml.delegated_payments.pub.check_return import PaidStatus
 
 
@@ -31,6 +35,11 @@ class ScenarioName(Enum):
 
     HAPPY_PATH_TWO_PAYMENTS_UNDER_WEEKLY_CAP = "HAPPY_PATH_TWO_PAYMENTS_UNDER_WEEKLY_CAP"
     HAPPY_PATH_TWO_ADHOC_PAYMENTS_OVER_CAP = "HAPPY_PATH_TWO_ADHOC_PAYMENTS_OVER_CAP"
+
+    # Audit scenarios
+    HAPPY_PATH_DOR_FINEOS_NAME_MISMATCH = "HAPPY_PATH_DOR_FINEOS_NAME_MISMATCH"
+    HAPPY_PATH_DUA_ADDITIONAL_INCOME = "HAPPY_PATH_DUA_ADDITIONAL_INCOME"
+    HAPPY_PATH_DIA_ADDITIONAL_INCOME = "HAPPY_PATH_DIA_ADDITIONAL_INCOME"
 
     # Non-Standard Payments
     ZERO_DOLLAR_PAYMENT = "ZERO_DOLLAR_PAYMENT"
@@ -67,9 +76,11 @@ class ScenarioName(Enum):
 
     # Audit
     AUDIT_REJECTED = "AUDIT_REJECTED"
+    AUDIT_REJECTED_WITH_NOTE = "AUDIT_REJECTED_WITH_NOTE"
     AUDIT_REJECTED_THEN_ACCEPTED = "AUDIT_REJECTED_THEN_ACCEPTED"
 
     AUDIT_SKIPPED = "AUDIT_SKIPPED"
+    AUDIT_SKIPPED_WITH_NOTE = "AUDIT_SKIPPED_WITH_NOTE"
     AUDIT_SKIPPED_THEN_ACCEPTED = "AUDIT_SKIPPED_THEN_ACCEPTED"
 
     # Returns
@@ -96,6 +107,22 @@ class ScenarioName(Enum):
     PUB_CHECK_FAMILY_RETURN_CHECK_NUMBER_NOT_FOUND = (
         "PUB_CHECK_FAMILY_RETURN_CHECK_NUMBER_NOT_FOUND"
     )
+
+    # Tax withholding payments
+    HAPPY_PATH_TAX_WITHHOLDING = "HAPPY_PATH_TAX_WITHHOLDING"
+    TAX_WITHHOLDING_ADDRESS_NO_MATCHES_FROM_EXPERIAN = (
+        "TAX_WITHHOLDING_ADDRESS_NO_MATCHES_FROM_EXPERIAN"
+    )
+
+    HAPPY_PATH_TAX_WITHHOLDING_PAYMENT_METHOD_CHECK = (
+        "HAPPY_PATH_TAX_WITHHOLDING_PAYMENT_METHOD_CHECK"
+    )
+
+    TAX_WITHHOLDING_PRIMARY_PAYMENT_NOT_PRENOTED = "TAX_WITHHOLDING_PRIMARY_PAYMENT_NOT_PRENOTED"
+
+    TAX_WITHHOLDING_MISSING_PRIMARY_PAYMENT = "TAX_WITHHOLDING_MISSING_PRIMARY_PAYMENT"
+
+    TAX_WITHHOLDING_AUDIT_SKIPPED_THEN_ACCEPTED = "TAX_WITHHOLDING_AUDIT_SKIPPED_THEN_ACCEPTED"
 
 
 @dataclass
@@ -139,9 +166,15 @@ class ScenarioDescriptor:
 
     leave_request_decision: str = "Approved"
 
+    dor_fineos_name_mismatch: bool = False
+    dua_additional_income: bool = False
+    dia_additional_income: bool = False
+
     is_audit_rejected: bool = False
     is_audit_skipped: bool = False
     is_audit_approved_delayed: bool = False
+
+    audit_response_note: str = ""
 
     negative_payment_amount: bool = False
     payment_close_to_cap: bool = False
@@ -149,6 +182,7 @@ class ScenarioDescriptor:
 
     include_claim_details: bool = True
 
+    # is_create_employee : bool = True
     # ACH Returns
     # https://lwd.atlassian.net/wiki/spaces/API/pages/1333364105/PUB+ACH+Return+File+Format
 
@@ -171,6 +205,10 @@ class ScenarioDescriptor:
     pub_check_outstanding_response_status: PaidStatus = PaidStatus.OUTSTANDING
 
     pub_check_return_invalid_check_number: bool = False
+
+    is_tax_withholding_records_exists: bool = False
+    is_duplicate_tax_withholding_records_exists: bool = False
+    is_tax_withholding_record_without_primary_payment: bool = False
 
 
 SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
@@ -252,7 +290,17 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
         leave_request_decision="Rejected",
     ),
     ScenarioDescriptor(scenario_name=ScenarioName.AUDIT_REJECTED, is_audit_rejected=True),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.AUDIT_REJECTED_WITH_NOTE,
+        is_audit_rejected=True,
+        audit_response_note=list(AUDIT_REJECT_NOTE_TO_WRITEBACK_STATUS.keys())[0],
+    ),
     ScenarioDescriptor(scenario_name=ScenarioName.AUDIT_SKIPPED, is_audit_skipped=True),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.AUDIT_SKIPPED_WITH_NOTE,
+        is_audit_skipped=True,
+        audit_response_note=list(AUDIT_SKIPPED_NOTE_TO_WRITEBACK_STATUS.keys())[0],
+    ),
     ScenarioDescriptor(
         scenario_name=ScenarioName.PUB_ACH_PRENOTE_RETURN,
         existing_eft_account=False,
@@ -358,6 +406,42 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
         claim_missing_employee=True,
         claim_extract_employee_identifier_unknown=True,
     ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.HAPPY_PATH_TAX_WITHHOLDING,
+        is_tax_withholding_records_exists=True,
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.TAX_WITHHOLDING_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
+        payment_method=PaymentMethod.CHECK,
+        is_tax_withholding_records_exists=True,
+        fineos_extract_address_valid=False,
+        pub_check_response=False,
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.HAPPY_PATH_TAX_WITHHOLDING_PAYMENT_METHOD_CHECK,
+        is_tax_withholding_records_exists=True,
+        payment_method=PaymentMethod.CHECK,
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.TAX_WITHHOLDING_PRIMARY_PAYMENT_NOT_PRENOTED,
+        is_tax_withholding_records_exists=True,
+        existing_eft_account=False,
+        prenoted=False,
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.TAX_WITHHOLDING_MISSING_PRIMARY_PAYMENT,
+        is_tax_withholding_record_without_primary_payment=True,
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.HAPPY_PATH_DOR_FINEOS_NAME_MISMATCH,
+        dor_fineos_name_mismatch=True,
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.HAPPY_PATH_DUA_ADDITIONAL_INCOME, dua_additional_income=True,
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.HAPPY_PATH_DIA_ADDITIONAL_INCOME, dia_additional_income=True,
+    ),
 ]
 
 SCENARIO_DESCRIPTORS_BY_NAME: Dict[ScenarioName, ScenarioDescriptor] = {
@@ -407,6 +491,13 @@ DELAYED_SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
         scenario_name=ScenarioName.SECOND_PAYMENT_FOR_PERIOD_OVER_CAP,
         payment_close_to_cap=True,
         has_additional_payment_in_period=True,
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.TAX_WITHHOLDING_AUDIT_SKIPPED_THEN_ACCEPTED,
+        is_audit_skipped=True,
+        is_audit_approved_delayed=True,
+        has_additional_payment_in_period=True,
+        is_tax_withholding_records_exists=True,
     ),
 ]
 

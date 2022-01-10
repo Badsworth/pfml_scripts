@@ -1,12 +1,12 @@
-import Alert from "../../components/Alert";
+import Alert from "../../components/core/Alert";
 import { AppLogic } from "../../hooks/useAppLogic";
-import Button from "../../components/Button";
-import Details from "../../components/Details";
+import Button from "../../components/core/Button";
+import Details from "../../components/core/Details";
 import InputPassword from "../../components/InputPassword";
-import InputText from "../../components/InputText";
-import Lead from "../../components/Lead";
+import InputText from "../../components/core/InputText";
+import Lead from "../../components/core/Lead";
 import React from "react";
-import Title from "../../components/Title";
+import Title from "../../components/core/Title";
 import { Trans } from "react-i18next";
 import routes from "../../routes";
 import useFormState from "../../hooks/useFormState";

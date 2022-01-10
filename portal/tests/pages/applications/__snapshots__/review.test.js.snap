@@ -603,7 +603,7 @@ exports[`Review Page PreviousLeaveList renders same reason list 1`] = `
 
 exports[`Review Page Work patterns displays correct work pattern details when pattern type is Fixed 1`] = `
 <table
-  class="usa-table usa-table--borderless c-table"
+  class="usa-table usa-table--borderless"
 >
   <thead>
     <tr>
@@ -886,7 +886,7 @@ exports[`Review Page renders Review page with Part 1 content and edit links when
         >
           Notified employer
         </h4>
-        Notified employer on 1/1/2021
+        Notified employer on 1/1/2022
       </div>
     </div>
     <div
@@ -915,7 +915,7 @@ exports[`Review Page renders Review page with Part 1 content and edit links when
           Weekly work hours
         </h4>
         <table
-          class="usa-table usa-table--borderless c-table"
+          class="usa-table usa-table--borderless"
         >
           <thead>
             <tr>
@@ -1061,7 +1061,7 @@ exports[`Review Page renders Review page with Part 1 content and edit links when
         >
           Continuous leave
         </h4>
-        1/1/2021 to 6/1/2021
+        1/1/2022 to 6/1/2022
       </div>
     </div>
     <div
@@ -1137,7 +1137,7 @@ exports[`Review Page renders Review page with Part 1 content and edit links when
           <p
             class="text-base-darker margin-top-1"
           >
-            7/1/2021 to 5/1/2021
+            7/1/2022 to 5/1/2022
           </p>
           <ul
             class="usa-list margin-top-1"
@@ -1173,7 +1173,7 @@ exports[`Review Page renders Review page with Part 1 content and edit links when
           <p
             class="text-base-darker margin-top-1"
           >
-            7/1/2021 to 5/1/2021
+            7/1/2022 to 5/1/2022
           </p>
           <ul
             class="usa-list margin-top-1"
@@ -1226,7 +1226,7 @@ exports[`Review Page renders Review page with Part 1 content and edit links when
           <p
             class="text-base-darker margin-top-1"
           >
-            1/1/2021 to 3/1/2021
+            1/1/2022 to 3/1/2022
           </p>
           <ul
             class="usa-list margin-top-1"
@@ -1265,7 +1265,7 @@ exports[`Review Page renders Review page with Part 1 content and edit links when
           <p
             class="text-base-darker margin-top-1"
           >
-            1/1/2021 to 2/1/2021
+            1/1/2022 to 2/1/2022
           </p>
           <ul
             class="usa-list margin-top-1"
@@ -1293,7 +1293,7 @@ exports[`Review Page renders Review page with Part 1 content and edit links when
           <p
             class="text-base-darker margin-top-1"
           >
-            1/1/2021 to 2/1/2021
+            1/1/2022 to 2/1/2022
           </p>
           <ul
             class="usa-list margin-top-1"
@@ -1319,7 +1319,7 @@ exports[`Review Page renders Review page with Part 1 content and edit links when
           <p
             class="text-base-darker margin-top-1"
           >
-            1/1/2021 to 2/1/2021
+            1/1/2022 to 2/1/2022
           </p>
           <ul
             class="usa-list margin-top-1"
@@ -1347,7 +1347,7 @@ exports[`Review Page renders Review page with Part 1 content and edit links when
           <p
             class="text-base-darker margin-top-1"
           >
-            1/1/2021 to 2/1/2021
+            1/1/2022 to 2/1/2022
           </p>
           <ul
             class="usa-list margin-top-1"
@@ -1355,6 +1355,7 @@ exports[`Review Page renders Review page with Part 1 content and edit links when
             <li>
               Permanent disability insurance
             </li>
+            
           </ul>
         </div>
       </div>
@@ -1386,7 +1387,7 @@ exports[`Review Page renders Review page with Part 1 content and edit links when
           <p
             class="text-base-darker margin-top-1"
           >
-            1/30/2021 to 1/1/2021
+            1/30/2022 to 1/1/2022
           </p>
           <ul
             class="usa-list margin-top-1"
@@ -1608,7 +1609,7 @@ exports[`Review Page renders Review page with all sections and only edit links f
         >
           Notified employer
         </h3>
-        Notified employer on 1/1/2021
+        Notified employer on 1/1/2022
       </div>
     </div>
     <div
@@ -1673,7 +1674,7 @@ exports[`Review Page renders Review page with all sections and only edit links f
         >
           Continuous leave
         </h3>
-        1/1/2021 to 6/1/2021
+        1/1/2022 to 6/1/2022
       </div>
     </div>
     <div
@@ -1779,15 +1780,29 @@ exports[`Review Page renders Review page with all sections and only edit links f
       >
         Part 2
       </span>
-      Review: Your payment information
+      Review: Tell us how you want to receive your payment
     </h2>
+    <p
+      class="usa-intro"
+    >
+      If you need to make edits to Part 2, you’ll need to call our Contact Center at 
+      <a
+        href="tel:(833) 344-7365"
+      >
+        (833) 344‑7365
+      </a>
+      . Your application ID is 
+      <strong>
+        NTN-111-ABS-01
+      </strong>
+    </p>
     <div
       class="display-flex flex-align-end margin-top-6 margin-bottom-3"
     >
       <h2
         class="flex-fill margin-right-1 font-heading-md text-bold"
       >
-        Payment information
+        Payment method
       </h2>
     </div>
     <div
@@ -1799,7 +1814,7 @@ exports[`Review Page renders Review page with all sections and only edit links f
         <h3
           class="margin-bottom-1 font-heading-xs text-bold"
         >
-          Payment method
+          Direct deposit or paper check
         </h3>
         Direct deposit into my bank account
       </div>
@@ -1846,6 +1861,29 @@ exports[`Review Page renders Review page with all sections and only edit links f
         Checking
       </div>
     </div>
+    <div
+      class="display-flex flex-align-end margin-top-6 margin-bottom-3"
+    >
+      <h2
+        class="flex-fill margin-right-1 font-heading-md text-bold"
+      >
+        Tax withholding
+      </h2>
+    </div>
+    <div
+      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+    >
+      <div
+        class="margin-right-2"
+      >
+        <h3
+          class="margin-bottom-1 font-heading-xs text-bold"
+        >
+          Withhold state and federal taxes?
+        </h3>
+        No
+      </div>
+    </div>
     <h2
       class="font-heading-md text-bold"
     >
@@ -1854,7 +1892,7 @@ exports[`Review Page renders Review page with all sections and only edit links f
       >
         Part 3
       </span>
-      Review: Upload document
+      Review: Upload your documents
     </h2>
     <div
       class="display-flex flex-align-end margin-top-6 margin-bottom-3"
@@ -1939,7 +1977,7 @@ exports[`Review Page renders WeeklyTimeTable for the reduced leave period when w
     Hours off per week
   </h4>
   <table
-    class="usa-table usa-table--borderless c-table margin-bottom-0"
+    class="usa-table usa-table--borderless margin-bottom-0"
   >
     <thead>
       <tr>

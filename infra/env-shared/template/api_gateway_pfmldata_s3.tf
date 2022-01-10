@@ -89,6 +89,11 @@ resource "aws_api_gateway_method_response" "pfmldata_get_object_response_200" {
   resource_id = aws_api_gateway_resource.pfmldata_bucket_key.id
   http_method = aws_api_gateway_method.pfmldata_get_object_method.http_method
   status_code = "200"
+  response_parameters = {
+    "method.response.header.Timestamp"      = true
+    "method.response.header.Content-Length" = true
+    "method.response.header.Content-Type"   = true
+  }
 }
 
 resource "aws_api_gateway_method_response" "pfmldata_get_object_response_403" {
@@ -96,6 +101,19 @@ resource "aws_api_gateway_method_response" "pfmldata_get_object_response_403" {
   resource_id = aws_api_gateway_resource.pfmldata_bucket_key.id
   http_method = aws_api_gateway_method.pfmldata_get_object_method.http_method
   status_code = "403"
+  response_parameters = {
+    "method.response.header.Content-Type" = true
+  }
+}
+
+resource "aws_api_gateway_method_response" "pfmldata_get_object_response_404" {
+  rest_api_id = aws_api_gateway_rest_api.pfml.id
+  resource_id = aws_api_gateway_resource.pfmldata_bucket_key.id
+  http_method = aws_api_gateway_method.pfmldata_get_object_method.http_method
+  status_code = "404"
+  response_parameters = {
+    "method.response.header.Content-Type" = true
+  }
 }
 
 
@@ -122,6 +140,11 @@ resource "aws_api_gateway_integration_response" "pfmldata_get_object_s3_integrat
   http_method       = aws_api_gateway_method.pfmldata_get_object_method.http_method
   status_code       = aws_api_gateway_method_response.pfmldata_get_object_response_200.status_code
   selection_pattern = aws_api_gateway_method_response.pfmldata_get_object_response_200.status_code
+  response_parameters = {
+    "method.response.header.Timestamp"      = "integration.response.header.Date"
+    "method.response.header.Content-Length" = "integration.response.header.Content-Length"
+    "method.response.header.Content-Type"   = "integration.response.header.Content-Type"
+  }
 }
 
 resource "aws_api_gateway_integration_response" "pfmldata_get_object_s3_integration_response_403" {
@@ -131,6 +154,23 @@ resource "aws_api_gateway_integration_response" "pfmldata_get_object_s3_integrat
   http_method       = aws_api_gateway_method.pfmldata_get_object_method.http_method
   status_code       = aws_api_gateway_method_response.pfmldata_get_object_response_403.status_code
   selection_pattern = aws_api_gateway_method_response.pfmldata_get_object_response_403.status_code
+
+  response_parameters = {
+    "method.response.header.Content-Type" = "integration.response.header.Content-Type"
+  }
+}
+
+resource "aws_api_gateway_integration_response" "pfmldata_get_object_s3_integration_response_404" {
+  depends_on        = [aws_api_gateway_integration.pfmldata_get_object_s3_integration]
+  rest_api_id       = aws_api_gateway_rest_api.pfml.id
+  resource_id       = aws_api_gateway_resource.pfmldata_bucket_key.id
+  http_method       = aws_api_gateway_method.pfmldata_get_object_method.http_method
+  status_code       = aws_api_gateway_method_response.pfmldata_get_object_response_404.status_code
+  selection_pattern = aws_api_gateway_method_response.pfmldata_get_object_response_404.status_code
+
+  response_parameters = {
+    "method.response.header.Content-Type" = "integration.response.header.Content-Type"
+  }
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -219,10 +259,11 @@ resource "aws_api_gateway_method" "pfmldata_list_objects_method" {
   api_key_required = true
 
   request_parameters = {
-    "method.request.path.bucket"             = true
-    "method.request.path.key"                = true
-    "method.request.querystring.max_keys"    = false
-    "method.request.querystring.start_after" = false
+    "method.request.path.bucket"              = true
+    "method.request.path.key"                 = true
+    "method.request.querystring.max_keys"     = false
+    "method.request.querystring.start_after"  = false
+    "method.request.querystring.no_slash_fix" = false
   }
 }
 
@@ -271,9 +312,12 @@ resource "aws_api_gateway_integration" "pfmldata_list_objects_s3_integration" {
 
   request_templates = {
     "application/json" : <<EOD
-{
-  #set($context.requestOverride.querystring.prefix="$input.params('key')/")
-}
+#set($bucketKey="$util.urlDecode($input.params('key'))")
+#set($shouldFixSlash= !$bucketKey.endsWith('/') && "$input.params('no_slash_fix')" == "" )
+#if( $shouldFixSlash )
+  #set($bucketKey="$bucketKey/")
+#end
+#set($context.requestOverride.querystring.prefix="$bucketKey")
 EOD
   }
 }
@@ -336,11 +380,31 @@ resource "aws_api_gateway_method_response" "pfmldata_copy_object_response_200" {
   }
 }
 
+resource "aws_api_gateway_method_response" "pfmldata_copy_object_response_400" {
+  rest_api_id = aws_api_gateway_rest_api.pfml.id
+  resource_id = aws_api_gateway_resource.pfmldata_bucket_key.id
+  http_method = aws_api_gateway_method.pfmldata_copy_object_method.http_method
+  status_code = "400"
+
+  response_parameters = {
+    "method.response.header.Content-Type" = true
+  }
+}
 resource "aws_api_gateway_method_response" "pfmldata_copy_object_response_403" {
   rest_api_id = aws_api_gateway_rest_api.pfml.id
   resource_id = aws_api_gateway_resource.pfmldata_bucket_key.id
   http_method = aws_api_gateway_method.pfmldata_copy_object_method.http_method
   status_code = "403"
+
+  response_parameters = {
+    "method.response.header.Content-Type" = true
+  }
+}
+resource "aws_api_gateway_method_response" "pfmldata_copy_object_response_404" {
+  rest_api_id = aws_api_gateway_rest_api.pfml.id
+  resource_id = aws_api_gateway_resource.pfmldata_bucket_key.id
+  http_method = aws_api_gateway_method.pfmldata_copy_object_method.http_method
+  status_code = "404"
 
   response_parameters = {
     "method.response.header.Content-Type" = true
@@ -384,6 +448,18 @@ resource "aws_api_gateway_integration_response" "pfmldata_copy_object_s3_integra
   }
 }
 
+resource "aws_api_gateway_integration_response" "pfmldata_copy_object_s3_integration_response_400" {
+  depends_on        = [aws_api_gateway_integration.pfmldata_copy_object_s3_integration]
+  rest_api_id       = aws_api_gateway_rest_api.pfml.id
+  resource_id       = aws_api_gateway_resource.pfmldata_bucket_key.id
+  http_method       = aws_api_gateway_method.pfmldata_copy_object_method.http_method
+  status_code       = aws_api_gateway_method_response.pfmldata_copy_object_response_400.status_code
+  selection_pattern = aws_api_gateway_method_response.pfmldata_copy_object_response_400.status_code
+
+  response_parameters = {
+    "method.response.header.Content-Type" = "integration.response.header.Content-Type"
+  }
+}
 resource "aws_api_gateway_integration_response" "pfmldata_copy_object_s3_integration_response_403" {
   depends_on        = [aws_api_gateway_integration.pfmldata_copy_object_s3_integration]
   rest_api_id       = aws_api_gateway_rest_api.pfml.id
@@ -391,6 +467,19 @@ resource "aws_api_gateway_integration_response" "pfmldata_copy_object_s3_integra
   http_method       = aws_api_gateway_method.pfmldata_copy_object_method.http_method
   status_code       = aws_api_gateway_method_response.pfmldata_copy_object_response_403.status_code
   selection_pattern = aws_api_gateway_method_response.pfmldata_copy_object_response_403.status_code
+
+  response_parameters = {
+    "method.response.header.Content-Type" = "integration.response.header.Content-Type"
+  }
+}
+
+resource "aws_api_gateway_integration_response" "pfmldata_copy_object_s3_integration_response_404" {
+  depends_on        = [aws_api_gateway_integration.pfmldata_copy_object_s3_integration]
+  rest_api_id       = aws_api_gateway_rest_api.pfml.id
+  resource_id       = aws_api_gateway_resource.pfmldata_bucket_key.id
+  http_method       = aws_api_gateway_method.pfmldata_copy_object_method.http_method
+  status_code       = aws_api_gateway_method_response.pfmldata_copy_object_response_404.status_code
+  selection_pattern = aws_api_gateway_method_response.pfmldata_copy_object_response_404.status_code
 
   response_parameters = {
     "method.response.header.Content-Type" = "integration.response.header.Content-Type"

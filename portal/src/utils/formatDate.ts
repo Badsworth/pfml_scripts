@@ -1,24 +1,24 @@
-import { DateTime } from "luxon";
+import dayjs from "dayjs";
 
 /**
  * Format the given date as an internationalized, human-readable string
  */
-export default function formatDate(isoDate: string) {
-  const dateTime = DateTime.fromISO(isoDate);
-
+export default function formatDate(isoDate: string | null) {
   return {
     full: () => {
-      if (dateTime.isValid) {
-        return dateTime.toLocaleString(DateTime.DATE_FULL);
+      if (!isoDate) return "";
+      const date = dayjs(isoDate);
+      if (date.isValid()) {
+        return new Intl.DateTimeFormat("default", {
+          dateStyle: "long",
+        }).format(date.toDate());
       }
 
       return "";
     },
 
     short: () => {
-      if (dateTime.isValid) {
-        return dateTime.toLocaleString();
-      }
+      if (!isoDate) return "";
 
       // Support masked dates, which wouldn't be considered valid above
       if (isoDate && isoDate.includes("*")) {
@@ -27,6 +27,11 @@ export default function formatDate(isoDate: string) {
           // Remove leading zeros
           .map((datePart) => datePart.replace(/^0/, ""));
         return `${month}/${day}/${year}`;
+      }
+
+      const date = dayjs(isoDate);
+      if (date.isValid()) {
+        return new Intl.DateTimeFormat().format(date.toDate());
       }
 
       return "";

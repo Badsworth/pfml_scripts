@@ -2,7 +2,7 @@
 # Dockerfile for PFML API.
 #
 
-FROM python:3.9-slim-buster as build
+FROM python:3.9.7-slim-buster as build
 
 # core project tools
 RUN pip install poetry
@@ -10,7 +10,7 @@ RUN apt-get update \
  && apt-get install --no-install-recommends --yes \
         libffi-dev make \
         build-essential git curl \
-        postgresql libpq-dev gnupg
+        postgresql libpq-dev gnupg ghostscript graphviz
 
 # setup user stuff
 ARG RUN_UID
@@ -41,7 +41,9 @@ USER ${RUN_USER}
 WORKDIR /app
 
 # install dependencies
+# note: explicitly create a new virtualenv to avoid getting overridden by mounted .venv folders.
 COPY pyproject.toml poetry.lock ./
+RUN poetry config virtualenvs.in-project false && poetry env use python
 RUN poetry install --no-root --extras "api-only-dependencies"
 
 # grab the application
@@ -106,6 +108,14 @@ COPY --from=app-build /usr/local/lib/ /usr/local/lib/
 COPY --from=app-build /usr/local/include/python* /usr/local/include/
 COPY --from=app-build /lib64/* /lib64/
 COPY --from=app-build --chown=${RUN_USER} /tmp/ /tmp/
+
+# Include ghostscript executable
+COPY --from=app-build  /usr/bin/gs /usr/bin/gs
+COPY --from=app-build /usr/share/ghostscript /usr/share/ghostscript
+COPY --from=app-build /usr/share/man /usr/share/man
+COPY --from=app-build /usr/share/fonts /usr/share/fonts
+COPY --from=app-build /usr/share/fontconfig /usr/share/fontconfig
+COPY --from=app-build /usr/share/color /usr/share/color
 
 ENV PATH="/app/.venv/bin:$PATH"
 

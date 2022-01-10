@@ -1,7 +1,7 @@
 class Flag {
   enabled = false;
-  name: string | null = null;
-  options: Record<string, unknown> = {};
+  name: string;
+  options: { [key: string]: unknown } = {};
   start: string | null = null;
   end: string | null = null;
 

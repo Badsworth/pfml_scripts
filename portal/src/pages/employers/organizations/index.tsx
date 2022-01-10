@@ -1,28 +1,21 @@
-import Alert from "../../../components/Alert";
-import { AppLogic } from "../../../hooks/useAppLogic";
+import withUser, { WithUserProps } from "../../../hoc/withUser";
+import Alert from "../../../components/core/Alert";
 import BackButton from "../../../components/BackButton";
 import ButtonLink from "../../../components/ButtonLink";
 import LeaveAdministratorRow from "../../../components/employers/LeaveAdministratorRow";
 import React from "react";
-import Table from "../../../components/Table";
-import Title from "../../../components/Title";
+import Table from "../../../components/core/Table";
+import Title from "../../../components/core/Title";
 import { Trans } from "react-i18next";
 import routes from "../../../routes";
 import { useTranslation } from "../../../locales/i18n";
-import withUser from "../../../hoc/withUser";
 
-interface IndexProps {
-  appLogic: AppLogic;
-  query?: {
-    account_converted?: string;
-  };
-}
-
-export const Index = (props: IndexProps) => {
+export const Index = (
+  props: WithUserProps & { query: { account_converted?: string } }
+) => {
   const { appLogic, query } = props;
   const { t } = useTranslation();
-  const { hasVerifiableEmployer, user_leave_administrators } =
-    appLogic.users.user;
+  const { hasVerifiableEmployer, user_leave_administrators } = props.user;
   const accountConverted = query?.account_converted === "true";
 
   return (

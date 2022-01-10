@@ -1,6 +1,21 @@
 version: "3.8"
 
 services:
+  sftp:
+    image: atmoz/sftp
+    container_name: "mass-pfml-sftp"
+    ports:
+      - "2222:22"
+    command: foo:pass:1001
+    volumes:
+      - ./local_sftp/ssh_host_ed25519_key:/etc/ssh/ssh_host_ed25519_key
+      - ./local_sftp/ssh_host_rsa_key:/etc/ssh/ssh_host_rsa_key
+      - ./local_sftp/ssh_api_rsa_key.pub:/home/foo/.ssh/keys/ssh_api_rsa_key.pub:ro
+      - ./local_sftp/upload:/home/foo/upload
+    networks:
+      main:
+        aliases:
+          - mass-pfml-sftp
   mass-pfml-db:
     image: postgres:12.4-alpine
     container_name: "mass-pfml-db"
@@ -53,7 +68,7 @@ services:
       - DB_PASSWORD=secret123
       - DB_NESSUS_PASSWORD=nessussecret123
       - CORS_ORIGINS=http://localhost:3000,http://localhost:3001
-      - COGNITO_USER_POOL_KEYS_URL=file:///app/jwks.json
+      - COGNITO_USER_POOL_KEYS_URL=${COGNITO_USER_POOL_KEYS_URL:-file:///app/jwks.json}
       # Stage Cognito resource
       - COGNITO_USER_POOL_ID=us-east-1_HpL4XslLg
       - COGNITO_USER_POOL_CLIENT_ID=10rjcp71r8bnk4459c67bn18t8
@@ -79,11 +94,16 @@ services:
       # - OAUTHLIB_INSECURE_TRANSPORT=1
       # Disable this variable and set the following three variables to use a real Service Now API instead of a mock:
       - ENABLE_MOCK_SERVICE_NOW_CLIENT=1
+
+      - ENABLE_WITHHOLDING_PAYMENTS=1
       # - SERVICE_NOW_BASE_URL=...
       # - SERVICE_NOW_USERNAME=...
       # - SERVICE_NOW_PASSWORD=...
       - PORTAL_BASE_URL=https://paidleave.mass.gov
       - ENABLE_APPLICATION_FRAUD_CHECK=0
+      - ENABLE_PDF_DOCUMENT_COMPRESSION=0
+      - ENABLE_DOCUMENT_MULTIPART_UPLOAD=0
+
       # Payments env vars
       # - PAYMENTS_GAX_BIEVNT_EMAIL=
       # - PAYMENTS_DFML_BUSINESS_OPERATIONS_EMAIL=
@@ -104,16 +124,16 @@ services:
       #- AWS_PROFILE=AWS-498823821309-Infrastructure-Admin_profile
       #- NEW_PLAN_PROOFS_ACTIVE_AT=2021-06-26 00:00:00+00:00
       #- FEATURES_FILE_PATH=file:///app/features.yaml
-      # Uncomment and set these in order to enable Azure AD SSO in the admin portal
-      #- AZURE_AD_APPLICATION_CLIENT_ID=ecc75e15-cd60-4e28-b62f-d1bf80e05d4d
-      #- AZURE_AD_OBJECT_ID=7ee79648-2fec-425e-9985-a56e792771d0
-      #- AZURE_AD_DIRECTORY_TENANT_ID=3e861d16-48b7-4a0e-9806-8c04d81b7b2a
-      #- AZURE_AD_AUTHORITY_DOMAIN=login.microsoftonline.com
-      # Non-prod admin portal group id from Azure AD
-      #- AZURE_AD_AUTHORIZATION_GUID=67f909a7-049b-4844-98eb-beec1bd35fc0
-      # For development grab the non-prod azure_ad_secret_value from parameter store.
-      # - AZURE_AD_SECRET_VALUE=
-      - ADMIN_PORTAL_BASE_URL=http://localhost:3001
+      - PDF_API_HOST=https://mass-pfml-pdf-api
+      - ENABLE_GENERATE_1099_PDF=1
+      - GENERATE_1099_MAX_FILES=1000
+      - ENABLE_MERGE_1099_PDF=1
+      - ENABLE_UPLOAD_1099_PDF=1
+      - UPLOAD_MAX_FILES_TO_FINEOS=10
+      - TEST_FILE_GENERATION_1099=0
+      - IRS_1099_CORRECTION_IND=0
+      - MOVEIT_SFTP_URI=sftp://foo@mass-pfml-sftp:22
+      - SFTP_URI=sftp://foo@mass-pfml-sftp:22
 
     networks:
       main:

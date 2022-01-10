@@ -1,11 +1,11 @@
 import { render, screen } from "@testing-library/react";
 import AppErrorInfo from "../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
-import { DateTime } from "luxon";
 import Flag from "../../src/models/Flag";
 import PageWrapper from "../../src/components/PageWrapper";
 import React from "react";
 import User from "../../src/models/User";
+import dayjs from "dayjs";
 import { mockRouter } from "next/router";
 import useAppLogic from "../../src/hooks/useAppLogic";
 
@@ -51,15 +51,15 @@ const PageWrapperWithAppLogic = ({
 describe("PageWrapper", () => {
   beforeEach(() => {
     // Enable rendering of the site
-    process.env.featureFlags = {
+    process.env.featureFlags = JSON.stringify({
       pfmlTerriyay: true,
-    };
+    });
   });
 
   it("doesn't render the site when the 'pfmlTerriyay' feature flag is disabled", () => {
-    process.env.featureFlags = {
+    process.env.featureFlags = JSON.stringify({
       pfmlTerriyay: false,
-    };
+    });
 
     const { container } = render(<PageWrapperWithAppLogic />);
 
@@ -180,9 +180,8 @@ describe("PageWrapper", () => {
 
   it("renders MaintenanceTakeover with localized end time when maintenanceEnd is set", () => {
     mockRouter.pathname = "/";
-    // Ends in an hour
-    const maintenanceEndDateTime = DateTime.local().plus({ hours: 1 });
-
+    // Ends in an hour format e.g. 2021-11-12T11:00:04.666-08:00
+    const maintenanceEndDateTime = dayjs().add(1, "hour");
     const maintenanceWithoutEndTime = new Flag({
       enabled: true,
       options: {
@@ -195,23 +194,30 @@ describe("PageWrapper", () => {
       options: {
         page_routes: ["/*"],
       },
-      end: maintenanceEndDateTime.toISO(),
+      end: maintenanceEndDateTime.toISOString(),
     });
 
     const { rerender } = render(
       <PageWrapperWithAppLogic maintenance={maintenanceWithoutEndTime} />
     );
-
     expect(
       screen.queryByText(
-        maintenanceEndDateTime.toLocaleString(DateTime.DATETIME_FULL)
+        new Intl.DateTimeFormat("default", {
+          dateStyle: "long",
+          timeStyle: "short",
+        }).format(dayjs(maintenanceEndDateTime).toDate())
       )
     ).not.toBeInTheDocument();
 
     rerender(<PageWrapperWithAppLogic maintenance={maintenanceWithEndTime} />);
+
+    // format e.g. November 12, 2021, 11:00 AM PST
     expect(
       screen.getByText(
-        maintenanceEndDateTime.toLocaleString(DateTime.DATETIME_FULL)
+        new Intl.DateTimeFormat("default", {
+          dateStyle: "long",
+          timeStyle: "short",
+        }).format(dayjs(maintenanceEndDateTime).toDate())
       )
     ).toBeInTheDocument();
   });
@@ -225,9 +231,9 @@ describe("PageWrapper", () => {
         page_routes: ["/*"],
       },
       // Started 1 hour ago
-      start: DateTime.local().minus({ hours: 1 }).toISO(),
+      start: dayjs().subtract(1, "hour").toISOString(),
       // Ends in 1 hour
-      end: DateTime.local().plus({ hours: 1 }).toISO(),
+      end: dayjs().add(1, "hour").toISOString(),
     });
 
     const maintenanceNotInMaintenanceWindow = new Flag({
@@ -236,9 +242,9 @@ describe("PageWrapper", () => {
         page_routes: ["/*"],
       },
       // Started 2 hours ago
-      start: DateTime.local().minus({ hours: 2 }).toISO(),
+      start: dayjs().subtract(2, "hour").toISOString(),
       // Ended 1 hour ago
-      end: DateTime.local().minus({ hours: 1 }).toISO(),
+      end: dayjs().subtract(1, "hour").toISOString(),
     });
 
     const { rerender } = render(
@@ -266,7 +272,7 @@ describe("PageWrapper", () => {
         page_routes: ["/*"],
       },
       // Started 1 hour ago
-      start: DateTime.local().minus({ hours: 1 }).toISO(),
+      start: dayjs().subtract(1, "hour").toISOString(),
     });
 
     render(
@@ -286,7 +292,7 @@ describe("PageWrapper", () => {
         page_routes: ["/*"],
       },
       // Ends in 1 hour
-      end: DateTime.local().plus({ hours: 1 }).toISO(),
+      end: dayjs().add(1, "hour").toISOString(),
     });
 
     render(
@@ -298,10 +304,10 @@ describe("PageWrapper", () => {
   });
 
   it("bypasses MaintenanceTakeover when noMaintenance feature flag is present", () => {
-    process.env.featureFlags = {
+    process.env.featureFlags = JSON.stringify({
       noMaintenance: true,
       pfmlTerriyay: true,
-    };
+    });
     mockRouter.pathname = "/login";
 
     const maintenanceProp = new Flag({
@@ -323,15 +329,15 @@ describe("PageWrapper", () => {
       <PageWrapperWithAppLogic
         addAppLogicMocks={(_appLogic) => {
           appLogic = _appLogic;
-          appLogic.appErrors = new AppErrorInfoCollection([new AppErrorInfo()]);
+          appLogic.appErrors = new AppErrorInfoCollection([
+            new AppErrorInfo({
+              message: "Error message",
+            }),
+          ]);
         }}
       />
     );
 
-    expect(
-      screen.getByText(
-        "Sorry, we encountered an unexpected error. If this continues to happen, you may call the Paid Family Leave Contact Center at (833) 344‑7365"
-      )
-    ).toBeInTheDocument();
+    expect(screen.getByText("Error message")).toBeInTheDocument();
   });
 });

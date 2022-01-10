@@ -35,9 +35,9 @@ describe("App", () => {
 
   beforeEach(() => {
     // Enable rendering of the site
-    process.env.featureFlags = {
+    process.env.featureFlags = JSON.stringify({
       pfmlTerriyay: true,
-    };
+    });
 
     // Reset the focused element
     document.activeElement.blur();
@@ -63,7 +63,7 @@ describe("App", () => {
       renderApp();
       expect(
         screen.queryByRole("progressbar", {
-          "aria-valuetext": "Loading",
+          "aria-label": "Loading",
         })
       ).not.toBeInTheDocument();
 
@@ -71,7 +71,7 @@ describe("App", () => {
 
       expect(
         screen.queryByRole("progressbar", {
-          "aria-valuetext": "Loading",
+          "aria-label": "Loading",
         })
       ).toBeInTheDocument();
     });
@@ -84,7 +84,7 @@ describe("App", () => {
       });
       expect(
         screen.queryByRole("progressbar", {
-          "aria-valuetext": "Loading",
+          "aria-label": "Loading",
         })
       ).not.toBeInTheDocument();
     });

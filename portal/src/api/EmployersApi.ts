@@ -4,10 +4,10 @@ import BaseApi, {
   getAuthorizationHeader,
   handleNotOkResponse,
 } from "./BaseApi";
-import ClaimDocument from "../models/ClaimDocument";
+import User, { UserLeaveAdministrator } from "../models/User";
+import { ClaimDocument } from "../models/Document";
 import DocumentCollection from "../models/DocumentCollection";
 import EmployerClaim from "../models/EmployerClaim";
-import { UserLeaveAdministrator } from "../models/User";
 import Withholding from "../models/Withholding";
 import routes from "../routes";
 
@@ -82,12 +82,9 @@ export default class EmployersApi extends BaseApi {
       "GET",
       `claims/${absenceId}/documents`
     );
-    const documents = data.map(
-      (documentData) => new ClaimDocument(documentData)
-    );
 
     return {
-      documents: new DocumentCollection(documents),
+      documents: new DocumentCollection(data),
     };
   };
 
@@ -99,12 +96,12 @@ export default class EmployersApi extends BaseApi {
       "GET",
       `withholding/${employer_id}`
     );
-    return new Withholding(data);
+    return data;
   };
 
   submitClaimReview = async (
     absenceId: string,
-    patchData: Record<string, unknown>
+    patchData: { [key: string]: unknown }
   ) => {
     await this.request("PATCH", `claims/${absenceId}/review`, patchData);
   };
@@ -112,7 +109,15 @@ export default class EmployersApi extends BaseApi {
   /**
    * Submit withholding data for validation
    */
-  submitWithholding = async (postData: Record<string, unknown>) => {
-    await this.request("POST", "verifications", postData);
+  submitWithholding = async (postData: { [key: string]: unknown }) => {
+    const { data } = await this.request<User>(
+      "POST",
+      "verifications",
+      postData
+    );
+
+    return {
+      user: new User(data),
+    };
   };
 }

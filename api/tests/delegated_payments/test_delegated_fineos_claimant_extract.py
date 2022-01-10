@@ -451,7 +451,9 @@ def formatted_claim(initialize_factories_session) -> Claim:
     return claim
 
 
-def make_claimant_data_from_fineos_data(fineos_data):
+def make_claimant_data_from_fineos_data(
+    fineos_data, additional_requested_absence_data=None, metrics_obj=None
+):
     reference_file = ReferenceFileFactory.build()
     requested_absence = payments_util.create_staging_table_instance(
         fineos_data.get_requested_absence_record(),
@@ -462,9 +464,28 @@ def make_claimant_data_from_fineos_data(fineos_data):
     employee_feed = payments_util.create_staging_table_instance(
         fineos_data.get_employee_feed_record(), FineosExtractEmployeeFeed, reference_file, None
     )
+    requested_absences = [requested_absence]
+
+    if additional_requested_absence_data:
+        additional_requested_absence = payments_util.create_staging_table_instance(
+            additional_requested_absence_data.get_requested_absence_record(),
+            FineosExtractVbiRequestedAbsenceSom,
+            reference_file,
+            None,
+        )
+        requested_absences.append(additional_requested_absence)
+
+    # For tests that don't run the full step, can still see metrics
+    count_incrementer = None
+    if metrics_obj is not None:
+
+        def count_incrementer(name: str, increment: int = 1) -> None:
+            if name not in metrics_obj:
+                metrics_obj[name] = 0
+            metrics_obj[name] += increment
 
     return claimant_extract.ClaimantData(
-        fineos_data.absence_case_number, [requested_absence], employee_feed
+        fineos_data.absence_case_number, requested_absences, employee_feed, count_incrementer
     )
 
 
@@ -521,6 +542,48 @@ def test_create_or_update_claim_happy_path_update_claim(claimant_extract_step, f
     assert claim.absence_period_start_date == datetime.date(2021, 2, 14)
     assert claim.absence_period_end_date == datetime.date(2021, 2, 28)
     assert claim.is_id_proofed is True
+
+
+def test_absence_period_deduplication(claimant_extract_step, test_db_session):
+    # If the same requested absence appears multiple times, we dedupe that to a single one
+    claimant_data = FineosClaimantData(absence_period_i_value="1234")
+
+    reference_file = ReferenceFileFactory.build()
+    requested_absence = payments_util.create_staging_table_instance(
+        claimant_data.get_requested_absence_record(),
+        FineosExtractVbiRequestedAbsenceSom,
+        reference_file,
+        None,
+    )
+    employee_feed = payments_util.create_staging_table_instance(
+        claimant_data.get_employee_feed_record(), FineosExtractEmployeeFeed, reference_file, None
+    )
+    # Add an exact duplicate of the first absence record
+    requested_absence2 = payments_util.create_staging_table_instance(
+        claimant_data.get_requested_absence_record(),
+        FineosExtractVbiRequestedAbsenceSom,
+        reference_file,
+        None,
+    )
+
+    requested_absence3 = payments_util.create_staging_table_instance(
+        FineosClaimantData(absence_period_i_value="5678").get_requested_absence_record(),
+        FineosExtractVbiRequestedAbsenceSom,
+        reference_file,
+        None,
+    )
+
+    requested_absences = [requested_absence, requested_absence2, requested_absence3]
+
+    claimant_data = claimant_extract.ClaimantData(
+        claimant_data.absence_case_number, requested_absences, employee_feed
+    )
+
+    # Despite passing in 3 requested absences, one gets deduped away (the 2nd)
+    assert len(claimant_data.absence_period_data) == 2
+    assert set(
+        [absence_period_data.index_id for absence_period_data in claimant_data.absence_period_data]
+    ) == set([1234, 5678])
 
 
 def test_create_or_update_claim_invalid_values(claimant_extract_step):
@@ -993,7 +1056,9 @@ def test_run_step_validation_issues(
         == payments_util.get_mapped_claim_type(fineos_data.leave_type).claim_type_id
     )
     assert claim.fineos_absence_status_id == AbsenceStatus.get_id(fineos_data.absence_case_status)
-    assert claim.absence_period_start_date is not None
+
+    # Start Date is not set because of logic changes. If either start_date or end_date is not set, ignore both.
+    assert claim.absence_period_start_date is None
     assert claim.absence_period_end_date is None  # Due to being empty
     assert claim.is_id_proofed
     assert claim.employer.fineos_employer_id == int(fineos_data.employer_customer_num)
@@ -1005,12 +1070,10 @@ def test_run_step_validation_issues(
         state_log.end_state_id == State.DELEGATED_CLAIM_ADD_TO_CLAIM_EXTRACT_ERROR_REPORT.state_id
     )
     validation_issues = state_log.outcome["validation_container"]["validation_issues"]
+    # AbsencePeriod Start is not included in validation issues because it is technically a valid field.
+    # Even though it is technically valid, it should not be set on the claim unless both start_date and end_date are present.
     assert validation_issues == [
         {"reason": "MissingField", "details": "ABSENCEPERIOD_END"},
-        {
-            "reason": "MissingField",
-            "details": "ABSENCEPERIOD_END",
-        },  # ABSENCEPERIOD_END is processed twice
         {"reason": "MissingField", "details": "DATEOFBIRTH"},
         {"reason": "MissingField", "details": "FIRSTNAMES"},
         {"reason": "MissingField", "details": "LASTNAME"},
@@ -1061,14 +1124,6 @@ def test_run_step_minimal_viable_claim(
         {"reason": "MissingField", "details": "NOTIFICATION_CASENUMBER"},
         {"reason": "MissingField", "details": "ABSENCEREASON_COVERAGE"},
         {"reason": "MissingField", "details": "ABSENCE_CASESTATUS"},
-        {
-            "reason": "MissingField",
-            "details": "ABSENCEPERIOD_START",
-        },  # ABSENCEPERIOD_START is processed twice
-        {
-            "reason": "MissingField",
-            "details": "ABSENCEPERIOD_END",
-        },  # ABSENCEPERIOD_END is processed twice
         {"reason": "MissingField", "details": "EMPLOYEE_CUSTOMERNO"},
         {"reason": "MissingField", "details": "EMPLOYER_CUSTOMERNO"},
         {
@@ -1210,3 +1265,195 @@ def test_run_step_mix_of_payment_prefs(
     claim = employee.claims[0]
     assert claim.fineos_absence_id == default_fineos_data.absence_case_number
     assert claim.employee_id == employee.employee_id
+
+
+def test_run_step_uses_correct_start_and_end_dates(
+    claimant_extract_step, test_db_session,
+):
+    not_default_fineos_data = FineosClaimantData(
+        leave_request_start="2021-01-01 12:00:00", leave_request_end="2021-04-01 12:00:00"
+    )
+
+    default_fineos_data = copy.deepcopy(not_default_fineos_data)
+
+    default_fineos_data.leave_request_start = "2021-02-01 12:00:00"
+    default_fineos_data.leave_request_end = "2021-05-01 12:00:00"
+
+    # Create the employee record
+    employee_before, _ = add_db_records_from_fineos_data(
+        test_db_session, default_fineos_data, add_eft=False
+    )
+
+    stage_data(
+        [default_fineos_data],
+        test_db_session,
+        additional_requested_absence_som_records=[not_default_fineos_data],
+    )
+
+    # Run the process
+    claimant_extract_step.run_step()
+
+    # Verify the Employee was updated
+    employee = (
+        test_db_session.query(Employee)
+        .filter(Employee.employee_id == employee_before.employee_id)
+        .one_or_none()
+    )
+    assert employee
+    assert employee.fineos_customer_number == default_fineos_data.customer_number
+
+    # The claim was attached to the employee
+    assert len(employee.claims) == 1
+    claim = employee.claims[0]
+    assert claim.fineos_absence_id == default_fineos_data.absence_case_number
+    assert claim.employee_id == employee.employee_id
+
+    # The earliest start date and latest end date of the requested_absences were used
+    assert claim.absence_period_start_date == datetime.date(2021, 1, 1)
+    assert claim.absence_period_end_date == datetime.date(2021, 5, 1)
+
+
+def test_run_step_with_missing_start_and_end_dates(
+    claimant_extract_step, test_db_session,
+):
+    not_default_fineos_data = FineosClaimantData(
+        leave_request_start="2021-01-01 12:00:00", leave_request_end=""
+    )
+
+    default_fineos_data = copy.deepcopy(not_default_fineos_data)
+
+    default_fineos_data.leave_request_start = "2021-02-01 12:00:00"
+    default_fineos_data.leave_request_end = "2021-05-01 12:00:00"
+
+    # Create the employee record
+    employee_before, _ = add_db_records_from_fineos_data(
+        test_db_session, default_fineos_data, add_eft=False
+    )
+
+    stage_data(
+        [default_fineos_data],
+        test_db_session,
+        additional_requested_absence_som_records=[not_default_fineos_data],
+    )
+
+    # Run the process
+    claimant_extract_step.run_step()
+
+    # Verify the Employee was updated
+    employee = (
+        test_db_session.query(Employee)
+        .filter(Employee.employee_id == employee_before.employee_id)
+        .one_or_none()
+    )
+    assert employee
+    assert employee.fineos_customer_number == default_fineos_data.customer_number
+
+    # The claim was attached to the employee
+    assert len(employee.claims) == 1
+    claim = employee.claims[0]
+    assert claim.fineos_absence_id == default_fineos_data.absence_case_number
+    assert claim.employee_id == employee.employee_id
+
+    # Since one of start_date or end_date was missing or invalid, nothing is set on the claim.
+    assert claim.absence_period_start_date is None
+    assert claim.absence_period_end_date is None
+
+    assert claim.state_logs[0].outcome["validation_container"]["validation_issues"] == [
+        {"reason": "MissingField", "details": "ABSENCEPERIOD_END"}
+    ]
+
+
+def test_claimant_data_validation_matching_dupes(initialize_factories_session):
+    # See the test_claimant_data_validation_matching_dupes test, this is the happy case
+    # and is just present to verify and avoid regression of behavior
+    fineos_data = FineosClaimantData(
+        employer_customer_num="1234", customer_number="12345678", absence_case_status="Approved"
+    )
+    # Make a 2nd set of data exactly the same
+    fineos_data2 = copy.deepcopy(fineos_data)
+
+    metrics = {}
+    claimant_data = make_claimant_data_from_fineos_data(fineos_data, fineos_data2, metrics)
+
+    # No issues
+    assert not claimant_data.validation_container.has_validation_issues()
+    assert claimant_data.employer_customer_number == "1234"
+    assert claimant_data.fineos_customer_number == "12345678"
+    assert claimant_data.absence_case_status == "Approved"
+
+    # Verify the metrics are not set (ie. zero)
+    assert (
+        claimant_extract.ClaimantExtractStep.Metrics.MULTIPLE_EMPLOYER_FOR_CLAIM_ISSUE_COUNT
+        not in metrics
+    )
+    assert (
+        claimant_extract.ClaimantExtractStep.Metrics.MULTIPLE_CLAIMANT_FOR_CLAIM_ISSUE_COUNT
+        not in metrics
+    )
+    assert (
+        claimant_extract.ClaimantExtractStep.Metrics.MULTIPLE_ABSENCE_STATUSES_FOR_CLAIM_ISSUE_COUNT
+        not in metrics
+    )
+
+
+def test_claimant_data_validation_nonmatching_dupes(initialize_factories_session):
+    # Verify validation issues are found when
+    # we receive two rows in the requested absence
+    # file with differing values for a few key fields
+
+    fineos_data = FineosClaimantData(
+        employer_customer_num="1234", customer_number="12345678", absence_case_status="Approved"
+    )
+    # Make a 2nd set of data with a few values different
+    fineos_data2 = copy.deepcopy(fineos_data)
+    fineos_data2.employer_customer_num = ""
+    fineos_data2.customer_number = "999999999"
+    fineos_data2.absence_case_status = "Intake In Progress"
+
+    metrics = {}
+    claimant_data = make_claimant_data_from_fineos_data(fineos_data, fineos_data2, metrics)
+
+    assert claimant_data.validation_container.has_validation_issues()
+    # Note that our processing grabs the last (in this case data2) record
+    # so it additional gets the validation issue for a blank field
+    assert set(claimant_data.validation_container.validation_issues) == set(
+        [
+            ValidationIssue(ValidationReason.MISSING_FIELD, "EMPLOYER_CUSTOMERNO"),
+            ValidationIssue(
+                ValidationReason.UNEXPECTED_RECORD_VARIANCE,
+                "Expected only a single employer customer number for claim, and received 2: ['1234', '']",
+            ),
+            ValidationIssue(
+                ValidationReason.UNEXPECTED_RECORD_VARIANCE,
+                "Expected only a single employee customer number for claim, and received 2: ['12345678', '999999999']",
+            ),
+            ValidationIssue(
+                ValidationReason.UNEXPECTED_RECORD_VARIANCE,
+                "Expected only a single absence case status for claim, and received 2: ['Approved', 'Intake In Progress']",
+            ),
+        ]
+    )
+    # Verify it unset the fields so we won't update these downstream
+    assert claimant_data.employer_customer_number is None
+    assert claimant_data.fineos_customer_number is None
+    assert claimant_data.absence_case_status is None
+
+    # Check the metrics
+    assert (
+        metrics[
+            claimant_extract.ClaimantExtractStep.Metrics.MULTIPLE_EMPLOYER_FOR_CLAIM_ISSUE_COUNT
+        ]
+        == 1
+    )
+    assert (
+        metrics[
+            claimant_extract.ClaimantExtractStep.Metrics.MULTIPLE_CLAIMANT_FOR_CLAIM_ISSUE_COUNT
+        ]
+        == 1
+    )
+    assert (
+        metrics[
+            claimant_extract.ClaimantExtractStep.Metrics.MULTIPLE_ABSENCE_STATUSES_FOR_CLAIM_ISSUE_COUNT
+        ]
+        == 1
+    )

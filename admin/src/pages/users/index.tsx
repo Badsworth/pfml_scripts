@@ -9,6 +9,7 @@ import { Helmet } from "react-helmet-async";
 import { useState } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
+import { StaticPropsPermissions } from "../../menus";
 
 type User = {
   id?: number;
@@ -75,7 +76,7 @@ export const tempUsers = [
   },
 ];
 
-export default function UserLookup() {
+function UserLookup() {
   const router = useRouter();
   const [users, setUsers] = useState<User[]>([]);
   const { Popup: SlideOutPopup, open: openSlideOut } = usePopup<
@@ -110,7 +111,6 @@ export default function UserLookup() {
         <title>User Lookup</title>
       </Helmet>
       <h1 className="page__title">User Lookup</h1>
-
       <SlideOutPopup title="Account Information">
         {(data: User) => {
           return (
@@ -212,3 +212,17 @@ export default function UserLookup() {
     </>
   );
 }
+
+// This function determines the list of permissions required
+// to view this component, at a broad scale.
+// If more accurate permission control is required,
+// use the <HasPermission> component wrapper
+export async function getStaticProps(): Promise<StaticPropsPermissions> {
+  return {
+    props: {
+      permissions: ["USER_READ"],
+    },
+  };
+}
+
+export default UserLookup;

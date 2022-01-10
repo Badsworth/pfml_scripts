@@ -1,23 +1,33 @@
 import {
+  BondingFosterClaim,
+  CaringLeaveClaim,
   MilitaryCaregiverClaim,
   MilitaryExigencyClaim,
   ScenarioSpecification,
 } from "../generation/Scenario";
-import { addWeeks, subWeeks, startOfWeek, addDays, subDays } from "date-fns";
-
+import {
+  addWeeks,
+  subWeeks,
+  startOfWeek,
+  addDays,
+  subDays,
+  parseISO,
+} from "date-fns";
+import * as faker from "faker";
 /**
  * Cypress Testing Scenarios.
  *
  * 99% of our Cypress scenarios are short claims (1 day). If you add a new scenario here, please ensure it is a
  * short claim, or you explain why it is not.
  */
-export const BHAP1: ScenarioSpecification = {
+export const BHAP1: ScenarioSpecification<BondingFosterClaim> = {
   employee: { mass_id: true, wages: "eligible" },
   claim: {
     label: "BHAP1",
     shortClaim: true,
     reason: "Child Bonding",
     reason_qualifier: "Foster Care",
+    work_pattern_spec: "0,720,0,720,0,720,0",
     docs: {
       MASSID: {},
       FOSTERPLACEMENT: {},
@@ -86,35 +96,6 @@ export const MIL_EXI: ScenarioSpecification<MilitaryExigencyClaim> = {
   },
 };
 
-export const BHAP1INEL: ScenarioSpecification = {
-  employee: { mass_id: true, wages: "ineligible" },
-  claim: {
-    label: "BHAP1",
-    shortClaim: true,
-    reason: "Child Bonding",
-    reason_qualifier: "Foster Care",
-    docs: {
-      MASSID: {},
-      FOSTERPLACEMENT: {},
-    },
-  },
-};
-
-export const BHAP9: ScenarioSpecification = {
-  employee: { mass_id: true, wages: "eligible" },
-  claim: {
-    label: "BHAP9",
-    shortClaim: true,
-    reason: "Child Bonding",
-    reason_qualifier: "Foster Care",
-    docs: {
-      MASSID: {},
-      FOSTERPLACEMENT: {},
-    },
-    intermittent_leave_spec: true,
-  },
-};
-
 export const MED_INTER_INEL: ScenarioSpecification = {
   employee: { mass_id: true, wages: "ineligible" },
   claim: {
@@ -143,31 +124,7 @@ export const MCAP_NODOC: ScenarioSpecification = {
   },
 };
 
-export const MHAP1: ScenarioSpecification = {
-  employee: { mass_id: true, wages: "eligible" },
-  claim: {
-    label: "MHAP1",
-    shortClaim: true,
-    reason: "Serious Health Condition - Employee",
-    docs: {
-      HCP: {},
-      MASSID: {},
-    },
-  },
-};
-
-export const MHAP1ER: ScenarioSpecification = {
-  ...MHAP1,
-  claim: {
-    ...MHAP1.claim,
-    employerResponse: {
-      hours_worked_per_week: 40,
-      employer_decision: "Approve",
-      fraud: "No",
-    },
-  },
-};
-
+// Only used in *ignored* spec MHAP4.ts
 export const MHAP4: ScenarioSpecification = {
   employee: { mass_id: true, wages: "eligible" },
   claim: {
@@ -202,6 +159,7 @@ export const MRAP30: ScenarioSpecification = {
   },
 };
 
+// Only used in ignored `bond_continuous_approval_payment_90K.ts` spec
 export const BCAP90: ScenarioSpecification = {
   employee: {
     wages: 90000,
@@ -230,16 +188,18 @@ export const BIAP60: ScenarioSpecification = {
   claim: {
     label: "BIAP60",
     reason: "Child Bonding",
-    reason_qualifier: "Foster Care",
+    reason_qualifier: "Newborn",
+    bondingDate: "future",
     work_pattern_spec: "0,240,240,240,240,240,0",
     docs: {
       MASSID: {},
-      FOSTERPLACEMENT: {},
+      BIRTHCERTIFICATE: {},
     },
     intermittent_leave_spec: {
       duration: 5,
       duration_basis: "Days",
     },
+    is_withholding_tax: false,
     // This scenario requires a 4 week leave time for payment calculation purposes.
     leave_dates: [subWeeks(mostRecentSunday, 3), addWeeks(mostRecentSunday, 1)],
     metadata: {
@@ -292,6 +252,22 @@ export const CDENY2: ScenarioSpecification = {
   },
 };
 
+export const ORGUNIT: ScenarioSpecification = {
+  employee: { mass_id: true, wages: "eligible" },
+  claim: {
+    label: "ORGUNIT",
+    shortClaim: true,
+    has_continuous_leave_periods: true,
+    reason: "Care for a Family Member",
+    docs: {
+      MASSID: {},
+      CARING: {},
+    },
+    metadata: { orgunit: "Division of Administrative Law Appeals" },
+  },
+};
+
+// only used in ignored `reductions.ts` spec
 export const MED_OLB: ScenarioSpecification = {
   employee: { mass_id: true, wages: 90000 },
   claim: {
@@ -335,12 +311,12 @@ export const MED_OLB: ScenarioSpecification = {
   },
 };
 
-export const MED_PRE: ScenarioSpecification = {
+export const PREBIRTH: ScenarioSpecification = {
   employee: { mass_id: true, wages: "eligible" },
   claim: {
-    label: "MED_PRE",
-    reason: "Serious Health Condition - Employee",
-    pregnant_or_recent_birth: true,
+    label: "PREBIRTH",
+    reason: "Pregnancy/Maternity",
+    pregnant_or_recent_birth: undefined,
     shortClaim: true,
     docs: {
       MASSID: {},
@@ -350,18 +326,6 @@ export const MED_PRE: ScenarioSpecification = {
       hours_worked_per_week: 40,
       employer_decision: "Approve",
     },
-  },
-};
-
-// @todo: PREGNANCY_AND_MATERNITY_FORM document is unable to be submitted when using reason: "Serious Health Condition - Employee"
-// with the most recent deployment. (https://github.com/EOLWD/pfml/pull/5359) Once change has been deployed to all envs, remove MED_PRE scenario above.
-export const PREBIRTH: ScenarioSpecification = {
-  ...MED_PRE,
-  claim: {
-    ...MED_PRE.claim,
-    label: "PREBIRTH",
-    reason: "Pregnancy/Maternity",
-    pregnant_or_recent_birth: undefined,
   },
 };
 
@@ -420,18 +384,31 @@ export const CONTINUOUS_MEDICAL_OLB: ScenarioSpecification = {
   },
 };
 
+const getFutureStartDates2022 = (): [Date, Date] => {
+  const start = faker.date.between(
+    parseISO("2022-01-03"),
+    addDays(new Date(), 60)
+  );
+  const startDate = startOfWeek(start);
+  const endDate = addWeeks(startDate, 2);
+  return [startDate, endDate];
+};
 export const BHAP1_OLB: ScenarioSpecification = {
   employee: { mass_id: true, wages: 90000 },
   claim: {
     label: "BHAP1_OLB",
     reason: "Child Bonding",
-    reason_qualifier: "Foster Care",
+    reason_qualifier: "Foster Care", // @todo: remove after 1/14/22. This is a temporary workaround for future leave, so that employer can make amendments
+    // reason_qualifier: "Newborn",
+    // bondingDate: "future",
     docs: {
       MASSID: {},
       FOSTERPLACEMENT: {},
     },
     // Create a leave in progress, so we can check adjustments for both made and future payments.
-    leave_dates: [subWeeks(mostRecentSunday, 2), addWeeks(mostRecentSunday, 2)],
+    // @todo: reinstate after 1/14/22 - this scenario is used for testing tax withholdings, where claims must start after 1/1/22
+    // leave_dates: [subWeeks(mostRecentSunday, 2), addWeeks(mostRecentSunday, 2)],
+    leave_dates: getFutureStartDates2022(),
     // Leave start & end dates here and in employer benefits empty so they match the leave dates automatically
     other_incomes: [
       {
@@ -457,6 +434,7 @@ export const BHAP1_OLB: ScenarioSpecification = {
         worked_per_week_minutes: 1200,
       },
     ],
+    is_withholding_tax: true,
     concurrent_leave: { is_for_current_employer: true },
     metadata: { expected_weekly_payment: "850.00" },
   },
@@ -556,16 +534,72 @@ export const HIST_CASE: ScenarioSpecification = {
     shortClaim: true,
     has_continuous_leave_periods: true,
     reason: "Care for a Family Member",
-    docs: {},
+    docs: {
+      MASSID: {},
+      CARING: {},
+    },
   },
 };
 
 // Leave start date change request
 export const MED_LSDCR: ScenarioSpecification = {
-  ...MHAP1ER,
+  employee: { mass_id: true, wages: "eligible" },
   claim: {
-    ...MHAP1ER.claim,
     label: "MED_LSDCR",
+    shortClaim: true,
+    reason: "Serious Health Condition - Employee",
     leave_dates: [addWeeks(new Date(), 2), addWeeks(new Date(), 6)],
+    employerResponse: {
+      hours_worked_per_week: 40,
+      employer_decision: "Approve",
+      fraud: "No",
+    },
+    docs: {
+      HCP: {},
+      MASSID: {},
+    },
+  },
+};
+
+export const CARE_TAXES: ScenarioSpecification<CaringLeaveClaim> = {
+  employee: { wages: 30000 },
+  claim: {
+    reason: "Care for a Family Member",
+    label: "CARE_TAXES",
+    leave_dates: [
+      startOfWeek(addDays(new Date(), 60)), // claims must start in 2022 in order to test SIT/FIT withholdings
+      startOfWeek(addDays(new Date(), 74)),
+    ],
+    is_withholding_tax: true,
+    work_pattern_spec: "standard",
+    reduced_leave_spec: "0,240,240,240,240,240,0",
+    docs: { CARING: {}, MASSID: {} },
+  },
+};
+
+export const MED_CONT_ER_APPROVE: ScenarioSpecification = {
+  employee: { wages: 60000 },
+  claim: {
+    reason: "Serious Health Condition - Employee",
+    label: "MED_CONT_ER_APPROVE",
+    leave_dates: [
+      startOfWeek(subWeeks(new Date(), 3)),
+      startOfWeek(subWeeks(new Date(), 1)),
+    ],
+    address: {
+      city: "Washington",
+      line_1: "1600 Pennsylvania Avenue NW",
+      state: "DC",
+      zip: "20500",
+    },
+    work_pattern_spec: "standard",
+    docs: { MASSID: {}, HCP: {} },
+    payment: {
+      payment_method: "Check",
+    },
+    employerResponse: {
+      hours_worked_per_week: 40,
+      employer_decision: "Approve",
+    },
   },
 };

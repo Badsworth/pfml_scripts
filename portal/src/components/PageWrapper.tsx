@@ -4,12 +4,14 @@ import {
   isMaintenancePageRoute,
   maintenanceTime,
 } from "../utils/maintenance";
+import { AppLogic } from "../hooks/useAppLogic";
 import ErrorBoundary from "./ErrorBoundary";
 import ErrorsSummary from "./ErrorsSummary";
+import Flag from "../models/Flag";
 import Header from "./Header";
 import { Helmet } from "react-helmet";
 import React from "react";
-import Spinner from "./Spinner";
+import Spinner from "./core/Spinner";
 import dynamic from "next/dynamic";
 import { get } from "lodash";
 import { isFeatureEnabled } from "../services/featureFlags";
@@ -21,10 +23,10 @@ const Footer = dynamic(() => import("./Footer"));
 const MaintenanceTakeover = dynamic(() => import("./MaintenanceTakeover"));
 
 interface PageWrapperProps {
-  appLogic: any;
+  appLogic: AppLogic;
   children: React.ReactNode;
   isLoading?: boolean;
-  maintenance?: any;
+  maintenance?: Flag;
 }
 
 /**
@@ -38,9 +40,9 @@ const PageWrapper = (props: PageWrapperProps) => {
 
   // If no page routes are specified, the entire site should be under maintenance.
   const maintenancePageRoutes = get(maintenance, "options.page_routes", ["/*"]);
-  const maintenanceStart = maintenance.start;
-  const maintenanceEnd = maintenance.end;
-  const maintenanceEnabled = !!maintenance.enabled;
+  const maintenanceStart = maintenance?.start;
+  const maintenanceEnd = maintenance?.end;
+  const maintenanceEnabled = !!maintenance?.enabled;
 
   /**
    * What to show to the user within our page wrapper. Depends on
@@ -66,7 +68,6 @@ const PageWrapper = (props: PageWrapperProps) => {
 
   /**
    * Should this page display a maintenance message instead of its normal content?
-   * @type {boolean}
    */
   const showMaintenancePageBody =
     maintenanceEnabled &&
@@ -90,7 +91,7 @@ const PageWrapper = (props: PageWrapperProps) => {
   if (isLoading) {
     pageBody = (
       <section id="page" className="margin-top-8 text-center">
-        <Spinner aria-valuetext={t("components.spinner.label")} />
+        <Spinner aria-label={t("components.spinner.label")} />
       </section>
     );
   } else if (showMaintenancePageBody && !isFeatureEnabled("noMaintenance")) {
@@ -117,7 +118,7 @@ const PageWrapper = (props: PageWrapperProps) => {
           {/* Wrap header children in a div because its parent is a flex container */}
           <Header
             user={appLogic.users.user}
-            onLogout={appLogic.auth.logout}
+            onLogout={() => appLogic.auth.logout()}
             showUpcomingMaintenanceAlertBar={showUpcomingMaintenanceAlertBar}
             maintenanceStartTime={maintenanceStartTime}
             maintenanceEndTime={maintenanceEndTime}

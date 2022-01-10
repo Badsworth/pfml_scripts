@@ -81,9 +81,7 @@ class AuditScenarioName(Enum):
     ADDRESS_PAIR_DOES_NOT_EXIST = "ADDRESS_PAIR_DOES_NOT_EXIST"
     ADDRESS_IS_NOT_VERIFIED = "ADDRESS_IS_NOT_VERIFIED"
 
-    AUDIT_REPORT_DETAIL_REJECTED = "AUDIT_REPORT_DETAIL_REJECTED"
     AUDIT_REPORT_DETAIL_INFORMATIONAL = "AUDIT_REPORT_DETAIL_INFORMATIONAL"
-    AUDIT_REPORT_DETAIL_MIXED = "AUDIT_REPORT_DETAIL_MIXED"
 
 
 @dataclass
@@ -99,7 +97,9 @@ class AuditScenarioDescriptor:
     has_address_pair: bool = True
     is_address_verified: bool = True
 
-    audit_report_detail_rejected: bool = False
+    # TODO add when we have a rejected use case
+    # audit_report_detail_rejected: bool = False
+
     audit_report_detail_informational: bool = False
 
 
@@ -222,21 +222,9 @@ AUDIT_SCENARIO_DESCRIPTORS[AuditScenarioName.ADDRESS_IS_NOT_VERIFIED] = AuditSce
 )
 
 AUDIT_SCENARIO_DESCRIPTORS[
-    AuditScenarioName.AUDIT_REPORT_DETAIL_REJECTED
-] = AuditScenarioDescriptor(
-    scenario_name=AuditScenarioName.AUDIT_REPORT_DETAIL_REJECTED, audit_report_detail_rejected=True
-)
-
-AUDIT_SCENARIO_DESCRIPTORS[
     AuditScenarioName.AUDIT_REPORT_DETAIL_INFORMATIONAL
 ] = AuditScenarioDescriptor(
     scenario_name=AuditScenarioName.AUDIT_REPORT_DETAIL_INFORMATIONAL,
-    audit_report_detail_informational=True,
-)
-
-AUDIT_SCENARIO_DESCRIPTORS[AuditScenarioName.AUDIT_REPORT_DETAIL_MIXED] = AuditScenarioDescriptor(
-    scenario_name=AuditScenarioName.AUDIT_REPORT_DETAIL_MIXED,
-    audit_report_detail_rejected=True,
     audit_report_detail_informational=True,
 )
 
@@ -361,6 +349,8 @@ def generate_scenario_data(
         employer=employer,
         claim_type_id=scenario_descriptor.claim_type.claim_type_id,
         fineos_absence_status_id=AbsenceStatus.APPROVED.absence_status_id,
+        absence_period_start_date=datetime.today() - timedelta(days=180),
+        absence_period_end_date=datetime.today() - timedelta(days=90),
     )
 
     if not scenario_descriptor.is_first_time_payment:
@@ -445,16 +435,19 @@ def generate_scenario_data(
         previously_errored_payment_count=previous_error_count,
         previously_rejected_payment_count=previously_rejected_payment_count,
         previously_skipped_payment_count=previously_skipped_payment_count,
+        previously_paid_payment_count=0,
+        previously_paid_payments_string=None,
+        gross_payment_amount="",
+        net_payment_amount=str(payment.amount),
+        federal_withholding_amount="",
+        state_withholding_amount="",
+        federal_withholding_i_value="",
+        state_withholding_i_value="",
     )
-
-    if scenario_descriptor.audit_report_detail_rejected:
-        stage_payment_audit_report_details(
-            payment, PaymentAuditReportType.MAX_WEEKLY_BENEFITS, "Test Message", None, db_session
-        )
 
     if scenario_descriptor.audit_report_detail_informational:
         stage_payment_audit_report_details(
-            payment, PaymentAuditReportType.DUA_DIA_REDUCTION, "Test Message", None, db_session
+            payment, PaymentAuditReportType.DUA_ADDITIONAL_INCOME, "Test Message", None, db_session
         )
 
     return AuditScenarioData(
@@ -516,6 +509,8 @@ def generate_payment_audit_data_set_and_rejects_file(
             state_log_util.build_outcome("test"),
             db_session,
         )
+
+    db_session.commit()
 
     write_audit_report_rows(
         payment_audit_report_rows, folder_path, db_session, report_name=file_name

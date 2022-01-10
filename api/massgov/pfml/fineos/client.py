@@ -4,7 +4,9 @@
 
 import abc
 from decimal import Decimal
-from typing import List, Optional, Tuple, Union
+from typing import Any, List, Optional, Tuple, Union
+
+from requests.models import Response
 
 from massgov.pfml.fineos.transforms.to_fineos.base import EFormBody
 
@@ -124,7 +126,7 @@ class AbstractFINEOSClient(abc.ABC, metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def get_eform(
-        self, user_id: str, absence_id: str, eform_id: str
+        self, user_id: str, absence_id: str, eform_id: int
     ) -> models.group_client_api.EForm:
         pass
 
@@ -152,11 +154,26 @@ class AbstractFINEOSClient(abc.ABC, metaclass=abc.ABCMeta):
         occupation_id: int,
         employment_status: Optional[str],
         hours_worked_per_week: Optional[Decimal],
+        fineos_org_unit_id: Optional[str],
+        worksite_id: Optional[str],
     ) -> None:
         pass
 
     @abc.abstractmethod
     def upload_document(
+        self,
+        user_id: str,
+        absence_id: str,
+        document_type: str,
+        file_content: bytes,
+        file_name: str,
+        content_type: str,
+        description: str,
+    ) -> models.customer_api.Document:
+        pass
+
+    @abc.abstractmethod
+    def upload_document_multipart(
         self,
         user_id: str,
         absence_id: str,
@@ -258,4 +275,14 @@ class AbstractFINEOSClient(abc.ABC, metaclass=abc.ABCMeta):
         service_agreement_inputs: models.CreateOrUpdateServiceAgreement,
     ) -> str:
         """Create Service Agreement For An Employer in FINEOS"""
+        pass
+
+    @abc.abstractmethod
+    def send_tax_withholding_preference(self, absence_id: str, is_withholding_tax: bool) -> None:
+        """Send tax withholding preference to FINEOS"""
+        pass
+
+    @abc.abstractmethod
+    def upload_document_to_dms(self, file_name: str, file: bytes, data: Any) -> Response:
+        """Upload a 1099G document to fineos Api"""
         pass

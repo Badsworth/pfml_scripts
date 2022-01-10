@@ -8,6 +8,7 @@ from massgov.pfml.db.models.employees import (
     EmployeeOccupation,
     Gender,
     MaritalStatus,
+    OrganizationUnit,
     TaxIdentifier,
     Title,
 )
@@ -190,6 +191,30 @@ def test_fineos_updates_happy_path(test_db_session, initialize_factories_session
     assert report.errored_employees_count == 0
     assert report.errored_employee_occupation_count == 0
     assert report.total_employees_received_count == 2
+
+    org_unit_one = (
+        test_db_session.query(OrganizationUnit)
+        .filter(
+            OrganizationUnit.organization_unit_id == employee_occupation_one.organization_unit_id,
+            OrganizationUnit.employer_id == employer.employer_id,
+        )
+        .one_or_none()
+    )
+
+    assert org_unit_one is not None
+    assert employee_occupation_one.organization_unit == org_unit_one
+
+    org_unit_two = (
+        test_db_session.query(OrganizationUnit)
+        .filter(
+            OrganizationUnit.organization_unit_id == employee_occupation_two.organization_unit_id,
+            OrganizationUnit.employer_id == employer.employer_id,
+        )
+        .one_or_none()
+    )
+
+    assert org_unit_two is None
+    assert employee_occupation_two.organization_unit is None
 
 
 def test_fineos_updates_no_employer(

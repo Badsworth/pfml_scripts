@@ -1,11 +1,16 @@
-from datetime import date, datetime
+import datetime
+from datetime import date
+from unittest import mock
 
 import pytest
 from freezegun import freeze_time
 
 from massgov.pfml.api.models.applications.common import DurationBasis, FrequencyIntervalBasis
+from massgov.pfml.api.models.applications.responses import DocumentResponse
 from massgov.pfml.api.validation.application_rules import (
     get_always_required_issues,
+    get_application_complete_issues,
+    get_concurrent_leave_issues,
     get_conditional_issues,
     get_continuous_leave_issues,
     get_intermittent_leave_issues,
@@ -17,6 +22,7 @@ from massgov.pfml.api.validation.application_rules import (
 from massgov.pfml.api.validation.exceptions import IssueRule, IssueType, ValidationErrorDetail
 from massgov.pfml.db.models.applications import (
     ConcurrentLeave,
+    DocumentType,
     EmployerBenefit,
     EmploymentStatus,
     IntermittentLeavePeriod,
@@ -31,8 +37,10 @@ from massgov.pfml.db.models.employees import PaymentMethod
 from massgov.pfml.db.models.factories import (
     AddressFactory,
     ApplicationFactory,
+    ClaimFactory,
     ConcurrentLeaveFactory,
     ContinuousLeavePeriodFactory,
+    DocumentFactory,
     EmployerBenefitFactory,
     IntermittentLeavePeriodFactory,
     OtherIncomeFactory,
@@ -1721,7 +1729,9 @@ def test_has_employer_benefits_true_zero_benefit():
 
     benefits = [
         EmployerBenefitFactory.build(
-            application_id=application.application_id, benefit_amount_dollars=0
+            application_id=application.application_id,
+            benefit_amount_dollars=0,
+            is_full_salary_continuous=False,
         )
     ]
     application.employer_benefits = benefits
@@ -1734,6 +1744,11 @@ def test_has_employer_benefits_true_zero_benefit():
             field="employer_benefits[0].benefit_amount_dollars",
         )
     ] == issues
+
+    application.employer_benefits[0].is_full_salary_continuous = True
+    issues = get_conditional_issues(application)
+
+    assert len(issues) == 0
 
 
 def test_employer_benefit_no_issues():
@@ -1764,6 +1779,21 @@ def test_employer_benefit_missing_fields():
             message="employer_benefits[0].is_full_salary_continuous is required",
             field="employer_benefits[0].is_full_salary_continuous",
         ),
+    ] == issues
+
+
+def test_benefit_amount_and_frequency_required():
+    test_app = ApplicationFactory.build(
+        employer_benefits=[
+            EmployerBenefit(
+                is_full_salary_continuous=False,
+                benefit_start_date=date(2021, 1, 3),
+                benefit_type_id=0,
+            )
+        ]
+    )
+    issues = get_conditional_issues(test_app)
+    assert [
         ValidationErrorDetail(
             type=IssueType.required,
             message="employer_benefits[0].benefit_amount_dollars is required",
@@ -1890,7 +1920,7 @@ def test_other_leave_rules():
 
 def test_other_leave_submitted_rules():
     # TODO (CP-2455): Remove this test once we always require other leaves be present, even on submitted applications
-    application = ApplicationFactory.build(submitted_time=datetime.now())
+    application = ApplicationFactory.build(submitted_time=datetime.datetime.now())
     issues = get_conditional_issues(application)
 
     assert (
@@ -2454,3 +2484,366 @@ def test_previous_leaves_cannot_overlap_leave_periods():
             message="Previous leaves cannot overlap with leave periods. Received leave period 2021-01-05 – 2021-02-28 and previous leave 2021-01-03 – 2021-03-01.",
         ),
     ] == issues
+
+
+@pytest.mark.parametrize(
+    "is_withholding_tax, has_submitted_payment_preference, include_id_document, expected_issues",
+    [
+        (
+            None,
+            True,
+            True,
+            [
+                ValidationErrorDetail(
+                    type=IssueType.required,
+                    message="Tax withholding preference is required",
+                    field="is_withholding_tax",
+                ),
+            ],
+        ),
+        (False, True, True, []),
+        (True, True, True, []),
+        (
+            False,
+            False,
+            True,
+            [
+                ValidationErrorDetail(
+                    message="Payment preference is required",
+                    type=IssueType.required,
+                    field="payment_method",
+                )
+            ],
+        ),
+        (
+            True,
+            True,
+            False,
+            [
+                ValidationErrorDetail(
+                    type=IssueType.required, message="An identification document is required"
+                )
+            ],
+        ),
+    ],
+)
+@mock.patch("massgov.pfml.api.validation.application_rules.get_documents")
+def test_get_application_complete_issues(
+    mock_get_docs,
+    is_withholding_tax,
+    has_submitted_payment_preference,
+    include_id_document,
+    expected_issues,
+    test_db_session,
+    user,
+    initialize_factories_session,
+):
+    application = ApplicationFactory.create(
+        is_withholding_tax=is_withholding_tax,
+        has_submitted_payment_preference=has_submitted_payment_preference,
+        claim=ClaimFactory.build(),
+        user_id=user.user_id,
+        leave_reason_id=LeaveReason.PREGNANCY_MATERNITY.leave_reason_id,
+    )
+    mock_get_docs.return_value = []
+    if include_id_document:
+        DocumentFactory.create(
+            user_id=application.user_id,
+            application_id=application.application_id,
+            document_type_id=DocumentType.PASSPORT.document_type_id,
+        )
+
+    issues = get_application_complete_issues(application, test_db_session)
+
+    assert issues == expected_issues
+
+
+def test_get_application_complete_issues_certification_validation(
+    initialize_factories_session, user, test_db_session,
+):
+    application = ApplicationFactory.create(
+        is_withholding_tax=True,
+        has_submitted_payment_preference=True,
+        claim=ClaimFactory.build(),
+        user_id=user.user_id,
+        leave_reason_id=LeaveReason.SERIOUS_HEALTH_CONDITION_EMPLOYEE.leave_reason_id,
+    )
+    DocumentFactory.create(
+        user_id=application.user_id,
+        application_id=application.application_id,
+        document_type_id=DocumentType.PASSPORT.document_type_id,
+    )
+
+    issues = get_application_complete_issues(application, test_db_session)
+
+    assert issues == [
+        ValidationErrorDetail(
+            type=IssueType.required, message="A certification document is required"
+        )
+    ]
+
+
+@pytest.mark.parametrize(
+    "document_type, expected_issues",
+    [
+        (
+            DocumentType.PASSPORT.document_type_description,
+            [
+                ValidationErrorDetail(
+                    type=IssueType.required, message="A certification document is required"
+                )
+            ],
+        ),
+        (
+            DocumentType.CHILD_BONDING_EVIDENCE_FORM.document_type_description,
+            [
+                ValidationErrorDetail(
+                    type=IssueType.required, message="An identification document is required"
+                )
+            ],
+        ),
+    ],
+)
+@mock.patch("massgov.pfml.api.validation.application_rules.get_documents")
+def test_get_application_complete_issues_fineos_fallback(
+    mock_get_documents,
+    document_type,
+    expected_issues,
+    initialize_factories_session,
+    user,
+    test_db_session,
+):
+    application = ApplicationFactory.create(
+        is_withholding_tax=True,
+        has_submitted_payment_preference=True,
+        claim=ClaimFactory.build(),
+        user_id=user.user_id,
+        leave_reason_id=LeaveReason.SERIOUS_HEALTH_CONDITION_EMPLOYEE.leave_reason_id,
+    )
+
+    mock_get_documents.return_value = [
+        DocumentResponse(
+            user_id=user.user_id,
+            application_id=application.application_id,
+            document_type=document_type,
+            name="File.pdf",
+            description="my file",
+        )
+    ]
+
+    issues = get_application_complete_issues(application, test_db_session)
+
+    assert issues == expected_issues
+
+
+@mock.patch("massgov.pfml.api.validation.application_rules.get_documents_issues", return_value=[])
+def test_get_application_complete_issues_missing_absence_id(test_db_session):
+    claim = ClaimFactory.build(fineos_absence_id=None)
+    application = ApplicationFactory.build(
+        is_withholding_tax=False, claim=claim, has_submitted_payment_preference=True
+    )
+
+    issues = get_application_complete_issues(application, test_db_session)
+
+    assert issues == [
+        ValidationErrorDetail(
+            type=IssueType.object_not_found,
+            message="A case must exist before it can be marked as complete.",
+        )
+    ]
+
+
+@mock.patch("massgov.pfml.api.validation.application_rules.get_documents_issues", return_value=[])
+def test_get_application_complete_issues_missing_part1_field(test_db_session):
+    # This validation doesn't care if a new "Submit" rule isn't fulfilled, as long as a claim
+    # with a Fineos absence ID exists.
+    application = ApplicationFactory.build(
+        is_withholding_tax=False,
+        claim=ClaimFactory.build(),
+        first_name=None,
+        has_submitted_payment_preference=True,
+    )
+    issues = get_application_complete_issues(application, test_db_session)
+
+    assert not issues
+
+
+class TestGetConcurrentLeaveIssues:
+    @pytest.fixture
+    def application(self, concurrent_leave):
+        application = ApplicationFactory.build()
+        application.concurrent_leave = concurrent_leave
+        application.has_concurrent_leave = True
+        return application
+
+    @pytest.fixture
+    def continuous_leave_periods(self, application):
+        return [
+            ContinuousLeavePeriodFactory.build(
+                start_date=date(2021, 11, 20), end_date=date(2021, 12, 28),
+            )
+        ]
+
+    @pytest.fixture
+    def reduced_leave_periods(self):
+        return [
+            ReducedScheduleLeavePeriodFactory.build(
+                start_date=date(2021, 11, 20), end_date=date(2021, 12, 28),
+            )
+        ]
+
+    @pytest.fixture
+    def concurrent_leave(self):
+        return ConcurrentLeaveFactory.build(
+            is_for_current_employer=True,
+            leave_start_date=date(2021, 11, 19),
+            leave_end_date=date(2021, 11, 27),
+        )
+
+    @pytest.fixture
+    def concurrent_leave_start_issue(self):
+        return ValidationErrorDetail(
+            type=IssueType.conflicting,
+            message="Concurrent leaves cannot overlap with waiting period.",
+            rule=IssueRule.disallow_overlapping_waiting_period_and_concurrent_leave_start_date,
+            field="concurrent_leave.leave_start_date",
+        )
+
+    @pytest.fixture
+    def concurrent_leave_end_issue(self):
+        return ValidationErrorDetail(
+            type=IssueType.conflicting,
+            message="Concurrent leaves cannot overlap with waiting period.",
+            rule=IssueRule.disallow_overlapping_waiting_period_and_concurrent_leave_end_date,
+            field="concurrent_leave.leave_end_date",
+        )
+
+    @pytest.fixture
+    def intermittent_leave(self):
+        return [
+            IntermittentLeavePeriodFactory.build(
+                start_date=date(2021, 11, 20), end_date=date(2021, 12, 20)
+            )
+        ]
+
+    def test_concurrent_leave_start_date_cannot_overlap_continuous_leave_waiting_period(
+        self, application, continuous_leave_periods, concurrent_leave_start_issue
+    ):
+        application.has_continuous_leave_periods = True
+        application.continuous_leave_periods = continuous_leave_periods
+        application.concurrent_leave.leave_start_date = continuous_leave_periods[0].start_date
+
+        issues = get_concurrent_leave_issues(application)
+        assert concurrent_leave_start_issue in issues
+
+    def test_concurrent_leave_end_date_cannot_overlap_continuous_leave_waiting_period(
+        self, application, continuous_leave_periods, concurrent_leave_end_issue
+    ):
+        application.has_continuous_leave_periods = True
+        application.continuous_leave_periods = continuous_leave_periods
+        application.concurrent_leave.leave_end_date = continuous_leave_periods[
+            0
+        ].start_date + datetime.timedelta(days=1)
+
+        issues = get_concurrent_leave_issues(application)
+        assert concurrent_leave_end_issue in issues
+
+    def test_concurrent_leave_start_and_end_dates_cannot_overlap_continuous_leave_waiting_period(
+        self,
+        application,
+        continuous_leave_periods,
+        concurrent_leave_start_issue,
+        concurrent_leave_end_issue,
+    ):
+        application.has_continuous_leave_periods = True
+        application.continuous_leave_periods = continuous_leave_periods
+        application.concurrent_leave.leave_start_date = continuous_leave_periods[0].start_date
+        application.concurrent_leave.leave_end_date = continuous_leave_periods[
+            0
+        ].start_date + datetime.timedelta(days=1)
+
+        issues = get_concurrent_leave_issues(application)
+        assert concurrent_leave_start_issue in issues
+        assert concurrent_leave_end_issue in issues
+
+    def test_concurrent_leave_start_date_cannot_overlap_reduced_leave_waiting_period(
+        self, application, reduced_leave_periods, concurrent_leave_start_issue
+    ):
+        application.has_reduced_schedule_leave_periods = True
+        application.reduced_schedule_leave_periods = reduced_leave_periods
+        application.concurrent_leave.leave_start_date = reduced_leave_periods[0].start_date
+
+        issues = get_concurrent_leave_issues(application)
+        assert concurrent_leave_start_issue in issues
+
+    def test_concurrent_leave_dates_not_validated_for_intermittent_leave(
+        self, application, intermittent_leave
+    ):
+        application.has_intermittent_leave_periods = True
+        application.intermittent_leave_periods = intermittent_leave
+        application.concurrent_leave.leave_start_date = intermittent_leave[0].start_date
+        application.concurrent_leave.leave_end_date = intermittent_leave[
+            0
+        ].start_date + datetime.timedelta(days=1)
+
+        issues = get_concurrent_leave_issues(application)
+        assert [] == issues
+
+    def test_no_issues_returned_if_no_concurrent_leave(self, application, continuous_leave_periods):
+        application.has_continuous_leave_periods = True
+        application.continuous_leave_periods = continuous_leave_periods
+        application.has_concurrent_leave = False
+        application.concurrent_leave = None
+
+        issues = get_concurrent_leave_issues(application)
+        assert [] == issues
+
+    def test_no_issues_for_non_overlapping_leaves(self, application, continuous_leave_periods):
+        application.has_continuous_leave_periods = True
+        application.continuous_leave_periods = continuous_leave_periods
+        application.concurrent_leave.leave_start_date = continuous_leave_periods[
+            0
+        ].start_date + datetime.timedelta(days=7)
+        application.concurrent_leave.leave_end_date = continuous_leave_periods[
+            0
+        ].start_date + datetime.timedelta(days=8)
+
+        issues = get_concurrent_leave_issues(application)
+        assert [] == issues
+
+    def test_correct_calculation_of_waiting_period_dates(
+        self,
+        application,
+        continuous_leave_periods,
+        reduced_leave_periods,
+        concurrent_leave_start_issue,
+    ):
+        application.has_continuous_leave_periods = True
+        application.has_reduced_schedule_leave_periods = True
+
+        application.continuous_leave_periods = continuous_leave_periods
+        application.continuous_leave_periods[0].start_date = date(2021, 11, 20)
+        application.continuous_leave_periods[0].end_date = date(2021, 12, 28)
+
+        # This is the earliest leave start date
+        # we should receive an error if concurrent start or end dates land between 10/28/21 and 11/3/21
+        application.reduced_schedule_leave_periods = reduced_leave_periods
+        application.reduced_schedule_leave_periods[0].start_date = date(2021, 10, 28)
+        application.reduced_schedule_leave_periods[0].end_date = date(2021, 11, 19)
+
+        application.concurrent_leave.leave_start_date = date(2021, 10, 29)
+        application.concurrent_leave.leave_end_date = date(2021, 11, 10)
+
+        issues = get_concurrent_leave_issues(application)
+        assert concurrent_leave_start_issue in issues
+
+    def test_with_no_concurrent_leave_start_date_no_errors(
+        self, application, continuous_leave_periods
+    ):
+        application.has_continuous_leave_periods = True
+        application.continuous_leave_periods = continuous_leave_periods
+
+        application.concurrent_leave.leave_start_date = None
+
+        # should resolve without errors
+        get_concurrent_leave_issues(application)

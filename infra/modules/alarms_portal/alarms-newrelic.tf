@@ -33,6 +33,9 @@ locals {
     "uat"         = local.low_priority_channel_key,
     "breakfix"    = local.low_priority_channel_key,
     "cps-preview" = local.low_priority_channel_key,
+    "infra-test"  = local.low_priority_channel_key,
+    "long"        = local.low_priority_channel_key,
+    "trn2"        = local.low_priority_channel_key,
     "prod"        = local.high_priority_channel_key,
   }
 }
@@ -291,7 +294,7 @@ resource "newrelic_nrql_alert_condition" "server_networkerror_surge" {
   warning {
     # Warn if two 5-minute periods have error rate > 39% (at least 4/10 requests)
     threshold_duration    = 600
-    threshold             = 0.39
+    threshold             = 39
     operator              = "above"
     threshold_occurrences = "ALL"
   }
@@ -299,7 +302,7 @@ resource "newrelic_nrql_alert_condition" "server_networkerror_surge" {
   critical {
     # Set the alarm off if two 5-minute periods have error rate > 59% (at least 6/10 requests)
     threshold_duration    = 600
-    threshold             = 0.59
+    threshold             = 59
     operator              = "above"
     threshold_occurrences = "ALL"
   }
@@ -312,7 +315,7 @@ locals {
   # to prevent noisy false positives.
   #
   js_error_min_uniq_per_window = 5
-  js_error_uniq_count          = "filter(count(session), WHERE browserInteractionName NOT LIKE 'fetch:%')"
+  js_error_uniq_count          = "filter(uniqueCount(session), WHERE browserInteractionName NOT LIKE 'fetch:%')"
   js_error_total_count         = "filter(count(browserInteractionName), WHERE browserInteractionName NOT LIKE 'fetch:%')"
 }
 

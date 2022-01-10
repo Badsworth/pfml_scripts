@@ -1,33 +1,28 @@
-import BenefitsApplication, {
-  ReasonQualifier as ReasonQualifierEnum,
-} from "../../models/BenefitsApplication";
 import { get, pick, set } from "lodash";
-import Alert from "../../components/Alert";
+import withBenefitsApplication, {
+  WithBenefitsApplicationProps,
+} from "../../hoc/withBenefitsApplication";
+import Alert from "../../components/core/Alert";
 import ConditionalContent from "../../components/ConditionalContent";
-import Details from "../../components/Details";
-import InputChoiceGroup from "../../components/InputChoiceGroup";
+import Details from "../../components/core/Details";
+import InputChoiceGroup from "../../components/core/InputChoiceGroup";
 import LeaveReasonEnum from "../../models/LeaveReason";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
+import { ReasonQualifier as ReasonQualifierEnum } from "../../models/BenefitsApplication";
 import { Trans } from "react-i18next";
 import { isFeatureEnabled } from "../../services/featureFlags";
 import routes from "../../routes";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = [
   "claim.leave_details.reason",
   "claim.leave_details.reason_qualifier",
 ];
 
-interface LeaveReasonProps {
-  claim?: BenefitsApplication;
-  appLogic: any;
-}
-
-export const LeaveReason = (props: LeaveReasonProps) => {
+export const LeaveReason = (props: WithBenefitsApplicationProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
@@ -101,7 +96,11 @@ export const LeaveReason = (props: LeaveReasonProps) => {
   );
 
   const getChoices = () => {
-    const choices = [];
+    const choices: Array<{
+      checked: boolean;
+      label: string;
+      value: string;
+    }> = [];
     choices.push(choiceMedical, choiceBonding, choiceCaringLeave);
 
     showMilitaryLeaveTypes &&

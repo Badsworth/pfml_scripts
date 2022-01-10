@@ -1,10 +1,12 @@
 import AppErrorInfoCollection from "../models/AppErrorInfoCollection";
-import Fieldset from "./Fieldset";
-import FormLabel from "./FormLabel";
-import InputText from "./InputText";
+import Fieldset from "./core/Fieldset";
+import FormLabel from "./core/FormLabel";
+import InputText from "./core/InputText";
 import React from "react";
-import StateDropdown from "./StateDropdown";
+import StateDropdown from "./core/StateDropdown";
 import { useTranslation } from "../locales/i18n";
+
+type AddressFieldNames = "city" | "line_1" | "line_2" | "state" | "zip";
 
 interface FieldsetAddressProps {
   /**
@@ -40,7 +42,7 @@ interface FieldsetAddressProps {
   /**
    * The address value as an object
    */
-  value: Record<"city" | "line_1" | "line_2" | "state" | "zip", string>;
+  value: { [key in AddressFieldNames]: string | null };
 }
 
 /**

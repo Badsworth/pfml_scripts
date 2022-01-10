@@ -1,13 +1,12 @@
 import React, { useEffect } from "react";
-import { isNil, omitBy } from "lodash";
-import { AppLogic } from "../hooks/useAppLogic";
+import withUser, { WithUserProps } from "./withUser";
 import ClaimCollection from "../models/ClaimCollection";
 import PaginationMeta from "../models/PaginationMeta";
-import Spinner from "../components/Spinner";
+import Spinner from "../components/core/Spinner";
+import { omitBy } from "lodash";
 import { useTranslation } from "../locales/i18n";
-import withUser from "./withUser";
 
-interface ApiParams {
+export interface ApiParams {
   page_offset?: string;
   employer_id?: string;
   search?: string;
@@ -16,27 +15,20 @@ interface ApiParams {
   order_direction?: "ascending" | "descending";
 }
 
-interface ComponentWithClaimsProps {
-  appLogic: AppLogic;
-  claims: {
-    activeFilters: {
-      employer_id: string;
-    };
-    claims?: ClaimCollection;
-    isLoadingClaims?: boolean;
-    loadPage: (page_offset: string, order: any, filters: any) => void;
-    paginationMeta?: PaginationMeta;
-  };
+export interface WithClaimsProps extends WithUserProps {
+  claims: ClaimCollection;
+  paginationMeta: PaginationMeta;
 }
 
 /**
  * Higher order component that provides the current user's claims to the wrapped component.
  * The higher order component also loads the claims if they have not already been loaded.
- * @param {React.Component} Component - Component to receive claims prop
- * @returns {React.Component} - Component with claims prop
  */
-const withClaims = (Component: any, apiParams: ApiParams = {}) => {
-  const ComponentWithClaims = (props: ComponentWithClaimsProps) => {
+function withClaims<T extends WithClaimsProps>(
+  Component: React.ComponentType<T>,
+  apiParams: ApiParams = {}
+) {
+  const ComponentWithClaims = (props: Omit<T, "claims" | "paginationMeta">) => {
     const { appLogic } = props;
     const { page_offset } = apiParams;
     const { t } = useTranslation();
@@ -52,7 +44,7 @@ const withClaims = (Component: any, apiParams: ApiParams = {}) => {
         order_by: apiParams.order_by,
         order_direction: apiParams.order_direction,
       },
-      isNil
+      (value) => value === null || value === undefined
     );
     const filters = omitBy(
       {
@@ -60,7 +52,7 @@ const withClaims = (Component: any, apiParams: ApiParams = {}) => {
         employer_id: apiParams.employer_id,
         search: apiParams.search,
       },
-      isNil
+      (value) => value === null || value === undefined
     );
 
     useEffect(() => {
@@ -71,14 +63,14 @@ const withClaims = (Component: any, apiParams: ApiParams = {}) => {
     if (isLoadingClaims) {
       return (
         <div className="margin-top-8 text-center">
-          <Spinner aria-valuetext={t("components.withClaims.loadingLabel")} />
+          <Spinner aria-label={t("components.withClaims.loadingLabel")} />
         </div>
       );
     }
 
     return (
       <Component
-        {...props}
+        {...(props as T)}
         claims={appLogic.claims.claims}
         paginationMeta={appLogic.claims.paginationMeta}
       />
@@ -86,6 +78,6 @@ const withClaims = (Component: any, apiParams: ApiParams = {}) => {
   };
 
   return withUser(ComponentWithClaims);
-};
+}
 
 export default withClaims;

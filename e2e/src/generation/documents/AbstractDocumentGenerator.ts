@@ -10,7 +10,7 @@ import {
 import path from "path";
 import { v4 as uuid } from "uuid";
 import { DocumentWithPromisedFile } from "./index";
-import { Uint8ArrayWrapper } from "../FileWrapper";
+import { StreamWrapper, Uint8ArrayWrapper } from "../FileWrapper";
 import { FineosStubDocTypes } from "../../types";
 
 export type DocumentType = DocumentUploadRequest["document_type"];
@@ -40,16 +40,26 @@ export abstract class AbstractDocumentGenerator<
     config: C
   ): DocumentWithPromisedFile {
     const name = `${uuid()}.pdf`;
+
+    const pathToDoc = config.filename
+      ? path.join(process.cwd(), `forms/${config.filename}`)
+      : undefined;
     return {
       // Assertion here so that we don't have to redefine all of the associated types downstream
       document_type: this.documentType as DocumentType,
       name,
       // Return a callback to generate the file. This is important when dealing with millions of claims, as it allows us
       // to trigger generation at save time.
-      file: async () =>
-        this.generate(claim, config).then(
-          (data) => new Uint8ArrayWrapper(data, name)
-        ),
+      file: pathToDoc
+        ? async () =>
+            new StreamWrapper(
+              fs.createReadStream(pathToDoc),
+              path.basename(config.filename as string)
+            )
+        : async () =>
+            this.generate(claim, config).then(
+              (data) => new Uint8ArrayWrapper(data, name)
+            ),
     };
   }
   abstract getFormData(claim: ApplicationRequestBody, config: C): PDFFormData;

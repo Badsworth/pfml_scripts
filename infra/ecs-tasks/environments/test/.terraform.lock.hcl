@@ -5,6 +5,7 @@ provider "registry.terraform.io/hashicorp/archive" {
   version = "2.2.0"
   hashes = [
     "h1:2K5LQkuWRS2YN1/YoNaHn9MAzjuTX8Gaqy6i8Mbfv8Y=",
+    "h1:CIWi5G6ob7p2wWoThRQbOB8AbmFlCzp7Ka81hR3cVp0=",
     "zh:06bd875932288f235c16e2237142b493c2c2b6aba0e82e8c85068332a8d2a29e",
     "zh:0c681b481372afcaefddacc7ccdf1d3bb3a0c0d4678a526bc8b02d0c331479bc",
     "zh:100fc5b3fc01ea463533d7bbfb01cb7113947a969a4ec12e27f5b2be49884d6c",
@@ -20,9 +21,9 @@ provider "registry.terraform.io/hashicorp/archive" {
 }
 
 provider "registry.terraform.io/hashicorp/aws" {
-  version     = "3.56.0"
-  constraints = "~> 3.56.0"
+  version = "3.56.0"
   hashes = [
+    "h1:L0F0l8AuDcLL+Grob4eHWdc3jm/dCufnU5lWWEpi+F8=",
     "h1:XuiEcFvwm+GkRpt4MqfwJpfdU2BssSjpyqMkqrI3Pjs=",
     "zh:001373be6fbc5738bf8c3aa8688b248ba5f99b04174310c0efcbbf23e6c4dc29",
     "zh:0d4af59266668089790f5a7bdeb25642ba750fb5dc7934fe28d1cc36310ba495",
@@ -42,6 +43,7 @@ provider "registry.terraform.io/hashicorp/template" {
   version = "2.2.0"
   hashes = [
     "h1:0wlehNaxBX7GJQnPfQwTNvvAf38Jm0Nv7ssKGMaG6Og=",
+    "h1:94qn780bi1qjrbC3uQtjJh3Wkfwd5+tTtJHOb7KTg9w=",
     "zh:01702196f0a0492ec07917db7aaa595843d8f171dc195f4c988d2ffca2a06386",
     "zh:09aae3da826ba3d7df69efeb25d146a1de0d03e951d35019a0f80e4f58c89b53",
     "zh:09ba83c0625b6fe0a954da6fbd0c355ac0b7f07f86c91a2a97849140fea49603",
@@ -58,6 +60,7 @@ provider "registry.terraform.io/hashicorp/template" {
 provider "registry.terraform.io/newrelic/newrelic" {
   version = "2.21.0"
   hashes = [
+    "h1:9fTUVQm/Nf3IebTBUiC5khPivgUR189kx7YtqoU7iGc=",
     "h1:KeWL5oXb6NZpKVYbWWsqcKutbssd/rHKg2qUYse+Olo=",
     "zh:0e4b0b026caf1fd750b62687784d4514c86d7ff5be5674cdf6994f8be1877486",
     "zh:0e90821537612aef583cb1a2fbd73acc34769e1475cd437da6f50729f733f213",
@@ -80,6 +83,7 @@ provider "registry.terraform.io/newrelic/newrelic" {
 provider "registry.terraform.io/pagerduty/pagerduty" {
   version = "1.9.5"
   hashes = [
+    "h1:MaDvQcRgaJY35T1kf89ny2FNryvxO9kb2fu5ZxaJvwc=",
     "h1:xEZ4tf93GAwsIvDXBVepNf4U/pHGc2jrJVRN6XLZcs0=",
     "zh:202dbde8fd3596bd89e04d5cc8264946309fb9fdf0147c8651068a5335d80947",
     "zh:3572e4be61fdba262d762cb225b0a05f65140bb4f4391f258dc6b225636229bb",

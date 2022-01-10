@@ -1,14 +1,15 @@
-import BenefitsApplication from "../../models/BenefitsApplication";
-import Fieldset from "../../components/Fieldset";
-import FormLabel from "../../components/FormLabel";
-import InputText from "../../components/InputText";
+import withBenefitsApplication, {
+  WithBenefitsApplicationProps,
+} from "../../hoc/withBenefitsApplication";
+import Fieldset from "../../components/core/Fieldset";
+import FormLabel from "../../components/core/FormLabel";
+import InputText from "../../components/core/InputText";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import { pick } from "lodash";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = [
   "claim.first_name",
@@ -16,12 +17,7 @@ export const fields = [
   "claim.last_name",
 ];
 
-interface NameProps {
-  appLogic: any;
-  claim: BenefitsApplication;
-}
-
-export const Name = (props: NameProps) => {
+export const Name = (props: WithBenefitsApplicationProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 

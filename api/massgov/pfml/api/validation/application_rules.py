@@ -1,3 +1,4 @@
+import datetime
 from datetime import date
 from itertools import chain, combinations
 from typing import Any, Dict, Iterable, List, Optional, Union
@@ -6,20 +7,24 @@ from dateutil.relativedelta import relativedelta
 
 import massgov.pfml.db as db
 import massgov.pfml.util.logging
+from massgov.pfml.api.constants.application import CERTIFICATION_DOC_TYPES, ID_DOC_TYPES
 from massgov.pfml.api.models.applications.common import DurationBasis, FrequencyIntervalBasis
 from massgov.pfml.api.services.applications import (
     ContinuousLeavePeriod,
     IntermittentLeavePeriod,
     ReducedScheduleLeavePeriod,
 )
+from massgov.pfml.api.services.fineos_actions import get_documents
 from massgov.pfml.api.util.deepgetattr import deepgetattr
 from massgov.pfml.api.validation.exceptions import IssueRule, IssueType, ValidationErrorDetail
 from massgov.pfml.db.models.applications import (
     Application,
+    Document,
     EmployerBenefit,
     EmploymentStatus,
     LeaveReason,
     LeaveReasonQualifier,
+    LkDocumentType,
     OtherIncome,
     PreviousLeave,
 )
@@ -35,7 +40,7 @@ MAX_MINUTES_IN_WEEK = 10080  # 60 * 24 * 7
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
 
-def get_application_issues(application: Application) -> List[ValidationErrorDetail]:
+def get_application_submit_issues(application: Application) -> List[ValidationErrorDetail]:
     """Takes in application and outputs any validation issues.
     These issues are either fields that are always required for an application or fields that are conditionally required based on previous input.
     """
@@ -44,6 +49,30 @@ def get_application_issues(application: Application) -> List[ValidationErrorDeta
     issues += get_leave_periods_issues(application)
     issues += get_conditional_issues(application)
 
+    return issues
+
+
+def get_application_complete_issues(
+    application: Application, db_session: db.Session
+) -> List[ValidationErrorDetail]:
+    """Takes in an application and outputs any validation issues.
+        Validates only the data entered post-submit (Parts 2-3) are present, allowing an application to be completed.
+    """
+    issues = []
+    issues += get_app_complete_payments_issues(application)
+    issues += get_documents_issues(application, db_session)
+
+    # Application must have a case in Fineos in order to be completed. This is equivalent to saying
+    # that "Part 1" of the application flow in the Portal has been fulfilled. We don't run the
+    # validations in get_application_submit_issues here, because there are scenarios where new
+    # rules may be introduced, but those rules don't apply if the application was already "submitted".
+    if not application.claim or not application.claim.fineos_absence_id:
+        issues.append(
+            ValidationErrorDetail(
+                type=IssueType.object_not_found,
+                message="A case must exist before it can be marked as complete.",
+            )
+        )
     return issues
 
 
@@ -224,20 +253,19 @@ def get_employer_benefit_issues(
         "benefit_start_date",
         "benefit_type_id",
         "is_full_salary_continuous",
-        "benefit_amount_dollars",
-        "benefit_amount_frequency_id",
     ]
     issues += check_required_fields(
-        benefit_path,
-        benefit,
-        required_fields,
-        {
-            "benefit_type_id": "benefit_type",
-            "benefit_amount_frequency_id": "benefit_amount_frequency",
-        },
+        benefit_path, benefit, required_fields, {"benefit_type_id": "benefit_type",},
     )
 
-    issues += check_zero_income_amount(benefit_path, benefit, "benefit_amount_dollars",)
+    if benefit.is_full_salary_continuous is False:
+        issues += check_required_fields(
+            benefit_path,
+            benefit,
+            ["benefit_amount_dollars", "benefit_amount_frequency_id",],
+            {"benefit_amount_frequency_id": "benefit_amount_frequency",},
+        )
+        issues += check_zero_income_amount(benefit_path, benefit, "benefit_amount_dollars",)
 
     start_date = benefit.benefit_start_date
     start_date_path = f"{benefit_path}.benefit_start_date"
@@ -345,6 +373,62 @@ def get_concurrent_leave_issues(application: Application) -> List[ValidationErro
         PFML_PROGRAM_LAUNCH_DATE,
     )
 
+    issues += _check_concurrent_leave_overlapping_waiting_period(application)
+
+    return issues
+
+
+def _check_concurrent_leave_overlapping_waiting_period(
+    application: Application,
+) -> List[ValidationErrorDetail]:
+    concurrent_leave_start = application.concurrent_leave.leave_start_date
+    concurrent_leave_end = application.concurrent_leave.leave_end_date
+
+    if concurrent_leave_start is None or concurrent_leave_end is None:
+        return []
+
+    issues = []
+
+    waiting_period_start: date = date.max
+
+    # Loop through continuous_and_reduced_leave_periods to find earliest start date
+    for leave_period in application.all_leave_periods:
+        # Can’t predict the 7-day waiting period for intermittent leave
+        # won't be validating concurrent leave dates for intermittent leave
+        if type(leave_period) == IntermittentLeavePeriod:
+            continue
+
+        if leave_period.start_date is None:
+            continue
+
+        if leave_period.start_date <= waiting_period_start:
+            waiting_period_start = leave_period.start_date
+
+    if waiting_period_start == date.max:
+        return []
+
+    waiting_period_days = 7
+    waiting_period_end = waiting_period_start + datetime.timedelta(days=waiting_period_days - 1)
+
+    if waiting_period_start <= concurrent_leave_start <= waiting_period_end:
+        issues.append(
+            ValidationErrorDetail(
+                type=IssueType.conflicting,
+                message="Concurrent leaves cannot overlap with waiting period.",
+                rule=IssueRule.disallow_overlapping_waiting_period_and_concurrent_leave_start_date,
+                field="concurrent_leave.leave_start_date",
+            )
+        )
+
+    if waiting_period_start <= concurrent_leave_end <= waiting_period_end:
+        issues.append(
+            ValidationErrorDetail(
+                type=IssueType.conflicting,
+                message="Concurrent leaves cannot overlap with waiting period.",
+                rule=IssueRule.disallow_overlapping_waiting_period_and_concurrent_leave_end_date,
+                field="concurrent_leave.leave_end_date",
+            )
+        )
     return issues
 
 
@@ -437,18 +521,9 @@ def get_previous_leave_and_leave_period_issues(
 ) -> List[ValidationErrorDetail]:
     issues = []
     # Prevent overlapping leave periods and previous leaves
-    all_leave_periods: Iterable[
-        Union[ContinuousLeavePeriod, IntermittentLeavePeriod, ReducedScheduleLeavePeriod]
-    ] = list(
-        chain(
-            application.continuous_leave_periods,
-            application.intermittent_leave_periods,
-            application.reduced_schedule_leave_periods,
-        )
-    )
     leave_period_ranges = [
         (leave_period.start_date, leave_period.end_date)
-        for leave_period in all_leave_periods
+        for leave_period in application.all_leave_periods
         # Only store complete ranges
         if leave_period.start_date and leave_period.end_date
     ]
@@ -849,19 +924,12 @@ def get_leave_period_ranges_issues(application: Application) -> List[ValidationE
     """Validate all leave period date ranges against each other"""
     issues = []
 
-    all_leave_periods: Iterable[
-        Union[ContinuousLeavePeriod, IntermittentLeavePeriod, ReducedScheduleLeavePeriod]
-    ] = list(
-        chain(
-            application.continuous_leave_periods,
-            application.intermittent_leave_periods,
-            application.reduced_schedule_leave_periods,
-        )
-    )
+    all_leave_periods = application.all_leave_periods
 
     leave_period_start_dates = [
         leave_period.start_date for leave_period in all_leave_periods if leave_period.start_date
     ]
+
     leave_period_end_dates = [
         leave_period.end_date for leave_period in all_leave_periods if leave_period.end_date
     ]
@@ -1275,3 +1343,80 @@ def validate_application_state(
             extra={"application.application_id": existing_application.application_id},
         )
     return issues
+
+
+def get_app_complete_payments_issues(application: Application) -> List[ValidationErrorDetail]:
+    """Validate payments related selections are complete. Called from application complete endpoint."""
+    issues = []
+
+    if not application.has_submitted_payment_preference:
+        issues.append(
+            ValidationErrorDetail(
+                message="Payment preference is required",
+                type=IssueType.required,
+                field="payment_method",
+            )
+        )
+
+    if not isinstance(application.is_withholding_tax, bool):
+        issues.append(
+            ValidationErrorDetail(
+                type=IssueType.required,
+                message="Tax withholding preference is required",
+                field="is_withholding_tax",
+            )
+        )
+    return issues
+
+
+def get_documents_issues(
+    application: Application, db_session: db.Session
+) -> List[ValidationErrorDetail]:
+    """Validate document selections are complete. Called from application complete endpoint."""
+    issues = []
+
+    has_id_doc = has_type_of_document(ID_DOC_TYPES, db_session, application)
+
+    if not has_id_doc:
+        issues.append(
+            ValidationErrorDetail(
+                type=IssueType.required, message="An identification document is required"
+            )
+        )
+    ## Currently leaving out validation for bonding due to more complex business logic around child start date
+    if application.leave_reason_id == LeaveReason.SERIOUS_HEALTH_CONDITION_EMPLOYEE.leave_reason_id:
+        has_cert_doc = has_type_of_document(CERTIFICATION_DOC_TYPES, db_session, application)
+        if not has_cert_doc:
+            issues.append(
+                ValidationErrorDetail(
+                    type=IssueType.required, message="A certification document is required"
+                )
+            )
+    return issues
+
+
+def has_type_of_document(
+    doc_types: List[LkDocumentType], db_session: db.Session, application: Application
+) -> bool:
+    """Helper to retrieve if an application has a particular type of document associated with it."""
+    doc_type_identifiers = [doc_type.document_type_id for doc_type in doc_types]
+    doc_type_descriptions = [doc_type.document_type_description.lower() for doc_type in doc_types]
+    has_doc = bool(
+        (
+            db_session.query(Document)
+            .filter(
+                Document.application_id == application.application_id,
+                Document.document_type_id.in_(doc_type_identifiers),
+            )
+            .first()
+        )
+    )
+
+    if not has_doc:
+        fineos_documents = get_documents(application, db_session)
+        for doc_response_obj in fineos_documents:
+            if doc_response_obj.document_type:
+                if doc_response_obj.document_type.lower() in doc_type_descriptions:
+                    has_doc = True
+
+    return has_doc

@@ -12,8 +12,8 @@ export const setupBenefitsApplications = (appLogicHook, claims, cb) => {
     claims = [new MockBenefitsApplicationBuilder().create()];
   }
   appLogicHook.benefitsApplications.load = jest.fn();
-  appLogicHook.benefitsApplications.loadAll = jest.fn();
-  appLogicHook.benefitsApplications.hasLoadedAll = true;
+  appLogicHook.benefitsApplications.loadPage = jest.fn();
+  appLogicHook.benefitsApplications.isLoadingClaims = jest.fn();
   appLogicHook.benefitsApplications.benefitsApplications =
     new BenefitsApplicationCollection(claims);
   appLogicHook.benefitsApplications.hasLoadedBenefitsApplicationAndWarnings =

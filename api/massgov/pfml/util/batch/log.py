@@ -6,10 +6,12 @@ import contextlib
 import json
 import time
 from dataclasses import asdict
+from typing import Union
 
 import massgov.pfml.util.datetime
 import massgov.pfml.util.logging
 import massgov.pfml.util.newrelic.events
+from massgov.pfml import db
 from massgov.pfml.db.models.employees import ImportLog
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
@@ -175,3 +177,21 @@ def log_report_to_newrelic(import_log: ImportLog) -> None:
         }
     )
     massgov.pfml.util.newrelic.events.log_newrelic_event(report_with_metadata)
+
+
+def latest_import_log_for_metric(
+    db_session: db.Session, import_type: str, metric: str
+) -> Union[ImportLog, None]:
+    """Finds the latest import log with specified import type
+    that also has metric in report field non 0.
+    """
+    found_import_log = (
+        db_session.query(ImportLog)
+        .filter(
+            ImportLog.import_type == import_type,
+            ImportLog.report.op("~")(f'"{metric}": [1-9][0-9]*'),
+        )
+        .order_by(ImportLog.created_at.desc())
+        .first()
+    )
+    return found_import_log

@@ -7,7 +7,6 @@ import userEvent from "@testing-library/user-event";
 jest.mock("../../src/services/tracker");
 
 describe("QuestionPage", () => {
-  const sampleRoute = "/";
   const sampleTitle = "This is a question page";
 
   it("renders the form", () => {
@@ -15,12 +14,43 @@ describe("QuestionPage", () => {
       <QuestionPage
         title={sampleTitle}
         onSave={jest.fn(() => Promise.resolve())}
-        nextPage={sampleRoute}
       >
         <div>Some stuff here</div>
       </QuestionPage>
     );
     expect(container.firstChild).toMatchSnapshot();
+  });
+
+  it("renders a large heading when titleSize is 'large'", () => {
+    render(
+      <QuestionPage
+        title={sampleTitle}
+        titleSize="large"
+        onSave={jest.fn(() => Promise.resolve())}
+      >
+        <div>Some stuff here</div>
+      </QuestionPage>
+    );
+
+    expect(screen.getByRole("heading", { level: 1 })).toHaveClass(
+      "font-heading-lg"
+    );
+  });
+
+  it("supports custom continue button text", () => {
+    render(
+      <QuestionPage
+        continueButtonLabel="Custom submit button"
+        title={sampleTitle}
+        onSave={jest.fn(() => Promise.resolve())}
+      >
+        <div>Some stuff here</div>
+      </QuestionPage>
+    );
+
+    expect(
+      screen.getByRole("button", { name: "Custom submit button" })
+    ).toBeInTheDocument();
   });
 
   it("calls onSave", async () => {

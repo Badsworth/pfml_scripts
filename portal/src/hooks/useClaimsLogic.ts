@@ -1,17 +1,21 @@
+import ClaimDetail, { PaymentDetail, Payments } from "../models/ClaimDetail";
 import { ClaimWithdrawnError, ValidationError } from "../errors";
 import { AppErrorsLogic } from "./useAppErrorsLogic";
 import ClaimCollection from "../models/ClaimCollection";
-import ClaimDetail from "../models/ClaimDetail";
 import ClaimsApi from "../api/ClaimsApi";
 import PaginationMeta from "../models/PaginationMeta";
+import { PortalFlow } from "./usePortalFlow";
 import { isEqual } from "lodash";
+import { isFeatureEnabled } from "../services/featureFlags";
 import useCollectionState from "./useCollectionState";
 import { useState } from "react";
 
 const useClaimsLogic = ({
   appErrorsLogic,
+  portalFlow,
 }: {
   appErrorsLogic: AppErrorsLogic;
+  portalFlow: PortalFlow;
 }) => {
   const claimsApi = new ClaimsApi();
 
@@ -26,7 +30,18 @@ const useClaimsLogic = ({
   const [isLoadingClaimDetail, setIsLoadingClaimDetail] = useState<boolean>();
 
   // Pagination info associated with the current collection of claims
-  const [paginationMeta, setPaginationMeta] = useState(new PaginationMeta());
+  const [paginationMeta, setPaginationMeta] = useState<
+    PaginationMeta | { [key: string]: never }
+  >({});
+
+  // Payments data associated with claim
+  const [loadedPaymentsData, setLoadedPaymentsData] = useState<Payments>();
+
+  /**
+   * Check if payments have loaded for claim
+   */
+  const hasLoadedPayments = (absenceId: string) =>
+    loadedPaymentsData?.absence_case_id === absenceId;
 
   // Track the search and filter params currently applied for the collection of claims
   const [activeFilters, setActiveFilters] = useState({});
@@ -41,7 +56,7 @@ const useClaimsLogic = ({
     setClaims(new ClaimCollection());
     // Also clear any indication that a page is loaded, so our loadPage method
     // fetches the page from the API
-    setPaginationMeta(new PaginationMeta());
+    setPaginationMeta({});
   };
 
   /**
@@ -101,37 +116,81 @@ const useClaimsLogic = ({
   const loadClaimDetail = async (absenceId: string) => {
     if (isLoadingClaimDetail) return;
 
-    // Have we already loaded this claim?
+    const shouldPaymentsLoad =
+      (isFeatureEnabled("claimantShowPayments") ||
+        isFeatureEnabled("claimantShowPaymentsPhaseTwo")) &&
+      claimDetail?.hasApprovedStatus &&
+      portalFlow.pageRoute === "/applications/status/payments" &&
+      !hasLoadedPayments(absenceId);
+
+    let loadedClaimDetail = claimDetail;
+    // Have we already loaded this claim? If claim is loaded we check for payments being loaded as well
     if (claimDetail?.fineos_absence_id === absenceId) {
-      return claimDetail;
-    }
-
-    setIsLoadingClaimDetail(true);
-    appErrorsLogic.clearErrors();
-
-    let loadedClaimDetail;
-    try {
-      const data = await claimsApi.getClaimDetail(absenceId);
-      loadedClaimDetail = data.claimDetail;
-
-      setClaimDetail(loadedClaimDetail);
-    } catch (error) {
-      if (
-        error instanceof ValidationError &&
-        error.issues[0].type === "fineos_claim_withdrawn"
-      ) {
-        // The claim was withdrawn -- we'll need to show an error message to the user
-        appErrorsLogic.catchError(
-          new ClaimWithdrawnError(absenceId, error.issues[0])
-        );
-      } else {
-        appErrorsLogic.catchError(error);
+      if (shouldPaymentsLoad) {
+        try {
+          const claimDetailWithPayments = await fetchPayments(
+            absenceId,
+            claimDetail
+          );
+          setClaimDetail(claimDetailWithPayments);
+          return claimDetailWithPayments;
+        } catch (error) {
+          appErrorsLogic.catchError(error);
+        } finally {
+          setIsLoadingClaimDetail(false);
+        }
       }
-    } finally {
-      setIsLoadingClaimDetail(false);
+    } else {
+      try {
+        setIsLoadingClaimDetail(true);
+        appErrorsLogic.clearErrors();
+        const data = await claimsApi.getClaimDetail(absenceId);
+        loadedClaimDetail = data.claimDetail;
+        if (shouldPaymentsLoad) {
+          const claimDetailWithPayments = fetchPayments(absenceId, claimDetail);
+          setClaimDetail(await claimDetailWithPayments);
+          return claimDetailWithPayments;
+        }
+        setClaimDetail(loadedClaimDetail);
+      } catch (error) {
+        if (
+          error instanceof ValidationError &&
+          error.issues[0].type === "fineos_claim_withdrawn"
+        ) {
+          // The claim was withdrawn -- we'll need to show an error message to the user
+          appErrorsLogic.catchError(
+            new ClaimWithdrawnError(absenceId, error.issues[0])
+          );
+        } else {
+          appErrorsLogic.catchError(error);
+        }
+      } finally {
+        setIsLoadingClaimDetail(false);
+      }
     }
-
     return loadedClaimDetail;
+  };
+
+  const fetchPayments = async (
+    absenceId: string,
+    loadedClaim: Partial<ClaimDetail> | undefined
+  ) => {
+    let paymentList: PaymentDetail[] = [];
+    try {
+      const fetchedPayments = await claimsApi.getPayments(absenceId);
+      paymentList = fetchedPayments.payments;
+    } catch (error) {
+      appErrorsLogic.catchError(error);
+    } finally {
+      setLoadedPaymentsData({
+        payments: paymentList,
+        absence_case_id: absenceId,
+      });
+    }
+    if (loadedClaim) {
+      loadedClaim.payments = paymentList;
+    }
+    return new ClaimDetail(loadedClaim);
   };
 
   return {
@@ -142,8 +201,10 @@ const useClaimsLogic = ({
     isLoadingClaims,
     isLoadingClaimDetail,
     loadClaimDetail,
+    loadedPaymentsData,
     loadPage,
     paginationMeta,
+    hasLoadedPayments,
   };
 };
 

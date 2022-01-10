@@ -1,7 +1,6 @@
 import usePortalFlow, {
   getRouteFromPathWithParams,
 } from "../../src/hooks/usePortalFlow";
-import RouteTransitionError from "../../src/errors";
 import machineConfigs from "../../src/flows";
 import { mockRouter } from "next/router";
 import { renderHook } from "@testing-library/react-hooks";
@@ -29,6 +28,40 @@ describe("usePortalFlow", () => {
         {
           shallow: true,
         }
+      );
+    });
+  });
+
+  describe("goTo", () => {
+    it("routes to the given page with query params", () => {
+      let portalFlow;
+
+      renderHook(() => {
+        portalFlow = usePortalFlow();
+      });
+
+      portalFlow.goTo("/dashboard", { "show-filters": true });
+
+      expect(mockRouter.push).toHaveBeenCalledWith(
+        "/dashboard?show-filters=true"
+      );
+    });
+
+    it("replaces the current page when redirect option is true", () => {
+      let portalFlow;
+
+      renderHook(() => {
+        portalFlow = usePortalFlow();
+      });
+
+      portalFlow.goTo(
+        "/dashboard",
+        { "show-filters": true },
+        { redirect: true }
+      );
+
+      expect(mockRouter.replace).toHaveBeenCalledWith(
+        "/dashboard?show-filters=true"
       );
     });
   });
@@ -64,22 +97,6 @@ describe("usePortalFlow", () => {
         );
       });
     });
-
-    describe("when path is not defined", () => {
-      it("throws error", () => {
-        mockRouter.pathname = "/not/in/configs";
-
-        renderHook(() => {
-          portalFlow = usePortalFlow();
-        });
-
-        const testGoToPageFor = () => {
-          portalFlow.goToNextPage();
-        };
-
-        expect(testGoToPageFor).toThrowError(RouteTransitionError);
-      });
-    });
   });
 
   describe("getNextPageRoute", () => {
@@ -103,22 +120,6 @@ describe("usePortalFlow", () => {
         const result = portalFlow.getNextPageRoute("VERIFY_ID", {}, params);
 
         expect(result).toBe(`${expectedRoute}?param1=${params.param1}`);
-      });
-    });
-
-    describe("when path is not defined", () => {
-      it("throws error", () => {
-        mockRouter.pathname = "/not/in/configs";
-
-        renderHook(() => {
-          portalFlow = usePortalFlow();
-        });
-
-        const testGoToPageFor = () => {
-          portalFlow.getNextPageRoute();
-        };
-
-        expect(testGoToPageFor).toThrowError(RouteTransitionError);
       });
     });
   });
@@ -148,23 +149,6 @@ describe("usePortalFlow", () => {
         );
       });
     });
-
-    describe("when next page is not defined", () => {
-      it("throws errors", () => {
-        let portalFlow;
-        mockRouter.pathname = "/not/in/configs";
-
-        renderHook(() => {
-          portalFlow = usePortalFlow();
-        });
-
-        const testNextPage = () => {
-          portalFlow.goToNextPage();
-        };
-
-        expect(testNextPage).toThrowError(RouteTransitionError);
-      });
-    });
   });
 
   describe("page", () => {
@@ -177,14 +161,14 @@ describe("usePortalFlow", () => {
       });
 
       expect(portalFlow.page).toMatchInlineSnapshot(`
-        Object {
-          "meta": Object {
-            "fields": Array [
+        {
+          "meta": {
+            "fields": [
               "claim.tax_identifier",
             ],
             "step": "VERIFY_ID",
           },
-          "on": Object {
+          "on": {
             "CONTINUE": "/applications/checklist",
           },
         }

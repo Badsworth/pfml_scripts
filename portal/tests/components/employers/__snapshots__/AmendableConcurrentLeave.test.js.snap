@@ -201,6 +201,7 @@ exports[`AmendableConcurrentLeave renders the component with initial leave detai
   <tbody>
     <tr>
       <th
+        data-label="Date range"
         scope="row"
       >
         3/1/2020 to 3/6/2020

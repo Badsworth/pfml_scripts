@@ -1,0 +1,50 @@
+@keyframes spinner {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.loading {
+  background-color: $Color-BerkshiresGreen-200;
+  display: flex;
+  flex-direction: column;
+  grid-column: 1 / span 2;
+  height: 100%;
+  padding: 1.5em;
+  
+  &__container {
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    margin: auto;
+  }
+  
+  &__title {
+    font-size: 1.286em;
+    font-weight: bold;
+    line-height: 1.555em;
+  }
+  
+  .loading__description {
+    font-size: 1.143em;
+    line-height: 1.5em;
+    margin-top: 4px;
+  }
+}
+
+.loading__container::before {
+  animation: spinner 1.5s linear infinite;
+  background: url('/assets/spinner.svg') no-repeat left top;
+  content: '';
+  display: block;
+  font-size: 3em;
+  height: 45px;
+  line-height: 0;
+  margin-bottom: 16px;
+  width: 45px;
+}

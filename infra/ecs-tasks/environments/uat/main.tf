@@ -63,6 +63,11 @@ module "tasks" {
   fineos_error_export_path      = "s3://fin-sompre-data-export/UAT/errorExtracts"
   fineos_report_export_path     = "s3://fin-sompre-data-export/UAT/reportExtract"
 
+  enable_pub_automation_fineos           = true
+  enable_pub_automation_create_pub_files = true
+  enable_pub_automation_process_returns  = false
+  enable_fineos_import_iaww              = true
+
   rmv_client_base_url               = "https://atlas-staging-gateway.massdot.state.ma.us/vs"
   rmv_client_certificate_binary_arn = "arn:aws:secretsmanager:us-east-1:498823821309:secret:/service/pfml-api-uat/rmv_client_certificate-LWvMFe"
   rmv_api_behavior                  = "partially_mocked"
@@ -71,5 +76,20 @@ module "tasks" {
 
   task_failure_email_address_list = ["mass-pfml-api-low-priority@navapbc.pagerduty.com"]
 
-  dor_fineos_etl_schedule_expression = "cron(30 0 * * ? *)" # Daily at 00:30 UTC [19:30 EST] [20:30 EDT]
+  # Daily at [20:30 Eastern]
+  dor_fineos_etl_schedule_expression_standard         = "cron(30 1 * * ? *)"
+  dor_fineos_etl_schedule_expression_daylight_savings = "cron(30 0 * * ? *)"
+
+  pdf_api_host                    = "http://localhost:5000"
+  enable_generate_1099_pdf        = "0"
+  generate_1099_max_files         = "1000"
+  enable_merge_1099_pdf           = "0"
+  enable_upload_1099_pdf          = "0"
+  upload_max_files_to_fineos      = "10"
+  enable_1099_testfile_generation = "0"
+  irs_1099_correction_ind         = "0"
+
+  enable_withholding_payments = "1"
+
+  enable_pub_payments_copy_audit_report_schedule = true
 }

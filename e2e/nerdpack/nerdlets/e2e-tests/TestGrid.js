@@ -1,36 +1,14 @@
-import { Link, NrqlQuery, Tooltip, Spinner, SectionMessage } from "nr1";
+import {
+  Link,
+  NrqlQuery,
+  PieChart,
+  Tooltip,
+  Spinner,
+  SectionMessage,
+} from "nr1";
 import React from "react";
-
-const CATEGORY_PRIORITY = {
-  content: {
-    "potential-edm": "EDM",
-    "test-update": "HIGH",
-  },
-  infrastructure: {
-    "timeout-service": "LOW",
-    authentication: "HIGH",
-    "failure-400": "HIGH",
-    "failure-500": "EDM",
-    "failure-503": "MEDIUM",
-    "failure-504": "LOW",
-  },
-  known: { priority: "LOW" },
-  notification: { priority: "MEDIUM" },
-};
-
-const ERROR_PRIORITY = ["EDM", "HIGH", "MEDIUM", "LOW"];
-
-function getErrorPriority(cat, sub) {
-  if (CATEGORY_PRIORITY[cat]) {
-    if (CATEGORY_PRIORITY[cat].priority) {
-      return CATEGORY_PRIORITY[cat]?.priority;
-    }
-    if (CATEGORY_PRIORITY[cat][sub]) {
-      return CATEGORY_PRIORITY[cat][sub];
-    }
-  }
-  return "HIGH";
-}
+import { labelEnv } from "../common";
+import { ERROR_PRIORITY, getErrorPriority } from "../common/ErrorPriority";
 
 function RunIdsQuery({ children, environment, accountId }) {
   const whereClauses = [];
@@ -40,7 +18,7 @@ function RunIdsQuery({ children, environment, accountId }) {
   const where = whereClauses.length ? `WHERE ${whereClauses.join(",")}` : "";
   const query = `SELECT max(timestamp)
                  FROM CypressTestResult FACET runId ${where} SINCE 1 week ago
-                 LIMIT 5`;
+                   LIMIT 5`;
   return (
     <NrqlQuery accountId={accountId} query={query}>
       {({ data, loading, error }) => {
@@ -90,12 +68,13 @@ function buildRuns(data) {
         status: "passed",
         failedCount: 0,
         failedPriority: null,
+        connectionError: false,
         testCount: 0,
         categories: [],
         results: [],
+        branch: result.branch,
       };
     }
-
     seenTests.add(result.file);
     if (result.status != "passed") {
       let errorPriority = getErrorPriority(result.category, result.subCategory);
@@ -103,6 +82,9 @@ function buildRuns(data) {
       //IF we did not pass this test, then populate the error fields
       collected[result.runId][result.file].status = result.status;
       collected[result.runId][result.file].failedCount++;
+      if (result.category == "infrastructure") {
+        collected[result.runId][result.file].connectionError = true;
+      }
       result["errorPriority"] = errorPriority;
 
       //Organization for categories. We could remove this in the future, it's not used at the moment,
@@ -160,6 +142,7 @@ function buildRuns(data) {
       runId,
       environment: sample.environment,
       runUrl: sample.runUrl,
+      branch: sample.branch,
       timestamp: Math.min(...Object.values(runResults).map((r) => r.timestamp)),
     };
   });
@@ -179,11 +162,42 @@ function buildRuns(data) {
   return { rows, uniqueRuns };
 }
 
+function RunQueryIntegration({ accountId, runIds, children }) {
+  const query = `SELECT *
+                  FROM IntegrationTestResult
+                  WHERE runId IN (${runIds.map((i) => `'${i}'`).join(", ")})
+                  SINCE 1 month ago until now LIMIT MAX`;
+
+  return (
+    <NrqlQuery accountId={accountId} query={query}>
+      {({ data, loading, error }) => {
+        if (loading) {
+          return <Spinner />;
+        }
+        if (error) {
+          return (
+            <SectionMessage
+              title={"There was an error executing the query"}
+              description={error}
+              type={SectionMessage.TYPE.CRITICAL}
+            />
+          );
+        }
+        const runData = buildRuns(data);
+        if (!runData) {
+          return children({ rows: [], uniqueRuns: [] });
+        }
+        return children(runData);
+      }}
+    </NrqlQuery>
+  );
+}
+
 function RunQuery({ accountId, runIds, children }) {
   const query = `SELECT *
-                 FROM CypressTestResult SINCE 1 week ago
+                 FROM CypressTestResult SINCE 1 month ago
                  WHERE runId IN (${runIds.map((i) => `'${i}'`).join(", ")})
-                 LIMIT MAX`;
+                   LIMIT MAX`;
 
   return (
     <NrqlQuery accountId={accountId} query={query}>
@@ -216,18 +230,155 @@ function RunQuery({ accountId, runIds, children }) {
   );
 }
 
+function GridTable({ uniqueRuns, rows, accountId, runIds }) {
+  return (
+    <div>
+      {uniqueRuns.map(({ runId, environment, runUrl, branch }, i) => (
+        <div className={"run-notes"}>
+          <span>
+            {`${i + 1} Run ID: ${runId}, Environment: ${labelEnv(environment)}`}
+          </span>
+          <Link to={runUrl}>View in Cypress</Link>
+          {branch != "main" && (
+            <Link to={`https://github.com/EOLWD/pfml/compare/main...${branch}`}>
+              {branch}
+            </Link>
+          )}
+        </div>
+      ))}
+      <table className={"e2e-status"}>
+        <thead>
+          <tr>
+            <th></th>
+            <th>File</th>
+            {uniqueRuns.map(({ runId, environment, runUrl, timestamp }, i) => [
+              <th></th>,
+              <th width={"150px"} additionalValue={timestamp}>
+                <Tooltip
+                  text={`Run ID: ${runId}, Environment: ${environment}`}
+                  additionalInfoLink={{
+                    to: runUrl,
+                    label: "View in Cypress",
+                  }}
+                >
+                  {i + 1}
+                </Tooltip>
+              </th>,
+            ])}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((item) => {
+            return <GridRow item={item}></GridRow>;
+          })}
+        </tbody>
+      </table>
+      <div className={`charts`}>
+        <PieChart
+          fullWidth
+          accountId={accountId}
+          query={`SELECT count(*)
+                    FROM CypressTestResult since 1 month ago
+                    WHERE runId IN (${runIds.map((i) => `'${i}'`).join(", ")})
+                      AND pass is false
+                      FACET category`}
+        ></PieChart>
+        <PieChart
+          fullWidth
+          accountId={accountId}
+          query={`SELECT count(*)
+                    FROM CypressTestResult since 1 month ago
+                    WHERE runId IN (${runIds.map((i) => `'${i}'`).join(", ")})
+                      AND pass is false
+                      FACET category
+                        , subCategory`}
+        ></PieChart>
+      </div>
+    </div>
+  );
+}
+
+const httpUrlRegex = new RegExp(
+  /(https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b[-a-zA-Z0-9()@:%_\\+.~#?&//=]*)/
+);
+
+function RichErroMessage({ children }) {
+  return <>
+    {
+      React.Children.map(children, (errorMessage) => {
+        if (typeof errorMessage !== 'string') {
+          return errorMessage;
+        }
+        return errorMessage
+          .split(httpUrlRegex)
+          .map((substring) => {
+            if(httpUrlRegex.test(substring)) {
+              return (
+                <a href={encodeURI(substring)} target="_blank">
+                  {substring}
+                </a>
+              );
+            }
+            return substring;
+          })
+      })
+    }
+  </>
+}
+
 class GridRow extends React.Component {
+  state = {
+    open: false,
+  };
+  maxRuns = 1;
+
   constructor(props) {
     super(props);
-
-    this.state = { open: this.props.item.state };
+    this.subResults();
   }
 
-  toggleShow = () => {
-    this.setState((state) => ({ open: !state.open }));
+  subResults = () => {
+    const sub = {};
+    this.props.item.results.map((run, i) => {
+      if (this.state[i] === undefined) {
+        this.state[i] = { open: run?.passPercent !== 100 };
+        this.maxRuns = i + 1;
+      }
+      if (!run?.results) {
+        return;
+      }
+      run.results.map((result) => {
+        let title = result.test;
+        if (!title) {
+          title = result.title;
+        }
+        if (!sub[title]) {
+          sub[title] = [];
+        }
+        sub[title].push(result);
+      });
+    });
+    this.sub = sub;
+  };
+  toggleShow = (id) => {
+    if (id == null) {
+      this.setState((state) => {
+        return (state.open = !state.open);
+      });
+    } else {
+      this.setState((state) => {
+        if (!state[id]) {
+          state[id] = { open: false };
+        }
+        return (state[id].open = !state[id].open);
+      });
+    }
   };
 
   render() {
+    if (!this.props.item.results[0]) {
+      return <span></span>;
+    }
     return [
       <tr>
         <td>
@@ -237,18 +388,36 @@ class GridRow extends React.Component {
             }`}
           ></span>
         </td>
-        <td onClick={this.toggleShow} className={"clickable"}>
+        <td
+          onClick={() => {
+            this.toggleShow(null);
+          }}
+          className={"clickable"}
+        >
           {this.props.item.shortFile}
         </td>
-        {this.props.item.results.map((result) => {
+        {this.props.item.results.map((result, i) => {
+          if (!result) {
+            return;
+          }
           return [
             <td>
               <span className={`pill ${result.failedPriority}`}>
                 {result.failedPriority}
               </span>
+              {result.connectionError ? (
+                <span className={`pill connection`}>Connection</span>
+              ) : (
+                ""
+              )}
             </td>,
             <td>
-              <div className={"e2e-run-progress"}>
+              <div
+                className={"e2e-run-progress clickable"}
+                onClick={() => {
+                  this.toggleShow(i);
+                }}
+              >
                 <div
                   className={`progress ${result?.status ?? "na"}`}
                   style={{ width: `${result.passPercent}%` }}
@@ -261,50 +430,61 @@ class GridRow extends React.Component {
         })}
       </tr>,
       <tr className={this.state.open ? "open" : "closed"}>
-        <td>
-          <span
-            className={`indicator ${
-              this.props.item.results[0].passPercent == 100 ? "pass" : "fail"
-            }`}
-          ></span>
-        </td>
-        <td colSpan={20}>
+        <td></td>
+        <td colSpan={this.maxRuns * 2}>
           <table className={"runDetails"}>
-            <thead>
-              <tr>
-                <th></th>
-                <th>Category</th>
-                <th>Error</th>
-              </tr>
-            </thead>
             <tbody>
-              {this.props.item.results[0].results.map((result) => {
+              {Object.keys(this.sub).map((key) => {
                 // TODO: Add link to the result.test that goes directly to the cypress test-results. We need to capture the UUID to generate this link.
                 // Example, we have the url, we just need the hash: https://dashboard.cypress.io/projects/wjoxhr/runs/6937/test-results/81922e08-ffa0-46f9-b144-e07a59db81c9
                 // would then be `${result.runUrl}/runs/${result.uuid}`
                 return [
                   <tr>
-                    <td>
-                      <span
-                        className={`pill ${result.errorPriority ?? "PASS"}`}
-                      >
-                        {result.errorPriority ?? "PASS"}
-                      </span>
-                    </td>
-                    <td colSpan={2} className={"test-name"}>
-                      {result.test}
+                    <td colSpan={this.maxRuns} className={"test-name"}>
+                      {key}
                     </td>
                   </tr>,
-                  <tr className={result.errorPriority ?? "closed"}>
-                    <td></td>
-                    <td>{`${result.category} ${
-                      result.subCategory ? " -> " + result.subCategory : ""
-                    }`}</td>
-                    <td>
-                      <div className={"display-linebreak"}>
-                        {result.errorMessage}
-                      </div>
-                    </td>
+                  <tr>
+                    {this.sub[key].map((r, i) => {
+                      return (
+                        <td className={this.state[i].open ? "open" : "closed"}>
+                          <span>
+                            <Link to={r.runUrl}>{i + 1}</Link>
+                          </span>
+                          <table>
+                            <tr>
+                              <td>
+                                <span
+                                  className={`pill ${
+                                    r.errorPriority ?? "PASS"
+                                  }`}
+                                >
+                                  {r.errorPriority ?? "PASS"}
+                                </span>
+                              </td>
+                              <td className={r.errorPriority ?? "closed"}>{`${
+                                r.category
+                              } ${
+                                r.subCategory ? " -> " + r.subCategory : ""
+                              }`}</td>
+                            </tr>
+                            <tr>
+                              <td
+                                colSpan={2}
+                                className={r.errorPriority ?? "closed"}
+                              >
+                                <div className={"display-linebreak"}>
+                                  {r.errorClass}:&nbsp;
+                                  <RichErroMessage>
+                                    {r.errorMessage}
+                                  </RichErroMessage>
+                                </div>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      );
+                    })}
                   </tr>,
                 ];
               })}
@@ -317,55 +497,23 @@ class GridRow extends React.Component {
 }
 
 export default function TestGrid({ accountId, environment, runIds }) {
-  const children = ({ rows, uniqueRuns }) => {
-    return (
-      <div>
-        {uniqueRuns.map(({ runId, environment, runUrl }, i) => (
-          <div className={"run-notes"}>
-            <span>
-              {`${i + 1} Run ID: ${runId}, Environment: ${environment}`}
-            </span>
-            <Link to={runUrl}>View in Cypress</Link>
-          </div>
-        ))}
-        <table className={"e2e-status"}>
-          <thead>
-            <tr>
-              <th></th>
-              <th>File</th>
-              {uniqueRuns.map(
-                ({ runId, environment, runUrl, timestamp }, i) => [
-                  <th>Severity</th>,
-                  <th width={"150px"} additionalValue={timestamp}>
-                    <Tooltip
-                      text={`Run ID: ${runId}, Environment: ${environment}`}
-                      additionalInfoLink={{
-                        to: runUrl,
-                        label: "View in Cypress",
-                      }}
-                    >
-                      {i + 1}
-                    </Tooltip>
-                  </th>,
-                ]
-              )}
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((item) => {
-              return <GridRow item={item}></GridRow>;
-            })}
-          </tbody>
-        </table>
-      </div>
-    );
-  };
   // If we have explicit run IDs we're trying to look at, just query for those directly.
   if (runIds) {
     return (
-      <RunQuery runIds={runIds} accountId={accountId}>
-        {children}
-      </RunQuery>
+      <RunQueryIntegration runIds={runIds} accountId={accountId}>
+        {(IntegrationRuns) => (
+          <RunQuery runIds={runIds} accountId={accountId}>
+            {(CypressRuns) => (
+              <GridTable
+                uniqueRuns={CypressRuns.uniqueRuns}
+                rows={[...CypressRuns.rows, ...IntegrationRuns.rows]}
+                accountId={accountId}
+                runIds={runIds}
+              />
+            )}
+          </RunQuery>
+        )}
+      </RunQueryIntegration>
     );
   }
 
@@ -373,9 +521,20 @@ export default function TestGrid({ accountId, environment, runIds }) {
   return (
     <RunIdsQuery environment={environment} accountId={accountId}>
       {({ runIds }) => (
-        <RunQuery runIds={runIds} accountId={accountId}>
-          {children}
-        </RunQuery>
+        <RunQueryIntegration runIds={runIds} accountId={accountId}>
+          {(IntegrationRuns) => (
+            <RunQuery runIds={runIds} accountId={accountId}>
+              {(CypressRuns) => (
+                <GridTable
+                  uniqueRuns={CypressRuns.uniqueRuns}
+                  rows={[...CypressRuns.rows, ...IntegrationRuns.rows]}
+                  accountId={accountId}
+                  runIds={runIds}
+                />
+              )}
+            </RunQuery>
+          )}
+        </RunQueryIntegration>
       )}
     </RunIdsQuery>
   );

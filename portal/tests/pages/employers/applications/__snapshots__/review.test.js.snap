@@ -1,21 +1,5 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Review displays organization/employer information 1`] = `
-<h2
-  class="margin-bottom-1 font-heading-xs text-bold"
->
-  Organization
-</h2>
-`;
-
-exports[`Review displays organization/employer information 2`] = `
-<h2
-  class="margin-bottom-1 font-heading-xs text-bold"
->
-  Employer ID number (EIN)
-</h2>
-`;
-
 exports[`Review renders default view onload with v2 of claim 1`] = `
 <div>
   <div
@@ -48,242 +32,233 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
     <p>
       Please review the details of this application carefully. If anything is incorrect or incomplete, you can add an amendment or include specific comments at the end. Changes are not saved until you submit your review.
     </p>
-    <div
-      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify"
-    >
-      <div
-        class="margin-right-2"
-      >
-        <h2
-          class="margin-bottom-1 font-heading-xs text-bold"
-        >
-          Organization
-        </h2>
-        Work Inc.
-      </div>
-    </div>
-    <div
-      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify"
-    >
-      <div
-        class="margin-right-2"
-      >
-        <h2
-          class="margin-bottom-1 font-heading-xs text-bold"
-        >
-          Employer ID number (EIN)
-        </h2>
-        12-3456789
-      </div>
-    </div>
-    <div
-      class="display-flex flex-align-end margin-top-6 margin-bottom-3"
-    >
-      <h2
-        class="flex-fill margin-right-1 font-heading-md text-bold"
-      >
-        Employee information
-      </h2>
-    </div>
-    <div
-      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
-    >
-      <div
-        class="margin-right-2"
-      >
-        <h3
-          class="margin-bottom-1 font-heading-xs text-bold"
-        >
-          Employee name
-        </h3>
-        Jane
-         
-        
-         
-        Doe
-      </div>
-    </div>
-    <div
-      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
-    >
-      <div
-        class="margin-right-2"
-      >
-        <h3
-          class="margin-bottom-1 font-heading-xs text-bold"
-        >
-          Mailing address
-        </h3>
-        <span
-          class="residential-address"
-          data-testid="residential-address"
-        >
-          1234 My St.
-          <br />
-          Boston
-          , 
-          MA
-           
-          00000
-        </span>
-      </div>
-    </div>
-    <div
-      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
-    >
-      <div
-        class="margin-right-2"
-      >
-        <h3
-          class="margin-bottom-1 font-heading-xs text-bold"
-        >
-          Social Security Number or Individual Taxpayer Identification Number
-        </h3>
-        ***-**-1234
-      </div>
-    </div>
-    <div
-      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
-    >
-      <div
-        class="margin-right-2"
-      >
-        <h3
-          class="margin-bottom-1 font-heading-xs text-bold"
-        >
-          Date of birth
-        </h3>
-        7/17/****
-      </div>
-    </div>
-    <div
-      class="display-flex flex-align-end margin-top-6 margin-bottom-3"
-    >
-      <h2
-        class="flex-fill margin-right-1 font-heading-md text-bold"
-      >
-        Leave details
-      </h2>
-    </div>
-    <div
-      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
-    >
-      <div
-        class="margin-right-2"
-      >
-        <h3
-          class="margin-bottom-1 font-heading-xs text-bold"
-        >
-          Leave type
-        </h3>
-        <a
-          href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#about-medical-leave-"
-          rel="noopener"
-          target="_blank"
-        >
-          Medical leave
-        </a>
-      </div>
-    </div>
-    <div
-      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
-    >
-      <div
-        class="margin-right-2"
-      >
-        <h3
-          class="margin-bottom-1 font-heading-xs text-bold"
-        >
-          Application ID
-        </h3>
-        NTN-111-ABS-01
-      </div>
-    </div>
-    <div
-      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
-    >
-      <div
-        class="margin-right-2"
-      >
-        <h3
-          class="margin-bottom-1 font-heading-xs text-bold"
-        >
-          Leave duration
-        </h3>
-        1/1/2021 to 7/1/2021
-      </div>
-    </div>
-    <div
-      class="display-flex flex-align-end margin-top-6 margin-bottom-3"
-    >
-      <h2
-        class="flex-fill margin-right-1 font-heading-md text-bold"
-      >
-        Leave schedule
-      </h2>
-    </div>
-    <p>
-      This is your employee’s expected leave schedule.
-    </p>
-    <table
-      class="usa-table usa-table--borderless c-table width-full"
-    >
-      <thead>
-        <tr>
-          <th
-            scope="col"
-          >
-            Date range
-          </th>
-          <th
-            scope="col"
-          >
-            Leave frequency
-          </th>
-          <th
-            scope="col"
-          >
-            Details
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <th
-            scope="row"
-          >
-            1/1/2021 to 6/1/2021
-          </th>
-          <td>
-            Continuous leave
-          </td>
-          <td />
-        </tr>
-        <tr>
-          <th
-            scope="row"
-          >
-            2/1/2021 to 7/1/2021
-          </th>
-          <td>
-            Reduced leave schedule
-          </td>
-          <td>
-            Contact us at 
-            <a
-              href="tel:(833) 344-7365"
-            >
-              (833) 344‑7365
-            </a>
-             for details about the leave schedule.
-          </td>
-        </tr>
-      </tbody>
-    </table>
     <form
       id="employer-review-form"
       method="post"
     >
+      <div
+        class="margin-bottom-2 padding-bottom-2 display-flex flex-justify"
+      >
+        <div
+          class="margin-right-2"
+        >
+          <h2
+            class="margin-bottom-1 font-heading-xs text-bold"
+          >
+            Organization
+          </h2>
+          Work Inc.
+        </div>
+      </div>
+      <div
+        class="margin-bottom-2 padding-bottom-2 display-flex flex-justify"
+      >
+        <div
+          class="margin-right-2"
+        >
+          <h2
+            class="margin-bottom-1 font-heading-xs text-bold"
+          >
+            Employer ID number (EIN)
+          </h2>
+          12-3456789
+        </div>
+      </div>
+      <div
+        class="display-flex flex-align-end margin-top-6 margin-bottom-3"
+      >
+        <h2
+          class="flex-fill margin-right-1 font-heading-md text-bold"
+        >
+          Employee information
+        </h2>
+      </div>
+      <div
+        class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+      >
+        <div
+          class="margin-right-2"
+        >
+          <h3
+            class="margin-bottom-1 font-heading-xs text-bold"
+          >
+            Employee name
+          </h3>
+          Jane
+           
+          
+           
+          Doe
+        </div>
+      </div>
+      <div
+        class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+      >
+        <div
+          class="margin-right-2"
+        >
+          <h3
+            class="margin-bottom-1 font-heading-xs text-bold"
+          >
+            Mailing address
+          </h3>
+          <span
+            class="residential-address"
+            data-testid="residential-address"
+          >
+            1234 My St.
+            <br />
+            Boston
+            , 
+            MA
+             
+            00000
+          </span>
+        </div>
+      </div>
+      <div
+        class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+      >
+        <div
+          class="margin-right-2"
+        >
+          <h3
+            class="margin-bottom-1 font-heading-xs text-bold"
+          >
+            Social Security Number or Individual Taxpayer Identification Number
+          </h3>
+          ***-**-1234
+        </div>
+      </div>
+      <div
+        class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+      >
+        <div
+          class="margin-right-2"
+        >
+          <h3
+            class="margin-bottom-1 font-heading-xs text-bold"
+          >
+            Date of birth
+          </h3>
+          7/17/****
+        </div>
+      </div>
+      <div
+        class="display-flex flex-align-end margin-top-6 margin-bottom-3"
+      >
+        <h2
+          class="flex-fill margin-right-1 font-heading-md text-bold"
+        >
+          Leave details
+        </h2>
+      </div>
+      <div
+        class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+      >
+        <div
+          class="margin-right-2"
+        >
+          <h3
+            class="margin-bottom-1 font-heading-xs text-bold"
+          >
+            Leave type
+          </h3>
+          <a
+            href="https://www.mass.gov/leave-types-medical"
+            rel="noopener"
+            target="_blank"
+          >
+            Medical leave
+          </a>
+        </div>
+      </div>
+      <div
+        class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+      >
+        <div
+          class="margin-right-2"
+        >
+          <h3
+            class="margin-bottom-1 font-heading-xs text-bold"
+          >
+            Application ID
+          </h3>
+          NTN-111-ABS-01
+        </div>
+      </div>
+      <div
+        class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+      >
+        <div
+          class="margin-right-2"
+        >
+          <h3
+            class="margin-bottom-1 font-heading-xs text-bold"
+          >
+            Leave duration
+          </h3>
+          1/1/2022 to 7/1/2022
+        </div>
+      </div>
+      <div
+        class="display-flex flex-align-end margin-top-6 margin-bottom-3"
+      >
+        <h2
+          class="flex-fill margin-right-1 font-heading-md text-bold"
+        >
+          Leave schedule
+        </h2>
+      </div>
+      <p>
+        This is your employee’s expected leave schedule.
+      </p>
+      <table
+        class="usa-table usa-table--borderless width-full usa-table--stacked"
+      >
+        <thead>
+          <tr>
+            <th
+              scope="col"
+            >
+              Date range
+            </th>
+            <th
+              scope="col"
+            >
+              Leave frequency
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th
+              data-label="Date range"
+              scope="row"
+            >
+              1/1/2022 to 6/1/2022
+            </th>
+            <td
+              data-label="Leave frequency"
+            >
+              Continuous leave
+            </td>
+          </tr>
+          <tr>
+            <th
+              data-label="Date range"
+              scope="row"
+            >
+              2/1/2022 to 7/1/2022
+            </th>
+            <td
+              data-label="Leave frequency"
+            >
+              Reduced leave schedule
+            </td>
+          </tr>
+        </tbody>
+      </table>
       <div
         class="display-flex flex-align-end margin-top-6 margin-bottom-3"
       >
@@ -389,7 +364,7 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
         Previous leave
       </h3>
       <p>
-        Your employee has listed leave they have taken for a qualified reason. Only leave since January 1, 2021 is included. This includes both paid leave, such as paid vacation or sick days, and unpaid leave, such as FMLA leave. When possible, verify that a previous leave was for a reason that qualifies for paid leave under PFML.
+        Your employee has listed leave they have taken for qualified reasons. Only leave since January 1, 2021 is included. This includes both paid leave (for example: paid vacation or sick days) and unpaid leave (for example: FMLA leave). When possible, verify that this previous leave was for reasons that qualify for paid leave under PFML.
       </p>
       <details
         class="c-details"
@@ -411,7 +386,7 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
             <li>
               Manage a 
               <a
-                href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#what-is-a-serious-health-condition?-"
+                href="https://www.mass.gov/pfml-serious-health-condition"
                 rel="noopener"
                 target="_blank"
               >
@@ -431,7 +406,7 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
             <li>
               Care for a family member with a 
               <a
-                href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#what-is-a-serious-health-condition?-"
+                href="https://www.mass.gov/pfml-serious-health-condition"
                 rel="noopener"
                 target="_blank"
               >
@@ -443,7 +418,7 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
         </div>
       </details>
       <table
-        class="usa-table usa-table--borderless c-table width-full"
+        class="usa-table usa-table--borderless width-full usa-table--stacked"
       >
         <thead>
           <tr>
@@ -491,10 +466,17 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
         Concurrent accrued paid leave
       </h3>
       <p>
-        Your employee has told us about the following accrued paid leave they plan to use concurrent with their paid leave from PFML. This includes paid vacation time, sick time, personal time, and other paid time off. It does not include a family or medical leave policy or a disability program. There’s a 7-day unpaid waiting period, and employees are allowed to use accrued paid leave to overlap that period.
+        Your employee has told us about the following accrued paid leave they plan to use concurrent with their paid leave from PFML. This includes paid vacation time, sick time, personal time, and other paid time off. It does not include a family or medical leave policy or a disability program.
+      </p>
+      <p>
+        Your employee won’t receive PFML payments for the first 7 calendar days of their PFML leave from 1/1/2022 to 1/7/2022. During those 7 days they may use accrued paid leave, and you and your employee 
+        <strong>
+          shouldn’t
+        </strong>
+         report it.
       </p>
       <table
-        class="usa-table usa-table--borderless c-table width-full"
+        class="usa-table usa-table--borderless width-full usa-table--stacked"
       >
         <thead>
           <tr>
@@ -545,7 +527,7 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
         </a>
       </p>
       <table
-        class="usa-table usa-table--borderless c-table width-full"
+        class="usa-table usa-table--borderless width-full usa-table--stacked"
       >
         <thead>
           <tr>
@@ -572,14 +554,19 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
             data-testid="benefit-details-row"
           >
             <th
+              data-label="Date range"
               scope="row"
             >
-              1/1/2021 to 2/1/2021
+              1/1/2022 to 2/1/2022
             </th>
-            <td>
+            <td
+              data-label="Benefit type"
+            >
               Family or medical leave insurance
             </td>
-            <td>
+            <td
+              data-label="Details"
+            >
               $500.00 per week
             </td>
             <td>
@@ -605,14 +592,19 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
             data-testid="benefit-details-row"
           >
             <th
+              data-label="Date range"
               scope="row"
             >
-              1/1/2021 to 2/1/2021
+              1/1/2022 to 2/1/2022
             </th>
-            <td>
+            <td
+              data-label="Benefit type"
+            >
               Family or medical leave insurance
             </td>
-            <td>
+            <td
+              data-label="Details"
+            >
               $200.00 (frequency unknown)
             </td>
             <td>
@@ -638,14 +630,19 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
             data-testid="benefit-details-row"
           >
             <th
+              data-label="Date range"
               scope="row"
             >
-              1/1/2021 to 2/1/2021
+              1/1/2022 to 2/1/2022
             </th>
-            <td>
+            <td
+              data-label="Benefit type"
+            >
               Short-term disability insurance
             </td>
-            <td>
+            <td
+              data-label="Details"
+            >
               Full salary continuous
             </td>
             <td>
@@ -671,14 +668,19 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
             data-testid="benefit-details-row"
           >
             <th
+              data-label="Date range"
               scope="row"
             >
-              1/1/2021 to 2/1/2021
+              1/1/2022 to 2/1/2022
             </th>
-            <td>
+            <td
+              data-label="Benefit type"
+            >
               Permanent disability insurance
             </td>
-            <td>
+            <td
+              data-label="Details"
+            >
               No amount reported
             </td>
             <td>
@@ -772,14 +774,14 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
           >
             <input
               class="usa-radio__input"
-              id="InputChoice33"
+              id="InputChoice38"
               name="fraud"
               type="radio"
               value="Yes"
             />
             <label
               class="usa-radio__label"
-              for="InputChoice33"
+              for="InputChoice38"
             >
               Yes (explain below)
             </label>
@@ -789,14 +791,14 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
           >
             <input
               class="usa-radio__input"
-              id="InputChoice34"
+              id="InputChoice39"
               name="fraud"
               type="radio"
               value="No"
             />
             <label
               class="usa-radio__label"
-              for="InputChoice34"
+              for="InputChoice39"
             >
               No
             </label>
@@ -827,14 +829,14 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
           >
             <input
               class="usa-radio__input"
-              id="InputChoice35"
+              id="InputChoice40"
               name="employee_notice"
               type="radio"
               value="Yes"
             />
             <label
               class="usa-radio__label"
-              for="InputChoice35"
+              for="InputChoice40"
             >
               Yes
             </label>
@@ -844,14 +846,14 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
           >
             <input
               class="usa-radio__input"
-              id="InputChoice36"
+              id="InputChoice41"
               name="employee_notice"
               type="radio"
               value="No"
             />
             <label
               class="usa-radio__label"
-              for="InputChoice36"
+              for="InputChoice41"
             >
               No (explain below)
             </label>
@@ -896,14 +898,14 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
             <input
               checked=""
               class="usa-radio__input"
-              id="InputChoice37"
+              id="InputChoice42"
               name="employer_decision"
               type="radio"
               value="Approve"
             />
             <label
               class="usa-radio__label"
-              for="InputChoice37"
+              for="InputChoice42"
             >
               Approve
             </label>
@@ -913,14 +915,14 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
           >
             <input
               class="usa-radio__input"
-              id="InputChoice38"
+              id="InputChoice43"
               name="employer_decision"
               type="radio"
               value="Deny"
             />
             <label
               class="usa-radio__label"
-              for="InputChoice38"
+              for="InputChoice43"
             >
               Deny (explain below)
             </label>
@@ -951,14 +953,14 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
           >
             <input
               class="usa-radio__input"
-              id="InputChoice39"
+              id="InputChoice44"
               name="should_show_comment_box"
               type="radio"
               value="true"
             />
             <label
               class="usa-radio__label"
-              for="InputChoice39"
+              for="InputChoice44"
             >
               Yes
             </label>
@@ -969,14 +971,14 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
             <input
               checked=""
               class="usa-radio__input"
-              id="InputChoice40"
+              id="InputChoice45"
               name="should_show_comment_box"
               type="radio"
               value="false"
             />
             <label
               class="usa-radio__label"
-              for="InputChoice40"
+              for="InputChoice45"
             >
               No
             </label>

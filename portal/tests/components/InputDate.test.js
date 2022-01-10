@@ -1,7 +1,7 @@
 import InputDate, {
   formatFieldsAsISO8601,
   parseDateParts,
-} from "../../src/components/InputDate";
+} from "../../src/components/core/InputDate";
 import { render, screen } from "@testing-library/react";
 import React from "react";
 import userEvent from "@testing-library/user-event";

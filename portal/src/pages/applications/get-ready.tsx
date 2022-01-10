@@ -1,25 +1,26 @@
 import { IconLaptop, IconPhone } from "@massds/mayflower-react/dist/Icon";
-import Alert from "../../components/Alert";
-import { AppLogic } from "../../hooks/useAppLogic";
-import BenefitsApplicationCollection from "../../models/BenefitsApplicationCollection";
+import withBenefitsApplications, {
+  WithBenefitsApplicationsProps,
+} from "../../hoc/withBenefitsApplications";
+import Alert from "../../components/core/Alert";
 import ButtonLink from "../../components/ButtonLink";
-import Heading from "../../components/Heading";
-import Icon from "../../components/Icon";
+import Heading from "../../components/core/Heading";
+import Icon from "../../components/core/Icon";
 import Link from "next/link";
+import MfaSetupSuccessAlert from "src/components/MfaSetupSuccessAlert";
 import React from "react";
-import Title from "../../components/Title";
+import Title from "../../components/core/Title";
 import { Trans } from "react-i18next";
+import { getMaxBenefitAmount } from "src/utils/getMaxBenefitAmount";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
-import withBenefitsApplications from "../../hoc/withBenefitsApplications";
 
-interface GetReadyProps {
-  appLogic: AppLogic;
-  claims: BenefitsApplicationCollection;
+interface GetReadyProps extends WithBenefitsApplicationsProps {
+  query: { smsMfaConfirmed?: string };
 }
 
 export const GetReady = (props: GetReadyProps) => {
-  const { appLogic, claims } = props;
+  const { appLogic, claims, query } = props;
   const { t } = useTranslation();
 
   const hasClaims = !claims.isEmpty;
@@ -34,6 +35,8 @@ export const GetReady = (props: GetReadyProps) => {
     fill: "currentColor",
   };
 
+  const maxBenefitAmount = getMaxBenefitAmount();
+
   return (
     <React.Fragment>
       {hasClaims && (
@@ -43,6 +46,7 @@ export const GetReady = (props: GetReadyProps) => {
           </a>
         </Link>
       )}
+      {query?.smsMfaConfirmed && <MfaSetupSuccessAlert />}
 
       <Title>{t("pages.getReady.title")}</Title>
 
@@ -152,6 +156,7 @@ export const GetReady = (props: GetReadyProps) => {
         </Heading>
         <Trans
           i18nKey="pages.getReady.stepThree"
+          values={{ maxBenefitAmount }}
           components={{
             "contact-center-phone-link": (
               <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
@@ -165,6 +170,13 @@ export const GetReady = (props: GetReadyProps) => {
             ),
             ul: <ul className="usa-list" />,
             li: <li />,
+            "tax-guide-link": (
+              <a
+                href={routes.external.massgov.taxGuide}
+                target="_blank"
+                rel="noopener"
+              />
+            ),
             "tax-liability-link": (
               <a
                 href={routes.external.massgov.taxLiability}

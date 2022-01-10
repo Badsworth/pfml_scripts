@@ -11,6 +11,7 @@ from massgov.pfml.api.authentication import (
     build_auth_code_flow,
     build_logout_flow,
 )
+from massgov.pfml.api.authentication.azure import AzureUser
 from massgov.pfml.api.authorization.flask import READ, ensure
 from massgov.pfml.api.models.users.requests import AdminTokenRequest
 from massgov.pfml.api.models.users.responses import (
@@ -19,7 +20,7 @@ from massgov.pfml.api.models.users.responses import (
     AuthURIResponse,
 )
 from massgov.pfml.api.validation.exceptions import IssueType, ValidationErrorDetail
-from massgov.pfml.db.models.employees import AzureUser, LkAzurePermission
+from massgov.pfml.db.models.employees import LkAzurePermission
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
@@ -27,11 +28,11 @@ SERVICE_UNAVAILABLE_MESSAGE = "Azure AD is not configured."
 
 
 def admin_authorization_url():
-    authCodeParams = build_auth_code_flow()
-    if authCodeParams is None:
+    auth_code_params = build_auth_code_flow()
+    if auth_code_params is None:
         raise ServiceUnavailable(description=SERVICE_UNAVAILABLE_MESSAGE)
     return response_util.success_response(
-        data=AuthURIResponse.parse_obj(authCodeParams).__dict__,
+        data=AuthURIResponse.parse_obj(auth_code_params).__dict__,
         message="Retrieved authorization url!",
     ).to_api_response()
 
@@ -39,7 +40,7 @@ def admin_authorization_url():
 def admin_token():
     request = AdminTokenRequest.parse_obj(connexion.request.json)
     try:
-        tokens = build_access_token(request.authURIRes.__dict__, request.authCodeRes.__dict__)
+        tokens = build_access_token(request.auth_uri_res.__dict__, request.auth_code_res.__dict__)
 
     except ValueError:  # Usually caused by CSRF, simply ignore them
         logger.error("admins_token value error.")
@@ -48,7 +49,7 @@ def admin_token():
             message="Invalid code while attempting to acquire a token",
             errors=[
                 ValidationErrorDetail(
-                    field="authURIRes", message="Value error", type=IssueType.invalid,
+                    field="auth_uri_res", message="Value error", type=IssueType.invalid,
                 )
             ],
         ).to_api_response()
@@ -63,7 +64,7 @@ def admin_token():
             message="Unknown error while attempting to acquire a token",
             errors=[
                 ValidationErrorDetail(
-                    field="authURIRes", message=tokens["error"], type=IssueType.invalid,
+                    field="auth_uri_res", message=tokens["error"], type=IssueType.invalid,
                 )
             ],
         ).to_api_response()
@@ -105,7 +106,6 @@ def azure_user_response(user: AzureUser) -> Dict[str, Any]:
         )
 
     response["permissions"] = [
-        f"{permission.azure_permission_resource}_{permission.azure_permission_action}".upper()
-        for permission in permissions
+        f"{permission.azure_permission_description}" for permission in permissions
     ]
     return AdminUserResponse.parse_obj(response).__dict__

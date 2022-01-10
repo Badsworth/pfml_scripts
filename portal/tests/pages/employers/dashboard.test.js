@@ -3,7 +3,6 @@ import User, { UserLeaveAdministrator } from "../../../src/models/User";
 import { cleanup, screen, within } from "@testing-library/react";
 import ClaimCollection from "../../../src/models/ClaimCollection";
 import Dashboard from "../../../src/pages/employers/dashboard";
-import PaginationMeta from "../../../src/models/PaginationMeta";
 import faker from "faker";
 import { mockRouter } from "next/router";
 import { renderPage } from "../../test-utils";
@@ -13,7 +12,7 @@ import userEvent from "@testing-library/user-event";
 // Avoid issue where USWDS generates unique ID each render,
 // which causes havoc for our snapshot testing
 // https://github.com/uswds/uswds/issues/4338
-jest.mock("../../../src/components/TooltipIcon", () => ({
+jest.mock("../../../src/components/core/TooltipIcon", () => ({
   __esModule: true,
   default: () => null,
 }));
@@ -87,15 +86,15 @@ const setup = ({
     appLogic.claims.claims = new ClaimCollection(claims);
     appLogic.claims.shouldLoadPage = jest.fn().mockReturnValue(false);
     appLogic.claims.isLoadingClaims = false;
-    appLogic.claims.paginationMeta = new PaginationMeta({
+    appLogic.claims.paginationMeta = {
       page_offset: 1,
       page_size: 25,
       total_pages: 3,
       total_records: 75,
       order_by: "created_at",
-      order_direction: "asc",
+      order_direction: "ascending",
       ...paginationMeta,
-    });
+    };
 
     updateQuerySpy = jest.spyOn(appLogic.portalFlow, "updateQuery");
   };
@@ -182,7 +181,7 @@ describe("Employer dashboard", () => {
 
     expect(screen.getAllByRole("columnheader").map((el) => el.textContent))
       .toMatchInlineSnapshot(`
-      Array [
+      [
         "Employee name",
         "Application ID",
         "Employer ID number",
@@ -205,7 +204,7 @@ describe("Employer dashboard", () => {
 
     expect(screen.getAllByRole("columnheader").map((el) => el.textContent))
       .toMatchInlineSnapshot(`
-      Array [
+      [
         "Employee name",
         "Application ID",
         "Organization",
@@ -290,6 +289,17 @@ describe("Employer dashboard", () => {
     expect(updateQuerySpy).toHaveBeenCalledWith({
       page_offset: "1",
       search: "Bud Baxter",
+    });
+  });
+
+  it("clears search param when the search field is cleared", () => {
+    const { updateQuerySpy } = setup({ query: { search: "Bud Baxter" } });
+
+    userEvent.clear(screen.getByRole("textbox", { name: /search/i }));
+    userEvent.click(screen.getByRole("button", { name: /search/i }));
+
+    expect(updateQuerySpy).toHaveBeenCalledWith({
+      page_offset: "1",
     });
   });
 
@@ -507,11 +517,7 @@ describe("Employer dashboard", () => {
     });
   });
 
-  it("defaults to Sort by Status option when Review By feature flag is enabled", () => {
-    process.env.featureFlags = {
-      employerShowReviewByStatus: true,
-    };
-
+  it("defaults to Sort by Status option", () => {
     setup();
 
     expect(screen.getByRole("combobox", { name: /sort/i })).toHaveValue(
@@ -533,14 +539,11 @@ describe("Employer dashboard", () => {
     });
   });
 
-  it("renders Review By status when feature flag is enabled", () => {
-    process.env.featureFlags = {
-      employerShowReviewByStatus: true,
-    };
-
+  it("renders Review By status", () => {
     const claims = getClaims(verifiedUserLeaveAdministrator);
     claims[0].managed_requirements = [
       {
+        status: "Open",
         follow_up_date: "2050-01-30",
       },
     ];

@@ -1,18 +1,19 @@
-import BenefitsApplication, {
-  WorkPattern,
-} from "../../models/BenefitsApplication";
 import React, { useState } from "react";
+import { WorkPattern, WorkPatternDay } from "../../models/BenefitsApplication";
 import { pick, round } from "lodash";
-import Heading from "../../components/Heading";
-import InputHours from "../../components/InputHours";
-import Lead from "../../components/Lead";
+import withBenefitsApplication, {
+  WithBenefitsApplicationProps,
+} from "../../hoc/withBenefitsApplication";
+import Heading from "../../components/core/Heading";
+import InputHours from "../../components/core/InputHours";
+import Lead from "../../components/core/Lead";
 import QuestionPage from "../../components/QuestionPage";
 import { Trans } from "react-i18next";
+import isBlank from "../../utils/isBlank";
 import routes from "../../routes";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = [
   "claim.work_pattern.work_pattern_days",
@@ -23,16 +24,11 @@ export const fields = [
   "claim.work_pattern.work_pattern_days[0].minutes",
 ];
 
-interface ScheduleVariableProps {
-  claim: BenefitsApplication;
-  appLogic: any;
-}
-
-export const ScheduleVariable = (props: ScheduleVariableProps) => {
+export const ScheduleVariable = (props: WithBenefitsApplicationProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
-  const workPattern = new WorkPattern(claim.work_pattern);
+  const workPattern = new WorkPattern(claim.work_pattern || {});
 
   const { formState, updateFields } = useFormState(pick(props, fields).claim);
   // minutesWorkedPerWeek will be spread across
@@ -58,10 +54,10 @@ export const ScheduleVariable = (props: ScheduleVariableProps) => {
   };
 
   const handleSave = async () => {
-    let work_pattern_days;
-    let hours_worked_per_week = null;
+    let work_pattern_days: WorkPatternDay[] | null = null;
+    let hours_worked_per_week: null | number = null;
 
-    if (!minutesWorkedPerWeek) {
+    if (isBlank(minutesWorkedPerWeek)) {
       work_pattern_days = [];
     } else {
       ({ work_pattern_days } =
@@ -71,7 +67,9 @@ export const ScheduleVariable = (props: ScheduleVariableProps) => {
 
     await appLogic.benefitsApplications.update(claim.application_id, {
       hours_worked_per_week,
-      work_pattern: { work_pattern_days },
+      work_pattern: {
+        work_pattern_days,
+      },
     });
   };
 

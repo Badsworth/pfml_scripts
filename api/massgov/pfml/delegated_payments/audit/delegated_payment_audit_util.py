@@ -33,12 +33,12 @@ from massgov.pfml.delegated_payments.reporting.delegated_abstract_reporting impo
     Report,
     ReportGroup,
 )
-from massgov.pfml.util.datetime import get_period_in_weeks
+from massgov.pfml.util.datetime import get_now_us_eastern, get_period_in_weeks
 
 # Specify an override for the notes to put if the
 # description on the audit report type doesn't match the message
 AUDIT_REPORT_NOTES_OVERRIDE = {
-    PaymentAuditReportType.MAX_WEEKLY_BENEFITS.payment_audit_report_type_id: "Weekly benefit amount exceeds $850"
+    PaymentAuditReportType.DEPRECATED_MAX_WEEKLY_BENEFITS.payment_audit_report_type_id: "Weekly benefit amount exceeds $850"
 }
 
 
@@ -55,6 +55,14 @@ class PaymentAuditData:
     previously_errored_payment_count: int
     previously_rejected_payment_count: int
     previously_skipped_payment_count: int
+    previously_paid_payment_count: int
+    previously_paid_payments_string: Optional[str]
+    gross_payment_amount: str
+    net_payment_amount: str
+    federal_withholding_amount: str
+    state_withholding_amount: str
+    federal_withholding_i_value: str
+    state_withholding_i_value: str
 
 
 def write_audit_report(
@@ -66,7 +74,7 @@ def write_audit_report(
     payment_audit_report_rows: List[PaymentAuditCSV] = []
     for payment_audit_data in payment_audit_data_set:
         payment_audit_report_rows.append(
-            build_audit_report_row(payment_audit_data, payments_util.get_now(), db_session)
+            build_audit_report_row(payment_audit_data, get_now_us_eastern(), db_session)
         )
 
     return write_audit_report_rows(payment_audit_report_rows, output_path, db_session, report_name)
@@ -143,13 +151,11 @@ def build_audit_report_row(
     payment_audit_row = PaymentAuditCSV(
         pfml_payment_id=str(payment.payment_id),
         leave_type=get_leave_type(payment),
-        fineos_customer_number=employee.fineos_customer_number
-        if employee.fineos_customer_number
-        else None,
+        fineos_customer_number=employee.fineos_customer_number if employee else None,
         first_name=payment.fineos_employee_first_name,
         last_name=payment.fineos_employee_last_name,
-        dor_first_name=employee.first_name,
-        dor_last_name=employee.last_name,
+        dor_first_name=employee.first_name if employee else None,
+        dor_last_name=employee.last_name if employee else None,
         address_line_1=address.address_line_one if address else None,
         address_line_2=address.address_line_two if address else None,
         city=address.city if address else None,
@@ -161,13 +167,28 @@ def build_audit_report_row(
         payment_period_start_date=payment_period_start_date,
         payment_period_end_date=payment_period_end_date,
         payment_period_weeks=str(payment_period_weeks),
-        payment_amount=str(payment.amount),
+        gross_payment_amount=str(payment_audit_data.gross_payment_amount),
+        payment_amount=str(payment_audit_data.net_payment_amount),
+        federal_withholding_amount=str(payment_audit_data.federal_withholding_amount),
+        state_withholding_amount=str(payment_audit_data.state_withholding_amount),
+        employer_reimbursement_amount=None,
+        child_support_amount=None,
         absence_case_number=claim.fineos_absence_id,
         c_value=payment.fineos_pei_c_value,
         i_value=payment.fineos_pei_i_value,
+        federal_withholding_i_value=str(payment_audit_data.federal_withholding_i_value),
+        state_withholding_i_value=str(payment_audit_data.state_withholding_i_value),
+        employer_reimbursement_i_value=None,
+        child_support_i_value=None,
         employer_id=str(employer.fineos_employer_id) if employer else None,
         absence_case_creation_date=payment.absence_case_creation_date.isoformat()
         if payment.absence_case_creation_date
+        else None,
+        absence_start_date=claim.absence_period_start_date.isoformat()
+        if claim.absence_period_start_date
+        else None,
+        absence_end_date=claim.absence_period_end_date.isoformat()
+        if claim.absence_period_end_date
         else None,
         case_status=claim.fineos_absence_status.absence_status_description
         if claim.fineos_absence_status
@@ -180,14 +201,16 @@ def build_audit_report_row(
         previously_errored_payment_count=str(payment_audit_data.previously_errored_payment_count),
         previously_rejected_payment_count=str(payment_audit_data.previously_rejected_payment_count),
         previously_skipped_payment_count=str(payment_audit_data.previously_skipped_payment_count),
-        max_weekly_benefits_details=audit_report_details.max_weekly_benefits_details,
-        dua_dia_reduction_details=audit_report_details.dua_dia_reduction_details,
+        dua_additional_income_details=audit_report_details.dua_additional_income_details,
+        dia_additional_income_details=audit_report_details.dia_additional_income_details,
         dor_fineos_name_mismatch_details=audit_report_details.dor_fineos_name_mismatch_details,
         rejected_by_program_integrity=bool_to_str[
             audit_report_details.rejected_by_program_integrity
         ],
         skipped_by_program_integrity=bool_to_str[audit_report_details.skipped_by_program_integrity],
         rejected_notes=audit_report_details.rejected_notes,
+        previously_paid_payment_count=str(payment_audit_data.previously_paid_payment_count),
+        previously_paid_payments=payment_audit_data.previously_paid_payments_string,
     )
 
     return payment_audit_row
@@ -214,6 +237,8 @@ def get_payment_preference(payment: Payment) -> str:
         return "ACH"
     elif payment.disb_method_id == PaymentMethod.CHECK.payment_method_id:
         return "Check"
+    else:
+        return ""
 
     raise PaymentAuditRowError(
         "Unexpected payment preference %s" % payment.disb_method.payment_method_description

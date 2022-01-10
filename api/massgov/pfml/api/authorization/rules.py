@@ -1,9 +1,10 @@
-from typing import Callable, List, Union
+from typing import Callable, Union
 
 from bouncer.constants import CREATE, EDIT, READ  # noqa: F401 F403
 from bouncer.models import RuleList
 from flask_bouncer import Bouncer  # noqa: F401
 
+from massgov.pfml.api.authentication.azure import AzureUser
 from massgov.pfml.api.models.applications.responses import DocumentResponse
 from massgov.pfml.db.models.applications import (
     Application,
@@ -12,23 +13,8 @@ from massgov.pfml.db.models.applications import (
     Notification,
     RMVCheck,
 )
-from massgov.pfml.db.models.employees import (
-    AzurePermission,
-    AzureUser,
-    Employee,
-    LkRole,
-    Role,
-    User,
-)
-
-
-def has_role_in(user: User, accepted_roles: List[LkRole]) -> bool:
-    accepted_role_ids = set(role.role_id for role in accepted_roles)
-    for role in user.roles:
-        if role.role_id in accepted_role_ids:
-            return True
-
-    return False
+from massgov.pfml.db.models.employees import AzurePermission, Employee, Role, User
+from massgov.pfml.util.users import has_role_in
 
 
 def create_authorization(
@@ -44,6 +30,8 @@ def create_authorization(
             financial_eligibility(user, they)
             rmv_check(user, they)
             notifications(user, they)
+        elif has_role_in(user, [Role.SERVICE_NOW]):
+            pass
         else:
             users(user, they)
             applications(user, they)
@@ -99,6 +87,12 @@ def can_download(user: User, doc: Union[Document, DocumentResponse]) -> bool:
                 DocumentType.DENIAL_NOTICE.document_type_description,
                 DocumentType.WITHDRAWAL_NOTICE.document_type_description,
                 DocumentType.APPEAL_ACKNOWLEDGMENT.document_type_description,
+                DocumentType.MAXIMUM_WEEKLY_BENEFIT_CHANGE_NOTICE.document_type_description,
+                DocumentType.BENEFIT_AMOUNT_CHANGE_NOTICE.document_type_description,
+                DocumentType.LEAVE_ALLOTMENT_CHANGE_NOTICE.document_type_description,
+                DocumentType.APPROVED_TIME_CANCELLED.document_type_description,
+                DocumentType.CHANGE_REQUEST_APPROVED.document_type_description,
+                DocumentType.CHANGE_REQUEST_DENIED.document_type_description,
             ]
         ]
 

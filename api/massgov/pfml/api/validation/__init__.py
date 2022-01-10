@@ -8,6 +8,7 @@ import connexion.apps.flask_app
 import pydantic
 from connexion.exceptions import BadRequestProblem, ExtraParameterProblem, ProblemException
 from flask.wrappers import Response
+from sqlalchemy.exc import OperationalError
 from werkzeug.exceptions import (
     BadRequest,
     Forbidden,
@@ -71,6 +72,16 @@ def log_validation_error(
         newrelic_util.log_and_capture_exception(message, extra=log_attributes)
 
 
+def db_operational_error_handler(operational_error: OperationalError) -> Response:
+    log_attr = {
+        "error.class": "sqlalchemy.exc.OperationalError",
+    }
+    logger.warning(operational_error.detail, extra=log_attr, exc_info=True)
+    return response_util.error_response(
+        status_code=ServiceUnavailable, message="database service unavailable", errors=[],
+    ).to_api_response()
+
+
 def validation_request_handler(validation_exception: ValidationException) -> Response:
     for error in validation_exception.errors:
         log_validation_error(validation_exception, error)
@@ -103,11 +114,11 @@ def http_exception_handler(http_exception: HTTPException) -> Response:
 def internal_server_error_handler(error: InternalServerError) -> Response:
     # Use the original exception if it exists.
     #
-    # Ignore the mypy type error because it hasn't caught up to werkzeug 1.0.0.
+    # Ignore the mypy type error because it is missing the `original_exception` attribute.
     #
     # see: https://github.com/python/typeshed/pull/4210
     #
-    exception = error.original_exception or error  # type: ignore
+    exception = error.original_exception or error  # type: ignore[attr-defined]
 
     logger.exception(str(exception), extra={"error.class": type(exception).__name__})
 
@@ -148,7 +159,7 @@ def add_error_handlers_to_app(connexion_app):
     connexion_app.add_error_handler(
         botocore.exceptions.ConnectionError, handle_aws_connection_error
     )
-
+    connexion_app.add_error_handler(OperationalError, db_operational_error_handler)
     # These are all handled with the same generic exception handler to make them uniform in structure.
     connexion_app.add_error_handler(NotFound, http_exception_handler)
     connexion_app.add_error_handler(HTTPException, http_exception_handler)

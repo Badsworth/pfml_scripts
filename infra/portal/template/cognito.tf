@@ -13,6 +13,9 @@ locals {
   prod_from_email_address     = "Department of Family and Medical Leave <${var.ses_email_address}>"
   non_prod_from_email_address = "${upper(local.shorthand_env_name)}_${local.prod_from_email_address}"
   from_email_address          = var.environment_name == "prod" ? local.prod_from_email_address : local.non_prod_from_email_address
+
+  # Environments where MFA should be enabled
+  env_mfa_enabled = module.constants.env_mfa_enabled
 }
 
 # It should noted that 'claimants_pool' is a misnomer as this user pool will also contain Leave Administrators
@@ -20,6 +23,23 @@ resource "aws_cognito_user_pool" "claimants_pool" {
   name                     = "massgov-${local.app_name}-${var.environment_name}"
   username_attributes      = ["email"]
   auto_verified_attributes = ["email"]
+
+  # This can break environment deployments if we are not carful, so we are taking extra precautions.
+  mfa_configuration = contains(local.env_mfa_enabled, var.environment_name) ? "OPTIONAL" : "OFF"
+  dynamic "sms_configuration" {
+    for_each = contains(local.env_mfa_enabled, var.environment_name) ? [var.environment_name] : []
+    content {
+      external_id    = "massgov-${local.app_name}-portal-${local.shorthand_env_name}-mfa-sms"
+      sns_caller_arn = aws_iam_role.cognito_mfa_sms_messages.arn
+    }
+  }
+
+  account_recovery_setting {
+    recovery_mechanism {
+      name     = "verified_email"
+      priority = 1
+    }
+  }
 
   email_configuration {
     # Use this SES email to send cognito emails. If we're not using SES for emails then use null
@@ -33,7 +53,7 @@ resource "aws_cognito_user_pool" "claimants_pool" {
     from_email_address = var.ses_email_address == "" ? null : local.from_email_address
   }
 
-  sms_authentication_message = "Your authentication code is {####}. "
+  sms_authentication_message = var.sms_mfa_message
 
   # Use aliases (for provisioned concurrency) in perf and prod. Elsewhere, use the lambda's $LATEST version directly.
   lambda_config {
@@ -62,7 +82,7 @@ resource "aws_cognito_user_pool" "claimants_pool" {
 
   verification_message_template {
     default_email_option = "CONFIRM_WITH_CODE"
-    sms_message          = "Your Paid Family and Medical Leave verification code is {####}"
+    sms_message          = var.sms_mfa_message
   }
 
   schema {
@@ -99,7 +119,7 @@ resource "aws_cognito_user_pool_client" "massgov_pfml_client" {
   prevent_user_existence_errors = "ENABLED"
 
   read_attributes  = ["email", "email_verified", "phone_number", "phone_number_verified", "updated_at"]
-  write_attributes = ["email", "updated_at"]
+  write_attributes = ["email", "updated_at", "phone_number"]
 }
 
 // Cognito sets defaults when it's created - most you can ignore but
@@ -120,6 +140,33 @@ resource "aws_cognito_user_pool_client" "fineos_pfml_client" {
 // to test the OAuth endpoints that fineos_pfml_client has access to.
 resource "aws_cognito_user_pool_client" "internal_fineos_role_pfml_client" {
   name         = "internal-fineos-role-oauth-${local.app_name}-${var.environment_name}"
+  user_pool_id = aws_cognito_user_pool.claimants_pool.id
+
+  allowed_oauth_flows                  = ["client_credentials"]
+  generate_secret                      = true
+  allowed_oauth_scopes                 = ["machine/admin"]
+  allowed_oauth_flows_user_pool_client = true
+}
+
+
+// Cognito sets defaults when it's created - most you can ignore but
+// access tokens expire in 60 mins.
+resource "aws_cognito_user_pool_client" "servicenow_pfml_client" {
+  name         = "servicenow-${local.app_name}-${var.environment_name}"
+  user_pool_id = aws_cognito_user_pool.claimants_pool.id
+
+  allowed_oauth_flows                  = ["client_credentials"]
+  generate_secret                      = true
+  allowed_oauth_scopes                 = ["machine/admin"]
+  allowed_oauth_flows_user_pool_client = true
+}
+
+// Cognito sets defaults when it's created - most you can ignore but
+// access tokens expire in 60 mins.
+// The internal_ServiceNow_role_pfml_client is to be used internally
+// to test the OAuth endpoints that fineos_pfml_client has access to.
+resource "aws_cognito_user_pool_client" "internal_servicenow_role_pfml_client" {
+  name         = "internal-servicenow-role-oauth-${local.app_name}-${var.environment_name}"
   user_pool_id = aws_cognito_user_pool.claimants_pool.id
 
   allowed_oauth_flows                  = ["client_credentials"]

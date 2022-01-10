@@ -30,6 +30,22 @@ $ brew install tfenv
 $ tfenv install 0.14.7
 ```
 
+### Using pre-commit hooks
+
+In order for our pre-commit hooks to work properly, you'll need to have a supported version of Node installed and have run `npm install` in the root directory. Once you've completed those steps, pre-commit hooks should work with any of the API's [Development Environment Setup](docs/api/development-environment-setup.md) options. If you have not set `RUN_CMD_OPT` the pre-commit hooks will default to running in docker.
+
+We're using husky and lint-staged to manage our pre-commit hooks so that they only run on relevant file changes. Here are the details on which changes will trigger which checks:
+
+| File(s) changed                               | Command                                | What's being checked                                    |
+|-----------------------------------------------|---------------------------------------------|---------------------------------------------------------|
+| Files in the `portal/` directory              | `npm run format --prefix=portal -- --write` | Formatting (prettier)                                   |
+| Any `.tf` or `.tfvars` files                  | `npm run lint:tf`                           | Formatting (terraform fmt)
+| `.py` files in the `api/` directory           | `make pre-commit`                           | Formatting (isort & black) and linting (flake8 & mypy)  |
+| Files in the `api/massgov/pfml/db/` directory | `make db-check-model-parity`                | Ensure application models are in sync with the database |
+| `api/openapi.yaml`                            | `make lint-spectral`                        | OpenAPI spec linting                                    |
+
+While using the pre-commit hooks is highly encouraged, if you ever need to force a commit to go through without passing the pre-commit hooks, you can commit with the `--no-verify` flag. 
+
 ### Additional commands
 
 #### `npm run lint:tf`

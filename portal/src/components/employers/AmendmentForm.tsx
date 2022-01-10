@@ -1,9 +1,12 @@
-import Button from "../Button";
+import Button from "../core/Button";
 import React from "react";
+import ThrottledButton from "../ThrottledButton";
 import classnames from "classnames";
 
 interface AmendmentFormProps {
   className?: string;
+  onSave?: () => Promise<void>;
+  saveButtonText?: string;
   onDestroy: React.MouseEventHandler<HTMLButtonElement>;
   children: React.ReactNode;
   destroyButtonLabel: string;
@@ -16,6 +19,8 @@ interface AmendmentFormProps {
 
 export const AmendmentForm = ({
   className = "",
+  onSave,
+  saveButtonText,
   onDestroy,
   children,
   destroyButtonLabel,
@@ -30,6 +35,11 @@ export const AmendmentForm = ({
       <div className="usa-alert__body">
         <div className="usa-alert__text">{children}</div>
         <div className="border-top border-width-1px margin-top-4 margin-bottom-1 border-base-light">
+          {onSave && (
+            <ThrottledButton onClick={onSave} className="margin-right-2">
+              {saveButtonText}
+            </ThrottledButton>
+          )}
           <Button
             data-test="amendment-destroy-button"
             variation="unstyled"

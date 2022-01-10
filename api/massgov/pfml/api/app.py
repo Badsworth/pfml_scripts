@@ -22,6 +22,7 @@ import massgov.pfml.api.validation.formats
 import massgov.pfml.util.logging
 import massgov.pfml.util.logging.access
 from massgov.pfml import db
+from massgov.pfml.api.authentication.azure import AzureUser
 from massgov.pfml.api.config import AppConfig, get_config
 from massgov.pfml.api.validation import add_error_handlers_to_app, get_custom_validator_map
 from massgov.pfml.db.models.employees import AzureUser, User
@@ -99,6 +100,9 @@ def create_app(
         massgov.pfml.util.logging.access.access_log_start(flask.request)
         newrelic.agent.add_custom_parameter(
             "api_release_version", os.environ.get("RELEASE_VERSION")
+        )
+        newrelic.agent.add_custom_parameter(
+            "request_id", flask.request.headers.get("x-amzn-requestid", "")
         )
 
     @flask_app.teardown_request

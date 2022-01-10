@@ -1,6 +1,5 @@
 import { MockBenefitsApplicationBuilder, renderPage } from "../../test-utils";
 import { cleanup, screen } from "@testing-library/react";
-import { DateTime } from "luxon";
 import Success from "../../../src/pages/applications/success";
 import { setupBenefitsApplications } from "../../test-utils/helpers";
 
@@ -17,7 +16,16 @@ const setup = ({ claim }) => {
 };
 
 describe("Success", () => {
-  const futureDate = DateTime.local().plus({ months: 1 }).toISODate();
+  beforeEach(() => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date(2022, 1, 1));
+  });
+
+  afterAll(() => {
+    jest.useRealTimers();
+  });
+
+  const futureDate = new Date(2022, 3, 1).toISOString().split("T")[0]; // hack to e.g. 2021-01-01 format
   /**
    * Output a snapshot for each of these claim variations
    */

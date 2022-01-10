@@ -14,8 +14,12 @@ from massgov.pfml.db.models.employees import (
     PaymentMethod,
     State,
 )
-from massgov.pfml.db.models.payments import FineosWritebackDetails, FineosWritebackTransactionStatus
+from massgov.pfml.db.models.payments import FineosWritebackTransactionStatus
+from massgov.pfml.delegated_payments.delegated_payments_util import get_traceable_payment_details
 from massgov.pfml.delegated_payments.step import Step
+from massgov.pfml.delegated_payments.util.fineos_writeback_util import (
+    stage_payment_fineos_writeback,
+)
 from massgov.pfml.experian.address_validate_soap.service import (
     address_to_experian_verification_search,
     experian_verification_response_to_address,
@@ -37,7 +41,7 @@ class Constants:
     UNKNOWN = "Unknown"
 
     ERROR_STATE = State.PAYMENT_FAILED_ADDRESS_VALIDATION
-    SUCCESS_STATE = State.DELEGATED_PAYMENT_POST_PROCESSING_CHECK
+    SUCCESS_STATE = State.PAYMENT_READY_FOR_MAX_WEEKLY_BENEFIT_AMOUNT_VALIDATION
 
     MESSAGE_ALREADY_VALIDATED = "Address has already been validated"
     MESSAGE_INVALID_EXPERIAN_RESPONSE = "Invalid response from Experian search API"
@@ -66,20 +70,15 @@ class AddressValidationStep(Step):
 
     def run_step(self) -> None:
 
-        try:
-            experian_soap_client = _get_experian_soap_client()
+        experian_soap_client = _get_experian_soap_client()
 
-            payments = _get_payments_awaiting_address_validation(self.db_session)
-            for payment in payments:
-                self._validate_address_for_payment(payment, experian_soap_client)
-                self.increment(self.Metrics.VALIDATED_ADDRESS_COUNT)
-
-            self.db_session.commit()
-
-        except Exception:
-            self.db_session.rollback()
-            logger.exception("Error processing addresses for payments")
-            raise
+        payments = _get_payments_awaiting_address_validation(self.db_session)
+        for payment in payments:
+            logger.info(
+                "Doing address validation for payment", extra=get_traceable_payment_details(payment)
+            )
+            self._validate_address_for_payment(payment, experian_soap_client)
+            self.increment(self.Metrics.VALIDATED_ADDRESS_COUNT)
 
         return None
 
@@ -101,6 +100,10 @@ class AddressValidationStep(Step):
                 db_session=self.db_session,
             )
             self.increment(self.Metrics.PREVIOUSLY_VALIDATED_MATCH_COUNT)
+            logger.info(
+                "Address previously validated for payment, skipping Experian call",
+                extra=get_traceable_payment_details(payment, Constants.SUCCESS_STATE),
+            )
 
             return None
 
@@ -213,6 +216,11 @@ class AddressValidationStep(Step):
                 # Update the message to mention that for EFT we do not
                 # require the address to be valid.
                 message += " but not required for EFT payment"
+
+                logger.info(
+                    "EFT Payment has an invalid address, but address is not required for EFT",
+                    extra=get_traceable_payment_details(payment),
+                )
             end_state = Constants.SUCCESS_STATE
 
         outcome = _outcome_for_search_result(address_validation_result, message, address)
@@ -224,23 +232,22 @@ class AddressValidationStep(Step):
         )
 
         if end_state.state_id == Constants.ERROR_STATE.state_id:
-            self._manage_pei_writeback_state(payment, outcome)
-
-    def _manage_pei_writeback_state(self, payment: Payment, outcome: Dict[str, Any]) -> None:
-        # Create the state log, note this is in the DELEGATED_PEI_WRITEBACK flow
-        # So it is added in addition to the state log added in _create_end_state_by_payment_type
-        state_log_util.create_finished_state_log(
-            end_state=State.DELEGATED_ADD_TO_FINEOS_WRITEBACK,
-            outcome=outcome,
-            associated_model=payment,
-            db_session=self.db_session,
-        )
-        writeback_details = FineosWritebackDetails(
-            payment=payment,
-            transaction_status_id=FineosWritebackTransactionStatus.ADDRESS_VALIDATION_ERROR.transaction_status_id,
-            import_log_id=cast(int, self.get_import_log_id()),
-        )
-        self.db_session.add(writeback_details)
+            stage_payment_fineos_writeback(
+                payment=payment,
+                writeback_transaction_status=FineosWritebackTransactionStatus.ADDRESS_VALIDATION_ERROR,
+                outcome=outcome,
+                db_session=self.db_session,
+                import_log_id=self.get_import_log_id(),
+            )
+            logger.info(
+                "Payment failed address validation",
+                extra=get_traceable_payment_details(payment, Constants.ERROR_STATE),
+            )
+        else:
+            logger.info(
+                "Payment passed address validation",
+                extra=get_traceable_payment_details(payment, Constants.SUCCESS_STATE),
+            )
 
 
 def _get_experian_soap_client() -> soap_api.Client:

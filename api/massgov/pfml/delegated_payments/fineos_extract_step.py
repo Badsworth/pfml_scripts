@@ -4,7 +4,7 @@ import pathlib
 import tempfile
 import uuid
 from dataclasses import dataclass
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import massgov.pfml.delegated_payments.delegated_config as payments_config
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
@@ -42,6 +42,12 @@ PAYMENT_RECONCILIATION_EXTRACT_CONFIG = ExtractConfig(
     "fineos_adhoc_data_export_path",
 )
 
+IAWW_EXTRACT_CONFIG = ExtractConfig(
+    payments_util.IAWW_EXTRACT_FILES,
+    ReferenceFileType.FINEOS_IAWW_EXTRACT,
+    "fineos_data_export_path",
+)
+
 
 class ExtractData:
     date_str: str
@@ -50,7 +56,13 @@ class ExtractData:
 
     reference_file: ReferenceFile
 
-    def __init__(self, s3_locations: List[str], date_str: str, extract_config: ExtractConfig):
+    def __init__(
+        self,
+        s3_locations: List[str],
+        date_str: str,
+        extract_config: ExtractConfig,
+        validate_all_files: bool = True,
+    ):
         self.date_str = date_str
         self.extract_path_mapping = {}
 
@@ -59,7 +71,7 @@ class ExtractData:
                 if s3_location.endswith(extract.file_name):
                     self.extract_path_mapping[s3_location] = extract
 
-        if len(extract_config.extracts) != len(self.extract_path_mapping):
+        if validate_all_files and len(extract_config.extracts) != len(self.extract_path_mapping):
             expected_file_names = [extract.file_name for extract in extract_config.extracts]
             error_msg = f"Expected to find files {expected_file_names}, but found {s3_locations}"
             raise Exception(error_msg)
@@ -78,6 +90,8 @@ class ExtractData:
 
 class FineosExtractStep(Step):
     extract_config: ExtractConfig
+    active_extract_data: Optional[ExtractData]
+    active_extract_data_date_str: Optional[str]
 
     class Metrics(str, enum.Enum):
         FINEOS_PREFIX = "fineos_prefix"
@@ -92,6 +106,8 @@ class FineosExtractStep(Step):
     ) -> None:
         super().__init__(db_session=db_session, log_entry_db_session=log_entry_db_session)
         self.extract_config = extract_config
+        self.active_extract_data = None
+        self.active_extract_data_date_str = None
 
     def run_step(self) -> None:
         logger.info(
@@ -101,12 +117,24 @@ class FineosExtractStep(Step):
         with tempfile.TemporaryDirectory() as download_directory:
             self.process_extracts(pathlib.Path(download_directory))
 
-        self.db_session.commit()
-
         logger.info(
             "Successfully consumed FINEOS extract data for %s",
             self.extract_config.reference_file_type.reference_file_type_description,
         )
+
+    def cleanup_on_failure(self) -> None:
+        logger.exception(
+            "Error processing %s extract files in date_group: %s",
+            self.extract_config.reference_file_type.reference_file_type_description,
+            self.active_extract_data_date_str,
+            extra={"date_group": self.active_extract_data_date_str},
+        )
+        if self.active_extract_data:
+            self.move_files_from_received_to_out_dir(
+                self.active_extract_data, payments_util.Constants.S3_INBOUND_ERROR_DIR
+            )
+            self.db_session.commit()
+            self.active_extract_data = None
 
     def process_extracts(self, download_directory: pathlib.Path) -> None:
         data_by_date = self._move_files_from_fineos_to_received()
@@ -121,58 +149,57 @@ class FineosExtractStep(Step):
             logger.info(
                 "Processing files in date group: %s", date_str, extra={"date_group": date_str}
             )
+            is_latest_extract = date_str == latest_date_str
 
-            try:
-                extract_data = ExtractData(s3_file_locations, date_str, self.extract_config)
+            # We'll only validate all files present for the latest
+            # extract that we're going to actually store to the DB
+            extract_data = ExtractData(
+                s3_file_locations,
+                date_str,
+                self.extract_config,
+                validate_all_files=is_latest_extract,
+            )
+            self.active_extract_data = extract_data
+            self.active_extract_data_date_str = date_str
 
-                if date_str != latest_date_str:
-                    self.move_files_from_received_to_out_dir(
-                        extract_data, payments_util.Constants.S3_INBOUND_SKIPPED_DIR
-                    )
-                    logger.info(
-                        "Successfully skipped claimant extract files in date group: %s",
-                        date_str,
-                        extra={"date_group": date_str},
-                    )
-                    continue
-
-                if (
-                    date_str in previously_processed_date
-                    or payments_util.payment_extract_reference_file_exists_by_date_group(
-                        self.db_session, date_str, self.extract_config.reference_file_type
-                    )
-                ):
-                    logger.warning(
-                        "Found existing ReferenceFile record for date group in /processed folder: %s",
-                        date_str,
-                        extra={"date_group": date_str},
-                    )
-                    previously_processed_date.add(date_str)
-                    continue
-
-                self.set_metrics({self.Metrics.FINEOS_PREFIX: date_str})
-                self._download_and_index_data(extract_data, str(download_directory))
+            if not is_latest_extract:
                 self.move_files_from_received_to_out_dir(
-                    extract_data, payments_util.Constants.S3_INBOUND_PROCESSED_DIR
+                    extract_data, payments_util.Constants.S3_INBOUND_SKIPPED_DIR
                 )
                 logger.info(
-                    "Processed extract files for %s now in %s",
-                    self.extract_config.reference_file_type.reference_file_type_description,
-                    extract_data.reference_file.file_location,
-                )
-
-            except Exception:
-                self.db_session.rollback()
-                logger.exception(
-                    "Error processing %s extract files in date_group: %s",
-                    self.extract_config.reference_file_type.reference_file_type_description,
+                    "Successfully skipped claimant extract files in date group: %s",
                     date_str,
                     extra={"date_group": date_str},
                 )
-                self.move_files_from_received_to_out_dir(
-                    extract_data, payments_util.Constants.S3_INBOUND_ERROR_DIR
+                continue
+
+            if (
+                date_str in previously_processed_date
+                or payments_util.payment_extract_reference_file_exists_by_date_group(
+                    self.db_session, date_str, self.extract_config.reference_file_type
                 )
-                raise
+            ):
+                logger.warning(
+                    "Found existing ReferenceFile record for date group in /processed folder: %s",
+                    date_str,
+                    extra={"date_group": date_str},
+                )
+                previously_processed_date.add(date_str)
+                continue
+
+            self.set_metrics({self.Metrics.FINEOS_PREFIX: date_str})
+            self._download_and_index_data(extract_data, str(download_directory))
+            self.move_files_from_received_to_out_dir(
+                extract_data, payments_util.Constants.S3_INBOUND_PROCESSED_DIR
+            )
+            logger.info(
+                "Processed extract files for %s now in %s",
+                self.extract_config.reference_file_type.reference_file_type_description,
+                extract_data.reference_file.file_location,
+            )
+
+            self.active_extract_data = None
+            self.active_extract_data_date_str = None
 
     def _move_files_from_fineos_to_received(self) -> Dict[str, List[str]]:
         expected_file_names = [extract.file_name for extract in self.extract_config.extracts]
@@ -182,6 +209,7 @@ class FineosExtractStep(Step):
             expected_file_names,
             self.extract_config.reference_file_type,
             self.extract_config.source_folder_s3_config_key,
+            allow_missing=True,  # We'll check later
         )
         data_by_date = payments_util.group_s3_files_by_date(expected_file_names)
 

@@ -323,6 +323,28 @@ class OCOrganisationItem(pydantic.BaseModel):
 class OCOrganisation(pydantic.BaseModel):
     OCOrganisation: List[OCOrganisationItem]
 
+    def get_customer_number(self):
+        return str(self.OCOrganisation[0].CustomerNo)
+
+    def get_worksite_id(self):
+        units = self.OCOrganisation[0].organisationUnits
+        try:
+            worksite_id = (
+                units.OrganisationUnit[0]  # type: ignore
+                .orgUnitLocationLinks.OrgUnitLocationLink[0]
+                .partyLocationAssociation.OCPartyLocationAssociation[0]
+                .OID
+            )
+        except AttributeError:
+            worksite_id = None
+        return worksite_id
+
+    def get_organization_units(self) -> Optional[List[OCOrganisationUnitItem]]:
+        has_org_units = self.OCOrganisation[0].organisationUnits
+        if has_org_units is not None:
+            return has_org_units.OrganisationUnit
+        return None
+
 
 class PartyIntegrationDTOItem(pydantic.BaseModel):
     EffectiveDate: str = "1753-01-01T00:00:00"
@@ -394,3 +416,20 @@ class ServiceAgreementServiceRequest(pydantic.BaseModel):
     )
     config_name: str = pydantic.Field("ServiceAgreementService", alias="config-name")
     update_data: ServiceAgreementData = pydantic.Field(None, alias="update-data")
+
+
+class TaxWithholdingUpdateData(pydantic.BaseModel):
+    additional_data_set: AdditionalDataSet = pydantic.Field(None, alias="additional-data-set")
+
+
+class TaxWithholdingUpdateRequest(pydantic.BaseModel):
+    xmlns_p: str = pydantic.Field(
+        "http://www.fineos.com/wscomposer/OptInSITFITService", alias="@xmlns:p"
+    )
+    xmlns_xsi: str = pydantic.Field("http://www.w3.org/2001/XMLSchema-instance", alias="@xmlns:xsi")
+    xsi_schemaLocation: str = pydantic.Field(
+        "http://www.fineos.com/wscomposer/OptInSITFITService  optinsitfitservice.xsd",
+        alias="@xsi:schemaLocation",
+    )
+    config_name: str = pydantic.Field("OptInSITFITService", alias="config-name")
+    update_data: TaxWithholdingUpdateData = pydantic.Field(None, alias="update-data")

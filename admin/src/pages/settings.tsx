@@ -6,6 +6,7 @@ import React, { useEffect, useState } from "react";
 //import { ApiResponse, PermissionsResponse, AzureGroupsResponse, getPermissions, patchPermissions, getAzureGroups } from "../api";
 // @todo: Remove when API is functional
 import { getAzureGroups, getAzurePermissions } from "./settingsData";
+import { StaticPropsPermissions } from "../menus";
 
 export type AzureGroup = {
   azure_group_id: number;
@@ -349,4 +350,12 @@ export default function Settings() {
       </table>
     </>
   );
+}
+
+export async function getStaticProps(): Promise<StaticPropsPermissions> {
+  return {
+    props: {
+      permissions: ["SETTINGS_READ"],
+    },
+  };
 }

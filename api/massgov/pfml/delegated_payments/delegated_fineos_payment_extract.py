@@ -42,12 +42,14 @@ from massgov.pfml.db.models.payments import (
     FineosExtractVpei,
     FineosExtractVpeiClaimDetails,
     FineosExtractVpeiPaymentDetails,
-    FineosWritebackDetails,
     FineosWritebackTransactionStatus,
     LkFineosWritebackTransactionStatus,
 )
-from massgov.pfml.delegated_payments.delegated_payments_util import get_now
 from massgov.pfml.delegated_payments.step import Step
+from massgov.pfml.delegated_payments.util.fineos_writeback_util import (
+    stage_payment_fineos_writeback,
+)
+from massgov.pfml.util.datetime import get_now_us_eastern
 
 logger = logging.get_logger(__name__)
 
@@ -60,6 +62,10 @@ PROCESSED_FOLDER = "processed"
 SKIPPED_FOLDER = "skipped"
 
 CANCELLATION_PAYMENT_TRANSACTION_TYPE = "PaymentOut Cancellation"
+
+STATE_TAX_WITHHOLDING_TIN = "SITPAYEE001"
+FEDERAL_TAX_WITHHOLDING_TIN = "FITAMOUNTPAYEE001"
+
 # There are multiple types of overpayments
 OVERPAYMENT_PAYMENT_TRANSACTION_TYPES = [
     PaymentTransactionType.OVERPAYMENT,
@@ -329,10 +335,24 @@ class PaymentData:
         could potentially fall into multiple payment types.
         https://lwd.atlassian.net/wiki/spaces/API/pages/1336901700/Types+of+Payments
         """
+        # Cancellations
+        if self.event_type == CANCELLATION_PAYMENT_TRANSACTION_TYPE:
+            return PaymentTransactionType.CANCELLATION
 
         # Zero dollar payments overrule all other payment types
         if self.payment_amount == Decimal("0"):
             return PaymentTransactionType.ZERO_DOLLAR
+
+        # Tax Withholdings
+        if payments_util.is_withholding_payments_enabled():
+            logger.info("Tax Withholding ENABLED")
+            # SIT
+            if self.tin == STATE_TAX_WITHHOLDING_TIN:
+                return PaymentTransactionType.STATE_TAX_WITHHOLDING
+
+            # FIT
+            if self.tin == FEDERAL_TAX_WITHHOLDING_TIN:
+                return PaymentTransactionType.FEDERAL_TAX_WITHHOLDING
 
         # Employer reimbursements reimbursements are a very specific set of records
         if (
@@ -346,10 +366,6 @@ class PaymentData:
         for overpayment_transaction_type in OVERPAYMENT_PAYMENT_TRANSACTION_TYPES:
             if self.event_type == overpayment_transaction_type.payment_transaction_type_description:
                 return overpayment_transaction_type
-
-        # Cancellations
-        if self.event_type == CANCELLATION_PAYMENT_TRANSACTION_TYPE:
-            return PaymentTransactionType.CANCELLATION
 
         # The bulk of the payments we process will be standard payments
         if (
@@ -452,8 +468,21 @@ class PaymentData:
                 True,
                 custom_validator_func=self.payment_period_date_validator,
             )
-            row_amount = payments_util.validate_db_input(
+
+            # This amount will sum to the amount we pay the claimant
+            # across all of the payment periods of a payment
+            row_amount_post_tax = payments_util.validate_db_input(
                 "BALANCINGAMOU_MONAMT",
+                payment_detail_row,
+                self.validation_container,
+                True,
+                custom_validator_func=payments_util.amount_validator,
+            )
+
+            # This amount is prior to taxes being taken out and
+            # also includes overpayments that have been paid back in some scenarios
+            business_net_amount = payments_util.validate_db_input(
+                "BUSINESSNETBE_MONAMT",
                 payment_detail_row,
                 self.validation_container,
                 True,
@@ -465,12 +494,21 @@ class PaymentData:
             if row_end_period is not None:
                 end_periods.append(row_end_period)
 
-            if all(field is not None for field in [row_start_period, row_end_period, row_amount]):
+            if all(
+                field is not None
+                for field in [
+                    row_start_period,
+                    row_end_period,
+                    row_amount_post_tax,
+                    business_net_amount,
+                ]
+            ):
                 self.payment_detail_records.append(
                     PaymentDetails(
                         period_start_date=payments_util.datetime_str_to_date(row_start_period),
                         period_end_date=payments_util.datetime_str_to_date(row_end_period),
-                        amount=Decimal(cast(str, row_amount)),
+                        amount=Decimal(cast(str, row_amount_post_tax)),
+                        business_net_amount=Decimal(cast(str, business_net_amount)),
                     )
                 )
 
@@ -494,6 +532,9 @@ class PaymentData:
             "c_value": self.c_value,
             "i_value": self.i_value,
             "absence_case_id": self.absence_case_number,
+            "period_start_date": self.payment_start_period,
+            "period_end_date": self.payment_end_period,
+            "payment_transaction_type": self.payment_transaction_type.payment_transaction_type_description,
         }
 
     def get_payment_message_str(self) -> str:
@@ -530,19 +571,12 @@ class PaymentExtractStep(Step):
         ZERO_DOLLAR_PAYMENT_COUNT = "zero_dollar_payment_count"
         ADHOC_PAYMENT_COUNT = "adhoc_payment_count"
         MULTIPLE_CLAIM_DETAILS_ERROR_COUNT = "multiple_claim_details_error_count"
+        FEDERAL_WITHHOLDING_PAYMENT_COUNT = "federal_withholding_payment_count"
+        STATE_WITHHOLDING_PAYMENT_COUNT = "state_withholding_payment_count"
 
     def run_step(self):
         logger.info("Processing payment extract data")
-
-        try:
-            self.process_records()
-            self.db_session.commit()
-
-        except Exception:
-            self.db_session.rollback()
-            logger.exception("Error processing payment extract data")
-            raise
-
+        self.process_records()
         logger.info("Successfully processed payment extract data")
 
     def get_active_payment_state(self, payment: Payment) -> Optional[LkState]:
@@ -576,7 +610,10 @@ class PaymentExtractStep(Step):
         )
 
         if active_state:
-            logger.warning(
+            # If you are seeing this error, the writebacks are not working
+            # properly. We need to verify that we have been correctly sending
+            # the writebacks, and that FINEOS has been properly consuming them.
+            logger.error(
                 "Payment with C=%s I=%s received from FINEOS that is already in active state: [%s] - active payment ID: %s",
                 payment.fineos_pei_c_value,
                 payment.fineos_pei_i_value,
@@ -595,12 +632,13 @@ class PaymentExtractStep(Step):
         # Get the TIN, employee and claim associated with the payment to be made
         employee, claim = None, None
         try:
-            # If the payment transaction type is for the employer
+            # If the payment transaction type is for the employer,State or Federal
             # We know we aren't going to find an employee, so don't look
-            if (
-                payment_data.payment_transaction_type.payment_transaction_type_id
-                != PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id
-            ):
+            if payment_data.payment_transaction_type.payment_transaction_type_id not in [
+                PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id,
+                PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id,
+                PaymentTransactionType.FEDERAL_TAX_WITHHOLDING.payment_transaction_type_id,
+            ]:
                 tax_identifier = (
                     self.db_session.query(TaxIdentifier)
                     .filter_by(tax_identifier=payment_data.tin)
@@ -734,7 +772,7 @@ class PaymentExtractStep(Step):
         # or a payment might have been created before. We'll check that later.
 
         logger.info(
-            "Creating new payment for %s",
+            "Creating payment record in DB %s",
             payment_data.get_payment_message_str(),
             extra=payment_data.get_traceable_details(),
         )
@@ -783,15 +821,18 @@ class PaymentExtractStep(Step):
 
         payment.fineos_pei_c_value = payment_data.c_value
         payment.fineos_pei_i_value = payment_data.i_value
-        payment.fineos_extraction_date = payments_util.get_now().date()
+        payment.fineos_extraction_date = get_now_us_eastern().date()
         payment.fineos_extract_import_log_id = self.get_import_log_id()
         payment.leave_request_decision = payment_data.leave_request_decision
 
-        # A payment is considered adhoc if it's marked as "Adhoc"
+        # A payment is considered adhoc if it's marked as "Adhoc" often with
+        # a random number suffixed to it.
         # This column can be empty/missing, and that's fine. This is used
         # later in the post-processing step to filter out adhoc payments from
         # the weekly maximum check.
-        payment.is_adhoc_payment = payment_data.amalgamation_c == "Adhoc"
+        payment.is_adhoc_payment = (
+            payment_data.amalgamation_c is not None and "Adhoc" in payment_data.amalgamation_c
+        )
         if payment.is_adhoc_payment:
             self.increment(self.Metrics.ADHOC_PAYMENT_COUNT)
 
@@ -815,6 +856,7 @@ class PaymentExtractStep(Step):
                 payments_util.ValidationReason.RECEIVED_PAYMENT_CURRENTLY_BEING_PROCESSED,
                 f"We received a payment that is already being processed. It is currently in state [{active_state.state_description}].",
             )
+            payment.exclude_from_payment_status = True
 
         self.db_session.add(payment)
 
@@ -885,12 +927,12 @@ class PaymentExtractStep(Step):
             elif (
                 (PrenoteState.PENDING_WITH_PUB.prenote_state_id == existing_eft.prenote_state_id)
                 and existing_eft.prenote_sent_at
-                and (get_now() - existing_eft.prenote_sent_at).days
+                and (get_now_us_eastern() - existing_eft.prenote_sent_at).days
                 >= PRENOTE_PRENDING_WAITING_PERIOD
             ):
                 # Set prenote to approved
                 existing_eft.prenote_state_id = PrenoteState.APPROVED.prenote_state_id
-                existing_eft.prenote_approved_at = payments_util.get_now()
+                existing_eft.prenote_approved_at = get_now_us_eastern()
 
                 self.increment(self.Metrics.PRENOTE_PAST_WAITING_PERIOD_APPROVED_COUNT)
             else:
@@ -921,7 +963,7 @@ class PaymentExtractStep(Step):
 
             extra["pub_eft_id"] = new_eft.pub_eft_id
             logger.info(
-                "Initiating DELEGATED_EFT flow for employee associated with payment %s",
+                "Starting DELEGATED_EFT prenote flow for employee associated with payment %s",
                 payment_data.get_payment_message_str(),
                 extra=extra,
             )
@@ -1014,7 +1056,6 @@ class PaymentExtractStep(Step):
         self, payment_data: PaymentData, reference_file: ReferenceFile
     ) -> Payment:
         employee, claim = self.get_employee_and_claim(payment_data)
-
         payment = self.add_records_to_db(payment_data, employee, claim, reference_file)
 
         return payment
@@ -1022,10 +1063,19 @@ class PaymentExtractStep(Step):
     def _setup_state_log(self, payment: Payment, payment_data: PaymentData) -> None:
         transaction_status = None
 
+        # If it has an active payment issue, we do not want
+        # to update the transaction status, the writebacks
+        # are probably not working, and we'd prefer the payment
+        # keep whatever its original status was.
+        if payment.exclude_from_payment_status:
+            message = "Active Payment Error - Contact FINEOS"
+            end_state = State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT
+            self.increment(self.Metrics.ERRORED_PAYMENT_COUNT)
+
         # https://lwd.atlassian.net/wiki/spaces/API/pages/1336901700/Types+of+Payments
         # Does the payment have validation issues
         # If so, add to that error state
-        if payment_data.validation_container.has_validation_issues():
+        elif payment_data.validation_container.has_validation_issues():
             message = "Error processing payment record"
 
             # https://lwd.atlassian.net/wiki/spaces/API/pages/1319272855/Payment+Transaction+Scenarios
@@ -1086,6 +1136,27 @@ class PaymentExtractStep(Step):
             )
             self.increment(self.Metrics.CANCELLATION_COUNT)
 
+        # set status FEDERAL_WITHHOLDING_READY_FOR_PROCESSING
+        elif (
+            payments_util.is_withholding_payments_enabled()
+            and payment.payment_transaction_type_id
+            == PaymentTransactionType.FEDERAL_TAX_WITHHOLDING.payment_transaction_type_id
+        ):
+            logger.info("Tax Withholding ENABLED")
+            end_state = State.FEDERAL_WITHHOLDING_READY_FOR_PROCESSING
+            message = "Federal Withholding payment processed"
+            self.increment(self.Metrics.FEDERAL_WITHHOLDING_PAYMENT_COUNT)
+
+        # set status  STATE_WITHHOLDING_READY_FOR_PROCESSING
+        elif (
+            payments_util.is_withholding_payments_enabled()
+            and payment.payment_transaction_type_id
+            == PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id
+        ):
+            logger.info("Tax Withholding ENABLED")
+            end_state = State.STATE_WITHHOLDING_READY_FOR_PROCESSING
+            message = "State Withholding payment processed"
+            self.increment(self.Metrics.STATE_WITHHOLDING_PAYMENT_COUNT)
         else:
             end_state = State.PAYMENT_READY_FOR_ADDRESS_VALIDATION
             message = "Success"
@@ -1100,9 +1171,10 @@ class PaymentExtractStep(Step):
             db_session=self.db_session,
         )
         logger.info(
-            "Payment %s added to state %s",
+            "After consuming extracts and performing initial validation, payment %s added to state [%s]",
             payment_data.get_payment_message_str(),
             end_state.state_description,
+            extra=payments_util.get_traceable_payment_details(payment, end_state),
         )
 
     def _manage_pei_writeback_state(
@@ -1122,21 +1194,13 @@ class PaymentExtractStep(Step):
 
         message = f"Payment {payment_data.get_payment_message_str()} added to DELEGATED_PEI_WRITEBACK flow with transaction status {transaction_status.transaction_status_description}"
 
-        # Create the state log, note this is in the DELEGATED_PEI_WRITEBACK flow
-        # So it is added in addition to the state log added in manage_state_log
-        state_log_util.create_finished_state_log(
-            end_state=State.DELEGATED_ADD_TO_FINEOS_WRITEBACK,
-            outcome=state_log_util.build_outcome(message, payment_data.validation_container),
-            associated_model=payment,
-            import_log_id=self.get_import_log_id(),
-            db_session=self.db_session,
-        )
-        writeback_details = FineosWritebackDetails(
+        stage_payment_fineos_writeback(
             payment=payment,
-            transaction_status_id=transaction_status.transaction_status_id,
+            writeback_transaction_status=transaction_status,
+            outcome=state_log_util.build_outcome(message, payment_data.validation_container),
+            db_session=self.db_session,
             import_log_id=self.get_import_log_id(),
         )
-        self.db_session.add(writeback_details)
         logger.info(message, extra=payment_data.get_traceable_details())
 
     def _determine_pei_transaction_status(
@@ -1280,7 +1344,7 @@ class PaymentExtractStep(Step):
                 )
                 if len(requested_absence_records) > 0:
                     if len(requested_absence_records) > 1:
-                        logger.info(
+                        logger.warning(
                             "Found more than one requested absence record for payment with C/I %s/%s and leave request ID %s",
                             c_value,
                             i_value,
@@ -1300,7 +1364,8 @@ class PaymentExtractStep(Step):
             )
 
             logger.info(
-                f"Processing payment record {payment_data.get_payment_message_str()}",
+                "Processing extract data for payment record %s",
+                payment_data.get_payment_message_str(),
                 extra=payment_data.get_traceable_details(),
             )
 
@@ -1313,11 +1378,6 @@ class PaymentExtractStep(Step):
                 payment, payment_data,
             )
 
-            logger.info(
-                "Done processing payment record %s",
-                payment_data.get_payment_message_str(),
-                extra=payment_data.get_traceable_details(),
-            )
         except Exception:
             # An exception during processing would indicate
             # either a bug or a scenario that we believe invalidates

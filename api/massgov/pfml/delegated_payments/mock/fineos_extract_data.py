@@ -1,12 +1,14 @@
+import copy
 import csv
 import io
 import os
 from collections import OrderedDict
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
-from typing import Dict, List, cast
+from typing import Dict, List, Optional, cast
 
 import faker
+from sqlalchemy.sql.expression import true
 
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.files as file_util
@@ -19,6 +21,7 @@ from massgov.pfml.delegated_payments.mock.scenario_data_generator import (
     NO_MATCH_ADDRESS,
     ScenarioData,
 )
+from massgov.pfml.util.datetime import get_now_us_eastern
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
@@ -29,7 +32,10 @@ fake.seed_instance(1212)
 # so these field names extended from the constant values
 # This is mainly for new columns we want to implement logic for
 # but FINEOS hasn't yet made a change to a particular extract
-EMPLOYEE_FEED_FIELD_NAMES = payments_util.FineosExtractConstants.EMPLOYEE_FEED.field_names
+EMPLOYEE_FEED_FIELD_NAMES = payments_util.FineosExtractConstants.EMPLOYEE_FEED.field_names + [
+    "EFFECTIVEFROM",
+    "EFFECTIVETO",
+]
 REQUESTED_ABSENCE_SOM_FIELD_NAMES = (
     payments_util.FineosExtractConstants.VBI_REQUESTED_ABSENCE_SOM.field_names
 )
@@ -40,6 +46,14 @@ PEI_PAYMENT_DETAILS_FIELD_NAMES = payments_util.FineosExtractConstants.PAYMENT_D
 PEI_CLAIM_DETAILS_FIELD_NAMES = payments_util.FineosExtractConstants.CLAIM_DETAILS.field_names
 REQUESTED_ABSENCE_FIELD_NAMES = (
     payments_util.FineosExtractConstants.VBI_REQUESTED_ABSENCE.field_names
+)
+
+# IAWW files
+VBI_LEAVE_PLAN_REQUESTED_ABSENCE_FIELD_NAMES = (
+    payments_util.FineosExtractConstants.VBI_LEAVE_PLAN_REQUESTED_ABSENCE.field_names
+)
+PAID_LEVAVE_INSTRUCTION_FIELD_NAMES = (
+    payments_util.FineosExtractConstants.PAID_LEAVE_INSTRUCTION.field_names
 )
 
 
@@ -76,6 +90,8 @@ class FineosClaimantData(MockData):
         self.account_nbr = self.get_value("account_nbr", ssn)
         self.ssn = self.get_value("ssn", ssn)
         self.default_payment_pref = self.get_value("default_payment_pref", "Y")
+
+        # match with fineos_customer_number in scenario_data_generator.py
         self.customer_number = self.get_value("customer_number", fake.ssn().replace("-", ""))
 
         absence_num = str(fake.unique.random_int())
@@ -101,6 +117,12 @@ class FineosClaimantData(MockData):
         self.absence_period_index_id = self.get_value(
             "absence_period_i_value", str(fake.unique.random_int())
         )
+        self.fineos_address_effective_from = self.get_value(
+            "fineos_address_effective_from", "2021-01-01 12:00:00"
+        )
+        self.fineos_address_effective_to = self.get_value(
+            "fineos_address_effective_to", "2022-01-01 12:00:00"
+        )
 
     def get_employee_feed_record(self):
         employee_feed_record = OrderedDict()
@@ -123,6 +145,8 @@ class FineosClaimantData(MockData):
             employee_feed_record["FIRSTNAMES"] = self.fineos_employee_first_name
             employee_feed_record["INITIALS"] = self.fineos_employee_middle_name
             employee_feed_record["LASTNAME"] = self.fineos_employee_last_name
+            employee_feed_record["EFFECTIVEFROM"] = self.fineos_address_effective_from
+            employee_feed_record["EFFECTIVETO"] = self.fineos_address_effective_to
 
         return employee_feed_record
 
@@ -196,6 +220,8 @@ class FineosPaymentData(MockData):
             "absence_case_creation_date", "2020-12-01 07:00:00"
         )
         self.payment_amount = self.get_value("payment_amount", "100.00")
+        self.balancing_amount = self.get_value("balancing_amount", self.payment_amount)
+        self.business_net_amount = self.get_value("business_net_amount", self.payment_amount)
         self.routing_nbr = self.get_value("routing_nbr", generate_routing_nbr_from_ssn(ssn))
         self.account_nbr = self.get_value("account_nbr", ssn)
         self.account_type = self.get_value("account_type", "Checking")
@@ -251,7 +277,8 @@ class FineosPaymentData(MockData):
             payment_detail_record["PAYMENTSTARTP"] = self.payment_start_period
             payment_detail_record["PAYMENTENDPER"] = self.payment_end_period
 
-            payment_detail_record["BALANCINGAMOU_MONAMT"] = self.payment_amount
+            payment_detail_record["BALANCINGAMOU_MONAMT"] = self.balancing_amount
+            payment_detail_record["BUSINESSNETBE_MONAMT"] = self.business_net_amount
 
         return payment_detail_record
 
@@ -264,6 +291,56 @@ class FineosPaymentData(MockData):
             requested_absence_record["ABSENCE_CASECREATIONDATE"] = self.absence_case_creation_date
 
         return requested_absence_record
+
+
+class FineosIAWWData(MockData):
+    """
+    This contains all data we care about for extracting IAWW data from FINEOS
+    With no parameters, it will generate a valid, mostly-random data set
+    Parameters can be overriden by specifying them as kwargs
+    """
+
+    def __init__(
+        self, **kwargs,
+    ):
+        super().__init__(true, **kwargs)
+        self.kwargs = kwargs
+
+        self.c_value = self.get_value("c_value", "7326")
+        self.i_value = self.get_value("i_value", str(fake.unique.random_int()))
+        self.leaveplan_c_value = self.get_value("leaveplan_c_value", "14437")
+
+        leaveplan_i_value = str(fake.unique.random_int())
+        self.leaveplan_i_value_instruction = self.get_value(
+            "leaveplan_i_value_instruction", leaveplan_i_value
+        )
+        self.leaveplan_i_value_request = self.get_value(
+            "leaveplan_i_value_request", leaveplan_i_value
+        )
+        self.leave_request_id_value = self.get_value(
+            "leave_request_id_value", str(fake.unique.random_int())
+        )
+        self.aww_value = self.get_value("aww_value", str(fake.unique.random_int()))
+
+    def get_leave_plan_request_absence_record(self):
+        leave_plan_request_absence_record = OrderedDict()
+
+        leave_plan_request_absence_record["SELECTEDPLAN_CLASSID"] = self.leaveplan_c_value
+        leave_plan_request_absence_record["SELECTEDPLAN_INDEXID"] = self.leaveplan_i_value_request
+        leave_plan_request_absence_record["LEAVEREQUEST_ID"] = self.leave_request_id_value
+
+        return leave_plan_request_absence_record
+
+    def get_vpaid_leave_instruction_record(self):
+        vpaid_leave_instruction_record = OrderedDict()
+
+        vpaid_leave_instruction_record["C"] = self.c_value
+        vpaid_leave_instruction_record["I"] = self.i_value
+        vpaid_leave_instruction_record["AVERAGEWEEKLYWAGE_MONAMT"] = self.aww_value
+        vpaid_leave_instruction_record["C_SELECTEDLEAVEPLAN"] = self.leaveplan_c_value
+        vpaid_leave_instruction_record["I_SELECTEDLEAVEPLAN"] = self.leaveplan_i_value_instruction
+
+        return vpaid_leave_instruction_record
 
 
 @dataclass
@@ -369,7 +446,7 @@ def generate_payment_extract_files(
 
         payment_method = scenario_descriptor.payment_method.payment_method_description
 
-        payment_date = payments_util.get_now()
+        payment_date = get_now_us_eastern()
 
         # This'll be a new payment based on different C/I values
         if round > 1 and scenario_descriptor.has_additional_payment_in_period and prior_payment:
@@ -439,6 +516,13 @@ def generate_payment_extract_files(
         if scenario_descriptor.invalid_address and (not fix_address):
             mock_address = INVALID_ADDRESS
 
+        # We have one payment record as withholding
+        if scenario_descriptor.is_tax_withholding_record_without_primary_payment:
+            event_reason = "Automatic Alternate Payment"
+            payee_identifier = "ID"
+            amalgamationc = "ScheduledAlternate65424"
+            ssn = "SITPAYEE001"
+            payment_amount = "22.00"
         # Auto generated: c_value, i_value, leave_request_id
         fineos_payments_data = FineosPaymentData(
             generate_defaults=True,
@@ -460,8 +544,8 @@ def generate_payment_extract_files(
             routing_nbr=routing_nbr,
             account_nbr=account_nbr,
             account_type=account_type,
-            payment_start_period=payment_start_period.strftime("%Y-%m-%d %H:%M:%S"),
-            payment_end_period=payment_end_period.strftime("%Y-%m-%d %H:%M:%S"),
+            payment_start=payment_start_period.strftime("%Y-%m-%d %H:%M:%S"),
+            payment_end=payment_end_period.strftime("%Y-%m-%d %H:%M:%S"),
             leave_request_decision=scenario_descriptor.leave_request_decision,
             event_type=event_type,
             event_reason=event_reason,
@@ -470,6 +554,30 @@ def generate_payment_extract_files(
             claim_type=claim_type,
         )
 
+        if scenario_descriptor.is_tax_withholding_records_exists:
+            for item in range(2):
+                withholding_payment = copy.deepcopy(fineos_payments_data)
+                withholding_payment.event_reason = "Automatic Alternate Payment"
+                withholding_payment.payee_identifier = "ID"
+                withholding_payment.amalgamationc = "ScheduledAlternate65424"
+
+                # always have valid address for withholding payments
+                mock_address = MATCH_ADDRESS
+                withholding_payment.payment_address_1 = (mock_address["line_1"],)
+                withholding_payment.payment_address_2 = (mock_address["line_2"],)
+                withholding_payment.city = (mock_address["city"],)
+                withholding_payment.state = (mock_address["state"],)
+                withholding_payment.zip_code = (mock_address["zip"],)
+
+                if item == 0:
+                    withholding_payment.tin = "SITPAYEE001"
+                    withholding_payment.payment_amount = "22.00"
+                    withholding_payment.i_value = str(fake.unique.random_int())
+                if item == 1:
+                    withholding_payment.tin = "FITAMOUNTPAYEE001"
+                    withholding_payment.payment_amount = "35.00"
+                    withholding_payment.i_value = str(fake.unique.random_int())
+                fineos_payments_dataset.append(withholding_payment)
         fineos_payments_dataset.append(fineos_payments_data)
 
     # create the files
@@ -575,6 +683,15 @@ def generate_claimant_data_files(
         fineos_employer_id = employer.fineos_employer_id
         leave_type = scenario_descriptor.claim_type
 
+        fineos_employee_first_name: Optional[str] = employee.fineos_employee_first_name
+        fineos_employee_middle_name: Optional[str] = employee.fineos_employee_middle_name
+        fineos_employee_last_name: Optional[str] = employee.fineos_employee_last_name
+
+        if scenario_descriptor.dor_fineos_name_mismatch:
+            fineos_employee_first_name = "Mismatch"
+            fineos_employee_middle_name = "Mismatch"
+            fineos_employee_last_name = "Mismatch"
+
         # Auto generated: c_value, i_value, leave_request_id
         fineos_claimant_data = FineosClaimantData(
             generate_defaults=True,
@@ -600,9 +717,9 @@ def generate_claimant_data_files(
             leave_request_id=leave_request_id,
             notification_number=notification_number,
             employer_customer_num=fineos_employer_id,
-            fineos_employee_first_name=employee.fineos_employee_first_name,
-            fineos_employee_middle_name=employee.fineos_employee_first_name,
-            fineos_employee_last_name=employee.fineos_employee_last_name,
+            fineos_employee_first_name=fineos_employee_first_name,
+            fineos_employee_middle_name=fineos_employee_middle_name,
+            fineos_employee_last_name=fineos_employee_last_name,
         )
 
         fineos_claimant_dataset.append(fineos_claimant_data)
@@ -633,5 +750,64 @@ def generate_payment_reconciliation_extract_files(
 
         csv_handle.file.close()
         extract_records[extract_file.file_name] = records
+
+    return extract_records
+
+
+def generate_iaww_extract_files(
+    dataset: List[FineosIAWWData], folder_path: str, date_prefix: str
+) -> Dict[str, List[Dict]]:
+    extract_records = {}
+
+    # create the extract files
+    leave_plan_requested_absence_writer = _create_file(
+        folder_path,
+        date_prefix,
+        payments_util.FineosExtractConstants.VBI_LEAVE_PLAN_REQUESTED_ABSENCE.file_name,
+        VBI_LEAVE_PLAN_REQUESTED_ABSENCE_FIELD_NAMES,
+    )
+    paid_leave_instruction_writer = _create_file(
+        folder_path,
+        date_prefix,
+        payments_util.FineosExtractConstants.PAID_LEAVE_INSTRUCTION.file_name,
+        PAID_LEVAVE_INSTRUCTION_FIELD_NAMES,
+    )
+
+    # write the respective rows
+    # we can leave most of the fields empty and just populate the columns we care about
+    leave_plan_requested_records = []
+    leave_instruction_records = []
+
+    for data in dataset:
+        leave_plan_requested_absence_record = data.get_leave_plan_request_absence_record()
+        leave_instruction_record = data.get_vpaid_leave_instruction_record()
+
+        row = {}
+        row["SELECTEDPLAN_CLASSID"] = leave_plan_requested_absence_record["SELECTEDPLAN_CLASSID"]
+        row["SELECTEDPLAN_INDEXID"] = leave_plan_requested_absence_record["SELECTEDPLAN_INDEXID"]
+        row["LEAVEREQUEST_ID"] = leave_plan_requested_absence_record["LEAVEREQUEST_ID"]
+
+        leave_plan_requested_absence_writer.csv_writer.writerow(row)
+        leave_plan_requested_records.append(row)
+
+        row = {}
+        row["C"] = leave_instruction_record["C"]
+        row["I"] = leave_instruction_record["I"]
+        row["AVERAGEWEEKLYWAGE_MONAMT"] = leave_instruction_record["AVERAGEWEEKLYWAGE_MONAMT"]
+        row["C_SELECTEDLEAVEPLAN"] = leave_instruction_record["C_SELECTEDLEAVEPLAN"]
+        row["I_SELECTEDLEAVEPLAN"] = leave_instruction_record["I_SELECTEDLEAVEPLAN"]
+
+        paid_leave_instruction_writer.csv_writer.writerow(row)
+        leave_instruction_records.append(row)
+
+    leave_plan_requested_absence_writer.file.close()
+    extract_records[
+        payments_util.FineosExtractConstants.VBI_LEAVE_PLAN_REQUESTED_ABSENCE.file_name
+    ] = leave_plan_requested_records
+
+    paid_leave_instruction_writer.file.close()
+    extract_records[
+        payments_util.FineosExtractConstants.PAID_LEAVE_INSTRUCTION.file_name
+    ] = leave_instruction_records
 
     return extract_records

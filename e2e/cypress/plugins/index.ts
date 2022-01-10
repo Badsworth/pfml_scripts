@@ -9,7 +9,7 @@
 // https://on.cypress.io/plugins-guide
 // ***********************************************************
 
-import config, { merged } from "../../src/config";
+import config, { configuration } from "../../src/config";
 import path from "path";
 import webpackPreprocessor from "@cypress/webpack-preprocessor";
 import {
@@ -45,6 +45,8 @@ import { chooseRolePreset } from "../../src/util/fineosRoleSwitching";
 import { FineosSecurityGroups } from "../../src/submission/fineos.pages";
 import { Fineos } from "../../src/submission/fineos.pages";
 import { beforeRunCollectMetadata } from "../reporters/new-relic-collect-metadata";
+import { getClaimsByFineos_absence_id } from "_api";
+import EmployeePool from "../../src/generation/Employee";
 
 export default function (
   on: Cypress.PluginEvents,
@@ -157,13 +159,26 @@ export default function (
     waitForClaimDocuments:
       documentWaiter.waitForClaimDocuments.bind(documentWaiter),
 
-    async generateClaim(scenarioID: Scenarios): Promise<DehydratedClaim> {
+    async generateClaim(
+      arg: Scenarios | { scenario: Scenarios, employeePoolFileName?: string }
+    ): Promise<DehydratedClaim> {
+      let scenarioID: Scenarios;
+      let employeePoolFileName: string | null = null;
+
+      if (typeof arg === "object") {
+        scenarioID = arg.scenario;
+        employeePoolFileName = arg.employeePoolFileName || null;
+      } else {
+        scenarioID = arg;
+      }
       if (!(scenarioID in scenarios)) {
         throw new Error(`Invalid scenario: ${scenarioID}`);
       }
       const scenario = scenarios[scenarioID];
       const claim = ClaimGenerator.generate(
-        await getEmployeePool(),
+        employeePoolFileName
+          ? await EmployeePool.load(employeePoolFileName)
+          : await getEmployeePool(),
         scenario.employee,
         scenario.claim as APIClaimSpec
       );
@@ -193,7 +208,13 @@ export default function (
     },
 
     async deleteDownloadFolder(folderName): Promise<true> {
-      await fs.promises.rmdir(folderName, { maxRetries: 5, recursive: true });
+      try {
+        await fs.promises.rmdir(folderName, { maxRetries: 5, recursive: true });
+      } catch (error) {
+        // Ignore the error if download folder doesn't exist.
+        if (error.code === "ENOENT") return true;
+        throw error;
+      }
       return true;
     },
 
@@ -205,6 +226,42 @@ export default function (
       }
       return null;
     },
+
+    async findFirstApprovedClaim({
+      applications,
+      credentials,
+    }: {
+      applications: ApplicationResponse[];
+      credentials: Credentials;
+    }): Promise<ApplicationResponse | 0> {
+      const authManager = getAuthManager();
+      const session = await authManager.authenticate(
+        credentials.username,
+        credentials.password
+      );
+      for (let i = 0; i < applications.length && i < 15; i++) {
+        const response = await getClaimsByFineos_absence_id(
+          {
+            fineos_absence_id: applications[i].fineos_absence_id as string,
+          },
+          {
+            baseUrl: authManager.apiBaseUrl,
+            headers: {
+              Authorization: `Bearer ${session.getAccessToken().getJwtToken()}`,
+              "User-Agent": "PFML Business Simulation Bot",
+            },
+          }
+        );
+        if (
+          // @ts-ignore - @todo _api.ts file needs to be regenerated to update the types for this response
+          response?.data.data.claim_status === "Approved" ||
+          // @ts-ignore - @todo _api.ts file needs to be regenerated to update the types for this response
+          response?.data.data.claim_status === "Completed"
+        )
+          return applications[i];
+      }
+      return 0;
+    },
   });
 
   const options = {
@@ -213,7 +270,10 @@ export default function (
   on("file:preprocessor", webpackPreprocessor(options));
 
   // Pass config values through as environment variables, which we will access via Cypress.env() in actions/common.ts.
-  const configEntries = Object.entries(merged).map(([k, v]) => [`E2E_${k}`, v]);
+  const configEntries = Object.entries(configuration).map(([k, v]) => [
+    `E2E_${k}`,
+    v,
+  ]);
 
   // Add dynamic options for the New Relic reporter.
   let reporterOptions = cypressConfig.reporterOptions ?? {};
@@ -226,6 +286,7 @@ export default function (
       accountId: config("NEWRELIC_ACCOUNTID"),
       apiKey: config("NEWRELIC_INGEST_KEY"),
       environment: config("ENVIRONMENT"),
+      branch: path.relative("refs/heads", process.env.GITHUB_REF as string),
       ...reporterOptions,
     };
   }

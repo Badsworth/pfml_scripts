@@ -1,11 +1,15 @@
 import BaseBenefitsApplication, {
   BaseLeavePeriod,
 } from "./BaseBenefitsApplication";
+import { AbsencePeriod } from "./AbsencePeriod";
 import Address from "./Address";
 import ConcurrentLeave from "./ConcurrentLeave";
 import EmployerBenefit from "./EmployerBenefit";
 import { IntermittentLeavePeriod } from "./BenefitsApplication";
+import { ManagedRequirement } from "../models/Claim";
 import PreviousLeave from "./PreviousLeave";
+import dayjs from "dayjs";
+import getClosestOpenFollowUpDate from "../utils/getClosestOpenFollowUpDate";
 import { merge } from "lodash";
 
 /**
@@ -15,25 +19,24 @@ import { merge } from "lodash";
  * TODO (EMPLOYER-1130): Rename this model to clarify this nuance.
  */
 class EmployerClaim extends BaseBenefitsApplication {
+  absence_periods: AbsencePeriod[];
   employer_id: string;
   fineos_absence_id: string;
   created_at: string;
-
   first_name: string | null = null;
   middle_name: string | null = null;
   last_name: string | null = null;
   concurrent_leave: ConcurrentLeave | null = null;
-  employer_benefits: EmployerBenefit[] = [];
+  employer_benefits: EmployerBenefit[];
   date_of_birth: string | null = null;
   employer_fein: string;
-  employer_dba: string;
-  follow_up_date: string | null = null;
+  employer_dba: string | null;
   hours_worked_per_week: number | null = null;
-  is_reviewable: boolean | null = null;
-  residential_address: Address = new Address({});
-  status: string | null = null;
+  managed_requirements: ManagedRequirement[] = [];
+  residential_address: Address;
+  status: string;
   tax_identifier: string | null = null;
-  previous_leaves: PreviousLeave[] = [];
+  previous_leaves: PreviousLeave[];
   // does this claim use the old or new version of other leave / income eforms?
   // Todo(EMPLOYER-1453): remove V1 eform functionality
   uses_second_eform_version: boolean;
@@ -50,6 +53,21 @@ class EmployerClaim extends BaseBenefitsApplication {
     super();
     // Recursively merge with the defaults
     merge(this, attrs);
+
+    this.absence_periods = this.absence_periods.map(
+      (absence_period) => new AbsencePeriod(absence_period)
+    );
+  }
+
+  get is_reviewable() {
+    const followUpDate = getClosestOpenFollowUpDate(
+      this.managed_requirements,
+      false
+    );
+    if (followUpDate) {
+      return dayjs().format("YYYY-MM-DD") <= followUpDate;
+    }
+    return false;
   }
 }
 

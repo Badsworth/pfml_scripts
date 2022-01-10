@@ -1,12 +1,12 @@
 import React from "react";
-import Tag from "../Tag";
+import Tag from "../core/Tag";
 import { UserLeaveAdministrator } from "../../models/User";
 import routeWithParams from "../../utils/routeWithParams";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
 
 interface LeaveAdministratorRowProps {
-  leaveAdmin?: UserLeaveAdministrator;
+  leaveAdmin: UserLeaveAdministrator;
 }
 
 export const LeaveAdministratorRow = ({

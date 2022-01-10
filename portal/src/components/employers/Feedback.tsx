@@ -1,14 +1,15 @@
-import FormLabel from "../FormLabel";
-import InputChoiceGroup from "../InputChoiceGroup";
+import FormLabel from "../core/FormLabel";
+import InputChoiceGroup from "../core/InputChoiceGroup";
 import React from "react";
 import ReviewHeading from "../ReviewHeading";
 import { Trans } from "react-i18next";
 import classnames from "classnames";
+import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
 
 interface FeedbackProps {
   context: string;
-  getFunctionalInputProps: (...args: any[]) => any;
+  getFunctionalInputProps: ReturnType<typeof useFunctionalInputProps>;
   shouldDisableNoOption: boolean;
   shouldShowCommentBox: boolean;
 }

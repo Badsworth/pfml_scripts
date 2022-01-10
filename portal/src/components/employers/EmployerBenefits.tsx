@@ -2,9 +2,9 @@ import AddButton from "./AddButton";
 import AmendableEmployerBenefit from "./AmendableEmployerBenefit";
 import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
 import EmployerBenefit from "../../models/EmployerBenefit";
-import Heading from "../Heading";
+import Heading from "../core/Heading";
 import React from "react";
-import Table from "../Table";
+import Table from "../core/Table";
 import { Trans } from "react-i18next";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
@@ -12,10 +12,13 @@ import { useTranslation } from "../../locales/i18n";
 interface EmployerBenefitsProps {
   addedBenefits: EmployerBenefit[];
   appErrors: AppErrorInfoCollection;
-  employerBenefits?: EmployerBenefit[];
+  employerBenefits: EmployerBenefit[];
   onAdd: React.MouseEventHandler<HTMLButtonElement>;
-  onChange: (...args: any[]) => any;
-  onRemove: (...args: any[]) => any;
+  onChange: (
+    arg: EmployerBenefit | { [key: string]: unknown },
+    arg2: string
+  ) => void;
+  onRemove: (arg: EmployerBenefit) => void;
   shouldShowV2: boolean;
 }
 
@@ -59,7 +62,7 @@ const EmployerBenefits = (props: EmployerBenefitsProps) => {
           }}
         />
       </p>
-      <Table className="width-full">
+      <Table className="width-full" responsive>
         <thead>
           <tr>
             <th scope="col">

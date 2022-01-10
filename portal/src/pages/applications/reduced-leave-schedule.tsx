@@ -1,15 +1,19 @@
-import BenefitsApplication, {
+import {
   OrderedDaysOfWeek,
   ReducedScheduleLeavePeriod,
   WorkPattern,
+  WorkPatternDay,
   WorkPatternType,
 } from "../../models/BenefitsApplication";
 import { get, pick, set, zip } from "lodash";
-import Alert from "../../components/Alert";
-import Details from "../../components/Details";
-import Heading from "../../components/Heading";
-import InputHours from "../../components/InputHours";
-import Lead from "../../components/Lead";
+import withBenefitsApplication, {
+  WithBenefitsApplicationProps,
+} from "../../hoc/withBenefitsApplication";
+import Alert from "../../components/core/Alert";
+import Details from "../../components/core/Details";
+import Heading from "../../components/core/Heading";
+import InputHours from "../../components/core/InputHours";
+import Lead from "../../components/core/Lead";
 import LeaveReason from "../../models/LeaveReason";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
@@ -17,13 +21,11 @@ import { Trans } from "react-i18next";
 import WeeklyTimeTable from "../../components/WeeklyTimeTable";
 import convertMinutesToHours from "../../utils/convertMinutesToHours";
 import findKeyByValue from "../../utils/findKeyByValue";
-import { isFeatureEnabled } from "../../services/featureFlags";
 import routes from "../../routes";
 import spreadMinutesOverWeek from "../../utils/spreadMinutesOverWeek";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 /**
  * Convenience constant for referencing the leave period object
@@ -43,15 +45,7 @@ export const fields = [
   `claim.${leavePeriodPath}.wednesday_off_minutes`,
 ];
 
-interface ReducedLeaveScheduleProps {
-  claim?: BenefitsApplication;
-  appLogic: any;
-  query?: {
-    claim_id?: string;
-  };
-}
-
-export const ReducedLeaveSchedule = (props: ReducedLeaveScheduleProps) => {
+export const ReducedLeaveSchedule = (props: WithBenefitsApplicationProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
@@ -59,7 +53,7 @@ export const ReducedLeaveSchedule = (props: ReducedLeaveScheduleProps) => {
   const initialLeavePeriod = new ReducedScheduleLeavePeriod(
     get(claim, leavePeriodPath)
   );
-  const workPattern = new WorkPattern(claim.work_pattern);
+  const workPattern = new WorkPattern(claim.work_pattern || {});
   const gatherMinutesAsWeeklyAverage =
     workPattern.work_pattern_type === WorkPatternType.variable;
 
@@ -90,7 +84,9 @@ export const ReducedLeaveSchedule = (props: ReducedLeaveScheduleProps) => {
       ];
 
       zip(minuteFields, dailyMinutes).forEach(([field, minutes]) => {
-        set(requestData, field, minutes);
+        if (field) {
+          set(requestData, field, minutes);
+        }
       });
     }
 
@@ -173,11 +169,7 @@ export const ReducedLeaveSchedule = (props: ReducedLeaveScheduleProps) => {
           <Trans
             i18nKey="pages.claimsReducedLeaveSchedule.leadCertGuidance"
             tOptions={{
-              context:
-                claim.isMedicalOrPregnancyLeave &&
-                isFeatureEnabled("updateMedicalCertForm")
-                  ? "updateMedicalCertForm"
-                  : contentContext,
+              context: contentContext,
             }}
           />
         </Lead>
@@ -194,7 +186,9 @@ export const ReducedLeaveSchedule = (props: ReducedLeaveScheduleProps) => {
             ...convertMinutesToHours(workPattern.minutesWorkedPerWeek),
           })
         ) : (
-          <WeeklyTimeTable days={workPattern.work_pattern_days} />
+          <WeeklyTimeTable
+            days={workPattern.work_pattern_days as WorkPatternDay[]}
+          />
         )}
       </Details>
 

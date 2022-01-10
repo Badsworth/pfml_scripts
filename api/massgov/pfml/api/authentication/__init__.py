@@ -3,7 +3,6 @@
 #
 
 import json
-from datetime import datetime
 from typing import Any, Optional, Union
 
 import flask
@@ -19,25 +18,29 @@ from werkzeug.exceptions import Unauthorized
 
 import massgov.pfml.api.app as app
 import massgov.pfml.util.logging
-from massgov.pfml.api.authentication.msalConfig import MSALClientConfig, get_msal_client_config
+from massgov.pfml.api.authentication.azure import (
+    AzureClientConfig,
+    AzureUser,
+    create_azure_client_config,
+)
 from massgov.pfml.db.models.employees import (
     AzureGroup,
     AzureGroupPermission,
-    AzureUser,
     LkAzureGroup,
     LkAzurePermission,
+    Role,
     User,
 )
+from massgov.pfml.util.users import has_role_in
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
 public_keys = None
-msalClient = None
-azure_config: Optional[MSALClientConfig] = None
+azure_config: Optional[AzureClientConfig] = None
 
 
 def get_public_keys(userpool_keys_url):
-    """Retrives cognito public keys"""
+    """Retrieves cognito public keys"""
     global public_keys
 
     logger.info("Retrieving public keys from %s", userpool_keys_url)
@@ -56,19 +59,13 @@ def get_url_as_json(url):
         return response.json()
 
 
-def configure_azure_ad() -> Optional[MSALClientConfig]:
+def configure_azure_ad() -> Optional[AzureClientConfig]:
     global azure_config
 
-    now = datetime.now()
-    seconds_in_24_hours = 86400
-
-    # Some of the public keys might be rotated or updated on a reasonable period of 24h
-    if (
-        azure_config is None
-        or (now - azure_config.public_keys_last_updated).total_seconds() > seconds_in_24_hours
-    ):
-        azure_config = get_msal_client_config()
-
+    if azure_config is None:
+        azure_config = create_azure_client_config()
+    if azure_config is not None:
+        azure_config.update_keys()
     return azure_config
 
 
@@ -85,10 +82,10 @@ def _decode_jwt(token: str, is_azure_token: bool = False) -> dict[str, Any]:
 
 
 def _is_azure_token(token: str) -> bool:
-    azure_config = configure_azure_ad()
     # Assume cognito is being used if azure is not configured.
     if not azure_config or not azure_config.public_keys:
         return False
+    azure_config.update_keys()
     headers = jwt.get_unverified_header(token)
     pick_public_key = [
         key for key in azure_config.public_keys if key.get("kid") == headers.get("kid")
@@ -100,22 +97,18 @@ def _is_azure_token(token: str) -> bool:
 def _process_azure_token(db_session: Session, decoded_token: dict[str, Any]) -> None:
     group_guids = decoded_token.get("groups", [])
 
-    has_prod_group = AzureGroup.PROD.azure_group_guid in group_guids
-    has_non_prod_group = AzureGroup.NON_PROD.azure_group_guid in group_guids
-    is_prod = app.get_config().environment == "prod"
-    access = has_prod_group if is_prod else has_non_prod_group
+    # If it's gotten into _process_azure_token then azure_config is not None.
+    parent_group = AzureGroup.get_instance(db_session, description=azure_config.parent_group)  # type: ignore
+    access = parent_group.azure_group_guid in group_guids
 
     if not access:
         raise Unauthorized("You do not have the correct group to access the Admin Portal.")
 
-    parent_group_id = (
-        AzureGroup.PROD.azure_group_id if is_prod else AzureGroup.NON_PROD.azure_group_id
-    )
     filter_params = [
         # Find permissions for this user using its groups
         LkAzureGroup.azure_group_guid.in_(group_guids),
         # But only for the current access group
-        LkAzureGroup.azure_group_parent_id == parent_group_id,
+        LkAzureGroup.azure_group_parent_id == parent_group.azure_group_id,
     ]
     permissions = (
         db_session.query(LkAzurePermission)
@@ -166,12 +159,17 @@ def _process_cognito_token(db_session: Session, decoded_token: dict[str, Any]) -
         "current_user.auth_id", user.sub_id,
     )
 
+    if has_role_in(user, [Role.SERVICE_NOW]):
+        mass_pfml_agent_id = flask.request.headers.get("Mass-PFML-Agent-ID", None)
+        if mass_pfml_agent_id is None or mass_pfml_agent_id.strip() == "":
+            raise Unauthorized("Invalid required header: Mass-PFML-Agent-ID")
+        newrelic.agent.add_custom_parameter("mass_pfml_agent_id", mass_pfml_agent_id)
+
     # Read attributes for logging, so that db calls are not made during logging.
     flask.g.current_user_user_id = str(user.user_id)
     flask.g.current_user_auth_id = str(user.sub_id)
 
     flask.g.current_user_role_ids = ",".join(str(role.role_id) for role in user.roles)
-
     logger.info("Cognito auth token decode succeeded", extra={"auth_id": auth_id, "user": user})
 
 
@@ -211,7 +209,6 @@ def build_auth_code_flow() -> Optional[dict[str, Optional[Union[str, list]]]]:
     The first step in the authentication code flow
     Returns state, code verifier and auth_uri
     """
-    azure_config = configure_azure_ad()
     if azure_config is None:
         return None
     msal_app = _build_msal_app()
@@ -223,7 +220,7 @@ def build_auth_code_flow() -> Optional[dict[str, Optional[Union[str, list]]]]:
 
 
 def build_access_token(
-    authURIRes: dict[str, Optional[Union[str, list]]], authCodeRes: dict[str, str]
+    auth_uri_res: dict[str, Optional[Union[str, list]]], auth_code_res: dict[str, str]
 ) -> Optional[dict[str, str]]:
     """
     The second step in the authentication code flow
@@ -232,31 +229,25 @@ def build_access_token(
     msal_app = _build_msal_app()
     if msal_app is None:
         return None
-    return msal_app.acquire_token_by_auth_code_flow(authURIRes, authCodeRes)
+    return msal_app.acquire_token_by_auth_code_flow(auth_uri_res, auth_code_res)
 
 
 def _build_msal_app() -> Optional[msal.ConfidentialClientApplication]:
     """
     Build the Confidential Client Application
     """
-    global msalClient
 
-    azure_config = configure_azure_ad()
     if azure_config is None:
         return None
 
-    if not msalClient:
-        msalClient = msal.ConfidentialClientApplication(
-            azure_config.client_id,
-            authority=azure_config.authority,
-            client_credential=azure_config.client_secret,
-        )
-
-    return msalClient
+    return msal.ConfidentialClientApplication(
+        azure_config.client_id,
+        authority=azure_config.authority,
+        client_credential=azure_config.client_secret,
+    )
 
 
 def build_logout_flow() -> Optional[str]:
-    azure_config = configure_azure_ad()
     if azure_config is None:
         return None
     return azure_config.logout_uri

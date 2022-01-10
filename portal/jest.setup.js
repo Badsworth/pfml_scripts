@@ -2,26 +2,26 @@
  * @file Sets up the testing framework for each test file
  * @see https://jestjs.io/docs/en/configuration#setupfilesafterenv-array
  */
-
 import "@testing-library/jest-dom";
 import { format } from "util";
 // Setup I18n globally for tests, so English strings are displayed in rendered components
 import { initializeI18n } from "./src/locales/i18n";
+import { toHaveNoViolations } from "jest-axe";
+
 initializeI18n();
 
-jest.mock("@aws-amplify/auth");
+expect.extend(toHaveNoViolations);
 
 /**
  * Mock environment variables
  */
 process.env.apiUrl = "http://localhost/jest-mock-api";
-process.env.awsConfig = {};
 process.env.buildEnv = "mock-build-env";
 process.env.domain = "localhost";
-process.env.featureFlags = {};
+process.env.featureFlags = "{}";
 process.env.newRelicAppId = "mock-new-relic-id";
-process.env.gtmConfig = { auth: "mock-gtm-auth", preview: "mock-env" };
-process.env.session = { secondsOfInactivityUntilLogout: 10 };
+process.env.gtmConfigAuth = "mock-gtm-auth";
+process.env.secondsOfInactivityUntilLogout = "10";
 
 /**
  * Mock DOM APIs

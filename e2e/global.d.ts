@@ -47,7 +47,7 @@ declare namespace Cypress {
     dependsOnPreviousPass(dependencies?: Mocha.Test[]): null;
     task<T extends Scenarios>(
       event: "generateClaim",
-      scenario: T
+      arg: T | { scenario: T, employeePoolFileName: string }
     ): Chainable<
       ScenarioSpecs[T]["claim"] extends APIClaimSpec
         ? DehydratedClaim
@@ -103,5 +103,9 @@ declare namespace Cypress {
       waitParams: Parameters<waitForClaimDocuments>[0],
       options?: Partial<Timeoutable & Loggable>
     ): Chainable<boolean>;
+    task(
+      event: "findFirstApprovedClaim",
+      args: { applications: ApplicationResponse[]; credentials: Credentials }
+    ): Chainable<ApplicationResponse | 0>;
   }
 }

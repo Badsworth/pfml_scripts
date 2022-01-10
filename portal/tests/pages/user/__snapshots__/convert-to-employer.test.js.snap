@@ -9,6 +9,7 @@ exports[`ConvertToEmployer renders form when user has no claims 1`] = `
     Convert to employer account
   </h1>
   <div
+    aria-labelledby="alert-heading1"
     class="usa-alert usa-alert--warning margin-bottom-3"
     role="region"
     tabindex="-1"
@@ -18,6 +19,7 @@ exports[`ConvertToEmployer renders form when user has no claims 1`] = `
     >
       <h2
         class="usa-alert__heading font-heading-md text-bold"
+        id="alert-heading1"
       >
         This action is irreversible!
       </h2>
@@ -39,14 +41,14 @@ exports[`ConvertToEmployer renders form when user has no claims 1`] = `
     >
       <label
         class="usa-label text-bold font-heading-xs measure-5"
-        for="InputText1"
-        id="InputText1_label"
+        for="InputText2"
+        id="InputText2_label"
       >
         Employer ID number (EIN)
       </label>
       <span
         class="display-block line-height-sans-5 measure-5 usa-hint text-base-darkest"
-        id="InputText1_hint"
+        id="InputText2_hint"
       >
         Your Employer Identification Number is a 
         <a
@@ -62,9 +64,9 @@ exports[`ConvertToEmployer renders form when user has no claims 1`] = `
         class=""
       >
         <input
-          aria-labelledby="InputText1_label InputText1_hint InputText1_error"
+          aria-labelledby="InputText2_label InputText2_hint InputText2_error"
           class="usa-input maxw-mobile-lg"
-          id="InputText1"
+          id="InputText2"
           inputmode="numeric"
           name="employer_fein"
           type="text"

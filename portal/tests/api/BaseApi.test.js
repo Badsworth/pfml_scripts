@@ -269,15 +269,15 @@ describe("BaseApi", () => {
 
       await expect(testsApi.request("GET", "users")).resolves
         .toMatchInlineSnapshot(`
-              Object {
-                "data": Object {
+              {
+                "data": {
                   "mock_response": true,
                 },
-                "meta": Object {
+                "meta": {
                   "method": "GET",
                   "resource": "/v1/users/current",
                 },
-                "warnings": Array [],
+                "warnings": [],
               }
             `);
     });

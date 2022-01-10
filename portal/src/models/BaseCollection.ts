@@ -1,11 +1,12 @@
-import { findIndex, keyBy } from "lodash";
+import { keyBy } from "lodash";
 
 /**
  * Read only abstract class representing a collection of models. Subclass this class
  * to create a specific collection class. Methods of BaseCollection returns new
  * instances of the collection rather than modifying the original collection.
  */
-abstract class BaseCollection<T> {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+abstract class BaseCollection<T extends { [key: string]: any }> {
   items: T[];
   /**
    * The name of the id property for the items in the collection.
@@ -28,7 +29,7 @@ abstract class BaseCollection<T> {
    * Return a single item from the id of the item or
    * undefined if the item is not in the collection
    */
-  getItem(itemId: string) {
+  getItem(itemId: string): T | undefined {
     return this.itemsById[itemId];
   }
 
@@ -41,10 +42,13 @@ abstract class BaseCollection<T> {
     if (!itemId) {
       throw new Error(`Item ${this.idProperty} is null or undefined`);
     }
-    if (this.getItem(itemId)) {
-      throw new Error(
-        `Item with ${this.idProperty} ${itemId} already exists in collection`
+    if (typeof itemId === "string" && this.getItem(itemId)) {
+      // eslint-disable-next-line no-console
+      console.warn(
+        `Item with ${this.idProperty} ${itemId} already exists in collection. Use updateItem() if you intended to replace the item.`
       );
+
+      return this;
     }
     const newItems = this.items.concat(item);
     return new (<new (args: T[]) => BaseCollection<T>>this.constructor)(
@@ -62,7 +66,7 @@ abstract class BaseCollection<T> {
     }
     return items.reduce((collection, item) => {
       return collection.addItem(item);
-    }, this);
+    }, this as BaseCollection<T>);
   }
 
   /**
@@ -75,7 +79,10 @@ abstract class BaseCollection<T> {
     if (!itemId) {
       throw new Error(`Item ${this.idProperty} is null or undefined`);
     }
-    const itemIndex = findIndex(items, [this.idProperty, itemId]);
+    const itemIndex = items.findIndex(
+      (item) => item[this.idProperty] === itemId
+    );
+
     if (itemIndex === -1) {
       throw new Error(
         `Cannot find item with ${this.idProperty} ${itemId} in collection`
@@ -96,7 +103,9 @@ abstract class BaseCollection<T> {
    */
   removeItem(itemId: string) {
     const items = this.items;
-    const itemIndex = findIndex(items, [this.idProperty, itemId]);
+    const itemIndex = items.findIndex(
+      (item) => item[this.idProperty] === itemId
+    );
     if (itemIndex === -1) {
       throw new Error(
         `Cannot find item with ${this.idProperty} ${itemId} in collection`

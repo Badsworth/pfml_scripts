@@ -1,6 +1,7 @@
 import copy
 from datetime import date, datetime
 from typing import Optional
+from unittest import mock
 
 import factory.random
 import pytest
@@ -61,9 +62,9 @@ from massgov.pfml.db.models.factories import (
 from massgov.pfml.fineos.client import AbstractFINEOSClient
 from massgov.pfml.fineos.exception import (
     FINEOSClientError,
+    FINEOSEntityNotFound,
     FINEOSFatalResponseError,
     FINEOSFatalUnavailable,
-    FINEOSNotFound,
 )
 from massgov.pfml.fineos.factory import FINEOSClientConfig
 from massgov.pfml.util.paginate.paginator import DEFAULT_PAGE_SIZE
@@ -71,6 +72,19 @@ from massgov.pfml.util.paginate.paginator import DEFAULT_PAGE_SIZE
 
 def sqlalchemy_object_as_dict(obj):
     return {c.key: getattr(obj, c.key) for c in inspect(obj).mapper.column_attrs}
+
+
+def test_applications_get_invalid_uuid(client, user, auth_token):
+    response = client.get(
+        "/v1/applications/undefined", headers={"Authorization": f"Bearer {auth_token}"},
+    )
+
+    response_body = response.get_json()
+    assert response.status_code == 400
+    assert (
+        response_body.get("detail")
+        == "'undefined' is not a 'uuid'\n\nFailed validating 'format' in schema:\n    {'format': 'uuid', 'type': 'string'}\n\nOn instance:\n    'undefined'"
+    )
 
 
 # The UUID used in this test was generated online. Hopefully it will never match any of
@@ -85,8 +99,14 @@ def test_applications_get_invalid(client, user, auth_token):
 
 
 @freeze_time("2020-01-01")
-def test_applications_get_valid(client, user, auth_token):
-    application = ApplicationFactory.create(user=user, updated_at=datetime_util.utcnow())
+def test_applications_get_incomplete(client, user, auth_token):
+    application = ApplicationFactory.create(
+        user=user,
+        submitted_time=None,
+        updated_at=datetime_util.utcnow(),
+        # Cause at least one validation error to be present
+        first_name=None,
+    )
 
     response = client.get(
         "/v1/applications/{}".format(application.application_id),
@@ -94,12 +114,34 @@ def test_applications_get_valid(client, user, auth_token):
     )
 
     assert response.status_code == 200
+    assert len(response.get_json().get("warnings")) > 0
+
     response_body = response.get_json().get("data")
 
     assert response_body.get("employer_fein") is not None
     assert response_body.get("application_id") == str(application.application_id)
     assert response_body.get("updated_at") == "2020-01-01T00:00:00+00:00"
     assert response_body.get("status") == ApplicationStatus.Started.value
+
+
+def test_applications_get_incomplete_submitted(client, user, auth_token):
+    application = ApplicationFactory.create(
+        user=user,
+        updated_at=datetime_util.utcnow(),
+        # Put the application in a state where it is submitted
+        submitted_time=datetime_util.utcnow(),
+        # Simulate a validation error for pre-submission application
+        first_name=None,
+    )
+
+    response = client.get(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+
+    assert response.status_code == 200
+    # No warning about the first_name missing, because the application is submitted
+    assert len(response.get_json().get("warnings")) == 0
 
 
 def test_applications_unauthorized_get(client, user, auth_token):
@@ -195,7 +237,6 @@ def test_applications_get_all_for_user(client, user, auth_token):
     unassociated_application = ApplicationFactory.create()
 
     response = client.get("/v1/applications", headers={"Authorization": f"Bearer {auth_token}"})
-    print(response.get_json())
     assert response.status_code == 200
 
     response_data = response.get_json().get("data")
@@ -3147,13 +3188,14 @@ def test_application_patch_failure_after_absence_case_creation(
         headers={"Authorization": f"Bearer {auth_token}"},
         json={},
     )
-
+    message = "Application {} could not be updated. Application already submitted on {}".format(
+        application.application_id, datetime_util.utcnow().strftime("%x")
+    )
     tests.api.validate_error_response(
         response,
         403,
-        message="Application {} could not be updated. Application already submitted on {}".format(
-            application.application_id, datetime_util.utcnow().strftime("%x")
-        ),
+        message=message,
+        errors=[{"type": "exists", "field": "claim", "message": message}],
     )
 
 
@@ -3213,7 +3255,7 @@ def create_mock_client(err: FINEOSClientError):
         (
             400,
             IssueType.fineos_case_creation_issues,
-            FINEOSNotFound(
+            FINEOSEntityNotFound(
                 "<ErrorDetails><faultcode>com.fineos.common.portalinfrastructure.exceptions.GenericUncheckedException</faultcode><faultstring>The employee does not have an occupation linked.</faultstring><detail></detail></ErrorDetails>"
             ),
         ),
@@ -3564,7 +3606,12 @@ def test_application_post_submit_app_ssn_not_found(client, user, auth_token, tes
     assert response_body.get("data").get("status") == ApplicationStatus.Started.value
 
 
-def test_application_post_submit_existing_work_pattern(client, user, auth_token, test_db_session):
+@mock.patch(
+    "massgov.pfml.fineos.mock_client.MockFINEOSClient.get_customer_occupations_customer_api"
+)
+def test_application_post_submit_existing_work_pattern(
+    mock_get_customer_occupations, client, user, auth_token, test_db_session
+):
     employer = EmployerFactory.create()
     employee = EmployeeFactory.create()
     application = ApplicationFactory.create(
@@ -3587,6 +3634,12 @@ def test_application_post_submit_existing_work_pattern(client, user, auth_token,
     ]
     application.has_continuous_leave_periods = True
 
+    mock_get_customer_occupations.return_value = [
+        massgov.pfml.fineos.models.customer_api.ReadCustomerOccupation(
+            occupationId=12345, hoursWorkedPerWeek=37.5, workPatternBasis="Week Based"
+        )
+    ]
+
     # set fineos user id in DB to avoid autogenerated id
     fineos_user_id = "USER_WITH_EXISTING_WORK_PATTERN"
     fineos_web_id_ext = FINEOSWebIdExt()
@@ -3596,7 +3649,6 @@ def test_application_post_submit_existing_work_pattern(client, user, auth_token,
     test_db_session.add(fineos_web_id_ext)
 
     test_db_session.commit()
-
     massgov.pfml.fineos.mock_client.start_capture()
 
     response = client.post(
@@ -3612,81 +3664,41 @@ def test_application_post_submit_existing_work_pattern(client, user, auth_token,
 
     capture = massgov.pfml.fineos.mock_client.get_capture()
 
-    # it attempts to add work pattern then updates work pattern
-    # causing two queries to fineos in send_to_fineos
-    # Then has an additional fineos query in complete_intake
-    assert capture[2:4] == [
-        (
-            "add_week_based_work_pattern",
-            fineos_user_id,
-            {
-                "week_based_work_pattern": massgov.pfml.fineos.models.customer_api.WeekBasedWorkPattern(
-                    workPatternType="Fixed",
-                    workWeekStarts="Sunday",
-                    patternStartDate=None,
-                    patternStatus=None,
-                    workPatternDays=[
-                        massgov.pfml.fineos.models.customer_api.WorkPatternDay(
-                            dayOfWeek="Sunday", weekNumber=1, hours=8, minutes=15
-                        ),
-                        massgov.pfml.fineos.models.customer_api.WorkPatternDay(
-                            dayOfWeek="Monday", weekNumber=1, hours=8, minutes=15
-                        ),
-                        massgov.pfml.fineos.models.customer_api.WorkPatternDay(
-                            dayOfWeek="Tuesday", weekNumber=1, hours=8, minutes=15
-                        ),
-                        massgov.pfml.fineos.models.customer_api.WorkPatternDay(
-                            dayOfWeek="Wednesday", weekNumber=1, hours=8, minutes=15
-                        ),
-                        massgov.pfml.fineos.models.customer_api.WorkPatternDay(
-                            dayOfWeek="Thursday", weekNumber=1, hours=8, minutes=15
-                        ),
-                        massgov.pfml.fineos.models.customer_api.WorkPatternDay(
-                            dayOfWeek="Friday", weekNumber=1, hours=8, minutes=15
-                        ),
-                        massgov.pfml.fineos.models.customer_api.WorkPatternDay(
-                            dayOfWeek="Saturday", weekNumber=1, hours=8, minutes=15
-                        ),
-                    ],
-                )
-            },
-        ),
-        (
-            "update_week_based_work_pattern",
-            fineos_user_id,
-            {
-                "week_based_work_pattern": massgov.pfml.fineos.models.customer_api.WeekBasedWorkPattern(
-                    workPatternType="Fixed",
-                    workWeekStarts="Sunday",
-                    patternStartDate=None,
-                    patternStatus=None,
-                    workPatternDays=[
-                        massgov.pfml.fineos.models.customer_api.WorkPatternDay(
-                            dayOfWeek="Sunday", weekNumber=1, hours=8, minutes=15
-                        ),
-                        massgov.pfml.fineos.models.customer_api.WorkPatternDay(
-                            dayOfWeek="Monday", weekNumber=1, hours=8, minutes=15
-                        ),
-                        massgov.pfml.fineos.models.customer_api.WorkPatternDay(
-                            dayOfWeek="Tuesday", weekNumber=1, hours=8, minutes=15
-                        ),
-                        massgov.pfml.fineos.models.customer_api.WorkPatternDay(
-                            dayOfWeek="Wednesday", weekNumber=1, hours=8, minutes=15
-                        ),
-                        massgov.pfml.fineos.models.customer_api.WorkPatternDay(
-                            dayOfWeek="Thursday", weekNumber=1, hours=8, minutes=15
-                        ),
-                        massgov.pfml.fineos.models.customer_api.WorkPatternDay(
-                            dayOfWeek="Friday", weekNumber=1, hours=8, minutes=15
-                        ),
-                        massgov.pfml.fineos.models.customer_api.WorkPatternDay(
-                            dayOfWeek="Saturday", weekNumber=1, hours=8, minutes=15
-                        ),
-                    ],
-                )
-            },
-        ),
-    ]
+    assert capture[2] == (
+        "update_week_based_work_pattern",
+        fineos_user_id,
+        {
+            "week_based_work_pattern": massgov.pfml.fineos.models.customer_api.WeekBasedWorkPattern(
+                workPatternType="Fixed",
+                workWeekStarts="Sunday",
+                patternStartDate=None,
+                patternStatus=None,
+                workPatternDays=[
+                    massgov.pfml.fineos.models.customer_api.WorkPatternDay(
+                        dayOfWeek="Sunday", weekNumber=1, hours=8, minutes=15
+                    ),
+                    massgov.pfml.fineos.models.customer_api.WorkPatternDay(
+                        dayOfWeek="Monday", weekNumber=1, hours=8, minutes=15
+                    ),
+                    massgov.pfml.fineos.models.customer_api.WorkPatternDay(
+                        dayOfWeek="Tuesday", weekNumber=1, hours=8, minutes=15
+                    ),
+                    massgov.pfml.fineos.models.customer_api.WorkPatternDay(
+                        dayOfWeek="Wednesday", weekNumber=1, hours=8, minutes=15
+                    ),
+                    massgov.pfml.fineos.models.customer_api.WorkPatternDay(
+                        dayOfWeek="Thursday", weekNumber=1, hours=8, minutes=15
+                    ),
+                    massgov.pfml.fineos.models.customer_api.WorkPatternDay(
+                        dayOfWeek="Friday", weekNumber=1, hours=8, minutes=15
+                    ),
+                    massgov.pfml.fineos.models.customer_api.WorkPatternDay(
+                        dayOfWeek="Saturday", weekNumber=1, hours=8, minutes=15
+                    ),
+                ],
+            )
+        },
+    )
 
     assert capture[-1] == (
         "complete_intake",
@@ -3744,14 +3756,14 @@ def test_application_post_submit_to_fineos(client, user, auth_token, test_db_ses
     # This is generated randomly and changes each time.
     fineos_user_id = capture[2][1]
     assert capture == [
-        ("find_employer", None, {"employer_fein": application.employer_fein}),
+        ("read_employer", None, {"employer_fein": application.employer_fein}),
         (
             "register_api_user",
             None,
             {
                 "employee_registration": massgov.pfml.fineos.models.EmployeeRegistration(
                     user_id=fineos_user_id,
-                    employer_id=f"{application.employer_fein}1000",
+                    employer_id="999",
                     date_of_birth=date(1753, 1, 1),
                     national_insurance_no=application.tax_identifier.tax_identifier,
                 )
@@ -3837,8 +3849,10 @@ def test_application_post_submit_to_fineos(client, user, auth_token, test_db_ses
             None,
             {
                 "employment_status": "Terminated",
+                "fineos_org_unit_id": None,
                 "hours_worked_per_week": 70,
                 "occupation_id": 12345,
+                "worksite_id": None,
             },
         ),
         (
@@ -4615,6 +4629,14 @@ def test_application_post_complete_app(client, user, auth_token, test_db_session
         ContinuousLeavePeriodFactory.create(start_date=date(2021, 1, 1))
     ]
     application.has_continuous_leave_periods = True
+    application.is_withholding_tax = True
+    application.has_submitted_payment_preference = True
+    application.leave_reason_id = LeaveReason.PREGNANCY_MATERNITY.leave_reason_id
+    DocumentFactory.create(
+        user_id=user.user_id,
+        application_id=application.application_id,
+        document_type_id=DocumentType.DRIVERS_LICENSE_MASS.document_type_id,
+    )
 
     test_db_session.commit()
 
@@ -4655,6 +4677,14 @@ def test_application_post_complete_app_without_other_leave_fields(
         ContinuousLeavePeriodFactory.create(start_date=date(2021, 1, 1))
     ]
     application.has_continuous_leave_periods = True
+    application.is_withholding_tax = True
+    application.has_submitted_payment_preference = True
+    application.leave_reason_id = LeaveReason.PREGNANCY_MATERNITY.leave_reason_id
+    DocumentFactory.create(
+        user_id=user.user_id,
+        application_id=application.application_id,
+        document_type_id=DocumentType.DRIVERS_LICENSE_MASS.document_type_id,
+    )
 
     test_db_session.commit()
 
@@ -4691,6 +4721,14 @@ def test_application_complete_mark_document_received_fineos(
         )
     ]
     application.has_continuous_leave_periods = True
+    application.is_withholding_tax = True
+    application.has_submitted_payment_preference = True
+    application.leave_reason_id = LeaveReason.PREGNANCY_MATERNITY.leave_reason_id
+    DocumentFactory.create(
+        user_id=user.user_id,
+        application_id=application.application_id,
+        document_type_id=DocumentType.DRIVERS_LICENSE_MASS.document_type_id,
+    )
 
     test_db_session.add(application)
 

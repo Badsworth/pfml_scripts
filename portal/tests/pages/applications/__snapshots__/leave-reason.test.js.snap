@@ -6,6 +6,7 @@ exports[`LeaveReason instructs the user to review their previous leaves when use
 >
   <h2
     class="usa-alert__heading font-heading-md text-bold"
+    id="alert-heading132"
   >
     Review your previous leave
   </h2>
@@ -89,33 +90,16 @@ exports[`LeaveReason renders the page without the military leave option 1`] = `
         >
           <input
             class="usa-radio__input"
-            id="InputChoice1"
+            id="InputChoice2"
             name="leave_details.reason"
             type="radio"
             value="Serious Health Condition - Employee"
           />
           <label
             class="usa-radio__label"
-            for="InputChoice1"
-          >
-            I can’t work due to my illness, injury, or pregnancy.
-          </label>
-        </div>
-        <div
-          class="usa-radio measure-5 bg-transparent"
-        >
-          <input
-            class="usa-radio__input"
-            id="InputChoice2"
-            name="leave_details.reason"
-            type="radio"
-            value="Child Bonding"
-          />
-          <label
-            class="usa-radio__label"
             for="InputChoice2"
           >
-            I need to bond with my child after birth, adoption, or foster placement.
+            I can’t work due to my illness, injury, or pregnancy.
           </label>
         </div>
         <div
@@ -126,11 +110,28 @@ exports[`LeaveReason renders the page without the military leave option 1`] = `
             id="InputChoice3"
             name="leave_details.reason"
             type="radio"
-            value="Care for a Family Member"
+            value="Child Bonding"
           />
           <label
             class="usa-radio__label"
             for="InputChoice3"
+          >
+            I need to bond with my child after birth, adoption, or foster placement.
+          </label>
+        </div>
+        <div
+          class="usa-radio measure-5 bg-transparent"
+        >
+          <input
+            class="usa-radio__input"
+            id="InputChoice4"
+            name="leave_details.reason"
+            type="radio"
+            value="Care for a Family Member"
+          />
+          <label
+            class="usa-radio__label"
+            for="InputChoice4"
           >
             I need to care for my family member.
           </label>

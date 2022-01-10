@@ -1,6 +1,6 @@
-import { get, isNil } from "lodash";
 import AppErrorInfoCollection from "../models/AppErrorInfoCollection";
 import { FormState } from "./useFormState";
+import { get } from "lodash";
 import useHandleInputChange from "./useHandleInputChange";
 
 /**
@@ -20,7 +20,7 @@ function useFunctionalInputProps({
 
   return function getFunctionalInputProps(
     fieldName: string,
-    config = { fallbackValue: "" }
+    config: { fallbackValue: unknown } = { fallbackValue: "" }
   ) {
     const errorMsg = appErrors
       ? appErrors.fieldErrorMessage(fieldName)
@@ -37,7 +37,7 @@ function useFunctionalInputProps({
        * even when its value is null/undefined. Radio and checkbox inputs will ignore this value prop.
        * @see https://reactjs.org/docs/forms.html#controlled-components
        */
-      value: isNil(value) ? config.fallbackValue : value,
+      value: value ?? config.fallbackValue,
     };
   };
 }

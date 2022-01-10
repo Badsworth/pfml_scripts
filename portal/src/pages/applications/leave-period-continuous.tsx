@@ -1,22 +1,22 @@
 import React, { useEffect } from "react";
 import { cloneDeep, get, pick, set } from "lodash";
-import Alert from "../../components/Alert";
-import BenefitsApplication from "../../models/BenefitsApplication";
+import withBenefitsApplication, {
+  WithBenefitsApplicationProps,
+} from "../../hoc/withBenefitsApplication";
+import Alert from "../../components/core/Alert";
 import ConditionalContent from "../../components/ConditionalContent";
-import Heading from "../../components/Heading";
-import InputChoiceGroup from "../../components/InputChoiceGroup";
-import InputDate from "../../components/InputDate";
-import Lead from "../../components/Lead";
+import Heading from "../../components/core/Heading";
+import InputChoiceGroup from "../../components/core/InputChoiceGroup";
+import InputDate from "../../components/core/InputDate";
+import Lead from "../../components/core/Lead";
 import LeaveReason from "../../models/LeaveReason";
 import QuestionPage from "../../components/QuestionPage";
 import { Trans } from "react-i18next";
 import findKeyByValue from "../../utils/findKeyByValue";
-import { isFeatureEnabled } from "../../services/featureFlags";
 import routes from "../../routes";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 /**
  * Convenience constant for referencing the leave period object
@@ -31,15 +31,7 @@ export const fields = [
   `claim.${leavePeriodPath}.start_date`,
 ];
 
-interface LeavePeriodContinuousProps {
-  appLogic: any;
-  claim: BenefitsApplication;
-  query?: {
-    claim_id?: string;
-  };
-}
-
-export const LeavePeriodContinuous = (props: LeavePeriodContinuousProps) => {
+export const LeavePeriodContinuous = (props: WithBenefitsApplicationProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
@@ -142,11 +134,7 @@ export const LeavePeriodContinuous = (props: LeavePeriodContinuousProps) => {
         hint={
           claim.isMedicalOrPregnancyLeave || claim.isCaringLeave
             ? t("pages.claimsLeavePeriodContinuous.hasLeaveHint", {
-                context:
-                  claim.isMedicalOrPregnancyLeave &&
-                  isFeatureEnabled("updateMedicalCertForm")
-                    ? "updateMedicalCertForm"
-                    : contentContext,
+                context: contentContext,
               })
             : null
         }
@@ -169,11 +157,7 @@ export const LeavePeriodContinuous = (props: LeavePeriodContinuousProps) => {
           <Trans
             i18nKey="pages.claimsLeavePeriodContinuous.datesLead"
             tOptions={{
-              context:
-                claim.isMedicalOrPregnancyLeave &&
-                isFeatureEnabled("updateMedicalCertForm")
-                  ? "updateMedicalCertForm"
-                  : contentContext,
+              context: contentContext,
             }}
           />
         </Lead>

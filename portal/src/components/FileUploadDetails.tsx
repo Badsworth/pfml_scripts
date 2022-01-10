@@ -1,5 +1,5 @@
-import Details from "./Details";
-import Heading from "./Heading";
+import Details from "./core/Details";
+import Heading from "./core/Heading";
 import React from "react";
 import { useTranslation } from "../locales/i18n";
 

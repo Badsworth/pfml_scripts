@@ -10,11 +10,15 @@ jobs:
   publish-fineos-deployments:
     name: "Publish Fineos Deployments"
     runs-on: ubuntu-latest
+    # Prevent runaway jobs from eating up a lot of CI time. There's no legitimate reason this job
+    # should take more than a couple of minutes. There have been instances where snap install was
+    # taking ~10 minutes, which is what we want to prevent.
+    timeout-minutes: 2
     strategy:
       fail-fast: false
       matrix:
         environment:
-          [ "test", "stage", "performance", "cps-preview", "training" ]
+          [ "test", "stage", "performance", "cps-preview", "training", "long", "trn2" ]
     env:
       NEW_RELIC_ACCOUNT_ID: 2837112
     steps:
@@ -35,7 +39,7 @@ jobs:
         id: publish-deployments
 
       - name: Trigger E2E Workflow
-        uses: aurelien-baudet/workflow-dispatch@v2
+        uses: aurelien-baudet/workflow-dispatch@v2.1.1
         if: steps.publish-deployments.outputs.was_deployed == 'true'
         with:
           workflow: e2e-cypress.yml

@@ -145,6 +145,11 @@ class LookupTable:
         return row_was_updated
 
     @classmethod
+    def get_all(cls):
+        """Get all instances of a model."""
+        return [p for p in vars(cls).values() if isinstance(p, cls.model)]
+
+    @classmethod
     def get_instance(cls, db_session, template=None, description=None):
         """Get an ORM instance for the row by template instance or description.
 

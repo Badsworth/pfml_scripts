@@ -2,6 +2,7 @@ import abc
 import collections
 import enum
 import uuid
+from datetime import datetime
 from typing import Any, Dict, Optional, Set
 
 import massgov.pfml.api.util.state_log_util as state_log_util
@@ -14,7 +15,8 @@ from massgov.pfml.db.models.employees import (
     PaymentReferenceFile,
     ReferenceFile,
 )
-from massgov.pfml.util.batch.log import LogEntry
+from massgov.pfml.util.batch.log import LogEntry, latest_import_log_for_metric
+from massgov.pfml.util.datetime.business_day import BusinessDay
 
 logger = logging.get_logger(__name__)
 
@@ -36,6 +38,9 @@ class Step(abc.ABC, metaclass=abc.ABCMeta):
         self.payments_in_reference_file = set()
         self.employees_in_reference_file = set()
 
+    def cleanup_on_failure(self) -> None:
+        pass
+
     def run(self) -> None:
         with LogEntry(self.log_entry_db_session, self.__class__.__name__) as log_entry:
             self.log_entry = log_entry
@@ -56,22 +61,40 @@ class Step(abc.ABC, metaclass=abc.ABCMeta):
             flattened_state_log_counts_before = flatten(before_map)
 
             self.set_metrics(flattened_state_log_counts_before)
-            self.run_step()
 
-            # Flatten these prefixed with the "after" key since nested values in the
-            # metrics dictionary aren’t properly imported into New Relic
-            state_log_counts_after = state_log_util.get_state_counts(self.db_session)
+            try:
+                self.run_step()
+                self.db_session.commit()
 
-            after_map = {"after_state_log_counts": state_log_counts_after}
-            flattened_state_log_counts_after = flatten(after_map)
+            except Exception:
+                # Rollback for any exception
+                self.db_session.rollback()
+                logger.exception(
+                    "Error processing step %s:. Cleaning up after failure if applicable.",
+                    self.__class__.__name__,
+                )
 
-            self.set_metrics(flattened_state_log_counts_after)
+                # If there was a file-level exception anywhere in the processing,
+                # we move the file from received to error
+                # perform any cleanup necessary by the step.
+                self.cleanup_on_failure()
+                raise
 
-            # Calculate the difference in counts for the metrics
-            state_log_diff = calculate_state_log_count_diff(
-                state_log_counts_before, state_log_counts_after
-            )
-            self.set_metrics(state_log_diff)
+            finally:
+                # Flatten these prefixed with the "after" key since nested values in the
+                # metrics dictionary aren’t properly imported into New Relic
+                state_log_counts_after = state_log_util.get_state_counts(self.db_session)
+
+                after_map = {"after_state_log_counts": state_log_counts_after}
+                flattened_state_log_counts_after = flatten(after_map)
+
+                self.set_metrics(flattened_state_log_counts_after)
+
+                # Calculate the difference in counts for the metrics
+                state_log_diff = calculate_state_log_count_diff(
+                    state_log_counts_before, state_log_counts_after
+                )
+                self.set_metrics(state_log_diff)
 
     @abc.abstractmethod
     def run_step(self) -> None:
@@ -126,6 +149,29 @@ class Step(abc.ABC, metaclass=abc.ABCMeta):
             employee=employee, reference_file=reference_file,
         )
         self.db_session.add(employee_reference_file)
+
+    @classmethod
+    def check_if_processed_within_x_days(
+        cls, db_session: db.Session, metric: str, business_days: int
+    ) -> bool:
+        import_type = cls.__name__
+        found_import_log = latest_import_log_for_metric(
+            db_session=db_session, import_type=import_type, metric=metric
+        )
+
+        if found_import_log is None:
+            logger.error(f"No data was found for step {cls.__name__} with results for {metric}.")
+        else:
+            business_day = BusinessDay(found_import_log.created_at)
+            days = business_day.days_between(datetime.utcnow())
+            if days <= business_days:
+                return True
+
+            logger.error(
+                f"Last time processing step {cls.__name__} with results for {metric} was greater than {business_days} days.",
+                extra={"import_log_created_at": found_import_log.created_at},
+            )
+        return False
 
 
 def calculate_state_log_count_diff(

@@ -341,6 +341,42 @@ data "aws_iam_policy_document" "dor_import_execution_role_extras" {
   }
 }
 
+# ------------------------------------------------------------------------------------------------------
+# DOR Pending Filing Submission File task stuff
+# ------------------------------------------------------------------------------------------------------
+
+resource "aws_iam_role" "dor_pending_filing_sub_task_role" {
+  name               = "${local.app_name}-${var.environment_name}-ecs-tasks-dor_pending_filing_sub-task-role"
+  assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume_role_policy.json
+}
+
+resource "aws_iam_role_policy_attachment" "dor_pending_filing_sub_task_role_extras" {
+  role       = aws_iam_role.dor_pending_filing_sub_task_role.name
+  policy_arn = aws_iam_policy.dor_pending_filing_sub_task_role_extras.arn
+}
+
+resource "aws_iam_policy" "dor_pending_filing_sub_task_role_extras" {
+  name        = "${local.app_name}-${var.environment_name}-ecs-tasks-dor_pending_filing_sub-ecs-policy"
+  description = "All the things the DOR Pending Filing Submision File task needs to be allowed to do"
+  policy      = data.aws_iam_policy_document.dor_pending_filing_sub_task_role_extras.json
+}
+
+data "aws_iam_policy_document" "dor_pending_filing_sub_task_role_extras" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "s3:PutObject",
+      "s3:GetObject",
+      "s3:ListBucket",
+      "s3:DeleteObject"
+    ]
+    resources = [
+      data.aws_s3_bucket.agency_transfer.arn,
+      "${data.aws_s3_bucket.agency_transfer.arn}/*"
+    ]
+  }
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # IAM role and policies for FINEOS Eligibility Feed export
 # ----------------------------------------------------------------------------------------------------------------------
@@ -737,6 +773,292 @@ data "aws_iam_policy_document" "pub_payments_process_pub_returns_task_role_extra
   }
 }
 
+#####
+
+resource "aws_iam_role" "pub_payments_copy_audit_report_task_role" {
+  name               = "${local.app_name}-${var.environment_name}-pub-payments-copy-audit-report"
+  assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume_role_policy.json
+}
+
+resource "aws_iam_role_policy" "pub_payments_copy_audit_report_task_role_extras" {
+  name   = "${local.app_name}-${var.environment_name}-pub-payments-copy-audit-report-extras"
+  role   = aws_iam_role.pub_payments_copy_audit_report_task_role.id
+  policy = data.aws_iam_policy_document.pub_payments_copy_audit_report_task_role_extras.json
+}
+
+data "aws_iam_policy_document" "pub_payments_copy_audit_report_task_role_extras" {
+  statement {
+    sid = "AllowListingOfBucket"
+    actions = [
+      "s3:ListBucket"
+    ]
+
+    resources = [
+      data.aws_s3_bucket.agency_transfer.arn,
+      "${data.aws_s3_bucket.agency_transfer.arn}/*",
+      data.aws_s3_bucket.reports.arn,
+      "${data.aws_s3_bucket.reports.arn}/*"
+    ]
+
+    effect = "Allow"
+  }
+
+  statement {
+    sid = "ReadWriteAccessToAgencyTransferBucket"
+    actions = [
+      "s3:ListBucket",
+      "s3:Get*",
+      "s3:List*",
+      "s3:PutObject",
+      "s3:DeleteObject",
+      "s3:AbortMultipartUpload"
+    ]
+
+    resources = [
+      "${data.aws_s3_bucket.agency_transfer.arn}/reports",
+      "${data.aws_s3_bucket.agency_transfer.arn}/reports/*",
+      "${data.aws_s3_bucket.reports.arn}/dfml-responses",
+      "${data.aws_s3_bucket.reports.arn}/dfml-responses/*"
+    ]
+
+    effect = "Allow"
+  }
+}
+
+# ----------------------------------------------------------------------------------------------------------------------
+# IAM role and policies for pub-claimant-address-validation
+# ----------------------------------------------------------------------------------------------------------------------
+
+resource "aws_iam_role" "pub_claimant_address_validation_task_role" {
+  name               = "${local.app_name}-${var.environment_name}-ecs-tasks-pub-claimant-address-validation"
+  assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume_role_policy.json
+}
+
+# We may not always have a value for `fineos_aws_iam_role_arn` and a policy has
+# to list a resource, so make this part conditional with the count hack
+resource "aws_iam_role_policy" "pub_claimant_address_validation_task_fineos_role_policy" {
+  count = var.fineos_aws_iam_role_arn == "" ? 0 : 1
+
+  name   = "${local.app_name}-${var.environment_name}-ecs-tasks-pub-claimant-address-validation-fineos-assume-policy"
+  role   = aws_iam_role.pub_claimant_address_validation_task_role.id
+  policy = data.aws_iam_policy_document.fineos_feeds_role_policy[0].json
+}
+
+resource "aws_iam_role_policy" "pub_claimant_address_validation_task_role_extras" {
+  name   = "${local.app_name}-${var.environment_name}-ecs-tasks-pub-claimant-address-validation-extras"
+  role   = aws_iam_role.pub_claimant_address_validation_task_role.id
+  policy = data.aws_iam_policy_document.pub_claimant_address_validation_task_role_extras.json
+}
+
+data "aws_iam_policy_document" "pub_claimant_address_validation_task_role_extras" {
+  statement {
+    sid = "AllowListingOfBucket"
+    actions = [
+      "s3:ListBucket"
+    ]
+
+    resources = [
+      data.aws_s3_bucket.agency_transfer.arn,
+      "${data.aws_s3_bucket.agency_transfer.arn}/*",
+      data.aws_s3_bucket.reports.arn,
+      "${data.aws_s3_bucket.reports.arn}/*"
+    ]
+
+    effect = "Allow"
+  }
+
+  statement {
+    sid = "ReadWriteAccessToAgencyTransferBucket"
+    actions = [
+      "s3:ListBucket",
+      "s3:Get*",
+      "s3:List*",
+      "s3:PutObject",
+      "s3:DeleteObject",
+      "s3:AbortMultipartUpload"
+    ]
+
+    resources = [
+      "${data.aws_s3_bucket.agency_transfer.arn}/pub",
+      "${data.aws_s3_bucket.agency_transfer.arn}/pub/*",
+      "${data.aws_s3_bucket.agency_transfer.arn}/reports",
+      "${data.aws_s3_bucket.agency_transfer.arn}/reports/*",
+      "${data.aws_s3_bucket.agency_transfer.arn}/audit",
+      "${data.aws_s3_bucket.agency_transfer.arn}/audit/*",
+      "${data.aws_s3_bucket.agency_transfer.arn}/cps",
+      "${data.aws_s3_bucket.agency_transfer.arn}/cps/*",
+      "${data.aws_s3_bucket.reports.arn}/dfml-reports",
+      "${data.aws_s3_bucket.reports.arn}/dfml-reports/*",
+      "${data.aws_s3_bucket.reports.arn}/dfml-responses",
+      "${data.aws_s3_bucket.reports.arn}/dfml-responses/*"
+    ]
+
+    effect = "Allow"
+  }
+}
+
+# ----------------------------------------------------------------------------------------------------------------------
+# IAM role and policies for pub-payments-process-1099-documents
+# ----------------------------------------------------------------------------------------------------------------------
+
+resource "aws_iam_role" "pub_payments_process_1099_task_role" {
+  name               = "${local.app_name}-${var.environment_name}-ecs-tasks-pub-payments-process-1099"
+  assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume_role_policy.json
+}
+
+# We may not always have a value for `fineos_aws_iam_role_arn` and a policy has
+# to list a resource, so make this part conditional with the count hack
+resource "aws_iam_role_policy" "pub_payments_process_1099_task_fineos_role_policy" {
+  count = var.fineos_aws_iam_role_arn == "" ? 0 : 1
+
+  name   = "${local.app_name}-${var.environment_name}-ecs-tasks-pub-payments-process-1099-fineos-assume-policy"
+  role   = aws_iam_role.pub_payments_process_1099_task_role.id
+  policy = data.aws_iam_policy_document.fineos_feeds_role_policy[0].json
+}
+
+resource "aws_iam_role_policy" "pub_payments_process_1099_task_role_extras" {
+  name   = "${local.app_name}-${var.environment_name}-ecs-tasks-pub-payments-process-1099-extras"
+  role   = aws_iam_role.pub_payments_process_1099_task_role.id
+  policy = data.aws_iam_policy_document.pub_payments_process_1099_task_role_extras.json
+}
+
+data "aws_iam_policy_document" "pub_payments_process_1099_task_role_extras" {
+  statement {
+    sid = "AllowListingOfBucket"
+    actions = [
+      "s3:ListBucket"
+    ]
+
+    resources = [
+      data.aws_s3_bucket.agency_transfer.arn,
+      "${data.aws_s3_bucket.agency_transfer.arn}/*",
+      data.aws_s3_bucket.reports.arn,
+      "${data.aws_s3_bucket.reports.arn}/*"
+    ]
+
+    effect = "Allow"
+  }
+
+  statement {
+    sid = "ReadWriteAccessToAgencyTransferBucket"
+    actions = [
+      "s3:ListBucket",
+      "s3:Get*",
+      "s3:List*",
+      "s3:PutObject",
+      "s3:DeleteObject",
+      "s3:AbortMultipartUpload"
+    ]
+
+    resources = [
+      "${data.aws_s3_bucket.agency_transfer.arn}/pub",
+      "${data.aws_s3_bucket.agency_transfer.arn}/pub/*",
+      "${data.aws_s3_bucket.agency_transfer.arn}/reports",
+      "${data.aws_s3_bucket.agency_transfer.arn}/reports/*",
+      "${data.aws_s3_bucket.agency_transfer.arn}/audit",
+      "${data.aws_s3_bucket.agency_transfer.arn}/audit/*",
+      "${data.aws_s3_bucket.agency_transfer.arn}/cps",
+      "${data.aws_s3_bucket.agency_transfer.arn}/cps/*",
+      "${data.aws_s3_bucket.reports.arn}/dfml-reports",
+      "${data.aws_s3_bucket.reports.arn}/dfml-reports/*",
+      "${data.aws_s3_bucket.reports.arn}/dfml-responses",
+      "${data.aws_s3_bucket.reports.arn}/dfml-responses/*"
+    ]
+
+    effect = "Allow"
+  }
+}
+
+resource "aws_iam_role_policy" "pub_payments_process_1099_role_s3_access_policy" {
+  count = var.fineos_aws_iam_role_arn == "" ? 0 : 1
+
+  name = "${local.app_name}-${var.environment_name}-ecs-tasks-pub-payments-process-1099-s3_access-policy"
+  role = aws_iam_role.pub_payments_process_1099_task_role.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = [
+          "s3:Get*",
+          "s3:List*",
+          "s3:PutObject"
+        ]
+        Effect = "Allow"
+        Resource = [
+          "${aws_s3_bucket.ecs_tasks_1099_bucket.arn}",
+          "${aws_s3_bucket.ecs_tasks_1099_bucket.arn}/*"
+        ]
+      },
+    ]
+  })
+}
+
+# ----------------------------------------------------------------------------------------------------------------------
+# IAM role and policies for fineos-import-iaww
+# ----------------------------------------------------------------------------------------------------------------------
+
+resource "aws_iam_role" "fineos_import_iaww_task_role" {
+  name               = "${local.app_name}-${var.environment_name}-ecs-tasks-fineos-import-iaww"
+  assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume_role_policy.json
+}
+
+# We may not always have a value for `fineos_aws_iam_role_arn` and a policy has
+# to list a resource, so make this part conditional with the count hack
+resource "aws_iam_role_policy" "fineos_import_iaww_task_fineos_role_policy" {
+  count = var.fineos_aws_iam_role_arn == "" ? 0 : 1
+
+  name   = "${local.app_name}-${var.environment_name}-ecs-tasks-fineos-import-iaww-fineos-assume-policy"
+  role   = aws_iam_role.fineos_import_iaww_task_role.id
+  policy = data.aws_iam_policy_document.fineos_feeds_role_policy[0].json
+}
+
+resource "aws_iam_role_policy" "fineos_import_iaww_task_role_extras" {
+  name   = "${local.app_name}-${var.environment_name}-ecs-tasks-fineos-import-iaww-extras"
+  role   = aws_iam_role.fineos_import_iaww_task_role.id
+  policy = data.aws_iam_policy_document.fineos_import_iaww_task_role_extras.json
+}
+
+data "aws_iam_policy_document" "fineos_import_iaww_task_role_extras" {
+  statement {
+    sid = "AllowListingOfBucket"
+    actions = [
+      "s3:ListBucket"
+    ]
+
+    resources = [
+      data.aws_s3_bucket.agency_transfer.arn,
+      "${data.aws_s3_bucket.agency_transfer.arn}/*",
+      data.aws_s3_bucket.reports.arn,
+      "${data.aws_s3_bucket.reports.arn}/*"
+    ]
+
+    effect = "Allow"
+  }
+
+  statement {
+    sid = "ReadWriteAccessToAgencyTransferBucket"
+    actions = [
+      "s3:ListBucket",
+      "s3:Get*",
+      "s3:List*",
+      "s3:PutObject",
+      "s3:DeleteObject",
+      "s3:AbortMultipartUpload"
+    ]
+
+    resources = [
+      "${data.aws_s3_bucket.agency_transfer.arn}/cps",
+      "${data.aws_s3_bucket.agency_transfer.arn}/cps/*",
+      "${data.aws_s3_bucket.agency_transfer.arn}/reports",
+      "${data.aws_s3_bucket.agency_transfer.arn}/reports/*",
+      "${data.aws_s3_bucket.reports.arn}/dfml-reports",
+      "${data.aws_s3_bucket.reports.arn}/dfml-reports/*"
+    ]
+
+    effect = "Allow"
+  }
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # IAM role and policies for reductions-workflow
 # ----------------------------------------------------------------------------------------------------------------------
@@ -985,6 +1307,149 @@ data "aws_iam_policy_document" "fineos_bucket_tool_task_policy_document" {
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
+# IAM role and policies for S3 buckets for SFTP (agency transfer) tool
+# ----------------------------------------------------------------------------------------------------------------------
+
+resource "aws_iam_role" "sftp_tool_role" {
+  name               = "${local.app_name}-${var.environment_name}-ecs-tasks-sftp-tool"
+  assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume_role_policy.json
+}
+
+resource "aws_iam_role_policy" "sftp_tool_assume_role_policy" {
+  name   = "${local.app_name}-${var.environment_name}-ecs-tasks-sftp-tool-assume-role-policy"
+  role   = aws_iam_role.sftp_tool_role.id
+  policy = data.aws_iam_policy_document.sftp_tool_task_policy_document.json
+}
+
+resource "aws_iam_role_policy" "sftp_tool_role_policy" {
+  name   = "${local.app_name}-${var.environment_name}-ecs-tasks-sftp-tool-role-policy"
+  role   = aws_iam_role.sftp_tool_role.id
+  policy = data.aws_iam_policy_document.sftp_tool_task_policy_document.json
+}
+
+data "aws_iam_policy_document" "sftp_tool_task_policy_document" {
+  statement {
+    sid = "AllowListingOfBucket"
+    actions = [
+      "s3:ListBucket"
+    ]
+
+    resources = [
+      data.aws_s3_bucket.agency_transfer.arn
+    ]
+
+    effect = "Allow"
+  }
+
+  statement {
+    sid = "AllowS3ReadOnBucket"
+    actions = [
+      "s3:Get*",
+      "s3:List*"
+    ]
+
+    resources = [
+      "${data.aws_s3_bucket.agency_transfer.arn}/",
+      "${data.aws_s3_bucket.agency_transfer.arn}/*"
+    ]
+
+    effect = "Allow"
+  }
+
+  statement {
+    sid = "AllowS3WriteOnBucket"
+    actions = [
+      "s3:PutObject",
+      "s3:DeleteObject",
+      "s3:AbortMultipartUpload"
+    ]
+
+    resources = [
+      "${data.aws_s3_bucket.agency_transfer.arn}/",
+      "${data.aws_s3_bucket.agency_transfer.arn}/*"
+    ]
+
+    effect = "Allow"
+  }
+}
+
+resource "aws_iam_role" "sftp_tool_execution_role" {
+  name               = "${local.app_name}-${var.environment_name}-sftp-tool-execution-role"
+  assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume_role_policy.json
+}
+
+resource "aws_iam_role_policy_attachment" "sftp_tool_execution_role_extras" {
+  role       = aws_iam_role.sftp_tool_execution_role.name
+  policy_arn = aws_iam_policy.sftp_tool_execution_role_extras.arn
+}
+
+resource "aws_iam_policy" "sftp_tool_execution_role_extras" {
+  name        = "${local.app_name}-${var.environment_name}-sftp-tool-execution-policy"
+  description = "A clone of the standard execution role with extra SSM permissions for SFTP agency transfer."
+  policy      = data.aws_iam_policy_document.sftp_tool_execution_role_extras.json
+}
+
+data "aws_iam_policy_document" "sftp_tool_execution_role_extras" {
+  # Allow ECS to log to Cloudwatch.
+  statement {
+    actions = [
+      "logs:CreateLogStream",
+      "logs:PutLogEvents",
+      "logs:DescribeLogStreams"
+    ]
+
+    resources = [
+      "${aws_cloudwatch_log_group.ecs_tasks.arn}:*"
+    ]
+  }
+
+  # Allow ECS to authenticate with ECR and download images.
+  statement {
+    actions = [
+      "ecr:GetAuthorizationToken",
+      "ecr:BatchCheckLayerAvailability",
+      "ecr:GetDownloadUrlForLayer",
+      "ecr:BatchGetImage",
+    ]
+
+    # ECS Fargate doesn't like it when you restrict the access to a single
+    # repository. Instead, it needs access to all of them.
+    resources = [
+      "*"
+    ]
+  }
+
+  # Allow ECS to access secrets from parameter store.
+  statement {
+    actions = [
+      "ssm:GetParameter",
+      "ssm:GetParameters",
+    ]
+
+    resources = [
+      "${local.ssm_arn_prefix}/${local.app_name}/common/*",
+      "${local.ssm_arn_prefix}/${local.app_name}/${var.environment_name}/*",
+      "${local.ssm_arn_prefix}/${local.app_name}-comptroller/${var.environment_name}/*",
+      "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/admin/*",
+    ]
+  }
+
+  statement {
+    actions = [
+      "ssm:GetParametersByPath",
+    ]
+
+    resources = [
+      "${local.ssm_arn_prefix}/${local.app_name}/common",
+      "${local.ssm_arn_prefix}/${local.app_name}/${var.environment_name}",
+      "${local.ssm_arn_prefix}/${local.app_name}-comptroller/${var.environment_name}",
+      "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/admin"
+    ]
+  }
+}
+
+
+# ----------------------------------------------------------------------------------------------------------------------
 # IAM role and policies for cps-errors-crawler
 # ----------------------------------------------------------------------------------------------------------------------
 
@@ -1012,7 +1477,7 @@ data "aws_iam_policy_document" "cps_errors_crawler_role_policy_document" {
     ]
 
     condition {
-      test     = "StringEquals"
+      test     = "StringLike"
       variable = "s3:prefix"
       values = [
         "cps-errors/received/",
@@ -1137,18 +1602,18 @@ data "aws_iam_policy_document" "evaluate_new_financial_eligibility" {
 # IAM role and policies for dua-import-employee-demographics
 # ----------------------------------------------------------------------------------------------------------------------
 
-resource "aws_iam_role" "dua_import_employee_demographics_task_role" {
-  name               = "${local.app_name}-${var.environment_name}-dua-import-employee-demographics-task-role"
+resource "aws_iam_role" "dua_employee_workflow_task_role" {
+  name               = "${local.app_name}-${var.environment_name}-dua-employee-workflow-task-role"
   assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume_role_policy.json
 }
 
-resource "aws_iam_role_policy" "dua_import_employee_demographics_role_policy" {
-  name   = "${local.app_name}-${var.environment_name}-dua-import-employee-demographics-task-role-policy"
-  role   = aws_iam_role.dua_import_employee_demographics_task_role.id
-  policy = data.aws_iam_policy_document.dua_import_employee_demographics.json
+resource "aws_iam_role_policy" "dua_employee_workflow_role_policy" {
+  name   = "${local.app_name}-${var.environment_name}-dua-employee-workflow-task-role-policy"
+  role   = aws_iam_role.dua_employee_workflow_task_role.id
+  policy = data.aws_iam_policy_document.dua_employee_workflow.json
 }
 
-data "aws_iam_policy_document" "dua_import_employee_demographics" {
+data "aws_iam_policy_document" "dua_employee_workflow" {
   # Allow writing results to S3.
   statement {
     effect = "Allow"
@@ -1164,3 +1629,79 @@ data "aws_iam_policy_document" "dua_import_employee_demographics" {
     ]
   }
 }
+
+resource "aws_iam_role" "dua_employee_workflow_execution_role" {
+  name               = "${local.app_name}-${var.environment_name}-dua-employee-workflow-execution-role"
+  assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume_role_policy.json
+}
+
+resource "aws_iam_role_policy_attachment" "dua_employee_workflow_execution_role_extras" {
+  role       = aws_iam_role.dua_employee_workflow_execution_role.name
+  policy_arn = aws_iam_policy.dua_employee_workflow_execution_role_extras.arn
+}
+
+resource "aws_iam_policy" "dua_employee_workflow_execution_role_extras" {
+  name        = "${local.app_name}-${var.environment_name}-dua-employee-workflow-execution-policy"
+  description = "A clone of the standard execution role with extra SSM permissions for DUA Employee Workflow decryption keys."
+  policy      = data.aws_iam_policy_document.dua_employee_workflow_execution_role_extras.json
+}
+
+data "aws_iam_policy_document" "dua_employee_workflow_execution_role_extras" {
+  # Allow ECS to log to Cloudwatch.
+  statement {
+    actions = [
+      "logs:CreateLogStream",
+      "logs:PutLogEvents",
+      "logs:DescribeLogStreams"
+    ]
+
+    resources = [
+      "${aws_cloudwatch_log_group.ecs_tasks.arn}:*"
+    ]
+  }
+
+  # Allow ECS to authenticate with ECR and download images.
+  statement {
+    actions = [
+      "ecr:GetAuthorizationToken",
+      "ecr:BatchCheckLayerAvailability",
+      "ecr:GetDownloadUrlForLayer",
+      "ecr:BatchGetImage",
+    ]
+
+    # ECS Fargate doesn't like it when you restrict the access to a single
+    # repository. Instead, it needs access to all of them.
+    resources = [
+      "*"
+    ]
+  }
+
+  # Allow ECS to access secrets from parameter store.
+  statement {
+    actions = [
+      "ssm:GetParameter",
+      "ssm:GetParameters",
+    ]
+
+    resources = [
+      "${local.ssm_arn_prefix}/${local.app_name}/common/*",
+      "${local.ssm_arn_prefix}/${local.app_name}/${var.environment_name}/*",
+      "${local.ssm_arn_prefix}/${local.app_name}-comptroller/${var.environment_name}/*",
+      "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/admin/*",
+    ]
+  }
+
+  statement {
+    actions = [
+      "ssm:GetParametersByPath",
+    ]
+
+    resources = [
+      "${local.ssm_arn_prefix}/${local.app_name}/common",
+      "${local.ssm_arn_prefix}/${local.app_name}/${var.environment_name}",
+      "${local.ssm_arn_prefix}/${local.app_name}-comptroller/${var.environment_name}",
+      "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/admin"
+    ]
+  }
+}
+

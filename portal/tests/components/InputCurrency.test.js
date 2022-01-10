@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 
-import InputCurrency from "../../src/components/InputCurrency";
+import InputCurrency from "../../src/components/core/InputCurrency";
 import React from "react";
 
 describe("InputCurrency", () => {

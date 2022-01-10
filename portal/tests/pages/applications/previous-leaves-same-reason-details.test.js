@@ -70,34 +70,57 @@ describe("PreviousLeavesSameReasonDetails", () => {
     ).toBeInTheDocument();
   });
 
-  it("changes date in hint text when claim is for caring leave", () => {
-    const julyTextMatch = /leave taken between July 1, 2021/i;
+  it("changes hint date if claim is caring leave or starts in 2021", () => {
     const januaryTextMatch = /leave taken between January 1, 2021/i;
+    const marchTextMatch = /leave taken between March 7, 2021/i;
+    const julyTextMatch = /leave taken between July 1, 2021/i;
 
     setup(
       new MockBenefitsApplicationBuilder()
-        .continuous()
-        .employed()
-        .previousLeavesSameReason()
-        .caringLeaveReason()
-        .create()
-    );
-
-    expect(screen.queryByText(julyTextMatch)).toBeInTheDocument();
-    expect(screen.queryByText(januaryTextMatch)).not.toBeInTheDocument();
-
-    cleanup();
-    setup(
-      new MockBenefitsApplicationBuilder()
-        .continuous()
+        .continuous({
+          start_date: "2021-11-01",
+        })
         .employed()
         .previousLeavesSameReason()
         .medicalLeaveReason()
         .create()
     );
 
-    expect(screen.queryByText(julyTextMatch)).not.toBeInTheDocument();
     expect(screen.queryByText(januaryTextMatch)).toBeInTheDocument();
+    expect(screen.queryByText(marchTextMatch)).not.toBeInTheDocument();
+    expect(screen.queryByText(julyTextMatch)).not.toBeInTheDocument();
+
+    cleanup();
+    setup(
+      new MockBenefitsApplicationBuilder()
+        .continuous({
+          start_date: "2022-03-07",
+        })
+        .employed()
+        .previousLeavesSameReason()
+        .caringLeaveReason()
+        .create()
+    );
+
+    expect(screen.queryByText(januaryTextMatch)).not.toBeInTheDocument();
+    expect(screen.queryByText(marchTextMatch)).not.toBeInTheDocument();
+    expect(screen.queryByText(julyTextMatch)).toBeInTheDocument();
+
+    cleanup();
+    setup(
+      new MockBenefitsApplicationBuilder()
+        .continuous({
+          start_date: "2022-03-07",
+        })
+        .employed()
+        .previousLeavesSameReason()
+        .medicalLeaveReason()
+        .create()
+    );
+
+    expect(screen.queryByText(januaryTextMatch)).not.toBeInTheDocument();
+    expect(screen.queryByText(marchTextMatch)).toBeInTheDocument();
+    expect(screen.queryByText(julyTextMatch)).not.toBeInTheDocument();
   });
 
   it("calls update when user submits form with new data", async () => {

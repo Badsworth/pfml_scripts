@@ -50,6 +50,14 @@ class IssueRule(str, Enum):
     disallow_overlapping_leave_period_with_previous_leave = (
         "disallow_overlapping_leave_period_with_previous_leave"
     )
+    disallow_overlapping_waiting_period_and_concurrent_leave_end_date = (
+        "disallow_overlapping_waiting_period_and_concurrent_leave_end_date"
+    )
+    disallow_overlapping_waiting_period_and_concurrent_leave_start_date = (
+        "disallow_overlapping_waiting_period_and_concurrent_leave_start_date"
+    )
+    # Document requirement has already been satisfied in Fineos
+    document_requirement_already_satisfied = "document_requirement_already_satisfied"
     # Employer must be notified when employment status is Employed
     require_employer_notified = "require_employer_notified"
     # Partially masked field does not match existing value
@@ -111,6 +119,8 @@ class IssueType(str, Enum):
     outstanding_information_request_required = "outstanding_information_request_required"
     # Masked field is not allowed
     invalid_masked_field = "invalid_masked_field"
+    # File is too large to be stored
+    file_size = "file_size"
     # File mime type is not a supported mime type
     file_type = "file_type"
     # Extension portion is required in the filename, but missing.
@@ -150,6 +160,8 @@ class IssueType(str, Enum):
     # this moving forward.
     # TODO (EMPLOYER-1643): Remove this once the errors the reference it no longer use IssueRule
     pfml = ""
+    # Generic value error
+    value_error = "value_error"
 
 
 @dataclass

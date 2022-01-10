@@ -2,18 +2,26 @@ import AddButton from "./AddButton";
 import AmendableConcurrentLeave from "./AmendableConcurrentLeave";
 import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
 import ConcurrentLeaveModel from "../../models/ConcurrentLeave";
-import Heading from "../Heading";
+import EmployerClaim from "../../models/EmployerClaim";
+import Heading from "../core/Heading";
 import React from "react";
-import Table from "../Table";
+import Table from "../core/Table";
+import { Trans } from "react-i18next";
+import dayjs from "dayjs";
+import formatDate from "../../utils/formatDate";
 import { useTranslation } from "../../locales/i18n";
 
 interface ConcurrentLeaveProps {
   addedConcurrentLeave?: ConcurrentLeaveModel;
   appErrors: AppErrorInfoCollection;
+  claim: EmployerClaim;
   concurrentLeave?: ConcurrentLeaveModel;
   onAdd: React.MouseEventHandler<HTMLButtonElement>;
-  onChange: (...args: any[]) => any;
-  onRemove: (...args: any[]) => any;
+  onChange: (
+    arg: ConcurrentLeaveModel | { [key: string]: unknown },
+    arg2?: string
+  ) => void;
+  onRemove: (arg: ConcurrentLeaveModel) => void;
 }
 
 /**
@@ -26,11 +34,16 @@ const ConcurrentLeave = (props: ConcurrentLeaveProps) => {
   const {
     addedConcurrentLeave,
     appErrors,
+    claim,
     concurrentLeave,
     onAdd,
     onChange,
     onRemove,
   } = props;
+
+  const leaveContext = claim.isIntermittent
+    ? "intermittent"
+    : "continuousOrReduced";
 
   return (
     <React.Fragment>
@@ -38,7 +51,19 @@ const ConcurrentLeave = (props: ConcurrentLeaveProps) => {
         {t("components.employersConcurrentLeave.header")}
       </Heading>
       <p>{t("components.employersConcurrentLeave.explanation")}</p>
-      <Table className="width-full">
+      <p>
+        <Trans
+          i18nKey="components.employersConcurrentLeave.explanationDetails"
+          tOptions={{ context: leaveContext }}
+          values={{
+            endDate: formatDate(
+              dayjs(claim.leaveStartDate).add(6, "day").format()
+            ).short(),
+            startDate: formatDate(claim.leaveStartDate).short(),
+          }}
+        />
+      </p>
+      <Table className="width-full" responsive>
         <thead>
           <tr>
             <th scope="col">

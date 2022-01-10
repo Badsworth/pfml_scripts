@@ -90,10 +90,10 @@ def downgrade():
         "absence_period",
         sa.Column("claim_type_id", sa.INTEGER(), autoincrement=False, nullable=False),
     )
-    op.drop_constraint(None, "absence_period", type_="foreignkey")
-    op.drop_constraint(None, "absence_period", type_="foreignkey")
-    op.drop_constraint(None, "absence_period", type_="foreignkey")
-    op.drop_constraint(None, "absence_period", type_="foreignkey")
+    op.drop_constraint(None, "absence_period", type_="foreignkey")  # type: ignore
+    op.drop_constraint(None, "absence_period", type_="foreignkey")  # type: ignore
+    op.drop_constraint(None, "absence_period", type_="foreignkey")  # type: ignore
+    op.drop_constraint(None, "absence_period", type_="foreignkey")  # type: ignore
     op.create_foreign_key(
         "absence_period_claim_type_id_fkey",
         "absence_period",

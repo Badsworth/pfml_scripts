@@ -21,7 +21,7 @@ exports[`AlertBar renders the children as the alert body text 1`] = `
           >
             <svg
               aria-hidden="true"
-              class="usa-icon--size-4"
+              class="usa-icon usa-icon--size-4"
               focusable="false"
               role="img"
             >

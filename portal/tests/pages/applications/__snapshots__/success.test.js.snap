@@ -132,7 +132,7 @@ exports[`Success renders content tailored to Caring Leave 1`] = `
       </li>
       <li>
         <a
-          href="/applications/status?absence_case_id=NTN-111-ABS-01"
+          href="/applications/status?absence_id=NTN-111-ABS-01"
         >
           Track the status of your application here
         </a>
@@ -161,7 +161,7 @@ exports[`Success renders content tailored to Caring Leave 1`] = `
     </h2>
     Review 
     <a
-      href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#benefit-amount-details-"
+      href="https://www.mass.gov/how-much-will-i-get-paid"
       rel="noreferrer noopener"
       target="_blank"
     >
@@ -175,7 +175,7 @@ exports[`Success renders content tailored to Caring Leave 1`] = `
     >
       use this calculator
     </a>
-    . The maximum total amount that a person can receive in PFML benefits is $850 per week, even if you have been approved for leave benefits from multiple employers.
+    . The maximum total amount that a person can receive in PFML benefits is $1084 per week, even if you have been approved for leave benefits from multiple employers.
     <div
       class="border-top-2px border-base-lighter margin-top-4 padding-top-4"
     >
@@ -207,7 +207,7 @@ exports[`Success renders content tailored to Caring Leave 1`] = `
       </h2>
       <a
         class="usa-button margin-top-4"
-        href="/applications/status?absence_case_id=NTN-111-ABS-01"
+        href="/applications/status?absence_id=NTN-111-ABS-01"
       >
         View your application
       </a>
@@ -340,7 +340,7 @@ exports[`Success renders content tailored to Family (Bonding Adoption) 1`] = `
       </li>
       <li>
         <a
-          href="/applications/status?absence_case_id=NTN-111-ABS-01"
+          href="/applications/status?absence_id=NTN-111-ABS-01"
         >
           Track the status of your application here
         </a>
@@ -369,7 +369,7 @@ exports[`Success renders content tailored to Family (Bonding Adoption) 1`] = `
     </h2>
     Review 
     <a
-      href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#benefit-amount-details-"
+      href="https://www.mass.gov/how-much-will-i-get-paid"
       rel="noreferrer noopener"
       target="_blank"
     >
@@ -383,7 +383,7 @@ exports[`Success renders content tailored to Family (Bonding Adoption) 1`] = `
     >
       use this calculator
     </a>
-    . The maximum total amount that a person can receive in PFML benefits is $850 per week, even if you have been approved for leave benefits from multiple employers.
+    . The maximum total amount that a person can receive in PFML benefits is $1084 per week, even if you have been approved for leave benefits from multiple employers.
     <div
       class="border-top-2px border-base-lighter margin-top-4 padding-top-4"
     >
@@ -415,7 +415,7 @@ exports[`Success renders content tailored to Family (Bonding Adoption) 1`] = `
       </h2>
       <a
         class="usa-button margin-top-4"
-        href="/applications/status?absence_case_id=NTN-111-ABS-01"
+        href="/applications/status?absence_id=NTN-111-ABS-01"
       >
         View your application
       </a>
@@ -523,7 +523,7 @@ exports[`Success renders content tailored to Family (Bonding Future Adoption) 1`
       </li>
       <li>
         <a
-          href="/applications/status?absence_case_id=NTN-111-ABS-01"
+          href="/applications/status?absence_id=NTN-111-ABS-01"
         >
           Track the status of your application here
         </a>
@@ -552,7 +552,7 @@ exports[`Success renders content tailored to Family (Bonding Future Adoption) 1`
     </h2>
     Review 
     <a
-      href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#benefit-amount-details-"
+      href="https://www.mass.gov/how-much-will-i-get-paid"
       rel="noreferrer noopener"
       target="_blank"
     >
@@ -566,7 +566,7 @@ exports[`Success renders content tailored to Family (Bonding Future Adoption) 1`
     >
       use this calculator
     </a>
-    . The maximum total amount that a person can receive in PFML benefits is $850 per week, even if you have been approved for leave benefits from multiple employers.
+    . The maximum total amount that a person can receive in PFML benefits is $1084 per week, even if you have been approved for leave benefits from multiple employers.
     <div
       class="border-top-2px border-base-lighter margin-top-4 padding-top-4"
     >
@@ -598,7 +598,7 @@ exports[`Success renders content tailored to Family (Bonding Future Adoption) 1`
       </h2>
       <a
         class="usa-button margin-top-4"
-        href="/applications/status?absence_case_id=NTN-111-ABS-01"
+        href="/applications/status?absence_id=NTN-111-ABS-01"
       >
         View your application
       </a>
@@ -706,7 +706,7 @@ exports[`Success renders content tailored to Family (Bonding Future Newborn) 1`]
       </li>
       <li>
         <a
-          href="/applications/status?absence_case_id=NTN-111-ABS-01"
+          href="/applications/status?absence_id=NTN-111-ABS-01"
         >
           Track the status of your application here
         </a>
@@ -735,7 +735,7 @@ exports[`Success renders content tailored to Family (Bonding Future Newborn) 1`]
     </h2>
     Review 
     <a
-      href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#benefit-amount-details-"
+      href="https://www.mass.gov/how-much-will-i-get-paid"
       rel="noreferrer noopener"
       target="_blank"
     >
@@ -749,7 +749,7 @@ exports[`Success renders content tailored to Family (Bonding Future Newborn) 1`]
     >
       use this calculator
     </a>
-    . The maximum total amount that a person can receive in PFML benefits is $850 per week, even if you have been approved for leave benefits from multiple employers.
+    . The maximum total amount that a person can receive in PFML benefits is $1084 per week, even if you have been approved for leave benefits from multiple employers.
     <div
       class="padding-top-2 margin-top-2"
     >
@@ -847,7 +847,7 @@ exports[`Success renders content tailored to Family (Bonding Future Newborn) 1`]
       </h2>
       <a
         class="usa-button margin-top-4"
-        href="/applications/status?absence_case_id=NTN-111-ABS-01"
+        href="/applications/status?absence_id=NTN-111-ABS-01"
       >
         View your application
       </a>
@@ -980,7 +980,7 @@ exports[`Success renders content tailored to Family (Bonding Newborn) 1`] = `
       </li>
       <li>
         <a
-          href="/applications/status?absence_case_id=NTN-111-ABS-01"
+          href="/applications/status?absence_id=NTN-111-ABS-01"
         >
           Track the status of your application here
         </a>
@@ -1009,7 +1009,7 @@ exports[`Success renders content tailored to Family (Bonding Newborn) 1`] = `
     </h2>
     Review 
     <a
-      href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#benefit-amount-details-"
+      href="https://www.mass.gov/how-much-will-i-get-paid"
       rel="noreferrer noopener"
       target="_blank"
     >
@@ -1023,7 +1023,7 @@ exports[`Success renders content tailored to Family (Bonding Newborn) 1`] = `
     >
       use this calculator
     </a>
-    . The maximum total amount that a person can receive in PFML benefits is $850 per week, even if you have been approved for leave benefits from multiple employers.
+    . The maximum total amount that a person can receive in PFML benefits is $1084 per week, even if you have been approved for leave benefits from multiple employers.
     <div
       class="padding-top-2 margin-top-2"
     >
@@ -1121,7 +1121,7 @@ exports[`Success renders content tailored to Family (Bonding Newborn) 1`] = `
       </h2>
       <a
         class="usa-button margin-top-4"
-        href="/applications/status?absence_case_id=NTN-111-ABS-01"
+        href="/applications/status?absence_id=NTN-111-ABS-01"
       >
         View your application
       </a>
@@ -1254,7 +1254,7 @@ exports[`Success renders content tailored to Medical (Not pregnant) 1`] = `
       </li>
       <li>
         <a
-          href="/applications/status?absence_case_id=NTN-111-ABS-01"
+          href="/applications/status?absence_id=NTN-111-ABS-01"
         >
           Track the status of your application here
         </a>
@@ -1283,7 +1283,7 @@ exports[`Success renders content tailored to Medical (Not pregnant) 1`] = `
     </h2>
     Review 
     <a
-      href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#benefit-amount-details-"
+      href="https://www.mass.gov/how-much-will-i-get-paid"
       rel="noreferrer noopener"
       target="_blank"
     >
@@ -1297,7 +1297,7 @@ exports[`Success renders content tailored to Medical (Not pregnant) 1`] = `
     >
       use this calculator
     </a>
-    . The maximum total amount that a person can receive in PFML benefits is $850 per week, even if you have been approved for leave benefits from multiple employers.
+    . The maximum total amount that a person can receive in PFML benefits is $1084 per week, even if you have been approved for leave benefits from multiple employers.
     <div
       class="border-top-2px border-base-lighter margin-top-4 padding-top-4"
     >
@@ -1329,7 +1329,7 @@ exports[`Success renders content tailored to Medical (Not pregnant) 1`] = `
       </h2>
       <a
         class="usa-button margin-top-4"
-        href="/applications/status?absence_case_id=NTN-111-ABS-01"
+        href="/applications/status?absence_id=NTN-111-ABS-01"
       >
         View your application
       </a>
@@ -1462,7 +1462,7 @@ exports[`Success renders content tailored to Medical (Pregnant) 1`] = `
       </li>
       <li>
         <a
-          href="/applications/status?absence_case_id=NTN-111-ABS-01"
+          href="/applications/status?absence_id=NTN-111-ABS-01"
         >
           Track the status of your application here
         </a>
@@ -1491,7 +1491,7 @@ exports[`Success renders content tailored to Medical (Pregnant) 1`] = `
     </h2>
     Review 
     <a
-      href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#benefit-amount-details-"
+      href="https://www.mass.gov/how-much-will-i-get-paid"
       rel="noreferrer noopener"
       target="_blank"
     >
@@ -1505,7 +1505,7 @@ exports[`Success renders content tailored to Medical (Pregnant) 1`] = `
     >
       use this calculator
     </a>
-    . The maximum total amount that a person can receive in PFML benefits is $850 per week, even if you have been approved for leave benefits from multiple employers.
+    . The maximum total amount that a person can receive in PFML benefits is $1084 per week, even if you have been approved for leave benefits from multiple employers.
     <div
       class="padding-top-2 margin-top-2"
     >
@@ -1603,7 +1603,7 @@ exports[`Success renders content tailored to Medical (Pregnant) 1`] = `
       </h2>
       <a
         class="usa-button margin-top-4"
-        href="/applications/status?absence_case_id=NTN-111-ABS-01"
+        href="/applications/status?absence_id=NTN-111-ABS-01"
       >
         View your application
       </a>
@@ -1730,7 +1730,7 @@ exports[`Success renders content tailored to Medical (Pregnant, applying in adva
       </li>
       <li>
         <a
-          href="/applications/status?absence_case_id=NTN-111-ABS-01"
+          href="/applications/status?absence_id=NTN-111-ABS-01"
         >
           Track the status of your application here
         </a>
@@ -1759,7 +1759,7 @@ exports[`Success renders content tailored to Medical (Pregnant, applying in adva
     </h2>
     Review 
     <a
-      href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#benefit-amount-details-"
+      href="https://www.mass.gov/how-much-will-i-get-paid"
       rel="noreferrer noopener"
       target="_blank"
     >
@@ -1773,7 +1773,7 @@ exports[`Success renders content tailored to Medical (Pregnant, applying in adva
     >
       use this calculator
     </a>
-    . The maximum total amount that a person can receive in PFML benefits is $850 per week, even if you have been approved for leave benefits from multiple employers.
+    . The maximum total amount that a person can receive in PFML benefits is $1084 per week, even if you have been approved for leave benefits from multiple employers.
     <div
       class="padding-top-2 margin-top-2"
     >
@@ -1871,7 +1871,7 @@ exports[`Success renders content tailored to Medical (Pregnant, applying in adva
       </h2>
       <a
         class="usa-button margin-top-4"
-        href="/applications/status?absence_case_id=NTN-111-ABS-01"
+        href="/applications/status?absence_id=NTN-111-ABS-01"
       >
         View your application
       </a>

@@ -1,6 +1,7 @@
 import enum
 
 import massgov.pfml.api.util.state_log_util as state_log_util
+import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml.db.models.employees import PaymentMethod, State
 from massgov.pfml.delegated_payments.step import Step
@@ -61,6 +62,13 @@ class PaymentMethodsSplitStep(Step):
                     outcome=message,
                     db_session=self.db_session,
                 )
+                logger.info(
+                    "Moved EFT payment to state %s in preparation of creating PUB files",
+                    State.DELEGATED_PAYMENT_ADD_TO_PUB_TRANSACTION_EFT.state_description,
+                    extra=payments_util.get_traceable_payment_details(
+                        payment, State.DELEGATED_PAYMENT_ADD_TO_PUB_TRANSACTION_EFT
+                    ),
+                )
             elif payment_method_id == PaymentMethod.CHECK.payment_method_id:
                 self.increment(self.Metrics.CHECK_PAYMENT_COUNT)
                 message = state_log_util.build_outcome(
@@ -72,6 +80,14 @@ class PaymentMethodsSplitStep(Step):
                     outcome=message,
                     db_session=self.db_session,
                 )
+                logger.info(
+                    "Moved check payment to state %s in preparation of creating PUB files",
+                    State.DELEGATED_PAYMENT_ADD_TO_PUB_TRANSACTION_CHECK.state_description,
+                    extra=payments_util.get_traceable_payment_details(
+                        payment, State.DELEGATED_PAYMENT_ADD_TO_PUB_TRANSACTION_CHECK
+                    ),
+                )
+
             else:
                 # raise an exception, put more details than just this here so we can trace back to the payment.
                 raise PaymentMethodsSplitError(
@@ -82,12 +98,5 @@ class PaymentMethodsSplitStep(Step):
 
     def split_payment_methods(self):
         logger.info("Beginning payment methods split for payments in fineos writeback state")
-        try:
-            self._split_payment_methods()
-            self.db_session.commit()
-            logger.info("Successfully moved payments into check and EFT PUB states")
-        except Exception:
-            self.db_session.rollback()
-            logger.exception("Error splitting payment methods")
-            # We do not want to run any subsequent steps if this fails
-            raise
+        self._split_payment_methods()
+        logger.info("Successfully moved payments into check and EFT PUB states")

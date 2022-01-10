@@ -1,7 +1,6 @@
 import config from "../config";
 import TestMailVerificationFetcher from "../submission/TestMailVerificationFetcher";
 import AuthenticationManager from "../submission/AuthenticationManager";
-import { CognitoUserPool } from "amazon-cognito-identity-js";
 import PortalSubmitter from "../submission/PortalSubmitter";
 import EmployerPool from "../generation/Employer";
 import EmployeePool from "../generation/Employee";
@@ -32,14 +31,7 @@ export function getVerificationFetcher(): TestMailVerificationFetcher {
 }
 
 export function getAuthManager(): AuthenticationManager {
-  return new AuthenticationManager(
-    new CognitoUserPool({
-      UserPoolId: config("COGNITO_POOL"),
-      ClientId: config("COGNITO_CLIENTID"),
-    }),
-    config("API_BASEURL"),
-    getVerificationFetcher()
-  );
+  return AuthenticationManager.create(config);
 }
 
 export function getPortalSubmitter(): PortalSubmitter {
@@ -103,6 +95,7 @@ export function splitClaimToParts(
     {
       leave_details: {
         reason: leave_details?.reason,
+        caring_leave_metadata: leave_details?.caring_leave_metadata,
         reason_qualifier: leave_details?.reason_qualifier,
       },
     },

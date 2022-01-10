@@ -1,6 +1,6 @@
-import Button from "./Button";
+import Button from "./core/Button";
 import ButtonLink from "./ButtonLink";
-import Heading from "./Heading";
+import Heading from "./core/Heading";
 import Link from "next/link";
 import React from "react";
 import StepNumber from "./StepNumber";
@@ -10,7 +10,7 @@ interface StepProps {
   /**
    * Href to question page.
    */
-  stepHref?: string;
+  stepHref: string;
   /**
    * Status of step.
    */
@@ -185,10 +185,10 @@ const Step = (props: StepProps) => {
   return (
     <div className={classes}>
       <StepNumber
-        screenReaderPrefix={props.screenReaderNumberPrefix}
+        screenReaderPrefix={props.screenReaderNumberPrefix || ""}
         state={props.status}
       >
-        {props.number}
+        {props.number ?? ""}
       </StepNumber>
       <div className={collapsibleColumnClasses}>
         <div className={titleDescriptionColumnClasses}>

@@ -317,11 +317,11 @@ describe("useAuthLogic", () => {
       });
       expect(appErrors.items).toHaveLength(2);
       expect(appErrors.items.map((e) => e.message)).toMatchInlineSnapshot(`
-            Array [
-              "Enter your email address",
-              "Enter your password",
-            ]
-          `);
+        [
+          "Enter your email address",
+          "Enter your password",
+        ]
+      `);
 
       expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
         issueField: "username",
@@ -599,6 +599,234 @@ describe("useAuthLogic", () => {
           `"Your password must be reset before you can log in again. Click the \\"Forgot your password?\\" link below to reset your password."`
         );
       });
+    });
+
+    describe("with claimantShowMFA feature flag enabled", () => {
+      const next = "/applications";
+      const portalFlow = mockPortalFlow();
+
+      beforeEach(() => {
+        process.env.featureFlags = JSON.stringify({
+          claimantShowMFA: true,
+        });
+      });
+
+      describe("with no MFA challenge", () => {
+        let usersApi;
+
+        beforeAll(() => {
+          // The mock of UsersApi returns an object with references to a singleton
+          // of getCurrentUser and updateUser so this will reference the same
+          // jest.fn mocks that are used in the hook.
+          usersApi = new UsersApi();
+
+          jest.spyOn(Auth, "signIn").mockImplementation(() => {
+            const cognitoUser = {};
+            return cognitoUser;
+          });
+        });
+
+        it("sets isLoggedIn to true", async () => {
+          const { result } = render();
+
+          await act(async () => {
+            await result.current.login(username, password);
+          });
+
+          expect(result.current.isLoggedIn).toBe(true);
+        });
+
+        it("redirects to the ENABLE_MFA page if user has not made an MFA selection", async () => {
+          const { result } = render(portalFlow);
+
+          usersApi.getCurrentUser.mockImplementationOnce(() => {
+            const apiUser = {
+              user: {
+                mfa_delivery_preference: null,
+              },
+            };
+
+            return apiUser;
+          });
+
+          await act(async () => {
+            await result.current.login(username, password, next);
+          });
+
+          expect(portalFlow.goToPageFor).toHaveBeenCalledWith("ENABLE_MFA");
+        });
+
+        it("does not redirect to MFA setup if user is an Employer", async () => {
+          const { result } = render(portalFlow);
+
+          usersApi.getCurrentUser.mockImplementationOnce(() => {
+            const apiUser = {
+              user: {
+                mfa_delivery_preference: null,
+                hasEmployerRole: true,
+              },
+            };
+
+            return apiUser;
+          });
+
+          await act(async () => {
+            await result.current.login(username, password, next);
+          });
+
+          expect(portalFlow.goTo).toHaveBeenCalledWith(next);
+        });
+
+        it("redirects to the next page if user has made MFA selection", async () => {
+          const { result } = render(portalFlow);
+
+          usersApi.getCurrentUser.mockImplementationOnce(() => {
+            const apiUser = {
+              user: {
+                mfa_delivery_preference: "SMS",
+              },
+            };
+
+            return apiUser;
+          });
+
+          await act(async () => {
+            await result.current.login(username, password, next);
+          });
+
+          expect(portalFlow.goTo).toHaveBeenCalledWith(next);
+        });
+      });
+
+      describe("with an MFA challenge", () => {
+        beforeAll(() => {
+          jest.spyOn(Auth, "signIn").mockImplementation(() => {
+            const cognitoUser = {
+              challengeName: "SMS_MFA",
+            };
+            return cognitoUser;
+          });
+        });
+
+        it("does not mark the user as logged in", async () => {
+          const { result } = render();
+
+          await act(async () => {
+            await result.current.login(username, password);
+          });
+
+          expect(result.current.isLoggedIn).not.toBe(true);
+        });
+
+        it("redirects to the VERIFY_CODE page", async () => {
+          const { result } = render(portalFlow);
+
+          await act(async () => {
+            await result.current.login(username, password, next);
+          });
+
+          expect(portalFlow.goToPageFor).toHaveBeenCalledWith(
+            "VERIFY_CODE",
+            {},
+            { next: "/applications" }
+          );
+        });
+      });
+    });
+  });
+
+  describe("verifyMFACodeAndLogin", () => {
+    const next = "/applications";
+
+    it("validates the code was entered", async () => {
+      const { result } = render();
+
+      await act(async () => {
+        await result.current.verifyMFACodeAndLogin("", next);
+      });
+
+      expect(appErrors.items).toHaveLength(1);
+      expect(appErrors.items.map((e) => e.message)).toMatchInlineSnapshot(`
+        [
+          "Enter the 6-digit code sent to your phone number",
+        ]
+      `);
+      expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
+        issueField: "code",
+        issueRule: "",
+        issueType: "required",
+      });
+    });
+
+    it("validates the code format", async () => {
+      const { result } = render();
+
+      await act(async () => {
+        await result.current.verifyMFACodeAndLogin("aaaa", next);
+      });
+
+      expect(appErrors.items).toHaveLength(1);
+      expect(appErrors.items.map((e) => e.message)).toMatchInlineSnapshot(`
+        [
+          "Enter the 6-digit code sent to your phone number and ensure it does not include any punctuation.",
+        ]
+      `);
+      expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
+        issueField: "code",
+        issueRule: "",
+        issueType: "pattern",
+      });
+    });
+
+    it("calls Auth.confirmSignIn", async () => {
+      const { result } = render();
+
+      await act(async () => {
+        await result.current.verifyMFACodeAndLogin(verificationCode, next);
+      });
+
+      expect(Auth.confirmSignIn).toHaveBeenCalledWith(
+        undefined,
+        verificationCode,
+        "SMS_MFA"
+      );
+    });
+
+    it("throws an invalid code error when the code is rejected", async () => {
+      jest.spyOn(Auth, "confirmSignIn").mockImplementationOnce(() => {
+        throw new Error("invalid code");
+      });
+      const { result } = render();
+
+      await act(async () => {
+        await result.current.verifyMFACodeAndLogin(verificationCode, next);
+      });
+
+      expect(appErrors.items).toHaveLength(1);
+      expect(appErrors.items[0].message).toMatchInlineSnapshot(
+        `"The security code you entered is invalid. Make sure the code matches the security code we texted to you."`
+      );
+    });
+
+    it("tracks request", async () => {
+      const { result } = render();
+
+      await act(async () => {
+        await result.current.verifyMFACodeAndLogin(verificationCode, next);
+      });
+
+      expect(tracker.trackFetchRequest).toHaveBeenCalledTimes(1);
+      expect(tracker.markFetchRequestEnd).toHaveBeenCalledTimes(1);
+    });
+
+    it("sets isLoggedIn to true", async () => {
+      const { result } = render();
+
+      await act(async () => {
+        await result.current.verifyMFACodeAndLogin(verificationCode, next);
+      });
+
+      expect(result.current.isLoggedIn).toBe(true);
     });
   });
 
@@ -1015,7 +1243,7 @@ describe("useAuthLogic", () => {
 
       expect(appErrors.items).toHaveLength(3);
       expect(appErrors.items.map((e) => e.message)).toMatchInlineSnapshot(`
-        Array [
+        [
           "Enter the 6-digit code sent to your email",
           "Enter your email address",
           "Enter your password",
@@ -1276,7 +1504,7 @@ describe("useAuthLogic", () => {
 
       expect(appErrors.items).toHaveLength(2);
       expect(appErrors.items.map((e) => e.message)).toMatchInlineSnapshot(`
-        Array [
+        [
           "Enter the 6-digit code sent to your email",
           "Enter your email address",
         ]

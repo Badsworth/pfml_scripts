@@ -4,6 +4,7 @@ import BenefitsApplicationCollection from "../../../src/models/BenefitsApplicati
 import Index from "../../../src/pages/applications/index";
 import { mockRouter } from "next/router";
 import routes from "../../../src/routes";
+import userEvent from "@testing-library/user-event";
 
 const inProgressClaim = new MockBenefitsApplicationBuilder()
   .id("mock_application_id_one")
@@ -19,10 +20,9 @@ const completedClaim = new MockBenefitsApplicationBuilder()
   .create();
 
 const setUpHelper = (appLogicHook) => {
-  appLogicHook.benefitsApplications.loadAll = jest.fn();
-  appLogicHook.benefitsApplications.hasLoadedAll = true;
   appLogicHook.benefitsApplications.benefitsApplications =
     new BenefitsApplicationCollection([]);
+  appLogicHook.benefitsApplications.loadPage = jest.fn();
 };
 
 describe("Applications", () => {
@@ -36,28 +36,77 @@ describe("Applications", () => {
     renderPage(Index, {
       addCustomSetup: (appLogicHook) => {
         setUpHelper(appLogicHook);
+        appLogicHook.benefitsApplications.isLoadingClaims = false;
         goToSpy = jest.spyOn(appLogicHook.portalFlow, "goTo");
       },
     });
-    expect(goToSpy).toHaveBeenCalledWith("/applications/get-ready");
+    expect(goToSpy).toHaveBeenCalledWith("/applications/get-ready", {});
   });
 
-  it("user can view their in-progress + submitted applications", () => {
+  it("displays Find Application action when feature flag is enabled", () => {
+    const linkName = "Find my application";
+    process.env.featureFlags = JSON.stringify({ channelSwitching: false });
+
     renderPage(Index, {
       addCustomSetup: (appLogicHook) => {
         setUpHelper(appLogicHook);
-        appLogicHook.documents.loadAll = jest.fn();
-        appLogicHook.benefitsApplications.benefitsApplications =
-          new BenefitsApplicationCollection([inProgressClaim, submittedClaim]);
       },
     });
+
+    expect(
+      screen.queryByRole("link", { name: linkName })
+    ).not.toBeInTheDocument();
+
+    process.env.featureFlags = JSON.stringify({ channelSwitching: true });
+
+    renderPage(Index, {
+      addCustomSetup: (appLogicHook) => {
+        setUpHelper(appLogicHook);
+      },
+    });
+
+    expect(screen.queryByRole("link", { name: linkName })).toBeInTheDocument();
+  });
+
+  it("passes mfaSetupSuccess value when it redirects to getReady", () => {
+    let goToSpy;
+
+    renderPage(
+      Index,
+      {
+        addCustomSetup: (appLogicHook) => {
+          setUpHelper(appLogicHook);
+          appLogicHook.benefitsApplications.isLoadingClaims = false;
+          goToSpy = jest.spyOn(appLogicHook.portalFlow, "goTo");
+        },
+      },
+      { query: { smsMfaConfirmed: "true" } }
+    );
+    expect(goToSpy).toHaveBeenCalledWith("/applications/get-ready", {
+      smsMfaConfirmed: "true",
+    });
+  });
+
+  it("user can view their in-progress + submitted applications", () => {
+    renderPage(
+      Index,
+      {
+        addCustomSetup: (appLogicHook) => {
+          setUpHelper(appLogicHook);
+          appLogicHook.documents.loadAll = jest.fn();
+          appLogicHook.benefitsApplications.benefitsApplications =
+            new BenefitsApplicationCollection([
+              inProgressClaim,
+              submittedClaim,
+            ]);
+        },
+      },
+      { query: {} }
+    );
 
     expect(screen.getByText(/In-progress applications/)).toBeInTheDocument();
     expect(
       screen.getByRole("heading", { name: "Application 1" })
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("heading", { name: "NTN-111-ABS-03" })
     ).toBeInTheDocument();
   });
 
@@ -72,23 +121,27 @@ describe("Applications", () => {
     });
 
     expect(screen.getByText(/Submitted applications/)).toBeInTheDocument();
-    expect(screen.getByText(/Download your notices/)).toBeInTheDocument();
+    expect(screen.getByText(/View your notices/)).toBeInTheDocument();
   });
 
   describe("When multiple claims of different statuses exist", () => {
     beforeEach(() => {
-      renderPage(Index, {
-        addCustomSetup: (appLogicHook) => {
-          setUpHelper(appLogicHook);
-          appLogicHook.documents.loadAll = jest.fn();
-          appLogicHook.benefitsApplications.benefitsApplications =
-            new BenefitsApplicationCollection([
-              inProgressClaim,
-              submittedClaim,
-              completedClaim,
-            ]);
+      renderPage(
+        Index,
+        {
+          addCustomSetup: (appLogicHook) => {
+            setUpHelper(appLogicHook);
+            appLogicHook.documents.loadAll = jest.fn();
+            appLogicHook.benefitsApplications.benefitsApplications =
+              new BenefitsApplicationCollection([
+                inProgressClaim,
+                submittedClaim,
+                completedClaim,
+              ]);
+          },
         },
-      });
+        { query: {} }
+      );
     });
 
     it("Displays Application Card for each claim", () => {
@@ -99,7 +152,6 @@ describe("Applications", () => {
         screen.getAllByRole("link", { name: "Continue application" })
       ).toHaveLength(2);
       expect(screen.getByText(/NTN-111-ABS-01/)).toBeInTheDocument();
-      expect(screen.getByText(/NTN-111-ABS-03/)).toBeInTheDocument();
     });
 
     it("Displays headers for each section", () => {
@@ -112,7 +164,7 @@ describe("Applications", () => {
       expect(
         within(inProgClaim).getByText(/Application 1/)
       ).toBeInTheDocument();
-      expect(within(subClaim).getByText(/NTN-111-ABS-03/)).toBeInTheDocument();
+      expect(within(subClaim).getByText(/Application 2/)).toBeInTheDocument();
       expect(within(compClaim).getByText(/NTN-111-ABS-01/)).toBeInTheDocument();
     });
   });
@@ -123,35 +175,22 @@ describe("Applications", () => {
 
     const spy = jest.fn();
 
-    renderPage(Index, {
-      addCustomSetup: (appLogicHook) => {
-        setUpHelper(appLogicHook);
-        appLogicHook.documents.loadAll = spy;
-        appLogicHook.benefitsApplications.benefitsApplications =
-          new BenefitsApplicationCollection([
-            inProgressClaim,
-            inProgressClaim2,
-          ]);
+    renderPage(
+      Index,
+      {
+        addCustomSetup: (appLogicHook) => {
+          setUpHelper(appLogicHook);
+          appLogicHook.documents.loadAll = spy;
+          appLogicHook.benefitsApplications.benefitsApplications =
+            new BenefitsApplicationCollection([
+              inProgressClaim,
+              inProgressClaim2,
+            ]);
+        },
       },
-    });
+      { query: {} }
+    );
     expect(spy).toHaveBeenCalledTimes(2);
-  });
-
-  it("renders v2 application card when feature flags are enabled", () => {
-    process.env.featureFlags = {
-      claimantShowStatusPage: true,
-    };
-    renderPage(Index, {
-      addCustomSetup: (appLogicHook) => {
-        setUpHelper(appLogicHook);
-        appLogicHook.documents.loadAll = jest.fn();
-        appLogicHook.benefitsApplications.benefitsApplications =
-          new BenefitsApplicationCollection([inProgressClaim, submittedClaim]);
-      },
-    });
-    const [v2CardOne, v2CardTwo] = screen.getAllByRole("article");
-    expect(within(v2CardOne).getByText(/Application 1/)).toBeInTheDocument();
-    expect(within(v2CardTwo).getByText(/Application 2/)).toBeInTheDocument();
   });
 
   it("displays success alert when uploaded absence id is present", () => {
@@ -172,5 +211,97 @@ describe("Applications", () => {
         /Our Contact Center staff will review your documents for mock_id./
       )
     ).toBeInTheDocument();
+  });
+
+  it("displays success alert when claim was associated", () => {
+    renderPage(
+      Index,
+      {
+        addCustomSetup: setUpHelper,
+      },
+      { query: { applicationAssociated: "mock_id" } }
+    );
+    expect(
+      screen.getByText(
+        /Your application has been successfully linked to your account./
+      )
+    ).toBeInTheDocument();
+  });
+
+  it("displays success alert when user sets up SMS MFA", () => {
+    renderPage(
+      Index,
+      {
+        addCustomSetup: (appLogicHook) => {
+          setUpHelper(appLogicHook);
+          appLogicHook.documents.loadAll = jest.fn();
+          appLogicHook.benefitsApplications.benefitsApplications =
+            new BenefitsApplicationCollection([inProgressClaim]);
+        },
+      },
+      { query: { smsMfaConfirmed: "true" } }
+    );
+    expect(screen.getByRole("region")).toMatchSnapshot();
+  });
+
+  describe("Pagination Navigation", () => {
+    it("does not display when there is only 1 page of applications", () => {
+      renderPage(Index, {
+        addCustomSetup: (appLogicHook) => {
+          setUpHelper(appLogicHook);
+          appLogicHook.documents.loadAll = jest.fn();
+          appLogicHook.benefitsApplications.benefitsApplications =
+            new BenefitsApplicationCollection([inProgressClaim]);
+        },
+      });
+
+      expect(
+        screen.queryByRole("button", { name: /next/i })
+      ).not.toBeInTheDocument();
+    });
+
+    it("does display when there is more than 1 page of applications", () => {
+      renderPage(Index, {
+        addCustomSetup: (appLogicHook) => {
+          setUpHelper(appLogicHook);
+          appLogicHook.documents.loadAll = jest.fn();
+          appLogicHook.benefitsApplications.benefitsApplications =
+            new BenefitsApplicationCollection([inProgressClaim]);
+          appLogicHook.benefitsApplications.paginationMeta = {
+            total_records: 50,
+            total_pages: 2,
+          };
+        },
+      });
+
+      expect(
+        screen.queryByRole("button", { name: /next/i })
+      ).toBeInTheDocument();
+    });
+
+    it("changes page_offset when clicked", () => {
+      let updateQuerySpy;
+
+      renderPage(Index, {
+        addCustomSetup: (appLogicHook) => {
+          setUpHelper(appLogicHook);
+          appLogicHook.documents.loadAll = jest.fn();
+          appLogicHook.benefitsApplications.benefitsApplications =
+            new BenefitsApplicationCollection([inProgressClaim]);
+          appLogicHook.benefitsApplications.paginationMeta = {
+            total_records: 50,
+            total_pages: 2,
+            page_offset: 1,
+          };
+          updateQuerySpy = jest.spyOn(appLogicHook.portalFlow, "updateQuery");
+        },
+      });
+
+      userEvent.click(screen.getByRole("button", { name: /next/i }));
+
+      expect(updateQuerySpy).toHaveBeenCalledWith({
+        page_offset: "2",
+      });
+    });
   });
 });

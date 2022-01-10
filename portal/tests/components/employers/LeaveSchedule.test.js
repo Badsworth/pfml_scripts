@@ -20,7 +20,7 @@ describe("LeaveSchedule", () => {
   it("renders continuous schedule without documents", () => {
     render(<LeaveSchedule claim={CONTINUOUS_CLAIM} />);
     expect(
-      screen.getByRole("row", { name: "1/1/2021 to 6/1/2021 Continuous leave" })
+      screen.getByRole("row", { name: "1/1/2022 to 6/1/2022 Continuous leave" })
     ).toBeInTheDocument();
     expect(
       screen.getByText("This is your employee’s expected leave schedule.")
@@ -48,18 +48,13 @@ describe("LeaveSchedule", () => {
     expect(
       screen.getByText(/Download the attached documentation for more details./)
     ).toBeInTheDocument();
-    expect(
-      screen.getByRole("cell", {
-        name: "Download the attached documentation or contact us at (833) 344‑7365 for details about the leave schedule.",
-      })
-    ).toBeInTheDocument();
   });
 
   it("renders intermittent schedule without documents", () => {
     render(<LeaveSchedule claim={INTERMITTENT_CLAIM} />);
     expect(
       screen.getByRole("row", {
-        name: "Intermittent leave Contact us at (833) 344‑7365 for details about the leave schedule.",
+        name: "2/1/2022 to 7/1/2022 Intermittent leave",
       })
     ).toBeInTheDocument();
   });
@@ -71,12 +66,6 @@ describe("LeaveSchedule", () => {
         "Download the attached documentation for details about the employee’s intermittent leave schedule."
       )
     ).toBeInTheDocument();
-
-    expect(
-      screen.getByRole("cell", {
-        name: "Download the attached documentation or contact us at (833) 344‑7365 for details about the leave schedule.",
-      })
-    ).toBeInTheDocument();
   });
 
   it("renders multiple leave schedules", () => {
@@ -85,11 +74,11 @@ describe("LeaveSchedule", () => {
       .create();
     render(<LeaveSchedule claim={multipleLeaveClaim} />);
     expect(
-      screen.getByRole("row", { name: "1/1/2021 to 6/1/2021 Continuous leave" })
+      screen.getByRole("row", { name: "1/1/2022 to 6/1/2022 Continuous leave" })
     ).toBeInTheDocument();
     expect(
       screen.getByRole("row", {
-        name: "2/1/2021 to 7/1/2021 Reduced leave schedule Contact us at (833) 344‑7365 for details about the leave schedule.",
+        name: "2/1/2022 to 7/1/2022 Reduced leave schedule",
       })
     ).toBeInTheDocument();
   });

@@ -3,48 +3,65 @@ import BenefitsApplication, {
   ReasonQualifier,
 } from "../../models/BenefitsApplication";
 import StepModel, { ClaimSteps } from "../../models/Step";
-import { camelCase, filter, findIndex, get } from "lodash";
-import Alert from "../../components/Alert";
-import { AppLogic } from "../../hooks/useAppLogic";
+import { camelCase, get } from "lodash";
+import withBenefitsApplication, {
+  WithBenefitsApplicationProps,
+} from "../../hoc/withBenefitsApplication";
+import withClaimDocuments, {
+  WithClaimDocumentsProps,
+} from "../../hoc/withClaimDocuments";
+import Alert from "../../components/core/Alert";
 import BackButton from "../../components/BackButton";
-import BenefitsApplicationDocument from "../../models/BenefitsApplicationDocument";
 import ButtonLink from "../../components/ButtonLink";
-import Details from "../../components/Details";
+import Details from "../../components/core/Details";
 import { DocumentType } from "../../models/Document";
-import HeadingPrefix from "../../components/HeadingPrefix";
+import HeadingPrefix from "../../components/core/HeadingPrefix";
 import LeaveReason from "../../models/LeaveReason";
 import React from "react";
-import Spinner from "../../components/Spinner";
+import Spinner from "../../components/core/Spinner";
 import Step from "../../components/Step";
 import StepGroup from "../../models/StepGroup";
 import StepList from "../../components/StepList";
-import Title from "../../components/Title";
+import Title from "../../components/core/Title";
 import { Trans } from "react-i18next";
 import claimantConfig from "../../flows/claimant";
 import findDocumentsByLeaveReason from "../../utils/findDocumentsByLeaveReason";
 import findDocumentsByTypes from "../../utils/findDocumentsByTypes";
+import formatDate from "../../utils/formatDate";
 import hasDocumentsLoadError from "../../utils/hasDocumentsLoadError";
 import routeWithParams from "../../utils/routeWithParams";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
-import withBenefitsApplication from "../../hoc/withBenefitsApplication";
-import withClaimDocuments from "../../hoc/withClaimDocuments";
 
-interface ChecklistProps {
-  appLogic: AppLogic;
-  claim: BenefitsApplication;
-  documents?: BenefitsApplicationDocument[];
-  isLoadingDocuments?: boolean;
-  query?: {
+interface ChecklistProps
+  extends WithClaimDocumentsProps,
+    WithBenefitsApplicationProps {
+  query: {
     "part-one-submitted"?: string;
     "payment-pref-submitted"?: string;
+    "tax-pref-submitted"?: string;
   };
 }
+
+interface ChecklistAlertsProps {
+  submitted: "partOne" | "payment" | "taxPref";
+}
+
+export const ChecklistAlerts = ({ submitted }: ChecklistAlertsProps) => {
+  const { t } = useTranslation();
+
+  return (
+    <Alert className="margin-bottom-3" state="warning">
+      {t("pages.claimsChecklist.afterSubmissionAlert", { context: submitted })}
+    </Alert>
+  );
+};
 
 export const Checklist = (props: ChecklistProps) => {
   const { t } = useTranslation();
   const { appLogic, claim, documents, isLoadingDocuments, query } = props;
   const { appErrors } = appLogic;
+  const otherLeaveStartDate = formatDate(claim.otherLeaveStartDate).full();
 
   const hasLoadingDocumentsError = hasDocumentsLoadError(
     appErrors,
@@ -60,8 +77,6 @@ export const Checklist = (props: ChecklistProps) => {
     get(claim, "leave_details.reason")
   );
 
-  const partOneSubmitted = query["part-one-submitted"];
-  const paymentPrefSubmitted = query["payment-pref-submitted"];
   const warnings =
     appLogic.benefitsApplications.warningsLists[claim.application_id];
 
@@ -92,7 +107,10 @@ export const Checklist = (props: ChecklistProps) => {
    */
   const stepGroups = [1, 2, 3].map(
     (number) =>
-      new StepGroup({ number, steps: filter(allSteps, { group: number }) })
+      new StepGroup({
+        number,
+        steps: allSteps.filter((step) => step.group === number),
+      })
   );
 
   const sharedStepListProps = {
@@ -109,7 +127,7 @@ export const Checklist = (props: ChecklistProps) => {
    * Get the number of a Step for display in the checklist.
    */
   function getStepNumber(step: StepModel) {
-    const index = findIndex(allSteps, { name: step.name });
+    const index = allSteps.findIndex((s) => s.name === step.name);
     return index + 1;
   }
 
@@ -153,6 +171,7 @@ export const Checklist = (props: ChecklistProps) => {
                 ul: <ul className="usa-list" />,
                 li: <li />,
               }}
+              values={{ otherLeaveStartDate }}
             />
           </Details>
         </React.Fragment>
@@ -188,7 +207,7 @@ export const Checklist = (props: ChecklistProps) => {
           })}
           status={step.status}
           stepHref={stepHref}
-          editable={step.editable}
+          editable={!!step.editable}
           submittedContent={getStepSubmittedContent(step)}
         >
           <Trans
@@ -232,6 +251,7 @@ export const Checklist = (props: ChecklistProps) => {
             tOptions={{
               context: description,
             }}
+            values={{ otherLeaveStartDate }}
           />
         </Step>
       );
@@ -249,6 +269,7 @@ export const Checklist = (props: ChecklistProps) => {
       claim,
       "leave_details.has_future_child_date"
     );
+
     // TODO (CP-2101) rename context strings for clarity in en-US.js strings i.e. uploadMedicalCert, uploadCareCert
     if (stepName !== ClaimSteps.uploadCertification) {
       return camelCase(stepName);
@@ -275,7 +296,6 @@ export const Checklist = (props: ChecklistProps) => {
     if (hasFutureChildDate) {
       context += "Future";
     }
-
     return context;
   }
 
@@ -298,7 +318,8 @@ export const Checklist = (props: ChecklistProps) => {
 
     if (
       stepGroup.number === 2 &&
-      claim.has_submitted_payment_preference === true
+      (claim.has_submitted_payment_preference === true ||
+        typeof claim.is_withholding_tax === "boolean")
     ) {
       // Description for the second part changes after it's been submitted
       context += "_submitted";
@@ -324,39 +345,30 @@ export const Checklist = (props: ChecklistProps) => {
       />
     );
   }
-
   return (
     <div className="measure-6">
-      {partOneSubmitted && (
-        <Alert
-          className="margin-bottom-3"
-          heading={t("pages.claimsChecklist.partOneSubmittedHeading")}
-          state="success"
-        >
-          <Trans
-            i18nKey="pages.claimsChecklist.partOneSubmittedDescription"
-            components={{
-              "contact-center-phone-link": (
-                <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
-              ),
-            }}
-          />
-        </Alert>
-      )}
-      {paymentPrefSubmitted && (
-        <Alert
-          className="margin-bottom-3"
-          heading={t("pages.claimsChecklist.partTwoSubmittedHeading")}
-          state="success"
-        >
-          {t("pages.claimsChecklist.partTwoSubmittedDescription")}
-        </Alert>
+      {(query["part-one-submitted"] ||
+        query["payment-pref-submitted"] ||
+        query["tax-pref-submitted"]) && (
+        <ChecklistAlerts
+          submitted={
+            query["part-one-submitted"]
+              ? "partOne"
+              : query["payment-pref-submitted"]
+              ? "payment"
+              : "taxPref"
+          }
+        />
       )}
       <BackButton
         label={t("pages.claimsChecklist.backButtonLabel")}
         href={routes.applications.index}
       />
-      <Title hidden>{t("pages.claimsChecklist.title")}</Title>
+
+      <div className="margin-bottom-5">
+        <Title>{t("pages.claimsChecklist.title")}</Title>
+        <p> {t("pages.claimsChecklist.titleBody")} </p>
+      </div>
 
       {stepGroups.map((stepGroup) => (
         <StepList
@@ -388,13 +400,12 @@ export const Checklist = (props: ChecklistProps) => {
               />
             </Alert>
           ) : stepGroup.number === 3 && isLoadingDocuments ? (
-            <Spinner aria-valuetext={t("components.spinner.label")} />
+            <Spinner aria-label={t("components.spinner.label")} />
           ) : (
             renderSteps(stepGroup.steps)
           )}
         </StepList>
       ))}
-
       <ButtonLink
         href={routeWithParams("applications.review", {
           claim_id: claim.application_id,

@@ -4,6 +4,7 @@ import PaymentPreference, {
 import BenefitsApplication from "../../src/models/BenefitsApplication";
 import BenefitsApplicationCollection from "../../src/models/BenefitsApplicationCollection";
 import BenefitsApplicationsApi from "../../src/api/BenefitsApplicationsApi";
+
 import { mockAuth } from "../test-utils";
 
 jest.mock("../../src/services/tracker");
@@ -28,10 +29,11 @@ describe("BenefitsApplicationsApi", () => {
   const baseRequestHeaders = {
     Authorization: `Bearer ${accessTokenJwt}`,
     "Content-Type": "application/json",
+    // TODO (PORTAL-1473) : Remove when BE changes are made
+    "X-FF-Tax-Withholding-Enabled": true,
   };
 
   beforeEach(() => {
-    process.env.featureFlags = {};
     jest.resetAllMocks();
     mockAuth(true, accessTokenJwt);
 
@@ -79,9 +81,9 @@ describe("BenefitsApplicationsApi", () => {
       expect(claimResponse).toBeInstanceOf(BenefitsApplication);
       expect(claimResponse).toEqual(claim);
       expect(rest).toMatchInlineSnapshot(`
-        Object {
-          "warnings": Array [
-            Object {
+        {
+          "warnings": [
+            {
               "field": "first_name",
               "message": "First name is required",
               "type": "required",
@@ -114,7 +116,7 @@ describe("BenefitsApplicationsApi", () => {
       it("sends GET request to /applications", async () => {
         await claimsApi.getClaims();
         expect(fetch).toHaveBeenCalledWith(
-          `${process.env.apiUrl}/applications`,
+          `${process.env.apiUrl}/applications?page_offset=1`,
           {
             body: null,
             headers: baseRequestHeaders,
@@ -256,10 +258,10 @@ describe("BenefitsApplicationsApi", () => {
       expect(claimResponse).toBeInstanceOf(BenefitsApplication);
       expect(claimResponse).toEqual(claim);
       expect(rest).toMatchInlineSnapshot(`
-Object {
-  "warnings": Array [],
-}
-`);
+        {
+          "warnings": [],
+        }
+      `);
     });
   });
 
@@ -340,10 +342,56 @@ Object {
       expect(claimResponse).toBeInstanceOf(BenefitsApplication);
       expect(claimResponse).toEqual(claim);
       expect(rest).toMatchInlineSnapshot(`
-Object {
-  "warnings": Array [],
-}
-`);
+        {
+          "warnings": [],
+        }
+      `);
+    });
+  });
+
+  describe("SubmitTaxWithholdingPreference", () => {
+    let claim, tax_preference;
+
+    beforeEach(() => {
+      claim = new BenefitsApplication();
+      tax_preference = { is_withholding_tax: true };
+
+      global.fetch = mockFetch({
+        response: { data: { ...claim } },
+        status: 201,
+      });
+    });
+
+    it("sends POST request to /applications/:application_id/submit_tax_withholding_preference", async () => {
+      await claimsApi.submitTaxWithholdingPreference(
+        claim.application_id,
+        tax_preference
+      );
+
+      expect(fetch).toHaveBeenCalledWith(
+        `${process.env.apiUrl}/applications/${claim.application_id}/submit_tax_withholding_preference`,
+        {
+          body: JSON.stringify(tax_preference),
+          headers: baseRequestHeaders,
+          method: "POST",
+        }
+      );
+    });
+
+    it("resolves with claim properties", async () => {
+      const { claim: claimResponse, ...rest } =
+        await claimsApi.submitTaxWithholdingPreference(
+          claim.application_id,
+          tax_preference
+        );
+
+      expect(claimResponse).toBeInstanceOf(BenefitsApplication);
+      expect(claimResponse).toEqual(claim);
+      expect(rest).toMatchInlineSnapshot(`
+        {
+          "warnings": [],
+        }
+      `);
     });
   });
 });

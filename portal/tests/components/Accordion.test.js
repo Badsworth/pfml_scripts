@@ -1,5 +1,5 @@
-import Accordion from "../../src/components/Accordion";
-import AccordionItem from "../../src/components/AccordionItem";
+import Accordion from "../../src/components/core/Accordion";
+import AccordionItem from "../../src/components/core/AccordionItem";
 import React from "react";
 import { render } from "@testing-library/react";
 

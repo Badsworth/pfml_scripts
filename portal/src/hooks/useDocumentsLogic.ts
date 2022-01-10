@@ -1,13 +1,15 @@
 import {
+  BenefitsApplicationDocument,
+  DocumentTypeEnum,
+} from "../models/Document";
+import {
   DocumentsLoadError,
   DocumentsUploadError,
   ValidationError,
 } from "../errors";
 import { useMemo, useState } from "react";
 import { AppErrorsLogic } from "./useAppErrorsLogic";
-import BenefitsApplicationDocument from "../models/BenefitsApplicationDocument";
 import DocumentCollection from "../models/DocumentCollection";
-import { DocumentTypeEnum } from "../models/Document";
 import DocumentsApi from "../api/DocumentsApi";
 import TempFile from "../models/TempFile";
 import assert from "assert";
@@ -36,9 +38,9 @@ const useDocumentsLogic = ({
   } = useCollectionState(new DocumentCollection());
 
   const documentsApi = useMemo(() => new DocumentsApi(), []);
-  const [loadedApplicationDocs, setLoadedApplicationDocs] = useState<string[]>(
-    []
-  );
+  const [loadedApplicationDocs, setLoadedApplicationDocs] = useState<{
+    [application_id: string]: { isLoading: boolean };
+  }>({});
 
   /**
    * Check if docs for this application have been loaded
@@ -46,7 +48,12 @@ const useDocumentsLogic = ({
    * because documents that don't have items won't be represented in the DocumentCollection.
    */
   const hasLoadedClaimDocuments = (application_id: string) =>
-    loadedApplicationDocs.includes(application_id);
+    application_id in loadedApplicationDocs &&
+    loadedApplicationDocs[application_id].isLoading === false;
+
+  const isLoadingClaimDocuments = (application_id: string) =>
+    application_id in loadedApplicationDocs &&
+    loadedApplicationDocs[application_id].isLoading === true;
 
   /**
    * Load all documents for a user's claim
@@ -54,21 +61,35 @@ const useDocumentsLogic = ({
    */
   const loadAll = async (application_id: string) => {
     // if documents already contains docs for application_id, don't load again
-    if (hasLoadedClaimDocuments(application_id)) {
+    // or if we started making a request to the API to load documents, don't load again
+    if (
+      hasLoadedClaimDocuments(application_id) ||
+      isLoadingClaimDocuments(application_id)
+    )
       return;
-    }
+
     appErrorsLogic.clearErrors();
+
+    setLoadedApplicationDocs((loadingClaimDocuments) => {
+      const docs = { ...loadingClaimDocuments };
+      docs[application_id] = {
+        isLoading: true,
+      };
+      return docs;
+    });
 
     try {
       const { documents: loadedDocuments } = await documentsApi.getDocuments(
         application_id
       );
-
-      setLoadedApplicationDocs((loadedApplicationDocs) => [
-        ...loadedApplicationDocs,
-        application_id,
-      ]);
       addDocuments(loadedDocuments.items);
+      setLoadedApplicationDocs((loadingClaimDocuments) => {
+        const docs = { ...loadingClaimDocuments };
+        docs[application_id] = {
+          isLoading: false,
+        };
+        return docs;
+      });
     } catch (error) {
       appErrorsLogic.catchError(new DocumentsLoadError(application_id));
     }
@@ -107,7 +128,7 @@ const useDocumentsLogic = ({
           "documents"
         )
       );
-      return;
+      return [];
     }
 
     const uploadPromises = filesWithUniqueId.map(async (fileWithUniqueId) => {
@@ -125,7 +146,7 @@ const useDocumentsLogic = ({
           new DocumentsUploadError(
             application_id,
             fileWithUniqueId.id,
-            error instanceof ValidationError && error.issues
+            error instanceof ValidationError && error.issues.length
               ? error.issues[0]
               : null
           )
@@ -153,6 +174,7 @@ const useDocumentsLogic = ({
     attach,
     download,
     hasLoadedClaimDocuments,
+    isLoadingClaimDocuments,
     documents,
     loadAll,
   };

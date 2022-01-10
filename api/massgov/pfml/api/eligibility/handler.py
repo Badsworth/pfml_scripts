@@ -92,7 +92,7 @@ def eligibility_post():
         employer_id: UUID = employer.employer_id
 
     try:
-        wage_data_response = eligibility.compute_financial_eligibility(
+        wage_data_response = eligibility.retrieve_financial_eligibility(
             db_session,
             employee_id,
             employer_id,

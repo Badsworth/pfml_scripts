@@ -66,7 +66,15 @@ export const LSTOLB1: ScenarioSpecification = {
   ...CypressScenarios.BHAP1,
   claim: {
     ...CypressScenarios.BHAP1.claim,
-    label: "PortalClaimSubmit",
+    label: "PortalClaimSubmit - Other Leaves/Benefits",
+    docs: {
+      FOSTERPLACEMENT: {
+        filename: "limit-4.5MB.pdf",
+      },
+      MASSID: {
+        filename: "limit-4.5MB.pdf",
+      },
+    },
     employerResponse: {
       hours_worked_per_week: 40,
       employer_decision: "Approve",
@@ -81,10 +89,18 @@ export const LSTBHAP1: ScenarioSpecification = {
   ...CypressScenarios.BHAP1,
   claim: {
     ...CypressScenarios.BHAP1.claim,
-    label: "PortalClaimSubmit",
+    label: "PortalClaimSubmit - Bonding",
     employerResponse: {
       hours_worked_per_week: 40,
       employer_decision: "Approve",
+    },
+    docs: {
+      FOSTERPLACEMENT: {
+        filename: "limit-4.5MB.pdf",
+      },
+      MASSID: {
+        filename: "limit-4.5MB.pdf",
+      },
     },
   },
 };
@@ -95,15 +111,23 @@ export const LSTCHAP1: ScenarioSpecification = {
     mass_id: true,
   },
   claim: {
-    label: "CCAP90",
+    label: "PortalClaimSubmit - Caring",
     reason: "Care for a Family Member",
     work_pattern_spec: "0,720,0,720,0,720,0",
-    docs: { MASSID: {}, CARING: {} },
+    docs: {
+      MASSID: {
+        filename: "limit-4.5MB.pdf",
+      },
+      CARING: {
+        filename: "limit-4.5MB.pdf",
+      },
+    },
     shortClaim: true,
     employerResponse: {
       hours_worked_per_week: 40,
       employer_decision: "Approve",
     },
+    is_withholding_tax: true,
   },
 };
 
@@ -122,13 +146,19 @@ export const LSTFBHAP1: ScenarioSpecification = {
 
 // Fineos claim submission with ineligible employee
 export const LSTFBHAP4: ScenarioSpecification = {
-  ...CypressScenarios.BHAP1INEL,
+  employee: { mass_id: true, wages: "ineligible" },
   claim: {
-    ...CypressScenarios.BHAP1INEL.claim,
     label: "FineosClaimSubmit",
+    shortClaim: true,
+    reason: "Child Bonding",
+    reason_qualifier: "Foster Care",
     employerResponse: {
       hours_worked_per_week: 40,
       employer_decision: "Deny",
+    },
+    docs: {
+      MASSID: {},
+      FOSTERPLACEMENT: {},
     },
   },
 };

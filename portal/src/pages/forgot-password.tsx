@@ -1,9 +1,10 @@
+import { AppLogic } from "../hooks/useAppLogic";
 import BackButton from "../components/BackButton";
-import Button from "../components/Button";
-import InputText from "../components/InputText";
-import Lead from "../components/Lead";
+import Button from "../components/core/Button";
+import InputText from "../components/core/InputText";
+import Lead from "../components/core/Lead";
 import React from "react";
-import Title from "../components/Title";
+import Title from "../components/core/Title";
 import routes from "../routes";
 import useFormState from "../hooks/useFormState";
 import useFunctionalInputProps from "../hooks/useFunctionalInputProps";
@@ -11,7 +12,7 @@ import useThrottledHandler from "../hooks/useThrottledHandler";
 import { useTranslation } from "../locales/i18n";
 
 interface ForgotPasswordProps {
-  appLogic: any;
+  appLogic: AppLogic;
 }
 
 export const ForgotPassword = (props: ForgotPasswordProps) => {

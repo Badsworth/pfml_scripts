@@ -77,7 +77,27 @@ describe("API Documents Test of various file sizes", () => {
    *    - larger than limit
    */
 
-  const tests = [...data.pdf, ...data.jpg, ...data.png, ...data.badFileTypes];
+  let tests: (string | number)[][];
+
+  // Added logic to establish baseline of failures for Files right at limit
+  if (
+    config("ENVIRONMENT") === "stage" || // not configured - expected failures for baseline
+    config("ENVIRONMENT") === "performance"||
+    config("ENVIRONMENT") === "test" ||
+    config("ENVIRONMENT") === "cps-preview" ||
+    config("ENVIRONMENT") === "breakfix" ||
+    config("ENVIRONMENT") === "uat" 
+  ) {
+    tests = [
+      ...data.pdf,
+      ...data.jpg,
+      ...data.png,
+      ...data.badFileTypes,
+      ...data.rightAtLimit,
+    ];
+  } else {
+    tests = [...data.pdf, ...data.jpg, ...data.png, ...data.badFileTypes];
+  }
 
   test.each(tests)(
     "%s",

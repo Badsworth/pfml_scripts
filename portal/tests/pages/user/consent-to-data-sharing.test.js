@@ -8,6 +8,7 @@ import userEvent from "@testing-library/user-event";
 jest.mock("../../../src/hooks/useAppLogic");
 
 const updateUser = jest.fn();
+const portalGoToPage = jest.fn();
 
 const renderWithUserParams = (user) => {
   if (!user) {
@@ -17,9 +18,14 @@ const renderWithUserParams = (user) => {
     addCustomSetup: (appLogic) => {
       appLogic.users.user = new User(user);
       appLogic.users.updateUser = updateUser;
+      appLogic.portalFlow.goToPageFor = portalGoToPage;
     },
   });
 };
+
+beforeEach(() => {
+  process.env.featureFlags = JSON.stringify({ claimantShowMFA: true });
+});
 
 describe("ConsentToDataSharing", () => {
   it("shows the correct content for non-employers", () => {
@@ -56,6 +62,28 @@ describe("ConsentToDataSharing", () => {
         "User consented to data sharing",
         {}
       );
+    });
+  });
+
+  it("on submit, it redirects to MFA setup page when user is not an Employer", async () => {
+    renderWithUserParams();
+
+    userEvent.click(screen.getByRole("button", { name: "Agree and continue" }));
+    await waitFor(() => {
+      expect(portalGoToPage).toHaveBeenCalledWith("ENABLE_MFA");
+    });
+  });
+
+  it("on submit, it does not redirect to MFA setup page when user is an Employer", async () => {
+    renderWithUserParams({
+      user_id: "mock_user_id",
+      consented_to_data_sharing: true,
+      roles: [new UserRole({ role_description: "Employer" })],
+    });
+
+    userEvent.click(screen.getByRole("button", { name: "Agree and continue" }));
+    await waitFor(() => {
+      expect(portalGoToPage).not.toHaveBeenCalled();
     });
   });
 });

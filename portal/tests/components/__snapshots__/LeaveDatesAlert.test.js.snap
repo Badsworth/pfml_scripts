@@ -6,6 +6,7 @@ exports[`LeaveDatesAlert renders 7 day waiting period when showWaitingDayPeriod 
 >
   <h2
     class="usa-alert__heading font-heading-md text-bold"
+    id="mock-unique-id"
   >
     Your 7-day waiting period dates
   </h2>
@@ -19,6 +20,7 @@ exports[`LeaveDatesAlert renders 7 day waiting period when showWaitingDayPeriod 
 
 exports[`LeaveDatesAlert renders Alert with given dates 1`] = `
 <div
+  aria-labelledby="mock-unique-id"
   class="usa-alert usa-alert--info usa-alert--no-icon c-alert--neutral margin-top-2 margin-bottom-4"
   role="region"
   tabindex="-1"
@@ -28,6 +30,7 @@ exports[`LeaveDatesAlert renders Alert with given dates 1`] = `
   >
     <h2
       class="usa-alert__heading font-heading-md text-bold"
+      id="mock-unique-id"
     >
       Your leave dates for paid leave from PFML
     </h2>

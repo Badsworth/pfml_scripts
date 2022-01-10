@@ -33,6 +33,14 @@ class AppConfig:
     enable_application_fraud_check: bool
     dashboard_password: str
     new_plan_proofs_active_at: datetime
+    enable_generate_1099_pdf: bool
+    generate_1099_max_files: int
+    enable_merge_1099_pdf: bool
+    enable_pdf_document_compression: bool
+    enable_upload_1099_pdf: bool
+    upload_max_files_to_fineos: int
+    enable_document_multipart_upload: bool
+    enable_1099_testfile_generation: bool
 
 
 def get_config() -> AppConfig:
@@ -56,4 +64,15 @@ def get_config() -> AppConfig:
         new_plan_proofs_active_at=datetime.fromisoformat(
             os.environ.get("NEW_PLAN_PROOFS_ACTIVE_AT", "2021-06-26 00:00:00+00:00")
         ),
+        enable_generate_1099_pdf=os.environ.get("ENABLE_GENERATE_1099_PDF", "0") == "1",
+        generate_1099_max_files=int(os.environ.get("GENERATE_1099_MAX_FILES", 1000)),
+        enable_merge_1099_pdf=os.environ.get("ENABLE_MERGE_1099_PDF", "0") == "1",
+        enable_pdf_document_compression=(
+            os.environ.get("ENABLE_PDF_DOCUMENT_COMPRESSION", "0") == "1"
+        ),
+        enable_upload_1099_pdf=os.environ.get("ENABLE_UPLOAD_1099_PDF", "0") == "1",
+        upload_max_files_to_fineos=int(os.environ.get("UPLOAD_MAX_FILES_TO_FINEOS", 10)),
+        enable_document_multipart_upload=os.environ.get("ENABLE_DOCUMENT_MULTIPART_UPLOAD", "0")
+        == "1",
+        enable_1099_testfile_generation=os.environ.get("TEST_FILE_GENERATION_1099", "0") == "1",
     )

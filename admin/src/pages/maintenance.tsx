@@ -15,6 +15,7 @@ import Table from "../components/Table";
 import Toggle from "../components/Toggle";
 import VerticalMenu from "../components/VerticalMenu";
 import moment from "moment";
+import { StaticPropsPermissions } from "../menus";
 
 export default function Maintenance() {
   const [maintenanceHistory, setMaintenanceHistory] =
@@ -219,4 +220,12 @@ export default function Maintenance() {
       />
     </>
   );
+}
+
+export async function getStaticProps(): Promise<StaticPropsPermissions> {
+  return {
+    props: {
+      permissions: ["MAINTENANCE_READ"],
+    },
+  };
 }

@@ -1,6 +1,5 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import AppErrorInfo from "../../src/models/AppErrorInfo";
-import BenefitsApplicationDocument from "../../src/models/BenefitsApplicationDocument";
 import { DocumentType } from "../../src/models/Document";
 import FileCardList from "../../src/components/FileCardList";
 import React from "react";
@@ -21,6 +20,7 @@ const onRemoveTempFile = jest.fn();
 
 const renderComponent = (customProps) => {
   const defaultProps = {
+    documents: [],
     tempFiles: new TempFileCollection(),
     onChange,
     fileErrors: [],
@@ -28,6 +28,7 @@ const renderComponent = (customProps) => {
     fileHeadingPrefix: "Document",
     addFirstFileButtonText: "Choose a document",
     addAnotherFileButtonText: "Choose another document",
+    disableRemove: false,
     ...customProps,
   };
   return render(<FileCardList {...defaultProps} />);
@@ -77,6 +78,14 @@ describe("FileCardList", () => {
     expect(onChange).toHaveBeenCalledWith([
       expect.objectContaining({ name: "filename.txt" }),
     ]);
+  });
+
+  it("disables remove button on file card children when indicated", () => {
+    renderComponent({
+      tempFiles: new TempFileCollection([makeFileObjectHelper()]),
+      disableRemove: true,
+    });
+    expect(screen.getByRole("button", { name: "Remove file" })).toBeDisabled();
   });
 
   it("calls onChange with multiple files when user makes that selection", async () => {
@@ -150,18 +159,18 @@ describe("FileCardList", () => {
   });
 
   it("renders file cards for documents", () => {
-    const newDoc1 = new BenefitsApplicationDocument({
+    const newDoc1 = {
       document_type: DocumentType.certification.medicalCertification,
       application_id: "mock_application_id",
       fineos_document_id: "testId1",
       created_at: "2020-11-26",
-    });
-    const newDoc2 = new BenefitsApplicationDocument({
+    };
+    const newDoc2 = {
       document_type: DocumentType.certification.medicalCertification,
       application_id: "mock_application_id",
       fineos_document_id: "testId2",
       created_at: "2020-11-26",
-    });
+    };
     renderComponent({
       documents: [newDoc1, newDoc2],
       tempFiles: new TempFileCollection([makeFileObjectHelper()]),

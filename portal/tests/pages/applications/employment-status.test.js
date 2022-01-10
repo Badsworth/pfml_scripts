@@ -30,9 +30,9 @@ const setup = (claim) => {
 describe("EmploymentStatusPage", () => {
   describe("when claimantShowEmploymentStatus feature flag is disabled", () => {
     beforeEach(() => {
-      process.env.featureFlags = {
+      process.env.featureFlags = JSON.stringify({
         claimantShowEmploymentStatus: false,
-      };
+      });
     });
 
     it("renders the page without the employment status field", () => {
@@ -64,9 +64,9 @@ describe("EmploymentStatusPage", () => {
 
   describe("when claimantShowEmploymentStatus feature flag is enabled", () => {
     beforeEach(() => {
-      process.env.featureFlags = {
+      process.env.featureFlags = JSON.stringify({
         claimantShowEmploymentStatus: true,
-      };
+      });
     });
 
     it("renders the page with the employment status field", () => {

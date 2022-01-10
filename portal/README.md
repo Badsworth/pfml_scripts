@@ -1,6 +1,6 @@
 # Portal for Mass PFML
 
-This is a [Next.js](https://nextjs.org/docs)-powered [React](https://reactjs.org/) app, written in [TypeScript](https://www.typescriptlang.org/), for the Massachusetts Paid Family and Medical Leave Portal, used by Claimants and Leave Admins.
+This is a [Next.js](https://nextjs.org/docs)-powered [React](https://reactjs.org/) app, written in [TypeScript](https://www.typescriptlang.org/), for the Massachusetts Paid Family and Medical Leave Portal, used by claimants and employers' leave adminstrators.
 
 **You may also be interested in:**
 
@@ -33,10 +33,14 @@ Run the development server with live reloading:
 npm run dev
 ```
 
+If you wish to connect your local portal to local backend run `npm run dev:local` (paired with `make logs-local` to run the local configured api server for the backend).
+
 ### Configure your code editor
 
 - [Integrate ESLint into your IDE or a git hook](https://eslint.org/docs/user-guide/integrations) if you'd like to catch linting errors before it reaches the CI.
 - [Setup your IDE to run Prettier upon save.](https://prettier.io/docs/en/editors.html)
+
+If you're using VS Code, it's recommended that you configure the `typescript.preferences.importModuleSpecifier` setting to `"project-relative"`, so that VS Code's auto-import behavior is more accurate. You can configure this as a [workspace setting](https://code.visualstudio.com/docs/getstarted/settings) by creating a local `.vscode/settings.json` file at the root of the repo's directory on your machine.
 
 ## Build and Export the static site
 
@@ -79,6 +83,14 @@ Updates _all_ [Jest snapshots](../docs/portal/tests.md#Snapshot%20tests), accept
 ### `npm run test:watch`
 
 Runs the project's test suite in watch mode. By default, this will attempt to identify which tests to run based on which files have changed in the current repository. After running, you can interact with the prompt to configure or filter which test files are ran.
+
+### `npm run test:ci:src`
+
+Run the project's test suite against the source code (excludes generated Storybook tests) and produce a coverage report.
+
+### `npm run test:ci:storybook`
+
+Run just the Storybook tests. We run this separately in the CI since it can take several minutes to run.
 
 ## Design tooling commands
 
@@ -245,12 +257,14 @@ Below is an abbreviated representation of our directory structure, pointing out 
 
 ```
 ├── __mocks__               Dependency mocks used by test suites
-├── tests                   Test suites
 ├── config                  Env. variables & feature flags
+├── lib                     Common code shared between Storybook and Tests
+├── next.config.js          Build process config for Portal
 ├── public                  Static assets
 ├── src                     Source code
 │   ├── api                 API request modules
 │   ├── components
+|   |   └── core            Home for reusable presentation components
 │   │   └── PageWrapper.tsx 🖼 Main layout applied to all pages
 │   ├── hooks               Custom React hooks
 │   ├── locales             Localization files
@@ -267,6 +281,6 @@ Below is an abbreviated representation of our directory structure, pointing out 
 ├── storybook               Storybook site config and stories
 ├── styles
 │   └── app.scss            Main stylesheet
-├── next.config.js          Build process config for Portal
+├── tests                   Test suites
 └── tsconfig.json           TypeScript setup
 ```

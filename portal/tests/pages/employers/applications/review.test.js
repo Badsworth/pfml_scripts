@@ -1,46 +1,63 @@
 /* eslint testing-library/prefer-user-event: 0 */
-import { MockEmployerClaimBuilder, renderPage } from "../../../test-utils";
-import { act, fireEvent, screen, waitFor } from "@testing-library/react";
-import ClaimDocument from "../../../../src/models/ClaimDocument";
+import {
+  MockEmployerClaimBuilder,
+  createAbsencePeriod,
+  renderPage,
+} from "../../../test-utils";
+import {
+  act,
+  fireEvent,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import ConcurrentLeave from "../../../../src/models/ConcurrentLeave";
 import DocumentCollection from "../../../../src/models/DocumentCollection";
 import { DocumentType } from "../../../../src/models/Document";
 import { EmployerBenefitFrequency } from "../../../../src/models/EmployerBenefit";
 import EmployerClaim from "../../../../src/models/EmployerClaim";
 import LeaveReason from "../../../../src/models/LeaveReason";
+import MockDate from "mockdate";
 import Review from "../../../../src/pages/employers/applications/review";
 import { clone } from "lodash";
 import userEvent from "@testing-library/user-event";
 
 jest.mock("../../../../src/hooks/useAppLogic");
 
-const DOCUMENTS = new DocumentCollection([
-  new ClaimDocument({
-    content_type: "image/png",
-    created_at: "2020-04-05",
-    document_type: DocumentType.certification.medicalCertification,
-    fineos_document_id: "fineos-id-4",
-    name: "Medical cert doc",
-  }),
-  new ClaimDocument({
-    content_type: "application/pdf",
-    created_at: "2020-01-02",
-    document_type: DocumentType.approvalNotice,
-    fineos_document_id: "fineos-id-1",
-    name: "Approval notice doc",
-  }),
-  new ClaimDocument({
-    content_type: "application/pdf",
-    created_at: "2020-02-01",
-    document_type: DocumentType.certification[LeaveReason.care],
-    fineos_document_id: "fineos-id-10",
-    name: "Caring cert doc",
-  }),
+const ABSENCEID = "NTN-111-ABS-01";
+
+const CLAIMDOCUMENTSMAP = new Map([
+  [
+    ABSENCEID,
+    new DocumentCollection([
+      {
+        content_type: "image/png",
+        created_at: "2020-04-05",
+        document_type: DocumentType.certification.medicalCertification,
+        fineos_document_id: "fineos-id-4",
+        name: "Medical cert doc",
+      },
+      {
+        content_type: "application/pdf",
+        created_at: "2020-01-02",
+        document_type: DocumentType.approvalNotice,
+        fineos_document_id: "fineos-id-1",
+        name: "Approval notice doc",
+      },
+      {
+        content_type: "application/pdf",
+        created_at: "2020-02-01",
+        document_type: DocumentType.certification[LeaveReason.care],
+        fineos_document_id: "fineos-id-10",
+        name: "Caring cert doc",
+      },
+    ]),
+  ],
 ]);
 
 const baseClaimBuilder = new MockEmployerClaimBuilder()
   .completed()
-  .reviewable();
+  .reviewable("2020-10-10");
 const claimWithV1Eform = baseClaimBuilder.eformsV1().create();
 const claimWithV2Eform = baseClaimBuilder.eformsV2().create();
 const submitClaimReview = jest.fn(() => {
@@ -57,6 +74,7 @@ const setup = (employerClaimAttrs = claimWithV2Eform, cb) => {
     {
       addCustomSetup: (appLogic) => {
         appLogic.employers.claim = new EmployerClaim(employerClaimAttrs);
+        appLogic.employers.claimDocumentsMap = new Map();
         appLogic.employers.submitClaimReview = submitClaimReview;
         appLogic.portalFlow.goTo = goTo;
         appLogic.employers.loadDocuments = loadDocuments;
@@ -70,6 +88,10 @@ const setup = (employerClaimAttrs = claimWithV2Eform, cb) => {
 };
 
 describe("Review", () => {
+  beforeEach(() => {
+    MockDate.set("2020-10-01");
+  });
+
   it("renders the page for v1 eforms", () => {
     setup(claimWithV1Eform);
     expect(screen.getByText(/Employee information/)).toBeInTheDocument();
@@ -141,20 +163,56 @@ describe("Review", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("displays organization/employer information", () => {
-    setup();
-    expect(screen.getByText(/Organization/)).toMatchSnapshot();
-    expect(screen.getByText("Employer ID number (EIN)")).toMatchSnapshot();
+  it("does not render the caring leave relationship question", () => {
+    expect(
+      screen.queryByRole("group", {
+        name: "Do you believe the listed relationship is described accurately? (Optional)",
+      })
+    ).not.toBeInTheDocument();
   });
 
-  it("hides organization name if employer_dba is falsy", () => {
-    const noEmployerDba = clone(claimWithV1Eform);
-    noEmployerDba.employer_dba = undefined;
+  it("Updates Alert text if claim has been reviewed previously", () => {
+    process.env.featureFlags = JSON.stringify({
+      employerShowMultiLeave: true,
+    });
 
-    setup(noEmployerDba);
+    setup({
+      ...claimWithV2Eform,
+      managed_requirements: [
+        {
+          type: "",
+          created_at: "",
+          follow_up_date: "",
+          category: "",
+          responded_at: "2021-11-01",
+          status: "Complete",
+        },
+        {
+          type: "",
+          created_at: "",
+          follow_up_date: "",
+          category: "",
+          responded_at: "2021-10-01",
+          status: "Complete",
+        },
+        {
+          type: null,
+          created_at: null,
+          follow_up_date: null,
+          category: null,
+          responded_at: null,
+          status: null,
+        },
+      ],
+    });
 
-    expect(screen.queryByText(/Organization/)).not.toBeInTheDocument();
-    expect(screen.getByText("Employer ID number (EIN)")).toBeInTheDocument();
+    // Text gets formatted before displaying thus why the date looks slightly different here
+    // & should display the most recent date
+    expect(
+      screen.queryByText(
+        "This application has changed since it was reviewed on 11/1/2021."
+      )
+    ).toBeInTheDocument();
   });
 
   it("submits a claim with the correct options", async () => {
@@ -554,8 +612,8 @@ describe("Review", () => {
         expect.objectContaining({
           concurrent_leave: new ConcurrentLeave({
             is_for_current_employer: true,
-            leave_start_date: "2021-01-01",
-            leave_end_date: "2021-03-01",
+            leave_start_date: "2022-01-01",
+            leave_end_date: "2022-03-01",
           }),
         })
       );
@@ -612,7 +670,6 @@ describe("Review", () => {
   it("redirects to the status page if is_reviewable is false", () => {
     const falseIsReviewableClaim = new MockEmployerClaimBuilder()
       .completed()
-      .reviewable(false)
       .create();
 
     setup(falseIsReviewableClaim);
@@ -620,17 +677,6 @@ describe("Review", () => {
     expect(goTo).toHaveBeenCalledWith("/employers/applications/status", {
       absence_id: "NTN-111-ABS-01",
     });
-  });
-
-  it("does not redirect to the status page if is_reviewable is null", () => {
-    const nullIsReviewableClaim = new MockEmployerClaimBuilder()
-      .completed()
-      .create();
-
-    setup(nullIsReviewableClaim);
-
-    expect(nullIsReviewableClaim.is_reviewable).toBe(null);
-    expect(goTo).not.toHaveBeenCalled();
   });
 
   it("sets 'has_amendments' to false if nothing is amended", async () => {
@@ -766,20 +812,48 @@ describe("Review", () => {
       expect(loadDocuments).toHaveBeenCalledWith("NTN-111-ABS-01");
     });
 
+    it("calls downloadDocument when a document's button is clicked", async () => {
+      const downloadDocument = jest.fn();
+      const document = {
+        content_type: "application/pdf",
+        created_at: "2021-01-01",
+        description: "",
+        document_type: DocumentType.certification[LeaveReason.medical],
+        fineos_document_id: "mock-id-1",
+        name: "",
+      };
+
+      setup(undefined, (appLogic) => {
+        appLogic.employers.downloadDocument = downloadDocument;
+        appLogic.employers.claimDocumentsMap = new Map([
+          [
+            claimWithV2Eform.fineos_absence_id,
+            new DocumentCollection([document]),
+          ],
+        ]);
+      });
+
+      const downloadButtons = await screen.findAllByRole("button", {
+        name: /Your employee's certification/i,
+      });
+
+      userEvent.click(downloadButtons[0]);
+
+      expect(downloadDocument).toHaveBeenCalledWith(
+        document,
+        claimWithV2Eform.fineos_absence_id
+      );
+    });
+
     describe("when the claim is a caring leave", () => {
       function render() {
         const caringLeaveClaim = clone(claimWithV2Eform);
         caringLeaveClaim.leave_details.reason = "Care for a Family Member";
         const cb = (appLogic) => {
-          appLogic.employers.documents = DOCUMENTS;
+          appLogic.employers.claimDocumentsMap = CLAIMDOCUMENTSMAP;
         };
         setup(caringLeaveClaim, cb);
       }
-
-      it("does not load the documents while documents is loaded ", () => {
-        render();
-        expect(loadDocuments).not.toHaveBeenCalled();
-      });
 
       it("shows medical cert and caring cert", () => {
         render();
@@ -800,6 +874,14 @@ describe("Review", () => {
         .create();
 
       setup(caringLeaveClaim);
+    });
+
+    it("renders the caring leave relationship question", () => {
+      expect(
+        screen.getByRole("group", {
+          name: "Do you believe the listed relationship is described accurately? (Optional)",
+        })
+      ).toBeInTheDocument();
     });
 
     it("submits a caring leave claim with the correct options", async () => {
@@ -852,5 +934,63 @@ describe("Review", () => {
         );
       });
     });
+  });
+
+  it("does not render supporting work details when employerShowMultiLeave is enabled", () => {
+    process.env.featureFlags = JSON.stringify({
+      employerShowMultiLeave: true,
+    });
+    setup();
+    expect(
+      screen.queryByRole("heading", { name: "Supporting work details" })
+    ).not.toBeInTheDocument();
+  });
+
+  it("renders absence id above the title when employerShowMultiLeave is enabled", () => {
+    process.env.featureFlags = JSON.stringify({
+      employerShowMultiLeave: true,
+    });
+    setup();
+    expect(
+      screen.getByText("Application ID: NTN-111-ABS-01")
+    ).toBeInTheDocument();
+  });
+
+  it("renders the absence periods sorted newest to oldest when employerShowMultiLeave is enabled", () => {
+    process.env.featureFlags = JSON.stringify({
+      employerShowMultiLeave: true,
+    });
+
+    setup({
+      ...claimWithV2Eform,
+      absence_periods: [
+        createAbsencePeriod({
+          absence_period_start_date: "2020-01-01",
+          absence_period_end_date: "2020-01-30",
+          reason: LeaveReason.medical,
+        }),
+        createAbsencePeriod({
+          absence_period_start_date: "2020-02-15",
+          absence_period_end_date: "2020-02-28",
+          reason: LeaveReason.bonding,
+        }),
+      ],
+    });
+
+    const sections = screen.getAllByTestId("absence periods");
+    let headings = [];
+    sections.forEach((section) => {
+      headings = headings.concat(
+        within(section).getAllByRole("heading", { level: 3 })
+      );
+    });
+
+    expect(headings.map((heading) => heading.textContent))
+      .toMatchInlineSnapshot(`
+      [
+        "Bond with a child",
+        "Medical leave",
+      ]
+    `);
   });
 });

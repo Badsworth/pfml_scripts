@@ -54,5 +54,18 @@ module "tasks" {
 
   task_failure_email_address_list = ["mass-pfml-api-low-priority@navapbc.pagerduty.com"]
 
-  dor_fineos_etl_schedule_expression = "cron(5 * * * ? *)" # Hourly at :05 minutes past each hour
+  # Hourly at :05 minutes past each hour
+  dor_fineos_etl_schedule_expression_standard         = "cron(5 * * * ? *)"
+  dor_fineos_etl_schedule_expression_daylight_savings = "cron(5 * * * ? *)"
+
+  pdf_api_host                    = "http://localhost:5000"
+  enable_generate_1099_pdf        = "0"
+  generate_1099_max_files         = "1000"
+  enable_merge_1099_pdf           = "0"
+  enable_upload_1099_pdf          = "0"
+  upload_max_files_to_fineos      = "10"
+  enable_1099_testfile_generation = "0"
+  irs_1099_correction_ind         = "0"
+
+  enable_withholding_payments = "1"
 }

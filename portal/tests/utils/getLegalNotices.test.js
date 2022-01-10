@@ -1,4 +1,3 @@
-import BenefitsApplicationDocument from "../../src/models/BenefitsApplicationDocument";
 import { DocumentType } from "../../src/models/Document";
 import LeaveReason from "../../src/models/LeaveReason";
 import getLegalNotices from "../../src/utils/getLegalNotices";
@@ -11,6 +10,12 @@ describe("getLegalNotices", () => {
       DocumentType.denialNotice,
       DocumentType.requestForInfoNotice,
       DocumentType.withdrawalNotice,
+      DocumentType.maximumWeeklyBenefitChangeNotice,
+      DocumentType.benefitAmountChangeNotice,
+      DocumentType.leaveAllotmentChangeNotice,
+      DocumentType.approvedTimeCancelled,
+      DocumentType.changeRequestApproved,
+      DocumentType.changeRequestDenied,
     ]);
     const manyDocumentTypes = [
       DocumentType.appealAcknowledgment,
@@ -23,10 +28,16 @@ describe("getLegalNotices", () => {
       DocumentType.medicalCertification,
       DocumentType.requestForInfoNotice,
       DocumentType.withdrawalNotice,
+      DocumentType.maximumWeeklyBenefitChangeNotice,
+      DocumentType.benefitAmountChangeNotice,
+      DocumentType.leaveAllotmentChangeNotice,
+      DocumentType.approvedTimeCancelled,
+      DocumentType.changeRequestApproved,
+      DocumentType.changeRequestDenied,
     ];
-    const documents = manyDocumentTypes.map(
-      (document_type) => new BenefitsApplicationDocument({ document_type })
-    );
+    const documents = manyDocumentTypes.map((document_type) => {
+      return { document_type };
+    });
 
     const legalNotices = getLegalNotices(documents);
 

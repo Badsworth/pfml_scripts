@@ -41,6 +41,17 @@ internal_client_id=$(
 
 internal_secret=$(aws cognito-idp describe-user-pool-client --user-pool-id=$pool_id --client-id=$internal_client_id | jq -r ".UserPoolClient.ClientSecret")
 
+# ServiceNow oauth client that they use to communicate to the PFML API.
+servicenow_client_id=$(
+    aws cognito-idp list-user-pool-clients --user-pool-id=$pool_id \
+        | jq -r ".UserPoolClients | .[] | select(.ClientName == \"servicenow-pfml-$ENV\") | .ClientId")
+
+internal_servicenow_client_id=$(
+    aws cognito-idp list-user-pool-clients --user-pool-id=$pool_id \
+        | jq -r ".UserPoolClients | .[] | select(.ClientName == \"internal-servicenow-role-oauth-pfml-$ENV\") | .ClientId")
+
+internal_servicenow_secret=$(aws cognito-idp describe-user-pool-client --user-pool-id=$pool_id --client-id=$internal_servicenow_client_id | jq -r ".UserPoolClient.ClientSecret")
+
 cat <<-EOF
 cognito_user_pool_arn = "arn:aws:cognito-idp:us-east-1:498823821309:userpool/$pool_id"
 cognito_user_pool_id = "$pool_id"
@@ -53,5 +64,9 @@ echo "Uploading secrets to parameter store..."
 aws ssm put-parameter --name "/service/pfml-api/$ENV/cognito_fineos_app_client_id" --value "$fineos_client_id" --type "SecureString" --overwrite
 aws ssm put-parameter --name "/service/pfml-api/$ENV/cognito_internal_fineos_role_app_client_id" --value "$internal_client_id" --type "SecureString" --overwrite
 aws ssm put-parameter --name "/service/pfml-api/$ENV/cognito_internal_fineos_role_app_client_secret" --value "$internal_secret" --type "SecureString" --overwrite
+
+aws ssm put-parameter --name "/service/pfml-api/$ENV/cognito_servicenow_app_client_id" --value "$servicenow_client_id" --type "SecureString" --overwrite
+aws ssm put-parameter --name "/service/pfml-api/$ENV/cognito_internal_servicenow_role_app_client_id" --value "$internal_servicenow_client_id" --type "SecureString" --overwrite
+aws ssm put-parameter --name "/service/pfml-api/$ENV/cognito_internal_servicenow_role_app_client_secret" --value "$internal_servicenow_secret" --type "SecureString" --overwrite
 
 echo "Done!"

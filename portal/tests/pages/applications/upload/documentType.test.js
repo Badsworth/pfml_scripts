@@ -5,7 +5,6 @@ import UploadDocument, {
 import { act, render, screen } from "@testing-library/react";
 import AppErrorInfo from "../../../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../../../src/models/AppErrorInfoCollection";
-import BenefitsApplicationDocument from "../../../../src/models/BenefitsApplicationDocument";
 import { DocumentType } from "../../../../src/models/Document";
 import LeaveReason from "../../../../src/models/LeaveReason";
 import React from "react";
@@ -42,7 +41,7 @@ describe(UploadDocument, () => {
         <UploadDocumentWithAppLogic
           query={{
             claim_id: "mock-claim-id",
-            absence_case_id: "mock-absence-case-id",
+            absence_id: "mock-absence-case-id",
             documentType,
           }}
         />
@@ -64,7 +63,7 @@ describe(UploadDocument, () => {
         <UploadDocumentWithAppLogic
           query={{
             claim_id: "mock-claim-id",
-            absence_case_id: "mock-absence-case-id",
+            absence_id: "mock-absence-case-id",
             documentType,
           }}
         />
@@ -80,7 +79,7 @@ describe(UploadDocument, () => {
         <UploadDocumentWithAppLogic
           query={{
             claim_id: "mock-claim-id",
-            absence_case_id: "mock-absence-case-id",
+            absence_id: "mock-absence-case-id",
             documentType: "state-id",
           }}
         />
@@ -91,7 +90,7 @@ describe(UploadDocument, () => {
       const spinner = screen.getByRole("progressbar");
 
       expect(spinner).toBeInTheDocument();
-      expect(spinner).toHaveAttribute("aria-valuetext", "Loading documents");
+      expect(spinner).toHaveAttribute("aria-label", "Loading documents");
     });
 
     it("does not show file card rows", () => {
@@ -114,7 +113,7 @@ describe(UploadDocument, () => {
           }}
           query={{
             claim_id: "mock-claim-id",
-            absence_case_id: "mock-absence-case-id",
+            absence_id: "mock-absence-case-id",
             documentType: "state-id",
           }}
         />
@@ -150,18 +149,18 @@ describe(UploadDocument, () => {
               .mockImplementation(() => true);
             appLogic.documents.attach = jest.fn();
             appLogic.documents.documents = appLogic.documents.documents.addItem(
-              new BenefitsApplicationDocument({
+              {
                 application_id: "mock-claim-id",
                 fineos_document_id: uuidv4(),
                 document_type: DocumentType.identityVerification,
                 created_at: "2021-09-01",
-              })
+              }
             );
             appLogic.portalFlow.goToNextPage = jest.fn();
           }}
           query={{
             claim_id: "mock-claim-id",
-            absence_case_id: "mock-absence-case-id",
+            absence_id: "mock-absence-case-id",
             documentType: "state-id",
           }}
         />
@@ -190,7 +189,7 @@ describe(UploadDocument, () => {
       expect(appLogic.documents.attach).not.toHaveBeenCalled();
       expect(appLogic.portalFlow.goToNextPage).toHaveBeenCalledWith(
         { isAdditionalDoc: true },
-        { claim_id: "mock-claim-id", absence_case_id: "mock-absence-case-id" }
+        { claim_id: "mock-claim-id", absence_id: "mock-absence-case-id" }
       );
     });
   });
@@ -230,7 +229,7 @@ describe(UploadDocument, () => {
           }}
           query={{
             claim_id: "mock-claim-id",
-            absence_case_id: "mock-absence-case-id",
+            absence_id: "mock-absence-case-id",
             documentType: "state-id",
           }}
         />
@@ -299,7 +298,7 @@ describe(UploadDocument, () => {
         }}
         query={{
           claim_id: "mock-claim-id",
-          absence_case_id: "mock-absence-case-id",
+          absence_id: "mock-absence-case-id",
           documentType: "state-id",
         }}
       />
@@ -307,22 +306,22 @@ describe(UploadDocument, () => {
 
     const alert = await screen.findByRole("alert");
     expect(alert).toMatchInlineSnapshot(`
-      <div
-        class="usa-alert usa-alert--error usa-alert--no-icon margin-bottom-3"
-        role="alert"
-        tabindex="-1"
-      >
-        <div
-          class="usa-alert__body"
-        >
-          <div
-            class="usa-alert__text"
-          >
-            An error was encountered while checking your application for documents. If this continues to happen, call the Paid Family Leave Contact Center at (833) 344‑7365.
-          </div>
-        </div>
-      </div>
-    `);
+<div
+  class="usa-alert usa-alert--error usa-alert--no-icon margin-bottom-3"
+  role="alert"
+  tabindex="-1"
+>
+  <div
+    class="usa-alert__body"
+  >
+    <div
+      class="usa-alert__text"
+    >
+      An error was encountered while checking your application for documents. If this continues to happen, call the Paid Family Leave Contact Center at (833) 344‑7365.
+    </div>
+  </div>
+</div>
+`);
   });
 
   it("calls attach function with 'true' flag when there is additionalDoc flag in query", async () => {
@@ -341,7 +340,7 @@ describe(UploadDocument, () => {
         }}
         query={{
           claim_id: "mock-claim-id",
-          absence_case_id: "mock-absence-case-id",
+          absence_id: "mock-absence-case-id",
           documentType: "state-id",
           additionalDoc: "true",
         }}
@@ -401,7 +400,7 @@ describe(UploadDocument, () => {
           }}
           query={{
             claim_id: "mock-claim-id",
-            absence_case_id: "mock-absence-case-id",
+            absence_id: "mock-absence-case-id",
             documentType: documentTypeParam,
             additionalDoc: "true",
           }}
@@ -434,7 +433,7 @@ describe(UploadDocument, () => {
         { isAdditionalDoc: true },
         {
           claim_id: "mock-claim-id",
-          absence_case_id: "mock-absence-case-id",
+          absence_id: "mock-absence-case-id",
           uploaded_document_type: documentTypeParam,
         }
       );

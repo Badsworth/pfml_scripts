@@ -1,5 +1,6 @@
 import copy
 import json
+import os
 from datetime import date
 
 import pytest
@@ -164,6 +165,31 @@ def validate_non_standard_payment_state(non_standard_payment: Payment, payment_s
     assert len(non_standard_payment.state_logs) == 2
     assert set([state_log.end_state_id for state_log in non_standard_payment.state_logs]) == set(
         [payment_state.state_id, State.DELEGATED_ADD_TO_FINEOS_WRITEBACK.state_id,]
+    )
+
+
+def validate_withholding(
+    withholding_payment: Payment,
+    withholding_payment_data: FineosPaymentData,
+    payment_state: LkState,
+    payment_transaction_type: PaymentTransactionType,
+):
+    assert withholding_payment.claim_id
+    assert withholding_payment.employee_id is None
+    assert str(withholding_payment.amount) == withholding_payment_data.payment_amount
+    assert withholding_payment.period_start_date == payments_util.datetime_str_to_date(
+        withholding_payment_data.payment_start_period
+    )
+    assert withholding_payment.period_end_date == payments_util.datetime_str_to_date(
+        withholding_payment_data.payment_end_period
+    )
+    assert (
+        withholding_payment.payment_transaction_type.payment_transaction_type_id
+        == payment_transaction_type.payment_transaction_type_id
+    )
+    assert len(withholding_payment.state_logs) == 1
+    assert set([state_log.end_state_id for state_log in withholding_payment.state_logs]) == set(
+        [payment_state.state_id,]
     )
 
 
@@ -368,6 +394,7 @@ def test_run_step_happy_path(
             assert len(pub_efts) == 1  # A prior one from setup logic
             assert payment.pub_eft_id in [pub_eft.pub_eft_id for pub_eft in employee.pub_efts]
 
+        assert payment.exclude_from_payment_status is False
     # Verify a few of the metrics were added to the import log table
     import_log_report = json.loads(payment.fineos_extract_import_log.report)
     assert import_log_report["standard_valid_payment_count"] == 2
@@ -439,7 +466,8 @@ def test_process_extract_data_prior_payment_exists_is_being_processed(
         for payment in payments
         if payment.state_logs[0].end_state_id != State.DELEGATED_PAYMENT_COMPLETE.state_id
     ][0]
-    assert new_payment
+
+    assert new_payment.exclude_from_payment_status is True
 
     state_log = state_log_util.get_latest_state_log_in_flow(
         new_payment, Flow.DELEGATED_PAYMENT, local_test_db_session
@@ -447,7 +475,7 @@ def test_process_extract_data_prior_payment_exists_is_being_processed(
     assert state_log.end_state_id == State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT.state_id
 
     assert state_log.outcome == {
-        "message": "Error processing payment record",
+        "message": "Active Payment Error - Contact FINEOS",
         "validation_container": {
             "record_key": f"C={payment_data.c_value},I={payment_data.i_value}",
             "validation_issues": [
@@ -458,7 +486,11 @@ def test_process_extract_data_prior_payment_exists_is_being_processed(
             ],
         },
     }
-    validate_pei_writeback_state_for_payment(new_payment, local_test_db_session, is_invalid=True)
+    # No writeback made for active payment errors
+    pei_writeback_state = state_log_util.get_latest_state_log_in_flow(
+        new_payment, Flow.DELEGATED_PEI_WRITEBACK, local_test_db_session
+    )
+    assert pei_writeback_state is None
 
 
 def test_process_extract_data_one_bad_record(
@@ -953,7 +985,7 @@ def test_process_extract_no_fineos_name(local_test_db_session, local_payment_ext
 def test_process_extract_is_adhoc(
     local_payment_extract_step, local_test_db_session,
 ):
-    fineos_adhoc_data = FineosPaymentData(amalgamationc="Adhoc")
+    fineos_adhoc_data = FineosPaymentData(amalgamationc="Adhoc1234")
     add_db_records_from_fineos_data(local_test_db_session, fineos_adhoc_data)
     fineos_standard_data = FineosPaymentData(amalgamationc="Some other value")
     add_db_records_from_fineos_data(local_test_db_session, fineos_standard_data)
@@ -1006,6 +1038,8 @@ def test_process_extract_multiple_payment_details(
         payment_start="2021-01-01 12:00:00",
         payment_end="2021-01-01 12:00:00",
         payment_amount="100.00",
+        balancing_amount="100.10",
+        business_net_amount="100.01",
     )
     add_db_records_from_fineos_data(local_test_db_session, fineos_payment_data)
 
@@ -1016,6 +1050,8 @@ def test_process_extract_multiple_payment_details(
         additional_data.include_claim_details = False
         additional_data.include_requested_absence = False
         additional_data.payment_amount = f"{i}00.00"
+        additional_data.balancing_amount = f"{i}00.10"
+        additional_data.business_net_amount = f"{i}00.01"
 
         additional_data.payment_start_period = f"2021-01-0{i} 12:00:00"
         additional_data.payment_end_period = f"2021-01-0{i} 12:00:00"
@@ -1042,7 +1078,8 @@ def test_process_extract_multiple_payment_details(
     # Verify the payment details were parsed correctly
     payment_details.sort(key=lambda payment_detail: payment_detail.period_start_date)
     for i, payment_detail in enumerate(payment_details, start=1):
-        assert str(payment_detail.amount) == f"{i}00.00"
+        assert str(payment_detail.amount) == f"{i}00.10"
+        assert str(payment_detail.business_net_amount) == f"{i}00.01"
         assert str(payment_detail.period_start_date) == f"2021-01-0{i}"
         assert str(payment_detail.period_end_date) == f"2021-01-0{i}"
 
@@ -1537,6 +1574,177 @@ def test_process_extract_additional_payment_types_still_require_employee(
     )
 
 
+@freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
+def test_process_extract_tax_withholding_payment_types(
+    local_test_db_session, local_payment_extract_step,
+):
+    datasets = []
+
+    # Turn on Tax Withholding Feature Flag for this test.
+    os.environ["ENABLE_WITHHOLDING_PAYMENTS"] = "1"
+
+    # This tests that the behavior of tax withholding payment types are handled properly
+    # All of these are setup as EFT payments, but we won't create EFT information for them
+    # or reject them for not being prenoted yet.
+
+    # Create a State Tax Withholding
+    state_withholding_amount = "20.50"
+    state_start = "2021-01-14 12:00:00"
+    state_end = "2021-01-20 12:00:00"
+    state_withholding_data = FineosPaymentData(
+        event_type="PaymentOut",
+        tin=extractor.STATE_TAX_WITHHOLDING_TIN,
+        payment_amount=state_withholding_amount,
+        payment_start=state_start,
+        payment_end=state_end,
+        payment_method="Elec Funds Transfer",
+    )
+
+    add_db_records_from_fineos_data(local_test_db_session, state_withholding_data, add_eft=False)
+    datasets.append(state_withholding_data)
+
+    # Create a Federal Tax Withholding
+    federal_withholding_amount = "110.00"
+    federal_start = "2021-01-14 12:00:00"
+    federal_end = "2021-01-20 12:00:00"
+    federal_withholding_data = FineosPaymentData(
+        event_type="PaymentOut",
+        tin=extractor.FEDERAL_TAX_WITHHOLDING_TIN,
+        payment_amount=federal_withholding_amount,
+        payment_start=federal_start,
+        payment_end=federal_end,
+        payment_method="Elec Funds Transfer",
+    )
+
+    add_db_records_from_fineos_data(local_test_db_session, federal_withholding_data, add_eft=False)
+    datasets.append(federal_withholding_data)
+
+    stage_data(datasets, local_test_db_session)
+
+    # Run the extract process
+    local_payment_extract_step.run()
+
+    # Validate Tax Withholding, and state should be in STATE_WITHHOLDING_READY_FOR_PROCESSING
+    state_withholding = (
+        local_test_db_session.query(Payment)
+        .filter(Payment.fineos_pei_i_value == state_withholding_data.i_value)
+        .one_or_none()
+    )
+    validate_withholding(
+        state_withholding,
+        state_withholding_data,
+        State.STATE_WITHHOLDING_READY_FOR_PROCESSING,
+        PaymentTransactionType.STATE_TAX_WITHHOLDING,
+    )
+
+    # Validate Tax Withholding, and state should be in FEDERAL_WITHHOLDING_READY_FOR_PROCESSING
+    federal_withholding = (
+        local_test_db_session.query(Payment)
+        .filter(Payment.fineos_pei_i_value == federal_withholding_data.i_value)
+        .one_or_none()
+    )
+    validate_withholding(
+        federal_withholding,
+        federal_withholding_data,
+        State.FEDERAL_WITHHOLDING_READY_FOR_PROCESSING,
+        PaymentTransactionType.FEDERAL_TAX_WITHHOLDING,
+    )
+
+
+@freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
+def test_process_extract_invalid_tax_withholding_payment_types(
+    local_test_db_session, local_payment_extract_step,
+):
+    datasets = []
+
+    # Turn on Tax Withholding Feature Flag for this test.
+    os.environ["ENABLE_WITHHOLDING_PAYMENTS"] = "1"
+
+    # This tests that invalid tax withholding payment types are handled properly
+    # All of these are setup as EFT payments, but we won't create EFT information for them
+    # or reject them for not being prenoted yet.
+
+    # Create a State Tax Withholding
+    state_withholding_amount = None
+    state_start = "2021-01-14 12:00:00"
+    state_end = "2021-01-20 12:00:00"
+    state_withholding_data = FineosPaymentData(
+        event_type="PaymentOut",
+        tin=extractor.STATE_TAX_WITHHOLDING_TIN,
+        payment_amount=state_withholding_amount,
+        payment_start=state_start,
+        payment_end=state_end,
+        payment_method="Elec Funds Transfer",
+    )
+
+    add_db_records_from_fineos_data(local_test_db_session, state_withholding_data, add_eft=False)
+    datasets.append(state_withholding_data)
+
+    stage_data(datasets, local_test_db_session)
+
+    # Run the extract process
+    local_payment_extract_step.run()
+
+    # Validate Tax Withholding, and state should be in:
+    # DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT
+    # DELEGATED_ADD_TO_FINEOS_WRITEBACK
+    state_withholding = (
+        local_test_db_session.query(Payment)
+        .filter(Payment.fineos_pei_i_value == state_withholding_data.i_value)
+        .one_or_none()
+    )
+    assert len(state_withholding.state_logs) == 2
+    assert set([state_log.end_state_id for state_log in state_withholding.state_logs]) == set(
+        [
+            State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT.state_id,
+            State.DELEGATED_ADD_TO_FINEOS_WRITEBACK.state_id,
+        ]
+    )
+
+
+@freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
+def test_process_extract_data_minimal_viable_withholding_payment(
+    local_payment_extract_step, local_test_db_session,
+):
+    # Setup enough to make a tax withholding payment
+    # This test creates a tax withholding with absolutely no data besides the bare
+    # minimum to be viable to create a payment, this is done in order
+    # to test that all of our validations work, and all of the missing data
+    # edge cases are accounted for and handled appropriately.
+
+    # C & I value are the bare minimum to have a payment
+    fineos_data = FineosPaymentData(
+        False,
+        c_value="1000",
+        i_value="1",
+        event_type="PaymentOut",
+        tin=extractor.STATE_TAX_WITHHOLDING_TIN,
+        payment_amount="100.00",
+    )
+    stage_data([fineos_data], local_test_db_session)
+    # We deliberately do no DB setup, there will not be any prior employee or claim
+    local_payment_extract_step.run()
+
+    payment = local_test_db_session.query(Payment).one_or_none()
+    assert payment
+    assert payment.vpei_id is not None
+    assert payment.claim is None
+
+    state_log = state_log_util.get_latest_state_log_in_flow(
+        payment, Flow.DELEGATED_PAYMENT, local_test_db_session
+    )
+    assert state_log.end_state_id == State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT.state_id
+
+    assert state_log.outcome["message"] == "Error processing payment record"
+    assert state_log.outcome["validation_container"]["record_key"] == "C=1000,I=1"
+    # Not going to exactly match the errors here as there are many
+    # and they may adjust in the future
+    assert len(state_log.outcome["validation_container"]["validation_issues"]) >= 5
+
+    # Payment is also added to the PEI writeback error flow
+    validate_pei_writeback_state_for_payment(payment, local_test_db_session, is_invalid=True)
+
+
 def make_payment_data_from_fineos_data(fineos_data):
     reference_file = ReferenceFileFactory.build(
         reference_file_type_id=ReferenceFileType.FINEOS_PAYMENT_EXTRACT.reference_file_type_id
@@ -1607,12 +1815,14 @@ def test_validation_missing_fields(initialize_factories_session):
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTSTARTP"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTENDPER"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "BALANCINGAMOU_MONAMT"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "BUSINESSNETBE_MONAMT"),
             ValidationIssue(
                 ValidationReason.UNEXPECTED_PAYMENT_TRANSACTION_TYPE,
                 "Unknown payment scenario encountered. Payment Amount: None, Event Type: None, Event Reason: ",
             ),
         ]
     )
+
     assert expected_missing_values == set(validation_container.validation_issues)
 
     # Set the event type to PaymentOut and give it a valid amount so that
@@ -1636,6 +1846,8 @@ def test_validation_missing_fields(initialize_factories_session):
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEEIDENTIFI"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCEREASON_COVERAGE"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCE_CASECREATIONDATE"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "BALANCINGAMOU_MONAMT"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "BUSINESSNETBE_MONAMT"),
         ]
     )
     assert expected_missing_values == set(validation_container.validation_issues)
@@ -1661,6 +1873,8 @@ def test_validation_missing_fields(initialize_factories_session):
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTPOSTCO"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCEREASON_COVERAGE"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCE_CASECREATIONDATE"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "BALANCINGAMOU_MONAMT"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "BUSINESSNETBE_MONAMT"),
         ]
     )
     assert expected_missing_values == set(validation_container.validation_issues)
@@ -1685,6 +1899,8 @@ def test_validation_missing_fields(initialize_factories_session):
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEEACCOUNTT"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCEREASON_COVERAGE"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCE_CASECREATIONDATE"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "BALANCINGAMOU_MONAMT"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "BUSINESSNETBE_MONAMT"),
         ]
     )
 
@@ -1784,6 +2000,10 @@ def test_validation_payment_amount(initialize_factories_session, set_exporter_en
                 ValidationIssue(
                     ValidationReason.INVALID_VALUE,
                     f"BALANCINGAMOU_MONAMT: {invalid_payment_amount}",
+                ),
+                ValidationIssue(
+                    ValidationReason.INVALID_VALUE,
+                    f"BUSINESSNETBE_MONAMT: {invalid_payment_amount}",
                 ),
                 ValidationIssue(
                     ValidationReason.UNEXPECTED_PAYMENT_TRANSACTION_TYPE,

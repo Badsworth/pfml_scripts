@@ -1,14 +1,15 @@
-import BenefitsApplicationDocument from "../models/BenefitsApplicationDocument";
-import ClaimDocument from "../models/ClaimDocument";
+import { BenefitsApplicationDocument, ClaimDocument } from "../models/Document";
 import DownloadableDocument from "./DownloadableDocument";
-import Icon from "./Icon";
+import Icon from "./core/Icon";
 import React from "react";
 import getLegalNotices from "../utils/getLegalNotices";
 import { useTranslation } from "../locales/i18n";
 
 interface LegalNoticeListProps {
-  documents?: Array<BenefitsApplicationDocument | ClaimDocument>;
-  onDownloadClick?: (...args: any[]) => any;
+  documents: Array<BenefitsApplicationDocument | ClaimDocument>;
+  onDownloadClick: (
+    document: BenefitsApplicationDocument
+  ) => Promise<Blob | undefined>;
 }
 
 /**
@@ -39,7 +40,7 @@ export default function LegalNoticeList(props: LegalNoticeListProps) {
       <div>
         <DownloadableDocument
           document={document}
-          onDownloadClick={onDownloadClick}
+          downloadBenefitsApplicationDocument={onDownloadClick}
           showCreatedAt
         />
       </div>
@@ -49,7 +50,7 @@ export default function LegalNoticeList(props: LegalNoticeListProps) {
   return (
     <React.Fragment>
       <p className="padding-bottom-2 margin-top-05">
-        {t("components.applicationCardV2.noticeOnClickDetails")}
+        {t("components.applicationCard.noticeOnClickDetails")}
       </p>
       <ul className="add-list-reset">{legalNoticeList}</ul>
     </React.Fragment>

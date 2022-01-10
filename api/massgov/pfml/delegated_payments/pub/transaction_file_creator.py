@@ -14,7 +14,7 @@ from massgov.pfml.db.models.employees import (
     PubEft,
     State,
 )
-from massgov.pfml.db.models.payments import FineosWritebackDetails, FineosWritebackTransactionStatus
+from massgov.pfml.db.models.payments import FineosWritebackTransactionStatus
 from massgov.pfml.delegated_payments.check_issue_file import CheckIssueFile
 from massgov.pfml.delegated_payments.delegated_payments_nacha import (
     add_eft_prenote_to_nacha_file,
@@ -25,6 +25,10 @@ from massgov.pfml.delegated_payments.delegated_payments_nacha import (
 from massgov.pfml.delegated_payments.ez_check import EzCheckFile
 from massgov.pfml.delegated_payments.step import Step
 from massgov.pfml.delegated_payments.util.ach.nacha import NachaFile
+from massgov.pfml.delegated_payments.util.fineos_writeback_util import (
+    create_payment_finished_state_log_with_writeback,
+)
+from massgov.pfml.util.datetime import get_now_us_eastern
 
 logger = logging.get_logger(__name__)
 
@@ -46,57 +50,48 @@ class TransactionFileCreatorStep(Step):
         TRANSACTION_FILES_SENT_COUNT = "transaction_files_sent_count"
 
     def run_step(self) -> None:
-        try:
-            logger.info("Start creating PUB transaction file")
+        logger.info("Start creating PUB transaction file")
 
-            # ACH
-            self.add_ach_payments()
-            self.add_prenotes()
+        # ACH
+        self.add_ach_payments()
+        self.add_prenotes()
 
-            # Check and positive pay
-            self.check_file, self.positive_pay_file = pub_check.create_check_file(
-                self.db_session, self.increment, self.get_import_log_id()
+        # Check and positive pay
+        self.check_file, self.positive_pay_file = pub_check.create_check_file(
+            self.db_session, self.increment, self.get_import_log_id()
+        )
+
+        # Send the file
+        self.send_payment_files()
+
+        # Commit pending changes to db
+        self.db_session.commit()
+
+        if self.log_entry is not None:
+            successeful_transactions_count = (
+                self.log_entry.metrics[self.Metrics.ACH_PAYMENT_COUNT]
+                + self.log_entry.metrics[self.Metrics.ACH_PRENOTE_COUNT]
+                + self.log_entry.metrics[self.Metrics.CHECK_PAYMENT_COUNT]
+                # Subtract FAILED_TO_ADD_TRANSACTION_COUNT because pub_check.create_check_file()
+                # may increase that value without raising an exception.
+                - self.log_entry.metrics[self.Metrics.FAILED_TO_ADD_TRANSACTION_COUNT]
+            )
+            self.set_metrics(
+                {self.Metrics.SUCCESSFUL_ADD_TO_TRANSACTION_COUNT: successeful_transactions_count}
             )
 
-            # Send the file
-            self.send_payment_files()
+        logger.info("Done creating PUB transaction file")
 
-            # Commit pending changes to db
-            self.db_session.commit()
-
-            if self.log_entry is not None:
-                successeful_transactions_count = (
-                    self.log_entry.metrics[self.Metrics.ACH_PAYMENT_COUNT]
-                    + self.log_entry.metrics[self.Metrics.ACH_PRENOTE_COUNT]
-                    + self.log_entry.metrics[self.Metrics.CHECK_PAYMENT_COUNT]
-                    # Subtract FAILED_TO_ADD_TRANSACTION_COUNT because pub_check.create_check_file()
-                    # may increase that value without raising an exception.
-                    - self.log_entry.metrics[self.Metrics.FAILED_TO_ADD_TRANSACTION_COUNT]
-                )
-                self.set_metrics(
-                    {
-                        self.Metrics.SUCCESSFUL_ADD_TO_TRANSACTION_COUNT: successeful_transactions_count
-                    }
-                )
-
-            logger.info("Done creating PUB transaction file")
-
-        except Exception:
-            self.db_session.rollback()
-            logger.exception("Error creating PUB transaction file")
-
-            if self.log_entry is not None:
-                total_transactions_attempted = (
-                    self.log_entry.metrics[self.Metrics.ACH_PAYMENT_COUNT]
-                    + self.log_entry.metrics[self.Metrics.ACH_PRENOTE_COUNT]
-                    + self.log_entry.metrics[self.Metrics.CHECK_PAYMENT_COUNT]
-                )
-                self.set_metrics(
-                    {self.Metrics.FAILED_TO_ADD_TRANSACTION_COUNT: total_transactions_attempted}
-                )
-
-            # We do not want to run any subsequent steps if this fails
-            raise
+    def cleanup_on_failure(self) -> None:
+        if self.log_entry is not None:
+            total_transactions_attempted = (
+                self.log_entry.metrics[self.Metrics.ACH_PAYMENT_COUNT]
+                + self.log_entry.metrics[self.Metrics.ACH_PRENOTE_COUNT]
+                + self.log_entry.metrics[self.Metrics.CHECK_PAYMENT_COUNT]
+            )
+            self.set_metrics(
+                {self.Metrics.FAILED_TO_ADD_TRANSACTION_COUNT: total_transactions_attempted}
+            )
 
     def add_prenotes(self):
         logger.info("Start adding EFT prenotes to PUB transaction file")
@@ -121,8 +116,14 @@ class TransactionFileCreatorStep(Step):
             eft: PubEft = employee_with_eft[1]
 
             eft.prenote_state_id = PrenoteState.PENDING_WITH_PUB.prenote_state_id
-            eft.prenote_sent_at = payments_util.get_now()
+            eft.prenote_sent_at = get_now_us_eastern()
             self.db_session.add(eft)
+
+            logger.info(
+                "Sending prenote to PUB at %s eastern time",
+                eft.prenote_sent_at,
+                extra=payments_util.get_traceable_pub_eft_details(eft, employee),
+            )
 
             state_log_util.create_finished_state_log(
                 associated_model=employee,
@@ -154,27 +155,24 @@ class TransactionFileCreatorStep(Step):
             self.increment(self.Metrics.ACH_PAYMENT_COUNT)
 
             outcome = state_log_util.build_outcome("PUB transaction sent")
-            state_log_util.create_finished_state_log(
-                associated_model=payment,
-                end_state=State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT,
-                outcome=outcome,
-                db_session=self.db_session,
+
+            logger.info(
+                "Added payment to NACHA file",
+                extra=payments_util.get_traceable_payment_details(
+                    payment, State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT
+                ),
             )
 
-            transaction_status = FineosWritebackTransactionStatus.PAID
-            state_log_util.create_finished_state_log(
-                end_state=State.DELEGATED_ADD_TO_FINEOS_WRITEBACK,
-                outcome=outcome,
-                associated_model=payment,
-                import_log_id=self.get_import_log_id(),
-                db_session=self.db_session,
-            )
-            writeback_details = FineosWritebackDetails(
+            create_payment_finished_state_log_with_writeback(
                 payment=payment,
-                transaction_status_id=transaction_status.transaction_status_id,
+                payment_end_state=State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT,
+                payment_outcome=outcome,
+                writeback_transaction_status=FineosWritebackTransactionStatus.PAID,
+                writeback_outcome=outcome,
+                db_session=self.db_session,
                 import_log_id=self.get_import_log_id(),
             )
-            self.db_session.add(writeback_details)
+
             payments_util.create_payment_log(payment, self.get_import_log_id(), self.db_session)
 
         logger.info("Done adding ACH payments to PUB transaction file: %i", len(payments))

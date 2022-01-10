@@ -138,9 +138,14 @@ variable "pfml_fineos_outbound_path" {
   default     = ""
 }
 
-variable "dor_fineos_etl_schedule_expression" {
-  # Daily at 04:30 UTC [12:30 EST] [13:30 EDT]
-  description = "EventBridge schedule for DOR FINEOS ETL"
+variable "dor_fineos_etl_schedule_expression_standard" {
+  description = "EventBridge schedule for DOR FINEOS ETL in standard time"
+  type        = string
+  default     = "cron(30 5 * * ? *)"
+}
+
+variable "dor_fineos_etl_schedule_expression_daylight_savings" {
+  description = "EventBridge schedule for DOR FINEOS ETL in daylight time"
   type        = string
   default     = "cron(30 4 * * ? *)"
 }
@@ -244,6 +249,21 @@ variable "enable_pub_automation_process_returns" {
   default     = false
 }
 
+variable "enable_pub_automation_claimant_address_validation" {
+  description = "Enable scheduling for pub automation claimant address validation task"
+  default     = false
+}
+
+variable "enable_fineos_import_iaww" {
+  description = "Enable scheduling for fineos IAWW processing task"
+  default     = false
+}
+
+variable "enable_pub_automation_process_1099_documents" {
+  description = "Enable scheduling for pub automation 1099 documents processing task"
+  default     = false
+}
+
 variable "rmv_client_base_url" {
   description = "The base URL for the Registry of Motor Vehicles (RMV) API."
   type        = string
@@ -260,6 +280,58 @@ variable "rmv_api_behavior" {
   description = "Specifies if the RMV response is mocked"
   type        = string
   default     = "fully_mocked"
+}
+
+variable "pdf_api_host" {
+  description = "URL of the PDF API"
+  type        = string
+  default     = ""
+}
+
+variable "enable_generate_1099_pdf" {
+  description = "Enable generation of 1099 documents"
+  default     = "0"
+}
+
+variable "generate_1099_max_files" {
+  description = "Maximum number of 1099s to generate"
+  default     = "1000"
+}
+
+variable "enable_merge_1099_pdf" {
+  description = "Enable merging of 1099 documents for printing"
+  default     = "0"
+}
+
+variable "enable_upload_1099_pdf" {
+  description = "Enable uploading of 1099 documents to Fineos API"
+  default     = "0"
+}
+
+variable "enable_withholding_payments" {
+  description = "Enable tax withholding payments within the API system."
+  default     = "0"
+}
+
+variable "enable_pub_payments_copy_audit_report_schedule" {
+  description = "Enable scheduling for 'pub-payments-copy-audit-report' ECS task"
+  type        = bool
+  default     = false
+}
+
+variable "upload_max_files_to_fineos" {
+  description = "max number of 1099 documents to upload to Fineos API"
+  default     = "10"
+}
+
+variable "enable_1099_testfile_generation" {
+  description = "Enable IRS 1099 test file generation"
+  default     = "0"
+}
+
+variable "irs_1099_correction_ind" {
+  description = "Declares if the 1099 batch should be a correction run"
+  default     = "0"
 }
 
 ########## Variables for Step Functions ################

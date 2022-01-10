@@ -30,7 +30,7 @@ resource "aws_s3_bucket" "pfml_reports" {
   dynamic "replication_configuration" {
     for_each = var.environment_name == module.constants.bucket_replication_environment ? [1] : []
     content {
-      role = data.aws_iam_role.replication.name
+      role = data.aws_iam_role.replication.arn
       rules {
         id     = "replicateFullBucket"
         status = "Enabled"

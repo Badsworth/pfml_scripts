@@ -23,14 +23,7 @@
     "pilot4:gen": "ts-node src/cli.ts simulation generate -f ./src/simulation/scenarios/pilot4.ts -d ./data/pilot4",
     "pilot4:sim": "ts-node src/cli.ts simulation run -d ./data/pilot4",
     "generate:api": "npx @spec2ts/openapi-client ../api/openapi.yaml -o src/_api.ts",
-    "flood:all": "element run src/flood/index.perf.ts",
-    "flood:plan": "element plan src/flood/index.perf.ts",
-    "flood:compile": "element compile src/flood/index.perf.ts",
-    "flood:PortalClaimSubmit": "element run src/flood/scenarios/PortalClaimSubmit.perf.ts --no-headless",
-    "flood:FineosClaimSubmit": "element run src/flood/scenarios/FineosClaimSubmit.perf.ts --no-headless",
-    "flood:SavilinxAgent": "element run src/flood/scenarios/SavilinxAgent.perf.ts --no-headless",
-    "flood:LeaveAdminSelfReg": "element run src/flood/scenarios/LeaveAdminSelfReg.perf.ts --no-headless",
-    "artillery:dev": "npm run artillery:bundle&& artillery run -e test -q dist/development.yml",
+    "artillery:dev": "npm run artillery:bundle && artillery run -e basic dist/development.yml",
     "artillery:run": "E2E_ENVIRONMENT=performance npm run artillery:bundle && artillery run -e performance dist/development.yml",
     "artillery:bundle": "rm -rf ./dist && webpack --config=webpack.artillery.config.ts",
     "newrelic:generate-fineos-dashboards": "ts-node src/scripts/2021-07-19-generate-nr-api-dashboards.ts"
@@ -71,6 +64,7 @@
     "playwright-chromium": "^1.14.1",
     "prettier": "^2.3.2",
     "ts-node": "^8.10.2",
+    "tsconfig-paths-webpack-plugin": "^3.5.2",
     "typescript": "^4.4.4",
     "webpack": "^4.46.0",
     "webpack-cli": "^4.7.2",
@@ -86,8 +80,6 @@
     "@aws-sdk/credential-provider-sso": "^3.35.0",
     "@aws-sdk/lib-storage": "^3.31.0",
     "@aws-sdk/util-arn-parser": "^3.23.0",
-    "@flood/element": "^1.5.4",
-    "@flood/element-cli": "^1.5.4",
     "@influxdata/influxdb-client": "^1.18.0",
     "JSONStream": "^1.3.5",
     "abort-controller": "^3.0.0",
@@ -121,11 +113,6 @@
     "uuid": "^8.3.1",
     "winston": "^3.3.3",
     "yargs": "^17.0.1"
-  },
-  "element": {
-    "testMatch": [
-      "*/flood/*.[tj]s"
-    ]
   },
   "volta": {
     "node": "14.17.3",

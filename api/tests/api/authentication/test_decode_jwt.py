@@ -98,17 +98,17 @@ def test_process_azure_token_success(app, mock_azure, auth_claims_unit, test_db_
     decoded_azure_token = auth_claims_unit.copy()
     decoded_azure_token["groups"] = [
         AzureGroup.NON_PROD.azure_group_guid,
-        AzureGroup.NON_PROD_ADMIN.azure_group_guid,
+        AzureGroup.NON_PROD_DEV.azure_group_guid,
     ]
     test_db_session.add(
         AzureGroupPermission(
-            azure_group_id=AzureGroup.NON_PROD_ADMIN.azure_group_id,
+            azure_group_id=AzureGroup.NON_PROD_DEV.azure_group_id,
             azure_permission_id=AzurePermission.USER_READ.azure_permission_id,
         )
     )
     test_db_session.add(
         AzureGroupPermission(
-            azure_group_id=AzureGroup.NON_PROD_ADMIN.azure_group_id,
+            azure_group_id=AzureGroup.NON_PROD_DEV.azure_group_id,
             azure_permission_id=AzurePermission.USER_EDIT.azure_permission_id,
         )
     )
@@ -243,6 +243,44 @@ def test_endpoint_rejects_token_with_alg_none(client, app, user, auth_token_alg_
 
         assert not hasattr(g, "current_user")
         assert response.status_code == 401
+
+
+def test_endpoint_snow_user_with_no_mass_pfml_agent_id_header(
+    client, app, snow_user, snow_user_token
+):
+    with app.app.test_request_context("/v1/users/current"):
+        response = client.get(
+            "/v1/users/current", headers={"Authorization": f"Bearer {snow_user_token}"}
+        )
+        assert response.status_code == 401
+
+        error_msg = "Invalid required header: Mass-PFML-Agent-ID"
+        assert error_msg in response.get_json()["message"]
+
+
+def test_endpoint_snow_user_with_empty_mass_pfml_agent_id_header(
+    client, app, snow_user, snow_user_token
+):
+    with app.app.test_request_context("/v1/users/current"):
+        response = client.get(
+            "/v1/users/current",
+            headers={"Authorization": f"Bearer {snow_user_token}", "Mass-PFML-Agent-ID": "   "},
+        )
+        assert response.status_code == 401
+
+        error_msg = "Invalid required header: Mass-PFML-Agent-ID"
+        assert error_msg in response.get_json()["message"]
+
+
+def test_endpoint_snow_user_with_mass_pfml_agent_id_header(client, app, snow_user, snow_user_token):
+    with app.app.test_request_context("/v1/users/current"):
+        response = client.get(
+            "/v1/users/current",
+            headers={"Authorization": f"Bearer {snow_user_token}", "Mass-PFML-Agent-ID": "123"},
+        )
+
+        # Currently, snow user does not have access to any routes
+        assert response.status_code == 403
 
 
 def test_endpoint_rejects_token_with_alg_hs256(client, app, user, auth_token_alg_hs256):

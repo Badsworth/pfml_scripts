@@ -63,6 +63,34 @@ class AbsencePeriodContainer:
         self.is_id_proofed = is_id_proofed
         self.leave_request_id = int(leave_request_id) if leave_request_id else None
 
+    def _members(self):
+        return (
+            self.start_date,
+            self.end_date,
+            self.class_id,
+            self.index_id,
+            self.is_id_proofed,
+            self.leave_request_id,
+        )
+
+    def __eq__(self, other):
+        if not isinstance(other, AbsencePeriodContainer):
+            return False
+
+        return self._members() == other._members()
+
+    def __hash__(self):
+        return hash(
+            (
+                self.start_date,
+                self.end_date,
+                self.class_id,
+                self.index_id,
+                self.is_id_proofed,
+                self.leave_request_id,
+            )
+        )
+
 
 class ClaimantData:
     """
@@ -115,10 +143,32 @@ class ClaimantData:
         self._process_requested_absences(requested_absences)
         self._process_employee_feed(employee_record)
 
+    def increment(self, metric: str) -> None:
+        if self.count_incrementer:
+            self.count_incrementer(metric)
+
     def _process_requested_absences(
         self, requested_absences: List[FineosExtractVbiRequestedAbsenceSom]
     ) -> None:
+
+        start_dates: List[str] = []
+        end_dates = []
+
+        # Keep track of all the values across all absence periods
+        # Used for validation at end of function as we expect these to be the same
+        employer_customer_numbers = []
+        claimant_customer_numbers = []
+        absence_case_statuses = []
+
+        # We dedupe absence periods as sometimes the extracts
+        # exact duplicates and it causes performance issues
+        absence_period_set = set()
         for requested_absence in requested_absences:
+            # Add the raw values of a few fields to lists for later validation
+            employer_customer_numbers.append(requested_absence.employer_customerno)
+            claimant_customer_numbers.append(requested_absence.employee_customerno)
+            absence_case_statuses.append(requested_absence.absence_casestatus)
+
             # If any of the requested absence records are ID proofed, then
             # we consider the entire claim valid
             evidence_result_type = requested_absence.leaverequest_evidenceresulttype
@@ -157,13 +207,16 @@ class ClaimantData:
                     "Unable to extract class_id and/or index_id from requested_absence.",
                     extra=log_attributes,
                 )
-
-                if self.count_incrementer:
-                    self.count_incrementer(
-                        ClaimantExtractStep.Metrics.ABSENCE_PERIOD_CLASS_ID_OR_INDEX_ID_NOT_FOUND_COUNT
-                    )
+                self.increment(
+                    ClaimantExtractStep.Metrics.ABSENCE_PERIOD_CLASS_ID_OR_INDEX_ID_NOT_FOUND_COUNT
+                )
 
                 continue
+
+            if start_date:
+                start_dates.append(start_date)
+            if end_date:
+                end_dates.append(end_date)
 
             absence_period = AbsencePeriodContainer(
                 start_date=start_date,
@@ -174,7 +227,25 @@ class ClaimantData:
                 leave_request_id=fineos_leave_request_id,
             )
 
-            self.absence_period_data.append(absence_period)
+            # The absence period data has many duplicate records
+            # on values we don't need for our processing. To improve
+            # performance, we dedupe to avoid rewriting the same records
+            # to the DB hundreds of times potentially.
+            if absence_period in absence_period_set and self.count_incrementer:
+                self.count_incrementer(ClaimantExtractStep.Metrics.DUPLICATE_ABSENCE_PERIOD_COUNT)
+            absence_period_set.add(absence_period)
+
+        self.absence_period_data = list(absence_period_set)
+        all_start_end_dates_valid = len(requested_absences) == len(start_dates) == len(end_dates)
+
+        if all_start_end_dates_valid:
+            # We don't need to convert to date to do comparisons (min/max)
+            # This is because the current string format (Y-M-D...) preserves the chronological sort order
+            self.absence_start_date = min(start_dates)
+            self.absence_end_date = max(end_dates)
+
+        else:
+            self.increment(ClaimantExtractStep.Metrics.START_DATE_OR_END_DATE_NOT_FOUND_COUNT)
 
         # Ideally, we would be able to distinguish and separate out the
         # various leave requests that make up a claim, but we don't
@@ -199,14 +270,6 @@ class ClaimantData:
             custom_validator_func=payments_util.lookup_validator(AbsenceStatus),
         )
 
-        self.absence_start_date = payments_util.validate_db_input(
-            "ABSENCEPERIOD_START", requested_absence, self.validation_container, True
-        )
-
-        self.absence_end_date = payments_util.validate_db_input(
-            "ABSENCEPERIOD_END", requested_absence, self.validation_container, True
-        )
-
         # Note this should be identical regardless of absence case
         self.fineos_customer_number = payments_util.validate_db_input(
             "EMPLOYEE_CUSTOMERNO", requested_absence, self.validation_container, True
@@ -216,6 +279,36 @@ class ClaimantData:
         self.employer_customer_number = payments_util.validate_db_input(
             "EMPLOYER_CUSTOMERNO", requested_absence, self.validation_container, True
         )
+
+        # Sanity test that the fields we expect to be the exact same
+        # for every requested absence record are in fact the same.
+        # If we've encountered a strange scenario, set the value to
+        # None so it won't get attached to the claim (this likely indicates a FINEOS issue)
+        if (dupe_number := len(set(employer_customer_numbers))) > 1:
+            self.validation_container.add_validation_issue(
+                payments_util.ValidationReason.UNEXPECTED_RECORD_VARIANCE,
+                f"Expected only a single employer customer number for claim, and received {dupe_number}: {employer_customer_numbers}",
+            )
+            self.employer_customer_number = None
+            self.increment(ClaimantExtractStep.Metrics.MULTIPLE_EMPLOYER_FOR_CLAIM_ISSUE_COUNT)
+
+        if (dupe_number := len(set(claimant_customer_numbers))) > 1:
+            self.validation_container.add_validation_issue(
+                payments_util.ValidationReason.UNEXPECTED_RECORD_VARIANCE,
+                f"Expected only a single employee customer number for claim, and received {dupe_number}: {claimant_customer_numbers}",
+            )
+            self.fineos_customer_number = None
+            self.increment(ClaimantExtractStep.Metrics.MULTIPLE_CLAIMANT_FOR_CLAIM_ISSUE_COUNT)
+
+        if (dupe_number := len(set(absence_case_statuses))) > 1:
+            self.validation_container.add_validation_issue(
+                payments_util.ValidationReason.UNEXPECTED_RECORD_VARIANCE,
+                f"Expected only a single absence case status for claim, and received {dupe_number}: {absence_case_statuses}",
+            )
+            self.absence_case_status = None
+            self.increment(
+                ClaimantExtractStep.Metrics.MULTIPLE_ABSENCE_STATUSES_FOR_CLAIM_ISSUE_COUNT
+            )
 
     def _process_employee_feed(
         self, employee_feed_record: Optional[FineosExtractEmployeeFeed]
@@ -239,10 +332,7 @@ class ClaimantData:
             logger.warning(
                 "Skipping: %s", error_msg, extra=self.get_traceable_details(),
             )
-            if self.count_incrementer:
-                self.count_incrementer(
-                    ClaimantExtractStep.Metrics.NO_EMPLOYEE_FEED_RECORDS_FOUND_COUNT
-                )
+            self.increment(ClaimantExtractStep.Metrics.NO_EMPLOYEE_FEED_RECORDS_FOUND_COUNT)
 
             # Can't process subsequent records as they pull from employee_feed
             return
@@ -281,10 +371,7 @@ class ClaimantData:
             self.validation_container.add_validation_issue(
                 payments_util.ValidationReason.INVALID_VALUE, message
             )
-            if self.count_incrementer:
-                self.count_incrementer(
-                    ClaimantExtractStep.Metrics.NO_DEFAULT_PAYMENT_PREFERENCE_COUNT
-                )
+            self.increment(ClaimantExtractStep.Metrics.NO_DEFAULT_PAYMENT_PREFERENCE_COUNT)
             return
 
         self.payment_method = payments_util.validate_db_input(
@@ -362,6 +449,17 @@ class ClaimantExtractStep(Step):
         ABSENCE_PERIOD_CLASS_ID_OR_INDEX_ID_NOT_FOUND_COUNT = (
             "absence_period_class_id_or_index_id_not_found_count"
         )
+        START_DATE_OR_END_DATE_NOT_FOUND_COUNT = "start_date_or_end_date_not_found_count"
+        DUPLICATE_ABSENCE_PERIOD_COUNT = "duplicate_absence_period_count"
+
+        MULTIPLE_EMPLOYER_FOR_CLAIM_ISSUE_COUNT = "multiple_employer_for_claim_issue_count"
+        MULTIPLE_CLAIMANT_FOR_CLAIM_ISSUE_COUNT = "multiple_claimant_for_claim_issue_count"
+        MULTIPLE_ABSENCE_STATUSES_FOR_CLAIM_ISSUE_COUNT = (
+            "multiple_absence_statuses_for_claim_issue_count"
+        )
+
+        EMPLOYER_CHANGED_COUNT = "employer_changed_count"
+        EMPLOYEE_CHANGED_COUNT = "employee_changed_count"
 
     def run_step(self) -> None:
         self.process_claimant_extract_data()
@@ -369,18 +467,7 @@ class ClaimantExtractStep(Step):
     def process_claimant_extract_data(self) -> None:
 
         logger.info("Processing claimant extract data")
-
-        try:
-            self.process_records_to_db()
-            self.db_session.commit()
-        except Exception:
-            # If there was a file-level exception anywhere in the processing,
-            # we move the file from received to error
-            # Add this function:
-            self.db_session.rollback()
-            logger.exception("Error processing claimant extract data")
-            raise
-
+        self.process_records_to_db()
         logger.info("Done processing claimant extract data")
 
     def get_employee_feed_map(
@@ -778,6 +865,16 @@ class ClaimantExtractStep(Step):
 
         self.update_eft_info(claimant_data, employee_pfml_entry)
 
+        if claim.employee and claim.employee_id != employee_pfml_entry.employee_id:
+            self.increment(self.Metrics.EMPLOYEE_CHANGED_COUNT)
+            logger.warning(
+                "Employee for claim %s is changing from %s to %s",
+                claimant_data.absence_case_id,
+                claim.employee.fineos_customer_number,
+                claimant_data.fineos_customer_number,
+                extra=claimant_data.get_traceable_details(),
+            )
+
         # Associate claim with employee in case it is a new claim.
         claim.employee_id = employee_pfml_entry.employee_id
         # NOTE: fix to address test issues with query cache using a claim with the employee_id not set in other steps
@@ -833,11 +930,8 @@ class ClaimantExtractStep(Step):
                 # This EFT info is new, it needs to be linked to the employee
                 # and added to the EFT prenoting flow
                 logger.info(
-                    "Initiating DELEGATED_EFT flow for employee",
-                    extra={
-                        "end_state_id": State.DELEGATED_EFT_SEND_PRENOTE.state_id,
-                        "employee_id": employee_pfml_entry.employee_id,
-                    },
+                    "Initiating DELEGATED_EFT prenote flow for employee",
+                    extra=payments_util.get_traceable_pub_eft_details(new_eft, employee_pfml_entry),
                 )
 
                 employee_pub_eft_pair = EmployeePubEftPair(
@@ -879,6 +973,17 @@ class ClaimantExtractStep(Step):
             )
             self.increment(self.Metrics.EMPLOYER_NOT_FOUND_COUNT)
             return None
+
+        # Log a warning if the claim is changing employers
+        if claim.employer and claim.employer_id != employer_pfml_entry.employer_id:
+            self.increment(self.Metrics.EMPLOYER_CHANGED_COUNT)
+            logger.warning(
+                "Employer for claim %s is changing from %s to %s",
+                claimant_data.absence_case_id,
+                claim.employer.fineos_employer_id,
+                claimant_data.employer_customer_number,
+                extra=claimant_data.get_traceable_details(),
+            )
 
         self.increment(self.Metrics.EMPLOYER_FOUND_COUNT)
         claim.employer_id = employer_pfml_entry.employer_id

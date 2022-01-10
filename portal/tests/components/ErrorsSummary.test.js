@@ -28,6 +28,7 @@ describe("ErrorsSummary", () => {
 
       expect(container.firstChild).toMatchInlineSnapshot(`
         <div
+          aria-labelledby="alert-heading3"
           class="usa-alert usa-alert--error margin-bottom-3"
           role="alert"
           tabindex="-1"
@@ -37,6 +38,7 @@ describe("ErrorsSummary", () => {
           >
             <h2
               class="usa-alert__heading font-heading-md text-bold"
+              id="alert-heading3"
             >
               An error occurred
             </h2>
@@ -138,19 +140,7 @@ describe("ErrorsSummary", () => {
   });
 
   describe("when the component mounts", () => {
-    it("focuses the Alert", () => {
-      // Hide warning about rendering in the body, since we need to for this test
-      jest.spyOn(console, "error").mockImplementationOnce(jest.fn());
-      const errors = new AppErrorInfoCollection([
-        new AppErrorInfo({ message: "Mock error message" }),
-      ]);
-
-      renderComponent({ errors });
-      const alert = screen.getByRole("alert");
-      expect(alert).toHaveFocus();
-    });
-
-    it("scrolls to the top of the window", () => {
+    it("scrolls to the top of the window when there are errors", () => {
       renderComponent({
         errors: new AppErrorInfoCollection([
           new AppErrorInfo({ message: "Mock error message #1" }),

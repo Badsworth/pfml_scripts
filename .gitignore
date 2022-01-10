@@ -7,6 +7,9 @@ node_modules/
 # Next.js build output
 .next/
 
+# TypeScript
+tsconfig.tsbuildinfo
+
 # Portal static exports
 portal/out/
 portal/out-storybook/
@@ -28,6 +31,7 @@ site/
 infra/portal/template/.zip
 infra/env-shared/template/.zip
 infra/monitoring/.zip/
+infra/bi/template/.zip/
 
 # Generated code coverage reports
 portal/coverage/

@@ -118,6 +118,7 @@ export interface BaseClaimSpecification {
   metadata?: GeneratedClaimMetadata;
   /** Makes a claim for an extremely short time period (1 day). */
   shortClaim?: boolean;
+  is_withholding_tax?: boolean | null;
 }
 
 type IntermittentLeaveSpec =
@@ -144,6 +145,7 @@ export type GeneratedClaim = {
   documents: DocumentWithPromisedFile[];
   employerResponse?: EmployerClaimRequestBody | null;
   paymentPreference: PaymentPreferenceRequestBody;
+  is_withholding_tax: boolean;
   metadata?: GeneratedClaimMetadata;
 };
 
@@ -241,6 +243,14 @@ export class ClaimGenerator {
       has_previous_leaves_other_reason: !!previous_leaves_other_reason,
       has_previous_leaves_same_reason: !!previous_leaves_same_reason,
     };
+    if (
+      spec.metadata?.doc_filename &&
+      typeof spec.metadata?.doc_filename !== "string"
+    ) {
+      throw Error(
+        "Invalid value for property doc_filename - type must be 'string'"
+      );
+    }
     return {
       id: uuid(),
       // @todo: Rename to label?
@@ -251,6 +261,7 @@ export class ClaimGenerator {
       paymentPreference: {
         payment_preference: spec.payment ?? this.generatePaymentPreference(),
       },
+      is_withholding_tax: spec.is_withholding_tax || false,
       employerResponse: spec.employerResponse
         ? this.generateEmployerResponse(spec.employerResponse, leaveDetails)
         : null,

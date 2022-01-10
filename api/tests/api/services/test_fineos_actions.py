@@ -8,7 +8,7 @@ import pytest
 
 import massgov.pfml.fineos
 import massgov.pfml.fineos.mock_client as fineos_mock
-from massgov.pfml.api.models.claims.responses import AbsencePeriodStatusResponse
+from massgov.pfml.api.models.claims.responses import AbsencePeriodResponse
 from massgov.pfml.api.services import fineos_actions
 from massgov.pfml.db.models.applications import (
     Application,
@@ -19,6 +19,7 @@ from massgov.pfml.db.models.applications import (
     RelationshipToCaregiver,
 )
 from massgov.pfml.db.models.employees import (
+    AbsencePeriodType,
     AddressType,
     BankAccountType,
     Country,
@@ -29,6 +30,7 @@ from massgov.pfml.db.models.factories import (
     AddressFactory,
     ApplicationFactory,
     CaringLeaveMetadataFactory,
+    ClaimFactory,
     ConcurrentLeaveFactory,
     ContinuousLeavePeriodFactory,
     EmployeeFactory,
@@ -39,11 +41,35 @@ from massgov.pfml.db.models.factories import (
     ReducedScheduleLeavePeriodFactory,
     WorkPatternFixedFactory,
 )
+from massgov.pfml.db.queries.absence_periods import (
+    convert_fineos_absence_period_to_claim_response_absence_period,
+)
 from massgov.pfml.fineos import FINEOSClient, exception
-from massgov.pfml.fineos.exception import FINEOSClientBadResponse, FINEOSClientError, FINEOSNotFound
+from massgov.pfml.fineos.exception import (
+    FINEOSClientBadResponse,
+    FINEOSClientError,
+    FINEOSEntityNotFound,
+    FINEOSForbidden,
+)
 from massgov.pfml.fineos.models import CreateOrUpdateEmployer, CreateOrUpdateServiceAgreement
 from massgov.pfml.fineos.models.customer_api import Address as FineosAddress
 from massgov.pfml.fineos.models.customer_api import CustomerAddress
+from massgov.pfml.fineos.models.customer_api.spec import AbsencePeriod as FineosAbsencePeriod
+
+
+@pytest.fixture
+def employer():
+    return EmployerFactory.create()
+
+
+@pytest.fixture
+def claim(employer):
+    return ClaimFactory.create(employer_id=employer.employer_id, fineos_absence_id="NTN-111-111")
+
+
+@pytest.fixture
+def application(user, claim):
+    return ApplicationFactory.create(user=user, claim_id=claim.claim_id)
 
 
 def test_register_employee_pass(test_db_session):
@@ -101,7 +127,7 @@ def test_register_employee_bad_fein(test_db_session):
         fineos_actions.register_employee(
             fineos_client, employee_ssn, employer_fein, test_db_session
         )
-    except FINEOSNotFound:
+    except FINEOSEntityNotFound:
         assert True
 
 
@@ -1359,14 +1385,18 @@ class TestGetAbsencePeriods:
         employer_fein = "12-3456789"
         # TODO (PORTAL-752): don't use magic string here
         absence_case_id = "NTN-304363-ABS-01"
-        absence_periods = fineos_actions.get_absence_periods(
+        fineos_absence_periods = fineos_actions.get_absence_periods(
             employee_tax_id, employer_fein, absence_case_id, test_db_session
         )
-
-        assert type(absence_periods[0]) == AbsencePeriodStatusResponse
+        absence_periods = [
+            convert_fineos_absence_period_to_claim_response_absence_period(
+                fineos_absence_period, {}
+            )
+            for fineos_absence_period in fineos_absence_periods
+        ]
+        assert type(absence_periods[0]) == AbsencePeriodResponse
         assert absence_periods == [
-            AbsencePeriodStatusResponse(
-                fineos_leave_period_id="PL-14449-0000002237",
+            AbsencePeriodResponse(
                 absence_period_start_date=datetime.date(2021, 1, 29),
                 absence_period_end_date=datetime.date(2021, 1, 30),
                 reason="Child Bonding",
@@ -1378,11 +1408,35 @@ class TestGetAbsencePeriods:
             )
         ]
 
+    def test_period_type_mapping(self):
+        fineos_absence_periods = [
+            FineosAbsencePeriod(
+                absenceType=AbsencePeriodType.TIME_OFF_PERIOD.absence_period_type_description
+            ),
+            FineosAbsencePeriod(
+                absenceType=AbsencePeriodType.EPISODIC.absence_period_type_description
+            ),
+        ]
+
+        absence_periods = [
+            convert_fineos_absence_period_to_claim_response_absence_period(
+                fineos_absence_period, {}
+            )
+            for fineos_absence_period in fineos_absence_periods
+        ]
+
+        assert (
+            absence_periods[0].period_type
+            == AbsencePeriodType.CONTINUOUS.absence_period_type_description
+        )
+        assert (
+            absence_periods[1].period_type
+            == AbsencePeriodType.INTERMITTENT.absence_period_type_description
+        )
+
     @mock.patch("massgov.pfml.api.services.fineos_actions.register_employee")
     def test_with_fineos_error(self, mock_register, test_db_session, user, caplog):
-        error = exception.FINEOSClientBadResponse(
-            "get_absence", 200, 403, "Unable to get absence periods"
-        )
+        error = exception.FINEOSForbidden("get_absence", 200, 403, "Unable to get absence periods")
         mock_register.side_effect = error
 
         employee_tax_id = "123-45-6789"
@@ -1392,7 +1446,41 @@ class TestGetAbsencePeriods:
             fineos_actions.get_absence_periods(
                 employee_tax_id, employer_fein, absence_case_id, test_db_session
             )
-        except FINEOSClientBadResponse:
+        except FINEOSForbidden:
             pass
 
         assert "Unable to get absence periods" in caplog.text
+
+
+def test_send_tax_withholding_preference(application, claim):
+    fineos_mock_client = massgov.pfml.fineos.MockFINEOSClient()
+    fineos_mock.start_capture()
+    fineos_actions.send_tax_withholding_preference(application, True, fineos_mock_client)
+    capture = fineos_mock.get_capture()
+    assert capture[0][2] == {"absence_id": claim.fineos_absence_id, "is_withholding_tax": True}
+
+
+def test_tax_preference_payload():
+    payload = FINEOSClient._create_tax_preference_payload("NTN-111-111", True)
+
+    assert payload is not None
+    assert payload.__contains__("<config-name>OptInSITFITService</config-name>")
+    assert payload.__contains__("<name>AbsenceCaseNumber</name>")
+    assert payload.__contains__("<value>NTN-111-111</value>")
+    assert payload.__contains__("<name>FlagValue</name>")
+    assert payload.__contains__("<value>True</value>")
+
+
+@pytest.mark.parametrize(
+    "existing_work_pattern, expected_fn_call",
+    [("Unknown", "add_week_based_work_pattern"), ("Week Based", "update_week_based_work_pattern")],
+)
+def test_upsert_week_based_work_pattern(existing_work_pattern, expected_fn_call, application, user):
+    application.work_pattern = WorkPatternFixedFactory.create()
+    fineos_mock_client = massgov.pfml.fineos.MockFINEOSClient()
+    fineos_mock.start_capture()
+    fineos_actions.upsert_week_based_work_pattern(
+        fineos_mock_client, user.user_id, application, 12345, existing_work_pattern
+    )
+    capture = fineos_mock.get_capture()
+    assert capture[0][0] == expected_fn_call

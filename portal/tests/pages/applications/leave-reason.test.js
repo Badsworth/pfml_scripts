@@ -38,9 +38,9 @@ describe("LeaveReason", () => {
   });
 
   it("renders military leave options when feature flag is enabled", () => {
-    process.env.featureFlags = {
+    process.env.featureFlags = JSON.stringify({
       claimantShowMilitaryLeaveTypes: true,
-    };
+    });
 
     setup();
 
@@ -79,9 +79,9 @@ describe("LeaveReason", () => {
   ])(
     "clears bonding leave fields and submits leave reason when user selects %s leave option",
     async (_testLabel, reason, radioName) => {
-      process.env.featureFlags = {
+      process.env.featureFlags = JSON.stringify({
         claimantShowMilitaryLeaveTypes: true,
-      };
+      });
       const { updateSpy } = setup({
         claim: new MockBenefitsApplicationBuilder()
           .bondingBirthLeaveReason()

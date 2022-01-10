@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import AccordionItem from "../../src/components/AccordionItem";
+import AccordionItem from "../../src/components/core/AccordionItem";
 import React from "react";
 import userEvent from "@testing-library/user-event";
 
@@ -41,5 +41,13 @@ describe("AccordionItem", () => {
     );
     expect(screen.getByText(/Hello world/)).toBeInTheDocument();
     expect(screen.getByTestId("mock-unique-id")).not.toHaveAttribute("hidden");
+  });
+
+  it("supports className prop", () => {
+    const { container } = render(
+      <AccordionItem label="accordion" className="margin-left-1" />
+    );
+
+    expect(container.firstChild).toHaveClass("margin-left-1");
   });
 });

@@ -63,7 +63,7 @@ describe("createRouteWithQuery", () => {
     );
 
     expect(createRouteWithQuery(route, undefined, "hash")).toEqual(
-      route + "#hash"
+      route + "/#hash"
     );
   });
 });

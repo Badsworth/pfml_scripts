@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import Heading from "../../src/components/Heading";
+import Heading from "../../src/components/core/Heading";
 import React from "react";
 
 describe("Heading", () => {

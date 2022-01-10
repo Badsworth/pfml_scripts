@@ -2,8 +2,7 @@ import {
   NullableQueryParams,
   createRouteWithQuery,
 } from "../utils/routeWithParams";
-import machineConfigs, { guards } from "../flows";
-import { RouteTransitionError } from "../errors";
+import machineConfigs, { FlowContext, guards } from "../flows";
 import { createMachine } from "xstate";
 import { useMemo } from "react";
 import { useRouter } from "next/router";
@@ -54,7 +53,7 @@ const usePortalFlow = () => {
     const url = createRouteWithQuery(route, params);
 
     if (options.redirect) {
-      router.replace(route);
+      router.replace(url);
       return;
     }
 
@@ -69,7 +68,7 @@ const usePortalFlow = () => {
    */
   const getNextPageRoute = (
     event: string,
-    context: Record<string, unknown> = {},
+    context: FlowContext = {},
     params?: NullableQueryParams
   ) => {
     const nextRoutingMachine = routingMachine.withContext(context);
@@ -77,9 +76,6 @@ const usePortalFlow = () => {
       pageRoute || pathname,
       event
     );
-    if (!nextPageRoute) {
-      throw new RouteTransitionError(`Next page not found for: ${event}`);
-    }
     return createRouteWithQuery(nextPageRoute.value.toString(), params);
   };
 
@@ -93,7 +89,7 @@ const usePortalFlow = () => {
    */
   const goToPageFor = (
     event: string,
-    context?: Record<string, unknown>,
+    context?: FlowContext,
     params?: NullableQueryParams,
     options: {
       redirect?: boolean;
@@ -109,7 +105,7 @@ const usePortalFlow = () => {
    * @param params - query parameters to append to page route
    */
   const goToNextPage = (
-    context: Record<string, unknown>,
+    context: FlowContext,
     params: NullableQueryParams = {},
     event = "CONTINUE"
   ) => {

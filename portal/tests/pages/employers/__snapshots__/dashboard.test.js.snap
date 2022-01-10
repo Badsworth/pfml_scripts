@@ -2,7 +2,7 @@
 
 exports[`Employer dashboard renders a table of claims with links if employer is registered in FINEOS 1`] = `
 <table
-  class="usa-table usa-table--borderless c-table width-full usa-table--stacked-header"
+  class="usa-table usa-table--borderless width-full usa-table--stacked"
 >
   <thead>
     <tr>
@@ -79,7 +79,7 @@ exports[`Employer dashboard renders a table of claims with links if employer is 
         data-label="Status"
       >
         <span
-          class="usa-tag display-inline-block text-bold padding-y-05 radius-lg text-no-wrap text-success-dark bg-success-lighter padding-x-205"
+          class="usa-tag display-inline-block text-bold text-middle text-no-wrap text-success-dark bg-success-lighter"
         >
           Approved
         </span>
@@ -91,6 +91,7 @@ exports[`Employer dashboard renders a table of claims with links if employer is 
 
 exports[`Employer dashboard renders the banner if there are any unverified employers 1`] = `
 <div
+  aria-labelledby="alert-heading176"
   class="usa-alert usa-alert--warning"
   role="region"
   tabindex="-1"
@@ -100,6 +101,7 @@ exports[`Employer dashboard renders the banner if there are any unverified emplo
   >
     <h2
       class="usa-alert__heading font-heading-md text-bold"
+      id="alert-heading176"
     >
       Verify your account
     </h2>
@@ -123,6 +125,7 @@ exports[`Employer dashboard renders the banner if there are any unverified emplo
 exports[`Employer dashboard renders the page with expected content and pagination components 1`] = `
 <div>
   <nav
+    aria-label="Employer menu"
     class="border-bottom border-base-lighter margin-bottom-5 display-flex width-full"
   >
     <a
@@ -147,46 +150,10 @@ exports[`Employer dashboard renders the page with expected content and paginatio
   </h1>
   <div
     class="measure-6"
-  >
-    <div
-      class="usa-alert usa-alert--info"
-      role="region"
-      tabindex="-1"
-    >
-      <div
-        class="usa-alert__body"
-      >
-        <h2
-          class="usa-alert__heading font-heading-md text-bold"
-        >
-          We're making it easier to manage paid leave applications
-        </h2>
-        <div
-          class="usa-alert__text"
-        >
-          <p>
-            You can now see all the applications you need to review using our new dashboard. Over the next few months, we'll be adding more features to the dashboard so you can easily find and manage paid leave applications. You can 
-            <a
-              href="https://www.mass.gov/paidleave-employer-feedback"
-              rel="noopener"
-              target="_blank"
-            >
-              use our feedback form
-            </a>
-             to tell us what you think of our new features.
-          </p>
-        </div>
-      </div>
-    </div>
-  </div>
+  />
   <section
-    class="margin-bottom-4"
+    class="margin-bottom-4 margin-top-2"
   >
-    <p
-      class="margin-y-2"
-    >
-      Applications will not have a status until the Department has made a decision. Applications that don't have a status may require action from you.
-    </p>
     <details
       class="c-details"
     >
@@ -203,9 +170,21 @@ exports[`Employer dashboard renders the page with expected content and paginatio
         >
           <li>
             <strong>
-              “--” or no status:
+              Review by:
             </strong>
-             This leave request may require action from you; otherwise, it is awaiting a decision from DFML.
+             Review this application by this date to provide DFML with your input.
+          </li>
+          <li>
+            <strong>
+              No action required:
+            </strong>
+             This leave request is awaiting a decision from DFML.
+          </li>
+          <li>
+            <strong>
+              Denied:
+            </strong>
+             DFML has denied this leave request.
           </li>
           <li>
             <strong>
@@ -218,12 +197,6 @@ exports[`Employer dashboard renders the page with expected content and paginatio
               Closed:
             </strong>
              The leave has passed or no action can be taken.
-          </li>
-          <li>
-            <strong>
-              Denied:
-            </strong>
-             DFML has denied this leave request.
           </li>
         </ul>
       </div>
@@ -357,13 +330,30 @@ exports[`Employer dashboard renders the page with expected content and paginatio
             id="InputChoice5"
             name="claim_status"
             type="checkbox"
-            value="Pending"
+            value="Pending - no action"
           />
           <label
             class="usa-checkbox__label"
             for="InputChoice5"
           >
-            --
+            No action required
+          </label>
+        </div>
+        <div
+          class="usa-checkbox measure-5 bg-transparent"
+        >
+          <input
+            class="usa-checkbox__input"
+            id="InputChoice6"
+            name="claim_status"
+            type="checkbox"
+            value="Open requirement"
+          />
+          <label
+            class="usa-checkbox__label"
+            for="InputChoice6"
+          >
+            Review by
           </label>
         </div>
       </div>
@@ -383,6 +373,7 @@ exports[`Employer dashboard renders the page with expected content and paginatio
       class="grid-col grid-col-12 margin-bottom-2 mobile-lg:grid-col-fill mobile-lg:margin-bottom-0"
     >
       <p
+        aria-live="polite"
         class="line-height-sans-2"
       >
         Viewing 1 to 25 of 75 results
@@ -396,21 +387,26 @@ exports[`Employer dashboard renders the page with expected content and paginatio
       >
         <label
           class="usa-label text-bold margin-right-1 font-heading-xs measure-5"
-          for="Dropdown12"
-          id="Dropdown12_label"
+          for="Dropdown14"
+          id="Dropdown14_label"
         >
           Sort
         </label>
         <div
           class=""
-          data-default-value="created_at,descending"
+          data-default-value="absence_status,ascending"
         >
           <select
-            aria-labelledby="Dropdown12_label Dropdown12_hint Dropdown12_error"
+            aria-labelledby="Dropdown14_label Dropdown14_hint Dropdown14_error"
             class="usa-select maxw-mobile-lg margin-0"
-            id="Dropdown12"
+            id="Dropdown14"
             name="orderAndDirection"
           >
+            <option
+              value="absence_status,ascending"
+            >
+              Status
+            </option>
             <option
               value="created_at,descending"
             >
@@ -440,7 +436,7 @@ exports[`Employer dashboard renders the page with expected content and paginatio
     class="usa-table-container--scrollable"
   >
     <table
-      class="usa-table usa-table--borderless c-table width-full usa-table--stacked-header"
+      class="usa-table usa-table--borderless width-full usa-table--stacked"
     >
       <thead>
         <tr>

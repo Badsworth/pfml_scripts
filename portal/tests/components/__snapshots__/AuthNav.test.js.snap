@@ -2,7 +2,7 @@
 
 exports[`AuthNav renders the logged-in state 1`] = `
 <div
-  class="flex-fill margin-y-1"
+  class="flex-fill margin-y-1 margin-left-2"
 >
   <div
     class="grid-row grid-gap"
@@ -11,13 +11,13 @@ exports[`AuthNav renders the logged-in state 1`] = `
       class="grid-col text-right"
     >
       <span
-        class="display-inline-block margin-right-1"
+        class="display-inline-block"
         data-testid="email_address"
       >
         email@address.com
       </span>
       <button
-        class="usa-button position-relative width-auto usa-button--unstyled usa-button--inverse usa-button--outline"
+        class="usa-button position-relative width-auto margin-left-2 usa-button--unstyled usa-button--inverse usa-button--outline"
         type="button"
       >
         Log out
@@ -29,7 +29,7 @@ exports[`AuthNav renders the logged-in state 1`] = `
 
 exports[`AuthNav renders the logged-out state 1`] = `
 <div
-  class="flex-fill margin-y-1"
+  class="flex-fill margin-y-1 margin-left-2"
 >
   <div
     class="grid-row grid-gap"

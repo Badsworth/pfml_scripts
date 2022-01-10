@@ -19,3 +19,23 @@ All data generation scripts use APIs which are defined in `src/generation` and `
 
 * [E2E test Employer and Employee generation](../src/scripts/2021-04-08-e2e-employees.ts): This script generates 5 employers and 10,000 employees. All employees are assigned to 2 of the employers (the other 3 are just used for LA registration/verification testing). This script generates the JSON files, as well as DOR files, which we then loaded into every environment.
 * [PUB payment testing generation & submission](../src/scripts/2021-04-02-payments.ts): This script generates claim data using complex scenarios that were defined for this task (employees/employers are generated externally).  It also defines a claim submission routine, including post-submission adjudication action.
+
+
+### Common commands
+
+#### Leave Admin Registration
+
+```bash
+E2E_ENVIRONMENT=${env} npm run cli -- simulation registerAllLeaveAdmins -f data/${folder}/employers.csv
+```
+
+#### Claim Submission
+Needs a folder with a `claims.ndjson` file
+```bash
+E2E_ENVIRONMENT=${env} npm run cli -- simulation submit data/${folder} --cc 3 --verbose=true
+```
+
+#### Running Generation Scripts
+```bash
+npx ts-node src/scripts/2021-04-08-e2e-employees.ts
+```

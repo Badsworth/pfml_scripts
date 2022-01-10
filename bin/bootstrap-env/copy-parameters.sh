@@ -1,5 +1,8 @@
 # Utility script for setting up parameter store values for new environments.
+# You should be a prod admin to run the script in production environment
 #
+
+set -euo pipefail
 
 USAGE=$(cat <<-EOF
 Utility script for setting up parameter store values for new environments.
@@ -43,31 +46,30 @@ if [[ ! $REPLY =~ ^[Yy]$ ]]; then
 fi
 
 # Copy parameters wholesale from stage to connect to various staging services.
-parameters=$(aws ssm get-parameters \
-    --names \
+parameters=$(aws ssm get-parameters --with-decryption --names \
     "/service/pfml-api-comptroller/$COPY_FROM_ENV/eolwd-moveit-ssh-key" \
     "/service/pfml-api-comptroller/$COPY_FROM_ENV/eolwd-moveit-ssh-key-password" \
     "/service/pfml-api-dor-import/$COPY_FROM_ENV/gpg_decryption_key_passphrase" \
     "/service/pfml-api/$COPY_FROM_ENV/ctr-data-mart-password" \
     "/service/pfml-api/$COPY_FROM_ENV/rmv_client_certificate_password" \
     "/service/pfml-api/$COPY_FROM_ENV/service_now_username" \
-    "/service/pfml-api/$COPY_FROM_ENV/service_now_password")
+    "/service/pfml-api/$COPY_FROM_ENV/service_now_password" | jq '.Parameters' | jq -c '.[]')
 
-for row in $(echo $parameters | jq ".Parameters" | jq -c ".[]"); do
-    name=$(echo $row | jq -r '.Name')
-    value=$(echo $row | jq -r '.Value')
-    type=$(echo $row | jq -r '.Type')
-    description=$(echo $row | jq -r '.Description | values' | sed s/$COPY_FROM_ENV/$NEW_ENV/g)
+while IFS= read -r row; do
+    name=$(printf "%s" "$row" | jq -r '.Name')
+    value=$(printf "%s" "$row" | jq -r '.Value')
+    type=$(printf "%s" "$row" | jq -r '.Type')
+
     new_name=$(echo $name | sed "s/$COPY_FROM_ENV/$NEW_ENV/g")
 
     echo "Creating $new_name from $name ($type)"
     aws ssm put-parameter \
         --name $new_name \
-        --value $value \
+        --value "$value" \
         --type $type \
-        --description "$description" \
         --tags Key=environment,Value=$NEW_ENV
-done
+ 
+done <<< "$parameters"
 
 # Generate random values for these parameters and insert them into parameter store.
 #
@@ -100,6 +102,9 @@ placeholders=(
     "/service/pfml-api/$NEW_ENV/fineos_oauth2_client_secret"
     "/service/pfml-api/$NEW_ENV/cognito_fineos_app_client_id"
     "/service/pfml-api/$NEW_ENV/cognito_internal_fineos_role_app_client_id"
+    "/service/pfml-api/$NEW_ENV/servicenow_oauth2_client_secret"
+    "/service/pfml-api/$NEW_ENV/cognito_servicenow_app_client_id"
+    "/service/pfml-api/$NEW_ENV/cognito_internal_servicenow_role_app_client_id"
 )
 
 

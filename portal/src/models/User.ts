@@ -1,4 +1,13 @@
 /* eslint sort-keys: ["error", "asc"] */
+export const PhoneType = {
+  cell: "Cell",
+  phone: "Phone",
+} as const;
+
+export const MFAPreference = {
+  optOut: "Opt Out",
+  sms: "SMS",
+} as const;
 
 class User {
   auth_id: string;
@@ -6,6 +15,16 @@ class User {
   email_address: string;
   roles: UserRole[] = [];
   user_id: string;
+  mfa_phone_number: {
+    int_code: string | null;
+    phone_number: string | null;
+    phone_type: typeof PhoneType[keyof typeof PhoneType] | null;
+  } | null = null;
+
+  mfa_delivery_preference:
+    | typeof MFAPreference[keyof typeof MFAPreference]
+    | null = null;
+
   user_leave_administrators: UserLeaveAdministrator[] = [];
 
   constructor(attrs: Partial<User>) {
@@ -29,33 +48,9 @@ class User {
    * Determines whether user_leave_administrators has a verifiable employer
    */
   get hasVerifiableEmployer(): boolean {
-    return this.user_leave_administrators.some(
-      (employer) => employer && this.isVerifiableEmployer(employer)
+    return this.user_leave_administrators.some((employer) =>
+      this.isVerifiableEmployer(employer)
     );
-  }
-
-  /**
-   * Returns an unverifiable employer by employer id
-   */
-  getUnverifiableEmployerById(employerId: string): UserLeaveAdministrator {
-    return this.user_leave_administrators.find((employer) => {
-      return (
-        employerId === employer.employer_id &&
-        this.isUnverifiableEmployer(employer)
-      );
-    });
-  }
-
-  /**
-   * Returns a verifiable employer by employer id
-   */
-  getVerifiableEmployerById(employerId: string): UserLeaveAdministrator {
-    return this.user_leave_administrators.find((employer) => {
-      return (
-        employerId === employer.employer_id &&
-        this.isVerifiableEmployer(employer)
-      );
-    });
   }
 
   /**
@@ -65,13 +60,6 @@ class User {
     return this.user_leave_administrators.filter(
       (employer) => employer.verified === true
     );
-  }
-
-  /**
-   * Determines whether an employer is NOT verifiable (unverified and lacks verification data)
-   */
-  isUnverifiableEmployer(employer: UserLeaveAdministrator): boolean {
-    return !employer.verified && !employer.has_verification_data;
   }
 
   /**
@@ -93,11 +81,8 @@ class User {
 }
 
 export class UserRole {
-  role_description:
-    | typeof RoleDescription[keyof typeof RoleDescription]
-    | null = null;
-
-  role_id: string | null = null;
+  role_description: typeof RoleDescription[keyof typeof RoleDescription];
+  role_id: number;
 
   constructor(attrs: Partial<UserRole>) {
     Object.assign(this, attrs);
@@ -114,12 +99,12 @@ export const RoleDescription = {
 } as const;
 
 export class UserLeaveAdministrator {
-  employer_dba: string | null = null;
-  employer_fein: string | null = null;
-  employer_id: string | null = null;
-  has_fineos_registration: boolean | null = null;
-  has_verification_data: boolean | null = null;
-  verified: boolean | null = null;
+  employer_dba: string | null;
+  employer_fein: string;
+  employer_id: string;
+  has_fineos_registration: boolean;
+  has_verification_data: boolean;
+  verified: boolean;
 
   constructor(attrs: Partial<UserLeaveAdministrator>) {
     Object.assign(this, attrs);

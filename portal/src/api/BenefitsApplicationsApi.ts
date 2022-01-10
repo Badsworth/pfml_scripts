@@ -2,6 +2,7 @@ import BaseApi, { ApiMethod, ApiRequestBody } from "./BaseApi";
 import BenefitsApplication from "../models/BenefitsApplication";
 import BenefitsApplicationCollection from "../models/BenefitsApplicationCollection";
 import PaymentPreference from "../models/PaymentPreference";
+import TaxWithholdingPreference from "../models/TaxWithholdingPreference";
 import routes from "../routes";
 
 export default class BenefitsApplicationsApi extends BaseApi {
@@ -18,12 +19,15 @@ export default class BenefitsApplicationsApi extends BaseApi {
    * API functionality that can be toggled on/off.
    */
   private get featureFlagHeaders() {
-    const headers = {};
+    const headers: { [key: string]: unknown } = {};
 
     // Add any feature flag headers here. eg:
     // if (isFeatureEnabled("claimantShowOtherLeaveStep")) {
     //   headers["X-FF-Require-Other-Leaves"] = true;
     // }
+
+    // TODO (PORTAL-1473): Remove once BE changes are merged
+    headers["X-FF-Tax-Withholding-Enabled"] = true;
 
     return headers;
   }
@@ -59,13 +63,18 @@ export default class BenefitsApplicationsApi extends BaseApi {
   /**
    * Fetches the list of claims for a user
    */
-  getClaims = async () => {
-    const { data } = await this.request<BenefitsApplication[]>("GET");
+  getClaims = async (pageOffset: string | number = 1) => {
+    const { data, meta } = await this.request<BenefitsApplication[]>(
+      "GET",
+      "",
+      { page_offset: pageOffset }
+    );
 
     const claims = data.map((claimData) => new BenefitsApplication(claimData));
 
     return {
       claims: new BenefitsApplicationCollection(claims),
+      paginationMeta: meta?.paging ?? {},
     };
   };
 
@@ -131,6 +140,22 @@ export default class BenefitsApplicationsApi extends BaseApi {
       "POST",
       `${application_id}/submit_payment_preference`,
       paymentPreferenceData
+    );
+
+    return {
+      claim: new BenefitsApplication(data),
+      warnings,
+    };
+  };
+
+  submitTaxWithholdingPreference = async (
+    application_id: string,
+    preferenceData: Partial<TaxWithholdingPreference>
+  ) => {
+    const { data, warnings } = await this.request<BenefitsApplication>(
+      "POST",
+      `${application_id}/submit_tax_withholding_preference`,
+      preferenceData
     );
 
     return {

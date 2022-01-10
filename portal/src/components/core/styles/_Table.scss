@@ -1,0 +1,37 @@
+// Further theme the USWDS table component to match Mass.gov's Mayflower design system.
+// These properties don't have themeable Sass variables, so we use CSS for these.
+.usa-table {
+  thead tr :is(th, td) {
+    // USWDS removes the background for borderless tables, but we
+    // always want the table headers to have a background
+    background-color: color($theme-table-header-background-color);
+  }
+
+  tr {
+    // Increase size of the border
+    border-bottom: 2px solid color($theme-table-border-color);
+  }
+
+  th:first-child {
+    padding-left: units(2);
+  }
+}
+
+@include at-media-max("mobile-lg") {
+  .usa-table--stacked {
+    tr :is(td:first-child, th:first-child) {
+      margin-top: units(1);
+      background-color: color($theme-table-header-background-color);
+    }
+  }
+
+  .usa-table--borderless {
+    td,
+    th,
+    tr,
+    // We need this more specific selector to override the USWDS's styling:
+    tr:first-child :is(td:first-child, th:first-child) {
+      border: none;
+    }
+  }
+}

@@ -1,16 +1,17 @@
 import React, { useEffect } from "react";
-import InputChoiceGroup from "../InputChoiceGroup";
+import InputChoiceGroup from "../core/InputChoiceGroup";
 import ReviewHeading from "../ReviewHeading";
 import { Trans } from "react-i18next";
 import routes from "../../routes";
+import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import usePreviousValue from "../../hooks/usePreviousValue";
 import { useTranslation } from "../../locales/i18n";
 
 interface EmployerDecisionProps {
   employerDecisionInput?: "Approve" | "Deny";
   fraud?: string;
-  getFunctionalInputProps: (...args: any[]) => any;
-  updateFields: (...args: any[]) => any;
+  getFunctionalInputProps: ReturnType<typeof useFunctionalInputProps>;
+  updateFields: (fields: { [fieldName: string]: unknown }) => void;
 }
 
 const EmployerDecision = (props: EmployerDecisionProps) => {

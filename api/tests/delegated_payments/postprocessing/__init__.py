@@ -1,8 +1,7 @@
 import random
 from datetime import date, timedelta
 
-import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
-from massgov.pfml.db.models.employees import PaymentTransactionType, State
+from massgov.pfml.db.models.employees import PaymentTransactionType, SharedPaymentConstants, State
 from massgov.pfml.db.models.factories import PaymentDetailsFactory
 from massgov.pfml.delegated_payments.mock.delegated_payments_factory import DelegatedPaymentFactory
 from massgov.pfml.delegated_payments.postprocessing.payment_post_processing_util import (
@@ -10,7 +9,7 @@ from massgov.pfml.delegated_payments.postprocessing.payment_post_processing_util
 )
 
 
-def _create_payment_periods(total_amount, start_date, periods, length_of_period):
+def _create_payment_periods(payment, total_amount, start_date, periods, length_of_period):
     amount_per_period = total_amount / periods
 
     payment_periods = []
@@ -18,7 +17,11 @@ def _create_payment_periods(total_amount, start_date, periods, length_of_period)
         end_date = start_date + timedelta(length_of_period - 1)
 
         payment_period = PaymentDetailsFactory.create(
-            amount=amount_per_period, period_start_date=start_date, period_end_date=end_date,
+            payment=payment,
+            business_net_amount=amount_per_period,
+            period_start_date=start_date,
+            period_end_date=end_date,
+            amount=100000,
         )
         payment_periods.append(payment_period)
 
@@ -40,6 +43,7 @@ def _create_payment_container(
     has_errored_state=False,
     is_adhoc_payment=False,
     is_overpayment=False,
+    is_ready_for_max_weekly_benefit_validation=False,
     later_failed=False,
     payment_transaction_type=PaymentTransactionType.STANDARD,
     claim=None,
@@ -49,11 +53,7 @@ def _create_payment_container(
         # We use this day because it's a Sunday that starts on the 1st so easier to conceptualize
         start_date = date(2021, 8, 1)
 
-    if not skip_pay_periods:
-        payment_periods = _create_payment_periods(amount, start_date, periods, length_of_period)
-        end_date = payment_periods[-1].period_end_date
-    else:
-        end_date = start_date + timedelta(length_of_period - 1)
+    end_date = start_date + timedelta((periods * length_of_period) - 1)
 
     factory = DelegatedPaymentFactory(
         db_session,
@@ -71,15 +71,16 @@ def _create_payment_container(
     payment = factory.get_or_create_payment()
 
     if not skip_pay_periods:
-        for payment_period in payment_periods:
-            payment_period.payment_id = payment.payment_id
+        _create_payment_periods(payment, amount, start_date, periods, length_of_period)
 
     if has_processed_state:
-        state = random.choice(list(payments_util.Constants.PAID_STATES))
+        state = random.choice(list(SharedPaymentConstants.PAID_STATES))
     elif has_errored_state:
         state = State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT
     elif is_overpayment:
         state = State.DELEGATED_PAYMENT_PROCESSED_OVERPAYMENT
+    elif is_ready_for_max_weekly_benefit_validation:
+        state = State.PAYMENT_READY_FOR_MAX_WEEKLY_BENEFIT_AMOUNT_VALIDATION
     else:
         state = State.DELEGATED_PAYMENT_POST_PROCESSING_CHECK
 

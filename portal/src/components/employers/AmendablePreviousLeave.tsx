@@ -7,9 +7,9 @@ import AmendButton from "./AmendButton";
 import AmendmentForm from "./AmendmentForm";
 import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
 import ConditionalContent from "../ConditionalContent";
-import Heading from "../Heading";
-import InputChoiceGroup from "../InputChoiceGroup";
-import InputDate from "../InputDate";
+import Heading from "../core/Heading";
+import InputChoiceGroup from "../core/InputChoiceGroup";
+import InputDate from "../core/InputDate";
 import findKeyByValue from "../../utils/findKeyByValue";
 import formatDateRange from "../../utils/formatDateRange";
 import { get } from "lodash";
@@ -19,8 +19,11 @@ import { useTranslation } from "../../locales/i18n";
 interface AmendablePreviousLeaveProps {
   appErrors: AppErrorInfoCollection;
   isAddedByLeaveAdmin: boolean;
-  onChange: (...args: any[]) => any;
-  onRemove: (...args: any[]) => any;
+  onChange: (
+    arg: PreviousLeave | { [key: string]: unknown },
+    arg2: string
+  ) => void;
+  onRemove: (arg: PreviousLeave) => void;
   previousLeave: PreviousLeave;
   shouldShowV2: boolean;
 }
@@ -42,16 +45,16 @@ const AmendablePreviousLeave = ({
   const [amendment, setAmendment] = useState(previousLeave);
   const [isAmendmentFormDisplayed, setIsAmendmentFormDisplayed] =
     useState(isAddedByLeaveAdmin);
-  const containerRef = useRef<HTMLTableRowElement>();
+  const containerRef = useRef<HTMLTableRowElement>(null);
   useAutoFocusEffect({ containerRef, isAmendmentFormDisplayed });
 
-  const getFieldPath = (field) =>
+  const getFieldPath = (field: string) =>
     `previous_leaves[${amendment.previous_leave_id}].${field}`;
 
-  const getErrorMessage = (field) =>
+  const getErrorMessage = (field: string) =>
     appErrors.fieldErrorMessage(getFieldPath(field));
 
-  const getFormattedValue = (field, value) => {
+  const getFormattedValue = (field: string, value: string) => {
     if (field === "leave_start_date" || field === "leave_end_date") {
       // happens if a user starts typing a date, then removes it
       // these fields aren't required, and sending an empty string returns an "invalid date" error
@@ -65,7 +68,7 @@ const AmendablePreviousLeave = ({
     return value;
   };
 
-  const amendLeave = (field, value) => {
+  const amendLeave = (field: string, value: string) => {
     const formStateField = isAddedByLeaveAdmin
       ? "addedPreviousLeaves"
       : "amendedPreviousLeaves";
@@ -107,13 +110,16 @@ const AmendablePreviousLeave = ({
 
   const LeaveDetailsRow = () => (
     <tr>
-      <th scope="row">
+      <th
+        scope="row"
+        data-label={t("components.employersPreviousLeaves.dateRangeLabel")}
+      >
         {formatDateRange(
           previousLeave.leave_start_date,
           previousLeave.leave_end_date
         )}
       </th>
-      <td>
+      <td data-label={t("components.employersPreviousLeaves.leaveTypeLabel")}>
         {t("components.employersAmendablePreviousLeave.leaveReasonValue", {
           context: findKeyByValue(
             PreviousLeaveReason,
@@ -280,7 +286,7 @@ const AmendablePreviousLeave = ({
               </ConditionalContent>
               <InputDate
                 onChange={(e) => amendLeave("leave_start_date", e.target.value)}
-                value={amendment.leave_start_date}
+                value={amendment.leave_start_date || ""}
                 label={t(
                   "components.employersAmendablePreviousLeave.leaveStartDateLabel"
                 )}
@@ -293,7 +299,7 @@ const AmendablePreviousLeave = ({
               />
               <InputDate
                 onChange={(e) => amendLeave("leave_end_date", e.target.value)}
-                value={amendment.leave_end_date}
+                value={amendment.leave_end_date || ""}
                 label={t(
                   "components.employersAmendablePreviousLeave.leaveEndDateLabel"
                 )}

@@ -39,7 +39,15 @@ exports[`Status renders the page for a claim without documents or a status 1`] =
     >
       Status
     </h3>
-    --
+    <div
+      class="margin-0"
+    >
+      <span
+        class="usa-tag display-inline-block text-bold text-middle text-no-wrap text-base-darker bg-base-lightest"
+      >
+        No action required
+      </span>
+    </div>
   </div>
   <div
     class="margin-bottom-2 padding-bottom-2"
@@ -59,7 +67,7 @@ exports[`Status renders the page for a claim without documents or a status 1`] =
     >
       Leave duration
     </h3>
-    1/1/2021 to 7/1/2021
+    1/1/2022 to 7/1/2022
   </div>
   <div
     class="margin-bottom-2 padding-bottom-2"
@@ -69,7 +77,7 @@ exports[`Status renders the page for a claim without documents or a status 1`] =
     >
       Continuous leave
     </h3>
-    1/1/2021 to 6/1/2021
+    1/1/2022 to 6/1/2022
   </div>
   <div
     class="margin-bottom-2 padding-bottom-2"
@@ -79,7 +87,7 @@ exports[`Status renders the page for a claim without documents or a status 1`] =
     >
       Reduced leave schedule
     </h3>
-    2/1/2021 to 7/1/2021
+    2/1/2022 to 7/1/2022
   </div>
 </div>
 `;
@@ -128,11 +136,15 @@ exports[`Status renders the page for a completed claim 1`] = `
     >
       Status
     </h3>
-    <span
-      class="usa-tag display-inline-block text-bold padding-y-05 radius-lg text-no-wrap text-success-dark bg-success-lighter padding-x-205"
+    <div
+      class="margin-0"
     >
-      Approved
-    </span>
+      <span
+        class="usa-tag display-inline-block text-bold text-middle text-no-wrap text-success-dark bg-success-lighter"
+      >
+        Approved
+      </span>
+    </div>
   </div>
   <div
     class="margin-bottom-2 padding-bottom-2"
@@ -152,7 +164,7 @@ exports[`Status renders the page for a completed claim 1`] = `
     >
       Leave duration
     </h3>
-    1/1/2021 to 7/1/2021
+    1/1/2022 to 7/1/2022
   </div>
   <div
     class="margin-bottom-2 padding-bottom-2"
@@ -162,7 +174,7 @@ exports[`Status renders the page for a completed claim 1`] = `
     >
       Continuous leave
     </h3>
-    1/1/2021 to 6/1/2021
+    1/1/2022 to 6/1/2022
   </div>
   <div
     class="margin-bottom-2 padding-bottom-2"
@@ -172,7 +184,7 @@ exports[`Status renders the page for a completed claim 1`] = `
     >
       Reduced leave schedule
     </h3>
-    2/1/2021 to 7/1/2021
+    2/1/2022 to 7/1/2022
   </div>
   <div
     class="border-top-2px border-base-lighter padding-top-2"
@@ -198,7 +210,7 @@ exports[`Status renders the page for a completed claim 1`] = `
         <div
           class="text-base-dark"
         >
-          Posted 1/2/2021
+          Posted 1/2/2021.
         </div>
       </li>
     </ul>
@@ -223,7 +235,7 @@ exports[`Status shows only legal documents 1`] = `
     <div
       class="text-base-dark"
     >
-      Posted 1/9/2021
+      Posted 1/9/2021.
     </div>
   </li>
   <li
@@ -238,7 +250,67 @@ exports[`Status shows only legal documents 1`] = `
     <div
       class="text-base-dark"
     >
-      Posted 1/10/2021
+      Posted 1/10/2021.
+    </div>
+  </li>
+  <li
+    class="margin-bottom-2"
+  >
+    <button
+      class="usa-button position-relative text-bold usa-button--unstyled"
+      type="button"
+    >
+      Approved Time Cancelled (PDF)
+    </button>
+    <div
+      class="text-base-dark"
+    >
+      Posted 1/11/2021.
+    </div>
+  </li>
+  <li
+    class="margin-bottom-2"
+  >
+    <button
+      class="usa-button position-relative text-bold usa-button--unstyled"
+      type="button"
+    >
+      Benefit Amount Change Notice (PDF)
+    </button>
+    <div
+      class="text-base-dark"
+    >
+      Posted 1/12/2021.
+    </div>
+  </li>
+  <li
+    class="margin-bottom-2"
+  >
+    <button
+      class="usa-button position-relative text-bold usa-button--unstyled"
+      type="button"
+    >
+      Change Request Approved (PDF)
+    </button>
+    <div
+      class="text-base-dark"
+    >
+      Posted 1/13/2021.
+    </div>
+  </li>
+  <li
+    class="margin-bottom-2"
+  >
+    <button
+      class="usa-button position-relative text-bold usa-button--unstyled"
+      type="button"
+    >
+      Change Request Denied (PDF)
+    </button>
+    <div
+      class="text-base-dark"
+    >
+      Posted 1/14/2021.
     </div>
   </li>
   <li
@@ -253,7 +325,37 @@ exports[`Status shows only legal documents 1`] = `
     <div
       class="text-base-dark"
     >
-      Posted 1/11/2021
+      Posted 1/15/2021.
+    </div>
+  </li>
+  <li
+    class="margin-bottom-2"
+  >
+    <button
+      class="usa-button position-relative text-bold usa-button--unstyled"
+      type="button"
+    >
+      Leave Allotment Change Notice (PDF)
+    </button>
+    <div
+      class="text-base-dark"
+    >
+      Posted 1/17/2021.
+    </div>
+  </li>
+  <li
+    class="margin-bottom-2"
+  >
+    <button
+      class="usa-button position-relative text-bold usa-button--unstyled"
+      type="button"
+    >
+      Maximum Weekly Benefit Change Notice (PDF)
+    </button>
+    <div
+      class="text-base-dark"
+    >
+      Posted 1/18/2021.
     </div>
   </li>
   <li
@@ -268,7 +370,7 @@ exports[`Status shows only legal documents 1`] = `
     <div
       class="text-base-dark"
     >
-      Posted 1/14/2021
+      Posted 1/20/2021.
     </div>
   </li>
   <li
@@ -283,7 +385,7 @@ exports[`Status shows only legal documents 1`] = `
     <div
       class="text-base-dark"
     >
-      Posted 1/15/2021
+      Posted 1/21/2021.
     </div>
   </li>
 </ul>

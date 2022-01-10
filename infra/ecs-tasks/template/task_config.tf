@@ -65,6 +65,14 @@ locals {
     { name : "MOVEIT_SSH_KEY_PASSWORD", valueFrom : "/service/${local.app_name}-comptroller/${var.environment_name}/eolwd-moveit-ssh-key-password" }
   ]
 
+  # Generic baseline SFTP server - defaults to EOLWD settings for now
+  base_sftp_access = [
+    { name : "SFTP_URI", value : var.eolwd_moveit_sftp_uri },
+    { name : "SFTP_SSH_KEY", valueFrom : "/service/${local.app_name}-comptroller/${var.environment_name}/eolwd-moveit-ssh-key" },
+    { name : "SFTP_SSH_KEY_PASSWORD", valueFrom : "/service/${local.app_name}-comptroller/${var.environment_name}/eolwd-moveit-ssh-key-password" }
+  ]
+
+
   # S3 path configurations for PUB
   pub_s3_folders = [
     { name : "PFML_FINEOS_WRITEBACK_ARCHIVE_PATH", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/cps/pei-writeback" },
@@ -79,14 +87,29 @@ locals {
     { name : "PFML_PAYMENT_REJECTS_ARCHIVE_PATH", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/audit" }
   ]
 
-  # Moveit and S3 path configurations for reductions
+  # MOVEit and S3 path configurations for reductions
+  #
+  # These environment variables are from the perspective of the API system,
+  # namely:
+  # "inbound" = "where does API look for files coming from DIA/DUA"
+  # "outbound" = "where does API put files to send to DIA/DUA"
+  #
+  # The actual paths in MOVEit may not always correspond to the API perspective.
+  #
+  # *Notably, the DUA paths in MOVEit are reversed from the API point of view.*
+  #
+  # The paths may be made consistent in the future:
+  # https://lwd.atlassian.net/browse/API-1626
+  # TODO (API 2200): refactor reductions_folders variable.
   reductions_folders = [
     { name : "MOVEIT_DIA_INBOUND_PATH", value : "/DFML/DIA/Inbound" },
     { name : "MOVEIT_DUA_INBOUND_PATH", value : "/DFML/DUA/Outbound" },
     { name : "MOVEIT_DIA_OUTBOUND_PATH", value : "/DFML/DIA/Outbound" },
     { name : "MOVEIT_DUA_OUTBOUND_PATH", value : "/DFML/DUA/Inbound" },
-    { name : "S3_BUCKET", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/" }
-
+    { name : "MOVEIT_DIA_ARCHIVE_PATH", value : "/DFML/DIA/Archive" },
+    { name : "MOVEIT_DUA_ARCHIVE_PATH", value : "/DFML/DUA/Archive" },
+    { name : "S3_BUCKET", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/" },
+    { name : "DUA_TRANSFER_BASE_PATH", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/" }
   ]
 
   # Basic configuration for sender email
@@ -113,5 +136,23 @@ locals {
     { name : "RMV_CLIENT_CERTIFICATE_BINARY_ARN", value : var.rmv_client_certificate_binary_arn },
     { name : "RMV_CLIENT_CERTIFICATE_PASSWORD", valueFrom : "/service/${local.app_name}/${var.environment_name}/rmv_client_certificate_password" },
     { name : "RMV_API_BEHAVIOR", value : var.rmv_api_behavior }
+  ]
+
+  # Environement variable specifically for the .NET container in tasks_1099.tf
+  apps_netcore_env = [
+    { name : "ASPNETCORE_ENVIRONMENT", value : module.constants.env_var_mappings[var.environment_name] }
+  ]
+
+  # 1099 variables
+  irs_1099_documents = [
+    { name : "PDF_API_HOST", value : var.pdf_api_host },
+    { name : "ENABLE_GENERATE_1099_PDF", value : var.enable_generate_1099_pdf },
+    { name : "GENERATE_1099_MAX_FILES", value : var.generate_1099_max_files },
+    { name : "ENABLE_MERGE_1099_PDF", value : var.enable_merge_1099_pdf },
+    { name : "ENABLE_UPLOAD_1099_PDF", value : var.enable_upload_1099_pdf },
+    { name : "PFML_1099_DOCUMENT_ARCHIVE_PATH", value : "s3://pfml-api-${var.environment_name}-1099-form-generator/1099" },
+    { name : "UPLOAD_MAX_FILES_TO_FINEOS", value : var.upload_max_files_to_fineos },
+    { name : "TEST_FILE_GENERATION_1099", value : var.enable_1099_testfile_generation },
+    { name : "IRS_1099_CORRECTION_IND", value : var.irs_1099_correction_ind }
   ]
 }

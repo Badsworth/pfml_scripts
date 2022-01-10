@@ -1,8 +1,8 @@
+import * as MFAService from "../../src/services/mfa";
 import User, { RoleDescription, UserRole } from "../../src/models/User";
 import { act, renderHook } from "@testing-library/react-hooks";
 import AppErrorInfo from "../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
-import BenefitsApplication from "../../src/models/BenefitsApplication";
 import { NetworkError } from "../../src/errors";
 import UsersApi from "../../src/api/UsersApi";
 import { mockRouter } from "next/router";
@@ -12,6 +12,10 @@ import usePortalFlow from "../../src/hooks/usePortalFlow";
 import useUsersLogic from "../../src/hooks/useUsersLogic";
 
 jest.mock("../../src/api/UsersApi");
+jest.mock("../../src/services/mfa", () => ({
+  setMFAPreference: jest.fn(),
+  updateMFAPhoneNumber: jest.fn(),
+}));
 jest.mock("next/router");
 
 describe("useUsersLogic", () => {
@@ -50,24 +54,24 @@ describe("useUsersLogic", () => {
     const user_id = "mock-user-id";
     const patchData = { path: "data" };
 
-    beforeEach(async () => {
+    beforeEach(() => {
       setup();
+    });
 
+    it("updates user to the api", async () => {
       await act(async () => {
         await usersLogic.updateUser(user_id, patchData);
       });
-    });
 
-    it("updates user to the api", () => {
       expect(usersApi.updateUser).toHaveBeenCalledWith(user_id, patchData);
     });
 
-    it("sets user state", () => {
-      expect(usersLogic.user).toBeInstanceOf(User);
-    });
+    it("sets user state", async () => {
+      await act(async () => {
+        await usersLogic.updateUser(user_id, patchData);
+      });
 
-    it("goes to next page", () => {
-      expect(mockRouter.push).toHaveBeenCalled();
+      expect(usersLogic.user).toBeInstanceOf(User);
     });
 
     describe("when errors exist", () => {
@@ -88,25 +92,6 @@ describe("useUsersLogic", () => {
       });
     });
 
-    describe("when a claim is passed", () => {
-      const claim = new BenefitsApplication({
-        application_id: "mock-claim-id",
-      });
-
-      it("adds claim to context and a claim_id parameter", async () => {
-        const nextPageSpy = jest.spyOn(portalFlow, "goToNextPage");
-
-        await act(async () => {
-          await usersLogic.updateUser(user_id, patchData, claim);
-        });
-
-        expect(nextPageSpy).toHaveBeenCalledWith(
-          { user: usersLogic.user, claim },
-          expect.objectContaining({ claim_id: claim.application_id })
-        );
-      });
-    });
-
     describe("when api errors", () => {
       it("catches error", async () => {
         usersApi.updateUser.mockImplementationOnce(() => {
@@ -120,6 +105,63 @@ describe("useUsersLogic", () => {
         expect(appErrorsLogic.appErrors.items[0].name).toEqual(
           NetworkError.name
         );
+      });
+    });
+
+    describe("when mfa_delivery_preference is updated", () => {
+      const patchData = { mfa_delivery_preference: "SMS" };
+      it("sets MFA preferences and updates user", async () => {
+        await act(async () => {
+          await usersLogic.updateUser(user_id, patchData);
+        });
+
+        expect(MFAService.setMFAPreference).toHaveBeenCalledWith("SMS");
+        expect(usersApi.updateUser).toHaveBeenCalledWith(user_id, patchData);
+      });
+
+      it("does not update user if MFA service fails to update", async () => {
+        MFAService.setMFAPreference.mockImplementation(() =>
+          Promise.reject(new Error())
+        );
+        usersApi.updateUser.mockClear();
+        await act(async () => {
+          await usersLogic.updateUser(user_id, patchData);
+        });
+
+        expect(usersApi.updateUser).not.toHaveBeenCalled();
+      });
+    });
+
+    describe("when mfa_phone_number is updated", () => {
+      const patchData = {
+        mfa_phone_number: {
+          int_code: "1",
+          phone_type: "Cell",
+          phone_number: "555-555-5555",
+        },
+      };
+
+      it("sets MFA phone number and updates user", async () => {
+        await act(async () => {
+          await usersLogic.updateUser(user_id, patchData);
+        });
+
+        expect(MFAService.updateMFAPhoneNumber).toHaveBeenCalledWith(
+          "555-555-5555"
+        );
+        expect(usersApi.updateUser).toHaveBeenCalledWith(user_id, patchData);
+      });
+
+      it("does not update user if MFA service fails to update", async () => {
+        MFAService.updateMFAPhoneNumber.mockImplementation(() =>
+          Promise.reject(new Error())
+        );
+        usersApi.updateUser.mockClear();
+        await act(async () => {
+          await usersLogic.updateUser(user_id, patchData);
+        });
+
+        expect(usersApi.updateUser).not.toHaveBeenCalled();
       });
     });
   });
@@ -172,18 +214,6 @@ describe("useUsersLogic", () => {
       isLoggedIn = false;
       setup();
       await expect(usersLogic.loadUser).rejects.toThrow(/Cannot load user/);
-    });
-
-    it("throws UserNotReceivedError when api resolves with no user", async () => {
-      usersApi.getCurrentUser.mockResolvedValueOnce({ user: null });
-
-      await act(async () => {
-        await usersLogic.loadUser();
-      });
-
-      expect(appErrorsLogic.appErrors.items[0].message).toMatchInlineSnapshot(
-        `"Sorry, we were unable to retrieve your account. Please log out and try again. If this continues to happen, you may call the Paid Family Leave Contact Center at (833) 344‑7365"`
-      );
     });
 
     it("throws NetworkError when fetch request fails", async () => {

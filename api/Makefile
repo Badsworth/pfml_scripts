@@ -1,10 +1,13 @@
 .DEFAULT_GOAL := help
 
 APP_NAME := mass-pfml-api
+SHELL = /bin/bash -o pipefail
 
 export AWS_DEFAULT_REGION := us-east-1
 
 DOCKER_REPO ?= pfml-api
+# additional repo for 1099 image
+DOCKER_PDF_REPO ?= pfml-pdf-api
 DOCKER_REGISTRY ?= 498823821309.dkr.ecr.us-east-1.amazonaws.com
 
 # Generate a unique tag based solely on the git hash.
@@ -115,17 +118,26 @@ build-app: ## Build app container
 		--build-arg RUN_UID=$(RUN_UID) \
 		.
 
+create-erds:
+	PYTHONPATH=$$PYTHONPATH:. $(PY_RUN_CMD) python bin/create-erds.py; rm *.dot; mv *.png ../docs/assets/api/erds
+
 create-leave-admin-and-claims: ## Create local API Leave Admin user and claims
 	PYTHONPATH=$$PYTHONPATH:. $(PY_RUN_CMD) python bin/create-leave-admin-and-claims.py $(args)
+
+create-claim-with-payments-for-user: ## Create local API user with claims + payments (usable with payment status API)
+	PYTHONPATH=$$PYTHONPATH:. $(PY_RUN_CMD) python bin/create_claim_with_payments_for_user.py $(args)
 
 create-user: ## Create local API User
 	PYTHONPATH=$$PYTHONPATH:. $(PY_RUN_CMD) python bin/create-user.py $(args)
 
+console: ## Start interactive Python console
+	$(PY_RUN_CMD) python3 -i -m massgov.pfml.tool.console.interactive
+
 deps: ## Install dependencies
 	$(POETRY_CMD) install --no-root --extras "api-only-dependencies"
 
-deps-check:
-	$(PY_RUN_CMD) safety check --full-report
+deps-check: ## Check dependencies for vulnerabilities using Safety
+	$(PY_RUN_CMD) safety check --full-report --ignore=42050 --ignore=42194
 
 distclean: ## Remove all artifacts that can be regenerated
 distclean: clean clean-node clean-venv
@@ -157,8 +169,20 @@ fineos-eligibility-feed-export: ## Run an eligibility feed export
 	mkdir -p eligibility_export/absence-eligibility/upload
 	OUTPUT_DIRECTORY_PATH=eligibility_export FINEOS_AWS_IAM_ROLE_ARN="arn" FINEOS_AWS_IAM_ROLE_EXTERNAL_ID="1" $(PY_RUN_CMD) fineos-eligibility-feed-export $(DECODE_LOG)
 
+dua-import-employee-demographics:
+	$(PY_RUN_CMD) dua-import-employee-demographics $(args) $(DECODE_LOG)
+
+dua-generate-and-send-employee-request-file:
+	$(PY_RUN_CMD) dua-generate-and-send-employee-request-file $(args) $(DECODE_LOG)
+
+sftp-tool:
+	$(PY_RUN_CMD) sftp-tool $(args) $(DECODE_LOG)
+
 pub-payments-process-fineos:
 	$(PY_RUN_CMD) pub-payments-process-fineos --steps ALL $(DECODE_LOG)
+
+pub-claimant-address-validation:
+	$(PY_RUN_CMD) pub-claimant-address-validation --steps ALL $(DECODE_LOG)
 
 pub-payments-create-pub-files:
 	$(PY_RUN_CMD) pub-payments-create-pub-files --steps ALL $(DECODE_LOG)
@@ -171,6 +195,9 @@ pub-payments-process-snapshot:
 
 pub-payments-mock-generate:
 	$(PY_RUN_CMD)  pub-payments-mock-generate $(DECODE_LOG)
+
+pub-payments-process-mmars-payments:
+	$(PY_RUN_CMD)  pub-payments-process-mmars-payments $(DECODE_LOG)
 
 pub-payments-process-1099-documents:
 	$(PY_RUN_CMD) pub-payments-process-1099-documents --steps ALL $(DECODE_LOG)
@@ -187,10 +214,23 @@ delegated-payment-check-response-generate:
 	mkdir -p mock_payment_check_response
 	$(PY_RUN_CMD) delegated-payment-check-response-generate --folder mock_payment_check_response $(DECODE_LOG)
 
+fineos-import-iaww:
+	$(PY_RUN_CMD) fineos-import-iaww --steps ALL $(DECODE_LOG)
+
 ecr-login: ## Login to ECR for Docker
 	@echo "Authenticating Docker with ECR"
 	aws ecr get-login-password --region 'us-east-1' | \
 	docker login --username AWS --password-stdin 498823821309.dkr.ecr.us-east-1.amazonaws.com
+
+pre-commit: 
+	$(PY_RUN_CMD) isort --atomic --apply $(args)
+	$(PY_RUN_CMD) black $(args)
+ifdef flake_args
+	$(PY_RUN_CMD) flake8 $(flake_args)
+endif
+ifdef mypy_args
+	$(PY_RUN_CMD) mypy $(mypy_args)
+endif
 
 format: ## Format code
 	$(PY_RUN_CMD) isort --atomic --apply
@@ -234,33 +274,38 @@ jwt: jwks.json
 # See https://help.github.com/en/actions/reference/workflow-commands-for-github-actions
 ifdef CI
  FLAKE8_FORMAT := '::warning file=api/%(path)s,line=%(row)d,col=%(col)d::%(path)s:%(row)d:%(col)d: %(code)s %(text)s'
+ MYPY_FLAGS := --no-pretty
+ MYPY_POSTPROC := | perl -pe "s/^(.+):(\d+):(\d+): error: (.*)/::warning file=api\/\1,line=\2,col=\3::\4/"
 else
  FLAKE8_FORMAT := default
 endif
 
 lint: ## Run linting
-lint: lint-spectral lint-py
+lint: lint-spectral lint-py db-check-model-parity
 
 lint-py: ## Run python linting
-lint-py: lint-flake lint-mypy
+lint-py: lint-flake lint-mypy lint-poetry-version
+
+lint-poetry-version: ## Check poetry version
+	grep --quiet 'lock-version = "1.1"' poetry.lock
 
 lint-flake: ## Run flake8
 	$(PY_RUN_CMD) flake8 --format=$(FLAKE8_FORMAT) massgov tests bin
 
 lint-mypy: ## Run mypy
-	$(PY_RUN_CMD) mypy massgov bin
+	$(PY_RUN_CMD) mypy $(MYPY_FLAGS) massgov bin $(MYPY_POSTPROC)
 
 lint-security: ## Run security linting
 	$(PY_RUN_CMD) bandit -r . --number 3 --skip B101 -ll
 
 lint-spectral: ## Run OpenAPI Spec linting
 	docker run --rm --tty --cap-drop=ALL --network=none --read-only --volume=$(PWD):/tmp:ro \
-           stoplight/spectral:5.9 lint /tmp/$(OPEN_API_PATH) --ruleset /tmp/.spectral.yaml
+           stoplight/spectral:6 lint /tmp/$(OPEN_API_PATH) --ruleset /tmp/.spectral.yaml
 
 login: start ## Start shell in running container
 	docker exec -it $(APP_NAME) bash
 
-login-root: start ## Start shell in running container
+login-root: start ## Start root shell in running container
 	docker exec --user 0 -it $(APP_NAME) bash
 
 login-db: ## Start psql with project environment variables
@@ -270,6 +315,11 @@ login-db-admin: ## Start psql with project environment variables and admin user
 	PGPASSWORD=$$DB_ADMIN_PASSWORD psql --host=$$DB_HOST --username=$$DB_ADMIN_USERNAME $$DB_NAME
 
 logs: start ## View API logs
+	docker-compose logs --follow --no-color $(APP_NAME) $(DECODE_LOG)
+
+
+logs-local: ## Run start-local, with API logs
+logs-local: start-local
 	docker-compose logs --follow --no-color $(APP_NAME) $(DECODE_LOG)
 
 logs-db: start ## View DB logs
@@ -290,6 +340,10 @@ start: ## Start all containers
 start: jwks.json
 	docker-compose up --detach
 
+start-local: ## Start all containers using a cognito instance, in order to match local-to-local development with portal
+start-local: 
+	docker-compose --env-file .env.local up --detach
+
 start-db: ## Start DB container
 	docker-compose up --detach mass-pfml-db
 
@@ -299,6 +353,9 @@ stop: ## Stop all running containers
 build-and-publish: ## Build and publish release image
 build-and-publish: api-image-build api-image-publish
 
+build-and-publish-pdf-api: ## Build and publish release image for PDF API
+build-and-publish-pdf-api: pdf-api-image-build pdf-api-image-publish
+
 api-image-build: ## Build release image
 	docker build \
 		--tag $(APP_NAME):latest \
@@ -306,6 +363,13 @@ api-image-build: ## Build release image
 		--target app \
 		--build-arg RUN_USER=container \
 		--build-arg RUN_UID=4000 \
+		.
+
+pdf-api-image-build: ## Build release pdf-api image
+	docker build \
+		--tag $(APP_NAME)-pdf:latest \
+		--tag $(APP_NAME)-pdf:$(IMAGE_TAG) \
+		--target final \
 		.
 
 release-start-api: jwks.json ## starts api container without an attached database
@@ -322,13 +386,24 @@ pre-flight-test: db-upgrade db-create-users release-start-api health-check
 api-image-publish: ## Tag and push release
 api-image-publish: ecr-login api-image-tag api-image-push
 
+pdf-api-image-publish: ## Tag and push pdf-api release
+pdf-api-image-publish: ecr-login pdf-api-image-tag pdf-api-image-push
+
 api-image-push: ## Push release image to the registry
 	docker push $(DOCKER_REGISTRY)/$(DOCKER_REPO):$(IMAGE_TAG)
 	docker push $(DOCKER_REGISTRY)/$(DOCKER_REPO):$(INFO_TAG)
 
+pdf-api-image-push: ## Push release pdf-api image to the registry
+	docker push $(DOCKER_REGISTRY)/$(DOCKER_PDF_REPO):$(IMAGE_TAG)
+	docker push $(DOCKER_REGISTRY)/$(DOCKER_PDF_REPO):$(INFO_TAG)
+
 api-image-tag: ## Tag release image for registry
 	docker tag $(APP_NAME):$(IMAGE_TAG) $(DOCKER_REGISTRY)/$(DOCKER_REPO):$(IMAGE_TAG)
 	docker tag $(APP_NAME):$(IMAGE_TAG) $(DOCKER_REGISTRY)/$(DOCKER_REPO):$(INFO_TAG)
+
+pdf-api-image-tag: ## Tag release pdf-api image for registry
+	docker tag $(APP_NAME)-pdf:$(IMAGE_TAG) $(DOCKER_REGISTRY)/$(DOCKER_PDF_REPO):$(IMAGE_TAG)
+	docker tag $(APP_NAME)-pdf:$(IMAGE_TAG) $(DOCKER_REGISTRY)/$(DOCKER_PDF_REPO):$(INFO_TAG)
 
 runcmd: ## Run poetry command
 	$(PY_RUN_CMD) $(cmd)
@@ -343,6 +418,9 @@ run: start logs
 run-native: ## Start API server directly
 run-native: jwks.json
 	poetry run python -m massgov.pfml.api $(DECODE_LOG)
+
+db-check-model-parity: ## Ensure application models are in sync with the database
+	$(PY_RUN_CMD) db-check-model-parity
 
 db-create-users: ## Create database users
 	$(PY_RUN_CMD) db-admin-create-db-users $(DECODE_LOG)
@@ -471,7 +549,7 @@ release-list: ## Generate comma-separated list of ticket ids for $refs
 	tr '\n' ',' | sed 's/,$$//'
 
 
-API_RELEASE_BRANCHES := $(addprefix origin/, main deploy/api/stage deploy/api/prod deploy/api/performance deploy/api/training deploy/api/uat deploy/api/breakfix deploy/api/cps-preview)
+API_RELEASE_BRANCHES := $(addprefix origin/, main deploy/api/stage deploy/api/prod deploy/api/performance deploy/api/training deploy/api/uat deploy/api/breakfix deploy/api/cps-preview deploy/api/long deploy/api/trn2)
 where-ticket: ## Search release branches for $ticket
 	@for b in $(API_RELEASE_BRANCHES); do echo "## $$b ##"; \
 		git --no-pager log --oneline --decorate --grep=$(ticket) $$b; \
@@ -508,3 +586,6 @@ help: ## Displays this help screen
 	@echo "IMAGE_TAG=$(IMAGE_TAG)"
 	@echo "RUN_UID=$(RUN_UID)"
 	@echo "RUN_USER=$(RUN_USER)"
+	@echo "SHELL=$(SHELL)"
+	@echo "MAKE_VERSION=$(MAKE_VERSION)"
+	@echo "COGNITO_USER_POOL_KEYS_URL=$(COGNITO_USER_POOL_KEYS_URL)"

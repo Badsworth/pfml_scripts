@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react";
+import MockDate from "mockdate";
 import { MockEmployerClaimBuilder } from "../../../test-utils";
 import NewApplication from "../../../../src/pages/employers/applications/new-application";
 import React from "react";
@@ -23,7 +24,7 @@ describe("NewApplication", () => {
     // default props for the purposes of this test.
     const defaultClaim = new MockEmployerClaimBuilder()
       .completed()
-      .reviewable(true)
+      .reviewable("2020-10-10")
       .absenceId("my-absence-id")
       .create();
     const claim = providedProps.claim ?? defaultClaim;
@@ -42,10 +43,13 @@ describe("NewApplication", () => {
     return <NewApplication {...props} />;
   };
 
+  beforeEach(() => {
+    MockDate.set("2020-10-01");
+  });
+
   it("redirects to the 'Not Reviewable' page if the claim is not reviewable", () => {
     const notReviewableClaim = new MockEmployerClaimBuilder()
       .completed()
-      .reviewable(false)
       .absenceId("my-absence-id")
       .create();
 

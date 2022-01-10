@@ -1,10 +1,12 @@
-import { compact, get, map } from "lodash";
+import { compact, get } from "lodash";
 import LeaveReason from "./LeaveReason";
+import dayjs from "dayjs";
 import formatDateRange from "../utils/formatDateRange";
+import tracker from "../services/tracker";
 
 export interface BaseLeavePeriod {
-  start_date: string;
-  end_date: string;
+  start_date: string | null;
+  end_date: string | null;
 }
 
 /**
@@ -20,29 +22,27 @@ abstract class BaseBenefitsApplication {
     continuous_leave_periods: BaseLeavePeriod[];
     intermittent_leave_periods: BaseLeavePeriod[];
     reduced_schedule_leave_periods: BaseLeavePeriod[];
-    reason: string;
+    reason: string | null;
   };
 
   /**
    * Determine if claim is a Bonding Leave claim
-   * @returns {boolean}
    */
-  get isBondingLeave() {
+  get isBondingLeave(): boolean {
     return get(this, "leave_details.reason") === LeaveReason.bonding;
   }
 
   /**
    * Determine if claim is a continuous leave claim
-   * @returns {boolean}
    */
-  get isContinuous() {
+  get isContinuous(): boolean {
     return !!get(this, "leave_details.continuous_leave_periods[0]");
   }
 
   /**
    * Returns the start and end dates of the specific continuous leave period in a
    * human-readable format. Ex: "1/1/2021 - 6/1/2021".
-   * @returns {string} a representation of the leave period
+   * @returns a representation of the leave period
    */
   continuousLeaveDateRange() {
     const { start_date, end_date } = get(
@@ -55,14 +55,14 @@ abstract class BaseBenefitsApplication {
   /**
    * Determine if claim is an intermittent leave claim
    */
-  get isIntermittent() {
+  get isIntermittent(): boolean {
     return !!get(this, "leave_details.intermittent_leave_periods[0]");
   }
 
   /**
    * Returns the start and end dates of the specific intermittent leave period in a
    * human-readable format. Ex: "1/1/2021 - 6/1/2021".
-   * @returns {string} a representation of the leave period
+   * @returns a representation of the leave period
    */
   intermittentLeaveDateRange() {
     const { start_date, end_date } = get(
@@ -75,14 +75,14 @@ abstract class BaseBenefitsApplication {
   /**
    * Determine if claim is a reduced schedule leave claim
    */
-  get isReducedSchedule() {
+  get isReducedSchedule(): boolean {
     return !!get(this, "leave_details.reduced_schedule_leave_periods[0]");
   }
 
   /**
    * Returns the start and end dates of the specific reduced schedule leave period in a
    * human-readable format. Ex: "1/1/2021 - 6/1/2021".
-   * @returns {string} a representation of the leave period
+   * @returns a representation of the leave period
    */
   reducedLeaveDateRange() {
     const { start_date, end_date } = get(
@@ -103,7 +103,6 @@ abstract class BaseBenefitsApplication {
 
   /**
    * Returns earliest start date across all leave periods
-   * @returns {string}
    */
   get leaveStartDate() {
     const periods = [
@@ -112,7 +111,9 @@ abstract class BaseBenefitsApplication {
       get(this, "leave_details.reduced_schedule_leave_periods"),
     ].flat();
 
-    const startDates = map(compact(periods), "start_date").sort();
+    const startDates: string[] = compact(periods)
+      .map((period) => period.start_date)
+      .sort();
 
     if (!startDates.length) return null;
 
@@ -121,7 +122,6 @@ abstract class BaseBenefitsApplication {
 
   /**
    * Returns latest end date across all leave periods
-   * @returns {string}
    */
   get leaveEndDate() {
     const periods = [
@@ -130,11 +130,45 @@ abstract class BaseBenefitsApplication {
       get(this, "leave_details.reduced_schedule_leave_periods"),
     ].flat();
 
-    const endDates = map(compact(periods), "end_date").sort();
+    const endDates: string[] = compact(periods)
+      .map((period) => period.end_date)
+      .sort();
 
     if (!endDates.length) return null;
 
     return endDates[endDates.length - 1];
+  }
+
+  /**
+   * Returns a date a year before the start date (or Jan 1, 2021)
+   */
+  get otherLeaveStartDate(): string {
+    const programLaunchIsoDate = "2021-01-01";
+    if (!this.leaveStartDate) {
+      return programLaunchIsoDate;
+    }
+
+    try {
+      const startDate = dayjs(this.leaveStartDate);
+      if (!startDate.isValid()) {
+        throw new Error(`Invalid date: ${this.leaveStartDate}`);
+      }
+
+      const startingSunday = startDate.startOf("week");
+      const yearBeforeStartingSundayIsoDate = startingSunday
+        .subtract(364, "days")
+        .format("YYYY-MM-DD"); // Don't use toISOString() because it adds a timezone offset
+
+      // If calculated date is earlier, return the program start date
+      if (yearBeforeStartingSundayIsoDate < programLaunchIsoDate) {
+        return programLaunchIsoDate;
+      }
+
+      return yearBeforeStartingSundayIsoDate;
+    } catch (error) {
+      tracker.noticeError(error);
+      return programLaunchIsoDate;
+    }
   }
 }
 

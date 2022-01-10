@@ -6,6 +6,19 @@ import tracker from "./tracker";
 
 const featureFlagsParamName = "_ff";
 
+function getEnvironmentFlags() {
+  try {
+    return JSON.parse(process.env.featureFlags || "{}");
+  } catch (error) {
+    console.error(
+      "Error parsing feature flags. The feature flag env var should be a stringified JSON object.",
+      error
+    );
+    tracker.noticeError(error);
+    return {};
+  }
+}
+
 /**
  * Check whether a feature flag is enabled
  * @param name - Feature flag name
@@ -14,9 +27,7 @@ export function isFeatureEnabled(name: string) {
   const cookieFlags = getCookieFlags();
   if (cookieFlags.hasOwnProperty(name)) return cookieFlags[name];
 
-  // https://nextjs.org/docs/api-reference/next.config.js/environment-variables
-  const environmentFlags = process.env.featureFlags;
-  return environmentFlags[name];
+  return getEnvironmentFlags()[name];
 }
 
 /**
@@ -36,10 +47,7 @@ function getCookieFlags() {
  * that it's a valid flag that we can override through the query string.
  */
 function flagExistsInEnvironment(flagName: string) {
-  // https://nextjs.org/docs/api-reference/next.config.js/environment-variables
-  const environmentFlags = process.env.featureFlags;
-
-  if (environmentFlags.hasOwnProperty(flagName)) return true;
+  if (getEnvironmentFlags().hasOwnProperty(flagName)) return true;
 
   // eslint-disable-next-line no-console
   console.warn(`${flagName} ignored`);
@@ -53,8 +61,6 @@ function flagExistsInEnvironment(flagName: string) {
  * showSite and disable enableClaimFlow
  */
 export function storeFeatureFlagsFromQuery(searchParams: URLSearchParams) {
-  if (!searchParams) return;
-
   const paramValue = searchParams.get(featureFlagsParamName);
   if (!paramValue) return;
 

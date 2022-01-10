@@ -8,7 +8,7 @@ exports[`PreviousLeaves when there are claimant-reported leaves shows a row for 
     Previous leave
   </h3>
   <p>
-    Your employee has listed leave they have taken for a qualified reason. Only leave since January 1, 2021 is included. This includes both paid leave, such as paid vacation or sick days, and unpaid leave, such as FMLA leave. When possible, verify that a previous leave was for a reason that qualifies for paid leave under PFML.
+    Your employee has listed leave they have taken for qualified reasons. Only leave since March 15, 2021 is included. This includes both paid leave (for example: paid vacation or sick days) and unpaid leave (for example: FMLA leave). When possible, verify that this previous leave was for reasons that qualify for paid leave under PFML.
   </p>
   <details
     class="c-details"
@@ -30,7 +30,7 @@ exports[`PreviousLeaves when there are claimant-reported leaves shows a row for 
         <li>
           Manage a 
           <a
-            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#what-is-a-serious-health-condition?-"
+            href="https://www.mass.gov/pfml-serious-health-condition"
             rel="noopener"
             target="_blank"
           >
@@ -50,7 +50,7 @@ exports[`PreviousLeaves when there are claimant-reported leaves shows a row for 
         <li>
           Care for a family member with a 
           <a
-            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#what-is-a-serious-health-condition?-"
+            href="https://www.mass.gov/pfml-serious-health-condition"
             rel="noopener"
             target="_blank"
           >
@@ -62,7 +62,7 @@ exports[`PreviousLeaves when there are claimant-reported leaves shows a row for 
     </div>
   </details>
   <table
-    class="usa-table usa-table--borderless c-table width-full"
+    class="usa-table usa-table--borderless width-full usa-table--stacked"
   >
     <thead>
       <tr>
@@ -82,11 +82,14 @@ exports[`PreviousLeaves when there are claimant-reported leaves shows a row for 
     <tbody>
       <tr>
         <th
+          data-label="Date range"
           scope="row"
         >
           3/1/2020 to 3/6/2020
         </th>
-        <td>
+        <td
+          data-label="Leave type"
+        >
           Caring for a family member who served in the armed forces
         </td>
         <td>

@@ -21,7 +21,9 @@ let token: string;
  * @group stable
  */
 describeIf(
-  config("ENVIRONMENT") !== "test" && config("ENVIRONMENT") !== "training"
+  config("ENVIRONMENT") !== "test" &&
+    config("ENVIRONMENT") !== "training" &&
+    config("ENVIRONMENT") !== "breakfix"
 )("ID Proofing Tests", () => {
   beforeAll(async () => {
     const authenticator = getAuthManager();
@@ -50,7 +52,6 @@ describeIf(
         },
       };
       const res = await postRmvCheck(rmvCheckRequest, pmflApiOptions);
-
       expect(res.status).toBe(200);
       expect(res.data.data?.description).toBe(message);
       expect(res.data.data?.verified).toBe(verified);

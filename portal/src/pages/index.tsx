@@ -1,9 +1,9 @@
 import { AppLogic } from "../hooks/useAppLogic";
 import ButtonLink from "../components/ButtonLink";
-import Heading from "../components/Heading";
+import Heading from "../components/core/Heading";
 import Link from "next/link";
 import React from "react";
-import Title from "../components/Title";
+import Title from "../components/core/Title";
 import { Trans } from "react-i18next";
 import routes from "../routes";
 import useLoggedInRedirect from "../hooks/useLoggedInRedirect";

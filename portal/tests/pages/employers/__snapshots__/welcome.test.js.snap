@@ -6,6 +6,7 @@ exports[`Employer welcome renders page 1`] = `
     class="grid-row"
   >
     <nav
+      aria-label="Employer menu"
       class="border-bottom border-base-lighter margin-bottom-5 display-flex width-full"
     >
       <a
@@ -34,23 +35,6 @@ exports[`Employer welcome renders page 1`] = `
       >
         Welcome
       </h1>
-      <div
-        class="usa-alert usa-alert--info"
-        role="region"
-        tabindex="-1"
-      >
-        <div
-          class="usa-alert__body"
-        >
-          <div
-            class="usa-alert__text"
-          >
-            <p>
-              The Department of Family and Medical Leave has updated the Review page. Employees can now report other leaves and benefits in their paid leave application. If your employee reported other leaves or benefits, you can review the information provided, and add any that they missed.
-            </p>
-          </div>
-        </div>
-      </div>
       <p>
         Thanks for joining the paid leave program. Massachusetts workers can now apply for paid family and medical leave.
       </p>
@@ -59,7 +43,7 @@ exports[`Employer welcome renders page 1`] = `
       >
         <svg
           aria-hidden="true"
-          class="usa-icon--size-4 margin-right-2 text-secondary text-middle"
+          class="usa-icon usa-icon--size-4 margin-right-2 text-secondary text-middle"
           fill="currentColor"
           focusable="false"
           role="img"
@@ -69,11 +53,6 @@ exports[`Employer welcome renders page 1`] = `
           />
         </svg>
         View all applications
-        <strong
-          class="usa-tag radius-md margin-left-1"
-        >
-          New
-        </strong>
       </h2>
       <p>
         When you log into your account you can now use the 
@@ -222,6 +201,7 @@ exports[`Employer welcome shows Verification alert when user has a verifiable em
 >
   <h2
     class="usa-alert__heading font-heading-md text-bold"
+    id="alert-heading1"
   >
     Verify your account to continue
   </h2>

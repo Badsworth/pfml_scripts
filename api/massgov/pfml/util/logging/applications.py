@@ -66,6 +66,8 @@ def get_application_log_attributes(application: Application) -> Dict[str, Option
         "has_previous_leaves_same_reason",
         "has_reduced_schedule_leave_periods",
         "has_submitted_payment_preference",
+        "is_withholding_tax",
+        "organization_unit_id",
         "pregnant_or_recent_birth",
         "created_at",
         "updated_at",
@@ -105,6 +107,11 @@ def get_application_log_attributes(application: Application) -> Dict[str, Option
         if application.leave_reason_qualifier
         else None
     )
+
+    if application.claim is not None and application.claim.employer is not None:
+        result[
+            "employer.uses_organization_units"
+        ] = application.claim.employer.uses_organization_units
 
     # for caring leave, log relationship type
     if (

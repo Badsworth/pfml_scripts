@@ -6,10 +6,10 @@ import config from "../config";
  * Generates a random set of credentials.
  */
 export function generateCredentials(): Credentials {
-  const tag = faker.random.alphaNumeric(8);
+  const tag = faker.random.alphaNumeric(11);
   return {
     // Partition the addresses to avoid "An account with the given email already exists" errors.
-    username: `${config("TESTMAIL_NAMESPACE")}.1.${tag}@inbox.testmail.app`,
+    username: `${config("TESTMAIL_NAMESPACE")}.${tag}@inbox.testmail.app`,
     password: generatePassword(),
   };
 }

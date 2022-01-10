@@ -1,0 +1,26 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Applications displays success alert when user sets up SMS MFA 1`] = `
+<div
+  aria-labelledby="alert-heading4"
+  class="usa-alert usa-alert--success margin-bottom-3"
+  role="region"
+  tabindex="-1"
+>
+  <div
+    class="usa-alert__body"
+  >
+    <h2
+      class="usa-alert__heading font-heading-md text-bold"
+      id="alert-heading4"
+    >
+      Phone number confirmed
+    </h2>
+    <div
+      class="usa-alert__text"
+    >
+      To protect your security, we'll send you a 6-digit code when you log in to verify it's really you.
+    </div>
+  </div>
+</div>
+`;

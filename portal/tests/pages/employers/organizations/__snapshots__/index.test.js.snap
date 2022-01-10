@@ -32,7 +32,7 @@ exports[`Index renders the page 1`] = `
     You can manage leave for these organizations. In the future, you’ll be able to invite other members of your team to review applications.
   </p>
   <table
-    class="usa-table usa-table--borderless c-table width-full usa-table--stacked-header"
+    class="usa-table usa-table--borderless width-full usa-table--stacked"
   >
     <thead>
       <tr>
@@ -68,6 +68,7 @@ exports[`Index renders the page 1`] = `
 
 exports[`Index shows a success message telling the user they are now a leave admin 1`] = `
 <div
+  aria-labelledby="alert-heading4"
   class="usa-alert usa-alert--success"
   role="region"
   tabindex="-1"
@@ -77,6 +78,7 @@ exports[`Index shows a success message telling the user they are now a leave adm
   >
     <h2
       class="usa-alert__heading font-heading-md text-bold"
+      id="alert-heading4"
     >
       Success
     </h2>
@@ -91,6 +93,7 @@ exports[`Index shows a success message telling the user they are now a leave adm
 
 exports[`Index shows an Alert telling the user to start verification if there are unverified employers 1`] = `
 <div
+  aria-labelledby="alert-heading2"
   class="usa-alert usa-alert--warning"
   role="region"
   tabindex="-1"
@@ -100,6 +103,7 @@ exports[`Index shows an Alert telling the user to start verification if there ar
   >
     <h2
       class="usa-alert__heading font-heading-md text-bold"
+      id="alert-heading2"
     >
       Verify your account
     </h2>
@@ -131,7 +135,7 @@ exports[`Index shows the 'Verification blocked' tag and link for unverifiable ad
     href="/employers/organizations/cannot-verify?employer_id=io19fj9-00jjf-uiw3r"
   >
     <span
-      class="usa-tag display-inline-block text-bold padding-y-05 radius-lg text-no-wrap text-error-darker bg-error-lighter padding-x-205"
+      class="usa-tag display-inline-block text-bold text-middle text-no-wrap text-error-darker bg-error-lighter"
     >
       Verification blocked
     </span>
@@ -154,7 +158,7 @@ exports[`Index shows the 'Verification required' tag and link for verifiable adm
     href="/employers/organizations/verify-contributions?employer_id=dda903f-f093f-ff900&next=%2Femployers%2Forganizations"
   >
     <span
-      class="usa-tag display-inline-block text-bold padding-y-05 radius-lg text-no-wrap text-base-darkest bg-warning-lighter padding-x-205"
+      class="usa-tag display-inline-block text-bold text-middle text-no-wrap text-base-darkest bg-warning-lighter"
     >
       Verification required
     </span>

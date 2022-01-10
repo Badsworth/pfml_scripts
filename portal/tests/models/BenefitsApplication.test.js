@@ -2,9 +2,8 @@ import {
   ReducedScheduleLeavePeriod,
   WorkPattern,
 } from "../../src/models/BenefitsApplication";
-import { DateTime } from "luxon";
 import { MockBenefitsApplicationBuilder } from "../test-utils";
-import { map } from "lodash";
+import MockDate from "mockdate";
 
 describe("Claim", () => {
   let emptyClaim;
@@ -33,24 +32,32 @@ describe("Claim", () => {
       expect(emptyClaim.isSubmitted).toBe(false);
       expect(submittedClaim.isSubmitted).toBe(true);
     });
+
+    it("returns true when the Claim status is 'completed'", () => {
+      const completedClaim = new MockBenefitsApplicationBuilder()
+        .completed()
+        .create();
+
+      expect(emptyClaim.isSubmitted).toBe(false);
+      expect(completedClaim.isSubmitted).toBe(true);
+    });
   });
 
   describe("#isLeaveStartDateInFuture", () => {
     const past = "2020-09-30";
     const now = "2020-10-01";
     const future = "2020-10-02";
-    let spy;
 
-    beforeAll(() => {
-      spy = jest.spyOn(DateTime, "local").mockImplementation(() => {
-        return {
-          toISODate: () => now,
-        };
-      });
+    // Need to explicitly unset timezone to be passed to MockDate to ensure
+    // local timezone is used.
+    const current = "2020-10-01T00:00:00";
+
+    beforeEach(() => {
+      MockDate.set(current);
     });
 
-    afterAll(() => {
-      spy.mockRestore();
+    afterEach(() => {
+      MockDate.reset();
     });
 
     it("returns true when hybrid leave start dates are in the future", () => {
@@ -145,9 +152,9 @@ describe("Claim", () => {
           expect(day.minutes).toEqual(660);
         });
 
-        expect(map(workPattern2.work_pattern_days, "minutes")).toEqual([
-          675, 675, 675, 675, 670, 660, 660,
-        ]);
+        expect(
+          workPattern2.work_pattern_days.map((day) => day.minutes)
+        ).toEqual([675, 675, 675, 675, 670, 660, 660]);
       });
 
       it("returns week with 0 minutes when 0 minutes are provided", () => {
@@ -161,9 +168,9 @@ describe("Claim", () => {
       it("divides minutes in increments of 15 and adds remainders to the next day", () => {
         const workPattern = WorkPattern.createWithWeek(77 * 60 + 18); // 77 hours and 18 minutes
 
-        expect(map(workPattern.work_pattern_days, "minutes")).toEqual([
-          675, 663, 660, 660, 660, 660, 660,
-        ]);
+        expect(workPattern.work_pattern_days.map((day) => day.minutes)).toEqual(
+          [675, 663, 660, 660, 660, 660, 660]
+        );
       });
 
       it("passes provided attributes to new WorkPattern", () => {
@@ -179,9 +186,9 @@ describe("Claim", () => {
       it("totals minutes worked across all work pattern days", () => {
         const workPattern = WorkPattern.createWithWeek(70 * 60 + 4); // 70 hours and 4 minutes
 
-        expect(map(workPattern.work_pattern_days, "minutes")).toEqual([
-          604, 600, 600, 600, 600, 600, 600,
-        ]);
+        expect(workPattern.work_pattern_days.map((day) => day.minutes)).toEqual(
+          [604, 600, 600, 600, 600, 600, 600]
+        );
       });
 
       it("returns null if work_pattern_days are empty", () => {

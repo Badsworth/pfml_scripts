@@ -30,7 +30,7 @@ def init(app, dashboard_password):
             raise NotFound
         with massgov.pfml.api.app.db_session() as db_session:
             data = process_entries(db_session)
-        return flask.render_template("dashboards.html", data=data, now=utcnow())
+        return flask.render_template("dashboards.html", data=data, now=utcnow(), key=key)
 
     @app.route("/dashboard/<key>/batch/<int:batch_id>")
     def dashboard_batch_id(key, batch_id):
@@ -46,7 +46,7 @@ def init(app, dashboard_password):
             raise NotFound
         with massgov.pfml.api.app.db_session() as db_session:
             data = process_entries(db_session, batch_name)
-        return flask.render_template("dashboards.html", data=data, now=utcnow(), base_url="../")
+        return flask.render_template("dashboards.html", data=data, now=utcnow(), key=key)
 
 
 def process_entries(db_session: db.Session, batch_name: Optional[str] = None) -> dict:

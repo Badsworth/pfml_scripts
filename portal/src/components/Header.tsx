@@ -1,4 +1,4 @@
-import AlertBar from "./AlertBar";
+import AlertBar from "./core/AlertBar";
 import AuthNav from "./AuthNav";
 import BetaBanner from "./BetaBanner";
 import HeaderSlim from "@massds/mayflower-react/dist/HeaderSlim";
@@ -14,8 +14,8 @@ interface HeaderProps {
   user?: User;
   onLogout: React.MouseEventHandler<HTMLButtonElement>;
   showUpcomingMaintenanceAlertBar?: boolean;
-  maintenanceStartTime?: string;
-  maintenanceEndTime?: string;
+  maintenanceStartTime: string | null;
+  maintenanceEndTime: string | null;
 }
 
 /**

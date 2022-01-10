@@ -15,11 +15,17 @@ const CertificationType = {
   medicalCertification: "State managed Paid Leave Confirmation", // TODO (CP-2029): Remove this legacy type once claims filed before 7/1/2021 are adjudicated
 } as const;
 
-const OtherDocumentType = {
+export const OtherDocumentType = {
   appealAcknowledgment: "Appeal Acknowledgment",
   approvalNotice: "Approval Notice",
+  approvedTimeCancelled: "Approved Time Cancelled",
+  benefitAmountChangeNotice: "Benefit Amount Change Notice",
+  changeRequestApproved: "Change Request Approved",
+  changeRequestDenied: "Change Request Denied",
   denialNotice: "Denial Notice",
   identityVerification: "Identification Proof",
+  leaveAllotmentChangeNotice: "Leave Allotment Change Notice",
+  maximumWeeklyBenefitChangeNotice: "Maximum Weekly Benefit Change Notice",
   medicalCertification: "State managed Paid Leave Confirmation",
   requestForInfoNotice: "Request for more Information",
   withdrawalNotice: "Pending Application Withdrawn",
@@ -38,3 +44,41 @@ export const DocumentType = {
   certification: { ...CertificationType },
   ...OtherDocumentType,
 } as const;
+
+/**
+ * A document record from the application endpoints
+ */
+export interface BenefitsApplicationDocument {
+  content_type: string;
+  created_at: string;
+  description: string;
+  document_type: DocumentTypeEnum;
+  fineos_document_id: string;
+  name: string;
+  user_id: string;
+  application_id: string;
+}
+
+/**
+ * A document record from the employer endpoints
+ */
+export interface ClaimDocument {
+  content_type: string;
+  created_at: string;
+  description: string | null;
+  document_type: DocumentTypeEnum;
+  fineos_document_id: string;
+  name: string | null;
+}
+
+export function isBenefitsApplicationDocument(
+  document: BenefitsApplicationDocument | ClaimDocument
+): document is BenefitsApplicationDocument {
+  return "application_id" in document;
+}
+
+export function isClaimDocument(
+  document: BenefitsApplicationDocument | ClaimDocument
+): document is ClaimDocument {
+  return !isBenefitsApplicationDocument(document);
+}

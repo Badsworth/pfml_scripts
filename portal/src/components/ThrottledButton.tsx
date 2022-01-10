@@ -1,4 +1,4 @@
-import Button from "./Button";
+import Button from "./core/Button";
 import React from "react";
 import tracker from "../services/tracker";
 import useThrottledHandler from "../hooks/useThrottledHandler";
@@ -30,7 +30,7 @@ interface ThrottledButtonProps {
   /**
    * HTML `onClick` attribute
    */
-  onClick?: (...args: any[]) => Promise<any>;
+  onClick: (Event: React.SyntheticEvent) => Promise<void>;
   /**
    * HTML `type` attribute
    */
