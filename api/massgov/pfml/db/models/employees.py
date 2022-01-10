@@ -3070,6 +3070,8 @@ class ReferenceFileType(LookupTable):
         36, "Claimant Address validation Report", 1
     )
 
+    DUA_EMPLOYERS_REQUEST_FILE = LkReferenceFileType(37, "DUA employers request", 1)
+
 
 class Title(LookupTable):
     model = LkTitle

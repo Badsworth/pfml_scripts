@@ -175,6 +175,9 @@ dua-import-employee-demographics:
 dua-generate-and-send-employee-request-file:
 	$(PY_RUN_CMD) dua-generate-and-send-employee-request-file $(args) $(DECODE_LOG)
 
+dua-generate-and-send-employer-request-file:
+	$(PY_RUN_CMD) dua-generate-and-send-employer-request-file $(args) $(DECODE_LOG)
+
 sftp-tool:
 	$(PY_RUN_CMD) sftp-tool $(args) $(DECODE_LOG)
 

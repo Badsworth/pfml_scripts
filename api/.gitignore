@@ -39,3 +39,4 @@ jwks.json
 /fineos_mock/
 
 local_sftp/upload
+local_s3/

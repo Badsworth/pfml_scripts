@@ -379,6 +379,19 @@ locals {
       ]
     }
 
+    "dua-generate-and-send-employer-request-file" = {
+      command        = ["dua-generate-and-send-employer-request-file"]
+      task_role      = aws_iam_role.dua_employee_workflow_task_role.arn
+      execution_role = aws_iam_role.dua_employee_workflow_execution_role.arn
+      cpu            = 2048,
+      memory         = 4096,
+      env = [
+        local.db_access,
+        local.eolwd_moveit_access,
+        local.reductions_folders
+      ]
+    }
+
     "dua-backfill-employee-gender" = {
       command        = ["dua-backfill-employee-gender"]
       task_role      = aws_iam_role.dua_employee_workflow_task_role.arn
