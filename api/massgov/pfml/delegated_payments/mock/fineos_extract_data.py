@@ -516,6 +516,13 @@ def generate_payment_extract_files(
         if scenario_descriptor.invalid_address and (not fix_address):
             mock_address = INVALID_ADDRESS
 
+        # We have one payment record as withholding
+        if scenario_descriptor.is_tax_withholding_record_without_primary_payment:
+            event_reason = "Automatic Alternate Payment"
+            payee_identifier = "ID"
+            amalgamationc = "ScheduledAlternate65424"
+            ssn = "SITPAYEE001"
+            payment_amount = "22.00"
         # Auto generated: c_value, i_value, leave_request_id
         fineos_payments_data = FineosPaymentData(
             generate_defaults=True,
@@ -553,6 +560,15 @@ def generate_payment_extract_files(
                 withholding_payment.event_reason = "Automatic Alternate Payment"
                 withholding_payment.payee_identifier = "ID"
                 withholding_payment.amalgamationc = "ScheduledAlternate65424"
+
+                # always have valid address for withholding payments
+                mock_address = MATCH_ADDRESS
+                withholding_payment.payment_address_1 = (mock_address["line_1"],)
+                withholding_payment.payment_address_2 = (mock_address["line_2"],)
+                withholding_payment.city = (mock_address["city"],)
+                withholding_payment.state = (mock_address["state"],)
+                withholding_payment.zip_code = (mock_address["zip"],)
+
                 if item == 0:
                     withholding_payment.tin = "SITPAYEE001"
                     withholding_payment.payment_amount = "22.00"
@@ -561,42 +577,7 @@ def generate_payment_extract_files(
                     withholding_payment.tin = "FITAMOUNTPAYEE001"
                     withholding_payment.payment_amount = "35.00"
                     withholding_payment.i_value = str(fake.unique.random_int())
-
-                # if item == 2:
-                #     withholding_payment.tin = "SITPAYEE001"
-                #     withholding_payment.payment_amount = "20.00"
-                #     withholding_payment.i_value = str(fake.unique.random_int())
-
-                # if item == 3:
-                #     withholding_payment.tin = "FITAMOUNTPAYEE001"
-                #     withholding_payment.payment_amount = "45.00"
-                #     withholding_payment.i_value = str(fake.unique.random_int())
-
                 fineos_payments_dataset.append(withholding_payment)
-        # if scenario_descriptor.is_duplicate_tax_withholding_records_exists:
-        #     for item in range(5):
-        #         withholding_payment = copy.deepcopy(fineos_payments_data)
-        #         if item in [0]:
-        #             withholding_payment.event_type = "PaymentOut"
-        #             withholding_payment.payee_identifier = "Social Security Number"
-        #             withholding_payment.event_reason = "Automatic Main Payment"
-        #             withholding_payment.amalgamationc = ""
-        #             withholding_payment.i_value = str(fake.unique.random_int())
-        #         if item in [1, 2]:
-        #             withholding_payment.event_reason = "Automatic Alternate Payment"
-        #             withholding_payment.payee_identifier = "ID"
-        #             withholding_payment.amalgamationc = "ScheduledAlternate65424"
-        #             withholding_payment.tin = "SITPAYEE001"
-        #             withholding_payment.payment_amount = "10.00"
-        #             withholding_payment.i_value = str(fake.unique.random_int())
-        #         if item in [3, 4]:
-        #             withholding_payment.event_reason = "Automatic Alternate Payment"
-        #             withholding_payment.payee_identifier = "ID"
-        #             withholding_payment.amalgamationc = "ScheduledAlternate65424"
-        #             withholding_payment.tin = "FITAMOUNTPAYEE001"
-        #             withholding_payment.payment_amount = "35.00"
-        #             withholding_payment.i_value = str(fake.unique.random_int())
-        #         fineos_payments_dataset.append(withholding_payment)
         fineos_payments_dataset.append(fineos_payments_data)
 
     # create the files
