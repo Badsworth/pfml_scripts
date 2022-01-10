@@ -199,21 +199,6 @@ describe("Status", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("redirects to 404 if there's no absence case ID", () => {
-    renderPage(
-      Status,
-      {
-        addCustomSetup: setupHelper(),
-      },
-      { query: {} }
-    );
-
-    const pageNotFoundHeading = screen.getByRole("heading", {
-      name: /Page not found/,
-    });
-    expect(pageNotFoundHeading).toBeInTheDocument();
-  });
-
   it("renders the page if the only errors are DocumentsLoadError", () => {
     const errors = new AppErrorInfoCollection([
       new AppErrorInfo({
@@ -231,25 +216,6 @@ describe("Status", () => {
     );
 
     expect(container).toMatchSnapshot();
-  });
-
-  it("renders the page with only a back button if non-DocumentsLoadErrors exists", () => {
-    renderPage(
-      Status,
-      {
-        addCustomSetup: (appLogicHook) => {
-          appLogicHook.claims.loadClaimDetail = jest.fn();
-          appLogicHook.appErrors = new AppErrorInfoCollection([
-            new AppErrorInfo(),
-          ]);
-        },
-      },
-      props
-    );
-
-    expect(
-      screen.getByRole("link", { name: "Back to your applications" })
-    ).toBeInTheDocument();
   });
 
   it("shows a spinner if there is no claim detail", () => {
