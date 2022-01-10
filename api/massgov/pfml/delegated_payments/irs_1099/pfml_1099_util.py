@@ -1004,8 +1004,11 @@ def get_tax_id(db_session: Any, tax_id_str: str) -> str:
 
     try:
         tax_id = db_session.query(TaxIdentifier).get(tax_id_str)
-
-        return tax_id.tax_identifier
+        if tax_id is not None:
+            return tax_id.tax_identifier
+        else:
+            logger.error("There is no tax id for uuid %s", tax_id_str)
+            return ""
 
     except Exception:
         logger.exception("Error accessing 1099 data")

@@ -50,6 +50,7 @@ class Metrics:
     DUA_REPORTING_UNIT_MISSING_FINEOS_ORG_UNIT_COUNT = (
         "dua_reporting_unit_missing_fineos_org_unit_count"
     )
+    DUA_REPORTING_UNIT_MISMATCHED_EMPLOYER_COUNT = "dua_reporting_unit_mismatched_employer_count"
 
 
 class Constants:
@@ -193,7 +194,11 @@ def set_employee_occupation_from_demographic_data(
     for row in demographic_data:
         fineos_customer_number = row.fineos_customer_number
         employer_reporting_unit_number = row.employer_reporting_unit_number
-        employer_fein = row.employer_fein
+        # some of the FEINs in the DUA data are missing their leading zeros/are
+        # not 9 digits long, so to have best chance to match against our
+        # Employer records (which all correctly have 9 digit FEINs) pad the left
+        # with zero
+        employer_fein = row.employer_fein.zfill(9)
 
         log_attributes = {
             "employee_fineos_customer_number": fineos_customer_number,
@@ -256,6 +261,13 @@ def set_employee_occupation_from_demographic_data(
                 "DUA Reporting Unit has no FINEOS Org Unit associated", extra=log_attributes
             )
             log_entry.increment(Metrics.DUA_REPORTING_UNIT_MISSING_FINEOS_ORG_UNIT_COUNT)
+            continue
+
+        if found_reporting_unit.organization_unit.employer_id != existing_employer.employer_id:
+            log_attributes["dua_reporting_unit_id"] = found_reporting_unit.dua_reporting_unit_id
+            log_attributes["organization_unit_id"] = found_reporting_unit.organization_unit_id
+            logger.warning("FINEOS Org Unit is not for same employer", extra=log_attributes)
+            log_entry.increment(Metrics.DUA_REPORTING_UNIT_MISMATCHED_EMPLOYER_COUNT)
             continue
 
         # Create an EmployeeOccupation if it doesn't exist

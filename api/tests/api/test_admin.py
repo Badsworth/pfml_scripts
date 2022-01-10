@@ -16,9 +16,9 @@ FAKE_AUTH_URI_RESPONSE = {
 }
 
 
-@patch("massgov.pfml.api.authentication.configure_azure_ad")
-def test_admin_authorize_unavailable(mock_configure, client):
-    mock_configure.return_value = None
+@patch("massgov.pfml.api.admin.build_auth_code_flow")
+def test_admin_authorize_unavailable(mock_build, client):
+    mock_build.return_value = None
     response = client.get("/v1/admin/authorize")
     assert response.status_code == 503
     json = response.get_json()
@@ -92,9 +92,9 @@ def test_admin_login_unauthorized_no_permissions(client, app, mock_azure, azure_
         assert response.status_code == 401
 
 
-@patch("massgov.pfml.api.authentication.configure_azure_ad")
-def test_admin_logout_service_unavailable(mock_configure, client):
-    mock_configure.return_value = None
+@patch("massgov.pfml.api.admin.build_logout_flow")
+def test_admin_logout_service_unavailable(mock_build, client):
+    mock_build.return_value = None
     response = client.get("/v1/admin/logout")
     assert response.status_code == 503
     json = response.get_json()

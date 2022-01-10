@@ -6,49 +6,34 @@
  * settings flow.
  */
 
-import BenefitsApplication from "src/models/BenefitsApplication";
-import User from "src/models/User";
 import routes from "../routes";
-
-export interface UserFlowContext {
-  user?: User;
-  claim?: BenefitsApplication;
-}
-
-export const guards = {
-  hasOptedOutOfMFA: (context: UserFlowContext) =>
-    context.user?.mfa_delivery_preference === "Opt Out",
-};
 
 export default {
   states: {
+    [routes.user.convert]: {
+      meta: {},
+      on: {
+        PREVENT_CONVERSION: routes.applications.getReady,
+        /* We cannot move between 2 different flows due to
+         * claimant test only using claimant state, therefore,
+         * we have no access to redirect to employer pages
+         */
+        // CONTINUE: routes.employers.organizations,
+      },
+    },
+    [routes.user.consentToDataSharing]: {
+      meta: {},
+      on: {
+        ENABLE_MFA: routes.twoFactor.smsIndex,
+        // Route to Applications page to support users who are re-consenting.
+        // If they're new users with no claims, the Applications page will
+        // handle redirecting them
+        CONTINUE: routes.applications.index,
+      },
+    },
     [routes.user.settings]: {
       on: {
-        CONTINUE: routes.user.settings,
         EDIT_MFA_PHONE: routes.twoFactor.smsSetup,
-      },
-    },
-    [routes.twoFactor.smsIndex]: {
-      on: {
-        CONTINUE: [
-          {
-            target: routes.applications.index,
-            cond: "hasOptedOutOfMFA",
-          },
-          { target: routes.twoFactor.smsSetup },
-        ],
-        EDIT_MFA_PHONE: routes.twoFactor.smsSetup,
-      },
-    },
-    [routes.twoFactor.smsSetup]: {
-      on: {
-        CONTINUE: routes.twoFactor.smsConfirm,
-      },
-    },
-    [routes.twoFactor.smsConfirm]: {
-      on: {
-        CONTINUE: routes.applications.index,
-        RETURN_TO_SETTINGS: routes.user.settings,
       },
     },
   },

@@ -5,13 +5,13 @@ import userEvent from "@testing-library/user-event";
 
 describe("Find", () => {
   beforeEach(() => {
-    process.env.featureFlags = {
+    process.env.featureFlags = JSON.stringify({
       channelSwitching: true,
-    };
+    });
   });
 
   it("renders page not found when feature flag isn't enabled", () => {
-    process.env.featureFlags = { channelSwitching: false };
+    process.env.featureFlags = JSON.stringify({ channelSwitching: false });
     renderPage(Find);
 
     expect(screen.getByText("Page not found")).toBeInTheDocument();

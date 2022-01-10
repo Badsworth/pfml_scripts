@@ -468,8 +468,21 @@ class PaymentData:
                 True,
                 custom_validator_func=self.payment_period_date_validator,
             )
-            row_amount = payments_util.validate_db_input(
+
+            # This amount will sum to the amount we pay the claimant
+            # across all of the payment periods of a payment
+            row_amount_post_tax = payments_util.validate_db_input(
                 "BALANCINGAMOU_MONAMT",
+                payment_detail_row,
+                self.validation_container,
+                True,
+                custom_validator_func=payments_util.amount_validator,
+            )
+
+            # This amount is prior to taxes being taken out and
+            # also includes overpayments that have been paid back in some scenarios
+            business_net_amount = payments_util.validate_db_input(
+                "BUSINESSNETBE_MONAMT",
                 payment_detail_row,
                 self.validation_container,
                 True,
@@ -481,12 +494,21 @@ class PaymentData:
             if row_end_period is not None:
                 end_periods.append(row_end_period)
 
-            if all(field is not None for field in [row_start_period, row_end_period, row_amount]):
+            if all(
+                field is not None
+                for field in [
+                    row_start_period,
+                    row_end_period,
+                    row_amount_post_tax,
+                    business_net_amount,
+                ]
+            ):
                 self.payment_detail_records.append(
                     PaymentDetails(
                         period_start_date=payments_util.datetime_str_to_date(row_start_period),
                         period_end_date=payments_util.datetime_str_to_date(row_end_period),
-                        amount=Decimal(cast(str, row_amount)),
+                        amount=Decimal(cast(str, row_amount_post_tax)),
+                        business_net_amount=Decimal(cast(str, business_net_amount)),
                     )
                 )
 
@@ -510,6 +532,9 @@ class PaymentData:
             "c_value": self.c_value,
             "i_value": self.i_value,
             "absence_case_id": self.absence_case_number,
+            "period_start_date": self.payment_start_period,
+            "period_end_date": self.payment_end_period,
+            "payment_transaction_type": self.payment_transaction_type.payment_transaction_type_description,
         }
 
     def get_payment_message_str(self) -> str:
@@ -747,7 +772,7 @@ class PaymentExtractStep(Step):
         # or a payment might have been created before. We'll check that later.
 
         logger.info(
-            "Creating new payment for %s",
+            "Creating payment record in DB %s",
             payment_data.get_payment_message_str(),
             extra=payment_data.get_traceable_details(),
         )
@@ -938,7 +963,7 @@ class PaymentExtractStep(Step):
 
             extra["pub_eft_id"] = new_eft.pub_eft_id
             logger.info(
-                "Initiating DELEGATED_EFT flow for employee associated with payment %s",
+                "Starting DELEGATED_EFT prenote flow for employee associated with payment %s",
                 payment_data.get_payment_message_str(),
                 extra=extra,
             )
@@ -1031,7 +1056,6 @@ class PaymentExtractStep(Step):
         self, payment_data: PaymentData, reference_file: ReferenceFile
     ) -> Payment:
         employee, claim = self.get_employee_and_claim(payment_data)
-
         payment = self.add_records_to_db(payment_data, employee, claim, reference_file)
 
         return payment
@@ -1147,9 +1171,10 @@ class PaymentExtractStep(Step):
             db_session=self.db_session,
         )
         logger.info(
-            "Payment %s added to state %s",
+            "After consuming extracts and performing initial validation, payment %s added to state [%s]",
             payment_data.get_payment_message_str(),
             end_state.state_description,
+            extra=payments_util.get_traceable_payment_details(payment, end_state),
         )
 
     def _manage_pei_writeback_state(
@@ -1319,7 +1344,7 @@ class PaymentExtractStep(Step):
                 )
                 if len(requested_absence_records) > 0:
                     if len(requested_absence_records) > 1:
-                        logger.info(
+                        logger.warning(
                             "Found more than one requested absence record for payment with C/I %s/%s and leave request ID %s",
                             c_value,
                             i_value,
@@ -1339,7 +1364,8 @@ class PaymentExtractStep(Step):
             )
 
             logger.info(
-                f"Processing payment record {payment_data.get_payment_message_str()}",
+                "Processing extract data for payment record %s",
+                payment_data.get_payment_message_str(),
                 extra=payment_data.get_traceable_details(),
             )
 
@@ -1352,11 +1378,6 @@ class PaymentExtractStep(Step):
                 payment, payment_data,
             )
 
-            logger.info(
-                "Done processing payment record %s",
-                payment_data.get_payment_message_str(),
-                extra=payment_data.get_traceable_details(),
-            )
         except Exception:
             # An exception during processing would indicate
             # either a bug or a scenario that we believe invalidates

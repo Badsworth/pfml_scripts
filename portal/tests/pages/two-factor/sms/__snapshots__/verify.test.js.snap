@@ -15,7 +15,7 @@ exports[`Two-factor SMS Verify renders landing page content 1`] = `
     <p
       class="usa-intro"
     >
-      We sent a 6-digit code to your phone number ***-***-**** as an additional security measure.
+      To protect your security we sent a 6-digit code to the phone number we have on file for verification.  Don’t share this code with anyone. We’ll never call or text you for this code.
     </p>
     <div
       class="usa-form-group"

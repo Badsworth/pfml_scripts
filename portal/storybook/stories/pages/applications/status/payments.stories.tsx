@@ -1,13 +1,10 @@
-import {
-  AbsencePeriodRequestDecision,
-  AbsencePeriodTypes,
-} from "src/models/AbsencePeriod";
 import createMockClaimDetail, {
   leaveScenarioMap,
   leaveTypes,
   requestTypes,
 } from "lib/mock-helpers/createMockClaimDetail";
 
+import { AbsencePeriodTypes } from "src/models/AbsencePeriod";
 import DocumentCollection from "src/models/DocumentCollection";
 import { Payments } from "src/pages/applications/status/payments";
 import { Props } from "types/common";
@@ -25,26 +22,54 @@ const PAYMENT_OPTIONS = {
   NONE: "No payments",
 };
 
+const STATIC_DATES = {
+  absence_period_start_date: dayjs("2021-05-01"),
+  absence_period_end_date: dayjs("2021-07-01"),
+};
+
+const APPROVAL_TIME = {
+  AFTER_FOURTEEN_DAYS: "After fourteen days",
+  BEFORE_FOURTEEN_DAYS: "Before fourteen days",
+  RETROACTIVE: "Retroactive",
+};
+
+const mappedApprovalDate: { [key: string]: string } = {
+  "After fourteen days": STATIC_DATES.absence_period_start_date
+    .subtract(-16, "day")
+    .format("YYYY-MM-DD"),
+  "Before fourteen days": STATIC_DATES.absence_period_start_date
+    .subtract(20, "day")
+    .format("YYYY-MM-DD"),
+  Retroactive: STATIC_DATES.absence_period_end_date
+    .subtract(-14, "day")
+    .format("YYYY-MM-DD"),
+};
+
 export default {
   title: "Pages/Applications/Status/Payments",
   component: Payments,
   args: {
     Payments: PAYMENT_OPTIONS.REGULAR,
-    "Is retroactive": false,
     "Leave scenario": Object.keys(leaveScenarioMap)[0],
     "Leave type": leaveTypes[0],
-    "Request decision": requestTypes[0],
+    "Approval time": APPROVAL_TIME.AFTER_FOURTEEN_DAYS,
   },
   argTypes: {
     Payments: {
       control: {
-        type: "select",
+        type: "radio",
       },
       options: [
         PAYMENT_OPTIONS.REGULAR,
         PAYMENT_OPTIONS.RETROACTIVE,
         PAYMENT_OPTIONS.NONE,
       ],
+    },
+    "Approval time": {
+      control: {
+        type: "radio",
+        options: Object.values(APPROVAL_TIME),
+      },
     },
     "Leave scenario": {
       control: {
@@ -58,12 +83,6 @@ export default {
         options: leaveTypes,
       },
     },
-    "Request decision": {
-      control: {
-        type: "radio",
-        options: requestTypes,
-      },
-    },
   },
 };
 
@@ -72,7 +91,7 @@ export const DefaultStory = (
     Payments: string;
     "Leave scenario": keyof typeof leaveScenarioMap;
     "Leave type": AbsencePeriodTypes;
-    "Request decision": AbsencePeriodRequestDecision;
+    "Approval time": keyof typeof APPROVAL_TIME;
   }
 ) => {
   // Configure payments array
@@ -102,7 +121,9 @@ export const DefaultStory = (
       createMockPayment({
         payment_method: "Elec Funds Transfer",
         status: "Sent to bank",
-        sent_to_bank_date: dayjs().subtract(7, "days").format("YYYY-MM-DD"),
+        sent_to_bank_date: STATIC_DATES.absence_period_end_date
+          .subtract(-7, "day")
+          .format("YYYY-MM-DD"),
       }),
     ],
     [PAYMENT_OPTIONS.NONE]: [],
@@ -114,8 +135,8 @@ export const DefaultStory = (
       period_type: args["Leave type"],
     },
     [PAYMENT_OPTIONS.RETROACTIVE]: {
-      absence_period_end_date: dayjs()
-        .subtract(10, "days")
+      absence_period_end_date: STATIC_DATES.absence_period_end_date
+        .subtract(-25, "day")
         .format("YYYY-MM-DD"),
       period_type: args["Leave type"],
     },
@@ -124,17 +145,22 @@ export const DefaultStory = (
     },
   }[args.Payments];
 
+  const defaultAbsencePeriod = createAbsencePeriod({
+    ...absenceDetails,
+    absence_period_start_date: "2021-05-01",
+    absence_period_end_date: "2021-07-01",
+    request_decision: requestTypes[0],
+  });
   const appLogic = useMockableAppLogic({
     claims: {
       claimDetail: createMockClaimDetail({
-        absencePeriods: [createAbsencePeriod(absenceDetails)],
+        absencePeriods: [defaultAbsencePeriod],
         hasPaidPayments:
           args.Payments === PAYMENT_OPTIONS.REGULAR ||
           args.Payments === PAYMENT_OPTIONS.RETROACTIVE,
         leaveScenario: args["Leave scenario"],
         leaveType: args["Leave type"],
         payments,
-        requestDecision: args["Request decision"],
       }),
       isLoadingClaimDetail: false,
     },
@@ -142,12 +168,11 @@ export const DefaultStory = (
       documents: new DocumentCollection([
         generateNotice(
           "approvalNotice",
-          dayjs().subtract(7, "days").format("YYYY-MM-DD")
+          mappedApprovalDate[args["Approval time"]]
         ),
       ]),
     },
   });
-
   return (
     <Payments
       appLogic={appLogic}

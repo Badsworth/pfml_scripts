@@ -422,13 +422,11 @@ class TestGetClaimReview:
 
         assert response.status_code == 200
 
-        assert response_data["follow_up_date"] == "2021-02-01"
         # This field is set in mock_client.py::get_customer_occupations
         assert response_data["hours_worked_per_week"] == 37.5
         assert response_data["employer_dba"] == "Acme Co"
         assert response_data["employer_fein"] == "99-9999999"
         assert response_data["employer_id"] == str(employer.employer_id)
-        assert response_data["is_reviewable"] is True
         # The fields below are set in mock_client.py::mock_customer_info
         assert response_data["date_of_birth"] == "****-12-25"
         assert response_data["tax_identifier"] == "***-**-1234"
@@ -513,9 +511,7 @@ class TestGetClaimReview:
             f"/v1/employers/claims/{claim.fineos_absence_id}/review",
             headers={"Authorization": f"Bearer {employer_auth_token}"},
         )
-        response_data = response.get_json()["data"]
         assert response.status_code == 200
-        assert response_data["is_reviewable"] is True
 
     @freeze_time("2020-12-07")
     def test_employers_with_int_hours_worked_per_week_receive_200_from_get_claim_review(
@@ -543,12 +539,10 @@ class TestGetClaimReview:
 
         assert response.status_code == 200
 
-        assert response_data["follow_up_date"] == "2021-02-01"
         # This field is set in mock_client.py::get_customer_occupations
         assert response_data["hours_worked_per_week"] == 37
         assert response_data["employer_dba"] == "Acme Co"
         assert response_data["employer_fein"] == "99-9999999"
-        assert response_data["is_reviewable"] is True
         # The fields below are set in mock_client.py::mock_customer_info
         assert response_data["date_of_birth"] == "****-12-25"
         assert response_data["tax_identifier"] == "***-**-1234"

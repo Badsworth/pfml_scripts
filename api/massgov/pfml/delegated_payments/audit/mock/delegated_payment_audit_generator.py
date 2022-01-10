@@ -438,6 +438,7 @@ def generate_scenario_data(
         previously_paid_payment_count=0,
         previously_paid_payments_string=None,
         gross_payment_amount="",
+        net_payment_amount=str(payment.amount),
         federal_withholding_amount="",
         state_withholding_amount="",
         federal_withholding_i_value="",

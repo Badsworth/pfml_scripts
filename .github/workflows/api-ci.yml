@@ -121,36 +121,66 @@ jobs:
         run: make pre-flight-test
 
   # Run Tenable container scanning
-  # TEMPORARILY DISABLED (INFRA-568): our underlying Tenable license changed, & our old credentials are no longer valid.
-#  scan-containers:
-#    runs-on: ubuntu-latest
-#
-#    steps:
-#      - uses: actions/checkout@v2
-#
-#      - name: build image
-#        run: make api-image-build
-#
-#      - name: pull latest tenable image
-#        env:
-#          DOCKER_PW: ${{ secrets.PFML_TENABLE_DOCKER_PASSWORD }}
-#          DOCKER_USER: ${{ secrets.PFML_TENABLE_DOCKER_USER }}
-#        run: |
-#          echo "$DOCKER_PW" | docker login --username "$DOCKER_USER" --password-stdin tenableio-docker-consec-local.jfrog.io
-#          docker pull tenableio-docker-consec-local.jfrog.io/cs-scanner:latest
-#
-#      - name: run tenable scan
-#        env:
-#          TENABLE_ACCESS_KEY: ${{ secrets.TENABLE_ACCESS_KEY }}
-#          TENABLE_SECRET_KEY: ${{ secrets.TENABLE_SECRET_KEY }}
-#        run: |
-#          DOCKER_TAG=$(docker images | grep mass-pfml-api | grep -v latest | awk '{print $2}')
-#          docker save mass-pfml-api:$DOCKER_TAG | docker run \
-#          --env TENABLE_ACCESS_KEY=$TENABLE_ACCESS_KEY \
-#          --env TENABLE_SECRET_KEY=$TENABLE_SECRET_KEY \
-#          --env IMPORT_REPO_NAME=mass-pfml-api \
-#          --env CHECK_POLICY=true \
-#          --interactive tenableio-docker-consec-local.jfrog.io/cs-scanner:latest inspect-image mass-pfml-api:$DOCKER_TAG
+  scan-api-container:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: build API image
+        run: make api-image-build
+
+      - name: pull latest tenable image
+        env:
+          DOCKER_PW: ${{ secrets.PFML_TENABLE_DOCKER_PASSWORD }}
+          DOCKER_USER: ${{ secrets.PFML_TENABLE_DOCKER_USER }}
+        run: |
+          echo "$DOCKER_PW" | docker login --username "$DOCKER_USER" --password-stdin tenableio-docker-consec-local.jfrog.io
+          docker pull tenableio-docker-consec-local.jfrog.io/cs-scanner:latest
+
+      - name: run tenable scan on API image
+        env:
+          TENABLE_ACCESS_KEY: ${{ secrets.TENABLE_ACCESS_KEY }}
+          TENABLE_SECRET_KEY: ${{ secrets.TENABLE_SECRET_KEY }}
+        run: |
+          DOCKER_TAG=$(docker images | grep mass-pfml-api | grep -v latest | awk '{print $2}')
+          docker save mass-pfml-api:$DOCKER_TAG | docker run \
+          --env TENABLE_ACCESS_KEY=$TENABLE_ACCESS_KEY \
+          --env TENABLE_SECRET_KEY=$TENABLE_SECRET_KEY \
+          --env IMPORT_REPO_NAME=mass-pfml-api \
+          --env CHECK_POLICY=true \
+          --interactive tenableio-docker-consec-local.jfrog.io/cs-scanner:latest inspect-image mass-pfml-api:$DOCKER_TAG
+
+  scan-pdf-api-container:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: build PDF API image
+        run: make -f ../api/Makefile pdf-api-image-build
+        working-directory: ./pdf_api
+
+      - name: pull latest tenable image
+        env:
+          DOCKER_PW: ${{ secrets.PFML_TENABLE_DOCKER_PASSWORD }}
+          DOCKER_USER: ${{ secrets.PFML_TENABLE_DOCKER_USER }}
+        run: |
+          echo "$DOCKER_PW" | docker login --username "$DOCKER_USER" --password-stdin tenableio-docker-consec-local.jfrog.io
+          docker pull tenableio-docker-consec-local.jfrog.io/cs-scanner:latest
+
+      - name: run tenable scan on PDF API image
+        env:
+          TENABLE_ACCESS_KEY: ${{ secrets.TENABLE_ACCESS_KEY }}
+          TENABLE_SECRET_KEY: ${{ secrets.TENABLE_SECRET_KEY }}
+        run: |
+          DOCKER_TAG=$(docker images | grep mass-pfml-api-pdf | grep -v latest | awk '{print $2}')
+          docker save mass-pfml-api-pdf:$DOCKER_TAG | docker run \
+          --env TENABLE_ACCESS_KEY=$TENABLE_ACCESS_KEY \
+          --env TENABLE_SECRET_KEY=$TENABLE_SECRET_KEY \
+          --env IMPORT_REPO_NAME=mass-pfml-api-pdf \
+          --env CHECK_POLICY=true \
+          --interactive tenableio-docker-consec-local.jfrog.io/cs-scanner:latest inspect-image mass-pfml-api-pdf:$DOCKER_TAG
 
   # Run Terriyay
   get-test-state:

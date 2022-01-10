@@ -29,10 +29,11 @@ describe("BenefitsApplicationsApi", () => {
   const baseRequestHeaders = {
     Authorization: `Bearer ${accessTokenJwt}`,
     "Content-Type": "application/json",
+    // TODO (PORTAL-1473) : Remove when BE changes are made
+    "X-FF-Tax-Withholding-Enabled": true,
   };
 
   beforeEach(() => {
-    process.env.featureFlags = {};
     jest.resetAllMocks();
     mockAuth(true, accessTokenJwt);
 

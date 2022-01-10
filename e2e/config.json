@@ -66,13 +66,14 @@
     "PORTAL_USERNAME": "zanson+pfml+default@lastcallmedia.com",
     "FINEOS_USERNAME": "CONTENT",
     "COGNITO_POOL": "us-east-1_oxOGrdAe8",
-    "COGNITO_CLIENTID": "16oll6nm4ifkik83b7c3s2a0ro",
+    "COGNITO_CLIENTID": "3dgp7vtcdt7bo0utlp2tqit1ee",
     "EMPLOYEES_FILE": "./employees/e2e-2022-01-03.json",
     "EMPLOYERS_FILE": "./employers/e2e-2022-01-03.json",
     "DOR_IMPORT_URI": "s3://massgov-pfml-trn2-agency-transfer/dor/received/",
     "DOR_ETL_ARN": "arn:aws:states:us-east-1:498823821309:stateMachine:pfml-api-trn2-dor-fineos-etl",
     "FINEOS_HAS_TAX_WITHHOLDING": "false",
     "HAS_UPDATED_MAX_BENFIT": "false",
+    "HAS_PAYMENT_STATUS": "false",
     "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "false"
   },
   "long": {
@@ -87,8 +88,9 @@
     "EMPLOYERS_FILE": "./employers/e2e-2022-01-03.json",
     "DOR_IMPORT_URI": "s3://massgov-pfml-long-agency-transfer/dor/received/",
     "DOR_ETL_ARN": "arn:aws:states:us-east-1:498823821309:stateMachine:pfml-api-long-dor-fineos-etl",
-    "FINEOS_HAS_TAX_WITHHOLDING": "false",
+    "FINEOS_HAS_TAX_WITHHOLDING": "true",
     "HAS_UPDATED_MAX_BENFIT": "false",
+    "HAS_PAYMENT_STATUS": "false",
     "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "false"
   },
   "performance": {

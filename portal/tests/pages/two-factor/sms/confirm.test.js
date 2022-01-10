@@ -24,7 +24,7 @@ const user = new User({
 
 beforeEach(() => {
   mockAuth(true);
-  process.env.featureFlags = { claimantShowMFA: true };
+  process.env.featureFlags = JSON.stringify({ claimantShowMFA: true });
 });
 
 describe("Two-factor SMS Confirm", () => {
@@ -170,7 +170,7 @@ describe("Two-factor SMS Confirm", () => {
   });
 
   it("renders PageNotFound if the claimantShowMFA feature flag is not set", () => {
-    process.env.featureFlags = { claimantShowMFA: false };
+    process.env.featureFlags = JSON.stringify({ claimantShowMFA: false });
     renderPage(ConfirmSMS);
 
     const pageNotFoundHeading = screen.getByRole("heading", {

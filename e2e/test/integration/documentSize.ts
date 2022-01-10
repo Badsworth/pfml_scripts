@@ -81,8 +81,12 @@ describe("API Documents Test of various file sizes", () => {
 
   // Added logic to establish baseline of failures for Files right at limit
   if (
-    config("ENVIRONMENT") === "stage" ||
-    config("ENVIRONMENT") === "performance"
+    config("ENVIRONMENT") === "stage" || // not configured - expected failures for baseline
+    config("ENVIRONMENT") === "performance"||
+    config("ENVIRONMENT") === "test" ||
+    config("ENVIRONMENT") === "cps-preview" ||
+    config("ENVIRONMENT") === "breakfix" ||
+    config("ENVIRONMENT") === "uat" 
   ) {
     tests = [
       ...data.pdf,

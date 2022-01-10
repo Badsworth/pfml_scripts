@@ -100,6 +100,11 @@ def add_payments_to_nacha_file(nacha_file: NachaFile, payments: List[Payment]) -
         if payment.disb_method_id != PaymentMethod.ACH.payment_method_id:
             raise Exception(f"Non-ACH payment method for payment: {payment.payment_id}")
 
+        logger.info(
+            "Adding payment to the NACHA file for EFT payment",
+            extra=payments_util.get_traceable_payment_details(payment),
+        )
+
         entry = NachaEntry(
             trans_code=get_trans_code(payment.pub_eft.bank_account_type_id, False, False),
             receiving_dfi_id=payment.pub_eft.routing_nbr,
@@ -149,6 +154,11 @@ def add_eft_prenote_to_nacha_file(
             raise Exception(
                 f"Found non pending eft trying to add to prenote list: {employee.employee_id}, eft: {pub_eft.pub_eft_id}"
             )
+
+        logger.info(
+            "Adding prenote info to NACHA EFT file",
+            extra=payments_util.get_traceable_pub_eft_details(pub_eft, employee),
+        )
 
         entry = NachaEntry(
             trans_code=get_trans_code(pub_eft.bank_account_type_id, True, False),

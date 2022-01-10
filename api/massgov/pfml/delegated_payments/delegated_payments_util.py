@@ -24,6 +24,7 @@ from massgov.pfml.db.models.employees import (
     ExperianAddressPair,
     LkClaimType,
     LkReferenceFileType,
+    LkState,
     Payment,
     PaymentTransactionType,
     PubEft,
@@ -267,6 +268,7 @@ class FineosExtractConstants:
             "PAYMENTSTARTP",
             "PAYMENTENDPER",
             "BALANCINGAMOU_MONAMT",
+            "BUSINESSNETBE_MONAMT",
         ],
     )
 
@@ -1210,7 +1212,9 @@ def create_staging_table_instance(
     )
 
 
-def get_traceable_payment_details(payment: Payment) -> Dict[str, Optional[Any]]:
+def get_traceable_payment_details(
+    payment: Payment, state: Optional[LkState] = None
+) -> Dict[str, Optional[Any]]:
     # For logging purposes, this returns useful, traceable details
     # about a payment and related fields if they exist.
     #
@@ -1221,11 +1225,41 @@ def get_traceable_payment_details(payment: Payment) -> Dict[str, Optional[Any]]:
     employee = payment.claim.employee if payment.claim else None
 
     return {
+        "payment_id": payment.payment_id,
         "c_value": payment.fineos_pei_c_value,
         "i_value": payment.fineos_pei_i_value,
-        "absence_case_number": claim.fineos_absence_id if claim else None,
+        "absence_case_id": claim.fineos_absence_id if claim else None,
         "fineos_customer_number": employee.fineos_customer_number if employee else None,
+        "claim_id": claim.claim_id if claim else None,
+        "employee_id": employee.employee_id if employee else None,
+        "period_start_date": payment.period_start_date,
+        "period_end_date": payment.period_end_date,
+        "pub_individual_id": payment.pub_individual_id,
+        "payment_transaction_type": payment.payment_transaction_type.payment_transaction_type_description
+        if payment.payment_transaction_type
+        else None,
+        "current_state": state.state_description if state else None,
     }
+
+
+def get_traceable_pub_eft_details(
+    pub_eft: PubEft, employee: Employee, payment: Optional[Payment] = None
+) -> Dict[str, Any]:
+    # For logging purposes, this returns useful, traceable details
+    # about an EFT record and related fields
+    #
+    # DO NOT PUT PII IN THE RETURN OF THIS METHOD, IT'S MEANT FOR LOGGING
+    #
+
+    details = {}
+    if payment:
+        details = get_traceable_payment_details(payment)
+
+    details["pub_eft_id"] = pub_eft.pub_eft_id
+    details["employee_id"] = employee.employee_id
+    details["fineos_customer_number"] = employee.fineos_customer_number
+
+    return details
 
 
 def get_transaction_status_date(payment: Payment) -> date:

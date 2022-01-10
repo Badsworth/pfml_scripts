@@ -7,7 +7,7 @@ import userEvent from "@testing-library/user-event";
 jest.mock("../../../src/services/tracker");
 
 beforeEach(() => {
-  process.env.featureFlags = { claimantShowMFA: true };
+  process.env.featureFlags = JSON.stringify({ claimantShowMFA: true });
 });
 
 const updateUser = jest.fn();
@@ -142,7 +142,7 @@ describe(Settings, () => {
   });
 
   it("renders 404 when claimantShowMFA feature flag is disabled", () => {
-    process.env.featureFlags = { claimantShowMFA: false };
+    process.env.featureFlags = JSON.stringify({ claimantShowMFA: false });
     renderPage(Settings);
 
     const pageNotFoundHeading = screen.getByRole("heading", {

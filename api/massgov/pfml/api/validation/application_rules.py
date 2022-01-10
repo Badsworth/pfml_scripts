@@ -4,7 +4,6 @@ from itertools import chain, combinations
 from typing import Any, Dict, Iterable, List, Optional, Union
 
 from dateutil.relativedelta import relativedelta
-from werkzeug.datastructures import Headers
 
 import massgov.pfml.db as db
 import massgov.pfml.util.logging
@@ -54,13 +53,13 @@ def get_application_submit_issues(application: Application) -> List[ValidationEr
 
 
 def get_application_complete_issues(
-    application: Application, headers: Headers, db_session: db.Session
+    application: Application, db_session: db.Session
 ) -> List[ValidationErrorDetail]:
     """Takes in an application and outputs any validation issues.
         Validates only the data entered post-submit (Parts 2-3) are present, allowing an application to be completed.
     """
     issues = []
-    issues += get_app_complete_payments_issues(application, headers)
+    issues += get_app_complete_payments_issues(application)
     issues += get_documents_issues(application, db_session)
 
     # Application must have a case in Fineos in order to be completed. This is equivalent to saying
@@ -1346,9 +1345,7 @@ def validate_application_state(
     return issues
 
 
-def get_app_complete_payments_issues(
-    application: Application, headers: Headers
-) -> List[ValidationErrorDetail]:
+def get_app_complete_payments_issues(application: Application) -> List[ValidationErrorDetail]:
     """Validate payments related selections are complete. Called from application complete endpoint."""
     issues = []
 
@@ -1361,10 +1358,7 @@ def get_app_complete_payments_issues(
             )
         )
 
-    # only verify tax when tax is enabled
-    if headers.get("X-FF-Tax-Withholding-Enabled") and not isinstance(
-        application.is_withholding_tax, bool
-    ):
+    if not isinstance(application.is_withholding_tax, bool):
         issues.append(
             ValidationErrorDetail(
                 type=IssueType.required,

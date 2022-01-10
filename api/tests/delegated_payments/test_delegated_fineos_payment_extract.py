@@ -1038,6 +1038,8 @@ def test_process_extract_multiple_payment_details(
         payment_start="2021-01-01 12:00:00",
         payment_end="2021-01-01 12:00:00",
         payment_amount="100.00",
+        balancing_amount="100.10",
+        business_net_amount="100.01",
     )
     add_db_records_from_fineos_data(local_test_db_session, fineos_payment_data)
 
@@ -1048,6 +1050,8 @@ def test_process_extract_multiple_payment_details(
         additional_data.include_claim_details = False
         additional_data.include_requested_absence = False
         additional_data.payment_amount = f"{i}00.00"
+        additional_data.balancing_amount = f"{i}00.10"
+        additional_data.business_net_amount = f"{i}00.01"
 
         additional_data.payment_start_period = f"2021-01-0{i} 12:00:00"
         additional_data.payment_end_period = f"2021-01-0{i} 12:00:00"
@@ -1074,7 +1078,8 @@ def test_process_extract_multiple_payment_details(
     # Verify the payment details were parsed correctly
     payment_details.sort(key=lambda payment_detail: payment_detail.period_start_date)
     for i, payment_detail in enumerate(payment_details, start=1):
-        assert str(payment_detail.amount) == f"{i}00.00"
+        assert str(payment_detail.amount) == f"{i}00.10"
+        assert str(payment_detail.business_net_amount) == f"{i}00.01"
         assert str(payment_detail.period_start_date) == f"2021-01-0{i}"
         assert str(payment_detail.period_end_date) == f"2021-01-0{i}"
 
@@ -1810,12 +1815,14 @@ def test_validation_missing_fields(initialize_factories_session):
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTSTARTP"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTENDPER"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "BALANCINGAMOU_MONAMT"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "BUSINESSNETBE_MONAMT"),
             ValidationIssue(
                 ValidationReason.UNEXPECTED_PAYMENT_TRANSACTION_TYPE,
                 "Unknown payment scenario encountered. Payment Amount: None, Event Type: None, Event Reason: ",
             ),
         ]
     )
+
     assert expected_missing_values == set(validation_container.validation_issues)
 
     # Set the event type to PaymentOut and give it a valid amount so that
@@ -1839,6 +1846,8 @@ def test_validation_missing_fields(initialize_factories_session):
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEEIDENTIFI"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCEREASON_COVERAGE"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCE_CASECREATIONDATE"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "BALANCINGAMOU_MONAMT"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "BUSINESSNETBE_MONAMT"),
         ]
     )
     assert expected_missing_values == set(validation_container.validation_issues)
@@ -1864,6 +1873,8 @@ def test_validation_missing_fields(initialize_factories_session):
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTPOSTCO"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCEREASON_COVERAGE"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCE_CASECREATIONDATE"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "BALANCINGAMOU_MONAMT"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "BUSINESSNETBE_MONAMT"),
         ]
     )
     assert expected_missing_values == set(validation_container.validation_issues)
@@ -1888,6 +1899,8 @@ def test_validation_missing_fields(initialize_factories_session):
             ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEEACCOUNTT"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCEREASON_COVERAGE"),
             ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCE_CASECREATIONDATE"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "BALANCINGAMOU_MONAMT"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "BUSINESSNETBE_MONAMT"),
         ]
     )
 
@@ -1987,6 +2000,10 @@ def test_validation_payment_amount(initialize_factories_session, set_exporter_en
                 ValidationIssue(
                     ValidationReason.INVALID_VALUE,
                     f"BALANCINGAMOU_MONAMT: {invalid_payment_amount}",
+                ),
+                ValidationIssue(
+                    ValidationReason.INVALID_VALUE,
+                    f"BUSINESSNETBE_MONAMT: {invalid_payment_amount}",
                 ),
                 ValidationIssue(
                     ValidationReason.UNEXPECTED_PAYMENT_TRANSACTION_TYPE,

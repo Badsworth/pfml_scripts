@@ -10,8 +10,11 @@ const createAccountStates = [
   routes.auth.verifyAccount,
   routes.auth.login,
   routes.twoFactor.smsIndex,
+  routes.twoFactor.smsSetup,
+  routes.twoFactor.smsConfirm,
   routes.twoFactor.smsVerify,
   routes.applications.index,
+  routes.user.settings,
 ];
 
 const forgotPasswordStates = [
@@ -19,9 +22,12 @@ const forgotPasswordStates = [
   routes.applications.index,
   routes.auth.login,
   routes.twoFactor.smsIndex,
+  routes.twoFactor.smsSetup,
+  routes.twoFactor.smsConfirm,
   routes.twoFactor.smsVerify,
   routes.auth.verifyAccount,
   routes.auth.resetPassword,
+  routes.user.settings,
 ];
 
 const machineTestGenerator = (states) => {
@@ -102,11 +108,14 @@ describe("createAccountFlow", () => {
 
   runTestsWithStatesAndEvents(
     {
+      CONTINUE: {},
       CREATE_ACCOUNT: {},
       LOG_IN: {},
       VERIFY_CODE: {},
       SUBMIT: {},
       ENABLE_MFA: {},
+      EDIT_MFA_PHONE: {},
+      RETURN_TO_SETTINGS: {},
     },
     routes.auth.createAccount,
     machineConfigsWithTests
@@ -125,12 +134,15 @@ describe("forgotPasswordFlow", () => {
 
   runTestsWithStatesAndEvents(
     {
+      CONTINUE: {},
       UNCONFIRMED_ACCOUNT: {},
       LOG_IN: {},
       VERIFY_CODE: {},
       SEND_CODE: {},
       ENABLE_MFA: {},
+      EDIT_MFA_PHONE: {},
       SET_NEW_PASSWORD: {},
+      RETURN_TO_SETTINGS: {},
     },
     routes.auth.forgotPassword,
     machineConfigsWithTests

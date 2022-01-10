@@ -384,11 +384,6 @@ const machineTests = {
       test: () => {},
     },
   },
-  [routes.twoFactor.smsIndex]: {
-    meta: {
-      test: () => {},
-    },
-  },
 };
 
 const machineConfigsWithTests = {

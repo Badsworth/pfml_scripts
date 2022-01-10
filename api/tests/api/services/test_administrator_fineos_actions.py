@@ -1955,8 +1955,6 @@ def test_get_claim_other_income(mock_fineos_other_income_v1_eform):
     assert leave_details.residential_address.state == "GA"
     assert leave_details.residential_address.zip == "30303"
     assert leave_details.tax_identifier == "***-**-1234"
-    assert leave_details.follow_up_date == date(2021, 2, 1)
-    assert leave_details.is_reviewable is False
     assert leave_details.status == "Known"
     assert leave_details.uses_second_eform_version is False
 
@@ -1984,7 +1982,6 @@ def test_get_claim_with_open_managed_requirement(
     )
     assert leave_details.status == "Known"
     assert len(managed_requirements) == len(mock_managed_requirements)
-    assert leave_details.is_reviewable
 
 
 @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_managed_requirements")
@@ -2008,7 +2005,6 @@ def test_get_claim_with_closed_managed_requirement(
     )
     assert leave_details.status == "Known"
     assert len(managed_requirements) == len(mock_managed_requirements)
-    assert not leave_details.is_reviewable
 
 
 @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_managed_requirements")
@@ -2032,7 +2028,6 @@ def test_get_claim_with_open_expired_managed_requirement(
     )
     assert leave_details.status == "Known"
     assert len(managed_requirements) == len(mock_managed_requirements)
-    assert not leave_details.is_reviewable
 
 
 # testing class for get_documents_as_leave_admin

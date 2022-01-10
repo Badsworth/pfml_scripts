@@ -47,6 +47,7 @@ class JsonFormatter(logging.Formatter):  # noqa: B1
             record.method = flask.request.method
             record.path = flask.request.path
             record.request_id = flask.request.headers.get("x-amzn-requestid", "")
+            record.mass_pfml_agent_id = flask.request.headers.get("Mass-PFML-Agent-ID", "")
 
         super(JsonFormatter, self).format(record)
 
@@ -62,6 +63,7 @@ class JsonFormatter(logging.Formatter):  # noqa: B1
             # logging call may have happened due to a database failure.
             user_id = flask.g.get("current_user_user_id")
             azure_user_sub_id = flask.g.get("azure_user_sub_id")
+
             if user_id:
                 output.update(
                     {

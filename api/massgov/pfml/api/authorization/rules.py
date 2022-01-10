@@ -1,4 +1,4 @@
-from typing import Callable, List, Union
+from typing import Callable, Union
 
 from bouncer.constants import CREATE, EDIT, READ  # noqa: F401 F403
 from bouncer.models import RuleList
@@ -13,16 +13,8 @@ from massgov.pfml.db.models.applications import (
     Notification,
     RMVCheck,
 )
-from massgov.pfml.db.models.employees import AzurePermission, Employee, LkRole, Role, User
-
-
-def has_role_in(user: User, accepted_roles: List[LkRole]) -> bool:
-    accepted_role_ids = set(role.role_id for role in accepted_roles)
-    for role in user.roles:
-        if role.role_id in accepted_role_ids:
-            return True
-
-    return False
+from massgov.pfml.db.models.employees import AzurePermission, Employee, Role, User
+from massgov.pfml.util.users import has_role_in
 
 
 def create_authorization(

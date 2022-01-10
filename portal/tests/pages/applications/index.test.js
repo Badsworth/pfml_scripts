@@ -45,7 +45,7 @@ describe("Applications", () => {
 
   it("displays Find Application action when feature flag is enabled", () => {
     const linkName = "Find my application";
-    process.env.featureFlags = { channelSwitching: false };
+    process.env.featureFlags = JSON.stringify({ channelSwitching: false });
 
     renderPage(Index, {
       addCustomSetup: (appLogicHook) => {
@@ -57,7 +57,7 @@ describe("Applications", () => {
       screen.queryByRole("link", { name: linkName })
     ).not.toBeInTheDocument();
 
-    process.env.featureFlags = { channelSwitching: true };
+    process.env.featureFlags = JSON.stringify({ channelSwitching: true });
 
     renderPage(Index, {
       addCustomSetup: (appLogicHook) => {

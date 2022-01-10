@@ -930,11 +930,8 @@ class ClaimantExtractStep(Step):
                 # This EFT info is new, it needs to be linked to the employee
                 # and added to the EFT prenoting flow
                 logger.info(
-                    "Initiating DELEGATED_EFT flow for employee",
-                    extra={
-                        "end_state_id": State.DELEGATED_EFT_SEND_PRENOTE.state_id,
-                        "employee_id": employee_pfml_entry.employee_id,
-                    },
+                    "Initiating DELEGATED_EFT prenote flow for employee",
+                    extra=payments_util.get_traceable_pub_eft_details(new_eft, employee_pfml_entry),
                 )
 
                 employee_pub_eft_pair = EmployeePubEftPair(

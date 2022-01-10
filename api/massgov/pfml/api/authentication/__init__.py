@@ -28,8 +28,10 @@ from massgov.pfml.db.models.employees import (
     AzureGroupPermission,
     LkAzureGroup,
     LkAzurePermission,
+    Role,
     User,
 )
+from massgov.pfml.util.users import has_role_in
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
@@ -80,10 +82,10 @@ def _decode_jwt(token: str, is_azure_token: bool = False) -> dict[str, Any]:
 
 
 def _is_azure_token(token: str) -> bool:
-    azure_config = configure_azure_ad()
     # Assume cognito is being used if azure is not configured.
     if not azure_config or not azure_config.public_keys:
         return False
+    azure_config.update_keys()
     headers = jwt.get_unverified_header(token)
     pick_public_key = [
         key for key in azure_config.public_keys if key.get("kid") == headers.get("kid")
@@ -157,12 +159,17 @@ def _process_cognito_token(db_session: Session, decoded_token: dict[str, Any]) -
         "current_user.auth_id", user.sub_id,
     )
 
+    if has_role_in(user, [Role.SERVICE_NOW]):
+        mass_pfml_agent_id = flask.request.headers.get("Mass-PFML-Agent-ID", None)
+        if mass_pfml_agent_id is None or mass_pfml_agent_id.strip() == "":
+            raise Unauthorized("Invalid required header: Mass-PFML-Agent-ID")
+        newrelic.agent.add_custom_parameter("mass_pfml_agent_id", mass_pfml_agent_id)
+
     # Read attributes for logging, so that db calls are not made during logging.
     flask.g.current_user_user_id = str(user.user_id)
     flask.g.current_user_auth_id = str(user.sub_id)
 
     flask.g.current_user_role_ids = ",".join(str(role.role_id) for role in user.roles)
-
     logger.info("Cognito auth token decode succeeded", extra={"auth_id": auth_id, "user": user})
 
 
@@ -202,7 +209,6 @@ def build_auth_code_flow() -> Optional[dict[str, Optional[Union[str, list]]]]:
     The first step in the authentication code flow
     Returns state, code verifier and auth_uri
     """
-    azure_config = configure_azure_ad()
     if azure_config is None:
         return None
     msal_app = _build_msal_app()
@@ -231,7 +237,6 @@ def _build_msal_app() -> Optional[msal.ConfidentialClientApplication]:
     Build the Confidential Client Application
     """
 
-    azure_config = configure_azure_ad()
     if azure_config is None:
         return None
 
@@ -243,7 +248,6 @@ def _build_msal_app() -> Optional[msal.ConfidentialClientApplication]:
 
 
 def build_logout_flow() -> Optional[str]:
-    azure_config = configure_azure_ad()
     if azure_config is None:
         return None
     return azure_config.logout_uri

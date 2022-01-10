@@ -99,7 +99,7 @@ def create_azure_client_config(
     if azure_settings is None:
         try:
             azure_settings = AzureSettings()
-        except ValidationError as e:
-            logger.info(e)
+        except ValidationError as err:
+            logger.info("Azure AD is not configured", exc_info=err)
             return None
     return AzureClientConfig(azure_settings)

@@ -51,15 +51,15 @@ const PageWrapperWithAppLogic = ({
 describe("PageWrapper", () => {
   beforeEach(() => {
     // Enable rendering of the site
-    process.env.featureFlags = {
+    process.env.featureFlags = JSON.stringify({
       pfmlTerriyay: true,
-    };
+    });
   });
 
   it("doesn't render the site when the 'pfmlTerriyay' feature flag is disabled", () => {
-    process.env.featureFlags = {
+    process.env.featureFlags = JSON.stringify({
       pfmlTerriyay: false,
-    };
+    });
 
     const { container } = render(<PageWrapperWithAppLogic />);
 
@@ -304,10 +304,10 @@ describe("PageWrapper", () => {
   });
 
   it("bypasses MaintenanceTakeover when noMaintenance feature flag is present", () => {
-    process.env.featureFlags = {
+    process.env.featureFlags = JSON.stringify({
       noMaintenance: true,
       pfmlTerriyay: true,
-    };
+    });
     mockRouter.pathname = "/login";
 
     const maintenanceProp = new Flag({

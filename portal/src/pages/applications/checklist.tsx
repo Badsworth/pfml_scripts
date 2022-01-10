@@ -29,7 +29,6 @@ import findDocumentsByLeaveReason from "../../utils/findDocumentsByLeaveReason";
 import findDocumentsByTypes from "../../utils/findDocumentsByTypes";
 import formatDate from "../../utils/formatDate";
 import hasDocumentsLoadError from "../../utils/hasDocumentsLoadError";
-import { isFeatureEnabled } from "../../services/featureFlags";
 import routeWithParams from "../../utils/routeWithParams";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
@@ -78,8 +77,6 @@ export const Checklist = (props: ChecklistProps) => {
     get(claim, "leave_details.reason")
   );
 
-  // TODO(PORTAL-1001): - Remove Feature Flag
-  const taxWithholdingEnabled = isFeatureEnabled("claimantShowTaxWithholding");
   const warnings =
     appLogic.benefitsApplications.warningsLists[claim.application_id];
 
@@ -94,12 +91,7 @@ export const Checklist = (props: ChecklistProps) => {
       certificationDocuments,
     },
     warnings
-  ).filter((step) => {
-    if (!taxWithholdingEnabled) {
-      return step.name !== ClaimSteps.taxWithholding;
-    }
-    return step;
-  });
+  );
 
   /**
    * @type {boolean} Flag for determining whether to enable the submit button
@@ -211,10 +203,7 @@ export const Checklist = (props: ChecklistProps) => {
           key={step.name}
           number={getStepNumber(step)}
           title={t("pages.claimsChecklist.stepTitle", {
-            context:
-              taxWithholdingEnabled && step.name === ClaimSteps.payment
-                ? camelCase(step.name) + "_tax"
-                : camelCase(step.name),
+            context: camelCase(step.name),
           })}
           status={step.status}
           stepHref={stepHref}
@@ -281,9 +270,6 @@ export const Checklist = (props: ChecklistProps) => {
       "leave_details.has_future_child_date"
     );
 
-    if (stepName === ClaimSteps.payment && taxWithholdingEnabled) {
-      return "payment_tax";
-    }
     // TODO (CP-2101) rename context strings for clarity in en-US.js strings i.e. uploadMedicalCert, uploadCareCert
     if (stepName !== ClaimSteps.uploadCertification) {
       return camelCase(stepName);
@@ -396,10 +382,7 @@ export const Checklist = (props: ChecklistProps) => {
                 })}
               </HeadingPrefix>
               {t("pages.claimsChecklist.stepListTitle", {
-                context:
-                  taxWithholdingEnabled && stepGroup.number === 2
-                    ? `${String(stepGroup.number)}_tax`
-                    : String(stepGroup.number),
+                context: String(stepGroup.number),
               })}
             </React.Fragment>
           }

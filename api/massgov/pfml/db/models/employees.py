@@ -1060,6 +1060,7 @@ class PaymentDetails(Base, TimestampMixin):
     period_start_date = Column(Date)
     period_end_date = Column(Date)
     amount = Column(Numeric(asdecimal=True), nullable=False)
+    business_net_amount = Column(Numeric(asdecimal=True), nullable=False)
 
     payment = relationship(Payment)
 
@@ -3053,7 +3054,7 @@ class ReferenceFileType(LookupTable):
 
     DUA_DEMOGRAPHICS_REQUEST_FILE = LkReferenceFileType(33, "DUA demographics request", 1)
 
-    IRS_1099_ORIG = LkReferenceFileType(34, "IRS 1099 org file", 1)
+    IRS_1099_FILE = LkReferenceFileType(34, "IRS 1099 file", 1)
 
     FINEOS_IAWW_EXTRACT = LkReferenceFileType(35, "IAWW extract", 2)
 

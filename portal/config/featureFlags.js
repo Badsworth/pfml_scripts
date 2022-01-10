@@ -1,7 +1,10 @@
+// @ts-check
+
 /**
  * Feature flags. A feature flag can be enabled/disabled at the environment level.
  * Its value will either be true or false. Environments can override this value.
- * @see ../../docs/portal/feature-flags.md
+ * See: ../../docs/portal/feature-flags.md
+ * @type {Record<string, Record<string, boolean>>}
  */
 const flagsConfig = {
   // Define a default or all feature flags here.
@@ -28,13 +31,10 @@ const flagsConfig = {
     claimantShowOrganizationUnits: false,
 
     // When this flag is enabled, the claim payments section for claimants will show
-    claimantShowPayments: false,
+    claimantShowPayments: true,
 
     // When this flag is enabled payment status phase two work will be displayed.
     claimantShowPaymentsPhaseTwo: false,
-
-    // When this flag is enabled, tax withholding option will be displayed to claimaints.
-    claimantShowTaxWithholding: false,
 
     // Show multiple leave request UI updates to leave admins.
     // TODO (PORTAL-1151) Remove flag
@@ -57,46 +57,47 @@ const flagsConfig = {
   // Environments can optionally override a default feature flag below.
   // The environment keys should use the same envName defined in
   // environment config files.
-  "cps-preview": {
-    claimantShowTaxWithholding: true,
-  },
+  "cps-preview": {},
   development: {
     example: true,
     pfmlTerriyay: true,
-    claimantShowTaxWithholding: true,
+    claimantShowPayments: true,
   },
   test: {
-    claimantShowTaxWithholding: true,
+    claimantShowPayments: true,
   },
   stage: {
-    claimantShowTaxWithholding: true,
+    claimantShowPayments: true,
   },
   training: {
-    claimantShowTaxWithholding: true,
+    claimantShowPayments: true,
   },
   performance: {
-    claimantShowTaxWithholding: true,
+    claimantShowPayments: true,
   },
   uat: {
-    claimantShowTaxWithholding: true,
+    claimantShowPayments: true,
   },
   local: {
     pfmlTerriyay: true,
-    claimantShowTaxWithholding: true,
+    claimantShowPayments: true,
   },
   prod: {
     pfmlTerriyay: true,
-    claimantShowTaxWithholding: true,
+    claimantShowPayments: true,
   },
 };
 
 /**
  * Merges the default feature flags with any environment-specific overrides
  * @param {string} env - Environment name
- * @returns {object} Feature flags for the given environment
+ * @returns {string} Stringified JSON representation of the feature flags for the given environment
  */
 function featureFlags(env) {
-  return Object.assign({}, flagsConfig.defaults, flagsConfig[env]);
+  const envFlags = Object.assign({}, flagsConfig.defaults, flagsConfig[env]);
+
+  // This gets passed into the app as an environment variable, which *must* be a string.
+  return JSON.stringify(envFlags);
 }
 
 module.exports = featureFlags;

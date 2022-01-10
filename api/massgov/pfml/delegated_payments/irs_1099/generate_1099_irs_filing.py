@@ -1,5 +1,6 @@
 import decimal
 import os
+import re
 import uuid
 from typing import Any, List, Tuple
 
@@ -16,8 +17,6 @@ from massgov.pfml.delegated_payments.step import Step
 from massgov.pfml.util.datetime import get_now_us_eastern
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
-
-total_b_record = 0
 
 
 class Constants:
@@ -73,6 +72,11 @@ class Constants:
 
 
 class Generate1099IRSfilingStep(Step):
+
+    total_b_record = 0
+    total_a_record = 1
+    seq_number = 1
+
     def run_step(self) -> None:
         self._generate_1099_irs_filing()
 
@@ -93,19 +97,21 @@ class Generate1099IRSfilingStep(Step):
             except Exception:
                 logger.exception("Error accessing 1099 data")
                 raise
+            if pfml_1099_util.is_test_file() == "T":
+                pfml_1099 = pfml_1099[:11]
             self.total_b_record = len(pfml_1099)
             logger.info("Total b records are, %s", self.total_b_record)
-            b_template = self._create_b_template()
-            b_entries = self._load_b_rec_data(b_template, pfml_1099)
             t_template = self._create_t_template()
             t_entries = self._load_t_rec_data(t_template)
             a_template = self._create_a_template()
             a_entries = self._load_a_rec_data(a_template)
             entries = t_entries + a_entries
+            b_template = self._create_b_template()
+            b_entries = self._load_b_rec_data(b_template, pfml_1099)
             for b_records in b_entries:
                 entries = entries + b_records
             c_template = self._create_c_template()
-            ctl_total, st_tax, fed_tax = _get_totals(pfml_1099)
+            ctl_total, st_tax, fed_tax = self._get_totals(pfml_1099)
             c_entries = self._load_c_rec_data(c_template, ctl_total)
             k_template = self._create_k_template()
             k_entries = self._load_k_rec_data(k_template, ctl_total, st_tax, fed_tax)
@@ -124,7 +130,6 @@ class Generate1099IRSfilingStep(Step):
             "{CONT_NM:<40}{CONT_PH:<15}{CONT_EMAIL:<50}{B91:<91}{SEQ_NO:08}{B10:<10}"
             "{VEN_IND:<1}{VEN_INFO:<232}\n"
         )
-        logger.debug("Template string is %s", temp)
         return temp
 
     def _create_a_template(self) -> str:
@@ -134,7 +139,6 @@ class Generate1099IRSfilingStep(Step):
             "{FE_IND:<1}{PYR_NM:<80}{TA_IND:<1}{PYR_ADDR:<40}{PYR_CTY:<40}"
             "{PYR_ST:<2}{PYR_ZC:0<9}{PYR_PHONE:<15}{B260:<260}{SEQ_NO:08}{B243:<243}\n"
         )
-        logger.debug("Template string is %s", temp)
         return temp
 
     def _create_b_template(self) -> str:
@@ -151,23 +155,20 @@ class Generate1099IRSfilingStep(Step):
             "{TAX_YR_OF_REFUND:<4}{B111:<111}{SP_DATA_ENTRIES:<60}{ST_TAX:0>12}"
             "{LOCAL_TAX:0>12}{CSF_CD:<2}{B2_1:<2}\n"
         )
-        logger.debug("Template string is %s", temp)
         return temp
 
     def _create_c_template(self) -> str:
         temp = (
-            "{C_REC_TYPE:<1}{TOT_B_REC:0>8}{B6:<6}{CTL_TOTAL_1:0>12}{CTL_TOTAL:0>276}{B196:<196}{SEQ_NO:08}"
+            "{C_REC_TYPE:<1}{TOT_B_REC:0>8}{B6:<6}{CTL_TOTAL_1:0>18}{CTL_TOTAL:0>270}{B196:<196}{SEQ_NO:08}"
             "{B243:<243}\n"
         )
-        logger.debug("Template string is %s", temp)
         return temp
 
     def _create_k_template(self) -> str:
         temp = (
-            "{K_REC_TYPE:<1}{TOT_B_REC:0>8}{B6:<6}{CTL_TOTAL_1:0>12}{CTL_TOTAL:0>276}{B196:<196}{SEQ_NO:08}"
+            "{K_REC_TYPE:<1}{TOT_B_REC:0>8}{B6:<6}{CTL_TOTAL_1:0>18}{CTL_TOTAL:0>270}{B196:<196}{SEQ_NO:08}"
             "{B199:<199}{ST_TAX:0>18}{FED_TAX:0>18}{B4:<4}{CSF_CD:<2}{B2:<2}\n"
         )
-        logger.debug("Template string is %s", temp)
         return temp
 
     def _create_f_template(self) -> str:
@@ -175,7 +176,6 @@ class Generate1099IRSfilingStep(Step):
             "{F_REC_TYPE:<1}{TOT_A_REC:0>8}{ZERO_21:0<21}{B19:<19}{TOT_B_REC:0>8}{B442:<442}"
             "{SEQ_NO:08}{B243:<243}"
         )
-        logger.debug("Template string is %s", temp)
         return temp
 
     def _create_irs_file(self, all_records: str) -> None:
@@ -197,7 +197,7 @@ class Generate1099IRSfilingStep(Step):
         file_util.copy_file(source_path, outgoing_s3_path)
         reference_file = ReferenceFile(
             file_location=str(source_path),
-            reference_file_type_id=ReferenceFileType.IRS_1099_ORIG.reference_file_type_id,
+            reference_file_type_id=ReferenceFileType.IRS_1099_FILE.reference_file_type_id,
             reference_file_id=uuid.uuid4(),
         )
         self.db_session.add(reference_file)
@@ -225,7 +225,7 @@ class Generate1099IRSfilingStep(Step):
             CONT_PH=Constants.CONT_PH,
             CONT_EMAIL=Constants.CONT_EMAIL,
             B91=Constants.BLANK_SPACE,
-            SEQ_NO=1,
+            SEQ_NO=self.seq_number,
             B10=Constants.BLANK_SPACE,
             VEN_IND=Constants.VEN_IND,
             VEN_INFO=Constants.BLANK_SPACE,
@@ -234,7 +234,7 @@ class Generate1099IRSfilingStep(Step):
         return t_record
 
     def _load_a_rec_data(self, template_str: str) -> str:
-
+        a_seq = self.seq_number + 1
         a_dict = dict(
             A_REC_TYPE=Constants.A_REC_TYPE,
             TAX_YEAR=pfml_1099_util.get_tax_year(),
@@ -255,27 +255,29 @@ class Generate1099IRSfilingStep(Step):
             PYR_ZC=Constants.COM_ZIP_CD,
             PYR_PHONE=Constants.PYR_PHONE,
             B260=Constants.BLANK_SPACE,
-            SEQ_NO=2,
+            SEQ_NO=a_seq,
             B243=Constants.BLANK_SPACE,
         )
         a_record = template_str.format_map(a_dict)
+        self.seq_number = self.seq_number + 1
         return a_record
 
     def _load_b_rec_data(self, template_str: str, tax_data: List[Any]) -> List[str]:
         b_dict_list = []
-        b_seq = 3
+        b_seq = self.seq_number + 1
+        logger.info("B sequence starts at %s", b_seq)
         for records in tax_data:
             b_dict = dict(
                 B_REC_TYPE=Constants.B_REC_TYPE,
                 TAX_YEAR=pfml_1099_util.get_tax_year(),
-                CORRECTION_IND=_get_correction_ind(records.correction_ind),
-                PAYEE_NAME_CTL=_get_name_ctl(records.last_name),
+                CORRECTION_IND=self._get_correction_ind(records.correction_ind),
+                PAYEE_NAME_CTL=self._get_name_ctl(records.last_name),
                 PAYEE_TIN_TYPE=Constants.TIN_TYPE,
                 PAYEE_TIN=pfml_1099_util.get_tax_id(self.db_session, records.tax_identifier_id),
                 PAYER_ACCT_NUMBER=Constants.PAYER_ACCT_NUMBER,
                 PAYER_OFFICE_CD=Constants.PAYER_OFFICE_CD,
                 B10=Constants.BLANK_SPACE,
-                AMT_CD_1=_format_amount_fields(records.gross_payments),
+                AMT_CD_1=self._format_amount_fields(records.gross_payments),
                 AMT_CD_2=Constants.AMT_CD_1,
                 AMT_CD_3=Constants.AMT_CD_1,
                 AMT_CD_4=Constants.AMT_CD_1,
@@ -292,14 +294,14 @@ class Generate1099IRSfilingStep(Step):
                 AMT_CD_F=Constants.AMT_CD_1,
                 AMT_CD_G=Constants.AMT_CD_1,
                 FE_IND=Constants.BLANK_SPACE,
-                PAYEE_NM1=_get_full_name(records.first_name, records.last_name, "PAYEE_NM1"),
-                PAYEE_NM2=_get_full_name(records.first_name, records.last_name, "PAYEE_NM2"),
+                PAYEE_NM1=self._get_full_name(records.first_name, records.last_name, "PAYEE_NM1"),
+                PAYEE_NM2=self._get_full_name(records.first_name, records.last_name, "PAYEE_NM2"),
                 B40=Constants.BLANK_SPACE,
                 PAYEE_ADDRESS=records.address_line_1.upper(),
                 B40_1=Constants.BLANK_SPACE,
                 PAYEE_CTY=records.city.upper(),
                 PAYEE_ST=records.state.upper(),
-                PAYEE_ZC=_get_zip(records.zip),
+                PAYEE_ZC=self._get_zip(records.zip),
                 B1=Constants.BLANK_SPACE,
                 SEQ_NO=b_seq,
                 B36=Constants.BLANK_SPACE,
@@ -309,20 +311,20 @@ class Generate1099IRSfilingStep(Step):
                 TAX_YR_OF_REFUND=Constants.BLANK_SPACE,
                 B111=Constants.BLANK_SPACE,
                 SP_DATA_ENTRIES=Constants.BLANK_SPACE,
-                ST_TAX=_format_amount_fields(records.state_tax_withholdings),
-                LOCAL_TAX=_format_amount_fields(records.federal_tax_withholdings),
+                ST_TAX=self._format_amount_fields(records.state_tax_withholdings),
+                LOCAL_TAX=self._format_amount_fields(records.federal_tax_withholdings),
                 CSF_CD=Constants.COMBINED_ST_FED_CD,
                 B2_1=Constants.BLANK_SPACE,
             )
             b_record = template_str.format_map(b_dict)
-            # logger.info(b_record)
             b_seq = b_seq + 1
             b_dict_list.append(b_record)
+            self.seq_number = b_seq
         return b_dict_list
 
     def _load_c_rec_data(self, template_str: str, ctl_total: decimal.Decimal) -> str:
-        c_seq = 3 + self.total_b_record
-        logger.debug("c_seq %s", c_seq)
+        c_seq = self.seq_number
+        logger.info("c_seq %s", c_seq)
         c_dict = dict(
             C_REC_TYPE=Constants.C_REC_TYPE,
             TOT_B_REC=self.total_b_record,
@@ -334,6 +336,7 @@ class Generate1099IRSfilingStep(Step):
             B243=Constants.BLANK_SPACE,
         )
         c_record = template_str.format_map(c_dict)
+        self.seq_number += 1
         return c_record
 
     def _load_k_rec_data(
@@ -343,7 +346,7 @@ class Generate1099IRSfilingStep(Step):
         st_tax: decimal.Decimal,
         fed_tax: decimal.Decimal,
     ) -> str:
-        k_seq = 4 + self.total_b_record
+        k_seq = self.seq_number
         k_dict = dict(
             K_REC_TYPE=Constants.K_REC_TYPE,
             TOT_B_REC=self.total_b_record,
@@ -360,13 +363,14 @@ class Generate1099IRSfilingStep(Step):
             B2=Constants.BLANK_SPACE,
         )
         k_record = template_str.format_map(k_dict)
+        self.seq_number += 1
         return k_record
 
     def _load_f_rec_data(self, template_str: str) -> str:
-        f_seq = 5 + self.total_b_record
+        f_seq = self.seq_number
         f_dict = dict(
             F_REC_TYPE=Constants.F_REC_TYPE,
-            TOT_A_REC=Constants.TOT_A_REC,
+            TOT_A_REC=self.total_a_record,
             ZERO_21=Constants.ZERO,
             B19=Constants.BLANK_SPACE,
             TOT_B_REC=self.total_b_record,
@@ -377,92 +381,98 @@ class Generate1099IRSfilingStep(Step):
         f_record = template_str.format_map(f_dict)
         return f_record
 
+    def _get_correction_ind(self, correction_ind: Boolean) -> str:
 
-def _get_correction_ind(correction_ind: Boolean) -> str:
-
-    if not correction_ind:
-        return Constants.BLANK_SPACE
-    else:
-        # TODO find which correction type to send and how to determine
-        # G (1 correction) or C(2 correction)
-        return "G"
-
-
-def _get_full_name(fname: str, lname: str, field_name: str) -> str:
-    full_name = lname + Constants.BLANK_SPACE + fname
-    name_length = len(full_name)
-    if name_length <= 40:
-        if field_name == "PAYEE_NM1":
-            return full_name.upper()
-        else:
+        if not correction_ind:
             return Constants.BLANK_SPACE
-    else:
-        first_forty_chars = full_name[:40]
-        last_chars = full_name[40:name_length]
-        if field_name == "PAYEE_NM1":
-            return first_forty_chars.upper()
         else:
-            return last_chars.upper()
+            # TODO find which correction type to send and how to determine
+            # G (1 correction) or C(2 correction)
+            return "G"
 
-
-def _get_name_ctl(lname: str) -> str:
-    last_name_four = ""
-    if lname.find("-") != -1:
-        last_name = lname.split("-")[0]
-    elif lname.find(" ") != -1:
-        last_name_list = lname.split(" ")
-        name_length = len(last_name_list)
-        if name_length == 2:
-            last_name = last_name_list[1]
+    def _get_full_name(self, fname: str, lname: str, field_name: str) -> str:
+        full_name_str = lname + Constants.BLANK_SPACE + fname
+        full_name = self._remove_special_chars(full_name_str)
+        name_length = len(full_name)
+        if name_length <= 40:
+            if field_name == "PAYEE_NM1":
+                return full_name.upper()
+            else:
+                return Constants.BLANK_SPACE
         else:
-            last_name = last_name_list[0].rstrip() + last_name_list[1]
-    else:
-        last_name = lname
-    logger.debug("Last name 4 chars is %s", last_name[0:4])
-    last_name_four = last_name[0:4].upper()
-    return last_name_four
+            first_forty_chars = full_name[:40]
+            last_chars = full_name[40:name_length]
+            if field_name == "PAYEE_NM1":
+                return first_forty_chars.upper()
+            else:
+                return last_chars.upper()
 
+    def _get_name_ctl(self, last_name: str) -> str:
+        last_name_four = ""
+        lname = self._remove_special_chars(last_name)
+        if lname.find("-") != -1:
+            last_name = lname.split("-")[0]
+        elif lname.find(" ") != -1:
+            last_name_list = lname.split(" ")
+            name_length = len(last_name_list)
+            if name_length == 2:
+                last_name = last_name_list[1]
+            else:
+                last_name = last_name_list[0].rstrip() + last_name_list[1]
+        else:
+            last_name = lname
+        logger.debug("Last name 4 chars is %s", last_name[0:4])
+        last_name_four = last_name[0:4].upper()
+        return last_name_four
 
-def _format_amount_fields(amt: decimal.Decimal) -> str:
+    def _format_amount_fields(self, amt: decimal.Decimal) -> str:
 
-    amount = str(amt).split(".")
-    dollars = amount[0]
-    if len(amount) == 2:
-        cents = amount[1]
-        if len(cents) == 2:
-            cents = cents
-        elif len(cents) == 1:
-            cents = cents + "0"
-    else:
-        cents = "00"
-    format_amt = dollars + cents
-    return format_amt
+        amount = str(amt).split(".")
+        dollars = amount[0]
+        if len(amount) == 2:
+            cents = amount[1]
+            if len(cents) == 2:
+                cents = cents
+            elif len(cents) == 1:
+                cents = cents + "0"
+            else:
+                cents = cents[:2]
+        else:
+            cents = "00"
+        format_amt = dollars + cents
+        return format_amt
 
+    def _get_totals(self, tax_data: List[Any]) -> Tuple:
+        ctl_total = decimal.Decimal(0.0)
+        st_tax = decimal.Decimal(0.0)
+        fed_tax = decimal.Decimal(0.0)
 
-def _get_totals(tax_data: List[Any]) -> Tuple:
-    ctl_total = decimal.Decimal(0.0)
-    st_tax = decimal.Decimal(0.0)
-    fed_tax = decimal.Decimal(0.0)
+        for records in tax_data:
+            ctl_total += records.gross_payments
+            st_tax += records.state_tax_withholdings
+            fed_tax += records.federal_tax_withholdings
+        return (
+            self._format_amount_fields(ctl_total),
+            self._format_amount_fields(st_tax),
+            self._format_amount_fields(fed_tax),
+        )
 
-    for records in tax_data:
-        ctl_total += records.gross_payments
-        st_tax += records.state_tax_withholdings
-        fed_tax += records.federal_tax_withholdings
-    return (
-        _format_amount_fields(ctl_total),
-        _format_amount_fields(st_tax),
-        _format_amount_fields(fed_tax),
-    )
+    def _get_zip(self, zip_code: str) -> str:
+        zip_code_five = ""
+        zip_code_four = ""
+        zcode = ""
+        if zip_code.find("-") != -1:
+            zip_code_five = zip_code.split("-")[0]
+            zip_code_four = zip_code.split("-")[1]
+            zcode = zip_code_five[:5] + zip_code_four[:4]
+        else:
+            zcode = zip_code[:9]
+        return zcode
 
+    def _remove_special_chars(self, name_string: str) -> str:
 
-def _get_zip(zip_code: str) -> str:
-    zip_code_five = ""
-    zip_code_four = ""
-    zcode = ""
-    if zip_code.find("-") != -1:
-        zip_code_five = zip_code.split("-")[0]
-        zip_code_four = zip_code.split("-")[1]
-        zcode = zip_code_five[:5] + zip_code_four[:4]
-    else:
-        zcode = zip_code[:9]
-    return zcode
+        final_string = re.sub("[^A-Za-z0-9- ]+", "", name_string)
+        if final_string != name_string:
+            logger.info("Removed special characters from name %s", name_string)
+            logger.info("Name is now %s", final_string)
+        return final_string

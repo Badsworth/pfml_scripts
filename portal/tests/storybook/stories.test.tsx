@@ -44,7 +44,7 @@ const storyFilePaths: Array<[RelativeFilePath, AbsoluteFilePath]> =
   );
 
 // Axe tests can sometimes take longer than the default 5 seconds
-jest.setTimeout(10000);
+jest.setTimeout(20000);
 
 /**
  * Generated tests for each Storybook story, to ensure our stories are

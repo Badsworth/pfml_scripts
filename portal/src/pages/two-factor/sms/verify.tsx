@@ -22,9 +22,6 @@ interface VerifySMSProps {
 
 export const VerifySMS = (props: VerifySMSProps) => {
   const { appLogic } = props;
-  const mfaPhoneNumber =
-    appLogic.auth.cognitoUser?.challengeParam?.CODE_DELIVERY_DESTINATION;
-  const lastFourDigits = mfaPhoneNumber ? mfaPhoneNumber.slice(-4) : "****";
   const { t } = useTranslation();
 
   const { formState, updateFields } = useFormState({
@@ -55,9 +52,7 @@ export const VerifySMS = (props: VerifySMSProps) => {
       <form className="usa-form" method="post">
         <Title>{t("pages.authTwoFactorSmsVerify.title")}</Title>
 
-        <Lead>
-          {t("pages.authTwoFactorSmsVerify.lead", { lastFourDigits })}
-        </Lead>
+        <Lead>{t("pages.authTwoFactorSmsVerify.lead")}</Lead>
 
         <InputText
           {...getFunctionalInputProps("code")}

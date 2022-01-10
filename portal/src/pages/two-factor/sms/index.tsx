@@ -50,7 +50,7 @@ export const IndexSMS = (props: IndexSMSProps) => {
       await appLogic.users.updateUser(props.user.user_id, {
         mfa_delivery_preference: "Opt Out",
       });
-      appLogic.portalFlow.goToNextPage({});
+      appLogic.portalFlow.goToPageFor("CONTINUE");
     }
   };
 

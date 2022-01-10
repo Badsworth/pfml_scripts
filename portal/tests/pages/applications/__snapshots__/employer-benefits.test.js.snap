@@ -143,7 +143,7 @@ exports[`EmployerBenefits renders the page 1`] = `
             class="usa-hint text-base-dark"
           >
             <br />
-            I will recieve employer-sponsored benefits during my paid leave
+            I will receive employer-sponsored benefits during my paid leave
           </span>
         </label>
       </div>

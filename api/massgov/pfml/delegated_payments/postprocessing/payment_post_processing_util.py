@@ -194,7 +194,7 @@ class PayPeriodGroup:
     def add_payment_from_details(
         self, payment_details: PaymentDetails, payment_scenario: PaymentScenario
     ) -> None:
-        amount = payment_details.amount
+        amount = payment_details.business_net_amount
         payment = payment_details.payment
         self.absence_case_ids.add(str(payment.claim.fineos_absence_id))
 
@@ -313,10 +313,12 @@ def get_reduction_amount(payment_amount: Decimal, amount_available: Decimal) -> 
 def make_payment_detail_log(
     payment_detail: PaymentDetails, amount_available: Optional[Decimal] = None
 ) -> str:
-    msg = f"[StartDate={payment_detail.period_start_date},EndDate={payment_detail.period_end_date},Amount=${payment_detail.amount}]"
+    msg = f"[StartDate={payment_detail.period_start_date},EndDate={payment_detail.period_end_date},Amount=${payment_detail.business_net_amount}]"
 
     if amount_available is not None:
-        reduction_amount = get_reduction_amount(payment_detail.amount, amount_available)
+        reduction_amount = get_reduction_amount(
+            payment_detail.business_net_amount, amount_available
+        )
         if reduction_amount == Decimal(0):
             msg += " does not require a reduction for this pay period."
         else:
@@ -436,7 +438,7 @@ class MaximumWeeklyBenefitsAuditMessageBuilder:
                     continue
 
                 for payment_details in payment_detail_group.payment_details:
-                    amount_attempting_to_pay += payment_details.amount
+                    amount_attempting_to_pay += payment_details.business_net_amount
 
             reduction_amount = get_reduction_amount(amount_attempting_to_pay, amount_available)
             pay_period_overview_msg += f"; Over the cap by ${reduction_amount}"
