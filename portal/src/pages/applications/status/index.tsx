@@ -8,6 +8,7 @@ import {
   DocumentType,
   DocumentTypeEnum,
 } from "../../../models/Document";
+import React, { useEffect } from "react";
 import Tag, { TagProps } from "../../../components/core/Tag";
 
 import Alert from "../../../components/core/Alert";
@@ -17,7 +18,6 @@ import ButtonLink from "../../../components/ButtonLink";
 import Heading from "../../../components/core/Heading";
 import LeaveReason from "../../../models/LeaveReason";
 import LegalNoticeList from "../../../components/LegalNoticeList";
-import React from "react";
 import Spinner from "../../../components/core/Spinner";
 import StatusNavigationTabs from "../../../components/status/StatusNavigationTabs";
 import Title from "../../../components/core/Title";
@@ -53,6 +53,7 @@ export const Status = ({
       documents: allClaimDocuments,
       download: downloadDocument,
       hasLoadedClaimDocuments,
+      loadAll: loadAllDocuments,
     },
   } = appLogic;
 
@@ -61,6 +62,13 @@ export const Status = ({
   const application_id = claimDetail?.application_id || "";
   const fineosAbsenceId = claimDetail?.fineos_absence_id || "";
   const absenceId = absence_id || absence_case_id;
+
+  // Load claim documents if application id is valid
+  useEffect(() => {
+    if (application_id) loadAllDocuments(application_id, true);
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [application_id, appLogic.portalFlow.pathname]);
 
   // Retrieve claim details
   const hasDocuments = hasLoadedClaimDocuments(application_id);
@@ -72,6 +80,11 @@ export const Status = ({
 
   const documentsForApplication =
     allClaimDocuments.filterByApplication(application_id);
+
+  const hasDocumentsError = hasDocumentsLoadError(
+    appLogic.appErrors,
+    application_id
+  );
 
   const viewYourNotices = () => {
     const hasDocumentsError = hasDocumentsLoadError(

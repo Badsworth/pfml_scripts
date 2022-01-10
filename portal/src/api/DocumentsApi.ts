@@ -8,7 +8,6 @@ import {
   BenefitsApplicationDocument,
   DocumentTypeEnum,
 } from "../models/Document";
-
 import DocumentCollection from "../models/DocumentCollection";
 import assert from "assert";
 import routes from "../routes";
@@ -66,7 +65,7 @@ export default class DocumentsApi extends BaseApi {
   getDocuments = async (application_id: string) => {
     const { data } = await this.request<BenefitsApplicationDocument[]>(
       "GET",
-      `${application_id}/documentasdfsadfs`
+      `${application_id}/documents`
     );
 
     return {

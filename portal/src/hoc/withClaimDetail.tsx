@@ -30,20 +30,11 @@ function withClaimDetail<T extends WithClaimDetailProps>(
     const { t } = useTranslation();
     const {
       claims: { claimDetail, isLoadingClaimDetail, loadClaimDetail },
-      documents: { hasLoadedClaimDocuments, loadAll },
     } = appLogic;
 
     // Determine absence/application ids
     const { absence_case_id, absence_id } = query;
-    const application_id = claimDetail?.application_id || "";
     const absenceId = absence_id || absence_case_id;
-
-    // Check for documents and related errors
-    const hasDocuments = hasLoadedClaimDocuments(application_id);
-    const hasDocumentsError = hasDocumentsLoadError(
-      appLogic.appErrors,
-      application_id
-    );
 
     // Load claim detail if absence id is valid
     useEffect(() => {
@@ -51,13 +42,6 @@ function withClaimDetail<T extends WithClaimDetailProps>(
 
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [absenceId]);
-
-    // Load claim documents if application id is valid
-    useEffect(() => {
-      if (application_id) loadAll(application_id, true);
-
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [application_id, appLogic.portalFlow.pathname]);
 
     // Address potential hash values in URL
     useEffect(() => {
@@ -70,7 +54,7 @@ function withClaimDetail<T extends WithClaimDetailProps>(
         const anchorId = document.getElementById(location.hash.substring(1));
         if (anchorId) anchorId.scrollIntoView();
       }
-    }, [hasDocuments, hasDocumentsError, isLoadingClaimDetail]);
+    }, [isLoadingClaimDetail]);
 
     /**
      * If there is no absence_id query parameter,
