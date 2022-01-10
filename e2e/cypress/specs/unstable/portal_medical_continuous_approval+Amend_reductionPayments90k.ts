@@ -158,35 +158,18 @@ describe("Claimant uses portal to report other leaves and benefits, receives cor
               .approve()
               .paidLeave((leaveCase) => {
                 const { other_incomes, employer_benefits } = claim;
-                let paymentAmounts;
-                // @note: Once these changes are deployed to all environments, we should only use the split payments with the updated maximum benfit
-                if (config("HAS_UPDATED_MAX_BENFIT") === "true") {
-                  paymentAmounts =
-                    config("FINEOS_HAS_TAX_WITHHOLDING") === "true"
-                      ? [
-                          { net_payment_amount: 496.66 },
-                          { net_payment_amount: 58.43 },
-                          { net_payment_amount: 29.22 },
-                        ]
-                      : [{ net_payment_amount: 584.31 }];
-                } else {
-                  paymentAmounts =
-                    config("FINEOS_HAS_TAX_WITHHOLDING") === "true"
-                      ? [
-                          { net_payment_amount: 299.25 },
-                          { net_payment_amount: 35.0 },
-                          { net_payment_amount: 15.75 },
-                        ]
-                      : [{ net_payment_amount: 350 }];
-                }
+                const paymentAmounts =[
+                  { net_payment_amount: 496.66 },
+                  { net_payment_amount: 58.43 },
+                  { net_payment_amount: 29.22 },
+                ];
                 assertIsTypedArray(other_incomes, isValidOtherIncome);
                 assertIsTypedArray(employer_benefits, isValidEmployerBenefit);
                 leaveCase
                   .applyReductions({ other_incomes, employer_benefits })
-                  // @todo: reinstate after 1/14/22 and once retroactive start dates are being used for this scenario.
-                  // .assertPaymentsMade([{ net_payment_amount: 350 }])
-                  // .assertPaymentAllocations([{ net_payment_amount: 350 }]);
-                  .assertAmountsPending(paymentAmounts);
+                  .assertAmountsPending(paymentAmounts)
+                  .assertPaymentsMade(paymentAmounts)
+                  .assertPaymentAllocations(paymentAmounts);
               });
           }
         );
