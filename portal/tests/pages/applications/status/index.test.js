@@ -218,18 +218,6 @@ describe("Status", () => {
     expect(container).toMatchSnapshot();
   });
 
-  it("shows a spinner if there is no claim detail", () => {
-    renderPage(
-      Status,
-      {
-        addCustomSetup: setupHelper(),
-      },
-      props
-    );
-
-    expect(screen.getByRole("progressbar")).toBeInTheDocument();
-  });
-
   it("fetches claim detail on if none is loaded", () => {
     const loadClaimDetailSpy = jest.fn();
     renderPage(
