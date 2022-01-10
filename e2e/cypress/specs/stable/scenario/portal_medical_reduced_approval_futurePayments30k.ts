@@ -27,7 +27,7 @@ describe("Submit medical application via the web portal: Adjudication Approval &
             timestamp_from: Date.now(),
           });
         });
-        portal.submitClaimPartsTwoThree(application, paymentPreference);
+        portal.submitClaimPartsTwoThree(application, paymentPreference, claim.is_withholding_tax);
       });
     });
 

@@ -48,7 +48,7 @@ function setFeatureFlags(flags?: Partial<FeatureFlags>): void {
     employerShowDashboardSearch: true,
     employerShowReviewByStatus: true,
     claimantShowStatusPage: true,
-    claimantShowTaxWithholding: false,
+    claimantShowTaxWithholding: true,
     claimantShowPayments: config("HAS_PAYMENT_STATUS") === "true",
     claimantShowOrganizationUnits: false,
   };
@@ -1031,21 +1031,14 @@ export function submitPartsTwoThreeNoLeaveCert(
 export function submitClaimPartsTwoThree(
   application: ApplicationRequestBody,
   paymentPreference: PaymentPreferenceRequestBody,
-  useWithholdingFlow = false,
-  is_withholding_tax = false
+  is_withholding_tax: boolean
 ): void {
   const reason = application.leave_details && application.leave_details.reason;
-  clickChecklistButton(
-    useWithholdingFlow
-      ? "Enter payment (method|information)"
-      : "Add payment information"
-  );
+  clickChecklistButton("Enter payment (method|information)");
   addPaymentInfo(paymentPreference);
   onPage("checklist");
-  if (useWithholdingFlow) {
-    clickChecklistButton("Enter tax withholding preference");
-    addWithholdingPreference(is_withholding_tax ?? false);
-  }
+  clickChecklistButton("Enter tax withholding preference");
+  addWithholdingPreference(is_withholding_tax);
   clickChecklistButton("Upload identification document");
   addId("MA ID");
   onPage("checklist");
@@ -1056,11 +1049,9 @@ export function submitClaimPartsTwoThree(
   onPage("checklist");
   reviewAndSubmit();
   onPage("review");
-  useWithholdingFlow &&
-    cy
-      .contains("Withhold state and federal taxes?")
-      .parent()
-      .contains(is_withholding_tax ? "Yes" : "No");
+  cy.contains("Withhold state and federal taxes?")
+    .parent()
+    .contains(is_withholding_tax ? "Yes" : "No");
   confirmSubmit();
   goToDashboardFromSuccessPage();
   cy.wait(3000);

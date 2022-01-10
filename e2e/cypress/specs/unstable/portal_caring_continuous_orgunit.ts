@@ -29,7 +29,7 @@ describe("Submit a claim through the Portal that has OrgUnits associated with th
           timestamp_from: Date.now(),
         });
       });
-      portal.submitClaimPartsTwoThree(application, paymentPreference);
+      portal.submitClaimPartsTwoThree(application, paymentPreference, claim.is_withholding_tax);
     });
   });
 
