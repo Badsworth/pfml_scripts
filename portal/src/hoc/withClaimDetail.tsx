@@ -4,7 +4,6 @@ import withUser, { WithUserProps } from "./withUser";
 import BackButton from "../components/BackButton";
 import PageNotFound from "../components/PageNotFound";
 import Spinner from "../components/core/Spinner";
-import hasDocumentsLoadError from "../utils/hasDocumentsLoadError";
 import routes from "../routes";
 import { useTranslation } from "../locales/i18n";
 

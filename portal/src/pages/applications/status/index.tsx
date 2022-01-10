@@ -81,11 +81,6 @@ export const Status = ({
   const documentsForApplication =
     allClaimDocuments.filterByApplication(application_id);
 
-  const hasDocumentsError = hasDocumentsLoadError(
-    appLogic.appErrors,
-    application_id
-  );
-
   const viewYourNotices = () => {
     const hasDocumentsError = hasDocumentsLoadError(
       appLogic.appErrors,
