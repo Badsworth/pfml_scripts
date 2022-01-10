@@ -31,7 +31,7 @@ const flagsConfig = {
     claimantShowPayments: false,
 
     // When this flag is enabled payment status phase two work will be displayed.
-    claimantShowPaymentsPhaseTwo: true,
+    claimantShowPaymentsPhaseTwo: false,
 
     // When this flag is enabled, tax withholding option will be displayed to claimaints.
     claimantShowTaxWithholding: false,
