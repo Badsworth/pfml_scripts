@@ -249,7 +249,7 @@ export const Payments = ({
                 </tr>
               </thead>
               <tbody>
-                {claimDetail.payments
+                {claimDetail?.payments
                   .reverse()
                   .map(
                     ({
