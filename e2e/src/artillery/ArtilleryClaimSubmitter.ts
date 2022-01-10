@@ -57,16 +57,15 @@ class ArtilleryClaimSubmitter extends PortalSubmitter {
       claim.paymentPreference,
       options
     );
-    if (config("FINEOS_HAS_TAX_WITHHOLDING") === "true") {
-      logger?.debug("Attempting to input Tax Withholding Info", {
-        fineos_absence_id,
-      });
-      await this.submitTaxPreference(
-        application_id,
-        { is_withholding_tax: claim.is_withholding_tax },
-        options
-      );
-    }
+    logger?.debug("Attempting to input Tax Withholding Info", {
+      fineos_absence_id,
+    });
+    await this.submitTaxPreference(
+      application_id,
+      { is_withholding_tax: claim.is_withholding_tax },
+      options
+    );
+
     logger?.debug("Attempting to complete Application (Final Submit)", {
       fineos_absence_id,
     });

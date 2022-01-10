@@ -49,7 +49,7 @@ function setFeatureFlags(flags?: Partial<FeatureFlags>): void {
     employerShowReviewByStatus: true,
     claimantShowStatusPage: true,
     claimantShowTaxWithholding: false,
-    claimantShowPayments: config("HAS_PAYMENT_STATUS") === "true",
+    claimantShowPayments: true,
     claimantShowOrganizationUnits: false,
   };
   cy.setCookie("_ff", JSON.stringify({ ...defaults, ...flags }), { log: true });
@@ -584,9 +584,7 @@ export function enterEmployerInfo(
   if (useOrgUnitFlow === true) {
     cy.findByLabelText("Select a department")
       .get("select")
-      .select(
-        "Division of Administrative Law Appeals", {force: true}
-      );
+      .select("Division of Administrative Law Appeals", { force: true });
     cy.contains("button", "Save and continue").click();
   }
   if (application.employment_status === "Employed") {
@@ -1031,21 +1029,15 @@ export function submitPartsTwoThreeNoLeaveCert(
 export function submitClaimPartsTwoThree(
   application: ApplicationRequestBody,
   paymentPreference: PaymentPreferenceRequestBody,
-  useWithholdingFlow = false,
   is_withholding_tax = false
 ): void {
   const reason = application.leave_details && application.leave_details.reason;
-  clickChecklistButton(
-    useWithholdingFlow
-      ? "Enter payment (method|information)"
-      : "Add payment information"
-  );
+  clickChecklistButton("Enter payment (method|information)");
   addPaymentInfo(paymentPreference);
   onPage("checklist");
-  if (useWithholdingFlow) {
-    clickChecklistButton("Enter tax withholding preference");
-    addWithholdingPreference(is_withholding_tax ?? false);
-  }
+  clickChecklistButton("Enter tax withholding preference");
+  addWithholdingPreference(is_withholding_tax ?? false);
+
   clickChecklistButton("Upload identification document");
   addId("MA ID");
   onPage("checklist");
@@ -1056,11 +1048,9 @@ export function submitClaimPartsTwoThree(
   onPage("checklist");
   reviewAndSubmit();
   onPage("review");
-  useWithholdingFlow &&
-    cy
-      .contains("Withhold state and federal taxes?")
-      .parent()
-      .contains(is_withholding_tax ? "Yes" : "No");
+  cy.contains("Withhold state and federal taxes?")
+    .parent()
+    .contains(is_withholding_tax ? "Yes" : "No");
   confirmSubmit();
   goToDashboardFromSuccessPage();
   cy.wait(3000);
@@ -1994,11 +1984,11 @@ export function claimantGoToClaimStatus(
   fineosAbsenceId: string,
   waitForApps = true
 ): void {
-  waitForApps && cy.wait("@getApplications")
-  waitForApps && cy.wait("@getDocuments").wait(300)
+  waitForApps && cy.wait("@getApplications");
+  waitForApps && cy.wait("@getDocuments").wait(300);
   cy.contains("article", fineosAbsenceId).within(() => {
     cy.contains("View status updates and details").click({
-      force: true
+      force: true,
     });
     cy.url()
       .should("include", "/applications/status/")

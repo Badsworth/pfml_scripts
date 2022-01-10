@@ -12,7 +12,6 @@ import {
   isValidOtherIncome,
   isValidPreviousLeave,
 } from "../../../src/util/typeUtils";
-import { config } from "../../actions/common";
 
 // Used for stashing generated benefit and leave
 type LeaveAdminchanges = {
@@ -23,10 +22,7 @@ type LeaveAdminchanges = {
 describe("Claimant uses portal to report other leaves and benefits, receives correction from employer, gets escalated and approved within Fineos", () => {
   const claimSubmission =
     it("As a claimant, I should be able to report a previous leave, report other benefits, and submit continuos medical leave application through the portal", () => {
-      portal.before({
-        claimantShowTaxWithholding:
-          config("FINEOS_HAS_TAX_WITHHOLDING") === "true",
-      });
+      portal.before();
       cy.task("generateClaim", "BHAP1_OLB").then((claim) => {
         const employerReportedBenefit = claim.claim.employer_benefits?.[0];
         delete claim.claim.employer_benefits;
@@ -45,10 +41,7 @@ describe("Claimant uses portal to report other leaves and benefits, receives cor
 
         // Submit Claim
         portal.startClaim();
-        portal.submitClaimPartOne(
-          application,
-          false
-        );
+        portal.submitClaimPartOne(application, false);
         portal.waitForClaimSubmission().then((data) => {
           cy.stash("submission", {
             application_id: data.application_id,
@@ -56,12 +49,7 @@ describe("Claimant uses portal to report other leaves and benefits, receives cor
             timestamp_from: Date.now(),
           });
         });
-        portal.submitClaimPartsTwoThree(
-          application,
-          paymentPreference,
-          config("FINEOS_HAS_TAX_WITHHOLDING") === "true",
-          true
-        );
+        portal.submitClaimPartsTwoThree(application, paymentPreference, true);
       });
     });
 
@@ -149,36 +137,18 @@ describe("Claimant uses portal to report other leaves and benefits, receives cor
                     certification.prefill();
                   })
                   .paidBenefits((paidBenefits) => {
-                    if (config("FINEOS_HAS_TAX_WITHHOLDING") === "true") {
-                      paidBenefits.assertSitFitOptIn(true);
-                    }
+                    paidBenefits.assertSitFitOptIn(true);
                   })
                   .acceptLeavePlan();
               })
               .approve()
               .paidLeave((leaveCase) => {
                 const { other_incomes, employer_benefits } = claim;
-                let paymentAmounts;
-                // @note: Once these changes are deployed to all environments, we should only use the split payments with the updated maximum benfit
-                if (config("HAS_UPDATED_MAX_BENFIT") === "true") {
-                  paymentAmounts =
-                    config("FINEOS_HAS_TAX_WITHHOLDING") === "true"
-                      ? [
-                          { net_payment_amount: 496.66 },
-                          { net_payment_amount: 58.43 },
-                          { net_payment_amount: 29.22 },
-                        ]
-                      : [{ net_payment_amount: 584.31 }];
-                } else {
-                  paymentAmounts =
-                    config("FINEOS_HAS_TAX_WITHHOLDING") === "true"
-                      ? [
-                          { net_payment_amount: 299.25 },
-                          { net_payment_amount: 35.0 },
-                          { net_payment_amount: 15.75 },
-                        ]
-                      : [{ net_payment_amount: 350 }];
-                }
+                const paymentAmounts = [
+                  { net_payment_amount: 496.66 },
+                  { net_payment_amount: 58.43 },
+                  { net_payment_amount: 29.22 },
+                ];
                 assertIsTypedArray(other_incomes, isValidOtherIncome);
                 assertIsTypedArray(employer_benefits, isValidEmployerBenefit);
                 leaveCase

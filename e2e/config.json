@@ -19,9 +19,6 @@
     "ORGUNIT_EMPLOYERS_FILE": "./employers/e2e-2021-12-20-orgunits.json",
     "DOR_IMPORT_URI": "s3://massgov-pfml-test-agency-transfer/dor/received/",
     "DOR_ETL_ARN": "arn:aws:states:us-east-1:498823821309:stateMachine:pfml-api-test-dor-fineos-etl",
-    "FINEOS_HAS_TAX_WITHHOLDING": "true",
-    "HAS_UPDATED_MAX_BENFIT": "true",
-    "HAS_PAYMENT_STATUS": "true",
     "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "true",
     "HAS_ORGUNITS_SETUP": "true"
   },
@@ -37,9 +34,6 @@
     "EMPLOYERS_FILE": "./employers/e2e-2021-08-05.json",
     "DOR_IMPORT_URI": "s3://massgov-pfml-stage-agency-transfer/dor/received/",
     "DOR_ETL_ARN": "arn:aws:states:us-east-1:498823821309:stateMachine:pfml-api-stage-dor-fineos-etl",
-    "FINEOS_HAS_TAX_WITHHOLDING": "true",
-    "HAS_UPDATED_MAX_BENFIT": "true",
-    "HAS_PAYMENT_STATUS": "false",
     "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "false"
   },
   "training": {
@@ -54,9 +48,6 @@
     "EMPLOYERS_FILE": "./employers/e2e-2022-01-03.json",
     "DOR_IMPORT_URI": "s3://massgov-pfml-training-agency-transfer/dor/received/",
     "DOR_ETL_ARN": "arn:aws:states:us-east-1:498823821309:stateMachine:pfml-api-training-dor-fineos-etl",
-    "FINEOS_HAS_TAX_WITHHOLDING": "true",
-    "HAS_UPDATED_MAX_BENFIT": "true",
-    "HAS_PAYMENT_STATUS": "false",
     "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "false"
   },
   "trn2": {
@@ -71,9 +62,6 @@
     "EMPLOYERS_FILE": "./employers/e2e-2022-01-03.json",
     "DOR_IMPORT_URI": "s3://massgov-pfml-trn2-agency-transfer/dor/received/",
     "DOR_ETL_ARN": "arn:aws:states:us-east-1:498823821309:stateMachine:pfml-api-trn2-dor-fineos-etl",
-    "FINEOS_HAS_TAX_WITHHOLDING": "false",
-    "HAS_UPDATED_MAX_BENFIT": "false",
-    "HAS_PAYMENT_STATUS": "false",
     "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "false"
   },
   "long": {
@@ -88,9 +76,6 @@
     "EMPLOYERS_FILE": "./employers/e2e-2022-01-03.json",
     "DOR_IMPORT_URI": "s3://massgov-pfml-long-agency-transfer/dor/received/",
     "DOR_ETL_ARN": "arn:aws:states:us-east-1:498823821309:stateMachine:pfml-api-long-dor-fineos-etl",
-    "FINEOS_HAS_TAX_WITHHOLDING": "true",
-    "HAS_UPDATED_MAX_BENFIT": "false",
-    "HAS_PAYMENT_STATUS": "false",
     "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "false"
   },
   "performance": {
@@ -109,9 +94,6 @@
     "ORGUNIT_EMPLOYERS_FILE": "./employers/e2e-2021-12-20-orgunits.json",
     "DOR_IMPORT_URI": "s3://massgov-pfml-performance-agency-transfer/dor/received/",
     "DOR_ETL_ARN": "arn:aws:states:us-east-1:498823821309:stateMachine:pfml-api-performance-dor-fineos-etl",
-    "HAS_PAYMENT_STATUS": "false",
-    "FINEOS_HAS_TAX_WITHHOLDING": "true",
-    "HAS_UPDATED_MAX_BENFIT": "true",
     "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "false",
     "HAS_ORGUNITS_SETUP": "false"
   },
@@ -128,9 +110,6 @@
     "DOR_IMPORT_URI": "s3://massgov-pfml-uat-agency-transfer/dor/received/",
     "DOR_ETL_ARN": "arn:aws:states:us-east-1:498823821309:stateMachine:pfml-api-uat-dor-fineos-etl",
     "HAS_FINEOS_SP": "true",
-    "HAS_PAYMENT_STATUS": "false",
-    "FINEOS_HAS_TAX_WITHHOLDING": "true",
-    "HAS_UPDATED_MAX_BENFIT": "true",
     "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "false"
   },
   "cps-preview": {
@@ -147,9 +126,6 @@
     "ORGUNIT_EMPLOYERS_FILE": "./employers/e2e-2021-12-20-orgunits.json",
     "DOR_IMPORT_URI": "s3://massgov-pfml-cps-preview-agency-transfer/dor/received/",
     "DOR_ETL_ARN": "arn:aws:states:us-east-1:498823821309:stateMachine:pfml-api-cps-preview-dor-fineos-etl",
-    "FINEOS_HAS_TAX_WITHHOLDING": "false",
-    "HAS_UPDATED_MAX_BENFIT": "false",
-    "HAS_PAYMENT_STATUS": "true",
     "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "true",
     "HAS_ORGUNITS_SETUP": "false"
   },
@@ -167,9 +143,6 @@
     "DOR_IMPORT_URI": "s3://massgov-pfml-breakfix-agency-transfer/dor/received/",
     "DOR_ETL_ARN": "arn:aws:states:us-east-1:498823821309:stateMachine:pfml-api-breakfix-dor-fineos-etl",
     "HAS_FINEOS_SP": "true",
-    "FINEOS_HAS_TAX_WITHHOLDING": "false",
-    "HAS_UPDATED_MAX_BENFIT": "false",
-    "HAS_PAYMENT_STATUS": "false",
     "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "false"
   },
   "local": {

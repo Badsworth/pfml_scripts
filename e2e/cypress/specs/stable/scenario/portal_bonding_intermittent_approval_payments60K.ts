@@ -20,10 +20,7 @@ describe("Submit bonding application via the web portal: Adjudication Approval, 
 
         // Submit Claim
         portal.startClaim();
-        portal.submitClaimPartOne(
-          application,
-          false
-        );
+        portal.submitClaimPartOne(application, false);
         portal.waitForClaimSubmission().then((data) => {
           cy.stash("submission", {
             application_id: data.application_id,
@@ -68,11 +65,9 @@ describe("Submit bonding application via the web portal: Adjudication Approval, 
               })
               .certificationPeriods((certPeriods) => certPeriods.prefill())
               .acceptLeavePlan();
-            if (config("FINEOS_HAS_TAX_WITHHOLDING") === "true") {
-              adjudication.paidBenefits((paidBenefits) => {
-                paidBenefits.assertSitFitOptIn(claim.is_withholding_tax);
-              });
-            }
+            adjudication.paidBenefits((paidBenefits) => {
+              paidBenefits.assertSitFitOptIn(claim.is_withholding_tax);
+            });
           });
           claimPage.shouldHaveStatus("Availability", "As Certified");
           claimPage.approve();
