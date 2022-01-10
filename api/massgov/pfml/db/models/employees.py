@@ -1180,25 +1180,6 @@ class HealthCareProviderAddress(Base, TimestampMixin):
     address = relationship("Address", back_populates="health_care_providers")
 
 
-class AzureUser:
-    """ Not a database table but necessary for type-checking """
-
-    sub_id: str
-    first_name: str
-    last_name: str
-    email_address: str
-    groups: List[str]
-    permissions: List[int]
-
-    def __init__(self, sub_id, first_name, last_name, email_address, groups, permissions):
-        self.sub_id = sub_id
-        self.first_name = first_name
-        self.last_name = last_name
-        self.email_address = email_address
-        self.groups = groups
-        self.permissions = permissions
-
-
 class User(Base, TimestampMixin):
     __tablename__ = "user"
     user_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)

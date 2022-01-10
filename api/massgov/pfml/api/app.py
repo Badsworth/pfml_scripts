@@ -25,7 +25,7 @@ from massgov.pfml import db
 from massgov.pfml.api.authentication.azure import AzureUser
 from massgov.pfml.api.config import AppConfig, get_config
 from massgov.pfml.api.validation import add_error_handlers_to_app, get_custom_validator_map
-from massgov.pfml.db.models.employees import AzureUser, User
+from massgov.pfml.db.models.employees import User
 
 from .reverse_proxy import ReverseProxied
 

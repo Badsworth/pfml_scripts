@@ -19,7 +19,6 @@ import pytest
 import sqlalchemy
 from jose import jwt
 from jose.constants import ALGORITHMS
-from mock import patch
 from pytest import Item
 
 import massgov.pfml.api.app
@@ -261,22 +260,6 @@ def azure_auth_keys():
 
 
 @pytest.fixture(scope="session")
-def azure_auth_keys():
-    return {
-        "keys": [
-            {
-                "alg": "RS256",
-                "e": "AQAB",
-                "kid": "azure_kid",
-                "kty": "RSA",
-                "n": "iWBm-DQbycUqrPBSD5yk73zxyIr66hBUCyPCShW-btQ-nyBk1E-h4AvtqHpl4Y1aghQDTnn2gLHiRtV_XJtCpK1PEJ3SCqw6wGOEw5bbG7Q88KDvTMUF5k6gzRMHMBTD7lMNPIY-oCuh_Rwvg19hGBD2O6rA2sMHyTB-O2ZwL6M",
-                "use": "sig",
-            },
-        ]
-    }
-
-
-@pytest.fixture(scope="session")
 def auth_key():
     hmac_key = {
         "alg": "RS256",
@@ -432,23 +415,6 @@ def mock_azure(monkeypatch, azure_auth_keys):
     monkeypatch.setenv("AZURE_AD_PARENT_GROUP", "TSS-SG-PFML_ADMIN_PORTAL_NON_PROD")
 
     return authentication.configure_azure_ad()
-
-
-@pytest.fixture
-def mock_azure(monkeypatch, azure_auth_keys):
-    monkeypatch.setenv("AZURE_AD_APPLICATION_CLIENT_ID", "client_id")
-    monkeypatch.setenv("AZURE_AD_DIRECTORY_TENANT_ID", "tenant_id")
-    monkeypatch.setenv("AZURE_AD_AUTHORITY_DOMAIN", "login.microsoftonline.com")
-    monkeypatch.setenv("AZURE_AD_AUTHORIZATION_GUID", "1")
-    monkeypatch.setenv("AZURE_AD_SECRET_VALUE", "secret_value")
-    monkeypatch.setenv("ADMIN_PORTAL_BASE_URL", "http://localhost:3000")
-
-    with patch.object(
-        authentication.msalConfig.MSALClientConfig,
-        "_get_public_keys",
-        return_value=azure_auth_keys.get("keys"),
-    ):
-        return authentication.configure_azure_ad()
 
 
 @pytest.fixture
