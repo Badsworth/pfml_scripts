@@ -384,32 +384,20 @@ export const CONTINUOUS_MEDICAL_OLB: ScenarioSpecification = {
   },
 };
 
-const getFutureStartDates2022 = (): [Date, Date] => {
-  const start = faker.date.between(
-    parseISO("2022-01-03"),
-    addDays(new Date(), 60)
-  );
-  const startDate = startOfWeek(start);
-  const endDate = addWeeks(startDate, 2);
-  return [startDate, endDate];
-};
 export const BHAP1_OLB: ScenarioSpecification = {
   employee: { mass_id: true, wages: 90000 },
   claim: {
     label: "BHAP1_OLB",
     reason: "Child Bonding",
-    reason_qualifier: "Foster Care", // @todo: remove after 1/14/22. This is a temporary workaround for future leave, so that employer can make amendments
-    // reason_qualifier: "Newborn",
-    // bondingDate: "future",
+    reason_qualifier: "Newborn",
+    bondingDate: "future",
     docs: {
       MASSID: {},
-      FOSTERPLACEMENT: {},
+      BIRTHCERTIFICATE: {}
     },
     // Create a leave in progress, so we can check adjustments for both made and future payments.
-    // @todo: reinstate after 1/14/22 - this scenario is used for testing tax withholdings, where claims must start after 1/1/22
-    // leave_dates: [subWeeks(mostRecentSunday, 2), addWeeks(mostRecentSunday, 2)],
-    leave_dates: getFutureStartDates2022(),
     // Leave start & end dates here and in employer benefits empty so they match the leave dates automatically
+    leave_dates: [subWeeks(mostRecentSunday, 2), addWeeks(mostRecentSunday, 2)],
     other_incomes: [
       {
         income_type: "SSDI",

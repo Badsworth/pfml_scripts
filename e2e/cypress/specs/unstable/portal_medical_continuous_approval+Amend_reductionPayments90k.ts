@@ -158,16 +158,18 @@ describe("Claimant uses portal to report other leaves and benefits, receives cor
               .approve()
               .paidLeave((leaveCase) => {
                 const { other_incomes, employer_benefits } = claim;
-                const paymentAmounts =[
-                  { net_payment_amount: 496.66 },
-                  { net_payment_amount: 58.43 },
-                  { net_payment_amount: 29.22 },
-                ];
+                const paymentAmounts =
+                  config("FINEOS_HAS_TAX_WITHHOLDING") === "true"
+                    ? [
+                        { net_payment_amount: 496.66 },
+                        { net_payment_amount: 58.43 },
+                        { net_payment_amount: 29.22 },
+                      ]
+                    : [{ net_payment_amount: 584.31 }]; 
                 assertIsTypedArray(other_incomes, isValidOtherIncome);
                 assertIsTypedArray(employer_benefits, isValidEmployerBenefit);
                 leaveCase
                   .applyReductions({ other_incomes, employer_benefits })
-                  .assertAmountsPending(paymentAmounts)
                   .assertPaymentsMade(paymentAmounts)
                   .assertPaymentAllocations(paymentAmounts);
               });
