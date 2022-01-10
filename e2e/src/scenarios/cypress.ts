@@ -176,7 +176,7 @@ export const BCAP90: ScenarioSpecification = {
     },
     // This scenario requires a 2 week leave time for payment calculation purposes.
     leave_dates: [subWeeks(mostRecentSunday, 1), addWeeks(mostRecentSunday, 1)],
-    metadata: { expected_weekly_payment: "850.00" },
+    metadata: { expected_weekly_payment: "1084.31" },
   },
 };
 
@@ -234,7 +234,7 @@ export const CCAP90: ScenarioSpecification = {
     work_pattern_spec: "0,720,0,720,0,720,0",
     docs: { MASSID: {}, CARING: {} },
     leave_dates: [subWeeks(mostRecentSunday, 1), addWeeks(mostRecentSunday, 1)],
-    metadata: { expected_weekly_payment: "850.00" },
+    metadata: { expected_weekly_payment: "1084.31" },
   },
 };
 
@@ -380,7 +380,7 @@ export const CONTINUOUS_MEDICAL_OLB: ScenarioSpecification = {
       },
     ],
     concurrent_leave: { is_for_current_employer: true },
-    metadata: { expected_weekly_payment: "850.00" },
+    metadata: { expected_weekly_payment: "1084.31" },
   },
 };
 
@@ -436,7 +436,7 @@ export const BHAP1_OLB: ScenarioSpecification = {
     ],
     is_withholding_tax: true,
     concurrent_leave: { is_for_current_employer: true },
-    metadata: { expected_weekly_payment: "850.00" },
+    metadata: { expected_weekly_payment: "1084.31" },
   },
 };
 

@@ -1594,7 +1594,7 @@ class PaidLeavePage {
           // rendered.
           cy.get(`tr:nth-child(${i + 1})`).should(
             "contain.text",
-            payment.net_payment_amount
+            this.numToPaymentFormat(payment.net_payment_amount)
           );
         });
       });
