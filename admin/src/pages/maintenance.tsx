@@ -3,7 +3,7 @@ import {
   ApiResponse,
   Flag,
   FlagsResponse,
-  getFlagsByNameLogs,
+  getFlagsLogsByName,
   getFlagsByName,
 } from "../api";
 import Alert from "../components/Alert";
@@ -22,7 +22,6 @@ export default function Maintenance() {
     React.useState<FlagsResponse>([]);
   const [maintenance, setMaintenance] = React.useState<Flag | null>(null);
 
-
   const [showConfirmationDialog, setShowConfirmationDialog] =
     React.useState(false);
 
@@ -32,7 +31,7 @@ export default function Maintenance() {
         setMaintenance(response.data);
       },
     );
-    getFlagsByNameLogs({ name: "maintenance" }).then(
+    getFlagsLogsByName({ name: "maintenance" }).then(
       (response: ApiResponse<FlagsResponse>) => {
         setMaintenanceHistory(response.data);
       },
@@ -44,7 +43,6 @@ export default function Maintenance() {
     page_routes?: string[];
   };
 
-
   const confirmationDialogCancelCallback = () => {
     setShowConfirmationDialog(false);
   };
@@ -55,7 +53,6 @@ export default function Maintenance() {
     //patchFlagsByName({ name: "maintenance" }, flag).then().finally();
     setShowConfirmationDialog(false);
   };
-
 
   const checkedValues = [
     "/*",

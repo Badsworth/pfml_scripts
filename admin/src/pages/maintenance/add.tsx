@@ -1,5 +1,5 @@
 import "react-datetime/css/react-datetime.css";
-import { Flag, HttpError, patchFlagsByName } from "../../api";
+import { Flag, HttpError, postFlagsByName } from "../../api";
 import {
   Field,
   FieldArray,
@@ -18,7 +18,6 @@ import { StaticPropsPermissions } from "../../menus";
 
 export default function Maintenance() {
   const router = useRouter();
-
 
   type FormValues = {
     name: string;
@@ -226,7 +225,7 @@ export default function Maintenance() {
           name: values.name,
           page_routes: values.page_routes,
         };
-        patchFlagsByName({ name: "maintenance" }, flag)
+        postFlagsByName({ name: "maintenance" }, flag)
           .then(
             () => {
               router.push("/maintenance");
