@@ -42,7 +42,7 @@ def upgrade():
         sa.Column("feature_flag_value_id", sa.Integer(), autoincrement=True, nullable=False),
         sa.Column("feature_flag_id", sa.Integer(), nullable=False),
         sa.Column("enabled", sa.Boolean(), nullable=False),
-        sa.Column("options", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
+        sa.Column("options", postgresql.JSONB(), nullable=True),
         sa.Column("start", sa.TIMESTAMP(timezone=True), nullable=True),
         sa.Column("end", sa.TIMESTAMP(timezone=True), nullable=True),
         sa.ForeignKeyConstraint(["feature_flag_id"], ["lk_feature_flag.feature_flag_id"],),

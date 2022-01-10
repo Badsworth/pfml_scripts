@@ -64,28 +64,28 @@ class LkFeatureFlag(Base):
         )
 
     @property
-    def enabled(self) -> bool:
+    def enabled(self):
         latest_value = self._get_latest_feature_flag_value()
         if latest_value is None:
             return self.default_enabled
         return latest_value.enabled
 
     @property
-    def start(self) -> bool:
+    def start(self):
         latest_value = self._get_latest_feature_flag_value()
         if latest_value is None:
             return None
         return latest_value.start
 
     @property
-    def end(self) -> bool:
+    def end(self):
         latest_value = self._get_latest_feature_flag_value()
         if latest_value is None:
             return None
         return latest_value.end
 
     @property
-    def options(self) -> bool:
+    def options(self):
         latest_value = self._get_latest_feature_flag_value()
         if latest_value is None:
             return None
