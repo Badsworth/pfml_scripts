@@ -1,7 +1,6 @@
 // TODO (PORTAL-1148) Update to use createMockClaim when ready
 import { cleanup, screen } from "@testing-library/react";
 
-import AppErrorInfo from "../../../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../../../src/models/AppErrorInfoCollection";
 import ClaimDetail from "../../../../src/models/ClaimDetail";
 import DocumentCollection from "../../../../src/models/DocumentCollection";
@@ -13,6 +12,7 @@ import dayjs from "dayjs";
 import { mockRouter } from "next/router";
 import { renderPage } from "../../../test-utils";
 import routes from "../../../../src/routes";
+
 jest.mock("next/router");
 
 mockRouter.asPath = routes.applications.status.payments;
