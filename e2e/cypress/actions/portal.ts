@@ -933,6 +933,11 @@ export function checkNoticeForLeaveAdmin(
       cy.findByText("Appeal Acknowledgment (PDF)").should("be.visible").click();
       break;
 
+    case "changeRequestApproval":
+      cy.contains("h1", claimantName, { timeout: 20000 }).should("be.visible");
+      cy.findByText("Change Request Approved (PDF)").should("be.visible").click();
+      break;
+
     default:
       throw new Error("Notice Type not Found!");
   }
