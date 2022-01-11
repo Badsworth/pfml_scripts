@@ -19,6 +19,20 @@ exports[`Payments Phase 2 Checkback date implementation does not render the Paym
     </a>
     .
   </p>
+</section>
+`;
+
+exports[`Payments Phase 2 Checkback date implementation includes estimated date content for intermittent leaves with payments 1`] = `
+<section
+  data-testid="your-payments-intro"
+>
+  Once you report at least 8 hours, you can expect to receive a payment about one week later. You can receive more than one payment in a week depending on how your hours are reported. You can report your hours by calling 
+  <a
+    href="tel:(857) 972-9256"
+  >
+    (857) 972-9256
+  </a>
+  .
   <section
     class="margin-y-5"
     data-testid="estimated-date"
@@ -343,6 +357,20 @@ exports[`Payments does not render payments if the is a 404 status 1`] = `
   </svg>
   Back to your applications
 </a>
+`;
+
+exports[`Payments omits estimated date content for intermittent leaves with no payments 1`] = `
+<section
+  data-testid="your-payments-intro"
+>
+  Once you report at least 8 hours, you can expect to receive a payment about one week later. You can receive more than one payment in a week depending on how your hours are reported. You can report your hours by calling 
+  <a
+    href="tel:(857) 972-9256"
+  >
+    (857) 972-9256
+  </a>
+  .
+</section>
 `;
 
 exports[`Payments renders the \`Your payments\` intro content section 1`] = `
