@@ -10,7 +10,7 @@ from massgov.pfml.api.models.users.requests import (
     UserCreateRequest,
     UserUpdateRequest,
 )
-from massgov.pfml.api.models.users.responses import user_response
+from massgov.pfml.api.models.users.responses import UserResponse
 from massgov.pfml.api.services.users import update_user
 from massgov.pfml.api.util.deepgetattr import deepgetattr
 from massgov.pfml.api.validation.exceptions import IssueType, ValidationErrorDetail
@@ -85,7 +85,7 @@ def users_post():
                 errors=[e.issue],
                 data={},
             ).to_api_response()
-        data = user_response(user, db_session)
+        data = UserResponse.from_orm(user).dict()
     logger.info(
         "users_post success - account created", extra={"is_employer": str(is_employer)},
     )
@@ -100,7 +100,7 @@ def users_post():
 def users_get(user_id):
     with app.db_session() as db_session:
         u = get_or_404(db_session, User, user_id)
-        data = user_response(u, db_session)
+        data = UserResponse.from_orm(u).dict()
     ensure(READ, u)
     return response_util.success_response(
         message="Successfully retrieved user", data=data,
@@ -152,7 +152,7 @@ def users_convert_employer(user_id):
             add_leave_admin_and_role(db_session, updated_user, employer)
             db_session.commit()
             db_session.refresh(updated_user)
-        data = user_response(updated_user, db_session)
+        data = UserResponse.from_orm(updated_user).dict()
     logger.info(
         "users_convert_employer success - account converted",
         extra={"employer_id": employer.employer_id},
@@ -172,8 +172,7 @@ def users_current_get():
         raise NotFound
 
     ensure(READ, current_user)
-    with app.db_session() as db_session:
-        data = user_response(current_user, db_session)
+    data = UserResponse.from_orm(current_user).dict()
 
     return response_util.success_response(
         message="Successfully retrieved current user", data=data,
@@ -189,8 +188,8 @@ def users_patch(user_id):
 
         ensure(EDIT, user)
 
-        updated_user = update_user(db_session, user, body)
-        data = user_response(updated_user, db_session)
+    updated_user = update_user(db_session, user, body)
+    data = UserResponse.from_orm(updated_user).dict()
 
     return response_util.success_response(
         message="Successfully updated user", data=data,

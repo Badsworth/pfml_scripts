@@ -1574,6 +1574,24 @@ components:
           type: string
           format: email
           example: "janedoe@example.com"
+        application_names:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            properties:
+              first_name:
+                type: string
+                example: "Jane"
+                nullable: true
+              middle_name:
+                type: string
+                example: "Emily"
+                nullable: true
+              last_name:
+                type: string
+                example: "Doe"
+                nullable: true
         mfa_delivery_preference:
           type: string
           enum:
