@@ -287,6 +287,10 @@ Our Terraform scripts enable Advanced Security. however at the time of writing, 
    - infra/api/environments/NEW\_ENV/main.tf and 
    - infra/ecs-tasks/environments/NEW\_ENV/main.tf.
 3. The client secret value should be updated in parameter store (`/service/pfml-api/NEW_ENV/fineos_oauth2_client_secret`).
+4. Add `portal_base_url = "https://paidleave-NEW_ENV.(dfml).eol.mass.gov"` to infra/api/environments/NEW_ENV/main.tf file. 
+
+   *** Attention ***
+   The configuration values provided by Fineos team for the new environments might vary. Therefore, please double check with Fineos team on the configurations values. ***hint*** You can also check the configuration values of the other environments to compare and confirm.
 
 Verify the following details with FINEOS:
 - Will SSO be enabled? (If so, we need to configure the FINEOS user as OASIS instead of CONTENT)
@@ -298,6 +302,11 @@ Verify the following details with FINEOS:
 1. Add the new environment to the [CI build matrix](/.github/workflows/infra-validate.yml) so it can be validated when it's changed.
 2. Add the environment to the [monitoring module](/infra/monitoring/alarms.tf) to create API and Portal alarms that are linked to PagerDuty.
 3. Reach out to e2e team to update their test script with new environment.
+
+## 5. Update feature_flags files
+
+1. Add `NEW_ENV.yaml` file to `/pflm/feature_flags/` folder in rool level and corresponding content. 
+2. Make sure that correspoing feature flag s3 bucket is created for the new environment. 
 
 ## Setting up Custom Domains
 
