@@ -28,7 +28,7 @@ function withClaimDetail<T extends WithClaimDetailProps>(
     const { appLogic, query } = props;
     const { t } = useTranslation();
     const {
-      claims: { claimDetail, isLoadingClaimDetail, loadClaimDetail },
+      claims: { claimDetail = {}, isLoadingClaimDetail, loadClaimDetail },
     } = appLogic;
 
     // Determine absence/application ids
@@ -41,19 +41,6 @@ function withClaimDetail<T extends WithClaimDetailProps>(
 
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [absenceId]);
-
-    // Address potential hash values in URL
-    useEffect(() => {
-      /**
-       * If URL includes a location.hash then page
-       * should scroll into view on that id tag,
-       * provided the id tag exists.
-       */
-      if (location.hash) {
-        const anchorId = document.getElementById(location.hash.substring(1));
-        if (anchorId) anchorId.scrollIntoView();
-      }
-    }, [isLoadingClaimDetail]);
 
     /**
      * If there is no absence_id query parameter,
@@ -86,10 +73,7 @@ function withClaimDetail<T extends WithClaimDetailProps>(
       );
     }
 
-    const componentProps = {
-      ...(props as T),
-    };
-    return <Component {...(props as T)} />;
+    return <Component claimDetail={claimDetail} {...(props as T)} />;
   };
 
   return withUser(ComponentWithClaimDetail);

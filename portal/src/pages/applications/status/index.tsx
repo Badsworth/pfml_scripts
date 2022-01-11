@@ -15,6 +15,7 @@ import Alert from "../../../components/core/Alert";
 import { AppLogic } from "../../../hooks/useAppLogic";
 import BackButton from "../../../components/BackButton";
 import ButtonLink from "../../../components/ButtonLink";
+import ClaimDetail from "src/models/ClaimDetail";
 import Heading from "../../../components/core/Heading";
 import LeaveReason from "../../../models/LeaveReason";
 import LegalNoticeList from "../../../components/LegalNoticeList";
@@ -38,8 +39,10 @@ const containerClassName = "border-bottom border-base-lighter padding-y-4";
 
 export const Status = ({
   appLogic,
+  claimDetail,
   query,
 }: WithUserProps & {
+  claimDetail: ClaimDetail;
   query: {
     absence_case_id?: string;
     absence_id?: string;
@@ -48,7 +51,7 @@ export const Status = ({
 }) => {
   const { t } = useTranslation();
   const {
-    claims: { claimDetail },
+    claims: { isLoadingClaimDetail },
     documents: {
       documents: allClaimDocuments,
       download: downloadDocument,
@@ -58,9 +61,9 @@ export const Status = ({
   } = appLogic;
 
   const { absence_case_id, absence_id, uploaded_document_type } = query;
-  const absencePeriods = claimDetail?.absence_periods || [];
-  const application_id = claimDetail?.application_id || "";
-  const fineosAbsenceId = claimDetail?.fineos_absence_id || "";
+  const absencePeriods = claimDetail.absence_periods || [];
+  const application_id = claimDetail.application_id || "";
+  const fineosAbsenceId = claimDetail.fineos_absence_id || "";
   const absenceId = absence_id || absence_case_id;
 
   // Load claim documents if application id is valid
@@ -70,13 +73,26 @@ export const Status = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [application_id, appLogic.portalFlow.pathname]);
 
+  // Address potential hash values in URL
+  useEffect(() => {
+    /**
+     * If URL includes a location.hash then page
+     * should scroll into view on that id tag,
+     * provided the id tag exists.
+     */
+    if (location.hash) {
+      const anchorId = document.getElementById(location.hash.substring(1));
+      if (anchorId) anchorId.scrollIntoView();
+    }
+  }, [isLoadingClaimDetail]);
+
   // Retrieve claim details
   const hasDocuments = hasLoadedClaimDocuments(application_id);
   const absenceDetails = AbsencePeriod.groupByReason(absencePeriods);
   const hasPendingStatus = absencePeriods.some(
     (absenceItem) => absenceItem.request_decision === "Pending"
   );
-  const hasApprovedStatus = claimDetail?.hasApprovedStatus;
+  const hasApprovedStatus = claimDetail.hasApprovedStatus;
 
   const documentsForApplication =
     allClaimDocuments.filterByApplication(application_id);
@@ -188,7 +204,7 @@ export const Status = ({
   const showPhaseOneFeatures =
     isFeatureEnabled("claimantShowPayments") &&
     hasApprovedStatus &&
-    claimDetail?.has_paid_payments;
+    claimDetail.has_paid_payments;
 
   // Determines if phase two payment features are displayed
   const showPhaseTwoFeatures =
@@ -275,12 +291,12 @@ export const Status = ({
             </Heading>
             <p className="text-bold">{absenceId}</p>
           </div>
-          {claimDetail?.employer && (
+          {claimDetail.employer && (
             <div>
               <Heading weight="normal" level="2" size="4">
                 {t("pages.claimsStatus.employerEIN")}
               </Heading>
-              <p className="text-bold">{claimDetail?.employer.employer_fein}</p>
+              <p className="text-bold">{claimDetail.employer.employer_fein}</p>
             </div>
           )}
         </div>
@@ -289,10 +305,10 @@ export const Status = ({
           <Timeline
             absencePeriods={absencePeriods}
             employerFollowUpDate={
-              claimDetail?.managedRequirementByFollowUpDate[0]
-                ?.follow_up_date || null
+              claimDetail.managedRequirementByFollowUpDate[0]?.follow_up_date ||
+              null
             }
-            applicationId={claimDetail?.application_id}
+            applicationId={claimDetail.application_id}
             docList={documentsForApplication}
             absenceId={fineosAbsenceId}
             appLogic={appLogic}

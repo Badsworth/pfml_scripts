@@ -8,6 +8,7 @@ import {
   BenefitsApplicationDocument,
   DocumentTypeEnum,
 } from "../models/Document";
+
 import DocumentCollection from "../models/DocumentCollection";
 import assert from "assert";
 import routes from "../routes";

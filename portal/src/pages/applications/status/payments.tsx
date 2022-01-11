@@ -5,6 +5,7 @@ import Accordion from "../../../components/core/Accordion";
 import AccordionItem from "../../../components/core/AccordionItem";
 import Alert from "../../../components/core/Alert";
 import BackButton from "../../../components/BackButton";
+import ClaimDetail from "src/models/ClaimDetail";
 import Heading from "../../../components/core/Heading";
 import LeaveReason from "../../../models/LeaveReason";
 import { OtherDocumentType } from "../../../models/Document";
@@ -31,8 +32,10 @@ dayjs.extend(dayjsBusinessTime);
 
 export const Payments = ({
   appLogic,
+  claimDetail,
   query,
 }: WithUserProps & {
+  claimDetail: ClaimDetail;
   query: {
     absence_id?: string;
   };
@@ -41,40 +44,35 @@ export const Payments = ({
   const { absence_id } = query;
   const {
     appErrors: { items },
-    claims: {
-      claimDetail,
-      loadClaimDetail,
-      loadedPaymentsData,
-      hasLoadedPayments,
-    },
+    claims: { loadClaimDetail, loadedPaymentsData, hasLoadedPayments },
     documents: { documents: allClaimDocuments },
     portalFlow,
   } = appLogic;
 
-  const hasPaidPayments = claimDetail?.has_paid_payments;
+  const hasPaidPayments = claimDetail.has_paid_payments;
 
   // Determines if phase one payment features are displayed
   const showPhaseOneFeatures =
     isFeatureEnabled("claimantShowPayments") &&
-    claimDetail?.hasApprovedStatus &&
+    claimDetail.hasApprovedStatus &&
     hasPaidPayments;
 
   // Determines if phase two payment features are displayed
   const showPhaseTwoFeatures =
     isFeatureEnabled("claimantShowPaymentsPhaseTwo") &&
-    claimDetail?.hasApprovedStatus;
+    claimDetail.hasApprovedStatus;
 
-  const application_id = claimDetail?.application_id || "";
-  const absencePeriods = claimDetail?.absence_periods || [];
+  const application_id = claimDetail.application_id || "";
+  const absencePeriods = claimDetail.absence_periods || [];
   const absenceId = absence_id;
 
   const initialClaimStartDate =
-    claimDetail?.leaveDates[0].absence_period_start_date;
+    claimDetail.leaveDates[0].absence_period_start_date;
   useEffect(() => {
     const loadPayments = (absenceId: string) =>
       !hasLoadedPayments(absenceId) ||
       (loadedPaymentsData?.absence_case_id &&
-        Boolean(claimDetail?.payments.length === 0));
+        Boolean(claimDetail.payments.length === 0));
 
     if (claimDetail && !showPhaseOneFeatures && !showPhaseTwoFeatures) {
       portalFlow.goTo(routes.applications.status.claim, {
@@ -137,7 +135,7 @@ export const Payments = ({
     : false;
 
   const shouldShowPaymentsTable =
-    Boolean(claimDetail?.payments?.length) ||
+    Boolean(claimDetail.payments?.length) ||
     (hasLoadedPayments(absence_id || "") && !items.length);
 
   const tableColumns = [
@@ -148,9 +146,9 @@ export const Payments = ({
     t("pages.payments.paymentsTable.amountSentHeader"),
   ];
 
-  const waitingWeek = !isBlank(claimDetail?.waitingWeek?.startDate);
+  const waitingWeek = !isBlank(claimDetail.waitingWeek?.startDate);
 
-  const isIntermittent = claimDetail?.isIntermittent;
+  const isIntermittent = claimDetail.isIntermittent;
 
   const isIntermittentUnpaid =
     isIntermittent &&
@@ -176,7 +174,7 @@ export const Payments = ({
     !hasPaidPayments
   ) {
     if (!hasPaidPayments && approvalDate) {
-      checkbackDateContext = claimDetail?.isContinuous
+      checkbackDateContext = claimDetail.isContinuous
         ? "Continuous_"
         : "ReducedSchedule_";
       const fourteenthDayOfClaim = dayjs(initialClaimStartDate)
@@ -292,7 +290,7 @@ export const Payments = ({
                 </tr>
               </thead>
               <tbody>
-                {claimDetail?.payments
+                {claimDetail.payments
                   .reverse()
                   .map(
                     ({
