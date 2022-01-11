@@ -31,8 +31,8 @@ resource "pagerduty_schedule" "mass_pfml_prod_admin_secondary" {
 
   layer {
     name                         = "Production Admin Secondary"
-    start                        = "2020-11-04T13:00:00-05:00"
-    rotation_virtual_start       = "2020-10-28T13:00:00-05:00"
+    start                        = "2020-11-04T13:00:00-10:00"
+    rotation_virtual_start       = "2020-10-28T13:00:00-10:00"
     rotation_turn_length_seconds = 604800 # 1 week
     users                        = [data.pagerduty_user.mass_pfml["Keith Fitts"].id]
   }
