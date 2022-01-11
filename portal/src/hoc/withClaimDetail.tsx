@@ -76,8 +76,7 @@ function withClaimDetail<T extends WithClaimDetailProps>(
       );
     }
 
-    // Check both because claimDetail could be cached from a different status page.
-    if (isLoadingClaimDetail || !claimDetail) {
+    if (isLoadingClaimDetail) {
       return (
         <div className="text-center">
           <Spinner
@@ -87,6 +86,9 @@ function withClaimDetail<T extends WithClaimDetailProps>(
       );
     }
 
+    const componentProps = {
+      ...(props as T),
+    };
     return <Component {...(props as T)} />;
   };
 
