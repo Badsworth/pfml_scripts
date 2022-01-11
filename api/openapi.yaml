@@ -1138,6 +1138,36 @@ paths:
               schema:
                 $ref: "#/components/schemas/AdminLogoutResponse"
 
+  /admin/users:
+    get:
+      tags:
+        - Admin
+        - Users
+      summary: Retrieve all user accounts
+      operationId: massgov.pfml.api.admin.admin_users_get
+      parameters:
+        - $ref: "#/components/parameters/pageSize"
+        - $ref: "#/components/parameters/pageOffset"
+        - name: email_address
+          in: query
+          schema:
+            type: string
+          description: A partial email address, will be used as a wildcard.
+          required: false
+      responses:
+        "200":
+          description: A successful request returns a 200 status code and user objects.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UserResponse"
+        "401":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
 tags:
   - name: Test Endpoints
   - name: Users
