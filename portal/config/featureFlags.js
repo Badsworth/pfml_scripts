@@ -53,6 +53,12 @@ const flagsConfig = {
 
     // When this flag is true, PDF files up to 10mb are sent to the API.
     sendLargePdfToApi: false,
+
+    // When this flag is true, the HRD employer will no longer have their
+    // dashboard blocked from seeing any applications, and will function like
+    // all other employers' dashboards.
+    // Will only be used for smoke testing purposes and removed afterwards.
+    employerUnlockDashboard: false,
   },
   // Environments can optionally override a default feature flag below.
   // The environment keys should use the same envName defined in
