@@ -382,6 +382,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#5-update-feature_flags-files" class="md-nav__link">
+    5. Update feature_flags files
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#setting-up-custom-domains" class="md-nav__link">
     Setting up Custom Domains
   </a>
@@ -1314,6 +1321,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#5-update-feature_flags-files" class="md-nav__link">
+    5. Update feature_flags files
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#setting-up-custom-domains" class="md-nav__link">
     Setting up Custom Domains
   </a>
@@ -1601,7 +1615,10 @@ cognito_user_pool_keys_url = &quot;https://cognito-idp.us-east-1.amazonaws.com/$
 <li>infra/api/environments/NEW_ENV/main.tf and </li>
 <li>infra/ecs-tasks/environments/NEW_ENV/main.tf.</li>
 <li>The client secret value should be updated in parameter store (<code>/service/pfml-api/NEW_ENV/fineos_oauth2_client_secret</code>).</li>
+<li>Add <code>portal_base_url = "https://paidleave-NEW_ENV.(dfml).eol.mass.gov"</code> to infra/api/environments/NEW_ENV/main.tf file. </li>
 </ol>
+<p><strong><em> Attention </em></strong>
+   The configuration values provided by Fineos team for the new environments might vary. Therefore, please double check with Fineos team on the configurations values. <strong><em>hint</em></strong> You can also check the configuration values of the other environments to compare and confirm.</p>
 <p>Verify the following details with FINEOS:
 - Will SSO be enabled? (If so, we need to configure the FINEOS user as OASIS instead of CONTENT)
 - What is the FINEOS URL?
@@ -1611,6 +1628,11 @@ cognito_user_pool_keys_url = &quot;https://cognito-idp.us-east-1.amazonaws.com/$
 <li>Add the new environment to the <a href="https://github.com/EOLWD/pfml/tree/main/.github/workflows/infra-validate.yml">CI build matrix</a> so it can be validated when it's changed.</li>
 <li>Add the environment to the <a href="https://github.com/EOLWD/pfml/tree/main/infra/monitoring/alarms.tf">monitoring module</a> to create API and Portal alarms that are linked to PagerDuty.</li>
 <li>Reach out to e2e team to update their test script with new environment.</li>
+</ol>
+<h2 id="5-update-feature_flags-files">5. Update feature_flags files</h2>
+<ol>
+<li>Add <code>NEW_ENV.yaml</code> file to <code>/pflm/feature_flags/</code> folder in rool level and corresponding content. </li>
+<li>Make sure that correspoing feature flag s3 bucket is created for the new environment. </li>
 </ol>
 <h2 id="setting-up-custom-domains">Setting up Custom Domains</h2>
 <p>If we expect FINEOS to call the PFML API, you'll need a custom mass.gov domain for the environment. Please follow these steps:</p>
