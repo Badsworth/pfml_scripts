@@ -9,6 +9,7 @@ import InputChoiceGroup from "../../components/core/InputChoiceGroup";
 import LeaveDatesAlert from "../../components/LeaveDatesAlert";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
+import { Trans } from "react-i18next";
 import { pick } from "lodash";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
@@ -41,19 +42,6 @@ export const EmployerBenefits = (props: WithBenefitsApplicationProps) => {
     formState,
     updateFields,
   });
-  const doReportHintList = t<string, string[]>(
-    "pages.claimsEmployerBenefits.doReportHintList",
-    {
-      returnObjects: true,
-      employer_fein,
-    }
-  );
-  const doNotReportHintList = t<string, string[]>(
-    "pages.claimsEmployerBenefits.doNotReportHintList",
-    {
-      returnObjects: true,
-    }
-  );
 
   return (
     <QuestionPage
@@ -93,11 +81,16 @@ export const EmployerBenefits = (props: WithBenefitsApplicationProps) => {
               />
               {t("pages.claimsEmployerBenefits.doReportHintHeading")}
             </Heading>
-            <ul className="usa-list margin-top-0 margin-left-4 margin-bottom-4">
-              {doReportHintList.map((listItem, index) => (
-                <li key={index}>{listItem}</li>
-              ))}
-            </ul>
+            <div className="margin-left-4">
+              <Trans
+                i18nKey="pages.claimsEmployerBenefits.doReportHintList"
+                tOptions={{ employer_fein }}
+                components={{
+                  ul: <ul className="usa-list" />,
+                  li: <li />,
+                }}
+              />
+            </div>
             <Heading level="2" size="3">
               <Icon
                 name="cancel"
@@ -107,11 +100,15 @@ export const EmployerBenefits = (props: WithBenefitsApplicationProps) => {
               />
               {t("pages.claimsEmployerBenefits.doNotReportHintHeading")}
             </Heading>
-            <ul className="usa-list margin-top-0 margin-left-4">
-              {doNotReportHintList.map((listItem, index) => (
-                <li key={index}>{listItem}</li>
-              ))}
-            </ul>
+            <div className="margin-left-4">
+              <Trans
+                i18nKey="pages.claimsEmployerBenefits.doNotReportHintList"
+                components={{
+                  ul: <ul className="usa-list" />,
+                  li: <li />,
+                }}
+              />
+            </div>
           </React.Fragment>
         }
       />

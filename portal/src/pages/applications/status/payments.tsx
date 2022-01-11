@@ -177,11 +177,11 @@ export const Payments = ({
     : false;
 
   const tableColumns = [
-    t("pages.payments.paymentsTable.leaveDatesHeader"),
-    t("pages.payments.paymentsTable.paymentMethodHeader"),
-    t("pages.payments.paymentsTable.estimatedDateHeader"),
-    t("pages.payments.paymentsTable.dateProcessedHeader"),
-    t("pages.payments.paymentsTable.amountSentHeader"),
+    t("pages.payments.tableLeaveDatesHeader"),
+    t("pages.payments.tablePaymentMethodHeader"),
+    t("pages.payments.tableEstimatedDateHeader"),
+    t("pages.payments.tableDateProcessedHeader"),
+    t("pages.payments.tableAmountSentHeader"),
   ];
 
   const waitingWeek = !isBlank(claimDetail.waitingWeek?.startDate);
@@ -355,13 +355,13 @@ export const Payments = ({
                           {formatDateRange(period_start_date, period_end_date)}
                         </td>
                         <td data-label={tableColumns[1]}>
-                          {t("pages.payments.paymentsTable.paymentMethod", {
+                          {t("pages.payments.tablePaymentMethod", {
                             context: payment_method,
                           })}
                         </td>
                         <td data-label={tableColumns[2]}>
                           {status !== "Pending"
-                            ? t("pages.payments.paymentsTable.paymentStatus", {
+                            ? t("pages.payments.tablePaymentStatus", {
                                 context: status,
                               })
                             : formatDateRange(
@@ -371,16 +371,16 @@ export const Payments = ({
                         </td>
                         <td data-label={tableColumns[3]}>
                           {formatDate(sent_to_bank_date).short() ||
-                            t("pages.payments.paymentsTable.paymentStatus", {
+                            t("pages.payments.tablePaymentStatus", {
                               context: status,
                             })}
                         </td>
                         <td data-label={tableColumns[4]}>
                           {amount === null
-                            ? t("pages.payments.paymentsTable.paymentStatus", {
+                            ? t("pages.payments.tablePaymentStatus", {
                                 context: status,
                               })
-                            : t("pages.payments.paymentsTable.amountSent", {
+                            : t("pages.payments.tableAmountSent", {
                                 amount,
                               })}
                         </td>
@@ -389,16 +389,12 @@ export const Payments = ({
                   )}
                 {waitingWeek && !isIntermittent && (
                   <tr>
-                    <td
-                      data-label={t(
-                        "pages.payments.paymentsTable.waitingWeekHeader"
-                      )}
-                    >
-                      {t("pages.payments.paymentsTable.waitingWeekGeneric")}
+                    <td data-label={t("pages.payments.tableWaitingWeekHeader")}>
+                      {t("pages.payments.tableWaitingWeekGeneric")}
                     </td>
                     <td colSpan={4}>
                       <Trans
-                        i18nKey="pages.payments.paymentsTable.waitingWeekText"
+                        i18nKey="pages.payments.tableWaitingWeekText"
                         components={{
                           "waiting-week-link": (
                             <a

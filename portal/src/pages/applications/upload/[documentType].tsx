@@ -106,16 +106,13 @@ const CertificationUpload = ({ path }: CertificationUploadProps) => {
         />
       </Lead>
       <ConditionalContent visible={isBondingNewborn}>
-        <ul className="usa-list">
-          {t<string, string[]>(
-            "pages.claimsUploadDocumentType.leadListNewborn",
-            {
-              returnObjects: true,
-            }
-          ).map((listItem, index) => (
-            <li key={index}>{listItem}</li>
-          ))}
-        </ul>
+        <Trans
+          i18nKey="pages.claimsUploadDocumentType.leadListNewborn"
+          components={{
+            ul: <ul className="usa-list" />,
+            li: <li />,
+          }}
+        />
       </ConditionalContent>
       <DocumentRequirements type="certification" />
     </React.Fragment>
