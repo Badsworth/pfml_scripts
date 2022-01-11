@@ -71,6 +71,23 @@ paths:
             schema:
               $ref: "#/components/schemas/UserCreateRequest"
 
+  /roles:
+    delete:
+      tags:
+        - Roles
+        - Users
+      summary: Remove a role from a user
+      operationId: massgov.pfml.api.roles.roles_users_delete
+      responses:
+        "204":
+          description: Role deleted without issue
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+      requestBody:
+        $ref: "#/components/requestBodies/RoleUserDeleteRequest"
+
   /users/{user_id}/convert_employer:
     post:
       tags:
@@ -1176,6 +1193,7 @@ paths:
 
 tags:
   - name: Test Endpoints
+  - name: Roles
   - name: Users
   - name: Employees
   - name: Employers
@@ -1244,6 +1262,12 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/AdminTokenRequest"
+      required: true
+    RoleUserDeleteRequest:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/RoleUserDeleteRequest"
       required: true
     UserUpdateRequest:
       content:
@@ -1733,6 +1757,23 @@ components:
             employer_fein:
               $ref: "#/components/schemas/Fein"
               nullable: true
+
+    RoleUserDeleteRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        role:
+          type: object
+          additionalProperties: false
+          properties:
+            role_description:
+              type: string
+          required: ["role_description"]
+        user_id:
+          type: string
+          format: uuid
+          example: "fabd09ed-0ea9-4091-843e-2e37d2c61482"
+      required: ["role", "user_id"]
 
     UserUpdateRequest:
       type: object
