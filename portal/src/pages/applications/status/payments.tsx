@@ -134,10 +134,6 @@ export const Payments = ({
       approvalDate
     : false;
 
-  const shouldShowPaymentsTable =
-    Boolean(claimDetail.payments?.length) ||
-    (hasLoadedPayments(absence_id || "") && !items.length);
-
   const tableColumns = [
     t("pages.payments.paymentsTable.leaveDatesHeader"),
     t("pages.payments.paymentsTable.paymentMethodHeader"),

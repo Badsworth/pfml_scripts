@@ -71,7 +71,7 @@ export const Status = ({
     if (application_id) loadAllDocuments(application_id, true);
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [application_id, appLogic.portalFlow.pathname]);
+  }, [application_id]);
 
   // Address potential hash values in URL
   useEffect(() => {
