@@ -160,7 +160,7 @@ export default function (
       documentWaiter.waitForClaimDocuments.bind(documentWaiter),
 
     async generateClaim(
-      arg: Scenarios | { scenario: Scenarios, employeePoolFileName?: string }
+      arg: Scenarios | { scenario: Scenarios; employeePoolFileName?: string }
     ): Promise<DehydratedClaim> {
       let scenarioID: Scenarios;
       let employeePoolFileName: string | null = null;

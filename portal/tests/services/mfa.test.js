@@ -6,6 +6,26 @@ jest.mock("@aws-amplify/auth");
 jest.mock("../../src/api/UsersApi");
 jest.mock("../../src/services/tracker");
 
+describe("sendMFAConfirmationCode", () => {
+  beforeAll(() => {
+    jest.spyOn(Auth, "currentAuthenticatedUser").mockImplementation(() => {
+      const cognitoUser = {};
+      return cognitoUser;
+    });
+  });
+
+  it("calls Auth.verifyUserAttribute", async () => {
+    await MFAService.sendMFAConfirmationCode();
+    expect(Auth.verifyUserAttribute).toHaveBeenCalledWith({}, "phone_number");
+  });
+
+  it("tracks requests", async () => {
+    await MFAService.sendMFAConfirmationCode();
+    expect(tracker.trackFetchRequest).toHaveBeenCalledTimes(1);
+    expect(tracker.markFetchRequestEnd).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe("updateMFAPhoneNumber", () => {
   const phoneNumber = "2223334444";
 
@@ -23,12 +43,6 @@ describe("updateMFAPhoneNumber", () => {
       {},
       { phone_number: "+1" + phoneNumber }
     );
-  });
-
-  it("calls Auth.verifyUserAttribute", async () => {
-    await MFAService.updateMFAPhoneNumber(phoneNumber);
-
-    expect(Auth.verifyUserAttribute).toHaveBeenCalledWith({}, "phone_number");
   });
 
   it("tracks requests", async () => {

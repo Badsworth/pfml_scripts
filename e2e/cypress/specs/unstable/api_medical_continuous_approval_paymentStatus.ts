@@ -61,7 +61,7 @@ describe("Create a new caring leave claim in FINEOS and Suppress Correspondence 
     portal.before();
     portal.login(credentials);
     cy.wait("@getApplications").then(({ response }) => {
-      cy.wait("@getDocuments").wait(300)
+      cy.wait("@getDocuments").wait(300);
       const applications: ApplicationResponse[] = response?.body.data;
       const completedApplicationsBeforeToday: ApplicationResponse[] =
         applications.filter((application) => {

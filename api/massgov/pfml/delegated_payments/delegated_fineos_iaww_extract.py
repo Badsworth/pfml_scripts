@@ -1,6 +1,6 @@
 import enum
 from decimal import Decimal
-from typing import cast
+from typing import Dict, Tuple, cast
 
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.logging as logging
@@ -20,6 +20,10 @@ class IAWWExtractStep(Step):
     Inspect latest staged Individual Average Weekly Wage (IAWW) data and
     update fineos_average_weekly_wage for matching absence_periods
     """
+
+    leave_plan_requested_absence_records_map: Dict[
+        Tuple[str, str], FineosExtractVbiLeavePlanRequestedAbsence
+    ] = {}
 
     class Metrics(str, enum.Enum):
         PAID_LEAVE_INSTRUCTION_RECORD_COUNT = "paid_leave_instruction_record_count"
@@ -78,18 +82,10 @@ class IAWWExtractStep(Step):
 
             logger.debug(f"Processing paid leave instruction record C={c_value}, I={i_value}")
 
-            leave_plan_requested_absence_record = (
-                self.db_session.query(FineosExtractVbiLeavePlanRequestedAbsence)
-                .filter(
-                    FineosExtractVbiLeavePlanRequestedAbsence.selectedplan_classid
-                    == c_leaveplan_value,
-                    FineosExtractVbiLeavePlanRequestedAbsence.selectedplan_indexid
-                    == i_leaveplan_value,
-                    FineosExtractVbiLeavePlanRequestedAbsence.reference_file_id
-                    == reference_file.reference_file_id,
+            if c_leaveplan_value and i_leaveplan_value:
+                leave_plan_requested_absence_record = self.leave_plan_requested_absence_records_map.get(
+                    (c_leaveplan_value, i_leaveplan_value)
                 )
-                .first()
-            )
 
             if leave_plan_requested_absence_record:
                 self.increment(self.Metrics.LEAVE_PLAN_REQUESTED_ABSENCE_RECORD_COUNT)
@@ -174,6 +170,35 @@ class IAWWExtractStep(Step):
 
         return None
 
+    def get_leave_plan_requested_absence_records_map(self, reference_file: ReferenceFile) -> None:
+        raw_leave_plan_requested_absence_records = self.db_session.query(
+            FineosExtractVbiLeavePlanRequestedAbsence
+        ).filter(
+            FineosExtractVbiLeavePlanRequestedAbsence.reference_file_id
+            == reference_file.reference_file_id,
+        )
+
+        for record in raw_leave_plan_requested_absence_records:
+            selectedplan_classid = record.selectedplan_classid
+            selectedplan_indexid = record.selectedplan_indexid
+            if selectedplan_classid and selectedplan_indexid:
+                if (
+                    selectedplan_classid,
+                    selectedplan_indexid,
+                ) in self.leave_plan_requested_absence_records_map.keys():
+                    logger.error(
+                        "Duplicate entries found in the leave plan requested absence records.",
+                        extra={
+                            "selectedplan_classid": selectedplan_classid,
+                            "selectedplan_indexid": selectedplan_indexid,
+                        },
+                    )
+                    continue
+
+                self.leave_plan_requested_absence_records_map[
+                    (selectedplan_classid, selectedplan_indexid)
+                ] = record
+
     def process_records(self) -> None:
         # Grab the latest payment extract reference file
         reference_file = (
@@ -205,10 +230,13 @@ class IAWWExtractStep(Step):
             )
             .all()
         )
+
+        self.get_leave_plan_requested_absence_records_map(reference_file)
+
         for raw_paid_leave_instruction_record in raw_paid_leave_instruction_records:
             self.increment(self.Metrics.PAID_LEAVE_INSTRUCTION_RECORD_COUNT)
             self.process_paid_leave_instruction_record(
-                raw_paid_leave_instruction_record, reference_file
+                raw_paid_leave_instruction_record, reference_file,
             )
 
         reference_file.processed_import_log_id = self.get_import_log_id()

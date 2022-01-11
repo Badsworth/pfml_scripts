@@ -42,7 +42,7 @@ exports[`Two-factor SMS Verify renders landing page content 1`] = `
       class="usa-button position-relative display-block margin-top-1 usa-button--unstyled"
       type="button"
     >
-      Resend the code
+      Didn’t receive the code? Log in again to resend it.
     </button>
     <button
       class="usa-button position-relative display-block margin-top-3"

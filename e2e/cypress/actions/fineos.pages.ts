@@ -466,7 +466,7 @@ class AdjudicationPage {
     return this;
   }
   requestEmploymentInformation() {
-    this.onTab("Request Information", "Employment Information")
+    this.onTab("Request Information", "Employment Information");
   }
   requestInformation(cb: (page: RequestInformationPage) => unknown): this {
     this.onTab("Request Information", "Request Details");

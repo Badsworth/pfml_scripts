@@ -10,7 +10,7 @@ import massgov.pfml.api.app as app
 import massgov.pfml.api.util.response as response_util
 import massgov.pfml.fineos as fineos
 import massgov.pfml.util.logging as logging
-from massgov.pfml.api.models.users.responses import user_response
+from massgov.pfml.api.models.users.responses import UserResponse
 from massgov.pfml.api.models.verifications.requests import VerificationRequest
 from massgov.pfml.api.services.administrator_fineos_actions import generate_fineos_web_id
 from massgov.pfml.api.validation.exceptions import IssueType, ValidationErrorDetail
@@ -102,7 +102,7 @@ def verifications():
         db_session.add(verification)
         db_session.add(user_leave_administrator)
         db_session.commit()
-        data = user_response(current_user, db_session)
+        data = UserResponse.from_orm(current_user).dict()
     logger.info(
         "Successfully verified user.",
         extra={
