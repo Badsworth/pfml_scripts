@@ -176,10 +176,6 @@ export const Payments = ({
         ?.absence_period_end_date < approvalDate
     : false;
 
-  const shouldShowPaymentsTable =
-    Boolean(claimDetail?.payments?.length) ||
-    (hasLoadedPayments(absence_id || "") && !items.length);
-
   const tableColumns = [
     t("pages.payments.paymentsTable.leaveDatesHeader"),
     t("pages.payments.paymentsTable.paymentMethodHeader"),
@@ -198,6 +194,11 @@ export const Payments = ({
     !hasPaidPayments;
 
   const maxBenefitAmount = `$${getMaxBenefitAmount()}`;
+
+  const shouldShowPaymentsTable =
+    Boolean(claimDetail?.payments?.length) ||
+    (hasLoadedPayments(absence_id || "") && !items.length) ||
+    (!isIntermittent && showPhaseTwoFeatures);
 
   // TODO(PORTAL-1482): remove test cases for checkback dates
 
@@ -324,11 +325,12 @@ export const Payments = ({
             <Table className="width-full" responsive>
               <thead>
                 <tr>
-                  {tableColumns.map((columnName) => (
-                    <th key={columnName} scope="col">
-                      {columnName}
-                    </th>
-                  ))}
+                  {shouldShowPaymentsTable &&
+                    tableColumns.map((columnName) => (
+                      <th key={columnName} scope="col">
+                        {columnName}
+                      </th>
+                    ))}
                 </tr>
               </thead>
               <tbody>

@@ -1,5 +1,4 @@
 // TODO (PORTAL-1148) Update to use createMockClaim when ready
-import { cleanup, screen } from "@testing-library/react";
 import AppErrorInfo from "../../../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../../../src/models/AppErrorInfoCollection";
 import ClaimDetail from "../../../../src/models/ClaimDetail";
@@ -12,6 +11,7 @@ import dayjs from "dayjs";
 import { mockRouter } from "next/router";
 import { renderPage } from "../../../test-utils";
 import routes from "../../../../src/routes";
+import { screen } from "@testing-library/react";
 jest.mock("next/router");
 
 mockRouter.asPath = routes.applications.status.payments;
@@ -375,15 +375,15 @@ describe("Payments", () => {
     expect(container.firstChild).toMatchSnapshot();
   });
 
-  cleanup();
   // TODO(PORTAL-1482): remove test cases for checkback dates
-  describe("Phase 2 Checkback date implementation ", () => {
+  describe("Phase 2 Checkback date implementation", () => {
     beforeEach(() => {
       process.env.featureFlags = JSON.stringify({
         claimantShowPayments: false,
         claimantShowPaymentsPhaseTwo: true,
       });
     });
+
     it.each(Object.keys(approvalDate))(
       "renders intro text for continuous leaves %s ",
       (state) => {
@@ -400,8 +400,105 @@ describe("Payments", () => {
           },
           props
         );
+        const table = screen.getByRole("table");
+        expect(table).toBeInTheDocument();
         expect(screen.getByTestId("your-payments-intro")).toMatchSnapshot();
       }
     );
+
+    it.each(Object.keys(approvalDate))(
+      "renders intro text for reduced schedule leaves %s ",
+      (state) => {
+        const reducedClaimDetail = {
+          ...defaultClaimDetail,
+          absence_periods: [
+            {
+              ...defaultClaimDetail.absence_periods[0],
+              period_type: "Reduced Schedule",
+            },
+          ],
+        };
+        renderPage(
+          Payments,
+          {
+            addCustomSetup: setupHelper(
+              {
+                ...reducedClaimDetail,
+              },
+              false,
+              approvalDate[state]
+            ),
+          },
+          props
+        );
+        expect(screen.getByTestId("your-payments-intro")).toMatchSnapshot();
+        const table = screen.getByRole("table");
+        expect(table).toBeInTheDocument();
+      }
+    );
+
+    it.each(Object.keys(approvalDate))(
+      "renders intro text for continous leaves %s if claim has reduced and continuous leaves",
+      (state) => {
+        const multipleClaimDetail = {
+          ...defaultClaimDetail,
+          absence_periods: [
+            defaultClaimDetail.absence_periods[0],
+            {
+              ...defaultClaimDetail.absence_periods[0],
+              period_type: "Reduced Schedule",
+            },
+          ],
+        };
+        renderPage(
+          Payments,
+          {
+            addCustomSetup: setupHelper(
+              {
+                ...multipleClaimDetail,
+              },
+              false,
+              approvalDate[state]
+            ),
+          },
+          props
+        );
+        expect(screen.getByTestId("your-payments-intro")).toMatchSnapshot();
+        const table = screen.getByRole("table");
+        expect(table).toBeInTheDocument();
+      }
+    );
+
+    it("does not render the Payments table when no payments are available and leave is intermittent", () => {
+      renderPage(
+        Payments,
+        {
+          addCustomSetup: setupHelper({
+            ...defaultClaimDetail,
+            absence_periods: [
+              defaultClaimDetail.absence_periods[0],
+              {
+                ...defaultClaimDetail.absence_periods[0],
+                period_type: "Intermittent",
+              },
+            ],
+            loadedPaymentsData: {
+              absence_case_id: "fineos_id",
+            },
+            appLogicHook: {
+              claims: { loadClaimDetail: jest.fn() },
+              appErrors: { items: [] },
+            },
+          }),
+        },
+        {
+          ...props,
+        }
+      );
+
+      expect(screen.getByTestId("your-payments-intro")).toMatchSnapshot();
+      const table = screen.queryByRole("table");
+      expect(table).not.toBeInTheDocument();
+    });
   });
 });

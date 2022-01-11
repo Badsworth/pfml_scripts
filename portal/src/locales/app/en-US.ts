@@ -2630,6 +2630,12 @@ const pages = {
       "Payments are scheduled to be paid after each week of your leave. Check back weekly to see when your next payment will be scheduled.",
     paymentsIntro_NonIntermittent_Retro:
       "Since you were approved after your leave ended, you’ll receive one payment for your entire leave.",
+    paymentsIntro_ReducedSchedule_PostFourteenthClaimDate:
+      "<p>Check back on {{checkbackDate}} to see when you can expect your first payment. You need to take at least 8 hours of leave for a payment to be processed.</p>",
+    paymentsIntro_ReducedSchedule_PreFourteenthClaimDate:
+      "<p>Check back on {{checkbackDate}} to see when you can expect your first payment. You need to take at least 8 hours of leave for a payment to be processed. Your application has a 7-day waiting period at the start of your leave. You won’t receive any PFML payments for this week of leave.</p>",
+    paymentsIntro_ReducedSchedule_Retroactive:
+      "$t(pages.payments.paymentsIntro_Continuous_Retroactive)",
     paymentsTable: {
       amountSent: "{{amount, currency}}",
       amountSentHeader: "Amount sent",
