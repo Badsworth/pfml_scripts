@@ -1060,7 +1060,7 @@ const pages = {
       "Need help? Call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.",
     codeLabel: "$t(shared.verificationCodeLabel)",
     lead: "To protect your security we sent a 6-digit code to the phone number we have on file for verification.  Don’t share this code with anyone. We’ll never call or text you for this code.",
-    resendCodeLink: "$t(shared.resendVerificationCodeLink)",
+    resendCodeLink: "Didn’t receive the code? Log in again to resend it.",
     submitButton: "Submit",
     title: "Enter your security code",
   },
@@ -2623,13 +2623,19 @@ const pages = {
     paymentsIntro_Continuous_Retroactive:
       "<p>Check back on {{checkbackDate}} to see when you can expect your first payment. You’ll receive one payment for your entire leave.</p>",
     paymentsIntro_Intermittent:
-      "Once you report at least 8 hours, you can expect to receive a payment about one week later. You can receive more than one payment in a week depending on how your hours are reported. You can report your hours by calling <contact-center-report-phone-link>$t(shared.contactCenterReportHoursPhoneNumber)<contact-center-report-phone-link>.",
+      "Once you report at least 8 hours, you can expect to receive a payment about one week later. You can receive more than one payment in a week depending on how your hours are reported. You can report your hours by calling <contact-center-report-phone-link>$t(shared.contactCenterReportHoursPhoneNumber)</contact-center-report-phone-link>.",
     paymentsIntro_Intermittent_Unpaid:
       "<p>Your application has a 7-day waiting period after the first day you report taking leave. You won’t receive any PFML payments for these 7 days of leave.</p><p>After your waiting period, once you report at least 8 hours of leave you can expect to receive payment about one week later. You can receive more than one payment in a week depending on how your hours are reported.</p><p>You can report your hours by calling <contact-center-report-phone-link>$t(shared.contactCenterReportHoursPhoneNumber)</contact-center-report-phone-link>.</p>",
     paymentsIntro_NonIntermittent_NonRetro:
       "Payments are scheduled to be paid after each week of your leave. Check back weekly to see when your next payment will be scheduled.",
     paymentsIntro_NonIntermittent_Retro:
       "Since you were approved after your leave ended, you’ll receive one payment for your entire leave.",
+    paymentsIntro_ReducedSchedule_PostFourteenthClaimDate:
+      "<p>Check back on {{checkbackDate}} to see when you can expect your first payment. You need to take at least 8 hours of leave for a payment to be processed.</p>",
+    paymentsIntro_ReducedSchedule_PreFourteenthClaimDate:
+      "<p>Check back on {{checkbackDate}} to see when you can expect your first payment. You need to take at least 8 hours of leave for a payment to be processed. Your application has a 7-day waiting period at the start of your leave. You won’t receive any PFML payments for this week of leave.</p>",
+    paymentsIntro_ReducedSchedule_Retroactive:
+      "$t(pages.payments.paymentsIntro_Continuous_Retroactive)",
     paymentsTable: {
       amountSent: "{{amount, currency}}",
       amountSentHeader: "Amount sent",
@@ -2693,7 +2699,7 @@ const pages = {
     addPhoneNumberButtonText: "Add additional verification",
     additionalVerificationHeading: "Additional login verification",
     additionalVerificationNoMfaText:
-      "<p>Make your account more secure by providing a phone number to associate with your account. We'll send you a 6-digit code to verify it's really you. In the future, you’ll also be able to access sensitive information like tax documents (when available) once you set this up.</p><p>You will need to provide a phone number that can receive text messages (SMS) and that you’ll have consistent access to in case we need to verify your login.</p><p><strong>Additional login verification is not enabled</strong></p>",
+      "<p>Make your account more secure by providing a phone number to associate with your account. We'll send you a 6-digit code to verify it's really you. You’ll need to enter the code in order to log in to your account. In the future, you’ll also be able to access sensitive information like tax documents (when available) once you set this up.</p><p>You will need to provide a phone number that can receive text messages (SMS) and that you’ll have consistent access to in case we need to verify your login.</p><p><strong>Additional login verification is not enabled</strong></p>",
     additionalVerificationWithMfaText:
       "To protect your security, we'll send you a 6-digit code to verify it's really you. You’ll need to enter the code in order to log in to your account.",
     backToApplicationsLinkText: "Back to applications",

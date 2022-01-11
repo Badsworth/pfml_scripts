@@ -139,6 +139,8 @@ Github):
     - See the other `check-static` and `lint-*` make targets, as well as the Tests section below to run more targeted
       versions of these checks
 
+Note that should you wish to try out a backend change against a locally running instance of the portal, this is available to you by starting the backend with `make logs-local`. See [development.md](/portal/development#Frontend<>BackendConfiguration) for details.
+
 ## Makefile utilities
 
 Many of the utilities and scripts to developing and managing the application have been standardized into

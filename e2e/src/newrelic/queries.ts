@@ -33,7 +33,7 @@ export async function buildFineosAPIEndpoints(
   );
   const requestIdString = requestIds.map((i) => `'${i.request_id}'`).join(",");
   const results = await client.nrql<FineosAPIResult>(
-    `SELECT FINEOSUrl, FINEOSMethod FROM Log WHERE aws.logGroup = 'service/pfml-api-${environment}' AND name = 'massgov.pfml.fineos.fineos_client' AND funcName = '_request' AND levelname != 'DEBUG' AND request_id IN (${requestIdString}) ${limiters} LIMIT MAX`
+    `SELECT FINEOSUrl, FINEOSMethod FROM Log WHERE aws.logGroup LIKE 'service/pfml-api-${environment}%' AND name = 'massgov.pfml.fineos.fineos_client' AND funcName = '_request' AND levelname != 'DEBUG' AND request_id IN (${requestIdString}) ${limiters} LIMIT MAX`
   );
 
   // Anonymize the results, then filter uniques.
@@ -101,7 +101,7 @@ export async function fineosAPICallSummary(
   const cases = facets.join(", ");
 
   let query = `SELECT average(numeric(FINEOSResponseTime)) AS 'Average Response', percentile(numeric(FINEOSResponseTime), 95) AS 'p95 Response', percentile(numeric(FINEOSResponseTime), 99) AS 'p99 Response', percentage(count(*), WHERE levelname ='WARNING' OR levelname = 'ERROR') AS 'Error Rate', COUNT(*) AS 'Call Count'
-      FROM Log WHERE aws.logGroup = 'service/pfml-api-${environment}' AND name = 'massgov.pfml.fineos.fineos_client' AND funcName = '_request' AND levelname != 'DEBUG'
+      FROM Log WHERE aws.logGroup LIKE 'service/pfml-api-${environment}%' AND name = 'massgov.pfml.fineos.fineos_client' AND funcName = '_request' AND levelname != 'DEBUG'
       FACET CASES(${cases}) LIMIT MAX`;
   if (since) {
     // Quote ISO formatted strings.

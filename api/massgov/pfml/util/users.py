@@ -55,6 +55,30 @@ def add_leave_admin_and_role(db_session: db.Session, user: User, employer: Emplo
     return user
 
 
+def remove_leave_admins_and_role(db_session: db.Session, user: User) -> User:
+    """A helper function to remove the employer role and leave admin link from the user"""
+    # user.user_leave_administrators.remove(la) causes a not-null violation
+    # since it tries to set the user_id to NULL.
+    row_count = (
+        db_session.query(UserLeaveAdministrator)
+        .filter(UserLeaveAdministrator.user_id == user.user_id)
+        .delete()
+    )
+    logger.info(
+        "deleted from link_user_leave_administrator",
+        extra=dict(count=row_count, user_id=user.user_id),
+    )
+    row_count = (
+        db_session.query(UserRole)
+        .filter(UserRole.user_id == user.user_id and UserRole.role_id == Role.EMPLOYER.role_id)
+        .delete()
+    )
+    logger.info(
+        "deleted from link_user_role", extra=dict(count=row_count, user_id=user.user_id),
+    )
+    return user
+
+
 def get_register_user_log_attributes(
     employer_for_leave_admin: Optional[Employer], auth_id: Optional[str] = None
 ) -> Dict[str, Optional[str]]:

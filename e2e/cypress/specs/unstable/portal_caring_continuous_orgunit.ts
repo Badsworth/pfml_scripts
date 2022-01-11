@@ -1,15 +1,16 @@
 import { fineos, fineosPages, portal } from "../../actions";
-import { config } from "../../actions/common"
-import {Submission} from "../../../src/types";
-
+import { config } from "../../actions/common";
+import { Submission } from "../../../src/types";
 
 describe("Submit a claim through the Portal that has OrgUnits associated with the Employer", () => {
   it("As a claimant, I should be able to submit a claim application through the portal", () => {
     portal.before({
-      claimantShowOrganizationUnits:
-        config("HAS_ORGUNITS_SETUP") === "true",
+      claimantShowOrganizationUnits: config("HAS_ORGUNITS_SETUP") === "true",
     });
-    cy.task("generateClaim", { scenario: "ORGUNIT", employeePoolFileName: config("ORGUNIT_EMPLOYEES_FILE") }).then((claim) => {
+    cy.task("generateClaim", {
+      scenario: "ORGUNIT",
+      employeePoolFileName: config("ORGUNIT_EMPLOYEES_FILE"),
+    }).then((claim) => {
       cy.stash("claim", claim);
       const application: ApplicationRequestBody = claim.claim;
       const paymentPreference = claim.paymentPreference;
@@ -18,10 +19,7 @@ describe("Submit a claim through the Portal that has OrgUnits associated with th
 
       // Submit Claim
       portal.startClaim();
-      portal.submitClaimPartOne(
-        application,
-        true
-      );
+      portal.submitClaimPartOne(application, true);
       portal.waitForClaimSubmission().then((data) => {
         cy.stash("submission", {
           application_id: data.application_id,
@@ -29,7 +27,11 @@ describe("Submit a claim through the Portal that has OrgUnits associated with th
           timestamp_from: Date.now(),
         });
       });
-      portal.submitClaimPartsTwoThree(application, paymentPreference);
+      portal.submitClaimPartsTwoThree(
+        application,
+        paymentPreference,
+        claim.is_withholding_tax
+      );
     });
   });
 
@@ -40,18 +42,20 @@ describe("Submit a claim through the Portal that has OrgUnits associated with th
       cy.dependsOnPreviousPass();
       fineos.before();
       cy.unstash<Submission>("submission").then(({ fineos_absence_id }) => {
-          fineosPages.ClaimPage.visit(fineos_absence_id)
-            .adjudicate((adjudication) => {
-              adjudication.requestEmploymentInformation()
-              cy.get('span[id*="occupationDetailsProxy_un201_Organisation_Unit_Label"]').should((element) => {
-                expect(
-                  element,
-                  `Organization Unit should be the Division of Administrative Law Appeals`
-                ).to.have.text("Division of Administrative Law Appeals");
-              });
-            })
-
+        fineosPages.ClaimPage.visit(fineos_absence_id).adjudicate(
+          (adjudication) => {
+            adjudication.requestEmploymentInformation();
+            cy.get(
+              'span[id*="occupationDetailsProxy_un201_Organisation_Unit_Label"]'
+            ).should((element) => {
+              expect(
+                element,
+                `Organization Unit should be the Division of Administrative Law Appeals`
+              ).to.have.text("Division of Administrative Law Appeals");
+            });
+          }
+        );
       });
     }
   );
-})
+});

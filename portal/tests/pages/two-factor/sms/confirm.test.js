@@ -10,6 +10,7 @@ const updateUser = jest.fn();
 const goToNextPage = jest.fn();
 
 jest.mock("../../../../src/services/mfa", () => ({
+  sendMFAConfirmationCode: jest.fn(),
   verifyMFAPhoneNumber: jest.fn(),
 }));
 
@@ -86,6 +87,17 @@ describe("Two-factor SMS Confirm", () => {
     expect(updateUser).toHaveBeenCalledWith(expect.any(String), {
       mfa_delivery_preference: "SMS",
     });
+  });
+
+  it("resends the SMS code when user clicks the resend button", async () => {
+    renderPage(ConfirmSMS, {});
+
+    const resendButton = screen.getByRole("button", {
+      name: "Resend the code",
+    });
+    await act(async () => await userEvent.click(resendButton));
+
+    expect(MFAService.sendMFAConfirmationCode).toHaveBeenCalled();
   });
 
   it("routes the user to the next page when they submit", async () => {

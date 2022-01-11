@@ -364,7 +364,7 @@ def test_users_get_current_with_query_count(
         )
         test_db_session.add(link)
     test_db_session.commit()
-    with sqlalchemy_query_counter(test_db_session, expected_query_count=7):
+    with sqlalchemy_query_counter(test_db_session, expected_query_count=8):
         response = client.get(
             "/v1/users/current", headers={"Authorization": f"Bearer {employer_auth_token}"}
         )

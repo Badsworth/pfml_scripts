@@ -102,7 +102,7 @@ function makeMarkdownViz(markdown: string, title?: string, layout?: Layout) {
       whereClauses.push(
         `WHERE FINEOSMethod = '${call.FINEOSMethod}' AND FINEOSUrl LIKE '${call.FINEOSUrl}' AS '${call.FINEOSMethod} ${call.FINEOSUrl}'`
       );
-      const queryEnd = ` FROM Log WHERE aws.logGroup = 'service/pfml-api-${environment}' AND name = 'massgov.pfml.fineos.fineos_client' AND funcName = '_request' AND levelname != 'DEBUG' AND FINEOSMethod = '${call.FINEOSMethod}' AND FINEOSUrl LIKE '${call.FINEOSUrl}' TIMESERIES`;
+      const queryEnd = ` FROM Log WHERE aws.logGroup like 'service/pfml-api-${environment}%' AND name = 'massgov.pfml.fineos.fineos_client' AND funcName = '_request' AND levelname != 'DEBUG' AND FINEOSMethod = '${call.FINEOSMethod}' AND FINEOSUrl LIKE '${call.FINEOSUrl}' TIMESERIES`;
       widgets.push(
         makeLineViz(
           `Errors: ${call.FINEOSMethod} ${call.FINEOSUrl}`,

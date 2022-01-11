@@ -64,6 +64,7 @@ from massgov.pfml.util.logging.claims import (
     get_claim_log_attributes,
     get_claim_review_log_attributes,
     get_managed_requirements_log_attributes,
+    log_absence_period,
     log_get_claim_metrics,
     log_managed_requirement,
 )
@@ -351,6 +352,15 @@ def employer_get_claim_review(fineos_absence_id: str) -> flask.Response:
         for requirement in fineos_claim_review_response.managed_requirements:
             log_managed_requirement(requirement, fineos_absence_id)
 
+        log_attributes.update(
+            {"num_absence_periods": len(fineos_claim_review_response.absence_periods),}
+        )
+
+        for period in fineos_claim_review_response.absence_periods:
+            log_absence_period(
+                fineos_absence_id, period, "get_claim_review - Found absence period for claim"
+            )
+
         logger.info(
             "employer_get_claim_review success", extra=log_attributes,
         )
@@ -507,6 +517,7 @@ def get_claim_from_db(fineos_absence_id: Optional[str]) -> Optional[Claim]:
 def get_claims() -> flask.Response:
     current_user = app.current_user()
     employer_id = flask.request.args.get("employer_id")
+    allow_hrd = flask.request.args.get("allow_hrd", type=bool) or False
     search_string = flask.request.args.get("search", type=str)
     absence_statuses = parse_filterable_absence_statuses(flask.request.args.get("claim_status"))
     is_employer = can(READ, "EMPLOYER_API")
@@ -531,7 +542,7 @@ def get_claims() -> flask.Response:
                 verified_employers = [
                     employer
                     for employer in employers_list
-                    if employer.employer_fein not in CLAIMS_DASHBOARD_BLOCKED_FEINS
+                    if (employer.employer_fein not in CLAIMS_DASHBOARD_BLOCKED_FEINS or allow_hrd)
                     and current_user.verified_employer(employer)
                 ]
 

@@ -157,6 +157,11 @@ export const Payments = ({
 
   const maxBenefitAmount = `$${getMaxBenefitAmount()}`;
 
+  const shouldShowPaymentsTable =
+    Boolean(claimDetail?.payments?.length) ||
+    (hasLoadedPayments(absence_id || "") && !items.length) ||
+    (!isIntermittent && showPhaseTwoFeatures);
+
   // TODO(PORTAL-1482): remove test cases for checkback dates
 
   let checkbackDate;
@@ -269,12 +274,14 @@ export const Payments = ({
               }}
             />
             {/* Estimated Date section */}
-            <section className="margin-y-5" data-testid="estimated-date">
-              <Heading level="3">
-                {t("pages.payments.estimatedDateHeading")}
-              </Heading>
-              <p>{t("pages.payments.estimatedDate")}</p>
-            </section>
+            {(!isIntermittent || (isIntermittent && hasPaidPayments)) && (
+              <section className="margin-y-5" data-testid="estimated-date">
+                <Heading level="3">
+                  {t("pages.payments.estimatedDateHeading")}
+                </Heading>
+                <p>{t("pages.payments.estimatedDate")}</p>
+              </section>
+            )}
           </section>
 
           {/* Table section */}
@@ -282,11 +289,12 @@ export const Payments = ({
             <Table className="width-full" responsive>
               <thead>
                 <tr>
-                  {tableColumns.map((columnName) => (
-                    <th key={columnName} scope="col">
-                      {columnName}
-                    </th>
-                  ))}
+                  {shouldShowPaymentsTable &&
+                    tableColumns.map((columnName) => (
+                      <th key={columnName} scope="col">
+                        {columnName}
+                      </th>
+                    ))}
                 </tr>
               </thead>
               <tbody>

@@ -41,6 +41,24 @@ describe("Two-factor SMS Verify", () => {
     expect(mockGoTo).toHaveBeenCalledWith("/login", {}, { redirect: true });
   });
 
+  it("routes to the login page if the user hits the didn't get a code link", async () => {
+    const mockGoTo = jest.fn();
+    renderPage(
+      VerifySMS,
+      {
+        addCustomSetup: (appLogic) => {
+          appLogic.portalFlow.goTo = mockGoTo;
+        },
+      },
+      { query: { next: "next" } }
+    );
+    const didntGetCodeButton = screen.getByRole("button", {
+      name: "Didn’t receive the code? Log in again to resend it.",
+    });
+    await act(async () => await userEvent.click(didntGetCodeButton));
+    expect(mockGoTo).toHaveBeenCalledWith("/login", {}, { redirect: true });
+  });
+
   it("sends verification code and updates MFA preference when user saves and continues", async () => {
     const mockVerify = jest.fn();
     renderPage(

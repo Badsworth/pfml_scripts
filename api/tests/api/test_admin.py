@@ -5,6 +5,7 @@ from mock import patch
 
 from massgov.pfml.api.admin import SERVICE_UNAVAILABLE_MESSAGE
 from massgov.pfml.db.models.employees import AzureGroup, AzureGroupPermission, AzurePermission
+from massgov.pfml.db.models.factories import UserFactory
 
 FAKE_AUTH_URI_RESPONSE = {
     "auth_uri": "test",
@@ -193,3 +194,118 @@ def test_admin_token_value_error(mock_build, client):
     assert errors[0].get("message") == "Value error"
     assert errors[0].get("type") == "invalid"
     assert response.status_code == 400
+
+
+def test_admin_no_permissions(client, app, mock_azure, auth_claims_unit, azure_auth_private_key):
+    azure_token = auth_claims_unit.copy()
+    azure_token["groups"] = [
+        AzureGroup.NON_PROD.azure_group_guid,
+        AzureGroup.NON_PROD_DEV.azure_group_guid,
+    ]
+    encoded = jwt.encode(
+        azure_token,
+        azure_auth_private_key,
+        algorithm=ALGORITHMS.RS256,
+        headers={"kid": azure_auth_private_key.get("kid")},
+    )
+    with app.app.test_request_context("/v1/admin/users"):
+        response = client.get(
+            "/v1/admin/users?page_size=10", headers={"Authorization": f"Bearer {encoded}"}
+        )
+        assert response.status_code == 401
+
+
+def test_admin_users_cognito(client, app, mock_azure, auth_token):
+    response = client.get("/v1/admin/users", headers={"Authorization": f"Bearer {auth_token}"},)
+    assert response.status_code == 401
+
+
+def test_admin_users_success(
+    client, app, mock_azure, auth_claims_unit, azure_auth_private_key, test_db_session
+):
+    azure_token = auth_claims_unit.copy()
+    azure_token["groups"] = [
+        AzureGroup.NON_PROD.azure_group_guid,
+        AzureGroup.NON_PROD_DEV.azure_group_guid,
+    ]
+    test_db_session.add(
+        AzureGroupPermission(
+            azure_group_id=AzureGroup.NON_PROD_DEV.azure_group_id,
+            azure_permission_id=AzurePermission.USER_READ.azure_permission_id,
+        )
+    )
+    encoded = jwt.encode(
+        azure_token,
+        azure_auth_private_key,
+        algorithm=ALGORITHMS.RS256,
+        headers={"kid": azure_auth_private_key.get("kid")},
+    )
+    UserFactory.create_batch(50)
+    with app.app.test_request_context("/v1/admin/users"):
+        response = client.get(
+            "/v1/admin/users?page_size=10", headers={"Authorization": f"Bearer {encoded}"}
+        )
+        assert response.status_code == 200
+        assert g.azure_user.sub_id == "foo"
+        assert g.azure_user.permissions == [
+            AzurePermission.USER_READ.azure_permission_id,
+        ]
+        response_json = response.get_json()
+        data = response_json.get("data")
+        paging = response_json.get("meta").get("paging")
+
+        assert paging.get("order_by") == "created_at"
+        assert paging.get("order_direction") == "descending"
+        assert paging.get("page_offset") == 1
+        assert paging.get("page_size") == 10
+        assert paging.get("total_pages") == 5
+        assert paging.get("total_records") == 50
+        assert len(data) == 10
+
+
+def test_admin_users_email_address_filter(
+    client, app, mock_azure, auth_claims_unit, azure_auth_private_key, test_db_session
+):
+    azure_token = auth_claims_unit.copy()
+    azure_token["groups"] = [
+        AzureGroup.NON_PROD.azure_group_guid,
+        AzureGroup.NON_PROD_DEV.azure_group_guid,
+    ]
+    test_db_session.add(
+        AzureGroupPermission(
+            azure_group_id=AzureGroup.NON_PROD_DEV.azure_group_id,
+            azure_permission_id=AzurePermission.USER_READ.azure_permission_id,
+        )
+    )
+    encoded = jwt.encode(
+        azure_token,
+        azure_auth_private_key,
+        algorithm=ALGORITHMS.RS256,
+        headers={"kid": azure_auth_private_key.get("kid")},
+    )
+    for x in range(3):
+        UserFactory.create(email_address=f"janeDo+{x}@example.com")
+    for x in range(3):
+        UserFactory.create(email_address=f"johnDo+{x}@example.com")
+    with app.app.test_request_context("/v1/admin/users"):
+        # Just showing that it is case insensitive.
+        response = client.get(
+            "/v1/admin/users?page_size=10&email_address=anedo",
+            headers={"Authorization": f"Bearer {encoded}"},
+        )
+        assert response.status_code == 200
+        assert g.azure_user.sub_id == "foo"
+        assert g.azure_user.permissions == [
+            AzurePermission.USER_READ.azure_permission_id,
+        ]
+        response_json = response.get_json()
+        data = response_json.get("data")
+        paging = response_json.get("meta").get("paging")
+
+        assert paging.get("order_by") == "created_at"
+        assert paging.get("order_direction") == "descending"
+        assert paging.get("page_offset") == 1
+        assert paging.get("page_size") == 10
+        assert paging.get("total_pages") == 1
+        assert paging.get("total_records") == 3
+        assert len(data) == 3
