@@ -49,20 +49,6 @@ function withClaimDetail<T extends WithClaimDetailProps>(
     const isAbsenceCaseId = Boolean(absenceId?.length);
     if (!isAbsenceCaseId) return <PageNotFound />;
 
-    // only hide page content if there is an error that's not DocumentsLoadError.
-    const hasNonDocumentsLoadError: boolean = appLogic.appErrors.items.some(
-      (error) => error.name !== "DocumentsLoadError"
-    );
-
-    if (hasNonDocumentsLoadError) {
-      return (
-        <BackButton
-          label={t("pages.claimsStatus.backButtonLabel")}
-          href={routes.applications.index}
-        />
-      );
-    }
-
     if (isLoadingClaimDetail) {
       return (
         <div className="text-center">
