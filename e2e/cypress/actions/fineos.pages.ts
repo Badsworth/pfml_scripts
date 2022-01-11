@@ -2024,7 +2024,6 @@ export class ClaimantPage {
                         "input[type='checkbox'][name$='_somSITFITOptIn_CHECKBOX']"
                       ).click();
                     }
-                    cy.pause();
                     // must be selected to proceed
                     cy.get(
                       "input[type='checkbox'][name$='_somSITFITVerification_CHECKBOX']"
