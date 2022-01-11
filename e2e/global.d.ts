@@ -41,7 +41,7 @@ declare namespace Cypress {
       options?: Partial<Cypress.TypeOptions>
     ): Chainable<Element>;
     stash(key: string, value: unknown): null;
-    unstash<T extends unknown>(key: string): Chainable<T>;
+    unstash<T>(key: string): Chainable<T>;
     // Declare our custom tasks.
     stashLog(key: string, value: string | null | undefined): null;
     dependsOnPreviousPass(dependencies?: Mocha.Test[]): null;

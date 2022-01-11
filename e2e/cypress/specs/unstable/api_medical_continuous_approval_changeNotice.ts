@@ -101,53 +101,52 @@ describe("Approval (notifications/notices)", () => {
       );
     });
   });
-  const changeNotice = it('Generates and adds a "Change Leave Request Approved" document', () => {
-    cy.dependsOnPreviousPass([submission, approval, modify]);
-    fineos.before();
-    cy.unstash<Submission>("submission").then((submission) => {
-      fineosPages.ClaimPage.visit(submission.fineos_absence_id)
-        .outstandingRequirements((outstandingRequirement) => {
-          outstandingRequirement.add();
-        })
-        .tasks((tasks) => {
-          tasks.close("Approved Leave Start Date Change");
-          tasks.add("Update Paid Leave Case");
-          tasks.assertIsAssignedToDepartment(
-            "Update Paid Leave Case",
-            "DFML Program Integrity"
-          );
-        })
-        // Trigger the Approval notice first before the next notice.
-        .triggerNotice("Designation Notice")
-        .documents((docPage) => docPage.assertDocumentExists("Approval Notice"))
-        .adjudicate((ad) => {
-          waitForAjaxComplete();
-          ad.acceptLeavePlan();
-        })
-        .outstandingRequirements((outstandingRequirement) =>
-          outstandingRequirement.complete(
-            "Received",
-            "Complete Employer Confirmation",
-            true
+  const changeNotice =
+    it('Generates and adds a "Change Leave Request Approved" document', () => {
+      cy.dependsOnPreviousPass([submission, approval, modify]);
+      fineos.before();
+      cy.unstash<Submission>("submission").then((submission) => {
+        fineosPages.ClaimPage.visit(submission.fineos_absence_id)
+          .outstandingRequirements((outstandingRequirement) => {
+            outstandingRequirement.add();
+          })
+          .tasks((tasks) => {
+            tasks.close("Approved Leave Start Date Change");
+            tasks.add("Update Paid Leave Case");
+            tasks.assertIsAssignedToDepartment(
+              "Update Paid Leave Case",
+              "DFML Program Integrity"
+            );
+          })
+          // Trigger the Approval notice first before the next notice.
+          .triggerNotice("Designation Notice")
+          .documents((docPage) =>
+            docPage.assertDocumentExists("Approval Notice")
           )
-        )
-        .approve()
-        .triggerNotice("Review Approval Notice")
-        .documents((docPage) =>
-          docPage.assertDocumentExists("Change Request Approved")
-        );
+          .adjudicate((ad) => {
+            waitForAjaxComplete();
+            ad.acceptLeavePlan();
+          })
+          .outstandingRequirements((outstandingRequirement) =>
+            outstandingRequirement.complete(
+              "Received",
+              "Complete Employer Confirmation",
+              true
+            )
+          )
+          .approve()
+          .triggerNotice("Review Approval Notice")
+          .documents((docPage) =>
+            docPage.assertDocumentExists("Change Request Approved")
+          );
+      });
     });
-  });
-  it("Check the Claimant email for the Change Request Approved notification",
+  it(
+    "Check the Claimant email for the Change Request Approved notification",
     { retries: 0 },
     () => {
       {
-        cy.dependsOnPreviousPass([
-          submission,
-          approval,
-          modify,
-          changeNotice,
-        ]);
+        cy.dependsOnPreviousPass([submission, approval, modify, changeNotice]);
         cy.unstash<Submission>("submission").then((submission) => {
           cy.unstash<ApplicationRequestBody>("claim").then((claim) => {
             // The notification is using the same subject line as Appeals claimant.
@@ -167,7 +166,7 @@ describe("Approval (notifications/notices)", () => {
               60000
             );
             cy.screenshot("Claimant email");
-            cy.contains(submission.fineos_absence_id)
+            cy.contains(submission.fineos_absence_id);
           });
         });
       }
@@ -177,12 +176,7 @@ describe("Approval (notifications/notices)", () => {
     "Check the Leave Admin email for the Change Request Approved notification",
     { retries: 0 },
     () => {
-      cy.dependsOnPreviousPass([
-        submission,
-        approval,
-        modify,
-        changeNotice,
-      ]);
+      cy.dependsOnPreviousPass([submission, approval, modify, changeNotice]);
       cy.unstash<Submission>("submission").then((submission) => {
         cy.unstash<ApplicationRequestBody>("claim").then((claim) => {
           // The notification is using the same subject line as Appeals claimant.
@@ -191,25 +185,27 @@ describe("Approval (notifications/notices)", () => {
             submission.fineos_absence_id,
             `${claim.first_name} ${claim.last_name}`
           );
-          email.getEmails(
-            {
-              address: "gqzap.notifications@inbox.testmail.app",
-              subject: subjectEmployer,
-              // Had to adjust the messageWildcard to use line for Leave Admin only.
-              // Was getting duplicate Claimant emails or not found because of notifications
-              messageWildcard: "The applicant’s change request has been approved.",
-              timestamp_from: submission.timestamp_from,
-              debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
-            },
-            60000
-          )
-          .then(() => {
-            cy.screenshot("Leave Admin email");
-            cy.contains(submission.fineos_absence_id);
-            cy.get(
-              `a[href*="/employers/applications/status/?absence_id=${submission.fineos_absence_id}"]`
-            );
-          });
+          email
+            .getEmails(
+              {
+                address: "gqzap.notifications@inbox.testmail.app",
+                subject: subjectEmployer,
+                // Had to adjust the messageWildcard to use line for Leave Admin only.
+                // Was getting duplicate Claimant emails or not found because of notifications
+                messageWildcard:
+                  "The applicant’s change request has been approved.",
+                timestamp_from: submission.timestamp_from,
+                debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
+              },
+              60000
+            )
+            .then(() => {
+              cy.screenshot("Leave Admin email");
+              cy.contains(submission.fineos_absence_id);
+              cy.get(
+                `a[href*="/employers/applications/status/?absence_id=${submission.fineos_absence_id}"]`
+              );
+            });
         });
       });
     }
@@ -218,12 +214,7 @@ describe("Approval (notifications/notices)", () => {
     "Check the Leave Admin Portal for the Change Request Approved notice",
     { retries: 0 },
     () => {
-      cy.dependsOnPreviousPass([
-        submission,
-        approval,
-        modify,
-        changeNotice,
-      ]);
+      cy.dependsOnPreviousPass([submission, approval, modify, changeNotice]);
       portal.before();
       cy.unstash<Submission>("submission").then((submission) => {
         cy.unstash<DehydratedClaim>("claim").then((claim) => {
@@ -232,9 +223,7 @@ describe("Approval (notifications/notices)", () => {
           }
           const employeeFullName = `${claim.claim.first_name} ${claim.claim.last_name}`;
           portal.loginLeaveAdmin(claim.claim.employer_fein);
-          portal.selectClaimFromEmployerDashboard(
-            submission.fineos_absence_id
-          );
+          portal.selectClaimFromEmployerDashboard(submission.fineos_absence_id);
           portal.checkNoticeForLeaveAdmin(
             submission.fineos_absence_id,
             employeeFullName,
@@ -249,12 +238,7 @@ describe("Approval (notifications/notices)", () => {
     "Check the Claimant Portal for the legal notice (Change Request Approved)",
     { retries: 0 },
     () => {
-      cy.dependsOnPreviousPass([
-        submission,
-        approval,
-        modify,
-        changeNotice,
-      ]);
+      cy.dependsOnPreviousPass([submission, approval, modify, changeNotice]);
       portal.before();
       cy.unstash<Submission>("submission").then((submission) => {
         portal.loginClaimant();
@@ -264,7 +248,7 @@ describe("Approval (notifications/notices)", () => {
           {
             credentials: getClaimantCredentials(),
             application_id: submission.application_id,
-            document_type: "Change Request Approved"
+            document_type: "Change Request Approved",
           },
           { timeout: 45000 }
         );

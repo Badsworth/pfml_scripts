@@ -16,10 +16,7 @@ describe("Submit bonding application via the web portal: Adjudication Approval &
 
         // Submit Claim
         portal.startClaim();
-        portal.submitClaimPartOne(
-          application,
-          false
-        );
+        portal.submitClaimPartOne(application, false);
         portal.waitForClaimSubmission().then((data) => {
           cy.stash("submission", {
             application_id: data.application_id,
@@ -27,7 +24,11 @@ describe("Submit bonding application via the web portal: Adjudication Approval &
             timestamp_from: Date.now(),
           });
         });
-        portal.submitClaimPartsTwoThree(application, paymentPreference, claim.is_withholding_tax);
+        portal.submitClaimPartsTwoThree(
+          application,
+          paymentPreference,
+          claim.is_withholding_tax
+        );
       });
     });
 

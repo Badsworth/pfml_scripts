@@ -584,9 +584,7 @@ export function enterEmployerInfo(
   if (useOrgUnitFlow === true) {
     cy.findByLabelText("Select a department")
       .get("select")
-      .select(
-        "Division of Administrative Law Appeals", {force: true}
-      );
+      .select("Division of Administrative Law Appeals", { force: true });
     cy.contains("button", "Save and continue").click();
   }
   if (application.employment_status === "Employed") {
@@ -935,7 +933,9 @@ export function checkNoticeForLeaveAdmin(
 
     case "changeRequestApproval":
       cy.contains("h1", claimantName, { timeout: 20000 }).should("be.visible");
-      cy.findByText("Change Request Approved (PDF)").should("be.visible").click();
+      cy.findByText("Change Request Approved (PDF)")
+        .should("be.visible")
+        .click();
       break;
 
     default:
@@ -1993,11 +1993,11 @@ export function claimantGoToClaimStatus(
   fineosAbsenceId: string,
   waitForApps = true
 ): void {
-  waitForApps && cy.wait("@getApplications")
-  waitForApps && cy.wait("@getDocuments").wait(300)
+  waitForApps && cy.wait("@getApplications");
+  waitForApps && cy.wait("@getDocuments").wait(300);
   cy.contains("article", fineosAbsenceId).within(() => {
     cy.contains("View status updates and details").click({
-      force: true
+      force: true,
     });
     cy.url()
       .should("include", "/applications/status/")

@@ -19,10 +19,7 @@ describe("Submit a claim through Portal: Verify it creates an absence case in Fi
 
         // Submit Claim
         portal.startClaim();
-        portal.submitClaimPartOne(
-          application,
-          false
-        );
+        portal.submitClaimPartOne(application, false);
         portal.waitForClaimSubmission().then((data) => {
           cy.stash("submission", {
             application_id: data.application_id,
@@ -30,7 +27,11 @@ describe("Submit a claim through Portal: Verify it creates an absence case in Fi
             timestamp_from: Date.now(),
           });
         });
-        portal.submitClaimPartsTwoThree(application, paymentPreference, claim.is_withholding_tax);
+        portal.submitClaimPartsTwoThree(
+          application,
+          paymentPreference,
+          claim.is_withholding_tax
+        );
       });
     });
 
