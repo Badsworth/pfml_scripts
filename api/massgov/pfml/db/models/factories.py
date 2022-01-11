@@ -1094,12 +1094,28 @@ class MmarsPaymentDataFactory(BaseFactory):
     doc_last_modified_on = warrant_select_date
 
 
+class Pfml1099BatchFactory(BaseFactory):
+    class Meta:
+        model = payment_models.Pfml1099Batch
+
+    pfml_1099_batch_id = Generators.UuidObj
+
+    tax_year = 2021
+    batch_run_date = factory.Faker(
+        "date_between_dates", date_start=date(2021, 1, 1), date_end=date(2021, 1, 15)
+    )
+    correction_ind = False
+    batch_status = "Created"
+
+
 class Pfml1099Factory(BaseFactory):
     class Meta:
         model = payment_models.Pfml1099
 
     pfml_1099_id = Generators.UuidObj
+
     pfml_1099_batch_id = Generators.UuidObj
+
     tax_year = 2021
     employee_id = Generators.UuidObj
     tax_identifier_id = Generators.UuidObj
@@ -1117,22 +1133,8 @@ class Pfml1099Factory(BaseFactory):
     federal_tax_withholdings = Generators.Money
     overpayment_repayments = 0.00
     correction_ind = False
-    s3_location = "local_s3"
+    s3_location = "local_s3/Batch-1/Sub-Batch-1/test.pdf"
     fineos_status = "New"
-
-
-class Pfml1099BatchFactory(BaseFactory):
-    class Meta:
-        model = payment_models.Pfml1099Batch
-
-    pfml_1099_batch_id = Generators.UuidObj
-
-    tax_year = 2021
-    batch_run_date = factory.Faker(
-        "date_between_dates", date_start=date(2021, 1, 1), date_end=date(2021, 1, 15)
-    )
-    correction_ind = False
-    batch_status = "Created"
 
 
 class Pfml1099MMARSPaymentFactory(BaseFactory):

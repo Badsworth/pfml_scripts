@@ -11,7 +11,7 @@ def merge_1099_document_step(test_db_session, initialize_factories_session, test
     return Merge1099Step(db_session=test_db_session, log_entry_db_session=test_db_other_session)
 
 
-def test_get_records_batch_as_none(merge_1099_document_step: Merge1099Step):
+def test_get_record_as_none(merge_1099_document_step: Merge1099Step):
     mock.patch(
         "massgov.pfml.delegated_payments.irs_1099.pfml_1099_util.get_current_1099_batch",
         return_value=None,
@@ -23,14 +23,15 @@ def test_get_records_batch_as_none(merge_1099_document_step: Merge1099Step):
         merge_1099_document_step.get_record()
 
 
-def test_get_records_valid_batch(merge_1099_document_step: Merge1099Step):
+def test_get_record_as_valid(merge_1099_document_step: Merge1099Step):
     batch = Pfml1099BatchFactory.create()
-    mock.patch(
-        "massgov.pfml.delegated_payments.irs_1099.pfml_1099_util.get_current_1099_batch",
-        return_value=batch,
-    )
+    with mock.patch(
+        "massgov.pfml.delegated_payments.irs_1099.pfml_1099_util.get_current_1099_batch"
+    ) as mock_current_batch:
+        mock_current_batch.return_value = batch
+        response = merge_1099_document_step.get_record()
 
-    assert merge_1099_document_step.get_record() is not None
+    assert response is not None
 
 
 def test_merge_document_success(merge_1099_document_step: Merge1099Step):
@@ -43,4 +44,44 @@ def test_merge_document_success(merge_1099_document_step: Merge1099Step):
         response = merge_1099_document_step.merge_document(
             str(batch.pfml_1099_batch_id), "http://localhost:5001/api/pdf/merge"
         )
-        assert response is None
+
+    assert response is None
+
+
+def test_merge_1099_documents_flag_not_enabled(merge_1099_document_step: Merge1099Step):
+    with mock.patch(
+        "massgov.pfml.delegated_payments.irs_1099.pfml_1099_util.is_merge_1099_pdf_enabled"
+    ) as mock_is_merge_1099_pdf_enabled:
+        mock_is_merge_1099_pdf_enabled.return_value = False
+        response = merge_1099_document_step._merge_1099_documents()
+
+    assert response is None
+
+
+def test_merge_1099_documents_flag_enabled(merge_1099_document_step: Merge1099Step):
+    batch = Pfml1099BatchFactory.create()
+
+    with mock.patch(
+        "massgov.pfml.delegated_payments.irs_1099.pfml_1099_util.is_merge_1099_pdf_enabled"
+    ) as mock_is_merge_1099_pdf_enabled, mock.patch(
+        "massgov.pfml.delegated_payments.irs_1099.merge_documents.Merge1099Step.get_record"
+    ) as mock_get_record, mock.patch(
+        "massgov.pfml.delegated_payments.irs_1099.merge_documents.Merge1099Step.merge_document"
+    ) as mock_merge_document:
+        mock_is_merge_1099_pdf_enabled.return_value = True
+        mock_get_record.return_value = batch
+        mock_merge_document.return_value = None
+        merge_1099_document_step.pdfApiEndpoint = ""
+        response = merge_1099_document_step._merge_1099_documents()
+
+    assert response is None
+
+
+def test_run_step_success(merge_1099_document_step: Merge1099Step):
+    with mock.patch(
+        "massgov.pfml.delegated_payments.irs_1099.merge_documents.Merge1099Step._merge_1099_documents"
+    ) as mock_merge_1099_documents:
+        mock_merge_1099_documents.return_value = None
+        response = merge_1099_document_step.run_step()
+
+    assert response is None
