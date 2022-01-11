@@ -7,7 +7,6 @@ type CognitoMFAUser = CognitoUser & { preferredMFA: "NOMFA" | "SMS" };
  * Updates the user's MFA phone number in Cognito, and sends an SMS
  * with a 6-digit code for verification.
  * @param phoneNumber The user's 10-digit phone number, ie "2223334444"
- * @returns {boolean} returns boolean if true or false
  */
 export const updateMFAPhoneNumber = async (phoneNumber: string) => {
   const user = await Auth.currentAuthenticatedUser();
@@ -18,7 +17,15 @@ export const updateMFAPhoneNumber = async (phoneNumber: string) => {
     phone_number: "+1" + phoneNumber.replaceAll("-", ""),
   });
   tracker.markFetchRequestEnd();
+  await sendMFAConfirmationCode();
+};
 
+/**
+ * Sends a Cognito code to confirm phone number
+ * Needs an authenticated user, will not work to verify login
+ */
+export const sendMFAConfirmationCode = async () => {
+  const user = await Auth.currentAuthenticatedUser();
   tracker.trackFetchRequest("verifyUserAttribute");
   // sends a verification code to the phone number via SMS
   await Auth.verifyUserAttribute(user, "phone_number");

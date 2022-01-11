@@ -28,6 +28,11 @@ export const VerifySMS = (props: VerifySMSProps) => {
     code: "",
   });
 
+  const routeToLogin = async (event: React.FormEvent) => {
+    event.preventDefault();
+    await appLogic.portalFlow.goTo(routes.auth.login, {}, { redirect: true });
+  };
+
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     await appLogic.auth.verifyMFACodeAndLogin(formState.code, props.query.next);
@@ -66,6 +71,7 @@ export const VerifySMS = (props: VerifySMSProps) => {
           type="button"
           className="display-block margin-top-1"
           variation="unstyled"
+          onClick={routeToLogin}
         >
           {t("pages.authTwoFactorSmsVerify.resendCodeLink")}
         </Button>

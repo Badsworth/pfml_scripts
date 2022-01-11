@@ -1,4 +1,8 @@
 import { CognitoAuthError, ValidationError } from "../../../errors";
+import {
+  sendMFAConfirmationCode,
+  verifyMFAPhoneNumber,
+} from "../../../services/mfa";
 import { AppLogic } from "../../../hooks/useAppLogic";
 import BackButton from "../../../components/BackButton";
 import Button from "../../../components/core/Button";
@@ -14,7 +18,6 @@ import useFormState from "../../../hooks/useFormState";
 import useFunctionalInputProps from "../../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../../locales/i18n";
 import validateCode from "../../../utils/validateCode";
-import { verifyMFAPhoneNumber } from "../../../services/mfa";
 import withUser from "../../../hoc/withUser";
 
 interface ConfirmSMSProps {
@@ -34,6 +37,11 @@ export const ConfirmSMS = (props: ConfirmSMSProps) => {
   const { formState, updateFields } = useFormState({
     code: "",
   });
+
+  const resendConfirmationCode = async (event: React.FormEvent) => {
+    event.preventDefault();
+    await sendMFAConfirmationCode();
+  };
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -92,6 +100,7 @@ export const ConfirmSMS = (props: ConfirmSMSProps) => {
         type="button"
         className="display-block margin-top-1"
         variation="unstyled"
+        onClick={resendConfirmationCode}
       >
         {t("pages.authTwoFactorSmsConfirm.resendCodeButton")}
       </Button>
