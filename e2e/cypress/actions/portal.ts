@@ -1018,11 +1018,14 @@ export function answerCaringLeaveQuestions(
 }
 
 export function submitPartsTwoThreeNoLeaveCert(
-  paymentPreference: PaymentPreferenceRequestBody
+  paymentPreference: PaymentPreferenceRequestBody,
+  is_withholding_tax: boolean
 ): void {
-  clickChecklistButton("Add payment information");
+  clickChecklistButton("Enter payment (method|information)");
   addPaymentInfo(paymentPreference);
   onPage("checklist");
+  clickChecklistButton("Enter tax withholding preference");
+  addWithholdingPreference(is_withholding_tax);
   clickChecklistButton("Upload identification document");
   addId("MA ID");
   cy.wait(1000);

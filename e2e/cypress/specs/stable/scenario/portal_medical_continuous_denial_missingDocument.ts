@@ -27,7 +27,7 @@ describe("Submit a bonding claim and adjucation approval - BHAP1", () => {
             timestamp_from: Date.now(),
           });
         });
-        portal.submitPartsTwoThreeNoLeaveCert(paymentPreference);
+        portal.submitPartsTwoThreeNoLeaveCert(paymentPreference, claim.is_withholding_tax);
       });
     });
 
