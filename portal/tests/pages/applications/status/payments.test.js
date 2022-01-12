@@ -1,4 +1,3 @@
-
 import { cleanup, screen } from "@testing-library/react";
 
 import AppErrorInfo from "../../../../src/models/AppErrorInfo";
@@ -328,7 +327,7 @@ describe("Payments", () => {
   });
 
   cleanup();
-  
+
   it("displays page not found alert if there's no absence case ID", () => {
     renderPage(
       Payments,

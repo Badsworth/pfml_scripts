@@ -1,10 +1,8 @@
 import React, { useEffect } from "react";
 import withUser, { WithUserProps } from "./withUser";
 
-import BackButton from "../components/BackButton";
 import PageNotFound from "../components/PageNotFound";
 import Spinner from "../components/core/Spinner";
-import routes from "../routes";
 import { useTranslation } from "../locales/i18n";
 
 export interface QueryProps {
@@ -12,7 +10,6 @@ export interface QueryProps {
   absence_id?: string;
   uploaded_document_type?: string;
 }
-
 export interface WithClaimDetailProps extends WithUserProps {
   activePath?: string;
   query: QueryProps;

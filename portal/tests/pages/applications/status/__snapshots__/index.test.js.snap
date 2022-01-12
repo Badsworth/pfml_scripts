@@ -175,7 +175,7 @@ exports[`Status LeaveDetails renders page with one section if absenceDetails has
 
 exports[`Status info alert displays if claimant has bonding-newborn but not pregnancy claims 1`] = `
 <div
-  aria-labelledby="alert-heading9"
+  aria-labelledby="alert-heading10"
   class="usa-alert usa-alert--info usa-alert--no-icon margin-bottom-3"
   role="region"
   tabindex="-1"
@@ -185,7 +185,7 @@ exports[`Status info alert displays if claimant has bonding-newborn but not preg
   >
     <h2
       class="usa-alert__heading font-heading-xs text-bold"
-      id="alert-heading9"
+      id="alert-heading10"
     >
       If you are giving birth, you may also be eligible for paid medical leave
     </h2>
@@ -216,7 +216,7 @@ exports[`Status info alert displays if claimant has bonding-newborn but not preg
 
 exports[`Status info alert displays if claimant has pregnancy but not bonding claims 1`] = `
 <div
-  aria-labelledby="alert-heading10"
+  aria-labelledby="alert-heading11"
   class="usa-alert usa-alert--info usa-alert--no-icon margin-bottom-3"
   role="region"
   tabindex="-1"
@@ -226,7 +226,7 @@ exports[`Status info alert displays if claimant has pregnancy but not bonding cl
   >
     <h2
       class="usa-alert__heading font-heading-xs text-bold"
-      id="alert-heading10"
+      id="alert-heading11"
     >
       You may also be eligible for paid family leave
     </h2>
@@ -630,7 +630,7 @@ exports[`Status renders the page with claim detail when there is absence_case_id
 
 exports[`Status success alert renders success alert when document type param is given 1`] = `
 <div
-  aria-labelledby="alert-heading6"
+  aria-labelledby="alert-heading7"
   class="usa-alert usa-alert--success"
   role="region"
   tabindex="-1"
@@ -640,7 +640,7 @@ exports[`Status success alert renders success alert when document type param is 
   >
     <h2
       class="usa-alert__heading font-heading-md text-bold"
-      id="alert-heading6"
+      id="alert-heading7"
     >
       You've successfully submitted your proof of birth documents
     </h2>
