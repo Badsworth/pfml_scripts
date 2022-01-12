@@ -931,6 +931,11 @@ export function checkNoticeForLeaveAdmin(
       cy.findByText("Appeal Acknowledgment (PDF)").should("be.visible").click();
       break;
 
+    case "cancellation":
+      cy.contains("h1", claimantName, { timeout: 20000 }).should("be.visible");
+      cy.findByText("Approved Time Cancelled (PDF)").should("be.visible").click();
+      break;
+
     case "changeRequestApproval":
       cy.contains("h1", claimantName, { timeout: 20000 }).should("be.visible");
       cy.findByText("Change Request Approved (PDF)")
