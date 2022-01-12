@@ -23,7 +23,7 @@ describe("withClaimDetail", () => {
     };
 
   const PageComponent = (props) => (
-    <div>
+    <div data-testid="page-component">
       This page contains claim detail Application: {props.claim?.application_id}
     </div>
   );
@@ -61,5 +61,33 @@ describe("withClaimDetail", () => {
     );
 
     expect(screen.getByRole("progressbar")).toBeInTheDocument();
+  });
+
+  it("shows a spinner if there is no claim detail", () => {
+    renderPage(
+      WrappedComponent,
+      {
+        addCustomSetup: setupHelper(true),
+      },
+      {
+        ...defaultProps,
+      }
+    );
+
+    expect(screen.getByRole("progressbar")).toBeInTheDocument();
+  });
+
+  it("renders the page when application state is loaded", () => {
+    renderPage(
+      WrappedComponent,
+      {
+        addCustomSetup: setupHelper(),
+      },
+      {
+        ...defaultProps,
+      }
+    );
+
+    expect(screen.getByTestId("page-component")).toBeInTheDocument();
   });
 });
