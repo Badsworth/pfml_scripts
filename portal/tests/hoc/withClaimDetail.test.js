@@ -8,14 +8,18 @@ jest.mock("../../src/hooks/useAppLogic");
 
 describe("withClaimDetail", () => {
   const setupHelper =
-    (claimDetailAttrs, appErrors = new AppErrorInfoCollection()) =>
+    (
+      isLoading = false,
+      claimDetailAttrs,
+      appErrors = new AppErrorInfoCollection()
+    ) =>
     (appLogicHook) => {
       appLogicHook.claims.claimDetail = claimDetailAttrs
         ? new ClaimDetail(claimDetailAttrs)
         : null;
       appLogicHook.claims.loadClaimDetail = jest.fn();
       appLogicHook.appErrors = appErrors;
-      appLogicHook.claims.isLoadingClaimDetail = true;
+      appLogicHook.claims.isLoadingClaimDetail = isLoading;
     };
 
   const PageComponent = (props) => (
@@ -46,11 +50,10 @@ describe("withClaimDetail", () => {
   });
 
   it("shows a spinner if there is no claim detail", () => {
-    console.log(WrappedComponent);
     renderPage(
       WrappedComponent,
       {
-        addCustomSetup: setupHelper(),
+        addCustomSetup: setupHelper(true),
       },
       {
         ...defaultProps,
