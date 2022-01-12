@@ -5,6 +5,7 @@ import {
   FlagsResponse,
   getFlagsLogsByName,
   getFlagsByName,
+  postFlagsByName,
 } from "../api";
 import Alert from "../components/Alert";
 import ConfirmationDialog from "../components/ConfirmationDialog";
@@ -47,11 +48,17 @@ export default function Maintenance() {
     setShowConfirmationDialog(false);
   };
 
-  const confirmationDialogContinueCallback = () => {
-    setMaintenance({ ...maintenance, ...{ enabled: false } });
+  const confirmationDialogContinueCallback = async () => {
     // disable at API.
-    //patchFlagsByName({ name: "maintenance" }, flag).then().finally();
-    setShowConfirmationDialog(false);
+    if (maintenance) {
+      const response = await postFlagsByName(
+        { name: "maintenance" },
+        { enabled: false },
+      );
+      // TODO error check.
+      setMaintenance({ enabled: false });
+      setShowConfirmationDialog(false);
+    }
   };
 
   const checkedValues = [
@@ -142,6 +149,7 @@ export default function Maintenance() {
               },
               {
                 enabled: getMaintenanceEnabled(),
+                // Add query params including start and end.
                 href: "/maintenance/add",
                 text: "Edit",
                 type: "link",

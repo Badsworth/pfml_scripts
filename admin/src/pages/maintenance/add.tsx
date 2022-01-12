@@ -228,6 +228,7 @@ export default function Maintenance() {
         postFlagsByName({ name: "maintenance" }, flag)
           .then(
             () => {
+              // Include query param for success message.
               router.push("/maintenance");
             },
             (e) => {
