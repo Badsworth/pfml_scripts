@@ -3444,6 +3444,33 @@ class TestGetClaimsEndpoint:
                 first_name=X_NAME, middle_name=X_NAME, last_name="Johnson"
             )
 
+        @pytest.fixture()
+        def employee_different_fineos_dor_first_name(self, X_NAME):
+            return EmployeeFactory.create(
+                first_name="Jane",
+                middle_name=X_NAME,
+                last_name=X_NAME,
+                fineos_employee_first_name="Alice",
+            )
+
+        @pytest.fixture()
+        def employee_different_fineos_dor_middle_name(self, X_NAME):
+            return EmployeeFactory.create(
+                first_name=X_NAME,
+                middle_name="Marie",
+                last_name=X_NAME,
+                fineos_employee_middle_name="Ann",
+            )
+
+        @pytest.fixture()
+        def employee_different_fineos_dor_last_name(self, X_NAME):
+            return EmployeeFactory.create(
+                first_name=X_NAME,
+                middle_name=X_NAME,
+                last_name="Doe",
+                fineos_employee_last_name="Jones",
+            )
+
         @pytest.fixture(autouse=True)
         def load_test_db(
             self,
@@ -3462,6 +3489,9 @@ class TestGetClaimsEndpoint:
             middlejohn,
             johnson,
             XAbsenceCase,
+            employee_different_fineos_dor_first_name,
+            employee_different_fineos_dor_middle_name,
+            employee_different_fineos_dor_last_name,
         ):
             ClaimFactory.create(employer=employer, employee=first_employee, claim_type_id=1)
             ClaimFactory.create(employer=employer, employee=middle_employee, claim_type_id=1)
@@ -3475,6 +3505,20 @@ class TestGetClaimsEndpoint:
             ClaimFactory.create(employer=employer, employee=john, claim_type_id=1)
             ClaimFactory.create(employer=employer, employee=johnny, claim_type_id=1)
             ClaimFactory.create(employer=employer, employee=middlejohn, claim_type_id=1)
+
+            ClaimFactory.create(
+                employer=employer,
+                employee=employee_different_fineos_dor_first_name,
+                claim_type_id=1,
+            )
+            ClaimFactory.create(
+                employer=employer,
+                employee=employee_different_fineos_dor_middle_name,
+                claim_type_id=1,
+            )
+            ClaimFactory.create(
+                employer=employer, employee=employee_different_fineos_dor_last_name, claim_type_id=1
+            )
 
             ClaimFactory.create(employer=other_employer, employee=johnson, claim_type_id=1)
 
@@ -3624,6 +3668,63 @@ class TestGetClaimsEndpoint:
             )
             assert johnson_claim is not None
 
+        def test_get_claims_search_first_name_fineos(
+            self, employee_different_fineos_dor_first_name, client, employer_auth_token
+        ):
+            response = self.perform_search("lice", client, employer_auth_token)
+
+            assert response.status_code == 200
+            response_body = response.get_json()
+
+            claim = next(
+                (
+                    c
+                    for c in response_body["data"]
+                    if c["employee"]["first_name"]
+                    == employee_different_fineos_dor_first_name.first_name
+                ),
+                None,
+            )
+            assert claim is not None
+
+        def test_get_claims_search_middle_name_fineos(
+            self, employee_different_fineos_dor_middle_name, client, employer_auth_token
+        ):
+            response = self.perform_search("nn", client, employer_auth_token)
+
+            assert response.status_code == 200
+            response_body = response.get_json()
+
+            claim = next(
+                (
+                    c
+                    for c in response_body["data"]
+                    if c["employee"]["middle_name"]
+                    == employee_different_fineos_dor_middle_name.middle_name
+                ),
+                None,
+            )
+            assert claim is not None
+
+        def test_get_claims_search_last_name_fineos(
+            self, employee_different_fineos_dor_last_name, client, employer_auth_token
+        ):
+            response = self.perform_search("Jon", client, employer_auth_token)
+
+            assert response.status_code == 200
+            response_body = response.get_json()
+
+            claim = next(
+                (
+                    c
+                    for c in response_body["data"]
+                    if c["employee"]["last_name"]
+                    == employee_different_fineos_dor_last_name.last_name
+                ),
+                None,
+            )
+            assert claim is not None
+
         def test_get_claims_search_blank_string(self, client, employer_auth_token):
             response = self.perform_search("", client, employer_auth_token)
 
@@ -3686,14 +3787,19 @@ class TestGetClaimsEndpoint:
                     first_name=X_NAME, middle_name=X_NAME, last_name=full_name_employee.last_name
                 )
             )
-            # same first_name and last_name should be returned in first_last and last_first search
+            # same first_name and last_name should be returned in first_last and
+            # last_first search, but unique if search terms are the FINEOS names
+            # (in this dataset)
             similar_employees.append(
                 EmployeeFactory.create(
                     first_name=full_name_employee.first_name,
                     middle_name=X_NAME,
                     last_name=full_name_employee.last_name,
+                    fineos_employee_first_name="123",
+                    fineos_employee_last_name="456",
                 )
             )
+
             return similar_employees
 
         @pytest.fixture()
@@ -3763,6 +3869,24 @@ class TestGetClaimsEndpoint:
             response_body = response.get_json()
 
             assert len(response_body["data"]) == 2
+
+        def test_get_claims_search_last_first_fineos(self, client, employer_auth_token):
+            search_string = "123 456"
+            response = self.perform_search(search_string, client, employer_auth_token)
+
+            assert response.status_code == 200
+            response_body = response.get_json()
+
+            assert len(response_body["data"]) == 1
+
+        def test_get_claims_search_first_last_fineos(self, client, employer_auth_token):
+            search_string = "456 123"
+            response = self.perform_search(search_string, client, employer_auth_token)
+
+            assert response.status_code == 200
+            response_body = response.get_json()
+
+            assert len(response_body["data"]) == 1
 
         def test_claims_search_wildcard_input(
             self, client, employer_auth_token, full_name_employee

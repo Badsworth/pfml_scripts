@@ -174,6 +174,19 @@ class GetClaimsQuery:
             func.concat(
                 Employee.first_name, " ", Employee.middle_name, " ", Employee.last_name
             ).label("full_name"),
+            func.concat(
+                Employee.fineos_employee_first_name, " ", Employee.fineos_employee_last_name
+            ).label("first_last_fineos"),
+            func.concat(
+                Employee.fineos_employee_last_name, " ", Employee.fineos_employee_first_name
+            ).label("last_first_fineos"),
+            func.concat(
+                Employee.fineos_employee_first_name,
+                " ",
+                Employee.fineos_employee_middle_name,
+                " ",
+                Employee.fineos_employee_last_name,
+            ).label("full_name_fineos"),
         ]
         return self.session.query(*search_columns).subquery()
 
@@ -197,6 +210,9 @@ class GetClaimsQuery:
                     search_sub_query.c.first_last.ilike(f"%{search_string}%"),
                     search_sub_query.c.last_first.ilike(f"%{search_string}%"),
                     search_sub_query.c.full_name.ilike(f"%{search_string}%"),
+                    search_sub_query.c.first_last_fineos.ilike(f"%{search_string}%"),
+                    search_sub_query.c.last_first_fineos.ilike(f"%{search_string}%"),
+                    search_sub_query.c.full_name_fineos.ilike(f"%{search_string}%"),
                 ),
             )
         else:
@@ -208,6 +224,9 @@ class GetClaimsQuery:
                         Employee.first_name.ilike(f"%{search_string}%"),
                         Employee.middle_name.ilike(f"%{search_string}%"),
                         Employee.last_name.ilike(f"%{search_string}%"),
+                        Employee.fineos_employee_first_name.ilike(f"%{search_string}%"),
+                        Employee.fineos_employee_middle_name.ilike(f"%{search_string}%"),
+                        Employee.fineos_employee_last_name.ilike(f"%{search_string}%"),
                     ),
                 ),
             )
