@@ -87,7 +87,7 @@ def setup_output_file(start_time):
     folder_path = os.environ["OUTPUT_FOLDER_PATH"]
     output_file_name = f"{SUBMISSION_FILE_NAME}_{start_time.strftime('%Y%m%d%H%M%S')}"
     output_path = "{}/{}/{}".format(folder_path, "send", output_file_name)
-    return file_utils.write_file(output_path, "w")
+    return file_utils.write_file(output_path, "w", use_s3_multipart_upload=False)
 
 
 def process_pending_filing_employers() -> PendingFilingSubmissionReport:
