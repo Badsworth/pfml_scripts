@@ -87,8 +87,7 @@ module "api" {
   new_plan_proofs_active_at = "2021-06-26 00:00:00+00:00"
   use_claim_status_url      = true
 
-  enable_pdf_document_compression  = "0"
+  enable_pdf_document_compression  = "1"
   enable_application_import        = "0"
   enable_document_multipart_upload = "1"
-
 }

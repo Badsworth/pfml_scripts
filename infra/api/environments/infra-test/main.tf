@@ -48,7 +48,7 @@ module "api" {
   #st_use_mock_dor_data            = false
   #st_decrypt_dor_data             = false
   #st_file_limit_specified         = true
-  enable_pdf_document_compression = false
+  enable_pdf_document_compression = "1"
   service_app_count               = 2
   service_max_app_count           = 2
   service_docker_tag              = local.service_docker_tag
