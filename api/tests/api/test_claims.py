@@ -780,7 +780,9 @@ class TestGetClaimReview:
                 == db_mr.managed_requirement_category.managed_requirement_category_description
             )
 
-    @mock.patch("massgov.pfml.api.claims.get_managed_requirement_by_fineos_managed_requirement_id")
+    @mock.patch(
+        "massgov.pfml.db.queries.managed_requirements.get_managed_requirement_by_fineos_managed_requirement_id"
+    )
     def test_employer_get_claim_review_managed_requirement_failure_errors(
         self,
         mock_handle,
