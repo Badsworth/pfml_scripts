@@ -47,8 +47,8 @@ http.fetchJson = async (
   // However, it will still check local store.
   const authorization_header = getAuthorizationHeader();
   if ("headers" in authorization_header) {
-    const headers = {...authorization_header.headers, ...args[1]?.headers}
-    args[1] = {...args[1], headers}
+    const headers = { ...authorization_header.headers, ...args[1]?.headers };
+    args[1] = { ...args[1], headers };
   }
   const res = await _fetchJson(...args);
   return res.data;
