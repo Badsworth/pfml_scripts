@@ -276,6 +276,9 @@ export const DocumentUpload = (props: DocumentUploadProps) => {
 
   return (
     <QuestionPage
+      buttonLoadingMessage={t(
+        "pages.claimsUploadDocumentType.uploadingMessage"
+      )}
       title={t("pages.claimsUploadDocumentType.title", {
         context: isIdUpload ? "id" : "certification",
       })}

@@ -941,6 +941,7 @@ const shared: {
   submitApplicationButton: "I understand and agree",
   trackStatus:
     "<track-status-link>Track the status of your application here</track-status-link>.",
+  uploadingMessage: "Uploading documents… Do not refresh or go back.",
   usernameLabel: "Email address",
   verificationCodeLabel: "6-digit code",
   viewPostSubmissionVideo:
@@ -2210,6 +2211,7 @@ const pages: {
     sectionLabel: "Upload your certification form",
     sectionLabel_bonding: "Upload your documentation",
     title: "Upload certification",
+    uploadingMessage: "$t(shared.uploadingMessage)",
   },
   claimsUploadDocsOptions: {
     certLabel_bonding_adopt_foster: "Proof of placement",
@@ -2250,6 +2252,7 @@ const pages: {
       "Upload an identification document issued by state or federal government",
     title_certification: "Upload certification",
     title_id: "$t(shared.claimsVerifyIdTitle)",
+    uploadingMessage: "$t(shared.uploadingMessage)",
   },
   claimsUploadId: {
     accordionContent:
@@ -2271,6 +2274,7 @@ const pages: {
     sectionLabel_other:
       "Upload an identification document issued by state or federal government",
     title: "$t(shared.claimsVerifyIdTitle)",
+    uploadingMessage: "$t(shared.uploadingMessage)",
   },
   claimsWorkPatternType: {
     choiceHint_fixed:

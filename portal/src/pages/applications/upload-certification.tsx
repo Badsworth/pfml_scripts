@@ -123,6 +123,9 @@ export const UploadCertification = (props: UploadCertificationProps) => {
 
   return (
     <QuestionPage
+      buttonLoadingMessage={t(
+        "pages.claimsUploadCertification.uploadingMessage"
+      )}
       title={t("pages.claimsUploadCertification.title")}
       onSave={handleSave}
     >
