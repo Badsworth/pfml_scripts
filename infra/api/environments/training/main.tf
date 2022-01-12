@@ -76,4 +76,5 @@ module "api" {
   release_version                                     = var.release_version
 
   enable_pdf_document_compression = "0"
+  enable_application_import       = "1"
 }

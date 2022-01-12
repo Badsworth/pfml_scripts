@@ -89,4 +89,5 @@ module "api" {
   new_plan_proofs_active_at                           = "2021-06-29 04:00:00+00:00"
 
   enable_pdf_document_compression = "1"
+  enable_application_import       = "1"
 }

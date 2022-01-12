@@ -66,6 +66,7 @@ module "api" {
     "https://paidleave-api-infra-test.dfml.eol.mass.gov",
   ]
   enable_application_fraud_check = "0"
+  enable_application_import      = "1"
   release_version                = var.release_version
 
   # TODO: Fill this in after the portal is deployed.

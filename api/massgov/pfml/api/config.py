@@ -41,6 +41,7 @@ class AppConfig:
     upload_max_files_to_fineos: int
     enable_document_multipart_upload: bool
     enable_1099_testfile_generation: bool
+    enable_application_import: bool
 
 
 def get_config() -> AppConfig:
@@ -75,4 +76,5 @@ def get_config() -> AppConfig:
         enable_document_multipart_upload=os.environ.get("ENABLE_DOCUMENT_MULTIPART_UPLOAD", "0")
         == "1",
         enable_1099_testfile_generation=os.environ.get("TEST_FILE_GENERATION_1099", "0") == "1",
+        enable_application_import=os.environ.get("ENABLE_APPLICATION_IMPORT", "0") == "1",
     )

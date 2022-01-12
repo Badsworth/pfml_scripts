@@ -673,6 +673,39 @@ paths:
       requestBody:
         $ref: "#/components/requestBodies/ApplicationRequestBody"
 
+  /applications/import:
+    post:
+      tags:
+        - Applications
+      summary: >
+        Creates a new application in the PFML database from a FINEOS application that was created through the
+        contact center.
+      operationId: massgov.pfml.api.applications.applications_import
+      responses:
+        "201":
+          $ref: "#/components/responses/ApplicationImportedResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          description: Application with requested absence_case_id was not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "503":
+          description: Application could not be completed in Claims Processing System.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/ApplicationResponse"
+      requestBody:
+        $ref: '#/components/requestBodies/ApplicationImportRequestBody'
+
+
   /applications/{application_id}/submit_application:
     post:
       tags:
@@ -1299,6 +1332,11 @@ components:
           schema:
             $ref: "#/components/schemas/ApplicationRequestBody"
       required: true
+    ApplicationImportRequestBody:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ApplicationImportRequestBody"
     EligibilityRequest:
       content:
         application/json:
@@ -1349,6 +1387,16 @@ components:
             $ref: "#/components/schemas/ApplicationResponse"
     ApplicationCreatedResponse:
       description: A new application successfully created
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: "#/components/schemas/SuccessfulResponse"
+              - properties:
+                  data:
+                    $ref: "#/components/schemas/ApplicationResponse"
+    ApplicationImportedResponse:
+      description: Application successfully imported
       content:
         application/json:
           schema:
@@ -2258,6 +2306,16 @@ components:
               nullable: true
             mass_id:
               nullable: true
+
+    ApplicationImportRequestBody:
+      type: object
+      properties:
+        absence_case_id:
+          type: string
+          example: "NTN-111-ABS-01"
+          nullable: false
+      required:
+        - absence_case_id
 
     ApplicationResponse:
       type: object

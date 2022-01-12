@@ -304,3 +304,8 @@ variable "enable_pdf_document_compression" {
   description = "Enable or disable PDF compression on document upload"
   type        = string
 }
+
+variable "enable_application_import" {
+  description = "Enable or disable claimant application import"
+  type        = string
+}

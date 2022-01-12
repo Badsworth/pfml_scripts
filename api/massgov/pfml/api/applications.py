@@ -132,6 +132,35 @@ def applications_get():
     ).to_api_response()
 
 
+def applications_import():
+    if not app.get_app_config().enable_application_import:
+        return response_util.error_response(
+            status_code=Forbidden, message="Application import not currently available", errors=[]
+        ).to_api_response()
+
+    body = connexion.request.json
+
+    application = Application()
+
+    ensure(CREATE, application)
+
+    if user := app.current_user():
+        # TODO (portal-1512) - Remove role check
+        # Check if user is not a claimant
+        if user.roles:
+            raise Unauthorized
+        application.user = user
+    else:
+        raise Unauthorized
+
+    log_attributes = get_application_log_attributes(application)
+    logger.info("applications_import success", extra=log_attributes)
+
+    return response_util.success_response(
+        message="Successfully imported application", data=dict(body), status_code=201,
+    ).to_api_response()
+
+
 def applications_start():
     application = Application()
 
