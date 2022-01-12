@@ -10,6 +10,19 @@ def employee():
     return employee
 
 
+@pytest.fixture
+def employee_different_fineos_name():
+    employee = EmployeeFactory.create(
+        first_name="Foo",
+        last_name="Bar",
+        middle_name="Baz",
+        fineos_employee_first_name="Foo2",
+        fineos_employee_last_name="Bar2",
+        fineos_employee_middle_name="Baz2",
+    )
+    return employee
+
+
 def test_employees_get_valid(client, employee, consented_user_token):
     response = client.get(
         "/v1/employees/{}".format(employee.employee_id),
@@ -120,6 +133,45 @@ def test_employees_search_nonexisting_employee(client, consented_user_token):
     tests.api.validate_error_response(response, 404)
 
 
+def test_get_employee_basic_response(client, employee_different_fineos_name, consented_user_token):
+    response = client.get(
+        f"/v1/employees/{employee_different_fineos_name.employee_id}",
+        headers={"Authorization": f"Bearer {consented_user_token}"},
+    )
+
+    assert response.status_code == 200
+    response_body = response.get_json()
+
+    employee_data = response_body.get("data")
+
+    assert employee_data["first_name"] == "Foo2"
+    assert employee_data["middle_name"] == "Baz2"
+    assert employee_data["last_name"] == "Bar2"
+
+
+def test_employees_basic_response_search(
+    client, employee_different_fineos_name, consented_user_token
+):
+    body = {
+        "first_name": employee_different_fineos_name.first_name,
+        "last_name": employee_different_fineos_name.last_name,
+        "tax_identifier_last4": employee_different_fineos_name.tax_identifier.tax_identifier_last4,
+    }
+    response = client.post(
+        "/v1/employees/search",
+        json=body,
+        headers={"Authorization": "Bearer {}".format(consented_user_token)},
+    )
+
+    response_body = response.get_json()
+    employee_data = response_body.get("data")
+
+    assert response.status_code == 200
+    assert employee_data["first_name"] == "Foo2"
+    assert employee_data["middle_name"] == "Baz2"
+    assert employee_data["last_name"] == "Bar2"
+
+
 def test_employees_search_fineos_user_forbidden(client, employee, fineos_user_token):
     # Fineos role cannot access this endpoint
     body = {
@@ -150,10 +202,8 @@ def test_employees_patch(client, employee, consented_user_token):
     ).get_json()
 
     updated_employee_item = updated_employee.get("data")
-    assert updated_employee_item["first_name"] == "James"
-    assert updated_employee_item["last_name"] == "Brown"
+    # This assertion is sparse because this endpoint is planned to be removed.
     assert updated_employee_item["employee_id"] == str(employee.employee_id)
-    assert updated_employee_item["middle_name"] == employee.middle_name
 
 
 def test_employees_patch_empty(client, employee, consented_user_token):

@@ -2008,6 +2008,94 @@ class TestGetClaimEndpoint:
         message = response.get_json().get("message")
         assert message == "Employers are not allowed to access claimant claim info"
 
+    def test_get_claim_employee_different_fineos_names(
+        self, caplog, client, auth_token, user, test_db_session
+    ):
+        employer = EmployerFactory.create(employer_fein="813648030")
+        tax_identifier = TaxIdentifierFactory.create(tax_identifier="587777091")
+        employee = EmployeeFactory.create(
+            tax_identifier_id=tax_identifier.tax_identifier_id,
+            first_name="Foo",
+            last_name="Bar",
+            middle_name="Baz",
+            fineos_employee_first_name="Foo2",
+            fineos_employee_last_name="Bar2",
+            fineos_employee_middle_name="Baz2",
+        )
+
+        fineos_web_id_ext = FINEOSWebIdExt()
+        fineos_web_id_ext.employee_tax_identifier = employee.tax_identifier.tax_identifier
+        fineos_web_id_ext.employer_fein = employer.employer_fein
+        fineos_web_id_ext.fineos_web_id = "pfml_api_468df93c-cb2d-424e-9690-f61cc65506bb"
+        test_db_session.add(fineos_web_id_ext)
+
+        test_db_session.commit()
+        claim = ClaimFactory.create(
+            employer=employer,
+            employee=employee,
+            fineos_absence_status_id=1,
+            claim_type_id=1,
+            fineos_absence_id="NTN-304363-ABS-01",
+        )
+        ApplicationFactory.create(user=user, claim=claim)
+        response = client.get(
+            f"/v1/claims/{claim.fineos_absence_id}",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+
+        assert response.status_code == 200
+        response_body = response.get_json()
+
+        claim_data = response_body.get("data")
+
+        assert claim_data["employee"]["first_name"] == "Foo2"
+        assert claim_data["employee"]["middle_name"] == "Baz2"
+        assert claim_data["employee"]["last_name"] == "Bar2"
+
+    def test_get_claim_employee_no_fineos_names(
+        self, caplog, client, auth_token, user, test_db_session
+    ):
+        employer = EmployerFactory.create(employer_fein="813648030")
+        tax_identifier = TaxIdentifierFactory.create(tax_identifier="587777091")
+        employee = EmployeeFactory.create(
+            tax_identifier_id=tax_identifier.tax_identifier_id,
+            first_name="Foo",
+            last_name="Bar",
+            middle_name="Baz",
+            fineos_employee_first_name=None,
+            fineos_employee_last_name=None,
+            fineos_employee_middle_name=None,
+        )
+
+        fineos_web_id_ext = FINEOSWebIdExt()
+        fineos_web_id_ext.employee_tax_identifier = employee.tax_identifier.tax_identifier
+        fineos_web_id_ext.employer_fein = employer.employer_fein
+        fineos_web_id_ext.fineos_web_id = "pfml_api_468df93c-cb2d-424e-9690-f61cc65506bb"
+        test_db_session.add(fineos_web_id_ext)
+
+        test_db_session.commit()
+        claim = ClaimFactory.create(
+            employer=employer,
+            employee=employee,
+            fineos_absence_status_id=1,
+            claim_type_id=1,
+            fineos_absence_id="NTN-304363-ABS-01",
+        )
+        ApplicationFactory.create(user=user, claim=claim)
+        response = client.get(
+            f"/v1/claims/{claim.fineos_absence_id}",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+
+        assert response.status_code == 200
+        response_body = response.get_json()
+
+        claim_data = response_body.get("data")
+
+        assert claim_data["employee"]["first_name"] == "Foo"
+        assert claim_data["employee"]["middle_name"] == "Baz"
+        assert claim_data["employee"]["last_name"] == "Bar"
+
     def test_get_claim_user_has_access_as_claimant(
         self, caplog, client, auth_token, user, test_db_session
     ):
@@ -3681,7 +3769,7 @@ class TestGetClaimsEndpoint:
                     c
                     for c in response_body["data"]
                     if c["employee"]["first_name"]
-                    == employee_different_fineos_dor_first_name.first_name
+                    == employee_different_fineos_dor_first_name.fineos_employee_first_name
                 ),
                 None,
             )
@@ -3700,7 +3788,7 @@ class TestGetClaimsEndpoint:
                     c
                     for c in response_body["data"]
                     if c["employee"]["middle_name"]
-                    == employee_different_fineos_dor_middle_name.middle_name
+                    == employee_different_fineos_dor_middle_name.fineos_employee_middle_name
                 ),
                 None,
             )
@@ -3719,7 +3807,7 @@ class TestGetClaimsEndpoint:
                     c
                     for c in response_body["data"]
                     if c["employee"]["last_name"]
-                    == employee_different_fineos_dor_last_name.last_name
+                    == employee_different_fineos_dor_last_name.fineos_employee_last_name
                 ),
                 None,
             )

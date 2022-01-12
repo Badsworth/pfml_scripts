@@ -1873,6 +1873,29 @@ components:
           example: "1234"
       required: ["employee_id", "tax_identifier_last4"]
 
+    EmployeeBasicResponse:
+      type: object
+      properties:
+        employee_id:
+          type: string
+          format: uuid
+          example: "009fa369-291b-403f-a85a-15e938c26a7b"
+        first_name:
+          type: string
+          example: "Jane"
+        middle_name:
+          type: string
+          nullable: true
+          example: "Alice"
+        last_name:
+          type: string
+          example: "Doe"
+        other_name:
+          type: string
+          nullable: true
+          example: "Marie"
+      required: ["employee_id"]
+
     EmployerClaimRequestBody:
       type: object
       properties:
@@ -2575,7 +2598,7 @@ components:
         employer:
           $ref: "#/components/schemas/EmployerResponse"
         employee:
-          $ref: "#/components/schemas/EmployeeResponse"
+          $ref: "#/components/schemas/EmployeeBasicResponse"
         application_id:
           type: string
           format: uuid
@@ -2613,7 +2636,7 @@ components:
         employer:
           $ref: "#/components/schemas/EmployerResponse"
         employee:
-          $ref: "#/components/schemas/EmployeeResponse"
+          $ref: "#/components/schemas/EmployeeBasicResponse"
         fineos_absence_id:
           format: string
           example: "NTN-01-ABS-01"
