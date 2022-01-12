@@ -72,8 +72,6 @@ paths:
         "503":
           $ref: "#/components/responses/ServiceUnavailableError"
     post:
-      security:
-        - {} # no authentication option
       tags:
         - Feature Flags
       summary: Update a feature flag

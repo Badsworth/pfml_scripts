@@ -1,11 +1,13 @@
 import connexion
-from werkzeug.exceptions import NotFound
+from werkzeug.exceptions import NotFound, Unauthorized
 
 import massgov.pfml.api.app as app
 import massgov.pfml.api.util.response as response_util
 import massgov.pfml.util.logging
+from massgov.pfml.api.authorization.flask import READ, ensure
 from massgov.pfml.api.models.flags.requests import FlagRequest
 from massgov.pfml.api.models.flags.responses import FlagResponse
+from massgov.pfml.db.models.employees import AzurePermission
 from massgov.pfml.db.models.flags import FeatureFlagValue, LkFeatureFlag
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
@@ -31,7 +33,7 @@ def flag_get(name):
 
 def flag_get_logs(name):
     with app.db_session() as db_session:
-        # TODO return updated at?
+        # TODO return updated at? and user?
         logs = db_session.query(LkFeatureFlag).filter_by(name=name).one().logs()
         response = response_util.success_response(
             data=[FlagResponse.from_orm(flag_log).dict() for flag_log in logs],
@@ -51,6 +53,12 @@ def flags_get():
 
 
 def flags_post(name):
+    azure_user = app.azure_user()
+    # This should not ever be the case.
+    if azure_user is None:
+        raise Unauthorized
+    ensure(READ, azure_user)
+    ensure(READ, AzurePermission.MAINTENANCE_EDIT)
     body = FlagRequest.parse_obj(connexion.request.json)
 
     with app.db_session() as db_session:

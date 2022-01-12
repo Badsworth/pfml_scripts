@@ -48,7 +48,7 @@ class LkFeatureFlag(Base):
             object_session(self)
             .query(FeatureFlagValue)
             .filter(FeatureFlagValue.feature_flag_id == self.feature_flag_id)
-            .order_by(FeatureFlagValue.updated_at)
+            .order_by(FeatureFlagValue.updated_at.desc())
             .limit(limit)
             .offset(1)
             .all()
