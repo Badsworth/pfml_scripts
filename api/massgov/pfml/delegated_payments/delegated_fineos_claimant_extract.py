@@ -16,6 +16,7 @@ from massgov.pfml.db.models.employees import (
     Employee,
     EmployeePubEftPair,
     Employer,
+    OrganizationUnit,
     PaymentMethod,
     PrenoteState,
     PubEft,
@@ -117,6 +118,7 @@ class ClaimantData:
     employee_first_name: Optional[str] = None
     employee_middle_name: Optional[str] = None
     employee_last_name: Optional[str] = None
+    organization_unit_name: Optional[str] = None
     date_of_birth: Optional[str] = None
     payment_method: Optional[str] = None
 
@@ -159,6 +161,7 @@ class ClaimantData:
         employer_customer_numbers = []
         claimant_customer_numbers = []
         absence_case_statuses = []
+        organization_unit_names = []
 
         # We dedupe absence periods as sometimes the extracts
         # exact duplicates and it causes performance issues
@@ -168,6 +171,8 @@ class ClaimantData:
             employer_customer_numbers.append(requested_absence.employer_customerno)
             claimant_customer_numbers.append(requested_absence.employee_customerno)
             absence_case_statuses.append(requested_absence.absence_casestatus)
+            if requested_absence.orgunit_name:  # skip records with empty org unit name
+                organization_unit_names.append(requested_absence.orgunit_name)
 
             # If any of the requested absence records are ID proofed, then
             # we consider the entire claim valid
@@ -280,6 +285,11 @@ class ClaimantData:
             "EMPLOYER_CUSTOMERNO", requested_absence, self.validation_container, True
         )
 
+        self.organization_unit_name = None
+        org_unit_names_set = set(organization_unit_names)
+        if len(org_unit_names_set) == 1:
+            self.organization_unit_name = list(org_unit_names_set)[0]
+
         # Sanity test that the fields we expect to be the exact same
         # for every requested absence record are in fact the same.
         # If we've encountered a strange scenario, set the value to
@@ -308,6 +318,16 @@ class ClaimantData:
             self.absence_case_status = None
             self.increment(
                 ClaimantExtractStep.Metrics.MULTIPLE_ABSENCE_STATUSES_FOR_CLAIM_ISSUE_COUNT
+            )
+
+        if (dupe_number := len(org_unit_names_set)) > 1:
+            self.validation_container.add_validation_issue(
+                payments_util.ValidationReason.UNEXPECTED_RECORD_VARIANCE,
+                f"Expected only a single organization unit name for claim, and received {dupe_number}: {organization_unit_names}",
+            )
+            self.organization_unit_name = None
+            self.increment(
+                ClaimantExtractStep.Metrics.MULTIPLE_ORGANIZATION_UNIT_NAMES_FOR_CLAIM_ISSUE_COUNT
             )
 
     def _process_employee_feed(
@@ -446,6 +466,8 @@ class ClaimantExtractStep(Step):
         NO_DEFAULT_PAYMENT_PREFERENCE_COUNT = "no_default_payment_preference_count"
         EMPLOYER_NOT_FOUND_COUNT = "employer_not_found_count"
         EMPLOYER_FOUND_COUNT = "employer_found_count"
+        ORG_UNIT_NOT_FOUND_COUNT = "org_unit_not_found_count"
+        ORG_UNIT_FOUND_COUNT = "org_unit_found_count"
         ABSENCE_PERIOD_CLASS_ID_OR_INDEX_ID_NOT_FOUND_COUNT = (
             "absence_period_class_id_or_index_id_not_found_count"
         )
@@ -456,6 +478,9 @@ class ClaimantExtractStep(Step):
         MULTIPLE_CLAIMANT_FOR_CLAIM_ISSUE_COUNT = "multiple_claimant_for_claim_issue_count"
         MULTIPLE_ABSENCE_STATUSES_FOR_CLAIM_ISSUE_COUNT = (
             "multiple_absence_statuses_for_claim_issue_count"
+        )
+        MULTIPLE_ORGANIZATION_UNIT_NAMES_FOR_CLAIM_ISSUE_COUNT = (
+            "multiple_organization_unit_names_for_claim_issue_count"
         )
 
         EMPLOYER_CHANGED_COUNT = "employer_changed_count"
@@ -643,6 +668,7 @@ class ClaimantExtractStep(Step):
             if claim is not None:
                 employee_pfml_entry = self.update_employee_info(claimant_data, claim)
                 self.attach_employer_to_claim(claimant_data, claim)
+                self.attach_organization_unit_to_claim(claimant_data, claim)
 
                 # Add / update entry on absence period table
                 for absence_period_info in claimant_data.absence_period_data:
@@ -990,6 +1016,44 @@ class ClaimantExtractStep(Step):
         logger.info(
             "Attached employer %s to claim %s",
             claimant_data.employer_customer_number,
+            claimant_data.absence_case_id,
+            extra=claimant_data.get_traceable_details(),
+        )
+
+    def attach_organization_unit_to_claim(self, claimant_data: ClaimantData, claim: Claim) -> None:
+        """ Connects the claim to its FINEOS organization unit """
+        if not claim.employer_id or not claimant_data.organization_unit_name:
+            return None
+
+        organization_unit = (
+            self.db_session.query(OrganizationUnit)
+            .filter(
+                OrganizationUnit.name == claimant_data.organization_unit_name,
+                OrganizationUnit.employer_id == claim.employer_id,
+            )
+            .one_or_none()
+        )
+
+        if not organization_unit:
+            # Didn't import this organization unit from FINEOS yet
+            logger.warning(
+                "Organization unit %s not found in DB for claim %s",
+                claimant_data.organization_unit_name,
+                claimant_data.absence_case_id,
+                extra=claimant_data.get_traceable_details(),
+            )
+            claimant_data.validation_container.add_validation_issue(
+                payments_util.ValidationReason.MISSING_IN_DB,
+                f"organization unit name: {claimant_data.organization_unit_name}",
+            )
+            self.increment(self.Metrics.ORG_UNIT_NOT_FOUND_COUNT)
+            return None
+
+        self.increment(self.Metrics.ORG_UNIT_FOUND_COUNT)
+        claim.organization_unit_id = organization_unit.organization_unit_id
+        logger.info(
+            "Attached organization unit %s to claim %s",
+            claimant_data.organization_unit_name,
             claimant_data.absence_case_id,
             extra=claimant_data.get_traceable_details(),
         )

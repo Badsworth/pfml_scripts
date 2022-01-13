@@ -424,7 +424,7 @@ class Application(Base, TimestampMixin):
     def employer_organization_units(self) -> list[OrganizationUnit]:
         if not self.employer:
             return []
-        units = self.employer.organization_units.all()
+        units = self.employer.organization_units
         logger.info(
             "Application found Employer's organization units",
             extra={

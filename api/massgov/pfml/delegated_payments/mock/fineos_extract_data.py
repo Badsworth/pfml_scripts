@@ -179,6 +179,7 @@ class FineosClaimantData(MockData):
         self.fineos_address_effective_to = self.get_value(
             "fineos_address_effective_to", "2022-01-01 12:00:00"
         )
+        self.organization_unit_name = self.get_value("organization_unit_name", "")
         self.document_type_1099 = self.get_value("document_type_1099", "1099 Request")
         self.packed_data_1099 = self.get_value("packed_data_1099", xml_1099_packed_data)
 
@@ -225,6 +226,7 @@ class FineosClaimantData(MockData):
             requested_absence_record["ABSENCEPERIOD_CLASSID"] = self.absence_period_class_id
             requested_absence_record["ABSENCEPERIOD_INDEXID"] = self.absence_period_index_id
             requested_absence_record["LEAVEREQUEST_ID"] = self.leave_request_id
+            requested_absence_record["ORGUNIT_NAME"] = self.organization_unit_name
 
         return requested_absence_record
 

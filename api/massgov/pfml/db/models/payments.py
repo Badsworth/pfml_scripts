@@ -253,6 +253,7 @@ class FineosExtractVbiRequestedAbsenceSom(Base, TimestampMixin):
     employee_customerno = Column(Text)
     employee_manager_customerno = Column(Text)
     employee_addtl_mngr_customerno = Column(Text)
+    orgunit_name = Column(Text)
     employer_customerno = Column(Text)
     employer_name = Column(Text)
     employment_classid = Column(Text)

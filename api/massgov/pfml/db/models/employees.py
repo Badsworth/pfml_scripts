@@ -397,6 +397,34 @@ class HealthCareProvider(Base, TimestampMixin):
     addresses = relationship("HealthCareProviderAddress", back_populates="health_care_provider")
 
 
+class OrganizationUnit(Base, TimestampMixin):
+    __tablename__ = "organization_unit"
+    __table_args__ = (
+        UniqueConstraint("name", "employer_id", name="uix_organization_unit_name_employer_id",),
+    )
+    organization_unit_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+    fineos_id = Column(Text, nullable=True, unique=True)
+    name = Column(Text, nullable=False)
+    employer_id = Column(
+        PostgreSQLUUID, ForeignKey("employer.employer_id"), nullable=False, index=True
+    )
+
+    employer = relationship("Employer")
+    dua_reporting_units: "Query[DuaReportingUnit]" = dynamic_loader(
+        "DuaReportingUnit", back_populates="organization_unit"
+    )
+
+    @validates("fineos_id")
+    def validate_fineos_id(self, key: str, fineos_id: Optional[str]) -> Optional[str]:
+        if not fineos_id:
+            return fineos_id
+        if not re.fullmatch(r"[A-Z]{2}:[0-9]{5}:[0-9]{10}", fineos_id):
+            raise ValueError(
+                f"Invalid fineos_id: {fineos_id}. Expected a format of AA:00001:0000000001"
+            )
+        return fineos_id
+
+
 class EmployerQuarterlyContribution(Base, TimestampMixin):
     __tablename__ = "employer_quarterly_contribution"
     employer_id = Column(
@@ -441,9 +469,6 @@ class Employer(Base, TimestampMixin):
     employer_quarterly_contribution = relationship(
         "EmployerQuarterlyContribution", back_populates="employer"
     )
-    organization_units: "Query[OrganizationUnit]" = dynamic_loader(
-        "OrganizationUnit", back_populates="employer"
-    )
     employee_benefit_year_contributions: "Query[BenefitYearContribution]" = dynamic_loader(
         "BenefitYearContribution", back_populates="employer"
     )
@@ -451,8 +476,20 @@ class Employer(Base, TimestampMixin):
     lk_industry_code = relationship(LkIndustryCode)
 
     @property
+    def organization_units(self) -> list[OrganizationUnit]:
+        return (
+            object_session(self)
+            .query(OrganizationUnit)
+            .filter(
+                OrganizationUnit.employer_id == self.employer_id,
+                OrganizationUnit.fineos_id.isnot(None),
+            )
+            .all()
+        )
+
+    @property
     def uses_organization_units(self):
-        return any([unit for unit in self.organization_units if unit.fineos_id is not None])
+        return any(self.organization_units)
 
     @typed_hybrid_property
     def verification_data(self) -> Optional[EmployerQuarterlyContribution]:
@@ -580,34 +617,6 @@ class DuaReportingUnitRaw(Base, TimestampMixin):
     address_city = Column(Text, nullable=True)
     address_zip_code = Column(Text, nullable=True)
     address_state = Column(Text, nullable=True)
-
-
-class OrganizationUnit(Base, TimestampMixin):
-    __tablename__ = "organization_unit"
-    __table_args__ = (
-        UniqueConstraint("name", "employer_id", name="uix_organization_unit_name_employer_id",),
-    )
-    organization_unit_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
-    fineos_id = Column(Text, nullable=True, unique=True)
-    name = Column(Text, nullable=False)
-    employer_id = Column(
-        PostgreSQLUUID, ForeignKey("employer.employer_id"), nullable=False, index=True
-    )
-
-    employer = relationship("Employer", back_populates="organization_units")
-    dua_reporting_units: "Query[DuaReportingUnit]" = dynamic_loader(
-        "DuaReportingUnit", back_populates="organization_unit"
-    )
-
-    @validates("fineos_id")
-    def validate_fineos_id(self, key: str, fineos_id: Optional[str]) -> Optional[str]:
-        if not fineos_id:
-            return fineos_id
-        if not re.fullmatch(r"[A-Z]{2}:[0-9]{5}:[0-9]{10}", fineos_id):
-            raise ValueError(
-                f"Invalid fineos_id: {fineos_id}. Expected a format of AA:00001:0000000001"
-            )
-        return fineos_id
 
 
 class DuaReportingUnit(Base, TimestampMixin):
@@ -819,12 +828,13 @@ class Employee(Base, TimestampMixin):
                 DuaEmployeeDemographics,
                 DuaReportingUnit.dua_id == DuaEmployeeDemographics.employer_reporting_unit_number,
             )
+            .filter(DuaEmployeeDemographics.fineos_customer_number == self.fineos_customer_number,)
             .filter(
+                OrganizationUnit.fineos_id is not None,
+                DuaReportingUnit.organization_unit_id is not None,
+                DuaEmployeeDemographics.employer_fein == employer.employer_fein,
                 EmployeeOccupation.employee_id == self.employee_id,
                 EmployeeOccupation.employer_id == employer.employer_id,
-                DuaReportingUnit.organization_unit_id is not None,
-                DuaEmployeeDemographics.fineos_customer_number == self.fineos_customer_number,
-                DuaEmployeeDemographics.employer_fein == employer.employer_fein,
             )
             .distinct()
             .all()
@@ -1344,12 +1354,21 @@ class UserLeaveAdministrator(Base, TimestampMixin):
     user = relationship(User)
     employer = relationship(Employer)
     verification = relationship(Verification)
-    organization_units = relationship(
-        OrganizationUnit,
-        secondary="link_user_leave_administrator_org_unit",
-        uselist=True,
-        lazy="joined",
-    )
+
+    @property
+    def organization_units(self) -> list[OrganizationUnit]:
+        return (
+            object_session(self)
+            .query(OrganizationUnit)
+            .join(UserLeaveAdministratorOrgUnit)
+            .filter(
+                UserLeaveAdministratorOrgUnit.user_leave_administrator_id
+                == self.user_leave_administrator_id,
+                OrganizationUnit.employer_id == self.employer_id,
+                OrganizationUnit.fineos_id.isnot(None),
+            )
+            .all()
+        )
 
     @typed_hybrid_property
     def has_fineos_registration(self) -> bool:

@@ -4181,14 +4181,30 @@ class TestEmployerWithOrgUnitsAccess:
 
     @pytest.fixture()
     def non_leave_admin_org_unit(self, employer):
-        organization_unit = OrganizationUnitFactory.create(employer=employer,)
+        organization_unit = OrganizationUnitFactory.create(employer=employer)
         return organization_unit
 
     @pytest.fixture
     def leave_admin_org_unit(self, test_db_session, employer, user_leave_admin):
         test_db_session.add(user_leave_admin)
         test_db_session.commit()
-        org_unit = OrganizationUnitFactory.create(employer=employer,)
+        org_unit = OrganizationUnitFactory.create(employer=employer)
+        la_org_unit = UserLeaveAdministratorOrgUnit(
+            user_leave_administrator_id=user_leave_admin.user_leave_administrator_id,
+            organization_unit_id=org_unit.organization_unit_id,
+        )
+        test_db_session.add(la_org_unit)
+        test_db_session.commit()
+        return org_unit
+
+    @pytest.fixture
+    def leave_admin_invalid_org_unit(
+        self, test_db_session, employer, user_leave_admin, non_leave_admin_org_unit
+    ):
+        test_db_session.add(user_leave_admin)
+        test_db_session.commit()
+        OrganizationUnitFactory.create(employer=employer)
+        org_unit = OrganizationUnitFactory.create(employer=employer, fineos_id=None)
         la_org_unit = UserLeaveAdministratorOrgUnit(
             user_leave_administrator_id=user_leave_admin.user_leave_administrator_id,
             organization_unit_id=org_unit.organization_unit_id,
@@ -4212,11 +4228,33 @@ class TestEmployerWithOrgUnitsAccess:
         )
         return claim
 
+    @pytest.fixture
+    def claim_with_invalid_org_unit(self, leave_admin_invalid_org_unit):
+        claim = ClaimFactory.create(
+            employer_id=leave_admin_invalid_org_unit.employer_id,
+            organization_unit=leave_admin_invalid_org_unit,
+        )
+        return claim
+
     def test_employers_cannot_access_claim_without_claims_organization_unit(
         self, client, employer_auth_token, claim_with_different_org_unit
     ):
         response = client.get(
             f"/v1/employers/claims/{claim_with_different_org_unit.fineos_absence_id}/review",
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+        )
+
+        assert response.status_code == 403
+        assert (
+            response.get_json()["message"]
+            == "The leave admin cannot access claims of this organization unit"
+        )
+
+    def test_employers_cannot_access_claim_with_invalid_organization_unit(
+        self, client, employer_auth_token, claim_with_invalid_org_unit
+    ):
+        response = client.get(
+            f"/v1/employers/claims/{claim_with_invalid_org_unit.fineos_absence_id}/review",
             headers={"Authorization": f"Bearer {employer_auth_token}"},
         )
 
@@ -4261,6 +4299,29 @@ class TestEmployerWithOrgUnitsAccess:
         ]
         assert claim_data[0].get("fineos_absence_id") == claim_with_same_org_unit.fineos_absence_id
 
+    def test_employers_cannot_view_claims_with_invalid_organization_unit(
+        self, client, employer_auth_token, claim_with_invalid_org_unit
+    ):
+        generated_claims = [claim_with_invalid_org_unit]
+        generated_claims.extend(
+            ClaimFactory.create_batch(
+                size=3,
+                employer=claim_with_invalid_org_unit.employer,
+                employee=claim_with_invalid_org_unit.employee,
+                organization_unit=claim_with_invalid_org_unit.organization_unit,
+                fineos_absence_status_id=1,
+                claim_type_id=1,
+            )
+        )
+        response = client.get(
+            "/v1/claims", headers={"Authorization": f"Bearer {employer_auth_token}"},
+        )
+
+        response_body = response.get_json()
+        claim_data = response_body.get("data")
+        assert response.status_code == 200
+        assert len(claim_data) == 0
+
     def test_employers_can_view_claims_with_their_organization_units(
         self, client, employer_auth_token, claim_with_same_org_unit,
     ):
@@ -4293,6 +4354,15 @@ class TestEmployerWithOrgUnitsAccess:
         response = get_documents(client, request_params)
         assert response.status_code == 403
 
+    def test_employers_cannot_get_documents_with_invalid_organization_unit(
+        self, client, employer_auth_token, claim_with_invalid_org_unit
+    ):
+        request_params = GetClaimDocumentsRequestParams(
+            claim_with_invalid_org_unit.fineos_absence_id, employer_auth_token
+        )
+        response = get_documents(client, request_params)
+        assert response.status_code == 403
+
     def test_employers_can_get_documents_with_claims_organization_unit(
         self, client, employer_auth_token, claim_with_same_org_unit
     ):
@@ -4307,6 +4377,19 @@ class TestEmployerWithOrgUnitsAccess:
     ):
         request_params = EmployerDocumentDownloadRequestParams(
             claim_with_different_org_unit.fineos_absence_id, "doc_id", employer_auth_token
+        )
+        response = download_document(client, request_params)
+        assert response.status_code == 403
+        assert (
+            response.get_json()["message"]
+            == "The leave admin cannot access claims of this organization unit"
+        )
+
+    def test_employers_cannot_download_documents_with_invalid_organization_unit(
+        self, client, employer_auth_token, claim_with_invalid_org_unit
+    ):
+        request_params = EmployerDocumentDownloadRequestParams(
+            claim_with_invalid_org_unit.fineos_absence_id, "doc_id", employer_auth_token
         )
         response = download_document(client, request_params)
         assert response.status_code == 403
@@ -4331,6 +4414,20 @@ class TestEmployerWithOrgUnitsAccess:
     ):
         response = client.patch(
             f"/v1/employers/claims/{claim_with_different_org_unit.fineos_absence_id}/review",
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+            json=update_claim_body,
+        )
+        assert response.status_code == 403
+        assert (
+            response.get_json()["message"]
+            == "The leave admin cannot access claims of this organization unit"
+        )
+
+    def test_employers_cannot_update_claim_with_invalid_organization_unit(
+        self, client, claim_with_invalid_org_unit, employer_auth_token, update_claim_body,
+    ):
+        response = client.patch(
+            f"/v1/employers/claims/{claim_with_invalid_org_unit.fineos_absence_id}/review",
             headers={"Authorization": f"Bearer {employer_auth_token}"},
             json=update_claim_body,
         )

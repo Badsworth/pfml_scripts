@@ -23,11 +23,15 @@ def user_has_access_to_claim(claim: Claim, current_user: Optional[User]) -> bool
 
         # If the employer uses organization units
         # check if LA has access to this claim's org unit
-        can_view_org_unit = claim.organization_unit in leave_admin.organization_units
+        can_view_org_unit = False
         # or if LA has been notified about this claim
         has_been_notified = False
-        # but we'll only check notifications as a "last resort"/override
+
+        if claim.organization_unit is not None and len(leave_admin.organization_units) > 0:
+            can_view_org_unit = claim.organization_unit in leave_admin.organization_units
+
         if not can_view_org_unit:
+            # we'll only check notifications as a "last resort"/override
             notification_absence_ids = current_user.get_leave_admin_notifications()
             has_been_notified = claim.fineos_absence_id in notification_absence_ids
 

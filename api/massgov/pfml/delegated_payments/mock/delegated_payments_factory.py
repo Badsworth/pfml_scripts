@@ -28,6 +28,7 @@ from massgov.pfml.db.models.factories import (
     EmployerFactory,
     ExperianAddressPairFactory,
     ImportLogFactory,
+    OrganizationUnitFactory,
     PaymentFactory,
     PubEftFactory,
     TaxIdentifierFactory,
@@ -105,6 +106,9 @@ class DelegatedPaymentFactory(MockData):
             self.employee_optional_kwargs, "fineos_employee_last_name", fineos_employee_last_name
         )
 
+        # employer
+        self.employer_customer_num = self.get_value("employer_customer_num", None)
+
         # pub eft defaults
         self.ssn = self.get_value(
             "ssn", str(fake.unique.random_int(min=100_000_000, max=200_000_000))
@@ -126,6 +130,8 @@ class DelegatedPaymentFactory(MockData):
         self.absence_period_start_date = self.get_value(
             "absence_period_start_date", date(2021, 1, 7)
         )
+        self.organization_unit_name = self.get_value("organization_unit_name", None)
+        self.organization_unit = self.get_value("organization_unit", None)
 
         # payment defaults
         self.payment_optional_kwargs: Dict[str, Any] = (
@@ -191,6 +197,17 @@ class DelegatedPaymentFactory(MockData):
 
         return self.employee
 
+    def get_or_create_employer(self):
+        if self.employer is None and self.add_employer:
+            self.employer = EmployerFactory.create(fineos_employer_id=self.employer_customer_num)
+            # Only adds organization unit if there is an employer on this claim
+            if self.organization_unit_name is not None:
+                self.organization_unit = OrganizationUnitFactory.create(
+                    name=self.organization_unit_name, employer=self.employer,
+                )
+
+        return self.employer
+
     def get_or_create_pub_eft(self):
         if not self.add_pub_eft or self.pub_eft is not None:
             return self.pub_eft
@@ -234,8 +251,7 @@ class DelegatedPaymentFactory(MockData):
     def get_or_create_claim(self):
         self.get_or_create_employee()
 
-        if self.employer is None and self.add_employer:
-            self.employer = EmployerFactory.create()
+        self.get_or_create_employer()
 
         if self.claim is None and self.add_claim:
             self.claim = ClaimFactory.create(
@@ -247,6 +263,7 @@ class DelegatedPaymentFactory(MockData):
                 employee_id=self.employee.employee_id if self.employee else None,
                 fineos_absence_status_id=self.fineos_absence_status_id,
                 absence_period_start_date=self.absence_period_start_date,
+                organization_unit=self.organization_unit,
             )
 
         return self.claim
@@ -439,3 +456,6 @@ class DelegatedPaymentFactory(MockData):
             self.get_or_create_claim()
         elif self.add_employee:
             self.get_or_create_employee()
+
+        if self.add_employer:
+            self.get_or_create_employer()

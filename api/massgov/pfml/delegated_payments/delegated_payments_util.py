@@ -211,6 +211,7 @@ class FineosExtractConstants:
             "EMPLOYEE_CUSTOMERNO",
             "EMPLOYER_CUSTOMERNO",
             "LEAVEREQUEST_ID",
+            "ORGUNIT_NAME",
         ],
     )
 
