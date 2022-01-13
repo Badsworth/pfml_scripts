@@ -35,9 +35,9 @@ describe("App", () => {
 
   beforeEach(() => {
     // Enable rendering of the site
-    process.env.featureFlags = {
+    process.env.featureFlags = JSON.stringify({
       pfmlTerriyay: true,
-    };
+    });
 
     // Reset the focused element
     document.activeElement.blur();

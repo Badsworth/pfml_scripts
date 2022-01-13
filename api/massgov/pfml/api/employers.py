@@ -45,7 +45,8 @@ def employer_get_most_recent_withholding_dates(employer_id: str) -> flask.Respon
         if employer is None:
             raise NotFound(description="Employer not found")
 
-        contribution = (
+        # Check the last four quarters. Does not include the current quarter, which would be a future filing period.
+        non_zero_contribution = (
             db_session.query(EmployerQuarterlyContribution)
             .filter(EmployerQuarterlyContribution.employer_id == employer_id)
             .filter(EmployerQuarterlyContribution.employer_total_pfml_contribution > 0)
@@ -56,10 +57,24 @@ def employer_get_most_recent_withholding_dates(employer_id: str) -> flask.Respon
             .first()
         )
 
-        if contribution is None:
+        if non_zero_contribution is None:
+            # If this is a new or previously-exempt Employer to the program, we may not
+            # have any non-zero contributions within the past year. We still want to support
+            # verification for them, so for them we check future filing periods, which includes
+            # the current quarter:
+            non_zero_contribution = (
+                db_session.query(EmployerQuarterlyContribution)
+                .filter(EmployerQuarterlyContribution.employer_id == employer_id)
+                .filter(EmployerQuarterlyContribution.employer_total_pfml_contribution > 0)
+                .filter(EmployerQuarterlyContribution.filing_period > current_date)
+                .order_by(desc(EmployerQuarterlyContribution.filing_period))
+                .first()
+            )
+
+        if non_zero_contribution is None:
             raise PaymentRequired(description="No valid contributions found")
 
-        response = {"filing_period": contribution.filing_period}
+        response = {"filing_period": non_zero_contribution.filing_period}
 
         return response_util.success_response(
             message="Successfully retrieved quarterly contribution", data=response, status_code=200

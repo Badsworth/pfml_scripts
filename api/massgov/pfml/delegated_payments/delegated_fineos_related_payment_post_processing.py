@@ -36,6 +36,7 @@ class RelatedPaymentsPostProcessingStep(Step):
 
         for payment in payments:
             outcome = state_log_util.build_outcome("PUB transaction sent")
+
             end_state = (
                 State.STATE_WITHHOLDING_FUNDS_SENT
                 if (
@@ -45,6 +46,12 @@ class RelatedPaymentsPostProcessingStep(Step):
                 else State.FEDERAL_WITHHOLDING_FUNDS_SENT
             )
             transaction_status = FineosWritebackTransactionStatus.PAID
+
+            logger.info(
+                "Related payment for post-processing set to state %s",
+                end_state.state_description,
+                extra=payments_util.get_traceable_payment_details(payment, end_state),
+            )
 
             create_payment_finished_state_log_with_writeback(
                 payment=payment,

@@ -7,7 +7,7 @@ jest.mock("../../../../src/services/tracker");
 
 beforeEach(() => {
   mockAuth(true);
-  process.env.featureFlags = { claimantShowMFA: true };
+  process.env.featureFlags = JSON.stringify({ claimantShowMFA: true });
 });
 
 describe("Two-factor SMS Verify", () => {
@@ -17,13 +17,46 @@ describe("Two-factor SMS Verify", () => {
   });
 
   it("renders PageNotFound if the claimantShowMFA feature flag is not set", () => {
-    process.env.featureFlags = { claimantShowMFA: false };
+    process.env.featureFlags = JSON.stringify({ claimantShowMFA: false });
     renderPage(VerifySMS);
 
     const pageNotFoundHeading = screen.getByRole("heading", {
       name: /Page not found/,
     });
     expect(pageNotFoundHeading).toBeInTheDocument();
+  });
+
+  it("routes to the login page if the Cognito User is not defined", () => {
+    const mockGoTo = jest.fn();
+    renderPage(
+      VerifySMS,
+      {
+        addCustomSetup: (appLogic) => {
+          appLogic.portalFlow.goTo = mockGoTo;
+        },
+      },
+      { query: { next: "next" } }
+    );
+    // Didn't mock the Cognito user in setup, so we can expect to redirect
+    expect(mockGoTo).toHaveBeenCalledWith("/login", {}, { redirect: true });
+  });
+
+  it("routes to the login page if the user hits the didn't get a code link", async () => {
+    const mockGoTo = jest.fn();
+    renderPage(
+      VerifySMS,
+      {
+        addCustomSetup: (appLogic) => {
+          appLogic.portalFlow.goTo = mockGoTo;
+        },
+      },
+      { query: { next: "next" } }
+    );
+    const didntGetCodeButton = screen.getByRole("button", {
+      name: "Didn’t receive the code? Log in again to resend it.",
+    });
+    await act(async () => await userEvent.click(didntGetCodeButton));
+    expect(mockGoTo).toHaveBeenCalledWith("/login", {}, { redirect: true });
   });
 
   it("sends verification code and updates MFA preference when user saves and continues", async () => {

@@ -39,15 +39,15 @@ module "tasks" {
 
   # TODO: These values are provided by FINEOS.
   fineos_client_integration_services_api_url          = "https://trn2-api.masspfml.fineos.com/integration-services/"
-  fineos_client_customer_api_url                      = "https://trn2-api.masspfml.fineos.com/customerapi/customer/"
-  fineos_client_group_client_api_url                  = "https://trn2-api.masspfml.fineos.com/groupclientapi/groupClient/"
+  fineos_client_customer_api_url                      = "https://trn2-api.masspfml.fineos.com/customerapi/"
+  fineos_client_group_client_api_url                  = "https://trn2-api.masspfml.fineos.com/groupclientapi/"
   fineos_client_wscomposer_api_url                    = "https://trn2-api.masspfml.fineos.com/integration-services/wscomposer/"
   fineos_client_oauth2_url                            = "https://trn2-api.masspfml.fineos.com/oauth2/token"
   fineos_client_oauth2_client_id                      = "2e9vsuq808h3tu4rf9tr1efuh5"
   fineos_aws_iam_role_arn                             = "arn:aws:iam::666444232783:role/somdev-IAMRoles-CustomerAccountAccessRole-BF05IBJSG74B"
   fineos_aws_iam_role_external_id                     = "12345"
   fineos_eligibility_feed_output_directory_path       = "s3://fin-somdev-data-import/TRN2"
-  fineos_import_employee_updates_input_directory_path = "s3://fin-somdev-data-import/TRN2/dataexports"
+  fineos_import_employee_updates_input_directory_path = "s3://fin-somdev-data-export/TRN2/dataexports"
 
   # These can be kept blank.
   eolwd_moveit_sftp_uri   = ""
@@ -60,10 +60,11 @@ module "tasks" {
   dfml_business_operations_email_address = "mass-pfml-payments-test-email@navapbc.com"
 
   # TODO: Values from FINEOS.
-  fineos_data_export_path       = "s3://fin-somdev-data-export/TRN2/"
-  fineos_adhoc_data_export_path = "s3://fin-somdev-data-export/TRN2/dataextract/AdHocExtract/"
-  fineos_data_import_path       = "s3://fin-somdev-data-import/TRN2/"
-  fineos_error_export_path      = "s3://fin-somdev-data-export/TRN2/errorExtracts/"
+  fineos_data_export_path       = "s3://fin-somdev-data-export/TRN2/dataexports"
+  fineos_adhoc_data_export_path = "s3://fin-somdev-data-export/TRN2/dataextracts/AdHocExtract"
+  fineos_data_import_path       = "s3://fin-somdev-data-import/TRN2/peiupdate"
+  fineos_error_export_path      = "s3://fin-somdev-data-export/TRN2/errorExtracts"
+  fineos_report_export_path     = "s3://fin-somdev-data-export/TRN2/reportExtract"
 
   pfml_fineos_inbound_path  = "s3://massgov-pfml-trn2-agency-transfer/cps/inbound"
   pfml_fineos_outbound_path = "s3://massgov-pfml-trn2-agency-transfer/cps/outbound"

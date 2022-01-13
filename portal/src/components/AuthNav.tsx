@@ -19,7 +19,9 @@ const AuthNav = (props: AuthNavProps) => {
   const { t } = useTranslation();
   const isLoggedIn = !!props.user?.email_address;
   const showSettings =
-    isFeatureEnabled("claimantShowMFA") && !props.user?.hasEmployerRole;
+    isFeatureEnabled("claimantShowMFA") &&
+    !props.user?.hasEmployerRole &&
+    props.user?.consented_to_data_sharing;
 
   const back = (
     <ButtonLink

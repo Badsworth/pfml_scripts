@@ -21,6 +21,22 @@ describe("QuestionPage", () => {
     expect(container.firstChild).toMatchSnapshot();
   });
 
+  it("renders a large heading when titleSize is 'large'", () => {
+    render(
+      <QuestionPage
+        title={sampleTitle}
+        titleSize="large"
+        onSave={jest.fn(() => Promise.resolve())}
+      >
+        <div>Some stuff here</div>
+      </QuestionPage>
+    );
+
+    expect(screen.getByRole("heading", { level: 1 })).toHaveClass(
+      "font-heading-lg"
+    );
+  });
+
   it("supports custom continue button text", () => {
     render(
       <QuestionPage
@@ -50,6 +66,26 @@ describe("QuestionPage", () => {
 
     expect(handleSaveMock).toHaveBeenCalled();
     expect(tracker.trackEvent).not.toHaveBeenCalled();
+  });
+
+  it("shows buttonLoadingMessage when save handler is in progress", async () => {
+    const handleSaveMock = jest.fn(
+      () => new Promise((resolve) => setTimeout(resolve, 100))
+    );
+
+    render(
+      <QuestionPage
+        title={sampleTitle}
+        onSave={handleSaveMock}
+        buttonLoadingMessage="Loading!"
+      >
+        <div>Some stuff here</div>
+      </QuestionPage>
+    );
+
+    userEvent.click(screen.getByRole("button"));
+
+    expect(await screen.findByText("Loading!")).toBeInTheDocument();
   });
 
   it("tracks the event when onSave is not a Promise", async () => {

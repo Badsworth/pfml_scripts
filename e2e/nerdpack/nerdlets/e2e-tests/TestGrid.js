@@ -303,27 +303,25 @@ const httpUrlRegex = new RegExp(
 );
 
 function RichErroMessage({ children }) {
-  return <>
-    {
-      React.Children.map(children, (errorMessage) => {
-        if (typeof errorMessage !== 'string') {
+  return (
+    <>
+      {React.Children.map(children, (errorMessage) => {
+        if (typeof errorMessage !== "string") {
           return errorMessage;
         }
-        return errorMessage
-          .split(httpUrlRegex)
-          .map((substring) => {
-            if(httpUrlRegex.test(substring)) {
-              return (
-                <a href={encodeURI(substring)} target="_blank">
-                  {substring}
-                </a>
-              );
-            }
-            return substring;
-          })
-      })
-    }
-  </>
+        return errorMessage.split(httpUrlRegex).map((substring) => {
+          if (httpUrlRegex.test(substring)) {
+            return (
+              <a href={encodeURI(substring)} target="_blank">
+                {substring}
+              </a>
+            );
+          }
+          return substring;
+        });
+      })}
+    </>
+  );
 }
 
 class GridRow extends React.Component {

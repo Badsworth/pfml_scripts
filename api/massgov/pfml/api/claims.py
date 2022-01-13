@@ -40,16 +40,13 @@ from massgov.pfml.db.models.employees import (
     Claim,
     Employer,
     ManagedRequirement,
-    ManagedRequirementType,
     User,
     UserLeaveAdministrator,
 )
 from massgov.pfml.db.queries.absence_periods import upsert_absence_period_from_fineos_period
 from massgov.pfml.db.queries.get_claims_query import ActionRequiredStatusFilter, GetClaimsQuery
 from massgov.pfml.db.queries.managed_requirements import (
-    create_managed_requirement_from_fineos,
-    get_managed_requirement_by_fineos_managed_requirement_id,
-    update_managed_requirement_from_fineos,
+    create_or_update_managed_requirement_from_fineos,
 )
 from massgov.pfml.fineos.models.group_client_api import (
     Base64EncodedFileData,
@@ -64,6 +61,7 @@ from massgov.pfml.util.logging.claims import (
     get_claim_log_attributes,
     get_claim_review_log_attributes,
     get_managed_requirements_log_attributes,
+    log_absence_period,
     log_get_claim_metrics,
     log_managed_requirement,
 )
@@ -313,43 +311,42 @@ def employer_get_claim_review(fineos_absence_id: str) -> flask.Response:
 
         claim_from_db = get_claim_from_db(fineos_absence_id)
 
-        if claim_from_db and claim_from_db.fineos_absence_status:
-            fineos_claim_review_response.status = (
-                claim_from_db.fineos_absence_status.absence_status_description
-            )
-
+        # If claim exists, handle db sync side effects and updates to response object
         if claim_from_db:
             log_attributes.update(get_claim_log_attributes(claim_from_db))
 
-        if claim_from_db:
+            if claim_from_db.fineos_absence_status:
+                fineos_claim_review_response.status = (
+                    claim_from_db.fineos_absence_status.absence_status_description
+                )
+
             sync_absence_periods(
                 db_session, claim_from_db, absence_period_decisions, log_attributes
             )
-        handle_managed_requirements(
-            db_session, claim_from_db, fineos_managed_requirements, log_attributes,
-        )
 
-        managed_requirements = (
-            db_session.query(ManagedRequirement)
-            .filter(
-                ManagedRequirement.fineos_managed_requirement_id.in_(
-                    [str(mr.managedReqId) for mr in fineos_managed_requirements]
+            managed_requirements = sync_managed_requirements(
+                db_session, claim_from_db, fineos_managed_requirements, log_attributes,
+            )
+            fineos_claim_review_response.managed_requirements = [
+                ManagedRequirementResponse.from_orm(mr) for mr in managed_requirements
+            ]
+
+            log_attributes.update(
+                get_managed_requirements_log_attributes(
+                    fineos_claim_review_response.managed_requirements
                 )
             )
-            .all()
-        )
-        fineos_claim_review_response.managed_requirements = [
-            ManagedRequirementResponse.from_orm(mr) for mr in managed_requirements
-        ]
+            for requirement in fineos_claim_review_response.managed_requirements:
+                log_managed_requirement(requirement, fineos_absence_id)
 
         log_attributes.update(
-            get_managed_requirements_log_attributes(
-                fineos_claim_review_response.managed_requirements
-            )
+            {"num_absence_periods": len(fineos_claim_review_response.absence_periods),}
         )
 
-        for requirement in fineos_claim_review_response.managed_requirements:
-            log_managed_requirement(requirement, fineos_absence_id)
+        for period in fineos_claim_review_response.absence_periods:
+            log_absence_period(
+                fineos_absence_id, period, "get_claim_review - Found absence period for claim"
+            )
 
         logger.info(
             "employer_get_claim_review success", extra=log_attributes,
@@ -507,6 +504,7 @@ def get_claim_from_db(fineos_absence_id: Optional[str]) -> Optional[Claim]:
 def get_claims() -> flask.Response:
     current_user = app.current_user()
     employer_id = flask.request.args.get("employer_id")
+    allow_hrd = flask.request.args.get("allow_hrd", type=bool) or False
     search_string = flask.request.args.get("search", type=str)
     absence_statuses = parse_filterable_absence_statuses(flask.request.args.get("claim_status"))
     is_employer = can(READ, "EMPLOYER_API")
@@ -531,7 +529,7 @@ def get_claims() -> flask.Response:
                 verified_employers = [
                     employer
                     for employer in employers_list
-                    if employer.employer_fein not in CLAIMS_DASHBOARD_BLOCKED_FEINS
+                    if (employer.employer_fein not in CLAIMS_DASHBOARD_BLOCKED_FEINS or allow_hrd)
                     and current_user.verified_employer(employer)
                 ]
 
@@ -607,31 +605,23 @@ def validate_filterable_absence_statuses(absence_statuses: Set[str]) -> None:
     return
 
 
-def handle_managed_requirements(
+def sync_managed_requirements(
     db_session: Session,
-    claim: Optional[Claim],
+    claim: Claim,
     managed_requirements: List[ManagedRequirementDetails],
     log_attributes: dict,
-) -> None:
+) -> List[ManagedRequirement]:
     """
     Note that commit to db is the responsibility of called functions.
     """
-    if claim is None:
-        return
+    managed_requirements_from_db = []
     for mr in managed_requirements:
-        db_mr = get_managed_requirement_by_fineos_managed_requirement_id(
-            mr.managedReqId, db_session
+        committed_requirement = create_or_update_managed_requirement_from_fineos(
+            db_session, claim.claim_id, mr, log_attributes
         )
-        if (
-            db_mr
-            and db_mr.managed_requirement_type_id
-            == ManagedRequirementType.EMPLOYER_CONFIRMATION.managed_requirement_type_id
-        ):
-            update_managed_requirement_from_fineos(db_session, mr, db_mr, log_attributes.copy())
-        elif not db_mr:
-            create_managed_requirement_from_fineos(
-                db_session, claim.claim_id, mr, log_attributes.copy()
-            )
+        if committed_requirement:
+            managed_requirements_from_db.append(committed_requirement)
+    return managed_requirements_from_db
 
 
 def sync_absence_periods(

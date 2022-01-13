@@ -85,7 +85,7 @@ class PaymentPostProcessingStep(Step):
             )
 
             logger.info(
-                "Payment %s passed all validation rules",
+                "Payment post-processing complete for %s",
                 make_payment_log(payment_container.payment),
                 extra=payment_container.get_traceable_details(),
             )

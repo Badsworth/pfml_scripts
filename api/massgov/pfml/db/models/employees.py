@@ -1060,6 +1060,7 @@ class PaymentDetails(Base, TimestampMixin):
     period_start_date = Column(Date)
     period_end_date = Column(Date)
     amount = Column(Numeric(asdecimal=True), nullable=False)
+    business_net_amount = Column(Numeric(asdecimal=True), nullable=False)
 
     payment = relationship(Payment)
 
@@ -2991,6 +2992,13 @@ class PaymentTransactionType(LookupTable):
     STATE_TAX_WITHHOLDING = LkPaymentTransactionType(13, "State Tax Withholding")
     STANDARD_LEGACY_MMARS = LkPaymentTransactionType(14, "Standard Legacy MMARS")
 
+    OVERPAYMENT_ACTUAL_RECOVERY_CANCELLATION = LkPaymentTransactionType(
+        15, "Overpayment Actual Recovery Cancellation"
+    )
+    OVERPAYMENT_ADJUSTMENT_CANCELLATION = LkPaymentTransactionType(
+        16, "Overpayment Adjustment Cancellation"
+    )
+
 
 class PaymentCheckStatus(LookupTable):
     model = LkPaymentCheckStatus
@@ -3053,7 +3061,7 @@ class ReferenceFileType(LookupTable):
 
     DUA_DEMOGRAPHICS_REQUEST_FILE = LkReferenceFileType(33, "DUA demographics request", 1)
 
-    IRS_1099_ORIG = LkReferenceFileType(34, "IRS 1099 org file", 1)
+    IRS_1099_FILE = LkReferenceFileType(34, "IRS 1099 file", 1)
 
     FINEOS_IAWW_EXTRACT = LkReferenceFileType(35, "IAWW extract", 2)
 
@@ -3061,6 +3069,9 @@ class ReferenceFileType(LookupTable):
     CLAIMANT_ADDRESS_VALIDATION_REPORT = LkReferenceFileType(
         36, "Claimant Address validation Report", 1
     )
+
+    DUA_EMPLOYERS_REQUEST_FILE = LkReferenceFileType(37, "DUA employers request", 1)
+    FINEOS_1099_DATA_EXTRACT = LkReferenceFileType(38, "1099 extract", 1)
 
 
 class Title(LookupTable):

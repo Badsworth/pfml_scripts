@@ -43,6 +43,31 @@ describe("Applications", () => {
     expect(goToSpy).toHaveBeenCalledWith("/applications/get-ready", {});
   });
 
+  it("displays Find Application action when feature flag is enabled", () => {
+    const linkName = "Find my application";
+    process.env.featureFlags = JSON.stringify({ channelSwitching: false });
+
+    renderPage(Index, {
+      addCustomSetup: (appLogicHook) => {
+        setUpHelper(appLogicHook);
+      },
+    });
+
+    expect(
+      screen.queryByRole("link", { name: linkName })
+    ).not.toBeInTheDocument();
+
+    process.env.featureFlags = JSON.stringify({ channelSwitching: true });
+
+    renderPage(Index, {
+      addCustomSetup: (appLogicHook) => {
+        setUpHelper(appLogicHook);
+      },
+    });
+
+    expect(screen.queryByRole("link", { name: linkName })).toBeInTheDocument();
+  });
+
   it("passes mfaSetupSuccess value when it redirects to getReady", () => {
     let goToSpy;
 
@@ -184,6 +209,21 @@ describe("Applications", () => {
     expect(
       screen.getByText(
         /Our Contact Center staff will review your documents for mock_id./
+      )
+    ).toBeInTheDocument();
+  });
+
+  it("displays success alert when claim was associated", () => {
+    renderPage(
+      Index,
+      {
+        addCustomSetup: setUpHelper,
+      },
+      { query: { applicationAssociated: "mock_id" } }
+    );
+    expect(
+      screen.getByText(
+        /Your application has been successfully linked to your account./
       )
     ).toBeInTheDocument();
   });

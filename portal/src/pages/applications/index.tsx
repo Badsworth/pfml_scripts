@@ -13,12 +13,17 @@ import PaginationNavigation from "src/components/PaginationNavigation";
 import React from "react";
 import Title from "../../components/core/Title";
 import { Trans } from "react-i18next";
+import { isFeatureEnabled } from "../../services/featureFlags";
 import { pick } from "lodash";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
 
 interface IndexProps extends WithUserProps {
-  query: { uploadedAbsenceId?: string; smsMfaConfirmed?: string };
+  query: {
+    applicationAssociated?: string;
+    uploadedAbsenceId?: string;
+    smsMfaConfirmed?: string;
+  };
 }
 
 /**
@@ -53,10 +58,15 @@ export const Index = (props: IndexProps) => {
           })}
         </Alert>
       )}
+      {query?.applicationAssociated && (
+        <Alert className="margin-bottom-3" state="success">
+          <p>{t("pages.applications.claimAssociatedSuccessfully")}</p>
+        </Alert>
+      )}
       {query?.smsMfaConfirmed && <MfaSetupSuccessAlert />}
 
       <div className="grid-row grid-gap-6">
-        <div className="desktop:grid-col">
+        <div className="desktop:grid-col margin-bottom-2">
           <Title>{t("pages.applications.title")}</Title>
           <PaginatedApplicationCardsWithBenefitsApplications
             appLogic={appLogic}
@@ -67,9 +77,24 @@ export const Index = (props: IndexProps) => {
             {t("pages.applications.createApplicationHeading")}
           </Heading>
 
-          <ButtonLink href={routes.applications.getReady} variation="outline">
+          <ButtonLink
+            className="margin-bottom-2"
+            href={appLogic.portalFlow.getNextPageRoute("NEW_APPLICATION")}
+            variation="outline"
+          >
             {t("pages.applications.getReadyLink")}
           </ButtonLink>
+
+          <br />
+
+          {isFeatureEnabled("channelSwitching") && (
+            <ButtonLink
+              href={appLogic.portalFlow.getNextPageRoute("FIND_APPLICATION")}
+              variation="unstyled"
+            >
+              {t("pages.applications.findLink")}
+            </ButtonLink>
+          )}
         </div>
       </div>
     </React.Fragment>

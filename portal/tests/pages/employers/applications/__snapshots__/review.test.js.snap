@@ -165,7 +165,7 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
             Leave type
           </h3>
           <a
-            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#about-medical-leave-"
+            href="https://www.mass.gov/leave-types-medical"
             rel="noopener"
             target="_blank"
           >
@@ -386,7 +386,7 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
             <li>
               Manage a 
               <a
-                href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#what-is-a-serious-health-condition?-"
+                href="https://www.mass.gov/pfml-serious-health-condition"
                 rel="noopener"
                 target="_blank"
               >
@@ -406,7 +406,7 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
             <li>
               Care for a family member with a 
               <a
-                href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#what-is-a-serious-health-condition?-"
+                href="https://www.mass.gov/pfml-serious-health-condition"
                 rel="noopener"
                 target="_blank"
               >

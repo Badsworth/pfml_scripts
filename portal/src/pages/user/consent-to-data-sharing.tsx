@@ -24,17 +24,16 @@ export const ConsentToDataSharing = (props: ConsentToDataSharingProps) => {
   const { appLogic, user } = props;
   const { updateUser } = appLogic.users;
 
-  const handleSave = () =>
-    updateUser(user.user_id, {
-      consented_to_data_sharing: true,
-    });
-
   const handleSubmit = useThrottledHandler(async (event) => {
     event.preventDefault();
-    await handleSave();
+    await updateUser(user.user_id, {
+      consented_to_data_sharing: true,
+    });
     tracker.trackEvent("User consented to data sharing", {});
     if (isFeatureEnabled("claimantShowMFA") && !user.hasEmployerRole) {
       appLogic.portalFlow.goToPageFor("ENABLE_MFA");
+    } else {
+      appLogic.portalFlow.goToNextPage({});
     }
   });
 
@@ -54,17 +53,14 @@ export const ConsentToDataSharing = (props: ConsentToDataSharingProps) => {
           })}
         >
           <p>{t("pages.userConsentToDataSharing.applicationUsageIntro")}</p>
-          <ul className="usa-list">
-            {t<string, string[]>(
-              "pages.userConsentToDataSharing.applicationUsageList",
-              {
-                returnObjects: true,
-                context: roleContext,
-              }
-            ).map((listItemContent, index) => (
-              <li key={index}>{listItemContent}</li>
-            ))}
-          </ul>
+          <Trans
+            i18nKey="pages.userConsentToDataSharing.applicationUsageList"
+            tOptions={{ context: roleContext }}
+            components={{
+              ul: <ul className="usa-list" />,
+              li: <li />,
+            }}
+          />
         </AccordionItem>
 
         <AccordionItem

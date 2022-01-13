@@ -11,6 +11,7 @@ from massgov.pfml.db.models.employees import Claim, Employee, ImportLog, Payment
 from ..lookup import LookupTable
 from .base import Base, TimestampMixin, uuid_gen
 from .common import PostgreSQLUUID
+from .common import XMLType as XML
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
@@ -681,6 +682,34 @@ class FineosExtractVPaidLeaveInstruction(Base, TimestampMixin):
     )
     fineos_extract_import_log_id = Column(
         Integer, ForeignKey("import_log.import_log_id"), index=True
+    )
+
+    reference_file = relationship(ReferenceFile)
+
+
+class FineosExtractVbi1099DataSom(Base, TimestampMixin):
+    __tablename__ = "fineos_extract_vbi_1099_data_som"
+    vbi_1099_data_som_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+    firstnames = Column(Text)
+    lastname = Column(Text)
+    customerno = Column(Text)
+    packeddata = Column(XML)
+    documenttype = Column(Text)
+    c = Column(Text)
+
+    reference_file_id = Column(
+        PostgreSQLUUID, ForeignKey("reference_file.reference_file_id"), index=True
+    )
+
+    fineos_extract_import_log_id = Column(
+        Integer, ForeignKey("import_log.import_log_id"), index=True
+    )
+
+    Index(
+        "ix_vbi_1099_data_som_import_log_id_customerno",
+        fineos_extract_import_log_id,
+        customerno,
+        unique=False,
     )
 
     reference_file = relationship(ReferenceFile)

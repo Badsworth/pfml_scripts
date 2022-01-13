@@ -42,10 +42,7 @@ export abstract class AbstractDocumentGenerator<
     const name = `${uuid()}.pdf`;
 
     const pathToDoc = config.filename
-      ? path.join(
-          process.cwd(),
-          `cypress/fixtures/docTesting/${config.filename}`
-        )
+      ? path.join(process.cwd(), `forms/${config.filename}`)
       : undefined;
     return {
       // Assertion here so that we don't have to redefine all of the associated types downstream

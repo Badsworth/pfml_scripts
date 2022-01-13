@@ -376,11 +376,11 @@ def read_file(path, mode="r", encoding=None):
     return smart_open.open(path, mode, encoding=encoding).read()
 
 
-def write_file(path, mode="w", encoding=None):
+def write_file(path, mode="w", encoding=None, use_s3_multipart_upload=True):
     if not is_s3_path(path):
         os.makedirs(os.path.dirname(path), exist_ok=True)
     config = botocore.client.Config(retries={"max_attempts": 10, "mode": "standard"})
-    params = {"resource_kwargs": {"config": config}}
+    params = {"resource_kwargs": {"config": config}, "multipart_upload": use_s3_multipart_upload}
     return smart_open.open(path, mode, encoding=encoding, transport_params=params)
 
 

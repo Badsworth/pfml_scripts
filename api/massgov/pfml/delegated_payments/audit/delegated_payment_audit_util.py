@@ -58,6 +58,7 @@ class PaymentAuditData:
     previously_paid_payment_count: int
     previously_paid_payments_string: Optional[str]
     gross_payment_amount: str
+    net_payment_amount: str
     federal_withholding_amount: str
     state_withholding_amount: str
     federal_withholding_i_value: str
@@ -167,7 +168,7 @@ def build_audit_report_row(
         payment_period_end_date=payment_period_end_date,
         payment_period_weeks=str(payment_period_weeks),
         gross_payment_amount=str(payment_audit_data.gross_payment_amount),
-        payment_amount=str(payment.amount),
+        payment_amount=str(payment_audit_data.net_payment_amount),
         federal_withholding_amount=str(payment_audit_data.federal_withholding_amount),
         state_withholding_amount=str(payment_audit_data.state_withholding_amount),
         employer_reimbursement_amount=None,

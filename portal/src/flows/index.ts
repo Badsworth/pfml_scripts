@@ -10,16 +10,15 @@ import claimant, {
   ClaimantFlowContext,
   guards as claimantGuards,
 } from "./claimant";
-import user, { UserFlowContext, guards as userGuards } from "./user";
 import auth from "./auth";
 import employer from "./employer";
 import routes from "../routes";
+import user from "./user";
 
-export type FlowContext = ClaimantFlowContext | UserFlowContext;
+export type FlowContext = ClaimantFlowContext;
 
 export const guards = {
   ...claimantGuards,
-  ...userGuards,
 };
 
 export default {

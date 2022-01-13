@@ -257,7 +257,7 @@ export const Status = ({
           state="success"
         >
           {t("pages.applications.uploadSuccessMessage", {
-            absenceId,
+            absence_id: absenceId,
           })}
         </Alert>
       )}

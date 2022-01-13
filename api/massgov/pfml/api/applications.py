@@ -1,12 +1,11 @@
 import base64
 import tempfile
-from typing import Any, Dict
 from uuid import UUID
 
 import connexion
 import newrelic.agent
 import puremagic
-from flask import Response, abort, request
+from flask import Response, request
 from puremagic import PureError
 from pydantic import ValidationError
 from sqlalchemy import asc, desc
@@ -130,6 +129,35 @@ def applications_get():
         page=page,
         context=pagination_context,
         status_code=200,
+    ).to_api_response()
+
+
+def applications_import():
+    if not app.get_app_config().enable_application_import:
+        return response_util.error_response(
+            status_code=Forbidden, message="Application import not currently available", errors=[]
+        ).to_api_response()
+
+    body = connexion.request.json
+
+    application = Application()
+
+    ensure(CREATE, application)
+
+    if user := app.current_user():
+        # TODO (portal-1512) - Remove role check
+        # Check if user is not a claimant
+        if user.roles:
+            raise Unauthorized
+        application.user = user
+    else:
+        raise Unauthorized
+
+    log_attributes = get_application_log_attributes(application)
+    logger.info("applications_import success", extra=log_attributes)
+
+    return response_util.success_response(
+        message="Successfully imported application", data=dict(body), status_code=201,
     ).to_api_response()
 
 
@@ -390,9 +418,7 @@ def applications_complete(application_id):
 
         log_attributes = get_application_log_attributes(existing_application)
 
-        issues = application_rules.get_application_complete_issues(
-            existing_application, request.headers, db_session
-        )
+        issues = application_rules.get_application_complete_issues(existing_application, db_session)
         if issues:
             logger.info(
                 "applications_complete failure - application failed validation",
@@ -572,20 +598,11 @@ def document_upload(application_id, body, file):
             ):
                 # tempfile.SpooledTemporaryFile writes the compressed file in-memory
                 with tempfile.SpooledTemporaryFile(mode="wb+") as compressed_file:
-                    previous_file_size = file_size
                     file_size = pdf_util.compress_pdf(file, compressed_file)
                     file_name = f"Compressed_{file_name}"
 
                     compressed_file.seek(0)
                     file_content = compressed_file.read()
-
-                    log_attrs: Dict[str, Any] = {
-                        **get_application_log_attributes(existing_application),
-                        **pdf_util.pdf_compression_attrs(previous_file_size, file_size),
-                    }
-                    logger.info(
-                        "document_upload - PDF compressed", extra={**log_attrs,},
-                    )
 
             # Validate file size, regardless of processing
             validate_file_size(file_size)
@@ -916,21 +933,14 @@ def validate_tax_withholding_request(db_session, application_id, tax_preference_
             "submit_tax_withholding_preference failure - preference already set",
             extra=get_application_log_attributes(existing_application),
         )
-        abort(
-            response_util.error_response(
-                status_code=Forbidden,
-                message="Application {} could not be updated. Tax withholding preference already submitted".format(
-                    existing_application.application_id
-                ),
-                data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
-                errors=[
-                    ValidationErrorDetail(
-                        type=IssueType.duplicate,
-                        message="Tax withholding preference is already submitted",
-                        field="is_withholding_tax",
-                    )
-                ],
-            ).to_api_response()
+        raise ValidationException(
+            errors=[
+                ValidationErrorDetail(
+                    type=IssueType.duplicate,
+                    message="Tax withholding preference is already set",
+                    field="is_withholding_tax",
+                )
+            ]
         )
 
     return existing_application

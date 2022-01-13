@@ -71,6 +71,11 @@ class StateCleanupStep(Step):
                 db_session=self.db_session,
                 import_log_id=self.get_import_log_id(),
             )
+            logger.info(
+                "No audit file received for payment, moving to state [%s] to allow us to consume again",
+                ERROR_STATE.state_description,
+                extra=payments_util.get_traceable_payment_details(payment, ERROR_STATE),
+            )
 
         logger.info(
             "Successfully moved %i state logs from %s to %s",

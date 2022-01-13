@@ -73,27 +73,31 @@ exports[`EmployerBenefits renders the page 1`] = `
           role="img"
         >
           <use
-            xlink:href="/img/sprite.svg#check_circle"
+            xlink:href="/img/sprite.svg#check"
           />
         </svg>
         The employer-sponsored benefits you must report are:
       </h2>
-      <ul
-        class="usa-list margin-top-0 margin-left-4 margin-bottom-4"
+      <div
+        class="margin-left-4"
       >
-        <li>
-          Temporary disability insurance, for either short-term or long-term disability
-        </li>
-        <li>
-          Permanent disability insurance
-        </li>
-        <li>
-          Family or medical leave benefits, such as a parental leave program
-        </li>
-        <li>
-          You only have to report benefits from the employer with this EIN: . This is the same Employer Identification Number you entered earlier in your application.
-        </li>
-      </ul>
+        <ul
+          class="usa-list"
+        >
+          <li>
+            Temporary disability insurance, for either short-term or long-term disability
+          </li>
+          <li>
+            Permanent disability insurance
+          </li>
+          <li>
+            Family or medical leave benefits, such as a parental leave program
+          </li>
+          <li>
+            You only have to report benefits from the employer with this EIN: . This is the same Employer Identification Number you entered earlier in your application.
+          </li>
+        </ul>
+      </div>
       <h2
         class="font-heading-sm text-bold"
       >
@@ -105,21 +109,25 @@ exports[`EmployerBenefits renders the page 1`] = `
           role="img"
         >
           <use
-            xlink:href="/img/sprite.svg#cancel"
+            xlink:href="/img/sprite.svg#close"
           />
         </svg>
         You don’t need to report:
       </h2>
-      <ul
-        class="usa-list margin-top-0 margin-left-4"
+      <div
+        class="margin-left-4"
       >
-        <li>
-          Benefits from any other employers
-        </li>
-        <li>
-          Any benefit from your employer that will be based on your PFML benefit amount. One example is a “top up” to make up the difference between your regular wages and your PFML benefits.
-        </li>
-      </ul>
+        <ul
+          class="usa-list"
+        >
+          <li>
+            Benefits from any other employers
+          </li>
+          <li>
+            Any benefit from your employer that will be based on your PFML benefit amount. One example is a “top up” to make up the difference between your regular wages and your PFML benefits.
+          </li>
+        </ul>
+      </div>
     </span>
     <div
       class="margin-top-3"
@@ -143,7 +151,7 @@ exports[`EmployerBenefits renders the page 1`] = `
             class="usa-hint text-base-dark"
           >
             <br />
-            I will recieve employer-sponsored benefits during my paid leave
+            I will receive employer-sponsored benefits during my paid leave
           </span>
         </label>
       </div>

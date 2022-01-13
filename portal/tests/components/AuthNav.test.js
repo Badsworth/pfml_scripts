@@ -8,6 +8,7 @@ describe("AuthNav", () => {
   const user = new User({
     email_address: "email@address.com",
     user_id: "mock-user-id",
+    consented_to_data_sharing: true,
   });
 
   it("renders the logged-out state", () => {
@@ -49,13 +50,14 @@ describe("AuthNav", () => {
   });
 
   it("does not render settings link when user role is employer and MFA feature flag is enabled", () => {
-    process.env.featureFlags = { claimantShowMFA: true };
+    process.env.featureFlags = JSON.stringify({ claimantShowMFA: true });
     render(
       <AuthNav
         user={
           new User({
             email_address: "email@address.com",
             user_id: "mock-user-id",
+            consented_to_data_sharing: true,
             roles: [{ role_description: RoleDescription.employer, role_id: 1 }],
           })
         }
@@ -70,14 +72,36 @@ describe("AuthNav", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("renders settings link and not email when user role is not employer and MFA feature flag is enabled", () => {
-    process.env.featureFlags = { claimantShowMFA: true };
+  it("does not render settings link when user has not consented to data sharing and MFA feature flag is enabled", () => {
+    process.env.featureFlags = JSON.stringify({ claimantShowMFA: true });
     render(
       <AuthNav
         user={
           new User({
             email_address: "email@address.com",
             user_id: "mock-user-id",
+          })
+        }
+        onLogout={() => jest.fn()}
+      />
+    );
+
+    expect(screen.getByText(/email@address.com/)).toBeInTheDocument();
+
+    expect(
+      screen.queryByRole("link", { name: /Settings/ })
+    ).not.toBeInTheDocument();
+  });
+
+  it("renders settings link and not email when user role is not employer, user consented to sharing, and MFA feature flag is enabled", () => {
+    process.env.featureFlags = JSON.stringify({ claimantShowMFA: true });
+    render(
+      <AuthNav
+        user={
+          new User({
+            email_address: "email@address.com",
+            user_id: "mock-user-id",
+            consented_to_data_sharing: true,
             roles: [],
           })
         }

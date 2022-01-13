@@ -7,9 +7,10 @@ import faker from "faker";
 import userEvent from "@testing-library/user-event";
 
 const updateUser = jest.fn();
-const goToPageFor = jest.fn();
+const goToNextPage = jest.fn();
 
 jest.mock("../../../../src/services/mfa", () => ({
+  sendMFAConfirmationCode: jest.fn(),
   verifyMFAPhoneNumber: jest.fn(),
 }));
 
@@ -24,7 +25,7 @@ const user = new User({
 
 beforeEach(() => {
   mockAuth(true);
-  process.env.featureFlags = { claimantShowMFA: true };
+  process.env.featureFlags = JSON.stringify({ claimantShowMFA: true });
 });
 
 describe("Two-factor SMS Confirm", () => {
@@ -83,23 +84,51 @@ describe("Two-factor SMS Confirm", () => {
     await act(async () => await userEvent.click(submitButton));
 
     expect(MFAService.verifyMFAPhoneNumber).toHaveBeenCalledWith("123456");
-    expect(updateUser).toHaveBeenCalledWith(
-      expect.any(String),
-      {
-        mfa_delivery_preference: "SMS",
+    expect(updateUser).toHaveBeenCalledWith(expect.any(String), {
+      mfa_delivery_preference: "SMS",
+    });
+  });
+
+  it("resends the SMS code when user clicks the resend button", async () => {
+    renderPage(ConfirmSMS, {});
+
+    const resendButton = screen.getByRole("button", {
+      name: "Resend the code",
+    });
+    await act(async () => await userEvent.click(resendButton));
+
+    expect(MFAService.sendMFAConfirmationCode).toHaveBeenCalled();
+  });
+
+  it("routes the user to the next page when they submit", async () => {
+    renderPage(ConfirmSMS, {
+      addCustomSetup: (appLogic) => {
+        appLogic.users.updateUser = updateUser;
+        appLogic.portalFlow.goToNextPage = goToNextPage;
       },
-      undefined,
-      undefined,
+    });
+
+    const codeField = screen.getByLabelText("6-digit code");
+    userEvent.type(codeField, "123456");
+    const submitButton = screen.getByRole("button", {
+      name: "Save and continue",
+    });
+    await act(async () => await userEvent.click(submitButton));
+
+    expect(goToNextPage).toHaveBeenCalledWith(
+      {},
+      { smsMfaConfirmed: "true" },
       undefined
     );
   });
 
-  it("returns the user to the settings page if they reached they initiated mfa changes from there", async () => {
+  it("returns the user to the settings page if they initiated mfa changes from there", async () => {
     renderPage(
       ConfirmSMS,
       {
         addCustomSetup: (appLogic) => {
           appLogic.users.updateUser = updateUser;
+          appLogic.portalFlow.goToNextPage = goToNextPage;
         },
       },
       {
@@ -114,13 +143,9 @@ describe("Two-factor SMS Confirm", () => {
     });
     await act(async () => await userEvent.click(submitButton));
 
-    expect(updateUser).toHaveBeenCalledWith(
-      expect.any(String),
-      {
-        mfa_delivery_preference: "SMS",
-      },
-      undefined,
-      undefined,
+    expect(goToNextPage).toHaveBeenCalledWith(
+      {},
+      { smsMfaConfirmed: "true" },
       "RETURN_TO_SETTINGS"
     );
   });
@@ -134,7 +159,7 @@ describe("Two-factor SMS Confirm", () => {
     renderPage(ConfirmSMS, {
       addCustomSetup: (appLogic) => {
         appLogic.users.updateUser = updateUser;
-        appLogic.portalFlow.goToPageFor = goToPageFor;
+        appLogic.portalFlow.goToNextPage = goToNextPage;
       },
     });
 
@@ -147,7 +172,7 @@ describe("Two-factor SMS Confirm", () => {
 
     expect(MFAService.verifyMFAPhoneNumber).toHaveBeenCalledWith("123456");
     expect(updateUser).not.toHaveBeenCalled();
-    expect(goToPageFor).not.toHaveBeenCalled();
+    expect(goToNextPage).not.toHaveBeenCalled();
 
     expect(
       screen.getByText(
@@ -157,7 +182,7 @@ describe("Two-factor SMS Confirm", () => {
   });
 
   it("renders PageNotFound if the claimantShowMFA feature flag is not set", () => {
-    process.env.featureFlags = { claimantShowMFA: false };
+    process.env.featureFlags = JSON.stringify({ claimantShowMFA: false });
     renderPage(ConfirmSMS);
 
     const pageNotFoundHeading = screen.getByRole("heading", {

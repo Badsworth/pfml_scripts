@@ -24,6 +24,7 @@ from massgov.pfml.db.models.employees import (
     ExperianAddressPair,
     LkClaimType,
     LkReferenceFileType,
+    LkState,
     Payment,
     PaymentTransactionType,
     PubEft,
@@ -36,6 +37,7 @@ from massgov.pfml.db.models.payments import (
     FineosExtractEmployeeFeed,
     FineosExtractPaymentFullSnapshot,
     FineosExtractReplacedPayments,
+    FineosExtractVbi1099DataSom,
     FineosExtractVbiLeavePlanRequestedAbsence,
     FineosExtractVbiRequestedAbsence,
     FineosExtractVbiRequestedAbsenceSom,
@@ -63,6 +65,7 @@ ExtractTable = Union[
     Type[FineosExtractReplacedPayments],
     Type[FineosExtractVbiLeavePlanRequestedAbsence],
     Type[FineosExtractVPaidLeaveInstruction],
+    Type[FineosExtractVbi1099DataSom],
 ]
 
 
@@ -96,6 +99,7 @@ class Constants:
 
     REQUESTED_ABSENCE_SOM_FILE_NAME = "VBI_REQUESTEDABSENCE_SOM.csv"
     EMPLOYEE_FEED_FILE_NAME = "Employee_feed.csv"
+    VBI_1099DATA_SOM_FILE_NAME = "VBI_1099DATA_SOM.csv"
 
     PEI_EXPECTED_FILE_NAME = "vpei.csv"
     PAYMENT_DETAILS_EXPECTED_FILE_NAME = "vpeipaymentdetails.csv"
@@ -151,6 +155,8 @@ class Constants:
             PaymentTransactionType.OVERPAYMENT_RECOVERY_CANCELLATION,
             PaymentTransactionType.OVERPAYMENT_RECOVERY_REVERSE,
             PaymentTransactionType.OVERPAYMENT_ADJUSTMENT,
+            PaymentTransactionType.OVERPAYMENT_ACTUAL_RECOVERY_CANCELLATION,
+            PaymentTransactionType.OVERPAYMENT_ADJUSTMENT_CANCELLATION,
         ]
     )
     OVERPAYMENT_TYPES_WITHOUT_PAYMENT_DETAILS_IDS = frozenset(
@@ -232,7 +238,11 @@ class FineosExtractConstants:
             "LASTNAME",
         ],
     )
-
+    VBI_1099DATA_SOM = FineosExtract(
+        file_name="VBI_1099DATA_SOM.csv",
+        table=FineosExtractVbi1099DataSom,
+        field_names=["FIRSTNAMES", "LASTNAME", "CUSTOMERNO", "PACKEDDATA", "DOCUMENTTYPE", "C",],
+    )
     VPEI = FineosExtract(
         file_name="vpei.csv",
         table=FineosExtractVpei,
@@ -267,6 +277,7 @@ class FineosExtractConstants:
             "PAYMENTSTARTP",
             "PAYMENTENDPER",
             "BALANCINGAMOU_MONAMT",
+            "BUSINESSNETBE_MONAMT",
         ],
     )
 
@@ -448,6 +459,14 @@ IAWW_EXTRACT_FILES = [
     FineosExtractConstants.PAID_LEAVE_INSTRUCTION,
 ]
 IAWW_EXTRACT_FILES_NAMES = [extract_file.file_name for extract_file in IAWW_EXTRACT_FILES]
+
+REQUEST_1099_EXTRACT_FILES = [
+    FineosExtractConstants.VBI_1099DATA_SOM,
+]
+
+REQUEST_1099_EXTRACT_FILES_NAMES = [
+    extract_file.file_name for extract_file in REQUEST_1099_EXTRACT_FILES
+]
 
 
 class Regexes:
@@ -763,6 +782,11 @@ def get_fineos_max_history_date(export_type: LkReferenceFileType) -> datetime:
         == ReferenceFileType.FINEOS_IAWW_EXTRACT.reference_file_type_id
     ):
         datestring = date_config.fineos_iaww_extract_max_history_date
+    elif (
+        export_type.reference_file_type_id
+        == ReferenceFileType.FINEOS_1099_DATA_EXTRACT.reference_file_type_id
+    ):
+        datestring = date_config.fineos_1099_data_extract_max_history_date
 
     else:
         raise ValueError(f"Incorrect export_type {export_type} provided")
@@ -1210,7 +1234,9 @@ def create_staging_table_instance(
     )
 
 
-def get_traceable_payment_details(payment: Payment) -> Dict[str, Optional[Any]]:
+def get_traceable_payment_details(
+    payment: Payment, state: Optional[LkState] = None
+) -> Dict[str, Optional[Any]]:
     # For logging purposes, this returns useful, traceable details
     # about a payment and related fields if they exist.
     #
@@ -1221,11 +1247,41 @@ def get_traceable_payment_details(payment: Payment) -> Dict[str, Optional[Any]]:
     employee = payment.claim.employee if payment.claim else None
 
     return {
+        "payment_id": payment.payment_id,
         "c_value": payment.fineos_pei_c_value,
         "i_value": payment.fineos_pei_i_value,
-        "absence_case_number": claim.fineos_absence_id if claim else None,
+        "absence_case_id": claim.fineos_absence_id if claim else None,
         "fineos_customer_number": employee.fineos_customer_number if employee else None,
+        "claim_id": claim.claim_id if claim else None,
+        "employee_id": employee.employee_id if employee else None,
+        "period_start_date": payment.period_start_date,
+        "period_end_date": payment.period_end_date,
+        "pub_individual_id": payment.pub_individual_id,
+        "payment_transaction_type": payment.payment_transaction_type.payment_transaction_type_description
+        if payment.payment_transaction_type
+        else None,
+        "current_state": state.state_description if state else None,
     }
+
+
+def get_traceable_pub_eft_details(
+    pub_eft: PubEft, employee: Employee, payment: Optional[Payment] = None
+) -> Dict[str, Any]:
+    # For logging purposes, this returns useful, traceable details
+    # about an EFT record and related fields
+    #
+    # DO NOT PUT PII IN THE RETURN OF THIS METHOD, IT'S MEANT FOR LOGGING
+    #
+
+    details = {}
+    if payment:
+        details = get_traceable_payment_details(payment)
+
+    details["pub_eft_id"] = pub_eft.pub_eft_id
+    details["employee_id"] = employee.employee_id
+    details["fineos_customer_number"] = employee.fineos_customer_number
+
+    return details
 
 
 def get_transaction_status_date(payment: Payment) -> date:

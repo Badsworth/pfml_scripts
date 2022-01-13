@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Paid Leave API
   description: An API for managing leave within Massachusetts Paid Family and Medical Leave.
-  version: "2021-10-07"
+  version: "2022-01-06"
 
 servers:
   - url: /v1
@@ -70,6 +70,23 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/UserCreateRequest"
+
+  /roles:
+    delete:
+      tags:
+        - Roles
+        - Users
+      summary: Remove a role from a user
+      operationId: massgov.pfml.api.roles.roles_users_delete
+      responses:
+        "204":
+          description: Role deleted without issue
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+      requestBody:
+        $ref: "#/components/requestBodies/RoleUserDeleteRequest"
 
   /users/{user_id}/convert_employer:
     post:
@@ -389,6 +406,12 @@ paths:
             Absence Case IDs, in addition to the employees' first, middle, and last names.
             When the string is empty, it is ignored.
           required: false
+        - name: "allow_hrd"
+          in: query
+          schema:
+            type: boolean
+          description: A temporary boolean value used to allow smoke testers to see HRD dashboard
+          required: false
       responses:
         "200":
           description: The claim information.
@@ -649,6 +672,39 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
       requestBody:
         $ref: "#/components/requestBodies/ApplicationRequestBody"
+
+  /applications/import:
+    post:
+      tags:
+        - Applications
+      summary: >
+        Creates a new application in the PFML database from a FINEOS application that was created through the
+        contact center.
+      operationId: massgov.pfml.api.applications.applications_import
+      responses:
+        "201":
+          $ref: "#/components/responses/ApplicationImportedResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          description: Application with requested absence_case_id was not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "503":
+          description: Application could not be completed in Claims Processing System.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/ApplicationResponse"
+      requestBody:
+        $ref: '#/components/requestBodies/ApplicationImportRequestBody'
+
 
   /applications/{application_id}/submit_application:
     post:
@@ -1138,8 +1194,39 @@ paths:
               schema:
                 $ref: "#/components/schemas/AdminLogoutResponse"
 
+  /admin/users:
+    get:
+      tags:
+        - Admin
+        - Users
+      summary: Retrieve all user accounts
+      operationId: massgov.pfml.api.admin.admin_users_get
+      parameters:
+        - $ref: "#/components/parameters/pageSize"
+        - $ref: "#/components/parameters/pageOffset"
+        - name: email_address
+          in: query
+          schema:
+            type: string
+          description: A partial email address, will be used as a wildcard.
+          required: false
+      responses:
+        "200":
+          description: A successful request returns a 200 status code and user objects.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UserResponse"
+        "401":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
 tags:
   - name: Test Endpoints
+  - name: Roles
   - name: Users
   - name: Employees
   - name: Employers
@@ -1209,6 +1296,12 @@ components:
           schema:
             $ref: "#/components/schemas/AdminTokenRequest"
       required: true
+    RoleUserDeleteRequest:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/RoleUserDeleteRequest"
+      required: true
     UserUpdateRequest:
       content:
         application/json:
@@ -1239,6 +1332,11 @@ components:
           schema:
             $ref: "#/components/schemas/ApplicationRequestBody"
       required: true
+    ApplicationImportRequestBody:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ApplicationImportRequestBody"
     EligibilityRequest:
       content:
         application/json:
@@ -1289,6 +1387,16 @@ components:
             $ref: "#/components/schemas/ApplicationResponse"
     ApplicationCreatedResponse:
       description: A new application successfully created
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: "#/components/schemas/SuccessfulResponse"
+              - properties:
+                  data:
+                    $ref: "#/components/schemas/ApplicationResponse"
+    ApplicationImportedResponse:
+      description: Application successfully imported
       content:
         application/json:
           schema:
@@ -1574,6 +1682,24 @@ components:
           type: string
           format: email
           example: "janedoe@example.com"
+        application_names:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            properties:
+              first_name:
+                type: string
+                example: "Jane"
+                nullable: true
+              middle_name:
+                type: string
+                example: "Emily"
+                nullable: true
+              last_name:
+                type: string
+                example: "Doe"
+                nullable: true
         mfa_delivery_preference:
           type: string
           enum:
@@ -1680,6 +1806,23 @@ components:
               $ref: "#/components/schemas/Fein"
               nullable: true
 
+    RoleUserDeleteRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        role:
+          type: object
+          additionalProperties: false
+          properties:
+            role_description:
+              type: string
+          required: ["role_description"]
+        user_id:
+          type: string
+          format: uuid
+          example: "fabd09ed-0ea9-4091-843e-2e37d2c61482"
+      required: ["role", "user_id"]
+
     UserUpdateRequest:
       type: object
       additionalProperties: false
@@ -1778,6 +1921,29 @@ components:
           example: "1234"
       required: ["employee_id", "tax_identifier_last4"]
 
+    EmployeeBasicResponse:
+      type: object
+      properties:
+        employee_id:
+          type: string
+          format: uuid
+          example: "009fa369-291b-403f-a85a-15e938c26a7b"
+        first_name:
+          type: string
+          example: "Jane"
+        middle_name:
+          type: string
+          nullable: true
+          example: "Alice"
+        last_name:
+          type: string
+          example: "Doe"
+        other_name:
+          type: string
+          nullable: true
+          example: "Marie"
+      required: ["employee_id"]
+
     EmployerClaimRequestBody:
       type: object
       properties:
@@ -1874,8 +2040,6 @@ components:
           type: string
         hours_worked_per_week:
           type: string
-        is_reviewable:
-          type: boolean
         last_name:
           type: string
         leave_details:
@@ -1894,8 +2058,6 @@ components:
           $ref: "#/components/schemas/Address"
         tax_identifier:
           $ref: "#/components/schemas/MaskedSsnItin"
-        follow_up_date:
-          $ref: "#/components/schemas/Date"
         absence_periods:
           type: array
           items:
@@ -1914,7 +2076,6 @@ components:
         - leave_details
         - previous_leaves
         - residential_address
-        - is_reviewable
         - status
         - uses_second_eform_version
         - absence_periods
@@ -2145,6 +2306,16 @@ components:
               nullable: true
             mass_id:
               nullable: true
+
+    ApplicationImportRequestBody:
+      type: object
+      properties:
+        absence_case_id:
+          type: string
+          example: "NTN-111-ABS-01"
+          nullable: false
+      required:
+        - absence_case_id
 
     ApplicationResponse:
       type: object
@@ -2485,7 +2656,7 @@ components:
         employer:
           $ref: "#/components/schemas/EmployerResponse"
         employee:
-          $ref: "#/components/schemas/EmployeeResponse"
+          $ref: "#/components/schemas/EmployeeBasicResponse"
         application_id:
           type: string
           format: uuid
@@ -2523,7 +2694,7 @@ components:
         employer:
           $ref: "#/components/schemas/EmployerResponse"
         employee:
-          $ref: "#/components/schemas/EmployeeResponse"
+          $ref: "#/components/schemas/EmployeeBasicResponse"
         fineos_absence_id:
           format: string
           example: "NTN-01-ABS-01"

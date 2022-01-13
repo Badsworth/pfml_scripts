@@ -48,7 +48,7 @@ module "api" {
   #st_use_mock_dor_data            = false
   #st_decrypt_dor_data             = false
   #st_file_limit_specified         = true
-  enable_pdf_document_compression = false
+  enable_pdf_document_compression = "1"
   service_app_count               = 2
   service_max_app_count           = 2
   service_docker_tag              = local.service_docker_tag
@@ -66,6 +66,7 @@ module "api" {
     "https://paidleave-api-infra-test.dfml.eol.mass.gov",
   ]
   enable_application_fraud_check = "0"
+  enable_application_import      = "1"
   release_version                = var.release_version
 
   # TODO: Fill this in after the portal is deployed.

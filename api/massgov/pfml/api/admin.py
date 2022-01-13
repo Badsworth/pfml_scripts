@@ -1,7 +1,9 @@
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 import connexion
-from werkzeug.exceptions import BadRequest, NotFound, ServiceUnavailable
+import flask
+from sqlalchemy_utils import escape_like
+from werkzeug.exceptions import BadRequest, NotFound, ServiceUnavailable, Unauthorized
 
 import massgov.pfml.api.app as app
 import massgov.pfml.api.util.response as response_util
@@ -18,9 +20,11 @@ from massgov.pfml.api.models.users.responses import (
     AdminTokenResponse,
     AdminUserResponse,
     AuthURIResponse,
+    UserResponse,
 )
 from massgov.pfml.api.validation.exceptions import IssueType, ValidationErrorDetail
-from massgov.pfml.db.models.employees import LkAzurePermission
+from massgov.pfml.db.models.employees import AzurePermission, LkAzurePermission, User
+from massgov.pfml.util.paginate.paginator import PaginationAPIContext, page_for_api_context
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
@@ -92,6 +96,30 @@ def admin_logout():
         raise ServiceUnavailable(description=SERVICE_UNAVAILABLE_MESSAGE)
     return response_util.success_response(
         data={"logout_uri": logout_uri}, message="Retrieved logout url!",
+    ).to_api_response()
+
+
+def admin_users_get(email_address: Optional[str] = "") -> flask.Response:
+    azure_user = app.azure_user()
+    # This should not ever be the case.
+    if azure_user is None:
+        raise Unauthorized
+    ensure(READ, azure_user)
+    ensure(READ, AzurePermission.USER_READ)
+    with PaginationAPIContext(User, request=flask.request) as pagination_context:
+        with app.db_session() as db_session:
+            query = db_session.query(User)
+            if email_address:
+                query = query.filter(
+                    User.email_address.ilike("%" + escape_like(email_address) + "%")
+                )
+            page = page_for_api_context(pagination_context, query)
+    return response_util.paginated_success_response(
+        message="Successfully retrieved users",
+        model=UserResponse,
+        page=page,
+        context=pagination_context,
+        status_code=200,
     ).to_api_response()
 
 

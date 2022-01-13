@@ -93,6 +93,9 @@ def create_check_file(
         try:
             if count_incrementer:
                 count_incrementer("check_payment_count")
+
+            extra = payments_util.get_traceable_payment_details(payment)
+            logger.info("Adding check payment to PUB check files", extra=extra)
             check_number += 1
             payment.check = PaymentCheck(check_number=check_number)
             ez_check_record = _convert_payment_to_ez_check_record(payment, check_number)
@@ -108,10 +111,12 @@ def create_check_file(
             )
         except payments_util.ValidationIssueException as e:
             msg = ", ".join([str(issue) for issue in e.issues])
-            logger.exception("Error converting payment into PUB EZ check format: " + msg)
+            logger.exception(
+                "Error converting payment into PUB EZ check format: " + msg, extra=extra
+            )
             encountered_exception = True
         except Exception:
-            logger.exception("Error converting payment into PUB EZ check format")
+            logger.exception("Error converting payment into PUB EZ check format", extra=extra)
             encountered_exception = True
 
     if encountered_exception:
@@ -131,6 +136,13 @@ def create_check_file(
         check_issue_file.add_entry(record.positive_pay_record)
 
         outcome = state_log_util.build_outcome("Payment added to PUB EZ Check file")
+
+        logger.info(
+            "Added payment to check file",
+            extra=payments_util.get_traceable_payment_details(
+                payment, State.DELEGATED_PAYMENT_PUB_TRANSACTION_CHECK_SENT
+            ),
+        )
 
         create_payment_finished_state_log_with_writeback(
             payment=payment,

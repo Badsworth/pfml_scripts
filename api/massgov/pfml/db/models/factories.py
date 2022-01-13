@@ -1094,33 +1094,6 @@ class MmarsPaymentDataFactory(BaseFactory):
     doc_last_modified_on = warrant_select_date
 
 
-class Pfml1099Factory(BaseFactory):
-    class Meta:
-        model = payment_models.Pfml1099
-
-    pfml_1099_id = Generators.UuidObj
-    pfml_1099_batch_id = Generators.UuidObj
-    tax_year = 2021
-    employee_id = Generators.UuidObj
-    tax_identifier_id = Generators.UuidObj
-    c = "9999"
-    i = "9999"
-    first_name = "Joe"
-    last_name = "Pel"
-    address_line_1 = "172 Pearl St"
-    address_line_2 = ""
-    city = "Somerville"
-    state = "MA"
-    zip = "02145"
-    gross_payments = 1000.00
-    state_tax_withholdings = 100.00
-    federal_tax_withholdings = 15.00
-    overpayment_repayments = 0.00
-    correction_ind = False
-    s3_location = "local_s3"
-    fineos_status = "New"
-
-
 class Pfml1099BatchFactory(BaseFactory):
     class Meta:
         model = payment_models.Pfml1099Batch
@@ -1133,6 +1106,35 @@ class Pfml1099BatchFactory(BaseFactory):
     )
     correction_ind = False
     batch_status = "Created"
+
+
+class Pfml1099Factory(BaseFactory):
+    class Meta:
+        model = payment_models.Pfml1099
+
+    pfml_1099_id = Generators.UuidObj
+
+    pfml_1099_batch_id = Generators.UuidObj
+
+    tax_year = 2021
+    employee_id = Generators.UuidObj
+    tax_identifier_id = Generators.UuidObj
+    c = "9999"
+    i = "9999"
+    first_name = factory.Faker("first_name")
+    last_name = factory.Faker("last_name")
+    address_line_1 = factory.Faker("street_address")
+    address_line_2 = ""
+    city = factory.Faker("city")
+    state = factory.Faker("state_abbr")
+    zip = factory.Faker("postcode")
+    gross_payments = Generators.Money
+    state_tax_withholdings = Generators.Money
+    federal_tax_withholdings = Generators.Money
+    overpayment_repayments = 0.00
+    correction_ind = False
+    s3_location = "local_s3/Batch-1/Sub-Batch-1/test.pdf"
+    fineos_status = "New"
 
 
 class Pfml1099MMARSPaymentFactory(BaseFactory):

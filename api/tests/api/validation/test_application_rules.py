@@ -2487,11 +2487,9 @@ def test_previous_leaves_cannot_overlap_leave_periods():
 
 
 @pytest.mark.parametrize(
-    "headers, is_withholding_tax, has_submitted_payment_preference, include_id_document, expected_issues",
+    "is_withholding_tax, has_submitted_payment_preference, include_id_document, expected_issues",
     [
-        ({}, None, True, True, []),
         (
-            {"X-FF-Tax-Withholding-Enabled": True},
             None,
             True,
             True,
@@ -2503,11 +2501,10 @@ def test_previous_leaves_cannot_overlap_leave_periods():
                 ),
             ],
         ),
-        ({"X-FF-Tax-Withholding-Enabled": True}, True, True, True, []),
-        ({"X-FF-Tax-Withholding-Enabled": True}, False, True, True, []),
+        (False, True, True, []),
+        (True, True, True, []),
         (
-            {},
-            None,
+            False,
             False,
             True,
             [
@@ -2519,8 +2516,7 @@ def test_previous_leaves_cannot_overlap_leave_periods():
             ],
         ),
         (
-            {},
-            None,
+            True,
             True,
             False,
             [
@@ -2534,7 +2530,6 @@ def test_previous_leaves_cannot_overlap_leave_periods():
 @mock.patch("massgov.pfml.api.validation.application_rules.get_documents")
 def test_get_application_complete_issues(
     mock_get_docs,
-    headers,
     is_withholding_tax,
     has_submitted_payment_preference,
     include_id_document,
@@ -2558,7 +2553,7 @@ def test_get_application_complete_issues(
             document_type_id=DocumentType.PASSPORT.document_type_id,
         )
 
-    issues = get_application_complete_issues(application, headers, test_db_session)
+    issues = get_application_complete_issues(application, test_db_session)
 
     assert issues == expected_issues
 
@@ -2567,7 +2562,7 @@ def test_get_application_complete_issues_certification_validation(
     initialize_factories_session, user, test_db_session,
 ):
     application = ApplicationFactory.create(
-        is_withholding_tax=None,
+        is_withholding_tax=True,
         has_submitted_payment_preference=True,
         claim=ClaimFactory.build(),
         user_id=user.user_id,
@@ -2579,7 +2574,7 @@ def test_get_application_complete_issues_certification_validation(
         document_type_id=DocumentType.PASSPORT.document_type_id,
     )
 
-    issues = get_application_complete_issues(application, {}, test_db_session)
+    issues = get_application_complete_issues(application, test_db_session)
 
     assert issues == [
         ValidationErrorDetail(
@@ -2619,7 +2614,7 @@ def test_get_application_complete_issues_fineos_fallback(
     test_db_session,
 ):
     application = ApplicationFactory.create(
-        is_withholding_tax=None,
+        is_withholding_tax=True,
         has_submitted_payment_preference=True,
         claim=ClaimFactory.build(),
         user_id=user.user_id,
@@ -2636,7 +2631,7 @@ def test_get_application_complete_issues_fineos_fallback(
         )
     ]
 
-    issues = get_application_complete_issues(application, {}, test_db_session)
+    issues = get_application_complete_issues(application, test_db_session)
 
     assert issues == expected_issues
 
@@ -2648,7 +2643,7 @@ def test_get_application_complete_issues_missing_absence_id(test_db_session):
         is_withholding_tax=False, claim=claim, has_submitted_payment_preference=True
     )
 
-    issues = get_application_complete_issues(application, {}, test_db_session)
+    issues = get_application_complete_issues(application, test_db_session)
 
     assert issues == [
         ValidationErrorDetail(
@@ -2668,7 +2663,7 @@ def test_get_application_complete_issues_missing_part1_field(test_db_session):
         first_name=None,
         has_submitted_payment_preference=True,
     )
-    issues = get_application_complete_issues(application, {}, test_db_session)
+    issues = get_application_complete_issues(application, test_db_session)
 
     assert not issues
 

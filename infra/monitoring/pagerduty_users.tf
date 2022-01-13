@@ -11,6 +11,9 @@ locals {
     },
     "Sheldon Bachstein" = {
       email = "sheldon@navapbc.com"
+    },
+    "Keith Fitts" = {
+      email = "keith.fitts@mass.gov"
     }
   }
 }

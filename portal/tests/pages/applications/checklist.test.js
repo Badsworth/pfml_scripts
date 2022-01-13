@@ -170,70 +170,13 @@ describe("Checklist", () => {
       }
     });
 
-    it("renders payment heading and description", () => {
-      expect(
-        screen.getByText("Enter your payment information")
-      ).toBeInTheDocument();
-      expect(
-        screen.getByText(/Tell us how you want to receive payment./)
-      ).toBeInTheDocument();
-      expect(
-        screen.getByRole("link", { name: "Start: Add payment information" })
-      ).toBeInTheDocument();
-    });
-
-    it("CTA for payment would direct user to expected location", () => {
-      expect(
-        screen.getByRole("link", { name: "Start: Add payment information" })
-      ).toBeEnabled();
-      expect(
-        screen.getByRole("link", { name: "Start: Add payment information" })
-      ).toHaveAttribute(
-        "href",
-        "/applications/payment-method?claim_id=mock_application_id"
-      );
-    });
-  });
-
-  describe("Part 2 with tax withholding enabled", () => {
-    beforeEach(() => {
-      process.env.featureFlags = {
-        claimantShowTaxWithholding: true,
-      };
-      const warnings = [];
-      const customProps = {
-        query: {
-          claim_id: "mock_application_id",
-          "part-one-submitted": "true",
-        },
-      };
-      renderChecklist(
-        new MockBenefitsApplicationBuilder().submitted().create(),
-        warnings,
-        customProps
-      );
-    });
-
     it("renders with 9 steps including tax", () => {
       for (let step = 1; step <= 9; step++) {
         expect(screen.getByText(step)).toBeInTheDocument();
       }
     });
 
-    it("part 2 headlines with different titles", () => {
-      expect(
-        screen.queryByRole("heading", {
-          name: "Enter your payment information",
-        })
-      ).not.toBeInTheDocument();
-      expect(
-        screen.queryByRole("heading", { name: "Add payment information" })
-      ).not.toBeInTheDocument();
-      expect(
-        screen.getByRole("heading", {
-          name: "Part 2 Tell us how you want to receive your benefit",
-        })
-      ).toBeInTheDocument();
+    it("renders payment heading and description", () => {
       expect(
         screen.getByRole("heading", { name: "Enter payment method" })
       ).toBeInTheDocument();
@@ -262,9 +205,6 @@ describe("Checklist", () => {
   });
 
   it("with tax withholding incomplete, upload steps still disabled", () => {
-    process.env.featureFlags = {
-      claimantShowTaxWithholding: true,
-    };
     renderChecklist(
       new MockBenefitsApplicationBuilder()
         .part1Complete()
@@ -302,9 +242,6 @@ describe("Checklist", () => {
   });
 
   it("with tax withholding done & payment not done, submitted description displays", () => {
-    process.env.featureFlags = {
-      claimantShowTaxWithholding: true,
-    };
     renderChecklist(
       new MockBenefitsApplicationBuilder()
         .part1Complete()

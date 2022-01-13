@@ -70,9 +70,9 @@ const setup = (employeeOrgUnits = [], useDefaultEmployerOrgUnits = true) => {
 describe("DepartmentPage", () => {
   describe("when claimantShowOrganizationUnits feature flag is disabled", () => {
     beforeEach(() => {
-      process.env.featureFlags = {
+      process.env.featureFlags = JSON.stringify({
         claimantShowOrganizationUnits: false,
-      };
+      });
     });
 
     it("redirects to next page", async () => {
@@ -90,9 +90,9 @@ describe("DepartmentPage", () => {
 
   describe("when claimantShowOrganizationUnits feature flag is enabled", () => {
     beforeEach(() => {
-      process.env.featureFlags = {
+      process.env.featureFlags = JSON.stringify({
         claimantShowOrganizationUnits: true,
-      };
+      });
     });
 
     it("redirects to next page if department list is empty", async () => {

@@ -39,6 +39,8 @@ EMPLOYEE_FEED_FIELD_NAMES = payments_util.FineosExtractConstants.EMPLOYEE_FEED.f
 REQUESTED_ABSENCE_SOM_FIELD_NAMES = (
     payments_util.FineosExtractConstants.VBI_REQUESTED_ABSENCE_SOM.field_names
 )
+# 1099 Files
+VBI_1099DATA_SOM_FIELD_NAMES = payments_util.FineosExtractConstants.VBI_1099DATA_SOM.field_names
 
 # Payment files
 PEI_FIELD_NAMES = payments_util.FineosExtractConstants.VPEI.field_names
@@ -56,6 +58,58 @@ PAID_LEVAVE_INSTRUCTION_FIELD_NAMES = (
     payments_util.FineosExtractConstants.PAID_LEAVE_INSTRUCTION.field_names
 )
 
+xml_1099_packed_data = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+                <ns2:DataSet xmlns:ns2="http://www.fineos.com/ta/common/external">
+                    <EnumObject>
+                        <name>ENUM</name>
+                        <prompt>Provide the reason for the 1099G reissue</prompt>
+                        <value>512512002</value>
+                        <radiobutton>false</radiobutton>
+                    </EnumObject>
+                    <StringObject>
+                        <name>SPACE1</name>
+                        <prompt></prompt>
+                        <value></value>
+                        <width>0</width>
+                    </StringObject>
+                    <StringObject>
+                        <name>1099GReissueSHARED</name>
+                        <prompt>1099-G Reissue</prompt>
+                        <value>1099-G Reissue</value>
+                        <width>0</width>
+                    </StringObject>
+                    <StringObject>
+                        <name>ReissueInformation3</name>
+                        <prompt>Reissue information</prompt>
+                        <value>Reissue will mail a new copy of the 1099-G form to the customer with the new 1099-G form that was created from the payment resolution.</value>
+                        <width>250</width>
+                    </StringObject>
+                    <StringObject>
+                    <name>INITIALPAGE_HID</name>
+                    <prompt></prompt>
+                    <value></value>
+                    <width>99999</width>
+                    </StringObject>
+                    <StringObject>
+                        <name>ReissueInformation2</name>
+                        <prompt>Reissue Information</prompt>
+                        <value>Reissue will mail a new copy of the 1099-G form to the customer using the new address that has been added to the customer record.</value>
+                        <width>250</width>
+                    </StringObject>
+                    <StringObject>
+                        <name>ReissueInformation1</name>
+                        <prompt>Reissue Information</prompt>
+                        <value>Reissue will mail a new copy of the 1099-G form to the customer. The mailing address and payment information will be the same as the previous copy sent.</value>
+                        <width>250</width>
+                    </StringObject>
+                    <StringObject>
+                        <name>Confirmation</name>
+                        <prompt>Confirmation</prompt>
+                        <value>Before submitting this eForm please make sure the address change or payment reconciliation is complete in FINEOS.</value>
+                        <width>115</width>
+                    </StringObject>
+                </ns2:DataSet>"""
+
 
 class FineosClaimantData(MockData):
     def __init__(
@@ -63,12 +117,14 @@ class FineosClaimantData(MockData):
         generate_defaults=True,
         include_employee_feed=True,
         include_absence_case=True,
+        include_1099_data=True,
         **kwargs,
     ):
         super().__init__(generate_defaults, **kwargs)
 
         self.include_employee_feed = include_employee_feed
         self.include_absence_case = include_absence_case
+        self.include_1099_data = include_1099_data
 
         self.c_value = self.get_value("c_value", "7526")
         self.i_value = self.get_value("i_value", str(fake.unique.random_int()))
@@ -123,6 +179,8 @@ class FineosClaimantData(MockData):
         self.fineos_address_effective_to = self.get_value(
             "fineos_address_effective_to", "2022-01-01 12:00:00"
         )
+        self.document_type_1099 = self.get_value("document_type_1099", "1099 Request")
+        self.packed_data_1099 = self.get_value("packed_data_1099", xml_1099_packed_data)
 
     def get_employee_feed_record(self):
         employee_feed_record = OrderedDict()
@@ -169,6 +227,18 @@ class FineosClaimantData(MockData):
             requested_absence_record["LEAVEREQUEST_ID"] = self.leave_request_id
 
         return requested_absence_record
+
+    def get_vbi_1099_data_record(self):
+        vbi_1099_data_record = OrderedDict()
+        if self.include_1099_data:
+            vbi_1099_data_record["C"] = self.c_value
+            vbi_1099_data_record["CUSTOMERNO"] = self.customer_number
+            vbi_1099_data_record["FIRSTNAMES"] = self.fineos_employee_first_name
+            vbi_1099_data_record["LASTNAME"] = self.fineos_employee_last_name
+            vbi_1099_data_record["PACKEDDATA"] = self.packed_data_1099
+            vbi_1099_data_record["DOCUMENTTYPE"] = self.document_type_1099
+
+        return vbi_1099_data_record
 
 
 class FineosPaymentData(MockData):
@@ -220,6 +290,8 @@ class FineosPaymentData(MockData):
             "absence_case_creation_date", "2020-12-01 07:00:00"
         )
         self.payment_amount = self.get_value("payment_amount", "100.00")
+        self.balancing_amount = self.get_value("balancing_amount", self.payment_amount)
+        self.business_net_amount = self.get_value("business_net_amount", self.payment_amount)
         self.routing_nbr = self.get_value("routing_nbr", generate_routing_nbr_from_ssn(ssn))
         self.account_nbr = self.get_value("account_nbr", ssn)
         self.account_type = self.get_value("account_type", "Checking")
@@ -275,7 +347,8 @@ class FineosPaymentData(MockData):
             payment_detail_record["PAYMENTSTARTP"] = self.payment_start_period
             payment_detail_record["PAYMENTENDPER"] = self.payment_end_period
 
-            payment_detail_record["BALANCINGAMOU_MONAMT"] = self.payment_amount
+            payment_detail_record["BALANCINGAMOU_MONAMT"] = self.balancing_amount
+            payment_detail_record["BUSINESSNETBE_MONAMT"] = self.business_net_amount
 
         return payment_detail_record
 
@@ -513,6 +586,13 @@ def generate_payment_extract_files(
         if scenario_descriptor.invalid_address and (not fix_address):
             mock_address = INVALID_ADDRESS
 
+        # We have one payment record as withholding
+        if scenario_descriptor.is_tax_withholding_record_without_primary_payment:
+            event_reason = "Automatic Alternate Payment"
+            payee_identifier = "ID"
+            amalgamationc = "ScheduledAlternate65424"
+            ssn = "SITPAYEE001"
+            payment_amount = "22.00"
         # Auto generated: c_value, i_value, leave_request_id
         fineos_payments_data = FineosPaymentData(
             generate_defaults=True,
@@ -550,6 +630,15 @@ def generate_payment_extract_files(
                 withholding_payment.event_reason = "Automatic Alternate Payment"
                 withholding_payment.payee_identifier = "ID"
                 withholding_payment.amalgamationc = "ScheduledAlternate65424"
+
+                # always have valid address for withholding payments
+                mock_address = MATCH_ADDRESS
+                withholding_payment.payment_address_1 = (mock_address["line_1"],)
+                withholding_payment.payment_address_2 = (mock_address["line_2"],)
+                withholding_payment.city = (mock_address["city"],)
+                withholding_payment.state = (mock_address["state"],)
+                withholding_payment.zip_code = (mock_address["zip"],)
+
                 if item == 0:
                     withholding_payment.tin = "SITPAYEE001"
                     withholding_payment.payment_amount = "22.00"
@@ -558,42 +647,7 @@ def generate_payment_extract_files(
                     withholding_payment.tin = "FITAMOUNTPAYEE001"
                     withholding_payment.payment_amount = "35.00"
                     withholding_payment.i_value = str(fake.unique.random_int())
-
-                # if item == 2:
-                #     withholding_payment.tin = "SITPAYEE001"
-                #     withholding_payment.payment_amount = "20.00"
-                #     withholding_payment.i_value = str(fake.unique.random_int())
-
-                # if item == 3:
-                #     withholding_payment.tin = "FITAMOUNTPAYEE001"
-                #     withholding_payment.payment_amount = "45.00"
-                #     withholding_payment.i_value = str(fake.unique.random_int())
-
                 fineos_payments_dataset.append(withholding_payment)
-        # if scenario_descriptor.is_duplicate_tax_withholding_records_exists:
-        #     for item in range(5):
-        #         withholding_payment = copy.deepcopy(fineos_payments_data)
-        #         if item in [0]:
-        #             withholding_payment.event_type = "PaymentOut"
-        #             withholding_payment.payee_identifier = "Social Security Number"
-        #             withholding_payment.event_reason = "Automatic Main Payment"
-        #             withholding_payment.amalgamationc = ""
-        #             withholding_payment.i_value = str(fake.unique.random_int())
-        #         if item in [1, 2]:
-        #             withholding_payment.event_reason = "Automatic Alternate Payment"
-        #             withholding_payment.payee_identifier = "ID"
-        #             withholding_payment.amalgamationc = "ScheduledAlternate65424"
-        #             withholding_payment.tin = "SITPAYEE001"
-        #             withholding_payment.payment_amount = "10.00"
-        #             withholding_payment.i_value = str(fake.unique.random_int())
-        #         if item in [3, 4]:
-        #             withholding_payment.event_reason = "Automatic Alternate Payment"
-        #             withholding_payment.payee_identifier = "ID"
-        #             withholding_payment.amalgamationc = "ScheduledAlternate65424"
-        #             withholding_payment.tin = "FITAMOUNTPAYEE001"
-        #             withholding_payment.payment_amount = "35.00"
-        #             withholding_payment.i_value = str(fake.unique.random_int())
-        #         fineos_payments_dataset.append(withholding_payment)
         fineos_payments_dataset.append(fineos_payments_data)
 
     # create the files
@@ -619,6 +673,12 @@ def create_fineos_claimant_extract_files(
         payments_util.FineosExtractConstants.VBI_REQUESTED_ABSENCE_SOM.file_name,
         REQUESTED_ABSENCE_SOM_FIELD_NAMES,
     )
+    vbi_1099_data_writer = _create_file(
+        folder_path,
+        date_prefix,
+        payments_util.FineosExtractConstants.VBI_1099DATA_SOM.file_name,
+        VBI_1099DATA_SOM_FIELD_NAMES,
+    )
 
     # write the respective rows
     for fineos_claimant_data in fineos_claimant_dataset:
@@ -626,10 +686,12 @@ def create_fineos_claimant_extract_files(
         requested_absence_som_writer.csv_writer.writerow(
             fineos_claimant_data.get_requested_absence_record()
         )
+        vbi_1099_data_writer.csv_writer.writerow(fineos_claimant_data.get_vbi_1099_data_record())
 
     # close the files
     employee_feed_writer.file.close()
     requested_absence_som_writer.file.close()
+    vbi_1099_data_writer.file.close()
 
 
 def generate_claimant_data_files(

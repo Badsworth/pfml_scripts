@@ -264,24 +264,6 @@ def _get_document(
     return next((doc for doc in documents if str(doc.documentId) == fineos_document_id), None)
 
 
-def _get_review_requirements(
-    managed_reqs: List[ManagedRequirementDetails],
-) -> Tuple[bool, Optional[date]]:
-    """Determine whether an absence case needs to be reviewed by a leave admin,
-       and by when, based on the associated managed requirements (requests for info)"""
-    is_reviewable = False
-    follow_up_date = None
-
-    for req in managed_reqs:
-        if req.type == LEAVE_ADMIN_INFO_REQUEST_TYPE:
-            follow_up_date = req.followUpDate
-            if follow_up_date is not None and req.status == "Open":
-                is_reviewable = date.today() <= follow_up_date
-                break
-
-    return is_reviewable, follow_up_date
-
-
 def _parse_eform_data(
     fineos_client: massgov.pfml.fineos.AbstractFINEOSClient,
     fineos_user_id: str,
@@ -491,7 +473,6 @@ def get_claim_as_leave_admin(
 
     # Determine if the claim needs a review from the leave admin.
     managed_reqs = fineos_client.get_managed_requirements(fineos_user_id, absence_id)
-    is_reviewable, follow_up_date = _get_review_requirements(managed_reqs)
 
     # Pull existing eforms data for the claim
     eform_data = _parse_eform_data(fineos_client, fineos_user_id, absence_id, log_attributes)
@@ -523,8 +504,6 @@ def get_claim_as_leave_admin(
             residential_address=claimant_address,
             leave_details=leave_details,
             status=status,
-            follow_up_date=follow_up_date,
-            is_reviewable=is_reviewable,
             absence_periods=absence_period_responses,
         ),
         managed_reqs,

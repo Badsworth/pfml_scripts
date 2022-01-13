@@ -41,6 +41,10 @@
   },
   {
     "FINEOSMethod": "POST",
+    "FINEOSUrl": "%/api/v1/document/uploadAndIndexDocumentToFineosDMS"
+  },
+  {
+    "FINEOSMethod": "POST",
     "FINEOSUrl": "%/customer/cases/%/documents/upload/%"
   },
   {

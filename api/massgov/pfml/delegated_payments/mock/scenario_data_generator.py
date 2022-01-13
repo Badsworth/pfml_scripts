@@ -365,6 +365,10 @@ def generate_scenario_dataset(
 
                 # match with customer_number in fineos_extract_data.py
                 fineos_customer_number = str(ssn)
+                if not scenario_descriptor.is_tax_withholding_record_without_primary_payment:
+                    fineos_customer_number = str(ssn)
+                else:
+                    fineos_customer_number = ""
 
                 scenario_data = generate_scenario_data_in_db(
                     scenario_descriptor,

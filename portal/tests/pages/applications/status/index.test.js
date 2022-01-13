@@ -89,9 +89,9 @@ const props = {
 
 describe("Status", () => {
   it("shows StatusNavigationTabs if claimantShowPayments feature flag is enabled and claim has_paid_payments  ", () => {
-    process.env.featureFlags = {
+    process.env.featureFlags = JSON.stringify({
       claimantShowPayments: true,
-    };
+    });
 
     renderPage(
       Status,
@@ -119,9 +119,9 @@ describe("Status", () => {
   });
 
   it("shows StatusNavigationTabs if claimantShowPaymentsPhaseTwo feature flag is enabled and claim", () => {
-    process.env.featureFlags = {
+    process.env.featureFlags = JSON.stringify({
       claimantShowPaymentsPhaseTwo: true,
-    };
+    });
 
     renderPage(
       Status,
@@ -173,9 +173,9 @@ describe("Status", () => {
   });
 
   it("does not show StatusNavigationTabs if has_paid_payments is false for claim", () => {
-    process.env.featureFlags = {
+    process.env.featureFlags = JSON.stringify({
       claimantShowPayments: true,
-    };
+    });
     renderPage(
       Status,
       {
@@ -320,7 +320,8 @@ describe("Status", () => {
           },
         }
       );
-      expect(screen.getByRole("region")).toBeInTheDocument();
+
+      expect(screen.getByRole("region")).toMatchSnapshot();
       expect(
         screen.getByRole("heading", {
           name: "You've successfully submitted your proof of birth documents",

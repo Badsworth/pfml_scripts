@@ -292,6 +292,39 @@ def test_applications_get_all_pagination_limit_double(client, user, auth_token):
         assert application.nickname == app_response["application_nickname"]
 
 
+def test_applications_import(client, user, auth_token):
+    absence_case_id = "NTN-111-ABS-01"
+    response = client.post(
+        "/v1/applications/import",
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"absence_case_id": absence_case_id},
+    )
+    response_body = response.get_json().get("data")
+    assert response.status_code == 201
+    assert response_body.get("absence_case_id") == absence_case_id
+
+
+def test_applications_import_unauthenticated_post(client):
+    absence_case_id = "NTN-111-ABS-01"
+    response = client.post(
+        "/v1/applications/import",
+        headers={"Authorization": f"Bearer {''}"},
+        json={"absence_case_id": absence_case_id},
+    )
+    tests.api.validate_error_response(response, 401)
+
+
+def test_applications_import_unauthorized_post(client, user, employer_auth_token):
+    absence_case_id = "NTN-111-ABS-01"
+    # Employer cannot access this endpoint
+    response = client.post(
+        "/v1/applications/import",
+        headers={"Authorization": f"Bearer {employer_auth_token}"},
+        json={"absence_case_id": absence_case_id},
+    )
+    assert response.status_code == 401
+
+
 def test_applications_post_start_app(client, user, auth_token, test_db_session):
     response = client.post("/v1/applications", headers={"Authorization": f"Bearer {auth_token}"})
 

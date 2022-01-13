@@ -48,6 +48,12 @@ IAWW_EXTRACT_CONFIG = ExtractConfig(
     "fineos_data_export_path",
 )
 
+REQUEST_1099_EXTRACT_CONFIG = ExtractConfig(
+    payments_util.REQUEST_1099_EXTRACT_FILES,
+    ReferenceFileType.FINEOS_1099_DATA_EXTRACT,
+    "fineos_data_export_path",
+)
+
 
 class ExtractData:
     date_str: str

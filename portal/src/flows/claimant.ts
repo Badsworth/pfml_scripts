@@ -171,24 +171,8 @@ const claimantFlow: {
         CREATE_CLAIM: routes.applications.checklist,
       },
     },
-    [routes.user.convert]: {
-      meta: {},
+    [routes.applications.find]: {
       on: {
-        PREVENT_CONVERSION: routes.applications.getReady,
-        /* We cannot move between 2 different flows due to
-         * claimant test only using claimant state, therefore,
-         * we have no access to redirect to employer pages
-         */
-        // CONTINUE: routes.employers.organizations,
-      },
-    },
-    [routes.user.consentToDataSharing]: {
-      meta: {},
-      on: {
-        ENABLE_MFA: routes.twoFactor.smsIndex,
-        // Route to Applications page to support users who are re-consenting.
-        // If they're new users with no claims, the Applications page will
-        // handle redirecting them
         CONTINUE: routes.applications.index,
       },
     },
@@ -196,6 +180,8 @@ const claimantFlow: {
       meta: {},
       on: {
         CONTINUE: routes.applications.uploadDocsOptions,
+        FIND_APPLICATION: routes.applications.find,
+        NEW_APPLICATION: routes.applications.getReady,
         PAYMENT: routes.applications.status.payments,
         STATUS: routes.applications.status.claim,
       },

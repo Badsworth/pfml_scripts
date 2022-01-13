@@ -8,6 +8,7 @@ import ThrottledButton from "src/components/ThrottledButton";
 import Title from "../../../components/core/Title";
 import { Trans } from "react-i18next";
 import { isFeatureEnabled } from "../../../services/featureFlags";
+import routes from "../../../routes";
 import useFormState from "../../../hooks/useFormState";
 import useFunctionalInputProps from "../../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../../locales/i18n";
@@ -21,14 +22,16 @@ interface VerifySMSProps {
 
 export const VerifySMS = (props: VerifySMSProps) => {
   const { appLogic } = props;
-  const mfaPhoneNumber =
-    appLogic.auth.cognitoUser?.challengeParam?.CODE_DELIVERY_DESTINATION;
-  const lastFourDigits = mfaPhoneNumber ? mfaPhoneNumber.slice(-4) : "****";
   const { t } = useTranslation();
 
   const { formState, updateFields } = useFormState({
     code: "",
   });
+
+  const routeToLogin = async (event: React.FormEvent) => {
+    event.preventDefault();
+    await appLogic.portalFlow.goTo(routes.auth.login, {}, { redirect: true });
+  };
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -44,14 +47,17 @@ export const VerifySMS = (props: VerifySMSProps) => {
   // TODO(PORTAL-1007): Remove claimantShowMFA feature flag
   if (!isFeatureEnabled("claimantShowMFA")) return <PageNotFound />;
 
+  // if there is no Cognito user defined, we cannot log in. Direct them back to login
+  if (!appLogic.auth.cognitoUser && typeof window !== "undefined") {
+    appLogic.portalFlow.goTo(routes.auth.login, {}, { redirect: true });
+  }
+
   return (
     <div>
       <form className="usa-form" method="post">
         <Title>{t("pages.authTwoFactorSmsVerify.title")}</Title>
 
-        <Lead>
-          {t("pages.authTwoFactorSmsVerify.lead", { lastFourDigits })}
-        </Lead>
+        <Lead>{t("pages.authTwoFactorSmsVerify.lead")}</Lead>
 
         <InputText
           {...getFunctionalInputProps("code")}
@@ -65,6 +71,7 @@ export const VerifySMS = (props: VerifySMSProps) => {
           type="button"
           className="display-block margin-top-1"
           variation="unstyled"
+          onClick={routeToLogin}
         >
           {t("pages.authTwoFactorSmsVerify.resendCodeLink")}
         </Button>

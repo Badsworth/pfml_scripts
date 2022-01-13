@@ -1,5 +1,8 @@
 import logging  # noqa: B1
+from unittest import mock
+from unittest.mock import MagicMock
 
+import boto3
 import botocore
 import faker
 import pytest
@@ -297,3 +300,38 @@ def test_lookup_cognito_account_id_retries(
             retry_log_count += 1
 
     assert retry_log_count == 3
+
+
+class TestDisableUserMFA:
+    @pytest.fixture
+    def mock_cognito(self):
+        mock_cognito = MagicMock()
+        mock_cognito.admin_set_user_mfa_preference = MagicMock()
+        return mock_cognito
+
+    @mock.patch("massgov.pfml.util.aws.cognito.create_cognito_client")
+    def test_success(self, mock_create_cognito, mock_cognito):
+        mock_create_cognito.return_value = mock_cognito
+
+        cognito_util.disable_user_mfa("foo@bar.com")
+
+        mock_cognito.admin_set_user_mfa_preference.assert_called_with(
+            SMSMfaSettings={"Enabled": False}, Username="foo@bar.com", UserPoolId=mock.ANY
+        )
+
+    @mock.patch("massgov.pfml.util.aws.cognito.create_cognito_client")
+    def test_user_not_found_raises_exception(self, mock_create_cognito, mock_cognito, caplog):
+        mock_create_cognito.return_value = mock_cognito
+
+        user_not_found = boto3.client("cognito-idp", "us-east-1").exceptions.UserNotFoundException(
+            error_response={"Error": {"Code": "UserNotFoundException", "Message": ":(",}},
+            operation_name="Foo",
+        )
+
+        mock_set_mfa_prefs = mock_cognito.admin_set_user_mfa_preference
+        mock_set_mfa_prefs.side_effect = user_not_found
+
+        with pytest.raises(Exception):
+            cognito_util.disable_user_mfa("foo@bar.com")
+
+        assert "User not found with email" in caplog.text

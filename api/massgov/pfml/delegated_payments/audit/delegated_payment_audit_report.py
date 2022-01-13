@@ -111,6 +111,12 @@ class PaymentAuditReportStep(Step):
                 state_log_util.build_outcome("Add to Payment Audit Report"),
                 self.db_session,
             )
+            logger.info(
+                "Sampled payment into the audit report",
+                extra=payments_util.get_traceable_payment_details(
+                    payment, State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_AUDIT_REPORT
+                ),
+            )
 
             payments.append(payment)
             self.increment(self.Metrics.PAYMENT_SAMPLED_FOR_AUDIT_COUNT)
@@ -145,6 +151,13 @@ class PaymentAuditReportStep(Step):
                 state_log_util.build_outcome("Payment Audit Report sent"),
                 self.db_session,
             )
+            logger.info(
+                "Adding payment to the audit report",
+                extra=payments_util.get_traceable_payment_details(
+                    payment, State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_AUDIT_REPORT
+                ),
+            )
+
             if payments_util.is_withholding_payments_enabled():
                 if (
                     payment.payment_transaction_type_id
@@ -275,8 +288,16 @@ class PaymentAuditReportStep(Step):
 
         return output
 
-    def calculate_federal_withholding_amount(self, link_payments: List[Payment]) -> decimal.Decimal:
+    def calculate_federal_withholding_amount(
+        self, payment: Payment, link_payments: List[Payment]
+    ) -> decimal.Decimal:
         payment_amount: decimal.Decimal = decimal.Decimal(0)
+
+        if payment.payment_transaction_type_id in [
+            PaymentTransactionType.FEDERAL_TAX_WITHHOLDING.payment_transaction_type_id,
+        ]:
+            payment_amount = payment.amount
+            return payment_amount
 
         for payment in link_payments:
             if payment.payment_transaction_type_id in [
@@ -286,9 +307,17 @@ class PaymentAuditReportStep(Step):
 
         return payment_amount
 
-    def calculate_state_withholding_amount(self, link_payments: List[Payment]) -> decimal.Decimal:
+    def calculate_state_withholding_amount(
+        self, payment: Payment, link_payments: List[Payment]
+    ) -> decimal.Decimal:
 
         payment_amount: decimal.Decimal = decimal.Decimal(0)
+
+        if payment.payment_transaction_type_id in [
+            PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id,
+        ]:
+            payment_amount = payment.amount
+            return payment_amount
 
         for payment in link_payments:
             if payment.payment_transaction_type_id in [
@@ -334,14 +363,22 @@ class PaymentAuditReportStep(Step):
 
             previously_paid_payments = self.previously_paid_payments(payment)
 
+            # Clear the net payment amount for orphaned Tax Withholdings in the audit report
+            net_payment_amount = payment.amount
+            if payment.payment_transaction_type_id in [
+                PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id,
+                PaymentTransactionType.FEDERAL_TAX_WITHHOLDING.payment_transaction_type_id,
+            ]:
+                net_payment_amount = decimal.Decimal(0)
+
             linked_payments = _get_split_payments(self.db_session, payment)
             federal_withholding_amount: decimal.Decimal = (
-                self.calculate_federal_withholding_amount(linked_payments)
+                self.calculate_federal_withholding_amount(payment, linked_payments)
                 if payments_util.is_withholding_payments_enabled()
                 else decimal.Decimal(0)
             )
             state_withholding_amount: decimal.Decimal = (
-                self.calculate_state_withholding_amount(linked_payments)
+                self.calculate_state_withholding_amount(payment, linked_payments)
                 if payments_util.is_withholding_payments_enabled()
                 else decimal.Decimal(0)
             )
@@ -356,10 +393,15 @@ class PaymentAuditReportStep(Step):
                     previously_paid_payments
                 ),
                 gross_payment_amount=str(
-                    payment.amount + federal_withholding_amount + state_withholding_amount
+                    net_payment_amount + federal_withholding_amount + state_withholding_amount
                 )
                 if payments_util.is_withholding_payments_enabled()
                 else "",
+                net_payment_amount=str(
+                    net_payment_amount if decimal.Decimal(net_payment_amount) > 0 else ""
+                )
+                if payments_util.is_withholding_payments_enabled()
+                else str(payment.amount),
                 federal_withholding_amount=str(
                     federal_withholding_amount
                     if decimal.Decimal(federal_withholding_amount) > 0

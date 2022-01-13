@@ -24,7 +24,7 @@ const renderWithUserParams = (user) => {
 };
 
 beforeEach(() => {
-  process.env.featureFlags = { claimantShowMFA: true };
+  process.env.featureFlags = JSON.stringify({ claimantShowMFA: true });
 });
 
 describe("ConsentToDataSharing", () => {

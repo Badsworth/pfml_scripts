@@ -71,25 +71,29 @@ module "api" {
   cognito_user_pool_client_id = "1ufb6r40s1ad0evjffvdtl3113"
   cognito_user_pool_keys_url  = "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_FADLpF6um/.well-known/jwks.json"
 
+
   rmv_client_base_url               = "https://atlas-staging-gateway.massdot.state.ma.us/vs"
   rmv_client_certificate_binary_arn = "arn:aws:secretsmanager:us-east-1:498823821309:secret:/service/pfml-api-long/rmv_client_certificate-V8Pnt1"
   rmv_api_behavior                  = "fully_mocked"
   rmv_check_mock_success            = "1"
 
-  fineos_client_integration_services_api_url          = "https://dt4-api.masspfml.fineos.com/integration-services"
-  fineos_client_customer_api_url                      = "https://dt4-api.masspfml.fineos.com/customerapi/customer"
-  fineos_client_group_client_api_url                  = "https://dt4-api.masspfml.fineos.com/groupclientapi/groupClient"
-  fineos_client_wscomposer_api_url                    = "https://dt4-api.masspfml.fineos.com/integration-services/wscomposer/webservice"
+  fineos_client_integration_services_api_url          = "https://dt4-api.masspfml.fineos.com/integration-services/"
+  fineos_client_customer_api_url                      = "https://dt4-api.masspfml.fineos.com/customerapi/"
+  fineos_client_group_client_api_url                  = "https://dt4-api.masspfml.fineos.com/groupclientapi/"
+  fineos_client_wscomposer_api_url                    = "https://dt4-api.masspfml.fineos.com/integration-services/wscomposer/"
   fineos_client_oauth2_url                            = "https://dt4-api.masspfml.fineos.com/oauth2/token"
-  fineos_import_employee_updates_input_directory_path = "s3://fin-somdev-data-import/DT4/absence-eligibility/upload/"
+  fineos_import_employee_updates_input_directory_path = "s3://fin-somdev-data-export/DT4/dataexports"
   fineos_aws_iam_role_arn                             = "arn:aws:iam::666444232783:role/somdev-IAMRoles-CustomerAccountAccessRole-BF05IBJSG74B"
   fineos_aws_iam_role_external_id                     = "12345"
 
   fineos_client_oauth2_client_id = "5744bq9dpveko6jie4ma1e4g93"
 
   service_now_base_url = "https://savilinxstage.servicenowservices.com"
+  portal_base_url      = "https://paidleave-long.dfml.eol.mass.gov"
 
   # dor_fineos_etl_schedule_expression               = "cron(5 * * * ? *)" # Hourly at :05 minutes past each hour
 
-  enable_pdf_document_compression = "0"
+  enable_pdf_document_compression  = "1"
+  enable_document_multipart_upload = "1"
+  enable_application_import        = "1"
 }

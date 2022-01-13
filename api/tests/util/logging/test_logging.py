@@ -221,6 +221,7 @@ def test_log_message_with_flask_request_context(capsys, monkeypatch):
         "current_user.auth_id",
         "current_user.role_ids",
         "azure_user.sub_id",
+        "mass_pfml_agent_id",
     }
     assert last_line["name"] == "massgov.pfml.test.logging"
     assert last_line["levelname"] == "INFO"

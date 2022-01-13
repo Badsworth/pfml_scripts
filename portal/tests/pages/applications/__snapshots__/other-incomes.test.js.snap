@@ -35,7 +35,11 @@ exports[`OtherIncomes renders the page 1`] = `
     <legend
       class="usa-label text-bold usa-legend font-heading-lg line-height-sans-3 margin-bottom-1 maxw-tablet"
     >
-      Will you receive income from any other sources during your leave dates for paid leave?
+      <h2
+        class="font-heading-lg text-bold"
+      >
+        Will you receive income from any other sources during your leave dates for paid leave?
+      </h2>
     </legend>
     <span
       class="display-block line-height-sans-5 measure-5 usa-intro"
@@ -62,24 +66,23 @@ exports[`OtherIncomes renders the page 1`] = `
           </div>
         </div>
       </div>
-      <h2
+      <h3
         class="font-heading-sm text-bold"
       >
         <svg
           aria-hidden="true"
-          class="usa-icon usa-icon--size-3 text-secondary text-middle margin-right-05 margin-top-neg-05"
-          fill="currentColor"
+          class="usa-icon usa-icon--size-3 text-secondary text-middle margin-right-1 margin-top-neg-05"
           focusable="false"
           role="img"
         >
           <use
-            xlink:href="/img/sprite.svg#check_circle"
+            xlink:href="/img/sprite.svg#check"
           />
         </svg>
         You must report these sources of income:
-      </h2>
+      </h3>
       <ul
-        class="usa-list margin-top-0 margin-left-4 margin-bottom-4"
+        class="usa-list margin-left-4"
       >
         <li>
           Workers Compensation
@@ -101,26 +104,28 @@ exports[`OtherIncomes renders the page 1`] = `
         </li>
         <li>
           Earnings or benefits from another employer, or through self-employment
+          <ul
+            class="usa-list margin-left-4"
+          />
         </li>
       </ul>
-      <h2
+      <h3
         class="font-heading-sm text-bold"
       >
         <svg
           aria-hidden="true"
-          class="usa-icon usa-icon--size-3 text-error text-middle margin-right-05 margin-top-neg-05"
-          fill="currentColor"
+          class="usa-icon usa-icon--size-3 text-error text-middle margin-right-1 margin-top-neg-05"
           focusable="false"
           role="img"
         >
           <use
-            xlink:href="/img/sprite.svg#cancel"
+            xlink:href="/img/sprite.svg#close"
           />
         </svg>
         You don't need to report:
-      </h2>
+      </h3>
       <ul
-        class="usa-list margin-top-0 margin-left-4"
+        class="usa-list margin-left-4"
       >
         <li>
           Other income that you've applied for but are not yet receiving
@@ -155,7 +160,7 @@ exports[`OtherIncomes renders the page 1`] = `
             class="usa-hint text-base-dark"
           >
             <br />
-            I will recieve other income from other sources during my paid leave
+            I will receive other income from other sources during my paid leave
           </span>
         </label>
       </div>

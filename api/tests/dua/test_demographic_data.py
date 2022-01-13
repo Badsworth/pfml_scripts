@@ -496,6 +496,101 @@ def test_set_employee_occupation_from_demographics_data_missing_ids(
         assert len(eligibility_updates) == 0
 
 
+def test_set_employee_occupation_from_demographics_data_short_feins(
+    test_db_session, initialize_factories_session
+):
+    with LogEntry(test_db_session, "test log entry") as log_entry:
+        employer_one = EmployerFactory(employer_fein="012345678")
+
+        org_unit_one = OrganizationUnitFactory(employer=employer_one)
+
+        reporting_unit_one = DuaReportingUnitFactory(organization_unit=org_unit_one)
+
+        employee = EmployeeWithFineosNumberFactory()
+
+        employee_occupation_one = EmployeeOccupationFactory(
+            employee=employee, employer=employer_one
+        )
+
+        dua_employee_demographic_data = DuaEmployeeDemographicsFactory(
+            fineos_customer_number=employee.fineos_customer_number,
+            employer_fein=employer_one.employer_fein.strip("0"),
+            employer_reporting_unit_number=reporting_unit_one.dua_id,
+        )
+
+        test_db_session.commit()
+        test_db_session.refresh(dua_employee_demographic_data)
+
+        assert "0" not in dua_employee_demographic_data.employer_fein
+        dua_fein_before = dua_employee_demographic_data.employer_fein
+
+        set_employee_occupation_from_demographic_data(test_db_session, log_entry=log_entry)
+
+        metrics = log_entry.metrics
+
+        assert metrics["occupation_org_unit_set_count"] == 1
+
+        assert employee_occupation_one.organization_unit_id == org_unit_one.organization_unit_id
+
+        eligibility_updates = (
+            test_db_session.query(EmployeePushToFineosQueue)
+            .filter(EmployeePushToFineosQueue.action == "UPDATE_NEW_EMPLOYER")
+            .all()
+        )
+        assert len(eligibility_updates) == 1
+
+        assert {(eligibility_updates[0].employee_id, eligibility_updates[0].employer_id),} == {
+            (employee.employee_id, employer_one.employer_id),
+        }
+
+        # processing the occupation info shouldn't change FIEN in the DUA data,
+        # even if it was missing a leading zero
+        test_db_session.refresh(dua_employee_demographic_data)
+        assert dua_employee_demographic_data.employer_fein == dua_fein_before
+
+
+def test_set_employee_occupation_from_demographics_data_mismatched_employer_caught(
+    test_db_session, initialize_factories_session
+):
+    with LogEntry(test_db_session, "test log entry") as log_entry:
+        employer_one = EmployerFactory()
+
+        employer_two = EmployerFactory()
+        org_unit_two = OrganizationUnitFactory(employer=employer_two)
+        reporting_unit_two = DuaReportingUnitFactory(organization_unit=org_unit_two)
+
+        employee = EmployeeWithFineosNumberFactory()
+
+        employee_occupation_one = EmployeeOccupationFactory(
+            employee=employee, employer=employer_one
+        )
+
+        # Employee tied to employer_one, but the reporting unit listed is
+        # connected to employer_two in the DB
+        DuaEmployeeDemographicsFactory(
+            fineos_customer_number=employee.fineos_customer_number,
+            employer_fein=employer_one.employer_fein,
+            employer_reporting_unit_number=reporting_unit_two.dua_id,
+        )
+
+        test_db_session.commit()
+
+        set_employee_occupation_from_demographic_data(test_db_session, log_entry=log_entry)
+
+        metrics = log_entry.metrics
+
+        assert metrics["dua_reporting_unit_mismatched_employer_count"] == 1
+
+        assert employee_occupation_one.organization_unit_id is None
+
+        eligibility_updates = (
+            test_db_session.query(EmployeePushToFineosQueue)
+            .filter(EmployeePushToFineosQueue.action == "UPDATE_NEW_EMPLOYER")
+            .all()
+        )
+        assert len(eligibility_updates) == 0
+
+
 @freeze_time("2020-12-07")
 def test_update_employee_demographics_moveit_mode(
     initialize_factories_session,

@@ -3,7 +3,6 @@ import BenefitsApplication from "../models/BenefitsApplication";
 import BenefitsApplicationCollection from "../models/BenefitsApplicationCollection";
 import PaymentPreference from "../models/PaymentPreference";
 import TaxWithholdingPreference from "../models/TaxWithholdingPreference";
-import { isFeatureEnabled } from "../services/featureFlags";
 import routes from "../routes";
 
 export default class BenefitsApplicationsApi extends BaseApi {
@@ -27,9 +26,8 @@ export default class BenefitsApplicationsApi extends BaseApi {
     //   headers["X-FF-Require-Other-Leaves"] = true;
     // }
 
-    if (isFeatureEnabled("claimantShowTaxWithholding")) {
-      headers["X-FF-Tax-Withholding-Enabled"] = true;
-    }
+    // TODO (PORTAL-1473): Remove once BE changes are merged
+    headers["X-FF-Tax-Withholding-Enabled"] = true;
 
     return headers;
   }

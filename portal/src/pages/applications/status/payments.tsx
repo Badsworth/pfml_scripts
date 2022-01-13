@@ -15,6 +15,8 @@ import Table from "../../../components/core/Table";
 import Title from "../../../components/core/Title";
 import { Trans } from "react-i18next";
 import { createRouteWithQuery } from "../../../utils/routeWithParams";
+import dayjs from "dayjs";
+import dayjsBusinessTime from "dayjs-business-time";
 import formatDate from "../../../utils/formatDate";
 import formatDateRange from "../../../utils/formatDateRange";
 import { getMaxBenefitAmount } from "../../../utils/getMaxBenefitAmount";
@@ -22,6 +24,10 @@ import isBlank from "../../../utils/isBlank";
 import { isFeatureEnabled } from "../../../services/featureFlags";
 import routes from "../../../routes";
 import { useTranslation } from "../../../locales/i18n";
+
+// TODO(PORTAL-1482): remove test cases for checkback dates
+// remove dayjs and dayjsBusinessTime imports
+dayjs.extend(dayjsBusinessTime);
 
 export const Payments = ({
   appLogic,
@@ -46,11 +52,13 @@ export const Payments = ({
     portalFlow,
   } = appLogic;
 
+  const hasPaidPayments = claimDetail?.has_paid_payments;
+
   // Determines if phase one payment features are displayed
   const showPhaseOneFeatures =
     isFeatureEnabled("claimantShowPayments") &&
     claimDetail?.hasApprovedStatus &&
-    claimDetail?.has_paid_payments;
+    hasPaidPayments;
 
   // Determines if phase two payment features are displayed
   const showPhaseTwoFeatures =
@@ -60,6 +68,8 @@ export const Payments = ({
   const application_id = claimDetail?.application_id;
   const absenceId = absence_id;
 
+  const initialClaimStartDate =
+    claimDetail?.leaveDates[0].absence_period_start_date;
   useEffect(() => {
     const loadPayments = (absenceId: string) =>
       !hasLoadedPayments(absenceId) ||
@@ -79,9 +89,8 @@ export const Payments = ({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
-    portalFlow,
     absence_id,
-    claimDetail,
+    initialClaimStartDate,
     absenceId,
     loadedPaymentsData?.absence_case_id,
   ]);
@@ -167,16 +176,12 @@ export const Payments = ({
         ?.absence_period_end_date < approvalDate
     : false;
 
-  const shouldShowPaymentsTable =
-    Boolean(claimDetail?.payments?.length) ||
-    (hasLoadedPayments(absence_id || "") && !items.length);
-
   const tableColumns = [
-    t("pages.payments.paymentsTable.leaveDatesHeader"),
-    t("pages.payments.paymentsTable.paymentMethodHeader"),
-    t("pages.payments.paymentsTable.estimatedDateHeader"),
-    t("pages.payments.paymentsTable.dateProcessedHeader"),
-    t("pages.payments.paymentsTable.amountSentHeader"),
+    t("pages.payments.tableLeaveDatesHeader"),
+    t("pages.payments.tablePaymentMethodHeader"),
+    t("pages.payments.tableEstimatedDateHeader"),
+    t("pages.payments.tableDateProcessedHeader"),
+    t("pages.payments.tableAmountSentHeader"),
   ];
 
   const waitingWeek = !isBlank(claimDetail.waitingWeek?.startDate);
@@ -186,9 +191,56 @@ export const Payments = ({
   const isIntermittentUnpaid =
     isIntermittent &&
     isFeatureEnabled("claimantShowPaymentsPhaseTwo") &&
-    Boolean(claimDetail?.payments?.length) === false;
+    !hasPaidPayments;
 
   const maxBenefitAmount = `$${getMaxBenefitAmount()}`;
+
+  const shouldShowPaymentsTable =
+    Boolean(claimDetail?.payments?.length) ||
+    (hasLoadedPayments(absence_id || "") && !items.length) ||
+    (!isIntermittent && showPhaseTwoFeatures);
+
+  // TODO(PORTAL-1482): remove test cases for checkback dates
+
+  let checkbackDate;
+  let checkbackDateContext = isIntermittentUnpaid
+    ? "Intermittent_Unpaid"
+    : isIntermittent
+    ? "Intermittent"
+    : isRetroactive
+    ? "NonIntermittent_Retro"
+    : "NonIntermittent_NonRetro";
+
+  if (
+    isFeatureEnabled("claimantShowPaymentsPhaseTwo") &&
+    !isIntermittent &&
+    !hasPaidPayments
+  ) {
+    if (!hasPaidPayments && approvalDate) {
+      checkbackDateContext = claimDetail?.isContinuous
+        ? "Continuous_"
+        : "ReducedSchedule_";
+      const fourteenthDayOfClaim = dayjs(initialClaimStartDate)
+        .add(13, "day")
+        .format("YYYY-MM-DD");
+
+      if (isRetroactive || approvalDate >= fourteenthDayOfClaim) {
+        checkbackDate = dayjs(approvalDate)
+          .addBusinessDays(3)
+          .format("MM/DD/YYYY");
+        checkbackDateContext += isRetroactive
+          ? "Retroactive"
+          : "PostFourteenthClaimDate";
+      } else {
+        checkbackDate = dayjs(initialClaimStartDate)
+          .add(13, "day")
+          .addBusinessDays(3)
+          .format("MM/DD/YYYY");
+        checkbackDateContext += "PreFourteenthClaimDate";
+      }
+    }
+  }
+
   return (
     <React.Fragment>
       {!!infoAlertContext && (hasPendingStatus || hasApprovedStatus) && (
@@ -246,15 +298,8 @@ export const Payments = ({
             <Trans
               i18nKey="pages.payments.paymentsIntro"
               tOptions={{
-                context: `${
-                  isIntermittentUnpaid
-                    ? "Intermittent_Unpaid"
-                    : isIntermittent
-                    ? "Intermittent"
-                    : isRetroactive
-                    ? "NonIntermittent_Retro"
-                    : "NonIntermittent_NonRetro"
-                }`,
+                context: checkbackDateContext,
+                checkbackDate,
               }}
               components={{
                 "contact-center-report-phone-link": (
@@ -266,14 +311,15 @@ export const Payments = ({
                 ),
               }}
             />
-
             {/* Estimated Date section */}
-            <section className="margin-y-5" data-testid="estimated-date">
-              <Heading level="3">
-                {t("pages.payments.estimatedDateHeading")}
-              </Heading>
-              <p>{t("pages.payments.estimatedDate")}</p>
-            </section>
+            {(!isIntermittent || (isIntermittent && hasPaidPayments)) && (
+              <section className="margin-y-5" data-testid="estimated-date">
+                <Heading level="3">
+                  {t("pages.payments.estimatedDateHeading")}
+                </Heading>
+                <p>{t("pages.payments.estimatedDate")}</p>
+              </section>
+            )}
           </section>
 
           {/* Table section */}
@@ -281,11 +327,12 @@ export const Payments = ({
             <Table className="width-full" responsive>
               <thead>
                 <tr>
-                  {tableColumns.map((columnName) => (
-                    <th key={columnName} scope="col">
-                      {columnName}
-                    </th>
-                  ))}
+                  {shouldShowPaymentsTable &&
+                    tableColumns.map((columnName) => (
+                      <th key={columnName} scope="col">
+                        {columnName}
+                      </th>
+                    ))}
                 </tr>
               </thead>
               <tbody>
@@ -308,13 +355,13 @@ export const Payments = ({
                           {formatDateRange(period_start_date, period_end_date)}
                         </td>
                         <td data-label={tableColumns[1]}>
-                          {t("pages.payments.paymentsTable.paymentMethod", {
+                          {t("pages.payments.tablePaymentMethod", {
                             context: payment_method,
                           })}
                         </td>
                         <td data-label={tableColumns[2]}>
                           {status !== "Pending"
-                            ? t("pages.payments.paymentsTable.paymentStatus", {
+                            ? t("pages.payments.tablePaymentStatus", {
                                 context: status,
                               })
                             : formatDateRange(
@@ -324,16 +371,16 @@ export const Payments = ({
                         </td>
                         <td data-label={tableColumns[3]}>
                           {formatDate(sent_to_bank_date).short() ||
-                            t("pages.payments.paymentsTable.paymentStatus", {
+                            t("pages.payments.tablePaymentStatus", {
                               context: status,
                             })}
                         </td>
                         <td data-label={tableColumns[4]}>
                           {amount === null
-                            ? t("pages.payments.paymentsTable.paymentStatus", {
+                            ? t("pages.payments.tablePaymentStatus", {
                                 context: status,
                               })
-                            : t("pages.payments.paymentsTable.amountSent", {
+                            : t("pages.payments.tableAmountSent", {
                                 amount,
                               })}
                         </td>
@@ -342,16 +389,12 @@ export const Payments = ({
                   )}
                 {waitingWeek && !isIntermittent && (
                   <tr>
-                    <td
-                      data-label={t(
-                        "pages.payments.paymentsTable.waitingWeekHeader"
-                      )}
-                    >
-                      {t("pages.payments.paymentsTable.waitingWeekGeneric")}
+                    <td data-label={t("pages.payments.tableWaitingWeekHeader")}>
+                      {t("pages.payments.tableWaitingWeekGeneric")}
                     </td>
                     <td colSpan={4}>
                       <Trans
-                        i18nKey="pages.payments.paymentsTable.waitingWeekText"
+                        i18nKey="pages.payments.tableWaitingWeekText"
                         components={{
                           "waiting-week-link": (
                             <a

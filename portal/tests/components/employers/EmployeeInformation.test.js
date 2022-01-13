@@ -67,9 +67,9 @@ describe("EmployeeInformation", () => {
   });
 
   it("renders the correct employee information hierarchy when employerShowMultiLeave is enabled", () => {
-    process.env.featureFlags = {
+    process.env.featureFlags = JSON.stringify({
       employerShowMultiLeave: true,
-    };
+    });
     render(<EmployeeInformation claim={claim} />);
     const h3s = screen
       .getAllByRole("heading", { level: 3 })

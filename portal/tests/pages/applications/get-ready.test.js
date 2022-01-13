@@ -51,17 +51,6 @@ describe("GetReady", () => {
     ).toBeInTheDocument();
   });
 
-  it("displays different copy when tax withholding is enabled", () => {
-    process.env.featureFlags = {
-      claimantShowTaxWithholding: true,
-    };
-    const { container } = setup();
-    expect(container).toMatchSnapshot();
-    expect(
-      screen.getByRole("link", { name: "tax professional" })
-    ).toBeInTheDocument();
-  });
-
   it("displays success alert when user sets up SMS MFA", () => {
     setup([], { smsMfaConfirmed: "true" });
     expect(screen.getAllByRole("region")[0]).toMatchSnapshot();

@@ -119,6 +119,12 @@ class TransactionFileCreatorStep(Step):
             eft.prenote_sent_at = get_now_us_eastern()
             self.db_session.add(eft)
 
+            logger.info(
+                "Sending prenote to PUB at %s eastern time",
+                eft.prenote_sent_at,
+                extra=payments_util.get_traceable_pub_eft_details(eft, employee),
+            )
+
             state_log_util.create_finished_state_log(
                 associated_model=employee,
                 end_state=State.DELEGATED_EFT_PRENOTE_SENT,
@@ -149,6 +155,13 @@ class TransactionFileCreatorStep(Step):
             self.increment(self.Metrics.ACH_PAYMENT_COUNT)
 
             outcome = state_log_util.build_outcome("PUB transaction sent")
+
+            logger.info(
+                "Added payment to NACHA file",
+                extra=payments_util.get_traceable_payment_details(
+                    payment, State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT
+                ),
+            )
 
             create_payment_finished_state_log_with_writeback(
                 payment=payment,

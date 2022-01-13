@@ -28,6 +28,7 @@ class ReportName(str, Enum):
     IRS_1099_REPORT = "irs-1099-report"
     FEDERAL_WITHHOLDING_PROCESSED_REPORT = "federal-withholding-processed-report"
     STATE_WITHHOLDING_PROCESSED_REPORT = "state-withholding-processed-report"
+    TAX_WITHHOLDING_CUMULATIVE_REPORT = "tax-withholding-cumulative-report"
 
 
 # Reports grouped by processing tasks
@@ -49,6 +50,7 @@ CREATE_PUB_FILES_REPORTS: List[ReportName] = [
     ReportName.PAYMENT_RECONCILIATION_SUMMARY_REPORT,
     ReportName.FEDERAL_WITHHOLDING_PROCESSED_REPORT,
     ReportName.STATE_WITHHOLDING_PROCESSED_REPORT,
+    ReportName.TAX_WITHHOLDING_CUMULATIVE_REPORT,
 ]
 PROCESS_PUB_RESPONSES_REPORTS: List[ReportName] = [ReportName.PUB_ERROR_REPORT]
 PROCESS_FINEOS_RECONCILIATION_REPORTS: List[ReportName] = [
@@ -161,6 +163,10 @@ REPORTS: List[Report] = [
             ReportName.STATE_WITHHOLDING_PROCESSED_REPORT
         ),
         report_name=ReportName.STATE_WITHHOLDING_PROCESSED_REPORT,
+    ),
+    Report(
+        sql_command=_get_report_sql_command_from_file(ReportName.TAX_WITHHOLDING_CUMULATIVE_REPORT),
+        report_name=ReportName.TAX_WITHHOLDING_CUMULATIVE_REPORT,
     ),
 ]
 
