@@ -324,6 +324,12 @@ export interface Flag {
   enabled?: boolean;
 }
 export type FlagsResponse = Flag[];
+export interface FlagLog extends Flag {
+  family_name?: string;
+  given_name?: string;
+  created_at?: string;
+}
+export type FlagLogsResponse = FlagLog[];
 export type Fein = string;
 export interface UserCreateRequest {
   email_address?: string | null;
@@ -355,11 +361,22 @@ export interface UserResponse {
   user_id?: string;
   auth_id?: string;
   email_address?: string;
+  application_names?: {
+    first_name?: string | null;
+    middle_name?: string | null;
+    last_name?: string | null;
+  }[];
   mfa_delivery_preference?: ("SMS" | "Opt Out") | null;
   mfa_phone_number?: MaskedPhone | null;
   consented_to_data_sharing?: boolean;
   roles?: RoleResponse[];
   user_leave_administrators?: UserLeaveAdminResponse[];
+}
+export interface RoleUserDeleteRequest {
+  role: {
+    role_description: string;
+  };
+  user_id: string;
 }
 export interface EmployerAddFeinRequestBody {
   employer_fein?: Fein | null;
@@ -1107,6 +1124,7 @@ export interface AdminUserResponse {
 export interface AdminLogoutResponse {
   logout_uri?: string;
 }
+export type GETAdminUsersResponse = UserResponse[];
 /**
  * Get the API status
  */
@@ -1173,7 +1191,7 @@ export async function getFlagsLogsByName(
     name: string;
   },
   options?: RequestOptions,
-): Promise<ApiResponse<FlagsResponse>> {
+): Promise<ApiResponse<FlagLogsResponse>> {
   return await http.fetchJson(`/flags/logs/${name}`, {
     ...options,
   });
@@ -1191,6 +1209,22 @@ export async function postUsers(
       ...options,
       method: "POST",
       body: userCreateRequest,
+    }),
+  );
+}
+/**
+ * Remove a role from a user
+ */
+export async function deleteRoles(
+  roleUserDeleteRequest: RoleUserDeleteRequest,
+  options?: RequestOptions,
+): Promise<ApiResponse<void>> {
+  return await http.fetchVoid(
+    "/roles",
+    http.json({
+      ...options,
+      method: "DELETE",
+      body: roleUserDeleteRequest,
     }),
   );
 }
@@ -1372,6 +1406,7 @@ export async function getClaims(
     employer_id,
     claim_status,
     search,
+    allow_hrd,
   }: {
     page_size?: number;
     page_offset?: number;
@@ -1380,6 +1415,7 @@ export async function getClaims(
     employer_id?: string;
     claim_status?: string;
     search?: string;
+    allow_hrd?: boolean;
   } = {},
   options?: RequestOptions,
 ): Promise<ApiResponse<GETClaimsResponse>> {
@@ -1393,6 +1429,7 @@ export async function getClaims(
         employer_id,
         claim_status,
         search,
+        allow_hrd,
       }),
     )}`,
     {
@@ -1810,4 +1847,32 @@ export async function getAdminLogout(
   return await http.fetchJson("/admin/logout", {
     ...options,
   });
+}
+/**
+ * Retrieve all user accounts
+ */
+export async function getAdminUsers(
+  {
+    page_size,
+    page_offset,
+    email_address,
+  }: {
+    page_size?: number;
+    page_offset?: number;
+    email_address?: string;
+  } = {},
+  options?: RequestOptions,
+): Promise<ApiResponse<GETAdminUsersResponse>> {
+  return await http.fetchJson(
+    `/admin/users${QS.query(
+      QS.form({
+        page_size,
+        page_offset,
+        email_address,
+      }),
+    )}`,
+    {
+      ...options,
+    },
+  );
 }
