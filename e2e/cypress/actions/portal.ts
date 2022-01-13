@@ -914,38 +914,8 @@ export function checkNoticeForLeaveAdmin(
   noticeType: string
 ): void {
   cy.visit(`/employers/applications/status/?absence_id=${fineosAbsenceId}`);
-
-  switch (noticeType) {
-    case "approval":
-      cy.contains("h1", claimantName, { timeout: 20000 }).should("be.visible");
-      cy.findByText("Approval notice (PDF)").should("be.visible").click();
-      break;
-
-    case "denial":
-      cy.contains("h1", claimantName, { timeout: 20000 }).should("be.visible");
-      cy.findByText("Denial notice (PDF)").should("be.visible").click();
-      break;
-
-    case "appeals":
-      cy.contains("h1", claimantName, { timeout: 20000 }).should("be.visible");
-      cy.findByText("Appeal Acknowledgment (PDF)").should("be.visible").click();
-      break;
-
-    case "cancellation":
-      cy.contains("h1", claimantName, { timeout: 20000 }).should("be.visible");
-      cy.findByText("Approved Time Cancelled (PDF)").should("be.visible").click();
-      break;
-
-    case "changeRequestApproval":
-      cy.contains("h1", claimantName, { timeout: 20000 }).should("be.visible");
-      cy.findByText("Change Request Approved (PDF)")
-        .should("be.visible")
-        .click();
-      break;
-
-    default:
-      throw new Error("Notice Type not Found!");
-  }
+  cy.contains("h1", claimantName, { timeout: 20000 }).should("be.visible");
+  cy.findByText(`${noticeType}`).should("be.visible").click();
 }
 
 export function confirmEligibleClaimant(): void {
