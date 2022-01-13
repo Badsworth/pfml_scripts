@@ -26,6 +26,7 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
     and_,
+    desc,
     select,
 )
 from sqlalchemy.ext.hybrid import hybrid_method
@@ -396,6 +397,21 @@ class HealthCareProvider(Base, TimestampMixin):
     addresses = relationship("HealthCareProviderAddress", back_populates="health_care_provider")
 
 
+class EmployerQuarterlyContribution(Base, TimestampMixin):
+    __tablename__ = "employer_quarterly_contribution"
+    employer_id = Column(
+        PostgreSQLUUID, ForeignKey("employer.employer_id"), index=True, primary_key=True
+    )
+    filing_period = Column(Date, primary_key=True)
+    employer_total_pfml_contribution = Column(Numeric(asdecimal=True), nullable=False)
+    pfm_account_id = Column(Text, nullable=False, index=True)
+    dor_received_date = Column(TIMESTAMP(timezone=True))
+    dor_updated_date = Column(TIMESTAMP(timezone=True))
+    latest_import_log_id = Column(Integer, ForeignKey("import_log.import_log_id"), index=True)
+
+    employer = relationship("Employer", back_populates="employer_quarterly_contribution")
+
+
 class Employer(Base, TimestampMixin):
     __tablename__ = "employer"
     employer_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
@@ -438,16 +454,43 @@ class Employer(Base, TimestampMixin):
     def uses_organization_units(self):
         return any([unit for unit in self.organization_units if unit.fineos_id is not None])
 
-    @typed_hybrid_property
-    def has_verification_data(self) -> bool:
+    @property
+    def verification_data(self) -> Optional[EmployerQuarterlyContribution]:
+        """Get the most recent withholding data. Portal uses this data in order to verify a
+        user can become a leave admin for this employer"""
+
         current_date = date.today()
         last_years_date = current_date - relativedelta(years=1)
-        return any(
-            quarter.employer_total_pfml_contribution > 0
-            and quarter.filing_period >= last_years_date
-            and quarter.filing_period < current_date
-            for quarter in self.employer_quarterly_contribution  # type: ignore
+
+        # Check the last four quarters. Does not include the current quarter, which would be a future filing period.
+        non_zero_contribution = (
+            object_session(self).query(EmployerQuarterlyContribution)
+            .filter(EmployerQuarterlyContribution.employer_total_pfml_contribution > 0)
+            .filter(
+                EmployerQuarterlyContribution.filing_period.between(last_years_date, current_date)
+            )
+            .order_by(desc(EmployerQuarterlyContribution.filing_period))
+            .first()
         )
+
+        if non_zero_contribution is None:
+            # If this is a new or previously-exempt Employer to the program, we may not
+            # have any non-zero contributions within the past year. We still want to support
+            # verification for them, so for them we check future filing periods, which includes
+            # the current quarter:
+            non_zero_contribution = (
+                object_session(self).query(EmployerQuarterlyContribution)
+                .filter(EmployerQuarterlyContribution.employer_total_pfml_contribution > 0)
+                .filter(EmployerQuarterlyContribution.filing_period > current_date)
+                .order_by(desc(EmployerQuarterlyContribution.filing_period))
+                .first()
+            )
+
+        return non_zero_contribution
+
+    @typed_hybrid_property
+    def has_verification_data(self) -> bool:
+        return self.verification_data is not None
 
     @validates("employer_fein")
     def validate_employer_fein(self, key: str, employer_fein: str) -> str:
@@ -565,21 +608,6 @@ class DuaReportingUnit(Base, TimestampMixin):
     )
 
     organization_unit = relationship("OrganizationUnit", back_populates="dua_reporting_units")
-
-
-class EmployerQuarterlyContribution(Base, TimestampMixin):
-    __tablename__ = "employer_quarterly_contribution"
-    employer_id = Column(
-        PostgreSQLUUID, ForeignKey("employer.employer_id"), index=True, primary_key=True
-    )
-    filing_period = Column(Date, primary_key=True)
-    employer_total_pfml_contribution = Column(Numeric(asdecimal=True), nullable=False)
-    pfm_account_id = Column(Text, nullable=False, index=True)
-    dor_received_date = Column(TIMESTAMP(timezone=True))
-    dor_updated_date = Column(TIMESTAMP(timezone=True))
-    latest_import_log_id = Column(Integer, ForeignKey("import_log.import_log_id"), index=True)
-
-    employer = relationship("Employer", back_populates="employer_quarterly_contribution")
 
 
 class EmployerPushToFineosQueue(Base, TimestampMixin):
