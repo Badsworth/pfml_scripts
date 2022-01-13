@@ -74,7 +74,7 @@ export const EmployerBenefits = (props: WithBenefitsApplicationProps) => {
             />
             <Heading level="2" size="3">
               <Icon
-                name="check_circle"
+                name="check"
                 size={3}
                 className="text-secondary text-middle margin-right-05 margin-top-neg-05"
                 fill="currentColor"
@@ -93,7 +93,7 @@ export const EmployerBenefits = (props: WithBenefitsApplicationProps) => {
             </div>
             <Heading level="2" size="3">
               <Icon
-                name="cancel"
+                name="close"
                 size={3}
                 className="text-error text-middle margin-right-05 margin-top-neg-05"
                 fill="currentColor"

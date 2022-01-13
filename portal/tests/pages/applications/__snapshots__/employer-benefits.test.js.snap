@@ -73,7 +73,7 @@ exports[`EmployerBenefits renders the page 1`] = `
           role="img"
         >
           <use
-            xlink:href="/img/sprite.svg#check_circle"
+            xlink:href="/img/sprite.svg#check"
           />
         </svg>
         The employer-sponsored benefits you must report are:
@@ -109,7 +109,7 @@ exports[`EmployerBenefits renders the page 1`] = `
           role="img"
         >
           <use
-            xlink:href="/img/sprite.svg#cancel"
+            xlink:href="/img/sprite.svg#close"
           />
         </svg>
         You don’t need to report:
