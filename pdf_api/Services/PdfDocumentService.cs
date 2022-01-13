@@ -4,7 +4,6 @@ using iText.Kernel.Utils;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 using PfmlPdfApi.Models;
 using PfmlPdfApi.Utilities;
@@ -31,7 +30,8 @@ namespace PfmlPdfApi.Services
             template1099 = configuration.GetValue<string>("AppSettings:Template1099");
         }
 
-        public async Task<ResponseMessage<CreatedDocumentDto>> UpdateTemplate(){
+        public async Task<ResponseMessage<CreatedDocumentDto>> UpdateTemplate()
+        {
             var response = new ResponseMessage<CreatedDocumentDto>(null);
             string srcFileName = $"Assets/1099/{template1099}";
             string desFileName = template1099;
