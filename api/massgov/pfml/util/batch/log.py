@@ -180,17 +180,14 @@ def log_report_to_newrelic(import_log: ImportLog) -> None:
 
 
 def latest_import_log_for_metric(
-    db_session: db.Session, import_type: str, metric: str
+    db_session: db.Session, source: str, metric: str
 ) -> Union[ImportLog, None]:
-    """Finds the latest import log with specified import type
+    """Finds the latest import log with specified source
     that also has metric in report field non 0.
     """
     found_import_log = (
         db_session.query(ImportLog)
-        .filter(
-            ImportLog.import_type == import_type,
-            ImportLog.report.op("~")(f'"{metric}": [1-9][0-9]*'),
-        )
+        .filter(ImportLog.source == source, ImportLog.report.op("~")(f'"{metric}": [1-9][0-9]*'),)
         .order_by(ImportLog.created_at.desc())
         .first()
     )

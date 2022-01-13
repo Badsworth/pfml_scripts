@@ -74,33 +74,33 @@ def test_update_import_log_entry(test_db_session):
     assert entry.end == datetime.datetime(2020, 11, 20, 21, 0, 21, tzinfo=datetime.timezone.utc)
 
 
-def test_latest_import_log_for_metric__import_type_doesnt_exist(
+def test_latest_import_log_for_metric__source_doesnt_exist(
     test_db_session: db.Session, initialize_factories_session
 ):
-    import_type = "some_import_type"
+    source = "some_source"
     metrics = dict()
     report_str = json.dumps(metrics, indent=2)
-    ImportLogFactory.create(import_type=import_type, report=report_str)
+    ImportLogFactory.create(source=source, report=report_str)
 
     found_import_log = massgov.pfml.util.batch.log.latest_import_log_for_metric(
-        test_db_session, "other_import_type", "some_metric"
+        test_db_session, "other_source", "some_metric"
     )
 
     assert found_import_log is None
 
 
-def test_latest_import_log_for_metric__import_metric_doesnt_exist_for_import_type(
+def test_latest_import_log_for_metric__import_metric_doesnt_exist_for_source(
     test_db_session: db.Session, initialize_factories_session,
 ):
-    import_type = "some_import_type"
+    source = "some_source"
     metrics = dict()
     test_metric = "some_metric"
     metrics[test_metric] = 1
     report_str = json.dumps(metrics, indent=2)
-    ImportLogFactory.create(import_type=import_type, report=report_str)
+    ImportLogFactory.create(source=source, report=report_str)
 
     found_import_log = massgov.pfml.util.batch.log.latest_import_log_for_metric(
-        test_db_session, import_type, "some_other_metric"
+        test_db_session, source, "some_other_metric"
     )
 
     assert found_import_log is None
@@ -109,15 +109,15 @@ def test_latest_import_log_for_metric__import_metric_doesnt_exist_for_import_typ
 def test_latest_import_log_for_metric__import_metric_is_0(
     test_db_session: db.Session, initialize_factories_session
 ):
-    import_type = "some_import_type"
+    source = "some_source"
     metrics = dict()
     test_metric = "some_metric"
     metrics[test_metric] = 0
     report_str = json.dumps(metrics, indent=2)
-    ImportLogFactory.create(import_type=import_type, report=report_str)
+    ImportLogFactory.create(source=source, report=report_str)
 
     found_import_log = massgov.pfml.util.batch.log.latest_import_log_for_metric(
-        test_db_session, import_type, test_metric
+        test_db_session, source, test_metric
     )
 
     assert found_import_log is None
@@ -132,14 +132,14 @@ def test_latest_import_log_for_metric__import_metric_is_0(
 def test_latest_import_log_for_metric(
     test_db_session: db.Session, initialize_factories_session, test_metric: str, metric_count: int
 ):
-    import_type = "some_import_type"
+    source = "some_source"
     metrics = dict()
     metrics[test_metric] = metric_count
     report_str = json.dumps(metrics, indent=2)
-    created_log = ImportLogFactory.create(import_type=import_type, report=report_str)
+    created_log = ImportLogFactory.create(source=source, report=report_str)
 
     found_import_log = massgov.pfml.util.batch.log.latest_import_log_for_metric(
-        test_db_session, import_type, test_metric
+        test_db_session, source, test_metric
     )
 
     assert found_import_log is not None
@@ -149,18 +149,18 @@ def test_latest_import_log_for_metric(
 def test_latest_import_log_for_metric__multiple(
     test_db_session: db.Session, initialize_factories_session
 ):
-    import_type = "some_import_type"
+    source = "some_source"
     metrics = dict()
     test_metric = "some_metric"
     metrics[test_metric] = 1
     report_str = json.dumps(metrics, indent=2)
 
-    ImportLogFactory.create(import_type=import_type, report=report_str)
-    ImportLogFactory.create(import_type=import_type, report=report_str)
-    created_log_3 = ImportLogFactory.create(import_type=import_type, report=report_str)
+    ImportLogFactory.create(source=source, report=report_str)
+    ImportLogFactory.create(source=source, report=report_str)
+    created_log_3 = ImportLogFactory.create(source=source, report=report_str)
 
     found_import_log = massgov.pfml.util.batch.log.latest_import_log_for_metric(
-        test_db_session, import_type, test_metric
+        test_db_session, source, test_metric
     )
 
     assert found_import_log is not None
