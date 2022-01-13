@@ -10,3 +10,9 @@ class FlagResponse(PydanticBaseModel):
     end: Optional[datetime]
     options: Optional[dict]
     enabled: bool
+
+
+class FlagLogResponse(FlagResponse):
+    family_name: str
+    given_name: str
+    created_at: datetime

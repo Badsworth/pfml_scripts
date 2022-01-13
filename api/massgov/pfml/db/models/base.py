@@ -4,7 +4,7 @@ from decimal import Decimal
 from typing import Any, Type
 from uuid import UUID
 
-from sqlalchemy import TIMESTAMP, Column, inspect
+from sqlalchemy import TIMESTAMP, Column, Text, inspect
 from sqlalchemy.ext.declarative import as_declarative
 from sqlalchemy.orm import deferred
 from sqlalchemy.sql.functions import now as sqlnow
@@ -58,6 +58,15 @@ def uuid_gen() -> uuid.UUID:
 def utc_timestamp_gen():
     """ Generate a tz-aware timestamp pinned to UTC """
     return utcnow()
+
+
+# This is annotated as a @declarative_mixin when we upgrade to SQLAlchemy 1.4
+class AzureLogMixin:
+    email_address = Column(Text, nullable=False)
+    sub_id = Column(Text, nullable=False)
+    family_name = Column(Text, nullable=False)
+    given_name = Column(Text, nullable=False)
+    action = Column(Text, nullable=False)
 
 
 # This is annotated as a @declarative_mixin when we upgrade to SQLAlchemy 1.4

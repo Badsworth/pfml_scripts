@@ -1,3 +1,8 @@
+from flask import g
+from jose import jwt
+from jose.constants import ALGORITHMS
+
+from massgov.pfml.db.models.employees import AzureGroup, AzureGroupPermission, AzurePermission
 from massgov.pfml.db.models.flags import FeatureFlag, FeatureFlagValue
 
 # There are also feature flag related tests in tests/massgov/pfml/util/feature_gate/features_cache.py
@@ -34,3 +39,52 @@ def test_flags_get_empty(client):
     assert flag.get("start") is None
     assert flag.get("end") is None
     assert flag.get("options") is None
+
+
+def test_flags_post_success(app, client, test_db_session, auth_claims_unit, azure_auth_private_key):
+    azure_token = auth_claims_unit.copy()
+    azure_token["unique_name"] = "johndo@example.com"
+    azure_token["given_name"] = "john"
+    azure_token["family_name"] = "doe"
+    azure_token["groups"] = [
+        AzureGroup.NON_PROD.azure_group_guid,
+        AzureGroup.NON_PROD_DEV.azure_group_guid,
+    ]
+    test_db_session.add(
+        AzureGroupPermission(
+            azure_group_id=AzureGroup.NON_PROD_DEV.azure_group_id,
+            azure_permission_id=AzurePermission.MAINTENANCE_EDIT.azure_permission_id,
+        )
+    )
+    encoded = jwt.encode(
+        azure_token,
+        azure_auth_private_key,
+        algorithm=ALGORITHMS.RS256,
+        headers={"kid": azure_auth_private_key.get("kid")},
+    )
+    post_body = {
+        "enabled": True,
+        "start": "2022-01-14T00:00:00-05:00",
+        "end": "2022-01-15T00:00:00-05:00",
+        "options": {
+            "name": "applications and custom",
+            "page_routes": ["/applications/*", "/custom/*"],
+        },
+    }
+    with app.app.test_request_context("/v1/admin/users"):
+        response = client.post(
+            "/v1/flags/maintenance", headers={"Authorization": f"Bearer {encoded}"}, json=post_body
+        )
+        assert response.status_code == 201
+        assert g.azure_user.sub_id == "foo"
+        assert g.azure_user.permissions == [
+            AzurePermission.MAINTENANCE_EDIT.azure_permission_id,
+        ]
+        response_json = response.get_json()
+        data = response_json.get("data")
+        assert data.get("enabled") is True
+        assert data.get("start") == "2022-01-14T00:00:00-05:00"
+        assert data.get("end") == "2022-01-15T00:00:00-05:00"
+        assert data.get("options").get("name") == "applications and custom"
+        assert len(data.get("options").get("page_routes")) == 2
+        assert data.get("options").get("page_routes") == ["/applications/*", "/custom/*"]
