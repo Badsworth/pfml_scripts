@@ -327,7 +327,7 @@ class EmployerQuarterlyContributionFactory(BaseFactory):
     employer = factory.SubFactory(EmployerFactory)
     employer_id = factory.LazyAttribute(lambda w: w.employer.employer_id)
     filing_period = datetime.now().strftime("%Y-%m-%d")
-    employer_total_pfml_contribution = factory.Faker("random_int")
+    employer_total_pfml_contribution = factory.Faker("random_int", min=1)
     pfm_account_id = factory.Faker("random_int")
 
 
