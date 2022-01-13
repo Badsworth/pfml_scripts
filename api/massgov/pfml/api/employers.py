@@ -2,7 +2,6 @@ from datetime import date
 
 import connexion
 import flask
-from sqlalchemy import desc
 from sqlalchemy.exc import IntegrityError
 from werkzeug.exceptions import Conflict, NotFound, Unauthorized
 
@@ -22,11 +21,7 @@ from massgov.pfml.api.validation.exceptions import (
     ValidationErrorDetail,
     ValidationException,
 )
-from massgov.pfml.db.models.employees import (
-    Employer,
-    EmployerQuarterlyContribution,
-    UserLeaveAdministrator,
-)
+from massgov.pfml.db.models.employees import Employer, UserLeaveAdministrator
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
