@@ -92,6 +92,7 @@ fineos_warehouse_full_extracts = [
     "CPS_AbsenceCasesWithGT1LeavePlan.csv",
     "CPS_ServiceAgreementsWithGT3LeavePlans.csv",
     "OrphanedCases_list.csv",
+    "VBI_1099DATA_SOM.csv",
 ]
 
 # These extracts use a WHERE clause of records that have some date column > THE_LAST_RUN_START_TIME. So we will

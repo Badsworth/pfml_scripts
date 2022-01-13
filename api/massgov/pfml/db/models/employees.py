@@ -3071,6 +3071,7 @@ class ReferenceFileType(LookupTable):
     )
 
     DUA_EMPLOYERS_REQUEST_FILE = LkReferenceFileType(37, "DUA employers request", 1)
+    FINEOS_1099_DATA_EXTRACT = LkReferenceFileType(38, "1099 extract", 1)
 
 
 class Title(LookupTable):

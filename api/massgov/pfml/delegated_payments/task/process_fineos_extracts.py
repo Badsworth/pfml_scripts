@@ -18,6 +18,7 @@ from massgov.pfml.delegated_payments.delegated_fineos_related_payment_processing
 from massgov.pfml.delegated_payments.fineos_extract_step import (
     CLAIMANT_EXTRACT_CONFIG,
     PAYMENT_EXTRACT_CONFIG,
+    REQUEST_1099_EXTRACT_CONFIG,
     FineosExtractStep,
 )
 from massgov.pfml.delegated_payments.postprocessing.payment_post_processing_step import (
@@ -42,6 +43,7 @@ CONSUME_FINEOS_CLAIMANT = "consume-fineos-claimant"
 CLAIMANT_EXTRACT = "claimant-extract"
 CONSUME_FINEOS_PAYMENT = "consume-fineos-payment"
 PAYMENT_EXTRACT = "payment-extract"
+CONSUME_FINEOS_1099_REQUEST_EXTRACT = "consume-fineos-1099-request"
 VALIDATE_ADDRESSES = "validate-addresses"
 VALIDATE_MAX_WEEKLY_BENEFIT_AMOUNT = "validate-max-weekly-benefit-amount"
 PAYMENT_POST_PROCESSING = "payment-post-processing"
@@ -49,6 +51,8 @@ RELATED_PAYMENT_PROCESSING = "related-payment-processing"
 CREATE_AUDIT_REPORT = "audit-report"
 CREATE_PEI_WRITEBACK = "initial-writeback"
 REPORT = "report"
+
+
 ALLOWED_VALUES = [
     ALL,
     RUN_AUDIT_CLEANUP,
@@ -56,6 +60,7 @@ ALLOWED_VALUES = [
     CLAIMANT_EXTRACT,
     CONSUME_FINEOS_PAYMENT,
     PAYMENT_EXTRACT,
+    CONSUME_FINEOS_1099_REQUEST_EXTRACT,
     VALIDATE_ADDRESSES,
     PAYMENT_POST_PROCESSING,
     RELATED_PAYMENT_PROCESSING,
@@ -71,6 +76,7 @@ class Configuration:
     do_claimant_extract: bool
     consume_fineos_payment: bool
     do_payment_extract: bool
+    consume_fineos_1099_request: bool
     validate_addresses: bool
     validate_max_weekly_benefit_amount: bool
     do_payment_post_processing: bool
@@ -100,6 +106,7 @@ class Configuration:
             self.do_claimant_extract = True
             self.consume_fineos_payment = True
             self.do_payment_extract = True
+            self.consume_fineos_1099_request = True
             self.validate_addresses = True
             self.validate_max_weekly_benefit_amount = True
             self.do_payment_post_processing = True
@@ -107,12 +114,14 @@ class Configuration:
             self.make_audit_report = True
             self.create_pei_writeback = True
             self.make_reports = True
+
         else:
             self.do_audit_cleanup = RUN_AUDIT_CLEANUP in steps
             self.consume_fineos_claimant = CONSUME_FINEOS_CLAIMANT in steps
             self.do_claimant_extract = CLAIMANT_EXTRACT in steps
             self.consume_fineos_payment = CONSUME_FINEOS_PAYMENT in steps
             self.do_payment_extract = PAYMENT_EXTRACT in steps
+            self.consume_fineos_1099_request = CONSUME_FINEOS_1099_REQUEST_EXTRACT in steps
             self.validate_addresses = VALIDATE_ADDRESSES in steps
             self.validate_max_weekly_benefit_amount = VALIDATE_MAX_WEEKLY_BENEFIT_AMOUNT in steps
             self.do_payment_post_processing = PAYMENT_POST_PROCESSING in steps
@@ -166,6 +175,13 @@ def _process_fineos_extracts(
 
     if config.do_payment_extract:
         PaymentExtractStep(db_session=db_session, log_entry_db_session=log_entry_db_session).run()
+
+    if config.consume_fineos_1099_request:
+        FineosExtractStep(
+            db_session=db_session,
+            log_entry_db_session=log_entry_db_session,
+            extract_config=REQUEST_1099_EXTRACT_CONFIG,
+        ).run()
 
     if config.validate_addresses:
         AddressValidationStep(

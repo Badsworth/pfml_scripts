@@ -166,6 +166,10 @@ class PaymentsDateConfig(PydanticBaseSettings):
         NOT_SET, description="The earliest file we will copy from FINEOS for the IAWW extract",
     )
 
+    fineos_1099_data_extract_max_history_date: str = Field(
+        NOT_SET, description="The earliest file we will copy from FINEOS for the 1099 extract",
+    )
+
 
 def get_date_config() -> PaymentsDateConfig:
     payments_date_config = PaymentsDateConfig()
