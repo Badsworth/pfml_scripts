@@ -116,7 +116,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/FlagsResponse"
+                $ref: "#/components/schemas/FlagLogsResponse"
         "503":
           $ref: "#/components/responses/ServiceUnavailableError"
   /users:
@@ -1698,6 +1698,33 @@ components:
           type: boolean
           example: false
       additionalProperties: false
+
+    FlagLog:
+      allOf:
+        - $ref: "#/components/schemas/Flag"
+        - type: object
+          properties:
+            family_name:
+              type: string
+              example: "Doe"
+              readOnly: true
+            given_name:
+              type: string
+              example: "John"
+              readOnly: true
+            created_at:
+              type: string
+              nullable: false
+              format: date-time
+              example: "2020-06-26T01:02:03.967736+00:00"
+              readOnly: true
+          additionalProperties: false
+
+    FlagLogsResponse:
+      type: array
+      items:
+        $ref: "#/components/schemas/FlagLog"
+
 
     FlagsResponse:
       type: array
