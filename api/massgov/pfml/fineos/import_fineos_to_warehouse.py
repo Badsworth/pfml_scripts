@@ -104,6 +104,7 @@ fineos_warehouse_daily_extracts = [
     "VBI_ABSENCECASEByStage.csv",
     "EmployeeDataLoad_feed.csv",
     "VBI_TASKREPORT_SOM.csv",
+    "VBI_ORGUNIT_DETAILS_SOM.csv",
 ]
 
 
