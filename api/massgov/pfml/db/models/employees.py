@@ -464,7 +464,8 @@ class Employer(Base, TimestampMixin):
 
         # Check the last four quarters. Does not include the current quarter, which would be a future filing period.
         non_zero_contribution = (
-            object_session(self).query(EmployerQuarterlyContribution)
+            object_session(self)
+            .query(EmployerQuarterlyContribution)
             .filter(EmployerQuarterlyContribution.employer_total_pfml_contribution > 0)
             .filter(
                 EmployerQuarterlyContribution.filing_period.between(last_years_date, current_date)
@@ -479,7 +480,8 @@ class Employer(Base, TimestampMixin):
             # verification for them, so for them we check future filing periods, which includes
             # the current quarter:
             non_zero_contribution = (
-                object_session(self).query(EmployerQuarterlyContribution)
+                object_session(self)
+                .query(EmployerQuarterlyContribution)
                 .filter(EmployerQuarterlyContribution.employer_total_pfml_contribution > 0)
                 .filter(EmployerQuarterlyContribution.filing_period > current_date)
                 .order_by(desc(EmployerQuarterlyContribution.filing_period))
