@@ -677,6 +677,17 @@ const errors = {
       format: "Enter a valid email address",
       required: "$t(shared.auth.emailError_required)",
     },
+    mfa_phone_number: {
+      phone_number: {
+        // Used by the mfa service, more than 12 digits
+        international_number:
+          "Sorry, we don't support international phone numbers yet. Enter a U.S. phone number to set up additional login verifications.",
+        // There are 10 digits
+        pattern: "Enter a valid phone number",
+        // Used by the mfa service, field cant be blank
+        required: "Enter a phone number",
+      },
+    },
     password: {
       insecure: "$t(shared.auth.passwordError_insecure)",
       invalid: "$t(shared.auth.passwordError_invalid)",
