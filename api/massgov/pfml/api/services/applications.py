@@ -11,7 +11,6 @@ import massgov.pfml.api.models.claims.common as claims_common_io
 import massgov.pfml.api.models.common as common_io
 import massgov.pfml.db as db
 import massgov.pfml.db.lookups as db_lookups
-import massgov.pfml.util.datetime as datetime_util
 import massgov.pfml.util.logging
 import massgov.pfml.util.pydantic.mask as mask
 from massgov.pfml.api.models.applications.common import Address as ApiAddress
@@ -400,7 +399,6 @@ def update_from_request(
         db_session.add(tax_id)
         application.tax_identifier = tax_id
 
-    application.updated_time = datetime_util.utcnow()
     db_session.add(application)
 
     for leave_schedule in leave_schedules:

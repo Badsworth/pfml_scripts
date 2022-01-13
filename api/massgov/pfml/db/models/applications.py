@@ -316,8 +316,6 @@ class Application(Base, TimestampMixin):
         PostgreSQLUUID, ForeignKey("application_payment_preference.payment_pref_id")
     )
     imported_from_fineos_at = Column(TIMESTAMP(timezone=True))
-    start_time = Column(TIMESTAMP(timezone=True))
-    updated_time = Column(TIMESTAMP(timezone=True))
     completed_time = Column(TIMESTAMP(timezone=True))
     submitted_time = Column(TIMESTAMP(timezone=True))
     has_employer_benefits = Column(Boolean)
