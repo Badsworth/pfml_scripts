@@ -537,7 +537,7 @@ class Employer(Base, TimestampMixin):
         return any(
             quarter.employer_total_pfml_contribution > 0
             and quarter.filing_period >= last_years_date
-            and quarter.filing_period < current_date
+            and quarter.filing_period <= current_date
             for quarter in self.employer_quarterly_contribution  # type: ignore
         ) or any(
             quarter.employer_total_pfml_contribution > 0 and quarter.filing_period > current_date
