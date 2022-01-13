@@ -26,9 +26,6 @@ export default class BenefitsApplicationsApi extends BaseApi {
     //   headers["X-FF-Require-Other-Leaves"] = true;
     // }
 
-    // TODO (PORTAL-1473): Remove once BE changes are merged
-    headers["X-FF-Tax-Withholding-Enabled"] = true;
-
     return headers;
   }
 
