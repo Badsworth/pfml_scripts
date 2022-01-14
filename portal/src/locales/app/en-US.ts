@@ -546,6 +546,8 @@ const errors = {
       "Your account is temporarily locked because of too many forget password requests. Wait 15 minutes before trying again.",
     attemptsLimitExceeded_login:
       "Your account is temporarily locked because of too many failed login attempts. Wait 15 minutes before trying again.",
+    attemptsLimitExceeded_updatePhone:
+      "We couldn’t add your phone number because you've exceeded the number of allowed attempts. You can try again later.",
     code: {
       deliveryFailure:
         "We encountered an error while sending the verification code. Try again.",
