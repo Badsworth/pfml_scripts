@@ -2407,7 +2407,7 @@ class Role(LookupTable):
     USER = LkRole(1, "User")
     FINEOS = LkRole(2, "Fineos")
     EMPLOYER = LkRole(3, "Employer")
-    SERVICE_NOW = LkRole(4, "ServiceNow")
+    PFML_CRM = LkRole(4, "PFML_CRM")
 
 
 class PaymentMethod(LookupTable):

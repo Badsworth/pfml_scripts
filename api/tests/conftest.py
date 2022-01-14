@@ -187,7 +187,7 @@ def fineos_user(initialize_factories_session):
 
 @pytest.fixture
 def snow_user(initialize_factories_session):
-    user = UserFactory.create(roles=[employee_models.Role.SERVICE_NOW])
+    user = UserFactory.create(roles=[employee_models.Role.PFML_CRM])
     return user
 
 
