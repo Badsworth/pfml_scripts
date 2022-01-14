@@ -1,6 +1,7 @@
 import Auth, { CognitoUser } from "@aws-amplify/auth";
 import { ValidationError } from "../errors";
 import tracker from "./tracker";
+import { verifyUserAttribute } from "./mfaApi";
 
 type CognitoMFAUser = CognitoUser & { preferredMFA: "NOMFA" | "SMS" };
 
@@ -27,10 +28,8 @@ export const updateMFAPhoneNumber = async (phoneNumber: string) => {
  */
 export const sendMFAConfirmationCode = async () => {
   const user = await Auth.currentAuthenticatedUser();
-  tracker.trackFetchRequest("verifyUserAttribute");
   // sends a verification code to the phone number via SMS
-  await Auth.verifyUserAttribute(user, "phone_number");
-  tracker.markFetchRequestEnd();
+  await verifyUserAttribute(user, "phone_number");
 };
 
 /**
