@@ -46,6 +46,7 @@ from massgov.pfml.db.models.employees import (
 from massgov.pfml.db.queries.absence_periods import upsert_absence_period_from_fineos_period
 from massgov.pfml.db.queries.get_claims_query import ActionRequiredStatusFilter, GetClaimsQuery
 from massgov.pfml.db.queries.managed_requirements import (
+    commit_managed_requirements,
     create_or_update_managed_requirement_from_fineos,
 )
 from massgov.pfml.fineos.models.group_client_api import (
@@ -319,7 +320,6 @@ def employer_get_claim_review(fineos_absence_id: str) -> flask.Response:
                 fineos_claim_review_response.status = (
                     claim_from_db.fineos_absence_status.absence_status_description
                 )
-
             sync_absence_periods(
                 db_session, claim_from_db, absence_period_decisions, log_attributes
             )
@@ -616,11 +616,11 @@ def sync_managed_requirements(
     """
     managed_requirements_from_db = []
     for mr in managed_requirements:
-        committed_requirement = create_or_update_managed_requirement_from_fineos(
+        managed_requirement = create_or_update_managed_requirement_from_fineos(
             db_session, claim.claim_id, mr, log_attributes
         )
-        if committed_requirement:
-            managed_requirements_from_db.append(committed_requirement)
+        managed_requirements_from_db.append(managed_requirement)
+    commit_managed_requirements(db_session)
     return managed_requirements_from_db
 
 

@@ -736,7 +736,7 @@ class TestGetClaimReview:
         test_db_session.commit()
 
         for mr in fineos_managed_requirements:
-            create_managed_requirement_from_fineos(test_db_session, claim.claim_id, mr, {})
+            db_mr = create_managed_requirement_from_fineos(test_db_session, claim.claim_id, mr)
             mr.followUpDate = mr.followUpDate - timedelta(days=3)
             mr.status = ManagedRequirementStatus.SUPPRESSED.managed_requirement_status_description
         mock_get_req.return_value = fineos_managed_requirements
