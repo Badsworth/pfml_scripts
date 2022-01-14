@@ -191,12 +191,14 @@ class PayPeriodGroup:
     def get_amount_available_in_pay_period(self) -> Decimal:
         return max(Decimal("0.00"), self.maximum_weekly_amount - self.get_total_amount())
 
+    def add_absence_case_id(self, absence_case_id: str) -> None:
+        self.absence_case_ids.add(absence_case_id)
+
     def add_payment_from_details(
         self, payment_details: PaymentDetails, payment_scenario: PaymentScenario
     ) -> None:
         amount = payment_details.business_net_amount
         payment = payment_details.payment
-        self.absence_case_ids.add(str(payment.claim.fineos_absence_id))
 
         details_to_update = None
         if payment_scenario == PaymentScenario.PREVIOUS_PAYMENT:
