@@ -2,7 +2,7 @@ import { fineos, portal, fineosPages } from "../../../actions";
 import { Submission } from "../../../../src/types";
 import { extractLeavePeriod } from "../../../../src/util/claims";
 import { assertValidClaim } from "../../../../src/util/typeUtils";
-import { format, addDays, parse } from "date-fns";
+import { format, addDays } from "date-fns";
 
 describe("Claim date change", () => {
   after(() => {
@@ -99,39 +99,29 @@ describe("Claim date change", () => {
     portal.before();
     cy.unstash<DehydratedClaim>("claim").then(({ claim }) => {
       cy.unstash<Submission>("submission").then(({ fineos_absence_id }) => {
-        cy.unstash<string[]>("changedLeaveDates").then(
-          ([startDate, endDate]) => {
-            assertValidClaim(claim);
-            portal.loginLeaveAdmin(claim.employer_fein);
-            portal.selectClaimFromEmployerDashboard(fineos_absence_id);
-            const portalFormatStart = format(new Date(startDate), "M/d/yyyy");
-            const portalFormatEnd = format(
-              parse(endDate, "MM/dd/yyyy", new Date(endDate)),
-              "M/d/yyyy"
-            );
-            // This introduces some backward compatibility until we figure out the differences in ERI trigger
-            // between defferent envs. @see https://lwd.atlassian.net/browse/PFMLPB-1736
-            // Wait till the redirects are over and we are viewing the claim.
-            cy.url().should("not.include", "dashboard");
-            cy.contains(`${claim.first_name} ${claim.last_name}`);
-            // Check by url if we can review the claim
-            cy.contains(
-              "Are you the right person to respond to this application?"
-            );
-            cy.contains("Yes").click();
-            cy.contains("Agree and submit").click();
-            cy.findByText(
-              // There's a strange unicode hyphen at this place.
-              /This is your employe(.*)s expected leave schedule/
-            )
-              .next()
-              .should(
-                "contain.text",
-                `${portalFormatStart} to ${portalFormatEnd}`
-              );
-            portal.respondToLeaveAdminRequest(false, true, true);
-          }
-        );
+        cy.unstash<string[]>("changedLeaveDates").then(([start, end]) => {
+          assertValidClaim(claim);
+          portal.loginLeaveAdmin(claim.employer_fein);
+          portal.selectClaimFromEmployerDashboard(fineos_absence_id);
+          cy.url().should("not.include", "dashboard");
+          cy.contains(`${claim.first_name} ${claim.last_name}`);
+          // Check by url if we can review the claim
+          cy.contains(
+            "Are you the right person to respond to this application?"
+          );
+          cy.contains("Yes").click();
+          cy.contains("Agree and submit").click();
+          if (!claim.leave_details.reason)
+            throw TypeError("Claim missing leave reason");
+          portal.leaveAdminAssertClaimStatus([
+            {
+              leave: claim.leave_details.reason,
+              status: "Pending",
+              leavePeriods: [start, end],
+            },
+          ]);
+          portal.respondToLeaveAdminRequest(false, true, true);
+        });
       });
     });
   });

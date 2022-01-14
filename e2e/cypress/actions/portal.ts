@@ -36,8 +36,9 @@ import {
   dateToReviewFormat,
   minutesToHoursAndMinutes,
 } from "../../src/util/claims";
-import { APILeaveReason } from "generation/Claim";
+import { LeaveReason } from "generation/Claim";
 import { getClaimantCredentials, getLeaveAdminCredentials } from "../config";
+import { format } from "date-fns";
 
 /**Set portal feature flags */
 function setFeatureFlags(flags?: Partial<FeatureFlags>): void {
@@ -51,6 +52,10 @@ function setFeatureFlags(flags?: Partial<FeatureFlags>): void {
     claimantShowTaxWithholding: true,
     claimantShowPayments: config("HAS_PAYMENT_STATUS") === "true",
     claimantShowOrganizationUnits: false,
+    employerShowMultiLeave:
+      config("ENVIRONMENT") === "training" || config("ENVIRONMENT") === "long"
+        ? false
+        : true,
   };
   cy.setCookie("_ff", JSON.stringify({ ...defaults, ...flags }), { log: true });
 }
@@ -856,6 +861,12 @@ export function visitActionRequiredERFormPage(fineosAbsenceId: string): void {
   });
   cy.contains("label", "Yes").click();
   cy.contains("Agree and submit").click();
+  if (
+    config("ENVIRONMENT") !== "training" &&
+    config("ENVIRONMENT") !== "long"
+  ) {
+    cy.contains("span", fineosAbsenceId);
+  }
 }
 
 export function respondToLeaveAdminRequest(
@@ -1832,9 +1843,16 @@ export function assertConcurrentLeave(leave: ValidConcurrentLeave): void {
  * @param leaveType expand the type as needed
  */
 export function assertLeaveType(leaveType: "Active duty"): void {
-  cy.findByText("Leave type", { selector: "h3" })
-    .next()
-    .should("contain.text", leaveType);
+  if (
+    config("ENVIRONMENT") === "training" ||
+    config("ENVIRONMENT") === "long"
+  ) {
+    cy.findByText("Leave type", { selector: "h3" })
+      .next()
+      .should("contain.text", leaveType);
+  } else {
+    cy.findByText(leaveType, { selector: "h3" });
+  }
 }
 export type FilterOptionsFlags = {
   [key in DashboardClaimStatus]?: true | false;
@@ -1980,22 +1998,30 @@ export function claimantGoToClaimStatus(
   });
 }
 
+const leaveReasonHeadings: Readonly<
+  Partial<Record<NonNullable<LeaveReason>, string | RegExp>>
+> = {
+  "Serious Health Condition - Employee": /Medical leave/,
+  "Child Bonding": /(Leave to )?bond with a child/i,
+  "Care for a Family Member":
+    /(Leave to )?care for a family member( schedule)?/i,
+  "Military Exigency Family": "Active duty",
+} as const;
+
 type LeaveStatus = {
-  leave: NonNullable<APILeaveReason>;
+  leave: keyof typeof leaveReasonHeadings;
   status: ClaimantStatus;
   leavePeriods?: [string, string];
 };
 
 export function claimantAssertClaimStatus(leaves: LeaveStatus[]): void {
-  const leaveReasonHeadings = {
-    "Serious Health Condition - Employee": "Medical leave",
-    "Child Bonding": "Leave to bond with a child",
-    "Care for a Family Member": "Leave to care for a family member schedule",
-    "Pregnancy/Maternity": "",
-  } as const;
-
   for (const { leave, status, leavePeriods } of leaves) {
-    cy.contains(leaveReasonHeadings[leave])
+    const heading = leaveReasonHeadings[leave];
+    if (!heading)
+      throw Error(
+        `Leave reason "${leave}" property is undefined in Object "leaveReasonHeadings"`
+      );
+    cy.contains(heading)
       .parent()
       .within(() => {
         cy.contains(status);
@@ -2104,4 +2130,25 @@ export function assertPayments(spec: PaymentStatus[]) {
         });
       });
   });
+}
+
+export function leaveAdminAssertClaimStatus(leaves: LeaveStatus[]) {
+  for (const l of leaves) {
+    const { leavePeriods, leave, status } = l;
+    if (leavePeriods) {
+      const formatStart = format(new Date(leavePeriods[0]), "M/d/yyyy");
+      const formatEnd = format(new Date(leavePeriods[1]), "M/d/yyyy");
+      cy.get('th[data-label="Date range"]').should(
+        "contain.text",
+        `${formatStart} to ${formatEnd}`
+      );
+    }
+    const heading = leaveReasonHeadings[leave];
+    if (!heading)
+      throw Error(
+        `Leave reason "${leave}" property is undefined in Object "leaveReasonHeadings"`
+      );
+    cy.contains(heading);
+    cy.get('[data-label="Status"]').should("contain.text", status);
+  }
 }
