@@ -30,7 +30,7 @@ def create_authorization(
             financial_eligibility(user, they)
             rmv_check(user, they)
             notifications(user, they)
-        elif has_role_in(user, [Role.SERVICE_NOW]):
+        elif has_role_in(user, [Role.PFML_CRM]):
             pass
         else:
             users(user, they)

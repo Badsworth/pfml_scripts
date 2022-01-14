@@ -13,7 +13,7 @@ from massgov.pfml.db.models.employees import (
     ManagedRequirementType,
 )
 from massgov.pfml.db.queries.managed_requirements import (
-    commit_managed_requirement_update,
+    commit_managed_requirements,
     get_managed_requirement_by_fineos_managed_requirement_id,
 )
 from massgov.pfml.fineos import create_client, exception
@@ -65,12 +65,8 @@ def update_employer_confirmation_requirements(
         for req in employer_confirmation_requirements
     ]
 
-    records = [
-        commit_managed_requirement_update(db_session, valid_update)
-        for valid_update in managed_req_updates
-        if valid_update
-    ]
-
+    records = [valid_update for valid_update in managed_req_updates if valid_update]
+    commit_managed_requirements(db_session)
     updated_records = [updated for updated in records if updated]
 
     return updated_records

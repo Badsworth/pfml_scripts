@@ -433,6 +433,25 @@ data "aws_iam_policy_document" "fineos_feeds_role_policy" {
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
+# IAM role and policies for FINEOS import leave admin org units
+# ----------------------------------------------------------------------------------------------------------------------
+
+resource "aws_iam_role" "fineos_import_la_org_units_task_role" {
+  name               = "${local.app_name}-${var.environment_name}-ecs-tasks-fineos-import-la-org-units"
+  assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume_role_policy.json
+}
+
+# We may not always have a value for `fineos_aws_iam_role_arn` and a policy has
+# to list a resource, so make this part conditional with the count hack
+resource "aws_iam_role_policy" "fineos_import_la_org_units_task_fineos_role_policy" {
+  count = var.fineos_aws_iam_role_arn == "" ? 0 : 1
+
+  name   = "${local.app_name}-${var.environment_name}-ecs-tasks-fineos-import-la-org-units-fineos-policy"
+  role   = aws_iam_role.fineos_import_la_org_units_task_role.id
+  policy = data.aws_iam_policy_document.fineos_feeds_role_policy[0].json
+}
+
+# ----------------------------------------------------------------------------------------------------------------------
 # IAM role and policies for pub-payments-process-fineos
 # ----------------------------------------------------------------------------------------------------------------------
 

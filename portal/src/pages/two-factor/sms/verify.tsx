@@ -1,5 +1,4 @@
 import { AppLogic } from "../../../hooks/useAppLogic";
-import Button from "../../../components/core/Button";
 import InputText from "../../../components/core/InputText";
 import Lead from "../../../components/core/Lead";
 import PageNotFound from "../../../components/PageNotFound";
@@ -28,11 +27,6 @@ export const VerifySMS = (props: VerifySMSProps) => {
     code: "",
   });
 
-  const routeToLogin = async (event: React.FormEvent) => {
-    event.preventDefault();
-    await appLogic.portalFlow.goTo(routes.auth.login, {}, { redirect: true });
-  };
-
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     await appLogic.auth.verifyMFACodeAndLogin(formState.code, props.query.next);
@@ -59,6 +53,18 @@ export const VerifySMS = (props: VerifySMSProps) => {
 
         <Lead>{t("pages.authTwoFactorSmsVerify.lead")}</Lead>
 
+        <Lead>
+          <Trans
+            i18nKey="pages.authTwoFactorSmsVerify.resendCode"
+            components={{
+              "contact-center-phone-link": (
+                <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
+              ),
+              "login-link": <a href={routes.auth.login} />,
+            }}
+          />
+        </Lead>
+
         <InputText
           {...getFunctionalInputProps("code")}
           autoComplete="one-time-code"
@@ -66,15 +72,6 @@ export const VerifySMS = (props: VerifySMSProps) => {
           label={t("pages.authTwoFactorSmsVerify.codeLabel")}
           smallLabel
         />
-
-        <Button
-          type="button"
-          className="display-block margin-top-1"
-          variation="unstyled"
-          onClick={routeToLogin}
-        >
-          {t("pages.authTwoFactorSmsVerify.resendCodeLink")}
-        </Button>
 
         <ThrottledButton
           type="submit"
@@ -84,16 +81,6 @@ export const VerifySMS = (props: VerifySMSProps) => {
           {t("pages.authTwoFactorSmsVerify.submitButton")}
         </ThrottledButton>
       </form>
-      <p className="display-block margin-top-3">
-        <Trans
-          i18nKey="pages.authTwoFactorSmsVerify.callContactCenter"
-          components={{
-            "contact-center-phone-link": (
-              <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
-            ),
-          }}
-        />
-      </p>
     </div>
   );
 };

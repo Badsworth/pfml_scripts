@@ -1,4 +1,5 @@
 import Auth, { CognitoUser } from "@aws-amplify/auth";
+import { ValidationError } from "../errors";
 import tracker from "./tracker";
 
 type CognitoMFAUser = CognitoUser & { preferredMFA: "NOMFA" | "SMS" };
@@ -86,6 +87,55 @@ const setMFAPreferenceSMS = async (user: CognitoUser) => {
   await Auth.setPreferredMFA(user, "SMS");
   tracker.markFetchRequestEnd();
 };
+
+/**
+ * Throws ValidationError(s) for service level rules (field not filled in, etc)
+ * @param phoneNumber The phone number being entered to receive mfa texts
+ * returns Nothing, throws errors that are currently caught in useUsersLogic
+ */
+export const getMfaValidationErrors = (phoneNumber: string | null) => {
+  // Throw a validation error if the field is empty
+  if (!phoneNumber) {
+    throw getNoNumberEnteredError();
+  }
+  // Throw a validation error if the field looks like an international number
+  if (
+    // 10 digits and 2 dashes
+    phoneNumber.length > 12 &&
+    phoneNumber[0] !== "1"
+  ) {
+    throw getInternationalNumberError();
+  }
+};
+
+/**
+ * Utility function to create the errors for mfa validation
+ * @param field The field that should be highlighted when this error is thrown
+ * @param type The error type in users.mfa_phone_number.phone_number (app/en-US.ts)
+ * @returns ValidationErrors for various situations
+ */
+const getPhoneNumberError = (field: string, type: string) => {
+  const validation_issue = { field, type };
+  return new ValidationError([validation_issue], "users");
+};
+
+/**
+ * Function to generate the error asking you not to leave the field blank
+ * @param field See comment for getPhoneNumberError
+ * @param type See comment for getPhoneNumberError
+ * @returns ValidationError for empty phoneNumber field
+ */
+const getNoNumberEnteredError = () =>
+  getPhoneNumberError("mfa_phone_number.phone_number", "required");
+
+/**
+ * Function to generate the error asking you not to enter an international number
+ * @param field See comment for getPhoneNumberError
+ * @param type See comment for getPhoneNumberError
+ * @returns ValidationError for an international number
+ */
+const getInternationalNumberError = () =>
+  getPhoneNumberError("mfa_phone_number.phone_number", "international_number");
 
 export const verifyMFACode = async (code: string) => {
   const user = Auth.currentAuthenticatedUser();

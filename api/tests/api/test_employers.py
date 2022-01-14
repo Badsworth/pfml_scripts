@@ -272,6 +272,9 @@ def test_employers_receive_402_for_no_contributions(
 ):
     employer = EmployerFactory.create()
 
+    # Create other contributions to confirm we're limiting the check to the target employer
+    EmployerQuarterlyContributionFactory.create(employer=EmployerFactory.create())
+
     link = UserLeaveAdministrator(
         user_id=employer_user.user_id,
         employer_id=employer.employer_id,

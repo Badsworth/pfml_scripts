@@ -3,7 +3,8 @@ import { mockAuth, renderPage } from "../../../test-utils";
 import SetupSMS from "../../../../src/pages/two-factor/sms/setup";
 import userEvent from "@testing-library/user-event";
 
-const updateUser = jest.fn();
+// Need to return a truthy user to navigate to the next page
+const updateUser = jest.fn(() => true);
 const goToNextPage = jest.fn();
 
 beforeEach(() => {

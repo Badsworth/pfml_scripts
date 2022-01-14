@@ -12,10 +12,14 @@ import usePortalFlow from "../../src/hooks/usePortalFlow";
 import useUsersLogic from "../../src/hooks/useUsersLogic";
 
 jest.mock("../../src/api/UsersApi");
-jest.mock("../../src/services/mfa", () => ({
-  setMFAPreference: jest.fn(),
-  updateMFAPhoneNumber: jest.fn(),
-}));
+jest.mock("../../src/services/mfa", () => {
+  const originalModule = jest.requireActual("../../src/services/mfa");
+  return {
+    setMFAPreference: jest.fn(),
+    updateMFAPhoneNumber: jest.fn(),
+    getMfaValidationErrors: originalModule.getMfaValidationErrors,
+  };
+});
 jest.mock("next/router");
 
 describe("useUsersLogic", () => {
@@ -119,16 +123,15 @@ describe("useUsersLogic", () => {
         expect(usersApi.updateUser).toHaveBeenCalledWith(user_id, patchData);
       });
 
-      it("does not update user if MFA service fails to update", async () => {
-        MFAService.setMFAPreference.mockImplementation(() =>
+      it("does not call MFA service if user validation fails", async () => {
+        usersApi.updateUser.mockImplementationOnce(() =>
           Promise.reject(new Error())
         );
-        usersApi.updateUser.mockClear();
         await act(async () => {
           await usersLogic.updateUser(user_id, patchData);
         });
 
-        expect(usersApi.updateUser).not.toHaveBeenCalled();
+        expect(MFAService.updateMFAPhoneNumber).not.toHaveBeenCalled();
       });
     });
 
@@ -152,15 +155,50 @@ describe("useUsersLogic", () => {
         expect(usersApi.updateUser).toHaveBeenCalledWith(user_id, patchData);
       });
 
-      it("does not update user if MFA service fails to update", async () => {
-        MFAService.updateMFAPhoneNumber.mockImplementation(() =>
+      it("does not call MFA service if backend validation fails", async () => {
+        usersApi.updateUser.mockImplementationOnce(() =>
           Promise.reject(new Error())
         );
-        usersApi.updateUser.mockClear();
+        MFAService.updateMFAPhoneNumber.mockClear();
         await act(async () => {
           await usersLogic.updateUser(user_id, patchData);
         });
 
+        expect(MFAService.updateMFAPhoneNumber).not.toHaveBeenCalled();
+      });
+
+      it("fails service validation when mfa_phone_number is missing", async () => {
+        const missingPhoneNumberPatchData = {
+          mfa_phone_number: {
+            int_code: "1",
+            phone_type: "Cell",
+            phone_number: "",
+          },
+        };
+        MFAService.updateMFAPhoneNumber.mockClear();
+        await act(async () => {
+          await usersLogic.updateUser(user_id, missingPhoneNumberPatchData);
+        });
+        expect(MFAService.updateMFAPhoneNumber).not.toHaveBeenCalled();
+        expect(usersApi.updateUser).not.toHaveBeenCalled();
+      });
+
+      it("fails service validation when mfa_phone_number is internationa (long))", async () => {
+        const internationalPhoneNumberPatchData = {
+          mfa_phone_number: {
+            int_code: "1",
+            phone_type: "Cell",
+            phone_number: "61-441-255-1525",
+          },
+        };
+        MFAService.updateMFAPhoneNumber.mockClear();
+        await act(async () => {
+          await usersLogic.updateUser(
+            user_id,
+            internationalPhoneNumberPatchData
+          );
+        });
+        expect(MFAService.updateMFAPhoneNumber).not.toHaveBeenCalled();
         expect(usersApi.updateUser).not.toHaveBeenCalled();
       });
     });

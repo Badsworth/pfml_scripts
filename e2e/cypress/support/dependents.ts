@@ -44,7 +44,7 @@ Cypress.on("test:after:run", (attr, runnable) => {
 
 type TestWithID = Test & { id: string };
 
-Cypress.Commands.add("dependsOnPreviousPass", (dependencies?: [Test]) => {
+Cypress.Commands.add("dependsOnPreviousPass", (dependencies?: Test[]) => {
   // @ts-ignore
   const runnable = cy.state("runnable") as Runnable;
   // When calculating whether this test's dependencies pass, only consider results

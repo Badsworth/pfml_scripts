@@ -182,6 +182,9 @@ paths:
 
   /employees/{employee_id}:
     get:
+      security:
+        - jwt: []
+        - oauth2: []
       tags:
         - Employees
       summary: Retrieve an Employee record
@@ -240,6 +243,9 @@ paths:
 
   /employees/search:
     post:
+      security:
+        - jwt: []
+        - oauth2: []
       tags:
         - Employees
       summary: Lookup an Employee by SSN/ITIN and name
@@ -370,6 +376,9 @@ paths:
 
   /claims:
     get:
+      security:
+        - jwt: []
+        - oauth2: []
       summary: Retrieve claims
       operationId: massgov.pfml.api.claims.get_claims
       tags:

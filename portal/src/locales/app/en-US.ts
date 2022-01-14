@@ -677,6 +677,17 @@ const errors = {
       format: "Enter a valid email address",
       required: "$t(shared.auth.emailError_required)",
     },
+    mfa_phone_number: {
+      phone_number: {
+        // Used by the mfa service, more than 12 digits
+        international_number:
+          "Sorry, we don't support international phone numbers yet. Enter a U.S. phone number to set up additional login verifications.",
+        // There are 10 digits
+        pattern: "Enter a valid phone number",
+        // Used by the mfa service, field cant be blank
+        required: "Enter a phone number",
+      },
+    },
     password: {
       insecure: "$t(shared.auth.passwordError_insecure)",
       invalid: "$t(shared.auth.passwordError_invalid)",
@@ -1057,11 +1068,10 @@ const pages: {
       "Provide a phone number we can use when we need to verify your login",
   },
   authTwoFactorSmsVerify: {
-    callContactCenter:
-      "Need help? Call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.",
     codeLabel: "$t(shared.verificationCodeLabel)",
     lead: "To protect your security we sent a 6-digit code to the phone number we have on file for verification.  Don’t share this code with anyone. We’ll never call or text you for this code.",
-    resendCodeLink: "Didn’t receive the code? Log in again to resend it.",
+    resendCode:
+      "To receive a new code, <login-link>log in again</login-link>. If you need help, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.",
     submitButton: "Submit",
     title: "Enter your security code",
   },

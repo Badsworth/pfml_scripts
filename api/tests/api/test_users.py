@@ -6,6 +6,7 @@ import botocore.exceptions
 import faker
 import pytest
 from dateutil.relativedelta import relativedelta
+from freezegun.api import freeze_time
 
 import tests.api
 from massgov.pfml.cognito.exceptions import CognitoUserExistsValidationError
@@ -544,6 +545,38 @@ def test_has_verification_data_flag(client, employer_user, employer_auth_token, 
     # yesterday = datetime.today() - relativedelta(days=1)
     yesterday = date.today() - relativedelta(days=1)
     EmployerQuarterlyContributionFactory.create(employer=employer, filing_period=yesterday)
+    link = UserLeaveAdministrator(
+        user_id=employer_user.user_id,
+        employer_id=employer.employer_id,
+        fineos_web_id="fake-fineos-web-id",
+    )
+    test_db_session.add(link)
+    test_db_session.commit()
+
+    response = client.get(
+        "/v1/users/{}".format(employer_user.user_id),
+        headers={"Authorization": f"Bearer {employer_auth_token}"},
+    )
+    response_body = response.get_json()
+
+    assert response_body.get("data")["user_leave_administrators"] == [
+        {
+            "employer_dba": employer.employer_dba,
+            "employer_fein": format_fein(employer.employer_fein),
+            "employer_id": str(employer.employer_id),
+            "has_fineos_registration": True,
+            "verified": False,
+            "has_verification_data": True,
+        }
+    ]
+
+
+@freeze_time("2021-05-01")
+def test_has_verification_data_flag_future_data(
+    client, employer_user, employer_auth_token, test_db_session
+):
+    employer = EmployerFactory.create()
+    EmployerQuarterlyContributionFactory.create(employer=employer, filing_period="2021-06-01")
     link = UserLeaveAdministrator(
         user_id=employer_user.user_id,
         employer_id=employer.employer_id,

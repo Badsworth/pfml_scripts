@@ -154,9 +154,9 @@ class Step(abc.ABC, metaclass=abc.ABCMeta):
     def check_if_processed_within_x_days(
         cls, db_session: db.Session, metric: str, business_days: int
     ) -> bool:
-        import_type = cls.__name__
+        source = cls.__name__
         found_import_log = latest_import_log_for_metric(
-            db_session=db_session, import_type=import_type, metric=metric
+            db_session=db_session, source=source, metric=metric
         )
 
         if found_import_log is None:

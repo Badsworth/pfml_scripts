@@ -78,16 +78,37 @@ class EnvSummaryView extends React.Component {
             if (run.passPercent === 100) {
               return "✅"; //':white_check_mark:'
             } else {
-              return "❌".repeat(run.failCount); //':x:'
+              return "❌".repeat(run.failCount > 3 ? 3 : run.failCount); //':x:'
             }
           }
+
+          function statusFromBool(pass) {
+            if (pass === true) {
+              return "✅"; //':white_check_mark:'
+            } else {
+              return "❌"; //':x:'
+            }
+          }
+
+          let runIds = this.state.envs.reduce(function (r, a) {
+            r.push(byEnv[a].runId);
+            return r;
+          }, []);
+          let query_integration = `SELECT count(*)
+                                   FROM IntegrationTestResult FACET file, title, environment, passed
+                                   WHERE runId IN (${runIds
+                                     .map((i) => `'${i}'`)
+                                     .join(", ")})
+                                     SINCE 1 month ago
+                                     LIMIT max`;
 
           /**
            * TODO: Split up this section into components
            */
           return [
             <div className={"summary"}>
-              <h2>Summary</h2>
+              <h1>Summary</h1>
+              <h2>Cypress</h2>
               {this.state.envs.map((env) => {
                 if (byEnv[env]) {
                   let query = `SELECT count(*)
@@ -100,9 +121,10 @@ class EnvSummaryView extends React.Component {
                   return [
                     <div>
                       <h3>
-                        {labelEnv(env)} {status(byEnv[env])}{" "}
+                        <b>
+                          {labelEnv(env)} {status(byEnv[env])}{" "}
+                        </b>
                       </h3>
-                      <TagsFromArray tags={byEnv[env].tag} />
                       <NrqlQuery accountId={this.accountId} query={query}>
                         {({ data: runFileData, loading, error }) => {
                           if (loading) {
@@ -157,6 +179,152 @@ class EnvSummaryView extends React.Component {
                               })}
                             </ul>
                           );
+                        }}
+                      </NrqlQuery>
+                    </div>,
+                  ];
+                }
+              })}
+              <h2>
+                <b>Integration By Test</b>
+              </h2>
+              -----------------------------------------------
+              <div>
+                <NrqlQuery accountId={this.accountId} query={query_integration}>
+                  {({ data: runFileData, loading, error }) => {
+                    if (loading) {
+                      return <Spinner />;
+                    }
+                    if (error) {
+                      return (
+                        <SectionMessage
+                          title={"There was an error executing the query"}
+                          description={error.message}
+                          type={SectionMessage.TYPE.CRITICAL}
+                        />
+                      );
+                    }
+
+                    if (!runFileData.length) {
+                      return <span></span>;
+                    }
+
+                    function processRowsIntegration(data) {
+                      return data.reduce(function (r, a) {
+                        let file = a.file.replace("test/integration/", "");
+                        r[file] = r[file] || { pass: true, env: [] };
+                        r[file].env[a.environment] = r[file].env[a.environment] || {failed:0,total:0}
+                        if (a.passed === "false") {
+                          r[file].pass = false;
+                          r[file].env[a.environment].failed++;
+                        }
+                        r[file].env[a.environment].total++;
+                        return r;
+                      }, Object.create(null));
+                    }
+
+                    let data = processRowsIntegration(
+                      processNRQLDataAsTable(runFileData)
+                    );
+                    return Object.keys(data).map((test) => {
+                      return [
+                        <h3>
+                          <b>
+                            {test} {statusFromBool(data[test].pass)}
+                          </b>
+                        </h3>,
+                        <ul className={"filelist"}>
+                          {Object.keys(data[test].env).map((e) => {
+                            if(data[test].env[e].failed) {
+                              return [
+                                <li>
+                                <span>
+                                  <code>
+                                    {e} - Failed {data[test].env[e].failed} of {data[test].env[e].total}
+                                  </code>
+                                </span>
+                                </li>,
+                              ];
+                            }
+                          })}
+                        </ul>,
+                        <br />,
+                      ];
+                    });
+                  }}
+                </NrqlQuery>
+              </div>
+              <h2>Integration</h2>
+              {this.state.envs.map((env) => {
+                if (byEnv[env]) {
+                  let query_integration_per_env = `SELECT count(*)
+                                                   FROM IntegrationTestResult FACET file, title
+                                                   WHERE runId='${byEnv[env].runId}'
+                                                     AND passed is false
+                                                     SINCE 1 month ago`;
+                  return [
+                    <div>
+                      <NrqlQuery
+                        accountId={this.accountId}
+                        query={query_integration_per_env}
+                      >
+                        {({ data: runFileData, loading, error }) => {
+                          if (loading) {
+                            return <Spinner />;
+                          }
+                          if (error) {
+                            return (
+                              <SectionMessage
+                                title={"There was an error executing the query"}
+                                description={error.message}
+                                type={SectionMessage.TYPE.CRITICAL}
+                              />
+                            );
+                          }
+
+                          if (!runFileData.length) {
+                            return <h3>
+                              <b>
+                                {labelEnv(env)} {statusFromBool(true)}{" "}
+                              </b>
+                            </h3>;
+                          }
+
+                          function processRowsIntegration(data) {
+                            return data.reduce(function (r, a) {
+                              r[a.file] = r[a.file] || [];
+                              r[a.file].push(a);
+                              return r;
+                            }, Object.create(null));
+                          }
+
+                          let data = processRowsIntegration(
+                            processNRQLDataAsTable(runFileData)
+                          );
+
+                          return [
+                            <h3>
+                              <b>
+                                {labelEnv(env)} {statusFromBool(false)}{" "}
+                              </b>
+                            </h3>,
+                            <ul className={"filelist"}>
+                              {Object.keys(data).map((subcat) => {
+                                return [
+                                  <li>{subcat}</li>,
+                                  <ul className={"filelist"}>
+                                    {data[subcat].map((row) => (
+                                      <li>
+                                        <span>
+                                          <code>{row.title}</code>
+                                        </span>
+                                      </li>
+                                    ))}
+                                  </ul>,
+                                ];
+                              })}
+                            </ul>
+                          ];
                         }}
                       </NrqlQuery>
                     </div>,

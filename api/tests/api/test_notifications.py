@@ -655,7 +655,7 @@ class TestNotificationManagedRequirement:
         mock_get_req.return_value = [fineos_managed_requirement]
         # create existing managed requirement in db not in sync with fineos managed requirement
         create_managed_requirement_from_fineos(
-            test_db_session, claim.claim_id, fineos_managed_requirement, {}
+            test_db_session, claim.claim_id, fineos_managed_requirement
         )
         fineos_managed_requirement.followUpDate = date.today() + timedelta(days=20)
         fineos_managed_requirement.status = ManagedRequirementStatus.get_description(2)
@@ -715,7 +715,7 @@ class TestNotificationManagedRequirement:
         body = self.leave_admin_body_update().copy()
         body["recipients"] = []
         create_managed_requirement_from_fineos(
-            test_db_session, claim.claim_id, fineos_managed_requirement, {}
+            test_db_session, claim.claim_id, fineos_managed_requirement
         )
         fineos_managed_requirement.followUpDate = date.today() + timedelta(days=20)
         fineos_managed_requirement.status = ManagedRequirementStatus.get_description(2)
@@ -794,9 +794,11 @@ class TestNotificationManagedRequirement:
 
         # create existing managed requirements in db not in sync with fineos managed requirements
         for man_req in managed_requirements:
-            create_managed_requirement_from_fineos(
-                test_db_session, claim.claim_id, man_req["fineos_obj"], {}
+            db_mr = create_managed_requirement_from_fineos(
+                test_db_session, claim.claim_id, man_req["fineos_obj"]
             )
+            test_db_session.add(db_mr)
+            test_db_session.commit()
             man_req["fineos_obj"].followUpDate = man_req["new_follow_up_date"]
             man_req["fineos_obj"].status = ManagedRequirementStatus.get_description(
                 man_req["description_id"]

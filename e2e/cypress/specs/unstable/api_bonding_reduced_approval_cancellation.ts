@@ -164,7 +164,7 @@ describe("Approval (notifications/notices)", () => {
           portal.checkNoticeForLeaveAdmin(
             submission.fineos_absence_id,
             employeeFullName,
-            "cancellation"
+            "Approved Time Cancelled (PDF)"
           );
           portal.downloadLegalNotice(submission.fineos_absence_id);
         });

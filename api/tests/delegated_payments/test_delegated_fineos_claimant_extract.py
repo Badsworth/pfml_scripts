@@ -71,17 +71,13 @@ def add_db_records_from_fineos_data(
     with some defaults specific to the claimant extract tests
     """
 
-    # The factory doesn't yet make the employer, so do it here
-    employer = None
-    if add_employer:
-        employer = EmployerFactory(fineos_employer_id=fineos_data.employer_customer_num)
-
     factory = DelegatedPaymentFactory(
         db_session,
         ssn=fineos_data.ssn,
         add_employee=add_employee,
         add_employer=add_employer,
-        employer=employer,
+        employer_customer_num=int(fineos_data.employer_customer_num) if add_employer else None,
+        organization_unit_name=fineos_data.organization_unit_name or None,
         add_pub_eft=add_eft,
         prenote_state=prenote_state,
         prenote_response_at=datetime.datetime(2020, 12, 6, 12, 0, 0),
@@ -154,8 +150,8 @@ def stage_data(
 def test_run_step_happy_path(
     local_claimant_extract_step, local_test_db_session,
 ):
-
-    claimant_data = FineosClaimantData()
+    organization_unit_name = "Appeals Court"
+    claimant_data = FineosClaimantData(organization_unit_name=organization_unit_name)
     employee, _ = add_db_records_from_fineos_data(
         local_test_db_session,
         claimant_data,
@@ -176,6 +172,7 @@ def test_run_step_happy_path(
 
     assert claim is not None
     assert claim.employee_id == employee.employee_id
+    assert claim.organization_unit.name == organization_unit_name
 
     assert claim.fineos_notification_id == claimant_data.notification_number
     assert claim.fineos_absence_status_id == AbsenceStatus.APPROVED.absence_status_id
@@ -1106,6 +1103,7 @@ def test_run_step_minimal_viable_claim(
     assert claim.absence_period_start_date is None
     assert claim.absence_period_end_date is None
     assert claim.is_id_proofed is False
+    assert claim.organization_unit_id is None
 
     # Verify the state logs and outcome
     assert len(claim.state_logs) == 1

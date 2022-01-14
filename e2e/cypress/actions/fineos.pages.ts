@@ -186,6 +186,7 @@ export class ClaimPage {
       | "Preliminary Designation"
       | "SOM Generate Appeals Notice"
       | "Send Decision Notice"
+      | "Review Denial Notice"
   ): this {
     onTab("Task");
     onTab("Processes");
@@ -2563,6 +2564,10 @@ class LeaveDetailsPage {
     cy.get("tr.ListRow2.planUndecided").click();
     waitForAjaxComplete();
     cy.get('input[type="submit"][value="Reject"]').click();
+    return new AdjudicationPage();
+  }
+  inReview(): AdjudicationPage {
+    cy.get('input[type="submit"][value="Review"]').click();
     return new AdjudicationPage();
   }
 }

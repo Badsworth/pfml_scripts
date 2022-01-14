@@ -82,7 +82,7 @@ describe("Denial Notification and Notice", () => {
           portal.checkNoticeForLeaveAdmin(
             submission.fineos_absence_id,
             employeeFullName,
-            "denial"
+            "Denial notice (PDF)"
           );
           portal.downloadLegalNotice(submission.fineos_absence_id);
         });
