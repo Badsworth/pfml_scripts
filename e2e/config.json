@@ -137,7 +137,7 @@
     "HAS_PAYMENT_STATUS": "false",
     "FINEOS_HAS_TAX_WITHHOLDING": "true",
     "HAS_UPDATED_MAX_BENFIT": "true",
-    "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "false",
+    "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "true",
     "HAS_FINEOS_JANUARY_RELEASE": "false"
   },
   "cps-preview": {
