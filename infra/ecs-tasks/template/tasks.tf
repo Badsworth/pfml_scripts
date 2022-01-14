@@ -184,6 +184,7 @@ locals {
       memory    = 9216
       env = [
         local.db_access,
+        local.fineos_api_access,
         local.fineos_s3_access
       ]
     },
