@@ -41,7 +41,12 @@ describe("Submit a claim through the Portal that has OrgUnits associated with th
     () => {
       cy.dependsOnPreviousPass();
       fineos.before();
+      cy.unstash<DehydratedClaim>("claim").then((claim) => {
       cy.unstash<Submission>("submission").then(({ fineos_absence_id }) => {
+        const department = claim.metadata
+          ?.orgunits as unknown as string;
+        const worksite = claim.metadata
+          ?.worksite as unknown as string;
         fineosPages.ClaimPage.visit(fineos_absence_id).adjudicate(
           (adjudication) => {
             adjudication.requestEmploymentInformation();
@@ -50,12 +55,12 @@ describe("Submit a claim through the Portal that has OrgUnits associated with th
             ).should((element) => {
               expect(
                 element,
-                `Organization Unit should be the Division of Administrative Law Appeals`
-              ).to.have.text("Division of Administrative Law Appeals");
+                "Organization Unit should be the `${department}`"
+              ).to.have.text(`${department}`);
             });
           }
         );
       });
-    }
-  );
+    });
+  });
 });

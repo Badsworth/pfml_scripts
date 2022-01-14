@@ -15,8 +15,8 @@
     "EMPLOYERS_FILE": "./employers/e2e-2022-01-03.json",
     "LST_EMPLOYEES_FILE": "./employees/e2e-2021-08-05.json",
     "LST_EMPLOYERS_FILE": "./employers/e2e-2021-08-05.json",
-    "ORGUNIT_EMPLOYEES_FILE": "./employees/e2e-2021-12-20-orgunits.employees.json",
-    "ORGUNIT_EMPLOYERS_FILE": "./employers/e2e-2021-12-20-orgunits.json",
+    "ORGUNIT_EMPLOYEES_FILE": "./employees/e2e-2022-01-13-orgunits-FEIN046002284.json",
+    "ORGUNIT_EMPLOYERS_FILE": "./employers/e2e-2022-01-13-orgunits-FEIN046002284.json",
     "DOR_IMPORT_URI": "s3://massgov-pfml-test-agency-transfer/dor/received/",
     "DOR_ETL_ARN": "arn:aws:states:us-east-1:498823821309:stateMachine:pfml-api-test-dor-fineos-etl",
     "FINEOS_HAS_TAX_WITHHOLDING": "true",
@@ -36,13 +36,15 @@
     "FINEOS_USERNAME": "CONTENT",
     "EMPLOYEES_FILE": "./employees/e2e-2022-01-03.json",
     "EMPLOYERS_FILE": "./employers/e2e-2022-01-03.json",
+    "ORGUNIT_EMPLOYEES_FILE": "./employees/e2e-2022-01-13-orgunits-FEIN046002284.json",
+    "ORGUNIT_EMPLOYERS_FILE": "./employers/e2e-2022-01-13-orgunits-FEIN046002284.json",
     "DOR_IMPORT_URI": "s3://massgov-pfml-stage-agency-transfer/dor/received/",
     "DOR_ETL_ARN": "arn:aws:states:us-east-1:498823821309:stateMachine:pfml-api-stage-dor-fineos-etl",
     "FINEOS_HAS_TAX_WITHHOLDING": "true",
     "HAS_UPDATED_MAX_BENFIT": "true",
     "HAS_PAYMENT_STATUS": "false",
     "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "false",
-    "HAS_FINEOS_JANUARY_RELEASE": "false"
+    "HAS_ORGUNITS_SETUP": "true"
   },
   "training": {
     "PORTAL_BASEURL": "https://paidleave-training.mass.gov",
@@ -110,16 +112,16 @@
     "EMPLOYERS_FILE": "./employers/e2e-2022-01-03.json",
     "LST_EMPLOYEES_FILE": "./employees/lst-2021-08-18.employees.json",
     "LST_EMPLOYERS_FILE": "./employers/lst-2021-08-18.json",
-    "ORGUNIT_EMPLOYEES_FILE": "./employees/e2e-2021-12-20-orgunits.employees.json",
-    "ORGUNIT_EMPLOYERS_FILE": "./employers/e2e-2021-12-20-orgunits.json",
+    "ORGUNIT_EMPLOYEES_FILE": "./employees/e2e-2022-01-13-orgunits-FEIN046002284.json",
+    "ORGUNIT_EMPLOYERS_FILE": "./employers/e2e-2022-01-13-orgunits-FEIN046002284.json",
     "DOR_IMPORT_URI": "s3://massgov-pfml-performance-agency-transfer/dor/received/",
     "DOR_ETL_ARN": "arn:aws:states:us-east-1:498823821309:stateMachine:pfml-api-performance-dor-fineos-etl",
     "HAS_PAYMENT_STATUS": "false",
     "FINEOS_HAS_TAX_WITHHOLDING": "true",
     "HAS_UPDATED_MAX_BENFIT": "true",
     "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "true",
-    "HAS_ORGUNITS_SETUP": "false",
     "HAS_FINEOS_JANUARY_RELEASE": "true"
+    "HAS_ORGUNITS_SETUP": "true"
   },
   "uat": {
     "PORTAL_BASEURL": "https://paidleave-uat.mass.gov",
@@ -150,16 +152,16 @@
     "COGNITO_CLIENTID": "59oeobfn0759c8166pjh381joc",
     "EMPLOYEES_FILE": "./employees/e2e-2022-01-03.json",
     "EMPLOYERS_FILE": "./employers/e2e-2022-01-03.json",
-    "ORGUNIT_EMPLOYEES_FILE": "./employees/e2e-2021-12-20-orgunits.employees.json",
-    "ORGUNIT_EMPLOYERS_FILE": "./employers/e2e-2021-12-20-orgunits.json",
+    "ORGUNIT_EMPLOYEES_FILE": "./employees/e2e-2022-01-13-orgunits-FEIN046002284.json",
+    "ORGUNIT_EMPLOYERS_FILE": "./employers/e2e-2022-01-13-orgunits-FEIN046002284.json",
     "DOR_IMPORT_URI": "s3://massgov-pfml-cps-preview-agency-transfer/dor/received/",
     "DOR_ETL_ARN": "arn:aws:states:us-east-1:498823821309:stateMachine:pfml-api-cps-preview-dor-fineos-etl",
     "FINEOS_HAS_TAX_WITHHOLDING": "true",
     "HAS_UPDATED_MAX_BENFIT": "false",
     "HAS_PAYMENT_STATUS": "true",
     "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "true",
-    "HAS_ORGUNITS_SETUP": "false",
     "HAS_FINEOS_JANUARY_RELEASE": "true"
+    "HAS_ORGUNITS_SETUP": "true"
   },
   "breakfix": {
     "PORTAL_BASEURL": "https://paidleave-breakfix.eol.mass.gov",
@@ -172,6 +174,8 @@
     "TESTMAIL_NAMESPACE": "gqzap",
     "EMPLOYEES_FILE": "./employees/e2e-2021-11-04.json",
     "EMPLOYERS_FILE": "./employers/e2e-2021-11-04.json",
+    "ORGUNIT_EMPLOYEES_FILE": "./employees/e2e-2022-01-13-orgunits-FEIN046002284.json",
+    "ORGUNIT_EMPLOYERS_FILE": "./employers/e2e-2022-01-13-orgunits-FEIN046002284.json",
     "DOR_IMPORT_URI": "s3://massgov-pfml-breakfix-agency-transfer/dor/received/",
     "DOR_ETL_ARN": "arn:aws:states:us-east-1:498823821309:stateMachine:pfml-api-breakfix-dor-fineos-etl",
     "HAS_FINEOS_SP": "true",
@@ -179,7 +183,7 @@
     "HAS_UPDATED_MAX_BENFIT": "false",
     "HAS_PAYMENT_STATUS": "false",
     "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "false",
-    "HAS_FINEOS_JANUARY_RELEASE": "false"
+    "HAS_ORGUNITS_SETUP": "true"
   },
   "local": {
     "PORTAL_BASEURL": "http://localhost:3000",
