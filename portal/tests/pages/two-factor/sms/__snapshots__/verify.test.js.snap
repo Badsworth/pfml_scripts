@@ -17,6 +17,23 @@ exports[`Two-factor SMS Verify renders landing page content 1`] = `
     >
       To protect your security we sent a 6-digit code to the phone number we have on file for verification.  Don’t share this code with anyone. We’ll never call or text you for this code.
     </p>
+    <p
+      class="usa-intro"
+    >
+      To receive a new code, 
+      <a
+        href="/login"
+      >
+        log in again
+      </a>
+      . If you need help, call the Contact Center at 
+      <a
+        href="tel:(833) 344-7365"
+      >
+        (833) 344‑7365
+      </a>
+      .
+    </p>
     <div
       class="usa-form-group"
     >
@@ -39,28 +56,11 @@ exports[`Two-factor SMS Verify renders landing page content 1`] = `
       />
     </div>
     <button
-      class="usa-button position-relative display-block margin-top-1 usa-button--unstyled"
-      type="button"
-    >
-      Didn’t receive the code? Log in again to resend it.
-    </button>
-    <button
       class="usa-button position-relative display-block margin-top-3"
       type="submit"
     >
       Submit
     </button>
   </form>
-  <p
-    class="display-block margin-top-3"
-  >
-    Need help? Call the Contact Center at 
-    <a
-      href="tel:(833) 344-7365"
-    >
-      (833) 344‑7365
-    </a>
-    .
-  </p>
 </div>
 `;
