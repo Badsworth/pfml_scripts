@@ -2,6 +2,8 @@ import "react-datetime/css/react-datetime.css";
 import {
   ApiResponse,
   Flag,
+  FlagLog,
+  FlagLogsResponse,
   FlagsResponse,
   getFlagsLogsByName,
   getFlagsByName,
@@ -20,7 +22,7 @@ import { StaticPropsPermissions } from "../menus";
 
 export default function Maintenance() {
   const [maintenanceHistory, setMaintenanceHistory] =
-    React.useState<FlagsResponse>([]);
+    React.useState<FlagLogsResponse>([]);
   const [maintenance, setMaintenance] = React.useState<Flag | null>(null);
 
   const [showConfirmationDialog, setShowConfirmationDialog] =
@@ -33,7 +35,7 @@ export default function Maintenance() {
       },
     );
     getFlagsLogsByName({ name: "maintenance" }).then(
-      (response: ApiResponse<FlagsResponse>) => {
+      (response: ApiResponse<FlagLogsResponse>) => {
         setMaintenanceHistory(response.data);
       },
     );
@@ -73,21 +75,41 @@ export default function Maintenance() {
   const formatDateTime = (datetime: string) => {
     return moment(datetime).format("MM-DD-YY hh:mmA");
   };
-  const getName = (m: Flag) => <>{(m?.options as options)?.name}</>;
-  const getDuration = (m: Flag) => (
+  const getName = (m: FlagLog) => <>{(m?.options as options)?.name}</>;
+  const getDuration = (m: FlagLog) => (
     <>
       {(m.start ? formatDateTime(m.start) : "No start provided") +
         " - " +
         (m.end ? formatDateTime(m.end) : "No end provided")}
     </>
   );
-  const getPageRoutes = (m: Flag) => {
+  const getPageRoutes = (m: FlagLog) => {
     const routes = (m?.options as options)?.page_routes ?? [];
 
     return routes.join(", ");
   };
-  const getCreatedBy = (m: Flag) => <>{"Admin"}</>;
-  const getOptions = (m: Flag) => {
+  const getCreatedBy = (m: FlagLog) => (
+    <>
+      {m.family_name} {m.given_name}
+    </>
+  );
+
+  const getMaintenanceLinkValues = (m: Flag) => {
+    const linkValues: { [key: string]: string | string[] } = {};
+    linkValues.name = (m?.options as options)?.name ?? "";
+
+    const page_routes =
+      ((m?.options as options)?.page_routes as string[]) ?? [];
+    linkValues.checked_page_routes = page_routes.filter((item) =>
+      checkedValues.includes(item),
+    );
+    linkValues.custom_page_routes = page_routes.filter(
+      (item) => !checkedValues.includes(item),
+    );
+    return linkValues;
+  };
+
+  const getOptions = (m: FlagLog) => {
     const linkValues: { [key: string]: string | string[] } = {};
     linkValues.name = (m?.options as options)?.name ?? "";
     const page_routes =
@@ -104,7 +126,7 @@ export default function Maintenance() {
         <Link
           href={{
             pathname: "/maintenance/add",
-            query: linkValues,
+            query: getMaintenanceLinkValues(m),
           }}
         >
           <a>Clone</a>
@@ -151,6 +173,9 @@ export default function Maintenance() {
                 enabled: getMaintenanceEnabled(),
                 // Add query params including start and end.
                 href: "/maintenance/add",
+                query: maintenance
+                  ? getMaintenanceLinkValues(maintenance)
+                  : undefined,
                 text: "Edit",
                 type: "link",
               },
