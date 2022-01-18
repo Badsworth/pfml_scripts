@@ -4,11 +4,12 @@ from typing import Any, Dict, List, Literal, Optional, Type, Union
 import phonenumbers
 from phonenumbers.phonenumberutil import region_code_for_number
 from sqlalchemy.orm.exc import NoResultFound
-from werkzeug.exceptions import BadRequest, Forbidden
+from werkzeug.exceptions import BadRequest, Conflict, Forbidden, NotFound
 
 import massgov.pfml.api.models.applications.common as apps_common_io
 import massgov.pfml.api.models.claims.common as claims_common_io
 import massgov.pfml.api.models.common as common_io
+import massgov.pfml.api.util.response as response_util
 import massgov.pfml.db as db
 import massgov.pfml.db.lookups as db_lookups
 import massgov.pfml.util.logging
@@ -18,8 +19,9 @@ from massgov.pfml.api.models.applications.common import LeaveReason, PaymentPref
 from massgov.pfml.api.models.applications.requests import ApplicationRequestBody
 from massgov.pfml.api.models.applications.responses import DocumentResponse
 from massgov.pfml.api.models.common import LookupEnum
-from massgov.pfml.api.services.fineos_actions import get_documents
+from massgov.pfml.api.services.fineos_actions import get_documents, register_employee
 from massgov.pfml.api.util.phone import convert_to_E164
+from massgov.pfml.api.util.response import Response
 from massgov.pfml.api.validation.exceptions import (
     IssueRule,
     IssueType,
@@ -52,7 +54,8 @@ from massgov.pfml.db.models.applications import (
     WorkPatternDay,
     WorkPatternType,
 )
-from massgov.pfml.db.models.employees import Address, AddressType, GeoState, LkAddressType
+from massgov.pfml.db.models.employees import Address, AddressType, Claim, GeoState, LkAddressType
+from massgov.pfml.util.datetime import utcnow
 from massgov.pfml.util.pydantic.types import Regexes
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
@@ -925,3 +928,41 @@ def get_document_by_id(
         logger.warning("No document found for ID %s", document_id)
 
     return document
+
+
+def claim_is_valid_for_application_import(claim: Optional[Claim]) -> Optional[Response]:
+    if claim is None:
+        message = "Claim not in PFML database."
+        validation_error = ValidationErrorDetail(
+            message=message, type=IssueType.object_not_found, field="absence_case_id",
+        )
+        error = response_util.error_response(
+            NotFound, message=message, errors=[validation_error], data=[]
+        )
+        return error
+
+    if claim.employee_tax_identifier is None or claim.employer_fein is None:
+        message = "Claim data incomplete for application import."
+        validation_error = ValidationErrorDetail(message=message, type=IssueType.conflicting)
+        error = response_util.error_response(Conflict, message=message, errors=[validation_error])
+        return error
+    return None
+
+
+def set_application_fields_from_claim(
+    fineos: massgov.pfml.fineos.AbstractFINEOSClient,
+    application: Application,
+    claim: Claim,
+    db_session: db.Session,
+) -> str:
+    """
+    Set Application core fields using Claim and calculate the fineos_web_id
+    """
+    application.claim_id = claim.claim_id
+    application.tax_identifier_id = claim.employee.tax_identifier_id
+    application.employer_fein = claim.employer_fein
+    application.imported_from_fineos_at = utcnow()
+
+    return register_employee(
+        fineos, claim.employee_tax_identifier, application.employer_fein, db_session,  # type: ignore
+    )

@@ -19,10 +19,12 @@ import massgov.pfml.util.datetime as datetime_util
 import massgov.pfml.util.logging
 import massgov.pfml.util.pdf as pdf_util
 from massgov.pfml.api.authorization.flask import CREATE, EDIT, READ, ensure
+from massgov.pfml.api.claims import get_claim_from_db
 from massgov.pfml.api.constants.application import ID_DOC_TYPES
 from massgov.pfml.api.models.applications.common import ContentType as AllowedContentTypes
 from massgov.pfml.api.models.applications.common import DocumentType as IoDocumentTypes
 from massgov.pfml.api.models.applications.requests import (
+    ApplicationImportRequestBody,
     ApplicationRequestBody,
     DocumentRequestBody,
     PaymentPreferenceRequestBody,
@@ -138,10 +140,7 @@ def applications_import():
             status_code=Forbidden, message="Application import not currently available", errors=[]
         ).to_api_response()
 
-    body = connexion.request.json
-
     application = Application()
-
     ensure(CREATE, application)
 
     if user := app.current_user():
@@ -152,6 +151,25 @@ def applications_import():
         application.user = user
     else:
         raise Unauthorized
+
+    body = connexion.request.json
+    application_import_request = ApplicationImportRequestBody.parse_obj(body)
+
+    claim = get_claim_from_db(application_import_request.absence_case_id)
+
+    error = applications_service.claim_is_valid_for_application_import(claim)
+    if error is not None:
+        return error.to_api_response()
+
+    with app.db_session() as db_session:
+        fineos = massgov.pfml.fineos.create_client()
+        # we have already check that the claim is not None in
+        # claim_is_valid_for_application_import
+        applications_service.set_application_fields_from_claim(
+            fineos, application, claim, db_session  # type: ignore
+        )
+        db_session.add(application)
+        db_session.commit()
 
     log_attributes = get_application_log_attributes(application)
     logger.info("applications_import success", extra=log_attributes)
