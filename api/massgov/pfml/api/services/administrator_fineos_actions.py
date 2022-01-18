@@ -32,7 +32,7 @@ from massgov.pfml.db.models.employees import Employer, User, UserLeaveAdministra
 from massgov.pfml.db.queries.absence_periods import (
     convert_fineos_absence_period_to_claim_response_absence_period,
 )
-from massgov.pfml.fineos.common import DOWNLOADABLE_DOC_TYPES
+from massgov.pfml.fineos.common import DOWNLOADABLE_DOC_TYPES, SUB_CASE_DOC_TYPES
 from massgov.pfml.fineos.models.group_client_api import (
     Base64EncodedFileData,
     GroupClientDocument,
@@ -226,16 +226,16 @@ def download_document_as_leave_admin(
             data={"document.document_type": doc_type},
         )
     fineos = massgov.pfml.fineos.create_client()
-    # Appeal Acknowledgement notices cannot be fetched from the absence case, but only from the appeal subcase
-    if doc_type == "appeal acknowledgment":
-        case_id = find_appeal_case_id(fineos, fineos_user_id, absence_id, fineos_document_id)
+    # Some document types cannot be fetched from the absence case, but only from the sub case, in which case we need the corresponding case id
+    if doc_type in SUB_CASE_DOC_TYPES:
+        case_id = find_sub_case_id(fineos, fineos_user_id, absence_id, fineos_document_id)
     else:
         case_id = absence_id
 
     return fineos.download_document_as_leave_admin(fineos_user_id, case_id, fineos_document_id)
 
 
-def find_appeal_case_id(
+def find_sub_case_id(
     fineos: massgov.pfml.fineos.AbstractFINEOSClient,
     fineos_user_id: str,
     absence_id: str,

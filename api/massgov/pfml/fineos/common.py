@@ -20,3 +20,9 @@ DOWNLOADABLE_DOC_TYPES = [
     "change request approved",
     "change request denied",
 ]
+
+SUB_CASE_DOC_TYPES = {
+    "appeal acknowledgment",
+    "maximum weekly benefit change notice",
+    "benefit amount change notice",
+}
