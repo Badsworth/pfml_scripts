@@ -1,13 +1,14 @@
 import pytest
 
-from massgov.pfml.db.models.factories import ClaimFactory, EmployeeFactory, PaymentFactory
+from massgov.pfml.db.models.factories import ClaimFactory, EmployeeFactory, ImportLogFactory, PaymentFactory
 from massgov.pfml.db.models.payments import PaymentAuditReportDetails
 from massgov.pfml.delegated_payments.postprocessing.dor_fineos_employee_name_mismatch_processor import (
-    DORFineosEmployeeNameMismatchProcessor,
+    DORFineosEmployeeNameMismatchProcessor, trim_name
 )
 from massgov.pfml.delegated_payments.postprocessing.payment_post_processing_step import (
     PaymentPostProcessingStep,
 )
+from massgov.pfml.util.batch.log import LogEntry
 
 
 @pytest.fixture
@@ -17,9 +18,11 @@ def payment_post_processing_step(
     local_test_db_other_session,
     monkeypatch,
 ):
-    return PaymentPostProcessingStep(
+    step = PaymentPostProcessingStep(
         db_session=local_test_db_session, log_entry_db_session=local_test_db_other_session
     )
+    step.log_entry = LogEntry(local_test_db_other_session, "")
+    return step
 
 
 @pytest.fixture
@@ -112,3 +115,12 @@ def _get_audit_report_details(payment, local_test_db_session):
         .filter(PaymentAuditReportDetails.payment_id == payment.payment_id)
         .one_or_none()
     )
+
+def test_trim_name():
+    expected = "abcabc"
+    assert trim_name("abc abc") == expected
+    assert trim_name("abc ,.-!@$#%#$^%$&*()_+==-abc!@#_%#$%123") == expected
+    assert trim_name(",./;'[]abc abc") == expected
+    assert trim_name("]][[][[[][]abc abc") == expected
+    assert trim_name("///...,../abc abc") == expected
+

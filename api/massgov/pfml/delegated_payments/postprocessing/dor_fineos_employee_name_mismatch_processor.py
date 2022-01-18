@@ -1,5 +1,5 @@
 from typing import List
-
+import re
 import massgov.pfml.util.logging
 from massgov.pfml.db.models.employees import Employee, Payment
 from massgov.pfml.db.models.payments import PaymentAuditReportType
@@ -49,6 +49,12 @@ class DORFineosEmployeeNameMismatchProcessor(AbstractStepProcessor):
             employee.last_name, payment.fineos_employee_last_name
         ) or self.is_name_mismatch(employee.first_name, payment.fineos_employee_first_name)
         if name_mismatch:
+            # Check if the first/last name are just reversed in one of the systems
+            name_mismatch_reverse = self.is_name_mismatch(employee.last_name, payment.fineos_employee_first_name) or self.is_name_mismatch(employee.first_name, payment.fineos_employee_last_name)
+            if not name_mismatch_reverse:
+                self.increment(self.Metrics.PAYMENT_DOR_FINEOS_NAME_SWAPPED)
+                return    
+
             self.increment(self.Metrics.PAYMENT_DOR_FINEOS_NAME_MISMATCH)
             messages: List[str] = []
             messages.append(f"DOR Name: {employee.first_name} {employee.last_name}")
@@ -70,10 +76,12 @@ class DORFineosEmployeeNameMismatchProcessor(AbstractStepProcessor):
                 make_payment_log(payment),
                 extra=get_traceable_payment_details(payment),
             )
+            print("\t".join(messages))
+
 
     def is_name_mismatch(self, dor_name: str, fineos_name: str) -> bool:
-        dor_name_for_compare = dor_name.lower().replace("-", " ").strip()
-        fineos_name_for_compare = fineos_name.lower().replace("-", " ").strip()
+        dor_name_for_compare = trim_name(dor_name)
+        fineos_name_for_compare = trim_name(fineos_name)
 
         if len(dor_name_for_compare) < 2 or len(fineos_name_for_compare) < 2:
             return True
@@ -85,3 +93,10 @@ class DORFineosEmployeeNameMismatchProcessor(AbstractStepProcessor):
             return False
 
         return True
+
+
+def trim_name(name: str) -> str:
+    """
+    Remove miscellaneous characters and spaces from a name
+    """
+    return re.sub(r'[^a-z]', '', name.lower())

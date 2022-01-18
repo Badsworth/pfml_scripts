@@ -36,6 +36,7 @@ class PostProcessingMetrics(str, enum.Enum):
 
     # DOR <> FINEOS name mismatch
     PAYMENT_DOR_FINEOS_NAME_MISMATCH = "payment_dor_fineos_name_mismatch"
+    PAYMENT_DOR_FINEOS_NAME_SWAPPED = "payment_dor_fineos_name_swapped"
 
     # Metrics specific to the in review processor
     PAYMENT_LEAVE_PLAN_IN_REVIEW_COUNT = "payment_leave_plan_in_review"
