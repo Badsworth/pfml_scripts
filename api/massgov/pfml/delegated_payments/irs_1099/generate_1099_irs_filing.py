@@ -135,7 +135,7 @@ class Generate1099IRSfilingStep(Step):
     def _create_a_template(self) -> str:
         temp = (
             "{A_REC_TYPE:<1}{TAX_YEAR:<4}{CSF_IND:<1}{B5:<5}{PYR_TIN:<9}"
-            "{PYR_NM_CTL:<4}{LAST_FILING_IND:<1}{TYPE_RET:<2}{AMT_CD:016}{B8:<8}"
+            "{PYR_NM_CTL:<4}{LAST_FILING_IND:<1}{TYPE_RET:<2}{AMT_CD:<16}{B8:<8}"
             "{FE_IND:<1}{PYR_NM:<80}{TA_IND:<1}{PYR_ADDR:<40}{PYR_CTY:<40}"
             "{PYR_ST:<2}{PYR_ZC:0<9}{PYR_PHONE:<15}{B260:<260}{SEQ_NO:08}{B243:<243}\n"
         )
@@ -471,7 +471,7 @@ class Generate1099IRSfilingStep(Step):
 
     def _remove_special_chars(self, name_string: str) -> str:
 
-        final_string = re.sub("[^A-Za-z0-9- ]+", "", name_string)
+        final_string = re.sub("[^A-Za-z0-9-& ]+", "", name_string)
         if final_string != name_string:
             logger.info("Removed special characters from name %s", name_string)
             logger.info("Name is now %s", final_string)
