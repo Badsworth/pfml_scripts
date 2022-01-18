@@ -2042,6 +2042,7 @@ class TestGetDocumentsAsLeaveAdmin:
             caseId="123",
             description="foo bar",
             originalFilename="test.pdf",
+            fileExtension=".pdf",
         )
 
     @pytest.fixture
@@ -2053,14 +2054,32 @@ class TestGetDocumentsAsLeaveAdmin:
             caseId="234",
             description="foo bar",
             originalFilename="test.pdf",
+            fileExtension=".pdf",
+        )
+
+    @pytest.fixture
+    def group_client_doc_invalid_extension(self):
+        return GroupClientDocument(
+            name="approval notice",
+            documentId=3,
+            type="document",
+            caseId="456",
+            description="foo bar",
+            originalFilename="test.docx",
+            fileExtension=".docx",
         )
 
     def test_get_documents(
-        self, mock_group_client_get_docs, group_client_document, group_client_doc_invalid_type,
+        self,
+        mock_group_client_get_docs,
+        group_client_document,
+        group_client_doc_invalid_type,
+        group_client_doc_invalid_extension,
     ):
         mock_group_client_get_docs.return_value = [
             group_client_document,
             group_client_doc_invalid_type,
+            group_client_doc_invalid_extension,
         ]
         documents = get_documents_as_leave_admin("fake-user-id", "fake-absence-id")
         mock_group_client_get_docs.assert_called_once_with("fake-user-id", "fake-absence-id")

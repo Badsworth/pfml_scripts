@@ -185,9 +185,16 @@ def get_documents_as_leave_admin(fineos_user_id: str, absence_id: str) -> List[D
     downloadable_documents = filter(
         lambda fd: fd.name.lower() in DOWNLOADABLE_DOC_TYPES, fineos_documents
     )
+
     document_responses = list(
-        map(lambda fd: fineos_document_response_to_document_response(fd), downloadable_documents,)
+        map(
+            lambda fd: fineos_document_response_to_document_response(fd),
+            # Certain document types are Word documents when first created, then converted to PDF documents
+            # Only PDF documents should be returned to the portal
+            filter(lambda fd: fd.fileExtension == ".pdf", downloadable_documents),
+        )
     )
+
     return document_responses
 
 

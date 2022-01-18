@@ -1115,9 +1115,12 @@ def get_documents(
     document_responses = list(
         map(
             lambda fd: fineos_document_response_to_document_response(fd, application),
-            fineos_documents,
+            # Certain document types are Word documents when first created, then converted to PDF documents
+            # Only PDF documents should be returned to the portal
+            filter(lambda fd: fd.fileExtension == ".pdf", fineos_documents),
         )
     )
+
     return document_responses
 
 

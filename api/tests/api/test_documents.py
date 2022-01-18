@@ -803,8 +803,9 @@ def test_documents_get_date_created(
             {
                 "caseId": absence_id,
                 "dateCreated": "2020-09-01",
-                "name": "ID Document",
-                "originalFilename": "test.png",
+                "name": "Approval Notice",
+                "originalFilename": "test.pdf",
+                "fileExtension": ".pdf",
                 "receivedDate": "",
             }
         )
@@ -914,12 +915,20 @@ def test_documents_download_mismatch_case(
 ):
     # Regression test to ensure that get_document_by_id searches through all documents from FINEOS
     document_id = "3012"
+    file_extension = ".pdf"
 
     def mock_get_documents(self, user_id, absence_id):
         # mock the response to return multiple documents
         document_type = "approval notice"
         document1 = copy.copy(massgov.pfml.fineos.mock_client.MOCK_DOCUMENT_DATA)
-        document1.update({"caseId": absence_id, "name": document_type, "documentId": document_id})
+        document1.update(
+            {
+                "caseId": absence_id,
+                "name": document_type,
+                "documentId": document_id,
+                "fileExtension": file_extension,
+            }
+        )
 
         return [
             models.customer_api.Document.parse_obj(
