@@ -1,0 +1,8 @@
+{
+    "mypy.runUsingActiveInterpreter": true,
+    "mypy.dmypyExecutable": "",
+    "mypy.targets": [
+        "ci/scripted_releases",
+        "tests"
+    ]
+}

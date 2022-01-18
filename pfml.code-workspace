@@ -1,0 +1,34 @@
+{
+	"folders": [
+		{
+			"path": "admin"
+		},
+		{
+			"path": "api"
+		},
+		{
+			"path": "bin"
+		},
+		{
+			"path": "docs"
+		},
+		{
+			"path": "e2e"
+		},
+		{
+			"path": "feature_flags"
+		},
+		{
+			"path": "infra"
+		},
+		{
+			"path": "portal"
+		},
+		{
+			"path": ".github"
+		}
+	],
+	"settings": {
+		"typescript.preferences.importModuleSpecifier": "project-relative"
+	}
+}

@@ -1,0 +1,27 @@
+{
+  "name": "Python 3",
+  "build": {
+    "dockerComposeFile": "./docker-compose.yml",
+    "service": "mass-pfml-api"
+  },
+  // Set *default* container specific settings.json values on container create.
+  "settings": {
+    "python.pythonPath": "/home/kyeah/.cache/pypoetry/virtualenvs/massgov.pfml.api-9TtSrW0h-py3.9/bin/python",
+    "python.languageServer": "Pylance",
+    "python.linting.enabled": true,
+    "python.formatting.blackPath": "/home/kyeah/.cache/pypoetry/virtualenvs/massgov.pfml.api-9TtSrW0h-py3.9/bin/black",
+    "python.formatting.provider": "black",
+    "editor.formatOnSave": true,
+  },
+  // Add the IDs of extensions you want installed when the container is created.
+  "extensions": [
+    "ms-python.python",
+    "ms-python.vscode-pylance"
+],
+"dockerComposeFile": [
+	"docker-compose.yml",
+	".devcontainer/docker-compose.yml"
+],
+"service": "mass-pfml-api",
+"workspaceFolder": "/workspace"
+}
