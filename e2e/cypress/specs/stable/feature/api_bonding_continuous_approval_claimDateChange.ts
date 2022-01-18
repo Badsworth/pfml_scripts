@@ -8,7 +8,6 @@ describe("Claim date change", () => {
   after(() => {
     portal.deleteDownloadsFolder();
   });
-
   const submit = it("Given a fully approved claim", () => {
     fineos.before();
     // Submit a claim via the API, including Employer Response.
