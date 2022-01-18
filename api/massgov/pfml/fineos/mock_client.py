@@ -208,7 +208,7 @@ def mock_customer_info():
             "addressLine6": "GA",
             "addressLine7": "",
             "postCode": "30303",
-            "country": {"name": "USA", "domainName": "Country"},
+            "country": {"name": "USA", "domainName": "Country", "domainId": 1, "fullId": 2},
             "extensions": {
                 "ConsenttoShareData": True,
                 "Confirmed": True,

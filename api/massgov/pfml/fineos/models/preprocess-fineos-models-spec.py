@@ -30,6 +30,10 @@ for _schema_name, schema_desc in schemas.items():
                     prop_desc.get("additionalProperties", None) == {"type": "object"}
                 ):
                     prop_desc.pop("additionalProperties")
+
+                if prop_desc["type"] == "string" and (prop_desc.get("maximum", None) is not None):
+                    max_length = prop_desc.pop("maximum")
+                    prop_desc["maxLength"] = max_length
     else:
         # Some entries have an "allOf" property with a reference as well as properties, e.g. `AUTaxCodeDetails`
         continue
