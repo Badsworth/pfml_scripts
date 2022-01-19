@@ -1,14 +1,14 @@
 import pytest
 
-from massgov.pfml.db.models.factories import ClaimFactory, EmployeeFactory, ImportLogFactory, PaymentFactory
+from massgov.pfml.db.models.factories import ClaimFactory, EmployeeFactory, PaymentFactory
 from massgov.pfml.db.models.payments import PaymentAuditReportDetails
 from massgov.pfml.delegated_payments.postprocessing.dor_fineos_employee_name_mismatch_processor import (
-    DORFineosEmployeeNameMismatchProcessor, trim_name
+    DORFineosEmployeeNameMismatchProcessor,
+    trim_name,
 )
 from massgov.pfml.delegated_payments.postprocessing.payment_post_processing_step import (
     PaymentPostProcessingStep,
 )
-from massgov.pfml.util.batch.log import LogEntry
 
 
 @pytest.fixture
@@ -18,11 +18,9 @@ def payment_post_processing_step(
     local_test_db_other_session,
     monkeypatch,
 ):
-    step = PaymentPostProcessingStep(
+    return PaymentPostProcessingStep(
         db_session=local_test_db_session, log_entry_db_session=local_test_db_other_session
     )
-    step.log_entry = LogEntry(local_test_db_other_session, "")
-    return step
 
 
 @pytest.fixture
@@ -47,7 +45,7 @@ def test_processor_mixed(
     local_test_db_session,
     local_initialize_factories_session,
 ):
-    # Exact or close matches
+    ### Exact or close matches
     payment = create_payment_with_name("Javier", "Valdez", "Javier", "Valdez")
     dor_fineos_employee_name_mismatch_processor.process(payment)
     assert _get_audit_report_details(payment, local_test_db_session) is None
@@ -84,22 +82,44 @@ def test_processor_mixed(
     dor_fineos_employee_name_mismatch_processor.process(payment)
     assert _get_audit_report_details(payment, local_test_db_session) is None
 
-    # Mismatches
-    payment_1 = create_payment_with_name("Sam", "Valdez-Garcia", "Javier", "Valdez-Garcia")
+    payment = create_payment_with_name("Javier", "Valdez-Garcia", "Javier", "Valdez_Garcia")
+    dor_fineos_employee_name_mismatch_processor.process(payment)
+    assert _get_audit_report_details(payment, local_test_db_session) is None
+
+    ### Acceptable differences
+    # First names different
+    payment = create_payment_with_name("Javier", "Valdez-Garcia", "Joe", "Valdez-Garcia")
+    dor_fineos_employee_name_mismatch_processor.process(payment)
+    assert _get_audit_report_details(payment, local_test_db_session) is None
+    # Last names different
+    payment = create_payment_with_name("Javier", "Valdez-Garcia", "Javier", "Smith")
+    dor_fineos_employee_name_mismatch_processor.process(payment)
+    assert _get_audit_report_details(payment, local_test_db_session) is None
+    # Minor mispelling
+    payment = create_payment_with_name("Javier", "Valdez-Garcia", "Javiir", "Valdez-Garcia")
+    dor_fineos_employee_name_mismatch_processor.process(payment)
+    assert _get_audit_report_details(payment, local_test_db_session) is None
+    # Minor mispelling
+    payment = create_payment_with_name("Javier", "Valdes-Garcia", "Javier", "Valdez-Garcia")
+    dor_fineos_employee_name_mismatch_processor.process(payment)
+    assert _get_audit_report_details(payment, local_test_db_session) is None
+
+    ### Mismatches
+    payment_1 = create_payment_with_name("Sam", "Garcia-Valdez", "Javier", "Valdez-Garcia")
     dor_fineos_employee_name_mismatch_processor.process(payment_1)
     audit_report = _get_audit_report_details(payment_1, local_test_db_session)
     message = audit_report.details["message"]
 
     assert message == "\n".join(
-        ["DOR Name: Sam Valdez-Garcia", "FINEOS Name: Javier Valdez-Garcia",]
+        ["DOR Name: Sam Garcia-Valdez", "FINEOS Name: Javier Valdez-Garcia",]
     )
 
-    payment_2 = create_payment_with_name("Javier", "Jones", "Javier", "Valdez-Garcia")
+    payment_2 = create_payment_with_name("Javier", "Jones", "Joe", "Valdez-Garcia")
     dor_fineos_employee_name_mismatch_processor.process(payment_2)
     audit_report = _get_audit_report_details(payment_2, local_test_db_session)
     message = audit_report.details["message"]
 
-    assert message == "\n".join(["DOR Name: Javier Jones", "FINEOS Name: Javier Valdez-Garcia",])
+    assert message == "\n".join(["DOR Name: Javier Jones", "FINEOS Name: Joe Valdez-Garcia",])
 
     payment_3 = create_payment_with_name("Sam", "Jones", "Javier", "Valdez-Garcia")
     dor_fineos_employee_name_mismatch_processor.process(payment_3)
@@ -116,6 +136,7 @@ def _get_audit_report_details(payment, local_test_db_session):
         .one_or_none()
     )
 
+
 def test_trim_name():
     expected = "abcabc"
     assert trim_name("abc abc") == expected
@@ -123,4 +144,3 @@ def test_trim_name():
     assert trim_name(",./;'[]abc abc") == expected
     assert trim_name("]][[][[[][]abc abc") == expected
     assert trim_name("///...,../abc abc") == expected
-
