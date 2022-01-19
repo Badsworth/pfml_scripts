@@ -134,10 +134,9 @@ export const Status = ({
     claimDetail.application_id
   );
 
-  const approvalNotice = documentsForApplication.find(
-    (document: { document_type: string }) =>
-      document.document_type === DocumentType.approvalNotice
-  );
+  const approvalNotice = findDocumentsByTypes(documentsForApplication, [
+    DocumentType.approvalNotice,
+  ])[0];
 
   const viewYourNotices = () => {
     const legalNotices = getLegalNotices(documentsForApplication);

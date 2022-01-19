@@ -1,5 +1,26 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`Payments Phase 2 Checkback date implementation does not render checkback dates for claims that have at least one payment row 1`] = `
+<section
+  data-testid="your-payments-intro"
+>
+  Payments are scheduled to be paid after each week of your leave. Check back weekly to see when your next payment will be scheduled.
+  <section
+    class="margin-y-5"
+    data-testid="estimated-date"
+  >
+    <h3
+      class="font-heading-sm text-bold"
+    >
+      What does the estimated date mean?
+    </h3>
+    <p>
+      This is the date range we expect to process your direct deposit payment or send your check in the mail. Depending on your bank, expect to receive direct deposit payments in your account 2-3 days after this date. Checks may take 7-11 days to arrive in the mail. Once your payment is processed or your check is sent, that date will be shown in the “date processed” column.
+    </p>
+  </section>
+</section>
+`;
+
 exports[`Payments Phase 2 Checkback date implementation does not render the Payments table when no payments are available and leave is intermittent 1`] = `
 <section
   data-testid="your-payments-intro"

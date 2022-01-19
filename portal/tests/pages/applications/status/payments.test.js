@@ -434,6 +434,27 @@ describe("Payments", () => {
       });
     });
 
+    it("does not render checkback dates for claims that have at least one payment row", () => {
+      renderPage(
+        Payments,
+        {
+          addCustomSetup: setupHelper({
+            ...defaultClaimDetail,
+            payments: [
+              createMockPayment(
+                { status: "Delayed", sent_to_bank_date: null },
+                true
+              ),
+            ],
+          }),
+        },
+        props
+      );
+
+      expect(screen.queryByText(/Check back on/)).not.toBeInTheDocument();
+      expect(screen.getByTestId("your-payments-intro")).toMatchSnapshot();
+    });
+
     it.each(Object.keys(approvalDate))(
       "renders intro text for continuous leaves %s ",
       (state) => {
