@@ -365,7 +365,7 @@ class AbsencePeriod(Base, TimestampMixin):
     claim_id = Column(PostgreSQLUUID, ForeignKey("claim.claim_id"), index=True, nullable=False)
     fineos_absence_period_class_id = Column(Integer, nullable=False, index=True)
     fineos_absence_period_index_id = Column(Integer, nullable=False, index=True)
-    fineos_leave_request_id = Column(Integer)
+    fineos_leave_request_id = Column(Integer, index=True)
     fineos_average_weekly_wage = Column(Numeric(asdecimal=True))
     leave_request_decision_id = Column(
         Integer, ForeignKey("lk_leave_request_decision.leave_request_decision_id")
@@ -1108,7 +1108,7 @@ class Payment(Base, TimestampMixin):
 class PaymentDetails(Base, TimestampMixin):
     __tablename__ = "payment_details"
     payment_details_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
-    payment_id = Column(PostgreSQLUUID, ForeignKey(Payment.payment_id), nullable=False)
+    payment_id = Column(PostgreSQLUUID, ForeignKey(Payment.payment_id), nullable=False, index=True)
 
     period_start_date = Column(Date)
     period_end_date = Column(Date)
@@ -1698,7 +1698,7 @@ class DiaReductionPaymentReferenceFile(Base, TimestampMixin):
 class StateLog(Base, TimestampMixin):
     __tablename__ = "state_log"
     state_log_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
-    end_state_id = Column(Integer, ForeignKey("lk_state.state_id"))
+    end_state_id = Column(Integer, ForeignKey("lk_state.state_id"), index=True)
     started_at = Column(TIMESTAMP(timezone=True))
     ended_at = Column(TIMESTAMP(timezone=True), index=True)
     outcome = Column(JSON)
