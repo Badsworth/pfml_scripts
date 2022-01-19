@@ -5,9 +5,9 @@ import Accordion from "../../../components/core/Accordion";
 import AccordionItem from "../../../components/core/AccordionItem";
 import Alert from "../../../components/core/Alert";
 import BackButton from "../../../components/BackButton";
+import { DocumentType } from "../../../models/Document";
 import Heading from "../../../components/core/Heading";
 import LeaveReason from "../../../models/LeaveReason";
-import { OtherDocumentType } from "../../../models/Document";
 import PageNotFound from "../../../components/PageNotFound";
 import Spinner from "../../../components/core/Spinner";
 import StatusNavigationTabs from "../../../components/status/StatusNavigationTabs";
@@ -17,6 +17,7 @@ import { Trans } from "react-i18next";
 import { createRouteWithQuery } from "../../../utils/routeWithParams";
 import dayjs from "dayjs";
 import dayjsBusinessTime from "dayjs-business-time";
+import findDocumentsByTypes from "src/utils/findDocumentsByTypes";
 import formatDate from "../../../utils/formatDate";
 import formatDateRange from "../../../utils/formatDateRange";
 import { getMaxBenefitAmount } from "../../../utils/getMaxBenefitAmount";
@@ -77,10 +78,9 @@ export const Payments = ({
       allClaimDocuments.filterByApplication(application_id)) ||
     [];
 
-  const approvalNotice = documentsForApplication.find(
-    (document: { document_type: string }) =>
-      document.document_type === OtherDocumentType.approvalNotice
-  );
+  const approvalNotice = findDocumentsByTypes(documentsForApplication, [
+    DocumentType.approvalNotice,
+  ])[0];
 
   useEffect(() => {
     const loadPayments = (absenceId: string) =>
@@ -222,31 +222,30 @@ export const Payments = ({
 
   if (
     isFeatureEnabled("claimantShowPaymentsPhaseTwo") &&
+    !claimDetail?.payments.length &&
     !isIntermittent &&
-    !hasPaidPayments
+    approvalDate
   ) {
-    if (!hasPaidPayments && approvalDate) {
-      checkbackDateContext = claimDetail?.isContinuous
-        ? "Continuous_"
-        : "ReducedSchedule_";
-      const fourteenthDayOfClaim = dayjs(initialClaimStartDate)
-        .add(13, "day")
-        .format("YYYY-MM-DD");
+    checkbackDateContext = claimDetail?.isContinuous
+      ? "Continuous_"
+      : "ReducedSchedule_";
+    const fourteenthDayOfClaim = dayjs(initialClaimStartDate)
+      .add(13, "day")
+      .format("YYYY-MM-DD");
 
-      if (isRetroactive || approvalDate >= fourteenthDayOfClaim) {
-        checkbackDate = dayjs(approvalDate)
-          .addBusinessDays(3)
-          .format("MM/DD/YYYY");
-        checkbackDateContext += isRetroactive
-          ? "Retroactive"
-          : "PostFourteenthClaimDate";
-      } else {
-        checkbackDate = dayjs(initialClaimStartDate)
-          .add(13, "day")
-          .addBusinessDays(3)
-          .format("MM/DD/YYYY");
-        checkbackDateContext += "PreFourteenthClaimDate";
-      }
+    if (isRetroactive || approvalDate >= fourteenthDayOfClaim) {
+      checkbackDate = dayjs(approvalDate)
+        .addBusinessDays(3)
+        .format("MM/DD/YYYY");
+      checkbackDateContext += isRetroactive
+        ? "Retroactive"
+        : "PostFourteenthClaimDate";
+    } else {
+      checkbackDate = dayjs(initialClaimStartDate)
+        .add(13, "day")
+        .addBusinessDays(3)
+        .format("MM/DD/YYYY");
+      checkbackDateContext += "PreFourteenthClaimDate";
     }
   }
 
