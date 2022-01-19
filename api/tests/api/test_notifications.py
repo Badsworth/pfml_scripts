@@ -383,7 +383,6 @@ class TestNotificationAbsencePeriod:
     def updated_fineos_absence_details(self):
         details = fineos_absence_detail_body_1.copy()
         details["absencePeriods"][0]["endDate"] = date.today()
-        details["absencePeriods"][0]["expectedReturnToWorkDate"] = date.today() + timedelta(days=10)
         details["absencePeriods"][0]["requestStatus"] = "Denied"
         return AbsenceDetails.parse_obj(details)
 
