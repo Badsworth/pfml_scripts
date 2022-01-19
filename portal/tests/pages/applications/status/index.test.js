@@ -2,7 +2,6 @@ import Status, {
   LeaveDetails,
 } from "../../../../src/pages/applications/status/index";
 import { cleanup, render, screen } from "@testing-library/react";
-
 import { AbsencePeriod } from "../../../../src/models/AbsencePeriod";
 import AppErrorInfo from "../../../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../../../src/models/AppErrorInfoCollection";
@@ -53,6 +52,14 @@ const DOCUMENTS = [
     fineos_document_id: "fineos-id-7",
     name: "legal notice 3",
   },
+  {
+    application_id: "mock-application-id",
+    content_type: "image/png",
+    created_at: "2020-04-05",
+    document_type: DocumentType.approvalNotice,
+    fineos_document_id: "fineos-id-8",
+    name: "legal notice 3",
+  },
 ];
 
 const renderWithClaimDocuments = (appLogicHook, documents = []) => {
@@ -88,7 +95,7 @@ const props = {
 };
 
 describe("Status", () => {
-  it("shows StatusNavigationTabs if claimantShowPayments feature flag is enabled and claim has_paid_payments  ", () => {
+  it("shows StatusNavigationTabs if claimantShowPayments feature flag is enabled and claim has_paid_payments and approval notice ", () => {
     process.env.featureFlags = JSON.stringify({
       claimantShowPayments: true,
     });
@@ -96,18 +103,21 @@ describe("Status", () => {
     renderPage(
       Status,
       {
-        addCustomSetup: setupHelper({
-          ...defaultClaimDetail,
-          has_paid_payments: true,
-          absence_periods: [
-            {
-              period_type: "Reduced",
-              reason: LeaveReason.bonding,
-              request_decision: "Approved",
-              reason_qualifier_one: "Newborn",
-            },
-          ],
-        }),
+        addCustomSetup: setupHelper(
+          {
+            ...defaultClaimDetail,
+            has_paid_payments: true,
+            absence_periods: [
+              {
+                period_type: "Reduced",
+                reason: LeaveReason.bonding,
+                request_decision: "Approved",
+                reason_qualifier_one: "Newborn",
+              },
+            ],
+          },
+          [DOCUMENTS[4]]
+        ),
       },
       props
     );
@@ -118,7 +128,7 @@ describe("Status", () => {
     ).toBeInTheDocument();
   });
 
-  it("shows StatusNavigationTabs if claimantShowPaymentsPhaseTwo feature flag is enabled and claim", () => {
+  it("does not show StatusNavigationTabs if claimantShowPaymentsPhaseTwo feature flag is enabled and claim loaded without approval notice", () => {
     process.env.featureFlags = JSON.stringify({
       claimantShowPaymentsPhaseTwo: true,
     });
@@ -142,10 +152,9 @@ describe("Status", () => {
       props
     );
 
-    expect(screen.getByRole("link", { name: "Payments" })).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: "Application" })
-    ).toBeInTheDocument();
+      screen.queryByRole("link", { name: "Payments" })
+    ).not.toBeInTheDocument();
   });
 
   it("does not show StatusNavigationTabs if claimantShowPayments feature flag is disabled", () => {
