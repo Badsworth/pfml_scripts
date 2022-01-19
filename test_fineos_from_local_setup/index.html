@@ -1330,17 +1330,21 @@
 </li>
 </ul>
 <h2 id="1-set-up-env-values">1. Set up env values</h2>
-<p><strong>Decide which FINEOS environment you wish to use. Paste and replace the following values in your <code>docker-compose.yml</code></strong></p>
+<p><strong>Decide which FINEOS environment you wish to use. Paste and replace the following values in
+<code>config/local.env</code> and <code>docker-compose.yml</code></strong></p>
 <details>
   <summary>test - DT2</summary>
 
-<div class="highlight"><pre><span></span><code>  - FINEOS_CLIENT_CUSTOMER_API_URL=https://dt2-api.masspfml.fineos.com/customerapi/
-  - FINEOS_CLIENT_WSCOMPOSER_API_URL=https://dt2-api.masspfml.fineos.com/integration-services/wscomposer/
-  - FINEOS_CLIENT_GROUP_CLIENT_API_URL=https://dt2-api.masspfml.fineos.com/groupclientapi/
-  - FINEOS_CLIENT_INTEGRATION_SERVICES_API_URL=https://dt2-api.masspfml.fineos.com/integration-services/
-  - FINEOS_CLIENT_OAUTH2_URL=https://dt2-api.masspfml.fineos.com/oauth2/token
-  - FINEOS_CLIENT_OAUTH2_CLIENT_ID=1ral5e957i0l9shul52bhk0037
-  // no need to replace the following if you are using Swagger UI
+`config/local.env`:
+<div class="highlight"><pre><span></span><code>FINEOS_CLIENT_CUSTOMER_API_URL=https://dt2-api.masspfml.fineos.com/customerapi/
+FINEOS_CLIENT_WSCOMPOSER_API_URL=https://dt2-api.masspfml.fineos.com/integration-services/wscomposer/
+FINEOS_CLIENT_GROUP_CLIENT_API_URL=https://dt2-api.masspfml.fineos.com/groupclientapi/
+FINEOS_CLIENT_INTEGRATION_SERVICES_API_URL=https://dt2-api.masspfml.fineos.com/integration-services/
+FINEOS_CLIENT_OAUTH2_URL=https://dt2-api.masspfml.fineos.com/oauth2/token
+FINEOS_CLIENT_OAUTH2_CLIENT_ID=1ral5e957i0l9shul52bhk0037
+</code></pre></div>
+`docker-compose.yml`:
+<div class="highlight"><pre><span></span><code>  // no need to replace the following if you are using Swagger UI
   - COGNITO_USER_POOL_ID=us-east-1_HhQSLYSIe
   - COGNITO_USER_POOL_CLIENT_ID=7sjb96tvg8251lrq5vdk7de9
   - COGNITO_USER_POOL_KEYS_URL=https://cognito-idp.us-east-1.amazonaws.com/us-east-1_HhQSLYSIe/.well-known/jwks.json
@@ -1349,32 +1353,39 @@
 <details>
   <summary>cps-preview - DT3</summary>
 
-  <div class="highlight"><pre><span></span><code>- FINEOS_CLIENT_CUSTOMER_API_URL=https://dt3-api.masspfml.fineos.com/customerapi/
-- FINEOS_CLIENT_WSCOMPOSER_API_URL=https://dt3-api.masspfml.fineos.com/integration-services/wscomposer/
-- FINEOS_CLIENT_GROUP_CLIENT_API_URL=https://dt3-api.masspfml.fineos.com/groupclientapi/
-- FINEOS_CLIENT_INTEGRATION_SERVICES_API_URL=https://dt3-api.masspfml.fineos.com/integration-services/
-- FINEOS_CLIENT_OAUTH2_URL=https://dt3-api.masspfml.fineos.com/oauth2/token
-- FINEOS_CLIENT_OAUTH2_CLIENT_ID=2gptm2870hlo9ouq70poib8d5g
-// no need to replace the following if you are using Swagger UI
-- COGNITO_USER_POOL_ID=us-east-1_1OVYp4aZo
-- COGNITO_USER_POOL_CLIENT_ID=59oeobfn0759c8166pjh381joc
-- COGNITO_USER_POOL_KEYS_URL=https://cognito-idp.us-east-1.amazonaws.com/us-east-1_1OVYp4aZo/.well-known/jwks.json
+`config/local.env`:
+<div class="highlight"><pre><span></span><code>FINEOS_CLIENT_CUSTOMER_API_URL=https://dt3-api.masspfml.fineos.com/customerapi/
+FINEOS_CLIENT_WSCOMPOSER_API_URL=https://dt3-api.masspfml.fineos.com/integration-services/wscomposer/
+FINEOS_CLIENT_GROUP_CLIENT_API_URL=https://dt3-api.masspfml.fineos.com/groupclientapi/
+FINEOS_CLIENT_INTEGRATION_SERVICES_API_URL=https://dt3-api.masspfml.fineos.com/integration-services/
+FINEOS_CLIENT_OAUTH2_URL=https://dt3-api.masspfml.fineos.com/oauth2/token
+FINEOS_CLIENT_OAUTH2_CLIENT_ID=2gptm2870hlo9ouq70poib8d5g
 </code></pre></div>
-</details>
-<details>
-  <summary>stage - IDT</summary>
+`docker-compose.yml`:
+<div class="highlight"><pre><span></span><code>  // no need to replace the following if you are using Swagger UI
+  - COGNITO_USER_POOL_ID=us-east-1_1OVYp4aZo
+  - COGNITO_USER_POOL_CLIENT_ID=59oeobfn0759c8166pjh381joc
+  - COGNITO_USER_POOL_KEYS_URL=https://cognito-idp.us-east-1.amazonaws.com/us-east-1_1OVYp4aZo/.well-known/jwks.json
+  ```
+&lt;/details&gt;
+&lt;details&gt;
+  &lt;summary&gt;stage - IDT&lt;/summary&gt;
 
-  <div class="highlight"><pre><span></span><code>- FINEOS_CLIENT_CUSTOMER_API_URL=https://idt-api.masspfml.fineos.com/customerapi/
-- FINEOS_CLIENT_WSCOMPOSER_API_URL=https://idt-api.masspfml.fineos.com/integration-services/wscomposer/
-- FINEOS_CLIENT_GROUP_CLIENT_API_URL=https://idt-api.masspfml.fineos.com/groupclientapi/
-- FINEOS_CLIENT_INTEGRATION_SERVICES_API_URL=https://idt-api.masspfml.fineos.com/integration-services/
-- FINEOS_CLIENT_OAUTH2_URL=https://idt-api.masspfml.fineos.com/oauth2/token
-- FINEOS_CLIENT_OAUTH2_CLIENT_ID=1fa281uto9tjuqtm21jle7loam
-// no need to replace the following if you are using Swagger UI
-- COGNITO_USER_POOL_ID=us-east-1_HpL4XslLg
-- COGNITO_USER_POOL_CLIENT_ID=10rjcp71r8bnk4459c67bn18t8
-- COGNITO_USER_POOL_KEYS_URL=https://cognito-idp.us-east-1.amazonaws.com/us-east-1_HpL4XslLg/.well-known/jwks.json
+`config/local.env`:
 </code></pre></div>
+FINEOS_CLIENT_CUSTOMER_API_URL=https://idt-api.masspfml.fineos.com/customerapi/
+FINEOS_CLIENT_WSCOMPOSER_API_URL=https://idt-api.masspfml.fineos.com/integration-services/wscomposer/
+FINEOS_CLIENT_GROUP_CLIENT_API_URL=https://idt-api.masspfml.fineos.com/groupclientapi/
+FINEOS_CLIENT_INTEGRATION_SERVICES_API_URL=https://idt-api.masspfml.fineos.com/integration-services/
+FINEOS_CLIENT_OAUTH2_URL=https://idt-api.masspfml.fineos.com/oauth2/token
+FINEOS_CLIENT_OAUTH2_CLIENT_ID=1fa281uto9tjuqtm21jle7loam
+<div class="highlight"><pre><span></span><code>`docker-compose.yml`:
+</code></pre></div>
+  // no need to replace the following if you are using Swagger UI
+  - COGNITO_USER_POOL_ID=us-east-1_HpL4XslLg
+  - COGNITO_USER_POOL_CLIENT_ID=10rjcp71r8bnk4459c67bn18t8
+  - COGNITO_USER_POOL_KEYS_URL=https://cognito-idp.us-east-1.amazonaws.com/us-east-1_HpL4XslLg/.well-known/jwks.json
+  ```
 </details>
 <p><br/></p>
 <p><strong>Paste <code>FINEOS_CLIENT_OAUTH2_CLIENT_SECRET</code> from 1password7: <code>Fineos Client ID and Secrets</code></strong></p>
