@@ -16,16 +16,6 @@ describe("Two-factor SMS Verify", () => {
     expect(container.firstChild).toMatchSnapshot();
   });
 
-  it("renders PageNotFound if the claimantShowMFA feature flag is not set", () => {
-    process.env.featureFlags = JSON.stringify({ claimantShowMFA: false });
-    renderPage(VerifySMS);
-
-    const pageNotFoundHeading = screen.getByRole("heading", {
-      name: /Page not found/,
-    });
-    expect(pageNotFoundHeading).toBeInTheDocument();
-  });
-
   it("routes to the login page if the Cognito User is not defined", () => {
     const mockGoTo = jest.fn();
     renderPage(

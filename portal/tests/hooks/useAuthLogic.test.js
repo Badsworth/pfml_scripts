@@ -273,6 +273,13 @@ describe("useAuthLogic", () => {
   });
 
   describe("login", () => {
+    beforeAll(() => {
+      jest.spyOn(Auth, "signIn").mockImplementation(() => {
+        const cognitoUser = {};
+        return cognitoUser;
+      });
+    });
+
     it("calls Auth.signIn", async () => {
       const { result } = render();
       await act(async () => {
@@ -580,6 +587,23 @@ describe("useAuthLogic", () => {
       });
       expect(portalFlow.goToPageFor).toHaveBeenCalledWith(
         "UNCONFIRMED_ACCOUNT"
+      );
+    });
+
+    it("directs to the page to verify an MFA challenge even if the feature flag is not on", async () => {
+      jest.spyOn(Auth, "signIn").mockImplementationOnce(() => {
+        const cognitoUser = { challengeName: "SMS_MFA" };
+        return cognitoUser;
+      });
+      const portalFlow = mockPortalFlow();
+      const { result } = render(portalFlow);
+      await act(async () => {
+        await result.current.login(username, password);
+      });
+      expect(portalFlow.goToPageFor).toHaveBeenCalledWith(
+        "VERIFY_CODE",
+        {},
+        { next: undefined }
       );
     });
 
