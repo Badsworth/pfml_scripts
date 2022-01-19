@@ -24,6 +24,7 @@
     "HAS_PAYMENT_STATUS": "true",
     "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "true",
     "HAS_ORGUNITS_SETUP": "true",
+    "MFA_ENABLED": "true",
     "HAS_FINEOS_JANUARY_RELEASE": "true"
   },
   "stage": {
@@ -42,6 +43,7 @@
     "HAS_UPDATED_MAX_BENFIT": "true",
     "HAS_PAYMENT_STATUS": "false",
     "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "false",
+    "MFA_ENABLED": "false",
     "HAS_FINEOS_JANUARY_RELEASE": "false"
   },
   "training": {
@@ -60,6 +62,7 @@
     "HAS_UPDATED_MAX_BENFIT": "true",
     "HAS_PAYMENT_STATUS": "false",
     "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "false",
+    "MFA_ENABLED": "false",
     "HAS_FINEOS_JANUARY_RELEASE": "false"
   },
   "trn2": {
@@ -78,6 +81,7 @@
     "HAS_UPDATED_MAX_BENFIT": "false",
     "HAS_PAYMENT_STATUS": "false",
     "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "false",
+    "MFA_ENABLED": "false",
     "HAS_FINEOS_JANUARY_RELEASE": "false"
   },
   "long": {
@@ -96,6 +100,7 @@
     "HAS_UPDATED_MAX_BENFIT": "false",
     "HAS_PAYMENT_STATUS": "false",
     "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "false",
+    "MFA_ENABLED": "false",
     "HAS_FINEOS_JANUARY_RELEASE": "false"
   },
   "performance": {
@@ -117,6 +122,7 @@
     "HAS_PAYMENT_STATUS": "false",
     "FINEOS_HAS_TAX_WITHHOLDING": "true",
     "HAS_UPDATED_MAX_BENFIT": "true",
+    "MFA_ENABLED": "false",
     "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "true",
     "HAS_ORGUNITS_SETUP": "false",
     "HAS_FINEOS_JANUARY_RELEASE": "true"
@@ -138,6 +144,7 @@
     "FINEOS_HAS_TAX_WITHHOLDING": "true",
     "HAS_UPDATED_MAX_BENFIT": "true",
     "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "true",
+    "MFA_ENABLED": "false",
     "HAS_FINEOS_JANUARY_RELEASE": "false"
   },
   "cps-preview": {
@@ -157,9 +164,10 @@
     "FINEOS_HAS_TAX_WITHHOLDING": "true",
     "HAS_UPDATED_MAX_BENFIT": "false",
     "HAS_PAYMENT_STATUS": "true",
-    "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "true",
+    "HAS_FINEOS_JANUARY_RELEASE": "true",
+    "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "false",
     "HAS_ORGUNITS_SETUP": "false",
-    "HAS_FINEOS_JANUARY_RELEASE": "true"
+    "MFA_ENABLED": "false"
   },
   "breakfix": {
     "PORTAL_BASEURL": "https://paidleave-breakfix.eol.mass.gov",
@@ -179,6 +187,7 @@
     "HAS_UPDATED_MAX_BENFIT": "false",
     "HAS_PAYMENT_STATUS": "false",
     "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "false",
+    "MFA_ENABLED": "false",
     "HAS_FINEOS_JANUARY_RELEASE": "false"
   },
   "local": {

@@ -17,6 +17,7 @@ export type FeatureFlags = {
   claimantShowStatusPage?: boolean;
   claimantShowPayments: boolean;
   claimantShowOrganizationUnits: boolean;
+  claimantShowMFA?: boolean;
   employerShowMultiLeave: boolean;
 };
 

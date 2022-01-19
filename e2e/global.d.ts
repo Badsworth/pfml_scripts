@@ -15,6 +15,8 @@ type waitForClaimDocuments =
   import("./cypress/plugins/DocumentWaiter").default["waitForClaimDocuments"];
 type Email = import("./src/submission/TestMailClient").Email;
 type GetEmailsOpts = import("./src/submission/TestMailClient").GetEmailsOpts;
+type MFAOpts = import("./src/submission/TwilioClient").MFAOpts;
+type RES_MFA = import("./src/submission/TwilioClient").RES_MFA
 type Result = import("pdf-parse").Result;
 type DehydratedClaim = import("./src/generation/Claim").DehydratedClaim;
 type Employer = import("./src/generation/Employer").Employer;
@@ -54,6 +56,8 @@ declare namespace Cypress {
         : GeneratedClaim
     >;
     task(event: "getAuthVerification", mail: string): Chainable<string>;
+    task(event: "mfaVerfication", opts: MFAOpts): Chainable<RES_MFA>;
+    task(event: "getMFAPhoneNumber", type: string): Chainable<string>;
     task(
       event: "completeSSOLoginFineos",
       credentials?: Credentials

@@ -39,6 +39,8 @@ import {
 import { LeaveReason } from "generation/Claim";
 import { getClaimantCredentials, getLeaveAdminCredentials } from "../config";
 import { format } from "date-fns";
+import { Numbers } from "../../src/submission/TwilioClient";
+import { Environment } from "../../src/types";
 
 /**Set portal feature flags */
 function setFeatureFlags(flags?: Partial<FeatureFlags>): void {
@@ -52,6 +54,7 @@ function setFeatureFlags(flags?: Partial<FeatureFlags>): void {
     claimantShowTaxWithholding: true,
     claimantShowPayments: config("HAS_PAYMENT_STATUS") === "true",
     claimantShowOrganizationUnits: false,
+    claimantShowMFA: config("MFA_ENABLED") === "true",
     employerShowMultiLeave:
       config("ENVIRONMENT") === "training" || config("ENVIRONMENT") === "long"
         ? false
@@ -313,6 +316,14 @@ export function registerAsLeaveAdmin(
 
 export function assertLoggedIn(): void {
   cy.contains("button", "Log out").should("be.visible");
+}
+
+export function consentDataSharing(): void {
+  cy.location("pathname", { timeout: 30000 }).should(
+    "include",
+    "consent-to-data-sharing"
+  );
+  cy.contains("button", "Agree and continue").click();
 }
 
 export function startClaim(): void {
@@ -2130,6 +2141,68 @@ export function assertPayments(spec: PaymentStatus[]) {
         });
       });
   });
+}
+
+export function completeFlowMFA(type: keyof Numbers[Environment]): void {
+  cy.task("getMFAPhoneNumber", type).then((phone_number) => {
+    cy.findByLabelText("Phone number").type(phone_number);
+    cy.contains("button", "Save and continue").click();
+    const timeSent = new Date();
+    cy.location("pathname", { timeout: 30000 }).should(
+      "include",
+      "/sms/confirm/"
+    );
+    cy.wait(500);
+    cy.task("mfaVerfication", { timeSent, type: type }).then((res) => {
+      cy.findByLabelText("6-digit code").type(res.code);
+      cy.contains("button", "Save and continue").click();
+      cy.url({ timeout: 30000 }).should("contain", "smsMfaConfirmed=true");
+      cy.contains("Phone number confirmed");
+    });
+  });
+}
+
+export function enableMFA(): void {
+  cy.contains(
+    "Yes, I want to add a phone number for verifying logins."
+  ).click();
+  cy.contains("button", "Save and continue").click();
+}
+
+export function loginMFA(
+  credentials: Credentials,
+  type: keyof Numbers[Environment]
+): void {
+  const timeSent = new Date();
+  login(credentials);
+  cy.wait(1000);
+  cy.task("mfaVerfication", { timeSent, type }).then((res) => {
+    cy.findByLabelText("6-digit code").type(res.code);
+    cy.contains("button", "Submit").click();
+    cy.url({ timeout: 30000 }).should("contain", "get-ready");
+    assertLoggedIn();
+  });
+}
+
+export function disableMFA(): void {
+  cy.contains("a", "Settings").click();
+  cy.findByText("Additional login verification is enabled")
+    .parent()
+    .next()
+    .click();
+  cy.findByLabelText("Disable additional login verification").check({
+    force: true,
+  });
+  cy.contains("button", "Save preference").click();
+  cy.findByText("Additional login verification is not enabled").should(
+    "be.visible"
+  );
+}
+
+export function updateNumberMFA(): void {
+  cy.contains("a", "Settings").click();
+  cy.findByText("Phone number").parent().next().click();
+  completeFlowMFA("secondary");
 }
 
 export function leaveAdminAssertClaimStatus(leaves: LeaveStatus[]) {
