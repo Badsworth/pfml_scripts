@@ -187,6 +187,7 @@ export class ClaimPage {
       | "SOM Generate Appeals Notice"
       | "Send Decision Notice"
       | "Review Denial Notice"
+      | "Leave Allotment Change Notice"
   ): this {
     onTab("Task");
     onTab("Processes");
@@ -276,6 +277,18 @@ export class ClaimPage {
         cy.stash("appeal_case_id", appeal_case_id);
       });
     }
+    return this;
+  }
+
+  addLeaveAllotmentChangeNotice(): this {
+    cy.get('a[title="Correspondence"]').click({
+      force: true,
+    });
+    waitForAjaxComplete();
+    cy.findByLabelText("Leave Allotment Change Notice").click({
+      force: true,
+    });
+    cy.get("#footerButtonsBar input[value='Next']").click();
     return this;
   }
 
@@ -1332,6 +1345,39 @@ export class DocumentsPage {
     cy.get(`select[id$=TotalMinutes${i}]`).select(
       `${minutesTotal === 0 ? "00" : minutesTotal}`
     );
+  }
+
+  adjustDocumentStatus(notice: string, status: string): this {
+    cy.get(
+      'table[id^="DocumentsForCaseListviewWidget_"][id$="_DocumentsViewControl"]'
+    )
+      .contains("tr", notice)
+      .click()
+      .should("have.class", "ListRowSelected");
+    // Open document properties
+    cy.findByTitle("Document Properties").click();
+    cy.get("span[id^='DocumentPropertiesWidget']")
+      .find("select[id$='status']")
+      .select(status);
+    fineos.clickBottomWidgetButton("OK");
+    return this;
+  }
+
+  checkDocumentFileExtension(notice: string, fileExtension: RegExp): this {
+    cy.get(
+      'table[id^="DocumentsForCaseListviewWidget_"][id$="_DocumentsViewControl"]'
+    )
+      .contains("tr", notice)
+      .click()
+      .should("have.class", "ListRowSelected");
+    // Open document properties
+    cy.findByTitle("Document Properties").click();
+    cy.get("span[id='DocumentPropertiesWidget']")
+      .find("span[id$='fileName']")
+      .invoke("text")
+      .should('match', fileExtension);
+    fineos.clickBottomWidgetButton("OK")
+    return this;
   }
 }
 
