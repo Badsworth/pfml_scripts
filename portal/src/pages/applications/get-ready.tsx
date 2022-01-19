@@ -15,7 +15,7 @@ import { getMaxBenefitAmount } from "src/utils/getMaxBenefitAmount";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
 
-interface GetReadyProps extends WithBenefitsApplicationsProps {
+export interface GetReadyProps extends WithBenefitsApplicationsProps {
   query: { smsMfaConfirmed?: string };
 }
 

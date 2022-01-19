@@ -2,6 +2,7 @@ import User, { RoleDescription } from "../../../src/models/User";
 import { act, screen } from "@testing-library/react";
 import Settings from "../../../src/pages/user/settings";
 import { renderPage } from "../../test-utils";
+import routes from "../../../src/routes";
 import userEvent from "@testing-library/user-event";
 
 jest.mock("../../../src/services/tracker");
@@ -16,15 +17,17 @@ const renderWithUser = (
   user = new User({
     email_address: "mock@gmail.com",
     consented_to_data_sharing: true,
-  })
+  }),
+  query: { [key: string]: string } = {}
 ) => {
   const props = {
     user,
-    query: {},
+    query,
   };
   return renderPage(
     Settings,
     {
+      pathname: routes.user.settings,
       addCustomSetup: (appLogic) => {
         appLogic.users.user = user;
         appLogic.users.updateUser = updateUser;
@@ -135,13 +138,17 @@ describe(Settings, () => {
   });
 
   it("displays success alert when user sets up SMS MFA", () => {
-    renderPage(Settings, {}, { query: { smsMfaConfirmed: "true" } });
+    renderPage(
+      Settings,
+      { pathname: routes.user.settings },
+      { query: { smsMfaConfirmed: "true" } }
+    );
     expect(screen.getByRole("region")).toMatchSnapshot();
   });
 
   it("renders 404 when claimantShowMFA feature flag is disabled", () => {
     process.env.featureFlags = JSON.stringify({ claimantShowMFA: false });
-    renderPage(Settings);
+    renderPage(Settings, { pathname: routes.user.settings });
 
     const pageNotFoundHeading = screen.getByRole("heading", {
       name: /Page not found/,

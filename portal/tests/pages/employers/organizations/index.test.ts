@@ -3,6 +3,7 @@ import { cleanup, screen } from "@testing-library/react";
 import Index from "../../../../src/pages/employers/organizations";
 import { renderPage } from "../../../test-utils";
 import routeWithParams from "../../../../src/utils/routeWithParams";
+import routes from "../../../../src/routes";
 
 const verifiedAdministrator = new UserLeaveAdministrator({
   employer_dba: "Knitting Castle",
@@ -44,6 +45,7 @@ const setup = (
   return renderPage(
     Index,
     {
+      pathname: routes.employers.organizations,
       addCustomSetup: (appLogic) => {
         appLogic.users.user = new User({
           consented_to_data_sharing: true,

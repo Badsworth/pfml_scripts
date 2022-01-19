@@ -6,8 +6,6 @@ import ClaimCollection from "../../../src/models/ClaimCollection";
 import Dashboard from "../../../src/pages/employers/dashboard";
 import PaginationMeta from "../../../src/models/PaginationMeta";
 import faker from "faker";
-// @ts-expect-error ts-migrate(2614) FIXME: Module '"next/router"' has no exported member 'moc... Remove this comment to see the full error message
-import { mockRouter } from "next/router";
 import { renderPage } from "../../test-utils";
 import routes from "../../../src/routes";
 import userEvent from "@testing-library/user-event";
@@ -83,9 +81,6 @@ const setup = (options?: {
     query = {},
   } = options ?? {};
 
-  // Need to set an accurate pathname so portalFlow can return the correct links to route to
-  mockRouter.pathname = routes.employers.dashboard;
-
   const locationCopy = { ...window.location };
   // @ts-expect-error Need to manually set window.location so that we can set the active query string
   delete window.location;
@@ -120,6 +115,7 @@ const setup = (options?: {
     Dashboard,
     {
       addCustomSetup: setupAppLogic,
+      pathname: routes.employers.dashboard,
     },
     {
       query,

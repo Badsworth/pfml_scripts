@@ -4,7 +4,7 @@ exports[`Index renders the page 1`] = `
 <div>
   <a
     class="usa-button margin-bottom-5 usa-button--unstyled"
-    href="/applications"
+    href="/employers/dashboard"
   >
     <svg
       class="margin-right-05"

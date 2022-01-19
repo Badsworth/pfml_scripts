@@ -2,6 +2,7 @@ import { act, screen } from "@testing-library/react";
 import { mockAuth, renderPage } from "../../../test-utils";
 import SetupSMS from "../../../../src/pages/two-factor/sms/setup";
 import User from "../../../../src/models/User";
+import routes from "../../../../src/routes";
 import userEvent from "@testing-library/user-event";
 
 // Need to return a truthy user to navigate to the next page
@@ -21,6 +22,7 @@ describe("Two-factor SMS Setup", () => {
 
   it("updates phone number when user saves and continues", async () => {
     renderPage(SetupSMS, {
+      pathname: routes.twoFactor.smsSetup,
       addCustomSetup: (appLogic) => {
         appLogic.users.updateUser = updateUser;
       },

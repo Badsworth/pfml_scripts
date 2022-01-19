@@ -807,7 +807,7 @@ export class MockBenefitsApplicationBuilder extends BaseMockBenefitsApplicationB
   }
 
   /**
-   * @param {object} attrs Address object
+   * @param {object} [attrs] Address object
    * @returns {MockBenefitsApplicationBuilder}
    */
   mailingAddress(attrs) {

@@ -34,6 +34,7 @@ function setup({ addCustomSetup, pathname = routes.applications.index } = {}) {
   const WrappedComponent = withUser(PageComponent);
 
   return renderPage(WrappedComponent, {
+    pathname,
     addCustomSetup,
     // We don't use the authentication mocking behavior of renderPage
     // because it mocks some of the user/auth logic that this test file

@@ -99,7 +99,7 @@ exports[`ComponentWithUser renders the page 1`] = `
     </p>
     <a
       class="usa-button"
-      href="/applications?returnToSettings=true"
+      href="/two-factor/sms/setup?returnToSettings=true"
     >
       Add additional verification
     </a>
@@ -208,7 +208,7 @@ exports[`ComponentWithUser when MFA is enabled shows MFA configuration 1`] = `
       <a
         aria-label="Edit: Phone number"
         class="usa-link"
-        href="/applications?returnToSettings=true"
+        href="/two-factor/sms/setup?returnToSettings=true"
       >
         Edit
       </a>

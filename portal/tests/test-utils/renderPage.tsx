@@ -2,6 +2,7 @@ import { AppLogic } from "../../src/hooks/useAppLogic";
 import React from "react";
 import { render } from "@testing-library/react";
 import useMockableAppLogic from "../../lib/mock-helpers/useMockableAppLogic";
+import { useRouter } from "next/router";
 
 type AddCustomSetup = (appLogic: AppLogic) => void;
 // renderPage doesn't technically care what props the page takes
@@ -12,13 +13,18 @@ function PageWithAppLogic({
   PageComponent,
   addCustomSetup,
   isLoggedIn = true,
+  pathname,
   ...props
 }: {
   [propName: string]: unknown;
   PageComponent: React.ComponentType<PageComponentProps>;
   addCustomSetup?: AddCustomSetup;
   isLoggedIn?: boolean;
+  pathname: string;
 }) {
+  const router = useRouter();
+  router.pathname = pathname;
+
   const appLogic = useMockableAppLogic(
     {
       // Our tests instead use addCustomSetup in order to mock appLogic properties,
@@ -48,6 +54,8 @@ export function renderPage(
   options: {
     addCustomSetup?: AddCustomSetup;
     isLoggedIn?: boolean;
+    /** Set the correct page's pathname. Useful when testing portalFlow behavior */
+    pathname?: string;
   } = {},
   props: { [propName: string]: unknown } = {}
 ) {
@@ -56,6 +64,9 @@ export function renderPage(
       PageComponent={PageComponent}
       addCustomSetup={options.addCustomSetup}
       isLoggedIn={options.isLoggedIn}
+      // If you're getting an error indicating "/mock-pathname" does not exist on 'portal-flow',
+      // then you likely should set the pathname option to the route of the page you're testing.
+      pathname={options.pathname || "/mock-pathname"}
       {...props}
     />
   );

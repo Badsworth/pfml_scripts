@@ -185,7 +185,7 @@ const IdentificationUpload = ({ path }: IdentificationUploadProps) => {
   );
 };
 
-interface DocumentUploadProps extends WithClaimDocumentsProps {
+export interface DocumentUploadProps extends WithClaimDocumentsProps {
   query: {
     claim_id: string;
     additionalDoc?: string;
