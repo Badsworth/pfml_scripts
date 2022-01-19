@@ -69,7 +69,7 @@ def interactive_console() -> dict:
     print(INTRO.format(**locals()))
 
     if type(fineos) == massgov.pfml.fineos.MockFINEOSClient:
-        print("WARNING: using mock FINEOS client - set FINEOS_ env vars to use a real client\n")
+        print("WARNING: using mock FINEOS client - edit local.env to use a real client\n")
 
     sys.ps1 = "\npfml >>> "
     sys.ps2 = "pfml ... "
