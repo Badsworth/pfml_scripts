@@ -108,6 +108,7 @@ export const Payments = ({
     initialClaimStartDate,
     absenceId,
     loadedPaymentsData?.absence_case_id,
+    isLoadingClaimDetail,
     approvalNotice?.created_at,
   ]);
 
