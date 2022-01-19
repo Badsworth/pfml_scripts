@@ -107,6 +107,8 @@ class TransformPreviousLeaveFromOtherLeaveEform(BaseModel):
             leave["type"] = (
                 "same_reason" if leave["is_for_same_reason"] == "Yes" else "other_reason"
             )
+            if leave["is_for_current_employer"] == "Unknown":
+                leave["is_for_current_employer"] = None
         try:
             return [PreviousLeave.parse_obj(leave) for leave in previous_leaves]
         except pydantic.ValidationError:
@@ -124,6 +126,9 @@ class TransformConcurrentLeaveFromOtherLeaveEform(BaseModel):
         concurrent_leaves = TransformConcurrentLeaveAttributes.list_to_props(
             eform["eformAttributes"]
         )
+        for leave in concurrent_leaves:
+            if leave["is_for_current_employer"] == "Unknown":
+                leave["is_for_current_employer"] = None
         # The eform should only ever have 0 or 1 concurrent leave
         try:
             concurrent_leave = (

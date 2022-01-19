@@ -9,7 +9,7 @@ https://docs.pytest.org/en/latest/fixture.html#conftest-py-sharing-fixture-funct
 import logging.config  # noqa: B1
 import os
 import uuid
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from typing import List
 
 import _pytest.monkeypatch
@@ -166,7 +166,7 @@ def auth_claims(auth_claims_unit, user):
 @pytest.fixture
 def employer_claims(employer_user):
     claims = {
-        "exp": datetime.now() + timedelta(days=1),
+        "exp": datetime.now(timezone.utc) + timedelta(days=1),
         "sub": str(employer_user.sub_id),
     }
 
