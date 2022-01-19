@@ -448,6 +448,16 @@ locals {
         local.pub_s3_folders,
       ]
     },
+
+    "mfa-lockout-resolution" = {
+      command   = ["mfa-lockout-resolution"]
+      task_role = aws_iam_role.mfa_lockout_resolution_task_role.arn
+      env = [
+        local.db_access,
+        local.cognito_access,
+      ]
+    },
+
   }
 }
 

@@ -165,6 +165,9 @@ fineos-import-leave-admin-org-units: ## Import fake FINEOS leave admin org unit 
 dor-import: ## Run a DOR import using fake data (see dor-generate)
 	FOLDER_PATH=dor_mock $(PY_RUN_CMD) dor-import $(DECODE_LOG)
 
+mfa-lockout-resolution: ## Disable MFA on a user's account
+	$(PY_RUN_CMD) mfa-lockout-resolution $(args) $(DECODE_LOG)
+
 load-employers-to-fineos: ## Send employers from our database to the FINEOS API
 	$(PY_RUN_CMD) load-employers-to-fineos $(DECODE_LOG)
 

@@ -1724,3 +1724,48 @@ data "aws_iam_policy_document" "dua_employee_workflow_execution_role_extras" {
   }
 }
 
+# ----------------------------------------------------------------------------------------------------------------------
+# IAM role and policies for mfa-lockout-resolution
+# ----------------------------------------------------------------------------------------------------------------------
+
+resource "aws_iam_role" "mfa_lockout_resolution_task_role" {
+  name               = "${local.app_name}-${var.environment_name}-mfa-lockout-resolution-task-role"
+  assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume_role_policy.json
+}
+
+resource "aws_iam_role_policy" "mfa_lockout_resolution_role_policy" {
+  name   = "${local.app_name}-${var.environment_name}-mfa-lockout-resolution-role-policy"
+  role   = aws_iam_role.mfa_lockout_resolution_task_role.id
+  policy = data.aws_iam_policy_document.mfa_lockout_resolution.json
+}
+
+data "aws_iam_policy_document" "mfa_lockout_resolution" {
+  # Allow disabling MFA in Cognito and fixing opt in for SNS
+  statement {
+    effect = "Allow"
+    actions = [
+      "cognito-idp:AdminSetUserMFAPreference",
+      "sns:CheckIfPhoneNumberIsOptedOut",
+      "sns:OptInPhoneNumber"
+    ]
+    resources = [
+      "arn:aws:cognito-idp:us-east-1:498823821309:userpool/${var.cognito_user_pool_id}",
+      "arn:aws:sns:us-east-1:498823821309:*",
+    ]
+  }
+
+  # Allow sending emails to claimants when MFA is disabled.
+  statement {
+    sid = "AllowSESSendEmail"
+    actions = [
+      "ses:SendEmail",
+      "ses:SendRawEmail",
+      "ses:SendTemplateEmail"
+    ]
+
+    resources = ["*"]
+
+    effect = "Allow"
+  }
+}
+

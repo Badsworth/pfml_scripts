@@ -112,6 +112,11 @@ locals {
     { name : "DUA_TRANSFER_BASE_PATH", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/" }
   ]
 
+  # Cognito User Pool access
+  cognito_access = [
+    { name : "COGNITO_USER_POOL_ID", value : var.cognito_user_pool_id }
+  ]
+
   # Basic configuration for sender email
   emails = [
     { name : "PFML_EMAIL_ADDRESS", value : var.pfml_email_address },
