@@ -12,7 +12,9 @@ from massgov.pfml.db.models.employees import (
 )
 
 
-def update_user(db_session: db.Session, user: User, update_request: UserUpdateRequest) -> User:
+def update_user(
+    db_session: db.Session, user: User, update_request: UserUpdateRequest, updated_by: str = "User"
+) -> User:
     for key in update_request.__fields_set__:
         value = getattr(update_request, key)
 
@@ -24,7 +26,7 @@ def update_user(db_session: db.Session, user: User, update_request: UserUpdateRe
             )
             if delivery_preference != value:
                 _add_or_update_mfa_delivery_preference(db_session, user, key, value)
-                _update_mfa_preference_audit_trail(db_session, user, key, value)
+                _update_mfa_preference_audit_trail(db_session, user, key, value, updated_by)
             continue
 
         if key == "mfa_phone_number":
@@ -48,7 +50,7 @@ def _add_or_update_mfa_delivery_preference(
 
 
 def _update_mfa_preference_audit_trail(
-    db_session: db.Session, user: User, key: str, value: Optional[str]
+    db_session: db.Session, user: User, key: str, value: Optional[str], updated_by: str
 ) -> None:
     if value is None:
         setattr(user, key, None)
@@ -59,8 +61,10 @@ def _update_mfa_preference_audit_trail(
     mfa_delivery_preference_updated_at = "mfa_delivery_preference_updated_at"
     setattr(user, mfa_delivery_preference_updated_at, now)
 
-    mfa_delivery_preference_updated_by_user = db_lookups.by_value(
-        db_session, LkMFADeliveryPreferenceUpdatedBy, "User"
-    )
+    if updated_by.lower() == "admin":
+        mfa_updated_by = db_lookups.by_value(db_session, LkMFADeliveryPreferenceUpdatedBy, "Admin")
+    else:
+        mfa_updated_by = db_lookups.by_value(db_session, LkMFADeliveryPreferenceUpdatedBy, "User")
+
     mfa_delivery_preference_updated_by = "mfa_delivery_preference_updated_by"
-    setattr(user, mfa_delivery_preference_updated_by, mfa_delivery_preference_updated_by_user)
+    setattr(user, mfa_delivery_preference_updated_by, mfa_updated_by)

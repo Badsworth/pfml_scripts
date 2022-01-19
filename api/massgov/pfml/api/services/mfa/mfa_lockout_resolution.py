@@ -67,7 +67,7 @@ def _disable_mfa_pfml(user: User, dry_run: bool) -> None:
             if dry_run:
                 logger.info("(DRY RUN: Skipping API call)")
             else:
-                update_user(db_session, user, update_request)
+                update_user(db_session, user, update_request, "Admin")
         except Exception as e:
             logger.error("Error disabling user MFA in PFML db", exc_info=e)
             raise e
