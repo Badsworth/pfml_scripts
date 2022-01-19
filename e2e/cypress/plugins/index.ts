@@ -1,3 +1,7 @@
+import {
+  ApiResponse,
+  GETClaimsByFineosAbsenceIdResponse,
+} from "./../../src/_api";
 /// <reference types="cypress" />
 // ***********************************************************
 // This example plugins/index.js can be used to load plugins
@@ -258,23 +262,32 @@ export default function (
         credentials.password
       );
       for (let i = 0; i < applications.length && i < 15; i++) {
-        const response = await getClaimsByFineos_absence_id(
-          {
-            fineos_absence_id: applications[i].fineos_absence_id as string,
-          },
-          {
-            baseUrl: authManager.apiBaseUrl,
-            headers: {
-              Authorization: `Bearer ${session.getAccessToken().getJwtToken()}`,
-              "User-Agent": "PFML Business Simulation Bot",
+        let response: ApiResponse<GETClaimsByFineosAbsenceIdResponse>;
+        try {
+          response = await getClaimsByFineos_absence_id(
+            {
+              fineos_absence_id: applications[i].fineos_absence_id as string,
             },
-          }
-        );
+            {
+              baseUrl: authManager.apiBaseUrl,
+              headers: {
+                Authorization: `Bearer ${session
+                  .getAccessToken()
+                  .getJwtToken()}`,
+                "User-Agent": "PFML Business Simulation Bot",
+              },
+            }
+          );
+        } catch (e) {
+          if (!new RegExp(/withdrawn/i).test(e.message)) throw e;
+          else continue;
+        }
+        if (!response.data.data?.absence_periods)
+          throw Error("Missing absence_period property from response");
+        const { absence_periods } = response.data.data;
         if (
-          // @ts-ignore - @todo _api.ts file needs to be regenerated to update the types for this response
-          response?.data.data.claim_status === "Approved" ||
-          // @ts-ignore - @todo _api.ts file needs to be regenerated to update the types for this response
-          response?.data.data.claim_status === "Completed"
+          absence_periods.length > 0 &&
+          absence_periods[0].request_decision === "Approved"
         )
           return applications[i];
       }
