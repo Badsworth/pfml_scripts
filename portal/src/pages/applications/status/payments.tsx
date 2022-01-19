@@ -70,19 +70,34 @@ export const Payments = ({
 
   const initialClaimStartDate =
     claimDetail?.leaveDates[0].absence_period_start_date;
+
+  const documentsForApplication =
+    (allClaimDocuments?.items.length &&
+      application_id &&
+      allClaimDocuments.filterByApplication(application_id)) ||
+    [];
+
+  const approvalNotice = documentsForApplication.find(
+    (document: { document_type: string }) =>
+      document.document_type === OtherDocumentType.approvalNotice
+  );
+
   useEffect(() => {
     const loadPayments = (absenceId: string) =>
       !hasLoadedPayments(absenceId) ||
       (loadedPaymentsData?.absence_case_id &&
         Boolean(claimDetail?.payments.length === 0));
-
-    if (claimDetail && !showPhaseOneFeatures && !showPhaseTwoFeatures) {
+    if (
+      claimDetail &&
+      ((!showPhaseOneFeatures && !showPhaseTwoFeatures) ||
+        !approvalNotice?.created_at)
+    ) {
       portalFlow.goTo(routes.applications.status.claim, {
         absence_id,
       });
     } else if (
       absenceId &&
-      (!claimDetail || Boolean(loadPayments(absenceId))) &&
+      (!Boolean(claimDetail) || Boolean(loadPayments(absenceId))) &&
       !items.find((item) => item.name === "NotFoundError")
     ) {
       loadClaimDetail(absence_id);
@@ -93,6 +108,7 @@ export const Payments = ({
     initialClaimStartDate,
     absenceId,
     loadedPaymentsData?.absence_case_id,
+    approvalNotice?.created_at,
   ]);
 
   useEffect(() => {
@@ -141,9 +157,6 @@ export const Payments = ({
   const hasApprovedStatus = claimDetail.absence_periods.some(
     (absenceItem) => absenceItem.request_decision === "Approved"
   );
-  const documentsForApplication = allClaimDocuments.filterByApplication(
-    claimDetail.application_id
-  );
 
   const getInfoAlertContext = (absenceDetails: {
     [reason: string]: AbsencePeriod[];
@@ -166,11 +179,7 @@ export const Payments = ({
 
   const infoAlertContext = getInfoAlertContext(absenceDetails);
 
-  const approvalDate = documentsForApplication.find(
-    (document: { document_type: string }) =>
-      document.document_type === OtherDocumentType.approvalNotice
-  )?.created_at;
-
+  const approvalDate = approvalNotice?.created_at;
   const isRetroactive = approvalDate
     ? claimDetail.absence_periods[claimDetail.absence_periods.length - 1]
         ?.absence_period_end_date < approvalDate

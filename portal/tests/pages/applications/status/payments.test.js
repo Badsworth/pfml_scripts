@@ -108,6 +108,32 @@ describe("Payments", () => {
     });
   });
 
+  it("redirects to status page if claim does not have an approval notice", () => {
+    process.env.featureFlags = JSON.stringify({
+      claimantShowPayments: false,
+      claimantShowPaymentsPhaseTwo: false,
+    });
+
+    renderPage(
+      Payments,
+      {
+        addCustomSetup: setupHelper({
+          ...defaultClaimDetail,
+          appLogicHook: {
+            claims: { loadClaimDetail: jest.fn() },
+            documents: new DocumentCollection([]),
+            appErrors: { items: [] },
+          },
+        }),
+      },
+      props
+    );
+
+    expect(goToSpy).toHaveBeenCalledWith(routes.applications.status.claim, {
+      absence_id: props.query.absence_id,
+    });
+  });
+
   it("renders the back button", () => {
     renderPage(
       Payments,
@@ -362,9 +388,8 @@ describe("Payments", () => {
               name: "NotFoundError",
             }),
           ]),
-
           documents: {
-            documents: null,
+            documents: new DocumentCollection([]),
             loadAll: { loadAllClaimDocuments: jest.fn() },
           },
         },

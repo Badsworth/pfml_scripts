@@ -258,7 +258,7 @@ exports[`Payments Phase 2 Checkback date implementation renders intro text for r
 
 exports[`Payments displays info alert if claimant has bonding-newborn but not pregnancy claims 1`] = `
 <div
-  aria-labelledby="alert-heading7"
+  aria-labelledby="alert-heading10"
   class="usa-alert usa-alert--info usa-alert--no-icon margin-bottom-3"
   role="region"
   tabindex="-1"
@@ -268,7 +268,7 @@ exports[`Payments displays info alert if claimant has bonding-newborn but not pr
   >
     <h2
       class="usa-alert__heading font-heading-xs text-bold"
-      id="alert-heading7"
+      id="alert-heading10"
     >
       If you are giving birth, you may also be eligible for paid medical leave
     </h2>
@@ -299,7 +299,7 @@ exports[`Payments displays info alert if claimant has bonding-newborn but not pr
 
 exports[`Payments displays info alert if claimant has pregnancy but not bonding claims 1`] = `
 <div
-  aria-labelledby="alert-heading11"
+  aria-labelledby="alert-heading14"
   class="usa-alert usa-alert--info usa-alert--no-icon margin-bottom-3"
   role="region"
   tabindex="-1"
@@ -309,7 +309,7 @@ exports[`Payments displays info alert if claimant has pregnancy but not bonding 
   >
     <h2
       class="usa-alert__heading font-heading-xs text-bold"
-      id="alert-heading11"
+      id="alert-heading14"
     >
       You may also be eligible for paid family leave
     </h2>
@@ -412,7 +412,7 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
       class="usa-accordion__heading margin-y-2"
     >
       <button
-        aria-controls="accordion27"
+        aria-controls="accordion30"
         aria-expanded="false"
         class="usa-accordion__button"
         type="button"
@@ -422,9 +422,9 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
     </h2>
     <div
       class="usa-accordion__content usa-prose"
-      data-testid="accordion27"
+      data-testid="accordion30"
       hidden=""
-      id="accordion27"
+      id="accordion30"
     >
       <p>
         Once your payments have started, expect to be paid weekly for the duration of your leave.
@@ -481,7 +481,7 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
       class="usa-accordion__heading margin-y-2"
     >
       <button
-        aria-controls="accordion28"
+        aria-controls="accordion31"
         aria-expanded="false"
         class="usa-accordion__button"
         type="button"
@@ -491,9 +491,9 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
     </h2>
     <div
       class="usa-accordion__content usa-prose"
-      data-testid="accordion28"
+      data-testid="accordion31"
       hidden=""
-      id="accordion28"
+      id="accordion31"
     >
       <p>
         To see your maximum weekly benefit amount, view your approval notice in your 
@@ -542,7 +542,7 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
       class="usa-accordion__heading margin-y-2"
     >
       <button
-        aria-controls="accordion29"
+        aria-controls="accordion32"
         aria-expanded="false"
         class="usa-accordion__button"
         type="button"
@@ -552,9 +552,9 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
     </h2>
     <div
       class="usa-accordion__content usa-prose"
-      data-testid="accordion29"
+      data-testid="accordion32"
       hidden=""
-      id="accordion29"
+      id="accordion32"
     >
       <p>
         To make changes to your payment method or banking information, call the Contact Center at 
