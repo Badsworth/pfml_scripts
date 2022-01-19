@@ -10,6 +10,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import backref, object_session, relationship
 
 import massgov.pfml.util.logging
+from massgov.pfml.db.models.base import deferred
 from massgov.pfml.db.models.employees import (
     Address,
     Claim,
@@ -317,8 +318,8 @@ class Application(Base, TimestampMixin):
     )
     imported_from_fineos_at = Column(TIMESTAMP(timezone=True))
 
-    start_time = Column(TIMESTAMP(timezone=True))
-    updated_time = Column(TIMESTAMP(timezone=True))
+    start_time = deferred(Column(TIMESTAMP(timezone=True)))
+    updated_time = deferred(Column(TIMESTAMP(timezone=True)))
 
     completed_time = Column(TIMESTAMP(timezone=True))
     submitted_time = Column(TIMESTAMP(timezone=True))
