@@ -75,11 +75,15 @@ table.runDetails {
   height: 100%;
   display: block;
 
-  &.fail {
+  &.failed {
     background: red;
   }
 
-  &.pass {
+  &.skipped {
+    background: #d4e500;
+  }
+
+  &.passed {
     background: #00c100;
   }
 }
@@ -97,6 +101,10 @@ table.runDetails {
     background: #ffeffd;
     color: #00c100;
     border-color: #00c100;
+  }
+
+  &.SKIPPED {
+    background: #d4e500;
   }
 
   &.EDM {
@@ -162,7 +170,7 @@ table.runDetails {
       background: red;
     }
 
-    &.pending {
+    &.skipped {
       background: #d4e500;
     }
 
