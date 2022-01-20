@@ -33,3 +33,6 @@ Make sure the user's email is provided, and spelled correctly!
 
 ### Errors updating Cognito
 If running locally, make sure your AWS credentials are up-to-date, and are being supplied to the Docker container correctly.
+
+### Errors updating SNS
+A user's number can only be opted back into SNS once every 30 days - if any exceptions related to throttling are shown, there is no need to run the script again or escalate. 
