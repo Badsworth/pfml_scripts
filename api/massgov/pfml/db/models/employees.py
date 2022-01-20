@@ -1947,6 +1947,7 @@ class AbsenceReason(LookupTable):
     PREVENTATIVE_CARE_FAMILY_MEMBER = LkAbsenceReason(13, "Preventative Care - Family Member")
     PUBLIC_HEALTH_EMERGENCY_FAMILY = LkAbsenceReason(14, "Public Health Emergency - Family")
     MILITARY_EMPLOYEE = LkAbsenceReason(15, "Military - Employee")
+    PERSONAL_EMPLOYEE = LkAbsenceReason(16, "Personal - Employee")
 
 
 class AbsenceReasonQualifierOne(LookupTable):
