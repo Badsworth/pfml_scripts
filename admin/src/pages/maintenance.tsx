@@ -172,10 +172,12 @@ export default function Maintenance() {
               {
                 enabled: getMaintenanceEnabled(),
                 // Add query params including start and end.
-                href: "/maintenance/add",
-                query: maintenance
-                  ? getMaintenanceLinkValues(maintenance)
-                  : undefined,
+                href: {
+                  pathname: "/maintenance/add",
+                  query: maintenance
+                    ? getMaintenanceLinkValues(maintenance)
+                    : undefined,
+                },
                 text: "Edit",
                 type: "link",
               },

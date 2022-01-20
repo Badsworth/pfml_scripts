@@ -1,12 +1,13 @@
 import { useState, isValidElement } from "react";
 import Link from "next/link";
+import { LinkProps } from "next/link";
 
 export type Option = {
   enabled: boolean;
   text: string;
   type: "button" | "link";
   onClick?: Function;
-  href?: string;
+  href?: LinkProps["href"];
 };
 
 export type Props = {
