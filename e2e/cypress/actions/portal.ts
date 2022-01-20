@@ -55,10 +55,7 @@ function setFeatureFlags(flags?: Partial<FeatureFlags>): void {
     claimantShowPayments: config("HAS_PAYMENT_STATUS") === "true",
     claimantShowOrganizationUnits: false,
     claimantShowMFA: config("MFA_ENABLED") === "true",
-    employerShowMultiLeave:
-      config("ENVIRONMENT") === "training" || config("ENVIRONMENT") === "long"
-        ? false
-        : true,
+    employerShowMultiLeave: config("ENVIRONMENT") !== "training",
   };
   cy.setCookie("_ff", JSON.stringify({ ...defaults, ...flags }), { log: true });
 }
@@ -872,10 +869,7 @@ export function visitActionRequiredERFormPage(fineosAbsenceId: string): void {
   });
   cy.contains("label", "Yes").click();
   cy.contains("Agree and submit").click();
-  if (
-    config("ENVIRONMENT") !== "training" &&
-    config("ENVIRONMENT") !== "long"
-  ) {
+  if (config("ENVIRONMENT") !== "training") {
     cy.contains("span", fineosAbsenceId);
   }
 }
@@ -1854,10 +1848,7 @@ export function assertConcurrentLeave(leave: ValidConcurrentLeave): void {
  * @param leaveType expand the type as needed
  */
 export function assertLeaveType(leaveType: "Active duty"): void {
-  if (
-    config("ENVIRONMENT") === "training" ||
-    config("ENVIRONMENT") === "long"
-  ) {
+  if (config("ENVIRONMENT") === "training") {
     cy.findByText("Leave type", { selector: "h3" })
       .next()
       .should("contain.text", leaveType);

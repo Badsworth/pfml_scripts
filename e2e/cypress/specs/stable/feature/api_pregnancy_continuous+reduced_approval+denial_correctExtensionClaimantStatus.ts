@@ -85,9 +85,7 @@ describe("Submit medical pre-birth application via the web portal", () => {
     }
   );
 
-  (config("ENVIRONMENT") === "training" || config("ENVIRONMENT") === "long"
-    ? it.skip
-    : it)(
+  (config("ENVIRONMENT") === "training" ? it.skip : it)(
     "Will display the approprite claimant statuses in the leave admin portal",
     () => {
       cy.dependsOnPreviousPass([extension]);
