@@ -55,7 +55,7 @@ function setFeatureFlags(flags?: Partial<FeatureFlags>): void {
     claimantShowPayments: config("HAS_PAYMENT_STATUS") === "true",
     claimantShowOrganizationUnits: false,
     claimantShowMFA: config("MFA_ENABLED") === "true",
-    employerShowMultiLeave: config("ENVIRONMENT") !== "training",
+    employerShowMultiLeave: true,
   };
   cy.setCookie("_ff", JSON.stringify({ ...defaults, ...flags }), { log: true });
 }
@@ -869,9 +869,7 @@ export function visitActionRequiredERFormPage(fineosAbsenceId: string): void {
   });
   cy.contains("label", "Yes").click();
   cy.contains("Agree and submit").click();
-  if (config("ENVIRONMENT") !== "training") {
-    cy.contains("span", fineosAbsenceId);
-  }
+  cy.contains("span", fineosAbsenceId);
 }
 
 export function respondToLeaveAdminRequest(
@@ -1848,13 +1846,7 @@ export function assertConcurrentLeave(leave: ValidConcurrentLeave): void {
  * @param leaveType expand the type as needed
  */
 export function assertLeaveType(leaveType: "Active duty"): void {
-  if (config("ENVIRONMENT") === "training") {
-    cy.findByText("Leave type", { selector: "h3" })
-      .next()
-      .should("contain.text", leaveType);
-  } else {
-    cy.findByText(leaveType, { selector: "h3" });
-  }
+  cy.findByText(leaveType, { selector: "h3" });
 }
 export type FilterOptionsFlags = {
   [key in DashboardClaimStatus]?: true | false;
