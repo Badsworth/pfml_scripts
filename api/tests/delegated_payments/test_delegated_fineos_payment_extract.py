@@ -198,6 +198,8 @@ def stage_data(
     db_session,
     reference_file=None,
     import_log=None,
+    claimant_reference_file=None,
+    claimant_import_log=None,
     additional_vpei_records=None,
     additional_payment_detail_records=None,
     additional_claim_detail_records=None,
@@ -209,6 +211,13 @@ def stage_data(
         )
     if not import_log:
         import_log = ImportLogFactory.create()
+
+    if not claimant_reference_file:
+        claimant_reference_file = ReferenceFileFactory.create(
+            reference_file_type_id=ReferenceFileType.FINEOS_CLAIMANT_EXTRACT.reference_file_type_id
+        )
+    if not claimant_import_log:
+        claimant_import_log = ImportLogFactory.create()
 
     for record in records:
         instance = payments_util.create_staging_table_instance(
@@ -232,8 +241,8 @@ def stage_data(
         instance = payments_util.create_staging_table_instance(
             record.get_requested_absence_record(),
             FineosExtractVbiRequestedAbsence,
-            reference_file,
-            import_log.import_log_id,
+            claimant_reference_file,
+            claimant_import_log.import_log_id,
         )
         db_session.add(instance)
 
@@ -272,8 +281,8 @@ def stage_data(
             instance = payments_util.create_staging_table_instance(
                 requested_absence_record.get_requested_absence_record(),
                 FineosExtractVbiRequestedAbsence,
-                reference_file,
-                import_log.import_log_id,
+                claimant_reference_file,
+                claimant_import_log.import_log_id,
             )
             db_session.add(instance)
 
@@ -416,7 +425,14 @@ def test_run_step_multiple_times(
     local_payment_extract_step.run()
 
     # Make sure the processed ID is set.
-    reference_files = local_test_db_session.query(ReferenceFile).all()
+    reference_files = (
+        local_test_db_session.query(ReferenceFile)
+        .filter(
+            ReferenceFile.reference_file_type_id
+            == ReferenceFileType.FINEOS_PAYMENT_EXTRACT.reference_file_type_id
+        )
+        .all()
+    )
     assert len(reference_files) == 1
     assert (
         reference_files[0].processed_import_log_id == local_payment_extract_step.get_import_log_id()
@@ -1751,6 +1767,11 @@ def make_payment_data_from_fineos_data(fineos_data):
     )
     import_log = ImportLogFactory.build()
 
+    claimant_reference_file = ReferenceFileFactory.build(
+        reference_file_type_id=ReferenceFileType.FINEOS_CLAIMANT_EXTRACT.reference_file_type_id
+    )
+    claimant_import_log = ImportLogFactory.build()
+
     vpei_record = payments_util.create_staging_table_instance(
         fineos_data.get_vpei_record(), FineosExtractVpei, reference_file, import_log.import_log_id
     )
@@ -1766,11 +1787,12 @@ def make_payment_data_from_fineos_data(fineos_data):
         reference_file,
         import_log.import_log_id,
     )
+    # The requested absence file is consumed during the claimant extract process
     requested_absence_record = payments_util.create_staging_table_instance(
         fineos_data.get_requested_absence_record(),
         FineosExtractVbiRequestedAbsence,
-        reference_file,
-        import_log.import_log_id,
+        claimant_reference_file,
+        claimant_import_log.import_log_id,
     )
 
     return (

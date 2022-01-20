@@ -3113,8 +3113,8 @@ class ReferenceFileType(LookupTable):
 
     DELEGATED_PAYMENT_AUDIT_REPORT = LkReferenceFileType(20, "Payment Audit Report", 1)
     DELEGATED_PAYMENT_REJECTS = LkReferenceFileType(21, "Payment Rejects", 1)
-    FINEOS_CLAIMANT_EXTRACT = LkReferenceFileType(24, "Claimant extract", 2)
-    FINEOS_PAYMENT_EXTRACT = LkReferenceFileType(25, "Payment extract", 4)
+    FINEOS_CLAIMANT_EXTRACT = LkReferenceFileType(24, "Claimant extract", 3)
+    FINEOS_PAYMENT_EXTRACT = LkReferenceFileType(25, "Payment extract", 3)
 
     PUB_EZ_CHECK = LkReferenceFileType(26, "PUB EZ check file", 1)
     PUB_POSITIVE_PAYMENT = LkReferenceFileType(27, "PUB positive pay file", 1)

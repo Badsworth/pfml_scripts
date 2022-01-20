@@ -1267,7 +1267,10 @@ class PaymentExtractStep(Step):
         )
 
     def process_payment_record(
-        self, raw_payment_record: FineosExtractVpei, reference_file: ReferenceFile
+        self,
+        raw_payment_record: FineosExtractVpei,
+        reference_file: ReferenceFile,
+        latest_claimant_extract_reference_file: ReferenceFile,
     ) -> None:
         self.increment(self.Metrics.PROCESSED_PAYMENT_COUNT)
 
@@ -1337,7 +1340,7 @@ class PaymentExtractStep(Step):
                     .filter(
                         FineosExtractVbiRequestedAbsence.leaverequest_id == leave_request_id,
                         FineosExtractVbiRequestedAbsence.reference_file_id
-                        == reference_file.reference_file_id,
+                        == latest_claimant_extract_reference_file.reference_file_id,
                     )
                     .all()
                 )
@@ -1404,7 +1407,7 @@ class PaymentExtractStep(Step):
         )
         if not reference_file:
             raise Exception(
-                "This would only happen the first time you run in an env and have no extracts, make sure FINEOS has created extracts"
+                "No payment extracts consumed. This would only happen the first time you run in an env and have no extracts, make sure FINEOS has created extracts"
             )
         if reference_file.processed_import_log_id:
             logger.warning(
@@ -1414,6 +1417,24 @@ class PaymentExtractStep(Step):
             )
             return
 
+        # We also want the latest claimant extract reference
+        # file as we'll need it for the requested absence file
+        # that we are going to lookup. Don't care if it's processed
+        # already as it's just a lookup file
+        latest_claimant_extract_reference_file = (
+            self.db_session.query(ReferenceFile)
+            .filter(
+                ReferenceFile.reference_file_type_id
+                == ReferenceFileType.FINEOS_CLAIMANT_EXTRACT.reference_file_type_id
+            )
+            .order_by(ReferenceFile.created_at.desc())
+            .first()
+        )
+        if not latest_claimant_extract_reference_file:
+            raise Exception(
+                "No claimant extracts consumed. This would only happen the first time you run in an env and have no extracts, make sure FINEOS has created extracts"
+            )
+
         raw_payment_records = (
             self.db_session.query(FineosExtractVpei)
             .filter(FineosExtractVpei.reference_file_id == reference_file.reference_file_id)
@@ -1421,6 +1442,8 @@ class PaymentExtractStep(Step):
         )
         for raw_payment_record in raw_payment_records:
             self.increment(self.Metrics.PEI_RECORD_COUNT)
-            self.process_payment_record(raw_payment_record, reference_file)
+            self.process_payment_record(
+                raw_payment_record, reference_file, latest_claimant_extract_reference_file
+            )
 
         reference_file.processed_import_log_id = self.get_import_log_id()
