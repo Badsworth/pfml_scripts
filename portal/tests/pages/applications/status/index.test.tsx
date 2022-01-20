@@ -1,68 +1,78 @@
+import {
+  BenefitsApplicationDocument,
+  DocumentType,
+} from "../../../../src/models/Document";
 import Status, {
   LeaveDetails,
 } from "../../../../src/pages/applications/status/index";
 import { cleanup, render, screen } from "@testing-library/react";
+import { createAbsencePeriod, renderPage } from "../../../test-utils";
 import { AbsencePeriod } from "../../../../src/models/AbsencePeriod";
 import AppErrorInfo from "../../../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../../../src/models/AppErrorInfoCollection";
+import { AppLogic } from "../../../../src/hooks/useAppLogic";
 import ClaimDetail from "../../../../src/models/ClaimDetail";
 import DocumentCollection from "../../../../src/models/DocumentCollection";
-import { DocumentType } from "../../../../src/models/Document";
 import LeaveReason from "../../../../src/models/LeaveReason";
 import React from "react";
 import { ReasonQualifier } from "../../../../src/models/BenefitsApplication";
+import { createMockBenefitsApplicationDocument } from "../../../../lib/mock-helpers/createMockDocument";
+import { createMockManagedRequirement } from "../../../../lib/mock-helpers/createMockManagedRequirement";
+// @ts-expect-error This should eventually be removed, in favor of setting the pathname option in renderPage
 import { mockRouter } from "next/router";
-import { renderPage } from "../../../test-utils";
 import routes from "../../../../src/routes";
 
 jest.mock("next/router");
 
 mockRouter.asPath = routes.applications.status.claim;
 
-const DOCUMENTS = [
-  {
+const DOCUMENTS: BenefitsApplicationDocument[] = [
+  createMockBenefitsApplicationDocument({
     application_id: "mock-application-id",
     content_type: "image/png",
     created_at: "2020-04-05",
     document_type: DocumentType.denialNotice,
     fineos_document_id: "fineos-id-4",
     name: "legal notice 1",
-  },
-  {
+  }),
+  createMockBenefitsApplicationDocument({
     application_id: "not-my-application-id",
     content_type: "image/png",
     created_at: "2020-04-05",
     document_type: DocumentType.requestForInfoNotice,
     fineos_document_id: "fineos-id-5",
     name: "legal notice 2",
-  },
-  {
+  }),
+  createMockBenefitsApplicationDocument({
     application_id: "mock-application-id",
     content_type: "image/png",
     created_at: "2020-04-05",
     document_type: DocumentType.identityVerification,
     fineos_document_id: "fineos-id-6",
     name: "non-legal notice 1",
-  },
-  {
+  }),
+  createMockBenefitsApplicationDocument({
     application_id: "mock-application-id",
     content_type: "image/png",
     created_at: "2020-04-05",
     document_type: DocumentType.requestForInfoNotice,
     fineos_document_id: "fineos-id-7",
     name: "legal notice 3",
-  },
-  {
+  }),
+  createMockBenefitsApplicationDocument({
     application_id: "mock-application-id",
     content_type: "image/png",
     created_at: "2020-04-05",
     document_type: DocumentType.approvalNotice,
     fineos_document_id: "fineos-id-8",
     name: "legal notice 3",
-  },
+  }),
 ];
 
-const renderWithClaimDocuments = (appLogicHook, documents = []) => {
+const renderWithClaimDocuments = (
+  appLogicHook: AppLogic,
+  documents: BenefitsApplicationDocument[] = []
+) => {
   appLogicHook.documents.loadAll = jest.fn();
   appLogicHook.documents.documents = new DocumentCollection(documents);
   appLogicHook.documents.hasLoadedClaimDocuments = () => !!documents.length;
@@ -71,23 +81,27 @@ const renderWithClaimDocuments = (appLogicHook, documents = []) => {
 
 const setupHelper =
   (
-    claimDetailAttrs,
-    documents = [],
+    claimDetailAttrs?: Partial<ClaimDetail>,
+    documents: BenefitsApplicationDocument[] = [],
     appErrors = new AppErrorInfoCollection()
   ) =>
-  (appLogicHook) => {
+  (appLogicHook: AppLogic) => {
     appLogicHook.claims.claimDetail = claimDetailAttrs
       ? new ClaimDetail(claimDetailAttrs)
-      : null;
+      : undefined;
     appLogicHook.claims.loadClaimDetail = jest.fn();
     appLogicHook.appErrors = appErrors;
     renderWithClaimDocuments(appLogicHook, documents);
   };
 
-const defaultClaimDetail = {
+const defaultClaimDetail: Partial<ClaimDetail> = {
   application_id: "mock-application-id",
   fineos_absence_id: "mock-absence-case-id",
-  employer: { employer_fein: "12-1234567" },
+  employer: {
+    employer_fein: "12-1234567",
+    employer_dba: "Acme",
+    employer_id: "mock-employer-id",
+  },
 };
 
 const props = {
@@ -108,12 +122,12 @@ describe("Status", () => {
             ...defaultClaimDetail,
             has_paid_payments: true,
             absence_periods: [
-              {
-                period_type: "Reduced",
+              createAbsencePeriod({
+                period_type: "Reduced Schedule",
                 reason: LeaveReason.bonding,
                 request_decision: "Approved",
                 reason_qualifier_one: "Newborn",
-              },
+              }),
             ],
           },
           [DOCUMENTS[4]]
@@ -140,12 +154,12 @@ describe("Status", () => {
           ...defaultClaimDetail,
           has_paid_payments: false,
           absence_periods: [
-            {
-              period_type: "Reduced",
+            createAbsencePeriod({
+              period_type: "Reduced Schedule",
               reason: LeaveReason.bonding,
               request_decision: "Approved",
               reason_qualifier_one: "Newborn",
-            },
+            }),
           ],
         }),
       },
@@ -164,12 +178,12 @@ describe("Status", () => {
         addCustomSetup: setupHelper({
           ...defaultClaimDetail,
           absence_periods: [
-            {
-              period_type: "Reduced",
+            createAbsencePeriod({
+              period_type: "Reduced Schedule",
               reason: LeaveReason.bonding,
               request_decision: "Approved",
               reason_qualifier_one: "Newborn",
-            },
+            }),
           ],
         }),
       },
@@ -191,12 +205,12 @@ describe("Status", () => {
         addCustomSetup: setupHelper({
           ...defaultClaimDetail,
           absence_periods: [
-            {
-              period_type: "Reduced",
+            createAbsencePeriod({
+              period_type: "Reduced Schedule",
               reason: LeaveReason.bonding,
               request_decision: "Approved",
               reason_qualifier_one: "Newborn",
-            },
+            }),
           ],
         }),
       },
@@ -249,7 +263,7 @@ describe("Status", () => {
         addCustomSetup: (appLogicHook) => {
           appLogicHook.claims.loadClaimDetail = jest.fn();
           appLogicHook.appErrors = new AppErrorInfoCollection([
-            new AppErrorInfo(),
+            new AppErrorInfo({}),
           ]);
         },
       },
@@ -393,12 +407,12 @@ describe("Status", () => {
           addCustomSetup: setupHelper({
             ...defaultClaimDetail,
             absence_periods: [
-              {
-                period_type: "Reduced",
+              createAbsencePeriod({
+                period_type: "Reduced Schedule",
                 reason: LeaveReason.bonding,
                 request_decision: "Pending",
                 reason_qualifier_one: "Newborn",
-              },
+              }),
             ],
           }),
         },
@@ -415,11 +429,11 @@ describe("Status", () => {
           addCustomSetup: setupHelper({
             ...defaultClaimDetail,
             absence_periods: [
-              {
-                period_type: "Reduced",
+              createAbsencePeriod({
+                period_type: "Reduced Schedule",
                 reason: LeaveReason.pregnancy,
                 request_decision: "Approved",
-              },
+              }),
             ],
           }),
         },
@@ -436,16 +450,16 @@ describe("Status", () => {
           addCustomSetup: setupHelper({
             ...defaultClaimDetail,
             absence_periods: [
-              {
-                period_type: "Reduced",
+              createAbsencePeriod({
+                period_type: "Reduced Schedule",
                 reason: LeaveReason.pregnancy,
                 request_decision: "Approved",
-              },
-              {
-                period_type: "Reduced",
+              }),
+              createAbsencePeriod({
+                period_type: "Reduced Schedule",
                 reason: LeaveReason.bonding,
                 request_decision: "Approved",
-              },
+              }),
             ],
           }),
         },
@@ -462,11 +476,11 @@ describe("Status", () => {
           addCustomSetup: setupHelper({
             ...defaultClaimDetail,
             absence_periods: [
-              {
-                period_type: "Reduced",
+              createAbsencePeriod({
+                period_type: "Reduced Schedule",
                 reason: LeaveReason.pregnancy,
                 request_decision: "Denied",
-              },
+              }),
             ],
           }),
         },
@@ -483,12 +497,12 @@ describe("Status", () => {
           addCustomSetup: setupHelper({
             ...defaultClaimDetail,
             absence_periods: [
-              {
-                period_type: "Reduced",
+              createAbsencePeriod({
+                period_type: "Reduced Schedule",
                 reason: LeaveReason.bonding,
                 reason_qualifier_one: "Newborn",
                 request_decision: "Withdrawn",
-              },
+              }),
             ],
           }),
         },
@@ -556,16 +570,16 @@ describe("Status", () => {
             {
               ...defaultClaimDetail,
               absence_periods: [
-                {
-                  period_type: "Reduced",
+                createAbsencePeriod({
+                  period_type: "Reduced Schedule",
                   reason: LeaveReason.pregnancy,
                   request_decision: "Pending",
-                },
-                {
-                  period_type: "Reduced",
+                }),
+                createAbsencePeriod({
+                  period_type: "Reduced Schedule",
                   reason: LeaveReason.bonding,
                   request_decision: "Approved",
-                },
+                }),
               ],
             },
             [DOCUMENTS[1]]
@@ -589,16 +603,16 @@ describe("Status", () => {
             {
               ...defaultClaimDetail,
               absence_periods: [
-                {
-                  period_type: "Reduced",
+                createAbsencePeriod({
+                  period_type: "Reduced Schedule",
                   reason: LeaveReason.pregnancy,
                   request_decision: "Pending",
-                },
-                {
-                  period_type: "Reduced",
+                }),
+                createAbsencePeriod({
+                  period_type: "Reduced Schedule",
                   reason: LeaveReason.bonding,
                   request_decision: "Approved",
-                },
+                }),
               ],
             },
             [DOCUMENTS[0]]
@@ -616,18 +630,22 @@ describe("Status", () => {
   });
 
   it("includes a button to upload additional documents if there is a pending absence period", () => {
-    const absence_periods = [
+    const request_decisions = [
       "Withdrawn",
       "Cancelled",
       "Approved",
       "Pending",
       "Denied",
-    ].map((request_decision, fineos_leave_request_id) => ({
-      fineos_leave_request_id,
-      request_decision,
-      period_type: "Continuous",
-      reason: LeaveReason.medical,
-    }));
+    ] as const;
+    const absence_periods = request_decisions.map(
+      (request_decision, fineos_leave_request_id) =>
+        createAbsencePeriod({
+          fineos_leave_request_id: fineos_leave_request_id.toString(),
+          request_decision,
+          period_type: "Continuous",
+          reason: LeaveReason.medical,
+        })
+    );
 
     renderPage(
       Status,
@@ -656,43 +674,46 @@ describe("Status", () => {
     const CLAIM_DETAIL = new ClaimDetail({
       fineos_absence_id: "fineos-abence-id",
       absence_periods: [
-        {
-          period_type: "Reduced",
+        createAbsencePeriod({
+          period_type: "Reduced Schedule",
           absence_period_start_date: "2021-06-01",
           absence_period_end_date: "2021-06-08",
           request_decision: "Approved",
           fineos_leave_request_id: "PL-14432-0000002026",
           reason: LeaveReason.bonding,
           reason_qualifier_one: "Newborn",
-        },
-        {
-          period_type: "Reduced Leave",
+        }),
+        createAbsencePeriod({
+          period_type: "Reduced Schedule",
           absence_period_start_date: "2021-08-01",
           absence_period_end_date: "2021-08-08",
           request_decision: "Pending",
           fineos_leave_request_id: "PL-14434-0000002026",
           reason: LeaveReason.pregnancy,
           reason_qualifier_one: "Postnatal Disability",
-        },
-        {
+        }),
+        createAbsencePeriod({
           period_type: "Continuous",
           absence_period_start_date: "2021-08-01",
           absence_period_end_date: "2021-08-08",
           request_decision: "Withdrawn",
           fineos_leave_request_id: "PL-14434-0000002326",
           reason: LeaveReason.medical,
-        },
+        }),
       ],
     });
 
     it("does not render LeaveDetails if absenceDetails not given", () => {
-      const { container } = render(<LeaveDetails />);
+      const { container } = render(
+        <LeaveDetails absenceId={CLAIM_DETAIL.fineos_absence_id} />
+      );
       expect(container).toBeEmptyDOMElement();
     });
 
     it("renders page separated by keys if object of absenceDetails has more keys", () => {
       const { container } = render(
         <LeaveDetails
+          absenceId={CLAIM_DETAIL.fineos_absence_id}
           absenceDetails={AbsencePeriod.groupByReason(
             CLAIM_DETAIL.absence_periods
           )}
@@ -705,6 +726,7 @@ describe("Status", () => {
     it("renders page with one section if absenceDetails has only one key", () => {
       const { container } = render(
         <LeaveDetails
+          absenceId={CLAIM_DETAIL.fineos_absence_id}
           absenceDetails={{
             [LeaveReason.medical]: AbsencePeriod.groupByReason(
               CLAIM_DETAIL.absence_periods
@@ -719,6 +741,7 @@ describe("Status", () => {
     it("renders track your payments link if isPaymentsTab is true", () => {
       render(
         <LeaveDetails
+          absenceId={CLAIM_DETAIL.fineos_absence_id}
           isPaymentsTab
           absenceDetails={{
             [LeaveReason.medical]: AbsencePeriod.groupByReason(
@@ -736,17 +759,21 @@ describe("Status", () => {
 
   describe("timeline", () => {
     it("is not displayed if there are no pending absence periods", () => {
-      const absence_periods = [
+      const request_decisions = [
         "Withdrawn",
         "Cancelled",
         "Approved",
         "Denied",
-      ].map((request_decision, fineos_leave_request_id) => ({
-        fineos_leave_request_id,
-        request_decision,
-        period_type: "Continuous",
-        reason: LeaveReason.medical,
-      }));
+      ] as const;
+      const absence_periods = request_decisions.map(
+        (request_decision, fineos_leave_request_id) =>
+          createAbsencePeriod({
+            fineos_leave_request_id: fineos_leave_request_id.toString(),
+            request_decision,
+            period_type: "Continuous",
+            reason: LeaveReason.medical,
+          })
+      );
 
       renderPage(
         Status,
@@ -763,18 +790,22 @@ describe("Status", () => {
     });
 
     it("is displayed if there is a pending absence period", () => {
-      const absence_periods = [
+      const request_decisions = [
         "Withdrawn",
         "Cancelled",
         "Approved",
         "Pending",
         "Denied",
-      ].map((request_decision, fineos_leave_request_id) => ({
-        fineos_leave_request_id,
-        request_decision,
-        period_type: "Continuous",
-        reason: LeaveReason.medical,
-      }));
+      ] as const;
+      const absence_periods = request_decisions.map(
+        (request_decision, fineos_leave_request_id) =>
+          createAbsencePeriod({
+            fineos_leave_request_id: fineos_leave_request_id.toString(),
+            request_decision,
+            period_type: "Continuous",
+            reason: LeaveReason.medical,
+          })
+      );
 
       renderPage(
         Status,
@@ -799,14 +830,14 @@ describe("Status", () => {
         LeaveReason.pregnancy,
       ][Math.floor(Math.random() * 3)];
 
-      const claimDetailAttrs = {
+      const claimDetailAttrs: Partial<ClaimDetail> = {
         ...defaultClaimDetail,
         absence_periods: [
-          {
+          createAbsencePeriod({
             period_type: "Continuous",
             request_decision: "Pending",
             reason: randomReason,
-          },
+          }),
         ],
       };
 
@@ -817,14 +848,14 @@ describe("Status", () => {
             addCustomSetup: setupHelper({
               ...claimDetailAttrs,
               managed_requirements: [
-                {
+                createMockManagedRequirement({
                   follow_up_date: null,
                   status: "Open",
-                },
-                {
+                }),
+                createMockManagedRequirement({
                   follow_up_date: "2022-01-01",
-                  status: "Completed",
-                },
+                  status: "Complete",
+                }),
               ],
             }),
           },
@@ -850,18 +881,18 @@ describe("Status", () => {
             addCustomSetup: setupHelper({
               ...claimDetailAttrs,
               managed_requirements: [
-                {
+                createMockManagedRequirement({
                   follow_up_date: "2021-01-01",
-                  status: "Completed",
-                },
-                {
+                  status: "Complete",
+                }),
+                createMockManagedRequirement({
                   follow_up_date: "2021-01-01",
                   status: "Suppressed",
-                },
-                {
+                }),
+                createMockManagedRequirement({
                   follow_up_date: "2022-12-01",
                   status: "Open",
-                },
+                }),
               ],
             }),
           },
@@ -882,23 +913,23 @@ describe("Status", () => {
     });
 
     describe("when there is a pending bonding absence period and claimant has submitted certification documents", () => {
-      const claimDetailAttrs = {
+      const claimDetailAttrs: Partial<ClaimDetail> = {
         ...defaultClaimDetail,
         absence_periods: [
-          {
+          createAbsencePeriod({
             period_type: "Continuous",
             request_decision: "Pending",
             reason: LeaveReason.bonding,
             reason_qualifier_one: ReasonQualifier.newBorn,
-          },
+          }),
         ],
       };
 
-      const documents = [
-        {
+      const documents: BenefitsApplicationDocument[] = [
+        createMockBenefitsApplicationDocument({
           application_id: defaultClaimDetail.application_id,
           document_type: DocumentType.certification[LeaveReason.bonding],
-        },
+        }),
       ];
 
       it("shows timeline with generic follow up dates when there are no open managed requirements with follow up dates", () => {
@@ -909,14 +940,14 @@ describe("Status", () => {
               {
                 ...claimDetailAttrs,
                 managed_requirements: [
-                  {
+                  createMockManagedRequirement({
                     follow_up_date: null,
                     status: "Open",
-                  },
-                  {
+                  }),
+                  createMockManagedRequirement({
                     follow_up_date: "2022-01-01",
-                    status: "Completed",
-                  },
+                    status: "Complete",
+                  }),
                 ],
               },
               documents
@@ -945,18 +976,18 @@ describe("Status", () => {
               {
                 ...claimDetailAttrs,
                 managed_requirements: [
-                  {
+                  createMockManagedRequirement({
                     follow_up_date: "2021-01-01",
-                    status: "Completed",
-                  },
-                  {
+                    status: "Complete",
+                  }),
+                  createMockManagedRequirement({
                     follow_up_date: "2021-01-01",
                     status: "Suppressed",
-                  },
-                  {
+                  }),
+                  createMockManagedRequirement({
                     follow_up_date: "2022-12-01",
                     status: "Open",
-                  },
+                  }),
                 ],
               },
               documents
@@ -986,12 +1017,12 @@ describe("Status", () => {
             addCustomSetup: setupHelper({
               ...defaultClaimDetail,
               absence_periods: [
-                {
+                createAbsencePeriod({
                   period_type: "Continuous",
                   request_decision: "Pending",
                   reason: LeaveReason.bonding,
                   reason_qualifier_one: ReasonQualifier.newBorn,
-                },
+                }),
               ],
             }),
           },
@@ -1008,12 +1039,12 @@ describe("Status", () => {
             addCustomSetup: setupHelper({
               ...defaultClaimDetail,
               absence_periods: [
-                {
+                createAbsencePeriod({
                   period_type: "Continuous",
                   request_decision: "Pending",
                   reason: LeaveReason.bonding,
                   reason_qualifier_one: ReasonQualifier.newBorn,
-                },
+                }),
               ],
             }),
           },
@@ -1038,12 +1069,12 @@ describe("Status", () => {
             addCustomSetup: setupHelper({
               ...defaultClaimDetail,
               absence_periods: [
-                {
+                createAbsencePeriod({
                   period_type: "Continuous",
                   request_decision: "Pending",
                   reason: LeaveReason.bonding,
                   reason_qualifier_one: ReasonQualifier.fosterCare,
-                },
+                }),
               ],
             }),
           },
@@ -1068,12 +1099,12 @@ describe("Status", () => {
             addCustomSetup: setupHelper({
               ...defaultClaimDetail,
               absence_periods: [
-                {
+                createAbsencePeriod({
                   period_type: "Continuous",
                   request_decision: "Pending",
                   reason: LeaveReason.bonding,
                   reason_qualifier_one: ReasonQualifier.adoption,
-                },
+                }),
               ],
             }),
           },
@@ -1095,13 +1126,15 @@ describe("Status", () => {
 
   describe("manage your application", () => {
     it("is not displayed if all the claim statuses on an application are Withdrawn, Cancelled, or Denied", () => {
-      const absence_periods = ["Withdrawn", "Cancelled", "Denied"].map(
-        (request_decision, fineos_leave_request_id) => ({
-          fineos_leave_request_id,
-          request_decision,
-          period_type: "Continuous",
-          reason: LeaveReason.medical,
-        })
+      const request_decisions = ["Withdrawn", "Cancelled", "Denied"] as const;
+      const absence_periods = request_decisions.map(
+        (request_decision, fineos_leave_request_id) =>
+          createAbsencePeriod({
+            fineos_leave_request_id: fineos_leave_request_id.toString(),
+            request_decision,
+            period_type: "Continuous",
+            reason: LeaveReason.medical,
+          })
       );
 
       renderPage(
@@ -1119,18 +1152,22 @@ describe("Status", () => {
     });
 
     it("displays manage approved application link if any of the claim statuses on an application are Approved", () => {
-      const absence_periods = [
+      const request_decisions = [
         "Withdrawn",
         "Cancelled",
         "Approved",
         "Pending",
         "Denied",
-      ].map((request_decision, fineos_leave_request_id) => ({
-        fineos_leave_request_id,
-        request_decision,
-        period_type: "Continuous",
-        reason: LeaveReason.medical,
-      }));
+      ] as const;
+      const absence_periods = request_decisions.map(
+        (request_decision, fineos_leave_request_id) =>
+          createAbsencePeriod({
+            fineos_leave_request_id: fineos_leave_request_id.toString(),
+            request_decision,
+            period_type: "Continuous",
+            reason: LeaveReason.medical,
+          })
+      );
 
       renderPage(
         Status,
@@ -1151,17 +1188,21 @@ describe("Status", () => {
     });
 
     it("is displayed if any of the claim statuses on an application are Pending and none are Approved", () => {
-      const absence_periods = [
+      const request_decisions = [
         "Withdrawn",
         "Cancelled",
         "Pending",
         "Denied",
-      ].map((request_decision, fineos_leave_request_id) => ({
-        fineos_leave_request_id,
-        request_decision,
-        period_type: "Continuous",
-        reason: LeaveReason.medical,
-      }));
+      ] as const;
+      const absence_periods = request_decisions.map(
+        (request_decision, fineos_leave_request_id) =>
+          createAbsencePeriod({
+            fineos_leave_request_id: fineos_leave_request_id.toString(),
+            request_decision,
+            period_type: "Continuous",
+            reason: LeaveReason.medical,
+          })
+      );
 
       renderPage(
         Status,
