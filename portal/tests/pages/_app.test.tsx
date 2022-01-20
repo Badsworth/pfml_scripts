@@ -1,14 +1,14 @@
+// @ts-expect-error Not sure how else to track occurrences of these
+import { mockRouter, mockRouterEvents } from "next/router";
 import { render, screen } from "@testing-library/react";
 import { App } from "../../src/pages/_app";
+import { MockRouterEvent } from "../../lib/mock-helpers/router";
 import React from "react";
 import { act } from "react-dom/test-utils";
-import { merge } from "lodash";
-import { mockRouterEvents } from "next/router";
-import useAppLogic from "../../src/hooks/useAppLogic";
 import useTrackerPageView from "../../src/hooks/useTrackerPageView";
 
 // see https://github.com/vercel/next.js/issues/5416
-jest.mock("next/dynamic", () => () => (_props) => null);
+jest.mock("next/dynamic", () => () => () => null);
 jest.mock("../../src/api/UsersApi");
 jest.mock("../../src/hooks/useAppLogic");
 jest.mock("../../src/hooks/useTrackerPageView");
@@ -19,13 +19,15 @@ jest.mock("lodash/uniqueId", () => {
 function renderApp() {
   const TestComponent = () => (
     <div>
-      <h1 tabIndex="-1" className="js-title">
+      <h1 tabIndex={-1} className="js-title">
         Page title
       </h1>
     </div>
   );
 
-  const component = <App Component={TestComponent} />;
+  const component = (
+    <App Component={TestComponent} pageProps={{}} router={mockRouter} />
+  );
   return render(component);
 }
 
@@ -40,17 +42,20 @@ describe("App", () => {
     });
 
     // Reset the focused element
-    document.activeElement.blur();
+    if (document.activeElement instanceof HTMLElement)
+      document.activeElement.blur();
   });
 
   describe("Router events", () => {
     const triggerRouterEvent = async (
-      eventName,
+      eventName: string,
       url = "/foo",
-      options = {}
+      options: {
+        shallow?: boolean;
+      } = {}
     ) => {
       const routeChangeStart = mockRouterEvents.find(
-        (evt) => evt.name === eventName
+        (evt: MockRouterEvent) => evt.name === eventName
       );
 
       await act(async () => {
@@ -61,19 +66,11 @@ describe("App", () => {
 
     it("sets isLoading to true when a route change starts", async () => {
       renderApp();
-      expect(
-        screen.queryByRole("progressbar", {
-          "aria-label": "Loading",
-        })
-      ).not.toBeInTheDocument();
+      expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
 
       await triggerRouterEvent("routeChangeStart");
 
-      expect(
-        screen.queryByRole("progressbar", {
-          "aria-label": "Loading",
-        })
-      ).toBeInTheDocument();
+      expect(screen.queryByRole("progressbar")).toBeInTheDocument();
     });
 
     it("does not set isLoading to true when a SHALLOW route change starts", async () => {
@@ -82,11 +79,7 @@ describe("App", () => {
       await triggerRouterEvent("routeChangeStart", undefined, {
         shallow: true,
       });
-      expect(
-        screen.queryByRole("progressbar", {
-          "aria-label": "Loading",
-        })
-      ).not.toBeInTheDocument();
+      expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
     });
 
     it("does not scroll to the top of the window after a SHALLOW route change", async () => {
@@ -103,17 +96,6 @@ describe("App", () => {
     });
 
     it("calls useTrackerPageView hook when mounted", () => {
-      // Overwrite isLoggedIn to simulate a scenario where the route event is
-      // triggered before the page has loaded auth info
-      useAppLogic.mockImplementationOnce(() =>
-        merge(
-          { ...useAppLogic() },
-          {
-            auth: { isLoggedIn: null },
-          }
-        )
-      );
-
       renderApp();
       expect(useTrackerPageView).toHaveBeenCalledTimes(1);
     });
