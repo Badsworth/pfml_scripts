@@ -294,10 +294,16 @@ class FineosExtractConstants:
         file_name="VBI_REQUESTEDABSENCE.csv",
         table=FineosExtractVbiRequestedAbsence,
         field_names=[
+            "ABSENCEPERIOD_CLASSID",
+            "ABSENCEPERIOD_INDEXID",
             "LEAVEREQUEST_DECISION",
             "LEAVEREQUEST_ID",
             "ABSENCEREASON_COVERAGE",
             "ABSENCE_CASECREATIONDATE",
+            "ABSENCEPERIOD_TYPE",
+            "ABSENCEREASON_QUALIFIER1",
+            "ABSENCEREASON_QUALIFIER2",
+            "ABSENCEREASON_NAME",
         ],
     )
 
@@ -434,6 +440,7 @@ class FineosExtractConstants:
 CLAIMANT_EXTRACT_FILES = [
     FineosExtractConstants.VBI_REQUESTED_ABSENCE_SOM,
     FineosExtractConstants.EMPLOYEE_FEED,
+    FineosExtractConstants.VBI_REQUESTED_ABSENCE,
 ]
 
 CLAIMANT_EXTRACT_FILE_NAMES = [extract_file.file_name for extract_file in CLAIMANT_EXTRACT_FILES]
@@ -442,7 +449,6 @@ PAYMENT_EXTRACT_FILES = [
     FineosExtractConstants.VPEI,
     FineosExtractConstants.CLAIM_DETAILS,
     FineosExtractConstants.PAYMENT_DETAILS,
-    FineosExtractConstants.VBI_REQUESTED_ABSENCE,
 ]
 PAYMENT_EXTRACT_FILE_NAMES = [extract_file.file_name for extract_file in PAYMENT_EXTRACT_FILES]
 

@@ -37,7 +37,6 @@ from massgov.pfml.db.models.payments import (
     FineosExtractCancelledPayments,
     FineosExtractPaymentFullSnapshot,
     FineosExtractReplacedPayments,
-    FineosExtractVbiRequestedAbsence,
     FineosExtractVpei,
     FineosExtractVpeiClaimDetails,
     FineosExtractVpeiPaymentDetails,
@@ -299,10 +298,13 @@ def test_e2e_pub_payments(
         ) + len(address_no_match_split_payment_records) - len(missing_payment)
 
         # Payment staging tables
-        assert len(test_db_session.query(FineosExtractVbiRequestedAbsence).all()) == len(payments)
+        # We don't make a payment for CLAIMANT_PRENOTED_NO_PAYMENT_RECEIVED
+        # but do make the records in the other files still
         assert len(test_db_session.query(FineosExtractVpei).all()) == len(payments)
-        assert len(test_db_session.query(FineosExtractVpeiClaimDetails).all()) == len(payments)
-        assert len(test_db_session.query(FineosExtractVpeiPaymentDetails).all()) == len(payments)
+        assert len(test_db_session.query(FineosExtractVpeiClaimDetails).all()) == len(payments) + 1
+        assert (
+            len(test_db_session.query(FineosExtractVpeiPaymentDetails).all()) == len(payments) + 1
+        )
 
         # == Validate employee state logs
         assert_employee_state_for_scenarios(
@@ -857,9 +859,6 @@ def test_e2e_pub_payments(
                         ScenarioName.CLAIMANT_PRENOTED_NO_PAYMENT_RECEIVED,
                     ]
                 )
-                + withholding_requested_absence_records_count
-                + withholding_requested_absence_records_count
-                + withholding_requested_absence_records_count
                 + withholding_requested_absence_records_count,
                 "standard_valid_payment_count": len(
                     [

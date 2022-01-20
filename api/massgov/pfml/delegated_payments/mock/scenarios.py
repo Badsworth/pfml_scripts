@@ -286,8 +286,7 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
         leave_request_decision="In Review",
     ),
     ScenarioDescriptor(
-        scenario_name=ScenarioName.REJECTED_LEAVE_REQUEST_DECISION,
-        leave_request_decision="Rejected",
+        scenario_name=ScenarioName.REJECTED_LEAVE_REQUEST_DECISION, leave_request_decision="Denied",
     ),
     ScenarioDescriptor(scenario_name=ScenarioName.AUDIT_REJECTED, is_audit_rejected=True),
     ScenarioDescriptor(

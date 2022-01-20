@@ -40,8 +40,8 @@ logger = logging.get_logger(__name__)
 ALL = "ALL"
 RUN_AUDIT_CLEANUP = "audit-cleanup"
 CONSUME_FINEOS_CLAIMANT = "consume-fineos-claimant"
-CLAIMANT_EXTRACT = "claimant-extract"
 CONSUME_FINEOS_PAYMENT = "consume-fineos-payment"
+CLAIMANT_EXTRACT = "claimant-extract"
 PAYMENT_EXTRACT = "payment-extract"
 CONSUME_FINEOS_1099_REQUEST_EXTRACT = "consume-fineos-1099-request"
 VALIDATE_ADDRESSES = "validate-addresses"
@@ -57,8 +57,8 @@ ALLOWED_VALUES = [
     ALL,
     RUN_AUDIT_CLEANUP,
     CONSUME_FINEOS_CLAIMANT,
-    CLAIMANT_EXTRACT,
     CONSUME_FINEOS_PAYMENT,
+    CLAIMANT_EXTRACT,
     PAYMENT_EXTRACT,
     CONSUME_FINEOS_1099_REQUEST_EXTRACT,
     VALIDATE_ADDRESSES,
@@ -73,8 +73,8 @@ ALLOWED_VALUES = [
 class Configuration:
     do_audit_cleanup: bool
     consume_fineos_claimant: bool
-    do_claimant_extract: bool
     consume_fineos_payment: bool
+    do_claimant_extract: bool
     do_payment_extract: bool
     consume_fineos_1099_request: bool
     validate_addresses: bool
@@ -103,8 +103,8 @@ class Configuration:
         if ALL in steps:
             self.do_audit_cleanup = True
             self.consume_fineos_claimant = True
-            self.do_claimant_extract = True
             self.consume_fineos_payment = True
+            self.do_claimant_extract = True
             self.do_payment_extract = True
             self.consume_fineos_1099_request = True
             self.validate_addresses = True
@@ -118,8 +118,8 @@ class Configuration:
         else:
             self.do_audit_cleanup = RUN_AUDIT_CLEANUP in steps
             self.consume_fineos_claimant = CONSUME_FINEOS_CLAIMANT in steps
-            self.do_claimant_extract = CLAIMANT_EXTRACT in steps
             self.consume_fineos_payment = CONSUME_FINEOS_PAYMENT in steps
+            self.do_claimant_extract = CLAIMANT_EXTRACT in steps
             self.do_payment_extract = PAYMENT_EXTRACT in steps
             self.consume_fineos_1099_request = CONSUME_FINEOS_1099_REQUEST_EXTRACT in steps
             self.validate_addresses = VALIDATE_ADDRESSES in steps
@@ -163,15 +163,15 @@ def _process_fineos_extracts(
             extract_config=CLAIMANT_EXTRACT_CONFIG,
         ).run()
 
-    if config.do_claimant_extract:
-        ClaimantExtractStep(db_session=db_session, log_entry_db_session=log_entry_db_session).run()
-
     if config.consume_fineos_payment:
         FineosExtractStep(
             db_session=db_session,
             log_entry_db_session=log_entry_db_session,
             extract_config=PAYMENT_EXTRACT_CONFIG,
         ).run()
+
+    if config.do_claimant_extract:
+        ClaimantExtractStep(db_session=db_session, log_entry_db_session=log_entry_db_session).run()
 
     if config.do_payment_extract:
         PaymentExtractStep(db_session=db_session, log_entry_db_session=log_entry_db_session).run()

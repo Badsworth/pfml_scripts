@@ -10,6 +10,7 @@ import { ManagedRequirement } from "../models/Claim";
 import PreviousLeave from "./PreviousLeave";
 import dayjs from "dayjs";
 import getClosestOpenFollowUpDate from "../utils/getClosestOpenFollowUpDate";
+import isBlank from "../utils/isBlank";
 import { merge } from "lodash";
 
 /**
@@ -67,6 +68,28 @@ class EmployerClaim extends BaseBenefitsApplication {
     if (followUpDate) {
       return dayjs().format("YYYY-MM-DD") <= followUpDate;
     }
+    return false;
+  }
+
+  get lastReviewedAt(): string | undefined {
+    if (this.managed_requirements?.length) {
+      const nonBlankDates = this.managed_requirements
+        .map((managedRequirement) => managedRequirement.responded_at)
+        .filter((date): date is string => !isBlank(date))
+        .sort();
+
+      return nonBlankDates.length ? nonBlankDates[0] : undefined;
+    }
+  }
+
+  get wasPreviouslyReviewed(): boolean {
+    if (this.managed_requirements?.length) {
+      return this.managed_requirements.some((managedRequirement) => {
+        // "Suppressed" indicates the managed requirement has been been closed, but doesn't mean it was *reviewed*
+        return managedRequirement.status === "Complete";
+      });
+    }
+
     return false;
   }
 }
