@@ -4,6 +4,7 @@
 import Cookies from "js-cookie";
 import tracker from "./tracker";
 
+type CookieFlagValue = "reset" | "true" | "false";
 const featureFlagsParamName = "_ff";
 
 function getEnvironmentFlags() {
@@ -23,11 +24,11 @@ function getEnvironmentFlags() {
  * Check whether a feature flag is enabled
  * @param name - Feature flag name
  */
-export function isFeatureEnabled(name: string) {
+export function isFeatureEnabled(name: string): boolean {
   const cookieFlags = getCookieFlags();
-  if (cookieFlags.hasOwnProperty(name)) return cookieFlags[name];
+  if (cookieFlags.hasOwnProperty(name)) return cookieFlags[name] === true;
 
-  return getEnvironmentFlags()[name];
+  return getEnvironmentFlags()[name] === true;
 }
 
 /**
@@ -67,14 +68,17 @@ export function storeFeatureFlagsFromQuery(searchParams: URLSearchParams) {
   // Convert the query string into array of key/value pairs
   // a:valA;b:valB => [ [a, valA], [b, valB] ]
   const flags = paramValue.split(";").map((value) => value.split(":"));
+  const validValues = ["reset", "true", "false"];
 
   flags
     .filter(([flagName, flagValue]) => {
       // Prevent someone from setting arbitrary feature flags
-      return flagValue && flagExistsInEnvironment(flagName);
+      return (
+        validValues.includes(flagValue) && flagExistsInEnvironment(flagName)
+      );
     })
     .forEach(([flagName, flagValue]) => {
-      updateCookieWithFlag(flagName, flagValue);
+      updateCookieWithFlag(flagName, flagValue as CookieFlagValue);
     });
 
   // Track when someone sets feature flag(s) through their browser
@@ -85,7 +89,10 @@ export function storeFeatureFlagsFromQuery(searchParams: URLSearchParams) {
  * Updates the feature flag cookie based on the given flag name/value.
  * This merges the given flag with any existing cookie value.
  */
-export function updateCookieWithFlag(flagName: string, flagValue: string) {
+export function updateCookieWithFlag(
+  flagName: string,
+  flagValue: CookieFlagValue
+) {
   const cookieFlags = getCookieFlags();
 
   if (flagValue === "reset") delete cookieFlags[flagName];
