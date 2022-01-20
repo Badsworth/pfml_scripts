@@ -138,7 +138,7 @@
     "FINEOS_HAS_TAX_WITHHOLDING": "true",
     "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "true",
     "MFA_ENABLED": "false",
-    "HAS_FINEOS_JANUARY_RELEASE": "false"
+    "HAS_FINEOS_JANUARY_RELEASE": "true"
   },
   "cps-preview": {
     "PORTAL_BASEURL": "https://paidleave-cps-preview.eol.mass.gov",
