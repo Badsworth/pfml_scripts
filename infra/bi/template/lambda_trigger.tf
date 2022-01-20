@@ -58,11 +58,12 @@ resource "aws_lambda_function" "bi_reporting_lambda" {
 }
 
 resource "aws_lambda_permission" "run_bi_reporting_lambda" {
-  statement_id  = "TriggerExecutionFromS3"
-  action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.bi_reporting_lambda.function_name
-  principal     = "s3.amazonaws.com"
-  source_arn    = data.aws_s3_bucket.business_intelligence_tool.arn
+  statement_id   = "TriggerExecutionFromS3"
+  action         = "lambda:InvokeFunction"
+  function_name  = aws_lambda_function.bi_reporting_lambda.function_name
+  principal      = "s3.amazonaws.com"
+  source_arn     = data.aws_s3_bucket.business_intelligence_tool.arn
+  source_account = data.aws_caller_identity.current.account_id
 }
 
 resource "aws_cloudwatch_log_subscription_filter" "nr_bi_reporting_lambda" {
