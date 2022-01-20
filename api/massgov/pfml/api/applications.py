@@ -697,7 +697,9 @@ def document_upload(application_id, body, file):
                         ValidationErrorDetail(
                             type=IssueType.fineos_client,
                             message=message,
-                            rule=IssueRule.document_requirement_already_satisfied,
+                            rule=IssueRule.document_requirement_already_satisfied
+                            if "is not required for the case provided" in err.message  # noqa: B306
+                            else None,
                         )
                     ],
                     data=document_details.dict(),
