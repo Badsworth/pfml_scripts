@@ -3,6 +3,7 @@ import EmployerClaim from "../../src/models/EmployerClaim";
 import LeaveReason from "src/models/LeaveReason";
 import MockDate from "mockdate";
 import { MockEmployerClaimBuilder } from "../test-utils";
+import { createMockManagedRequirement } from "../../lib/mock-helpers/createMockManagedRequirement";
 
 describe("EmployerClaim", () => {
   describe("#constructor", () => {
@@ -60,6 +61,93 @@ describe("EmployerClaim", () => {
       const claim = new MockEmployerClaimBuilder().create();
 
       expect(claim.is_reviewable).toBe(false);
+    });
+  });
+
+  describe("lastReviewedAt", () => {
+    it("returns the most recent ManagedRequirement responded_at", () => {
+      const claim = new EmployerClaim({
+        absence_periods: [],
+        managed_requirements: [
+          createMockManagedRequirement({
+            responded_at: "2021-02-30",
+          }),
+          createMockManagedRequirement({
+            responded_at: "2021-01-01",
+          }),
+          createMockManagedRequirement({
+            responded_at: "2021-01-30",
+          }),
+        ],
+      });
+
+      expect(claim.lastReviewedAt).toBe("2021-01-01");
+    });
+
+    it("returns undefined when there are no ManagedRequirements", () => {
+      const claim = new EmployerClaim({
+        absence_periods: [],
+        managed_requirements: [],
+      });
+
+      expect(claim.lastReviewedAt).toBeUndefined();
+    });
+
+    it("returns undefined when there are no ManagedRequirements with a responded_at", () => {
+      const claim = new EmployerClaim({
+        absence_periods: [],
+        managed_requirements: [
+          createMockManagedRequirement({
+            responded_at: null,
+            status: "Suppressed",
+          }),
+        ],
+      });
+
+      expect(claim.lastReviewedAt).toBeUndefined();
+    });
+  });
+
+  describe("wasPreviouslyReviewed", () => {
+    it("returns true if any ManagedRequirement has a status of Complete", () => {
+      const claim = new EmployerClaim({
+        absence_periods: [],
+        managed_requirements: [
+          createMockManagedRequirement({
+            status: "Open",
+          }),
+          createMockManagedRequirement({
+            status: "Complete",
+          }),
+        ],
+      });
+
+      expect(claim.wasPreviouslyReviewed).toBe(true);
+    });
+
+    it("returns false if no ManagedRequirement has a status of Complete", () => {
+      const claim = new EmployerClaim({
+        absence_periods: [],
+        managed_requirements: [
+          createMockManagedRequirement({
+            status: "Open",
+          }),
+          createMockManagedRequirement({
+            status: "Suppressed",
+          }),
+        ],
+      });
+
+      expect(claim.wasPreviouslyReviewed).toBe(false);
+    });
+
+    it("returns false if there are no ManagedRequirements", () => {
+      const claim = new EmployerClaim({
+        absence_periods: [],
+        managed_requirements: [],
+      });
+
+      expect(claim.wasPreviouslyReviewed).toBe(false);
     });
   });
 });
