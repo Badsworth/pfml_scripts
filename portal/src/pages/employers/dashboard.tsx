@@ -186,14 +186,14 @@ export const Dashboard = (props: WithUserProps & { query: ApiParams }) => {
                   </td>
                   <td>
                     <p class="grid-row grid-gap-1">
-                      <div class="grid-col-auto">
+                      <div class="desktop:grid-col-auto">
                         <Tag
                           label="Pending"
                           state="warning"
                           className="width-15 text-center"
                         />
                       </div>
-                      <div class="grid-col-fill minw-15">
+                      <div class="desktop:grid-col-fill">
                         <b>Leave to bond with a child</b>
                         <br />
                         11/15/2021 to 11/30/2021
@@ -205,14 +205,14 @@ export const Dashboard = (props: WithUserProps & { query: ApiParams }) => {
                     </p>
 
                     <p class="grid-row grid-gap-1">
-                      <div class="grid-col-auto">
+                      <div class="desktop:grid-col-auto">
                         <Tag
                           label="Approved"
                           state="success"
                           className="width-15 text-center"
                         />
                       </div>
-                      <div class="grid-col-fill minw-15">
+                      <div class="desktop:grid-col-fill">
                         <b>Medical leave for pregnancy</b>
                         <br />
                         10/15/2021 to 11/14/2021
