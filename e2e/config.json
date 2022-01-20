@@ -41,7 +41,7 @@
     "FINEOS_HAS_TAX_WITHHOLDING": "true",
     "HAS_PAYMENT_STATUS": "false",
     "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "false",
-    "MFA_ENABLED": "false",
+    "MFA_ENABLED": "true",
     "HAS_FINEOS_JANUARY_RELEASE": "false"
   },
   "training": {
