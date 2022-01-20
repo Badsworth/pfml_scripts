@@ -35,16 +35,19 @@ export const SetupSMS = (props: SetupSMSProps) => {
     phone_number: "",
   });
 
-  const handleSubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
-    await appLogic.users.updateUser(props.user.user_id, {
+  const handleSubmit = async () => {
+    const user = await appLogic.users.updateUser(props.user.user_id, {
       mfa_phone_number: {
         int_code: "1",
         phone_type: PhoneType.cell,
         phone_number: formState.phone_number,
       },
     });
-    appLogic.portalFlow.goToNextPage({}, additionalParams);
+
+    // Only navigate away if there are no errors. The user is only returned if there are no errors.
+    if (user) {
+      appLogic.portalFlow.goToNextPage({}, additionalParams);
+    }
   };
 
   const getFunctionalInputProps = useFunctionalInputProps({

@@ -1,3 +1,7 @@
+import {
+  ApiResponse,
+  GETClaimsByFineosAbsenceIdResponse,
+} from "./../../src/_api";
 /// <reference types="cypress" />
 // ***********************************************************
 // This example plugins/index.js can be used to load plugins
@@ -22,6 +26,7 @@ import {
 import {
   ApplicationSubmissionResponse,
   Credentials,
+  Environment,
   Scenarios,
 } from "../../src/types";
 import {
@@ -36,6 +41,11 @@ import TestMailClient, {
   Email,
   GetEmailsOpts,
 } from "../../src/submission/TestMailClient";
+import TwilioClient, {
+  Numbers,
+  MFAOpts,
+  RES_MFA,
+} from "../../src/submission/TwilioClient";
 import DocumentWaiter from "./DocumentWaiter";
 import { ClaimGenerator, DehydratedClaim } from "../../src/generation/Claim";
 import * as scenarios from "../../src/scenarios";
@@ -55,6 +65,10 @@ export default function (
   const verificationFetcher = getVerificationFetcher();
   const authenticator = getAuthManager();
   const submitter = getPortalSubmitter();
+  const twilio_client = new TwilioClient(
+    config("TWILIO_ACCOUNTSID"),
+    config("TWILIO_AUTHTOKEN")
+  );
   const documentWaiter = new DocumentWaiter(
     config("API_BASEURL"),
     authenticator
@@ -65,7 +79,15 @@ export default function (
     getAuthVerification: (toAddress: string) => {
       return verificationFetcher.getVerificationCodeForUser(toAddress);
     },
-
+    async mfaVerfication(opts: MFAOpts): Promise<RES_MFA> {
+      return await twilio_client.getPhoneVerification(opts);
+    },
+    getMFAPhoneNumber(type: keyof Numbers[Environment]) {
+      return twilio_client.getPhoneNumber(
+        config("ENVIRONMENT") as Environment,
+        type
+      );
+    },
     async chooseFineosRole({
       userId,
       preset,
@@ -240,23 +262,32 @@ export default function (
         credentials.password
       );
       for (let i = 0; i < applications.length && i < 15; i++) {
-        const response = await getClaimsByFineos_absence_id(
-          {
-            fineos_absence_id: applications[i].fineos_absence_id as string,
-          },
-          {
-            baseUrl: authManager.apiBaseUrl,
-            headers: {
-              Authorization: `Bearer ${session.getAccessToken().getJwtToken()}`,
-              "User-Agent": "PFML Business Simulation Bot",
+        let response: ApiResponse<GETClaimsByFineosAbsenceIdResponse>;
+        try {
+          response = await getClaimsByFineos_absence_id(
+            {
+              fineos_absence_id: applications[i].fineos_absence_id as string,
             },
-          }
-        );
+            {
+              baseUrl: authManager.apiBaseUrl,
+              headers: {
+                Authorization: `Bearer ${session
+                  .getAccessToken()
+                  .getJwtToken()}`,
+                "User-Agent": "PFML Business Simulation Bot",
+              },
+            }
+          );
+        } catch (e) {
+          if (!new RegExp(/withdrawn/i).test(e.message)) throw e;
+          else continue;
+        }
+        if (!response.data.data?.absence_periods)
+          throw Error("Missing absence_period property from response");
+        const { absence_periods } = response.data.data;
         if (
-          // @ts-ignore - @todo _api.ts file needs to be regenerated to update the types for this response
-          response?.data.data.claim_status === "Approved" ||
-          // @ts-ignore - @todo _api.ts file needs to be regenerated to update the types for this response
-          response?.data.data.claim_status === "Completed"
+          absence_periods.length > 0 &&
+          absence_periods[0].request_decision === "Approved"
         )
           return applications[i];
       }

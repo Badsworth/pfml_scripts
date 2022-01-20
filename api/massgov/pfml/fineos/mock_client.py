@@ -9,9 +9,8 @@ import base64
 import copy
 import datetime
 import pathlib
-import typing
 from decimal import Decimal
-from typing import Any, List, Optional, Tuple, Union
+from typing import Any, Iterable, List, Optional, Tuple, Union
 
 import faker
 import requests
@@ -24,11 +23,13 @@ from massgov.pfml.util.converters.json_to_obj import set_empty_dates_to_none
 
 from ..db.models.applications import PhoneType
 from . import client, exception, fineos_client, models
+from .mock.eform import MOCK_EFORMS
+from .models.group_client_api import EForm
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
 # Capture calls for unit testing.
-_capture: typing.Optional[typing.List] = None
+_capture: Optional[List] = None
 
 MOCK_DOCUMENT_DATA = {
     "caseId": "",
@@ -218,16 +219,40 @@ def mock_customer_info():
 class MockFINEOSClient(client.AbstractFINEOSClient):
     """Mock FINEOS API client that returns fake responses."""
 
+    def __init__(self, mock_eforms: Iterable[EForm] = MOCK_EFORMS):
+        self.mock_eforms = mock_eforms
+        self.mock_eform_map = {eform.eformId: eform for eform in mock_eforms}
+
     def read_employer(self, employer_fein: str) -> models.OCOrganisation:
         _capture_call("read_employer", None, employer_fein=employer_fein)
 
         if employer_fein == "999999999":
             raise exception.FINEOSEntityNotFound("Employer not found.")
 
+        organisationUnits = None
+        if employer_fein == "999999998":
+            organisationUnits = models.OCOrganisationUnit(
+                OrganisationUnit=[
+                    models.OCOrganisationUnitItem(OID="PE:00001:0000000001", Name="OrgUnitOne",),
+                    models.OCOrganisationUnitItem(OID="PE:00001:0000000002", Name="OrgUnitTwo",),
+                ]
+            )
+
+        if employer_fein == "999999997":
+            organisationUnits = models.OCOrganisationUnit(
+                OrganisationUnit=[
+                    models.OCOrganisationUnitItem(OID="PE:00002:0000000001", Name="OrgUnitThree",),
+                    models.OCOrganisationUnitItem(OID="PE:00002:0000000002", Name="OrgUnitFour",),
+                ]
+            )
+
         return models.OCOrganisation(
             OCOrganisation=[
                 models.OCOrganisationItem(
-                    CustomerNo="999", CorporateTaxNumber=employer_fein, Name="Foo"
+                    CustomerNo="999",
+                    CorporateTaxNumber=employer_fein,
+                    Name="Foo",
+                    organisationUnits=organisationUnits,
                 )
             ]
         )
@@ -326,7 +351,7 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
         )
         return notification_case_summary
 
-    def get_absences(self, user_id: str) -> typing.List[models.customer_api.AbsenceCaseSummary]:
+    def get_absences(self, user_id: str) -> List[models.customer_api.AbsenceCaseSummary]:
         return [models.customer_api.AbsenceCaseSummary()]
 
     def get_absence(self, user_id: str, absence_id: str) -> models.customer_api.AbsenceDetails:
@@ -419,16 +444,25 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
     def get_eform_summary(
         self, user_id: str, absence_id: str
     ) -> List[models.group_client_api.EFormSummary]:
+        _capture_call("get_eform_summary", user_id, absence_id=absence_id)
         return [
             models.group_client_api.EFormSummary(
-                eformId=12345, eformType="Mocked Other Leave EForm"
+                eformId=eform.eformId,
+                eformTypeId="PE-11212-%010i" % eform.eformId,
+                effectiveDateFrom=None,
+                effectiveDateTo=None,
+                eformType=eform.eformType,
             )
+            for eform in self.mock_eforms
         ]
 
     def get_eform(
         self, user_id: str, absence_id: str, eform_id: int
     ) -> models.group_client_api.EForm:
-        return models.group_client_api.EForm(eformId=12345, eformAttributes=[])
+        _capture_call("get_eform", user_id, absence_id=absence_id, eform_id=eform_id)
+        if eform_id in self.mock_eform_map:
+            return self.mock_eform_map[eform_id]
+        raise exception.FINEOSForbidden("get_eform", 200, 403, "Permission denied")
 
     def create_eform(self, user_id: str, absence_id: str, eform: EFormBody) -> None:
         _capture_call("create_eform", user_id, eform=eform, absence_id=absence_id)
@@ -542,26 +576,26 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
                     "followUpDate": datetime.date(2021, 2, 1),
                     "documentReceived": True,
                     "creator": "Fake Creator",
+                    "status": "Open",
                     "subjectPartyName": "Fake Name",
                     "sourceOfInfoPartyName": "Fake Sourcee",
                     "creationDate": datetime.date(2020, 1, 1),
                     "dateSuppressed": datetime.date(2020, 3, 1),
-                    "status": "Open",
                 }
             ),
             models.group_client_api.ManagedRequirementDetails.parse_obj(
                 {
-                    "managedReqId": 123,
+                    "managedReqId": 124,
                     "category": "Employer Confirmation",
-                    "type": "Fake Type",
+                    "type": "Employer Confirmation of Leave Data",
                     "followUpDate": datetime.date(2021, 2, 1),
                     "documentReceived": True,
                     "creator": "Fake Creator",
+                    "status": "Complete",
                     "subjectPartyName": "Fake Name",
                     "sourceOfInfoPartyName": "Fake Sourcee",
                     "creationDate": datetime.date(2020, 1, 1),
                     "dateSuppressed": datetime.date(2020, 3, 1),
-                    "status": "Complete",
                 }
             ),
         ]
@@ -700,7 +734,7 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
         self,
         employer_create_or_update: models.CreateOrUpdateEmployer,
         existing_organization: Optional[models.OCOrganisationItem] = None,
-    ) -> typing.Tuple[str, int]:
+    ) -> Tuple[str, int]:
         _capture_call(
             "create_or_update_employer",
             None,
@@ -732,7 +766,7 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
     def update_reflexive_questions(
         self,
         user_id: str,
-        absence_id: typing.Optional[str],
+        absence_id: Optional[str],
         additional_information: models.customer_api.AdditionalInformation,
     ) -> None:
         _capture_call(

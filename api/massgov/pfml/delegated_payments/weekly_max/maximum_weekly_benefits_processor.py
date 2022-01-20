@@ -149,12 +149,14 @@ class MaximumWeeklyBenefitsStepProcessor(AbstractStepProcessor):
                 prior_payment, pay_periods
             )
             prior_payment.payment_distribution = payment_distribution
+            absence_case_id = prior_payment.payment.claim.fineos_absence_id
 
             for pay_period, payment_details in payment_distribution.items():
                 for payment_detail in payment_details:
                     pay_period.add_payment_from_details(
                         payment_detail, PaymentScenario.PREVIOUS_PAYMENT
                     )
+                    pay_period.add_absence_case_id(str(absence_case_id))
                     self._update_maximum_amount(pay_period, payment_detail.payment.claim)
 
         return pay_periods
@@ -168,6 +170,7 @@ class MaximumWeeklyBenefitsStepProcessor(AbstractStepProcessor):
         """
         pay_periods: dict[date, PayPeriodGroup] = {}
         for payment_container in payment_containers:
+            absence_case_id = payment_container.payment.claim.fineos_absence_id
             date_iter = cast(date, payment_container.payment.period_start_date) - timedelta(days=6)
 
             while date_iter <= cast(date, payment_container.payment.period_end_date):
@@ -182,6 +185,8 @@ class MaximumWeeklyBenefitsStepProcessor(AbstractStepProcessor):
                     self._update_maximum_amount(
                         pay_periods[start_date], payment_container.payment.claim
                     )
+
+                    pay_periods[start_date].add_absence_case_id(str(absence_case_id))
 
                 date_iter = date_iter + timedelta(days=1)
 
@@ -223,20 +228,29 @@ class MaximumWeeklyBenefitsStepProcessor(AbstractStepProcessor):
             )
             payment_container.payment_distribution = payment_distribution
 
-            absence_case_id = payment_container.payment.claim.fineos_absence_id
-
             # Check all pay_periods if we could pay the amount
             is_payable = True
             for pay_period, payment_details in payment_distribution.items():
+                # We do not check if a payment is over the cap
+                # for a given week if the payments are all from one claim
+                # FINEOS calculates maximum amount differently than we do here
+                # so can potentially put two separate payments in one week
+                # that are under the cap when you look at a claim as a whole (which we can't see).
+                if len(pay_period.absence_case_ids) == 1:
+                    # This will log for every payment which is ideal.
+                    extra = payment_container.get_traceable_details()
+                    extra["pay_period_start_date"] = pay_period.start_date
+                    extra["pay_period_end_date"] = pay_period.end_date
+                    logger.info(
+                        "Only a single claim found for pay period %s, skipping max weekly check",
+                        str(pay_period),
+                        extra,
+                    )
+                    continue
+
                 for payment_detail in payment_details:
-                    # We do not check if a payment is over the cap
-                    # for a given week if the payments are all from one claim
-                    # FINEOS calculates maximum amount differently than we do here
-                    # so can potentially put two separate payments in one week
-                    # that are under the cap when you look at a claim as a whole (which we can't see).
                     if (
-                        absence_case_id not in pay_period.absence_case_ids
-                        and pay_period.get_amount_available_in_pay_period()
+                        pay_period.get_amount_available_in_pay_period()
                         < payment_detail.business_net_amount
                     ):
                         is_payable = False

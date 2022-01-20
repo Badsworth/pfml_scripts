@@ -19,10 +19,12 @@ import massgov.pfml.util.datetime as datetime_util
 import massgov.pfml.util.logging
 import massgov.pfml.util.pdf as pdf_util
 from massgov.pfml.api.authorization.flask import CREATE, EDIT, READ, ensure
+from massgov.pfml.api.claims import get_claim_from_db
 from massgov.pfml.api.constants.application import ID_DOC_TYPES
 from massgov.pfml.api.models.applications.common import ContentType as AllowedContentTypes
 from massgov.pfml.api.models.applications.common import DocumentType as IoDocumentTypes
 from massgov.pfml.api.models.applications.requests import (
+    ApplicationImportRequestBody,
     ApplicationRequestBody,
     DocumentRequestBody,
     PaymentPreferenceRequestBody,
@@ -132,14 +134,55 @@ def applications_get():
     ).to_api_response()
 
 
+def applications_import():
+    if not app.get_app_config().enable_application_import:
+        return response_util.error_response(
+            status_code=Forbidden, message="Application import not currently available", errors=[]
+        ).to_api_response()
+
+    application = Application()
+    ensure(CREATE, application)
+
+    if user := app.current_user():
+        # TODO (portal-1512) - Remove role check
+        # Check if user is not a claimant
+        if user.roles:
+            raise Unauthorized
+        application.user = user
+    else:
+        raise Unauthorized
+
+    body = connexion.request.json
+    application_import_request = ApplicationImportRequestBody.parse_obj(body)
+
+    claim = get_claim_from_db(application_import_request.absence_case_id)
+
+    error = applications_service.claim_is_valid_for_application_import(claim)
+    if error is not None:
+        return error.to_api_response()
+
+    with app.db_session() as db_session:
+        fineos = massgov.pfml.fineos.create_client()
+        # we have already check that the claim is not None in
+        # claim_is_valid_for_application_import
+        applications_service.set_application_fields_from_claim(
+            fineos, application, claim, db_session  # type: ignore
+        )
+        db_session.add(application)
+        db_session.commit()
+
+    log_attributes = get_application_log_attributes(application)
+    logger.info("applications_import success", extra=log_attributes)
+
+    return response_util.success_response(
+        message="Successfully imported application", data=dict(body), status_code=201,
+    ).to_api_response()
+
+
 def applications_start():
     application = Application()
 
     ensure(CREATE, application)
-
-    now = datetime_util.utcnow()
-    application.start_time = now
-    application.updated_time = now
 
     # this should always be the case at this point, but the type for
     # current_user is still optional until we require authentication
@@ -654,7 +697,9 @@ def document_upload(application_id, body, file):
                         ValidationErrorDetail(
                             type=IssueType.fineos_client,
                             message=message,
-                            rule=IssueRule.document_requirement_already_satisfied,
+                            rule=IssueRule.document_requirement_already_satisfied
+                            if "is not required for the case provided" in err.message  # noqa: B306
+                            else None,
                         )
                     ],
                     data=document_details.dict(),
@@ -802,7 +847,6 @@ def payment_preference_submit(application_id: UUID) -> Response:
                 db_session, payment_pref_request.payment_preference, existing_application
             )
 
-            existing_application.updated_time = datetime_util.utcnow()
             db_session.add(existing_application)
             db_session.commit()
             db_session.refresh(existing_application)

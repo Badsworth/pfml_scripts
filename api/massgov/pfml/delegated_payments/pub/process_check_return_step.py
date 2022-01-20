@@ -278,6 +278,12 @@ class ProcessCheckReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
 
         payment.check.check_posted_date = check_payment.paid_date
         payment.check.payment_check_status_id = PaymentCheckStatus.PAID.payment_check_status_id
+
+        # Keep track of how long it took for checks to be cashed
+        if check_payment.paid_date and payment.check.created_at:
+            check_time_to_cash = (check_payment.paid_date - payment.check.created_at.date()).days
+            extra["check_time_to_cash"] = check_time_to_cash
+
         logger.info(
             "payment complete by paid check", extra=extra,
         )

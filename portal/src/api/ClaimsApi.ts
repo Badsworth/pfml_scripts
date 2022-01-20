@@ -29,22 +29,20 @@ export default class ClaimsApi extends BaseApi {
       claim_status?: string;
       employer_id?: string;
       search?: string;
-      allow_hrd?: boolean;
     } = {}
   ) => {
     const orderParams = { ...order };
     // We display Closed and Completed claims as the same to the user, so we
     // want the Closed filter to encompass both.
     // TODO (PFMLPB-2615) Remove this feature flag after HRD feature is enabled
-    const employerUnlockDashboard: boolean = isFeatureEnabled(
-      "employerUnlockDashboard"
+    const employerUnlockDashboard = Boolean(
+      isFeatureEnabled("employerUnlockDashboard")
     );
-    // Depending on whether the employerUnlockDashboard feature flag is enabled or not,
-    // We ask the API to allow/block this HRD LA from seeing claims in the dashboard
+    type FilterParams = typeof filters & { allow_hrd?: boolean };
+    const filterParams: FilterParams = { ...filters };
     if (employerUnlockDashboard) {
-      filters.allow_hrd = employerUnlockDashboard;
+      filterParams.allow_hrd = employerUnlockDashboard;
     }
-    const filterParams = { ...filters };
 
     if (
       filters.claim_status &&

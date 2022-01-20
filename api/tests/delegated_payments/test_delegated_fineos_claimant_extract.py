@@ -8,12 +8,17 @@ import massgov.pfml.delegated_payments.delegated_fineos_claimant_extract as clai
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 from massgov.pfml.api.util import state_log_util
 from massgov.pfml.db.models.employees import (
+    AbsencePeriodType,
+    AbsenceReason,
+    AbsenceReasonQualifierOne,
+    AbsenceReasonQualifierTwo,
     AbsenceStatus,
     BankAccountType,
     Claim,
     ClaimType,
     Employee,
     ImportLog,
+    LeaveRequestDecision,
     PrenoteState,
     ReferenceFile,
     ReferenceFileType,
@@ -29,6 +34,7 @@ from massgov.pfml.db.models.factories import (
 )
 from massgov.pfml.db.models.payments import (
     FineosExtractEmployeeFeed,
+    FineosExtractVbiRequestedAbsence,
     FineosExtractVbiRequestedAbsenceSom,
 )
 from massgov.pfml.delegated_payments.delegated_payments_util import (
@@ -36,7 +42,7 @@ from massgov.pfml.delegated_payments.delegated_payments_util import (
     ValidationReason,
 )
 from massgov.pfml.delegated_payments.mock.delegated_payments_factory import DelegatedPaymentFactory
-from massgov.pfml.delegated_payments.mock.fineos_extract_data import FineosClaimantData
+from massgov.pfml.delegated_payments.mock.fineos_extract_data import FineosPaymentData
 from massgov.pfml.util import datetime
 
 
@@ -71,17 +77,13 @@ def add_db_records_from_fineos_data(
     with some defaults specific to the claimant extract tests
     """
 
-    # The factory doesn't yet make the employer, so do it here
-    employer = None
-    if add_employer:
-        employer = EmployerFactory(fineos_employer_id=fineos_data.employer_customer_num)
-
     factory = DelegatedPaymentFactory(
         db_session,
         ssn=fineos_data.ssn,
         add_employee=add_employee,
         add_employer=add_employer,
-        employer=employer,
+        employer_customer_num=int(fineos_data.employer_customer_num) if add_employer else None,
+        organization_unit_name=fineos_data.organization_unit_name or None,
         add_pub_eft=add_eft,
         prenote_state=prenote_state,
         prenote_response_at=datetime.datetime(2020, 12, 6, 12, 0, 0),
@@ -114,7 +116,7 @@ def stage_data(
 
     for record in records:
         instance = payments_util.create_staging_table_instance(
-            record.get_requested_absence_record(),
+            record.get_requested_absence_som_record(),
             FineosExtractVbiRequestedAbsenceSom,
             reference_file,
             import_log.import_log_id,
@@ -128,10 +130,18 @@ def stage_data(
         )
         db_session.add(instance)
 
+        instance = payments_util.create_staging_table_instance(
+            record.get_requested_absence_record(),
+            FineosExtractVbiRequestedAbsence,
+            reference_file,
+            import_log.import_log_id,
+        )
+        db_session.add(instance)
+
     if additional_requested_absence_som_records:
         for requested_absence_som_record in additional_requested_absence_som_records:
             instance = payments_util.create_staging_table_instance(
-                requested_absence_som_record.get_requested_absence_record(),
+                requested_absence_som_record.get_requested_absence_som_record(),
                 FineosExtractVbiRequestedAbsenceSom,
                 reference_file,
                 import_log.import_log_id,
@@ -154,8 +164,8 @@ def stage_data(
 def test_run_step_happy_path(
     local_claimant_extract_step, local_test_db_session,
 ):
-
-    claimant_data = FineosClaimantData()
+    organization_unit_name = "Appeals Court"
+    claimant_data = FineosPaymentData(organization_unit_name=organization_unit_name)
     employee, _ = add_db_records_from_fineos_data(
         local_test_db_session,
         claimant_data,
@@ -176,6 +186,7 @@ def test_run_step_happy_path(
 
     assert claim is not None
     assert claim.employee_id == employee.employee_id
+    assert claim.organization_unit.name == organization_unit_name
 
     assert claim.fineos_notification_id == claimant_data.notification_number
     assert claim.fineos_absence_status_id == AbsenceStatus.APPROVED.absence_status_id
@@ -252,7 +263,7 @@ def test_run_step_multiple_times(
     # After the first run, the step should no-op as the reference file
     # has already been processed.
 
-    claimant_data = FineosClaimantData()
+    claimant_data = FineosPaymentData()
     add_db_records_from_fineos_data(local_test_db_session, claimant_data)
 
     stage_data([claimant_data], local_test_db_session)
@@ -261,7 +272,14 @@ def test_run_step_multiple_times(
     local_claimant_extract_step.run()
 
     # Make sure the processed ID is set.
-    reference_files = local_test_db_session.query(ReferenceFile).all()
+    reference_files = (
+        local_test_db_session.query(ReferenceFile)
+        .filter(
+            ReferenceFile.reference_file_type_id
+            == ReferenceFileType.FINEOS_CLAIMANT_EXTRACT.reference_file_type_id
+        )
+        .all()
+    )
     assert len(reference_files) == 1
     assert (
         reference_files[0].processed_import_log_id
@@ -294,7 +312,7 @@ def test_run_step_existing_approved_eft_info(
     # Very similar to the happy path test, but EFT info has already been
     # previously approved and we do not need to start the prenoting process
 
-    claimant_data = FineosClaimantData()
+    claimant_data = FineosPaymentData()
     add_db_records_from_fineos_data(
         local_test_db_session, claimant_data, prenote_state=PrenoteState.APPROVED
     )
@@ -340,7 +358,7 @@ def test_run_step_existing_rejected_eft_info(
     # Very similar to the happy path test, but EFT info has already been
     # previously rejected and thus it goes into an error state instead
 
-    claimant_data = FineosClaimantData()
+    claimant_data = FineosPaymentData()
     add_db_records_from_fineos_data(
         local_test_db_session, claimant_data, prenote_state=PrenoteState.REJECTED
     )
@@ -391,7 +409,7 @@ def test_run_step_existing_rejected_eft_info(
 def test_run_step_no_employee(
     local_claimant_extract_step, local_test_db_session,
 ):
-    claimant_data = FineosClaimantData()
+    claimant_data = FineosPaymentData()
     stage_data([claimant_data], local_test_db_session)
 
     local_claimant_extract_step.run()
@@ -416,14 +434,14 @@ def test_run_step_no_employee(
     ]
 
 
-def format_claimant_data() -> FineosClaimantData:
-    return FineosClaimantData(
+def format_claimant_data() -> FineosPaymentData:
+    return FineosPaymentData(
         absence_case_number="NTN-001-ABS-01",
         notification_number="NTN-001",
         absence_case_status="Adjudication",
         leave_request_start="2021-02-14",
         leave_request_end="2021-02-28",
-        leave_type="Family",
+        claim_type="Family",
         leave_request_evidence="Satisfied",
         customer_number="12345",
         ssn="123456789",
@@ -455,25 +473,36 @@ def make_claimant_data_from_fineos_data(
     fineos_data, additional_requested_absence_data=None, metrics_obj=None
 ):
     reference_file = ReferenceFileFactory.build()
-    requested_absence = payments_util.create_staging_table_instance(
-        fineos_data.get_requested_absence_record(),
+    requested_absence_som = payments_util.create_staging_table_instance(
+        fineos_data.get_requested_absence_som_record(),
         FineosExtractVbiRequestedAbsenceSom,
+        reference_file,
+        None,
+    )
+    requested_absence_non_som = payments_util.create_staging_table_instance(
+        fineos_data.get_requested_absence_record(),
+        FineosExtractVbiRequestedAbsence,
         reference_file,
         None,
     )
     employee_feed = payments_util.create_staging_table_instance(
         fineos_data.get_employee_feed_record(), FineosExtractEmployeeFeed, reference_file, None
     )
-    requested_absences = [requested_absence]
+    claimant_extract.AbsencePair
+    requested_absences = [
+        claimant_extract.AbsencePair(requested_absence_som, requested_absence_non_som)
+    ]
 
     if additional_requested_absence_data:
         additional_requested_absence = payments_util.create_staging_table_instance(
-            additional_requested_absence_data.get_requested_absence_record(),
+            additional_requested_absence_data.get_requested_absence_som_record(),
             FineosExtractVbiRequestedAbsenceSom,
             reference_file,
             None,
         )
-        requested_absences.append(additional_requested_absence)
+        requested_absences.append(
+            claimant_extract.AbsencePair(additional_requested_absence, requested_absence_non_som)
+        )
 
     # For tests that don't run the full step, can still see metrics
     count_incrementer = None
@@ -493,18 +522,26 @@ def make_claimant_data_with_incorrect_request_absence(fineos_data):
     # This method guarantees the request absence fields ABSENCEPERIOD_CLASSID, ABSENCEPERIOD_INDEXID are set to Unknown
     reference_file = ReferenceFileFactory.build()
 
-    raw_requested_absence = fineos_data.get_requested_absence_record()
+    raw_requested_absence = fineos_data.get_requested_absence_som_record()
     raw_requested_absence["ABSENCEPERIOD_CLASSID"] = "Unknown"
     raw_requested_absence["ABSENCEPERIOD_INDEXID"] = "Unknown"
-    requested_absence = payments_util.create_staging_table_instance(
+    requested_absence_som = payments_util.create_staging_table_instance(
         raw_requested_absence, FineosExtractVbiRequestedAbsenceSom, reference_file, None,
+    )
+    requested_absence_non_som = payments_util.create_staging_table_instance(
+        fineos_data.get_requested_absence_record(),
+        FineosExtractVbiRequestedAbsence,
+        reference_file,
+        None,
     )
     employee_feed = payments_util.create_staging_table_instance(
         fineos_data.get_employee_feed_record(), FineosExtractEmployeeFeed, reference_file, None
     )
 
     return claimant_extract.ClaimantData(
-        fineos_data.absence_case_number, [requested_absence], employee_feed
+        fineos_data.absence_case_number,
+        [claimant_extract.AbsencePair(requested_absence_som, requested_absence_non_som)],
+        employee_feed,
     )
 
 
@@ -546,34 +583,59 @@ def test_create_or_update_claim_happy_path_update_claim(claimant_extract_step, f
 
 def test_absence_period_deduplication(claimant_extract_step, test_db_session):
     # If the same requested absence appears multiple times, we dedupe that to a single one
-    claimant_data = FineosClaimantData(absence_period_i_value="1234")
-
     reference_file = ReferenceFileFactory.build()
-    requested_absence = payments_util.create_staging_table_instance(
-        claimant_data.get_requested_absence_record(),
+
+    claimant_data = FineosPaymentData(absence_period_i_value="1234")
+    requested_absences = []
+
+    requested_absence_som = payments_util.create_staging_table_instance(
+        claimant_data.get_requested_absence_som_record(),
         FineosExtractVbiRequestedAbsenceSom,
         reference_file,
         None,
     )
+    requested_absence_non_som = payments_util.create_staging_table_instance(
+        claimant_data.get_requested_absence_record(),
+        FineosExtractVbiRequestedAbsence,
+        reference_file,
+        None,
+    )
+    requested_absences.append(
+        claimant_extract.AbsencePair(requested_absence_som, requested_absence_non_som)
+    )
+
+    # Add an exact duplicate of the first absence record
+    requested_absence_som2 = payments_util.create_staging_table_instance(
+        claimant_data.get_requested_absence_som_record(),
+        FineosExtractVbiRequestedAbsenceSom,
+        reference_file,
+        None,
+    )
+    requested_absences.append(
+        claimant_extract.AbsencePair(requested_absence_som2, requested_absence_non_som)
+    )
+
+    # Create a record with a different I value so it doesn't get deduped
+    different_payment_data = FineosPaymentData(absence_period_i_value="5678")
+    requested_absence_som3 = payments_util.create_staging_table_instance(
+        different_payment_data.get_requested_absence_som_record(),
+        FineosExtractVbiRequestedAbsenceSom,
+        reference_file,
+        None,
+    )
+    different_requested_absence_non_som = payments_util.create_staging_table_instance(
+        claimant_data.get_requested_absence_record(),
+        FineosExtractVbiRequestedAbsence,
+        reference_file,
+        None,
+    )
+    requested_absences.append(
+        claimant_extract.AbsencePair(requested_absence_som3, different_requested_absence_non_som)
+    )
+
     employee_feed = payments_util.create_staging_table_instance(
         claimant_data.get_employee_feed_record(), FineosExtractEmployeeFeed, reference_file, None
     )
-    # Add an exact duplicate of the first absence record
-    requested_absence2 = payments_util.create_staging_table_instance(
-        claimant_data.get_requested_absence_record(),
-        FineosExtractVbiRequestedAbsenceSom,
-        reference_file,
-        None,
-    )
-
-    requested_absence3 = payments_util.create_staging_table_instance(
-        FineosClaimantData(absence_period_i_value="5678").get_requested_absence_record(),
-        FineosExtractVbiRequestedAbsenceSom,
-        reference_file,
-        None,
-    )
-
-    requested_absences = [requested_absence, requested_absence2, requested_absence3]
 
     claimant_data = claimant_extract.ClaimantData(
         claimant_data.absence_case_number, requested_absences, employee_feed
@@ -588,11 +650,11 @@ def test_absence_period_deduplication(claimant_extract_step, test_db_session):
 
 def test_create_or_update_claim_invalid_values(claimant_extract_step):
     # Create claimant data with just an absence case number
-    fineos_data = FineosClaimantData(generate_defaults=False, absence_case_number="NTN-001-ABS-01")
+    fineos_data = FineosPaymentData(generate_defaults=False, absence_case_number="NTN-001-ABS-01")
     claimant_data = make_claimant_data_from_fineos_data(fineos_data)
 
     # The number of required fields we pull out of the requested absence file
-    assert len(set(claimant_data.validation_container.validation_issues)) == 10
+    assert len(set(claimant_data.validation_container.validation_issues)) == 14
 
     # The claim will be created, but with just an absence case number
     claim = claimant_extract_step.create_or_update_claim(claimant_data)
@@ -608,7 +670,7 @@ def test_create_or_update_claim_invalid_values(claimant_extract_step):
 
 def test_create_or_update_absence_period_happy_path(claimant_extract_step, test_db_session):
     # Create claimant data, and make sure there aren't any initial validation issues
-    formatted_claimant_data = FineosClaimantData(
+    formatted_claimant_data = FineosPaymentData(
         absence_case_number="ABS_001",
         leave_request_start="2021-02-14",
         leave_request_end="2021-02-28",
@@ -616,6 +678,11 @@ def test_create_or_update_absence_period_happy_path(claimant_extract_step, test_
         leave_request_evidence="Satisfied",
         absence_period_c_value=1448,
         absence_period_i_value=1,
+        absence_period_type="Episodic",
+        absence_reason_qualifier_one="Blood",
+        absence_reason_qualifier_two="Accident / Injury",
+        absence_reason="Bereavement",
+        leave_request_decision="Denied",
     )
     claimant_data = make_claimant_data_from_fineos_data(formatted_claimant_data)
     assert len(claimant_data.validation_container.validation_issues) == 0
@@ -640,10 +707,26 @@ def test_create_or_update_absence_period_happy_path(claimant_extract_step, test_
     assert absence_period.absence_period_start_date == datetime.date(2021, 2, 14)
     assert absence_period.absence_period_end_date == datetime.date(2021, 2, 28)
     assert absence_period.fineos_leave_request_id == 5
+    assert (
+        absence_period.absence_period_type_id == AbsencePeriodType.EPISODIC.absence_period_type_id
+    )
+    assert (
+        absence_period.absence_reason_qualifier_one_id
+        == AbsenceReasonQualifierOne.BLOOD.absence_reason_qualifier_one_id
+    )
+    assert (
+        absence_period.absence_reason_qualifier_two_id
+        == AbsenceReasonQualifierTwo.ACCIDENT_INJURY.absence_reason_qualifier_two_id
+    )
+    assert absence_period.absence_reason_id == AbsenceReason.BEREAVEMENT.absence_reason_id
+    assert (
+        absence_period.leave_request_decision_id
+        == LeaveRequestDecision.DENIED.leave_request_decision_id
+    )
 
     # Create new claimant data to update existing absence_period. We make sure the claim and claimant_data's
     # absence_period_c_value and absence_period_i_value remain unchanged.
-    new_formatted_claimant_data = FineosClaimantData(
+    new_formatted_claimant_data = FineosPaymentData(
         absence_case_number="ABS_001",
         leave_request_start="2021-03-07",
         leave_request_end="2021-12-11",
@@ -651,6 +734,11 @@ def test_create_or_update_absence_period_happy_path(claimant_extract_step, test_
         leave_request_evidence="UnSatisfied",
         absence_period_c_value=1448,
         absence_period_i_value=1,
+        absence_period_type="Office Visit",
+        absence_reason_qualifier_one="Adoption",
+        absence_reason_qualifier_two="Sickness",
+        absence_reason="Medical Donation - Employee",
+        leave_request_decision="Projected",
     )
 
     new_claimant_data = make_claimant_data_from_fineos_data(new_formatted_claimant_data)
@@ -674,11 +762,31 @@ def test_create_or_update_absence_period_happy_path(claimant_extract_step, test_
     assert absence_period.absence_period_start_date == datetime.date(2021, 3, 7)
     assert absence_period.absence_period_end_date == datetime.date(2021, 12, 11)
     assert absence_period.fineos_leave_request_id == 2
+    assert (
+        absence_period.absence_period_type_id
+        == AbsencePeriodType.OFFICE_VISIT.absence_period_type_id
+    )
+    assert (
+        absence_period.absence_reason_qualifier_one_id
+        == AbsenceReasonQualifierOne.ADOPTION.absence_reason_qualifier_one_id
+    )
+    assert (
+        absence_period.absence_reason_qualifier_two_id
+        == AbsenceReasonQualifierTwo.SICKNESS.absence_reason_qualifier_two_id
+    )
+    assert (
+        absence_period.absence_reason_id
+        == AbsenceReason.MEDICAL_DONATION_EMPLOYEE.absence_reason_id
+    )
+    assert (
+        absence_period.leave_request_decision_id
+        == LeaveRequestDecision.PROJECTED.leave_request_decision_id
+    )
 
 
 def test_create_or_update_absence_period_invalid_values(claimant_extract_step, test_db_session):
     # Create claimant data with just an absence case number
-    fineos_data = FineosClaimantData(
+    fineos_data = FineosPaymentData(
         generate_defaults=False,
         absence_case_number="NTN-001-ABS-01",
         absence_period_c_value=1010,
@@ -687,7 +795,7 @@ def test_create_or_update_absence_period_invalid_values(claimant_extract_step, t
     claimant_data = make_claimant_data_from_fineos_data(fineos_data)
 
     # The number of required fields we pull out of the requested absence file
-    assert len(set(claimant_data.validation_container.validation_issues)) == 8
+    assert len(set(claimant_data.validation_container.validation_issues)) == 12
 
     # The claim will be created, but with just an absence case number
     absence_period_data = claimant_data.absence_period_data
@@ -710,6 +818,11 @@ def test_create_or_update_absence_period_invalid_values(claimant_extract_step, t
     assert absence_period.absence_period_start_date is None
     assert absence_period.absence_period_end_date is None
     assert absence_period.fineos_leave_request_id is None
+    assert absence_period.absence_period_type_id is None
+    assert absence_period.absence_reason_qualifier_one_id is None
+    assert absence_period.absence_reason_qualifier_two_id is None
+    assert absence_period.absence_reason_id is None
+    assert absence_period.leave_request_decision_id is None
 
 
 def test_update_absence_period_with_mismatching_claim_id(claimant_extract_step, test_db_session):
@@ -717,7 +830,7 @@ def test_update_absence_period_with_mismatching_claim_id(claimant_extract_step, 
     # absence_period.claim_id and claim.claim_id
 
     # Create claimant data with just an absence case number
-    formatted_claimant_data_1 = FineosClaimantData(
+    formatted_claimant_data_1 = FineosPaymentData(
         absence_case_number="NTN-001-ABS-01", absence_period_c_value=1448, absence_period_i_value=1,
     )
 
@@ -738,7 +851,7 @@ def test_update_absence_period_with_mismatching_claim_id(claimant_extract_step, 
     assert claim_1 is not None
     assert absence_period_1 is not None
 
-    formatted_claimant_data_2 = FineosClaimantData(
+    formatted_claimant_data_2 = FineosPaymentData(
         absence_case_number="NTN-001-ABS-02", absence_period_c_value=1448, absence_period_i_value=1,
     )
 
@@ -769,7 +882,7 @@ def test_create_or_update_absence_period_with_incomplete_request_absence_data(
     claimant_extract_step, test_db_session
 ):
     # Create claimant data, with request absence fields ABSENCEPERIOD_CLASSID, ABSENCEPERIOD_INDEXID as Unknown
-    formatted_claimant_data = FineosClaimantData(
+    formatted_claimant_data = FineosPaymentData(
         leave_request_start="2021-02-14",
         leave_request_end="2021-02-28",
         leave_request_id=5,
@@ -791,7 +904,7 @@ def test_create_or_update_absence_period_with_duplicated_rows_but_different_id_p
     claimant_extract_step, test_db_session
 ):
     # Create two exact claimant data, except leave_request_evidence as Satisfied for one and empty string for other
-    formatted_claimant_data_1 = FineosClaimantData(
+    formatted_claimant_data_1 = FineosPaymentData(
         absence_case_number="ABS_001",
         leave_request_start="2021-02-14",
         leave_request_end="2021-02-28",
@@ -825,7 +938,7 @@ def test_create_or_update_absence_period_with_duplicated_rows_but_different_id_p
     assert absence_period.absence_period_end_date == datetime.date(2021, 2, 28)
     assert absence_period.fineos_leave_request_id == 5
 
-    formatted_claimant_data_2 = FineosClaimantData(
+    formatted_claimant_data_2 = FineosPaymentData(
         absence_case_number="ABS_001",
         leave_request_start="2021-02-14",
         leave_request_end="2021-02-28",
@@ -884,7 +997,7 @@ def test_update_employee_info_not_in_db(claimant_extract_step, formatted_claim):
 
 
 def test_update_eft_info_happy_path(claimant_extract_step, test_db_session):
-    fineos_data = FineosClaimantData(
+    fineos_data = FineosPaymentData(
         routing_nbr="111111118", account_nbr="123456789", account_type="Checking"
     )
     employee, _ = add_db_records_from_fineos_data(test_db_session, fineos_data, add_eft=False)
@@ -908,7 +1021,7 @@ def test_update_eft_info_happy_path(claimant_extract_step, test_db_session):
 
 def test_update_eft_info_validation_issues(claimant_extract_step, test_db_session):
     # Routing number doesn't pass checksum, but is correct length
-    fineos_data = FineosClaimantData(
+    fineos_data = FineosPaymentData(
         routing_nbr="111111111", account_nbr="123456789", account_type="Checking"
     )
     claimant_data = make_claimant_data_from_fineos_data(fineos_data)
@@ -926,7 +1039,7 @@ def test_update_eft_info_validation_issues(claimant_extract_step, test_db_sessio
     ) == set(claimant_data.validation_container.validation_issues)
 
     # Routing number incorrect length.
-    fineos_data = FineosClaimantData(
+    fineos_data = FineosPaymentData(
         routing_nbr="123", account_nbr="123456789", account_type="Checking"
     )
     claimant_data = make_claimant_data_from_fineos_data(fineos_data)
@@ -946,7 +1059,7 @@ def test_update_eft_info_validation_issues(claimant_extract_step, test_db_sessio
 
     # Account number incorrect length.
     long_num = "123456789012345678"
-    fineos_data = FineosClaimantData(
+    fineos_data = FineosPaymentData(
         routing_nbr="111111118", account_nbr=long_num, account_type="Checking",
     )
     claimant_data = make_claimant_data_from_fineos_data(fineos_data)
@@ -963,7 +1076,7 @@ def test_update_eft_info_validation_issues(claimant_extract_step, test_db_sessio
     assert len(updated_employee.pub_efts.all()) == 0
 
     # Account type incorrect.
-    fineos_data = FineosClaimantData(
+    fineos_data = FineosPaymentData(
         routing_nbr="111111118",
         account_nbr="12345678901234567",
         account_type="Certificate of Deposit",
@@ -986,7 +1099,7 @@ def test_update_eft_info_validation_issues(claimant_extract_step, test_db_sessio
     assert len(updated_employee.pub_efts.all()) == 0
 
     # Account type and Routing number incorrect.
-    fineos_data = FineosClaimantData(
+    fineos_data = FineosPaymentData(
         routing_nbr="12345678",
         account_nbr="12345678901234567",
         account_type="Certificate of Deposit",
@@ -1015,7 +1128,7 @@ def test_run_step_validation_issues(
     claimant_extract_step, test_db_session, formatted_claim,
 ):
     # Create some validation issues
-    fineos_data = FineosClaimantData(
+    fineos_data = FineosPaymentData(
         routing_nbr="",
         leave_request_end="",
         date_of_birth="",
@@ -1053,7 +1166,7 @@ def test_run_step_validation_issues(
     assert claim.fineos_notification_id == fineos_data.notification_number
     assert (
         claim.claim_type_id
-        == payments_util.get_mapped_claim_type(fineos_data.leave_type).claim_type_id
+        == payments_util.get_mapped_claim_type(fineos_data.claim_type).claim_type_id
     )
     assert claim.fineos_absence_status_id == AbsenceStatus.get_id(fineos_data.absence_case_status)
 
@@ -1087,7 +1200,7 @@ def test_run_step_minimal_viable_claim(
     # Create a record with only an absence case number
     # This should still end up created in the DB, but with
     # significant validation issues
-    fineos_data = FineosClaimantData(
+    fineos_data = FineosPaymentData(
         False, include_employee_feed=False, absence_case_number="ABS-001"
     )
 
@@ -1106,6 +1219,7 @@ def test_run_step_minimal_viable_claim(
     assert claim.absence_period_start_date is None
     assert claim.absence_period_end_date is None
     assert claim.is_id_proofed is False
+    assert claim.organization_unit_id is None
 
     # Verify the state logs and outcome
     assert len(claim.state_logs) == 1
@@ -1121,6 +1235,10 @@ def test_run_step_minimal_viable_claim(
         {"reason": "MissingField", "details": "ABSENCEPERIOD_CLASSID"},
         {"reason": "MissingField", "details": "ABSENCEPERIOD_INDEXID"},
         {"reason": "MissingField", "details": "LEAVEREQUEST_ID"},
+        {"reason": "MissingField", "details": "ABSENCEPERIOD_TYPE"},
+        {"reason": "MissingField", "details": "ABSENCEREASON_QUALIFIER1"},
+        {"reason": "MissingField", "details": "ABSENCEREASON_NAME"},
+        {"reason": "MissingField", "details": "LEAVEREQUEST_DECISION"},
         {"reason": "MissingField", "details": "NOTIFICATION_CASENUMBER"},
         {"reason": "MissingField", "details": "ABSENCEREASON_COVERAGE"},
         {"reason": "MissingField", "details": "ABSENCE_CASESTATUS"},
@@ -1136,7 +1254,7 @@ def test_run_step_minimal_viable_claim(
 def test_run_step_not_id_proofed(
     claimant_extract_step, test_db_session,
 ):
-    fineos_data = FineosClaimantData(leave_request_evidence="Rejected")
+    fineos_data = FineosPaymentData(leave_request_evidence="Rejected")
 
     add_db_records_from_fineos_data(test_db_session, fineos_data)
     stage_data([fineos_data], test_db_session)
@@ -1152,7 +1270,7 @@ def test_run_step_not_id_proofed(
     assert claim.fineos_notification_id == fineos_data.notification_number
     assert (
         claim.claim_type_id
-        == payments_util.get_mapped_claim_type(fineos_data.leave_type).claim_type_id
+        == payments_util.get_mapped_claim_type(fineos_data.claim_type).claim_type_id
     )
     assert claim.fineos_absence_status_id == AbsenceStatus.get_id(fineos_data.absence_case_status)
     assert claim.absence_period_start_date is not None
@@ -1172,7 +1290,7 @@ def test_run_step_no_default_payment_pref(
 ):
     # Create records without a default payment preference
     # None of the payment preference related fields will be set
-    fineos_data = FineosClaimantData(
+    fineos_data = FineosPaymentData(
         default_payment_pref="N",
         payment_method="Elec Funds Transfer",
         account_nbr="123456789",
@@ -1215,7 +1333,7 @@ def test_run_step_mix_of_payment_prefs(
     # then create another record with the same customer number & absence case number
     # but with default payment preference set to Y
     # We will use the default payment preference and ignore the other record
-    not_default_fineos_data = FineosClaimantData(
+    not_default_fineos_data = FineosPaymentData(
         default_payment_pref="N",
         payment_method="Check",
         account_nbr="Unknown",
@@ -1270,7 +1388,7 @@ def test_run_step_mix_of_payment_prefs(
 def test_run_step_uses_correct_start_and_end_dates(
     claimant_extract_step, test_db_session,
 ):
-    not_default_fineos_data = FineosClaimantData(
+    not_default_fineos_data = FineosPaymentData(
         leave_request_start="2021-01-01 12:00:00", leave_request_end="2021-04-01 12:00:00"
     )
 
@@ -1316,7 +1434,7 @@ def test_run_step_uses_correct_start_and_end_dates(
 def test_run_step_with_missing_start_and_end_dates(
     claimant_extract_step, test_db_session,
 ):
-    not_default_fineos_data = FineosClaimantData(
+    not_default_fineos_data = FineosPaymentData(
         leave_request_start="2021-01-01 12:00:00", leave_request_end=""
     )
 
@@ -1366,7 +1484,7 @@ def test_run_step_with_missing_start_and_end_dates(
 def test_claimant_data_validation_matching_dupes(initialize_factories_session):
     # See the test_claimant_data_validation_matching_dupes test, this is the happy case
     # and is just present to verify and avoid regression of behavior
-    fineos_data = FineosClaimantData(
+    fineos_data = FineosPaymentData(
         employer_customer_num="1234", customer_number="12345678", absence_case_status="Approved"
     )
     # Make a 2nd set of data exactly the same
@@ -1401,7 +1519,7 @@ def test_claimant_data_validation_nonmatching_dupes(initialize_factories_session
     # we receive two rows in the requested absence
     # file with differing values for a few key fields
 
-    fineos_data = FineosClaimantData(
+    fineos_data = FineosPaymentData(
         employer_customer_num="1234", customer_number="12345678", absence_case_status="Approved"
     )
     # Make a 2nd set of data with a few values different

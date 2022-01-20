@@ -37,6 +37,7 @@ from massgov.pfml.db.models.payments import (
     FineosExtractEmployeeFeed,
     FineosExtractPaymentFullSnapshot,
     FineosExtractReplacedPayments,
+    FineosExtractVbi1099DataSom,
     FineosExtractVbiLeavePlanRequestedAbsence,
     FineosExtractVbiRequestedAbsence,
     FineosExtractVbiRequestedAbsenceSom,
@@ -64,6 +65,7 @@ ExtractTable = Union[
     Type[FineosExtractReplacedPayments],
     Type[FineosExtractVbiLeavePlanRequestedAbsence],
     Type[FineosExtractVPaidLeaveInstruction],
+    Type[FineosExtractVbi1099DataSom],
 ]
 
 
@@ -97,6 +99,7 @@ class Constants:
 
     REQUESTED_ABSENCE_SOM_FILE_NAME = "VBI_REQUESTEDABSENCE_SOM.csv"
     EMPLOYEE_FEED_FILE_NAME = "Employee_feed.csv"
+    VBI_1099DATA_SOM_FILE_NAME = "VBI_1099DATA_SOM.csv"
 
     PEI_EXPECTED_FILE_NAME = "vpei.csv"
     PAYMENT_DETAILS_EXPECTED_FILE_NAME = "vpeipaymentdetails.csv"
@@ -208,6 +211,7 @@ class FineosExtractConstants:
             "EMPLOYEE_CUSTOMERNO",
             "EMPLOYER_CUSTOMERNO",
             "LEAVEREQUEST_ID",
+            "ORGUNIT_NAME",
         ],
     )
 
@@ -235,7 +239,11 @@ class FineosExtractConstants:
             "LASTNAME",
         ],
     )
-
+    VBI_1099DATA_SOM = FineosExtract(
+        file_name="VBI_1099DATA_SOM.csv",
+        table=FineosExtractVbi1099DataSom,
+        field_names=["FIRSTNAMES", "LASTNAME", "CUSTOMERNO", "PACKEDDATA", "DOCUMENTTYPE", "C",],
+    )
     VPEI = FineosExtract(
         file_name="vpei.csv",
         table=FineosExtractVpei,
@@ -286,10 +294,16 @@ class FineosExtractConstants:
         file_name="VBI_REQUESTEDABSENCE.csv",
         table=FineosExtractVbiRequestedAbsence,
         field_names=[
+            "ABSENCEPERIOD_CLASSID",
+            "ABSENCEPERIOD_INDEXID",
             "LEAVEREQUEST_DECISION",
             "LEAVEREQUEST_ID",
             "ABSENCEREASON_COVERAGE",
             "ABSENCE_CASECREATIONDATE",
+            "ABSENCEPERIOD_TYPE",
+            "ABSENCEREASON_QUALIFIER1",
+            "ABSENCEREASON_QUALIFIER2",
+            "ABSENCEREASON_NAME",
         ],
     )
 
@@ -426,6 +440,7 @@ class FineosExtractConstants:
 CLAIMANT_EXTRACT_FILES = [
     FineosExtractConstants.VBI_REQUESTED_ABSENCE_SOM,
     FineosExtractConstants.EMPLOYEE_FEED,
+    FineosExtractConstants.VBI_REQUESTED_ABSENCE,
 ]
 
 CLAIMANT_EXTRACT_FILE_NAMES = [extract_file.file_name for extract_file in CLAIMANT_EXTRACT_FILES]
@@ -434,7 +449,6 @@ PAYMENT_EXTRACT_FILES = [
     FineosExtractConstants.VPEI,
     FineosExtractConstants.CLAIM_DETAILS,
     FineosExtractConstants.PAYMENT_DETAILS,
-    FineosExtractConstants.VBI_REQUESTED_ABSENCE,
 ]
 PAYMENT_EXTRACT_FILE_NAMES = [extract_file.file_name for extract_file in PAYMENT_EXTRACT_FILES]
 
@@ -452,6 +466,14 @@ IAWW_EXTRACT_FILES = [
     FineosExtractConstants.PAID_LEAVE_INSTRUCTION,
 ]
 IAWW_EXTRACT_FILES_NAMES = [extract_file.file_name for extract_file in IAWW_EXTRACT_FILES]
+
+REQUEST_1099_EXTRACT_FILES = [
+    FineosExtractConstants.VBI_1099DATA_SOM,
+]
+
+REQUEST_1099_EXTRACT_FILES_NAMES = [
+    extract_file.file_name for extract_file in REQUEST_1099_EXTRACT_FILES
+]
 
 
 class Regexes:
@@ -767,6 +789,11 @@ def get_fineos_max_history_date(export_type: LkReferenceFileType) -> datetime:
         == ReferenceFileType.FINEOS_IAWW_EXTRACT.reference_file_type_id
     ):
         datestring = date_config.fineos_iaww_extract_max_history_date
+    elif (
+        export_type.reference_file_type_id
+        == ReferenceFileType.FINEOS_1099_DATA_EXTRACT.reference_file_type_id
+    ):
+        datestring = date_config.fineos_1099_data_extract_max_history_date
 
     else:
         raise ValueError(f"Incorrect export_type {export_type} provided")

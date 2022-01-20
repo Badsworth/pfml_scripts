@@ -156,32 +156,20 @@ const useAuthLogic = ({
       setCognitoUser(currentUser);
       tracker.markFetchRequestEnd();
 
-      // TODO(PORTAL-1007): Remove claimantShowMFA feature flag
-      if (!isFeatureEnabled("claimantShowMFA")) {
-        finishLoginAndRedirect(next);
-        return;
-      }
+      const mfaChallenge =
+        currentUser.challengeName && currentUser.challengeName === "SMS_MFA";
 
-      if (
-        !currentUser.challengeName ||
-        currentUser.challengeName !== "SMS_MFA"
-      ) {
+      if (mfaChallenge) {
+        portalFlow.goToPageFor("VERIFY_CODE", {}, { next });
+      } else if (!isFeatureEnabled("claimantShowMFA")) {
+        finishLoginAndRedirect(next);
+      } else {
         const apiUser = await usersApi.getCurrentUser();
         // if delivery preference is null and user is not an employer, redirect to set up MFA
         const shouldSetMFA =
           apiUser.user.mfa_delivery_preference === null &&
           !apiUser.user.hasEmployerRole;
-        // user is not being prompted for a verification code - log them in!
         finishLoginAndRedirect(next, shouldSetMFA);
-      } else {
-        portalFlow.goToPageFor(
-          "VERIFY_CODE",
-          {},
-          {
-            next,
-          }
-        );
-        return;
       }
     } catch (error) {
       if (!isCognitoError(error)) {

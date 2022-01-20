@@ -68,6 +68,26 @@ describe("QuestionPage", () => {
     expect(tracker.trackEvent).not.toHaveBeenCalled();
   });
 
+  it("shows buttonLoadingMessage when save handler is in progress", async () => {
+    const handleSaveMock = jest.fn(
+      () => new Promise((resolve) => setTimeout(resolve, 100))
+    );
+
+    render(
+      <QuestionPage
+        title={sampleTitle}
+        onSave={handleSaveMock}
+        buttonLoadingMessage="Loading!"
+      >
+        <div>Some stuff here</div>
+      </QuestionPage>
+    );
+
+    userEvent.click(screen.getByRole("button"));
+
+    expect(await screen.findByText("Loading!")).toBeInTheDocument();
+  });
+
   it("tracks the event when onSave is not a Promise", async () => {
     jest.spyOn(console, "warn").mockImplementationOnce(jest.fn());
     const handleSaveMock = jest.fn();

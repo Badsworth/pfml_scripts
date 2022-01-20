@@ -26,6 +26,7 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
     and_,
+    desc,
     select,
 )
 from sqlalchemy.ext.hybrid import hybrid_method
@@ -364,7 +365,7 @@ class AbsencePeriod(Base, TimestampMixin):
     claim_id = Column(PostgreSQLUUID, ForeignKey("claim.claim_id"), index=True, nullable=False)
     fineos_absence_period_class_id = Column(Integer, nullable=False, index=True)
     fineos_absence_period_index_id = Column(Integer, nullable=False, index=True)
-    fineos_leave_request_id = Column(Integer)
+    fineos_leave_request_id = Column(Integer, index=True)
     fineos_average_weekly_wage = Column(Numeric(asdecimal=True))
     leave_request_decision_id = Column(
         Integer, ForeignKey("lk_leave_request_decision.leave_request_decision_id")
@@ -396,6 +397,49 @@ class HealthCareProvider(Base, TimestampMixin):
     addresses = relationship("HealthCareProviderAddress", back_populates="health_care_provider")
 
 
+class OrganizationUnit(Base, TimestampMixin):
+    __tablename__ = "organization_unit"
+    __table_args__ = (
+        UniqueConstraint("name", "employer_id", name="uix_organization_unit_name_employer_id",),
+    )
+    organization_unit_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+    fineos_id = Column(Text, nullable=True, unique=True)
+    name = Column(Text, nullable=False)
+    employer_id = Column(
+        PostgreSQLUUID, ForeignKey("employer.employer_id"), nullable=False, index=True
+    )
+
+    employer = relationship("Employer")
+    dua_reporting_units: "Query[DuaReportingUnit]" = dynamic_loader(
+        "DuaReportingUnit", back_populates="organization_unit"
+    )
+
+    @validates("fineos_id")
+    def validate_fineos_id(self, key: str, fineos_id: Optional[str]) -> Optional[str]:
+        if not fineos_id:
+            return fineos_id
+        if not re.fullmatch(r"[A-Z]{2}:[0-9]{5}:[0-9]{10}", fineos_id):
+            raise ValueError(
+                f"Invalid fineos_id: {fineos_id}. Expected a format of AA:00001:0000000001"
+            )
+        return fineos_id
+
+
+class EmployerQuarterlyContribution(Base, TimestampMixin):
+    __tablename__ = "employer_quarterly_contribution"
+    employer_id = Column(
+        PostgreSQLUUID, ForeignKey("employer.employer_id"), index=True, primary_key=True
+    )
+    filing_period = Column(Date, primary_key=True)
+    employer_total_pfml_contribution = Column(Numeric(asdecimal=True), nullable=False)
+    pfm_account_id = Column(Text, nullable=False, index=True)
+    dor_received_date = Column(TIMESTAMP(timezone=True))
+    dor_updated_date = Column(TIMESTAMP(timezone=True))
+    latest_import_log_id = Column(Integer, ForeignKey("import_log.import_log_id"), index=True)
+
+    employer = relationship("Employer", back_populates="employer_quarterly_contribution")
+
+
 class Employer(Base, TimestampMixin):
     __tablename__ = "employer"
     employer_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
@@ -425,9 +469,6 @@ class Employer(Base, TimestampMixin):
     employer_quarterly_contribution = relationship(
         "EmployerQuarterlyContribution", back_populates="employer"
     )
-    organization_units: "Query[OrganizationUnit]" = dynamic_loader(
-        "OrganizationUnit", back_populates="employer"
-    )
     employee_benefit_year_contributions: "Query[BenefitYearContribution]" = dynamic_loader(
         "BenefitYearContribution", back_populates="employer"
     )
@@ -435,17 +476,71 @@ class Employer(Base, TimestampMixin):
     lk_industry_code = relationship(LkIndustryCode)
 
     @property
+    def organization_units(self) -> list[OrganizationUnit]:
+        return (
+            object_session(self)
+            .query(OrganizationUnit)
+            .filter(
+                OrganizationUnit.employer_id == self.employer_id,
+                OrganizationUnit.fineos_id.isnot(None),
+            )
+            .all()
+        )
+
+    @property
     def uses_organization_units(self):
-        return any([unit for unit in self.organization_units if unit.fineos_id is not None])
+        return any(self.organization_units)
+
+    @typed_hybrid_property
+    def verification_data(self) -> Optional[EmployerQuarterlyContribution]:
+        """Get the most recent withholding data. Portal uses this data in order to verify a
+        user can become a leave admin for this employer"""
+
+        current_date = date.today()
+        last_years_date = current_date - relativedelta(years=1)
+
+        # Check the last four quarters. Does not include the current quarter, which would be a future filing period.
+        non_zero_contribution = (
+            object_session(self)
+            .query(EmployerQuarterlyContribution)
+            .filter(EmployerQuarterlyContribution.employer_id == self.employer_id)
+            .filter(EmployerQuarterlyContribution.employer_total_pfml_contribution > 0)
+            .filter(
+                EmployerQuarterlyContribution.filing_period.between(last_years_date, current_date)
+            )
+            .order_by(desc(EmployerQuarterlyContribution.filing_period))
+            .first()
+        )
+
+        if non_zero_contribution is None:
+            # If this is a new or previously-exempt Employer to the program, we may not
+            # have any non-zero contributions within the past year. We still want to support
+            # verification for them, so for them we check future filing periods, which includes
+            # the current quarter:
+            non_zero_contribution = (
+                object_session(self)
+                .query(EmployerQuarterlyContribution)
+                .filter(EmployerQuarterlyContribution.employer_id == self.employer_id)
+                .filter(EmployerQuarterlyContribution.employer_total_pfml_contribution > 0)
+                .filter(EmployerQuarterlyContribution.filing_period > current_date)
+                .order_by(desc(EmployerQuarterlyContribution.filing_period))
+                .first()
+            )
+
+        return non_zero_contribution
 
     @typed_hybrid_property
     def has_verification_data(self) -> bool:
         current_date = date.today()
         last_years_date = current_date - relativedelta(years=1)
+
         return any(
             quarter.employer_total_pfml_contribution > 0
             and quarter.filing_period >= last_years_date
-            and quarter.filing_period < current_date
+            and quarter.filing_period <= current_date
+            for quarter in self.employer_quarterly_contribution  # type: ignore
+        ) or any(
+            quarter.employer_total_pfml_contribution > 0 and quarter.filing_period > current_date
             for quarter in self.employer_quarterly_contribution  # type: ignore
         )
 
@@ -524,34 +619,6 @@ class DuaReportingUnitRaw(Base, TimestampMixin):
     address_state = Column(Text, nullable=True)
 
 
-class OrganizationUnit(Base, TimestampMixin):
-    __tablename__ = "organization_unit"
-    __table_args__ = (
-        UniqueConstraint("name", "employer_id", name="uix_organization_unit_name_employer_id",),
-    )
-    organization_unit_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
-    fineos_id = Column(Text, nullable=True, unique=True)
-    name = Column(Text, nullable=False)
-    employer_id = Column(
-        PostgreSQLUUID, ForeignKey("employer.employer_id"), nullable=False, index=True
-    )
-
-    employer = relationship("Employer", back_populates="organization_units")
-    dua_reporting_units: "Query[DuaReportingUnit]" = dynamic_loader(
-        "DuaReportingUnit", back_populates="organization_unit"
-    )
-
-    @validates("fineos_id")
-    def validate_fineos_id(self, key: str, fineos_id: Optional[str]) -> Optional[str]:
-        if not fineos_id:
-            return fineos_id
-        if not re.fullmatch(r"[A-Z]{2}:[0-9]{5}:[0-9]{10}", fineos_id):
-            raise ValueError(
-                f"Invalid fineos_id: {fineos_id}. Expected a format of AA:00001:0000000001"
-            )
-        return fineos_id
-
-
 class DuaReportingUnit(Base, TimestampMixin):
     __tablename__ = "dua_reporting_unit"
     dua_reporting_unit_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
@@ -565,21 +632,6 @@ class DuaReportingUnit(Base, TimestampMixin):
     )
 
     organization_unit = relationship("OrganizationUnit", back_populates="dua_reporting_units")
-
-
-class EmployerQuarterlyContribution(Base, TimestampMixin):
-    __tablename__ = "employer_quarterly_contribution"
-    employer_id = Column(
-        PostgreSQLUUID, ForeignKey("employer.employer_id"), index=True, primary_key=True
-    )
-    filing_period = Column(Date, primary_key=True)
-    employer_total_pfml_contribution = Column(Numeric(asdecimal=True), nullable=False)
-    pfm_account_id = Column(Text, nullable=False, index=True)
-    dor_received_date = Column(TIMESTAMP(timezone=True))
-    dor_updated_date = Column(TIMESTAMP(timezone=True))
-    latest_import_log_id = Column(Integer, ForeignKey("import_log.import_log_id"), index=True)
-
-    employer = relationship("Employer", back_populates="employer_quarterly_contribution")
 
 
 class EmployerPushToFineosQueue(Base, TimestampMixin):
@@ -776,12 +828,13 @@ class Employee(Base, TimestampMixin):
                 DuaEmployeeDemographics,
                 DuaReportingUnit.dua_id == DuaEmployeeDemographics.employer_reporting_unit_number,
             )
+            .filter(DuaEmployeeDemographics.fineos_customer_number == self.fineos_customer_number,)
             .filter(
+                OrganizationUnit.fineos_id is not None,
+                DuaReportingUnit.organization_unit_id is not None,
+                DuaEmployeeDemographics.employer_fein == employer.employer_fein,
                 EmployeeOccupation.employee_id == self.employee_id,
                 EmployeeOccupation.employer_id == employer.employer_id,
-                DuaReportingUnit.organization_unit_id is not None,
-                DuaEmployeeDemographics.fineos_customer_number == self.fineos_customer_number,
-                DuaEmployeeDemographics.employer_fein == employer.employer_fein,
             )
             .distinct()
             .all()
@@ -1055,7 +1108,7 @@ class Payment(Base, TimestampMixin):
 class PaymentDetails(Base, TimestampMixin):
     __tablename__ = "payment_details"
     payment_details_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
-    payment_id = Column(PostgreSQLUUID, ForeignKey(Payment.payment_id), nullable=False)
+    payment_id = Column(PostgreSQLUUID, ForeignKey(Payment.payment_id), nullable=False, index=True)
 
     period_start_date = Column(Date)
     period_end_date = Column(Date)
@@ -1259,6 +1312,16 @@ class User(Base, TimestampMixin):
         user_leave_administrator = self.get_user_leave_admin_for_employer(employer=employer)
         return user_leave_administrator.verified if user_leave_administrator else False
 
+    @hybrid_method
+    def mfa_preference_description(self) -> Optional[str]:
+        """Helper method for accessing mfa_delivery_preference_description in a null-safe way"""
+        # explicit cast to Optional to make linter happy
+        mfa_preference: Optional[LkMFADeliveryPreference] = self.mfa_delivery_preference
+        if mfa_preference is None:
+            return None
+
+        return mfa_preference.mfa_delivery_preference_description
+
 
 class UserRole(Base, TimestampMixin):
     __tablename__ = "link_user_role"
@@ -1301,12 +1364,21 @@ class UserLeaveAdministrator(Base, TimestampMixin):
     user = relationship(User)
     employer = relationship(Employer)
     verification = relationship(Verification)
-    organization_units = relationship(
-        OrganizationUnit,
-        secondary="link_user_leave_administrator_org_unit",
-        uselist=True,
-        lazy="joined",
-    )
+
+    @property
+    def organization_units(self) -> list[OrganizationUnit]:
+        return (
+            object_session(self)
+            .query(OrganizationUnit)
+            .join(UserLeaveAdministratorOrgUnit)
+            .filter(
+                UserLeaveAdministratorOrgUnit.user_leave_administrator_id
+                == self.user_leave_administrator_id,
+                OrganizationUnit.employer_id == self.employer_id,
+                OrganizationUnit.fineos_id.isnot(None),
+            )
+            .all()
+        )
 
     @typed_hybrid_property
     def has_fineos_registration(self) -> bool:
@@ -1631,7 +1703,7 @@ class DiaReductionPaymentReferenceFile(Base, TimestampMixin):
 class StateLog(Base, TimestampMixin):
     __tablename__ = "state_log"
     state_log_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
-    end_state_id = Column(Integer, ForeignKey("lk_state.state_id"))
+    end_state_id = Column(Integer, ForeignKey("lk_state.state_id"), index=True)
     started_at = Column(TIMESTAMP(timezone=True))
     ended_at = Column(TIMESTAMP(timezone=True), index=True)
     outcome = Column(JSON)
@@ -1880,6 +1952,7 @@ class AbsenceReason(LookupTable):
     PREVENTATIVE_CARE_FAMILY_MEMBER = LkAbsenceReason(13, "Preventative Care - Family Member")
     PUBLIC_HEALTH_EMERGENCY_FAMILY = LkAbsenceReason(14, "Public Health Emergency - Family")
     MILITARY_EMPLOYEE = LkAbsenceReason(15, "Military - Employee")
+    PERSONAL_EMPLOYEE = LkAbsenceReason(16, "Personal - Employee")
 
 
 class AbsenceReasonQualifierOne(LookupTable):
@@ -2340,7 +2413,7 @@ class Role(LookupTable):
     USER = LkRole(1, "User")
     FINEOS = LkRole(2, "Fineos")
     EMPLOYER = LkRole(3, "Employer")
-    SERVICE_NOW = LkRole(4, "ServiceNow")
+    PFML_CRM = LkRole(4, "PFML_CRM")
 
 
 class PaymentMethod(LookupTable):
@@ -3035,8 +3108,8 @@ class ReferenceFileType(LookupTable):
 
     DELEGATED_PAYMENT_AUDIT_REPORT = LkReferenceFileType(20, "Payment Audit Report", 1)
     DELEGATED_PAYMENT_REJECTS = LkReferenceFileType(21, "Payment Rejects", 1)
-    FINEOS_CLAIMANT_EXTRACT = LkReferenceFileType(24, "Claimant extract", 2)
-    FINEOS_PAYMENT_EXTRACT = LkReferenceFileType(25, "Payment extract", 4)
+    FINEOS_CLAIMANT_EXTRACT = LkReferenceFileType(24, "Claimant extract", 3)
+    FINEOS_PAYMENT_EXTRACT = LkReferenceFileType(25, "Payment extract", 3)
 
     PUB_EZ_CHECK = LkReferenceFileType(26, "PUB EZ check file", 1)
     PUB_POSITIVE_PAYMENT = LkReferenceFileType(27, "PUB positive pay file", 1)
@@ -3066,6 +3139,7 @@ class ReferenceFileType(LookupTable):
     )
 
     DUA_EMPLOYERS_REQUEST_FILE = LkReferenceFileType(37, "DUA employers request", 1)
+    FINEOS_1099_DATA_EXTRACT = LkReferenceFileType(38, "1099 extract", 1)
 
 
 class Title(LookupTable):

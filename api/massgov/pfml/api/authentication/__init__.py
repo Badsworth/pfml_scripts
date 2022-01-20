@@ -159,7 +159,7 @@ def _process_cognito_token(db_session: Session, decoded_token: dict[str, Any]) -
         "current_user.auth_id", user.sub_id,
     )
 
-    if has_role_in(user, [Role.SERVICE_NOW]):
+    if has_role_in(user, [Role.PFML_CRM]):
         mass_pfml_agent_id = flask.request.headers.get("Mass-PFML-Agent-ID", None)
         if mass_pfml_agent_id is None or mass_pfml_agent_id.strip() == "":
             raise Unauthorized("Invalid required header: Mass-PFML-Agent-ID")

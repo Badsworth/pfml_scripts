@@ -227,7 +227,7 @@ describe("Approval (notifications/notices)", () => {
           portal.checkNoticeForLeaveAdmin(
             submission.fineos_absence_id,
             employeeFullName,
-            "changeRequestApproval"
+            "Change Request Approved (PDF)"
           );
           portal.downloadLegalNotice(submission.fineos_absence_id);
         });

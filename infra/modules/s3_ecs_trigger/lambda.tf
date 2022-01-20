@@ -59,11 +59,12 @@ resource "aws_cloudwatch_log_group" "task_trigger_lambda" {
 
 # Allow the Lambda to be invoked by S3
 resource "aws_lambda_permission" "allow_bucket" {
-  statement_id  = "AllowExecutionFromS3Bucket"
-  action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.task_trigger.arn
-  principal     = "s3.amazonaws.com"
-  source_arn    = var.s3_bucket_arn
+  statement_id   = "AllowExecutionFromS3Bucket"
+  action         = "lambda:InvokeFunction"
+  function_name  = aws_lambda_function.task_trigger.arn
+  principal      = "s3.amazonaws.com"
+  source_arn     = var.s3_bucket_arn
+  source_account = data.aws_caller_identity.current.account_id
 }
 
 resource "aws_cloudwatch_log_subscription_filter" "nr_lambda_task_trigger" {

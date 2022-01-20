@@ -1,6 +1,6 @@
 import { fineos, fineosPages, portal } from "../../actions";
 import { ApplicationResponse } from "_api";
-import { isToday, addDays, format } from "date-fns";
+import { isToday, addDays, format, differenceInHours } from "date-fns";
 import { config } from "../../actions/common";
 
 describe("Create a new caring leave claim in FINEOS and Suppress Correspondence check", () => {
@@ -68,8 +68,8 @@ describe("Create a new caring leave claim in FINEOS and Suppress Correspondence 
           if (!application.updated_time)
             throw Error("updated_time is undefined");
           return (
-            !isToday(new Date(application.updated_time)) &&
-            application.status === "Completed"
+            differenceInHours(new Date(), new Date(application.updated_time)) >
+              24 && application.status === "Completed"
           );
         });
       cy.task("findFirstApprovedClaim", {
@@ -90,7 +90,7 @@ describe("Create a new caring leave claim in FINEOS and Suppress Correspondence 
             estimatedScheduledDate: "Sent",
             dateSent: format(
               addDays(new Date(response.updated_at), 1),
-              "MM/dd/yyyy"
+              "M/dd/yyyy"
             ),
             amount: "800.09",
           },

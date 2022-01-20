@@ -6,7 +6,6 @@ import {
   findCertificationDoc,
   getDocumentReviewTaskName,
 } from "../../../../src/util/documents";
-import { assertValidClaim } from "../../../../src/util/typeUtils";
 
 describe("Approval (notifications/notices)", () => {
   after(() => {
@@ -109,7 +108,7 @@ describe("Approval (notifications/notices)", () => {
           portal.checkNoticeForLeaveAdmin(
             submission.fineos_absence_id,
             employeeFullName,
-            "approval"
+            "Approval notice (PDF)"
           );
           portal.downloadLegalNotice(submission.fineos_absence_id);
         });
@@ -147,13 +146,9 @@ describe("Approval (notifications/notices)", () => {
     "Should generate an approval notification for the Leave Administrator",
     { retries: 0 },
     () => {
-      portal.before();
       cy.dependsOnPreviousPass([submit]);
       cy.unstash<Submission>("submission").then((submission) => {
         cy.unstash<ApplicationRequestBody>("claim").then((claim) => {
-          assertValidClaim(claim);
-          portal.loginLeaveAdmin(claim.employer_fein);
-          portal.selectClaimFromEmployerDashboard(submission.fineos_absence_id);
           const subjectEmployer = email.getNotificationSubject(
             "approval (employer)",
             submission.fineos_absence_id

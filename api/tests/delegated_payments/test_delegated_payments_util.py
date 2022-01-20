@@ -61,6 +61,9 @@ CLAIMANT_EXTRACT_FILENAMES = [
     "Employee_feed.csv",
     "VBI_REQUESTEDABSENCE_SOM.csv",
 ]
+REQUEST_1099_DATA_EXTRACT_FILENAMES = [
+    "VBI_1099DATA_SOM.csv",
+]
 
 
 @pytest.fixture
@@ -170,6 +173,12 @@ def test_get_date_group_folder_name():
             "2020-12-01-11-30-00", ReferenceFileType.FINEOS_CLAIMANT_EXTRACT
         )
         == "2020-12-01-11-30-00-claimant-extract"
+    )
+    assert (
+        payments_util.get_date_group_folder_name(
+            "2022-01-01-11-30-00", ReferenceFileType.FINEOS_1099_DATA_EXTRACT
+        )
+        == "2022-01-01-11-30-00-1099-extract"
     )
 
 
@@ -1046,3 +1055,115 @@ def test_create_success_file(mock_s3_bucket, monkeypatch):
     files = file_util.list_files(archive_folder_path, recursive=True)
     assert len(files) == 1
     assert files[0] == "processed/2021-08-01/2021-08-02-00-15-00-example-process.SUCCESS"
+
+
+def test_copy_fineos_data_to_archival_bucket_skip_old_1099_Extract(
+    test_db_session, mock_fineos_s3_bucket, mock_s3_bucket, set_exporter_env_vars, monkeypatch
+):
+    # Monkey path the max history date
+    monkeypatch.setenv("fineos_1099_data_extract_max_history_date", "2022-01-04")
+
+    # Add 2 top level files: should be processed
+    expected_timestamp_1 = "2022-01-05-11-30-00"
+    s3_prefix = "DT2/dataexports/"
+    upload_timestamped_s3_files(
+        mock_fineos_s3_bucket, s3_prefix, expected_timestamp_1, REQUEST_1099_DATA_EXTRACT_FILENAMES
+    )
+
+    # Add 2 files in a date folder: should be processed
+    expected_timestamp_2 = "2022-01-07-11-30-00"
+    s3_prefix = f"DT2/dataexports/{expected_timestamp_2}/"
+    upload_timestamped_s3_files(
+        mock_fineos_s3_bucket, s3_prefix, expected_timestamp_2, REQUEST_1099_DATA_EXTRACT_FILENAMES
+    )
+
+    # Add 2 files in a date folder: should NOT be processed
+    not_expected_timestamp_1 = "2022-01-01-11-30-00"
+    s3_prefix = f"DT2/dataexports/{not_expected_timestamp_1}/"
+    upload_timestamped_s3_files(
+        mock_fineos_s3_bucket,
+        s3_prefix,
+        not_expected_timestamp_1,
+        REQUEST_1099_DATA_EXTRACT_FILENAMES,
+    )
+
+    # Actually run the command
+    copied_file_mapping_by_date = payments_util.copy_fineos_data_to_archival_bucket(
+        test_db_session,
+        REQUEST_1099_DATA_EXTRACT_FILENAMES,
+        ReferenceFileType.FINEOS_1099_DATA_EXTRACT,
+    )
+
+    received_s3_prefix = f"s3://{mock_s3_bucket}/cps/inbound/received/"
+
+    # 2022-01-05 files should be there
+    assert_copied_file_mapping_by_date_matches(
+        copied_file_mapping_by_date,
+        expected_timestamp_1,
+        received_s3_prefix,
+        REQUEST_1099_DATA_EXTRACT_FILENAMES,
+    )
+
+    # 2022-01-07 files should be there
+    assert_copied_file_mapping_by_date_matches(
+        copied_file_mapping_by_date,
+        expected_timestamp_2,
+        received_s3_prefix,
+        REQUEST_1099_DATA_EXTRACT_FILENAMES,
+    )
+
+    # 2022-01-01 files should NOT be there
+    assert copied_file_mapping_by_date.get(not_expected_timestamp_1) is None
+
+
+def test_copy_fineos_data_to_archival_bucket_no_files_copied(
+    test_db_session, mock_fineos_s3_bucket, mock_s3_bucket, set_exporter_env_vars, monkeypatch
+):
+    # Monkey path the max history date
+    monkeypatch.setenv("fineos_1099_data_extract_max_history_date", "2022-01-04")
+
+    # Add 3 top level files: should not be processed
+    expected_timestamp_1 = "2022-01-03-11-30-00"
+    s3_prefix = "DT2/dataexports/"
+    upload_timestamped_s3_files(
+        mock_fineos_s3_bucket, s3_prefix, expected_timestamp_1, REQUEST_1099_DATA_EXTRACT_FILENAMES
+    )
+
+    # Actually run the command
+    copied_file_mapping_by_date = payments_util.copy_fineos_data_to_archival_bucket(
+        test_db_session,
+        REQUEST_1099_DATA_EXTRACT_FILENAMES,
+        ReferenceFileType.FINEOS_1099_DATA_EXTRACT,
+    )
+
+    # Files should be empty
+    assert copied_file_mapping_by_date == {}
+
+
+def test_copy_fineos_data_to_archival_bucket_duplicate_1099_file_error(
+    test_db_session, mock_fineos_s3_bucket, mock_s3_bucket, set_exporter_env_vars, monkeypatch
+):
+    # Monkey path the max history date
+    monkeypatch.setenv("fineos_1099_data_extract_max_history_date", "2022-01-04")
+
+    date_prefix = "2022-01-04-11-30-00"
+    s3_prefix = "DT2/dataexports/"
+
+    upload_timestamped_s3_files(
+        mock_fineos_s3_bucket, s3_prefix, date_prefix, REQUEST_1099_DATA_EXTRACT_FILENAMES
+    )
+    make_s3_file(
+        mock_fineos_s3_bucket,
+        f"{s3_prefix}{date_prefix}-ANOTHER-VBI_1099DATA_SOM.csv",
+        "VBI_1099DATA_SOM.csv",
+    )
+
+    with pytest.raises(
+        Exception,
+        match=f"Error while copying fineos extracts - duplicate files found for VBI_1099DATA_SOM.csv: s3://test_bucket/cps/inbound/received/{date_prefix}-ANOTHER-VBI_1099DATA_SOM.csv and s3://fineos_bucket/DT2/dataexports/{date_prefix}-VBI_1099DATA_SOM.csv",
+    ):
+        payments_util.copy_fineos_data_to_archival_bucket(
+            test_db_session,
+            REQUEST_1099_DATA_EXTRACT_FILENAMES,
+            ReferenceFileType.FINEOS_1099_DATA_EXTRACT,
+        )

@@ -108,6 +108,32 @@ describe("Payments", () => {
     });
   });
 
+  it("redirects to status page if claim does not have an approval notice", () => {
+    process.env.featureFlags = JSON.stringify({
+      claimantShowPayments: false,
+      claimantShowPaymentsPhaseTwo: false,
+    });
+
+    renderPage(
+      Payments,
+      {
+        addCustomSetup: setupHelper({
+          ...defaultClaimDetail,
+          appLogicHook: {
+            claims: { loadClaimDetail: jest.fn() },
+            documents: new DocumentCollection([]),
+            appErrors: { items: [] },
+          },
+        }),
+      },
+      props
+    );
+
+    expect(goToSpy).toHaveBeenCalledWith(routes.applications.status.claim, {
+      absence_id: props.query.absence_id,
+    });
+  });
+
   it("renders the back button", () => {
     renderPage(
       Payments,
@@ -362,9 +388,8 @@ describe("Payments", () => {
               name: "NotFoundError",
             }),
           ]),
-
           documents: {
-            documents: null,
+            documents: new DocumentCollection([]),
             loadAll: { loadAllClaimDocuments: jest.fn() },
           },
         },
@@ -375,6 +400,31 @@ describe("Payments", () => {
     expect(container.firstChild).toMatchSnapshot();
   });
 
+  it("omits estimated date content for intermittent leaves with no payments", () => {
+    renderPage(
+      Payments,
+      {
+        addCustomSetup: setupHelper({
+          ...defaultClaimDetail,
+          absence_periods: [
+            {
+              period_type: "Intermittent",
+              absence_period_start_date: "2022-10-21",
+              absence_period_end_date: "2022-12-30",
+              reason: "Child Bonding",
+            },
+          ],
+        }),
+      },
+      props
+    );
+
+    expect(
+      screen.queryByText(/What does the estimated date mean/)
+    ).not.toBeInTheDocument();
+    expect(screen.getByTestId("your-payments-intro")).toMatchSnapshot();
+  });
+
   // TODO(PORTAL-1482): remove test cases for checkback dates
   describe("Phase 2 Checkback date implementation", () => {
     beforeEach(() => {
@@ -382,6 +432,27 @@ describe("Payments", () => {
         claimantShowPayments: false,
         claimantShowPaymentsPhaseTwo: true,
       });
+    });
+
+    it("does not render checkback dates for claims that have at least one payment row", () => {
+      renderPage(
+        Payments,
+        {
+          addCustomSetup: setupHelper({
+            ...defaultClaimDetail,
+            payments: [
+              createMockPayment(
+                { status: "Delayed", sent_to_bank_date: null },
+                true
+              ),
+            ],
+          }),
+        },
+        props
+      );
+
+      expect(screen.queryByText(/Check back on/)).not.toBeInTheDocument();
+      expect(screen.getByTestId("your-payments-intro")).toMatchSnapshot();
     });
 
     it.each(Object.keys(approvalDate))(
@@ -499,6 +570,33 @@ describe("Payments", () => {
       expect(screen.getByTestId("your-payments-intro")).toMatchSnapshot();
       const table = screen.queryByRole("table");
       expect(table).not.toBeInTheDocument();
+    });
+
+    it("includes estimated date content for intermittent leaves with payments", () => {
+      renderPage(
+        Payments,
+        {
+          addCustomSetup: setupHelper({
+            ...defaultClaimDetail,
+            absence_periods: [
+              {
+                period_type: "Intermittent",
+                absence_period_start_date: "2022-10-21",
+                absence_period_end_date: "2022-12-30",
+                reason: "Child Bonding",
+              },
+            ],
+            has_paid_payments: true,
+            payments: [createMockPayment({ status: "Sent to bank" }, true)],
+          }),
+        },
+        props
+      );
+
+      expect(
+        screen.getByText(/What does the estimated date mean/)
+      ).toBeInTheDocument();
+      expect(screen.getByTestId("your-payments-intro")).toMatchSnapshot();
     });
   });
 });

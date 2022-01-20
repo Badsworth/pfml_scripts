@@ -12,8 +12,8 @@ from sqlalchemy import tuple_
 import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging
 from massgov.pfml import db
+from massgov.pfml.api.eligibility.eligibility import compute_financial_eligibility
 from massgov.pfml.db.models.employees import Claim, EmployeeOccupation, Employer
-from massgov.pfml.evaluate_new_eligibility.eligibility import compute_financial_eligibility
 from massgov.pfml.util.bg import background_task
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
@@ -99,9 +99,9 @@ def pull_data_from_cloudwatch(number_of_days):
     }
     for start_date in all_leave_start_dates:
         if start_date["request_id"] in claim_data_request_dict.keys():
-            claim_data_request_dict[start_date["request_id"]][
+            claim_data_request_dict[start_date["request_id"]]["leave_start_date"] = start_date[
                 "leave_start_date"
-            ] = date.fromisoformat(start_date["leave_start_date"])
+            ]
             claim_data_request_dict[start_date["request_id"]]["employment_status"] = start_date[
                 "employment_status"
             ]
@@ -118,7 +118,7 @@ def pull_data_from_cloudwatch(number_of_days):
     return list(claim_data_request_dict.values())
 
 
-def generate_report(cli_args, db_session, output_csv, diff_reason_csv):
+def generate_report(cli_args, db_session, output_csv):
     merged_results = pull_data_from_cloudwatch(cli_args.historical_len)
 
     # leave start date here is used to basically allow for multiple employee employer pairs
@@ -127,7 +127,7 @@ def generate_report(cli_args, db_session, output_csv, diff_reason_csv):
         for log in merged_results
         if {"employee_id", "employer_id", "leave_start_date"}.issubset(log.keys())
     }
-    application_submitted_date = date.today()
+
     all_claims = (
         db_session.query(
             Claim.created_at,
@@ -154,18 +154,29 @@ def generate_report(cli_args, db_session, output_csv, diff_reason_csv):
     )
     logger.info(f"claims len: {len(all_claims)}")
     for claim in all_claims:
-        old_claim_result = log_eligibility_dict[
-            (str(claim.employee_id), str(claim.employer_id), claim.absence_period_start_date,)
-        ]
-        leave_start_date = (
-            old_claim_result.get("leave_start_date") or claim.absence_period_start_date
+        old_claim_result = log_eligibility_dict.get(
+            (str(claim.employee_id), str(claim.employer_id), str(claim.absence_period_start_date),)
         )
+
+        if not old_claim_result:
+            logger.warning(
+                "could not find claim in dict",
+                extra={
+                    "employee_id": claim.employee_id,
+                    "employer_id": claim.employer_id,
+                    "absence_period_start_date": claim.absence_period_start_date,
+                },
+            )
+            continue
+
+        leave_start_date = date.fromisoformat(old_claim_result.get("leave_start_date"))
         employment_status = old_claim_result.get("employment_status") or claim.employment_status
         prior_eligibility = old_claim_result.get("financially_eligible") == "True"
+        prior_description = old_claim_result.get("description")
         claimaint_id = str(claim.employee_id)
-        time = old_claim_result.get("application_submitted_date")
-        old_aww = old_claim_result.get("employer_average_weekly_wage")
-        new_aww, new_decision = None, None
+        application_submitted_date = date.fromisoformat(
+            old_claim_result.get("application_submitted_date")
+        )
 
         try:
             eligibility = compute_financial_eligibility(
@@ -176,19 +187,19 @@ def generate_report(cli_args, db_session, output_csv, diff_reason_csv):
                 application_submitted_date=application_submitted_date,
                 leave_start_date=leave_start_date,
                 employment_status=employment_status,
-                diff_reason_csv=diff_reason_csv,
             )
-            current_eligibility = eligibility.financially_eligible
-            if current_eligibility != prior_eligibility:
-                new_decision = current_eligibility
-                new_aww = eligibility.employer_average_weekly_wage
+            new_eligibility = eligibility.financially_eligible
+            new_description = eligibility.description
+            if new_eligibility != prior_eligibility:
                 result = [
                     claimaint_id,
-                    time,
+                    application_submitted_date,
+                    leave_start_date,
                     prior_eligibility,
-                    new_decision,
-                    old_aww,
-                    new_aww,
+                    prior_description,
+                    new_eligibility,
+                    new_description,
+                    eligibility.total_wages,
                 ]
                 output_csv.writerow(result)
         except Exception as ex:
@@ -205,18 +216,21 @@ def main(cli_args, db_session):
     base_path = (
         f"{s3_bucket}/financial_eligibility/{ENVIRONMENT}/{datetime.now().strftime('%Y%m%d%H%M%S')}"
     )
-    with file_util.open_stream(
-        f"{base_path}/output.csv", "w"
-    ) as output_csv_path, file_util.open_stream(
-        f"{base_path}/diff_reason.csv", "w"
-    ) as diff_reason_csv_path:
+    with file_util.open_stream(f"{base_path}/output.csv", "w") as output_csv_path:
         output_csv = csv.writer(output_csv_path, lineterminator="\n")
-        diff_reason_csv = csv.writer(diff_reason_csv_path, lineterminator="\n")
         output_csv.writerow(
-            ["claimaint_id", "time", "previous_decision", "new_decision", "old_aww", "new_aww",]
+            [
+                "claimaint_id",
+                "application_submitted_date",
+                "leave_start_date",
+                "previous_decision",
+                "previous_description",
+                "new_decision",
+                "new_description",
+                "total_wages",
+            ]
         )
-        diff_reason_csv.writerow(["employee_id", "employer_id", "leave_start_date", "reason"])
-        generate_report(cli_args, db_session, output_csv, diff_reason_csv)
+        generate_report(cli_args, db_session, output_csv)
 
 
 @background_task("evaluate_new_eligibility")

@@ -23,7 +23,8 @@ from massgov.pfml.api.services.administrator_fineos_actions import (
 from massgov.pfml.api.validation.exceptions import ContainsV1AndV2Eforms
 from massgov.pfml.db.models.employees import AbsencePeriodType, UserLeaveAdministrator
 from massgov.pfml.db.models.factories import EmployerFactory
-from massgov.pfml.fineos import FINEOSClient, create_client
+from massgov.pfml.fineos import FINEOSClient
+from massgov.pfml.fineos.mock.eform import MOCK_EFORM_OTHER_INCOME_V1, MOCK_EFORM_OTHER_INCOME_V2
 from massgov.pfml.fineos.models import CreateOrUpdateLeaveAdmin, group_client_api
 from massgov.pfml.fineos.models.group_client_api import (
     GroupClientDocument,
@@ -189,7 +190,7 @@ def mock_fineos_client_period_decisions(period_decisions_data):
     def mock_period_decisions(*args, **kwargs):
         return period_decisions_data
 
-    mock_client = create_client()
+    mock_client = massgov.pfml.fineos.mock_client.MockFINEOSClient()
     mock_client.get_absence_period_decisions = mock_period_decisions
     return mock_client
 
@@ -1012,7 +1013,7 @@ def mock_fineos_other_leaves_v2_eform():
             group_client_api.EFormSummary(eformId=12345, eformType=EformTypes.OTHER_LEAVES),
         ]
 
-    mock_client = create_client()
+    mock_client = massgov.pfml.fineos.mock_client.MockFINEOSClient()
     mock_client.get_eform = mock_eform
     mock_client.get_eform_summary = mock_eform_summary
 
@@ -1295,22 +1296,8 @@ def mock_fineos_other_leaves_v2_accrued_leave_different_employer_eform():
             group_client_api.EFormSummary(eformId=12345, eformType=EformTypes.OTHER_LEAVES),
         ]
 
-    mock_client = create_client()
+    mock_client = massgov.pfml.fineos.mock_client.MockFINEOSClient()
     mock_client.get_eform = mock_eform
-    mock_client.get_eform_summary = mock_eform_summary
-
-    return mock_client
-
-
-@pytest.fixture
-def mock_fineos_other_income_eform_both_versions(period_decisions):
-    def mock_eform_summary(*args, **kwargs):
-        return [
-            group_client_api.EFormSummary(eformId=12345, eformType=EformTypes.OTHER_INCOME),
-            group_client_api.EFormSummary(eformId=12354, eformType=EformTypes.OTHER_INCOME_V2),
-        ]
-
-    mock_client = create_client()
     mock_client.get_eform_summary = mock_eform_summary
 
     return mock_client
@@ -1548,7 +1535,7 @@ def mock_fineos_other_income_v1_eform():
             ],
         )
 
-    mock_client = create_client()
+    mock_client = massgov.pfml.fineos.mock_client.MockFINEOSClient()
     mock_client.get_eform_summary = mock_eform_summary
     mock_client.get_eform = mock_get_eform
 
@@ -1608,7 +1595,7 @@ def test_register_previously_registered_leave_admin_with_fineos(
     )
     test_db_session.add(ula)
     test_db_session.commit()
-    fineos_client = create_client()
+    fineos_client = massgov.pfml.fineos.mock_client.MockFINEOSClient()
     caplog.set_level(logging.INFO)  # noqa: B1
     capture = massgov.pfml.fineos.mock_client.start_capture()
 
@@ -1801,18 +1788,16 @@ def test_get_claim_eform_type_contains_neither_version(mock_fineos_period_decisi
     assert leave_details.uses_second_eform_version is True
 
 
-def test_get_claim_other_income_eform_type_contains_both_versions(
-    mock_fineos_other_income_eform_both_versions,
-):
+def test_get_claim_other_income_eform_type_contains_both_versions():
     fineos_user_id = "Friendly_HR"
     absence_id = "NTN-001-ABS-001"
+    client = massgov.pfml.fineos.mock_client.MockFINEOSClient(
+        mock_eforms=(MOCK_EFORM_OTHER_INCOME_V1, MOCK_EFORM_OTHER_INCOME_V2)
+    )
     employer = EmployerFactory.build()
     with pytest.raises(ContainsV1AndV2Eforms):
         get_claim_as_leave_admin(
-            fineos_user_id,
-            absence_id,
-            employer,
-            fineos_client=mock_fineos_other_income_eform_both_versions,
+            fineos_user_id, absence_id, employer, fineos_client=client,
         )
 
 
@@ -2042,6 +2027,7 @@ class TestGetDocumentsAsLeaveAdmin:
             caseId="123",
             description="foo bar",
             originalFilename="test.pdf",
+            fileExtension=".pdf",
         )
 
     @pytest.fixture
@@ -2053,14 +2039,32 @@ class TestGetDocumentsAsLeaveAdmin:
             caseId="234",
             description="foo bar",
             originalFilename="test.pdf",
+            fileExtension=".pdf",
+        )
+
+    @pytest.fixture
+    def group_client_doc_invalid_extension(self):
+        return GroupClientDocument(
+            name="approval notice",
+            documentId=3,
+            type="document",
+            caseId="456",
+            description="foo bar",
+            originalFilename="test.docx",
+            fileExtension=".docx",
         )
 
     def test_get_documents(
-        self, mock_group_client_get_docs, group_client_document, group_client_doc_invalid_type,
+        self,
+        mock_group_client_get_docs,
+        group_client_document,
+        group_client_doc_invalid_type,
+        group_client_doc_invalid_extension,
     ):
         mock_group_client_get_docs.return_value = [
             group_client_document,
             group_client_doc_invalid_type,
+            group_client_doc_invalid_extension,
         ]
         documents = get_documents_as_leave_admin("fake-user-id", "fake-absence-id")
         mock_group_client_get_docs.assert_called_once_with("fake-user-id", "fake-absence-id")

@@ -88,6 +88,8 @@ env:
   E2E_TESTMAIL_APIKEY: ${{ secrets.E2E_TESTMAIL_APIKEY }}
   E2E_SSO_PASSWORD: ${{ secrets.E2E_SSO_PASSWORD }}
   E2E_SSO_USERNAME: ${{ secrets.E2E_SSO_USERNAME }}
+  E2E_TWILIO_ACCOUNTSID: ${{ secrets.E2E_TWILIO_ACCOUNTSID }}
+  E2E_TWILIO_AUTHTOKEN: ${{ secrets.E2E_TWILIO_AUTHTOKEN }}
   CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   # Caching/build performance - Move Cypress, Playwright binary storage to .npm to leverage caching.

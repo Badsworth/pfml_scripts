@@ -20,9 +20,7 @@ Cypress.Commands.add(
         message: "*".repeat(chars.length),
       });
     }
-    return cy
-      .wrap(subject, { log: false })
-      .type(chars, { ...options, log: false });
+    cy.wrap(subject, { log: false }).type(chars, { ...options, log: false });
   }
 );
 

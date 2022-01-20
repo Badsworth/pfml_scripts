@@ -53,17 +53,14 @@ export const ConsentToDataSharing = (props: ConsentToDataSharingProps) => {
           })}
         >
           <p>{t("pages.userConsentToDataSharing.applicationUsageIntro")}</p>
-          <ul className="usa-list">
-            {t<string, string[]>(
-              "pages.userConsentToDataSharing.applicationUsageList",
-              {
-                returnObjects: true,
-                context: roleContext,
-              }
-            ).map((listItemContent, index) => (
-              <li key={index}>{listItemContent}</li>
-            ))}
-          </ul>
+          <Trans
+            i18nKey="pages.userConsentToDataSharing.applicationUsageList"
+            tOptions={{ context: roleContext }}
+            components={{
+              ul: <ul className="usa-list" />,
+              li: <li />,
+            }}
+          />
         </AccordionItem>
 
         <AccordionItem

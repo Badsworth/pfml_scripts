@@ -93,6 +93,7 @@ module "api" {
 
   # dor_fineos_etl_schedule_expression               = "cron(5 * * * ? *)" # Hourly at :05 minutes past each hour
 
-  enable_pdf_document_compression  = "0"
+  enable_pdf_document_compression  = "1"
   enable_document_multipart_upload = "1"
+  enable_application_import        = "1"
 }

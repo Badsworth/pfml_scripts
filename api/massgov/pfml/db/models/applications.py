@@ -316,8 +316,6 @@ class Application(Base, TimestampMixin):
         PostgreSQLUUID, ForeignKey("application_payment_preference.payment_pref_id")
     )
     imported_from_fineos_at = Column(TIMESTAMP(timezone=True))
-    start_time = Column(TIMESTAMP(timezone=True))
-    updated_time = Column(TIMESTAMP(timezone=True))
     completed_time = Column(TIMESTAMP(timezone=True))
     submitted_time = Column(TIMESTAMP(timezone=True))
     has_employer_benefits = Column(Boolean)
@@ -426,7 +424,7 @@ class Application(Base, TimestampMixin):
     def employer_organization_units(self) -> list[OrganizationUnit]:
         if not self.employer:
             return []
-        units = self.employer.organization_units.all()
+        units = self.employer.organization_units
         logger.info(
             "Application found Employer's organization units",
             extra={

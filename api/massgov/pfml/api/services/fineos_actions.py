@@ -49,6 +49,7 @@ from massgov.pfml.db.models.employees import (
     TaxIdentifier,
     User,
 )
+from massgov.pfml.fineos.common import SUB_CASE_DOC_TYPES
 from massgov.pfml.fineos.exception import FINEOSClientError, FINEOSEntityNotFound
 from massgov.pfml.fineos.models import CreateOrUpdateServiceAgreement
 from massgov.pfml.fineos.models.customer_api import (
@@ -1114,9 +1115,12 @@ def get_documents(
     document_responses = list(
         map(
             lambda fd: fineos_document_response_to_document_response(fd, application),
-            fineos_documents,
+            # Certain document types are Word documents when first created, then converted to PDF documents
+            # Only PDF documents should be returned to the portal
+            filter(lambda fd: fd.fileExtension == ".pdf", fineos_documents),
         )
     )
+
     return document_responses
 
 
@@ -1186,7 +1190,7 @@ def download_document(
     fineos_web_id = get_or_register_employee_fineos_web_id(fineos, application, db_session)
     absence_id = get_fineos_absence_id_from_application(application)
 
-    if not document_type or document_type == "Appeal Acknowledgment":
+    if not document_type or document_type.lower() in SUB_CASE_DOC_TYPES:
         fineos_documents = fineos.get_documents(fineos_web_id, absence_id)
         for doc in fineos_documents:
             if fineos_document_id == str(doc.documentId):

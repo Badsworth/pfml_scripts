@@ -292,6 +292,102 @@ def test_applications_get_all_pagination_limit_double(client, user, auth_token):
         assert application.nickname == app_response["application_nickname"]
 
 
+def test_applications_import(client, user, test_db_session, auth_token, claim):
+    absence_case_id = claim.fineos_absence_id
+    assert test_db_session.query(Application).one_or_none() is None
+
+    response = client.post(
+        "/v1/applications/import",
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"absence_case_id": absence_case_id},
+    )
+
+    response_body = response.get_json().get("data")
+    assert response.status_code == 201
+    assert response_body.get("absence_case_id") == absence_case_id
+
+    imported_application = (
+        test_db_session.query(Application).filter(Application.claim_id == claim.claim_id).one()
+    )
+
+    assert imported_application.tax_identifier_id == claim.employee.tax_identifier_id
+    assert imported_application.employer_fein == claim.employer_fein
+    assert imported_application.imported_from_fineos_at is not None
+
+
+def test_applications_import_claim_not_found(client, user, auth_token, test_db_session):
+    absence_case_id = "NTN-111-ABS-01"
+
+    response = client.post(
+        "/v1/applications/import",
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"absence_case_id": absence_case_id},
+    )
+
+    assert response.status_code == 404
+    assert response.get_json()["message"] == "Claim not in PFML database."
+    assert test_db_session.query(Application).one_or_none() is None
+
+
+def test_applications_import_claim_without_employee_tax_identification(
+    client, user, auth_token, test_db_session, claim
+):
+    claim.employee.tax_identifier_id = None
+    claim.employee.tax_identifier = None
+    test_db_session.commit()
+
+    absence_case_id = claim.fineos_absence_id
+    response = client.post(
+        "/v1/applications/import",
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"absence_case_id": absence_case_id},
+    )
+
+    assert response.status_code == 409
+    assert response.get_json()["message"] == "Claim data incomplete for application import."
+    assert test_db_session.query(Application).one_or_none() is None
+
+
+def test_applications_import_claim_without_employer(
+    client, user, auth_token, test_db_session, claim
+):
+    claim.employer_id = None
+    claim.employer = None
+    test_db_session.commit()
+
+    absence_case_id = claim.fineos_absence_id
+    response = client.post(
+        "/v1/applications/import",
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"absence_case_id": absence_case_id},
+    )
+    assert response.status_code == 409
+    assert response.get_json()["message"] == "Claim data incomplete for application import."
+    assert test_db_session.query(Application).one_or_none() is None
+
+
+def test_applications_import_unauthenticated_post(client, test_db_session):
+    absence_case_id = "NTN-111-ABS-01"
+    response = client.post(
+        "/v1/applications/import",
+        headers={"Authorization": f"Bearer {''}"},
+        json={"absence_case_id": absence_case_id},
+    )
+    tests.api.validate_error_response(response, 401)
+    assert test_db_session.query(Application).one_or_none() is None
+
+
+def test_applications_import_unauthorized_post(client, user, employer_auth_token):
+    absence_case_id = "NTN-111-ABS-01"
+    # Employer cannot access this endpoint
+    response = client.post(
+        "/v1/applications/import",
+        headers={"Authorization": f"Bearer {employer_auth_token}"},
+        json={"absence_case_id": absence_case_id},
+    )
+    assert response.status_code == 401
+
+
 def test_applications_post_start_app(client, user, auth_token, test_db_session):
     response = client.post("/v1/applications", headers={"Authorization": f"Bearer {auth_token}"})
 

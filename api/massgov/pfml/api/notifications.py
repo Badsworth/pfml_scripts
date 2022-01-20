@@ -24,6 +24,7 @@ from massgov.pfml.db.models.applications import Notification
 from massgov.pfml.db.models.employees import Claim, Employee, Employer, ManagedRequirementType
 from massgov.pfml.db.queries.absence_periods import sync_customer_api_absence_periods_to_db
 from massgov.pfml.db.queries.managed_requirements import (
+    commit_managed_requirements,
     create_managed_requirement_from_fineos,
     create_or_update_managed_requirement_from_fineos,
     get_managed_requirement_by_fineos_managed_requirement_id,
@@ -275,7 +276,6 @@ def handle_managed_requirements_create(
     fineos_requirements = get_fineos_managed_requirements_from_notification(
         notification, log_attributes
     )
-
     if len(fineos_requirements) == 0:
         logger.info("No managed requirements returned by Fineos", extra=log_attributes)
         return
@@ -297,13 +297,12 @@ def handle_managed_requirements_create(
             fineos_requirement.managedReqId, db_session
         )
         if existing_requirement is None:
-            create_managed_requirement_from_fineos(
-                db_session, claim_id, fineos_requirement, log_attr
-            )
+            create_managed_requirement_from_fineos(db_session, claim_id, fineos_requirement)
         elif existing_requirement.managed_requirement_type_id != type_id:
             logger.warning("Managed Requirement type mismatch", extra=log_attr)
         else:
             logger.info("Managed Requirement already exists, no record created", extra=log_attr)
+    commit_managed_requirements(db_session)
     return
 
 
@@ -317,7 +316,6 @@ def handle_managed_requirements_update(
     if len(fineos_requirements) == 0:
         logger.info("No managed requirements returned by Fineos", extra=log_attributes)
         return
-
     for fineos_requirement in fineos_requirements:
         log_attr = {
             **log_attributes.copy(),
@@ -326,6 +324,7 @@ def handle_managed_requirements_update(
         create_or_update_managed_requirement_from_fineos(
             db_session, claim_id, fineos_requirement, log_attr
         )
+    commit_managed_requirements(db_session)
     return
 
 

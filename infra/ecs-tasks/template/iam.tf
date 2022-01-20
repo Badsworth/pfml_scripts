@@ -433,6 +433,25 @@ data "aws_iam_policy_document" "fineos_feeds_role_policy" {
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
+# IAM role and policies for FINEOS import leave admin org units
+# ----------------------------------------------------------------------------------------------------------------------
+
+resource "aws_iam_role" "fineos_import_la_org_units_task_role" {
+  name               = "${local.app_name}-${var.environment_name}-ecs-tasks-fineos-import-la-org-units"
+  assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume_role_policy.json
+}
+
+# We may not always have a value for `fineos_aws_iam_role_arn` and a policy has
+# to list a resource, so make this part conditional with the count hack
+resource "aws_iam_role_policy" "fineos_import_la_org_units_task_fineos_role_policy" {
+  count = var.fineos_aws_iam_role_arn == "" ? 0 : 1
+
+  name   = "${local.app_name}-${var.environment_name}-ecs-tasks-fineos-import-la-org-units-fineos-policy"
+  role   = aws_iam_role.fineos_import_la_org_units_task_role.id
+  policy = data.aws_iam_policy_document.fineos_feeds_role_policy[0].json
+}
+
+# ----------------------------------------------------------------------------------------------------------------------
 # IAM role and policies for pub-payments-process-fineos
 # ----------------------------------------------------------------------------------------------------------------------
 
@@ -1702,6 +1721,51 @@ data "aws_iam_policy_document" "dua_employee_workflow_execution_role_extras" {
       "${local.ssm_arn_prefix}/${local.app_name}-comptroller/${var.environment_name}",
       "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/admin"
     ]
+  }
+}
+
+# ----------------------------------------------------------------------------------------------------------------------
+# IAM role and policies for mfa-lockout-resolution
+# ----------------------------------------------------------------------------------------------------------------------
+
+resource "aws_iam_role" "mfa_lockout_resolution_task_role" {
+  name               = "${local.app_name}-${var.environment_name}-mfa-lockout-resolution-task-role"
+  assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume_role_policy.json
+}
+
+resource "aws_iam_role_policy" "mfa_lockout_resolution_role_policy" {
+  name   = "${local.app_name}-${var.environment_name}-mfa-lockout-resolution-role-policy"
+  role   = aws_iam_role.mfa_lockout_resolution_task_role.id
+  policy = data.aws_iam_policy_document.mfa_lockout_resolution.json
+}
+
+data "aws_iam_policy_document" "mfa_lockout_resolution" {
+  # Allow disabling MFA in Cognito and fixing opt in for SNS
+  statement {
+    effect = "Allow"
+    actions = [
+      "cognito-idp:AdminSetUserMFAPreference",
+      "sns:CheckIfPhoneNumberIsOptedOut",
+      "sns:OptInPhoneNumber"
+    ]
+    resources = [
+      "arn:aws:cognito-idp:us-east-1:498823821309:userpool/${var.cognito_user_pool_id}",
+      "arn:aws:sns:us-east-1:498823821309:*",
+    ]
+  }
+
+  # Allow sending emails to claimants when MFA is disabled.
+  statement {
+    sid = "AllowSESSendEmail"
+    actions = [
+      "ses:SendEmail",
+      "ses:SendRawEmail",
+      "ses:SendTemplateEmail"
+    ]
+
+    resources = ["*"]
+
+    effect = "Allow"
   }
 }
 

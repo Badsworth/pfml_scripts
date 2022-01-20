@@ -33,6 +33,7 @@ def maximum_weekly_processor(max_weekly_benefit_amount_validation_step):
 
 
 def validate_payment_success(payment_container):
+    payment_container.get_payment_log_record()
     assert not payment_container.maximum_weekly_audit_report_msg
 
 
@@ -171,17 +172,24 @@ def test_validate_payments_not_exceeding_cap_in_same_claim(
     payment_container5 = _create_payment_container(
         employee, Decimal("850.00"), local_test_db_session, start_date=date(2021, 8, 5)  # Thursday
     )
-
     successful_containers = [payment_container1, payment_container2, payment_container3]
     failed_containers = [payment_container4, payment_container5]
+
+    # The successful containers will work on their own
     maximum_weekly_processor.process(
-        employee, successful_containers + failed_containers,
+        employee, successful_containers,
     )
 
     for container in successful_containers:
         validate_payment_success(container)
 
-    for container in failed_containers:
+    # But if you run them with another claim, now they all need
+    # to meet the rule and they start failing
+    maximum_weekly_processor.process(
+        employee, successful_containers + failed_containers,
+    )
+
+    for container in successful_containers + failed_containers:
         validate_payment_failed(container)
 
 
@@ -468,6 +476,66 @@ def test_validate_payments_not_exceeding_cap_other_payment_types(
     # caused any sort of interference
     validate_payment_success(payment_container1)
     validate_payment_success(payment_container2)
+
+
+def test_validate_payments_not_exceeding_cap_multiple_claims(
+    maximum_weekly_processor, local_test_db_session
+):
+    # This is validating a problem found in https://lwd.atlassian.net/browse/API-2245
+    # Before, the logic was letting all payments after
+    # the first auto-pass the validation if they were in the
+    # same claim + week, which isn't correct.
+    employee = EmployeeFactory.create()
+    claim1 = ClaimFactory.create(employee=employee)
+    claim2 = ClaimFactory.create(employee=employee)
+
+    # Claim 1
+    _create_payment_container(
+        employee,
+        Decimal("100.00"),
+        local_test_db_session,
+        has_processed_state=True,
+        claim=claim1,
+        start_date=date(2021, 12, 19),
+        length_of_period=1,
+    )
+
+    payment_container1 = _create_payment_container(
+        employee,
+        Decimal("700.00"),
+        local_test_db_session,
+        claim=claim1,
+        start_date=date(2021, 12, 20),
+        length_of_period=7,
+    )
+
+    # Claim 2
+    _create_payment_container(
+        employee,
+        Decimal("125.00"),
+        local_test_db_session,
+        has_processed_state=True,
+        claim=claim2,
+        start_date=date(2021, 12, 19),
+        length_of_period=1,
+    )
+
+    payment_container2 = _create_payment_container(
+        employee,
+        Decimal("725.00"),
+        local_test_db_session,
+        claim=claim2,
+        start_date=date(2021, 12, 20),
+        length_of_period=7,
+    )
+
+    # Run the logic
+    # Because $225.00 was paid previously
+    # both payments are expected to fail validation
+    maximum_weekly_processor.process(employee, [payment_container1, payment_container2])
+
+    validate_payment_failed(payment_container1)
+    validate_payment_failed(payment_container2)
 
 
 def test_validate_payments_use_correct_maximum_benefit(

@@ -7,6 +7,8 @@ import useThrottledHandler from "../hooks/useThrottledHandler";
 import { useTranslation } from "../locales/i18n";
 
 interface QuestionPageProps {
+  /** Text to show in the submit button when the submission is in progress */
+  buttonLoadingMessage?: string;
   /**
    * The contents of the form question page.
    */
@@ -71,6 +73,7 @@ export const QuestionPage = (props: QuestionPageProps) => {
           className="margin-top-4"
           type="submit"
           loading={handleSubmit.isThrottled}
+          loadingMessage={props.buttonLoadingMessage}
         >
           {props.continueButtonLabel ?? t("components.form.continueButton")}
         </Button>

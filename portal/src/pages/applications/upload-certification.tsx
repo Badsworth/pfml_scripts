@@ -123,6 +123,9 @@ export const UploadCertification = (props: UploadCertificationProps) => {
 
   return (
     <QuestionPage
+      buttonLoadingMessage={t(
+        "pages.claimsUploadCertification.uploadingMessage"
+      )}
       title={t("pages.claimsUploadCertification.title")}
       onSave={handleSave}
     >
@@ -161,16 +164,13 @@ export const UploadCertification = (props: UploadCertificationProps) => {
           claimReasonQualifier === ReasonQualifier.newBorn
         }
       >
-        <ul className="usa-list">
-          {t<string, string[]>(
-            "pages.claimsUploadCertification.leadListNewborn",
-            {
-              returnObjects: true,
-            }
-          ).map((listItem, index) => (
-            <li key={index}>{listItem}</li>
-          ))}
-        </ul>
+        <Trans
+          i18nKey="pages.claimsUploadCertification.leadListNewborn"
+          components={{
+            ul: <ul className="usa-list" />,
+            li: <li />,
+          }}
+        />
       </ConditionalContent>
       <DocumentRequirements type="certification" />
       <FileUploadDetails />

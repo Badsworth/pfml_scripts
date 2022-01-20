@@ -803,8 +803,9 @@ def test_documents_get_date_created(
             {
                 "caseId": absence_id,
                 "dateCreated": "2020-09-01",
-                "name": "ID Document",
-                "originalFilename": "test.png",
+                "name": "Approval Notice",
+                "originalFilename": "test.pdf",
+                "fileExtension": ".pdf",
                 "receivedDate": "",
             }
         )
@@ -914,12 +915,20 @@ def test_documents_download_mismatch_case(
 ):
     # Regression test to ensure that get_document_by_id searches through all documents from FINEOS
     document_id = "3012"
+    file_extension = ".pdf"
 
     def mock_get_documents(self, user_id, absence_id):
         # mock the response to return multiple documents
         document_type = "approval notice"
         document1 = copy.copy(massgov.pfml.fineos.mock_client.MOCK_DOCUMENT_DATA)
-        document1.update({"caseId": absence_id, "name": document_type, "documentId": document_id})
+        document1.update(
+            {
+                "caseId": absence_id,
+                "name": document_type,
+                "documentId": document_id,
+                "fileExtension": file_extension,
+            }
+        )
 
         return [
             models.customer_api.Document.parse_obj(
@@ -982,7 +991,12 @@ def test_documents_get_not_submitted_application(
 def test_document_upload_return_error_rule(
     mock_upload, client, consented_user, consented_user_token, test_db_session
 ):
-    error = FINEOSUnprocessableEntity("upload_document", 200, 422, "Unable to upload document")
+    error = FINEOSUnprocessableEntity(
+        "upload_document",
+        200,
+        422,
+        "A document of type Identification Proof is not required for the case provided",
+    )
     mock_upload.side_effect = error
 
     response = document_upload_helper(
@@ -994,3 +1008,24 @@ def test_document_upload_return_error_rule(
 
     assert response["status_code"] == 400
     assert response["errors"][0]["rule"] == "document_requirement_already_satisfied"
+
+
+@mock.patch("massgov.pfml.api.applications.upload_document")
+def test_document_upload_doesnt_return_error_rule(
+    mock_upload, client, consented_user, consented_user_token, test_db_session
+):
+    error = FINEOSUnprocessableEntity("upload_document", 200, 422, "Unable to upload document")
+    mock_upload.side_effect = error
+
+    response = document_upload_helper(
+        client=client,
+        user=consented_user,
+        auth_token=consented_user_token,
+        form_data=document_upload_payload_helper(VALID_FORM_DATA, valid_file()),
+    )
+
+    assert response["status_code"] == 400
+    assert response["errors"][0] == {
+        "message": "Issue encountered while attempting to upload the document.",
+        "type": "fineos_client",
+    }

@@ -1,5 +1,26 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`Payments Phase 2 Checkback date implementation does not render checkback dates for claims that have at least one payment row 1`] = `
+<section
+  data-testid="your-payments-intro"
+>
+  Payments are scheduled to be paid after each week of your leave. Check back weekly to see when your next payment will be scheduled.
+  <section
+    class="margin-y-5"
+    data-testid="estimated-date"
+  >
+    <h3
+      class="font-heading-sm text-bold"
+    >
+      What does the estimated date mean?
+    </h3>
+    <p>
+      This is the date range we expect to process your direct deposit payment or send your check in the mail. Depending on your bank, expect to receive direct deposit payments in your account 2-3 days after this date. Checks may take 7-11 days to arrive in the mail. Once your payment is processed or your check is sent, that date will be shown in the “date processed” column.
+    </p>
+  </section>
+</section>
+`;
+
 exports[`Payments Phase 2 Checkback date implementation does not render the Payments table when no payments are available and leave is intermittent 1`] = `
 <section
   data-testid="your-payments-intro"
@@ -19,6 +40,20 @@ exports[`Payments Phase 2 Checkback date implementation does not render the Paym
     </a>
     .
   </p>
+</section>
+`;
+
+exports[`Payments Phase 2 Checkback date implementation includes estimated date content for intermittent leaves with payments 1`] = `
+<section
+  data-testid="your-payments-intro"
+>
+  Once you report at least 8 hours, you can expect to receive a payment about one week later. You can receive more than one payment in a week depending on how your hours are reported. You can report your hours by calling 
+  <a
+    href="tel:(857) 972-9256"
+  >
+    (857) 972-9256
+  </a>
+  .
   <section
     class="margin-y-5"
     data-testid="estimated-date"
@@ -244,7 +279,7 @@ exports[`Payments Phase 2 Checkback date implementation renders intro text for r
 
 exports[`Payments displays info alert if claimant has bonding-newborn but not pregnancy claims 1`] = `
 <div
-  aria-labelledby="alert-heading7"
+  aria-labelledby="alert-heading10"
   class="usa-alert usa-alert--info usa-alert--no-icon margin-bottom-3"
   role="region"
   tabindex="-1"
@@ -254,7 +289,7 @@ exports[`Payments displays info alert if claimant has bonding-newborn but not pr
   >
     <h2
       class="usa-alert__heading font-heading-xs text-bold"
-      id="alert-heading7"
+      id="alert-heading10"
     >
       If you are giving birth, you may also be eligible for paid medical leave
     </h2>
@@ -285,7 +320,7 @@ exports[`Payments displays info alert if claimant has bonding-newborn but not pr
 
 exports[`Payments displays info alert if claimant has pregnancy but not bonding claims 1`] = `
 <div
-  aria-labelledby="alert-heading11"
+  aria-labelledby="alert-heading14"
   class="usa-alert usa-alert--info usa-alert--no-icon margin-bottom-3"
   role="region"
   tabindex="-1"
@@ -295,7 +330,7 @@ exports[`Payments displays info alert if claimant has pregnancy but not bonding 
   >
     <h2
       class="usa-alert__heading font-heading-xs text-bold"
-      id="alert-heading11"
+      id="alert-heading14"
     >
       You may also be eligible for paid family leave
     </h2>
@@ -345,6 +380,20 @@ exports[`Payments does not render payments if the is a 404 status 1`] = `
 </a>
 `;
 
+exports[`Payments omits estimated date content for intermittent leaves with no payments 1`] = `
+<section
+  data-testid="your-payments-intro"
+>
+  Once you report at least 8 hours, you can expect to receive a payment about one week later. You can receive more than one payment in a week depending on how your hours are reported. You can report your hours by calling 
+  <a
+    href="tel:(857) 972-9256"
+  >
+    (857) 972-9256
+  </a>
+  .
+</section>
+`;
+
 exports[`Payments renders the \`Your payments\` intro content section 1`] = `
 <section
   data-testid="your-payments-intro"
@@ -384,7 +433,7 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
       class="usa-accordion__heading margin-y-2"
     >
       <button
-        aria-controls="accordion27"
+        aria-controls="accordion30"
         aria-expanded="false"
         class="usa-accordion__button"
         type="button"
@@ -394,9 +443,9 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
     </h2>
     <div
       class="usa-accordion__content usa-prose"
-      data-testid="accordion27"
+      data-testid="accordion30"
       hidden=""
-      id="accordion27"
+      id="accordion30"
     >
       <p>
         Once your payments have started, expect to be paid weekly for the duration of your leave.
@@ -453,7 +502,7 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
       class="usa-accordion__heading margin-y-2"
     >
       <button
-        aria-controls="accordion28"
+        aria-controls="accordion31"
         aria-expanded="false"
         class="usa-accordion__button"
         type="button"
@@ -463,9 +512,9 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
     </h2>
     <div
       class="usa-accordion__content usa-prose"
-      data-testid="accordion28"
+      data-testid="accordion31"
       hidden=""
-      id="accordion28"
+      id="accordion31"
     >
       <p>
         To see your maximum weekly benefit amount, view your approval notice in your 
@@ -514,7 +563,7 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
       class="usa-accordion__heading margin-y-2"
     >
       <button
-        aria-controls="accordion29"
+        aria-controls="accordion32"
         aria-expanded="false"
         class="usa-accordion__button"
         type="button"
@@ -524,9 +573,9 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
     </h2>
     <div
       class="usa-accordion__content usa-prose"
-      data-testid="accordion29"
+      data-testid="accordion32"
       hidden=""
-      id="accordion29"
+      id="accordion32"
     >
       <p>
         To make changes to your payment method or banking information, call the Contact Center at 

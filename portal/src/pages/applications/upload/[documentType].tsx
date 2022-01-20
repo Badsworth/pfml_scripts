@@ -106,16 +106,13 @@ const CertificationUpload = ({ path }: CertificationUploadProps) => {
         />
       </Lead>
       <ConditionalContent visible={isBondingNewborn}>
-        <ul className="usa-list">
-          {t<string, string[]>(
-            "pages.claimsUploadDocumentType.leadListNewborn",
-            {
-              returnObjects: true,
-            }
-          ).map((listItem, index) => (
-            <li key={index}>{listItem}</li>
-          ))}
-        </ul>
+        <Trans
+          i18nKey="pages.claimsUploadDocumentType.leadListNewborn"
+          components={{
+            ul: <ul className="usa-list" />,
+            li: <li />,
+          }}
+        />
       </ConditionalContent>
       <DocumentRequirements type="certification" />
     </React.Fragment>
@@ -188,7 +185,7 @@ const IdentificationUpload = ({ path }: IdentificationUploadProps) => {
   );
 };
 
-interface DocumentUploadProps extends WithClaimDocumentsProps {
+export interface DocumentUploadProps extends WithClaimDocumentsProps {
   query: {
     claim_id: string;
     additionalDoc?: string;
@@ -279,6 +276,9 @@ export const DocumentUpload = (props: DocumentUploadProps) => {
 
   return (
     <QuestionPage
+      buttonLoadingMessage={t(
+        "pages.claimsUploadDocumentType.uploadingMessage"
+      )}
       title={t("pages.claimsUploadDocumentType.title", {
         context: isIdUpload ? "id" : "certification",
       })}

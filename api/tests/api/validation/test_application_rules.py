@@ -1723,34 +1723,6 @@ def test_has_employer_benefits_true_no_benefit():
     ] == issues
 
 
-def test_has_employer_benefits_true_zero_benefit():
-    application = ApplicationFactory.build()
-    application.has_employer_benefits = True
-
-    benefits = [
-        EmployerBenefitFactory.build(
-            application_id=application.application_id,
-            benefit_amount_dollars=0,
-            is_full_salary_continuous=False,
-        )
-    ]
-    application.employer_benefits = benefits
-    issues = get_conditional_issues(application)
-
-    assert [
-        ValidationErrorDetail(
-            type=IssueType.minimum,
-            message="benefit_amount_dollars must be greater than zero",
-            field="employer_benefits[0].benefit_amount_dollars",
-        )
-    ] == issues
-
-    application.employer_benefits[0].is_full_salary_continuous = True
-    issues = get_conditional_issues(application)
-
-    assert len(issues) == 0
-
-
 def test_employer_benefit_no_issues():
     application = ApplicationFactory.build()
     benefits = [EmployerBenefitFactory.build(application_id=application.application_id)]
@@ -1766,11 +1738,6 @@ def test_employer_benefit_missing_fields():
     assert [
         ValidationErrorDetail(
             type=IssueType.required,
-            message="employer_benefits[0].benefit_start_date is required",
-            field="employer_benefits[0].benefit_start_date",
-        ),
-        ValidationErrorDetail(
-            type=IssueType.required,
             message="employer_benefits[0].benefit_type is required",
             field="employer_benefits[0].benefit_type",
         ),
@@ -1778,31 +1745,6 @@ def test_employer_benefit_missing_fields():
             type=IssueType.required,
             message="employer_benefits[0].is_full_salary_continuous is required",
             field="employer_benefits[0].is_full_salary_continuous",
-        ),
-    ] == issues
-
-
-def test_benefit_amount_and_frequency_required():
-    test_app = ApplicationFactory.build(
-        employer_benefits=[
-            EmployerBenefit(
-                is_full_salary_continuous=False,
-                benefit_start_date=date(2021, 1, 3),
-                benefit_type_id=0,
-            )
-        ]
-    )
-    issues = get_conditional_issues(test_app)
-    assert [
-        ValidationErrorDetail(
-            type=IssueType.required,
-            message="employer_benefits[0].benefit_amount_dollars is required",
-            field="employer_benefits[0].benefit_amount_dollars",
-        ),
-        ValidationErrorDetail(
-            type=IssueType.required,
-            message="employer_benefits[0].benefit_amount_frequency is required",
-            field="employer_benefits[0].benefit_amount_frequency",
         ),
     ] == issues
 
@@ -1863,6 +1805,27 @@ def test_employer_benefit_end_date_must_be_after_start_date():
             message="employer_benefits[0].benefit_end_date cannot be earlier than employer_benefits[0].benefit_start_date",
             field="employer_benefits[0].benefit_end_date",
         ),
+    ] == issues
+
+
+def test_employer_benefit_requires_start_date_when_is_full_salary_continuous_is_true():
+    application = ApplicationFactory.build()
+    benefits = [
+        EmployerBenefitFactory.build(
+            application_id=application.application_id,
+            is_full_salary_continuous=True,
+            benefit_start_date=None,
+        )
+    ]
+    application.employer_benefits = benefits
+
+    issues = get_conditional_issues(application)
+    assert [
+        ValidationErrorDetail(
+            type=IssueType.required,
+            message="employer_benefits[0].benefit_start_date is required",
+            field="employer_benefits[0].benefit_start_date",
+        )
     ] == issues
 
 

@@ -30,15 +30,14 @@ def create_authorization(
             financial_eligibility(user, they)
             rmv_check(user, they)
             notifications(user, they)
-        elif has_role_in(user, [Role.SERVICE_NOW]):
-            pass
+        elif has_role_in(user, [Role.PFML_CRM]):
+            if enable_employees:
+                employees(user, they)
         else:
             users(user, they)
             applications(user, they)
             documents(user, they)
             leave_admins(user, they)
-            if enable_employees:
-                employees(user, they)
 
     return define_authorization
 
@@ -118,7 +117,7 @@ def users(user: User, they: RuleList) -> None:
 
 
 def employees(user: User, they: RuleList) -> None:
-    they.can((READ, EDIT), Employee)
+    they.can(READ, Employee)
 
 
 def applications(user: User, they: RuleList) -> None:

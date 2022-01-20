@@ -227,3 +227,7 @@ class PaymentPreferenceRequestBody(PydanticBaseModel):
 
 class TaxWithholdingPreferenceRequestBody(PydanticBaseModel):
     is_withholding_tax: Optional[bool]
+
+
+class ApplicationImportRequestBody(PydanticBaseModel):
+    absence_case_id: str

@@ -1,0 +1,66 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Two-factor SMS Verify renders landing page content 1`] = `
+<div>
+  <form
+    class="usa-form"
+    method="post"
+  >
+    <h1
+      class="js-title margin-top-0 margin-bottom-2 font-heading-lg line-height-sans-2"
+      tabindex="-1"
+    >
+      Enter your security code
+    </h1>
+    <p
+      class="usa-intro"
+    >
+      To protect your security we sent a 6-digit code to the phone number we have on file for verification.  Don’t share this code with anyone. We’ll never call or text you for this code.
+    </p>
+    <p
+      class="usa-intro"
+    >
+      To receive a new code, 
+      <a
+        href="/login"
+      >
+        log in again
+      </a>
+      . If you need help, call the Contact Center at 
+      <a
+        href="tel:(833) 344-7365"
+      >
+        (833) 344‑7365
+      </a>
+      .
+    </p>
+    <div
+      class="usa-form-group"
+    >
+      <label
+        class="usa-label text-bold font-heading-xs measure-5"
+        for="InputText1"
+        id="InputText1_label"
+      >
+        6-digit code
+      </label>
+      <input
+        aria-labelledby="InputText1_label InputText1_hint InputText1_error"
+        autocomplete="one-time-code"
+        class="usa-input maxw-mobile-lg"
+        id="InputText1"
+        inputmode="numeric"
+        name="code"
+        type="text"
+        value=""
+      />
+    </div>
+    <button
+      class="usa-button position-relative display-block margin-top-3"
+      type="submit"
+    >
+      Submit
+    </button>
+  </form>
+</div>
+`;

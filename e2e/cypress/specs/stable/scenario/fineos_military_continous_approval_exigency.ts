@@ -36,7 +36,11 @@ describe("Create a new continuous leave, military caregiver claim in FINEOS", ()
         // Access the review page
         portal.visitActionRequiredERFormPage(submission.fineos_absence_id);
         // Deny the claim
-        portal.assertLeaveType("Active duty");
+        if (!claim.leave_details.reason)
+          throw Error("Unstashed claim missing leave reason");
+        portal.leaveAdminAssertClaimStatus([
+          { leave: claim.leave_details.reason, status: "Pending" },
+        ]);
         portal.respondToLeaveAdminRequest(false, true, false, false);
       });
     });

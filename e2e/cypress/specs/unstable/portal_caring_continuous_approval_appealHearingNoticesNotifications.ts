@@ -193,7 +193,7 @@ describe("Submit a claim through Portal: Verify it creates an absence case in Fi
             portal.checkNoticeForLeaveAdmin(
               submission.fineos_absence_id,
               employeeFullName,
-              "appeals"
+              "Appeal Acknowledgment (PDF)"
             );
             portal.downloadLegalNoticeSubcase(appeal_case_id);
           });

@@ -253,6 +253,9 @@ paths:
 
   /employees/{employee_id}:
     get:
+      security:
+        - jwt: []
+        - oauth2: []
       tags:
         - Employees
       summary: Retrieve an Employee record
@@ -311,6 +314,9 @@ paths:
 
   /employees/search:
     post:
+      security:
+        - jwt: []
+        - oauth2: []
       tags:
         - Employees
       summary: Lookup an Employee by SSN/ITIN and name
@@ -441,6 +447,9 @@ paths:
 
   /claims:
     get:
+      security:
+        - jwt: []
+        - oauth2: []
       summary: Retrieve claims
       operationId: massgov.pfml.api.claims.get_claims
       tags:
@@ -743,6 +752,39 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
       requestBody:
         $ref: "#/components/requestBodies/ApplicationRequestBody"
+
+  /applications/import:
+    post:
+      tags:
+        - Applications
+      summary: >
+        Creates a new application in the PFML database from a FINEOS application that was created through the
+        contact center.
+      operationId: massgov.pfml.api.applications.applications_import
+      responses:
+        "201":
+          $ref: "#/components/responses/ApplicationImportedResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          description: Application with requested absence_case_id was not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "503":
+          description: Application could not be completed in Claims Processing System.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/ApplicationResponse"
+      requestBody:
+        $ref: '#/components/requestBodies/ApplicationImportRequestBody'
+
 
   /applications/{application_id}/submit_application:
     post:
@@ -1370,6 +1412,11 @@ components:
           schema:
             $ref: "#/components/schemas/ApplicationRequestBody"
       required: true
+    ApplicationImportRequestBody:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ApplicationImportRequestBody"
     EligibilityRequest:
       content:
         application/json:
@@ -1426,6 +1473,16 @@ components:
             $ref: "#/components/schemas/ApplicationResponse"
     ApplicationCreatedResponse:
       description: A new application successfully created
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: "#/components/schemas/SuccessfulResponse"
+              - properties:
+                  data:
+                    $ref: "#/components/schemas/ApplicationResponse"
+    ApplicationImportedResponse:
+      description: Application successfully imported
       content:
         application/json:
           schema:
@@ -1984,6 +2041,29 @@ components:
           example: "1234"
       required: ["employee_id", "tax_identifier_last4"]
 
+    EmployeeBasicResponse:
+      type: object
+      properties:
+        employee_id:
+          type: string
+          format: uuid
+          example: "009fa369-291b-403f-a85a-15e938c26a7b"
+        first_name:
+          type: string
+          example: "Jane"
+        middle_name:
+          type: string
+          nullable: true
+          example: "Alice"
+        last_name:
+          type: string
+          example: "Doe"
+        other_name:
+          type: string
+          nullable: true
+          example: "Marie"
+      required: ["employee_id"]
+
     EmployerClaimRequestBody:
       type: object
       properties:
@@ -2347,6 +2427,16 @@ components:
             mass_id:
               nullable: true
 
+    ApplicationImportRequestBody:
+      type: object
+      properties:
+        absence_case_id:
+          type: string
+          example: "NTN-111-ABS-01"
+          nullable: false
+      required:
+        - absence_case_id
+
     ApplicationResponse:
       type: object
       properties:
@@ -2686,7 +2776,7 @@ components:
         employer:
           $ref: "#/components/schemas/EmployerResponse"
         employee:
-          $ref: "#/components/schemas/EmployeeResponse"
+          $ref: "#/components/schemas/EmployeeBasicResponse"
         application_id:
           type: string
           format: uuid
@@ -2724,7 +2814,7 @@ components:
         employer:
           $ref: "#/components/schemas/EmployerResponse"
         employee:
-          $ref: "#/components/schemas/EmployeeResponse"
+          $ref: "#/components/schemas/EmployeeBasicResponse"
         fineos_absence_id:
           format: string
           example: "NTN-01-ABS-01"

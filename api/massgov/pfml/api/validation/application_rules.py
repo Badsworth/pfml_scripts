@@ -246,11 +246,14 @@ def get_employer_benefits_issues(application: Application) -> List[ValidationErr
 def get_employer_benefit_issues(
     benefit: EmployerBenefit, index: int
 ) -> List[ValidationErrorDetail]:
+    """
+    Checks whether required fields are included in an EmployerBenefit.
+    If is_full_salary_continuous (i.e. a full wage replacement), then a start date is required.
+    """
     benefit_path = f"employer_benefits[{index}]"
     issues = []
 
     required_fields = [
-        "benefit_start_date",
         "benefit_type_id",
         "is_full_salary_continuous",
     ]
@@ -258,14 +261,8 @@ def get_employer_benefit_issues(
         benefit_path, benefit, required_fields, {"benefit_type_id": "benefit_type",},
     )
 
-    if benefit.is_full_salary_continuous is False:
-        issues += check_required_fields(
-            benefit_path,
-            benefit,
-            ["benefit_amount_dollars", "benefit_amount_frequency_id",],
-            {"benefit_amount_frequency_id": "benefit_amount_frequency",},
-        )
-        issues += check_zero_income_amount(benefit_path, benefit, "benefit_amount_dollars",)
+    if benefit.is_full_salary_continuous is True:
+        issues += check_required_fields(benefit_path, benefit, ["benefit_start_date"], {},)
 
     start_date = benefit.benefit_start_date
     start_date_path = f"{benefit_path}.benefit_start_date"

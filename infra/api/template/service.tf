@@ -83,6 +83,7 @@ resource "aws_ecs_task_definition" "app" {
       use_claim_status_url                       = var.use_claim_status_url
       enable_pdf_document_compression            = var.enable_pdf_document_compression
       enable_document_multipart_upload           = var.enable_document_multipart_upload
+      enable_application_import                  = var.enable_application_import
     }
   )
 

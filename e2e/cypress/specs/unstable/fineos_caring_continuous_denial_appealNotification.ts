@@ -140,7 +140,7 @@ describe("Create a new continuous leave, caring leave claim in FINEOS", () => {
             portal.checkNoticeForLeaveAdmin(
               submission.fineos_absence_id,
               employeeFullName,
-              "appeals"
+              "Appeal Acknowledgment (PDF)"
             );
             portal.downloadLegalNoticeSubcase(appeal_case_id);
           });

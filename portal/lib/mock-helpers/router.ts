@@ -4,10 +4,12 @@
 import Router from "next/router";
 import createMockFn from "./createMockFn";
 
-export const mockRouterEvents: Array<{
+export interface MockRouterEvent {
   name: string;
   callback: RouterEventCallback;
-}> = [];
+}
+
+export const mockRouterEvents: MockRouterEvent[] = [];
 
 type RouterEventCallback = (...args: unknown[]) => unknown;
 

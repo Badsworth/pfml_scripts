@@ -177,7 +177,7 @@ output "bucket_replication_environment" {
   value = "test"
 }
 
-# Env Var mappings for ECS Tasks 
+# Env Var mappings for ECS Tasks
 # Currently only used in aws_ecs_task_definition.ecs_tasks_1099 resource
 output "env_var_mappings" {
   value = {
@@ -211,4 +211,18 @@ output "env_mfa_enabled" {
     "trn2",
     "infra-test"
   ]
+}
+
+output "aws_sns_sms_monthly_spend_limit" {
+  value = 9180
+}
+
+output "newrelic_account_id" {
+  description = "PFML's New Relic sub-account number"
+  value       = "2837112"
+}
+
+output "newrelic_trusted_account_key" {
+  description = "EOLWD's New Relic parent account number"
+  value       = "1606654"
 }

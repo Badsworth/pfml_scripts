@@ -36,8 +36,11 @@ import {
   dateToReviewFormat,
   minutesToHoursAndMinutes,
 } from "../../src/util/claims";
-import { APILeaveReason } from "generation/Claim";
+import { LeaveReason } from "generation/Claim";
 import { getClaimantCredentials, getLeaveAdminCredentials } from "../config";
+import { format } from "date-fns";
+import { Numbers } from "../../src/submission/TwilioClient";
+import { Environment } from "../../src/types";
 
 /**Set portal feature flags */
 function setFeatureFlags(flags?: Partial<FeatureFlags>): void {
@@ -51,6 +54,8 @@ function setFeatureFlags(flags?: Partial<FeatureFlags>): void {
     claimantShowTaxWithholding: true,
     claimantShowPayments: config("HAS_PAYMENT_STATUS") === "true",
     claimantShowOrganizationUnits: false,
+    claimantShowMFA: config("MFA_ENABLED") === "true",
+    employerShowMultiLeave: true,
   };
   cy.setCookie("_ff", JSON.stringify({ ...defaults, ...flags }), { log: true });
 }
@@ -308,6 +313,14 @@ export function registerAsLeaveAdmin(
 
 export function assertLoggedIn(): void {
   cy.contains("button", "Log out").should("be.visible");
+}
+
+export function consentDataSharing(): void {
+  cy.location("pathname", { timeout: 30000 }).should(
+    "include",
+    "consent-to-data-sharing"
+  );
+  cy.contains("button", "Agree and continue").click();
 }
 
 export function startClaim(): void {
@@ -856,6 +869,7 @@ export function visitActionRequiredERFormPage(fineosAbsenceId: string): void {
   });
   cy.contains("label", "Yes").click();
   cy.contains("Agree and submit").click();
+  cy.contains("span", fineosAbsenceId);
 }
 
 export function respondToLeaveAdminRequest(
@@ -914,33 +928,8 @@ export function checkNoticeForLeaveAdmin(
   noticeType: string
 ): void {
   cy.visit(`/employers/applications/status/?absence_id=${fineosAbsenceId}`);
-
-  switch (noticeType) {
-    case "approval":
-      cy.contains("h1", claimantName, { timeout: 20000 }).should("be.visible");
-      cy.findByText("Approval notice (PDF)").should("be.visible").click();
-      break;
-
-    case "denial":
-      cy.contains("h1", claimantName, { timeout: 20000 }).should("be.visible");
-      cy.findByText("Denial notice (PDF)").should("be.visible").click();
-      break;
-
-    case "appeals":
-      cy.contains("h1", claimantName, { timeout: 20000 }).should("be.visible");
-      cy.findByText("Appeal Acknowledgment (PDF)").should("be.visible").click();
-      break;
-
-    case "changeRequestApproval":
-      cy.contains("h1", claimantName, { timeout: 20000 }).should("be.visible");
-      cy.findByText("Change Request Approved (PDF)")
-        .should("be.visible")
-        .click();
-      break;
-
-    default:
-      throw new Error("Notice Type not Found!");
-  }
+  cy.contains("h1", claimantName, { timeout: 20000 }).should("be.visible");
+  cy.findByText(`${noticeType}`).should("be.visible").click();
 }
 
 export function confirmEligibleClaimant(): void {
@@ -1857,9 +1846,7 @@ export function assertConcurrentLeave(leave: ValidConcurrentLeave): void {
  * @param leaveType expand the type as needed
  */
 export function assertLeaveType(leaveType: "Active duty"): void {
-  cy.findByText("Leave type", { selector: "h3" })
-    .next()
-    .should("contain.text", leaveType);
+  cy.findByText(leaveType, { selector: "h3" });
 }
 export type FilterOptionsFlags = {
   [key in DashboardClaimStatus]?: true | false;
@@ -2005,22 +1992,30 @@ export function claimantGoToClaimStatus(
   });
 }
 
+const leaveReasonHeadings: Readonly<
+  Partial<Record<NonNullable<LeaveReason>, string | RegExp>>
+> = {
+  "Serious Health Condition - Employee": /Medical leave/,
+  "Child Bonding": /(Leave to )?bond with a child/i,
+  "Care for a Family Member":
+    /(Leave to )?care for a family member( schedule)?/i,
+  "Military Exigency Family": "Active duty",
+} as const;
+
 type LeaveStatus = {
-  leave: NonNullable<APILeaveReason>;
+  leave: keyof typeof leaveReasonHeadings;
   status: ClaimantStatus;
   leavePeriods?: [string, string];
 };
 
 export function claimantAssertClaimStatus(leaves: LeaveStatus[]): void {
-  const leaveReasonHeadings = {
-    "Serious Health Condition - Employee": "Medical leave",
-    "Child Bonding": "Leave to bond with a child",
-    "Care for a Family Member": "Leave to care for a family member schedule",
-    "Pregnancy/Maternity": "",
-  } as const;
-
   for (const { leave, status, leavePeriods } of leaves) {
-    cy.contains(leaveReasonHeadings[leave])
+    const heading = leaveReasonHeadings[leave];
+    if (!heading)
+      throw Error(
+        `Leave reason "${leave}" property is undefined in Object "leaveReasonHeadings"`
+      );
+    cy.contains(heading)
       .parent()
       .within(() => {
         cy.contains(status);
@@ -2129,4 +2124,87 @@ export function assertPayments(spec: PaymentStatus[]) {
         });
       });
   });
+}
+
+export function completeFlowMFA(type: keyof Numbers[Environment]): void {
+  cy.task("getMFAPhoneNumber", type).then((phone_number) => {
+    cy.findByLabelText("Phone number").type(phone_number);
+    cy.contains("button", "Save and continue").click();
+    const timeSent = new Date();
+    cy.location("pathname", { timeout: 30000 }).should(
+      "include",
+      "/sms/confirm/"
+    );
+    cy.wait(500);
+    cy.task("mfaVerfication", { timeSent, type: type }).then((res) => {
+      cy.findByLabelText("6-digit code").type(res.code);
+      cy.contains("button", "Save and continue").click();
+      cy.url({ timeout: 30000 }).should("contain", "smsMfaConfirmed=true");
+      cy.contains("Phone number confirmed");
+    });
+  });
+}
+
+export function enableMFA(): void {
+  cy.contains(
+    "Yes, I want to add a phone number for verifying logins."
+  ).click();
+  cy.contains("button", "Save and continue").click();
+}
+
+export function loginMFA(
+  credentials: Credentials,
+  type: keyof Numbers[Environment]
+): void {
+  const timeSent = new Date();
+  login(credentials);
+  cy.wait(1000);
+  cy.task("mfaVerfication", { timeSent, type }).then((res) => {
+    cy.findByLabelText("6-digit code").type(res.code);
+    cy.contains("button", "Submit").click();
+    cy.url({ timeout: 30000 }).should("contain", "get-ready");
+    assertLoggedIn();
+  });
+}
+
+export function disableMFA(): void {
+  cy.contains("a", "Settings").click();
+  cy.findByText("Additional login verification is enabled")
+    .parent()
+    .next()
+    .click();
+  cy.findByLabelText("Disable additional login verification").check({
+    force: true,
+  });
+  cy.contains("button", "Save preference").click();
+  cy.findByText("Additional login verification is not enabled").should(
+    "be.visible"
+  );
+}
+
+export function updateNumberMFA(): void {
+  cy.contains("a", "Settings").click();
+  cy.findByText("Phone number").parent().next().click();
+  completeFlowMFA("secondary");
+}
+
+export function leaveAdminAssertClaimStatus(leaves: LeaveStatus[]) {
+  for (const l of leaves) {
+    const { leavePeriods, leave, status } = l;
+    if (leavePeriods) {
+      const formatStart = format(new Date(leavePeriods[0]), "M/d/yyyy");
+      const formatEnd = format(new Date(leavePeriods[1]), "M/d/yyyy");
+      cy.get('th[data-label="Date range"]').should(
+        "contain.text",
+        `${formatStart} to ${formatEnd}`
+      );
+    }
+    const heading = leaveReasonHeadings[leave];
+    if (!heading)
+      throw Error(
+        `Leave reason "${leave}" property is undefined in Object "leaveReasonHeadings"`
+      );
+    cy.contains(heading);
+    cy.get('[data-label="Status"]').should("contain.text", status);
+  }
 }

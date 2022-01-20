@@ -115,13 +115,29 @@ def test_main_success_s3_location(
     report = pending_filing_submission.handler_with_return()
 
     object_list = s3_client.list_objects(Bucket=f"{mock_bucket_name_dor}")["Contents"]
-    found_output_file = False
+    output_file_reference = None
     for output_file in object_list:
-        found_output_file = output_file["Key"].__contains__(
+        if output_file["Key"].__contains__(
             f"send/{pending_filing_submission.SUBMISSION_FILE_NAME}"
-        )
+        ):
+            output_file_reference = output_file
 
-    assert found_output_file is True
+    assert output_file_reference
+    output_file_object = s3_client.get_object(
+        Bucket=f"{mock_bucket_name_dor}", Key=output_file_reference["Key"]
+    )
+
+    # smart_open defaults to multipart S3 uploads. This causes the ETag header
+    # for the files in S3 to have the upload part number on the end (e.g.,
+    # `-1`), rather than just an MD5.
+    #
+    # This breaks the (incorrect) validation the DOR system tries to run when
+    # picking up the file.
+    #
+    # Solution is to not use the multipart upload for these files DOR needs to
+    # fetch.
+    etag = output_file_object["ResponseMetadata"]["HTTPHeaders"]["etag"]
+    assert not etag.endswith('-1"')
     assert report.start
     assert report.end
     assert report.total_employers_received_count == 2

@@ -100,7 +100,11 @@ export const UploadId = (props: UploadIdProps) => {
   );
 
   return (
-    <QuestionPage title={t("pages.claimsUploadId.title")} onSave={handleSave}>
+    <QuestionPage
+      buttonLoadingMessage={t("pages.claimsUploadId.uploadingMessage")}
+      title={t("pages.claimsUploadId.title")}
+      onSave={handleSave}
+    >
       <div className="measure-6">
         <Heading level="2" size="1">
           {t("pages.claimsUploadId.sectionLabel", { context: contentContext })}

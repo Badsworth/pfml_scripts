@@ -1,4 +1,4 @@
-import { fineos, portal, fineosPages } from "../../actions";
+import { fineos, portal, email, fineosPages } from "../../actions";
 import { Submission } from "../../../src/types";
 import {
   findCertificationDoc,
@@ -10,7 +10,7 @@ describe("Approval (notifications/notices)", () => {
     portal.deleteDownloadsFolder();
   });
 
-  it("Given a fully approved claim", () => {
+  const submission = it("Submit a fully approved claim", () => {
     fineos.before();
     // Submit a claim via the API, including Employer Response.
     cy.task("generateClaim", "REDUCED_ER").then((claim) => {
@@ -18,6 +18,7 @@ describe("Approval (notifications/notices)", () => {
         if (!response.fineos_absence_id) {
           throw new Error("Response contained no fineos_absence_id property");
         }
+        cy.stash("claim", claim);
         cy.stash("submission", {
           application_id: response.application_id,
           fineos_absence_id: response.fineos_absence_id,
@@ -54,7 +55,7 @@ describe("Approval (notifications/notices)", () => {
     });
   });
 
-  it("Records Cancellation", () => {
+  const cancellation = it("Records Cancellation", () => {
     cy.dependsOnPreviousPass();
     fineos.before();
     cy.unstash<Submission>("submission").then(({ fineos_absence_id }) => {
@@ -67,18 +68,133 @@ describe("Approval (notifications/notices)", () => {
         })
         .documents((docsPage) => {
           docsPage.assertDocumentExists("Record Cancel Time");
-        });
+        })
+        .triggerNotice("Designation Notice")
+        .triggerNotice("Leave Cancellation Request");
     });
   });
 
-  it("Displays claimant status of cancelled within the claimant portal", () => {
-    portal.before();
-    cy.unstash<Submission>("submission").then((submission) => {
-      portal.loginClaimant();
-      portal.claimantGoToClaimStatus(submission.fineos_absence_id);
-      portal.claimantAssertClaimStatus([
-        { leave: "Child Bonding", status: "Cancelled" },
+  it("Check the Claimant email for the Cancellation notification.",
+    { retries: 0 },
+    () => {
+      {
+        cy.dependsOnPreviousPass([
+          submission,
+          cancellation,
+        ]);
+        cy.unstash<Submission>("submission").then((submission) => {
+          cy.unstash<ApplicationRequestBody>("claim").then((claim) => {
+            // The notification is using the same subject line as Appeals claimant.
+            const subjectClaimant = email.getNotificationSubject(
+              "appeal (claimant)",
+              submission.fineos_absence_id,
+              `${claim.first_name} ${claim.last_name}`
+            );
+            email.getEmails(
+              {
+                address: "gqzap.notifications@inbox.testmail.app",
+                subject: subjectClaimant,
+                messageWildcard: submission.fineos_absence_id,
+                timestamp_from: submission.timestamp_from,
+                debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
+              },
+              60000
+            );
+            cy.contains(submission.fineos_absence_id)
+          });
+        });
+      }
+    }
+  );
+  it(
+    "Check the Leave Admin email for the Cancellation notification.",
+    { retries: 0 },
+    () => {
+      cy.dependsOnPreviousPass([
+        submission,
+        cancellation,
       ]);
-    });
-  });
+      cy.unstash<Submission>("submission").then((submission) => {
+        cy.unstash<ApplicationRequestBody>("claim").then((claim) => {
+          // The notification is using the same subject line as Appeals claimant.
+          const subjectEmployer = email.getNotificationSubject(
+            "appeal (claimant)",
+            submission.fineos_absence_id,
+            `${claim.first_name} ${claim.last_name}`
+          );
+          email.getEmails(
+            {
+              address: "gqzap.notifications@inbox.testmail.app",
+              subject: subjectEmployer,
+              messageWildcard: "The applicant’s approved time has been cancelled.",
+              timestamp_from: submission.timestamp_from,
+              debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
+            },
+            60000
+          )
+          .then(() => {
+            cy.contains(submission.fineos_absence_id);
+            cy.get(
+              `a[href*="/employers/applications/status/?absence_id=${submission.fineos_absence_id}"]`
+            );
+          });
+        });
+      });
+    }
+  );
+  it(
+    "Check the Leave Admin Portal for the Cancellation notice",
+    { retries: 0 },
+    () => {
+      cy.dependsOnPreviousPass([
+        submission,
+        cancellation,
+      ]);
+      portal.before();
+      cy.unstash<Submission>("submission").then((submission) => {
+        cy.unstash<DehydratedClaim>("claim").then((claim) => {
+          if (!claim.claim.employer_fein) {
+            throw new Error("Claim must include employer FEIN");
+          }
+          const employeeFullName = `${claim.claim.first_name} ${claim.claim.last_name}`;
+          portal.loginLeaveAdmin(claim.claim.employer_fein);
+          portal.selectClaimFromEmployerDashboard(
+            submission.fineos_absence_id
+          );
+          portal.checkNoticeForLeaveAdmin(
+            submission.fineos_absence_id,
+            employeeFullName,
+            "Approved Time Cancelled (PDF)"
+          );
+          portal.downloadLegalNotice(submission.fineos_absence_id);
+        });
+      });
+    }
+  );
+  it(
+    "Check the Claimant Portal for the legal notice (Cancellation)",
+    { retries: 0 },
+    () => {
+      cy.dependsOnPreviousPass([
+        submission,
+        cancellation,
+      ]);
+      portal.before();
+      portal.loginClaimant();
+      cy.unstash<Submission>("submission").then((submission) => {
+        cy.log("Finished waiting for documents");
+        portal.claimantGoToClaimStatus(submission.fineos_absence_id);
+        portal.claimantAssertClaimStatus([
+          {
+            leave: "Child Bonding",
+            status: "Approved",
+          },
+        ]);
+        cy.findByText("Approved Time Cancelled (PDF)")
+          .should("be.visible")
+          .click({ force: true });
+        portal.downloadLegalNotice(submission.fineos_absence_id);
+      });
+    }
+  );
 });

@@ -134,6 +134,10 @@ export const Status = ({
     claimDetail.application_id
   );
 
+  const approvalNotice = findDocumentsByTypes(documentsForApplication, [
+    DocumentType.approvalNotice,
+  ])[0];
+
   const viewYourNotices = () => {
     const legalNotices = getLegalNotices(documentsForApplication);
     const hasNothingToShow = hasDocumentsError || legalNotices.length === 0;
@@ -243,7 +247,8 @@ export const Status = ({
     isFeatureEnabled("claimantShowPaymentsPhaseTwo") && hasApprovedStatus;
 
   // Determines if payment tab is displayed
-  const isPaymentsTab = showPhaseOneFeatures || showPhaseTwoFeatures;
+  const isPaymentsTab =
+    Boolean(approvalNotice) && (showPhaseOneFeatures || showPhaseTwoFeatures);
 
   return (
     <React.Fragment>

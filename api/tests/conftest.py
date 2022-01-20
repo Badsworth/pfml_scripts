@@ -9,8 +9,9 @@ https://docs.pytest.org/en/latest/fixture.html#conftest-py-sharing-fixture-funct
 import logging.config  # noqa: B1
 import os
 import uuid
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from typing import List
+from unittest.mock import MagicMock
 
 import _pytest.monkeypatch
 import boto3
@@ -37,6 +38,15 @@ from massgov.pfml.db.models.factories import (
 )
 
 logger = massgov.pfml.util.logging.get_logger("massgov.pfml.api.tests.conftest")
+
+
+def get_mock_logger():
+    mock_logger = MagicMock()
+    mock_logger.info = MagicMock()
+    mock_logger.warning = MagicMock()
+    mock_logger.error = MagicMock()
+
+    return mock_logger
 
 
 @pytest.fixture(scope="session")
@@ -166,7 +176,7 @@ def auth_claims(auth_claims_unit, user):
 @pytest.fixture
 def employer_claims(employer_user):
     claims = {
-        "exp": datetime.now() + timedelta(days=1),
+        "exp": datetime.now(timezone.utc) + timedelta(days=1),
         "sub": str(employer_user.sub_id),
     }
 
@@ -187,7 +197,7 @@ def fineos_user(initialize_factories_session):
 
 @pytest.fixture
 def snow_user(initialize_factories_session):
-    user = UserFactory.create(roles=[employee_models.Role.SERVICE_NOW])
+    user = UserFactory.create(roles=[employee_models.Role.PFML_CRM])
     return user
 
 

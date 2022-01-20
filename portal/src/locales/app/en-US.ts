@@ -5,10 +5,14 @@
  *
  */
 
+interface I18nContentGroup {
+  [contentKey: string]: string;
+}
+
 // When editing this file, be mindful that many of its strings use non-breaking
 // hyphen and non-breaking space characters.
 // https://alignedonline.com/non%E2%80%91breaking-spaces
-const chars = {
+const chars: { [key: string]: string } = {
   // Non-breaking hyphen characters are used in phone and fax numbers to avoid
   // the numbers awkwardly wrapping to multiple lines.
   nbhyphen: "‑",
@@ -18,6 +22,9 @@ const chars = {
   nbsp: " ",
 };
 
+// Our other i18n keys are limited to three levels, but errors is an exception
+// since the format of these mirror the field path, which could possibly be more
+// than three levels deep (e.g `errors.claim.leave_details.start_date.required`).
 const errors = {
   applications: {
     claim: {
@@ -395,77 +402,62 @@ const errors = {
     previous_leaves_other_reason: {
       is_for_current_employer: {
         required:
-          "$t(shared.claimsPreviousLeaveDetails.errors.isForCurrentEmployer_required)",
+          "$t(shared.claimsPreviousLeaveErrors.isForCurrentEmployer_required)",
       },
       leave_end_date: {
-        format:
-          "$t(shared.claimsPreviousLeaveDetails.errors.leaveEndDate_format)",
+        format: "$t(shared.claimsPreviousLeaveErrors.leaveEndDate_format)",
         invalid_date_range:
-          "$t(shared.claimsPreviousLeaveDetails.errors.leaveEndDate_invalidDateRange)",
-        minimum:
-          "$t(shared.claimsPreviousLeaveDetails.errors.leaveEndDate_minimum)",
-        required:
-          "$t(shared.claimsPreviousLeaveDetails.errors.leaveEndDate_required)",
+          "$t(shared.claimsPreviousLeaveErrors.leaveEndDate_invalidDateRange)",
+        minimum: "$t(shared.claimsPreviousLeaveErrors.leaveEndDate_minimum)",
+        required: "$t(shared.claimsPreviousLeaveErrors.leaveEndDate_required)",
       },
       leave_minutes: {
-        maximum:
-          "$t(shared.claimsPreviousLeaveDetails.errors.leaveMinutes_maximum)",
-        required:
-          "$t(shared.claimsPreviousLeaveDetails.errors.leaveMinutes_required)",
+        maximum: "$t(shared.claimsPreviousLeaveErrors.leaveMinutes_maximum)",
+        required: "$t(shared.claimsPreviousLeaveErrors.leaveMinutes_required)",
       },
       leave_reason: {
-        required:
-          "$t(shared.claimsPreviousLeaveDetails.errors.leaveReason_required)",
+        required: "$t(shared.claimsPreviousLeaveErrors.leaveReason_required)",
       },
       leave_start_date: {
-        format:
-          "$t(shared.claimsPreviousLeaveDetails.errors.leaveStartDate_format)",
-        minimum:
-          "$t(shared.claimsPreviousLeaveDetails.errors.leaveStartDate_minimum)",
+        format: "$t(shared.claimsPreviousLeaveErrors.leaveStartDate_format)",
+        minimum: "$t(shared.claimsPreviousLeaveErrors.leaveStartDate_minimum)",
         required:
-          "$t(shared.claimsPreviousLeaveDetails.errors.leaveStartDate_required)",
+          "$t(shared.claimsPreviousLeaveErrors.leaveStartDate_required)",
       },
       worked_per_week_minutes: {
         maximum:
-          "$t(shared.claimsPreviousLeaveDetails.errors.workedPerWeekMinutes_maximum)",
+          "$t(shared.claimsPreviousLeaveErrors.workedPerWeekMinutes_maximum)",
         required:
-          "$t(shared.claimsPreviousLeaveDetails.errors.workedPerWeekMinutes_required)",
+          "$t(shared.claimsPreviousLeaveErrors.workedPerWeekMinutes_required)",
       },
     },
     previous_leaves_same_reason: {
       is_for_current_employer: {
         required:
-          "$t(shared.claimsPreviousLeaveDetails.errors.isForCurrentEmployer_required)",
+          "$t(shared.claimsPreviousLeaveErrors.isForCurrentEmployer_required)",
       },
       leave_end_date: {
-        format:
-          "$t(shared.claimsPreviousLeaveDetails.errors.leaveEndDate_format)",
+        format: "$t(shared.claimsPreviousLeaveErrors.leaveEndDate_format)",
         invalid_date_range:
-          "$t(shared.claimsPreviousLeaveDetails.errors.leaveEndDate_invalidDateRange)",
-        minimum:
-          "$t(shared.claimsPreviousLeaveDetails.errors.leaveEndDate_minimum)",
-        required:
-          "$t(shared.claimsPreviousLeaveDetails.errors.leaveEndDate_required)",
+          "$t(shared.claimsPreviousLeaveErrors.leaveEndDate_invalidDateRange)",
+        minimum: "$t(shared.claimsPreviousLeaveErrors.leaveEndDate_minimum)",
+        required: "$t(shared.claimsPreviousLeaveErrors.leaveEndDate_required)",
       },
       leave_minutes: {
-        maximum:
-          "$t(shared.claimsPreviousLeaveDetails.errors.leaveMinutes_maximum)",
-        required:
-          "$t(shared.claimsPreviousLeaveDetails.errors.leaveMinutes_required)",
+        maximum: "$t(shared.claimsPreviousLeaveErrors.leaveMinutes_maximum)",
+        required: "$t(shared.claimsPreviousLeaveErrors.leaveMinutes_required)",
       },
       leave_start_date: {
-        format:
-          "$t(shared.claimsPreviousLeaveDetails.errors.leaveStartDate_format)",
-        minimum:
-          "$t(shared.claimsPreviousLeaveDetails.errors.leaveStartDate_minimum)",
+        format: "$t(shared.claimsPreviousLeaveErrors.leaveStartDate_format)",
+        minimum: "$t(shared.claimsPreviousLeaveErrors.leaveStartDate_minimum)",
         required:
-          "$t(shared.claimsPreviousLeaveDetails.errors.leaveStartDate_required)",
+          "$t(shared.claimsPreviousLeaveErrors.leaveStartDate_required)",
       },
       worked_per_week_minutes: {
         maximum:
-          "$t(shared.claimsPreviousLeaveDetails.errors.workedPerWeekMinutes_maximum)",
+          "$t(shared.claimsPreviousLeaveErrors.workedPerWeekMinutes_maximum)",
         required:
-          "$t(shared.claimsPreviousLeaveDetails.errors.workedPerWeekMinutes_required)",
+          "$t(shared.claimsPreviousLeaveErrors.workedPerWeekMinutes_required)",
       },
     },
     residential_address: {
@@ -685,6 +677,17 @@ const errors = {
       format: "Enter a valid email address",
       required: "$t(shared.auth.emailError_required)",
     },
+    mfa_phone_number: {
+      phone_number: {
+        // Used by the mfa service, more than 12 digits
+        international_number:
+          "Sorry, we don't support international phone numbers yet. Enter a U.S. phone number to set up additional login verifications.",
+        // There are 10 digits
+        pattern: "Enter a valid phone number",
+        // Used by the mfa service, field cant be blank
+        required: "Enter a phone number",
+      },
+    },
     password: {
       insecure: "$t(shared.auth.passwordError_insecure)",
       invalid: "$t(shared.auth.passwordError_invalid)",
@@ -712,7 +715,11 @@ const errors = {
   },
 };
 
-const shared = {
+const shared: {
+  // Keys are limited to three levels deep, for example `shared.auth.emailMissing`.
+  // This makes the structure easier to navigate and the process of finding a specific element more consistent
+  [contentKey: string]: string | I18nContentGroup;
+} = {
   absenceCaseStatus_approved: "Approved",
   absenceCaseStatus_closed: "Closed",
   absenceCaseStatus_denied: "Denied",
@@ -766,30 +773,6 @@ const shared = {
   claimsOtherLeaveTitle: "Other leave, benefits, and income",
   claimsPreviousLeaveDetails: {
     addButton: "Add another previous leave",
-    errors: {
-      isForCurrentEmployer_required:
-        "Select Yes if your leave is from this employer.",
-      leaveEndDate_format:
-        "The date your leave ended must include a valid month, day, and year.",
-      leaveEndDate_invalidDateRange:
-        "The date your leave ends must be on or after the date your leave began.",
-      leaveEndDate_minimum:
-        "Only enter previous leaves taken on or after January 1, 2021.",
-      leaveEndDate_required: "Enter the date your leave ended.",
-      leaveMinutes_maximum:
-        "The hours entered are more than the possible hours.",
-      leaveMinutes_required:
-        "Enter the hours you took off work for your leave.",
-      leaveReason_required: "Select the qualifying reason for your leave.",
-      leaveStartDate_format:
-        "The date your leave began must include a valid month, day, and year.",
-      leaveStartDate_minimum:
-        "Only enter previous leaves taken on or after January 1, 2021.",
-      leaveStartDate_required: "Enter the date your leave began.",
-      workedPerWeekMinutes_maximum:
-        "The hours entered are more than the possible hours.",
-      workedPerWeekMinutes_required: "Enter the hours you normally worked.",
-    },
     isForCurrentEmployerHint:
       "This is the same Employer Identification Number you entered earlier in your application. After you submit your application, this employer will be able to review it. We won’t share any leave you took from other employers.",
     isForCurrentEmployerLabel:
@@ -811,6 +794,28 @@ const shared = {
       "Enter the number of hours you would have worked each week, if you were not on leave.",
     workedPerWeekMinutesLabel:
       "How many hours would you normally have worked per week at the time you took this leave?",
+  },
+  claimsPreviousLeaveErrors: {
+    isForCurrentEmployer_required:
+      "Select Yes if your leave is from this employer.",
+    leaveEndDate_format:
+      "The date your leave ended must include a valid month, day, and year.",
+    leaveEndDate_invalidDateRange:
+      "The date your leave ends must be on or after the date your leave began.",
+    leaveEndDate_minimum:
+      "Only enter previous leaves taken on or after January 1, 2021.",
+    leaveEndDate_required: "Enter the date your leave ended.",
+    leaveMinutes_maximum: "The hours entered are more than the possible hours.",
+    leaveMinutes_required: "Enter the hours you took off work for your leave.",
+    leaveReason_required: "Select the qualifying reason for your leave.",
+    leaveStartDate_format:
+      "The date your leave began must include a valid month, day, and year.",
+    leaveStartDate_minimum:
+      "Only enter previous leaves taken on or after January 1, 2021.",
+    leaveStartDate_required: "Enter the date your leave began.",
+    workedPerWeekMinutes_maximum:
+      "The hours entered are more than the possible hours.",
+    workedPerWeekMinutes_required: "Enter the hours you normally worked.",
   },
   claimsVerifyIdTitle: "Your identification",
   contactCenterAddress:
@@ -917,6 +922,8 @@ const shared = {
   minutesLabel: "Minutes",
   networkError:
     "Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.contactCenterPhoneNumberNoBreak)",
+  newbornCertificationDocOptions:
+    "<ul><li>Your child’s birth certificate.</li><li>A note from your child’s health care provider stating your child’s date of birth.</li><li>A note from the health care provider of the person who gave birth stating your child’s date of birth.</li></ul>",
   noneReported: "None reported",
   otherIncomeEntryPrefix: "Income",
   otherIncomeType_jonesAct: "Jones Act benefits",
@@ -945,13 +952,18 @@ const shared = {
   submitApplicationButton: "I understand and agree",
   trackStatus:
     "<track-status-link>Track the status of your application here</track-status-link>.",
+  uploadingMessage: "Uploading documents… Do not refresh or go back.",
   usernameLabel: "Email address",
   verificationCodeLabel: "6-digit code",
   viewPostSubmissionVideo:
     "View the video below to learn about what happens between submitting your application and receiving payments.",
 };
 
-const pages = {
+const pages: {
+  // Keys are limited to three levels deep, for example `pages.claimsDateOfBirth.title`.
+  // This makes the structure easier to navigate and the process of finding a specific element more consistent
+  [pageKey: string]: I18nContentGroup;
+} = {
   app: {
     seoDescription: "$t(shared.siteDescription)",
   },
@@ -1056,11 +1068,10 @@ const pages = {
       "Provide a phone number we can use when we need to verify your login",
   },
   authTwoFactorSmsVerify: {
-    callContactCenter:
-      "Need help? Call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.",
     codeLabel: "$t(shared.verificationCodeLabel)",
     lead: "To protect your security we sent a 6-digit code to the phone number we have on file for verification.  Don’t share this code with anyone. We’ll never call or text you for this code.",
-    resendCodeLink: "Didn’t receive the code? Log in again to resend it.",
+    resendCode:
+      "To receive a new code, <login-link>log in again</login-link>. If you need help, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.",
     submitButton: "Submit",
     title: "Enter your security code",
   },
@@ -1278,17 +1289,11 @@ const pages = {
     choiceYesHint:
       "I will receive employer-sponsored benefits during my paid leave",
     doNotReportHintHeading: "You don’t need to report:",
-    doNotReportHintList: [
-      "Benefits from any other employers",
-      "Any benefit from your employer that will be based on your PFML benefit amount. One example is a “top up” to make up the difference between your regular wages and your PFML benefits.",
-    ],
+    doNotReportHintList:
+      "<ul><li>Benefits from any other employers</li><li>Any benefit from your employer that will be based on your PFML benefit amount. One example is a “top up” to make up the difference between your regular wages and your PFML benefits.</li></ul>",
     doReportHintHeading: "The employer-sponsored benefits you must report are:",
-    doReportHintList: [
-      "Temporary disability insurance, for either short-term or long-term disability",
-      "Permanent disability insurance",
-      "Family or medical leave benefits, such as a parental leave program",
-      "You only have to report benefits from the employer with this EIN: {{employer_fein}}. This is the same Employer Identification Number you entered earlier in your application.",
-    ],
+    doReportHintList:
+      "<ul><li>Temporary disability insurance, for either short-term or long-term disability</li><li>Permanent disability insurance</li><li>Family or medical leave benefits, such as a parental leave program</li><li>You only have to report benefits from the employer with this EIN: {{employer_fein}}. This is the same Employer Identification Number you entered earlier in your application.</li></ul>",
     sectionLabel:
       "Will you use any employer-sponsored benefits from this employer during your paid leave from PFML?",
     title: "$t(shared.claimsOtherLeaveTitle)",
@@ -2204,11 +2209,7 @@ const pages = {
     certificationDocumentsCount: "$t(shared.filesUploaded)",
     documentsLoadError: "$t(shared.documentsLoadError)",
     fileHeadingPrefix: "File",
-    leadListNewborn: [
-      "Your child’s birth certificate.",
-      "A note from your child’s health care provider stating your child’s date of birth.",
-      "A note from the health care provider of the person who gave birth stating your child’s date of birth.",
-    ],
+    leadListNewborn: "$t(shared.newbornCertificationDocOptions)",
     lead_bonding_adopt_foster:
       "You need to upload a statement from your adoption or foster agency or from the Massachusetts Department of Children and Families to confirm the placement and the date of the placement.",
     lead_bonding_newborn:
@@ -2220,6 +2221,7 @@ const pages = {
     sectionLabel: "Upload your certification form",
     sectionLabel_bonding: "Upload your documentation",
     title: "Upload certification",
+    uploadingMessage: "$t(shared.uploadingMessage)",
   },
   claimsUploadDocsOptions: {
     certLabel_bonding_adopt_foster: "Proof of placement",
@@ -2241,11 +2243,7 @@ const pages = {
     idAccordionContent:
       "<p><strong>If you don’t have any of those, you can provide one of the following plus proof of your Social Security Number or Individual Tax Identification Number:</strong></p><ul><li>Valid, unexpired U.S. State or Territory License or ID, both front and back</li><li>Certified copy of a birth certificate filed with a State Office of Vital Statistics or equivalent agency in the individual’s state of birth. (You can only use a <puerto-rican-birth-certificate-link>Puerto Rican birth certificate</puerto-rican-birth-certificate-link> if it was issued on or after July 1, 2010.)</li><li>Certificate of Citizenship (Form N$t(chars.nbhyphen)560, or Form N$t(chars.nbhyphen)561)</li><li>Certificate of Naturalization (Form N$t(chars.nbhyphen)550 or N$t(chars.nbhyphen)570)</li></ul><p><strong>You can provide proof of your Social Security Number using one of the following documents displaying your complete Social Security Number:</strong></p><ul><li>Social Security card</li><li>W$t(chars.nbhyphen)2 Form</li><li>SSA$t(chars.nbhyphen)1099 Form</li><li>Non$t(chars.nbhyphen)SSA$t(chars.nbhyphen)1099 Form</li><li>Pay stub with your name on it</li></ul><p><identity-proof-link>Learn more about verifying your identity with different documents.</identity-proof-link></p>",
     idAccordionHeading: "If you don’t have any of those documents:",
-    leadListNewborn: [
-      "Your child’s birth certificate.",
-      "A note from your child’s health care provider stating your child’s date of birth.",
-      "A note from the health care provider of the person who gave birth stating your child’s date of birth.",
-    ],
+    leadListNewborn: "$t(shared.newbornCertificationDocOptions)",
     lead_bonding_adopt_foster:
       "You need to upload a statement from your adoption or foster agency or from the Massachusetts Department of Children and Families to confirm the placement and the date of the placement.",
     lead_bonding_newborn:
@@ -2264,6 +2262,7 @@ const pages = {
       "Upload an identification document issued by state or federal government",
     title_certification: "Upload certification",
     title_id: "$t(shared.claimsVerifyIdTitle)",
+    uploadingMessage: "$t(shared.uploadingMessage)",
   },
   claimsUploadId: {
     accordionContent:
@@ -2285,6 +2284,7 @@ const pages = {
     sectionLabel_other:
       "Upload an identification document issued by state or federal government",
     title: "$t(shared.claimsVerifyIdTitle)",
+    uploadingMessage: "$t(shared.uploadingMessage)",
   },
   claimsWorkPatternType: {
     choiceHint_fixed:
@@ -2623,7 +2623,7 @@ const pages = {
     paymentsIntro_Continuous_Retroactive:
       "<p>Check back on {{checkbackDate}} to see when you can expect your first payment. You’ll receive one payment for your entire leave.</p>",
     paymentsIntro_Intermittent:
-      "Once you report at least 8 hours, you can expect to receive a payment about one week later. You can receive more than one payment in a week depending on how your hours are reported. You can report your hours by calling <contact-center-report-phone-link>$t(shared.contactCenterReportHoursPhoneNumber)<contact-center-report-phone-link>.",
+      "Once you report at least 8 hours, you can expect to receive a payment about one week later. You can receive more than one payment in a week depending on how your hours are reported. You can report your hours by calling <contact-center-report-phone-link>$t(shared.contactCenterReportHoursPhoneNumber)</contact-center-report-phone-link>.",
     paymentsIntro_Intermittent_Unpaid:
       "<p>Your application has a 7-day waiting period after the first day you report taking leave. You won’t receive any PFML payments for these 7 days of leave.</p><p>After your waiting period, once you report at least 8 hours of leave you can expect to receive payment about one week later. You can receive more than one payment in a week depending on how your hours are reported.</p><p>You can report your hours by calling <contact-center-report-phone-link>$t(shared.contactCenterReportHoursPhoneNumber)</contact-center-report-phone-link>.</p>",
     paymentsIntro_NonIntermittent_NonRetro:
@@ -2636,29 +2636,27 @@ const pages = {
       "<p>Check back on {{checkbackDate}} to see when you can expect your first payment. You need to take at least 8 hours of leave for a payment to be processed. Your application has a 7-day waiting period at the start of your leave. You won’t receive any PFML payments for this week of leave.</p>",
     paymentsIntro_ReducedSchedule_Retroactive:
       "$t(pages.payments.paymentsIntro_Continuous_Retroactive)",
-    paymentsTable: {
-      amountSent: "{{amount, currency}}",
-      amountSentHeader: "Amount sent",
-      dateProcessedHeader: "Date processed",
-      estimatedDateHeader: "Estimated date",
-      leaveDatesHeader: "Leave dates",
-      paymentMethodHeader: "Payment Method",
-      paymentMethod_Check: "Check",
-      "paymentMethod_Elec Funds Transfer": "Direct Deposit",
-      paymentStatus_Cancelled: "Cancelled",
-      paymentStatus_Delayed: "Delayed",
-      paymentStatus_Pending: "Pending",
-      "paymentStatus_Sent to bank": "Sent",
-      waitingWeekGeneric:
-        "The first seven (7) days of approved leave are unpaid",
-      waitingWeekHeader: "Waiting week",
-      waitingWeekText:
-        "Learn more about the <waiting-week-link>7-day waiting period</waiting-week-link>.",
-    },
     paymentsTitle: "Payments",
     questionsDetails:
       "<p>Call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.</p>",
     questionsHeader: "Questions?",
+    tableAmountSent: "{{amount, currency}}",
+    tableAmountSentHeader: "Amount sent",
+    tableDateProcessedHeader: "Date processed",
+    tableEstimatedDateHeader: "Estimated date",
+    tableLeaveDatesHeader: "Leave dates",
+    tablePaymentMethodHeader: "Payment Method",
+    tablePaymentMethod_Check: "Check",
+    "tablePaymentMethod_Elec Funds Transfer": "Direct Deposit",
+    tablePaymentStatus_Cancelled: "Cancelled",
+    tablePaymentStatus_Delayed: "Delayed",
+    tablePaymentStatus_Pending: "Pending",
+    "tablePaymentStatus_Sent to bank": "Sent",
+    tableWaitingWeekGeneric:
+      "The first seven (7) days of approved leave are unpaid",
+    tableWaitingWeekHeader: "Waiting week",
+    tableWaitingWeekText:
+      "Learn more about the <waiting-week-link>7-day waiting period</waiting-week-link>.",
     whatDoesEstimatedDateMean:
       "<p><strong>What does estimated scheduled date mean?</strong></p><p>This is the date range we expect to process your direct deposit payment or send your check in the mail. Depending on your bank, expect to receive direct deposit payments in your account 2-3 days after this date.  Checks may take 7-11 days to arrive in the mail. Once your payment is processed or your check is sent, that date will be shown in the “date processed” column.</p>",
     yourPayments: "Your payments",
@@ -2670,17 +2668,10 @@ const pages = {
     applicationUsageHeading_employer: "Reviewing paid leave applications",
     applicationUsageHeading_user: "Applying for benefits",
     applicationUsageIntro: "We need this information to:",
-    applicationUsageList_employer: [
-      "Check eligibility for coverage",
-      "Determine your employee’s benefit amount",
-      "Administer the program and meet reporting requirements",
-      "Give you the best service possible",
-    ],
-    applicationUsageList_user: [
-      "Check your eligibility for coverage",
-      "Determine your benefit amount",
-      "Give you the best service possible",
-    ],
+    applicationUsageList_employer:
+      "<ul><li>Check eligibility for coverage</li><li>Determine your employee’s benefit amount</li><li>Administer the program and meet reporting requirements</li><li>Give you the best service possible</li></ul>",
+    applicationUsageList_user:
+      "<ul><li>Check your eligibility for coverage</li><li>Determine your benefit amount</li><li>Give you the best service possible</li></ul>",
     continueButton: "Agree and continue",
     dataUsageBody_employer:
       "We’ll keep your information private as required by law. As a part of the application process, we may check the information you give with other state agencies. We may share information related to an application with health care providers and contracted private partners.",
@@ -2716,7 +2707,11 @@ const pages = {
   },
 };
 
-const components = {
+const components: {
+  // Keys are limited to three levels deep, for example `components.spinner.label`.
+  // This makes the structure easier to navigate and the process of finding a specific element more consistent
+  [componentKey: string]: I18nContentGroup;
+} = {
   absenceCaseStatusTag: {
     status_approved: "$t(shared.absenceCaseStatus_approved)",
     status_closed: "$t(shared.absenceCaseStatus_closed)",
@@ -3122,29 +3117,17 @@ const components = {
     loadingLabel: "Loading files",
   },
   fileUploadDetails: {
+    attachmentHeading: "If your document is attached to an email:",
+    attachmentList:
+      "<ul><li>Open the file on your computer or phone</li><li>Save it as a PDF or image, and try uploading again</li></ul>",
+    conversionHeading:
+      "If your file is not in one of these formats, try one of the following:",
+    conversionList:
+      "<ul><li>Take a picture of the document</li><li>Take a screenshot of the document</li><li>Save the document as a PDF or image, and try uploading again</li></ul>",
+    fileTypesHeading: "This website only accepts:",
+    fileTypesList:
+      "<ul><li>PDF documents</li><li>Images (.jpg, .jpeg, .png)</li></ul>",
     label: "Tips for uploading images or PDFs",
-    tips: [
-      {
-        listHeading: "This website only accepts:",
-        listItems: ["PDF documents", "Images (.jpg, .jpeg, .png)"],
-      },
-      {
-        listHeading:
-          "If your file is not in one of these formats, try one of the following:",
-        listItems: [
-          "Take a picture of the document",
-          "Take a screenshot of the document",
-          "Save the document as a PDF or image, and try uploading again",
-        ],
-      },
-      {
-        listHeading: "If your document is attached to an email:",
-        listItems: [
-          "Open the file on your computer or phone",
-          "Save it as a PDF or image, and try uploading again",
-        ],
-      },
-    ],
   },
   footer: {
     dataSharingAgreement: "Data Sharing Agreement",

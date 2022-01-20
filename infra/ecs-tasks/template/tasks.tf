@@ -177,6 +177,18 @@ locals {
       ]
     },
 
+    "fineos-import-leave-admin-org-units" = {
+      command   = ["fineos-import-leave-admin-org-units"]
+      task_role = aws_iam_role.fineos_import_la_org_units_task_role.arn
+      cpu       = 2048
+      memory    = 9216
+      env = [
+        local.db_access,
+        local.fineos_api_access,
+        local.fineos_s3_access
+      ]
+    },
+
     "register-leave-admins-with-fineos" = {
       command   = ["register-leave-admins-with-fineos"]
       task_role = aws_iam_role.register_admins_task_role.arn,
@@ -267,6 +279,7 @@ locals {
         local.pub_s3_folders,
         { name : "FINEOS_CLAIMANT_EXTRACT_MAX_HISTORY_DATE", value : "2021-06-12" },
         { name : "FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", value : "2021-06-12" },
+        { name : "FINEOS_1099_DATA_EXTRACT_MAX_HISTORY_DATE", value : "2022-01-01" },
         { name : "USE_EXPERIAN_SOAP_CLIENT", value : "1" },
         { name : "EXPERIAN_AUTH_TOKEN", valueFrom : "/service/${local.app_name}/common/experian-auth-token" },
         { "name" : "ENABLE_WITHHOLDING_PAYMENTS", "value" : var.enable_withholding_payments }
@@ -435,6 +448,16 @@ locals {
         local.pub_s3_folders,
       ]
     },
+
+    "mfa-lockout-resolution" = {
+      command   = ["mfa-lockout-resolution"]
+      task_role = aws_iam_role.mfa_lockout_resolution_task_role.arn
+      env = [
+        local.db_access,
+        local.cognito_access,
+      ]
+    },
+
   }
 }
 

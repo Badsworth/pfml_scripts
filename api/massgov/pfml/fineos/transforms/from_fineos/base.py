@@ -1,8 +1,5 @@
-import abc
 from string import digits
 from typing import Any, Dict, List, Optional, Type, Union, cast
-
-from pydantic import BaseModel
 
 from massgov.pfml.fineos.transforms.common import (
     DEFAULT_ENUM_REPLACEMENT_VALUE,
@@ -10,16 +7,6 @@ from massgov.pfml.fineos.transforms.common import (
 )
 
 DEFAULT_ENUM_VALUE_UNSELECTED = "Please Select"
-
-
-class AbstractTransform(abc.ABC, metaclass=abc.ABCMeta):
-    """ Base class that defines interface for transformations """
-
-    @classmethod
-    @abc.abstractmethod
-    def from_fineos(cls, api_model: BaseModel) -> Any:
-        """A method to transform a model into a FINEOS Model ."""
-        pass
 
 
 class TransformEformAttributes:
