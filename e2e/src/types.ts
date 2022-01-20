@@ -222,4 +222,6 @@ export type Environment =
   | "performance"
   | "uat"
   | "cps-preview"
+  | "long"
+  | "trn2"
   | "breakfix";

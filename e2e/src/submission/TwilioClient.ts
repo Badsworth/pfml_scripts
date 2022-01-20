@@ -53,6 +53,14 @@ export default class TwilioClient {
         primary: "",
         secondary: "",
       },
+      long: {
+        primary: "",
+        secondary: "",
+      },
+      trn2: {
+        primary: "",
+        secondary: "",
+      }
     };
   }
 
