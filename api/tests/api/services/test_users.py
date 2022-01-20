@@ -6,6 +6,7 @@ import pytest
 from massgov.pfml.api.models.common import Phone
 from massgov.pfml.api.models.users.requests import UserUpdateRequest
 from massgov.pfml.api.services.users import update_user
+from tests.conftest import get_mock_logger
 
 
 # Run `initialize_factories_session` for all tests,
@@ -16,6 +17,8 @@ def setup_factories(initialize_factories_session):
 
 
 class TestUpdateUser:
+    mock_logger = get_mock_logger()
+
     def test_set_consented_to_share(self, user, test_db_session):
         update_request = UserUpdateRequest(consented_to_data_sharing=True)
         update_user(test_db_session, user, update_request)
@@ -115,3 +118,31 @@ class TestUpdateUser:
         update_user(test_db_session, user, update_request)
 
         assert mock_audit_trail.call_count == 1
+
+    @mock.patch("massgov.pfml.api.services.users.logger", mock_logger)
+    def test_mfa_updated_logging(
+        self, user, test_db_session,
+    ):
+        update_request = UserUpdateRequest(mfa_delivery_preference="SMS")
+        update_user(test_db_session, user, update_request)
+
+        self.mock_logger.info.assert_any_call(
+            "MFA updated for user", extra={"mfa_preference": "SMS", "updated_by": "User"}
+        )
+
+    @mock.patch("massgov.pfml.api.services.users.logger", mock_logger)
+    def test_mfa_disabled_logging(
+        self, user, test_db_session,
+    ):
+        # enable MFA
+        update_request = UserUpdateRequest(mfa_delivery_preference="SMS")
+        update_user(test_db_session, user, update_request)
+
+        # disable MFA
+        update_request = UserUpdateRequest(mfa_delivery_preference="Opt Out")
+        update_user(test_db_session, user, update_request)
+
+        self.mock_logger.info.assert_any_call(
+            "MFA disabled for user",
+            extra={"last_enabled_at": mock.ANY, "time_since_enabled_in_sec": mock.ANY},
+        )

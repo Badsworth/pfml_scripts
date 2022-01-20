@@ -11,6 +11,7 @@ import os
 import uuid
 from datetime import date, datetime, timedelta, timezone
 from typing import List
+from unittest.mock import MagicMock
 
 import _pytest.monkeypatch
 import boto3
@@ -37,6 +38,15 @@ from massgov.pfml.db.models.factories import (
 )
 
 logger = massgov.pfml.util.logging.get_logger("massgov.pfml.api.tests.conftest")
+
+
+def get_mock_logger():
+    mock_logger = MagicMock()
+    mock_logger.info = MagicMock()
+    mock_logger.warning = MagicMock()
+    mock_logger.error = MagicMock()
+
+    return mock_logger
 
 
 @pytest.fixture(scope="session")

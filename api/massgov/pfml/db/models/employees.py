@@ -1312,6 +1312,16 @@ class User(Base, TimestampMixin):
         user_leave_administrator = self.get_user_leave_admin_for_employer(employer=employer)
         return user_leave_administrator.verified if user_leave_administrator else False
 
+    @hybrid_method
+    def mfa_preference_description(self) -> Optional[str]:
+        """Helper method for accessing mfa_delivery_preference_description in a null-safe way"""
+        # explicit cast to Optional to make linter happy
+        mfa_preference: Optional[LkMFADeliveryPreference] = self.mfa_delivery_preference
+        if mfa_preference is None:
+            return None
+
+        return mfa_preference.mfa_delivery_preference_description
+
 
 class UserRole(Base, TimestampMixin):
     __tablename__ = "link_user_role"
