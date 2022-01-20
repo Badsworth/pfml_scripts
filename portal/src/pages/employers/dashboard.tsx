@@ -167,7 +167,7 @@ export const Dashboard = (props: WithUserProps & { query: ApiParams }) => {
                     Organization <span className="font-body-2xs">(FEIN)</span>
                   </th>
                   <th>Leave details</th>
-                  <th>Review date</th>
+                  <th>Review due date</th>
                 </tr>
               </thead>
               <tbody className="text-top">
