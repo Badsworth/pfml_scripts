@@ -1,18 +1,17 @@
-import { fineos, fineosPages, portal } from "../../actions";
+import { fineos, fineosPages, portal } from "../../../actions";
 
 import {
   Submission,
   ValidConcurrentLeave,
   ValidEmployerBenefit,
-} from "../../../src/types";
+} from "../../../../src/types";
 import {
   assertIsTypedArray,
   assertValidClaim,
   isValidEmployerBenefit,
   isValidOtherIncome,
   isValidPreviousLeave,
-} from "../../../src/util/typeUtils";
-import { config } from "../../actions/common";
+} from "../../../../src/util/typeUtils";
 
 // Used for stashing generated benefit and leave
 type LeaveAdminchanges = {
@@ -23,10 +22,7 @@ type LeaveAdminchanges = {
 describe("Claimant uses portal to report other leaves and benefits, receives correction from employer, gets escalated and approved within Fineos", () => {
   const claimSubmission =
     it("As a claimant, I should be able to report a previous leave, report other benefits, and submit continuos medical leave application through the portal", () => {
-      portal.before({
-        claimantShowTaxWithholding:
-          config("FINEOS_HAS_TAX_WITHHOLDING") === "true",
-      });
+      portal.before();
       cy.task("generateClaim", "BHAP1_OLB").then((claim) => {
         const employerReportedBenefit = claim.claim.employer_benefits?.[0];
         delete claim.claim.employer_benefits;
@@ -145,9 +141,7 @@ describe("Claimant uses portal to report other leaves and benefits, receives cor
                     certification.prefill();
                   })
                   .paidBenefits((paidBenefits) => {
-                    if (config("FINEOS_HAS_TAX_WITHHOLDING") === "true") {
-                      paidBenefits.assertSitFitOptIn(true);
-                    }
+                    paidBenefits.assertSitFitOptIn(true);
                   })
                   .acceptLeavePlan();
               })
