@@ -1,67 +1,76 @@
 // TODO (PORTAL-1148) Update to use createMockClaim when ready
+import { createAbsencePeriod, renderPage } from "../../../test-utils";
 import AppErrorInfo from "../../../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../../../src/models/AppErrorInfoCollection";
+import { AppLogic } from "../../../../src/hooks/useAppLogic";
 import ClaimDetail from "../../../../src/models/ClaimDetail";
 import DocumentCollection from "../../../../src/models/DocumentCollection";
 import { DocumentType } from "../../../../src/models/Document";
 import LeaveReason from "../../../../src/models/LeaveReason";
 import { Payments } from "../../../../src/pages/applications/status/payments";
+import { createMockBenefitsApplicationDocument } from "../../../../lib/mock-helpers/createMockDocument";
 import { createMockPayment } from "lib/mock-helpers/createMockPayment";
 import dayjs from "dayjs";
-import { mockRouter } from "next/router";
-import { renderPage } from "../../../test-utils";
 import routes from "../../../../src/routes";
 import { screen } from "@testing-library/react";
-jest.mock("next/router");
-
-mockRouter.asPath = routes.applications.status.payments;
 
 const renderWithApprovalNotice = (
-  appLogicHook,
+  appLogicHook: AppLogic,
   isRetroactive = true,
-  approvalTime
+  approvalTime = ""
 ) => {
   appLogicHook.appErrors = new AppErrorInfoCollection();
   appLogicHook.documents.loadAll = jest.fn();
   appLogicHook.documents.documents = new DocumentCollection([
-    {
+    createMockBenefitsApplicationDocument({
       application_id: "mock-application-id",
       content_type: "image/png",
       created_at: isRetroactive ? "2021-11-30" : approvalTime,
       document_type: DocumentType.approvalNotice,
       fineos_document_id: "fineos-id-7",
       name: "legal notice 3",
-    },
+    }),
   ]);
   appLogicHook.documents.hasLoadedClaimDocuments = () => true;
 };
 
-let goToSpy;
+let goToSpy: jest.SpyInstance;
 
 const setupHelper =
-  (claimDetailAttrs, isRetroactive, approvalTime) => (appLogicHook) => {
-    appLogicHook.claims.claimDetail =
-      claimDetailAttrs && new ClaimDetail(claimDetailAttrs);
+  (
+    claimDetailAttrs?: Partial<ClaimDetail>,
+    isRetroactive?: boolean,
+    approvalTime?: string
+  ) =>
+  (appLogicHook: AppLogic) => {
+    appLogicHook.claims.claimDetail = claimDetailAttrs
+      ? new ClaimDetail(claimDetailAttrs)
+      : undefined;
     appLogicHook.claims.loadClaimDetail = jest.fn();
     goToSpy = jest.spyOn(appLogicHook.portalFlow, "goTo");
     renderWithApprovalNotice(appLogicHook, isRetroactive, approvalTime);
   };
 
-const defaultClaimDetail = {
+const defaultClaimDetail = new ClaimDetail({
   application_id: "mock-application-id",
   fineos_absence_id: "mock-absence-case-id",
-  employer: { employer_fein: "12-1234567" },
+  employer: {
+    employer_fein: "12-1234567",
+    employer_dba: "Acme",
+    employer_id: "mock-employer-id",
+  },
   absence_periods: [
-    {
+    createAbsencePeriod({
       period_type: "Continuous",
       absence_period_start_date: "2021-10-21",
       absence_period_end_date: "2021-12-30",
       reason: "Child Bonding",
       request_decision: "Approved",
-    },
+    }),
   ],
   payments: [],
-};
+});
+
 const approvalDate = {
   "approved after fourteenth claim date": dayjs(
     defaultClaimDetail.absence_periods[0].absence_period_start_date
@@ -119,11 +128,6 @@ describe("Payments", () => {
       {
         addCustomSetup: setupHelper({
           ...defaultClaimDetail,
-          appLogicHook: {
-            claims: { loadClaimDetail: jest.fn() },
-            documents: new DocumentCollection([]),
-            appErrors: { items: [] },
-          },
         }),
       },
       props
@@ -155,12 +159,12 @@ describe("Payments", () => {
         addCustomSetup: setupHelper({
           ...defaultClaimDetail,
           absence_periods: [
-            {
-              period_type: "Reduced",
+            createAbsencePeriod({
+              period_type: "Reduced Schedule",
               reason: LeaveReason.bonding,
               request_decision: "Pending",
               reason_qualifier_one: "Newborn",
-            },
+            }),
           ],
         }),
       },
@@ -177,11 +181,11 @@ describe("Payments", () => {
         addCustomSetup: setupHelper({
           ...defaultClaimDetail,
           absence_periods: [
-            {
-              period_type: "Reduced",
+            createAbsencePeriod({
+              period_type: "Reduced Schedule",
               reason: LeaveReason.pregnancy,
               request_decision: "Approved",
-            },
+            }),
           ],
         }),
       },
@@ -198,16 +202,16 @@ describe("Payments", () => {
         addCustomSetup: setupHelper({
           ...defaultClaimDetail,
           absence_periods: [
-            {
-              period_type: "Reduced",
+            createAbsencePeriod({
+              period_type: "Reduced Schedule",
               reason: LeaveReason.pregnancy,
               request_decision: "Approved",
-            },
-            {
-              period_type: "Reduced",
+            }),
+            createAbsencePeriod({
+              period_type: "Reduced Schedule",
               reason: LeaveReason.bonding,
               request_decision: "Approved",
-            },
+            }),
           ],
         }),
       },
@@ -235,12 +239,12 @@ describe("Payments", () => {
           ...defaultClaimDetail,
           absence_periods: [
             ...defaultClaimDetail.absence_periods,
-            {
-              period_type: "Reduced",
+            createAbsencePeriod({
+              period_type: "Reduced Schedule",
               absence_period_start_date: "2022-10-21",
               absence_period_end_date: "2022-12-30",
               reason: "Child Bonding",
-            },
+            }),
           ],
         }),
       },
@@ -264,18 +268,18 @@ describe("Payments", () => {
         addCustomSetup: setupHelper({
           ...defaultClaimDetail,
           absence_periods: [
-            {
-              period_type: "Reduced",
+            createAbsencePeriod({
+              period_type: "Reduced Schedule",
               absence_period_start_date: "2021-07-21",
               absence_period_end_date: "2021-18-30",
               reason: "Child Bonding",
-            },
-            {
-              period_type: "Reduced",
+            }),
+            createAbsencePeriod({
+              period_type: "Reduced Schedule",
               absence_period_start_date: "2021-09-21",
               absence_period_end_date: "2021-10-30",
               reason: "Child Bonding",
-            },
+            }),
           ],
         }),
       },
@@ -318,9 +322,6 @@ describe("Payments", () => {
       {
         addCustomSetup: setupHelper({
           ...defaultClaimDetail,
-          loadedPaymentsData: {
-            absence_case_id: "fineos_id",
-          },
           payments: [
             createMockPayment({ status: "Sent to bank" }, true),
             createMockPayment(
@@ -333,10 +334,6 @@ describe("Payments", () => {
             ),
             createMockPayment({ status: "Sent to bank" }, true),
           ],
-          appLogicHook: {
-            claims: { loadClaimDetail: jest.fn() },
-            appErrors: { items: [] },
-          },
         }),
       },
       {
@@ -407,12 +404,12 @@ describe("Payments", () => {
         addCustomSetup: setupHelper({
           ...defaultClaimDetail,
           absence_periods: [
-            {
+            createAbsencePeriod({
               period_type: "Intermittent",
               absence_period_start_date: "2022-10-21",
               absence_period_end_date: "2022-12-30",
               reason: "Child Bonding",
-            },
+            }),
           ],
         }),
       },
@@ -455,7 +452,7 @@ describe("Payments", () => {
       expect(screen.getByTestId("your-payments-intro")).toMatchSnapshot();
     });
 
-    it.each(Object.keys(approvalDate))(
+    it.each(Object.keys(approvalDate) as Array<keyof typeof approvalDate>)(
       "renders intro text for continuous leaves %s ",
       (state) => {
         renderPage(
@@ -477,10 +474,10 @@ describe("Payments", () => {
       }
     );
 
-    it.each(Object.keys(approvalDate))(
+    it.each(Object.keys(approvalDate) as Array<keyof typeof approvalDate>)(
       "renders intro text for reduced schedule leaves %s ",
       (state) => {
-        const reducedClaimDetail = {
+        const reducedClaimDetail = new ClaimDetail({
           ...defaultClaimDetail,
           absence_periods: [
             {
@@ -488,7 +485,7 @@ describe("Payments", () => {
               period_type: "Reduced Schedule",
             },
           ],
-        };
+        });
         renderPage(
           Payments,
           {
@@ -508,10 +505,10 @@ describe("Payments", () => {
       }
     );
 
-    it.each(Object.keys(approvalDate))(
+    it.each(Object.keys(approvalDate) as Array<keyof typeof approvalDate>)(
       "renders intro text for continous leaves %s if claim has reduced and continuous leaves",
       (state) => {
-        const multipleClaimDetail = {
+        const multipleClaimDetail = new ClaimDetail({
           ...defaultClaimDetail,
           absence_periods: [
             defaultClaimDetail.absence_periods[0],
@@ -520,7 +517,7 @@ describe("Payments", () => {
               period_type: "Reduced Schedule",
             },
           ],
-        };
+        });
         renderPage(
           Payments,
           {
@@ -553,13 +550,6 @@ describe("Payments", () => {
                 period_type: "Intermittent",
               },
             ],
-            loadedPaymentsData: {
-              absence_case_id: "fineos_id",
-            },
-            appLogicHook: {
-              claims: { loadClaimDetail: jest.fn() },
-              appErrors: { items: [] },
-            },
           }),
         },
         {
@@ -579,12 +569,12 @@ describe("Payments", () => {
           addCustomSetup: setupHelper({
             ...defaultClaimDetail,
             absence_periods: [
-              {
+              createAbsencePeriod({
                 period_type: "Intermittent",
                 absence_period_start_date: "2022-10-21",
                 absence_period_end_date: "2022-12-30",
                 reason: "Child Bonding",
-              },
+              }),
             ],
             has_paid_payments: true,
             payments: [createMockPayment({ status: "Sent to bank" }, true)],
