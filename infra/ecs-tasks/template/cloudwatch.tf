@@ -418,7 +418,7 @@ module "weekend-fineos-import-la-units" {
   source     = "../../modules/ecs_task_scheduler"
   is_enabled = true
 
-  task_name                            = "fineos-import-la-units"
+  task_name                            = "weekend-fineos-import-la-units"
   schedule_expression_standard         = "cron(0 10 ? * SAT-SUN *)"
   schedule_expression_daylight_savings = "cron(0 9 ? * SAT-SUN *)"
   environment_name                     = var.environment_name
