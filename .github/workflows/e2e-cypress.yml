@@ -113,8 +113,8 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Check Fineos Online
-        run: echo "Running Health Check for env - ${{ env.E2E_ENVIRONMENT }} -"
         run: |
+          echo "Running Health Check for env - ${{ env.E2E_ENVIRONMENT }} -"
           fineos_url=$(cat config.json | jq -re '.["${{ env.E2E_ENVIRONMENT }}"].FINEOS_BASEURL')
           status_code=$(curl -s -o /dev/null -w "%{http_code}" "$fineos_url")
           echo "Received ${status_code} from ${fineos_url}"
