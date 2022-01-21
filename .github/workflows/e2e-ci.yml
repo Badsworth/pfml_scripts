@@ -1,13 +1,13 @@
 # End to End testing CI processes.
 #
-name: End-to-End CI Testing
+name: End-to-End CI Testings
 
 on:
   push:
-  pull_request:
-    paths:
-      - e2e/**
-      - .github/workflows/e2e-ci.yml
+  # pull_request:
+  #   paths:
+  #     - e2e/**
+  #     - .github/workflows/e2e-ci.yml
 defaults:
   run:
     working-directory: e2e
@@ -33,69 +33,69 @@ jobs:
       - name: "Lint"
         run: npm run lint:ci
 
-  test:
-    name: "Unit Tests"
-    runs-on: ubuntu-latest
-    env:
-      E2E_ENVIRONMENT: test
-    steps:
-      - uses: actions/checkout@v2
-      - name: Setup Node
-        uses: actions/setup-node@v2
-        with: { node-version: "14.x" }
-      - name: "Install Node Modules"
-        uses: bahmutov/npm-install@v1
-        with:
-          working-directory: e2e
-      - name: "Run Jest"
-        run: npm run test:unit
+  # test:
+  #   name: "Unit Tests"
+  #   runs-on: ubuntu-latest
+  #   env:
+  #     E2E_ENVIRONMENT: test
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #     - name: Setup Node
+  #       uses: actions/setup-node@v2
+  #       with: { node-version: "14.x" }
+  #     - name: "Install Node Modules"
+  #       uses: bahmutov/npm-install@v1
+  #       with:
+  #         working-directory: e2e
+  #     - name: "Run Jest"
+  #       run: npm run test:unit
 
-  changed-files:
-    name: "Check Changed Files"
-    runs-on: ubuntu-latest
-    outputs:
-      has-artillery-changes: ${{ steps.artillery-changed-files.outputs.any_changed }}
-      has-cypress-changes: ${{ steps.cypress-changed-files.outputs.any_changed }}
-    steps:
-      - uses: actions/checkout@v2
-      - name: "Check if Artillery files have been changed"
-        id: artillery-changed-files
-        uses: tj-actions/changed-files@v8.1
-        with:
-          files: |
-            e2e/src/artillery/**
-            e2e/src/submission/**
-            e2e/package.json
-            e2e/Dockerfile
-      - name: "Check if Cypress files have been changed"
-        id: cypress-changed-files
-        uses: tj-actions/changed-files@v8.1
-        with:
-          files: |
-            e2e/cypress/**
-            e2e/package.json
+  # changed-files:
+  #   name: "Check Changed Files"
+  #   runs-on: ubuntu-latest
+  #   outputs:
+  #     has-artillery-changes: ${{ steps.artillery-changed-files.outputs.any_changed }}
+  #     has-cypress-changes: ${{ steps.cypress-changed-files.outputs.any_changed }}
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #     - name: "Check if Artillery files have been changed"
+  #       id: artillery-changed-files
+  #       uses: tj-actions/changed-files@v8.1
+  #       with:
+  #         files: |
+  #           e2e/src/artillery/**
+  #           e2e/src/submission/**
+  #           e2e/package.json
+  #           e2e/Dockerfile
+  #     - name: "Check if Cypress files have been changed"
+  #       id: cypress-changed-files
+  #       uses: tj-actions/changed-files@v8.1
+  #       with:
+  #         files: |
+  #           e2e/cypress/**
+  #           e2e/package.json
 
-  check-artillery:
-    name: "Run docker and build image for artillery deploy"
-    runs-on: ubuntu-latest
-    needs: changed-files
-    env:
-      E2E_ENVIRONMENT: performance
-      E2E_FINEOS_PASSWORD: ${{ secrets.E2E_FINEOS_PASSWORD }}
-      E2E_PORTAL_PASSWORD: ${{ secrets.E2E_PORTAL_PASSWORD }}
-      E2E_EMPLOYER_PORTAL_PASSWORD: ${{ secrets.E2E_EMPLOYER_PORTAL_PASSWORD }}
-      E2E_TESTMAIL_APIKEY: ${{ secrets.E2E_TESTMAIL_APIKEY }}
-      E2E_FINEOS_USERS: ${{ secrets.E2E_FINEOS_USERS }}
-    if: needs.changed-files.outputs.has-artillery-changes == 'true'
-    steps:
-      - uses: actions/checkout@v2
-      - name: "Build the Docker Image ..."
-        run: docker build --rm -f ./Dockerfile ../e2e
+  # check-artillery:
+  #   name: "Run docker and build image for artillery deploy"
+  #   runs-on: ubuntu-latest
+  #   needs: changed-files
+  #   env:
+  #     E2E_ENVIRONMENT: performance
+  #     E2E_FINEOS_PASSWORD: ${{ secrets.E2E_FINEOS_PASSWORD }}
+  #     E2E_PORTAL_PASSWORD: ${{ secrets.E2E_PORTAL_PASSWORD }}
+  #     E2E_EMPLOYER_PORTAL_PASSWORD: ${{ secrets.E2E_EMPLOYER_PORTAL_PASSWORD }}
+  #     E2E_TESTMAIL_APIKEY: ${{ secrets.E2E_TESTMAIL_APIKEY }}
+  #     E2E_FINEOS_USERS: ${{ secrets.E2E_FINEOS_USERS }}
+  #   if: needs.changed-files.outputs.has-artillery-changes == 'true'
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #     - name: "Build the Docker Image ..."
+  #       run: docker build --rm -f ./Dockerfile ../e2e
 
   trigger-cypress:
     name: End-to-End Tests
     runs-on: ubuntu-latest
-    needs: changed-files
+    # needs: changed-files
     # if: needs.changed-files.outputs.has-cypress-changes == 'true'
     steps:
       - name: Trigger E2E Workflow
