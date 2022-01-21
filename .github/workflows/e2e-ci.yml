@@ -115,7 +115,6 @@ jobs:
               "title_override": ${{ toJSON(format('PR: {0}', github.event.pull_request.title)) }}
             }
       - name: Display Environment
-      - uses: actions/checkout@v2
-        if: always()
+        # if: always()
         run: | 
           echo "E2E specs running in stage"
