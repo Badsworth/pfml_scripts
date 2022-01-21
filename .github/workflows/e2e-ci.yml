@@ -7,6 +7,7 @@ on:
     paths:
       - e2e/**
       - .github/workflows/e2e-ci.yml
+  push:
 defaults:
   run:
     working-directory: e2e
@@ -112,3 +113,6 @@ jobs:
               "run_nightly": "false",
               "title_override": ${{ toJSON(format('PR: {0}', github.event.pull_request.title)) }}
             }
+      - name: Display Environment
+        if: always()
+        run: echo "E2E specs running in test"

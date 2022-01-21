@@ -716,11 +716,13 @@ jobs:
     if: github.event.inputs.deployment_env != 'prod' && github.event.inputs.deployment_env != 'infra-test'
     steps:
       - name: Trigger E2E Workflow
+        id: trigger-e2e
         uses: aurelien-baudet/workflow-dispatch@v2.1.1
         with:
           workflow: e2e-cypress.yml
           token: ${{ secrets.PFML_DEVOPS_TOKEN }}
           wait-for-completion: true
+          display-workflow-run-url-interval: 30s
           ref: "main"
           inputs: |
             {
@@ -730,6 +732,9 @@ jobs:
               "run_nightly": "false",
               "title_override": ${{ toJSON(format('API Deploy: {0} to {1}', env.version, env.deployment_env)) }}
             }
+      - name: Display Environment
+        if: always()
+        run: echo "E2E specs running in ${{ env.deployment_env }}"
 
   load-test:
     name: "Trigger Load Testing"
