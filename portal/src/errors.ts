@@ -30,6 +30,23 @@ class BasePortalError extends Error {
 }
 
 /**
+ * Checks if this error has the shape of an error from the Cognito API
+ * @param error
+ * @returns boolean, whether this is a Cognito error or not
+ */
+export function isCognitoError(error: unknown): error is CognitoError {
+  if (
+    error &&
+    typeof error === "object" &&
+    error.hasOwnProperty("code") !== undefined
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
+/**
  * A Cognito authentication step failed.
  */
 export class CognitoAuthError extends BasePortalError {

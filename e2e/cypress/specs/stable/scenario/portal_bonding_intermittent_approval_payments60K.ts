@@ -2,7 +2,6 @@ import { portal, fineos, fineosPages } from "../../../actions";
 import { Submission } from "../../../../src/types";
 import { assertValidClaim } from "../../../../src/util/typeUtils";
 import { addDays, formatISO, startOfWeek, subDays } from "date-fns";
-import { config } from "../../../actions/common";
 
 describe("Submit bonding application via the web portal: Adjudication Approval, recording actual hours & payment checking", () => {
   const submissionTest =
@@ -67,11 +66,9 @@ describe("Submit bonding application via the web portal: Adjudication Approval, 
               })
               .certificationPeriods((certPeriods) => certPeriods.prefill())
               .acceptLeavePlan();
-            if (config("FINEOS_HAS_TAX_WITHHOLDING") === "true") {
-              adjudication.paidBenefits((paidBenefits) => {
-                paidBenefits.assertSitFitOptIn(claim.is_withholding_tax);
-              });
-            }
+            adjudication.paidBenefits((paidBenefits) => {
+              paidBenefits.assertSitFitOptIn(claim.is_withholding_tax);
+            });
           });
           claimPage.shouldHaveStatus("Availability", "As Certified");
           claimPage.approve();

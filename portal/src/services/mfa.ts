@@ -1,5 +1,5 @@
 import Auth, { CognitoUser } from "@aws-amplify/auth";
-import { ValidationError } from "../errors";
+import { CognitoAuthError, ValidationError, isCognitoError } from "../errors";
 import tracker from "./tracker";
 
 type CognitoMFAUser = CognitoUser & { preferredMFA: "NOMFA" | "SMS" };
@@ -26,11 +26,20 @@ export const updateMFAPhoneNumber = async (phoneNumber: string) => {
  * Needs an authenticated user, will not work to verify login
  */
 export const sendMFAConfirmationCode = async () => {
-  const user = await Auth.currentAuthenticatedUser();
-  tracker.trackFetchRequest("verifyUserAttribute");
-  // sends a verification code to the phone number via SMS
-  await Auth.verifyUserAttribute(user, "phone_number");
-  tracker.markFetchRequestEnd();
+  try {
+    const user = await Auth.currentAuthenticatedUser();
+    tracker.trackFetchRequest("verifyUserAttribute");
+    // sends a verification code to the phone number via SMS
+    await Auth.verifyUserAttribute(user, "phone_number");
+    tracker.markFetchRequestEnd();
+  } catch (error) {
+    if (isCognitoError(error)) {
+      const issue = { type: "attemptsLimitExceeded_updatePhone" };
+      const cognitoError = new CognitoAuthError(error, issue);
+      throw cognitoError;
+    }
+    throw error;
+  }
 };
 
 /**
