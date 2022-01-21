@@ -177,8 +177,8 @@ locals {
       ]
     },
 
-    "fineos-import-leave-admin-org-units" = {
-      command   = ["fineos-import-leave-admin-org-units"]
+    "fineos-import-leave-admin-org-unit" = {
+      command   = ["fineos-import-leave-admin-org-unit"]
       task_role = aws_iam_role.fineos_import_la_org_units_task_role.arn
       cpu       = 2048
       memory    = 9216
