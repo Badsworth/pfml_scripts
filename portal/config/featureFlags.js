@@ -31,10 +31,10 @@ const flagsConfig = {
     claimantShowOrganizationUnits: false,
 
     // When this flag is enabled, the claim payments section for claimants will show
-    claimantShowPayments: true,
+    claimantShowPayments: false,
 
     // When this flag is enabled payment status phase two work will be displayed.
-    claimantShowPaymentsPhaseTwo: false,
+    claimantShowPaymentsPhaseTwo: true,
 
     // Show multiple leave request UI updates to leave admins.
     // TODO (PORTAL-1151) Remove flag
@@ -67,30 +67,30 @@ const flagsConfig = {
   development: {
     example: true,
     pfmlTerriyay: true,
-    claimantShowPayments: true,
+    claimantShowPaymentsPhaseTwo: true,
   },
   test: {
-    claimantShowPayments: true,
+    claimantShowPaymentsPhaseTwo: true,
   },
   stage: {
-    claimantShowPayments: true,
+    claimantShowPaymentsPhaseTwo: true,
   },
   training: {
-    claimantShowPayments: true,
+    claimantShowPaymentsPhaseTwo: true,
   },
   performance: {
-    claimantShowPayments: true,
+    claimantShowPaymentsPhaseTwo: true,
   },
   uat: {
-    claimantShowPayments: true,
+    claimantShowPaymentsPhaseTwo: true,
   },
   local: {
     pfmlTerriyay: true,
-    claimantShowPayments: true,
+    claimantShowPaymentsPhaseTwo: true,
   },
   prod: {
     pfmlTerriyay: true,
-    claimantShowPayments: true,
+    claimantShowPaymentsPhaseTwo: true,
   },
 };
 
