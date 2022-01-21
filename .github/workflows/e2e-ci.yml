@@ -117,4 +117,4 @@ jobs:
             }
       - name: Display Environment
         if: always()
-        run: echo "Another Workflow conclusion: ${{ steps.trigger-step.outputs.workflow-conclusion }}"
+        run: echo "Another Workflow conclusion ${{ steps.trigger-step.outputs.workflow-conclusion }}"
