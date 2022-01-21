@@ -99,6 +99,7 @@ jobs:
     # if: needs.changed-files.outputs.has-cypress-changes == 'true'
     steps:
       - name: Trigger E2E Workflow
+        id: trigger-step
         uses: aurelien-baudet/workflow-dispatch@v2.1.1
         with:
           workflow: e2e-cypress.yml
@@ -115,6 +116,5 @@ jobs:
               "title_override": ${{ toJSON(format('PR: {0}', github.event.pull_request.title)) }}
             }
       - name: Display Environment
-        # if: always()
-        run: | 
-          echo "E2E specs running in stage"
+        if: always()
+        run: echo "Another Workflow conclusion: ${{ steps.trigger-step.outputs.workflow-conclusion }}"
