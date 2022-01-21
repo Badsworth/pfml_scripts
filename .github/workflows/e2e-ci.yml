@@ -1,6 +1,6 @@
 # End to End testing CI processes.
 #
-name: End-to-End CI Testings
+name: End-to-End CI Testing
 
 on:
   push:
