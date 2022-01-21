@@ -121,12 +121,13 @@ def test_processor_mixed(
 
     assert message == "\n".join(["DOR Name: Javier Jones", "FINEOS Name: Joe Valdez-Garcia",])
 
-    payment_3 = create_payment_with_name("Sam", "Jones", "Javier", "Valdez-Garcia")
+    # Name too short, auto-fails
+    payment_3 = create_payment_with_name("J", "Valdez-Garcia", "Javier", "Valdez-Garcia")
     dor_fineos_employee_name_mismatch_processor.process(payment_3)
     audit_report = _get_audit_report_details(payment_3, local_test_db_session)
     message = audit_report.details["message"]
 
-    assert message == "\n".join(["DOR Name: Sam Jones", "FINEOS Name: Javier Valdez-Garcia",])
+    assert message == "\n".join(["DOR Name: J Valdez-Garcia", "FINEOS Name: Javier Valdez-Garcia",])
 
 
 def _get_audit_report_details(payment, local_test_db_session):
