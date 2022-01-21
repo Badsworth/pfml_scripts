@@ -104,6 +104,7 @@ jobs:
           workflow: e2e-cypress.yml
           token: ${{ secrets.PFML_DEVOPS_TOKEN }}
           wait-for-completion: true
+          display-workflow-run-url-interval: 30s
           ref: ${{ github.event.pull_request.head.ref }}
           inputs: |
             {
@@ -115,4 +116,5 @@ jobs:
             }
       - name: Display Environment
         if: always()
-        run: echo "E2E specs running in test"
+        run: | 
+          echo "E2E specs running in stage"
