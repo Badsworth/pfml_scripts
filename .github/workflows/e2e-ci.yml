@@ -107,7 +107,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.ref }}
           inputs: |
             {
-              "target_environment": "test",
+              "target_environment": "stage",
               "cypress_tags": "PR",
               "run_unstable": "true",
               "run_nightly": "false",

@@ -108,9 +108,9 @@ jobs:
   # when we know we're going to get a high failure rate.
   health-check:
     name: Check for Healthy Services
-    environment: ${{ env.E2E_ENVIRONMENT }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    run: "Echo test ${{ env.E2E_ENVIRONMENT }}"
     steps:
       - uses: actions/checkout@v2
       - name: Check Fineos Online
