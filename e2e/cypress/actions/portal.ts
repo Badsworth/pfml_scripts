@@ -52,8 +52,9 @@ function setFeatureFlags(flags?: Partial<FeatureFlags>): void {
     employerShowReviewByStatus: true,
     claimantShowStatusPage: true,
     claimantShowTaxWithholding: true,
-    claimantShowPayments: config("HAS_PAYMENT_STATUS") === "true",
+    claimantShowPayments: false,
     claimantShowOrganizationUnits: false,
+    claimantShowPaymentsPhaseTwo: true,
     claimantShowMFA: config("MFA_ENABLED") === "true",
     employerShowMultiLeave: true,
   };
@@ -99,6 +100,10 @@ export function before(flags?: Partial<FeatureFlags>): void {
   cy.intercept(/\/api\/v1\/claims\?(page_offset=\d+)?&?(order_by)/).as(
     "dashboardClaimQueries"
   );
+  cy.intercept({
+    method: "GET",
+    url: "**/api/v1/payments?absence_case_id=*",
+  }).as("payments");
 
   deleteDownloadsFolder();
 }
@@ -2105,7 +2110,7 @@ export function assertPayments(spec: PaymentStatus[]) {
     estimatedScheduledDate: "Estimated date",
     dateSent: "Date processed",
   };
-
+  cy.wait("@payments").wait(100);
   cy.get("section[data-testid='your-payments']").within(() => {
     cy.get("tbody")
       .children()
@@ -2207,4 +2212,15 @@ export function leaveAdminAssertClaimStatus(leaves: LeaveStatus[]) {
     cy.contains(heading);
     cy.get('[data-label="Status"]').should("contain.text", status);
   }
+}
+
+export function assertPaymentCheckBackDate(date: Date) {
+  cy.get("section[data-testid='your-payments-intro']").within(() => {
+    cy.contains(
+      `Check back on ${format(
+        date,
+        "MM/dd/yyyy"
+      )} to see when you can expect your first payment.`
+    );
+  });
 }
