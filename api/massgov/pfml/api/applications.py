@@ -144,10 +144,6 @@ def applications_import():
     ensure(CREATE, application)
 
     if user := app.current_user():
-        # TODO (portal-1512) - Remove role check
-        # Check if user is not a claimant
-        if user.roles:
-            raise Unauthorized
         application.user = user
     else:
         raise Unauthorized

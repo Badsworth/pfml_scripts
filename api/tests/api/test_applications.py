@@ -377,7 +377,12 @@ def test_applications_import_unauthenticated_post(client, test_db_session):
     assert test_db_session.query(Application).one_or_none() is None
 
 
-def test_applications_import_unauthorized_post(client, user, employer_auth_token):
+@mock.patch("massgov.pfml.api.applications.app.current_user")
+def test_applications_import_unauthorized_post(
+    mock_current_user, client, employer_user, employer_auth_token, test_db_session
+):
+    mock_current_user.return_value = employer_user
+    test_db_session.commit()
     absence_case_id = "NTN-111-ABS-01"
     # Employer cannot access this endpoint
     response = client.post(
@@ -385,7 +390,8 @@ def test_applications_import_unauthorized_post(client, user, employer_auth_token
         headers={"Authorization": f"Bearer {employer_auth_token}"},
         json={"absence_case_id": absence_case_id},
     )
-    assert response.status_code == 401
+    assert response.status_code == 403
+    assert "don't have the permission to access" in response.get_json()["message"]
 
 
 def test_applications_post_start_app(client, user, auth_token, test_db_session):
