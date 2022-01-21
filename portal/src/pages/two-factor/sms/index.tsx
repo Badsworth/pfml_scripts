@@ -9,6 +9,7 @@ import User from "src/models/User";
 import { ValidationError } from "../../../errors";
 import { get } from "lodash";
 import { isFeatureEnabled } from "../../../services/featureFlags";
+import tracker from "../../../services/tracker";
 import useFormState from "../../../hooks/useFormState";
 import useFunctionalInputProps from "../../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../../locales/i18n";
@@ -45,8 +46,10 @@ export const IndexSMS = (props: IndexSMSProps) => {
     }
 
     if (formState.enterMFASetupFlow) {
+      tracker.trackEvent("User entered MFA setup flow");
       await appLogic.portalFlow.goToPageFor("EDIT_MFA_PHONE");
     } else {
+      tracker.trackEvent("User opted out of MFA");
       await appLogic.users.updateUser(props.user.user_id, {
         mfa_delivery_preference: "Opt Out",
       });
