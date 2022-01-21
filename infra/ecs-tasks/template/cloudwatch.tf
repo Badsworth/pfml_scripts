@@ -391,13 +391,13 @@ module "weekend-pub-payments-process-fineos" {
   JSON
 }
 
-# Run fineos-import-leave-admin-org-units task prior to pub-payments-process-fineos
+# Run fineos-import-la-units task prior to pub-payments-process-fineos
 # 10PM EST
-module "fineos-import-leave-admin-org-units" {
+module "fineos-import-la-units" {
   source     = "../../modules/ecs_task_scheduler"
   is_enabled = true
 
-  task_name                            = "fineos-import-leave-admin-org-units"
+  task_name                            = "fineos-import-la-units"
   schedule_expression_standard         = "cron(0 3 ? * MON-FRI *)"
   schedule_expression_daylight_savings = "cron(0 2 ? * MON-FRI *)"
   environment_name                     = var.environment_name
@@ -406,19 +406,19 @@ module "fineos-import-leave-admin-org-units" {
   app_subnet_ids     = var.app_subnet_ids
   security_group_ids = [aws_security_group.tasks.id]
 
-  ecs_task_definition_arn    = aws_ecs_task_definition.ecs_tasks["fineos-import-leave-admin-org-units"].arn
-  ecs_task_definition_family = aws_ecs_task_definition.ecs_tasks["fineos-import-leave-admin-org-units"].family
+  ecs_task_definition_arn    = aws_ecs_task_definition.ecs_tasks["fineos-import-la-units"].arn
+  ecs_task_definition_family = aws_ecs_task_definition.ecs_tasks["fineos-import-la-units"].family
   ecs_task_executor_role     = aws_iam_role.task_executor.arn
   ecs_task_role              = aws_iam_role.fineos_import_la_org_units_task_role.arn
 }
 
-# Run fineos-import-leave-admin-org-units task prior to pub-payments-process-fineos
-# Weekends only 5AM EST - keeping consistent with weekend-pub-payments-process-fineos to avoid DB maintenance
-module "weekend-fineos-import-leave-admin-org-units" {
+# Run fineos-import-la-units task prior to pub-payments-process-fineos
+# Weekends only - 5AM EST - keeping consistent with weekend-pub-payments-process-fineos to avoid DB maintenance
+module "weekend-fineos-import-la-units" {
   source     = "../../modules/ecs_task_scheduler"
   is_enabled = true
 
-  task_name                            = "fineos-import-leave-admin-org-units"
+  task_name                            = "fineos-import-la-units"
   schedule_expression_standard         = "cron(0 10 ? * SAT-SUN *)"
   schedule_expression_daylight_savings = "cron(0 9 ? * SAT-SUN *)"
   environment_name                     = var.environment_name
@@ -427,8 +427,8 @@ module "weekend-fineos-import-leave-admin-org-units" {
   app_subnet_ids     = var.app_subnet_ids
   security_group_ids = [aws_security_group.tasks.id]
 
-  ecs_task_definition_arn    = aws_ecs_task_definition.ecs_tasks["fineos-import-leave-admin-org-units"].arn
-  ecs_task_definition_family = aws_ecs_task_definition.ecs_tasks["fineos-import-leave-admin-org-units"].family
+  ecs_task_definition_arn    = aws_ecs_task_definition.ecs_tasks["fineos-import-la-units"].arn
+  ecs_task_definition_family = aws_ecs_task_definition.ecs_tasks["fineos-import-la-units"].family
   ecs_task_executor_role     = aws_iam_role.task_executor.arn
   ecs_task_role              = aws_iam_role.fineos_import_la_org_units_task_role.arn
 }
