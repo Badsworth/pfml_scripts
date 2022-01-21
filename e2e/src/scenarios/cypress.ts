@@ -571,7 +571,7 @@ export const MED_CONT_ER_APPROVE: ScenarioSpecification = {
     label: "MED_CONT_ER_APPROVE",
     leave_dates: [
       startOfWeek(subWeeks(new Date(), 3)),
-      startOfWeek(subWeeks(new Date(), 1)),
+      startOfWeek(addWeeks(new Date(), 1)),
     ],
     address: {
       city: "Washington",
