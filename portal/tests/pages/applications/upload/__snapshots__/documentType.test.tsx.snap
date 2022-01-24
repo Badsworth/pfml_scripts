@@ -133,13 +133,25 @@ exports[`ComponentWithUser renders the appropriate certification upload content 
     </div>
   </details>
   <div
-    class="margin-top-8 text-center"
+    class="margin-bottom-4"
   >
-    <span
-      aria-label="Loading documents"
-      class="c-spinner"
-      role="progressbar"
+    <ul
+      class="usa-list usa-list--unstyled measure-5"
     />
+    <ul
+      class="usa-list usa-list--unstyled measure-5"
+    />
+    <label
+      class="margin-top-2 usa-button usa-button--outline"
+    >
+      Choose files
+      <input
+        accept="image/*,.pdf"
+        class="c-file-card-list__input"
+        multiple=""
+        type="file"
+      />
+    </label>
   </div>
   <button
     class="usa-button position-relative margin-top-4"
@@ -283,13 +295,25 @@ exports[`ComponentWithUser renders the appropriate certification upload content 
     </div>
   </details>
   <div
-    class="margin-top-8 text-center"
+    class="margin-bottom-4"
   >
-    <span
-      aria-label="Loading documents"
-      class="c-spinner"
-      role="progressbar"
+    <ul
+      class="usa-list usa-list--unstyled measure-5"
     />
+    <ul
+      class="usa-list usa-list--unstyled measure-5"
+    />
+    <label
+      class="margin-top-2 usa-button usa-button--outline"
+    >
+      Choose files
+      <input
+        accept="image/*,.pdf"
+        class="c-file-card-list__input"
+        multiple=""
+        type="file"
+      />
+    </label>
   </div>
   <button
     class="usa-button position-relative margin-top-4"
@@ -433,13 +457,25 @@ exports[`ComponentWithUser renders the appropriate certification upload content 
     </div>
   </details>
   <div
-    class="margin-top-8 text-center"
+    class="margin-bottom-4"
   >
-    <span
-      aria-label="Loading documents"
-      class="c-spinner"
-      role="progressbar"
+    <ul
+      class="usa-list usa-list--unstyled measure-5"
     />
+    <ul
+      class="usa-list usa-list--unstyled measure-5"
+    />
+    <label
+      class="margin-top-2 usa-button usa-button--outline"
+    >
+      Choose files
+      <input
+        accept="image/*,.pdf"
+        class="c-file-card-list__input"
+        multiple=""
+        type="file"
+      />
+    </label>
   </div>
   <button
     class="usa-button position-relative margin-top-4"
@@ -588,13 +624,25 @@ exports[`ComponentWithUser renders the appropriate certification upload content 
     </div>
   </details>
   <div
-    class="margin-top-8 text-center"
+    class="margin-bottom-4"
   >
-    <span
-      aria-label="Loading documents"
-      class="c-spinner"
-      role="progressbar"
+    <ul
+      class="usa-list usa-list--unstyled measure-5"
     />
+    <ul
+      class="usa-list usa-list--unstyled measure-5"
+    />
+    <label
+      class="margin-top-2 usa-button usa-button--outline"
+    >
+      Choose files
+      <input
+        accept="image/*,.pdf"
+        class="c-file-card-list__input"
+        multiple=""
+        type="file"
+      />
+    </label>
   </div>
   <button
     class="usa-button position-relative margin-top-4"
@@ -730,13 +778,25 @@ exports[`ComponentWithUser renders the appropriate certification upload content 
     </div>
   </details>
   <div
-    class="margin-top-8 text-center"
+    class="margin-bottom-4"
   >
-    <span
-      aria-label="Loading documents"
-      class="c-spinner"
-      role="progressbar"
+    <ul
+      class="usa-list usa-list--unstyled measure-5"
     />
+    <ul
+      class="usa-list usa-list--unstyled measure-5"
+    />
+    <label
+      class="margin-top-2 usa-button usa-button--outline"
+    >
+      Choose files
+      <input
+        accept="image/*,.pdf"
+        class="c-file-card-list__input"
+        multiple=""
+        type="file"
+      />
+    </label>
   </div>
   <button
     class="usa-button position-relative margin-top-4"
@@ -995,13 +1055,25 @@ exports[`ComponentWithUser renders the appropriate identification upload content
     </div>
   </details>
   <div
-    class="margin-top-8 text-center"
+    class="margin-bottom-4"
   >
-    <span
-      aria-label="Loading documents"
-      class="c-spinner"
-      role="progressbar"
+    <ul
+      class="usa-list usa-list--unstyled measure-5"
     />
+    <ul
+      class="usa-list usa-list--unstyled measure-5"
+    />
+    <label
+      class="margin-top-2 usa-button usa-button--outline"
+    >
+      Choose files
+      <input
+        accept="image/*,.pdf"
+        class="c-file-card-list__input"
+        multiple=""
+        type="file"
+      />
+    </label>
   </div>
   <button
     class="usa-button position-relative margin-top-4"
@@ -1135,13 +1207,25 @@ exports[`ComponentWithUser renders the appropriate identification upload content
     </div>
   </details>
   <div
-    class="margin-top-8 text-center"
+    class="margin-bottom-4"
   >
-    <span
-      aria-label="Loading documents"
-      class="c-spinner"
-      role="progressbar"
+    <ul
+      class="usa-list usa-list--unstyled measure-5"
     />
+    <ul
+      class="usa-list usa-list--unstyled measure-5"
+    />
+    <label
+      class="margin-top-2 usa-button usa-button--outline"
+    >
+      Choose files
+      <input
+        accept="image/*,.pdf"
+        class="c-file-card-list__input"
+        multiple=""
+        type="file"
+      />
+    </label>
   </div>
   <button
     class="usa-button position-relative margin-top-4"

@@ -19,7 +19,7 @@ from massgov.pfml.api.models.applications.common import LeaveReason, PaymentPref
 from massgov.pfml.api.models.applications.requests import ApplicationRequestBody
 from massgov.pfml.api.models.applications.responses import DocumentResponse
 from massgov.pfml.api.models.common import LookupEnum
-from massgov.pfml.api.services.fineos_actions import get_documents, register_employee
+from massgov.pfml.api.services.fineos_actions import get_documents
 from massgov.pfml.api.util.phone import convert_to_E164
 from massgov.pfml.api.util.response import Response
 from massgov.pfml.api.validation.exceptions import (
@@ -54,7 +54,14 @@ from massgov.pfml.db.models.applications import (
     WorkPatternDay,
     WorkPatternType,
 )
-from massgov.pfml.db.models.employees import Address, AddressType, Claim, GeoState, LkAddressType
+from massgov.pfml.db.models.employees import (
+    Address,
+    AddressType,
+    Claim,
+    GeoState,
+    LkAddressType,
+    LkGender,
+)
 from massgov.pfml.util.datetime import utcnow
 from massgov.pfml.util.pydantic.types import Regexes
 
@@ -949,20 +956,64 @@ def claim_is_valid_for_application_import(claim: Optional[Claim]) -> Optional[Re
     return None
 
 
-def set_application_fields_from_claim(
+def set_application_fields_from_db_claim(
     fineos: massgov.pfml.fineos.AbstractFINEOSClient,
     application: Application,
     claim: Claim,
     db_session: db.Session,
-) -> str:
+) -> None:
     """
-    Set Application core fields using Claim and calculate the fineos_web_id
+    Set Application core fields using Claim
     """
     application.claim_id = claim.claim_id
     application.tax_identifier_id = claim.employee.tax_identifier_id
     application.employer_fein = claim.employer_fein
     application.imported_from_fineos_at = utcnow()
 
-    return register_employee(
-        fineos, claim.employee_tax_identifier, application.employer_fein, db_session,  # type: ignore
-    )
+
+def set_customer_detail_fields(
+    fineos: massgov.pfml.fineos.AbstractFINEOSClient,
+    fineos_web_id: str,
+    application: Application,
+    db_session: db.Session,
+) -> None:
+    """
+    Retrieve customer details from FINEOS and set for application fields
+    """
+    details = fineos.read_customer_details(fineos_web_id)
+
+    application.first_name = details.firstName
+    application.middle_name = details.secondName
+    application.last_name = details.lastName
+    application.date_of_birth = details.dateOfBirth
+
+    if details.gender is not None:
+        db_gender = (
+            db_session.query(LkGender)
+            .filter(LkGender.fineos_gender_description == details.gender)
+            .one_or_none()
+        )
+        if db_gender is not None:
+            application.gender_id = db_gender.gender_id
+
+    has_state_id = False
+    if details.classExtensionInformation is not None:
+        mass_id = next(
+            (info for info in details.classExtensionInformation if info.name == "MassachusettsID"),
+            None,
+        )
+        if mass_id is not None and mass_id.stringValue != "":
+            application.mass_id = str(mass_id.stringValue).upper()
+            has_state_id = True
+    application.has_state_id = has_state_id
+
+    if isinstance(details.customerAddress, massgov.pfml.fineos.models.customer_api.CustomerAddress):
+        # Convert CustomerAddress to ApiAddress, in order to use add_or_update_address
+        address_to_create = ApiAddress(
+            line_1=details.customerAddress.address.addressLine1,
+            line_2=details.customerAddress.address.addressLine2,
+            city=details.customerAddress.address.addressLine4,
+            state=details.customerAddress.address.addressLine6,
+            zip=details.customerAddress.address.postCode,
+        )
+        add_or_update_address(db_session, address_to_create, AddressType.RESIDENTIAL, application)

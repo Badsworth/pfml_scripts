@@ -242,9 +242,8 @@ class MaximumWeeklyBenefitsStepProcessor(AbstractStepProcessor):
                     extra["pay_period_start_date"] = pay_period.start_date
                     extra["pay_period_end_date"] = pay_period.end_date
                     logger.info(
-                        "Only a single claim found for pay period %s, skipping max weekly check",
-                        str(pay_period),
-                        extra,
+                        "Only a single claim found for pay period, skipping max weekly check",
+                        extra=extra,
                     )
                     continue
 

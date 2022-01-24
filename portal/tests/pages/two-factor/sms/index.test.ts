@@ -1,7 +1,10 @@
 import { act, screen } from "@testing-library/react";
 import { mockAuth, renderPage } from "../../../test-utils";
 import IndexSMS from "../../../../src/pages/two-factor/sms/index";
+import tracker from "../../../../src/services/tracker";
 import userEvent from "@testing-library/user-event";
+
+jest.mock("../../../../src/services/tracker");
 
 beforeEach(() => {
   mockAuth(true);
@@ -59,6 +62,9 @@ describe("Two-factor SMS Index", () => {
     });
     await act(async () => await userEvent.click(submitButton));
 
+    expect(tracker.trackEvent).toHaveBeenCalledWith(
+      "User entered MFA setup flow"
+    );
     expect(goToPageFor).toHaveBeenCalledWith("EDIT_MFA_PHONE");
     expect(updateUser).not.toHaveBeenCalled();
   });
@@ -81,6 +87,7 @@ describe("Two-factor SMS Index", () => {
     });
     await act(async () => await userEvent.click(submitButton));
 
+    expect(tracker.trackEvent).toHaveBeenCalledWith("User opted out of MFA");
     expect(goToPageFor).toHaveBeenCalledWith("CONTINUE");
     expect(updateUser).toHaveBeenCalledWith(expect.any(String), {
       mfa_delivery_preference: "Opt Out",
