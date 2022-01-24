@@ -50,6 +50,7 @@ jobs:
           workflow: e2e-cypress.yml
           token: ${{ secrets.PFML_DEVOPS_TOKEN }}
           wait-for-completion: false
+          display-workflow-run-url-interval: 30s
           inputs: |
             {
               "target_environment": "${{ matrix.environment }}",
