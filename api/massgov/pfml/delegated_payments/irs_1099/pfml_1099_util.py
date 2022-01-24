@@ -1077,9 +1077,7 @@ def get_withholdings(db_session: db.Session) -> NamedTuple:
     #           WHEN SW.PAYMENT_ID IS NOT NULL THEN DATE_PART('YEAR', SW.ENDED_AT) END = 2022
     federal_withholding = (
         db_session.query(StateLog.payment_id, cast(StateLog.ended_at, Date).label("ended_at"))
-        .filter(
-            StateLog.end_state_id == State.FEDERAL_WITHHOLDING_FUNDS_SENT.state_id
-        )
+        .filter(StateLog.end_state_id == State.FEDERAL_WITHHOLDING_FUNDS_SENT.state_id)
         .subquery()
     )
     state_withholding = (
@@ -1099,14 +1097,19 @@ def get_withholdings(db_session: db.Session) -> NamedTuple:
             ).label("withholding_date"),
             case(
                 [
-                    (federal_withholding.c.payment_id != is_none, 'Federal Withholding'),
-                    (state_withholding.c.payment_id != is_none, 'State Withholding'),
-                ]   
+                    (federal_withholding.c.payment_id != is_none, "Federal Withholding"),
+                    (state_withholding.c.payment_id != is_none, "State Withholding"),
+                ]
             ).label("withholding_type"),
         )
         .outerjoin(federal_withholding, Payment.payment_id == federal_withholding.c.payment_id)
         .outerjoin(state_withholding, Payment.payment_id == state_withholding.c.payment_id)
-        .filter(or_(federal_withholding.c.payment_id != is_none, state_withholding.c.payment_id != is_none))
+        .filter(
+            or_(
+                federal_withholding.c.payment_id != is_none,
+                state_withholding.c.payment_id != is_none,
+            )
+        )
         .filter(
             or_(
                 case(
