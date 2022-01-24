@@ -1,37 +1,42 @@
 import UploadDocsOptions, {
   UploadType,
 } from "../../../../src/pages/applications/upload/index";
-import { act, render, screen } from "@testing-library/react";
+import { act, screen, waitFor } from "@testing-library/react";
 import { AbsencePeriod } from "../../../../src/models/AbsencePeriod";
+import { AppLogic } from "../../../../src/hooks/useAppLogic";
 import ClaimDetail from "../../../../src/models/ClaimDetail";
 import LeaveReason from "../../../../src/models/LeaveReason";
-import React from "react";
-import User from "../../../../src/models/User";
-import useAppLogic from "../../../../src/hooks/useAppLogic";
+import { renderPage } from "../../../test-utils";
 import userEvent from "@testing-library/user-event";
 
 jest.mock("../../../../src/services/tracker");
 
-const UploadDocsOptionsWithAppLogic = ({
-  addAppLogicMocks = (appLogic) => {},
-  ...props
-}) => {
-  const appLogic = useAppLogic();
-  appLogic.auth.requireLogin = jest.fn();
-  appLogic.users.requireUserConsentToDataAgreement = jest.fn();
-  appLogic.users.requireUserRole = jest.fn();
-  appLogic.users.user = new User({ consented_to_data_sharing: true });
-  appLogic.claims.loadClaimDetail = jest.fn();
-  appLogic.portalFlow.goToNextPage = jest.fn();
+function setup(claimDetail: Partial<ClaimDetail> = {}) {
+  const claim = new ClaimDetail({
+    fineos_absence_id: "mock-absence-id",
+    application_id: "mock-claim-id",
+    ...claimDetail,
+  });
+  const goToNextPageSpy = jest.fn();
+  const setAppErrorsSpy = jest.fn();
 
-  addAppLogicMocks(appLogic);
+  const utils = renderPage(
+    UploadDocsOptions,
+    {
+      addCustomSetup: (appLogic: AppLogic) => {
+        appLogic.claims.claimDetail = claim;
+        appLogic.claims.loadClaimDetail = jest.fn();
+        appLogic.portalFlow.goToNextPage = goToNextPageSpy;
+        appLogic.setAppErrors = setAppErrorsSpy;
+      },
+    },
+    {
+      query: { absence_id: claim.fineos_absence_id },
+    }
+  );
 
-  return <UploadDocsOptions appLogic={appLogic} {...props} />;
-};
-
-const addClaimDetail = (appLogic, claimDetail) => {
-  appLogic.claims.claimDetail = claimDetail;
-};
+  return { ...utils, setAppErrorsSpy, goToNextPageSpy };
+}
 
 const absencePeriodScenarios = {
   bondingWithNewBorn: {
@@ -77,55 +82,25 @@ const absencePeriodScenarios = {
 
 describe("UploadDocsOptions", () => {
   it("renders the page and all input choices when claim has an absence period for each leave reason", () => {
-    const claimDetail = new ClaimDetail({
+    const { container } = setup({
       absence_periods: Object.values(absencePeriodScenarios).map(
         (scenario) => scenario.absencePeriod
       ),
-      application_id: "mock-claim-id",
-      fineos_absence_id: "mock-absence-id",
     });
-
-    const { container } = render(
-      <UploadDocsOptionsWithAppLogic
-        addAppLogicMocks={(appLogic) => {
-          addClaimDetail(appLogic, claimDetail);
-        }}
-        query={{
-          absence_id: "mock-absence-id",
-        }}
-      />
-    );
 
     expect(container.firstChild).toMatchSnapshot();
   });
 
   describe("when claim has no absence periods", () => {
-    let appLogic, container;
-    beforeEach(() => {
-      const claimDetail = new ClaimDetail({
-        absence_periods: [],
-        fineos_absence_id: "mock-absence-id",
-        application_id: "mock-claim-id",
-      });
-
-      ({ container } = render(
-        <UploadDocsOptionsWithAppLogic
-          addAppLogicMocks={(_appLogic) => {
-            appLogic = _appLogic;
-            addClaimDetail(_appLogic, claimDetail);
-          }}
-          query={{
-            absence_id: "mock-absence-id",
-          }}
-        />
-      ));
-    });
-
     it("renders only id input choices", () => {
+      const { container } = setup({ absence_periods: [] });
+
       expect(container.firstChild).toMatchSnapshot();
     });
 
     it(`routes to the page for ${UploadType.mass_id} when "Massachusetts driver’s license or ID" radio is clicked`, async () => {
+      const { goToNextPageSpy } = setup({ absence_periods: [] });
+
       const radio = screen.getByLabelText(
         /Massachusetts driver’s license or ID/
       );
@@ -142,7 +117,7 @@ describe("UploadDocsOptions", () => {
         await userEvent.click(submitButton);
       });
 
-      expect(appLogic.portalFlow.goToNextPage).toHaveBeenCalledWith(
+      expect(goToNextPageSpy).toHaveBeenCalledWith(
         {},
         { claim_id: "mock-claim-id", absence_id: "mock-absence-id" },
         UploadType.mass_id
@@ -150,6 +125,8 @@ describe("UploadDocsOptions", () => {
     });
 
     it(`routes to the page for ${UploadType.non_mass_id} when "Different identification documentation" radio is clicked`, async () => {
+      const { goToNextPageSpy } = setup({ absence_periods: [] });
+
       const radio = screen.getByLabelText(
         /Different identification documentation/
       );
@@ -166,7 +143,7 @@ describe("UploadDocsOptions", () => {
         await userEvent.click(submitButton);
       });
 
-      expect(appLogic.portalFlow.goToNextPage).toHaveBeenCalledWith(
+      expect(goToNextPageSpy).toHaveBeenCalledWith(
         {},
         { claim_id: "mock-claim-id", absence_id: "mock-absence-id" },
         UploadType.non_mass_id
@@ -175,70 +152,47 @@ describe("UploadDocsOptions", () => {
   });
 
   it("shows a validation error when a user does not choose a doc type option", async () => {
-    const claimDetail = new ClaimDetail({
-      application_id: "mock-claim-id",
-      fineos_absence_id: "mock-absence-id",
-      absence_periods: [],
-    });
-
-    let appLogic;
-
-    render(
-      <UploadDocsOptionsWithAppLogic
-        addAppLogicMocks={(_appLogic) => {
-          appLogic = _appLogic;
-          addClaimDetail(_appLogic, claimDetail);
-        }}
-        query={{
-          absence_id: "mock-absence-id",
-        }}
-      />
-    );
+    const { goToNextPageSpy, setAppErrorsSpy } = setup();
 
     const submitButton = screen.getByRole("button", {
       name: "Save and continue",
     });
 
-    await act(async () => {
-      await userEvent.click(submitButton);
+    userEvent.click(submitButton);
+
+    await waitFor(() => {
+      expect(setAppErrorsSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          items: expect.arrayContaining([
+            expect.objectContaining({
+              field: "upload_docs_options",
+              type: "required",
+            }),
+          ]),
+        })
+      );
     });
 
-    const { field, type } = appLogic.appErrors.items[0];
-    expect([field, type]).toEqual(["upload_docs_options", "required"]);
-    expect(appLogic.portalFlow.goToNextPage).not.toHaveBeenCalled();
+    expect(goToNextPageSpy).not.toHaveBeenCalled();
   });
 
   Object.entries(absencePeriodScenarios).forEach(
     ([key, { absencePeriod, uploadType, labelText }]) => {
       describe(`when absence period is ${key}`, () => {
-        let appLogic;
-
-        beforeEach(() => {
-          const claimDetail = new ClaimDetail({
-            application_id: "mock-claim-id",
-            fineos_absence_id: "mock-absence-id",
+        it(`renders radio with ${labelText}`, async () => {
+          setup({
             absence_periods: [absencePeriod],
           });
-          render(
-            <UploadDocsOptionsWithAppLogic
-              addAppLogicMocks={(_appLogic) => {
-                appLogic = _appLogic;
-                addClaimDetail(_appLogic, claimDetail);
-              }}
-              query={{
-                absence_id: "mock-absence-id",
-              }}
-            />
-          );
-        });
-
-        it(`renders radio with ${labelText}`, async () => {
           const radio = await screen.findByLabelText(labelText);
 
           expect(radio).toBeInTheDocument();
         });
 
         it(`routes to the page for ${uploadType} when radio is clicked`, async () => {
+          const { goToNextPageSpy } = setup({
+            absence_periods: [absencePeriod],
+          });
+
           const radio = screen.getByLabelText(labelText);
 
           await act(async () => {
@@ -253,7 +207,7 @@ describe("UploadDocsOptions", () => {
             await userEvent.click(submitButton);
           });
 
-          expect(appLogic.portalFlow.goToNextPage).toHaveBeenCalledWith(
+          expect(goToNextPageSpy).toHaveBeenCalledWith(
             {},
             { claim_id: "mock-claim-id", absence_id: "mock-absence-id" },
             uploadType
