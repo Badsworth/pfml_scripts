@@ -39,6 +39,7 @@ from massgov.pfml.api.services.fineos_actions import (
     get_documents,
     mark_documents_as_received,
     mark_single_document_as_received,
+    register_employee,
     send_tax_withholding_preference,
     send_to_fineos,
     submit_payment_preference,
@@ -161,8 +162,14 @@ def applications_import():
         fineos = massgov.pfml.fineos.create_client()
         # we have already check that the claim is not None in
         # claim_is_valid_for_application_import
-        applications_service.set_application_fields_from_claim(
+        applications_service.set_application_fields_from_db_claim(
             fineos, application, claim, db_session  # type: ignore
+        )
+        fineos_web_id = register_employee(
+            fineos, claim.employee_tax_identifier, application.employer_fein, db_session,  # type: ignore
+        )
+        applications_service.set_customer_detail_fields(
+            fineos, fineos_web_id, application, db_session
         )
         db_session.add(application)
         db_session.commit()
