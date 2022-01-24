@@ -507,7 +507,7 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
         class="usa-accordion__button"
         type="button"
       >
-        Why your sent payment amount may be less than your approved benefit amount
+        Why the amount you received may be less than your approved benefit amount
       </button>
     </h2>
     <div
@@ -517,16 +517,16 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
       id="accordion31"
     >
       <p>
-        To see your maximum weekly benefit amount, view your approval notice in your 
+        To see your maximum weekly benefit amount, view your approval notice in the 
         <a
           href="/applications/status?absence_id=mock-absence-case-id#view_notices"
         >
-          application’s notices
+          notice section of your application.
         </a>
         .
       </p>
       <p>
-        The sent payment amount you see on this page may be less than the maximum benefit amount due to 
+        The payment amount you see on this page may be less than the maximum benefit amount due to 
         <a
           href="https://www.mass.gov/info-details/how-other-leave-and-benefits-can-affect-your-paid-family-and-medical-leave"
           rel="noopener noreferrer"
@@ -546,7 +546,7 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
           You or your employer report additional other leave, income or benefits
         </li>
         <li>
-          You reach the maximum total amount that you can receive in PFML benefits across multiple applications. The maximum weekly benefit amount is $1084 per week.
+          You reach the maximum total amount that you can receive in PFML benefits across multiple applications.
         </li>
         <li>
           You receive a payment for a pay period less than a full week
