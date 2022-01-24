@@ -1,6 +1,7 @@
 import {
   BenefitsApplicationDocument,
   DocumentType,
+  findDocumentsByTypes,
 } from "../../models/Document";
 import withBenefitsApplication, {
   WithBenefitsApplicationProps,
@@ -19,7 +20,6 @@ import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import Spinner from "../../components/core/Spinner";
 import { Trans } from "react-i18next";
-import findDocumentsByTypes from "../../utils/findDocumentsByTypes";
 import { get } from "lodash";
 import hasDocumentsLoadError from "../../utils/hasDocumentsLoadError";
 import routes from "../../routes";

@@ -1,4 +1,8 @@
-import { DocumentType, DocumentTypeEnum } from "../../../models/Document";
+import {
+  DocumentType,
+  DocumentTypeEnum,
+  findDocumentsByTypes,
+} from "../../../models/Document";
 import LeaveReason, { LeaveReasonType } from "../../../models/LeaveReason";
 import PreviousLeave, {
   PreviousLeaveType,
@@ -32,7 +36,6 @@ import ReviewHeading from "../../../components/ReviewHeading";
 import Title from "../../../components/core/Title";
 import { Trans } from "react-i18next";
 import WeeklyHoursWorkedRow from "../../../components/employers/WeeklyHoursWorkedRow";
-import findDocumentsByTypes from "../../../utils/findDocumentsByTypes";
 import formatDate from "../../../utils/formatDate";
 import getClosestOpenFollowUpDate from "../../../utils/getClosestOpenFollowUpDate";
 import isBlank from "../../../utils/isBlank";
