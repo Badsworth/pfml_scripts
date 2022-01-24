@@ -96,6 +96,7 @@
     "dotenv": "^8.2.0",
     "encoding": "^0.1.13",
     "enquirer": "^2.3.6",
+    "exiftool-vendored": "^15.10.1",
     "faker": "^4.1.0",
     "form-data": "^4.0.0",
     "graphql": "^15.4.0",

@@ -10,73 +10,62 @@
 
 import { promises as fs } from 'fs';
 import path from 'path';
-import {
-  PageSizes,
-  PDFDocument
-} from 'pdf-lib';
+import { exiftool } from "exiftool-vendored";
+import { PDFDocument } from 'pdf-lib';
 import config from "../src/config";
-import sharp from 'sharp';
 
 type DocumentType = 
   | "pdf"
   | "jpg"
   | "png";
 
-export const generateDocument = async (
+export const withGeneratedDocument = async (
   type: DocumentType,
-  size: [ number, "mb" | "kb" ]
-): Promise<string> => {
-  // truncate size to ones
-  const sizeTruncated = size[0];
+  size: [ number, "mb" | "kb" ],
+  cb: 
+    | ((filepath: string) => Promise<void>)
+    | ((filepath: string) => void)
+): Promise<void> => {
+  const sizeTruncated = Math.max(Math.round(size[0]), 1);
   const targetSizeKb = sizeTruncated 
     * (size[1] === "mb" ? 1000 : 1);
 
-  const tempDir = await fs.mkdtemp(`${type}-${targetSizeKb}`);
+  const tempDir = await fs.mkdtemp(`${type}-${targetSizeKb}kb-`);
   const documentPath = path.join(tempDir, `generated.${type}`);
 
-  if (type === "jpg" || type === "png") {
-    const image = sharp({
-      create: {
-       width: 500,
-       height: 200,
-       channels: 3,
-       background: { r: 255, g: 255, b: 255 }
-      }
-    });
+  // create an array of garbage data that we'll use to pad out
+  // files in order to get them close to the target size
+  const junkData = new Array(targetSizeKb * 100)
+      .fill(null)
+      // generate random 10-character ASCII strings
+      .map(() => Math.random().toString().slice(0, 10));
 
-    if (type == "jpg") {
-      await image.jpeg().toFile(documentPath);
-    } else {
-      await image.png().toFile(documentPath);
-    }
+  if (type === "jpg" || type === "png") {
+    const baseFile = type === "jpg"
+      ? "./cypress/fixtures/docTesting/xxsmall-90B.jpg"
+      : "./cypress/fixtures/docTesting/xxsmall-90B.png"
+
+    await fs.copyFile(baseFile, documentPath);
   }
 
   if (type === "pdf") {
-    const text = (
-      new Array(1000).fill("A")
-    ).join();
     const doc = await PDFDocument.create();
-    const page = await doc.addPage(PageSizes.Letter);
-
-    page.moveTo(10, 10);
-    page.drawText(
-      new Array(targetSizeKb * 100)
-        .fill("TENBYTES!")
-        .join(" ")
-    );
-
-    // let sizeInBytes = 0;
-    // do {
-    //   page.drawText(text, { size: 10 });
-    //   page.moveDown(10);
-    //   sizeInBytes = (await doc.save()).length;
-    //   console.log(sizeInBytes);
-    // } while ((sizeInBytes / 1000) < (targetSizeKb - 1));
 
     await fs.writeFile(documentPath, await doc.save());
   }
 
-  return documentPath;
+  await exiftool.write(
+    documentPath,
+    { UserComment: junkData.join("") }
+  );
+  await exiftool.end();
+
+  await cb(documentPath);
+
+  // clean up
+  await fs.rm(tempDir, { recursive: true });
+
+  return;
 }
 
 export interface DocumentTestCase {
