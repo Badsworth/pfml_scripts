@@ -927,10 +927,20 @@ export function respondToLeaveAdminRequest(
   cy.contains("Thanks for reviewing the application", { timeout: 30000 });
 }
 
+type NoticeType =
+  | "Approval notice (PDF)"
+  | "Denial notice (PDF)"
+  | "Appeal Acknowledgment (PDF)"
+  | "Benefit Amount Change Notice (PDF)"
+  | "Approved Time Cancelled (PDF)"
+  | "Change Request Denied (PDF)"
+  | "Leave Allotment Change Notice (PDF)"
+  | "Change Request Approved (PDF)";
+
 export function checkNoticeForLeaveAdmin(
   fineosAbsenceId: string,
   claimantName: string,
-  noticeType: string
+  noticeType: NoticeType,
 ): void {
   cy.visit(`/employers/applications/status/?absence_id=${fineosAbsenceId}`);
   cy.contains("h1", claimantName, { timeout: 20000 }).should("be.visible");
