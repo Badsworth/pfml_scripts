@@ -69,11 +69,10 @@ module "api" {
   enable_application_import      = "1"
   release_version                = var.release_version
 
-  # TODO: Fill this in after the portal is deployed.
-  cognito_user_pool_arn       = null
-  cognito_user_pool_id        = ""
-  cognito_user_pool_client_id = ""
-  cognito_user_pool_keys_url  = ""
+  cognito_user_pool_arn       = "arn:aws:cognito-idp:us-east-1:498823821309:userpool/us-east-1_8OEJk2XeD"
+  cognito_user_pool_id        = "us-east-1_8OEJk2XeD"
+  cognito_user_pool_client_id = "5pf01ur8rsdoumtu3ta8jvqbsj"
+  cognito_user_pool_keys_url  = "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_8OEJk2XeD/.well-known/jwks.json"
 
   # TODO: Connect to an RMV endpoint if desired. All nonprod environments are connected to the staging API
   #       in either a fully-mocked or partially-mocked setting.
