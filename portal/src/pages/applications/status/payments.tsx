@@ -235,12 +235,12 @@ export const Payments = ({
       : "ReducedSchedule_";
     const fourteenthDayOfClaim = dayjs(initialClaimStartDate)
       .add(14, "day")
-      .format("YYYY-MM-DD");
+      .format("MMMM D, YYYY");
 
     if (isRetroactive || approvalDate >= fourteenthDayOfClaim) {
       checkbackDate = dayjs(approvalDate)
         .addBusinessDays(3)
-        .format("MM/DD/YYYY");
+        .format("MMMM D, YYYY");
       checkbackDateContext += isRetroactive
         ? "Retroactive"
         : "PostFourteenthClaimDate";
@@ -248,7 +248,7 @@ export const Payments = ({
       checkbackDate = dayjs(initialClaimStartDate)
         .add(14, "day")
         .addBusinessDays(3)
-        .format("MM/DD/YYYY");
+        .format("MMMM D, YYYY");
       checkbackDateContext += "PreFourteenthClaimDate";
     }
   }
