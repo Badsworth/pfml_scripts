@@ -1,5 +1,5 @@
 import { act, renderHook } from "@testing-library/react-hooks";
-import TempFileCollection from "../../src/models/TempFileCollection";
+import ApiResourceCollection from "../../src/models/ApiResourceCollection";
 import { ValidationError } from "../../src/errors";
 import { makeFile } from "../test-utils";
 import tracker from "../../src/services/tracker";
@@ -26,7 +26,7 @@ describe("useFilesLogic", () => {
   });
 
   it("returns collection and callback functions", () => {
-    expect(files).toBeInstanceOf(TempFileCollection);
+    expect(files).toBeInstanceOf(ApiResourceCollection);
     expect(typeof processFiles).toBe("function");
     expect(typeof removeFile).toBe("function");
   });

@@ -1,10 +1,11 @@
+import ApiResourceCollection from "../models/ApiResourceCollection";
 import BaseCollection from "../models/BaseCollection";
 import { useState } from "react";
 
 // Gets the typeof for the class we're storing in the collection
-type InferCollectionItem<TCollection> = TCollection extends BaseCollection<
-  infer K
->
+type InferCollectionItem<TCollection> = TCollection extends
+  | BaseCollection<infer K>
+  | ApiResourceCollection<infer K>
   ? K
   : unknown;
 
@@ -12,7 +13,7 @@ type InferCollectionItem<TCollection> = TCollection extends BaseCollection<
  * React hook for creating a state for a Collection of objects
  */
 const useCollectionState = <
-  TCollection extends BaseCollection<TItem>,
+  TCollection extends BaseCollection<TItem> | ApiResourceCollection<TItem>,
   TItem = InferCollectionItem<TCollection>
 >(
   initialCollection: TCollection
