@@ -5,13 +5,7 @@ import {
   MilitaryExigencyClaim,
   ScenarioSpecification,
 } from "../generation/Scenario";
-import {
-  addWeeks,
-  subWeeks,
-  startOfWeek,
-  addDays,
-  subDays,
-} from "date-fns";
+import { addWeeks, subWeeks, startOfWeek, addDays, subDays } from "date-fns";
 
 /**
  * Cypress Testing Scenarios.
@@ -202,7 +196,7 @@ export const BIAP60: ScenarioSpecification = {
     // This scenario requires a 4 week leave time for payment calculation purposes.
     leave_dates: [subWeeks(mostRecentSunday, 3), addWeeks(mostRecentSunday, 1)],
     metadata: {
-      expected_weekly_payment: "800.09",
+      expected_weekly_payment: "831.06",
       spanHoursStart: "4",
       spanHoursEnd: "4",
     },
@@ -392,7 +386,7 @@ export const BHAP1_OLB: ScenarioSpecification = {
     bondingDate: "future",
     docs: {
       MASSID: {},
-      BIRTHCERTIFICATE: {}
+      BIRTHCERTIFICATE: {},
     },
     // Create a leave in progress, so we can check adjustments for both made and future payments.
     leave_dates: [subWeeks(mostRecentSunday, 2), addWeeks(mostRecentSunday, 2)],
