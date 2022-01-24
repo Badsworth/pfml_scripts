@@ -1461,6 +1461,60 @@ const reductionCategories = {
   ["Unemployment Insurance" as const]: "",
 };
 
+
+type PaidLeaveDocumentStatus = "Unknown" | "Completed" | "Draft";
+
+class PaidLeaveDocumentPropertiesPage {
+
+  fileNameShouldMatch(re: RegExp): PaidLeaveDocumentsPage {
+    cy.get("span[id='DocumentPropertiesWidget']")
+      .find("span[id$='fileName']")
+      .invoke("text")
+      .should('match', re);
+    
+    fineos.clickBottomWidgetButton("OK")
+
+    return new PaidLeaveDocumentsPage();
+  }
+
+  setStatus(status: PaidLeaveDocumentStatus): PaidLeaveDocumentsPage {
+    cy.get("span[id^='DocumentPropertiesWidget']")
+      .find("select[id$='status']")
+      .select(status);
+
+    fineos.clickBottomWidgetButton("OK")
+
+    return new PaidLeaveDocumentsPage();
+  }
+}
+
+class PaidLeaveDocumentsPage {
+  assertDocumentExists(documentName: string): this {
+    assertHasDocument(documentName);
+    return this;
+  }
+
+  /**
+   * @param document - the name of the desired document
+   * @param cb - actions to take on the desired document's properties page
+   * @returns whatever `cb` returns
+   */
+  properties<T>(
+    document: string,
+    cb: (page: PaidLeaveDocumentPropertiesPage) => T,
+  ): T {
+    cy.get("table[id*='DocumentsForCaseListviewWidget'] tbody")
+      .contains('tr', document)
+      .click();
+    cy.get("input[id$='DocumentProperties']")
+      .click();
+    
+    waitForAjaxComplete();
+
+    return cb(new PaidLeaveDocumentPropertiesPage());
+  }
+}
+
 /**
  * Future or made payment.
  */
@@ -1476,6 +1530,7 @@ type Reduction = {
   frequency_same_as_due: boolean;
   amount: number;
 };
+
 /**
  * Class representing the Absence Paid Leave Case,
  * Claim should be adjudicated and approved before trying to access this.
@@ -1527,6 +1582,66 @@ class PaidLeavePage {
     });
 
     clickBottomWidgetButton();
+    return this;
+  }
+
+  createCorrespondenceDocument(
+    document:
+      | "Benefit Amount Change Notice",
+  ): this {
+
+    cy.get("a[id$=Correspondencelink]")
+      .click({ scrollBehavior: false })
+      .parents("li")
+      .findByText(document)
+      .click({ scrollBehavior: false });
+
+    waitForAjaxComplete();
+
+    cy.get("span[id='footerButtonsBar']")
+      .find("input[id$='next']")
+      .click();
+
+    return this;
+  }
+
+  triggerPaidLeaveNotice(
+    type:
+      | "Benefit Amount Change Notice"
+  ): this {
+    this.onTab(
+      "Tasks",
+      "Processes"
+    );
+
+    cy.contains(".TreeNodeElement", type).click({
+      force: true,
+    });
+    waitForAjaxComplete();
+    // When we're firing time triggers, there's always the possibility that the trigger has already happened
+    // by the time we get here. When this happens, the "Properties" button will be grayed out and unclickable.
+    cy.get('input[type="submit"][value="Properties"]').then((el) => {
+      if (el.is(":disabled")) {
+        cy.log("Skipping trigger because this time trigger has already fired");
+        return;
+      }
+      cy.wrap(el).click();
+
+      waitForAjaxComplete();
+
+      cy.get("span[id='ProcessPropertiesWidget']")
+        .find("input[id$='ContinueButton']")
+        .click();
+    });
+
+    this.onTab("General Claim");
+    return this;
+  }
+
+  documents(cb: (page: PaidLeaveDocumentsPage) => unknown): this {
+    this.onTab("Documents");
+    cb(new PaidLeaveDocumentsPage());
+    this.onTab("General Claim");
     return this;
   }
 
