@@ -7,6 +7,9 @@ module.exports = {
     plugins: [new TsconfigPathsPlugin()],
     extensions: [".ts", ".js"],
   },
+  externals: {
+    sharp: 'commonjs sharp'
+  },
   module: {
     rules: [
       {

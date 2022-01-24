@@ -8,7 +8,76 @@
   This file also contains other util functions/variables specifically for integration tests
 */
 
+import { promises as fs } from 'fs';
+import path from 'path';
+import {
+  PageSizes,
+  PDFDocument
+} from 'pdf-lib';
 import config from "../src/config";
+import sharp from 'sharp';
+
+type DocumentType = 
+  | "pdf"
+  | "jpg"
+  | "png";
+
+export const generateDocument = async (
+  type: DocumentType,
+  size: [ number, "mb" | "kb" ]
+): Promise<string> => {
+  // truncate size to ones
+  const sizeTruncated = size[0];
+  const targetSizeKb = sizeTruncated 
+    * (size[1] === "mb" ? 1000 : 1);
+
+  const tempDir = await fs.mkdtemp(`${type}-${targetSizeKb}`);
+  const documentPath = path.join(tempDir, `generated.${type}`);
+
+  if (type === "jpg" || type === "png") {
+    const image = sharp({
+      create: {
+       width: 500,
+       height: 200,
+       channels: 3,
+       background: { r: 255, g: 255, b: 255 }
+      }
+    });
+
+    if (type == "jpg") {
+      await image.jpeg().toFile(documentPath);
+    } else {
+      await image.png().toFile(documentPath);
+    }
+  }
+
+  if (type === "pdf") {
+    const text = (
+      new Array(1000).fill("A")
+    ).join();
+    const doc = await PDFDocument.create();
+    const page = await doc.addPage(PageSizes.Letter);
+
+    page.moveTo(10, 10);
+    page.drawText(
+      new Array(targetSizeKb * 100)
+        .fill("TENBYTES!")
+        .join(" ")
+    );
+
+    // let sizeInBytes = 0;
+    // do {
+    //   page.drawText(text, { size: 10 });
+    //   page.moveDown(10);
+    //   sizeInBytes = (await doc.save()).length;
+    //   console.log(sizeInBytes);
+    // } while ((sizeInBytes / 1000) < (targetSizeKb - 1));
+
+    await fs.writeFile(documentPath, await doc.save());
+  }
+
+  return documentPath;
+}
 
 export interface DocumentTestCase {
   description: string;
@@ -38,7 +107,7 @@ export const documentTests: Record<string, DocumentTestSpec> = {
     {
       description: "Should submit a PDF document with file size larger than 4.5MB (10MB) unsuccessfully and return API error",
       filepath: "./cypress/fixtures/docTesting/large-10MB.pdf",
-      statusCode: config("HAS_LARGE_FILE_COMPRESSION") === "true" ? 200 : 413,
+      statusCode: 413,
     },
   ],
   jpg: [
@@ -50,7 +119,7 @@ export const documentTests: Record<string, DocumentTestSpec> = {
     {
       description: "Should submit a JPG document with file size larger than 4.5MB (15.5MB) unsuccessfully and return API error",
       filepath: "./cypress/fixtures/docTesting/large-15.5MB.jpg",
-      statusCode: config("HAS_LARGE_FILE_COMPRESSION") === "true" ? 200 : 413,
+      statusCode: 413,
     },
   ],
   png: [
@@ -62,7 +131,7 @@ export const documentTests: Record<string, DocumentTestSpec> = {
     {
       description: "Should submit a PNG document with file size larger than 4.5MB (15.5MB) unsuccessfully and return API error",
       filepath: "./cypress/fixtures/docTesting/large-14MB.png",
-      statusCode: config("HAS_LARGE_FILE_COMPRESSION") === "true" ? 200 : 413,
+      statusCode: 413,
     },
   ],
   badFileTypes:  [
