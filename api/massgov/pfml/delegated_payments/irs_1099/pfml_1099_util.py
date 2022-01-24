@@ -1043,3 +1043,90 @@ def is_test_file() -> str:
 
 def is_correction_batch() -> bool:
     return os.environ.get("IRS_1099_CORRECTION_IND", "0") == "1"
+
+
+def get_withholdings(db_session: db.Session) -> NamedTuple:
+
+    year = get_tax_year()
+
+    is_none = None
+
+    # WITH FED_WTHLDS AS (SELECT PAYMENT_ID, CAST(ENDED_AT AS DATE) FROM STATE_LOG WHERE END_STATE_ID = 208),
+    # ST_WTHLDS AS (SELECT PAYMENT_ID, CAST(ENDED_AT AS DATE) FROM STATE_LOG WHERE END_STATE_ID = 207)
+    # SELECT CURRENT_TIMESTAMP CREATED_AT,
+    #   CURRENT_TIMESTAMP UPDATED_AT,
+    #   GEN_RANDOM_UUID() PFML_1099_PAYMENT_ID,
+    #   GEN_RANDOM_UUID() PFML_1099_BATCH_ID,
+    #   E.EMPLOYEE_ID EMPLOYEE_ID,
+    #   CL.CLAIM_ID CLAIM_ID,
+    #   P.PAYMENT_ID PAYMENT_ID,
+    #   P.AMOUNT WITHHOLDING_AMOUNT,
+    #   CASE WHEN FW.PAYMENT_ID IS NOT NULL THEN FW.ENDED_AT
+    #       WHEN SW.PAYMENT_ID IS NOT NULL THEN SW.ENDED_AT
+    #       ELSE NULL END WITHHOLDING_DATE,
+    #   CASE WHEN FW.PAYMENT_ID IS NOT NULL THEN 'Federal Withholding'
+    #       WHEN SW.PAYMENT_ID IS NOT NULL THEN 'State Withholding'
+    #       ELSE NULL END WITHHOLDING_TYPE
+    # FROM PAYMENT P
+    # INNER JOIN CLAIM CL ON P.CLAIM_ID = CL.CLAIM_ID
+    # INNER JOIN EMPLOYEE E ON CL.EMPLOYEE_ID = E.EMPLOYEE_ID
+    # LEFT OUTER JOIN FED_WTHLDS FW ON P.PAYMENT_ID = FW.PAYMENT_ID
+    # LEFT OUTER JOIN ST_WTHLDS SW ON P.PAYMENT_ID = SW.PAYMENT_ID
+    # WHERE FW.PAYMENT_ID IS NOT NULL OR SW.PAYMENT_ID IS NOT NULL
+    #   AND CASE WHEN FW.PAYMENT_ID IS NOT NULL THEN DATE_PART('YEAR', FW.ENDED_AT)
+    #           WHEN SW.PAYMENT_ID IS NOT NULL THEN DATE_PART('YEAR', SW.ENDED_AT) END = 2022
+    federal_withholding = (
+        db_session.query(StateLog.payment_id, cast(StateLog.ended_at, Date).label("ended_at"))
+        .filter(
+            StateLog.end_state_id == State.FEDERAL_WITHHOLDING_FUNDS_SENT.state_id
+        )
+        .subquery()
+    )
+    state_withholding = (
+        db_session.query(StateLog.payment_id, cast(StateLog.ended_at, Date).label("ended_at"))
+        .filter(StateLog.end_state_id == State.STATE_WITHHOLDING_FUNDS_SENT.state_id)
+        .subquery()
+    )
+
+    withholdings = (
+        db_session.query(Payment)
+        .add_columns(
+            case(
+                [
+                    (federal_withholding.c.payment_id != is_none, federal_withholding.c.ended_at),
+                    (state_withholding.c.payment_id != is_none, state_withholding.c.ended_at),
+                ]
+            ).label("withholding_date"),
+            case(
+                [
+                    (federal_withholding.c.payment_id != is_none, 'Federal Withholding'),
+                    (state_withholding.c.payment_id != is_none, 'State Withholding'),
+                ]   
+            ).label("withholding_type"),
+        )
+        .outerjoin(federal_withholding, Payment.payment_id == federal_withholding.c.payment_id)
+        .outerjoin(state_withholding, Payment.payment_id == state_withholding.c.payment_id)
+        .filter(or_(federal_withholding.c.payment_id != is_none, state_withholding.c.payment_id != is_none))
+        .filter(
+            or_(
+                case(
+                    [
+                        (
+                            federal_withholding.c.payment_id != is_none,
+                            func.date_part("YEAR", federal_withholding.c.ended_at),
+                        ),
+                        (
+                            state_withholding.c.payment_id != is_none,
+                            func.date_part("YEAR", state_withholding.c.ended_at),
+                        ),
+                    ]
+                )
+                == year,
+            )
+        )
+        .all()
+    )
+
+    logger.info("Number of Withholdings for %s: %s", year, len(withholdings))
+
+    return withholdings
