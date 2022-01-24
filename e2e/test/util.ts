@@ -10,7 +10,8 @@
 
 import { promises as fs } from 'fs';
 import path from 'path';
-import { exiftool } from "exiftool-vendored";
+import crypto from 'crypto';
+import { exiftool, Tags } from "exiftool-vendored";
 import { PDFDocument } from 'pdf-lib';
 import config from "../src/config";
 
@@ -18,6 +19,10 @@ type DocumentType =
   | "pdf"
   | "jpg"
   | "png";
+
+const getExifTag = (usedTags: string[]): keyof Tags => {
+  return 
+}
 
 export const withGeneratedDocument = async (
   type: DocumentType,
@@ -33,37 +38,62 @@ export const withGeneratedDocument = async (
   const tempDir = await fs.mkdtemp(`${type}-${targetSizeKb}kb-`);
   const documentPath = path.join(tempDir, `generated.${type}`);
 
-  // create an array of garbage data that we'll use to pad out
-  // files in order to get them close to the target size
-  const junkData = new Array(targetSizeKb * 100)
-      .fill(null)
-      // generate random 10-character ASCII strings
-      .map(() => Math.random().toString().slice(0, 10));
+  try {
+    if (type === "jpg" || type === "png") {
+      const baseFile = type === "jpg"
+        ? "./cypress/fixtures/docTesting/baseline.jpg"
+        : "./cypress/fixtures/docTesting/baseline.png"
+      const baseFileSizeBytes = (await fs.stat(baseFile)).size;
 
-  if (type === "jpg" || type === "png") {
-    const baseFile = type === "jpg"
-      ? "./cypress/fixtures/docTesting/xxsmall-90B.jpg"
-      : "./cypress/fixtures/docTesting/xxsmall-90B.png"
+      await fs.copyFile(baseFile, documentPath);
 
-    await fs.copyFile(baseFile, documentPath);
+      let padSizeBytes = (targetSizeKb * 1000) - baseFileSizeBytes;
+      while(padSizeBytes > 0) {
+        // exiftool blows up when asked to pipe in more than ~100kb of data,
+        // so this seems like a safe threshold
+        const bytesToInsert = Math.min(padSizeBytes, 10000);
+        const buf = Buffer.alloc(bytesToInsert);
+
+        const junkData = crypto.randomFillSync(buf).toString("ascii");
+
+        console.log(padSizeBytes);
+
+        await exiftool.write(
+          documentPath,
+          { Keywords: junkData },
+        );
+
+        padSizeBytes =- bytesToInsert;
+      }
+      await exiftool.end();
+    }
+
+    if (type === "pdf") {
+      const baseFile = "./cypress/fixtures/docTesting/baseline.pdf";
+      const baseFileSizeBytes = (await fs.stat(baseFile)).size;
+      const doc = await PDFDocument.load(
+        await fs.readFile(baseFile)
+      );
+
+      const padSizeBytes = (targetSizeKb * 1000) - baseFileSizeBytes;
+      const buf = Buffer.alloc(padSizeBytes);
+
+      const junkData = crypto.randomFillSync(buf);
+
+      doc.attach(junkData, "bytes.txt");
+
+      await fs.writeFile(documentPath, await doc.save());
+    }
+
+    await cb(documentPath);
   }
-
-  if (type === "pdf") {
-    const doc = await PDFDocument.create();
-
-    await fs.writeFile(documentPath, await doc.save());
+  catch (e) {
+    console.error(e);
   }
-
-  await exiftool.write(
-    documentPath,
-    { UserComment: junkData.join("") }
-  );
-  await exiftool.end();
-
-  await cb(documentPath);
-
-  // clean up
-  await fs.rm(tempDir, { recursive: true });
+  finally {
+    // clean up
+    await fs.rm(tempDir, { recursive: true });
+  }
 
   return;
 }
