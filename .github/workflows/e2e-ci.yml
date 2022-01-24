@@ -115,6 +115,3 @@ jobs:
               "run_nightly": "false",
               "title_override": ${{ toJSON(format('PR: {0}', github.event.pull_request.title)) }}
             }
-      - name: Display Environment
-        if: always()
-        run: echo "Another Workflow conclusion ${{ steps.trigger-step.outputs.workflow-conclusion }}"

@@ -107,7 +107,7 @@ jobs:
   # Health check job. Ensures Fineos is online before proceeding with testing. This saves resources
   # when we know we're going to get a high failure rate.
   health-check:
-    name: Check for Healthy Services for Environment ** ${{ github.event.inputs.target_environment }^^} **
+    name: Check for Healthy Services for Environment ** ${{ github.event.inputs.target_environment }} **
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
