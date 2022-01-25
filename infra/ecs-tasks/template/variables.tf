@@ -313,6 +313,11 @@ variable "enable_withholding_payments" {
   default     = "0"
 }
 
+variable "enable_employer_reimbursement_payments" {
+  description = "Enable employer reimbursement payments within the API system."
+  default     = "0"
+}
+
 variable "enable_pub_payments_copy_audit_report_schedule" {
   description = "Enable scheduling for 'pub-payments-copy-audit-report' ECS task"
   type        = bool
