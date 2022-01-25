@@ -51,15 +51,26 @@ describe("formatDate", () => {
       expect(date1).toEqual("1/13/****");
       expect(date2).toEqual("**/**/****");
     });
+  });
 
-    it("interprets impossible date unexpectedly", () => {
-      const date = formatDate("2021-13-14").short();
-      expect(date).toEqual("1/14/2022");
+  // These tests show some existing, likely incorrect, behavior.
+  describe("formatDate should return a blank string, but doesnt", () => {
+    it("interprets impossible date", () => {
+      const impossibleDate = "2021-13-14";
+      const short = formatDate(impossibleDate).short();
+      const full = formatDate(impossibleDate).full();
+
+      expect(short).toEqual("1/14/2022");
+      expect(full).toEqual("January 14, 2022");
     });
 
-    it("requires YYYY-MM-DD input (doesn't detect YYYY-DD-MM)", () => {
-      const date = formatDate("2021-16-12").short();
-      expect(date).toEqual("4/12/2022");
+    it("interprets YYYY-DD-MM input as YYYY-MM-DD", () => {
+      const yyyyddmmDate = "2021-16-12";
+      const short = formatDate(yyyyddmmDate).short();
+      const full = formatDate(yyyyddmmDate).full();
+
+      expect(short).toEqual("4/12/2022");
+      expect(full).toEqual("April 12, 2022");
     });
   });
 });
