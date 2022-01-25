@@ -3,6 +3,8 @@ import {
   OtherIncome,
   PaymentPreferenceRequestBody,
   ReducedScheduleLeavePeriods,
+  ApplicationRequestBody,
+  AbsencePeriodResponse,
 } from "../../src/_api";
 import {
   FineosTasks,
@@ -26,6 +28,7 @@ import {
 } from "../../src/util/typeUtils";
 import {
   dateToMMddyyyy,
+  extractLeavePeriodType,
   getLeavePeriod,
   minutesToHoursAndMinutes,
 } from "../../src/util/claims";
@@ -1375,8 +1378,8 @@ export class DocumentsPage {
     cy.get("span[id='DocumentPropertiesWidget']")
       .find("span[id$='fileName']")
       .invoke("text")
-      .should('match', fileExtension);
-    fineos.clickBottomWidgetButton("OK")
+      .should("match", fileExtension);
+    fineos.clickBottomWidgetButton("OK");
     return this;
   }
 }
@@ -2147,29 +2150,24 @@ export class ClaimantPage {
               assertValidClaim(claim);
               // Add all available leave periods.
               const [startDate, endDate] = getLeavePeriod(claim.leave_details);
+              const leavePeriodType = extractLeavePeriodType(
+                claim.leave_details
+              );
+              datesOfAbsence.toggleLeaveScheduleSlider(leavePeriodType);
               if (claim.has_continuous_leave_periods)
-                // @TODO adjust leave period/status as needed
-                datesOfAbsence
-                  .toggleLeaveScheduleSlider("continuos")
-                  .addFixedTimeOffPeriod({
-                    status: "Known",
-                    start: startDate,
-                    end: endDate,
-                  });
-              if (claim.has_intermittent_leave_periods)
-                datesOfAbsence
-                  // @TODO add method to add intermittent leave period
-                  .toggleLeaveScheduleSlider("intermittent");
+                datesOfAbsence.addFixedTimeOffPeriod({
+                  status: "Known",
+                  start: startDate,
+                  end: endDate,
+                });
               if (
                 claim.has_reduced_schedule_leave_periods &&
                 claim.leave_details.reduced_schedule_leave_periods
               )
-                datesOfAbsence
-                  .toggleLeaveScheduleSlider("reduced")
-                  .addReducedSchedulePeriod(
-                    "Known",
-                    claim.leave_details.reduced_schedule_leave_periods[0]
-                  );
+                datesOfAbsence.addReducedSchedulePeriod(
+                  "Known",
+                  claim.leave_details.reduced_schedule_leave_periods[0]
+                );
               return datesOfAbsence.nextStep((absenceDetails) => {
                 if (!claim?.work_pattern?.work_pattern_type)
                   throw new Error(`Missing work pattern`);
@@ -2414,12 +2412,12 @@ class DatesOfAbsence extends CreateNotificationStep {
    * @param type
    */
   toggleLeaveScheduleSlider(
-    type: "continuos" | "intermittent" | "reduced"
+    type: NonNullable<AbsencePeriodResponse["type"]>
   ): this {
     const scheduleSliderMap: Record<typeof type, string> = {
-      continuos: "One or more fixed time off periods",
-      intermittent: "Episodic / leave as needed",
-      reduced: "Reduced work schedule",
+      Continuous: "One or more fixed time off periods",
+      Intermittent: "Episodic / leave as needed",
+      "Reduced Schedule": "Reduced work schedule",
     };
     cy.contains("div.toggle-guidance-row", scheduleSliderMap[type])
       .find("span.slider")
@@ -2612,6 +2610,18 @@ class WrapUp extends CreateNotificationStep {
       cy.contains(absenceId);
       return cy.wrap(absenceId);
     });
+  }
+
+  selectWithholdingPreference(withholdingPreference?: boolean) {
+    if (withholdingPreference) {
+      cy.get(
+        "input[type='checkbox'][name$='_somSITFITOptIn_CHECKBOX']"
+      ).click();
+    }
+    cy.get(
+      "input[type='checkbox'][name$='_somSITFITVerification_CHECKBOX']"
+    ).click();
+    return this;
   }
 }
 

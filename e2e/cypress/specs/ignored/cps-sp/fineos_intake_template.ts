@@ -7,7 +7,10 @@ import {
   PrimaryRelationshipDescription,
 } from "../../../actions/fineos.pages";
 import { Submission } from "../../../../src/types";
-import { getLeavePeriod } from "../../../../src/util/claims";
+import {
+  extractLeavePeriodType,
+  getLeavePeriod,
+} from "../../../../src/util/claims";
 import { waitForAjaxComplete } from "../../../actions/fineos";
 
 /**
@@ -68,43 +71,48 @@ describe("Submit a claim through Fineos intake process, verify the Absence Case"
                 .chooseTypeOfRequest("Out of work for another reason")
                 .nextStep((reasonOfAbsence) => {
                   reasonOfAbsence.fillAbsenceReason(absenceDescription);
-
                   // @TODO Fill absence relationship for caring leave or bonding claims
                   // .fillAbsenceRelationship(relationshipDescription);
                   return reasonOfAbsence.nextStep((datesOfAbsence) => {
                     assertValidClaim(claim.claim);
-
                     const [startDate, endDate] = getLeavePeriod(
                       claim.claim.leave_details
                     );
-                    if (claim.claim.has_continuous_leave_periods)
-                      // @TODO adjust leave period/status as needed
-                      datesOfAbsence
-                        .toggleLeaveScheduleSlider("continuos")
-                        .addFixedTimeOffPeriod({
+                    const leavePeriodType = extractLeavePeriodType(
+                      claim.claim.leave_details
+                    );
+                    datesOfAbsence.toggleLeaveScheduleSlider(
+                      extractLeavePeriodType(claim.claim.leave_details)
+                    );
+                    switch (leavePeriodType) {
+                      case "Continuous":
+                        datesOfAbsence.addFixedTimeOffPeriod({
                           status: "Known",
                           start: startDate,
                           end: endDate,
                         });
-                    // @TODO CPS-906-G (CPS-2449)/intermittent & reduced leave periods.
-                    if (claim.claim.has_intermittent_leave_periods)
-                      // @TODO adjust leave period/status as needed
-                      datesOfAbsence
-                        // @TODO add method to add intermittent leave period
-                        .toggleLeaveScheduleSlider("intermittent")
-                        .addIntermittentLeavePeriod(startDate, endDate);
-                    if (
-                      claim.claim.has_reduced_schedule_leave_periods &&
-                      claim.claim.leave_details.reduced_schedule_leave_periods
-                    )
-                      // @TODO adjust leave period/status as needed
-                      datesOfAbsence
-                        .toggleLeaveScheduleSlider("continuos")
-                        .addReducedSchedulePeriod(
-                          "Known",
+                        break;
+                      case "Reduced Schedule": {
+                        if (
                           claim.claim.leave_details
-                            .reduced_schedule_leave_periods[0]
+                            .reduced_schedule_leave_periods
+                        )
+                          datesOfAbsence.addReducedSchedulePeriod(
+                            "Known",
+                            claim.claim.leave_details
+                              .reduced_schedule_leave_periods[0]
+                          );
+                        else
+                          throw Error("Failed to add reduced leave schedule");
+                        break;
+                      }
+                      default:
+                        datesOfAbsence.addIntermittentLeavePeriod(
+                          startDate,
+                          endDate
                         );
+                        break;
+                    }
                     return datesOfAbsence.nextStep((workAbsenceDetails) =>
                       // @TODO CPS-906-AA (CPS-2579)
                       workAbsenceDetails
@@ -113,6 +121,9 @@ describe("Submit a claim through Fineos intake process, verify the Absence Case"
                         // @TODO comment out applyStandardWorkWeek() and return wrapUp.finishNotificationCreation() and below that line.
                         .applyStandardWorkWeek()
                         .nextStep((wrapUp) => {
+                          wrapUp.selectWithholdingPreference(
+                            claim.claim.is_withholding_tax
+                          );
                           wrapUp.clickNext();
                           // @TODO Uncomment the fineos.assertErrorMessage to check for error message
                           // fineos.assertErrorMessage("Work Pattern must be populated. Total hours per week in the Work Pattern must equal the Hours Worked Per Week field. Populate the Work Pattern and click Apply to Calendar before proceeding.")
