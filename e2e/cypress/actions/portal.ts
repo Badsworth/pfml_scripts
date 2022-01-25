@@ -933,8 +933,9 @@ type NoticeType =
   | "Appeal Acknowledgment (PDF)"
   | "Benefit Amount Change Notice (PDF)"
   | "Approved Time Cancelled (PDF)"
-  | "Change Request Denied (PDF)"
+  | "Maximum Weekly Benefit Change Notice (PDF)"
   | "Leave Allotment Change Notice (PDF)"
+  | "Change Request Denied (PDF)"
   | "Change Request Approved (PDF)";
 
 export function checkNoticeForLeaveAdmin(

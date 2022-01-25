@@ -1531,6 +1531,14 @@ type Reduction = {
   amount: number;
 };
 
+type PaidLeavePageNotice = 
+  | "Benefit Amount Change Notice"
+  | "Maximum Weekly Benefit Change Notice";
+
+type PaidLeaveCorrespondenceDocument =
+  | "Benefit Amount Change Notice"
+  | "Maximum Weekly Benefit Change Notice";
+
 /**
  * Class representing the Absence Paid Leave Case,
  * Claim should be adjudicated and approved before trying to access this.
@@ -1586,8 +1594,7 @@ class PaidLeavePage {
   }
 
   createCorrespondenceDocument(
-    document:
-      | "Benefit Amount Change Notice",
+    document: PaidLeaveCorrespondenceDocument,
   ): this {
 
     cy.get("a[id$=Correspondencelink]")
@@ -1606,8 +1613,7 @@ class PaidLeavePage {
   }
 
   triggerPaidLeaveNotice(
-    type:
-      | "Benefit Amount Change Notice"
+    type: PaidLeavePageNotice
   ): this {
     this.onTab(
       "Tasks",
