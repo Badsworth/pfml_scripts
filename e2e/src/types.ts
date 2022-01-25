@@ -119,7 +119,7 @@ export type OtherTasks =
   | "Review and Decision Cancel Time Submitted"
   | "Employee Reported Other Leave"
   | "Employee Reported Other Income"
-  | "Future or overlapping Absence Request exists"
+  | "Overlapping Absence Request Exists"
   | "Confirm Employment"
   | "Manual Intervention required to Approve Payments"
   | "Absence Paid Leave Payments Failure"

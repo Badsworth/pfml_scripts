@@ -46,7 +46,7 @@ describe("Submit a claim through Portal: Verify it creates an absence case in Fi
 
           // [nameOfTask, SLA diff in days]
           const taskDiff: [FineosTasks, number][] = [
-            ["Future or overlapping Absence Request exists", 3],
+            ["Overlapping Absence Request Exists", 3],
             ["Update Paid Leave Case", 1],
             ["Manual Intervention required to Approve Payments", 1],
             ["Escalate Employer Reported Other Income", 3],
