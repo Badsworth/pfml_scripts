@@ -55,9 +55,9 @@
     "DOR_IMPORT_URI": "s3://massgov-pfml-training-agency-transfer/dor/received/",
     "DOR_ETL_ARN": "arn:aws:states:us-east-1:498823821309:stateMachine:pfml-api-training-dor-fineos-etl",
     "HAS_PAYMENT_STATUS": "false",
-    "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "false",
+    "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "true",
     "MFA_ENABLED": "false",
-    "HAS_FINEOS_JANUARY_RELEASE": "false"
+    "HAS_FINEOS_JANUARY_RELEASE": "true"
   },
   "trn2": {
     "PORTAL_BASEURL": "https://paidleave-trn2.dfml.eol.mass.gov",
