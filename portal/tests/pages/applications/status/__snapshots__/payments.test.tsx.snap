@@ -75,7 +75,7 @@ exports[`Payments Phase 2 Checkback date implementation renders intro text for c
   data-testid="your-payments-intro"
 >
   <p>
-    Check back on November 9, 2021 to see when you can expect your first payment. After your first payment, payments are scheduled weekly. Your application has a 7-day waiting period at the start of your leave. You won’t receive any PFML payments for this week of leave.
+    Check back on November 9, 2021 to see when you can expect your first payment. Your first payment will include multiple weeks of leave. After your first payment, payments are scheduled weekly.
   </p>
   <section
     class="margin-y-5"
@@ -144,7 +144,7 @@ exports[`Payments Phase 2 Checkback date implementation renders intro text for c
   data-testid="your-payments-intro"
 >
   <p>
-    Check back on November 9, 2021 to see when you can expect your first payment. After your first payment, payments are scheduled weekly. Your application has a 7-day waiting period at the start of your leave. You won’t receive any PFML payments for this week of leave.
+    Check back on November 9, 2021 to see when you can expect your first payment. Your first payment will include multiple weeks of leave. After your first payment, payments are scheduled weekly.
   </p>
   <section
     class="margin-y-5"
@@ -213,7 +213,7 @@ exports[`Payments Phase 2 Checkback date implementation renders intro text for r
   data-testid="your-payments-intro"
 >
   <p>
-    Check back on November 9, 2021 to see when you can expect your first payment. You need to take at least 8 hours of leave for a payment to be processed. Your application has a 7-day waiting period at the start of your leave. You won’t receive any PFML payments for this week of leave.
+    Check back on November 9, 2021 to see when you can expect your first payment. You need to take at least 8 hours of leave for a payment to be processed.
   </p>
   <section
     class="margin-y-5"
