@@ -1,7 +1,7 @@
-import { portal, fineos, email, fineosPages } from "../../actions";
-import { getClaimantCredentials, getLeaveAdminCredentials } from "../../config";
-import { assertValidClaim } from "../../../src/util/typeUtils";
-import { Submission } from "../../../src/types";
+import { portal, fineos, email, fineosPages } from "../../../actions";
+import { getClaimantCredentials, getLeaveAdminCredentials } from "../../../config";
+import { assertValidClaim } from "../../../../src/util/typeUtils";
+import { Submission } from "../../../../src/types";
 
 describe("Submit a claim through Portal: Verify it creates an absence case in Fineos", () => {
   after(() => {

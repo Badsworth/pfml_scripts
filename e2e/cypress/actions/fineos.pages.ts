@@ -302,7 +302,7 @@ export class ClaimPage {
       .click({ force: true })
       .parents("li")
       .findByText("Employer")
-      .click();
+      .click({ force: true });
 
     //change radio to Organization
     cy.contains("label", "Organization").click();
