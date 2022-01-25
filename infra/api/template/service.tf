@@ -84,6 +84,7 @@ resource "aws_ecs_task_definition" "app" {
       enable_pdf_document_compression            = var.enable_pdf_document_compression
       enable_document_multipart_upload           = var.enable_document_multipart_upload
       enable_application_import                  = var.enable_application_import
+      enable_employee_endpoints                  = var.enable_employee_endpoints
     }
   )
 
