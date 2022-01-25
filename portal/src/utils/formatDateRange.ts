@@ -8,6 +8,8 @@ import { t } from "../locales/i18n";
  * @example formatDateRange("2020-09-01", "2020-10-31") // output: "9/1/2020 to 10/31/2020"
  * @example formatDateRange("2020-09-01", "2020-10-31", "–") // output: "9/1/2020 – 10/31/2020"
  * @example formatDateRange("2020-09-01") // output: "9/1/2020"
+ *
+ * // Somewhere in here I want to use typescript (or something else?) to enforce YYYY-MM-DD since that's the only valid input
  */
 export default function formatDateRange(
   startIsoDate: string | null,

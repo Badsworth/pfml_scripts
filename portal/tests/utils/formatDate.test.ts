@@ -51,5 +51,15 @@ describe("formatDate", () => {
       expect(date1).toEqual("1/13/****");
       expect(date2).toEqual("**/**/****");
     });
+
+    it("interprets impossible date unexpectedly", () => {
+      const date = formatDate("2021-13-14").short();
+      expect(date).toEqual("1/14/2022");
+    });
+
+    it("requires YYYY-MM-DD input (doesn't detect YYYY-DD-MM)", () => {
+      const date = formatDate("2021-16-12").short();
+      expect(date).toEqual("4/12/2022");
+    });
   });
 });
