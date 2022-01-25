@@ -4,7 +4,7 @@ import itertools
 import os
 from datetime import date, datetime, timedelta
 from time import sleep
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 import boto3
 from sqlalchemy import tuple_
@@ -18,6 +18,15 @@ from massgov.pfml.util.bg import background_task
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 ENVIRONMENT = os.getenv("ENVIRONMENT")
+
+
+def valid_date_type(arg_date_str):
+    """custom argparse *date* type for user dates values given from the command line"""
+    try:
+        return datetime.strptime(arg_date_str, "%Y-%m-%d")
+    except ValueError:
+        msg = "Given Date ({0}) not valid! Expected format, YYYY-MM-DD!".format(arg_date_str)
+        raise argparse.ArgumentTypeError(msg)
 
 
 def run_cloud_watch_query(start_date, end_date, client, query):
@@ -42,21 +51,30 @@ def run_cloud_watch_query(start_date, end_date, client, query):
             ]
 
 
-def one_day_date_windows(number):
-    today = datetime.today()
-    return [
-        (
-            int((today - timedelta(days=i + 1)).timestamp()),
-            int((today - timedelta(days=i)).timestamp()),
-        )
-        for i in range(number)
-    ]
+def one_day_date_windows(start_date: datetime, end_date: datetime) -> List[tuple[int, int]]:
+    date_windows = []
+    date = start_date
+    delta = timedelta(days=1)
+    while date <= end_date:
+        date_windows.append((int(date.timestamp()), int((date + timedelta(1)).timestamp())))
+        date += delta
+
+    return date_windows
 
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Evaluate impact of financial eligiblity changes",)
     parser.add_argument(
-        "--historical_len", type=int, default=5, help="number of days back you want to consider"
+        "--start_date",
+        type=valid_date_type,
+        default=(datetime.now() - timedelta(days=5)),
+        help="The start date; format YYYY-MM-DD",
+    )
+    parser.add_argument(
+        "--end_date",
+        type=valid_date_type,
+        default=datetime.now(),
+        help="The end date; format YYYY-MM-DD",
     )
     parser.add_argument(
         "--s3_bucket",
@@ -67,10 +85,10 @@ def parse_args():
     return args
 
 
-def pull_data_from_cloudwatch(number_of_days):
+def pull_data_from_cloudwatch(logs_start_date: datetime, logs_end_date: datetime) -> List[Dict]:
     client = boto3.client("logs", region_name="us-east-1",)
     # this could be done in parralel
-    date_ranges = one_day_date_windows(number_of_days)
+    date_ranges = one_day_date_windows(logs_start_date, logs_end_date)
     claim_data_query = "fields employee_id, employer_id, employer_average_weekly_wage, created, description, financially_eligible, @timestamp, request_id | filter message = 'Calculated financial eligibility' | limit 10000"
 
     claim_data_results = list(
@@ -119,7 +137,9 @@ def pull_data_from_cloudwatch(number_of_days):
 
 
 def generate_report(cli_args, db_session, output_csv):
-    merged_results = pull_data_from_cloudwatch(cli_args.historical_len)
+    start_date: datetime = cli_args.start_date
+    end_date: datetime = cli_args.end_date
+    merged_results = pull_data_from_cloudwatch(start_date, end_date)
 
     # leave start date here is used to basically allow for multiple employee employer pairs
     log_eligibility_dict = {
@@ -169,13 +189,13 @@ def generate_report(cli_args, db_session, output_csv):
             )
             continue
 
-        leave_start_date = date.fromisoformat(old_claim_result.get("leave_start_date"))
+        leave_start_date = date.fromisoformat(str(old_claim_result.get("leave_start_date")))
         employment_status = old_claim_result.get("employment_status") or claim.employment_status
         prior_eligibility = old_claim_result.get("financially_eligible") == "True"
         prior_description = old_claim_result.get("description")
         claimaint_id = str(claim.employee_id)
         application_submitted_date = date.fromisoformat(
-            old_claim_result.get("application_submitted_date")
+            str(old_claim_result.get("application_submitted_date"))
         )
 
         try:
