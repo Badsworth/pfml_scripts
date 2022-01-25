@@ -11,7 +11,7 @@
 import { promises as fs } from 'fs';
 import path from 'path';
 import crypto from 'crypto';
-import { exiftool, Tags } from "exiftool-vendored";
+import { exiftool } from "exiftool-vendored";
 import { PDFDocument } from 'pdf-lib';
 import config from "../src/config";
 
@@ -20,10 +20,6 @@ type DocumentType =
   | "jpg"
   | "png";
 
-const getExifTag = (usedTags: string[]): keyof Tags => {
-  return 
-}
-
 export const withGeneratedDocument = async (
   type: DocumentType,
   size: [ number, "mb" | "kb" ],
@@ -31,11 +27,22 @@ export const withGeneratedDocument = async (
     | ((filepath: string) => Promise<void>)
     | ((filepath: string) => void)
 ): Promise<void> => {
-  const sizeTruncated = Math.max(Math.round(size[0]), 1);
+  const sizeTruncated = Math.max(
+    Math.trunc(100 * size[0]) / 100, // truncate to hundredths-place
+    1
+  );
   const targetSizeKb = sizeTruncated 
-    * (size[1] === "mb" ? 1000 : 1);
+    * (size[1] === "mb" ? 1_000 : 1);
 
-  const tempDir = await fs.mkdtemp(`${type}-${targetSizeKb}kb-`);
+  const tempDir =  path.join(
+    __dirname,
+    "data",
+    `${type}-${targetSizeKb}kb-${crypto.randomUUID().slice(0, 6)}`
+  );
+  await fs.mkdir(
+    tempDir,
+    { recursive: true }
+  )
   const documentPath = path.join(tempDir, `generated.${type}`);
 
   try {
@@ -43,28 +50,33 @@ export const withGeneratedDocument = async (
       const baseFile = type === "jpg"
         ? "./cypress/fixtures/docTesting/baseline.jpg"
         : "./cypress/fixtures/docTesting/baseline.png"
-      const baseFileSizeBytes = (await fs.stat(baseFile)).size;
 
       await fs.copyFile(baseFile, documentPath);
 
-      let padSizeBytes = (targetSizeKb * 1000) - baseFileSizeBytes;
-      while(padSizeBytes > 0) {
-        // exiftool blows up when asked to pipe in more than ~100kb of data,
+      let fileSizeBytes = (await fs.stat(documentPath)).size;
+      do {
+        // exiftool blows up when asked to pipe in more than ~500kb of data,
         // so this seems like a safe threshold
-        const bytesToInsert = Math.min(padSizeBytes, 10000);
-        const buf = Buffer.alloc(bytesToInsert);
-
-        const junkData = crypto.randomFillSync(buf).toString("ascii");
-
-        console.log(padSizeBytes);
+        const bytesToInsert = Math.min(
+          (targetSizeKb * 1_000) - fileSizeBytes,
+          50_000
+        );
+        const buf = Buffer.alloc(
+          // we convert these bytes to a hex string, which doubles the total size
+          Math.round(bytesToInsert / 2)
+        );
+        crypto.randomFillSync(buf);
 
         await exiftool.write(
           documentPath,
-          { Keywords: junkData },
+          {},
+          [`-Keywords+='${buf.toString("hex")}'`]
         );
 
-        padSizeBytes =- bytesToInsert;
-      }
+        fileSizeBytes = (await fs.stat(documentPath)).size;
+        console.log(fileSizeBytes);
+      } while (fileSizeBytes < targetSizeKb * 1_000);
+
       await exiftool.end();
     }
 
@@ -75,12 +87,18 @@ export const withGeneratedDocument = async (
         await fs.readFile(baseFile)
       );
 
-      const padSizeBytes = (targetSizeKb * 1000) - baseFileSizeBytes;
-      const buf = Buffer.alloc(padSizeBytes);
+      let padSizeBytes = (targetSizeKb * 1_000) - baseFileSizeBytes;
+      let i = 0;
+      while (padSizeBytes > 0) {
+        // Buffers larger than 4 MiB cannot be allocated
+        const bytesToInsert = Math.min(padSizeBytes, 2**32 - 1);
+        const buf = Buffer.alloc(bytesToInsert);
 
-      const junkData = crypto.randomFillSync(buf);
+        const junkData = crypto.randomFillSync(buf);
 
-      doc.attach(junkData, "bytes.txt");
+        doc.attach(junkData, `bytes-${i++}.txt`);
+        padSizeBytes -= bytesToInsert;
+      }
 
       await fs.writeFile(documentPath, await doc.save());
     }
