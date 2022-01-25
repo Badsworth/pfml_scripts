@@ -273,7 +273,7 @@ def get_overpayments(db_session: db.Session) -> NamedTuple:
     #                                                   'Overpayment Recovery Reverse',
     #                                                   'Overpayment Recovery Cancellation')
     # AND DATE_PART('YEAR', OP.ENDED_AT) = 2021
-    # AND VPEI.PAYMENTMETHOD <> 'Inflight Recovery'
+    # AND VPEI.PAYMENTMETHOD NOT IN ('Inflight Recovery', 'Automatic Offset Recovery')
     # AND VPEI.R = 1
     overpayments = (
         db_session.query(StateLog.payment_id, cast(StateLog.ended_at, Date).label("ended_at"))
@@ -312,7 +312,7 @@ def get_overpayments(db_session: db.Session) -> NamedTuple:
         .filter(
             Payment.payment_transaction_type_id.in_(OVERPAYMENT_TYPES_1099_IDS),
             func.extract("YEAR", overpayments.c.ended_at) == year,
-            vpei.c.paymentmethod != "Inflight Recovery",
+            vpei.c.paymentmethod.notin_(["Inflight Recovery", "Automatic Offset Recovery"]),
             vpei.c.R == 1,
         )
         .all()
