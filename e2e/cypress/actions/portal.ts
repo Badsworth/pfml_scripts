@@ -2226,12 +2226,13 @@ export function leaveAdminAssertClaimStatus(leaves: LeaveStatus[]) {
 }
 
 export function assertPaymentCheckBackDate(date: Date) {
+  const dateFormatPrevious = format(date, "MM/dd/yyyy");
+  const dateFormatUpdated = format(date, "MMMM d, yyyy");
   cy.get("section[data-testid='your-payments-intro']").within(() => {
     cy.contains(
-      `Check back on ${format(
-        date,
-        "MM/dd/yyyy"
-      )} to see when you can expect your first payment.`
+      new RegExp(
+        `Check back on (${dateFormatPrevious}|${dateFormatUpdated}) to see when you can expect your first payment.`
+      )
     );
   });
 }
