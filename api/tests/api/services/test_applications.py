@@ -2,8 +2,11 @@ import mock
 import pytest
 
 import massgov
-from massgov.pfml.api.services.applications import set_customer_detail_fields
-from massgov.pfml.db.models.employees import Gender
+from massgov.pfml.api.services.applications import (
+    set_customer_detail_fields,
+    set_payment_preference_fields,
+)
+from massgov.pfml.db.models.employees import BankAccountType, Gender, PaymentMethod
 from massgov.pfml.db.models.factories import ApplicationFactory
 
 
@@ -133,3 +136,70 @@ def test_set_customer_detail_fields_with_blank_address(
     mock_read_customer_details.return_value = customer_details
     set_customer_detail_fields(fineos_client, fineos_web_id, application, test_db_session)
     assert application.residential_address is None
+
+
+def test_set_payment_preference_fields(fineos_client, fineos_web_id, application, test_db_session):
+    set_payment_preference_fields(fineos_client, fineos_web_id, application, test_db_session)
+    assert application.has_submitted_payment_preference is True
+    assert (
+        application.payment_preference.payment_method.payment_method_id
+        == PaymentMethod.ACH.payment_method_id
+    )
+    assert application.payment_preference.account_number == "1234565555"
+    assert application.payment_preference.routing_number == "011222333"
+    assert (
+        application.payment_preference.bank_account_type.bank_account_type_id
+        == BankAccountType.CHECKING.bank_account_type_id
+    )
+    assert application.has_mailing_address is True
+    assert application.mailing_address.address_line_one == "44324 Nayeli Stream"
+
+
+@mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_payment_preferences")
+def test_set_payment_preference_fields_without_a_default_preference(
+    mock_get_payment_preferences, fineos_client, fineos_web_id, application, test_db_session
+):
+    mock_get_payment_preferences.return_value = [
+        massgov.pfml.fineos.models.customer_api.PaymentPreferenceResponse(
+            paymentMethod="Elec Funds Transfer", paymentPreferenceId="1234",
+        )
+    ]
+    set_payment_preference_fields(fineos_client, fineos_web_id, application, test_db_session)
+    assert application.payment_preference is None
+    assert application.has_submitted_payment_preference is False
+
+
+@mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_payment_preferences")
+def test_set_payment_preference_fields_with_blank_payment_method(
+    mock_get_payment_preferences, fineos_client, fineos_web_id, application, test_db_session
+):
+    mock_get_payment_preferences.return_value = [
+        massgov.pfml.fineos.models.customer_api.PaymentPreferenceResponse(
+            paymentMethod="", paymentPreferenceId="1234", isDefault=True,
+        )
+    ]
+    set_payment_preference_fields(fineos_client, fineos_web_id, application, test_db_session)
+    assert application.payment_preference is None
+    assert application.has_submitted_payment_preference is False
+
+
+@mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_payment_preferences")
+def test_set_payment_preference_fields_without_address(
+    mock_get_payment_preferences, fineos_client, fineos_web_id, application, test_db_session
+):
+    mock_get_payment_preferences.return_value = [
+        massgov.pfml.fineos.models.customer_api.PaymentPreferenceResponse(
+            paymentMethod="Elec Funds Transfer",
+            paymentPreferenceId="85622",
+            isDefault=True,
+            accountDetails=massgov.pfml.fineos.models.customer_api.AccountDetails(
+                accountNo="1234565555",
+                accountName="Constance Griffin",
+                routingNumber="011222333",
+                accountType="Checking",
+            ),
+        )
+    ]
+    set_payment_preference_fields(fineos_client, fineos_web_id, application, test_db_session)
+    assert application.has_mailing_address is False
+    assert application.mailing_address is None

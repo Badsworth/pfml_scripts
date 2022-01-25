@@ -36,7 +36,14 @@ from massgov.pfml.db.models.applications import (
     WorkPatternDay,
     WorkPatternType,
 )
-from massgov.pfml.db.models.employees import Address, Gender, GeoState, PaymentMethod, TaxIdentifier
+from massgov.pfml.db.models.employees import (
+    Address,
+    BankAccountType,
+    Gender,
+    GeoState,
+    PaymentMethod,
+    TaxIdentifier,
+)
 from massgov.pfml.db.models.factories import (
     AddressFactory,
     ApplicationFactory,
@@ -426,6 +433,52 @@ def test_applications_import_has_customer_details(
     assert imported_application.residential_address.city == "Amherst"
     assert imported_application.residential_address.geo_state_id == GeoState.MA.geo_state_id
     assert imported_application.residential_address.zip_code == "01003"
+
+
+def test_applications_import_has_payment_preferences(client, test_db_session, auth_token, claim):
+    absence_case_id = claim.fineos_absence_id
+    client.post(
+        "/v1/applications/import",
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"absence_case_id": absence_case_id},
+    )
+
+    imported_application = (
+        test_db_session.query(Application).filter(Application.claim_id == claim.claim_id).one()
+    )
+
+    assert imported_application.has_submitted_payment_preference is True
+    assert (
+        imported_application.payment_preference.payment_method_id
+        == PaymentMethod.ACH.payment_method_id
+    )
+    assert imported_application.payment_preference.account_number == "1234565555"
+    assert imported_application.payment_preference.routing_number == "011222333"
+    assert (
+        imported_application.payment_preference.bank_account_type_id
+        == BankAccountType.CHECKING.bank_account_type_id
+    )
+    assert imported_application.has_mailing_address is True
+
+
+@mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_payment_preferences")
+def test_applications_import_succeeds_without_payment_preferences(
+    mock_get_payment_preferences, client, test_db_session, auth_token, claim
+):
+    mock_get_payment_preferences.return_value = None
+
+    absence_case_id = claim.fineos_absence_id
+    client.post(
+        "/v1/applications/import",
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"absence_case_id": absence_case_id},
+    )
+
+    imported_application = (
+        test_db_session.query(Application).filter(Application.claim_id == claim.claim_id).one()
+    )
+
+    assert imported_application.has_submitted_payment_preference is False
 
 
 def test_applications_post_start_app(client, user, auth_token, test_db_session):

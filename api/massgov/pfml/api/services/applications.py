@@ -1017,3 +1017,54 @@ def set_customer_detail_fields(
             zip=details.customerAddress.address.postCode,
         )
         add_or_update_address(db_session, address_to_create, AddressType.RESIDENTIAL, application)
+
+
+def set_payment_preference_fields(
+    fineos: massgov.pfml.fineos.AbstractFINEOSClient,
+    fineos_web_id: str,
+    application: Application,
+    db_session: db.Session,
+) -> None:
+    """
+    Retrieve payment preferences from FINEOS and set for imported application fields
+    """
+    preferences = fineos.get_payment_preferences(fineos_web_id)
+
+    if not preferences:
+        application.has_submitted_payment_preference = False
+        return
+
+    # Take the one with isDefault=True, if any
+    preference = next(
+        (pref for pref in preferences if pref.isDefault and pref.paymentMethod != ""), None,
+    )
+
+    if preference is None:
+        application.has_submitted_payment_preference = False
+        return
+
+    if preference.accountDetails is not None:
+        payment_preference = PaymentPreference(
+            account_number=preference.accountDetails.accountNo,
+            routing_number=preference.accountDetails.routingNumber,
+            bank_account_type=preference.accountDetails.accountType,
+            payment_method=preference.paymentMethod,
+        )
+        add_or_update_payment_preference(db_session, payment_preference, application)
+        application.has_submitted_payment_preference = True
+
+    has_mailing_address = False
+    if isinstance(
+        preference.customerAddress, massgov.pfml.fineos.models.customer_api.CustomerAddress
+    ):
+        # Convert CustomerAddress to ApiAddress, in order to use add_or_update_address
+        address_to_create = ApiAddress(
+            line_1=preference.customerAddress.address.addressLine1,
+            line_2=preference.customerAddress.address.addressLine2,
+            city=preference.customerAddress.address.addressLine4,
+            state=preference.customerAddress.address.addressLine6,
+            zip=preference.customerAddress.address.postCode,
+        )
+        add_or_update_address(db_session, address_to_create, AddressType.MAILING, application)
+        has_mailing_address = True
+    application.has_mailing_address = has_mailing_address

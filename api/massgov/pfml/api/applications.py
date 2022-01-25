@@ -171,6 +171,9 @@ def applications_import():
         applications_service.set_customer_detail_fields(
             fineos, fineos_web_id, application, db_session
         )
+        applications_service.set_payment_preference_fields(
+            fineos, fineos_web_id, application, db_session
+        )
         db_session.add(application)
         db_session.commit()
 

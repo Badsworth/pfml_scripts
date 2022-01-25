@@ -506,6 +506,40 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
         _capture_call("get_case_occupations", user_id, case_id=case_id)
         return [models.customer_api.ReadCustomerOccupation(occupationId=12345)]
 
+    def get_payment_preferences(
+        self, user_id: str
+    ) -> List[models.customer_api.PaymentPreferenceResponse]:
+        _capture_call("get_payment_preferences", user_id)
+        return [
+            models.customer_api.PaymentPreferenceResponse(
+                paymentMethod="Elec Funds Transfer",
+                paymentPreferenceId="85622",
+                isDefault=True,
+                accountDetails=models.customer_api.AccountDetails(
+                    accountNo="1234565555",
+                    accountName="Constance Griffin",
+                    routingNumber="011222333",
+                    accountType="Checking",
+                ),
+                chequeDetails=models.customer_api.ChequeDetails(
+                    nameToPrintOnCheck="Connie Griffin"
+                ),
+                customerAddress=models.customer_api.CustomerAddress(
+                    address=models.customer_api.Address(
+                        addressLine1="44324 Nayeli Stream",
+                        addressLine2="",
+                        addressLine3="",
+                        addressLine4="New Monserrateberg",
+                        addressLine5="",
+                        addressLine6="IN",
+                        addressLine7="",
+                        postCode="22516-6101",
+                        country="USA",
+                    )
+                ),
+            )
+        ]
+
     def add_payment_preference(
         self, user_id: str, payment_preference: models.customer_api.NewPaymentPreference
     ) -> models.customer_api.PaymentPreferenceResponse:
