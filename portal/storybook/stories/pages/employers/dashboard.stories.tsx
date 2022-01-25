@@ -1,7 +1,7 @@
 import Claim, { AbsenceCaseStatusType, ClaimEmployee } from "src/models/Claim";
 import React, { useState } from "react";
 import User, { UserLeaveAdministrator } from "src/models/User";
-import ClaimCollection from "src/models/ClaimCollection";
+import ApiResourceCollection from "src/models/ApiResourceCollection";
 import { Dashboard } from "src/pages/employers/dashboard";
 import { NullableQueryParams } from "src/utils/routeWithParams";
 import { Props } from "types/common";
@@ -187,7 +187,7 @@ export const Default = (
 
   const appLogic = useMockableAppLogic({
     claims: {
-      claims: new ClaimCollection(claims),
+      claims: new ApiResourceCollection<Claim>("fineos_absence_id", claims),
       isLoadingClaims: false,
       paginationMeta: {
         page_offset: 1,

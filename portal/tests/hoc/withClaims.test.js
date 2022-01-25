@@ -1,6 +1,6 @@
 import { screen, waitFor } from "@testing-library/react";
+import ApiResourceCollection from "src/models/ApiResourceCollection";
 import Claim from "../../src/models/Claim";
-import ClaimCollection from "../../src/models/ClaimCollection";
 import React from "react";
 import { renderPage } from "../test-utils";
 import withClaims from "../../src/hoc/withClaims";
@@ -59,7 +59,10 @@ describe("withClaims", () => {
 
     setup({
       addCustomSetup: (appLogic) => {
-        const claimsCollection = new ClaimCollection([mockClaim]);
+        const claimsCollection = new ApiResourceCollection(
+          "fineos_absence_id",
+          [mockClaim]
+        );
         appLogic.claims.claims = claimsCollection;
         appLogic.claims.paginationMeta = mockPaginationMeta;
         appLogic.claims.isLoadingClaims = false;
