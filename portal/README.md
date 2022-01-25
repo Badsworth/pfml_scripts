@@ -266,6 +266,7 @@ Below is an abbreviated representation of our directory structure, pointing out 
 │   ├── components
 |   |   └── core            Home for reusable presentation components
 │   │   └── PageWrapper.tsx 🖼 Main layout applied to all pages
+│   ├── features            Non-reusable feature-specific UI
 │   ├── hooks               Custom React hooks
 │   ├── locales             Localization files
 │   ├── models              Data models
