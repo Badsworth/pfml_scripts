@@ -1437,3 +1437,7 @@ def validate_columns_present(record: Dict[str, Any], fineos_extract: FineosExtra
 
 def is_withholding_payments_enabled() -> bool:
     return os.environ.get("ENABLE_WITHHOLDING_PAYMENTS", "0") == "1"
+
+
+def is_employer_reimbursement_payments_enabled() -> bool:
+    return os.environ.get("ENABLE_EMPLOYER_REIMBURSEMENT_PAYMENTS", "0") == "1"

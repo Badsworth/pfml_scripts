@@ -1,7 +1,10 @@
+import {
+  BenefitsApplicationDocument,
+  filterByApplication,
+} from "../models/Document";
 import React, { useEffect } from "react";
 import withUser, { WithUserProps } from "./withUser";
 import BenefitsApplication from "../models/BenefitsApplication";
-import { BenefitsApplicationDocument } from "../models/Document";
 import PageNotFound from "../components/PageNotFound";
 import assert from "assert";
 
@@ -55,7 +58,7 @@ function withClaimDocuments<
     return (
       <Component
         {...(props as T & { query: QueryForWithClaimDocuments })}
-        documents={documents.filterByApplication(application_id)}
+        documents={filterByApplication(documents.items, application_id)}
         isLoadingDocuments={shouldLoad}
       />
     );

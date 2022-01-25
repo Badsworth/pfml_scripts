@@ -1,3 +1,8 @@
+import {
+  DocumentType,
+  filterByApplication,
+  findDocumentsByTypes,
+} from "../../../models/Document";
 import React, { useEffect } from "react";
 import withUser, { WithUserProps } from "../../../hoc/withUser";
 import { AbsencePeriod } from "../../../models/AbsencePeriod";
@@ -5,7 +10,6 @@ import Accordion from "../../../components/core/Accordion";
 import AccordionItem from "../../../components/core/AccordionItem";
 import Alert from "../../../components/core/Alert";
 import BackButton from "../../../components/BackButton";
-import { DocumentType } from "../../../models/Document";
 import Heading from "../../../components/core/Heading";
 import LeaveReason from "../../../models/LeaveReason";
 import PageNotFound from "../../../components/PageNotFound";
@@ -17,7 +21,6 @@ import { Trans } from "react-i18next";
 import { createRouteWithQuery } from "../../../utils/routeWithParams";
 import dayjs from "dayjs";
 import dayjsBusinessTime from "dayjs-business-time";
-import findDocumentsByTypes from "src/utils/findDocumentsByTypes";
 import formatDate from "../../../utils/formatDate";
 import formatDateRange from "../../../utils/formatDateRange";
 import { getMaxBenefitAmount } from "../../../utils/getMaxBenefitAmount";
@@ -75,7 +78,7 @@ export const Payments = ({
   const documentsForApplication =
     (allClaimDocuments?.items.length &&
       application_id &&
-      allClaimDocuments.filterByApplication(application_id)) ||
+      filterByApplication(allClaimDocuments.items, application_id)) ||
     [];
 
   const approvalNotice = findDocumentsByTypes(documentsForApplication, [
@@ -231,21 +234,21 @@ export const Payments = ({
       ? "Continuous_"
       : "ReducedSchedule_";
     const fourteenthDayOfClaim = dayjs(initialClaimStartDate)
-      .add(13, "day")
-      .format("YYYY-MM-DD");
+      .add(14, "day")
+      .format("MMMM D, YYYY");
 
     if (isRetroactive || approvalDate >= fourteenthDayOfClaim) {
       checkbackDate = dayjs(approvalDate)
         .addBusinessDays(3)
-        .format("MM/DD/YYYY");
+        .format("MMMM D, YYYY");
       checkbackDateContext += isRetroactive
         ? "Retroactive"
         : "PostFourteenthClaimDate";
     } else {
       checkbackDate = dayjs(initialClaimStartDate)
-        .add(13, "day")
+        .add(14, "day")
         .addBusinessDays(3)
-        .format("MM/DD/YYYY");
+        .format("MMMM D, YYYY");
       checkbackDateContext += "PreFourteenthClaimDate";
     }
   }

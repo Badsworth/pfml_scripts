@@ -1,7 +1,8 @@
 import ClaimDetail, { PaymentDetail, Payments } from "../models/ClaimDetail";
 import { ClaimWithdrawnError, ValidationError } from "../errors";
+import ApiResourceCollection from "../models/ApiResourceCollection";
 import { AppErrorsLogic } from "./useAppErrorsLogic";
-import ClaimCollection from "../models/ClaimCollection";
+import Claim from "../models/Claim";
 import ClaimsApi from "../api/ClaimsApi";
 import PaginationMeta from "../models/PaginationMeta";
 import { PortalFlow } from "./usePortalFlow";
@@ -23,7 +24,7 @@ const useClaimsLogic = ({
   // Initialized to empty collection, but will eventually store the claims
   // as API calls are made to fetch the user's claims
   const { collection: claims, setCollection: setClaims } = useCollectionState(
-    new ClaimCollection()
+    new ApiResourceCollection<Claim>("fineos_absence_id")
   );
   const [claimDetail, setClaimDetail] = useState<ClaimDetail>();
   const [isLoadingClaims, setIsLoadingClaims] = useState<boolean>();
@@ -53,7 +54,7 @@ const useClaimsLogic = ({
    * Empty the claims collection so that it is fetched again from the API
    */
   const clearClaims = () => {
-    setClaims(new ClaimCollection());
+    setClaims(new ApiResourceCollection<Claim>("fineos_absence_id"));
     // Also clear any indication that a page is loaded, so our loadPage method
     // fetches the page from the API
     setPaginationMeta({});

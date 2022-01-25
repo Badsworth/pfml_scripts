@@ -1,10 +1,10 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
+import ApiResourceCollection from "../../src/models/ApiResourceCollection";
 import AppErrorInfo from "../../src/models/AppErrorInfo";
 import { DocumentType } from "../../src/models/Document";
 import FileCardList from "../../src/components/FileCardList";
 import React from "react";
 import TempFile from "../../src/models/TempFile";
-import TempFileCollection from "../../src/models/TempFileCollection";
 import { act } from "react-dom/test-utils";
 import { makeFile } from "../test-utils";
 import userEvent from "@testing-library/user-event";
@@ -21,7 +21,7 @@ const onRemoveTempFile = jest.fn();
 const renderComponent = (customProps) => {
   const defaultProps = {
     documents: [],
-    tempFiles: new TempFileCollection(),
+    tempFiles: new ApiResourceCollection("id"),
     onChange,
     fileErrors: [],
     onRemoveTempFile,
@@ -49,7 +49,7 @@ describe("FileCardList", () => {
 
   it("with previously selected files, renders them and user can remove", () => {
     renderComponent({
-      tempFiles: new TempFileCollection([
+      tempFiles: new ApiResourceCollection("id", [
         makeFileObjectHelper({ name: "TempFile1.pdf" }),
       ]),
     });
@@ -69,7 +69,7 @@ describe("FileCardList", () => {
   it("calls onChange with a single file when user makes that selection", async () => {
     const newFile = new File([""], "filename.txt", { type: "text/plain" });
     renderComponent({
-      tempFiles: new TempFileCollection([makeFileObjectHelper()]),
+      tempFiles: new ApiResourceCollection("id", [makeFileObjectHelper()]),
     });
     const input = screen.getByText("Choose another document");
     await act(async () => {
@@ -82,7 +82,7 @@ describe("FileCardList", () => {
 
   it("disables remove button on file card children when indicated", () => {
     renderComponent({
-      tempFiles: new TempFileCollection([makeFileObjectHelper()]),
+      tempFiles: new ApiResourceCollection("id", [makeFileObjectHelper()]),
       disableRemove: true,
     });
     expect(screen.getByRole("button", { name: "Remove file" })).toBeDisabled();
@@ -92,7 +92,7 @@ describe("FileCardList", () => {
     const newFile = new File([""], "filename.txt", { type: "text/plain" });
     const newFile2 = new File([""], "filename2.txt", { type: "text/plain" });
     renderComponent({
-      tempFiles: new TempFileCollection([makeFileObjectHelper()]),
+      tempFiles: new ApiResourceCollection("id", [makeFileObjectHelper()]),
     });
     const input = screen.getByText("Choose another document");
     await act(async () => {
@@ -173,7 +173,7 @@ describe("FileCardList", () => {
     };
     renderComponent({
       documents: [newDoc1, newDoc2],
-      tempFiles: new TempFileCollection([makeFileObjectHelper()]),
+      tempFiles: new ApiResourceCollection("id", [makeFileObjectHelper()]),
     });
     expect(screen.getByText(/Document 1/)).toBeInTheDocument();
     expect(screen.getByText(/Document 2/)).toBeInTheDocument();
@@ -188,7 +188,7 @@ describe("FileCardList", () => {
           { message: "Mock error message #2", meta: { file_id: "222" } }
         ),
       ],
-      tempFiles: new TempFileCollection([
+      tempFiles: new ApiResourceCollection("id", [
         makeFileObjectHelper({ id: "123" }),
         makeFileObjectHelper({ id: "333" }),
       ]),

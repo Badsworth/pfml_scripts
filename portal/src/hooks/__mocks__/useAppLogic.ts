@@ -1,8 +1,9 @@
 import User, { UserLeaveAdministrator } from "../../models/User";
+import ApiResourceCollection from "../../models/ApiResourceCollection";
 import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
 import BenefitsApplication from "../../models/BenefitsApplication";
 import BenefitsApplicationCollection from "../../models/BenefitsApplicationCollection";
-import ClaimCollection from "../../models/ClaimCollection";
+import Claim from "../../models/Claim";
 import ClaimDetail from "../../models/ClaimDetail";
 import DocumentCollection from "../../models/DocumentCollection";
 import EmployerClaim from "../../models/EmployerClaim";
@@ -44,7 +45,7 @@ export default jest.fn(() => ({
   claims: {
     activeFilters: {},
     claimDetail: new ClaimDetail(),
-    claims: new ClaimCollection(),
+    claims: new ApiResourceCollection<Claim>("fineos_absence_id"),
     clearClaims: jest.fn(),
     isLoadingClaims: null,
     isLoadingClaimDetail: null,

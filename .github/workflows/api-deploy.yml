@@ -721,6 +721,7 @@ jobs:
           workflow: e2e-cypress.yml
           token: ${{ secrets.PFML_DEVOPS_TOKEN }}
           wait-for-completion: true
+          display-workflow-run-url-interval: 30s
           ref: "main"
           inputs: |
             {

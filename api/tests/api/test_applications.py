@@ -377,7 +377,12 @@ def test_applications_import_unauthenticated_post(client, test_db_session):
     assert test_db_session.query(Application).one_or_none() is None
 
 
-def test_applications_import_unauthorized_post(client, user, employer_auth_token):
+@mock.patch("massgov.pfml.api.applications.app.current_user")
+def test_applications_import_unauthorized_post(
+    mock_current_user, client, employer_user, employer_auth_token, test_db_session
+):
+    mock_current_user.return_value = employer_user
+    test_db_session.commit()
     absence_case_id = "NTN-111-ABS-01"
     # Employer cannot access this endpoint
     response = client.post(
@@ -385,7 +390,42 @@ def test_applications_import_unauthorized_post(client, user, employer_auth_token
         headers={"Authorization": f"Bearer {employer_auth_token}"},
         json={"absence_case_id": absence_case_id},
     )
-    assert response.status_code == 401
+    assert response.status_code == 403
+    assert "don't have the permission to access" in response.get_json()["message"]
+
+
+@mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.read_customer_details")
+def test_applications_import_has_customer_details(
+    mock_read_customer_details, client, test_db_session, auth_token, claim
+):
+    customer_details_json = massgov.pfml.fineos.mock_client.mock_customer_details()
+    customer_details = massgov.pfml.fineos.models.customer_api.Customer.parse_obj(
+        customer_details_json
+    )
+    mock_read_customer_details.return_value = customer_details
+
+    absence_case_id = claim.fineos_absence_id
+    client.post(
+        "/v1/applications/import",
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"absence_case_id": absence_case_id},
+    )
+
+    imported_application = (
+        test_db_session.query(Application).filter(Application.claim_id == claim.claim_id).one()
+    )
+
+    assert imported_application.first_name == "Samantha"
+    assert imported_application.last_name == "Jorgenson"
+    assert imported_application.date_of_birth == date(1996, 1, 11)
+    assert imported_application.mass_id == "45354352"
+    assert imported_application.has_state_id is True
+    assert imported_application.gender_id == Gender.NONBINARY.gender_id
+    assert imported_application.residential_address.address_line_one == "37 Mather Drive"
+    assert imported_application.residential_address.address_line_two == "#22"
+    assert imported_application.residential_address.city == "Amherst"
+    assert imported_application.residential_address.geo_state_id == GeoState.MA.geo_state_id
+    assert imported_application.residential_address.zip_code == "01003"
 
 
 def test_applications_post_start_app(client, user, auth_token, test_db_session):

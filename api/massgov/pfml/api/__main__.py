@@ -58,7 +58,12 @@ def start_server():
             openapi_files = list(
                 map(lambda f: os.path.join(app.get_project_root_dir(), f), app.openapi_filenames())
             )
-            connexion_app.run(port=app_config.port, use_reloader=True, extra_files=openapi_files)
+            connexion_app.run(
+                port=app_config.port,
+                use_reloader=True,
+                extra_files=openapi_files,
+                reloader_type="stat",
+            )
         else:
             # If running in a deployed environment, run it with a multi-worker production-ready WSGI wrapper.
             gunicorn_app = GunicornAppWrapper(connexion_app.app, app_config.port)

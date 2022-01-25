@@ -1,10 +1,14 @@
-import { DocumentType, DocumentTypeEnum } from "../../../models/Document";
+import {
+  DocumentType,
+  DocumentTypeEnum,
+  findDocumentsByTypes,
+} from "../../../models/Document";
 import LeaveReason, { LeaveReasonType } from "../../../models/LeaveReason";
 import PreviousLeave, {
   PreviousLeaveType,
 } from "../../../models/PreviousLeave";
 import React, { useEffect, useState } from "react";
-import { compact, get, isEqual, sortBy } from "lodash";
+import { get, isEqual } from "lodash";
 import withEmployerClaim, {
   WithEmployerClaimProps,
 } from "../../../hoc/withEmployerClaim";
@@ -32,7 +36,6 @@ import ReviewHeading from "../../../components/ReviewHeading";
 import Title from "../../../components/core/Title";
 import { Trans } from "react-i18next";
 import WeeklyHoursWorkedRow from "../../../components/employers/WeeklyHoursWorkedRow";
-import findDocumentsByTypes from "../../../utils/findDocumentsByTypes";
 import formatDate from "../../../utils/formatDate";
 import getClosestOpenFollowUpDate from "../../../utils/getClosestOpenFollowUpDate";
 import isBlank from "../../../utils/isBlank";
@@ -403,20 +406,6 @@ export const Review = (props: WithEmployerClaimProps) => {
     }
   };
 
-  /**
-   * Checks through the managed_requirements array if value exists within
-   * key: responded_at and return the most recent date
-   */
-  const previouslyReviewed = () => {
-    if (!claim.managed_requirements?.length) return;
-
-    const respondedAtDate = claim.managed_requirements.map(
-      (managedRequirement) => managedRequirement.responded_at
-    );
-
-    return formatDate(sortBy(compact(respondedAtDate)).reverse()[0]).short();
-  };
-
   const otherLeaveStartDate = formatDate(claim.otherLeaveStartDate).full();
 
   return (
@@ -435,12 +424,17 @@ export const Review = (props: WithEmployerClaimProps) => {
         })}
       </Title>
       <Alert state="warning" noIcon>
-        {showMultipleLeave && previouslyReviewed() && (
+        {showMultipleLeave && claim.wasPreviouslyReviewed && (
           <p>
             <strong>
               <Trans
-                i18nKey="pages.employersClaimsReview.managedRequirementsRespondedAt"
-                values={{ date: previouslyReviewed() }}
+                i18nKey="pages.employersClaimsReview.previouslyReviewed"
+                values={{
+                  context: claim.lastReviewedAt ? "withDate" : undefined,
+                  date: claim.lastReviewedAt
+                    ? formatDate(claim.lastReviewedAt).short()
+                    : undefined,
+                }}
               />
             </strong>
           </p>

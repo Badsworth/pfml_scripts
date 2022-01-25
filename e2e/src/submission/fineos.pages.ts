@@ -90,6 +90,7 @@ export class Fineos {
         if (/login\.microsoftonline\.com/.test(page.url())) {
           await page.click("input[value='No']");
         }
+        await page.waitForLoadState("domcontentloaded");
       }
       await page.waitForSelector("body.PageBody");
       return page;
@@ -419,6 +420,7 @@ export class ClaimantPage extends FineosPage {
   async visit(ssn: string): Promise<ClaimantPage> {
     ssn = ssn.replace(/-/g, "");
     await this.page.click('a[aria-label="Parties"]', { force: true });
+    await this.page.waitForLoadState("domcontentloaded");
     await this.page.fill(
       "input[type='text'][name$='Social_Security_No._(SSN)']",
       ssn,

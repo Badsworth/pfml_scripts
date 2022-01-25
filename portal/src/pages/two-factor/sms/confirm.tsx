@@ -14,6 +14,7 @@ import ThrottledButton from "src/components/ThrottledButton";
 import Title from "../../../components/core/Title";
 import User from "../../../models/User";
 import { isFeatureEnabled } from "../../../services/featureFlags";
+import tracker from "../../../services/tracker";
 import useFormState from "../../../hooks/useFormState";
 import useFunctionalInputProps from "../../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../../locales/i18n";
@@ -41,6 +42,7 @@ export const ConfirmSMS = (props: ConfirmSMSProps) => {
   const resendConfirmationCode = async (event: React.FormEvent) => {
     event.preventDefault();
     await sendMFAConfirmationCode();
+    tracker.trackEvent("User resent MFA confirmation code");
   };
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -59,6 +61,7 @@ export const ConfirmSMS = (props: ConfirmSMSProps) => {
       await appLogic.users.updateUser(user.user_id, {
         mfa_delivery_preference: "SMS",
       });
+      tracker.trackEvent("User confirmed MFA phone number");
       appLogic.portalFlow.goToNextPage(
         {},
         { smsMfaConfirmed: "true" },

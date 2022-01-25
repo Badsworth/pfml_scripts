@@ -273,7 +273,7 @@ def get_overpayments(db_session: db.Session) -> NamedTuple:
     #                                                   'Overpayment Recovery Reverse',
     #                                                   'Overpayment Recovery Cancellation')
     # AND DATE_PART('YEAR', OP.ENDED_AT) = 2021
-    # AND VPEI.PAYMENTMETHOD <> 'Inflight Recovery'
+    # AND VPEI.PAYMENTMETHOD NOT IN ('Inflight Recovery', 'Automatic Offset Recovery')
     # AND VPEI.R = 1
     overpayments = (
         db_session.query(StateLog.payment_id, cast(StateLog.ended_at, Date).label("ended_at"))
@@ -312,7 +312,7 @@ def get_overpayments(db_session: db.Session) -> NamedTuple:
         .filter(
             Payment.payment_transaction_type_id.in_(OVERPAYMENT_TYPES_1099_IDS),
             func.extract("YEAR", overpayments.c.ended_at) == year,
-            vpei.c.paymentmethod != "Inflight Recovery",
+            vpei.c.paymentmethod.notin_(["Inflight Recovery", "Automatic Offset Recovery"]),
             vpei.c.R == 1,
         )
         .all()
@@ -337,6 +337,7 @@ def get_1099s(db_session: db.Session, batch: Pfml1099Batch) -> NamedTuple:
     #                         SELECT EMPLOYEE_ID FROM PFML_1099_WITHHOLDING WHERE PFML_BATCH_ID = ''),
     #     EMPLOYEE_FEED  AS (SELECT E.EMPLOYEE_ID, FEEF.FIRSTNAMES, FEEF.LASTNAME, FEEF.C, FEEF.I, FEEF.CUSTOMERNO, FEEF.ADDRESS1, FEEF.ADDRESS2, FEEF.ADDRESS4, FEEF.ADDRESS6, FEEF.POSTCODE, FEEF.COUNTRY,
     #                             FEEF.FINEOS_EXTRACT_IMPORT_LOG_ID, FEEF.EFFECTIVEFROM, FEEF.EFFECTIVETO, FEEF.CREATED_AT,
+    #                             CAST (CASE WHEN FEEF.EFFECTIVEFROM IS NULL THEN '1900-01-01' WHEN FEEF.EFFECTIVEFROM = '' THEN '1900-01-01' ELSE FEEF.EFFECTIVEFROM END AS DATE) ADDRESS_DATE,
     #                             RANK() OVER (PARTITION BY FEEF.CUSTOMERNO ORDER BY FEEF.FINEOS_EXTRACT_IMPORT_LOG_ID DESC, FEEF.EFFECTIVEFROM DESC, FEEF.EFFECTIVETO DESC, FEEF.CREATED_AT DESC) R
     #                             FROM FINEOS_EXTRACT_EMPLOYEE_FEED FEEF
     #                             INNER JOIN EMPLOYEE E ON E.FINEOS_CUSTOMER_NUMBER = FEEF.CUSTOMERNO
@@ -470,8 +471,15 @@ def get_1099s(db_session: db.Session, batch: Pfml1099Batch) -> NamedTuple:
             FineosExtractEmployeeFeed.address4.label("address4"),
             FineosExtractEmployeeFeed.address6.label("address6"),
             FineosExtractEmployeeFeed.postcode.label("postcode"),
-            func.coalesce(
-                cast(FineosExtractEmployeeFeed.effectivefrom, Date), cast("1900-01-01", Date)
+            cast(
+                case(
+                    [
+                        (FineosExtractEmployeeFeed.effectivefrom == is_none, "1900-01-01",),
+                        (FineosExtractEmployeeFeed.effectivefrom == "", "1900-01-01",),
+                    ],
+                    else_=FineosExtractEmployeeFeed.effectivefrom,
+                ),
+                Date,
             ).label("ADDRESS_DATE"),
             func.rank()
             .over(

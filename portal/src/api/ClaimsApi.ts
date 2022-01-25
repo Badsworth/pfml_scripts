@@ -1,7 +1,7 @@
 import Claim, { AbsenceCaseStatus } from "../models/Claim";
 import ClaimDetail, { Payments } from "../models/ClaimDetail";
+import ApiResourceCollection from "../models/ApiResourceCollection";
 import BaseApi from "./BaseApi";
-import ClaimCollection from "../models/ClaimCollection";
 import { isFeatureEnabled } from "../services/featureFlags";
 import routes from "../routes";
 
@@ -71,7 +71,7 @@ export default class ClaimsApi extends BaseApi {
     const claims = data.map((claimData) => new Claim(claimData));
 
     return {
-      claims: new ClaimCollection(claims),
+      claims: new ApiResourceCollection<Claim>("fineos_absence_id", claims),
       paginationMeta: meta?.paging ?? {},
     };
   };

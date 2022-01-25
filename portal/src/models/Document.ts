@@ -71,6 +71,77 @@ export interface ClaimDocument {
   name: string | null;
 }
 
+/**
+ * Get only documents associated with a given Application
+ */
+export function filterByApplication(
+  items: Array<BenefitsApplicationDocument | ClaimDocument>,
+  application_id: string
+) {
+  return items.filter((item) => {
+    return (
+      isBenefitsApplicationDocument(item) &&
+      item.application_id === application_id
+    );
+  });
+}
+
+/**
+ * Get certification documents based on application leave reason
+ */
+export function findDocumentsByLeaveReason<
+  T extends BenefitsApplicationDocument | ClaimDocument
+>(documents: T[], leaveReason: keyof typeof DocumentType.certification): T[] {
+  // TODO (CP-2029): Remove the medicalCertification type from this array when it becomes obsolete
+  const documentFilters: Array<
+    typeof DocumentType.certification[keyof typeof DocumentType.certification]
+  > = [DocumentType.certification.medicalCertification];
+
+  if (leaveReason) {
+    documentFilters.push(DocumentType.certification[leaveReason]);
+  }
+  return findDocumentsByTypes(documents, documentFilters);
+}
+
+/**
+ * Get only documents associated with a given selection of document_types
+ */
+export function findDocumentsByTypes<
+  T extends BenefitsApplicationDocument | ClaimDocument
+>(documents: T[], document_types: DocumentTypeEnum[]): T[] {
+  const lowerCaseDocumentTypes = document_types.map((documentType) =>
+    documentType.toLowerCase()
+  );
+
+  return documents.filter((document) => {
+    // Ignore casing differences by comparing lowercased enums
+    return lowerCaseDocumentTypes.includes(
+      document.document_type.toLowerCase()
+    );
+  });
+}
+
+/**
+ * Get only documents that are legal notices.
+ */
+export function getLegalNotices(
+  documents: Array<BenefitsApplicationDocument | ClaimDocument>
+) {
+  return findDocumentsByTypes(documents, [
+    DocumentType.appealAcknowledgment,
+    DocumentType.approvalNotice,
+    DocumentType.denialNotice,
+    DocumentType.requestForInfoNotice,
+    DocumentType.withdrawalNotice,
+    DocumentType.maximumWeeklyBenefitChangeNotice,
+    DocumentType.benefitAmountChangeNotice,
+    DocumentType.leaveAllotmentChangeNotice,
+    DocumentType.approvedTimeCancelled,
+    DocumentType.changeRequestApproved,
+    DocumentType.changeRequestDenied,
+  ]);
+}
+
 export function isBenefitsApplicationDocument(
   document: BenefitsApplicationDocument | ClaimDocument
 ): document is BenefitsApplicationDocument {

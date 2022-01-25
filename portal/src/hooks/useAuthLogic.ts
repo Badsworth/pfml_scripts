@@ -4,6 +4,7 @@ import {
   CognitoError,
   Issue,
   ValidationError,
+  isCognitoError,
 } from "../errors";
 import {
   NullableQueryParams,
@@ -23,18 +24,6 @@ import validateCode from "../utils/validateCode";
 
 interface ErrorCodeMap {
   [code: string]: { field?: string; type: string } | undefined;
-}
-
-function isCognitoError(error: unknown): error is CognitoError {
-  if (
-    error &&
-    typeof error === "object" &&
-    error.hasOwnProperty("code") !== undefined
-  ) {
-    return true;
-  }
-
-  return false;
 }
 
 interface MFAChallenge {

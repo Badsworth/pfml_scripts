@@ -11,6 +11,7 @@
 import {
   BenefitsApplicationDocument,
   DocumentType,
+  findDocumentsByTypes,
 } from "../../../models/Document";
 import withClaimDocuments, {
   WithClaimDocumentsProps,
@@ -29,7 +30,6 @@ import QuestionPage from "../../../components/QuestionPage";
 import React from "react";
 import Spinner from "../../../components/core/Spinner";
 import { Trans } from "react-i18next";
-import findDocumentsByTypes from "../../../utils/findDocumentsByTypes";
 import hasDocumentsLoadError from "../../../utils/hasDocumentsLoadError";
 import routes from "../../../routes";
 import uploadDocumentsHelper from "../../../utils/uploadDocumentsHelper";

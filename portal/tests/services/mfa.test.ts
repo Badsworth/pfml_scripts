@@ -1,5 +1,6 @@
 import * as MFAService from "../../src/services/mfa";
 import { Auth } from "@aws-amplify/auth";
+import { CognitoAuthError } from "../../src/errors";
 import tracker from "../../src/services/tracker";
 
 jest.mock("@aws-amplify/auth");
@@ -20,6 +21,32 @@ describe("sendMFAConfirmationCode", () => {
     await MFAService.sendMFAConfirmationCode();
     expect(tracker.trackFetchRequest).toHaveBeenCalledTimes(1);
     expect(tracker.markFetchRequestEnd).toHaveBeenCalledTimes(1);
+  });
+
+  // This tests the way things currently work, which is isCognitoError always returns true
+  // due to behavior in this line: error.hasOwnProperty("code") !== undefined
+  // This is not changing in this PR because login logic uses isCognitoError.
+  //
+  // When isCognitoError gets fixed, we should split this test to check:
+  // - A CognitoAuthError is only thrown when the error has the correct shape.
+  // - A non-CognitoAuth error is thrown otherwise
+  //
+  // Here's an example of the error Cognito throws
+  //  const errorFromCognito = {
+  //      "code": "LimitExceededException",
+  //      "name": "LimitExceededException",
+  //      "message": "Attempt limit exceeded, please try after some time."
+  //  }
+  it("throws reformatted error when any error received from cognito", async () => {
+    jest
+      .spyOn(Auth, "verifyUserAttribute")
+      .mockRejectedValueOnce(new Error("Async error"));
+    try {
+      await MFAService.sendMFAConfirmationCode();
+    } catch (error) {
+      expect(error).toBeInstanceOf(Error);
+      expect(error).toBeInstanceOf(CognitoAuthError);
+    }
   });
 });
 

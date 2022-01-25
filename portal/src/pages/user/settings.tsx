@@ -15,6 +15,7 @@ import { Trans } from "react-i18next";
 import { isFeatureEnabled } from "src/services/featureFlags";
 import { pick } from "lodash";
 import routes from "src/routes";
+import tracker from "src/services/tracker";
 import useFormState from "src/hooks/useFormState";
 import useFunctionalInputProps from "src/hooks/useFunctionalInputProps";
 import { useTranslation } from "src/locales/i18n";
@@ -43,6 +44,11 @@ const MFAAmendmentForm = (props: {
 
   const handleSave = async () => {
     await props.appLogic.users.updateUser(props.user.user_id, formState);
+    if (formState.mfa_delivery_preference === MFAPreference.optOut) {
+      tracker.trackEvent("User disabled MFA");
+    } else if (formState.mfa_delivery_preference === MFAPreference.sms) {
+      tracker.trackEvent("User kept MFA enabled");
+    }
     props.onHide();
   };
 
@@ -110,6 +116,7 @@ export const Settings = (props: UserSettingsProps) => {
         <React.Fragment>
           <Trans i18nKey="pages.userSettings.additionalVerificationNoMfaText" />
           <ButtonLink
+            onClick={() => tracker.trackEvent("User opted to enable MFA")}
             href={appLogic.portalFlow.getNextPageRoute(
               "EDIT_MFA_PHONE",
               undefined,

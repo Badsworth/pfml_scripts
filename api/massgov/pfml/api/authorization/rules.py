@@ -77,7 +77,7 @@ def can_download(user: User, doc: Union[Document, DocumentResponse]) -> bool:
         return False
 
     # Regular users can download a limited number of doc types.
-    if not user.roles:
+    if user.is_worker_user:
         regular_user_allowed_doc_types = [
             d.lower()
             for d in [
@@ -121,7 +121,8 @@ def employees(user: User, they: RuleList) -> None:
 
 
 def applications(user: User, they: RuleList) -> None:
-    they.can(CREATE, Application)
+    if user.is_worker_user:
+        they.can(CREATE, Application)
     they.can((EDIT, READ), Application, user_id=user.user_id)
 
 

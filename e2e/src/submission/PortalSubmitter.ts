@@ -26,7 +26,6 @@ import AuthenticationManager from "./AuthenticationManager";
 import { ApplicationSubmissionResponse, Credentials } from "../types";
 import { GeneratedClaim } from "../generation/Claim";
 import { DocumentWithPromisedFile } from "../generation/documents";
-import config from "../config";
 if (!global.FormData) {
   // @ts-ignore
   global.FormData = FormData;
@@ -92,12 +91,11 @@ export default class PortalSubmitter {
       options
     );
 
-    if (config("FINEOS_HAS_TAX_WITHHOLDING") === "true")
-      await this.submitTaxPreference(
-        application_id,
-        { is_withholding_tax: claim.is_withholding_tax },
-        options
-      );
+    await this.submitTaxPreference(
+      application_id,
+      { is_withholding_tax: claim.is_withholding_tax },
+      options
+    );
 
     await this.completeApplication(application_id, options);
     if (claim.employerResponse) {

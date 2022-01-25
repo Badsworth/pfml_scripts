@@ -11,9 +11,9 @@ import withClaims, { ApiParams, WithClaimsProps } from "../../hoc/withClaims";
 import withUser, { WithUserProps } from "../../hoc/withUser";
 import AbsenceCaseStatusTag from "../../components/AbsenceCaseStatusTag";
 import Alert from "../../components/core/Alert";
+import ApiResourceCollection from "../../models/ApiResourceCollection";
 import { AppLogic } from "../../hooks/useAppLogic";
 import Button from "../../components/core/Button";
-import ClaimCollection from "../../models/ClaimCollection";
 import Details from "../../components/core/Details";
 import Dropdown from "../../components/core/Dropdown";
 import EmployerNavigationTabs from "../../components/employers/EmployerNavigationTabs";
@@ -268,7 +268,7 @@ const PaginatedClaimsTable = (props: PaginatedClaimsTableProps) => {
 
 interface ClaimTableRowsProps {
   appLogic: AppLogic;
-  claims: ClaimCollection;
+  claims: ApiResourceCollection<Claim>;
   tableColumnKeys: string[];
   user: User;
 }

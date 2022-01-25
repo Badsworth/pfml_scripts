@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import withUser, { WithUserProps } from "./withUser";
-import ClaimCollection from "../models/ClaimCollection";
+import ApiResourceCollection from "../models/ApiResourceCollection";
+import Claim from "../models/Claim";
 import PaginationMeta from "../models/PaginationMeta";
 import Spinner from "../components/core/Spinner";
 import { omitBy } from "lodash";
@@ -16,7 +17,7 @@ export interface ApiParams {
 }
 
 export interface WithClaimsProps extends WithUserProps {
-  claims: ClaimCollection;
+  claims: ApiResourceCollection<Claim>;
   paginationMeta: PaginationMeta;
 }
 

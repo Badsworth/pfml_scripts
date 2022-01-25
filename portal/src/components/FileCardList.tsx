@@ -1,10 +1,10 @@
 import React, { useState } from "react";
+import ApiResourceCollection from "../models/ApiResourceCollection";
 import AppErrorInfo from "../models/AppErrorInfo";
 import { BenefitsApplicationDocument } from "../models/Document";
 import FileCard from "./FileCard";
 import Spinner from "./core/Spinner";
 import TempFile from "../models/TempFile";
-import TempFileCollection from "../models/TempFileCollection";
 import { useTranslation } from "../locales/i18n";
 
 /**
@@ -62,7 +62,7 @@ function renderDocumentFileCard(
 }
 
 interface FileCardListProps {
-  tempFiles: TempFileCollection;
+  tempFiles: ApiResourceCollection<TempFile>;
   fileErrors: AppErrorInfo[];
   onChange: (files: File[]) => Promise<void>;
   onRemoveTempFile: (id: string) => void;

@@ -7,6 +7,9 @@ import {
   ClaimDocument,
   DocumentType,
   DocumentTypeEnum,
+  filterByApplication,
+  findDocumentsByTypes,
+  getLegalNotices,
 } from "../../../models/Document";
 import React, { useEffect } from "react";
 import Tag, { TagProps } from "../../../components/core/Tag";
@@ -25,10 +28,8 @@ import StatusNavigationTabs from "../../../components/status/StatusNavigationTab
 import Title from "../../../components/core/Title";
 import { Trans } from "react-i18next";
 import { createRouteWithQuery } from "../../../utils/routeWithParams";
-import findDocumentsByTypes from "../../../utils/findDocumentsByTypes";
 import findKeyByValue from "../../../utils/findKeyByValue";
 import formatDate from "../../../utils/formatDate";
-import getLegalNotices from "../../../utils/getLegalNotices";
 import hasDocumentsLoadError from "../../../utils/hasDocumentsLoadError";
 import { isFeatureEnabled } from "../../../services/featureFlags";
 import routes from "../../../routes";
@@ -130,7 +131,8 @@ export const Status = ({
   );
   const hasApprovedStatus = claimDetail?.hasApprovedStatus;
 
-  const documentsForApplication = allClaimDocuments.filterByApplication(
+  const documentsForApplication = filterByApplication(
+    allClaimDocuments.items,
     claimDetail.application_id
   );
 

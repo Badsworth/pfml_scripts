@@ -4,6 +4,7 @@ import withBenefitsApplications, {
 import withUser, { WithUserProps } from "../../hoc/withUser";
 import Alert from "../../components/core/Alert";
 import ApplicationCard from "../../components/ApplicationCard";
+import BenefitsApplication from "../../models/BenefitsApplication";
 import ButtonLink from "../../components/ButtonLink";
 import Heading from "../../components/core/Heading";
 import Lead from "../../components/core/Lead";
@@ -125,6 +126,8 @@ function withRedirectToGetReadyPage<T extends WithBenefitsApplicationsProps>(
 const PaginatedApplicationCards = (props: WithBenefitsApplicationsProps) => {
   const { appLogic, claims, paginationMeta } = props;
   const { t } = useTranslation();
+  const inProgressClaims = BenefitsApplication.inProgress(claims.items);
+  const completedClaims = BenefitsApplication.completed(claims.items);
 
   /**
    * Update the page's query string, to load a different page number,
@@ -135,10 +138,6 @@ const PaginatedApplicationCards = (props: WithBenefitsApplicationsProps) => {
     appLogic.portalFlow.updateQuery({ page_offset: String(pageNumber) });
   };
 
-  const hasClaims = !claims.isEmpty;
-  const hasInProgressClaims = hasClaims && claims.inProgress.length > 0;
-  const hasCompletedClaims = hasClaims && claims.completed.length > 0;
-
   /**
    * Event handler for when a next/prev pagination button is clicked
    */
@@ -148,7 +147,7 @@ const PaginatedApplicationCards = (props: WithBenefitsApplicationsProps) => {
 
   return (
     <React.Fragment>
-      {hasInProgressClaims && (
+      {inProgressClaims.length > 0 && (
         <React.Fragment>
           <div className="measure-6">
             <Lead>
@@ -169,7 +168,7 @@ const PaginatedApplicationCards = (props: WithBenefitsApplicationsProps) => {
           <Heading level="2">
             {t("pages.applications.inProgressHeading")}
           </Heading>
-          {claims.inProgress.map((claim, index) => {
+          {inProgressClaims.map((claim, index) => {
             return (
               <ApplicationCard
                 key={claim.application_id}
@@ -183,12 +182,12 @@ const PaginatedApplicationCards = (props: WithBenefitsApplicationsProps) => {
         </React.Fragment>
       )}
 
-      {hasCompletedClaims && (
+      {completedClaims.length > 0 && (
         <React.Fragment>
           <Heading level="2">
             {t("pages.applications.submittedHeading")}
           </Heading>
-          {claims.completed.map((claim, index) => {
+          {completedClaims.map((claim, index) => {
             return (
               <ApplicationCard
                 key={claim.application_id}

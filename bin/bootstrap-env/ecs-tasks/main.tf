@@ -84,4 +84,5 @@ module "tasks" {
   irs_1099_correction_ind         = "0"
 
   enable_withholding_payments = "1"
+  enable_employer_reimbursement_payments = "0"
 }

@@ -1,8 +1,8 @@
 import { Issue, ValidationError } from "../errors";
+import ApiResourceCollection from "../models/ApiResourceCollection";
 import { AppErrorsLogic } from "./useAppErrorsLogic";
 import Compressor from "compressorjs";
 import TempFile from "../models/TempFile";
-import TempFileCollection from "../models/TempFileCollection";
 import bytesToMb from "../utils/bytesToMb";
 import { isFeatureEnabled } from "../services/featureFlags";
 import { snakeCase } from "lodash";
@@ -181,7 +181,7 @@ const useFilesLogic = ({
     collection: files,
     addItems: addFiles,
     removeItem: removeFile,
-  } = useCollectionState(new TempFileCollection());
+  } = useCollectionState(new ApiResourceCollection<TempFile>("id"));
 
   /**
    * Async function handles file optimization and filter logic

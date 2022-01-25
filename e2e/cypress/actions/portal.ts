@@ -52,8 +52,9 @@ function setFeatureFlags(flags?: Partial<FeatureFlags>): void {
     employerShowReviewByStatus: true,
     claimantShowStatusPage: true,
     claimantShowTaxWithholding: true,
-    claimantShowPayments: config("HAS_PAYMENT_STATUS") === "true",
+    claimantShowPayments: false,
     claimantShowOrganizationUnits: false,
+    claimantShowPaymentsPhaseTwo: true,
     claimantShowMFA: config("MFA_ENABLED") === "true",
     employerShowMultiLeave: true,
   };
@@ -99,6 +100,10 @@ export function before(flags?: Partial<FeatureFlags>): void {
   cy.intercept(/\/api\/v1\/claims\?(page_offset=\d+)?&?(order_by)/).as(
     "dashboardClaimQueries"
   );
+  cy.intercept({
+    method: "GET",
+    url: "**/api/v1/payments?absence_case_id=*",
+  }).as("payments");
 
   deleteDownloadsFolder();
 }
@@ -922,10 +927,21 @@ export function respondToLeaveAdminRequest(
   cy.contains("Thanks for reviewing the application", { timeout: 30000 });
 }
 
+type NoticeType =
+  | "Approval notice (PDF)"
+  | "Denial notice (PDF)"
+  | "Appeal Acknowledgment (PDF)"
+  | "Benefit Amount Change Notice (PDF)"
+  | "Approved Time Cancelled (PDF)"
+  | "Maximum Weekly Benefit Change Notice (PDF)"
+  | "Leave Allotment Change Notice (PDF)"
+  | "Change Request Denied (PDF)"
+  | "Change Request Approved (PDF)";
+
 export function checkNoticeForLeaveAdmin(
   fineosAbsenceId: string,
   claimantName: string,
-  noticeType: string
+  noticeType: NoticeType,
 ): void {
   cy.visit(`/employers/applications/status/?absence_id=${fineosAbsenceId}`);
   cy.contains("h1", claimantName, { timeout: 20000 }).should("be.visible");
@@ -2105,7 +2121,7 @@ export function assertPayments(spec: PaymentStatus[]) {
     estimatedScheduledDate: "Estimated date",
     dateSent: "Date processed",
   };
-
+  cy.wait("@payments").wait(100);
   cy.get("section[data-testid='your-payments']").within(() => {
     cy.get("tbody")
       .children()
@@ -2207,4 +2223,15 @@ export function leaveAdminAssertClaimStatus(leaves: LeaveStatus[]) {
     cy.contains(heading);
     cy.get('[data-label="Status"]').should("contain.text", status);
   }
+}
+
+export function assertPaymentCheckBackDate(date: Date) {
+  cy.get("section[data-testid='your-payments-intro']").within(() => {
+    cy.contains(
+      `Check back on ${format(
+        date,
+        "MM/dd/yyyy"
+      )} to see when you can expect your first payment.`
+    );
+  });
 }

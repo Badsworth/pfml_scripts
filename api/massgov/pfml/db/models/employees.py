@@ -1322,6 +1322,16 @@ class User(Base, TimestampMixin):
 
         return mfa_preference.mfa_delivery_preference_description
 
+    @property
+    def is_worker_user(self) -> bool:
+        """
+        Currently we do not populate a role for worker account users
+        so for now we can rely on roles being empty to extrapolate
+
+        See: create_user in users.py utility
+        """
+        return not self.roles
+
 
 class UserRole(Base, TimestampMixin):
     __tablename__ = "link_user_role"

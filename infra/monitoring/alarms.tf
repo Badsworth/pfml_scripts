@@ -33,7 +33,6 @@ module "email_bounce" {
   high_priority_nr_integration_key = pagerduty_service_integration.newrelic_high_priority_notification.integration_key
 }
 
-# how do we tie this to sms preferences in pfml-aws/sns.tf to remove duplication?
 module "sns_alarms" {
   source                           = "../modules/terraform_sns_alarms"
   sns_monthly_spend_limit          = module.constants.aws_sns_sms_monthly_spend_limit

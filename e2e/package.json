@@ -91,6 +91,7 @@
     "cypress": "8.2.0",
     "cypress-file-upload": "^5.0.8",
     "date-fns": "^2.16.1",
+    "date-fns-timezone": "^0.1.4",
     "delay": "^4.3.0",
     "dotenv": "^8.2.0",
     "encoding": "^0.1.13",
