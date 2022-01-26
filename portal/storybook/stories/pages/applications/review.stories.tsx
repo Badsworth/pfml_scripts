@@ -1,10 +1,10 @@
+import { BenefitsApplicationDocument, DocumentType } from "src/models/Document";
 import {
   claimArgTypes,
   claimArgs,
   createClaimFromArgs,
 } from "storybook/utils/claimArgTypes";
-import DocumentCollection from "src/models/DocumentCollection";
-import { DocumentType } from "src/models/Document";
+import ApiResourceCollection from "src/models/ApiResourceCollection";
 import React from "react";
 import { Review } from "src/pages/applications/review";
 import User from "src/models/User";
@@ -58,7 +58,10 @@ export const DefaultStory = (
 
   const appLogic = useMockableAppLogic({
     documents: {
-      documents: new DocumentCollection(documents),
+      documents: new ApiResourceCollection<BenefitsApplicationDocument>(
+        "fineos_document_id",
+        documents
+      ),
     },
   });
 

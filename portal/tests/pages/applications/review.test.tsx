@@ -28,9 +28,9 @@ import Review, {
   PreviousLeaveList,
 } from "../../../src/pages/applications/review";
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import ApiResourceCollection from "src/models/ApiResourceCollection";
 import AppErrorInfo from "../../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../../src/models/AppErrorInfoCollection";
-import DocumentCollection from "../../../src/models/DocumentCollection";
 import { LeaveReasonType } from "../../../src/models/LeaveReason";
 import { createMockBenefitsApplicationDocument } from "../../../lib/mock-helpers/createMockDocument";
 import dayjs from "dayjs";
@@ -60,7 +60,11 @@ const setup = ({
         setupBenefitsApplications(appLogic, [claim]);
 
         // Mock the Application's documents
-        appLogic.documents.documents = new DocumentCollection(documents);
+        appLogic.documents.documents =
+          new ApiResourceCollection<BenefitsApplicationDocument>(
+            "fineos_document_id",
+            documents
+          );
         jest
           .spyOn(appLogic.documents, "hasLoadedClaimDocuments")
           .mockReturnValue(true);
@@ -242,6 +246,7 @@ describe("Review Page", () => {
       documents: [
         createMockBenefitsApplicationDocument({
           application_id: claim.application_id,
+          fineos_document_id: "1",
           document_type:
             DocumentType.certification[
               claim.leave_details.reason as LeaveReasonType
@@ -249,6 +254,7 @@ describe("Review Page", () => {
         }),
         createMockBenefitsApplicationDocument({
           application_id: claim.application_id,
+          fineos_document_id: "12",
           document_type:
             DocumentType.certification[
               claim.leave_details.reason as LeaveReasonType
@@ -256,6 +262,7 @@ describe("Review Page", () => {
         }),
         createMockBenefitsApplicationDocument({
           application_id: claim.application_id,
+          fineos_document_id: "3",
           document_type: DocumentType.identityVerification,
         }),
       ],

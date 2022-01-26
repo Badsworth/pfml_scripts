@@ -8,7 +8,7 @@ import {
   BenefitsApplicationDocument,
   DocumentTypeEnum,
 } from "../models/Document";
-import DocumentCollection from "../models/DocumentCollection";
+import ApiResourceCollection from "../models/ApiResourceCollection";
 import assert from "assert";
 import routes from "../routes";
 
@@ -69,7 +69,10 @@ export default class DocumentsApi extends BaseApi {
     );
 
     return {
-      documents: new DocumentCollection(data),
+      documents: new ApiResourceCollection<BenefitsApplicationDocument>(
+        "fineos_document_id",
+        data
+      ),
     };
   };
 

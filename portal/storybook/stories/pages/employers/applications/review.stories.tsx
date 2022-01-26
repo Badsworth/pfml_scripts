@@ -1,9 +1,9 @@
 import { ClaimDocument, DocumentType } from "src/models/Document";
 import LeaveReason, { LeaveReasonType } from "src/models/LeaveReason";
 import { AbsencePeriod } from "src/models/AbsencePeriod";
+import ApiResourceCollection from "src/models/ApiResourceCollection";
 import AppErrorInfo from "src/models/AppErrorInfo";
 import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
-import DocumentCollection from "src/models/DocumentCollection";
 import EmployerClaim from "src/models/EmployerClaim";
 import { ManagedRequirement } from "src/models/Claim";
 import { MockEmployerClaimBuilder } from "lib/mock-helpers/mock-model-builder";
@@ -145,7 +145,10 @@ export const Default = (
       claimDocumentsMap: new Map([
         [
           claim.fineos_absence_id,
-          new DocumentCollection(documents as ClaimDocument[]),
+          new ApiResourceCollection<ClaimDocument>(
+            "fineos_document_id",
+            documents as ClaimDocument[]
+          ),
         ],
       ]),
     },

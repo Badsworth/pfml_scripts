@@ -13,9 +13,9 @@ import {
   submitClaimReviewMock,
   submitWithholdingMock,
 } from "../../src/api/EmployersApi";
+import ApiResourceCollection from "src/models/ApiResourceCollection";
 import AppErrorInfo from "../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
-import DocumentCollection from "../../src/models/DocumentCollection";
 import User from "../../src/models/User";
 import { uniqueId } from "lodash";
 import useAppErrorsLogic from "../../src/hooks/useAppErrorsLogic";
@@ -217,7 +217,10 @@ describe("useEmployersLogic", () => {
       it("fetches all documents for an application and adds to the claimDocumentsMap", async () => {
         const absenceId = "NTN-323-ABS-01";
         const expectedDocumentsMap = new Map([
-          [absenceId, new DocumentCollection([approvalNotice])],
+          [
+            absenceId,
+            new ApiResourceCollection("fineos_document_id", [approvalNotice]),
+          ],
         ]);
         let { claimDocumentsMap } = employersLogic;
 
@@ -225,7 +228,9 @@ describe("useEmployersLogic", () => {
           return {
             success: true,
             status: 200,
-            documents: new DocumentCollection([approvalNotice]),
+            documents: new ApiResourceCollection("fineos_document_id", [
+              approvalNotice,
+            ]),
           };
         });
 
@@ -240,8 +245,14 @@ describe("useEmployersLogic", () => {
         const absenceCaseId_first = "NTN-323-ABS-01";
         const absenceCaseId_second = "NTN-423-ABS-01";
         const expectedDocumentsMap = new Map([
-          [absenceCaseId_first, new DocumentCollection([approvalNotice])],
-          [absenceCaseId_second, new DocumentCollection([denialNotice])],
+          [
+            absenceCaseId_first,
+            new ApiResourceCollection("fineos_document_id", [approvalNotice]),
+          ],
+          [
+            absenceCaseId_second,
+            new ApiResourceCollection("fineos_document_id", [denialNotice]),
+          ],
         ]);
         let { claimDocumentsMap } = employersLogic;
 
@@ -250,14 +261,18 @@ describe("useEmployersLogic", () => {
             return {
               success: true,
               status: 200,
-              documents: new DocumentCollection([approvalNotice]),
+              documents: new ApiResourceCollection("fineos_document_id", [
+                approvalNotice,
+              ]),
             };
           })
           .mockImplementationOnce(() => {
             return {
               success: true,
               status: 200,
-              documents: new DocumentCollection([denialNotice]),
+              documents: new ApiResourceCollection("fineos_document_id", [
+                denialNotice,
+              ]),
             };
           });
 
@@ -273,7 +288,10 @@ describe("useEmployersLogic", () => {
       it("fetches documents for the same absence case twice and only calls the API once", async () => {
         const absenceId = "NTN-323-ABS-01";
         const expectedDocumentsMap = new Map([
-          [absenceId, new DocumentCollection([approvalNotice])],
+          [
+            absenceId,
+            new ApiResourceCollection("fineos_document_id", [approvalNotice]),
+          ],
         ]);
         let { claimDocumentsMap } = employersLogic;
 
@@ -281,7 +299,9 @@ describe("useEmployersLogic", () => {
           return {
             success: true,
             status: 200,
-            documents: new DocumentCollection([approvalNotice]),
+            documents: new ApiResourceCollection("fineos_document_id", [
+              approvalNotice,
+            ]),
           };
         });
 

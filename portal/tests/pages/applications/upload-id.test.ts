@@ -1,14 +1,17 @@
 import {
+  BenefitsApplicationDocument,
+  DocumentType,
+} from "../../../src/models/Document";
+import {
   MockBenefitsApplicationBuilder,
   makeFile,
   renderPage,
 } from "../../test-utils";
 import { act, screen, waitFor } from "@testing-library/react";
+import ApiResourceCollection from "src/models/ApiResourceCollection";
 import AppErrorInfo from "../../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../../src/models/AppErrorInfoCollection";
 import { AppLogic } from "../../../src/hooks/useAppLogic";
-import DocumentCollection from "../../../src/models/DocumentCollection";
-import { DocumentType } from "../../../src/models/Document";
 import UploadId from "../../../src/pages/applications/upload-id";
 import { ValidationError } from "../../../src/errors";
 import { createMockBenefitsApplicationDocument } from "../../../lib/mock-helpers/createMockDocument";
@@ -90,11 +93,15 @@ describe("UploadId", () => {
         appLogic.documents.hasLoadedClaimDocuments = jest
           .fn()
           .mockReturnValue(true);
-        appLogic.documents.documents = new DocumentCollection([
-          createMockBenefitsApplicationDocument({
-            document_type: DocumentType.identityVerification,
-          }),
-        ]);
+        appLogic.documents.documents =
+          new ApiResourceCollection<BenefitsApplicationDocument>(
+            "fineos_document_id",
+            [
+              createMockBenefitsApplicationDocument({
+                document_type: DocumentType.identityVerification,
+              }),
+            ]
+          );
       };
       beforeEach(() => {
         const claim = new MockBenefitsApplicationBuilder()
@@ -403,11 +410,15 @@ describe("UploadId", () => {
           appLogic.documents.hasLoadedClaimDocuments = jest
             .fn()
             .mockReturnValue(true);
-          appLogic.documents.documents = new DocumentCollection([
-            createMockBenefitsApplicationDocument({
-              document_type: DocumentType.identityVerification,
-            }),
-          ]);
+          appLogic.documents.documents =
+            new ApiResourceCollection<BenefitsApplicationDocument>(
+              "fineos_document_id",
+              [
+                createMockBenefitsApplicationDocument({
+                  document_type: DocumentType.identityVerification,
+                }),
+              ]
+            );
         };
         setup(undefined, undefined, cb);
         expect(screen.getByText(/File/)).toBeInTheDocument();
@@ -419,11 +430,15 @@ describe("UploadId", () => {
           appLogic.documents.hasLoadedClaimDocuments = jest
             .fn()
             .mockReturnValue(true);
-          appLogic.documents.documents = new DocumentCollection([
-            createMockBenefitsApplicationDocument({
-              document_type: DocumentType.identityVerification,
-            }),
-          ]);
+          appLogic.documents.documents =
+            new ApiResourceCollection<BenefitsApplicationDocument>(
+              "fineos_document_id",
+              [
+                createMockBenefitsApplicationDocument({
+                  document_type: DocumentType.identityVerification,
+                }),
+              ]
+            );
         };
         setup(claim, undefined, cb);
         const tempFiles = [
@@ -456,11 +471,15 @@ describe("UploadId", () => {
           appLogic.documents.hasLoadedClaimDocuments = jest
             .fn()
             .mockReturnValue(true);
-          appLogic.documents.documents = new DocumentCollection([
-            createMockBenefitsApplicationDocument({
-              document_type: DocumentType.identityVerification,
-            }),
-          ]);
+          appLogic.documents.documents =
+            new ApiResourceCollection<BenefitsApplicationDocument>(
+              "fineos_document_id",
+              [
+                createMockBenefitsApplicationDocument({
+                  document_type: DocumentType.identityVerification,
+                }),
+              ]
+            );
         };
 
         setup(undefined, undefined, cb);

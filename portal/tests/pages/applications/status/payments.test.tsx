@@ -1,11 +1,14 @@
+import {
+  BenefitsApplicationDocument,
+  DocumentType,
+} from "../../../../src/models/Document";
 // TODO (PORTAL-1148) Update to use createMockClaim when ready
 import { createAbsencePeriod, renderPage } from "../../../test-utils";
+import ApiResourceCollection from "src/models/ApiResourceCollection";
 import AppErrorInfo from "../../../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../../../src/models/AppErrorInfoCollection";
 import { AppLogic } from "../../../../src/hooks/useAppLogic";
 import ClaimDetail from "../../../../src/models/ClaimDetail";
-import DocumentCollection from "../../../../src/models/DocumentCollection";
-import { DocumentType } from "../../../../src/models/Document";
 import LeaveReason from "../../../../src/models/LeaveReason";
 import { Payments } from "../../../../src/pages/applications/status/payments";
 import { createMockBenefitsApplicationDocument } from "../../../../lib/mock-helpers/createMockDocument";
@@ -21,16 +24,20 @@ const renderWithApprovalNotice = (
 ) => {
   appLogicHook.appErrors = new AppErrorInfoCollection();
   appLogicHook.documents.loadAll = jest.fn();
-  appLogicHook.documents.documents = new DocumentCollection([
-    createMockBenefitsApplicationDocument({
-      application_id: "mock-application-id",
-      content_type: "image/png",
-      created_at: isRetroactive ? "2021-11-30" : approvalTime,
-      document_type: DocumentType.approvalNotice,
-      fineos_document_id: "fineos-id-7",
-      name: "legal notice 3",
-    }),
-  ]);
+  appLogicHook.documents.documents =
+    new ApiResourceCollection<BenefitsApplicationDocument>(
+      "fineos_document_id",
+      [
+        createMockBenefitsApplicationDocument({
+          application_id: "mock-application-id",
+          content_type: "image/png",
+          created_at: isRetroactive ? "2021-11-30" : approvalTime,
+          document_type: DocumentType.approvalNotice,
+          fineos_document_id: "fineos-id-7",
+          name: "legal notice 3",
+        }),
+      ]
+    );
   appLogicHook.documents.hasLoadedClaimDocuments = () => true;
 };
 
@@ -386,7 +393,10 @@ describe("Payments", () => {
             }),
           ]),
           documents: {
-            documents: new DocumentCollection([]),
+            documents: new ApiResourceCollection<BenefitsApplicationDocument>(
+              "fineos_document_id",
+              []
+            ),
             loadAll: { loadAllClaimDocuments: jest.fn() },
           },
         },

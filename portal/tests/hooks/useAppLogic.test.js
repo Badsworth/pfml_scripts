@@ -1,7 +1,6 @@
 import ApiResourceCollection from "src/models/ApiResourceCollection";
 import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
 import BenefitsApplicationCollection from "../../src/models/BenefitsApplicationCollection";
-import DocumentCollection from "../../src/models/DocumentCollection";
 import { renderHook } from "@testing-library/react-hooks";
 import useAppLogic from "../../src/hooks/useAppLogic";
 
@@ -63,7 +62,7 @@ describe("useAppLogic", () => {
     expect(users.updateUser).toBeInstanceOf(Function);
     expect(setAppErrors).toBeInstanceOf(Function);
     expect(benefitsApplications.submit).toBeInstanceOf(Function);
-    expect(documents.documents).toBeInstanceOf(DocumentCollection);
+    expect(documents.documents).toBeInstanceOf(ApiResourceCollection);
     expect(documents.loadAll).toBeInstanceOf(Function);
     expect(documents.attach).toBeInstanceOf(Function);
     expect(employers.loadWithholding).toBeInstanceOf(Function);

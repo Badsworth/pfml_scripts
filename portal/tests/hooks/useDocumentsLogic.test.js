@@ -5,9 +5,9 @@ import {
   downloadDocumentMock,
   getDocumentsMock,
 } from "../../src/api/DocumentsApi";
+import ApiResourceCollection from "src/models/ApiResourceCollection";
 import AppErrorInfo from "../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
-import DocumentCollection from "../../src/models/DocumentCollection";
 import { makeFile } from "../test-utils";
 import { uniqueId } from "lodash";
 import useAppErrorsLogic from "../../src/hooks/useAppErrorsLogic";
@@ -41,8 +41,8 @@ describe("useDocumentsLogic", () => {
     documentsLogic = null;
   });
 
-  it("returns documents as instance of DocumentCollection", () => {
-    expect(documentsLogic.documents).toBeInstanceOf(DocumentCollection);
+  it("returns documents as instance of ApiResourceCollection", () => {
+    expect(documentsLogic.documents).toBeInstanceOf(ApiResourceCollection);
   });
 
   describe("attach", () => {
@@ -157,20 +157,23 @@ describe("useDocumentsLogic", () => {
       let newDocument, previouslyLoadedDocuments;
 
       beforeEach(async () => {
-        previouslyLoadedDocuments = new DocumentCollection([
-          {
-            application_id,
-            fineos_document_id: 1,
-          },
-          {
-            application_id,
-            fineos_document_id: 2,
-          },
-          {
-            application_id,
-            fineos_document_id: 3,
-          },
-        ]);
+        previouslyLoadedDocuments = new ApiResourceCollection(
+          "fineos_document_id",
+          [
+            {
+              application_id,
+              fineos_document_id: 1,
+            },
+            {
+              application_id,
+              fineos_document_id: 2,
+            },
+            {
+              application_id,
+              fineos_document_id: 3,
+            },
+          ]
+        );
 
         getDocumentsMock.mockImplementationOnce(() => {
           return {
@@ -362,7 +365,7 @@ describe("useDocumentsLogic", () => {
       describe("when the API returns documents", () => {
         let loadedDocuments;
         beforeEach(async () => {
-          loadedDocuments = new DocumentCollection([
+          loadedDocuments = new ApiResourceCollection("fineos_document_id", [
             {
               application_id,
               fineos_document_id: 1,
@@ -408,7 +411,7 @@ describe("useDocumentsLogic", () => {
 
         it("merges previously loaded documents with newly loaded documents", async () => {
           const newApplicationId = "mock-application-id-2";
-          const newDocuments = new DocumentCollection([
+          const newDocuments = new ApiResourceCollection("fineos_document_id", [
             {
               application_id: newApplicationId,
               fineos_document_id: 4,
@@ -444,7 +447,7 @@ describe("useDocumentsLogic", () => {
           getDocumentsMock.mockResolvedValue({
             status: 200,
             success: true,
-            documents: new DocumentCollection([]),
+            documents: new ApiResourceCollection("fineos_document_id", []),
           });
         });
 
@@ -500,7 +503,7 @@ describe("useDocumentsLogic", () => {
     it("resolves race conditions", async () => {
       let resolveFirstLoad, resolveSecondLoad;
 
-      const documentSet1 = new DocumentCollection([
+      const documentSet1 = new ApiResourceCollection("fineos_document_id", [
         {
           application_id,
           fineos_document_id: 1,
@@ -515,7 +518,7 @@ describe("useDocumentsLogic", () => {
         },
       ]);
 
-      const documentSet2 = new DocumentCollection([
+      const documentSet2 = new ApiResourceCollection("fineos_document_id", [
         {
           application_id: application_id2,
           fineos_document_id: 4,
@@ -579,7 +582,7 @@ describe("useDocumentsLogic", () => {
       getDocumentsMock.mockResolvedValueOnce({
         status: 200,
         success: true,
-        documents: new DocumentCollection([
+        documents: new ApiResourceCollection("fineos_document_id", [
           {
             application_id,
             fineos_document_id: 1,
@@ -598,7 +601,7 @@ describe("useDocumentsLogic", () => {
       getDocumentsMock.mockResolvedValueOnce({
         status: 200,
         success: true,
-        documents: new DocumentCollection([]),
+        documents: new ApiResourceCollection("fineos_document_id", []),
       });
 
       await act(async () => {

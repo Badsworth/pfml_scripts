@@ -1,14 +1,17 @@
 import {
+  BenefitsApplicationDocument,
+  DocumentType,
+} from "../../../src/models/Document";
+import {
   MockBenefitsApplicationBuilder,
   makeFile,
   renderPage,
 } from "../../test-utils";
 import { act, screen, waitFor } from "@testing-library/react";
+import ApiResourceCollection from "src/models/ApiResourceCollection";
 import AppErrorInfo from "../../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../../src/models/AppErrorInfoCollection";
 import { AppLogic } from "../../../src/hooks/useAppLogic";
-import DocumentCollection from "../../../src/models/DocumentCollection";
-import { DocumentType } from "../../../src/models/Document";
 import UploadCertification from "../../../src/pages/applications/upload-certification";
 import { ValidationError } from "../../../src/errors";
 import { createMockBenefitsApplicationDocument } from "../../../lib/mock-helpers/createMockDocument";
@@ -133,11 +136,15 @@ describe("UploadCertification", () => {
       appLogic.documents.hasLoadedClaimDocuments = jest
         .fn()
         .mockReturnValue(true);
-      appLogic.documents.documents = new DocumentCollection([
-        createMockBenefitsApplicationDocument({
-          document_type: DocumentType.certification.medicalCertification,
-        }),
-      ]);
+      appLogic.documents.documents =
+        new ApiResourceCollection<BenefitsApplicationDocument>(
+          "fineos_document_id",
+          [
+            createMockBenefitsApplicationDocument({
+              document_type: DocumentType.certification.medicalCertification,
+            }),
+          ]
+        );
     };
     it("renders unremovable FileCard", () => {
       setup(undefined, undefined, cb);

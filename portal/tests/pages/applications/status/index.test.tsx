@@ -8,11 +8,11 @@ import Status, {
 import { cleanup, render, screen } from "@testing-library/react";
 import { createAbsencePeriod, renderPage } from "../../../test-utils";
 import { AbsencePeriod } from "../../../../src/models/AbsencePeriod";
+import ApiResourceCollection from "src/models/ApiResourceCollection";
 import AppErrorInfo from "../../../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../../../src/models/AppErrorInfoCollection";
 import { AppLogic } from "../../../../src/hooks/useAppLogic";
 import ClaimDetail from "../../../../src/models/ClaimDetail";
-import DocumentCollection from "../../../../src/models/DocumentCollection";
 import LeaveReason from "../../../../src/models/LeaveReason";
 import React from "react";
 import { ReasonQualifier } from "../../../../src/models/BenefitsApplication";
@@ -74,7 +74,11 @@ const renderWithClaimDocuments = (
   documents: BenefitsApplicationDocument[] = []
 ) => {
   appLogicHook.documents.loadAll = jest.fn();
-  appLogicHook.documents.documents = new DocumentCollection(documents);
+  appLogicHook.documents.documents =
+    new ApiResourceCollection<BenefitsApplicationDocument>(
+      "fineos_document_id",
+      documents
+    );
   appLogicHook.documents.hasLoadedClaimDocuments = () => !!documents.length;
   appLogicHook.documents.download = jest.fn();
 };

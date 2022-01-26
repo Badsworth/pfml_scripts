@@ -1,4 +1,5 @@
 /* eslint testing-library/prefer-user-event: 0 */
+import { ClaimDocument, DocumentType } from "../../../../src/models/Document";
 import {
   MockEmployerClaimBuilder,
   createAbsencePeriod,
@@ -11,10 +12,9 @@ import {
   waitFor,
   within,
 } from "@testing-library/react";
+import ApiResourceCollection from "src/models/ApiResourceCollection";
 import { AppLogic } from "../../../../src/hooks/useAppLogic";
 import ConcurrentLeave from "../../../../src/models/ConcurrentLeave";
-import DocumentCollection from "../../../../src/models/DocumentCollection";
-import { DocumentType } from "../../../../src/models/Document";
 import { EmployerBenefitFrequency } from "../../../../src/models/EmployerBenefit";
 import EmployerClaim from "../../../../src/models/EmployerClaim";
 import LeaveReason from "../../../../src/models/LeaveReason";
@@ -31,7 +31,7 @@ const ABSENCEID = "NTN-111-ABS-01";
 const CLAIMDOCUMENTSMAP = new Map([
   [
     ABSENCEID,
-    new DocumentCollection([
+    new ApiResourceCollection<ClaimDocument>("fineos_document_id", [
       {
         content_type: "image/png",
         created_at: "2020-04-05",
@@ -819,7 +819,9 @@ describe("Review", () => {
         appLogic.employers.claimDocumentsMap = new Map([
           [
             claimWithV2Eform.fineos_absence_id,
-            new DocumentCollection([document]),
+            new ApiResourceCollection<ClaimDocument>("fineos_document_id", [
+              document,
+            ]),
           ],
         ]);
       });
