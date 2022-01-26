@@ -59,7 +59,8 @@ describe("Create a new continuous leave, caring leave claim in FINEOS", () => {
                   "Complete Employer Confirmation",
                   true
                 )
-              );
+              )
+              .approve();
           });
       });
     });
@@ -68,15 +69,15 @@ describe("Create a new continuous leave, caring leave claim in FINEOS", () => {
     cy.dependsOnPreviousPass([fineosSubmission]);
     fineos.before();
     cy.unstash<Submission>("submission").then(({ fineos_absence_id }) => {
-      fineosPages.ClaimPage.visit(fineos_absence_id)
-        .approve()
-        .paidLeave((paidLeavePage) => {
+      fineosPages.ClaimPage.visit(fineos_absence_id).paidLeave(
+        (paidLeavePage) => {
           paidLeavePage.assertAmountsPending([
             { net_payment_amount: 230.77 },
             { net_payment_amount: 23.08 },
             { net_payment_amount: 11.54 },
           ]);
-        });
+        }
+      );
     });
   });
 
