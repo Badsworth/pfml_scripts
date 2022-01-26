@@ -256,6 +256,17 @@ export const CDENY2: ScenarioSpecification = {
   },
 };
 
+export const CDENY2ER: ScenarioSpecification = {
+  ...CDENY2,
+  claim: {
+    ...CDENY2.claim,
+    employerResponse: {
+      employer_decision: "Approve",
+      hours_worked_per_week: 40,
+    },
+  },
+};
+
 export const ORGUNIT: ScenarioSpecification = {
   employee: { mass_id: true, wages: "eligible" },
   claim: {
