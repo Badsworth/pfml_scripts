@@ -111,6 +111,7 @@ def test_get_payments_200(
         "payment_method": payment.disb_method.payment_method_description,
         "expected_send_date_start": expected_start_date,
         "expected_send_date_end": expected_end_date,
+        "cancellation_date": None,
         "status": status,
     }
 
@@ -165,6 +166,7 @@ def test_get_payments_200_pending_validation_scenario_no_prenote_sent_at(
         "payment_method": payment.disb_method.payment_method_description,
         "expected_send_date_start": expected_start_date,
         "expected_send_date_end": expected_end_date,
+        "cancellation_date": None,
         "status": FrontendPaymentStatus.DELAYED,
     }
 
@@ -216,6 +218,7 @@ def test_get_payments_200_range_before_today(client, auth_token, user, test_db_s
         "payment_method": payment.disb_method.payment_method_description,
         "expected_send_date_start": None,
         "expected_send_date_end": None,
+        "cancellation_date": None,
         "status": FrontendPaymentStatus.DELAYED,
     }
 
@@ -228,6 +231,7 @@ def test_get_payments_200_cancelled_payments(client, auth_token, user, test_db_s
         fineos_absence_id=absence_id,
         payment_method=PaymentMethod.ACH,
         amount=Decimal("750.67"),
+        fineos_extraction_date=date(2021, 6, 1),
     )
     claim = payment_factory.get_or_create_claim()
     ApplicationFactory.create(claim=claim, user=user)
@@ -235,7 +239,9 @@ def test_get_payments_200_cancelled_payments(client, auth_token, user, test_db_s
     # Create the payment and a cancellation in the DB
     transaction_status = FineosWritebackTransactionStatus.WAITING_WEEK
     payment_factory.get_or_create_payment_with_writeback(transaction_status)
-    payment_factory.create_cancellation_payment()
+    cancellation_payment = payment_factory.create_cancellation_payment(
+        fineos_extraction_date=date(2021, 12, 1)
+    )
 
     test_db_session.commit()
 
@@ -264,6 +270,57 @@ def test_get_payments_200_cancelled_payments(client, auth_token, user, test_db_s
         "payment_method": payment.disb_method.payment_method_description,
         "expected_send_date_start": None,
         "expected_send_date_end": None,
+        "cancellation_date": str(cancellation_payment.fineos_extraction_date),
+        "status": FrontendPaymentStatus.CANCELLED,
+    }
+
+
+def test_get_payments_200_zero_dollar(client, auth_token, user, test_db_session):
+    absence_id = "NTN-12345-ABS-01"
+
+    payment_factory = DelegatedPaymentFactory(
+        test_db_session,
+        fineos_absence_id=absence_id,
+        payment_method=PaymentMethod.ACH,
+        amount=Decimal("0"),
+        payment_transaction_type=PaymentTransactionType.ZERO_DOLLAR,
+        fineos_extraction_date=date(2021, 6, 1),
+    )
+    claim = payment_factory.get_or_create_claim()
+    ApplicationFactory.create(claim=claim, user=user)
+
+    # Create the payment in the DB
+    transaction_status = FineosWritebackTransactionStatus.PROCESSED
+    payment_factory.get_or_create_payment_with_writeback(transaction_status)
+
+    test_db_session.commit()
+
+    querystring = urlencode({"absence_case_id": absence_id})
+    response = client.get(
+        "/v1/payments?{}".format(querystring), headers={"Authorization": f"Bearer {auth_token}"},
+    )
+
+    assert response.status_code == 200
+
+    response_body = response.get_json().get("data")
+    assert response_body["absence_case_id"] == absence_id
+
+    payment_response = response_body["payments"][0]
+
+    payment = payment_factory.payment
+
+    assert payment_response == {
+        "payment_id": str(payment.payment_id),
+        "fineos_c_value": str(payment.fineos_pei_c_value),
+        "fineos_i_value": str(payment.fineos_pei_i_value),
+        "period_start_date": str(payment.period_start_date),
+        "period_end_date": str(payment.period_end_date),
+        "amount": Decimal("0.00"),
+        "sent_to_bank_date": None,
+        "payment_method": payment.disb_method.payment_method_description,
+        "expected_send_date_start": None,
+        "expected_send_date_end": None,
+        "cancellation_date": str(payment.fineos_extraction_date),
         "status": FrontendPaymentStatus.CANCELLED,
     }
 
@@ -308,6 +365,7 @@ def test_get_payments_200_legacy_payments(client, auth_token, user, test_db_sess
         "payment_method": payment.disb_method.payment_method_description,
         "expected_send_date_start": str(payment.disb_check_eft_issue_date),
         "expected_send_date_end": str(payment.disb_check_eft_issue_date),
+        "cancellation_date": None,
         "status": FrontendPaymentStatus.SENT_TO_BANK,
     }
 

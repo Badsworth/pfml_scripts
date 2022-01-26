@@ -2797,6 +2797,11 @@ components:
           type: string
           nullable: true
           example: "1970-06-01"
+        cancellation_date:
+          format: date
+          type: string
+          nullable: true
+          example: "2021-01-01"
         status:
           type: string
           enum:

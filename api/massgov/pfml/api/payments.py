@@ -17,6 +17,7 @@ logger = massgov.pfml.util.logging.get_logger(__name__)
 
 def get_payments() -> flask.Response:
     absence_case_id = flask.request.args.get("absence_case_id")
+    extra = {"absence_case_id": absence_case_id}
 
     # OpenApi should catch this before we ever get here
     # But mypy complains anyway, so we need this guard clause
@@ -40,8 +41,7 @@ def get_payments() -> flask.Response:
 
         if claim is None:
             logger.warning(
-                "Claim not in PFML database. Could not retrieve payments for claim",
-                extra={"absence_case_id": absence_case_id},
+                "Claim not in PFML database. Could not retrieve payments for claim", extra=extra,
             )
             error = response_util.error_response(
                 NotFound,
@@ -52,8 +52,7 @@ def get_payments() -> flask.Response:
 
         if not user_has_access_to_claim(claim, current_user):
             logger.warning(
-                "get_payments failure - User does not have access to claim.",
-                extra={"absence_case_id": absence_case_id},
+                "get_payments failure - User does not have access to claim.", extra=extra,
             )
             error = response_util.error_response(
                 Forbidden, "User does not have access to claim.", errors=[]

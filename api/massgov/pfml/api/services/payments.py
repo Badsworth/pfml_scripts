@@ -50,6 +50,7 @@ class PaymentScenarioData:
     sent_date: Optional[date] = None
     expected_send_date_start: Optional[date] = None
     expected_send_date_end: Optional[date] = None
+    cancellation_date: Optional[date] = None
     status: FrontendPaymentStatus = FrontendPaymentStatus.DELAYED
 
     SCENARIOS = {
@@ -66,7 +67,7 @@ class PaymentScenarioData:
     @classmethod
     def compute(cls, payment_container: "PaymentContainer") -> "PaymentScenarioData":
         if payment_container.is_cancelled():
-            return cls.cancelled()
+            return cls.cancelled(cancellation_date=payment_container.get_cancellation_date())
 
         if payment_container.is_legacy_payment():
             return cls.legacy_mmars_paid(payment=payment_container.payment)
@@ -82,6 +83,7 @@ class PaymentScenarioData:
         return cls(
             status=FrontendPaymentStatus.CANCELLED,
             amount=Decimal("0.00"),  # The portal wants cancellations to be for $0
+            cancellation_date=kwargs["cancellation_date"],
         )
 
     @classmethod
@@ -249,6 +251,19 @@ class PaymentContainer:
             return True
 
         return False
+
+    def get_cancellation_date(self) -> Optional[date]:
+        # Zero dollar payments, assume they were cancelled
+        # on the date we received it, even if it's earlier
+        if self.is_zero_dollar_payment():
+            return self.payment.fineos_extraction_date
+
+        # For cancelled payments, use the date we received the
+        # cancellation event as the cancellation date
+        if self.cancellation_event:
+            return self.cancellation_event.payment.fineos_extraction_date
+
+        return None
 
     def is_legacy_payment(self) -> bool:
         return (
@@ -493,6 +508,7 @@ def to_response_dict(payment_data: List[PaymentContainer], absence_case_id: Opti
                 and payment.disb_method.payment_method_description,
                 expected_send_date_start=scenario_data.expected_send_date_start,
                 expected_send_date_end=scenario_data.expected_send_date_end,
+                cancellation_date=scenario_data.cancellation_date,
                 status=scenario_data.status,
             ).dict()
         )
@@ -539,7 +555,7 @@ def to_est(datetime_obj):
 
 def log_payment_status(claim: Claim, payment_containers: List[PaymentContainer]) -> None:
     log_attributes: Dict[str, Any] = defaultdict(int)
-    log_attributes["absence_id"] = claim.fineos_absence_id
+    log_attributes["absence_case_id"] = claim.fineos_absence_id
 
     # For the various payment scenarios, initialize the counts to 0
     # New enums defined above automatically get added here
