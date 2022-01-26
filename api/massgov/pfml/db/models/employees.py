@@ -30,7 +30,15 @@ from sqlalchemy import (
     select,
 )
 from sqlalchemy.ext.hybrid import hybrid_method
-from sqlalchemy.orm import Query, aliased, dynamic_loader, object_session, relationship, validates
+from sqlalchemy.orm import (
+    Query,
+    aliased,
+    deferred,
+    dynamic_loader,
+    object_session,
+    relationship,
+    validates,
+)
 from sqlalchemy.schema import Sequence
 from sqlalchemy.sql.expression import func
 from sqlalchemy.types import JSON
@@ -1076,7 +1084,11 @@ class Payment(Base, TimestampMixin):
         server_default=payment_individual_id_seq.next_value(),
     )
     claim_type_id = Column(Integer, ForeignKey("lk_claim_type.claim_type_id"))
-    leave_request_id = Column(PostgreSQLUUID, ForeignKey("absence_period.absence_period_id"))
+    leave_request_id = deferred(
+        Column(
+            PostgreSQLUUID, ForeignKey("absence_period.absence_period_id")
+        )  # Infer type "PostgreSQLUUID"
+    )
 
     vpei_id = Column(PostgreSQLUUID, ForeignKey("fineos_extract_vpei.vpei_id"))
     exclude_from_payment_status = Column(
