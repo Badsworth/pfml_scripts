@@ -5,22 +5,25 @@ This script is idempotent - it can safely be run multiple times with the same in
 
 For more on the MFA Lockout Flow procedures, see: https://lwd.atlassian.net/wiki/spaces/CP/pages/2198995062/MFA+Lockout+Flow
 
-## Sample Run
+## Running the Script
+
+usage: mfa-lockout-resolution [-h] --email EMAIL --psd_number PSD_NUMBER --reason REASON --employee EMPLOYEE --verification_method VERIFICATION_METHOD [--dry_run DRY_RUN]
+
+For info on how to run the script, use the `--help` flag.
+
+### Sample Run
 On local machine:
 `cd pfml/api`
-`make mfa-lockout-resolution args="--email jesseshepherd+mfa-01@navapbc.com --dry_run true"`
+`make mfa-lockout-resolution args="--email=jesseshepherd+mfa-01@navapbc.com --psd_number=PSD-9876 --reason='They lost their phone' --employee='Rick Diggins' --verification_method='Claim number and ssn' --dry_run=true"`
 
 In `test` environment:
 `cd pfml`
-`./bin/run-ecs-task/run-task.sh test mfa-lockout-resolution jesse.shepherd mfa-lockout-resolution --email jesseshepherd+test-mfa-01@navapbc.com --dry_run true`
+`./bin/run-ecs-task/run-task.sh test mfa-lockout-resolution jesse.shepherd mfa-lockout-resolution --email=jesseshepherd+mfa-01@navapbc.com --psd_number=PSD-9876 --reason='They lost their phone' --employee='Rick Diggins' --verification_method='Claim number and ssn' --dry_run=true`
 
-## Required Params
-- email (str)       - The email associated with the user's PFML account.
+### Dry Run
+By default, this script runs in "dry run" mode, and does not commit any changes to Amazon Cognito or the PFML db. To commit these changes, run the script with `--dry_run=false`
 
-## Optional Params
-- dry_run (str)     - If enabled (set to "True"), the script will not make any changes to Amazon Cognito or the PFML db
-
-## Local Setup
+### Local Setup
 (See: [Local Integration with AWS](/docs/api/local-integration-with-aws.md))
 
 ## Handling Errors
