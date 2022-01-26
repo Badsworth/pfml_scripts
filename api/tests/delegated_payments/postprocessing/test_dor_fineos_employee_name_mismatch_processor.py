@@ -108,20 +108,25 @@ def test_processor_mixed(
     payment = create_payment_with_name("abcdef", "sss", "zyxwvu", "ghijkl-sss-mnopqr")
     dor_fineos_employee_name_mismatch_processor.process(payment)
     assert _get_audit_report_details(payment, local_test_db_session) is None
-    ####
-    payment = create_payment_with_name("zyxwvu", "ghijkl-sss-mnopqr", "abcdef", "sss")
-    dor_fineos_employee_name_mismatch_processor.process(payment)
-    assert _get_audit_report_details(payment, local_test_db_session) is None
+
     ###
     payment = create_payment_with_name("zyxwvu", "sss", "ghijkl-sss-mnopqr", "abcdef")
     dor_fineos_employee_name_mismatch_processor.process(payment)
     assert _get_audit_report_details(payment, local_test_db_session) is None
 
+    ####
     payment = create_payment_with_name("sss", "zyxwvu", "abcdef", "ghijkl-sss-mnopqr")
     dor_fineos_employee_name_mismatch_processor.process(payment)
     assert _get_audit_report_details(payment, local_test_db_session) is None
 
     ### Mismatches
+    payment_0 = create_payment_with_name("zyxwvu", "ghijkl-sss-mnopqr", "abcdef", "sss")
+    dor_fineos_employee_name_mismatch_processor.process(payment_0)
+    audit_report = _get_audit_report_details(payment_0, local_test_db_session)
+    message = audit_report.details["message"]
+
+    assert message == "\n".join(["DOR Name: zyxwvu ghijkl-sss-mnopqr", "FINEOS Name: abcdef sss",])
+
     payment_1 = create_payment_with_name("Sam", "Garcia-Valdez", "Javier", "Valdez-Garcia")
     dor_fineos_employee_name_mismatch_processor.process(payment_1)
     audit_report = _get_audit_report_details(payment_1, local_test_db_session)
