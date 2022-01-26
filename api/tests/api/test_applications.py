@@ -74,6 +74,7 @@ from massgov.pfml.fineos.exception import (
     FINEOSFatalUnavailable,
 )
 from massgov.pfml.fineos.factory import FINEOSClientConfig
+from massgov.pfml.fineos.models.customer_api.spec import ReadCustomerOccupation
 from massgov.pfml.util.paginate.paginator import DEFAULT_PAGE_SIZE
 
 
@@ -459,6 +460,55 @@ def test_applications_import_has_payment_preferences(client, test_db_session, au
         == BankAccountType.CHECKING.bank_account_type_id
     )
     assert imported_application.has_mailing_address is True
+
+
+@mock.patch(
+    "massgov.pfml.fineos.mock_client.MockFINEOSClient.get_customer_occupations_customer_api"
+)
+def test_applications_import_occupation(
+    mock_get_occupation, client, user, auth_token, test_db_session, claim
+):
+    fineos_occupation = ReadCustomerOccupation(employmentStatus="Employed", hoursWorkedPerWeek=40)
+    mock_get_occupation.return_value = [fineos_occupation]
+
+    assert test_db_session.query(Application).one_or_none() is None
+
+    absence_case_id = claim.fineos_absence_id
+    response = client.post(
+        "/v1/applications/import",
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"absence_case_id": absence_case_id},
+    )
+    assert response.status_code == 201
+    imported_application = (
+        test_db_session.query(Application).filter(Application.claim_id == claim.claim_id).one()
+    )
+    assert (
+        imported_application.employment_status.employment_status_description
+        == fineos_occupation.employmentStatus
+    )
+    assert imported_application.hours_worked_per_week == fineos_occupation.hoursWorkedPerWeek
+
+
+@mock.patch(
+    "massgov.pfml.fineos.mock_client.MockFINEOSClient.get_customer_occupations_customer_api"
+)
+def test_applications_import_occupation_invalid_employment_status(
+    mock_get_occupation, client, user, auth_token, test_db_session, claim
+):
+    fineos_occupation = ReadCustomerOccupation(employmentStatus="Invalid", hoursWorkedPerWeek=40)
+    mock_get_occupation.return_value = [fineos_occupation]
+
+    assert test_db_session.query(Application).one_or_none() is None
+
+    absence_case_id = claim.fineos_absence_id
+    response = client.post(
+        "/v1/applications/import",
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"absence_case_id": absence_case_id},
+    )
+    assert response.status_code == 500
+    assert test_db_session.query(Application).one_or_none() is None
 
 
 @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_payment_preferences")

@@ -1,3 +1,4 @@
+from decimal import Decimal
 from re import Pattern
 from typing import Any, Dict, List, Literal, Optional, Type, Union
 
@@ -39,6 +40,7 @@ from massgov.pfml.db.models.applications import (
     Document,
     EmployerBenefit,
     EmployerBenefitType,
+    EmploymentStatus,
     IntermittentLeavePeriod,
     OtherIncome,
     OtherIncomeType,
@@ -61,7 +63,9 @@ from massgov.pfml.db.models.employees import (
     GeoState,
     LkAddressType,
     LkGender,
+    User,
 )
+from massgov.pfml.fineos.client import AbstractFINEOSClient
 from massgov.pfml.util.datetime import utcnow
 from massgov.pfml.util.pydantic.types import Regexes
 
@@ -957,22 +961,20 @@ def claim_is_valid_for_application_import(claim: Optional[Claim]) -> Optional[Re
 
 
 def set_application_fields_from_db_claim(
-    fineos: massgov.pfml.fineos.AbstractFINEOSClient,
-    application: Application,
-    claim: Claim,
-    db_session: db.Session,
+    fineos: AbstractFINEOSClient, application: Application, claim: Claim, db_session: db.Session,
 ) -> None:
     """
     Set Application core fields using Claim
     """
     application.claim_id = claim.claim_id
     application.tax_identifier_id = claim.employee.tax_identifier_id
+    application.tax_identifier = claim.employee.tax_identifier  # type: ignore
     application.employer_fein = claim.employer_fein
     application.imported_from_fineos_at = utcnow()
 
 
 def set_customer_detail_fields(
-    fineos: massgov.pfml.fineos.AbstractFINEOSClient,
+    fineos: AbstractFINEOSClient,
     fineos_web_id: str,
     application: Application,
     db_session: db.Session,
@@ -1017,6 +1019,24 @@ def set_customer_detail_fields(
             zip=details.customerAddress.address.postCode,
         )
         add_or_update_address(db_session, address_to_create, AddressType.RESIDENTIAL, application)
+
+
+def set_employment_status(
+    fineos_client: AbstractFINEOSClient,
+    fineos_web_id: str,
+    application: Application,
+    current_user: User,
+) -> None:
+    occupations = fineos_client.get_customer_occupations_customer_api(
+        fineos_web_id, application.tax_identifier.tax_identifier
+    )
+    if len(occupations) == 0:
+        return
+    occupation = occupations[0]
+    if occupation.employmentStatus is not None:
+        application.employment_status_id = EmploymentStatus.get_id(occupation.employmentStatus)
+    if occupation.hoursWorkedPerWeek is not None:
+        application.hours_worked_per_week = Decimal(occupation.hoursWorkedPerWeek)
 
 
 def set_payment_preference_fields(
