@@ -36,9 +36,13 @@ const flagsConfig = {
     // When this flag is enabled payment status phase two work will be displayed.
     claimantShowPaymentsPhaseTwo: true,
 
-    // Show multiple leave request UI updates to leave admins.
+    // Show multiple leave request UI updates to leave admins (review page).
     // TODO (PORTAL-1151) Remove flag
     employerShowMultiLeave: true,
+
+    // Show multiple leave request UI updates to leave admins (dashboard++)
+    // TODO (PORTAL-1560) Remove flag
+    employerShowMultiLeaveDashboard: false,
 
     // When this flag true, you can BYPASS maintenance pages that are currently present.
     // See docs/portal/maintenance-pages.md for more details.
