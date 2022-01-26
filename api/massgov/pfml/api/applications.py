@@ -151,9 +151,11 @@ def applications_import():
 
     body = connexion.request.json
     application_import_request = ApplicationImportRequestBody.parse_obj(body)
-
     claim = get_claim_from_db(application_import_request.absence_case_id)
 
+    application_rules.validate_application_import_request_for_claim(
+        application_import_request, claim,
+    )
     error = applications_service.claim_is_valid_for_application_import(claim)
     if error is not None:
         return error.to_api_response()
@@ -182,7 +184,9 @@ def applications_import():
     logger.info("applications_import success", extra=log_attributes)
 
     return response_util.success_response(
-        message="Successfully imported application", data=dict(body), status_code=201,
+        message="Successfully imported application",
+        data=ApplicationResponse.from_orm(application).dict(exclude_none=True),
+        status_code=201,
     ).to_api_response()
 
 

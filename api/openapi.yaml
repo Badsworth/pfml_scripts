@@ -2332,9 +2332,10 @@ components:
         absence_case_id:
           type: string
           example: "NTN-111-ABS-01"
-          nullable: false
-      required:
-        - absence_case_id
+          nullable: true
+        tax_identifier:
+          $ref: "#/components/schemas/SsnItin"
+          nullable: true
 
     ApplicationResponse:
       type: object

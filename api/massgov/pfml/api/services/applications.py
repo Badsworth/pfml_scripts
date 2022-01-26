@@ -5,7 +5,7 @@ from typing import Any, Dict, List, Literal, Optional, Type, Union
 import phonenumbers
 from phonenumbers.phonenumberutil import region_code_for_number
 from sqlalchemy.orm.exc import NoResultFound
-from werkzeug.exceptions import BadRequest, Conflict, Forbidden, NotFound
+from werkzeug.exceptions import BadRequest, Conflict, Forbidden
 
 import massgov.pfml.api.models.applications.common as apps_common_io
 import massgov.pfml.api.models.claims.common as claims_common_io
@@ -942,17 +942,7 @@ def get_document_by_id(
 
 
 def claim_is_valid_for_application_import(claim: Optional[Claim]) -> Optional[Response]:
-    if claim is None:
-        message = "Claim not in PFML database."
-        validation_error = ValidationErrorDetail(
-            message=message, type=IssueType.object_not_found, field="absence_case_id",
-        )
-        error = response_util.error_response(
-            NotFound, message=message, errors=[validation_error], data=[]
-        )
-        return error
-
-    if claim.employee_tax_identifier is None or claim.employer_fein is None:
+    if claim is not None and (claim.employee_tax_identifier is None or claim.employer_fein is None):
         message = "Claim data incomplete for application import."
         validation_error = ValidationErrorDetail(message=message, type=IssueType.conflicting)
         error = response_util.error_response(Conflict, message=message, errors=[validation_error])

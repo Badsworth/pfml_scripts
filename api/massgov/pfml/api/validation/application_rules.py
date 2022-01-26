@@ -9,6 +9,7 @@ import massgov.pfml.db as db
 import massgov.pfml.util.logging
 from massgov.pfml.api.constants.application import CERTIFICATION_DOC_TYPES, ID_DOC_TYPES
 from massgov.pfml.api.models.applications.common import DurationBasis, FrequencyIntervalBasis
+from massgov.pfml.api.models.applications.requests import ApplicationImportRequestBody
 from massgov.pfml.api.services.applications import (
     ContinuousLeavePeriod,
     IntermittentLeavePeriod,
@@ -16,7 +17,12 @@ from massgov.pfml.api.services.applications import (
 )
 from massgov.pfml.api.services.fineos_actions import get_documents
 from massgov.pfml.api.util.deepgetattr import deepgetattr
-from massgov.pfml.api.validation.exceptions import IssueRule, IssueType, ValidationErrorDetail
+from massgov.pfml.api.validation.exceptions import (
+    IssueRule,
+    IssueType,
+    ValidationErrorDetail,
+    ValidationException,
+)
 from massgov.pfml.db.models.applications import (
     Application,
     Document,
@@ -28,7 +34,7 @@ from massgov.pfml.db.models.applications import (
     OtherIncome,
     PreviousLeave,
 )
-from massgov.pfml.db.models.employees import PaymentMethod
+from massgov.pfml.db.models.employees import Claim, PaymentMethod
 from massgov.pfml.util.routing_number_validation import validate_routing_number
 
 CARING_LEAVE_EARLIEST_START_DATE = date(2021, 7, 1)
@@ -1417,3 +1423,51 @@ def has_type_of_document(
                     has_doc = True
 
     return has_doc
+
+
+def validate_application_import_request_for_claim(
+    body: ApplicationImportRequestBody, claim: Optional[Claim]
+) -> None:
+    """
+    Validates the application import request body has all required fields, and matches a target claim.
+
+    Raises ``ValidationException`` if any validation rule is not met.
+    """
+    required_field_issues = []
+    required_fields = ["absence_case_id", "tax_identifier"]
+
+    for field in required_fields:
+        val = getattr(body, field)
+        if val is None:
+            required_field_issues.append(
+                ValidationErrorDetail(
+                    type=IssueType.required, message=f"{field} is required", field=field,
+                )
+            )
+
+    if len(required_field_issues) > 0:
+        raise ValidationException(required_field_issues)
+
+    if claim is None:
+        raise ValidationException(
+            [
+                ValidationErrorDetail(
+                    message="Application not found for the given ID.",
+                    type=IssueType.object_not_found,
+                    field="absence_case_id",
+                )
+            ]
+        )
+
+    # Only validate the tax_id when the claim has one set. A separate validator handles the case
+    # where the claim.employee_tax_identifier is not set.
+    if claim.employee_tax_identifier and claim.employee_tax_identifier != body.tax_identifier:
+        raise ValidationException(
+            [
+                ValidationErrorDetail(
+                    type=IssueType.incorrect,
+                    message="tax_identifier does not match our records",
+                    field="tax_identifier",
+                )
+            ]
+        )
