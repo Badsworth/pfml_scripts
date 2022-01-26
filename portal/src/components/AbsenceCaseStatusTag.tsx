@@ -30,7 +30,11 @@ const AbsenceCaseStatusTag = ({
     return "pending";
   };
 
-  if (managedRequirements && managedRequirements.length > 0) {
+  const hasOpenManagedRequirement = managedRequirements?.some((requirement) => {
+    return requirement.status === "Open";
+  });
+
+  if (managedRequirements && hasOpenManagedRequirement) {
     return (
       <Tag
         state="warning"

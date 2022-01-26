@@ -37,7 +37,7 @@ describe("AbsenceCaseStatusTag", () => {
     expect(container).toMatchSnapshot();
   });
 
-  it("renders the component with 'Review By {{date}}' when managedRequirements is not empty", () => {
+  it("renders the component with 'Review By {{date}}' when managedRequirements contains Open requirements", () => {
     const managedRequirementsData = [
       { follow_up_date: "2021-08-22", status: "Open" },
       { follow_up_date: "2021-07-22", status: "Open" },
@@ -48,6 +48,23 @@ describe("AbsenceCaseStatusTag", () => {
     );
 
     expect(container).toMatchSnapshot();
+    expect(container).not.toHaveTextContent("Approved");
+    expect(container).toHaveTextContent("Review by 7/22/2021");
+  });
+
+  it("Defers to absence case if no Open managed requirements returned", () => {
+    const managedRequirementsData = [
+      { follow_up_date: "2021-08-22", status: "Completed" },
+      { follow_up_date: "2021-07-22", status: "Suppressed" },
+    ];
+    const { container } = renderComponent(
+      AbsenceCaseStatus.approved,
+      managedRequirementsData
+    );
+    expect(container).toMatchSnapshot();
+    expect(container).toHaveTextContent("Approved");
+    expect(container).not.toHaveTextContent("Review by 7/22/2021");
+    expect(container).not.toHaveTextContent("Review by 8/22/2021");
   });
 
   it("renders the component with 'No Action Required' when managedRequirements is empty and has a pending-line status value", () => {
