@@ -79,7 +79,7 @@ class LeaveAdmin:
     departments: list[str]
 
 
-@background_task("fineos-import-leave-admin-org-units")
+@background_task("fineos-import-la-units")
 def handler():
     """ECS handler function. Creates Org Units for the given employer"""
     logger.info("Starting import of organization unit updates from FINEOS.")
