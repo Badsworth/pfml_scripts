@@ -79,13 +79,19 @@ describe("Create a new caring leave claim in API submission and add Historical A
            {
              address: "gqzap.notifications@inbox.testmail.app",
              subject: subjectClaimant,
-             messageWildcard: "Your maximum leave allotment has changed.",
+             messageWildcard: {
+               pattern: `${submission.fineos_absence_id}.*Your maximum leave allotment has changed`
+             },
              timestamp_from: submission.timestamp_from,
              debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
            },
            45000
-         );
-         cy.contains(submission.fineos_absence_id);
+         )
+         .then(() => {
+          cy.get(
+            `a[href$="/applications/status/?absence_case_id=${submission.fineos_absence_id}#view-notices"]`
+          );
+         })
        });
      });
     });
@@ -106,14 +112,15 @@ describe("Create a new caring leave claim in API submission and add Historical A
           {
             address: "gqzap.notifications@inbox.testmail.app",
             subject: subjectEmployer,
-            messageWildcard: "The applicant’s leave allotment was changed",
+            messageWildcard: {
+              pattern: `${submission.fineos_absence_id}.*The applicant’s leave allotment was changed`
+            },
             timestamp_from: submission.timestamp_from,
             debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
           },
           60000
         )
         .then(() => {
-          cy.contains(submission.fineos_absence_id);
           cy.get(
             `a[href*="/employers/applications/status/?absence_id=${submission.fineos_absence_id}"]`
           );

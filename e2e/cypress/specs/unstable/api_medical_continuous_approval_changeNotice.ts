@@ -155,18 +155,23 @@ describe("Approval (notifications/notices)", () => {
               submission.fineos_absence_id,
               `${claim.first_name} ${claim.last_name}`
             );
-            email.getEmails(
-              {
-                address: "gqzap.notifications@inbox.testmail.app",
-                subject: subjectClaimant,
-                messageWildcard: submission.fineos_absence_id,
-                timestamp_from: submission.timestamp_from,
-                debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
-              },
-              60000
-            );
-            cy.screenshot("Claimant email");
-            cy.contains(submission.fineos_absence_id);
+            email
+              .getEmails(
+                {
+                  address: "gqzap.notifications@inbox.testmail.app",
+                  subject: subjectClaimant,
+                  messageWildcard: {
+                    pattern: `${submission.fineos_absence_id}.*Your change request has been approved`
+                  },
+                  timestamp_from: submission.timestamp_from,
+                  debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
+                },
+                60000
+              )
+              .then(() => {
+                cy.screenshot("Claimant email");
+                cy.get(`a[href$="/applications/status/?absence_case_id=${submission.fineos_absence_id}#view-notices"]`);
+              });
           });
         });
       }
@@ -190,10 +195,9 @@ describe("Approval (notifications/notices)", () => {
               {
                 address: "gqzap.notifications@inbox.testmail.app",
                 subject: subjectEmployer,
-                // Had to adjust the messageWildcard to use line for Leave Admin only.
-                // Was getting duplicate Claimant emails or not found because of notifications
-                messageWildcard:
-                  "The applicant’s change request has been approved.",
+                messageWildcard: {
+                  pattern: `${submission.fineos_absence_id}.*The applicant’s change request has been approved`
+                },
                 timestamp_from: submission.timestamp_from,
                 debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
               },
@@ -201,10 +205,7 @@ describe("Approval (notifications/notices)", () => {
             )
             .then(() => {
               cy.screenshot("Leave Admin email");
-              cy.contains(submission.fineos_absence_id);
-              cy.get(
-                `a[href*="/employers/applications/status/?absence_id=${submission.fineos_absence_id}"]`
-              );
+              cy.get(`a[href*="/employers/applications/status/?absence_id=${submission.fineos_absence_id}"]`);
             });
         });
       });

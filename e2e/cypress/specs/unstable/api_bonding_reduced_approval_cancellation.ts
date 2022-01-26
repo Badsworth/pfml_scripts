@@ -90,17 +90,24 @@ describe("Approval (notifications/notices)", () => {
               submission.fineos_absence_id,
               `${claim.first_name} ${claim.last_name}`
             );
-            email.getEmails(
-              {
-                address: "gqzap.notifications@inbox.testmail.app",
-                subject: subjectClaimant,
-                messageWildcard: submission.fineos_absence_id,
-                timestamp_from: submission.timestamp_from,
-                debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
-              },
-              60000
-            );
-            cy.contains(submission.fineos_absence_id)
+            email
+              .getEmails(
+                {
+                  address: "gqzap.notifications@inbox.testmail.app",
+                  subject: subjectClaimant,
+                  messageWildcard: {
+                    pattern: `${submission.fineos_absence_id}.*Your approved time has been cancelled`
+                  },
+                  timestamp_from: submission.timestamp_from,
+                  debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
+                },
+                60000
+              )
+              .then(() => {
+                cy.get(
+                  `a[href$="/applications/status/?absence_case_id=${submission.fineos_absence_id}#view-notices"]`
+                );
+              });
           });
         });
       }
@@ -126,7 +133,9 @@ describe("Approval (notifications/notices)", () => {
             {
               address: "gqzap.notifications@inbox.testmail.app",
               subject: subjectEmployer,
-              messageWildcard: "The applicant’s approved time has been cancelled.",
+              messageWildcard: {
+                pattern: `${submission.fineos_absence_id}.*The applicant’s approved time has been cancelled`
+              },
               timestamp_from: submission.timestamp_from,
               debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
             },
