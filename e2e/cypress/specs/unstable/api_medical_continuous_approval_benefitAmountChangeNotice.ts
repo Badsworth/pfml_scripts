@@ -3,7 +3,6 @@ import { Submission } from "../../../src/types";
 import { getClaimantCredentials } from "../../config";
 
 describe("Create a Benefit Amount Change Notice in FINEOS and check delivery to the LA/Claimant portal", () => {
-
   after(() => {
     portal.deleteDownloadsFolder();
   });
@@ -29,8 +28,7 @@ describe("Create a Benefit Amount Change Notice in FINEOS and check delivery to 
     fineos.before();
     cy.unstash<DehydratedClaim>("claim").then((claim) => {
       cy.unstash<Submission>("submission").then((submission) => {
-        fineosPages.ClaimPage
-          .visit(submission.fineos_absence_id)
+        fineosPages.ClaimPage.visit(submission.fineos_absence_id)
           .adjudicate((adjudication) => {
             adjudication
               .evidence((evidence) => {
@@ -49,16 +47,16 @@ describe("Create a Benefit Amount Change Notice in FINEOS and check delivery to 
     });
   });
 
-  const notification = it("Generates 'Benefit Amount Change Notice' document and triggers notification",
-    () => {
+  const notification =
+    it("Generates 'Benefit Amount Change Notice' document and triggers notification", () => {
       cy.dependsOnPreviousPass([submission, approval]);
       fineos.before();
       cy.unstash<Submission>("submission").then((submission) => {
-        fineosPages.ClaimPage.visit(submission.fineos_absence_id)
-          .paidLeave((paidLeavePage) => {
+        fineosPages.ClaimPage.visit(submission.fineos_absence_id).paidLeave(
+          (paidLeavePage) => {
             paidLeavePage
               .createCorrespondenceDocument("Benefit Amount Change Notice")
-              .documents((documentsPage) => 
+              .documents((documentsPage) =>
                 documentsPage
                   .assertDocumentExists("Benefit Amount Change Notice")
                   .properties(
@@ -67,14 +65,15 @@ describe("Create a Benefit Amount Change Notice in FINEOS and check delivery to 
                   )
                   .properties(
                     "Benefit Amount Change Notice",
-                    (propertiesPage) =>propertiesPage.fileNameShouldMatch(/\.pdf$/)
+                    (propertiesPage) =>
+                      propertiesPage.fileNameShouldMatch(/\.pdf$/)
                   )
               )
               .triggerPaidLeaveNotice("Benefit Amount Change Notice");
-          })
+          }
+        );
       });
-    }
-  );
+    });
 
   it("Employee receives notification for Benefit Amount Change", () => {
     cy.dependsOnPreviousPass([submission, approval, notification]);
@@ -95,8 +94,8 @@ describe("Create a Benefit Amount Change Notice in FINEOS and check delivery to 
         .then(() => {
           cy.contains("Your benefit amount has changed.");
           cy.get(`a[href*='${portalPath}']`);
-        })
-    })
+        });
+    });
   });
 
   it("Employer receives notification for Benefit Amount Change", () => {
@@ -118,8 +117,8 @@ describe("Create a Benefit Amount Change Notice in FINEOS and check delivery to 
         .then(() => {
           cy.contains("The applicant’s benefit amount was changed.");
           cy.get(`a[href*='${portalPath}']`);
-        })
-    })
+        });
+    });
   });
 
   it("Check the Leave Admin Portal for the Benefit Amount Change Notice and download it", () => {
@@ -132,9 +131,7 @@ describe("Create a Benefit Amount Change Notice in FINEOS and check delivery to 
         }
         const employeeFullName = `${claim.claim.first_name} ${claim.claim.last_name}`;
         portal.loginLeaveAdmin(claim.claim.employer_fein);
-        portal.selectClaimFromEmployerDashboard(
-          submission.fineos_absence_id
-        );
+        portal.selectClaimFromEmployerDashboard(submission.fineos_absence_id);
         portal.checkNoticeForLeaveAdmin(
           submission.fineos_absence_id,
           employeeFullName,
@@ -156,7 +153,7 @@ describe("Create a Benefit Amount Change Notice in FINEOS and check delivery to 
         {
           credentials: getClaimantCredentials(),
           application_id: submission.application_id,
-          document_type: "Benefit Amount Change Notice"
+          document_type: "Benefit Amount Change Notice",
         },
         { timeout: 45000 }
       );
@@ -169,8 +166,8 @@ describe("Create a Benefit Amount Change Notice in FINEOS and check delivery to 
         },
       ]);
       cy.findByText("Benefit Amount Change Notice (PDF)")
-       .should("be.visible")
-       .click({ force: true });
+        .should("be.visible")
+        .click({ force: true });
       portal.downloadLegalNotice(submission.fineos_absence_id);
     });
   });

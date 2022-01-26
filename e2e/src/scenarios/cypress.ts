@@ -239,8 +239,8 @@ export const CCAP90ER: ScenarioSpecification = {
       employer_decision: "Approve",
       hours_worked_per_week: 40,
     },
-  }
-}
+  },
+};
 
 export const CDENY2: ScenarioSpecification = {
   employee: { mass_id: true, wages: "eligible" },

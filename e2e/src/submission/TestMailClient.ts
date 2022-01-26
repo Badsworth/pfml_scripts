@@ -15,40 +15,34 @@ export type GetEmailsOpts = {
   address: string;
   subject?: string;
   subjectWildcard?: string;
-  messageWildcard?:
-  | string
-  | { pattern: string, flags?: string };
+  messageWildcard?: string | { pattern: string; flags?: string };
   timestamp_from?: number;
   debugInfo?: Record<string, string>;
   timeout?: number;
 };
 
 type FilterField =
-| "tag"
-| "envelope_from"
-| "envelope_to"
-| "from"
-| "to"
-| "cc"
-| "subject"
-| "text"
-| "html"
-| "sender_ip"
-| "id";
+  | "tag"
+  | "envelope_from"
+  | "envelope_to"
+  | "from"
+  | "to"
+  | "cc"
+  | "subject"
+  | "text"
+  | "html"
+  | "sender_ip"
+  | "id";
 
-type FilterMatch =
-  | "exact"
-  | "wildcard";
+type FilterMatch = "exact" | "wildcard";
 
-type FilterAction =
-  | "include"
-  | "exclude";
+type FilterAction = "include" | "exclude";
 
 type Filter = {
   field: FilterField;
   match: FilterMatch;
   action: FilterAction;
-  value: string
+  value: string;
 };
 
 export default class TestMailClient {
@@ -111,7 +105,9 @@ export default class TestMailClient {
       const matches = candidates.filter((email) =>
         typeof messageWildcard === "string"
           ? email.html.includes(messageWildcard)
-          : new RegExp(messageWildcard.pattern, messageWildcard.flags).test(email.html)
+          : new RegExp(messageWildcard.pattern, messageWildcard.flags).test(
+              email.html
+            )
       );
       if (matches.length > 0) {
         return matches;

@@ -1,5 +1,8 @@
 import { portal, fineos, email, fineosPages } from "../../../actions";
-import { getClaimantCredentials, getLeaveAdminCredentials } from "../../../config";
+import {
+  getClaimantCredentials,
+  getLeaveAdminCredentials,
+} from "../../../config";
 import { assertValidClaim } from "../../../../src/util/typeUtils";
 import { Submission } from "../../../../src/types";
 

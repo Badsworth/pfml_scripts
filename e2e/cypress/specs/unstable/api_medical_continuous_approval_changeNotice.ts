@@ -161,16 +161,20 @@ describe("Approval (notifications/notices)", () => {
                   address: "gqzap.notifications@inbox.testmail.app",
                   subject: subjectClaimant,
                   messageWildcard: {
-                    pattern: `${submission.fineos_absence_id}.*Your change request has been approved`
+                    pattern: `${submission.fineos_absence_id}.*Your change request has been approved`,
                   },
                   timestamp_from: submission.timestamp_from,
-                  debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
+                  debugInfo: {
+                    "Fineos Claim ID": submission.fineos_absence_id,
+                  },
                 },
                 60000
               )
               .then(() => {
                 cy.screenshot("Claimant email");
-                cy.get(`a[href$="/applications/status/?absence_case_id=${submission.fineos_absence_id}#view-notices"]`);
+                cy.get(
+                  `a[href$="/applications/status/?absence_case_id=${submission.fineos_absence_id}#view-notices"]`
+                );
               });
           });
         });
@@ -196,7 +200,7 @@ describe("Approval (notifications/notices)", () => {
                 address: "gqzap.notifications@inbox.testmail.app",
                 subject: subjectEmployer,
                 messageWildcard: {
-                  pattern: `${submission.fineos_absence_id}.*The applicant’s change request has been approved`
+                  pattern: `${submission.fineos_absence_id}.*The applicant’s change request has been approved`,
                 },
                 timestamp_from: submission.timestamp_from,
                 debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
@@ -205,7 +209,9 @@ describe("Approval (notifications/notices)", () => {
             )
             .then(() => {
               cy.screenshot("Leave Admin email");
-              cy.get(`a[href*="/employers/applications/status/?absence_id=${submission.fineos_absence_id}"]`);
+              cy.get(
+                `a[href*="/employers/applications/status/?absence_id=${submission.fineos_absence_id}"]`
+              );
             });
         });
       });

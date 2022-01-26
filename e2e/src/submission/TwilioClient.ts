@@ -60,7 +60,7 @@ export default class TwilioClient {
       trn2: {
         primary: "",
         secondary: "",
-      }
+      },
     };
   }
 

@@ -1464,18 +1464,16 @@ const reductionCategories = {
   ["Unemployment Insurance" as const]: "",
 };
 
-
 type PaidLeaveDocumentStatus = "Unknown" | "Completed" | "Draft";
 
 class PaidLeaveDocumentPropertiesPage {
-
   fileNameShouldMatch(re: RegExp): PaidLeaveDocumentsPage {
     cy.get("span[id='DocumentPropertiesWidget']")
       .find("span[id$='fileName']")
       .invoke("text")
-      .should('match', re);
-    
-    fineos.clickBottomWidgetButton("OK")
+      .should("match", re);
+
+    fineos.clickBottomWidgetButton("OK");
 
     return new PaidLeaveDocumentsPage();
   }
@@ -1485,7 +1483,7 @@ class PaidLeaveDocumentPropertiesPage {
       .find("select[id$='status']")
       .select(status);
 
-    fineos.clickBottomWidgetButton("OK")
+    fineos.clickBottomWidgetButton("OK");
 
     return new PaidLeaveDocumentsPage();
   }
@@ -1504,14 +1502,13 @@ class PaidLeaveDocumentsPage {
    */
   properties<T>(
     document: string,
-    cb: (page: PaidLeaveDocumentPropertiesPage) => T,
+    cb: (page: PaidLeaveDocumentPropertiesPage) => T
   ): T {
     cy.get("table[id*='DocumentsForCaseListviewWidget'] tbody")
-      .contains('tr', document)
+      .contains("tr", document)
       .click();
-    cy.get("input[id$='DocumentProperties']")
-      .click();
-    
+    cy.get("input[id$='DocumentProperties']").click();
+
     waitForAjaxComplete();
 
     return cb(new PaidLeaveDocumentPropertiesPage());
@@ -1534,7 +1531,7 @@ type Reduction = {
   amount: number;
 };
 
-type PaidLeavePageNotice = 
+type PaidLeavePageNotice =
   | "Benefit Amount Change Notice"
   | "Maximum Weekly Benefit Change Notice";
 
@@ -1597,9 +1594,8 @@ class PaidLeavePage {
   }
 
   createCorrespondenceDocument(
-    document: PaidLeaveCorrespondenceDocument,
+    document: PaidLeaveCorrespondenceDocument
   ): this {
-
     cy.get("a[id$=Correspondencelink]")
       .click({ scrollBehavior: false })
       .parents("li")
@@ -1608,20 +1604,13 @@ class PaidLeavePage {
 
     waitForAjaxComplete();
 
-    cy.get("span[id='footerButtonsBar']")
-      .find("input[id$='next']")
-      .click();
+    cy.get("span[id='footerButtonsBar']").find("input[id$='next']").click();
 
     return this;
   }
 
-  triggerPaidLeaveNotice(
-    type: PaidLeavePageNotice
-  ): this {
-    this.onTab(
-      "Tasks",
-      "Processes"
-    );
+  triggerPaidLeaveNotice(type: PaidLeavePageNotice): this {
+    this.onTab("Tasks", "Processes");
 
     cy.contains(".TreeNodeElement", type).click({
       force: true,

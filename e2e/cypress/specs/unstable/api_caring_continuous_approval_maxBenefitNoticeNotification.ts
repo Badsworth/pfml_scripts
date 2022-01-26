@@ -3,10 +3,14 @@ import { email, fineos, fineosPages, portal } from "../../actions";
 import { config } from "../../actions/common";
 import { getClaimantCredentials } from "../../config";
 
-const describeIf = (condition: boolean, title: string, cb: () => void): void => {
+const describeIf = (
+  condition: boolean,
+  title: string,
+  cb: () => void
+): void => {
   const testRunFn = condition ? describe : describe.skip;
   testRunFn(title, cb);
-}
+};
 
 describeIf(
   config("HAS_FINEOS_JANUARY_RELEASE") === "true",
@@ -31,8 +35,7 @@ describeIf(
           };
           cy.stash("submission", submission);
 
-          fineosPages.ClaimPage
-            .visit(submission.fineos_absence_id)
+          fineosPages.ClaimPage.visit(submission.fineos_absence_id)
             .adjudicate((adjudication) => {
               adjudication
                 .evidence((evidence) => {
@@ -51,53 +54,54 @@ describeIf(
       });
     });
 
-    const notification = it(
-      "CSR will generate a maximum weekly benefit amount notice",
-      () => {
+    const notification =
+      it("CSR will generate a maximum weekly benefit amount notice", () => {
         cy.dependsOnPreviousPass([approval]);
         fineos.before();
         cy.unstash<Submission>("submission").then(({ fineos_absence_id }) => {
-          fineosPages.ClaimPage.visit(fineos_absence_id)
-            .paidLeave((paidLeavePage) => 
+          fineosPages.ClaimPage.visit(fineos_absence_id).paidLeave(
+            (paidLeavePage) =>
               paidLeavePage
-                .createCorrespondenceDocument("Maximum Weekly Benefit Change Notice")
+                .createCorrespondenceDocument(
+                  "Maximum Weekly Benefit Change Notice"
+                )
                 .documents((documentsPage) =>
                   documentsPage
-                    .assertDocumentExists("Maximum Weekly Benefit Change Notice")
+                    .assertDocumentExists(
+                      "Maximum Weekly Benefit Change Notice"
+                    )
                     .properties(
                       "Maximum Weekly Benefit Change Notice",
                       (propertiesPage) => propertiesPage.setStatus("Completed")
                     )
                     .properties(
                       "Maximum Weekly Benefit Change Notice",
-                      (propertiesPage) => propertiesPage .fileNameShouldMatch(/.pdf$/)
+                      (propertiesPage) =>
+                        propertiesPage.fileNameShouldMatch(/.pdf$/)
                     )
                 )
                 .triggerPaidLeaveNotice("Maximum Weekly Benefit Change Notice")
-            );
+          );
         });
-      }
-    );
+      });
 
     it("Claimant receives max weekly benefit change notification", () => {
       cy.dependsOnPreviousPass([approval, notification]);
       cy.unstash<Submission>("submission").then((submission) => {
         const portalPath = `/applications/status/?absence_case_id=${submission.fineos_absence_id}#view-notices`;
         email
-          .getEmails(
-            {
-              address: "gqzap.notifications@inbox.testmail.app",
-              subject: email.getNotificationSubject("appeal (claimant)"),
-              messageWildcard: portalPath,
-              timestamp_from: submission.timestamp_from,
-              debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
-            }
-          )
+          .getEmails({
+            address: "gqzap.notifications@inbox.testmail.app",
+            subject: email.getNotificationSubject("appeal (claimant)"),
+            messageWildcard: portalPath,
+            timestamp_from: submission.timestamp_from,
+            debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
+          })
           .then(() => {
             cy.contains("Your maximum weekly benefit has changed");
             cy.get(`a[href$='${portalPath}']`);
-          })
-      })
+          });
+      });
     });
 
     it("Leave admin receives max weekly benefit change notification", () => {
@@ -118,68 +122,60 @@ describeIf(
           .then(() => {
             cy.contains("The applicant’s maximum weekly benefit was changed.");
             cy.get(`a[href*='${portalPath}']`);
-          })
-      })
+          });
+      });
     });
 
-    it(
-      "Check the leave admin portal for the max weekly benefit change notice and download it",
-      () => {
-        cy.dependsOnPreviousPass([approval, notification]);
-        portal.before();
-        cy.unstash<Submission>("submission").then((submission) => {
-          cy.unstash<DehydratedClaim>("claim").then(({ claim }) => {
-            if (!claim.employer_fein) {
-              throw new Error("Claim must include employer FEIN");
-            }
-            const employeeFullName = `${claim.first_name} ${claim.last_name}`;
-            portal.loginLeaveAdmin(claim.employer_fein);
-            portal.selectClaimFromEmployerDashboard(
-              submission.fineos_absence_id
-            );
-            portal.checkNoticeForLeaveAdmin(
-              submission.fineos_absence_id,
-              employeeFullName,
-              "Maximum Weekly Benefit Change Notice (PDF)"
-            );
-            portal.downloadLegalNotice(submission.fineos_absence_id);
-          });
-        });
-      }
-    );
-
-    it(
-      "Check the claimant portal for the max weekly benefit change notice and download it",
-      () => {
-        cy.dependsOnPreviousPass([approval, notification]);
-        portal.before();
-        cy.unstash<Submission>("submission").then((submission) => {
-          portal.loginClaimant();
-          cy.log("Waiting for documents");
-          cy.task(
-            "waitForClaimDocuments",
-            {
-              credentials: getClaimantCredentials(),
-              application_id: submission.application_id,
-              document_type: "Maximum Weekly Benefit Change Notice"
-            },
-            { timeout: 45000 }
+    it("Check the leave admin portal for the max weekly benefit change notice and download it", () => {
+      cy.dependsOnPreviousPass([approval, notification]);
+      portal.before();
+      cy.unstash<Submission>("submission").then((submission) => {
+        cy.unstash<DehydratedClaim>("claim").then(({ claim }) => {
+          if (!claim.employer_fein) {
+            throw new Error("Claim must include employer FEIN");
+          }
+          const employeeFullName = `${claim.first_name} ${claim.last_name}`;
+          portal.loginLeaveAdmin(claim.employer_fein);
+          portal.selectClaimFromEmployerDashboard(submission.fineos_absence_id);
+          portal.checkNoticeForLeaveAdmin(
+            submission.fineos_absence_id,
+            employeeFullName,
+            "Maximum Weekly Benefit Change Notice (PDF)"
           );
-          cy.log("Finished waiting for documents");
-          
-          portal.claimantGoToClaimStatus(submission.fineos_absence_id);
-          portal.claimantAssertClaimStatus([
-            {
-              leave: "Care for a Family Member",
-              status: "Approved",
-            },
-          ]);
-          cy.findByText("Maximum Weekly Benefit Change Notice (PDF)")
-            .should("be.visible")
-            .click({ force: true });
           portal.downloadLegalNotice(submission.fineos_absence_id);
         });
-      }
-    );
+      });
+    });
+
+    it("Check the claimant portal for the max weekly benefit change notice and download it", () => {
+      cy.dependsOnPreviousPass([approval, notification]);
+      portal.before();
+      cy.unstash<Submission>("submission").then((submission) => {
+        portal.loginClaimant();
+        cy.log("Waiting for documents");
+        cy.task(
+          "waitForClaimDocuments",
+          {
+            credentials: getClaimantCredentials(),
+            application_id: submission.application_id,
+            document_type: "Maximum Weekly Benefit Change Notice",
+          },
+          { timeout: 45000 }
+        );
+        cy.log("Finished waiting for documents");
+
+        portal.claimantGoToClaimStatus(submission.fineos_absence_id);
+        portal.claimantAssertClaimStatus([
+          {
+            leave: "Care for a Family Member",
+            status: "Approved",
+          },
+        ]);
+        cy.findByText("Maximum Weekly Benefit Change Notice (PDF)")
+          .should("be.visible")
+          .click({ force: true });
+        portal.downloadLegalNotice(submission.fineos_absence_id);
+      });
+    });
   }
 );
