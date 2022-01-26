@@ -77,6 +77,7 @@ function getRawEnvironment() {
       process.env.FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION,
     HAS_ORGUNITS_SETUP: process.env.HAS_ORGUNITS_SETUP,
     MFA_ENABLED: process.env.MFA_ENABLED,
+    HAS_LARGE_FILE_COMPRESSION: process.env.HAS_LARGE_FILE_COMPRESSION,
   };
 }
 

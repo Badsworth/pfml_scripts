@@ -23,7 +23,8 @@
     "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "true",
     "HAS_ORGUNITS_SETUP": "true",
     "MFA_ENABLED": "true",
-    "HAS_FINEOS_JANUARY_RELEASE": "true"
+    "HAS_FINEOS_JANUARY_RELEASE": "true",
+    "HAS_LARGE_FILE_COMPRESSION": "true"
   },
   "stage": {
     "PORTAL_BASEURL": "https://paidleave-stage.mass.gov",
@@ -40,7 +41,8 @@
     "HAS_PAYMENT_STATUS": "false",
     "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "false",
     "MFA_ENABLED": "true",
-    "HAS_FINEOS_JANUARY_RELEASE": "false"
+    "HAS_FINEOS_JANUARY_RELEASE": "false",
+    "HAS_LARGE_FILE_COMPRESSION": "true"
   },
   "training": {
     "PORTAL_BASEURL": "https://paidleave-training.mass.gov",
@@ -57,7 +59,8 @@
     "HAS_PAYMENT_STATUS": "false",
     "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "true",
     "MFA_ENABLED": "false",
-    "HAS_FINEOS_JANUARY_RELEASE": "true"
+    "HAS_FINEOS_JANUARY_RELEASE": "true",
+    "HAS_LARGE_FILE_COMPRESSION": "true"
   },
   "trn2": {
     "PORTAL_BASEURL": "https://paidleave-trn2.dfml.eol.mass.gov",
@@ -74,7 +77,8 @@
     "HAS_PAYMENT_STATUS": "false",
     "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "false",
     "MFA_ENABLED": "false",
-    "HAS_FINEOS_JANUARY_RELEASE": "false"
+    "HAS_FINEOS_JANUARY_RELEASE": "false",
+    "HAS_LARGE_FILE_COMPRESSION": "true"
   },
   "long": {
     "PORTAL_BASEURL": "https://paidleave-long.dfml.eol.mass.gov",
@@ -91,7 +95,8 @@
     "HAS_PAYMENT_STATUS": "false",
     "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "false",
     "MFA_ENABLED": "false",
-    "HAS_FINEOS_JANUARY_RELEASE": "false"
+    "HAS_FINEOS_JANUARY_RELEASE": "false",
+    "HAS_LARGE_FILE_COMPRESSION": "true"
   },
   "performance": {
     "PORTAL_BASEURL": "https://paidleave-performance.mass.gov",
@@ -113,7 +118,8 @@
     "MFA_ENABLED": "false",
     "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "true",
     "HAS_ORGUNITS_SETUP": "false",
-    "HAS_FINEOS_JANUARY_RELEASE": "true"
+    "HAS_FINEOS_JANUARY_RELEASE": "true",
+    "HAS_LARGE_FILE_COMPRESSION": "true"
   },
   "uat": {
     "PORTAL_BASEURL": "https://paidleave-uat.mass.gov",
@@ -131,7 +137,8 @@
     "HAS_PAYMENT_STATUS": "false",
     "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "true",
     "MFA_ENABLED": "false",
-    "HAS_FINEOS_JANUARY_RELEASE": "true"
+    "HAS_FINEOS_JANUARY_RELEASE": "true",
+    "HAS_LARGE_FILE_COMPRESSION": "true"
   },
   "cps-preview": {
     "PORTAL_BASEURL": "https://paidleave-cps-preview.eol.mass.gov",
@@ -151,7 +158,8 @@
     "HAS_FINEOS_JANUARY_RELEASE": "true",
     "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "true",
     "HAS_ORGUNITS_SETUP": "false",
-    "MFA_ENABLED": "false"
+    "MFA_ENABLED": "false",
+    "HAS_LARGE_FILE_COMPRESSION": "false"
   },
   "breakfix": {
     "PORTAL_BASEURL": "https://paidleave-breakfix.eol.mass.gov",
@@ -170,7 +178,8 @@
     "HAS_PAYMENT_STATUS": "false",
     "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "true",
     "MFA_ENABLED": "false",
-    "HAS_FINEOS_JANUARY_RELEASE": "true"
+    "HAS_FINEOS_JANUARY_RELEASE": "true",
+    "HAS_LARGE_FILE_COMPRESSION": "false"
   },
   "local": {
     "PORTAL_BASEURL": "http://localhost:3000",
