@@ -1332,6 +1332,20 @@ class Pfml1099(Base, TimestampMixin):
     employee = relationship(Employee)
 
 
+class Pfml1099Request(Base, TimestampMixin):
+    __tablename__ = "pfml_1099_request"
+    pfml_1099_request_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+    employee_id = Column(
+        PostgreSQLUUID, ForeignKey("employee.employee_id"), index=True, nullable=False
+    )
+    correction_ind = Column(Boolean, nullable=False)
+    pfml_1099_batch_id = Column(
+        PostgreSQLUUID, ForeignKey("pfml_1099_batch.pfml_1099_batch_id"), index=True, nullable=True
+    )
+
+    employee = relationship(Employee)
+
+
 class LinkSplitPayment(Base, TimestampMixin):
     __tablename__ = "link_split_payment"
     payment_id = Column(PostgreSQLUUID, ForeignKey("payment.payment_id"), primary_key=True)
