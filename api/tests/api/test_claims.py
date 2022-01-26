@@ -2866,6 +2866,185 @@ class TestGetClaimsEndpoint:
         for claim in response_body["data"]:
             assert claim["employer"]["employer_fein"] == format_fein(employer.employer_fein)
 
+    def test_get_claims_for_employee_id_as_employer(
+        self, client, employer_auth_token, employer_user, test_db_session, test_verification
+    ):
+        employer = EmployerFactory.create()
+        employee = EmployeeFactory.create()
+
+        ClaimFactory.create(
+            employer=employer, employee=employee, fineos_absence_status_id=1, claim_type_id=1,
+        )
+        for _ in range(5):
+            ClaimFactory.create(
+                employer=employer, fineos_absence_status_id=1, claim_type_id=1,
+            )
+
+        link = UserLeaveAdministrator(
+            user_id=employer_user.user_id,
+            employer_id=employer.employer_id,
+            fineos_web_id="fake-fineos-web-id",
+            verification=test_verification,
+        )
+        test_db_session.add(link)
+        test_db_session.commit()
+
+        # Verify we can find the employee in question
+        response1 = client.get(
+            f"/v1/claims?employee_id={employee.employee_id}",
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+        )
+        assert response1.status_code == 200
+        response_body1 = response1.get_json()
+        assert len(response_body1["data"]) == 1
+        assert response_body1["data"][0]["employee"]["employee_id"] == str(employee.employee_id)
+
+        # Verify we're filtering OUT results if the employee isn't found
+        response2 = client.get(
+            f"/v1/claims?employee_id={employer.employer_id}",
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+        )
+        assert response2.status_code == 200
+        response_body2 = response2.get_json()
+        assert len(response_body2["data"]) == 0
+
+    def test_get_claims_valid_employee_id_invalid_employer_id(
+        self, client, employer_auth_token, employer_user, test_db_session, test_verification
+    ):
+        employer = EmployerFactory.create()
+        employee = EmployeeFactory.create()
+
+        ClaimFactory.create(
+            employer=employer, employee=employee, fineos_absence_status_id=1, claim_type_id=1,
+        )
+        for _ in range(5):
+            ClaimFactory.create(
+                employer=employer, fineos_absence_status_id=1, claim_type_id=1,
+            )
+
+        link = UserLeaveAdministrator(
+            user_id=employer_user.user_id,
+            employer_id=employer.employer_id,
+            fineos_web_id="fake-fineos-web-id",
+            verification=test_verification,
+        )
+        test_db_session.add(link)
+        test_db_session.commit()
+
+        # Verify the wrong employer_id fails to find anything
+        response1 = client.get(
+            f"/v1/claims?employer_id={employee.employee_id}&employee_id={employee.employee_id}",
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+        )
+        assert response1.status_code == 200
+        response_body1 = response1.get_json()
+        assert len(response_body1["data"]) == 0
+
+        # Verify the right employer_id and employee_id work together
+        response2 = client.get(
+            f"/v1/claims?employer_id={employer.employer_id}&employee_id={employee.employee_id}",
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+        )
+        assert response2.status_code == 200
+        response_body2 = response2.get_json()
+        assert len(response_body2["data"]) == 1
+        assert response_body2["data"][0]["employee"]["employee_id"] == str(employee.employee_id)
+
+    def test_get_claims_for_multiple_employee_ids_as_employer(
+        self, client, employer_auth_token, employer_user, test_db_session, test_verification
+    ):
+        employer = EmployerFactory.create()
+        employee = EmployeeFactory.create()
+        employee2 = EmployeeFactory.create()
+
+        ClaimFactory.create(
+            employer=employer, employee=employee, fineos_absence_status_id=1, claim_type_id=1,
+        )
+
+        for _ in range(5):
+            ClaimFactory.create(
+                employer=employer, employee=employee2, fineos_absence_status_id=1, claim_type_id=1,
+            )
+
+        link = UserLeaveAdministrator(
+            user_id=employer_user.user_id,
+            employer_id=employer.employer_id,
+            fineos_web_id="fake-fineos-web-id",
+            verification=test_verification,
+        )
+        test_db_session.add(link)
+        test_db_session.commit()
+
+        # Verify we can find a single valid employee_id when sending one
+        response1 = client.get(
+            f"/v1/claims?employee_id={employee.employee_id},{employer.employer_id}",
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+        )
+        assert response1.status_code == 200
+        response_body1 = response1.get_json()
+        assert len(response_body1["data"]) == 1
+        assert response_body1["data"][0]["employee"]["employee_id"] == str(employee.employee_id)
+
+        # Verify we can find both valid employee_ids when sending multiple
+        response2 = client.get(
+            f"/v1/claims?employee_id={employee.employee_id},{employee2.employee_id}",
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+        )
+        assert response2.status_code == 200
+        response_body2 = response2.get_json()
+        assert len(response_body2["data"]) == 6
+        eids_to_find = [str(employee.employee_id), str(employee2.employee_id)]
+        for found_employee in response_body2["data"]:
+            assert found_employee["employee"]["employee_id"] in eids_to_find
+
+        # Verify malformed e.g. trailing comma is rejected
+        response3 = client.get(
+            f"/v1/claims?employee_id={employee.employee_id},",
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+        )
+        assert response3.status_code == 400
+
+    def test_get_claims_for_employee_id_as_claimant(
+        self, client, auth_token, user, test_db_session, test_verification
+    ):
+        employer = EmployerFactory.create()
+        employeeA = EmployeeFactory.create()
+        generated_claims = []
+
+        for _ in range(3):
+            new_claim = ClaimFactory.create(
+                employer=employer, employee=employeeA, fineos_absence_status_id=1, claim_type_id=1,
+            )
+            generated_claims.append(new_claim)
+            ApplicationFactory.create(user=user, claim=new_claim)
+
+        # Create a claim that is not expected to be returned
+        employeeB = EmployeeFactory.create()
+        ClaimFactory.create(
+            employer=employer, employee=employeeB, fineos_absence_status_id=1, claim_type_id=1
+        )
+
+        response1 = client.get(
+            f"/v1/claims?employee_id={employeeB.employee_id}",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+
+        assert response1.status_code == 200
+        response_body1 = response1.get_json()
+        claim_data1 = response_body1.get("data")
+        assert len(claim_data1) == 0
+
+        response2 = client.get(
+            f"/v1/claims?employee_id={employeeA.employee_id}",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert response2.status_code == 200
+        response_body2 = response2.get_json()
+        claim_data2 = response_body2.get("data")
+        assert len(claim_data2) == 3
+        for found_claim in response_body2["data"]:
+            assert found_claim["employee"]["employee_id"] == str(employeeA.employee_id)
+
     def test_get_claims_as_claimant(self, client, auth_token, user):
         employer = EmployerFactory.create()
         employeeA = EmployeeFactory.create()
@@ -2889,6 +3068,7 @@ class TestGetClaimsEndpoint:
         assert response.status_code == 200
         response_body = response.get_json()
         claim_data = response_body.get("data")
+        assert len(claim_data) == 3
         for i in range(3):
             assert_claim_response_equal_to_claim_query(claim_data[i], generated_claims[2 - i])
 

@@ -395,6 +395,16 @@ paths:
             format: uuid
           description: ID of Employer to query claims for
           required: false
+        - name: employee_id
+          in: query
+          schema:
+            type: array
+            items:
+                type: string
+                format: uuid
+          description: ID(s) of Employee to query claims for
+          required: false
+          explode: false
         - name: "claim_status"
           in: query
           schema:
