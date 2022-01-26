@@ -1085,9 +1085,7 @@ class Payment(Base, TimestampMixin):
     )
     claim_type_id = Column(Integer, ForeignKey("lk_claim_type.claim_type_id"))
     leave_request_id = deferred(
-        Column(
-            PostgreSQLUUID, ForeignKey("absence_period.absence_period_id")
-        )  # Infer type "PostgreSQLUUID"
+        Column(PostgreSQLUUID, ForeignKey("absence_period.absence_period_id"))
     )
 
     vpei_id = Column(PostgreSQLUUID, ForeignKey("fineos_extract_vpei.vpei_id"))
