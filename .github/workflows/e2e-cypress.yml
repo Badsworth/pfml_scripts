@@ -97,6 +97,7 @@ env:
   PLAYWRIGHT_BROWSERS_PATH: /home/runner/.npm/.playwright-cache
   PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: 1 # We never actually need puppeteer chromium installed
   TEST_RUN_ID: ${{ github.repository }}-${{ github.run_id }}-${{ github.run_attempt}}
+  DEBUG: "cypress:reporter:newrelic"
 
 # Prevent this workflow from running more than 1x concurrently in any environment.
 # This prevents us from overloading the environment with requests, which causes false failures.
