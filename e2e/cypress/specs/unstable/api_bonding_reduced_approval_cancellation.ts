@@ -5,17 +5,7 @@ import {
   getDocumentReviewTaskName,
 } from "../../../src/util/documents";
 import { config } from "../../actions/common";
-
-const itIf = (
-  condition: boolean,
-  label: string,
-  opts: Parameters<typeof it>[1],
-  cb: 
-    | (() => void)
-    | (() => Promise<void>)
-): void => {
-  (condition ? it : it.skip)(label, opts, cb);
-}
+import { itIf } from '../../util';
 
 describe("Approval (notifications/notices)", () => {
   after(() => {
