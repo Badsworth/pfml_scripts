@@ -941,7 +941,7 @@ type NoticeType =
 export function checkNoticeForLeaveAdmin(
   fineosAbsenceId: string,
   claimantName: string,
-  noticeType: NoticeType,
+  noticeType: NoticeType
 ): void {
   cy.visit(`/employers/applications/status/?absence_id=${fineosAbsenceId}`);
   cy.contains("h1", claimantName, { timeout: 20000 }).should("be.visible");
