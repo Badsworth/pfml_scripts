@@ -619,11 +619,7 @@ def document_upload(application_id, body, file):
             # attempt to compress the PDF and update file meta data.
             # A size constraint of 10MB is still enforced by the API gateway,
             # so the API should not expect to receive anything above this size
-            if (
-                app.get_config().enable_pdf_document_compression
-                and content_type == AllowedContentTypes.pdf.value
-                and file_size > UPLOAD_SIZE_CONSTRAINT
-            ):
+            if content_type == AllowedContentTypes.pdf.value and file_size > UPLOAD_SIZE_CONSTRAINT:
                 # tempfile.SpooledTemporaryFile writes the compressed file in-memory
                 with tempfile.SpooledTemporaryFile(mode="wb+") as compressed_file:
                     file_size = pdf_util.compress_pdf(file, compressed_file)
