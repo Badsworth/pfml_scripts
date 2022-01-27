@@ -81,7 +81,6 @@ resource "aws_ecs_task_definition" "app" {
       release_version                            = var.release_version
       new_plan_proofs_active_at                  = var.new_plan_proofs_active_at
       use_claim_status_url                       = var.use_claim_status_url
-      enable_pdf_document_compression            = var.enable_pdf_document_compression
       enable_document_multipart_upload           = var.enable_document_multipart_upload
       enable_application_import                  = var.enable_application_import
       enable_employee_endpoints                  = var.enable_employee_endpoints

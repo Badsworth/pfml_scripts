@@ -77,7 +77,6 @@ module "api" {
   enable_application_fraud_check                      = "0"
   release_version                                     = var.release_version
 
-  enable_pdf_document_compression  = "1"
   enable_document_multipart_upload = "1"
   enable_application_import        = "1"
 }
