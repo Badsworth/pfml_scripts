@@ -1255,9 +1255,9 @@ return (
   &lt;/form&gt;
 );
 </code></pre></div>
-<p>Alternatively, if you're not using <code>useFunctionalInputProps</code>, you can use <code>appErrors.fieldErrorMessage(fieldName)</code> to return the error message for a specific field:</p>
+<p>Alternatively, if you're not using <code>useFunctionalInputProps</code>, you can use <code>AppErrorInfo.fieldErrorMessage(fieldName)</code> to return the error message for a specific field:</p>
 <div class="highlight"><pre><span></span><code>&lt;InputText
-  errorMsg={props.appErrors.fieldErrorMessage(&quot;first_name&quot;)}
+  errorMsg={AppErrorInfo.fieldErrorMessage(errors, &quot;first_name&quot;)}
   name=&quot;first_name&quot;
   ...
 </code></pre></div>
