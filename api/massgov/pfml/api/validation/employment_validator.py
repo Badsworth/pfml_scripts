@@ -1,6 +1,7 @@
 from typing import Optional
 
 import massgov.pfml.db as db
+import massgov.pfml.util.logging
 from massgov.pfml.api.validation.exceptions import IssueRule, IssueType, ValidationErrorDetail
 from massgov.pfml.db.models.employees import (
     Employee,
@@ -8,6 +9,8 @@ from massgov.pfml.db.models.employees import (
     TaxIdentifier,
     WagesAndContributions,
 )
+
+logger = massgov.pfml.util.logging.get_logger(__name__)
 
 
 def get_contributing_employer_or_employee_issue(
@@ -18,6 +21,7 @@ def get_contributing_employer_or_employee_issue(
     """Validate an Employer exists and a specific Employee works there"""
 
     # Requiring an EIN be present is handled by a separate validation rule
+    logger.warning("IN FUNC")
     if maybe_employer_fein is not None:
         employer = (
             db_session.query(Employer)
@@ -26,11 +30,23 @@ def get_contributing_employer_or_employee_issue(
         )
 
         # Employer was not in DOR data, or we haven't yet created the corresponding record in FINEOS
-        if employer is None or employer.fineos_employer_id is None:
+        # if employer is None or employer.fineos_employer_id is None:
+        if employer is None:
+            logger.warning("emp is none or fineos id is none")
             return ValidationErrorDetail(
                 field="employer_fein",
                 type=IssueType.require_contributing_employer,
                 message="Confirm that you have the correct EIN, and that the Employer is contributing to Paid Family and Medical Leave.",
+            )
+
+        # The DOR doesn't currently provide employee wages for employers that
+        # are exempt.
+        if employer.family_exemption and employer.medical_exemption:
+            logger.warning("emp is exempt")
+            return ValidationErrorDetail(
+                field="employer_fein",
+                type=IssueType.require_non_exempt_employer,
+                message="The employer you entered is exempt in our system.",
             )
 
         # Requiring a tax identifier be present is handled by a separate validation rule.
@@ -44,7 +60,10 @@ def get_contributing_employer_or_employee_issue(
             # will therefore fail with a "not found" error.
             return ValidationErrorDetail(
                 rule=IssueRule.require_employee,
-                message="Couldn't find Employee in our system. Confirm that you have the correct EIN.",
+                # TODO is this error message so specific that it's wrong?
+                # If the employee itself is not found, then it isn't correct to
+                # say that the association is not found.
+                message="We couldn't find an assocation between you and the employer you entered in our system.",
                 type=IssueType.pfml,
             )
 
