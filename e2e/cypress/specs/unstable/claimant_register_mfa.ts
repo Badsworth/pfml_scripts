@@ -1,11 +1,11 @@
 import { portal } from "../../actions";
 import { config } from "../../actions/common";
+import { describeIf } from '../../util';
 
-const describeIf = (condition: boolean) =>
-  condition ? describe : describe.skip;
-
-describeIf(config("MFA_ENABLED") === "true")(
+describeIf(
+  config("MFA_ENABLED") === "true",
   "Claimant Registration with MFA",
+  {},
   () => {
     const register_mfa =
       it("As a newly registered user I should be prompted to enable MFA, then trigger MFA successfully", () => {

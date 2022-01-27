@@ -2,15 +2,12 @@ import { Submission } from "../../../src/types";
 import { email, fineos, fineosPages, portal } from "../../actions";
 import { config } from "../../actions/common";
 import { getClaimantCredentials } from "../../config";
-
-const describeIf = (condition: boolean, title: string, cb: () => void): void => {
-  const testRunFn = condition ? describe : describe.skip;
-  testRunFn(title, cb);
-}
+import { describeIf } from '../../util';
 
 describeIf(
   config("HAS_FINEOS_JANUARY_RELEASE") === "true",
   "Create a Max Weekly Benefit Change Notice in FINEOS and check delivery to the LA/Claimant portal",
+  {},
   () => {
     after(() => {
       portal.deleteDownloadsFolder();
