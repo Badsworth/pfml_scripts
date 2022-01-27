@@ -92,10 +92,10 @@ TAX_IDENTIFICATION_NUMBER = "Tax Identification Number"
 
 class PaymentData:
     """A class for containing any and all payment data. Handles validation and
-       pulling values out of the various types
+    pulling values out of the various types
 
-       All values are pulled from the CSV as-is and as strings. Values prefixed with raw_ need
-       to be converted from the FINEOS value to one of our DB values (usually a lookup enum)
+    All values are pulled from the CSV as-is and as strings. Values prefixed with raw_ need
+    to be converted from the FINEOS value to one of our DB values (usually a lookup enum)
     """
 
     validation_container: payments_util.ValidationContainer
@@ -401,28 +401,38 @@ class PaymentData:
 
         if requested_absence:
 
-            def leave_request_decision_validator(
-                leave_request_decision: str,
-            ) -> Optional[payments_util.ValidationReason]:
-                if leave_request_decision == "In Review":
-                    # These are allowed, but will be defaulted to skip in the audit report
-                    if count_incrementer is not None:
-                        count_incrementer(PaymentExtractStep.Metrics.IN_REVIEW_LEAVE_REQUEST_COUNT)
+            def leave_request_decision_validator_closure(
+                is_adhoc_payment: bool,
+            ) -> Callable[[str], Optional[payments_util.ValidationReason]]:
+                def leave_request_decision_validator(
+                    leave_request_decision: str,
+                ) -> Optional[payments_util.ValidationReason]:
+                    if leave_request_decision == "In Review":
+                        if is_adhoc_payment:
+                            return None
+                        if count_incrementer is not None:
+                            count_incrementer(
+                                PaymentExtractStep.Metrics.IN_REVIEW_LEAVE_REQUEST_COUNT
+                            )
+                        return payments_util.ValidationReason.LEAVE_REQUEST_IN_REVIEW
+                    if leave_request_decision != "Approved":
+                        if count_incrementer is not None:
+                            count_incrementer(
+                                PaymentExtractStep.Metrics.NOT_APPROVED_LEAVE_REQUEST_COUNT
+                            )
+                        return payments_util.ValidationReason.INVALID_VALUE
                     return None
-                if leave_request_decision != "Approved":
-                    if count_incrementer is not None:
-                        count_incrementer(
-                            PaymentExtractStep.Metrics.NOT_APPROVED_LEAVE_REQUEST_COUNT
-                        )
-                    return payments_util.ValidationReason.INVALID_VALUE
-                return None
+
+                return leave_request_decision_validator
 
             self.leave_request_decision = payments_util.validate_db_input(
                 "LEAVEREQUEST_DECISION",
                 requested_absence,
                 self.validation_container,
                 self.is_standard_payment,
-                custom_validator_func=leave_request_decision_validator,
+                custom_validator_func=leave_request_decision_validator_closure(
+                    self.is_adhoc_payment()
+                ),
             )
 
             self.claim_type_raw = payments_util.validate_db_input(
@@ -542,6 +552,12 @@ class PaymentData:
     def get_payment_message_str(self) -> str:
         return f"[C={self.c_value},I={self.i_value},absence_case_id={self.absence_case_number}]"
 
+    def is_adhoc_payment(self) -> bool:
+        # A payment is considered adhoc if it's marked as "Adhoc" often with
+        # a random number suffixed to it.
+        # This column can be empty/missing, and that's fine.
+        return self.amalgamation_c is not None and "Adhoc" in self.amalgamation_c
+
 
 class PaymentExtractStep(Step):
     class Metrics(str, enum.Enum):
@@ -582,10 +598,10 @@ class PaymentExtractStep(Step):
         logger.info("Successfully processed payment extract data")
 
     def get_active_payment_state(self, payment: Payment) -> Optional[LkState]:
-        """ For the given payment, determine if the payment is being processed or complete
-            and if so, return the active state.
-            Returns:
-              - If being processed, the state the active payment is in, else None
+        """For the given payment, determine if the payment is being processed or complete
+        and if so, return the active state.
+        Returns:
+          - If being processed, the state the active payment is in, else None
         """
         # Get all payments associated with C/I value
         payment_ids = (
@@ -827,14 +843,10 @@ class PaymentExtractStep(Step):
         payment.fineos_extract_import_log_id = self.get_import_log_id()
         payment.leave_request_decision = payment_data.leave_request_decision
 
-        # A payment is considered adhoc if it's marked as "Adhoc" often with
-        # a random number suffixed to it.
-        # This column can be empty/missing, and that's fine. This is used
-        # later in the post-processing step to filter out adhoc payments from
-        # the weekly maximum check.
-        payment.is_adhoc_payment = (
-            payment_data.amalgamation_c is not None and "Adhoc" in payment_data.amalgamation_c
-        )
+        # This is used later in the post-processing step to filter out
+        # adhoc payments from the weekly maximum check.
+        payment.is_adhoc_payment = payment_data.is_adhoc_payment()
+
         if payment.is_adhoc_payment:
             self.increment(self.Metrics.ADHOC_PAYMENT_COUNT)
 
@@ -1185,13 +1197,13 @@ class PaymentExtractStep(Step):
         transaction_status: LkFineosWritebackTransactionStatus,
         payment_data: PaymentData,
     ) -> None:
-        """ If the payment had any validation issues, we want to writeback to FINEOS
-            so that the particular error can be shown in the UI.
+        """If the payment had any validation issues, we want to writeback to FINEOS
+        so that the particular error can be shown in the UI.
 
-            Note that some of these states also mark the payment as
-            Active (they only end up in extracts when PendingActive)
-            This is deliberate as some payments need to be marked as Active
-            so they can be fixed and reissued (an extracted payment can't be modified)
+        Note that some of these states also mark the payment as
+        Active (they only end up in extracts when PendingActive)
+        This is deliberate as some payments need to be marked as Active
+        so they can be fixed and reissued (an extracted payment can't be modified)
         """
 
         message = f"Payment {payment_data.get_payment_message_str()} added to DELEGATED_PEI_WRITEBACK flow with transaction status {transaction_status.transaction_status_description}"
@@ -1210,9 +1222,12 @@ class PaymentExtractStep(Step):
     ) -> LkFineosWritebackTransactionStatus:
         # https://lwd.atlassian.net/wiki/spaces/API/pages/1319272855/Payment+Transaction+Scenarios
         validation_reasons = payment_data.validation_container.get_reasons()
+
+        has_other_issues = False
         has_unfixable_issues = False
         has_pending_prenote = False
         has_rejected_prenote = False
+        has_leave_request_in_review = False
 
         for reason in validation_reasons:
             # Some issues are either due to the data setup in our system
@@ -1230,7 +1245,10 @@ class PaymentExtractStep(Step):
                 payments_util.ValidationReason.UNEXPECTED_PAYMENT_TRANSACTION_TYPE,
             ]:
                 has_unfixable_issues = True
-
+            # Reject any payments with leave request “In Review”, allowing for
+            # retries each day in case the status changes to “Approved” or “Completed”
+            elif reason == payments_util.ValidationReason.LEAVE_REQUEST_IN_REVIEW:
+                has_leave_request_in_review = True
             # Pending prenotes will also be put in PendingActive as we are just
             # waiting to get the payment
             elif reason == payments_util.ValidationReason.EFT_PRENOTE_PENDING:
@@ -1243,14 +1261,21 @@ class PaymentExtractStep(Step):
 
             # Otherwise the issue is any of the other validation reasons
             # which all will set the payment to Active so the payment can
-            # be fixed and reissued. This always takes precendence, so
-            # we can immediately return without iterating further.
+            # be fixed and reissued.
             else:
-                return FineosWritebackTransactionStatus.FAILED_AUTOMATED_VALIDATION
+                has_other_issues = True
+
+        # This always takes precendence
+        if has_other_issues:
+            return FineosWritebackTransactionStatus.FAILED_AUTOMATED_VALIDATION
 
         # Unfixable issues take next precendence
         if has_unfixable_issues:
             return FineosWritebackTransactionStatus.DATA_ISSUE_IN_SYSTEM
+
+        # Leave requests in review take next precendence
+        if has_leave_request_in_review:
+            return FineosWritebackTransactionStatus.LEAVE_IN_REVIEW
 
         # Pending and rejected can't happen at the same time, so ordering
         # won't matter

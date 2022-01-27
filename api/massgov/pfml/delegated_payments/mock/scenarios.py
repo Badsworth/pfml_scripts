@@ -26,6 +26,9 @@ class ScenarioName(Enum):
     )
     UNKNOWN_LEAVE_REQUEST_DECISION = "UNKNOWN_LEAVE_REQUEST_DECISION"
     IN_REVIEW_LEAVE_REQUEST_DECISION = "IN_REVIEW_LEAVE_REQUEST_DECISION"
+    IN_REVIEW_LEAVE_REQUEST_ADHOC_PAYMENTS_DECISION = (
+        "IN_REVIEW_LEAVE_REQUEST_ADHOC_PAYMENTS_DECISION"
+    )
 
     HAPPY_PATH_FAMILY_CHECK_PRENOTED = "HAPPY_PATH_FAMILY_CHECK_PRENOTED"
 
@@ -284,6 +287,11 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
     ScenarioDescriptor(
         scenario_name=ScenarioName.IN_REVIEW_LEAVE_REQUEST_DECISION,
         leave_request_decision="In Review",
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.IN_REVIEW_LEAVE_REQUEST_ADHOC_PAYMENTS_DECISION,
+        leave_request_decision="In Review",
+        is_adhoc_payment=True,
     ),
     ScenarioDescriptor(
         scenario_name=ScenarioName.REJECTED_LEAVE_REQUEST_DECISION, leave_request_decision="Denied",

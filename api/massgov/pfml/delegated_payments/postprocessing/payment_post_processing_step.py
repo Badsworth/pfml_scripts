@@ -10,7 +10,6 @@ from massgov.pfml.delegated_payments.postprocessing.dor_fineos_employee_name_mis
 from massgov.pfml.delegated_payments.postprocessing.dua_dia_reductions_processor import (
     DuaDiaReductionsProcessor,
 )
-from massgov.pfml.delegated_payments.postprocessing.in_review_processor import InReviewProcessor
 from massgov.pfml.delegated_payments.postprocessing.payment_post_processing_util import (
     PaymentContainer,
     PostProcessingMetrics,
@@ -65,12 +64,10 @@ class PaymentPostProcessingStep(Step):
     def _process_payments(self, payment_containers: List[PaymentContainer]) -> None:
         """Post process payments individually"""
         dua_dia_processor = DuaDiaReductionsProcessor(self)
-        in_review_processor = InReviewProcessor(self)
         name_mismatch_processor = DORFineosEmployeeNameMismatchProcessor(self)
 
         for payment_container in payment_containers:
             dua_dia_processor.process(payment_container.payment)
-            in_review_processor.process(payment_container)
             name_mismatch_processor.process(payment_container.payment)
 
     def _handle_state_transition(self, payment_containers: List[PaymentContainer]) -> None:
