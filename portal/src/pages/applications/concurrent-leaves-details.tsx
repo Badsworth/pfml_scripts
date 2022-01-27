@@ -2,6 +2,7 @@ import withBenefitsApplication, {
   WithBenefitsApplicationProps,
 } from "../../hoc/withBenefitsApplication";
 import ConcurrentLeave from "../../models/ConcurrentLeave";
+import Details from "../../components/core/Details";
 import InputChoiceGroup from "../../components/core/InputChoiceGroup";
 import InputDate from "../../components/core/InputDate";
 import LeaveDatesAlert from "../../components/LeaveDatesAlert";
@@ -79,6 +80,11 @@ export const ConcurrentLeavesDetails = (
               showWaitingDayPeriod={!isIntermittent}
             />
             <p>{t("pages.claimsConcurrentLeavesDetails.hintHeader")}</p>
+            <Details
+              label={t("pages.claimsConcurrentLeavesDetails.detailsLabel")}
+            >
+              {t("pages.claimsConcurrentLeavesDetails.detailsBody")}
+            </Details>
           </React.Fragment>
         }
       />

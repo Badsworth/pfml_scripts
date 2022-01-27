@@ -1262,12 +1262,17 @@ const pages: {
   claimsConcurrentLeavesDetails: {
     choiceNo: "$t(shared.choiceNo)",
     choiceYes: "$t(shared.choiceYes)",
+    detailsBody:
+      "Employer-sponsored paid vacation time, sick time, and personal time you plan to take during your paid leave from PFML.",
+    detailsLabel: "What is employer-sponsored paid time off?",
     hintHeader:
       "This is the same Employer Identification Number you entered earlier in your application. After you submit your application, this employer will be able to review it. We won’t share any leave you plan to take from other employers.",
-    leaveEndDateLabel: "What is the last day of this leave?",
-    leaveStartDateLabel: "What is the first day of this leave?",
+    leaveEndDateLabel:
+      "What is the last day of your employer-sponsored paid time off?",
+    leaveStartDateLabel:
+      "What is the first day of your employer-sponsored paid time off?",
     sectionLabel:
-      "Will you use accrued paid leave from this employer? EIN: {{employer_fein, ein}}",
+      "Will you use employer-sponsored paid time off from this employer? EIN: {{employer_fein, ein}}",
     title: "$t(shared.claimsOtherLeaveTitle)",
   },
   claimsConcurrentLeavesIntro: {
