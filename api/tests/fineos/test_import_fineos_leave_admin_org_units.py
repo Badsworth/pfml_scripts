@@ -210,6 +210,7 @@ def test_fineos_la_org_units_happy_path(
     assert report.duplicate_leave_admins_count == 0
     assert report.duplicate_employer_count == 0
     assert report.disabled_leave_admins_count == 0
+    assert report.updated_employer_org_units_count == 0
 
 
 def test_fineos_la_org_units_missing_required_fields(
@@ -261,6 +262,7 @@ def test_fineos_la_org_units_missing_required_fields(
     assert report.duplicate_leave_admins_count == 0
     assert report.duplicate_employer_count == 0
     assert report.disabled_leave_admins_count == 0
+    assert report.updated_employer_org_units_count == 0
 
 
 def test_fineos_la_org_units_missing_employer(
@@ -312,6 +314,7 @@ def test_fineos_la_org_units_missing_employer(
     assert report.duplicate_leave_admins_count == 0
     assert report.duplicate_employer_count == 0
     assert report.disabled_leave_admins_count == 0
+    assert report.updated_employer_org_units_count == 0
 
 
 def test_fineos_la_org_units_missing_employer_org_unit(
@@ -363,6 +366,7 @@ def test_fineos_la_org_units_missing_employer_org_unit(
     assert report.duplicate_leave_admins_count == 0
     assert report.duplicate_employer_count == 0
     assert report.disabled_leave_admins_count == 0
+    assert report.updated_employer_org_units_count == 0
 
 
 def test_fineos_la_org_units_missing_leave_admin(
@@ -414,6 +418,7 @@ def test_fineos_la_org_units_missing_leave_admin(
     assert report.duplicate_leave_admins_count == 0
     assert report.duplicate_employer_count == 0
     assert report.disabled_leave_admins_count == 0
+    assert report.updated_employer_org_units_count == 0
 
 
 def test_fineos_la_org_units_leave_admin_disabled(
@@ -465,3 +470,4 @@ def test_fineos_la_org_units_leave_admin_disabled(
     assert report.missing_fineos_org_units_count == 0
     assert report.duplicate_leave_admins_count == 0
     assert report.duplicate_employer_count == 0
+    assert report.updated_employer_org_units_count == 0
