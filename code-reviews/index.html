@@ -13,7 +13,7 @@
     
     
       
-        <title>Github Teams and Code Owners - PFML</title>
+        <title>Code Reviews - PFML</title>
       
     
     
@@ -58,7 +58,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#github-teams-and-code-owners" class="md-skip">
+        <a href="#code-reviews" class="md-skip">
           Skip to content
         </a>
       
@@ -91,7 +91,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Github Teams and Code Owners
+              Code Reviews
             
           </span>
         </div>
@@ -229,6 +229,124 @@
 
   
   
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Code Reviews
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        Code Reviews
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#for-reviewers" class="md-nav__link">
+    For reviewers
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#for-authors-or-requesters" class="md-nav__link">
+    For authors or requesters
+  </a>
+  
+    <nav class="md-nav" aria-label="For authors or requesters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pr-titles" class="md-nav__link">
+    PR titles
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#draft-prs" class="md-nav__link">
+    Draft PRs
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#requesting-reviews-from-your-feature-team" class="md-nav__link">
+    Requesting reviews from your feature team
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#requesting-reviews-from-subject-matter-experts" class="md-nav__link">
+    Requesting reviews from subject matter experts
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#codeowners" class="md-nav__link">
+    Codeowners
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#re-requesting-reviews-after-completing-changes" class="md-nav__link">
+    Re-requesting reviews after completing changes
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#labels" class="md-nav__link">
+    Labels
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
   
     <li class="md-nav__item">
       <a href="../contributing/" class="md-nav__link">
@@ -264,82 +382,6 @@
       <a href="../deployment/" class="md-nav__link">
         Deployment
       </a>
-    </li>
-  
-
-    
-      
-      
-      
-
-  
-  
-    
-  
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          Github Teams and Code Owners
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
-        Github Teams and Code Owners
-      </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#code-owners" class="md-nav__link">
-    Code Owners
-  </a>
-  
-    <nav class="md-nav" aria-label="Code Owners">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#auto-assignment" class="md-nav__link">
-    Auto-Assignment
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#github-teams" class="md-nav__link">
-    Github Teams
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -1144,29 +1186,71 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#code-owners" class="md-nav__link">
-    Code Owners
+  <a href="#for-reviewers" class="md-nav__link">
+    For reviewers
   </a>
   
-    <nav class="md-nav" aria-label="Code Owners">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#for-authors-or-requesters" class="md-nav__link">
+    For authors or requesters
+  </a>
+  
+    <nav class="md-nav" aria-label="For authors or requesters">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#auto-assignment" class="md-nav__link">
-    Auto-Assignment
+  <a href="#pr-titles" class="md-nav__link">
+    PR titles
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#draft-prs" class="md-nav__link">
+    Draft PRs
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#requesting-reviews-from-your-feature-team" class="md-nav__link">
+    Requesting reviews from your feature team
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#requesting-reviews-from-subject-matter-experts" class="md-nav__link">
+    Requesting reviews from subject matter experts
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#codeowners" class="md-nav__link">
+    Codeowners
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#re-requesting-reviews-after-completing-changes" class="md-nav__link">
+    Re-requesting reviews after completing changes
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#labels" class="md-nav__link">
+    Labels
   </a>
   
 </li>
         
       </ul>
     </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#github-teams" class="md-nav__link">
-    Github Teams
-  </a>
   
 </li>
       
@@ -1182,41 +1266,102 @@
             <article class="md-content__inner md-typeset">
               
                 
-<a href="https://github.com/EOLWD/PFML/edit/master/docs/github-teams-and-codeowners.md" title="Edit this page" class="md-content__button md-icon">
+<a href="https://github.com/EOLWD/PFML/edit/master/docs/code-reviews.md" title="Edit this page" class="md-content__button md-icon">
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"/></svg>
 </a>
 
 
-<h1 id="github-teams-and-code-owners">Github Teams and Code Owners</h1>
-<h2 id="code-owners">Code Owners</h2>
-<p>Many parts of the code have owners, defined in the <a href="https://github.com/EOLWD/pfml/tree/main/.github/CODEOWNERS"><code>CODEOWNERS</code> file</a>.</p>
-<p>Code owners help to improve the quality of the code by:</p>
+<h1 id="code-reviews">Code Reviews</h1>
+<p>Code reviews are intended to help all of us grow as engineers and improve the quality of what we ship.
+These guidelines are meant to reinforce those two goals.</p>
+<h2 id="for-reviewers">For reviewers</h2>
+<p>Aim to respond to code reviews within 1 business day.</p>
+<p>Remember to highlight things that you like and appreciate while reading through the changes,
+and to make any other feedback clearly actionable by indicating if it is optional preference, an important consideration, or an error.</p>
+<p>Don't be afraid to comment with a question, or to ask for clarification, or provide a suggestion,
+whenever you don’t understand what is going on at first glance — or if you think an approach or decision can be improved.
+Code reviews give us a chance to learn from one another, and to reflect, iterate on, and document why certain decisions are made.</p>
+<p>Once you're ready to approve or request changes, err on the side of trust.
+Send a vote of approval if the PR looks ready except for small minor changes,
+and trust that the recipient will address your comments before merging by replying via comment or code to any asks.
+Use "request changes" sparingly, unless there's a blocking issue or major refactors that should be done.</p>
+<h2 id="for-authors-or-requesters">For authors or requesters</h2>
+<h3 id="pr-titles">PR titles</h3>
+<p>Include the JIRA ticket number in the title. For example: <code>PFML-123: Implement API endpoint</code>. A single JIRA ticket may be associated with multiple pull requests.</p>
+<div class="codehilite"><pre><span></span><code><span class="nv">Every</span> <span class="nv">change</span> <span class="nv">should</span> <span class="nv">have</span> <span class="nv">an</span> <span class="nv">associated</span> <span class="nv">JIRA</span> <span class="nv">ticket</span> <span class="nv">unless</span> <span class="nv">it</span> <span class="nv">is</span> <span class="nv">a</span> <span class="nv">documentation</span> <span class="nv">change</span>. <span class="nv">This</span> <span class="nv">makes</span> <span class="nv">it</span> <span class="nv">easier</span> <span class="nv">to</span> <span class="nv">search</span> <span class="k">for</span> <span class="nv">PRs</span> <span class="nv">and</span> <span class="nv">generates</span> <span class="nv">a</span> <span class="nv">link</span> <span class="nv">in</span> <span class="nv">the</span> <span class="nv">Jira</span> <span class="nv">ticket</span> <span class="nv">to</span> <span class="nv">the</span> <span class="nv">pull</span> <span class="nv">request</span>, <span class="nv">which</span> <span class="nv">provides</span> <span class="nv">the</span> <span class="nv">program</span> <span class="nv">with</span> <span class="nv">an</span> <span class="nv">audit</span> <span class="nv">trail</span> <span class="k">for</span> <span class="nv">verifying</span> <span class="nv">the</span> <span class="nv">relevant</span> <span class="nv">code</span> <span class="nv">changes</span>, <span class="nv">approvals</span>, <span class="nv">and</span> <span class="nv">test</span> <span class="nv">cases</span>.
+</code></pre></div>
+
 <ul>
-<li>Reviewing changes (see below)</li>
-<li>Encouraging consistency and maintainability</li>
-<li>Refactoring the code as it grows</li>
+<li>
+<p>For tickets that have subtasks, use the parent ticket's id in the title, and include the subtask in the PR description. </p>
+</li>
+<li>
+<p>If it is a documentation change, please prefix with docs: <code>docs: Clean up CONTRIBUTING.md</code>.</p>
+</li>
 </ul>
-<p>Normally each module or file has two or more owners that share these tasks.</p>
-<h3 id="auto-assignment">Auto-Assignment</h3>
-<p>Code owners will be automatically assigned for review when the relevant code paths are edited in a pull request.</p>
-<h2 id="github-teams">Github Teams</h2>
-<p>We use <a href="https://help.github.com/en/github/setting-up-and-managing-organizations-and-teams/organizing-members-into-teams">GitHub teams</a> to make it easier to request reviews and specify code owners.</p>
-<p>Teams exist for select disciplines:</p>
+<h3 id="draft-prs">Draft PRs</h3>
+<p>If your PR is a work-in-progress, or if you are looking for specific feedback on things,
+create a <a href="https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/about-pull-requests#draft-pull-requests">Draft Pull Request</a>
+and state what you are looking for in the description.</p>
+<p>Your PR should be small enough that a reviewer can reasonably respond within 1-2 business days.
+For larger changes, break them down into a series of PRs.
+If refactors are included in your changes, try to split them out as recommended below.</p>
+<p>As a PR writer, you should consider your description and comments as documentation;
+current and future team members will refer to it to understand your design decisions.
+Include relevant context and business requirements, and add preemptive comments (in code or PR)
+for sections of code that may be confusing or worth debate.</p>
+<h3 id="requesting-reviews-from-your-feature-team">Requesting reviews from your feature team</h3>
+<p>Assign the PR to be reviewed by people within your feature team if your changes are within the existing software architecture, uses existing patterns and tools, and you are confident that your changes follows the latest best practices. In this situation, your feature team is most likely to have the most context on the business requirements and whether your changes meets those requirements.</p>
+<p>Note that code review culture within each feature team may differ - Some teams are configured so that PR review requests are automatically assigned to a member of the team via a round robin algorithm, with the goal of equally distributing PR reviews across the team:
+- <a href="https://github.com/orgs/EOLWD/teams/pfml-acorn-street"><code>@pfml-acorn-street</code></a>
+- <a href="https://github.com/orgs/EOLWD/teams/pfml-beacon-hill"><code>@pfml-beacon-hill</code></a>
+- <a href="https://github.com/orgs/EOLWD/teams/pfml-dorchester"><code>@pfml-dorchester</code></a>
+- <a href="https://github.com/orgs/EOLWD/teams/pfml-newbury"><code>@pfml-newbury</code></a></p>
+<h3 id="requesting-reviews-from-subject-matter-experts">Requesting reviews from subject matter experts</h3>
+<p>If you are making changes that have complexity and may benefit from a pair of eyes with more familiarity with the particular area you are changing, assign the PR to be reviewed by the relevant GitHub team.</p>
+<p>Complexity can include:
+- Changes in complex and/or critical systems (payments, auth, integrations)
+- Changes that have non-functional success criteria that are hard to directly test (accessibility, architecture and security)
+- Changes that can potentially impact other features or other teams (infrastructure changes, changes to database schema / data model, tooling)
+- Changes in areas of the codebase that have inconsistent practices or are in the midst of a refactor involving introducing new best practices and deprecating legacy practices
+- Changes to core areas of the code that aren't changed very often (architecture, tooling)</p>
+<p>Reference the following list of teams when considering who you might want to review your PR.</p>
+<p><strong>Component teams</strong>
+- <a href="https://github.com/orgs/EOLWD/teams/pfml-payments">@pfml-payments</a> - Payments processing
+- <a href="https://github.com/orgs/EOLWD/teams/pfml-infra">@pfml-infra</a> - Infrastructure / Terraform
+- <a href="https://github.com/orgs/EOLWD/teams/pfml-application-validation">@pfml-application-validation</a> - Application validation
+- <a href="https://github.com/orgs/EOLWD/teams/pfml-database">@pfml-database</a> - Database
+- pfml-portal
+  - <a href="https://github.com/orgs/EOLWD/teams/pfml-portal-architecture">@pfml-portal-architecture</a> - Core portal software architecture like hooks and higher order components
+  - <a href="https://github.com/orgs/EOLWD/teams/pfml-portal-auth">@pfml-portal-auth</a> - Cognito authentication (including MFA)
+  - <a href="https://github.com/orgs/EOLWD/teams/pfml-portal-tools">@pfml-portal-tools</a> - Portal tooling – Jest, test utilities, storybook
+- pfml-api
+  - <a href="https://github.com/orgs/EOLWD/teams/pfml-api-architecture">@pfml-api-architecture</a> - Core backend software architecture like authorization
+  - <a href="https://github.com/orgs/EOLWD/teams/pfml-api-integrations">@pfml-api-integrations</a> - Other API integrations (RMV, Experian)
+    - <a href="https://github.com/orgs/EOLWD/teams/pfml-fineos-integrations">@pfml-fineos-integrations</a> - FINEOS API integrations, e-Forms
+  - <a href="https://github.com/orgs/EOLWD/teams/pfml-batch-processes">@pfml-batch-processes</a> - Backend ECS scripts
+    - <a href="https://github.com/orgs/EOLWD/teams/pfml-fineos-extracts">@pfml-fineos-extracts</a> - FINEOS extracts processing</p>
+<p><strong>Practice teams</strong></p>
 <ul>
-<li>API engineers: <a href="https://github.com/orgs/EOLWD/teams/pfml-api"><code>@pfml-api</code></a></li>
-<li>Portal engineers: <a href="https://github.com/orgs/EOLWD/teams/pfml-portal"><code>@pfml-portal</code></a></li>
-<li>Infra engineers: <a href="https://github.com/orgs/EOLWD/teams/pfml-infra"><code>@pfml-infra</code></a></li>
-<li>E2E engineers: <a href="https://github.com/orgs/EOLWD/teams/pfml-e2e"><code>@pfml-e2e</code></a></li>
+<li><a href="https://github.com/orgs/EOLWD/teams/pfml-accessibility">@pfml-accessibility</a> - Accessibility</li>
+<li><a href="https://github.com/orgs/EOLWD/teams/pfml-observability">@pfml-observability</a> - Monitoring and Logging</li>
+<li><a href="https://github.com/orgs/EOLWD/teams/pfml-portal-testing">@pfml-portal-testing</a> - Portal Testing</li>
+<li><a href="https://github.com/orgs/EOLWD/teams/pfml-api-testing">@pfml-api-testing</a> - Backend Testing</li>
 </ul>
-<p>Additionally, certain scrum teams have their own Github team:</p>
-<ul>
-<li><a href="https://github.com/orgs/EOLWD/teams/pfml-acorn-street"><code>@pfml-acorn-street</code></a></li>
-<li><a href="https://github.com/orgs/EOLWD/teams/pfml-beacon-hill"><code>@pfml-beacon-hill</code></a></li>
-<li><a href="https://github.com/orgs/EOLWD/teams/pfml-dorchester"><code>@pfml-dorchester</code></a></li>
-<li><a href="https://github.com/orgs/EOLWD/teams/pfml-newbury"><code>@pfml-newbury</code></a></li>
-</ul>
-<p>Some teams are configured so that PR review requests are automatically assigned to a member of the team via a round robin algorithm,
-with the goal of equally distributing PR reviews across the team.</p>
+<p>For a full list of teams, and to add yourself to any you're interested in, visit the <a href="https://github.com/orgs/EOLWD/teams/pfml/teams">PFML teams page in GitHub</a></p>
+<h3 id="codeowners">Codeowners</h3>
+<p>The GitHub <a href="https://github.com/EOLWD/pfml/tree/main/.github/CODEOWNERS"><code>CODEOWNERS</code> file</a> is used to protect sensitive parts of the codebase that have access to secrets stored within GitHub actions. This is a "Separation of Concerns" requirement by the LWD security team to prevent developers from being able to unilaterally make production changes.</p>
+<h3 id="re-requesting-reviews-after-completing-changes">Re-requesting reviews after completing changes</h3>
+<p>After you make requested changes in response to code review feedback, please re-request reviews from the reviewers to notify them that the work is ready to be reviewed again.</p>
+<h3 id="labels">Labels</h3>
+<p>Include a <a href="https://github.com/EOLWD/pfml/labels">GitHub label</a> if relevant.
+These labels can be a helpful wayfinding and context building tool, especially for new engineers onboarding into the codebase.</p>
+<div class="codehilite"><pre><span></span><code><span class="o">-</span><span class="w"> </span><span class="n">The</span><span class="w"> </span><span class="n n-Quoted">`architecture`</span><span class="w"> </span><span class="n">label</span><span class="w"> </span><span class="n">should</span><span class="w"> </span><span class="n">be</span><span class="w"> </span><span class="n">used</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">changes</span><span class="w"> </span><span class="k">to</span><span class="w"> </span><span class="n">abstractions</span><span class="w"> </span><span class="k">or</span><span class="w"> </span><span class="n">interfaces</span><span class="w"> </span><span class="n">that</span><span class="w"> </span><span class="n">usually</span><span class="w"> </span><span class="n">affect</span><span class="w"> </span><span class="n">multiple</span><span class="w"> </span><span class="n">existing</span><span class="w"> </span><span class="n">files</span><span class="p">.</span><span class="w"></span>
+
+<span class="o">-</span><span class="w"> </span><span class="n">The</span><span class="w"> </span><span class="n n-Quoted">`pattern`</span><span class="w"> </span><span class="n">label</span><span class="w"> </span><span class="n">should</span><span class="w"> </span><span class="n">be</span><span class="w"> </span><span class="n">used</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">structure</span><span class="w"> </span><span class="k">or</span><span class="w"> </span><span class="n">interface</span><span class="w"> </span><span class="n">that</span><span class="w"> </span><span class="n">will</span><span class="w"> </span><span class="n">be</span><span class="w"> </span><span class="n">reused</span><span class="w"> </span><span class="n">later</span><span class="p">.</span><span class="w"></span>
+
+<span class="o">-</span><span class="w"> </span><span class="n">The</span><span class="w"> </span><span class="n n-Quoted">`operations`</span><span class="w"> </span><span class="n">label</span><span class="w"> </span><span class="n">should</span><span class="w"> </span><span class="n">be</span><span class="w"> </span><span class="n">used</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">changes</span><span class="w"> </span><span class="k">to</span><span class="w"> </span><span class="n">engineering</span><span class="w"> </span><span class="n">operations</span><span class="p">,</span><span class="w"> </span><span class="n">such</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">dev</span><span class="w"> </span><span class="k">set</span><span class="o">-</span><span class="n">up</span><span class="w"> </span><span class="k">or</span><span class="w"> </span><span class="n">deployment</span><span class="p">.</span><span class="w"></span>
+</code></pre></div>
 
               
             </article>
@@ -1230,7 +1375,7 @@ with the goal of equally distributing PR reviews across the team.</p>
     <nav class="md-footer__inner md-grid" aria-label="Footer">
       
         
-        <a href="../deployment/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Deployment" rel="prev">
+        <a href="../archiving-code/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Process for Archiving Code" rel="prev">
           <div class="md-footer__button md-icon">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
           </div>
@@ -1239,20 +1384,20 @@ with the goal of equally distributing PR reviews across the team.</p>
               <span class="md-footer__direction">
                 Previous
               </span>
-              Deployment
+              Process for Archiving Code
             </div>
           </div>
         </a>
       
       
         
-        <a href="../test_fineos_from_local_setup/" class="md-footer__link md-footer__link--next" aria-label="Next: Test Fineos server from local setup" rel="next">
+        <a href="../contributing/" class="md-footer__link md-footer__link--next" aria-label="Next: Contributing" rel="next">
           <div class="md-footer__title">
             <div class="md-ellipsis">
               <span class="md-footer__direction">
                 Next
               </span>
-              Test Fineos server from local setup
+              Contributing
             </div>
           </div>
           <div class="md-footer__button md-icon">

@@ -229,6 +229,21 @@
 
   
   
+  
+    <li class="md-nav__item">
+      <a href="../code-reviews/" class="md-nav__link">
+        Code Reviews
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
     
   
   
@@ -282,26 +297,6 @@
   <a href="#code-reviews" class="md-nav__link">
     Code Reviews
   </a>
-  
-    <nav class="md-nav" aria-label="Code Reviews">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#for-authors-or-requesters" class="md-nav__link">
-    For authors or requesters:
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#for-reviewers" class="md-nav__link">
-    For reviewers:
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -372,21 +367,6 @@
     <li class="md-nav__item">
       <a href="../deployment/" class="md-nav__link">
         Deployment
-      </a>
-    </li>
-  
-
-    
-      
-      
-      
-
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../github-teams-and-codeowners/" class="md-nav__link">
-        Github Teams and Code Owners
       </a>
     </li>
   
@@ -1210,26 +1190,6 @@
     Code Reviews
   </a>
   
-    <nav class="md-nav" aria-label="Code Reviews">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#for-authors-or-requesters" class="md-nav__link">
-    For authors or requesters:
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#for-reviewers" class="md-nav__link">
-    For reviewers:
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
 </li>
       
         <li class="md-nav__item">
@@ -1324,63 +1284,7 @@ if your branch is being worked on by more than one person at a time, due to the 
 </li>
 </ul>
 <h2 id="code-reviews">Code Reviews</h2>
-<p>Code reviews are intended to help all of us grow as engineers and improve the quality of what we ship.
-These guidelines are meant to reinforce those two goals.</p>
-<h3 id="for-authors-or-requesters">For authors or requesters:</h3>
-<ul>
-<li>
-<p>Include the JIRA ticket number in the title. For example: <code>PFML-123: Implement API endpoint</code>. A single JIRA ticket may be associated with multiple pull requests.</p>
-<p>Every change should have an associated JIRA ticket unless it is a documentation change. This makes it easier to search for PRs and generates a link in the Jira ticket to the pull request, which provides the program with an audit trail for verifying the relevant code changes, approvals, and test cases.</p>
-</li>
-<li>
-<p>For tickets that have subtasks, use the parent ticket's id in the title, and include the subtask in the PR description. </p>
-</li>
-<li>
-<p>If it is a documentation change, please prefix with docs: <code>docs: Clean up CONTRIBUTING.md</code>.</p>
-</li>
-<li>
-<p>Include a <a href="https://github.com/EOLWD/pfml/labels">GitHub label</a> if relevant.
-These labels can be a helpful wayfinding and context building tool, especially for new engineers onboarding into the codebase.</p>
-<ul>
-<li>
-<p>The <code>architecture</code> label should be used for changes to abstractions or interfaces that usually affect multiple existing files.</p>
-</li>
-<li>
-<p>The <code>pattern</code> label should be used for a new structure or interface that will be reused later.</p>
-</li>
-<li>
-<p>The <code>operations</code> label should be used for changes to engineering operations, such as dev set-up or deployment.</p>
-</li>
-</ul>
-</li>
-<li>
-<p>If your PR is a work-in-progress, or if you are looking for specific feedback on things,
-create a <a href="https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/about-pull-requests#draft-pull-requests">Draft Pull Request</a>
-and state what you are looking for in the description.</p>
-</li>
-</ul>
-<p>Your PR should be small enough that a reviewer can reasonably respond within 1-2 business days.
-For larger changes, break them down into a series of PRs.
-If refactors are included in your changes, try to split them out as recommended below.</p>
-<p>As a PR writer, you should consider your description and comments as documentation;
-current and future team members will refer to it to understand your design decisions.
-Include relevant context and business requirements, and add preemptive comments (in code or PR)
-for sections of code that may be confusing or worth debate.</p>
-<p>When you're ready to request a review, consider including folks who are less familiar with that part of the codebase.
-This allows others to see what you're working on, along with your development/communication style and ways of working.</p>
-<p>You may also reference a specific team for review using the teams defined in <a href="../github-teams-and-codeowners/">Github Teams and Codeowners</a>.</p>
-<p>Once you've received feedback, acknowledge each comment with a response or code change.</p>
-<h3 id="for-reviewers">For reviewers:</h3>
-<p>Aim to respond to code reviews within 1 business day.</p>
-<p>Remember to highlight things that you like and appreciate while reading through the changes,
-and to make any other feedback clearly actionable by indicating if it is optional preference, an important consideration, or an error.</p>
-<p>Don't be afraid to comment with a question, or to ask for clarification, or provide a suggestion,
-whenever you don’t understand what is going on at first glance — or if you think an approach or decision can be improved.
-Code reviews give us a chance to learn from one another, and to reflect, iterate on, and document why certain decisions are made.</p>
-<p>Once you're ready to approve or request changes, err on the side of trust.
-Send a vote of approval if the PR looks ready except for small minor changes,
-and trust that the recipient will address your comments before merging by replying via comment or code to any asks.
-Use "request changes" sparingly, unless there's a blocking issue or major refactors that should be done.</p>
+<p>See <a href="./code-reviews">code reviews</a></p>
 <h2 id="merging-a-pr">Merging a PR</h2>
 <h3 id="how-to-merge">How to merge</h3>
 <p>When merging a PR, <em>use the PR description as a starting point</em>. Copy it into the merge commit body and clean it up as desired.</p>
@@ -1442,7 +1346,7 @@ To avoid these conflicts, any PR that alters the database <em>must</em> be updat
     <nav class="md-footer__inner md-grid" aria-label="Footer">
       
         
-        <a href="../archiving-code/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Process for Archiving Code" rel="prev">
+        <a href="../code-reviews/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Code Reviews" rel="prev">
           <div class="md-footer__button md-icon">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
           </div>
@@ -1451,7 +1355,7 @@ To avoid these conflicts, any PR that alters the database <em>must</em> be updat
               <span class="md-footer__direction">
                 Previous
               </span>
-              Process for Archiving Code
+              Code Reviews
             </div>
           </div>
         </a>
