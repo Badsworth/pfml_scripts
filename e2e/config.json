@@ -23,7 +23,8 @@
     "HAS_ORGUNITS_SETUP": "true",
     "MFA_ENABLED": "true",
     "HAS_FINEOS_JANUARY_RELEASE": "true",
-    "HAS_LARGE_FILE_COMPRESSION": "true"
+    "HAS_LARGE_FILE_COMPRESSION": "true",
+    "HAS_EMPLOYER_REIMBURSEMENTS": "true"
   },
   "stage": {
     "PORTAL_BASEURL": "https://paidleave-stage.mass.gov",
@@ -151,7 +152,8 @@
     "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "true",
     "HAS_ORGUNITS_SETUP": "false",
     "MFA_ENABLED": "false",
-    "HAS_LARGE_FILE_COMPRESSION": "false"
+    "HAS_LARGE_FILE_COMPRESSION": "false",
+    "HAS_EMPLOYER_REIMBURSEMENTS": "true"
   },
   "breakfix": {
     "PORTAL_BASEURL": "https://paidleave-breakfix.eol.mass.gov",

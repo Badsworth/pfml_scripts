@@ -128,9 +128,18 @@ export type OtherTasks =
   | "Review Appeal "
   | "Schedule Hearing"
   | "Send Decision Notice"
-  | "Conduct Hearing";
+  | "Conduct Hearing"
+  | "Employer Reimbursement"
+  | "SOM Autopay After Appeal Reminder"
+  | "DO NOT USE Autopay After Appeal Reminder"
+  | "Employer Reimbursement Adjustment"
+  | "Print and Mail Correspondence";
 /**Tasks avalable in fineos */
 export type FineosTasks = DocumentReviewTasks | ERTasks | OtherTasks;
+
+export type FineosCloseTaskStep =
+  | "Reimbursement Approved"
+  | "Reimbursement Denied";
 
 export type ClaimStatus =
   | "Adjudication"

@@ -73,7 +73,7 @@ describe("Approve claim created in Fineos, then check Tax Withholding deductions
         fineosPages.ClaimPage.visit(fineos_absence_id).paidLeave(
           (paidLeavePage) => {
             paidLeavePage.assertAmountsPending([
-              { net_payment_amount: 230.77 },
+              { net_payment_amount: 196.15 },
               { net_payment_amount: 23.08 },
               { net_payment_amount: 11.54 },
             ]);

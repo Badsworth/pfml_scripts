@@ -564,6 +564,30 @@ export const MED_LSDCR: ScenarioSpecification = {
   },
 };
 
+export const MED_ERRE: ScenarioSpecification = {
+  employee: {
+    wages: 30000,
+    mass_id: true,
+  },
+  claim: {
+    label: "MED_ERRE",
+    shortClaim: true,
+    reason: "Serious Health Condition - Employee",
+    leave_dates: [subWeeks(mostRecentSunday, 2), addWeeks(mostRecentSunday, 2)],
+    employerResponse: {
+      hours_worked_per_week: 40,
+      employer_decision: "Approve",
+      fraud: "No",
+      employer_benefits: [],
+    },
+    docs: {
+      HCP: {},
+      MASSID: {},
+    },
+    metadata: { expected_weekly_payment: "461.54" },
+  },
+};
+
 export const CARE_TAXES: ScenarioSpecification<CaringLeaveClaim> = {
   employee: { wages: 30000 },
   claim: {
