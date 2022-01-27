@@ -4,9 +4,9 @@ import { Submission } from "../../../../src/types";
 import * as faker from "faker";
 import { add, format } from "date-fns";
 
-describe("Create a new continuous leave, caring leave claim in FINEOS", () => {
+describe("Approve claim created in Fineos, then check Tax Withholding deductions (SIT/FIT)", () => {
   const fineosSubmission =
-    it("Creates and adjudicates a caring leave claim", () => {
+    it("Given a fully approved claim created in Fineos", () => {
       fineos.before();
       cy.task("generateClaim", "CARE_TAXES").then((claim) => {
         cy.stash("claim", claim);
@@ -65,21 +65,22 @@ describe("Create a new continuous leave, caring leave claim in FINEOS", () => {
       });
     });
 
-  const payments = it("Pending payments withhhold S/F taxes", () => {
-    cy.dependsOnPreviousPass([fineosSubmission]);
-    fineos.before();
-    cy.unstash<Submission>("submission").then(({ fineos_absence_id }) => {
-      fineosPages.ClaimPage.visit(fineos_absence_id).paidLeave(
-        (paidLeavePage) => {
-          paidLeavePage.assertAmountsPending([
-            { net_payment_amount: 230.77 },
-            { net_payment_amount: 23.08 },
-            { net_payment_amount: 11.54 },
-          ]);
-        }
-      );
+  const payments =
+    it("Should calculate the proper withholding amounts for SIT/FIT", () => {
+      cy.dependsOnPreviousPass([fineosSubmission]);
+      fineos.before();
+      cy.unstash<Submission>("submission").then(({ fineos_absence_id }) => {
+        fineosPages.ClaimPage.visit(fineos_absence_id).paidLeave(
+          (paidLeavePage) => {
+            paidLeavePage.assertAmountsPending([
+              { net_payment_amount: 230.77 },
+              { net_payment_amount: 23.08 },
+              { net_payment_amount: 11.54 },
+            ]);
+          }
+        );
+      });
     });
-  });
 
   it("SIT/FIT opt-in cannot be modified once payments are generated", () => {
     cy.dependsOnPreviousPass([payments]);
