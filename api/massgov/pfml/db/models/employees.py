@@ -1083,6 +1083,7 @@ class Payment(Base, TimestampMixin):
         Boolean, default=False, server_default="FALSE", nullable=False
     )
 
+    fineos_leave_request_id = Column(Integer, index=True)
     fineos_employee_first_name = Column(Text)
     fineos_employee_middle_name = Column(Text)
     fineos_employee_last_name = Column(Text)

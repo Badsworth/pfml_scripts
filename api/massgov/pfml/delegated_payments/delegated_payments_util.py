@@ -47,6 +47,7 @@ from massgov.pfml.db.models.payments import (
     FineosExtractVpeiPaymentDetails,
     PaymentLog,
 )
+from massgov.pfml.util.converters.str_to_numeric import str_to_int
 from massgov.pfml.util.csv import CSVSourceWrapper
 from massgov.pfml.util.datetime import get_now_us_eastern
 from massgov.pfml.util.routing_number_validation import validate_routing_number
@@ -602,6 +603,13 @@ def routing_number_validator(routing_number: str) -> Optional[ValidationReason]:
     if not validate_routing_number(routing_number):
         return ValidationReason.ROUTING_NUMBER_FAILS_CHECKSUM
 
+    return None
+
+
+def leave_request_id_validator(leave_request_id: str,) -> Optional[ValidationReason]:
+    parsed_leave_request_id = str_to_int(leave_request_id)
+    if parsed_leave_request_id is None:
+        return ValidationReason.INVALID_TYPE
     return None
 
 

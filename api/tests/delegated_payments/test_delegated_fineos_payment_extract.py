@@ -48,6 +48,7 @@ from massgov.pfml.delegated_payments.delegated_payments_util import (
 )
 from massgov.pfml.delegated_payments.mock.delegated_payments_factory import DelegatedPaymentFactory
 from massgov.pfml.delegated_payments.mock.fineos_extract_data import FineosPaymentData
+from massgov.pfml.util.converters.str_to_numeric import str_to_int
 
 EXPECTED_OUTCOME = {"message": "Success"}
 
@@ -345,6 +346,8 @@ def test_run_step_happy_path(
         employee = claim.employee
         assert employee
 
+        assert payment.fineos_leave_request_id is not None
+        assert payment.fineos_leave_request_id == str_to_int(payment_data.leave_request_id)
         assert payment.fineos_employee_first_name == employee.fineos_employee_first_name
         assert payment.fineos_employee_middle_name == employee.fineos_employee_middle_name
         assert payment.fineos_employee_last_name == employee.fineos_employee_last_name

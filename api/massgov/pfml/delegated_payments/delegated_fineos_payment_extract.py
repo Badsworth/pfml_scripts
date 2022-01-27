@@ -49,6 +49,7 @@ from massgov.pfml.delegated_payments.step import Step
 from massgov.pfml.delegated_payments.util.fineos_writeback_util import (
     stage_payment_fineos_writeback,
 )
+from massgov.pfml.util.converters.str_to_numeric import str_to_int
 from massgov.pfml.util.datetime import get_now_us_eastern
 
 logger = logging.get_logger(__name__)
@@ -395,8 +396,13 @@ class PaymentData:
         self.absence_case_number = payments_util.validate_db_input(
             "ABSENCECASENU", claim_details, self.validation_container, self.is_standard_payment
         )
+
         self.leave_request_id = payments_util.validate_db_input(
-            "LEAVEREQUESTI", claim_details, self.validation_container, self.is_standard_payment
+            "LEAVEREQUESTI",
+            claim_details,
+            self.validation_container,
+            self.is_standard_payment,
+            custom_validator_func=payments_util.leave_request_id_validator,
         )
 
         if requested_absence:
@@ -794,7 +800,7 @@ class PaymentExtractStep(Step):
             payment_data.get_payment_message_str(),
             extra=payment_data.get_traceable_details(),
         )
-        payment = Payment(payment_id=uuid.uuid4(), vpei_id=payment_data.pei_record.vpei_id)
+        payment = Payment(payment_id=uuid.uuid4(), vpei_id=payment_data.pei_record.vpei_id,)
 
         # set the payment method
         if payment_data.raw_payment_method:
@@ -802,6 +808,8 @@ class PaymentExtractStep(Step):
 
         # Note that these values may have validation issues and not be set
         # that is fine as it will get moved to an error state
+        if payment_data.leave_request_id:
+            payment.fineos_leave_request_id = str_to_int(payment_data.leave_request_id)
         if claim:
             payment.claim = claim
         if employee:
