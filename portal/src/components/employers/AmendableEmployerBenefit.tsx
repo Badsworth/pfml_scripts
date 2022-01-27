@@ -5,6 +5,7 @@ import EmployerBenefit, {
 import React, { useRef, useState } from "react";
 import AmendButton from "./AmendButton";
 import AmendmentForm from "./AmendmentForm";
+import AppErrorInfo from "../../models/AppErrorInfo";
 import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
 import ConditionalContent from "../ConditionalContent";
 import Dropdown from "../core/Dropdown";
@@ -57,7 +58,7 @@ const AmendableEmployerBenefit = ({
     `employer_benefits[${amendment.employer_benefit_id}].${field}`;
 
   const getErrorMessage = (field: string) =>
-    appErrors.fieldErrorMessage(getFieldPath(field));
+    AppErrorInfo.fieldErrorMessage(appErrors.items, getFieldPath(field));
 
   /**
    * Update amendment state and sends to `review.js` (dates, dollars, frequency)

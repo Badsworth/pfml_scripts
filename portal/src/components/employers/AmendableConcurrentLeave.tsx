@@ -1,6 +1,7 @@
 import React, { useRef, useState } from "react";
 import AmendButton from "./AmendButton";
 import AmendmentForm from "./AmendmentForm";
+import AppErrorInfo from "../../models/AppErrorInfo";
 import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
 import ConcurrentLeave from "../../models/ConcurrentLeave";
 import ConditionalContent from "../ConditionalContent";
@@ -62,10 +63,12 @@ const AmendableConcurrentLeave = ({
     onChange({ [field]: formattedValue }, formStateField);
   };
 
-  const startDateErrMsg = appErrors.fieldErrorMessage(
+  const startDateErrMsg = AppErrorInfo.fieldErrorMessage(
+    appErrors.items,
     `concurrent_leave.leave_start_date`
   );
-  const leaveDateErrMsg = appErrors.fieldErrorMessage(
+  const leaveDateErrMsg = AppErrorInfo.fieldErrorMessage(
+    appErrors.items,
     `concurrent_leave.leave_end_date`
   );
 

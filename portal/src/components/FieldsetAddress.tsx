@@ -1,3 +1,4 @@
+import AppErrorInfo from "../models/AppErrorInfo";
 import AppErrorInfoCollection from "../models/AppErrorInfoCollection";
 import Fieldset from "./core/Fieldset";
 import FormLabel from "./core/FormLabel";
@@ -70,7 +71,10 @@ const FieldsetAddress = ({
 
       <InputText
         autoComplete="address-line1"
-        errorMsg={appErrors.fieldErrorMessage(`${name}.line_1`)}
+        errorMsg={AppErrorInfo.fieldErrorMessage(
+          appErrors.items,
+          `${name}.line_1`
+        )}
         label={line1Label}
         name={`${name}.line_1`}
         onChange={onChange}
@@ -80,7 +84,10 @@ const FieldsetAddress = ({
 
       <InputText
         autoComplete="address-line2"
-        errorMsg={appErrors.fieldErrorMessage(`${name}.line_2`)}
+        errorMsg={AppErrorInfo.fieldErrorMessage(
+          appErrors.items,
+          `${name}.line_2`
+        )}
         label={line2Label}
         name={`${name}.line_2`}
         onChange={onChange}
@@ -91,7 +98,10 @@ const FieldsetAddress = ({
 
       <InputText
         autoComplete="address-level2"
-        errorMsg={appErrors.fieldErrorMessage(`${name}.city`)}
+        errorMsg={AppErrorInfo.fieldErrorMessage(
+          appErrors.items,
+          `${name}.city`
+        )}
         label={t("components.fieldsetAddress.cityLabel")}
         name={`${name}.city`}
         onChange={onChange}
@@ -101,7 +111,10 @@ const FieldsetAddress = ({
 
       <StateDropdown
         emptyChoiceLabel={t("components.dropdown.emptyChoiceLabel")}
-        errorMsg={appErrors.fieldErrorMessage(`${name}.state`)}
+        errorMsg={AppErrorInfo.fieldErrorMessage(
+          appErrors.items,
+          `${name}.state`
+        )}
         label={t("components.fieldsetAddress.stateLabel")}
         name={`${name}.state`}
         onChange={onChange}
@@ -111,7 +124,10 @@ const FieldsetAddress = ({
 
       <InputText
         autoComplete="postal-code"
-        errorMsg={appErrors.fieldErrorMessage(`${name}.zip`)}
+        errorMsg={AppErrorInfo.fieldErrorMessage(
+          appErrors.items,
+          `${name}.zip`
+        )}
         inputMode="numeric"
         label={t("components.fieldsetAddress.zipLabel")}
         mask="zip"

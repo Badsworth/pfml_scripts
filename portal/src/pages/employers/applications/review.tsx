@@ -14,6 +14,7 @@ import withEmployerClaim, {
 } from "../../../hoc/withEmployerClaim";
 
 import Alert from "../../../components/core/Alert";
+import AppErrorInfo from "../../../models/AppErrorInfo";
 import BackButton from "../../../components/BackButton";
 import Button from "../../../components/core/Button";
 import CaringLeaveQuestion from "src/components/employers/CaringLeaveQuestion";
@@ -483,7 +484,8 @@ export const Review = (props: WithEmployerClaimProps) => {
 
         {isCaringLeave && (
           <CaringLeaveQuestion
-            errorMsg={appErrors.fieldErrorMessage(
+            errorMsg={AppErrorInfo.fieldErrorMessage(
+              appErrors.items,
               "relationship_inaccurate_reason"
             )}
             believeRelationshipAccurate={formState.believeRelationshipAccurate}

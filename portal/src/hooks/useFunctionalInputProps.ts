@@ -1,3 +1,4 @@
+import AppErrorInfo from "../models/AppErrorInfo";
 import AppErrorInfoCollection from "../models/AppErrorInfoCollection";
 import { FormState } from "./useFormState";
 import { get } from "lodash";
@@ -23,7 +24,7 @@ function useFunctionalInputProps({
     config: { fallbackValue: unknown } = { fallbackValue: "" }
   ) {
     const errorMsg = appErrors
-      ? appErrors.fieldErrorMessage(fieldName)
+      ? AppErrorInfo.fieldErrorMessage(appErrors.items, fieldName)
       : undefined;
     const value = get(formState, fieldName);
 

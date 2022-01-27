@@ -5,6 +5,7 @@ import PreviousLeave, {
 import React, { useRef, useState } from "react";
 import AmendButton from "./AmendButton";
 import AmendmentForm from "./AmendmentForm";
+import AppErrorInfo from "../../models/AppErrorInfo";
 import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
 import ConditionalContent from "../ConditionalContent";
 import Heading from "../core/Heading";
@@ -52,7 +53,7 @@ const AmendablePreviousLeave = ({
     `previous_leaves[${amendment.previous_leave_id}].${field}`;
 
   const getErrorMessage = (field: string) =>
-    appErrors.fieldErrorMessage(getFieldPath(field));
+    AppErrorInfo.fieldErrorMessage(appErrors.items, getFieldPath(field));
 
   const getFormattedValue = (field: string, value: string) => {
     if (field === "leave_start_date" || field === "leave_end_date") {

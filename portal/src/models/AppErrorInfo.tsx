@@ -1,3 +1,4 @@
+import React from "react";
 import { uniqueId } from "lodash";
 
 /**
@@ -21,6 +22,29 @@ class AppErrorInfo {
 
   constructor(attrs: Partial<AppErrorInfo>) {
     Object.assign(this, attrs);
+  }
+
+  /**
+   * Get a human readable error message for the given field, if an associated error exists.
+   * @param errors - All errors, including those not associated with the given field
+   * @param field - The field to get the error message(s) for
+   */
+  static fieldErrorMessage(errors: AppErrorInfo[], field: string) {
+    if (!errors.length) return null;
+
+    const fieldErrors = errors.filter((error) => error.field === field);
+
+    if (!fieldErrors.length) {
+      return null;
+    }
+
+    // Combine all errors for this field into a single message to be rendered
+    return fieldErrors.map((error, i) => (
+      <React.Fragment key={error.key}>
+        {error.message}
+        {i < fieldErrors.length - 1 && " "}
+      </React.Fragment>
+    ));
   }
 }
 
