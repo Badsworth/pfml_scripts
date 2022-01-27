@@ -140,6 +140,16 @@ data "aws_iam_policy_document" "api_service" {
       var.rmv_client_certificate_binary_arn,
     ]
   }
+  # For sending emails to users, eg notifications for when MFA has been disabled
+  statement {
+    effect = "Allow"
+    actions = [
+      "ses:SendTemplatedEmail",
+    ]
+    resources = [
+      "arn:aws:ses:us-east-1:498823821309:identity/PFML_DoNotReply@eol.mass.gov",
+    ]
+  }
 
   # Conditionally add permissions to talk to Cognito if its been
   # configured. We may not have one yet if we're starting up a new environment.
