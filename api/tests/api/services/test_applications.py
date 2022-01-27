@@ -3,6 +3,7 @@ import pytest
 
 import massgov
 from massgov.pfml.api.services.applications import (
+    set_customer_contact_detail_fields,
     set_customer_detail_fields,
     set_payment_preference_fields,
 )
@@ -203,3 +204,64 @@ def test_set_payment_preference_fields_without_address(
     set_payment_preference_fields(fineos_client, fineos_web_id, application, test_db_session)
     assert application.has_mailing_address is False
     assert application.mailing_address is None
+
+
+@mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.read_customer_contact_details")
+def test_set_customer_contact_detail_fields(
+    mock_read_customer_contact_details, fineos_client, fineos_web_id, application, test_db_session
+):
+    customer_contact_details_json = massgov.pfml.fineos.mock_client.mock_customer_contact_details()
+    customer_contact_details = massgov.pfml.fineos.models.customer_api.ContactDetails.parse_obj(
+        customer_contact_details_json
+    )
+    mock_read_customer_contact_details.return_value = customer_contact_details
+    set_customer_contact_detail_fields(fineos_client, fineos_web_id, application, test_db_session)
+
+    # This also asserts that the preferred phone number gets returned in this case
+    # since the phone number being set is the 2nd element in the phoneNumbers array
+    assert application.phone.phone_number == "+13214567890"
+    assert application.phone_id == application.phone.phone_id
+
+
+@mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.read_customer_contact_details")
+def test_set_customer_contact_detail_fields_with_invalid_phone_number(
+    mock_read_customer_contact_details, fineos_client, fineos_web_id, application, test_db_session
+):
+    customer_contact_details_json = massgov.pfml.fineos.mock_client.mock_customer_contact_details()
+    customer_contact_details = massgov.pfml.fineos.models.customer_api.ContactDetails.parse_obj(
+        customer_contact_details_json
+    )
+    # Reset phone fields that get auto generated from the application factory
+    application.phone_id = None
+    application.phone = None
+    customer_contact_details.phoneNumbers = None
+
+    mock_read_customer_contact_details.return_value = customer_contact_details
+    set_customer_contact_detail_fields(fineos_client, fineos_web_id, application, test_db_session)
+    assert application.phone is None
+    assert application.phone_id is None
+
+
+@mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.read_customer_contact_details")
+def test_set_customer_contact_detail_fields_with_no_contact_details_returned_from_fineos(
+    mock_read_customer_contact_details, fineos_client, fineos_web_id, application, test_db_session
+):
+    # Reset phone fields that get auto generated from the application factory
+    application.phone_id = None
+    application.phone = None
+
+    # Checks to assert that if FINEOS returns no data, we don't update the applications phone record
+    mock_read_customer_contact_details.return_value = None
+    set_customer_contact_detail_fields(fineos_client, fineos_web_id, application, test_db_session)
+    assert application.phone is None
+    assert application.phone_id is None
+
+    # Checks to assert that if FINEOS returns contact details, but no phone numbers,
+    # we don't update the application phone record
+    customer_contact_details_json = massgov.pfml.fineos.mock_client.mock_customer_contact_details()
+    customer_contact_details = massgov.pfml.fineos.models.customer_api.ContactDetails.parse_obj(
+        customer_contact_details_json
+    )
+    customer_contact_details.phoneNumbers = None
+    mock_read_customer_contact_details.return_value = customer_contact_details
+    set_customer_contact_detail_fields(fineos_client, fineos_web_id, application, test_db_session)

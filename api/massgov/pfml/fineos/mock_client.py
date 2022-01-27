@@ -246,6 +246,36 @@ def mock_customer_details():
     }
 
 
+def mock_customer_contact_details():
+    # Mocks FINEOS response for customer contact details
+    # This includes all of the FINEOS fields from this endpoint
+    return {
+        "phoneNumbers": [
+            {
+                "id": 0,
+                "preferred": False,
+                "phoneNumberType": "Cell",
+                "intCode": "1",
+                "areaCode": "123",
+                "telephoneNo": "4567890",
+            },
+            {
+                "id": 1,
+                "preferred": True,
+                "phoneNumberType": "Cell",
+                "intCode": "1",
+                "areaCode": "321",
+                "telephoneNo": "4567890",
+            },
+        ],
+        "emailAddresses": [
+            {"id": 0, "preferred": False, "emailAddress": "testemail1@test.com"},
+            {"id": 1, "preferred": True, "emailAddress": "testemail2@test.com"},
+        ],
+        "preferredContactMethod": 1,
+    }
+
+
 class MockFINEOSClient(client.AbstractFINEOSClient):
     """Mock FINEOS API client that returns fake responses."""
 

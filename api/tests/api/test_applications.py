@@ -582,6 +582,38 @@ class TestApplicationsImport:
 
         assert imported_application.has_submitted_payment_preference is False
 
+    @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.read_customer_contact_details")
+    def test_applications_import_has_customer_contact_details(
+        self,
+        mock_read_customer_contact_details,
+        client,
+        test_db_session,
+        auth_token,
+        claim,
+        valid_request_body,
+    ):
+        customer_contact_details_json = (
+            massgov.pfml.fineos.mock_client.mock_customer_contact_details()
+        )
+        customer_contact_details = massgov.pfml.fineos.models.customer_api.ContactDetails.parse_obj(
+            customer_contact_details_json
+        )
+
+        mock_read_customer_contact_details.return_value = customer_contact_details
+
+        client.post(
+            "/v1/applications/import",
+            headers={"Authorization": f"Bearer {auth_token}"},
+            json=valid_request_body,
+        )
+
+        imported_application = (
+            test_db_session.query(Application).filter(Application.claim_id == claim.claim_id).one()
+        )
+
+        assert imported_application.phone.phone_number == "+13214567890"
+        assert imported_application.phone.phone_type_id == 1
+
 
 def test_applications_post_start_app(client, user, auth_token, test_db_session):
     response = client.post("/v1/applications", headers={"Authorization": f"Bearer {auth_token}"})

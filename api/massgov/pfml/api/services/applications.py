@@ -42,6 +42,7 @@ from massgov.pfml.db.models.applications import (
     EmployerBenefitType,
     EmploymentStatus,
     IntermittentLeavePeriod,
+    LkPhoneType,
     OtherIncome,
     OtherIncomeType,
     Phone,
@@ -1078,3 +1079,60 @@ def set_payment_preference_fields(
         add_or_update_address(db_session, address_to_create, AddressType.MAILING, application)
         has_mailing_address = True
     application.has_mailing_address = has_mailing_address
+
+
+def set_customer_contact_detail_fields(
+    fineos: massgov.pfml.fineos.AbstractFINEOSClient,
+    fineos_web_id: str,
+    application: Application,
+    db_session: db.Session,
+) -> None:
+    """
+    Retrieves customer contact details from FINEOS, creates a new phone record,
+    and associates the phone record with the application being imported
+    """
+    contact_details = fineos.read_customer_contact_details(fineos_web_id)
+
+    if not contact_details or not contact_details.phoneNumbers:
+        logger.info("No contact details returned from FINEOS")
+        return
+
+    phone_number_from_fineos = next(
+        (phone_num for phone_num in contact_details.phoneNumbers if phone_num.preferred),
+        contact_details.phoneNumbers[0],
+    )
+
+    # Handles the potential case of a phone number list existing, but phone fields are null
+    if not (
+        phone_number_from_fineos.intCode
+        or phone_number_from_fineos.areaCode
+        or phone_number_from_fineos.telephoneNo
+    ):
+        logger.info(
+            "Field missing from FINEOS phoneNumber list",
+            extra={"phoneNumbers": str(phone_number_from_fineos)},
+        )
+        return
+
+    db_phone = (
+        db_session.query(LkPhoneType)
+        .filter(LkPhoneType.phone_type_description == phone_number_from_fineos.phoneNumberType)
+        .one_or_none()
+    )
+
+    if not db_phone:
+        logger.info("Unable to find phone_type")
+        return
+
+    phone_number = str(phone_number_from_fineos.areaCode) + str(
+        phone_number_from_fineos.telephoneNo
+    )
+    # Creating common_io.Phone object in order to re-use add_or_update_phone helper method
+    phone_to_create = common_io.Phone(
+        int_code=phone_number_from_fineos.intCode,
+        phone_number=phone_number,
+        phone_type=db_phone.phone_type_description,
+        fineos_phone_id=phone_number_from_fineos.id,
+    )
+
+    add_or_update_phone(db_session, phone_to_create, application)
