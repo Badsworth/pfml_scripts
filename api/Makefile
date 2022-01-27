@@ -178,6 +178,12 @@ fineos-eligibility-feed-export: ## Run an eligibility feed export
 dua-import-employee-demographics:
 	$(PY_RUN_CMD) dua-import-employee-demographics $(args) $(DECODE_LOG)
 
+dua-import-employer:
+	$(PY_RUN_CMD) dua-import-employer $(args) $(DECODE_LOG)
+
+dua-import-employer-unit:
+	$(PY_RUN_CMD) dua-import-employer-unit $(args) $(DECODE_LOG)
+
 dua-generate-and-send-employee-request-file:
 	$(PY_RUN_CMD) dua-generate-and-send-employee-request-file $(args) $(DECODE_LOG)
 

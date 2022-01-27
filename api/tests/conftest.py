@@ -465,6 +465,30 @@ def mock_s3_bucket(mock_s3_bucket_resource):
 
 
 @pytest.fixture
+def mock_sftp_paths(monkeypatch):
+    source_directory_path = "dua/pending"
+    archive_directory_path = "dua/archive"
+    moveit_pickup_path = "upload/DFML/DUA/Inbound"
+
+    monkeypatch.setenv("DUA_TRANSFER_BASE_PATH", "local_s3/agency_transfer")
+    monkeypatch.setenv("OUTBOUND_DIRECTORY_PATH", source_directory_path)
+    monkeypatch.setenv("ARCHIVE_DIRECTORY_PATH", archive_directory_path)
+    monkeypatch.setenv("MOVEIT_SFTP_URI", "sftp://foo@bar.com")
+    monkeypatch.setenv("MOVEIT_SSH_KEY", "foo")
+
+    pending_directory = f"local_s3/agency_transfer/{source_directory_path}"
+    archive_directory = f"local_s3/agency_transfer/{archive_directory_path}"
+
+    paths = {
+        "pending_directory": pending_directory,
+        "archive_directory": archive_directory,
+        "moveit_pickup_path": moveit_pickup_path,
+    }
+
+    return paths
+
+
+@pytest.fixture
 def mock_sftp_client():
     class MockSftpClient:
         calls = []

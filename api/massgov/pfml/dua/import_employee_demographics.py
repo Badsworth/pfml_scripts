@@ -42,7 +42,8 @@ class Configuration:
             "--import-mode",
             choices=IMPORT_MODE_ALLOWED_VALUES,
             default=FILE,
-            help="Indicate which mode to process: MOVEIT scans MOVEit, FILE takes a direct path. FILE must be accompanies by --file arg",
+            help="Indicate which mode to process: MOVEIT scans MOVEit, FILE takes a direct path. FILE must be "
+            "accompanies by --file arg",
         )
 
         parser.add_argument(
@@ -52,7 +53,8 @@ class Configuration:
 
         parser.add_argument(
             "--start-date",
-            help="Specifies a start date when set-org-unit-id is run. Must be in ISO-8601 format. If not set, start time of run will be used if also importing a file, otherwise will process all records.",
+            help="Specifies a start date when set-org-unit-id is run. Must be in ISO-8601 format. If not set, "
+            "start time of run will be used if also importing a file, otherwise will process all records.",
         )
 
         parser.add_argument(
