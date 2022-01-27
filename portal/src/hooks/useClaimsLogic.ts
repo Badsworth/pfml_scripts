@@ -118,8 +118,7 @@ const useClaimsLogic = ({
     if (isLoadingClaimDetail) return;
 
     const shouldPaymentsLoad =
-      (isFeatureEnabled("claimantShowPayments") ||
-        isFeatureEnabled("claimantShowPaymentsPhaseTwo")) &&
+      isFeatureEnabled("claimantShowPaymentsPhaseTwo") &&
       claimDetail?.hasApprovedStatus &&
       portalFlow.pageRoute === "/applications/status/payments" &&
       !hasLoadedPayments(absenceId);

@@ -30,9 +30,6 @@ const flagsConfig = {
     // When this flag is false, you can bypass the deparment capture form when applying
     claimantShowOrganizationUnits: false,
 
-    // When this flag is enabled, the claim payments section for claimants will show
-    claimantShowPayments: false,
-
     // When this flag is enabled payment status phase two work will be displayed.
     claimantShowPaymentsPhaseTwo: true,
 

@@ -58,12 +58,6 @@ export const Payments = ({
 
   const hasPaidPayments = claimDetail?.has_paid_payments;
 
-  // Determines if phase one payment features are displayed
-  const showPhaseOneFeatures =
-    isFeatureEnabled("claimantShowPayments") &&
-    claimDetail?.hasApprovedStatus &&
-    hasPaidPayments;
-
   // Determines if phase two payment features are displayed
   const showPhaseTwoFeatures =
     isFeatureEnabled("claimantShowPaymentsPhaseTwo") &&
@@ -90,11 +84,7 @@ export const Payments = ({
       !hasLoadedPayments(absenceId) ||
       (loadedPaymentsData?.absence_case_id &&
         Boolean(claimDetail?.payments.length === 0));
-    if (
-      claimDetail &&
-      ((!showPhaseOneFeatures && !showPhaseTwoFeatures) ||
-        !approvalNotice?.created_at)
-    ) {
+    if (claimDetail && (!showPhaseTwoFeatures || !approvalNotice?.created_at)) {
       portalFlow.goTo(routes.applications.status.claim, {
         absence_id,
       });

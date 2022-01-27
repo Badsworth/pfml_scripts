@@ -112,44 +112,13 @@ const props = {
 };
 
 describe("Status", () => {
-  it("shows StatusNavigationTabs if claimantShowPayments feature flag is enabled and claim has_paid_payments and approval notice ", () => {
-    process.env.featureFlags = JSON.stringify({
-      claimantShowPayments: true,
-    });
-
-    renderPage(
-      Status,
-      {
-        addCustomSetup: setupHelper(
-          {
-            ...defaultClaimDetail,
-            has_paid_payments: true,
-            absence_periods: [
-              createAbsencePeriod({
-                period_type: "Reduced Schedule",
-                reason: LeaveReason.bonding,
-                request_decision: "Approved",
-                reason_qualifier_one: "Newborn",
-              }),
-            ],
-          },
-          [DOCUMENTS[4]]
-        ),
-      },
-      props
-    );
-
-    expect(screen.getByRole("link", { name: "Payments" })).toBeInTheDocument();
-    expect(
-      screen.getByRole("link", { name: "Application" })
-    ).toBeInTheDocument();
-  });
-
-  it("does not show StatusNavigationTabs if claimantShowPaymentsPhaseTwo feature flag is enabled and claim loaded without approval notice", () => {
+  beforeEach(() => {
     process.env.featureFlags = JSON.stringify({
       claimantShowPaymentsPhaseTwo: true,
     });
+  });
 
+  it("does not show StatusNavigationTabs if claimantShowPaymentsPhaseTwo feature flag is enabled and claim loaded without approval notice", () => {
     renderPage(
       Status,
       {
@@ -174,33 +143,9 @@ describe("Status", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("does not show StatusNavigationTabs if claimantShowPayments feature flag is disabled", () => {
-    renderPage(
-      Status,
-      {
-        addCustomSetup: setupHelper({
-          ...defaultClaimDetail,
-          absence_periods: [
-            createAbsencePeriod({
-              period_type: "Reduced Schedule",
-              reason: LeaveReason.bonding,
-              request_decision: "Approved",
-              reason_qualifier_one: "Newborn",
-            }),
-          ],
-        }),
-      },
-      props
-    );
-
-    expect(
-      screen.queryByRole("link", { name: "Payments" })
-    ).not.toBeInTheDocument();
-  });
-
-  it("does not show StatusNavigationTabs if has_paid_payments is false for claim", () => {
+  it("does not show StatusNavigationTabs if claimantShowPaymentsPhaseTwo feature flag is disabled", () => {
     process.env.featureFlags = JSON.stringify({
-      claimantShowPayments: true,
+      claimantShowPaymentsPhaseTwo: false,
     });
     renderPage(
       Status,

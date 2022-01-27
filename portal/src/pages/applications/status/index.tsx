@@ -239,18 +239,11 @@ export const Status = ({
   const [firstAbsenceDetail] = Object.keys(absenceDetails);
 
   // Determines if phase two payment features are displayed
-  const showPhaseOneFeatures =
-    isFeatureEnabled("claimantShowPayments") &&
-    hasApprovedStatus &&
-    claimDetail.has_paid_payments;
-
-  // Determines if phase two payment features are displayed
   const showPhaseTwoFeatures =
     isFeatureEnabled("claimantShowPaymentsPhaseTwo") && hasApprovedStatus;
 
   // Determines if payment tab is displayed
-  const isPaymentsTab =
-    Boolean(approvalNotice) && (showPhaseOneFeatures || showPhaseTwoFeatures);
+  const isPaymentsTab = Boolean(approvalNotice) && showPhaseTwoFeatures;
 
   return (
     <React.Fragment>

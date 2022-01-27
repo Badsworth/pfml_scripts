@@ -104,7 +104,6 @@ const props = {
 describe("Payments", () => {
   it("redirects to status page if feature flag is not enabled and claim has loaded", () => {
     process.env.featureFlags = JSON.stringify({
-      claimantShowPayments: false,
       claimantShowPaymentsPhaseTwo: false,
     });
 
@@ -125,7 +124,6 @@ describe("Payments", () => {
 
   it("redirects to status page if claim does not have an approval notice", () => {
     process.env.featureFlags = JSON.stringify({
-      claimantShowPayments: false,
       claimantShowPaymentsPhaseTwo: false,
     });
 
@@ -435,7 +433,6 @@ describe("Payments", () => {
   describe("Phase 2 Checkback date implementation", () => {
     beforeEach(() => {
       process.env.featureFlags = JSON.stringify({
-        claimantShowPayments: false,
         claimantShowPaymentsPhaseTwo: true,
       });
     });
