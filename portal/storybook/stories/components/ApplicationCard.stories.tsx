@@ -4,6 +4,8 @@ import { MockBenefitsApplicationBuilder } from "lib/mock-helpers/mock-model-buil
 import { Props } from "types/common";
 import React from "react";
 import { generateNotice } from "storybook/utils/generateNotice";
+import ApiResourceCollection from "src/models/ApiResourceCollection";
+import { BenefitsApplicationDocument } from "src/models/Document";
 
 export default {
   title: "Components/ApplicationCard",
@@ -43,6 +45,13 @@ export const Story = ({
       loadClaimDetail: () => {},
     },
     documents: {
+      documents: new ApiResourceCollection<BenefitsApplicationDocument>(
+        "fineos_document_id",
+        [
+          generateNotice("requestForInfoNotice", "", "mock_application_id"),
+          generateNotice("denialNotice", "", "mock_application_id"),
+        ]
+      ),
       download: () => {},
       isLoadingClaimDocuments: () => undefined,
       loadAll: () => {},
@@ -78,21 +87,15 @@ export const Story = ({
       },
 
       "In Progress": {
-        claim: new MockBenefitsApplicationBuilder().address(),
-        documents: [],
+        claim: new MockBenefitsApplicationBuilder().address().create(),
       },
 
       "In Progress + EIN": {
-        claim: new MockBenefitsApplicationBuilder().employed(),
-        documents: [],
+        claim: new MockBenefitsApplicationBuilder().employed().create(),
       },
 
       "In Progress + Notices": {
-        claim: new MockBenefitsApplicationBuilder().submitted(),
-        documents: [
-          generateNotice("requestForInfoNotice"),
-          generateNotice("denialNotice"),
-        ],
+        claim: new MockBenefitsApplicationBuilder().submitted().create(),
       },
     }[scenario],
     { ...args, appLogic }

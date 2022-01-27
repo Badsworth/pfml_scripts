@@ -8,7 +8,8 @@ import { uniqueId } from "lodash";
 // Generates notice of type (e.g., denialNotice)
 export const generateNotice = (
   type: keyof typeof OtherDocumentType,
-  customDate?: string
+  customDate?: string,
+  customApplicationId?: string
 ): BenefitsApplicationDocument => {
   // Creates random number up to limit {number} value
 
@@ -29,7 +30,7 @@ export const generateNotice = (
   }
 
   return {
-    application_id: "mock-application-id",
+    application_id: customApplicationId || "mock-application-id",
     created_at: createdDate,
     document_type: DocumentType[type],
     fineos_document_id: uniqueId("notice"),
