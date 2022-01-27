@@ -1,7 +1,6 @@
 import { act, renderHook } from "@testing-library/react-hooks";
 import { mockAuth, mockFetch } from "../test-utils";
 import AppErrorInfo from "../../src/models/AppErrorInfo";
-import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
 import ClaimDetail from "../../src/models/ClaimDetail";
 import useAppLogic from "../../src/hooks/useAppLogic";
 
@@ -199,16 +198,14 @@ describe("useClaimsLogic", () => {
       const { appLogic } = setup();
 
       act(() => {
-        appLogic.current.setAppErrors(
-          new AppErrorInfoCollection([new AppErrorInfo()])
-        );
+        appLogic.current.setAppErrors([new AppErrorInfo()]);
       });
 
       await act(async () => {
         await appLogic.current.claims.loadPage();
       });
 
-      expect(appLogic.current.appErrors.items).toHaveLength(0);
+      expect(appLogic.current.appErrors).toHaveLength(0);
     });
 
     it("catches exceptions thrown from the API module", async () => {
@@ -223,9 +220,7 @@ describe("useClaimsLogic", () => {
         await appLogic.current.claims.loadPage();
       });
 
-      expect(appLogic.current.appErrors.items[0].name).toEqual(
-        "BadRequestError"
-      );
+      expect(appLogic.current.appErrors[0].name).toEqual("BadRequestError");
     });
   });
 
@@ -313,16 +308,14 @@ describe("useClaimsLogic", () => {
       const { appLogic } = setup();
 
       act(() => {
-        appLogic.current.setAppErrors(
-          new AppErrorInfoCollection([new AppErrorInfo()])
-        );
+        appLogic.current.setAppErrors([new AppErrorInfo()]);
       });
 
       await act(async () => {
         await appLogic.current.claims.loadClaimDetail("absence_id_1");
       });
 
-      expect(appLogic.current.appErrors.items).toHaveLength(0);
+      expect(appLogic.current.appErrors).toHaveLength(0);
     });
 
     it("triggers a ClaimWithdrawnError if the absence case has been withdrawn", async () => {
@@ -351,10 +344,8 @@ describe("useClaimsLogic", () => {
       });
 
       expect(claimDetail).toBeUndefined();
-      expect(appLogic.current.appErrors.items).toHaveLength(1);
-      expect(appLogic.current.appErrors.items[0].name).toEqual(
-        "ClaimWithdrawnError"
-      );
+      expect(appLogic.current.appErrors).toHaveLength(1);
+      expect(appLogic.current.appErrors[0].name).toEqual("ClaimWithdrawnError");
       expect(appLogic.current.claims.isLoadingClaimDetail).toBe(false);
     });
   });

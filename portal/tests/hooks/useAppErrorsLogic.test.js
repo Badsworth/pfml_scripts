@@ -10,7 +10,6 @@ import {
 } from "../../src/errors";
 import { act, renderHook } from "@testing-library/react-hooks";
 import AppErrorInfo from "../../src/models/AppErrorInfo";
-import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
 import { render } from "@testing-library/react";
 import tracker from "../../src/services/tracker";
 import useAppErrorsLogic from "../../src/hooks/useAppErrorsLogic";
@@ -129,7 +128,7 @@ describe("useAppErrorsLogic", () => {
   it("returns methods for setting errors", () => {
     const { result } = setup();
     expect(result.current.setAppErrors).toBeInstanceOf(Function);
-    expect(result.current.appErrors.items).toHaveLength(0);
+    expect(result.current.appErrors).toHaveLength(0);
   });
 
   it.each(errorMessages)(
@@ -140,10 +139,10 @@ describe("useAppErrorsLogic", () => {
       act(() => {
         result.current.catchError(error);
       });
-      expect(result.current.appErrors.items).toHaveLength(1);
-      expect(result.current.appErrors.items[0].message).toBe(message);
+      expect(result.current.appErrors).toHaveLength(1);
+      expect(result.current.appErrors[0].message).toBe(message);
       if (applicationId) {
-        expect(result.current.appErrors.items[0].meta).toEqual({
+        expect(result.current.appErrors[0].meta).toEqual({
           application_id: applicationId,
         });
       }
@@ -171,7 +170,7 @@ describe("useAppErrorsLogic", () => {
     act(() => {
       result.current.catchError(new Error());
     });
-    expect(result.current.appErrors.items[0].name).toEqual("Error");
+    expect(result.current.appErrors[0].name).toEqual("Error");
     expect(tracker.noticeError).toHaveBeenCalledTimes(1);
     expect(console.error).toHaveBeenCalledTimes(1);
   });
@@ -208,7 +207,7 @@ describe("useAppErrorsLogic", () => {
       result.current.catchError(new ValidationError(issues, "applications"));
     });
 
-    const appErrorInfo = result.current.appErrors.items[0];
+    const appErrorInfo = result.current.appErrors[0];
 
     expect(appErrorInfo).toEqual(
       expect.objectContaining({
@@ -228,7 +227,7 @@ describe("useAppErrorsLogic", () => {
         result.current.catchError(new ValidationError(issues, i18nPrefix));
       });
 
-      expect(result.current.appErrors.items[0].message).toBe(message);
+      expect(result.current.appErrors[0].message).toBe(message);
     }
   );
 
@@ -249,10 +248,10 @@ describe("useAppErrorsLogic", () => {
       result.current.catchError(new ValidationError(issues, "applications"));
     });
 
-    expect(result.current.appErrors.items).toHaveLength(2);
-    expect(result.current.appErrors.items[0].field).toBe(issues[0].field);
-    expect(result.current.appErrors.items[0].name).toBe("ValidationError");
-    expect(result.current.appErrors.items[1].rule).toBe(issues[1].rule);
+    expect(result.current.appErrors).toHaveLength(2);
+    expect(result.current.appErrors[0].field).toBe(issues[0].field);
+    expect(result.current.appErrors[0].name).toBe("ValidationError");
+    expect(result.current.appErrors[1].rule).toBe(issues[1].rule);
   });
 
   it("For ValidationErrors, tracks each issue in New Relic", () => {
@@ -409,7 +408,7 @@ describe("useAppErrorsLogic", () => {
       result.current.catchError(new Error("error 2"));
     });
 
-    expect(result.current.appErrors.items).toHaveLength(2);
+    expect(result.current.appErrors).toHaveLength(2);
     expect(tracker.noticeError).toHaveBeenCalledTimes(2);
     expect(tracker.trackEvent).not.toHaveBeenCalled();
     expect(console.error).toHaveBeenCalledTimes(2);
@@ -440,7 +439,7 @@ describe("useAppErrorsLogic", () => {
         );
       });
 
-      const Message = result.current.appErrors.items[0].message;
+      const Message = result.current.appErrors[0].message;
 
       expect(render(Message).container).toMatchSnapshot();
     }
@@ -464,7 +463,7 @@ describe("useAppErrorsLogic", () => {
       );
     });
 
-    const Message = result.current.appErrors.items[0].message;
+    const Message = result.current.appErrors[0].message;
 
     expect(render(Message).container).toMatchSnapshot();
   });
@@ -480,9 +479,9 @@ describe("useAppErrorsLogic", () => {
       );
     });
 
-    const Message = result.current.appErrors.items[0].message;
+    const Message = result.current.appErrors[0].message;
 
-    expect(result.current.appErrors.items).toHaveLength(1);
+    expect(result.current.appErrors).toHaveLength(1);
     expect(render(Message).container).toMatchSnapshot();
   });
 
@@ -510,14 +509,14 @@ describe("useAppErrorsLogic", () => {
 
     // Safeguard that our test is actually testing against a `type` that sometimes
     // results in an HTML message.
-    expect(result.current.appErrors.items[0].message).toBeInstanceOf(Object);
+    expect(result.current.appErrors[0].message).toBeInstanceOf(Object);
 
     act(() => {
       result.current.clearErrors();
       result.current.catchError(errorWithNoMatchingI18nMessage);
     });
 
-    expect(result.current.appErrors.items[0].message).toBe(
+    expect(result.current.appErrors[0].message).toBe(
       "New error Portal doesn't yet support, but with a similar type."
     );
   });
@@ -525,37 +524,33 @@ describe("useAppErrorsLogic", () => {
   it("when clearErrors is called, prior errors are removed", () => {
     const { result } = setup();
     act(() => {
-      result.current.setAppErrors(
-        new AppErrorInfoCollection([new AppErrorInfo()])
-      );
+      result.current.setAppErrors([new AppErrorInfo()]);
     });
 
     act(() => {
       result.current.clearErrors();
     });
 
-    expect(result.current.appErrors.items).toHaveLength(0);
+    expect(result.current.appErrors).toHaveLength(0);
   });
 
   it("when clearRequiredFieldErrors is called, removes required field errors", () => {
     const { result } = setup();
 
     act(() => {
-      result.current.setAppErrors(
-        new AppErrorInfoCollection([
-          new AppErrorInfo(),
-          new AppErrorInfo({ type: "required" }),
-        ])
-      );
+      result.current.setAppErrors([
+        new AppErrorInfo(),
+        new AppErrorInfo({ type: "required" }),
+      ]);
     });
 
     act(() => {
       result.current.clearRequiredFieldErrors();
     });
 
-    expect(result.current.appErrors.items).toHaveLength(1);
+    expect(result.current.appErrors).toHaveLength(1);
     expect(
-      result.current.appErrors.items.some((error) => error.type === "required")
+      result.current.appErrors.some((error) => error.type === "required")
     ).toBe(false);
   });
 });

@@ -1,6 +1,5 @@
 import { render, screen, within } from "@testing-library/react";
 import AppErrorInfo from "../../../src/models/AppErrorInfo";
-import AppErrorInfoCollection from "../../../src/models/AppErrorInfoCollection";
 import Feedback from "../../../src/components/employers/Feedback";
 import React from "react";
 import { renderHook } from "@testing-library/react-hooks";
@@ -26,7 +25,7 @@ describe("Feedback", () => {
 
   function setUpFunctionalInputProps(customArgs = {}) {
     const defaultArgs = {
-      appErrors: new AppErrorInfoCollection(),
+      appErrors: [],
       formState: {},
       updateFields,
     };
@@ -101,14 +100,14 @@ describe("Feedback", () => {
   it("renders inline error message when the text exceeds the limit", () => {
     renderHook(() => {
       getFunctionalInputProps = useFunctionalInputProps({
-        appErrors: new AppErrorInfoCollection([
+        appErrors: [
           new AppErrorInfo({
             field: "comment",
             type: "maxLength",
             message:
               "Please shorten your comment. We cannot accept comments that are longer than 9999 characters.",
           }),
-        ]),
+        ],
         formState: {},
         updateFields,
       });

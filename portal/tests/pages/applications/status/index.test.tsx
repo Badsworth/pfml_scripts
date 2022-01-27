@@ -10,7 +10,6 @@ import { createAbsencePeriod, renderPage } from "../../../test-utils";
 import { AbsencePeriod } from "../../../../src/models/AbsencePeriod";
 import ApiResourceCollection from "src/models/ApiResourceCollection";
 import AppErrorInfo from "../../../../src/models/AppErrorInfo";
-import AppErrorInfoCollection from "../../../../src/models/AppErrorInfoCollection";
 import { AppLogic } from "../../../../src/hooks/useAppLogic";
 import ClaimDetail from "../../../../src/models/ClaimDetail";
 import LeaveReason from "../../../../src/models/LeaveReason";
@@ -87,7 +86,7 @@ const setupHelper =
   (
     claimDetailAttrs?: Partial<ClaimDetail>,
     documents: BenefitsApplicationDocument[] = [],
-    appErrors = new AppErrorInfoCollection()
+    appErrors: AppErrorInfo[] = []
   ) =>
   (appLogicHook: AppLogic) => {
     appLogicHook.claims.claimDetail = claimDetailAttrs
@@ -242,12 +241,12 @@ describe("Status", () => {
   });
 
   it("renders the page if the only errors are DocumentsLoadError", () => {
-    const errors = new AppErrorInfoCollection([
+    const errors = [
       new AppErrorInfo({
         meta: { application_id: "mock_application_id" },
         name: "DocumentsLoadError",
       }),
-    ]);
+    ];
 
     const { container } = renderPage(
       Status,
@@ -266,9 +265,7 @@ describe("Status", () => {
       {
         addCustomSetup: (appLogicHook) => {
           appLogicHook.claims.loadClaimDetail = jest.fn();
-          appLogicHook.appErrors = new AppErrorInfoCollection([
-            new AppErrorInfo({}),
-          ]);
+          appLogicHook.appErrors = [new AppErrorInfo({})];
         },
       },
       props

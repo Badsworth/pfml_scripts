@@ -6,7 +6,6 @@ import {
 import { createAbsencePeriod, renderPage } from "../../../test-utils";
 import ApiResourceCollection from "src/models/ApiResourceCollection";
 import AppErrorInfo from "../../../../src/models/AppErrorInfo";
-import AppErrorInfoCollection from "../../../../src/models/AppErrorInfoCollection";
 import { AppLogic } from "../../../../src/hooks/useAppLogic";
 import ClaimDetail from "../../../../src/models/ClaimDetail";
 import LeaveReason from "../../../../src/models/LeaveReason";
@@ -22,7 +21,7 @@ const renderWithApprovalNotice = (
   isRetroactive = true,
   approvalTime = ""
 ) => {
-  appLogicHook.appErrors = new AppErrorInfoCollection();
+  appLogicHook.appErrors = [];
   appLogicHook.documents.loadAll = jest.fn();
   appLogicHook.documents.documents =
     new ApiResourceCollection<BenefitsApplicationDocument>(
@@ -383,7 +382,7 @@ describe("Payments", () => {
             claimDetail: undefined,
             isLoadingClaimDetail: false,
           },
-          appErrors: new AppErrorInfoCollection([
+          appErrors: [
             new AppErrorInfo({
               meta: { application_id: "foo" },
               key: "AppErrorInfo1",
@@ -391,7 +390,7 @@ describe("Payments", () => {
                 "Sorry, we were unable to retrieve what you were looking for. Check that the link you are visiting is correct. If this continues to happen, please log out and try again.",
               name: "NotFoundError",
             }),
-          ]),
+          ],
           documents: {
             documents: new ApiResourceCollection<BenefitsApplicationDocument>(
               "fineos_document_id",

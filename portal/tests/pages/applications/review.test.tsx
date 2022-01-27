@@ -30,7 +30,6 @@ import Review, {
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import ApiResourceCollection from "src/models/ApiResourceCollection";
 import AppErrorInfo from "../../../src/models/AppErrorInfo";
-import AppErrorInfoCollection from "../../../src/models/AppErrorInfoCollection";
 import { LeaveReasonType } from "../../../src/models/LeaveReason";
 import { createMockBenefitsApplicationDocument } from "../../../lib/mock-helpers/createMockDocument";
 import dayjs from "dayjs";
@@ -43,7 +42,7 @@ const setup = ({
   claim = new MockBenefitsApplicationBuilder().part1Complete().create(),
   documents,
 }: {
-  appErrors?: AppErrorInfoCollection;
+  appErrors?: AppErrorInfo[];
   claim?: BenefitsApplication;
   documents?: BenefitsApplicationDocument[];
 } = {}) => {
@@ -185,9 +184,9 @@ describe("Review Page", () => {
   });
 
   it("renders a Alert when there are required field errors", () => {
-    const appErrors = new AppErrorInfoCollection([
+    const appErrors = [
       new AppErrorInfo({ type: "required", field: "someField" }),
-    ]);
+    ];
 
     setup({ appErrors });
 
@@ -197,14 +196,14 @@ describe("Review Page", () => {
   });
 
   it("does not render a custom Alert when there are required errors not associated to a specific field", () => {
-    const appErrors = new AppErrorInfoCollection([
+    const appErrors = [
       new AppErrorInfo({
         type: "required",
         rule: "require_employer_notified",
         message:
           "employer_notified must be True if employment_status is Employed",
       }),
-    ]);
+    ];
 
     setup({ appErrors });
 
@@ -217,14 +216,14 @@ describe("Review Page", () => {
     const claim = new MockBenefitsApplicationBuilder().complete().create();
 
     setup({
-      appErrors: new AppErrorInfoCollection([
+      appErrors: [
         new AppErrorInfo({
           name: "DocumentsLoadError",
           meta: {
             application_id: claim.application_id,
           },
         }),
-      ]),
+      ],
       claim,
     });
 

@@ -1,5 +1,4 @@
 import ApiResourceCollection from "src/models/ApiResourceCollection";
-import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
 import BenefitsApplicationCollection from "../../src/models/BenefitsApplicationCollection";
 import { renderHook } from "@testing-library/react-hooks";
 import useAppLogic from "../../src/hooks/useAppLogic";
@@ -42,8 +41,8 @@ describe("useAppLogic", () => {
       } = useAppLogic());
     });
 
-    expect(appErrors).toBeInstanceOf(AppErrorInfoCollection);
-    expect(appErrors.items).toHaveLength(0);
+    expect(appErrors).toBeInstanceOf(Array);
+    expect(appErrors).toHaveLength(0);
     expect(_appErrorsLogic).toEqual(expect.anything());
     expect(auth).toEqual(expect.anything());
     expect(catchError).toBeInstanceOf(Function);

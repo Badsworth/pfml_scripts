@@ -1,4 +1,3 @@
-import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
 import { ApplicationCard } from "src/components/ApplicationCard";
 import { MockBenefitsApplicationBuilder } from "lib/mock-helpers/mock-model-builder";
 import { Props } from "types/common";
@@ -36,7 +35,7 @@ export const Story = ({
 }: Props<typeof ApplicationCard> & { scenario: string }) => {
   // Fake appLogic for stories
   const appLogic = {
-    appErrors: new AppErrorInfoCollection([]),
+    appErrors: [],
     claims: {
       claimDetail: args,
       isLoadingClaimDetail: false,

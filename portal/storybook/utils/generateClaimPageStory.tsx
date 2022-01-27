@@ -1,6 +1,5 @@
 import { chain, get, upperFirst } from "lodash";
 import AppErrorInfo from "src/models/AppErrorInfo";
-import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
 import BenefitsApplication from "src/models/BenefitsApplication";
 import React from "react";
 import User from "../../src/models/User";
@@ -111,7 +110,7 @@ function generateDefaultStory(Component, mockClaims, possibleErrors) {
     // @ts-expect-error ts-migrate(2554) FIXME: Expected 1 arguments, but got 0.
     const user = new User();
     const { t } = useTranslation();
-    const appErrors = new AppErrorInfoCollection(
+    const appErrors =
       // @ts-expect-error ts-migrate(7006) FIXME: Parameter 'displayStr' implicitly has an 'any' typ... Remove this comment to see the full error message
       errorDisplayStrs.map((displayStr) => {
         const errorInfo = possibleErrors.find(
@@ -124,8 +123,7 @@ function generateDefaultStory(Component, mockClaims, possibleErrors) {
           name: "ValidationError",
           field,
         });
-      })
-    );
+      });
 
     const appLogic = useMockableAppLogic({ appErrors });
 

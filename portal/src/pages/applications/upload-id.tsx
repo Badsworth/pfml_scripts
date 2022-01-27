@@ -95,7 +95,7 @@ export const UploadId = (props: UploadIdProps) => {
     }
   };
 
-  const fileErrors = appErrors.items.filter(
+  const fileErrors = appErrors.filter(
     (appErrorInfo) => appErrorInfo.meta && appErrorInfo.meta.file_id
   );
 

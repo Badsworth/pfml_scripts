@@ -10,7 +10,6 @@ import {
 import { act, screen, waitFor } from "@testing-library/react";
 import ApiResourceCollection from "src/models/ApiResourceCollection";
 import AppErrorInfo from "../../../src/models/AppErrorInfo";
-import AppErrorInfoCollection from "../../../src/models/AppErrorInfoCollection";
 import { AppLogic } from "../../../src/hooks/useAppLogic";
 import UploadCertification from "../../../src/pages/applications/upload-certification";
 import { ValidationError } from "../../../src/errors";
@@ -302,12 +301,12 @@ describe("UploadCertification", () => {
 
   it("renders alert when there is an error loading documents", () => {
     const cb = (appLogic: AppLogic) => {
-      appLogic.appErrors = new AppErrorInfoCollection([
+      appLogic.appErrors = [
         new AppErrorInfo({
           meta: { application_id: "mock_application_id" },
           name: "DocumentsLoadError",
         }),
-      ]);
+      ];
     };
     setup(undefined, undefined, cb);
     expect(

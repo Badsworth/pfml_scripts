@@ -1,5 +1,4 @@
 import AppErrorInfo from "../../src/models/AppErrorInfo";
-import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
 import { renderHook } from "@testing-library/react-hooks";
 import useFormState from "../../src/hooks/useFormState";
 import useFunctionalInputProps from "../../src/hooks/useFunctionalInputProps";
@@ -13,7 +12,7 @@ describe("useFunctionalInputProps", () => {
       });
 
       getFunctionalInputProps = useFunctionalInputProps({
-        appErrors: new AppErrorInfoCollection(),
+        appErrors: [],
         formState,
         updateFields,
       });
@@ -30,7 +29,7 @@ describe("useFunctionalInputProps", () => {
       const { formState, updateFields } = useFormState({});
 
       getFunctionalInputProps = useFunctionalInputProps({
-        appErrors: new AppErrorInfoCollection(),
+        appErrors: [],
         formState,
         updateFields,
       });
@@ -47,7 +46,7 @@ describe("useFunctionalInputProps", () => {
       const { formState, updateFields } = useFormState({});
 
       getFunctionalInputProps = useFunctionalInputProps({
-        appErrors: new AppErrorInfoCollection(),
+        appErrors: [],
         formState,
         updateFields,
       });
@@ -66,7 +65,7 @@ describe("useFunctionalInputProps", () => {
       const { formState, updateFields } = useFormState({ minutes: 0 });
 
       getFunctionalInputProps = useFunctionalInputProps({
-        appErrors: new AppErrorInfoCollection(),
+        appErrors: [],
         formState,
         updateFields,
       });
@@ -85,7 +84,7 @@ describe("useFunctionalInputProps", () => {
       });
 
       getFunctionalInputProps = useFunctionalInputProps({
-        appErrors: new AppErrorInfoCollection(),
+        appErrors: [],
         formState,
         updateFields,
       });
@@ -109,7 +108,7 @@ describe("useFunctionalInputProps", () => {
       });
 
       getFunctionalInputProps = useFunctionalInputProps({
-        appErrors: new AppErrorInfoCollection([issue]),
+        appErrors: [issue],
         formState,
         updateFields,
       });
@@ -148,7 +147,7 @@ describe("useFunctionalInputProps", () => {
       });
 
       getFunctionalInputProps = useFunctionalInputProps({
-        appErrors: new AppErrorInfoCollection(),
+        appErrors: [],
         formState,
         updateFields,
       });

@@ -162,14 +162,12 @@ describe("UploadDocsOptions", () => {
 
     await waitFor(() => {
       expect(setAppErrorsSpy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          items: expect.arrayContaining([
-            expect.objectContaining({
-              field: "upload_docs_options",
-              type: "required",
-            }),
-          ]),
-        })
+        expect.arrayContaining([
+          expect.objectContaining({
+            field: "upload_docs_options",
+            type: "required",
+          }),
+        ])
       );
     });
 

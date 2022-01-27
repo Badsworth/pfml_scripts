@@ -15,7 +15,6 @@ import {
 } from "../../src/api/EmployersApi";
 import ApiResourceCollection from "src/models/ApiResourceCollection";
 import AppErrorInfo from "../../src/models/AppErrorInfo";
-import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
 import User from "../../src/models/User";
 import { uniqueId } from "lodash";
 import useAppErrorsLogic from "../../src/hooks/useAppErrorsLogic";
@@ -91,21 +90,19 @@ describe("useEmployersLogic", () => {
           await employersLogic.addEmployer({ ein: "" });
         });
 
-        expect(appErrorsLogic.appErrors.items[0].name).toEqual("Error");
+        expect(appErrorsLogic.appErrors[0].name).toEqual("Error");
       });
 
       it("clears prior errors", async () => {
         act(() => {
-          appErrorsLogic.setAppErrors(
-            new AppErrorInfoCollection([new AppErrorInfo()])
-          );
+          appErrorsLogic.setAppErrors([new AppErrorInfo()]);
         });
 
         await act(async () => {
           await employersLogic.addEmployer(postData);
         });
 
-        expect(appErrorsLogic.appErrors.items).toHaveLength(0);
+        expect(appErrorsLogic.appErrors).toHaveLength(0);
       });
     });
   });
@@ -146,7 +143,7 @@ describe("useEmployersLogic", () => {
           await employersLogic.loadClaim(absenceId);
         });
 
-        expect(appErrorsLogic.appErrors.items[0].name).toEqual("Error");
+        expect(appErrorsLogic.appErrors[0].name).toEqual("Error");
       });
 
       it("catches instances of LeaveAdminForbiddenError", async () => {
@@ -172,22 +169,20 @@ describe("useEmployersLogic", () => {
         );
         // first call, first argument
         expect(catchErrorSpy.mock.calls[0][0]).toEqual(expectedError);
-        expect(appErrorsLogic.appErrors.items.length).toBe(0);
+        expect(appErrorsLogic.appErrors.length).toBe(0);
       });
     });
 
     it("clears prior errors", async () => {
       act(() => {
-        appErrorsLogic.setAppErrors(
-          new AppErrorInfoCollection([new AppErrorInfo()])
-        );
+        appErrorsLogic.setAppErrors([new AppErrorInfo()]);
       });
 
       await act(async () => {
         await employersLogic.loadClaim(absenceId);
       });
 
-      expect(appErrorsLogic.appErrors.items).toHaveLength(0);
+      expect(appErrorsLogic.appErrors).toHaveLength(0);
     });
   });
 
@@ -330,21 +325,19 @@ describe("useEmployersLogic", () => {
           await employersLogic.loadDocuments(absenceId);
         });
 
-        expect(appErrorsLogic.appErrors.items[0].name).toEqual("Error");
+        expect(appErrorsLogic.appErrors[0].name).toEqual("Error");
       });
 
       it("clears prior errors", async () => {
         act(() => {
-          appErrorsLogic.setAppErrors(
-            new AppErrorInfoCollection([new AppErrorInfo()])
-          );
+          appErrorsLogic.setAppErrors([new AppErrorInfo()]);
         });
 
         await act(async () => {
           await employersLogic.loadDocuments(absenceId);
         });
 
-        expect(appErrorsLogic.appErrors.items).toHaveLength(0);
+        expect(appErrorsLogic.appErrors).toHaveLength(0);
       });
     });
   });
@@ -376,7 +369,7 @@ describe("useEmployersLogic", () => {
           await employersLogic.loadWithholding(employerId);
         });
 
-        expect(appErrorsLogic.appErrors.items[0].name).toEqual("Error");
+        expect(appErrorsLogic.appErrors[0].name).toEqual("Error");
       });
     });
   });
@@ -384,9 +377,7 @@ describe("useEmployersLogic", () => {
   describe("downloadDocument", () => {
     it("clears prior errors", async () => {
       act(() => {
-        appErrorsLogic.setAppErrors(
-          new AppErrorInfoCollection([new AppErrorInfo()])
-        );
+        appErrorsLogic.setAppErrors([new AppErrorInfo()]);
       });
 
       const document = new Document({
@@ -399,7 +390,7 @@ describe("useEmployersLogic", () => {
         await employersLogic.downloadDocument(absenceId, document);
       });
 
-      expect(appErrorsLogic.appErrors.items).toHaveLength(0);
+      expect(appErrorsLogic.appErrors).toHaveLength(0);
     });
 
     it("makes a request to the API", () => {
@@ -441,7 +432,7 @@ describe("useEmployersLogic", () => {
         await employersLogic.downloadDocument();
       });
 
-      expect(appErrorsLogic.appErrors.items[0].name).toEqual("BadRequestError");
+      expect(appErrorsLogic.appErrors[0].name).toEqual("BadRequestError");
     });
   });
 
@@ -490,21 +481,19 @@ describe("useEmployersLogic", () => {
           await employersLogic.submitClaimReview(absenceId, {});
         });
 
-        expect(appErrorsLogic.appErrors.items[0].name).toEqual("Error");
+        expect(appErrorsLogic.appErrors[0].name).toEqual("Error");
       });
 
       it("clears prior errors", async () => {
         act(() => {
-          appErrorsLogic.setAppErrors(
-            new AppErrorInfoCollection([new AppErrorInfo()])
-          );
+          appErrorsLogic.setAppErrors([new AppErrorInfo()]);
         });
 
         await act(async () => {
           await employersLogic.submitClaimReview(absenceId, patchData);
         });
 
-        expect(appErrorsLogic.appErrors.items).toHaveLength(0);
+        expect(appErrorsLogic.appErrors).toHaveLength(0);
       });
     });
   });
@@ -550,21 +539,19 @@ describe("useEmployersLogic", () => {
           await employersLogic.submitWithholding(absenceId, {});
         });
 
-        expect(appErrorsLogic.appErrors.items[0].name).toEqual("Error");
+        expect(appErrorsLogic.appErrors[0].name).toEqual("Error");
       });
 
       it("clears prior errors", async () => {
         act(() => {
-          appErrorsLogic.setAppErrors(
-            new AppErrorInfoCollection([new AppErrorInfo()])
-          );
+          appErrorsLogic.setAppErrors([new AppErrorInfo()]);
         });
 
         await act(async () => {
           await employersLogic.submitWithholding(postData);
         });
 
-        expect(appErrorsLogic.appErrors.items).toHaveLength(0);
+        expect(appErrorsLogic.appErrors).toHaveLength(0);
       });
     });
   });

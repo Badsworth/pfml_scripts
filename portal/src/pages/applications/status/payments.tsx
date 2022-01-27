@@ -44,7 +44,7 @@ export const Payments = ({
   const { t } = useTranslation();
   const { absence_id } = query;
   const {
-    appErrors: { items },
+    appErrors,
     claims: {
       claimDetail,
       isLoadingClaimDetail,
@@ -101,7 +101,7 @@ export const Payments = ({
     } else if (
       absenceId &&
       (!Boolean(claimDetail) || Boolean(loadPayments(absenceId))) &&
-      !items.find((item) => item.name === "NotFoundError")
+      !appErrors.find((item) => item.name === "NotFoundError")
     ) {
       loadClaimDetail(absence_id);
     }
@@ -130,7 +130,7 @@ export const Payments = ({
   if (!isAbsenceCaseId) return <PageNotFound />;
 
   // only hide page content if there is an error that's not DocumentsLoadError.
-  const hasNonDocumentsLoadError: boolean = appLogic.appErrors.items.some(
+  const hasNonDocumentsLoadError: boolean = appLogic.appErrors.some(
     (error) => error.name !== "DocumentsLoadError"
   );
 
@@ -210,7 +210,7 @@ export const Payments = ({
 
   const shouldShowPaymentsTable =
     Boolean(claimDetail?.payments?.length) ||
-    (hasLoadedPayments(absence_id || "") && !items.length) ||
+    (hasLoadedPayments(absence_id || "") && !appErrors.length) ||
     (!isIntermittent && showPhaseTwoFeatures);
 
   // TODO(PORTAL-1482): remove test cases for checkback dates

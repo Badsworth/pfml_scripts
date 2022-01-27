@@ -45,7 +45,7 @@ describe("useFeatureFlagsLogic", () => {
         await flagsLogic.loadFlags();
       });
 
-      expect(appErrorsLogic.appErrors.items).toHaveLength(0);
+      expect(appErrorsLogic.appErrors).toHaveLength(0);
     });
   });
 

@@ -4,7 +4,6 @@ import {
 } from "../../models/Document";
 import User, { UserLeaveAdministrator } from "../../models/User";
 import ApiResourceCollection from "../../models/ApiResourceCollection";
-import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
 import BenefitsApplication from "../../models/BenefitsApplication";
 import BenefitsApplicationCollection from "../../models/BenefitsApplicationCollection";
 import Claim from "../../models/Claim";
@@ -14,7 +13,7 @@ import Flag from "../../models/Flag";
 import { uniqueId } from "lodash";
 
 export default jest.fn(() => ({
-  appErrors: new AppErrorInfoCollection(),
+  appErrors: [],
   auth: {
     createAccount: jest.fn(),
     createEmployerAccount: jest.fn(),

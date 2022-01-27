@@ -4,13 +4,12 @@ import EmployerBenefit, {
 } from "../../../src/models/EmployerBenefit";
 import { fireEvent, render, screen } from "@testing-library/react";
 import AmendableEmployerBenefit from "../../../src/components/employers/AmendableEmployerBenefit";
-import AppErrorInfoCollection from "../../../src/models/AppErrorInfoCollection";
 import React from "react";
 import userEvent from "@testing-library/user-event";
 
 const onChange = jest.fn();
 const onRemove = jest.fn();
-const appErrors = new AppErrorInfoCollection([]);
+const appErrors = [];
 const employerBenefit = new EmployerBenefit({
   benefit_amount_dollars: 1000,
   benefit_amount_frequency: EmployerBenefitFrequency.monthly,

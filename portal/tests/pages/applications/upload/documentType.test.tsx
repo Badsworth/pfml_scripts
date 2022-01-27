@@ -11,7 +11,6 @@ import { act, screen, waitFor } from "@testing-library/react";
 import { makeFile, renderPage } from "../../../test-utils";
 import ApiResourceCollection from "src/models/ApiResourceCollection";
 import AppErrorInfo from "../../../../src/models/AppErrorInfo";
-import AppErrorInfoCollection from "../../../../src/models/AppErrorInfoCollection";
 import { AppLogic } from "../../../../src/hooks/useAppLogic";
 import LeaveReason from "../../../../src/models/LeaveReason";
 import { createMockBenefitsApplicationDocument } from "../../../../lib/mock-helpers/createMockDocument";
@@ -120,7 +119,7 @@ describe(UploadDocument, () => {
       await act(async () => await userEvent.click(submitButton));
 
       await waitFor(() => {
-        expect(appLogic?.appErrors.items[0].message).toEqual(
+        expect(appLogic?.appErrors[0].message).toEqual(
           "Upload at least one file to continue."
         );
       });
@@ -263,12 +262,12 @@ describe(UploadDocument, () => {
 
   it("renders alert when there is an error loading documents ", async () => {
     setup("state-id", (appLogic) => {
-      appLogic.appErrors = new AppErrorInfoCollection([
+      appLogic.appErrors = [
         new AppErrorInfo({
           meta: { application_id: "mock-claim-id" },
           name: "DocumentsLoadError",
         }),
-      ]);
+      ];
     });
 
     const alert = await screen.findByRole("alert");

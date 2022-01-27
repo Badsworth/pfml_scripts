@@ -1,5 +1,4 @@
 import { render, screen } from "@testing-library/react";
-import AppErrorInfoCollection from "../../../src/models/AppErrorInfoCollection";
 import { DocumentType } from "../../../src/models/Document";
 import LeaveDetails from "../../../src/components/employers/LeaveDetails";
 import { MockEmployerClaimBuilder } from "../../test-utils";
@@ -35,7 +34,7 @@ const renderComponent = (props = {}) => {
       claim={claim}
       documents={[]}
       downloadDocument={jest.fn()}
-      appErrors={new AppErrorInfoCollection()}
+      appErrors={[]}
       {...props}
     />
   );

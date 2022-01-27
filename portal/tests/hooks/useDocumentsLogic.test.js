@@ -7,7 +7,6 @@ import {
 } from "../../src/api/DocumentsApi";
 import ApiResourceCollection from "src/models/ApiResourceCollection";
 import AppErrorInfo from "../../src/models/AppErrorInfo";
-import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
 import { makeFile } from "../test-utils";
 import { uniqueId } from "lodash";
 import useAppErrorsLogic from "../../src/hooks/useAppErrorsLogic";
@@ -263,7 +262,7 @@ describe("useDocumentsLogic", () => {
           false
         );
       });
-      expect(appErrorsLogic.appErrors.items[0]).toEqual(
+      expect(appErrorsLogic.appErrors[0]).toEqual(
         expect.objectContaining({
           field: "file",
           message: "Upload at least one file to continue.",
@@ -311,7 +310,7 @@ describe("useDocumentsLogic", () => {
         );
       });
 
-      const appErrorInfos = appErrorsLogic.appErrors.items;
+      const appErrorInfos = appErrorsLogic.appErrors;
 
       expect(appErrorInfos).toHaveLength(2);
       expect(appErrorInfos[0].name).toBe("DocumentsUploadError");
@@ -329,9 +328,7 @@ describe("useDocumentsLogic", () => {
 
   it("clears prior errors", async () => {
     act(() => {
-      appErrorsLogic.setAppErrors(
-        new AppErrorInfoCollection([new AppErrorInfo()])
-      );
+      appErrorsLogic.setAppErrors([new AppErrorInfo()]);
     });
 
     attachDocumentMock.mockResolvedValueOnce({
@@ -357,7 +354,7 @@ describe("useDocumentsLogic", () => {
       await Promise.all(uploadPromises);
     });
 
-    expect(appErrorsLogic.appErrors.items).toHaveLength(0);
+    expect(appErrorsLogic.appErrors).toHaveLength(0);
   });
 
   describe("loadAll", () => {
@@ -477,10 +474,8 @@ describe("useDocumentsLogic", () => {
           await documentsLogic.loadAll(application_id);
         });
 
-        expect(appErrorsLogic.appErrors.items[0].name).toEqual(
-          "DocumentsLoadError"
-        );
-        expect(appErrorsLogic.appErrors.items[0].meta).toEqual({
+        expect(appErrorsLogic.appErrors[0].name).toEqual("DocumentsLoadError");
+        expect(appErrorsLogic.appErrors[0].meta).toEqual({
           application_id,
         });
       });
@@ -488,16 +483,14 @@ describe("useDocumentsLogic", () => {
 
     it("clears prior errors", async () => {
       act(() => {
-        appErrorsLogic.setAppErrors(
-          new AppErrorInfoCollection([new AppErrorInfo()])
-        );
+        appErrorsLogic.setAppErrors([new AppErrorInfo()]);
       });
 
       await act(async () => {
         await documentsLogic.loadAll(application_id);
       });
 
-      expect(appErrorsLogic.appErrors.items).toHaveLength(0);
+      expect(appErrorsLogic.appErrors).toHaveLength(0);
     });
 
     it("resolves race conditions", async () => {
@@ -615,9 +608,7 @@ describe("useDocumentsLogic", () => {
   describe("download", () => {
     it("clears prior errors", async () => {
       act(() => {
-        appErrorsLogic.setAppErrors(
-          new AppErrorInfoCollection([new AppErrorInfo()])
-        );
+        appErrorsLogic.setAppErrors([new AppErrorInfo()]);
       });
 
       const document = {
@@ -630,7 +621,7 @@ describe("useDocumentsLogic", () => {
         await documentsLogic.download(document);
       });
 
-      expect(appErrorsLogic.appErrors.items).toHaveLength(0);
+      expect(appErrorsLogic.appErrors).toHaveLength(0);
     });
 
     it("makes a request to the API", () => {
@@ -673,7 +664,7 @@ describe("useDocumentsLogic", () => {
         await documentsLogic.download();
       });
 
-      expect(appErrorsLogic.appErrors.items[0].name).toEqual("BadRequestError");
+      expect(appErrorsLogic.appErrors[0].name).toEqual("BadRequestError");
     });
   });
 });

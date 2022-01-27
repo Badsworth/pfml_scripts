@@ -485,7 +485,7 @@ export const Review = (props: WithEmployerClaimProps) => {
         {isCaringLeave && (
           <CaringLeaveQuestion
             errorMsg={AppErrorInfo.fieldErrorMessage(
-              appErrors.items,
+              appErrors,
               "relationship_inaccurate_reason"
             )}
             believeRelationshipAccurate={formState.believeRelationshipAccurate}

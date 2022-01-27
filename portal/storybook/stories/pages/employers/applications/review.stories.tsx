@@ -3,7 +3,6 @@ import LeaveReason, { LeaveReasonType } from "src/models/LeaveReason";
 import { AbsencePeriod } from "src/models/AbsencePeriod";
 import ApiResourceCollection from "src/models/ApiResourceCollection";
 import AppErrorInfo from "src/models/AppErrorInfo";
-import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
 import EmployerClaim from "src/models/EmployerClaim";
 import { ManagedRequirement } from "src/models/Claim";
 import { MockEmployerClaimBuilder } from "lib/mock-helpers/mock-model-builder";
@@ -301,5 +300,5 @@ function getAppErrorInfoCollection(errorTypes: string[] = []) {
     );
   }
 
-  return new AppErrorInfoCollection(errors);
+  return errors;
 }

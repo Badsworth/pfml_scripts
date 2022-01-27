@@ -1,6 +1,4 @@
 import { render, screen } from "@testing-library/react";
-
-import AppErrorInfoCollection from "../../../src/models/AppErrorInfoCollection";
 import ConcurrentLeave from "../../../src/components/employers/ConcurrentLeave";
 import ConcurrentLeaveModel from "../../../src/models/ConcurrentLeave";
 import React from "react";
@@ -14,7 +12,7 @@ const CONCURRENT_LEAVE = new ConcurrentLeaveModel({
 
 const defaultProps = {
   addedConcurrentLeave: null,
-  appErrors: new AppErrorInfoCollection(),
+  appErrors: [],
   concurrentLeave: CONCURRENT_LEAVE,
   claim: createMockEmployerClaim("completed"),
   onAdd: jest.fn(),
