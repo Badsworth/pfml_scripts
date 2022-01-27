@@ -31,10 +31,6 @@ describe("Create a new caring leave claim in FINEOS and add Historical Absence c
         const claimPage = fineosPages.ClaimPage.visit(
           submission.fineos_absence_id
         );
-        claimPage.removeSuppressCorrespondence();
-        claimPage.documents((docsPage) => {
-            docsPage.assertDocumentExists("Notification Suppression Disabled");
-          });
         claimPage.withdraw();
         claimPage.triggerNotice("Leave Request Withdrawn");
         claimPage.documents((docsPage) => {
