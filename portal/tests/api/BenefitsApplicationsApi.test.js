@@ -1,8 +1,8 @@
 import PaymentPreference, {
   PaymentPreferenceMethod,
 } from "../../src/models/PaymentPreference";
+import ApiResourceCollection from "../../src/models/ApiResourceCollection";
 import BenefitsApplication from "../../src/models/BenefitsApplication";
-import BenefitsApplicationCollection from "../../src/models/BenefitsApplicationCollection";
 import BenefitsApplicationsApi from "../../src/api/BenefitsApplicationsApi";
 
 import { mockAuth } from "../test-utils";
@@ -126,7 +126,7 @@ describe("BenefitsApplicationsApi", () => {
       it("resolves with claims properties", async () => {
         const { claims: claimsResponse } = await claimsApi.getClaims();
 
-        expect(claimsResponse).toBeInstanceOf(BenefitsApplicationCollection);
+        expect(claimsResponse).toBeInstanceOf(ApiResourceCollection);
         expect(claimsResponse.items).toEqual([claim]);
       });
     });

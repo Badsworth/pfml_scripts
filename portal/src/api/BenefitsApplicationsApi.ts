@@ -1,6 +1,6 @@
 import BaseApi, { ApiMethod, ApiRequestBody } from "./BaseApi";
+import ApiResourceCollection from "../models/ApiResourceCollection";
 import BenefitsApplication from "../models/BenefitsApplication";
-import BenefitsApplicationCollection from "../models/BenefitsApplicationCollection";
 import PaymentPreference from "../models/PaymentPreference";
 import TaxWithholdingPreference from "../models/TaxWithholdingPreference";
 import routes from "../routes";
@@ -70,7 +70,10 @@ export default class BenefitsApplicationsApi extends BaseApi {
     const claims = data.map((claimData) => new BenefitsApplication(claimData));
 
     return {
-      claims: new BenefitsApplicationCollection(claims),
+      claims: new ApiResourceCollection<BenefitsApplication>(
+        "application_id",
+        claims
+      ),
       paginationMeta: meta?.paging ?? {},
     };
   };

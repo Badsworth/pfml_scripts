@@ -13,8 +13,8 @@ import {
   submitPaymentPreferenceMock,
   updateClaimMock,
 } from "../../src/api/BenefitsApplicationsApi";
+import ApiResourceCollection from "../../src/models/ApiResourceCollection";
 import AppErrorInfo from "../../src/models/AppErrorInfo";
-import BenefitsApplicationCollection from "../../src/models/BenefitsApplicationCollection";
 import { MockBenefitsApplicationBuilder } from "../test-utils";
 import { mockRouter } from "next/router";
 import routes from "../../src/routes";
@@ -54,7 +54,7 @@ describe("useBenefitsApplicationsLogic", () => {
     setup();
 
     expect(claimsLogic.benefitsApplications).toBeInstanceOf(
-      BenefitsApplicationCollection
+      ApiResourceCollection
     );
     expect(claimsLogic.benefitsApplications.items).toHaveLength(0);
   });
@@ -390,7 +390,7 @@ describe("useBenefitsApplicationsLogic", () => {
       let claim, existingClaims;
 
       beforeEach(async () => {
-        existingClaims = new BenefitsApplicationCollection([
+        existingClaims = new ApiResourceCollection("application_id", [
           new BenefitsApplication({ application_id: "1" }),
           new BenefitsApplication({ application_id: "2" }),
         ]);

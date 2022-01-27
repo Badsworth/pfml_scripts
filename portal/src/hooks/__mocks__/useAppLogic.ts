@@ -5,7 +5,6 @@ import {
 import User, { UserLeaveAdministrator } from "../../models/User";
 import ApiResourceCollection from "../../models/ApiResourceCollection";
 import BenefitsApplication from "../../models/BenefitsApplication";
-import BenefitsApplicationCollection from "../../models/BenefitsApplicationCollection";
 import Claim from "../../models/Claim";
 import ClaimDetail from "../../models/ClaimDetail";
 import EmployerClaim from "../../models/EmployerClaim";
@@ -29,7 +28,9 @@ export default jest.fn(() => ({
   },
   catchError: jest.fn(),
   benefitsApplications: {
-    benefitsApplications: new BenefitsApplicationCollection(),
+    benefitsApplications: new ApiResourceCollection<BenefitsApplication>(
+      "application_id"
+    ),
     complete: jest.fn(),
     create: jest.fn(
       () => new BenefitsApplication({ application_id: uniqueId() })

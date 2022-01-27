@@ -1,8 +1,10 @@
+import BenefitsApplication, {
+  ReasonQualifier,
+} from "../../../src/models/BenefitsApplication";
 import { MockBenefitsApplicationBuilder, renderPage } from "../../test-utils";
 import { screen, waitFor } from "@testing-library/react";
-import BenefitsApplicationCollection from "../../../src/models/BenefitsApplicationCollection";
+import ApiResourceCollection from "../../../src/models/ApiResourceCollection";
 import DateOfChild from "../../../src/pages/applications/date-of-child";
-import { ReasonQualifier } from "../../../src/models/BenefitsApplication";
 import dayjs from "dayjs";
 import userEvent from "@testing-library/user-event";
 
@@ -22,7 +24,9 @@ const setup = (claim = new MockBenefitsApplicationBuilder().create()) => {
       addCustomSetup: (appLogic) => {
         appLogic.benefitsApplications.update = updateClaim;
         appLogic.benefitsApplications.benefitsApplications =
-          new BenefitsApplicationCollection([claim]);
+          new ApiResourceCollection<BenefitsApplication>("application_id", [
+            claim,
+          ]);
       },
     },
     { query: { claim_id: "mock_application_id" }, claim: {} }

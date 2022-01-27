@@ -1,6 +1,7 @@
 import { MockBenefitsApplicationBuilder, renderPage } from "../../test-utils";
 import { screen, waitFor } from "@testing-library/react";
-import BenefitsApplicationCollection from "../../../src/models/BenefitsApplicationCollection";
+import ApiResourceCollection from "../../../src/models/ApiResourceCollection";
+import BenefitsApplication from "../../../src/models/BenefitsApplication";
 import DateOfBirth from "../../../src/pages/applications/date-of-birth";
 import { pick } from "lodash";
 import userEvent from "@testing-library/user-event";
@@ -21,7 +22,9 @@ describe("DateOfBirth", () => {
         addCustomSetup: (appLogic) => {
           appLogic.benefitsApplications.update = updateClaim;
           appLogic.benefitsApplications.benefitsApplications =
-            new BenefitsApplicationCollection([claim]);
+            new ApiResourceCollection<BenefitsApplication>("application_id", [
+              claim,
+            ]);
         },
       },
       { query: { claim_id: "mock_application_id" }, claim: {} }

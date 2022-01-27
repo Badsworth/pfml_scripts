@@ -1,4 +1,5 @@
-import BenefitsApplicationCollection from "src/models/BenefitsApplicationCollection";
+import ApiResourceCollection from "src/models/ApiResourceCollection";
+import BenefitsApplication from "src/models/BenefitsApplication";
 import { Index } from "src/pages/applications/index";
 import { MockBenefitsApplicationBuilder } from "lib/mock-helpers/mock-model-builder";
 import React from "react";
@@ -54,7 +55,10 @@ export const Default = (args: {
 
   const appLogic = useMockableAppLogic({
     benefitsApplications: {
-      benefitsApplications: new BenefitsApplicationCollection(claims()),
+      benefitsApplications: new ApiResourceCollection<BenefitsApplication>(
+        "application_id",
+        claims()
+      ),
       isLoadingClaims: false,
       paginationMeta: {
         page_offset: 1,

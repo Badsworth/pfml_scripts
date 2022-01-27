@@ -1,5 +1,4 @@
 import ApiResourceCollection from "src/models/ApiResourceCollection";
-import BenefitsApplicationCollection from "../../src/models/BenefitsApplicationCollection";
 import { renderHook } from "@testing-library/react-hooks";
 import useAppLogic from "../../src/hooks/useAppLogic";
 
@@ -47,7 +46,7 @@ describe("useAppLogic", () => {
     expect(auth).toEqual(expect.anything());
     expect(catchError).toBeInstanceOf(Function);
     expect(benefitsApplications.benefitsApplications).toBeInstanceOf(
-      BenefitsApplicationCollection
+      ApiResourceCollection
     );
     expect(clearErrors).toBeInstanceOf(Function);
     expect(clearRequiredFieldErrors).toBeInstanceOf(Function);

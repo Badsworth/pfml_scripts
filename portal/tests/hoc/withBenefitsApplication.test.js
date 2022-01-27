@@ -1,6 +1,6 @@
 import { screen, waitFor } from "@testing-library/react";
+import ApiResourceCollection from "../../src/models/ApiResourceCollection";
 import BenefitsApplication from "../../src/models/BenefitsApplication";
-import BenefitsApplicationCollection from "../../src/models/BenefitsApplicationCollection";
 import React from "react";
 import { renderPage } from "../test-utils";
 import routes from "../../src/routes";
@@ -90,7 +90,7 @@ describe("withBenefitsApplication", () => {
           .mockReturnValue(true);
 
         appLogic.benefitsApplications.benefitsApplications =
-          new BenefitsApplicationCollection([mockClaim]);
+          new ApiResourceCollection("application_id", [mockClaim]);
       },
     });
 
@@ -117,7 +117,7 @@ describe("withBenefitsApplication", () => {
         appLogic.portalFlow.pathname = routes.applications.checklist;
 
         appLogic.benefitsApplications.benefitsApplications =
-          new BenefitsApplicationCollection([completedClaim]);
+          new ApiResourceCollection("application_id", [completedClaim]);
       },
       query: { claim_id: mockApplicationId },
     });
@@ -130,7 +130,7 @@ describe("withBenefitsApplication", () => {
         appLogic.portalFlow.pathname = routes.applications.review;
 
         appLogic.benefitsApplications.benefitsApplications =
-          new BenefitsApplicationCollection([completedClaim]);
+          new ApiResourceCollection("application_id", [completedClaim]);
       },
       query: { claim_id: mockApplicationId },
     });
@@ -151,7 +151,7 @@ describe("withBenefitsApplication", () => {
         appLogic.portalFlow.pathname = routes.applications.success;
 
         appLogic.benefitsApplications.benefitsApplications =
-          new BenefitsApplicationCollection([completedClaim]);
+          new ApiResourceCollection("application_id", [completedClaim]);
       },
       query: { claim_id: mockApplicationId },
     });

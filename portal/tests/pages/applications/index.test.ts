@@ -1,7 +1,8 @@
 import { MockBenefitsApplicationBuilder, renderPage } from "../../test-utils";
 import { screen, within } from "@testing-library/react";
+import ApiResourceCollection from "src/models/ApiResourceCollection";
 import { AppLogic } from "../../../src/hooks/useAppLogic";
-import BenefitsApplicationCollection from "../../../src/models/BenefitsApplicationCollection";
+import BenefitsApplication from "src/models/BenefitsApplication";
 import Index from "../../../src/pages/applications/index";
 import routes from "../../../src/routes";
 import userEvent from "@testing-library/user-event";
@@ -11,17 +12,19 @@ const inProgressClaim = new MockBenefitsApplicationBuilder()
   .create();
 
 const submittedClaim = new MockBenefitsApplicationBuilder()
+  .id("mock_application_id_two")
   .submitted()
   .create();
 submittedClaim.fineos_absence_id = "NTN-111-ABS-03";
 
 const completedClaim = new MockBenefitsApplicationBuilder()
+  .id("mock_application_id_three")
   .completed()
   .create();
 
 const setUpHelper = (appLogicHook: AppLogic) => {
   appLogicHook.benefitsApplications.benefitsApplications =
-    new BenefitsApplicationCollection([]);
+    new ApiResourceCollection<BenefitsApplication>("application_id", []);
   appLogicHook.benefitsApplications.loadPage = jest.fn();
 };
 
@@ -96,7 +99,7 @@ describe("Applications", () => {
           setUpHelper(appLogicHook);
           appLogicHook.documents.loadAll = jest.fn();
           appLogicHook.benefitsApplications.benefitsApplications =
-            new BenefitsApplicationCollection([
+            new ApiResourceCollection<BenefitsApplication>("application_id", [
               inProgressClaim,
               submittedClaim,
             ]);
@@ -118,7 +121,9 @@ describe("Applications", () => {
         setUpHelper(appLogicHook);
         appLogicHook.documents.loadAll = jest.fn();
         appLogicHook.benefitsApplications.benefitsApplications =
-          new BenefitsApplicationCollection([completedClaim]);
+          new ApiResourceCollection<BenefitsApplication>("application_id", [
+            completedClaim,
+          ]);
       },
     });
 
@@ -136,7 +141,7 @@ describe("Applications", () => {
             setUpHelper(appLogicHook);
             appLogicHook.documents.loadAll = jest.fn();
             appLogicHook.benefitsApplications.benefitsApplications =
-              new BenefitsApplicationCollection([
+              new ApiResourceCollection<BenefitsApplication>("application_id", [
                 inProgressClaim,
                 submittedClaim,
                 completedClaim,
@@ -186,7 +191,7 @@ describe("Applications", () => {
           setUpHelper(appLogicHook);
           appLogicHook.documents.loadAll = spy;
           appLogicHook.benefitsApplications.benefitsApplications =
-            new BenefitsApplicationCollection([
+            new ApiResourceCollection<BenefitsApplication>("application_id", [
               inProgressClaim,
               inProgressClaim2,
             ]);
@@ -206,7 +211,9 @@ describe("Applications", () => {
           setUpHelper(appLogicHook);
           appLogicHook.documents.loadAll = jest.fn();
           appLogicHook.benefitsApplications.benefitsApplications =
-            new BenefitsApplicationCollection([inProgressClaim]);
+            new ApiResourceCollection<BenefitsApplication>("application_id", [
+              inProgressClaim,
+            ]);
         },
       },
       { query: { uploadedAbsenceId: "mock_id" } }
@@ -243,7 +250,9 @@ describe("Applications", () => {
           setUpHelper(appLogicHook);
           appLogicHook.documents.loadAll = jest.fn();
           appLogicHook.benefitsApplications.benefitsApplications =
-            new BenefitsApplicationCollection([inProgressClaim]);
+            new ApiResourceCollection<BenefitsApplication>("application_id", [
+              inProgressClaim,
+            ]);
         },
       },
       { query: { smsMfaConfirmed: "true" } }
@@ -259,7 +268,9 @@ describe("Applications", () => {
           setUpHelper(appLogicHook);
           appLogicHook.documents.loadAll = jest.fn();
           appLogicHook.benefitsApplications.benefitsApplications =
-            new BenefitsApplicationCollection([inProgressClaim]);
+            new ApiResourceCollection<BenefitsApplication>("application_id", [
+              inProgressClaim,
+            ]);
         },
       });
 
@@ -275,7 +286,9 @@ describe("Applications", () => {
           setUpHelper(appLogicHook);
           appLogicHook.documents.loadAll = jest.fn();
           appLogicHook.benefitsApplications.benefitsApplications =
-            new BenefitsApplicationCollection([inProgressClaim]);
+            new ApiResourceCollection<BenefitsApplication>("application_id", [
+              inProgressClaim,
+            ]);
           appLogicHook.benefitsApplications.paginationMeta = {
             total_records: 50,
             total_pages: 2,
@@ -301,7 +314,9 @@ describe("Applications", () => {
           setUpHelper(appLogicHook);
           appLogicHook.documents.loadAll = jest.fn();
           appLogicHook.benefitsApplications.benefitsApplications =
-            new BenefitsApplicationCollection([inProgressClaim]);
+            new ApiResourceCollection<BenefitsApplication>("application_id", [
+              inProgressClaim,
+            ]);
           appLogicHook.benefitsApplications.paginationMeta = {
             total_records: 50,
             total_pages: 2,
