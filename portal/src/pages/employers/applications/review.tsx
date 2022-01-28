@@ -38,7 +38,7 @@ import Title from "../../../components/core/Title";
 import { Trans } from "react-i18next";
 import WeeklyHoursWorkedRow from "../../../components/employers/WeeklyHoursWorkedRow";
 import formatDate from "../../../utils/formatDate";
-import getClosestOpenFollowUpDate from "../../../utils/getClosestOpenFollowUpDate";
+import { getClosestReviewableFollowUpDate } from "../../../models/ManagedRequirement";
 import isBlank from "../../../utils/isBlank";
 import { isFeatureEnabled } from "../../../services/featureFlags";
 import leaveReasonToPreviousLeaveReason from "../../../utils/leaveReasonToPreviousLeaveReason";
@@ -444,7 +444,7 @@ export const Review = (props: WithEmployerClaimProps) => {
         <Trans
           i18nKey="pages.employersClaimsReview.instructionsFollowUpDate"
           values={{
-            date: getClosestOpenFollowUpDate(claim.managed_requirements),
+            date: getClosestReviewableFollowUpDate(claim.managed_requirements),
           }}
         />
       </Alert>

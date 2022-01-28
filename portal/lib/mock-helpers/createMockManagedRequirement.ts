@@ -1,4 +1,4 @@
-import { ManagedRequirement } from "../../src/models/Claim";
+import { ManagedRequirement } from "../../src/models/ManagedRequirement";
 
 export const createMockManagedRequirement = (
   customAttrs: Partial<ManagedRequirement> = {}

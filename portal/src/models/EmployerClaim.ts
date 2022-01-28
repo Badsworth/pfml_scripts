@@ -1,15 +1,16 @@
 import BaseBenefitsApplication, {
   BaseLeavePeriod,
 } from "./BaseBenefitsApplication";
+import {
+  ManagedRequirement,
+  getClosestReviewableFollowUpDate,
+} from "../models/ManagedRequirement";
 import { AbsencePeriod } from "./AbsencePeriod";
 import Address from "./Address";
 import ConcurrentLeave from "./ConcurrentLeave";
 import EmployerBenefit from "./EmployerBenefit";
 import { IntermittentLeavePeriod } from "./BenefitsApplication";
-import { ManagedRequirement } from "../models/Claim";
 import PreviousLeave from "./PreviousLeave";
-import dayjs from "dayjs";
-import getClosestOpenFollowUpDate from "../utils/getClosestOpenFollowUpDate";
 import isBlank from "../utils/isBlank";
 import { merge } from "lodash";
 
@@ -61,14 +62,10 @@ class EmployerClaim extends BaseBenefitsApplication {
   }
 
   get is_reviewable() {
-    const followUpDate = getClosestOpenFollowUpDate(
-      this.managed_requirements,
-      false
+    const followUpDate = getClosestReviewableFollowUpDate(
+      this.managed_requirements
     );
-    if (followUpDate) {
-      return dayjs().format("YYYY-MM-DD") <= followUpDate;
-    }
-    return false;
+    return followUpDate !== undefined;
   }
 
   get lastReviewedAt(): string | undefined {

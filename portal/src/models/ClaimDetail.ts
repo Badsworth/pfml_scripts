@@ -1,6 +1,6 @@
-import { ClaimEmployee, ClaimEmployer, ManagedRequirement } from "./Claim";
-
+import { ClaimEmployee, ClaimEmployer } from "./Claim";
 import { AbsencePeriod } from "./AbsencePeriod";
+import { ManagedRequirement } from "./ManagedRequirement";
 import dayjs from "dayjs";
 import { orderBy } from "lodash";
 

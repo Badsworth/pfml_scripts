@@ -1,5 +1,6 @@
 /* eslint sort-keys: ["error", "asc"] */
 import { compact, get } from "lodash";
+import { ManagedRequirement } from "./ManagedRequirement";
 
 /**
  * A record from the API's Claims table. Could be utilized by Leave Admin and Claimants.
@@ -53,18 +54,6 @@ export interface ClaimEmployer {
   employer_dba: string | null;
   employer_fein: string;
   employer_id: string;
-}
-
-/**
- * Managed requirements associated to the Claim
- */
-export interface ManagedRequirement {
-  category: string;
-  created_at: string;
-  follow_up_date: string | null;
-  responded_at: string | null;
-  status: "Open" | "Complete" | "Suppressed";
-  type: string;
 }
 
 /**

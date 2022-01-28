@@ -20,7 +20,7 @@ exports[`AbsenceCaseStatusTag renders the component with 'No Action Required' wh
 </div>
 `;
 
-exports[`AbsenceCaseStatusTag renders the component with 'Review By {{date}}' when managedRequirements contains Open requirements 1`] = `
+exports[`AbsenceCaseStatusTag renders the component with 'Review By {{date}}' when managedRequirements contains Open requirements not in the past 1`] = `
 <div>
   <span
     class="usa-tag display-inline-block text-bold text-middle text-no-wrap text-base-darkest bg-warning-lighter"

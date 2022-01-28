@@ -4,7 +4,7 @@ import { AbsencePeriod } from "src/models/AbsencePeriod";
 import ApiResourceCollection from "src/models/ApiResourceCollection";
 import AppErrorInfo from "src/models/AppErrorInfo";
 import EmployerClaim from "src/models/EmployerClaim";
-import { ManagedRequirement } from "src/models/Claim";
+import { ManagedRequirement } from "src/models/ManagedRequirement";
 import { MockEmployerClaimBuilder } from "lib/mock-helpers/mock-model-builder";
 import { Props } from "types/common";
 import React from "react";

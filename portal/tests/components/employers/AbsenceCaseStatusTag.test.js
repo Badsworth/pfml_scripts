@@ -1,10 +1,11 @@
 import { AbsenceCaseStatus } from "../../../src/models/Claim";
 import AbsenceCaseStatusTag from "../../../src/components/AbsenceCaseStatusTag";
+import MockDate from "mockdate";
 import React from "react";
 import { render } from "@testing-library/react";
 
 describe("AbsenceCaseStatusTag", () => {
-  const renderComponent = (status, managedRequirements) => {
+  const renderComponent = (status, managedRequirements = []) => {
     return render(
       <AbsenceCaseStatusTag
         status={status}
@@ -37,7 +38,8 @@ describe("AbsenceCaseStatusTag", () => {
     expect(container).toMatchSnapshot();
   });
 
-  it("renders the component with 'Review By {{date}}' when managedRequirements contains Open requirements", () => {
+  it("renders the component with 'Review By {{date}}' when managedRequirements contains Open requirements not in the past", () => {
+    MockDate.set("2021-07-22");
     const managedRequirementsData = [
       { follow_up_date: "2021-08-22", status: "Open" },
       { follow_up_date: "2021-07-22", status: "Open" },
