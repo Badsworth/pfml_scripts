@@ -55,7 +55,7 @@ function setFeatureFlags(flags?: Partial<FeatureFlags>): void {
     claimantShowPayments: false,
     claimantShowOrganizationUnits: false,
     claimantShowPaymentsPhaseTwo: true,
-    claimantShowMFA: config("MFA_ENABLED") === "true",
+    claimantShowMFA: true,
     employerShowMultiLeave: true,
   };
   cy.setCookie("_ff", JSON.stringify({ ...defaults, ...flags }), { log: true });

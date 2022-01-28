@@ -34,32 +34,32 @@ export default class TwilioClient {
         secondary: "5074188158",
       },
       training: {
-        primary: "",
-        secondary: "",
+        primary: "7853699328",
+        secondary: "8106349678",
       },
       performance: {
-        primary: "",
-        secondary: "",
+        primary: "8045342047",
+        secondary: "8106349684",
       },
       breakfix: {
-        primary: "",
-        secondary: "",
+        primary: "8063045688",
+        secondary: "7752564489",
       },
       uat: {
-        primary: "",
-        secondary: "",
+        primary: "7853699139",
+        secondary: "7754062155",
       },
       "cps-preview": {
-        primary: "",
-        secondary: "",
+        primary: "7652759074",
+        secondary: "8063045703",
       },
       long: {
-        primary: "",
-        secondary: "",
+        primary: "7853699162",
+        secondary: "8045342087",
       },
       trn2: {
-        primary: "",
-        secondary: "",
+        primary: "7752564493",
+        secondary: "8063045739",
       }
     };
   }
