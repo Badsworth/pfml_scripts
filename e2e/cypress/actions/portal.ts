@@ -1456,7 +1456,7 @@ function reportOtherLeavesAndBenefits(claim: ApplicationRequestBody): void {
 
   cy.contains(
     "form",
-    "Will you use any employer-sponsored accrued paid leave during your paid leave from PFML?"
+    /Will you use any employer-sponsored (paid time off|accrued paid leave) during your (leave period?|paid leave from PFML?)/
   )
     .within(() => {
       const selector = (content: string) =>
