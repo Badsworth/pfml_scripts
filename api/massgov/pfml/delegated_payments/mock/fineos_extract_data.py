@@ -614,7 +614,10 @@ def generate_payment_extract_files(
             leave_request_id=scenario_data.leave_request_id,
         )
 
-        if scenario_descriptor.is_tax_withholding_records_exists:
+        if (
+            scenario_descriptor.is_tax_withholding_records_exists
+            and scenario_data.tax_withholding_payment_i_values
+        ):
             for item in range(2):
                 withholding_payment = copy.deepcopy(fineos_payments_data)
                 withholding_payment.event_reason = "Automatic Alternate Payment"
@@ -632,11 +635,15 @@ def generate_payment_extract_files(
                 if item == 0:
                     withholding_payment.tin = "SITPAYEE001"
                     withholding_payment.payment_amount = "22.00"
-                    withholding_payment.i_value = str(fake.unique.random_int())
+                    withholding_payment.i_value = scenario_data.tax_withholding_payment_i_values[
+                        item
+                    ]
                 if item == 1:
                     withholding_payment.tin = "FITAMOUNTPAYEE001"
                     withholding_payment.payment_amount = "35.00"
-                    withholding_payment.i_value = str(fake.unique.random_int())
+                    withholding_payment.i_value = scenario_data.tax_withholding_payment_i_values[
+                        item
+                    ]
                 fineos_payments_dataset.append(withholding_payment)
         fineos_payments_dataset.append(fineos_payments_data)
 

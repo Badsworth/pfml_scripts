@@ -9,6 +9,7 @@ from sqlalchemy.sql.expression import null
 import massgov.pfml.api.services.payments as payment_services
 from massgov.pfml.db.models.employees import PaymentMethod, PaymentTransactionType
 from massgov.pfml.db.models.factories import ImportLogFactory, PaymentFactory
+from massgov.pfml.db.models.payments import FineosWritebackTransactionStatus
 from massgov.pfml.delegated_payments.mock.delegated_payments_factory import DelegatedPaymentFactory
 
 
@@ -495,11 +496,21 @@ def test_get_payments_with_status(test_db_session, caplog):
     claim = payment_factory1.get_or_create_claim()
 
     payment1 = payment_factory1.get_or_create_payment()
-    payment1_cancellation, payment1_successor = payment_factory1.create_reissued_payments()
+    payment1_cancellation, payment1_successor = payment_factory1.create_reissued_payments(
+        writeback_transaction_status=FineosWritebackTransactionStatus.PAYMENT_AUDIT_IN_PROGRESS
+    )
 
     # Create two payments in a later pay period
-    payment2a = payment_factory1.create_related_payment(weeks_later=1, amount=200)
-    payment2b = payment_factory1.create_related_payment(weeks_later=1, amount=300)
+    payment2a = payment_factory1.create_related_payment(
+        weeks_later=1,
+        amount=200,
+        writeback_transaction_status=FineosWritebackTransactionStatus.PAYMENT_AUDIT_IN_PROGRESS,
+    )
+    payment2b = payment_factory1.create_related_payment(
+        weeks_later=1,
+        amount=300,
+        writeback_transaction_status=FineosWritebackTransactionStatus.PAYMENT_AUDIT_IN_PROGRESS,
+    )
 
     # Create a payment that is just cancelled (but in its own week, so returned)
     payment3 = payment_factory1.create_related_payment(weeks_later=2, amount=400)
@@ -513,7 +524,6 @@ def test_get_payments_with_status(test_db_session, caplog):
     payment_response = payment_services.get_payments_with_status(test_db_session, claim)
 
     log_dict = caplog.records[0].__dict__
-
     assert len(payment_response["payments"]) == len(expected_valid_payments)
     for i, expected_payment in enumerate(expected_valid_payments):
         resp_payment = payment_response["payments"][i]
@@ -640,7 +650,9 @@ def test_get_payments_with_legacy_and_regular(test_db_session):
     claim = payment_factory.get_or_create_claim()
 
     payment_factory.get_or_create_payment()
-    _, payment_successor = payment_factory.create_reissued_payments()
+    _, payment_successor = payment_factory.create_reissued_payments(
+        writeback_transaction_status=FineosWritebackTransactionStatus.PAYMENT_AUDIT_IN_PROGRESS
+    )
 
     # Create a legacy payment
     legacy_send_date = date(2021, 6, 14)

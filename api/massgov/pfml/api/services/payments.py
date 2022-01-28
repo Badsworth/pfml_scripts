@@ -54,14 +54,17 @@ class PaymentScenarioData:
     status: FrontendPaymentStatus = FrontendPaymentStatus.DELAYED
 
     SCENARIOS = {
-        WritebackStatus.PENDING_PRENOTE.transaction_status_id: "pending_validation",
+        WritebackStatus.PENDING_PRENOTE.transaction_status_id: "pending_prenote",
         WritebackStatus.DUA_ADDITIONAL_INCOME.transaction_status_id: "reduction",
         WritebackStatus.DIA_ADDITIONAL_INCOME.transaction_status_id: "reduction",
         WritebackStatus.WEEKLY_BENEFITS_AMOUNT_EXCEEDS_850.transaction_status_id: "reduction",
         WritebackStatus.SELF_REPORTED_ADDITIONAL_INCOME.transaction_status_id: "reduction",
         WritebackStatus.PAID.transaction_status_id: "paid",
         WritebackStatus.POSTED.transaction_status_id: "paid",
-        None: "no_writeback",
+        WritebackStatus.PAYMENT_AUDIT_IN_PROGRESS.transaction_status_id: "pending",
+        # Payments may not have a status, but be in our system if
+        # the batch processing is actively occurring.
+        None: "pending",
     }
 
     @classmethod
@@ -87,7 +90,7 @@ class PaymentScenarioData:
         )
 
     @classmethod
-    def pending_validation(cls, **kwargs):
+    def pending_prenote(cls, **kwargs):
         payment = kwargs["payment"]
         pub_eft = payment.pub_eft
         created_date = (
@@ -147,7 +150,7 @@ class PaymentScenarioData:
         )
 
     @classmethod
-    def no_writeback(cls, **_):
+    def pending(cls, **_):
         """
         No writeback means the payment hasn't failed any validation,
         but hasn't been sent to the bank yet. Likely it's waiting for the audit report

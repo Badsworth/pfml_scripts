@@ -102,6 +102,8 @@ class ScenarioData:
     additional_payment_c_value: Optional[str] = None
     additional_payment_i_value: Optional[str] = None
 
+    tax_withholding_payment_i_values: Optional[List[str]] = None
+
     additional_payment_absence_case_id: Optional[str] = None
 
     absence_period_c_value: Optional[str] = None
@@ -109,6 +111,8 @@ class ScenarioData:
 
     payment: Optional[Payment] = None
     additional_payment: Optional[Payment] = None
+
+    tax_withholding_payments: Optional[List[Payment]] = None
 
 
 @dataclass
@@ -410,6 +414,12 @@ def generate_scenario_dataset(
                         scenario_data.additional_payment_absence_case_id,
                         db_session,
                     )
+
+                if scenario_descriptor.is_tax_withholding_records_exists:
+                    scenario_data.tax_withholding_payment_i_values = [
+                        str(fake.unique.random_int()),
+                        str(fake.unique.random_int()),
+                    ]
 
                 scenario_dataset.append(scenario_data)
 

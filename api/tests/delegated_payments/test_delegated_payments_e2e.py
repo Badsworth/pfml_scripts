@@ -27,6 +27,7 @@ from massgov.pfml.db.models.employees import (
     LkState,
     Payment,
     PaymentMethod,
+    PaymentTransactionType,
     PrenoteState,
     PubError,
     ReferenceFile,
@@ -63,6 +64,7 @@ from massgov.pfml.delegated_payments.mock.scenario_data_generator import (
 from massgov.pfml.delegated_payments.mock.scenarios import (
     DELAYED_SCENARIO_DESCRIPTORS,
     SCENARIO_DESCRIPTORS,
+    SCENARIO_DESCRIPTORS_BY_NAME,
     ScenarioDescriptor,
     ScenarioName,
 )
@@ -140,6 +142,9 @@ class TestDataSet:
                 if payment is not None:
                     payments.append(payment)
 
+                if scenario_data.tax_withholding_payments:
+                    payments.extend(scenario_data.tax_withholding_payments)
+
         return payments
 
     def is_payment_scenario(self, payment: Payment, scenario_name: ScenarioName):
@@ -159,6 +164,13 @@ class TestDataSet:
                 and scenario_data.additional_payment_i_value == i_value
             ):
                 return scenario_data
+
+            elif (
+                scenario_data.tax_withholding_payment_i_values
+                and i_value in scenario_data.tax_withholding_payment_i_values
+            ):
+                return scenario_data
+
         return None
 
     def populate_scenario_data_payments(self, db_session) -> None:
@@ -186,6 +198,18 @@ class TestDataSet:
                     .first()
                 )
                 scenario_data.additional_payment = additional_payment
+
+            if scenario_data.tax_withholding_payment_i_values:
+                tax_withholding_payments = (
+                    db_session.query(Payment)
+                    .filter(
+                        Payment.fineos_pei_i_value.in_(
+                            scenario_data.tax_withholding_payment_i_values
+                        )
+                    )
+                    .all()
+                )
+                scenario_data.tax_withholding_payments = tax_withholding_payments
 
     def populate_scenario_dataset_claims(self, db_session) -> None:
         for scenario_data in self.scenario_dataset:
@@ -218,9 +242,6 @@ def test_e2e_pub_payments(
     # ========================================================================
     # Configuration / Setup
     # ========================================================================
-
-    # Turn on Tax Withholding Feature Flag for e2e test.
-    os.environ["ENABLE_WITHHOLDING_PAYMENTS"] = "1"
 
     caplog.set_level(logging.ERROR)  # noqa: B1
     setup_common_env_variables(monkeypatch)
@@ -269,6 +290,7 @@ def test_e2e_pub_payments(
                 lambda sd: not sd.scenario_descriptor.create_payment, test_dataset.scenario_dataset
             )
         )
+        all_scenarios = list(SCENARIO_DESCRIPTORS_BY_NAME.keys())
 
         # split payments added for withholding
         split_payment_scenarios = [
@@ -348,6 +370,7 @@ def test_e2e_pub_payments(
         ]
 
         stage_1_non_standard_payments.extend(stage_1_overpayment_scenarios)
+        stage_1_non_standard_payments.extend(stage_1_non_standard_splitpayment_scenarios)
 
         assert_payment_state_for_scenarios(
             test_dataset=test_dataset,
@@ -356,25 +379,26 @@ def test_e2e_pub_payments(
             db_session=test_db_session,
         )
 
+        stage_1_scenarios_that_will_later_fail = [
+            ScenarioName.PUB_ACH_FAMILY_RETURN,
+            ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
+            ScenarioName.PUB_ACH_FAMILY_RETURN_INVALID_PAYMENT_ID_FORMAT,
+            ScenarioName.PUB_ACH_MEDICAL_RETURN,
+            ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
+            ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
+            ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
+            ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
+            ScenarioName.AUDIT_REJECTED,
+            ScenarioName.AUDIT_SKIPPED,
+            ScenarioName.AUDIT_REJECTED_WITH_NOTE,
+            ScenarioName.AUDIT_SKIPPED_WITH_NOTE,
+            ScenarioName.PUB_ACH_FAMILY_RETURN_PAYMENT_ID_NOT_FOUND,
+            ScenarioName.PUB_CHECK_FAMILY_RETURN_CHECK_NUMBER_NOT_FOUND,
+        ]
+
         assert_payment_state_for_scenarios(
             test_dataset=test_dataset,
-            scenario_names=[
-                ScenarioName.PUB_ACH_FAMILY_RETURN,
-                ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
-                ScenarioName.PUB_ACH_FAMILY_RETURN_INVALID_PAYMENT_ID_FORMAT,
-                ScenarioName.PUB_ACH_MEDICAL_RETURN,
-                ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
-                ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
-                ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
-                ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
-                ScenarioName.AUDIT_REJECTED,
-                ScenarioName.AUDIT_SKIPPED,
-                ScenarioName.AUDIT_REJECTED_WITH_NOTE,
-                ScenarioName.AUDIT_SKIPPED_WITH_NOTE,
-                ScenarioName.PUB_ACH_FAMILY_RETURN_INVALID_PAYMENT_ID_FORMAT,
-                ScenarioName.PUB_ACH_FAMILY_RETURN_PAYMENT_ID_NOT_FOUND,
-                ScenarioName.PUB_CHECK_FAMILY_RETURN_CHECK_NUMBER_NOT_FOUND,
-            ],
+            scenario_names=stage_1_scenarios_that_will_later_fail,
             end_state=State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT,
             db_session=test_db_session,
         )
@@ -608,30 +632,34 @@ def test_e2e_pub_payments(
         assert_csv_content(audit_report_parsed_csv_rows, audit_report_expected_rows)
 
         # == Writeback
-        stage_1_writeback_scenarios = []
-        stage_1_writeback_scenarios.extend(stage_1_non_standard_payments)
-        stage_1_writeback_scenarios.extend(state_1_invalid_payment_scenarios)
-        stage_1_writeback_scenarios.extend(
-            [
-                ScenarioName.REJECTED_LEAVE_REQUEST_DECISION,
-                ScenarioName.UNKNOWN_LEAVE_REQUEST_DECISION,
-                ScenarioName.CHECK_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
-                ScenarioName.TAX_WITHHOLDING_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
-                ScenarioName.IN_REVIEW_LEAVE_REQUEST_DECISION,
-            ]
+        # Nearly every scenario has a writeback at this point after task 1
+        stage_1_writeback_scenarios = list(all_scenarios)
+        # The tax records for these next scenarios don't have writebacks yet, and
+        # complicate the logic to check for them
+        stage_1_writeback_scenarios.remove(ScenarioName.HAPPY_PATH_TAX_WITHHOLDING)
+        stage_1_writeback_scenarios.remove(
+            ScenarioName.HAPPY_PATH_TAX_WITHHOLDING_PAYMENT_METHOD_CHECK
         )
-
-        stage_1_split_writeback_scenarios = [
-            ScenarioName.TAX_WITHHOLDING_PRIMARY_PAYMENT_NOT_PRENOTED,
-            ScenarioName.TAX_WITHHOLDING_PRIMARY_PAYMENT_NOT_PRENOTED,
-            ScenarioName.TAX_WITHHOLDING_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
-            ScenarioName.TAX_WITHHOLDING_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
-            ScenarioName.TAX_WITHHOLDING_CANCELLATION_PAYMENT,
-            ScenarioName.TAX_WITHHOLDING_CANCELLATION_PAYMENT,
-        ]
+        # No payment created for this scenario
+        stage_1_writeback_scenarios.remove(ScenarioName.CLAIMANT_PRENOTED_NO_PAYMENT_RECEIVED)
 
         assert_writeback_for_stage(
             test_dataset, stage_1_writeback_scenarios, test_db_session,
+        )
+
+        # Now add records to the list for tax withholding scenarios so the counts
+        # match as each scenario can have multiple payments for it
+        stage_1_writeback_scenarios.extend(
+            [
+                ScenarioName.TAX_WITHHOLDING_MISSING_PRIMARY_PAYMENT,
+                ScenarioName.TAX_WITHHOLDING_MISSING_PRIMARY_PAYMENT,
+                ScenarioName.TAX_WITHHOLDING_PRIMARY_PAYMENT_NOT_PRENOTED,
+                ScenarioName.TAX_WITHHOLDING_PRIMARY_PAYMENT_NOT_PRENOTED,
+                ScenarioName.TAX_WITHHOLDING_CANCELLATION_PAYMENT,
+                ScenarioName.TAX_WITHHOLDING_CANCELLATION_PAYMENT,
+                ScenarioName.TAX_WITHHOLDING_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
+                ScenarioName.TAX_WITHHOLDING_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
+            ]
         )
 
         # Validate reference files
@@ -1152,12 +1180,9 @@ def test_e2e_pub_payments(
             {
                 "errored_writeback_record_during_file_creation_count": 0,
                 "errored_writeback_record_during_file_transfer_count": 0,
-                "successful_writeback_record_count": len(stage_1_writeback_scenarios)
-                + len(stage_1_split_writeback_scenarios),
-                "writeback_record_count": len(stage_1_writeback_scenarios)
-                + len(stage_1_split_writeback_scenarios),
-                "generic_flow_writeback_items_count": len(stage_1_writeback_scenarios)
-                + len(stage_1_split_writeback_scenarios),
+                "successful_writeback_record_count": len(stage_1_writeback_scenarios),
+                "writeback_record_count": len(stage_1_writeback_scenarios),
+                "generic_flow_writeback_items_count": len(stage_1_writeback_scenarios),
                 "address_validation_error_writeback_transaction_status_count": len(
                     [
                         ScenarioName.CHECK_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
@@ -1192,8 +1217,18 @@ def test_e2e_pub_payments(
                         ScenarioName.UNKNOWN_LEAVE_REQUEST_DECISION,
                     ]
                 ),
-                "processed_writeback_transaction_status_count": len(stage_1_non_standard_payments)
-                + len(stage_1_non_standard_splitpayment_scenarios),
+                "processed_writeback_transaction_status_count": len(stage_1_non_standard_payments),
+                "payment_audit_in_progress_writeback_transaction_status_count": len(
+                    stage_1_happy_path_scenarios
+                )
+                + len(stage_1_scenarios_that_will_later_fail)
+                + len(
+                    [
+                        ScenarioName.HAPPY_PATH_TAX_WITHHOLDING,
+                        ScenarioName.HAPPY_PATH_TAX_WITHHOLDING_PAYMENT_METHOD_CHECK,
+                        ScenarioName.TAX_WITHHOLDING_MISSING_PRIMARY_PAYMENT,
+                    ]
+                ),
             },
         )
 
@@ -1863,7 +1898,10 @@ def test_e2e_pub_payments(
         )
 
         assert_writeback_for_stage(
-            test_dataset, stage_3_all_writeback_scenarios, test_db_session,
+            test_dataset,
+            stage_3_all_writeback_scenarios,
+            test_db_session,
+            do_related_payments=False,
         )
 
         # == Reports
@@ -2264,7 +2302,10 @@ def test_e2e_pub_payments_delayed_scenarios(
         ]
 
         assert_writeback_for_stage(
-            test_dataset, stage_2_writeback_scenarios, local_test_db_session,
+            test_dataset,
+            stage_2_writeback_scenarios,
+            local_test_db_session,
+            do_related_payments=False,
         )
 
     # ===============================================================================
@@ -2367,7 +2408,10 @@ def test_e2e_pub_payments_delayed_scenarios(
         ]
 
         assert_writeback_for_stage(
-            test_dataset, stage_4_writeback_scenarios, local_test_db_session,
+            test_dataset,
+            stage_4_writeback_scenarios,
+            local_test_db_session,
+            do_related_payments=False,
         )
 
     # ===============================================================================
@@ -2698,6 +2742,7 @@ def setup_common_env_variables(monkeypatch):
     monkeypatch.setenv("DFML_PUB_ROUTING_NUMBER", "234567890")
     monkeypatch.setenv("PUB_PAYMENT_STARTING_CHECK_NUMBER", "100")
     monkeypatch.setenv("USE_AUDIT_REJECT_TRANSACTION_STATUS", "1")
+    monkeypatch.setenv("ENABLE_WITHHOLDING_PAYMENTS", "1")
 
 
 # == Assertion Helpers ==
@@ -2753,7 +2798,7 @@ def assert_payment_state_for_scenarios(
                 payment = scenario_data.additional_payment
             else:
                 payment = scenario_data.payment
-            assert payment is not None
+            assert payment is not None, f"No payment found for scenario: {scenario_name}"
 
             state_log = state_log_util.get_latest_state_log_in_flow(payment, flow, db_session)
 
@@ -2921,7 +2966,10 @@ def assert_metrics(
 
 
 def assert_writeback_for_stage(
-    test_dataset: TestDataSet, writeback_scenario_names: List[ScenarioName], db_session: db.Session,
+    test_dataset: TestDataSet,
+    writeback_scenario_names: List[ScenarioName],
+    db_session: db.Session,
+    do_related_payments: bool = True,
 ):
 
     # Validate file creation
@@ -2947,21 +2995,20 @@ def assert_writeback_for_stage(
     )
 
     # Validate counts
-    writeback_scenario_payments = []
-    for writeback_scenario_name in writeback_scenario_names:
-        scenario_payments = test_dataset.get_scenario_payments_by_scenario_name(
-            writeback_scenario_name
-        )
-        writeback_scenario_payments.extend(scenario_payments)
-
-    assert len(writeback_scenario_names) == len(writeback_scenario_payments)
-
     generic_flow_scenario_payments = []
     for writeback_scenario_name in writeback_scenario_names:
         scenario_payments = test_dataset.get_scenario_payments_by_scenario_name(
             writeback_scenario_name
         )
-        generic_flow_scenario_payments.extend(scenario_payments)
+        # In some cases, we know the related payments (ie. tax withholdings)
+        # Won't have a new writeback, so skip validating them below
+        for scenario_payment in scenario_payments:
+            if not do_related_payments and scenario_payment.payment_transaction_type_id in [
+                PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id,
+                PaymentTransactionType.FEDERAL_TAX_WITHHOLDING.payment_transaction_type_id,
+            ]:
+                continue
+            generic_flow_scenario_payments.append(scenario_payment)
 
     generic_flow_scenario_payment_ids = set([p.payment_id for p in generic_flow_scenario_payments])
 
@@ -2974,12 +3021,11 @@ def assert_writeback_for_stage(
         )
         .all()
     )
-
-    assert len(writeback_details) == len(writeback_scenario_names)
+    assert len(writeback_details) == len(generic_flow_scenario_payment_ids)
 
     # Validate csv content
     expected_csv_rows = []
-    for p in writeback_scenario_payments:
+    for p in generic_flow_scenario_payments:
         expected_csv_row = {
             "pei_C_Value": p.fineos_pei_c_value,
             "pei_I_Value": p.fineos_pei_i_value,
