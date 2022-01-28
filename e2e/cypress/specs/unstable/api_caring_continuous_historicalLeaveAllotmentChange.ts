@@ -85,7 +85,7 @@ describe("Create a new caring leave claim in API submission and add Historical A
              timestamp_from: submission.timestamp_from,
              debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
            },
-           45000
+           75000
          )
          .then(() => {
           cy.get(
@@ -118,7 +118,7 @@ describe("Create a new caring leave claim in API submission and add Historical A
             timestamp_from: submission.timestamp_from,
             debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
           },
-          60000
+          90000
         )
         .then(() => {
           cy.get(

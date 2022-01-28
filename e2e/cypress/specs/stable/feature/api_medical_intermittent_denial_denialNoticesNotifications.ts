@@ -111,7 +111,7 @@ describe("Denial Notification and Notice", () => {
                 messageWildcard: submission.fineos_absence_id,
                 debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
               },
-              45000
+              75000
             )
             .then(() => {
               const dob =
@@ -151,7 +151,7 @@ describe("Denial Notification and Notice", () => {
               },
               // Adding an additional 30 seconds based on recent failures
               // retrieving this notification during E2E runs
-              60000
+              90000
             )
             .then(() => {
               const dob =
@@ -188,9 +188,7 @@ describe("Denial Notification and Notice", () => {
               messageWildcard: submission.fineos_absence_id,
               timestamp_from: submission.timestamp_from,
               debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
-            },
-            // Reduced timeout, since we have multiple tests that run prior to this.
-            30000
+            }
           )
           .then(() => {
             cy.contains(submission.fineos_absence_id);

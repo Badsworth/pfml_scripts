@@ -170,7 +170,7 @@ describe("Post-approval (notifications/notices)", () => {
                       "Fineos Claim ID": submission.fineos_absence_id,
                     },
                   },
-                  60000
+                  90000
                 )
                 .then(() => {
                   cy.screenshot("Claimant email");
@@ -210,7 +210,7 @@ describe("Post-approval (notifications/notices)", () => {
                     "Fineos Claim ID": submission.fineos_absence_id,
                   },
                 },
-                60000
+                90000
               )
               .then(() => {
                 cy.screenshot("Leave Admin email");

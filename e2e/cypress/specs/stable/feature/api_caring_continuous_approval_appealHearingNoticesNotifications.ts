@@ -143,7 +143,7 @@ describe("Appeal Hearing Notification & Notice Confirmation", () => {
               timestamp_from: submission.timestamp_from,
               debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
             },
-            60000
+            90000
           );
           cy.screenshot("approval-claimant-email");
           cy.contains(submission.fineos_absence_id);
@@ -179,7 +179,7 @@ describe("Appeal Hearing Notification & Notice Confirmation", () => {
                 timestamp_from: submission.timestamp_from,
                 debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
               },
-              60000
+              90000
             )
             .then(() => {
               cy.screenshot("approval-leave-admin-email");

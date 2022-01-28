@@ -90,7 +90,7 @@ describe("Create a Benefit Amount Change Notice in FINEOS and check delivery to 
             timestamp_from: submission.timestamp_from,
             debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
           },
-          60000
+          90000
         )
         .then(() => {
           cy.contains("Your benefit amount has changed.");
@@ -113,7 +113,7 @@ describe("Create a Benefit Amount Change Notice in FINEOS and check delivery to 
             timestamp_from: submission.timestamp_from,
             debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
           },
-          60000
+          90000
         )
         .then(() => {
           cy.contains("The applicant’s benefit amount was changed.");
