@@ -61,11 +61,20 @@ def eligibility_post():
         EligibilityEmploymentStatus.self_employed,
         EligibilityEmploymentStatus.unemployed,
     ]:
+        invalid_employment_status_description = "Not Known: invalid employment status"
+        logger.info(
+            "Cannot calculate financial eligibility: invalid employment status",
+            extra={
+                "employment_status": request.employment_status,
+                "financially_eligible": False,
+                "description": invalid_employment_status_description,
+            },
+        )
         return response_util.success_response(
             message="success",
             data=EligibilityResponse(
                 financially_eligible=False,
-                description="Not Known: invalid employment status",
+                description=invalid_employment_status_description,
                 total_wages=None,
                 state_average_weekly_wage=None,
                 unemployment_minimum=None,
