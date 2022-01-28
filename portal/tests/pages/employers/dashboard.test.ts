@@ -45,12 +45,9 @@ const verifiableUserLeaveAdministrator = createUserLeaveAdministrator({
 const getClaims = (leaveAdmin: UserLeaveAdministrator) => {
   return [
     new Claim({
-      absence_period_end_date: "",
-      absence_period_start_date: "",
-      claim_type_description: "",
-      fineos_notification_id: "NTN-123",
-      managed_requirements: [],
+      absence_periods: [],
       created_at: "2021-01-15",
+      managed_requirements: [],
       employee: new ClaimEmployee({
         first_name: "Jane",
         middle_name: null,
