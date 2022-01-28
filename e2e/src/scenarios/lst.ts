@@ -1,6 +1,8 @@
+import path from "path";
 import { ScenarioSpecification } from "../generation/Scenario";
 import * as CypressScenarios from "./cypress";
 import { ClaimSpecification, EmployerResponseSpec } from "../generation/Claim";
+import shuffle from "generation/shuffle";
 
 /**
  * Load & Stress Testing Scenarios.
@@ -62,6 +64,21 @@ const employerResponseLeavesAndBenefits: Partial<EmployerResponseSpec> = {
   ],
 };
 
+const selectRandomFile = (): string => {
+  type FileSizeRanges = "4.8MB-6.8MB" | "7MB-10MB";
+  const wheel: Array<FileSizeRanges> = [
+    ...Array<"4.8MB-6.8MB">(70).fill("4.8MB-6.8MB"),
+    ...Array<"7MB-10MB">(30).fill("7MB-10MB"),
+  ];
+  const range = wheel[Math.floor(Math.random() * wheel.length)];
+  const filesMap: Record<FileSizeRanges, string[]> = {
+    "4.8MB-6.8MB": ["5MB.pdf", "6MB.pdf"],
+    "7MB-10MB": ["7MB.pdf", "8MB.pdf", "9.4MB.pdf"],
+  };
+  const filesInRanges = filesMap[range];
+  const file = shuffle(filesInRanges)[0];
+  return path.join("forms", "lst", file);
+};
 export const LSTOLB1: ScenarioSpecification = {
   ...CypressScenarios.BHAP1,
   claim: {
@@ -69,10 +86,10 @@ export const LSTOLB1: ScenarioSpecification = {
     label: "PortalClaimSubmit - Other Leaves/Benefits",
     docs: {
       FOSTERPLACEMENT: {
-        filename: "limit-4.5MB.pdf",
+        filename: selectRandomFile,
       },
       MASSID: {
-        filename: "limit-4.5MB.pdf",
+        filename: selectRandomFile,
       },
     },
     employerResponse: {
@@ -96,10 +113,10 @@ export const LSTBHAP1: ScenarioSpecification = {
     },
     docs: {
       FOSTERPLACEMENT: {
-        filename: "limit-4.5MB.pdf",
+        filename: selectRandomFile,
       },
       MASSID: {
-        filename: "limit-4.5MB.pdf",
+        filename: selectRandomFile,
       },
     },
   },
@@ -116,10 +133,10 @@ export const LSTCHAP1: ScenarioSpecification = {
     work_pattern_spec: "0,720,0,720,0,720,0",
     docs: {
       MASSID: {
-        filename: "limit-4.5MB.pdf",
+        filename: selectRandomFile,
       },
       CARING: {
-        filename: "limit-4.5MB.pdf",
+        filename: selectRandomFile,
       },
     },
     shortClaim: true,

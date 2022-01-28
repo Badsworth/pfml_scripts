@@ -40,26 +40,39 @@ export abstract class AbstractDocumentGenerator<
     config: C
   ): DocumentWithPromisedFile {
     const name = `${uuid()}.pdf`;
-
-    const pathToDoc = config.filename
-      ? path.join(process.cwd(), `forms/${config.filename}`)
+    if (
+      config.filename &&
+      typeof config.filename !== "string" &&
+      typeof config.filename !== "function"
+    ) {
+      throw TypeError("'filename' must be of type 'string' | '(() => string)'");
+    }
+    const fileNameOrFileNameMethod: string | (() => string) | undefined =
+      config.filename as string | (() => string);
+    let file: string | undefined;
+    if (typeof fileNameOrFileNameMethod === "function") {
+      file = fileNameOrFileNameMethod();
+    }
+    const pathToDoc = file
+      ? path.join(process.cwd(), file as string)
       : undefined;
     return {
       // Assertion here so that we don't have to redefine all of the associated types downstream
       document_type: this.documentType as DocumentType,
-      name,
+      name: file || name,
       // Return a callback to generate the file. This is important when dealing with millions of claims, as it allows us
       // to trigger generation at save time.
-      file: pathToDoc
-        ? async () =>
-            new StreamWrapper(
-              fs.createReadStream(pathToDoc),
-              path.basename(config.filename as string)
-            )
-        : async () =>
-            this.generate(claim, config).then(
-              (data) => new Uint8ArrayWrapper(data, name)
-            ),
+      file:
+        file && pathToDoc
+          ? async () =>
+              new StreamWrapper(
+                fs.createReadStream(pathToDoc),
+                path.basename(file as string)
+              )
+          : async () =>
+              this.generate(claim, config).then(
+                (data) => new Uint8ArrayWrapper(data, name)
+              ),
     };
   }
   abstract getFormData(claim: ApplicationRequestBody, config: C): PDFFormData;
