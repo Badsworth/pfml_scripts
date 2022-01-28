@@ -2,6 +2,7 @@ import { portal, fineos, fineosPages } from "../../../actions";
 import { Submission } from "../../../../src/types";
 import { assertValidClaim } from "../../../../src/util/typeUtils";
 import { addDays, formatISO, startOfWeek, subDays } from "date-fns";
+import { config } from "../../../actions/common";
 
 describe("Submit bonding application via the web portal: Adjudication Approval, recording actual hours & payment checking", () => {
   const submissionTest =
@@ -131,7 +132,11 @@ describe("Submit bonding application via the web portal: Adjudication Approval, 
           ?.expected_weekly_payment as unknown as number;
         fineosPages.ClaimPage.visit(submission.fineos_absence_id).paidLeave(
           (leaveCase) => {
-            leaveCase.assertPaymentsMade([{ net_payment_amount: payment }]);
+            if (config("HAS_FEB_RELEASE") === "true") {
+              leaveCase.assertAmountsPending([{ net_payment_amount: payment }]);
+            } else {
+              leaveCase.assertPaymentsMade([{ net_payment_amount: payment }]);
+            }
           }
         );
       });

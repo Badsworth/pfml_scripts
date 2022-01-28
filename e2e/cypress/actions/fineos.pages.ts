@@ -1651,7 +1651,7 @@ class PaidLeaveDocumentsPage {
 /**
  * Future or made payment.
  */
-type Payment = { net_payment_amount: number };
+type Payment = { net_payment_amount: number; paymentInstances?: number };
 
 /**
  * Data needed to apply a reduction to a payment in a paid leave case.
@@ -1911,10 +1911,23 @@ class PaidLeavePage {
         // If you really need ordering, I'd suggest we add expected payment dates to this function and
         // do it that way.
         amountsPending.forEach((payment) => {
-          if(payment.net_payment_amount) {
+          if (payment.net_payment_amount) {
             cy.get(`tbody tr`)
               .find("td:nth-child(8)")
-              .should("contain.text", numToPaymentFormat(payment.net_payment_amount));
+              .then((els) => {
+                const payments = [...els]
+                  .map((el) => el.innerText)
+                  .filter(
+                    (text) =>
+                      text == numToPaymentFormat(payment.net_payment_amount)
+                  );
+                expect(payments.length).to.equal(
+                  payment.paymentInstances ?? 1,
+                  `Expected ${payment.paymentInstances ?? 1} payment(s) of ${
+                    payment.net_payment_amount
+                  } - received ${payments.length} instances`
+                );
+              });
           }
         });
       });

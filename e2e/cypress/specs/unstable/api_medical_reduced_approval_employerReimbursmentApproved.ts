@@ -150,6 +150,7 @@ import { config } from "../../actions/common";
             },
             {
               net_payment_amount: employerReAmount,
+              paymentInstances: 2
             },
           ]);
         });

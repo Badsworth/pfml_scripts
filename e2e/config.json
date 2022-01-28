@@ -23,7 +23,8 @@
     "HAS_ORGUNITS_SETUP": "true",
     "HAS_FINEOS_JANUARY_RELEASE": "true",
     "HAS_LARGE_FILE_COMPRESSION": "true",
-    "HAS_EMPLOYER_REIMBURSEMENTS": "true"
+    "HAS_EMPLOYER_REIMBURSEMENTS": "true",
+    "HAS_FEB_RELEASE": "true"
   },
   "stage": {
     "PORTAL_BASEURL": "https://paidleave-stage.mass.gov",
@@ -39,7 +40,8 @@
     "DOR_ETL_ARN": "arn:aws:states:us-east-1:498823821309:stateMachine:pfml-api-stage-dor-fineos-etl",
     "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "false",
     "HAS_FINEOS_JANUARY_RELEASE": "false",
-    "HAS_LARGE_FILE_COMPRESSION": "true"
+    "HAS_LARGE_FILE_COMPRESSION": "true",
+    "HAS_FEB_RELEASE": "false"
   },
   "training": {
     "PORTAL_BASEURL": "https://paidleave-training.mass.gov",
@@ -55,7 +57,8 @@
     "DOR_ETL_ARN": "arn:aws:states:us-east-1:498823821309:stateMachine:pfml-api-training-dor-fineos-etl",
     "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "true",
     "HAS_FINEOS_JANUARY_RELEASE": "true",
-    "HAS_LARGE_FILE_COMPRESSION": "true"
+    "HAS_LARGE_FILE_COMPRESSION": "true",
+    "HAS_FEB_RELEASE": "false"
   },
   "trn2": {
     "PORTAL_BASEURL": "https://paidleave-trn2.dfml.eol.mass.gov",
@@ -71,7 +74,8 @@
     "DOR_ETL_ARN": "arn:aws:states:us-east-1:498823821309:stateMachine:pfml-api-trn2-dor-fineos-etl",
     "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "false",
     "HAS_FINEOS_JANUARY_RELEASE": "false",
-    "HAS_LARGE_FILE_COMPRESSION": "true"
+    "HAS_LARGE_FILE_COMPRESSION": "true",
+    "HAS_FEB_RELEASE": "false"
   },
   "long": {
     "PORTAL_BASEURL": "https://paidleave-long.dfml.eol.mass.gov",
@@ -87,7 +91,8 @@
     "DOR_ETL_ARN": "arn:aws:states:us-east-1:498823821309:stateMachine:pfml-api-long-dor-fineos-etl",
     "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "false",
     "HAS_FINEOS_JANUARY_RELEASE": "false",
-    "HAS_LARGE_FILE_COMPRESSION": "true"
+    "HAS_LARGE_FILE_COMPRESSION": "true",
+    "HAS_FEB_RELEASE": "false"
   },
   "performance": {
     "PORTAL_BASEURL": "https://paidleave-performance.mass.gov",
@@ -108,7 +113,8 @@
     "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "true",
     "HAS_ORGUNITS_SETUP": "false",
     "HAS_FINEOS_JANUARY_RELEASE": "true",
-    "HAS_LARGE_FILE_COMPRESSION": "true"
+    "HAS_LARGE_FILE_COMPRESSION": "true",
+    "HAS_FEB_RELEASE": "false"
   },
   "uat": {
     "PORTAL_BASEURL": "https://paidleave-uat.mass.gov",
@@ -125,7 +131,8 @@
     "HAS_FINEOS_SP": "true",
     "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "true",
     "HAS_FINEOS_JANUARY_RELEASE": "true",
-    "HAS_LARGE_FILE_COMPRESSION": "true"
+    "HAS_LARGE_FILE_COMPRESSION": "true",
+    "HAS_FEB_RELEASE": "false"
   },
   "cps-preview": {
     "PORTAL_BASEURL": "https://paidleave-cps-preview.eol.mass.gov",
@@ -145,7 +152,8 @@
     "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "true",
     "HAS_ORGUNITS_SETUP": "false",
     "HAS_LARGE_FILE_COMPRESSION": "false",
-    "HAS_EMPLOYER_REIMBURSEMENTS": "true"
+    "HAS_EMPLOYER_REIMBURSEMENTS": "true",
+    "HAS_FEB_RELEASE": "false"
   },
   "breakfix": {
     "PORTAL_BASEURL": "https://paidleave-breakfix.eol.mass.gov",
@@ -163,7 +171,8 @@
     "HAS_FINEOS_SP": "true",
     "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "true",
     "HAS_FINEOS_JANUARY_RELEASE": "true",
-    "HAS_LARGE_FILE_COMPRESSION": "false"
+    "HAS_LARGE_FILE_COMPRESSION": "false",
+    "HAS_FEB_RELEASE": "false"
   },
   "local": {
     "PORTAL_BASEURL": "http://localhost:3000",
