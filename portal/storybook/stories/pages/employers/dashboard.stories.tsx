@@ -156,6 +156,7 @@ export const Default = (
           25,
           (num) =>
             new Claim({
+              absence_periods: [],
               created_at: dayjs().subtract(num, "day").format("YYYY-MM-DD"),
               fineos_absence_id: `NTN-101-ABS-${num}`,
               claim_status: faker.helpers.randomize([
@@ -177,10 +178,6 @@ export const Default = (
                   2
                 )}-${faker.finance.account(7)}`,
               },
-              absence_period_end_date: "",
-              absence_period_start_date: "",
-              claim_type_description: "",
-              fineos_notification_id: "",
               managed_requirements: [],
             })
         );

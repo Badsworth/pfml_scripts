@@ -1,20 +1,18 @@
 /* eslint sort-keys: ["error", "asc"] */
 import { compact, get } from "lodash";
+import { AbsencePeriod } from "./AbsencePeriod";
 import { ManagedRequirement } from "./ManagedRequirement";
 
 /**
  * A record from the API's Claims table. Could be utilized by Leave Admin and Claimants.
  */
 class Claim {
-  absence_period_end_date: string | null = null;
-  absence_period_start_date: string | null = null;
+  absence_periods: AbsencePeriod[];
   claim_status: AbsenceCaseStatusType | null;
-  claim_type_description: string | null = null;
   created_at: string;
   employee: ClaimEmployee | null;
   employer: ClaimEmployer;
   fineos_absence_id: string;
-  fineos_notification_id: string;
   managed_requirements: ManagedRequirement[];
 
   constructor(attrs: Claim) {
