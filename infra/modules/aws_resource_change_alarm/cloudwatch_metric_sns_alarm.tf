@@ -1,7 +1,7 @@
 
 resource "aws_cloudwatch_log_metric_filter" "aws_resource_changes" {
   name           = var.metric_name
-  pattern        = var.filter_pattern
+  pattern        = var.pattern
   log_group_name = data.aws_cloudwatch_log_group.aws_resource_changes.name
 
   metric_transformation {
