@@ -1,0 +1,5 @@
+{
+  "*.{js,ts}": ["npx eslint --cache --fix", "npx prettier --write"],
+  "*.ts": ["npx tsc --noEmit"],
+  "*.{css,md,yml,json}": "npx prettier --write"
+}

@@ -1,5 +1,3 @@
 {
-  "testMatch": [
-    "**/test/unit/**/*.[jt]s?(x)"
-  ]
+  "testMatch": ["**/test/unit/**/*.[jt]s?(x)"]
 }
