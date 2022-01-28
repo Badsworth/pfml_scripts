@@ -1323,6 +1323,14 @@ class User(Base, TimestampMixin):
 
         return mfa_preference.mfa_delivery_preference_description
 
+    @hybrid_method
+    def mfa_phone_number_last_four(self) -> Optional[str]:
+        """Retrieves the last four digits of mfa_phone_number in a null-safe way"""
+        if self.mfa_phone_number is None:
+            return None
+
+        return self.mfa_phone_number[-4:]
+
     @property
     def is_worker_user(self) -> bool:
         """

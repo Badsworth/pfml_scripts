@@ -60,7 +60,7 @@ class EmailRecipient(BaseModel):
     @classmethod
     def check_email_format(cls, email):
         try:
-            validate_email(email)
+            validate_email(email, check_deliverability=False)
         except EmailNotValidError as e:
             validation_error = ValidationErrorDetail(message=f"{e}", type=IssueType.pattern,)
             raise ValidationException(
