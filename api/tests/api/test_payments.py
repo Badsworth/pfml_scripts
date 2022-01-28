@@ -43,6 +43,11 @@ from massgov.pfml.delegated_payments.mock.delegated_payments_factory import Dele
         ),
         # No Writeback scenario - expected dates 1-3 days from today
         (None, [FrontendPaymentStatus.PENDING, None, None, 1, 3]),
+        # Payment Audit In Progress Scenario - expected dates 1-3 days from today
+        (
+            FineosWritebackTransactionStatus.PAYMENT_AUDIT_IN_PROGRESS,
+            [FrontendPaymentStatus.PENDING, None, None, 1, 3],
+        ),
     ],
 )
 def test_get_payments_200(

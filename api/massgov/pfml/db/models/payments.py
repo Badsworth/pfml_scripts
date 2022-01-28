@@ -1050,6 +1050,10 @@ class FineosWritebackTransactionStatus(LookupTable):
         24, "PrimaryPayment ProcessingErr", ACTIVE_WRITEBACK_RECORD_STATUS
     )
 
+    PAYMENT_AUDIT_IN_PROGRESS = LkFineosWritebackTransactionStatus(
+        25, "Payment Audit In Progress", PENDING_ACTIVE_WRITEBACK_RECORD_STATUS
+    )
+
 
 class AuditReportAction(str, Enum):
     REJECTED = "REJECTED"

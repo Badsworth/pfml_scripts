@@ -31,6 +31,9 @@ from massgov.pfml.delegated_payments.audit.delegated_payment_audit_util import (
     write_audit_report,
 )
 from massgov.pfml.delegated_payments.step import Step
+from massgov.pfml.delegated_payments.util.fineos_writeback_util import (
+    create_payment_finished_state_log_with_writeback,
+)
 
 logger = logging.get_logger(__name__)
 
@@ -145,12 +148,14 @@ class PaymentAuditReportStep(Step):
                     f"A state log was found without a payment while processing audit report: {state_log.state_log_id}"
                 )
 
-            state_log_util.create_finished_state_log(
-                payment,
-                State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT,
-                state_log_util.build_outcome("Payment Audit Report sent"),
-                self.db_session,
+            create_payment_finished_state_log_with_writeback(
+                payment=payment,
+                payment_end_state=State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT,
+                payment_outcome=state_log_util.build_outcome("Payment Audit Report sent"),
+                writeback_transaction_status=FineosWritebackTransactionStatus.PAYMENT_AUDIT_IN_PROGRESS,
+                db_session=self.db_session,
             )
+
             logger.info(
                 "Adding payment to the audit report",
                 extra=payments_util.get_traceable_payment_details(
