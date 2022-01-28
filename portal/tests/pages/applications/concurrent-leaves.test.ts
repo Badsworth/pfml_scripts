@@ -71,7 +71,7 @@ describe("ConcurrentLeaves", () => {
     setup("continuous", "concurrentLeave", "employed");
 
     userEvent.click(
-      screen.getByRole("radio", { name: /no i don't need to report/i })
+      screen.getByRole("radio", { name: /No I don’t need to report/i })
     );
     userEvent.click(screen.getByRole("button", { name: "Save and continue" }));
     await waitFor(() => {
@@ -91,7 +91,7 @@ describe("ConcurrentLeaves", () => {
     setup("continuous", "employed");
 
     userEvent.click(
-      screen.getByRole("radio", { name: /no i don't need to report/i })
+      screen.getByRole("radio", { name: /No I don’t need to report/i })
     );
 
     userEvent.click(screen.getByRole("button", { name: "Save and continue" }));

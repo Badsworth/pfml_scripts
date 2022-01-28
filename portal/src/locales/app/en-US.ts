@@ -1228,17 +1228,17 @@ const pages: {
   claimsConcurrentLeaves: {
     choiceNo: "$t(shared.choiceNo)",
     choiceNoHint:
-      "I don't need to report any employer sponsored accrued paid leave after the 7-day waiting period, or I don't know yet",
+      "I don’t need to report any employer-sponsored paid time off after the 7-day waiting period, or I don’t know yet",
     choiceYes: "$t(shared.choiceYes)",
     choiceYesHint:
-      "I need to report employer-sponsored accrued paid leave I will use after the 7-day waiting period",
+      "I need to report employer-sponsored paid time off I will use after the 7-day waiting period.",
     dontNeedToReport:
-      "You don't need to report accrued paid leave that you use during the 7-day waiting period",
+      "Don’t report paid time off that you use during the 7-day waiting period",
     dontNeedToReport_intermittentLeave:
       "You don't need to report accrued paid leave that you use during the 7-day waiting period, which is 7 consecutive calendar days from the date of the first instance of leave from your employer",
     hintWhatKindBody:
       "<p>This includes any paid vacation time, sick time, and personal time. It should be reported if it’s taken during your leave period, whether it’s during the 7-day waiting period or after. Reminder: you can use accrued paid leave during the 7-day waiting period with no impact to your PFML benefit.</p>",
-    hintWhatKindHeading: "What kinds of accrued paid leave to report",
+    hintWhatKindHeading: "What kinds of paid time off to report",
     hintWhenToReportBody:
       "<p>If your PFML leave includes taking time off work completely for a period of time (continuous leave), you need to report any accrued paid leave you plan to take during that continuous leave. Select Yes to report this leave.</p><p>If your PFML leave includes working fewer hours than normal (a reduced leave schedule) or taking time off work in uneven or unpredictable blocks of time (intermittent leave), you need to report leave if ONE of the following two statements is true:</p><ul><li>You are planning to use this accrued paid leave on days when you are also taking PFML leave.</li><li>You are planning to use this accrued paid leave for a PFML qualifying reason, even if it’s not the same reason you are applying for now.</li></ul>",
     hintWhenToReportDetailsBody:
@@ -1252,7 +1252,7 @@ const pages: {
     intro_ReducedOrIntermittent:
       "<div><p>Employer-sponsored paid vacation time, sick time, and personal time that:</p><ul><li>You are planning to use on days when you are also taking PFML leave.</li></ul><p>Or</p><ul><li>You are planning to use for a PFML qualifying reason, even if it’s not the same reason you are applying for now.</li></ul></div>",
     sectionLabel:
-      "Will you use any employer-sponsored accrued paid leave during your paid leave from PFML?",
+      "Will you use any employer-sponsored paid time off during your leave period?",
     title: "$t(shared.claimsOtherLeaveTitle)",
     typesOfLeaveToReport:
       "For PFML leave that includes taking time off work completely for a period of time (continuous leave), you need to report any accrued paid leave you plan to take during that continuous leave.",
