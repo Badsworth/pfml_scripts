@@ -79,15 +79,24 @@ def add_db_records_from_fineos_data(
     add_employee=True,
     add_eft=True,
     add_claim=True,
+    add_employer=True,
     add_payment=False,
     additional_payment_state=None,
     prenote_state=PrenoteState.APPROVED,
     missing_fineos_name=False,
+    has_exempt_employer=False,
 ):
     factory_args = {}
     if missing_fineos_name:
         factory_args["fineos_employee_first_name"] = None
         factory_args["fineos_employee_last_name"] = None
+
+    if has_exempt_employer:
+        factory_args["employer_exempt_family"] = True
+        factory_args["employer_exempt_medical"] = True
+        factory_args["employer_exempt_commence_date"] = date(2021, 1, 1)
+        factory_args["employer_exempt_cease_date"] = date(2021, 1, 31)
+        factory_args["absence_period_start_date"] = date(2021, 1, 15)
 
     factory = DelegatedPaymentFactory(
         db_session,
@@ -99,6 +108,7 @@ def add_db_records_from_fineos_data(
         is_id_proofed=is_id_proofed,
         add_address=add_address,
         add_employee=add_employee,
+        add_employer=add_employer,
         add_pub_eft=add_eft,
         add_claim=add_claim,
         add_payment=add_payment,
@@ -119,6 +129,7 @@ def validate_pei_writeback_state_for_payment(
     is_leave_in_review=False,
     is_pending_prenote=False,
     is_rejected_prenote=False,
+    is_exempt_employer=False,
 ):
     state_log = state_log_util.get_latest_state_log_in_flow(
         payment, Flow.DELEGATED_PEI_WRITEBACK, db_session
@@ -159,6 +170,11 @@ def validate_pei_writeback_state_for_payment(
         assert (
             writeback_details.transaction_status_id
             == FineosWritebackTransactionStatus.PRENOTE_ERROR.transaction_status_id
+        )
+    elif is_exempt_employer:
+        assert (
+            writeback_details.transaction_status_id
+            == FineosWritebackTransactionStatus.EXEMPT_EMPLOYER.transaction_status_id
         )
 
 
@@ -558,6 +574,123 @@ def test_process_extract_data_one_bad_record(
     validate_pei_writeback_state_for_payment(
         payment, local_test_db_session, is_issue_in_system=True
     )
+
+
+def test_process_extract_data_no_employer_on_claim(
+    local_payment_extract_step, local_test_db_session,
+):
+    # This payment will end up in an error state
+    # because the employer is exempt for the payment
+    payment_data = FineosPaymentData()
+    add_db_records_from_fineos_data(local_test_db_session, payment_data, add_employer=False)
+
+    stage_data([payment_data], local_test_db_session)
+    local_payment_extract_step.run()
+
+    payment = (
+        local_test_db_session.query(Payment)
+        .filter(
+            Payment.fineos_pei_c_value == payment_data.c_value,
+            Payment.fineos_pei_i_value == payment_data.i_value,
+        )
+        .first()
+    )
+
+    assert payment
+    assert not payment.claim.employer
+
+    state_log = state_log_util.get_latest_state_log_in_flow(
+        payment, Flow.DELEGATED_PAYMENT, local_test_db_session
+    )
+    assert (
+        state_log.end_state_id
+        == State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT_RESTARTABLE.state_id
+    )
+    assert state_log.outcome == {
+        "message": "Error processing payment record",
+        "validation_container": {
+            "record_key": f"C={payment_data.c_value},I={payment_data.i_value}",
+            "validation_issues": [
+                {
+                    "reason": "MissingInDB",
+                    "details": f"Claim {payment.claim.fineos_absence_id} does not have an employer associated with it",
+                },
+            ],
+        },
+    }
+    validate_pei_writeback_state_for_payment(
+        payment, local_test_db_session, is_issue_in_system=True
+    )
+
+
+def test_process_extract_data_employer_exempt(
+    local_payment_extract_step, local_test_db_session,
+):
+    # This payment will end up in an error state
+    # because the employer is exempt for the payment
+    payment_data = FineosPaymentData()
+    add_db_records_from_fineos_data(local_test_db_session, payment_data, has_exempt_employer=True)
+
+    stage_data([payment_data], local_test_db_session)
+    local_payment_extract_step.run()
+
+    payment = (
+        local_test_db_session.query(Payment)
+        .filter(
+            Payment.fineos_pei_c_value == payment_data.c_value,
+            Payment.fineos_pei_i_value == payment_data.i_value,
+        )
+        .first()
+    )
+
+    assert payment
+    assert payment.claim.employer
+    employer = payment.claim.employer
+
+    state_log = state_log_util.get_latest_state_log_in_flow(
+        payment, Flow.DELEGATED_PAYMENT, local_test_db_session
+    )
+    assert state_log.end_state_id == State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT.state_id
+    assert state_log.outcome == {
+        "message": "Error processing payment record",
+        "validation_container": {
+            "record_key": f"C={payment_data.c_value},I={payment_data.i_value}",
+            "validation_issues": [
+                {
+                    "reason": "EmployerExempt",
+                    "details": f"Employer {employer.fineos_employer_id} is exempt for dates {employer.exemption_commence_date} - {employer.exemption_cease_date}",
+                },
+            ],
+        },
+    }
+    validate_pei_writeback_state_for_payment(
+        payment, local_test_db_session, is_exempt_employer=True
+    )
+
+
+def test_process_extract_data_employer_exempt_non_standard_payment(
+    local_payment_extract_step, local_test_db_session,
+):
+    # Show that non-standard payments don't error
+    # due to employer exempt
+    payment_data = FineosPaymentData(
+        event_type="Overpayment", event_reason="Unknown", payment_method="Elec Funds Transfer"
+    )
+    add_db_records_from_fineos_data(local_test_db_session, payment_data, has_exempt_employer=True)
+
+    stage_data([payment_data], local_test_db_session)
+    local_payment_extract_step.run()
+
+    payment = (
+        local_test_db_session.query(Payment)
+        .filter(
+            Payment.fineos_pei_c_value == payment_data.c_value,
+            Payment.fineos_pei_i_value == payment_data.i_value,
+        )
+        .first()
+    )
+    assert payment
+    validate_non_standard_payment_state(payment, State.DELEGATED_PAYMENT_PROCESSED_OVERPAYMENT)
 
 
 def test_process_extract_data_rollback(
