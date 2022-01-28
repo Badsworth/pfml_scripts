@@ -701,7 +701,8 @@ class ClaimantExtractStep(Step):
             # so we can follow this over time especially with future file changes
             if id in requested_absence_mapping:
                 logger.warning(
-                    "Found multiple records for requested absences in VBI_REQUESTEDABSENCE for C/I values: %s"
+                    "Found multiple records for requested absences in VBI_REQUESTEDABSENCE for C/I values: %s",
+                    id,
                 )
                 self.increment(self.Metrics.MULTIPLE_ADDITIONAL_REQUESTED_ABSENCE_FOUND_COUNT)
 
@@ -1140,20 +1141,20 @@ class ClaimantExtractStep(Step):
             # If we found a match, do not need to create anything
             # but do need to add an error to the report if the EFT
             # information is invalid
+            extra = claimant_data.get_traceable_details()
             if existing_eft:
+                extra |= payments_util.get_traceable_pub_eft_details(
+                    existing_eft, employee_pfml_entry
+                )
                 self.increment(self.Metrics.EFT_FOUND_COUNT)
                 logger.info(
-                    "Found existing EFT info for claimant in prenote state %s",
-                    existing_eft.prenote_state.prenote_state_description,
-                    extra={
-                        "employee_id": employee_pfml_entry.employee_id,
-                        "pub_eft_id": existing_eft.pub_eft_id,
-                    },
+                    "Found existing EFT info for claimant", extra=extra,
                 )
                 if existing_eft.prenote_state_id == PrenoteState.REJECTED.prenote_state_id:
+                    msg = "EFT prenote was rejected - cannot pay with this account info"
+                    logger.info(msg, extra=extra)
                     claimant_data.validation_container.add_validation_issue(
-                        payments_util.ValidationReason.EFT_PRENOTE_REJECTED,
-                        "EFT prenote was rejected - cannot pay with this account info",
+                        payments_util.ValidationReason.EFT_PRENOTE_REJECTED, msg,
                     )
                     self.increment(self.Metrics.EFT_REJECTED_COUNT)
 
@@ -1161,9 +1162,9 @@ class ClaimantExtractStep(Step):
                 self.increment(self.Metrics.NEW_EFT_COUNT)
                 # This EFT info is new, it needs to be linked to the employee
                 # and added to the EFT prenoting flow
+                extra |= payments_util.get_traceable_pub_eft_details(new_eft, employee_pfml_entry)
                 logger.info(
-                    "Initiating DELEGATED_EFT prenote flow for employee",
-                    extra=payments_util.get_traceable_pub_eft_details(new_eft, employee_pfml_entry),
+                    "Initiating DELEGATED_EFT prenote flow for employee", extra=extra,
                 )
 
                 employee_pub_eft_pair = EmployeePubEftPair(

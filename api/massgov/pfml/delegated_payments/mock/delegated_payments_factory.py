@@ -107,7 +107,13 @@ class DelegatedPaymentFactory(MockData):
         )
 
         # employer
-        self.employer_customer_num = self.get_value("employer_customer_num", None)
+        self.employer_customer_num = self.get_value(
+            "employer_customer_num", str(fake.unique.random_int(min=1, max=1_000_000))
+        )
+        self.employer_exempt_family = self.get_value("employer_exempt_family", False)
+        self.employer_exempt_medical = self.get_value("employer_exempt_medical", False)
+        self.employer_exempt_commence_date = self.get_value("employer_exempt_commence_date", None)
+        self.employer_exempt_cease_date = self.get_value("employer_exempt_cease_date", None)
 
         # pub eft defaults
         self.ssn = self.get_value(
@@ -199,7 +205,13 @@ class DelegatedPaymentFactory(MockData):
 
     def get_or_create_employer(self):
         if self.employer is None and self.add_employer:
-            self.employer = EmployerFactory.create(fineos_employer_id=self.employer_customer_num)
+            self.employer = EmployerFactory.create(
+                fineos_employer_id=self.employer_customer_num,
+                family_exemption=self.employer_exempt_family,
+                medical_exemption=self.employer_exempt_medical,
+                exemption_commence_date=self.employer_exempt_commence_date,
+                exemption_cease_date=self.employer_exempt_cease_date,
+            )
             # Only adds organization unit if there is an employer on this claim
             if self.organization_unit_name is not None:
                 self.organization_unit = OrganizationUnitFactory.create(
