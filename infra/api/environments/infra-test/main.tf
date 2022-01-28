@@ -95,6 +95,10 @@ module "api" {
   # TODO: This value is provided by FINEOS over Interchange.
   fineos_client_oauth2_client_id = ""
 
+  pfml_email_address                  = "PFML_DoNotReply@eol.mass.gov"
+  bounce_forwarding_email_address     = "PFML_DoNotReply@eol.mass.gov"
+  bounce_forwarding_email_address_arn = "arn:aws:ses:us-east-1:498823821309:identity/PFML_DoNotReply@eol.mass.gov"
+
   # TODO: Connect to ServiceNow. Usually in nonprod you'll connect to test.
   service_now_base_url = "https://savilinxtest.servicenowservices.com"
 
