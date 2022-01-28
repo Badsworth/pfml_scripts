@@ -271,31 +271,22 @@ def test_e2e_pub_payments(
         )
 
         # split payments added for withholding
-        split_payment_records = [
+        split_payment_scenarios = [
             ScenarioName.HAPPY_PATH_TAX_WITHHOLDING,
             ScenarioName.HAPPY_PATH_TAX_WITHHOLDING,
-        ]
-
-        split_payment_records_payment_method_check = [
             ScenarioName.HAPPY_PATH_TAX_WITHHOLDING_PAYMENT_METHOD_CHECK,
             ScenarioName.HAPPY_PATH_TAX_WITHHOLDING_PAYMENT_METHOD_CHECK,
-        ]
-
-        split_payment_records_without_prenote = [
             ScenarioName.TAX_WITHHOLDING_PRIMARY_PAYMENT_NOT_PRENOTED,
             ScenarioName.TAX_WITHHOLDING_PRIMARY_PAYMENT_NOT_PRENOTED,
-        ]
-
-        address_no_match_split_payment_records = [
+            ScenarioName.TAX_WITHHOLDING_CANCELLATION_PAYMENT,
+            ScenarioName.TAX_WITHHOLDING_CANCELLATION_PAYMENT,
             ScenarioName.TAX_WITHHOLDING_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
             ScenarioName.TAX_WITHHOLDING_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
         ]
 
         assert len(payments) == len(test_dataset.scenario_dataset) + len(
-            split_payment_records
-            + split_payment_records_payment_method_check
-            + split_payment_records_without_prenote
-        ) + len(address_no_match_split_payment_records) - len(missing_payment)
+            split_payment_scenarios
+        ) - len(missing_payment)
 
         # Payment staging tables
         # We don't make a payment for CLAIMANT_PRENOTED_NO_PAYMENT_RECEIVED
@@ -342,12 +333,18 @@ def test_e2e_pub_payments(
             ScenarioName.ZERO_DOLLAR_PAYMENT,
             ScenarioName.CANCELLATION_PAYMENT,
             ScenarioName.EMPLOYER_REIMBURSEMENT_PAYMENT,
+            ScenarioName.TAX_WITHHOLDING_CANCELLATION_PAYMENT,
         ]
 
         stage_1_overpayment_scenarios = [
             ScenarioName.OVERPAYMENT_PAYMENT_POSITIVE,
             ScenarioName.OVERPAYMENT_PAYMENT_NEGATIVE,
             ScenarioName.OVERPAYMENT_MISSING_NON_VPEI_RECORDS,
+        ]
+
+        stage_1_non_standard_splitpayment_scenarios = [
+            ScenarioName.TAX_WITHHOLDING_CANCELLATION_PAYMENT,
+            ScenarioName.TAX_WITHHOLDING_CANCELLATION_PAYMENT,
         ]
 
         stage_1_non_standard_payments.extend(stage_1_overpayment_scenarios)
@@ -391,7 +388,10 @@ def test_e2e_pub_payments(
 
         assert_payment_state_for_scenarios(
             test_dataset=test_dataset,
-            scenario_names=[ScenarioName.CANCELLATION_PAYMENT,],
+            scenario_names=[
+                ScenarioName.CANCELLATION_PAYMENT,
+                ScenarioName.TAX_WITHHOLDING_CANCELLATION_PAYMENT,
+            ],
             end_state=State.DELEGATED_PAYMENT_PROCESSED_CANCELLATION,
             db_session=test_db_session,
         )
@@ -621,6 +621,15 @@ def test_e2e_pub_payments(
             ]
         )
 
+        stage_1_split_writeback_scenarios = [
+            ScenarioName.TAX_WITHHOLDING_PRIMARY_PAYMENT_NOT_PRENOTED,
+            ScenarioName.TAX_WITHHOLDING_PRIMARY_PAYMENT_NOT_PRENOTED,
+            ScenarioName.TAX_WITHHOLDING_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
+            ScenarioName.TAX_WITHHOLDING_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
+            ScenarioName.TAX_WITHHOLDING_CANCELLATION_PAYMENT,
+            ScenarioName.TAX_WITHHOLDING_CANCELLATION_PAYMENT,
+        ]
+
         assert_writeback_for_stage(
             test_dataset, stage_1_writeback_scenarios, test_db_session,
         )
@@ -712,8 +721,8 @@ def test_e2e_pub_payments(
                 "vbi_requested_absence_som_record_count": len(SCENARIO_DESCRIPTORS),
             },
         )
-        # Number of absence records created for withholding scenerios
-        withholding_requested_absence_records_count = 8
+        # Number of absence records created for withholding scenarios
+        withholding_requested_absence_records_count = 10
         assert_metrics(
             test_db_other_session,
             "PaymentExtractStep",
@@ -743,12 +752,16 @@ def test_e2e_pub_payments(
                         ScenarioName.IN_REVIEW_LEAVE_REQUEST_ADHOC_PAYMENTS_DECISION,
                     ]
                 ),
-                "cancellation_count": len([ScenarioName.CANCELLATION_PAYMENT]),
+                "cancellation_count": len(
+                    [
+                        ScenarioName.CANCELLATION_PAYMENT,
+                        ScenarioName.TAX_WITHHOLDING_CANCELLATION_PAYMENT,
+                        ScenarioName.TAX_WITHHOLDING_CANCELLATION_PAYMENT,
+                        ScenarioName.TAX_WITHHOLDING_CANCELLATION_PAYMENT,
+                    ]
+                ),
                 "claim_details_record_count": len(SCENARIO_DESCRIPTORS)
-                + len(split_payment_records)
-                + len(address_no_match_split_payment_records)
-                + len(split_payment_records_payment_method_check)
-                + len(split_payment_records_without_prenote)
+                + len(split_payment_scenarios)
                 - len(
                     [
                         ScenarioName.OVERPAYMENT_MISSING_NON_VPEI_RECORDS,
@@ -831,23 +844,14 @@ def test_e2e_pub_payments(
                 ),
                 "overpayment_count": len(stage_1_overpayment_scenarios),
                 "payment_details_record_count": len(SCENARIO_DESCRIPTORS)
-                + len(split_payment_records)
-                + len(address_no_match_split_payment_records)
-                + len(split_payment_records_payment_method_check)
-                + len(split_payment_records_without_prenote)
+                + len(split_payment_scenarios)
                 - len([ScenarioName.CLAIMANT_PRENOTED_NO_PAYMENT_RECEIVED]),
                 "pei_record_count": len(SCENARIO_DESCRIPTORS)
-                + len(split_payment_records)
-                + len(address_no_match_split_payment_records)
-                + len(split_payment_records_payment_method_check)
-                + len(split_payment_records_without_prenote)
+                + len(split_payment_scenarios)
                 - len([ScenarioName.CLAIMANT_PRENOTED_NO_PAYMENT_RECEIVED]),
                 "prenote_past_waiting_period_approved_count": 0,
                 "processed_payment_count": len(SCENARIO_DESCRIPTORS)
-                + len(split_payment_records)
-                + len(address_no_match_split_payment_records)
-                + len(split_payment_records_payment_method_check)
-                + len(split_payment_records_without_prenote)
+                + len(split_payment_scenarios)
                 - len([ScenarioName.CLAIMANT_PRENOTED_NO_PAYMENT_RECEIVED]),
                 "requested_absence_record_count": len(SCENARIO_DESCRIPTORS)
                 - len(
@@ -1149,14 +1153,11 @@ def test_e2e_pub_payments(
                 "errored_writeback_record_during_file_creation_count": 0,
                 "errored_writeback_record_during_file_transfer_count": 0,
                 "successful_writeback_record_count": len(stage_1_writeback_scenarios)
-                + len(address_no_match_split_payment_records)
-                + len(split_payment_records_without_prenote),
+                + len(stage_1_split_writeback_scenarios),
                 "writeback_record_count": len(stage_1_writeback_scenarios)
-                + len(address_no_match_split_payment_records)
-                + len(split_payment_records_without_prenote),
+                + len(stage_1_split_writeback_scenarios),
                 "generic_flow_writeback_items_count": len(stage_1_writeback_scenarios)
-                + len(address_no_match_split_payment_records)
-                + len(split_payment_records_without_prenote),
+                + len(stage_1_split_writeback_scenarios),
                 "address_validation_error_writeback_transaction_status_count": len(
                     [
                         ScenarioName.CHECK_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
@@ -1181,16 +1182,18 @@ def test_e2e_pub_payments(
                         ScenarioName.PUB_ACH_PRENOTE_INVALID_PAYMENT_ID_FORMAT,
                         ScenarioName.PUB_ACH_PRENOTE_PAYMENT_ID_NOT_FOUND,
                         ScenarioName.TAX_WITHHOLDING_PRIMARY_PAYMENT_NOT_PRENOTED,
+                        ScenarioName.TAX_WITHHOLDING_PRIMARY_PAYMENT_NOT_PRENOTED,
+                        ScenarioName.TAX_WITHHOLDING_PRIMARY_PAYMENT_NOT_PRENOTED,
                     ]
-                )
-                + len(split_payment_records_without_prenote),
+                ),
                 "payment_validation_error_writeback_transaction_status_count": len(
                     [
                         ScenarioName.REJECTED_LEAVE_REQUEST_DECISION,
                         ScenarioName.UNKNOWN_LEAVE_REQUEST_DECISION,
                     ]
                 ),
-                "processed_writeback_transaction_status_count": len(stage_1_non_standard_payments),
+                "processed_writeback_transaction_status_count": len(stage_1_non_standard_payments)
+                + len(stage_1_non_standard_splitpayment_scenarios),
             },
         )
 
@@ -1483,6 +1486,13 @@ def test_e2e_pub_payments(
         stage_2_writeback_scenarios.extend(stage_2_ach_scenarios)
         stage_2_writeback_scenarios.extend(stage_2_check_scenarios)
 
+        stage_2_split_writeback_scenarios = [
+            ScenarioName.HAPPY_PATH_TAX_WITHHOLDING,
+            ScenarioName.HAPPY_PATH_TAX_WITHHOLDING,
+            ScenarioName.HAPPY_PATH_TAX_WITHHOLDING_PAYMENT_METHOD_CHECK,
+            ScenarioName.HAPPY_PATH_TAX_WITHHOLDING_PAYMENT_METHOD_CHECK,
+        ]
+
         assert_writeback_for_stage(
             test_dataset, stage_2_writeback_scenarios, test_db_session,
         )
@@ -1557,14 +1567,11 @@ def test_e2e_pub_payments(
                 "errored_writeback_record_during_file_creation_count": 0,
                 "errored_writeback_record_during_file_transfer_count": 0,
                 "successful_writeback_record_count": len(stage_2_writeback_scenarios)
-                + len(split_payment_records)
-                + len(split_payment_records_payment_method_check),
+                + len(stage_2_split_writeback_scenarios),
                 "writeback_record_count": len(stage_2_writeback_scenarios)
-                + len(split_payment_records)
-                + len(split_payment_records_payment_method_check),
+                + len(stage_2_split_writeback_scenarios),
                 "generic_flow_writeback_items_count": len(stage_2_writeback_scenarios)
-                + len(split_payment_records)
-                + len(split_payment_records_payment_method_check),
+                + len(stage_2_split_writeback_scenarios),
                 "payment_audit_error_writeback_transaction_status_count": len(
                     [ScenarioName.AUDIT_REJECTED,]
                 ),
@@ -1576,8 +1583,7 @@ def test_e2e_pub_payments(
                 ),
                 "paid_writeback_transaction_status_count": len(stage_2_ach_scenarios)
                 + len(stage_2_check_scenarios)
-                + len(split_payment_records)
-                + len(split_payment_records_payment_method_check),
+                + len(stage_2_split_writeback_scenarios),
                 "dua_additional_income_writeback_transaction_status_count": len(
                     [ScenarioName.AUDIT_REJECTED_WITH_NOTE,]
                 ),

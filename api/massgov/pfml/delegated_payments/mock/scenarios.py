@@ -127,6 +127,8 @@ class ScenarioName(Enum):
 
     TAX_WITHHOLDING_AUDIT_SKIPPED_THEN_ACCEPTED = "TAX_WITHHOLDING_AUDIT_SKIPPED_THEN_ACCEPTED"
 
+    TAX_WITHHOLDING_CANCELLATION_PAYMENT = "TAX_WITHHOLDING_CANCELLATION_PAYMENT"
+
 
 @dataclass
 class ScenarioDescriptor:
@@ -438,6 +440,11 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
     ScenarioDescriptor(
         scenario_name=ScenarioName.TAX_WITHHOLDING_MISSING_PRIMARY_PAYMENT,
         is_tax_withholding_record_without_primary_payment=True,
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.TAX_WITHHOLDING_CANCELLATION_PAYMENT,
+        is_tax_withholding_records_exists=True,
+        payment_transaction_type=PaymentTransactionType.CANCELLATION,
     ),
     ScenarioDescriptor(
         scenario_name=ScenarioName.HAPPY_PATH_DOR_FINEOS_NAME_MISMATCH,

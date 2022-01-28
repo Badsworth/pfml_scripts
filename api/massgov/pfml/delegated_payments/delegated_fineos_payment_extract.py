@@ -141,6 +141,7 @@ class PaymentData:
 
     payment_transaction_type: LkPaymentTransactionType
     is_standard_payment: bool
+    is_employee_required: bool
 
     def __init__(
         self,
@@ -219,6 +220,18 @@ class PaymentData:
         self.is_standard_payment = (
             self.payment_transaction_type.payment_transaction_type_id
             == PaymentTransactionType.STANDARD.payment_transaction_type_id
+        )
+
+        # We only want to check for an employee in certain scenarios
+        # Employer Reimbursements will not map to an Employee,
+        # and nor will payments associated with tax withholdings
+        # We are not checking against transaction type here because
+        # cancelled tax withholdings will be "Cancellations" not tax withholdings.
+        self.is_employee_required = (
+            self.payment_transaction_type.payment_transaction_type_id
+            != PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id
+            and self.tin != STATE_TAX_WITHHOLDING_TIN
+            and self.tin != FEDERAL_TAX_WITHHOLDING_TIN
         )
 
         #######################################
@@ -348,7 +361,6 @@ class PaymentData:
 
         # Tax Withholdings
         if payments_util.is_withholding_payments_enabled():
-            logger.info("Tax Withholding ENABLED")
             # SIT
             if self.tin == STATE_TAX_WITHHOLDING_TIN:
                 return PaymentTransactionType.STATE_TAX_WITHHOLDING
@@ -553,6 +565,7 @@ class PaymentData:
             "period_start_date": self.payment_start_period,
             "period_end_date": self.payment_end_period,
             "payment_transaction_type": self.payment_transaction_type.payment_transaction_type_description,
+            "is_for_standard_payment": self.is_employee_required,
         }
 
     def get_payment_message_str(self) -> str:
@@ -656,13 +669,9 @@ class PaymentExtractStep(Step):
         # Get the TIN, employee and claim associated with the payment to be made
         employee, claim = None, None
         try:
-            # If the payment transaction type is for the employer,State or Federal
-            # We know we aren't going to find an employee, so don't look
-            if payment_data.payment_transaction_type.payment_transaction_type_id not in [
-                PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id,
-                PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id,
-                PaymentTransactionType.FEDERAL_TAX_WITHHOLDING.payment_transaction_type_id,
-            ]:
+            # If the employee is required and should be validated, do so
+            # Otherwise, we know we aren't going to find an employee, so don't look
+            if payment_data.is_employee_required:
                 tax_identifier = (
                     self.db_session.query(TaxIdentifier)
                     .filter_by(tax_identifier=payment_data.tin)
@@ -1192,11 +1201,13 @@ class PaymentExtractStep(Step):
             associated_model=payment,
             db_session=self.db_session,
         )
+        extra = payments_util.get_traceable_payment_details(payment, end_state)
+        extra["is_for_standard_payment"] = payment_data.is_employee_required
         logger.info(
             "After consuming extracts and performing initial validation, payment %s added to state [%s]",
             payment_data.get_payment_message_str(),
             end_state.state_description,
-            extra=payments_util.get_traceable_payment_details(payment, end_state),
+            extra=extra,
         )
 
     def _manage_pei_writeback_state(

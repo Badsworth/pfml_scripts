@@ -623,11 +623,11 @@ def generate_payment_extract_files(
 
                 # always have valid address for withholding payments
                 mock_address = MATCH_ADDRESS
-                withholding_payment.payment_address_1 = (mock_address["line_1"],)
-                withholding_payment.payment_address_2 = (mock_address["line_2"],)
-                withholding_payment.city = (mock_address["city"],)
-                withholding_payment.state = (mock_address["state"],)
-                withholding_payment.zip_code = (mock_address["zip"],)
+                withholding_payment.payment_address_1 = mock_address["line_1"]
+                withholding_payment.payment_address_2 = mock_address["line_2"]
+                withholding_payment.city = mock_address["city"]
+                withholding_payment.state = mock_address["state"]
+                withholding_payment.zip_code = mock_address["zip"]
 
                 if item == 0:
                     withholding_payment.tin = "SITPAYEE001"
