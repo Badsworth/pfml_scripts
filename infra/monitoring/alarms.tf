@@ -117,17 +117,6 @@ module "sns_root_account_usage" {
   sns_topic         = aws_sns_topic.sns_resource_changes.arn
 }
 
-module "sns_console_sign_in_without_mfa" {
-  source = "../modules/aws_resource_change_alarm"
-
-  alarm_name        = "console_sign_in_without_mfa"
-  alarm_description = "Console Sign in Without MFA Occured"
-  metric_name       = "ConsoleSignInWithoutMFA"
-  namespace         = "LogMetrics"
-  pattern           = "{ ($.eventName = \"ConsoleLogin\") && ($.additionalEventData.MFAUsed != \"Yes\") }"
-  sns_topic         = aws_sns_topic.sns_resource_changes.arn
-}
-
 module "sns_unauthorized_api_calls" {
   source = "../modules/aws_resource_change_alarm"
 
