@@ -88,6 +88,10 @@ module "api" {
 
   fineos_client_oauth2_client_id = "2e9vsuq808h3tu4rf9tr1efuh5"
 
+  pfml_email_address                  = "PFML_DoNotReply@eol.mass.gov"
+  bounce_forwarding_email_address     = "PFML_DoNotReply@eol.mass.gov"
+  bounce_forwarding_email_address_arn = "arn:aws:ses:us-east-1:498823821309:identity/PFML_DoNotReply@eol.mass.gov"
+
   service_now_base_url = "https://savilinxtrain.servicenowservices.com"
   portal_base_url      = "https://paidleave-trn2.dfml.eol.mass.gov"
 

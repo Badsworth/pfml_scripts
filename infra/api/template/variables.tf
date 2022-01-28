@@ -282,6 +282,24 @@ variable "cognito_provisioned_concurrency_level_min" {
   default     = 1
 }
 
+variable "pfml_email_address" {
+  description = "\"Send from\" address for outgoing emails sent to claimants and leave administrators"
+  type        = string
+  default     = ""
+}
+
+variable "bounce_forwarding_email_address" {
+  description = "\"Send to\" address for bounced back outgoing emails"
+  type        = string
+  default     = ""
+}
+
+variable "bounce_forwarding_email_address_arn" {
+  description = "\"Send to\" address for bounced back outgoing emails (ARN)"
+  type        = string
+  default     = ""
+}
+
 variable "release_version" {
   description = "API release version"
   type        = string
