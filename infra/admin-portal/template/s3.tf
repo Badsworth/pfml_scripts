@@ -4,6 +4,13 @@
 
 resource "aws_s3_bucket" "admin_portal_web" {
   bucket = "massgov-${local.app_name}-${var.environment_name}-admin-portal-site-builds"
+<<<<<<< HEAD
+=======
+  website {
+    index_document = "index.html"
+    error_document = "404.html"
+  }
+>>>>>>> 4a09a32c1... PFMLPB-2181: Terraform and GitHub actions admin portal (#6164)
 
   # EOTSS AWS Tagging Standards
   tags = merge(module.constants.common_tags, {
