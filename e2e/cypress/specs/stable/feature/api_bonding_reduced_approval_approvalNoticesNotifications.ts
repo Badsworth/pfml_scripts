@@ -123,15 +123,13 @@ describe("Approval (notifications/notices)", () => {
       cy.dependsOnPreviousPass([submit]);
       cy.unstash<Submission>("submission").then((submission) => {
         email
-          .getEmails(
-            {
-              address: "gqzap.notifications@inbox.testmail.app",
-              subjectWildcard: `Action required: Respond to *'s paid leave application`,
-              messageWildcard: submission.fineos_absence_id,
-              timestamp_from: submission.timestamp_from,
-              debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
-            }
-          )
+          .getEmails({
+            address: "gqzap.notifications@inbox.testmail.app",
+            subjectWildcard: `Action required: Respond to *'s paid leave application`,
+            messageWildcard: submission.fineos_absence_id,
+            timestamp_from: submission.timestamp_from,
+            debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
+          })
           .then(() => {
             cy.get(
               `a[href*="/employers/applications/new-application/?absence_id=${submission.fineos_absence_id}"]`
@@ -191,15 +189,13 @@ describe("Approval (notifications/notices)", () => {
           submission.fineos_absence_id
         );
         // Check email for Claimant/Employee
-        email.getEmails(
-          {
-            address: "gqzap.notifications@inbox.testmail.app",
-            subject: subjectClaimant,
-            messageWildcard: submission.fineos_absence_id,
-            timestamp_from: submission.timestamp_from,
-            debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
-          }
-        );
+        email.getEmails({
+          address: "gqzap.notifications@inbox.testmail.app",
+          subject: subjectClaimant,
+          messageWildcard: submission.fineos_absence_id,
+          timestamp_from: submission.timestamp_from,
+          debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
+        });
         cy.contains(submission.fineos_absence_id);
         cy.get(`a[href*="${config("PORTAL_BASEURL")}/applications"]`);
       });

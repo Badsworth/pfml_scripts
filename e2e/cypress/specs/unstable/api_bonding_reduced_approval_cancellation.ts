@@ -5,7 +5,7 @@ import {
   getDocumentReviewTaskName,
 } from "../../../src/util/documents";
 import { config } from "../../actions/common";
-import { itIf } from '../../util';
+import { itIf } from "../../util";
 
 describe("Approval (notifications/notices)", () => {
   after(() => {
@@ -80,10 +80,7 @@ describe("Approval (notifications/notices)", () => {
     "Check the Leave Admin Portal for the Cancellation notice",
     { retries: 0 },
     () => {
-      cy.dependsOnPreviousPass([
-        submission,
-        cancellation,
-      ]);
+      cy.dependsOnPreviousPass([submission, cancellation]);
       portal.before();
       cy.unstash<Submission>("submission").then((submission) => {
         cy.unstash<DehydratedClaim>("claim").then((claim) => {
@@ -92,9 +89,7 @@ describe("Approval (notifications/notices)", () => {
           }
           const employeeFullName = `${claim.claim.first_name} ${claim.claim.last_name}`;
           portal.loginLeaveAdmin(claim.claim.employer_fein);
-          portal.selectClaimFromEmployerDashboard(
-            submission.fineos_absence_id
-          );
+          portal.selectClaimFromEmployerDashboard(submission.fineos_absence_id);
           portal.checkNoticeForLeaveAdmin(
             submission.fineos_absence_id,
             employeeFullName,
@@ -110,10 +105,7 @@ describe("Approval (notifications/notices)", () => {
     "Check the Claimant Portal for the legal notice (Cancellation)",
     { retries: 0 },
     () => {
-      cy.dependsOnPreviousPass([
-        submission,
-        cancellation,
-      ]);
+      cy.dependsOnPreviousPass([submission, cancellation]);
       portal.before();
       portal.loginClaimant();
       cy.unstash<Submission>("submission").then((submission) => {
@@ -139,10 +131,7 @@ describe("Approval (notifications/notices)", () => {
     { retries: 0 },
     () => {
       {
-        cy.dependsOnPreviousPass([
-          submission,
-          cancellation,
-        ]);
+        cy.dependsOnPreviousPass([submission, cancellation]);
         cy.unstash<Submission>("submission").then((submission) => {
           cy.unstash<ApplicationRequestBody>("claim").then((claim) => {
             // The notification is using the same subject line as Appeals claimant.
@@ -157,10 +146,12 @@ describe("Approval (notifications/notices)", () => {
                   address: "gqzap.notifications@inbox.testmail.app",
                   subject: subjectClaimant,
                   messageWildcard: {
-                    pattern: `${submission.fineos_absence_id}.*Your approved time has been cancelled`
+                    pattern: `${submission.fineos_absence_id}.*Your approved time has been cancelled`,
                   },
                   timestamp_from: submission.timestamp_from,
-                  debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
+                  debugInfo: {
+                    "Fineos Claim ID": submission.fineos_absence_id,
+                  },
                 },
                 90000
               )
@@ -180,10 +171,7 @@ describe("Approval (notifications/notices)", () => {
     "Check the Leave Admin email for the Cancellation notification.",
     { retries: 0 },
     () => {
-      cy.dependsOnPreviousPass([
-        submission,
-        cancellation,
-      ]);
+      cy.dependsOnPreviousPass([submission, cancellation]);
       cy.unstash<Submission>("submission").then((submission) => {
         cy.unstash<ApplicationRequestBody>("claim").then((claim) => {
           // The notification is using the same subject line as Appeals claimant.
@@ -192,24 +180,25 @@ describe("Approval (notifications/notices)", () => {
             submission.fineos_absence_id,
             `${claim.first_name} ${claim.last_name}`
           );
-          email.getEmails(
-            {
-              address: "gqzap.notifications@inbox.testmail.app",
-              subject: subjectEmployer,
-              messageWildcard: {
-                pattern: `${submission.fineos_absence_id}.*The applicant’s approved time has been cancelled`
+          email
+            .getEmails(
+              {
+                address: "gqzap.notifications@inbox.testmail.app",
+                subject: subjectEmployer,
+                messageWildcard: {
+                  pattern: `${submission.fineos_absence_id}.*The applicant’s approved time has been cancelled`,
+                },
+                timestamp_from: submission.timestamp_from,
+                debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
               },
-              timestamp_from: submission.timestamp_from,
-              debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
-            },
-            90000
-          )
-          .then(() => {
-            cy.contains(submission.fineos_absence_id);
-            cy.get(
-              `a[href*="/employers/applications/status/?absence_id=${submission.fineos_absence_id}"]`
-            );
-          });
+              90000
+            )
+            .then(() => {
+              cy.contains(submission.fineos_absence_id);
+              cy.get(
+                `a[href*="/employers/applications/status/?absence_id=${submission.fineos_absence_id}"]`
+              );
+            });
         });
       });
     }

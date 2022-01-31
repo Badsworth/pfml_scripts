@@ -22,25 +22,27 @@ const defaultClaimantCredentials = getClaimantCredentials();
 let application_id: string;
 let pmflApiOptions: RequestOptions;
 
-const getExpectedResponseText = (statusCode: DocumentTestCase['statusCode']): Partial<{
-  statusText: string,
-  message: string
+const getExpectedResponseText = (
+  statusCode: DocumentTestCase["statusCode"]
+): Partial<{
+  statusText: string;
+  message: string;
 }> => {
-  if ( statusCode === 200) {
+  if (statusCode === 200) {
     return { message: "Successfully uploaded document" };
-  } 
+  }
 
   if (statusCode === 400) {
-    return { message: "File validation error."}
+    return { message: "File validation error." };
   }
 
   if (statusCode === 413) {
-    return { statusText: "Request Entity Too Large" }
+    return { statusText: "Request Entity Too Large" };
   }
 
   const exhaustiveCheck: never = statusCode;
   return exhaustiveCheck;
-}
+};
 
 /**
  * @group stable
@@ -89,17 +91,15 @@ describe("API Documents Test of various file sizes", () => {
     );
   }, 120000);
 
-  const tests: Parameters<typeof test['each']>[0] = [];
+  const tests: Parameters<typeof test["each"]>[0] = [];
 
   Object.values(documentTests).forEach((testSpec) => {
-    const testCases = typeof testSpec === "function"
-      ? testSpec()
-      : testSpec;
-    
+    const testCases = typeof testSpec === "function" ? testSpec() : testSpec;
+
     tests.push(
       ...testCases.map((testCase) => [testCase.description, testCase])
     );
-  })
+  });
 
   test.each(tests)(
     "%s",

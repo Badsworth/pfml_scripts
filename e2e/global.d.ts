@@ -16,7 +16,7 @@ type waitForClaimDocuments =
 type Email = import("./src/submission/TestMailClient").Email;
 type GetEmailsOpts = import("./src/submission/TestMailClient").GetEmailsOpts;
 type MFAOpts = import("./src/submission/TwilioClient").MFAOpts;
-type RES_MFA = import("./src/submission/TwilioClient").RES_MFA
+type RES_MFA = import("./src/submission/TwilioClient").RES_MFA;
 type Result = import("pdf-parse").Result;
 type DehydratedClaim = import("./src/generation/Claim").DehydratedClaim;
 type Employer = import("./src/generation/Employer").Employer;
@@ -49,7 +49,7 @@ declare namespace Cypress {
     dependsOnPreviousPass(dependencies?: Mocha.Test[]): null;
     task<T extends Scenarios>(
       event: "generateClaim",
-      arg: T | { scenario: T, employeePoolFileName: string }
+      arg: T | { scenario: T; employeePoolFileName: string }
     ): Chainable<
       ScenarioSpecs[T]["claim"] extends APIClaimSpec
         ? DehydratedClaim
