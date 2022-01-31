@@ -27,7 +27,7 @@ on:
         default: false
         type: boolean
       large_doc_uploads:
-        description: "Uses randomized file sizes in range of 4.8MB - 10MB for doc uploads"
+        description: "Only use randomized file sizes in range of 4.8MB - 10MB for doc uploads"
         required: false
         default: false
         type: boolean

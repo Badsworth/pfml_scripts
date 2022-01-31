@@ -68,11 +68,12 @@ const selectRandomFile = (): string => {
   type FileSizeRanges = "<4.8" | "4.8MB-6.8MB" | "7MB-10MB";
   const wheel: Array<FileSizeRanges> =
     process.env.USE_LARGE_DOCUMENT_UPLOADS === "true"
-      ? [
-          ...Array<"4.8MB-6.8MB">(70).fill("4.8MB-6.8MB"),
-          ...Array<"7MB-10MB">(30).fill("7MB-10MB"),
-        ]
-      : ["<4.8"];
+      ? [...Array(70).fill("4.8MB-6.8MB"), ...Array(30).fill("7MB-10MB")]
+      : [
+          ...Array(80).fill("<4.8"),
+          ...Array(12).fill("4.8MB-6.8MB"),
+          ...Array(8).fill("7MB-10MB"),
+        ];
   const range = wheel[Math.floor(Math.random() * wheel.length)];
   const filesMap: Record<FileSizeRanges, string[]> = {
     "<4.8": ["150KB.pdf", "1MB.jpg", "2.7MB.png", "4.5MB.pdf"],

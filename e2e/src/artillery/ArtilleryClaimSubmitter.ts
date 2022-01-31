@@ -12,7 +12,6 @@ import {
   getApplicationsByApplication_idDocuments,
 } from "../api";
 import assert from "assert";
-import path from "path";
 
 class ArtilleryClaimSubmitter extends PortalSubmitter {
   constructor(authenticator: AuthenticationManager, apiBaseUrl: string) {
