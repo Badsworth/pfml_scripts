@@ -5,19 +5,6 @@ exports[`Payments Phase 2 Checkback date implementation does not render checkbac
   data-testid="your-payments-intro"
 >
   Payments are scheduled to be paid after each week of your leave. Check back weekly to see when your next payment will be scheduled.
-  <section
-    class="margin-y-5"
-    data-testid="estimated-date"
-  >
-    <h3
-      class="font-heading-sm text-bold"
-    >
-      What does the estimated date mean?
-    </h3>
-    <p>
-      This is the date range we expect to process your direct deposit payment or send your check in the mail. Depending on your bank, expect to receive direct deposit payments in your account 2-3 days after this date. Checks may take 7-11 days to arrive in the mail. Once your payment is processed or your check is sent, that date will be shown in the “date processed” column.
-    </p>
-  </section>
 </section>
 `;
 
@@ -26,47 +13,20 @@ exports[`Payments Phase 2 Checkback date implementation does not render the Paym
   data-testid="your-payments-intro"
 >
   <p>
-    Your application has a 7-day waiting period after the first day you report taking leave. You won’t receive any PFML payments for these 7 days of leave.
+    Your application has an unpaid 7-day waiting period that begins the first day you report taking leave.
   </p>
   <p>
-    After your waiting period, once you report at least 8 hours of leave you can expect to receive payment about one week later. You can receive more than one payment in a week depending on how your hours are reported.
+    You need to complete your unpaid 7-day waiting period waiting period and report at least 8 hours of leave before you will receive a payment from the Department. You may receive more than one payment per week depending on how your hours are reported.
   </p>
   <p>
-    You can report your hours by calling 
+    Call the Hours Reporting line at 
     <a
       href="tel:(857) 972-9256"
     >
       (857) 972-9256
     </a>
-    .
+     each week to report the intermittent leave hours you used.
   </p>
-</section>
-`;
-
-exports[`Payments Phase 2 Checkback date implementation includes estimated date content for intermittent leaves with payments 1`] = `
-<section
-  data-testid="your-payments-intro"
->
-  Once you report at least 8 hours, you can expect to receive a payment about one week later. You can receive more than one payment in a week depending on how your hours are reported. You can report your hours by calling 
-  <a
-    href="tel:(857) 972-9256"
-  >
-    (857) 972-9256
-  </a>
-  .
-  <section
-    class="margin-y-5"
-    data-testid="estimated-date"
-  >
-    <h3
-      class="font-heading-sm text-bold"
-    >
-      What does the estimated date mean?
-    </h3>
-    <p>
-      This is the date range we expect to process your direct deposit payment or send your check in the mail. Depending on your bank, expect to receive direct deposit payments in your account 2-3 days after this date. Checks may take 7-11 days to arrive in the mail. Once your payment is processed or your check is sent, that date will be shown in the “date processed” column.
-    </p>
-  </section>
 </section>
 `;
 
@@ -75,21 +35,8 @@ exports[`Payments Phase 2 Checkback date implementation renders intro text for c
   data-testid="your-payments-intro"
 >
   <p>
-    Check back on November 9, 2021 to see when you can expect your first payment. Your first payment will include multiple weeks of leave. After your first payment, payments are scheduled weekly.
+    Check back on November 9, 2021 to see when you can expect your first payment. Your first payment will include multiple weeks of leave. After your first payment, expect to be paid weekly.
   </p>
-  <section
-    class="margin-y-5"
-    data-testid="estimated-date"
-  >
-    <h3
-      class="font-heading-sm text-bold"
-    >
-      What does the estimated date mean?
-    </h3>
-    <p>
-      This is the date range we expect to process your direct deposit payment or send your check in the mail. Depending on your bank, expect to receive direct deposit payments in your account 2-3 days after this date. Checks may take 7-11 days to arrive in the mail. Once your payment is processed or your check is sent, that date will be shown in the “date processed” column.
-    </p>
-  </section>
 </section>
 `;
 
@@ -98,21 +45,8 @@ exports[`Payments Phase 2 Checkback date implementation renders intro text for c
   data-testid="your-payments-intro"
 >
   <p>
-    Check back on November 9, 2021 to see when you can expect your first payment. After your first payment, payments are scheduled weekly. Your application has a 7-day waiting period at the start of your leave. You won’t receive any PFML payments for this week of leave.
+    Check back on November 9, 2021 to see when you can expect your first payment. Your first payment will be scheduled after your second week of leave ends. After your first payment, expect to be paid weekly.
   </p>
-  <section
-    class="margin-y-5"
-    data-testid="estimated-date"
-  >
-    <h3
-      class="font-heading-sm text-bold"
-    >
-      What does the estimated date mean?
-    </h3>
-    <p>
-      This is the date range we expect to process your direct deposit payment or send your check in the mail. Depending on your bank, expect to receive direct deposit payments in your account 2-3 days after this date. Checks may take 7-11 days to arrive in the mail. Once your payment is processed or your check is sent, that date will be shown in the “date processed” column.
-    </p>
-  </section>
 </section>
 `;
 
@@ -123,19 +57,6 @@ exports[`Payments Phase 2 Checkback date implementation renders intro text for c
   <p>
     Check back on January 18, 2022 to see when you can expect your first payment. You’ll receive one payment for your entire leave.
   </p>
-  <section
-    class="margin-y-5"
-    data-testid="estimated-date"
-  >
-    <h3
-      class="font-heading-sm text-bold"
-    >
-      What does the estimated date mean?
-    </h3>
-    <p>
-      This is the date range we expect to process your direct deposit payment or send your check in the mail. Depending on your bank, expect to receive direct deposit payments in your account 2-3 days after this date. Checks may take 7-11 days to arrive in the mail. Once your payment is processed or your check is sent, that date will be shown in the “date processed” column.
-    </p>
-  </section>
 </section>
 `;
 
@@ -144,21 +65,8 @@ exports[`Payments Phase 2 Checkback date implementation renders intro text for c
   data-testid="your-payments-intro"
 >
   <p>
-    Check back on November 9, 2021 to see when you can expect your first payment. Your first payment will include multiple weeks of leave. After your first payment, payments are scheduled weekly.
+    Check back on November 9, 2021 to see when you can expect your first payment. Your first payment will include multiple weeks of leave. After your first payment, expect to be paid weekly.
   </p>
-  <section
-    class="margin-y-5"
-    data-testid="estimated-date"
-  >
-    <h3
-      class="font-heading-sm text-bold"
-    >
-      What does the estimated date mean?
-    </h3>
-    <p>
-      This is the date range we expect to process your direct deposit payment or send your check in the mail. Depending on your bank, expect to receive direct deposit payments in your account 2-3 days after this date. Checks may take 7-11 days to arrive in the mail. Once your payment is processed or your check is sent, that date will be shown in the “date processed” column.
-    </p>
-  </section>
 </section>
 `;
 
@@ -167,21 +75,8 @@ exports[`Payments Phase 2 Checkback date implementation renders intro text for c
   data-testid="your-payments-intro"
 >
   <p>
-    Check back on November 9, 2021 to see when you can expect your first payment. After your first payment, payments are scheduled weekly. Your application has a 7-day waiting period at the start of your leave. You won’t receive any PFML payments for this week of leave.
+    Check back on November 9, 2021 to see when you can expect your first payment. Your first payment will be scheduled after your second week of leave ends. After your first payment, expect to be paid weekly.
   </p>
-  <section
-    class="margin-y-5"
-    data-testid="estimated-date"
-  >
-    <h3
-      class="font-heading-sm text-bold"
-    >
-      What does the estimated date mean?
-    </h3>
-    <p>
-      This is the date range we expect to process your direct deposit payment or send your check in the mail. Depending on your bank, expect to receive direct deposit payments in your account 2-3 days after this date. Checks may take 7-11 days to arrive in the mail. Once your payment is processed or your check is sent, that date will be shown in the “date processed” column.
-    </p>
-  </section>
 </section>
 `;
 
@@ -192,19 +87,6 @@ exports[`Payments Phase 2 Checkback date implementation renders intro text for c
   <p>
     Check back on January 18, 2022 to see when you can expect your first payment. You’ll receive one payment for your entire leave.
   </p>
-  <section
-    class="margin-y-5"
-    data-testid="estimated-date"
-  >
-    <h3
-      class="font-heading-sm text-bold"
-    >
-      What does the estimated date mean?
-    </h3>
-    <p>
-      This is the date range we expect to process your direct deposit payment or send your check in the mail. Depending on your bank, expect to receive direct deposit payments in your account 2-3 days after this date. Checks may take 7-11 days to arrive in the mail. Once your payment is processed or your check is sent, that date will be shown in the “date processed” column.
-    </p>
-  </section>
 </section>
 `;
 
@@ -213,21 +95,8 @@ exports[`Payments Phase 2 Checkback date implementation renders intro text for r
   data-testid="your-payments-intro"
 >
   <p>
-    Check back on November 9, 2021 to see when you can expect your first payment. You need to take at least 8 hours of leave for a payment to be processed.
+    Check back on November 9, 2021 to see when you can expect your first payment. You need to take at least 8 hours of leave or wait until 30 days have passed for a payment to be scheduled.
   </p>
-  <section
-    class="margin-y-5"
-    data-testid="estimated-date"
-  >
-    <h3
-      class="font-heading-sm text-bold"
-    >
-      What does the estimated date mean?
-    </h3>
-    <p>
-      This is the date range we expect to process your direct deposit payment or send your check in the mail. Depending on your bank, expect to receive direct deposit payments in your account 2-3 days after this date. Checks may take 7-11 days to arrive in the mail. Once your payment is processed or your check is sent, that date will be shown in the “date processed” column.
-    </p>
-  </section>
 </section>
 `;
 
@@ -236,21 +105,8 @@ exports[`Payments Phase 2 Checkback date implementation renders intro text for r
   data-testid="your-payments-intro"
 >
   <p>
-    Check back on November 9, 2021 to see when you can expect your first payment. You need to take at least 8 hours of leave for a payment to be processed. Your application has a 7-day waiting period at the start of your leave. You won’t receive any PFML payments for this week of leave.
+    Check back on November 9, 2021 to see when you can expect your first payment. You need to take at least 8 hours of leave or wait until 30 days have passed for a payment to be scheduled.
   </p>
-  <section
-    class="margin-y-5"
-    data-testid="estimated-date"
-  >
-    <h3
-      class="font-heading-sm text-bold"
-    >
-      What does the estimated date mean?
-    </h3>
-    <p>
-      This is the date range we expect to process your direct deposit payment or send your check in the mail. Depending on your bank, expect to receive direct deposit payments in your account 2-3 days after this date. Checks may take 7-11 days to arrive in the mail. Once your payment is processed or your check is sent, that date will be shown in the “date processed” column.
-    </p>
-  </section>
 </section>
 `;
 
@@ -261,19 +117,6 @@ exports[`Payments Phase 2 Checkback date implementation renders intro text for r
   <p>
     Check back on January 18, 2022 to see when you can expect your first payment. You’ll receive one payment for your entire leave.
   </p>
-  <section
-    class="margin-y-5"
-    data-testid="estimated-date"
-  >
-    <h3
-      class="font-heading-sm text-bold"
-    >
-      What does the estimated date mean?
-    </h3>
-    <p>
-      This is the date range we expect to process your direct deposit payment or send your check in the mail. Depending on your bank, expect to receive direct deposit payments in your account 2-3 days after this date. Checks may take 7-11 days to arrive in the mail. Once your payment is processed or your check is sent, that date will be shown in the “date processed” column.
-    </p>
-  </section>
 </section>
 `;
 
@@ -380,38 +223,11 @@ exports[`Payments does not render payments if the is a 404 status 1`] = `
 </a>
 `;
 
-exports[`Payments omits estimated date content for intermittent leaves with no payments 1`] = `
-<section
-  data-testid="your-payments-intro"
->
-  Once you report at least 8 hours, you can expect to receive a payment about one week later. You can receive more than one payment in a week depending on how your hours are reported. You can report your hours by calling 
-  <a
-    href="tel:(857) 972-9256"
-  >
-    (857) 972-9256
-  </a>
-  .
-</section>
-`;
-
 exports[`Payments renders the \`Your payments\` intro content section 1`] = `
 <section
   data-testid="your-payments-intro"
 >
   Payments are scheduled to be paid after each week of your leave. Check back weekly to see when your next payment will be scheduled.
-  <section
-    class="margin-y-5"
-    data-testid="estimated-date"
-  >
-    <h3
-      class="font-heading-sm text-bold"
-    >
-      What does the estimated date mean?
-    </h3>
-    <p>
-      This is the date range we expect to process your direct deposit payment or send your check in the mail. Depending on your bank, expect to receive direct deposit payments in your account 2-3 days after this date. Checks may take 7-11 days to arrive in the mail. Once your payment is processed or your check is sent, that date will be shown in the “date processed” column.
-    </p>
-  </section>
 </section>
 `;
 
@@ -447,14 +263,9 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
       hidden=""
       id="accordion30"
     >
-      <p>
-        Once your payments have started, expect to be paid weekly for the duration of your leave.
-      </p>
-      <p>
-        <strong>
-          What may cause a delayed payment
-        </strong>
-      </p>
+      <strong>
+        What may cause a delayed payment
+      </strong>
       <p>
         The exact day you receive payment can be delayed because of:
       </p>
@@ -463,38 +274,51 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
           State and federal holidays
         </li>
         <li>
-          Leave periods that end on weekends
+          Pay periods that end on weekends
         </li>
         <li>
           Your bank’s processes
         </li>
         <li>
-          The process to adjust your benefit amount due to additional income or benefits you or your employer reported
+          Changes to your leave’s start and end dates
+        </li>
+        <li>
+          Changes to your benefit amount due to additional income or benefits you or your employer reported
+        </li>
+        <li>
+          Other processing issues such as issues with bank account information or your address
+        </li>
+      </ul>
+      <p>
+        <strong>
+          What may cause a cancelled payment
+        </strong>
+      </p>
+      <p>
+        Payments can be cancelled because of:
+      </p>
+      <ul>
+        <li>
+          Paid time off taken on the same day you receive receive PFML benefits
         </li>
         <li>
           Changes to your leave’s start and end dates
         </li>
         <li>
-          Other processing issues such as issues with bank account information, or your address
-        </li>
-      </ul>
-      <p>
-        <strong>
-          What may lead to a cancelled payment
-        </strong>
-      </p>
-      <p>
-        Payments can be cancelled due to:
-      </p>
-      <ul>
-        <li>
-          Changes to when you end your leave
+          Changes to your benefit amount due to additional income or benefits you or your employer reported
         </li>
         <li>
-          Paid time off taken on days you also receive PFML benefits
+          Hours worked outside of the schedule you set up with your employer or during reported intermittent hours
         </li>
         <li>
-          The process to adjust your benefit amount due to additional income or benefits you or your employer reported may temporarily create a cancelled payment
+          If you believe we’ve cancelled your payments for an incorrect reason, you can 
+          <a
+            href="https://www.mass.gov/forms/request-an-appeal-for-paid-family-and-medical-leave"
+            rel="noreferrer noopener"
+            target="_blank"
+          >
+            appeal the DFML decision.
+          </a>
         </li>
       </ul>
     </div>
@@ -774,7 +598,7 @@ exports[`Payments renders the Payments table 1`] = `
     </tr>
     <tr>
       <td
-        data-label="Waiting week"
+        data-label="Waiting period"
       >
         The first seven (7) days of approved leave are unpaid
       </td>

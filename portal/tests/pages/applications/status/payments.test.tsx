@@ -258,11 +258,7 @@ describe("Payments", () => {
     expect(
       screen.queryByText(/receive one payment for your entire leave/)
     ).not.toBeInTheDocument();
-    expect(
-      screen.getByText(
-        /expect to be paid weekly for the duration of your leave/
-      )
-    ).toBeInTheDocument();
+    expect(screen.getByText(/Check back weekly/)).toBeInTheDocument();
   });
 
   it("renders retroactive text if latest absence period date is retroactive", () => {
@@ -404,31 +400,6 @@ describe("Payments", () => {
     expect(container.firstChild).toMatchSnapshot();
   });
 
-  it("omits estimated date content for intermittent leaves with no payments", () => {
-    renderPage(
-      Payments,
-      {
-        addCustomSetup: setupHelper({
-          ...defaultClaimDetail,
-          absence_periods: [
-            createAbsencePeriod({
-              period_type: "Intermittent",
-              absence_period_start_date: "2022-10-21",
-              absence_period_end_date: "2022-12-30",
-              reason: "Child Bonding",
-            }),
-          ],
-        }),
-      },
-      props
-    );
-
-    expect(
-      screen.queryByText(/What does the estimated date mean/)
-    ).not.toBeInTheDocument();
-    expect(screen.getByTestId("your-payments-intro")).toMatchSnapshot();
-  });
-
   // TODO(PORTAL-1482): remove test cases for checkback dates
   describe("Phase 2 Checkback date implementation", () => {
     beforeEach(() => {
@@ -566,33 +537,6 @@ describe("Payments", () => {
       expect(screen.getByTestId("your-payments-intro")).toMatchSnapshot();
       const table = screen.queryByRole("table");
       expect(table).not.toBeInTheDocument();
-    });
-
-    it("includes estimated date content for intermittent leaves with payments", () => {
-      renderPage(
-        Payments,
-        {
-          addCustomSetup: setupHelper({
-            ...defaultClaimDetail,
-            absence_periods: [
-              createAbsencePeriod({
-                period_type: "Intermittent",
-                absence_period_start_date: "2022-10-21",
-                absence_period_end_date: "2022-12-30",
-                reason: "Child Bonding",
-              }),
-            ],
-            has_paid_payments: true,
-            payments: [createMockPayment({ status: "Sent to bank" }, true)],
-          }),
-        },
-        props
-      );
-
-      expect(
-        screen.getByText(/What does the estimated date mean/)
-      ).toBeInTheDocument();
-      expect(screen.getByTestId("your-payments-intro")).toMatchSnapshot();
     });
   });
 });

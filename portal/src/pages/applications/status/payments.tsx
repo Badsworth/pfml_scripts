@@ -313,15 +313,6 @@ export const Payments = ({
                 ),
               }}
             />
-            {/* Estimated Date section */}
-            {(!isIntermittent || (isIntermittent && hasPaidPayments)) && (
-              <section className="margin-y-5" data-testid="estimated-date">
-                <Heading level="3">
-                  {t("pages.payments.estimatedDateHeading")}
-                </Heading>
-                <p>{t("pages.payments.estimatedDate")}</p>
-              </section>
-            )}
           </section>
 
           {/* Table section */}
@@ -432,6 +423,13 @@ export const Payments = ({
               <Trans
                 i18nKey="pages.payments.delaysToPaymentsScheduleAnswer"
                 components={{
+                  "online-appeals-form": (
+                    <a
+                      href={routes.external.massgov.onlineAppealsForm}
+                      target="_blank"
+                      rel="noreferrer noopener"
+                    />
+                  ),
                   li: <li />,
                   ul: <ul />,
                 }}
