@@ -12,7 +12,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  nodeVersion: 15.x
+  nodeVersion: 16.x
   deploys_channel: "C01HEAJPE76" #mass-pfml-deploys-shared
   working-dir: ./portal
   cache-package-lock: ./portal/package-lock.json
@@ -43,7 +43,6 @@ jobs:
       - name: build
         run: npm run build:${{ matrix.env }}
         working-directory: ${{ env.working-dir }}
-
   storybook:
     name: Check Storybook builds successfully
     runs-on: ubuntu-latest

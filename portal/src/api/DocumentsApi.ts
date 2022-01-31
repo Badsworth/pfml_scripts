@@ -50,7 +50,6 @@ export default class DocumentsApi extends BaseApi {
       "POST",
       `${application_id}/documents`,
       formData,
-      undefined,
       { multipartForm: true }
     );
 

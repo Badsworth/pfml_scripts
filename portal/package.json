@@ -4,7 +4,7 @@
   "description": "Mass PFML Portal",
   "main": "index.js",
   "engines": {
-    "node": ">=15",
+    "node": ">=16",
     "npm": ">=7"
   },
   "scripts": {

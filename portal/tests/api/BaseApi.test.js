@@ -60,7 +60,7 @@ describe("BaseApi", () => {
   });
 
   it("excludes Authorization header when excludeAuthHeader option is true", async () => {
-    await testsApi.request("GET", "users", {}, {}, { excludeAuthHeader: true });
+    await testsApi.request("GET", "users", {}, { excludeAuthHeader: true });
 
     expect(fetch).toHaveBeenCalledWith(
       expect.any(String),
@@ -221,7 +221,9 @@ describe("BaseApi", () => {
       const body = null;
       const headers = { "X-Header": "X-Header-Value" };
 
-      await testsApi.request(method, "users", body, headers);
+      await testsApi.request(method, "users", body, {
+        additionalHeaders: headers,
+      });
 
       expect(fetch).toHaveBeenCalledWith(
         expect.any(String),
@@ -238,10 +240,9 @@ describe("BaseApi", () => {
       it("doesn't set the Content-Type header", async () => {
         const method = "PUT";
         const body = null;
-        const headers = {};
         const options = { multipartForm: true };
 
-        await testsApi.request(method, "users", body, headers, options);
+        await testsApi.request(method, "users", body, options);
 
         expect(fetch).toHaveBeenCalledWith(
           expect.any(String),
@@ -383,6 +384,30 @@ describe("BaseApi", () => {
         expect(error).toBeInstanceOf(ValidationError);
         expect(error.issues).toHaveLength(1);
         expect(error.i18nPrefix).toBe("testPrefix");
+      }
+    });
+
+    it("overrides the error's i18nPrefix when an override is passed as an argument", async () => {
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: false,
+        status: 400,
+        json: jest.fn().mockResolvedValue({
+          errors: [
+            {
+              type: "minLength",
+              rule: "5",
+              field: "residential_address.zip",
+            },
+          ],
+        }),
+      });
+
+      try {
+        await testsApi.request("GET", "users", undefined, {
+          i18nPrefix: "customPrefix",
+        });
+      } catch (error) {
+        expect(error.i18nPrefix).toBe("customPrefix");
       }
     });
 
