@@ -504,6 +504,7 @@ def get_claim_from_db(fineos_absence_id: Optional[str]) -> Optional[Claim]:
 def get_claims() -> flask.Response:
     current_user = app.current_user()
     employer_id = flask.request.args.get("employer_id")
+    employee_id_str = flask.request.args.get("employee_id")
     allow_hrd = flask.request.args.get("allow_hrd", type=bool) or False
     search_string = flask.request.args.get("search", type=str)
     absence_statuses = parse_filterable_absence_statuses(flask.request.args.get("claim_status"))
@@ -538,6 +539,11 @@ def get_claims() -> flask.Response:
                 query.add_employers_filter(verified_employers, current_user)
             else:
                 query.add_user_owns_claim_filter(current_user)
+
+            # filter claims by an employee_id
+            if employee_id_str:
+                employee_ids = {eid.strip() for eid in employee_id_str.split(",")}
+                query.add_employees_filter(employee_ids)
 
             query.add_managed_requirements_filter()
             if len(absence_statuses):

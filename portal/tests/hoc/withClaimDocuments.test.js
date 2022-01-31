@@ -1,6 +1,6 @@
 import { screen, waitFor } from "@testing-library/react";
+import ApiResourceCollection from "src/models/ApiResourceCollection";
 import BenefitsApplication from "../../src/models/BenefitsApplication";
-import DocumentCollection from "../../src/models/DocumentCollection";
 import React from "react";
 import { renderPage } from "../test-utils";
 import withClaimDocuments from "../../src/hoc/withClaimDocuments";
@@ -81,7 +81,7 @@ describe("withClaimDocuments", () => {
   });
 
   it("renders the page with Claim documents when document state is loaded", async () => {
-    const mockDocuments = new DocumentCollection([
+    const mockDocuments = new ApiResourceCollection("fineos_document_id", [
       {
         application_id: mockClaimId,
         fineos_document_id: 1,
@@ -141,7 +141,7 @@ describe("withClaimDocuments", () => {
   // Mostly identical to test above, except testing the scenario where the claim prop is set,
   // instead of the query param
   it("renders the page with Application documents when document state is loaded", async () => {
-    const mockDocuments = new DocumentCollection([
+    const mockDocuments = new ApiResourceCollection("fineos_document_id", [
       {
         application_id: mockClaimId,
         fineos_document_id: 1,

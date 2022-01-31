@@ -1,5 +1,9 @@
-import { BenefitsApplicationDocument, DocumentType } from "src/models/Document";
-import DocumentCollection from "src/models/DocumentCollection";
+import {
+  BenefitsApplicationDocument,
+  ClaimDocument,
+  DocumentType,
+} from "src/models/Document";
+import ApiResourceCollection from "src/models/ApiResourceCollection";
 import { MockEmployerClaimBuilder } from "lib/mock-helpers/mock-model-builder";
 import React from "react";
 import { Status } from "src/pages/employers/applications/status";
@@ -100,13 +104,16 @@ export const Default = ({
   let documentsMap;
   if (document === "None") {
     documentsMap = new Map([
-      [claim.fineos_absence_id, new DocumentCollection()],
+      [
+        claim.fineos_absence_id,
+        new ApiResourceCollection<ClaimDocument>("fineos_document_id"),
+      ],
     ]);
   } else if (document === "Multiple") {
     documentsMap = new Map([
       [
         claim.fineos_absence_id,
-        new DocumentCollection([
+        new ApiResourceCollection<ClaimDocument>("fineos_document_id", [
           { ...documentData },
           {
             ...documentData,
@@ -117,7 +124,12 @@ export const Default = ({
     ]);
   } else {
     documentsMap = new Map([
-      [claim.fineos_absence_id, new DocumentCollection([{ ...documentData }])],
+      [
+        claim.fineos_absence_id,
+        new ApiResourceCollection<ClaimDocument>("fineos_document_id", [
+          { ...documentData },
+        ]),
+      ],
     ]);
   }
 

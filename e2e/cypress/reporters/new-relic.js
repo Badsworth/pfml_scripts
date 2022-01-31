@@ -41,6 +41,7 @@ module.exports = class NewRelicCypressReporter extends reporters.Spec {
   }
 
   async reportTest(test) {
+    const MAX_NR_EVENT_LENGTH = 4096;
     const suite = getSuite(test);
     const { ciBuildId: runId, group, tag, runUrl } = await getRunMetadata();
     const { environment, ErrorCategory, branch } = this;
@@ -62,9 +63,9 @@ module.exports = class NewRelicCypressReporter extends reporters.Spec {
       tag: tag ? tag.join(",") : "",
       runUrl,
     };
+
     // ADD Categorization system function here
     if (test.err) {
-      event.errorMessage = test.err.message;
       event.errorClass = test.err.name ?? "Error";
       if (test.err.codeFrame && test.err.codeFrame.line) {
         event.errorLine = test.err.codeFrame.line;
@@ -72,8 +73,18 @@ module.exports = class NewRelicCypressReporter extends reporters.Spec {
       if (test.err.codeFrame && test.err.codeFrame.relativeFile) {
         event.errorRelativeFile = test.err.codeFrame.relativeFile;
       }
+      event.errorMessage = test.err.message;
+      const eventLength = JSON.stringify(event).length;
+      // custom attibute length is 4096 chars https://docs.newrelic.com/docs/data-apis/custom-data/custom-events/data-requirements-limits-custom-event-data/
+      // Error messages could cause failures by posting an event by going over the NR character limit
+      // to stay within these contraints, excess characters need to be sliced off
+      if (eventLength > MAX_NR_EVENT_LENGTH) {
+        const charsOver = eventLength - MAX_NR_EVENT_LENGTH;
+        event.errorMessage = event.errorMessage.slice(0, -charsOver);
+      }
       ErrorCategory.setErrorCategory(event);
     }
+
     return this.send(event);
   }
 

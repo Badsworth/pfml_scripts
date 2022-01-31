@@ -18,7 +18,7 @@ from massgov.pfml.delegated_payments.address_validation import Constants
 from massgov.pfml.delegated_payments.claimant_address_validation import (
     ClaimantAddressValidationStep,
 )
-from massgov.pfml.delegated_payments.mock.fineos_extract_data import FineosClaimantData
+from massgov.pfml.delegated_payments.mock.fineos_extract_data import FineosPaymentData
 from massgov.pfml.experian.address_validate_soap.client import Client
 from massgov.pfml.experian.address_validate_soap.mock_caller import MockVerificationZeepCaller
 from massgov.pfml.experian.address_validate_soap.models import VerifyLevel
@@ -49,7 +49,7 @@ def employee_factory():
 
 @pytest.fixture
 def employee_extract_factory():
-    claimant_data = FineosClaimantData()
+    claimant_data = FineosPaymentData()
     return claimant_data
 
 
@@ -84,9 +84,9 @@ def test_construct_address_data(employee_extract_factory):
     AddressFactory.address_line_one = employee_extract_factory.address_1
     AddressFactory.city = employee_extract_factory.city
     AddressFactory.geo_state_id = employee_extract_factory.state
-    AddressFactory.zip_code = employee_extract_factory.post_code
+    AddressFactory.zip_code = employee_extract_factory.zip_code
 
-    assert len(AddressFactory.zip_code) == 5
+    assert len(AddressFactory.zip_code) == 10
 
 
 def is_address_same(address, employee_extract_factory):
@@ -95,7 +95,7 @@ def is_address_same(address, employee_extract_factory):
         address.fineos_address.address_line_one == employee_extract_factory.address_1
         and address.city == employee_extract_factory.city
         and address.geo_state_id == employee_extract_factory.state
-        and address.zip_code == employee_extract_factory.post_code
+        and address.zip_code == employee_extract_factory.zip_code
     ):
         result = True
     assert result is False
@@ -112,7 +112,7 @@ def test_validate_claimant_address_has_all_parts(employee_extract_factory):
         not employee_extract_factory.address_1
         or not employee_extract_factory.city
         or not employee_extract_factory.state
-        or not employee_extract_factory.post_code
+        or not employee_extract_factory.zip_code
     ):
         result = False
     assert result is True

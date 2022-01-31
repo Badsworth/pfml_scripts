@@ -1,3 +1,8 @@
+import {
+  DocumentType,
+  filterByApplication,
+  findDocumentsByTypes,
+} from "../../../models/Document";
 import React, { useEffect } from "react";
 import withUser, { WithUserProps } from "../../../hoc/withUser";
 import { AbsencePeriod } from "../../../models/AbsencePeriod";
@@ -5,7 +10,6 @@ import Accordion from "../../../components/core/Accordion";
 import AccordionItem from "../../../components/core/AccordionItem";
 import Alert from "../../../components/core/Alert";
 import BackButton from "../../../components/BackButton";
-import { DocumentType } from "../../../models/Document";
 import Heading from "../../../components/core/Heading";
 import LeaveReason from "../../../models/LeaveReason";
 import PageNotFound from "../../../components/PageNotFound";
@@ -17,7 +21,6 @@ import { Trans } from "react-i18next";
 import { createRouteWithQuery } from "../../../utils/routeWithParams";
 import dayjs from "dayjs";
 import dayjsBusinessTime from "dayjs-business-time";
-import findDocumentsByTypes from "src/utils/findDocumentsByTypes";
 import formatDate from "../../../utils/formatDate";
 import formatDateRange from "../../../utils/formatDateRange";
 import { getMaxBenefitAmount } from "../../../utils/getMaxBenefitAmount";
@@ -41,7 +44,7 @@ export const Payments = ({
   const { t } = useTranslation();
   const { absence_id } = query;
   const {
-    appErrors: { items },
+    appErrors,
     claims: {
       claimDetail,
       isLoadingClaimDetail,
@@ -54,12 +57,6 @@ export const Payments = ({
   } = appLogic;
 
   const hasPaidPayments = claimDetail?.has_paid_payments;
-
-  // Determines if phase one payment features are displayed
-  const showPhaseOneFeatures =
-    isFeatureEnabled("claimantShowPayments") &&
-    claimDetail?.hasApprovedStatus &&
-    hasPaidPayments;
 
   // Determines if phase two payment features are displayed
   const showPhaseTwoFeatures =
@@ -75,7 +72,7 @@ export const Payments = ({
   const documentsForApplication =
     (allClaimDocuments?.items.length &&
       application_id &&
-      allClaimDocuments.filterByApplication(application_id)) ||
+      filterByApplication(allClaimDocuments.items, application_id)) ||
     [];
 
   const approvalNotice = findDocumentsByTypes(documentsForApplication, [
@@ -87,18 +84,14 @@ export const Payments = ({
       !hasLoadedPayments(absenceId) ||
       (loadedPaymentsData?.absence_case_id &&
         Boolean(claimDetail?.payments.length === 0));
-    if (
-      claimDetail &&
-      ((!showPhaseOneFeatures && !showPhaseTwoFeatures) ||
-        !approvalNotice?.created_at)
-    ) {
+    if (claimDetail && (!showPhaseTwoFeatures || !approvalNotice?.created_at)) {
       portalFlow.goTo(routes.applications.status.claim, {
         absence_id,
       });
     } else if (
       absenceId &&
       (!Boolean(claimDetail) || Boolean(loadPayments(absenceId))) &&
-      !items.find((item) => item.name === "NotFoundError")
+      !appErrors.find((item) => item.name === "NotFoundError")
     ) {
       loadClaimDetail(absence_id);
     }
@@ -127,7 +120,7 @@ export const Payments = ({
   if (!isAbsenceCaseId) return <PageNotFound />;
 
   // only hide page content if there is an error that's not DocumentsLoadError.
-  const hasNonDocumentsLoadError: boolean = appLogic.appErrors.items.some(
+  const hasNonDocumentsLoadError: boolean = appLogic.appErrors.some(
     (error) => error.name !== "DocumentsLoadError"
   );
 
@@ -207,7 +200,7 @@ export const Payments = ({
 
   const shouldShowPaymentsTable =
     Boolean(claimDetail?.payments?.length) ||
-    (hasLoadedPayments(absence_id || "") && !items.length) ||
+    (hasLoadedPayments(absence_id || "") && !appErrors.length) ||
     (!isIntermittent && showPhaseTwoFeatures);
 
   // TODO(PORTAL-1482): remove test cases for checkback dates
@@ -231,21 +224,21 @@ export const Payments = ({
       ? "Continuous_"
       : "ReducedSchedule_";
     const fourteenthDayOfClaim = dayjs(initialClaimStartDate)
-      .add(13, "day")
+      .add(14, "day")
       .format("YYYY-MM-DD");
 
     if (isRetroactive || approvalDate >= fourteenthDayOfClaim) {
       checkbackDate = dayjs(approvalDate)
         .addBusinessDays(3)
-        .format("MM/DD/YYYY");
+        .format("MMMM D, YYYY");
       checkbackDateContext += isRetroactive
         ? "Retroactive"
         : "PostFourteenthClaimDate";
     } else {
       checkbackDate = dayjs(initialClaimStartDate)
-        .add(13, "day")
+        .add(14, "day")
         .addBusinessDays(3)
-        .format("MM/DD/YYYY");
+        .format("MMMM D, YYYY");
       checkbackDateContext += "PreFourteenthClaimDate";
     }
   }

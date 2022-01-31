@@ -1,4 +1,5 @@
-import BenefitsApplicationCollection from "src/models/BenefitsApplicationCollection";
+import ApiResourceCollection from "src/models/ApiResourceCollection";
+import BenefitsApplication from "src/models/BenefitsApplication";
 import { ConvertToEmployer } from "src/pages/user/convert-to-employer";
 import PaginationMeta from "src/models/PaginationMeta";
 import React from "react";
@@ -21,7 +22,9 @@ const paginationMeta: PaginationMeta = {
 
 export const Page = () => {
   const user = new User({});
-  const claims = new BenefitsApplicationCollection();
+  const claims = new ApiResourceCollection<BenefitsApplication>(
+    "application_id"
+  );
   const appLogic = useMockableAppLogic();
 
   return (

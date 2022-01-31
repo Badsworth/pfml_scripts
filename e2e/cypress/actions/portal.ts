@@ -52,13 +52,11 @@ function setFeatureFlags(flags?: Partial<FeatureFlags>): void {
     employerShowReviewByStatus: true,
     claimantShowStatusPage: true,
     claimantShowTaxWithholding: true,
-    claimantShowPayments: config("HAS_PAYMENT_STATUS") === "true",
+    claimantShowPayments: false,
     claimantShowOrganizationUnits: false,
-    claimantShowMFA: config("MFA_ENABLED") === "true",
-    employerShowMultiLeave:
-      config("ENVIRONMENT") === "training" || config("ENVIRONMENT") === "long"
-        ? false
-        : true,
+    claimantShowPaymentsPhaseTwo: true,
+    claimantShowMFA: true,
+    employerShowMultiLeave: true,
   };
   cy.setCookie("_ff", JSON.stringify({ ...defaults, ...flags }), { log: true });
 }
@@ -102,6 +100,10 @@ export function before(flags?: Partial<FeatureFlags>): void {
   cy.intercept(/\/api\/v1\/claims\?(page_offset=\d+)?&?(order_by)/).as(
     "dashboardClaimQueries"
   );
+  cy.intercept({
+    method: "GET",
+    url: "**/api/v1/payments?absence_case_id=*",
+  }).as("payments");
 
   deleteDownloadsFolder();
 }
@@ -872,12 +874,7 @@ export function visitActionRequiredERFormPage(fineosAbsenceId: string): void {
   });
   cy.contains("label", "Yes").click();
   cy.contains("Agree and submit").click();
-  if (
-    config("ENVIRONMENT") !== "training" &&
-    config("ENVIRONMENT") !== "long"
-  ) {
-    cy.contains("span", fineosAbsenceId);
-  }
+  cy.contains("span", fineosAbsenceId);
 }
 
 export function respondToLeaveAdminRequest(
@@ -930,10 +927,21 @@ export function respondToLeaveAdminRequest(
   cy.contains("Thanks for reviewing the application", { timeout: 30000 });
 }
 
+type NoticeType =
+  | "Approval notice (PDF)"
+  | "Denial notice (PDF)"
+  | "Appeal Acknowledgment (PDF)"
+  | "Benefit Amount Change Notice (PDF)"
+  | "Approved Time Cancelled (PDF)"
+  | "Maximum Weekly Benefit Change Notice (PDF)"
+  | "Leave Allotment Change Notice (PDF)"
+  | "Change Request Denied (PDF)"
+  | "Change Request Approved (PDF)";
+
 export function checkNoticeForLeaveAdmin(
   fineosAbsenceId: string,
   claimantName: string,
-  noticeType: string
+  noticeType: NoticeType
 ): void {
   cy.visit(`/employers/applications/status/?absence_id=${fineosAbsenceId}`);
   cy.contains("h1", claimantName, { timeout: 20000 }).should("be.visible");
@@ -1442,13 +1450,14 @@ function reportOtherLeavesAndBenefits(claim: ApplicationRequestBody): void {
 
   cy.contains(
     "form",
-    // @bc: This title was changed: "... your PFML leave." -> "... your paid leave from PFML."
-    /Tell us about the accrued paid leave you'll use during your (paid|PFML) (leave.|leave from PFML.)/
+    // @bc: Old title: "Tell us about the accrued paid leave you'll use during your paid leave from PFML."
+    // @bc: Current title: "Tell us about the employer-sponsored paid time off you’ll use during your leave period"
+    /Tell us about the (accrued paid leave|employer-sponsored paid time off) you('|’)ll use during your (leave period.|paid leave from PFML.)/
   ).submit();
 
   cy.contains(
     "form",
-    "Will you use any employer-sponsored accrued paid leave during your paid leave from PFML?"
+    /Will you use any employer-sponsored (paid time off|accrued paid leave) during your (leave period?|paid leave from PFML?)/
   )
     .within(() => {
       const selector = (content: string) =>
@@ -1854,16 +1863,7 @@ export function assertConcurrentLeave(leave: ValidConcurrentLeave): void {
  * @param leaveType expand the type as needed
  */
 export function assertLeaveType(leaveType: "Active duty"): void {
-  if (
-    config("ENVIRONMENT") === "training" ||
-    config("ENVIRONMENT") === "long"
-  ) {
-    cy.findByText("Leave type", { selector: "h3" })
-      .next()
-      .should("contain.text", leaveType);
-  } else {
-    cy.findByText(leaveType, { selector: "h3" });
-  }
+  cy.findByText(leaveType, { selector: "h3" });
 }
 export type FilterOptionsFlags = {
   [key in DashboardClaimStatus]?: true | false;
@@ -2122,7 +2122,7 @@ export function assertPayments(spec: PaymentStatus[]) {
     estimatedScheduledDate: "Estimated date",
     dateSent: "Date processed",
   };
-
+  cy.wait("@payments").wait(100);
   cy.get("section[data-testid='your-payments']").within(() => {
     cy.get("tbody")
       .children()
@@ -2224,4 +2224,16 @@ export function leaveAdminAssertClaimStatus(leaves: LeaveStatus[]) {
     cy.contains(heading);
     cy.get('[data-label="Status"]').should("contain.text", status);
   }
+}
+
+export function assertPaymentCheckBackDate(date: Date) {
+  const dateFormatPrevious = format(date, "MM/dd/yyyy");
+  const dateFormatUpdated = format(date, "MMMM d, yyyy");
+  cy.get("section[data-testid='your-payments-intro']").within(() => {
+    cy.contains(
+      new RegExp(
+        `Check back on (${dateFormatPrevious}|${dateFormatUpdated}) to see when you can expect your first payment.`
+      )
+    );
+  });
 }

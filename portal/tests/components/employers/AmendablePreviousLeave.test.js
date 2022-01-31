@@ -4,7 +4,6 @@ import PreviousLeave, {
 } from "../../../src/models/PreviousLeave";
 import { fireEvent, render, screen } from "@testing-library/react";
 import AmendablePreviousLeave from "../../../src/components/employers/AmendablePreviousLeave";
-import AppErrorInfoCollection from "../../../src/models/AppErrorInfoCollection";
 import React from "react";
 import userEvent from "@testing-library/user-event";
 
@@ -20,7 +19,7 @@ const previousLeave = new PreviousLeave({
 });
 const onChange = jest.fn();
 const onRemove = jest.fn();
-const appErrors = new AppErrorInfoCollection([]);
+const appErrors = [];
 
 const renderAmendedLeave = () => {
   return render(

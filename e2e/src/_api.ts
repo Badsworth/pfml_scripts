@@ -970,7 +970,9 @@ export interface DocumentUploadRequest {
     | "Pending Application Withdrawn"
     | "Appeal Notice - Claim Decision Changed" // @todo: added manually - this document type is still needed at the time of re-generating this file.
     | "Appeal Acknowledgment"
-    | "Certification Form";
+    | "Certification Form"
+    | "Employer Reimbursement Formstack"
+    | "Employer Reimbursement Policy";
   name?: string;
   description?: string;
   mark_evidence_received?: boolean;

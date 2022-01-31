@@ -118,3 +118,8 @@ def test_claim_has_paid_payments_returns_false_when_payments_exist_not_in_paid_s
     # Test that the property updates with state changes
     payment_factory.get_or_create_payment_with_state(State.DELEGATED_PAYMENT_ERROR_FROM_BANK)
     assert claim.has_paid_payments is False
+
+
+def test_user_is_worker_user(user, employer_user):
+    assert employer_user.is_worker_user is False
+    assert user.is_worker_user is True

@@ -1,8 +1,8 @@
 import Claim, { ClaimEmployee } from "../../../src/models/Claim";
 import User, { UserLeaveAdministrator } from "../../../src/models/User";
 import { cleanup, screen, within } from "@testing-library/react";
+import ApiResourceCollection from "src/models/ApiResourceCollection";
 import { AppLogic } from "../../../src/hooks/useAppLogic";
-import ClaimCollection from "../../../src/models/ClaimCollection";
 import Dashboard from "../../../src/pages/employers/dashboard";
 import PaginationMeta from "../../../src/models/PaginationMeta";
 import faker from "faker";
@@ -45,12 +45,9 @@ const verifiableUserLeaveAdministrator = createUserLeaveAdministrator({
 const getClaims = (leaveAdmin: UserLeaveAdministrator) => {
   return [
     new Claim({
-      absence_period_end_date: "",
-      absence_period_start_date: "",
-      claim_type_description: "",
-      fineos_notification_id: "NTN-123",
-      managed_requirements: [],
+      absence_periods: [],
       created_at: "2021-01-15",
+      managed_requirements: [],
       employee: new ClaimEmployee({
         first_name: "Jane",
         middle_name: null,
@@ -96,7 +93,10 @@ const setup = (options?: {
       consented_to_data_sharing: true,
       ...userAttrs,
     });
-    appLogic.claims.claims = new ClaimCollection(claims);
+    appLogic.claims.claims = new ApiResourceCollection<Claim>(
+      "fineos_absence_id",
+      claims
+    );
     appLogic.claims.isLoadingClaims = false;
     appLogic.claims.paginationMeta = {
       page_offset: 1,

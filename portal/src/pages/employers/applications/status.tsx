@@ -1,3 +1,4 @@
+import { DocumentType, findDocumentsByTypes } from "../../../models/Document";
 import React, { useEffect } from "react";
 import withEmployerClaim, {
   WithEmployerClaimProps,
@@ -6,7 +7,6 @@ import withEmployerClaim, {
 import { AbsenceCaseStatus } from "../../../models/Claim";
 import AbsenceCaseStatusTag from "../../../components/AbsenceCaseStatusTag";
 import BackButton from "../../../components/BackButton";
-import { DocumentType } from "../../../models/Document";
 import DownloadableDocument from "../../../components/DownloadableDocument";
 import Heading from "../../../components/core/Heading";
 import Lead from "../../../components/core/Lead";
@@ -14,7 +14,6 @@ import LeaveReason from "../../../models/LeaveReason";
 import StatusRow from "../../../components/StatusRow";
 import Title from "../../../components/core/Title";
 import { Trans } from "react-i18next";
-import findDocumentsByTypes from "../../../utils/findDocumentsByTypes";
 import findKeyByValue from "../../../utils/findKeyByValue";
 import formatDateRange from "../../../utils/formatDateRange";
 import { get } from "lodash";
@@ -86,7 +85,10 @@ export const Status = (props: WithEmployerClaimProps) => {
       <StatusRow label={t("pages.employersClaimsStatus.statusLabel")}>
         {/* Wrapped with margin-0 to collapse awkward default spacing between the heading and the tag */}
         <div className="margin-0">
-          <AbsenceCaseStatusTag status={claim.status} />
+          <AbsenceCaseStatusTag
+            managedRequirements={claim.managed_requirements}
+            status={claim.status}
+          />
         </div>
       </StatusRow>
       <StatusRow label={t("pages.employersClaimsStatus.leaveReasonLabel")}>

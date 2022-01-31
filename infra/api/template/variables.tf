@@ -117,7 +117,7 @@ variable "enable_alarm_api_ram" {
 variable "enable_document_multipart_upload" {
   description = "Enable document uploads through the FINEOS multipart endpoint"
   type        = string
-  default     = "0"
+  default     = "1"
 }
 
 variable "cors_origins" {
@@ -282,6 +282,24 @@ variable "cognito_provisioned_concurrency_level_min" {
   default     = 1
 }
 
+variable "pfml_email_address" {
+  description = "\"Send from\" address for outgoing emails sent to claimants and leave administrators"
+  type        = string
+  default     = ""
+}
+
+variable "bounce_forwarding_email_address" {
+  description = "\"Send to\" address for bounced back outgoing emails"
+  type        = string
+  default     = ""
+}
+
+variable "bounce_forwarding_email_address_arn" {
+  description = "\"Send to\" address for bounced back outgoing emails (ARN)"
+  type        = string
+  default     = ""
+}
+
 variable "release_version" {
   description = "API release version"
   type        = string
@@ -300,12 +318,13 @@ variable "use_claim_status_url" {
   default     = true
 }
 
-variable "enable_pdf_document_compression" {
-  description = "Enable or disable PDF compression on document upload"
-  type        = string
-}
-
 variable "enable_application_import" {
   description = "Enable or disable claimant application import"
   type        = string
+}
+
+variable "enable_employee_endpoints" {
+  description = "Specifies if the /employees/* API endpoints are enabled"
+  type        = string
+  default     = "0"
 }

@@ -1,6 +1,6 @@
+import ApiResourceCollection from "src/models/ApiResourceCollection";
 import { AppLogic } from "../../src/hooks/useAppLogic";
-import BenefitsApplication from "../../src/models/BenefitsApplication";
-import BenefitsApplicationCollection from "../../src/models/BenefitsApplicationCollection";
+import BenefitsApplication from "src/models/BenefitsApplication";
 import { MockBenefitsApplicationBuilder } from ".";
 
 /**
@@ -18,7 +18,7 @@ export const setupBenefitsApplications = (
   appLogicHook.benefitsApplications.loadPage = jest.fn();
   appLogicHook.benefitsApplications.isLoadingClaims = false;
   appLogicHook.benefitsApplications.benefitsApplications =
-    new BenefitsApplicationCollection(claims);
+    new ApiResourceCollection<BenefitsApplication>("application_id", claims);
   appLogicHook.benefitsApplications.hasLoadedBenefitsApplicationAndWarnings =
     jest.fn(() => true);
   if (cb) {

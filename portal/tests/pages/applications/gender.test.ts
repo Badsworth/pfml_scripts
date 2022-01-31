@@ -1,6 +1,6 @@
 import { screen, waitFor } from "@testing-library/react";
+import ApiResourceCollection from "src/models/ApiResourceCollection";
 import BenefitsApplication from "../../../src/models/BenefitsApplication";
-import BenefitsApplicationCollection from "../../../src/models/BenefitsApplicationCollection";
 import Gender from "../../../src/pages/applications/gender";
 import { pick } from "lodash";
 import { renderPage } from "../../test-utils";
@@ -30,7 +30,9 @@ const setup = (props: { gender?: BenefitsApplication["gender"] }) => {
         setupBenefitsApplications(appLogic);
         appLogic.benefitsApplications.update = updateClaim;
         appLogic.benefitsApplications.benefitsApplications =
-          new BenefitsApplicationCollection([claim]);
+          new ApiResourceCollection<BenefitsApplication>("application_id", [
+            claim,
+          ]);
       },
     },
     { query: { claim_id: "mock_application_id" } }

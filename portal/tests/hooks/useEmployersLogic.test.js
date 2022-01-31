@@ -13,9 +13,8 @@ import {
   submitClaimReviewMock,
   submitWithholdingMock,
 } from "../../src/api/EmployersApi";
+import ApiResourceCollection from "src/models/ApiResourceCollection";
 import AppErrorInfo from "../../src/models/AppErrorInfo";
-import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
-import DocumentCollection from "../../src/models/DocumentCollection";
 import User from "../../src/models/User";
 import { uniqueId } from "lodash";
 import useAppErrorsLogic from "../../src/hooks/useAppErrorsLogic";
@@ -91,21 +90,19 @@ describe("useEmployersLogic", () => {
           await employersLogic.addEmployer({ ein: "" });
         });
 
-        expect(appErrorsLogic.appErrors.items[0].name).toEqual("Error");
+        expect(appErrorsLogic.appErrors[0].name).toEqual("Error");
       });
 
       it("clears prior errors", async () => {
         act(() => {
-          appErrorsLogic.setAppErrors(
-            new AppErrorInfoCollection([new AppErrorInfo()])
-          );
+          appErrorsLogic.setAppErrors([new AppErrorInfo()]);
         });
 
         await act(async () => {
           await employersLogic.addEmployer(postData);
         });
 
-        expect(appErrorsLogic.appErrors.items).toHaveLength(0);
+        expect(appErrorsLogic.appErrors).toHaveLength(0);
       });
     });
   });
@@ -146,7 +143,7 @@ describe("useEmployersLogic", () => {
           await employersLogic.loadClaim(absenceId);
         });
 
-        expect(appErrorsLogic.appErrors.items[0].name).toEqual("Error");
+        expect(appErrorsLogic.appErrors[0].name).toEqual("Error");
       });
 
       it("catches instances of LeaveAdminForbiddenError", async () => {
@@ -172,22 +169,20 @@ describe("useEmployersLogic", () => {
         );
         // first call, first argument
         expect(catchErrorSpy.mock.calls[0][0]).toEqual(expectedError);
-        expect(appErrorsLogic.appErrors.items.length).toBe(0);
+        expect(appErrorsLogic.appErrors.length).toBe(0);
       });
     });
 
     it("clears prior errors", async () => {
       act(() => {
-        appErrorsLogic.setAppErrors(
-          new AppErrorInfoCollection([new AppErrorInfo()])
-        );
+        appErrorsLogic.setAppErrors([new AppErrorInfo()]);
       });
 
       await act(async () => {
         await employersLogic.loadClaim(absenceId);
       });
 
-      expect(appErrorsLogic.appErrors.items).toHaveLength(0);
+      expect(appErrorsLogic.appErrors).toHaveLength(0);
     });
   });
 
@@ -217,7 +212,10 @@ describe("useEmployersLogic", () => {
       it("fetches all documents for an application and adds to the claimDocumentsMap", async () => {
         const absenceId = "NTN-323-ABS-01";
         const expectedDocumentsMap = new Map([
-          [absenceId, new DocumentCollection([approvalNotice])],
+          [
+            absenceId,
+            new ApiResourceCollection("fineos_document_id", [approvalNotice]),
+          ],
         ]);
         let { claimDocumentsMap } = employersLogic;
 
@@ -225,7 +223,9 @@ describe("useEmployersLogic", () => {
           return {
             success: true,
             status: 200,
-            documents: new DocumentCollection([approvalNotice]),
+            documents: new ApiResourceCollection("fineos_document_id", [
+              approvalNotice,
+            ]),
           };
         });
 
@@ -240,8 +240,14 @@ describe("useEmployersLogic", () => {
         const absenceCaseId_first = "NTN-323-ABS-01";
         const absenceCaseId_second = "NTN-423-ABS-01";
         const expectedDocumentsMap = new Map([
-          [absenceCaseId_first, new DocumentCollection([approvalNotice])],
-          [absenceCaseId_second, new DocumentCollection([denialNotice])],
+          [
+            absenceCaseId_first,
+            new ApiResourceCollection("fineos_document_id", [approvalNotice]),
+          ],
+          [
+            absenceCaseId_second,
+            new ApiResourceCollection("fineos_document_id", [denialNotice]),
+          ],
         ]);
         let { claimDocumentsMap } = employersLogic;
 
@@ -250,14 +256,18 @@ describe("useEmployersLogic", () => {
             return {
               success: true,
               status: 200,
-              documents: new DocumentCollection([approvalNotice]),
+              documents: new ApiResourceCollection("fineos_document_id", [
+                approvalNotice,
+              ]),
             };
           })
           .mockImplementationOnce(() => {
             return {
               success: true,
               status: 200,
-              documents: new DocumentCollection([denialNotice]),
+              documents: new ApiResourceCollection("fineos_document_id", [
+                denialNotice,
+              ]),
             };
           });
 
@@ -273,7 +283,10 @@ describe("useEmployersLogic", () => {
       it("fetches documents for the same absence case twice and only calls the API once", async () => {
         const absenceId = "NTN-323-ABS-01";
         const expectedDocumentsMap = new Map([
-          [absenceId, new DocumentCollection([approvalNotice])],
+          [
+            absenceId,
+            new ApiResourceCollection("fineos_document_id", [approvalNotice]),
+          ],
         ]);
         let { claimDocumentsMap } = employersLogic;
 
@@ -281,7 +294,9 @@ describe("useEmployersLogic", () => {
           return {
             success: true,
             status: 200,
-            documents: new DocumentCollection([approvalNotice]),
+            documents: new ApiResourceCollection("fineos_document_id", [
+              approvalNotice,
+            ]),
           };
         });
 
@@ -310,21 +325,19 @@ describe("useEmployersLogic", () => {
           await employersLogic.loadDocuments(absenceId);
         });
 
-        expect(appErrorsLogic.appErrors.items[0].name).toEqual("Error");
+        expect(appErrorsLogic.appErrors[0].name).toEqual("Error");
       });
 
       it("clears prior errors", async () => {
         act(() => {
-          appErrorsLogic.setAppErrors(
-            new AppErrorInfoCollection([new AppErrorInfo()])
-          );
+          appErrorsLogic.setAppErrors([new AppErrorInfo()]);
         });
 
         await act(async () => {
           await employersLogic.loadDocuments(absenceId);
         });
 
-        expect(appErrorsLogic.appErrors.items).toHaveLength(0);
+        expect(appErrorsLogic.appErrors).toHaveLength(0);
       });
     });
   });
@@ -356,7 +369,7 @@ describe("useEmployersLogic", () => {
           await employersLogic.loadWithholding(employerId);
         });
 
-        expect(appErrorsLogic.appErrors.items[0].name).toEqual("Error");
+        expect(appErrorsLogic.appErrors[0].name).toEqual("Error");
       });
     });
   });
@@ -364,9 +377,7 @@ describe("useEmployersLogic", () => {
   describe("downloadDocument", () => {
     it("clears prior errors", async () => {
       act(() => {
-        appErrorsLogic.setAppErrors(
-          new AppErrorInfoCollection([new AppErrorInfo()])
-        );
+        appErrorsLogic.setAppErrors([new AppErrorInfo()]);
       });
 
       const document = new Document({
@@ -379,7 +390,7 @@ describe("useEmployersLogic", () => {
         await employersLogic.downloadDocument(absenceId, document);
       });
 
-      expect(appErrorsLogic.appErrors.items).toHaveLength(0);
+      expect(appErrorsLogic.appErrors).toHaveLength(0);
     });
 
     it("makes a request to the API", () => {
@@ -421,7 +432,7 @@ describe("useEmployersLogic", () => {
         await employersLogic.downloadDocument();
       });
 
-      expect(appErrorsLogic.appErrors.items[0].name).toEqual("BadRequestError");
+      expect(appErrorsLogic.appErrors[0].name).toEqual("BadRequestError");
     });
   });
 
@@ -470,21 +481,19 @@ describe("useEmployersLogic", () => {
           await employersLogic.submitClaimReview(absenceId, {});
         });
 
-        expect(appErrorsLogic.appErrors.items[0].name).toEqual("Error");
+        expect(appErrorsLogic.appErrors[0].name).toEqual("Error");
       });
 
       it("clears prior errors", async () => {
         act(() => {
-          appErrorsLogic.setAppErrors(
-            new AppErrorInfoCollection([new AppErrorInfo()])
-          );
+          appErrorsLogic.setAppErrors([new AppErrorInfo()]);
         });
 
         await act(async () => {
           await employersLogic.submitClaimReview(absenceId, patchData);
         });
 
-        expect(appErrorsLogic.appErrors.items).toHaveLength(0);
+        expect(appErrorsLogic.appErrors).toHaveLength(0);
       });
     });
   });
@@ -530,21 +539,19 @@ describe("useEmployersLogic", () => {
           await employersLogic.submitWithholding(absenceId, {});
         });
 
-        expect(appErrorsLogic.appErrors.items[0].name).toEqual("Error");
+        expect(appErrorsLogic.appErrors[0].name).toEqual("Error");
       });
 
       it("clears prior errors", async () => {
         act(() => {
-          appErrorsLogic.setAppErrors(
-            new AppErrorInfoCollection([new AppErrorInfo()])
-          );
+          appErrorsLogic.setAppErrors([new AppErrorInfo()]);
         });
 
         await act(async () => {
           await employersLogic.submitWithholding(postData);
         });
 
-        expect(appErrorsLogic.appErrors.items).toHaveLength(0);
+        expect(appErrorsLogic.appErrors).toHaveLength(0);
       });
     });
   });

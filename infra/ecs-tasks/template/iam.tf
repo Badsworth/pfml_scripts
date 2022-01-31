@@ -1618,7 +1618,7 @@ data "aws_iam_policy_document" "evaluate_new_financial_eligibility" {
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
-# IAM role and policies for dua-import-employee-demographics
+# IAM role and policies for dua-import-employee-demographics, dua-import-employer, dua-import-employer-unit
 # ----------------------------------------------------------------------------------------------------------------------
 
 resource "aws_iam_role" "dua_employee_workflow_task_role" {

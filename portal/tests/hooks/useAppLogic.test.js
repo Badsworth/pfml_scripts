@@ -1,7 +1,4 @@
-import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
-import BenefitsApplicationCollection from "../../src/models/BenefitsApplicationCollection";
-import ClaimCollection from "../../src/models/ClaimCollection";
-import DocumentCollection from "../../src/models/DocumentCollection";
+import ApiResourceCollection from "src/models/ApiResourceCollection";
 import { renderHook } from "@testing-library/react-hooks";
 import useAppLogic from "../../src/hooks/useAppLogic";
 
@@ -43,13 +40,13 @@ describe("useAppLogic", () => {
       } = useAppLogic());
     });
 
-    expect(appErrors).toBeInstanceOf(AppErrorInfoCollection);
-    expect(appErrors.items).toHaveLength(0);
+    expect(appErrors).toBeInstanceOf(Array);
+    expect(appErrors).toHaveLength(0);
     expect(_appErrorsLogic).toEqual(expect.anything());
     expect(auth).toEqual(expect.anything());
     expect(catchError).toBeInstanceOf(Function);
     expect(benefitsApplications.benefitsApplications).toBeInstanceOf(
-      BenefitsApplicationCollection
+      ApiResourceCollection
     );
     expect(clearErrors).toBeInstanceOf(Function);
     expect(clearRequiredFieldErrors).toBeInstanceOf(Function);
@@ -58,12 +55,12 @@ describe("useAppLogic", () => {
     expect(benefitsApplications.loadPage).toBeInstanceOf(Function);
     expect(benefitsApplications.create).toBeInstanceOf(Function);
     expect(benefitsApplications.update).toBeInstanceOf(Function);
-    expect(claims.claims).toBeInstanceOf(ClaimCollection);
+    expect(claims.claims).toBeInstanceOf(ApiResourceCollection);
     expect(claims.loadPage).toBeInstanceOf(Function);
     expect(users.updateUser).toBeInstanceOf(Function);
     expect(setAppErrors).toBeInstanceOf(Function);
     expect(benefitsApplications.submit).toBeInstanceOf(Function);
-    expect(documents.documents).toBeInstanceOf(DocumentCollection);
+    expect(documents.documents).toBeInstanceOf(ApiResourceCollection);
     expect(documents.loadAll).toBeInstanceOf(Function);
     expect(documents.attach).toBeInstanceOf(Function);
     expect(employers.loadWithholding).toBeInstanceOf(Function);

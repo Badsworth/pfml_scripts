@@ -1,7 +1,7 @@
 import BenefitsApplication, {
   BenefitsApplicationStatus,
 } from "../../models/BenefitsApplication";
-import BenefitsApplicationCollection from "../../models/BenefitsApplicationCollection";
+import ApiResourceCollection from "../../models/ApiResourceCollection";
 import { uniqueId } from "lodash";
 
 // Export mocked BenefitsApplicationsApi functions so we can spy on them
@@ -50,7 +50,7 @@ export const getClaimsMock = jest.fn(() =>
   Promise.resolve({
     success: true,
     status: 200,
-    claims: new BenefitsApplicationCollection([
+    claims: new ApiResourceCollection<BenefitsApplication>("application_id", [
       new BenefitsApplication({
         application_id: getClaimMockApplicationId,
         status: BenefitsApplicationStatus.started,

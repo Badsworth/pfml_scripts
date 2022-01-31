@@ -2,8 +2,8 @@ import GetReady, {
   GetReadyProps,
 } from "../../../src/pages/applications/get-ready";
 import { MockBenefitsApplicationBuilder, renderPage } from "../../test-utils";
+import ApiResourceCollection from "src/models/ApiResourceCollection";
 import BenefitsApplication from "../../../src/models/BenefitsApplication";
-import BenefitsApplicationCollection from "../../../src/models/BenefitsApplicationCollection";
 import routes from "../../../src/routes";
 import { screen } from "@testing-library/react";
 
@@ -17,7 +17,10 @@ const setup = (
       pathname: routes.applications.getReady,
       addCustomSetup: (appLogic) => {
         appLogic.benefitsApplications.benefitsApplications =
-          new BenefitsApplicationCollection(claims);
+          new ApiResourceCollection<BenefitsApplication>(
+            "application_id",
+            claims
+          );
         appLogic.benefitsApplications.loadPage = jest.fn();
       },
     },

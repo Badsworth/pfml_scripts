@@ -202,6 +202,7 @@ output "env_mfa_enabled" {
   value = [
     "test",
     "stage",
+    "prod",
     "performance",
     "training",
     "uat",

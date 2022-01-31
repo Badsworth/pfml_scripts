@@ -1,5 +1,5 @@
 import AbsenceCaseStatusTag from "src/components/AbsenceCaseStatusTag";
-import { ManagedRequirement } from "src/models/Claim";
+import { ManagedRequirement } from "src/models/ManagedRequirement";
 import { Props } from "types/common";
 import React from "react";
 

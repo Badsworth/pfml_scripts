@@ -1,16 +1,18 @@
+import {
+  BenefitsApplicationDocument,
+  ClaimDocument,
+} from "../../models/Document";
 import User, { UserLeaveAdministrator } from "../../models/User";
-import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
+import ApiResourceCollection from "../../models/ApiResourceCollection";
 import BenefitsApplication from "../../models/BenefitsApplication";
-import BenefitsApplicationCollection from "../../models/BenefitsApplicationCollection";
-import ClaimCollection from "../../models/ClaimCollection";
+import Claim from "../../models/Claim";
 import ClaimDetail from "../../models/ClaimDetail";
-import DocumentCollection from "../../models/DocumentCollection";
 import EmployerClaim from "../../models/EmployerClaim";
 import Flag from "../../models/Flag";
 import { uniqueId } from "lodash";
 
 export default jest.fn(() => ({
-  appErrors: new AppErrorInfoCollection(),
+  appErrors: [],
   auth: {
     createAccount: jest.fn(),
     createEmployerAccount: jest.fn(),
@@ -26,7 +28,9 @@ export default jest.fn(() => ({
   },
   catchError: jest.fn(),
   benefitsApplications: {
-    benefitsApplications: new BenefitsApplicationCollection(),
+    benefitsApplications: new ApiResourceCollection<BenefitsApplication>(
+      "application_id"
+    ),
     complete: jest.fn(),
     create: jest.fn(
       () => new BenefitsApplication({ application_id: uniqueId() })
@@ -44,7 +48,7 @@ export default jest.fn(() => ({
   claims: {
     activeFilters: {},
     claimDetail: new ClaimDetail(),
-    claims: new ClaimCollection(),
+    claims: new ApiResourceCollection<Claim>("fineos_absence_id"),
     clearClaims: jest.fn(),
     isLoadingClaims: null,
     isLoadingClaimDetail: null,
@@ -63,7 +67,9 @@ export default jest.fn(() => ({
       return uploadPromises;
     }),
     hasLoadedClaimDocuments: jest.fn(),
-    documents: new DocumentCollection(),
+    documents: new ApiResourceCollection<BenefitsApplicationDocument>(
+      "fineos_document_id"
+    ),
     download: jest.fn(),
     loadAll: jest.fn(),
   },
@@ -77,7 +83,9 @@ export default jest.fn(() => ({
           fineos_absence_id: "NTN-111-ABS-01",
         })
     ),
-    loadDocuments: jest.fn(() => new DocumentCollection()),
+    loadDocuments: jest.fn(
+      () => new ApiResourceCollection<ClaimDocument>("fineos_document_id")
+    ),
     loadWithholding: jest.fn(() => ({ filing_period: "2011-11-20" })),
     submitClaimReview: jest.fn(),
     submitWithholding: jest.fn(),

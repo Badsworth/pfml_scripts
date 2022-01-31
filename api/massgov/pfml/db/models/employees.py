@@ -1083,6 +1083,7 @@ class Payment(Base, TimestampMixin):
         Boolean, default=False, server_default="FALSE", nullable=False
     )
 
+    fineos_leave_request_id = Column(Integer, index=True)
     fineos_employee_first_name = Column(Text)
     fineos_employee_middle_name = Column(Text)
     fineos_employee_last_name = Column(Text)
@@ -1311,6 +1312,34 @@ class User(Base, TimestampMixin):
         # Return the `verified` state of the Employer (from the UserLeaveAdministrator record)
         user_leave_administrator = self.get_user_leave_admin_for_employer(employer=employer)
         return user_leave_administrator.verified if user_leave_administrator else False
+
+    @hybrid_method
+    def mfa_preference_description(self) -> Optional[str]:
+        """Helper method for accessing mfa_delivery_preference_description in a null-safe way"""
+        # explicit cast to Optional to make linter happy
+        mfa_preference: Optional[LkMFADeliveryPreference] = self.mfa_delivery_preference
+        if mfa_preference is None:
+            return None
+
+        return mfa_preference.mfa_delivery_preference_description
+
+    @hybrid_method
+    def mfa_phone_number_last_four(self) -> Optional[str]:
+        """Retrieves the last four digits of mfa_phone_number in a null-safe way"""
+        if self.mfa_phone_number is None:
+            return None
+
+        return self.mfa_phone_number[-4:]
+
+    @property
+    def is_worker_user(self) -> bool:
+        """
+        Currently we do not populate a role for worker account users
+        so for now we can rely on roles being empty to extrapolate
+
+        See: create_user in users.py utility
+        """
+        return not self.roles
 
 
 class UserRole(Base, TimestampMixin):
@@ -1947,6 +1976,7 @@ class AbsenceReason(LookupTable):
     PREVENTATIVE_CARE_FAMILY_MEMBER = LkAbsenceReason(13, "Preventative Care - Family Member")
     PUBLIC_HEALTH_EMERGENCY_FAMILY = LkAbsenceReason(14, "Public Health Emergency - Family")
     MILITARY_EMPLOYEE = LkAbsenceReason(15, "Military - Employee")
+    PERSONAL_EMPLOYEE = LkAbsenceReason(16, "Personal - Employee")
 
 
 class AbsenceReasonQualifierOne(LookupTable):
@@ -3102,8 +3132,8 @@ class ReferenceFileType(LookupTable):
 
     DELEGATED_PAYMENT_AUDIT_REPORT = LkReferenceFileType(20, "Payment Audit Report", 1)
     DELEGATED_PAYMENT_REJECTS = LkReferenceFileType(21, "Payment Rejects", 1)
-    FINEOS_CLAIMANT_EXTRACT = LkReferenceFileType(24, "Claimant extract", 2)
-    FINEOS_PAYMENT_EXTRACT = LkReferenceFileType(25, "Payment extract", 4)
+    FINEOS_CLAIMANT_EXTRACT = LkReferenceFileType(24, "Claimant extract", 3)
+    FINEOS_PAYMENT_EXTRACT = LkReferenceFileType(25, "Payment extract", 3)
 
     PUB_EZ_CHECK = LkReferenceFileType(26, "PUB EZ check file", 1)
     PUB_POSITIVE_PAYMENT = LkReferenceFileType(27, "PUB positive pay file", 1)
@@ -3134,6 +3164,9 @@ class ReferenceFileType(LookupTable):
 
     DUA_EMPLOYERS_REQUEST_FILE = LkReferenceFileType(37, "DUA employers request", 1)
     FINEOS_1099_DATA_EXTRACT = LkReferenceFileType(38, "1099 extract", 1)
+
+    DUA_EMPLOYER_FILE = LkReferenceFileType(39, "DUA employer", 1)
+    DUA_EMPLOYER_UNIT_FILE = LkReferenceFileType(40, "DUA employer unit", 1)
 
 
 class Title(LookupTable):

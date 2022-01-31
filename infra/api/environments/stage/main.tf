@@ -81,6 +81,9 @@ module "api" {
   fineos_client_oauth2_client_id                      = "1fa281uto9tjuqtm21jle7loam"
   fineos_import_employee_updates_input_directory_path = "s3://fin-somdev-data-export/IDT/dataexports"
   service_now_base_url                                = "https://savilinxstage.servicenowservices.com"
+  pfml_email_address                                  = "PFML_DoNotReply@eol.mass.gov"
+  bounce_forwarding_email_address                     = "PFML_DoNotReply@eol.mass.gov"
+  bounce_forwarding_email_address_arn                 = "arn:aws:ses:us-east-1:498823821309:identity/PFML_DoNotReply@eol.mass.gov"
   portal_base_url                                     = "https://paidleave-stage.mass.gov"
   fineos_aws_iam_role_arn                             = "arn:aws:iam::666444232783:role/somdev-IAMRoles-CustomerAccountAccessRole-BF05IBJSG74B"
   fineos_aws_iam_role_external_id                     = "12345"
@@ -88,6 +91,5 @@ module "api" {
   release_version                                     = var.release_version
   new_plan_proofs_active_at                           = "2021-06-29 04:00:00+00:00"
 
-  enable_pdf_document_compression = "1"
-  enable_application_import       = "1"
+  enable_application_import = "1"
 }

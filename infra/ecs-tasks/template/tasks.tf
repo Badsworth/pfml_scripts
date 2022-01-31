@@ -177,8 +177,8 @@ locals {
       ]
     },
 
-    "fineos-import-leave-admin-org-units" = {
-      command   = ["fineos-import-leave-admin-org-units"]
+    "fineos-import-la-units" = {
+      command   = ["fineos-import-la-units"]
       task_role = aws_iam_role.fineos_import_la_org_units_task_role.arn
       cpu       = 2048
       memory    = 9216
@@ -241,7 +241,8 @@ locals {
         { name : "PUB_PAYMENT_STARTING_CHECK_NUMBER", value : "106" },
         { name : "DFML_PUB_ROUTING_NUMBER", valueFrom : "/service/${local.app_name}/${var.environment_name}/dfml_pub_routing_number" },
         { name : "DFML_PUB_ACCOUNT_NUMBER", valueFrom : "/service/${local.app_name}/${var.environment_name}/dfml_pub_account_number" },
-        { "name" : "ENABLE_WITHHOLDING_PAYMENTS", "value" : var.enable_withholding_payments }
+        { "name" : "ENABLE_WITHHOLDING_PAYMENTS", "value" : var.enable_withholding_payments },
+        { "name" : "ENABLE_EMPLOYER_REIMBURSEMENT_PAYMENTS", "value" : var.enable_employer_reimbursement_payments }
       ]
     },
 
@@ -282,7 +283,8 @@ locals {
         { name : "FINEOS_1099_DATA_EXTRACT_MAX_HISTORY_DATE", value : "2022-01-01" },
         { name : "USE_EXPERIAN_SOAP_CLIENT", value : "1" },
         { name : "EXPERIAN_AUTH_TOKEN", valueFrom : "/service/${local.app_name}/common/experian-auth-token" },
-        { "name" : "ENABLE_WITHHOLDING_PAYMENTS", "value" : var.enable_withholding_payments }
+        { "name" : "ENABLE_WITHHOLDING_PAYMENTS", "value" : var.enable_withholding_payments },
+        { "name" : "ENABLE_EMPLOYER_REIMBURSEMENT_PAYMENTS", "value" : var.enable_employer_reimbursement_payments }
       ]
     },
 
@@ -418,6 +420,32 @@ locals {
 
     "dua-import-employee-demographics" = {
       command        = ["dua-import-employee-demographics"]
+      task_role      = aws_iam_role.dua_employee_workflow_task_role.arn
+      execution_role = aws_iam_role.dua_employee_workflow_execution_role.arn
+      cpu            = 2048,
+      memory         = 4096,
+      env = [
+        local.db_access,
+        local.eolwd_moveit_access,
+        local.reductions_folders
+      ]
+    }
+
+    "dua-import-employer" = {
+      command        = ["dua-import-employer"]
+      task_role      = aws_iam_role.dua_employee_workflow_task_role.arn
+      execution_role = aws_iam_role.dua_employee_workflow_execution_role.arn
+      cpu            = 2048,
+      memory         = 4096,
+      env = [
+        local.db_access,
+        local.eolwd_moveit_access,
+        local.reductions_folders
+      ]
+    }
+
+    "dua-import-employer-unit" = {
+      command        = ["dua-import-employer-unit"]
       task_role      = aws_iam_role.dua_employee_workflow_task_role.arn
       execution_role = aws_iam_role.dua_employee_workflow_execution_role.arn
       cpu            = 2048,

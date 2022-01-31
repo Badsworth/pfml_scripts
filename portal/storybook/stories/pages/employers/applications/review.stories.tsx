@@ -1,17 +1,17 @@
 import { ClaimDocument, DocumentType } from "src/models/Document";
 import LeaveReason, { LeaveReasonType } from "src/models/LeaveReason";
 import { AbsencePeriod } from "src/models/AbsencePeriod";
+import ApiResourceCollection from "src/models/ApiResourceCollection";
 import AppErrorInfo from "src/models/AppErrorInfo";
-import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
-import DocumentCollection from "src/models/DocumentCollection";
 import EmployerClaim from "src/models/EmployerClaim";
-import { ManagedRequirement } from "src/models/Claim";
+import { ManagedRequirement } from "src/models/ManagedRequirement";
 import { MockEmployerClaimBuilder } from "lib/mock-helpers/mock-model-builder";
 import { Props } from "types/common";
 import React from "react";
 import { Review } from "src/pages/employers/applications/review";
 import User from "src/models/User";
 import createAbsencePeriod from "lib/mock-helpers/createAbsencePeriod";
+import { createMockManagedRequirement } from "lib/mock-helpers/createMockManagedRequirement";
 import faker from "faker";
 import useMockableAppLogic from "lib/mock-helpers/useMockableAppLogic";
 
@@ -72,7 +72,8 @@ export default {
     },
     "Reviewed Previously": {
       control: {
-        type: "boolean",
+        type: "radio",
+        options: ["No", "Yes, via Portal", "Yes, via contact center"],
       },
     },
   },
@@ -82,7 +83,7 @@ export default {
     "Claimant EForm Version": "Version 2 (after 2021-07-14)",
     "Includes documentation": true,
     "Number of absence periods for each leave reason": 1,
-    "Reviewed Previously": false,
+    "Reviewed Previously": "No",
   },
 };
 
@@ -93,7 +94,7 @@ export const Default = (
     "Claimant EForm Version": string;
     "Includes documentation": boolean;
     "Number of absence periods for each leave reason": number;
-    "Reviewed Previously": boolean;
+    "Reviewed Previously": string;
     errorTypes: string[];
   }
 ) => {
@@ -105,30 +106,16 @@ export const Default = (
     : [LeaveReason.medical];
 
   const managedRequirements: ManagedRequirement[] = [
-    {
-      type: "",
-      created_at: "",
+    createMockManagedRequirement({
       follow_up_date: "2021-12-10",
-      category: "",
-      responded_at: "",
       status: "Open",
-    },
-    {
-      type: "",
-      created_at: "",
+    }),
+    createMockManagedRequirement({
       follow_up_date: "2021-08-30",
-      category: "",
-      responded_at: args["Reviewed Previously"] ? "2021-10-01" : "",
-      status: "Complete",
-    },
-    {
-      type: "",
-      created_at: "",
-      follow_up_date: "2021-07-20",
-      category: "",
-      responded_at: args["Reviewed Previously"] ? "2021-11-01" : "",
-      status: "Complete",
-    },
+      responded_at:
+        args["Reviewed Previously"] === "Yes, via Portal" ? "2021-10-01" : "",
+      status: args["Reviewed Previously"] !== "No" ? "Complete" : "Suppressed",
+    }),
   ];
 
   const selectedLeaveTypes: Array<AbsencePeriod["period_type"]> = args[
@@ -157,7 +144,10 @@ export const Default = (
       claimDocumentsMap: new Map([
         [
           claim.fineos_absence_id,
-          new DocumentCollection(documents as ClaimDocument[]),
+          new ApiResourceCollection<ClaimDocument>(
+            "fineos_document_id",
+            documents as ClaimDocument[]
+          ),
         ],
       ]),
     },
@@ -310,5 +300,5 @@ function getAppErrorInfoCollection(errorTypes: string[] = []) {
     );
   }
 
-  return new AppErrorInfoCollection(errors);
+  return errors;
 }

@@ -4,8 +4,9 @@ import User, {
   UserLeaveAdministrator,
 } from "../../../src/models/User";
 import { screen, waitFor } from "@testing-library/react";
+import ApiResourceCollection from "src/models/ApiResourceCollection";
 import { AppLogic } from "../../../src/hooks/useAppLogic";
-import BenefitsApplicationCollection from "../../../src/models/BenefitsApplicationCollection";
+import BenefitsApplication from "src/models/BenefitsApplication";
 import ConvertToEmployer from "../../../src/pages/user/convert-to-employer";
 // @ts-expect-error ts-migrate(2614) FIXME: Module '"next/router"' has no exported member 'moc... Remove this comment to see the full error message
 import { mockRouter } from "next/router";
@@ -23,7 +24,7 @@ const getOptions = (cb?: (appLogic: AppLogic) => void) => {
         consented_to_data_sharing: true,
       });
       appLogic.benefitsApplications.benefitsApplications =
-        new BenefitsApplicationCollection([]);
+        new ApiResourceCollection<BenefitsApplication>("application_id", []);
       appLogic.benefitsApplications.isLoadingClaims = false;
       appLogic.benefitsApplications.loadPage = jest.fn();
       if (cb) {
@@ -67,7 +68,10 @@ describe("ConvertToEmployer", () => {
     const claims = [new MockBenefitsApplicationBuilder().submitted().create()];
     options = getOptions((appLogic) => {
       appLogic.benefitsApplications.benefitsApplications =
-        new BenefitsApplicationCollection(claims);
+        new ApiResourceCollection<BenefitsApplication>(
+          "application_id",
+          claims
+        );
       appLogic.portalFlow.goToPageFor = goToPageFor;
     });
     renderPage(ConvertToEmployer, options, props);

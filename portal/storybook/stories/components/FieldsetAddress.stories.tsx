@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { cloneDeep, set } from "lodash";
 import Address from "src/models/Address";
 import AppErrorInfo from "src/models/AppErrorInfo";
-import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
 import FieldsetAddress from "src/components/FieldsetAddress";
 import { Props } from "types/common";
 
@@ -10,7 +9,7 @@ export default {
   title: "Components/Forms/FieldsetAddress",
   component: FieldsetAddress,
   args: {
-    appErrors: new AppErrorInfoCollection(),
+    appErrors: [],
     label: "What's your address?",
     hint: "Enter it as it appears on your ID card",
     name: "address",
@@ -47,7 +46,7 @@ export const WithErrors = () => {
   };
 
   // Setup error states
-  const appErrors = new AppErrorInfoCollection([
+  const appErrors = [
     new AppErrorInfo({
       field: "address.line_1",
       message: "Address is required",
@@ -64,7 +63,7 @@ export const WithErrors = () => {
       field: "address.zip",
       message: "ZIP is required",
     }),
-  ]);
+  ];
 
   return (
     <form className="usa-form">

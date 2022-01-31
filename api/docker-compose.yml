@@ -83,25 +83,16 @@ services:
       - RMV_API_BEHAVIOR=fully_mocked
       # Enable this variable to configure /rmv-check
       - RMV_CHECK_MOCK_SUCCESS=1
-      # Enable these variables to use a real FINEOS API instead of a mock:
-      # - FINEOS_CLIENT_CUSTOMER_API_URL=https://idt-api.masspfml.fineos.com/customerapi/
-      # - FINEOS_CLIENT_WSCOMPOSER_API_URL=https://idt-api.masspfml.fineos.com/integration-services/wscomposer/
-      # - FINEOS_CLIENT_GROUP_CLIENT_API_URL=https://idt-api.masspfml.fineos.com/groupclientapi/
-      # - FINEOS_CLIENT_INTEGRATION_SERVICES_API_URL=https://idt-api.masspfml.fineos.com/integration-services/
-      # - FINEOS_CLIENT_OAUTH2_URL=https://idt-api.masspfml.fineos.com/oauth2/token
-      # - FINEOS_CLIENT_OAUTH2_CLIENT_ID=...
-      # - FINEOS_CLIENT_OAUTH2_CLIENT_SECRET=...
-      # - OAUTHLIB_INSECURE_TRANSPORT=1
       # Disable this variable and set the following three variables to use a real Service Now API instead of a mock:
       - ENABLE_MOCK_SERVICE_NOW_CLIENT=1
 
       - ENABLE_WITHHOLDING_PAYMENTS=1
+      - ENABLE_EMPLOYER_REIMBURSEMENT_PAYMENTS=0
       # - SERVICE_NOW_BASE_URL=...
       # - SERVICE_NOW_USERNAME=...
       # - SERVICE_NOW_PASSWORD=...
       - PORTAL_BASE_URL=https://paidleave.mass.gov
       - ENABLE_APPLICATION_FRAUD_CHECK=0
-      - ENABLE_PDF_DOCUMENT_COMPRESSION=1
       - ENABLE_DOCUMENT_MULTIPART_UPLOAD=0
 
       # Payments env vars

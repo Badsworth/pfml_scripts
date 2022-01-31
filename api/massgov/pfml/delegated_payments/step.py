@@ -41,8 +41,14 @@ class Step(abc.ABC, metaclass=abc.ABCMeta):
     def cleanup_on_failure(self) -> None:
         pass
 
+    def get_import_type(self) -> str:
+        """ Override in subclass steps to set the type of the import log """
+        return ""
+
     def run(self) -> None:
-        with LogEntry(self.log_entry_db_session, self.__class__.__name__) as log_entry:
+        with LogEntry(
+            self.log_entry_db_session, self.__class__.__name__, self.get_import_type()
+        ) as log_entry:
             self.log_entry = log_entry
 
             self.initialize_metrics()

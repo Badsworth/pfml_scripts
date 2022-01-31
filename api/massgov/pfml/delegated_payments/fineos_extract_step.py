@@ -102,6 +102,7 @@ class FineosExtractStep(Step):
     class Metrics(str, enum.Enum):
         FINEOS_PREFIX = "fineos_prefix"
         ARCHIVE_PATH = "archive_path"
+        FILE_TYPE = "file_type"
         RECORDS_PROCESSED_COUNT = "records_processed_count"
 
     def __init__(
@@ -115,11 +116,21 @@ class FineosExtractStep(Step):
         self.active_extract_data = None
         self.active_extract_data_date_str = None
 
+    def get_import_type(self) -> str:
+        """ Use the reference file type description for an import log type distinction """
+        return self.extract_config.reference_file_type.reference_file_type_description
+
     def run_step(self) -> None:
         logger.info(
             "Starting processing of %s files",
             self.extract_config.reference_file_type.reference_file_type_description,
         )
+        self.set_metrics(
+            {
+                self.Metrics.FILE_TYPE: self.extract_config.reference_file_type.reference_file_type_description
+            }
+        )
+
         with tempfile.TemporaryDirectory() as download_directory:
             self.process_extracts(pathlib.Path(download_directory))
 

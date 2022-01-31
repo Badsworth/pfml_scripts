@@ -7,6 +7,7 @@ from typing import Optional
 
 import boto3
 from pydantic import Field
+from sqlalchemy import or_
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 
 import massgov
@@ -47,6 +48,8 @@ class ImportFineosOrganizationUnitUpdatesReport:
     missing_required_fields_count: int = 0
     # when new fineos organization units are added to the database
     created_employer_org_units_count: int = 0
+    # when an organization unit is updated in the database
+    updated_employer_org_units_count: int = 0
     # when we could not add a new organization unit to the database due to any conflicts
     errored_employer_org_units_count: int = 0
     # when a leave admin is servicing an org unit that the employer does not have
@@ -79,7 +82,7 @@ class LeaveAdmin:
     departments: list[str]
 
 
-@background_task("fineos-import-leave-admin-org-units")
+@background_task("fineos-import-la-units")
 def handler():
     """ECS handler function. Creates Org Units for the given employer"""
     logger.info("Starting import of organization unit updates from FINEOS.")
@@ -243,12 +246,14 @@ def process_fineos_updates(
             # Create OrganizationUnit record if it doesn't exist.
             org_unit = (
                 db_session.query(OrganizationUnit)
-                .filter(OrganizationUnit.name == name)
+                .filter(or_(OrganizationUnit.name == name, OrganizationUnit.fineos_id == fineos_id))
                 .filter(OrganizationUnit.employer_id == employer.employer_id)
                 .one_or_none()
             )
-            if org_unit is None or org_unit.fineos_id is None:
+            # When the org unit does not yet exist
+            if org_unit is None:
                 try:
+                    # Create a new one
                     org_unit_model = OrganizationUnit(
                         fineos_id=fineos_id, name=name, employer_id=employer.employer_id
                     )
@@ -261,6 +266,26 @@ def process_fineos_updates(
                         "Unable to add Organization Unit.",
                         extra={
                             "fineos_id": fineos_id,
+                            "name": name,
+                            "employer_id": employer.employer_id,
+                        },
+                    )
+                    report.errored_employer_org_units_count += 1
+                    continue
+            # When the org unit exists but needs to be updated
+            elif org_unit.fineos_id is None or org_unit.name != name:
+                try:
+                    # Update fineos_id and name
+                    org_unit.fineos_id = fineos_id
+                    org_unit.name = name
+                    db_session.add(org_unit)
+                    db_session.commit()
+                    report.updated_employer_org_units_count += 1
+                except Exception:
+                    logger.error(
+                        "Unable to update Organization Unit.",
+                        extra={
+                            "organization_unit_id": org_unit.organization_unit_id,
                             "name": name,
                             "employer_id": employer.employer_id,
                         },

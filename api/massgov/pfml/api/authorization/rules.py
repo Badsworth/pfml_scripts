@@ -31,14 +31,13 @@ def create_authorization(
             rmv_check(user, they)
             notifications(user, they)
         elif has_role_in(user, [Role.PFML_CRM]):
-            pass
+            if enable_employees:
+                employees(user, they)
         else:
             users(user, they)
             applications(user, they)
             documents(user, they)
             leave_admins(user, they)
-            if enable_employees:
-                employees(user, they)
 
     return define_authorization
 
@@ -78,7 +77,7 @@ def can_download(user: User, doc: Union[Document, DocumentResponse]) -> bool:
         return False
 
     # Regular users can download a limited number of doc types.
-    if not user.roles:
+    if user.is_worker_user:
         regular_user_allowed_doc_types = [
             d.lower()
             for d in [
@@ -118,11 +117,12 @@ def users(user: User, they: RuleList) -> None:
 
 
 def employees(user: User, they: RuleList) -> None:
-    they.can((READ, EDIT), Employee)
+    they.can(READ, Employee)
 
 
 def applications(user: User, they: RuleList) -> None:
-    they.can(CREATE, Application)
+    if user.is_worker_user:
+        they.can(CREATE, Application)
     they.can((EDIT, READ), Application, user_id=user.user_id)
 
 

@@ -2,7 +2,6 @@ import * as MFAService from "../../src/services/mfa";
 import User, { RoleDescription, UserRole } from "../../src/models/User";
 import { act, renderHook } from "@testing-library/react-hooks";
 import AppErrorInfo from "../../src/models/AppErrorInfo";
-import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
 import { NetworkError } from "../../src/errors";
 import UsersApi from "../../src/api/UsersApi";
 import { mockRouter } from "next/router";
@@ -81,9 +80,7 @@ describe("useUsersLogic", () => {
     describe("when errors exist", () => {
       beforeEach(async () => {
         act(() => {
-          appErrorsLogic.setAppErrors(
-            new AppErrorInfoCollection([new AppErrorInfo()])
-          );
+          appErrorsLogic.setAppErrors([new AppErrorInfo()]);
         });
 
         await act(async () => {
@@ -92,7 +89,7 @@ describe("useUsersLogic", () => {
       });
 
       it("clears errors", () => {
-        expect(appErrorsLogic.appErrors.items).toHaveLength(0);
+        expect(appErrorsLogic.appErrors).toHaveLength(0);
       });
     });
 
@@ -106,9 +103,7 @@ describe("useUsersLogic", () => {
           await usersLogic.updateUser(user_id, patchData);
         });
 
-        expect(appErrorsLogic.appErrors.items[0].name).toEqual(
-          NetworkError.name
-        );
+        expect(appErrorsLogic.appErrors[0].name).toEqual(NetworkError.name);
       });
     });
 
@@ -238,14 +233,12 @@ describe("useUsersLogic", () => {
     it("doesn't clear errors if user has been loaded", async () => {
       await act(async () => {
         await usersLogic.loadUser();
-        appErrorsLogic.setAppErrors(
-          new AppErrorInfoCollection([new AppErrorInfo()])
-        );
+        appErrorsLogic.setAppErrors([new AppErrorInfo()]);
         await usersLogic.loadUser();
       });
 
       expect(usersApi.getCurrentUser).toHaveBeenCalledTimes(1);
-      expect(appErrorsLogic.appErrors.items).toHaveLength(1);
+      expect(appErrorsLogic.appErrors).toHaveLength(1);
     });
 
     it("throws an error if user is not logged in to Cognito", async () => {
@@ -261,7 +254,7 @@ describe("useUsersLogic", () => {
         await usersLogic.loadUser();
       });
 
-      expect(appErrorsLogic.appErrors.items[0].name).toBe("NetworkError");
+      expect(appErrorsLogic.appErrors[0].name).toBe("NetworkError");
     });
   });
 
@@ -440,9 +433,7 @@ describe("useUsersLogic", () => {
     describe("when errors exist", () => {
       beforeEach(async () => {
         act(() => {
-          appErrorsLogic.setAppErrors(
-            new AppErrorInfoCollection([new AppErrorInfo()])
-          );
+          appErrorsLogic.setAppErrors([new AppErrorInfo()]);
         });
 
         await act(async () => {
@@ -451,7 +442,7 @@ describe("useUsersLogic", () => {
       });
 
       it("clears errors", () => {
-        expect(appErrorsLogic.appErrors.items).toHaveLength(0);
+        expect(appErrorsLogic.appErrors).toHaveLength(0);
       });
     });
 
@@ -465,9 +456,7 @@ describe("useUsersLogic", () => {
           await usersLogic.convertUser(user_id, postData);
         });
 
-        expect(appErrorsLogic.appErrors.items[0].name).toEqual(
-          NetworkError.name
-        );
+        expect(appErrorsLogic.appErrors[0].name).toEqual(NetworkError.name);
       });
     });
   });

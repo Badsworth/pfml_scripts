@@ -151,7 +151,7 @@ def to_semver(version_str: str) -> semver.VersionInfo:
 
 def from_semver(sem_ver: semver.VersionInfo, app) -> str:
     if app == "portal":
-        return "portal/v" + str(sem_ver).split("0.")[-1]
+        return "portal/v" + str(sem_ver).split(".", 1)[1]
     elif app == "api":
         return "api/v" + str(sem_ver)
     elif app == "foobar":

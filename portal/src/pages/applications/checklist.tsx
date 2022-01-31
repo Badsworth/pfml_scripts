@@ -2,6 +2,11 @@ import BenefitsApplication, {
   BenefitsApplicationStatus,
   ReasonQualifier,
 } from "../../models/BenefitsApplication";
+import {
+  DocumentType,
+  findDocumentsByLeaveReason,
+  findDocumentsByTypes,
+} from "../../models/Document";
 import StepModel, { ClaimSteps } from "../../models/Step";
 import { camelCase, get } from "lodash";
 import withBenefitsApplication, {
@@ -14,7 +19,6 @@ import Alert from "../../components/core/Alert";
 import BackButton from "../../components/BackButton";
 import ButtonLink from "../../components/ButtonLink";
 import Details from "../../components/core/Details";
-import { DocumentType } from "../../models/Document";
 import HeadingPrefix from "../../components/core/HeadingPrefix";
 import LeaveReason from "../../models/LeaveReason";
 import React from "react";
@@ -25,8 +29,6 @@ import StepList from "../../components/StepList";
 import Title from "../../components/core/Title";
 import { Trans } from "react-i18next";
 import claimantConfig from "../../flows/claimant";
-import findDocumentsByLeaveReason from "../../utils/findDocumentsByLeaveReason";
-import findDocumentsByTypes from "../../utils/findDocumentsByTypes";
 import formatDate from "../../utils/formatDate";
 import hasDocumentsLoadError from "../../utils/hasDocumentsLoadError";
 import routeWithParams from "../../utils/routeWithParams";

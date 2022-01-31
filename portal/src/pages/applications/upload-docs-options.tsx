@@ -7,7 +7,6 @@ import withBenefitsApplication, {
   WithBenefitsApplicationProps,
 } from "../../hoc/withBenefitsApplication";
 import AppErrorInfo from "../../models/AppErrorInfo";
-import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
 import InputChoiceGroup from "../../components/core/InputChoiceGroup";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
@@ -59,7 +58,7 @@ export const UploadDocsOptions = (props: WithBenefitsApplicationProps) => {
         type: "required",
       });
 
-      await appLogic.setAppErrors(new AppErrorInfoCollection([appErrorInfo]));
+      await appLogic.setAppErrors([appErrorInfo]);
 
       tracker.trackEvent("ValidationError", {
         issueField: appErrorInfo.field || "",

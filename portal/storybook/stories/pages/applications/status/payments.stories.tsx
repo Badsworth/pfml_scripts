@@ -5,7 +5,8 @@ import createMockClaimDetail, {
 } from "lib/mock-helpers/createMockClaimDetail";
 
 import { AbsencePeriodTypes } from "src/models/AbsencePeriod";
-import DocumentCollection from "src/models/DocumentCollection";
+import ApiResourceCollection from "src/models/ApiResourceCollection";
+import { BenefitsApplicationDocument } from "src/models/Document";
 import { Payments } from "src/pages/applications/status/payments";
 import { Props } from "types/common";
 import React from "react";
@@ -165,12 +166,15 @@ export const DefaultStory = (
       isLoadingClaimDetail: false,
     },
     documents: {
-      documents: new DocumentCollection([
-        generateNotice(
-          "approvalNotice",
-          mappedApprovalDate[args["Approval time"]]
-        ),
-      ]),
+      documents: new ApiResourceCollection<BenefitsApplicationDocument>(
+        "fineos_document_id",
+        [
+          generateNotice(
+            "approvalNotice",
+            mappedApprovalDate[args["Approval time"]]
+          ),
+        ]
+      ),
     },
   });
   return (

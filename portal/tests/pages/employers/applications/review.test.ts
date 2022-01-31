@@ -1,4 +1,5 @@
 /* eslint testing-library/prefer-user-event: 0 */
+import { ClaimDocument, DocumentType } from "../../../../src/models/Document";
 import {
   MockEmployerClaimBuilder,
   createAbsencePeriod,
@@ -11,16 +12,16 @@ import {
   waitFor,
   within,
 } from "@testing-library/react";
+import ApiResourceCollection from "src/models/ApiResourceCollection";
 import { AppLogic } from "../../../../src/hooks/useAppLogic";
 import ConcurrentLeave from "../../../../src/models/ConcurrentLeave";
-import DocumentCollection from "../../../../src/models/DocumentCollection";
-import { DocumentType } from "../../../../src/models/Document";
 import { EmployerBenefitFrequency } from "../../../../src/models/EmployerBenefit";
 import EmployerClaim from "../../../../src/models/EmployerClaim";
 import LeaveReason from "../../../../src/models/LeaveReason";
 import MockDate from "mockdate";
 import Review from "../../../../src/pages/employers/applications/review";
 import { clone } from "lodash";
+import { createMockManagedRequirement } from "../../../../lib/mock-helpers/createMockManagedRequirement";
 import userEvent from "@testing-library/user-event";
 
 jest.mock("../../../../src/hooks/useAppLogic");
@@ -30,7 +31,7 @@ const ABSENCEID = "NTN-111-ABS-01";
 const CLAIMDOCUMENTSMAP = new Map([
   [
     ABSENCEID,
-    new DocumentCollection([
+    new ApiResourceCollection<ClaimDocument>("fineos_document_id", [
       {
         content_type: "image/png",
         created_at: "2020-04-05",
@@ -178,41 +179,32 @@ describe("Review", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("Updates Alert text if claim has been reviewed previously", () => {
-    process.env.featureFlags = JSON.stringify({
-      employerShowMultiLeave: true,
-    });
+  it.each([
+    [
+      "2021-11-01",
+      "This application has changed since it was reviewed on 11/1/2021.",
+    ],
+    [null, "This application has changed since it was last reviewed."],
+  ])(
+    "shows additional text if the claim has been reviewed previously",
+    (responded_at, expectedText) => {
+      process.env.featureFlags = JSON.stringify({
+        employerShowMultiLeave: true,
+      });
 
-    setup({
-      ...claimWithV2Eform,
-      managed_requirements: [
-        {
-          type: "",
-          created_at: "",
-          follow_up_date: "",
-          category: "",
-          responded_at: "2021-11-01",
-          status: "Complete",
-        },
-        {
-          type: "",
-          created_at: "",
-          follow_up_date: "",
-          category: "",
-          responded_at: "2021-10-01",
-          status: "Complete",
-        },
-      ],
-    });
+      setup({
+        ...claimWithV2Eform,
+        managed_requirements: [
+          createMockManagedRequirement({
+            status: "Complete",
+            responded_at,
+          }),
+        ],
+      });
 
-    // Text gets formatted before displaying thus why the date looks slightly different here
-    // & should display the most recent date
-    expect(
-      screen.queryByText(
-        "This application has changed since it was reviewed on 11/1/2021."
-      )
-    ).toBeInTheDocument();
-  });
+      expect(screen.getByText(expectedText)).toBeInTheDocument();
+    }
+  );
 
   it("submits a claim with the correct options", async () => {
     setup();
@@ -827,7 +819,9 @@ describe("Review", () => {
         appLogic.employers.claimDocumentsMap = new Map([
           [
             claimWithV2Eform.fineos_absence_id,
-            new DocumentCollection([document]),
+            new ApiResourceCollection<ClaimDocument>("fineos_document_id", [
+              document,
+            ]),
           ],
         ]);
       });

@@ -101,6 +101,23 @@ class BenefitsApplication extends BaseBenefitsApplication {
   }
 
   /**
+   * Returns all claims with an "Started" or "Submitted" status
+   */
+  static inProgress(applications: BenefitsApplication[]) {
+    return applications.filter(
+      (item) => item.status !== BenefitsApplicationStatus.completed
+    );
+  }
+
+  /**
+   * Returns all claims that have completed all parts of
+   * the progressive application
+   */
+  static completed(applications: BenefitsApplication[]) {
+    return applications.filter((item) => item.isCompleted);
+  }
+
+  /**
    * Determine if applicable leave period start date(s) are in the future.
    */
   get isLeaveStartDateInFuture() {

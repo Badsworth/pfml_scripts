@@ -1,5 +1,4 @@
 import { render, screen } from "@testing-library/react";
-import AppErrorInfoCollection from "../../../src/models/AppErrorInfoCollection";
 import EmployerDecision from "../../../src/components/employers/EmployerDecision";
 import React from "react";
 import { renderHook } from "@testing-library/react-hooks";
@@ -13,7 +12,7 @@ describe("EmployerDecision", () => {
   beforeEach(() => {
     renderHook(() => {
       getFunctionalInputProps = useFunctionalInputProps({
-        appErrors: new AppErrorInfoCollection(),
+        appErrors: [],
         formState: { employerDecision: "Approve" },
         updateFields,
       });

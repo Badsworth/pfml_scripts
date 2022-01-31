@@ -1050,6 +1050,10 @@ class FineosWritebackTransactionStatus(LookupTable):
         24, "PrimaryPayment ProcessingErr", ACTIVE_WRITEBACK_RECORD_STATUS
     )
 
+    PAYMENT_AUDIT_IN_PROGRESS = LkFineosWritebackTransactionStatus(
+        25, "Payment Audit In Progress", PENDING_ACTIVE_WRITEBACK_RECORD_STATUS
+    )
+
 
 class AuditReportAction(str, Enum):
     REJECTED = "REJECTED"
@@ -1328,6 +1332,20 @@ class Pfml1099(Base, TimestampMixin):
     correction_ind = Column(Boolean, nullable=False)
     s3_location = Column(Text, nullable=True)
     fineos_status = Column(Text, nullable=True, default="New")
+
+    employee = relationship(Employee)
+
+
+class Pfml1099Request(Base, TimestampMixin):
+    __tablename__ = "pfml_1099_request"
+    pfml_1099_request_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+    employee_id = Column(
+        PostgreSQLUUID, ForeignKey("employee.employee_id"), index=True, nullable=False
+    )
+    correction_ind = Column(Boolean, nullable=False)
+    pfml_1099_batch_id = Column(
+        PostgreSQLUUID, ForeignKey("pfml_1099_batch.pfml_1099_batch_id"), index=True, nullable=True
+    )
 
     employee = relationship(Employee)
 

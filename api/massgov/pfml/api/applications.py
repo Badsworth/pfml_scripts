@@ -39,6 +39,7 @@ from massgov.pfml.api.services.fineos_actions import (
     get_documents,
     mark_documents_as_received,
     mark_single_document_as_received,
+    register_employee,
     send_tax_withholding_preference,
     send_to_fineos,
     submit_payment_preference,
@@ -144,19 +145,17 @@ def applications_import():
     ensure(CREATE, application)
 
     if user := app.current_user():
-        # TODO (portal-1512) - Remove role check
-        # Check if user is not a claimant
-        if user.roles:
-            raise Unauthorized
         application.user = user
     else:
         raise Unauthorized
 
     body = connexion.request.json
     application_import_request = ApplicationImportRequestBody.parse_obj(body)
-
     claim = get_claim_from_db(application_import_request.absence_case_id)
 
+    application_rules.validate_application_import_request_for_claim(
+        application_import_request, claim,
+    )
     error = applications_service.claim_is_valid_for_application_import(claim)
     if error is not None:
         return error.to_api_response()
@@ -165,8 +164,21 @@ def applications_import():
         fineos = massgov.pfml.fineos.create_client()
         # we have already check that the claim is not None in
         # claim_is_valid_for_application_import
-        applications_service.set_application_fields_from_claim(
+        applications_service.set_application_fields_from_db_claim(
             fineos, application, claim, db_session  # type: ignore
+        )
+        fineos_web_id = register_employee(
+            fineos, claim.employee_tax_identifier, application.employer_fein, db_session,  # type: ignore
+        )
+        applications_service.set_customer_detail_fields(
+            fineos, fineos_web_id, application, db_session
+        )
+        applications_service.set_customer_contact_detail_fields(
+            fineos, fineos_web_id, application, db_session
+        )
+        applications_service.set_employment_status(fineos, fineos_web_id, application, user)
+        applications_service.set_payment_preference_fields(
+            fineos, fineos_web_id, application, db_session
         )
         db_session.add(application)
         db_session.commit()
@@ -175,7 +187,9 @@ def applications_import():
     logger.info("applications_import success", extra=log_attributes)
 
     return response_util.success_response(
-        message="Successfully imported application", data=dict(body), status_code=201,
+        message="Successfully imported application",
+        data=ApplicationResponse.from_orm(application).dict(exclude_none=True),
+        status_code=201,
     ).to_api_response()
 
 
@@ -605,11 +619,7 @@ def document_upload(application_id, body, file):
             # attempt to compress the PDF and update file meta data.
             # A size constraint of 10MB is still enforced by the API gateway,
             # so the API should not expect to receive anything above this size
-            if (
-                app.get_config().enable_pdf_document_compression
-                and content_type == AllowedContentTypes.pdf.value
-                and file_size > UPLOAD_SIZE_CONSTRAINT
-            ):
+            if content_type == AllowedContentTypes.pdf.value and file_size > UPLOAD_SIZE_CONSTRAINT:
                 # tempfile.SpooledTemporaryFile writes the compressed file in-memory
                 with tempfile.SpooledTemporaryFile(mode="wb+") as compressed_file:
                     file_size = pdf_util.compress_pdf(file, compressed_file)
@@ -697,7 +707,9 @@ def document_upload(application_id, body, file):
                         ValidationErrorDetail(
                             type=IssueType.fineos_client,
                             message=message,
-                            rule=IssueRule.document_requirement_already_satisfied,
+                            rule=IssueRule.document_requirement_already_satisfied
+                            if "is not required for the case provided" in err.message  # noqa: B306
+                            else None,
                         )
                     ],
                     data=document_details.dict(),

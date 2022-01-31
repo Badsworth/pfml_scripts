@@ -65,6 +65,7 @@ def test_users_post_claimant(
     # User added to DB
     user = test_db_session.query(User).filter(User.email_address == email_address).one_or_none()
     assert user.sub_id is not None
+    assert user.is_worker_user is True
 
     # User added to user pool
     cognito_users = mock_cognito.list_users(UserPoolId=mock_cognito_user_pool["id"],)
@@ -97,6 +98,7 @@ def test_users_post_employer(
     # User added to DB
     user = test_db_session.query(User).filter(User.email_address == email_address).one_or_none()
     assert user.sub_id is not None
+    assert user.is_worker_user is False
 
     # Employer records added to DB
     assert len(user.roles) == 1

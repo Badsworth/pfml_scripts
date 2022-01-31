@@ -41,7 +41,8 @@ module.exports = {
   transformIgnorePatterns: [
     // Some assets are ECMAScript Modules, which need transformed
     // in our test environment. Those modules need listed here:
-    "node_modules/(?!(entity-decode)/)",
+    // https://stackoverflow.com/questions/69075510/jest-tests-failing-on-d3-import
+    "node_modules/(?!d3|d3-array|delaunator|entity-decode|internmap|mermaid|robust-predicates/)",
   ],
   coverageThreshold: {
     global: {

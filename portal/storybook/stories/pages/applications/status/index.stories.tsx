@@ -8,7 +8,8 @@ import createMockClaimDetail, {
   requestTypes,
 } from "lib/mock-helpers/createMockClaimDetail";
 
-import DocumentCollection from "src/models/DocumentCollection";
+import ApiResourceCollection from "src/models/ApiResourceCollection";
+import { BenefitsApplicationDocument } from "src/models/Document";
 import { Props } from "types/common";
 import React from "react";
 import { Status } from "src/pages/applications/status";
@@ -35,7 +36,10 @@ function getDocuments({
     documents.push(generateNotice("requestForInfoNotice"));
   }
 
-  return new DocumentCollection(documents);
+  return new ApiResourceCollection<BenefitsApplicationDocument>(
+    "fineos_document_id",
+    documents
+  );
 }
 
 export default {

@@ -3,7 +3,6 @@ import EmployerBenefit, {
   EmployerBenefitType,
 } from "../../../src/models/EmployerBenefit";
 import { render, screen } from "@testing-library/react";
-import AppErrorInfoCollection from "../../../src/models/AppErrorInfoCollection";
 import EmployerBenefits from "../../../src/components/employers/EmployerBenefits";
 import React from "react";
 
@@ -31,7 +30,7 @@ const BENEFITS = [
 function renderComponent(customProps) {
   const props = {
     addedBenefits: [],
-    appErrors: new AppErrorInfoCollection(),
+    appErrors: [],
     employerBenefits: BENEFITS,
     onAdd: () => {},
     onChange: () => {},

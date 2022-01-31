@@ -19,6 +19,7 @@ export type FeatureFlags = {
   claimantShowOrganizationUnits: boolean;
   claimantShowMFA?: boolean;
   employerShowMultiLeave: boolean;
+  claimantShowPaymentsPhaseTwo: boolean;
 };
 
 export type Credentials = {
@@ -118,7 +119,7 @@ export type OtherTasks =
   | "Review and Decision Cancel Time Submitted"
   | "Employee Reported Other Leave"
   | "Employee Reported Other Income"
-  | "Future or overlapping Absence Request exists"
+  | "Overlapping Absence Request Exists"
   | "Confirm Employment"
   | "Manual Intervention required to Approve Payments"
   | "Absence Paid Leave Payments Failure"
@@ -127,9 +128,18 @@ export type OtherTasks =
   | "Review Appeal "
   | "Schedule Hearing"
   | "Send Decision Notice"
-  | "Conduct Hearing";
+  | "Conduct Hearing"
+  | "Employer Reimbursement"
+  | "SOM Autopay After Appeal Reminder"
+  | "DO NOT USE Autopay After Appeal Reminder"
+  | "Employer Reimbursement Adjustment"
+  | "Print and Mail Correspondence";
 /**Tasks avalable in fineos */
 export type FineosTasks = DocumentReviewTasks | ERTasks | OtherTasks;
+
+export type FineosCloseTaskStep =
+  | "Reimbursement Approved"
+  | "Reimbursement Denied";
 
 export type ClaimStatus =
   | "Adjudication"
@@ -222,4 +232,6 @@ export type Environment =
   | "performance"
   | "uat"
   | "cps-preview"
+  | "long"
+  | "trn2"
   | "breakfix";

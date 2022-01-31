@@ -73,11 +73,11 @@ return (
 );
 ```
 
-Alternatively, if you're not using `useFunctionalInputProps`, you can use `appErrors.fieldErrorMessage(fieldName)` to return the error message for a specific field:
+Alternatively, if you're not using `useFunctionalInputProps`, you can use `AppErrorInfo.fieldErrorMessage(fieldName)` to return the error message for a specific field:
 
 ```jsx
 <InputText
-  errorMsg={props.appErrors.fieldErrorMessage("first_name")}
+  errorMsg={AppErrorInfo.fieldErrorMessage(errors, "first_name")}
   name="first_name"
   ...
 ```

@@ -1,5 +1,4 @@
 import { render, screen } from "@testing-library/react";
-import AppErrorInfoCollection from "../../../src/models/AppErrorInfoCollection";
 import EmployeeNotice from "../../../src/components/employers/EmployeeNotice";
 import React from "react";
 import { renderHook } from "@testing-library/react-hooks";
@@ -10,7 +9,7 @@ function setupGetFunctionalInputProps(updateFields) {
 
   renderHook(() => {
     getFunctionalInputProps = useFunctionalInputProps({
-      appErrors: new AppErrorInfoCollection(),
+      appErrors: [],
       formState: {},
       updateFields,
     });

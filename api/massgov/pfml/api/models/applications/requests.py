@@ -230,4 +230,5 @@ class TaxWithholdingPreferenceRequestBody(PydanticBaseModel):
 
 
 class ApplicationImportRequestBody(PydanticBaseModel):
-    absence_case_id: str
+    absence_case_id: Optional[str]
+    tax_identifier: Optional[TaxIdUnformattedStr]

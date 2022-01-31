@@ -18,4 +18,5 @@ class PaymentResponse(PydanticBaseModel):
     payment_method: str
     expected_send_date_start: Optional[date]
     expected_send_date_end: Optional[date]
+    cancellation_date: Optional[date]
     status: str

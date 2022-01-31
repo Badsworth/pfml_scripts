@@ -806,6 +806,19 @@ class FINEOSClient(client.AbstractFINEOSClient):
 
         return pydantic.parse_obj_as(List[models.customer_api.ReadCustomerOccupation], json)
 
+    def get_payment_preferences(
+        self, user_id: str
+    ) -> List[models.customer_api.PaymentPreferenceResponse]:
+        response = self._customer_api(
+            "GET", "customer/paymentPreferences", user_id, "get_payment_preferences",
+        )
+
+        json = response.json()
+        for item in json:
+            set_empty_dates_to_none(item, ["effectiveFrom", "effectiveTo"])
+
+        return pydantic.parse_obj_as(List[models.customer_api.PaymentPreferenceResponse], json)
+
     def add_payment_preference(
         self, user_id: str, payment_preference: models.customer_api.NewPaymentPreference
     ) -> models.customer_api.PaymentPreferenceResponse:

@@ -1,3 +1,4 @@
+import { filterByApplication, getLegalNotices } from "../models/Document";
 import { AppLogic } from "../hooks/useAppLogic";
 import BenefitsApplication from "../models/BenefitsApplication";
 import ButtonLink from "./ButtonLink";
@@ -10,7 +11,6 @@ import Tag from "./core/Tag";
 import { WithUserProps } from "src/hoc/withUser";
 import { createRouteWithQuery } from "../utils/routeWithParams";
 import findKeyByValue from "../utils/findKeyByValue";
-import getLegalNotices from "../utils/getLegalNotices";
 import hasDocumentsLoadError from "../utils/hasDocumentsLoadError";
 import routes from "../routes";
 import { useTranslation } from "../locales/i18n";
@@ -139,7 +139,8 @@ const LegalNoticeSection = (props: LegalNoticeSectionProps) => {
   }
 
   const legalNotices = getLegalNotices(
-    props.appLogic.documents.documents.filterByApplication(
+    filterByApplication(
+      props.appLogic.documents.documents.items,
       props.claim.application_id
     )
   );
@@ -151,7 +152,8 @@ const LegalNoticeSection = (props: LegalNoticeSectionProps) => {
       <Heading level="3">{t("components.applicationCard.viewNotices")}</Heading>
       <LegalNoticeList
         onDownloadClick={props.appLogic.documents.download}
-        documents={props.appLogic.documents.documents.filterByApplication(
+        documents={filterByApplication(
+          props.appLogic.documents.documents.items,
           props.claim.application_id
         )}
         {...props}

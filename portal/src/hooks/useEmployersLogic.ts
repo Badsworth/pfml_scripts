@@ -1,8 +1,8 @@
 import { useMemo, useState } from "react";
+import ApiResourceCollection from "../models/ApiResourceCollection";
 import { AppErrorsLogic } from "./useAppErrorsLogic";
 import { ClaimDocument } from "../models/Document";
 import { ClaimsLogic } from "./useClaimsLogic";
-import DocumentCollection from "../models/DocumentCollection";
 import EmployerClaim from "../models/EmployerClaim";
 import EmployersApi from "../api/EmployersApi";
 import { LeaveAdminForbiddenError } from "../errors";
@@ -23,7 +23,7 @@ const useEmployersLogic = ({
 }) => {
   const [claim, setEmployerClaim] = useState<EmployerClaim | null>(null);
   const [claimDocumentsMap, setClaimDocumentsMap] = useState<
-    Map<string, DocumentCollection>
+    Map<string, ApiResourceCollection<ClaimDocument>>
   >(new Map());
   const employersApi = useMemo(() => new EmployersApi(), []);
 

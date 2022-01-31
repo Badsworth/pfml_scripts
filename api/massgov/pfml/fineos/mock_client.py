@@ -216,6 +216,66 @@ def mock_customer_info():
     }
 
 
+def mock_customer_details():
+    # Similar to mock_customer_info, The FINEOS response includes more fields than this
+    return {
+        "firstName": "Samantha",
+        "lastName": "Jorgenson",
+        "secondName": "",
+        "initials": "",
+        "dateOfBirth": "1996-01-11",
+        "idNumber": "123121232",
+        "gender": "Neutral",
+        "customerAddress": {
+            "address": {
+                "addressLine1": "37 Mather Drive",
+                "addressLine2": "#22",
+                "addressLine3": "",
+                "addressLine4": "Amherst",
+                "addressLine5": "",
+                "addressLine6": "MA",
+                "addressLine7": "",
+                "postCode": "01003",
+                "country": "USA",
+            },
+        },
+        "classExtensionInformation": [
+            {"name": "MassachusettsID", "stringValue": "45354352"},
+            {"name": "OutOfStateID", "stringValue": "123"},
+        ],
+    }
+
+
+def mock_customer_contact_details():
+    # Mocks FINEOS response for customer contact details
+    # This includes all of the FINEOS fields from this endpoint
+    return {
+        "phoneNumbers": [
+            {
+                "id": 0,
+                "preferred": False,
+                "phoneNumberType": "Cell",
+                "intCode": "1",
+                "areaCode": "123",
+                "telephoneNo": "4567890",
+            },
+            {
+                "id": 1,
+                "preferred": True,
+                "phoneNumberType": "Cell",
+                "intCode": "1",
+                "areaCode": "321",
+                "telephoneNo": "4567890",
+            },
+        ],
+        "emailAddresses": [
+            {"id": 0, "preferred": False, "emailAddress": "testemail1@test.com"},
+            {"id": 1, "preferred": True, "emailAddress": "testemail2@test.com"},
+        ],
+        "preferredContactMethod": 1,
+    }
+
+
 class MockFINEOSClient(client.AbstractFINEOSClient):
     """Mock FINEOS API client that returns fake responses."""
 
@@ -475,6 +535,40 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
     ) -> List[models.customer_api.ReadCustomerOccupation]:
         _capture_call("get_case_occupations", user_id, case_id=case_id)
         return [models.customer_api.ReadCustomerOccupation(occupationId=12345)]
+
+    def get_payment_preferences(
+        self, user_id: str
+    ) -> List[models.customer_api.PaymentPreferenceResponse]:
+        _capture_call("get_payment_preferences", user_id)
+        return [
+            models.customer_api.PaymentPreferenceResponse(
+                paymentMethod="Elec Funds Transfer",
+                paymentPreferenceId="85622",
+                isDefault=True,
+                accountDetails=models.customer_api.AccountDetails(
+                    accountNo="1234565555",
+                    accountName="Constance Griffin",
+                    routingNumber="011222333",
+                    accountType="Checking",
+                ),
+                chequeDetails=models.customer_api.ChequeDetails(
+                    nameToPrintOnCheck="Connie Griffin"
+                ),
+                customerAddress=models.customer_api.CustomerAddress(
+                    address=models.customer_api.Address(
+                        addressLine1="44324 Nayeli Stream",
+                        addressLine2="",
+                        addressLine3="",
+                        addressLine4="New Monserrateberg",
+                        addressLine5="",
+                        addressLine6="IN",
+                        addressLine7="",
+                        postCode="22516-6101",
+                        country="USA",
+                    )
+                ),
+            )
+        ]
 
     def add_payment_preference(
         self, user_id: str, payment_preference: models.customer_api.NewPaymentPreference

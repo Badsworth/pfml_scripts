@@ -1,6 +1,8 @@
+import { extractLeavePeriod } from "util/claims";
 import { portal, fineos, fineosPages } from "../../../actions";
 import { Submission } from "../../../../src/types";
 import { assertValidClaim } from "../../../../src/util/typeUtils";
+import { addBusinessDays, addWeeks } from "date-fns";
 
 describe("Submit medical application via the web portal: Adjudication Approval & payment checking", () => {
   const submissionTest =
@@ -32,53 +34,57 @@ describe("Submit medical application via the web portal: Adjudication Approval &
       });
     });
 
-  it("Leave admin will submit ER approval for employee", () => {
-    cy.dependsOnPreviousPass([submissionTest]);
-    portal.before();
-    cy.unstash<DehydratedClaim>("claim").then((claim) => {
-      cy.unstash<Submission>("submission").then((submission) => {
-        assertValidClaim(claim.claim);
-        portal.loginLeaveAdmin(claim.claim.employer_fein);
-        portal.selectClaimFromEmployerDashboard(submission.fineos_absence_id);
-        portal.visitActionRequiredERFormPage(submission.fineos_absence_id);
-        portal.respondToLeaveAdminRequest(false, true, true);
-      });
-    });
-  });
-
-  it("CSR rep will approve reduced medical application", { retries: 0 }, () => {
-    cy.dependsOnPreviousPass();
-    fineos.before();
-    cy.unstash<DehydratedClaim>("claim").then((claim) => {
-      cy.unstash<Submission>("submission").then((submission) => {
-        const claimPage = fineosPages.ClaimPage.visit(
-          submission.fineos_absence_id
-        );
-        claimPage.adjudicate((adjudication) => {
-          adjudication.evidence((evidence) => {
-            // Receive all of the claim documentation.
-            claim.documents.forEach((document) => {
-              evidence.receive(document.document_type);
-            });
-          });
-          adjudication.certificationPeriods((cert) => cert.prefill());
-          adjudication.acceptLeavePlan();
+  const erApproval =
+    it("Leave admin will submit ER approval for employee", () => {
+      cy.dependsOnPreviousPass([submissionTest]);
+      portal.before();
+      cy.unstash<DehydratedClaim>("claim").then((claim) => {
+        cy.unstash<Submission>("submission").then((submission) => {
+          assertValidClaim(claim.claim);
+          portal.loginLeaveAdmin(claim.claim.employer_fein);
+          portal.selectClaimFromEmployerDashboard(submission.fineos_absence_id);
+          portal.visitActionRequiredERFormPage(submission.fineos_absence_id);
+          portal.respondToLeaveAdminRequest(false, true, true);
         });
-        claimPage.shouldHaveStatus("Applicability", "Applicable");
-        claimPage.shouldHaveStatus("Eligibility", "Met");
-        claimPage.shouldHaveStatus("Evidence", "Satisfied");
-        claimPage.shouldHaveStatus("Availability", "Time Available");
-        claimPage.shouldHaveStatus("Restriction", "Passed");
-        claimPage.shouldHaveStatus("PlanDecision", "Accepted");
-        claimPage.approve();
       });
     });
-  });
+
+  const approval = it(
+    "CSR rep will approve reduced medical application",
+    { retries: 0 },
+    () => {
+      cy.dependsOnPreviousPass([erApproval]);
+      fineos.before();
+      cy.unstash<DehydratedClaim>("claim").then((claim) => {
+        cy.unstash<Submission>("submission").then((submission) => {
+          const claimPage = fineosPages.ClaimPage.visit(
+            submission.fineos_absence_id
+          );
+          claimPage.adjudicate((adjudication) => {
+            adjudication.evidence((evidence) => {
+              // Receive all of the claim documentation.
+              claim.documents.forEach((document) => {
+                evidence.receive(document.document_type);
+              });
+            });
+            adjudication.certificationPeriods((cert) => cert.prefill());
+            adjudication.acceptLeavePlan();
+          });
+          claimPage.shouldHaveStatus("Applicability", "Applicable");
+          claimPage.shouldHaveStatus("Eligibility", "Met");
+          claimPage.shouldHaveStatus("Evidence", "Satisfied");
+          claimPage.shouldHaveStatus("Availability", "Time Available");
+          claimPage.shouldHaveStatus("Restriction", "Passed");
+          claimPage.shouldHaveStatus("PlanDecision", "Accepted");
+          claimPage.approve().triggerNotice("Designation Notice");
+        });
+      });
+    }
+  );
 
   it("Should be able to confirm the weekly payment amount for a reduced schedule", () => {
-    cy.dependsOnPreviousPass();
+    cy.dependsOnPreviousPass([approval]);
     fineos.before();
-
     cy.unstash<DehydratedClaim>("claim").then((claim) => {
       cy.unstash<Submission>("submission").then((submission) => {
         const payment = claim.metadata
@@ -89,6 +95,36 @@ describe("Submit medical application via the web portal: Adjudication Approval &
               .assertAmountsPending([{ net_payment_amount: payment }])
               .assertMatchingPaymentDates();
           }
+        );
+      });
+    });
+  });
+
+  it("Should display a checkback date of (leave start date + 2 weeks + 3 business days) on the payment status page", () => {
+    cy.dependsOnPreviousPass([approval]);
+    portal.before();
+    portal.loginClaimant();
+    cy.unstash<DehydratedClaim>("claim").then((claim) => {
+      cy.unstash<Submission>("submission").then((submission) => {
+        const [start] = extractLeavePeriod(
+          {
+            leave_details: claim.claim.leave_details,
+          },
+          "reduced_schedule_leave_periods"
+        );
+        if (!claim.claim.leave_details?.reason)
+          throw Error("Leave reason undefined on unstashed claim object");
+        portal.claimantGoToClaimStatus(submission.fineos_absence_id);
+        portal.claimantAssertClaimStatus([
+          {
+            leave: claim.claim.leave_details?.reason,
+            status: "Approved",
+          },
+        ]);
+        portal.viewPaymentStatus();
+        const twoWeeksAfterStart = addWeeks(start, 2);
+        portal.assertPaymentCheckBackDate(
+          addBusinessDays(twoWeeksAfterStart, 3)
         );
       });
     });

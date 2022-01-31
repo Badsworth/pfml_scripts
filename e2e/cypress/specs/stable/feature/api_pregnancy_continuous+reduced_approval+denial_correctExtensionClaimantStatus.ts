@@ -2,7 +2,6 @@ import { fineos, fineosPages, portal } from "../../../actions";
 import { Submission } from "../../../../src/types";
 import { addMonths, addDays, format } from "date-fns";
 import { extractLeavePeriod } from "util/claims";
-import { config } from "../../../actions/common";
 
 describe("Submit medical pre-birth application via the web portal", () => {
   const submission =
@@ -85,45 +84,38 @@ describe("Submit medical pre-birth application via the web portal", () => {
     }
   );
 
-  (config("ENVIRONMENT") === "training" || config("ENVIRONMENT") === "long"
-    ? it.skip
-    : it)(
-    "Will display the approprite claimant statuses in the leave admin portal",
-    () => {
-      cy.dependsOnPreviousPass([extension]);
-      portal.before();
-      cy.unstash<Submission>("submission").then((submission) => {
-        cy.unstash<DehydratedClaim>("claim").then((claim) => {
-          cy.unstash<[string, string]>("extensionDates").then(
-            (extensionDates) => {
-              if (!claim.claim.employer_fein)
-                throw Error(
-                  "Property 'employer_fein' undefined in unstashed claim"
-                );
-              portal.loginLeaveAdmin(claim.claim.employer_fein);
-              portal.visitActionRequiredERFormPage(
-                submission.fineos_absence_id
+  it("Will display the approprite claimant statuses in the leave admin portal", () => {
+    cy.dependsOnPreviousPass([extension]);
+    portal.before();
+    cy.unstash<Submission>("submission").then((submission) => {
+      cy.unstash<DehydratedClaim>("claim").then((claim) => {
+        cy.unstash<[string, string]>("extensionDates").then(
+          (extensionDates) => {
+            if (!claim.claim.employer_fein)
+              throw Error(
+                "Property 'employer_fein' undefined in unstashed claim"
               );
-              const [start, end] = extractLeavePeriod(claim.claim);
-              portal.leaveAdminAssertClaimStatus([
-                {
-                  leave: "Serious Health Condition - Employee",
-                  status: "Approved",
-                  leavePeriods: [start.toISOString(), end.toISOString()],
-                },
-                {
-                  leave: "Child Bonding",
-                  status: "Pending",
-                  leavePeriods: extensionDates,
-                },
-              ]);
-              portal.respondToLeaveAdminRequest(false, true, true);
-            }
-          );
-        });
+            portal.loginLeaveAdmin(claim.claim.employer_fein);
+            portal.visitActionRequiredERFormPage(submission.fineos_absence_id);
+            const [start, end] = extractLeavePeriod(claim.claim);
+            portal.leaveAdminAssertClaimStatus([
+              {
+                leave: "Serious Health Condition - Employee",
+                status: "Approved",
+                leavePeriods: [start.toISOString(), end.toISOString()],
+              },
+              {
+                leave: "Child Bonding",
+                status: "Pending",
+                leavePeriods: extensionDates,
+              },
+            ]);
+            portal.respondToLeaveAdminRequest(false, true, true);
+          }
+        );
       });
-    }
-  );
+    });
+  });
 
   const denyExtension = it(
     "CSR rep will deny bonding leave (extension) on the absence case",

@@ -1,5 +1,5 @@
 import { mockAuth, mockFetch } from "../test-utils";
-import ClaimCollection from "../../src/models/ClaimCollection";
+import ApiResourceCollection from "src/models/ApiResourceCollection";
 import ClaimDetail from "../../src/models/ClaimDetail";
 import { ClaimEmployee } from "../../src/models/Claim";
 import ClaimsApi from "../../src/api/ClaimsApi";
@@ -113,7 +113,7 @@ describe("ClaimsApi", () => {
       expect(order).toEqual(originalOrder);
     });
 
-    it("returns response as instances of ClaimCollection and PaginationMeta", async () => {
+    it("returns response as instances of ApiResourceCollection and PaginationMeta", async () => {
       const mockResponseData = [
         {
           fineos_absence_id: "abs-1",
@@ -155,7 +155,7 @@ describe("ClaimsApi", () => {
       const claimsApi = new ClaimsApi();
       const { claims, paginationMeta } = await claimsApi.getClaims();
 
-      expect(claims).toBeInstanceOf(ClaimCollection);
+      expect(claims).toBeInstanceOf(ApiResourceCollection);
       expect({ ...paginationMeta }).toEqual(mockPaginationMeta);
 
       expect(claims.items).toHaveLength(2);

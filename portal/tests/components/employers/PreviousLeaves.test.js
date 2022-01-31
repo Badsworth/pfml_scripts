@@ -3,7 +3,6 @@ import PreviousLeave, {
   PreviousLeaveType,
 } from "../../../src/models/PreviousLeave";
 import { render, screen } from "@testing-library/react";
-import AppErrorInfoCollection from "../../../src/models/AppErrorInfoCollection";
 import PreviousLeaves from "../../../src/components/employers/PreviousLeaves";
 import React from "react";
 import { times } from "lodash";
@@ -33,7 +32,7 @@ describe("PreviousLeaves", () => {
 
   const defaultProps = {
     addedPreviousLeaves: [],
-    appErrors: new AppErrorInfoCollection(),
+    appErrors: [],
     onAdd,
     onChange,
     onRemove,

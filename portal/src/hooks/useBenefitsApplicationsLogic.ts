@@ -1,7 +1,7 @@
 import { Issue, NotFoundError, ValidationError } from "../errors";
+import ApiResourceCollection from "../models/ApiResourceCollection";
 import { AppErrorsLogic } from "./useAppErrorsLogic";
 import BenefitsApplication from "../models/BenefitsApplication";
-import BenefitsApplicationCollection from "../models/BenefitsApplicationCollection";
 import BenefitsApplicationsApi from "../api/BenefitsApplicationsApi";
 import { NullableQueryParams } from "../utils/routeWithParams";
 import PaginationMeta from "../models/PaginationMeta";
@@ -29,7 +29,9 @@ const useBenefitsApplicationsLogic = ({
     addItem: addBenefitsApplication,
     updateItem: setBenefitsApplication,
     setCollection: setBenefitsApplications,
-  } = useCollectionState(new BenefitsApplicationCollection());
+  } = useCollectionState(
+    new ApiResourceCollection<BenefitsApplication>("application_id")
+  );
 
   // Tracks loading state of claims when calling loadPage()
   const [isLoadingClaims, setIsLoadingClaims] = useState<boolean>();

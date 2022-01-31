@@ -6,7 +6,7 @@ import {
 import { MockEmployerClaimBuilder, renderPage } from "../../../test-utils";
 import { screen, waitFor } from "@testing-library/react";
 import { AbsenceCaseStatus } from "../../../../src/models/Claim";
-import DocumentCollection from "../../../../src/models/DocumentCollection";
+import ApiResourceCollection from "src/models/ApiResourceCollection";
 import Status from "../../../../src/pages/employers/applications/status";
 import userEvent from "@testing-library/user-event";
 
@@ -25,7 +25,7 @@ function setup(models = {}) {
     claimDocumentsMap: new Map([
       [
         absence_id,
-        new DocumentCollection([
+        new ApiResourceCollection<ClaimDocument>("fineos_document_id", [
           {
             content_type: "application/pdf",
             created_at: "2021-01-02",
@@ -129,7 +129,13 @@ describe("Status", () => {
       }
     });
     const newMap = new Map([
-      ["NTN-111-ABS-01", new DocumentCollection(documents)],
+      [
+        "NTN-111-ABS-01",
+        new ApiResourceCollection<ClaimDocument>(
+          "fineos_document_id",
+          documents
+        ),
+      ],
     ]);
 
     setup({ claimDocumentsMap: newMap });
@@ -149,7 +155,12 @@ describe("Status", () => {
 
     const { downloadDocumentSpy } = setup({
       claimDocumentsMap: new Map([
-        [absence_id, new DocumentCollection([document])],
+        [
+          absence_id,
+          new ApiResourceCollection<ClaimDocument>("fineos_document_id", [
+            document,
+          ]),
+        ],
       ]),
     });
 

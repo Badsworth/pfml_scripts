@@ -5,15 +5,8 @@ import {
   MilitaryExigencyClaim,
   ScenarioSpecification,
 } from "../generation/Scenario";
-import {
-  addWeeks,
-  subWeeks,
-  startOfWeek,
-  addDays,
-  subDays,
-  parseISO,
-} from "date-fns";
-import * as faker from "faker";
+import { addWeeks, subWeeks, startOfWeek, addDays, subDays } from "date-fns";
+
 /**
  * Cypress Testing Scenarios.
  *
@@ -203,7 +196,7 @@ export const BIAP60: ScenarioSpecification = {
     // This scenario requires a 4 week leave time for payment calculation purposes.
     leave_dates: [subWeeks(mostRecentSunday, 3), addWeeks(mostRecentSunday, 1)],
     metadata: {
-      expected_weekly_payment: "800.09",
+      expected_weekly_payment: "831.06",
       spanHoursStart: "4",
       spanHoursEnd: "4",
     },
@@ -238,6 +231,17 @@ export const CCAP90: ScenarioSpecification = {
   },
 };
 
+export const CCAP90ER: ScenarioSpecification = {
+  ...CCAP90,
+  claim: {
+    ...CCAP90.claim,
+    employerResponse: {
+      employer_decision: "Approve",
+      hours_worked_per_week: 40,
+    },
+  },
+};
+
 export const CDENY2: ScenarioSpecification = {
   employee: { mass_id: true, wages: "eligible" },
   claim: {
@@ -248,6 +252,17 @@ export const CDENY2: ScenarioSpecification = {
     docs: {
       MASSID: {},
       CARING: {},
+    },
+  },
+};
+
+export const CDENY2ER: ScenarioSpecification = {
+  ...CDENY2,
+  claim: {
+    ...CDENY2.claim,
+    employerResponse: {
+      employer_decision: "Approve",
+      hours_worked_per_week: 40,
     },
   },
 };
@@ -384,31 +399,19 @@ export const CONTINUOUS_MEDICAL_OLB: ScenarioSpecification = {
   },
 };
 
-const getFutureStartDates2022 = (): [Date, Date] => {
-  const start = faker.date.between(
-    parseISO("2022-01-03"),
-    addDays(new Date(), 60)
-  );
-  const startDate = startOfWeek(start);
-  const endDate = addWeeks(startDate, 2);
-  return [startDate, endDate];
-};
 export const BHAP1_OLB: ScenarioSpecification = {
   employee: { mass_id: true, wages: 90000 },
   claim: {
     label: "BHAP1_OLB",
     reason: "Child Bonding",
-    reason_qualifier: "Foster Care", // @todo: remove after 1/14/22. This is a temporary workaround for future leave, so that employer can make amendments
-    // reason_qualifier: "Newborn",
-    // bondingDate: "future",
+    reason_qualifier: "Newborn",
+    bondingDate: "future",
     docs: {
       MASSID: {},
-      FOSTERPLACEMENT: {},
+      BIRTHCERTIFICATE: {},
     },
     // Create a leave in progress, so we can check adjustments for both made and future payments.
-    // @todo: reinstate after 1/14/22 - this scenario is used for testing tax withholdings, where claims must start after 1/1/22
-    // leave_dates: [subWeeks(mostRecentSunday, 2), addWeeks(mostRecentSunday, 2)],
-    leave_dates: getFutureStartDates2022(),
+    leave_dates: [subWeeks(mostRecentSunday, 2), addWeeks(mostRecentSunday, 2)],
     // Leave start & end dates here and in employer benefits empty so they match the leave dates automatically
     other_incomes: [
       {
@@ -561,6 +564,30 @@ export const MED_LSDCR: ScenarioSpecification = {
   },
 };
 
+export const MED_ERRE: ScenarioSpecification = {
+  employee: {
+    wages: 30000,
+    mass_id: true,
+  },
+  claim: {
+    label: "MED_ERRE",
+    shortClaim: true,
+    reason: "Serious Health Condition - Employee",
+    leave_dates: [subWeeks(mostRecentSunday, 2), addWeeks(mostRecentSunday, 2)],
+    employerResponse: {
+      hours_worked_per_week: 40,
+      employer_decision: "Approve",
+      fraud: "No",
+      employer_benefits: [],
+    },
+    docs: {
+      HCP: {},
+      MASSID: {},
+    },
+    metadata: { expected_weekly_payment: "461.54" },
+  },
+};
+
 export const CARE_TAXES: ScenarioSpecification<CaringLeaveClaim> = {
   employee: { wages: 30000 },
   claim: {
@@ -584,7 +611,7 @@ export const MED_CONT_ER_APPROVE: ScenarioSpecification = {
     label: "MED_CONT_ER_APPROVE",
     leave_dates: [
       startOfWeek(subWeeks(new Date(), 3)),
-      startOfWeek(subWeeks(new Date(), 1)),
+      startOfWeek(addWeeks(new Date(), 1)),
     ],
     address: {
       city: "Washington",

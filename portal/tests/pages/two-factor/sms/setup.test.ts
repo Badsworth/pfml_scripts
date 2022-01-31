@@ -3,7 +3,10 @@ import { mockAuth, renderPage } from "../../../test-utils";
 import SetupSMS from "../../../../src/pages/two-factor/sms/setup";
 import User from "../../../../src/models/User";
 import routes from "../../../../src/routes";
+import tracker from "../../../../src/services/tracker";
 import userEvent from "@testing-library/user-event";
+
+jest.mock("../../../../src/services/tracker");
 
 // Need to return a truthy user to navigate to the next page
 const updateUser = jest.fn().mockReturnValue(new User({}));
@@ -37,6 +40,9 @@ describe("Two-factor SMS Setup", () => {
 
     await act(async () => await userEvent.click(submitButton));
 
+    expect(tracker.trackEvent).toHaveBeenCalledWith(
+      "User submitted phone number for MFA setup"
+    );
     expect(updateUser).toHaveBeenCalledWith(expect.any(String), {
       mfa_phone_number: {
         int_code: "1",
@@ -46,7 +52,38 @@ describe("Two-factor SMS Setup", () => {
     });
   });
 
-  it("routes the user to the  next page when they submit", async () => {
+  it("tracks that a user is updating their phone number", async () => {
+    const user = new User({
+      consented_to_data_sharing: true,
+      mfa_phone_number: {
+        int_code: "1",
+        phone_number: "***-***-1234",
+        phone_type: "Cell",
+      },
+    });
+    renderPage(SetupSMS, {
+      pathname: routes.twoFactor.smsSetup,
+      addCustomSetup: (appLogic) => {
+        appLogic.users.updateUser = updateUser;
+        appLogic.users.user = user;
+      },
+    });
+
+    const phoneNumberField = screen.getByLabelText(/Phone number/);
+    userEvent.type(phoneNumberField, "555-555-5555");
+
+    const submitButton = screen.getByRole("button", {
+      name: "Save and continue",
+    });
+
+    await act(async () => await userEvent.click(submitButton));
+
+    expect(tracker.trackEvent).toHaveBeenCalledWith(
+      "User edited MFA phone number"
+    );
+  });
+
+  it("routes the user to the next page when they submit", async () => {
     renderPage(SetupSMS, {
       addCustomSetup: (appLogic) => {
         appLogic.users.updateUser = updateUser;

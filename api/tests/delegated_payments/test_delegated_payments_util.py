@@ -1,6 +1,6 @@
 import logging  # noqa: B1
 import os
-from datetime import datetime
+from datetime import date, datetime
 
 import boto3
 import faker
@@ -13,6 +13,7 @@ import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.files as file_util
 from massgov.pfml.db.models.employees import (
     BankAccountType,
+    ClaimType,
     Country,
     GeoState,
     ImportLog,
@@ -36,10 +37,12 @@ from massgov.pfml.db.models.payments import FineosExtractVpei, PaymentLog
 from massgov.pfml.delegated_payments.delegated_payments_util import (
     find_existing_address_pair,
     find_existing_eft,
+    is_employer_exempt_for_payment,
     is_same_address,
     is_same_eft,
     move_reference_file,
 )
+from massgov.pfml.delegated_payments.mock.delegated_payments_factory import DelegatedPaymentFactory
 from massgov.pfml.util.datetime import get_now_us_eastern
 from tests.delegated_payments.conftest import upload_file_to_s3
 
@@ -1167,3 +1170,76 @@ def test_copy_fineos_data_to_archival_bucket_duplicate_1099_file_error(
             REQUEST_1099_DATA_EXTRACT_FILENAMES,
             ReferenceFileType.FINEOS_1099_DATA_EXTRACT,
         )
+
+
+@pytest.mark.parametrize(
+    "employer_exempt_family, employer_exempt_medical, absence_period_start_date, claim_type, expected_result",
+    (
+        # No exemptions
+        (False, False, date(2022, 1, 15), ClaimType.MEDICAL_LEAVE, False),
+        # Exemption is for other leave type
+        (True, False, date(2022, 1, 15), ClaimType.MEDICAL_LEAVE, False),
+        # Exemption is for other leave type
+        (False, True, date(2022, 1, 15), ClaimType.FAMILY_LEAVE, False),
+        # Date is before exemption start
+        (True, True, date(2021, 12, 15), ClaimType.FAMILY_LEAVE, False),
+        # Date is after exemption end
+        (True, True, date(2022, 2, 15), ClaimType.FAMILY_LEAVE, False),
+        # Employer exempt for family leave
+        (True, False, date(2022, 1, 15), ClaimType.FAMILY_LEAVE, True),
+        # Employer exempt for medical leave
+        (False, True, date(2022, 1, 15), ClaimType.MEDICAL_LEAVE, True),
+        # Verifying dates are inclusive
+        (True, True, date(2022, 1, 1), ClaimType.MEDICAL_LEAVE, True),
+        (True, True, date(2022, 1, 31), ClaimType.MEDICAL_LEAVE, True),
+    ),
+)
+def test_is_employer_exempt_for_payment(
+    employer_exempt_family,
+    employer_exempt_medical,
+    absence_period_start_date,
+    claim_type,
+    expected_result,
+    initialize_factories_session,
+    test_db_session,
+):
+    payment = DelegatedPaymentFactory(
+        test_db_session,
+        # Payment
+        is_adhoc_payment=False,
+        # Claim
+        claim_type=claim_type,
+        absence_period_start_date=absence_period_start_date,
+        # Employer
+        employer_exempt_commence_date=date(2022, 1, 1),
+        employer_exempt_cease_date=date(2022, 1, 31),
+        employer_exempt_family=employer_exempt_family,
+        employer_exempt_medical=employer_exempt_medical,
+    ).get_or_create_payment()
+
+    assert (
+        is_employer_exempt_for_payment(payment, payment.claim, payment.claim.employer)
+        is expected_result
+    )
+
+    # Show that adhoc payments always return false from check
+    adhoc_payment = DelegatedPaymentFactory(
+        test_db_session,
+        # Payment
+        is_adhoc_payment=True,
+        # Claim
+        claim_type=claim_type,
+        absence_period_start_date=absence_period_start_date,
+        # Employer
+        employer_exempt_commence_date=date(2022, 1, 1),
+        employer_exempt_cease_date=date(2022, 1, 31),
+        employer_exempt_family=employer_exempt_family,
+        employer_exempt_medical=employer_exempt_medical,
+    ).get_or_create_payment()
+
+    assert (
+        is_employer_exempt_for_payment(
+            adhoc_payment, adhoc_payment.claim, adhoc_payment.claim.employer
+        )
+        is False
+    )

@@ -1,4 +1,5 @@
-import TempFileCollection from "../models/TempFileCollection";
+import ApiResourceCollection from "../models/ApiResourceCollection";
+import TempFile from "../models/TempFile";
 import { zip } from "lodash";
 
 /**
@@ -9,7 +10,7 @@ import { zip } from "lodash";
  */
 const uploadDocumentsHelper = async (
   uploadPromises: Array<Promise<{ success: boolean }>> = [],
-  tempFiles: TempFileCollection,
+  tempFiles: ApiResourceCollection<TempFile>,
   removeTempFile: (id: string) => void
 ) => {
   if (!uploadPromises.length) {

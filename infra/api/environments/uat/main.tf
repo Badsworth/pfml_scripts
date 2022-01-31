@@ -70,6 +70,9 @@ module "api" {
   fineos_client_oauth2_url                            = "https://uat-api.masspfml.fineos.com/oauth2/token"
   fineos_client_oauth2_client_id                      = "61on8s7n66i0gj913didkmn5q"
   fineos_import_employee_updates_input_directory_path = "s3://fin-sompre-data-export/UAT/dataexports"
+  pfml_email_address                                  = "PFML_DoNotReply@eol.mass.gov"
+  bounce_forwarding_email_address                     = "PFML_DoNotReply@eol.mass.gov"
+  bounce_forwarding_email_address_arn                 = "arn:aws:ses:us-east-1:498823821309:identity/PFML_DoNotReply@eol.mass.gov"
   service_now_base_url                                = "https://savilinxstage.servicenowservices.com"
   portal_base_url                                     = "https://paidleave-uat.mass.gov"
   fineos_aws_iam_role_arn                             = "arn:aws:iam::016390658835:role/sompre-IAMRoles-CustomerAccountAccessRole-S0EP9ABIA02Z"
@@ -77,7 +80,6 @@ module "api" {
   enable_application_fraud_check                      = "0"
   release_version                                     = var.release_version
 
-  enable_pdf_document_compression  = "1"
   enable_document_multipart_upload = "1"
   enable_application_import        = "1"
 }

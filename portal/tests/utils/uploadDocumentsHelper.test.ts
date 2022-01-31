@@ -1,5 +1,5 @@
+import ApiResourceCollection from "../../src/models/ApiResourceCollection";
 import TempFile from "../../src/models/TempFile";
-import TempFileCollection from "../../src/models/TempFileCollection";
 import { makeFile } from "../test-utils";
 import uploadDocumentsHelper from "../../src/utils/uploadDocumentsHelper";
 
@@ -10,7 +10,7 @@ describe("uploadDocumentsHelper", () => {
     Promise.resolve({ success: false }),
   ];
 
-  const tempFiles = new TempFileCollection([
+  const tempFiles = new ApiResourceCollection("id", [
     new TempFile({ file: makeFile({ name: "file1" }) }),
     new TempFile({ file: makeFile({ name: "file2" }) }),
     new TempFile({ file: makeFile({ name: "file3" }) }),

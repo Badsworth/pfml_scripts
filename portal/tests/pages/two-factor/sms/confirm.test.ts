@@ -4,11 +4,13 @@ import { mockAuth, renderPage } from "../../../test-utils";
 import ConfirmSMS from "../../../../src/pages/two-factor/sms/confirm";
 import User from "../../../../src/models/User";
 import faker from "faker";
+import tracker from "../../../../src/services/tracker";
 import userEvent from "@testing-library/user-event";
 
 const updateUser = jest.fn();
 const goToNextPage = jest.fn();
 
+jest.mock("../../../../src/services/tracker");
 jest.mock("../../../../src/services/mfa", () => ({
   sendMFAConfirmationCode: jest.fn(),
   verifyMFAPhoneNumber: jest.fn(),
@@ -86,6 +88,9 @@ describe("Two-factor SMS Confirm", () => {
     await act(async () => await userEvent.click(submitButton));
 
     expect(MFAService.verifyMFAPhoneNumber).toHaveBeenCalledWith("123456");
+    expect(tracker.trackEvent).toHaveBeenCalledWith(
+      "User confirmed MFA phone number"
+    );
     expect(updateUser).toHaveBeenCalledWith(expect.any(String), {
       mfa_delivery_preference: "SMS",
     });
@@ -99,6 +104,9 @@ describe("Two-factor SMS Confirm", () => {
     });
     await act(async () => await userEvent.click(resendButton));
 
+    expect(tracker.trackEvent).toHaveBeenCalledWith(
+      "User resent MFA confirmation code"
+    );
     expect(MFAService.sendMFAConfirmationCode).toHaveBeenCalled();
   });
 

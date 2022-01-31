@@ -1,10 +1,11 @@
+from decimal import Decimal
 from re import Pattern
 from typing import Any, Dict, List, Literal, Optional, Type, Union
 
 import phonenumbers
 from phonenumbers.phonenumberutil import region_code_for_number
 from sqlalchemy.orm.exc import NoResultFound
-from werkzeug.exceptions import BadRequest, Conflict, Forbidden, NotFound
+from werkzeug.exceptions import BadRequest, Conflict, Forbidden
 
 import massgov.pfml.api.models.applications.common as apps_common_io
 import massgov.pfml.api.models.claims.common as claims_common_io
@@ -19,7 +20,7 @@ from massgov.pfml.api.models.applications.common import LeaveReason, PaymentPref
 from massgov.pfml.api.models.applications.requests import ApplicationRequestBody
 from massgov.pfml.api.models.applications.responses import DocumentResponse
 from massgov.pfml.api.models.common import LookupEnum
-from massgov.pfml.api.services.fineos_actions import get_documents, register_employee
+from massgov.pfml.api.services.fineos_actions import get_documents
 from massgov.pfml.api.util.phone import convert_to_E164
 from massgov.pfml.api.util.response import Response
 from massgov.pfml.api.validation.exceptions import (
@@ -39,7 +40,9 @@ from massgov.pfml.db.models.applications import (
     Document,
     EmployerBenefit,
     EmployerBenefitType,
+    EmploymentStatus,
     IntermittentLeavePeriod,
+    LkPhoneType,
     OtherIncome,
     OtherIncomeType,
     Phone,
@@ -54,7 +57,16 @@ from massgov.pfml.db.models.applications import (
     WorkPatternDay,
     WorkPatternType,
 )
-from massgov.pfml.db.models.employees import Address, AddressType, Claim, GeoState, LkAddressType
+from massgov.pfml.db.models.employees import (
+    Address,
+    AddressType,
+    Claim,
+    GeoState,
+    LkAddressType,
+    LkGender,
+    User,
+)
+from massgov.pfml.fineos.client import AbstractFINEOSClient
 from massgov.pfml.util.datetime import utcnow
 from massgov.pfml.util.pydantic.types import Regexes
 
@@ -931,17 +943,7 @@ def get_document_by_id(
 
 
 def claim_is_valid_for_application_import(claim: Optional[Claim]) -> Optional[Response]:
-    if claim is None:
-        message = "Claim not in PFML database."
-        validation_error = ValidationErrorDetail(
-            message=message, type=IssueType.object_not_found, field="absence_case_id",
-        )
-        error = response_util.error_response(
-            NotFound, message=message, errors=[validation_error], data=[]
-        )
-        return error
-
-    if claim.employee_tax_identifier is None or claim.employer_fein is None:
+    if claim is not None and (claim.employee_tax_identifier is None or claim.employer_fein is None):
         message = "Claim data incomplete for application import."
         validation_error = ValidationErrorDetail(message=message, type=IssueType.conflicting)
         error = response_util.error_response(Conflict, message=message, errors=[validation_error])
@@ -949,20 +951,188 @@ def claim_is_valid_for_application_import(claim: Optional[Claim]) -> Optional[Re
     return None
 
 
-def set_application_fields_from_claim(
-    fineos: massgov.pfml.fineos.AbstractFINEOSClient,
-    application: Application,
-    claim: Claim,
-    db_session: db.Session,
-) -> str:
+def set_application_fields_from_db_claim(
+    fineos: AbstractFINEOSClient, application: Application, claim: Claim, db_session: db.Session,
+) -> None:
     """
-    Set Application core fields using Claim and calculate the fineos_web_id
+    Set Application core fields using Claim
     """
     application.claim_id = claim.claim_id
     application.tax_identifier_id = claim.employee.tax_identifier_id
+    application.tax_identifier = claim.employee.tax_identifier  # type: ignore
     application.employer_fein = claim.employer_fein
     application.imported_from_fineos_at = utcnow()
 
-    return register_employee(
-        fineos, claim.employee_tax_identifier, application.employer_fein, db_session,  # type: ignore
+
+def set_customer_detail_fields(
+    fineos: AbstractFINEOSClient,
+    fineos_web_id: str,
+    application: Application,
+    db_session: db.Session,
+) -> None:
+    """
+    Retrieve customer details from FINEOS and set for application fields
+    """
+    details = fineos.read_customer_details(fineos_web_id)
+
+    application.first_name = details.firstName
+    application.middle_name = details.secondName
+    application.last_name = details.lastName
+    application.date_of_birth = details.dateOfBirth
+
+    if details.gender is not None:
+        db_gender = (
+            db_session.query(LkGender)
+            .filter(LkGender.fineos_gender_description == details.gender)
+            .one_or_none()
+        )
+        if db_gender is not None:
+            application.gender_id = db_gender.gender_id
+
+    has_state_id = False
+    if details.classExtensionInformation is not None:
+        mass_id = next(
+            (info for info in details.classExtensionInformation if info.name == "MassachusettsID"),
+            None,
+        )
+        if mass_id is not None and mass_id.stringValue != "":
+            application.mass_id = str(mass_id.stringValue).upper()
+            has_state_id = True
+    application.has_state_id = has_state_id
+
+    if isinstance(details.customerAddress, massgov.pfml.fineos.models.customer_api.CustomerAddress):
+        # Convert CustomerAddress to ApiAddress, in order to use add_or_update_address
+        address_to_create = ApiAddress(
+            line_1=details.customerAddress.address.addressLine1,
+            line_2=details.customerAddress.address.addressLine2,
+            city=details.customerAddress.address.addressLine4,
+            state=details.customerAddress.address.addressLine6,
+            zip=details.customerAddress.address.postCode,
+        )
+        add_or_update_address(db_session, address_to_create, AddressType.RESIDENTIAL, application)
+
+
+def set_employment_status(
+    fineos_client: AbstractFINEOSClient,
+    fineos_web_id: str,
+    application: Application,
+    current_user: User,
+) -> None:
+    occupations = fineos_client.get_customer_occupations_customer_api(
+        fineos_web_id, application.tax_identifier.tax_identifier
     )
+    if len(occupations) == 0:
+        return
+    occupation = occupations[0]
+    if occupation.employmentStatus is not None:
+        application.employment_status_id = EmploymentStatus.get_id(occupation.employmentStatus)
+    if occupation.hoursWorkedPerWeek is not None:
+        application.hours_worked_per_week = Decimal(occupation.hoursWorkedPerWeek)
+
+
+def set_payment_preference_fields(
+    fineos: massgov.pfml.fineos.AbstractFINEOSClient,
+    fineos_web_id: str,
+    application: Application,
+    db_session: db.Session,
+) -> None:
+    """
+    Retrieve payment preferences from FINEOS and set for imported application fields
+    """
+    preferences = fineos.get_payment_preferences(fineos_web_id)
+
+    if not preferences:
+        application.has_submitted_payment_preference = False
+        return
+
+    # Take the one with isDefault=True, if any
+    preference = next(
+        (pref for pref in preferences if pref.isDefault and pref.paymentMethod != ""), None,
+    )
+
+    if preference is None:
+        application.has_submitted_payment_preference = False
+        return
+
+    if preference.accountDetails is not None:
+        payment_preference = PaymentPreference(
+            account_number=preference.accountDetails.accountNo,
+            routing_number=preference.accountDetails.routingNumber,
+            bank_account_type=preference.accountDetails.accountType,
+            payment_method=preference.paymentMethod,
+        )
+        add_or_update_payment_preference(db_session, payment_preference, application)
+        application.has_submitted_payment_preference = True
+
+    has_mailing_address = False
+    if isinstance(
+        preference.customerAddress, massgov.pfml.fineos.models.customer_api.CustomerAddress
+    ):
+        # Convert CustomerAddress to ApiAddress, in order to use add_or_update_address
+        address_to_create = ApiAddress(
+            line_1=preference.customerAddress.address.addressLine1,
+            line_2=preference.customerAddress.address.addressLine2,
+            city=preference.customerAddress.address.addressLine4,
+            state=preference.customerAddress.address.addressLine6,
+            zip=preference.customerAddress.address.postCode,
+        )
+        add_or_update_address(db_session, address_to_create, AddressType.MAILING, application)
+        has_mailing_address = True
+    application.has_mailing_address = has_mailing_address
+
+
+def set_customer_contact_detail_fields(
+    fineos: massgov.pfml.fineos.AbstractFINEOSClient,
+    fineos_web_id: str,
+    application: Application,
+    db_session: db.Session,
+) -> None:
+    """
+    Retrieves customer contact details from FINEOS, creates a new phone record,
+    and associates the phone record with the application being imported
+    """
+    contact_details = fineos.read_customer_contact_details(fineos_web_id)
+
+    if not contact_details or not contact_details.phoneNumbers:
+        logger.info("No contact details returned from FINEOS")
+        return
+
+    phone_number_from_fineos = next(
+        (phone_num for phone_num in contact_details.phoneNumbers if phone_num.preferred),
+        contact_details.phoneNumbers[0],
+    )
+
+    # Handles the potential case of a phone number list existing, but phone fields are null
+    if not (
+        phone_number_from_fineos.intCode
+        or phone_number_from_fineos.areaCode
+        or phone_number_from_fineos.telephoneNo
+    ):
+        logger.info(
+            "Field missing from FINEOS phoneNumber list",
+            extra={"phoneNumbers": str(phone_number_from_fineos)},
+        )
+        return
+
+    db_phone = (
+        db_session.query(LkPhoneType)
+        .filter(LkPhoneType.phone_type_description == phone_number_from_fineos.phoneNumberType)
+        .one_or_none()
+    )
+
+    if not db_phone:
+        logger.info("Unable to find phone_type")
+        return
+
+    phone_number = str(phone_number_from_fineos.areaCode) + str(
+        phone_number_from_fineos.telephoneNo
+    )
+    # Creating common_io.Phone object in order to re-use add_or_update_phone helper method
+    phone_to_create = common_io.Phone(
+        int_code=phone_number_from_fineos.intCode,
+        phone_number=phone_number,
+        phone_type=db_phone.phone_type_description,
+        fineos_phone_id=phone_number_from_fineos.id,
+    )
+
+    add_or_update_phone(db_session, phone_to_create, application)

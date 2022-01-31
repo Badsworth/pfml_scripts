@@ -91,10 +91,13 @@ module "api" {
   # TODO: This value is provided by FINEOS over Interchange.
   fineos_client_oauth2_client_id = "2gptm2870hlo9ouq70poib8d5g"
 
+  pfml_email_address                  = "PFML_DoNotReply@eol.mass.gov"
+  bounce_forwarding_email_address     = "PFML_DoNotReply@eol.mass.gov"
+  bounce_forwarding_email_address_arn = "arn:aws:ses:us-east-1:498823821309:identity/PFML_DoNotReply@eol.mass.gov"
+
   # TODO: Connect to ServiceNow.
   service_now_base_url = "https://savilinxstage.servicenowservices.com"
 
-  enable_pdf_document_compression  = "0"
   enable_document_multipart_upload = "1"
   enable_application_import        = "1"
 }

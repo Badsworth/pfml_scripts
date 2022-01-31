@@ -3,6 +3,7 @@ import { act, screen } from "@testing-library/react";
 import Settings from "../../../src/pages/user/settings";
 import { renderPage } from "../../test-utils";
 import routes from "../../../src/routes";
+import tracker from "../../../src/services/tracker";
 import userEvent from "@testing-library/user-event";
 
 jest.mock("../../../src/services/tracker");
@@ -130,9 +131,28 @@ describe(Settings, () => {
         expect(updateUser).toHaveBeenCalledWith(expect.any(String), {
           mfa_delivery_preference: "SMS",
         });
+        expect(tracker.trackEvent).toHaveBeenCalledWith(
+          "User kept MFA enabled"
+        );
         expect(
           screen.queryByText(/Edit login verification preferences/)
         ).not.toBeInTheDocument();
+      });
+
+      it("tracks a user disabling MFA", async () => {
+        const disableRadio = screen.getByText(
+          /Disable additional login verification/
+        );
+        await act(async () => await userEvent.click(disableRadio));
+        const saveButton = screen.getByRole("button", {
+          name: /Save preference/,
+        });
+        await act(async () => await userEvent.click(saveButton));
+
+        expect(updateUser).toHaveBeenCalledWith(expect.any(String), {
+          mfa_delivery_preference: "Opt Out",
+        });
+        expect(tracker.trackEvent).toHaveBeenCalledWith("User disabled MFA");
       });
     });
   });

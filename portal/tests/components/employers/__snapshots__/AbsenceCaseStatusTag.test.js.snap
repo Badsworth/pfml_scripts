@@ -1,5 +1,15 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`AbsenceCaseStatusTag Defers to absence case if no Open managed requirements returned 1`] = `
+<div>
+  <span
+    class="usa-tag display-inline-block text-bold text-middle text-no-wrap text-success-dark bg-success-lighter"
+  >
+    Approved
+  </span>
+</div>
+`;
+
 exports[`AbsenceCaseStatusTag renders the component with 'No Action Required' when managedRequirements is empty and has a pending-line status value 1`] = `
 <div>
   <span
@@ -10,7 +20,7 @@ exports[`AbsenceCaseStatusTag renders the component with 'No Action Required' wh
 </div>
 `;
 
-exports[`AbsenceCaseStatusTag renders the component with 'Review By {{date}}' when managedRequirements is not empty 1`] = `
+exports[`AbsenceCaseStatusTag renders the component with 'Review By {{date}}' when managedRequirements contains Open requirements not in the past 1`] = `
 <div>
   <span
     class="usa-tag display-inline-block text-bold text-middle text-no-wrap text-base-darkest bg-warning-lighter"

@@ -28,7 +28,6 @@ from massgov.pfml.delegated_payments.fineos_extract_step import (
     FineosExtractStep,
 )
 from massgov.pfml.delegated_payments.mock.fineos_extract_data import (
-    FineosClaimantData,
     FineosIAWWData,
     FineosPaymentData,
     create_fineos_claimant_extract_files,
@@ -119,7 +118,7 @@ def test_run_happy_path(
     monkeypatch.setenv("FINEOS_CLAIMANT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
 
     payment_data = [FineosPaymentData(), FineosPaymentData(), FineosPaymentData()]
-    claimant_data = [FineosClaimantData(), FineosClaimantData(), FineosClaimantData()]
+    claimant_data = [FineosPaymentData(), FineosPaymentData(), FineosPaymentData()]
 
     upload_fineos_payment_data(mock_fineos_s3_bucket, payment_data)
     upload_fineos_claimant_data(mock_fineos_s3_bucket, claimant_data)
@@ -156,6 +155,7 @@ def test_run_happy_path(
             f"{claimant_prefix}-{payments_util.Constants.REQUESTED_ABSENCE_SOM_FILE_NAME}" in files
         )
         assert f"{claimant_prefix}-{payments_util.Constants.EMPLOYEE_FEED_FILE_NAME}" in files
+        assert f"{claimant_prefix}-{payments_util.Constants.REQUESTED_ABSENCE_FILE_NAME}" in files
 
         payment_prefix = f"{date_str}-payment-extract/{date_str}"
         assert f"{payment_prefix}-{payments_util.Constants.PEI_EXPECTED_FILE_NAME}" in files
@@ -166,7 +166,6 @@ def test_run_happy_path(
         assert (
             f"{payment_prefix}-{payments_util.Constants.CLAIM_DETAILS_EXPECTED_FILE_NAME}" in files
         )
-        assert f"{payment_prefix}-{payments_util.Constants.REQUESTED_ABSENCE_FILE_NAME}" in files
 
         claimant_reference_file = (
             local_test_db_session.query(ReferenceFile)
@@ -200,12 +199,22 @@ def test_run_happy_path(
         )
 
         requested_absence_som_records = [
-            record.get_requested_absence_record() for record in claimant_data
+            record.get_requested_absence_som_record() for record in claimant_data
         ]
         validate_records(
             requested_absence_som_records,
             FineosExtractVbiRequestedAbsenceSom,
             "ABSENCE_CASENUMBER",
+            local_test_db_session,
+        )
+
+        requested_absence_records = [
+            record.get_requested_absence_record() for record in claimant_data
+        ]
+        validate_records(
+            requested_absence_records,
+            FineosExtractVbiRequestedAbsence,
+            "LEAVEREQUEST_ID",
             local_test_db_session,
         )
 
@@ -228,16 +237,6 @@ def test_run_happy_path(
             local_test_db_session,
         )
 
-        requested_absence_records = [
-            record.get_requested_absence_record() for record in payment_data
-        ]
-        validate_records(
-            requested_absence_records,
-            FineosExtractVbiRequestedAbsence,
-            "LEAVEREQUEST_ID",
-            local_test_db_session,
-        )
-
         ### and verify the skipped files as well
         expected_path_prefix = f"s3://{mock_s3_bucket}/cps/inbound/skipped/"
         files = file_util.list_files(expected_path_prefix, recursive=True)
@@ -248,6 +247,7 @@ def test_run_happy_path(
             f"{claimant_prefix}-{payments_util.Constants.REQUESTED_ABSENCE_SOM_FILE_NAME}" in files
         )
         assert f"{claimant_prefix}-{payments_util.Constants.EMPLOYEE_FEED_FILE_NAME}" in files
+        assert f"{claimant_prefix}-{payments_util.Constants.REQUESTED_ABSENCE_FILE_NAME}" in files
 
         payment_prefix = f"{skipped_date_str}-payment-extract/{skipped_date_str}"
         assert f"{payment_prefix}-{payments_util.Constants.PEI_EXPECTED_FILE_NAME}" in files
@@ -258,7 +258,6 @@ def test_run_happy_path(
         assert (
             f"{payment_prefix}-{payments_util.Constants.CLAIM_DETAILS_EXPECTED_FILE_NAME}" in files
         )
-        assert f"{payment_prefix}-{payments_util.Constants.REQUESTED_ABSENCE_FILE_NAME}" in files
 
         # And the skipped reference files
         claimant_reference_file = (
@@ -466,12 +465,11 @@ def test_run_with_error_during_processing(
     # Files were moved to error directory
     expected_path_prefix = f"s3://{mock_s3_bucket}/cps/inbound/error/"
     files = file_util.list_files(expected_path_prefix, recursive=True)
-    assert len(files) == 4
+    assert len(files) == 3
     payment_prefix = f"{date_str}-payment-extract/{date_str}"
     assert f"{payment_prefix}-{payments_util.Constants.PEI_EXPECTED_FILE_NAME}" in files
     assert f"{payment_prefix}-{payments_util.Constants.PAYMENT_DETAILS_EXPECTED_FILE_NAME}" in files
     assert f"{payment_prefix}-{payments_util.Constants.CLAIM_DETAILS_EXPECTED_FILE_NAME}" in files
-    assert f"{payment_prefix}-{payments_util.Constants.REQUESTED_ABSENCE_FILE_NAME}" in files
 
     # A reference file is present and pointing to the errored directory
     reference_files = local_test_db_session.query(ReferenceFile).all()
@@ -486,7 +484,6 @@ def test_run_with_error_during_processing(
     validate_records([], FineosExtractVpei, "I", local_test_db_session)
     validate_records([], FineosExtractVpeiClaimDetails, "LEAVEREQUESTI", local_test_db_session)
     validate_records([], FineosExtractVpeiPaymentDetails, "PEINDEXID", local_test_db_session)
-    validate_records([], FineosExtractVbiRequestedAbsence, "LEAVEREQUEST_ID", local_test_db_session)
 
 
 def test_run_with_missing_fineos_file(
@@ -500,7 +497,7 @@ def test_run_with_missing_fineos_file(
     monkeypatch.setenv("FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
     monkeypatch.setenv("FINEOS_CLAIMANT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
 
-    claimant_data = [FineosClaimantData(), FineosClaimantData(), FineosClaimantData()]
+    claimant_data = [FineosPaymentData(), FineosPaymentData(), FineosPaymentData()]
     upload_fineos_claimant_data(mock_fineos_s3_bucket, claimant_data)
 
     # Delete the employee feed file
@@ -546,12 +543,12 @@ def test_run_with_missing_files_skipped_run(
     # that the process won't fail.
     monkeypatch.setenv("FINEOS_CLAIMANT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
 
-    prior_claimant_data = [FineosClaimantData(), FineosClaimantData()]
+    prior_claimant_data = [FineosPaymentData(), FineosPaymentData()]
     upload_fineos_claimant_data(
         mock_fineos_s3_bucket, prior_claimant_data, timestamp=earlier_date_str
     )
 
-    claimant_data = [FineosClaimantData(), FineosClaimantData(), FineosClaimantData()]
+    claimant_data = [FineosPaymentData(), FineosPaymentData(), FineosPaymentData()]
     upload_fineos_claimant_data(mock_fineos_s3_bucket, claimant_data)
 
     # Delete the employee feed file for the older skipped record
@@ -572,22 +569,31 @@ def test_run_with_missing_files_skipped_run(
     # Verify that the skipped file ended up in the right place
     expected_path_prefix = f"s3://{mock_s3_bucket}/cps/inbound/skipped/"
     files = file_util.list_files(expected_path_prefix, recursive=True)
-    assert len(files) == 1
+    assert len(files) == 2
 
     claimant_prefix = f"{earlier_date_str}-claimant-extract/{earlier_date_str}"
     assert f"{claimant_prefix}-{payments_util.Constants.REQUESTED_ABSENCE_SOM_FILE_NAME}" in files
+    assert f"{claimant_prefix}-{payments_util.Constants.REQUESTED_ABSENCE_FILE_NAME}" in files
 
     # Verify the unskipped file was still loaded properly
     employee_feed_records = [record.get_employee_feed_record() for record in claimant_data]
     validate_records(employee_feed_records, FineosExtractEmployeeFeed, "I", local_test_db_session)
 
     requested_absence_som_records = [
-        record.get_requested_absence_record() for record in claimant_data
+        record.get_requested_absence_som_record() for record in claimant_data
     ]
     validate_records(
         requested_absence_som_records,
         FineosExtractVbiRequestedAbsenceSom,
         "ABSENCE_CASENUMBER",
+        local_test_db_session,
+    )
+
+    requested_absence_records = [record.get_requested_absence_record() for record in claimant_data]
+    validate_records(
+        requested_absence_records,
+        FineosExtractVbiRequestedAbsence,
+        "LEAVEREQUEST_ID",
         local_test_db_session,
     )
 
@@ -609,7 +615,7 @@ def test_run_with_malformed_claimant_data(
     monkeypatch.setenv("FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
     monkeypatch.setenv("FINEOS_CLAIMANT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
 
-    claimant_data = [FineosClaimantData()]
+    claimant_data = [FineosPaymentData()]
     upload_fineos_claimant_data(
         mock_fineos_s3_bucket, claimant_data, malformed_extract=claimant_extract_file
     )

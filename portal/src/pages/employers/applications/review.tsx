@@ -1,15 +1,20 @@
-import { DocumentType, DocumentTypeEnum } from "../../../models/Document";
+import {
+  DocumentType,
+  DocumentTypeEnum,
+  findDocumentsByTypes,
+} from "../../../models/Document";
 import LeaveReason, { LeaveReasonType } from "../../../models/LeaveReason";
 import PreviousLeave, {
   PreviousLeaveType,
 } from "../../../models/PreviousLeave";
 import React, { useEffect, useState } from "react";
-import { compact, get, isEqual, sortBy } from "lodash";
+import { get, isEqual } from "lodash";
 import withEmployerClaim, {
   WithEmployerClaimProps,
 } from "../../../hoc/withEmployerClaim";
 
 import Alert from "../../../components/core/Alert";
+import AppErrorInfo from "../../../models/AppErrorInfo";
 import BackButton from "../../../components/BackButton";
 import Button from "../../../components/core/Button";
 import CaringLeaveQuestion from "src/components/employers/CaringLeaveQuestion";
@@ -32,9 +37,8 @@ import ReviewHeading from "../../../components/ReviewHeading";
 import Title from "../../../components/core/Title";
 import { Trans } from "react-i18next";
 import WeeklyHoursWorkedRow from "../../../components/employers/WeeklyHoursWorkedRow";
-import findDocumentsByTypes from "../../../utils/findDocumentsByTypes";
 import formatDate from "../../../utils/formatDate";
-import getClosestOpenFollowUpDate from "../../../utils/getClosestOpenFollowUpDate";
+import { getClosestReviewableFollowUpDate } from "../../../models/ManagedRequirement";
 import isBlank from "../../../utils/isBlank";
 import { isFeatureEnabled } from "../../../services/featureFlags";
 import leaveReasonToPreviousLeaveReason from "../../../utils/leaveReasonToPreviousLeaveReason";
@@ -403,20 +407,6 @@ export const Review = (props: WithEmployerClaimProps) => {
     }
   };
 
-  /**
-   * Checks through the managed_requirements array if value exists within
-   * key: responded_at and return the most recent date
-   */
-  const previouslyReviewed = () => {
-    if (!claim.managed_requirements?.length) return;
-
-    const respondedAtDate = claim.managed_requirements.map(
-      (managedRequirement) => managedRequirement.responded_at
-    );
-
-    return formatDate(sortBy(compact(respondedAtDate)).reverse()[0]).short();
-  };
-
   const otherLeaveStartDate = formatDate(claim.otherLeaveStartDate).full();
 
   return (
@@ -435,12 +425,17 @@ export const Review = (props: WithEmployerClaimProps) => {
         })}
       </Title>
       <Alert state="warning" noIcon>
-        {showMultipleLeave && previouslyReviewed() && (
+        {showMultipleLeave && claim.wasPreviouslyReviewed && (
           <p>
             <strong>
               <Trans
-                i18nKey="pages.employersClaimsReview.managedRequirementsRespondedAt"
-                values={{ date: previouslyReviewed() }}
+                i18nKey="pages.employersClaimsReview.previouslyReviewed"
+                values={{
+                  context: claim.lastReviewedAt ? "withDate" : undefined,
+                  date: claim.lastReviewedAt
+                    ? formatDate(claim.lastReviewedAt).short()
+                    : undefined,
+                }}
               />
             </strong>
           </p>
@@ -449,7 +444,7 @@ export const Review = (props: WithEmployerClaimProps) => {
         <Trans
           i18nKey="pages.employersClaimsReview.instructionsFollowUpDate"
           values={{
-            date: getClosestOpenFollowUpDate(claim.managed_requirements),
+            date: getClosestReviewableFollowUpDate(claim.managed_requirements),
           }}
         />
       </Alert>
@@ -489,7 +484,8 @@ export const Review = (props: WithEmployerClaimProps) => {
 
         {isCaringLeave && (
           <CaringLeaveQuestion
-            errorMsg={appErrors.fieldErrorMessage(
+            errorMsg={AppErrorInfo.fieldErrorMessage(
+              appErrors,
               "relationship_inaccurate_reason"
             )}
             believeRelationshipAccurate={formState.believeRelationshipAccurate}

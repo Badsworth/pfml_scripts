@@ -66,8 +66,9 @@ function buildRuns(data) {
         environment: result.environment,
         runUrl: result.runUrl,
         status: "passed",
-        failedCount: 0,
+        passedCount: 0,
         failedPriority: null,
+        skippedCount: 0,
         connectionError: false,
         testCount: 0,
         categories: [],
@@ -75,13 +76,26 @@ function buildRuns(data) {
         branch: result.branch,
       };
     }
+
     seenTests.add(result.file);
-    if (result.status != "passed") {
+
+    if (result.status === "passed") {
+      collected[result.runId][result.file].passedCount++;
+    }
+    if (result.status === "pending") {
+      // don't set the overall status if we've already encountered a failure
+      if (collected[result.runId][result.file].status === "passed") {
+        collected[result.runId][result.file].status = "skipped"
+      }
+      collected[result.runId][result.file].skippedCount++;
+      result.category = "skipped";
+      result.errorPriority = "SKIPPED";
+    }
+    if (result.status === "failed") {
       let errorPriority = getErrorPriority(result.category, result.subCategory);
 
       //IF we did not pass this test, then populate the error fields
-      collected[result.runId][result.file].status = result.status;
-      collected[result.runId][result.file].failedCount++;
+      collected[result.runId][result.file].status = "failed";
       if (result.category == "infrastructure") {
         collected[result.runId][result.file].connectionError = true;
       }
@@ -116,15 +130,24 @@ function buildRuns(data) {
         collected[result.runId][result.file].failedPriority = errorPriority;
       }
     }
+
     // pre calculate all the things, and sort the data.
     collected[result.runId][result.file].testCount++;
-    collected[result.runId][result.file].passPercent = -(
+    collected[result.runId][result.file].passPercent = (
       Math.round(
-        (collected[result.runId][result.file].failedCount /
+        (collected[result.runId][result.file].passedCount /
           collected[result.runId][result.file].testCount) *
           100
-      ) - 100
+      )
     );
+    collected[result.runId][result.file].skippedPercent = (
+      Math.round(
+        (collected[result.runId][result.file].skippedCount /
+          collected[result.runId][result.file].testCount) *
+          100
+      )
+    );
+
     collected[result.runId][result.file].results.push(result);
     collected[result.runId][result.file].results.sort((a, b) => {
       return a.timestamp - b.timestamp;
@@ -358,6 +381,7 @@ class GridRow extends React.Component {
     });
     this.sub = sub;
   };
+
   toggleShow = (id) => {
     if (id == null) {
       this.setState((state) => {
@@ -373,6 +397,40 @@ class GridRow extends React.Component {
     }
   };
 
+  getProgressStyles = (result) => {
+    let width;
+    switch (result.status) {
+      case "passed":
+        width = 100;
+        break;
+      case "failed":
+        width = result.passPercent;
+        break;
+      case "skipped":
+      default:
+        width = 100 - result.skippedPercent;
+        break;
+    }
+    return { width: `${width}%` }
+  }
+
+  getOverallStatus = (result) => {
+    let status;
+    switch (result.status) {
+      case "passed":
+        status = "PASS";
+        break;
+      case "failed":
+        status = `${result.passPercent}%`;
+        break;
+      case "skipped":
+      default:
+        status = `${100 - result.skippedPercent}%`;
+        break;
+    }
+    return status;
+  }
+
   render() {
     if (!this.props.item.results[0]) {
       return <span></span>;
@@ -381,9 +439,7 @@ class GridRow extends React.Component {
       <tr>
         <td>
           <span
-            className={`indicator ${
-              this.props.item.results[0].passPercent == 100 ? "pass" : "fail"
-            }`}
+            className={`indicator ${this.props.item.results[0].status}`}
           ></span>
         </td>
         <td
@@ -418,9 +474,9 @@ class GridRow extends React.Component {
               >
                 <div
                   className={`progress ${result?.status ?? "na"}`}
-                  style={{ width: `${result.passPercent}%` }}
+                  style={this.getProgressStyles(result)}
                 >
-                  {result?.failedCount != 0 ? `${result.passPercent}%` : "PASS"}
+                  {this.getOverallStatus(result)}
                 </div>
               </div>
             </td>,

@@ -10,6 +10,7 @@ import Title from "../../../components/core/Title";
 import { Trans } from "react-i18next";
 import { isFeatureEnabled } from "../../../services/featureFlags";
 import { pick } from "lodash";
+import tracker from "../../../services/tracker";
 import useFormState from "../../../hooks/useFormState";
 import useFunctionalInputProps from "../../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../../locales/i18n";
@@ -36,6 +37,8 @@ export const SetupSMS = (props: SetupSMSProps) => {
   });
 
   const handleSubmit = async () => {
+    const editingMFANumber = props.user.mfa_phone_number !== null;
+
     const user = await appLogic.users.updateUser(props.user.user_id, {
       mfa_phone_number: {
         int_code: "1",
@@ -46,6 +49,11 @@ export const SetupSMS = (props: SetupSMSProps) => {
 
     // Only navigate away if there are no errors. The user is only returned if there are no errors.
     if (user) {
+      if (editingMFANumber) {
+        tracker.trackEvent("User edited MFA phone number");
+      } else {
+        tracker.trackEvent("User submitted phone number for MFA setup");
+      }
       appLogic.portalFlow.goToNextPage({}, additionalParams);
     }
   };

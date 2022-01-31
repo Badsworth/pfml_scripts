@@ -1,7 +1,7 @@
 import { fineos, fineosPages, portal, email } from "../../../actions";
 import { Submission } from "../../../../src/types";
-import {getClaimantCredentials} from "../../../config";
-import {config} from "../../../actions/common";
+import { getClaimantCredentials } from "../../../config";
+import { config } from "../../../actions/common";
 
 // @TODO parts of this test is only available in certain environments with the FINEOS
 // @TODO January release and the email template updates.
@@ -59,7 +59,7 @@ describe("Post-approval (notifications/notices)", () => {
         //visit claim after approval to put in review and deny.
         const claimPage = fineosPages.ClaimPage.visit(
           submission.fineos_absence_id
-        )
+        );
         claimPage.leaveDetails((leaveDetails) => {
           leaveDetails.inReview();
         });
@@ -72,78 +72,54 @@ describe("Post-approval (notifications/notices)", () => {
       });
     });
 
-  if (config("HAS_FINEOS_JANUARY_RELEASE") === "true") {
-    it("Check the Claimant email for the Change Request Denial notification.",
-      {retries: 0},
-      () => {
-        {
-          cy.dependsOnPreviousPass([denyModification]);
-          cy.unstash<Submission>("submission").then((submission) => {
-            cy.unstash<ApplicationRequestBody>("claim").then((claim) => {
-              // The notification is using the same subject line as Appeals claimant.
-              const subjectClaimant = email.getNotificationSubject(
-                "appeal (claimant)",
-                submission.fineos_absence_id,
-                `${claim.first_name} ${claim.last_name}`
-              );
-              email.getEmails(
-                {
-                  address: "gqzap.notifications@inbox.testmail.app",
-                  subject: subjectClaimant,
-                  messageWildcard: submission.fineos_absence_id,
-                  timestamp_from: submission.timestamp_from,
-                  debugInfo: {"Fineos Claim ID": submission.fineos_absence_id},
-                },
-                60000
-              );
-              cy.screenshot("Claimant email");
-              cy.contains(submission.fineos_absence_id)
-            });
-          });
+  it(
+    "Check the Claimant Portal status and for the legal notice Change Request Denied or Denial Notice",
+    { retries: 0 },
+    () => {
+      cy.dependsOnPreviousPass([denyModification]);
+      portal.before();
+      cy.unstash<Submission>("submission").then((submission) => {
+        portal.loginClaimant();
+        cy.log("Waiting for documents");
+        cy.task(
+          "waitForClaimDocuments",
+          {
+            credentials: getClaimantCredentials(),
+            application_id: submission.application_id,
+            document_type: "Change Request Denied",
+          },
+          { timeout: 45000 }
+        );
+        cy.log("Finished waiting for documents");
+        portal.claimantGoToClaimStatus(submission.fineos_absence_id);
+        portal.claimantAssertClaimStatus([
+          {
+            leave: "Care for a Family Member",
+            status: "Denied",
+          },
+        ]);
+        //@TODO this will need to be adjusted for the January release for FINEOS version
+        // If the environment has the January release add to the if statement
+        if (config("HAS_FINEOS_JANUARY_RELEASE") === "true") {
+          cy.findByText("Change Request Denied (PDF)")
+            .should("be.visible")
+            .click({ force: true });
+          portal.downloadLegalNotice(submission.fineos_absence_id);
+        } else {
+          // Any other FINEOS version from Dec or before will need to use the else statement
+          cy.findByText("Approval notice (PDF)")
+            .should("be.visible")
+            .click({ force: true });
+          portal.downloadLegalNotice(submission.fineos_absence_id);
         }
-      }
-    );
+      });
+    }
+  );
 
-    it(
-      "Check the Leave Admin email for the Change Request Denial notification.",
-      {retries: 0},
-      () => {
-        cy.dependsOnPreviousPass([denyModification]);
-        cy.unstash<Submission>("submission").then((submission) => {
-          cy.unstash<ApplicationRequestBody>("claim").then((claim) => {
-            // The notification is using the same subject line as Appeals claimant.
-            const subjectEmployer = email.getNotificationSubject(
-              "appeal (claimant)",
-              submission.fineos_absence_id,
-              `${claim.first_name} ${claim.last_name}`
-            );
-            email.getEmails(
-              {
-                address: "gqzap.notifications@inbox.testmail.app",
-                subject: subjectEmployer,
-                // Had to adjust the messageWildcard to use line for Leave Admin only.
-                // Was getting a duplicate Claimant emails or not found because of to many notifications.
-                messageWildcard: "The applicant’s change request has been denied.",
-                timestamp_from: submission.timestamp_from,
-                debugInfo: {"Fineos Claim ID": submission.fineos_absence_id},
-              },
-              60000
-            )
-              .then(() => {
-                cy.screenshot("Leave Admin email");
-                cy.contains(submission.fineos_absence_id);
-                cy.get(
-                  `a[href*="/employers/applications/status/?absence_id=${submission.fineos_absence_id}"]`
-                );
-              });
-          });
-        });
-      }
-    );
-
+  if (config("HAS_FINEOS_JANUARY_RELEASE") === "true") {
     it(
       "Check the Leave Admin Portal for the Change Request Denied notice",
-      {retries: 0},
+      { retries: 0 },
       () => {
         cy.dependsOnPreviousPass([denyModification]);
         portal.before();
@@ -167,50 +143,85 @@ describe("Post-approval (notifications/notices)", () => {
         });
       }
     );
-  }
-
-  it(
-    "Check the Claimant Portal status and for the legal notice Change Request Denied or Denial Notice",
-    {retries: 0},
-    () => {
-      cy.dependsOnPreviousPass([denyModification]);
-      portal.before();
-      cy.unstash<Submission>("submission").then((submission) => {
-        portal.loginClaimant();
-        cy.log("Waiting for documents");
-        cy.task(
-          "waitForClaimDocuments",
-          {
-            credentials: getClaimantCredentials(),
-            application_id: submission.application_id,
-            document_type: "Change Request Denied"
-          },
-          {timeout: 45000}
-        );
-        cy.log("Finished waiting for documents");
-        portal.claimantGoToClaimStatus(submission.fineos_absence_id);
-        portal.claimantAssertClaimStatus([
-          {
-            leave: "Care for a Family Member",
-            status: "Denied",
-          },
-        ]);
-        //@TODO this will need to be adjusted for the January release for FINEOS version
-        // If the environment has the January release add to the if statement
-        if (config("HAS_FINEOS_JANUARY_RELEASE") === "true") {
-          cy.findByText("Change Request Denied (PDF)")
-            .should("be.visible")
-            .click({force: true});
-          portal.downloadLegalNotice(submission.fineos_absence_id);
-        } else {
-          // Any other FINEOS version from Dec or before will need to use the else statement
-          cy.findByText("Approval notice (PDF)")
-            .should("be.visible")
-            .click({force: true});
-          portal.downloadLegalNotice(submission.fineos_absence_id);
+    it(
+      "Check the Claimant email for the Change Request Denial notification.",
+      { retries: 0 },
+      () => {
+        {
+          cy.dependsOnPreviousPass([denyModification]);
+          cy.unstash<Submission>("submission").then((submission) => {
+            cy.unstash<ApplicationRequestBody>("claim").then((claim) => {
+              // The notification is using the same subject line as Appeals claimant.
+              const subjectClaimant = email.getNotificationSubject(
+                "appeal (claimant)",
+                submission.fineos_absence_id,
+                `${claim.first_name} ${claim.last_name}`
+              );
+              email
+                .getEmails(
+                  {
+                    address: "gqzap.notifications@inbox.testmail.app",
+                    subject: subjectClaimant,
+                    messageWildcard: {
+                      pattern: `${submission.fineos_absence_id}.*Your change request has been denied`,
+                    },
+                    timestamp_from: submission.timestamp_from,
+                    debugInfo: {
+                      "Fineos Claim ID": submission.fineos_absence_id,
+                    },
+                  },
+                  90000
+                )
+                .then(() => {
+                  cy.screenshot("Claimant email");
+                  cy.contains(submission.fineos_absence_id);
+                });
+            });
+          });
         }
-      });
-    }
-  );
-});
+      }
+    );
 
+    it(
+      "Check the Leave Admin email for the Change Request Denial notification.",
+      { retries: 0 },
+      () => {
+        cy.dependsOnPreviousPass([denyModification]);
+        cy.unstash<Submission>("submission").then((submission) => {
+          cy.unstash<ApplicationRequestBody>("claim").then((claim) => {
+            // The notification is using the same subject line as Appeals claimant.
+            const subjectEmployer = email.getNotificationSubject(
+              "appeal (claimant)",
+              submission.fineos_absence_id,
+              `${claim.first_name} ${claim.last_name}`
+            );
+            email
+              .getEmails(
+                {
+                  address: "gqzap.notifications@inbox.testmail.app",
+                  subject: subjectEmployer,
+                  // Had to adjust the messageWildcard to use line for Leave Admin only.
+                  // Was getting a duplicate Claimant emails or not found because of to many notifications.
+                  messageWildcard: {
+                    pattern: `${submission.fineos_absence_id}.*The applicant’s change request has been denied.`,
+                  },
+                  timestamp_from: submission.timestamp_from,
+                  debugInfo: {
+                    "Fineos Claim ID": submission.fineos_absence_id,
+                  },
+                },
+                90000
+              )
+              .then(() => {
+                cy.screenshot("Leave Admin email");
+                cy.contains(submission.fineos_absence_id);
+                cy.get(
+                  `a[href*="/employers/applications/status/?absence_id=${submission.fineos_absence_id}"]`
+                );
+              });
+          });
+        });
+      }
+    );
+  }
+});

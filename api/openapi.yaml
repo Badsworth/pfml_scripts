@@ -395,6 +395,16 @@ paths:
             format: uuid
           description: ID of Employer to query claims for
           required: false
+        - name: employee_id
+          in: query
+          schema:
+            type: array
+            items:
+                type: string
+                format: uuid
+          description: ID(s) of Employee to query claims for
+          required: false
+          explode: false
         - name: "claim_status"
           in: query
           schema:
@@ -2322,9 +2332,10 @@ components:
         absence_case_id:
           type: string
           example: "NTN-111-ABS-01"
-          nullable: false
-      required:
-        - absence_case_id
+          nullable: true
+        tax_identifier:
+          $ref: "#/components/schemas/SsnItin"
+          nullable: true
 
     ApplicationResponse:
       type: object
@@ -2797,6 +2808,11 @@ components:
           type: string
           nullable: true
           example: "1970-06-01"
+        cancellation_date:
+          format: date
+          type: string
+          nullable: true
+          example: "2021-01-01"
         status:
           type: string
           enum:

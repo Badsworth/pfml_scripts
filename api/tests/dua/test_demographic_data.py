@@ -1,7 +1,6 @@
 import os
 from datetime import date, datetime
 
-import pytest
 from freezegun import freeze_time
 
 import massgov.pfml.util.files as file_util
@@ -29,45 +28,14 @@ from massgov.pfml.dua.demographics import (
 )
 from massgov.pfml.util.batch.log import LogEntry
 
-
-def get_mock_data():
-    return ReferenceFile(
-        file_location=os.path.join(
-            os.path.dirname(__file__), "test_files", "test_dua_demographic_data.csv"
-        )
-    )
-
-
-def get_mock_data_next():
-    return ReferenceFile(
-        file_location=os.path.join(
-            os.path.dirname(__file__), "test_files", "test_dua_demographic_data_other.csv"
-        )
-    )
-
-
-@pytest.fixture
-def add_test_employees(initialize_factories_session):
-    return [
-        EmployeeFactory.create(fineos_customer_number="1234567"),
-        EmployeeFactory.create(fineos_customer_number="7654321"),
-        EmployeeFactory.create(fineos_customer_number="1111111"),
-        EmployeeFactory.create(fineos_customer_number="2222222", gender_id=Gender.WOMAN.gender_id),
-        EmployeeFactory.create(fineos_customer_number="3333333"),
-        EmployeeFactory.create(fineos_customer_number="4444444"),
-        EmployeeFactory.create(fineos_customer_number="5555555"),
-        EmployeeFactory.create(fineos_customer_number="6666666"),
-        EmployeeFactory.create(fineos_customer_number="7777777"),
-        EmployeeFactory.create(fineos_customer_number="8888888"),
-        EmployeeFactory.create(fineos_customer_number="9999999"),
-    ]
+from .helpers import get_mock_reference_file
 
 
 def test_import_multiple_files_new_data(test_db_session, monkeypatch, mock_s3_bucket):
     monkeypatch.setenv("S3_BUCKET", f"s3://{mock_s3_bucket}")
     with LogEntry(test_db_session, "test log entry") as log_entry:
 
-        reference_file = get_mock_data()
+        reference_file = get_mock_reference_file("test_dua_demographic_data.csv")
         transfer_config = get_transfer_config()
         load_demographics_file(test_db_session, reference_file, log_entry, transfer_config)
 
@@ -95,7 +63,7 @@ def test_import_multiple_files_new_data(test_db_session, monkeypatch, mock_s3_bu
         assert found_data_to_validate
         assert len(processed_records) == 10
 
-        reference_file_next = get_mock_data_next()
+        reference_file_next = get_mock_reference_file("test_dua_demographic_data_other.csv")
         load_demographics_file(test_db_session, reference_file_next, log_entry, transfer_config)
 
         # 2 new rows in this file
@@ -107,7 +75,7 @@ def test_update_employee_demographics_file_mode(test_db_session, monkeypatch, mo
     monkeypatch.setenv("S3_BUCKET", f"s3://{mock_s3_bucket}")
     with LogEntry(test_db_session, "test log entry") as log_entry:
 
-        reference_file = get_mock_data()
+        reference_file = get_mock_reference_file("test_dua_demographic_data.csv")
         transfer_config = get_transfer_config()
         load_demographics_file(test_db_session, reference_file, log_entry, transfer_config)
 
@@ -595,29 +563,18 @@ def test_set_employee_occupation_from_demographics_data_mismatched_employer_caug
 def test_update_employee_demographics_moveit_mode(
     initialize_factories_session,
     test_db_session,
-    monkeypatch,
     mock_s3_bucket,
     mock_sftp_client,
+    mock_sftp_paths,
     setup_mock_sftp_client,
 ):
 
-    source_directory_path = "dua/pending"
-    archive_directory_path = "dua/archive"
-    moveit_pickup_path = "upload/DFML/DUA/Inbound"
-
-    monkeypatch.setenv("DUA_TRANSFER_BASE_PATH", "local_s3/agency_transfer")
-    monkeypatch.setenv("OUTBOUND_DIRECTORY_PATH", source_directory_path)
-    monkeypatch.setenv("ARCHIVE_DIRECTORY_PATH", archive_directory_path)
-    monkeypatch.setenv("MOVEIT_SFTP_URI", "sftp://foo@bar.com")
-    monkeypatch.setenv("MOVEIT_SSH_KEY", "foo")
-
-    pending_directory = f"local_s3/agency_transfer/{source_directory_path}"
-    archive_directory = f"local_s3/agency_transfer/{archive_directory_path}"
+    paths = mock_sftp_paths
 
     with LogEntry(test_db_session, "test log entry") as log_entry:
-        reference_file = get_mock_data()
+        reference_file = get_mock_reference_file("test_dua_demographic_data.csv")
         filename = "DUA_DFML_CLM_DEM_202012070000.csv"
-        filepath = os.path.join(moveit_pickup_path, filename)
+        filepath = os.path.join(paths["moveit_pickup_path"], filename)
         mock_sftp_client._add_file(filepath, file_util.read_file(reference_file.file_location))
 
         transfer_config = get_transfer_config()
@@ -631,8 +588,8 @@ def test_update_employee_demographics_moveit_mode(
                 moveit_config=moveit_config,
             ),
         )
-        assert len(file_util.list_files(pending_directory)) == 1
-        assert len(file_util.list_files(archive_directory)) == 0
+        assert filename in file_util.list_files(paths["pending_directory"])
+        assert filename not in file_util.list_files(paths["archive_directory"])
         assert len(reference_files) == 1
 
         reference_files = (
@@ -646,8 +603,8 @@ def test_update_employee_demographics_moveit_mode(
                 test_db_session, file, log_entry, move_files=True, transfer_config=transfer_config
             )
 
-        assert len(file_util.list_files(pending_directory)) == 0
-        assert len(file_util.list_files(archive_directory)) == 1
+        assert filename not in file_util.list_files(paths["pending_directory"])
+        assert filename in file_util.list_files(paths["archive_directory"])
 
         metrics = log_entry.metrics
 

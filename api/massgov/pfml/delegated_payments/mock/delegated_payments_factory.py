@@ -107,7 +107,13 @@ class DelegatedPaymentFactory(MockData):
         )
 
         # employer
-        self.employer_customer_num = self.get_value("employer_customer_num", None)
+        self.employer_customer_num = self.get_value(
+            "employer_customer_num", str(fake.unique.random_int(min=1, max=1_000_000))
+        )
+        self.employer_exempt_family = self.get_value("employer_exempt_family", False)
+        self.employer_exempt_medical = self.get_value("employer_exempt_medical", False)
+        self.employer_exempt_commence_date = self.get_value("employer_exempt_commence_date", None)
+        self.employer_exempt_cease_date = self.get_value("employer_exempt_cease_date", None)
 
         # pub eft defaults
         self.ssn = self.get_value(
@@ -199,7 +205,13 @@ class DelegatedPaymentFactory(MockData):
 
     def get_or_create_employer(self):
         if self.employer is None and self.add_employer:
-            self.employer = EmployerFactory.create(fineos_employer_id=self.employer_customer_num)
+            self.employer = EmployerFactory.create(
+                fineos_employer_id=self.employer_customer_num,
+                family_exemption=self.employer_exempt_family,
+                medical_exemption=self.employer_exempt_medical,
+                exemption_commence_date=self.employer_exempt_commence_date,
+                exemption_cease_date=self.employer_exempt_cease_date,
+            )
             # Only adds organization unit if there is an employer on this claim
             if self.organization_unit_name is not None:
                 self.organization_unit = OrganizationUnitFactory.create(
@@ -365,6 +377,7 @@ class DelegatedPaymentFactory(MockData):
         import_log_id=None,
         payment_end_state=None,
         writeback_transaction_status=None,
+        fineos_extraction_date=None,
     ):
         """ Roughly mimic creating another payment. Uses the original payment as a base
             with only the specified values + C/I values updated.
@@ -377,6 +390,9 @@ class DelegatedPaymentFactory(MockData):
             params = {
                 "period_start_date": self.payment.period_start_date + delta,  # type: ignore
                 "period_end_date": self.payment.period_end_date + delta,  # type: ignore
+                "fineos_extraction_date": fineos_extraction_date
+                if fineos_extraction_date
+                else self.fineos_extraction_date,
                 "amount": amount if amount is not None else self.payment.amount,
                 "payment_transaction_type_id": payment_transaction_type_id
                 if payment_transaction_type_id is not None
@@ -400,7 +416,9 @@ class DelegatedPaymentFactory(MockData):
 
         return None
 
-    def create_cancellation_payment(self, reissuing_payment=None, import_log=None, weeks_later=0):
+    def create_cancellation_payment(
+        self, reissuing_payment=None, import_log=None, weeks_later=0, fineos_extraction_date=None
+    ):
         self.get_or_create_payment()
 
         payment_to_reissue = reissuing_payment if reissuing_payment is not None else self.payment
@@ -413,6 +431,7 @@ class DelegatedPaymentFactory(MockData):
             amount=-payment_to_reissue.amount,
             payment_transaction_type_id=PaymentTransactionType.CANCELLATION.payment_transaction_type_id,
             import_log_id=import_log.import_log_id,
+            fineos_extraction_date=fineos_extraction_date,
         )
 
     def create_reissued_payments(

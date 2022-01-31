@@ -546,6 +546,8 @@ const errors = {
       "Your account is temporarily locked because of too many forget password requests. Wait 15 minutes before trying again.",
     attemptsLimitExceeded_login:
       "Your account is temporarily locked because of too many failed login attempts. Wait 15 minutes before trying again.",
+    attemptsLimitExceeded_updatePhone:
+      "We couldn't add your phone number because you've exceeded the number of allowed attempts. You can try again later.",
     code: {
       deliveryFailure:
         "We encountered an error while sending the verification code. Try again.",
@@ -1226,17 +1228,17 @@ const pages: {
   claimsConcurrentLeaves: {
     choiceNo: "$t(shared.choiceNo)",
     choiceNoHint:
-      "I don't need to report any employer sponsored accrued paid leave after the 7-day waiting period, or I don't know yet",
+      "I don’t need to report any employer-sponsored paid time off after the 7-day waiting period, or I don’t know yet",
     choiceYes: "$t(shared.choiceYes)",
     choiceYesHint:
-      "I need to report employer-sponsored accrued paid leave I will use after the 7-day waiting period",
+      "I need to report employer-sponsored paid time off I will use after the 7-day waiting period.",
     dontNeedToReport:
-      "You don't need to report accrued paid leave that you use during the 7-day waiting period",
+      "Don’t report paid time off that you use during the 7-day waiting period",
     dontNeedToReport_intermittentLeave:
       "You don't need to report accrued paid leave that you use during the 7-day waiting period, which is 7 consecutive calendar days from the date of the first instance of leave from your employer",
     hintWhatKindBody:
       "<p>This includes any paid vacation time, sick time, and personal time. It should be reported if it’s taken during your leave period, whether it’s during the 7-day waiting period or after. Reminder: you can use accrued paid leave during the 7-day waiting period with no impact to your PFML benefit.</p>",
-    hintWhatKindHeading: "What kinds of accrued paid leave to report",
+    hintWhatKindHeading: "What kinds of paid time off to report",
     hintWhenToReportBody:
       "<p>If your PFML leave includes taking time off work completely for a period of time (continuous leave), you need to report any accrued paid leave you plan to take during that continuous leave. Select Yes to report this leave.</p><p>If your PFML leave includes working fewer hours than normal (a reduced leave schedule) or taking time off work in uneven or unpredictable blocks of time (intermittent leave), you need to report leave if ONE of the following two statements is true:</p><ul><li>You are planning to use this accrued paid leave on days when you are also taking PFML leave.</li><li>You are planning to use this accrued paid leave for a PFML qualifying reason, even if it’s not the same reason you are applying for now.</li></ul>",
     hintWhenToReportDetailsBody:
@@ -1250,7 +1252,7 @@ const pages: {
     intro_ReducedOrIntermittent:
       "<div><p>Employer-sponsored paid vacation time, sick time, and personal time that:</p><ul><li>You are planning to use on days when you are also taking PFML leave.</li></ul><p>Or</p><ul><li>You are planning to use for a PFML qualifying reason, even if it’s not the same reason you are applying for now.</li></ul></div>",
     sectionLabel:
-      "Will you use any employer-sponsored accrued paid leave during your paid leave from PFML?",
+      "Will you use any employer-sponsored paid time off during your leave period?",
     title: "$t(shared.claimsOtherLeaveTitle)",
     typesOfLeaveToReport:
       "For PFML leave that includes taking time off work completely for a period of time (continuous leave), you need to report any accrued paid leave you plan to take during that continuous leave.",
@@ -1260,19 +1262,24 @@ const pages: {
   claimsConcurrentLeavesDetails: {
     choiceNo: "$t(shared.choiceNo)",
     choiceYes: "$t(shared.choiceYes)",
+    detailsBody:
+      "Employer-sponsored paid vacation time, sick time, and personal time you plan to take during your paid leave from PFML.",
+    detailsLabel: "What is employer-sponsored paid time off?",
     hintHeader:
       "This is the same Employer Identification Number you entered earlier in your application. After you submit your application, this employer will be able to review it. We won’t share any leave you plan to take from other employers.",
-    leaveEndDateLabel: "What is the last day of this leave?",
-    leaveStartDateLabel: "What is the first day of this leave?",
+    leaveEndDateLabel:
+      "What is the last day of your employer-sponsored paid time off?",
+    leaveStartDateLabel:
+      "What is the first day of your employer-sponsored paid time off?",
     sectionLabel:
-      "Will you use accrued paid leave from this employer? EIN: {{employer_fein, ein}}",
+      "Will you use employer-sponsored paid time off from this employer? EIN: {{employer_fein, ein}}",
     title: "$t(shared.claimsOtherLeaveTitle)",
   },
   claimsConcurrentLeavesIntro: {
     intro:
-      "<p>Next, we need to know about paid leave from your employer that you plan to use between {{startDate}} and {{endDate}}. This includes paid vacation time, sick time, personal time, and other paid time off provided by your employer. It does not include family or medical leave provided by your employer, or through a short- or long-term disability program. We’ll ask about that later.</p><p>When your PFML leave begins, there is a 7-day waiting period before PFML payments start. During this 7-day waiting period, you can use paid time off from your employer with no impact to your PFML benefit.</p><p>After the 7-day waiting period, you cannot use both paid leave from your employer and paid leave from PFML on the same days. In some cases, using accrued paid leave after the 7-day waiting period has ended can cause your PFML benefits to stop. You will need to re-apply to receive PFML benefits again. To avoid this, use accrued paid leave only at the start or end of your PFML leave. <examples-of-using-paid-leave>See examples of how you can use accrued paid leave</examples-of-using-paid-leave>.</p>",
+      "<p>Next, we need to know about paid time off from your employer that you plan to use between {{startDate}} and {{endDate}}. This includes paid vacation time, sick time, personal time, and other paid time off provided by your employer. You do not need to tell us about short or long-term disability programs, or other family or medical leave benefits provided by your employer in this section. We’ll ask about that in the next section.</p><p>When your PFML leave begins, there is a 7-day waiting period before PFML payments start. During this 7-day waiting period, you can use paid time off from your employer with no impact to your PFML benefit.</p><p>After the 7-day waiting period, <strong>you cannot use both employer-sponsored paid time off and paid leave from PFML on the same day.</strong> In some cases, using accrued paid leave after the 7-day waiting period has ended can cause your PFML benefits to stop. You will need to re-apply to receive PFML benefits again. To avoid this, use accrued paid leave only at the start or end of your PFML leave. <examples-of-using-paid-leave>See examples of how you can use accrued paid leave</examples-of-using-paid-leave>.</p>",
     sectionLabel:
-      "Tell us about the accrued paid leave you'll use during your paid leave from PFML.",
+      "Tell us about the employer-sponsored paid time off you’ll use during your  leave period.",
     title: "$t(shared.claimsOtherLeaveTitle)",
   },
   claimsDateOfBirth: {
@@ -2375,8 +2382,6 @@ const pages: {
     instructionsAmendment:
       "Please review the details of this application carefully. If anything is incorrect or incomplete, you can add an amendment or include specific comments at the end. Changes are not saved until you submit your review.",
     instructionsFollowUpDate: "$t(shared.employerInstructions_followUpDate)",
-    managedRequirementsRespondedAt:
-      "This application has changed since it was reviewed on {{date}}.",
     otherLeavesBody:
       "<p>Please review the leaves and benefits listed in the tables below. If everything looks correct, then there’s no action needed. If something looks incorrect or incomplete, you can:</p><ul><li>Amend reported leaves and benefits.</li><li>Add a leave or benefit that your employee used or will use.</li></ul><p>If you need to remove a leave or benefit, use the comment box at the end of this page.</p>",
     otherLeavesBodyV1:
@@ -2385,6 +2390,10 @@ const pages: {
       "<ul><li>Previous leave for a qualifying reason that they took before their paid leave from PFML</li><li>Accrued paid leave they plan to use during their paid leave from PFML</li><li>Employer-sponsored benefits they plan to use during their paid leave from PFML</li></ul>",
     otherLeavesSummaryBoxTitle: "Employees are asked to report:",
     otherLeavesTitle: "Other leaves and benefits",
+    previouslyReviewed:
+      "This application has changed since it was last reviewed.",
+    previouslyReviewed_withDate:
+      "This application has changed since it was reviewed on {{date}}.",
     submitButton: "Submit",
     submitLoadingMessage: "Submitting… Do not refresh or go back.",
     // TODO (PORTAL-1151) Remove flag
@@ -2594,9 +2603,9 @@ const pages: {
   payments: {
     backButtonLabel: "$t(shared.backToYourApplicationsLink)",
     changesToPaymentsAmountAnswer:
-      "<p>To see your maximum weekly benefit amount, view your approval notice in your <view-notices-link>application’s notices</view-notices-link>.</p><p>The sent payment amount you see on this page may be less than the maximum benefit amount due to <using-other-leave-link>other leave, income and benefits</using-other-leave-link> you reported. You will receive another notice if we reduce your benefit amount for any reason other than tax withholding. Please note that you can not change your tax withholding status at this point, since your application has been approved.</p><p><strong>Other scenarios that may change the payment amount you receive are:</strong></p><ul><li>You or your employer report additional other leave, income or benefits</li><li>You reach the maximum total amount that you can receive in PFML benefits across multiple applications. The maximum weekly benefit amount is {{maxBenefitAmount}} per week.</li><li>You receive a payment for a pay period less than a full week</li><li>You elected to have taxes withheld</li><li>You received an overpayment</li></ul>",
+      "<p>To see your maximum weekly benefit amount, view your approval notice in the <view-notices-link>notice section of your application.</view-notices-link>.</p><p>The payment amount you see on this page may be less than the maximum benefit amount due to <using-other-leave-link>other leave, income and benefits</using-other-leave-link> you reported. You will receive another notice if we reduce your benefit amount for any reason other than tax withholding. Please note that you can not change your tax withholding status at this point, since your application has been approved.</p><p><strong>Other scenarios that may change the payment amount you receive are:</strong></p><ul><li>You or your employer report additional other leave, income or benefits</li><li>You reach the maximum total amount that you can receive in PFML benefits across multiple applications.</li><li>You receive a payment for a pay period less than a full week</li><li>You elected to have taxes withheld</li><li>You received an overpayment</li></ul>",
     changesToPaymentsAmountQuestion:
-      "Why your sent payment amount may be less than your approved benefit amount",
+      "Why the amount you received may be less than your approved benefit amount",
     changesToPaymentsHeading: "Changes to payments",
     changesToPaymentsYourPreferencesAnswer:
       "<p>To make changes to your payment method or banking information, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.</p>",

@@ -1,7 +1,7 @@
 import React, { useRef, useState } from "react";
 import AmendButton from "./AmendButton";
 import AmendmentForm from "./AmendmentForm";
-import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
+import AppErrorInfo from "../../models/AppErrorInfo";
 import ConcurrentLeave from "../../models/ConcurrentLeave";
 import ConditionalContent from "../ConditionalContent";
 import Heading from "../core/Heading";
@@ -11,7 +11,7 @@ import useAutoFocusEffect from "../../hooks/useAutoFocusEffect";
 import { useTranslation } from "../../locales/i18n";
 
 interface AmendableConcurrentLeaveProps {
-  appErrors: AppErrorInfoCollection;
+  appErrors: AppErrorInfo[];
   concurrentLeave: ConcurrentLeave;
   isAddedByLeaveAdmin: boolean;
   onChange: (
@@ -62,10 +62,12 @@ const AmendableConcurrentLeave = ({
     onChange({ [field]: formattedValue }, formStateField);
   };
 
-  const startDateErrMsg = appErrors.fieldErrorMessage(
+  const startDateErrMsg = AppErrorInfo.fieldErrorMessage(
+    appErrors,
     `concurrent_leave.leave_start_date`
   );
-  const leaveDateErrMsg = appErrors.fieldErrorMessage(
+  const leaveDateErrMsg = AppErrorInfo.fieldErrorMessage(
+    appErrors,
     `concurrent_leave.leave_end_date`
   );
 

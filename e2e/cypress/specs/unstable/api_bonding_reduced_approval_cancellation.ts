@@ -4,6 +4,8 @@ import {
   findCertificationDoc,
   getDocumentReviewTaskName,
 } from "../../../src/util/documents";
+import { config } from "../../actions/common";
+import { itIf } from '../../util';
 
 describe("Approval (notifications/notices)", () => {
   after(() => {
@@ -74,74 +76,6 @@ describe("Approval (notifications/notices)", () => {
     });
   });
 
-  it("Check the Claimant email for the Cancellation notification.",
-    { retries: 0 },
-    () => {
-      {
-        cy.dependsOnPreviousPass([
-          submission,
-          cancellation,
-        ]);
-        cy.unstash<Submission>("submission").then((submission) => {
-          cy.unstash<ApplicationRequestBody>("claim").then((claim) => {
-            // The notification is using the same subject line as Appeals claimant.
-            const subjectClaimant = email.getNotificationSubject(
-              "appeal (claimant)",
-              submission.fineos_absence_id,
-              `${claim.first_name} ${claim.last_name}`
-            );
-            email.getEmails(
-              {
-                address: "gqzap.notifications@inbox.testmail.app",
-                subject: subjectClaimant,
-                messageWildcard: submission.fineos_absence_id,
-                timestamp_from: submission.timestamp_from,
-                debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
-              },
-              60000
-            );
-            cy.contains(submission.fineos_absence_id)
-          });
-        });
-      }
-    }
-  );
-  it(
-    "Check the Leave Admin email for the Cancellation notification.",
-    { retries: 0 },
-    () => {
-      cy.dependsOnPreviousPass([
-        submission,
-        cancellation,
-      ]);
-      cy.unstash<Submission>("submission").then((submission) => {
-        cy.unstash<ApplicationRequestBody>("claim").then((claim) => {
-          // The notification is using the same subject line as Appeals claimant.
-          const subjectEmployer = email.getNotificationSubject(
-            "appeal (claimant)",
-            submission.fineos_absence_id,
-            `${claim.first_name} ${claim.last_name}`
-          );
-          email.getEmails(
-            {
-              address: "gqzap.notifications@inbox.testmail.app",
-              subject: subjectEmployer,
-              messageWildcard: "The applicant’s approved time has been cancelled.",
-              timestamp_from: submission.timestamp_from,
-              debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
-            },
-            60000
-          )
-          .then(() => {
-            cy.contains(submission.fineos_absence_id);
-            cy.get(
-              `a[href*="/employers/applications/status/?absence_id=${submission.fineos_absence_id}"]`
-            );
-          });
-        });
-      });
-    }
-  );
   it(
     "Check the Leave Admin Portal for the Cancellation notice",
     { retries: 0 },
@@ -171,6 +105,7 @@ describe("Approval (notifications/notices)", () => {
       });
     }
   );
+
   it(
     "Check the Claimant Portal for the legal notice (Cancellation)",
     { retries: 0 },
@@ -194,6 +129,88 @@ describe("Approval (notifications/notices)", () => {
           .should("be.visible")
           .click({ force: true });
         portal.downloadLegalNotice(submission.fineos_absence_id);
+      });
+    }
+  );
+
+  itIf(
+    config("HAS_FINEOS_JANUARY_RELEASE") === "true",
+    "Check the Claimant email for the Cancellation notification.",
+    { retries: 0 },
+    () => {
+      {
+        cy.dependsOnPreviousPass([
+          submission,
+          cancellation,
+        ]);
+        cy.unstash<Submission>("submission").then((submission) => {
+          cy.unstash<ApplicationRequestBody>("claim").then((claim) => {
+            // The notification is using the same subject line as Appeals claimant.
+            const subjectClaimant = email.getNotificationSubject(
+              "appeal (claimant)",
+              submission.fineos_absence_id,
+              `${claim.first_name} ${claim.last_name}`
+            );
+            email
+              .getEmails(
+                {
+                  address: "gqzap.notifications@inbox.testmail.app",
+                  subject: subjectClaimant,
+                  messageWildcard: {
+                    pattern: `${submission.fineos_absence_id}.*Your approved time has been cancelled`
+                  },
+                  timestamp_from: submission.timestamp_from,
+                  debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
+                },
+                90000
+              )
+              .then(() => {
+                cy.get(
+                  `a[href$="/applications/status/?absence_case_id=${submission.fineos_absence_id}#view-notices"]`
+                );
+              });
+          });
+        });
+      }
+    }
+  );
+
+  itIf(
+    config("HAS_FINEOS_JANUARY_RELEASE") === "true",
+    "Check the Leave Admin email for the Cancellation notification.",
+    { retries: 0 },
+    () => {
+      cy.dependsOnPreviousPass([
+        submission,
+        cancellation,
+      ]);
+      cy.unstash<Submission>("submission").then((submission) => {
+        cy.unstash<ApplicationRequestBody>("claim").then((claim) => {
+          // The notification is using the same subject line as Appeals claimant.
+          const subjectEmployer = email.getNotificationSubject(
+            "appeal (claimant)",
+            submission.fineos_absence_id,
+            `${claim.first_name} ${claim.last_name}`
+          );
+          email.getEmails(
+            {
+              address: "gqzap.notifications@inbox.testmail.app",
+              subject: subjectEmployer,
+              messageWildcard: {
+                pattern: `${submission.fineos_absence_id}.*The applicant’s approved time has been cancelled`
+              },
+              timestamp_from: submission.timestamp_from,
+              debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
+            },
+            90000
+          )
+          .then(() => {
+            cy.contains(submission.fineos_absence_id);
+            cy.get(
+              `a[href*="/employers/applications/status/?absence_id=${submission.fineos_absence_id}"]`
+            );
+          });
+        });
       });
     }
   );

@@ -94,6 +94,7 @@ class ScenarioData:
     claim: Optional[Claim]
 
     absence_case_id: str
+    leave_request_id: int
 
     payment_c_value: Optional[str] = None
     payment_i_value: Optional[str] = None
@@ -101,10 +102,17 @@ class ScenarioData:
     additional_payment_c_value: Optional[str] = None
     additional_payment_i_value: Optional[str] = None
 
+    tax_withholding_payment_i_values: Optional[List[str]] = None
+
     additional_payment_absence_case_id: Optional[str] = None
+
+    absence_period_c_value: Optional[str] = None
+    absence_period_i_value: Optional[str] = None
 
     payment: Optional[Payment] = None
     additional_payment: Optional[Payment] = None
+
+    tax_withholding_payments: Optional[List[Payment]] = None
 
 
 @dataclass
@@ -252,6 +260,7 @@ def generate_scenario_data_in_db(
     scenario_descriptor: ScenarioDescriptor,
     ssn: str,
     fein: str,
+    leave_request_id: int,
     fineos_employer_id: str,
     fineos_notification_id: str,
     fineos_customer_number: str,
@@ -305,6 +314,7 @@ def generate_scenario_data_in_db(
         employee=employee,
         claim=claim,
         absence_case_id=absence_case_id,
+        leave_request_id=leave_request_id,
     )
 
 
@@ -346,6 +356,7 @@ def generate_scenario_dataset(
         # provided unique keys, sequences etc
         ssn = config.ssn_id_base + 1
         fein = config.fein_id_base + 1
+        leave_request_id = 100
 
         for scenario_with_count in config.scenarios_with_count:
             scenario_name = scenario_with_count.scenario_name
@@ -377,11 +388,17 @@ def generate_scenario_dataset(
                     fineos_employer_id=fineos_employer_id,
                     fineos_notification_id=fineos_notification_id,
                     fineos_customer_number=fineos_customer_number,
+                    leave_request_id=leave_request_id,
                     db_session=db_session,
                 )
 
                 scenario_data.payment_c_value = "7326"
                 scenario_data.payment_i_value = str(fake.unique.random_int())
+
+                scenario_data.absence_period_c_value = "14449"
+                scenario_data.absence_period_i_value = str(
+                    fake.unique.random_int(min=1_000_000, max=9_999_999)
+                )
 
                 if scenario_descriptor.has_additional_payment_in_period:
                     scenario_data.additional_payment_c_value = "7326"
@@ -398,11 +415,18 @@ def generate_scenario_dataset(
                         db_session,
                     )
 
+                if scenario_descriptor.is_tax_withholding_records_exists:
+                    scenario_data.tax_withholding_payment_i_values = [
+                        str(fake.unique.random_int()),
+                        str(fake.unique.random_int()),
+                    ]
+
                 scenario_dataset.append(scenario_data)
 
                 # increment sequences
                 ssn += 1
                 fein += 1
+                leave_request_id += 1
 
         return scenario_dataset
 

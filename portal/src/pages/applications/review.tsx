@@ -2,6 +2,11 @@ import {
   BankAccountType,
   PaymentPreferenceMethod,
 } from "../../models/PaymentPreference";
+import {
+  DocumentType,
+  findDocumentsByLeaveReason,
+  findDocumentsByTypes,
+} from "../../models/Document";
 import EmployerBenefit, {
   EmployerBenefitFrequency,
   EmployerBenefitType,
@@ -34,7 +39,6 @@ import withClaimDocuments, {
 import Address from "../../models/Address";
 import Alert from "../../components/core/Alert";
 import BackButton from "../../components/BackButton";
-import { DocumentType } from "../../models/Document";
 import Heading from "../../components/core/Heading";
 import HeadingPrefix from "../../components/core/HeadingPrefix";
 import Lead from "../../components/core/Lead";
@@ -48,8 +52,6 @@ import { Trans } from "react-i18next";
 import WeeklyTimeTable from "../../components/WeeklyTimeTable";
 import claimantConfigs from "../../flows/claimant";
 import convertMinutesToHours from "../../utils/convertMinutesToHours";
-import findDocumentsByLeaveReason from "../../utils/findDocumentsByLeaveReason";
-import findDocumentsByTypes from "../../utils/findDocumentsByTypes";
 import findKeyByValue from "../../utils/findKeyByValue";
 import formatDate from "../../utils/formatDate";
 import formatDateRange from "../../utils/formatDateRange";
@@ -154,7 +156,7 @@ export const Review = (
   // page with required fields.
   const [showNewFieldError, setShowNewFieldError] = useState(false);
   useEffect(() => {
-    const missingFields = getMissingRequiredFields(appErrors.items);
+    const missingFields = getMissingRequiredFields(appErrors);
     if (missingFields.length) {
       tracker.trackEvent("Missing required fields", {
         missingFields: JSON.stringify(missingFields),
@@ -167,7 +169,7 @@ export const Review = (
       }
     }
   }, [
-    appErrors.items,
+    appErrors,
     showNewFieldError,
     setShowNewFieldError,
     clearRequiredFieldErrors,

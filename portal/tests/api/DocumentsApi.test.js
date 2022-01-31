@@ -1,5 +1,5 @@
 import { makeFile, mockAuth } from "../test-utils";
-import DocumentCollection from "../../src/models/DocumentCollection";
+import ApiResourceCollection from "src/models/ApiResourceCollection";
 import DocumentsApi from "../../src/api/DocumentsApi";
 
 jest.mock("../../src/services/tracker");
@@ -140,10 +140,10 @@ describe("DocumentsApi", () => {
         );
       });
 
-      it("resolves with DocumentCollection instance", async () => {
+      it("resolves with ApiResourceCollection instance", async () => {
         const result = await documentsApi.getDocuments(applicationId);
         expect(result).toEqual({
-          documents: expect.any(DocumentCollection),
+          documents: expect.any(ApiResourceCollection),
         });
         expect(result.documents.items).toEqual([
           {

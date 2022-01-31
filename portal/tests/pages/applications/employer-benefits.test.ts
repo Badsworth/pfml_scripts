@@ -1,7 +1,8 @@
 import { MockBenefitsApplicationBuilder, renderPage } from "../../test-utils";
 import { screen, waitFor } from "@testing-library/react";
+import ApiResourceCollection from "../../../src/models/ApiResourceCollection";
 import { AppLogic } from "../../../src/hooks/useAppLogic";
-import BenefitsApplicationCollection from "../../../src/models/BenefitsApplicationCollection";
+import BenefitsApplication from "../../../src/models/BenefitsApplication";
 import EmployerBenefits from "../../../src/pages/applications/employer-benefits";
 import userEvent from "@testing-library/user-event";
 
@@ -25,7 +26,9 @@ const render = (
     addCustomSetup: (appLogic: AppLogic) => {
       appLogic.benefitsApplications.update = update;
       appLogic.benefitsApplications.benefitsApplications =
-        new BenefitsApplicationCollection([claimAttrs]);
+        new ApiResourceCollection<BenefitsApplication>("application_id", [
+          claimAttrs,
+        ]);
     },
     isLoggedIn: true,
   };

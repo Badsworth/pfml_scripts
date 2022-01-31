@@ -1,6 +1,7 @@
 import {
   BenefitsApplicationDocument,
   DocumentType,
+  findDocumentsByLeaveReason,
 } from "../../models/Document";
 import withBenefitsApplication, {
   WithBenefitsApplicationProps,
@@ -21,7 +22,6 @@ import React from "react";
 import { ReasonQualifier } from "../../models/BenefitsApplication";
 import Spinner from "../../components/core/Spinner";
 import { Trans } from "react-i18next";
-import findDocumentsByLeaveReason from "../../utils/findDocumentsByLeaveReason";
 import findKeyByValue from "../../utils/findKeyByValue";
 import { get } from "lodash";
 import hasDocumentsLoadError from "../../utils/hasDocumentsLoadError";
@@ -117,7 +117,7 @@ export const UploadCertification = (props: UploadCertificationProps) => {
       );
     }
   };
-  const fileErrors = appErrors.items.filter(
+  const fileErrors = appErrors.filter(
     (appErrorInfo) => appErrorInfo.meta && appErrorInfo.meta.file_id
   );
 

@@ -1,6 +1,6 @@
 import os
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, datetime
 
 import boto3
 import pytest
@@ -19,7 +19,8 @@ def cli_args(tmpdir, mock_s3_bucket):
 
     @dataclass
     class CliArgs:
-        historical_len: int = 0
+        start_date = datetime.today()
+        end_date = datetime.today()
         s3_bucket: str = s3_bucket_uri
 
     return CliArgs()
@@ -42,7 +43,7 @@ def test_full_generate_evaluate_new_eligibility(
         employee_qtr_wages=5500,
     )
 
-    def mock_new_relic(len):
+    def mock_new_relic(start_date, end_date):
         return [
             {
                 "leave_start_date": "2022-01-15",

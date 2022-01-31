@@ -88,12 +88,15 @@ module "api" {
 
   fineos_client_oauth2_client_id = "2e9vsuq808h3tu4rf9tr1efuh5"
 
+  pfml_email_address                  = "PFML_DoNotReply@eol.mass.gov"
+  bounce_forwarding_email_address     = "PFML_DoNotReply@eol.mass.gov"
+  bounce_forwarding_email_address_arn = "arn:aws:ses:us-east-1:498823821309:identity/PFML_DoNotReply@eol.mass.gov"
+
   service_now_base_url = "https://savilinxtrain.servicenowservices.com"
   portal_base_url      = "https://paidleave-trn2.dfml.eol.mass.gov"
 
   # dor_fineos_etl_schedule_expression               = "cron(5 * * * ? *)" # Hourly at :05 minutes past each hour
 
-  enable_pdf_document_compression  = "1"
   enable_document_multipart_upload = "1"
   enable_application_import        = "1"
 }

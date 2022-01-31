@@ -1,7 +1,15 @@
 import { fineos, fineosPages, portal } from "../../actions";
 import { ApplicationResponse } from "_api";
-import { isToday, addDays, format, differenceInHours } from "date-fns";
+import {
+  isToday,
+  addDays,
+  format,
+  differenceInHours,
+  getHours,
+} from "date-fns";
 import { config } from "../../actions/common";
+import { addBusinessDays } from "date-fns/esm";
+import { convertToTimeZone } from "date-fns-timezone";
 
 describe("Create a new caring leave claim in FINEOS and Suppress Correspondence check", () => {
   const credentials: Credentials = {
@@ -51,7 +59,7 @@ describe("Create a new caring leave claim in FINEOS and Suppress Correspondence 
             );
             adjudication.acceptLeavePlan();
           });
-          claimPage.approve("Completed");
+          claimPage.approve("Approved").triggerNotice("Designation Notice");
         });
       });
     });
@@ -61,17 +69,28 @@ describe("Create a new caring leave claim in FINEOS and Suppress Correspondence 
     portal.before();
     portal.login(credentials);
     cy.wait("@getApplications").then(({ response }) => {
-      cy.wait("@getDocuments").wait(300);
       const applications: ApplicationResponse[] = response?.body.data;
       const completedApplicationsBeforeToday: ApplicationResponse[] =
         applications.filter((application) => {
           if (!application.updated_time)
             throw Error("updated_time is undefined");
+          // Must use EST timezone here to avoid issues when running this spec across different timezones
+          // E.X running this test at 5PM PST will select a claim approved on the day the test is running, so no payments would appear
+          const estTime = getHours(
+            convertToTimeZone(application.updated_time, {
+              timeZone: "America/New_York",
+            })
+          );
+          // Claims approved after 1800 EST will be left out of nightly payment extracts
+          const PAYMENT_BATCH_HOUR = 18;
           return (
             differenceInHours(new Date(), new Date(application.updated_time)) >
-              24 && application.status === "Completed"
+              24 &&
+            estTime < PAYMENT_BATCH_HOUR &&
+            application.status === "Completed"
           );
         });
+
       cy.task("findFirstApprovedClaim", {
         applications: completedApplicationsBeforeToday,
         credentials,
@@ -89,12 +108,53 @@ describe("Create a new caring leave claim in FINEOS and Suppress Correspondence 
             paymentMethod: "Check",
             estimatedScheduledDate: "Sent",
             dateSent: format(
-              addDays(new Date(response.updated_at), 1),
+              addDays(
+                // Enforce using EST time
+                // Causes failures if local timezone is behind EST, and claim submission time in EST is past 23:59
+                convertToTimeZone(response.updated_at, {
+                  timeZone: "America/New_York",
+                }),
+                1
+              ),
               "M/dd/yyyy"
             ),
-            amount: "800.09",
+            amount: "1,662.12",
           },
         ]);
+      });
+    });
+  });
+
+  it("Provides a payment status 'Check back date' for the claimant to view payments ", () => {
+    portal.before();
+    portal.login(credentials);
+    cy.wait("@getApplications").then(({ response }) => {
+      const applications: ApplicationResponse[] = response?.body.data;
+      const completedApplicationsBeforeToday: ApplicationResponse[] =
+        applications.filter((application) => {
+          if (!application.updated_time)
+            throw Error("updated_time is undefined");
+          // a claim cannot be older than 24 hours and must be in a completed state for this spec
+          return (
+            differenceInHours(new Date(), new Date(application.updated_time)) <
+              24 && application.status === "Completed"
+          );
+        });
+      cy.task("findFirstApprovedClaim", {
+        applications: completedApplicationsBeforeToday,
+        credentials,
+      }).then((response) => {
+        if (!response) return;
+        if (!response.updated_at)
+          throw Error("Claim missing submission timestamp");
+        portal.claimantGoToClaimStatus(
+          response.fineos_absence_id as string,
+          false
+        );
+        portal.viewPaymentStatus();
+        portal.assertPaymentCheckBackDate(
+          addBusinessDays(new Date(response.updated_at), 3)
+        );
       });
     });
   });

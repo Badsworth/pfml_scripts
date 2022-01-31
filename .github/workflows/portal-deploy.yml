@@ -46,7 +46,7 @@ env:
   version: ${{ github.event.inputs.version || 'main' }}
   deployment_env: ${{ github.event.inputs.deployment_env || 'test' }}
   deploys_channel: "C01HEAJPE76" #mass-pfml-deploys-shared
-  nodeVersion: 15.x
+  nodeVersion: 16.x
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   terraformVersion: 0.14.7
   terraformBaseDir: ./infra/portal/environments/
@@ -581,6 +581,7 @@ jobs:
           workflow: e2e-cypress.yml
           token: ${{ secrets.PFML_DEVOPS_TOKEN }}
           wait-for-completion: true
+          display-workflow-run-url-interval: 30s
           ref: "main"
           inputs: |
             {

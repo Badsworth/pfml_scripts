@@ -130,8 +130,7 @@ describe("Approval (notifications/notices)", () => {
               messageWildcard: submission.fineos_absence_id,
               timestamp_from: submission.timestamp_from,
               debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
-            },
-            30000
+            }
           )
           .then(() => {
             cy.get(
@@ -163,8 +162,7 @@ describe("Approval (notifications/notices)", () => {
                 timestamp_from: submission.timestamp_from,
                 debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
               },
-              // Reduced timeout, since we have multiple tests that run prior to this.
-              60000
+              90000
             )
             .then(() => {
               const dob =
@@ -200,9 +198,7 @@ describe("Approval (notifications/notices)", () => {
             messageWildcard: submission.fineos_absence_id,
             timestamp_from: submission.timestamp_from,
             debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
-          },
-          // Reduced timeout, since we have multiple tests that run prior to this.
-          30000
+          }
         );
         cy.contains(submission.fineos_absence_id);
         cy.get(`a[href*="${config("PORTAL_BASEURL")}/applications"]`);

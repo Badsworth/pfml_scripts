@@ -25,9 +25,10 @@ on:
         - training
         - uat
         - breakfix
-        - infra-test
         - long
         - trn2
+        # Note: Infra-test is intentionally not E2E tested, as it shares a Fineos instance.
+        # - infra-test
       cypress_tags:
         description: "Cypress Run Tags"
         required: false
@@ -107,7 +108,7 @@ jobs:
   # Health check job. Ensures Fineos is online before proceeding with testing. This saves resources
   # when we know we're going to get a high failure rate.
   health-check:
-    name: Check for Healthy Services
+    name: Check Healthy Services ** ${{ github.event.inputs.target_environment }} **
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -128,7 +129,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        containers: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        containers: [1, 2, 3, 4, 5, 6, 7]
     steps:
       - uses: actions/checkout@v2
       - name: Setup Node

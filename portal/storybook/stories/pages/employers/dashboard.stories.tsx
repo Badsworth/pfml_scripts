@@ -1,7 +1,7 @@
 import Claim, { AbsenceCaseStatusType, ClaimEmployee } from "src/models/Claim";
 import React, { useState } from "react";
 import User, { UserLeaveAdministrator } from "src/models/User";
-import ClaimCollection from "src/models/ClaimCollection";
+import ApiResourceCollection from "src/models/ApiResourceCollection";
 import { Dashboard } from "src/pages/employers/dashboard";
 import { NullableQueryParams } from "src/utils/routeWithParams";
 import { Props } from "types/common";
@@ -156,6 +156,7 @@ export const Default = (
           25,
           (num) =>
             new Claim({
+              absence_periods: [],
               created_at: dayjs().subtract(num, "day").format("YYYY-MM-DD"),
               fineos_absence_id: `NTN-101-ABS-${num}`,
               claim_status: faker.helpers.randomize([
@@ -177,17 +178,13 @@ export const Default = (
                   2
                 )}-${faker.finance.account(7)}`,
               },
-              absence_period_end_date: "",
-              absence_period_start_date: "",
-              claim_type_description: "",
-              fineos_notification_id: "",
               managed_requirements: [],
             })
         );
 
   const appLogic = useMockableAppLogic({
     claims: {
-      claims: new ClaimCollection(claims),
+      claims: new ApiResourceCollection<Claim>("fineos_absence_id", claims),
       isLoadingClaims: false,
       paginationMeta: {
         page_offset: 1,
