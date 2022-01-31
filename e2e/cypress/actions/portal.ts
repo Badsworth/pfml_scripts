@@ -1450,8 +1450,9 @@ function reportOtherLeavesAndBenefits(claim: ApplicationRequestBody): void {
 
   cy.contains(
     "form",
-    // @bc: This title was changed: "... your PFML leave." -> "... your paid leave from PFML."
-    /Tell us about the accrued paid leave you'll use during your (paid|PFML) (leave.|leave from PFML.)/
+    // @bc: Old title: "Tell us about the accrued paid leave you'll use during your paid leave from PFML."
+    // @bc: Current title: "Tell us about the employer-sponsored paid time off you’ll use during your leave period"
+    /Tell us about the (accrued paid leave|employer-sponsored paid time off) you('|’)ll use during your (leave period.|paid leave from PFML.)/
   ).submit();
 
   cy.contains(
