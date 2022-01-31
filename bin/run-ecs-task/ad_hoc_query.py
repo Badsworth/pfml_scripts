@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 import json
+import pwd
 import os
 import logging
 from datetime import datetime, timedelta
@@ -251,7 +252,7 @@ def list_fineos_s3_contents(environment: dict) -> dict:
         "./run-task.sh",
         f"{mass_env}",
         "fineos-bucket-tool",
-        "FIRST.LAST",
+        pwd.getpwuid(os.getuid()).pw_name,
         "fineos-bucket-tool",
         "--list",
         f"s3://fin-{fineos_bucket}-data-export/{fineos_env}/dataExtracts/AdHocExtract/",
@@ -391,7 +392,7 @@ def copy_target_file_from_fineos(target_file_prefix: str, environment: dict) -> 
         "./run-task.sh",
         f"{mass_env}",
         "fineos-bucket-tool",
-        "FIRST.LAST",
+        pwd.getpwuid(os.getuid()).pw_name,
         "fineos-bucket-tool",
         "--to",
         f"s3://massgov-pfml-{mass_env}-agency-transfer/payments/{file_name}",
