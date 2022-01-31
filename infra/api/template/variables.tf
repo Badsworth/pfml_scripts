@@ -259,6 +259,42 @@ variable "portal_base_url" {
   default     = ""
 }
 
+variable "admin_portal_base_url" {
+  description = "Admin Portal base URL for Azure log in and redirect URLs."
+  type        = string
+  default     = ""
+}
+
+variable "azure_ad_authority_domain" {
+  description = "The main azure domain used for public keys and logging out."
+  type        = string
+  default     = ""
+}
+
+variable "azure_ad_client_id" {
+  description = "Used to associate with the Azure AD application."
+  type        = string
+  default     = ""
+}
+
+variable "azure_ad_client_secret" {
+  description = "Used to generate the access token."
+  type        = string
+  default     = ""
+}
+
+variable "azure_ad_parent_group" {
+  description = "The main authentication group, which represents either prod or non-prod."
+  type        = string
+  default     = ""
+}
+
+variable "azure_ad_tenant_id" {
+  description = "Identifies the Azure AD tenant to use for authentication. AKA directory ID."
+  type        = string
+  default     = ""
+}
+
 variable "enable_application_fraud_check" {
   description = "Enable the fraud check for application submission"
   type        = string

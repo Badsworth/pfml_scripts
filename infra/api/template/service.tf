@@ -80,6 +80,11 @@ resource "aws_ecs_task_definition" "app" {
       bounce_forwarding_email_address_arn        = var.bounce_forwarding_email_address_arn
       service_now_base_url                       = var.service_now_base_url
       portal_base_url                            = var.portal_base_url
+      admin_portal_base_url                      = var.admin_portal_base_url
+      azure_ad_authority_domain                  = var.azure_ad_authority_domain
+      azure_ad_client_id                         = var.azure_ad_client_id
+      azure_ad_parent_group                      = var.azure_ad_parent_group
+      azure_ad_tenant_id                         = var.azure_ad_tenant_id
       enable_application_fraud_check             = var.enable_application_fraud_check
       release_version                            = var.release_version
       new_plan_proofs_active_at                  = var.new_plan_proofs_active_at

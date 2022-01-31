@@ -55,7 +55,9 @@ module "api" {
     "https://lk64ifbnn4.execute-api.us-east-1.amazonaws.com",
     "https://dijouhh49zeeb.cloudfront.net",
     "https://paidleave-api-performance.mass.gov",
-    "https://paidleave-performance.mass.gov"
+    "https://paidleave-performance.mass.gov",
+    # Allow requests from the Admin Portal
+    "https://paidleave-admin-performance.dfml.eol.mass.gov",
   ]
 
   cognito_user_pool_arn       = "arn:aws:cognito-idp:us-east-1:498823821309:userpool/us-east-1_0jv6SlemT"
@@ -83,6 +85,7 @@ module "api" {
   bounce_forwarding_email_address_arn                 = "arn:aws:ses:us-east-1:498823821309:identity/PFML_DoNotReply@eol.mass.gov"
   service_now_base_url                                = "https://savilinxperf.servicenowservices.com"
   portal_base_url                                     = "https://paidleave-performance.mass.gov"
+  admin_portal_base_url                               = "https://paidleave-admin-performance.dfml.eol.mass.gov"
   enable_application_fraud_check                      = "0"
   release_version                                     = var.release_version
 
