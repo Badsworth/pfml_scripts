@@ -129,7 +129,7 @@ class TestUpdateUser:
         update_user(test_db_session, user, update_request)
 
         self.mock_logger.info.assert_any_call(
-            "MFA updated for user", extra={"mfa_preference": "SMS", "updated_by": "User"}
+            "MFA updated for user", extra={"mfa_preference": "SMS", "updated_by": "user"}
         )
 
     @mock.patch("massgov.pfml.api.services.users.send_mfa_disabled_email")
@@ -147,7 +147,11 @@ class TestUpdateUser:
 
         self.mock_logger.info.assert_any_call(
             "MFA disabled for user",
-            extra={"last_enabled_at": mock.ANY, "time_since_enabled_in_sec": mock.ANY},
+            extra={
+                "last_enabled_at": mock.ANY,
+                "time_since_enabled_in_sec": mock.ANY,
+                "updated_by": "user",
+            },
         )
         assert (
             self.mock_logger.info.call_args.kwargs["extra"]["last_enabled_at"].strftime("%Y-%m-%d")
