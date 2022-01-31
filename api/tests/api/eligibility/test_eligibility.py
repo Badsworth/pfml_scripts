@@ -1,17 +1,18 @@
 #
 # Tests for massgov.pfml.api.eligibility.
 #
-
 from datetime import date, timedelta
 from decimal import Decimal
 from typing import List
 from uuid import UUID, uuid4
 
 import pytest
+from freezegun import freeze_time
 
 from massgov.pfml import db
-from massgov.pfml.api.eligibility import eligibility
+from massgov.pfml.api.eligibility import eligibility, wage
 from massgov.pfml.api.eligibility.benefit_year_dates import get_benefit_year_dates
+from massgov.pfml.api.eligibility.eligibility_date import eligibility_date
 from massgov.pfml.api.eligibility.wage import get_wage_calculator
 from massgov.pfml.db.models.employees import (
     AbsencePeriod,
@@ -30,6 +31,7 @@ from massgov.pfml.db.models.factories import (
     TaxIdentifierFactory,
     WagesAndContributionsFactory,
 )
+from massgov.pfml.util.datetime.quarter import Quarter
 
 
 def test_compute_financial_eligibility_no_data(test_db_session):
@@ -235,6 +237,102 @@ def test_scenario_A_case_B(test_db_session, initialize_factories_session):
         state_average_weekly_wage=Decimal("1431.66"),
         unemployment_minimum=Decimal("5100.00"),
         employer_average_weekly_wage=Decimal("615.38"),
+    )
+
+
+@freeze_time("2021-09-13")
+def test_scenario_B_case_G(test_db_session, initialize_factories_session):
+    """
+    Scenario is listed in the spreadsheet linked above.
+    In this scenario the application is submitted 2021 Q3 after the leave has
+    started 2021 Q2. The last recorded wages were in 2020 Q3.
+    """
+
+    employer_fein = 716779225
+    tax_id = TaxIdentifierFactory.create(tax_identifier="088574541")
+    employee = EmployeeFactory.create(tax_identifier=tax_id)
+    employer = EmployerFactory.create(employer_fein=employer_fein)
+    application_submitted_date = date(2021, 9, 13)
+    leave_start_date = date(2021, 6, 4)
+    employee_id = employee.employee_id
+    employer_id = employer.employer_id
+    employment_status = "Employed"
+
+    start_qtr = Quarter(2019, 4)
+    current_qtr = start_qtr
+    earnings = [6264.50, 4333.07, 3177.13, 24.78, 0, 0, 0, 0]
+    for amount in earnings:
+        WagesAndContributionsFactory.create(
+            employee=employee,
+            employer=employer,
+            filing_period=current_qtr.as_date(),
+            employee_qtr_wages=amount,
+        )
+        current_qtr = current_qtr.next_quarter()
+
+    benefit_year_dates = get_benefit_year_dates(leave_start_date)
+    effective_date = eligibility_date(benefit_year_dates.start_date, application_submitted_date)
+
+    # To determine the effective date: if the leave start date is in the future,
+    # choose application submitted date otherwise choose the leave start date.
+    assert effective_date == date(2021, 5, 30)  # Q2 2021
+    assert effective_date == benefit_year_dates.start_date
+
+    # To get the base period we look at the the employee's quarterly wage history.
+    # If the effective quarter has wages, then the base period ends on the effective quarter
+    # If the quarter before the effective quarter has wages, then the base period ends on the quarter before the effective quarter
+    # Otherwise the base period ends two quarters previous the effective quarter
+    wage_calculator = wage.get_wage_calculator(employee_id, effective_date, test_db_session)
+    base_period_quarters = wage_calculator.base_period_quarters
+
+    # Wage calculator determined that the base period
+    # starts on Q1 2020
+    assert base_period_quarters[-1].year == 2020
+    assert base_period_quarters[-1].quarter == 1
+
+    # and ends on Q4 2020
+    assert base_period_quarters[0].year == 2020
+    assert base_period_quarters[0].quarter == 4
+
+    # Given that Q1 2020 and Q4 2020 are the range over which we are looking
+    # for wages, Financial eligibility calculations will use:
+    # Q1 $4333.07, Q2 $3177.13, Q3 $24.78, Q4 $0
+    fe_result = eligibility.compute_financial_eligibility(
+        test_db_session,
+        employee_id,
+        employer_id,
+        employer_fein,
+        leave_start_date,
+        application_submitted_date,
+        employment_status,
+    )
+
+    assert fe_result == eligibility.EligibilityResponse(
+        financially_eligible=True,
+        description="Financially eligible",
+        total_wages=Decimal("7534.98"),
+        state_average_weekly_wage=Decimal("1487.78"),
+        unemployment_minimum=Decimal("5400.00"),
+        employer_average_weekly_wage=Decimal("288.85"),
+    )
+
+    by_result = eligibility.retrieve_financial_eligibility(
+        test_db_session,
+        employee_id,
+        employer_id,
+        employer_fein,
+        leave_start_date,
+        application_submitted_date,
+        employment_status,
+    )
+
+    assert by_result == eligibility.EligibilityResponse(
+        financially_eligible=True,
+        description="Financially eligible",
+        total_wages=Decimal("7534.98"),
+        state_average_weekly_wage=Decimal("1487.78"),
+        unemployment_minimum=Decimal("5400.00"),
+        employer_average_weekly_wage=Decimal("288.85"),
     )
 
 
