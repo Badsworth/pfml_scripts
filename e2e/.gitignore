@@ -9,3 +9,4 @@ dist
 scripts/*
 !scripts/*.sh
 nerdpack/dist
+.eslintcache

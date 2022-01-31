@@ -91,7 +91,7 @@ class EnvSummaryView extends React.Component {
           }
 
           let runIds = this.state.envs.reduce(function (r, a) {
-            if(byEnv[a]?.runId) {
+            if (byEnv[a]?.runId) {
               r.push(byEnv[a].runId);
             }
             return r;
