@@ -3,8 +3,8 @@ import React from "react";
 import ReviewHeading from "../ReviewHeading";
 import ReviewRow from "../ReviewRow";
 import formatDateRange from "../../utils/formatDateRange";
-import { isFeatureEnabled } from "../../services/featureFlags";
 import { useTranslation } from "../../locales/i18n";
+
 interface EmployeeInformationProps {
   claim: EmployerClaim;
 }
@@ -26,32 +26,9 @@ const EmployeeInformation = (props: EmployeeInformationProps) => {
     tax_identifier,
     residential_address: { city, line_1, line_2, state, zip },
   } = props.claim;
-  const showMultipleLeave = isFeatureEnabled("employerShowMultiLeave");
 
   return (
     <React.Fragment>
-      {!showMultipleLeave && !!employer_dba && (
-        <ReviewRow
-          level="2"
-          label={t(
-            "components.employersEmployeeInformation.organizationNameLabel"
-          )}
-          noBorder
-        >
-          {employer_dba}
-        </ReviewRow>
-      )}
-      {!showMultipleLeave && (
-        <ReviewRow
-          level="2"
-          label={t(
-            "components.employersEmployeeInformation.employerIdentifierLabel"
-          )}
-          noBorder
-        >
-          {employer_fein}
-        </ReviewRow>
-      )}
       <ReviewHeading level="2">
         {t("components.employersEmployeeInformation.header")}
       </ReviewHeading>
@@ -61,7 +38,7 @@ const EmployeeInformation = (props: EmployeeInformationProps) => {
       >
         {first_name} {middle_name} {last_name}
       </ReviewRow>
-      {showMultipleLeave && !!employer_dba && (
+      {!!employer_dba && (
         <ReviewRow
           level="3"
           label={t(
@@ -71,16 +48,14 @@ const EmployeeInformation = (props: EmployeeInformationProps) => {
           {employer_dba}
         </ReviewRow>
       )}
-      {showMultipleLeave && (
-        <ReviewRow
-          level="3"
-          label={t(
-            "components.employersEmployeeInformation.employerIdentifierLabel"
-          )}
-        >
-          {employer_fein}
-        </ReviewRow>
-      )}
+      <ReviewRow
+        level="3"
+        label={t(
+          "components.employersEmployeeInformation.employerIdentifierLabel"
+        )}
+      >
+        {employer_fein}
+      </ReviewRow>
       <ReviewRow
         level="3"
         label={t("components.employersEmployeeInformation.addressLabel")}
