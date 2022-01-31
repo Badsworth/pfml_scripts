@@ -52,13 +52,15 @@ def _update_mfa_preference(
     # Keep a copy of the last updated timestamp before we update it. This is used later for logging
     # feature metrics
     last_updated_at = user.mfa_delivery_preference_updated_at
+    updated_by = updated_by.lower()
+
     _update_mfa_preference_audit_trail(db_session, user, updated_by)
 
     log_attributes = {"mfa_preference": value, "updated_by": updated_by}
     logger.info("MFA updated for user", extra=log_attributes)
 
     if value == "Opt Out" and existing_mfa_preference is not None:
-        _handle_mfa_disabled(user, last_updated_at)
+        _handle_mfa_disabled(user, last_updated_at, updated_by)
 
 
 def _update_mfa_preference_audit_trail(db_session: db.Session, user: User, updated_by: str) -> None:
@@ -68,7 +70,7 @@ def _update_mfa_preference_audit_trail(db_session: db.Session, user: User, updat
     mfa_delivery_preference_updated_at = "mfa_delivery_preference_updated_at"
     setattr(user, mfa_delivery_preference_updated_at, now)
 
-    if updated_by.lower() == "admin":
+    if updated_by == "admin":
         mfa_updated_by = db_lookups.by_value(db_session, LkMFADeliveryPreferenceUpdatedBy, "Admin")
     else:
         mfa_updated_by = db_lookups.by_value(db_session, LkMFADeliveryPreferenceUpdatedBy, "User")
@@ -77,7 +79,7 @@ def _update_mfa_preference_audit_trail(db_session: db.Session, user: User, updat
     setattr(user, mfa_delivery_preference_updated_by, mfa_updated_by)
 
 
-def _handle_mfa_disabled(user: User, last_enabled_at: Optional[datetime]) -> None:
+def _handle_mfa_disabled(user: User, last_enabled_at: Optional[datetime], updated_by: str) -> None:
     """Helper method for handling necessary actions after MFA is disabled for a user (send email, logging, etc)"""
     # These values should always be set by the time a user disables MFA but the
     # linter doesn't know that. This prevents a linter failure
@@ -92,8 +94,10 @@ def _handle_mfa_disabled(user: User, last_enabled_at: Optional[datetime]) -> Non
     log_attributes = {
         "last_enabled_at": last_enabled_at,
         "time_since_enabled_in_sec": time_since_enabled_in_sec,
+        "updated_by": updated_by,
     }
     logger.info("MFA disabled for user", extra=log_attributes)
+
     try:
         send_mfa_disabled_email(user.email_address, user.mfa_phone_number_last_four())
     except Exception as error:
