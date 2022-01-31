@@ -59,11 +59,14 @@ module "api" {
   cors_origins = [
     "https://paidleave-breakfix.eol.mass.gov",
     "https://paidleave-api-breakfix.eol.mass.gov",
+    # Allow requests from the Admin Portal
+    "https://paidleave-admin-breakfix.dfml.eol.mass.gov",
     "https://l296x0cj1m.execute-api.us-east-1.amazonaws.com"
   ]
   enable_application_fraud_check = "0"
   release_version                = var.release_version
   portal_base_url                = "https://paidleave-breakfix.eol.mass.gov"
+  admin_portal_base_url          = "https://paidleave-admin-breakfix.dfml.eol.mass.gov"
 
   cognito_user_pool_arn       = "arn:aws:cognito-idp:us-east-1:498823821309:userpool/us-east-1_ZM6ztWTcs"
   cognito_user_pool_id        = "us-east-1_ZM6ztWTcs"

@@ -1,5 +1,5 @@
-import { AzurePermission, AzureGroup } from "./settings";
-
+import Settings from "./pages/settings";
+import { AzurePermission, AzureGroup } from "./pages/settings";
 /** Database table for azure groups: lk_azure_group */
 export const mockLkAzureGroup = [
   {

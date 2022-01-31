@@ -5,7 +5,7 @@ import { isEqual } from "lodash";
 import React, { useEffect, useState } from "react";
 //import { ApiResponse, PermissionsResponse, AzureGroupsResponse, getPermissions, patchPermissions, getAzureGroups } from "../api";
 // @todo: Remove when API is functional
-import { getAzureGroups, getAzurePermissions } from "./settingsData";
+import { getAzureGroups, getAzurePermissions } from "./../settingsData";
 import { StaticPropsPermissions } from "../menus";
 
 export type AzureGroup = {

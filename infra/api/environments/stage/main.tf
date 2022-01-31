@@ -51,6 +51,9 @@ module "api" {
     "https://paidleave-api-stage.mass.gov",
     "https://hxrjel1aeb.execute-api.us-east-1.amazonaws.com",
 
+    # Allow requests from the Admin Portal
+    "https://paidleave-admin-stage.dfml.eol.mass.gov",
+
     # Since we're going to be pointing the Portal test environment to API staging
     # as well, allow requests to come from that origin.
     "https://paidleave-test.mass.gov",
@@ -85,6 +88,7 @@ module "api" {
   bounce_forwarding_email_address                     = "PFML_DoNotReply@eol.mass.gov"
   bounce_forwarding_email_address_arn                 = "arn:aws:ses:us-east-1:498823821309:identity/PFML_DoNotReply@eol.mass.gov"
   portal_base_url                                     = "https://paidleave-stage.mass.gov"
+  admin_portal_base_url                               = "https://paidleave-admin-stage.dfml.eol.mass.gov"
   fineos_aws_iam_role_arn                             = "arn:aws:iam::666444232783:role/somdev-IAMRoles-CustomerAccountAccessRole-BF05IBJSG74B"
   fineos_aws_iam_role_external_id                     = "12345"
   enable_application_fraud_check                      = "0"

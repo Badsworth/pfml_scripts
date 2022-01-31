@@ -59,6 +59,8 @@ module "api" {
   cors_origins = [
     "https://paidleave-cps-preview.eol.mass.gov",
     "https://paidleave-api-cps-preview.eol.mass.gov",
+    # Allow requests from the Admin Portal
+    "https://paidleave-admin-cps-preview.dfml.eol.mass.gov",
   ]
   enable_application_fraud_check = "0"
   release_version                = var.release_version
@@ -96,7 +98,8 @@ module "api" {
   bounce_forwarding_email_address_arn = "arn:aws:ses:us-east-1:498823821309:identity/PFML_DoNotReply@eol.mass.gov"
 
   # TODO: Connect to ServiceNow.
-  service_now_base_url = "https://savilinxstage.servicenowservices.com"
+  service_now_base_url  = "https://savilinxstage.servicenowservices.com"
+  admin_portal_base_url = "https://paidleave-admin-cps-preview.dfml.eol.mass.gov"
 
   enable_document_multipart_upload = "1"
   enable_application_import        = "1"

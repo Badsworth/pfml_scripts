@@ -62,6 +62,8 @@ module "api" {
   cors_origins = [
     "https://paidleave-trn2.dfml.eol.mass.gov",
     "https://paidleave-api-trn2.dfml.eol.mass.gov",
+    # Allow requests from the Admin Portal
+    "https://paidleave-admin-trn2.dfml.eol.mass.gov",
   ]
   enable_application_fraud_check = "0"
   release_version                = var.release_version
@@ -88,6 +90,7 @@ module "api" {
 
   fineos_client_oauth2_client_id = "2e9vsuq808h3tu4rf9tr1efuh5"
 
+  admin_portal_base_url               = "https://paidleave-admin-trn2.dfml.eol.mass.gov"
   pfml_email_address                  = "PFML_DoNotReply@eol.mass.gov"
   bounce_forwarding_email_address     = "PFML_DoNotReply@eol.mass.gov"
   bounce_forwarding_email_address_arn = "arn:aws:ses:us-east-1:498823821309:identity/PFML_DoNotReply@eol.mass.gov"

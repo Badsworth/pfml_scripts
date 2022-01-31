@@ -1,11 +1,22 @@
 {
-  "test": {
-    "baseUrl": "https://paidleave-api-test.mass.gov/api/v1"
+  "breakfix": {
+    "baseUrl": "https://paidleave-api-breakfix.eol.mass.gov/api/v1"
   },
-  "stage": {
-    "baseUrl": "https://paidleave-api-stage.mass.gov/api/v1"
+  "cps-preview": {
+    "baseUrl": "https://paidleave-api-cps-preview.eol.mass.gov/api/v1"
   },
-  "development": {
-    "baseUrl": "http://localhost:1550/v1"
-  }
+  "development": { "baseUrl": "http://localhost:1550/v1" },
+  "infra-test": {
+    "baseUrl": "https://paidleave-api-infra-test.dfml.eol.mass.gov/api/v1"
+  },
+  "long": { "baseUrl": "https://paidleave-api-long.dfml.eol.mass.gov/api/v1" },
+  "performance": {
+    "baseUrl": "https://paidleave-api-performance.mass.gov/api/v1"
+  },
+  "prod": { "baseUrl": "https://paidleave-api.mass.gov/api/v1" },
+  "stage": { "baseUrl": "https://paidleave-api-stage.mass.gov/api/v1" },
+  "test": { "baseUrl": "https://paidleave-api-test.mass.gov/api/v1" },
+  "training": { "baseUrl": "https://paidleave-api-training.mass.gov/api/v1" },
+  "trn2": { "baseUrl": "https://paidleave-api-trn2.dfml.eol.mass.gov/api/v1" },
+  "uat": { "baseUrl": "https://paidleave-api-uat.mass.gov/api/v1" }
 }

@@ -27,19 +27,19 @@ output "infra_admin_sso_arn" {
 #       https://lwd.atlassian.net/wiki/spaces/DD/pages/272072807/Tagging+Standards.
 output "environment_tags" {
   value = {
-    "test"        = "test"
-    "stage"       = "stage"
-    "prod"        = "prod"
-    "nonprod"     = "stage"
-    "performance" = "qa"
-    "training"    = "train"
-    "uat"         = "uat"
+    "adhoc"       = "test"
     "breakfix"    = "qa"
     "cps-preview" = "qa"
-    "adhoc"       = "test"
-    "long"        = "test"
     "infra-test"  = "test"
-    "trn2"        = "train"
+    "long"        = "test"
+    "nonprod"     = "stage"
+    "performance" = "qa"
+    "prod"        = "prod"
+    "stage"       = "stage"
+    "test"        = "test"
+    "training"    = "train"
+    "trn2"        = "trn2"
+    "uat"         = "uat"
   }
 }
 
@@ -50,17 +50,17 @@ output "environment_tags" {
 #
 output "environment_shorthand" {
   value = {
-    "test"        = "test"
-    "stage"       = "stage"
-    "prod"        = "prod"
-    "performance" = "perf"
-    "training"    = "train"
-    "uat"         = "uat"
     "breakfix"    = "bfx"
     "cps-preview" = "cpspr"
-    "long"        = "long"
     "infra-test"  = "itest"
+    "long"        = "long"
+    "performance" = "perf"
+    "prod"        = "prod"
+    "stage"       = "stage"
+    "test"        = "test"
+    "training"    = "train"
     "trn2"        = "trn2"
+    "uat"         = "uat"
   }
 }
 
@@ -72,17 +72,17 @@ output "environment_shorthand" {
 #
 output "smartronix_environment_tags" {
   value = {
-    "test"        = "Development"
-    "stage"       = "Staging"
-    "prod"        = "Production"
-    "performance" = "QA"
-    "training"    = "Sandbox"
-    "uat"         = "UAT"
+    "adhoc"       = "Adhoc"
     "breakfix"    = "Breakfix"
     "cps-preview" = "CPSPreview"
-    "adhoc"       = "Adhoc"
-    "long"        = "LONG"
     "infra-test"  = "Sandbox"
+    "long"        = "LONG"
+    "prod"        = "Production"
+    "performance" = "QA"
+    "stage"       = "Staging"
+    "test"        = "Development"
+    "training"    = "Sandbox"
+    "uat"         = "UAT"
     "trn2"        = "TRN2"
   }
 }
@@ -113,32 +113,47 @@ output "nonprod_admin_roles" {
 #
 output "domains" {
   value = {
-    "infra-test"  = "paidleave-infra-test.dfml.eol.mass.gov",
-    "test"        = "paidleave-test.mass.gov",
-    "stage"       = "paidleave-stage.mass.gov",
-    "performance" = "paidleave-performance.mass.gov",
-    "training"    = "paidleave-training.mass.gov",
     "breakfix"    = "paidleave-breakfix.eol.mass.gov",
     "cps-preview" = "paidleave-cps-preview.eol.mass.gov",
-    "uat"         = "paidleave-uat.mass.gov",
+    "long"        = "paidleave-long.dfml.eol.mass.gov"
+    "performance" = "paidleave-performance.mass.gov",
     "prod"        = "paidleave.mass.gov",
-    "long"        = "paidleave-long.dfml.eol.mass.gov",
-    "trn2"        = "paidleave-trn2.dfml.eol.mass.gov"
+    "infra-test"  = "paidleave-infra-test.dfml.eol.mass.gov",
+    "stage"       = "paidleave-stage.mass.gov",
+    "test"        = "paidleave-test.mass.gov",
+    "training"    = "paidleave-training.mass.gov",
+    "uat"         = "paidleave-uat.mass.gov",
+  }
+}
+
+output "admin_domains" {
+  value = {
+    "breakfix"    = "paidleave-admin-breakfix.dfml.eol.mass.gov",
+    "cps-preview" = "paidleave-admin-cpspreview.dfml.eol.mass.gov",
+    "infra-test"  = "paidleave-admin-infra-test.dfml.eol.mass.gov",
+    "long"        = "paidleave-admin-long.dfml.eol.mass.gov",
+    "performance" = "paidleave-admin-performance.dfml.eol.mass.gov",
+    "prod"        = "paidleave-admin.dfml.eol.mass.gov",
+    "stage"       = "paidleave-admin-stage.dfml.eol.mass.gov",
+    "test"        = "paidleave-admin-test.dfml.eol.mass.gov",
+    "training"    = "paidleave-admin-training.dfml.eol.mass.gov",
+    "trn2"        = "paidleave-admin-trn2.dfml.eol.mass.gov"
+    "uat"         = "paidleave-admin-uat.dfml.eol.mass.gov",
   }
 }
 
 output "api_domains" {
   value = {
-    "infra-test"  = "paidleave-api-infra-test.dfml.eol.mass.gov",
-    "test"        = "paidleave-api-test.mass.gov",
-    "stage"       = "paidleave-api-stage.mass.gov",
-    "performance" = "paidleave-api-performance.mass.gov",
-    "training"    = "paidleave-api-training.mass.gov",
     "breakfix"    = "paidleave-api-breakfix.eol.mass.gov",
     "cps-preview" = "paidleave-api-cps-preview.eol.mass.gov",
-    "uat"         = "paidleave-api-uat.mass.gov",
+    "infra-test"  = "paidleave-api-infra-test.dfml.eol.mass.gov",
+    "long"        = "paidleave-api-long.dfml.eol.mass.gov"
+    "performance" = "paidleave-api-performance.mass.gov",
     "prod"        = "paidleave-api.mass.gov",
-    "long"        = "paidleave-api-long.dfml.eol.mass.gov",
+    "stage"       = "paidleave-api-stage.mass.gov",
+    "test"        = "paidleave-api-test.mass.gov",
+    "training"    = "paidleave-api-training.mass.gov",
+    "uat"         = "paidleave-api-uat.mass.gov",
     "trn2"        = "paidleave-api-trn2.dfml.eol.mass.gov"
   }
 }
@@ -148,17 +163,35 @@ output "cert_domains" {
   # you cannot lookup certs by a SAN, so we lookup based on the first domain
   # that is specified in the certificate.
   value = {
-    "infra-test"  = "paidleave-infra-test.dfml.eol.mass.gov",
-    "test"        = "paidleave-test.mass.gov",
-    "stage"       = "paidleave-test.mass.gov",
-    "performance" = "paidleave-performance.mass.gov",
-    "training"    = "paidleave-performance.mass.gov",
     "breakfix"    = "paidleave-breakfix.eol.mass.gov",
     "cps-preview" = "paidleave-breakfix.eol.mass.gov",
-    "uat"         = "paidleave-uat.mass.gov",
+    "infra-test"  = "paidleave-infra-test.dfml.eol.mass.gov",
+    "long"        = "paidleave-long.dfml.eol.mass.gov"
+    "performance" = "paidleave-performance.mass.gov",
     "prod"        = "paidleave.mass.gov",
-    "long"        = "paidleave-long.dfml.eol.mass.gov",
-    "trn2"        = "paidleave-trn2.dfml.eol.mass.gov"
+    "stage"       = "paidleave-test.mass.gov",
+    "test"        = "paidleave-test.mass.gov",
+    "training"    = "paidleave-performance.mass.gov",
+    "uat"         = "paidleave-uat.mass.gov",
+  }
+}
+
+# Mapping of admin portal environments to certificate domain lookups
+output "admin_portal_cert_domains" {
+  # you cannot lookup certs by a SAN, so we lookup based on the first domain
+  # that is specified in the certificate.
+  value = {
+    "breakfix"    = "paidleave-admin-breakfix.dfml.eol.mass.gov",
+    "cps-preview" = "paidleave-admin-cps-preview.dfml.eol.mass.gov",
+    "infra-test"  = "paidleave-admin-infra-test.dfml.eol.mass.gov",
+    "long"        = "paidleave-admin-long.dfml.eol.mass.gov",
+    "performance" = "paidleave-admin-performance.dfml.eol.mass.gov",
+    "prod"        = "paidleave-admin.dfml.eol.mass.gov",
+    "stage"       = "paidleave-admin-stage.dfml.eol.mass.gov",
+    "training"    = "paidleave-admin-training.dfml.eol.mass.gov"
+    "trn2"        = "paidleave-admin-trn2.dfml.eol.mass.gov",
+    "test"        = "paidleave-admin-test.dfml.eol.mass.gov",
+    "uat"         = "paidleave-admin-test.dfml.eol.mass.gov",
   }
 }
 
@@ -181,18 +214,35 @@ output "bucket_replication_environment" {
 # Currently only used in aws_ecs_task_definition.ecs_tasks_1099 resource
 output "env_var_mappings" {
   value = {
-    "test"        = "Test"
-    "stage"       = "Staging"
-    "prod"        = "Production"
-    "performance" = "Performance"
-    "training"    = "Training"
-    "uat"         = "UAT"
     "breakfix"    = "Breakfix"
     "cps-preview" = "CPSPreview"
-    "long"        = "Long"
     "infra-test"  = "Test"
+    "long"        = "Long"
+    "performance" = "Performance"
+    "prod"        = "Production"
+    "stage"       = "Staging"
+    "test"        = "Test"
+    "training"    = "Training"
+    "uat"         = "UAT"
     "trn2"        = "Training"
   }
+}
+
+# Master list of IPs to whitelist for the Admin Portal WAF
+output "admin_portal_waf_whitelist" {
+  value = [
+    "72.234.3.211/32",   # Last Call Media WFH IP
+    "86.107.55.213/32",  # Last Call Media WFH IP
+    "75.134.71.16/32",   # Last Call Media WFH IP
+    "68.204.24.240/32",  # Last Call Media WFH IP - Tyler
+    "68.84.12.117/32",   # Last Call Media WFH IP - Niki Ramlogan
+    "47.200.176.201/32", # Ben WFH
+    "47.199.161.99/32",  # Jamie WFH
+    "76.202.246.67/32",  # Mark WFH
+    "70.122.162.186/32", # Jake WFH
+    "35.174.218.119/32", # PFML nat-0e7778fcf7a7fc067
+    "3.234.51.136/32"    # PFML nat-022bece54348228b5
+  ]
 }
 
 #

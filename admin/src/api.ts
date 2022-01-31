@@ -8,17 +8,22 @@ import configs from "./config.json";
  * The actual (generated) API code lives in ./_api.ts.
  */
 const environments = [
-  "test",
-  "stage",
-  "training",
-  "performance",
-  "uat",
+  "breakfix",
   "cps-preview",
   "development",
+  "infra-test",
+  "long",
+  "performance",
+  "prod",
+  "stage",
+  "test",
+  "training",
+  "trn2",
+  "uat",
 ] as const;
 export type Environment = typeof environments[number];
 
-const env: Environment = (process.env.BUILD_ENV ||
+const env: Environment = (process.env.NEXT_PUBLIC_BUILD_ENV ||
   "development") as Environment;
 
 const _fetch = http.fetch;
