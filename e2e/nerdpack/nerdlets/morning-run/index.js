@@ -91,7 +91,9 @@ class EnvSummaryView extends React.Component {
           }
 
           let runIds = this.state.envs.reduce(function (r, a) {
-            r.push(byEnv[a].runId);
+            if(byEnv[a]?.runId) {
+              r.push(byEnv[a].runId);
+            }
             return r;
           }, []);
           let query_integration = `SELECT count(*)
