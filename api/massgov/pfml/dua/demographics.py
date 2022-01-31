@@ -152,11 +152,21 @@ def set_employee_occupation_from_demographic_data(
             )
             continue
 
-        existing_employee = (
+        existing_employees = (
             db_session.query(Employee).filter(
                 Employee.fineos_customer_number == fineos_customer_number
             )
-        ).one_or_none()
+        ).all()
+        if len(existing_employees) > 1:
+            log_attributes["employee_duplicate_count"] = len(existing_employees)
+            logger.warning(
+                "Duplicate employees found for fineos_customer_number. Skipping",
+                extra=log_attributes,
+            )
+            log_entry.increment(Metrics.EMPLOYEE_SKIPPED_COUNT)
+            continue
+        else:
+            existing_employee = existing_employees[0] if len(existing_employees) == 1 else None
 
         existing_employer = (
             db_session.query(Employer).filter(Employer.employer_fein == employer_fein)

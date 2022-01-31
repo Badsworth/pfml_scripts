@@ -237,6 +237,46 @@ def test_set_employee_occupation_from_demographics_data(
         assert eligibility_updates[0].employer_id == employer.employer_id
 
 
+def test_set_employee_demographics_duplicate_employee_fineos_customer_numbers(
+    test_db_session, initialize_factories_session
+):
+    with LogEntry(test_db_session, "test log entry") as log_entry:
+        employer = EmployerFactory()
+        customer_number = "1234567"
+        employee_to_update_customer_number = "55555"
+        EmployeeFactory(fineos_customer_number=customer_number)
+        EmployeeFactory(fineos_customer_number=customer_number)
+        EmployeeFactory(fineos_customer_number=employee_to_update_customer_number)
+        org_unit = OrganizationUnitFactory(name="Foo", employer=employer)
+        reporting_unit_with_org_unit = DuaReportingUnitFactory(organization_unit=org_unit)
+
+        DuaEmployeeDemographicsFactory(
+            fineos_customer_number=customer_number,
+            date_of_birth=date(1998, 5, 6),
+            gender_code="M",
+            occupation_code=5191,
+            occupation_description="Packaging and Filling Machine Operators and Tenders",
+            employer_fein=employer.employer_fein,
+            employer_reporting_unit_number=reporting_unit_with_org_unit.dua_id,
+        )
+
+        DuaEmployeeDemographicsFactory(
+            fineos_customer_number=employee_to_update_customer_number,
+            date_of_birth=date(1998, 5, 6),
+            gender_code="M",
+            occupation_code=5191,
+            occupation_description="Packaging and Filling Machine Operators and Tenders",
+            employer_fein=employer.employer_fein,
+            employer_reporting_unit_number=reporting_unit_with_org_unit.dua_id,
+        )
+
+        test_db_session.commit()
+
+        set_employee_occupation_from_demographic_data(test_db_session, log_entry=log_entry)
+        metrics = log_entry.metrics
+        assert metrics["employee_skipped_count"] == 1
+
+
 def test_set_employee_occupation_from_demographics_data_multiple_dua_records(
     test_db_session, initialize_factories_session
 ):
@@ -588,7 +628,9 @@ def test_update_employee_demographics_moveit_mode(
                 moveit_config=moveit_config,
             ),
         )
+
         assert filename in file_util.list_files(paths["pending_directory"])
+        # Note: local_s3/ doesn't get automatically cleared out between tests so repeated runs may fail
         assert filename not in file_util.list_files(paths["archive_directory"])
         assert len(reference_files) == 1
 
