@@ -134,7 +134,7 @@ class TestUpdateUser:
 
     @mock.patch("massgov.pfml.api.services.users.send_mfa_disabled_email")
     @mock.patch("massgov.pfml.api.services.users.logger", mock_logger)
-    def test_mfa_disabled_logging(self, user, test_db_session):
+    def test_mfa_disabled_logging(self, mock_send_mfa_disabled_email, user, test_db_session):
         # enable MFA at some time in the past
         enabled_at = "2022-01-15"
         with freeze_time(enabled_at):
@@ -172,3 +172,12 @@ class TestUpdateUser:
         update_user(test_db_session, user, update_request)
 
         mock_send_mfa_disabled_email.assert_called_once_with(user.email_address, "4321")
+
+    @mock.patch("massgov.pfml.api.services.users.send_mfa_disabled_email")
+    def test_mfa_disabled_email_not_sent_on_first_opt_out(
+        self, mock_send_mfa_disabled_email, user, test_db_session,
+    ):
+        update_request = UserUpdateRequest(mfa_delivery_preference="Opt Out")
+        update_user(test_db_session, user, update_request)
+
+        mock_send_mfa_disabled_email.assert_not_called()
