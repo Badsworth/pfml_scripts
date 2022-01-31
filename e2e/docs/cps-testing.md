@@ -1,7 +1,7 @@
-CPS Testing - Cypress Testing
-========================================
+# CPS Testing - Cypress Testing
 
 ## What available to use for CPS testing?
+
 In each of the folders under `specs` we have following test that will test following items:
 
 `ingored/cps-sp`
@@ -27,15 +27,15 @@ The following tests name and description:
 - **secure_action_document_type_changes** - This test will check if the user is allowed to change or update the document type. The document was already uploaded by Portal/API in this case and edit to upload a new document under that document type.
 - **secure_action_modify_delete_historical_absence_case** - This test is checking to create/modify/delete a historical absence case for each role.
 - **secure_action_correspondence** - We are checking in this test to see if the user allowed to suppress correspondence. If the user is allowed to suppress the correspondence the user will be able to click the `Suppress Notifications` in the dropdown.
-Then we are checking to see if the following message is showing `Automatic Notifications and Correspondence have been suppressed` in the alert box.
+  Then we are checking to see if the following message is showing `Automatic Notifications and Correspondence have been suppressed` in the alert box.
 - **secure_action_outstanding_requirement_access** - We are checking to see if different security groups have access to the Outstanding Requirement buttons available to update or change the "Employer Confirmation of Leave Data".
-The buttons we are checking are the following: Complete, Suppress, and Remove only.
+  The buttons we are checking are the following: Complete, Suppress, and Remove only.
 
 Each of these secure action above have been added to the E2E Test Suite as a task. We are not testing the security groups in the E2E Test Suite, but we are
 testing the secure action is available to our "Super User" in each environment.
 
 | Secure Action                                 | Test name in E2E Test Suite                            |
-|-----------------------------------------------|--------------------------------------------------------|
+| --------------------------------------------- | ------------------------------------------------------ |
 | Add Case                                      | fineos_caring_continuos_denial.ts                      |
 | Bulk Payee                                    | caring_continuous_approval_payment_ownership_90k.ts    |
 | Document Type Change                          | medical_notice_change_request_approval.ts              |
@@ -58,6 +58,7 @@ The **fineos_intake_template** has most of the changes directly in the template 
 You have few options while testing by adding `cy.pause()` to stop the test at certain spot. If you add `cy.screenshot()` it will take a screenshot and drop under the `cypress/screenshots` folder.
 
 Example of using pause and screenshot in a test:
+
 ```angular2html
 cy.unstash<Submission>("submission").then((submission) => {
         const claimPage = fineosPages.ClaimPage.visit(
@@ -80,7 +81,7 @@ cy.unstash<Submission>("submission").then((submission) => {
 What tickets from CPS-906 were included:
 
 | Ticket #               | Test name                                          | Leave Type             | Leave Periods        | Notes                                                                                    |
-|------------------------|----------------------------------------------------|------------------------|----------------------|------------------------------------------------------------------------------------------|
+| ---------------------- | -------------------------------------------------- | ---------------------- | -------------------- | ---------------------------------------------------------------------------------------- |
 | CPS-906-A              | portal_api_template.ts                             | Any                    | Any                  | Checking O/R tab available                                                               |
 | CPS-906-B              | bonding_reduced_notice_notification_approval.ts    | Any                    | Any                  | Checking SOM Designation                                                                 |
 | CPS-906-C              | fineos_alerts_template.ts                          | Any                    | Any                  | Alert for specific dateae 60/90 calendar days                                            |

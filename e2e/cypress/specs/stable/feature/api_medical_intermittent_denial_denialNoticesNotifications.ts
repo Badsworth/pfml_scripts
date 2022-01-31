@@ -181,15 +181,13 @@ describe("Denial Notification and Notice", () => {
         );
         // Check email for Claimant/Employee
         email
-          .getEmails(
-            {
-              address: "gqzap.notifications@inbox.testmail.app",
-              subjectWildcard: subjectClaimant,
-              messageWildcard: submission.fineos_absence_id,
-              timestamp_from: submission.timestamp_from,
-              debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
-            }
-          )
+          .getEmails({
+            address: "gqzap.notifications@inbox.testmail.app",
+            subjectWildcard: subjectClaimant,
+            messageWildcard: submission.fineos_absence_id,
+            timestamp_from: submission.timestamp_from,
+            debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
+          })
           .then(() => {
             cy.contains(submission.fineos_absence_id);
           });

@@ -25,7 +25,7 @@ module.exports = () => {
     },
     externals: {
       "playwright-chromium": "playwright-chromium",
-      "@influxdata/influxdb-client": "@influxdata/influxdb-client"
+      "@influxdata/influxdb-client": "@influxdata/influxdb-client",
     },
     resolve: {
       // @see https://medium.com/better-programming/the-right-usage-of-aliases-in-webpack-typescript-4418327f47fa
@@ -66,7 +66,7 @@ module.exports = () => {
             { from: "./src/artillery/development.yml", to: "./" },
           ],
         }),
-      ]
+      ],
     },
     {
       name: "reporter",
@@ -77,7 +77,7 @@ module.exports = () => {
       output: {
         ...baseConfig.output,
         path: path.resolve(__dirname, "dist", "plugins"),
-      }
-    }
+      },
+    },
   ];
 };

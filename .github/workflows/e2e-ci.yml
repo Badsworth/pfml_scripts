@@ -31,8 +31,8 @@ jobs:
           working-directory: e2e
       - name: "Lint"
         run: npm run lint:ci
-      # - name: "Check Format"
-      #   run: npm run format-check
+      - name: "Check Format"
+        run: npm run format-check
 
   test:
     name: "Unit Tests"

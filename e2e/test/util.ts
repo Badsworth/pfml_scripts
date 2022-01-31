@@ -16,10 +16,9 @@ export interface DocumentTestCase {
   statusCode: 200 | 413 | 400;
 }
 
-type DocumentTestSpec = 
+type DocumentTestSpec =
   | Array<DocumentTestCase>
   | (() => Array<DocumentTestCase>);
-
 
 /**
  *  Idea here is to test the file size limit (4.5MB) w/each accepted
@@ -31,48 +30,56 @@ type DocumentTestSpec =
 export const documentTests: Record<string, DocumentTestSpec> = {
   pdf: [
     {
-      description: "Should submit a PDF document with file size less than 4.5MB successfully",
+      description:
+        "Should submit a PDF document with file size less than 4.5MB successfully",
       filepath: "./cypress/fixtures/docTesting/small-150KB.pdf",
-      statusCode: 200
+      statusCode: 200,
     },
     {
-      description: "Should submit a PDF document with file size larger than 4.5MB (10MB) unsuccessfully and return API error",
+      description:
+        "Should submit a PDF document with file size larger than 4.5MB (10MB) unsuccessfully and return API error",
       filepath: "./cypress/fixtures/docTesting/large-10MB.pdf",
-      statusCode: 413
+      statusCode: 413,
     },
   ],
   jpg: [
     {
-      description: "Should submit a JPG document with file size less than 4.5MB successfully",
+      description:
+        "Should submit a JPG document with file size less than 4.5MB successfully",
       filepath: "./cypress/fixtures/docTesting/xsmall-220KB.jpg",
       statusCode: 200,
     },
     {
-      description: "Should submit a JPG document with file size larger than 4.5MB (15.5MB) unsuccessfully and return API error",
+      description:
+        "Should submit a JPG document with file size larger than 4.5MB (15.5MB) unsuccessfully and return API error",
       filepath: "./cypress/fixtures/docTesting/large-15.5MB.jpg",
-      statusCode: 413
+      statusCode: 413,
     },
   ],
   png: [
     {
-      description: "Should submit a PNG document with file size less than 4.5MB successfully",
+      description:
+        "Should submit a PNG document with file size less than 4.5MB successfully",
       filepath: "./cypress/fixtures/docTesting/small-2.7MB.png",
       statusCode: 200,
     },
     {
-      description: "Should submit a PNG document with file size larger than 4.5MB (15.5MB) unsuccessfully and return API error",
+      description:
+        "Should submit a PNG document with file size larger than 4.5MB (15.5MB) unsuccessfully and return API error",
       filepath: "./cypress/fixtures/docTesting/large-14MB.png",
-      statusCode: 413
+      statusCode: 413,
     },
   ],
-  badFileTypes:  [
+  badFileTypes: [
     {
-      description: "Should receive error when trying to submit an incorrect file type (.gif)",
+      description:
+        "Should receive error when trying to submit an incorrect file type (.gif)",
       filepath: "./cypress/fixtures/docTesting/small-275KB.gif",
       statusCode: 400,
     },
     {
-      description: "Should receive error when trying to submit an incorrect file type (.svg)",
+      description:
+        "Should receive error when trying to submit an incorrect file type (.svg)",
       filepath: "./cypress/fixtures/docTesting/small-387KB.svg",
       statusCode: 400,
     },
@@ -83,17 +90,20 @@ export const documentTests: Record<string, DocumentTestSpec> = {
       // environments with large file compression allow for PDF uploads up to 10MB
       return [
         {
-          description: "Should submit a PDF document with file size just under 10MB successfully",
+          description:
+            "Should submit a PDF document with file size just under 10MB successfully",
           filepath: "./cypress/fixtures/docTesting/limit-9.4MB.pdf",
           statusCode: 200,
         },
         {
-          description: "Should submit a JPG document with file size right at 4.5MB successfully",
+          description:
+            "Should submit a JPG document with file size right at 4.5MB successfully",
           filepath: "./cypress/fixtures/docTesting/limit-4.5MB.jpg",
           statusCode: 200,
         },
         {
-          description: "Should submit a PNG document with file size right at 4.5MB successfully",
+          description:
+            "Should submit a PNG document with file size right at 4.5MB successfully",
           filepath: "./cypress/fixtures/docTesting/limit-4.5MB.png",
           statusCode: 200,
         },
@@ -102,23 +112,26 @@ export const documentTests: Record<string, DocumentTestSpec> = {
 
     return [
       {
-        description: "Should submit a PDF document with file size right at 4.5MB successfully",
+        description:
+          "Should submit a PDF document with file size right at 4.5MB successfully",
         filepath: "./cypress/fixtures/docTesting/limit-4.5MB.pdf",
         statusCode: 200,
       },
       {
-        description: "Should submit a JPG document with file size right at 4.5MB successfully",
+        description:
+          "Should submit a JPG document with file size right at 4.5MB successfully",
         filepath: "./cypress/fixtures/docTesting/limit-4.5MB.jpg",
         statusCode: 200,
       },
       {
-        description: "Should submit a PNG document with file size right at 4.5MB successfully",
+        description:
+          "Should submit a PNG document with file size right at 4.5MB successfully",
         filepath: "./cypress/fixtures/docTesting/limit-4.5MB.png",
         statusCode: 200,
       },
     ];
-  } 
-}
+  },
+};
 
 export const id_proofing = [
   [

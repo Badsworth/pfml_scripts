@@ -85,7 +85,7 @@ function buildRuns(data) {
     if (result.status === "pending") {
       // don't set the overall status if we've already encountered a failure
       if (collected[result.runId][result.file].status === "passed") {
-        collected[result.runId][result.file].status = "skipped"
+        collected[result.runId][result.file].status = "skipped";
       }
       collected[result.runId][result.file].skippedCount++;
       result.category = "skipped";
@@ -133,19 +133,15 @@ function buildRuns(data) {
 
     // pre calculate all the things, and sort the data.
     collected[result.runId][result.file].testCount++;
-    collected[result.runId][result.file].passPercent = (
-      Math.round(
-        (collected[result.runId][result.file].passedCount /
-          collected[result.runId][result.file].testCount) *
-          100
-      )
+    collected[result.runId][result.file].passPercent = Math.round(
+      (collected[result.runId][result.file].passedCount /
+        collected[result.runId][result.file].testCount) *
+        100
     );
-    collected[result.runId][result.file].skippedPercent = (
-      Math.round(
-        (collected[result.runId][result.file].skippedCount /
-          collected[result.runId][result.file].testCount) *
-          100
-      )
+    collected[result.runId][result.file].skippedPercent = Math.round(
+      (collected[result.runId][result.file].skippedCount /
+        collected[result.runId][result.file].testCount) *
+        100
     );
 
     collected[result.runId][result.file].results.push(result);
@@ -411,8 +407,8 @@ class GridRow extends React.Component {
         width = 100 - result.skippedPercent;
         break;
     }
-    return { width: `${width}%` }
-  }
+    return { width: `${width}%` };
+  };
 
   getOverallStatus = (result) => {
     let status;
@@ -429,7 +425,7 @@ class GridRow extends React.Component {
         break;
     }
     return status;
-  }
+  };
 
   render() {
     if (!this.props.item.results[0]) {
