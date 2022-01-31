@@ -65,13 +65,17 @@ const employerResponseLeavesAndBenefits: Partial<EmployerResponseSpec> = {
 };
 
 const selectRandomFile = (): string => {
-  type FileSizeRanges = "4.8MB-6.8MB" | "7MB-10MB";
-  const wheel: Array<FileSizeRanges> = [
-    ...Array<"4.8MB-6.8MB">(70).fill("4.8MB-6.8MB"),
-    ...Array<"7MB-10MB">(30).fill("7MB-10MB"),
-  ];
+  type FileSizeRanges = "<4.8" | "4.8MB-6.8MB" | "7MB-10MB";
+  const wheel: Array<FileSizeRanges> =
+    process.env.USE_LARGE_DOCUMENT_UPLOADS === "true"
+      ? [
+          ...Array<"4.8MB-6.8MB">(70).fill("4.8MB-6.8MB"),
+          ...Array<"7MB-10MB">(30).fill("7MB-10MB"),
+        ]
+      : ["<4.8"];
   const range = wheel[Math.floor(Math.random() * wheel.length)];
   const filesMap: Record<FileSizeRanges, string[]> = {
+    "<4.8": ["150KB.pdf", "1MB.jpg", "2.7MB.png", "4.5MB.pdf"],
     "4.8MB-6.8MB": ["5MB.pdf", "6MB.pdf"],
     "7MB-10MB": ["7MB.pdf", "8MB.pdf", "9.4MB.pdf"],
   };
