@@ -14,7 +14,7 @@ on:
       - "!portal/tests/**"
 
 env:
-  nodeVersion: 15.x
+  nodeVersion: 16.x
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   terraformVersion: 0.14.7
   deploys_channel: "C01HEAJPE76" #mass-pfml-deploys-shared

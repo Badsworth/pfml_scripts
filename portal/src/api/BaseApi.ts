@@ -52,7 +52,8 @@ export default abstract class BaseApi {
    */
   abstract get basePath(): string;
   /**
-   * Prefix used in ValidationError message strings.
+   * Prefix used in ValidationError message strings. Can be overridden at the request-level
+   * by setting the `i18nPrefix` option argument when calling request()
    */
   abstract get i18nPrefix(): string;
 
@@ -65,9 +66,19 @@ export default abstract class BaseApi {
     method: ApiMethod,
     subPath = "",
     body?: ApiRequestBody,
-    additionalHeaders = {},
-    { excludeAuthHeader = false, multipartForm = false } = {}
+    options: {
+      additionalHeaders?: { [header: string]: string };
+      i18nPrefix?: string;
+      excludeAuthHeader?: boolean;
+      multipartForm?: boolean;
+    } = {}
   ) {
+    const {
+      additionalHeaders = {},
+      i18nPrefix = this.i18nPrefix,
+      excludeAuthHeader = false,
+      multipartForm = false,
+    } = options;
     const url = createRequestUrl(method, this.basePath, subPath, body);
     const authHeader = excludeAuthHeader ? {} : await getAuthorizationHeader();
     const headers: { [header: string]: string } = {
@@ -86,11 +97,17 @@ export default abstract class BaseApi {
       headers["Content-Type"] = "application/json";
     }
 
-    const response = await this.sendRequest<TResponseData>(url, {
-      body: method === "GET" || !body ? null : createRequestBody(body),
-      headers,
-      method,
-    });
+    const response = await this.sendRequest<TResponseData>(
+      url,
+      {
+        body: method === "GET" || !body ? null : createRequestBody(body),
+        headers,
+        method,
+      },
+      {
+        i18nPrefix,
+      }
+    );
 
     return response;
   }
@@ -98,13 +115,17 @@ export default abstract class BaseApi {
   /**
    * Send a request and handle the response
    */
-  async sendRequest<TResponseData>(url: string, options: RequestInit) {
+  async sendRequest<TResponseData>(
+    url: string,
+    fetchOptions: RequestInit,
+    options: { i18nPrefix: string }
+  ) {
     let response: Response;
     let responseBody: ApiResponseBody<TResponseData>;
 
     try {
       tracker.trackFetchRequest(url);
-      response = await fetch(url, options);
+      response = await fetch(url, fetchOptions);
       tracker.markFetchRequestEnd();
       responseBody = await response.json();
     } catch (error) {
@@ -113,7 +134,7 @@ export default abstract class BaseApi {
 
     const { data, errors, meta, warnings } = responseBody;
     if (!response.ok) {
-      handleNotOkResponse(response, errors, this.i18nPrefix, data);
+      handleNotOkResponse(response, errors, options.i18nPrefix, data);
     }
 
     return {

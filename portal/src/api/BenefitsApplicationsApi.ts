@@ -1,5 +1,5 @@
-import BaseApi, { ApiMethod, ApiRequestBody } from "./BaseApi";
 import ApiResourceCollection from "../models/ApiResourceCollection";
+import BaseApi from "./BaseApi";
 import BenefitsApplication from "../models/BenefitsApplication";
 import PaymentPreference from "../models/PaymentPreference";
 import TaxWithholdingPreference from "../models/TaxWithholdingPreference";
@@ -12,37 +12,6 @@ export default class BenefitsApplicationsApi extends BaseApi {
 
   get i18nPrefix() {
     return "applications";
-  }
-
-  /**
-   * Pass feature flags to the API as headers to enable
-   * API functionality that can be toggled on/off.
-   */
-  private get featureFlagHeaders() {
-    const headers: { [key: string]: unknown } = {};
-
-    // Add any feature flag headers here. eg:
-    // if (isFeatureEnabled("claimantShowOtherLeaveStep")) {
-    //   headers["X-FF-Require-Other-Leaves"] = true;
-    // }
-
-    return headers;
-  }
-
-  /**
-   * Send an authenticated API request, with feature flag headers
-   */
-  request<TResponseData>(
-    method: ApiMethod,
-    subPath?: string,
-    body?: ApiRequestBody
-  ) {
-    return super.request<TResponseData>(
-      method,
-      subPath,
-      body,
-      this.featureFlagHeaders
-    );
   }
 
   getClaim = async (application_id: string) => {
