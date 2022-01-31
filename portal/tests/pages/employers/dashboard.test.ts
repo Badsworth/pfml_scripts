@@ -5,7 +5,7 @@ import ApiResourceCollection from "src/models/ApiResourceCollection";
 import { AppLogic } from "../../../src/hooks/useAppLogic";
 import Dashboard from "../../../src/pages/employers/dashboard";
 import PaginationMeta from "../../../src/models/PaginationMeta";
-import faker from "faker";
+import createMockUserLeaveAdministrator from "../../../lib/mock-helpers/createMockUserLeaveAdministrator";
 import { renderPage } from "../../test-utils";
 import routes from "../../../src/routes";
 import userEvent from "@testing-library/user-event";
@@ -18,16 +18,7 @@ jest.mock("../../../src/components/core/TooltipIcon", () => ({
   default: () => null,
 }));
 
-function createUserLeaveAdministrator(attrs = {}) {
-  return new UserLeaveAdministrator({
-    employer_id: faker.datatype.uuid(),
-    employer_dba: faker.company.companyName(),
-    employer_fein: `${faker.finance.account(2)}-${faker.finance.account(7)}`,
-    ...attrs,
-  });
-}
-
-const verifiedUserLeaveAdministrator = createUserLeaveAdministrator({
+const verifiedUserLeaveAdministrator = createMockUserLeaveAdministrator({
   employer_dba: "Work Inc",
   employer_fein: "12-3456789",
   has_fineos_registration: true,
@@ -35,7 +26,7 @@ const verifiedUserLeaveAdministrator = createUserLeaveAdministrator({
   verified: true,
 });
 
-const verifiableUserLeaveAdministrator = createUserLeaveAdministrator({
+const verifiableUserLeaveAdministrator = createMockUserLeaveAdministrator({
   employer_dba: "Book Bindings 'R Us",
   has_fineos_registration: false,
   has_verification_data: true,
@@ -318,7 +309,7 @@ describe("Employer dashboard", () => {
 
   it("displays number of active filters in Show Filters button", () => {
     const user_leave_administrators = [
-      createUserLeaveAdministrator({
+      createMockUserLeaveAdministrator({
         verified: true,
       }),
     ];
@@ -338,31 +329,13 @@ describe("Employer dashboard", () => {
     ).toBeInTheDocument();
   });
 
-  it("toggles filters visibility when Show Filters button is clicked", () => {
-    setup();
-    const toggleButton = screen.getByRole("button", { name: "Show filters" });
-
-    // Collapsed by default
-    expect(
-      screen.queryByRole("group", { name: /status/i })
-    ).not.toBeInTheDocument();
-
-    // Show the filters
-    userEvent.click(toggleButton);
-
-    expect(toggleButton).toHaveAccessibleName("Hide filters");
-    expect(
-      screen.queryByRole("group", { name: /status/i })
-    ).toBeInTheDocument();
-  });
-
   it("sets initial filter form state from query prop", () => {
     // Include multiple LA's so Employer filter shows
     const user_leave_administrators = [
-      createUserLeaveAdministrator({
+      createMockUserLeaveAdministrator({
         verified: true,
       }),
-      createUserLeaveAdministrator({
+      createMockUserLeaveAdministrator({
         verified: true,
       }),
     ];
@@ -389,33 +362,6 @@ describe("Employer dashboard", () => {
     expect(screen.getByRole("checkbox", { name: /denied/i })).not.toBeChecked();
   });
 
-  it("renders organizations filter when there are multiple verified organizations", () => {
-    setup({
-      userAttrs: {
-        user_leave_administrators: [
-          createUserLeaveAdministrator({
-            employer_dba: "Work Inc",
-            employer_id: "mock-id-1",
-            employer_fein: "11-3456789",
-            verified: true,
-          }),
-          createUserLeaveAdministrator({
-            employer_dba: "Acme",
-            employer_id: "mock-id-2",
-            employer_fein: "22-3456789",
-            verified: true,
-          }),
-        ],
-      },
-    });
-
-    userEvent.click(screen.getByRole("button", { name: /show filters/i }));
-
-    expect(
-      screen.getByRole("combobox", { name: /organizations/i })
-    ).toBeInTheDocument();
-  });
-
   it("updates query params when user changes filter to Approved and Closed", () => {
     const { updateQuerySpy } = setup({
       paginationMeta: {
@@ -436,10 +382,10 @@ describe("Employer dashboard", () => {
 
   it("resets query params when user clicks Reset action", () => {
     const user_leave_administrators = [
-      createUserLeaveAdministrator({
+      createMockUserLeaveAdministrator({
         verified: true,
       }),
-      createUserLeaveAdministrator({
+      createMockUserLeaveAdministrator({
         verified: true,
       }),
     ];
@@ -467,7 +413,7 @@ describe("Employer dashboard", () => {
 
   it("removes the employer filter when its FilterMenuButton is clicked", () => {
     const user_leave_administrators = [
-      createUserLeaveAdministrator({
+      createMockUserLeaveAdministrator({
         verified: true,
         employer_dba: "Acme Co",
       }),
