@@ -2,7 +2,7 @@ import path from "path";
 import { ScenarioSpecification } from "../generation/Scenario";
 import * as CypressScenarios from "./cypress";
 import { ClaimSpecification, EmployerResponseSpec } from "../generation/Claim";
-import shuffle from "generation/shuffle";
+import shuffle from "../../src/generation/shuffle";
 
 /**
  * Load & Stress Testing Scenarios.
