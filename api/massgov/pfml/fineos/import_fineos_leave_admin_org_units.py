@@ -1,4 +1,3 @@
-import json
 import sys
 from dataclasses import asdict, dataclass
 from itertools import groupby
@@ -41,7 +40,7 @@ class ImportFineosOrganizationUnitUpdatesConfig(PydanticBaseSettings):
 
 @dataclass
 class ImportFineosOrganizationUnitUpdatesReport:
-    start: str = utcnow().isoformat()
+    organization_unit_file: str = ""
     # total count of rows in extract
     total_rows_received_count: int = 0
     # when a row in the extract doesn't have enough info to proceed
@@ -72,8 +71,6 @@ class ImportFineosOrganizationUnitUpdatesReport:
     missing_fineos_employer_count: int = 0
     # when the fineos employer does not have organization units
     missing_fineos_org_units_count: int = 0
-    end: Optional[str] = None
-    process_duration_in_seconds: float = 0
 
 
 @dataclass
@@ -107,7 +104,7 @@ def handler():
             report = process_fineos_updates(
                 db_session, config.fineos_folder_path, fineos_boto_session
             )
-            log_entry.report = json.dumps(asdict(report), indent=2)
+            log_entry.set_metrics(asdict(report))
     except Exception:
         logger.exception("Error importing organization unit updates from FINEOS")
         sys.exit(1)
@@ -145,13 +142,9 @@ def process_fineos_updates(
     db_session: db.Session, folder_path: str, boto_session: Optional[boto3.Session] = None
 ) -> ImportFineosOrganizationUnitUpdatesReport:
     # Get CSV file and initiate report
-    start_time = utcnow()
-    report = ImportFineosOrganizationUnitUpdatesReport(start=start_time.isoformat())
+    report = ImportFineosOrganizationUnitUpdatesReport()
     file = get_file_to_process(folder_path, boto_session)
     if file is None:
-        end_time = utcnow()
-        report.end = end_time.isoformat()
-        report.process_duration_in_seconds = (end_time - start_time).total_seconds()
         return report
     else:
         logger.info(
@@ -159,6 +152,7 @@ def process_fineos_updates(
         )
 
     file_path = f"{folder_path}/{file}"
+    report.organization_unit_file = file_path
     csv_input = CSVSourceWrapper(file_path, transport_params={"session": boto_session})
 
     # For each employer fein, keep a list of leave admins
@@ -166,7 +160,7 @@ def process_fineos_updates(
     # Process CSV data into a simpler format
     rows = []
     REQUIRED_KEYS = ("USERENABLED", "FEIN", "EMAIL", "ORGUNIT_NAME")
-    for row in log_every(logger, csv_input, count=10, item_name="CSV row"):
+    for row in log_every(logger, csv_input, count=10000, item_name="CSV row", start_time=utcnow()):
         report.total_rows_received_count += 1
         if all(row.get(key) for key in REQUIRED_KEYS):
             rows.append(row)
@@ -359,9 +353,5 @@ def process_fineos_updates(
                     continue
 
     # Ended import process
-    db_session.close()
-    end_time = utcnow()
-    report.end = end_time.isoformat()
-    report.process_duration_in_seconds = (end_time - start_time).total_seconds()
 
     return report
