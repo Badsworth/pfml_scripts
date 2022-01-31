@@ -2396,8 +2396,6 @@ const pages: {
       "This application has changed since it was reviewed on {{date}}.",
     submitButton: "Submit",
     submitLoadingMessage: "Submitting… Do not refresh or go back.",
-    // TODO (PORTAL-1151) Remove flag
-    supportingWorkDetailsHeader: "Supporting work details",
     title: "Review application from {{name}}",
   },
   employersClaimsStatus: {
@@ -2894,6 +2892,22 @@ const components: {
     subtitle_amend:
       "This amendment will get saved when you submit your review. To remove this leave, include a comment at the end of the page.",
   },
+  employersCaringLeaveQuestion: {
+    choiceNo: "No (comment required)",
+    choiceUnknown: "I don't know",
+    choiceYes: "Yes",
+    commentHeading: "Tell us why you think this relationship is inaccurate.",
+    familyMemberRelationshipHint:
+      "This employee has attested the family member relationship is <eligible-relationship-link>a covered relationship</eligible-relationship-link>. If something on the form seems incorrect, add a comment at the end of the page.",
+    familyMemberRelationshipLabel:
+      "Do you believe the listed relationship is described accurately? (Optional)",
+    inaccurateRelationshipAlertHeading:
+      "The employee will be denied paid leave.",
+    inaccurateRelationshipAlertLead:
+      "We take allegations about false relationships seriously. Choosing No may trigger a denial of the employee's application for paid leave. The employee has the right to appeal if their application is denied.",
+    unknownRelationshipAlertLead:
+      "If you have not confirmed the accuracy of the family relationship the employee has attested to, please note that the Department of Family and Medical leave will adjudicate the claim based on the attestation the employee made when submitting their application.",
+  },
   employersCertsAndPeriods: {
     caringLeaveDocumentInstructions: "View the family relationship on page 3.",
     documentName: "Your employee's certification document.",
@@ -2997,54 +3011,6 @@ const components: {
     example_personalInfo:
       "Using someone’s personal information to fraudulently collect benefits",
     heading: "Do you have any reason to suspect this is fraud?",
-  },
-  employersLeaveDetails: {
-    applicationIdLabel: "Application ID",
-    choiceNo: "No (comment required)",
-    choiceUnknown: "I don't know",
-    choiceYes: "Yes",
-    commentHeading: "Tell us why you think this relationship is inaccurate.",
-    documentName: "Your employee's certification document",
-    documentationLabel: "Documentation",
-    familyMemberRelationshipHint:
-      "This employee has attested the family member relationship is <eligible-relationship-link>a covered relationship</eligible-relationship-link>. If something on the form seems incorrect, add a comment at the end of the page.",
-    familyMemberRelationshipLabel:
-      "Do you believe the listed relationship is described accurately? (Optional)",
-    header: "Leave details",
-    inaccurateRelationshipAlertHeading:
-      "The employee will be denied paid leave.",
-    inaccurateRelationshipAlertLead:
-      "We take allegations about false relationships seriously. Choosing No may trigger a denial of the employee's application for paid leave. The employee has the right to appeal if their application is denied.",
-    leaveDurationLabel: "Leave duration",
-    leaveReasonValue_activeDutyFamily: "$t(shared.leaveReasonActiveDutyFamily)",
-    leaveReasonValue_bonding: "$t(shared.leaveReasonBonding)",
-    leaveReasonValue_care: "$t(shared.leaveReasonCare)",
-    leaveReasonValue_medical: "$t(shared.leaveReasonMedical)",
-    leaveReasonValue_pregnancy: "$t(shared.leaveReasonPregnancy)",
-    leaveReasonValue_serviceMemberFamily:
-      "$t(shared.leaveReasonServiceMemberFamily)",
-    leaveTypeLabel: "Leave type",
-    recordkeepingInstructions:
-      "To meet <mass-employer-role-link>federal laws and regulations</mass-employer-role-link>, you must keep medical records separate and confidential from any personnel files.",
-    recordkeepingInstructions_caringLeave:
-      "<p>To meet <mass-employer-role-link>federal laws and regulations</mass-employer-role-link>, you must keep medical records separate and confidential from any personnel files.</p><p>View the family relationship on page 3.</p>",
-    unknownRelationshipAlertLead:
-      "If you have not confirmed the accuracy of the family relationship the employee has attested to, please note that the Department of Family and Medical leave will adjudicate the claim based on the attestation the employee made when submitting their application.",
-  },
-  employersLeaveSchedule: {
-    caption: "This is your employee’s expected leave schedule.",
-    caption_documents:
-      "This is your employee’s expected leave schedule. Download the attached documentation for more details.",
-    caption_intermittentWithDocuments:
-      "Download the attached documentation for details about the employee’s intermittent leave schedule.",
-    claimDurationType_continuous: "$t(shared.claimDurationTypeContinuous)",
-    claimDurationType_intermittent: "$t(shared.claimDurationTypeIntermittent)",
-    claimDurationType_reducedSchedule:
-      "$t(shared.claimDurationTypeReducedSchedule)",
-    dateRangeLabel: "Date range",
-    header: "Leave schedule",
-    leaveFrequencyLabel: "Leave frequency",
-    reducedHoursPerWeek: "Reduced by {{numOfHours}} hours per week",
   },
   employersNavigationTabs: {
     dashboard: "Dashboard",

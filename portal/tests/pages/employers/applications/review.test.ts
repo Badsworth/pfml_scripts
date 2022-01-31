@@ -120,9 +120,6 @@ describe("Review", () => {
     expect(
       screen.getByText(/Do you have any reason to suspect this is fraud?/)
     ).toBeInTheDocument();
-    expect(screen.getByText(/Leave details/)).toBeInTheDocument();
-    expect(screen.getByText(/Leave schedule/)).toBeInTheDocument();
-    expect(screen.getByText(/Supporting work details/)).toBeInTheDocument();
     expect(
       screen.queryByText(/Concurrent accrued paid leave/)
     ).not.toBeInTheDocument();
@@ -149,9 +146,6 @@ describe("Review", () => {
     expect(
       screen.getByText(/Do you have any reason to suspect this is fraud?/)
     ).toBeInTheDocument();
-    expect(screen.getByText(/Leave details/)).toBeInTheDocument();
-    expect(screen.getByText(/Leave schedule/)).toBeInTheDocument();
-    expect(screen.getByText(/Supporting work details/)).toBeInTheDocument();
     expect(
       screen.getByRole("heading", { name: "Concurrent accrued paid leave" })
     ).toBeInTheDocument();
@@ -188,10 +182,6 @@ describe("Review", () => {
   ])(
     "shows additional text if the claim has been reviewed previously",
     (responded_at, expectedText) => {
-      process.env.featureFlags = JSON.stringify({
-        employerShowMultiLeave: true,
-      });
-
       setup({
         ...claimWithV2Eform,
         managed_requirements: [
@@ -929,31 +919,14 @@ describe("Review", () => {
     });
   });
 
-  it("does not render supporting work details when employerShowMultiLeave is enabled", () => {
-    process.env.featureFlags = JSON.stringify({
-      employerShowMultiLeave: true,
-    });
-    setup();
-    expect(
-      screen.queryByRole("heading", { name: "Supporting work details" })
-    ).not.toBeInTheDocument();
-  });
-
-  it("renders absence id above the title when employerShowMultiLeave is enabled", () => {
-    process.env.featureFlags = JSON.stringify({
-      employerShowMultiLeave: true,
-    });
+  it("renders absence id above the title", () => {
     setup();
     expect(
       screen.getByText("Application ID: NTN-111-ABS-01")
     ).toBeInTheDocument();
   });
 
-  it("renders the absence periods sorted newest to oldest when employerShowMultiLeave is enabled", () => {
-    process.env.featureFlags = JSON.stringify({
-      employerShowMultiLeave: true,
-    });
-
+  it("renders the absence periods sorted newest to oldest", () => {
     setup({
       ...claimWithV2Eform,
       absence_periods: [

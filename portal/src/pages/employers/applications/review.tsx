@@ -30,8 +30,6 @@ import Feedback from "../../../components/employers/Feedback";
 import FraudReport from "../../../components/employers/FraudReport";
 import Heading from "../../../components/core/Heading";
 import HeadingPrefix from "src/components/core/HeadingPrefix";
-import LeaveDetails from "../../../components/employers/LeaveDetails";
-import LeaveSchedule from "../../../components/employers/LeaveSchedule";
 import PreviousLeaves from "../../../components/employers/PreviousLeaves";
 import ReviewHeading from "../../../components/ReviewHeading";
 import Title from "../../../components/core/Title";
@@ -40,7 +38,6 @@ import WeeklyHoursWorkedRow from "../../../components/employers/WeeklyHoursWorke
 import formatDate from "../../../utils/formatDate";
 import { getClosestReviewableFollowUpDate } from "../../../models/ManagedRequirement";
 import isBlank from "../../../utils/isBlank";
-import { isFeatureEnabled } from "../../../services/featureFlags";
 import leaveReasonToPreviousLeaveReason from "../../../utils/leaveReasonToPreviousLeaveReason";
 import routes from "../../../routes";
 import updateAmendments from "../../../utils/updateAmendments";
@@ -58,9 +55,7 @@ export const Review = (props: WithEmployerClaimProps) => {
   const { t } = useTranslation();
 
   const absenceId = claim.fineos_absence_id;
-
   const shouldShowV2 = !!claim.uses_second_eform_version;
-  const showMultipleLeave = isFeatureEnabled("employerShowMultiLeave");
 
   if (claim.is_reviewable === false) {
     appLogic.portalFlow.goTo(routes.employers.status, {
@@ -412,20 +407,18 @@ export const Review = (props: WithEmployerClaimProps) => {
   return (
     <div className="maxw-desktop-lg">
       <BackButton />
-      {showMultipleLeave && (
-        <HeadingPrefix>
-          {t("pages.employersClaimsReview.absenceIdLabel", {
-            absenceId: claim.fineos_absence_id,
-          })}
-        </HeadingPrefix>
-      )}
+      <HeadingPrefix>
+        {t("pages.employersClaimsReview.absenceIdLabel", {
+          absenceId: claim.fineos_absence_id,
+        })}
+      </HeadingPrefix>
       <Title>
         {t("pages.employersClaimsReview.title", {
           name: claim.fullName,
         })}
       </Title>
       <Alert state="warning" noIcon>
-        {showMultipleLeave && claim.wasPreviouslyReviewed && (
+        {claim.wasPreviouslyReviewed && (
           <p>
             <strong>
               <Trans
@@ -457,30 +450,19 @@ export const Review = (props: WithEmployerClaimProps) => {
         onKeyDown={handleKeyDown}
       >
         <EmployeeInformation claim={claim} />
-
-        {showMultipleLeave ? (
-          <React.Fragment>
-            <WeeklyHoursWorkedRow
-              appErrors={appErrors}
-              clearField={clearField}
-              getField={getField}
-              getFunctionalInputProps={getFunctionalInputProps}
-              initialHoursWorkedPerWeek={claim.hours_worked_per_week}
-              updateFields={updateFields}
-            />
-            <CertificationsAndAbsencePeriods
-              claim={claim}
-              documents={certificationDocuments}
-              downloadDocument={downloadDocument}
-            />
-          </React.Fragment>
-        ) : (
-          <LeaveDetails
-            claim={claim}
-            documents={certificationDocuments}
-            downloadDocument={downloadDocument}
-          />
-        )}
+        <WeeklyHoursWorkedRow
+          appErrors={appErrors}
+          clearField={clearField}
+          getField={getField}
+          getFunctionalInputProps={getFunctionalInputProps}
+          initialHoursWorkedPerWeek={claim.hours_worked_per_week}
+          updateFields={updateFields}
+        />
+        <CertificationsAndAbsencePeriods
+          claim={claim}
+          documents={certificationDocuments}
+          downloadDocument={downloadDocument}
+        />
 
         {isCaringLeave && (
           <CaringLeaveQuestion
@@ -496,26 +478,6 @@ export const Review = (props: WithEmployerClaimProps) => {
               handleRelationshipInaccurateReason
             }
           />
-        )}
-
-        {!showMultipleLeave && (
-          <React.Fragment>
-            <LeaveSchedule
-              claim={claim}
-              hasDocuments={!!certificationDocuments.length}
-            />
-            <ReviewHeading level="2">
-              {t("pages.employersClaimsReview.supportingWorkDetailsHeader")}
-            </ReviewHeading>
-            <WeeklyHoursWorkedRow
-              appErrors={appErrors}
-              clearField={clearField}
-              getField={getField}
-              getFunctionalInputProps={getFunctionalInputProps}
-              initialHoursWorkedPerWeek={claim.hours_worked_per_week}
-              updateFields={updateFields}
-            />
-          </React.Fragment>
         )}
 
         <ReviewHeading level="2">

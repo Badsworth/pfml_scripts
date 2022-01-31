@@ -5,6 +5,11 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
   <div
     class="maxw-desktop-lg"
   >
+    <span
+      class="display-block font-heading-2xs margin-bottom-2 text-base-dark text-bold"
+    >
+      Application ID: NTN-111-ABS-01
+    </span>
     <h1
       class="js-title margin-top-0 margin-bottom-2 font-heading-lg line-height-sans-2"
       tabindex="-1"
@@ -37,34 +42,6 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
       method="post"
     >
       <div
-        class="margin-bottom-2 padding-bottom-2 display-flex flex-justify"
-      >
-        <div
-          class="margin-right-2"
-        >
-          <h2
-            class="margin-bottom-1 font-heading-xs text-bold"
-          >
-            Organization
-          </h2>
-          Work Inc.
-        </div>
-      </div>
-      <div
-        class="margin-bottom-2 padding-bottom-2 display-flex flex-justify"
-      >
-        <div
-          class="margin-right-2"
-        >
-          <h2
-            class="margin-bottom-1 font-heading-xs text-bold"
-          >
-            Employer ID number (EIN)
-          </h2>
-          12-3456789
-        </div>
-      </div>
-      <div
         class="display-flex flex-align-end margin-top-6 margin-bottom-3"
       >
         <h2
@@ -89,6 +66,34 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
           
            
           Doe
+        </div>
+      </div>
+      <div
+        class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+      >
+        <div
+          class="margin-right-2"
+        >
+          <h3
+            class="margin-bottom-1 font-heading-xs text-bold"
+          >
+            Organization
+          </h3>
+          Work Inc.
+        </div>
+      </div>
+      <div
+        class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+      >
+        <div
+          class="margin-right-2"
+        >
+          <h3
+            class="margin-bottom-1 font-heading-xs text-bold"
+          >
+            Employer ID number (EIN)
+          </h3>
+          12-3456789
         </div>
       </div>
       <div
@@ -145,130 +150,6 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
         </div>
       </div>
       <div
-        class="display-flex flex-align-end margin-top-6 margin-bottom-3"
-      >
-        <h2
-          class="flex-fill margin-right-1 font-heading-md text-bold"
-        >
-          Leave details
-        </h2>
-      </div>
-      <div
-        class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
-      >
-        <div
-          class="margin-right-2"
-        >
-          <h3
-            class="margin-bottom-1 font-heading-xs text-bold"
-          >
-            Leave type
-          </h3>
-          <a
-            href="https://www.mass.gov/leave-types-medical"
-            rel="noopener"
-            target="_blank"
-          >
-            Medical leave
-          </a>
-        </div>
-      </div>
-      <div
-        class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
-      >
-        <div
-          class="margin-right-2"
-        >
-          <h3
-            class="margin-bottom-1 font-heading-xs text-bold"
-          >
-            Application ID
-          </h3>
-          NTN-111-ABS-01
-        </div>
-      </div>
-      <div
-        class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
-      >
-        <div
-          class="margin-right-2"
-        >
-          <h3
-            class="margin-bottom-1 font-heading-xs text-bold"
-          >
-            Leave duration
-          </h3>
-          1/1/2022 to 7/1/2022
-        </div>
-      </div>
-      <div
-        class="display-flex flex-align-end margin-top-6 margin-bottom-3"
-      >
-        <h2
-          class="flex-fill margin-right-1 font-heading-md text-bold"
-        >
-          Leave schedule
-        </h2>
-      </div>
-      <p>
-        This is your employee’s expected leave schedule.
-      </p>
-      <table
-        class="usa-table usa-table--borderless width-full usa-table--stacked"
-      >
-        <thead>
-          <tr>
-            <th
-              scope="col"
-            >
-              Date range
-            </th>
-            <th
-              scope="col"
-            >
-              Leave frequency
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <th
-              data-label="Date range"
-              scope="row"
-            >
-              1/1/2022 to 6/1/2022
-            </th>
-            <td
-              data-label="Leave frequency"
-            >
-              Continuous leave
-            </td>
-          </tr>
-          <tr>
-            <th
-              data-label="Date range"
-              scope="row"
-            >
-              2/1/2022 to 7/1/2022
-            </th>
-            <td
-              data-label="Leave frequency"
-            >
-              Reduced leave schedule
-            </td>
-          </tr>
-        </tbody>
-      </table>
-      <div
-        class="display-flex flex-align-end margin-top-6 margin-bottom-3"
-      >
-        <h2
-          class="flex-fill margin-right-1 font-heading-md text-bold"
-        >
-          Supporting work details
-        </h2>
-      </div>
-      <div
         class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
       >
         <div
@@ -301,6 +182,29 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
           </svg>
           Amend
         </button>
+      </div>
+      <div
+        class="display-flex flex-align-end margin-top-6 margin-bottom-3"
+      >
+        <h2
+          class="flex-fill margin-right-1 font-heading-md text-bold"
+        >
+          Leave details
+        </h2>
+      </div>
+      <div
+        class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+      >
+        <div
+          class="margin-right-2"
+        >
+          <h3
+            class="margin-bottom-1 font-heading-xs text-bold"
+          >
+            Leave duration
+          </h3>
+          1/1/2022 to 7/1/2022
+        </div>
       </div>
       <div
         class="display-flex flex-align-end margin-top-6 margin-bottom-3"

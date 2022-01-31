@@ -46,30 +46,30 @@ const CaringLeaveQuestion = (props: CaringLeaveQuestionProps) => {
         choices={[
           {
             checked: believeRelationshipAccurate === "Yes",
-            label: t("components.employersLeaveDetails.choiceYes"),
+            label: t("components.employersCaringLeaveQuestion.choiceYes"),
             value: "Yes",
           },
           {
             checked: believeRelationshipAccurate === "Unknown",
-            label: t("components.employersLeaveDetails.choiceUnknown"),
+            label: t("components.employersCaringLeaveQuestion.choiceUnknown"),
             value: "Unknown",
           },
           {
             checked: believeRelationshipAccurate === "No",
-            label: t("components.employersLeaveDetails.choiceNo"),
+            label: t("components.employersCaringLeaveQuestion.choiceNo"),
             value: "No",
           },
         ]}
         label={
           <ReviewHeading level="2">
             {t(
-              "components.employersLeaveDetails.familyMemberRelationshipLabel"
+              "components.employersCaringLeaveQuestion.familyMemberRelationshipLabel"
             )}
           </ReviewHeading>
         }
         hint={
           <Trans
-            i18nKey="components.employersLeaveDetails.familyMemberRelationshipHint"
+            i18nKey="components.employersCaringLeaveQuestion.familyMemberRelationshipHint"
             components={{
               "eligible-relationship-link": (
                 <a
@@ -88,13 +88,13 @@ const CaringLeaveQuestion = (props: CaringLeaveQuestionProps) => {
         <Alert
           state="warning"
           heading={t(
-            "components.employersLeaveDetails.inaccurateRelationshipAlertHeading"
+            "components.employersCaringLeaveQuestion.inaccurateRelationshipAlertHeading"
           )}
           headingSize="3"
           className="measure-5 margin-y-3"
         >
           {t(
-            "components.employersLeaveDetails.inaccurateRelationshipAlertLead"
+            "components.employersCaringLeaveQuestion.inaccurateRelationshipAlertLead"
           )}
         </Alert>
         <div
@@ -106,7 +106,7 @@ const CaringLeaveQuestion = (props: CaringLeaveQuestionProps) => {
             small
             errorMsg={errorMsg}
           >
-            {t("components.employersLeaveDetails.commentHeading")}
+            {t("components.employersCaringLeaveQuestion.commentHeading")}
           </FormLabel>
           <textarea
             className={textAreaClasses}
@@ -121,7 +121,9 @@ const CaringLeaveQuestion = (props: CaringLeaveQuestionProps) => {
 
       <ConditionalContent visible={believeRelationshipAccurate === "Unknown"}>
         <Alert state="info" className="measure-5 margin-y-3">
-          {t("components.employersLeaveDetails.unknownRelationshipAlertLead")}
+          {t(
+            "components.employersCaringLeaveQuestion.unknownRelationshipAlertLead"
+          )}
         </Alert>
       </ConditionalContent>
     </React.Fragment>

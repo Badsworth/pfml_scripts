@@ -56,20 +56,7 @@ describe("EmployeeInformation", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("renders the correct employee information hierarchy ", () => {
-    render(<EmployeeInformation claim={claim} />);
-    const h2s = screen
-      .getAllByRole("heading", { level: 2 })
-      .map((h) => h.innerHTML);
-
-    expect(h2s.includes("Organization")).toBe(true);
-    expect(h2s.includes("Employer ID number (EIN)")).toBe(true);
-  });
-
-  it("renders the correct employee information hierarchy when employerShowMultiLeave is enabled", () => {
-    process.env.featureFlags = JSON.stringify({
-      employerShowMultiLeave: true,
-    });
+  it("renders the correct employee information hierarchy", () => {
     render(<EmployeeInformation claim={claim} />);
     const h3s = screen
       .getAllByRole("heading", { level: 3 })
