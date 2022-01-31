@@ -57,7 +57,7 @@ def _update_mfa_preference(
     log_attributes = {"mfa_preference": value, "updated_by": updated_by}
     logger.info("MFA updated for user", extra=log_attributes)
 
-    if value == "Opt Out":
+    if value == "Opt Out" and existing_mfa_preference is not None:
         _handle_mfa_disabled(user, last_updated_at)
 
 
