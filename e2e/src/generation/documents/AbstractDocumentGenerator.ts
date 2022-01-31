@@ -56,10 +56,14 @@ export abstract class AbstractDocumentGenerator<
     const pathToDoc = file
       ? path.join(process.cwd(), file as string)
       : undefined;
+    const name = pathToDoc
+      ? (pathToDoc.split("/").pop() as string)
+      : `${uuid()}.pdf`;
+
     return {
       // Assertion here so that we don't have to redefine all of the associated types downstream
       document_type: this.documentType as DocumentType,
-      name: file || name,
+      name,
       // Return a callback to generate the file. This is important when dealing with millions of claims, as it allows us
       // to trigger generation at save time.
       file:
