@@ -2609,7 +2609,7 @@ const pages: {
       "<p>To make changes to your payment method or banking information, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.</p>",
     changesToPaymentsYourPreferencesQuestion: "Change your payment preference",
     delaysToPaymentsScheduleAnswer:
-      "<p>Once your payments have started, expect to be paid weekly for the duration of your leave.</p><p><strong>What may cause a delayed payment</strong></p><p>The exact day you receive payment can be delayed because of:</p><ul><li>State and federal holidays</li><li>Leave periods that end on weekends</li><li>Your bank’s processes</li><li>The process to adjust your benefit amount due to additional income or benefits you or your employer reported</li><li>Changes to your leave’s start and end dates</li><li>Other processing issues such as issues with bank account information, or your address</li></ul><p><strong>What may lead to a cancelled payment</strong></p><p>Payments can be cancelled due to:</p><ul><li>Changes to when you end your leave</li><li>Paid time off taken on days you also receive PFML benefits</li><li>The process to adjust your benefit amount due to additional income or benefits you or your employer reported may temporarily create a cancelled payment</li></ul>",
+      "<strong>What may cause a delayed payment</strong><p>The exact day you receive payment can be delayed because of:</p><ul><li>State and federal holidays</li><li>Pay periods that end on weekends</li><li>Your bank’s processes</li><li>Changes to your leave’s start and end dates</li><li>Changes to your benefit amount due to additional income or benefits you or your employer reported</li><li>Other processing issues such as issues with bank account information or your address</li></ul><p><strong>What may cause a cancelled payment</strong></p><p>Payments can be cancelled because of:</p><ul><li>Paid time off taken on the same day you receive receive PFML benefits</li><li>Changes to your leave’s start and end dates</li><li>Changes to your benefit amount due to additional income or benefits you or your employer reported</li><li>Hours worked outside of the schedule you set up with your employer or during reported intermittent hours</li><li>If you believe we’ve cancelled your payments for an incorrect reason, you can <online-appeals-form>appeal the DFML decision.</online-appeals-form></ul>",
     delaysToPaymentsScheduleQuestion:
       "What may cause a delayed or cancelled payment",
     estimatedDate:
@@ -2624,23 +2624,23 @@ const pages: {
     infoAlertHeading_pregnancy: "$t(shared.infoAlertHeading_pregnancy)",
     loadingClaimDetailLabel: "$t(shared.loadingClaimDetailLabel)",
     paymentsIntro_Continuous_PostFourteenthClaimDate:
-      "<p>Check back on {{checkbackDate}} to see when you can expect your first payment. Your first payment will include multiple weeks of leave. After your first payment, payments are scheduled weekly.</p>",
+      "<p>Check back on {{checkbackDate}} to see when you can expect your first payment. Your first payment will include multiple weeks of leave. After your first payment, expect to be paid weekly.</p>",
     paymentsIntro_Continuous_PreFourteenthClaimDate:
-      "<p>Check back on {{checkbackDate}} to see when you can expect your first payment. After your first payment, payments are scheduled weekly. Your application has a 7-day waiting period at the start of your leave. You won’t receive any PFML payments for this week of leave.</p>",
+      "<p>Check back on {{checkbackDate}} to see when you can expect your first payment. Your first payment will be scheduled after your second week of leave ends. After your first payment, expect to be paid weekly.</p>",
     paymentsIntro_Continuous_Retroactive:
       "<p>Check back on {{checkbackDate}} to see when you can expect your first payment. You’ll receive one payment for your entire leave.</p>",
     paymentsIntro_Intermittent:
       "Once you report at least 8 hours, you can expect to receive a payment about one week later. You can receive more than one payment in a week depending on how your hours are reported. You can report your hours by calling <contact-center-report-phone-link>$t(shared.contactCenterReportHoursPhoneNumber)</contact-center-report-phone-link>.",
     paymentsIntro_Intermittent_Unpaid:
-      "<p>Your application has a 7-day waiting period after the first day you report taking leave. You won’t receive any PFML payments for these 7 days of leave.</p><p>After your waiting period, once you report at least 8 hours of leave you can expect to receive payment about one week later. You can receive more than one payment in a week depending on how your hours are reported.</p><p>You can report your hours by calling <contact-center-report-phone-link>$t(shared.contactCenterReportHoursPhoneNumber)</contact-center-report-phone-link>.</p>",
+      "<p>Your application has an unpaid 7-day waiting period that begins the first day you report taking leave.</p><p>You need to complete your unpaid 7-day waiting period waiting period and report at least 8 hours of leave before you will receive a payment from the Department. You may receive more than one payment per week depending on how your hours are reported.</p><p>Call the Hours Reporting line at <contact-center-report-phone-link>$t(shared.contactCenterReportHoursPhoneNumber)</contact-center-report-phone-link> each week to report the intermittent leave hours you used.</p>",
     paymentsIntro_NonIntermittent_NonRetro:
       "Payments are scheduled to be paid after each week of your leave. Check back weekly to see when your next payment will be scheduled.",
     paymentsIntro_NonIntermittent_Retro:
       "Since you were approved after your leave ended, you’ll receive one payment for your entire leave.",
     paymentsIntro_ReducedSchedule_PostFourteenthClaimDate:
-      "<p>Check back on {{checkbackDate}} to see when you can expect your first payment. You need to take at least 8 hours of leave for a payment to be processed.</p>",
+      "<p>Check back on {{checkbackDate}} to see when you can expect your first payment. You need to take at least 8 hours of leave or wait until 30 days have passed for a payment to be scheduled.</p>",
     paymentsIntro_ReducedSchedule_PreFourteenthClaimDate:
-      "<p>Check back on {{checkbackDate}} to see when you can expect your first payment. You need to take at least 8 hours of leave for a payment to be processed. Your application has a 7-day waiting period at the start of your leave. You won’t receive any PFML payments for this week of leave.</p>",
+      "<p>Check back on {{checkbackDate}} to see when you can expect your first payment. You need to take at least 8 hours of leave or wait until 30 days have passed for a payment to be scheduled.</p>",
     paymentsIntro_ReducedSchedule_Retroactive:
       "$t(pages.payments.paymentsIntro_Continuous_Retroactive)",
     paymentsTitle: "Payments",
@@ -2661,7 +2661,7 @@ const pages: {
     "tablePaymentStatus_Sent to bank": "Sent",
     tableWaitingWeekGeneric:
       "The first seven (7) days of approved leave are unpaid",
-    tableWaitingWeekHeader: "Waiting week",
+    tableWaitingWeekHeader: "Waiting period",
     tableWaitingWeekText:
       "Learn more about the <waiting-week-link>7-day waiting period</waiting-week-link>.",
     whatDoesEstimatedDateMean:
