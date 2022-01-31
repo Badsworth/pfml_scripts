@@ -12,6 +12,7 @@ class Metrics:
         "unsuccessful_dua_demographics_reference_files_count"
     )
     INSERTED_DUA_DEMOGRAPHICS_ROW_COUNT = "inserted_dua_demographics_row_count"
+    EMPLOYEE_SKIPPED_COUNT = "employee_skipped_count"
     OCCUPATION_ORG_UNIT_SET_COUNT = "occupation_org_unit_set_count"
     OCCUPATION_ORG_UNIT_SKIPPED_COUNT = "occupation_org_unit_skipped_count"
     MISSING_DUA_REPORTING_UNIT_COUNT = "missing_dua_reporting_unit_count"
