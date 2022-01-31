@@ -39,7 +39,6 @@ export abstract class AbstractDocumentGenerator<
     claim: ApplicationRequestBody,
     config: C
   ): DocumentWithPromisedFile {
-    const name = `${uuid()}.pdf`;
     if (
       config.filename &&
       typeof config.filename !== "string" &&
