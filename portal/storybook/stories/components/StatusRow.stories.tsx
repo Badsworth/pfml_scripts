@@ -2,7 +2,7 @@ import React from "react";
 import StatusRow from "src/components/StatusRow";
 
 export default {
-  title: "Components/StatusRow",
+  title: "Features/Employer review/StatusRow",
   component: StatusRow,
 };
 

@@ -7,7 +7,7 @@ import User from "src/models/User";
 import useMockableAppLogic from "lib/mock-helpers/useMockableAppLogic";
 
 export default {
-  title: "Components/PageWrapper",
+  title: "Templates/Page wrapper",
   component: PageWrapper,
   argTypes: {
     Authentication: {

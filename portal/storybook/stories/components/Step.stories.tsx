@@ -3,7 +3,7 @@ import React from "react";
 import Step from "src/components/Step";
 
 export default {
-  title: "Components/StepList/Step",
+  title: "Features/Applications/StepList/Step",
   component: Step,
 };
 

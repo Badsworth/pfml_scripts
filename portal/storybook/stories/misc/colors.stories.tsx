@@ -5,7 +5,7 @@
 import React, { useEffect, useRef, useState } from "react";
 
 export default {
-  title: "Utilities/Colors",
+  title: "Misc/Colors",
 };
 
 const Swatch = ({ token }: { token: string }) => {

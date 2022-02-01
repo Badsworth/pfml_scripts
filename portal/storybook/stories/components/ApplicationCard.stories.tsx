@@ -7,7 +7,7 @@ import React from "react";
 import { createMockBenefitsApplicationDocument } from "lib/mock-helpers/createMockDocument";
 
 export default {
-  title: "Components/ApplicationCard",
+  title: "Features/Applications/ApplicationCard",
   component: ApplicationCard,
   args: {
     number: 1,

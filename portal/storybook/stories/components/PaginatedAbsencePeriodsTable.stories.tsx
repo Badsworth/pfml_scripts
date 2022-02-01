@@ -4,7 +4,7 @@ import React from "react";
 import { createAbsencePeriod } from "lib/mock-helpers/createAbsencePeriod";
 
 export default {
-  title: "Components/PaginatedAbsencePeriodsTable",
+  title: "Features/Employer review/PaginatedAbsencePeriodsTable",
   component: PaginatedAbsencePeriodsTable,
 };
 

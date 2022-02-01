@@ -23,7 +23,7 @@ const managedRequirementsData: ManagedRequirement[] = [
 ];
 
 export default {
-  title: "Components/AbsenceCaseStatusTag",
+  title: "Features/Employer review/AbsenceCaseStatusTag",
   component: AbsenceCaseStatusTag,
   argTypes: {
     status: {
