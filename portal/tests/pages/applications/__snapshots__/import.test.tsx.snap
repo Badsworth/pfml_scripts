@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Find renders the page 1`] = `
+exports[`Import renders the page 1`] = `
 <div>
   <form
     class="usa-form"
@@ -10,12 +10,17 @@ exports[`Find renders the page 1`] = `
       class="js-title margin-top-0 margin-bottom-2 font-heading-lg line-height-sans-2"
       tabindex="-1"
     >
-      Find My Application
+      Add an existing application
     </h1>
     <p
       class="usa-intro"
     >
-      To locate your application, please enter information for each field.
+      We need some information to identify your application.
+    </p>
+    <p
+      class="usa-intro"
+    >
+      Reminder: You’ll need to keep managing applications through the Contact Center if you are self-employed or unemployed or if you are applying for military-related paid family leave benefits.
     </p>
     <div
       class="usa-form-group"
@@ -25,16 +30,21 @@ exports[`Find renders the page 1`] = `
         for="InputText1"
         id="InputText1_label"
       >
-        Last 4 digits of Social Security Number
+        Social Security Number (SSN)
       </label>
-      <input
-        aria-labelledby="InputText1_label InputText1_hint InputText1_error"
-        class="usa-input usa-input--small"
-        id="InputText1"
-        name="tax_identifier_last4"
-        type="text"
-        value=""
-      />
+      <div
+        class=""
+      >
+        <input
+          aria-labelledby="InputText1_label InputText1_hint InputText1_error"
+          class="usa-input usa-input--medium"
+          id="InputText1"
+          inputmode="numeric"
+          name="tax_identifier"
+          type="text"
+          value=""
+        />
+      </div>
     </div>
     <div
       class="usa-form-group"
@@ -44,13 +54,13 @@ exports[`Find renders the page 1`] = `
         for="InputText2"
         id="InputText2_label"
       >
-        Application ID
+        Application ID number
       </label>
       <input
         aria-labelledby="InputText2_label InputText2_hint InputText2_error"
         class="usa-input usa-input--medium"
         id="InputText2"
-        name="absence_id"
+        name="absence_case_id"
         type="text"
         value=""
       />
