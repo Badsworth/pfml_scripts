@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Employer dashboard renders a table of claims with links if employer is registered in FINEOS 1`] = `
+exports[`Employer dashboard deprecated: renders a table of claims with links if employer is registered in FINEOS 1`] = `
 <table
   class="usa-table usa-table--borderless width-full usa-table--stacked"
 >
@@ -89,9 +89,88 @@ exports[`Employer dashboard renders a table of claims with links if employer is 
 </table>
 `;
 
+exports[`Employer dashboard renders a table of claims 1`] = `
+<table
+  class="usa-table usa-table--borderless width-full usa-table--stacked"
+>
+  <thead>
+    <tr>
+      <th
+        scope="col"
+      >
+        Employee (Application ID)
+      </th>
+      <th
+        scope="col"
+      >
+        Organization (FEIN)
+      </th>
+      <th
+        scope="col"
+      >
+        Leave details
+      </th>
+      <th
+        scope="col"
+      >
+        Review due date
+      </th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th
+        data-label="Employee (Application ID)"
+        scope="row"
+      >
+        Jane Doe
+        NTN-111-ABS-01
+      </th>
+      <td
+        data-label="Organization (FEIN)"
+      />
+      <td
+        data-label="Leave details"
+      />
+      <td
+        data-label="Review due date"
+      />
+    </tr>
+  </tbody>
+</table>
+`;
+
+exports[`Employer dashboard renders a verification message in the table, when all employers are unverified 1`] = `
+<td
+  colspan="4"
+>
+  You have not verified any organizations. 
+  <a
+    href="/employers/organizations"
+  >
+    Complete this process
+  </a>
+   to review applications.
+</td>
+`;
+
+exports[`Employer dashboard renders a verification message in the table, when all employers are unverified 2`] = `
+<td
+  colspan="5"
+>
+  You have not verified any organizations. 
+  <a
+    href="/employers/organizations"
+  >
+    Complete this process
+  </a>
+   to review applications.
+</td>
+`;
+
 exports[`Employer dashboard renders the banner if there are any unverified employers 1`] = `
 <div
-  aria-labelledby="alert-heading176"
+  aria-labelledby="alert-heading313"
   class="usa-alert usa-alert--warning"
   role="region"
   tabindex="-1"
@@ -101,7 +180,7 @@ exports[`Employer dashboard renders the banner if there are any unverified emplo
   >
     <h2
       class="usa-alert__heading font-heading-md text-bold"
-      id="alert-heading176"
+      id="alert-heading313"
     >
       Verify your account
     </h2>

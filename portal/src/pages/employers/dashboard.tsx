@@ -6,6 +6,7 @@ import withClaims, { ApiParams } from "../../hoc/withClaims";
 import withUser, { WithUserProps } from "../../hoc/withUser";
 import Alert from "../../components/core/Alert";
 import Button from "../../components/core/Button";
+import DeprecatedPaginatedClaimsTable from "../../features/employer-dashboard/DeprecatedPaginatedClaimsTable";
 import Details from "../../components/core/Details";
 import EmployerNavigationTabs from "../../components/employers/EmployerNavigationTabs";
 import Filters from "../../features/employer-dashboard/Filters";
@@ -15,7 +16,7 @@ import Title from "../../components/core/Title";
 import { Trans } from "react-i18next";
 import { get } from "lodash";
 import isBlank from "../../utils/isBlank";
-import routes from "../../routes";
+import { isFeatureEnabled } from "../../services/featureFlags";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
@@ -60,12 +61,15 @@ export const Dashboard = (props: WithUserProps & { query: ApiParams }) => {
     if (introElementRef.current) introElementRef.current.scrollIntoView();
   };
 
-  const PaginatedClaimsTableWithClaims = withClaims(
-    PaginatedClaimsTable,
-    apiParams
-  );
-  const componentSpecificProps = {
+  const PaginatedClaimsTableWithClaims = isFeatureEnabled(
+    "employerShowMultiLeaveDashboard"
+  )
+    ? withClaims(PaginatedClaimsTable, apiParams)
+    : withClaims(DeprecatedPaginatedClaimsTable, apiParams);
+  const claimsTableProps = {
     updatePageQuery,
+    getNextPageRoute: props.appLogic.portalFlow.getNextPageRoute,
+    hasOnlyUnverifiedEmployers: props.user.hasOnlyUnverifiedEmployers,
     sort: (
       <SortDropdown
         order_by={apiParams.order_by}
@@ -91,7 +95,11 @@ export const Dashboard = (props: WithUserProps & { query: ApiParams }) => {
                 i18nKey="pages.employersDashboard.verificationBody"
                 components={{
                   "your-organizations-link": (
-                    <a href={routes.employers.organizations} />
+                    <a
+                      href={props.appLogic.portalFlow.getNextPageRoute(
+                        "VERIFY_ORG"
+                      )}
+                    />
                   ),
                 }}
               />
@@ -133,7 +141,7 @@ export const Dashboard = (props: WithUserProps & { query: ApiParams }) => {
       />
       <PaginatedClaimsTableWithClaims
         appLogic={props.appLogic}
-        {...componentSpecificProps}
+        {...claimsTableProps}
       />
     </React.Fragment>
   );

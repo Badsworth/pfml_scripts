@@ -13,6 +13,7 @@ import userEvent from "@testing-library/user-event";
 // Avoid issue where USWDS generates unique ID each render,
 // which causes havoc for our snapshot testing
 // https://github.com/uswds/uswds/issues/4338
+// TODO (PORTAL-1560): Remove this mock, once the new deprecated table component is removed
 jest.mock("../../../src/components/core/TooltipIcon", () => ({
   __esModule: true,
   default: () => null,
@@ -126,7 +127,8 @@ describe("Employer dashboard", () => {
     expect(container).toMatchSnapshot();
   });
 
-  it("renders a table of claims with links if employer is registered in FINEOS", () => {
+  // TODO (PORTAL-1560): Remove this test, once the deprecated table component is removed
+  it("deprecated: renders a table of claims with links if employer is registered in FINEOS", () => {
     const claims = getClaims(verifiedUserLeaveAdministrator);
     const userAttrs = {
       // Set multiple employers so the table shows all possible columns
@@ -141,7 +143,22 @@ describe("Employer dashboard", () => {
     expect(screen.getByRole("table")).toMatchSnapshot();
   });
 
-  it("renders claim rows without links if employer is not registered in FINEOS", () => {
+  it("renders a table of claims", () => {
+    process.env.featureFlags = JSON.stringify({
+      employerShowMultiLeaveDashboard: true,
+    });
+    const claims = getClaims(verifiedUserLeaveAdministrator);
+    const userAttrs = {
+      user_leave_administrators: [verifiedUserLeaveAdministrator],
+    };
+
+    setup({ claims, userAttrs });
+
+    expect(screen.getByRole("table")).toMatchSnapshot();
+  });
+
+  // TODO (PORTAL-1560): Remove this test, once the deprecated table component is removed
+  it("deprecated: renders claim rows without links if employer is not registered in FINEOS", () => {
     const verifiedButNotInFineos = {
       ...verifiableUserLeaveAdministrator,
       verified: true,
@@ -158,24 +175,32 @@ describe("Employer dashboard", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("renders '--' when a Claim's Employee name is blank", () => {
-    let claims = getClaims(verifiedUserLeaveAdministrator);
-    claims = claims.map((claim) => {
-      claim.employee = null;
-      return claim;
-    });
+  // TODO (PORTAL-1560) Remove the .each portion once flag is always enabled
+  it.each([true, false])(
+    "renders '--' when a Claim's Employee name is blank",
+    (employerShowMultiLeaveDashboard) => {
+      process.env.featureFlags = JSON.stringify({
+        employerShowMultiLeaveDashboard,
+      });
+      let claims = getClaims(verifiedUserLeaveAdministrator);
+      claims = claims.map((claim) => {
+        claim.employee = null;
+        return claim;
+      });
 
-    setup({
-      claims,
-      userAttrs: {
-        user_leave_administrators: [verifiedUserLeaveAdministrator],
-      },
-    });
+      setup({
+        claims,
+        userAttrs: {
+          user_leave_administrators: [verifiedUserLeaveAdministrator],
+        },
+      });
 
-    expect(screen.getByRole("rowheader", { name: "--" })).toBeInTheDocument();
-  });
+      expect(screen.getByRole("rowheader", { name: /--/ })).toBeInTheDocument();
+    }
+  );
 
-  it("renders Organization column only when user has more than one Employer", () => {
+  // TODO (PORTAL-1560): Remove this test, once the deprecated table component is removed
+  it("deprecated: renders Organization column only when user has more than one Employer", () => {
     // Organization column should NOT
     setup({
       userAttrs: {
@@ -219,53 +244,98 @@ describe("Employer dashboard", () => {
     `);
   });
 
-  it("renders a 'no results' message in the table, and no pagination components when no claims are present", () => {
-    setup({
-      userAttrs: {
-        user_leave_administrators: [verifiedUserLeaveAdministrator],
-      },
-      paginationMeta: {
-        total_records: 0,
-        total_pages: 1,
-      },
-    });
+  // TODO (PORTAL-1560) Remove the .each portion once flag is always enabled
+  it.each([true, false])(
+    "renders a 'no results' message in the table, and no pagination components when no claims are present",
+    (employerShowMultiLeaveDashboard) => {
+      process.env.featureFlags = JSON.stringify({
+        employerShowMultiLeaveDashboard,
+      });
 
-    expect(
-      screen.getByRole("cell", { name: "No applications on file" })
-    ).toBeInTheDocument();
-    expect(
-      screen.queryByRole("button", { name: /next/i })
-    ).not.toBeInTheDocument();
-  });
+      setup({
+        userAttrs: {
+          user_leave_administrators: [verifiedUserLeaveAdministrator],
+        },
+        paginationMeta: {
+          total_records: 0,
+          total_pages: 1,
+        },
+      });
 
-  it("renders only the pagination summary when only one page of claims exists", () => {
-    setup({
-      paginationMeta: {
-        total_records: 25,
-        total_pages: 1,
-      },
-    });
+      expect(
+        screen.getByRole("cell", { name: "No applications on file" })
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: /next/i })
+      ).not.toBeInTheDocument();
+    }
+  );
 
-    expect(screen.getByText(/Viewing 1 to 25 of 25/i)).toBeInTheDocument();
-    expect(
-      screen.queryByRole("button", { name: /next/i })
-    ).not.toBeInTheDocument();
-  });
+  // TODO (PORTAL-1560) Remove the .each portion once flag is always enabled
+  // eslint-disable-next-line jest/no-focused-tests
+  it.each([true, false])(
+    "renders a verification message in the table, when all employers are unverified",
+    (employerShowMultiLeaveDashboard) => {
+      process.env.featureFlags = JSON.stringify({
+        employerShowMultiLeaveDashboard,
+      });
 
-  it("changes the page_offset query param when a page navigation button is clicked", () => {
-    const { updateQuerySpy } = setup({
-      paginationMeta: {
-        page_offset: 2,
-        total_pages: 3,
-      },
-    });
+      setup({
+        userAttrs: {
+          user_leave_administrators: [verifiableUserLeaveAdministrator],
+        },
+      });
 
-    userEvent.click(screen.getByRole("button", { name: /next/i }));
+      expect(
+        screen.getByRole("cell", {
+          name: /You have not verified any organizations/,
+        })
+      ).toMatchSnapshot();
+    }
+  );
 
-    expect(updateQuerySpy).toHaveBeenCalledWith({
-      page_offset: "3",
-    });
-  });
+  // TODO (PORTAL-1560) Remove the .each portion once flag is always enabled
+  it.each([true, false])(
+    "renders only the pagination summary when only one page of claims exists",
+    (employerShowMultiLeaveDashboard) => {
+      process.env.featureFlags = JSON.stringify({
+        employerShowMultiLeaveDashboard,
+      });
+      setup({
+        paginationMeta: {
+          total_records: 25,
+          total_pages: 1,
+        },
+      });
+
+      expect(screen.getByText(/Viewing 1 to 25 of 25/i)).toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: /next/i })
+      ).not.toBeInTheDocument();
+    }
+  );
+
+  // TODO (PORTAL-1560) Remove the .each portion once flag is always enabled
+  it.each([true, false])(
+    "changes the page_offset query param when a page navigation button is clicked",
+    (employerShowMultiLeaveDashboard) => {
+      process.env.featureFlags = JSON.stringify({
+        employerShowMultiLeaveDashboard,
+      });
+      const { updateQuerySpy } = setup({
+        paginationMeta: {
+          page_offset: 2,
+          total_pages: 3,
+        },
+      });
+
+      userEvent.click(screen.getByRole("button", { name: /next/i }));
+
+      expect(updateQuerySpy).toHaveBeenCalledWith({
+        page_offset: "3",
+      });
+    }
+  );
 
   it("renders the banner if there are any unverified employers", () => {
     setup({
@@ -500,7 +570,8 @@ describe("Employer dashboard", () => {
     });
   });
 
-  it("renders Review By status", () => {
+  // TODO (PORTAL-1560): Remove or update this test, once the deprecated table component is removed
+  it("deprecated: renders Review By status", () => {
     const claims = getClaims(verifiedUserLeaveAdministrator);
     claims[0].managed_requirements = [
       {
