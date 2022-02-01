@@ -1,57 +1,51 @@
-import AbsenceCaseStatusTag from "../../components/AbsenceCaseStatusTag";
 import ApiResourceCollection from "../../models/ApiResourceCollection";
-import { AppLogic } from "../../hooks/useAppLogic";
 import Claim from "../../models/Claim";
-import Link from "next/link";
-import { PageQueryParam } from "../../features/employer-dashboard/SortDropdown";
+import { PageQueryParam } from "./SortDropdown";
+import PaginationMeta from "../../models/PaginationMeta";
 import PaginationNavigation from "../../components/PaginationNavigation";
 import PaginationSummary from "../../components/PaginationSummary";
+import { PortalFlow } from "../../hooks/usePortalFlow";
 import React from "react";
 import Table from "../../components/core/Table";
-import TooltipIcon from "../../components/core/TooltipIcon";
 import { Trans } from "react-i18next";
-import User from "../../models/User";
 import { WithClaimsProps } from "../../hoc/withClaims";
-import formatDateRange from "../../utils/formatDateRange";
-import { get } from "lodash";
-import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
 
-interface PaginatedClaimsTableProps extends WithClaimsProps {
+/**
+ * Columns rendered in the table.
+ * Used as i18n context for rendering headers, and determining
+ * what content to render in each column.
+ */
+const tableColumnKeys = [
+  "employee_and_case",
+  "employer",
+  "leave_details",
+  "review_status",
+] as const;
+
+export interface PaginatedClaimsTableProps extends WithClaimsProps {
+  claims: ApiResourceCollection<Claim>;
+  getNextPageRoute: PortalFlow["getNextPageRoute"];
+  hasOnlyUnverifiedEmployers: boolean;
+  paginationMeta: PaginationMeta;
   updatePageQuery: (params: PageQueryParam[]) => void;
   /** Pass in the SortDropdown so it can be rendered in the expected inline UI position */
   sort: React.ReactNode;
 }
 
 const PaginatedClaimsTable = (props: PaginatedClaimsTableProps) => {
-  const { paginationMeta, updatePageQuery, user } = props;
+  const { claims, paginationMeta } = props;
   const { t } = useTranslation();
 
-  const hasOnlyUnverifiedEmployers = user.hasOnlyUnverifiedEmployers;
-  const tableColumnVisibility = {
-    employee_name: true,
-    fineos_absence_id: true,
-    employer_dba: user.user_leave_administrators.length > 1,
-    employer_fein: true,
-    created_at: true,
-    status: true,
+  /** Helper for determining what to display in our table body. Keeps conditions simpler in our render section */
+  const getTableBodyState = () => {
+    if (props.hasOnlyUnverifiedEmployers) return "no_verifications";
+    return claims.isEmpty ? "empty" : "show_claims";
   };
+  const tableBodyState = getTableBodyState();
 
-  /**
-   * Columns rendered in the table.
-   * Used for rendering header labels and the field(s) in each column. These
-   * mostly mirror the name of the fields rendered, but not exactly
-   * since some columns might require multiple fields.
-   */
-  const tableColumnKeys = Object.entries(tableColumnVisibility)
-    .filter(([_columnKey, isVisible]) => isVisible)
-    .map(([columnKey]) => columnKey);
-
-  /**
-   * Event handler for when a next/prev pagination button is clicked
-   */
-  const handlePaginationNavigationClick = (pageOffset: number | string) => {
-    updatePageQuery([
+  const handlePaginationNavigationClick = (pageOffset: number) => {
+    props.updatePageQuery([
       {
         name: "page_offset",
         value: pageOffset,
@@ -79,38 +73,36 @@ const PaginatedClaimsTable = (props: PaginatedClaimsTableProps) => {
                 {t("pages.employersDashboard.tableColHeading", {
                   context: columnKey,
                 })}
-                {columnKey === "created_at" && (
-                  <TooltipIcon position="bottom">
-                    {t("pages.employersDashboard.startDateTooltip")}
-                  </TooltipIcon>
-                )}
               </th>
             ))}
           </tr>
         </thead>
         <tbody>
-          {hasOnlyUnverifiedEmployers && (
+          {tableBodyState === "no_verifications" && (
             <tr data-test="verification-instructions-row">
               <td colSpan={tableColumnKeys.length}>
                 <Trans
                   i18nKey="pages.employersDashboard.verificationInstructions"
                   components={{
                     "your-organizations-link": (
-                      <a href={routes.employers.organizations} />
+                      <a href={props.getNextPageRoute("VERIFY_ORG")} />
                     ),
                   }}
                 />
               </td>
             </tr>
           )}
-          {!hasOnlyUnverifiedEmployers && (
-            <ClaimTableRows
-              appLogic={props.appLogic}
-              claims={props.claims}
-              tableColumnKeys={tableColumnKeys}
-              user={user}
-            />
+          {tableBodyState === "empty" && (
+            <tr>
+              <td colSpan={tableColumnKeys.length}>
+                {t("pages.employersDashboard.noClaimResults")}
+              </td>
+            </tr>
           )}
+          {tableBodyState === "show_claims" &&
+            claims.items.map((claim) => (
+              <ClaimTableRow key={claim.fineos_absence_id} claim={claim} />
+            ))}
         </tbody>
       </Table>
       {paginationMeta.total_pages > 1 && (
@@ -124,116 +116,49 @@ const PaginatedClaimsTable = (props: PaginatedClaimsTableProps) => {
   );
 };
 
-interface ClaimTableRowsProps {
-  appLogic: AppLogic;
-  claims: ApiResourceCollection<Claim>;
-  tableColumnKeys: string[];
-  user: User;
+interface ClaimTableRowProps {
+  claim: Claim;
 }
 
-/**
- * Renders the <tr> elements for each claim, or a message indicating
- * no claim data exists
- */
-const ClaimTableRows = (props: ClaimTableRowsProps) => {
-  const { appLogic, claims, tableColumnKeys, user } = props;
+const ClaimTableRow = (props: ClaimTableRowProps) => {
+  const { claim } = props;
   const { t } = useTranslation();
-
-  if (claims.isEmpty) {
-    return (
-      <tr>
-        <td colSpan={tableColumnKeys.length}>
-          {t("pages.employersDashboard.noClaimResults")}
-        </td>
-      </tr>
-    );
-  }
-
-  /**
-   * Helper for mapping a column key to the value
-   * the user should see
-   */
-  const getValueForColumn = (claim: Claim, columnKey: string) => {
-    const claimRoute = appLogic.portalFlow.getNextPageRoute(
-      "VIEW_CLAIM",
-      {},
-      { absence_id: get(claim, "fineos_absence_id") }
-    );
-    const employerFein = get(claim, "employer.employer_fein");
-    const fullName = get(claim, "employee.fullName", "--");
-    const isEmployerRegisteredInFineos = user.isEmployerIdRegisteredInFineos(
-      get(claim, "employer.employer_id")
-    );
-
+  const getColumnContents = (columnKey: typeof tableColumnKeys[number]) => {
     switch (columnKey) {
-      case "created_at":
-        return formatDateRange(get(claim, columnKey));
-      case "fineos_absence_id":
-        return isEmployerRegisteredInFineos ? (
-          <Link href={claimRoute}>
-            <a>{get(claim, columnKey)}</a>
-          </Link>
-        ) : (
-          get(claim, columnKey)
-        );
-      case "employee_name":
-        return isEmployerRegisteredInFineos ? (
-          <Link href={claimRoute}>
-            <a>{fullName}</a>
-          </Link>
-        ) : (
-          fullName
-        );
-      case "employer_dba":
-        return get(claim, "employer.employer_dba");
-      case "employer_fein":
-        return employerFein;
-      case "status":
+      case "employee_and_case":
         return (
-          <AbsenceCaseStatusTag
-            status={get(claim, "claim_status")}
-            managedRequirements={get(claim, "managed_requirements")}
-          />
+          <React.Fragment>
+            {claim.employee?.fullName || "--"}
+            {claim.fineos_absence_id}
+          </React.Fragment>
         );
-
       default:
-        return "";
+        break;
     }
   };
 
-  const renderClaimItems = () => {
-    const claimItemsJSX: JSX.Element[] = [];
-
-    claims.items.forEach((claim) => {
-      claimItemsJSX.push(
-        <tr key={claim.fineos_absence_id}>
-          <th
-            scope="row"
-            data-label={t("pages.employersDashboard.tableColHeading", {
-              context: tableColumnKeys[0],
-            })}
-            data-test={tableColumnKeys[0]}
-          >
-            {getValueForColumn(claim, tableColumnKeys[0])}
-          </th>
-          {tableColumnKeys.slice(1).map((columnKey) => (
-            <td
-              key={columnKey}
-              data-label={t("pages.employersDashboard.tableColHeading", {
-                context: columnKey,
-              })}
-            >
-              {getValueForColumn(claim, columnKey)}
-            </td>
-          ))}
-        </tr>
-      );
-    });
-
-    return claimItemsJSX;
-  };
-
-  return <React.Fragment>{renderClaimItems()}</React.Fragment>;
+  return (
+    <tr>
+      <th
+        scope="row"
+        data-label={t("pages.employersDashboard.tableColHeading", {
+          context: tableColumnKeys[0],
+        })}
+      >
+        {getColumnContents(tableColumnKeys[0])}
+      </th>
+      {tableColumnKeys.slice(1).map((columnKey) => (
+        <td
+          key={columnKey}
+          data-label={t("pages.employersDashboard.tableColHeading", {
+            context: columnKey,
+          })}
+        >
+          {getColumnContents(columnKey)}
+        </td>
+      ))}
+    </tr>
+  );
 };
 
 export default PaginatedClaimsTable;

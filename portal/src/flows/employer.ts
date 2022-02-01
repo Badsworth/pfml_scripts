@@ -22,6 +22,7 @@ export default {
     },
     [routes.employers.dashboard]: {
       on: {
+        VERIFY_ORG: routes.employers.organizations,
         // New Application page handles conditional routing for claims, because the logic
         // is dependent on fetching additional claim data from Fineos first
         VIEW_CLAIM: routes.employers.newApplication,
