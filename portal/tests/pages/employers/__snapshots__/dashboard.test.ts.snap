@@ -334,117 +334,120 @@ exports[`Employer dashboard renders the page with expected content and paginatio
       Show filters
     </button>
   </div>
-  <form
-    class="bg-primary-lighter padding-x-3 padding-top-1px padding-bottom-3 usa-form maxw-none"
+  <div
     hidden=""
     id="filters"
   >
-    <fieldset
-      class="usa-fieldset margin-top-3 usa-form-group"
+    <form
+      class="bg-primary-lighter padding-x-3 padding-top-1px padding-bottom-3 usa-form maxw-none"
     >
-      <legend
-        class="usa-label text-bold usa-legend font-heading-xs measure-5"
+      <fieldset
+        class="usa-fieldset margin-top-3 usa-form-group"
       >
-        Status
-      </legend>
-      <div
-        class=""
+        <legend
+          class="usa-label text-bold usa-legend font-heading-xs measure-5"
+        >
+          Status
+        </legend>
+        <div
+          class=""
+        >
+          <div
+            class="usa-checkbox measure-5 bg-transparent"
+          >
+            <input
+              class="usa-checkbox__input"
+              id="InputChoice2"
+              name="claim_status"
+              type="checkbox"
+              value="Approved"
+            />
+            <label
+              class="usa-checkbox__label"
+              for="InputChoice2"
+            >
+              Approved
+            </label>
+          </div>
+          <div
+            class="usa-checkbox measure-5 bg-transparent"
+          >
+            <input
+              class="usa-checkbox__input"
+              id="InputChoice3"
+              name="claim_status"
+              type="checkbox"
+              value="Closed"
+            />
+            <label
+              class="usa-checkbox__label"
+              for="InputChoice3"
+            >
+              Closed
+            </label>
+          </div>
+          <div
+            class="usa-checkbox measure-5 bg-transparent"
+          >
+            <input
+              class="usa-checkbox__input"
+              id="InputChoice4"
+              name="claim_status"
+              type="checkbox"
+              value="Declined"
+            />
+            <label
+              class="usa-checkbox__label"
+              for="InputChoice4"
+            >
+              Denied
+            </label>
+          </div>
+          <div
+            class="usa-checkbox measure-5 bg-transparent"
+          >
+            <input
+              class="usa-checkbox__input"
+              id="InputChoice5"
+              name="claim_status"
+              type="checkbox"
+              value="Pending - no action"
+            />
+            <label
+              class="usa-checkbox__label"
+              for="InputChoice5"
+            >
+              No action required
+            </label>
+          </div>
+          <div
+            class="usa-checkbox measure-5 bg-transparent"
+          >
+            <input
+              class="usa-checkbox__input"
+              id="InputChoice6"
+              name="claim_status"
+              type="checkbox"
+              value="Open requirement"
+            />
+            <label
+              class="usa-checkbox__label"
+              for="InputChoice6"
+            >
+              Review by
+            </label>
+          </div>
+        </div>
+      </fieldset>
+      <button
+        class="usa-button position-relative"
+        disabled=""
+        type="submit"
       >
-        <div
-          class="usa-checkbox measure-5 bg-transparent"
-        >
-          <input
-            class="usa-checkbox__input"
-            id="InputChoice2"
-            name="claim_status"
-            type="checkbox"
-            value="Approved"
-          />
-          <label
-            class="usa-checkbox__label"
-            for="InputChoice2"
-          >
-            Approved
-          </label>
-        </div>
-        <div
-          class="usa-checkbox measure-5 bg-transparent"
-        >
-          <input
-            class="usa-checkbox__input"
-            id="InputChoice3"
-            name="claim_status"
-            type="checkbox"
-            value="Closed"
-          />
-          <label
-            class="usa-checkbox__label"
-            for="InputChoice3"
-          >
-            Closed
-          </label>
-        </div>
-        <div
-          class="usa-checkbox measure-5 bg-transparent"
-        >
-          <input
-            class="usa-checkbox__input"
-            id="InputChoice4"
-            name="claim_status"
-            type="checkbox"
-            value="Declined"
-          />
-          <label
-            class="usa-checkbox__label"
-            for="InputChoice4"
-          >
-            Denied
-          </label>
-        </div>
-        <div
-          class="usa-checkbox measure-5 bg-transparent"
-        >
-          <input
-            class="usa-checkbox__input"
-            id="InputChoice5"
-            name="claim_status"
-            type="checkbox"
-            value="Pending - no action"
-          />
-          <label
-            class="usa-checkbox__label"
-            for="InputChoice5"
-          >
-            No action required
-          </label>
-        </div>
-        <div
-          class="usa-checkbox measure-5 bg-transparent"
-        >
-          <input
-            class="usa-checkbox__input"
-            id="InputChoice6"
-            name="claim_status"
-            type="checkbox"
-            value="Open requirement"
-          />
-          <label
-            class="usa-checkbox__label"
-            for="InputChoice6"
-          >
-            Review by
-          </label>
-        </div>
-      </div>
-    </fieldset>
-    <button
-      class="usa-button position-relative"
-      disabled=""
-      type="submit"
-    >
-      Apply filters
-    </button>
-  </form>
+        Apply filters
+      </button>
+    </form>
+  </div>
   <div
     class="margin-y-2 grid-row grid-gap flex-align-center"
   >
