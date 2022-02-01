@@ -727,12 +727,6 @@ const shared: {
   absenceCaseStatus_denied: "Denied",
   absenceCaseStatus_noAction: "No action required",
   absenceCaseStatus_pending: "Pending",
-  absencePeriodStatus_Approved: "Approved",
-  absencePeriodStatus_Cancelled: "Cancelled",
-  absencePeriodStatus_Denied: "Denied",
-  absencePeriodStatus_Pending: "Pending",
-  absencePeriodStatus_Voided: "Voided",
-  absencePeriodStatus_Withdrawn: "Withdrawn",
   achTypeChecking: "Checking",
   achTypeSavings: "Savings",
   amountFrequencyLabel: "Frequency",
@@ -1104,13 +1098,6 @@ const pages: {
     sectionLabel: "What is your current residential address?",
     title: "$t(shared.claimsVerifyIdTitle)",
   },
-  claimsAssociate: {
-    absenceIdLabel: "Application ID",
-    lead: "To locate your application, please enter information for each field.",
-    submitButton: "Continue",
-    taxIdLabel: "Last 4 digits of Social Security Number",
-    title: "Find My Application",
-  },
   claimsBondingDateOfChild: {
     birthHint:
       "If your child has not been born yet, enter the expected due date.",
@@ -1405,6 +1392,15 @@ const pages: {
     sectionLabelHint:
       "This data helps us understand who is accessing our program to ensure it is built for everyone.",
     title: "$t(shared.claimsVerifyIdTitle)",
+  },
+  claimsImport: {
+    absenceIdLabel: "Application ID number",
+    leadIntro: "We need some information to identify your application.",
+    leadReminder:
+      "Reminder: You’ll need to keep managing applications through the Contact Center if you are self-employed or unemployed or if you are applying for military-related paid family leave benefits.",
+    submitButton: "Continue",
+    taxIdLabel: "Social Security Number (SSN)",
+    title: "Add an existing application",
   },
   claimsIntermittentFrequency: {
     durationBasisChoice_days: "At least one day",
@@ -2107,14 +2103,6 @@ const pages: {
     reportOtherBenefitsBody:
       "<p>If your plans for other benefits or income during your paid leave have changed, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>. Report changes to:</p><ul><li>Benefits from your employer that you plan to use in addition to paid leave from PFML. For example, if you are taking a different amount of sick days than you first planned, or if you are taking employer sponsored parental leave on a different schedule than you expected, report this change.</li><li>Income from other sources during your leave. For example, if you got approved for a disability benefit or a worker’s compensation claim after you submitted your application, report this change.</li></ul>",
     reportOtherBenefitsHeading: "Report other benefits or income",
-    requestDecision_Approved: "$t(shared.absencePeriodStatus_Approved)",
-    requestDecision_Cancelled: "$t(shared.absencePeriodStatus_Cancelled)",
-    requestDecision_Denied: "$t(shared.absencePeriodStatus_Denied)",
-    "requestDecision_In Review": "$t(shared.absencePeriodStatus_Pending)",
-    requestDecision_Pending: "$t(shared.absencePeriodStatus_Pending)",
-    requestDecision_Projected: "$t(shared.absencePeriodStatus_Pending)",
-    requestDecision_Voided: "$t(shared.absencePeriodStatus_Voided)",
-    requestDecision_Withdrawn: "$t(shared.absencePeriodStatus_Withdrawn)",
     statusTimelineNotice:
       "Notices usually appear within 30 minutes after we update the status of your application.",
     timelineDescription:
@@ -2605,7 +2593,7 @@ const pages: {
   payments: {
     backButtonLabel: "$t(shared.backToYourApplicationsLink)",
     changesToPaymentsAmountAnswer:
-      "<p>To see your maximum weekly benefit amount, view your approval notice in the <view-notices-link>notice section of your application.</view-notices-link>.</p><p>The payment amount you see on this page may be less than the maximum benefit amount due to <using-other-leave-link>other leave, income and benefits</using-other-leave-link> you reported. You will receive another notice if we reduce your benefit amount for any reason other than tax withholding. Please note that you can not change your tax withholding status at this point, since your application has been approved.</p><p><strong>Other scenarios that may change the payment amount you receive are:</strong></p><ul><li>You or your employer report additional other leave, income or benefits</li><li>You reach the maximum total amount that you can receive in PFML benefits across multiple applications.</li><li>You receive a payment for a pay period less than a full week</li><li>You elected to have taxes withheld</li><li>You received an overpayment</li></ul>",
+      "<p>To see your maximum weekly benefit amount, view your approval notice in the <view-notices-link>notice section of your application.</view-notices-link>.</p><p>The payment amount you see on this page may be less than the maximum benefit amount due to <using-other-leave-link>other leave, income and benefits</using-other-leave-link> you reported. You will receive another notice if we reduce your benefit amount for any reason other than tax withholding. Please note that you can not change your tax withholding status at this point, since your application has been approved.</p><p><strong>Other scenarios that may change the payment amount you receive are:</strong></p><ul><li>You or your employer report other leave, income or benefits</li><li>You reach the maximum total amount that you can receive in PFML benefits across multiple applications</li><li>You receive a payment for a pay period less than a full week</li><li>You elected to have taxes withheld</li><li>You received an overpayment</li></ul>",
     changesToPaymentsAmountQuestion:
       "Why the amount you received may be less than your approved benefit amount",
     changesToPaymentsHeading: "Changes to payments",
@@ -2651,25 +2639,24 @@ const pages: {
     questionsDetails:
       "<p>Call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.</p>",
     questionsHeader: "Questions?",
+    tableAmountHeader: "Amount",
     tableAmountSent: "{{amount, currency}}",
-    tableAmountSentHeader: "Amount sent",
-    tableDateProcessedHeader: "Date processed",
-    tableEstimatedDateHeader: "Estimated date",
-    tableLeaveDatesHeader: "Leave dates",
-    tablePaymentMethodHeader: "Payment Method",
-    tablePaymentMethod_Check: "Check",
-    "tablePaymentMethod_Elec Funds Transfer": "Direct Deposit",
-    tablePaymentStatus_Cancelled: "Cancelled",
-    tablePaymentStatus_Delayed: "Delayed",
-    tablePaymentStatus_Pending: "Pending",
-    "tablePaymentStatus_Sent to bank": "Sent",
+    tablePayPeriodHeader: "Pay period",
+    tablePaymentStatus_Cancelled:
+      "This payment was cancelled. See <delays-accordion-link>what may cause a delayed or cancelled payment</delays-accordion-link>.",
+    tablePaymentStatus_Check: "Check mailed on {{sentDate}}",
+    tablePaymentStatus_Delayed:
+      "See <delays-accordion-link>what may cause a delayed or cancelled payment</delays-accordion-link>.",
+    tablePaymentStatus_Pending:
+      "Your payment will be sent by {{paymentMethod}} between {{payPeriod}}.",
+    "tablePaymentStatus_Sent to bank":
+      "Direct deposit was sent on {{sentDate}}. Depending on your bank’s processes, expect to see this payment in your account 2-3 days after this date.",
+    tableStatusHeader: "Status",
     tableWaitingWeekGeneric:
       "The first seven (7) days of approved leave are unpaid",
     tableWaitingWeekHeader: "Waiting period",
     tableWaitingWeekText:
-      "Learn more about the <waiting-week-link>7-day waiting period</waiting-week-link>.",
-    whatDoesEstimatedDateMean:
-      "<p><strong>What does estimated scheduled date mean?</strong></p><p>This is the date range we expect to process your direct deposit payment or send your check in the mail. Depending on your bank, expect to receive direct deposit payments in your account 2-3 days after this date.  Checks may take 7-11 days to arrive in the mail. Once your payment is processed or your check is sent, that date will be shown in the “date processed” column.</p>",
+      "You have an unpaid 7-day waiting period at the start of your leave. You won’t receive any PFML payments for leave you take during this time. Learn more about the <waiting-week-link>7-day waiting period</waiting-week-link>.",
     yourPayments: "Your payments",
   },
   userConsentToDataSharing: {
@@ -2731,6 +2718,16 @@ const components: {
     status_noAction: "$t(shared.absenceCaseStatus_noAction)",
     status_openRequirements: "Review by {{followupDate}}",
     status_pending: "$t(shared.absenceCaseStatus_pending)",
+  },
+  absencePeriodStatusTag: {
+    label_approved: "Approved",
+    label_cancelled: "Cancelled",
+    label_denied: "Denied",
+    label_inReview: "Pending",
+    label_pending: "Pending",
+    label_projected: "Pending",
+    label_voided: "Cancelled",
+    label_withdrawn: "Withdrawn",
   },
   amendButton: {
     amend: "Amend",
@@ -3028,14 +3025,6 @@ const components: {
       "$t(shared.claimDurationTypeReducedSchedule)",
     dateRangeLabel: "Date range",
     leaveFrequencyLabel: "Leave frequency",
-    requestDecision_Approved: "$t(shared.absencePeriodStatus_Approved)",
-    requestDecision_Cancelled: "$t(shared.absencePeriodStatus_Cancelled)",
-    requestDecision_Denied: "$t(shared.absencePeriodStatus_Denied)",
-    "requestDecision_In Review": "$t(shared.absencePeriodStatus_Pending)",
-    requestDecision_Pending: "$t(shared.absencePeriodStatus_Pending)",
-    requestDecision_Projected: "$t(shared.absencePeriodStatus_Pending)",
-    requestDecision_Voided: "$t(shared.absencePeriodStatus_Voided)",
-    requestDecision_Withdrawn: "$t(shared.absencePeriodStatus_Withdrawn)",
     statusLabel: "Status",
   },
   employersPreviousLeaves: {

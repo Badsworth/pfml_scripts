@@ -2,7 +2,7 @@ import React from "react";
 import StepNumber from "src/components/StepNumber";
 
 export default {
-  title: "Components/StepList/StepNumber",
+  title: "Features/Applications/StepList/StepNumber",
   component: StepNumber,
 };
 

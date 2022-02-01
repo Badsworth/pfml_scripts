@@ -8,7 +8,7 @@ export interface TagProps {
    * Keywords for sharing common styling for similar Tag states. The state value
    * may not exactly match the tag content (i.e "Approved" is a success-like state).
    */
-  state?: "success" | "warning" | "error" | "inactive" | "pending";
+  state?: "success" | "warning" | "error" | "inactive";
 }
 
 /**
@@ -30,8 +30,6 @@ const Tag = ({ label, state, className }: TagProps) => {
       "bg-error-lighter": state === "error",
       "text-base-darker": state === "inactive",
       "bg-base-lightest": state === "inactive",
-      "bg-primary-lighter": state === "pending",
-      "text-primary": state === "pending",
     },
     className
   );

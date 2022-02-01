@@ -27,7 +27,7 @@ const envs: Environment[] = [
 jest.setTimeout(1000 * 60 * 20);
 
 /**
- * @group nightly
+ * @group morning
  */
 describe("dor_upload", () => {
   let tempDir: string;

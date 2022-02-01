@@ -1,5 +1,6 @@
 import { ApplicationLeaveDetails, ApplicationRequestBody } from "./api";
 import * as scenarios from "./scenarios";
+import * as lstScenarios from "./scenarios/lst";
 import {
   EmployerBenefit,
   PreviousLeave,
@@ -73,6 +74,7 @@ export type SubjectOptions =
 
 export type ScenarioSpecs = typeof scenarios;
 export type Scenarios = keyof ScenarioSpecs;
+export type LSTScenarios = keyof typeof lstScenarios;
 
 export type PersonalIdentificationDetails = {
   id_number_type: "Social Security Number" | "ID" | "ITIN";

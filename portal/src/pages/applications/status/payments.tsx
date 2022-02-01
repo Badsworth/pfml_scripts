@@ -1,6 +1,6 @@
 import {
+  BenefitsApplicationDocument,
   DocumentType,
-  filterByApplication,
   findDocumentsByTypes,
 } from "../../../models/Document";
 import React, { useEffect } from "react";
@@ -9,7 +9,9 @@ import { AbsencePeriod } from "../../../models/AbsencePeriod";
 import Accordion from "../../../components/core/Accordion";
 import AccordionItem from "../../../components/core/AccordionItem";
 import Alert from "../../../components/core/Alert";
+import ApiResourceCollection from "src/models/ApiResourceCollection";
 import BackButton from "../../../components/BackButton";
+import ClaimDetail from "src/models/ClaimDetail";
 import Heading from "../../../components/core/Heading";
 import LeaveReason from "../../../models/LeaveReason";
 import PageNotFound from "../../../components/PageNotFound";
@@ -21,9 +23,8 @@ import { Trans } from "react-i18next";
 import { createRouteWithQuery } from "../../../utils/routeWithParams";
 import dayjs from "dayjs";
 import dayjsBusinessTime from "dayjs-business-time";
-import formatDate from "../../../utils/formatDate";
+import formatDate from "src/utils/formatDate";
 import formatDateRange from "../../../utils/formatDateRange";
-import { getMaxBenefitAmount } from "../../../utils/getMaxBenefitAmount";
 import isBlank from "../../../utils/isBlank";
 import { isFeatureEnabled } from "../../../services/featureFlags";
 import routes from "../../../routes";
@@ -45,65 +46,27 @@ export const Payments = ({
   const { absence_id } = query;
   const {
     appErrors,
-    claims: {
-      claimDetail,
-      isLoadingClaimDetail,
-      loadClaimDetail,
-      loadedPaymentsData,
-      hasLoadedPayments,
+    claims: { claimDetail, loadClaimDetail, hasLoadedPayments },
+    documents: {
+      documents: allClaimDocuments,
+      loadAll: loadAllClaimDocuments,
+      hasLoadedClaimDocuments,
     },
-    documents: { documents: allClaimDocuments, loadAll: loadAllClaimDocuments },
     portalFlow,
   } = appLogic;
 
-  const hasPaidPayments = claimDetail?.has_paid_payments;
-
-  // Determines if phase two payment features are displayed
-  const showPhaseTwoFeatures =
-    isFeatureEnabled("claimantShowPaymentsPhaseTwo") &&
-    claimDetail?.hasApprovedStatus;
-
   const application_id = claimDetail?.application_id;
-  const absenceId = absence_id;
-
-  const initialClaimStartDate =
-    claimDetail?.leaveDates[0].absence_period_start_date;
-
-  const documentsForApplication =
-    (allClaimDocuments?.items.length &&
-      application_id &&
-      filterByApplication(allClaimDocuments.items, application_id)) ||
-    [];
-
-  const approvalNotice = findDocumentsByTypes(documentsForApplication, [
-    DocumentType.approvalNotice,
-  ])[0];
+  const shouldLoad =
+    !!absence_id &&
+    (claimDetail?.fineos_absence_id !== absence_id ||
+      !hasLoadedPayments(absence_id));
 
   useEffect(() => {
-    const loadPayments = (absenceId: string) =>
-      !hasLoadedPayments(absenceId) ||
-      (loadedPaymentsData?.absence_case_id &&
-        Boolean(claimDetail?.payments.length === 0));
-    if (claimDetail && (!showPhaseTwoFeatures || !approvalNotice?.created_at)) {
-      portalFlow.goTo(routes.applications.status.claim, {
-        absence_id,
-      });
-    } else if (
-      absenceId &&
-      (!Boolean(claimDetail) || Boolean(loadPayments(absenceId))) &&
-      !appErrors.find((item) => item.name === "NotFoundError")
-    ) {
+    if (shouldLoad) {
       loadClaimDetail(absence_id);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    absence_id,
-    initialClaimStartDate,
-    absenceId,
-    loadedPaymentsData?.absence_case_id,
-    isLoadingClaimDetail,
-    approvalNotice?.created_at,
-  ]);
+  }, [shouldLoad, absence_id]);
 
   useEffect(() => {
     if (application_id) {
@@ -112,19 +75,7 @@ export const Payments = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [application_id]);
 
-  /**
-   * If there is no absence_id query parameter,
-   * then return the PFML 404 page.
-   */
-  const isAbsenceCaseId = Boolean(absenceId?.length);
-  if (!isAbsenceCaseId) return <PageNotFound />;
-
-  // only hide page content if there is an error that's not DocumentsLoadError.
-  const hasNonDocumentsLoadError: boolean = appLogic.appErrors.some(
-    (error) => error.name !== "DocumentsLoadError"
-  );
-
-  if (hasNonDocumentsLoadError) {
+  if (appErrors.length > 0) {
     return (
       <BackButton
         label={t("pages.payments.backButtonLabel")}
@@ -134,118 +85,81 @@ export const Payments = ({
   }
 
   // Check both because claimDetail could be cached from a different status page.
-  if (isLoadingClaimDetail || !claimDetail) {
+  if (shouldLoad || !hasLoadedClaimDocuments(application_id || "")) {
     return (
       <div className="text-center">
         <Spinner aria-label={t("pages.payments.loadingClaimDetailLabel")} />
       </div>
     );
   }
+  /**
+   * If there is no absence_id query parameter,
+   * then return the PFML 404 page.
+   */
+  if (!absence_id || !claimDetail) return <PageNotFound />;
 
-  const absenceDetails = AbsencePeriod.groupByReason(
-    claimDetail.absence_periods
-  );
-  const hasPendingStatus = claimDetail.absence_periods.some(
-    (absenceItem) => absenceItem.request_decision === "Pending"
-  );
-  const hasApprovedStatus = claimDetail.absence_periods.some(
-    (absenceItem) => absenceItem.request_decision === "Approved"
-  );
+  const helper = paymentStatusViewHelper(claimDetail, allClaimDocuments);
 
-  const getInfoAlertContext = (absenceDetails: {
-    [reason: string]: AbsencePeriod[];
-  }) => {
-    const hasBondingReason = LeaveReason.bonding in absenceDetails;
-    const hasPregnancyReason = LeaveReason.pregnancy in absenceDetails;
-    const hasNewBorn = claimDetail.absence_periods.some(
-      (absenceItem) => absenceItem.reason_qualifier_one === "Newborn"
-    );
-    if (hasBondingReason && !hasPregnancyReason && hasNewBorn) {
-      return "bonding";
-    }
+  const {
+    hasApprovedStatus,
+    hasPendingStatus,
+    hasPayments,
+    hasWaitingWeek,
+    hasApprovalNotice,
+    checkbackDate,
+    payments,
+  } = helper;
 
-    if (hasPregnancyReason && !hasBondingReason) {
-      return "pregnancy";
-    }
+  const infoAlertContext = getInfoAlertContext(helper);
+  const checkbackDateContext = getPaymentIntroContext(helper);
 
-    return "";
-  };
+  // Determines if phase two payment features are displayed
+  const showPhaseTwoFeatures =
+    isFeatureEnabled("claimantShowPaymentsPhaseTwo") && hasApprovedStatus;
 
-  const infoAlertContext = getInfoAlertContext(absenceDetails);
-
-  const approvalDate = approvalNotice?.created_at;
-  const isRetroactive = approvalDate
-    ? claimDetail.absence_periods[claimDetail.absence_periods.length - 1]
-        ?.absence_period_end_date < approvalDate
-    : false;
+  if (!showPhaseTwoFeatures || !hasApprovalNotice) {
+    portalFlow.goTo(routes.applications.status.claim, {
+      absence_id,
+    });
+  }
 
   const tableColumns = [
-    t("pages.payments.tableLeaveDatesHeader"),
-    t("pages.payments.tablePaymentMethodHeader"),
-    t("pages.payments.tableEstimatedDateHeader"),
-    t("pages.payments.tableDateProcessedHeader"),
-    t("pages.payments.tableAmountSentHeader"),
+    t("pages.payments.tablePayPeriodHeader"),
+    t("pages.payments.tableAmountHeader"),
+    t("pages.payments.tableStatusHeader"),
   ];
 
-  const waitingWeek = !isBlank(claimDetail.waitingWeek?.startDate);
-
-  const isIntermittent = claimDetail.isIntermittent;
-
-  const isIntermittentUnpaid =
-    isIntermittent &&
-    isFeatureEnabled("claimantShowPaymentsPhaseTwo") &&
-    !hasPaidPayments;
-
-  const maxBenefitAmount = `$${getMaxBenefitAmount()}`;
-
   const shouldShowPaymentsTable =
-    Boolean(claimDetail?.payments?.length) ||
-    (hasLoadedPayments(absence_id || "") && !appErrors.length) ||
-    (!isIntermittent && showPhaseTwoFeatures);
+    hasPayments || (hasWaitingWeek && showPhaseTwoFeatures);
 
-  // TODO(PORTAL-1482): remove test cases for checkback dates
-
-  let checkbackDate;
-  let checkbackDateContext = isIntermittentUnpaid
-    ? "Intermittent_Unpaid"
-    : isIntermittent
-    ? "Intermittent"
-    : isRetroactive
-    ? "NonIntermittent_Retro"
-    : "NonIntermittent_NonRetro";
-
-  if (
-    isFeatureEnabled("claimantShowPaymentsPhaseTwo") &&
-    !claimDetail?.payments.length &&
-    !isIntermittent &&
-    approvalDate
-  ) {
-    checkbackDateContext = claimDetail?.isContinuous
-      ? "Continuous_"
-      : "ReducedSchedule_";
-    const fourteenthDayOfClaim = dayjs(initialClaimStartDate)
-      .add(14, "day")
-      .format("YYYY-MM-DD");
-
-    if (isRetroactive || approvalDate >= fourteenthDayOfClaim) {
-      checkbackDate = dayjs(approvalDate)
-        .addBusinessDays(3)
-        .format("MMMM D, YYYY");
-      checkbackDateContext += isRetroactive
-        ? "Retroactive"
-        : "PostFourteenthClaimDate";
-    } else {
-      checkbackDate = dayjs(initialClaimStartDate)
-        .add(14, "day")
-        .addBusinessDays(3)
-        .format("MMMM D, YYYY");
-      checkbackDateContext += "PreFourteenthClaimDate";
+  const getPaymentAmount = (status: string, amount: number | null) => {
+    if (status === "Sent to bank") {
+      return t("pages.payments.tableAmountSent", { amount });
+    } else if (status === "Pending") {
+      return "Processing";
     }
-  }
+    return status;
+  };
+
+  const getPaymentMethod = (payment_method: string) => {
+    if (payment_method === "Check") {
+      return "check";
+    } else {
+      return "direct deposit";
+    }
+  };
+
+  const getPaymentStatus = (status: string, payment_method: string) => {
+    if (status === "Sent to bank" && payment_method === "Check") {
+      return "Check";
+    } else {
+      return status;
+    }
+  };
 
   return (
     <React.Fragment>
-      {!!infoAlertContext && (hasPendingStatus || hasApprovedStatus) && (
+      {infoAlertContext && (hasPendingStatus || hasApprovedStatus) && (
         <Alert
           className="margin-bottom-3"
           data-test="info-alert"
@@ -317,7 +231,7 @@ export const Payments = ({
 
           {/* Table section */}
           {shouldShowPaymentsTable && (
-            <Table className="width-full" responsive>
+            <Table responsive>
               <thead>
                 <tr>
                   {shouldShowPaymentsTable &&
@@ -329,7 +243,7 @@ export const Payments = ({
                 </tr>
               </thead>
               <tbody>
-                {claimDetail.payments
+                {payments
                   .reverse()
                   .map(
                     ({
@@ -344,48 +258,46 @@ export const Payments = ({
                       status,
                     }) => (
                       <tr key={payment_id}>
-                        <td data-label={tableColumns[0]}>
+                        <td
+                          data-label={tableColumns[0]}
+                          className="tablet:width-card-lg"
+                        >
                           {formatDateRange(period_start_date, period_end_date)}
                         </td>
                         <td data-label={tableColumns[1]}>
-                          {t("pages.payments.tablePaymentMethod", {
-                            context: payment_method,
-                          })}
+                          {getPaymentAmount(status, amount)}
                         </td>
                         <td data-label={tableColumns[2]}>
-                          {status !== "Pending"
-                            ? t("pages.payments.tablePaymentStatus", {
-                                context: status,
-                              })
-                            : formatDateRange(
+                          <Trans
+                            i18nKey="pages.payments.tablePaymentStatus"
+                            tOptions={{
+                              context: getPaymentStatus(status, payment_method),
+                              paymentMethod: getPaymentMethod(payment_method),
+                              payPeriod: formatDateRange(
                                 expected_send_date_start,
-                                expected_send_date_end
-                              )}
-                        </td>
-                        <td data-label={tableColumns[3]}>
-                          {formatDate(sent_to_bank_date).short() ||
-                            t("pages.payments.tablePaymentStatus", {
-                              context: status,
-                            })}
-                        </td>
-                        <td data-label={tableColumns[4]}>
-                          {amount === null
-                            ? t("pages.payments.tablePaymentStatus", {
-                                context: status,
-                              })
-                            : t("pages.payments.tableAmountSent", {
-                                amount,
-                              })}
+                                expected_send_date_end,
+                                "and"
+                              ),
+                              sentDate:
+                                dayjs(sent_to_bank_date).format("MMMM D, YYYY"),
+                            }}
+                            components={{
+                              "delays-accordion-link": (
+                                <a href={"#delays_accordion"} />
+                              ),
+                            }}
+                          />
                         </td>
                       </tr>
                     )
                   )}
-                {waitingWeek && !isIntermittent && (
+                {hasWaitingWeek && (
                   <tr>
                     <td data-label={t("pages.payments.tableWaitingWeekHeader")}>
                       {t("pages.payments.tableWaitingWeekGeneric")}
                     </td>
-                    <td colSpan={4}>
+                    <td data-label={tableColumns[1]}>$0.00</td>
+                    <td>
                       <Trans
                         i18nKey="pages.payments.tableWaitingWeekText"
                         components={{
@@ -416,25 +328,27 @@ export const Payments = ({
           </Heading>
 
           <Accordion>
-            <AccordionItem
-              className="margin-y-2"
-              heading={t("pages.payments.delaysToPaymentsScheduleQuestion")}
-            >
-              <Trans
-                i18nKey="pages.payments.delaysToPaymentsScheduleAnswer"
-                components={{
-                  "online-appeals-form": (
-                    <a
-                      href={routes.external.massgov.onlineAppealsForm}
-                      target="_blank"
-                      rel="noreferrer noopener"
-                    />
-                  ),
-                  li: <li />,
-                  ul: <ul />,
-                }}
-              />
-            </AccordionItem>
+            <div id="delays_accordion">
+              <AccordionItem
+                className="margin-y-2"
+                heading={t("pages.payments.delaysToPaymentsScheduleQuestion")}
+              >
+                <Trans
+                  i18nKey="pages.payments.delaysToPaymentsScheduleAnswer"
+                  components={{
+                    "online-appeals-form": (
+                      <a
+                        href={routes.external.massgov.onlineAppealsForm}
+                        target="_blank"
+                        rel="noreferrer noopener"
+                      />
+                    ),
+                    li: <li />,
+                    ul: <ul />,
+                  }}
+                />
+              </AccordionItem>
+            </div>
 
             <AccordionItem
               className="margin-y-2"
@@ -442,7 +356,6 @@ export const Payments = ({
             >
               <Trans
                 i18nKey="pages.payments.changesToPaymentsAmountAnswer"
-                values={{ maxBenefitAmount }}
                 components={{
                   li: <li />,
                   ul: <ul />,
@@ -516,3 +429,181 @@ export const Payments = ({
 };
 
 export default withUser(Payments);
+
+type PaymentStatusViewHelper = ReturnType<typeof paymentStatusViewHelper>;
+
+function paymentStatusViewHelper(
+  claimDetail: ClaimDetail,
+  documents: ApiResourceCollection<BenefitsApplicationDocument>
+) {
+  const {
+    absence_periods: _absencePeriods,
+    has_paid_payments: _isPaid,
+    payments,
+  } = claimDetail;
+
+  // private variables
+  const _absenceDetails = AbsencePeriod.groupByReason(_absencePeriods);
+  const _hasBondingReason = LeaveReason.bonding in _absenceDetails;
+  const _hasPregnancyReason = LeaveReason.pregnancy in _absenceDetails;
+  const _hasNewBorn = _absencePeriods.some(
+    (absenceItem: AbsencePeriod) =>
+      absenceItem.reason_qualifier_one === "Newborn"
+  );
+  const _initialClaimStartDate =
+    claimDetail.leaveDates[0].absence_period_start_date;
+  const _fourteenthDayOfClaim = dayjs(_initialClaimStartDate)
+    .add(14, "day")
+    .format("YYYY-MM-DD");
+  const _approvalNotice = findDocumentsByTypes(documents.items, [
+    DocumentType.approvalNotice,
+  ])[0];
+  const _approvalDate = _approvalNotice?.created_at;
+
+  // intermittent claims are treated differently in a few ways
+  // 1. changes intro text
+  // 2. the waiting week will never show in the payments
+  //    table for intermittent claims.
+  const isIntermittent = claimDetail.isIntermittent;
+
+  // changes intro text
+  const isContinuous = claimDetail.isContinuous;
+
+  // 1. phase 1 & 2 will only be available for people with approved statuses
+  // 2. info alerts, if any, should show if claim is approved
+  const hasApprovedStatus = claimDetail.hasApprovedStatus;
+
+  // info alerts, if any, should show if claim is pending
+  const hasPendingStatus = claimDetail.hasPendingStatus;
+
+  // changes InfoAlert text
+  const onlyHasNewBornBondingReason =
+    _hasBondingReason && !_hasPregnancyReason && _hasNewBorn;
+  const onlyHasPregnancyReason = _hasPregnancyReason && !_hasBondingReason;
+
+  // only show waiting period row in the payments table if there is a waiting week on the claim detail
+  // intermittent claims never have waiting weeks.
+  const hasWaitingWeek =
+    !isBlank(claimDetail.waitingWeek?.startDate) && !isIntermittent;
+
+  // 1. only show payments table if claimant has payments to show.
+  // 2. changes intro text
+  const hasPayments = !!payments.length;
+
+  // changes intro text
+  const isUnpaid = !_isPaid;
+
+  // there is a 30 minute window between when the claim detail says the claim is approved
+  // and the approval notice is available, we only want to display some content
+  // if the user can also access the approval notice.
+  const hasApprovalNotice = !!_approvalDate;
+
+  // if payment is retroactive
+  // and/or if the claim was approved within the first 14 days of the leave period
+  // 1. changes intro text
+  // 2. changes checkbackDate
+  const isRetroactive = hasApprovalNotice
+    ? _absencePeriods[_absencePeriods.length - 1]?.absence_period_end_date <
+      _approvalDate
+    : false;
+  const isApprovedBeforeFourteenthDayOfClaim =
+    _approvalDate < _fourteenthDayOfClaim;
+
+  // for claims that have no payments and aren't intermittent
+  // the date the user should come back to check their payment status
+  // that shows in the intro text
+  const checkbackDate = (function () {
+    // intermittent claims or claims that have payments
+    // should have no checkbackDate
+    if (hasPayments || isIntermittent || !_approvalDate) {
+      return null;
+    }
+
+    let result;
+    if (isRetroactive || !isApprovedBeforeFourteenthDayOfClaim) {
+      result = dayjs(_approvalDate).addBusinessDays(3);
+    } else {
+      result = dayjs(_initialClaimStartDate).add(14, "day").addBusinessDays(3);
+    }
+
+    return formatDate(result.format()).full();
+  })();
+
+  // intro text changes if there is a checkback date.
+  const hasCheckbackDate = !!checkbackDate;
+
+  return {
+    payments,
+    isIntermittent,
+    isContinuous,
+    hasApprovedStatus,
+    hasPendingStatus,
+    onlyHasNewBornBondingReason,
+    onlyHasPregnancyReason,
+    hasWaitingWeek,
+    hasPayments,
+    isUnpaid,
+    hasApprovalNotice,
+    isRetroactive,
+    isApprovedBeforeFourteenthDayOfClaim,
+    checkbackDate,
+    hasCheckbackDate,
+  };
+}
+
+function getInfoAlertContext(helper: PaymentStatusViewHelper) {
+  const { onlyHasNewBornBondingReason, onlyHasPregnancyReason } = helper;
+  if (onlyHasNewBornBondingReason) {
+    return "bonding";
+  }
+
+  if (onlyHasPregnancyReason) {
+    return "pregnancy";
+  }
+
+  return "";
+}
+
+function getPaymentIntroContext(helper: PaymentStatusViewHelper) {
+  const {
+    hasCheckbackDate,
+    isUnpaid,
+    isIntermittent,
+    isContinuous,
+    isRetroactive,
+    isApprovedBeforeFourteenthDayOfClaim,
+  } = helper;
+
+  if (isFeatureEnabled("claimantShowPaymentsPhaseTwo")) {
+    /* Remove once phasetwo feature flag is removed */
+    if (isUnpaid && isIntermittent) {
+      return "Intermittent_Unpaid";
+    }
+
+    if (hasCheckbackDate) {
+      /* Keys for text that include checkbackDate */
+      const contextSuffix = isApprovedBeforeFourteenthDayOfClaim
+        ? "PreFourteenthClaimDate"
+        : isRetroactive
+        ? "Retroactive"
+        : "PostFourteenthClaimDate";
+      return isContinuous
+        ? `Continuous_${contextSuffix}`
+        : `ReducedSchedule_${contextSuffix}`;
+    }
+
+    /* Remove once phasetwo feature flag is removed */
+    return isIntermittent
+      ? "Intermittent"
+      : isRetroactive
+      ? "NonIntermittent_Retro"
+      : "NonIntermittent_NonRetro";
+  }
+
+  /* add intermittent_unpaid once phasetwo flag is removed */
+  return isIntermittent
+    ? "Intermittent"
+    : isRetroactive
+    ? "NonIntermittent_Retro"
+    : "NonIntermittent_NonRetro";
+}

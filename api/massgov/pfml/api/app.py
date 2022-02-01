@@ -14,6 +14,7 @@ import flask_cors
 import newrelic.api.time_trace
 from flask import Flask, current_app, g
 from sqlalchemy.orm import Session
+from werkzeug.exceptions import Unauthorized
 
 import massgov.pfml.api.authorization.flask
 import massgov.pfml.api.authorization.rules
@@ -169,8 +170,11 @@ def db_session(close: bool = False) -> Generator[db.Session, None, None]:
         yield session_scoped
 
 
-def current_user() -> Optional[User]:
-    return g.get("current_user")
+def current_user() -> User:
+    current = g.get("current_user")
+    if current is None:
+        raise Unauthorized
+    return current
 
 
 def azure_user() -> Optional[AzureUser]:

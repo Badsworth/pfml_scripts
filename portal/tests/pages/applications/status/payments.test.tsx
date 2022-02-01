@@ -54,6 +54,8 @@ const setupHelper =
       : undefined;
     appLogicHook.claims.loadClaimDetail = jest.fn();
     goToSpy = jest.spyOn(appLogicHook.portalFlow, "goTo");
+    appLogicHook.claims.hasLoadedPayments = () =>
+      !!appLogicHook.claims.claimDetail?.payments;
     renderWithApprovalNotice(appLogicHook, isRetroactive, approvalTime);
   };
 

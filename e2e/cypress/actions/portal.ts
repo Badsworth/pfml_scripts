@@ -865,6 +865,18 @@ export function checkHoursPerWeekLeaveAdmin(hwpw: number): void {
   });
 }
 
+export function checkConcurrentLeave(startDate: string, endDate: string): void {
+  cy.get("#employer-review-form").should((textArea) => {
+    expect(textArea, `Concurrent leave should be present`).contain.text(
+      "Concurrent accrued paid leave"
+    );
+    expect(
+      textArea,
+      `Concurrent leave start date should be: ${startDate} to ${endDate}`
+    ).contain.text(`${startDate} to ${endDate}`);
+  });
+}
+
 export function visitActionRequiredERFormPage(fineosAbsenceId: string): void {
   cy.visit(
     `/employers/applications/new-application/?absence_id=${fineosAbsenceId}`
@@ -1244,7 +1256,7 @@ function reportPreviousLeave(leave: ValidPreviousLeave, index: number) {
  */
 function reportAccruedLeave(accruedLeave: ValidConcurrentLeave): void {
   inFieldsetLabelled(
-    "Will you use accrued paid leave from this employer?",
+    /(Will you use accrued paid leave from this employer\?|Will you use employer-sponsored paid time off from this employer\?)/,
     () => {
       cy.findByLabelText(
         accruedLeave.is_for_current_employer ? "Yes" : "No"
@@ -1254,20 +1266,23 @@ function reportAccruedLeave(accruedLeave: ValidConcurrentLeave): void {
     }
   );
   fillDateFieldset(
-    "What is the first day of this leave",
+    /(What is the first day of this leave|What is the first day of your employer-sponsored paid time off\?)/,
     accruedLeave.leave_start_date
   );
   fillDateFieldset(
-    "What is the last day of this leave?",
+    /(What is the last day of this leave\?|What is the last day of your employer-sponsored paid time off\?)/,
     accruedLeave.leave_end_date
   );
   cy.contains("button", "Save and continue").click();
 }
 
-const benefitTypeMap: Record<ValidEmployerBenefit["benefit_type"], string> = {
+const benefitTypeMap: Record<
+  ValidEmployerBenefit["benefit_type"],
+  string | RegExp
+> = {
   "Family or medical leave insurance": "Family or medical leave insurance",
   "Permanent disability insurance": "Permanent disability insurance",
-  "Short-term disability insurance": "Temporary disability insurance",
+  "Short-term disability insurance": /Temporary disability insurance.*/,
   "Accrued paid leave": "",
   Unknown: "",
 };
@@ -1518,7 +1533,7 @@ function reportOtherLeavesAndBenefits(claim: ApplicationRequestBody): void {
  * @example
  * fillDateFieldset("What was the first day of this leave?", "2021-01-17")
  */
-export function fillDateFieldset(caption: string, date: string): void {
+export function fillDateFieldset(caption: string | RegExp, date: string): void {
   const [year, month, day] = date.split("-");
   inFieldsetLabelled(caption, () => {
     cy.contains("Month").type(month);

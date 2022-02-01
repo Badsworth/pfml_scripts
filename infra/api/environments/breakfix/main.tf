@@ -95,7 +95,7 @@ module "api" {
   bounce_forwarding_email_address     = "PFML_DoNotReply@eol.mass.gov"
   bounce_forwarding_email_address_arn = "arn:aws:ses:us-east-1:498823821309:identity/PFML_DoNotReply@eol.mass.gov"
 
-  service_now_base_url = "https://savilinxstage.servicenowservices.com"
+  service_now_base_url = "https://savilinxbreakfix.servicenowservices.com"
 
   enable_document_multipart_upload = "1"
   enable_application_import        = "1"

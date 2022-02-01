@@ -119,7 +119,6 @@ const useClaimsLogic = ({
 
     const shouldPaymentsLoad =
       isFeatureEnabled("claimantShowPaymentsPhaseTwo") &&
-      claimDetail?.hasApprovedStatus &&
       portalFlow.pageRoute === "/applications/status/payments" &&
       !hasLoadedPayments(absenceId);
 
@@ -147,7 +146,10 @@ const useClaimsLogic = ({
         const data = await claimsApi.getClaimDetail(absenceId);
         loadedClaimDetail = data.claimDetail;
         if (shouldPaymentsLoad) {
-          const claimDetailWithPayments = fetchPayments(absenceId, claimDetail);
+          const claimDetailWithPayments = fetchPayments(
+            absenceId,
+            loadedClaimDetail
+          );
           setClaimDetail(await claimDetailWithPayments);
           return claimDetailWithPayments;
         }

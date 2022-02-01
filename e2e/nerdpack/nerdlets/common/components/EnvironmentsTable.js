@@ -104,68 +104,88 @@ export class EnvironmentsTable extends React.Component {
                       id: "e2e-tests",
                       urlState: { runIds: runidList },
                     });
+
                     return (
-                      <tr>
-                        <td className={"env"}>
-                          <Link
-                            to={navigation.getOpenStackedNerdletLocation({
-                              id: "env-timeline",
-                              urlState: {
-                                environment: env,
-                              },
-                            })}
-                          >
-                            {labelEnv(env)}
-                          </Link>
-                        </td>
-                        <td className={"e2e-run-history"}>
-                          <span className={"allLink"}>
-                            <Link to={link}>All</Link>
-                          </span>
-                          {byEnv[env].map((run) => (
-                            <E2EVisualIndicator
-                              run={{
-                                pass_rate: run.passPercent / 100,
-                                timestamp: run.timestamp,
-                                tag: run.tag.join(","),
-                                runUrl: run.runUrl,
-                              }}
-                              runIds={[run.runId]}
-                            />
-                          ))}
-                        </td>
-                        {COMPONENTS.map((component) => {
-                          if (envVersions[env] && envVersions[env][component]) {
-                            return (
-                              <td>
-                                <div className={"version"}>
-                                  <Link
-                                    to={navigation.getOpenStackedNerdletLocation(
-                                      {
-                                        id: "deployments",
-                                        urlState: {
-                                          environment: env,
-                                          component: component,
-                                        },
-                                      }
-                                    )}
-                                  >
-                                    {envVersions[env][component].status}
-                                  </Link>
-                                  <span>
-                                    {envVersions[env][component]?.timestamp
-                                      ? dateFormat(
-                                          envVersions[env][component].timestamp,
-                                          "PPPp"
-                                        )
-                                      : ""}
-                                  </span>
-                                </div>
-                              </td>
-                            );
-                          }
-                        })}
-                      </tr>
+                      <>
+                        {env === "infra-test" && (
+                          <tr className={"infra"}>
+                            <td colspan="2">
+                              Environment for Infra Deployments Only
+                            </td>
+                          </tr>
+                        )}
+                        <tr>
+                          <td className={"env"}>
+                            <Link
+                              to={navigation.getOpenStackedNerdletLocation({
+                                id: "env-timeline",
+                                urlState: {
+                                  environment: env,
+                                },
+                              })}
+                            >
+                              {labelEnv(env)}
+                            </Link>
+                          </td>
+                          {env === "infra-test" || env === "prod" ? (
+                            <td>
+                              E2E Suite not configured for this environment
+                            </td>
+                          ) : (
+                            <td className={"e2e-run-history"}>
+                              <span className={"allLink"}>
+                                <Link to={link}>All</Link>
+                              </span>
+                              {byEnv[env].map((run) => (
+                                <E2EVisualIndicator
+                                  run={{
+                                    pass_rate: run.passPercent / 100,
+                                    timestamp: run.timestamp,
+                                    tag: run.tag.join(","),
+                                    runUrl: run.runUrl,
+                                  }}
+                                  runIds={[run.runId]}
+                                />
+                              ))}
+                            </td>
+                          )}
+                          {COMPONENTS.map((component) => {
+                            if (
+                              envVersions[env] &&
+                              envVersions[env][component]
+                            ) {
+                              return (
+                                <td>
+                                  <div className={"version"}>
+                                    <Link
+                                      to={navigation.getOpenStackedNerdletLocation(
+                                        {
+                                          id: "deployments",
+                                          urlState: {
+                                            environment: env,
+                                            component: component,
+                                          },
+                                        }
+                                      )}
+                                    >
+                                      {envVersions[env][component].status}
+                                    </Link>
+                                    <span>
+                                      {envVersions[env][component]?.timestamp
+                                        ? dateFormat(
+                                            envVersions[env][component]
+                                              .timestamp,
+                                            "PPPp"
+                                          )
+                                        : ""}
+                                    </span>
+                                  </div>
+                                </td>
+                              );
+                            }
+                          })}
+                        </tr>
+                      </>
                     );
                   }
                 })}

@@ -278,7 +278,10 @@ export const ORGUNIT: ScenarioSpecification = {
       MASSID: {},
       CARING: {},
     },
-    metadata: { orgunit: "Division of Administrative Law Appeals" },
+    metadata: {
+      orgunits: "Division of Administrative Law Appeals",
+      worksite: "TEAMX_",
+    },
   },
 };
 
@@ -323,6 +326,21 @@ export const MED_OLB: ScenarioSpecification = {
         worked_per_week_minutes: 1200,
       },
     ],
+  },
+};
+
+export const CONCURRENT: ScenarioSpecification = {
+  employee: { mass_id: true, wages: "eligible" },
+  claim: {
+    label: "CONCURRENT",
+    shortClaim: true,
+    reason: "Serious Health Condition - Employee",
+    work_pattern_spec: "0,315,315,315,315,315,0",
+    docs: {
+      MASSID: {},
+      //HCP: {}
+    },
+    concurrent_leave: { is_for_current_employer: true },
   },
 };
 

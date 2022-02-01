@@ -177,8 +177,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/UserResponse"
-        "404":
-          $ref: "#/components/responses/NotFound"
 
   /employees/{employee_id}:
     get:
@@ -1931,14 +1929,29 @@ components:
         last_name:
           type: string
           example: "Doe"
-        phone_number:
-          type: string
-          nullable: true
-          example: "123-456-7890"
+        phone_numbers:
+          type: array
+          items:
+            nullable: true
+            $ref: "#/components/schemas/Phone"
         tax_identifier_last4:
           type: string
+          nullable: true
           example: "1234"
-      required: ["employee_id", "tax_identifier_last4"]
+        tax_identifier:
+          $ref: "#/components/schemas/SsnItin"
+          nullable: true
+        fineos_customer_number:
+          type: string
+          nullable: true
+          example: "1111111"
+        mass_id_number:
+          nullable: true
+          $ref: "#/components/schemas/MassId"
+        date_of_birth:
+          nullable: true
+          $ref: "#/components/schemas/MaskedDate"
+      required: ["employee_id"]
 
     EmployeeBasicResponse:
       type: object

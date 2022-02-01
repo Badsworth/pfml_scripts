@@ -191,7 +191,7 @@ output "admin_portal_cert_domains" {
     "training"    = "paidleave-admin-training.dfml.eol.mass.gov"
     "trn2"        = "paidleave-admin-trn2.dfml.eol.mass.gov",
     "test"        = "paidleave-admin-test.dfml.eol.mass.gov",
-    "uat"         = "paidleave-admin-test.dfml.eol.mass.gov",
+    "uat"         = "paidleave-admin-uat.dfml.eol.mass.gov",
   }
 }
 

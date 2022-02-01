@@ -51,6 +51,6 @@ jobs:
               "target_environment": "${{ matrix.environment }}",
               "cypress_tags": "Deploy-Fineos",
               "run_unstable": "false",
-              "run_nightly": "false",
+              "run_morning": "false",
               "title_override": "Fineos Deploy: ${{ steps.publish-deployments.outputs.version }}"
             }

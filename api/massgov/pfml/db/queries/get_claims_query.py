@@ -115,8 +115,7 @@ class GetClaimsQuery:
     def add_employees_filter(self, employee_ids: Set[str]) -> None:
         self.query = self.query.filter(Claim.employee_id.in_(employee_ids))
 
-    # TODO: current_user shouldn't be Optional - `get_claims` should throw an error instead
-    def add_user_owns_claim_filter(self, current_user: Optional[User]) -> None:
+    def add_user_owns_claim_filter(self, current_user: User) -> None:
         filter = Claim.application.has(Application.user_id == current_user.user_id)  # type: ignore
         self.query = self.query.filter(filter)
 

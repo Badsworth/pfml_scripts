@@ -738,6 +738,15 @@ class ExperianAddressPair(Base, TimestampMixin):
     )
 
 
+class EmployeeAddress(Base, TimestampMixin):
+    __tablename__ = "link_employee_address"
+    employee_id = Column(PostgreSQLUUID, ForeignKey("employee.employee_id"), primary_key=True)
+    address_id = Column(PostgreSQLUUID, ForeignKey("address.address_id"), primary_key=True)
+
+    employee = relationship("Employee", back_populates="employee_addresses")
+    address = relationship("Address", back_populates="employees")
+
+
 class Employee(Base, TimestampMixin):
     __tablename__ = "employee"
     employee_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
@@ -792,6 +801,7 @@ class Employee(Base, TimestampMixin):
         "EmployeePubEftPair", back_populates="employee"
     )
     reference_files = relationship("EmployeeReferenceFile", back_populates="employee")
+    addresses = relationship("Address", secondary=EmployeeAddress.__table__)
     payment_method = relationship(LkPaymentMethod, foreign_keys=payment_method_id)
     tax_identifier = cast(
         Optional[TaxIdentifier], relationship("TaxIdentifier", back_populates="employee")
@@ -803,7 +813,7 @@ class Employee(Base, TimestampMixin):
     wages_and_contributions: "Query[WagesAndContributions]" = dynamic_loader(
         "WagesAndContributions", back_populates="employee"
     )
-    addresses: "Query[EmployeeAddress]" = dynamic_loader(
+    employee_addresses: "Query[EmployeeAddress]" = dynamic_loader(
         "EmployeeAddress", back_populates="employee"
     )
     employee_occupations: "Query[EmployeeOccupation]" = dynamic_loader(
@@ -814,6 +824,25 @@ class Employee(Base, TimestampMixin):
     employer_benefit_year_contributions: "Query[BenefitYearContribution]" = dynamic_loader(
         "BenefitYearContribution", back_populates="employee"
     )
+
+    @property
+    def mass_id_number(self) -> Optional[str]:
+        # This is imported here to prevent circular import error
+        from massgov.pfml.db.models.applications import Application
+
+        application = (
+            object_session(self)
+            .query(Application)
+            .join(Claim, Claim.claim_id == Application.claim_id)
+            .filter(Claim.is_id_proofed, Claim.employee_id == self.employee_id)
+            .order_by(desc(Claim.created_at))
+            .first()
+        )
+
+        if application:
+            return application.mass_id
+        else:
+            return None
 
     @hybrid_method
     def get_organization_units(self, employer: Employer) -> list[OrganizationUnit]:
@@ -1197,15 +1226,6 @@ class CtrBatchIdentifier(Base, TimestampMixin):
     Index("ix_year_ctr_batch_identifier", year, ctr_batch_identifier, unique=True)
 
     reference_files = relationship("ReferenceFile", back_populates="ctr_batch_identifier")
-
-
-class EmployeeAddress(Base, TimestampMixin):
-    __tablename__ = "link_employee_address"
-    employee_id = Column(PostgreSQLUUID, ForeignKey("employee.employee_id"), primary_key=True)
-    address_id = Column(PostgreSQLUUID, ForeignKey("address.address_id"), primary_key=True)
-
-    employee = relationship("Employee", back_populates="addresses")
-    address = relationship("Address", back_populates="employees")
 
 
 class EmployerAddress(Base, TimestampMixin):
