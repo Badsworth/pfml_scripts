@@ -9,7 +9,6 @@ import {
   ReceiveMessageCommand,
   DeleteMessageCommand,
 } from "@aws-sdk/client-sqs";
-import shuffle from "generation/shuffle";
 
 const { combine, printf, json, colorize } = format;
 
