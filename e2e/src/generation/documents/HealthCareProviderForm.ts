@@ -12,7 +12,7 @@ import { extractLatestLeaveDate } from "../../util/claims";
 
 export default class HealthCareProviderForm extends AbstractDocumentGenerator<{
   invalid?: boolean;
-  filename?: string | (() => string);
+  filename?: string;
 }> {
   documentSource(): string {
     return this.path("hcp-v3.1.1.pdf");

@@ -39,19 +39,10 @@ export abstract class AbstractDocumentGenerator<
     claim: ApplicationRequestBody,
     config: C
   ): DocumentWithPromisedFile {
-    if (
-      config.filename &&
-      typeof config.filename !== "string" &&
-      typeof config.filename !== "function"
-    ) {
-      throw TypeError("'filename' must be of type 'string' | '(() => string)'");
+    if (config.filename && typeof config.filename !== "string") {
+      throw TypeError("'filename' must be of type 'string'");
     }
-    const fileNameOrFileNameMethod: string | (() => string) | undefined =
-      config.filename as string | (() => string);
-    let file: string | undefined;
-    if (typeof fileNameOrFileNameMethod === "function") {
-      file = fileNameOrFileNameMethod();
-    }
+    const file: string | undefined = config.filename as string;
     const pathToDoc = file
       ? path.join(process.cwd(), file as string)
       : undefined;
