@@ -367,10 +367,10 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
       </p>
       <ul>
         <li>
-          You or your employer report additional other leave, income or benefits
+          You or your employer report other leave, income or benefits
         </li>
         <li>
-          You reach the maximum total amount that you can receive in PFML benefits across multiple applications.
+          You reach the maximum total amount that you can receive in PFML benefits across multiple applications
         </li>
         <li>
           You receive a payment for a pay period less than a full week
