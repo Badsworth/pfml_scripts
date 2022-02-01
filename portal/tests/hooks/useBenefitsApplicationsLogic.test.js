@@ -9,6 +9,7 @@ import {
   getClaimMock,
   getClaimMockApplicationId,
   getClaimsMock,
+  importClaimMock,
   submitClaimMock,
   submitPaymentPreferenceMock,
   updateClaimMock,
@@ -61,13 +62,24 @@ describe("useBenefitsApplicationsLogic", () => {
 
   describe("associate", () => {
     const mockAssociateFormState = {
-      absence_id: "mock-absence-id",
-      tax_identifier_last4: "1234",
+      absence_case_id: "mock-absence-id",
+      tax_identifier: "123-45-6789",
     };
 
     beforeEach(() => {
-      mockRouter.pathname = routes.applications.find;
+      mockRouter.pathname = routes.applications.import;
       setup();
+    });
+
+    it("transforms the absence ID to uppercase before sending the request", async () => {
+      await act(async () => {
+        await claimsLogic.associate(mockAssociateFormState);
+      });
+
+      expect(importClaimMock).toHaveBeenCalledWith({
+        ...mockAssociateFormState,
+        absence_case_id: "MOCK-ABSENCE-ID",
+      });
     });
 
     it("causes a new API request the next time loadPage is called, after an application has been associated successfully", async () => {
@@ -95,6 +107,19 @@ describe("useBenefitsApplicationsLogic", () => {
           `${routes.applications.index}?applicationAssociated=mock-absence-id`
         )
       );
+    });
+
+    it("catches exceptions thrown from the API module", async () => {
+      jest.spyOn(console, "error").mockImplementationOnce(jest.fn());
+      importClaimMock.mockImplementationOnce(() => {
+        throw new BadRequestError();
+      });
+
+      await act(async () => {
+        await claimsLogic.associate(mockAssociateFormState);
+      });
+
+      expect(appErrorsLogic.appErrors[0].name).toEqual("BadRequestError");
     });
 
     it("clears prior errors", async () => {

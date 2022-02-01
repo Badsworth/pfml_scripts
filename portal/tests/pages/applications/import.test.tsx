@@ -1,9 +1,9 @@
 import { screen, waitFor } from "@testing-library/react";
-import { Find } from "../../../src/pages/applications/find";
+import Import from "../../../src/pages/applications/import";
 import { renderPage } from "../../test-utils";
 import userEvent from "@testing-library/user-event";
 
-describe("Find", () => {
+describe("Import", () => {
   beforeEach(() => {
     process.env.featureFlags = JSON.stringify({
       channelSwitching: true,
@@ -12,19 +12,19 @@ describe("Find", () => {
 
   it("renders page not found when feature flag isn't enabled", () => {
     process.env.featureFlags = JSON.stringify({ channelSwitching: false });
-    renderPage(Find);
+    renderPage(Import);
 
     expect(screen.getByText("Page not found")).toBeInTheDocument();
   });
 
   it("renders the page", () => {
-    const { container } = renderPage(Find);
+    const { container } = renderPage(Import);
     expect(container).toMatchSnapshot();
   });
 
   it("associates application when user clicks submit", async () => {
     const associateMock = jest.fn();
-    renderPage(Find, {
+    renderPage(Import, {
       addCustomSetup: (appLogic) => {
         appLogic.benefitsApplications.associate = associateMock;
       },
@@ -32,7 +32,7 @@ describe("Find", () => {
 
     userEvent.type(
       screen.getByRole("textbox", { name: /social security/i }),
-      "1234"
+      "123456789"
     );
     userEvent.type(
       screen.getByRole("textbox", { name: /application id/i }),
@@ -42,8 +42,8 @@ describe("Find", () => {
 
     await waitFor(() => {
       expect(associateMock).toHaveBeenCalledWith({
-        absence_id: "NTN-111-ABS-01",
-        tax_identifier_last4: "1234",
+        absence_case_id: "NTN-111-ABS-01",
+        tax_identifier: "123-45-6789",
       });
     });
   });

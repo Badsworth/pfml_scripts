@@ -64,6 +64,18 @@ export const getClaimsMock = jest.fn(() =>
   })
 );
 
+export const importClaimMock = jest.fn(() =>
+  Promise.resolve({
+    success: true,
+    status: 201,
+    claim: new BenefitsApplication({
+      application_id: `mock-created-claim-application-id-${uniqueId()}`,
+      fineos_absence_id: "mock-absence-id",
+      status: BenefitsApplicationStatus.submitted,
+    }),
+  })
+);
+
 export const updateClaimMock = jest.fn((application_id, patchData) =>
   Promise.resolve({
     success: true,
@@ -124,6 +136,7 @@ const claimsApi = jest.fn().mockImplementation(() => ({
   createClaim: createClaimMock,
   getClaim: getClaimMock,
   getClaims: getClaimsMock,
+  importClaim: importClaimMock,
   updateClaim: updateClaimMock,
   submitClaim: submitClaimMock,
   submitPaymentPreference: submitPaymentPreferenceMock,

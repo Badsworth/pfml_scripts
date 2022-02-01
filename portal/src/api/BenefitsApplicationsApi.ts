@@ -47,6 +47,21 @@ export default class BenefitsApplicationsApi extends BaseApi {
     };
   };
 
+  importClaim = async (postData: {
+    absence_case_id: string | null;
+    tax_identifier: string | null;
+  }) => {
+    const { data } = await this.request<BenefitsApplication>(
+      "POST",
+      "import",
+      postData
+    );
+
+    return {
+      claim: new BenefitsApplication(data),
+    };
+  };
+
   /**
    * Signal the data entry is complete and application is ready
    * for intake to be marked as complete in the claims processing system.
