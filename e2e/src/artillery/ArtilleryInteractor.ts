@@ -12,7 +12,7 @@ import config from "../../src/config";
 import getArtillerySubmitter from "./ArtilleryClaimSubmitter";
 import winston from "winston";
 import { getDataFromClaim, UsefulClaimData } from "./util";
-import shuffle from "../generation/shuffle";
+import shuffle from "../../src/generation/shuffle";
 
 type ArtilleryDocRanges = "small" | "med" | "large";
 type DocRangesToScenarios = Record<ArtilleryDocRanges, LSTScenarios[]>;
