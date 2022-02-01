@@ -95,7 +95,7 @@ module "api" {
   bounce_forwarding_email_address     = "PFML_DoNotReply@eol.mass.gov"
   bounce_forwarding_email_address_arn = "arn:aws:ses:us-east-1:498823821309:identity/PFML_DoNotReply@eol.mass.gov"
 
-  service_now_base_url = "https://savilinxtrain.servicenowservices.com"
+  service_now_base_url = "https://savilinxtrain2.servicenowservices.com"
   portal_base_url      = "https://paidleave-trn2.dfml.eol.mass.gov"
 
   # dor_fineos_etl_schedule_expression               = "cron(5 * * * ? *)" # Hourly at :05 minutes past each hour
