@@ -329,7 +329,7 @@ const machineTests = {
       },
     },
   },
-  [routes.applications.import]: {
+  [routes.applications.importClaim]: {
     meta: {
       test: () => {},
     },

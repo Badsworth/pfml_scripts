@@ -19,7 +19,7 @@ const initialFormState: FormState = {
   tax_identifier: null,
 };
 
-export const Import = (props: WithUserProps) => {
+export const ImportClaim = (props: WithUserProps) => {
   const { t } = useTranslation();
   const { formState, updateFields } = useFormState(initialFormState);
 
@@ -63,4 +63,4 @@ export const Import = (props: WithUserProps) => {
   );
 };
 
-export default withUser(Import);
+export default withUser(ImportClaim);
