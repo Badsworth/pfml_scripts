@@ -75,7 +75,7 @@ module "api" {
   pfml_email_address                                  = "PFML_DoNotReply@eol.mass.gov"
   bounce_forwarding_email_address                     = "PFML_DoNotReply@eol.mass.gov"
   bounce_forwarding_email_address_arn                 = "arn:aws:ses:us-east-1:498823821309:identity/PFML_DoNotReply@eol.mass.gov"
-  service_now_base_url                                = "https://savilinxstage.servicenowservices.com"
+  service_now_base_url                                = "https://savilinxuat.servicenowservices.com"
   portal_base_url                                     = "https://paidleave-uat.mass.gov"
   admin_portal_base_url                               = "https://paidleave-admin-uat.dfml.eol.mass.gov"
   fineos_aws_iam_role_arn                             = "arn:aws:iam::016390658835:role/sompre-IAMRoles-CustomerAccountAccessRole-S0EP9ABIA02Z"
