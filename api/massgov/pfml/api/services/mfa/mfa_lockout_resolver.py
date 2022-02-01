@@ -7,7 +7,6 @@ from massgov.pfml.db.queries.users import get_user_by_email
 from massgov.pfml.util.aws.cognito import disable_user_mfa
 from massgov.pfml.util.aws.sns import check_phone_number_opt_out, opt_in_phone_number
 
-db_session_raw = db.init(sync_lookups=True)
 logger = logging.get_logger(__name__)
 
 
@@ -24,6 +23,7 @@ class MfaLockoutResolver:
         employee_name,
         verification_method,
         dry_run,
+        db_session=None,
     ):
         self.user_email = user_email
         self.log_attr = {
@@ -38,6 +38,8 @@ class MfaLockoutResolver:
             self._log_info("***DRY RUN MODE ENABLED***")
         else:
             self._log_info("***DRY RUN MODE DISABLED***")
+
+        self.db_session_raw = db.init(sync_lookups=True) if not db_session else db_session
 
         self.should_commit_changes = not dry_run
 
@@ -58,11 +60,13 @@ class MfaLockoutResolver:
     def _get_user(self) -> User:
         self._log_info("Getting user from PFML API")
 
-        with db.session_scope(db_session_raw) as db_session:
+        with db.session_scope(self.db_session_raw) as db_session:
             user = get_user_by_email(db_session, self.user_email)
 
         if user is None:
-            raise Exception("Unable to find user with the given email")
+            e = Exception("Unable to find user with the given email")
+            self._log_error("Error finding user in PFML database", e)
+            raise e
 
         self._log_info("...Done!")
         return user
@@ -112,7 +116,7 @@ class MfaLockoutResolver:
 
         update_request = UserUpdateRequest(mfa_delivery_preference="Opt Out")
 
-        with db.session_scope(db_session_raw) as db_session:
+        with db.session_scope(self.db_session_raw) as db_session:
             try:
                 if self.should_commit_changes:
                     update_user(db_session, user, update_request, "Admin")

@@ -190,6 +190,12 @@ def consented_user(initialize_factories_session):
 
 
 @pytest.fixture
+def user_with_mfa(initialize_factories_session):
+    user = UserFactory.create(mfa_phone_number="+15109283075")
+    return user
+
+
+@pytest.fixture
 def fineos_user(initialize_factories_session):
     user = UserFactory.create(roles=[employee_models.Role.FINEOS])
     return user

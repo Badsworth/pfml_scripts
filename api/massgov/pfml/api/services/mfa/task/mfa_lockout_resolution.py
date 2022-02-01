@@ -1,11 +1,12 @@
 import argparse
 import sys
+from typing import List
 
 from massgov.pfml.api.services.mfa.mfa_lockout_resolver import MfaLockoutResolver
 from massgov.pfml.util.bg import background_task
 
 
-def _create_parser() -> argparse.ArgumentParser:
+def _parse_script_args(args: List[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Disables MFA for users who have become locked out of their accounts due to an MFA issue"
     )
@@ -57,14 +58,13 @@ def _create_parser() -> argparse.ArgumentParser:
             Set this to 'False' to allow the script to commit changes to Amazon Cognito and the PFML db",
     )
 
-    return parser
+    return parser.parse_args(args)
 
 
 @background_task("mfa-lockout-resolution")
 def main() -> None:
     args = sys.argv[1:]
-    parser = _create_parser()
-    parsed_args = parser.parse_args(args)
+    parsed_args = _parse_script_args(args)
 
     user_email = parsed_args.email
     psd_number = parsed_args.psd_number.upper()
