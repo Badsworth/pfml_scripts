@@ -4,7 +4,7 @@ from pydantic import UUID4, Field
 from sqlalchemy.orm import contains_eager
 
 import massgov.pfml.api.app as app
-from massgov.pfml.api.models.common import LookupEnum, MaskedPhone
+from massgov.pfml.api.models.common import LookupEnum, MaskedPhoneResponse
 from massgov.pfml.db import Session
 from massgov.pfml.db.models.applications import Application
 from massgov.pfml.db.models.employees import (
@@ -54,7 +54,7 @@ class UserResponse(PydanticBaseModel):
     auth_id: str = Field(alias="sub_id")
     email_address: str
     mfa_delivery_preference: Optional[MFADeliveryPreference]
-    mfa_phone_number: Optional[MaskedPhone]
+    mfa_phone_number: Optional[MaskedPhoneResponse]
     # Optional since it isn't populated at first in from_orm(). After that it
     # should always be a potentially empty list.
     application_names: Optional[List[ApplicationNamesResponse]]

@@ -1,15 +1,16 @@
 import connexion
-from werkzeug.exceptions import NotFound
+from werkzeug.exceptions import NotFound, Unauthorized
 
 import massgov.pfml.api.app as app
 import massgov.pfml.api.util.response as response_util
 import massgov.pfml.util.logging
 from massgov.pfml.api.authorization.flask import EDIT, READ, ensure
 from massgov.pfml.api.models.employees.requests import EmployeeSearchRequest, EmployeeUpdateRequest
-from massgov.pfml.api.models.employees.responses import EmployeeResponse
+from massgov.pfml.api.models.employees.responses import EmployeeForPfmlCrmResponse, EmployeeResponse
 from massgov.pfml.api.validation.exceptions import IssueType, ValidationErrorDetail
-from massgov.pfml.db.models.employees import Employee, TaxIdentifier
+from massgov.pfml.db.models.employees import Employee, Role, TaxIdentifier
 from massgov.pfml.util.sqlalchemy import get_or_404
+from massgov.pfml.util.users import has_role_in
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
@@ -17,11 +18,18 @@ logger = massgov.pfml.util.logging.get_logger(__name__)
 def employees_get(employee_id):
     with app.db_session() as db_session:
         employee = get_or_404(db_session, Employee, employee_id)
+        ensure(READ, employee)
 
-    ensure(READ, employee)
+        user = app.current_user()
+        if not user:
+            raise Unauthorized
+
+        response_type = (
+            EmployeeForPfmlCrmResponse if has_role_in(user, [Role.PFML_CRM]) else EmployeeResponse
+        )
 
     return response_util.success_response(
-        message="Successfully retrieved employee", data=EmployeeResponse.from_orm(employee).dict(),
+        message="Successfully retrieved employee", data=response_type.from_orm(employee).dict(),
     ).to_api_response()
 
 
@@ -76,6 +84,14 @@ def employees_search():
 
         ensure(READ, employee)
 
+        user = app.current_user()
+        if not user:
+            raise Unauthorized
+
+        response_type = (
+            EmployeeForPfmlCrmResponse if has_role_in(user, [Role.PFML_CRM]) else EmployeeResponse
+        )
+
     return response_util.success_response(
-        message="Successfully found employee", data=EmployeeResponse.from_orm(employee).dict(),
+        message="Successfully found employee", data=response_type.from_orm(employee).dict(),
     ).to_api_response()

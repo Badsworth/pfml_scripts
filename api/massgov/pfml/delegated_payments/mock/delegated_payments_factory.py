@@ -197,7 +197,7 @@ class DelegatedPaymentFactory(MockData):
             )
 
             if self.add_address:
-                self.employee.addresses = [
+                self.employee.employee_addresses = [
                     EmployeeAddress(employee=self.employee, address=self.get_or_create_address())
                 ]
 
