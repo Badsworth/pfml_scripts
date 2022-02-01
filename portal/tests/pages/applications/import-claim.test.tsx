@@ -1,9 +1,9 @@
 import { screen, waitFor } from "@testing-library/react";
-import Import from "../../../src/pages/applications/import";
+import ImportClaim from "../../../src/pages/applications/import-claim";
 import { renderPage } from "../../test-utils";
 import userEvent from "@testing-library/user-event";
 
-describe("Import", () => {
+describe("ImportClaim", () => {
   beforeEach(() => {
     process.env.featureFlags = JSON.stringify({
       channelSwitching: true,
@@ -12,19 +12,19 @@ describe("Import", () => {
 
   it("renders page not found when feature flag isn't enabled", () => {
     process.env.featureFlags = JSON.stringify({ channelSwitching: false });
-    renderPage(Import);
+    renderPage(ImportClaim);
 
     expect(screen.getByText("Page not found")).toBeInTheDocument();
   });
 
   it("renders the page", () => {
-    const { container } = renderPage(Import);
+    const { container } = renderPage(ImportClaim);
     expect(container).toMatchSnapshot();
   });
 
   it("associates application when user clicks submit", async () => {
     const associateMock = jest.fn();
-    renderPage(Import, {
+    renderPage(ImportClaim, {
       addCustomSetup: (appLogic) => {
         appLogic.benefitsApplications.associate = associateMock;
       },

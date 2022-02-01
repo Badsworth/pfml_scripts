@@ -67,7 +67,7 @@ describe("useBenefitsApplicationsLogic", () => {
     };
 
     beforeEach(() => {
-      mockRouter.pathname = routes.applications.import;
+      mockRouter.pathname = routes.applications.importClaim;
       setup();
     });
 

@@ -171,7 +171,7 @@ const claimantFlow: {
         CREATE_CLAIM: routes.applications.checklist,
       },
     },
-    [routes.applications.import]: {
+    [routes.applications.importClaim]: {
       on: {
         CONTINUE: routes.applications.index,
       },
@@ -180,7 +180,7 @@ const claimantFlow: {
       meta: {},
       on: {
         CONTINUE: routes.applications.uploadDocsOptions,
-        IMPORT_APPLICATION: routes.applications.import,
+        IMPORT_APPLICATION: routes.applications.importClaim,
         NEW_APPLICATION: routes.applications.getReady,
         PAYMENT: routes.applications.status.payments,
         STATUS: routes.applications.status.claim,

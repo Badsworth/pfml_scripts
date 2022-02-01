@@ -31,7 +31,7 @@ const routes = {
     familyMemberRelationship: "/applications/family-member-relationship",
     gender: "/applications/gender",
     getReady: "/applications/get-ready",
-    import: "/applications/import",
+    importClaim: "/applications/import-claim",
     index: "/applications",
     intermittentFrequency: "/applications/intermittent-frequency",
     leavePeriodContinuous: "/applications/leave-period-continuous",
