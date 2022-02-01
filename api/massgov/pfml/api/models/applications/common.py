@@ -39,10 +39,12 @@ class EligibilityEmploymentStatus(str):
     retired = "Retired"
 
 
+# TODO modify here.
 class EmploymentStatus(str, LookupEnum):
     employed = "Employed"
     unemployed = "Unemployed"
     self_employed = "Self-Employed"
+    employed_exempt = "My employer is exempt"
 
 
 class LeaveReason(str, LookupEnum):

@@ -56,6 +56,7 @@ def eligibility_post():
     application_submitted_date = request.application_submitted_date
     employment_status = request.employment_status
 
+    # TODO maybe need to alter here?
     if employment_status not in [
         EligibilityEmploymentStatus.employed,
         EligibilityEmploymentStatus.self_employed,

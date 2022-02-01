@@ -2253,6 +2253,7 @@ components:
                 - Employed
                 - Unemployed
                 - Self-Employed
+                - My employer is exempt
               example: "Employed"
             occupation:
               type: string
@@ -2431,6 +2432,7 @@ components:
             - Employed
             - Unemployed
             - Self-Employed
+            - My employer is exempt
           example: "Employed"
           nullable: true
         occupation:

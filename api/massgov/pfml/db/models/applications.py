@@ -721,6 +721,7 @@ class EmploymentStatus(LookupTable):
     EMPLOYED = LkEmploymentStatus(1, "Employed", "Active")
     UNEMPLOYED = LkEmploymentStatus(2, "Unemployed", "Terminated")
     SELF_EMPLOYED = LkEmploymentStatus(3, "Self-Employed", "Self-Employed")
+    EMPLOYED_EXEMPT = LkEmploymentStatus(4, "My employer is exempt", "Active")
 
 
 class AmountFrequency(LookupTable):
