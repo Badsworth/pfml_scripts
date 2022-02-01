@@ -160,61 +160,62 @@ const Filters = (props: FiltersProps) => {
         </Button>
       </div>
 
-      <form
-        className="bg-primary-lighter padding-x-3 padding-top-1px padding-bottom-3 usa-form maxw-none"
-        hidden={!showFilters}
-        id={filtersContainerId}
-        onSubmit={handleSubmit}
-      >
-        <InputChoiceGroup
-          {...getFunctionalInputProps("claim_status")}
-          smallLabel
-          choices={[
-            AbsenceCaseStatus.approved,
-            AbsenceCaseStatus.closed,
-            AbsenceCaseStatus.declined,
-            "Pending - no action",
-            "Open requirement",
-          ].map((value) => ({
-            checked: get(formState, "claim_status", []).includes(value),
-            label: t("pages.employersDashboard.filterStatusChoice", {
-              context: startCase(camelCase(value)).replace(/[-\s]/g, ""),
-            }),
-            value,
-          }))}
-          label={t("pages.employersDashboard.filterStatusLabel")}
-          type="checkbox"
-        />
-
-        {verifiedEmployers.length > 1 && (
-          <Dropdown
-            autocomplete
-            {...getFunctionalInputProps("employer_id")}
-            choices={[
-              ...verifiedEmployers.map((employer) => ({
-                label: `${employer.employer_dba} (${employer.employer_fein})`,
-                value: employer.employer_id,
-              })),
-            ]}
-            label={t("pages.employersDashboard.filterOrgsLabel")}
+      {/* `hidden` is set on div, instead of the form, to workaround a quirk in E2E scripts (https://lwd.atlassian.net/browse/PORTAL-1592) */}
+      <div hidden={!showFilters} id={filtersContainerId}>
+        <form
+          className="bg-primary-lighter padding-x-3 padding-top-1px padding-bottom-3 usa-form maxw-none"
+          onSubmit={handleSubmit}
+        >
+          <InputChoiceGroup
+            {...getFunctionalInputProps("claim_status")}
             smallLabel
+            choices={[
+              AbsenceCaseStatus.approved,
+              AbsenceCaseStatus.closed,
+              AbsenceCaseStatus.declined,
+              "Pending - no action",
+              "Open requirement",
+            ].map((value) => ({
+              checked: get(formState, "claim_status", []).includes(value),
+              label: t("pages.employersDashboard.filterStatusChoice", {
+                context: startCase(camelCase(value)).replace(/[-\s]/g, ""),
+              }),
+              value,
+            }))}
+            label={t("pages.employersDashboard.filterStatusLabel")}
+            type="checkbox"
           />
-        )}
 
-        <Button type="submit" disabled={isEqual(formState, activeFilters)}>
-          {t("pages.employersDashboard.filtersApply")}
-        </Button>
+          {verifiedEmployers.length > 1 && (
+            <Dropdown
+              autocomplete
+              {...getFunctionalInputProps("employer_id")}
+              choices={[
+                ...verifiedEmployers.map((employer) => ({
+                  label: `${employer.employer_dba} (${employer.employer_fein})`,
+                  value: employer.employer_id,
+                })),
+              ]}
+              label={t("pages.employersDashboard.filterOrgsLabel")}
+              smallLabel
+            />
+          )}
 
-        {activeFiltersCount > 0 && (
-          <Button
-            data-test="reset-filters"
-            variation="outline"
-            onClick={handleFilterReset}
-          >
-            {t("pages.employersDashboard.filtersReset")}
+          <Button type="submit" disabled={isEqual(formState, activeFilters)}>
+            {t("pages.employersDashboard.filtersApply")}
           </Button>
-        )}
-      </form>
+
+          {activeFiltersCount > 0 && (
+            <Button
+              data-test="reset-filters"
+              variation="outline"
+              onClick={handleFilterReset}
+            >
+              {t("pages.employersDashboard.filtersReset")}
+            </Button>
+          )}
+        </form>
+      </div>
 
       {activeFiltersCount > 0 && (
         <div className="margin-top-1 margin-bottom-4" data-test="filters-menu">
