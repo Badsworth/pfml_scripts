@@ -94,6 +94,12 @@ class ClaimDetail {
     );
   }
 
+  get hasPendingStatus() {
+    return this.absence_periods.some(
+      (absenceItem) => absenceItem.request_decision === "Pending"
+    );
+  }
+
   get leaveDates(): AbsencePeriodDates[] {
     return this.absence_periods.map(
       ({ absence_period_start_date, absence_period_end_date }) => ({
