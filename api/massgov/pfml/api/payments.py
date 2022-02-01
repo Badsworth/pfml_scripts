@@ -1,7 +1,7 @@
 from typing import Optional
 
 import flask
-from werkzeug.exceptions import BadRequest, Forbidden, NotFound, Unauthorized
+from werkzeug.exceptions import BadRequest, Forbidden, NotFound
 
 import massgov.pfml.api.app as app
 import massgov.pfml.api.util.response as response_util
@@ -33,9 +33,6 @@ def get_payments() -> flask.Response:
 
     with app.db_session() as db_session:
         current_user = app.current_user()
-
-        if current_user is None:
-            raise Unauthorized()
 
         claim = _get_claim_from_db(db_session, absence_case_id)
 

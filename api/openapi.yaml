@@ -177,8 +177,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/UserResponse"
-        "404":
-          $ref: "#/components/responses/NotFound"
 
   /employees/{employee_id}:
     get:

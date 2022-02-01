@@ -9,7 +9,7 @@ from flask import Response, request
 from puremagic import PureError
 from pydantic import ValidationError
 from sqlalchemy import asc, desc
-from werkzeug.exceptions import BadRequest, Forbidden, NotFound, ServiceUnavailable, Unauthorized
+from werkzeug.exceptions import BadRequest, Forbidden, NotFound, ServiceUnavailable
 
 import massgov.pfml.api.app as app
 import massgov.pfml.api.services.applications as applications_service
@@ -111,17 +111,14 @@ def application_get(application_id):
 
 
 def applications_get():
-    if user := app.current_user():
-        user_id = user.user_id
-    else:
-        raise Unauthorized
+    user = app.current_user()
     with ApplicationPaginationAPIContext(Application, request=request) as pagination_context:
         with app.db_session() as db_session:
             is_asc = pagination_context.order_direction == OrderDirection.asc.value
             sort_fn = asc if is_asc else desc
             application_query = (
                 db_session.query(Application)
-                .filter(Application.user_id == user_id)
+                .filter(Application.user_id == user.user_id)
                 .order_by(sort_fn(pagination_context.order_key))
             )
             page = page_for_api_context(pagination_context, application_query)
@@ -144,10 +141,8 @@ def applications_import():
     application = Application()
     ensure(CREATE, application)
 
-    if user := app.current_user():
-        application.user = user
-    else:
-        raise Unauthorized
+    user = app.current_user()
+    application.user = user
 
     body = connexion.request.json
     application_import_request = ApplicationImportRequestBody.parse_obj(body)
@@ -198,12 +193,7 @@ def applications_start():
 
     ensure(CREATE, application)
 
-    # this should always be the case at this point, but the type for
-    # current_user is still optional until we require authentication
-    if user := app.current_user():
-        application.user = user
-    else:
-        raise Unauthorized
+    application.user = app.current_user()
 
     with app.db_session() as db_session:
         db_session.add(application)

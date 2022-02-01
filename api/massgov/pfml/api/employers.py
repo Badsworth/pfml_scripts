@@ -1,7 +1,7 @@
 import connexion
 import flask
 from sqlalchemy.exc import IntegrityError
-from werkzeug.exceptions import Conflict, NotFound, Unauthorized
+from werkzeug.exceptions import Conflict, NotFound
 
 import massgov.pfml.api.app as app
 import massgov.pfml.api.util.response as response_util
@@ -50,9 +50,6 @@ def employer_get_most_recent_withholding_dates(employer_id: str) -> flask.Respon
 def employer_add_fein() -> flask.Response:
     add_fein_request = EmployerAddFeinRequest.parse_obj(connexion.request.json)
     current_user = app.current_user()
-
-    if current_user is None:
-        raise Unauthorized()
 
     if add_fein_request.employer_fein is None:
         raise ValidationException(
