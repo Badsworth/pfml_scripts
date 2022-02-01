@@ -26,18 +26,22 @@ on:
         required: false
         default: false
         type: boolean
-      large_doc_uploads:
-        description: "Only use randomized file sizes in range of 4.8MB - 10MB for doc uploads"
+      document_upload_size:
+        description: "File size ranges for document uploads. 'small' will upload file sizes up to 4.5MB. 'large' will upload file sizes from 5MB to 10MB. 'full_range' uploads from <1MB - 10MB"
         required: false
-        default: false
-        type: boolean
+        default: "small"
+        type: choice
+        options:
+          - small
+          - large
+          - full_range
 defaults:
   run:
     working-directory: e2e
 
 env:
   E2E_ENVIRONMENT: ${{ github.event.inputs.target_environment }}
-  USE_LARGE_DOCUMENT_UPLOADS: ${{github.event.inputs.large_doc_uploads}}
+  E2E_LST_FILE_RANGE: ${{github.event.inputs.document_upload_size}}
   # Caching/build performance
   CYPRESS_CACHE_FOLDER: /home/runner/.npm/.cypress-cache
   PLAYWRIGHT_BROWSERS_PATH: /home/runner/.npm/.playwright-cache

@@ -2,7 +2,6 @@ import path from "path";
 import { ScenarioSpecification } from "../generation/Scenario";
 import * as CypressScenarios from "./cypress";
 import { ClaimSpecification, EmployerResponseSpec } from "../generation/Claim";
-import shuffle from "../../src/generation/shuffle";
 
 /**
  * Load & Stress Testing Scenarios.
@@ -64,37 +63,19 @@ const employerResponseLeavesAndBenefits: Partial<EmployerResponseSpec> = {
   ],
 };
 
-const selectRandomFile = (): string => {
-  type FileSizeRanges = "<4.8" | "4.8MB-6.8MB" | "7MB-10MB";
-  const wheel: Array<FileSizeRanges> =
-    process.env.USE_LARGE_DOCUMENT_UPLOADS === "true"
-      ? [...Array(70).fill("4.8MB-6.8MB"), ...Array(30).fill("7MB-10MB")]
-      : [
-          ...Array(80).fill("<4.8"),
-          ...Array(12).fill("4.8MB-6.8MB"),
-          ...Array(8).fill("7MB-10MB"),
-        ];
-  const range = wheel[Math.floor(Math.random() * wheel.length)];
-  const filesMap: Record<FileSizeRanges, string[]> = {
-    "<4.8": ["150KB.pdf", "1MB.jpg", "2.7MB.png", "4.5MB.pdf"],
-    "4.8MB-6.8MB": ["5MB.pdf", "6MB.pdf"],
-    "7MB-10MB": ["7MB.pdf", "8MB.pdf", "9.4MB.pdf"],
-  };
-  const filesInRanges = filesMap[range];
-  const file = shuffle(filesInRanges)[0];
-  return path.join("forms", "lst", file);
-};
-export const LSTOLB1: ScenarioSpecification = {
+const getDocPath = (filename: string) => path.join("forms", "lst", filename);
+
+export const LSTOLB1_150KB: ScenarioSpecification = {
   ...CypressScenarios.BHAP1,
   claim: {
     ...CypressScenarios.BHAP1.claim,
-    label: "PortalClaimSubmit - Other Leaves/Benefits",
+    label: "PortalClaimSubmit - Other Leaves/Benefits  - 150KB file size",
     docs: {
       FOSTERPLACEMENT: {
-        filename: selectRandomFile,
+        filename: getDocPath("150KB.pdf"),
       },
       MASSID: {
-        filename: selectRandomFile,
+        filename: getDocPath("150KB.pdf"),
       },
     },
     employerResponse: {
@@ -107,41 +88,41 @@ export const LSTOLB1: ScenarioSpecification = {
 };
 
 // Portal claim submission with eligible employee
-export const LSTBHAP1: ScenarioSpecification = {
+export const LSTBHAP_1MB: ScenarioSpecification = {
   ...CypressScenarios.BHAP1,
   claim: {
     ...CypressScenarios.BHAP1.claim,
-    label: "PortalClaimSubmit - Bonding",
+    label: "PortalClaimSubmit - Bonding - 1MB file size",
     employerResponse: {
       hours_worked_per_week: 40,
       employer_decision: "Approve",
     },
     docs: {
       FOSTERPLACEMENT: {
-        filename: selectRandomFile,
+        filename: getDocPath("1MB.pdf"),
       },
       MASSID: {
-        filename: selectRandomFile,
+        filename: getDocPath("1MB.pdf"),
       },
     },
   },
 };
 
-export const LSTCHAP1: ScenarioSpecification = {
+export const LSTCHAP1_2MB: ScenarioSpecification = {
   employee: {
     wages: "eligible",
     mass_id: true,
   },
   claim: {
-    label: "PortalClaimSubmit - Caring",
+    label: "PortalClaimSubmit - Caring - 2.7MB file sizes",
     reason: "Care for a Family Member",
     work_pattern_spec: "0,720,0,720,0,720,0",
     docs: {
       MASSID: {
-        filename: selectRandomFile,
+        filename: getDocPath("2.7MB.pdf"),
       },
       CARING: {
-        filename: selectRandomFile,
+        filename: getDocPath("2.7MB.pdf"),
       },
     },
     shortClaim: true,
@@ -153,34 +134,172 @@ export const LSTCHAP1: ScenarioSpecification = {
   },
 };
 
-// Fineos claim submission with eligible employee
-export const LSTFBHAP1: ScenarioSpecification = {
+export const LSTOLB1_4MB: ScenarioSpecification = {
   ...CypressScenarios.BHAP1,
   claim: {
     ...CypressScenarios.BHAP1.claim,
-    label: "FineosClaimSubmit",
+    label: "PortalClaimSubmit - Other Leaves/Benefits  - 4.5MB file size",
+    docs: {
+      FOSTERPLACEMENT: {
+        filename: getDocPath("4.5MB.pdf"),
+      },
+      MASSID: {
+        filename: getDocPath("4.5MB.pdf"),
+      },
+    },
+    employerResponse: {
+      hours_worked_per_week: 40,
+      employer_decision: "Approve",
+      ...employerResponseLeavesAndBenefits,
+    },
+    ...otherLeavesAndBenefitsProps,
+  },
+};
+
+// Portal claim submission with eligible employee
+export const LSTBHAP_5MB: ScenarioSpecification = {
+  ...CypressScenarios.BHAP1,
+  claim: {
+    ...CypressScenarios.BHAP1.claim,
+    label: "PortalClaimSubmit - Bonding - 5MB file size",
     employerResponse: {
       hours_worked_per_week: 40,
       employer_decision: "Approve",
     },
+    docs: {
+      FOSTERPLACEMENT: {
+        filename: getDocPath("5MB"),
+      },
+      MASSID: {
+        filename: getDocPath("5MB"),
+      },
+    },
   },
 };
 
-// Fineos claim submission with ineligible employee
-export const LSTFBHAP4: ScenarioSpecification = {
-  employee: { mass_id: true, wages: "ineligible" },
+export const LSTCHAP1_6MB: ScenarioSpecification = {
+  employee: {
+    wages: "eligible",
+    mass_id: true,
+  },
   claim: {
-    label: "FineosClaimSubmit",
+    label: "PortalClaimSubmit - Caring - 6MB file sizes",
+    reason: "Care for a Family Member",
+    work_pattern_spec: "0,720,0,720,0,720,0",
+    docs: {
+      MASSID: {
+        filename: getDocPath("6MB.pdf"),
+      },
+      CARING: {
+        filename: getDocPath("6MB.pdf"),
+      },
+    },
     shortClaim: true,
-    reason: "Child Bonding",
-    reason_qualifier: "Foster Care",
     employerResponse: {
       hours_worked_per_week: 40,
-      employer_decision: "Deny",
+      employer_decision: "Approve",
+    },
+    is_withholding_tax: true,
+  },
+};
+
+export const LSTOLB1_7MB: ScenarioSpecification = {
+  ...CypressScenarios.BHAP1,
+  claim: {
+    ...CypressScenarios.BHAP1.claim,
+    label: "PortalClaimSubmit - Other Leaves/Benefits  - 7MB file size",
+    docs: {
+      FOSTERPLACEMENT: {
+        filename: getDocPath("7MB.pdf"),
+      },
+      MASSID: {
+        filename: getDocPath("7MB.pdf"),
+      },
+    },
+    employerResponse: {
+      hours_worked_per_week: 40,
+      employer_decision: "Approve",
+      ...employerResponseLeavesAndBenefits,
+    },
+    ...otherLeavesAndBenefitsProps,
+  },
+};
+
+// Portal claim submission with eligible employee
+export const LSTBHAP_8MB: ScenarioSpecification = {
+  ...CypressScenarios.BHAP1,
+  claim: {
+    ...CypressScenarios.BHAP1.claim,
+    label: "PortalClaimSubmit - Bonding - 8MB file size",
+    employerResponse: {
+      hours_worked_per_week: 40,
+      employer_decision: "Approve",
     },
     docs: {
-      MASSID: {},
-      FOSTERPLACEMENT: {},
+      FOSTERPLACEMENT: {
+        filename: getDocPath("8MB"),
+      },
+      MASSID: {
+        filename: getDocPath("8MB"),
+      },
     },
   },
 };
+
+export const LSTCHAP1_9MB: ScenarioSpecification = {
+  employee: {
+    wages: "eligible",
+    mass_id: true,
+  },
+  claim: {
+    label: "PortalClaimSubmit - Caring - 9.4MB file sizes",
+    reason: "Care for a Family Member",
+    work_pattern_spec: "0,720,0,720,0,720,0",
+    docs: {
+      MASSID: {
+        filename: getDocPath("9.4MB"),
+      },
+      CARING: {
+        filename: getDocPath("9.4MB"),
+      },
+    },
+    shortClaim: true,
+    employerResponse: {
+      hours_worked_per_week: 40,
+      employer_decision: "Approve",
+    },
+    is_withholding_tax: true,
+  },
+};
+
+// // Fineos claim submission with eligible employee
+// export const LSTFBHAP1: ScenarioSpecification = {
+//   ...CypressScenarios.BHAP1,
+//   claim: {
+//     ...CypressScenarios.BHAP1.claim,
+//     label: "FineosClaimSubmit",
+//     employerResponse: {
+//       hours_worked_per_week: 40,
+//       employer_decision: "Approve",
+//     },
+//   },
+// };
+
+// // Fineos claim submission with ineligible employee
+// export const LSTFBHAP4: ScenarioSpecification = {
+//   employee: { mass_id: true, wages: "ineligible" },
+//   claim: {
+//     label: "FineosClaimSubmit",
+//     shortClaim: true,
+//     reason: "Child Bonding",
+//     reason_qualifier: "Foster Care",
+//     employerResponse: {
+//       hours_worked_per_week: 40,
+//       employer_decision: "Deny",
+//     },
+//     docs: {
+//       MASSID: {},
+//       FOSTERPLACEMENT: {},
+//     },
+//   },
+// };
