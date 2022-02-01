@@ -164,6 +164,7 @@ export const DefaultStory = (
         payments,
       }),
       isLoadingClaimDetail: false,
+      hasLoadedPayments: () => true,
     },
     documents: {
       documents: new ApiResourceCollection<BenefitsApplicationDocument>(
@@ -175,12 +176,14 @@ export const DefaultStory = (
           ),
         ]
       ),
+      hasLoadedClaimDocuments: () => true,
+      loadAll: () => new Promise(() => {}),
     },
   });
   return (
     <Payments
       appLogic={appLogic}
-      query={{ absence_id: "mock-application-id" }}
+      query={{ absence_id: "NTN-12345-ABS-01" }}
       user={new User({})}
     />
   );
