@@ -67,7 +67,7 @@ exports[`Status LeaveDetails renders page separated by keys if object of absence
       </p>
       <p>
         <span
-          class="usa-tag display-inline-block text-bold text-middle text-no-wrap bg-primary-lighter text-primary"
+          class="usa-tag display-inline-block text-bold text-middle text-no-wrap text-base-darkest bg-warning-lighter"
         >
           Pending
         </span>

@@ -1,5 +1,7 @@
-import { AbsencePeriod } from "src/models/AbsencePeriod";
-import { StatusTagMap } from "src/pages/applications/status";
+import {
+  AbsencePeriod,
+  AbsencePeriodRequestDecision,
+} from "src/models/AbsencePeriod";
 import faker from "faker";
 
 // Cache the previously used date so we incrementally increase it,
@@ -23,8 +25,8 @@ export const createAbsencePeriod = (partialAttrs: Partial<AbsencePeriod>) => {
       "Intermittent",
       "Reduced Schedule",
     ]),
-    request_decision: faker.random.arrayElement<keyof typeof StatusTagMap>(
-      Object.keys(StatusTagMap) as Array<keyof typeof StatusTagMap>
+    request_decision: faker.random.arrayElement(
+      Object.values(AbsencePeriodRequestDecision)
     ),
   };
 

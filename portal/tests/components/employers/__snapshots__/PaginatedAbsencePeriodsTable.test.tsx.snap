@@ -202,7 +202,7 @@ exports[`PaginatedAbsencePeriodsTable renders the component 1`] = `
         <span
           class="usa-tag display-inline-block text-bold text-middle text-no-wrap text-base-darker bg-base-lightest"
         >
-          Withdrawn
+          Cancelled
         </span>
       </td>
     </tr>
@@ -228,7 +228,7 @@ exports[`PaginatedAbsencePeriodsTable renders the component 1`] = `
         <span
           class="usa-tag display-inline-block text-bold text-middle text-no-wrap text-base-darker bg-base-lightest"
         >
-          Voided
+          Withdrawn
         </span>
       </td>
     </tr>

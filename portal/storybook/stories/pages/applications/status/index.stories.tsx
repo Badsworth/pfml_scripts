@@ -1,5 +1,5 @@
 import {
-  AbsencePeriodRequestDecision,
+  AbsencePeriodRequestDecisionEnum,
   AbsencePeriodTypes,
 } from "src/models/AbsencePeriod";
 import createMockClaimDetail, {
@@ -21,7 +21,7 @@ function getDocuments({
   requestDecision,
   shouldIncludeRfiDocument,
 }: {
-  requestDecision: AbsencePeriodRequestDecision;
+  requestDecision: AbsencePeriodRequestDecisionEnum;
   shouldIncludeRfiDocument: boolean;
 }) {
   const documents = [];
@@ -88,7 +88,7 @@ export const DefaultStory = (
     "Has payments": boolean;
     "Leave scenario": keyof typeof leaveScenarioMap;
     "Leave type": AbsencePeriodTypes;
-    "Request decision": AbsencePeriodRequestDecision;
+    "Request decision": AbsencePeriodRequestDecisionEnum;
     "Show request for more information": boolean;
   }
 ) => {

@@ -1,8 +1,4 @@
 import {
-  AbsencePeriod,
-  AbsencePeriodRequestDecision,
-} from "../../../models/AbsencePeriod";
-import {
   BenefitsApplicationDocument,
   ClaimDocument,
   DocumentType,
@@ -12,9 +8,10 @@ import {
   getLegalNotices,
 } from "../../../models/Document";
 import React, { useEffect } from "react";
-import Tag, { TagProps } from "../../../components/core/Tag";
 import withUser, { WithUserProps } from "../../../hoc/withUser";
 
+import { AbsencePeriod } from "../../../models/AbsencePeriod";
+import AbsencePeriodStatusTag from "../../../components/AbsencePeriodStatusTag";
 import Alert from "../../../components/core/Alert";
 import { AppLogic } from "../../../hooks/useAppLogic";
 import BackButton from "../../../components/BackButton";
@@ -444,19 +441,6 @@ export const Status = ({
 
 export default withUser(Status);
 
-export const StatusTagMap: {
-  [status in AbsencePeriodRequestDecision]: TagProps["state"];
-} = {
-  Approved: "success",
-  Cancelled: "inactive",
-  Denied: "error",
-  "In Review": "pending",
-  Pending: "pending",
-  Projected: "pending",
-  Withdrawn: "inactive",
-  Voided: "inactive",
-} as const;
-
 interface LeaveDetailsProps {
   absenceDetails?: { [key: string]: AbsencePeriod[] };
   absenceId: string;
@@ -507,11 +491,8 @@ export const LeaveDetails = ({
                     })}
                   </p>
                   <p>
-                    <Tag
-                      label={t("pages.claimsStatus.requestDecision", {
-                        context: request_decision,
-                      })}
-                      state={StatusTagMap[request_decision]}
+                    <AbsencePeriodStatusTag
+                      request_decision={request_decision}
                     />
                   </p>
                   <div>

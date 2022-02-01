@@ -32,7 +32,7 @@ const AbsenceCaseStatusTag = ({
       if (errorState.includes(status)) return "error";
       if (inactiveState.includes(status)) return "inactive";
     }
-    return "pending";
+    return "warning";
   };
 
   if (closestReviewableFollowUpDate) {

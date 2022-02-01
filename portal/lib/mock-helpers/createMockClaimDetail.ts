@@ -1,6 +1,6 @@
 import {
   AbsencePeriod,
-  AbsencePeriodRequestDecision,
+  AbsencePeriodRequestDecisionEnum,
   AbsencePeriodTypes,
 } from "src/models/AbsencePeriod";
 import ClaimDetail, { PaymentDetail } from "src/models/ClaimDetail";
@@ -47,7 +47,7 @@ export const leaveTypes: AbsencePeriodTypes[] = [
   "Reduced Schedule",
 ];
 
-export const requestTypes: AbsencePeriodRequestDecision[] = [
+export const requestTypes: AbsencePeriodRequestDecisionEnum[] = [
   "Approved",
   "Denied",
   "Pending",
@@ -78,7 +78,7 @@ const createMockClaimDetail = ({
   leaveScenario?: keyof typeof leaveScenarioMap;
   leaveType?: AbsencePeriodTypes;
   payments?: PaymentDetail[];
-  requestDecision?: AbsencePeriodRequestDecision;
+  requestDecision?: AbsencePeriodRequestDecisionEnum;
 }): ClaimDetail => {
   const reasonDetails = leaveScenarioMap[leaveScenario];
   const defaultAbsencePeriods = reasonDetails.map((reasonDetail) => {

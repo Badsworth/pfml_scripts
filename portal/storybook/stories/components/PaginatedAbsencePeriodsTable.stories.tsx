@@ -1,6 +1,6 @@
+import { AbsencePeriodRequestDecision } from "src/models/AbsencePeriod";
 import PaginatedAbsencePeriodsTable from "src/components/employers/PaginatedAbsencePeriodsTable";
 import React from "react";
-import { StatusTagMap } from "src/pages/applications/status";
 import { createAbsencePeriod } from "lib/mock-helpers/createAbsencePeriod";
 
 export default {
@@ -8,9 +8,9 @@ export default {
   component: PaginatedAbsencePeriodsTable,
 };
 
-const shortAbsencePeriodsList = (
-  Object.keys(StatusTagMap) as Array<keyof typeof StatusTagMap>
-).map((status) => createAbsencePeriod({ request_decision: status }));
+const shortAbsencePeriodsList = Object.values(AbsencePeriodRequestDecision).map(
+  (status) => createAbsencePeriod({ request_decision: status })
+);
 
 export const Default = () => (
   <PaginatedAbsencePeriodsTable absencePeriods={shortAbsencePeriodsList} />
