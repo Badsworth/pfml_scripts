@@ -30,7 +30,7 @@ let employer: Employer;
 jest.retryTimes(3);
 
 /**
- * @group nightly
+ * @group morning
  */
 describe("Series of test that verifies LAs are properly registered in Fineos", () => {
   beforeAll(async () => {

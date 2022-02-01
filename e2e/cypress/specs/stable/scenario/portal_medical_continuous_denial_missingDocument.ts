@@ -8,7 +8,6 @@ type ConcurrentLeave = {
   concurrentLeave: ValidConcurrentLeave;
 };
 
-
 describe("Submit a bonding claim and adjucation approval - BHAP1", () => {
   const submissionTest =
     it("As a claimant, I should be able to submit a continous bonding application through the portal", () => {
@@ -73,7 +72,8 @@ describe("Submit a bonding claim and adjucation approval - BHAP1", () => {
                   );
                   // Mark missing doc as recieved
                   evidence.receive("Own serious health condition form");
-                }); });
+                });
+            });
         });
       });
     });
@@ -99,18 +99,25 @@ describe("Submit a bonding claim and adjucation approval - BHAP1", () => {
     cy.unstash<DehydratedClaim>("claim").then((claim) => {
       cy.unstash<Submission>("submission").then((submission) => {
         cy.unstash<ConcurrentLeave>("ConcurrentLeave").then(
-         ({ concurrentLeave }) => {
-          assertValidClaim(claim.claim);
-          portal.loginLeaveAdmin(claim.claim.employer_fein);
-          portal.visitActionRequiredERFormPage(submission.fineos_absence_id);
-          portal.checkHoursPerWeekLeaveAdmin(
-            claim.claim.hours_worked_per_week as number
-          );
-          const newStart = format(parseISO(concurrentLeave.leave_start_date), "M/d/yyyy");
-          const newEnd = format(parseISO(concurrentLeave.leave_end_date), "M/d/yyyy");
-          portal.checkConcurrentLeave(newStart, newEnd);
-          portal.respondToLeaveAdminRequest(false, false, false);
-        });
+          ({ concurrentLeave }) => {
+            assertValidClaim(claim.claim);
+            portal.loginLeaveAdmin(claim.claim.employer_fein);
+            portal.visitActionRequiredERFormPage(submission.fineos_absence_id);
+            portal.checkHoursPerWeekLeaveAdmin(
+              claim.claim.hours_worked_per_week as number
+            );
+            const newStart = format(
+              parseISO(concurrentLeave.leave_start_date),
+              "M/d/yyyy"
+            );
+            const newEnd = format(
+              parseISO(concurrentLeave.leave_end_date),
+              "M/d/yyyy"
+            );
+            portal.checkConcurrentLeave(newStart, newEnd);
+            portal.respondToLeaveAdminRequest(false, false, false);
+          }
+        );
       });
     });
   });

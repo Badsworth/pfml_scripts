@@ -278,7 +278,10 @@ export const ORGUNIT: ScenarioSpecification = {
       MASSID: {},
       CARING: {},
     },
-    metadata: { orgunit: "Division of Administrative Law Appeals" },
+    metadata: {
+      orgunits: "Division of Administrative Law Appeals",
+      worksite: "TEAMX_",
+    },
   },
 };
 
@@ -334,9 +337,8 @@ export const CONCURRENT: ScenarioSpecification = {
     reason: "Serious Health Condition - Employee",
     work_pattern_spec: "0,315,315,315,315,315,0",
     docs: {
-      MASSID: {}
-     //HCP: {}
-
+      MASSID: {},
+      //HCP: {}
     },
     concurrent_leave: { is_for_current_employer: true },
   },

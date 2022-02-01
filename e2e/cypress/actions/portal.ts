@@ -867,17 +867,15 @@ export function checkHoursPerWeekLeaveAdmin(hwpw: number): void {
 
 export function checkConcurrentLeave(startDate: string, endDate: string): void {
   cy.get("#employer-review-form").should((textArea) => {
-    expect(
-      textArea,
-      `Concurrent leave should be present`
-    ).contain.text("Concurrent accrued paid leave")
+    expect(textArea, `Concurrent leave should be present`).contain.text(
+      "Concurrent accrued paid leave"
+    );
     expect(
       textArea,
       `Concurrent leave start date should be: ${startDate} to ${endDate}`
-    ).contain.text(`${startDate} to ${endDate}`)
+    ).contain.text(`${startDate} to ${endDate}`);
   });
 }
-
 
 export function visitActionRequiredERFormPage(fineosAbsenceId: string): void {
   cy.visit(
@@ -1278,7 +1276,10 @@ function reportAccruedLeave(accruedLeave: ValidConcurrentLeave): void {
   cy.contains("button", "Save and continue").click();
 }
 
-const benefitTypeMap: Record<ValidEmployerBenefit["benefit_type"], string | RegExp> = {
+const benefitTypeMap: Record<
+  ValidEmployerBenefit["benefit_type"],
+  string | RegExp
+> = {
   "Family or medical leave insurance": "Family or medical leave insurance",
   "Permanent disability insurance": "Permanent disability insurance",
   "Short-term disability insurance": /Temporary disability insurance.*/,
