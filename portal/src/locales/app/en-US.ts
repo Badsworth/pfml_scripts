@@ -2639,25 +2639,24 @@ const pages: {
     questionsDetails:
       "<p>Call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.</p>",
     questionsHeader: "Questions?",
+    tableAmountHeader: "Amount",
     tableAmountSent: "{{amount, currency}}",
-    tableAmountSentHeader: "Amount sent",
-    tableDateProcessedHeader: "Date processed",
-    tableEstimatedDateHeader: "Estimated date",
-    tableLeaveDatesHeader: "Leave dates",
-    tablePaymentMethodHeader: "Payment Method",
-    tablePaymentMethod_Check: "Check",
-    "tablePaymentMethod_Elec Funds Transfer": "Direct Deposit",
-    tablePaymentStatus_Cancelled: "Cancelled",
-    tablePaymentStatus_Delayed: "Delayed",
-    tablePaymentStatus_Pending: "Pending",
-    "tablePaymentStatus_Sent to bank": "Sent",
+    tablePayPeriodHeader: "Pay period",
+    tablePaymentStatus_Cancelled:
+      "This payment was cancelled. See <delays-accordion-link>what may cause a delayed or cancelled payment</delays-accordion-link>.",
+    tablePaymentStatus_Check: "Check mailed on {{sentDate}}",
+    tablePaymentStatus_Delayed:
+      "See <delays-accordion-link>what may cause a delayed or cancelled payment</delays-accordion-link>.",
+    tablePaymentStatus_Pending:
+      "Your payment will be sent by {{paymentMethod}} between {{payPeriod}}.",
+    "tablePaymentStatus_Sent to bank":
+      "Direct deposit was sent on {{sentDate}}. Depending on your bank’s processes, expect to see this payment in your account 2-3 days after this date.",
+    tableStatusHeader: "Status",
     tableWaitingWeekGeneric:
       "The first seven (7) days of approved leave are unpaid",
     tableWaitingWeekHeader: "Waiting period",
     tableWaitingWeekText:
-      "Learn more about the <waiting-week-link>7-day waiting period</waiting-week-link>.",
-    whatDoesEstimatedDateMean:
-      "<p><strong>What does estimated scheduled date mean?</strong></p><p>This is the date range we expect to process your direct deposit payment or send your check in the mail. Depending on your bank, expect to receive direct deposit payments in your account 2-3 days after this date.  Checks may take 7-11 days to arrive in the mail. Once your payment is processed or your check is sent, that date will be shown in the “date processed” column.</p>",
+      "You have an unpaid 7-day waiting period at the start of your leave. You won’t receive any PFML payments for leave you take during this time. Learn more about the <waiting-week-link>7-day waiting period</waiting-week-link>.",
     yourPayments: "Your payments",
   },
   userConsentToDataSharing: {

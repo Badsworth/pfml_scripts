@@ -23,7 +23,7 @@ import { Trans } from "react-i18next";
 import { createRouteWithQuery } from "../../../utils/routeWithParams";
 import dayjs from "dayjs";
 import dayjsBusinessTime from "dayjs-business-time";
-import formatDate from "../../../utils/formatDate";
+import formatDate from "src/utils/formatDate";
 import formatDateRange from "../../../utils/formatDateRange";
 import isBlank from "../../../utils/isBlank";
 import { isFeatureEnabled } from "../../../services/featureFlags";
@@ -124,15 +124,38 @@ export const Payments = ({
   }
 
   const tableColumns = [
-    t("pages.payments.tableLeaveDatesHeader"),
-    t("pages.payments.tablePaymentMethodHeader"),
-    t("pages.payments.tableEstimatedDateHeader"),
-    t("pages.payments.tableDateProcessedHeader"),
-    t("pages.payments.tableAmountSentHeader"),
+    t("pages.payments.tablePayPeriodHeader"),
+    t("pages.payments.tableAmountHeader"),
+    t("pages.payments.tableStatusHeader"),
   ];
 
   const shouldShowPaymentsTable =
     hasPayments || (hasWaitingWeek && showPhaseTwoFeatures);
+
+  const getPaymentAmount = (status: string, amount: number | null) => {
+    if (status === "Sent to bank") {
+      return t("pages.payments.tableAmountSent", { amount });
+    } else if (status === "Pending") {
+      return "Processing";
+    }
+    return status;
+  };
+
+  const getPaymentMethod = (payment_method: string) => {
+    if (payment_method === "Check") {
+      return "check";
+    } else {
+      return "direct deposit";
+    }
+  };
+
+  const getPaymentStatus = (status: string, payment_method: string) => {
+    if (status === "Sent to bank" && payment_method === "Check") {
+      return "Check";
+    } else {
+      return status;
+    }
+  };
 
   return (
     <React.Fragment>
@@ -208,7 +231,7 @@ export const Payments = ({
 
           {/* Table section */}
           {shouldShowPaymentsTable && (
-            <Table className="width-full" responsive>
+            <Table responsive>
               <thead>
                 <tr>
                   {shouldShowPaymentsTable &&
@@ -235,38 +258,35 @@ export const Payments = ({
                       status,
                     }) => (
                       <tr key={payment_id}>
-                        <td data-label={tableColumns[0]}>
+                        <td
+                          data-label={tableColumns[0]}
+                          className="tablet:width-card-lg"
+                        >
                           {formatDateRange(period_start_date, period_end_date)}
                         </td>
                         <td data-label={tableColumns[1]}>
-                          {t("pages.payments.tablePaymentMethod", {
-                            context: payment_method,
-                          })}
+                          {getPaymentAmount(status, amount)}
                         </td>
                         <td data-label={tableColumns[2]}>
-                          {status !== "Pending"
-                            ? t("pages.payments.tablePaymentStatus", {
-                                context: status,
-                              })
-                            : formatDateRange(
+                          <Trans
+                            i18nKey="pages.payments.tablePaymentStatus"
+                            tOptions={{
+                              context: getPaymentStatus(status, payment_method),
+                              paymentMethod: getPaymentMethod(payment_method),
+                              payPeriod: formatDateRange(
                                 expected_send_date_start,
-                                expected_send_date_end
-                              )}
-                        </td>
-                        <td data-label={tableColumns[3]}>
-                          {formatDate(sent_to_bank_date).short() ||
-                            t("pages.payments.tablePaymentStatus", {
-                              context: status,
-                            })}
-                        </td>
-                        <td data-label={tableColumns[4]}>
-                          {amount === null
-                            ? t("pages.payments.tablePaymentStatus", {
-                                context: status,
-                              })
-                            : t("pages.payments.tableAmountSent", {
-                                amount,
-                              })}
+                                expected_send_date_end,
+                                "and"
+                              ),
+                              sentDate:
+                                dayjs(sent_to_bank_date).format("MMMM D, YYYY"),
+                            }}
+                            components={{
+                              "delays-accordion-link": (
+                                <a href={"#delays_accordion"} />
+                              ),
+                            }}
+                          />
                         </td>
                       </tr>
                     )
@@ -276,7 +296,8 @@ export const Payments = ({
                     <td data-label={t("pages.payments.tableWaitingWeekHeader")}>
                       {t("pages.payments.tableWaitingWeekGeneric")}
                     </td>
-                    <td colSpan={4}>
+                    <td data-label={tableColumns[1]}>$0.00</td>
+                    <td>
                       <Trans
                         i18nKey="pages.payments.tableWaitingWeekText"
                         components={{
@@ -307,25 +328,27 @@ export const Payments = ({
           </Heading>
 
           <Accordion>
-            <AccordionItem
-              className="margin-y-2"
-              heading={t("pages.payments.delaysToPaymentsScheduleQuestion")}
-            >
-              <Trans
-                i18nKey="pages.payments.delaysToPaymentsScheduleAnswer"
-                components={{
-                  "online-appeals-form": (
-                    <a
-                      href={routes.external.massgov.onlineAppealsForm}
-                      target="_blank"
-                      rel="noreferrer noopener"
-                    />
-                  ),
-                  li: <li />,
-                  ul: <ul />,
-                }}
-              />
-            </AccordionItem>
+            <div id="delays_accordion">
+              <AccordionItem
+                className="margin-y-2"
+                heading={t("pages.payments.delaysToPaymentsScheduleQuestion")}
+              >
+                <Trans
+                  i18nKey="pages.payments.delaysToPaymentsScheduleAnswer"
+                  components={{
+                    "online-appeals-form": (
+                      <a
+                        href={routes.external.massgov.onlineAppealsForm}
+                        target="_blank"
+                        rel="noreferrer noopener"
+                      />
+                    ),
+                    li: <li />,
+                    ul: <ul />,
+                  }}
+                />
+              </AccordionItem>
+            </div>
 
             <AccordionItem
               className="margin-y-2"
