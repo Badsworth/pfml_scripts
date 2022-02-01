@@ -19,6 +19,7 @@ interface StepProps {
     | "not_applicable"
     | "not_started"
     | "in_progress"
+    | "manual_review"
     | "completed";
   /**
    * Title for the step.
@@ -76,11 +77,12 @@ interface StepProps {
 }
 
 const Step = (props: StepProps) => {
-  const disabled = props.status === "disabled";
-  const notStarted = props.status === "not_started";
-  const inProgress = props.status === "in_progress";
   const completed = props.status === "completed";
+  const disabled = props.status === "disabled";
+  const inProgress = props.status === "in_progress";
+  const inManualReview = props.status === "manual_review";
   const notApplicable = props.status === "not_applicable";
+  const notStarted = props.status === "not_started";
   const showChildren = inProgress || notStarted || notApplicable;
 
   const editCompletedStep = (
@@ -202,6 +204,7 @@ const Step = (props: StepProps) => {
           {disabled && disabledStartButton}
           {notStarted && startButton}
           {inProgress && resumeButton}
+          {inManualReview && (<>In manual review</>)}
           {completed && props.editable && editCompletedStep}
         </div>
       </div>

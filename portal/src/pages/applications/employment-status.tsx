@@ -6,6 +6,7 @@ import Alert from "../../components/core/Alert";
 import ConditionalContent from "../../components/ConditionalContent";
 import Details from "../../components/core/Details";
 import { EmploymentStatus as EmploymentStatusEnum } from "../../models/BenefitsApplication";
+import InputChoice from "../../components/core/InputChoice";
 import InputChoiceGroup from "../../components/core/InputChoiceGroup";
 import InputText from "../../components/core/InputText";
 import QuestionPage from "../../components/QuestionPage";
@@ -15,11 +16,14 @@ import { isFeatureEnabled } from "../../services/featureFlags";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
+import { headers } from "next.config";
+import AppErrorInfo from "src/models/AppErrorInfo";
 
-export const fields = ["claim.employment_status", "claim.employer_fein"];
+export const fields = ["claim.employment_status", "claim.employer_fein", "claim.unf.date_of_hire"];
 
 export const EmploymentStatus = (props: WithBenefitsApplicationProps) => {
   const { appLogic, claim } = props;
+  //appLogic.appErrors.push(new AppErrorInfo({field: "employment_status", name: "Invalid", message: "Invalid message"}))
   const { t } = useTranslation();
 
   // TODO (CP-1281): Show employment status question when Portal supports other employment statuses
@@ -39,7 +43,14 @@ export const EmploymentStatus = (props: WithBenefitsApplicationProps) => {
   const employment_status = get(formState, "employment_status");
 
   const handleSave = () =>
-    appLogic.benefitsApplications.update(claim.application_id, formState);
+    {
+      console.log(formState);
+      // If they selected that they are exempt, update the UNF submission
+      // instead of saving the application.
+      // else
+      appLogic.benefitsApplications.update(claim.application_id, formState);
+      // Somehow call another API to save to another table.
+    }
 
   const getFunctionalInputProps = useFunctionalInputProps({
     appErrors: appLogic.appErrors,
@@ -49,15 +60,20 @@ export const EmploymentStatus = (props: WithBenefitsApplicationProps) => {
 
   const choiceKeys: Array<keyof typeof EmploymentStatusEnum> = [
     "employed",
-    "unemployed",
-    "selfEmployed",
+    "employedNotFound",
+    "employedExempt",
+    //"unemployed",
+    //"selfEmployed",
   ];
+  //console.log({...getFunctionalInputProps("employer_fein")});
 
   return (
     <QuestionPage
       title={t("pages.claimsEmploymentStatus.title")}
       onSave={handleSave}
     >
+      {/* Create enableUNFFlow feature flag */}
+
       {!showEmploymentStatus && (
         <Alert state="info" neutral>
           <Trans
@@ -91,13 +107,12 @@ export const EmploymentStatus = (props: WithBenefitsApplicationProps) => {
           type="radio"
         />
       )}
-
       <ConditionalContent
         fieldNamesClearedWhenHidden={["employer_fein"]}
         getField={getField}
         clearField={clearField}
         updateFields={updateFields}
-        visible={employment_status === EmploymentStatusEnum.employed}
+        visible={true}
       >
         <InputText
           {...getFunctionalInputProps("employer_fein")}
@@ -106,6 +121,7 @@ export const EmploymentStatus = (props: WithBenefitsApplicationProps) => {
           mask="fein"
           hint={t("pages.claimsEmploymentStatus.feinHint")}
         />
+
       </ConditionalContent>
     </QuestionPage>
   );

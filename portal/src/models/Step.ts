@@ -95,6 +95,7 @@ export default class Step {
       | "isComplete"
       | "isDisabled"
       | "isInProgress"
+      | "isInManualReview"
       | "isNotApplicable"
       | "status"
     >
@@ -109,6 +110,10 @@ export default class Step {
   get status() {
     if (this.isDisabled) {
       return "disabled";
+    }
+
+    if (this.isInManualReview) {
+      return "manual_review";
     }
 
     if (this.isNotApplicable) {
@@ -139,8 +144,16 @@ export default class Step {
     return issues.length === 0;
   }
 
+  // Employment status is in progress because some of the fields in this step
+  // have values.
   get isInProgress() {
     return this.fields.some((field) => fieldHasValue(field, this.context));
+  }
+
+  get isInManualReview() {
+    if (this.manualReviewCond) return this.manualReviewCond(this.context);
+
+    return false;
   }
 
   get isNotApplicable() {
@@ -194,6 +207,8 @@ export default class Step {
       group: 1,
       pages: pagesByStep[ClaimSteps.employerInformation],
       dependsOn: [verifyId],
+      manualReviewCond: (context) =>
+        get(context.claim, "employment_status") === "My employer is exempt",
       context,
       warnings,
     });

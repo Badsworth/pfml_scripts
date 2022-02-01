@@ -171,7 +171,7 @@ const claimantFlow: {
         CREATE_CLAIM: routes.applications.checklist,
       },
     },
-    [routes.applications.importClaim]: {
+    [routes.applications.find]: {
       on: {
         CONTINUE: routes.applications.index,
       },
@@ -180,7 +180,7 @@ const claimantFlow: {
       meta: {},
       on: {
         CONTINUE: routes.applications.uploadDocsOptions,
-        IMPORT_APPLICATION: routes.applications.importClaim,
+        FIND_APPLICATION: routes.applications.find,
         NEW_APPLICATION: routes.applications.getReady,
         PAYMENT: routes.applications.status.payments,
         STATUS: routes.applications.status.claim,
@@ -636,6 +636,12 @@ const claimantFlow: {
             target: routes.applications.notifiedEmployer,
             cond: "isEmployed",
           },
+          /*
+          {
+            target: extended or UNF flow
+            cond: (employerNotFound || employerExempt) && !claim.unf.submitted_at
+          },
+          */
           {
             target: routes.applications.checklist,
           },

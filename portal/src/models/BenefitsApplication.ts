@@ -205,6 +205,8 @@ export const EmploymentStatus = {
   employed: "Employed",
   selfEmployed: "Self-Employed",
   unemployed: "Unemployed",
+  employedNotFound: "Employed Not Found",
+  employedExempt: "My employer is exempt",
 } as const;
 
 /**
