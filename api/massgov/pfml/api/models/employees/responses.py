@@ -1,9 +1,12 @@
-from typing import Optional, cast
+from typing import List, Optional, cast
 
 from pydantic import UUID4
 
+from massgov.pfml.api.models.applications.common import MaskedAddress
+from massgov.pfml.api.models.common import PhoneResponse, PhoneType
 from massgov.pfml.db.models.employees import Employee
 from massgov.pfml.util.pydantic import PydanticBaseModel
+from massgov.pfml.util.pydantic.types import MaskedDateStr, MassIdStr, TaxIdFormattedStr
 
 
 class EmployeeBasicResponse(PydanticBaseModel):
@@ -26,14 +29,61 @@ class EmployeeBasicResponse(PydanticBaseModel):
 
 class EmployeeResponse(EmployeeBasicResponse):
     tax_identifier_last4: Optional[str]
+    tax_identifier: Optional[TaxIdFormattedStr]
+    fineos_customer_number: Optional[str]
     email_address: Optional[str]
-    phone_number: Optional[str]
+    phone_numbers: Optional[List[PhoneResponse]]
+    mass_id_number: Optional[MassIdStr]
+    date_of_birth: Optional[MaskedDateStr]
+    addresses: Optional[List[MaskedAddress]]
 
     @classmethod
     def from_orm(cls, employee: Employee) -> "EmployeeResponse":
         employee_response = cast(EmployeeResponse, super().from_orm(employee))
 
-        if employee.tax_identifier:
-            employee_response.tax_identifier_last4 = employee.tax_identifier.tax_identifier_last4
+        employee_response.phone_numbers = employee_response_phone_numbers(employee)
 
         return employee_response
+
+
+class EmployeeForPfmlCrmResponse(EmployeeBasicResponse):
+    tax_identifier_last4: Optional[str]
+    tax_identifier: Optional[TaxIdFormattedStr]
+    fineos_customer_number: Optional[str]
+    email_address: Optional[str]
+    phone_numbers: Optional[List[PhoneResponse]]
+    mass_id_number: Optional[MassIdStr]
+    date_of_birth: Optional[MaskedDateStr]
+    addresses: Optional[List[MaskedAddress]]
+
+    @classmethod
+    def from_orm(cls, employee: Employee) -> "EmployeeForPfmlCrmResponse":
+        employee_response = cast(EmployeeForPfmlCrmResponse, super().from_orm(employee))
+
+        employee_response.phone_numbers = list()
+        if employee.phone_number:
+            phone_response = PhoneResponse.from_orm(employee.phone_number)
+            phone_response.phone_type = PhoneType.Phone
+            employee_response.phone_numbers.append(phone_response)
+
+        if employee.cell_phone_number:
+            phone_response = PhoneResponse.from_orm(employee.cell_phone_number)
+            phone_response.phone_type = PhoneType.Phone
+            employee_response.phone_numbers.append(phone_response)
+
+        return employee_response
+
+
+def employee_response_phone_numbers(employee: Employee) -> List[PhoneResponse]:
+    phone_numbers = list()
+    if employee.phone_number:
+        phone_response = PhoneResponse.from_orm(employee.phone_number)
+        phone_response.phone_type = PhoneType.Phone
+        phone_numbers.append(phone_response)
+
+    if employee.cell_phone_number:
+        phone_response = PhoneResponse.from_orm(employee.cell_phone_number)
+        phone_response.phone_type = PhoneType.Cell
+        phone_numbers.append(phone_response)
+
+    return phone_numbers

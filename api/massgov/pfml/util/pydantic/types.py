@@ -50,7 +50,10 @@ class TaxIdFormattedStr(str):
         yield cls.validate_type
 
     @classmethod
-    def validate_type(cls, val):
+    def validate_type(cls, val: Optional[Union[TaxIdentifier, str]]) -> str:
+        if isinstance(val, TaxIdentifier):
+            val = val.tax_identifier
+
         if not isinstance(val, str):
             raise TypeError("is not a str")
 

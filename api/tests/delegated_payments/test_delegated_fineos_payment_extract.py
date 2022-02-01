@@ -377,7 +377,7 @@ def test_run_step_happy_path(
         assert mailing_address.zip_code == payment_data.zip_code
         assert mailing_address.address_type_id == AddressType.MAILING.address_type_id
 
-        employee_addresses = employee.addresses.all()
+        employee_addresses = employee.employee_addresses.all()
         assert (
             len(employee_addresses) == 2
         )  # 1 created in setup_process_tests, 1 created during the step itself

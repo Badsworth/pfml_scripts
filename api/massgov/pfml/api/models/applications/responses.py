@@ -19,7 +19,7 @@ from massgov.pfml.api.models.applications.common import (
     WorkPattern,
 )
 from massgov.pfml.api.models.claims.common import PreviousLeave
-from massgov.pfml.api.models.common import ConcurrentLeave, EmployerBenefit, MaskedPhone
+from massgov.pfml.api.models.common import ConcurrentLeave, EmployerBenefit, MaskedPhoneResponse
 from massgov.pfml.db.models.applications import Application, ApplicationPaymentPreference, Document
 from massgov.pfml.util.pydantic import PydanticBaseModel
 from massgov.pfml.util.pydantic.types import (
@@ -73,7 +73,7 @@ class ApplicationResponse(PydanticBaseModel):
     employer_organization_units: List[OrganizationUnit]
     has_other_incomes: Optional[bool]
     other_incomes: Optional[List[OtherIncome]]
-    phone: Optional[MaskedPhone]
+    phone: Optional[MaskedPhoneResponse]
     previous_leaves_other_reason: Optional[List[PreviousLeave]]
     previous_leaves_same_reason: Optional[List[PreviousLeave]]
     concurrent_leave: Optional[ConcurrentLeave]
@@ -104,7 +104,7 @@ class ApplicationResponse(PydanticBaseModel):
             )
 
         if application.phone is not None:
-            application_response.phone = MaskedPhone.from_orm(application.phone)
+            application_response.phone = MaskedPhoneResponse.from_orm(application.phone)
 
         if application.completed_time:
             application_response.status = ApplicationStatus.Completed

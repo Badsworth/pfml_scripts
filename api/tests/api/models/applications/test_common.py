@@ -1,5 +1,5 @@
 from massgov.pfml.api.models.applications.common import LeaveReason
-from massgov.pfml.api.models.common import MaskedPhone, PreviousLeaveQualifyingReason
+from massgov.pfml.api.models.common import MaskedPhoneResponse, PreviousLeaveQualifyingReason
 
 
 def test_leave_reason_to_previous_leave_qualifying_reason():
@@ -25,6 +25,6 @@ def test_leave_reason_to_previous_leave_qualifying_reason():
 
 def test_masked_phone_str_input():
     phone_str = "+15109283075"
-    masked = MaskedPhone.from_orm(phone=phone_str)
+    masked = MaskedPhoneResponse.from_orm(phone=phone_str)
     assert masked.int_code == "1"
     assert masked.phone_number == "***-***-3075"
