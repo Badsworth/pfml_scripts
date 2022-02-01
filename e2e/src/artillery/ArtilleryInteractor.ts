@@ -21,7 +21,6 @@ const docRangesToScenariosMap: DocRangesToScenarios = {
   med: ["LSTBHAP_5MB", "LSTCHAP1_6MB", "LSTOLB1_7MB"],
   large: ["LSTBHAP_8MB", "LSTCHAP1_9MB"],
 };
-
 /**
  * This is the interaction layer.
  *
