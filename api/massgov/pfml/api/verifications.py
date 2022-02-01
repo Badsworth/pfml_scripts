@@ -37,15 +37,6 @@ def verifications():
         "withholding_quarter": verification_request.withholding_quarter,
     }
 
-    if current_user is None:
-        logger.error("No authenticated user", extra=log_attributes)
-        return response_util.error_response(
-            status_code=BadRequest,
-            message="No authenticated user",
-            errors=[],
-            data=verification_request.dict(exclude_none=True),
-        ).to_api_response()
-
     with app.db_session() as db_session:
         user_leave_administrator = (
             db_session.query(UserLeaveAdministrator)

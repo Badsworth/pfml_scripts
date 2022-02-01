@@ -1,5 +1,5 @@
 import connexion
-from werkzeug.exceptions import NotFound, Unauthorized
+from werkzeug.exceptions import NotFound
 
 import massgov.pfml.api.app as app
 import massgov.pfml.api.util.response as response_util
@@ -21,9 +21,6 @@ def employees_get(employee_id):
         ensure(READ, employee)
 
         user = app.current_user()
-        if not user:
-            raise Unauthorized
-
         response_type = (
             EmployeeForPfmlCrmResponse if has_role_in(user, [Role.PFML_CRM]) else EmployeeResponse
         )
@@ -85,8 +82,6 @@ def employees_search():
         ensure(READ, employee)
 
         user = app.current_user()
-        if not user:
-            raise Unauthorized
 
         response_type = (
             EmployeeForPfmlCrmResponse if has_role_in(user, [Role.PFML_CRM]) else EmployeeResponse

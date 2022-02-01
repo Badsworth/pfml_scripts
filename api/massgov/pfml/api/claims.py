@@ -6,7 +6,7 @@ import connexion
 import flask
 from sqlalchemy.orm.session import Session
 from sqlalchemy_utils import escape_like
-from werkzeug.exceptions import BadRequest, Forbidden, NotFound, Unauthorized
+from werkzeug.exceptions import BadRequest, Forbidden, NotFound
 
 import massgov.pfml.api.app as app
 import massgov.pfml.api.util.response as response_util
@@ -40,7 +40,6 @@ from massgov.pfml.db.models.employees import (
     Claim,
     Employer,
     ManagedRequirement,
-    User,
     UserLeaveAdministrator,
 )
 from massgov.pfml.db.queries.absence_periods import upsert_absence_period_from_fineos_period
@@ -98,20 +97,11 @@ class VerificationRequired(Forbidden):
         ).to_api_response()
 
 
-def get_user() -> User:
-    current_user = app.current_user()
-    if current_user is None:
-        raise Unauthorized()
-    return current_user
-
-
 def get_current_user_leave_admin_record(fineos_absence_id: str) -> UserLeaveAdministrator:
     with app.db_session() as db_session:
         associated_employer_id: Optional[UUID] = None
 
         current_user = app.current_user()
-        if current_user is None:
-            raise Unauthorized()
 
         claim = get_claim_from_db(fineos_absence_id)
 
@@ -166,7 +156,7 @@ def get_current_user_leave_admin_record(fineos_absence_id: str) -> UserLeaveAdmi
 
 @requires(READ, "EMPLOYER_API")
 def employer_update_claim_review(fineos_absence_id: str) -> flask.Response:
-    current_user = get_user()
+    current_user = app.current_user()
     body = connexion.request.json
 
     claim_review: EmployerClaimReview = EmployerClaimReview.parse_obj(body)
@@ -510,8 +500,7 @@ def get_claims() -> flask.Response:
     absence_statuses = parse_filterable_absence_statuses(flask.request.args.get("claim_status"))
     is_employer = can(READ, "EMPLOYER_API")
     log_attributes = {}
-    if current_user:
-        log_attributes.update(get_employer_log_attributes(current_user))
+    log_attributes.update(get_employer_log_attributes(current_user))
 
     with PaginationAPIContext(Claim, request=flask.request) as pagination_context:
         with app.db_session() as db_session:

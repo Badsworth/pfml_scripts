@@ -348,6 +348,11 @@ def test_users_get_current(client, employer_user, employer_auth_token, test_db_s
     ]
 
 
+def test_users_get_current_no_user_unauthorized(client):
+    response = client.get("/v1/users/current")
+    assert response.status_code == 401
+
+
 def test_users_get_current_with_query_count(
     client, employer_user, employer_auth_token, test_db_session, sqlalchemy_query_counter
 ):
