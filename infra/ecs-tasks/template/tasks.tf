@@ -483,6 +483,7 @@ locals {
       env = [
         local.db_access,
         local.cognito_access,
+        local.emails
       ]
     },
 
