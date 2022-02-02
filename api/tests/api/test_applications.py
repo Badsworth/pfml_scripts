@@ -515,9 +515,7 @@ class TestApplicationsImport:
     def test_applications_import_occupation(
         self, mock_get_occupation, client, auth_token, test_db_session, claim, valid_request_body
     ):
-        fineos_occupation = ReadCustomerOccupation(
-            employmentStatus="Employed", hoursWorkedPerWeek=40
-        )
+        fineos_occupation = ReadCustomerOccupation(employmentStatus="Active", hoursWorkedPerWeek=40)
         mock_get_occupation.return_value = [fineos_occupation]
 
         assert test_db_session.query(Application).one_or_none() is None
@@ -532,7 +530,7 @@ class TestApplicationsImport:
             test_db_session.query(Application).filter(Application.claim_id == claim.claim_id).one()
         )
         assert (
-            imported_application.employment_status.employment_status_description
+            imported_application.employment_status.fineos_label
             == fineos_occupation.employmentStatus
         )
         assert imported_application.hours_worked_per_week == fineos_occupation.hoursWorkedPerWeek
@@ -555,7 +553,7 @@ class TestApplicationsImport:
             headers={"Authorization": f"Bearer {auth_token}"},
             json=valid_request_body,
         )
-        assert response.status_code == 500
+        assert response.status_code == 400
         assert test_db_session.query(Application).one_or_none() is None
 
     @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_payment_preferences")

@@ -5,8 +5,15 @@ import massgov
 from massgov.pfml.api.services.applications import (
     set_customer_contact_detail_fields,
     set_customer_detail_fields,
+    set_employment_status,
     set_payment_preference_fields,
 )
+from massgov.pfml.api.validation.exceptions import (
+    IssueType,
+    ValidationErrorDetail,
+    ValidationException,
+)
+from massgov.pfml.db.models.applications import EmploymentStatus
 from massgov.pfml.db.models.employees import BankAccountType, Gender, PaymentMethod
 from massgov.pfml.db.models.factories import ApplicationFactory
 
@@ -137,6 +144,40 @@ def test_set_customer_detail_fields_with_blank_address(
     mock_read_customer_details.return_value = customer_details
     set_customer_detail_fields(fineos_client, fineos_web_id, application, test_db_session)
     assert application.residential_address is None
+
+
+def test_set_employment_status(fineos_client, fineos_web_id, application, user):
+    set_employment_status(fineos_client, fineos_web_id, application, user)
+    assert application.employment_status_id == EmploymentStatus.EMPLOYED.employment_status_id
+    assert application.hours_worked_per_week == 37.5
+
+
+@mock.patch(
+    "massgov.pfml.fineos.mock_client.MockFINEOSClient.get_customer_occupations_customer_api"
+)
+@pytest.mark.parametrize("status", ("Terminated", "Self-Employed", "Retired", "Unknown"))
+def test_set_invalid_status_returns_error(
+    mock_get_customer_occupations_customer_api,
+    fineos_client,
+    fineos_web_id,
+    application,
+    user,
+    status,
+):
+    mock_get_customer_occupations_customer_api.return_value = [
+        massgov.pfml.fineos.models.customer_api.ReadCustomerOccupation(
+            occupationId=12345, hoursWorkedPerWeek=37.5, employmentStatus=status
+        )
+    ]
+    with pytest.raises(ValidationException) as exc:
+        set_employment_status(fineos_client, fineos_web_id, application, user)
+        assert exc.value.errors == [
+            ValidationErrorDetail(
+                type=IssueType.invalid,
+                message="Employment Status must be Active",
+                field="employment_status",
+            )
+        ]
 
 
 def test_set_payment_preference_fields(fineos_client, fineos_web_id, application, test_db_session):

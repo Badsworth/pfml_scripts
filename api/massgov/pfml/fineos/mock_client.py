@@ -454,7 +454,10 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
         hrsWorkedPerWeek = 37 if customer_id == "1000" else 37.5
         return [
             models.customer_api.ReadCustomerOccupation(
-                occupationId=12345, hoursWorkedPerWeek=hrsWorkedPerWeek, workPatternBasis="Unknown"
+                occupationId=12345,
+                hoursWorkedPerWeek=hrsWorkedPerWeek,
+                workPatternBasis="Unknown",
+                employmentStatus="Active",
             )
         ]
 

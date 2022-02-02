@@ -1025,7 +1025,28 @@ def set_employment_status(
         return
     occupation = occupations[0]
     if occupation.employmentStatus is not None:
-        application.employment_status_id = EmploymentStatus.get_id(occupation.employmentStatus)
+        if occupation.employmentStatus != EmploymentStatus.EMPLOYED.fineos_label:
+            logger.info(
+                "Did not import unsupported employment status from FINEOS",
+                extra={
+                    "fineos_web_id": fineos_web_id,
+                    "status": occupation.employmentStatus,
+                    "absence_case_id": (
+                        application.claim.fineos_absence_id if application.claim else None
+                    ),
+                },
+            )
+            raise ValidationException(
+                errors=[
+                    ValidationErrorDetail(
+                        type=IssueType.invalid,
+                        message="Employment Status must be Active",
+                        field="employment_status",
+                    )
+                ]
+            )
+        else:
+            application.employment_status_id = EmploymentStatus.EMPLOYED.employment_status_id
     if occupation.hoursWorkedPerWeek is not None:
         application.hours_worked_per_week = Decimal(occupation.hoursWorkedPerWeek)
 
