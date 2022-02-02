@@ -162,7 +162,7 @@
     "HAS_ORGUNITS_SETUP": "true",
     "HAS_LARGE_FILE_COMPRESSION": "false",
     "HAS_EMPLOYER_REIMBURSEMENTS": "true",
-    "HAS_FEB_RELEASE": "false"
+    "HAS_FEB_RELEASE": "true"
   },
   "breakfix": {
     "PORTAL_BASEURL": "https://paidleave-breakfix.eol.mass.gov",
