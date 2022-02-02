@@ -1760,7 +1760,7 @@ data "aws_iam_policy_document" "mfa_lockout_resolution" {
     actions = [
       "ses:SendEmail",
       "ses:SendRawEmail",
-      "ses:SendTemplateEmail"
+      "ses:SendTemplatedEmail"
     ]
 
     resources = ["*"]
