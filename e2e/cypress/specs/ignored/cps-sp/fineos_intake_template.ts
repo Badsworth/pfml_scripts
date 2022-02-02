@@ -122,7 +122,7 @@ describe("Submit a claim through Fineos intake process, verify the Absence Case"
                         .applyStandardWorkWeek()
                         .nextStep((wrapUp) => {
                           wrapUp.selectWithholdingPreference(
-                            claim.claim.is_withholding_tax
+                            claim.is_withholding_tax
                           );
                           wrapUp.clickNext();
                           // @TODO Uncomment the fineos.assertErrorMessage to check for error message

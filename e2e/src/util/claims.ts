@@ -138,7 +138,7 @@ export function extractLatestLeaveDate(
 
 export function extractLeavePeriodType(
   leaveDetails: ApplicationLeaveDetails
-): NonNullable<AbsencePeriodResponse["type"]> {
+): NonNullable<AbsencePeriodResponse["period_type"]> {
   const leavePeriodTypes = {
     intermittent_leave_periods: "Intermittent",
     continuous_leave_periods: "Continuous",

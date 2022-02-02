@@ -56,6 +56,7 @@ import { DocumentUploadRequest } from "../../src/api";
 import { fineos } from ".";
 import { LeaveReason } from "../../src/generation/Claim";
 import { config } from "./common";
+import { FineosCorrespondanceType, FineosDocumentType } from "./fineos.enums";
 
 type StatusCategory =
   | "Applicability"
@@ -276,9 +277,7 @@ export class ClaimPage {
     return this;
   }
 
-  addCorrespondenceDocument(
-    action: DocumentUploadRequest["document_type"]
-  ): this {
+  addCorrespondenceDocument(action: FineosCorrespondanceType): this {
     const document = new DocumentsPage();
     cy.get("[id^=MENUBAR\\.CaseSubjectMenu]")
       .findByText("Correspondence")
@@ -1037,7 +1036,7 @@ export class DocumentsPage {
    * @param businessType - name of the document type in fineos
    * @returns
    */
-  uploadDocument(documentType: DocumentUploadRequest["document_type"]): this {
+  uploadDocument(documentType: FineosDocumentType): this {
     this.startDocumentCreation(documentType);
     cy.get("input[type='file']").attachFile(
       `./${getFixtureDocumentName(documentType)}.pdf`
@@ -1047,9 +1046,7 @@ export class DocumentsPage {
     return this;
   }
 
-  uploadDocumentAlt(
-    documentType: DocumentUploadRequest["document_type"]
-  ): this {
+  uploadDocumentAlt(documentType: FineosDocumentType): this {
     cy.get("input[type='file']").attachFile(
       `./${getFixtureDocumentName(documentType)}.pdf`
     );
@@ -2743,7 +2740,7 @@ class DatesOfAbsence extends CreateNotificationStep {
    * @param type
    */
   toggleLeaveScheduleSlider(
-    type: NonNullable<AbsencePeriodResponse["type"]>
+    type: NonNullable<AbsencePeriodResponse["period_type"]>
   ): this {
     const scheduleSliderMap: Record<typeof type, string> = {
       Continuous: "One or more fixed time off periods",

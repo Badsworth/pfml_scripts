@@ -1,7 +1,7 @@
-import { DocumentUploadRequest } from "_api";
 import { format, addMonths, addDays } from "date-fns";
 import { config, getFineosBaseUrl } from "./common";
 import { Credentials } from "../../src/types";
+import { FineosDocumentType } from "./fineos.enums";
 /**
  * This function is used to fetch and set the proper cookies for access Fineos UAT
  *
@@ -261,7 +261,7 @@ export const clickNext = (
  * @returns name of the fixture file, see `e2e/cypress/fixtures`
  */
 export function getFixtureDocumentName(
-  document_type: DocumentUploadRequest["document_type"]
+  document_type: FineosDocumentType
 ): string {
   switch (document_type) {
     case "Driver's License Mass":
