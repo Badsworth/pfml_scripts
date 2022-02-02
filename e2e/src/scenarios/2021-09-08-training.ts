@@ -371,6 +371,30 @@ export const TRNT: ScenarioSpecification = {
   },
 };
 
+export const TRNTB: ScenarioSpecification = {
+  employee: { mass_id: true, wages: "eligible" },
+  claim: {
+    label: "TRNTB",
+    reason: "Child Bonding",
+    reason_qualifier: "Newborn",
+    docs: {
+      MASSID: {},
+      BIRTHCERTIFICATE: {}
+    },
+    bondingDate: "past",
+    employerResponse: {
+      hours_worked_per_week: 40,
+      employer_decision: "Approve",
+    },
+    metadata: {
+      postSubmit: "APPROVE",
+      leaveDescription: FIRST_OF_MONTH_START_MAX_LEAVE_DESCRIPTION,
+      quantity: 50,
+    },
+    leave_dates: () => firstOfMonthStartMaxLeave(),
+  },
+};
+
 export const TRNW: ScenarioSpecification = {
   employee: { mass_id: true, wages: "eligible" },
   claim: {
