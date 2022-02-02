@@ -1341,8 +1341,10 @@ const pages: {
     alertBody:
       "<p>If you’re self-employed or unemployed, apply by calling the Department of Family and Medical Leave Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.</p><p>You can apply online if you’re currently employed in Massachusetts.</p>",
     choiceLabel_employed: "I’m employed in Massachusetts",
-    choiceLabel_employedExempt: "I’m employed in Massachusetts but my employer is exempt",
-    choiceLabel_employedNotFound: "I’m employed in Massachusetts but my employer is not found",
+    choiceLabel_employedExempt:
+      "I’m employed in Massachusetts but my employer is exempt",
+    choiceLabel_employedNotFound:
+      "I’m employed in Massachusetts but my employer is not found",
     choiceLabel_selfEmployed: "I’m self-employed",
     choiceLabel_unemployed: "I’m unemployed",
     feinHint:

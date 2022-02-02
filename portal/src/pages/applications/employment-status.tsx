@@ -19,7 +19,11 @@ import { useTranslation } from "../../locales/i18n";
 import { headers } from "next.config";
 import AppErrorInfo from "src/models/AppErrorInfo";
 
-export const fields = ["claim.employment_status", "claim.employer_fein", "claim.unf.date_of_hire"];
+export const fields = [
+  "claim.employment_status",
+  "claim.employer_fein",
+  "claim.unf.date_of_hire",
+];
 
 export const EmploymentStatus = (props: WithBenefitsApplicationProps) => {
   const { appLogic, claim } = props;
@@ -42,15 +46,14 @@ export const EmploymentStatus = (props: WithBenefitsApplicationProps) => {
     useFormState(initialFormState);
   const employment_status = get(formState, "employment_status");
 
-  const handleSave = () =>
-    {
-      console.log(formState);
-      // If they selected that they are exempt, update the UNF submission
-      // instead of saving the application.
-      // else
-      appLogic.benefitsApplications.update(claim.application_id, formState);
-      // Somehow call another API to save to another table.
-    }
+  const handleSave = () => {
+    console.log(formState);
+    // If they selected that they are exempt, update the UNF submission
+    // instead of saving the application.
+    // else
+    appLogic.benefitsApplications.update(claim.application_id, formState);
+    // Somehow call another API to save to another table.
+  };
 
   const getFunctionalInputProps = useFunctionalInputProps({
     appErrors: appLogic.appErrors,
@@ -121,7 +124,6 @@ export const EmploymentStatus = (props: WithBenefitsApplicationProps) => {
           mask="fein"
           hint={t("pages.claimsEmploymentStatus.feinHint")}
         />
-
       </ConditionalContent>
     </QuestionPage>
   );

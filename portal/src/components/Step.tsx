@@ -204,7 +204,7 @@ const Step = (props: StepProps) => {
           {disabled && disabledStartButton}
           {notStarted && startButton}
           {inProgress && resumeButton}
-          {inManualReview && (<>In manual review</>)}
+          {inManualReview && <>In manual review</>}
           {completed && props.editable && editCompletedStep}
         </div>
       </div>
