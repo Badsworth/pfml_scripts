@@ -19,6 +19,7 @@ import Table from "../../components/core/Table";
 import { Trans } from "react-i18next";
 import { WithClaimsProps } from "../../hoc/withClaims";
 import classNames from "classnames";
+import { compact } from "lodash";
 import findKeyByValue from "../../utils/findKeyByValue";
 import formatDate from "../../utils/formatDate";
 import formatDateRange from "../../utils/formatDateRange";
@@ -50,17 +51,12 @@ const PaginatedClaimsTable = (props: PaginatedClaimsTableProps) => {
    * Used as i18n context for rendering headers, and determining
    * what content to render in each column.
    */
-  const tableColumnVisibility: { [key in TableColumnKey]: boolean } = {
-    employee_and_case: true,
-    employer: props.showEmployer,
-    leave_details: true,
-    review_status: true,
-  } as const;
-  const visibleTableColumns: TableColumnKey[] = Object.entries(
-    tableColumnVisibility
-  )
-    .filter(([_columnKey, isVisible]) => isVisible)
-    .map(([columnKey]) => columnKey as TableColumnKey);
+  const visibleTableColumns: TableColumnKey[] = compact([
+    "employee_and_case",
+    props.showEmployer ? "employer" : undefined,
+    "leave_details",
+    "review_status",
+  ]);
 
   /** Helper for determining what to display in our table body. Keeps conditions simpler in our render section */
   const getTableBodyState = () => {
