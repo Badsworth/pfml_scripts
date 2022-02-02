@@ -3,6 +3,11 @@
 Full E2E process (SOP): https://lwd.atlassian.net/wiki/spaces/DD/pages/1549860868/SOP+New+Environment+Build
 
 ---
+# Lessons Learned during last deployment
+
+https://lwd.atlassian.net/wiki/spaces/DD/pages/2192572902/Long+and+Trn2+Environments+Lessons+Learned
+
+---
 
 The easiest way to set up resources in a new environment is using the templates in [/bin/bootstrap-env/](../bin/bootstrap-env).
 
