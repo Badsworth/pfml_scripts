@@ -162,12 +162,33 @@ def test_set_payment_preference_fields_without_a_default_preference(
 ):
     mock_get_payment_preferences.return_value = [
         massgov.pfml.fineos.models.customer_api.PaymentPreferenceResponse(
-            paymentMethod="Elec Funds Transfer", paymentPreferenceId="1234",
-        )
+            paymentMethod="Check",
+            paymentPreferenceId="1234",
+            accountDetails=massgov.pfml.fineos.models.customer_api.AccountDetails(
+                accountNo="1234565555",
+                accountName="Constance Griffin",
+                routingNumber="011222333",
+                accountType="Checking",
+            ),
+        ),
+        massgov.pfml.fineos.models.customer_api.PaymentPreferenceResponse(
+            paymentMethod="Elec Funds Transfer",
+            paymentPreferenceId="1234",
+            accountDetails=massgov.pfml.fineos.models.customer_api.AccountDetails(
+                accountNo="1234565555",
+                accountName="Constance Griffin",
+                routingNumber="011222333",
+                accountType="Checking",
+            ),
+        ),
     ]
     set_payment_preference_fields(fineos_client, fineos_web_id, application, test_db_session)
-    assert application.payment_preference is None
-    assert application.has_submitted_payment_preference is False
+    # takes first payment pref, if none is set to default
+    assert application.has_submitted_payment_preference is True
+    assert (
+        application.payment_preference.payment_method.payment_method_id
+        == PaymentMethod.CHECK.payment_method_id
+    )
 
 
 @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_payment_preferences")

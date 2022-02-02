@@ -1045,14 +1045,12 @@ def set_payment_preference_fields(
         application.has_submitted_payment_preference = False
         return
 
-    # Take the one with isDefault=True, if any
+    has_submitted_payment_preference = False
+    # Take the one with isDefault=True, otherwise take first one
     preference = next(
-        (pref for pref in preferences if pref.isDefault and pref.paymentMethod != ""), None,
+        (pref for pref in preferences if pref.isDefault and pref.paymentMethod != ""),
+        preferences[0],
     )
-
-    if preference is None:
-        application.has_submitted_payment_preference = False
-        return
 
     if preference.accountDetails is not None:
         payment_preference = PaymentPreference(
@@ -1062,7 +1060,8 @@ def set_payment_preference_fields(
             payment_method=preference.paymentMethod,
         )
         add_or_update_payment_preference(db_session, payment_preference, application)
-        application.has_submitted_payment_preference = True
+        has_submitted_payment_preference = True
+    application.has_submitted_payment_preference = has_submitted_payment_preference
 
     has_mailing_address = False
     if isinstance(
