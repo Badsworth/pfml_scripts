@@ -7,8 +7,8 @@ import { Props } from "types/common";
 import User from "src/models/User";
 import createAbsencePeriod from "lib/mock-helpers/createAbsencePeriod";
 import createMockClaim from "lib/mock-helpers/createMockClaim";
+import { createMockManagedRequirement } from "lib/mock-helpers/createMockManagedRequirement";
 import createMockUserLeaveAdministrator from "lib/mock-helpers/createMockUserLeaveAdministrator";
-import dayjs from "dayjs";
 import faker from "faker";
 import routes from "src/routes";
 import { times } from "lodash";
@@ -146,15 +146,31 @@ export const Default = (
   const claims =
     args.claims === "No claims"
       ? []
-      : times(25, (num) =>
-          createMockClaim({
-            absence_periods: times(
-              faker.datatype.number({ min: 1, max: 3 }),
-              () => createAbsencePeriod()
-            ),
-            created_at: dayjs().subtract(num, "day").format("YYYY-MM-DD"),
-          })
-        );
+      : times(25, () => {
+          const absence_periods = times(
+            faker.datatype.number({ min: 1, max: 2 }),
+            () => createAbsencePeriod()
+          );
+
+          const claim = createMockClaim({
+            absence_periods,
+            managed_requirements: [
+              createMockManagedRequirement({
+                follow_up_date: faker.date.future().toISOString(),
+                // Create an open managed requirement if any absence period is in a pending-like state
+                status: absence_periods.some(
+                  (period) =>
+                    period.request_decision === "In Review" ||
+                    period.request_decision === "Pending"
+                )
+                  ? "Open"
+                  : "Complete",
+              }),
+            ],
+          });
+
+          return claim;
+        });
 
   const appLogic = useMockableAppLogic({
     claims: {

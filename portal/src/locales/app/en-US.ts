@@ -2448,6 +2448,8 @@ const pages: {
     filtersToggle: "Show filters",
     filtersToggle_expanded: "Hide filters",
     noClaimResults: "No applications on file",
+    respondBy: "Respond by {{ date }}",
+    reviewAction: "Review Application",
     searchLabel: "Search for employee name or application ID",
     searchSubmit: "Search",
     sortChoice_employee_az: "Last name – A to Z",

@@ -3,7 +3,7 @@ import BaseBenefitsApplication, {
 } from "./BaseBenefitsApplication";
 import {
   ManagedRequirement,
-  getClosestReviewableFollowUpDate,
+  getSoonestReviewableManagedRequirement,
 } from "../models/ManagedRequirement";
 import { AbsencePeriod } from "./AbsencePeriod";
 import Address from "./Address";
@@ -62,10 +62,7 @@ class EmployerClaim extends BaseBenefitsApplication {
   }
 
   get is_reviewable() {
-    const followUpDate = getClosestReviewableFollowUpDate(
-      this.managed_requirements
-    );
-    return followUpDate !== undefined;
+    return !!getSoonestReviewableManagedRequirement(this.managed_requirements);
   }
 
   get lastReviewedAt(): string | undefined {

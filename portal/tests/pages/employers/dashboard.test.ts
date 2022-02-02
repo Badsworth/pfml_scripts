@@ -1,11 +1,14 @@
 import Claim, { ClaimEmployee } from "../../../src/models/Claim";
-import User, { UserLeaveAdministrator } from "../../../src/models/User";
 import { cleanup, screen, within } from "@testing-library/react";
 import { createAbsencePeriod, renderPage } from "../../test-utils";
 import ApiResourceCollection from "src/models/ApiResourceCollection";
 import { AppLogic } from "../../../src/hooks/useAppLogic";
 import Dashboard from "../../../src/pages/employers/dashboard";
+import MockDate from "mockdate";
 import PaginationMeta from "../../../src/models/PaginationMeta";
+import User from "../../../src/models/User";
+import createMockClaim from "../../../lib/mock-helpers/createMockClaim";
+import { createMockManagedRequirement } from "../../../lib/mock-helpers/createMockManagedRequirement";
 import createMockUserLeaveAdministrator from "../../../lib/mock-helpers/createMockUserLeaveAdministrator";
 import routes from "../../../src/routes";
 import userEvent from "@testing-library/user-event";
@@ -18,6 +21,8 @@ jest.mock("../../../src/components/core/TooltipIcon", () => ({
   __esModule: true,
   default: () => null,
 }));
+
+const MOCK_CURRENT_ISO_DATE = "2021-05-01";
 
 const verifiedUserLeaveAdministrator = createMockUserLeaveAdministrator({
   employer_dba: "Work Inc",
@@ -34,34 +39,34 @@ const verifiableUserLeaveAdministrator = createMockUserLeaveAdministrator({
   verified: false,
 });
 
-const getClaims = (leaveAdmin: UserLeaveAdministrator) => {
-  return [
-    new Claim({
-      absence_periods: [
-        createAbsencePeriod({
-          absence_period_start_date: "2020-01-01",
-          absence_period_end_date: "2020-02-01",
-          reason: "Serious Health Condition - Employee",
-          request_decision: "Approved",
-          period_type: "Continuous",
-        }),
-      ],
-      created_at: "2021-01-15",
-      managed_requirements: [],
-      employee: new ClaimEmployee({
-        first_name: "Jane",
-        middle_name: null,
-        last_name: "Doe",
+const getClaim = (customAttrs: Partial<Claim> = {}) => {
+  // Stable data to support stable snapshots
+  return createMockClaim({
+    absence_periods: [
+      createAbsencePeriod({
+        absence_period_start_date: "2020-01-01",
+        absence_period_end_date: "2020-02-01",
+        reason: "Serious Health Condition - Employee",
+        request_decision: "Approved",
+        period_type: "Continuous",
       }),
-      employer: {
-        employer_dba: leaveAdmin.employer_dba,
-        employer_fein: leaveAdmin.employer_fein,
-        employer_id: leaveAdmin.employer_id,
-      },
-      fineos_absence_id: "NTN-111-ABS-01",
-      claim_status: "Approved",
+    ],
+    created_at: "2021-01-15",
+    managed_requirements: [],
+    employee: new ClaimEmployee({
+      first_name: "Jane",
+      middle_name: null,
+      last_name: "Doe",
     }),
-  ];
+    employer: {
+      employer_dba: verifiedUserLeaveAdministrator.employer_dba,
+      employer_fein: verifiedUserLeaveAdministrator.employer_fein,
+      employer_id: verifiedUserLeaveAdministrator.employer_id,
+    },
+    fineos_absence_id: "NTN-111-ABS-01",
+    claim_status: "Approved",
+    ...customAttrs,
+  });
 };
 
 const setup = (options?: {
@@ -129,6 +134,10 @@ const setup = (options?: {
 };
 
 describe("Employer dashboard", () => {
+  beforeAll(() => {
+    MockDate.set(MOCK_CURRENT_ISO_DATE);
+  });
+
   it("renders the page with expected content and pagination components", () => {
     const { container } = setup();
 
@@ -137,7 +146,7 @@ describe("Employer dashboard", () => {
 
   // TODO (PORTAL-1560): Remove this test, once the deprecated table component is removed
   it("deprecated: renders a table of claims with links if employer is registered in FINEOS", () => {
-    const claims = getClaims(verifiedUserLeaveAdministrator);
+    const claims = [getClaim()];
     const userAttrs = {
       // Set multiple employers so the table shows all possible columns
       user_leave_administrators: [
@@ -151,11 +160,22 @@ describe("Employer dashboard", () => {
     expect(screen.getByRole("table")).toMatchSnapshot();
   });
 
-  it("renders a table of claims", () => {
+  it("renders a table of claims, with links to review page", () => {
     process.env.featureFlags = JSON.stringify({
       employerShowMultiLeaveDashboard: true,
     });
-    const claims = getClaims(verifiedUserLeaveAdministrator);
+    const claims = [
+      getClaim({
+        managed_requirements: [
+          createMockManagedRequirement({
+            follow_up_date: MOCK_CURRENT_ISO_DATE,
+            // "Open" helps provide coverage of the link used on the Review button
+            status: "Open",
+          }),
+        ],
+      }),
+    ];
+
     const userAttrs = {
       user_leave_administrators: [
         // Set multiple employers so the table shows all possible columns
@@ -175,7 +195,15 @@ describe("Employer dashboard", () => {
       ...verifiableUserLeaveAdministrator,
       verified: true,
     };
-    const claims = getClaims(verifiedButNotInFineos);
+    const claims = [
+      getClaim({
+        employer: {
+          employer_dba: verifiedButNotInFineos.employer_dba,
+          employer_fein: verifiedButNotInFineos.employer_fein,
+          employer_id: verifiedButNotInFineos.employer_id,
+        },
+      }),
+    ];
 
     const userAttrs = {
       user_leave_administrators: [verifiedButNotInFineos],
@@ -194,7 +222,7 @@ describe("Employer dashboard", () => {
       process.env.featureFlags = JSON.stringify({
         employerShowMultiLeaveDashboard,
       });
-      let claims = getClaims(verifiedUserLeaveAdministrator);
+      let claims = [getClaim()];
       claims = claims.map((claim) => {
         claim.employee = null;
         return claim;
@@ -628,7 +656,7 @@ describe("Employer dashboard", () => {
 
   // TODO (PORTAL-1560): Remove or update this test, once the deprecated table component is removed
   it("deprecated: renders Review By status", () => {
-    const claims = getClaims(verifiedUserLeaveAdministrator);
+    const claims = [getClaim()];
     claims[0].managed_requirements = [
       {
         category: "",

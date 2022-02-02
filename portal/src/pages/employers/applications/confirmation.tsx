@@ -5,7 +5,7 @@ import React from "react";
 import Title from "../../../components/core/Title";
 import { Trans } from "react-i18next";
 import UserFeedback from "../../../components/UserFeedback";
-import { getClosestReviewableFollowUpDate } from "../../../models/ManagedRequirement";
+import { getSoonestReviewableFollowUpDate } from "../../../models/ManagedRequirement";
 import routes from "../../../routes";
 import { useTranslation } from "../../../locales/i18n";
 
@@ -23,7 +23,7 @@ export const Confirmation = (props: WithEmployerClaimProps) => {
       <Trans
         i18nKey="pages.employersClaimsConfirmation.instructionsFollowUpDateLabel"
         values={{
-          date: getClosestReviewableFollowUpDate(claim.managed_requirements),
+          date: getSoonestReviewableFollowUpDate(claim.managed_requirements),
         }}
         components={{
           div: <div />,

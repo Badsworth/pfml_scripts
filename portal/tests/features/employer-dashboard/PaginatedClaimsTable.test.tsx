@@ -1,12 +1,16 @@
 import { render, screen } from "@testing-library/react";
-import ApiResourceCollection from "../../../src/models/ApiResourceCollection";
-import Claim from "../../../src/models/Claim";
+import ApiResourceCollection from "src/models/ApiResourceCollection";
+import Claim from "src/models/Claim";
+import MockDate from "mockdate";
 import PaginatedClaimsTable from "src/features/employer-dashboard/PaginatedClaimsTable";
 import React from "react";
-import User from "../../../src/models/User";
+import User from "src/models/User";
 import { createAbsencePeriod } from "tests/test-utils";
-import createMockClaim from "../../../lib/mock-helpers/createMockClaim";
-import useMockableAppLogic from "../../../lib/mock-helpers/useMockableAppLogic";
+import createMockClaim from "lib/mock-helpers/createMockClaim";
+import { createMockManagedRequirement } from "lib/mock-helpers/createMockManagedRequirement";
+import useMockableAppLogic from "lib/mock-helpers/useMockableAppLogic";
+
+const MOCK_CURRENT_ISO_DATE = "2021-05-01";
 
 /**
  * A lot of tests for this component's functionality are integration tests,
@@ -25,7 +29,7 @@ const setup = (claims: Claim[] = []) => {
 
   const props = {
     claims: new ApiResourceCollection<Claim>("fineos_absence_id", claims),
-    getNextPageRoute: jest.fn(), // tested in dashboard page tests, ignoring here.
+    getNextPageRoute: jest.fn().mockReturnValue("/mocked-router"), // tested in dashboard page tests, ignoring here.
     hasOnlyUnverifiedEmployers: false,
     paginationMeta,
     showEmployer: true, // tested in dashboard page tests, ignoring here.
@@ -44,6 +48,10 @@ const setup = (claims: Claim[] = []) => {
 };
 
 describe("PaginatedClaimsTable", () => {
+  beforeAll(() => {
+    MockDate.set(MOCK_CURRENT_ISO_DATE);
+  });
+
   it("renders absence periods sorted new to old", () => {
     setup([
       createMockClaim({
@@ -68,8 +76,56 @@ describe("PaginatedClaimsTable", () => {
     expect(absencePeriodParents[2]).toHaveTextContent("1/1/2021");
   });
 
-  it.todo("renders a Review call to action when a managed requirement is open");
-  it.todo(
-    "renders the most recent review date when no managed requirement is open"
-  );
+  it("renders a Review call to action when a managed requirement is open", () => {
+    setup([
+      createMockClaim({
+        absence_periods: [createAbsencePeriod()],
+        managed_requirements: [
+          createMockManagedRequirement({
+            status: "Open",
+            follow_up_date: MOCK_CURRENT_ISO_DATE,
+          }),
+        ],
+      }),
+    ]);
+
+    expect(
+      screen.getByRole("cell", { name: /Review Application/ })
+    ).toMatchSnapshot();
+  });
+
+  it("renders the most recent review date when no managed requirement is open", () => {
+    setup([
+      createMockClaim({
+        absence_periods: [createAbsencePeriod()],
+        managed_requirements: [
+          createMockManagedRequirement({
+            status: "Complete",
+            follow_up_date: MOCK_CURRENT_ISO_DATE,
+          }),
+          createMockManagedRequirement({
+            status: "Complete",
+            follow_up_date: "2020-01-01",
+          }),
+        ],
+      }),
+    ]);
+
+    const cells = screen.getAllByRole("cell");
+
+    expect(cells[cells.length - 1]).toMatchSnapshot();
+  });
+
+  it("renders '--' for review date when no managed requirements exist", () => {
+    setup([
+      createMockClaim({
+        absence_periods: [createAbsencePeriod()],
+        managed_requirements: [],
+      }),
+    ]);
+
+    const cells = screen.getAllByRole("cell");
+
+    expect(cells[cells.length - 1]).toHaveTextContent("--");
+  });
 });

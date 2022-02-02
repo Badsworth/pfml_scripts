@@ -1,6 +1,11 @@
+import {
+  getLatestFollowUpDate,
+  getSoonestReviewableManagedRequirement,
+} from "../../models/ManagedRequirement";
 import { AbsencePeriod } from "../../models/AbsencePeriod";
 import AbsencePeriodStatusTag from "../../components/AbsencePeriodStatusTag";
 import ApiResourceCollection from "../../models/ApiResourceCollection";
+import ButtonLink from "../../components/ButtonLink";
 import Claim from "../../models/Claim";
 import LeaveReason from "../../models/LeaveReason";
 import Link from "next/link";
@@ -15,6 +20,7 @@ import { Trans } from "react-i18next";
 import { WithClaimsProps } from "../../hoc/withClaims";
 import classNames from "classnames";
 import findKeyByValue from "../../utils/findKeyByValue";
+import formatDate from "../../utils/formatDate";
 import formatDateRange from "../../utils/formatDateRange";
 import { useTranslation } from "../../locales/i18n";
 
@@ -179,7 +185,12 @@ const ClaimTableRow = (props: ClaimTableRowProps) => {
       case "leave_details":
         return <LeaveDetailsCell absence_periods={claim.absence_periods} />;
       case "review_status":
-        return <React.Fragment>{/* TODO (PORTAL-1615) */}</React.Fragment>;
+        return (
+          <ReviewStatusCell
+            href={props.href}
+            managed_requirements={claim.managed_requirements}
+          />
+        );
     }
   };
 
@@ -256,6 +267,40 @@ const LeaveDetailsCell = (props: {
           </div>
         </div>
       ))}
+    </React.Fragment>
+  );
+};
+
+const ReviewStatusCell = (props: {
+  href: string;
+  managed_requirements: Claim["managed_requirements"];
+}) => {
+  const { t } = useTranslation();
+  const { managed_requirements } = props;
+  const reviewableManagedRequirement =
+    getSoonestReviewableManagedRequirement(managed_requirements);
+
+  if (managed_requirements.length === 0) {
+    return <React.Fragment>--</React.Fragment>;
+  }
+
+  if (reviewableManagedRequirement) {
+    return (
+      <React.Fragment>
+        <ButtonLink className="margin-bottom-05" href={props.href}>
+          {t("pages.employersDashboard.reviewAction")}
+        </ButtonLink>
+        <br />
+        {t("pages.employersDashboard.respondBy", {
+          date: formatDate(reviewableManagedRequirement.follow_up_date).short(),
+        })}
+      </React.Fragment>
+    );
+  }
+
+  return (
+    <React.Fragment>
+      {formatDate(getLatestFollowUpDate(managed_requirements)).short()}
     </React.Fragment>
   );
 };
