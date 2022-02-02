@@ -194,7 +194,7 @@ export const BIAP60: ScenarioSpecification = {
     },
     is_withholding_tax: false,
     // This scenario requires a 4 week leave time for payment calculation purposes.
-    leave_dates: [subWeeks(mostRecentSunday, 3), addWeeks(mostRecentSunday, 1)],
+    leave_dates: [subWeeks(mostRecentSunday, 4), mostRecentSunday],
     metadata: {
       expected_weekly_payment: "831.06",
       spanHoursStart: "4",

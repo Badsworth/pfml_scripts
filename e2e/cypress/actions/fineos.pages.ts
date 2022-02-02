@@ -1645,7 +1645,11 @@ class PaidLeaveDocumentsPage {
 /**
  * Future or made payment.
  */
-type Payment = { net_payment_amount: number; paymentInstances?: number };
+type Payment = {
+  net_payment_amount: number;
+  paymentInstances?: number;
+  paymentProcessingDates?: Date[];
+};
 
 /**
  * Data needed to apply a reduction to a payment in a paid leave case.
@@ -1882,7 +1886,8 @@ class PaidLeavePage {
   }
 
   /**
-   * Asserts there are pending payments for a given amount.
+   * Asserts there are pending payments for a given amount. Assertion for payment dates are also supported.
+   * Assertions for payment amounts and dates disregard payment ordering, which can sometimes vary by environment
    * @param amountsPending array of expected pending payments.
    * @returns
    */
@@ -1893,27 +1898,49 @@ class PaidLeavePage {
     cy.contains("table.WidgetPanel", "Amounts Pending")
       .find("table.ListTable")
       .within(() => {
-        // Note: This method disregards payment ordering, which can sometimes vary by environment.
-        // If you really need ordering, I'd suggest we add expected payment dates to this function and
-        // do it that way.
         amountsPending.forEach((payment) => {
           if (payment.net_payment_amount) {
-            cy.get(`tbody tr`)
-              .find("td:nth-child(8)")
-              .then((els) => {
-                const payments = [...els]
-                  .map((el) => el.innerText)
-                  .filter(
-                    (text) =>
-                      text == numToPaymentFormat(payment.net_payment_amount)
+            // find row items that contain payment information
+            cy.get(`tbody tr`).within(() => {
+              // get all row items that contain a matching net payment amouns
+              cy.get(
+                `td:nth-child(8):contains(${numToPaymentFormat(
+                  payment.net_payment_amount
+                )})`
+              )
+                .parent()
+                .then((paymentRows) => {
+                  // validate the correct amount of payments appear for each payment amount.
+                  expect(paymentRows.length).to.equal(
+                    payment.paymentInstances ?? 1,
+                    `Expected ${payment.paymentInstances ?? 1} payment(s) of ${
+                      payment.net_payment_amount
+                    } - received ${paymentRows.length} instances`
                   );
-                expect(payments.length).to.equal(
-                  payment.paymentInstances ?? 1,
-                  `Expected ${payment.paymentInstances ?? 1} payment(s) of ${
-                    payment.net_payment_amount
-                  } - received ${payments.length} instances`
-                );
-              });
+                  if (payment.paymentProcessingDates) {
+                    // grab payment process date column text from payment row
+                    const actualProcessingDates = [...paymentRows].map(
+                      (el) => el.children[2].textContent
+                    );
+                    for (const expectedDate of payment.paymentProcessingDates) {
+                      const index = actualProcessingDates.findIndex(
+                        (date) => format(expectedDate, "MM/dd/yyyy") === date
+                      );
+                      expect(index).gt(
+                        -1,
+                        `Expected to find payment date of ${format(
+                          expectedDate,
+                          "MM/dd/yyyy"
+                        )} for payment amount ${numToPaymentFormat(
+                          payment.net_payment_amount
+                        )}`
+                      );
+                      // removing previously matched payment dates prevents a false prositive from occurring
+                      actualProcessingDates.splice(index, 1);
+                    }
+                  }
+                });
+            });
           }
         });
       });
