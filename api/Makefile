@@ -564,7 +564,7 @@ release-list: ## Generate comma-separated list of ticket ids for $refs
 	tr '\n' ',' | sed 's/,$$//'
 
 
-API_RELEASE_BRANCHES := $(addprefix origin/, main deploy/api/stage deploy/api/prod deploy/api/performance deploy/api/training deploy/api/uat deploy/api/breakfix deploy/api/cps-preview deploy/api/long deploy/api/trn2)
+API_RELEASE_BRANCHES := $(addprefix origin/, main deploy/api/stage deploy/api/prod deploy/api/performance deploy/api/training deploy/api/uat deploy/api/breakfix deploy/api/cps-preview deploy/api/long deploy/api/trn2 deploy/api/infra-test)
 where-ticket: ## Search release branches for $ticket
 	@for b in $(API_RELEASE_BRANCHES); do echo "## $$b ##"; \
 		git --no-pager log --oneline --decorate --grep=$(ticket) $$b; \
