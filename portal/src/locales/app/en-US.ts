@@ -2419,6 +2419,20 @@ const pages: {
     title: "Thanks for reviewing the application",
   },
   employersDashboard: {
+    // Fallback in case some unexpected leave reason is sent from Fineos:
+    absencePeriodReason: "Leave period",
+    absencePeriodReason_activeDutyFamily:
+      "$t(shared.leaveReasonActiveDutyFamily)",
+    absencePeriodReason_bonding: "$t(shared.leaveReasonBonding)",
+    absencePeriodReason_care: "$t(shared.leaveReasonCare)",
+    absencePeriodReason_medical: "$t(shared.leaveReasonMedical)",
+    absencePeriodReason_pregnancy: "$t(shared.leaveReasonPregnancy)",
+    absencePeriodReason_serviceMemberFamily:
+      "$t(shared.leaveReasonServiceMemberFamily)",
+    absencePeriodType_Continuous: "$t(shared.claimDurationTypeContinuous)",
+    absencePeriodType_Intermittent: "$t(shared.claimDurationTypeIntermittent)",
+    "absencePeriodType_Reduced Schedule":
+      "$t(shared.claimDurationTypeReducedSchedule)",
     filterNavLabel: "Filters:",
     filterOrgsLabel: "Organizations",
     filterRemove: "Remove filter:",

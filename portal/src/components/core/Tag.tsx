@@ -20,6 +20,7 @@ const Tag = ({ label, state, className }: TagProps) => {
     "display-inline-block",
     "text-bold",
     "text-middle",
+    "text-center",
     "text-no-wrap",
     {
       "text-success-dark": state === "success",

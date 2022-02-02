@@ -8,6 +8,7 @@ import findKeyByValue from "../utils/findKeyByValue";
 import { useTranslation } from "../locales/i18n";
 
 interface AbsencePeriodStatusTagProps {
+  className?: string;
   request_decision?: AbsencePeriodRequestDecisionEnum;
 }
 
@@ -24,19 +25,18 @@ const StateMap: {
   voided: "inactive",
 } as const;
 
-const AbsencePeriodStatusTag = ({
-  request_decision,
-}: AbsencePeriodStatusTagProps) => {
+const AbsencePeriodStatusTag = (props: AbsencePeriodStatusTagProps) => {
   const { t } = useTranslation();
   const requestDecisionKey = findKeyByValue(
     AbsencePeriodRequestDecision,
-    request_decision
+    props.request_decision
   );
 
   if (!requestDecisionKey) return null;
 
   return (
     <Tag
+      className={props.className}
       label={t("components.absencePeriodStatusTag.label", {
         context: requestDecisionKey,
       })}

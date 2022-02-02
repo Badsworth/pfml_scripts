@@ -19,4 +19,15 @@ describe("AbsencePeriodStatusTag", () => {
 
     expect(container).toBeEmptyDOMElement();
   });
+
+  it("accepts custom classes", () => {
+    const { container } = render(
+      <AbsencePeriodStatusTag
+        request_decision={AbsencePeriodRequestDecision.approved}
+        className="width-12"
+      />
+    );
+
+    expect(container.firstChild).toHaveClass("width-12");
+  });
 });

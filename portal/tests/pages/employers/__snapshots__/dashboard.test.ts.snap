@@ -79,7 +79,7 @@ exports[`Employer dashboard deprecated: renders a table of claims with links if 
         data-label="Status"
       >
         <span
-          class="usa-tag display-inline-block text-bold text-middle text-no-wrap text-success-dark bg-success-lighter"
+          class="usa-tag display-inline-block text-bold text-middle text-center text-no-wrap text-success-dark bg-success-lighter"
         >
           Approved
         </span>
@@ -118,20 +118,71 @@ exports[`Employer dashboard renders a table of claims 1`] = `
     </tr>
   </thead>
   <tbody>
-    <tr>
+    <tr
+      class="text-top"
+    >
       <th
         data-label="Employee (Application ID)"
         scope="row"
       >
-        Jane Doe
-        NTN-111-ABS-01
+        <a
+          href="/employers/applications/new-application?absence_id=NTN-111-ABS-01"
+        >
+          Jane Doe
+          <div
+            class="font-body-2xs text-normal"
+          >
+            NTN-111-ABS-01
+          </div>
+        </a>
       </th>
       <td
         data-label="Organization (FEIN)"
-      />
+      >
+        <div
+          class="text-wrap"
+        >
+          Work Inc
+          <div
+            class="font-body-2xs text-base-dark"
+          >
+            12-3456789
+          </div>
+        </div>
+      </td>
       <td
         data-label="Leave details"
-      />
+      >
+        <div
+          class="grid-row grid-gap-1 margin-top-1 mobile-lg:margin-top-0"
+          data-testid="absence-period"
+        >
+          <div
+            class="desktop:grid-col-auto"
+          >
+            <span
+              class="usa-tag display-inline-block text-bold text-middle text-center text-no-wrap text-success-dark bg-success-lighter minw-15 margin-top-2px margin-bottom-05"
+            >
+              Approved
+            </span>
+          </div>
+          <div
+            class="desktop:grid-col-fill text-wrap"
+          >
+            <div
+              class="text-medium"
+            >
+              Medical leave
+            </div>
+            1/1/2020 to 2/1/2020
+            <div
+              class="font-body-2xs"
+            >
+              Continuous leave
+            </div>
+          </div>
+        </div>
+      </td>
       <td
         data-label="Review due date"
       />

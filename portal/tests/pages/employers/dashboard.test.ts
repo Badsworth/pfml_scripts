@@ -1,12 +1,12 @@
 import Claim, { ClaimEmployee } from "../../../src/models/Claim";
 import User, { UserLeaveAdministrator } from "../../../src/models/User";
 import { cleanup, screen, within } from "@testing-library/react";
+import { createAbsencePeriod, renderPage } from "../../test-utils";
 import ApiResourceCollection from "src/models/ApiResourceCollection";
 import { AppLogic } from "../../../src/hooks/useAppLogic";
 import Dashboard from "../../../src/pages/employers/dashboard";
 import PaginationMeta from "../../../src/models/PaginationMeta";
 import createMockUserLeaveAdministrator from "../../../lib/mock-helpers/createMockUserLeaveAdministrator";
-import { renderPage } from "../../test-utils";
 import routes from "../../../src/routes";
 import userEvent from "@testing-library/user-event";
 
@@ -37,7 +37,15 @@ const verifiableUserLeaveAdministrator = createMockUserLeaveAdministrator({
 const getClaims = (leaveAdmin: UserLeaveAdministrator) => {
   return [
     new Claim({
-      absence_periods: [],
+      absence_periods: [
+        createAbsencePeriod({
+          absence_period_start_date: "2020-01-01",
+          absence_period_end_date: "2020-02-01",
+          reason: "Serious Health Condition - Employee",
+          request_decision: "Approved",
+          period_type: "Continuous",
+        }),
+      ],
       created_at: "2021-01-15",
       managed_requirements: [],
       employee: new ClaimEmployee({

@@ -23,7 +23,7 @@ exports[`Status LeaveDetails renders page separated by keys if object of absence
       </p>
       <p>
         <span
-          class="usa-tag display-inline-block text-bold text-middle text-no-wrap text-success-dark bg-success-lighter"
+          class="usa-tag display-inline-block text-bold text-middle text-center text-no-wrap text-success-dark bg-success-lighter"
         >
           Approved
         </span>
@@ -67,7 +67,7 @@ exports[`Status LeaveDetails renders page separated by keys if object of absence
       </p>
       <p>
         <span
-          class="usa-tag display-inline-block text-bold text-middle text-no-wrap text-base-darkest bg-warning-lighter"
+          class="usa-tag display-inline-block text-bold text-middle text-center text-no-wrap text-base-darkest bg-warning-lighter"
         >
           Pending
         </span>
@@ -100,7 +100,7 @@ exports[`Status LeaveDetails renders page separated by keys if object of absence
       </p>
       <p>
         <span
-          class="usa-tag display-inline-block text-bold text-middle text-no-wrap text-base-darker bg-base-lightest"
+          class="usa-tag display-inline-block text-bold text-middle text-center text-no-wrap text-base-darker bg-base-lightest"
         >
           Withdrawn
         </span>
@@ -148,7 +148,7 @@ exports[`Status LeaveDetails renders page with one section if absenceDetails has
       </p>
       <p>
         <span
-          class="usa-tag display-inline-block text-bold text-middle text-no-wrap text-base-darker bg-base-lightest"
+          class="usa-tag display-inline-block text-bold text-middle text-center text-no-wrap text-base-darker bg-base-lightest"
         >
           Withdrawn
         </span>

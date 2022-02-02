@@ -1,5 +1,9 @@
+import { AbsencePeriod } from "../../models/AbsencePeriod";
+import AbsencePeriodStatusTag from "../../components/AbsencePeriodStatusTag";
 import ApiResourceCollection from "../../models/ApiResourceCollection";
 import Claim from "../../models/Claim";
+import LeaveReason from "../../models/LeaveReason";
+import Link from "next/link";
 import { PageQueryParam } from "./SortDropdown";
 import PaginationMeta from "../../models/PaginationMeta";
 import PaginationNavigation from "../../components/PaginationNavigation";
@@ -9,6 +13,9 @@ import React from "react";
 import Table from "../../components/core/Table";
 import { Trans } from "react-i18next";
 import { WithClaimsProps } from "../../hoc/withClaims";
+import classNames from "classnames";
+import findKeyByValue from "../../utils/findKeyByValue";
+import formatDateRange from "../../utils/formatDateRange";
 import { useTranslation } from "../../locales/i18n";
 
 /**
@@ -101,7 +108,15 @@ const PaginatedClaimsTable = (props: PaginatedClaimsTableProps) => {
           )}
           {tableBodyState === "show_claims" &&
             claims.items.map((claim) => (
-              <ClaimTableRow key={claim.fineos_absence_id} claim={claim} />
+              <ClaimTableRow
+                key={claim.fineos_absence_id}
+                claim={claim}
+                href={props.getNextPageRoute(
+                  "VIEW_CLAIM",
+                  {},
+                  { absence_id: claim.fineos_absence_id }
+                )}
+              />
             ))}
         </tbody>
       </Table>
@@ -118,27 +133,45 @@ const PaginatedClaimsTable = (props: PaginatedClaimsTableProps) => {
 
 interface ClaimTableRowProps {
   claim: Claim;
+  href: string;
 }
 
 const ClaimTableRow = (props: ClaimTableRowProps) => {
   const { claim } = props;
   const { t } = useTranslation();
+
   const getColumnContents = (columnKey: typeof tableColumnKeys[number]) => {
     switch (columnKey) {
       case "employee_and_case":
         return (
-          <React.Fragment>
-            {claim.employee?.fullName || "--"}
-            {claim.fineos_absence_id}
-          </React.Fragment>
+          <Link href={props.href}>
+            <a>
+              {claim.employee?.fullName || "--"}
+              <div className="font-body-2xs text-normal">
+                {claim.fineos_absence_id}
+              </div>
+            </a>
+          </Link>
         );
-      default:
-        break;
+      case "employer":
+        /* TODO (PORTAL-1615): Hide this column when there's only one org */
+        return (
+          <div className="text-wrap">
+            {claim.employer.employer_dba}
+            <div className="font-body-2xs text-base-dark">
+              {claim.employer.employer_fein}
+            </div>
+          </div>
+        );
+      case "leave_details":
+        return <LeaveDetailsCell absence_periods={claim.absence_periods} />;
+      case "review_status":
+        return <React.Fragment>{/* TODO (PORTAL-1615) */}</React.Fragment>;
     }
   };
 
   return (
-    <tr>
+    <tr className="text-top">
       <th
         scope="row"
         data-label={t("pages.employersDashboard.tableColHeading", {
@@ -158,6 +191,59 @@ const ClaimTableRow = (props: ClaimTableRowProps) => {
         </td>
       ))}
     </tr>
+  );
+};
+
+const LeaveDetailsCell = (props: {
+  absence_periods: Claim["absence_periods"];
+}) => {
+  const { absence_periods } = props;
+  const { t } = useTranslation();
+
+  return (
+    <React.Fragment>
+      {AbsencePeriod.sortNewToOld(absence_periods).map((period, index) => (
+        <div
+          key={index}
+          className={classNames(
+            "grid-row grid-gap-1",
+            // Put space between the cell's heading when stacked
+            "margin-top-1 mobile-lg:margin-top-0",
+            {
+              // Put space between the absence periods
+              "padding-top-2": index > 0,
+            }
+          )}
+          data-testid="absence-period"
+        >
+          <div className="desktop:grid-col-auto">
+            {/* 2px top margin to vertically align text when side-by-side */}
+            <AbsencePeriodStatusTag
+              className="minw-15 margin-top-2px margin-bottom-05"
+              request_decision={period.request_decision}
+            />
+          </div>
+          <div className="desktop:grid-col-fill text-wrap">
+            <div className="text-medium">
+              {t("pages.employersDashboard.absencePeriodReason", {
+                context: findKeyByValue(LeaveReason, period.reason),
+              })}
+            </div>
+
+            {formatDateRange(
+              period.absence_period_start_date,
+              period.absence_period_end_date
+            )}
+
+            <div className="font-body-2xs">
+              {t("pages.employersDashboard.absencePeriodType", {
+                context: period.period_type,
+              })}
+            </div>
+          </div>
+        </div>
+      ))}
+    </React.Fragment>
   );
 };
 
