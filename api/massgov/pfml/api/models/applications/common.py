@@ -39,7 +39,7 @@ class EligibilityEmploymentStatus(str):
     retired = "Retired"
 
 
-# TODO modify here.
+# TODO modify here?
 class EmploymentStatus(str, LookupEnum):
     employed = "Employed"
     unemployed = "Unemployed"

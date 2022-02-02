@@ -453,6 +453,19 @@ class Application(Base, TimestampMixin):
         return leave_periods
 
 
+class UserNotFoundSubmission(Base, TimestampMixin):
+    __tablename__ = "user_not_found_submission"
+    user_not_found_submission_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+    application_id = Column(PostgreSQLUUID, ForeignKey("application.application_id"), index=True)
+    employer_fein = Column(Text)
+    employer_name = Column(Text)
+    # TODO store a reason here or use application.employment_status ?
+    # reason = Column(Text)
+    submitted_time = Column(TIMESTAMP(timezone=True))
+
+    application = relationship(Application, backref=backref("unf", uselist=False))
+
+
 class CaringLeaveMetadata(Base, TimestampMixin):
     __tablename__ = "caring_leave_metadata"
     caring_leave_metadata_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
