@@ -28,6 +28,7 @@ const setup = (claims: Claim[] = []) => {
     getNextPageRoute: jest.fn(), // tested in dashboard page tests, ignoring here.
     hasOnlyUnverifiedEmployers: false,
     paginationMeta,
+    showEmployer: true, // tested in dashboard page tests, ignoring here.
     sort: <div />, // tested in dashboard page tests, ignoring here.
     updatePageQuery: jest.fn(),
     user: new User({}),
@@ -67,7 +68,6 @@ describe("PaginatedClaimsTable", () => {
     expect(absencePeriodParents[2]).toHaveTextContent("1/1/2021");
   });
 
-  it.todo("hides employer column when user only has one employer");
   it.todo("renders a Review call to action when a managed requirement is open");
   it.todo(
     "renders the most recent review date when no managed requirement is open"

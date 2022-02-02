@@ -70,6 +70,7 @@ export const Dashboard = (props: WithUserProps & { query: ApiParams }) => {
     updatePageQuery,
     getNextPageRoute: props.appLogic.portalFlow.getNextPageRoute,
     hasOnlyUnverifiedEmployers: props.user.hasOnlyUnverifiedEmployers,
+    showEmployer: props.user.user_leave_administrators.length > 1,
     sort: (
       <SortDropdown
         order_by={apiParams.order_by}

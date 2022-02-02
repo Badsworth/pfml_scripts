@@ -193,7 +193,7 @@ exports[`Employer dashboard renders a table of claims 1`] = `
 
 exports[`Employer dashboard renders a verification message in the table, when all employers are unverified 1`] = `
 <td
-  colspan="4"
+  colspan="3"
 >
   You have not verified any organizations. 
   <a
@@ -221,7 +221,7 @@ exports[`Employer dashboard renders a verification message in the table, when al
 
 exports[`Employer dashboard renders the banner if there are any unverified employers 1`] = `
 <div
-  aria-labelledby="alert-heading313"
+  aria-labelledby="alert-heading355"
   class="usa-alert usa-alert--warning"
   role="region"
   tabindex="-1"
@@ -231,7 +231,7 @@ exports[`Employer dashboard renders the banner if there are any unverified emplo
   >
     <h2
       class="usa-alert__heading font-heading-md text-bold"
-      id="alert-heading313"
+      id="alert-heading355"
     >
       Verify your account
     </h2>

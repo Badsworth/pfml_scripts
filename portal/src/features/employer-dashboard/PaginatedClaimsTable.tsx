@@ -18,31 +18,43 @@ import findKeyByValue from "../../utils/findKeyByValue";
 import formatDateRange from "../../utils/formatDateRange";
 import { useTranslation } from "../../locales/i18n";
 
-/**
- * Columns rendered in the table.
- * Used as i18n context for rendering headers, and determining
- * what content to render in each column.
- */
-const tableColumnKeys = [
-  "employee_and_case",
-  "employer",
-  "leave_details",
-  "review_status",
-] as const;
-
 export interface PaginatedClaimsTableProps extends WithClaimsProps {
   claims: ApiResourceCollection<Claim>;
   getNextPageRoute: PortalFlow["getNextPageRoute"];
   hasOnlyUnverifiedEmployers: boolean;
   paginationMeta: PaginationMeta;
   updatePageQuery: (params: PageQueryParam[]) => void;
+  showEmployer: boolean;
   /** Pass in the SortDropdown so it can be rendered in the expected inline UI position */
   sort: React.ReactNode;
 }
 
+type TableColumnKey =
+  | "employee_and_case"
+  | "employer"
+  | "leave_details"
+  | "review_status";
+
 const PaginatedClaimsTable = (props: PaginatedClaimsTableProps) => {
   const { claims, paginationMeta } = props;
   const { t } = useTranslation();
+
+  /**
+   * Columns rendered in the table.
+   * Used as i18n context for rendering headers, and determining
+   * what content to render in each column.
+   */
+  const tableColumnVisibility: { [key in TableColumnKey]: boolean } = {
+    employee_and_case: true,
+    employer: props.showEmployer,
+    leave_details: true,
+    review_status: true,
+  } as const;
+  const visibleTableColumns: TableColumnKey[] = Object.entries(
+    tableColumnVisibility
+  )
+    .filter(([_columnKey, isVisible]) => isVisible)
+    .map(([columnKey]) => columnKey as TableColumnKey);
 
   /** Helper for determining what to display in our table body. Keeps conditions simpler in our render section */
   const getTableBodyState = () => {
@@ -75,7 +87,7 @@ const PaginatedClaimsTable = (props: PaginatedClaimsTableProps) => {
       <Table className="width-full" responsive scrollable>
         <thead>
           <tr>
-            {tableColumnKeys.map((columnKey) => (
+            {visibleTableColumns.map((columnKey) => (
               <th key={columnKey} scope="col">
                 {t("pages.employersDashboard.tableColHeading", {
                   context: columnKey,
@@ -87,7 +99,7 @@ const PaginatedClaimsTable = (props: PaginatedClaimsTableProps) => {
         <tbody>
           {tableBodyState === "no_verifications" && (
             <tr data-test="verification-instructions-row">
-              <td colSpan={tableColumnKeys.length}>
+              <td colSpan={visibleTableColumns.length}>
                 <Trans
                   i18nKey="pages.employersDashboard.verificationInstructions"
                   components={{
@@ -101,7 +113,7 @@ const PaginatedClaimsTable = (props: PaginatedClaimsTableProps) => {
           )}
           {tableBodyState === "empty" && (
             <tr>
-              <td colSpan={tableColumnKeys.length}>
+              <td colSpan={visibleTableColumns.length}>
                 {t("pages.employersDashboard.noClaimResults")}
               </td>
             </tr>
@@ -116,6 +128,7 @@ const PaginatedClaimsTable = (props: PaginatedClaimsTableProps) => {
                   {},
                   { absence_id: claim.fineos_absence_id }
                 )}
+                visibleTableColumns={visibleTableColumns}
               />
             ))}
         </tbody>
@@ -134,13 +147,14 @@ const PaginatedClaimsTable = (props: PaginatedClaimsTableProps) => {
 interface ClaimTableRowProps {
   claim: Claim;
   href: string;
+  visibleTableColumns: TableColumnKey[];
 }
 
 const ClaimTableRow = (props: ClaimTableRowProps) => {
-  const { claim } = props;
+  const { claim, visibleTableColumns } = props;
   const { t } = useTranslation();
 
-  const getColumnContents = (columnKey: typeof tableColumnKeys[number]) => {
+  const getColumnContents = (columnKey: typeof visibleTableColumns[number]) => {
     switch (columnKey) {
       case "employee_and_case":
         return (
@@ -154,7 +168,6 @@ const ClaimTableRow = (props: ClaimTableRowProps) => {
           </Link>
         );
       case "employer":
-        /* TODO (PORTAL-1615): Hide this column when there's only one org */
         return (
           <div className="text-wrap">
             {claim.employer.employer_dba}
@@ -175,12 +188,12 @@ const ClaimTableRow = (props: ClaimTableRowProps) => {
       <th
         scope="row"
         data-label={t("pages.employersDashboard.tableColHeading", {
-          context: tableColumnKeys[0],
+          context: visibleTableColumns[0],
         })}
       >
-        {getColumnContents(tableColumnKeys[0])}
+        {getColumnContents(visibleTableColumns[0])}
       </th>
-      {tableColumnKeys.slice(1).map((columnKey) => (
+      {visibleTableColumns.slice(1).map((columnKey) => (
         <td
           key={columnKey}
           data-label={t("pages.employersDashboard.tableColHeading", {

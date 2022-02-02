@@ -157,7 +157,11 @@ describe("Employer dashboard", () => {
     });
     const claims = getClaims(verifiedUserLeaveAdministrator);
     const userAttrs = {
-      user_leave_administrators: [verifiedUserLeaveAdministrator],
+      user_leave_administrators: [
+        // Set multiple employers so the table shows all possible columns
+        verifiedUserLeaveAdministrator,
+        verifiableUserLeaveAdministrator,
+      ],
     };
 
     setup({ claims, userAttrs });
@@ -248,6 +252,50 @@ describe("Employer dashboard", () => {
         "Employer ID number",
         "Application start date",
         "Status",
+      ]
+    `);
+  });
+
+  it("renders Organization column only when user has more than one Employer", () => {
+    process.env.featureFlags = JSON.stringify({
+      employerShowMultiLeaveDashboard: true,
+    });
+
+    // Organization column should NOT show
+    setup({
+      userAttrs: {
+        user_leave_administrators: [verifiedUserLeaveAdministrator],
+      },
+    });
+
+    expect(screen.getAllByRole("columnheader").map((el) => el.textContent))
+      .toMatchInlineSnapshot(`
+      [
+        "Employee (Application ID)",
+        "Leave details",
+        "Review due date",
+      ]
+    `);
+
+    cleanup();
+
+    // Organization column should show
+    setup({
+      userAttrs: {
+        user_leave_administrators: [
+          verifiedUserLeaveAdministrator,
+          verifiableUserLeaveAdministrator,
+        ],
+      },
+    });
+
+    expect(screen.getAllByRole("columnheader").map((el) => el.textContent))
+      .toMatchInlineSnapshot(`
+      [
+        "Employee (Application ID)",
+        "Organization (FEIN)",
+        "Leave details",
+        "Review due date",
       ]
     `);
   });
