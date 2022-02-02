@@ -1,4 +1,4 @@
-import { portal } from "../../actions";
+import { portal } from "../../../actions";
 
 describe("Claimant Registration with MFA", () => {
   const register_mfa =
