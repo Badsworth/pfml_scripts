@@ -382,6 +382,30 @@ export const TRNT: ScenarioSpecification = {
   },
 };
 
+// Extra scenario requested by Nicole 2/2/2022.
+export const TRNTB: ScenarioSpecification = {
+  employee: { mass_id: true, wages: "eligible" },
+  claim: {
+    label: "TRNTB",
+    reason: "Child Bonding",
+    reason_qualifier: "Newborn",
+    docs: {
+      MASSID: {},
+      BIRTHCERTIFICATE: {}
+    },
+    employerResponse: {
+      hours_worked_per_week: 40,
+      employer_decision: "Approve",
+    },
+    metadata: {
+      postSubmit: "APPROVE",
+      leaveDescription: FIRST_OF_MONTH_START_MAX_LEAVE_DESCRIPTION,
+      quantity: 50,
+    },
+    leave_dates: () => generatetMaxLeave(12),
+  },
+};
+
 export const TRNW: ScenarioSpecification = {
   employee: { mass_id: true, wages: "eligible" },
   claim: {
