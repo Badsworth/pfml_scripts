@@ -17,6 +17,13 @@ To make configuration updates to mkdocs or the deployment workflow, see [mkdocs.
 
 ## Developer Setup
 
+To ensure consistent Node/NPM versions are used, install [Volta](https://volta.sh/). Volta is similar to NVM, but is faster and requires almost no setup. Once Volta is installed, it should automatically use the project-pinned versions of `node` and `npm` with no additional work, including installing the correct versions if you don't have them already.
+
+```shell
+curl https://get.volta.sh | bash
+exec $SHELL # ... or otherwise restart your shell.
+```
+
 When initially setting up the project, install packages from the repo root to enable git hooks.
 
 ```
