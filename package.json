@@ -21,6 +21,9 @@
     "hooks": {
       "pre-commit": "lint-staged --shell"
     }
+  },
+  "volta": {
+    "node": "16.13.2",
+    "npm": "8.4.0"
   }
- }
- 
+}
