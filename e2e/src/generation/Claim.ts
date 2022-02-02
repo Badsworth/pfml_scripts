@@ -23,7 +23,7 @@ import fs from "fs";
 import { promisify } from "util";
 import path from "path";
 import * as si from "streaming-iterables";
-import ndjson from "ndjson";
+import * as ndjson from "../stream/ndjson";
 import { StreamWrapper } from "./FileWrapper";
 import { collect, map, AnyIterable } from "streaming-iterables";
 import { OtherIncome } from "../api";

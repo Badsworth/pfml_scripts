@@ -1,7 +1,7 @@
 import { fineos, fineosPages, portal } from "../../../actions";
 import { Submission } from "../../../../src/types";
 import { addMonths, addDays, format } from "date-fns";
-import { extractLeavePeriod } from "util/claims";
+import { extractLeavePeriod } from "../../../../src/util/claims";
 
 describe("Submit medical pre-birth application via the web portal", () => {
   const submission =

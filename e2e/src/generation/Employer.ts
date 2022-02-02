@@ -3,9 +3,9 @@ import fs from "fs";
 import { formatISO } from "date-fns";
 import unique from "./unique";
 import { pipeline, Readable } from "stream";
-import JSONStream from "JSONStream";
 import { promisify } from "util";
 import shuffle from "./shuffle";
+import * as JSONStream from "../stream/json";
 
 const pipelineP = promisify(pipeline);
 

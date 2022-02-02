@@ -1,6 +1,5 @@
 // it would be ideal if we could include the the cypress and artillery configs into a single file and utilize the name property
 // this is pretty simple to do using the webpack cli (used for artillery), more time will be needed to find a clean way to acheive this with @cypress/webpack-preprocessor
-import TsconfigPathsPlugin from "tsconfig-paths-webpack-plugin";
 import webpack from "webpack";
 import CopyPlugin from "copy-webpack-plugin";
 import dotenv from "dotenv";
@@ -28,8 +27,6 @@ module.exports = () => {
       "@influxdata/influxdb-client": "@influxdata/influxdb-client",
     },
     resolve: {
-      // @see https://medium.com/better-programming/the-right-usage-of-aliases-in-webpack-typescript-4418327f47fa
-      plugins: [new TsconfigPathsPlugin()],
       extensions: [".ts", ".js"],
     },
     module: {
