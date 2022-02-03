@@ -38,11 +38,13 @@ from massgov.pfml.db.models.payments import (
     FineosExtractCancelledPayments,
     FineosExtractPaymentFullSnapshot,
     FineosExtractReplacedPayments,
+    FineosExtractVbi1099DataSom,
     FineosExtractVpei,
     FineosExtractVpeiClaimDetails,
     FineosExtractVpeiPaymentDetails,
     FineosWritebackDetails,
     LkFineosWritebackTransactionStatus,
+    Pfml1099Request,
 )
 from massgov.pfml.delegated_payments.audit.delegated_payment_audit_csv import (
     PAYMENT_AUDIT_CSV_HEADERS,
@@ -291,7 +293,13 @@ def test_e2e_pub_payments(
             )
         )
         all_scenarios = list(SCENARIO_DESCRIPTORS_BY_NAME.keys())
-
+        assert len(test_db_session.query(FineosExtractVbi1099DataSom).all()) > 1
+        assert (
+            len(test_db_session.query(FineosExtractVbi1099DataSom.reference_file_id).first()) == 1
+        )
+        assert len(test_db_session.query(Pfml1099Request).all()) <= len(
+            test_db_session.query(FineosExtractVbi1099DataSom).all()
+        )
         # split payments added for withholding
         split_payment_scenarios = [
             ScenarioName.HAPPY_PATH_TAX_WITHHOLDING,
@@ -2605,6 +2613,12 @@ def generate_fineos_extract_files(scenario_dataset: List[ScenarioData], round: i
     assert_files(
         fineos_data_export_path,
         payments_util.CLAIMANT_EXTRACT_FILE_NAMES,
+        fineos_extract_date_prefix,
+    )
+    # Confirm 1099 extract files were generated
+    assert_files(
+        fineos_data_export_path,
+        payments_util.REQUEST_1099_EXTRACT_FILES_NAMES,
         fineos_extract_date_prefix,
     )
 
