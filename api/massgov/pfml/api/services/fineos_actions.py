@@ -1266,7 +1266,22 @@ def create_or_update_employer(
         },
     )
 
-    employer.fineos_employer_id = fineos_employer_id
+    if employer.fineos_employer_id is None:
+        logger.info(
+            "update fineos_employer_id",
+            extra=dict(employer_id=employer.employer_id, fineos_employer_id=fineos_employer_id),
+        )
+        employer.fineos_employer_id = fineos_employer_id
+    elif fineos_employer_id != employer.fineos_employer_id:
+        logger.error(
+            "unexpected fineos_employer_id",
+            extra={
+                "internal_employer_id": employer.employer_id,
+                "fineos_employer_id": employer.fineos_employer_id,
+                "new_fineos_employer_id": fineos_employer_id,
+            },
+        )
+        raise RuntimeError("FINEOS returned different fineos_employer_id than before")
     return fineos_employer_id
 
 

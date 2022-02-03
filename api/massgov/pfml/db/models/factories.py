@@ -19,6 +19,7 @@ import massgov.pfml.db.models.applications as application_models
 import massgov.pfml.db.models.employees as employee_models
 import massgov.pfml.db.models.payments as payment_models
 import massgov.pfml.db.models.verifications as verification_models
+import massgov.pfml.fineos.mock.field
 import massgov.pfml.util.datetime as datetime_util
 from massgov.pfml.api.authentication.azure import AzureUser
 
@@ -167,7 +168,9 @@ class EmployerOnlyDORDataFactory(EmployerOnlyRequiredFactory):
 
 
 class EmployerFactory(EmployerOnlyDORDataFactory):
-    fineos_employer_id = factory.Sequence(lambda n: n + 1)
+    fineos_employer_id = factory.LazyAttribute(
+        lambda e: massgov.pfml.fineos.mock.field.fake_customer_no(e.employer_fein)
+    )
 
 
 class TaxIdentifierFactory(BaseFactory):

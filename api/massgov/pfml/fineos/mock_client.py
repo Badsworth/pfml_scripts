@@ -24,6 +24,7 @@ from massgov.pfml.util.converters.json_to_obj import set_empty_dates_to_none
 from ..db.models.applications import PhoneType
 from . import client, exception, fineos_client, models
 from .mock.eform import MOCK_EFORMS
+from .mock.field import fake_customer_no
 from .models.group_client_api import EForm
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
@@ -309,7 +310,7 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
         return models.OCOrganisation(
             OCOrganisation=[
                 models.OCOrganisationItem(
-                    CustomerNo="999",
+                    CustomerNo=str(fake_customer_no(employer_fein)),
                     CorporateTaxNumber=employer_fein,
                     Name="Foo",
                     organisationUnits=organisationUnits,
@@ -323,8 +324,7 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
         if employer_fein == "999999999":
             raise exception.FINEOSEntityNotFound("Employer not found.")
         else:
-            # TODO: Match the FINEOS employer id format
-            return employer_fein + "1000"
+            return str(fake_customer_no(employer_fein))
 
     def register_api_user(self, employee_registration: models.EmployeeRegistration) -> None:
         _capture_call("register_api_user", None, employee_registration=employee_registration)
@@ -851,7 +851,7 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
 
         return (
             employer_create_or_update.fineos_customer_nbr,
-            int(employer_create_or_update.employer_fein) + 44000000,
+            fake_customer_no(employer_create_or_update.employer_fein),
         )
 
     def create_or_update_leave_admin(

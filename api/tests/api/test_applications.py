@@ -10,6 +10,7 @@ from freezegun import freeze_time
 from sqlalchemy import inspect
 
 import massgov.pfml.fineos
+import massgov.pfml.fineos.mock.field
 import massgov.pfml.fineos.mock_client
 import massgov.pfml.fineos.models
 import massgov.pfml.util.datetime as datetime_util
@@ -3841,7 +3842,9 @@ def test_application_post_submit_app_already_submitted(client, user, auth_token,
                 "employee_registration": massgov.pfml.fineos.models.EmployeeRegistration(
                     user_id=fineos_user_id,
                     customer_number=None,
-                    employer_id=f"{application.employer_fein}1000",
+                    employer_id=str(
+                        massgov.pfml.fineos.mock.field.fake_customer_no(application.employer_fein)
+                    ),
                     date_of_birth=date(1753, 1, 1),
                     email=None,
                     first_name=None,
@@ -4218,7 +4221,9 @@ def test_application_post_submit_to_fineos(client, user, auth_token, test_db_ses
             {
                 "employee_registration": massgov.pfml.fineos.models.EmployeeRegistration(
                     user_id=fineos_user_id,
-                    employer_id="999",
+                    employer_id=str(
+                        massgov.pfml.fineos.mock.field.fake_customer_no(application.employer_fein)
+                    ),
                     date_of_birth=date(1753, 1, 1),
                     national_insurance_no=application.tax_identifier.tax_identifier,
                 )

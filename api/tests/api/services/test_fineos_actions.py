@@ -7,6 +7,7 @@ from unittest import mock
 import pytest
 
 import massgov.pfml.fineos
+import massgov.pfml.fineos.mock.field
 import massgov.pfml.fineos.mock_client as fineos_mock
 from massgov.pfml.api.models.claims.responses import AbsencePeriodResponse
 from massgov.pfml.api.services import fineos_actions
@@ -480,7 +481,9 @@ def test_update_employer_simple(test_db_session):
     employer.employer_fein = "888447576"
     employer.employer_name = "Test Organization Name"
     employer.employer_dba = "Test Organization DBA"
-    employer.fineos_employer_id = 250
+    employer.fineos_employer_id = massgov.pfml.fineos.mock.field.fake_customer_no(
+        employer.employer_fein
+    )
     test_db_session.add(employer)
     test_db_session.commit()
 
