@@ -1,5 +1,5 @@
 import base64
-from typing import Dict, List, Optional, Set, Union
+from typing import Dict, List, Optional, Set, Type, Union
 from uuid import UUID
 
 import connexion
@@ -17,7 +17,11 @@ from massgov.pfml.api.authorization.flask import READ, can, requires
 from massgov.pfml.api.exceptions import ClaimWithdrawn, ObjectNotFound
 from massgov.pfml.api.models.applications.common import OrganizationUnit
 from massgov.pfml.api.models.claims.common import EmployerClaimReview
-from massgov.pfml.api.models.claims.responses import ClaimResponse, ManagedRequirementResponse
+from massgov.pfml.api.models.claims.responses import (
+    ClaimForPfmlCrmResponse,
+    ClaimResponse,
+    ManagedRequirementResponse,
+)
 from massgov.pfml.api.services.administrator_fineos_actions import (
     awaiting_leave_info,
     complete_claim_review,
@@ -40,6 +44,7 @@ from massgov.pfml.db.models.employees import (
     Claim,
     Employer,
     ManagedRequirement,
+    Role,
     UserLeaveAdministrator,
 )
 from massgov.pfml.db.queries.absence_periods import upsert_absence_period_from_fineos_period
@@ -71,6 +76,7 @@ from massgov.pfml.util.logging.managed_requirements import (
 )
 from massgov.pfml.util.paginate.paginator import PaginationAPIContext
 from massgov.pfml.util.sqlalchemy import get_or_404
+from massgov.pfml.util.users import has_role_in
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
@@ -499,16 +505,21 @@ def get_claims() -> flask.Response:
     search_string = flask.request.args.get("search", type=str)
     absence_statuses = parse_filterable_absence_statuses(flask.request.args.get("claim_status"))
     is_employer = can(READ, "EMPLOYER_API")
+    is_pfml_crm_user = has_role_in(current_user, [Role.PFML_CRM])
     log_attributes = {}
     log_attributes.update(get_employer_log_attributes(current_user))
 
     with PaginationAPIContext(Claim, request=flask.request) as pagination_context:
         with app.db_session() as db_session:
             query = GetClaimsQuery(db_session)
-
             # The logic here is similar to that in user_has_access_to_claim (except it is applied to multiple claims)
             # so if something changes there it probably needs to be changed here
-            if is_employer and current_user and current_user.employers:
+            if is_pfml_crm_user:
+                # The CRM user should be able to read any claim, so this condition can just pass.
+                #
+                # The CRM user does not use use /claims/{claim_id} yet, so this logic has explicitly not been added to user_has_access_to_claim
+                pass
+            elif is_employer and current_user and current_user.employers:
                 if employer_id:
                     employers_list = (
                         db_session.query(Employer).filter(Employer.employer_id == employer_id).all()
@@ -568,9 +579,13 @@ def get_claims() -> flask.Response:
         },
     )
 
+    response_model: Union[
+        Type[ClaimForPfmlCrmResponse], Type[ClaimResponse]
+    ] = ClaimForPfmlCrmResponse if is_pfml_crm_user else ClaimResponse
+
     return response_util.paginated_success_response(
         message="Successfully retrieved claims",
-        model=ClaimResponse,
+        model=response_model,
         page=page,
         context=pagination_context,
         status_code=200,

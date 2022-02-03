@@ -1885,6 +1885,27 @@ def assert_claim_response_equal_to_claim_query(
     assert claim_response["has_paid_payments"] == has_paid_payments
 
 
+def assert_claim_pfml_crm_response_equal_to_claim_query(claim_response, claim_query) -> bool:
+    assert claim_response["fineos_absence_id"] == claim_query.fineos_absence_id
+    assert claim_response["fineos_notification_id"] == claim_query.fineos_notification_id
+    assert claim_response["employee"]["employee_id"] == str(claim_query.employee.employee_id)
+    assert claim_response["employee"]["first_name"] == claim_query.employee.first_name
+    assert claim_response["employee"]["middle_name"] == claim_query.employee.middle_name
+    assert claim_response["employee"]["last_name"] == claim_query.employee.last_name
+    assert claim_response["employee"]["other_name"] == claim_query.employee.other_name
+
+    # Ensure only fields in ClaimForPfmlCrmResponse are returned
+    assert "claim_status" not in claim_response
+    assert "claim_type_description" not in claim_response
+    assert "has_paid_payments" not in claim_response
+    assert "employer" not in claim_response
+    assert "created_at" not in claim_response
+    assert "absence_period_end_date" not in claim_response
+    assert "absence_period_start_date" not in claim_response
+    assert "absence_periods" not in claim_response
+    assert "managed_requirements" not in claim_response
+
+
 def assert_detailed_claim_response_equal_to_claim_query(
     claim_response, claim_query, application=None, has_paid_payments=False
 ) -> bool:
@@ -2321,6 +2342,30 @@ class TestGetClaimsEndpoint:
         assert len(claim_data) == len(generated_claims)
         for i in range(3):
             assert_claim_response_equal_to_claim_query(claim_data[i], generated_claims[2 - i])
+
+    def test_get_claims_as_pfml_crm_user(self, client, snow_user_headers):
+        employer = EmployerFactory.create()
+        employee = EmployeeFactory.create()
+
+        generated_claims = [
+            ClaimFactory.create(
+                employer=employer, employee=employee, fineos_absence_status_id=1, claim_type_id=1,
+            )
+            for _ in range(3)
+        ]
+
+        response = client.get("/v1/claims", headers=snow_user_headers)
+        assert response.status_code == 200
+        response_body = response.get_json()
+        claim_data = response_body.get("data")
+
+        for i in range(3):
+            assert_claim_pfml_crm_response_equal_to_claim_query(
+                claim_data[i], generated_claims[2 - i]
+            )
+
+        # assert that all created claims are returned
+        assert len(claim_data) == 3
 
     def test_get_claims_paginated_as_leave_admin(
         self, client, employer_auth_token, employer_user, test_db_session, test_verification
@@ -3812,6 +3857,74 @@ class TestGetClaimsEndpoint:
             return client.get(
                 f"/v1/claims?search={search_string}", headers={"Authorization": f"Bearer {token}"},
             )
+
+        def perform_search_with_headers(self, search_string, client, headers):
+            return client.get(f"/v1/claims?search={search_string}", headers=headers)
+
+        def test_get_claims_snow_user(self, client, snow_user_headers):
+            response = self.perform_search_with_headers("firstn", client, snow_user_headers)
+
+            assert response.status_code == 200
+            response_body = response.get_json()
+
+            claim = response_body["data"][0]
+            assert "has_paid_payments" not in claim
+
+        def test_get_claims_search_absence_id_snow_user(
+            self, XAbsenceCase, client, snow_user_headers
+        ):
+            response = self.perform_search_with_headers("NTN-99-ABS-01", client, snow_user_headers)
+
+            assert response.status_code == 200
+            response_body = response.get_json()
+
+            claim = next(
+                (c for c in response_body["data"] if c["fineos_absence_id"] == XAbsenceCase), None,
+            )
+            assert claim is not None
+
+        def test_get_claims_for_multiple_employee_ids_as_snow_user(
+            self, client, snow_user_headers, employer_user, test_db_session
+        ):
+            employer = EmployerFactory.create()
+            employee = EmployeeFactory.create()
+            employee2 = EmployeeFactory.create()
+
+            ClaimFactory.create(
+                employer=employer, employee=employee, fineos_absence_status_id=1, claim_type_id=1,
+            )
+
+            for _ in range(5):
+                ClaimFactory.create(
+                    employer=employer,
+                    employee=employee2,
+                    fineos_absence_status_id=1,
+                    claim_type_id=1,
+                )
+
+            test_db_session.commit()
+
+            # Verify we can find a single valid employee_id when sending one
+            response1 = client.get(
+                f"/v1/claims?employee_id={employee.employee_id},{employer.employer_id}",
+                headers=snow_user_headers,
+            )
+            assert response1.status_code == 200
+            response_body1 = response1.get_json()
+            assert len(response_body1["data"]) == 1
+            assert response_body1["data"][0]["employee"]["employee_id"] == str(employee.employee_id)
+
+            # Verify we can find both valid employee_ids when sending multiple
+            response2 = client.get(
+                f"/v1/claims?employee_id={employee.employee_id},{employee2.employee_id}",
+                headers=snow_user_headers,
+            )
+            assert response2.status_code == 200
+            response_body2 = response2.get_json()
+            assert len(response_body2["data"]) == 6
+            eids_to_find = [str(employee.employee_id), str(employee2.employee_id)]
+            for found_employee in response_body2["data"]:
+                assert found_employee["employee"]["employee_id"] in eids_to_find
 
         def test_get_claims_search_first_name(self, first_employee, client, employer_auth_token):
             response = self.perform_search("firstn", client, employer_auth_token)

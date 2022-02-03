@@ -22,11 +22,6 @@ def employee():
 
 
 @pytest.fixture
-def snow_user_headers(snow_user_token):
-    return {"Authorization": "Bearer {}".format(snow_user_token), "Mass-PFML-Agent-ID": "123"}
-
-
-@pytest.fixture
 def employee_different_fineos_name():
     employee = EmployeeFactory.create(
         first_name="Foo",

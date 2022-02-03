@@ -348,6 +348,11 @@ def snow_user_token(snow_user_claims, auth_private_key):
 
 
 @pytest.fixture
+def snow_user_headers(snow_user_token):
+    return {"Authorization": "Bearer {}".format(snow_user_token), "Mass-PFML-Agent-ID": "123"}
+
+
+@pytest.fixture
 def auth_token(auth_claims, auth_private_key):
     encoded = jwt.encode(auth_claims, auth_private_key, algorithm=ALGORITHMS.RS256)
     return encoded
