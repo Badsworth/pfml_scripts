@@ -25,6 +25,7 @@ module.exports = () => {
     externals: {
       "playwright-chromium": "playwright-chromium",
       "@influxdata/influxdb-client": "@influxdata/influxdb-client",
+      "aws-crt": "aws-crt",
     },
     resolve: {
       extensions: [".ts", ".js"],
