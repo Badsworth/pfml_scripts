@@ -182,7 +182,7 @@ export const BIAP60: ScenarioSpecification = {
     label: "BIAP60",
     reason: "Child Bonding",
     reason_qualifier: "Newborn",
-    bondingDate: "future",
+    bondingDate: "past",
     work_pattern_spec: "0,240,240,240,240,240,0",
     docs: {
       MASSID: {},
