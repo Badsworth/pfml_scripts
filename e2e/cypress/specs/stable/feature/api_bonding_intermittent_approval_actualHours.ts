@@ -45,7 +45,7 @@ describe("Report of intermittent leave hours notification", () => {
                   .certificationPeriods((certPeriods) => certPeriods.prefill())
                   .acceptLeavePlan();
               })
-              .approve();
+              .approve("Completed");
             claimPage.triggerNotice("Designation Notice");
             waitForAjaxComplete();
           });
@@ -62,11 +62,11 @@ describe("Report of intermittent leave hours notification", () => {
           // Those are the specific dates fit to the scenario spec.
           // We need those so that fineos approves the actual leave time and generates payments
           const mostRecentSunday = startOfWeek(new Date());
-          const actualLeaveStart = formatISO(subDays(mostRecentSunday, 13), {
+          const actualLeaveStart = formatISO(subDays(mostRecentSunday, 20), {
             representation: "date",
           });
           const actualLeaveEnd = formatISO(
-            addDays(subDays(mostRecentSunday, 13), 4),
+            addDays(subDays(mostRecentSunday, 20), 4),
             {
               representation: "date",
             }
