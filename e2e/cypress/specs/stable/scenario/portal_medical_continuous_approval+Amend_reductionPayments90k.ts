@@ -1,5 +1,4 @@
 import { fineos, fineosPages, portal } from "../../../actions";
-
 import {
   Submission,
   ValidConcurrentLeave,
@@ -13,6 +12,8 @@ import {
   isValidPreviousLeave,
 } from "../../../../src/util/typeUtils";
 import { config } from "../../../actions/common";
+import { getHours, addBusinessDays } from "date-fns";
+import { convertToTimeZone } from "date-fns-timezone";
 
 // Used for stashing generated benefit and leave
 type LeaveAdminchanges = {
@@ -169,11 +170,32 @@ describe("Claimant uses portal to report other leaves and benefits, receives cor
       fineosPages.ClaimPage.visit(submission.fineos_absence_id).paidLeave(
         (leaveCase) => {
           if (config("HAS_FEB_RELEASE") === "true") {
+            const estTimeHour = getHours(
+              convertToTimeZone(new Date(), {
+                timeZone: "America/New_York",
+              })
+            );
+            const isBeforeEndBusinessDay = estTimeHour < 17;
+            const paymentDates = Array<Date>(2).fill(
+              addBusinessDays(new Date(), isBeforeEndBusinessDay ? 5 : 6)
+            );
             leaveCase.assertPaymentsMade([]).assertAmountsPending([
               // retroactive SIT/FIT appear in amounts pending with processing date of today
-              { net_payment_amount: 58.43, paymentInstances: 2 },
-              { net_payment_amount: 29.22, paymentInstances: 2 },
-              { net_payment_amount: 496.66, paymentInstances: 2 },
+              {
+                net_payment_amount: 58.43,
+                paymentInstances: 2,
+                paymentProcessingDates: paymentDates,
+              },
+              {
+                net_payment_amount: 29.22,
+                paymentInstances: 2,
+                paymentProcessingDates: paymentDates,
+              },
+              {
+                net_payment_amount: 496.66,
+                paymentInstances: 2,
+                paymentProcessingDates: paymentDates,
+              },
             ]);
           } else {
             leaveCase
