@@ -25,12 +25,20 @@ def get_contributing_employer_or_employee_issue(
             .one_or_none()
         )
 
-        # Employer was not in DOR data, or we haven't yet created the corresponding record in FINEOS
-        if employer is None or employer.fineos_employer_id is None:
+        # If Employer is none
+        if employer is None:
             return ValidationErrorDetail(
                 field="employer_fein",
                 type=IssueType.require_contributing_employer,
                 message="Confirm that you have the correct EIN, and that the Employer is contributing to Paid Family and Medical Leave.",
+            )
+
+        # The DOR doesn't currently provide employee wages for employers that
+        # are exempt.
+        if employer.family_exemption and employer.medical_exemption:
+            return ValidationErrorDetail(
+                field="employer_fein",
+                type=IssueType.require_non_exempt_employer,
             )
 
         # Requiring a tax identifier be present is handled by a separate validation rule.
