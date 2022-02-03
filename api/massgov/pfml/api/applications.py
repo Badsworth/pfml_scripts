@@ -165,6 +165,9 @@ def applications_import():
         fineos_web_id = register_employee(
             fineos, claim.employee_tax_identifier, application.employer_fein, db_session,  # type: ignore
         )
+        applications_service.set_application_absence_and_leave_period(
+            fineos, fineos_web_id, application, application_import_request.absence_case_id  # type: ignore
+        )
         applications_service.set_customer_detail_fields(
             fineos, fineos_web_id, application, db_session
         )

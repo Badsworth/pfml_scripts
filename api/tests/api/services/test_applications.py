@@ -1,8 +1,11 @@
+from datetime import date, datetime
+
 import mock
 import pytest
 
 import massgov
 from massgov.pfml.api.services.applications import (
+    set_application_absence_and_leave_period,
     set_customer_contact_detail_fields,
     set_customer_detail_fields,
     set_employment_status,
@@ -13,14 +16,31 @@ from massgov.pfml.api.validation.exceptions import (
     ValidationErrorDetail,
     ValidationException,
 )
-from massgov.pfml.db.models.applications import EmploymentStatus
+from massgov.pfml.db.models.applications import (
+    ContinuousLeavePeriod,
+    EmploymentStatus,
+    LeaveReason,
+    LeaveReasonQualifier,
+)
 from massgov.pfml.db.models.employees import BankAccountType, Gender, PaymentMethod
 from massgov.pfml.db.models.factories import ApplicationFactory
+from massgov.pfml.fineos.models.customer_api.spec import (
+    AbsenceDetails,
+    AbsencePeriod,
+    EpisodicLeavePeriodDetail,
+    ReportedReducedScheduleLeavePeriod,
+    TimeOffLeavePeriod,
+)
 
 
 @pytest.fixture(autouse=True)
 def setup_factories(initialize_factories_session):
     return
+
+
+@pytest.fixture
+def absence_case_id():
+    return ""
 
 
 @pytest.fixture
@@ -36,6 +56,353 @@ def fineos_client():
 @pytest.fixture
 def application():
     return ApplicationFactory.create(leave_reason_id=None)
+
+
+@pytest.fixture
+def continuous_leave_periods():
+    return [
+        TimeOffLeavePeriod(
+            startDate=date(2021, 1, 1),
+            endDate=date(2021, 2, 9),
+            status="known",
+            lastDayWorked=date(2020, 12, 30),
+            expectedReturnToWorkDate=date(2021, 2, 11),
+            startDateFullDay=True,
+            startDateOffHours=1,
+            startDateOffMinutes=5,
+            endDateOffHours=4,
+            endDateOffMinutes=0,
+            endDateFullDay=True,
+        )
+    ]
+
+
+@pytest.fixture
+def intermittent_leave_periods():
+    episodic_leave_period_detail = EpisodicLeavePeriodDetail(
+        frequency=5,
+        frequencyInterval=5,
+        frequencyIntervalBasis="Month",
+        duration=10,
+        durationBasis="week",
+    )
+    return [
+        AbsencePeriod(
+            id="PL-14449-0000002237",
+            reason="Pregnancy/Maternity",
+            reasonQualifier1="Foster Care",
+            reasonQualifier2="",
+            startDate=date(2021, 1, 29),
+            endDate=date(2021, 1, 30),
+            absenceType="Episodic",
+            episodicLeavePeriodDetail=episodic_leave_period_detail,
+            requestStatus="Pending",
+        )
+    ]
+
+
+@pytest.fixture
+def intermittent_leave_periods_not_open():
+    episodic_leave_period_detail = EpisodicLeavePeriodDetail(
+        frequency=5,
+        frequencyInterval=5,
+        frequencyIntervalBasis="Month",
+        duration=10,
+        durationBasis="week",
+    )
+    return [
+        AbsencePeriod(
+            id="PL-14449-0000002237",
+            reason="Pregnancy/Maternity",
+            reasonQualifier1="Foster Care",
+            reasonQualifier2="",
+            startDate=date(2021, 1, 29),
+            endDate=date(2021, 1, 30),
+            absenceType="Episodic",
+            episodicLeavePeriodDetail=episodic_leave_period_detail,
+            requestStatus="Approved",
+        )
+    ]
+
+
+@pytest.fixture
+def intermittent_leave_periods_invalid_leave_reason():
+    episodic_leave_period_detail = EpisodicLeavePeriodDetail(
+        frequency=5,
+        frequencyInterval=5,
+        frequencyIntervalBasis="Month",
+        duration=10,
+        durationBasis="week",
+    )
+    return [
+        AbsencePeriod(
+            id="PL-14449-0000002237",
+            reason="invalid",
+            reasonQualifier1="Foster Care",
+            reasonQualifier2="",
+            startDate=date(2021, 1, 29),
+            endDate=date(2021, 1, 30),
+            absenceType="Episodic",
+            episodicLeavePeriodDetail=episodic_leave_period_detail,
+            requestStatus="Pending",
+        )
+    ]
+
+
+@pytest.fixture
+def intermittent_leave_periods_invalid_leave_reason_qualifier():
+    episodic_leave_period_detail = EpisodicLeavePeriodDetail(
+        frequency=5,
+        frequencyInterval=5,
+        frequencyIntervalBasis="Month",
+        duration=10,
+        durationBasis="week",
+    )
+    return [
+        AbsencePeriod(
+            id="PL-14449-0000002237",
+            reason="Pregnancy/Maternity",
+            reasonQualifier1="Invalid",
+            reasonQualifier2="",
+            startDate=date(2021, 1, 29),
+            endDate=date(2021, 1, 30),
+            absenceType="Episodic",
+            episodicLeavePeriodDetail=episodic_leave_period_detail,
+            requestStatus="Pending",
+        )
+    ]
+
+
+@pytest.fixture
+def reduced_leave_periods():
+    return [
+        ReportedReducedScheduleLeavePeriod(
+            startDate=date(2021, 1, 29),
+            endDate=date(2021, 3, 29),
+            sundayOffMinutes=10,
+            mondayOffMinutes=15,
+            tuesdayOffMinutes=20,
+            wednesdayOffMinutes=40,
+            thursdayOffMinutes=45,
+            fridayOffMinutes=25,
+            saturdayOffMinutes=12,
+        )
+    ]
+
+
+@pytest.fixture
+def absence_details(continuous_leave_periods, intermittent_leave_periods, reduced_leave_periods):
+    return AbsenceDetails(
+        creationDate=datetime(2020, 10, 10),
+        notificationDate=date(2020, 10, 20),
+        reportedTimeOff=continuous_leave_periods,
+        absencePeriods=intermittent_leave_periods,
+        reportedReducedSchedule=reduced_leave_periods,
+    )
+
+
+@pytest.fixture
+def absence_details_without_open_absence_period(
+    continuous_leave_periods, intermittent_leave_periods_not_open, reduced_leave_periods
+):
+    return AbsenceDetails(
+        creationDate=datetime(2020, 10, 10),
+        notificationDate=date(2020, 10, 20),
+        reportedTimeOff=continuous_leave_periods,
+        absencePeriods=intermittent_leave_periods_not_open,
+        reportedReducedSchedule=reduced_leave_periods,
+    )
+
+
+@pytest.fixture
+def absence_details_invalid_leave_reason(
+    continuous_leave_periods, intermittent_leave_periods_invalid_leave_reason, reduced_leave_periods
+):
+    return AbsenceDetails(
+        creationDate=datetime(2020, 10, 10),
+        notificationDate=date(2020, 10, 20),
+        reportedTimeOff=continuous_leave_periods,
+        absencePeriods=intermittent_leave_periods_invalid_leave_reason,
+        reportedReducedSchedule=reduced_leave_periods,
+    )
+
+
+@pytest.fixture
+def absence_details_invalid_leave_reason_qualifier(
+    continuous_leave_periods,
+    intermittent_leave_periods_invalid_leave_reason_qualifier,
+    reduced_leave_periods,
+):
+    return AbsenceDetails(
+        creationDate=datetime(2020, 10, 10),
+        notificationDate=date(2020, 10, 20),
+        reportedTimeOff=continuous_leave_periods,
+        absencePeriods=intermittent_leave_periods_invalid_leave_reason_qualifier,
+        reportedReducedSchedule=reduced_leave_periods,
+    )
+
+
+def _compare_continuous_leave(
+    application,
+    continuous_leave: ContinuousLeavePeriod,
+    fineos_continuous_leave: TimeOffLeavePeriod,
+):
+    assert continuous_leave.application_id == application.application_id
+    assert continuous_leave.start_date == fineos_continuous_leave.startDate
+    assert continuous_leave.end_date == fineos_continuous_leave.endDate
+    assert (
+        continuous_leave.expected_return_to_work_date
+        == fineos_continuous_leave.expectedReturnToWorkDate
+    )
+    assert continuous_leave.start_date_full_day == fineos_continuous_leave.startDateFullDay
+    assert continuous_leave.start_date_off_hours == fineos_continuous_leave.startDateOffHours
+    assert continuous_leave.start_date_off_minutes == fineos_continuous_leave.startDateOffMinutes
+    assert continuous_leave.end_date_full_day == fineos_continuous_leave.endDateFullDay
+    assert continuous_leave.end_date_off_hours == fineos_continuous_leave.endDateOffHours
+    assert continuous_leave.end_date_off_minutes == fineos_continuous_leave.endDateOffMinutes
+
+
+def _compare_intermittent_leave(application, intermittent_leave, fineos_intermittent_leave):
+    assert intermittent_leave.application_id == application.application_id
+    assert intermittent_leave.start_date == fineos_intermittent_leave.startDate
+    assert intermittent_leave.end_date == fineos_intermittent_leave.endDate
+
+    episodic_detail = fineos_intermittent_leave.episodicLeavePeriodDetail
+    assert intermittent_leave.frequency == episodic_detail.frequency
+    assert intermittent_leave.frequency_interval == episodic_detail.frequencyInterval
+    assert intermittent_leave.frequency_interval_basis == episodic_detail.frequencyIntervalBasis
+    assert intermittent_leave.duration == episodic_detail.duration
+    assert intermittent_leave.duration_basis == episodic_detail.durationBasis
+
+
+def _compare_reduced_leave(application, reduced_leave, fineos_reduced_leave):
+    assert reduced_leave.application_id == application.application_id
+    assert reduced_leave.start_date == fineos_reduced_leave.startDate
+    assert reduced_leave.end_date == fineos_reduced_leave.endDate
+    assert reduced_leave.sunday_off_minutes == fineos_reduced_leave.sundayOffMinutes
+    assert reduced_leave.monday_off_minutes == fineos_reduced_leave.mondayOffMinutes
+    assert reduced_leave.tuesday_off_minutes == fineos_reduced_leave.tuesdayOffMinutes
+    assert reduced_leave.wednesday_off_minutes == fineos_reduced_leave.wednesdayOffMinutes
+    assert reduced_leave.thursday_off_minutes == fineos_reduced_leave.thursdayOffMinutes
+    assert reduced_leave.friday_off_minutes == fineos_reduced_leave.fridayOffMinutes
+    assert reduced_leave.saturday_off_minutes == fineos_reduced_leave.saturdayOffMinutes
+
+
+@mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_absence")
+def test_set_application_absence_and_leave_period(
+    mock_get_absence, fineos_client, fineos_web_id, absence_case_id, application, absence_details
+):
+    mock_get_absence.return_value = absence_details
+    set_application_absence_and_leave_period(
+        fineos_client, fineos_web_id, application, absence_case_id
+    )
+
+    assert len(application.continuous_leave_periods) == 1
+    assert application.has_continuous_leave_periods
+    continuous_leave = application.continuous_leave_periods[0]
+    fineos_continuous_leave = absence_details.reportedTimeOff[0]
+    _compare_continuous_leave(application, continuous_leave, fineos_continuous_leave)
+
+    assert len(application.intermittent_leave_periods) == 1
+    assert application.has_intermittent_leave_periods
+    intermittent_leave = application.intermittent_leave_periods[0]
+    fineos_intermittent_leave = absence_details.absencePeriods[0]
+    _compare_intermittent_leave(application, intermittent_leave, fineos_intermittent_leave)
+
+    assert len(application.reduced_schedule_leave_periods) == 1
+    assert application.has_reduced_schedule_leave_periods
+    reduced_leave = application.reduced_schedule_leave_periods[0]
+    fineos_reduced_leave = absence_details.reportedReducedSchedule[0]
+    _compare_reduced_leave(application, reduced_leave, fineos_reduced_leave)
+
+    assert application.leave_reason_id == LeaveReason.get_id(
+        absence_details.absencePeriods[0].reason
+    )
+    assert application.leave_reason_qualifier_id == LeaveReasonQualifier.get_id(
+        absence_details.absencePeriods[0].reasonQualifier1
+    )
+    assert application.pregnant_or_recent_birth
+
+    assert application.submitted_time == absence_details.creationDate
+    assert application.employer_notification_date == absence_details.notificationDate
+    assert application.employer_notified
+
+
+@mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_absence")
+def test_set_application_absence_and_leave_period_without_open_absence_period(
+    mock_get_absence,
+    fineos_client,
+    fineos_web_id,
+    absence_case_id,
+    application,
+    absence_details_without_open_absence_period,
+):
+    mock_get_absence.return_value = absence_details_without_open_absence_period
+    set_application_absence_and_leave_period(
+        fineos_client, fineos_web_id, application, absence_case_id
+    )
+
+    assert len(application.continuous_leave_periods) == 1
+    assert application.has_continuous_leave_periods
+    continuous_leave = application.continuous_leave_periods[0]
+    fineos_continuous_leave = absence_details_without_open_absence_period.reportedTimeOff[0]
+    _compare_continuous_leave(application, continuous_leave, fineos_continuous_leave)
+
+    assert len(application.intermittent_leave_periods) == 1
+    assert application.has_intermittent_leave_periods
+    intermittent_leave = application.intermittent_leave_periods[0]
+    fineos_intermittent_leave = absence_details_without_open_absence_period.absencePeriods[0]
+    _compare_intermittent_leave(application, intermittent_leave, fineos_intermittent_leave)
+
+    assert len(application.reduced_schedule_leave_periods) == 1
+    assert application.has_reduced_schedule_leave_periods
+    reduced_leave = application.reduced_schedule_leave_periods[0]
+    fineos_reduced_leave = absence_details_without_open_absence_period.reportedReducedSchedule[0]
+    _compare_reduced_leave(application, reduced_leave, fineos_reduced_leave)
+
+    assert application.leave_reason_id is None
+
+    assert application.leave_reason_qualifier_id is None
+    assert application.pregnant_or_recent_birth is False
+
+    assert application.submitted_time == absence_details_without_open_absence_period.creationDate
+    assert (
+        application.employer_notification_date
+        == absence_details_without_open_absence_period.notificationDate
+    )
+    assert application.employer_notified
+
+
+@mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_absence")
+def test_set_application_absence_and_leave_period_invalid_leave_reason(
+    mock_get_absence,
+    fineos_client,
+    fineos_web_id,
+    absence_case_id,
+    application,
+    absence_details_invalid_leave_reason,
+):
+    mock_get_absence.return_value = absence_details_invalid_leave_reason
+    with pytest.raises(KeyError):
+        set_application_absence_and_leave_period(
+            fineos_client, fineos_web_id, application, absence_case_id
+        )
+
+
+@mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_absence")
+def test_set_application_absence_and_leave_period_invalid_leave_reason_qualifier(
+    mock_get_absence,
+    fineos_client,
+    fineos_web_id,
+    absence_case_id,
+    application,
+    absence_details_invalid_leave_reason_qualifier,
+):
+    mock_get_absence.return_value = absence_details_invalid_leave_reason_qualifier
+    with pytest.raises(KeyError):
+        set_application_absence_and_leave_period(
+            fineos_client, fineos_web_id, application, absence_case_id
+        )
 
 
 @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.read_customer_details")

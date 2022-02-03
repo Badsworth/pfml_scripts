@@ -524,13 +524,13 @@ class ReducedScheduleLeavePeriod(Base, TimestampMixin):
     start_date = Column(Date)
     end_date = Column(Date)
     is_estimated = Column(Boolean, default=True, nullable=False)
-    thursday_off_minutes = Column(Integer)
-    friday_off_minutes = Column(Integer)
-    saturday_off_minutes = Column(Integer)
     sunday_off_minutes = Column(Integer)
     monday_off_minutes = Column(Integer)
     tuesday_off_minutes = Column(Integer)
     wednesday_off_minutes = Column(Integer)
+    thursday_off_minutes = Column(Integer)
+    friday_off_minutes = Column(Integer)
+    saturday_off_minutes = Column(Integer)
 
     application = relationship(Application, back_populates="reduced_schedule_leave_periods")
 

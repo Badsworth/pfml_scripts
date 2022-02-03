@@ -1,6 +1,7 @@
 from decimal import Decimal
 from re import Pattern
 from typing import Any, Dict, List, Literal, Optional, Type, Union
+from uuid import UUID
 
 import phonenumbers
 from phonenumbers.phonenumberutil import region_code_for_number
@@ -42,6 +43,10 @@ from massgov.pfml.db.models.applications import (
     EmployerBenefitType,
     EmploymentStatus,
     IntermittentLeavePeriod,
+)
+from massgov.pfml.db.models.applications import LeaveReason as DBLeaveReason
+from massgov.pfml.db.models.applications import (
+    LeaveReasonQualifier,
     LkPhoneType,
     OtherIncome,
     OtherIncomeType,
@@ -58,15 +63,23 @@ from massgov.pfml.db.models.applications import (
     WorkPatternType,
 )
 from massgov.pfml.db.models.employees import (
+    AbsencePeriodType,
     Address,
     AddressType,
     Claim,
     GeoState,
+    LeaveRequestDecision,
     LkAddressType,
     LkGender,
     User,
 )
-from massgov.pfml.fineos.client import AbstractFINEOSClient
+from massgov.pfml.fineos import AbstractFINEOSClient
+from massgov.pfml.fineos.models.customer_api.spec import (
+    AbsenceDetails,
+    AbsencePeriod,
+    ReportedReducedScheduleLeavePeriod,
+    ReportedTimeOffLeavePeriod,
+)
 from massgov.pfml.util.datetime import utcnow
 from massgov.pfml.util.pydantic.types import Regexes
 
@@ -1010,6 +1023,148 @@ def set_customer_detail_fields(
             zip=details.customerAddress.address.postCode,
         )
         add_or_update_address(db_session, address_to_create, AddressType.RESIDENTIAL, application)
+
+
+def _parse_continuous_leave_period(
+    application_id: UUID, time_off: ReportedTimeOffLeavePeriod
+) -> ContinuousLeavePeriod:
+    return ContinuousLeavePeriod(
+        application_id=application_id,
+        start_date=time_off.startDate,
+        end_date=time_off.endDate,
+        expected_return_to_work_date=time_off.expectedReturnToWorkDate,
+        start_date_full_day=time_off.startDateFullDay,
+        start_date_off_hours=time_off.startDateOffHours,
+        start_date_off_minutes=time_off.startDateOffMinutes,
+        end_date_full_day=time_off.endDateFullDay,
+        end_date_off_hours=time_off.endDateOffHours,
+        end_date_off_minutes=time_off.endDateOffMinutes,
+    )
+
+
+def _parse_intermittent_leave_period(
+    application_id: UUID, absence_period: AbsencePeriod
+) -> IntermittentLeavePeriod:
+    leave_period = IntermittentLeavePeriod()
+    if absence_period.episodicLeavePeriodDetail is None:
+        error = ValueError("Episodic absence period is missing episodicLeavePeriodDetail")
+        raise error
+    leave_period.application_id = application_id
+    leave_period.start_date = absence_period.startDate
+    leave_period.end_date = absence_period.endDate
+
+    episodic_detail = absence_period.episodicLeavePeriodDetail
+    leave_period.frequency = episodic_detail.frequency
+    leave_period.frequency_interval = episodic_detail.frequencyInterval
+    leave_period.frequency_interval_basis = episodic_detail.frequencyIntervalBasis
+    leave_period.duration = episodic_detail.duration
+    leave_period.duration_basis = episodic_detail.durationBasis
+
+    return leave_period
+
+
+def _parse_reduced_leave_period(
+    application_id: UUID, reduced_period: ReportedReducedScheduleLeavePeriod
+) -> ReducedScheduleLeavePeriod:
+    return ReducedScheduleLeavePeriod(
+        application_id=application_id,
+        start_date=reduced_period.startDate,
+        end_date=reduced_period.endDate,
+        sunday_off_minutes=reduced_period.sundayOffMinutes,
+        monday_off_minutes=reduced_period.mondayOffMinutes,
+        tuesday_off_minutes=reduced_period.tuesdayOffMinutes,
+        wednesday_off_minutes=reduced_period.wednesdayOffMinutes,
+        thursday_off_minutes=reduced_period.thursdayOffMinutes,
+        friday_off_minutes=reduced_period.fridayOffMinutes,
+        saturday_off_minutes=reduced_period.saturdayOffMinutes,
+    )
+
+
+def _set_continuous_leave_periods(
+    application: Application, absence_details: AbsenceDetails
+) -> None:
+
+    continuous_leave_periods: List[ContinuousLeavePeriod] = []
+    if absence_details.reportedTimeOff:
+        for time_off in absence_details.reportedTimeOff:
+            time_off_leave = _parse_continuous_leave_period(application.application_id, time_off)
+            continuous_leave_periods.append(time_off_leave)
+
+    application.continuous_leave_periods = continuous_leave_periods
+    application.has_continuous_leave_periods = len(continuous_leave_periods) > 0
+
+
+def _set_intermittent_leave_periods(
+    application: Application, absence_details: AbsenceDetails
+) -> None:
+    intermittent_leave_periods: List[IntermittentLeavePeriod] = []
+
+    if absence_details.absencePeriods:
+        for absence_period in absence_details.absencePeriods:
+            if (
+                absence_period.absenceType
+                == AbsencePeriodType.EPISODIC.absence_period_type_description
+            ):
+
+                intermittent_leave = _parse_intermittent_leave_period(
+                    application.application_id, absence_period
+                )
+                intermittent_leave_periods.append(intermittent_leave)
+
+    application.intermittent_leave_periods = intermittent_leave_periods
+    application.has_intermittent_leave_periods = len(intermittent_leave_periods) > 0
+
+
+def _set_reduced_leave_periods(application: Application, absence_details: AbsenceDetails) -> None:
+    reduced_schedule_leave_periods: List[ReducedScheduleLeavePeriod] = []
+
+    if absence_details.reportedReducedSchedule:
+        for reduced_period in absence_details.reportedReducedSchedule:
+            reduced_leave = _parse_reduced_leave_period(application.application_id, reduced_period)
+            reduced_schedule_leave_periods.append(reduced_leave)
+
+    application.has_reduced_schedule_leave_periods = len(reduced_schedule_leave_periods) > 0
+    application.reduced_schedule_leave_periods = reduced_schedule_leave_periods
+
+
+def _get_open_absence_period(absence_details: AbsenceDetails) -> Optional[AbsencePeriod]:
+    if absence_details.absencePeriods:
+        for absence_period in absence_details.absencePeriods:
+            if (
+                absence_period.requestStatus
+                == LeaveRequestDecision.PENDING.leave_request_decision_description
+            ):
+                return absence_period
+    return None
+
+
+def set_application_absence_and_leave_period(
+    fineos: AbstractFINEOSClient, fineos_web_id: str, application: Application, absence_id: str
+) -> None:
+    absence_details = fineos.get_absence(fineos_web_id, absence_id)
+
+    open_absence_period: Optional[AbsencePeriod] = None
+
+    _set_continuous_leave_periods(application, absence_details)
+    _set_intermittent_leave_periods(application, absence_details)
+    _set_reduced_leave_periods(application, absence_details)
+    open_absence_period = _get_open_absence_period(absence_details)
+
+    if open_absence_period is not None:
+        if open_absence_period.reason is not None:
+            application.leave_reason_id = DBLeaveReason.get_id(open_absence_period.reason)
+        if open_absence_period.reasonQualifier1 is not None:
+            application.leave_reason_qualifier_id = LeaveReasonQualifier.get_id(
+                open_absence_period.reasonQualifier1
+            )
+        application.pregnant_or_recent_birth = (
+            application.leave_reason_id == DBLeaveReason.PREGNANCY_MATERNITY.leave_reason_id
+        )
+    application.submitted_time = absence_details.creationDate
+    application.employer_notification_date = absence_details.notificationDate
+    application.employer_notified = application.employer_notification_date is not None
+
+    return
 
 
 def set_employment_status(

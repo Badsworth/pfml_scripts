@@ -26,10 +26,12 @@ from massgov.pfml.db.models.applications import (
     DocumentType,
     EmploymentStatus,
     FINEOSWebIdExt,
+    IntermittentLeavePeriod,
     LeaveReason,
     LeaveReasonQualifier,
     NoClaimTypeForAbsenceType,
     Phone,
+    ReducedScheduleLeavePeriod,
     RelationshipQualifier,
     RelationshipToCaregiver,
     WorkPattern,
@@ -75,7 +77,14 @@ from massgov.pfml.fineos.exception import (
     FINEOSFatalUnavailable,
 )
 from massgov.pfml.fineos.factory import FINEOSClientConfig
-from massgov.pfml.fineos.models.customer_api.spec import ReadCustomerOccupation
+from massgov.pfml.fineos.models.customer_api.spec import (
+    AbsenceDetails,
+    AbsencePeriod,
+    EpisodicLeavePeriodDetail,
+    ReadCustomerOccupation,
+    ReportedReducedScheduleLeavePeriod,
+    TimeOffLeavePeriod,
+)
 from massgov.pfml.util.paginate.paginator import DEFAULT_PAGE_SIZE
 from massgov.pfml.util.strings import format_tax_identifier
 
@@ -611,6 +620,131 @@ class TestApplicationsImport:
 
         assert imported_application.phone.phone_number == "+13214567890"
         assert imported_application.phone.phone_type_id == 1
+
+    @pytest.fixture
+    def absence_details(self):
+        return AbsenceDetails(
+            creationDate=datetime(2020, 10, 10),
+            notificationDate=date(2020, 10, 20),
+            reportedTimeOff=[
+                TimeOffLeavePeriod(
+                    startDate=date(2021, 1, 1),
+                    endDate=date(2021, 2, 9),
+                    status="known",
+                    lastDayWorked=date(2020, 12, 30),
+                    expectedReturnToWorkDate=date(2021, 2, 11),
+                    startDateFullDay=True,
+                    startDateOffHours=1,
+                    startDateOffMinutes=5,
+                    endDateOffHours=4,
+                    endDateOffMinutes=0,
+                    endDateFullDay=True,
+                )
+            ],
+            absencePeriods=[
+                AbsencePeriod(
+                    id="PL-14449-0000002237",
+                    reason="Pregnancy/Maternity",
+                    reasonQualifier1="Foster Care",
+                    reasonQualifier2="",
+                    startDate=date(2021, 1, 29),
+                    endDate=date(2021, 1, 30),
+                    absenceType="Episodic",
+                    episodicLeavePeriodDetail=EpisodicLeavePeriodDetail(
+                        frequency=5,
+                        frequencyInterval=5,
+                        frequencyIntervalBasis="Days",
+                        duration=10,
+                        durationBasis="Days",
+                    ),
+                    requestStatus="Pending",
+                )
+            ],
+            reportedReducedSchedule=[
+                ReportedReducedScheduleLeavePeriod(
+                    startDate=date(2021, 1, 29),
+                    endDate=date(2021, 3, 29),
+                    sundayOffMinutes=10,
+                    mondayOffMinutes=15,
+                    tuesdayOffMinutes=20,
+                    wednesdayOffMinutes=40,
+                    thursdayOffMinutes=45,
+                    fridayOffMinutes=25,
+                    saturdayOffMinutes=12,
+                )
+            ],
+        )
+
+    @pytest.fixture
+    def absence_details_invalid(self, absence_details):
+        absence_details_invalid = absence_details.copy(deep=True)
+        absence_details_invalid.absencePeriods[0].reason = "Invalid"
+        return absence_details_invalid
+
+    @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_absence")
+    def test_applications_import_with_absence_period(
+        self,
+        mock_get_absence,
+        client,
+        user,
+        auth_token,
+        test_db_session,
+        claim,
+        absence_details,
+        valid_request_body,
+    ):
+        mock_get_absence.return_value = absence_details
+
+        assert test_db_session.query(Application).one_or_none() is None
+        assert test_db_session.query(ContinuousLeavePeriod).one_or_none() is None
+        assert test_db_session.query(IntermittentLeavePeriod).one_or_none() is None
+        assert test_db_session.query(ReducedScheduleLeavePeriod).one_or_none() is None
+
+        response = client.post(
+            "/v1/applications/import",
+            headers={"Authorization": f"Bearer {auth_token}"},
+            json=valid_request_body,
+        )
+
+        assert response.status_code == 201
+
+        imported_application = (
+            test_db_session.query(Application).filter(Application.claim_id == claim.claim_id).one()
+        )
+
+        continuous_leave = test_db_session.query(ContinuousLeavePeriod).all()
+        intermittent_leave = test_db_session.query(IntermittentLeavePeriod).all()
+        reduced_leave = test_db_session.query(ReducedScheduleLeavePeriod).all()
+
+        assert len(continuous_leave) == 1
+        assert continuous_leave[0].application_id == imported_application.application_id
+
+        assert len(intermittent_leave) == 1
+        assert intermittent_leave[0].application_id == imported_application.application_id
+
+        assert len(reduced_leave) == 1
+        assert reduced_leave[0].application_id == imported_application.application_id
+
+    @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_absence")
+    def test_applications_import_with_absence_period_invalid(
+        self,
+        mock_get_absence,
+        client,
+        user,
+        auth_token,
+        claim,
+        absence_details_invalid,
+        valid_request_body,
+    ):
+        mock_get_absence.return_value = absence_details_invalid
+
+        response = client.post(
+            "/v1/applications/import",
+            headers={"Authorization": f"Bearer {auth_token}"},
+            json=valid_request_body,
+        )
+
+        assert response.status_code == 500
 
 
 def test_applications_post_start_app(client, user, auth_token, test_db_session):
