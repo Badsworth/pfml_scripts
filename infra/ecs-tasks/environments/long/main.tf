@@ -72,6 +72,11 @@ module "tasks" {
   payment_audit_report_outbound_folder_path = "s3://massgov-pfml-long-agency-transfer/audit/outbound"
   payment_audit_report_sent_folder_path     = "s3://massgov-pfml-long-agency-transfer/audit/sent"
 
+  enable_pub_automation_fineos                   = true
+  enable_pub_automation_create_pub_files         = true
+  enable_pub_automation_process_returns          = false
+  enable_pub_payments_copy_audit_report_schedule = true
+
   enable_register_admins_job = true
 
   rmv_client_base_url               = "https://atlas-staging-gateway.massdot.state.ma.us/vs"
