@@ -1,6 +1,6 @@
 import enum
 import uuid
-from typing import NamedTuple
+from typing import Any, List
 
 import massgov.pfml.delegated_payments.irs_1099.pfml_1099_util as pfml_1099_util
 import massgov.pfml.util.logging
@@ -40,7 +40,7 @@ class Populate1099Step(Step):
 
         logger.info("Successfully moved claimants to 1099 payments batch.")
 
-    def _populate_1099(self, batch: Pfml1099Batch, claimant_results: NamedTuple) -> None:
+    def _populate_1099(self, batch: Pfml1099Batch, claimant_results: List[Any]) -> None:
         logger.info("1099 Documents - Populate 1099 Step")
 
         # Create 1099 records for each claimant
