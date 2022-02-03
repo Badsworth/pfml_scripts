@@ -8,10 +8,12 @@
 #   poetry run python3 -i -m massgov.pfml.tool.console.interactive
 #
 
+import importlib
 import itertools
 import logging  # noqa: B1
 import sys
 import time
+from types import ModuleType
 from typing import Union
 
 import PIL.Image
@@ -25,7 +27,9 @@ import massgov.pfml.db
 import massgov.pfml.db.config
 import massgov.pfml.db.models
 import massgov.pfml.db.models.base
+import massgov.pfml.db.models.factories
 import massgov.pfml.fineos
+import massgov.pfml.util
 import massgov.pfml.util.logging
 
 logger = massgov.pfml.util.logging.get_logger("massgov.pfml.repl")
@@ -74,13 +78,38 @@ def interactive_console() -> dict:
     sys.ps1 = "\npfml >>> "
     sys.ps2 = "pfml ... "
 
-    variables = locals()
+    variables = dict()
     variables.update(vars(massgov.pfml.db.models.applications))
     variables.update(vars(massgov.pfml.db.models.employees))
     variables.update(vars(massgov.pfml.db.models.industry_codes))
     variables.update(vars(massgov.pfml.db.models.payments))
     variables.update(vars(massgov.pfml.db.models.verifications))
+
+    # This goes after the imports of entire modules, so the console reserved
+    # names (db, fineos, etc) take precedence. This might break some modules
+    # that expect something different under those names.
+    variables.update(locals())
+
     variables["who_am_i"] = pfml_mascot
+
+    # DB Factories
+    factories_module = massgov.pfml.db.models.factories
+
+    if isinstance(db, sqlalchemy.orm.scoped_session):
+        factories_module.db_session = db
+
+    variables["f"] = factories_module
+
+    # Easy access to utilities
+    variables["u"] = massgov.pfml.util
+    variables["util"] = massgov.pfml.util
+
+    # Easy reloading of modules imported in REPL, for retrying something after a
+    # code change without dropping out of REPL
+    variables["r"] = reload_repl
+    variables["reload"] = reload_repl
+
+    variables["reload_module"] = reload_module
 
     return variables
 
@@ -117,6 +146,16 @@ def pfml_mascot(image_path="massgov/pfml/tool/console/terrier_gong.png"):
             width=99,
         )
     )
+
+
+def reload_repl():
+    for _k, v in globals().items():
+        if isinstance(v, ModuleType):
+            importlib.reload(v)
+
+
+def reload_module(m):
+    importlib.reload(m)
 
 
 if __name__ == "__main__":
