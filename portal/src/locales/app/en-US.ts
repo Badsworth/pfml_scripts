@@ -549,10 +549,11 @@ const errors = {
     attemptsLimitExceeded_updatePhone:
       "We couldn't add your phone number because you've exceeded the number of allowed attempts. You can try again later.",
     code: {
+      attemptsExceeded:
+        "Your account is temporarily locked because of too many failed verification attempts. Wait 15 minutes before trying again.",
       deliveryFailure:
         "We encountered an error while sending the verification code. Try again.",
-      expired:
-        "Sorry, your verification code has expired or has already been used.",
+      expired: "Your verification code has expired or has already been used.",
       invalidMFACode:
         "The security code you entered is invalid. Make sure the code matches the security code we texted to you.",
       mismatchException:
@@ -683,7 +684,7 @@ const errors = {
       phone_number: {
         // Used by the mfa service, more than 12 digits
         international_number:
-          "Sorry, we don't support international phone numbers yet. Enter a U.S. phone number to set up additional login verifications.",
+          "We don't support international phone numbers yet. Enter a U.S. phone number to set up additional login verifications.",
         // There are 10 digits
         pattern: "Enter a valid phone number",
         // Used by the mfa service, field cant be blank
