@@ -51,7 +51,7 @@ export default class Step {
   notApplicableCond?: (context: Context) => boolean;
   /**
    * Optional method for evaluating whether a step is waiting for manual review,
-   * based on the Step's `context`. This is useful if a Step needs to be 
+   * based on the Step's `context`. This is useful if a Step needs to be
    * reviewed by the Contact Center before the user can proceed
    */
   manualReviewCond?: (context: Context) => boolean;

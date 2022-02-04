@@ -89,7 +89,8 @@ const Step = (props: StepProps) => {
   const inManualReview = props.status === "manual_review";
   const notApplicable = props.status === "not_applicable";
   const notStarted = props.status === "not_started";
-  const showChildren = inManualReview || inProgress || notStarted || notApplicable;
+  const showChildren =
+    inManualReview || inProgress || notStarted || notApplicable;
 
   const editCompletedStep = (
     <React.Fragment>

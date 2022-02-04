@@ -5,6 +5,7 @@ import withBenefitsApplication, {
 import Alert from "../../components/core/Alert";
 import ConditionalContent from "../../components/ConditionalContent";
 import Details from "../../components/core/Details";
+import Button from "../../components/core/Button";
 import { EmploymentStatus as EmploymentStatusEnum } from "../../models/BenefitsApplication";
 import InputChoice from "../../components/core/InputChoice";
 import InputChoiceGroup from "../../components/core/InputChoiceGroup";
@@ -16,18 +17,15 @@ import { isFeatureEnabled } from "../../services/featureFlags";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import { headers } from "next.config";
-import AppErrorInfo from "src/models/AppErrorInfo";
 
 export const fields = [
   "claim.employment_status",
   "claim.employer_fein",
-  "claim.unf.date_of_hire",
+  // "claim.unf.date_of_hire",
 ];
 
 export const EmploymentStatus = (props: WithBenefitsApplicationProps) => {
   const { appLogic, claim } = props;
-  //appLogic.appErrors.push(new AppErrorInfo({field: "employment_status", name: "Invalid", message: "Invalid message"}))
   const { t } = useTranslation();
 
   // TODO (CP-1281): Show employment status question when Portal supports other employment statuses
@@ -46,12 +44,11 @@ export const EmploymentStatus = (props: WithBenefitsApplicationProps) => {
     useFormState(initialFormState);
   const employment_status = get(formState, "employment_status");
 
-  const handleSave = () => {
-    console.log(formState);
+  const handleSave = async () => {
     // If they selected that they are exempt, update the UNF submission
     // instead of saving the application.
     // else
-    appLogic.benefitsApplications.update(claim.application_id, formState);
+    await appLogic.benefitsApplications.update(claim.application_id, formState);
     // Somehow call another API to save to another table.
   };
 
@@ -65,67 +62,87 @@ export const EmploymentStatus = (props: WithBenefitsApplicationProps) => {
     "employed",
     "employedNotFound",
     "employedExempt",
-    //"unemployed",
-    //"selfEmployed",
+    "unemployed",
+    "selfEmployed",
   ];
-  //console.log({...getFunctionalInputProps("employer_fein")});
+
+  // console.log({isUserNotFound: (get(claim, "employment_status") === EmploymentStatusEnum.employedNotFound || get(claim, "employment_status") === EmploymentStatusEnum.employedExempt) && !get(claim, "unf.submitted_at")})
+
+  const startUNFFlowOnClick = (e) => {
+    appLogic.portalFlow.goToPageFor(
+      "CONTINUE",
+      { claim },
+      { claim_id: claim.application_id }
+    );
+  };
 
   return (
-    <QuestionPage
-      title={t("pages.claimsEmploymentStatus.title")}
-      onSave={handleSave}
-    >
-      {/* Create enableUNFFlow feature flag */}
-
-      {!showEmploymentStatus && (
-        <Alert state="info" neutral>
-          <Trans
-            i18nKey="pages.claimsEmploymentStatus.alertBody"
-            components={{
-              "contact-center-phone-link": (
-                <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
-              ),
-              p: <p />,
-            }}
-          />
-        </Alert>
-      )}
-
-      {showEmploymentStatus && (
-        <InputChoiceGroup
-          {...getFunctionalInputProps("employment_status")}
-          choices={choiceKeys.map((key) => ({
-            checked: employment_status === EmploymentStatusEnum[key],
-            label: t("pages.claimsEmploymentStatus.choiceLabel", {
-              context: key,
-            }),
-            value: EmploymentStatusEnum[key],
-          }))}
-          label={t("pages.claimsEmploymentStatus.sectionLabel")}
-          hint={
-            <Details label={t("pages.claimsEmploymentStatus.furloughQuestion")}>
-              {t("pages.claimsEmploymentStatus.furloughAnswer")}
-            </Details>
-          }
-          type="radio"
-        />
-      )}
-      <ConditionalContent
-        fieldNamesClearedWhenHidden={["employer_fein"]}
-        getField={getField}
-        clearField={clearField}
-        updateFields={updateFields}
-        visible={true}
+    <React.Fragment>
+      <QuestionPage
+        title={t("pages.claimsEmploymentStatus.title")}
+        onSave={handleSave}
       >
-        <InputText
-          {...getFunctionalInputProps("employer_fein")}
-          inputMode="numeric"
-          label={t("pages.claimsEmploymentStatus.feinLabel")}
-          mask="fein"
-          hint={t("pages.claimsEmploymentStatus.feinHint")}
-        />
-      </ConditionalContent>
-    </QuestionPage>
+        {/* Create enableUNFFlow feature flag */}
+
+        {!showEmploymentStatus && (
+          <Alert state="info" neutral>
+            <Trans
+              i18nKey="pages.claimsEmploymentStatus.alertBody"
+              components={{
+                "contact-center-phone-link": (
+                  <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
+                ),
+                p: <p />,
+              }}
+            />
+          </Alert>
+        )}
+
+        {showEmploymentStatus && (
+          <InputChoiceGroup
+            {...getFunctionalInputProps("employment_status")}
+            choices={choiceKeys.map((key) => ({
+              checked: employment_status === EmploymentStatusEnum[key],
+              label: t("pages.claimsEmploymentStatus.choiceLabel", {
+                context: key,
+              }),
+              value: EmploymentStatusEnum[key],
+            }))}
+            label={t("pages.claimsEmploymentStatus.sectionLabel")}
+            hint={
+              <Details
+                label={t("pages.claimsEmploymentStatus.furloughQuestion")}
+              >
+                {t("pages.claimsEmploymentStatus.furloughAnswer")}
+              </Details>
+            }
+            type="radio"
+          />
+        )}
+        <ConditionalContent
+          fieldNamesClearedWhenHidden={["employer_fein"]}
+          getField={getField}
+          clearField={clearField}
+          updateFields={updateFields}
+          visible={true}
+        >
+          <InputText
+            {...getFunctionalInputProps("employer_fein")}
+            inputMode="numeric"
+            label={t("pages.claimsEmploymentStatus.feinLabel")}
+            mask="fein"
+            hint={t("pages.claimsEmploymentStatus.feinHint")}
+          />
+        </ConditionalContent>
+      </QuestionPage>
+      <Button
+        className="margin-top-4"
+        type="button"
+        onClick={startUNFFlowOnClick}
+      >
+        Move on
+      </Button>
+    </React.Fragment>
   );
 };
 

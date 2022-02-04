@@ -86,6 +86,10 @@ export const guards: { [guardName: string]: ClaimFlowGuardFn } = {
     get(claim, "employer_organization_units", []).length > 0,
   isEmployed: ({ claim }) =>
     get(claim, "employment_status") === EmploymentStatus.employed,
+  isUserNotFound: ({ claim }) =>
+    (get(claim, "employment_status") === EmploymentStatus.employedNotFound ||
+      get(claim, "employment_status") === EmploymentStatus.employedExempt) &&
+    !get(claim, "unf.submitted_at"),
   isCompleted: ({ claim }) => claim?.isCompleted === true,
   hasStateId: ({ claim }) => claim?.has_state_id === true,
   hasConcurrentLeave: ({ claim }) => claim?.has_concurrent_leave === true,
@@ -636,15 +640,13 @@ const claimantFlow: {
             target: routes.applications.notifiedEmployer,
             cond: "isEmployed",
           },
-          /*
           {
-            target: extended or UNF flow
-            cond: (employerNotFound || employerExempt) && !claim.unf.submitted_at
+            target: routes.applications.notifiedEmployer,
+            cond: "isUserNotFound",
           },
-          */
-          {
-            target: routes.applications.checklist,
-          },
+          // {
+          //   target: routes.applications.checklist,
+          // },
         ],
       },
     },
