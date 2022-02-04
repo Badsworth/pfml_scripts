@@ -2449,6 +2449,7 @@ const pages: {
     filtersToggle: "Show filters",
     filtersToggle_expanded: "Hide filters",
     noClaimResults: "No applications on file",
+    numAbsencePeriodsHidden: "+ {{hiddenCount}} more",
     respondBy: "Respond by {{ date }}",
     reviewAction: "Review Application",
     searchLabel: "Search for employee name or application ID",

@@ -219,50 +219,66 @@ const LeaveDetailsCell = (props: {
 }) => {
   const { absence_periods } = props;
   const { t } = useTranslation();
+  const maxPeriodsShown = 2;
+  const additionalPeriods = absence_periods.length - maxPeriodsShown;
 
   return (
     <React.Fragment>
-      {AbsencePeriod.sortNewToOld(absence_periods).map((period, index) => (
-        <div
-          key={index}
-          className={classNames(
-            "grid-row grid-gap-1",
-            // Put space between the cell's heading when stacked
-            "margin-top-1 mobile-lg:margin-top-0",
-            {
-              // Put space between the absence periods
-              "padding-top-2": index > 0,
-            }
-          )}
-          data-testid="absence-period"
-        >
-          <div className="desktop:grid-col-auto">
-            {/* 2px top margin to vertically align text when side-by-side */}
-            <AbsencePeriodStatusTag
-              className="minw-15 margin-top-2px margin-bottom-05"
-              request_decision={period.request_decision}
-            />
-          </div>
-          <div className="desktop:grid-col-fill text-wrap">
-            <div className="text-medium">
-              {t("pages.employersDashboard.absencePeriodReason", {
-                context: findKeyByValue(LeaveReason, period.reason),
-              })}
-            </div>
-
-            {formatDateRange(
-              period.absence_period_start_date,
-              period.absence_period_end_date
+      {AbsencePeriod.sortNewToOld(absence_periods)
+        .slice(0, maxPeriodsShown)
+        .map((period, index) => (
+          <div
+            key={index}
+            className={classNames(
+              "grid-row grid-gap-1",
+              // Put space between the cell's heading when stacked
+              "margin-top-1 mobile-lg:margin-top-0",
+              {
+                // Put space between the absence periods
+                "padding-top-2": index > 0,
+              }
             )}
+            data-testid="absence-period"
+          >
+            <div className="desktop:grid-col-auto">
+              {/* 2px top margin to vertically align text when side-by-side */}
+              <AbsencePeriodStatusTag
+                className="minw-15 margin-top-2px margin-bottom-05"
+                request_decision={period.request_decision}
+              />
+            </div>
+            <div className="desktop:grid-col-fill text-wrap">
+              <div className="text-medium">
+                {t("pages.employersDashboard.absencePeriodReason", {
+                  context: findKeyByValue(LeaveReason, period.reason),
+                })}
+              </div>
 
-            <div className="font-body-2xs">
-              {t("pages.employersDashboard.absencePeriodType", {
-                context: period.period_type,
+              {formatDateRange(
+                period.absence_period_start_date,
+                period.absence_period_end_date
+              )}
+
+              <div className="font-body-2xs">
+                {t("pages.employersDashboard.absencePeriodType", {
+                  context: period.period_type,
+                })}
+              </div>
+            </div>
+          </div>
+        ))}
+      {absence_periods.length > maxPeriodsShown && (
+        <div className="grid-row grid-gap padding-top-1">
+          <div className="desktop:grid-col-auto minw-15"></div>
+          <div className="desktop:grid-col-fill">
+            <div className="padding-left-1 text-base-dark">
+              {t("pages.employersDashboard.numAbsencePeriodsHidden", {
+                hiddenCount: additionalPeriods,
               })}
             </div>
           </div>
         </div>
-      ))}
+      )}
     </React.Fragment>
   );
 };
