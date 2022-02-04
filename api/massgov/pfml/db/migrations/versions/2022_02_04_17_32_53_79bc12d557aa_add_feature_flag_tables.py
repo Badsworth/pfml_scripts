@@ -1,8 +1,8 @@
 """Add feature flag tables
 
-Revision ID: df5fe27a81bc
-Revises: 50c0a1e47747
-Create Date: 2022-01-25 18:41:27.831276
+Revision ID: 79bc12d557aa
+Revises: 7b183dd23b33
+Create Date: 2022-02-04 17:32:53.293471
 
 """
 import sqlalchemy as sa
@@ -10,8 +10,8 @@ from alembic import op
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = "df5fe27a81bc"
-down_revision = "50c0a1e47747"
+revision = "79bc12d557aa"
+down_revision = "7b183dd23b33"
 branch_labels = None
 depends_on = None
 
