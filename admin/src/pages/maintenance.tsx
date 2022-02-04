@@ -25,52 +25,12 @@ export const Timezone = "America/New_York";
 export const TimezoneAbbr = moment().tz(Timezone).zoneAbbr();
 
 export default function Maintenance() {
-<<<<<<< HEAD
   const [maintenanceHistory, setMaintenanceHistory] =
     React.useState<FlagLogsResponse>([]);
   const [maintenance, setMaintenance] = React.useState<Flag | null>(null);
 
   const [showConfirmationDialog, setShowConfirmationDialog] =
     React.useState(false);
-=======
-  const router = useRouter();
-
-  // Remove when Flag is in ../../api.
-  interface Flag {
-    start?: string | null;
-    end?: string | null;
-    name?: string;
-    options?: object;
-    enabled?: boolean;
-  }
-  type FlagsResponse = Flag[];
-
-  const [showConfirmationDialog, setShowConfirmationDialog] =
-    React.useState(false);
-  const [maintenanceHistory, setMaintenanceHistory] =
-    React.useState<FlagsResponse>([
-      {
-        enabled: true,
-        end: "2022-01-23 18:00:00-04",
-        name: "maintenance",
-        options: {
-          name: "Two checked page routes, one custom",
-          page_routes: ["/*", "/applications/*", "/custom/*"],
-        },
-        start: "2022-01-23 17:00:00-04",
-      },
-    ]);
-  const [maintenance, setMaintenance] = React.useState<Flag | null>({
-    enabled: true,
-    end: "2022-01-23 18:00:00-04",
-    name: "maintenance",
-    options: {
-      name: "Current maintenance status",
-      page_routes: ["/*", "/applications/*", "/custom/*"],
-    },
-    start: "2022-01-23 17:00:00-04",
-  });
->>>>>>> origin/main
 
   React.useEffect(() => {
     getFlagsByName({ name: "maintenance" }).then(
@@ -139,12 +99,7 @@ export default function Maintenance() {
         (m.end ? formatHistoryDateTime(m.end) : "No end provided")}
     </>
   );
-<<<<<<< HEAD
-  const getPageRoutes = (m: FlagLog) => {
-=======
-
   const getPageRoutes = (m: Flag) => {
->>>>>>> origin/main
     const routes = (m?.options as options)?.page_routes ?? [];
 
     return (
@@ -163,36 +118,16 @@ export default function Maintenance() {
       </ul>
     );
   };
-<<<<<<< HEAD
   const getCreatedBy = (m: FlagLog) => (
     <>
       {m.family_name} {m.given_name}
     </>
   );
 
-  const getMaintenanceLinkValues = (m: Flag) => {
-    const linkValues: { [key: string]: string | string[] } = {};
-    linkValues.name = (m?.options as options)?.name ?? "";
-
-    const page_routes =
-      ((m?.options as options)?.page_routes as string[]) ?? [];
-    linkValues.checked_page_routes = page_routes.filter((item) =>
-      checkedValues.includes(item),
-    );
-    linkValues.custom_page_routes = page_routes.filter(
-      (item) => !checkedValues.includes(item),
-    );
-    return linkValues;
-  };
-
-  const getOptions = (m: FlagLog) => {
-=======
-
   const getLinkOptions = (
     m: Flag | null,
     includeDateTimes: boolean,
   ): { [key: string]: string | string[] } => {
->>>>>>> origin/main
     const linkValues: { [key: string]: string | string[] } = {};
     if (!m) {
       return linkValues;
@@ -217,8 +152,6 @@ export default function Maintenance() {
       : "";
     return linkValues;
   };
-
-  const getCreatedBy = (m: Flag) => <>{"Admin"}</>;
 
   const getOptions = (m: Flag) => {
     const linkValues = getLinkOptions(m, false);
@@ -275,18 +208,9 @@ export default function Maintenance() {
               },
               {
                 enabled: getMaintenanceEnabled(),
-<<<<<<< HEAD
-                // Add query params including start and end.
-                href: {
-                  pathname: "/maintenance/add",
-                  query: maintenance
-                    ? getMaintenanceLinkValues(maintenance)
-                    : undefined,
-=======
                 href: {
                   pathname: "/maintenance/add",
                   query: getLinkOptions(maintenance, true),
->>>>>>> origin/main
                 },
                 text: "Edit",
                 type: "link",
