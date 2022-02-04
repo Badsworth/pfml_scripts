@@ -54,9 +54,10 @@ input[type='text'] {
   box-shadow: $Box-Shadow;
   color: $Color-GraniteGray-400;
   font: inherit;
+  line-height: 1.4;
   margin-bottom: 0.57em;
   outline: none;
-  padding: 1em;
+  padding: 0.57em 1em;
   transition: all 0.2s ease-in-out;
   width: 100%;
 
@@ -82,12 +83,13 @@ input[type='checkbox'] {
   appearance: none;
   background: #fff;
   border: solid 1px $Color-GraniteGray-200;
-  border-radius: 4px;
+  border-radius: $Border-Radius;
   color: $Color-GraniteGray-200;
   height: 16px;
-  margin: 0;
+  margin: 0 0.57em 0 0;
   padding: 0;
   position: relative;
+  vertical-align: bottom;
   width: 16px;
 
   &:checked {
@@ -110,6 +112,17 @@ input[type='checkbox'] {
     border-color: $Color-GraniteGray-300;
     color: $Color-GraniteGray-300;
   }
+}
+
+input[type='radio'] {
+  height: 1.228em;
+  margin: 0 0.571em 0 0;
+  vertical-align: bottom;
+  width: 1.228em;
+}
+
+legend {
+  margin-bottom: 0.214em;
 }
 
 .users__warning-wrapper {
