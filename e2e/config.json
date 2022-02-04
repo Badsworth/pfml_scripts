@@ -67,7 +67,7 @@
     "HAS_FINEOS_JANUARY_RELEASE": "true",
     "HAS_LARGE_FILE_COMPRESSION": "true",
     "HAS_FEB_RELEASE": "false",
-    "MFA_ENABLED": "false"
+    "MFA_ENABLED": "true"
   },
   "trn2": {
     "PORTAL_BASEURL": "https://paidleave-trn2.dfml.eol.mass.gov",
