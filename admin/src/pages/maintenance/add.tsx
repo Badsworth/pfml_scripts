@@ -6,6 +6,7 @@ import {
   FieldHookConfig,
   Formik,
   FormikErrors,
+  FormikHelpers,
   FormikProps,
   useField,
   useFormikContext,
@@ -161,7 +162,7 @@ export default function Maintenance() {
     ? router.query?.checked_page_routes
     : router.query?.checked_page_routes
     ? [router.query?.checked_page_routes?.toString()]
-    : [];
+    : ["/*"];
 
   const custom_page_routes = Array.isArray(router.query?.custom_page_routes)
     ? router.query?.custom_page_routes
@@ -169,8 +170,11 @@ export default function Maintenance() {
     ? [router.query?.custom_page_routes.toString()]
     : [];
 
+  // Show advanced if any custom page routes are used or if checked_page_routes are used, except if the only checked page route is the default (entire site).
   const [showAdvanced, setShowAdvanced] = React.useState(
-    !!checked_page_routes.length || !!custom_page_routes.length,
+    !!custom_page_routes.length ||
+      (!!checked_page_routes.length &&
+        !(checked_page_routes.length === 1 && checked_page_routes[0] === "/*")),
   );
 
   const showAdvancedOnClick = (e: React.MouseEvent) => {
@@ -252,7 +256,7 @@ export default function Maintenance() {
 
   const onSubmitHandler = async (
     values: FormValues,
-    { setSubmitting, setFieldError },
+    actions: FormikHelpers<FormValues>,
   ) => {
     const custom_page_routes = values.custom_page_routes
       .map((i) => i.trim())
@@ -289,14 +293,14 @@ export default function Maintenance() {
               (e.data?.errors as { field: string; message: string }[]) ?? [];
             errors.map((error) => {
               if (error.field in values) {
-                setFieldError(error.field, error.message);
+                actions.setFieldError(error.field, error.message);
               }
             });
           }
         },
       )
       .finally(() => {
-        setSubmitting(false);
+        actions.setSubmitting(false);
       });
   };
 
