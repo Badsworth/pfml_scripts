@@ -29,6 +29,8 @@ export default function Maintenance() {
     React.useState<FlagLogsResponse>([]);
   const [maintenance, setMaintenance] = React.useState<Flag | null>(null);
 
+  const router = useRouter();
+
   const [showConfirmationDialog, setShowConfirmationDialog] =
     React.useState(false);
 
@@ -99,6 +101,7 @@ export default function Maintenance() {
         (m.end ? formatHistoryDateTime(m.end) : "No end provided")}
     </>
   );
+
   const getPageRoutes = (m: Flag) => {
     const routes = (m?.options as options)?.page_routes ?? [];
 
@@ -160,7 +163,7 @@ export default function Maintenance() {
         <Link
           href={{
             pathname: "/maintenance/add",
-            query: getMaintenanceLinkValues(m),
+            query: linkValues,
           }}
         >
           <a>Clone</a>

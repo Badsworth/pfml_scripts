@@ -155,7 +155,6 @@ const CheckboxField = (props: { label: string } & FieldHookConfig<string>) => {
 export default function Maintenance() {
   const router = useRouter();
 
-
   // The query param can be either a string (it occurs once in the URL) or
   // array of strings (it occurs more than once).
   const checked_page_routes = Array.isArray(router.query?.checked_page_routes)
@@ -252,7 +251,8 @@ export default function Maintenance() {
   };
 
   const onSubmitHandler = async (
-    values: FormValues /*{ setSubmitting, setFieldError }*/,
+    values: FormValues,
+    { setSubmitting, setFieldError },
   ) => {
     const custom_page_routes = values.custom_page_routes
       .map((i) => i.trim())
@@ -278,26 +278,26 @@ export default function Maintenance() {
     };
 
     postFlagsByName({ name: "maintenance" }, flag)
-    .then(
-      () => {
-        router.push("/maintenance");
-      },
-      (e) => {
-        if (e instanceof HttpError) {
-          const errors =
-            (e.data?.errors as { field: string; message: string }[]) ??
-            [];
-          errors.map((error) => {
-            if (error.field in values) {
-              setFieldError(error.field, error.message);
-            }
-          });
-        }
-      },
-    )
-    .finally(() => {
-      setSubmitting(false);
-    });
+      .then(
+        () => {
+          // Include query param for success message.
+          router.push("/maintenance?saved=true");
+        },
+        (e) => {
+          if (e instanceof HttpError) {
+            const errors =
+              (e.data?.errors as { field: string; message: string }[]) ?? [];
+            errors.map((error) => {
+              if (error.field in values) {
+                setFieldError(error.field, error.message);
+              }
+            });
+          }
+        },
+      )
+      .finally(() => {
+        setSubmitting(false);
+      });
   };
 
   return (
