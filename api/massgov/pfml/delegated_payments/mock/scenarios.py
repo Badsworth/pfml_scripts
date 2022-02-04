@@ -10,9 +10,9 @@ from massgov.pfml.db.models.employees import (
     PaymentMethod,
     PaymentTransactionType,
 )
-from massgov.pfml.delegated_payments.audit.delegated_payment_rejects import (
-    AUDIT_REJECT_NOTE_TO_WRITEBACK_STATUS,
-    AUDIT_SKIPPED_NOTE_TO_WRITEBACK_STATUS,
+from massgov.pfml.db.models.payments import (
+    AUDIT_REJECT_NOTE_TO_WRITEBACK_TRANSACTION_STATUS,
+    AUDIT_SKIPPED_NOTE_TO_WRITEBACK_TRANSACTION_STATUS,
 )
 from massgov.pfml.delegated_payments.pub.check_return import PaidStatus
 
@@ -302,13 +302,13 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
     ScenarioDescriptor(
         scenario_name=ScenarioName.AUDIT_REJECTED_WITH_NOTE,
         is_audit_rejected=True,
-        audit_response_note=list(AUDIT_REJECT_NOTE_TO_WRITEBACK_STATUS.keys())[0],
+        audit_response_note=list(AUDIT_REJECT_NOTE_TO_WRITEBACK_TRANSACTION_STATUS.keys())[0],
     ),
     ScenarioDescriptor(scenario_name=ScenarioName.AUDIT_SKIPPED, is_audit_skipped=True),
     ScenarioDescriptor(
         scenario_name=ScenarioName.AUDIT_SKIPPED_WITH_NOTE,
         is_audit_skipped=True,
-        audit_response_note=list(AUDIT_SKIPPED_NOTE_TO_WRITEBACK_STATUS.keys())[0],
+        audit_response_note=list(AUDIT_SKIPPED_NOTE_TO_WRITEBACK_TRANSACTION_STATUS.keys())[0],
     ),
     ScenarioDescriptor(
         scenario_name=ScenarioName.PUB_ACH_PRENOTE_RETURN,
