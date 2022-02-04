@@ -1,12 +1,8 @@
-from typing import Optional
-
 from massgov.pfml.api.authorization.flask import READ, can
 from massgov.pfml.db.models.employees import Claim, User
 
 
-def user_has_access_to_claim(claim: Claim, current_user: Optional[User]) -> bool:
-    if current_user is None:
-        return False
+def user_has_access_to_claim(claim: Claim, current_user: User) -> bool:
 
     # When user is LA for the employer associated with claim
     if can(READ, "EMPLOYER_API") and claim.employer in current_user.employers:

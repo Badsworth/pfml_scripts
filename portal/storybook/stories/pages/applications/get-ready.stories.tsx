@@ -1,4 +1,5 @@
-import BenefitsApplicationCollection from "src/models/BenefitsApplicationCollection";
+import ApiResourceCollection from "src/models/ApiResourceCollection";
+import BenefitsApplication from "src/models/BenefitsApplication";
 import { GetReady } from "src/pages/applications/get-ready";
 import PaginationMeta from "src/models/PaginationMeta";
 import React from "react";
@@ -41,7 +42,7 @@ export const Page = (args: { smsMfaConfirmed: boolean }) => {
 
   return (
     <GetReady
-      claims={new BenefitsApplicationCollection()}
+      claims={new ApiResourceCollection<BenefitsApplication>("application_id")}
       appLogic={appLogic}
       user={new User({})}
       paginationMeta={paginationMeta}

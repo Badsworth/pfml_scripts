@@ -1,33 +1,30 @@
 import Claim, { ClaimEmployee } from "../../../src/models/Claim";
-import User, { UserLeaveAdministrator } from "../../../src/models/User";
 import { cleanup, screen, within } from "@testing-library/react";
+import { createAbsencePeriod, renderPage } from "../../test-utils";
 import ApiResourceCollection from "src/models/ApiResourceCollection";
 import { AppLogic } from "../../../src/hooks/useAppLogic";
 import Dashboard from "../../../src/pages/employers/dashboard";
+import MockDate from "mockdate";
 import PaginationMeta from "../../../src/models/PaginationMeta";
-import faker from "faker";
-import { renderPage } from "../../test-utils";
+import User from "../../../src/models/User";
+import createMockClaim from "../../../lib/mock-helpers/createMockClaim";
+import { createMockManagedRequirement } from "../../../lib/mock-helpers/createMockManagedRequirement";
+import createMockUserLeaveAdministrator from "../../../lib/mock-helpers/createMockUserLeaveAdministrator";
 import routes from "../../../src/routes";
 import userEvent from "@testing-library/user-event";
 
 // Avoid issue where USWDS generates unique ID each render,
 // which causes havoc for our snapshot testing
 // https://github.com/uswds/uswds/issues/4338
+// TODO (PORTAL-1560): Remove this mock, once the new deprecated table component is removed
 jest.mock("../../../src/components/core/TooltipIcon", () => ({
   __esModule: true,
   default: () => null,
 }));
 
-function createUserLeaveAdministrator(attrs = {}) {
-  return new UserLeaveAdministrator({
-    employer_id: faker.datatype.uuid(),
-    employer_dba: faker.company.companyName(),
-    employer_fein: `${faker.finance.account(2)}-${faker.finance.account(7)}`,
-    ...attrs,
-  });
-}
+const MOCK_CURRENT_ISO_DATE = "2021-05-01";
 
-const verifiedUserLeaveAdministrator = createUserLeaveAdministrator({
+const verifiedUserLeaveAdministrator = createMockUserLeaveAdministrator({
   employer_dba: "Work Inc",
   employer_fein: "12-3456789",
   has_fineos_registration: true,
@@ -35,36 +32,41 @@ const verifiedUserLeaveAdministrator = createUserLeaveAdministrator({
   verified: true,
 });
 
-const verifiableUserLeaveAdministrator = createUserLeaveAdministrator({
+const verifiableUserLeaveAdministrator = createMockUserLeaveAdministrator({
   employer_dba: "Book Bindings 'R Us",
   has_fineos_registration: false,
   has_verification_data: true,
   verified: false,
 });
 
-const getClaims = (leaveAdmin: UserLeaveAdministrator) => {
-  return [
-    new Claim({
-      absence_period_end_date: "",
-      absence_period_start_date: "",
-      claim_type_description: "",
-      fineos_notification_id: "NTN-123",
-      managed_requirements: [],
-      created_at: "2021-01-15",
-      employee: new ClaimEmployee({
-        first_name: "Jane",
-        middle_name: null,
-        last_name: "Doe",
+const getClaim = (customAttrs: Partial<Claim> = {}) => {
+  // Stable data to support stable snapshots
+  return createMockClaim({
+    absence_periods: [
+      createAbsencePeriod({
+        absence_period_start_date: "2020-01-01",
+        absence_period_end_date: "2020-02-01",
+        reason: "Serious Health Condition - Employee",
+        request_decision: "Approved",
+        period_type: "Continuous",
       }),
-      employer: {
-        employer_dba: leaveAdmin.employer_dba,
-        employer_fein: leaveAdmin.employer_fein,
-        employer_id: leaveAdmin.employer_id,
-      },
-      fineos_absence_id: "NTN-111-ABS-01",
-      claim_status: "Approved",
+    ],
+    created_at: "2021-01-15",
+    managed_requirements: [],
+    employee: new ClaimEmployee({
+      first_name: "Jane",
+      middle_name: null,
+      last_name: "Doe",
     }),
-  ];
+    employer: {
+      employer_dba: verifiedUserLeaveAdministrator.employer_dba,
+      employer_fein: verifiedUserLeaveAdministrator.employer_fein,
+      employer_id: verifiedUserLeaveAdministrator.employer_id,
+    },
+    fineos_absence_id: "NTN-111-ABS-01",
+    claim_status: "Approved",
+    ...customAttrs,
+  });
 };
 
 const setup = (options?: {
@@ -132,14 +134,19 @@ const setup = (options?: {
 };
 
 describe("Employer dashboard", () => {
+  beforeAll(() => {
+    MockDate.set(MOCK_CURRENT_ISO_DATE);
+  });
+
   it("renders the page with expected content and pagination components", () => {
     const { container } = setup();
 
     expect(container).toMatchSnapshot();
   });
 
-  it("renders a table of claims with links if employer is registered in FINEOS", () => {
-    const claims = getClaims(verifiedUserLeaveAdministrator);
+  // TODO (PORTAL-1560): Remove this test, once the deprecated table component is removed
+  it("deprecated: renders a table of claims with links if employer is registered in FINEOS", () => {
+    const claims = [getClaim()];
     const userAttrs = {
       // Set multiple employers so the table shows all possible columns
       user_leave_administrators: [
@@ -153,12 +160,50 @@ describe("Employer dashboard", () => {
     expect(screen.getByRole("table")).toMatchSnapshot();
   });
 
-  it("renders claim rows without links if employer is not registered in FINEOS", () => {
+  it("renders a table of claims, with links to review page", () => {
+    process.env.featureFlags = JSON.stringify({
+      employerShowMultiLeaveDashboard: true,
+    });
+    const claims = [
+      getClaim({
+        managed_requirements: [
+          createMockManagedRequirement({
+            follow_up_date: MOCK_CURRENT_ISO_DATE,
+            // "Open" helps provide coverage of the link used on the Review button
+            status: "Open",
+          }),
+        ],
+      }),
+    ];
+
+    const userAttrs = {
+      user_leave_administrators: [
+        // Set multiple employers so the table shows all possible columns
+        verifiedUserLeaveAdministrator,
+        verifiableUserLeaveAdministrator,
+      ],
+    };
+
+    setup({ claims, userAttrs });
+
+    expect(screen.getByRole("table")).toMatchSnapshot();
+  });
+
+  // TODO (PORTAL-1560): Remove this test, once the deprecated table component is removed
+  it("deprecated: renders claim rows without links if employer is not registered in FINEOS", () => {
     const verifiedButNotInFineos = {
       ...verifiableUserLeaveAdministrator,
       verified: true,
     };
-    const claims = getClaims(verifiedButNotInFineos);
+    const claims = [
+      getClaim({
+        employer: {
+          employer_dba: verifiedButNotInFineos.employer_dba,
+          employer_fein: verifiedButNotInFineos.employer_fein,
+          employer_id: verifiedButNotInFineos.employer_id,
+        },
+      }),
+    ];
 
     const userAttrs = {
       user_leave_administrators: [verifiedButNotInFineos],
@@ -170,24 +215,32 @@ describe("Employer dashboard", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("renders '--' when a Claim's Employee name is blank", () => {
-    let claims = getClaims(verifiedUserLeaveAdministrator);
-    claims = claims.map((claim) => {
-      claim.employee = null;
-      return claim;
-    });
+  // TODO (PORTAL-1560) Remove the .each portion once flag is always enabled
+  it.each([true, false])(
+    "renders '--' when a Claim's Employee name is blank",
+    (employerShowMultiLeaveDashboard) => {
+      process.env.featureFlags = JSON.stringify({
+        employerShowMultiLeaveDashboard,
+      });
+      let claims = [getClaim()];
+      claims = claims.map((claim) => {
+        claim.employee = null;
+        return claim;
+      });
 
-    setup({
-      claims,
-      userAttrs: {
-        user_leave_administrators: [verifiedUserLeaveAdministrator],
-      },
-    });
+      setup({
+        claims,
+        userAttrs: {
+          user_leave_administrators: [verifiedUserLeaveAdministrator],
+        },
+      });
 
-    expect(screen.getByRole("rowheader", { name: "--" })).toBeInTheDocument();
-  });
+      expect(screen.getByRole("rowheader", { name: /--/ })).toBeInTheDocument();
+    }
+  );
 
-  it("renders Organization column only when user has more than one Employer", () => {
+  // TODO (PORTAL-1560): Remove this test, once the deprecated table component is removed
+  it("deprecated: renders Organization column only when user has more than one Employer", () => {
     // Organization column should NOT
     setup({
       userAttrs: {
@@ -231,53 +284,142 @@ describe("Employer dashboard", () => {
     `);
   });
 
-  it("renders a 'no results' message in the table, and no pagination components when no claims are present", () => {
+  it("renders Organization column only when user has more than one Employer", () => {
+    process.env.featureFlags = JSON.stringify({
+      employerShowMultiLeaveDashboard: true,
+    });
+
+    // Organization column should NOT show
     setup({
       userAttrs: {
         user_leave_administrators: [verifiedUserLeaveAdministrator],
       },
-      paginationMeta: {
-        total_records: 0,
-        total_pages: 1,
-      },
     });
 
-    expect(
-      screen.getByRole("cell", { name: "No applications on file" })
-    ).toBeInTheDocument();
-    expect(
-      screen.queryByRole("button", { name: /next/i })
-    ).not.toBeInTheDocument();
-  });
+    expect(screen.getAllByRole("columnheader").map((el) => el.textContent))
+      .toMatchInlineSnapshot(`
+      [
+        "Employee (Application ID)",
+        "Leave details",
+        "Review due date",
+      ]
+    `);
 
-  it("renders only the pagination summary when only one page of claims exists", () => {
+    cleanup();
+
+    // Organization column should show
     setup({
-      paginationMeta: {
-        total_records: 25,
-        total_pages: 1,
+      userAttrs: {
+        user_leave_administrators: [
+          verifiedUserLeaveAdministrator,
+          verifiableUserLeaveAdministrator,
+        ],
       },
     });
 
-    expect(screen.getByText(/Viewing 1 to 25 of 25/i)).toBeInTheDocument();
-    expect(
-      screen.queryByRole("button", { name: /next/i })
-    ).not.toBeInTheDocument();
+    expect(screen.getAllByRole("columnheader").map((el) => el.textContent))
+      .toMatchInlineSnapshot(`
+      [
+        "Employee (Application ID)",
+        "Organization (FEIN)",
+        "Leave details",
+        "Review due date",
+      ]
+    `);
   });
 
-  it("changes the page_offset query param when a page navigation button is clicked", () => {
-    const { updateQuerySpy } = setup({
-      paginationMeta: {
-        page_offset: 2,
-        total_pages: 3,
-      },
-    });
+  // TODO (PORTAL-1560) Remove the .each portion once flag is always enabled
+  it.each([true, false])(
+    "renders a 'no results' message in the table, and no pagination components when no claims are present",
+    (employerShowMultiLeaveDashboard) => {
+      process.env.featureFlags = JSON.stringify({
+        employerShowMultiLeaveDashboard,
+      });
 
-    userEvent.click(screen.getByRole("button", { name: /next/i }));
+      setup({
+        userAttrs: {
+          user_leave_administrators: [verifiedUserLeaveAdministrator],
+        },
+        paginationMeta: {
+          total_records: 0,
+          total_pages: 1,
+        },
+      });
 
-    expect(updateQuerySpy).toHaveBeenCalledWith({
-      page_offset: "3",
-    });
-  });
+      expect(
+        screen.getByRole("cell", { name: "No applications on file" })
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: /next/i })
+      ).not.toBeInTheDocument();
+    }
+  );
+
+  // TODO (PORTAL-1560) Remove the .each portion once flag is always enabled
+  // eslint-disable-next-line jest/no-focused-tests
+  it.each([true, false])(
+    "renders a verification message in the table, when all employers are unverified",
+    (employerShowMultiLeaveDashboard) => {
+      process.env.featureFlags = JSON.stringify({
+        employerShowMultiLeaveDashboard,
+      });
+
+      setup({
+        userAttrs: {
+          user_leave_administrators: [verifiableUserLeaveAdministrator],
+        },
+      });
+
+      expect(
+        screen.getByRole("cell", {
+          name: /You have not verified any organizations/,
+        })
+      ).toMatchSnapshot();
+    }
+  );
+
+  // TODO (PORTAL-1560) Remove the .each portion once flag is always enabled
+  it.each([true, false])(
+    "renders only the pagination summary when only one page of claims exists",
+    (employerShowMultiLeaveDashboard) => {
+      process.env.featureFlags = JSON.stringify({
+        employerShowMultiLeaveDashboard,
+      });
+      setup({
+        paginationMeta: {
+          total_records: 25,
+          total_pages: 1,
+        },
+      });
+
+      expect(screen.getByText(/Viewing 1 to 25 of 25/i)).toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: /next/i })
+      ).not.toBeInTheDocument();
+    }
+  );
+
+  // TODO (PORTAL-1560) Remove the .each portion once flag is always enabled
+  it.each([true, false])(
+    "changes the page_offset query param when a page navigation button is clicked",
+    (employerShowMultiLeaveDashboard) => {
+      process.env.featureFlags = JSON.stringify({
+        employerShowMultiLeaveDashboard,
+      });
+      const { updateQuerySpy } = setup({
+        paginationMeta: {
+          page_offset: 2,
+          total_pages: 3,
+        },
+      });
+
+      userEvent.click(screen.getByRole("button", { name: /next/i }));
+
+      expect(updateQuerySpy).toHaveBeenCalledWith({
+        page_offset: "3",
+      });
+    }
+  );
 
   it("renders the banner if there are any unverified employers", () => {
     setup({
@@ -321,7 +463,7 @@ describe("Employer dashboard", () => {
 
   it("displays number of active filters in Show Filters button", () => {
     const user_leave_administrators = [
-      createUserLeaveAdministrator({
+      createMockUserLeaveAdministrator({
         verified: true,
       }),
     ];
@@ -341,31 +483,13 @@ describe("Employer dashboard", () => {
     ).toBeInTheDocument();
   });
 
-  it("toggles filters visibility when Show Filters button is clicked", () => {
-    setup();
-    const toggleButton = screen.getByRole("button", { name: "Show filters" });
-
-    // Collapsed by default
-    expect(
-      screen.queryByRole("group", { name: /status/i })
-    ).not.toBeInTheDocument();
-
-    // Show the filters
-    userEvent.click(toggleButton);
-
-    expect(toggleButton).toHaveAccessibleName("Hide filters");
-    expect(
-      screen.queryByRole("group", { name: /status/i })
-    ).toBeInTheDocument();
-  });
-
   it("sets initial filter form state from query prop", () => {
     // Include multiple LA's so Employer filter shows
     const user_leave_administrators = [
-      createUserLeaveAdministrator({
+      createMockUserLeaveAdministrator({
         verified: true,
       }),
-      createUserLeaveAdministrator({
+      createMockUserLeaveAdministrator({
         verified: true,
       }),
     ];
@@ -392,33 +516,6 @@ describe("Employer dashboard", () => {
     expect(screen.getByRole("checkbox", { name: /denied/i })).not.toBeChecked();
   });
 
-  it("renders organizations filter when there are multiple verified organizations", () => {
-    setup({
-      userAttrs: {
-        user_leave_administrators: [
-          createUserLeaveAdministrator({
-            employer_dba: "Work Inc",
-            employer_id: "mock-id-1",
-            employer_fein: "11-3456789",
-            verified: true,
-          }),
-          createUserLeaveAdministrator({
-            employer_dba: "Acme",
-            employer_id: "mock-id-2",
-            employer_fein: "22-3456789",
-            verified: true,
-          }),
-        ],
-      },
-    });
-
-    userEvent.click(screen.getByRole("button", { name: /show filters/i }));
-
-    expect(
-      screen.getByRole("combobox", { name: /organizations/i })
-    ).toBeInTheDocument();
-  });
-
   it("updates query params when user changes filter to Approved and Closed", () => {
     const { updateQuerySpy } = setup({
       paginationMeta: {
@@ -439,10 +536,10 @@ describe("Employer dashboard", () => {
 
   it("resets query params when user clicks Reset action", () => {
     const user_leave_administrators = [
-      createUserLeaveAdministrator({
+      createMockUserLeaveAdministrator({
         verified: true,
       }),
-      createUserLeaveAdministrator({
+      createMockUserLeaveAdministrator({
         verified: true,
       }),
     ];
@@ -470,7 +567,7 @@ describe("Employer dashboard", () => {
 
   it("removes the employer filter when its FilterMenuButton is clicked", () => {
     const user_leave_administrators = [
-      createUserLeaveAdministrator({
+      createMockUserLeaveAdministrator({
         verified: true,
         employer_dba: "Acme Co",
       }),
@@ -557,8 +654,9 @@ describe("Employer dashboard", () => {
     });
   });
 
-  it("renders Review By status", () => {
-    const claims = getClaims(verifiedUserLeaveAdministrator);
+  // TODO (PORTAL-1560): Remove or update this test, once the deprecated table component is removed
+  it("deprecated: renders Review By status", () => {
+    const claims = [getClaim()];
     claims[0].managed_requirements = [
       {
         category: "",

@@ -90,7 +90,7 @@ export const Index = (props: IndexProps) => {
 
           {isFeatureEnabled("channelSwitching") && (
             <ButtonLink
-              href={appLogic.portalFlow.getNextPageRoute("FIND_APPLICATION")}
+              href={appLogic.portalFlow.getNextPageRoute("IMPORT_APPLICATION")}
               variation="unstyled"
             >
               {t("pages.applications.findLink")}

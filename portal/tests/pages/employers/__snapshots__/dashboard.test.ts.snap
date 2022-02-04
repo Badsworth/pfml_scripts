@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Employer dashboard renders a table of claims with links if employer is registered in FINEOS 1`] = `
+exports[`Employer dashboard deprecated: renders a table of claims with links if employer is registered in FINEOS 1`] = `
 <table
   class="usa-table usa-table--borderless width-full usa-table--stacked"
 >
@@ -79,7 +79,7 @@ exports[`Employer dashboard renders a table of claims with links if employer is 
         data-label="Status"
       >
         <span
-          class="usa-tag display-inline-block text-bold text-middle text-no-wrap text-success-dark bg-success-lighter"
+          class="usa-tag display-inline-block text-bold text-middle text-center text-no-wrap text-success-dark bg-success-lighter"
         >
           Approved
         </span>
@@ -89,9 +89,148 @@ exports[`Employer dashboard renders a table of claims with links if employer is 
 </table>
 `;
 
+exports[`Employer dashboard renders a table of claims, with links to review page 1`] = `
+<table
+  class="usa-table usa-table--borderless width-full usa-table--stacked"
+>
+  <thead>
+    <tr>
+      <th
+        scope="col"
+      >
+        Employee (Application ID)
+      </th>
+      <th
+        scope="col"
+      >
+        Organization (FEIN)
+      </th>
+      <th
+        scope="col"
+      >
+        Leave details
+      </th>
+      <th
+        scope="col"
+      >
+        Review due date
+      </th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr
+      class="text-top"
+    >
+      <th
+        data-label="Employee (Application ID)"
+        scope="row"
+      >
+        <a
+          href="/employers/applications/new-application?absence_id=NTN-111-ABS-01"
+        >
+          Jane Doe
+          <div
+            class="font-body-2xs text-normal"
+          >
+            NTN-111-ABS-01
+          </div>
+        </a>
+      </th>
+      <td
+        data-label="Organization (FEIN)"
+      >
+        <div
+          class="text-wrap"
+        >
+          Work Inc
+          <div
+            class="font-body-2xs text-base-dark"
+          >
+            12-3456789
+          </div>
+        </div>
+      </td>
+      <td
+        data-label="Leave details"
+      >
+        <div
+          class="grid-row grid-gap-1 margin-top-1 mobile-lg:margin-top-0"
+          data-testid="absence-period"
+        >
+          <div
+            class="desktop:grid-col-auto"
+          >
+            <span
+              class="usa-tag display-inline-block text-bold text-middle text-center text-no-wrap text-success-dark bg-success-lighter minw-15 margin-top-2px margin-bottom-05"
+            >
+              Approved
+            </span>
+          </div>
+          <div
+            class="desktop:grid-col-fill text-wrap"
+          >
+            <div
+              class="text-medium"
+            >
+              Medical leave
+            </div>
+            1/1/2020 to 2/1/2020
+            <div
+              class="font-body-2xs"
+            >
+              Continuous leave
+            </div>
+          </div>
+        </div>
+      </td>
+      <td
+        data-label="Review due date"
+      >
+        <a
+          class="usa-button margin-bottom-05"
+          href="/employers/applications/new-application?absence_id=NTN-111-ABS-01"
+        >
+          Review Application
+        </a>
+        <br />
+        Respond by 5/1/2021
+      </td>
+    </tr>
+  </tbody>
+</table>
+`;
+
+exports[`Employer dashboard renders a verification message in the table, when all employers are unverified 1`] = `
+<td
+  colspan="3"
+>
+  You have not verified any organizations. 
+  <a
+    href="/employers/organizations"
+  >
+    Complete this process
+  </a>
+   to review applications.
+</td>
+`;
+
+exports[`Employer dashboard renders a verification message in the table, when all employers are unverified 2`] = `
+<td
+  colspan="5"
+>
+  You have not verified any organizations. 
+  <a
+    href="/employers/organizations"
+  >
+    Complete this process
+  </a>
+   to review applications.
+</td>
+`;
+
 exports[`Employer dashboard renders the banner if there are any unverified employers 1`] = `
 <div
-  aria-labelledby="alert-heading176"
+  aria-labelledby="alert-heading355"
   class="usa-alert usa-alert--warning"
   role="region"
   tabindex="-1"
@@ -101,7 +240,7 @@ exports[`Employer dashboard renders the banner if there are any unverified emplo
   >
     <h2
       class="usa-alert__heading font-heading-md text-bold"
-      id="alert-heading176"
+      id="alert-heading355"
     >
       Verify your account
     </h2>
@@ -255,117 +394,120 @@ exports[`Employer dashboard renders the page with expected content and paginatio
       Show filters
     </button>
   </div>
-  <form
-    class="bg-primary-lighter padding-x-3 padding-top-1px padding-bottom-3 usa-form maxw-none"
+  <div
     hidden=""
     id="filters"
   >
-    <fieldset
-      class="usa-fieldset margin-top-3 usa-form-group"
+    <form
+      class="bg-primary-lighter padding-x-3 padding-top-1px padding-bottom-3 usa-form maxw-none"
     >
-      <legend
-        class="usa-label text-bold usa-legend font-heading-xs measure-5"
+      <fieldset
+        class="usa-fieldset margin-top-3 usa-form-group"
       >
-        Status
-      </legend>
-      <div
-        class=""
+        <legend
+          class="usa-label text-bold usa-legend font-heading-xs measure-5"
+        >
+          Status
+        </legend>
+        <div
+          class=""
+        >
+          <div
+            class="usa-checkbox measure-5 bg-transparent"
+          >
+            <input
+              class="usa-checkbox__input"
+              id="InputChoice2"
+              name="claim_status"
+              type="checkbox"
+              value="Approved"
+            />
+            <label
+              class="usa-checkbox__label"
+              for="InputChoice2"
+            >
+              Approved
+            </label>
+          </div>
+          <div
+            class="usa-checkbox measure-5 bg-transparent"
+          >
+            <input
+              class="usa-checkbox__input"
+              id="InputChoice3"
+              name="claim_status"
+              type="checkbox"
+              value="Closed"
+            />
+            <label
+              class="usa-checkbox__label"
+              for="InputChoice3"
+            >
+              Closed
+            </label>
+          </div>
+          <div
+            class="usa-checkbox measure-5 bg-transparent"
+          >
+            <input
+              class="usa-checkbox__input"
+              id="InputChoice4"
+              name="claim_status"
+              type="checkbox"
+              value="Declined"
+            />
+            <label
+              class="usa-checkbox__label"
+              for="InputChoice4"
+            >
+              Denied
+            </label>
+          </div>
+          <div
+            class="usa-checkbox measure-5 bg-transparent"
+          >
+            <input
+              class="usa-checkbox__input"
+              id="InputChoice5"
+              name="claim_status"
+              type="checkbox"
+              value="Pending - no action"
+            />
+            <label
+              class="usa-checkbox__label"
+              for="InputChoice5"
+            >
+              No action required
+            </label>
+          </div>
+          <div
+            class="usa-checkbox measure-5 bg-transparent"
+          >
+            <input
+              class="usa-checkbox__input"
+              id="InputChoice6"
+              name="claim_status"
+              type="checkbox"
+              value="Open requirement"
+            />
+            <label
+              class="usa-checkbox__label"
+              for="InputChoice6"
+            >
+              Review by
+            </label>
+          </div>
+        </div>
+      </fieldset>
+      <button
+        class="usa-button position-relative"
+        disabled=""
+        type="submit"
       >
-        <div
-          class="usa-checkbox measure-5 bg-transparent"
-        >
-          <input
-            class="usa-checkbox__input"
-            id="InputChoice2"
-            name="claim_status"
-            type="checkbox"
-            value="Approved"
-          />
-          <label
-            class="usa-checkbox__label"
-            for="InputChoice2"
-          >
-            Approved
-          </label>
-        </div>
-        <div
-          class="usa-checkbox measure-5 bg-transparent"
-        >
-          <input
-            class="usa-checkbox__input"
-            id="InputChoice3"
-            name="claim_status"
-            type="checkbox"
-            value="Closed"
-          />
-          <label
-            class="usa-checkbox__label"
-            for="InputChoice3"
-          >
-            Closed
-          </label>
-        </div>
-        <div
-          class="usa-checkbox measure-5 bg-transparent"
-        >
-          <input
-            class="usa-checkbox__input"
-            id="InputChoice4"
-            name="claim_status"
-            type="checkbox"
-            value="Declined"
-          />
-          <label
-            class="usa-checkbox__label"
-            for="InputChoice4"
-          >
-            Denied
-          </label>
-        </div>
-        <div
-          class="usa-checkbox measure-5 bg-transparent"
-        >
-          <input
-            class="usa-checkbox__input"
-            id="InputChoice5"
-            name="claim_status"
-            type="checkbox"
-            value="Pending - no action"
-          />
-          <label
-            class="usa-checkbox__label"
-            for="InputChoice5"
-          >
-            No action required
-          </label>
-        </div>
-        <div
-          class="usa-checkbox measure-5 bg-transparent"
-        >
-          <input
-            class="usa-checkbox__input"
-            id="InputChoice6"
-            name="claim_status"
-            type="checkbox"
-            value="Open requirement"
-          />
-          <label
-            class="usa-checkbox__label"
-            for="InputChoice6"
-          >
-            Review by
-          </label>
-        </div>
-      </div>
-    </fieldset>
-    <button
-      class="usa-button position-relative"
-      disabled=""
-      type="submit"
-    >
-      Apply filters
-    </button>
-  </form>
+        Apply filters
+      </button>
+    </form>
+  </div>
   <div
     class="margin-y-2 grid-row grid-gap flex-align-center"
   >

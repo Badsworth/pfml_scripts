@@ -3,7 +3,7 @@ import { Props } from "types/common";
 import React from "react";
 
 export default {
-  title: "Components/DocumentRequirements",
+  title: "Features/Applications/DocumentRequirements",
   component: DocumentRequirements,
   argTypes: {
     type: {

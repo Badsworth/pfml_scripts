@@ -8,8 +8,8 @@ import {
   ValidationError,
 } from "../errors";
 import { useMemo, useState } from "react";
+import ApiResourceCollection from "../models/ApiResourceCollection";
 import { AppErrorsLogic } from "./useAppErrorsLogic";
-import DocumentCollection from "../models/DocumentCollection";
 import DocumentsApi from "../api/DocumentsApi";
 import TempFile from "../models/TempFile";
 import assert from "assert";
@@ -26,7 +26,7 @@ const useDocumentsLogic = ({
    * state as API calls are made to fetch the documents on a per-application basis,
    * and as new documents are created.
    *
-   * The DocumentCollection from useCollectionState stores all documents together,
+   * The collection from useCollectionState stores all documents together,
    * and we filter documents based on application_id to provide the correct documents
    * to the requesting components.
    */
@@ -35,7 +35,9 @@ const useDocumentsLogic = ({
     collection: documents,
     addItem: addDocument,
     addItems: addDocuments,
-  } = useCollectionState(new DocumentCollection());
+  } = useCollectionState(
+    new ApiResourceCollection<BenefitsApplicationDocument>("fineos_document_id")
+  );
 
   const documentsApi = useMemo(() => new DocumentsApi(), []);
   const [loadedApplicationDocs, setLoadedApplicationDocs] = useState<{
@@ -44,8 +46,8 @@ const useDocumentsLogic = ({
 
   /**
    * Check if docs for this application have been loaded
-   * We use a separate array and state here, rather than using the DocumentCollection,
-   * because documents that don't have items won't be represented in the DocumentCollection.
+   * We use a separate array and state here, rather than using the collection,
+   * because documents that don't have items won't be represented in the collection.
    */
   const hasLoadedClaimDocuments = (application_id: string) =>
     application_id in loadedApplicationDocs &&

@@ -1,6 +1,5 @@
 import { render, screen } from "@testing-library/react";
 import AppErrorInfo from "../../src/models/AppErrorInfo";
-import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
 import { ApplicationCard } from "../../src/components/ApplicationCard";
 import { DocumentType } from "../../src/models/Document";
 import { MockBenefitsApplicationBuilder } from "../test-utils";
@@ -85,14 +84,14 @@ describe("ApplicationCard", () => {
 
   it("does not show a spinner if there is a document load error", () => {
     const claim = new MockBenefitsApplicationBuilder().submitted().create();
-    const appErrors = new AppErrorInfoCollection([
+    const appErrors = [
       new AppErrorInfo({
         name: "DocumentsLoadError",
         meta: {
           application_id: "mock_application_id",
         },
       }),
-    ]);
+    ];
 
     render(
       <ApplicationCardWithAppLogic

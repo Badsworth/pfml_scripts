@@ -15,12 +15,35 @@ export type GetEmailsOpts = {
   address: string;
   subject?: string;
   subjectWildcard?: string;
-  messageWildcard?: string;
+  messageWildcard?: string | { pattern: string; flags?: string };
   timestamp_from?: number;
   debugInfo?: Record<string, string>;
   timeout?: number;
 };
-type Filter = { field: string; match: string; action: string; value: string };
+
+type FilterField =
+  | "tag"
+  | "envelope_from"
+  | "envelope_to"
+  | "from"
+  | "to"
+  | "cc"
+  | "subject"
+  | "text"
+  | "html"
+  | "sender_ip"
+  | "id";
+
+type FilterMatch = "exact" | "wildcard";
+
+type FilterAction = "include" | "exclude";
+
+type Filter = {
+  field: FilterField;
+  match: FilterMatch;
+  action: FilterAction;
+  value: string;
+};
 
 export default class TestMailClient {
   namespace: string;
@@ -80,7 +103,11 @@ export default class TestMailClient {
     for (;;) {
       const candidates = await this._fetchEmails(opts, client, excludedIds);
       const matches = candidates.filter((email) =>
-        email.html.includes(messageWildcard)
+        typeof messageWildcard === "string"
+          ? email.html.includes(messageWildcard)
+          : new RegExp(messageWildcard.pattern, messageWildcard.flags).test(
+              email.html
+            )
       );
       if (matches.length > 0) {
         return matches;

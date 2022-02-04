@@ -5,7 +5,7 @@ import EmployerBenefit, {
 import React, { useRef, useState } from "react";
 import AmendButton from "./AmendButton";
 import AmendmentForm from "./AmendmentForm";
-import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
+import AppErrorInfo from "../../models/AppErrorInfo";
 import ConditionalContent from "../ConditionalContent";
 import Dropdown from "../core/Dropdown";
 import Fieldset from "../core/Fieldset";
@@ -22,7 +22,7 @@ import useAutoFocusEffect from "../../hooks/useAutoFocusEffect";
 import { useTranslation } from "../../locales/i18n";
 
 interface AmendableEmployerBenefitProps {
-  appErrors: AppErrorInfoCollection;
+  appErrors: AppErrorInfo[];
   employerBenefit: EmployerBenefit;
   isAddedByLeaveAdmin: boolean;
   onChange: (
@@ -57,7 +57,7 @@ const AmendableEmployerBenefit = ({
     `employer_benefits[${amendment.employer_benefit_id}].${field}`;
 
   const getErrorMessage = (field: string) =>
-    appErrors.fieldErrorMessage(getFieldPath(field));
+    AppErrorInfo.fieldErrorMessage(appErrors, getFieldPath(field));
 
   /**
    * Update amendment state and sends to `review.js` (dates, dollars, frequency)

@@ -1,3 +1,4 @@
+import { extractLeavePeriodType } from "../../../../src/util/claims";
 import { fineos } from "../../../actions";
 import { assertValidClaim } from "../../../../src/util/typeUtils";
 import {
@@ -7,14 +8,12 @@ import {
   PrimaryRelationshipDescription,
 } from "../../../actions/fineos.pages";
 import { addDays, formatISO, startOfWeek, subWeeks } from "date-fns";
+import { config } from "../../../actions/common";
+import { DehydratedClaim } from "generation/Claim";
 
 // Disable linting of unused vars in this file due to the way this template is expected to be used.
 /* eslint-disable unused-imports/no-unused-vars */
 
-Cypress.env({
-  E2E_EMPLOYEES_FILE: "./employees/e2e-2021-06-30.json",
-  E2E_EMPLOYERS_FILE: "./employers/e2e-2021-06-30.json",
-});
 /**
  * Because each scenario needs to have a specific amount of days and employment status. These will be separated as blocks so make sure to comment in and out.
  * We will need to use a specific data set for these scenario either ones we created or old data set, because of the changes we are making. If these test
@@ -230,7 +229,10 @@ describe("Submit a claim through Fineos intake process, check the alert message"
   it("As a claimant, I should be able to submit a claim through Fineos intake process", () => {
     fineos.before();
     // @todo Adjust the CPS_SP to use "Care for Family Member" in this scenario
-    cy.task("generateClaim", "CPS_SP").then((claim) => {
+    cy.task<DehydratedClaim>("generateClaim", {
+      scenario: "CPS_SP",
+      employeePoolFilename: config("ORGUNIT_EMPLOYEES_FILE"),
+    }).then((claim) => {
       assertValidClaim(claim.claim);
       cy.stash("claim", claim);
       ClaimantPage.visit(claim.claim.tax_identifier)
@@ -283,18 +285,25 @@ describe("Submit a claim through Fineos intake process, check the alert message"
                   if (claim.claim.has_continuous_leave_periods)
                     // @TODO adjust leave period/status as needed
                     datesOfAbsence
-                      .toggleLeaveScheduleSlider("continuos")
+                      .toggleLeaveScheduleSlider(
+                        extractLeavePeriodType(claim.claim.leave_details)
+                      )
                       .addFixedTimeOffPeriod({
                         status: "Known",
                         start: startDate,
                         end: endDate,
                       });
-                  datesOfAbsence.toggleLeaveScheduleSlider("continuos");
+                  datesOfAbsence.toggleLeaveScheduleSlider(
+                    extractLeavePeriodType(claim.claim.leave_details)
+                  );
                   return datesOfAbsence.nextStep((workAbsenceDetails) =>
                     workAbsenceDetails
                       .selectWorkPatternType("Fixed")
                       .applyStandardWorkWeek()
                       .nextStep((wrapUp) => {
+                        wrapUp.selectWithholdingPreference(
+                          claim.is_withholding_tax
+                        );
                         wrapUp.clickNext();
                         // Bubble up Leave Case id number to outside scope
                         return wrapUp.finishNotificationCreation();

@@ -1,10 +1,9 @@
 import React, { useRef } from "react";
 import { AbsencePeriod } from "../../models/AbsencePeriod";
+import AbsencePeriodStatusTag from "../AbsencePeriodStatusTag";
 import PaginationNavigation from "../PaginationNavigation";
 import PaginationSummary from "../PaginationSummary";
-import { StatusTagMap } from "src/pages/applications/status";
 import Table from "../core/Table";
-import Tag from "../core/Tag";
 import formatDateRange from "../../utils/formatDateRange";
 import { useTranslation } from "../../locales/i18n";
 
@@ -76,10 +75,6 @@ const PaginatedAbsencePeriodsTable = ({
           {absencePeriodsWithPageOffsetMap
             .get(currentPage)
             ?.map((period, index) => {
-              const tagState =
-                StatusTagMap[period.request_decision] === "pending"
-                  ? "warning"
-                  : StatusTagMap[period.request_decision];
               return (
                 <tr
                   key={`${currentPage}-${index}`}
@@ -107,14 +102,8 @@ const PaginatedAbsencePeriodsTable = ({
                     )}
                   </td>
                   <td data-label={tableHeadings[2]}>
-                    <Tag
-                      state={tagState}
-                      label={t(
-                        "components.employersPaginationAbsencePeriodsTable.requestDecision",
-                        {
-                          context: period.request_decision,
-                        }
-                      )}
+                    <AbsencePeriodStatusTag
+                      request_decision={period.request_decision}
                     />
                   </td>
                 </tr>

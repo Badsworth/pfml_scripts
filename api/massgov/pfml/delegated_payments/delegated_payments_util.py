@@ -21,6 +21,7 @@ from massgov.pfml.db.models.employees import (
     Claim,
     ClaimType,
     Employee,
+    Employer,
     ExperianAddressPair,
     LkClaimType,
     LkReferenceFileType,
@@ -47,6 +48,7 @@ from massgov.pfml.db.models.payments import (
     FineosExtractVpeiPaymentDetails,
     PaymentLog,
 )
+from massgov.pfml.util.converters.str_to_numeric import str_to_int
 from massgov.pfml.util.csv import CSVSourceWrapper
 from massgov.pfml.util.datetime import get_now_us_eastern
 from massgov.pfml.util.routing_number_validation import validate_routing_number
@@ -508,6 +510,7 @@ class ValidationReason(str, Enum):
     ROUTING_NUMBER_FAILS_CHECKSUM = "RoutingNumberFailsChecksum"
     LEAVE_REQUEST_IN_REVIEW = "LeaveRequestInReview"
     UNEXPECTED_RECORD_VARIANCE = "UnexpectedRecordVariance"
+    EMPLOYER_EXEMPT = "EmployerExempt"
 
 
 @dataclass(frozen=True, eq=True)
@@ -602,6 +605,13 @@ def routing_number_validator(routing_number: str) -> Optional[ValidationReason]:
     if not validate_routing_number(routing_number):
         return ValidationReason.ROUTING_NUMBER_FAILS_CHECKSUM
 
+    return None
+
+
+def leave_request_id_validator(leave_request_id: str,) -> Optional[ValidationReason]:
+    parsed_leave_request_id = str_to_int(leave_request_id)
+    if parsed_leave_request_id is None:
+        return ValidationReason.INVALID_TYPE
     return None
 
 
@@ -1252,21 +1262,38 @@ def get_traceable_payment_details(
 
     claim = payment.claim
     employee = payment.claim.employee if payment.claim else None
+    employer = payment.claim.employer if payment.claim else None
 
     return {
         "payment_id": payment.payment_id,
         "c_value": payment.fineos_pei_c_value,
         "i_value": payment.fineos_pei_i_value,
-        "absence_case_id": claim.fineos_absence_id if claim else None,
-        "fineos_customer_number": employee.fineos_customer_number if employee else None,
-        "claim_id": claim.claim_id if claim else None,
-        "employee_id": employee.employee_id if employee else None,
-        "period_start_date": payment.period_start_date,
-        "period_end_date": payment.period_end_date,
+        "period_start_date": payment.period_start_date.isoformat()
+        if payment.period_start_date
+        else None,
+        "period_end_date": payment.period_end_date.isoformat() if payment.period_end_date else None,
+        "fineos_extraction_date": payment.fineos_extraction_date.isoformat()
+        if payment.fineos_extraction_date
+        else None,
+        "payment_date": payment.payment_date.isoformat() if payment.payment_date else None,
         "pub_individual_id": payment.pub_individual_id,
         "payment_transaction_type": payment.payment_transaction_type.payment_transaction_type_description
         if payment.payment_transaction_type
         else None,
+        "is_adhoc": payment.is_adhoc_payment,
+        "fineos_extract_import_log_id": payment.fineos_extract_import_log_id,
+        "leave_request_decision": payment.leave_request_decision,
+        "claim_type": payment.claim_type.claim_type_description if payment.claim_type else None,
+        # Claim
+        "claim_id": claim.claim_id if claim else None,
+        "absence_case_id": claim.fineos_absence_id if claim else None,
+        # Employee
+        "employee_id": employee.employee_id if employee else None,
+        "fineos_customer_number": employee.fineos_customer_number if employee else None,
+        # Employer
+        "employer_id": employer.employer_id if employer else None,
+        "fineos_employer_id": employer.fineos_employer_id if employer else None,
+        # Misc
         "current_state": state.state_description if state else None,
     }
 
@@ -1285,6 +1312,10 @@ def get_traceable_pub_eft_details(
         details = get_traceable_payment_details(payment)
 
     details["pub_eft_id"] = pub_eft.pub_eft_id
+    details["pub_eft_individual_id"] = pub_eft.pub_individual_id
+    details["pub_eft_prenote_state"] = (
+        pub_eft.prenote_state.prenote_state_description if pub_eft.prenote_state else None
+    )
     details["employee_id"] = employee.employee_id
     details["fineos_customer_number"] = employee.fineos_customer_number
 
@@ -1433,6 +1464,48 @@ def validate_columns_present(record: Dict[str, Any], fineos_extract: FineosExtra
             "FINEOS extract %s is missing required fields: %s - found only %s"
             % (fineos_extract.file_name, missing_columns, list(record.keys()))
         )
+
+
+def is_employer_exempt_for_payment(payment: Payment, claim: Claim, employer: Employer) -> bool:
+    # Adhoc payments always skip the exempt employer check
+    if payment.is_adhoc_payment:
+        return False
+
+    # See if exemptions are even set for the employer
+    # + make the linter happy that we're not comparing nulls
+    if (
+        not employer.exemption_commence_date
+        or not employer.exemption_cease_date
+        or not claim.absence_period_start_date
+    ):
+        return False
+
+    # Check if the employer is exempt for the claim type
+    # associated with the payment record
+    if (
+        payment.claim_type_id == ClaimType.FAMILY_LEAVE.claim_type_id and employer.family_exemption
+    ) or (
+        payment.claim_type_id == ClaimType.MEDICAL_LEAVE.claim_type_id
+        and employer.medical_exemption
+    ):
+        # Then check if the start of the claim
+        # fell within the exempt dates of the employer
+        if (
+            employer.exemption_commence_date
+            <= claim.absence_period_start_date
+            <= employer.exemption_cease_date
+        ):
+            extra = get_traceable_payment_details(
+                payment
+            )  # Adds the basics about the employer/claim/payment
+            extra["employer_is_exempt_family"] = employer.family_exemption
+            extra["employer_is_exempt_medical"] = employer.medical_exemption
+            extra["employer_exemption_commence_date"] = employer.exemption_commence_date.isoformat()
+            extra["employer_exemption_cease_date"] = employer.exemption_cease_date.isoformat()
+            logger.info("Payment failed exempt employer validation check", extra=extra)
+            return True
+
+    return False
 
 
 def is_withholding_payments_enabled() -> bool:

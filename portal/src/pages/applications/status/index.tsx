@@ -1,8 +1,4 @@
 import {
-  AbsencePeriod,
-  AbsencePeriodRequestDecision,
-} from "../../../models/AbsencePeriod";
-import {
   BenefitsApplicationDocument,
   ClaimDocument,
   DocumentType,
@@ -12,9 +8,10 @@ import {
   getLegalNotices,
 } from "../../../models/Document";
 import React, { useEffect } from "react";
-import Tag, { TagProps } from "../../../components/core/Tag";
 import withUser, { WithUserProps } from "../../../hoc/withUser";
 
+import { AbsencePeriod } from "../../../models/AbsencePeriod";
+import AbsencePeriodStatusTag from "../../../components/AbsencePeriodStatusTag";
 import Alert from "../../../components/core/Alert";
 import { AppLogic } from "../../../hooks/useAppLogic";
 import BackButton from "../../../components/BackButton";
@@ -102,7 +99,7 @@ export const Status = ({
   if (!isAbsenceCaseId) return <PageNotFound />;
 
   // only hide page content if there is an error that's not DocumentsLoadError.
-  const hasNonDocumentsLoadError: boolean = appLogic.appErrors.items.some(
+  const hasNonDocumentsLoadError: boolean = appLogic.appErrors.some(
     (error) => error.name !== "DocumentsLoadError"
   );
   if (hasNonDocumentsLoadError) {
@@ -239,18 +236,11 @@ export const Status = ({
   const [firstAbsenceDetail] = Object.keys(absenceDetails);
 
   // Determines if phase two payment features are displayed
-  const showPhaseOneFeatures =
-    isFeatureEnabled("claimantShowPayments") &&
-    hasApprovedStatus &&
-    claimDetail.has_paid_payments;
-
-  // Determines if phase two payment features are displayed
   const showPhaseTwoFeatures =
     isFeatureEnabled("claimantShowPaymentsPhaseTwo") && hasApprovedStatus;
 
   // Determines if payment tab is displayed
-  const isPaymentsTab =
-    Boolean(approvalNotice) && (showPhaseOneFeatures || showPhaseTwoFeatures);
+  const isPaymentsTab = Boolean(approvalNotice) && showPhaseTwoFeatures;
 
   return (
     <React.Fragment>
@@ -451,19 +441,6 @@ export const Status = ({
 
 export default withUser(Status);
 
-export const StatusTagMap: {
-  [status in AbsencePeriodRequestDecision]: TagProps["state"];
-} = {
-  Approved: "success",
-  Cancelled: "inactive",
-  Denied: "error",
-  "In Review": "pending",
-  Pending: "pending",
-  Projected: "pending",
-  Withdrawn: "inactive",
-  Voided: "inactive",
-} as const;
-
 interface LeaveDetailsProps {
   absenceDetails?: { [key: string]: AbsencePeriod[] };
   absenceId: string;
@@ -514,11 +491,8 @@ export const LeaveDetails = ({
                     })}
                   </p>
                   <p>
-                    <Tag
-                      label={t("pages.claimsStatus.requestDecision", {
-                        context: request_decision,
-                      })}
-                      state={StatusTagMap[request_decision]}
+                    <AbsencePeriodStatusTag
+                      request_decision={request_decision}
                     />
                   </p>
                   <div>

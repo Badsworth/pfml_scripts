@@ -1,6 +1,6 @@
 import AddButton from "./AddButton";
 import AmendablePreviousLeave from "./AmendablePreviousLeave";
-import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
+import AppErrorInfo from "../../models/AppErrorInfo";
 import Details from "../core/Details";
 import Heading from "../core/Heading";
 import PreviousLeave from "../../models/PreviousLeave";
@@ -12,7 +12,7 @@ import { useTranslation } from "../../locales/i18n";
 
 interface PreviousLeavesProps {
   addedPreviousLeaves: PreviousLeave[];
-  appErrors: AppErrorInfoCollection;
+  appErrors: AppErrorInfo[];
   onAdd: React.MouseEventHandler<HTMLButtonElement>;
   onChange: (
     arg: PreviousLeave | { [key: string]: unknown },

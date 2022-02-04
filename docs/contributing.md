@@ -35,64 +35,7 @@ if your branch is being worked on by more than one person at a time, due to the 
 
 ## Code Reviews
 
-Code reviews are intended to help all of us grow as engineers and improve the quality of what we ship.
-These guidelines are meant to reinforce those two goals.
-
-### For authors or requesters:
-
-- Include the JIRA ticket number in the title. For example: `PFML-123: Implement API endpoint`. A single JIRA ticket may be associated with multiple pull requests.
-
-    Every change should have an associated JIRA ticket unless it is a documentation change. This makes it easier to search for PRs and generates a link in the Jira ticket to the pull request, which provides the program with an audit trail for verifying the relevant code changes, approvals, and test cases.
-
-  - For tickets that have subtasks, use the parent ticket's id in the title, and include the subtask in the PR description. 
-
-  - If it is a documentation change, please prefix with docs: `docs: Clean up CONTRIBUTING.md`.
-
-- Include a [GitHub label](https://github.com/EOLWD/pfml/labels) if relevant.
-These labels can be a helpful wayfinding and context building tool, especially for new engineers onboarding into the codebase.
-
-    - The `architecture` label should be used for changes to abstractions or interfaces that usually affect multiple existing files.
-
-    - The `pattern` label should be used for a new structure or interface that will be reused later.
-
-    - The `operations` label should be used for changes to engineering operations, such as dev set-up or deployment.
-
-- If your PR is a work-in-progress, or if you are looking for specific feedback on things,
-create a [Draft Pull Request](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/about-pull-requests#draft-pull-requests)
-and state what you are looking for in the description.
-
-Your PR should be small enough that a reviewer can reasonably respond within 1-2 business days.
-For larger changes, break them down into a series of PRs.
-If refactors are included in your changes, try to split them out as recommended below.
-
-As a PR writer, you should consider your description and comments as documentation;
-current and future team members will refer to it to understand your design decisions.
-Include relevant context and business requirements, and add preemptive comments (in code or PR)
-for sections of code that may be confusing or worth debate.
-
-When you're ready to request a review, consider including folks who are less familiar with that part of the codebase.
-This allows others to see what you're working on, along with your development/communication style and ways of working.
-
-You may also reference a specific team for review using the teams defined in [Github Teams and Codeowners](./github-teams-and-codeowners.md).
-
-Once you've received feedback, acknowledge each comment with a response or code change.
-
-### For reviewers:
-
-Aim to respond to code reviews within 1 business day.
-
-Remember to highlight things that you like and appreciate while reading through the changes,
-and to make any other feedback clearly actionable by indicating if it is optional preference, an important consideration, or an error.
-
-Don't be afraid to comment with a question, or to ask for clarification, or provide a suggestion,
-whenever you don’t understand what is going on at first glance — or if you think an approach or decision can be improved.
-Code reviews give us a chance to learn from one another, and to reflect, iterate on, and document why certain decisions are made.
-
-Once you're ready to approve or request changes, err on the side of trust.
-Send a vote of approval if the PR looks ready except for small minor changes,
-and trust that the recipient will address your comments before merging by replying via comment or code to any asks.
-Use "request changes" sparingly, unless there's a blocking issue or major refactors that should be done.
-
+See [code reviews](./code-reviews)
 ## Merging a PR
 
 ### How to merge

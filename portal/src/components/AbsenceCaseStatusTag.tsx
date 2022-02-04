@@ -1,13 +1,16 @@
-import { AbsenceCaseStatus, ManagedRequirement } from "../models/Claim";
+import {
+  ManagedRequirement,
+  getSoonestReviewableFollowUpDate,
+} from "../models/ManagedRequirement";
+import { AbsenceCaseStatus } from "../models/Claim";
 import React from "react";
 import Tag from "./core/Tag";
 import findKeyByValue from "../utils/findKeyByValue";
-import getClosestOpenFollowUpDate from "../utils/getClosestOpenFollowUpDate";
 import { useTranslation } from "../locales/i18n";
 
 interface AbsenceCaseStatusTagProps {
   status?: string | null;
-  managedRequirements?: ManagedRequirement[];
+  managedRequirements: ManagedRequirement[];
 }
 
 const AbsenceCaseStatusTag = ({
@@ -16,6 +19,8 @@ const AbsenceCaseStatusTag = ({
 }: AbsenceCaseStatusTagProps) => {
   const { t } = useTranslation();
   const mappedStatus = findKeyByValue(AbsenceCaseStatus, status);
+  const closestReviewableFollowUpDate =
+    getSoonestReviewableFollowUpDate(managedRequirements);
 
   const getTagState = (status?: string | null) => {
     const successState = ["Approved"];
@@ -27,15 +32,15 @@ const AbsenceCaseStatusTag = ({
       if (errorState.includes(status)) return "error";
       if (inactiveState.includes(status)) return "inactive";
     }
-    return "pending";
+    return "warning";
   };
 
-  if (managedRequirements && managedRequirements.length > 0) {
+  if (closestReviewableFollowUpDate) {
     return (
       <Tag
         state="warning"
         label={t("components.absenceCaseStatusTag.status_openRequirements", {
-          followupDate: getClosestOpenFollowUpDate(managedRequirements),
+          followupDate: closestReviewableFollowUpDate,
         })}
       />
     );

@@ -1,4 +1,5 @@
 /* eslint testing-library/prefer-user-event: 0 */
+import { ClaimDocument, DocumentType } from "../../../../src/models/Document";
 import {
   MockEmployerClaimBuilder,
   createAbsencePeriod,
@@ -11,10 +12,9 @@ import {
   waitFor,
   within,
 } from "@testing-library/react";
+import ApiResourceCollection from "src/models/ApiResourceCollection";
 import { AppLogic } from "../../../../src/hooks/useAppLogic";
 import ConcurrentLeave from "../../../../src/models/ConcurrentLeave";
-import DocumentCollection from "../../../../src/models/DocumentCollection";
-import { DocumentType } from "../../../../src/models/Document";
 import { EmployerBenefitFrequency } from "../../../../src/models/EmployerBenefit";
 import EmployerClaim from "../../../../src/models/EmployerClaim";
 import LeaveReason from "../../../../src/models/LeaveReason";
@@ -31,7 +31,7 @@ const ABSENCEID = "NTN-111-ABS-01";
 const CLAIMDOCUMENTSMAP = new Map([
   [
     ABSENCEID,
-    new DocumentCollection([
+    new ApiResourceCollection<ClaimDocument>("fineos_document_id", [
       {
         content_type: "image/png",
         created_at: "2020-04-05",
@@ -120,9 +120,6 @@ describe("Review", () => {
     expect(
       screen.getByText(/Do you have any reason to suspect this is fraud?/)
     ).toBeInTheDocument();
-    expect(screen.getByText(/Leave details/)).toBeInTheDocument();
-    expect(screen.getByText(/Leave schedule/)).toBeInTheDocument();
-    expect(screen.getByText(/Supporting work details/)).toBeInTheDocument();
     expect(
       screen.queryByText(/Concurrent accrued paid leave/)
     ).not.toBeInTheDocument();
@@ -149,9 +146,6 @@ describe("Review", () => {
     expect(
       screen.getByText(/Do you have any reason to suspect this is fraud?/)
     ).toBeInTheDocument();
-    expect(screen.getByText(/Leave details/)).toBeInTheDocument();
-    expect(screen.getByText(/Leave schedule/)).toBeInTheDocument();
-    expect(screen.getByText(/Supporting work details/)).toBeInTheDocument();
     expect(
       screen.getByRole("heading", { name: "Concurrent accrued paid leave" })
     ).toBeInTheDocument();
@@ -188,10 +182,6 @@ describe("Review", () => {
   ])(
     "shows additional text if the claim has been reviewed previously",
     (responded_at, expectedText) => {
-      process.env.featureFlags = JSON.stringify({
-        employerShowMultiLeave: true,
-      });
-
       setup({
         ...claimWithV2Eform,
         managed_requirements: [
@@ -819,7 +809,9 @@ describe("Review", () => {
         appLogic.employers.claimDocumentsMap = new Map([
           [
             claimWithV2Eform.fineos_absence_id,
-            new DocumentCollection([document]),
+            new ApiResourceCollection<ClaimDocument>("fineos_document_id", [
+              document,
+            ]),
           ],
         ]);
       });
@@ -927,31 +919,14 @@ describe("Review", () => {
     });
   });
 
-  it("does not render supporting work details when employerShowMultiLeave is enabled", () => {
-    process.env.featureFlags = JSON.stringify({
-      employerShowMultiLeave: true,
-    });
-    setup();
-    expect(
-      screen.queryByRole("heading", { name: "Supporting work details" })
-    ).not.toBeInTheDocument();
-  });
-
-  it("renders absence id above the title when employerShowMultiLeave is enabled", () => {
-    process.env.featureFlags = JSON.stringify({
-      employerShowMultiLeave: true,
-    });
+  it("renders absence id above the title", () => {
     setup();
     expect(
       screen.getByText("Application ID: NTN-111-ABS-01")
     ).toBeInTheDocument();
   });
 
-  it("renders the absence periods sorted newest to oldest when employerShowMultiLeave is enabled", () => {
-    process.env.featureFlags = JSON.stringify({
-      employerShowMultiLeave: true,
-    });
-
+  it("renders the absence periods sorted newest to oldest", () => {
     setup({
       ...claimWithV2Eform,
       absence_periods: [

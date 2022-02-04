@@ -1,13 +1,12 @@
 import React, { useEffect } from "react";
 import Alert from "./core/Alert";
 import AppErrorInfo from "../models/AppErrorInfo";
-import AppErrorInfoCollection from "../models/AppErrorInfoCollection";
 import { Trans } from "react-i18next";
 import { groupBy } from "lodash";
 import { useTranslation } from "../locales/i18n";
 
 interface ErrorsSummaryProps {
-  errors: AppErrorInfoCollection;
+  errors: AppErrorInfo[];
 }
 
 /**
@@ -26,13 +25,13 @@ function ErrorsSummary(props: ErrorsSummaryProps) {
    * sighted users are made aware of the errors anytime they change.
    */
   useEffect(() => {
-    if (!errors.isEmpty) {
+    if (errors.length > 0) {
       window.scrollTo(0, 0);
     }
   }, [errors]);
 
   // Don't render anything if there are no errors present
-  if (errors.isEmpty) {
+  if (!errors.length) {
     return null;
   }
 
@@ -48,11 +47,11 @@ function ErrorsSummary(props: ErrorsSummaryProps) {
   // Condense the list to only unique messages, combining any that are redundant
   // TODO (CP-1532): Simplify once links in error messages are fully supported
   const visibleErrorMessages = Object.values(
-    groupBy(errors.items, getUniqueMessageKey)
+    groupBy(errors, getUniqueMessageKey)
   ).map((errors) => errors[0].message);
 
   const errorMessages = () => {
-    if (errors.items.length === 1) return <p>{errors.items[0].message}</p>;
+    if (errors.length === 1) return <p>{errors[0].message}</p>;
 
     return (
       <ul className="usa-list">

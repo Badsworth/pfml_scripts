@@ -1,0 +1,65 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`AbsencePeriodStatusTag renders tag for Approved 1`] = `
+<span
+  class="usa-tag display-inline-block text-bold text-middle text-center text-no-wrap text-success-dark bg-success-lighter"
+>
+  Approved
+</span>
+`;
+
+exports[`AbsencePeriodStatusTag renders tag for Cancelled 1`] = `
+<span
+  class="usa-tag display-inline-block text-bold text-middle text-center text-no-wrap text-base-darker bg-base-lightest"
+>
+  Cancelled
+</span>
+`;
+
+exports[`AbsencePeriodStatusTag renders tag for Denied 1`] = `
+<span
+  class="usa-tag display-inline-block text-bold text-middle text-center text-no-wrap text-error-darker bg-error-lighter"
+>
+  Denied
+</span>
+`;
+
+exports[`AbsencePeriodStatusTag renders tag for In Review 1`] = `
+<span
+  class="usa-tag display-inline-block text-bold text-middle text-center text-no-wrap text-base-darkest bg-warning-lighter"
+>
+  Pending
+</span>
+`;
+
+exports[`AbsencePeriodStatusTag renders tag for Pending 1`] = `
+<span
+  class="usa-tag display-inline-block text-bold text-middle text-center text-no-wrap text-base-darkest bg-warning-lighter"
+>
+  Pending
+</span>
+`;
+
+exports[`AbsencePeriodStatusTag renders tag for Projected 1`] = `
+<span
+  class="usa-tag display-inline-block text-bold text-middle text-center text-no-wrap text-base-darkest bg-warning-lighter"
+>
+  Pending
+</span>
+`;
+
+exports[`AbsencePeriodStatusTag renders tag for Voided 1`] = `
+<span
+  class="usa-tag display-inline-block text-bold text-middle text-center text-no-wrap text-base-darker bg-base-lightest"
+>
+  Cancelled
+</span>
+`;
+
+exports[`AbsencePeriodStatusTag renders tag for Withdrawn 1`] = `
+<span
+  class="usa-tag display-inline-block text-bold text-middle text-center text-no-wrap text-base-darker bg-base-lightest"
+>
+  Withdrawn
+</span>
+`;

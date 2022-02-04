@@ -3,6 +3,7 @@ from typing import Optional, Union
 
 import massgov.pfml.util.pydantic.mask as mask
 from massgov.pfml.db.models.employees import TaxIdentifier
+from massgov.pfml.util.strings import format_tax_identifier
 
 
 class Regexes:
@@ -49,12 +50,15 @@ class TaxIdFormattedStr(str):
         yield cls.validate_type
 
     @classmethod
-    def validate_type(cls, val):
+    def validate_type(cls, val: Optional[Union[TaxIdentifier, str]]) -> str:
+        if isinstance(val, TaxIdentifier):
+            val = val.tax_identifier
+
         if not isinstance(val, str):
             raise TypeError("is not a str")
 
         elif Regexes.TAX_ID.match(val):
-            return "{}-{}-{}".format(val[:3], val[3:5], val[5:])
+            return format_tax_identifier(val)
 
         elif Regexes.TAX_ID_FORMATTED.match(val):
             return val

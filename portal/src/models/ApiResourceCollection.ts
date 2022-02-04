@@ -1,4 +1,4 @@
-interface ApiResource {
+export interface ApiResource {
   // API resources are expected to be objects. We expect at least an ID property.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: any;

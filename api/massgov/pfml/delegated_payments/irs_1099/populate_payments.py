@@ -19,36 +19,36 @@ class PopulatePaymentsStep(Step):
     def _populate_payments(self) -> None:
         logger.info("1099 Documents - Populate 1099 Payments Step")
 
-        # Get all payment data for the 1099 batch
-        payment_results = pfml_1099_util.get_payments(self.db_session)
-
         # Get the current batch
         batch = pfml_1099_util.get_current_1099_batch(self.db_session)
         if batch is None:
             logger.error("No current batch exists. This should never happen.")
             raise Exception("Batch cannot be empty at this point.")
 
+        # Get all payment data for the 1099 batch
+        payment_results = pfml_1099_util.get_payments(self.db_session, batch)
+
         try:
             # Create 1099 payment record for each payment
             for payment_row in payment_results:
 
-                payment = payment_row.Payment
                 payment_date = payment_row.payment_date
                 cancel_date = payment_row.cancel_date
 
                 if payment_date is None:
                     logger.debug(
-                        "Payment: %s does not have a date associated with it.", payment.payment_id
+                        "Payment: %s does not have a date associated with it.",
+                        payment_row.payment_id,
                     )
                     continue
 
                 pfml_1099_payment = Pfml1099Payment(
                     pfml_1099_payment_id=uuid.uuid4(),
                     pfml_1099_batch_id=batch.pfml_1099_batch_id,
-                    payment_id=payment.payment_id,
-                    claim_id=payment.claim.claim_id,
-                    employee_id=payment.claim.employee.employee_id,
-                    payment_amount=payment.amount,
+                    payment_id=payment_row.payment_id,
+                    claim_id=payment_row.claim_id,
+                    employee_id=payment_row.employee_id,
+                    payment_amount=payment_row.payment_amount,
                     payment_date=payment_date,
                     cancel_date=cancel_date,
                 )

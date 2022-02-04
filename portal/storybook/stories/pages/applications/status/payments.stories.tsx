@@ -5,7 +5,8 @@ import createMockClaimDetail, {
 } from "lib/mock-helpers/createMockClaimDetail";
 
 import { AbsencePeriodTypes } from "src/models/AbsencePeriod";
-import DocumentCollection from "src/models/DocumentCollection";
+import ApiResourceCollection from "src/models/ApiResourceCollection";
+import { BenefitsApplicationDocument } from "src/models/Document";
 import { Payments } from "src/pages/applications/status/payments";
 import { Props } from "types/common";
 import React from "react";
@@ -18,7 +19,7 @@ import useMockableAppLogic from "lib/mock-helpers/useMockableAppLogic";
 
 const PAYMENT_OPTIONS = {
   REGULAR: "Regular payments",
-  RETROACTIVE: "Retroactive payments",
+  RETROACTIVE: "Has lump sum payment",
   NONE: "No payments",
 };
 
@@ -28,9 +29,14 @@ const STATIC_DATES = {
 };
 
 const APPROVAL_TIME = {
-  AFTER_FOURTEEN_DAYS: "After fourteen days",
   BEFORE_FOURTEEN_DAYS: "Before fourteen days",
+  AFTER_FOURTEEN_DAYS: "After fourteen days",
   RETROACTIVE: "Retroactive",
+};
+
+const PAYMENT_METHOD = {
+  CHECK: "Check",
+  ELEC_FUNDS_TRANSFER: "Direct deposit",
 };
 
 const mappedApprovalDate: { [key: string]: string } = {
@@ -53,6 +59,7 @@ export default {
     "Leave scenario": Object.keys(leaveScenarioMap)[0],
     "Leave type": leaveTypes[0],
     "Approval time": APPROVAL_TIME.AFTER_FOURTEEN_DAYS,
+    "Payment method": PAYMENT_METHOD.CHECK,
   },
   argTypes: {
     Payments: {
@@ -64,6 +71,12 @@ export default {
         PAYMENT_OPTIONS.RETROACTIVE,
         PAYMENT_OPTIONS.NONE,
       ],
+    },
+    "Payment method": {
+      control: {
+        type: "radio",
+      },
+      options: Object.values(PAYMENT_METHOD),
     },
     "Approval time": {
       control: {
@@ -92,34 +105,35 @@ export const DefaultStory = (
     "Leave scenario": keyof typeof leaveScenarioMap;
     "Leave type": AbsencePeriodTypes;
     "Approval time": keyof typeof APPROVAL_TIME;
+    "Payment method": keyof typeof PAYMENT_METHOD;
   }
 ) => {
   // Configure payments array
   const payments = {
     [PAYMENT_OPTIONS.REGULAR]: [
       createMockPayment({
-        payment_method: "Elec Funds Transfer",
+        payment_method: args["Payment method"],
         status: "Sent to bank",
       }),
       createMockPayment({
         sent_to_bank_date: null,
-        payment_method: "Check",
+        payment_method: args["Payment method"],
         status: "Pending",
       }),
       createMockPayment({
         sent_to_bank_date: null,
-        payment_method: "Check",
+        payment_method: args["Payment method"],
         status: "Delayed",
       }),
       createMockPayment({
         sent_to_bank_date: null,
-        payment_method: "Check",
+        payment_method: args["Payment method"],
         status: "Cancelled",
       }),
     ],
     [PAYMENT_OPTIONS.RETROACTIVE]: [
       createMockPayment({
-        payment_method: "Elec Funds Transfer",
+        payment_method: args["Payment method"],
         status: "Sent to bank",
         sent_to_bank_date: STATIC_DATES.absence_period_end_date
           .subtract(-7, "day")
@@ -163,20 +177,26 @@ export const DefaultStory = (
         payments,
       }),
       isLoadingClaimDetail: false,
+      hasLoadedPayments: () => true,
     },
     documents: {
-      documents: new DocumentCollection([
-        generateNotice(
-          "approvalNotice",
-          mappedApprovalDate[args["Approval time"]]
-        ),
-      ]),
+      documents: new ApiResourceCollection<BenefitsApplicationDocument>(
+        "fineos_document_id",
+        [
+          generateNotice(
+            "approvalNotice",
+            mappedApprovalDate[args["Approval time"]]
+          ),
+        ]
+      ),
+      hasLoadedClaimDocuments: () => true,
+      loadAll: () => new Promise(() => {}),
     },
   });
   return (
     <Payments
       appLogic={appLogic}
-      query={{ absence_id: "mock-application-id" }}
+      query={{ absence_id: "NTN-12345-ABS-01" }}
       user={new User({})}
     />
   );

@@ -62,7 +62,7 @@ export const ResetPassword = (props: ResetPasswordProps) => {
         label={t("pages.authResetPassword.backToLoginLink")}
         href={routes.auth.login}
       />
-      {codeResent && appErrors.isEmpty && (
+      {codeResent && !appErrors.length && (
         <Alert
           className="margin-bottom-3 margin-top-0"
           heading={t("pages.authResetPassword.codeResentHeading")}

@@ -21,7 +21,7 @@ exports[`ConcurrentLeaves renders the continuous page content 1`] = `
         <h2
           class="font-heading-lg text-bold"
         >
-          Will you use any employer-sponsored accrued paid leave during your paid leave from PFML?
+          Will you use any employer-sponsored paid time off during your leave period?
         </h2>
       </legend>
       <span
@@ -87,7 +87,7 @@ exports[`ConcurrentLeaves renders the continuous page content 1`] = `
                 xlink:href="/img/sprite.svg#check"
               />
             </svg>
-            What kinds of accrued paid leave to report
+            What kinds of paid time off to report
           </h3>
           <div
             class="margin-top-1 margin-left-4 margin-bottom-2"
@@ -107,7 +107,7 @@ exports[`ConcurrentLeaves renders the continuous page content 1`] = `
                 xlink:href="/img/sprite.svg#close"
               />
             </svg>
-            You don't need to report accrued paid leave that you use during the 7-day waiting period
+            Don’t report paid time off that you use during the 7-day waiting period
           </h3>
         </div>
       </span>
@@ -133,7 +133,7 @@ exports[`ConcurrentLeaves renders the continuous page content 1`] = `
               class="usa-hint text-base-dark"
             >
               <br />
-              I need to report employer-sponsored accrued paid leave I will use after the 7-day waiting period
+              I need to report employer-sponsored paid time off I will use after the 7-day waiting period.
             </span>
           </label>
         </div>
@@ -156,7 +156,7 @@ exports[`ConcurrentLeaves renders the continuous page content 1`] = `
               class="usa-hint text-base-dark"
             >
               <br />
-              I don't need to report any employer sponsored accrued paid leave after the 7-day waiting period, or I don't know yet
+              I don’t need to report any employer-sponsored paid time off after the 7-day waiting period, or I don’t know yet
             </span>
           </label>
         </div>
@@ -193,7 +193,7 @@ exports[`ConcurrentLeaves renders the intermittent reduced page content 1`] = `
         <h2
           class="font-heading-lg text-bold"
         >
-          Will you use any employer-sponsored accrued paid leave during your paid leave from PFML?
+          Will you use any employer-sponsored paid time off during your leave period?
         </h2>
       </legend>
       <span
@@ -237,7 +237,7 @@ exports[`ConcurrentLeaves renders the intermittent reduced page content 1`] = `
                 xlink:href="/img/sprite.svg#check"
               />
             </svg>
-            What kinds of accrued paid leave to report
+            What kinds of paid time off to report
           </h3>
           <div
             class="margin-top-1 margin-left-4 margin-bottom-2"
@@ -335,7 +335,7 @@ exports[`ConcurrentLeaves renders the intermittent reduced page content 1`] = `
               class="usa-hint text-base-dark"
             >
               <br />
-              I need to report employer-sponsored accrued paid leave I will use after the 7-day waiting period
+              I need to report employer-sponsored paid time off I will use after the 7-day waiting period.
             </span>
           </label>
         </div>
@@ -358,7 +358,7 @@ exports[`ConcurrentLeaves renders the intermittent reduced page content 1`] = `
               class="usa-hint text-base-dark"
             >
               <br />
-              I don't need to report any employer sponsored accrued paid leave after the 7-day waiting period, or I don't know yet
+              I don’t need to report any employer-sponsored paid time off after the 7-day waiting period, or I don’t know yet
             </span>
           </label>
         </div>
@@ -395,7 +395,7 @@ exports[`ConcurrentLeaves renders the page 1`] = `
         <h2
           class="font-heading-lg text-bold"
         >
-          Will you use any employer-sponsored accrued paid leave during your paid leave from PFML?
+          Will you use any employer-sponsored paid time off during your leave period?
         </h2>
       </legend>
       <span
@@ -461,7 +461,7 @@ exports[`ConcurrentLeaves renders the page 1`] = `
                 xlink:href="/img/sprite.svg#check"
               />
             </svg>
-            What kinds of accrued paid leave to report
+            What kinds of paid time off to report
           </h3>
           <div
             class="margin-top-1 margin-left-4 margin-bottom-2"
@@ -481,7 +481,7 @@ exports[`ConcurrentLeaves renders the page 1`] = `
                 xlink:href="/img/sprite.svg#close"
               />
             </svg>
-            You don't need to report accrued paid leave that you use during the 7-day waiting period
+            Don’t report paid time off that you use during the 7-day waiting period
           </h3>
         </div>
       </span>
@@ -508,7 +508,7 @@ exports[`ConcurrentLeaves renders the page 1`] = `
               class="usa-hint text-base-dark"
             >
               <br />
-              I need to report employer-sponsored accrued paid leave I will use after the 7-day waiting period
+              I need to report employer-sponsored paid time off I will use after the 7-day waiting period.
             </span>
           </label>
         </div>
@@ -531,7 +531,7 @@ exports[`ConcurrentLeaves renders the page 1`] = `
               class="usa-hint text-base-dark"
             >
               <br />
-              I don't need to report any employer sponsored accrued paid leave after the 7-day waiting period, or I don't know yet
+              I don’t need to report any employer-sponsored paid time off after the 7-day waiting period, or I don’t know yet
             </span>
           </label>
         </div>
@@ -568,7 +568,7 @@ exports[`ConcurrentLeaves renders the page when the claim does not contain concu
         <h2
           class="font-heading-lg text-bold"
         >
-          Will you use any employer-sponsored accrued paid leave during your paid leave from PFML?
+          Will you use any employer-sponsored paid time off during your leave period?
         </h2>
       </legend>
       <span
@@ -634,7 +634,7 @@ exports[`ConcurrentLeaves renders the page when the claim does not contain concu
                 xlink:href="/img/sprite.svg#check"
               />
             </svg>
-            What kinds of accrued paid leave to report
+            What kinds of paid time off to report
           </h3>
           <div
             class="margin-top-1 margin-left-4 margin-bottom-2"
@@ -654,7 +654,7 @@ exports[`ConcurrentLeaves renders the page when the claim does not contain concu
                 xlink:href="/img/sprite.svg#close"
               />
             </svg>
-            You don't need to report accrued paid leave that you use during the 7-day waiting period
+            Don’t report paid time off that you use during the 7-day waiting period
           </h3>
         </div>
       </span>
@@ -680,7 +680,7 @@ exports[`ConcurrentLeaves renders the page when the claim does not contain concu
               class="usa-hint text-base-dark"
             >
               <br />
-              I need to report employer-sponsored accrued paid leave I will use after the 7-day waiting period
+              I need to report employer-sponsored paid time off I will use after the 7-day waiting period.
             </span>
           </label>
         </div>
@@ -703,7 +703,7 @@ exports[`ConcurrentLeaves renders the page when the claim does not contain concu
               class="usa-hint text-base-dark"
             >
               <br />
-              I don't need to report any employer sponsored accrued paid leave after the 7-day waiting period, or I don't know yet
+              I don’t need to report any employer-sponsored paid time off after the 7-day waiting period, or I don’t know yet
             </span>
           </label>
         </div>
@@ -740,7 +740,7 @@ exports[`ConcurrentLeaves renders the reduced page content 1`] = `
         <h2
           class="font-heading-lg text-bold"
         >
-          Will you use any employer-sponsored accrued paid leave during your paid leave from PFML?
+          Will you use any employer-sponsored paid time off during your leave period?
         </h2>
       </legend>
       <span
@@ -806,7 +806,7 @@ exports[`ConcurrentLeaves renders the reduced page content 1`] = `
                 xlink:href="/img/sprite.svg#check"
               />
             </svg>
-            What kinds of accrued paid leave to report
+            What kinds of paid time off to report
           </h3>
           <div
             class="margin-top-1 margin-left-4 margin-bottom-2"
@@ -878,7 +878,7 @@ exports[`ConcurrentLeaves renders the reduced page content 1`] = `
                 xlink:href="/img/sprite.svg#close"
               />
             </svg>
-            You don't need to report accrued paid leave that you use during the 7-day waiting period
+            Don’t report paid time off that you use during the 7-day waiting period
           </h3>
         </div>
       </span>
@@ -904,7 +904,7 @@ exports[`ConcurrentLeaves renders the reduced page content 1`] = `
               class="usa-hint text-base-dark"
             >
               <br />
-              I need to report employer-sponsored accrued paid leave I will use after the 7-day waiting period
+              I need to report employer-sponsored paid time off I will use after the 7-day waiting period.
             </span>
           </label>
         </div>
@@ -927,7 +927,7 @@ exports[`ConcurrentLeaves renders the reduced page content 1`] = `
               class="usa-hint text-base-dark"
             >
               <br />
-              I don't need to report any employer sponsored accrued paid leave after the 7-day waiting period, or I don't know yet
+              I don’t need to report any employer-sponsored paid time off after the 7-day waiting period, or I don’t know yet
             </span>
           </label>
         </div>

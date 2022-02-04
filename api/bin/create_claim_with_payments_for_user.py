@@ -152,7 +152,9 @@ def main(total_payments: int, scenarios: List[str]) -> None:
             )
 
         elif scenario == "cancelled":
-            cancellation_payment = factory.create_cancellation_payment()
+            cancellation_payment = factory.create_cancellation_payment(
+                fineos_extraction_date=end_date + timedelta(days=1)
+            )
             click.secho(
                 f"Created cancellation {format_payment(cancellation_payment, scenario)}",
                 fg="bright_cyan",

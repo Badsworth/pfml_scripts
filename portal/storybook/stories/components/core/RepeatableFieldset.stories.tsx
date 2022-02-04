@@ -5,7 +5,7 @@ import useFormState from "src/hooks/useFormState";
 import useHandleInputChange from "src/hooks/useHandleInputChange";
 
 export default {
-  title: "Core Components/RepeatableFieldset",
+  title: "Core Components/Forms/RepeatableFieldset",
   component: RepeatableFieldset,
 };
 

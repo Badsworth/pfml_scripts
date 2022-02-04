@@ -80,15 +80,10 @@ resource "aws_s3_bucket_notification" "bi_reporting_lambda_trigger" {
     lambda_function_arn = aws_lambda_function.bi_reporting_lambda.arn
     events              = ["s3:ObjectCreated:*"]
     filter_prefix       = "fineos/dataexports/"
-    filter_suffix       = "VBI_REQUESTEDABSENCE.csv"
+    filter_suffix       = ".csv"
   }
 
-  lambda_function {
-    lambda_function_arn = aws_lambda_function.bi_reporting_lambda.arn
-    events              = ["s3:ObjectCreated:*"]
-    filter_prefix       = "fineos/dataexports/"
-    filter_suffix       = "VBI_TASKREPORT_SOM.csv"
-  }
+
   depends_on = [
     aws_lambda_permission.run_bi_reporting_lambda,
     aws_lambda_function.bi_reporting_lambda,

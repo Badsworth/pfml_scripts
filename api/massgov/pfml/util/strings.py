@@ -38,3 +38,7 @@ def sanitize_fein(fein: str) -> str:
 
 def format_fein(fein: str) -> str:
     return f"{fein[:2]}-{fein[2:]}"
+
+
+def format_tax_identifier(tax_identifier: str) -> str:
+    return "{}-{}-{}".format(tax_identifier[:3], tax_identifier[3:5], tax_identifier[5:])

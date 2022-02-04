@@ -107,7 +107,7 @@ def test_employee_to_eligibility_feed_record_with_address(initialize_factories_s
     employer = wages_and_contributions.employer
     address = AddressFactory.create()
 
-    employee.addresses = [
+    employee.employee_addresses = [
         EmployeeAddress(employee_id=employee.employee_id, address_id=address.address_id)
     ]
 
@@ -343,7 +343,7 @@ def test_write_employees_to_csv(tmp_path, test_db_session, initialize_factories_
     employees[1].phone_number = None
 
     # add an address
-    employees[1].addresses = [
+    employees[1].employee_addresses = [
         EmployeeAddress(employee_id=employees[0].employee_id, address_id=address.address_id,)
     ]
 

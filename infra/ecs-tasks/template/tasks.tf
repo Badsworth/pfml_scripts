@@ -177,8 +177,8 @@ locals {
       ]
     },
 
-    "fineos-import-leave-admin-org-units" = {
-      command   = ["fineos-import-leave-admin-org-units"]
+    "fineos-import-la-units" = {
+      command   = ["fineos-import-la-units"]
       task_role = aws_iam_role.fineos_import_la_org_units_task_role.arn
       cpu       = 2048
       memory    = 9216
@@ -431,6 +431,32 @@ locals {
       ]
     }
 
+    "dua-import-employer" = {
+      command        = ["dua-import-employer"]
+      task_role      = aws_iam_role.dua_employee_workflow_task_role.arn
+      execution_role = aws_iam_role.dua_employee_workflow_execution_role.arn
+      cpu            = 2048,
+      memory         = 4096,
+      env = [
+        local.db_access,
+        local.eolwd_moveit_access,
+        local.reductions_folders
+      ]
+    }
+
+    "dua-import-employer-unit" = {
+      command        = ["dua-import-employer-unit"]
+      task_role      = aws_iam_role.dua_employee_workflow_task_role.arn
+      execution_role = aws_iam_role.dua_employee_workflow_execution_role.arn
+      cpu            = 2048,
+      memory         = 4096,
+      env = [
+        local.db_access,
+        local.eolwd_moveit_access,
+        local.reductions_folders
+      ]
+    }
+
     "report-sequential-employment" = {
       command   = ["report-sequential-employment"]
       task_role = aws_iam_role.task_execute_sql_task_role.arn
@@ -457,6 +483,7 @@ locals {
       env = [
         local.db_access,
         local.cognito_access,
+        local.emails
       ]
     },
 

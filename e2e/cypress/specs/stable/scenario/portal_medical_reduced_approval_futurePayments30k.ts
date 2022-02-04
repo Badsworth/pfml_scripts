@@ -1,4 +1,4 @@
-import { extractLeavePeriod } from "util/claims";
+import { extractLeavePeriod } from "../../../../src/util/claims";
 import { portal, fineos, fineosPages } from "../../../actions";
 import { Submission } from "../../../../src/types";
 import { assertValidClaim } from "../../../../src/util/typeUtils";

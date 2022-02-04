@@ -1,7 +1,7 @@
 import { Issue, NotFoundError, ValidationError } from "../errors";
+import ApiResourceCollection from "../models/ApiResourceCollection";
 import { AppErrorsLogic } from "./useAppErrorsLogic";
 import BenefitsApplication from "../models/BenefitsApplication";
-import BenefitsApplicationCollection from "../models/BenefitsApplicationCollection";
 import BenefitsApplicationsApi from "../api/BenefitsApplicationsApi";
 import { NullableQueryParams } from "../utils/routeWithParams";
 import PaginationMeta from "../models/PaginationMeta";
@@ -29,7 +29,9 @@ const useBenefitsApplicationsLogic = ({
     addItem: addBenefitsApplication,
     updateItem: setBenefitsApplication,
     setCollection: setBenefitsApplications,
-  } = useCollectionState(new BenefitsApplicationCollection());
+  } = useCollectionState(
+    new ApiResourceCollection<BenefitsApplication>("application_id")
+  );
 
   // Tracks loading state of claims when calling loadPage()
   const [isLoadingClaims, setIsLoadingClaims] = useState<boolean>();
@@ -73,28 +75,36 @@ const useBenefitsApplicationsLogic = ({
 
   /**
    * Associate a claim created through the contact center with this user.
+   * `import` is a reserved variable name in JS, so...using `associate` here.
    */
-  const associate = async (formState: { [key: string]: string }) => {
+  const associate = async (formState: {
+    absence_case_id: string | null;
+    tax_identifier: string | null;
+  }) => {
     appErrorsLogic.clearErrors();
 
     try {
-      // TODO (PORTAL-1454) - Connect to the API endpoint
-      await Promise.resolve();
+      // Transform user input to conform to expected formatting for API
+      const postData = { ...formState };
+      postData.absence_case_id = postData.absence_case_id
+        ? postData.absence_case_id.toUpperCase().trim()
+        : null;
+
+      const { claim } = await applicationsApi.importClaim(postData);
+
+      // Reset the applications pagination state to force applications to be refetched,
+      // so that this newly associated application is listed
+      setPaginationMeta({});
+
+      portalFlow.goToNextPage(
+        {},
+        {
+          applicationAssociated: claim.fineos_absence_id,
+        }
+      );
     } catch (error) {
-      // TODO (PORTAL-1454) - Add a test for this error handler once API endpoint is connected
       appErrorsLogic.catchError(error);
     }
-
-    // Reset the applications pagination state to force applications to be refetched,
-    // so that this newly associated application is listed
-    setPaginationMeta({});
-
-    portalFlow.goToNextPage(
-      {},
-      {
-        applicationAssociated: formState.absence_id,
-      }
-    );
   };
 
   /**

@@ -8,7 +8,7 @@ const defaultMinutesWorked = 8 * 60 * 7;
 const workPattern = WorkPattern.createWithWeek(defaultMinutesWorked);
 
 export default {
-  title: "Components/WeeklyTimeTable",
+  title: "Features/Applications/WeeklyTimeTable",
   component: WeeklyTimeTable,
   argTypes: {
     days: {

@@ -1,5 +1,8 @@
-import { AbsencePeriod } from "src/models/AbsencePeriod";
-import { StatusTagMap } from "src/pages/applications/status";
+import {
+  AbsencePeriod,
+  AbsencePeriodRequestDecision,
+} from "src/models/AbsencePeriod";
+import LeaveReason from "../../src/models/LeaveReason";
 import faker from "faker";
 
 // Cache the previously used date so we incrementally increase it,
@@ -10,7 +13,9 @@ let endDate: Date;
  * Create an absence period for use in testing. Any attributes that are not passed
  * in will have a random, faked value provided.
  */
-export const createAbsencePeriod = (partialAttrs: Partial<AbsencePeriod>) => {
+export const createAbsencePeriod = (
+  partialAttrs: Partial<AbsencePeriod> = {}
+) => {
   const startDate = faker.date.soon(14, endDate);
   endDate = faker.date.soon(14, startDate);
 
@@ -23,8 +28,9 @@ export const createAbsencePeriod = (partialAttrs: Partial<AbsencePeriod>) => {
       "Intermittent",
       "Reduced Schedule",
     ]),
-    request_decision: faker.random.arrayElement<keyof typeof StatusTagMap>(
-      Object.keys(StatusTagMap) as Array<keyof typeof StatusTagMap>
+    reason: faker.random.arrayElement(Object.values(LeaveReason)),
+    request_decision: faker.random.arrayElement(
+      Object.values(AbsencePeriodRequestDecision)
     ),
   };
 

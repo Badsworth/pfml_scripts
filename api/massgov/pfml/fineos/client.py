@@ -143,6 +143,12 @@ class AbstractFINEOSClient(abc.ABC, metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
+    def get_payment_preferences(
+        self, user_id: str
+    ) -> List[models.customer_api.PaymentPreferenceResponse]:
+        pass
+
+    @abc.abstractmethod
     def add_payment_preference(
         self, user_id: str, payment_preference: models.customer_api.NewPaymentPreference
     ) -> models.customer_api.PaymentPreferenceResponse:

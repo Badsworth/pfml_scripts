@@ -3,6 +3,11 @@
 Full E2E process (SOP): https://lwd.atlassian.net/wiki/spaces/DD/pages/1549860868/SOP+New+Environment+Build
 
 ---
+# Lessons Learned during last deployment
+
+https://lwd.atlassian.net/wiki/spaces/DD/pages/2192572902/Long+and+Trn2+Environments+Lessons+Learned
+
+---
 
 The easiest way to set up resources in a new environment is using the templates in [/bin/bootstrap-env/](../bin/bootstrap-env).
 
@@ -300,8 +305,11 @@ Verify the following details with FINEOS:
 ## 4. Update CI and Monitoring
 
 1. Add the new environment to the [CI build matrix](/.github/workflows/infra-validate.yml) so it can be validated when it's changed.
-2. Add the environment to the [monitoring module](/infra/monitoring/alarms.tf) to create API and Portal alarms that are linked to PagerDuty.
-3. Reach out to e2e team to update their test script with new environment.
+2. Add the new environment to the [monitoring module](/infra/monitoring/alarms.tf) to create API and Portal alarms that are linked to PagerDuty.
+3. Add the new environment to the NewRelic Dashboard by updating `EnvironmentsTable.js` file in e2e folder.
+4. Add the new environment to the `makefile` in API by adding the release branch `deploy/api/NEW_ENV`
+5. Add the new environment to the `makefile` in Portal by adding the release branch `deploy/portal/NEW_ENV`
+6. Reach out to e2e team to update their test script with new environment.
 
 ## 5. Update feature_flags files
 

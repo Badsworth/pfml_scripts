@@ -111,6 +111,7 @@ export const getMfaValidationErrors = (phoneNumber: string | null) => {
   if (
     // 10 digits and 2 dashes
     phoneNumber.length > 12 &&
+    phoneNumber.length < 16 &&
     phoneNumber[0] !== "1"
   ) {
     throw getInternationalNumberError();

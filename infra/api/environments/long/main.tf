@@ -62,6 +62,8 @@ module "api" {
   cors_origins = [
     "https://paidleave-long.dfml.eol.mass.gov",
     "https://paidleave-api-long.dfml.eol.mass.gov",
+    # Allow requests from the Admin Portal
+    "https://paidleave-admin-long.dfml.eol.mass.gov",
   ]
   enable_application_fraud_check = "0"
   release_version                = var.release_version
@@ -88,12 +90,16 @@ module "api" {
 
   fineos_client_oauth2_client_id = "5744bq9dpveko6jie4ma1e4g93"
 
-  service_now_base_url = "https://savilinxstage.servicenowservices.com"
+  admin_portal_base_url               = "https://paidleave-admin-long.dfml.eol.mass.gov"
+  pfml_email_address                  = "PFML_DoNotReply@eol.mass.gov"
+  bounce_forwarding_email_address     = "PFML_DoNotReply@eol.mass.gov"
+  bounce_forwarding_email_address_arn = "arn:aws:ses:us-east-1:498823821309:identity/PFML_DoNotReply@eol.mass.gov"
+
+  service_now_base_url = "https://savilinxlong.servicenowservices.com"
   portal_base_url      = "https://paidleave-long.dfml.eol.mass.gov"
 
   # dor_fineos_etl_schedule_expression               = "cron(5 * * * ? *)" # Hourly at :05 minutes past each hour
 
-  enable_pdf_document_compression  = "1"
   enable_document_multipart_upload = "1"
   enable_application_import        = "1"
 }

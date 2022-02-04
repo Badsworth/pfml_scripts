@@ -69,7 +69,7 @@ We have two different styles of Cypress tests:
     - "portal" when the application is submitted by the claimant through the portal
   - Claim type (typically "medical", "bonding", "pregnancy", or "military")
   - Period (typically "continuous", "intermittent" or "reduced")
-  - Employer response: Typically "approval" or "denial", but in the case of appeals or extensions there can be more than one response (i.e. "approval+denial"). There are also instances where the feature being tested does not require a response at all (in that case leave the ER variable blank like: "api_medical_continuous__").
+  - Employer response: Typically "approval" or "denial", but in the case of appeals or extensions there can be more than one response (i.e. "approval+denial"). There are also instances where the feature being tested does not require a response at all (in that case leave the ER variable blank like: "api_medical_continuous\_\_").
   - What's being tested: the feature being checked in the test (i.e. notifications, payments, etc.)
 - When implementing step definitions, you can use "helper" code in the form of custom Cypress commands, and our system of "actions". Using helpers for repetitive technical steps is good, since it allows us to reuse and improve the execution over time. But make sure your helpers are specifying technical steps rather than business or human process. Business process belongs in the step definition rather than tucked away in a helper.
   - Good helper examples

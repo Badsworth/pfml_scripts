@@ -1,6 +1,6 @@
-import { ClaimEmployee, ClaimEmployer, ManagedRequirement } from "./Claim";
-
+import { ClaimEmployee, ClaimEmployer } from "./Claim";
 import { AbsencePeriod } from "./AbsencePeriod";
+import { ManagedRequirement } from "./ManagedRequirement";
 import dayjs from "dayjs";
 import { orderBy } from "lodash";
 
@@ -91,6 +91,12 @@ class ClaimDetail {
   get hasApprovedStatus() {
     return this.absence_periods.some(
       (absence_period) => absence_period.request_decision === "Approved"
+    );
+  }
+
+  get hasPendingStatus() {
+    return this.absence_periods.some(
+      (absenceItem) => absenceItem.request_decision === "Pending"
     );
   }
 

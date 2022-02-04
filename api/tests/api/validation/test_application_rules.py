@@ -6,6 +6,7 @@ import pytest
 from freezegun import freeze_time
 
 from massgov.pfml.api.models.applications.common import DurationBasis, FrequencyIntervalBasis
+from massgov.pfml.api.models.applications.requests import ApplicationImportRequestBody
 from massgov.pfml.api.models.applications.responses import DocumentResponse
 from massgov.pfml.api.validation.application_rules import (
     get_always_required_issues,
@@ -18,8 +19,14 @@ from massgov.pfml.api.validation.application_rules import (
     get_payments_issues,
     get_reduced_schedule_leave_issues,
     get_work_pattern_issues,
+    validate_application_import_request_for_claim,
 )
-from massgov.pfml.api.validation.exceptions import IssueRule, IssueType, ValidationErrorDetail
+from massgov.pfml.api.validation.exceptions import (
+    IssueRule,
+    IssueType,
+    ValidationErrorDetail,
+    ValidationException,
+)
 from massgov.pfml.db.models.applications import (
     ConcurrentLeave,
     DocumentType,
@@ -48,6 +55,7 @@ from massgov.pfml.db.models.factories import (
     PreviousLeaveOtherReasonFactory,
     PreviousLeaveSameReasonFactory,
     ReducedScheduleLeavePeriodFactory,
+    TaxIdentifierFactory,
     WorkPatternFixedFactory,
     WorkPatternVariableFactory,
 )
@@ -2810,3 +2818,40 @@ class TestGetConcurrentLeaveIssues:
 
         # should resolve without errors
         get_concurrent_leave_issues(application)
+
+
+class TestValidateApplicationImportRequestForClaim:
+    def test_tax_id_should_match_claim_tax_id(self):
+        claim = ClaimFactory.build()
+        claim.employee.tax_identifier = TaxIdentifierFactory.build(tax_identifier="000000000")
+
+        with pytest.raises(ValidationException) as exc:
+            validate_application_import_request_for_claim(
+                ApplicationImportRequestBody(
+                    tax_identifier="123456789",  # different SSN as on the claim
+                    absence_case_id=claim.fineos_absence_id,
+                ),
+                claim,
+            )
+
+        assert exc.value.errors == [
+            ValidationErrorDetail(
+                type=IssueType.incorrect,
+                message="tax_identifier does not match our records",
+                field="tax_identifier",
+            )
+        ]
+
+    def test_skips_tax_id_match_when_claim_has_no_tax_id(self):
+        claim = ClaimFactory.build()
+        claim.employee.tax_identifier = None
+
+        res = validate_application_import_request_for_claim(
+            ApplicationImportRequestBody(
+                tax_identifier="123456789", absence_case_id=claim.fineos_absence_id
+            ),
+            claim,
+        )
+
+        # No exception raised, so a success
+        assert res is None

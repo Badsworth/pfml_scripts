@@ -1,11 +1,13 @@
+import {
+  BenefitsApplicationDocument,
+  DocumentType,
+} from "../../../../src/models/Document";
 // TODO (PORTAL-1148) Update to use createMockClaim when ready
 import { createAbsencePeriod, renderPage } from "../../../test-utils";
+import ApiResourceCollection from "src/models/ApiResourceCollection";
 import AppErrorInfo from "../../../../src/models/AppErrorInfo";
-import AppErrorInfoCollection from "../../../../src/models/AppErrorInfoCollection";
 import { AppLogic } from "../../../../src/hooks/useAppLogic";
 import ClaimDetail from "../../../../src/models/ClaimDetail";
-import DocumentCollection from "../../../../src/models/DocumentCollection";
-import { DocumentType } from "../../../../src/models/Document";
 import LeaveReason from "../../../../src/models/LeaveReason";
 import { Payments } from "../../../../src/pages/applications/status/payments";
 import { createMockBenefitsApplicationDocument } from "../../../../lib/mock-helpers/createMockDocument";
@@ -19,18 +21,22 @@ const renderWithApprovalNotice = (
   isRetroactive = true,
   approvalTime = ""
 ) => {
-  appLogicHook.appErrors = new AppErrorInfoCollection();
+  appLogicHook.appErrors = [];
   appLogicHook.documents.loadAll = jest.fn();
-  appLogicHook.documents.documents = new DocumentCollection([
-    createMockBenefitsApplicationDocument({
-      application_id: "mock-application-id",
-      content_type: "image/png",
-      created_at: isRetroactive ? "2021-11-30" : approvalTime,
-      document_type: DocumentType.approvalNotice,
-      fineos_document_id: "fineos-id-7",
-      name: "legal notice 3",
-    }),
-  ]);
+  appLogicHook.documents.documents =
+    new ApiResourceCollection<BenefitsApplicationDocument>(
+      "fineos_document_id",
+      [
+        createMockBenefitsApplicationDocument({
+          application_id: "mock-application-id",
+          content_type: "image/png",
+          created_at: isRetroactive ? "2021-11-30" : approvalTime,
+          document_type: DocumentType.approvalNotice,
+          fineos_document_id: "fineos-id-7",
+          name: "legal notice 3",
+        }),
+      ]
+    );
   appLogicHook.documents.hasLoadedClaimDocuments = () => true;
 };
 
@@ -48,6 +54,8 @@ const setupHelper =
       : undefined;
     appLogicHook.claims.loadClaimDetail = jest.fn();
     goToSpy = jest.spyOn(appLogicHook.portalFlow, "goTo");
+    appLogicHook.claims.hasLoadedPayments = () =>
+      !!appLogicHook.claims.claimDetail?.payments;
     renderWithApprovalNotice(appLogicHook, isRetroactive, approvalTime);
   };
 
@@ -98,7 +106,6 @@ const props = {
 describe("Payments", () => {
   it("redirects to status page if feature flag is not enabled and claim has loaded", () => {
     process.env.featureFlags = JSON.stringify({
-      claimantShowPayments: false,
       claimantShowPaymentsPhaseTwo: false,
     });
 
@@ -119,7 +126,6 @@ describe("Payments", () => {
 
   it("redirects to status page if claim does not have an approval notice", () => {
     process.env.featureFlags = JSON.stringify({
-      claimantShowPayments: false,
       claimantShowPaymentsPhaseTwo: false,
     });
 
@@ -254,11 +260,7 @@ describe("Payments", () => {
     expect(
       screen.queryByText(/receive one payment for your entire leave/)
     ).not.toBeInTheDocument();
-    expect(
-      screen.getByText(
-        /expect to be paid weekly for the duration of your leave/
-      )
-    ).toBeInTheDocument();
+    expect(screen.getByText(/Check back weekly/)).toBeInTheDocument();
   });
 
   it("renders retroactive text if latest absence period date is retroactive", () => {
@@ -376,7 +378,7 @@ describe("Payments", () => {
             claimDetail: undefined,
             isLoadingClaimDetail: false,
           },
-          appErrors: new AppErrorInfoCollection([
+          appErrors: [
             new AppErrorInfo({
               meta: { application_id: "foo" },
               key: "AppErrorInfo1",
@@ -384,9 +386,12 @@ describe("Payments", () => {
                 "Sorry, we were unable to retrieve what you were looking for. Check that the link you are visiting is correct. If this continues to happen, please log out and try again.",
               name: "NotFoundError",
             }),
-          ]),
+          ],
           documents: {
-            documents: new DocumentCollection([]),
+            documents: new ApiResourceCollection<BenefitsApplicationDocument>(
+              "fineos_document_id",
+              []
+            ),
             loadAll: { loadAllClaimDocuments: jest.fn() },
           },
         },
@@ -397,36 +402,10 @@ describe("Payments", () => {
     expect(container.firstChild).toMatchSnapshot();
   });
 
-  it("omits estimated date content for intermittent leaves with no payments", () => {
-    renderPage(
-      Payments,
-      {
-        addCustomSetup: setupHelper({
-          ...defaultClaimDetail,
-          absence_periods: [
-            createAbsencePeriod({
-              period_type: "Intermittent",
-              absence_period_start_date: "2022-10-21",
-              absence_period_end_date: "2022-12-30",
-              reason: "Child Bonding",
-            }),
-          ],
-        }),
-      },
-      props
-    );
-
-    expect(
-      screen.queryByText(/What does the estimated date mean/)
-    ).not.toBeInTheDocument();
-    expect(screen.getByTestId("your-payments-intro")).toMatchSnapshot();
-  });
-
   // TODO(PORTAL-1482): remove test cases for checkback dates
   describe("Phase 2 Checkback date implementation", () => {
     beforeEach(() => {
       process.env.featureFlags = JSON.stringify({
-        claimantShowPayments: false,
         claimantShowPaymentsPhaseTwo: true,
       });
     });
@@ -560,33 +539,6 @@ describe("Payments", () => {
       expect(screen.getByTestId("your-payments-intro")).toMatchSnapshot();
       const table = screen.queryByRole("table");
       expect(table).not.toBeInTheDocument();
-    });
-
-    it("includes estimated date content for intermittent leaves with payments", () => {
-      renderPage(
-        Payments,
-        {
-          addCustomSetup: setupHelper({
-            ...defaultClaimDetail,
-            absence_periods: [
-              createAbsencePeriod({
-                period_type: "Intermittent",
-                absence_period_start_date: "2022-10-21",
-                absence_period_end_date: "2022-12-30",
-                reason: "Child Bonding",
-              }),
-            ],
-            has_paid_payments: true,
-            payments: [createMockPayment({ status: "Sent to bank" }, true)],
-          }),
-        },
-        props
-      );
-
-      expect(
-        screen.getByText(/What does the estimated date mean/)
-      ).toBeInTheDocument();
-      expect(screen.getByTestId("your-payments-intro")).toMatchSnapshot();
     });
   });
 });

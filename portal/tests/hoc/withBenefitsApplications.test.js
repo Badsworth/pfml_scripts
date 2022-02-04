@@ -1,6 +1,6 @@
 import { screen, waitFor } from "@testing-library/react";
+import ApiResourceCollection from "../../src/models/ApiResourceCollection";
 import BenefitsApplication from "../../src/models/BenefitsApplication";
-import BenefitsApplicationCollection from "../../src/models/BenefitsApplicationCollection";
 import React from "react";
 import { renderPage } from "../test-utils";
 import withBenefitsApplications from "../../src/hoc/withBenefitsApplications";
@@ -65,7 +65,7 @@ describe("withBenefitsApplications", () => {
 
     setup({
       addCustomSetup: (appLogic) => {
-        const claims = new BenefitsApplicationCollection([mockClaim]);
+        const claims = new ApiResourceCollection("application_id", [mockClaim]);
         appLogic.benefitsApplications.benefitsApplications = claims;
         appLogic.benefitsApplications.isLoadingClaims = false;
         appLogic.benefitsApplications.loadPage = jest.fn();

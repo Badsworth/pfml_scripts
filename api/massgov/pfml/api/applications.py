@@ -9,7 +9,7 @@ from flask import Response, request
 from puremagic import PureError
 from pydantic import ValidationError
 from sqlalchemy import asc, desc
-from werkzeug.exceptions import BadRequest, Forbidden, NotFound, ServiceUnavailable, Unauthorized
+from werkzeug.exceptions import BadRequest, Forbidden, NotFound, ServiceUnavailable
 
 import massgov.pfml.api.app as app
 import massgov.pfml.api.services.applications as applications_service
@@ -111,17 +111,14 @@ def application_get(application_id):
 
 
 def applications_get():
-    if user := app.current_user():
-        user_id = user.user_id
-    else:
-        raise Unauthorized
+    user = app.current_user()
     with ApplicationPaginationAPIContext(Application, request=request) as pagination_context:
         with app.db_session() as db_session:
             is_asc = pagination_context.order_direction == OrderDirection.asc.value
             sort_fn = asc if is_asc else desc
             application_query = (
                 db_session.query(Application)
-                .filter(Application.user_id == user_id)
+                .filter(Application.user_id == user.user_id)
                 .order_by(sort_fn(pagination_context.order_key))
             )
             page = page_for_api_context(pagination_context, application_query)
@@ -144,16 +141,16 @@ def applications_import():
     application = Application()
     ensure(CREATE, application)
 
-    if user := app.current_user():
-        application.user = user
-    else:
-        raise Unauthorized
+    user = app.current_user()
+    application.user = user
 
     body = connexion.request.json
     application_import_request = ApplicationImportRequestBody.parse_obj(body)
-
     claim = get_claim_from_db(application_import_request.absence_case_id)
 
+    application_rules.validate_application_import_request_for_claim(
+        application_import_request, claim,
+    )
     error = applications_service.claim_is_valid_for_application_import(claim)
     if error is not None:
         return error.to_api_response()
@@ -168,7 +165,17 @@ def applications_import():
         fineos_web_id = register_employee(
             fineos, claim.employee_tax_identifier, application.employer_fein, db_session,  # type: ignore
         )
+        applications_service.set_application_absence_and_leave_period(
+            fineos, fineos_web_id, application, application_import_request.absence_case_id  # type: ignore
+        )
         applications_service.set_customer_detail_fields(
+            fineos, fineos_web_id, application, db_session
+        )
+        applications_service.set_customer_contact_detail_fields(
+            fineos, fineos_web_id, application, db_session
+        )
+        applications_service.set_employment_status(fineos, fineos_web_id, application, user)
+        applications_service.set_payment_preference_fields(
             fineos, fineos_web_id, application, db_session
         )
         db_session.add(application)
@@ -178,7 +185,9 @@ def applications_import():
     logger.info("applications_import success", extra=log_attributes)
 
     return response_util.success_response(
-        message="Successfully imported application", data=dict(body), status_code=201,
+        message="Successfully imported application",
+        data=ApplicationResponse.from_orm(application).dict(exclude_none=True),
+        status_code=201,
     ).to_api_response()
 
 
@@ -187,12 +196,7 @@ def applications_start():
 
     ensure(CREATE, application)
 
-    # this should always be the case at this point, but the type for
-    # current_user is still optional until we require authentication
-    if user := app.current_user():
-        application.user = user
-    else:
-        raise Unauthorized
+    application.user = app.current_user()
 
     with app.db_session() as db_session:
         db_session.add(application)
@@ -608,11 +612,7 @@ def document_upload(application_id, body, file):
             # attempt to compress the PDF and update file meta data.
             # A size constraint of 10MB is still enforced by the API gateway,
             # so the API should not expect to receive anything above this size
-            if (
-                app.get_config().enable_pdf_document_compression
-                and content_type == AllowedContentTypes.pdf.value
-                and file_size > UPLOAD_SIZE_CONSTRAINT
-            ):
+            if content_type == AllowedContentTypes.pdf.value and file_size > UPLOAD_SIZE_CONSTRAINT:
                 # tempfile.SpooledTemporaryFile writes the compressed file in-memory
                 with tempfile.SpooledTemporaryFile(mode="wb+") as compressed_file:
                     file_size = pdf_util.compress_pdf(file, compressed_file)

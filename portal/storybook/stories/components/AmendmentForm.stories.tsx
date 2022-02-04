@@ -4,7 +4,7 @@ import AmendmentForm from "src/components/employers/AmendmentForm";
 import InputDate from "src/components/core/InputDate";
 
 export default {
-  title: "Components/AmendmentForm",
+  title: "Features/Employer review/AmendmentForm",
   component: AmendmentForm,
 };
 

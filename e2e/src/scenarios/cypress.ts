@@ -182,7 +182,7 @@ export const BIAP60: ScenarioSpecification = {
     label: "BIAP60",
     reason: "Child Bonding",
     reason_qualifier: "Newborn",
-    bondingDate: "future",
+    bondingDate: "past",
     work_pattern_spec: "0,240,240,240,240,240,0",
     docs: {
       MASSID: {},
@@ -194,7 +194,7 @@ export const BIAP60: ScenarioSpecification = {
     },
     is_withholding_tax: false,
     // This scenario requires a 4 week leave time for payment calculation purposes.
-    leave_dates: [subWeeks(mostRecentSunday, 3), addWeeks(mostRecentSunday, 1)],
+    leave_dates: [subWeeks(mostRecentSunday, 4), mostRecentSunday],
     metadata: {
       expected_weekly_payment: "831.06",
       spanHoursStart: "4",
@@ -239,8 +239,8 @@ export const CCAP90ER: ScenarioSpecification = {
       employer_decision: "Approve",
       hours_worked_per_week: 40,
     },
-  }
-}
+  },
+};
 
 export const CDENY2: ScenarioSpecification = {
   employee: { mass_id: true, wages: "eligible" },
@@ -256,6 +256,17 @@ export const CDENY2: ScenarioSpecification = {
   },
 };
 
+export const CDENY2ER: ScenarioSpecification = {
+  ...CDENY2,
+  claim: {
+    ...CDENY2.claim,
+    employerResponse: {
+      employer_decision: "Approve",
+      hours_worked_per_week: 40,
+    },
+  },
+};
+
 export const ORGUNIT: ScenarioSpecification = {
   employee: { mass_id: true, wages: "eligible" },
   claim: {
@@ -267,7 +278,10 @@ export const ORGUNIT: ScenarioSpecification = {
       MASSID: {},
       CARING: {},
     },
-    metadata: { orgunit: "Division of Administrative Law Appeals" },
+    metadata: {
+      orgunits: "Division of Administrative Law Appeals",
+      worksite: "TEAMX_",
+    },
   },
 };
 
@@ -312,6 +326,21 @@ export const MED_OLB: ScenarioSpecification = {
         worked_per_week_minutes: 1200,
       },
     ],
+  },
+};
+
+export const CONCURRENT: ScenarioSpecification = {
+  employee: { mass_id: true, wages: "eligible" },
+  claim: {
+    label: "CONCURRENT",
+    shortClaim: true,
+    reason: "Serious Health Condition - Employee",
+    work_pattern_spec: "0,315,315,315,315,315,0",
+    docs: {
+      MASSID: {},
+      //HCP: {}
+    },
+    concurrent_leave: { is_for_current_employer: true },
   },
 };
 
@@ -550,6 +579,30 @@ export const MED_LSDCR: ScenarioSpecification = {
       HCP: {},
       MASSID: {},
     },
+  },
+};
+
+export const MED_ERRE: ScenarioSpecification = {
+  employee: {
+    wages: 30000,
+    mass_id: true,
+  },
+  claim: {
+    label: "MED_ERRE",
+    shortClaim: true,
+    reason: "Serious Health Condition - Employee",
+    leave_dates: [subWeeks(mostRecentSunday, 2), addWeeks(mostRecentSunday, 2)],
+    employerResponse: {
+      hours_worked_per_week: 40,
+      employer_decision: "Approve",
+      fraud: "No",
+      employer_benefits: [],
+    },
+    docs: {
+      HCP: {},
+      MASSID: {},
+    },
+    metadata: { expected_weekly_payment: "461.54" },
   },
 };
 

@@ -1,6 +1,6 @@
 import AddButton from "./AddButton";
 import AmendableEmployerBenefit from "./AmendableEmployerBenefit";
-import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
+import AppErrorInfo from "../../models/AppErrorInfo";
 import EmployerBenefit from "../../models/EmployerBenefit";
 import Heading from "../core/Heading";
 import React from "react";
@@ -11,7 +11,7 @@ import { useTranslation } from "../../locales/i18n";
 
 interface EmployerBenefitsProps {
   addedBenefits: EmployerBenefit[];
-  appErrors: AppErrorInfoCollection;
+  appErrors: AppErrorInfo[];
   employerBenefits: EmployerBenefit[];
   onAdd: React.MouseEventHandler<HTMLButtonElement>;
   onChange: (

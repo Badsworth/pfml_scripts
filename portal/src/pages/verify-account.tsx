@@ -72,7 +72,7 @@ export const VerifyAccount = (props: VerifyAccountProps) => {
         label={t("pages.authVerifyAccount.backToLoginLink")}
         href={routes.auth.login}
       />
-      {codeResent && appErrors.isEmpty && (
+      {codeResent && !appErrors.length && (
         <Alert
           className="margin-bottom-3 margin-top-0"
           heading={t("pages.authVerifyAccount.codeResentHeading")}

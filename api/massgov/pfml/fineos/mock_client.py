@@ -24,6 +24,7 @@ from massgov.pfml.util.converters.json_to_obj import set_empty_dates_to_none
 from ..db.models.applications import PhoneType
 from . import client, exception, fineos_client, models
 from .mock.eform import MOCK_EFORMS
+from .mock.field import fake_customer_no
 from .models.group_client_api import EForm
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
@@ -246,6 +247,36 @@ def mock_customer_details():
     }
 
 
+def mock_customer_contact_details():
+    # Mocks FINEOS response for customer contact details
+    # This includes all of the FINEOS fields from this endpoint
+    return {
+        "phoneNumbers": [
+            {
+                "id": 0,
+                "preferred": False,
+                "phoneNumberType": "Cell",
+                "intCode": "1",
+                "areaCode": "123",
+                "telephoneNo": "4567890",
+            },
+            {
+                "id": 1,
+                "preferred": True,
+                "phoneNumberType": "Cell",
+                "intCode": "1",
+                "areaCode": "321",
+                "telephoneNo": "4567890",
+            },
+        ],
+        "emailAddresses": [
+            {"id": 0, "preferred": False, "emailAddress": "testemail1@test.com"},
+            {"id": 1, "preferred": True, "emailAddress": "testemail2@test.com"},
+        ],
+        "preferredContactMethod": 1,
+    }
+
+
 class MockFINEOSClient(client.AbstractFINEOSClient):
     """Mock FINEOS API client that returns fake responses."""
 
@@ -279,7 +310,7 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
         return models.OCOrganisation(
             OCOrganisation=[
                 models.OCOrganisationItem(
-                    CustomerNo="999",
+                    CustomerNo=str(fake_customer_no(employer_fein)),
                     CorporateTaxNumber=employer_fein,
                     Name="Foo",
                     organisationUnits=organisationUnits,
@@ -293,8 +324,7 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
         if employer_fein == "999999999":
             raise exception.FINEOSEntityNotFound("Employer not found.")
         else:
-            # TODO: Match the FINEOS employer id format
-            return employer_fein + "1000"
+            return str(fake_customer_no(employer_fein))
 
     def register_api_user(self, employee_registration: models.EmployeeRegistration) -> None:
         _capture_call("register_api_user", None, employee_registration=employee_registration)
@@ -424,7 +454,10 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
         hrsWorkedPerWeek = 37 if customer_id == "1000" else 37.5
         return [
             models.customer_api.ReadCustomerOccupation(
-                occupationId=12345, hoursWorkedPerWeek=hrsWorkedPerWeek, workPatternBasis="Unknown"
+                occupationId=12345,
+                hoursWorkedPerWeek=hrsWorkedPerWeek,
+                workPatternBasis="Unknown",
+                employmentStatus="Active",
             )
         ]
 
@@ -505,6 +538,40 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
     ) -> List[models.customer_api.ReadCustomerOccupation]:
         _capture_call("get_case_occupations", user_id, case_id=case_id)
         return [models.customer_api.ReadCustomerOccupation(occupationId=12345)]
+
+    def get_payment_preferences(
+        self, user_id: str
+    ) -> List[models.customer_api.PaymentPreferenceResponse]:
+        _capture_call("get_payment_preferences", user_id)
+        return [
+            models.customer_api.PaymentPreferenceResponse(
+                paymentMethod="Elec Funds Transfer",
+                paymentPreferenceId="85622",
+                isDefault=True,
+                accountDetails=models.customer_api.AccountDetails(
+                    accountNo="1234565555",
+                    accountName="Constance Griffin",
+                    routingNumber="011222333",
+                    accountType="Checking",
+                ),
+                chequeDetails=models.customer_api.ChequeDetails(
+                    nameToPrintOnCheck="Connie Griffin"
+                ),
+                customerAddress=models.customer_api.CustomerAddress(
+                    address=models.customer_api.Address(
+                        addressLine1="44324 Nayeli Stream",
+                        addressLine2="",
+                        addressLine3="",
+                        addressLine4="New Monserrateberg",
+                        addressLine5="",
+                        addressLine6="IN",
+                        addressLine7="",
+                        postCode="22516-6101",
+                        country="USA",
+                    )
+                ),
+            )
+        ]
 
     def add_payment_preference(
         self, user_id: str, payment_preference: models.customer_api.NewPaymentPreference
@@ -784,7 +851,7 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
 
         return (
             employer_create_or_update.fineos_customer_nbr,
-            int(employer_create_or_update.employer_fein) + 44000000,
+            fake_customer_no(employer_create_or_update.employer_fein),
         )
 
     def create_or_update_leave_admin(

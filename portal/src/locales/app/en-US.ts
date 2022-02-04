@@ -727,12 +727,6 @@ const shared: {
   absenceCaseStatus_denied: "Denied",
   absenceCaseStatus_noAction: "No action required",
   absenceCaseStatus_pending: "Pending",
-  absencePeriodStatus_Approved: "Approved",
-  absencePeriodStatus_Cancelled: "Cancelled",
-  absencePeriodStatus_Denied: "Denied",
-  absencePeriodStatus_Pending: "Pending",
-  absencePeriodStatus_Voided: "Voided",
-  absencePeriodStatus_Withdrawn: "Withdrawn",
   achTypeChecking: "Checking",
   achTypeSavings: "Savings",
   amountFrequencyLabel: "Frequency",
@@ -1104,13 +1098,6 @@ const pages: {
     sectionLabel: "What is your current residential address?",
     title: "$t(shared.claimsVerifyIdTitle)",
   },
-  claimsAssociate: {
-    absenceIdLabel: "Application ID",
-    lead: "To locate your application, please enter information for each field.",
-    submitButton: "Continue",
-    taxIdLabel: "Last 4 digits of Social Security Number",
-    title: "Find My Application",
-  },
   claimsBondingDateOfChild: {
     birthHint:
       "If your child has not been born yet, enter the expected due date.",
@@ -1228,17 +1215,17 @@ const pages: {
   claimsConcurrentLeaves: {
     choiceNo: "$t(shared.choiceNo)",
     choiceNoHint:
-      "I don't need to report any employer sponsored accrued paid leave after the 7-day waiting period, or I don't know yet",
+      "I don’t need to report any employer-sponsored paid time off after the 7-day waiting period, or I don’t know yet",
     choiceYes: "$t(shared.choiceYes)",
     choiceYesHint:
-      "I need to report employer-sponsored accrued paid leave I will use after the 7-day waiting period",
+      "I need to report employer-sponsored paid time off I will use after the 7-day waiting period.",
     dontNeedToReport:
-      "You don't need to report accrued paid leave that you use during the 7-day waiting period",
+      "Don’t report paid time off that you use during the 7-day waiting period",
     dontNeedToReport_intermittentLeave:
       "You don't need to report accrued paid leave that you use during the 7-day waiting period, which is 7 consecutive calendar days from the date of the first instance of leave from your employer",
     hintWhatKindBody:
       "<p>This includes any paid vacation time, sick time, and personal time. It should be reported if it’s taken during your leave period, whether it’s during the 7-day waiting period or after. Reminder: you can use accrued paid leave during the 7-day waiting period with no impact to your PFML benefit.</p>",
-    hintWhatKindHeading: "What kinds of accrued paid leave to report",
+    hintWhatKindHeading: "What kinds of paid time off to report",
     hintWhenToReportBody:
       "<p>If your PFML leave includes taking time off work completely for a period of time (continuous leave), you need to report any accrued paid leave you plan to take during that continuous leave. Select Yes to report this leave.</p><p>If your PFML leave includes working fewer hours than normal (a reduced leave schedule) or taking time off work in uneven or unpredictable blocks of time (intermittent leave), you need to report leave if ONE of the following two statements is true:</p><ul><li>You are planning to use this accrued paid leave on days when you are also taking PFML leave.</li><li>You are planning to use this accrued paid leave for a PFML qualifying reason, even if it’s not the same reason you are applying for now.</li></ul>",
     hintWhenToReportDetailsBody:
@@ -1252,7 +1239,7 @@ const pages: {
     intro_ReducedOrIntermittent:
       "<div><p>Employer-sponsored paid vacation time, sick time, and personal time that:</p><ul><li>You are planning to use on days when you are also taking PFML leave.</li></ul><p>Or</p><ul><li>You are planning to use for a PFML qualifying reason, even if it’s not the same reason you are applying for now.</li></ul></div>",
     sectionLabel:
-      "Will you use any employer-sponsored accrued paid leave during your paid leave from PFML?",
+      "Will you use any employer-sponsored paid time off during your leave period?",
     title: "$t(shared.claimsOtherLeaveTitle)",
     typesOfLeaveToReport:
       "For PFML leave that includes taking time off work completely for a period of time (continuous leave), you need to report any accrued paid leave you plan to take during that continuous leave.",
@@ -1262,19 +1249,24 @@ const pages: {
   claimsConcurrentLeavesDetails: {
     choiceNo: "$t(shared.choiceNo)",
     choiceYes: "$t(shared.choiceYes)",
+    detailsBody:
+      "Employer-sponsored paid vacation time, sick time, and personal time you plan to take during your paid leave from PFML.",
+    detailsLabel: "What is employer-sponsored paid time off?",
     hintHeader:
       "This is the same Employer Identification Number you entered earlier in your application. After you submit your application, this employer will be able to review it. We won’t share any leave you plan to take from other employers.",
-    leaveEndDateLabel: "What is the last day of this leave?",
-    leaveStartDateLabel: "What is the first day of this leave?",
+    leaveEndDateLabel:
+      "What is the last day of your employer-sponsored paid time off?",
+    leaveStartDateLabel:
+      "What is the first day of your employer-sponsored paid time off?",
     sectionLabel:
-      "Will you use accrued paid leave from this employer? EIN: {{employer_fein, ein}}",
+      "Will you use employer-sponsored paid time off from this employer? EIN: {{employer_fein, ein}}",
     title: "$t(shared.claimsOtherLeaveTitle)",
   },
   claimsConcurrentLeavesIntro: {
     intro:
-      "<p>Next, we need to know about paid leave from your employer that you plan to use between {{startDate}} and {{endDate}}. This includes paid vacation time, sick time, personal time, and other paid time off provided by your employer. It does not include family or medical leave provided by your employer, or through a short- or long-term disability program. We’ll ask about that later.</p><p>When your PFML leave begins, there is a 7-day waiting period before PFML payments start. During this 7-day waiting period, you can use paid time off from your employer with no impact to your PFML benefit.</p><p>After the 7-day waiting period, you cannot use both paid leave from your employer and paid leave from PFML on the same days. In some cases, using accrued paid leave after the 7-day waiting period has ended can cause your PFML benefits to stop. You will need to re-apply to receive PFML benefits again. To avoid this, use accrued paid leave only at the start or end of your PFML leave. <examples-of-using-paid-leave>See examples of how you can use accrued paid leave</examples-of-using-paid-leave>.</p>",
+      "<p>Next, we need to know about paid time off from your employer that you plan to use between {{startDate}} and {{endDate}}. This includes paid vacation time, sick time, personal time, and other paid time off provided by your employer. You do not need to tell us about short or long-term disability programs, or other family or medical leave benefits provided by your employer in this section. We’ll ask about that in the next section.</p><p>When your PFML leave begins, there is a 7-day waiting period before PFML payments start. During this 7-day waiting period, you can use paid time off from your employer with no impact to your PFML benefit.</p><p>After the 7-day waiting period, <strong>you cannot use both employer-sponsored paid time off and paid leave from PFML on the same day.</strong> In some cases, using accrued paid leave after the 7-day waiting period has ended can cause your PFML benefits to stop. You will need to re-apply to receive PFML benefits again. To avoid this, use accrued paid leave only at the start or end of your PFML leave. <examples-of-using-paid-leave>See examples of how you can use accrued paid leave</examples-of-using-paid-leave>.</p>",
     sectionLabel:
-      "Tell us about the accrued paid leave you'll use during your paid leave from PFML.",
+      "Tell us about the employer-sponsored paid time off you’ll use during your  leave period.",
     title: "$t(shared.claimsOtherLeaveTitle)",
   },
   claimsDateOfBirth: {
@@ -1400,6 +1392,15 @@ const pages: {
     sectionLabelHint:
       "This data helps us understand who is accessing our program to ensure it is built for everyone.",
     title: "$t(shared.claimsVerifyIdTitle)",
+  },
+  claimsImport: {
+    absenceIdLabel: "Application ID number",
+    leadIntro: "We need some information to identify your application.",
+    leadReminder:
+      "Reminder: You’ll need to keep managing applications through the Contact Center if you are self-employed or unemployed or if you are applying for military-related paid family leave benefits.",
+    submitButton: "Continue",
+    taxIdLabel: "Social Security Number (SSN)",
+    title: "Add an existing application",
   },
   claimsIntermittentFrequency: {
     durationBasisChoice_days: "At least one day",
@@ -2102,14 +2103,6 @@ const pages: {
     reportOtherBenefitsBody:
       "<p>If your plans for other benefits or income during your paid leave have changed, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>. Report changes to:</p><ul><li>Benefits from your employer that you plan to use in addition to paid leave from PFML. For example, if you are taking a different amount of sick days than you first planned, or if you are taking employer sponsored parental leave on a different schedule than you expected, report this change.</li><li>Income from other sources during your leave. For example, if you got approved for a disability benefit or a worker’s compensation claim after you submitted your application, report this change.</li></ul>",
     reportOtherBenefitsHeading: "Report other benefits or income",
-    requestDecision_Approved: "$t(shared.absencePeriodStatus_Approved)",
-    requestDecision_Cancelled: "$t(shared.absencePeriodStatus_Cancelled)",
-    requestDecision_Denied: "$t(shared.absencePeriodStatus_Denied)",
-    "requestDecision_In Review": "$t(shared.absencePeriodStatus_Pending)",
-    requestDecision_Pending: "$t(shared.absencePeriodStatus_Pending)",
-    requestDecision_Projected: "$t(shared.absencePeriodStatus_Pending)",
-    requestDecision_Voided: "$t(shared.absencePeriodStatus_Voided)",
-    requestDecision_Withdrawn: "$t(shared.absencePeriodStatus_Withdrawn)",
     statusTimelineNotice:
       "Notices usually appear within 30 minutes after we update the status of your application.",
     timelineDescription:
@@ -2391,8 +2384,6 @@ const pages: {
       "This application has changed since it was reviewed on {{date}}.",
     submitButton: "Submit",
     submitLoadingMessage: "Submitting… Do not refresh or go back.",
-    // TODO (PORTAL-1151) Remove flag
-    supportingWorkDetailsHeader: "Supporting work details",
     title: "Review application from {{name}}",
   },
   employersClaimsStatus: {
@@ -2428,6 +2419,20 @@ const pages: {
     title: "Thanks for reviewing the application",
   },
   employersDashboard: {
+    // Fallback in case some unexpected leave reason is sent from Fineos:
+    absencePeriodReason: "Leave period",
+    absencePeriodReason_activeDutyFamily:
+      "$t(shared.leaveReasonActiveDutyFamily)",
+    absencePeriodReason_bonding: "$t(shared.leaveReasonBonding)",
+    absencePeriodReason_care: "$t(shared.leaveReasonCare)",
+    absencePeriodReason_medical: "$t(shared.leaveReasonMedical)",
+    absencePeriodReason_pregnancy: "$t(shared.leaveReasonPregnancy)",
+    absencePeriodReason_serviceMemberFamily:
+      "$t(shared.leaveReasonServiceMemberFamily)",
+    absencePeriodType_Continuous: "$t(shared.claimDurationTypeContinuous)",
+    absencePeriodType_Intermittent: "$t(shared.claimDurationTypeIntermittent)",
+    "absencePeriodType_Reduced Schedule":
+      "$t(shared.claimDurationTypeReducedSchedule)",
     filterNavLabel: "Filters:",
     filterOrgsLabel: "Organizations",
     filterRemove: "Remove filter:",
@@ -2443,6 +2448,8 @@ const pages: {
     filtersToggle: "Show filters",
     filtersToggle_expanded: "Hide filters",
     noClaimResults: "No applications on file",
+    respondBy: "Respond by {{ date }}",
+    reviewAction: "Review Application",
     searchLabel: "Search for employee name or application ID",
     searchSubmit: "Search",
     sortChoice_employee_az: "Last name – A to Z",
@@ -2464,10 +2471,14 @@ const pages: {
       "<strong>Review by:</strong> Review this application by this date to provide DFML with your input.",
     statusDescriptionsLabel: "Status descriptions",
     tableColHeading_created_at: "Application start date",
+    tableColHeading_employee_and_case: "Employee (Application ID)",
     tableColHeading_employee_name: "Employee name",
+    tableColHeading_employer: "Organization (FEIN)",
     tableColHeading_employer_dba: "Organization",
     tableColHeading_employer_fein: "Employer ID number",
     tableColHeading_fineos_absence_id: "Application ID",
+    tableColHeading_leave_details: "Leave details",
+    tableColHeading_review_status: "Review due date",
     tableColHeading_status: "Status",
     title: "Dashboard",
     verificationBody:
@@ -2598,7 +2609,7 @@ const pages: {
   payments: {
     backButtonLabel: "$t(shared.backToYourApplicationsLink)",
     changesToPaymentsAmountAnswer:
-      "<p>To see your maximum weekly benefit amount, view your approval notice in the <view-notices-link>notice section of your application.</view-notices-link>.</p><p>The payment amount you see on this page may be less than the maximum benefit amount due to <using-other-leave-link>other leave, income and benefits</using-other-leave-link> you reported. You will receive another notice if we reduce your benefit amount for any reason other than tax withholding. Please note that you can not change your tax withholding status at this point, since your application has been approved.</p><p><strong>Other scenarios that may change the payment amount you receive are:</strong></p><ul><li>You or your employer report additional other leave, income or benefits</li><li>You reach the maximum total amount that you can receive in PFML benefits across multiple applications.</li><li>You receive a payment for a pay period less than a full week</li><li>You elected to have taxes withheld</li><li>You received an overpayment</li></ul>",
+      "<p>To see your maximum weekly benefit amount, view your approval notice in the <view-notices-link>notice section of your application.</view-notices-link>.</p><p>The payment amount you see on this page may be less than the maximum benefit amount due to <using-other-leave-link>other leave, income and benefits</using-other-leave-link> you reported. You will receive another notice if we reduce your benefit amount for any reason other than tax withholding. Please note that you can not change your tax withholding status at this point, since your application has been approved.</p><p><strong>Other scenarios that may change the payment amount you receive are:</strong></p><ul><li>You or your employer report other leave, income or benefits</li><li>You reach the maximum total amount that you can receive in PFML benefits across multiple applications</li><li>You receive a payment for a pay period less than a full week</li><li>You elected to have taxes withheld</li><li>You received an overpayment</li></ul>",
     changesToPaymentsAmountQuestion:
       "Why the amount you received may be less than your approved benefit amount",
     changesToPaymentsHeading: "Changes to payments",
@@ -2606,7 +2617,7 @@ const pages: {
       "<p>To make changes to your payment method or banking information, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.</p>",
     changesToPaymentsYourPreferencesQuestion: "Change your payment preference",
     delaysToPaymentsScheduleAnswer:
-      "<p>Once your payments have started, expect to be paid weekly for the duration of your leave.</p><p><strong>What may cause a delayed payment</strong></p><p>The exact day you receive payment can be delayed because of:</p><ul><li>State and federal holidays</li><li>Leave periods that end on weekends</li><li>Your bank’s processes</li><li>The process to adjust your benefit amount due to additional income or benefits you or your employer reported</li><li>Changes to your leave’s start and end dates</li><li>Other processing issues such as issues with bank account information, or your address</li></ul><p><strong>What may lead to a cancelled payment</strong></p><p>Payments can be cancelled due to:</p><ul><li>Changes to when you end your leave</li><li>Paid time off taken on days you also receive PFML benefits</li><li>The process to adjust your benefit amount due to additional income or benefits you or your employer reported may temporarily create a cancelled payment</li></ul>",
+      "<strong>What may cause a delayed payment</strong><p>The exact day you receive payment can be delayed because of:</p><ul><li>State and federal holidays</li><li>Pay periods that end on weekends</li><li>Your bank’s processes</li><li>Changes to your leave’s start and end dates</li><li>Changes to your benefit amount due to additional income or benefits you or your employer reported</li><li>Other processing issues such as issues with bank account information or your address</li></ul><p><strong>What may cause a cancelled payment</strong></p><p>Payments can be cancelled because of:</p><ul><li>Paid time off taken on the same day you receive receive PFML benefits</li><li>Changes to your leave’s start and end dates</li><li>Changes to your benefit amount due to additional income or benefits you or your employer reported</li><li>Hours worked outside of the schedule you set up with your employer or during reported intermittent hours</li><li>If you believe we’ve cancelled your payments for an incorrect reason, you can <online-appeals-form>appeal the DFML decision.</online-appeals-form></ul>",
     delaysToPaymentsScheduleQuestion:
       "What may cause a delayed or cancelled payment",
     estimatedDate:
@@ -2621,48 +2632,47 @@ const pages: {
     infoAlertHeading_pregnancy: "$t(shared.infoAlertHeading_pregnancy)",
     loadingClaimDetailLabel: "$t(shared.loadingClaimDetailLabel)",
     paymentsIntro_Continuous_PostFourteenthClaimDate:
-      "<p>Check back on {{checkbackDate}} to see when you can expect your first payment. Your first payment will include multiple weeks of leave. After your first payment, payments are scheduled weekly.</p>",
+      "<p>Check back on {{checkbackDate}} to see when you can expect your first payment. Your first payment will include multiple weeks of leave. After your first payment, expect to be paid weekly.</p>",
     paymentsIntro_Continuous_PreFourteenthClaimDate:
-      "<p>Check back on {{checkbackDate}} to see when you can expect your first payment. After your first payment, payments are scheduled weekly. Your application has a 7-day waiting period at the start of your leave. You won’t receive any PFML payments for this week of leave.</p>",
+      "<p>Check back on {{checkbackDate}} to see when you can expect your first payment. Your first payment will be scheduled after your second week of leave ends. After your first payment, expect to be paid weekly.</p>",
     paymentsIntro_Continuous_Retroactive:
       "<p>Check back on {{checkbackDate}} to see when you can expect your first payment. You’ll receive one payment for your entire leave.</p>",
     paymentsIntro_Intermittent:
       "Once you report at least 8 hours, you can expect to receive a payment about one week later. You can receive more than one payment in a week depending on how your hours are reported. You can report your hours by calling <contact-center-report-phone-link>$t(shared.contactCenterReportHoursPhoneNumber)</contact-center-report-phone-link>.",
     paymentsIntro_Intermittent_Unpaid:
-      "<p>Your application has a 7-day waiting period after the first day you report taking leave. You won’t receive any PFML payments for these 7 days of leave.</p><p>After your waiting period, once you report at least 8 hours of leave you can expect to receive payment about one week later. You can receive more than one payment in a week depending on how your hours are reported.</p><p>You can report your hours by calling <contact-center-report-phone-link>$t(shared.contactCenterReportHoursPhoneNumber)</contact-center-report-phone-link>.</p>",
+      "<p>Your application has an unpaid 7-day waiting period that begins the first day you report taking leave.</p><p>You need to complete your unpaid 7-day waiting period waiting period and report at least 8 hours of leave before you will receive a payment from the Department. You may receive more than one payment per week depending on how your hours are reported.</p><p>Call the Hours Reporting line at <contact-center-report-phone-link>$t(shared.contactCenterReportHoursPhoneNumber)</contact-center-report-phone-link> each week to report the intermittent leave hours you used.</p>",
     paymentsIntro_NonIntermittent_NonRetro:
       "Payments are scheduled to be paid after each week of your leave. Check back weekly to see when your next payment will be scheduled.",
     paymentsIntro_NonIntermittent_Retro:
       "Since you were approved after your leave ended, you’ll receive one payment for your entire leave.",
     paymentsIntro_ReducedSchedule_PostFourteenthClaimDate:
-      "<p>Check back on {{checkbackDate}} to see when you can expect your first payment. You need to take at least 8 hours of leave for a payment to be processed.</p>",
+      "<p>Check back on {{checkbackDate}} to see when you can expect your first payment. You need to take at least 8 hours of leave or wait until 30 days have passed for a payment to be scheduled.</p>",
     paymentsIntro_ReducedSchedule_PreFourteenthClaimDate:
-      "<p>Check back on {{checkbackDate}} to see when you can expect your first payment. You need to take at least 8 hours of leave for a payment to be processed. Your application has a 7-day waiting period at the start of your leave. You won’t receive any PFML payments for this week of leave.</p>",
+      "<p>Check back on {{checkbackDate}} to see when you can expect your first payment. You need to take at least 8 hours of leave or wait until 30 days have passed for a payment to be scheduled.</p>",
     paymentsIntro_ReducedSchedule_Retroactive:
       "$t(pages.payments.paymentsIntro_Continuous_Retroactive)",
     paymentsTitle: "Payments",
     questionsDetails:
       "<p>Call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.</p>",
     questionsHeader: "Questions?",
+    tableAmountHeader: "Amount",
     tableAmountSent: "{{amount, currency}}",
-    tableAmountSentHeader: "Amount sent",
-    tableDateProcessedHeader: "Date processed",
-    tableEstimatedDateHeader: "Estimated date",
-    tableLeaveDatesHeader: "Leave dates",
-    tablePaymentMethodHeader: "Payment Method",
-    tablePaymentMethod_Check: "Check",
-    "tablePaymentMethod_Elec Funds Transfer": "Direct Deposit",
-    tablePaymentStatus_Cancelled: "Cancelled",
-    tablePaymentStatus_Delayed: "Delayed",
-    tablePaymentStatus_Pending: "Pending",
-    "tablePaymentStatus_Sent to bank": "Sent",
+    tablePayPeriodHeader: "Pay period",
+    tablePaymentStatus_Cancelled:
+      "This payment was cancelled. See <delays-accordion-link>what may cause a delayed or cancelled payment</delays-accordion-link>.",
+    tablePaymentStatus_Check: "Check mailed on {{sentDate}}",
+    tablePaymentStatus_Delayed:
+      "See <delays-accordion-link>what may cause a delayed or cancelled payment</delays-accordion-link>.",
+    tablePaymentStatus_Pending:
+      "Your payment will be sent by {{paymentMethod}} between {{payPeriod}}.",
+    "tablePaymentStatus_Sent to bank":
+      "Direct deposit was sent on {{sentDate}}. Depending on your bank’s processes, expect to see this payment in your account 2-3 days after this date.",
+    tableStatusHeader: "Status",
     tableWaitingWeekGeneric:
       "The first seven (7) days of approved leave are unpaid",
-    tableWaitingWeekHeader: "Waiting week",
+    tableWaitingWeekHeader: "Waiting period",
     tableWaitingWeekText:
-      "Learn more about the <waiting-week-link>7-day waiting period</waiting-week-link>.",
-    whatDoesEstimatedDateMean:
-      "<p><strong>What does estimated scheduled date mean?</strong></p><p>This is the date range we expect to process your direct deposit payment or send your check in the mail. Depending on your bank, expect to receive direct deposit payments in your account 2-3 days after this date.  Checks may take 7-11 days to arrive in the mail. Once your payment is processed or your check is sent, that date will be shown in the “date processed” column.</p>",
+      "You have an unpaid 7-day waiting period at the start of your leave. You won’t receive any PFML payments for leave you take during this time. Learn more about the <waiting-week-link>7-day waiting period</waiting-week-link>.",
     yourPayments: "Your payments",
   },
   userConsentToDataSharing: {
@@ -2724,6 +2734,16 @@ const components: {
     status_noAction: "$t(shared.absenceCaseStatus_noAction)",
     status_openRequirements: "Review by {{followupDate}}",
     status_pending: "$t(shared.absenceCaseStatus_pending)",
+  },
+  absencePeriodStatusTag: {
+    label_approved: "Approved",
+    label_cancelled: "Cancelled",
+    label_denied: "Denied",
+    label_inReview: "Pending",
+    label_pending: "Pending",
+    label_projected: "Pending",
+    label_voided: "Cancelled",
+    label_withdrawn: "Withdrawn",
   },
   amendButton: {
     amend: "Amend",
@@ -2889,6 +2909,22 @@ const components: {
     subtitle_amend:
       "This amendment will get saved when you submit your review. To remove this leave, include a comment at the end of the page.",
   },
+  employersCaringLeaveQuestion: {
+    choiceNo: "No (comment required)",
+    choiceUnknown: "I don't know",
+    choiceYes: "Yes",
+    commentHeading: "Tell us why you think this relationship is inaccurate.",
+    familyMemberRelationshipHint:
+      "This employee has attested the family member relationship is <eligible-relationship-link>a covered relationship</eligible-relationship-link>. If something on the form seems incorrect, add a comment at the end of the page.",
+    familyMemberRelationshipLabel:
+      "Do you believe the listed relationship is described accurately? (Optional)",
+    inaccurateRelationshipAlertHeading:
+      "The employee will be denied paid leave.",
+    inaccurateRelationshipAlertLead:
+      "We take allegations about false relationships seriously. Choosing No may trigger a denial of the employee's application for paid leave. The employee has the right to appeal if their application is denied.",
+    unknownRelationshipAlertLead:
+      "If you have not confirmed the accuracy of the family relationship the employee has attested to, please note that the Department of Family and Medical leave will adjudicate the claim based on the attestation the employee made when submitting their application.",
+  },
   employersCertsAndPeriods: {
     caringLeaveDocumentInstructions: "View the family relationship on page 3.",
     documentName: "Your employee's certification document.",
@@ -2993,54 +3029,6 @@ const components: {
       "Using someone’s personal information to fraudulently collect benefits",
     heading: "Do you have any reason to suspect this is fraud?",
   },
-  employersLeaveDetails: {
-    applicationIdLabel: "Application ID",
-    choiceNo: "No (comment required)",
-    choiceUnknown: "I don't know",
-    choiceYes: "Yes",
-    commentHeading: "Tell us why you think this relationship is inaccurate.",
-    documentName: "Your employee's certification document",
-    documentationLabel: "Documentation",
-    familyMemberRelationshipHint:
-      "This employee has attested the family member relationship is <eligible-relationship-link>a covered relationship</eligible-relationship-link>. If something on the form seems incorrect, add a comment at the end of the page.",
-    familyMemberRelationshipLabel:
-      "Do you believe the listed relationship is described accurately? (Optional)",
-    header: "Leave details",
-    inaccurateRelationshipAlertHeading:
-      "The employee will be denied paid leave.",
-    inaccurateRelationshipAlertLead:
-      "We take allegations about false relationships seriously. Choosing No may trigger a denial of the employee's application for paid leave. The employee has the right to appeal if their application is denied.",
-    leaveDurationLabel: "Leave duration",
-    leaveReasonValue_activeDutyFamily: "$t(shared.leaveReasonActiveDutyFamily)",
-    leaveReasonValue_bonding: "$t(shared.leaveReasonBonding)",
-    leaveReasonValue_care: "$t(shared.leaveReasonCare)",
-    leaveReasonValue_medical: "$t(shared.leaveReasonMedical)",
-    leaveReasonValue_pregnancy: "$t(shared.leaveReasonPregnancy)",
-    leaveReasonValue_serviceMemberFamily:
-      "$t(shared.leaveReasonServiceMemberFamily)",
-    leaveTypeLabel: "Leave type",
-    recordkeepingInstructions:
-      "To meet <mass-employer-role-link>federal laws and regulations</mass-employer-role-link>, you must keep medical records separate and confidential from any personnel files.",
-    recordkeepingInstructions_caringLeave:
-      "<p>To meet <mass-employer-role-link>federal laws and regulations</mass-employer-role-link>, you must keep medical records separate and confidential from any personnel files.</p><p>View the family relationship on page 3.</p>",
-    unknownRelationshipAlertLead:
-      "If you have not confirmed the accuracy of the family relationship the employee has attested to, please note that the Department of Family and Medical leave will adjudicate the claim based on the attestation the employee made when submitting their application.",
-  },
-  employersLeaveSchedule: {
-    caption: "This is your employee’s expected leave schedule.",
-    caption_documents:
-      "This is your employee’s expected leave schedule. Download the attached documentation for more details.",
-    caption_intermittentWithDocuments:
-      "Download the attached documentation for details about the employee’s intermittent leave schedule.",
-    claimDurationType_continuous: "$t(shared.claimDurationTypeContinuous)",
-    claimDurationType_intermittent: "$t(shared.claimDurationTypeIntermittent)",
-    claimDurationType_reducedSchedule:
-      "$t(shared.claimDurationTypeReducedSchedule)",
-    dateRangeLabel: "Date range",
-    header: "Leave schedule",
-    leaveFrequencyLabel: "Leave frequency",
-    reducedHoursPerWeek: "Reduced by {{numOfHours}} hours per week",
-  },
   employersNavigationTabs: {
     dashboard: "Dashboard",
     label: "Employer menu",
@@ -3053,14 +3041,6 @@ const components: {
       "$t(shared.claimDurationTypeReducedSchedule)",
     dateRangeLabel: "Date range",
     leaveFrequencyLabel: "Leave frequency",
-    requestDecision_Approved: "$t(shared.absencePeriodStatus_Approved)",
-    requestDecision_Cancelled: "$t(shared.absencePeriodStatus_Cancelled)",
-    requestDecision_Denied: "$t(shared.absencePeriodStatus_Denied)",
-    "requestDecision_In Review": "$t(shared.absencePeriodStatus_Pending)",
-    requestDecision_Pending: "$t(shared.absencePeriodStatus_Pending)",
-    requestDecision_Projected: "$t(shared.absencePeriodStatus_Pending)",
-    requestDecision_Voided: "$t(shared.absencePeriodStatus_Voided)",
-    requestDecision_Withdrawn: "$t(shared.absencePeriodStatus_Withdrawn)",
     statusLabel: "Status",
   },
   employersPreviousLeaves: {

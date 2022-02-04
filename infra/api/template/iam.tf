@@ -92,6 +92,7 @@ data "aws_iam_policy_document" "task_executor" {
       "${local.ssm_arn_prefix}/${local.app_name}/common"
     ]
   }
+
 }
 
 # Link access policies to the ECS task execution role.
@@ -138,6 +139,16 @@ data "aws_iam_policy_document" "api_service" {
     ]
     resources = [
       var.rmv_client_certificate_binary_arn,
+    ]
+  }
+  # For sending emails to users, eg notifications for when MFA has been disabled
+  statement {
+    effect = "Allow"
+    actions = [
+      "ses:SendTemplatedEmail",
+    ]
+    resources = [
+      "arn:aws:ses:us-east-1:498823821309:identity/PFML_DoNotReply@eol.mass.gov",
     ]
   }
 

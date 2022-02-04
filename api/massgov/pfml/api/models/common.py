@@ -193,6 +193,40 @@ class Phone(PydanticBaseModel):
 class MaskedPhone(Phone):
     @classmethod
     def from_orm(cls, phone: Union[db_application_models.Phone, str]) -> "MaskedPhone":
+        phone_response = PhoneResponse.from_orm(phone)
+
+        return MaskedPhone(
+            int_code=phone_response.int_code,
+            phone_number=mask.mask_phone(phone_response.phone_number),
+            phone_type=phone_response.phone_type,
+        )
+
+
+class MaskedPhoneResponse(PydanticBaseModel):
+    int_code: Optional[str]
+    phone_number: Optional[str]
+    phone_type: Optional[PhoneType]
+
+    @classmethod
+    def from_orm(cls, phone: Union[db_application_models.Phone, str]) -> "MaskedPhoneResponse":
+        phone_response = PhoneResponse.from_orm(phone)
+        phone_response.phone_number = mask.mask_phone(phone_response.phone_number)
+
+        return MaskedPhoneResponse(
+            int_code=phone_response.int_code,
+            phone_number=phone_response.phone_number,
+            phone_type=phone_response.phone_type,
+        )
+
+
+# Create this response class to capture phone data without the validators above
+class PhoneResponse(PydanticBaseModel):
+    int_code: Optional[str]
+    phone_number: Optional[str]
+    phone_type: Optional[PhoneType]
+
+    @classmethod
+    def from_orm(cls, phone: Union[db_application_models.Phone, str]) -> "PhoneResponse":
         if isinstance(phone, db_application_models.Phone):
             phone_response = super().from_orm(phone)
             if phone.phone_type_instance:
@@ -204,14 +238,9 @@ class MaskedPhone(Phone):
 
         if phone_response.phone_number:
             parsed_phone_number = phonenumbers.parse(phone_response.phone_number)
-            region_code = phonenumbers.region_code_for_number(parsed_phone_number)
-            if region_code:
-                locally_formatted_number = phonenumbers.format_in_original_format(
-                    parsed_phone_number, region_code
-                )
-            else:
-                locally_formatted_number = phone_response.phone_number
-            phone_response.phone_number = mask.mask_phone(locally_formatted_number)
+            number = str(parsed_phone_number.national_number)
+
+            phone_response.phone_number = f"{number[0:3]}-{number[3:6]}-{number[-4:]}"
             phone_response.int_code = str(parsed_phone_number.country_code)
 
         return phone_response

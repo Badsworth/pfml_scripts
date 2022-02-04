@@ -2,8 +2,9 @@ import { MockBenefitsApplicationBuilder, renderPage } from "../../test-utils";
 import { screen, waitFor } from "@testing-library/react";
 import Address from "../../../src/pages/applications/address";
 import AddressModel from "../../../src/models/Address";
+import ApiResourceCollection from "../../../src/models/ApiResourceCollection";
 import { AppLogic } from "../../../src/hooks/useAppLogic";
-import BenefitsApplicationCollection from "../../../src/models/BenefitsApplicationCollection";
+import BenefitsApplication from "../../../src/models/BenefitsApplication";
 import userEvent from "@testing-library/user-event";
 
 jest.mock("../../../src/hooks/useAppLogic");
@@ -26,7 +27,7 @@ describe("Address", () => {
       addCustomSetup: (appLogic: AppLogic) => {
         appLogic.benefitsApplications.update = update;
         appLogic.benefitsApplications.benefitsApplications =
-          new BenefitsApplicationCollection([
+          new ApiResourceCollection<BenefitsApplication>("application_id", [
             new MockBenefitsApplicationBuilder().create(),
           ]);
       },

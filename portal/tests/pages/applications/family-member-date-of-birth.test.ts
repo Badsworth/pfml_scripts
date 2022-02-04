@@ -2,7 +2,7 @@ import BenefitsApplication, {
   CaringLeaveMetadata,
 } from "../../../src/models/BenefitsApplication";
 import { screen, waitFor } from "@testing-library/react";
-import BenefitsApplicationCollection from "../../../src/models/BenefitsApplicationCollection";
+import ApiResourceCollection from "src/models/ApiResourceCollection";
 import FamilyMemberDateOfBirth from "../../../src/pages/applications/family-member-date-of-birth";
 import { renderPage } from "../../test-utils";
 import { setupBenefitsApplications } from "../../test-utils/helpers";
@@ -25,7 +25,9 @@ const setup = (claimAttrs = {}) => {
         setupBenefitsApplications(appLogic);
         appLogic.benefitsApplications.update = updateClaim;
         appLogic.benefitsApplications.benefitsApplications =
-          new BenefitsApplicationCollection([claim]);
+          new ApiResourceCollection<BenefitsApplication>("application_id", [
+            claim,
+          ]);
       },
     },
     { query: { claim_id: "mock_application_id" } }

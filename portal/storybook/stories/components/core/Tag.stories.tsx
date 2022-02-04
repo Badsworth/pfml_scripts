@@ -16,7 +16,6 @@ const states: Array<Props<typeof Tag>["state"]> = [
   "error",
   "warning",
   "inactive",
-  "pending",
 ];
 
 export const Default = (args: Props<typeof Tag>) => (

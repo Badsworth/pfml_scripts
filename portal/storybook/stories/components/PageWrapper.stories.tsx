@@ -1,5 +1,4 @@
 import AppErrorInfo from "src/models/AppErrorInfo";
-import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
 import Flag from "src/models/Flag";
 import PageWrapper from "src/components/PageWrapper";
 import { Props } from "types/common";
@@ -8,7 +7,7 @@ import User from "src/models/User";
 import useMockableAppLogic from "lib/mock-helpers/useMockableAppLogic";
 
 export default {
-  title: "Components/PageWrapper",
+  title: "Templates/Page wrapper",
   component: PageWrapper,
   argTypes: {
     Authentication: {
@@ -67,7 +66,7 @@ export const Default = (
   });
 
   const appLogic = useMockableAppLogic({
-    appErrors: new AppErrorInfoCollection(appErrors),
+    appErrors,
     users: { user },
   });
 

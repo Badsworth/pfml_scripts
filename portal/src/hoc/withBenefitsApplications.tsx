@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import withUser, { WithUserProps } from "./withUser";
-import BenefitsApplicationCollection from "../models/BenefitsApplicationCollection";
+import ApiResourceCollection from "../models/ApiResourceCollection";
+import BenefitsApplication from "../models/BenefitsApplication";
 import PaginationMeta from "src/models/PaginationMeta";
 import Spinner from "../components/core/Spinner";
 import { useTranslation } from "../locales/i18n";
@@ -11,7 +12,7 @@ export interface ApiParams {
   order_direction?: "ascending" | "descending";
 }
 export interface WithBenefitsApplicationsProps extends WithUserProps {
-  claims: BenefitsApplicationCollection;
+  claims: ApiResourceCollection<BenefitsApplication>;
   paginationMeta: PaginationMeta;
 }
 

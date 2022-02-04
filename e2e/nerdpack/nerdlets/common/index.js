@@ -11,6 +11,7 @@ export const ENVS = [
   "long",
   "cps-preview",
   "test",
+  "infra-test",
 ];
 
 export const extractGroup = (item, name) => {

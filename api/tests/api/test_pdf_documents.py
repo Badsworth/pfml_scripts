@@ -5,15 +5,8 @@ from unittest import mock
 import pytest
 
 import massgov.pfml.util.pdf as pdf_util
-from massgov.pfml.api.app import get_app_config
 from massgov.pfml.db.models.applications import LeaveReason
 from massgov.pfml.db.models.factories import ApplicationFactory, ClaimFactory
-
-
-@pytest.fixture(autouse=True)
-def enable_pdf_compression_env(monkeypatch):
-    new_env = monkeypatch.setenv("ENABLE_PDF_DOCUMENT_COMPRESSION", "1")
-    return new_env
 
 
 @pytest.fixture
@@ -105,10 +98,6 @@ def small_pdf_file(pdf_util_test_files):
 @pytest.fixture
 def too_large_pdf_file(pdf_util_test_files):
     return pdf_util_test_files / "marsEv2.pdf"
-
-
-def test_configuration_set_from_env(app):
-    assert get_app_config(app).enable_pdf_document_compression
 
 
 # Check for regression against existing upload pattern

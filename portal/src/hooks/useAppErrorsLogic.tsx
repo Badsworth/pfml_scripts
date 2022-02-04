@@ -10,19 +10,17 @@ import {
   NetworkError,
   ValidationError,
 } from "../errors";
+import React, { useState } from "react";
 import AppErrorInfo from "../models/AppErrorInfo";
-import AppErrorInfoCollection from "../models/AppErrorInfoCollection";
 import { PortalFlow } from "./usePortalFlow";
-import React from "react";
 import { Trans } from "react-i18next";
 import { get } from "lodash";
 import routes from "../routes";
 import tracker from "../services/tracker";
-import useCollectionState from "./useCollectionState";
 import { useTranslation } from "../locales/i18n";
 
 /**
- * React hook for creating and managing the state of app errors in an AppErrorInfoCollection
+ * React hook for creating and managing the state of app errors
  */
 const useAppErrorsLogic = ({ portalFlow }: { portalFlow: PortalFlow }) => {
   const { i18n, t } = useTranslation();
@@ -31,11 +29,10 @@ const useAppErrorsLogic = ({ portalFlow }: { portalFlow: PortalFlow }) => {
    * State representing both application errors and
    * validation errors
    */
-  const {
-    addItem: addError,
-    collection: appErrors,
-    setCollection: setAppErrors,
-  } = useCollectionState(new AppErrorInfoCollection());
+  const [appErrors, setAppErrors] = useState<AppErrorInfo[]>([]);
+  const addError = (appError: AppErrorInfo) => {
+    setAppErrors((prevAppErrors) => [...prevAppErrors, appError]);
+  };
 
   /**
    * Converts a JavaScript error into an AppErrorInfo object and adds it to the app error collection
@@ -66,7 +63,7 @@ const useAppErrorsLogic = ({ portalFlow }: { portalFlow: PortalFlow }) => {
    * Convenience method for setting errors to null
    */
   const clearErrors = () => {
-    setAppErrors(() => new AppErrorInfoCollection());
+    setAppErrors([]);
   };
 
   /**
@@ -75,11 +72,11 @@ const useAppErrorsLogic = ({ portalFlow }: { portalFlow: PortalFlow }) => {
    * that they need to go back and complete all required fields
    */
   const clearRequiredFieldErrors = () => {
-    const remainingErrors = appErrors.items.filter(
+    const remainingErrors = appErrors.filter(
       (error) => error.type !== "required"
     );
 
-    setAppErrors(() => new AppErrorInfoCollection(remainingErrors));
+    setAppErrors(remainingErrors);
   };
 
   /**

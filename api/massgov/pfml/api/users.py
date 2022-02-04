@@ -1,5 +1,5 @@
 import connexion
-from werkzeug.exceptions import BadRequest, NotFound
+from werkzeug.exceptions import BadRequest
 
 import massgov.pfml.api.app as app
 import massgov.pfml.api.util.response as response_util
@@ -166,10 +166,6 @@ def users_convert_employer(user_id):
 def users_current_get():
     """Return the currently authenticated user"""
     current_user = app.current_user()
-
-    # this should not ever be the case once authentication is required
-    if current_user is None:
-        raise NotFound
 
     ensure(READ, current_user)
     data = UserResponse.from_orm(current_user).dict()

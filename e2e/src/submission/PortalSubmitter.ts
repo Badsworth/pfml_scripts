@@ -1,6 +1,3 @@
-// Cross-fetch polyfill makes fetch available as a global.
-import "cross-fetch/polyfill";
-import FormData from "form-data";
 import type { CognitoUserSession } from "amazon-cognito-identity-js";
 // Generated API Client courtesy of @spec2ts/openapi-client.
 import {
@@ -26,10 +23,6 @@ import AuthenticationManager from "./AuthenticationManager";
 import { ApplicationSubmissionResponse, Credentials } from "../types";
 import { GeneratedClaim } from "../generation/Claim";
 import { DocumentWithPromisedFile } from "../generation/documents";
-if (!global.FormData) {
-  // @ts-ignore
-  global.FormData = FormData;
-}
 
 export default class PortalSubmitter {
   private authenticator: AuthenticationManager;

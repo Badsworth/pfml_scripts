@@ -1,14 +1,14 @@
-import AppErrorInfoCollection from "../models/AppErrorInfoCollection";
+import AppErrorInfo from "../models/AppErrorInfo";
 import { get } from "lodash";
 
 /**
  * Check if a DocumentsLoadError related to loading exists for the given application
  */
 const hasDocumentsLoadError = (
-  appErrors: AppErrorInfoCollection,
+  appErrors: AppErrorInfo[],
   applicationId: string
 ) =>
-  appErrors.items.some(
+  appErrors.some(
     (error) =>
       error.name === "DocumentsLoadError" &&
       get(error, "meta.application_id") === applicationId &&

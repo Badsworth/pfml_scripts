@@ -108,10 +108,17 @@ describe("Create a new caring leave claim in FINEOS and Suppress Correspondence 
             paymentMethod: "Check",
             estimatedScheduledDate: "Sent",
             dateSent: format(
-              addDays(new Date(response.updated_at), 1),
+              addDays(
+                // Enforce using EST time
+                // Causes failures if local timezone is behind EST, and claim submission time in EST is past 23:59
+                convertToTimeZone(response.updated_at, {
+                  timeZone: "America/New_York",
+                }),
+                1
+              ),
               "M/dd/yyyy"
             ),
-            amount: "800.09",
+            amount: "1,662.12",
           },
         ]);
       });

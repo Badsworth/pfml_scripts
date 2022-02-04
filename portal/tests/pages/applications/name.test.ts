@@ -1,5 +1,6 @@
 import { MockBenefitsApplicationBuilder, renderPage } from "../../test-utils";
-import BenefitsApplicationCollection from "../../../src/models/BenefitsApplicationCollection";
+import ApiResourceCollection from "src/models/ApiResourceCollection";
+import BenefitsApplication from "src/models/BenefitsApplication";
 import Name from "../../../src/pages/applications/name";
 import { act } from "react-dom/test-utils";
 import { screen } from "@testing-library/react";
@@ -14,7 +15,7 @@ describe("Name", () => {
       {
         addCustomSetup: (appLogicHook) => {
           appLogicHook.benefitsApplications.benefitsApplications =
-            new BenefitsApplicationCollection([
+            new ApiResourceCollection<BenefitsApplication>("application_id", [
               new MockBenefitsApplicationBuilder().create(),
             ]);
         },
@@ -34,7 +35,7 @@ describe("Name", () => {
         addCustomSetup: (appLogicHook) => {
           appLogicHook.benefitsApplications.update = updateClaim;
           appLogicHook.benefitsApplications.benefitsApplications =
-            new BenefitsApplicationCollection([
+            new ApiResourceCollection<BenefitsApplication>("application_id", [
               new MockBenefitsApplicationBuilder().create(),
             ]);
         },

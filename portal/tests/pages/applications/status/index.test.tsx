@@ -8,11 +8,10 @@ import Status, {
 import { cleanup, render, screen } from "@testing-library/react";
 import { createAbsencePeriod, renderPage } from "../../../test-utils";
 import { AbsencePeriod } from "../../../../src/models/AbsencePeriod";
+import ApiResourceCollection from "src/models/ApiResourceCollection";
 import AppErrorInfo from "../../../../src/models/AppErrorInfo";
-import AppErrorInfoCollection from "../../../../src/models/AppErrorInfoCollection";
 import { AppLogic } from "../../../../src/hooks/useAppLogic";
 import ClaimDetail from "../../../../src/models/ClaimDetail";
-import DocumentCollection from "../../../../src/models/DocumentCollection";
 import LeaveReason from "../../../../src/models/LeaveReason";
 import React from "react";
 import { ReasonQualifier } from "../../../../src/models/BenefitsApplication";
@@ -74,7 +73,11 @@ const renderWithClaimDocuments = (
   documents: BenefitsApplicationDocument[] = []
 ) => {
   appLogicHook.documents.loadAll = jest.fn();
-  appLogicHook.documents.documents = new DocumentCollection(documents);
+  appLogicHook.documents.documents =
+    new ApiResourceCollection<BenefitsApplicationDocument>(
+      "fineos_document_id",
+      documents
+    );
   appLogicHook.documents.hasLoadedClaimDocuments = () => !!documents.length;
   appLogicHook.documents.download = jest.fn();
 };
@@ -83,7 +86,7 @@ const setupHelper =
   (
     claimDetailAttrs?: Partial<ClaimDetail>,
     documents: BenefitsApplicationDocument[] = [],
-    appErrors = new AppErrorInfoCollection()
+    appErrors: AppErrorInfo[] = []
   ) =>
   (appLogicHook: AppLogic) => {
     appLogicHook.claims.claimDetail = claimDetailAttrs
@@ -109,44 +112,13 @@ const props = {
 };
 
 describe("Status", () => {
-  it("shows StatusNavigationTabs if claimantShowPayments feature flag is enabled and claim has_paid_payments and approval notice ", () => {
-    process.env.featureFlags = JSON.stringify({
-      claimantShowPayments: true,
-    });
-
-    renderPage(
-      Status,
-      {
-        addCustomSetup: setupHelper(
-          {
-            ...defaultClaimDetail,
-            has_paid_payments: true,
-            absence_periods: [
-              createAbsencePeriod({
-                period_type: "Reduced Schedule",
-                reason: LeaveReason.bonding,
-                request_decision: "Approved",
-                reason_qualifier_one: "Newborn",
-              }),
-            ],
-          },
-          [DOCUMENTS[4]]
-        ),
-      },
-      props
-    );
-
-    expect(screen.getByRole("link", { name: "Payments" })).toBeInTheDocument();
-    expect(
-      screen.getByRole("link", { name: "Application" })
-    ).toBeInTheDocument();
-  });
-
-  it("does not show StatusNavigationTabs if claimantShowPaymentsPhaseTwo feature flag is enabled and claim loaded without approval notice", () => {
+  beforeEach(() => {
     process.env.featureFlags = JSON.stringify({
       claimantShowPaymentsPhaseTwo: true,
     });
+  });
 
+  it("does not show StatusNavigationTabs if claimantShowPaymentsPhaseTwo feature flag is enabled and claim loaded without approval notice", () => {
     renderPage(
       Status,
       {
@@ -171,33 +143,9 @@ describe("Status", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("does not show StatusNavigationTabs if claimantShowPayments feature flag is disabled", () => {
-    renderPage(
-      Status,
-      {
-        addCustomSetup: setupHelper({
-          ...defaultClaimDetail,
-          absence_periods: [
-            createAbsencePeriod({
-              period_type: "Reduced Schedule",
-              reason: LeaveReason.bonding,
-              request_decision: "Approved",
-              reason_qualifier_one: "Newborn",
-            }),
-          ],
-        }),
-      },
-      props
-    );
-
-    expect(
-      screen.queryByRole("link", { name: "Payments" })
-    ).not.toBeInTheDocument();
-  });
-
-  it("does not show StatusNavigationTabs if has_paid_payments is false for claim", () => {
+  it("does not show StatusNavigationTabs if claimantShowPaymentsPhaseTwo feature flag is disabled", () => {
     process.env.featureFlags = JSON.stringify({
-      claimantShowPayments: true,
+      claimantShowPaymentsPhaseTwo: false,
     });
     renderPage(
       Status,
@@ -238,12 +186,12 @@ describe("Status", () => {
   });
 
   it("renders the page if the only errors are DocumentsLoadError", () => {
-    const errors = new AppErrorInfoCollection([
+    const errors = [
       new AppErrorInfo({
         meta: { application_id: "mock_application_id" },
         name: "DocumentsLoadError",
       }),
-    ]);
+    ];
 
     const { container } = renderPage(
       Status,
@@ -262,9 +210,7 @@ describe("Status", () => {
       {
         addCustomSetup: (appLogicHook) => {
           appLogicHook.claims.loadClaimDetail = jest.fn();
-          appLogicHook.appErrors = new AppErrorInfoCollection([
-            new AppErrorInfo({}),
-          ]);
+          appLogicHook.appErrors = [new AppErrorInfo({})];
         },
       },
       props

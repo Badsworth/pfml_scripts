@@ -9,13 +9,13 @@ import {
   getClaimMock,
   getClaimMockApplicationId,
   getClaimsMock,
+  importClaimMock,
   submitClaimMock,
   submitPaymentPreferenceMock,
   updateClaimMock,
 } from "../../src/api/BenefitsApplicationsApi";
+import ApiResourceCollection from "../../src/models/ApiResourceCollection";
 import AppErrorInfo from "../../src/models/AppErrorInfo";
-import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
-import BenefitsApplicationCollection from "../../src/models/BenefitsApplicationCollection";
 import { MockBenefitsApplicationBuilder } from "../test-utils";
 import { mockRouter } from "next/router";
 import routes from "../../src/routes";
@@ -55,20 +55,31 @@ describe("useBenefitsApplicationsLogic", () => {
     setup();
 
     expect(claimsLogic.benefitsApplications).toBeInstanceOf(
-      BenefitsApplicationCollection
+      ApiResourceCollection
     );
     expect(claimsLogic.benefitsApplications.items).toHaveLength(0);
   });
 
   describe("associate", () => {
     const mockAssociateFormState = {
-      absence_id: "mock-absence-id",
-      tax_identifier_last4: "1234",
+      absence_case_id: "mock-absence-id",
+      tax_identifier: "123-45-6789",
     };
 
     beforeEach(() => {
-      mockRouter.pathname = routes.applications.find;
+      mockRouter.pathname = routes.applications.importClaim;
       setup();
+    });
+
+    it("transforms the absence ID to uppercase before sending the request", async () => {
+      await act(async () => {
+        await claimsLogic.associate(mockAssociateFormState);
+      });
+
+      expect(importClaimMock).toHaveBeenCalledWith({
+        ...mockAssociateFormState,
+        absence_case_id: "MOCK-ABSENCE-ID",
+      });
     });
 
     it("causes a new API request the next time loadPage is called, after an application has been associated successfully", async () => {
@@ -98,18 +109,29 @@ describe("useBenefitsApplicationsLogic", () => {
       );
     });
 
-    it("clears prior errors", async () => {
-      act(() => {
-        appErrorsLogic.setAppErrors(
-          new AppErrorInfoCollection([new AppErrorInfo()])
-        );
+    it("catches exceptions thrown from the API module", async () => {
+      jest.spyOn(console, "error").mockImplementationOnce(jest.fn());
+      importClaimMock.mockImplementationOnce(() => {
+        throw new BadRequestError();
       });
 
       await act(async () => {
         await claimsLogic.associate(mockAssociateFormState);
       });
 
-      expect(appErrorsLogic.appErrors.items).toHaveLength(0);
+      expect(appErrorsLogic.appErrors[0].name).toEqual("BadRequestError");
+    });
+
+    it("clears prior errors", async () => {
+      act(() => {
+        appErrorsLogic.setAppErrors([new AppErrorInfo()]);
+      });
+
+      await act(async () => {
+        await claimsLogic.associate(mockAssociateFormState);
+      });
+
+      expect(appErrorsLogic.appErrors).toHaveLength(0);
     });
   });
 
@@ -186,16 +208,14 @@ describe("useBenefitsApplicationsLogic", () => {
 
     it("clears prior errors", async () => {
       act(() => {
-        appErrorsLogic.setAppErrors(
-          new AppErrorInfoCollection([new AppErrorInfo()])
-        );
+        appErrorsLogic.setAppErrors([new AppErrorInfo()]);
       });
 
       await act(async () => {
         await claimsLogic.load(applicationId);
       });
 
-      expect(appErrorsLogic.appErrors.items).toHaveLength(0);
+      expect(appErrorsLogic.appErrors).toHaveLength(0);
     });
 
     describe("when request is unsuccessful", () => {
@@ -224,9 +244,7 @@ describe("useBenefitsApplicationsLogic", () => {
           await claimsLogic.load(applicationId);
         });
 
-        expect(appErrorsLogic.appErrors.items[0].name).toEqual(
-          "BadRequestError"
-        );
+        expect(appErrorsLogic.appErrors[0].name).toEqual("BadRequestError");
       });
     });
   });
@@ -271,16 +289,14 @@ describe("useBenefitsApplicationsLogic", () => {
 
     it("clears prior errors", async () => {
       act(() => {
-        appErrorsLogic.setAppErrors(
-          new AppErrorInfoCollection([new AppErrorInfo()])
-        );
+        appErrorsLogic.setAppErrors([new AppErrorInfo()]);
       });
 
       await act(async () => {
         await claimsLogic.loadPage();
       });
 
-      expect(appErrorsLogic.appErrors.items).toHaveLength(0);
+      expect(appErrorsLogic.appErrors).toHaveLength(0);
     });
 
     it("makes api request when page_offset is changed", async () => {
@@ -322,9 +338,7 @@ describe("useBenefitsApplicationsLogic", () => {
           await claimsLogic.loadPage();
         });
 
-        expect(appErrorsLogic.appErrors.items[0].name).toEqual(
-          "BadRequestError"
-        );
+        expect(appErrorsLogic.appErrors[0].name).toEqual("BadRequestError");
         expect(mockRouter.push).not.toHaveBeenCalled();
       });
     });
@@ -358,16 +372,14 @@ describe("useBenefitsApplicationsLogic", () => {
 
     it("clears prior errors", async () => {
       act(() => {
-        appErrorsLogic.setAppErrors(
-          new AppErrorInfoCollection([new AppErrorInfo()])
-        );
+        appErrorsLogic.setAppErrors([new AppErrorInfo()]);
       });
 
       await act(async () => {
         await claimsLogic.create();
       });
 
-      expect(appErrorsLogic.appErrors.items).toHaveLength(0);
+      expect(appErrorsLogic.appErrors).toHaveLength(0);
     });
 
     it("catches exceptions thrown from the API module", async () => {
@@ -381,7 +393,7 @@ describe("useBenefitsApplicationsLogic", () => {
         await claimsLogic.create();
       });
 
-      expect(appErrorsLogic.appErrors.items[0].name).toEqual("BadRequestError");
+      expect(appErrorsLogic.appErrors[0].name).toEqual("BadRequestError");
       expect(mockRouter.push).not.toHaveBeenCalled();
     });
 
@@ -403,7 +415,7 @@ describe("useBenefitsApplicationsLogic", () => {
       let claim, existingClaims;
 
       beforeEach(async () => {
-        existingClaims = new BenefitsApplicationCollection([
+        existingClaims = new ApiResourceCollection("application_id", [
           new BenefitsApplication({ application_id: "1" }),
           new BenefitsApplication({ application_id: "2" }),
         ]);
@@ -476,16 +488,14 @@ describe("useBenefitsApplicationsLogic", () => {
 
       it("clears prior errors", async () => {
         act(() => {
-          appErrorsLogic.setAppErrors(
-            new AppErrorInfoCollection([new AppErrorInfo()])
-          );
+          appErrorsLogic.setAppErrors([new AppErrorInfo()]);
         });
 
         await act(async () => {
           await claimsLogic.complete(applicationId);
         });
 
-        expect(appErrorsLogic.appErrors.items).toHaveLength(0);
+        expect(appErrorsLogic.appErrors).toHaveLength(0);
       });
 
       it("routes to claim success page when the request succeeds", async () => {
@@ -511,9 +521,7 @@ describe("useBenefitsApplicationsLogic", () => {
           await claimsLogic.complete(applicationId);
         });
 
-        expect(appErrorsLogic.appErrors.items[0].name).toEqual(
-          "BadRequestError"
-        );
+        expect(appErrorsLogic.appErrors[0].name).toEqual("BadRequestError");
         expect(mockRouter.push).not.toHaveBeenCalled();
       });
     });
@@ -566,16 +574,14 @@ describe("useBenefitsApplicationsLogic", () => {
         await act(async () => {
           await claimsLogic.create();
 
-          appErrorsLogic.setAppErrors(
-            new AppErrorInfoCollection([new AppErrorInfo()])
-          );
+          appErrorsLogic.setAppErrors([new AppErrorInfo()]);
         });
 
         await act(async () => {
           await claimsLogic.update(applicationId, patchData);
         });
 
-        expect(appErrorsLogic.appErrors.items).toHaveLength(0);
+        expect(appErrorsLogic.appErrors).toHaveLength(0);
       });
 
       describe("when request is unsuccessful", () => {
@@ -644,7 +650,7 @@ describe("useBenefitsApplicationsLogic", () => {
             await claimsLogic.update(applicationId, patchData);
           });
 
-          const errors = appErrorsLogic.appErrors.items;
+          const errors = appErrorsLogic.appErrors;
           const errorFields = errors.map((error) => error.field);
 
           expect(errors).toHaveLength(2);
@@ -677,7 +683,7 @@ describe("useBenefitsApplicationsLogic", () => {
             await claimsLogic.update(applicationId, patchData);
           });
 
-          const errors = appErrorsLogic.appErrors.items;
+          const errors = appErrorsLogic.appErrors;
 
           expect(errors).toHaveLength(1);
           expect(errors[0].rule).toBe("disallow_hybrid_intermittent_leave");
@@ -700,9 +706,7 @@ describe("useBenefitsApplicationsLogic", () => {
             await claimsLogic.update(applicationId, patchData);
           });
 
-          expect(appErrorsLogic.appErrors.items[0].name).toEqual(
-            "BadRequestError"
-          );
+          expect(appErrorsLogic.appErrors[0].name).toEqual("BadRequestError");
           expect(mockRouter.push).not.toHaveBeenCalled();
         });
       });
@@ -741,16 +745,14 @@ describe("useBenefitsApplicationsLogic", () => {
 
       it("clears prior errors", async () => {
         act(() => {
-          appErrorsLogic.setAppErrors(
-            new AppErrorInfoCollection([new AppErrorInfo()])
-          );
+          appErrorsLogic.setAppErrors([new AppErrorInfo()]);
         });
 
         await act(async () => {
           await claimsLogic.submit(applicationId);
         });
 
-        expect(appErrorsLogic.appErrors.items).toHaveLength(0);
+        expect(appErrorsLogic.appErrors).toHaveLength(0);
       });
 
       it("routes to claim checklist page when the request succeeds", async () => {
@@ -785,9 +787,7 @@ describe("useBenefitsApplicationsLogic", () => {
           await claimsLogic.submit(applicationId);
         });
 
-        expect(appErrorsLogic.appErrors.items[0].name).toEqual(
-          "BadRequestError"
-        );
+        expect(appErrorsLogic.appErrors[0].name).toEqual("BadRequestError");
         expect(mockRouter.push).not.toHaveBeenCalled();
       });
     });
@@ -834,16 +834,14 @@ describe("useBenefitsApplicationsLogic", () => {
 
       it("clears prior errors", async () => {
         act(() => {
-          appErrorsLogic.setAppErrors(
-            new AppErrorInfoCollection([new AppErrorInfo()])
-          );
+          appErrorsLogic.setAppErrors([new AppErrorInfo()]);
         });
 
         await act(async () => {
           await claimsLogic.submitPaymentPreference(applicationId);
         });
 
-        expect(appErrorsLogic.appErrors.items).toHaveLength(0);
+        expect(appErrorsLogic.appErrors).toHaveLength(0);
       });
 
       it("routes to claim checklist page when the request succeeds", async () => {
@@ -878,9 +876,7 @@ describe("useBenefitsApplicationsLogic", () => {
           await claimsLogic.submitPaymentPreference(applicationId);
         });
 
-        expect(appErrorsLogic.appErrors.items[0].name).toEqual(
-          "BadRequestError"
-        );
+        expect(appErrorsLogic.appErrors[0].name).toEqual("BadRequestError");
         expect(mockRouter.push).not.toHaveBeenCalled();
       });
     });

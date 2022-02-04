@@ -1,15 +1,12 @@
 import { render, screen } from "@testing-library/react";
 import AppErrorInfo from "../../src/models/AppErrorInfo";
-import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
 import ErrorsSummary from "../../src/components/ErrorsSummary";
 import React from "react";
 import { Trans } from "react-i18next";
 
 const renderComponent = (customProps) => {
   customProps = {
-    errors: new AppErrorInfoCollection([
-      new AppErrorInfo({ message: "Mock error message" }),
-    ]),
+    errors: [new AppErrorInfo({ message: "Mock error message" })],
     ...customProps,
   };
   return render(<ErrorsSummary {...customProps} />);
@@ -17,7 +14,7 @@ const renderComponent = (customProps) => {
 
 describe("ErrorsSummary", () => {
   it("does not render an alert when no errors exist", () => {
-    renderComponent({ errors: new AppErrorInfoCollection() });
+    renderComponent({ errors: [] });
 
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
@@ -55,9 +52,9 @@ describe("ErrorsSummary", () => {
     });
 
     it("renders a Trans component", () => {
-      const errors = new AppErrorInfoCollection([
+      const errors = [
         new AppErrorInfo({ message: <Trans i18nKey="errors.caughtError" /> }),
-      ]);
+      ];
 
       renderComponent({ errors });
 
@@ -71,10 +68,10 @@ describe("ErrorsSummary", () => {
 
   describe("when more than one error exists", () => {
     it("renders the plural heading and list of error messages", () => {
-      const errors = new AppErrorInfoCollection([
+      const errors = [
         new AppErrorInfo({ message: "Mock error message #1" }),
         new AppErrorInfo({ message: "Mock error message #2" }),
-      ]);
+      ];
 
       renderComponent({ errors });
 
@@ -83,11 +80,11 @@ describe("ErrorsSummary", () => {
     });
 
     it("renders the singular heading if all errors are duplicates", () => {
-      const errors = new AppErrorInfoCollection([
+      const errors = [
         new AppErrorInfo({ message: "Mock error message #1" }),
         new AppErrorInfo({ message: "Mock error message #1" }),
         new AppErrorInfo({ message: "Mock error message #1" }),
-      ]);
+      ];
 
       renderComponent({ errors });
 
@@ -95,32 +92,28 @@ describe("ErrorsSummary", () => {
     });
 
     it("removes any duplicate error messages", () => {
-      const errors = new AppErrorInfoCollection([
+      const errors = [
         new AppErrorInfo({ message: "Mock error message #1" }),
         new AppErrorInfo({ message: "Mock error message #1" }),
         new AppErrorInfo({ message: "Mock error message #2" }),
-      ]);
+      ];
       renderComponent({ errors });
 
       expect(screen.queryAllByRole("listitem")).toHaveLength(2);
 
       const listContainer = screen.getByRole("list");
 
-      expect(listContainer.firstChild).toHaveTextContent(
-        errors.items[0].message
-      );
-      expect(listContainer.lastChild).toHaveTextContent(
-        errors.items[2].message
-      );
+      expect(listContainer.firstChild).toHaveTextContent(errors[0].message);
+      expect(listContainer.lastChild).toHaveTextContent(errors[2].message);
     });
 
     it("renders elements corresponding to text in Trans components", () => {
-      const errors = new AppErrorInfoCollection([
+      const errors = [
         new AppErrorInfo({ message: <Trans i18nKey="errors.caughtError" /> }),
         new AppErrorInfo({
           message: <Trans i18nKey="errors.caughtError_NetworkError" />,
         }),
-      ]);
+      ];
 
       renderComponent({ errors });
 
@@ -142,17 +135,17 @@ describe("ErrorsSummary", () => {
   describe("when the component mounts", () => {
     it("scrolls to the top of the window when there are errors", () => {
       renderComponent({
-        errors: new AppErrorInfoCollection([
+        errors: [
           new AppErrorInfo({ message: "Mock error message #1" }),
           new AppErrorInfo({ message: "Mock error message #2" }),
-        ]),
+        ],
       });
 
       expect(window.scrollTo).toHaveBeenCalledWith(0, 0);
     });
 
     it("does not scroll if there are no errors", () => {
-      renderComponent({ errors: new AppErrorInfoCollection() });
+      renderComponent({ errors: [] });
 
       expect(global.scrollTo).not.toHaveBeenCalled();
     });
@@ -162,23 +155,15 @@ describe("ErrorsSummary", () => {
     it("scrolls to the top of the window", () => {
       const { rerender } = render(
         <ErrorsSummary
-          errors={
-            new AppErrorInfoCollection([
-              new AppErrorInfo({ message: "Mock error message #1" }),
-              new AppErrorInfo({ message: "Mock error message #2" }),
-            ])
-          }
+          errors={[
+            new AppErrorInfo({ message: "Mock error message #1" }),
+            new AppErrorInfo({ message: "Mock error message #2" }),
+          ]}
         />
       );
 
       rerender(
-        <ErrorsSummary
-          errors={
-            new AppErrorInfoCollection([
-              new AppErrorInfo({ message: "New error" }),
-            ])
-          }
-        />
+        <ErrorsSummary errors={[new AppErrorInfo({ message: "New error" })]} />
       );
       expect(global.scrollTo).toHaveBeenCalledTimes(2);
       expect(global.scrollTo).toHaveBeenCalledWith(0, 0);

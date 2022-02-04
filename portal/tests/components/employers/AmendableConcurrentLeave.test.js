@@ -1,6 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import AmendableConcurrentLeave from "../../../src/components/employers/AmendableConcurrentLeave";
-import AppErrorInfoCollection from "../../../src/models/AppErrorInfoCollection";
 import ConcurrentLeaveModel from "../../../src/models/ConcurrentLeave";
 import React from "react";
 import userEvent from "@testing-library/user-event";
@@ -12,7 +11,7 @@ const concurrentLeave = new ConcurrentLeaveModel({
 });
 const onChange = jest.fn();
 const onRemove = jest.fn();
-const appErrors = new AppErrorInfoCollection([]);
+const appErrors = [];
 
 const renderComponent = (customProps) => {
   const props = {

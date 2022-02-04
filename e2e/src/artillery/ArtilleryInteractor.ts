@@ -4,7 +4,7 @@ import { getAuthManager } from "../util/common";
 import { EventEmitter } from "events";
 import * as scenarios from "../scenarios/lst";
 import { ClaimGenerator, GeneratedClaim } from "../generation/Claim";
-import { Credentials } from "../types";
+import { Credentials, LSTScenarios } from "../types";
 import faker from "faker";
 import { approveClaim } from "../submission/PostSubmit";
 import { Fineos } from "../submission/fineos.pages";
@@ -12,6 +12,15 @@ import config from "../../src/config";
 import getArtillerySubmitter from "./ArtilleryClaimSubmitter";
 import winston from "winston";
 import { getDataFromClaim, UsefulClaimData } from "./util";
+import shuffle from "../generation/shuffle";
+
+type ArtilleryDocRanges = "small" | "med" | "large";
+type DocRangesToScenarios = Record<ArtilleryDocRanges, LSTScenarios[]>;
+const docRangesToScenariosMap: DocRangesToScenarios = {
+  small: ["LSTOLB1_150KB", "LSTBHAP_1MB", "LSTCHAP1_2MB", "LSTOLB1_4MB"],
+  med: ["LSTBHAP_5MB", "LSTCHAP1_6MB", "LSTOLB1_7MB"],
+  large: ["LSTBHAP_8MB", "LSTCHAP1_9MB"],
+};
 
 /**
  * This is the interaction layer.
@@ -21,9 +30,11 @@ import { getDataFromClaim, UsefulClaimData } from "./util";
 export default class ArtilleryPFMLInteractor {
   private employeePool?: EmployeePool;
   private authManager: AuthenticationManager;
-
+  readonly scenarios: LSTScenarios[];
+  private scenarioWheel?: ArtilleryDocRanges[];
   constructor() {
     this.authManager = getAuthManager();
+    this.scenarios = this.setScenarios();
   }
 
   private async employees(): Promise<EmployeePool> {
@@ -108,6 +119,45 @@ export default class ArtilleryPFMLInteractor {
       );
       return getDataFromClaim(claim);
     });
+  }
+
+  private setScenarios(): LSTScenarios[] {
+    const range = config("LST_FILE_RANGE");
+    switch (range) {
+      case "small":
+        this.scenarioWheel = ["small"];
+        return docRangesToScenariosMap.small;
+      case "large":
+        this.scenarioWheel = [
+          ...Array(70).fill("med"),
+          ...Array(30).fill("large"),
+        ];
+        return docRangesToScenariosMap.large;
+      // default to full range of scenarios
+      default:
+        this.scenarioWheel = [
+          ...Array(70).fill("small"),
+          ...Array(20).fill("med"),
+          ...Array(10).fill("large"),
+        ];
+        return Object.keys(docRangesToScenariosMap).reduce<LSTScenarios[]>(
+          (acc, curr) => {
+            const files = docRangesToScenariosMap[curr as ArtilleryDocRanges];
+            acc.push(...files);
+            return acc;
+          },
+          []
+        );
+    }
+  }
+
+  getScenario(): LSTScenarios {
+    if (!this.scenarioWheel)
+      throw Error("scenarioWheel undefined, unable to get random scenario");
+    const range =
+      this.scenarioWheel[Math.floor(Math.random() * this.scenarioWheel.length)];
+    const possibleScenarios = docRangesToScenariosMap[range];
+    return shuffle(possibleScenarios)[0];
   }
 }
 

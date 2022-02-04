@@ -13,20 +13,64 @@ import Alert from "../components/Alert";
 import ConfirmationDialog from "../components/ConfirmationDialog";
 import Link from "next/link";
 import { Helmet } from "react-helmet-async";
+import { useRouter } from "next/router";
 import React from "react";
 import Table from "../components/Table";
 import Toggle from "../components/Toggle";
-import VerticalMenu from "../components/VerticalMenu";
-import moment from "moment";
+import ActionMenu from "../components/ActionMenu";
 import { StaticPropsPermissions } from "../menus";
+import moment from "moment-timezone";
+
+export const Timezone = "America/New_York";
+export const TimezoneAbbr = moment().tz(Timezone).zoneAbbr();
 
 export default function Maintenance() {
+<<<<<<< HEAD
   const [maintenanceHistory, setMaintenanceHistory] =
     React.useState<FlagLogsResponse>([]);
   const [maintenance, setMaintenance] = React.useState<Flag | null>(null);
 
   const [showConfirmationDialog, setShowConfirmationDialog] =
     React.useState(false);
+=======
+  const router = useRouter();
+
+  // Remove when Flag is in ../../api.
+  interface Flag {
+    start?: string | null;
+    end?: string | null;
+    name?: string;
+    options?: object;
+    enabled?: boolean;
+  }
+  type FlagsResponse = Flag[];
+
+  const [showConfirmationDialog, setShowConfirmationDialog] =
+    React.useState(false);
+  const [maintenanceHistory, setMaintenanceHistory] =
+    React.useState<FlagsResponse>([
+      {
+        enabled: true,
+        end: "2022-01-23 18:00:00-04",
+        name: "maintenance",
+        options: {
+          name: "Two checked page routes, one custom",
+          page_routes: ["/*", "/applications/*", "/custom/*"],
+        },
+        start: "2022-01-23 17:00:00-04",
+      },
+    ]);
+  const [maintenance, setMaintenance] = React.useState<Flag | null>({
+    enabled: true,
+    end: "2022-01-23 18:00:00-04",
+    name: "maintenance",
+    options: {
+      name: "Current maintenance status",
+      page_routes: ["/*", "/applications/*", "/custom/*"],
+    },
+    start: "2022-01-23 17:00:00-04",
+  });
+>>>>>>> origin/main
 
   React.useEffect(() => {
     getFlagsByName({ name: "maintenance" }).then(
@@ -63,31 +107,63 @@ export default function Maintenance() {
     }
   };
 
-  const checkedValues = [
-    "/*",
-    "/applications/*",
-    "/employers/*",
-    "/*create-account",
-    "/login",
-  ];
+  const checked_page_routes: { [key: string]: string } = {
+    "Entire Site": "/*",
+    Applications: "/applications/*",
+    Employers: "/employers/*",
+    "Create Account": "/*create-account",
+    Login: "/login",
+  };
 
   // Functions to format table.
-  const formatDateTime = (datetime: string) => {
-    return moment(datetime).format("MM-DD-YY hh:mmA");
+  const formatCurrentDateTime = (datetime: string) => {
+    return (
+      moment.tz(datetime, Timezone).format("MMMM DD, YYYY h:mmA") +
+      " " +
+      TimezoneAbbr
+    );
+  };
+
+  const formatHistoryDateTime = (datetime: string) => {
+    return (
+      moment.tz(datetime, Timezone).format("MM/DD/YY hh:mmA") +
+      " " +
+      TimezoneAbbr
+    );
   };
   const getName = (m: FlagLog) => <>{(m?.options as options)?.name}</>;
   const getDuration = (m: FlagLog) => (
     <>
-      {(m.start ? formatDateTime(m.start) : "No start provided") +
+      {(m.start ? formatHistoryDateTime(m.start) : "No start provided") +
         " - " +
-        (m.end ? formatDateTime(m.end) : "No end provided")}
+        (m.end ? formatHistoryDateTime(m.end) : "No end provided")}
     </>
   );
+<<<<<<< HEAD
   const getPageRoutes = (m: FlagLog) => {
+=======
+
+  const getPageRoutes = (m: Flag) => {
+>>>>>>> origin/main
     const routes = (m?.options as options)?.page_routes ?? [];
 
-    return routes.join(", ");
+    return (
+      <ul className="maintenance-configure__page-routes">
+        {routes.map((route, index) => {
+          const label =
+            Object.keys(checked_page_routes).find(
+              (k) => checked_page_routes[k] === route,
+            ) || "Custom";
+          return (
+            <li key={index}>
+              {label}: <code>{route}</code>
+            </li>
+          );
+        })}
+      </ul>
+    );
   };
+<<<<<<< HEAD
   const getCreatedBy = (m: FlagLog) => (
     <>
       {m.family_name} {m.given_name}
@@ -110,17 +186,42 @@ export default function Maintenance() {
   };
 
   const getOptions = (m: FlagLog) => {
+=======
+
+  const getLinkOptions = (
+    m: Flag | null,
+    includeDateTimes: boolean,
+  ): { [key: string]: string | string[] } => {
+>>>>>>> origin/main
     const linkValues: { [key: string]: string | string[] } = {};
+    if (!m) {
+      return linkValues;
+    }
     linkValues.name = (m?.options as options)?.name ?? "";
     const page_routes =
       ((m?.options as options)?.page_routes as string[]) ?? [];
     linkValues.checked_page_routes = page_routes.filter((item) =>
-      checkedValues.includes(item),
+      Object.values(checked_page_routes).includes(item),
     );
     linkValues.custom_page_routes = page_routes.filter(
-      (item) => !checkedValues.includes(item),
+      (item) => !Object.values(checked_page_routes).includes(item),
     );
+    if (!includeDateTimes) {
+      return linkValues;
+    }
+    linkValues.start = m.start
+      ? moment.tz(m.start, Timezone).format("YYYY-MM-DD HH:mm:ss z")
+      : "";
+    linkValues.end = m.end
+      ? moment.tz(m.end, Timezone).format("YYYY-MM-DD HH:mm:ss z")
+      : "";
+    return linkValues;
+  };
 
+  const getCreatedBy = (m: Flag) => <>{"Admin"}</>;
+
+  const getOptions = (m: Flag) => {
+    const linkValues = getLinkOptions(m, false);
     return (
       <>
         <Link
@@ -146,13 +247,17 @@ export default function Maintenance() {
       </Helmet>
 
       <h1>Maintenance</h1>
-      <Alert type="success" closeable={true}>
-        Maintenance has been turned on.
-      </Alert>
+      {router.query?.saved && (
+        <Alert type="success" closeable={true}>
+          Changes to Maintenance have been saved.
+        </Alert>
+      )}
+
       <div className="maintenance">
         <div className="maintenance-info">
           <div className="maintenance-info__text">
             <h2 className="maintenance-info__title">Maintenance</h2>
+            <Toggle status={getMaintenanceEnabled()} />
             <p className="maintenance-info__body">
               When maintenance is scheduled for the future, a maintenance banner
               is displayed to users in the portal on the top of the page. When
@@ -160,8 +265,7 @@ export default function Maintenance() {
               to users instead of the normal page content.
             </p>
           </div>
-          <Toggle status={getMaintenanceEnabled()} />
-          <VerticalMenu
+          <ActionMenu
             options={[
               {
                 enabled: !getMaintenanceEnabled(),
@@ -171,12 +275,18 @@ export default function Maintenance() {
               },
               {
                 enabled: getMaintenanceEnabled(),
+<<<<<<< HEAD
                 // Add query params including start and end.
                 href: {
                   pathname: "/maintenance/add",
                   query: maintenance
                     ? getMaintenanceLinkValues(maintenance)
                     : undefined,
+=======
+                href: {
+                  pathname: "/maintenance/add",
+                  query: getLinkOptions(maintenance, true),
+>>>>>>> origin/main
                 },
                 text: "Edit",
                 type: "link",
@@ -215,7 +325,17 @@ export default function Maintenance() {
             <div className="maintenance-status__row">
               <div className="maintenance-status__label">Duration</div>
               <div className="maintenance-status__value">
-                {getDuration(maintenance)}
+                {maintenance && (
+                  <>
+                    {(maintenance.start
+                      ? formatCurrentDateTime(maintenance.start)
+                      : "No start provided") +
+                      " to " +
+                      (maintenance.end
+                        ? formatCurrentDateTime(maintenance.end)
+                        : "No end provided")}
+                  </>
+                )}
               </div>
             </div>
             <div className="maintenance-status__row">

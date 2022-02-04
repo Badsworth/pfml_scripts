@@ -1,5 +1,5 @@
 import {
-  AbsencePeriodRequestDecision,
+  AbsencePeriodRequestDecisionEnum,
   AbsencePeriodTypes,
 } from "src/models/AbsencePeriod";
 import createMockClaimDetail, {
@@ -8,7 +8,8 @@ import createMockClaimDetail, {
   requestTypes,
 } from "lib/mock-helpers/createMockClaimDetail";
 
-import DocumentCollection from "src/models/DocumentCollection";
+import ApiResourceCollection from "src/models/ApiResourceCollection";
+import { BenefitsApplicationDocument } from "src/models/Document";
 import { Props } from "types/common";
 import React from "react";
 import { Status } from "src/pages/applications/status";
@@ -20,7 +21,7 @@ function getDocuments({
   requestDecision,
   shouldIncludeRfiDocument,
 }: {
-  requestDecision: AbsencePeriodRequestDecision;
+  requestDecision: AbsencePeriodRequestDecisionEnum;
   shouldIncludeRfiDocument: boolean;
 }) {
   const documents = [];
@@ -35,7 +36,10 @@ function getDocuments({
     documents.push(generateNotice("requestForInfoNotice"));
   }
 
-  return new DocumentCollection(documents);
+  return new ApiResourceCollection<BenefitsApplicationDocument>(
+    "fineos_document_id",
+    documents
+  );
 }
 
 export default {
@@ -84,7 +88,7 @@ export const DefaultStory = (
     "Has payments": boolean;
     "Leave scenario": keyof typeof leaveScenarioMap;
     "Leave type": AbsencePeriodTypes;
-    "Request decision": AbsencePeriodRequestDecision;
+    "Request decision": AbsencePeriodRequestDecisionEnum;
     "Show request for more information": boolean;
   }
 ) => {

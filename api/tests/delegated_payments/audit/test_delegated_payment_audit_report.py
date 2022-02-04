@@ -728,6 +728,17 @@ def test_generate_audit_report(test_db_session, payment_audit_report_step, monke
     )
     assert len(sampled_state_logs) == len(DEFAULT_AUDIT_SCENARIO_DATA_SET)
 
+    # Writeback logs
+    writeback_details = (
+        test_db_session.query(FineosWritebackDetails)
+        .filter(
+            FineosWritebackDetails.transaction_status_id
+            == FineosWritebackTransactionStatus.PAYMENT_AUDIT_IN_PROGRESS.transaction_status_id
+        )
+        .all()
+    )
+    assert len(writeback_details) == len(DEFAULT_AUDIT_SCENARIO_DATA_SET)
+
     # check that audit report file was generated in outbound folder with correct number of rows
     expected_audit_report_archive_folder_path = os.path.join(
         archive_folder_path, payments_util.Constants.S3_OUTBOUND_SENT_DIR, date_folder
@@ -777,8 +788,9 @@ def test_generate_audit_report(test_db_session, payment_audit_report_step, monke
 
 
 def test_orphaned_withholding_payments(
-    initialize_factories_session, test_db_session, test_db_other_session
+    initialize_factories_session, test_db_session, test_db_other_session, monkeypatch
 ):
+    monkeypatch.setenv("ENABLE_WITHHOLDING_PAYMENTS", "1")
 
     payments: List[Payment] = []
 
@@ -830,8 +842,9 @@ def test_orphaned_withholding_payments(
 
 
 def test_related_withholding_payments(
-    initialize_factories_session, test_db_session, test_db_other_session
+    initialize_factories_session, test_db_session, test_db_other_session, monkeypatch
 ):
+    monkeypatch.setenv("ENABLE_WITHHOLDING_PAYMENTS", "1")
 
     payments: List[Payment] = []
 

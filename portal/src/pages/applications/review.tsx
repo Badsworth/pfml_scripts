@@ -156,7 +156,7 @@ export const Review = (
   // page with required fields.
   const [showNewFieldError, setShowNewFieldError] = useState(false);
   useEffect(() => {
-    const missingFields = getMissingRequiredFields(appErrors.items);
+    const missingFields = getMissingRequiredFields(appErrors);
     if (missingFields.length) {
       tracker.trackEvent("Missing required fields", {
         missingFields: JSON.stringify(missingFields),
@@ -169,7 +169,7 @@ export const Review = (
       }
     }
   }, [
-    appErrors.items,
+    appErrors,
     showNewFieldError,
     setShowNewFieldError,
     clearRequiredFieldErrors,

@@ -1,4 +1,3 @@
-import json
 import sys
 from dataclasses import asdict, dataclass
 from itertools import groupby
@@ -7,6 +6,7 @@ from typing import Optional
 
 import boto3
 from pydantic import Field
+from sqlalchemy import or_
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 
 import massgov
@@ -40,13 +40,15 @@ class ImportFineosOrganizationUnitUpdatesConfig(PydanticBaseSettings):
 
 @dataclass
 class ImportFineosOrganizationUnitUpdatesReport:
-    start: str = utcnow().isoformat()
+    organization_unit_file: str = ""
     # total count of rows in extract
     total_rows_received_count: int = 0
     # when a row in the extract doesn't have enough info to proceed
     missing_required_fields_count: int = 0
     # when new fineos organization units are added to the database
     created_employer_org_units_count: int = 0
+    # when an organization unit is updated in the database
+    updated_employer_org_units_count: int = 0
     # when we could not add a new organization unit to the database due to any conflicts
     errored_employer_org_units_count: int = 0
     # when a leave admin is servicing an org unit that the employer does not have
@@ -69,8 +71,6 @@ class ImportFineosOrganizationUnitUpdatesReport:
     missing_fineos_employer_count: int = 0
     # when the fineos employer does not have organization units
     missing_fineos_org_units_count: int = 0
-    end: Optional[str] = None
-    process_duration_in_seconds: float = 0
 
 
 @dataclass
@@ -79,7 +79,7 @@ class LeaveAdmin:
     departments: list[str]
 
 
-@background_task("fineos-import-leave-admin-org-units")
+@background_task("fineos-import-la-units")
 def handler():
     """ECS handler function. Creates Org Units for the given employer"""
     logger.info("Starting import of organization unit updates from FINEOS.")
@@ -104,7 +104,7 @@ def handler():
             report = process_fineos_updates(
                 db_session, config.fineos_folder_path, fineos_boto_session
             )
-            log_entry.report = json.dumps(asdict(report), indent=2)
+            log_entry.set_metrics(asdict(report))
     except Exception:
         logger.exception("Error importing organization unit updates from FINEOS")
         sys.exit(1)
@@ -142,13 +142,9 @@ def process_fineos_updates(
     db_session: db.Session, folder_path: str, boto_session: Optional[boto3.Session] = None
 ) -> ImportFineosOrganizationUnitUpdatesReport:
     # Get CSV file and initiate report
-    start_time = utcnow()
-    report = ImportFineosOrganizationUnitUpdatesReport(start=start_time.isoformat())
+    report = ImportFineosOrganizationUnitUpdatesReport()
     file = get_file_to_process(folder_path, boto_session)
     if file is None:
-        end_time = utcnow()
-        report.end = end_time.isoformat()
-        report.process_duration_in_seconds = (end_time - start_time).total_seconds()
         return report
     else:
         logger.info(
@@ -156,6 +152,7 @@ def process_fineos_updates(
         )
 
     file_path = f"{folder_path}/{file}"
+    report.organization_unit_file = file_path
     csv_input = CSVSourceWrapper(file_path, transport_params={"session": boto_session})
 
     # For each employer fein, keep a list of leave admins
@@ -163,7 +160,7 @@ def process_fineos_updates(
     # Process CSV data into a simpler format
     rows = []
     REQUIRED_KEYS = ("USERENABLED", "FEIN", "EMAIL", "ORGUNIT_NAME")
-    for row in log_every(logger, csv_input, count=10, item_name="CSV row"):
+    for row in log_every(logger, csv_input, count=10000, item_name="CSV row", start_time=utcnow()):
         report.total_rows_received_count += 1
         if all(row.get(key) for key in REQUIRED_KEYS):
             rows.append(row)
@@ -243,12 +240,14 @@ def process_fineos_updates(
             # Create OrganizationUnit record if it doesn't exist.
             org_unit = (
                 db_session.query(OrganizationUnit)
-                .filter(OrganizationUnit.name == name)
+                .filter(or_(OrganizationUnit.name == name, OrganizationUnit.fineos_id == fineos_id))
                 .filter(OrganizationUnit.employer_id == employer.employer_id)
                 .one_or_none()
             )
-            if org_unit is None or org_unit.fineos_id is None:
+            # When the org unit does not yet exist
+            if org_unit is None:
                 try:
+                    # Create a new one
                     org_unit_model = OrganizationUnit(
                         fineos_id=fineos_id, name=name, employer_id=employer.employer_id
                     )
@@ -261,6 +260,26 @@ def process_fineos_updates(
                         "Unable to add Organization Unit.",
                         extra={
                             "fineos_id": fineos_id,
+                            "name": name,
+                            "employer_id": employer.employer_id,
+                        },
+                    )
+                    report.errored_employer_org_units_count += 1
+                    continue
+            # When the org unit exists but needs to be updated
+            elif org_unit.fineos_id is None or org_unit.name != name:
+                try:
+                    # Update fineos_id and name
+                    org_unit.fineos_id = fineos_id
+                    org_unit.name = name
+                    db_session.add(org_unit)
+                    db_session.commit()
+                    report.updated_employer_org_units_count += 1
+                except Exception:
+                    logger.error(
+                        "Unable to update Organization Unit.",
+                        extra={
+                            "organization_unit_id": org_unit.organization_unit_id,
                             "name": name,
                             "employer_id": employer.employer_id,
                         },
@@ -334,9 +353,5 @@ def process_fineos_updates(
                     continue
 
     # Ended import process
-    db_session.close()
-    end_time = utcnow()
-    report.end = end_time.isoformat()
-    report.process_duration_in_seconds = (end_time - start_time).total_seconds()
 
     return report

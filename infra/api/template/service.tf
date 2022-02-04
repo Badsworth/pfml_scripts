@@ -75,15 +75,23 @@ resource "aws_ecs_task_definition" "app" {
       fineos_client_wscomposer_user_id           = var.fineos_client_wscomposer_user_id
       fineos_client_oauth2_url                   = var.fineos_client_oauth2_url
       fineos_client_oauth2_client_id             = var.fineos_client_oauth2_client_id
+      pfml_email_address                         = var.pfml_email_address
+      bounce_forwarding_email_address            = var.bounce_forwarding_email_address
+      bounce_forwarding_email_address_arn        = var.bounce_forwarding_email_address_arn
       service_now_base_url                       = var.service_now_base_url
       portal_base_url                            = var.portal_base_url
+      admin_portal_base_url                      = var.admin_portal_base_url
+      azure_ad_authority_domain                  = var.azure_ad_authority_domain
+      azure_ad_client_id                         = var.azure_ad_client_id
+      azure_ad_parent_group                      = var.azure_ad_parent_group
+      azure_ad_tenant_id                         = var.azure_ad_tenant_id
       enable_application_fraud_check             = var.enable_application_fraud_check
       release_version                            = var.release_version
       new_plan_proofs_active_at                  = var.new_plan_proofs_active_at
       use_claim_status_url                       = var.use_claim_status_url
-      enable_pdf_document_compression            = var.enable_pdf_document_compression
       enable_document_multipart_upload           = var.enable_document_multipart_upload
       enable_application_import                  = var.enable_application_import
+      enable_employee_endpoints                  = var.enable_employee_endpoints
     }
   )
 

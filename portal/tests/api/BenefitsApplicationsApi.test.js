@@ -1,10 +1,10 @@
 import PaymentPreference, {
   PaymentPreferenceMethod,
 } from "../../src/models/PaymentPreference";
+import ApiResourceCollection from "../../src/models/ApiResourceCollection";
 import BenefitsApplication from "../../src/models/BenefitsApplication";
-import BenefitsApplicationCollection from "../../src/models/BenefitsApplicationCollection";
 import BenefitsApplicationsApi from "../../src/api/BenefitsApplicationsApi";
-
+import { ValidationError } from "../../src/errors";
 import { mockAuth } from "../test-utils";
 
 jest.mock("../../src/services/tracker");
@@ -126,7 +126,7 @@ describe("BenefitsApplicationsApi", () => {
       it("resolves with claims properties", async () => {
         const { claims: claimsResponse } = await claimsApi.getClaims();
 
-        expect(claimsResponse).toBeInstanceOf(BenefitsApplicationCollection);
+        expect(claimsResponse).toBeInstanceOf(ApiResourceCollection);
         expect(claimsResponse.items).toEqual([claim]);
       });
     });
@@ -218,6 +218,47 @@ describe("BenefitsApplicationsApi", () => {
 
       expect(claimResponse).toBeInstanceOf(BenefitsApplication);
       expect(claimResponse).toEqual(claim);
+    });
+  });
+
+  describe("importClaim", () => {
+    it("sends POST request to /applications/import and resolves with BenefitsApplication", async () => {
+      const requestBody = {
+        absence_case_id: "mock-absence-id",
+        tax_identifier: "123-45-6789",
+      };
+      const mockResponse = new BenefitsApplication({
+        application_id: "mock-application_id",
+      });
+      global.fetch = mockFetch({
+        response: {
+          data: mockResponse,
+        },
+      });
+
+      const { claim: claimResponse } = await claimsApi.importClaim(requestBody);
+
+      expect(fetch).toHaveBeenCalledWith(
+        `${process.env.apiUrl}/applications/import`,
+        {
+          body: JSON.stringify(requestBody),
+          headers: baseRequestHeaders,
+          method: "POST",
+        }
+      );
+
+      expect(claimResponse).toBeInstanceOf(BenefitsApplication);
+      expect(claimResponse).toEqual(mockResponse);
+    });
+
+    it("throws error", async () => {
+      global.fetch = mockFetch({
+        response: { data: null, errors: [{ field: "tax_identifier" }] },
+        status: 400,
+        ok: false,
+      });
+
+      await expect(claimsApi.importClaim({})).rejects.toThrow(ValidationError);
     });
   });
 

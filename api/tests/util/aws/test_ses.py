@@ -102,12 +102,17 @@ def test_email_format():
         cc_addresses=["test@example.com"],
         bcc_addresses=["test@example.com"],
     )
+    ses.EmailRecipient(to_addresses=["test+valid@example.com"])
 
     # invalid email addresses
     with pytest.raises(ValidationException):
         ses.EmailRecipient(to_addresses=[])
     with pytest.raises(ValidationException):
         ses.EmailRecipient(to_addresses=[""])
+    with pytest.raises(ValidationException):
+        ses.EmailRecipient(to_addresses=["nopenotvalid"])
+    with pytest.raises(ValidationException):
+        ses.EmailRecipient(to_addresses=["nopenotvalid@@@.com"])
     with pytest.raises(ValidationError):
         ses.EmailRecipient(cc_addresses=["test@test.com"])
     with pytest.raises(ValidationException):

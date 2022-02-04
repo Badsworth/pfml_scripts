@@ -56,6 +56,8 @@ module "api" {
     "https://paidleave.mass.gov",
     "https://d2pc6g7x2eh1yn.cloudfront.net",
     "https://paidleave-api.mass.gov",
+    # Allow requests from the Admin Portal
+    "https://paidleave-admin.dfml.eol.mass.gov",
     "https://zi7eve1v85.execute-api.us-east-1.amazonaws.com"
   ]
 
@@ -75,8 +77,12 @@ module "api" {
   fineos_client_wscomposer_user_id           = "OASIS"
   fineos_client_oauth2_url                   = "https://prd-api.masspfml.fineos.com/oauth2/token"
   fineos_client_oauth2_client_id             = "5qcd2h1qlv4gpiqgugn2mrttkg"
+  pfml_email_address                         = "PFML_DoNotReply@eol.mass.gov"
+  bounce_forwarding_email_address            = "PFML_DoNotReply@eol.mass.gov"
+  bounce_forwarding_email_address_arn        = "arn:aws:ses:us-east-1:498823821309:identity/PFML_DoNotReply@eol.mass.gov"
   service_now_base_url                       = "https://savilinx.servicenowservices.com"
   portal_base_url                            = "https://paidleave.mass.gov"
+  admin_portal_base_url                      = "https://paidleave-admin.dfml.eol.mass.gov"
   enable_application_fraud_check             = "1"
   fineos_aws_iam_role_arn                    = "arn:aws:iam::133945341851:role/somprod-IAMRoles-CustomerAccountAccessRole-83KBPT56FTQP"
   fineos_aws_iam_role_external_id            = "8jFBtjr4UA@"
@@ -87,7 +93,6 @@ module "api" {
   new_plan_proofs_active_at = "2021-06-26 00:00:00+00:00"
   use_claim_status_url      = true
 
-  enable_pdf_document_compression  = "1"
   enable_application_import        = "0"
   enable_document_multipart_upload = "1"
 }

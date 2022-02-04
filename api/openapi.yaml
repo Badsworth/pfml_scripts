@@ -248,8 +248,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/UserResponse"
-        "404":
-          $ref: "#/components/responses/NotFound"
 
   /employees/{employee_id}:
     get:
@@ -466,6 +464,16 @@ paths:
             format: uuid
           description: ID of Employer to query claims for
           required: false
+        - name: employee_id
+          in: query
+          schema:
+            type: array
+            items:
+                type: string
+                format: uuid
+          description: ID(s) of Employee to query claims for
+          required: false
+          explode: false
         - name: "claim_status"
           in: query
           schema:
@@ -2032,14 +2040,29 @@ components:
         last_name:
           type: string
           example: "Doe"
-        phone_number:
-          type: string
-          nullable: true
-          example: "123-456-7890"
+        phone_numbers:
+          type: array
+          items:
+            nullable: true
+            $ref: "#/components/schemas/Phone"
         tax_identifier_last4:
           type: string
+          nullable: true
           example: "1234"
-      required: ["employee_id", "tax_identifier_last4"]
+        tax_identifier:
+          $ref: "#/components/schemas/SsnItin"
+          nullable: true
+        fineos_customer_number:
+          type: string
+          nullable: true
+          example: "1111111"
+        mass_id_number:
+          nullable: true
+          $ref: "#/components/schemas/MassId"
+        date_of_birth:
+          nullable: true
+          $ref: "#/components/schemas/MaskedDate"
+      required: ["employee_id"]
 
     EmployeeBasicResponse:
       type: object
@@ -2433,9 +2456,10 @@ components:
         absence_case_id:
           type: string
           example: "NTN-111-ABS-01"
-          nullable: false
-      required:
-        - absence_case_id
+          nullable: true
+        tax_identifier:
+          $ref: "#/components/schemas/SsnItin"
+          nullable: true
 
     ApplicationResponse:
       type: object
@@ -2908,6 +2932,11 @@ components:
           type: string
           nullable: true
           example: "1970-06-01"
+        cancellation_date:
+          format: date
+          type: string
+          nullable: true
+          example: "2021-01-01"
         status:
           type: string
           enum:

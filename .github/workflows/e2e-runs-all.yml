@@ -3,7 +3,7 @@ name: E2E Test Suite (All Environments)
 # This workflow is to trigger scheduled runs every morning
 #
 # Scheduled runs will trigger a workflow_dispatch for all
-# enviornments via the End-to-End Test Suite workflow
+# environments via the End-to-End Test Suite workflow
 
 on:
   workflow_dispatch:
@@ -25,8 +25,8 @@ on:
         required: false
         default: false
         type: boolean
-      run_nightly:
-        description: "Run tests in nightly group"
+      run_morning:
+        description: "Run tests in morning group"
         required: false
         default: false
         type: boolean
@@ -42,7 +42,7 @@ jobs:
       fail-fast: false
       matrix:
         environment:
-          ["test", "stage", "performance", "training", "uat", "cps-preview", "breakfix", "infra-test", "long", "trn2"]
+          ["test", "stage", "performance", "training", "uat", "cps-preview", "breakfix", "long", "trn2"]
     steps:
       - name: Trigger E2E Workflow
         uses: aurelien-baudet/workflow-dispatch@v2.1.1
@@ -56,6 +56,6 @@ jobs:
               "target_environment": "${{ matrix.environment }}",
               "cypress_tags": "${{ github.event_name == 'schedule' && 'Morning Run' || github.event.inputs.cypress_tags }}",
               "run_unstable": "${{ github.event.inputs.run_unstable || 'false' }}",
-              "run_nightly": "${{ github.event_name == 'schedule' && 'true' || github.event.inputs.run_nightly }}",
+              "run_morning": "${{ github.event_name == 'schedule' && 'true' || github.event.inputs.run_morning }}",
               "title_override": "${{ github.event_name == 'schedule' && format('Scheduled Run: {0}', matrix.environment) || '' }}"
             }

@@ -3,7 +3,7 @@ import React from "react";
 import useMockableAppLogic from "lib/mock-helpers/useMockableAppLogic";
 
 export default {
-  title: "Pages/Auth/Create Account",
+  title: "Pages/Auth/Create worker account",
   component: CreateAccount,
 };
 

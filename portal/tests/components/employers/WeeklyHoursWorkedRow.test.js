@@ -1,6 +1,5 @@
 import { render, screen } from "@testing-library/react";
 import AppErrorInfo from "../../../src/models/AppErrorInfo";
-import AppErrorInfoCollection from "../../../src/models/AppErrorInfoCollection";
 import React from "react";
 import WeeklyHoursWorkedRow from "../../../src/components/employers/WeeklyHoursWorkedRow";
 import userEvent from "@testing-library/user-event";
@@ -30,7 +29,7 @@ describe("WeeklyHoursWorkedRow", () => {
   const updateFields = jest.fn();
 
   const defaultProps = {
-    appErrors: new AppErrorInfoCollection(),
+    appErrors: [],
     clearField,
     getField,
     getFunctionalInputProps,
@@ -98,9 +97,9 @@ describe("WeeklyHoursWorkedRow", () => {
 
   describe("if there is a form error", () => {
     it("automatically opens the amendment form", () => {
-      const appErrors = new AppErrorInfoCollection([
+      const appErrors = [
         new AppErrorInfo({ name: "My error", message: "My message" }),
-      ]);
+      ];
 
       render(<WeeklyHoursWorkedRow {...defaultProps} appErrors={appErrors} />);
 
@@ -112,9 +111,9 @@ describe("WeeklyHoursWorkedRow", () => {
     });
 
     it("allows closing the opened amendment form", () => {
-      const appErrors = new AppErrorInfoCollection([
+      const appErrors = [
         new AppErrorInfo({ name: "My error", message: "My message" }),
-      ]);
+      ];
       render(<WeeklyHoursWorkedRow {...defaultProps} appErrors={appErrors} />);
 
       clickCancelAmendButton();

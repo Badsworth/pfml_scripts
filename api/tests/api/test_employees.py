@@ -1,18 +1,24 @@
+from datetime import date
+
 import pytest
 
 import tests.api
-from massgov.pfml.db.models.factories import EmployeeFactory, TaxIdentifierFactory
+from massgov.pfml.api.models.applications.common import MaskedAddress
+from massgov.pfml.db.models.employees import EmployeeAddress
+from massgov.pfml.db.models.factories import (
+    AddressFactory,
+    ApplicationFactory,
+    ClaimFactory,
+    EmployeeFactory,
+    EmployerFactory,
+    TaxIdentifierFactory,
+)
 
 
 @pytest.fixture
 def employee():
     employee = EmployeeFactory.create()
     return employee
-
-
-@pytest.fixture
-def snow_user_headers(snow_user_token):
-    return {"Authorization": "Bearer {}".format(snow_user_token), "Mass-PFML-Agent-ID": "123"}
 
 
 @pytest.fixture
@@ -124,6 +130,7 @@ def test_employees_search_snow_allowed(client, employee, snow_user_headers):
         "tax_identifier_last4": employee.tax_identifier.tax_identifier_last4,
     }
     response = client.post("/v1/employees/search", json=body, headers=snow_user_headers,)
+
     assert response.status_code == 200
 
 
@@ -185,6 +192,104 @@ def test_get_employee_basic_response(client, employee_different_fineos_name, sno
     assert employee_data["first_name"] == "Foo2"
     assert employee_data["middle_name"] == "Baz2"
     assert employee_data["last_name"] == "Bar2"
+
+
+def test_employee_for_pfml_crm_response(client, employee, snow_user_headers, user, test_db_session):
+    tax_identifier = TaxIdentifierFactory.create(tax_identifier="587777091")
+    employee = EmployeeFactory.create(
+        tax_identifier_id=tax_identifier.tax_identifier_id,
+        first_name="Foo",
+        last_name="Bar",
+        middle_name="Baz",
+        date_of_birth=date(2020, 1, 1),
+        fineos_employee_first_name="Foo2",
+        fineos_employee_last_name="Bar2",
+        fineos_employee_middle_name="Baz2",
+    )
+
+    address = AddressFactory.create()
+    employee.employee_addresses = [
+        EmployeeAddress(employee_id=employee.employee_id, address_id=address.address_id,)
+    ]
+
+    test_db_session.commit()
+
+    ApplicationFactory.create(user=user)
+    test_db_session.commit()
+
+    response = client.get(f"/v1/employees/{employee.employee_id}", headers=snow_user_headers,)
+
+    assert response.status_code == 200
+    response_body = response.get_json()
+
+    employee_data = response_body.get("data")
+    assert employee_data["tax_identifier"] is not None
+    assert employee_data["date_of_birth"] == "****-01-01"
+    assert employee_data["addresses"][0] == MaskedAddress.from_orm(address)
+
+
+def test_employee_with_claims_no_id_proof(
+    client, employee, snow_user_headers, user, test_db_session
+):
+    employer = EmployerFactory.create()
+    employee = EmployeeFactory.create()
+
+    claim = ClaimFactory.create(employer=employer, employee=employee,)
+
+    ApplicationFactory.create(user=user, claim=claim, mass_id="123456789")
+    test_db_session.commit()
+
+    response = client.get(f"/v1/employees/{employee.employee_id}", headers=snow_user_headers,)
+
+    assert response.status_code == 200
+    response_body = response.get_json()
+
+    employee_data = response_body.get("data")
+    assert employee_data["mass_id_number"] is None
+
+
+def test_employee_empty_mass_id(client, employee, snow_user_headers, user, test_db_session):
+    employee = EmployeeFactory.create()
+    ApplicationFactory.create(user=user)
+    test_db_session.commit()
+
+    response = client.get(f"/v1/employees/{employee.employee_id}", headers=snow_user_headers,)
+
+    assert response.status_code == 200
+    response_body = response.get_json()
+
+    employee_data = response_body.get("data")
+    assert employee_data["mass_id_number"] is None
+
+
+def test_employee_get_mass_id(client, employee, snow_user_headers, user, test_db_session):
+    employer = EmployerFactory.create()
+    employee = EmployeeFactory.create()
+
+    claim = ClaimFactory.create(
+        employer=employer, employee=employee, is_id_proofed=True, created_at=date(2020, 1, 1),
+    )
+
+    claim2 = ClaimFactory.create(
+        employer=employer,
+        employee=employee,
+        fineos_absence_status_id=1,
+        claim_type_id=1,
+        is_id_proofed=True,
+        created_at=date(2021, 2, 1),
+        fineos_absence_id="NTN-304363-ABS-02",
+    )
+    ApplicationFactory.create(user=user, claim=claim, mass_id="123456789")
+    ApplicationFactory.create(user=user, claim=claim2, mass_id="012345678")
+    test_db_session.commit()
+
+    response = client.get(f"/v1/employees/{employee.employee_id}", headers=snow_user_headers,)
+
+    assert response.status_code == 200
+    response_body = response.get_json()
+
+    employee_data = response_body.get("data")
+    assert employee_data["mass_id_number"] == "012345678"
 
 
 def test_employees_basic_response_search(client, employee_different_fineos_name, snow_user_headers):

@@ -1,15 +1,46 @@
+from datetime import date, datetime
+
 import mock
 import pytest
 
 import massgov
-from massgov.pfml.api.services.applications import set_customer_detail_fields
-from massgov.pfml.db.models.employees import Gender
+from massgov.pfml.api.services.applications import (
+    set_application_absence_and_leave_period,
+    set_customer_contact_detail_fields,
+    set_customer_detail_fields,
+    set_employment_status,
+    set_payment_preference_fields,
+)
+from massgov.pfml.api.validation.exceptions import (
+    IssueType,
+    ValidationErrorDetail,
+    ValidationException,
+)
+from massgov.pfml.db.models.applications import (
+    ContinuousLeavePeriod,
+    EmploymentStatus,
+    LeaveReason,
+    LeaveReasonQualifier,
+)
+from massgov.pfml.db.models.employees import BankAccountType, Gender, PaymentMethod
 from massgov.pfml.db.models.factories import ApplicationFactory
+from massgov.pfml.fineos.models.customer_api.spec import (
+    AbsenceDetails,
+    AbsencePeriod,
+    EpisodicLeavePeriodDetail,
+    ReportedReducedScheduleLeavePeriod,
+    TimeOffLeavePeriod,
+)
 
 
 @pytest.fixture(autouse=True)
 def setup_factories(initialize_factories_session):
     return
+
+
+@pytest.fixture
+def absence_case_id():
+    return ""
 
 
 @pytest.fixture
@@ -25,6 +56,353 @@ def fineos_client():
 @pytest.fixture
 def application():
     return ApplicationFactory.create(leave_reason_id=None)
+
+
+@pytest.fixture
+def continuous_leave_periods():
+    return [
+        TimeOffLeavePeriod(
+            startDate=date(2021, 1, 1),
+            endDate=date(2021, 2, 9),
+            status="known",
+            lastDayWorked=date(2020, 12, 30),
+            expectedReturnToWorkDate=date(2021, 2, 11),
+            startDateFullDay=True,
+            startDateOffHours=1,
+            startDateOffMinutes=5,
+            endDateOffHours=4,
+            endDateOffMinutes=0,
+            endDateFullDay=True,
+        )
+    ]
+
+
+@pytest.fixture
+def intermittent_leave_periods():
+    episodic_leave_period_detail = EpisodicLeavePeriodDetail(
+        frequency=5,
+        frequencyInterval=5,
+        frequencyIntervalBasis="Month",
+        duration=10,
+        durationBasis="week",
+    )
+    return [
+        AbsencePeriod(
+            id="PL-14449-0000002237",
+            reason="Pregnancy/Maternity",
+            reasonQualifier1="Foster Care",
+            reasonQualifier2="",
+            startDate=date(2021, 1, 29),
+            endDate=date(2021, 1, 30),
+            absenceType="Episodic",
+            episodicLeavePeriodDetail=episodic_leave_period_detail,
+            requestStatus="Pending",
+        )
+    ]
+
+
+@pytest.fixture
+def intermittent_leave_periods_not_open():
+    episodic_leave_period_detail = EpisodicLeavePeriodDetail(
+        frequency=5,
+        frequencyInterval=5,
+        frequencyIntervalBasis="Month",
+        duration=10,
+        durationBasis="week",
+    )
+    return [
+        AbsencePeriod(
+            id="PL-14449-0000002237",
+            reason="Pregnancy/Maternity",
+            reasonQualifier1="Foster Care",
+            reasonQualifier2="",
+            startDate=date(2021, 1, 29),
+            endDate=date(2021, 1, 30),
+            absenceType="Episodic",
+            episodicLeavePeriodDetail=episodic_leave_period_detail,
+            requestStatus="Approved",
+        )
+    ]
+
+
+@pytest.fixture
+def intermittent_leave_periods_invalid_leave_reason():
+    episodic_leave_period_detail = EpisodicLeavePeriodDetail(
+        frequency=5,
+        frequencyInterval=5,
+        frequencyIntervalBasis="Month",
+        duration=10,
+        durationBasis="week",
+    )
+    return [
+        AbsencePeriod(
+            id="PL-14449-0000002237",
+            reason="invalid",
+            reasonQualifier1="Foster Care",
+            reasonQualifier2="",
+            startDate=date(2021, 1, 29),
+            endDate=date(2021, 1, 30),
+            absenceType="Episodic",
+            episodicLeavePeriodDetail=episodic_leave_period_detail,
+            requestStatus="Pending",
+        )
+    ]
+
+
+@pytest.fixture
+def intermittent_leave_periods_invalid_leave_reason_qualifier():
+    episodic_leave_period_detail = EpisodicLeavePeriodDetail(
+        frequency=5,
+        frequencyInterval=5,
+        frequencyIntervalBasis="Month",
+        duration=10,
+        durationBasis="week",
+    )
+    return [
+        AbsencePeriod(
+            id="PL-14449-0000002237",
+            reason="Pregnancy/Maternity",
+            reasonQualifier1="Invalid",
+            reasonQualifier2="",
+            startDate=date(2021, 1, 29),
+            endDate=date(2021, 1, 30),
+            absenceType="Episodic",
+            episodicLeavePeriodDetail=episodic_leave_period_detail,
+            requestStatus="Pending",
+        )
+    ]
+
+
+@pytest.fixture
+def reduced_leave_periods():
+    return [
+        ReportedReducedScheduleLeavePeriod(
+            startDate=date(2021, 1, 29),
+            endDate=date(2021, 3, 29),
+            sundayOffMinutes=10,
+            mondayOffMinutes=15,
+            tuesdayOffMinutes=20,
+            wednesdayOffMinutes=40,
+            thursdayOffMinutes=45,
+            fridayOffMinutes=25,
+            saturdayOffMinutes=12,
+        )
+    ]
+
+
+@pytest.fixture
+def absence_details(continuous_leave_periods, intermittent_leave_periods, reduced_leave_periods):
+    return AbsenceDetails(
+        creationDate=datetime(2020, 10, 10),
+        notificationDate=date(2020, 10, 20),
+        reportedTimeOff=continuous_leave_periods,
+        absencePeriods=intermittent_leave_periods,
+        reportedReducedSchedule=reduced_leave_periods,
+    )
+
+
+@pytest.fixture
+def absence_details_without_open_absence_period(
+    continuous_leave_periods, intermittent_leave_periods_not_open, reduced_leave_periods
+):
+    return AbsenceDetails(
+        creationDate=datetime(2020, 10, 10),
+        notificationDate=date(2020, 10, 20),
+        reportedTimeOff=continuous_leave_periods,
+        absencePeriods=intermittent_leave_periods_not_open,
+        reportedReducedSchedule=reduced_leave_periods,
+    )
+
+
+@pytest.fixture
+def absence_details_invalid_leave_reason(
+    continuous_leave_periods, intermittent_leave_periods_invalid_leave_reason, reduced_leave_periods
+):
+    return AbsenceDetails(
+        creationDate=datetime(2020, 10, 10),
+        notificationDate=date(2020, 10, 20),
+        reportedTimeOff=continuous_leave_periods,
+        absencePeriods=intermittent_leave_periods_invalid_leave_reason,
+        reportedReducedSchedule=reduced_leave_periods,
+    )
+
+
+@pytest.fixture
+def absence_details_invalid_leave_reason_qualifier(
+    continuous_leave_periods,
+    intermittent_leave_periods_invalid_leave_reason_qualifier,
+    reduced_leave_periods,
+):
+    return AbsenceDetails(
+        creationDate=datetime(2020, 10, 10),
+        notificationDate=date(2020, 10, 20),
+        reportedTimeOff=continuous_leave_periods,
+        absencePeriods=intermittent_leave_periods_invalid_leave_reason_qualifier,
+        reportedReducedSchedule=reduced_leave_periods,
+    )
+
+
+def _compare_continuous_leave(
+    application,
+    continuous_leave: ContinuousLeavePeriod,
+    fineos_continuous_leave: TimeOffLeavePeriod,
+):
+    assert continuous_leave.application_id == application.application_id
+    assert continuous_leave.start_date == fineos_continuous_leave.startDate
+    assert continuous_leave.end_date == fineos_continuous_leave.endDate
+    assert (
+        continuous_leave.expected_return_to_work_date
+        == fineos_continuous_leave.expectedReturnToWorkDate
+    )
+    assert continuous_leave.start_date_full_day == fineos_continuous_leave.startDateFullDay
+    assert continuous_leave.start_date_off_hours == fineos_continuous_leave.startDateOffHours
+    assert continuous_leave.start_date_off_minutes == fineos_continuous_leave.startDateOffMinutes
+    assert continuous_leave.end_date_full_day == fineos_continuous_leave.endDateFullDay
+    assert continuous_leave.end_date_off_hours == fineos_continuous_leave.endDateOffHours
+    assert continuous_leave.end_date_off_minutes == fineos_continuous_leave.endDateOffMinutes
+
+
+def _compare_intermittent_leave(application, intermittent_leave, fineos_intermittent_leave):
+    assert intermittent_leave.application_id == application.application_id
+    assert intermittent_leave.start_date == fineos_intermittent_leave.startDate
+    assert intermittent_leave.end_date == fineos_intermittent_leave.endDate
+
+    episodic_detail = fineos_intermittent_leave.episodicLeavePeriodDetail
+    assert intermittent_leave.frequency == episodic_detail.frequency
+    assert intermittent_leave.frequency_interval == episodic_detail.frequencyInterval
+    assert intermittent_leave.frequency_interval_basis == episodic_detail.frequencyIntervalBasis
+    assert intermittent_leave.duration == episodic_detail.duration
+    assert intermittent_leave.duration_basis == episodic_detail.durationBasis
+
+
+def _compare_reduced_leave(application, reduced_leave, fineos_reduced_leave):
+    assert reduced_leave.application_id == application.application_id
+    assert reduced_leave.start_date == fineos_reduced_leave.startDate
+    assert reduced_leave.end_date == fineos_reduced_leave.endDate
+    assert reduced_leave.sunday_off_minutes == fineos_reduced_leave.sundayOffMinutes
+    assert reduced_leave.monday_off_minutes == fineos_reduced_leave.mondayOffMinutes
+    assert reduced_leave.tuesday_off_minutes == fineos_reduced_leave.tuesdayOffMinutes
+    assert reduced_leave.wednesday_off_minutes == fineos_reduced_leave.wednesdayOffMinutes
+    assert reduced_leave.thursday_off_minutes == fineos_reduced_leave.thursdayOffMinutes
+    assert reduced_leave.friday_off_minutes == fineos_reduced_leave.fridayOffMinutes
+    assert reduced_leave.saturday_off_minutes == fineos_reduced_leave.saturdayOffMinutes
+
+
+@mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_absence")
+def test_set_application_absence_and_leave_period(
+    mock_get_absence, fineos_client, fineos_web_id, absence_case_id, application, absence_details
+):
+    mock_get_absence.return_value = absence_details
+    set_application_absence_and_leave_period(
+        fineos_client, fineos_web_id, application, absence_case_id
+    )
+
+    assert len(application.continuous_leave_periods) == 1
+    assert application.has_continuous_leave_periods
+    continuous_leave = application.continuous_leave_periods[0]
+    fineos_continuous_leave = absence_details.reportedTimeOff[0]
+    _compare_continuous_leave(application, continuous_leave, fineos_continuous_leave)
+
+    assert len(application.intermittent_leave_periods) == 1
+    assert application.has_intermittent_leave_periods
+    intermittent_leave = application.intermittent_leave_periods[0]
+    fineos_intermittent_leave = absence_details.absencePeriods[0]
+    _compare_intermittent_leave(application, intermittent_leave, fineos_intermittent_leave)
+
+    assert len(application.reduced_schedule_leave_periods) == 1
+    assert application.has_reduced_schedule_leave_periods
+    reduced_leave = application.reduced_schedule_leave_periods[0]
+    fineos_reduced_leave = absence_details.reportedReducedSchedule[0]
+    _compare_reduced_leave(application, reduced_leave, fineos_reduced_leave)
+
+    assert application.leave_reason_id == LeaveReason.get_id(
+        absence_details.absencePeriods[0].reason
+    )
+    assert application.leave_reason_qualifier_id == LeaveReasonQualifier.get_id(
+        absence_details.absencePeriods[0].reasonQualifier1
+    )
+    assert application.pregnant_or_recent_birth
+
+    assert application.submitted_time == absence_details.creationDate
+    assert application.employer_notification_date == absence_details.notificationDate
+    assert application.employer_notified
+
+
+@mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_absence")
+def test_set_application_absence_and_leave_period_without_open_absence_period(
+    mock_get_absence,
+    fineos_client,
+    fineos_web_id,
+    absence_case_id,
+    application,
+    absence_details_without_open_absence_period,
+):
+    mock_get_absence.return_value = absence_details_without_open_absence_period
+    set_application_absence_and_leave_period(
+        fineos_client, fineos_web_id, application, absence_case_id
+    )
+
+    assert len(application.continuous_leave_periods) == 1
+    assert application.has_continuous_leave_periods
+    continuous_leave = application.continuous_leave_periods[0]
+    fineos_continuous_leave = absence_details_without_open_absence_period.reportedTimeOff[0]
+    _compare_continuous_leave(application, continuous_leave, fineos_continuous_leave)
+
+    assert len(application.intermittent_leave_periods) == 1
+    assert application.has_intermittent_leave_periods
+    intermittent_leave = application.intermittent_leave_periods[0]
+    fineos_intermittent_leave = absence_details_without_open_absence_period.absencePeriods[0]
+    _compare_intermittent_leave(application, intermittent_leave, fineos_intermittent_leave)
+
+    assert len(application.reduced_schedule_leave_periods) == 1
+    assert application.has_reduced_schedule_leave_periods
+    reduced_leave = application.reduced_schedule_leave_periods[0]
+    fineos_reduced_leave = absence_details_without_open_absence_period.reportedReducedSchedule[0]
+    _compare_reduced_leave(application, reduced_leave, fineos_reduced_leave)
+
+    assert application.leave_reason_id is None
+
+    assert application.leave_reason_qualifier_id is None
+    assert application.pregnant_or_recent_birth is False
+
+    assert application.submitted_time == absence_details_without_open_absence_period.creationDate
+    assert (
+        application.employer_notification_date
+        == absence_details_without_open_absence_period.notificationDate
+    )
+    assert application.employer_notified
+
+
+@mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_absence")
+def test_set_application_absence_and_leave_period_invalid_leave_reason(
+    mock_get_absence,
+    fineos_client,
+    fineos_web_id,
+    absence_case_id,
+    application,
+    absence_details_invalid_leave_reason,
+):
+    mock_get_absence.return_value = absence_details_invalid_leave_reason
+    with pytest.raises(KeyError):
+        set_application_absence_and_leave_period(
+            fineos_client, fineos_web_id, application, absence_case_id
+        )
+
+
+@mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_absence")
+def test_set_application_absence_and_leave_period_invalid_leave_reason_qualifier(
+    mock_get_absence,
+    fineos_client,
+    fineos_web_id,
+    absence_case_id,
+    application,
+    absence_details_invalid_leave_reason_qualifier,
+):
+    mock_get_absence.return_value = absence_details_invalid_leave_reason_qualifier
+    with pytest.raises(KeyError):
+        set_application_absence_and_leave_period(
+            fineos_client, fineos_web_id, application, absence_case_id
+        )
 
 
 @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.read_customer_details")
@@ -133,3 +511,186 @@ def test_set_customer_detail_fields_with_blank_address(
     mock_read_customer_details.return_value = customer_details
     set_customer_detail_fields(fineos_client, fineos_web_id, application, test_db_session)
     assert application.residential_address is None
+
+
+def test_set_employment_status(fineos_client, fineos_web_id, application, user):
+    set_employment_status(fineos_client, fineos_web_id, application, user)
+    assert application.employment_status_id == EmploymentStatus.EMPLOYED.employment_status_id
+    assert application.hours_worked_per_week == 37.5
+
+
+@mock.patch(
+    "massgov.pfml.fineos.mock_client.MockFINEOSClient.get_customer_occupations_customer_api"
+)
+@pytest.mark.parametrize("status", ("Terminated", "Self-Employed", "Retired", "Unknown"))
+def test_set_invalid_status_returns_error(
+    mock_get_customer_occupations_customer_api,
+    fineos_client,
+    fineos_web_id,
+    application,
+    user,
+    status,
+):
+    mock_get_customer_occupations_customer_api.return_value = [
+        massgov.pfml.fineos.models.customer_api.ReadCustomerOccupation(
+            occupationId=12345, hoursWorkedPerWeek=37.5, employmentStatus=status
+        )
+    ]
+    with pytest.raises(ValidationException) as exc:
+        set_employment_status(fineos_client, fineos_web_id, application, user)
+        assert exc.value.errors == [
+            ValidationErrorDetail(
+                type=IssueType.invalid,
+                message="Employment Status must be Active",
+                field="employment_status",
+            )
+        ]
+
+
+def test_set_payment_preference_fields(fineos_client, fineos_web_id, application, test_db_session):
+    set_payment_preference_fields(fineos_client, fineos_web_id, application, test_db_session)
+    assert application.has_submitted_payment_preference is True
+    assert (
+        application.payment_preference.payment_method.payment_method_id
+        == PaymentMethod.ACH.payment_method_id
+    )
+    assert application.payment_preference.account_number == "1234565555"
+    assert application.payment_preference.routing_number == "011222333"
+    assert (
+        application.payment_preference.bank_account_type.bank_account_type_id
+        == BankAccountType.CHECKING.bank_account_type_id
+    )
+    assert application.has_mailing_address is True
+    assert application.mailing_address.address_line_one == "44324 Nayeli Stream"
+
+
+@mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_payment_preferences")
+def test_set_payment_preference_fields_without_a_default_preference(
+    mock_get_payment_preferences, fineos_client, fineos_web_id, application, test_db_session
+):
+    mock_get_payment_preferences.return_value = [
+        massgov.pfml.fineos.models.customer_api.PaymentPreferenceResponse(
+            paymentMethod="Check",
+            paymentPreferenceId="1234",
+            accountDetails=massgov.pfml.fineos.models.customer_api.AccountDetails(
+                accountNo="1234565555",
+                accountName="Constance Griffin",
+                routingNumber="011222333",
+                accountType="Checking",
+            ),
+        ),
+        massgov.pfml.fineos.models.customer_api.PaymentPreferenceResponse(
+            paymentMethod="Elec Funds Transfer",
+            paymentPreferenceId="1234",
+            accountDetails=massgov.pfml.fineos.models.customer_api.AccountDetails(
+                accountNo="1234565555",
+                accountName="Constance Griffin",
+                routingNumber="011222333",
+                accountType="Checking",
+            ),
+        ),
+    ]
+    set_payment_preference_fields(fineos_client, fineos_web_id, application, test_db_session)
+    # takes first payment pref, if none is set to default
+    assert application.has_submitted_payment_preference is True
+    assert (
+        application.payment_preference.payment_method.payment_method_id
+        == PaymentMethod.CHECK.payment_method_id
+    )
+
+
+@mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_payment_preferences")
+def test_set_payment_preference_fields_with_blank_payment_method(
+    mock_get_payment_preferences, fineos_client, fineos_web_id, application, test_db_session
+):
+    mock_get_payment_preferences.return_value = [
+        massgov.pfml.fineos.models.customer_api.PaymentPreferenceResponse(
+            paymentMethod="", paymentPreferenceId="1234", isDefault=True,
+        )
+    ]
+    set_payment_preference_fields(fineos_client, fineos_web_id, application, test_db_session)
+    assert application.payment_preference is None
+    assert application.has_submitted_payment_preference is False
+
+
+@mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_payment_preferences")
+def test_set_payment_preference_fields_without_address(
+    mock_get_payment_preferences, fineos_client, fineos_web_id, application, test_db_session
+):
+    mock_get_payment_preferences.return_value = [
+        massgov.pfml.fineos.models.customer_api.PaymentPreferenceResponse(
+            paymentMethod="Elec Funds Transfer",
+            paymentPreferenceId="85622",
+            isDefault=True,
+            accountDetails=massgov.pfml.fineos.models.customer_api.AccountDetails(
+                accountNo="1234565555",
+                accountName="Constance Griffin",
+                routingNumber="011222333",
+                accountType="Checking",
+            ),
+        )
+    ]
+    set_payment_preference_fields(fineos_client, fineos_web_id, application, test_db_session)
+    assert application.has_mailing_address is False
+    assert application.mailing_address is None
+
+
+@mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.read_customer_contact_details")
+def test_set_customer_contact_detail_fields(
+    mock_read_customer_contact_details, fineos_client, fineos_web_id, application, test_db_session
+):
+    customer_contact_details_json = massgov.pfml.fineos.mock_client.mock_customer_contact_details()
+    customer_contact_details = massgov.pfml.fineos.models.customer_api.ContactDetails.parse_obj(
+        customer_contact_details_json
+    )
+    mock_read_customer_contact_details.return_value = customer_contact_details
+    set_customer_contact_detail_fields(fineos_client, fineos_web_id, application, test_db_session)
+
+    # This also asserts that the preferred phone number gets returned in this case
+    # since the phone number being set is the 2nd element in the phoneNumbers array
+    assert application.phone.phone_number == "+13214567890"
+    assert application.phone_id == application.phone.phone_id
+
+
+@mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.read_customer_contact_details")
+def test_set_customer_contact_detail_fields_with_invalid_phone_number(
+    mock_read_customer_contact_details, fineos_client, fineos_web_id, application, test_db_session
+):
+    customer_contact_details_json = massgov.pfml.fineos.mock_client.mock_customer_contact_details()
+    customer_contact_details = massgov.pfml.fineos.models.customer_api.ContactDetails.parse_obj(
+        customer_contact_details_json
+    )
+    # Reset phone fields that get auto generated from the application factory
+    application.phone_id = None
+    application.phone = None
+    customer_contact_details.phoneNumbers = None
+
+    mock_read_customer_contact_details.return_value = customer_contact_details
+    set_customer_contact_detail_fields(fineos_client, fineos_web_id, application, test_db_session)
+    assert application.phone is None
+    assert application.phone_id is None
+
+
+@mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.read_customer_contact_details")
+def test_set_customer_contact_detail_fields_with_no_contact_details_returned_from_fineos(
+    mock_read_customer_contact_details, fineos_client, fineos_web_id, application, test_db_session
+):
+    # Reset phone fields that get auto generated from the application factory
+    application.phone_id = None
+    application.phone = None
+
+    # Checks to assert that if FINEOS returns no data, we don't update the applications phone record
+    mock_read_customer_contact_details.return_value = None
+    set_customer_contact_detail_fields(fineos_client, fineos_web_id, application, test_db_session)
+    assert application.phone is None
+    assert application.phone_id is None
+
+    # Checks to assert that if FINEOS returns contact details, but no phone numbers,
+    # we don't update the application phone record
+    customer_contact_details_json = massgov.pfml.fineos.mock_client.mock_customer_contact_details()
+    customer_contact_details = massgov.pfml.fineos.models.customer_api.ContactDetails.parse_obj(
+        customer_contact_details_json
+    )
+    customer_contact_details.phoneNumbers = None
+    mock_read_customer_contact_details.return_value = customer_contact_details
+    set_customer_contact_detail_fields(fineos_client, fineos_web_id, application, test_db_session)

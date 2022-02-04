@@ -33,7 +33,7 @@ exports[`Two-factor SMS Setup renders landing page content 1`] = `
         class="usa-input maxw-mobile-lg"
         id="InputText1"
         inputmode="numeric"
-        name="phone_number"
+        name="mfa_phone_number.phone_number"
         type="tel"
         value=""
       />

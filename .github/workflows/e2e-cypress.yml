@@ -2,11 +2,12 @@ name: End-to-End Test Suite
 #
 # This workflow runs Cypress tests in a parallel fashion.
 #
-# Tests are split into three categories:
+# Tests are split into four categories:
 #
 # * Stable - tests that must pass before release.
 # * Unstable - tests that are advisory (for upcoming features) and should not block release.
 # * Ignored - tests that are not run at all in CI.
+# * Morning - tests that run to check features are working correctly.
 
 on:
   # Manual runs.
@@ -25,9 +26,10 @@ on:
         - training
         - uat
         - breakfix
-        - infra-test
         - long
         - trn2
+        # Note: Infra-test is intentionally not E2E tested, as it shares a Fineos instance.
+        # - infra-test
       cypress_tags:
         description: "Cypress Run Tags"
         required: false
@@ -65,8 +67,8 @@ on:
         required: false
         default: false
         type: boolean
-      run_nightly:
-        description: "Run tests in nightly group"
+      run_morning:
+        description: "Run tests in morning group"
         required: false
         default: false
         type: boolean
@@ -128,7 +130,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        containers: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        containers: [1, 2, 3, 4, 5, 6, 7]
     steps:
       - uses: actions/checkout@v2
       - name: Setup Node
@@ -189,21 +191,21 @@ jobs:
         # the step level instead, allowing continue-on-error to do its job.
         timeout-minutes: 15
 
-#      # Run Nightly Cypress tests (commented out until we have some).
-#      - name: Cypress Tests (Nightly)
-#        uses: cypress-io/github-action@v2
-#        timeout-minutes: 15
-#        with:
-#          spec: "cypress/specs/nightly/**"
-#          record: true
-#          parallel: true
-#          working-directory: e2e
-#          group: Nightly
-#          ci-build-id: ${{ env.TEST_RUN_ID }}
-#          install: false
-#          tag: "${{ github.event.inputs.cypress_tags }},Env-${{ github.event.inputs.target_environment }}"
-#          config: trashAssetsBeforeRuns=false,reporter=cypress/reporters/new-relic.js
-#        if: github.event.inputs.run_nightly == 'true' && always()
+      # Run Morning Cypress tests (with the Morning runs).
+      - name: Cypress Tests (Morning)
+        uses: cypress-io/github-action@v2
+        timeout-minutes: 15
+        with:
+          spec: "cypress/specs/morning/**"
+          record: true
+          parallel: true
+          working-directory: e2e
+          group: Morning
+          ci-build-id: ${{ env.TEST_RUN_ID }}
+          install: false
+          tag: "${{ github.event.inputs.cypress_tags }},Env-${{ github.event.inputs.target_environment }}"
+          config: trashAssetsBeforeRuns=false,reporter=cypress/reporters/new-relic.js
+        if: github.event.inputs.run_morning == 'true' && always()
 
       - name: "Archive screenshots"
         uses: actions/upload-artifact@v2
@@ -257,4 +259,4 @@ jobs:
           env_variable_name: "E2E_NEWRELIC_INGEST_KEY"
 
       - name: Integration Tests
-        run: npm run test:integration:ci -- --group=stable${{ github.event.inputs.run_unstable == 'true' && ' --group=unstable' || '' }}${{ github.event.inputs.run_nightly == 'true' && ' --group=nightly' || '' }}
+        run: npm run test:integration:ci -- --group=stable${{ github.event.inputs.run_unstable == 'true' && ' --group=unstable' || '' }}${{ github.event.inputs.run_morning == 'true' && ' --group=morning' || '' }}

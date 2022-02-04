@@ -9,7 +9,7 @@ import { Email, GetEmailsOpts } from "../../src/submission/TestMailClient";
  */
 export function getEmails(
   opts: GetEmailsOpts,
-  timeout = 30000
+  timeout = 60000
 ): Cypress.Chainable<Document> {
   return cy
     .task<Email[]>(

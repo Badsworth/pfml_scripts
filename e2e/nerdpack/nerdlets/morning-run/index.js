@@ -91,7 +91,9 @@ class EnvSummaryView extends React.Component {
           }
 
           let runIds = this.state.envs.reduce(function (r, a) {
-            r.push(byEnv[a].runId);
+            if (byEnv[a]?.runId) {
+              r.push(byEnv[a].runId);
+            }
             return r;
           }, []);
           let query_integration = `SELECT count(*)
@@ -213,7 +215,9 @@ class EnvSummaryView extends React.Component {
                       return data.reduce(function (r, a) {
                         let file = a.file.replace("test/integration/", "");
                         r[file] = r[file] || { pass: true, env: [] };
-                        r[file].env[a.environment] = r[file].env[a.environment] || {failed:0,total:0}
+                        r[file].env[a.environment] = r[file].env[
+                          a.environment
+                        ] || { failed: 0, total: 0 };
                         if (a.passed === "false") {
                           r[file].pass = false;
                           r[file].env[a.environment].failed++;
@@ -235,14 +239,15 @@ class EnvSummaryView extends React.Component {
                         </h3>,
                         <ul className={"filelist"}>
                           {Object.keys(data[test].env).map((e) => {
-                            if(data[test].env[e].failed) {
+                            if (data[test].env[e].failed) {
                               return [
                                 <li>
-                                <span>
-                                  <code>
-                                    {e} - Failed {data[test].env[e].failed} of {data[test].env[e].total}
-                                  </code>
-                                </span>
+                                  <span>
+                                    <code>
+                                      {e} - Failed {data[test].env[e].failed} of{" "}
+                                      {data[test].env[e].total}
+                                    </code>
+                                  </span>
                                 </li>,
                               ];
                             }
@@ -283,11 +288,13 @@ class EnvSummaryView extends React.Component {
                           }
 
                           if (!runFileData.length) {
-                            return <h3>
-                              <b>
-                                {labelEnv(env)} {statusFromBool(true)}{" "}
-                              </b>
-                            </h3>;
+                            return (
+                              <h3>
+                                <b>
+                                  {labelEnv(env)} {statusFromBool(true)}{" "}
+                                </b>
+                              </h3>
+                            );
                           }
 
                           function processRowsIntegration(data) {
@@ -323,7 +330,7 @@ class EnvSummaryView extends React.Component {
                                   </ul>,
                                 ];
                               })}
-                            </ul>
+                            </ul>,
                           ];
                         }}
                       </NrqlQuery>

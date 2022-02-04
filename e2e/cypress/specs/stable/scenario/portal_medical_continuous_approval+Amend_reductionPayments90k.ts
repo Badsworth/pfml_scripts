@@ -1,5 +1,4 @@
 import { fineos, fineosPages, portal } from "../../../actions";
-
 import {
   Submission,
   ValidConcurrentLeave,
@@ -12,6 +11,9 @@ import {
   isValidOtherIncome,
   isValidPreviousLeave,
 } from "../../../../src/util/typeUtils";
+import { config } from "../../../actions/common";
+import { getHours, addBusinessDays } from "date-fns";
+import { convertToTimeZone } from "date-fns-timezone";
 
 // Used for stashing generated benefit and leave
 type LeaveAdminchanges = {
@@ -92,80 +94,122 @@ describe("Claimant uses portal to report other leaves and benefits, receives cor
       });
     });
 
-  it("As a CPS Agent, I can review the claim and apply reductions.", () => {
-    cy.dependsOnPreviousPass([claimSubmission, erApproval]);
-    fineos.before();
-    cy.unstash<DehydratedClaim>("claim").then(({ claim, documents }) => {
-      cy.unstash<Submission>("submission").then((submission) => {
-        cy.unstash<LeaveAdminchanges>("amendments").then(
-          ({ employerReportedBenefit, employerReportedConcurrentLeave }) => {
-            claim.employer_benefits = [employerReportedBenefit];
-            claim.concurrent_leave = employerReportedConcurrentLeave;
-            assertValidClaim(claim);
-            fineosPages.ClaimPage.visit(submission.fineos_absence_id)
-              .tasks((tasks) => {
-                // Check all of the appropriate tasks have been generated
-                tasks.assertTaskExists("Employee Reported Other Leave");
-                tasks.assertTaskExists("Employee Reported Other Income");
-                tasks.assertTaskExists("Employer Conflict Reported");
-                // Add escalation tasks and check they are assigned appropriately
-                tasks
-                  .add("Escalate Employer Reported Other Income")
-                  .assertIsAssignedToUser(
-                    "Escalate Employer Reported Other Income",
-                    "DFML Program Integrity"
-                  )
-                  .assertIsAssignedToDepartment(
-                    "Escalate Employer Reported Other Income",
-                    "DFML Program Integrity"
-                  );
-                tasks
-                  .add("Escalate employer reported past leave")
-                  .assertIsAssignedToUser(
-                    "Escalate employer reported past leave",
-                    "DFML Program Integrity"
-                  )
-                  .assertIsAssignedToDepartment(
-                    "Escalate employer reported past leave",
-                    "DFML Program Integrity"
-                  );
-              })
-              .adjudicate((adjudication) => {
-                adjudication
-                  .evidence((evidence) => {
-                    documents.forEach(({ document_type }) => {
-                      evidence.receive(document_type);
-                    });
-                  })
-                  .certificationPeriods((certification) => {
-                    certification.prefill();
-                  })
-                  .paidBenefits((paidBenefits) => {
-                    paidBenefits.assertSitFitOptIn(true);
-                  })
-                  .acceptLeavePlan();
-              })
-              .approve()
-              .paidLeave((leaveCase) => {
-                const { other_incomes, employer_benefits } = claim;
-                assertIsTypedArray(other_incomes, isValidOtherIncome);
-                assertIsTypedArray(employer_benefits, isValidEmployerBenefit);
-                leaveCase
-                  .applyReductions({ other_incomes, employer_benefits })
-                  .assertPaymentsMade([{ net_payment_amount: 496.66 }])
-                  .assertPaymentAllocations([{ net_payment_amount: 496.66 }])
-                  .assertAmountsPending([
-                    // retroactive SIT/FIT appear in amounts pending with processing date of today
-                    { net_payment_amount: 58.43 },
-                    { net_payment_amount: 29.22 },
-                    { net_payment_amount: 496.66 },
-                    { net_payment_amount: 58.43 },
-                    { net_payment_amount: 29.22 },
-                  ]);
-              });
-          }
-        );
+  const approval =
+    it("As a CPS Agent, I can review and approve the claim, then apply reductions ", () => {
+      cy.dependsOnPreviousPass([claimSubmission, erApproval]);
+      fineos.before();
+      cy.unstash<DehydratedClaim>("claim").then(({ claim, documents }) => {
+        cy.unstash<Submission>("submission").then((submission) => {
+          cy.unstash<LeaveAdminchanges>("amendments").then(
+            ({ employerReportedBenefit, employerReportedConcurrentLeave }) => {
+              claim.employer_benefits = [employerReportedBenefit];
+              claim.concurrent_leave = employerReportedConcurrentLeave;
+              assertValidClaim(claim);
+              fineosPages.ClaimPage.visit(submission.fineos_absence_id)
+                .tasks((tasks) => {
+                  // Check all of the appropriate tasks have been generated
+                  tasks.assertTaskExists("Employee Reported Other Leave");
+                  tasks.assertTaskExists("Employee Reported Other Income");
+                  tasks.assertTaskExists("Employer Conflict Reported");
+                  // Add escalation tasks and check they are assigned appropriately
+                  tasks
+                    .add("Escalate Employer Reported Other Income")
+                    .assertIsAssignedToUser(
+                      "Escalate Employer Reported Other Income",
+                      "DFML Program Integrity"
+                    )
+                    .assertIsAssignedToDepartment(
+                      "Escalate Employer Reported Other Income",
+                      "DFML Program Integrity"
+                    );
+                  tasks
+                    .add("Escalate employer reported past leave")
+                    .assertIsAssignedToUser(
+                      "Escalate employer reported past leave",
+                      "DFML Program Integrity"
+                    )
+                    .assertIsAssignedToDepartment(
+                      "Escalate employer reported past leave",
+                      "DFML Program Integrity"
+                    );
+                })
+                .adjudicate((adjudication) => {
+                  adjudication
+                    .evidence((evidence) => {
+                      documents.forEach(({ document_type }) => {
+                        evidence.receive(document_type);
+                      });
+                    })
+                    .certificationPeriods((certification) => {
+                      certification.prefill();
+                    })
+                    .paidBenefits((paidBenefits) => {
+                      paidBenefits.assertSitFitOptIn(true);
+                    })
+                    .acceptLeavePlan();
+                })
+                .approve()
+                .paidLeave((leaveCase) => {
+                  const { other_incomes, employer_benefits } = claim;
+                  assertIsTypedArray(other_incomes, isValidOtherIncome);
+                  assertIsTypedArray(employer_benefits, isValidEmployerBenefit);
+                  leaveCase.applyReductions({
+                    other_incomes,
+                    employer_benefits,
+                  });
+                });
+            }
+          );
+        });
       });
+    });
+  it("Payments appear in paid leave case with the expected amounts", () => {
+    cy.dependsOnPreviousPass([approval]);
+    fineos.before();
+    cy.unstash<Submission>("submission").then((submission) => {
+      fineosPages.ClaimPage.visit(submission.fineos_absence_id).paidLeave(
+        (leaveCase) => {
+          if (config("HAS_FEB_RELEASE") === "true") {
+            const estTimeHour = getHours(
+              convertToTimeZone(new Date(), {
+                timeZone: "America/New_York",
+              })
+            );
+            const isBeforeEndBusinessDay = estTimeHour < 17;
+            const paymentDates = Array<Date>(2).fill(
+              addBusinessDays(new Date(), isBeforeEndBusinessDay ? 5 : 6)
+            );
+            leaveCase.assertPaymentsMade([]).assertAmountsPending([
+              // retroactive SIT/FIT appear in amounts pending with processing date of today
+              {
+                net_payment_amount: 58.43,
+                paymentInstances: 2,
+                paymentProcessingDates: paymentDates,
+              },
+              {
+                net_payment_amount: 29.22,
+                paymentInstances: 2,
+                paymentProcessingDates: paymentDates,
+              },
+              {
+                net_payment_amount: 496.66,
+                paymentInstances: 2,
+                paymentProcessingDates: paymentDates,
+              },
+            ]);
+          } else {
+            leaveCase
+              .assertPaymentsMade([{ net_payment_amount: 496.66 }])
+              .assertPaymentAllocations([{ net_payment_amount: 496.66 }])
+              .assertAmountsPending([
+                // retroactive SIT/FIT appear in amounts pending with processing date of today
+                { net_payment_amount: 58.43, paymentInstances: 2 },
+                { net_payment_amount: 29.22, paymentInstances: 2 },
+                { net_payment_amount: 496.66 },
+              ]);
+          }
+        }
+      );
     });
   });
 });

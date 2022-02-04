@@ -30,15 +30,12 @@ const flagsConfig = {
     // When this flag is false, you can bypass the deparment capture form when applying
     claimantShowOrganizationUnits: false,
 
-    // When this flag is enabled, the claim payments section for claimants will show
-    claimantShowPayments: false,
-
     // When this flag is enabled payment status phase two work will be displayed.
     claimantShowPaymentsPhaseTwo: true,
 
-    // Show multiple leave request UI updates to leave admins.
-    // TODO (PORTAL-1151) Remove flag
-    employerShowMultiLeave: true,
+    // Show multiple leave request UI updates to leave admins (dashboard++)
+    // TODO (PORTAL-1560) Remove flag
+    employerShowMultiLeaveDashboard: false,
 
     // When this flag true, you can BYPASS maintenance pages that are currently present.
     // See docs/portal/maintenance-pages.md for more details.
@@ -58,7 +55,7 @@ const flagsConfig = {
     // dashboard blocked from seeing any applications, and will function like
     // all other employers' dashboards.
     // Will only be used for smoke testing purposes and removed afterwards.
-    employerUnlockDashboard: false,
+    employerUnlockDashboard: true,
   },
   // Environments can optionally override a default feature flag below.
   // The environment keys should use the same envName defined in

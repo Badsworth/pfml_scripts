@@ -28,9 +28,8 @@ import Review, {
   PreviousLeaveList,
 } from "../../../src/pages/applications/review";
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import ApiResourceCollection from "src/models/ApiResourceCollection";
 import AppErrorInfo from "../../../src/models/AppErrorInfo";
-import AppErrorInfoCollection from "../../../src/models/AppErrorInfoCollection";
-import DocumentCollection from "../../../src/models/DocumentCollection";
 import { LeaveReasonType } from "../../../src/models/LeaveReason";
 import { createMockBenefitsApplicationDocument } from "../../../lib/mock-helpers/createMockDocument";
 import dayjs from "dayjs";
@@ -43,7 +42,7 @@ const setup = ({
   claim = new MockBenefitsApplicationBuilder().part1Complete().create(),
   documents,
 }: {
-  appErrors?: AppErrorInfoCollection;
+  appErrors?: AppErrorInfo[];
   claim?: BenefitsApplication;
   documents?: BenefitsApplicationDocument[];
 } = {}) => {
@@ -60,7 +59,11 @@ const setup = ({
         setupBenefitsApplications(appLogic, [claim]);
 
         // Mock the Application's documents
-        appLogic.documents.documents = new DocumentCollection(documents);
+        appLogic.documents.documents =
+          new ApiResourceCollection<BenefitsApplicationDocument>(
+            "fineos_document_id",
+            documents
+          );
         jest
           .spyOn(appLogic.documents, "hasLoadedClaimDocuments")
           .mockReturnValue(true);
@@ -181,9 +184,9 @@ describe("Review Page", () => {
   });
 
   it("renders a Alert when there are required field errors", () => {
-    const appErrors = new AppErrorInfoCollection([
+    const appErrors = [
       new AppErrorInfo({ type: "required", field: "someField" }),
-    ]);
+    ];
 
     setup({ appErrors });
 
@@ -193,14 +196,14 @@ describe("Review Page", () => {
   });
 
   it("does not render a custom Alert when there are required errors not associated to a specific field", () => {
-    const appErrors = new AppErrorInfoCollection([
+    const appErrors = [
       new AppErrorInfo({
         type: "required",
         rule: "require_employer_notified",
         message:
           "employer_notified must be True if employment_status is Employed",
       }),
-    ]);
+    ];
 
     setup({ appErrors });
 
@@ -213,14 +216,14 @@ describe("Review Page", () => {
     const claim = new MockBenefitsApplicationBuilder().complete().create();
 
     setup({
-      appErrors: new AppErrorInfoCollection([
+      appErrors: [
         new AppErrorInfo({
           name: "DocumentsLoadError",
           meta: {
             application_id: claim.application_id,
           },
         }),
-      ]),
+      ],
       claim,
     });
 
@@ -242,6 +245,7 @@ describe("Review Page", () => {
       documents: [
         createMockBenefitsApplicationDocument({
           application_id: claim.application_id,
+          fineos_document_id: "1",
           document_type:
             DocumentType.certification[
               claim.leave_details.reason as LeaveReasonType
@@ -249,6 +253,7 @@ describe("Review Page", () => {
         }),
         createMockBenefitsApplicationDocument({
           application_id: claim.application_id,
+          fineos_document_id: "12",
           document_type:
             DocumentType.certification[
               claim.leave_details.reason as LeaveReasonType
@@ -256,6 +261,7 @@ describe("Review Page", () => {
         }),
         createMockBenefitsApplicationDocument({
           application_id: claim.application_id,
+          fineos_document_id: "3",
           document_type: DocumentType.identityVerification,
         }),
       ],

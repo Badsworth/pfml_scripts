@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import json
 import os
-import re
 from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -10,6 +9,7 @@ from typing import TYPE_CHECKING, Dict, List, Optional, Sequence
 
 import boto3
 from botocore.exceptions import ClientError
+from email_validator import EmailNotValidError, validate_email
 from pydantic import BaseModel, validator
 
 import massgov.pfml.util.logging as logging
@@ -59,12 +59,10 @@ class EmailRecipient(BaseModel):
 
     @classmethod
     def check_email_format(cls, email):
-        # https://stackoverflow.com/questions/37289172/python-regex-for-email-addresses-need-to-weed-out-dot-dash
-        regex = r"^(?!.*\.-.*$|.*-\..*$)([a-zA-Z0-9._-]+)([a-zA-Z0-9]@[a-zA-Z0-9])([a-zA-Z0-9.-]+)([a-zA-Z0-9]\.[a-zA-Z]{2,3})$"
-        if not re.match(regex, email):
-            validation_error = ValidationErrorDetail(
-                message=f"Email format has to match {regex}", type=IssueType.pattern,
-            )
+        try:
+            validate_email(email, check_deliverability=False)
+        except EmailNotValidError as e:
+            validation_error = ValidationErrorDetail(message=f"{e}", type=IssueType.pattern,)
             raise ValidationException(
                 errors=[validation_error], message="Email validation error", data={}
             )

@@ -49,6 +49,7 @@ from massgov.pfml.delegated_payments.step import Step
 from massgov.pfml.delegated_payments.util.fineos_writeback_util import (
     stage_payment_fineos_writeback,
 )
+from massgov.pfml.util.converters.str_to_numeric import str_to_int
 from massgov.pfml.util.datetime import get_now_us_eastern
 
 logger = logging.get_logger(__name__)
@@ -92,10 +93,10 @@ TAX_IDENTIFICATION_NUMBER = "Tax Identification Number"
 
 class PaymentData:
     """A class for containing any and all payment data. Handles validation and
-       pulling values out of the various types
+    pulling values out of the various types
 
-       All values are pulled from the CSV as-is and as strings. Values prefixed with raw_ need
-       to be converted from the FINEOS value to one of our DB values (usually a lookup enum)
+    All values are pulled from the CSV as-is and as strings. Values prefixed with raw_ need
+    to be converted from the FINEOS value to one of our DB values (usually a lookup enum)
     """
 
     validation_container: payments_util.ValidationContainer
@@ -140,6 +141,7 @@ class PaymentData:
 
     payment_transaction_type: LkPaymentTransactionType
     is_standard_payment: bool
+    is_employee_required: bool
 
     def __init__(
         self,
@@ -218,6 +220,18 @@ class PaymentData:
         self.is_standard_payment = (
             self.payment_transaction_type.payment_transaction_type_id
             == PaymentTransactionType.STANDARD.payment_transaction_type_id
+        )
+
+        # We only want to check for an employee in certain scenarios
+        # Employer Reimbursements will not map to an Employee,
+        # and nor will payments associated with tax withholdings
+        # We are not checking against transaction type here because
+        # cancelled tax withholdings will be "Cancellations" not tax withholdings.
+        self.is_employee_required = (
+            self.payment_transaction_type.payment_transaction_type_id
+            != PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id
+            and self.tin != STATE_TAX_WITHHOLDING_TIN
+            and self.tin != FEDERAL_TAX_WITHHOLDING_TIN
         )
 
         #######################################
@@ -347,7 +361,6 @@ class PaymentData:
 
         # Tax Withholdings
         if payments_util.is_withholding_payments_enabled():
-            logger.info("Tax Withholding ENABLED")
             # SIT
             if self.tin == STATE_TAX_WITHHOLDING_TIN:
                 return PaymentTransactionType.STATE_TAX_WITHHOLDING
@@ -395,34 +408,49 @@ class PaymentData:
         self.absence_case_number = payments_util.validate_db_input(
             "ABSENCECASENU", claim_details, self.validation_container, self.is_standard_payment
         )
+
         self.leave_request_id = payments_util.validate_db_input(
-            "LEAVEREQUESTI", claim_details, self.validation_container, self.is_standard_payment
+            "LEAVEREQUESTI",
+            claim_details,
+            self.validation_container,
+            self.is_standard_payment,
+            custom_validator_func=payments_util.leave_request_id_validator,
         )
 
         if requested_absence:
 
-            def leave_request_decision_validator(
-                leave_request_decision: str,
-            ) -> Optional[payments_util.ValidationReason]:
-                if leave_request_decision == "In Review":
-                    # These are allowed, but will be defaulted to skip in the audit report
-                    if count_incrementer is not None:
-                        count_incrementer(PaymentExtractStep.Metrics.IN_REVIEW_LEAVE_REQUEST_COUNT)
+            def leave_request_decision_validator_closure(
+                is_adhoc_payment: bool,
+            ) -> Callable[[str], Optional[payments_util.ValidationReason]]:
+                def leave_request_decision_validator(
+                    leave_request_decision: str,
+                ) -> Optional[payments_util.ValidationReason]:
+                    if leave_request_decision == "In Review":
+                        if is_adhoc_payment:
+                            return None
+                        if count_incrementer is not None:
+                            count_incrementer(
+                                PaymentExtractStep.Metrics.IN_REVIEW_LEAVE_REQUEST_COUNT
+                            )
+                        return payments_util.ValidationReason.LEAVE_REQUEST_IN_REVIEW
+                    if leave_request_decision != "Approved":
+                        if count_incrementer is not None:
+                            count_incrementer(
+                                PaymentExtractStep.Metrics.NOT_APPROVED_LEAVE_REQUEST_COUNT
+                            )
+                        return payments_util.ValidationReason.INVALID_VALUE
                     return None
-                if leave_request_decision != "Approved":
-                    if count_incrementer is not None:
-                        count_incrementer(
-                            PaymentExtractStep.Metrics.NOT_APPROVED_LEAVE_REQUEST_COUNT
-                        )
-                    return payments_util.ValidationReason.INVALID_VALUE
-                return None
+
+                return leave_request_decision_validator
 
             self.leave_request_decision = payments_util.validate_db_input(
                 "LEAVEREQUEST_DECISION",
                 requested_absence,
                 self.validation_container,
                 self.is_standard_payment,
-                custom_validator_func=leave_request_decision_validator,
+                custom_validator_func=leave_request_decision_validator_closure(
+                    self.is_adhoc_payment()
+                ),
             )
 
             self.claim_type_raw = payments_util.validate_db_input(
@@ -537,10 +565,17 @@ class PaymentData:
             "period_start_date": self.payment_start_period,
             "period_end_date": self.payment_end_period,
             "payment_transaction_type": self.payment_transaction_type.payment_transaction_type_description,
+            "is_for_standard_payment": self.is_employee_required,
         }
 
     def get_payment_message_str(self) -> str:
         return f"[C={self.c_value},I={self.i_value},absence_case_id={self.absence_case_number}]"
+
+    def is_adhoc_payment(self) -> bool:
+        # A payment is considered adhoc if it's marked as "Adhoc" often with
+        # a random number suffixed to it.
+        # This column can be empty/missing, and that's fine.
+        return self.amalgamation_c is not None and "Adhoc" in self.amalgamation_c
 
 
 class PaymentExtractStep(Step):
@@ -575,6 +610,7 @@ class PaymentExtractStep(Step):
         MULTIPLE_CLAIM_DETAILS_ERROR_COUNT = "multiple_claim_details_error_count"
         FEDERAL_WITHHOLDING_PAYMENT_COUNT = "federal_withholding_payment_count"
         STATE_WITHHOLDING_PAYMENT_COUNT = "state_withholding_payment_count"
+        EXEMPT_EMPLOYER_COUNT = "exempt_employer_count"
 
     def run_step(self):
         logger.info("Processing payment extract data")
@@ -582,10 +618,10 @@ class PaymentExtractStep(Step):
         logger.info("Successfully processed payment extract data")
 
     def get_active_payment_state(self, payment: Payment) -> Optional[LkState]:
-        """ For the given payment, determine if the payment is being processed or complete
-            and if so, return the active state.
-            Returns:
-              - If being processed, the state the active payment is in, else None
+        """For the given payment, determine if the payment is being processed or complete
+        and if so, return the active state.
+        Returns:
+          - If being processed, the state the active payment is in, else None
         """
         # Get all payments associated with C/I value
         payment_ids = (
@@ -616,11 +652,10 @@ class PaymentExtractStep(Step):
             # properly. We need to verify that we have been correctly sending
             # the writebacks, and that FINEOS has been properly consuming them.
             logger.error(
-                "Payment with C=%s I=%s received from FINEOS that is already in active state: [%s] - active payment ID: %s",
-                payment.fineos_pei_c_value,
-                payment.fineos_pei_i_value,
+                "Payment received from FINEOS is already in active state: [%s] - active payment ID: %s",
                 active_state.end_state.state_description,
                 active_state.payment.payment_id,
+                extra=payments_util.get_traceable_payment_details(payment),
             )
             self.increment(self.Metrics.ALREADY_ACTIVE_PAYMENT_COUNT)
             return active_state.end_state
@@ -634,13 +669,9 @@ class PaymentExtractStep(Step):
         # Get the TIN, employee and claim associated with the payment to be made
         employee, claim = None, None
         try:
-            # If the payment transaction type is for the employer,State or Federal
-            # We know we aren't going to find an employee, so don't look
-            if payment_data.payment_transaction_type.payment_transaction_type_id not in [
-                PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id,
-                PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id,
-                PaymentTransactionType.FEDERAL_TAX_WITHHOLDING.payment_transaction_type_id,
-            ]:
+            # If the employee is required and should be validated, do so
+            # Otherwise, we know we aren't going to find an employee, so don't look
+            if payment_data.is_employee_required:
                 tax_identifier = (
                     self.db_session.query(TaxIdentifier)
                     .filter_by(tax_identifier=payment_data.tin)
@@ -692,6 +723,7 @@ class PaymentExtractStep(Step):
 
         # Perform various validations on the claim. We require
         # A claim to be ID Proofed
+        # A claim to have an attached employer
         # A claim to have a claim type
         # The employee we fetched above to already be connected to the claim
         if claim:
@@ -699,6 +731,12 @@ class PaymentExtractStep(Step):
                 payment_data.validation_container.add_validation_issue(
                     payments_util.ValidationReason.CLAIM_NOT_ID_PROOFED,
                     f"Claim {payment_data.absence_case_number} has not been ID proofed",
+                )
+
+            if payment_data.is_standard_payment and not claim.employer_id:
+                payment_data.validation_container.add_validation_issue(
+                    payments_util.ValidationReason.MISSING_IN_DB,
+                    f"Claim {payment_data.absence_case_number} does not have an employer associated with it",
                 )
 
             # If the employee we found does not match what is already attached
@@ -774,11 +812,9 @@ class PaymentExtractStep(Step):
         # or a payment might have been created before. We'll check that later.
 
         logger.info(
-            "Creating payment record in DB %s",
-            payment_data.get_payment_message_str(),
-            extra=payment_data.get_traceable_details(),
+            "Creating payment record in DB", extra=payment_data.get_traceable_details(),
         )
-        payment = Payment(payment_id=uuid.uuid4(), vpei_id=payment_data.pei_record.vpei_id)
+        payment = Payment(payment_id=uuid.uuid4(), vpei_id=payment_data.pei_record.vpei_id,)
 
         # set the payment method
         if payment_data.raw_payment_method:
@@ -786,6 +822,8 @@ class PaymentExtractStep(Step):
 
         # Note that these values may have validation issues and not be set
         # that is fine as it will get moved to an error state
+        if payment_data.leave_request_id:
+            payment.fineos_leave_request_id = str_to_int(payment_data.leave_request_id)
         if claim:
             payment.claim = claim
         if employee:
@@ -827,14 +865,10 @@ class PaymentExtractStep(Step):
         payment.fineos_extract_import_log_id = self.get_import_log_id()
         payment.leave_request_decision = payment_data.leave_request_decision
 
-        # A payment is considered adhoc if it's marked as "Adhoc" often with
-        # a random number suffixed to it.
-        # This column can be empty/missing, and that's fine. This is used
-        # later in the post-processing step to filter out adhoc payments from
-        # the weekly maximum check.
-        payment.is_adhoc_payment = (
-            payment_data.amalgamation_c is not None and "Adhoc" in payment_data.amalgamation_c
-        )
+        # This is used later in the post-processing step to filter out
+        # adhoc payments from the weekly maximum check.
+        payment.is_adhoc_payment = payment_data.is_adhoc_payment()
+
         if payment.is_adhoc_payment:
             self.increment(self.Metrics.ADHOC_PAYMENT_COUNT)
 
@@ -913,15 +947,11 @@ class PaymentExtractStep(Step):
         # information is invalid or pending. We can't pay someone
         # unless they have been prenoted
         extra = payment_data.get_traceable_details()
-        extra["employee_id"] = employee.employee_id
         if existing_eft:
-            extra["pub_eft_id"] = existing_eft.pub_eft_id
+            extra |= payments_util.get_traceable_pub_eft_details(existing_eft, employee)
             self.increment(self.Metrics.EFT_FOUND_COUNT)
             logger.info(
-                "Found existing EFT info for claimant in prenote state %s for payment %s",
-                existing_eft.prenote_state.prenote_state_description,
-                payment_data.get_payment_message_str(),
-                extra=extra,
+                "Found existing EFT info for claimant associated with payment", extra=extra,
             )
 
             if PrenoteState.APPROVED.prenote_state_id == existing_eft.prenote_state_id:
@@ -963,10 +993,9 @@ class PaymentExtractStep(Step):
             self.db_session.add(new_eft)
             self.db_session.add(employee_pub_eft_pair)
 
-            extra["pub_eft_id"] = new_eft.pub_eft_id
+            extra |= payments_util.get_traceable_pub_eft_details(new_eft, employee)
             logger.info(
-                "Starting DELEGATED_EFT prenote flow for employee associated with payment %s",
-                payment_data.get_payment_message_str(),
+                "Starting DELEGATED_EFT prenote flow for employee associated with payment",
                 extra=extra,
             )
 
@@ -1029,6 +1058,20 @@ class PaymentExtractStep(Step):
                 payment.fineos_employee_first_name = employee.fineos_employee_first_name
                 payment.fineos_employee_middle_name = employee.fineos_employee_middle_name
                 payment.fineos_employee_last_name = employee.fineos_employee_last_name
+
+        # Check whether the employer is exempt from payments
+        # Only for standard payments
+        if payment_data.is_standard_payment and payment and claim and claim.employer:
+            is_employer_exempt_for_payment = payments_util.is_employer_exempt_for_payment(
+                payment, claim, claim.employer
+            )
+            if is_employer_exempt_for_payment:
+                self.increment(self.Metrics.EXEMPT_EMPLOYER_COUNT)
+                employer = claim.employer
+                message = f"Employer {employer.fineos_employer_id} is exempt for dates {employer.exemption_commence_date} - {employer.exemption_cease_date}"
+                payment_data.validation_container.add_validation_issue(
+                    payments_util.ValidationReason.EMPLOYER_EXEMPT, message
+                )
 
         # Specify whether the Payment has an address update
         # TODO - is this still needed?
@@ -1172,12 +1215,17 @@ class PaymentExtractStep(Step):
             associated_model=payment,
             db_session=self.db_session,
         )
+        extra = payments_util.get_traceable_payment_details(payment, end_state)
+        extra["is_for_standard_payment"] = payment_data.is_employee_required
         logger.info(
-            "After consuming extracts and performing initial validation, payment %s added to state [%s]",
-            payment_data.get_payment_message_str(),
-            end_state.state_description,
-            extra=payments_util.get_traceable_payment_details(payment, end_state),
+            "After consuming extracts and performing initial validation, payment added to state",
+            extra=extra,
         )
+        # For the payments that failed validation, log their reason codes
+        # so that we can collect metrics on the most common error types
+        for reason in payment_data.validation_container.get_reasons():
+            extra["validation_reason"] = str(reason)  # Replaced each iteration
+            logger.info("Payment failed validation", extra=extra)
 
     def _manage_pei_writeback_state(
         self,
@@ -1185,16 +1233,16 @@ class PaymentExtractStep(Step):
         transaction_status: LkFineosWritebackTransactionStatus,
         payment_data: PaymentData,
     ) -> None:
-        """ If the payment had any validation issues, we want to writeback to FINEOS
-            so that the particular error can be shown in the UI.
+        """If the payment had any validation issues, we want to writeback to FINEOS
+        so that the particular error can be shown in the UI.
 
-            Note that some of these states also mark the payment as
-            Active (they only end up in extracts when PendingActive)
-            This is deliberate as some payments need to be marked as Active
-            so they can be fixed and reissued (an extracted payment can't be modified)
+        Note that some of these states also mark the payment as
+        Active (they only end up in extracts when PendingActive)
+        This is deliberate as some payments need to be marked as Active
+        so they can be fixed and reissued (an extracted payment can't be modified)
         """
 
-        message = f"Payment {payment_data.get_payment_message_str()} added to DELEGATED_PEI_WRITEBACK flow with transaction status {transaction_status.transaction_status_description}"
+        message = f"Payment added to DELEGATED_PEI_WRITEBACK flow with transaction status {transaction_status.transaction_status_description}"
 
         stage_payment_fineos_writeback(
             payment=payment,
@@ -1210,7 +1258,10 @@ class PaymentExtractStep(Step):
     ) -> LkFineosWritebackTransactionStatus:
         # https://lwd.atlassian.net/wiki/spaces/API/pages/1319272855/Payment+Transaction+Scenarios
         validation_reasons = payment_data.validation_container.get_reasons()
-        has_unfixable_issues = False
+        has_other_issues = False
+        has_system_issue = False
+        has_exempt_employer = False
+        has_leave_request_in_review = False
         has_pending_prenote = False
         has_rejected_prenote = False
 
@@ -1229,7 +1280,17 @@ class PaymentExtractStep(Step):
                 payments_util.ValidationReason.CLAIMANT_MISMATCH,
                 payments_util.ValidationReason.UNEXPECTED_PAYMENT_TRANSACTION_TYPE,
             ]:
-                has_unfixable_issues = True
+                has_system_issue = True
+
+            # Employers exempt from leave entirely block the payment, will
+            # write back as Active
+            elif reason == payments_util.ValidationReason.EMPLOYER_EXEMPT:
+                has_exempt_employer = True
+
+            # Reject any payments with leave request “In Review”, allowing for
+            # retries each day in case the status changes to “Approved” or “Completed”
+            elif reason == payments_util.ValidationReason.LEAVE_REQUEST_IN_REVIEW:
+                has_leave_request_in_review = True
 
             # Pending prenotes will also be put in PendingActive as we are just
             # waiting to get the payment
@@ -1243,14 +1304,28 @@ class PaymentExtractStep(Step):
 
             # Otherwise the issue is any of the other validation reasons
             # which all will set the payment to Active so the payment can
-            # be fixed and reissued. This always takes precendence, so
-            # we can immediately return without iterating further.
+            # be fixed and reissued.
             else:
-                return FineosWritebackTransactionStatus.FAILED_AUTOMATED_VALIDATION
+                has_other_issues = True
 
-        # Unfixable issues take next precendence
-        if has_unfixable_issues:
+        # This always takes precendence as there is something
+        # that requires a correction
+        if has_other_issues:
+            return FineosWritebackTransactionStatus.FAILED_AUTOMATED_VALIDATION
+
+        # Issues in our system take next precendence as a payment
+        # would be blocked due to this until manual engineering effort
+        # investigates and fixes the issue
+        if has_system_issue:
             return FineosWritebackTransactionStatus.DATA_ISSUE_IN_SYSTEM
+
+        # Exempt employer would block payment, so later scenarios irrelevant
+        if has_exempt_employer:
+            return FineosWritebackTransactionStatus.EXEMPT_EMPLOYER
+
+        # Leave requests in review take next precendence
+        if has_leave_request_in_review:
+            return FineosWritebackTransactionStatus.LEAVE_IN_REVIEW
 
         # Pending and rejected can't happen at the same time, so ordering
         # won't matter
@@ -1262,8 +1337,8 @@ class PaymentExtractStep(Step):
 
         # This should be impossible
         raise Exception(
-            "Unknown scenario encountered when attempting to figure out the transaction status for %s. Got reasons %s"
-            % (payment_data.get_payment_message_str(), validation_reasons)
+            "Unknown scenario encountered when attempting to figure out the transaction status for payment. Got reasons %s"
+            % validation_reasons
         )
 
     def process_payment_record(
@@ -1319,7 +1394,9 @@ class PaymentExtractStep(Step):
                     # If you are seeing this error, please investigate and check with FINEOS
                     # We should also verify that there is nothing different between the claim details records
                     logger.error(
-                        "Payment with C/I value %s/%s has multiple claim details records present."
+                        "Payment with C/I value %s/%s has multiple claim details records present.",
+                        c_value,
+                        i_value,
                     )
                     self.increment(self.Metrics.MULTIPLE_CLAIM_DETAILS_ERROR_COUNT)
 
@@ -1369,8 +1446,7 @@ class PaymentExtractStep(Step):
             )
 
             logger.info(
-                "Processing extract data for payment record %s",
-                payment_data.get_payment_message_str(),
+                "Processing extract data for payment record",
                 extra=payment_data.get_traceable_details(),
             )
 

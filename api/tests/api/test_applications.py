@@ -1,6 +1,6 @@
 import copy
 from datetime import date, datetime
-from typing import Optional
+from typing import Dict, Optional
 from unittest import mock
 
 import factory.random
@@ -10,6 +10,7 @@ from freezegun import freeze_time
 from sqlalchemy import inspect
 
 import massgov.pfml.fineos
+import massgov.pfml.fineos.mock.field
 import massgov.pfml.fineos.mock_client
 import massgov.pfml.fineos.models
 import massgov.pfml.util.datetime as datetime_util
@@ -26,17 +27,27 @@ from massgov.pfml.db.models.applications import (
     DocumentType,
     EmploymentStatus,
     FINEOSWebIdExt,
+    IntermittentLeavePeriod,
     LeaveReason,
     LeaveReasonQualifier,
     NoClaimTypeForAbsenceType,
     Phone,
+    ReducedScheduleLeavePeriod,
     RelationshipQualifier,
     RelationshipToCaregiver,
     WorkPattern,
     WorkPatternDay,
     WorkPatternType,
 )
-from massgov.pfml.db.models.employees import Address, Gender, GeoState, PaymentMethod, TaxIdentifier
+from massgov.pfml.db.models.employees import (
+    Address,
+    BankAccountType,
+    Claim,
+    Gender,
+    GeoState,
+    PaymentMethod,
+    TaxIdentifier,
+)
 from massgov.pfml.db.models.factories import (
     AddressFactory,
     ApplicationFactory,
@@ -67,7 +78,16 @@ from massgov.pfml.fineos.exception import (
     FINEOSFatalUnavailable,
 )
 from massgov.pfml.fineos.factory import FINEOSClientConfig
+from massgov.pfml.fineos.models.customer_api.spec import (
+    AbsenceDetails,
+    AbsencePeriod,
+    EpisodicLeavePeriodDetail,
+    ReadCustomerOccupation,
+    ReportedReducedScheduleLeavePeriod,
+    TimeOffLeavePeriod,
+)
 from massgov.pfml.util.paginate.paginator import DEFAULT_PAGE_SIZE
+from massgov.pfml.util.strings import format_tax_identifier
 
 
 def sqlalchemy_object_as_dict(obj):
@@ -292,140 +312,440 @@ def test_applications_get_all_pagination_limit_double(client, user, auth_token):
         assert application.nickname == app_response["application_nickname"]
 
 
-def test_applications_import(client, user, test_db_session, auth_token, claim):
-    absence_case_id = claim.fineos_absence_id
-    assert test_db_session.query(Application).one_or_none() is None
+class TestApplicationsImport:
+    @pytest.fixture
+    def valid_request_body(self, claim: Claim) -> Dict[str, str]:
+        return {
+            "absence_case_id": claim.fineos_absence_id,
+            "tax_identifier": format_tax_identifier(claim.employee_tax_identifier),
+        }
 
-    response = client.post(
-        "/v1/applications/import",
-        headers={"Authorization": f"Bearer {auth_token}"},
-        json={"absence_case_id": absence_case_id},
+    def test_applications_import(
+        self, client, test_db_session, auth_token, claim, valid_request_body
+    ):
+        absence_case_id = claim.fineos_absence_id
+        assert test_db_session.query(Application).one_or_none() is None
+
+        response = client.post(
+            "/v1/applications/import",
+            headers={"Authorization": f"Bearer {auth_token}"},
+            json=valid_request_body,
+        )
+
+        response_body = response.get_json().get("data")
+
+        assert response.status_code == 201
+        assert response_body.get("fineos_absence_id") == absence_case_id
+
+        imported_application = (
+            test_db_session.query(Application).filter(Application.claim_id == claim.claim_id).one()
+        )
+
+        assert imported_application.tax_identifier_id == claim.employee.tax_identifier_id
+        assert imported_application.employer_fein == claim.employer_fein
+        assert imported_application.imported_from_fineos_at is not None
+
+    def test_applications_import_missing_required_fields(self, client, auth_token, claim):
+        response = client.post(
+            "/v1/applications/import",
+            headers={"Authorization": f"Bearer {auth_token}"},
+            json={"absence_case_id": None, "tax_identifier": None},
+        )
+
+        assert response.status_code == 400
+        assert response.get_json().get("errors") == [
+            {
+                "field": "absence_case_id",
+                "message": "absence_case_id is required",
+                "type": "required",
+            },
+            {
+                "field": "tax_identifier",
+                "message": "tax_identifier is required",
+                "type": "required",
+            },
+        ]
+
+    def test_applications_import_claim_not_found(self, client, auth_token, test_db_session):
+        absence_case_id = "NTN-111-ABS-01"
+
+        response = client.post(
+            "/v1/applications/import",
+            headers={"Authorization": f"Bearer {auth_token}"},
+            json={
+                "absence_case_id": absence_case_id,
+                "tax_identifier": format_tax_identifier("123456789"),
+            },
+        )
+
+        assert response.status_code == 400
+        assert response.get_json().get("errors") == [
+            {
+                "field": "absence_case_id",
+                "message": "Application not found for the given ID.",
+                "type": "object_not_found",
+            },
+        ]
+        assert test_db_session.query(Application).one_or_none() is None
+
+    def test_applications_import_claim_without_employee_tax_identification(
+        self, client, auth_token, test_db_session, claim
+    ):
+        claim.employee.tax_identifier_id = None
+        claim.employee.tax_identifier = None
+        test_db_session.commit()
+
+        absence_case_id = claim.fineos_absence_id
+        response = client.post(
+            "/v1/applications/import",
+            headers={"Authorization": f"Bearer {auth_token}"},
+            json={
+                "absence_case_id": absence_case_id,
+                "tax_identifier": format_tax_identifier("123456789"),
+            },
+        )
+
+        assert response.status_code == 409
+        assert response.get_json()["message"] == "Claim data incomplete for application import."
+        assert test_db_session.query(Application).one_or_none() is None
+
+    def test_applications_import_claim_without_employer(
+        self, client, auth_token, test_db_session, claim
+    ):
+        claim.employer_id = None
+        claim.employer = None
+        test_db_session.commit()
+
+        absence_case_id = claim.fineos_absence_id
+        response = client.post(
+            "/v1/applications/import",
+            headers={"Authorization": f"Bearer {auth_token}"},
+            json={
+                "absence_case_id": absence_case_id,
+                "tax_identifier": format_tax_identifier(claim.employee_tax_identifier),
+            },
+        )
+        assert response.status_code == 409
+        assert response.get_json()["message"] == "Claim data incomplete for application import."
+        assert test_db_session.query(Application).one_or_none() is None
+
+    def test_applications_import_unauthenticated_post(self, client, test_db_session):
+        absence_case_id = "NTN-111-ABS-01"
+        response = client.post(
+            "/v1/applications/import",
+            headers={"Authorization": f"Bearer {''}"},
+            json={"absence_case_id": absence_case_id},
+        )
+        tests.api.validate_error_response(response, 401)
+        assert test_db_session.query(Application).one_or_none() is None
+
+    @mock.patch("massgov.pfml.api.applications.app.current_user")
+    def test_applications_import_unauthorized_post(
+        self, mock_current_user, client, employer_user, employer_auth_token, test_db_session
+    ):
+        mock_current_user.return_value = employer_user
+        test_db_session.commit()
+        absence_case_id = "NTN-111-ABS-01"
+        # Employer cannot access this endpoint
+        response = client.post(
+            "/v1/applications/import",
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+            json={"absence_case_id": absence_case_id},
+        )
+        assert response.status_code == 403
+        assert "don't have the permission to access" in response.get_json()["message"]
+
+    @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.read_customer_details")
+    def test_applications_import_has_customer_details(
+        self,
+        mock_read_customer_details,
+        client,
+        test_db_session,
+        auth_token,
+        claim,
+        valid_request_body,
+    ):
+        customer_details_json = massgov.pfml.fineos.mock_client.mock_customer_details()
+        customer_details = massgov.pfml.fineos.models.customer_api.Customer.parse_obj(
+            customer_details_json
+        )
+        mock_read_customer_details.return_value = customer_details
+
+        client.post(
+            "/v1/applications/import",
+            headers={"Authorization": f"Bearer {auth_token}"},
+            json=valid_request_body,
+        )
+
+        imported_application = (
+            test_db_session.query(Application).filter(Application.claim_id == claim.claim_id).one()
+        )
+
+        assert imported_application.first_name == "Samantha"
+        assert imported_application.last_name == "Jorgenson"
+        assert imported_application.date_of_birth == date(1996, 1, 11)
+        assert imported_application.mass_id == "45354352"
+        assert imported_application.has_state_id is True
+        assert imported_application.gender_id == Gender.NONBINARY.gender_id
+        assert imported_application.residential_address.address_line_one == "37 Mather Drive"
+        assert imported_application.residential_address.address_line_two == "#22"
+        assert imported_application.residential_address.city == "Amherst"
+        assert imported_application.residential_address.geo_state_id == GeoState.MA.geo_state_id
+        assert imported_application.residential_address.zip_code == "01003"
+
+    def test_applications_import_has_payment_preferences(
+        self, client, test_db_session, auth_token, claim, valid_request_body
+    ):
+        client.post(
+            "/v1/applications/import",
+            headers={"Authorization": f"Bearer {auth_token}"},
+            json=valid_request_body,
+        )
+
+        imported_application = (
+            test_db_session.query(Application).filter(Application.claim_id == claim.claim_id).one()
+        )
+
+        assert imported_application.has_submitted_payment_preference is True
+        assert (
+            imported_application.payment_preference.payment_method_id
+            == PaymentMethod.ACH.payment_method_id
+        )
+        assert imported_application.payment_preference.account_number == "1234565555"
+        assert imported_application.payment_preference.routing_number == "011222333"
+        assert (
+            imported_application.payment_preference.bank_account_type_id
+            == BankAccountType.CHECKING.bank_account_type_id
+        )
+        assert imported_application.has_mailing_address is True
+
+    @mock.patch(
+        "massgov.pfml.fineos.mock_client.MockFINEOSClient.get_customer_occupations_customer_api"
     )
+    def test_applications_import_occupation(
+        self, mock_get_occupation, client, auth_token, test_db_session, claim, valid_request_body
+    ):
+        fineos_occupation = ReadCustomerOccupation(employmentStatus="Active", hoursWorkedPerWeek=40)
+        mock_get_occupation.return_value = [fineos_occupation]
 
-    response_body = response.get_json().get("data")
-    assert response.status_code == 201
-    assert response_body.get("absence_case_id") == absence_case_id
+        assert test_db_session.query(Application).one_or_none() is None
 
-    imported_application = (
-        test_db_session.query(Application).filter(Application.claim_id == claim.claim_id).one()
+        response = client.post(
+            "/v1/applications/import",
+            headers={"Authorization": f"Bearer {auth_token}"},
+            json=valid_request_body,
+        )
+        assert response.status_code == 201
+        imported_application = (
+            test_db_session.query(Application).filter(Application.claim_id == claim.claim_id).one()
+        )
+        assert (
+            imported_application.employment_status.fineos_label
+            == fineos_occupation.employmentStatus
+        )
+        assert imported_application.hours_worked_per_week == fineos_occupation.hoursWorkedPerWeek
+
+    @mock.patch(
+        "massgov.pfml.fineos.mock_client.MockFINEOSClient.get_customer_occupations_customer_api"
     )
+    def test_applications_import_occupation_invalid_employment_status(
+        self, mock_get_occupation, client, auth_token, test_db_session, valid_request_body
+    ):
+        fineos_occupation = ReadCustomerOccupation(
+            employmentStatus="Invalid", hoursWorkedPerWeek=40
+        )
+        mock_get_occupation.return_value = [fineos_occupation]
 
-    assert imported_application.tax_identifier_id == claim.employee.tax_identifier_id
-    assert imported_application.employer_fein == claim.employer_fein
-    assert imported_application.imported_from_fineos_at is not None
+        assert test_db_session.query(Application).one_or_none() is None
 
+        response = client.post(
+            "/v1/applications/import",
+            headers={"Authorization": f"Bearer {auth_token}"},
+            json=valid_request_body,
+        )
+        assert response.status_code == 400
+        assert test_db_session.query(Application).one_or_none() is None
 
-def test_applications_import_claim_not_found(client, user, auth_token, test_db_session):
-    absence_case_id = "NTN-111-ABS-01"
+    @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_payment_preferences")
+    def test_applications_import_succeeds_without_payment_preferences(
+        self,
+        mock_get_payment_preferences,
+        client,
+        test_db_session,
+        auth_token,
+        claim,
+        valid_request_body,
+    ):
+        mock_get_payment_preferences.return_value = None
 
-    response = client.post(
-        "/v1/applications/import",
-        headers={"Authorization": f"Bearer {auth_token}"},
-        json={"absence_case_id": absence_case_id},
-    )
+        client.post(
+            "/v1/applications/import",
+            headers={"Authorization": f"Bearer {auth_token}"},
+            json=valid_request_body,
+        )
 
-    assert response.status_code == 404
-    assert response.get_json()["message"] == "Claim not in PFML database."
-    assert test_db_session.query(Application).one_or_none() is None
+        imported_application = (
+            test_db_session.query(Application).filter(Application.claim_id == claim.claim_id).one()
+        )
 
+        assert imported_application.has_submitted_payment_preference is False
 
-def test_applications_import_claim_without_employee_tax_identification(
-    client, user, auth_token, test_db_session, claim
-):
-    claim.employee.tax_identifier_id = None
-    claim.employee.tax_identifier = None
-    test_db_session.commit()
+    @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.read_customer_contact_details")
+    def test_applications_import_has_customer_contact_details(
+        self,
+        mock_read_customer_contact_details,
+        client,
+        test_db_session,
+        auth_token,
+        claim,
+        valid_request_body,
+    ):
+        customer_contact_details_json = (
+            massgov.pfml.fineos.mock_client.mock_customer_contact_details()
+        )
+        customer_contact_details = massgov.pfml.fineos.models.customer_api.ContactDetails.parse_obj(
+            customer_contact_details_json
+        )
 
-    absence_case_id = claim.fineos_absence_id
-    response = client.post(
-        "/v1/applications/import",
-        headers={"Authorization": f"Bearer {auth_token}"},
-        json={"absence_case_id": absence_case_id},
-    )
+        mock_read_customer_contact_details.return_value = customer_contact_details
 
-    assert response.status_code == 409
-    assert response.get_json()["message"] == "Claim data incomplete for application import."
-    assert test_db_session.query(Application).one_or_none() is None
+        client.post(
+            "/v1/applications/import",
+            headers={"Authorization": f"Bearer {auth_token}"},
+            json=valid_request_body,
+        )
 
+        imported_application = (
+            test_db_session.query(Application).filter(Application.claim_id == claim.claim_id).one()
+        )
 
-def test_applications_import_claim_without_employer(
-    client, user, auth_token, test_db_session, claim
-):
-    claim.employer_id = None
-    claim.employer = None
-    test_db_session.commit()
+        assert imported_application.phone.phone_number == "+13214567890"
+        assert imported_application.phone.phone_type_id == 1
 
-    absence_case_id = claim.fineos_absence_id
-    response = client.post(
-        "/v1/applications/import",
-        headers={"Authorization": f"Bearer {auth_token}"},
-        json={"absence_case_id": absence_case_id},
-    )
-    assert response.status_code == 409
-    assert response.get_json()["message"] == "Claim data incomplete for application import."
-    assert test_db_session.query(Application).one_or_none() is None
+    @pytest.fixture
+    def absence_details(self):
+        return AbsenceDetails(
+            creationDate=datetime(2020, 10, 10),
+            notificationDate=date(2020, 10, 20),
+            reportedTimeOff=[
+                TimeOffLeavePeriod(
+                    startDate=date(2021, 1, 1),
+                    endDate=date(2021, 2, 9),
+                    status="known",
+                    lastDayWorked=date(2020, 12, 30),
+                    expectedReturnToWorkDate=date(2021, 2, 11),
+                    startDateFullDay=True,
+                    startDateOffHours=1,
+                    startDateOffMinutes=5,
+                    endDateOffHours=4,
+                    endDateOffMinutes=0,
+                    endDateFullDay=True,
+                )
+            ],
+            absencePeriods=[
+                AbsencePeriod(
+                    id="PL-14449-0000002237",
+                    reason="Pregnancy/Maternity",
+                    reasonQualifier1="Foster Care",
+                    reasonQualifier2="",
+                    startDate=date(2021, 1, 29),
+                    endDate=date(2021, 1, 30),
+                    absenceType="Episodic",
+                    episodicLeavePeriodDetail=EpisodicLeavePeriodDetail(
+                        frequency=5,
+                        frequencyInterval=5,
+                        frequencyIntervalBasis="Days",
+                        duration=10,
+                        durationBasis="Days",
+                    ),
+                    requestStatus="Pending",
+                )
+            ],
+            reportedReducedSchedule=[
+                ReportedReducedScheduleLeavePeriod(
+                    startDate=date(2021, 1, 29),
+                    endDate=date(2021, 3, 29),
+                    sundayOffMinutes=10,
+                    mondayOffMinutes=15,
+                    tuesdayOffMinutes=20,
+                    wednesdayOffMinutes=40,
+                    thursdayOffMinutes=45,
+                    fridayOffMinutes=25,
+                    saturdayOffMinutes=12,
+                )
+            ],
+        )
 
+    @pytest.fixture
+    def absence_details_invalid(self, absence_details):
+        absence_details_invalid = absence_details.copy(deep=True)
+        absence_details_invalid.absencePeriods[0].reason = "Invalid"
+        return absence_details_invalid
 
-def test_applications_import_unauthenticated_post(client, test_db_session):
-    absence_case_id = "NTN-111-ABS-01"
-    response = client.post(
-        "/v1/applications/import",
-        headers={"Authorization": f"Bearer {''}"},
-        json={"absence_case_id": absence_case_id},
-    )
-    tests.api.validate_error_response(response, 401)
-    assert test_db_session.query(Application).one_or_none() is None
+    @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_absence")
+    def test_applications_import_with_absence_period(
+        self,
+        mock_get_absence,
+        client,
+        user,
+        auth_token,
+        test_db_session,
+        claim,
+        absence_details,
+        valid_request_body,
+    ):
+        mock_get_absence.return_value = absence_details
 
+        assert test_db_session.query(Application).one_or_none() is None
+        assert test_db_session.query(ContinuousLeavePeriod).one_or_none() is None
+        assert test_db_session.query(IntermittentLeavePeriod).one_or_none() is None
+        assert test_db_session.query(ReducedScheduleLeavePeriod).one_or_none() is None
 
-@mock.patch("massgov.pfml.api.applications.app.current_user")
-def test_applications_import_unauthorized_post(
-    mock_current_user, client, employer_user, employer_auth_token, test_db_session
-):
-    mock_current_user.return_value = employer_user
-    test_db_session.commit()
-    absence_case_id = "NTN-111-ABS-01"
-    # Employer cannot access this endpoint
-    response = client.post(
-        "/v1/applications/import",
-        headers={"Authorization": f"Bearer {employer_auth_token}"},
-        json={"absence_case_id": absence_case_id},
-    )
-    assert response.status_code == 403
-    assert "don't have the permission to access" in response.get_json()["message"]
+        response = client.post(
+            "/v1/applications/import",
+            headers={"Authorization": f"Bearer {auth_token}"},
+            json=valid_request_body,
+        )
 
+        assert response.status_code == 201
 
-@mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.read_customer_details")
-def test_applications_import_has_customer_details(
-    mock_read_customer_details, client, test_db_session, auth_token, claim
-):
-    customer_details_json = massgov.pfml.fineos.mock_client.mock_customer_details()
-    customer_details = massgov.pfml.fineos.models.customer_api.Customer.parse_obj(
-        customer_details_json
-    )
-    mock_read_customer_details.return_value = customer_details
+        imported_application = (
+            test_db_session.query(Application).filter(Application.claim_id == claim.claim_id).one()
+        )
 
-    absence_case_id = claim.fineos_absence_id
-    client.post(
-        "/v1/applications/import",
-        headers={"Authorization": f"Bearer {auth_token}"},
-        json={"absence_case_id": absence_case_id},
-    )
+        continuous_leave = test_db_session.query(ContinuousLeavePeriod).all()
+        intermittent_leave = test_db_session.query(IntermittentLeavePeriod).all()
+        reduced_leave = test_db_session.query(ReducedScheduleLeavePeriod).all()
 
-    imported_application = (
-        test_db_session.query(Application).filter(Application.claim_id == claim.claim_id).one()
-    )
+        assert len(continuous_leave) == 1
+        assert continuous_leave[0].application_id == imported_application.application_id
 
-    assert imported_application.first_name == "Samantha"
-    assert imported_application.last_name == "Jorgenson"
-    assert imported_application.date_of_birth == date(1996, 1, 11)
-    assert imported_application.mass_id == "45354352"
-    assert imported_application.has_state_id is True
-    assert imported_application.gender_id == Gender.NONBINARY.gender_id
-    assert imported_application.residential_address.address_line_one == "37 Mather Drive"
-    assert imported_application.residential_address.address_line_two == "#22"
-    assert imported_application.residential_address.city == "Amherst"
-    assert imported_application.residential_address.geo_state_id == GeoState.MA.geo_state_id
-    assert imported_application.residential_address.zip_code == "01003"
+        assert len(intermittent_leave) == 1
+        assert intermittent_leave[0].application_id == imported_application.application_id
+
+        assert len(reduced_leave) == 1
+        assert reduced_leave[0].application_id == imported_application.application_id
+
+    @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_absence")
+    def test_applications_import_with_absence_period_invalid(
+        self,
+        mock_get_absence,
+        client,
+        user,
+        auth_token,
+        claim,
+        absence_details_invalid,
+        valid_request_body,
+    ):
+        mock_get_absence.return_value = absence_details_invalid
+
+        response = client.post(
+            "/v1/applications/import",
+            headers={"Authorization": f"Bearer {auth_token}"},
+            json=valid_request_body,
+        )
+
+        assert response.status_code == 500
 
 
 def test_applications_post_start_app(client, user, auth_token, test_db_session):
@@ -3522,7 +3842,9 @@ def test_application_post_submit_app_already_submitted(client, user, auth_token,
                 "employee_registration": massgov.pfml.fineos.models.EmployeeRegistration(
                     user_id=fineos_user_id,
                     customer_number=None,
-                    employer_id=f"{application.employer_fein}1000",
+                    employer_id=str(
+                        massgov.pfml.fineos.mock.field.fake_customer_no(application.employer_fein)
+                    ),
                     date_of_birth=date(1753, 1, 1),
                     email=None,
                     first_name=None,
@@ -3899,7 +4221,9 @@ def test_application_post_submit_to_fineos(client, user, auth_token, test_db_ses
             {
                 "employee_registration": massgov.pfml.fineos.models.EmployeeRegistration(
                     user_id=fineos_user_id,
-                    employer_id="999",
+                    employer_id=str(
+                        massgov.pfml.fineos.mock.field.fake_customer_no(application.employer_fein)
+                    ),
                     date_of_birth=date(1753, 1, 1),
                     national_insurance_no=application.tax_identifier.tax_identifier,
                 )

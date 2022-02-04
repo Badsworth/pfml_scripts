@@ -43,7 +43,7 @@ exports[`Status renders the page for a claim without documents or a status 1`] =
       class="margin-0"
     >
       <span
-        class="usa-tag display-inline-block text-bold text-middle text-no-wrap text-base-darker bg-base-lightest"
+        class="usa-tag display-inline-block text-bold text-middle text-center text-no-wrap text-base-darker bg-base-lightest"
       >
         No action required
       </span>
@@ -140,7 +140,7 @@ exports[`Status renders the page for a completed claim 1`] = `
       class="margin-0"
     >
       <span
-        class="usa-tag display-inline-block text-bold text-middle text-no-wrap text-success-dark bg-success-lighter"
+        class="usa-tag display-inline-block text-bold text-middle text-center text-no-wrap text-success-dark bg-success-lighter"
       >
         Approved
       </span>

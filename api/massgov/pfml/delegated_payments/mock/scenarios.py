@@ -26,6 +26,9 @@ class ScenarioName(Enum):
     )
     UNKNOWN_LEAVE_REQUEST_DECISION = "UNKNOWN_LEAVE_REQUEST_DECISION"
     IN_REVIEW_LEAVE_REQUEST_DECISION = "IN_REVIEW_LEAVE_REQUEST_DECISION"
+    IN_REVIEW_LEAVE_REQUEST_ADHOC_PAYMENTS_DECISION = (
+        "IN_REVIEW_LEAVE_REQUEST_ADHOC_PAYMENTS_DECISION"
+    )
 
     HAPPY_PATH_FAMILY_CHECK_PRENOTED = "HAPPY_PATH_FAMILY_CHECK_PRENOTED"
 
@@ -123,6 +126,8 @@ class ScenarioName(Enum):
     TAX_WITHHOLDING_MISSING_PRIMARY_PAYMENT = "TAX_WITHHOLDING_MISSING_PRIMARY_PAYMENT"
 
     TAX_WITHHOLDING_AUDIT_SKIPPED_THEN_ACCEPTED = "TAX_WITHHOLDING_AUDIT_SKIPPED_THEN_ACCEPTED"
+
+    TAX_WITHHOLDING_CANCELLATION_PAYMENT = "TAX_WITHHOLDING_CANCELLATION_PAYMENT"
 
 
 @dataclass
@@ -286,6 +291,11 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
         leave_request_decision="In Review",
     ),
     ScenarioDescriptor(
+        scenario_name=ScenarioName.IN_REVIEW_LEAVE_REQUEST_ADHOC_PAYMENTS_DECISION,
+        leave_request_decision="In Review",
+        is_adhoc_payment=True,
+    ),
+    ScenarioDescriptor(
         scenario_name=ScenarioName.REJECTED_LEAVE_REQUEST_DECISION, leave_request_decision="Denied",
     ),
     ScenarioDescriptor(scenario_name=ScenarioName.AUDIT_REJECTED, is_audit_rejected=True),
@@ -430,6 +440,11 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
     ScenarioDescriptor(
         scenario_name=ScenarioName.TAX_WITHHOLDING_MISSING_PRIMARY_PAYMENT,
         is_tax_withholding_record_without_primary_payment=True,
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.TAX_WITHHOLDING_CANCELLATION_PAYMENT,
+        is_tax_withholding_records_exists=True,
+        payment_transaction_type=PaymentTransactionType.CANCELLATION,
     ),
     ScenarioDescriptor(
         scenario_name=ScenarioName.HAPPY_PATH_DOR_FINEOS_NAME_MISMATCH,
