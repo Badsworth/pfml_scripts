@@ -1,6 +1,7 @@
 import Button from "./core/Button";
 import ButtonLink from "./ButtonLink";
 import Heading from "./core/Heading";
+import Icon from "./core/Icon";
 import Link from "next/link";
 import React from "react";
 import StepNumber from "./StepNumber";
@@ -60,6 +61,11 @@ interface StepProps {
    */
   editText?: string;
   /**
+   * Localized text for the manual review link.
+   * This can also be passed by parent StepList component.
+   */
+  manualReviewText?: string;
+  /**
    * Localized text for the completed button.
    */
   completedText: string;
@@ -83,7 +89,7 @@ const Step = (props: StepProps) => {
   const inManualReview = props.status === "manual_review";
   const notApplicable = props.status === "not_applicable";
   const notStarted = props.status === "not_started";
-  const showChildren = inProgress || notStarted || notApplicable;
+  const showChildren = inManualReview || inProgress || notStarted || notApplicable;
 
   const editCompletedStep = (
     <React.Fragment>
@@ -98,6 +104,33 @@ const Step = (props: StepProps) => {
           </svg>
         </span>
         {props.completedText}
+      </div>
+      {props.stepHref && (
+        <div className="margin-top-1">
+          <Link href={props.stepHref}>
+            <a
+              className="usa-link"
+              aria-label={`${props.editText}: ${props.title}`}
+            >
+              {props.editText}
+            </a>
+          </Link>
+        </div>
+      )}
+    </React.Fragment>
+  );
+
+  const editStepInManualReview = (
+    <React.Fragment>
+      <div>
+        <span className="padding-right-05 text-warning">
+          <Icon
+            name="info"
+            className="margin-right-05 position-relative top-05"
+            size={3}
+          />
+        </span>
+        {props.manualReviewText}
       </div>
       {props.stepHref && (
         <div className="margin-top-1">
@@ -204,8 +237,8 @@ const Step = (props: StepProps) => {
           {disabled && disabledStartButton}
           {notStarted && startButton}
           {inProgress && resumeButton}
-          {inManualReview && <>In manual review</>}
           {completed && props.editable && editCompletedStep}
+          {inManualReview && props.editable && editStepInManualReview}
         </div>
       </div>
     </div>

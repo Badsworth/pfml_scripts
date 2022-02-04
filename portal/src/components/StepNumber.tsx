@@ -15,6 +15,7 @@ interface StepNumberProps {
     | "completed"
     | "in_progress"
     | "not_applicable"
+    | "manual_review"
     | "not_started";
   /**
    * Number to display. Currently only supports single digits.
@@ -26,7 +27,8 @@ const StepNumber = (props: StepNumberProps) => {
   const active =
     props.state && ["in_progress", "not_started"].includes(props.state);
   const completed = props.state === "completed";
-  const filled = active || completed;
+  const inManualReview = props.state === "manual_review";
+  const filled = active || completed || inManualReview;
 
   const classes = [
     "radius-pill",
@@ -53,6 +55,7 @@ const StepNumber = (props: StepNumberProps) => {
     {
       "bg-black": completed,
       "bg-secondary": active,
+      "bg-warning": inManualReview,
     }
   );
 

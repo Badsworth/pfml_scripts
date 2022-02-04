@@ -119,6 +119,7 @@ export const Checklist = (props: ChecklistProps) => {
     startText: t("pages.claimsChecklist.start"),
     resumeText: t("pages.claimsChecklist.resume"),
     resumeScreenReaderText: t("pages.claimsChecklist.resumeScreenReader"),
+    manualReviewText: t("pages.claimsChecklist.manualReview"),
     editText: t("pages.claimsChecklist.edit"),
     screenReaderNumberPrefix: t(
       "pages.claimsChecklist.screenReaderNumberPrefix"
