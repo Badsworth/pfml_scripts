@@ -203,7 +203,6 @@ def generate_report(cli_args, db_session, output_csv):
                 db_session=db_session,
                 employee_id=claim.employee_id,
                 employer_id=claim.employer_id,
-                employer_fein=claim.employer_fein,
                 application_submitted_date=application_submitted_date,
                 leave_start_date=leave_start_date,
                 employment_status=employment_status,
