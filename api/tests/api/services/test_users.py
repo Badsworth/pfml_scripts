@@ -143,3 +143,24 @@ class TestUpdateUser:
         update_user(test_db_session, user, update_request)
 
         mock_handle_mfa_disabled.assert_not_called()
+
+    @mock.patch("massgov.pfml.api.services.users.handle_mfa_disabled")
+    @mock.patch("massgov.pfml.api.services.users.logger", mock_logger)
+    def test_errors_in_handle_mfa_disabled_not_raised(
+        self, mock_handle_mfa_disabled, user, test_db_session,
+    ):
+        error = Exception("Unexpected failure")
+        mock_handle_mfa_disabled.side_effect = error
+
+        # enable MFA
+        update_request = UserUpdateRequest(mfa_delivery_preference="SMS")
+        update_user(test_db_session, user, update_request)
+
+        # disable MFA
+        update_request = UserUpdateRequest(mfa_delivery_preference="Opt Out")
+        update_user(test_db_session, user, update_request)
+
+        mock_handle_mfa_disabled.assert_called_once_with(user, mock.ANY, "user")
+        self.mock_logger.error.assert_any_call(
+            "Error handling MFA disabled side effects", exc_info=error
+        )
