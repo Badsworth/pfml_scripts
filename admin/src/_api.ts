@@ -324,12 +324,6 @@ export interface Flag {
   enabled?: boolean;
 }
 export type FlagsResponse = Flag[];
-export interface FlagLog extends Flag {
-  family_name?: string;
-  given_name?: string;
-  created_at?: string;
-}
-export type FlagLogsResponse = FlagLog[];
 export type Fein = string;
 export interface UserCreateRequest {
   email_address?: string | null;
@@ -391,6 +385,9 @@ export interface UserUpdateRequest {
   mfa_delivery_preference?: ("SMS" | "Opt Out") | null;
   mfa_phone_number?: Phone;
 }
+export type SsnItin = string;
+export type MassId = string;
+export type MaskedDate = string;
 export interface EmployeeResponse {
   employee_id: string;
   first_name?: string;
@@ -398,8 +395,12 @@ export interface EmployeeResponse {
   other_name?: string | null;
   email_address?: string | null;
   last_name?: string;
-  phone_number?: string | null;
-  tax_identifier_last4: string;
+  phone_numbers?: (Phone | null)[];
+  tax_identifier_last4?: string | null;
+  tax_identifier?: SsnItin | null;
+  fineos_customer_number?: string | null;
+  mass_id_number?: MassId | null;
+  date_of_birth?: MaskedDate | null;
 }
 export interface GETEmployeesByEmployeeIdResponse extends SuccessfulResponse {
   data?: EmployeeResponse;
@@ -441,6 +442,13 @@ export interface GETEmployersWithholdingByEmployerIdResponse
   extends SuccessfulResponse {
   data?: WithholdingResponse;
 }
+export interface EmployeeBasicResponse {
+  employee_id: string;
+  first_name?: string;
+  middle_name?: string | null;
+  last_name?: string;
+  other_name?: string | null;
+}
 export interface AbsencePeriodResponse {
   absence_period_start_date?: string;
   absence_period_end_date?: string;
@@ -461,7 +469,7 @@ export interface EvidenceStatusDetail {
 }
 export interface DetailedClaimResponse {
   employer?: EmployerResponse;
-  employee?: EmployeeResponse;
+  employee?: EmployeeBasicResponse;
   application_id?: string;
   fineos_absence_id?: any;
   fineos_notification_id?: any;
@@ -486,7 +494,7 @@ export interface ManagedRequirementResponse {
 }
 export interface ClaimResponse {
   employer?: EmployerResponse;
-  employee?: EmployeeResponse;
+  employee?: EmployeeBasicResponse;
   fineos_absence_id?: any;
   fineos_notification_id?: any;
   absence_period_start_date?: any;
@@ -512,6 +520,7 @@ export interface PaymentResponse {
   payment_method?: ("Elec Funds Transfer" | "Check" | "Debit") | null;
   expected_send_date_start?: string | null;
   expected_send_date_end?: string | null;
+  cancellation_date?: string | null;
   status?: "Sent to bank" | "Pending" | "Cancelled" | "Delayed";
 }
 export interface PaymentsResponse {
@@ -558,7 +567,6 @@ export interface ConcurrentLeave {
   leave_end_date?: Date | null;
   leave_start_date?: Date | null;
 }
-export type MaskedDate = string;
 export interface EmployerBenefit {
   employer_benefit_id?: string | null;
   benefit_start_date?: Date | null;
@@ -871,8 +879,6 @@ export type ApplicationSearchResults = ApplicationResponse[];
 export interface GETApplicationsResponse extends SuccessfulResponse {
   data?: ApplicationSearchResults;
 }
-export type SsnItin = string;
-export type MassId = string;
 export interface ApplicationRequestBody {
   organization_unit_selection?: ("not_listed" | "not_selected") | null;
   organization_unit_id?: string | null;
@@ -921,6 +927,16 @@ export interface ApplicationRequestBody {
 }
 export interface PATCHApplicationsByApplicationIdResponse
   extends SuccessfulResponse {
+  data?: ApplicationResponse;
+}
+export interface ApplicationImportRequestBody {
+  absence_case_id?: string | null;
+  tax_identifier?: SsnItin | null;
+}
+export interface POSTApplicationsImportResponse extends SuccessfulResponse {
+  data?: ApplicationResponse;
+}
+export interface POSTApplicationsImportResponse503 extends ErrorResponse {
   data?: ApplicationResponse;
 }
 export interface POSTApplicationsByApplicationIdSubmitApplicationResponse
@@ -1046,12 +1062,12 @@ export interface RMVCheckRequest {
   date_of_birth: Date;
   first_name: string;
   last_name: string;
-  mass_id_number: MassId;
   residential_address_city: string;
   residential_address_line_1: string;
   residential_address_line_2?: string | null;
   residential_address_zip_code: string;
   ssn_last_4: string;
+  mass_id_number?: any;
 }
 export interface RMVCheckResponse {
   verified: boolean;
@@ -1125,6 +1141,12 @@ export interface AdminLogoutResponse {
   logout_uri?: string;
 }
 export type GETAdminUsersResponse = UserResponse[];
+export interface FlagLog extends Flag {
+  family_name?: string;
+  given_name?: string;
+  created_at?: string;
+}
+export type FlagLogsResponse = FlagLog[];
 /**
  * Get the API status
  */
@@ -1157,42 +1179,6 @@ export async function getFlagsByName(
   options?: RequestOptions,
 ): Promise<ApiResponse<Flag>> {
   return await http.fetchJson(`/flags/${name}`, {
-    ...options,
-  });
-}
-/**
- * Update a feature flag
- */
-export async function postFlagsByName(
-  {
-    name,
-  }: {
-    name: string;
-  },
-  flag: Flag,
-  options?: RequestOptions,
-): Promise<ApiResponse<SuccessfulResponse>> {
-  return await http.fetchJson(
-    `/flags/${name}`,
-    http.json({
-      ...options,
-      method: "POST",
-      body: flag,
-    }),
-  );
-}
-/**
- * Get feature flags
- */
-export async function getFlagsLogsByName(
-  {
-    name,
-  }: {
-    name: string;
-  },
-  options?: RequestOptions,
-): Promise<ApiResponse<FlagLogsResponse>> {
-  return await http.fetchJson(`/flags/logs/${name}`, {
     ...options,
   });
 }
@@ -1404,6 +1390,7 @@ export async function getClaims(
     order_by,
     order_direction,
     employer_id,
+    employee_id,
     claim_status,
     search,
     allow_hrd,
@@ -1413,6 +1400,7 @@ export async function getClaims(
     order_by?: "fineos_absence_status" | "created_at" | "employee";
     order_direction?: "ascending" | "descending";
     employer_id?: string;
+    employee_id?: string[];
     claim_status?: string;
     search?: string;
     allow_hrd?: boolean;
@@ -1427,6 +1415,7 @@ export async function getClaims(
         order_by,
         order_direction,
         employer_id,
+        employee_id,
         claim_status,
         search,
         allow_hrd,
@@ -1587,6 +1576,23 @@ export async function patchApplicationsByApplication_id(
       ...options,
       method: "PATCH",
       body: applicationRequestBody,
+    }),
+  );
+}
+/**
+ * Creates a new application in the PFML database from a FINEOS application that was created through the contact center.
+ *
+ */
+export async function postApplicationsImport(
+  applicationImportRequestBody: ApplicationImportRequestBody,
+  options?: RequestOptions,
+): Promise<ApiResponse<POSTApplicationsImportResponse>> {
+  return await http.fetchJson(
+    "/applications/import",
+    http.json({
+      ...options,
+      method: "POST",
+      body: applicationImportRequestBody,
     }),
   );
 }
@@ -1875,4 +1881,40 @@ export async function getAdminUsers(
       ...options,
     },
   );
+}
+/**
+ * Update a feature flag
+ */
+export async function postAdminFlagsByName(
+  {
+    name,
+  }: {
+    name: string;
+  },
+  flag: Flag,
+  options?: RequestOptions,
+): Promise<ApiResponse<SuccessfulResponse>> {
+  return await http.fetchJson(
+    `/admin/flags/${name}`,
+    http.json({
+      ...options,
+      method: "POST",
+      body: flag,
+    }),
+  );
+}
+/**
+ * Get feature flags
+ */
+export async function getAdminFlagsLogsByName(
+  {
+    name,
+  }: {
+    name: string;
+  },
+  options?: RequestOptions,
+): Promise<ApiResponse<FlagLogsResponse>> {
+  return await http.fetchJson(`/admin/flags/logs/${name}`, {
+    ...options,
+  });
 }

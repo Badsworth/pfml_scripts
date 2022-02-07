@@ -1,5 +1,5 @@
 import "react-datetime/css/react-datetime.css";
-import { Flag, HttpError, postFlagsByName } from "../../api";
+import { Flag, HttpError, postAdminFlagsByName } from "../../api";
 import {
   Field,
   FieldArray,
@@ -281,7 +281,7 @@ export default function Maintenance() {
       page_routes: values.page_routes,
     };
 
-    postFlagsByName({ name: "maintenance" }, flag)
+    postAdminFlagsByName({ name: "maintenance" }, flag)
       .then(
         () => {
           // Include query param for success message.

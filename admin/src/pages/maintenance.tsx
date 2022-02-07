@@ -5,8 +5,8 @@ import {
   FlagLog,
   FlagLogsResponse,
   FlagsResponse,
-  getFlagsLogsByName,
-  postFlagsByName,
+  getAdminFlagsLogsByName,
+  postAdminFlagsByName,
 } from "../api";
 import Alert from "../components/Alert";
 import ConfirmationDialog from "../components/ConfirmationDialog";
@@ -34,14 +34,14 @@ export default function Maintenance() {
     React.useState(false);
 
   React.useEffect(() => {
-    getFlagsLogsByName({ name: "maintenance" }).then(
+    getAdminFlagsLogsByName({ name: "maintenance" }).then(
       (response: ApiResponse<FlagLogsResponse>) => {
         const logs = response.data;
         setMaintenance(logs.shift() || null);
         setMaintenanceHistory(logs);
       },
     );
-  }, []);
+  }, [showConfirmationDialog]);
 
   type options = {
     name?: string;
@@ -55,12 +55,10 @@ export default function Maintenance() {
   const confirmationDialogContinueCallback = async () => {
     // disable at API.
     if (maintenance) {
-      const response = await postFlagsByName(
+      await postAdminFlagsByName(
         { name: "maintenance" },
         { enabled: false },
       );
-      // TODO error check.
-      setMaintenance({ enabled: false });
       setShowConfirmationDialog(false);
     }
   };
