@@ -60,7 +60,10 @@ def _update_mfa_preference(
     logger.info("MFA updated for user", extra=log_attributes)
 
     if value == "Opt Out" and existing_mfa_preference is not None:
-        handle_mfa_disabled(user, last_updated_at, updated_by)
+        try:
+            handle_mfa_disabled(user, last_updated_at, updated_by)
+        except Exception as e:
+            logger.error("Error handling MFA disabled side effects", exc_info=e)
 
 
 def _update_mfa_preference_audit_trail(db_session: db.Session, user: User, updated_by: str) -> None:
