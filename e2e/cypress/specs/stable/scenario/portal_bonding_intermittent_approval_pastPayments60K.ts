@@ -1,3 +1,4 @@
+import { itIf } from "./../../../util";
 import { portal, fineos, fineosPages } from "../../../actions";
 import { Submission } from "../../../../src/types";
 import { assertValidClaim } from "../../../../src/util/typeUtils";
@@ -158,4 +159,20 @@ describe("Submit bonding application via the web portal: Adjudication Approval, 
       });
     });
   });
+  itIf(
+    config("HAS_FEB_RELEASE") === "true",
+    "CSR rep will override payment processing date to be schudeuled for day of approval",
+    {},
+    () => {
+      cy.dependsOnPreviousPass([recordingHours]);
+      fineos.before();
+      cy.unstash<Submission>("submission").then((submission) => {
+        fineosPages.ClaimPage.visit(submission.fineos_absence_id).paidLeave(
+          (paidLeavePage) => {
+            paidLeavePage.editPaymentProcessingDate();
+          }
+        );
+      });
+    }
+  );
 });
