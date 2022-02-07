@@ -89,7 +89,7 @@ def admin_token():
 def admin_login():
     # decode_jwt is automatically called and will validate the token.
     azure_user = app.azure_user()
-    # This should not ever be the case.
+    # This should never be the case.
     if azure_user is None:
         raise NotFound
     ensure(READ, azure_user)
@@ -108,6 +108,19 @@ def admin_logout():
 
 
 def admin_flag_get_logs(name):
+    azure_user = app.azure_user()
+    # This should never be the case.
+    if azure_user is None:
+        raise Unauthorized
+    ensure(READ, azure_user)
+    # There's a single API endpoint to set feature flags and maintenance is
+    # the only feature flag right now. This will need to change if more feature
+    # flags are set from the Admin Portal. This will disallow other feature
+    # flags from being unset until the decision is made.
+    if name == FeatureFlag.MAINTENANCE.name:
+        ensure(EDIT, AzurePermission.MAINTENANCE_EDIT)
+    else:
+        raise Unauthorized
     with app.db_session() as db_session:
         logs = db_session.query(LkFeatureFlag).filter_by(name=name).one().logs()
         response = response_util.success_response(
@@ -131,7 +144,7 @@ def admin_flag_get_logs(name):
 
 def admin_flags_post(name):
     azure_user = app.azure_user()
-    # This should not ever be the case.
+    # This should never be the case.
     if azure_user is None:
         raise Unauthorized
     ensure(READ, azure_user)
@@ -179,7 +192,7 @@ def admin_flags_post(name):
 
 def admin_users_get(email_address: Optional[str] = "") -> flask.Response:
     azure_user = app.azure_user()
-    # This should not ever be the case.
+    # This should never be the case.
     if azure_user is None:
         raise Unauthorized
     ensure(READ, azure_user)

@@ -1292,8 +1292,6 @@ paths:
 
   /admin/flags/logs/{name}:
     get:
-      security:
-        - {} # no authentication option
       tags:
         - Admin
         - Feature Flags
