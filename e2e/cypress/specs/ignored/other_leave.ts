@@ -1,5 +1,6 @@
 import { fineos, portal } from "../../actions";
 import { Submission } from "../../../src/types";
+import { ClaimPage } from "../../actions/fineos.pages";
 
 describe("Submit a bonding claim with other income and other leave - BHAP1", () => {
   const submit =
@@ -40,7 +41,9 @@ describe("Submit a bonding claim with other income and other leave - BHAP1", () 
     fineos.before();
     cy.unstash<Submission>("submission").then((submission) => {
       cy.visit("/");
-      fineos.findOtherLeaveEForm(submission.fineos_absence_id);
+      ClaimPage.visit(submission.fineos_absence_id).documents((documents) => {
+        documents.assertDocumentExists("Other Leaves");
+      });
     });
   });
 });

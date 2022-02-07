@@ -37,12 +37,12 @@ import {
   assertHasDocument,
   clickBottomWidgetButton,
   onTab,
-  visitClaim,
   wait,
   waitForAjaxComplete,
   clickNext,
   getFixtureDocumentName,
   assertClaimStatus,
+  assertAbsenceCaseNumber,
 } from "./fineos";
 import {
   addDays,
@@ -57,6 +57,12 @@ import { fineos } from ".";
 import { LeaveReason } from "../../src/generation/Claim";
 import { config } from "./common";
 import { FineosCorrespondanceType, FineosDocumentType } from "./fineos.enums";
+
+// Flag controlling whether we use the universal search when searching for claims and claimants.
+// Universal search is faster, but may not work in every environment. We may need to make this a
+// feature flag if it doesn't work in every environment. This optimization is worth it because
+// we do a lot of case/claimant lookups.
+const USE_UNIVERSAL_SEARCH = true;
 
 type StatusCategory =
   | "Applicability"
@@ -85,7 +91,17 @@ type PlanDecisions = "Accepted" | "Pending Evidence" | "Rejected" | "Undecided";
  */
 export class ClaimPage {
   static visit(id: string): ClaimPage {
-    visitClaim(id);
+    if (USE_UNIVERSAL_SEARCH) {
+      cy.get("#universal-search").type(id);
+      cy.contains(".suggestion-container", id).click();
+    } else {
+      cy.get('a[aria-label="Cases"]').click();
+      onTab("Case");
+      cy.findByLabelText("Case Number").type(id);
+      cy.findByLabelText("Case Type").select("Absence Case");
+      cy.get('input[type="submit"][value="Search"]').click();
+    }
+    assertAbsenceCaseNumber(id);
     return new ClaimPage();
   }
 
@@ -2328,15 +2344,21 @@ export class FinancialsBenefitAdjustmentsPage {
 export class ClaimantPage {
   static visit(ssn: string): ClaimantPage {
     ssn = ssn.replace(/-/g, "");
-    cy.get('a[aria-label="Parties"]').click({ force: true });
-    waitForAjaxComplete();
-    cy.findByLabelText("Identification Number")
-      .click({ force: true })
-      .type(ssn, { delay: 10 });
-    cy.get('input[type="submit"][value="Search"]').click({ force: true });
-    waitForAjaxComplete();
-    fineos.clickBottomWidgetButton("OK");
-
+    if (USE_UNIVERSAL_SEARCH) {
+      cy.get("#universal-search").type(ssn);
+      cy.get(".tt-dataset-universalSearch > .suggestion-container")
+        .should("have.length", 1)
+        .click();
+    } else {
+      cy.get('a[aria-label="Parties"]').click({ force: true });
+      waitForAjaxComplete();
+      cy.findByLabelText("Identification Number")
+        .click({ force: true })
+        .type(ssn, { delay: 10 });
+      cy.get('input[type="submit"][value="Search"]').click({ force: true });
+      waitForAjaxComplete();
+      fineos.clickBottomWidgetButton("OK");
+    }
     return new ClaimantPage();
   }
 

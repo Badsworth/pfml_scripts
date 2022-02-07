@@ -83,15 +83,6 @@ export function before(credentials?: Credentials): void {
   cy.visit("/");
 }
 
-export function visitClaim(claimId: string): void {
-  cy.get('a[aria-label="Cases"]').click();
-  onTab("Case");
-  cy.findByLabelText("Case Number").type(claimId);
-  cy.findByLabelText("Case Type").select("Absence Case");
-  cy.get('input[type="submit"][value="Search"]').click();
-  assertAbsenceCaseNumber(claimId);
-}
-
 /**
  * Called from the claim page, asserts that the claim status is an expected value.
  */
@@ -239,13 +230,6 @@ export function addBondingLeaveFlow(timeStamp: Date): void {
     "Fixed time off for Child Bonding"
   );
   cy.wait(1000);
-}
-
-export function findOtherLeaveEForm(claimNumber: string): void {
-  visitClaim(claimNumber);
-  onTab("Documents");
-  assertHasDocument("Other Leaves");
-  cy.wait(200);
 }
 
 /**Clicks on the 'Next' or 'Previous' button to move to the next/previous step during the intake process or recording actual leave */
