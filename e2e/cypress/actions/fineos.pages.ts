@@ -93,7 +93,9 @@ export class ClaimPage {
   static visit(id: string): ClaimPage {
     if (USE_UNIVERSAL_SEARCH) {
       cy.get("#universal-search").type(id);
-      cy.contains(".suggestion-container", id).click();
+      cy.contains(".tt-dataset-universalSearch > .suggestion-container", id)
+        .should("have.length", 1)
+        .click();
     } else {
       cy.get('a[aria-label="Cases"]').click();
       onTab("Case");
