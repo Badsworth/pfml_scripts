@@ -12,7 +12,7 @@ type CognitoMFAUser = CognitoUser & { preferredMFA: "NOMFA" | "SMS" };
 export const updateMFAPhoneNumber = async (phoneNumber: string) => {
   const user = await Auth.currentAuthenticatedUser();
 
-  tracker.trackFetchRequest("updateUserAttributes");
+  tracker.trackAuthRequest("updateUserAttributes");
   // TODO (PORTAL-1194): Convert phone number from user input to E164
   await Auth.updateUserAttributes(user, {
     phone_number: "+1" + phoneNumber.replaceAll("-", ""),
@@ -28,7 +28,7 @@ export const updateMFAPhoneNumber = async (phoneNumber: string) => {
 export const sendMFAConfirmationCode = async () => {
   try {
     const user = await Auth.currentAuthenticatedUser();
-    tracker.trackFetchRequest("verifyUserAttribute");
+    tracker.trackAuthRequest("verifyUserAttribute");
     // sends a verification code to the phone number via SMS
     await Auth.verifyUserAttribute(user, "phone_number");
     tracker.markFetchRequestEnd();
@@ -49,7 +49,7 @@ export const sendMFAConfirmationCode = async () => {
 export const verifyMFAPhoneNumber = async (code: string) => {
   const user = await Auth.currentAuthenticatedUser();
 
-  tracker.trackFetchRequest("verifyUserAttributeSubmit");
+  tracker.trackAuthRequest("verifyUserAttributeSubmit");
   await Auth.verifyUserAttributeSubmit(user, "phone_number", code);
   tracker.markFetchRequestEnd();
 };
@@ -80,7 +80,7 @@ const setMFAPreferenceOptOut = async (user: CognitoMFAUser) => {
     return;
   }
 
-  tracker.trackFetchRequest("setPreferredMFA");
+  tracker.trackAuthRequest("setPreferredMFA");
   await Auth.setPreferredMFA(user, "NOMFA");
   tracker.markFetchRequestEnd();
 };
@@ -92,7 +92,7 @@ const setMFAPreferenceOptOut = async (user: CognitoMFAUser) => {
  * @private
  */
 const setMFAPreferenceSMS = async (user: CognitoUser) => {
-  tracker.trackFetchRequest("setPreferredMFA");
+  tracker.trackAuthRequest("setPreferredMFA");
   await Auth.setPreferredMFA(user, "SMS");
   tracker.markFetchRequestEnd();
 };
@@ -150,7 +150,7 @@ const getInternationalNumberError = () =>
 export const verifyMFACode = async (code: string) => {
   const user = Auth.currentAuthenticatedUser();
 
-  tracker.trackFetchRequest("confirmSignIn");
+  tracker.trackAuthRequest("confirmSignIn");
   await Auth.confirmSignIn(user, code, "SMS_MFA");
   tracker.markFetchRequestEnd();
 };

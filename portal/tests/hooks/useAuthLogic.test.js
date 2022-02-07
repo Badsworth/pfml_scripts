@@ -120,7 +120,7 @@ describe("useAuthLogic", () => {
       await result.current.resendForgotPasswordCode(username);
     });
 
-    expect(tracker.trackFetchRequest).toHaveBeenCalledTimes(1);
+    expect(tracker.trackAuthRequest).toHaveBeenCalledTimes(1);
     expect(tracker.markFetchRequestEnd).toHaveBeenCalledTimes(1);
   });
 
@@ -292,7 +292,7 @@ describe("useAuthLogic", () => {
         await result.current.login(username, password);
       });
 
-      expect(tracker.trackFetchRequest).toHaveBeenCalledTimes(1);
+      expect(tracker.trackAuthRequest).toHaveBeenCalledTimes(1);
       expect(tracker.markFetchRequestEnd).toHaveBeenCalledTimes(1);
     });
 
@@ -859,7 +859,7 @@ describe("useAuthLogic", () => {
         await result.current.verifyMFACodeAndLogin(verificationCode, next);
       });
 
-      expect(tracker.trackFetchRequest).toHaveBeenCalledTimes(1);
+      expect(tracker.trackAuthRequest).toHaveBeenCalledTimes(1);
       expect(tracker.markFetchRequestEnd).toHaveBeenCalledTimes(1);
     });
 
@@ -942,7 +942,7 @@ describe("useAuthLogic", () => {
         await result.current.logout();
       });
 
-      expect(tracker.trackFetchRequest).toHaveBeenCalledTimes(1);
+      expect(tracker.trackAuthRequest).toHaveBeenCalledTimes(1);
       expect(tracker.markFetchRequestEnd).toHaveBeenCalledTimes(1);
     });
   });
@@ -1167,7 +1167,7 @@ describe("useAuthLogic", () => {
         await result.current.resendVerifyAccountCode(username);
       });
 
-      expect(tracker.trackFetchRequest).toHaveBeenCalledTimes(1);
+      expect(tracker.trackAuthRequest).toHaveBeenCalledTimes(1);
       expect(tracker.markFetchRequestEnd).toHaveBeenCalledTimes(1);
     });
 
@@ -1261,7 +1261,7 @@ describe("useAuthLogic", () => {
         );
       });
 
-      expect(tracker.trackFetchRequest).toHaveBeenCalledTimes(1);
+      expect(tracker.trackAuthRequest).toHaveBeenCalledTimes(1);
       expect(tracker.markFetchRequestEnd).toHaveBeenCalledTimes(1);
     });
 
@@ -1519,7 +1519,7 @@ describe("useAuthLogic", () => {
         await result.current.verifyAccount(username, verificationCode);
       });
 
-      expect(tracker.trackFetchRequest).toHaveBeenCalledTimes(1);
+      expect(tracker.trackAuthRequest).toHaveBeenCalledTimes(1);
       expect(tracker.markFetchRequestEnd).toHaveBeenCalledTimes(1);
     });
 
