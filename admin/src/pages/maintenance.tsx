@@ -55,10 +55,7 @@ export default function Maintenance() {
   const confirmationDialogContinueCallback = async () => {
     // disable at API.
     if (maintenance) {
-      await postAdminFlagsByName(
-        { name: "maintenance" },
-        { enabled: false },
-      );
+      await postAdminFlagsByName({ name: "maintenance" }, { enabled: false });
       setShowConfirmationDialog(false);
     }
   };
