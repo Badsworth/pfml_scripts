@@ -6,7 +6,6 @@ import {
   FlagLogsResponse,
   FlagsResponse,
   getFlagsLogsByName,
-  getFlagsByName,
   postFlagsByName,
 } from "../api";
 import Alert from "../components/Alert";
@@ -35,14 +34,11 @@ export default function Maintenance() {
     React.useState(false);
 
   React.useEffect(() => {
-    getFlagsByName({ name: "maintenance" }).then(
-      (response: ApiResponse<Flag>) => {
-        setMaintenance(response.data);
-      },
-    );
     getFlagsLogsByName({ name: "maintenance" }).then(
       (response: ApiResponse<FlagLogsResponse>) => {
-        setMaintenanceHistory(response.data);
+        const logs = response.data;
+        setMaintenance(logs.shift() || null);
+        setMaintenanceHistory(logs);
       },
     );
   }, []);

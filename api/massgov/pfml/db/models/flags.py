@@ -52,7 +52,7 @@ class LkFeatureFlag(Base):
     values = relationship("FeatureFlagValue")
 
     def logs(self, limit: Optional[int] = 10) -> Optional[list[UserAzureFeatureFlagLog]]:
-        # Use a query to include offset and limit.
+        # Use a query to include limit.
         return (
             object_session(self)
             .query(UserAzureFeatureFlagLog)
@@ -60,7 +60,6 @@ class LkFeatureFlag(Base):
             .filter(FeatureFlagValue.feature_flag_id == self.feature_flag_id)
             .order_by(FeatureFlagValue.updated_at.desc())
             .limit(limit)
-            .offset(1)
             .all()
         )
 
