@@ -21,3 +21,32 @@ variable "region" {
   type        = string
   default     = "us-east-1"
 }
+
+variable "sns_spending_thresholds" {
+  description = "SNS Spending Limits Thresholds"
+  type        = map(any)
+  default = {
+    information = 0.5,
+    warning     = 0.8,
+    critical    = 0.9,
+    exceeded    = 1.0
+  }
+}
+
+variable "sns_sms_failure_rate" {
+  description = "SNS SMS Failure Rate"
+  type        = map(any)
+  default = {
+    warning  = 0.4,
+    critical = 0.25
+  }
+}
+
+variable "carrier_unavailable_period" {
+  description = "Period When SMS Phone Carrier Is Unavailable"
+  type        = map(any)
+  default = {
+    warning  = 3600,
+    critical = 7200
+  }
+}

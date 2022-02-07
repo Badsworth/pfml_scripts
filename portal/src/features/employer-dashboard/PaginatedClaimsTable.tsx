@@ -155,7 +155,6 @@ interface ClaimTableRowProps {
 const ClaimTableRow = (props: ClaimTableRowProps) => {
   const { claim, visibleTableColumns } = props;
   const { t } = useTranslation();
-
   const getColumnContents = (columnKey: typeof visibleTableColumns[number]) => {
     switch (columnKey) {
       case "employee_and_case":
