@@ -92,7 +92,11 @@ type PlanDecisions = "Accepted" | "Pending Evidence" | "Rejected" | "Undecided";
 export class ClaimPage {
   static visit(id: string): ClaimPage {
     if (USE_UNIVERSAL_SEARCH) {
+      cy.intercept(/\/rest\/portalinfrastructure\/universalsearch/).as(
+        "universalSearch"
+      );
       cy.get("#universal-search").type(id);
+      cy.wait("@universalSearch", { timeout: 20000 });
       cy.contains(".tt-dataset-universalSearch > .suggestion-container", id)
         .should("have.length", 1)
         .click();
