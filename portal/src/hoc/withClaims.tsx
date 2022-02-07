@@ -9,11 +9,19 @@ import { useTranslation } from "../locales/i18n";
 
 export interface ApiParams {
   page_offset?: string;
+  // TODO (PORTAL-1683): DRY these up
   employer_id?: string;
   search?: string;
   claim_status?: string;
+  is_reviewable?: "no" | "yes";
   order_by?: "absence_status" | "created_at" | "employee";
   order_direction?: "ascending" | "descending";
+  request_decision?:
+    | "approved"
+    | "cancelled"
+    | "denied"
+    | "pending"
+    | "withdrawn";
 }
 
 export interface WithClaimsProps extends WithUserProps {
@@ -50,6 +58,8 @@ function withClaims<T extends WithClaimsProps>(
     const filters = omitBy(
       {
         claim_status: apiParams.claim_status,
+        is_reviewable: apiParams.is_reviewable,
+        request_decision: apiParams.request_decision,
         employer_id: apiParams.employer_id,
         search: apiParams.search,
       },

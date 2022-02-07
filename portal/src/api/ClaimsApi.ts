@@ -28,6 +28,13 @@ export default class ClaimsApi extends BaseApi {
     filters: {
       claim_status?: string;
       employer_id?: string;
+      is_reviewable?: "no" | "yes";
+      request_decision?:
+        | "approved"
+        | "cancelled"
+        | "denied"
+        | "pending"
+        | "withdrawn";
       search?: string;
     } = {}
   ) => {
