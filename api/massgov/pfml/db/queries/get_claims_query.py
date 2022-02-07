@@ -12,6 +12,7 @@ from massgov.pfml import db
 from massgov.pfml.db.models.applications import Application
 from massgov.pfml.db.models.base import Base
 from massgov.pfml.db.models.employees import (
+    AbsencePeriod,
     AbsenceStatus,
     Claim,
     Employee,
@@ -167,6 +168,12 @@ class GetClaimsQuery:
         filters = self.get_managed_requirement_status_filters(absence_statuses)
         if len(filters):
             self.query = self.query.filter(or_(*filters))
+
+    def add_request_decision_filter(self, request_decisions: Set[int]) -> None:
+        filter = Claim.absence_periods.any(  # type: ignore
+            AbsencePeriod.leave_request_decision_id.in_(request_decisions)
+        )
+        self.query = self.query.filter(filter)
 
     def employee_search_sub_query(self) -> Alias:
         search_columns = [

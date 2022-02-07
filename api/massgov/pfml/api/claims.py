@@ -43,6 +43,7 @@ from massgov.pfml.db.models.employees import (
     AbsenceStatus,
     Claim,
     Employer,
+    LeaveRequestDecision,
     ManagedRequirement,
     Role,
     UserLeaveAdministrator,
@@ -504,6 +505,9 @@ def get_claims() -> flask.Response:
     allow_hrd = flask.request.args.get("allow_hrd", type=bool) or False
     search_string = flask.request.args.get("search", type=str)
     absence_statuses = parse_filterable_absence_statuses(flask.request.args.get("claim_status"))
+    request_decisions = map_request_decision_param_to_db_columns(
+        flask.request.args.get("request_decision")
+    )
     is_employer = can(READ, "EMPLOYER_API")
     is_pfml_crm_user = has_role_in(current_user, [Role.PFML_CRM])
     log_attributes = {}
@@ -561,6 +565,9 @@ def get_claims() -> flask.Response:
                     escape_like(search_string)
                 )  # escape user input search string
 
+            if request_decisions:
+                query.add_request_decision_filter(request_decisions)
+
             query.add_order_by(pagination_context)
 
             page = query.get_paginated_results(pagination_context)
@@ -598,6 +605,31 @@ def parse_filterable_absence_statuses(absence_status_string: Union[str, None]) -
     absence_statuses = set(absence_status_string.strip().split(","))
     validate_filterable_absence_statuses(absence_statuses)
     return absence_statuses
+
+
+def map_request_decision_param_to_db_columns(request_decision_str: Optional[str],) -> Set[int]:
+    request_decision_map = {
+        "approved": set([LeaveRequestDecision.APPROVED.leave_request_decision_id]),
+        "denied": set([LeaveRequestDecision.DENIED.leave_request_decision_id]),
+        "withdrawn": set([LeaveRequestDecision.WITHDRAWN.leave_request_decision_id]),
+        "pending": set(
+            [
+                LeaveRequestDecision.PENDING.leave_request_decision_id,
+                LeaveRequestDecision.IN_REVIEW.leave_request_decision_id,
+                LeaveRequestDecision.PROJECTED.leave_request_decision_id,
+            ]
+        ),
+        "cancelled": set(
+            [
+                LeaveRequestDecision.CANCELLED.leave_request_decision_id,
+                LeaveRequestDecision.VOIDED.leave_request_decision_id,
+            ]
+        ),
+    }
+
+    if not request_decision_str:
+        return set()
+    return request_decision_map[request_decision_str]
 
 
 def validate_filterable_absence_statuses(absence_statuses: Set[str]) -> None:
