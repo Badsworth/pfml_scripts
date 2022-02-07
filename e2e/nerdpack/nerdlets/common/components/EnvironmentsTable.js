@@ -4,7 +4,7 @@ import {
   DAOEnvironmentComponentVersion,
 } from "../DAO";
 import { MutiQuery } from "../MultiQuery";
-import { Link, navigation, Spinner } from "nr1";
+import { Link, navigation, Spinner, Icon } from "nr1";
 import {
   COMPONENTS,
   ENVS,
@@ -14,6 +14,48 @@ import {
 } from "../index";
 import { E2EVisualIndicator } from "./E2EVisualIndicator";
 import { format as dateFormat } from "date-fns";
+
+function RunIndicators({ runs, env, link }) {
+  if (env === "infra-test" || env === "prod") {
+    return (
+      <td>
+        <span className="info">
+          <Icon type={Icon.TYPE.INTERFACE__INFO__INFO} />
+          E2E Suite not configured for this environment
+        </span>
+      </td>
+    );
+  }
+  // EXPECTED TO BE DOWN, REMOVE AFTER Feb 21, 2022
+  else if (env === "trn2" || env === "long") {
+    return (
+      <td>
+        <span class="warning">
+          <Icon type={Icon.TYPE.INTERFACE__STATE__WARNING} />
+          Env expected offline until Feb 21, 2022
+        </span>
+      </td>
+    );
+  }
+  return (
+    <td className={"e2e-run-history"}>
+      <span className={"allLink"}>
+        <Link to={link}>All</Link>
+      </span>
+      {runs.map((run) => (
+        <E2EVisualIndicator
+          run={{
+            pass_rate: run.passPercent / 100,
+            timestamp: run.timestamp,
+            tag: run.tag.join(","),
+            runUrl: run.runUrl,
+          }}
+          runIds={[run.runId]}
+        />
+      ))}
+    </td>
+  );
+}
 
 export class EnvironmentsTable extends React.Component {
   state = {
@@ -127,28 +169,11 @@ export class EnvironmentsTable extends React.Component {
                               {labelEnv(env)}
                             </Link>
                           </td>
-                          {env === "infra-test" || env === "prod" ? (
-                            <td>
-                              E2E Suite not configured for this environment
-                            </td>
-                          ) : (
-                            <td className={"e2e-run-history"}>
-                              <span className={"allLink"}>
-                                <Link to={link}>All</Link>
-                              </span>
-                              {byEnv[env].map((run) => (
-                                <E2EVisualIndicator
-                                  run={{
-                                    pass_rate: run.passPercent / 100,
-                                    timestamp: run.timestamp,
-                                    tag: run.tag.join(","),
-                                    runUrl: run.runUrl,
-                                  }}
-                                  runIds={[run.runId]}
-                                />
-                              ))}
-                            </td>
-                          )}
+                          <RunIndicators
+                            runs={byEnv[env]}
+                            env={env}
+                            link={link}
+                          ></RunIndicators>
                           {COMPONENTS.map((component) => {
                             if (
                               envVersions[env] &&
