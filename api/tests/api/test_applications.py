@@ -320,6 +320,11 @@ class TestApplicationsImport:
             "tax_identifier": format_tax_identifier(claim.employee_tax_identifier),
         }
 
+    @pytest.fixture(autouse=True)
+    def enable_user_mfa(self, user) -> None:
+        user.mfa_delivery_preference_id = 1
+        user.mfa_phone_number = "+13214567890"
+
     def test_applications_import(
         self, client, test_db_session, auth_token, claim, valid_request_body
     ):
@@ -333,7 +338,6 @@ class TestApplicationsImport:
         )
 
         response_body = response.get_json().get("data")
-
         assert response.status_code == 201
         assert response_body.get("fineos_absence_id") == absence_case_id
 

@@ -249,7 +249,7 @@ def mock_customer_details():
 
 def mock_customer_contact_details():
     # Mocks FINEOS response for customer contact details
-    # This includes all of the FINEOS fields from this endpoint
+    # This includes all the FINEOS fields from this endpoint
     return {
         "phoneNumbers": [
             {
@@ -357,8 +357,9 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
             phoneNumbers=[
                 models.customer_api.PhoneNumber(
                     id=1,
-                    intCode=None,
-                    telephoneNo=None,
+                    intCode=1,
+                    areaCode=321,
+                    telephoneNo=4567890,
                     phoneNumberType=PhoneType.PHONE.phone_type_description,
                 )
             ]

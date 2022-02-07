@@ -15,6 +15,7 @@ import massgov.pfml.api.util.response as response_util
 import massgov.pfml.db as db
 import massgov.pfml.db.lookups as db_lookups
 import massgov.pfml.util.logging
+import massgov.pfml.util.newrelic.events as newrelic_util
 import massgov.pfml.util.pydantic.mask as mask
 from massgov.pfml.api.models.applications.common import Address as ApiAddress
 from massgov.pfml.api.models.applications.common import LeaveReason, PaymentPreference
@@ -71,9 +72,11 @@ from massgov.pfml.db.models.employees import (
     LeaveRequestDecision,
     LkAddressType,
     LkGender,
+    MFADeliveryPreference,
     User,
 )
 from massgov.pfml.fineos import AbstractFINEOSClient
+from massgov.pfml.fineos.models.customer_api import PhoneNumber
 from massgov.pfml.fineos.models.customer_api.spec import (
     AbsenceDetails,
     AbsencePeriod,
@@ -1280,6 +1283,34 @@ def set_payment_preference_fields(
     application.has_mailing_address = has_mailing_address
 
 
+def create_common_io_phone_from_fineos(
+    phone: PhoneNumber, db_session: db.Session
+) -> Optional[common_io.Phone]:
+    """
+    Creates common.io Phone object from FINEOS PhoneNumber object
+    """
+    db_phone = (
+        db_session.query(LkPhoneType)
+        .filter(LkPhoneType.phone_type_description == phone.phoneNumberType)
+        .one_or_none()
+    )
+
+    if not db_phone:
+        newrelic_util.log_and_capture_exception(
+            f"Unable to find phone_type: {phone.phoneNumberType}",
+            extra={"phone_type": phone.phoneNumberType},
+        )
+        return None
+
+    phone_to_create = common_io.Phone(
+        int_code=phone.intCode,
+        phone_number=f"{phone.areaCode}{phone.telephoneNo}",
+        phone_type=db_phone.phone_type_description,
+        fineos_phone_id=phone.id,
+    )
+    return phone_to_create
+
+
 def set_customer_contact_detail_fields(
     fineos: massgov.pfml.fineos.AbstractFINEOSClient,
     fineos_web_id: str,
@@ -1295,6 +1326,44 @@ def set_customer_contact_detail_fields(
     if not contact_details or not contact_details.phoneNumbers:
         logger.info("No contact details returned from FINEOS")
         return
+
+    if (
+        application.user.mfa_delivery_preference_id
+        != MFADeliveryPreference.SMS.mfa_delivery_preference_id
+    ):
+        raise ValidationException(
+            errors=[
+                ValidationErrorDetail(
+                    field="mfa_delivery_preference",
+                    type=IssueType.required,
+                    message="User has not opted into MFA delivery preferences",
+                )
+            ]
+        )
+
+    mfa_phone_number = next(
+        (
+            phone_num
+            for phone_num in contact_details.phoneNumbers
+            if f"+{phone_num.intCode}{phone_num.areaCode}{phone_num.telephoneNo}"
+            == application.user.mfa_phone_number
+        ),
+        None,
+    )
+
+    if mfa_phone_number is None:
+        logger.info(
+            "application import failure - phone number mismatch",
+            extra={"absence_case_id": application.claim_id, "user_id": application.user.user_id,},
+        )
+        raise ValidationException(
+            errors=[
+                ValidationErrorDetail(
+                    type=IssueType.invalid,
+                    message="An issue occurred while trying to import the application",
+                )
+            ]
+        )
 
     phone_number_from_fineos = next(
         (phone_num for phone_num in contact_details.phoneNumbers if phone_num.preferred),
@@ -1313,25 +1382,5 @@ def set_customer_contact_detail_fields(
         )
         return
 
-    db_phone = (
-        db_session.query(LkPhoneType)
-        .filter(LkPhoneType.phone_type_description == phone_number_from_fineos.phoneNumberType)
-        .one_or_none()
-    )
-
-    if not db_phone:
-        logger.info("Unable to find phone_type")
-        return
-
-    phone_number = str(phone_number_from_fineos.areaCode) + str(
-        phone_number_from_fineos.telephoneNo
-    )
-    # Creating common_io.Phone object in order to re-use add_or_update_phone helper method
-    phone_to_create = common_io.Phone(
-        int_code=phone_number_from_fineos.intCode,
-        phone_number=phone_number,
-        phone_type=db_phone.phone_type_description,
-        fineos_phone_id=phone_number_from_fineos.id,
-    )
-
+    phone_to_create = create_common_io_phone_from_fineos(phone_number_from_fineos, db_session)
     add_or_update_phone(db_session, phone_to_create, application)

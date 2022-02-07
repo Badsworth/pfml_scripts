@@ -55,7 +55,7 @@ def fineos_client():
 
 @pytest.fixture
 def application():
-    return ApplicationFactory.create(leave_reason_id=None)
+    return ApplicationFactory.create(leave_reason_id=None, phone=None)
 
 
 @pytest.fixture
@@ -672,6 +672,9 @@ def test_set_customer_contact_detail_fields(
     customer_contact_details = massgov.pfml.fineos.models.customer_api.ContactDetails.parse_obj(
         customer_contact_details_json
     )
+
+    application.user.mfa_phone_number = "+13214567890"
+    application.user.mfa_delivery_preference_id = 1  # 'SMS' for MFA
     mock_read_customer_contact_details.return_value = customer_contact_details
     set_customer_contact_detail_fields(fineos_client, fineos_web_id, application, test_db_session)
 
@@ -679,6 +682,46 @@ def test_set_customer_contact_detail_fields(
     # since the phone number being set is the 2nd element in the phoneNumbers array
     assert application.phone.phone_number == "+13214567890"
     assert application.phone_id == application.phone.phone_id
+
+
+def test_set_customer_contact_detail_fields_without_mfa_enabled(
+    fineos_client, fineos_web_id, application, test_db_session
+):
+    application.user.mfa_phone_number = None
+    application.user.mfa_delivery_preference_id = 2  # 'opt-out' of MFA
+    with pytest.raises(ValidationException) as exc:
+        set_customer_contact_detail_fields(
+            fineos_client, fineos_web_id, application, test_db_session
+        )
+
+    assert exc.value.errors == [
+        ValidationErrorDetail(
+            type=IssueType.required,
+            message="User has not opted into MFA delivery preferences",
+            field="mfa_delivery_preference",
+        )
+    ]
+    assert application.phone is None
+
+
+def test_set_customer_contact_detail_fields_without_matching_mfa_phone_number(
+    fineos_client, fineos_web_id, application, test_db_session
+):
+    application.user.mfa_phone_number = "+12341456789"
+    application.user.mfa_delivery_preference_id = 1
+    with pytest.raises(ValidationException) as exc:
+        set_customer_contact_detail_fields(
+            fineos_client, fineos_web_id, application, test_db_session
+        )
+
+    assert exc.value.errors == [
+        ValidationErrorDetail(
+            type=IssueType.invalid,
+            message="An issue occurred while trying to import the application",
+        )
+    ]
+
+    assert application.phone is None
 
 
 @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.read_customer_contact_details")
@@ -723,3 +766,5 @@ def test_set_customer_contact_detail_fields_with_no_contact_details_returned_fro
     customer_contact_details.phoneNumbers = None
     mock_read_customer_contact_details.return_value = customer_contact_details
     set_customer_contact_detail_fields(fineos_client, fineos_web_id, application, test_db_session)
+    assert application.phone is None
+    assert application.phone_id is None
