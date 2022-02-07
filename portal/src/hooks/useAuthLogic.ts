@@ -200,8 +200,18 @@ const useAuthLogic = ({
         appErrorsLogic.catchError(error);
         return;
       }
-      const issue = { field: "code", type: "invalidMFACode" };
-      appErrorsLogic.catchError(new CognitoAuthError(error, issue));
+      if (error.message.includes("User temporarily locked.")) {
+        appErrorsLogic.catchError(
+          new CognitoAuthError(error, {
+            field: "code",
+            type: "attemptsExceeded",
+          })
+        );
+        return;
+      }
+      appErrorsLogic.catchError(
+        new CognitoAuthError(error, { field: "code", type: "invalidMFACode" })
+      );
       return;
     }
     finishLoginAndRedirect(next);

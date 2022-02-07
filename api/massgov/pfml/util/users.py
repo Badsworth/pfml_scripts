@@ -2,7 +2,6 @@ from typing import Dict, List, Optional
 
 import botocore
 
-import massgov.pfml.cognito.config as cognito_config
 import massgov.pfml.util.logging
 from massgov.pfml import db
 from massgov.pfml.cognito.exceptions import CognitoUserExistsValidationError
@@ -15,7 +14,6 @@ from massgov.pfml.db.models.employees import (
     UserRole,
 )
 from massgov.pfml.util.aws.cognito import create_cognito_account
-from massgov.pfml.util.aws.ses import EmailRecipient, send_templated_email
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
@@ -155,22 +153,3 @@ def has_role_in(user: User, accepted_roles: List[LkRole]) -> bool:
             return True
 
     return False
-
-
-def send_mfa_disabled_email(recipient_email: str, phone_number_last_four: str) -> None:
-    email_config = cognito_config.get_email_config()
-    sender_email = email_config.pfml_email_address
-    template = "MfaHasBeenDisabled"
-    template_data = {
-        "phone_number_last_four": phone_number_last_four,
-    }
-
-    recipient = EmailRecipient(to_addresses=[recipient_email])
-    send_templated_email(
-        recipient,
-        template,
-        sender_email,
-        email_config.bounce_forwarding_email_address,
-        email_config.bounce_forwarding_email_address_arn,
-        template_data,
-    )

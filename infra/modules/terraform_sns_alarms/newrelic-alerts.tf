@@ -25,9 +25,9 @@ resource "newrelic_nrql_alert_condition" "sns_spending_limit" {
   }
 }
 
-resource "newrelic_nrql_alert_condition" "sns_failure_rate" {
-  # WARN: SMS failure rate to phone numbers is 25% for 1 hour
-  # CRIT: SMS failure rate to phone numbers is 50% for 1 hour.
+resource "newrelic_nrql_alert_condition" "sns_sms_failure_rate" {
+  # WARN: SMS failure rate to phone numbers is 60% for 2 hours
+  # CRIT: SMS failure rate to phone numbers is 75% for 2 hours
 
   name               = "sns-sms-failure-rate"
   policy_id          = newrelic_alert_policy.sns_alerts.id
@@ -44,23 +44,23 @@ resource "newrelic_nrql_alert_condition" "sns_failure_rate" {
 
   violation_time_limit_seconds = local.violation_time_limit_seconds
   warning {
-    threshold_duration    = local.one_hour
-    threshold             = 0.6
+    threshold_duration    = local.two_hours
+    threshold             = 1 - var.sns_sms_failure_rate["warning"]
     operator              = "above"
     threshold_occurrences = "at_least_once"
   }
 
   critical {
-    threshold_duration    = local.one_hour
-    threshold             = 0.75 # current average rate is 0.5
+    threshold_duration    = local.two_hours
+    threshold             = 1 - var.sns_sms_failure_rate["critical"] # current average rate is 0.5
     operator              = "above"
     threshold_occurrences = "all"
   }
 }
 
 resource "newrelic_nrql_alert_condition" "sns_sms_phone_carrier_unavailable" {
-  # WARN: More than 10 SMS failed because a phone carrier is unavailable over 1 hours.
-  # CRIT: More than 10 SMS failed because a phone carrier is unavailable over 2 hours.
+  # WARN: More than local.phone_carrier_unavailable_threshold SMS failed because a phone carrier is unavailable over 1 hour.
+  # CRIT: More than local.phone_carrier_unavailable_threshold SMS failed because a phone carrier is unavailable over 2 hours.
 
   name               = "sns-spending-limit"
   policy_id          = newrelic_alert_policy.sns_alerts.id
@@ -78,18 +78,17 @@ resource "newrelic_nrql_alert_condition" "sns_sms_phone_carrier_unavailable" {
 
   violation_time_limit_seconds = local.violation_time_limit_seconds
 
-  # statistic is sum in this case
   warning {
-    threshold_duration    = local.one_hour
-    threshold             = 10      # threshold in aws_cloudwatch_metric_alarm
-    operator              = "above" # comparison_operator in aws_cloudwatch_metric_alarm
+    threshold_duration    = var.carrier_unavailable_period["warning"]
+    threshold             = local.phone_carrier_unavailable_threshold # threshold in aws_cloudwatch_metric_alarm
+    operator              = "above"                                   # comparison_operator in aws_cloudwatch_metric_alarm
     threshold_occurrences = "at_least_once"
   }
 
   critical {
-    threshold_duration    = local.one_hour * 2
-    threshold             = 10      # threshold in aws_cloudwatch_metric_alarm
-    operator              = "above" # comparison_operator in aws_cloudwatch_metric_alarm
+    threshold_duration    = var.carrier_unavailable_period["critical"]
+    threshold             = local.phone_carrier_unavailable_threshold # threshold in aws_cloudwatch_metric_alarm
+    operator              = "above"                                   # comparison_operator in aws_cloudwatch_metric_alarm
     threshold_occurrences = "all"
   }
 }
@@ -114,9 +113,9 @@ resource "newrelic_nrql_alert_condition" "sns_sms_blocked_as_spam" {
   violation_time_limit_seconds = local.violation_time_limit_seconds
 
   critical {
-    threshold_duration    = local.one_hour * 2 # period in aws_cloudwatch_metric_alarm
-    threshold             = 10                 # threshold in aws_cloudwatch_metric_alarm
-    operator              = "above"            # comparison_operator in aws_cloudwatch_metric_alarm
+    threshold_duration    = local.two_hours                 # period in aws_cloudwatch_metric_alarm
+    threshold             = local.blocked_as_spam_threshold # threshold in aws_cloudwatch_metric_alarm
+    operator              = "above"                         # comparison_operator in aws_cloudwatch_metric_alarm
     threshold_occurrences = "all"
   }
 }
@@ -138,8 +137,6 @@ resource "newrelic_nrql_alert_condition" "sns_sms_rate_exceeded" {
   }
 
   violation_time_limit_seconds = local.violation_time_limit_seconds
-
-  # statistic is sum in this case
 
   critical {
     threshold_duration    = local.default_aggregation_window # evaluation_periods in aws_cloudwatch_metric_alarm

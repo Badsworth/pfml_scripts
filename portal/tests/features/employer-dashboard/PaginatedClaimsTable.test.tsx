@@ -52,6 +52,22 @@ describe("PaginatedClaimsTable", () => {
     MockDate.set(MOCK_CURRENT_ISO_DATE);
   });
 
+  it("renders at most two absence periods", () => {
+    setup([
+      createMockClaim({
+        absence_periods: [
+          createAbsencePeriod(),
+          createAbsencePeriod(),
+          createAbsencePeriod(),
+        ],
+      }),
+    ]);
+
+    const absencePeriodParents = screen.getAllByTestId("absence-period");
+
+    expect(absencePeriodParents.length).toEqual(2);
+  });
+
   it("renders absence periods sorted new to old", () => {
     setup([
       createMockClaim({
@@ -73,7 +89,6 @@ describe("PaginatedClaimsTable", () => {
 
     expect(absencePeriodParents[0]).toHaveTextContent("3/1/2021");
     expect(absencePeriodParents[1]).toHaveTextContent("2/1/2021");
-    expect(absencePeriodParents[2]).toHaveTextContent("1/1/2021");
   });
 
   it("renders a Review call to action when a managed requirement is open", () => {

@@ -830,6 +830,28 @@ describe("useAuthLogic", () => {
       );
     });
 
+    it("throws an attempts exceeded error when throttles login", async () => {
+      jest.spyOn(Auth, "confirmSignIn").mockImplementationOnce(() => {
+        // Ignore lint rule since AWS Auth class actually throws an object literal
+        // eslint-disable-next-line no-throw-literal
+        throw {
+          code: "NotAuthorizedException",
+          message: "User temporarily locked. Try again soon",
+          name: "NotAuthorizedException",
+        };
+      });
+      const { result } = render();
+
+      await act(async () => {
+        await result.current.verifyMFACodeAndLogin(verificationCode, next);
+      });
+
+      expect(appErrors).toHaveLength(1);
+      expect(appErrors[0].message).toMatchInlineSnapshot(
+        `"Your account is temporarily locked because of too many failed verification attempts. Wait 15 minutes before trying again."`
+      );
+    });
+
     it("tracks request", async () => {
       const { result } = render();
 
@@ -1331,7 +1353,7 @@ describe("useAuthLogic", () => {
 
       expect(appErrors).toHaveLength(1);
       expect(appErrors[0].message).toMatchInlineSnapshot(
-        `"Sorry, your verification code has expired or has already been used."`
+        `"Your verification code has expired or has already been used."`
       );
     });
 
@@ -1611,7 +1633,7 @@ describe("useAuthLogic", () => {
       });
       expect(appErrors).toHaveLength(1);
       expect(appErrors[0].message).toMatchInlineSnapshot(
-        `"Sorry, your verification code has expired or has already been used."`
+        `"Your verification code has expired or has already been used."`
       );
     });
 

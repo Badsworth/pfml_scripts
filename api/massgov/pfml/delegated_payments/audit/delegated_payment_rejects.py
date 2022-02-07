@@ -21,10 +21,11 @@ from massgov.pfml.db.models.employees import (
     StateLog,
 )
 from massgov.pfml.db.models.payments import (
+    AUDIT_REJECT_NOTE_TO_WRITEBACK_TRANSACTION_STATUS,
+    AUDIT_SKIPPED_NOTE_TO_WRITEBACK_TRANSACTION_STATUS,
     FineosWritebackTransactionStatus,
     LinkSplitPayment,
     LkFineosWritebackTransactionStatus,
-    PaymentAuditReportType,
 )
 from massgov.pfml.delegated_payments.audit.delegated_payment_audit_csv import (
     PAYMENT_AUDIT_CSV_HEADERS,
@@ -75,25 +76,6 @@ ACCEPTED_STATE = State.DELEGATED_PAYMENT_VALIDATED
 ACCEPTED_OUTCOME = state_log_util.build_outcome(
     "Accepted payment to be added to FINEOS Writeback - sampled"
 )
-
-AUDIT_REJECT_NOTE_TO_WRITEBACK_STATUS = {
-    "DUA Additional Income": FineosWritebackTransactionStatus.DUA_ADDITIONAL_INCOME,
-    "DIA Additional Income": FineosWritebackTransactionStatus.DIA_ADDITIONAL_INCOME,
-    "Self-Reported Additional Income": FineosWritebackTransactionStatus.SELF_REPORTED_ADDITIONAL_INCOME,
-    "Exempt Employer": FineosWritebackTransactionStatus.EXEMPT_EMPLOYER,
-    "Weekly benefit amount exceeds $850": FineosWritebackTransactionStatus.WEEKLY_BENEFITS_AMOUNT_EXCEEDS_850,
-    "Waiting Week": FineosWritebackTransactionStatus.WAITING_WEEK,
-    "InvalidPayment PaidDate": FineosWritebackTransactionStatus.ALREADY_PAID_FOR_DATES,
-    "Leave Dates Change": FineosWritebackTransactionStatus.LEAVE_DATES_CHANGE,
-    "Under or Over payments(Adhocs needed)": FineosWritebackTransactionStatus.UNDER_OR_OVERPAY_ADJUSTMENT,
-    "Name mismatch": FineosWritebackTransactionStatus.NAME_MISMATCH,
-    "Other": FineosWritebackTransactionStatus.FAILED_MANUAL_VALIDATION,
-}
-
-AUDIT_SKIPPED_NOTE_TO_WRITEBACK_STATUS = {
-    PaymentAuditReportType.LEAVE_PLAN_IN_REVIEW.payment_audit_report_type_description: FineosWritebackTransactionStatus.LEAVE_IN_REVIEW,
-    "Other": FineosWritebackTransactionStatus.PENDING_PAYMENT_AUDIT,
-}
 
 
 class PaymentRejectsException(Exception):
@@ -526,11 +508,11 @@ class PaymentRejectsStep(Step):
     ) -> LkFineosWritebackTransactionStatus:
         if is_rejected:
             default_transaction_status = FineosWritebackTransactionStatus.FAILED_MANUAL_VALIDATION
-            transaction_status_mapping = AUDIT_REJECT_NOTE_TO_WRITEBACK_STATUS
+            transaction_status_mapping = AUDIT_REJECT_NOTE_TO_WRITEBACK_TRANSACTION_STATUS
             status_str = "rejected"
         else:
             default_transaction_status = FineosWritebackTransactionStatus.PENDING_PAYMENT_AUDIT
-            transaction_status_mapping = AUDIT_SKIPPED_NOTE_TO_WRITEBACK_STATUS
+            transaction_status_mapping = AUDIT_SKIPPED_NOTE_TO_WRITEBACK_TRANSACTION_STATUS
             status_str = "skipped"
 
         # Set writeback status from reject notes if available and matching, otherwise use default reject status

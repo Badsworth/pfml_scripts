@@ -49,8 +49,8 @@ resource "aws_ecs_task_definition" "app" {
     "${path.module}/container_definitions.json",
     {
       app_name                                   = local.app_name
-      cpu                                        = "768"
-      memory                                     = "1536"
+      cpu                                        = "2048"
+      memory                                     = "4096"
       db_host                                    = aws_db_instance.default.address
       db_name                                    = aws_db_instance.default.name
       db_username                                = "pfml_api"
@@ -95,8 +95,8 @@ resource "aws_ecs_task_definition" "app" {
     }
   )
 
-  cpu                      = "1024"
-  memory                   = "2048"
+  cpu                      = "2048"
+  memory                   = "4096"
   requires_compatibilities = ["FARGATE"]
   network_mode             = "awsvpc"
 

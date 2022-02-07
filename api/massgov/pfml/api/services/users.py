@@ -11,7 +11,7 @@ from massgov.pfml.db.models.employees import (
     LkMFADeliveryPreferenceUpdatedBy,
     User,
 )
-from massgov.pfml.util.users import send_mfa_disabled_email
+from massgov.pfml.mfa import handle_mfa_disabled
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
@@ -60,7 +60,7 @@ def _update_mfa_preference(
     logger.info("MFA updated for user", extra=log_attributes)
 
     if value == "Opt Out" and existing_mfa_preference is not None:
-        _handle_mfa_disabled(user, last_updated_at, updated_by)
+        handle_mfa_disabled(user, last_updated_at, updated_by)
 
 
 def _update_mfa_preference_audit_trail(db_session: db.Session, user: User, updated_by: str) -> None:
@@ -77,29 +77,3 @@ def _update_mfa_preference_audit_trail(db_session: db.Session, user: User, updat
 
     mfa_delivery_preference_updated_by = "mfa_delivery_preference_updated_by"
     setattr(user, mfa_delivery_preference_updated_by, mfa_updated_by)
-
-
-def _handle_mfa_disabled(user: User, last_enabled_at: Optional[datetime], updated_by: str) -> None:
-    """Helper method for handling necessary actions after MFA is disabled for a user (send email, logging, etc)"""
-    # These values should always be set by the time a user disables MFA but the
-    # linter doesn't know that. This prevents a linter failure
-    assert last_enabled_at
-    assert user.email_address
-    assert user.mfa_phone_number_last_four()
-
-    now = datetime.now(timezone.utc)
-    diff = now - last_enabled_at
-    time_since_enabled_in_sec = round(diff.total_seconds())
-
-    log_attributes = {
-        "last_enabled_at": last_enabled_at,
-        "time_since_enabled_in_sec": time_since_enabled_in_sec,
-        "updated_by": updated_by,
-    }
-    logger.info("MFA disabled for user", extra=log_attributes)
-
-    try:
-        send_mfa_disabled_email(user.email_address, user.mfa_phone_number_last_four())
-    except Exception as error:
-        logger.error("Error sending MFA disabled email", exc_info=error)
-        raise error

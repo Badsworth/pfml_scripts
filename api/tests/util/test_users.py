@@ -1,5 +1,3 @@
-from unittest import mock
-
 import faker
 import pytest
 from sqlalchemy.exc import SQLAlchemyError
@@ -105,24 +103,3 @@ def test_register_user_creates_missing_db_records(
 
     assert user.sub_id == sub_id
     assert user.email_address == email_address
-
-
-class TestSendMfaDisabledEmail:
-    @mock.patch("massgov.pfml.util.users.send_templated_email")
-    def test_success(self, mock_send_templated_email, monkeypatch):
-        monkeypatch.setenv("BOUNCE_FORWARDING_EMAIL_ADDRESS_ARN", "bounce_arn")
-
-        users_util.send_mfa_disabled_email("claimant@mock.nava.com", "1234")
-
-        mock_send_templated_email.assert_called_once_with(
-            mock.ANY,
-            "MfaHasBeenDisabled",
-            "PFML_DoNotReply@eol.mass.gov",
-            "PFML_DoNotReply@eol.mass.gov",
-            "bounce_arn",
-            mock.ANY,
-        )
-        assert mock_send_templated_email.call_args.args[0].to_addresses == [
-            "claimant@mock.nava.com"
-        ]
-        assert mock_send_templated_email.call_args.args[5] == {"phone_number_last_four": "1234"}

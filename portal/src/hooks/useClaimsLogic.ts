@@ -62,8 +62,6 @@ const useClaimsLogic = ({
 
   /**
    * Load a page of claims for the authenticated user
-   * @param [pageOffset] - Page number to load
-   * @param [filters.claim_status] - Comma-separated list of statuses
    */
   const loadPage = async (
     pageOffset: number | string = 1,
@@ -71,9 +69,17 @@ const useClaimsLogic = ({
       order_by?: string;
       order_direction?: "ascending" | "descending";
     } = {},
+    // TODO (PORTAL-1683): DRY this up
     filters: {
       claim_status?: string;
       employer_id?: string;
+      is_reviewable?: "no" | "yes";
+      request_decision?:
+        | "approved"
+        | "cancelled"
+        | "denied"
+        | "pending"
+        | "withdrawn";
       search?: string;
     } = {}
   ) => {

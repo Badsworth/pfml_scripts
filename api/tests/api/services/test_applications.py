@@ -113,15 +113,37 @@ def intermittent_leave_periods_not_open():
     return [
         AbsencePeriod(
             id="PL-14449-0000002237",
-            reason="Pregnancy/Maternity",
-            reasonQualifier1="Foster Care",
+            reason="Child Bonding",
+            reasonQualifier1="Not Work Related",
             reasonQualifier2="",
             startDate=date(2021, 1, 29),
             endDate=date(2021, 1, 30),
             absenceType="Episodic",
             episodicLeavePeriodDetail=episodic_leave_period_detail,
             requestStatus="Approved",
-        )
+        ),
+        AbsencePeriod(
+            id="PL-14449-0000002237",
+            reason="Pregnancy/Maternity",
+            reasonQualifier1="Foster Care",
+            reasonQualifier2="",
+            startDate=date(2021, 2, 1),
+            endDate=date(2021, 2, 15),
+            absenceType="Episodic",
+            episodicLeavePeriodDetail=episodic_leave_period_detail,
+            requestStatus="Approved",
+        ),
+        AbsencePeriod(
+            id="PL-14449-0000002237",
+            reason="Care for a Family Member",
+            reasonQualifier1="Adoption",
+            reasonQualifier2="",
+            startDate=date(2021, 1, 30),
+            endDate=date(2021, 2, 12),
+            absenceType="Episodic",
+            episodicLeavePeriodDetail=episodic_leave_period_detail,
+            requestStatus="Approved",
+        ),
     ]
 
 
@@ -322,6 +344,7 @@ def test_set_application_absence_and_leave_period(
         absence_details.absencePeriods[0].reasonQualifier1
     )
     assert application.pregnant_or_recent_birth
+    assert application.completed_time is None
 
     assert application.submitted_time == absence_details.creationDate
     assert application.employer_notification_date == absence_details.notificationDate
@@ -348,8 +371,9 @@ def test_set_application_absence_and_leave_period_without_open_absence_period(
     fineos_continuous_leave = absence_details_without_open_absence_period.reportedTimeOff[0]
     _compare_continuous_leave(application, continuous_leave, fineos_continuous_leave)
 
-    assert len(application.intermittent_leave_periods) == 1
+    assert len(application.intermittent_leave_periods) == 3
     assert application.has_intermittent_leave_periods
+
     intermittent_leave = application.intermittent_leave_periods[0]
     fineos_intermittent_leave = absence_details_without_open_absence_period.absencePeriods[0]
     _compare_intermittent_leave(application, intermittent_leave, fineos_intermittent_leave)
@@ -360,10 +384,15 @@ def test_set_application_absence_and_leave_period_without_open_absence_period(
     fineos_reduced_leave = absence_details_without_open_absence_period.reportedReducedSchedule[0]
     _compare_reduced_leave(application, reduced_leave, fineos_reduced_leave)
 
-    assert application.leave_reason_id is None
+    assert application.leave_reason_id == LeaveReason.get_id(
+        absence_details_without_open_absence_period.absencePeriods[1].reason
+    )
+    assert application.leave_reason_qualifier_id == LeaveReasonQualifier.get_id(
+        absence_details_without_open_absence_period.absencePeriods[1].reasonQualifier1
+    )
 
-    assert application.leave_reason_qualifier_id is None
-    assert application.pregnant_or_recent_birth is False
+    assert application.pregnant_or_recent_birth is True
+    assert application.completed_time is not None
 
     assert application.submitted_time == absence_details_without_open_absence_period.creationDate
     assert (

@@ -1138,24 +1138,48 @@ def _get_open_absence_period(absence_details: AbsenceDetails) -> Optional[Absenc
     return None
 
 
+def _get_latest_absence_period(absence_details: AbsenceDetails) -> Optional[AbsencePeriod]:
+    if absence_details.absencePeriods is None:
+        return None
+    absence_periods = sorted(absence_details.absencePeriods, key=lambda x: x.startDate)  # type: ignore
+    if len(absence_periods) > 0:
+        return absence_periods[-1]
+    return None
+
+
+def _get_absence_period_from_absence_details(
+    absence_details: AbsenceDetails, application: Application
+) -> Optional[AbsencePeriod]:
+    """
+    return Open Absence Period if there is one
+    if there isn't an open absence period the application is considered
+    completed and the function returns the latest closed absence period
+    if there is one
+    """
+    if absence_details.absencePeriods is None:
+        return None
+    absence_period = _get_open_absence_period(absence_details)
+    if absence_period is not None:
+        return absence_period
+    application.completed_time = utcnow()
+    return _get_latest_absence_period(absence_details)
+
+
 def set_application_absence_and_leave_period(
     fineos: AbstractFINEOSClient, fineos_web_id: str, application: Application, absence_id: str
 ) -> None:
     absence_details = fineos.get_absence(fineos_web_id, absence_id)
 
-    open_absence_period: Optional[AbsencePeriod] = None
-
     _set_continuous_leave_periods(application, absence_details)
     _set_intermittent_leave_periods(application, absence_details)
     _set_reduced_leave_periods(application, absence_details)
-    open_absence_period = _get_open_absence_period(absence_details)
-
-    if open_absence_period is not None:
-        if open_absence_period.reason is not None:
-            application.leave_reason_id = DBLeaveReason.get_id(open_absence_period.reason)
-        if open_absence_period.reasonQualifier1 is not None:
+    absence_period = _get_absence_period_from_absence_details(absence_details, application)
+    if absence_period is not None:
+        if absence_period.reason is not None:
+            application.leave_reason_id = DBLeaveReason.get_id(absence_period.reason)
+        if absence_period.reasonQualifier1 is not None:
             application.leave_reason_qualifier_id = LeaveReasonQualifier.get_id(
-                open_absence_period.reasonQualifier1
+                absence_period.reasonQualifier1
             )
         application.pregnant_or_recent_birth = (
             application.leave_reason_id == DBLeaveReason.PREGNANCY_MATERNITY.leave_reason_id

@@ -230,7 +230,7 @@ exports[`Employer dashboard renders a verification message in the table, when al
 
 exports[`Employer dashboard renders the banner if there are any unverified employers 1`] = `
 <div
-  aria-labelledby="alert-heading355"
+  aria-labelledby="alert-heading451"
   class="usa-alert usa-alert--warning"
   role="region"
   tabindex="-1"
@@ -240,7 +240,7 @@ exports[`Employer dashboard renders the banner if there are any unverified emplo
   >
     <h2
       class="usa-alert__heading font-heading-md text-bold"
-      id="alert-heading355"
+      id="alert-heading451"
     >
       Verify your account
     </h2>

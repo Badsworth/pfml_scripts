@@ -461,29 +461,10 @@ describe("Employer dashboard", () => {
     });
   });
 
-  it("displays number of active filters in Show Filters button", () => {
-    const user_leave_administrators = [
-      createMockUserLeaveAdministrator({
-        verified: true,
-      }),
-    ];
-    setup({
-      query: {
-        claim_status: "Pending",
-        employer_id: user_leave_administrators[0].employer_id,
-      },
-      userAttrs: {
-        // Include multiple LA's so Employer filter shows
-        user_leave_administrators,
-      },
-    });
-
-    expect(
-      screen.getByRole("button", { name: "Show filters (2)" })
-    ).toBeInTheDocument();
-  });
-
   it("sets initial filter form state from query prop", () => {
+    process.env.featureFlags = JSON.stringify({
+      employerShowMultiLeaveDashboard: true,
+    });
     // Include multiple LA's so Employer filter shows
     const user_leave_administrators = [
       createMockUserLeaveAdministrator({
@@ -496,7 +477,7 @@ describe("Employer dashboard", () => {
 
     setup({
       query: {
-        claim_status: "Approved,Closed",
+        request_decision: "approved",
         employer_id: user_leave_administrators[0].employer_id,
       },
       userAttrs: {
@@ -511,12 +492,14 @@ describe("Employer dashboard", () => {
     ).toHaveValue(
       `${user_leave_administrators[0].employer_dba} (${user_leave_administrators[0].employer_fein})`
     );
-    expect(screen.getByRole("checkbox", { name: /approved/i })).toBeChecked();
-    expect(screen.getByRole("checkbox", { name: /closed/i })).toBeChecked();
-    expect(screen.getByRole("checkbox", { name: /denied/i })).not.toBeChecked();
+    expect(screen.getByRole("radio", { name: /approved/i })).toBeChecked();
+    expect(screen.getByRole("radio", { name: /denied/i })).not.toBeChecked();
   });
 
-  it("updates query params when user changes filter to Approved and Closed", () => {
+  it("updates query params when user changes filter to Approved", () => {
+    process.env.featureFlags = JSON.stringify({
+      employerShowMultiLeaveDashboard: true,
+    });
     const { updateQuerySpy } = setup({
       paginationMeta: {
         page_offset: 2,
@@ -524,17 +507,19 @@ describe("Employer dashboard", () => {
     });
 
     userEvent.click(screen.getByRole("button", { name: /show filters/i }));
-    userEvent.click(screen.getByRole("checkbox", { name: "Approved" }));
-    userEvent.click(screen.getByRole("checkbox", { name: "Closed" }));
+    userEvent.click(screen.getByRole("radio", { name: "Approved" }));
     userEvent.click(screen.getByRole("button", { name: /apply/i }));
 
     expect(updateQuerySpy).toHaveBeenCalledWith({
-      claim_status: "Approved,Closed",
+      request_decision: "approved",
       page_offset: "1",
     });
   });
 
   it("resets query params when user clicks Reset action", () => {
+    process.env.featureFlags = JSON.stringify({
+      employerShowMultiLeaveDashboard: true,
+    });
     const user_leave_administrators = [
       createMockUserLeaveAdministrator({
         verified: true,
@@ -546,7 +531,7 @@ describe("Employer dashboard", () => {
 
     const { updateQuerySpy } = setup({
       query: {
-        claim_status: "Approved",
+        request_decision: "approved",
         employer_id: user_leave_administrators[0].employer_id,
       },
       userAttrs: {
@@ -575,7 +560,7 @@ describe("Employer dashboard", () => {
 
     const { updateQuerySpy } = setup({
       query: {
-        claim_status: "Approved,Closed",
+        request_decision: "approved",
         employer_id: user_leave_administrators[0].employer_id,
       },
       userAttrs: {
@@ -591,7 +576,7 @@ describe("Employer dashboard", () => {
 
     expect(updateQuerySpy).toHaveBeenLastCalledWith({
       page_offset: "1",
-      claim_status: "Approved,Closed",
+      request_decision: "approved",
     });
   });
 
