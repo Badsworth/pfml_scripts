@@ -28,7 +28,9 @@ exports[`Status LeaveDetails renders page separated by keys if object of absence
           Approved
         </span>
       </p>
-      <div>
+      <div
+        data-testid="leaveStatusMessage"
+      >
         <strong>
           This leave was approved.
         </strong>
@@ -72,7 +74,9 @@ exports[`Status LeaveDetails renders page separated by keys if object of absence
           Pending
         </span>
       </p>
-      <div>
+      <div
+        data-testid="leaveStatusMessage"
+      >
         <strong>
           This leave is being reviewed.
         </strong>
@@ -105,7 +109,9 @@ exports[`Status LeaveDetails renders page separated by keys if object of absence
           Withdrawn
         </span>
       </p>
-      <div>
+      <div
+        data-testid="leaveStatusMessage"
+      >
         <strong>
           This leave was withdrawn.
         </strong>
@@ -153,7 +159,9 @@ exports[`Status LeaveDetails renders page with one section if absenceDetails has
           Withdrawn
         </span>
       </p>
-      <div>
+      <div
+        data-testid="leaveStatusMessage"
+      >
         <strong>
           This leave was withdrawn.
         </strong>
@@ -625,6 +633,127 @@ exports[`Status renders the page with claim detail when there is absence_case_id
       </div>
     </div>
   </div>
+</div>
+`;
+
+exports[`Status status message displays the leaveStatusMessage on an application 1`] = `
+<div
+  data-testid="leaveStatusMessage"
+>
+  <strong>
+    This leave is being reviewed.
+  </strong>
+</div>
+`;
+
+exports[`Status status message displays the leaveStatusMessage on an application 2`] = `
+<div
+  data-testid="leaveStatusMessage"
+>
+  <strong>
+    This leave was withdrawn.
+  </strong>
+  <p>
+    You have withdrawn your application from the review process. If you want to apply for paid leave again, you can begin another application.
+  </p>
+  <p>
+    <a
+      href="/applications/get-ready"
+    >
+      Start another application
+    </a>
+  </p>
+</div>
+`;
+
+exports[`Status status message displays the leaveStatusMessage on an application 3`] = `
+<div
+  data-testid="leaveStatusMessage"
+>
+  <strong>
+    This leave was withdrawn.
+  </strong>
+  <p>
+    You have withdrawn your application from the review process. If you want to apply for paid leave again, you can begin another application.
+  </p>
+  <p>
+    <a
+      href="/applications/get-ready"
+    >
+      Start another application
+    </a>
+  </p>
+</div>
+`;
+
+exports[`Status status message displays the leaveStatusMessage on an application 4`] = `
+<div
+  data-testid="leaveStatusMessage"
+>
+  <strong>
+    This leave was cancelled.
+  </strong>
+  <p>
+    This application will no longer be processed. If you want to apply for paid leave again, you can begin another application.
+  </p>
+  <p>
+    <a
+      href="/applications/get-ready"
+    >
+      Start another application
+    </a>
+  </p>
+</div>
+`;
+
+exports[`Status status message displays the leaveStatusMessage on an application 5`] = `
+<div
+  data-testid="leaveStatusMessage"
+>
+  <strong>
+    This leave is being reviewed.
+  </strong>
+</div>
+`;
+
+exports[`Status status message displays the leaveStatusMessage on an application 6`] = `
+<div
+  data-testid="leaveStatusMessage"
+>
+  <strong>
+    This leave was approved.
+  </strong>
+  <p>
+    View your approval notice below for more details about your benefit amount, and how to appeal if your benefits appear incorrect. Learn more about the 
+    <a
+      href="https://www.mass.gov/how-to/appealing-a-denied-paid-family-or-medical-leave-claim"
+      rel="noopener noreferrer"
+      target="_blank"
+    >
+      appeal process
+    </a>
+    .
+  </p>
+</div>
+`;
+
+exports[`Status status message displays the leaveStatusMessage on an application 7`] = `
+<div
+  data-testid="leaveStatusMessage"
+>
+  <strong>
+    This leave is being reviewed.
+  </strong>
+</div>
+`;
+
+exports[`Status status message displays the leaveStatusMessage on an application 8`] = `
+<div
+  data-testid="leaveStatusMessage"
+>
+  <strong>
+    This leave is being reviewed.
+  </strong>
 </div>
 `;
 
