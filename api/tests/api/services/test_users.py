@@ -1,6 +1,8 @@
 from datetime import datetime
 from unittest import mock
 
+import pytest
+
 from massgov.pfml.api.models.common import Phone
 from massgov.pfml.api.models.users.requests import UserUpdateRequest
 from massgov.pfml.api.services.users import update_user
@@ -146,7 +148,7 @@ class TestUpdateUser:
 
     @mock.patch("massgov.pfml.api.services.users.handle_mfa_disabled")
     @mock.patch("massgov.pfml.api.services.users.logger", mock_logger)
-    def test_errors_in_handle_mfa_disabled_not_raised(
+    def test_errors_in_handle_mfa_disabled_not_raised_for_user(
         self, mock_handle_mfa_disabled, user, test_db_session,
     ):
         error = Exception("Unexpected failure")
@@ -161,6 +163,29 @@ class TestUpdateUser:
         update_user(test_db_session, user, update_request)
 
         mock_handle_mfa_disabled.assert_called_once_with(user, mock.ANY, "user")
+        self.mock_logger.error.assert_any_call(
+            "Error handling MFA disabled side effects", exc_info=error
+        )
+
+    @mock.patch("massgov.pfml.api.services.users.handle_mfa_disabled")
+    @mock.patch("massgov.pfml.api.services.users.logger", mock_logger)
+    def test_errors_in_handle_mfa_disabled_raised_for_non_user(
+        self, mock_handle_mfa_disabled, user, test_db_session,
+    ):
+        error = Exception("Unexpected failure")
+        mock_handle_mfa_disabled.side_effect = error
+
+        # enable MFA
+        update_request = UserUpdateRequest(mfa_delivery_preference="SMS")
+        update_user(test_db_session, user, update_request)
+
+        # disable MFA
+        update_request = UserUpdateRequest(mfa_delivery_preference="Opt Out")
+
+        with pytest.raises(Exception):
+            update_user(test_db_session, user, update_request, "admin")
+
+        mock_handle_mfa_disabled.assert_called_once_with(user, mock.ANY, "admin")
         self.mock_logger.error.assert_any_call(
             "Error handling MFA disabled side effects", exc_info=error
         )
