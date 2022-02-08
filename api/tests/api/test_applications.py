@@ -749,7 +749,7 @@ class TestApplicationsImport:
             json=valid_request_body,
         )
 
-        assert response.status_code == 500
+        assert response.status_code == 400
 
     def test_applications_import_has_previous_and_concurrent_leave_data(
         self, client, test_db_session, auth_token, claim, valid_request_body

@@ -23,7 +23,7 @@ from massgov.pfml.db.models.applications import (
     LeaveReason,
     LeaveReasonQualifier,
 )
-from massgov.pfml.db.models.employees import BankAccountType, Gender, PaymentMethod
+from massgov.pfml.db.models.employees import AbsenceReason, BankAccountType, Gender, PaymentMethod
 from massgov.pfml.db.models.factories import ApplicationFactory
 from massgov.pfml.fineos.models.customer_api import EForm, EFormAttribute, ModelEnum
 from massgov.pfml.fineos.models.customer_api.spec import (
@@ -414,10 +414,37 @@ def test_set_application_absence_and_leave_period_invalid_leave_reason(
     absence_details_invalid_leave_reason,
 ):
     mock_get_absence.return_value = absence_details_invalid_leave_reason
-    with pytest.raises(KeyError):
+    with pytest.raises(ValidationException) as exc:
         set_application_absence_and_leave_period(
             fineos_client, fineos_web_id, application, absence_case_id
         )
+    assert exc.value.errors == [
+        ValidationErrorDetail(
+            type=IssueType.invalid,
+            message="Absence period reason is not supported.",
+            field="leave_details.reason",
+        )
+    ]
+
+
+@mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_absence")
+def test_set_application_absence_and_leave_period_valid_but_unsupported_leave_reason(
+    mock_get_absence, fineos_client, fineos_web_id, absence_case_id, application, absence_details,
+):
+    valid_reason = AbsenceReason.MILITARY_CAREGIVER.absence_reason_description
+    absence_details.absencePeriods[0].reason = valid_reason
+    mock_get_absence.return_value = absence_details
+    with pytest.raises(ValidationException) as exc:
+        set_application_absence_and_leave_period(
+            fineos_client, fineos_web_id, application, absence_case_id
+        )
+    assert exc.value.errors == [
+        ValidationErrorDetail(
+            type=IssueType.invalid,
+            message="Absence period reason is not supported.",
+            field="leave_details.reason",
+        )
+    ]
 
 
 @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_absence")
@@ -569,13 +596,13 @@ def test_set_invalid_status_returns_error(
     ]
     with pytest.raises(ValidationException) as exc:
         set_employment_status(fineos_client, fineos_web_id, application, user)
-        assert exc.value.errors == [
-            ValidationErrorDetail(
-                type=IssueType.invalid,
-                message="Employment Status must be Active",
-                field="employment_status",
-            )
-        ]
+    assert exc.value.errors == [
+        ValidationErrorDetail(
+            type=IssueType.invalid,
+            message="Employment Status must be Active",
+            field="employment_status",
+        )
+    ]
 
 
 def test_set_payment_preference_fields(fineos_client, fineos_web_id, application, test_db_session):

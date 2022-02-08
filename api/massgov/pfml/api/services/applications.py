@@ -1183,7 +1183,30 @@ def set_application_absence_and_leave_period(
     absence_period = _get_absence_period_from_absence_details(absence_details, application)
     if absence_period is not None:
         if absence_period.reason is not None:
-            application.leave_reason_id = DBLeaveReason.get_id(absence_period.reason)
+            try:
+                leave_reason_id = DBLeaveReason.get_id(absence_period.reason)
+            except KeyError:
+                logger.warning(
+                    "Unsupported leave reason on absence period from FINEOS",
+                    extra={
+                        "fineos_web_id": fineos_web_id,
+                        "reason": absence_period.reason,
+                        "absence_case_id": (
+                            application.claim.fineos_absence_id if application.claim else None
+                        ),
+                    },
+                    exc_info=True,
+                )
+                raise ValidationException(
+                    errors=[
+                        ValidationErrorDetail(
+                            type=IssueType.invalid,
+                            message="Absence period reason is not supported.",
+                            field="leave_details.reason",
+                        )
+                    ]
+                )
+            application.leave_reason_id = leave_reason_id
         if absence_period.reasonQualifier1 is not None:
             application.leave_reason_qualifier_id = LeaveReasonQualifier.get_id(
                 absence_period.reasonQualifier1
