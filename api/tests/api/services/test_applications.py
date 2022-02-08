@@ -9,6 +9,7 @@ from massgov.pfml.api.services.applications import (
     set_customer_contact_detail_fields,
     set_customer_detail_fields,
     set_employment_status,
+    set_other_leaves,
     set_payment_preference_fields,
 )
 from massgov.pfml.api.validation.exceptions import (
@@ -24,6 +25,7 @@ from massgov.pfml.db.models.applications import (
 )
 from massgov.pfml.db.models.employees import BankAccountType, Gender, PaymentMethod
 from massgov.pfml.db.models.factories import ApplicationFactory
+from massgov.pfml.fineos.models.customer_api import EForm, EFormAttribute, ModelEnum
 from massgov.pfml.fineos.models.customer_api.spec import (
     AbsenceDetails,
     AbsencePeriod,
@@ -768,3 +770,159 @@ def test_set_customer_contact_detail_fields_with_no_contact_details_returned_fro
     set_customer_contact_detail_fields(fineos_client, fineos_web_id, application, test_db_session)
     assert application.phone is None
     assert application.phone_id is None
+
+
+def test_set_other_leaves(
+    fineos_client, fineos_web_id, application, test_db_session, absence_case_id
+):
+    set_other_leaves(fineos_client, fineos_web_id, application, test_db_session, absence_case_id)
+    assert application.has_previous_leaves_other_reason is True
+    assert application.has_previous_leaves_same_reason is False
+    assert application.has_concurrent_leave is True
+
+
+@mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.customer_get_eform_summary")
+def test_set_other_leaves_with_no_leaves(
+    mock_customer_get_eform_summary,
+    fineos_client,
+    fineos_web_id,
+    application,
+    test_db_session,
+    absence_case_id,
+):
+    mock_customer_get_eform_summary.return_value = []
+    set_other_leaves(fineos_client, fineos_web_id, application, test_db_session, absence_case_id)
+    assert application.has_previous_leaves_other_reason is False
+    assert application.has_previous_leaves_same_reason is False
+    assert application.has_concurrent_leave is False
+    assert application.concurrent_leave is None
+
+
+@mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.customer_get_eform")
+def test_set_other_leaves_with_only_concurrent_leave(
+    mock_customer_get_eform,
+    fineos_client,
+    fineos_web_id,
+    application,
+    test_db_session,
+    absence_case_id,
+):
+    mock_customer_get_eform.return_value = EForm(
+        eformId=211714,
+        eformType="Other Leaves - current version",
+        eformAttributes=[
+            # Minimum info needed to create Concurrent Leave:
+            EFormAttribute(
+                name="V2AccruedPLEmployer1",  # is_for_current_employer
+                enumValue=ModelEnum(domainName="PleaseSelectYesNo", instanceValue="Yes"),
+            ),
+        ],
+    )
+    set_other_leaves(fineos_client, fineos_web_id, application, test_db_session, absence_case_id)
+    assert application.has_previous_leaves_other_reason is False
+    assert application.has_previous_leaves_same_reason is False
+    assert application.has_concurrent_leave is True
+
+
+@mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.customer_get_eform")
+def test_set_other_leaves_with_only_previous_leave_same_reason(
+    mock_customer_get_eform,
+    fineos_client,
+    fineos_web_id,
+    application,
+    test_db_session,
+    absence_case_id,
+):
+    mock_customer_get_eform.return_value = EForm(
+        eformId=211714,
+        eformType="Other Leaves - current version",
+        eformAttributes=[
+            # Minimum info needed to create Previous Leave, same reason:
+            EFormAttribute(
+                name="V2Leave1",  # is_for_same_reason
+                enumValue=ModelEnum(domainName="PleaseSelectYesNo", instanceValue="Yes"),
+            ),
+            EFormAttribute(
+                name="V2LeaveFromEmployer1",  # is_for_current_employer
+                enumValue=ModelEnum(domainName="PleaseSelectYesNo", instanceValue="Yes"),
+            ),
+        ],
+    )
+
+    set_other_leaves(fineos_client, fineos_web_id, application, test_db_session, absence_case_id)
+    assert application.has_previous_leaves_other_reason is False
+    assert application.has_previous_leaves_same_reason is True
+    assert application.has_concurrent_leave is False
+    assert application.concurrent_leave is None
+
+
+@mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.customer_get_eform")
+def test_set_other_leaves_with_only_previous_leave_other_reason(
+    mock_customer_get_eform,
+    fineos_client,
+    fineos_web_id,
+    application,
+    test_db_session,
+    absence_case_id,
+):
+    mock_customer_get_eform.return_value = EForm(
+        eformId=211714,
+        eformType="Other Leaves - current version",
+        eformAttributes=[
+            # Minimum info needed to create Previous Leave, other reason:
+            EFormAttribute(
+                name="V2Leave1",  # is_for_same_reason
+                enumValue=ModelEnum(domainName="PleaseSelectYesNo", instanceValue="No"),
+            ),
+            EFormAttribute(
+                name="V2LeaveFromEmployer1",  # is_for_current_employer
+                enumValue=ModelEnum(domainName="PleaseSelectYesNo", instanceValue="Yes"),
+            ),
+        ],
+    )
+
+    set_other_leaves(fineos_client, fineos_web_id, application, test_db_session, absence_case_id)
+    assert application.has_previous_leaves_other_reason is True
+    assert application.has_previous_leaves_same_reason is False
+    assert application.has_concurrent_leave is False
+    assert application.concurrent_leave is None
+
+
+@mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.customer_get_eform")
+def test_set_other_leaves_with_both_types_of_previous_leave(
+    mock_customer_get_eform,
+    fineos_client,
+    fineos_web_id,
+    application,
+    test_db_session,
+    absence_case_id,
+):
+    mock_customer_get_eform.return_value = EForm(
+        eformId=211714,
+        eformType="Other Leaves - current version",
+        eformAttributes=[
+            # Minimum info needed to create Previous Leaves, both other and same reason:
+            EFormAttribute(
+                name="V2Leave1",  # is_for_same_reason
+                enumValue=ModelEnum(domainName="PleaseSelectYesNo", instanceValue="No"),
+            ),
+            EFormAttribute(
+                name="V2LeaveFromEmployer1",  # is_for_current_employer
+                enumValue=ModelEnum(domainName="PleaseSelectYesNo", instanceValue="Yes"),
+            ),
+            EFormAttribute(
+                name="V2Leave2",  # is_for_same_reason
+                enumValue=ModelEnum(domainName="PleaseSelectYesNo", instanceValue="Yes"),
+            ),
+            EFormAttribute(
+                name="V2LeaveFromEmployer2",  # is_for_current_employer
+                enumValue=ModelEnum(domainName="PleaseSelectYesNo", instanceValue="Yes"),
+            ),
+        ],
+    )
+
+    set_other_leaves(fineos_client, fineos_web_id, application, test_db_session, absence_case_id)
+    assert application.has_previous_leaves_other_reason is True
+    assert application.has_previous_leaves_same_reason is True
+    assert application.has_concurrent_leave is False
+    assert application.concurrent_leave is None

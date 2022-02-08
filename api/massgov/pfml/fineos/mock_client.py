@@ -23,8 +23,9 @@ from massgov.pfml.util.converters.json_to_obj import set_empty_dates_to_none
 
 from ..db.models.applications import PhoneType
 from . import client, exception, fineos_client, models
-from .mock.eform import MOCK_EFORMS
+from .mock.eform import MOCK_CUSTOMER_EFORMS, MOCK_EFORMS
 from .mock.field import fake_customer_no
+from .models.customer_api import EForm as CustomerEForm
 from .models.group_client_api import EForm
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
@@ -280,9 +281,15 @@ def mock_customer_contact_details():
 class MockFINEOSClient(client.AbstractFINEOSClient):
     """Mock FINEOS API client that returns fake responses."""
 
-    def __init__(self, mock_eforms: Iterable[EForm] = MOCK_EFORMS):
+    def __init__(
+        self,
+        mock_eforms: Iterable[EForm] = MOCK_EFORMS,
+        mock_customer_eforms: Iterable[CustomerEForm] = MOCK_CUSTOMER_EFORMS,
+    ):
         self.mock_eforms = mock_eforms
         self.mock_eform_map = {eform.eformId: eform for eform in mock_eforms}
+        self.mock_customer_eforms = mock_customer_eforms
+        self.mock_customer_eform_map = {eform.eformId: eform for eform in mock_customer_eforms}
 
     def read_employer(self, employer_fein: str) -> models.OCOrganisation:
         _capture_call("read_employer", None, employer_fein=employer_fein)
@@ -520,12 +527,35 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
             for eform in self.mock_eforms
         ]
 
+    def customer_get_eform_summary(
+        self, user_id: str, absence_id: str
+    ) -> List[models.customer_api.EFormSummary]:
+        _capture_call("customer_get_eform_summary", user_id, absence_id=absence_id)
+        return [
+            models.customer_api.EFormSummary(
+                eformId=eform.eformId,
+                eformTypeId="PE-11212-%010i" % eform.eformId,
+                effectiveDateFrom=None,
+                effectiveDateTo=None,
+                eformType=eform.eformType,
+            )
+            for eform in self.mock_customer_eforms
+        ]
+
     def get_eform(
         self, user_id: str, absence_id: str, eform_id: int
     ) -> models.group_client_api.EForm:
         _capture_call("get_eform", user_id, absence_id=absence_id, eform_id=eform_id)
         if eform_id in self.mock_eform_map:
             return self.mock_eform_map[eform_id]
+        raise exception.FINEOSForbidden("get_eform", 200, 403, "Permission denied")
+
+    def customer_get_eform(
+        self, user_id: str, absence_id: str, eform_id: int
+    ) -> models.customer_api.EForm:
+        _capture_call("customer_get_eform", user_id, absence_id=absence_id, eform_id=eform_id)
+        if eform_id in self.mock_customer_eform_map:
+            return self.mock_customer_eform_map[eform_id]
         raise exception.FINEOSForbidden("get_eform", 200, 403, "Permission denied")
 
     def create_eform(self, user_id: str, absence_id: str, eform: EFormBody) -> None:

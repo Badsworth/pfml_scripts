@@ -751,6 +751,26 @@ class TestApplicationsImport:
 
         assert response.status_code == 500
 
+    def test_applications_import_has_previous_and_concurrent_leave_data(
+        self, client, test_db_session, auth_token, claim, valid_request_body
+    ):
+        client.post(
+            "/v1/applications/import",
+            headers={"Authorization": f"Bearer {auth_token}"},
+            json=valid_request_body,
+        )
+        imported_application = (
+            test_db_session.query(Application).filter(Application.claim_id == claim.claim_id).one()
+        )
+
+        assert imported_application.has_previous_leaves_other_reason is True
+        assert imported_application.has_previous_leaves_same_reason is False
+        assert imported_application.has_concurrent_leave is True
+        assert imported_application.concurrent_leave is not None
+        assert type(imported_application.concurrent_leave) == ConcurrentLeave
+        assert len(imported_application.previous_leaves_other_reason) == 1
+        assert len(imported_application.previous_leaves_same_reason) == 0
+
 
 def test_applications_post_start_app(client, user, auth_token, test_db_session):
     response = client.post("/v1/applications", headers={"Authorization": f"Bearer {auth_token}"})

@@ -9,7 +9,6 @@ from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.exceptions import BadRequest, Conflict, Forbidden
 
 import massgov.pfml.api.models.applications.common as apps_common_io
-import massgov.pfml.api.models.claims.common as claims_common_io
 import massgov.pfml.api.models.common as common_io
 import massgov.pfml.api.util.response as response_util
 import massgov.pfml.db as db
@@ -22,6 +21,7 @@ from massgov.pfml.api.models.applications.common import LeaveReason, PaymentPref
 from massgov.pfml.api.models.applications.requests import ApplicationRequestBody
 from massgov.pfml.api.models.applications.responses import DocumentResponse
 from massgov.pfml.api.models.common import LookupEnum
+from massgov.pfml.api.services.administrator_fineos_actions import EformTypes
 from massgov.pfml.api.services.fineos_actions import get_documents
 from massgov.pfml.api.util.phone import convert_to_E164
 from massgov.pfml.api.util.response import Response
@@ -82,6 +82,10 @@ from massgov.pfml.fineos.models.customer_api.spec import (
     AbsencePeriod,
     ReportedReducedScheduleLeavePeriod,
     ReportedTimeOffLeavePeriod,
+)
+from massgov.pfml.fineos.transforms.from_fineos.eforms import (
+    TransformConcurrentLeaveFromOtherLeaveEform,
+    TransformPreviousLeaveFromOtherLeaveEform,
 )
 from massgov.pfml.util.datetime import utcnow
 from massgov.pfml.util.pydantic.types import Regexes
@@ -846,7 +850,7 @@ def set_concurrent_leave(
 
 def set_previous_leaves(
     db_session: db.Session,
-    api_previous_leaves: Optional[List[claims_common_io.PreviousLeave]],
+    api_previous_leaves: Optional[List[common_io.PreviousLeave]],
     application: Application,
     type: Literal["same_reason", "other_reason"],
 ) -> None:
@@ -1384,3 +1388,48 @@ def set_customer_contact_detail_fields(
 
     phone_to_create = create_common_io_phone_from_fineos(phone_number_from_fineos, db_session)
     add_or_update_phone(db_session, phone_to_create, application)
+
+
+def set_other_leaves(
+    fineos: massgov.pfml.fineos.AbstractFINEOSClient,
+    fineos_web_id: str,
+    application: Application,
+    db_session: db.Session,
+    absence_id: str,
+) -> None:
+    """
+    Retrieve other leaves from FINEOS and set for imported application fields
+    """
+    summaries = fineos.customer_get_eform_summary(fineos_web_id, absence_id)
+
+    for summary in summaries:
+        if summary.eformType != EformTypes.OTHER_LEAVES:
+            continue
+
+        previous_leaves: List[common_io.PreviousLeave] = []
+        concurrent_leave: Optional[common_io.ConcurrentLeave] = None
+
+        eform = fineos.customer_get_eform(fineos_web_id, absence_id, summary.eformId)
+
+        concurrent_leave = TransformConcurrentLeaveFromOtherLeaveEform.from_fineos(eform)
+        application.has_concurrent_leave = concurrent_leave is not None
+        set_concurrent_leave(db_session, concurrent_leave, application)
+
+        previous_leaves = TransformPreviousLeaveFromOtherLeaveEform.from_fineos(eform)
+        # Separate previous leaves according to type
+        other_leaves: List[common_io.PreviousLeave] = []
+        same_leaves: List[common_io.PreviousLeave] = []
+        for previous_leave in previous_leaves:
+            if previous_leave.type == "other_reason":
+                other_leaves.append(previous_leave)
+            elif previous_leave.type == "same_reason":
+                same_leaves.append(previous_leave)
+
+        application.has_previous_leaves_other_reason = len(other_leaves) > 0
+        application.has_previous_leaves_same_reason = len(same_leaves) > 0
+        set_previous_leaves(
+            db_session, other_leaves, application, "other_reason",
+        )
+        set_previous_leaves(
+            db_session, same_leaves, application, "same_reason",
+        )

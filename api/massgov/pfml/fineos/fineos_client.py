@@ -726,6 +726,27 @@ class FINEOSClient(client.AbstractFINEOSClient):
             set_empty_dates_to_none(item, ["effectiveDateFrom", "effectiveDateTo"])
         return pydantic.parse_obj_as(List[models.group_client_api.EFormSummary], json)
 
+    def customer_get_eform_summary(
+        self, user_id: str, absence_id: str
+    ) -> List[models.customer_api.EFormSummary]:
+        try:
+            response = self._customer_api(
+                "GET", f"customer/cases/{absence_id}/eforms", user_id, "customer_get_eform_summary"
+            )
+        except exception.FINEOSClientError as error:
+            logger.error(
+                "FINEOS Client Exception: customer_get_eform_summary",
+                extra={"method_name": "customer_get_eform_summary"},
+                exc_info=error,
+            )
+            error.method_name = "customer_get_eform_summary"
+            raise error
+        json = response.json()
+        # Workaround empty strings in response instead of null. These cause parse_obj to fail.
+        for item in json:
+            set_empty_dates_to_none(item, ["effectiveDateFrom", "effectiveDateTo"])
+        return pydantic.parse_obj_as(List[models.customer_api.EFormSummary], json)
+
     def get_eform(
         self, user_id: str, absence_id: str, eform_id: int
     ) -> models.group_client_api.EForm:
@@ -748,6 +769,29 @@ class FINEOSClient(client.AbstractFINEOSClient):
         for eformAttribute in json["eformAttributes"]:
             set_empty_dates_to_none(eformAttribute, ["dateValue"])
         return models.group_client_api.EForm.parse_obj(json)
+
+    def customer_get_eform(
+        self, user_id: str, absence_id: str, eform_id: int
+    ) -> models.customer_api.EForm:
+        try:
+            response = self._customer_api(
+                "GET",
+                f"customer/cases/{absence_id}/readEForm/{eform_id}",
+                user_id,
+                "customer_get_eform",
+            )
+        except exception.FINEOSClientError as error:
+            logger.error(
+                "FINEOS Client Exception: customer_get_eform",
+                extra={"method_name": "customer_get_eform"},
+                exc_info=error,
+            )
+            error.method_name = "customer_get_eform"
+            raise error
+        json = response.json()
+        for eformAttribute in json["eformAttributes"]:
+            set_empty_dates_to_none(eformAttribute, ["dateValue"])
+        return models.customer_api.EForm.parse_obj(json)
 
     def create_eform(self, user_id: str, absence_id: str, eform: EFormBody) -> None:
         encoded_eform_type = urllib.parse.quote(eform.eformType)
