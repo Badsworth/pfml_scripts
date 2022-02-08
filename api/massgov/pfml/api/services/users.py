@@ -65,6 +65,10 @@ def _update_mfa_preference(
         except Exception as e:
             logger.error("Error handling MFA disabled side effects", exc_info=e)
 
+            # only re-raise the error if the change wasn't made by a user in the portal
+            if updated_by != "user":
+                raise e
+
 
 def _update_mfa_preference_audit_trail(db_session: db.Session, user: User, updated_by: str) -> None:
     # when a user changes their security preferences
