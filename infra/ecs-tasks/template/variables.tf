@@ -366,3 +366,9 @@ variable "enforce_execute_sql_read_only" {
   type        = bool
   default     = true
 }
+
+variable "kms_key_id" {
+  description = "The ID of an AWS managed customer key (CMS)"
+  type        = string
+  default     = "alias/aws/sns"
+}

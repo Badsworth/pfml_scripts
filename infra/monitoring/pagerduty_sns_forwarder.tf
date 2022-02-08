@@ -1,7 +1,8 @@
 # Defines an SNS topic for low-priority cloudwatch alerts.
 resource "aws_sns_topic" "api-low-priority-alerts-topic" {
-  name         = "api-low-priority-alerts-topic"
-  display_name = "PFML API: Low Priority Alerts"
+  name              = "api-low-priority-alerts-topic"
+  kms_master_key_id = var.kms_key_id
+  display_name      = "PFML API: Low Priority Alerts"
   tags = merge(module.constants.common_tags, {
     environment = module.constants.environment_tags["prod"]
   })
@@ -9,8 +10,9 @@ resource "aws_sns_topic" "api-low-priority-alerts-topic" {
 
 # Defines an SNS topic for high-priority cloudwatch alerts.
 resource "aws_sns_topic" "api-high-priority-alerts-topic" {
-  name         = "api-high-priority-alerts-topic"
-  display_name = "PFML API: High Priority Alerts"
+  name              = "api-high-priority-alerts-topic"
+  kms_master_key_id = var.kms_key_id
+  display_name      = "PFML API: High Priority Alerts"
   tags = merge(module.constants.common_tags, {
     environment = module.constants.environment_tags["prod"]
   })

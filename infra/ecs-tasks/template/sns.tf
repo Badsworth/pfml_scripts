@@ -1,6 +1,7 @@
 resource "aws_sns_topic" "task_failure" {
-  name         = "mass-pfml-${var.environment_name}-task-failure"
-  display_name = "PFML API Layer: Task Failure Alerts"
+  name              = "mass-pfml-${var.environment_name}-task-failure"
+  kms_master_key_id = var.kms_key_id
+  display_name      = "PFML API Layer: Task Failure Alerts"
   tags = merge(module.constants.common_tags, {
     environment = module.constants.environment_tags[var.environment_name]
   })
