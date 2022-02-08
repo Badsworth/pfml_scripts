@@ -8,8 +8,8 @@ import {
   LeavePeriods,
   Submission,
 } from "../types";
-import { parseISO, format, min } from "date-fns";
 import { isNotNull } from "./typeUtils";
+import { parseISO, format, min } from "date-fns";
 
 export function extractLeavePeriod(
   { leave_details }: ApplicationRequestBody,

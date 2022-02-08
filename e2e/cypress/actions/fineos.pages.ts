@@ -51,12 +51,17 @@ import {
   parseISO,
   startOfWeek,
   subDays,
+  isBefore,
+  isAfter,
+  getHours,
+  addBusinessDays,
 } from "date-fns";
 import { DocumentUploadRequest } from "../../src/api";
 import { fineos } from ".";
 import { LeaveReason } from "../../src/generation/Claim";
 import { config } from "./common";
 import { FineosCorrespondanceType, FineosDocumentType } from "./fineos.enums";
+import { convertToTimeZone } from "date-fns-timezone";
 
 type StatusCategory =
   | "Applicability"
@@ -2138,6 +2143,61 @@ export function numToPaymentFormat(num: number): string {
   return `${new Intl.NumberFormat("en-US", {
     style: "decimal",
   }).format(num)}${decimal}`;
+}
+
+/**
+ * Function to determine payment processing dates when preventing overpayments.
+ * Note: This is intended to be used for this specific scenario, and won't be compatible with every payment under Amounts Pending
+ * Read more on preventing overpayments here: https://lwd.atlassian.net/browse/CPS-3115
+ * @returns Date
+ */
+export function calculatePaymentDatePreventingOP() {
+  const PFML_HOLIDAYS = [
+    "2022-02-21",
+    "2022-04-18",
+    "2022-05-30",
+    "2022-06-20",
+    "2022-07-04",
+    "2022-09-05",
+    "2022-10-10",
+    "2022-11-11",
+    "2022-11-24",
+    "2022-12-26",
+    "2023-01-02",
+    "2023-01-16",
+    "2023-02-20",
+    "2023-04-17",
+    "2023-05-29",
+    "2023-06-19",
+    "2023-07-04",
+    "2023-09-04",
+    "2023-10-09",
+    "2023-11-23",
+    "2023-12-25",
+  ] as const;
+
+  const estTimeHour = getHours(
+    convertToTimeZone(new Date(), {
+      timeZone: "America/New_York",
+    })
+  );
+  const isBeforeEndBusinessDay = estTimeHour < 17;
+  const afterNormalBusinessDays = addBusinessDays(
+    new Date(),
+    isBeforeEndBusinessDay ? 5 : 6
+  );
+  const hasHoliday = (holiday: Date) => {
+    return (
+      isAfter(holiday, subDays(new Date(), 1)) &&
+      isBefore(holiday, addDays(afterNormalBusinessDays, 1))
+    );
+  };
+  // account for holidays - which further delays the payment processing date
+  let totalHolidays = 0;
+  for (let i = 0; i < PFML_HOLIDAYS.length; i++) {
+    if (hasHoliday(parseISO(PFML_HOLIDAYS[i]))) totalHolidays += 1;
+  }
+  return addBusinessDays(afterNormalBusinessDays, totalHolidays);
 }
 
 class BenefitsExtensionPage {
