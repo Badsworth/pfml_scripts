@@ -1,7 +1,7 @@
 import re
 from datetime import date
 from enum import Enum
-from typing import Any, Callable, List, Optional, Set, Type, Union
+from typing import Any, Callable, List, Optional, Set, Type, Union, no_type_check
 
 from sqlalchemy import Column, and_, asc, desc, func, or_
 from sqlalchemy.orm import contains_eager
@@ -168,6 +168,16 @@ class GetClaimsQuery:
         filters = self.get_managed_requirement_status_filters(absence_statuses)
         if len(filters):
             self.query = self.query.filter(or_(*filters))
+
+    @no_type_check
+    def add_is_reviewable_filter(self, is_reviewable: str) -> None:
+        """
+        Filters claims by checking if they are reviewable or not.
+        """
+        if is_reviewable == "yes":
+            self.query = self.query.filter(Claim.soonest_open_requirement_date.isnot(None))
+        if is_reviewable == "no":
+            self.query = self.query.filter(Claim.soonest_open_requirement_date.is_(None))
 
     def add_request_decision_filter(self, request_decisions: Set[int]) -> None:
         filter = Claim.absence_periods.any(  # type: ignore

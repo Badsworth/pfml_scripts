@@ -436,6 +436,12 @@ paths:
             type: boolean
           description: A temporary boolean value used to allow smoke testers to see HRD dashboard
           required: false
+        - name: "is_reviewable"
+          in: query
+          schema:
+            type: string
+            enum: ["yes", "no"]
+          description: A string value used to check whether or not to filter claims where a review is requested for a leave admin.
         - name: "request_decision"
           in: query
           schema:

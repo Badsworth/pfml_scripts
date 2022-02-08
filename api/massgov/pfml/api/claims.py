@@ -509,6 +509,7 @@ def get_claims() -> flask.Response:
         flask.request.args.get("request_decision")
     )
     is_employer = can(READ, "EMPLOYER_API")
+    is_reviewable = flask.request.args.get("is_reviewable", type=str)
     is_pfml_crm_user = has_role_in(current_user, [Role.PFML_CRM])
     log_attributes = {}
     log_attributes.update(get_employer_log_attributes(current_user))
@@ -550,6 +551,7 @@ def get_claims() -> flask.Response:
                 query.add_employees_filter(employee_ids)
 
             query.add_managed_requirements_filter()
+
             if len(absence_statuses):
                 # Log the values from the query params rather than the enum groups they
                 # might equate to, since what is sent into the API will be more familiar
@@ -564,6 +566,9 @@ def get_claims() -> flask.Response:
                 query.add_search_filter(
                     escape_like(search_string)
                 )  # escape user input search string
+
+            if is_reviewable:
+                query.add_is_reviewable_filter(is_reviewable)
 
             if request_decisions:
                 query.add_request_decision_filter(request_decisions)
