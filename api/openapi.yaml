@@ -79,8 +79,12 @@ paths:
       summary: Remove a role from a user
       operationId: massgov.pfml.api.roles.roles_users_delete
       responses:
-        "204":
+        "200":
           description: Role deleted without issue
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessfulResponse"
         "400":
           $ref: "#/components/responses/BadRequest"
         "404":
@@ -428,6 +432,14 @@ paths:
           schema:
             type: boolean
           description: A temporary boolean value used to allow smoke testers to see HRD dashboard
+          required: false
+        - name: "request_decision"
+          in: query
+          schema:
+            type: string
+            enum: ["approved", "denied", "withdrawn", "pending", "cancelled"]
+          description: > 
+            request decision used in filtering, request_decision is a status associated with an absence_period
           required: false
       responses:
         "200":

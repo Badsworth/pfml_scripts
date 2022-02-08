@@ -159,10 +159,15 @@ const claimantFlow: {
         START_APPLICATION: routes.applications.start,
         SHOW_APPLICATIONS: routes.applications.index,
         /* We need this to trigger test coverage on
-         * the routes.user.convert page, which is
+         * the routes.user.convertToEmployer page, which is
          * otherwise isolated.
          */
-        CONVERT_EMPLOYER: routes.user.convert,
+        CONVERT_TO_EMPLOYER: routes.user.convertToEmployer,
+        /* We need this to trigger test coverage on
+         * the routes.user.convertToEmployee page, which is
+         * otherwise isolated.
+         */
+        CONVERT_TO_EMPLOYEE: routes.user.convertToEmployee,
       },
     },
     [routes.applications.start]: {

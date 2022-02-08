@@ -19,14 +19,14 @@ class PopulateRefundsStep(Step):
     def _populate_refunds(self) -> None:
         logger.info("1099 Documents - Populate Refunds Step")
 
-        # Get all overpayment data for the 1099 batch
-        overpayment_results = pfml_1099_util.get_overpayments(self.db_session)
-
         # Get the current batch
         batch = pfml_1099_util.get_current_1099_batch(self.db_session)
         if batch is None:
             logger.error("No current batch exists. This should never happen.")
             raise Exception("Batch cannot be empty at this point.")
+
+        # Get all overpayment data for the 1099 batch
+        overpayment_results = pfml_1099_util.get_overpayments(self.db_session, batch)
 
         try:
             # Create 1099 refund record for each overpayment

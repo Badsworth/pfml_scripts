@@ -63,7 +63,7 @@ export default class UsersApi extends BaseApi {
   /**
    * Convert a user to an employer
    */
-  convertUser = async (
+  convertUserToEmployer = async (
     user_id: string,
     postData: { employer_fein: string }
   ) => {

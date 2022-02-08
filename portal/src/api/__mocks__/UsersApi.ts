@@ -56,7 +56,7 @@ export const mockUpdateUser = jest.fn(() =>
   })
 );
 
-export const mockConvertUser = jest.fn(() =>
+export const mockConvertUserToEmployer = jest.fn(() =>
   Promise.resolve({
     success: true,
     user: createMockEmployer(),
@@ -67,5 +67,5 @@ export default jest.fn().mockImplementation(() => ({
   createUser: mockCreateUser,
   getCurrentUser: mockGetCurrentUser,
   updateUser: mockUpdateUser,
-  convertUser: mockConvertUser,
+  convertUserToEmployer: mockConvertUserToEmployer,
 }));

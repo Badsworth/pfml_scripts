@@ -148,7 +148,7 @@ export const Default = (
       ? []
       : times(25, () => {
           const absence_periods = times(
-            faker.datatype.number({ min: 1, max: 2 }),
+            faker.datatype.number({ min: 1, max: 3 }),
             () => createAbsencePeriod()
           );
 

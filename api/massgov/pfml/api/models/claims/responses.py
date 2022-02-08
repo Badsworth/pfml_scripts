@@ -145,6 +145,12 @@ class ClaimResponse(PydanticBaseModel):
         return claim_response
 
 
+class ClaimForPfmlCrmResponse(PydanticBaseModel):
+    fineos_absence_id: Optional[str]
+    employee: Optional[EmployeeBasicResponse]
+    fineos_notification_id: Optional[str]
+
+
 # This class is intended to show more granular data about a claim that is not shown in the dashboard,
 # where ClaimResponse is used. For now the detailed data is absence_periods and outstanding evidence.
 class DetailedClaimResponse(PydanticBaseModel):

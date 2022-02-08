@@ -20,7 +20,6 @@ from massgov.pfml.db.models.payments import (
     AuditReportAction,
     LkPaymentAuditReportType,
     PaymentAuditReportDetails,
-    PaymentAuditReportType,
 )
 from massgov.pfml.delegated_payments.audit.delegated_payment_audit_csv import (
     PAYMENT_AUDIT_CSV_HEADERS,
@@ -34,12 +33,6 @@ from massgov.pfml.delegated_payments.reporting.delegated_abstract_reporting impo
     ReportGroup,
 )
 from massgov.pfml.util.datetime import get_now_us_eastern, get_period_in_weeks
-
-# Specify an override for the notes to put if the
-# description on the audit report type doesn't match the message
-AUDIT_REPORT_NOTES_OVERRIDE = {
-    PaymentAuditReportType.DEPRECATED_MAX_WEEKLY_BENEFITS.payment_audit_report_type_id: "Weekly benefit amount exceeds $850"
-}
 
 
 class PaymentAuditRowError(Exception):
@@ -288,29 +281,30 @@ def get_payment_audit_report_details(
             staged_audit_report_detail.audit_report_type.payment_audit_report_type_description
         )
 
+        audit_report_column = (
+            staged_audit_report_detail.audit_report_type.payment_audit_report_column
+        )
+
         audit_report_action = (
             staged_audit_report_detail.audit_report_type.payment_audit_report_action
         )
 
         # Set the message in the correct column if the audit report action
         # dictates that we should populate a column
-        if AuditReportAction.should_populate_column(audit_report_action):
-            key = f"{audit_report_type.lower()}_details".replace(" ", "_")
+        if audit_report_column:
             details_dict = cast(Dict[str, Any], staged_audit_report_detail.details)
-            audit_report_details[key] = details_dict["message"]
+            audit_report_details[audit_report_column] = details_dict["message"]
 
         # The notes we add are based on the audit report description
         # unless an override is specified above for that particular type
-        notes_to_add = AUDIT_REPORT_NOTES_OVERRIDE.get(
-            staged_audit_report_detail.audit_report_type_id, audit_report_type
-        )
-        if AuditReportAction.is_rejected(audit_report_action):
+        notes_to_add = audit_report_type
+        if audit_report_action == AuditReportAction.REJECTED:
             rejected = True
             program_integrity_notes.append(f"{notes_to_add} (Rejected)")
-        elif AuditReportAction.is_skipped(audit_report_action):
+        elif audit_report_action == AuditReportAction.SKIPPED:
             skipped = True
             program_integrity_notes.append(f"{notes_to_add} (Skipped)")
-        elif AuditReportAction.is_informational(audit_report_action):
+        elif audit_report_action == AuditReportAction.INFORMATIONAL:
             program_integrity_notes.append(f"{notes_to_add}")
 
         # Mark the details row as processed

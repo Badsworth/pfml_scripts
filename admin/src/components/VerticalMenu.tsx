@@ -1,4 +1,5 @@
 import { useState, isValidElement } from "react";
+import { UrlObject } from "url";
 import Link from "next/link";
 
 export type Option = {
@@ -6,7 +7,7 @@ export type Option = {
   text: string;
   type: "button" | "link";
   onClick?: Function;
-  href?: string;
+  href?: string | UrlObject;
 };
 
 export type Props = {

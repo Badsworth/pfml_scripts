@@ -1,0 +1,188 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Filters renders leave details and is_reviewable filters 1`] = `
+<fieldset
+  class="usa-fieldset margin-top-3 usa-form-group"
+>
+  <legend
+    class="usa-label text-bold usa-legend font-heading-xs measure-5"
+  >
+    Leave details
+  </legend>
+  <div
+    class=""
+  >
+    <div
+      class="usa-radio measure-5 bg-transparent"
+    >
+      <input
+        class="usa-radio__input"
+        id="InputChoice87"
+        name="request_decision"
+        type="radio"
+        value="approved"
+      />
+      <label
+        class="usa-radio__label"
+        for="InputChoice87"
+      >
+        Approved
+      </label>
+    </div>
+    <div
+      class="usa-radio measure-5 bg-transparent"
+    >
+      <input
+        class="usa-radio__input"
+        id="InputChoice88"
+        name="request_decision"
+        type="radio"
+        value="cancelled"
+      />
+      <label
+        class="usa-radio__label"
+        for="InputChoice88"
+      >
+        Cancelled
+      </label>
+    </div>
+    <div
+      class="usa-radio measure-5 bg-transparent"
+    >
+      <input
+        class="usa-radio__input"
+        id="InputChoice89"
+        name="request_decision"
+        type="radio"
+        value="denied"
+      />
+      <label
+        class="usa-radio__label"
+        for="InputChoice89"
+      >
+        Denied
+      </label>
+    </div>
+    <div
+      class="usa-radio measure-5 bg-transparent"
+    >
+      <input
+        class="usa-radio__input"
+        id="InputChoice90"
+        name="request_decision"
+        type="radio"
+        value="pending"
+      />
+      <label
+        class="usa-radio__label"
+        for="InputChoice90"
+      >
+        Pending
+      </label>
+    </div>
+    <div
+      class="usa-radio measure-5 bg-transparent"
+    >
+      <input
+        class="usa-radio__input"
+        id="InputChoice91"
+        name="request_decision"
+        type="radio"
+        value="withdrawn"
+      />
+      <label
+        class="usa-radio__label"
+        for="InputChoice91"
+      >
+        Withdrawn
+      </label>
+    </div>
+    <div
+      class="usa-radio measure-5 bg-transparent"
+    >
+      <input
+        checked=""
+        class="usa-radio__input"
+        id="InputChoice92"
+        name="request_decision"
+        type="radio"
+        value=""
+      />
+      <label
+        class="usa-radio__label"
+        for="InputChoice92"
+      >
+        Show all
+      </label>
+    </div>
+  </div>
+</fieldset>
+`;
+
+exports[`Filters renders leave details and is_reviewable filters 2`] = `
+<fieldset
+  class="usa-fieldset margin-top-3 usa-form-group"
+>
+  <legend
+    class="usa-label text-bold usa-legend font-heading-xs measure-5"
+  >
+    Review requested
+  </legend>
+  <div
+    class=""
+  >
+    <div
+      class="usa-radio measure-5 bg-transparent"
+    >
+      <input
+        class="usa-radio__input"
+        id="InputChoice84"
+        name="is_reviewable"
+        type="radio"
+        value="yes"
+      />
+      <label
+        class="usa-radio__label"
+        for="InputChoice84"
+      >
+        Yes, review requested
+      </label>
+    </div>
+    <div
+      class="usa-radio measure-5 bg-transparent"
+    >
+      <input
+        class="usa-radio__input"
+        id="InputChoice85"
+        name="is_reviewable"
+        type="radio"
+        value="no"
+      />
+      <label
+        class="usa-radio__label"
+        for="InputChoice85"
+      >
+        No, review not needed
+      </label>
+    </div>
+    <div
+      class="usa-radio measure-5 bg-transparent"
+    >
+      <input
+        checked=""
+        class="usa-radio__input"
+        id="InputChoice86"
+        name="is_reviewable"
+        type="radio"
+        value=""
+      />
+      <label
+        class="usa-radio__label"
+        for="InputChoice86"
+      >
+        Show all
+      </label>
+    </div>
+  </div>
+</fieldset>
+`;

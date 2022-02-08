@@ -4,6 +4,8 @@
 
 import datetime
 
+from ..models.customer_api import EForm as CustomerEForm
+from ..models.customer_api import EFormAttribute as CustomerEFormAttribute
 from ..models.group_client_api import EForm, EFormAttribute, ModelEnum
 
 # Retrieved from DT2 using
@@ -182,6 +184,100 @@ MOCK_EFORM_OTHER_LEAVES = EForm(
     ],
 )
 
+MOCK_CUSTOMER_EFORM_OTHER_LEAVES = CustomerEForm(
+    eformId=211714,
+    eformType="Other Leaves - current version",
+    eformAttributes=[
+        CustomerEFormAttribute(name="V2Spacer1", stringValue=""),
+        CustomerEFormAttribute(name="V2Spacer5", stringValue=""),
+        CustomerEFormAttribute(name="V2Spacer4", stringValue=""),
+        CustomerEFormAttribute(name="V2Spacer7", stringValue=""),
+        CustomerEFormAttribute(name="V2Spacer6", stringValue=""),
+        CustomerEFormAttribute(name="V2Spacer9", stringValue=""),
+        CustomerEFormAttribute(
+            name="V2AccruedPLEmployer1",
+            enumValue=ModelEnum(domainName="PleaseSelectYesNo", instanceValue="Yes"),
+        ),
+        CustomerEFormAttribute(name="V2Spacer8", stringValue=""),
+        CustomerEFormAttribute(name="V2TotalHours1", integerValue=40),
+        CustomerEFormAttribute(name="V2AccruedEndDate1", dateValue=datetime.date(2021, 12, 19)),
+        CustomerEFormAttribute(
+            name="V2Leave1",
+            enumValue=ModelEnum(domainName="PleaseSelectYesNo", instanceValue="No"),
+        ),
+        CustomerEFormAttribute(
+            name="V2MinutesWorked1",
+            enumValue=ModelEnum(domainName="15MinuteIncrements", instanceValue="00"),
+        ),
+        CustomerEFormAttribute(
+            name="V2AccruedReasons",
+            stringValue="This includes vacation time, sick time, personal time. Reminder: you "
+            "can use accrued paid leave for the 7-day waiting period with no "
+            "impact to your PFML benefit.\n\nThe following are qualifying reasons "
+            "for taking paid or unpaid leave: \n\nYou had a serious health "
+            "condition, including illness, injury, or pregnancy. If you were "
+            "sick, you were out of work for at least 3 days and needed continuing "
+            "care from your health care provider or needed inpatient care. "
+            "\n\nYou bonded with your child after birth or placement. \n\nYou "
+            "needed to manage family affairs while a family member is on active "
+            "duty in the armed forces. \n\nYou needed to care for a family member "
+            "who serves in the armed forces. \n\nYou needed to care for a family "
+            "member with a serious health condition.",
+        ),
+        CustomerEFormAttribute(
+            name="V2AccruedPaidLeave1",
+            enumValue=ModelEnum(domainName="PleaseSelectYesNo", instanceValue="Yes"),
+        ),
+        CustomerEFormAttribute(
+            name="V2LeaveFromEmployer1",
+            enumValue=ModelEnum(domainName="PleaseSelectYesNo", instanceValue="Yes"),
+        ),
+        CustomerEFormAttribute(name="V2Header1", stringValue="Previous leaves"),
+        CustomerEFormAttribute(
+            name="V2Header2", stringValue="Employer-sponsored Accrued Paid Leave"
+        ),
+        CustomerEFormAttribute(
+            name="V2OtherLeavesPastLeaveEndDate1", dateValue=datetime.date(2021, 10, 24),
+        ),
+        CustomerEFormAttribute(
+            name="V2TotalMinutes1",
+            enumValue=ModelEnum(domainName="15MinuteIncrements", instanceValue="00"),
+        ),
+        CustomerEFormAttribute(
+            name="V2QualifyingReason1",
+            enumValue=ModelEnum(
+                domainName="QualifyingReasons",
+                instanceValue="Bonding with my child after birth or placement",
+            ),
+        ),
+        CustomerEFormAttribute(
+            name="V2Applies1",
+            enumValue=ModelEnum(domainName="PleaseSelectYesNo", instanceValue="Yes"),
+        ),
+        CustomerEFormAttribute(
+            name="V2Applies2",
+            enumValue=ModelEnum(domainName="PleaseSelectYesNo", instanceValue="Please Select"),
+        ),
+        CustomerEFormAttribute(
+            name="V2OtherLeavesPastLeaveStartDate1", dateValue=datetime.date(2021, 9, 12),
+        ),
+        CustomerEFormAttribute(name="V2HoursWorked1", integerValue=20),
+        CustomerEFormAttribute(name="V2Spacer10", stringValue=""),
+        CustomerEFormAttribute(
+            name="V2Reasons",
+            stringValue="You had a serious health condition, including illness, injury, "
+            "or pregnancy. If you were sick, you were out of work for at least 3 "
+            "days and needed continuing care from your health care provider or "
+            "needed inpatient care. \n\nYou bonded with your child after birth or "
+            "placement. \n\nYou needed to manage family affairs while a family "
+            "member is on active duty in the armed forces. \n\nYou needed to care "
+            "for a family member who serves in the armed forces. \n\nYou needed "
+            "to care for a family member with a serious health condition.",
+        ),
+        CustomerEFormAttribute(name="V2AccruedStartDate1", dateValue=datetime.date(2021, 11, 7)),
+    ],
+)
+
 MOCK_EFORM_EMPLOYER_RESPONSE_V2 = EForm(
     eformId=211721,
     eformType="Employer Response to Leave Request - current version",
@@ -308,3 +404,5 @@ MOCK_EFORMS = (
     MOCK_EFORM_OTHER_LEAVES,
     MOCK_EFORM_EMPLOYER_RESPONSE_V2,
 )
+
+MOCK_CUSTOMER_EFORMS = (MOCK_CUSTOMER_EFORM_OTHER_LEAVES,)

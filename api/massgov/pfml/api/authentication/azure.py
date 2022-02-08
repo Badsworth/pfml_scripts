@@ -102,4 +102,7 @@ def create_azure_client_config(
         except ValidationError as err:
             logger.info("Azure AD is not configured", exc_info=err)
             return None
+    if not azure_settings.client_id:
+        logger.info("Azure AD client id is empty")
+        return None
     return AzureClientConfig(azure_settings)

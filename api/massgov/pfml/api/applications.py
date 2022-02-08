@@ -1,6 +1,6 @@
 import base64
 import tempfile
-from uuid import UUID
+from uuid import UUID, uuid4
 
 import connexion
 import newrelic.agent
@@ -138,7 +138,7 @@ def applications_import():
             status_code=Forbidden, message="Application import not currently available", errors=[]
         ).to_api_response()
 
-    application = Application()
+    application = Application(application_id=uuid4())
     ensure(CREATE, application)
 
     user = app.current_user()
@@ -146,16 +146,20 @@ def applications_import():
 
     body = connexion.request.json
     application_import_request = ApplicationImportRequestBody.parse_obj(body)
+
     claim = get_claim_from_db(application_import_request.absence_case_id)
 
     application_rules.validate_application_import_request_for_claim(
         application_import_request, claim,
     )
+    assert application_import_request.absence_case_id is not None
+
     error = applications_service.claim_is_valid_for_application_import(claim)
     if error is not None:
         return error.to_api_response()
 
     with app.db_session() as db_session:
+        db_session.add(application)
         fineos = massgov.pfml.fineos.create_client()
         # we have already check that the claim is not None in
         # claim_is_valid_for_application_import
@@ -166,7 +170,7 @@ def applications_import():
             fineos, claim.employee_tax_identifier, application.employer_fein, db_session,  # type: ignore
         )
         applications_service.set_application_absence_and_leave_period(
-            fineos, fineos_web_id, application, application_import_request.absence_case_id  # type: ignore
+            fineos, fineos_web_id, application, application_import_request.absence_case_id
         )
         applications_service.set_customer_detail_fields(
             fineos, fineos_web_id, application, db_session
@@ -178,7 +182,14 @@ def applications_import():
         applications_service.set_payment_preference_fields(
             fineos, fineos_web_id, application, db_session
         )
-        db_session.add(application)
+        applications_service.set_other_leaves(
+            fineos,
+            fineos_web_id,
+            application,
+            db_session,
+            application_import_request.absence_case_id,
+        )
+        db_session.refresh(application)
         db_session.commit()
 
     log_attributes = get_application_log_attributes(application)

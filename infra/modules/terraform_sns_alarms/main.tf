@@ -28,12 +28,13 @@ provider "newrelic" {
 #  newrelic_baseline_error_rate/main.tf
 #  add to backlog
 locals {
-  app_name = "aws-sns"
-
-  low_priority_channel_key     = var.low_priority_nr_integration_key
-  high_priority_channel_key    = var.high_priority_nr_integration_key
-  violation_time_limit_seconds = 86400 # 24 hours
-  default_aggregation_window   = 300   # 5 minutes
-  one_hour                     = local.default_aggregation_window * 12
-  sns_failure_log_group_name   = "sns/${data.aws_region.current.name}/${data.aws_caller_identity.current.account_id}/DirectPublishToPhoneNumber/Failure"
+  low_priority_channel_key            = var.low_priority_nr_integration_key
+  high_priority_channel_key           = var.high_priority_nr_integration_key
+  violation_time_limit_seconds        = 86400 # 24 hours
+  default_aggregation_window          = 300   # 5 minutes
+  one_hour                            = local.default_aggregation_window * 12
+  two_hours                           = local.one_hour * 2
+  phone_carrier_unavailable_threshold = 25
+  blocked_as_spam_threshold           = 10
+  sns_failure_log_group_name          = "sns/${data.aws_region.current.name}/${data.aws_caller_identity.current.account_id}/DirectPublishToPhoneNumber/Failure"
 }

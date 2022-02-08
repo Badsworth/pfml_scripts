@@ -19,7 +19,12 @@ from massgov.pfml.db.models.employees import (
     StateLog,
 )
 from massgov.pfml.db.models.factories import LinkSplitPaymentFactory, PaymentFactory
-from massgov.pfml.db.models.payments import FineosWritebackDetails, FineosWritebackTransactionStatus
+from massgov.pfml.db.models.payments import (
+    AUDIT_REJECT_NOTE_TO_WRITEBACK_TRANSACTION_STATUS,
+    AUDIT_SKIPPED_NOTE_TO_WRITEBACK_TRANSACTION_STATUS,
+    FineosWritebackDetails,
+    FineosWritebackTransactionStatus,
+)
 from massgov.pfml.delegated_payments.audit.delegated_payment_audit_csv import (
     PAYMENT_AUDIT_CSV_HEADERS,
     PaymentAuditCSV,
@@ -31,8 +36,6 @@ from massgov.pfml.delegated_payments.audit.delegated_payment_audit_util import (
 from massgov.pfml.delegated_payments.audit.delegated_payment_rejects import (
     ACCEPTED_OUTCOME,
     ACCEPTED_STATE,
-    AUDIT_REJECT_NOTE_TO_WRITEBACK_STATUS,
-    AUDIT_SKIPPED_NOTE_TO_WRITEBACK_STATUS,
     NOT_SAMPLED_PAYMENT_NEXT_STATE_BY_CURRENT_STATE,
     NOT_SAMPLED_PAYMENT_OUTCOME_BY_CURRENT_STATE,
     NOT_SAMPLED_STATE_TRANSITIONS,
@@ -411,9 +414,12 @@ def test_convert_reject_notes_to_writeback_status_rejected_scenarios(
 ):
     test_cases = []
 
-    for (reject_note, expected_status) in AUDIT_REJECT_NOTE_TO_WRITEBACK_STATUS.items():
+    for (
+        reject_notes,
+        transaction_status,
+    ) in AUDIT_REJECT_NOTE_TO_WRITEBACK_TRANSACTION_STATUS.items():
         test_cases.append(
-            {"reject_notes": reject_note, "expected_status": expected_status,}
+            {"reject_notes": reject_notes, "expected_status": transaction_status,}
         )
 
     # Close matches
@@ -468,9 +474,12 @@ def test_convert_reject_notes_to_writeback_status_skipped_scenarios(
 ):
     test_cases = []
 
-    for (reject_note, expected_status) in AUDIT_SKIPPED_NOTE_TO_WRITEBACK_STATUS.items():
+    for (
+        reject_notes,
+        transaction_status,
+    ) in AUDIT_SKIPPED_NOTE_TO_WRITEBACK_TRANSACTION_STATUS.items():
         test_cases.append(
-            {"reject_notes": reject_note, "expected_status": expected_status,}
+            {"reject_notes": reject_notes, "expected_status": transaction_status,}
         )
 
     # Close matches

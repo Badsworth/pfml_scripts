@@ -495,7 +495,7 @@ export const LeaveDetails = ({
                       request_decision={request_decision}
                     />
                   </p>
-                  <div>
+                  <div data-testid="leaveStatusMessage">
                     <Trans
                       i18nKey="pages.claimsStatus.leaveStatusMessage"
                       tOptions={{ context: request_decision }}

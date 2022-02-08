@@ -1,4 +1,8 @@
 import {
+  AbsencePeriod,
+  AbsencePeriodRequestDecision,
+} from "../../../../src/models/AbsencePeriod";
+import {
   BenefitsApplicationDocument,
   DocumentType,
 } from "../../../../src/models/Document";
@@ -7,7 +11,6 @@ import Status, {
 } from "../../../../src/pages/applications/status/index";
 import { cleanup, render, screen } from "@testing-library/react";
 import { createAbsencePeriod, renderPage } from "../../../test-utils";
-import { AbsencePeriod } from "../../../../src/models/AbsencePeriod";
 import ApiResourceCollection from "src/models/ApiResourceCollection";
 import AppErrorInfo from "../../../../src/models/AppErrorInfo";
 import { AppLogic } from "../../../../src/hooks/useAppLogic";
@@ -1165,5 +1168,33 @@ describe("Status", () => {
       expect(manageApplication).toBeInTheDocument();
       expect(manageApplication).toMatchSnapshot();
     });
+  });
+
+  describe("status message", () => {
+    it.each(Object.values(AbsencePeriodRequestDecision))(
+      "displays the leaveStatusMessage on an application",
+      () => {
+        // cleanup();
+        renderPage(
+          Status,
+          {
+            addCustomSetup: setupHelper({
+              ...defaultClaimDetail,
+              has_paid_payments: false,
+              absence_periods: [
+                createAbsencePeriod({
+                  period_type: "Continuous",
+                  reason: LeaveReason.medical,
+                }),
+              ],
+            }),
+          },
+          props
+        );
+        const leaveStatusMessage = screen.getByTestId("leaveStatusMessage");
+        expect(leaveStatusMessage).toBeInTheDocument();
+        expect(leaveStatusMessage).toMatchSnapshot();
+      }
+    );
   });
 });

@@ -549,10 +549,11 @@ const errors = {
     attemptsLimitExceeded_updatePhone:
       "We couldn't add your phone number because you've exceeded the number of allowed attempts. You can try again later.",
     code: {
+      attemptsExceeded:
+        "Your account is temporarily locked because of too many failed verification attempts. Wait 15 minutes before trying again.",
       deliveryFailure:
         "We encountered an error while sending the verification code. Try again.",
-      expired:
-        "Sorry, your verification code has expired or has already been used.",
+      expired: "Your verification code has expired or has already been used.",
       invalidMFACode:
         "The security code you entered is invalid. Make sure the code matches the security code we texted to you.",
       mismatchException:
@@ -683,7 +684,7 @@ const errors = {
       phone_number: {
         // Used by the mfa service, more than 12 digits
         international_number:
-          "Sorry, we don't support international phone numbers yet. Enter a U.S. phone number to set up additional login verifications.",
+          "We don't support international phone numbers yet. Enter a U.S. phone number to set up additional login verifications.",
         // There are 10 digits
         pattern: "Enter a valid phone number",
         // Used by the mfa service, field cant be blank
@@ -2086,6 +2087,8 @@ const pages: {
       "<strong>This leave was cancelled.</strong><p>This application will no longer be processed. If you want to apply for paid leave again, you can begin another application.</p><p><application-link>Start another application</application-link></p>",
     leaveStatusMessage_Denied:
       "<strong>This leave was denied.</strong><p>View your denial notice below for more details and an explanation of the appeal process.</p><p>If you would like to appeal, you must submit your request within 10 calendar days of the date on your denial notice. Learn more about the <request-appeal-link>appeal process</request-appeal-link>.</p>",
+    "leaveStatusMessage_In Review":
+      "<strong>We’re reviewing your requested changes or appeal for this leave.</strong>",
     leaveStatusMessage_Pending:
       "<strong>This leave is being reviewed.</strong>",
     leaveStatusMessage_Withdrawn:
@@ -2292,6 +2295,13 @@ const pages: {
     sectionLabel: "How would you describe your work schedule?",
     title: "$t(shared.claimsEmploymentInfoTitle)",
   },
+  convertToEmployee: {
+    alertDescription:
+      'Converting your account from "employer" to "employee" is irreversible and will not be possible if your account has been verified.',
+    alertHeading: "This action is irreversible!",
+    submit: "Convert account",
+    title: "Convert to employee account",
+  },
   convertToEmployer: {
     alertDescription:
       'Converting your account from "employee" to "employer" is irreversible and will not be possible if any claims have been created, are in-progress, or are completed.',
@@ -2436,6 +2446,17 @@ const pages: {
     filterNavLabel: "Filters:",
     filterOrgsLabel: "Organizations",
     filterRemove: "Remove filter:",
+    filterRequestDecisionLabel: "Leave details",
+    filterRequestDecision_all: "Show all",
+    filterRequestDecision_approved: "Approved",
+    filterRequestDecision_cancelled: "Cancelled",
+    filterRequestDecision_denied: "Denied",
+    filterRequestDecision_pending: "Pending",
+    filterRequestDecision_withdrawn: "Withdrawn",
+    filterReviewableLabel: "Review requested",
+    filterReviewable_all: "Show all",
+    filterReviewable_no: "No, review not needed",
+    filterReviewable_yes: "Yes, review requested",
     filterStatusChoice_Approved: "$t(shared.absenceCaseStatus_approved)",
     filterStatusChoice_Closed: "$t(shared.absenceCaseStatus_closed)",
     filterStatusChoice_Declined: "$t(shared.absenceCaseStatus_denied)",
@@ -2448,6 +2469,7 @@ const pages: {
     filtersToggle: "Show filters",
     filtersToggle_expanded: "Hide filters",
     noClaimResults: "No applications on file",
+    numAbsencePeriodsHidden: "+ {{hiddenCount}} more",
     respondBy: "Respond by {{ date }}",
     reviewAction: "Review Application",
     searchLabel: "Search for employee name or application ID",
@@ -2567,6 +2589,8 @@ const pages: {
       "<p>Apply by calling the Department of Family and Medical Leave Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> if <strong>any</strong> of the following are true:</p><ul><li>You are self-employed or unemployed and you are applying for paid leave</li><li>You need paid family leave to care for a family member who serves in the armed forces</li><li>You need paid family leave to manage family affairs when a family member is on active duty in the armed forces</li></ul>",
     alertPhoneHeading: "Apply by phone",
     applicationsLink: "View all applications",
+    convertDescription: "Your account type is now converted.",
+    convertHeading: "Success",
     createClaimButton: "Create an application",
     stepOne:
       "<p>If you can, tell your employer at least 30 days before your leave begins. If you need to take leave right away, tell your employer as soon as possible.</p><p>Once you tell your employer, you have the right to apply and your job is protected. Make a note of when you notified your employer. You will need to provide this date in your leave application.</p>",

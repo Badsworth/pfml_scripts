@@ -7,7 +7,8 @@
   font-family: inherit;
   font-size: 1em;
   line-height: 1.14;
-  padding: 0.53em 1.09em;
+  // Top and bottom padding is uneven so text appears centered.
+  padding: 0.55em 1.09em 0.51em;
   text-decoration: none;
 }
 

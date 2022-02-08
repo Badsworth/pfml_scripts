@@ -41,7 +41,7 @@ def roles_users_delete():
                 ).to_api_response()
             remove_leave_admins_and_role(db_session, user)
             return response_util.success_response(
-                data=None, message="Role was deleted from user successfully", status_code=204,
+                message="Role was deleted from user successfully", status_code=200, data={},
             ).to_api_response()
     logger.warning(
         "Unsupported role deletion", extra=dict(role_description=role_description, user_id=user_id),

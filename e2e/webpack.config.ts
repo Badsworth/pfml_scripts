@@ -2,6 +2,9 @@ module.exports = {
   mode: "development",
   resolve: {
     extensions: [".ts", ".js"],
+    fallback: {
+      path: require.resolve("path-browserify"),
+    },
   },
   module: {
     rules: [

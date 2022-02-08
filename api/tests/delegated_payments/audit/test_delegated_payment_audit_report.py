@@ -143,13 +143,6 @@ def test_get_payment_audit_report_details(test_db_session, initialize_factories_
         None,
         test_db_session,
     )
-    stage_payment_audit_report_details(
-        payment,
-        PaymentAuditReportType.LEAVE_PLAN_IN_REVIEW,
-        "Leave Plan In Review Test Message",  # Not used
-        None,
-        test_db_session,
-    )
 
     audit_report_time = get_now_us_eastern()
 
@@ -161,15 +154,16 @@ def test_get_payment_audit_report_details(test_db_session, initialize_factories_
     assert audit_report_details.dua_additional_income_details == "DUA Reduction Test Message"
     assert audit_report_details.dia_additional_income_details == "DIA Reduction Test Message"
     assert audit_report_details.dor_fineos_name_mismatch_details == "Name mismatch Test Message"
-    assert audit_report_details.skipped_by_program_integrity
+    assert audit_report_details.rejected_by_program_integrity is False
+    assert audit_report_details.skipped_by_program_integrity is False
     assert (
         audit_report_details.rejected_notes
-        == f"{PaymentAuditReportType.DUA_ADDITIONAL_INCOME.payment_audit_report_type_description}, {PaymentAuditReportType.DIA_ADDITIONAL_INCOME.payment_audit_report_type_description}, {PaymentAuditReportType.DOR_FINEOS_NAME_MISMATCH.payment_audit_report_type_description}, {PaymentAuditReportType.LEAVE_PLAN_IN_REVIEW.payment_audit_report_type_description} (Skipped)"
+        == f"{PaymentAuditReportType.DUA_ADDITIONAL_INCOME.payment_audit_report_type_description}, {PaymentAuditReportType.DIA_ADDITIONAL_INCOME.payment_audit_report_type_description}, {PaymentAuditReportType.DOR_FINEOS_NAME_MISMATCH.payment_audit_report_type_description}"
     )
 
     # test that the audit report time was set
     audit_report_details = test_db_session.query(PaymentAuditReportDetails).all()
-    assert len(audit_report_details) == 4
+    assert len(audit_report_details) == 3
     for audit_report_detail in audit_report_details:
         assert audit_report_detail.added_to_audit_report_at == audit_report_time
 

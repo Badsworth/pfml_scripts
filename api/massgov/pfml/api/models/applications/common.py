@@ -31,7 +31,7 @@ class Occupation(str, LookupEnum):
     health_care = "Health Care"
 
 
-class EligibilityEmploymentStatus(str):
+class EligibilityEmploymentStatus(str, LookupEnum):
     employed = "Employed"
     unemployed = "Unemployed"
     self_employed = "Self-Employed"

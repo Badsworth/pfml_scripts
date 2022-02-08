@@ -3,4 +3,5 @@ module.exports = {
   images: {
     domains: ["via.placeholder.com"],
   },
+  trailingSlash: true,
 };

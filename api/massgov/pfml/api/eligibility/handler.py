@@ -105,7 +105,6 @@ def eligibility_post():
             db_session,
             employee_id,
             employer_id,
-            fein,
             leave_start_date,
             application_submitted_date,
             employment_status,

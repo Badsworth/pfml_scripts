@@ -44,7 +44,6 @@ describe("ClaimsApi", () => {
 
     it("includes order and filter params in request", async () => {
       mockFetch();
-
       const claimsApi = new ClaimsApi();
       await claimsApi.getClaims(
         2,
@@ -58,8 +57,31 @@ describe("ClaimsApi", () => {
         }
       );
 
-      expect(global.fetch).toHaveBeenCalledWith(
+      // TODO (PORTAL-1560): Remove this assertion, once the deprecated filters are removed
+      expect(global.fetch).toHaveBeenLastCalledWith(
         `${process.env.apiUrl}/claims?page_offset=2&order_by=employee&order_direction=descending&employer_id=mock-employer-id&claim_status=Approved%2CPending`,
+        expect.objectContaining({
+          headers: expect.any(Object),
+          method: "GET",
+        })
+      );
+
+      mockFetch();
+      await claimsApi.getClaims(
+        2,
+        {
+          order_by: "employee",
+          order_direction: "descending",
+        },
+        {
+          employer_id: "mock-employer-id",
+          is_reviewable: "yes",
+          request_decision: "approved",
+        }
+      );
+
+      expect(global.fetch).toHaveBeenLastCalledWith(
+        `${process.env.apiUrl}/claims?page_offset=2&order_by=employee&order_direction=descending&employer_id=mock-employer-id&is_reviewable=yes&request_decision=approved`,
         expect.objectContaining({
           headers: expect.any(Object),
           method: "GET",

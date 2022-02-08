@@ -117,3 +117,20 @@ export async function gotoCase(
     throw new Error("Page title should include case ID");
   }
 }
+
+export async function gotoEmployer(
+  page: playwright.Page,
+  id: string
+): Promise<void> {
+  await page.click("button#us-button");
+  await page.click(
+    "#universal-search-dropdown li[data-icon='icon-organisation']"
+  );
+  await page.fill("input#universal-search", id);
+  await page.waitForSelector("div#universal-search_listbox", {
+    state: "visible",
+  });
+  await page.click(
+    "div#universal-search_listbox div.tt-dataset-universalSearch div"
+  );
+}

@@ -1,7 +1,3 @@
-output "sns_spending_critical_alarm_arn" {
-  value = aws_cloudwatch_metric_alarm.sns_spending_critical.arn
-}
-
 output "sms_monthly_spend_limit_topic_arn" {
   value = aws_sns_topic.sms_monthly_spend_limit.arn
 }
