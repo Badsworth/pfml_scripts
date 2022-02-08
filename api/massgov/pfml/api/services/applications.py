@@ -1409,7 +1409,7 @@ def set_customer_contact_detail_fields(
         raise ValidationException(
             errors=[
                 ValidationErrorDetail(
-                    type=IssueType.invalid,
+                    type=IssueType.incorrect,
                     message="An issue occurred while trying to import the application",
                 )
             ]

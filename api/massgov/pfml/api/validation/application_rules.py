@@ -1449,12 +1449,15 @@ def validate_application_import_request_for_claim(
         raise ValidationException(required_field_issues)
 
     if claim is None:
+        logger.info(
+            "application import failure - claim not found",
+            extra={"absence_case_id": body.absence_case_id},
+        )
         raise ValidationException(
             [
                 ValidationErrorDetail(
-                    message="Application not found for the given ID.",
-                    type=IssueType.object_not_found,
-                    field="absence_case_id",
+                    message="An issue occurred while trying to import the application",
+                    type=IssueType.incorrect,
                 )
             ]
         )
@@ -1462,12 +1465,15 @@ def validate_application_import_request_for_claim(
     # Only validate the tax_id when the claim has one set. A separate validator handles the case
     # where the claim.employee_tax_identifier is not set.
     if claim.employee_tax_identifier and claim.employee_tax_identifier != body.tax_identifier:
+        logger.info(
+            "application import failure - tax_identifier mismatch",
+            extra={"absence_case_id": body.absence_case_id, "claim_id": claim.claim_id,},
+        )
         raise ValidationException(
             [
                 ValidationErrorDetail(
+                    message="An issue occurred while trying to import the application",
                     type=IssueType.incorrect,
-                    message="tax_identifier does not match our records",
-                    field="tax_identifier",
                 )
             ]
         )
