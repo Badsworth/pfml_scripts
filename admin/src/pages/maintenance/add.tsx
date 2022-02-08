@@ -282,26 +282,23 @@ export default function Maintenance() {
     };
 
     postAdminFlagsByName({ name: "maintenance" }, flag)
-      .then(
-        () => {
-          // Include query param for success message.
-          router.push("/maintenance?saved=true");
-        },
-        (e) => {
-          if (e instanceof HttpError) {
-            const errors =
-              (e.data?.errors as { field: string; message: string }[]) ?? [];
-            errors.map((error) => {
-              if (error.field in values) {
-                actions.setFieldError(error.field, error.message);
-              }
-            });
-          }
-        },
-      )
-      .finally(() => {
-        actions.setSubmitting(false);
-      });
+      .then(() => router.push("/maintenance?saved=true"))
+      .catch((error) => {
+        if (error instanceof HttpError) {
+          const errors =
+            (error.data?.errors as { field: string; message: string }[]) ?? [];
+          errors.map((error) => {
+            const field =
+              error.field === "start" || error.field === "end"
+                ? `${error.field}_datetime`
+                : error.field;
+            if (field in values) {
+              actions.setFieldError(field, error.message);
+            }
+          });
+        }
+      })
+      .finally(() => actions.setSubmitting(false));
   };
 
   return (
