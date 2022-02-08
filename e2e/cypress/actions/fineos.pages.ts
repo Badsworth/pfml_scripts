@@ -979,6 +979,13 @@ class TasksPage {
     waitForAjaxComplete();
     return this;
   }
+
+  returnSubTasksTab(): this {
+    cy.get(
+      'td[id$="_FINEOS.WorkManager.Activities.ViewTasks.AbsenceCase_TasksView_cell"]'
+    ).click();
+    return this;
+  }
 }
 
 /**
