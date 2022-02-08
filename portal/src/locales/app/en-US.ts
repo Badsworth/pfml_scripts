@@ -2295,6 +2295,13 @@ const pages: {
     sectionLabel: "How would you describe your work schedule?",
     title: "$t(shared.claimsEmploymentInfoTitle)",
   },
+  convertToEmployee: {
+    alertDescription:
+      'Converting your account from "employer" to "employee" is irreversible and will not be possible if your account has been verified.',
+    alertHeading: "This action is irreversible!",
+    submit: "Convert account",
+    title: "Convert to employee account",
+  },
   convertToEmployer: {
     alertDescription:
       'Converting your account from "employee" to "employer" is irreversible and will not be possible if any claims have been created, are in-progress, or are completed.',
@@ -2582,6 +2589,8 @@ const pages: {
       "<p>Apply by calling the Department of Family and Medical Leave Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> if <strong>any</strong> of the following are true:</p><ul><li>You are self-employed or unemployed and you are applying for paid leave</li><li>You need paid family leave to care for a family member who serves in the armed forces</li><li>You need paid family leave to manage family affairs when a family member is on active duty in the armed forces</li></ul>",
     alertPhoneHeading: "Apply by phone",
     applicationsLink: "View all applications",
+    convertDescription: "Your account type is now converted.",
+    convertHeading: "Success",
     createClaimButton: "Create an application",
     stepOne:
       "<p>If you can, tell your employer at least 30 days before your leave begins. If you need to take leave right away, tell your employer as soon as possible.</p><p>Once you tell your employer, you have the right to apply and your job is protected. Make a note of when you notified your employer. You will need to provide this date in your leave application.</p>",

@@ -79,8 +79,12 @@ paths:
       summary: Remove a role from a user
       operationId: massgov.pfml.api.roles.roles_users_delete
       responses:
-        "204":
+        "200":
           description: Role deleted without issue
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessfulResponse"
         "400":
           $ref: "#/components/responses/BadRequest"
         "404":

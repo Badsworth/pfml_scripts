@@ -32,7 +32,7 @@ def test_roles_delete_convert_to_claimant_success(
     response = client.delete(
         "v1/roles", headers={"Authorization": f"Bearer {employer_auth_token}"}, json=body,
     )
-    assert response.status_code == 204
+    assert response.status_code == 200
     test_db_session.refresh(employer_user)
 
     assert len(employer_user.roles) == 0

@@ -10,10 +10,21 @@ import routes from "../routes";
 
 export default {
   states: {
-    [routes.user.convert]: {
+    [routes.user.convertToEmployer]: {
       meta: {},
       on: {
         PREVENT_CONVERSION: routes.applications.getReady,
+        /* We cannot move between 2 different flows due to
+         * claimant test only using claimant state, therefore,
+         * we have no access to redirect to employer pages
+         */
+        // CONTINUE: routes.employers.organizations,
+      },
+    },
+    [routes.user.convertToEmployee]: {
+      meta: {},
+      on: {
+        PREVENT_CONVERSION: routes.employers.dashboard,
         /* We cannot move between 2 different flows due to
          * claimant test only using claimant state, therefore,
          * we have no access to redirect to employer pages

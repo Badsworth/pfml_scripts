@@ -16,7 +16,10 @@ import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
 
 export interface GetReadyProps extends WithBenefitsApplicationsProps {
-  query: { smsMfaConfirmed?: string };
+  query: {
+    smsMfaConfirmed?: string;
+    account_converted?: string;
+  };
 }
 
 export const GetReady = (props: GetReadyProps) => {
@@ -24,6 +27,7 @@ export const GetReady = (props: GetReadyProps) => {
   const { t } = useTranslation();
 
   const hasClaims = !claims.isEmpty;
+  const accountConverted = query?.account_converted === "true";
 
   const iconClassName =
     "margin-right-1 text-secondary text-middle margin-top-neg-05";
@@ -39,6 +43,15 @@ export const GetReady = (props: GetReadyProps) => {
 
   return (
     <React.Fragment>
+      {accountConverted && (
+        <Alert
+          className="margin-bottom-3"
+          heading={t("pages.getReady.convertHeading")}
+          state="success"
+        >
+          {t("pages.getReady.convertDescription")}
+        </Alert>
+      )}
       {hasClaims && (
         <Link href={appLogic.portalFlow.getNextPageRoute("SHOW_APPLICATIONS")}>
           <a className="display-inline-block margin-bottom-5">

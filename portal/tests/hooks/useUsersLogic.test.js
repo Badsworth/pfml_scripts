@@ -3,6 +3,7 @@ import User, { RoleDescription, UserRole } from "../../src/models/User";
 import { act, renderHook } from "@testing-library/react-hooks";
 import AppErrorInfo from "../../src/models/AppErrorInfo";
 import { NetworkError } from "../../src/errors";
+import RolesApi from "../../src/api/RolesApi";
 import UsersApi from "../../src/api/UsersApi";
 import { mockRouter } from "next/router";
 import routes from "../../src/routes";
@@ -10,6 +11,7 @@ import useAppErrorsLogic from "../../src/hooks/useAppErrorsLogic";
 import usePortalFlow from "../../src/hooks/usePortalFlow";
 import useUsersLogic from "../../src/hooks/useUsersLogic";
 
+jest.mock("../../src/api/RolesApi");
 jest.mock("../../src/api/UsersApi");
 jest.mock("../../src/services/mfa", () => {
   const originalModule = jest.requireActual("../../src/services/mfa");
@@ -22,7 +24,13 @@ jest.mock("../../src/services/mfa", () => {
 jest.mock("next/router");
 
 describe("useUsersLogic", () => {
-  let appErrorsLogic, goToSpy, isLoggedIn, portalFlow, usersApi, usersLogic;
+  let appErrorsLogic,
+    goToSpy,
+    isLoggedIn,
+    portalFlow,
+    rolesApi,
+    usersApi,
+    usersLogic;
 
   async function preloadUser(user) {
     await act(async () => {
@@ -49,6 +57,7 @@ describe("useUsersLogic", () => {
     // of getCurrentUser and updateUser so this will reference the same
     // jest.fn mocks that are used in the hook.
     usersApi = new UsersApi();
+    rolesApi = new RolesApi();
     isLoggedIn = true;
     jest.spyOn(console, "error").mockImplementationOnce(jest.fn());
   });
@@ -399,7 +408,7 @@ describe("useUsersLogic", () => {
     });
   });
 
-  describe("convertUser", () => {
+  describe("convertUserToEmployer", () => {
     const user_id = "mock-user-id";
     const postData = { employer_fein: "12-3456789" };
 
@@ -407,12 +416,15 @@ describe("useUsersLogic", () => {
       setup();
 
       await act(async () => {
-        await usersLogic.convertUser(user_id, postData);
+        await usersLogic.convertUserToEmployer(user_id, postData);
       });
     });
 
     it("converts user role in the api", () => {
-      expect(usersApi.convertUser).toHaveBeenCalledWith(user_id, postData);
+      expect(usersApi.convertUserToEmployer).toHaveBeenCalledWith(
+        user_id,
+        postData
+      );
     });
 
     it("receives user as employer", () => {
@@ -427,7 +439,7 @@ describe("useUsersLogic", () => {
     });
 
     it("goes to next page", () => {
-      expect(mockRouter.push).toHaveBeenCalled();
+      expect(mockRouter.replace).toHaveBeenCalled();
     });
 
     describe("when errors exist", () => {
@@ -437,7 +449,7 @@ describe("useUsersLogic", () => {
         });
 
         await act(async () => {
-          await usersLogic.convertUser(user_id, postData);
+          await usersLogic.convertUserToEmployer(user_id, postData);
         });
       });
 
@@ -448,12 +460,68 @@ describe("useUsersLogic", () => {
 
     describe("when api errors", () => {
       it("catches error", async () => {
-        usersApi.convertUser.mockImplementationOnce(() => {
+        usersApi.convertUserToEmployer.mockImplementationOnce(() => {
           throw new NetworkError();
         });
 
         await act(async () => {
-          await usersLogic.convertUser(user_id, postData);
+          await usersLogic.convertUserToEmployer(user_id, postData);
+        });
+
+        expect(appErrorsLogic.appErrors[0].name).toEqual(NetworkError.name);
+      });
+    });
+  });
+
+  describe("convertUserToEmployee", () => {
+    const user_id = "mock-user-id";
+
+    beforeEach(async () => {
+      setup();
+
+      await act(async () => {
+        await usersLogic.convertUserToEmployee(user_id);
+      });
+    });
+
+    it("converts user role in the api", () => {
+      expect(rolesApi.deleteEmployerRole).toHaveBeenCalledWith(user_id);
+    });
+
+    it("receives user as employee", () => {
+      expect(usersLogic.user).toBeInstanceOf(User);
+      expect(usersLogic.user.roles.length).toBe(0);
+      expect(usersLogic.user.user_leave_administrators.length).toBe(0);
+    });
+
+    it("goes to next page", () => {
+      expect(mockRouter.replace).toHaveBeenCalled();
+    });
+
+    describe("when errors exist", () => {
+      beforeEach(async () => {
+        act(() => {
+          appErrorsLogic.setAppErrors([new AppErrorInfo()]);
+        });
+
+        await act(async () => {
+          await usersLogic.convertUserToEmployer(user_id);
+        });
+      });
+
+      it("clears errors", () => {
+        expect(appErrorsLogic.appErrors).toHaveLength(0);
+      });
+    });
+
+    describe("when api errors", () => {
+      it("catches error", async () => {
+        usersApi.convertUserToEmployer.mockImplementationOnce(() => {
+          throw new NetworkError();
+        });
+
+        await act(async () => {
+          await usersLogic.convertUserToEmployer(user_id);
         });
 
         expect(appErrorsLogic.appErrors[0].name).toEqual(NetworkError.name);
