@@ -9,6 +9,7 @@ const routes = {
     claims: "/claims",
     employers: "/employers",
     payments: "/payments",
+    roles: "/roles",
     users: "/users",
   },
   applications: {
@@ -215,7 +216,8 @@ const routes = {
   },
   user: {
     consentToDataSharing: "/user/consent-to-data-sharing",
-    convert: "/user/convert-to-employer",
+    convertToEmployee: "/user/convert-to-employee",
+    convertToEmployer: "/user/convert-to-employer",
     settings: "/user/settings",
   },
 };

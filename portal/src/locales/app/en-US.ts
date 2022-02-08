@@ -2087,6 +2087,8 @@ const pages: {
       "<strong>This leave was cancelled.</strong><p>This application will no longer be processed. If you want to apply for paid leave again, you can begin another application.</p><p><application-link>Start another application</application-link></p>",
     leaveStatusMessage_Denied:
       "<strong>This leave was denied.</strong><p>View your denial notice below for more details and an explanation of the appeal process.</p><p>If you would like to appeal, you must submit your request within 10 calendar days of the date on your denial notice. Learn more about the <request-appeal-link>appeal process</request-appeal-link>.</p>",
+    "leaveStatusMessage_In Review":
+      "<strong>We’re reviewing your requested changes or appeal for this leave.</strong>",
     leaveStatusMessage_Pending:
       "<strong>This leave is being reviewed.</strong>",
     leaveStatusMessage_Withdrawn:
@@ -2292,6 +2294,13 @@ const pages: {
     choiceLabel_variable: "My schedule is not consistent from week to week.",
     sectionLabel: "How would you describe your work schedule?",
     title: "$t(shared.claimsEmploymentInfoTitle)",
+  },
+  convertToEmployee: {
+    alertDescription:
+      'Converting your account from "employer" to "employee" is irreversible and will not be possible if your account has been verified.',
+    alertHeading: "This action is irreversible!",
+    submit: "Convert account",
+    title: "Convert to employee account",
   },
   convertToEmployer: {
     alertDescription:
@@ -2580,6 +2589,8 @@ const pages: {
       "<p>Apply by calling the Department of Family and Medical Leave Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> if <strong>any</strong> of the following are true:</p><ul><li>You are self-employed or unemployed and you are applying for paid leave</li><li>You need paid family leave to care for a family member who serves in the armed forces</li><li>You need paid family leave to manage family affairs when a family member is on active duty in the armed forces</li></ul>",
     alertPhoneHeading: "Apply by phone",
     applicationsLink: "View all applications",
+    convertDescription: "Your account type is now converted.",
+    convertHeading: "Success",
     createClaimButton: "Create an application",
     stepOne:
       "<p>If you can, tell your employer at least 30 days before your leave begins. If you need to take leave right away, tell your employer as soon as possible.</p><p>Once you tell your employer, you have the right to apply and your job is protected. Make a note of when you notified your employer. You will need to provide this date in your leave application.</p>",

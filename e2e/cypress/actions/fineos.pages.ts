@@ -1894,8 +1894,8 @@ class PaidLeavePage {
   assertAmountsPending(amountsPending: Payment[]): this {
     this.onTab("Financials", "Payment History", "Amounts Pending");
     if (!amountsPending.length) return this;
-    // Get the table
     cy.contains("table.WidgetPanel", "Amounts Pending")
+      // Get the table
       .find("table.ListTable")
       .within(() => {
         amountsPending.forEach((payment) => {
@@ -2097,6 +2097,31 @@ class PaidLeavePage {
         `Expected the Assigned To display the following "${assign}"`
       ).to.have.text(assign);
     });
+    return this;
+  }
+
+  /**
+   * Modifies payment processing date for the first payment under amounts pending.
+   * @param date - Optional date to set payment for payment processing. Defaults to new Date()
+   * @returns PaidLeavePage
+   */
+  editPaymentProcessingDate(date = new Date()): this {
+    this.onTab("Financials", "Payment History", "Amounts Pending");
+    waitForAjaxComplete();
+    cy.get('input[type="submit"][value="Edit"]').click();
+    waitForAjaxComplete();
+    cy.get(
+      'input[type="checkbox"][id$="overrideprocessingdate_CHECKBOX"]'
+    ).click({ force: true });
+    waitForAjaxComplete();
+    cy.wait(350);
+    cy.get('input[type="text"][id$="processingDate"]').type(
+      `{selectAll}{backspace}${format(date, "MM/dd/yyyy")}`,
+      { force: true }
+    );
+    clickBottomWidgetButton();
+    // confirm that payment processing date has been changed
+    cy.get(`td:nth-child(3):contains(${format(date, "MM/dd/yyyy")})`);
     return this;
   }
 }

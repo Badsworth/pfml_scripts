@@ -125,9 +125,21 @@ class AbstractFINEOSClient(abc.ABC, metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
+    def customer_get_eform_summary(
+        self, user_id: str, absence_id: str
+    ) -> List[models.customer_api.EFormSummary]:
+        pass
+
+    @abc.abstractmethod
     def get_eform(
         self, user_id: str, absence_id: str, eform_id: int
     ) -> models.group_client_api.EForm:
+        pass
+
+    @abc.abstractmethod
+    def customer_get_eform(
+        self, user_id: str, absence_id: str, eform_id: int
+    ) -> models.customer_api.EForm:
         pass
 
     def create_eform(self, user_id: str, absence_id: str, eform: EFormBody) -> None:

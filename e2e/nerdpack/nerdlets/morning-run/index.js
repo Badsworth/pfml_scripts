@@ -97,7 +97,7 @@ class EnvSummaryView extends React.Component {
             return r;
           }, []);
           let query_integration = `SELECT count(*)
-                                   FROM IntegrationTestResult FACET file, title, environment, passed
+                                   FROM IntegrationTestResult FACET file, title, environment, passed, status
                                    WHERE runId IN (${runIds
                                      .map((i) => `'${i}'`)
                                      .join(", ")})
@@ -218,7 +218,7 @@ class EnvSummaryView extends React.Component {
                         r[file].env[a.environment] = r[file].env[
                           a.environment
                         ] || { failed: 0, total: 0 };
-                        if (a.passed === "false") {
+                        if (a.status === "failed") {
                           r[file].pass = false;
                           r[file].env[a.environment].failed++;
                         }
@@ -263,9 +263,10 @@ class EnvSummaryView extends React.Component {
               {this.state.envs.map((env) => {
                 if (byEnv[env]) {
                   let query_integration_per_env = `SELECT count(*)
-                                                   FROM IntegrationTestResult FACET file, title
+                                                   FROM IntegrationTestResult FACET file, title, status
                                                    WHERE runId='${byEnv[env].runId}'
                                                      AND passed is false
+                                                     AND status != 'pending'
                                                      SINCE 1 month ago`;
                   return [
                     <div>
@@ -431,8 +432,6 @@ export default class MorningRunNerdlet extends React.Component {
   };
 
   render() {
-    const where = this.getFilters();
-
     var now = new Date(); // now
 
     now.setHours(0); // set hours to 0
@@ -461,7 +460,7 @@ export default class MorningRunNerdlet extends React.Component {
       />,
       <PlatformStateContext.Consumer>
         {(platformState) => {
-          return [
+          return (
             <div className={"E2E-morning-run"}>
               <div>
                 <h2>Filtered Overview</h2>
@@ -479,13 +478,8 @@ export default class MorningRunNerdlet extends React.Component {
                 where={this.getFiltersTags()}
                 envs={this.getEnvsArray()}
               />
-            </div>,
-            <ErrorsListWithOverview
-              accountId={platformState.accountId}
-              since={since}
-              where={where}
-            />,
-          ];
+            </div>
+          );
         }}
       </PlatformStateContext.Consumer>,
     ];

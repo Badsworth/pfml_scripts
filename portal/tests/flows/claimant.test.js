@@ -30,7 +30,12 @@ const machineTests = {
       test: () => {},
     },
   },
-  [routes.user.convert]: {
+  [routes.user.convertToEmployer]: {
+    meta: {
+      test: () => {},
+    },
+  },
+  [routes.user.convertToEmployee]: {
     meta: {
       test: () => {},
     },
@@ -477,7 +482,8 @@ describe("claimFlowConfigs", () => {
   const testModel = createModel(routingMachine).withEvents({
     CONSENT_TO_DATA_SHARING: {},
     PREVENT_CONVERSION: {},
-    CONVERT_EMPLOYER: {},
+    CONVERT_TO_EMPLOYER: {},
+    CONVERT_TO_EMPLOYEE: {},
     CONTINUE: {},
     CREATE_CLAIM: {},
     EMPLOYER_INFORMATION: {},

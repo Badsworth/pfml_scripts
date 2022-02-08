@@ -100,7 +100,7 @@ const useAuthLogic = ({
     }
 
     try {
-      trackAuthRequest("forgotPassword");
+      tracker.trackAuthRequest("forgotPassword");
       await Auth.forgotPassword(trimmedUsername);
       tracker.markFetchRequestEnd();
 
@@ -140,7 +140,7 @@ const useAuthLogic = ({
     }
 
     try {
-      trackAuthRequest("signIn");
+      tracker.trackAuthRequest("signIn");
       const currentUser = await Auth.signIn(trimmedUsername, password);
       setCognitoUser(currentUser);
       tracker.markFetchRequestEnd();
@@ -192,7 +192,7 @@ const useAuthLogic = ({
     }
 
     try {
-      trackAuthRequest("confirmSignIn");
+      tracker.trackAuthRequest("confirmSignIn");
       await Auth.confirmSignIn(cognitoUser, trimmedCode, "SMS_MFA");
       tracker.markFetchRequestEnd();
     } catch (error) {
@@ -235,7 +235,7 @@ const useAuthLogic = ({
     //    - https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_GlobalSignOut.html
     //    - https://github.com/aws-amplify/amplify-js/issues/3435
     try {
-      trackAuthRequest("signOut");
+      tracker.trackAuthRequest("signOut");
       await Auth.signOut({ global: true });
       tracker.markFetchRequestEnd();
     } catch (error) {
@@ -377,7 +377,7 @@ const useAuthLogic = ({
     }
 
     try {
-      trackAuthRequest("resendSignUp");
+      tracker.trackAuthRequest("resendSignUp");
       await Auth.resendSignUp(trimmedUsername);
       tracker.markFetchRequestEnd();
 
@@ -427,7 +427,7 @@ const useAuthLogic = ({
     password = ""
   ) => {
     try {
-      trackAuthRequest("forgotPasswordSubmit");
+      tracker.trackAuthRequest("forgotPasswordSubmit");
       await Auth.forgotPasswordSubmit(username, code, password);
       tracker.markFetchRequestEnd();
 
@@ -449,7 +449,7 @@ const useAuthLogic = ({
    */
   const verifyAccountInCognito = async (username = "", code = "") => {
     try {
-      trackAuthRequest("confirmSignUp");
+      tracker.trackAuthRequest("confirmSignUp");
       await Auth.confirmSignUp(username, code);
       tracker.markFetchRequestEnd();
 
@@ -732,14 +732,6 @@ function getNotAuthorizedExceptionIssue(
   }
 
   return { message: error.message };
-}
-
-/**
- * Ensure Cognito AJAX requests are traceable in New Relic
- * @param action - name of the Cognito method being called
- */
-function trackAuthRequest(action: string) {
-  tracker.trackFetchRequest(`cognito ${action}`);
 }
 
 export default useAuthLogic;

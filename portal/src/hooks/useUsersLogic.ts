@@ -7,6 +7,7 @@ import routes, { isApplicationsRoute, isEmployersRoute } from "../routes";
 import { useMemo, useState } from "react";
 import { AppErrorsLogic } from "./useAppErrorsLogic";
 import { PortalFlow } from "./usePortalFlow";
+import RolesApi from "../api/RolesApi";
 import User from "../models/User";
 import UsersApi from "../api/UsersApi";
 
@@ -23,6 +24,7 @@ const useUsersLogic = ({
   portalFlow: PortalFlow;
 }) => {
   const usersApi = useMemo(() => new UsersApi(), []);
+  const rolesApi = useMemo(() => new RolesApi(), []);
   const [user, setUser] = useState<User>();
 
   /**
@@ -124,26 +126,54 @@ const useUsersLogic = ({
    * @param user_id - ID of user being converted
    * @param postData - User fields to update - role and leave admin
    */
-  const convertUser = async (
+  const convertUserToEmployer = async (
     user_id: User["user_id"],
     postData: { employer_fein: string }
   ) => {
     appErrorsLogic.clearErrors();
 
     try {
-      const { user } = await usersApi.convertUser(user_id, postData);
+      const { user } = await usersApi.convertUserToEmployer(user_id, postData);
+      portalFlow.goTo(
+        routes.employers.organizations,
+        {
+          account_converted: "true",
+        },
+        { redirect: true }
+      );
       setUser(user);
+    } catch (error) {
+      appErrorsLogic.catchError(error);
+    }
+  };
 
-      portalFlow.goTo(routes.employers.organizations, {
-        account_converted: "true",
-      });
+  /**
+   * Delete the user's employer role and leave admin associations through a DELETE to /roles
+   * @param user_id - ID of user being converted
+   * @param postData - User fields to update - role and leave admin
+   */
+  const convertUserToEmployee = async (user_id: User["user_id"]) => {
+    appErrorsLogic.clearErrors();
+
+    try {
+      await rolesApi.deleteEmployerRole(user_id);
+      const { user } = await usersApi.getCurrentUser();
+      portalFlow.goTo(
+        routes.applications.getReady,
+        {
+          account_converted: "true",
+        },
+        { redirect: true }
+      );
+      setUser(user);
     } catch (error) {
       appErrorsLogic.catchError(error);
     }
   };
 
   return {
-    convertUser,
+    convertUserToEmployer,
+    convertUserToEmployee,
     user,
     updateUser,
     loadUser,

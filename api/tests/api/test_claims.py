@@ -15,6 +15,7 @@ import massgov.pfml.fineos.mock_client
 import massgov.pfml.util.datetime as datetime_util
 import tests.api
 from massgov.pfml.api.authorization.exceptions import NotAuthorizedForAccess
+from massgov.pfml.api.claims import map_request_decision_param_to_db_columns
 from massgov.pfml.api.exceptions import ObjectNotFound
 from massgov.pfml.api.models.claims.common import EmployerClaimReview
 from massgov.pfml.api.services.claims import ClaimWithdrawnError
@@ -25,6 +26,7 @@ from massgov.pfml.db.models.employees import (
     AbsencePeriodType,
     AbsenceStatus,
     Claim,
+    LeaveRequestDecision,
     LkManagedRequirementStatus,
     ManagedRequirement,
     ManagedRequirementCategory,
@@ -3442,7 +3444,32 @@ class TestGetClaimsEndpoint:
             for _ in range(5):
                 end = start + timedelta(days=10)
                 period = AbsencePeriodFactory.create(
-                    claim=claim, absence_period_start_date=start, absence_period_end_date=end
+                    claim=claim, absence_period_start_date=start, absence_period_end_date=end,
+                )
+                periods.append(period)
+                start = start + timedelta(days=20)
+            return periods
+
+        @pytest.fixture()
+        def claims(self, employer, employee):
+            claims = []
+            for _ in range(8):
+                claim = ClaimFactory.create(employer=employer, employee=employee, claim_type_id=1)
+                claims.append(claim)
+            return claims
+
+        @pytest.fixture()
+        def varied_absence_periods(self, claims):
+            start = date.today() + timedelta(days=5)
+            periods = []
+            num_request_decision_types = 8
+            for i in range(num_request_decision_types):
+                end = start + timedelta(days=10)
+                period = AbsencePeriodFactory.create(
+                    claim=claims[i],
+                    absence_period_start_date=start,
+                    absence_period_end_date=end,
+                    leave_request_decision_id=i + 1,
                 )
                 periods.append(period)
                 start = start + timedelta(days=20)
@@ -3506,6 +3533,69 @@ class TestGetClaimsEndpoint:
             ][0]
             self._assert_claim_data(claim_data_with_absence_period, claim, absence_periods)
             self._assert_claim_data(claim_data_no_absence_period, claim_no_absence_period, [])
+
+        @pytest.mark.parametrize(
+            "request_decision, num_claims_returned, expected_req_decs_returned",
+            [
+                ["approved", 1, [LeaveRequestDecision.APPROVED.leave_request_decision_description]],
+                ["denied", 1, [LeaveRequestDecision.DENIED.leave_request_decision_description]],
+                [
+                    "withdrawn",
+                    1,
+                    [LeaveRequestDecision.WITHDRAWN.leave_request_decision_description],
+                ],
+                [
+                    "pending",
+                    3,
+                    [
+                        LeaveRequestDecision.PENDING.leave_request_decision_description,
+                        LeaveRequestDecision.IN_REVIEW.leave_request_decision_description,
+                        LeaveRequestDecision.PROJECTED.leave_request_decision_description,
+                    ],
+                ],
+                [
+                    "cancelled",
+                    2,
+                    [
+                        LeaveRequestDecision.CANCELLED.leave_request_decision_description,
+                        LeaveRequestDecision.VOIDED.leave_request_decision_description,
+                    ],
+                ],
+            ],
+        )
+        def test_claim_request_decision_filter(
+            self,
+            request_decision,
+            num_claims_returned,
+            expected_req_decs_returned,
+            client,
+            employer_auth_token,
+            claims,
+            varied_absence_periods,
+        ):
+            # Note that for this test, our test data puts in the db 1 claim per absence period request decision type
+            resp = client.get(
+                f"/v1/claims?request_decision={request_decision}",
+                headers={"Authorization": f"Bearer {employer_auth_token}"},
+            )
+            assert resp.status_code == 200
+            response_body = resp.get_json()
+            claims_returned = response_body.get("data")
+            assert len(claims_returned) == num_claims_returned
+            for claim in claims_returned:
+                for absence_period in claim["absence_periods"]:
+                    assert absence_period["request_decision"] in expected_req_decs_returned
+
+        def test_claim_request_decision_filter_invalid_param(
+            self, client, employer_auth_token, claims, varied_absence_periods
+        ):
+            resp = client.get(
+                "/v1/claims?request_decision=foobar",
+                headers={"Authorization": f"Bearer {employer_auth_token}"},
+            )
+            assert resp.status_code == 400
+            response_body = resp.get_json()
+            assert "'foobar' is not one of" in response_body["detail"]
 
     # Inner class for testing Claims with Managed Requirements
     class TestClaimsWithManagedRequirements:
@@ -4747,3 +4837,38 @@ class TestEmployerWithOrgUnitsAccess:
             json=update_claim_body,
         )
         assert response.status_code == 200
+
+
+class TestClaimsHelpers:
+    @pytest.mark.parametrize(
+        "request_decision_param, expected_output",
+        [
+            ["approved", set([LeaveRequestDecision.APPROVED.leave_request_decision_id])],
+            ["denied", set([LeaveRequestDecision.DENIED.leave_request_decision_id])],
+            ["withdrawn", set([LeaveRequestDecision.WITHDRAWN.leave_request_decision_id])],
+            [
+                "pending",
+                set(
+                    [
+                        LeaveRequestDecision.PENDING.leave_request_decision_id,
+                        LeaveRequestDecision.IN_REVIEW.leave_request_decision_id,
+                        LeaveRequestDecision.PROJECTED.leave_request_decision_id,
+                    ]
+                ),
+            ],
+            [
+                "cancelled",
+                set(
+                    [
+                        LeaveRequestDecision.CANCELLED.leave_request_decision_id,
+                        LeaveRequestDecision.VOIDED.leave_request_decision_id,
+                    ]
+                ),
+            ],
+            [None, set()],
+        ],
+    )
+    def test_map_request_decision_param_to_db_columns(
+        self, request_decision_param, expected_output
+    ):
+        assert map_request_decision_param_to_db_columns(request_decision_param) == expected_output

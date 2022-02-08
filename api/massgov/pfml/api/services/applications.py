@@ -9,18 +9,19 @@ from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.exceptions import BadRequest, Conflict, Forbidden
 
 import massgov.pfml.api.models.applications.common as apps_common_io
-import massgov.pfml.api.models.claims.common as claims_common_io
 import massgov.pfml.api.models.common as common_io
 import massgov.pfml.api.util.response as response_util
 import massgov.pfml.db as db
 import massgov.pfml.db.lookups as db_lookups
 import massgov.pfml.util.logging
+import massgov.pfml.util.newrelic.events as newrelic_util
 import massgov.pfml.util.pydantic.mask as mask
 from massgov.pfml.api.models.applications.common import Address as ApiAddress
 from massgov.pfml.api.models.applications.common import LeaveReason, PaymentPreference
 from massgov.pfml.api.models.applications.requests import ApplicationRequestBody
 from massgov.pfml.api.models.applications.responses import DocumentResponse
 from massgov.pfml.api.models.common import LookupEnum
+from massgov.pfml.api.services.administrator_fineos_actions import EformTypes
 from massgov.pfml.api.services.fineos_actions import get_documents
 from massgov.pfml.api.util.phone import convert_to_E164
 from massgov.pfml.api.util.response import Response
@@ -71,14 +72,20 @@ from massgov.pfml.db.models.employees import (
     LeaveRequestDecision,
     LkAddressType,
     LkGender,
+    MFADeliveryPreference,
     User,
 )
 from massgov.pfml.fineos import AbstractFINEOSClient
+from massgov.pfml.fineos.models.customer_api import PhoneNumber
 from massgov.pfml.fineos.models.customer_api.spec import (
     AbsenceDetails,
     AbsencePeriod,
     ReportedReducedScheduleLeavePeriod,
     ReportedTimeOffLeavePeriod,
+)
+from massgov.pfml.fineos.transforms.from_fineos.eforms import (
+    TransformConcurrentLeaveFromOtherLeaveEform,
+    TransformPreviousLeaveFromOtherLeaveEform,
 )
 from massgov.pfml.util.datetime import utcnow
 from massgov.pfml.util.pydantic.types import Regexes
@@ -843,7 +850,7 @@ def set_concurrent_leave(
 
 def set_previous_leaves(
     db_session: db.Session,
-    api_previous_leaves: Optional[List[claims_common_io.PreviousLeave]],
+    api_previous_leaves: Optional[List[common_io.PreviousLeave]],
     application: Application,
     type: Literal["same_reason", "other_reason"],
 ) -> None:
@@ -1280,6 +1287,34 @@ def set_payment_preference_fields(
     application.has_mailing_address = has_mailing_address
 
 
+def create_common_io_phone_from_fineos(
+    phone: PhoneNumber, db_session: db.Session
+) -> Optional[common_io.Phone]:
+    """
+    Creates common.io Phone object from FINEOS PhoneNumber object
+    """
+    db_phone = (
+        db_session.query(LkPhoneType)
+        .filter(LkPhoneType.phone_type_description == phone.phoneNumberType)
+        .one_or_none()
+    )
+
+    if not db_phone:
+        newrelic_util.log_and_capture_exception(
+            f"Unable to find phone_type: {phone.phoneNumberType}",
+            extra={"phone_type": phone.phoneNumberType},
+        )
+        return None
+
+    phone_to_create = common_io.Phone(
+        int_code=phone.intCode,
+        phone_number=f"{phone.areaCode}{phone.telephoneNo}",
+        phone_type=db_phone.phone_type_description,
+        fineos_phone_id=phone.id,
+    )
+    return phone_to_create
+
+
 def set_customer_contact_detail_fields(
     fineos: massgov.pfml.fineos.AbstractFINEOSClient,
     fineos_web_id: str,
@@ -1295,6 +1330,44 @@ def set_customer_contact_detail_fields(
     if not contact_details or not contact_details.phoneNumbers:
         logger.info("No contact details returned from FINEOS")
         return
+
+    if (
+        application.user.mfa_delivery_preference_id
+        != MFADeliveryPreference.SMS.mfa_delivery_preference_id
+    ):
+        raise ValidationException(
+            errors=[
+                ValidationErrorDetail(
+                    field="mfa_delivery_preference",
+                    type=IssueType.required,
+                    message="User has not opted into MFA delivery preferences",
+                )
+            ]
+        )
+
+    mfa_phone_number = next(
+        (
+            phone_num
+            for phone_num in contact_details.phoneNumbers
+            if f"+{phone_num.intCode}{phone_num.areaCode}{phone_num.telephoneNo}"
+            == application.user.mfa_phone_number
+        ),
+        None,
+    )
+
+    if mfa_phone_number is None:
+        logger.info(
+            "application import failure - phone number mismatch",
+            extra={"absence_case_id": application.claim_id, "user_id": application.user.user_id,},
+        )
+        raise ValidationException(
+            errors=[
+                ValidationErrorDetail(
+                    type=IssueType.invalid,
+                    message="An issue occurred while trying to import the application",
+                )
+            ]
+        )
 
     phone_number_from_fineos = next(
         (phone_num for phone_num in contact_details.phoneNumbers if phone_num.preferred),
@@ -1313,25 +1386,50 @@ def set_customer_contact_detail_fields(
         )
         return
 
-    db_phone = (
-        db_session.query(LkPhoneType)
-        .filter(LkPhoneType.phone_type_description == phone_number_from_fineos.phoneNumberType)
-        .one_or_none()
-    )
-
-    if not db_phone:
-        logger.info("Unable to find phone_type")
-        return
-
-    phone_number = str(phone_number_from_fineos.areaCode) + str(
-        phone_number_from_fineos.telephoneNo
-    )
-    # Creating common_io.Phone object in order to re-use add_or_update_phone helper method
-    phone_to_create = common_io.Phone(
-        int_code=phone_number_from_fineos.intCode,
-        phone_number=phone_number,
-        phone_type=db_phone.phone_type_description,
-        fineos_phone_id=phone_number_from_fineos.id,
-    )
-
+    phone_to_create = create_common_io_phone_from_fineos(phone_number_from_fineos, db_session)
     add_or_update_phone(db_session, phone_to_create, application)
+
+
+def set_other_leaves(
+    fineos: massgov.pfml.fineos.AbstractFINEOSClient,
+    fineos_web_id: str,
+    application: Application,
+    db_session: db.Session,
+    absence_id: str,
+) -> None:
+    """
+    Retrieve other leaves from FINEOS and set for imported application fields
+    """
+    summaries = fineos.customer_get_eform_summary(fineos_web_id, absence_id)
+
+    for summary in summaries:
+        if summary.eformType != EformTypes.OTHER_LEAVES:
+            continue
+
+        previous_leaves: List[common_io.PreviousLeave] = []
+        concurrent_leave: Optional[common_io.ConcurrentLeave] = None
+
+        eform = fineos.customer_get_eform(fineos_web_id, absence_id, summary.eformId)
+
+        concurrent_leave = TransformConcurrentLeaveFromOtherLeaveEform.from_fineos(eform)
+        application.has_concurrent_leave = concurrent_leave is not None
+        set_concurrent_leave(db_session, concurrent_leave, application)
+
+        previous_leaves = TransformPreviousLeaveFromOtherLeaveEform.from_fineos(eform)
+        # Separate previous leaves according to type
+        other_leaves: List[common_io.PreviousLeave] = []
+        same_leaves: List[common_io.PreviousLeave] = []
+        for previous_leave in previous_leaves:
+            if previous_leave.type == "other_reason":
+                other_leaves.append(previous_leave)
+            elif previous_leave.type == "same_reason":
+                same_leaves.append(previous_leave)
+
+        application.has_previous_leaves_other_reason = len(other_leaves) > 0
+        application.has_previous_leaves_same_reason = len(same_leaves) > 0
+        set_previous_leaves(
+            db_session, other_leaves, application, "other_reason",
+        )
+        set_previous_leaves(
+            db_session, same_leaves, application, "same_reason",
+        )
