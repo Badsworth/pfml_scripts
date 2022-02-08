@@ -26,11 +26,183 @@ class RelatedPaymentsProcessingStep(Step):
         STATE_WITHHOLDING_RECORD_COUNT = "state_withholding_record_count"
 
     def run_step(self) -> None:
-        self.process_payments_for_related_withholding_payments()
-
-    def process_payments_for_related_withholding_payments(self) -> None:
         """Top-level function that calls all the other functions in this file in order"""
         logger.info("Processing related payment processing step")
+        self.process_payments_for_related_employer_reimbursement_payments()
+        self.process_payments_for_related_withholding_payments()
+
+    def process_payments_for_related_employer_reimbursement_payments(self) -> None:
+        logger.info("Processing employer reimbursement payment processing step")
+
+        # get employer reimbursement payment records
+        employer_reimbursement_payments: List[
+            Payment
+        ] = self._get_employer_reimbursement_payment_records(self.db_session)
+
+        if not employer_reimbursement_payments:
+            logger.info("No employer reimbursement payment records for related payment.")
+            return
+        for payment in employer_reimbursement_payments:
+
+            if payment.claim is None:
+                raise Exception(
+                    "Claim not found for employer reimbursement payment id: %s ", payment.payment_id
+                )
+
+            primary_payment_records: List[Payment] = (
+                self.db_session.query(Payment)
+                .filter(Payment.claim_id == payment.claim_id)
+                .filter(Payment.period_start_date <= payment.period_start_date)
+                .filter(Payment.period_end_date >= payment.period_end_date)
+                .filter(
+                    Payment.payment_transaction_type_id
+                    == PaymentTransactionType.STANDARD.payment_transaction_type_id
+                )
+                .filter(
+                    Payment.fineos_extract_import_log_id == payment.fineos_extract_import_log_id
+                )
+                .all()
+            )
+
+            payment_log_details = payments_util.get_traceable_payment_details(payment)
+            if len(primary_payment_records) > 1:
+                logger.info(
+                    "Duplicate primary records exist for employer reimbursement payment %s",
+                    payment.claim.fineos_absence_id,
+                    extra=payment_log_details,
+                )
+
+                end_state = State.EMPLOYER_REIMBURSEMENT_ERROR
+
+                message = "Duplicate records found for the employer reimbursement payment."
+
+                state_log_util.create_finished_state_log(
+                    end_state=end_state,
+                    outcome=state_log_util.build_outcome(message),
+                    associated_model=payment,
+                    db_session=self.db_session,
+                )
+                logger.info(
+                    "Payment added to state %s",
+                    end_state.state_description,
+                    extra=payment_log_details,
+                )
+                message = (
+                    "Duplicate primary payment records found for the employer reimbursement record."
+                )
+                # do we have to do audit
+            elif len(primary_payment_records) == 0:
+                logger.info(
+                    "No primary payment record exists for employer reimbursement payment %s",
+                    payment.claim.fineos_absence_id,
+                    extra=payment_log_details,
+                )
+
+                end_state = State.EMPLOYER_REIMBURSEMENT_PENDING_AUDIT
+                message = "No primary payment found for the employer reimbursement payment record."
+
+                state_log_util.create_finished_state_log(
+                    end_state=end_state,
+                    outcome=state_log_util.build_outcome(message),
+                    associated_model=payment,
+                    db_session=self.db_session,
+                )
+                logger.info(
+                    "Payment added to state %s",
+                    end_state.state_description,
+                    extra=payment_log_details,
+                )
+                message = "No primary payment record found for the employer reimbursement record."
+            # elif len(primary_payment_records)  == 1: #
+            else:
+                primary_payment_record = primary_payment_records[0].payment_id
+                if primary_payment_record == "":
+                    raise Exception(
+                        f"Primary payment id not found for employer reimbursement payment id: {payment.payment_id}"
+                    )
+                payment_id = primary_payment_record
+                related_payment_id = payment.payment_id
+                link_payment = LinkSplitPayment()
+                link_payment.payment_id = payment_id
+                link_payment.related_payment_id = related_payment_id
+                self.db_session.add(link_payment)
+
+                logger.info(
+                    "Added related payment to link_payment: Primary payment id %s , Related Payment Id %s",
+                    payment_id,
+                    related_payment_id,
+                    extra=payment_log_details,
+                )
+
+                #  If primary payment has any validation error set employer reimbursement payment state to error
+                payment_state_log: Optional[StateLog] = state_log_util.get_latest_state_log_in_flow(
+                    primary_payment_records[0], Flow.DELEGATED_PAYMENT, self.db_session
+                )
+                if payment_state_log is None:
+                    raise Exception(
+                        "State log record not found for the primary payment id: %s",
+                        primary_payment_records[0].payment_id,
+                    )
+                if (
+                    payment_state_log.end_state_id
+                    != State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING.state_id
+                ):
+                    end_state = State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT
+                    outcome = state_log_util.build_outcome("Primary payment has an error")
+                    state_log_util.create_finished_state_log(
+                        associated_model=payment,
+                        end_state=end_state,
+                        outcome=outcome,
+                        db_session=self.db_session,
+                    )
+                    logger.info(
+                        "Payment added to state %s",
+                        end_state.state_description,
+                        extra=payment_log_details,
+                    )
+
+                    transaction_status: Optional[
+                        LkFineosWritebackTransactionStatus
+                    ] = self._get_payment_writeback_transaction_status(primary_payment_records[0])
+                    if transaction_status and transaction_status.transaction_status_description:
+                        message = "Employer reimbursement record error due to an issue with the primary payment."
+                        stage_payment_fineos_writeback(
+                            payment=payment,
+                            writeback_transaction_status=transaction_status,
+                            outcome=state_log_util.build_outcome(message),
+                            db_session=self.db_session,
+                            import_log_id=self.get_import_log_id(),
+                        )
+                else:
+                    end_state = State.EMPLOYER_REIMBURSEMENT_RELATED_PENDING_AUDIT
+                    message = "Primary payment found for the employer reimbursement payment record."
+
+                    state_log_util.create_finished_state_log(
+                        end_state=end_state,
+                        outcome=state_log_util.build_outcome(message),
+                        associated_model=payment,
+                        db_session=self.db_session,
+                    )
+                    logger.info(
+                        "Payment added to state %s",
+                        end_state.state_description,
+                        extra=payment_log_details,
+                    )
+                # primary_payment_records[0].has validation issues then
+                end_state = State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT
+                # else payment is valid then set state to
+                end_state = State.EMPLOYER_REIMBURSEMENT_RELATED_PENDING_AUDIT
+
+    def _get_employer_reimbursement_payment_records(self, db_session: db.Session) -> List[Payment]:
+        state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
+            associated_class=state_log_util.AssociatedClass.PAYMENT,
+            end_state=State.EMPLOYER_REIMBURSEMENT_READY_FOR_PROCESSING,
+            db_session=db_session,
+        )
+        return [state_log.payment for state_log in state_logs]
+
+    def process_payments_for_related_withholding_payments(self) -> None:
+        logger.info("Processing related withholding payment processing step")
 
         # get withholding payment records
         payments: List[Payment] = self._get_withholding_payments_records()

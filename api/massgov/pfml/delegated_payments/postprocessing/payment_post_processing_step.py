@@ -3,7 +3,7 @@ from typing import List
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.logging
-from massgov.pfml.db.models.employees import State
+from massgov.pfml.db.models.employees import PaymentTransactionType, State
 from massgov.pfml.delegated_payments.postprocessing.dor_fineos_employee_name_mismatch_processor import (
     DORFineosEmployeeNameMismatchProcessor,
 )
@@ -68,7 +68,11 @@ class PaymentPostProcessingStep(Step):
 
         for payment_container in payment_containers:
             dua_dia_processor.process(payment_container.payment)
-            name_mismatch_processor.process(payment_container.payment)
+            if (
+                payment_container.payment.payment_transaction_type_id
+                != PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id
+            ):
+                name_mismatch_processor.process(payment_container.payment)
 
     def _handle_state_transition(self, payment_containers: List[PaymentContainer]) -> None:
         for payment_container in payment_containers:
@@ -87,12 +91,26 @@ class PaymentPostProcessingStep(Step):
                 extra=payment_container.get_traceable_details(),
             )
 
-            # We simply add info for the audit report here without erroring
-            state_log_util.create_finished_state_log(
-                end_state=State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING,
-                outcome=state_log_util.build_outcome(
-                    "Completed post processing", validation_container=None,
-                ),
-                associated_model=payment_container.payment,
-                db_session=self.db_session,
-            )
+            # if employer reimbursement change state to EMPLOYER_REIMBURSEMENT_READY_FOR_PROCESSING
+            if (
+                payment_container.payment.payment_transaction_type_id
+                == PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id
+            ):
+                state_log_util.create_finished_state_log(
+                    end_state=State.EMPLOYER_REIMBURSEMENT_READY_FOR_PROCESSING,
+                    outcome=state_log_util.build_outcome(
+                        "Completed post processing", validation_container=None,
+                    ),
+                    associated_model=payment_container.payment,
+                    db_session=self.db_session,
+                )
+            else:
+                # We simply add info for the audit report here without erroring
+                state_log_util.create_finished_state_log(
+                    end_state=State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING,
+                    outcome=state_log_util.build_outcome(
+                        "Completed post processing", validation_container=None,
+                    ),
+                    associated_model=payment_container.payment,
+                    db_session=self.db_session,
+                )
