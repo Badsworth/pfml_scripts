@@ -43,7 +43,7 @@ function getDocuments({
 }
 
 export default {
-  title: `Pages/Applications/Status`,
+  title: `Pages/Applications/Status/Status`,
   component: Status,
   args: {
     "Has payments": true,
@@ -110,6 +110,11 @@ export const DefaultStory = (
     documents: {
       documents: getDocuments({ requestDecision, shouldIncludeRfiDocument }),
       hasLoadedClaimDocuments: () => true,
+      loadAll: () => new Promise(() => {}),
+    },
+    // Make the navigation tab appear active
+    portalFlow: {
+      pathname: `/applications/status`,
     },
   });
 
