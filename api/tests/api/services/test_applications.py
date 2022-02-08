@@ -8,7 +8,7 @@ from massgov.pfml.api.services.applications import (
     set_application_absence_and_leave_period,
     set_customer_contact_detail_fields,
     set_customer_detail_fields,
-    set_employment_status,
+    set_employment_status_and_occupations,
     set_other_leaves,
     set_payment_preference_fields,
 )
@@ -19,6 +19,7 @@ from massgov.pfml.api.validation.exceptions import (
 )
 from massgov.pfml.db.models.applications import (
     ContinuousLeavePeriod,
+    DayOfWeek,
     EmploymentStatus,
     LeaveReason,
     LeaveReasonQualifier,
@@ -32,6 +33,8 @@ from massgov.pfml.fineos.models.customer_api.spec import (
     EpisodicLeavePeriodDetail,
     ReportedReducedScheduleLeavePeriod,
     TimeOffLeavePeriod,
+    WeekBasedWorkPattern,
+    WorkPatternDay,
 )
 
 
@@ -571,10 +574,29 @@ def test_set_customer_detail_fields_with_blank_address(
     assert application.residential_address is None
 
 
-def test_set_employment_status(fineos_client, fineos_web_id, application, user):
-    set_employment_status(fineos_client, fineos_web_id, application, user)
+def test_set_employment_status_and_occupations(fineos_client, fineos_web_id, application, user):
+    set_employment_status_and_occupations(fineos_client, fineos_web_id, application)
     assert application.employment_status_id == EmploymentStatus.EMPLOYED.employment_status_id
     assert application.hours_worked_per_week == 37.5
+    assert (
+        application.work_pattern.work_pattern_days[0].day_of_week_id
+        == DayOfWeek.MONDAY.day_of_week_id
+    )
+    assert application.work_pattern.work_pattern_days[0].minutes == 5 + 4 * 60
+
+
+@mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_week_based_work_pattern")
+def test_set_employment_status_and_occupations_work_pattern_not_fixed(
+    mock_get_week_based_work_pattern, fineos_client, fineos_web_id, application, user
+):
+    mock_get_week_based_work_pattern.return_value = WeekBasedWorkPattern(
+        workPatternType="2 weeks Rotating",
+        workPatternDays=[WorkPatternDay(dayOfWeek="Monday", weekNumber=12, hours=4, minutes=5)],
+    )
+    set_employment_status_and_occupations(fineos_client, fineos_web_id, application)
+    assert application.employment_status_id == EmploymentStatus.EMPLOYED.employment_status_id
+    assert application.hours_worked_per_week == 37.5
+    assert application.work_pattern is None
 
 
 @mock.patch(
@@ -595,14 +617,14 @@ def test_set_invalid_status_returns_error(
         )
     ]
     with pytest.raises(ValidationException) as exc:
-        set_employment_status(fineos_client, fineos_web_id, application, user)
-    assert exc.value.errors == [
-        ValidationErrorDetail(
-            type=IssueType.invalid,
-            message="Employment Status must be Active",
-            field="employment_status",
-        )
-    ]
+        set_employment_status_and_occupations(fineos_client, fineos_web_id, application)
+        assert exc.value.errors == [
+            ValidationErrorDetail(
+                type=IssueType.invalid,
+                message="Employment Status must be Active",
+                field="employment_status",
+            )
+        ]
 
 
 def test_set_payment_preference_fields(fineos_client, fineos_web_id, application, test_db_session):
