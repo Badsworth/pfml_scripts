@@ -185,6 +185,7 @@ function RunQueryIntegration({ accountId, runIds, children }) {
   const query = `SELECT *
                   FROM IntegrationTestResult
                   WHERE runId IN (${runIds.map((i) => `'${i}'`).join(", ")})
+                  ORDER BY timestamp ASC
                   SINCE 1 month ago until now LIMIT MAX`;
 
   return (
@@ -212,12 +213,14 @@ function RunQueryIntegration({ accountId, runIds, children }) {
   );
 }
 
-function RunQuery({ accountId, runIds, children }) {
+function RunQuery({ accountId, runIds, groupName, children }) {
   const query = `SELECT *
                  FROM CypressTestResult SINCE 1 month ago
-                 WHERE runId IN (${runIds.map((i) => `'${i}'`).join(", ")})
-                   LIMIT MAX`;
-
+                 WHERE runId IN (${runIds
+                   .map((i) => `'${i}'`)
+                   .join(", ")}) AND group = '${groupName}'
+                 ORDER BY timestamp ASC
+                 LIMIT MAX`;
   return (
     <NrqlQuery accountId={accountId} query={query}>
       {({ data, loading, error }) => {
@@ -234,24 +237,16 @@ function RunQuery({ accountId, runIds, children }) {
           );
         }
         const runData = buildRuns(data);
-        if (!runData) {
-          return (
-            <SectionMessage
-              title={"There was no results returned."}
-              description={error}
-              type={SectionMessage.TYPE.CRITICAL}
-            />
-          );
-        }
         return children(runData);
       }}
     </NrqlQuery>
   );
 }
 
-function GridTable({ uniqueRuns, rows, accountId, runIds }) {
+function GridTable({ title, uniqueRuns, rows, accountId, runIds, charts }) {
   return (
     <div>
+      <h2>{title}</h2>
       {uniqueRuns.map(({ runId, environment, runUrl, branch }, i) => (
         <div className={"run-notes"}>
           <span>
@@ -292,27 +287,29 @@ function GridTable({ uniqueRuns, rows, accountId, runIds }) {
           })}
         </tbody>
       </table>
-      <div className={`charts`}>
-        <PieChart
-          fullWidth
-          accountId={accountId}
-          query={`SELECT count(*)
+      {charts && (
+        <div className={`charts`}>
+          <PieChart
+            fullWidth
+            accountId={accountId}
+            query={`SELECT count(*)
                     FROM CypressTestResult since 1 month ago
                     WHERE runId IN (${runIds.map((i) => `'${i}'`).join(", ")})
                       AND pass is false
                       FACET category`}
-        ></PieChart>
-        <PieChart
-          fullWidth
-          accountId={accountId}
-          query={`SELECT count(*)
+          ></PieChart>
+          <PieChart
+            fullWidth
+            accountId={accountId}
+            query={`SELECT count(*)
                     FROM CypressTestResult since 1 month ago
                     WHERE runId IN (${runIds.map((i) => `'${i}'`).join(", ")})
                       AND pass is false
                       FACET category
                         , subCategory`}
-        ></PieChart>
-      </div>
+          ></PieChart>
+        </div>
+      )}
     </div>
   );
 }
@@ -497,7 +494,7 @@ class GridRow extends React.Component {
                   <tr>
                     {this.sub[key].map((r, i) => {
                       return (
-                        <td className={this.state[i].open ? "open" : "closed"}>
+                        <td className={this.state[i]?.open ? "open" : "closed"}>
                           <span>
                             <Link to={r.runUrl}>{i + 1}</Link>
                           </span>
@@ -552,14 +549,70 @@ export default function TestGrid({ accountId, environment, runIds }) {
     return (
       <RunQueryIntegration runIds={runIds} accountId={accountId}>
         {(IntegrationRuns) => (
-          <RunQuery runIds={runIds} accountId={accountId}>
-            {(CypressRuns) => (
-              <GridTable
-                uniqueRuns={CypressRuns.uniqueRuns}
-                rows={[...CypressRuns.rows, ...IntegrationRuns.rows]}
-                accountId={accountId}
+          <RunQuery
+            runIds={runIds}
+            accountId={accountId}
+            groupName={"Commit Stable"}
+          >
+            {(CypressStableRuns) => (
+              <RunQuery
                 runIds={runIds}
-              />
+                accountId={accountId}
+                groupName={"Unstable"}
+              >
+                {(CypressUnstableRuns) => (
+                  <RunQuery
+                    runIds={runIds}
+                    accountId={accountId}
+                    groupName={"Morning"}
+                  >
+                    {(CypressMorningRuns) => {
+                      return [
+                        CypressMorningRuns && (
+                          <GridTable
+                            title={"Morning Tests"}
+                            uniqueRuns={CypressMorningRuns.uniqueRuns}
+                            rows={CypressMorningRuns.rows}
+                            accountId={accountId}
+                            runIds={runIds}
+                            charts={false}
+                          />
+                        ),
+                        CypressStableRuns && (
+                          <GridTable
+                            title={"Stable Tests"}
+                            uniqueRuns={CypressStableRuns.uniqueRuns}
+                            rows={CypressStableRuns.rows}
+                            accountId={accountId}
+                            runIds={runIds}
+                            charts={false}
+                          />
+                        ),
+                        CypressUnstableRuns && (
+                          <GridTable
+                            title={"Unstable Tests"}
+                            uniqueRuns={CypressUnstableRuns.uniqueRuns}
+                            rows={CypressUnstableRuns.rows}
+                            accountId={accountId}
+                            runIds={runIds}
+                            charts={false}
+                          />
+                        ),
+                        IntegrationRuns && (
+                          <GridTable
+                            title={"Integration Tests"}
+                            uniqueRuns={IntegrationRuns.uniqueRuns}
+                            rows={IntegrationRuns.rows}
+                            accountId={accountId}
+                            runIds={runIds}
+                            charts={false}
+                          />
+                        ),
+                      ];
+                    }}
+                  </RunQuery>
+                )}
+              </RunQuery>
             )}
           </RunQuery>
         )}
@@ -573,14 +626,68 @@ export default function TestGrid({ accountId, environment, runIds }) {
       {({ runIds }) => (
         <RunQueryIntegration runIds={runIds} accountId={accountId}>
           {(IntegrationRuns) => (
-            <RunQuery runIds={runIds} accountId={accountId}>
-              {(CypressRuns) => (
-                <GridTable
-                  uniqueRuns={CypressRuns.uniqueRuns}
-                  rows={[...CypressRuns.rows, ...IntegrationRuns.rows]}
-                  accountId={accountId}
+            <RunQuery
+              runIds={runIds}
+              accountId={accountId}
+              groupName={"Commit Stable"}
+            >
+              {(CypressStableRuns) => (
+                <RunQuery
                   runIds={runIds}
-                />
+                  accountId={accountId}
+                  groupName={"Unstable"}
+                >
+                  {(CypressUnstableRuns) => (
+                    <RunQuery
+                      runIds={runIds}
+                      accountId={accountId}
+                      groupName={"Morning"}
+                    >
+                      {(CypressMorningRuns) => [
+                        CypressMorningRuns && (
+                          <GridTable
+                            title={"Morning Tests"}
+                            uniqueRuns={CypressMorningRuns.uniqueRuns}
+                            rows={CypressMorningRuns.rows}
+                            accountId={accountId}
+                            runIds={runIds}
+                            charts={false}
+                          />
+                        ),
+                        CypressStableRuns && (
+                          <GridTable
+                            title={"Stable Tests"}
+                            uniqueRuns={CypressStableRuns.uniqueRuns}
+                            rows={CypressStableRuns.rows}
+                            accountId={accountId}
+                            runIds={runIds}
+                            charts={false}
+                          />
+                        ),
+                        CypressUnstableRuns && (
+                          <GridTable
+                            title={"Unstable Tests"}
+                            uniqueRuns={CypressUnstableRuns.uniqueRuns}
+                            rows={CypressUnstableRuns.rows}
+                            accountId={accountId}
+                            runIds={runIds}
+                            charts={false}
+                          />
+                        ),
+                        IntegrationRuns && (
+                          <GridTable
+                            title={"Integration Tests"}
+                            uniqueRuns={IntegrationRuns.uniqueRuns}
+                            rows={IntegrationRuns.rows}
+                            accountId={accountId}
+                            runIds={runIds}
+                            charts={false}
+                          />
+                        ),
+                      ]}
+                    </RunQuery>
+                  )}
+                </RunQuery>
               )}
             </RunQuery>
           )}
