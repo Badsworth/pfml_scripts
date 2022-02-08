@@ -51,6 +51,11 @@ class ScenarioName(Enum):
     OVERPAYMENT_PAYMENT_NEGATIVE = "OVERPAYMENT_PAYMENT_NEGATIVE"
     OVERPAYMENT_MISSING_NON_VPEI_RECORDS = "OVERPAYMENT_MISSING_NON_VPEI_RECORDS"
     EMPLOYER_REIMBURSEMENT_PAYMENT = "EMPLOYER_REIMBURSEMENT_PAYMENT"
+    # EMPLOYER_REIMBURSEMENT_PAYMENT_INVALID_ADDRESS = "EMPLOYER_REIMBURSEMENT_PAYMENT_INVALID_ADDRESS"
+    # EMPLOYER_REIMBURSEMENT_PAYMENT_WITH_TAX_WITHHOLDING_RECORDS = "EMPLOYER_REIMBURSEMENT_PAYMENT_WITH_TAX_WITHHOLDING_RECORDS"
+    # EMPLOYER_REIMBURSEMENT_PAYMENT_VALID_ADDRESS = "EMPLOYER_REIMBURSEMENT_PAYMENT_VALID_ADDRESS"
+    # EMPLOYER_REIMBURSEMENT_PAYMENT_WITHOUT_TAX_WITHHOLDING_RECORDS = "EMPLOYER_REIMBURSEMENT_PAYMENT_WITHOUT_TAX_WITHHOLDING_RECORDS"
+    # EMPLOYER_REIMBURSEMENT_PAYMENT_WITH_EFT = "EMPLOYER_REIMBURSEMENT_PAYMENT_WITH_EFT"
 
     # Prenote
     PRENOTE_WITH_EXISTING_EFT_ACCOUNT = "PRENOTE_WITH_EXISTING_EFT_ACCOUNT"
@@ -251,6 +256,48 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
         scenario_name=ScenarioName.EMPLOYER_REIMBURSEMENT_PAYMENT,
         payment_transaction_type=PaymentTransactionType.EMPLOYER_REIMBURSEMENT,
     ),
+    # ScenarioDescriptor(
+    #     scenario_name=ScenarioName.EMPLOYER_REIMBURSEMENT_PAYMENT,
+    #     payment_transaction_type=PaymentTransactionType.EMPLOYER_REIMBURSEMENT,
+    #     payment_method=PaymentMethod.CHECK,
+    #     fineos_extract_address_valid=True,
+    #     invalid_address= False,
+    # ),
+    # ScenarioDescriptor(
+    #     scenario_name=ScenarioName.EMPLOYER_REIMBURSEMENT_PAYMENT_VALID_ADDRESS,
+    #     payment_transaction_type=PaymentTransactionType.EMPLOYER_REIMBURSEMENT,
+    #     fineos_extract_address_valid=True,
+    #     claim_missing_employee = True,
+    #     employee_in_payment_extract_missing_in_db = True,
+    #     payment_method=PaymentMethod.CHECK,
+    # ),
+    # ScenarioDescriptor(
+    #     scenario_name=ScenarioName.EMPLOYER_REIMBURSEMENT_PAYMENT_INVALID_ADDRESS,
+    #     payment_transaction_type=PaymentTransactionType.EMPLOYER_REIMBURSEMENT,
+    #     fineos_extract_address_valid=False,
+    #     claim_missing_employee = True,
+    #     employee_in_payment_extract_missing_in_db = True,
+    #     payment_method=PaymentMethod.CHECK,
+    # ),
+    # ScenarioDescriptor(
+    #     scenario_name=ScenarioName.EMPLOYER_REIMBURSEMENT_PAYMENT_WITH_TAX_WITHHOLDING_RECORDS,
+    #     payment_transaction_type=PaymentTransactionType.EMPLOYER_REIMBURSEMENT,
+    #     is_tax_withholding_records_exists=True,
+    #     payment_method=PaymentMethod.CHECK,
+    # ),
+    # ScenarioDescriptor(
+    #     scenario_name=ScenarioName.EMPLOYER_REIMBURSEMENT_PAYMENT_WITHOUT_TAX_WITHHOLDING_RECORDS,
+    #     payment_transaction_type=PaymentTransactionType.EMPLOYER_REIMBURSEMENT,
+    #     payment_method=PaymentMethod.CHECK,
+    # ),
+    # ScenarioDescriptor(
+    #     scenario_name=ScenarioName.EMPLOYER_REIMBURSEMENT_PAYMENT_WITH_EFT,
+    #     payment_transaction_type=PaymentTransactionType.EMPLOYER_REIMBURSEMENT,
+    #     fineos_extract_address_valid=True,
+    #     claim_missing_employee = True,
+    #     employee_in_payment_extract_missing_in_db = True,
+    #     payment_method=PaymentMethod.ACH,
+    # ),
     ScenarioDescriptor(
         scenario_name=ScenarioName.PRENOTE_WITH_EXISTING_EFT_ACCOUNT,
         existing_eft_account=True,
