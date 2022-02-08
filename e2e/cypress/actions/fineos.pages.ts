@@ -2708,21 +2708,40 @@ class NotificationOptions extends CreateNotificationStep {
 }
 
 /**
- * Maps to select inputs available to describe Absense Reason
+ * Maps to select inputs available to describe Absence Reason
+ * Add new options to discriminated unions as needed
  */
 export type AbsenceReasonDescription = {
-  relates_to?: string;
-  reason?: string;
-  qualifier_1?: string;
-  qualifier_2?: string;
+  relates_to?: "Employee" | "Family";
+  reason?:
+    | "Serious Health Condition - Employee"
+    | "Care for a Family Member"
+    | "Pregnancy/Maternity"
+    | "Child Bonding"
+    | "Military Exigency Family"
+    | "Military Caregiver";
+  qualifier_1?:
+    | "Not Work Related"
+    | "Serious Health Condition"
+    | "Birth Disability"
+    | "Foster Care"
+    | "Other Additional Activities"
+    | "Newborn"
+    | "Adoption"
+    | "Prenatal Care";
+  qualifier_2?: "Sickness";
+  typeOfRequest?: TypeOfRequestOptions;
 };
 /**
  * Maps to select inputs available to describe Primary Relationship
+ * Add new options to discriminated unions as needed
  */
 export type PrimaryRelationshipDescription = {
-  relationship_to_employee?: string;
-  qualifier_1?: string;
-  qualifier_2?: string;
+  relationship_to_employee?: "Sibling - Brother/Sister" | "Child";
+  qualifier_1?: "Biological";
+  // @todo - currently unused, uncomment when you need to set
+  // this field
+  // qualifier_2?: "Equivalent Family Member" | "Opposite Sex" | "Same Sex";
 };
 
 class ReasonOfAbsence extends CreateNotificationStep {
@@ -2754,8 +2773,10 @@ class ReasonOfAbsence extends CreateNotificationStep {
         );
       if (relationship.qualifier_1)
         this.chooseSelectOption("Qualifier 1", relationship.qualifier_1);
-      if (relationship.qualifier_2)
-        this.chooseSelectOption("Qualifier 2", relationship.qualifier_2);
+      // @todo - currently unused, uncomment when you need to set
+      // this field
+      // if (relationship.qualifier_2)
+      //   this.chooseSelectOption("Qualifier 2", relationship.qualifier_2);
     });
     return this;
   }
