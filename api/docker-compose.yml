@@ -100,6 +100,8 @@ services:
       # - PAYMENTS_DFML_BUSINESS_OPERATIONS_EMAIL=
       - AGENCY_REDUCTIONS_EMAIL_ADDRESS=EOL-DL-DFML-Agency-Reductions@mass.gov
       - DFML_PROJECT_MANAGER_EMAIL_ADDRESS=
+      # Disabled locally so we don't need to authenticate with AWS SES
+      - DISABLE_SENDING_EMAILS=1
       - PFML_EMAIL_ADDRESS=PFML_DoNotReply@eol.mass.gov
       - BOUNCE_FORWARDING_EMAIL_ADDRESS=PFML_DoNotReply@eol.mass.gov
       # Uncomment and set these in order to run the FINEOS and CTR ECS tasks locally with real S3
