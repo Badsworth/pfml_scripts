@@ -2,7 +2,7 @@ import argparse
 import sys
 from typing import List
 
-from massgov.pfml.api.services.mfa.mfa_lockout_resolver import MfaLockoutResolver
+from massgov.pfml.mfa.mfa_lockout_resolver import MfaLockoutResolver
 from massgov.pfml.util.bg import background_task
 
 
