@@ -12,8 +12,7 @@ import {
   isValidPreviousLeave,
 } from "../../../../src/util/typeUtils";
 import { config } from "../../../actions/common";
-import { getHours, addBusinessDays } from "date-fns";
-import { convertToTimeZone } from "date-fns-timezone";
+import { calculatePaymentDatePreventingOP } from "../../../actions/fineos.pages";
 
 // Used for stashing generated benefit and leave
 type LeaveAdminchanges = {
@@ -170,14 +169,8 @@ describe("Claimant uses portal to report other leaves and benefits, receives cor
       fineosPages.ClaimPage.visit(submission.fineos_absence_id).paidLeave(
         (leaveCase) => {
           if (config("HAS_FEB_RELEASE") === "true") {
-            const estTimeHour = getHours(
-              convertToTimeZone(new Date(), {
-                timeZone: "America/New_York",
-              })
-            );
-            const isBeforeEndBusinessDay = estTimeHour < 17;
             const paymentDates = Array<Date>(2).fill(
-              addBusinessDays(new Date(), isBeforeEndBusinessDay ? 5 : 6)
+              calculatePaymentDatePreventingOP()
             );
             leaveCase.assertPaymentsMade([]).assertAmountsPending([
               // retroactive SIT/FIT appear in amounts pending with processing date of today

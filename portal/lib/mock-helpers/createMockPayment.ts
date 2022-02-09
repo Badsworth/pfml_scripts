@@ -46,8 +46,8 @@ const randomAmount = Number(getRandomInteger({ limit: 500, length: 3 }));
 export const createMockPayment = (
   customDetails: Partial<PaymentDetail>,
   isConstant = false,
-  startDate = randomStartDate,
-  amount = randomAmount
+  startDate: string = randomStartDate,
+  amount: number = randomAmount
 ): PaymentDetail => {
   // To use constant data (helps w/snapshots & similar)
   if (isConstant) {

@@ -20,6 +20,11 @@ on:
         - Manual - Environment Sanity Check (all envs)
         - Manual - New Dataset Check (all envs)
         - Manual - Other (all envs)
+      run_stable:
+        description: "Run tests in stable group"
+        required: false
+        default: true
+        type: boolean
       run_unstable:
         description: "Run tests in unstable group"
         required: false
@@ -55,6 +60,7 @@ jobs:
             {
               "target_environment": "${{ matrix.environment }}",
               "cypress_tags": "${{ github.event_name == 'schedule' && 'Morning Run' || github.event.inputs.cypress_tags }}",
+              "run_stable": "${{ github.event_name == 'schedule' && 'true' || github.event.inputs.run_stable }}",
               "run_unstable": "${{ github.event.inputs.run_unstable || 'false' }}",
               "run_morning": "${{ github.event_name == 'schedule' && 'true' || github.event.inputs.run_morning }}",
               "title_override": "${{ github.event_name == 'schedule' && format('Scheduled Run: {0}', matrix.environment) || '' }}"

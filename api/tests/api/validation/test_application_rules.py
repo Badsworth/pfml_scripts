@@ -2837,8 +2837,7 @@ class TestValidateApplicationImportRequestForClaim:
         assert exc.value.errors == [
             ValidationErrorDetail(
                 type=IssueType.incorrect,
-                message="tax_identifier does not match our records",
-                field="tax_identifier",
+                message="An issue occurred while trying to import the application",
             )
         ]
 

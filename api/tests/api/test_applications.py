@@ -385,9 +385,8 @@ class TestApplicationsImport:
         assert response.status_code == 400
         assert response.get_json().get("errors") == [
             {
-                "field": "absence_case_id",
-                "message": "Application not found for the given ID.",
-                "type": "object_not_found",
+                "message": "An issue occurred while trying to import the application",
+                "type": "incorrect",
             },
         ]
         assert test_db_session.query(Application).one_or_none() is None
@@ -749,7 +748,7 @@ class TestApplicationsImport:
             json=valid_request_body,
         )
 
-        assert response.status_code == 500
+        assert response.status_code == 400
 
     def test_applications_import_has_previous_and_concurrent_leave_data(
         self, client, test_db_session, auth_token, claim, valid_request_body

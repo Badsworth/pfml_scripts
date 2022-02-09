@@ -2,10 +2,9 @@ import { itIf } from "./../../../util";
 import { portal, fineos, fineosPages } from "../../../actions";
 import { Submission } from "../../../../src/types";
 import { assertValidClaim } from "../../../../src/util/typeUtils";
-import { addDays, formatISO, getHours, startOfWeek, subDays } from "date-fns";
+import { addDays, formatISO, startOfWeek, subDays } from "date-fns";
 import { config } from "../../../actions/common";
-import { addBusinessDays } from "date-fns";
-import { convertToTimeZone } from "date-fns-timezone";
+import { calculatePaymentDatePreventingOP } from "../../../actions/fineos.pages";
 
 describe("Submit bonding application via the web portal: Adjudication Approval, recording actual hours & payment checking", () => {
   const submissionTest =
@@ -137,18 +136,10 @@ describe("Submit bonding application via the web portal: Adjudication Approval, 
         fineosPages.ClaimPage.visit(submission.fineos_absence_id).paidLeave(
           (leaveCase) => {
             if (config("HAS_FEB_RELEASE") === "true") {
-              const estTimeHour = getHours(
-                convertToTimeZone(new Date(), {
-                  timeZone: "America/New_York",
-                })
-              );
-              const isBeforeEndBusinessDay = estTimeHour < 17;
               leaveCase.assertAmountsPending([
                 {
                   net_payment_amount: 831.06,
-                  paymentProcessingDates: [
-                    addBusinessDays(new Date(), isBeforeEndBusinessDay ? 5 : 6),
-                  ],
+                  paymentProcessingDates: [calculatePaymentDatePreventingOP()],
                 },
               ]);
             } else {

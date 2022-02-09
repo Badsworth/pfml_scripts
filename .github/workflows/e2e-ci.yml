@@ -110,6 +110,7 @@ jobs:
             {
               "target_environment": "test",
               "cypress_tags": "PR",
+              "run_stable": "true"
               "run_unstable": "true",
               "run_morning": "false",
               "title_override": ${{ toJSON(format('PR: {0}', github.event.pull_request.title)) }}

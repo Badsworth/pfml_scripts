@@ -1,3 +1,5 @@
+import { ValuesOf } from "../../types/common";
+
 /**
  * Enums for an absence case's `leave_details.reason` field. Claimant Portal sends some of these,
  * and Leave Admin portal needs to display any that a claimant can apply to via any channel.
@@ -15,6 +17,6 @@ const LeaveReason = {
   serviceMemberFamily: "Military Caregiver",
 } as const;
 
-export type LeaveReasonType = typeof LeaveReason[keyof typeof LeaveReason];
+export type LeaveReasonType = ValuesOf<typeof LeaveReason>;
 
 export default LeaveReason;

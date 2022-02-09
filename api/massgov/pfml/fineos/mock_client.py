@@ -828,7 +828,14 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
         self, user_id: str, occupation_id: Union[str, int],
     ) -> models.customer_api.WeekBasedWorkPattern:
         _capture_call("get_week_based_work_pattern", user_id, occupation_id=occupation_id)
-        return models.customer_api.WeekBasedWorkPattern(workPatternType="Fixed", workPatternDays=[])
+        return models.customer_api.WeekBasedWorkPattern(
+            workPatternType="Fixed",
+            workPatternDays=[
+                models.customer_api.WorkPatternDay(
+                    dayOfWeek="Monday", weekNumber=12, hours=4, minutes=5
+                )
+            ],
+        )
 
     def add_week_based_work_pattern(
         self,

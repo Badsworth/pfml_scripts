@@ -44,14 +44,15 @@ class MfaLockoutResolver:
         self.should_commit_changes = not dry_run
 
     def run(self):
+        user = self._get_user()
+
         self._log_info("Starting MFA lockout resolution")
 
-        self._resolve_lockout()
+        self._resolve_lockout(user)
 
         self._log_info("Completed MFA lockout resolution!")
 
-    def _resolve_lockout(self) -> None:
-        user = self._get_user()
+    def _resolve_lockout(self, user: User) -> None:
 
         self._disable_mfa_cognito()
         self._disable_mfa_pfml(user)
@@ -67,6 +68,8 @@ class MfaLockoutResolver:
             e = Exception("Unable to find user with the given email")
             self._log_error("Error finding user in PFML database", e)
             raise e
+
+        self.log_attr["user_id"] = user.user_id
 
         self._log_info("...Done!")
         return user
@@ -86,7 +89,7 @@ class MfaLockoutResolver:
         self._log_info("...Done!")
 
     def _set_sns_opt_in(self, user: User) -> None:
-        self._log_info("Setting user opt-in in SNS")
+        self._log_info("Checking user opt-in in SNS")
 
         if not user.mfa_phone_number:
             return
@@ -100,6 +103,7 @@ class MfaLockoutResolver:
 
         # Note: this can only be successfully run for a user once every 30 days!
         if user_opted_out:
+            self._log_info("Setting user opt-in in SNS")
             try:
                 if self.should_commit_changes:
                     opt_in_phone_number(user.mfa_phone_number)

@@ -15,6 +15,7 @@ import { AppErrorsLogic } from "./useAppErrorsLogic";
 import { PortalFlow } from "./usePortalFlow";
 import { RoleDescription } from "../models/User";
 import UsersApi from "../api/UsersApi";
+import { ValuesOf } from "../../types/common";
 import assert from "assert";
 import { compact } from "lodash";
 import { isFeatureEnabled } from "../services/featureFlags";
@@ -258,7 +259,7 @@ const useAuthLogic = ({
   const _createAccountInApi = async (
     email_address: string,
     password: string,
-    role_description: typeof RoleDescription[keyof typeof RoleDescription],
+    role_description: ValuesOf<typeof RoleDescription>,
     employer_fein?: string
   ) => {
     appErrorsLogic.clearErrors();

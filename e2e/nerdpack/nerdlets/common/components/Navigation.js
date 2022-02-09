@@ -24,7 +24,7 @@ export default class Navigation extends React.PureComponent {
             id: "morning",
           })}
         >
-          Morning Run
+          Daily Overview
         </Link>
       </nav>
     );

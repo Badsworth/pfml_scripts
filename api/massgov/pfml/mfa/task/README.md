@@ -18,7 +18,7 @@ On local machine:
 
 In `test` environment:
 `cd pfml`
-`./bin/run-ecs-task/run-task.sh test mfa-lockout-resolution jesse.shepherd mfa-lockout-resolution --email=jesseshepherd+mfa-01@navapbc.com --psd_number=PSD-9876 --reason='They lost their phone' --employee='Rick Diggins' --verification_method='Claim number and ssn' --dry_run=true`
+`./bin/run-ecs-task/run-task.sh test mfa-lockout-resolution jesse.shepherd mfa-lockout-resolution --email=jesseshepherd+test-01@navapbc.com --psd_number=PSD-9876 --reason='They lost their phone' --employee='Rick Diggins' --verification_method='Claim number and ssn' --dry_run=true`
 
 ### Dry Run
 By default, this script runs in "dry run" mode, and does not commit any changes to Amazon Cognito or the PFML db. To commit these changes, run the script with `--dry_run=false`
