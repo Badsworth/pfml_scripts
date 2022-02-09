@@ -1,6 +1,12 @@
+from werkzeug.exceptions import NotFound
+
+import massgov.pfml.api.app as app
 import massgov.pfml.api.util.response as response_util
+import massgov.pfml.util.logging
 from massgov.pfml.api.models.flags.responses import FlagResponse
-from massgov.pfml.util import feature_gate
+from massgov.pfml.db.models.flags import LkFeatureFlag
+
+logger = massgov.pfml.util.logging.get_logger(__name__)
 
 ##########################################
 # Handlers
@@ -8,18 +14,24 @@ from massgov.pfml.util import feature_gate
 
 
 def flag_get(name):
-    response = response_util.success_response(
-        data={}, message=f"Successfully retrieved flag {name}",
-    ).to_api_response()
-    response.headers["Cache-Control"] = "max-age=300"
-    return response
+    with app.db_session() as db_session:
+        flag = db_session.query(LkFeatureFlag).filter_by(name=name).one_or_none()
+        if flag is None:
+            raise NotFound(
+                description="Could not find {} with name {}".format(LkFeatureFlag.__name__, name)
+            )
+        response = response_util.success_response(
+            data=FlagResponse.from_orm(flag).dict(), message="Successfully retrieved flag",
+        ).to_api_response()
+        response.headers["Cache-Control"] = "max-age=300"
+        return response
 
 
 def flags_get():
-    flags = feature_gate.load_all()
-    response = response_util.success_response(
-        data=[FlagResponse.parse_obj(vars(flag)).dict() for flag in flags],
-        message="Successfully retrieved flags",
-    ).to_api_response()
-    response.headers["Cache-Control"] = "max-age=300"
-    return response
+    with app.db_session() as db_session:
+        response = response_util.success_response(
+            data=[FlagResponse.from_orm(flag).dict() for flag in db_session.query(LkFeatureFlag)],
+            message="Successfully retrieved flags",
+        ).to_api_response()
+        response.headers["Cache-Control"] = "max-age=300"
+        return response

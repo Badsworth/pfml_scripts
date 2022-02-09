@@ -39,7 +39,7 @@ import massgov.pfml.util.logging
 from massgov.pfml.util.datetime import utcnow
 
 from ..lookup import LookupTable
-from .base import Base, TimestampMixin, utc_timestamp_gen, uuid_gen
+from .base import AzureLogMixin, Base, TimestampMixin, utc_timestamp_gen, uuid_gen
 from .common import PostgreSQLUUID
 from .industry_codes import LkIndustryCode
 from .verifications import Verification
@@ -1475,16 +1475,11 @@ class LkAzureGroup(Base):
         self.azure_group_parent_id = azure_group_parent_id
 
 
-class UserAzurePermissionLog(Base, TimestampMixin):
+class UserAzurePermissionLog(Base, AzureLogMixin, TimestampMixin):
     __tablename__ = "user_azure_permission_log"
     user_azure_permission_log_id = Column(Integer, primary_key=True, autoincrement=True)
-    email_address = Column(Text, nullable=False)
-    sub_id = Column(Text, nullable=False)
-    family_name = Column(Text, nullable=False)
-    given_name = Column(Text, nullable=False)
     azure_permission_id = Column(Integer, ForeignKey("lk_azure_permission.azure_permission_id"))
     azure_group_id = Column(Integer, ForeignKey("lk_azure_group.azure_group_id"))
-    action = Column(Text, nullable=False)
 
 
 class LkManagedRequirementStatus(Base):

@@ -14,6 +14,7 @@ from massgov.pfml.db.models.base import Base  # noqa: E402 isort:skip
 # import models module to trigger loading of all modules into the Base
 import massgov.pfml.db.models.employees  # noqa: E402 isort:skip
 import massgov.pfml.db.models.applications  # noqa: E402 isort:skip
+import massgov.pfml.db.models.flags  # noqa: E402 isort:skip
 import massgov.pfml.db.models.payments  # noqa: E402 isort:skip
 import massgov.pfml.util.logging  # noqa: E402 isort:skip
 
