@@ -171,22 +171,6 @@ describe("useUsersLogic", () => {
         expect(MFAService.updateMFAPhoneNumber).not.toHaveBeenCalled();
       });
 
-      it("fails service validation when mfa_phone_number is missing", async () => {
-        const missingPhoneNumberPatchData = {
-          mfa_phone_number: {
-            int_code: "1",
-            phone_type: "Cell",
-            phone_number: "",
-          },
-        };
-        MFAService.updateMFAPhoneNumber.mockClear();
-        await act(async () => {
-          await usersLogic.updateUser(user_id, missingPhoneNumberPatchData);
-        });
-        expect(MFAService.updateMFAPhoneNumber).not.toHaveBeenCalled();
-        expect(usersApi.updateUser).not.toHaveBeenCalled();
-      });
-
       it("fails service validation when mfa_phone_number is internationa (long))", async () => {
         const internationalPhoneNumberPatchData = {
           mfa_phone_number: {
