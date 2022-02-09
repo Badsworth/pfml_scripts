@@ -81,7 +81,7 @@ def admin_token():
 def admin_login():
     # decode_jwt is automatically called and will validate the token.
     azure_user = app.azure_user()
-    # This should not ever be the case.
+    # This should never be the case.
     if azure_user is None:
         raise NotFound
     ensure(READ, azure_user)
@@ -99,9 +99,21 @@ def admin_logout():
     ).to_api_response()
 
 
+def admin_flag_get_logs(name):
+    return response_util.success_response(
+        data={}, message=f"Successfully retrieved flag {name}",
+    ).to_api_response()
+
+
+def admin_flags_post(name):
+    return response_util.success_response(
+        message=f"Successfully updated feature flag {name}", data={}, status_code=201,
+    ).to_api_response()
+
+
 def admin_users_get(email_address: Optional[str] = "") -> flask.Response:
     azure_user = app.azure_user()
-    # This should not ever be the case.
+    # This should never be the case.
     if azure_user is None:
         raise Unauthorized
     ensure(READ, azure_user)
