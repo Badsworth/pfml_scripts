@@ -2151,7 +2151,7 @@ export function numToPaymentFormat(num: number): string {
  * Read more on preventing overpayments here: https://lwd.atlassian.net/browse/CPS-3115
  * @returns Date
  */
-export function calculatePaymentDatePreventingOP() {
+export function calculatePaymentDatePreventingOP(approvalDate?: Date) {
   const PFML_HOLIDAYS = [
     "2022-02-21",
     "2022-04-18",
@@ -2175,7 +2175,6 @@ export function calculatePaymentDatePreventingOP() {
     "2023-11-23",
     "2023-12-25",
   ] as const;
-
   const estTimeHour = getHours(
     convertToTimeZone(new Date(), {
       timeZone: "America/New_York",
@@ -2183,7 +2182,7 @@ export function calculatePaymentDatePreventingOP() {
   );
   const isBeforeEndBusinessDay = estTimeHour < 17;
   const afterNormalBusinessDays = addBusinessDays(
-    new Date(),
+    approvalDate ?? new Date(),
     isBeforeEndBusinessDay ? 5 : 6
   );
   const hasHoliday = (holiday: Date) => {
