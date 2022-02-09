@@ -3,6 +3,7 @@
  * @file Document (AKA File) model and enum values
  */
 import LeaveReason from "./LeaveReason";
+import { ValuesOf } from "../../types/common";
 
 const CertificationType = {
   certificationForm: "Certification Form",
@@ -32,8 +33,8 @@ export const OtherDocumentType = {
 } as const;
 
 export type DocumentTypeEnum =
-  | typeof CertificationType[keyof typeof CertificationType]
-  | typeof OtherDocumentType[keyof typeof OtherDocumentType];
+  | ValuesOf<typeof CertificationType>
+  | ValuesOf<typeof OtherDocumentType>;
 
 /**
  * Enums for Document `document_type` field.  In the `certification` object, `certificationForm` is only used for uploads of certification forms; the API then sets the plan

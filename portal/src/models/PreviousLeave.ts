@@ -2,18 +2,17 @@
 /**
  * @file Previous leave period
  */
+import { ValuesOf } from "../../types/common";
 
 class PreviousLeave {
   is_for_current_employer: boolean | null = null;
   leave_end_date: string | null = null;
   leave_minutes: number | null = null;
-  leave_reason:
-    | typeof PreviousLeaveReason[keyof typeof PreviousLeaveReason]
-    | null = null;
+  leave_reason: ValuesOf<typeof PreviousLeaveReason> | null = null;
 
   leave_start_date: string | null = null;
   previous_leave_id: string | null = null; // currently only used by the /applications API in the Claimant portal.
-  type: typeof PreviousLeaveType[keyof typeof PreviousLeaveType] | null = null;
+  type: ValuesOf<typeof PreviousLeaveType> | null = null;
   worked_per_week_minutes: number | null = null;
 
   constructor(attrs: Partial<PreviousLeave>) {
