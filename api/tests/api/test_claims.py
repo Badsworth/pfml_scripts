@@ -2541,7 +2541,88 @@ class TestGetClaimsEndpoint:
 
     # Inner class for testing Claims With Status Filtering
     class TestClaimsOrder:
-        @pytest.fixture(autouse=True)
+        @pytest.fixture()
+        def load_test_db_with_managed_requirements(
+            self, employer_user, test_verification, test_db_session
+        ):
+            employer = EmployerFactory.create()
+            employee = EmployeeFactory.create()
+
+            link = UserLeaveAdministrator(
+                user_id=employer_user.user_id,
+                employer_id=employer.employer_id,
+                fineos_web_id="fake-fineos-web-id",
+                verification=test_verification,
+            )
+            test_db_session.add(link)
+
+            other_employer = EmployerFactory.create()
+            other_employee = EmployeeFactory.create()
+
+            other_link = UserLeaveAdministrator(
+                user_id=employer_user.user_id,
+                employer_id=other_employer.employer_id,
+                fineos_web_id="fake-fineos-web-id",
+                verification=test_verification,
+            )
+            test_db_session.add(other_link)
+            claim_one = ClaimFactory.create(
+                employer=employer, employee=employee, fineos_absence_status_id=1, claim_type_id=1
+            )
+            claim_two = ClaimFactory.create(
+                employer=other_employer, employee=other_employee, fineos_absence_status_id=2
+            )
+            claim_three = ClaimFactory.create(
+                employer=employer,
+                employee=employee,
+                fineos_absence_status_id=AbsenceStatus.COMPLETED.absence_status_id,
+                claim_type_id=1,
+            )
+            claim_four = ClaimFactory.create(
+                employer=employer,
+                employee=employee,
+                fineos_absence_status_id=AbsenceStatus.COMPLETED.absence_status_id,
+                claim_type_id=1,
+            )
+            ClaimFactory.create(
+                employer=employer,
+                employee=employee,
+                fineos_absence_status_id=AbsenceStatus.COMPLETED.absence_status_id,
+                claim_type_id=1,
+            )
+            ManagedRequirementFactory.create(
+                claim=claim_three,
+                managed_requirement_type_id=ManagedRequirementType.EMPLOYER_CONFIRMATION.managed_requirement_type_id,
+                managed_requirement_status_id=ManagedRequirementStatus.COMPLETE.managed_requirement_status_id,
+                follow_up_date="2022-01-01",
+            )
+            ManagedRequirementFactory.create(
+                claim=claim_three,
+                managed_requirement_type_id=ManagedRequirementType.EMPLOYER_CONFIRMATION.managed_requirement_type_id,
+                managed_requirement_status_id=ManagedRequirementStatus.COMPLETE.managed_requirement_status_id,
+                follow_up_date="2022-02-02",
+            )
+            ManagedRequirementFactory.create(
+                claim=claim_four,
+                managed_requirement_type_id=ManagedRequirementType.EMPLOYER_CONFIRMATION.managed_requirement_type_id,
+                managed_requirement_status_id=ManagedRequirementStatus.OPEN.managed_requirement_status_id,
+                follow_up_date="2021-01-01",
+            )
+            ManagedRequirementFactory.create(
+                claim=claim_one,
+                managed_requirement_type_id=ManagedRequirementType.EMPLOYER_CONFIRMATION.managed_requirement_type_id,
+                managed_requirement_status_id=ManagedRequirementStatus.OPEN.managed_requirement_status_id,
+                follow_up_date=datetime_util.utcnow() + timedelta(days=15),
+            )
+            ManagedRequirementFactory.create(
+                claim=claim_two,
+                managed_requirement_type_id=ManagedRequirementType.EMPLOYER_CONFIRMATION.managed_requirement_type_id,
+                managed_requirement_status_id=ManagedRequirementStatus.OPEN.managed_requirement_status_id,
+                follow_up_date=datetime_util.utcnow() + timedelta(days=30),
+            )
+            test_db_session.commit()
+
+        @pytest.fixture()
         def load_test_db(self, employer_user, test_verification, test_db_session):
             employer = EmployerFactory.create()
             employee = EmployeeFactory.create()
@@ -2614,7 +2695,7 @@ class TestGetClaimsEndpoint:
                 for i in range(0, len(data) - 1):
                     assert data[i] <= data[i + 1]
 
-        def test_get_claims_with_order_default(self, client, employer_auth_token):
+        def test_get_claims_with_order_default(self, client, employer_auth_token, load_test_db):
             request = {}
             response = self._perform_api_call(request, client, employer_auth_token)
             assert response.status_code == 200
@@ -2623,7 +2704,7 @@ class TestGetClaimsEndpoint:
             assert len(data) == self.claims_count
             self._assert_data_order(data, desc=True)
 
-        def test_get_claims_with_order_default_asc(self, client, employer_auth_token):
+        def test_get_claims_with_order_default_asc(self, client, employer_auth_token, load_test_db):
             request = {"order_direction": "ascending"}
             response = self._perform_api_call(request, client, employer_auth_token)
             assert response.status_code == 200
@@ -2632,7 +2713,9 @@ class TestGetClaimsEndpoint:
             assert len(data) == self.claims_count
             self._assert_data_order(data, desc=False)
 
-        def test_get_claims_with_order_unsupported_key(self, client, employer_auth_token):
+        def test_get_claims_with_order_unsupported_key(
+            self, client, employer_auth_token, load_test_db
+        ):
             request = {"order_by": "unsupported"}
             response = self._perform_api_call(request, client, employer_auth_token)
             assert response.status_code == 400
@@ -2649,7 +2732,9 @@ class TestGetClaimsEndpoint:
                 data.append(name)
             return data
 
-        def test_get_claims_with_order_employee_asc(self, client, employer_auth_token):
+        def test_get_claims_with_order_employee_asc(
+            self, client, employer_auth_token, load_test_db
+        ):
             request = {"order_direction": "ascending", "order_by": "employee"}
             response = self._perform_api_call(request, client, employer_auth_token)
             assert response.status_code == 200
@@ -2658,7 +2743,75 @@ class TestGetClaimsEndpoint:
             assert len(data) == self.claims_count
             self._assert_data_order(data, desc=False)
 
-        def test_get_claims_with_order_employee_desc(self, client, employer_auth_token):
+        def test_get_claims_with_order_by_follow_up_date_desc(
+            self, client, employer_auth_token, load_test_db_with_managed_requirements
+        ):
+            request = {"order_direction": "descending", "order_by": "latest_follow_up_date"}
+            response = self._perform_api_call(request, client, employer_auth_token)
+
+            assert response.status_code == 200
+            response_body = response.get_json()
+            claim_one, claim_two, claim_three, claim_four, claim_five = response_body["data"]
+
+            # The first claims are Open, ordered chronologically (e.g. first 2022-02-18 then 2022-03-05)
+            assert (
+                claim_one["managed_requirements"][0]["follow_up_date"]
+                < claim_two["managed_requirements"][0]["follow_up_date"]
+            )
+            assert claim_one["managed_requirements"][0]["status"] == "Open"
+            assert claim_two["managed_requirements"][0]["status"] == "Open"
+            # Next are any not-Open claims (or open claims with expired follow up date), ordered reverse chronologically (e.g. first 2022-02-02 then 2021-01-01)
+            assert "2022-02-02" in [
+                req["follow_up_date"] for req in claim_three["managed_requirements"]
+            ]
+            assert "2022-01-01" in [
+                req["follow_up_date"] for req in claim_three["managed_requirements"]
+            ]
+            assert claim_three["managed_requirements"][0]["status"] == "Complete"
+            assert (
+                claim_four["managed_requirements"][0]["status"] == "Open"
+            )  # Open but expired follow-up date
+            assert claim_four["managed_requirements"][0]["follow_up_date"] == "2021-01-01"
+            # Finally, claims without any associated managed requirements are last
+            assert claim_five["managed_requirements"] == []
+
+        def test_get_claims_with_order_by_follow_up_date_asc(
+            self,
+            client,
+            employer_auth_token,
+            load_test_db_with_managed_requirements,
+            test_db_session,
+        ):
+            request = {"order_direction": "ascending", "order_by": "latest_follow_up_date"}
+            response = self._perform_api_call(request, client, employer_auth_token)
+            assert response.status_code == 200
+            response_body = response.get_json()
+            claim_one, claim_two, claim_three, claim_four, claim_five = response_body["data"]
+
+            # First are not-Open claims (or open claims with expired follow up date), ordered chronologically (e.g. first 2021-01-01 then 2022-01-01)
+            assert (
+                claim_one["managed_requirements"][0]["status"] == "Open"
+            )  # Open but expired follow-up date
+            assert claim_two["managed_requirements"][0]["status"] == "Complete"
+            assert claim_one["managed_requirements"][0]["follow_up_date"] == "2021-01-01"
+            assert (
+                claim_one["managed_requirements"][0]["follow_up_date"]
+                < claim_two["managed_requirements"][0]["follow_up_date"]
+            )
+
+            # Next are open claims, ordered chronologically (e.g. first "2022-01-01" then "2022-03-03")
+            assert (
+                claim_three["managed_requirements"][0]["follow_up_date"]
+                < claim_four["managed_requirements"][0]["follow_up_date"]
+            )
+            assert claim_three["managed_requirements"][0]["status"] == "Open"
+            assert claim_four["managed_requirements"][0]["status"] == "Open"
+            # Finally, claims without any associated managed requirements are last
+            assert claim_five["managed_requirements"] == []
+
+        def test_get_claims_with_order_employee_desc(
+            self, client, employer_auth_token, load_test_db
+        ):
             request = {"order_direction": "descending", "order_by": "employee"}
             response = self._perform_api_call(request, client, employer_auth_token)
             assert response.status_code == 200
@@ -2668,7 +2821,7 @@ class TestGetClaimsEndpoint:
             self._assert_data_order(data, desc=True)
 
         def test_get_claims_with_order_fineos_absence_status_asc(
-            self, client, employer_auth_token, test_db_session
+            self, client, employer_auth_token, test_db_session, load_test_db
         ):
             request = {"order_direction": "ascending", "order_by": "fineos_absence_status"}
             response = self._perform_api_call(request, client, employer_auth_token)

@@ -27,6 +27,7 @@ from sqlalchemy import (
     UniqueConstraint,
     and_,
     desc,
+    or_,
     select,
 )
 from sqlalchemy.ext.hybrid import hybrid_method
@@ -953,7 +954,6 @@ class Claim(Base, TimestampMixin):
     @soonest_open_requirement_date.expression
     def soonest_open_requirement_date(cls):  # noqa: B902
         aliasManagedRequirement = aliased(ManagedRequirement)
-
         status_id = aliasManagedRequirement.managed_requirement_status_id
         type_id = aliasManagedRequirement.managed_requirement_type_id
         filters = and_(
@@ -964,6 +964,56 @@ class Claim(Base, TimestampMixin):
         )
         return (
             select([func.min(aliasManagedRequirement.follow_up_date)])
+            .where(filters)
+            .label("follow_up_date")
+        )
+
+    @typed_hybrid_property
+    def latest_follow_up_date(self) -> Optional[date]:
+        """
+        Note that this property (for use in our dashboard sorting),
+        returns the latest_follow_up_date only when the requirement is not open,
+        as well as a few other filters.
+        """
+
+        def _filter(requirement: ManagedRequirement) -> bool:
+            not_open_status = (
+                requirement.managed_requirement_status_id
+                != ManagedRequirementStatus.OPEN.managed_requirement_status_id
+            )
+            valid_type = (
+                requirement.managed_requirement_type_id
+                == ManagedRequirementType.EMPLOYER_CONFIRMATION.managed_requirement_type_id
+            )
+            expired = (
+                requirement.follow_up_date is not None and requirement.follow_up_date < date.today()
+            )
+            return valid_type and (not_open_status or expired)
+
+        if not self.managed_requirements:
+            return None
+        filtered_requirements = filter(_filter, self.managed_requirements)
+        requirements = sorted(filtered_requirements, key=lambda x: x.follow_up_date, reverse=True)  # type: ignore
+        if len(requirements):
+            return requirements[0].follow_up_date
+        return None
+
+    @latest_follow_up_date.expression
+    def latest_follow_up_date(cls):  # noqa: B902
+        aliasManagedRequirement = aliased(ManagedRequirement)
+        type_id = aliasManagedRequirement.managed_requirement_type_id
+        status_id = aliasManagedRequirement.managed_requirement_status_id
+
+        filters = and_(
+            aliasManagedRequirement.claim_id == cls.claim_id,
+            type_id == ManagedRequirementType.EMPLOYER_CONFIRMATION.managed_requirement_type_id,
+            or_(
+                status_id != ManagedRequirementStatus.OPEN.managed_requirement_status_id,
+                aliasManagedRequirement.follow_up_date < date.today(),
+            ),
+        )
+        return (
+            select([func.max(aliasManagedRequirement.follow_up_date)])
             .where(filters)
             .label("follow_up_date")
         )
