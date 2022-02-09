@@ -256,9 +256,6 @@ class GetClaimsQuery:
             ManagedRequirement.claim_id == Claim.claim_id,
             ManagedRequirement.managed_requirement_type_id
             == ManagedRequirementType.EMPLOYER_CONFIRMATION.managed_requirement_type_id,
-            ManagedRequirement.managed_requirement_status_id
-            == ManagedRequirementStatus.OPEN.managed_requirement_status_id,
-            ManagedRequirement.follow_up_date >= date.today(),
         ]
         # use outer join to return claims without managed_requirements (one to many)
         self.join(ManagedRequirement, isouter=True, join_filter=and_(*filters))
