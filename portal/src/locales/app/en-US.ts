@@ -1402,6 +1402,7 @@ const pages: {
     submitButton: "Continue",
     taxIdLabel: "Social Security Number (SSN)",
     title: "Add an existing application",
+    uploadingMessage: "Submitting… Do not refresh or go back",
   },
   claimsIntermittentFrequency: {
     durationBasisChoice_days: "At least one day",

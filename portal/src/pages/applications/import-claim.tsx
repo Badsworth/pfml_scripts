@@ -38,6 +38,7 @@ export const ImportClaim = (props: WithUserProps) => {
 
   return (
     <QuestionPage
+      buttonLoadingMessage={t("pages.claimsImport.uploadingMessage")}
       continueButtonLabel={t("pages.claimsImport.submitButton")}
       onSave={handleSubmit}
       title={t("pages.claimsImport.title")}
