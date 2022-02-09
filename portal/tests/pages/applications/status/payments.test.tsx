@@ -21,8 +21,6 @@ const renderWithApprovalNotice = (
   isRetroactive = true,
   approvalTime = ""
 ) => {
-  appLogicHook.appErrors = [];
-  appLogicHook.documents.loadAll = jest.fn();
   appLogicHook.documents.documents =
     new ApiResourceCollection<BenefitsApplicationDocument>(
       "fineos_document_id",
@@ -37,7 +35,6 @@ const renderWithApprovalNotice = (
         }),
       ]
     );
-  appLogicHook.documents.hasLoadedClaimDocuments = () => true;
 };
 
 let goToSpy: jest.SpyInstance;
@@ -46,7 +43,8 @@ const setupHelper =
   (
     claimDetailAttrs?: Partial<ClaimDetail>,
     isRetroactive?: boolean,
-    approvalTime?: string
+    approvalTime?: string,
+    includeApprovalNotice = true
   ) =>
   (appLogicHook: AppLogic) => {
     appLogicHook.claims.claimDetail = claimDetailAttrs
@@ -56,7 +54,12 @@ const setupHelper =
     goToSpy = jest.spyOn(appLogicHook.portalFlow, "goTo");
     appLogicHook.claims.hasLoadedPayments = () =>
       !!appLogicHook.claims.claimDetail?.payments;
-    renderWithApprovalNotice(appLogicHook, isRetroactive, approvalTime);
+    appLogicHook.appErrors = [];
+    appLogicHook.documents.loadAll = jest.fn();
+    appLogicHook.documents.hasLoadedClaimDocuments = () => true;
+    if (includeApprovalNotice) {
+      renderWithApprovalNotice(appLogicHook, isRetroactive, approvalTime);
+    }
   };
 
 const defaultClaimDetail = new ClaimDetail({
@@ -112,9 +115,7 @@ describe("Payments", () => {
     renderPage(
       Payments,
       {
-        addCustomSetup: setupHelper({
-          ...defaultClaimDetail,
-        }),
+        addCustomSetup: setupHelper(defaultClaimDetail),
       },
       props
     );
@@ -126,15 +127,18 @@ describe("Payments", () => {
 
   it("redirects to status page if claim does not have an approval notice", () => {
     process.env.featureFlags = JSON.stringify({
-      claimantShowPaymentsPhaseTwo: false,
+      claimantShowPaymentsPhaseTwo: true,
     });
 
     renderPage(
       Payments,
       {
-        addCustomSetup: setupHelper({
-          ...defaultClaimDetail,
-        }),
+        addCustomSetup: setupHelper(
+          defaultClaimDetail,
+          true, // default
+          "", // default
+          false // Dont render the approval notice
+        ),
       },
       props
     );

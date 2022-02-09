@@ -120,6 +120,9 @@ export const factory: ConfigFactory = (env: string) => {
     ...fileConfiguration._default, // Defaults
     ...file,
     ...environment,
+    // explicitly map the environment we've been passed. Otherwise, ENVIRONMENT always comes from
+    // the .env file, which is not correct when we're using an explicit config factory.
+    ENVIRONMENT: env,
   };
   const get: ConfigFunction = (name) => {
     const value = configuration[name];

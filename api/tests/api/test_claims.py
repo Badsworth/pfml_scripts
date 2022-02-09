@@ -3752,15 +3752,7 @@ class TestGetClaimsEndpoint:
             claim_data = response_body.get("data")
             assert len(claim_data) == 1
             claim = response_body["data"][0]
-            assert len(claim.get("managed_requirements", [])) == 2
-            expected_type = (
-                ManagedRequirementType.EMPLOYER_CONFIRMATION.managed_requirement_type_description
-            )
-            expected_status = ManagedRequirementStatus.OPEN.managed_requirement_status_description
-            for req in claim["managed_requirements"]:
-                assert req["follow_up_date"] >= date.today().strftime("%Y-%m-%d")
-                assert req["type"] == expected_type
-                assert req["status"] == expected_status
+            assert len(claim.get("managed_requirements", [])) == 6
 
         def test_claim_filter_has_open_managed_requirement(
             self, client, employer_auth_token, claims_with_managed_requirements
@@ -3796,7 +3788,17 @@ class TestGetClaimsEndpoint:
             claim_data = response_body.get("data")
             assert len(claim_data) == 3
             for returned_claim in claim_data:
-                assert len(returned_claim["managed_requirements"]) == 0
+                assert (
+                    len(
+                        [
+                            claim
+                            for claim in returned_claim["managed_requirements"]
+                            if claim["status"] == "Open"
+                            and claim["follow_up_date"] >= datetime.today().strftime("%Y-%m-%d")
+                        ]
+                    )
+                    == 0
+                )
 
         def test_claim_filter_has_open_managed_requirement_has_pending_no_action(
             self, client, employer_auth_token, claims_with_managed_requirements

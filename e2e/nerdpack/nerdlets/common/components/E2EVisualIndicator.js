@@ -86,11 +86,6 @@ export function E2EVisualIndicator({ run, runId, simpleView = true }) {
               ]}
             >
               <div className={"runInfo"}>
-                <code className={"tag"}>
-                  {run.tag.filter(
-                    (tag) => !tag.includes("Env-") && tag != "Deploy"
-                  )}
-                </code>
                 {run.total > 0 && (
                   <div className={"stable"}>
                     Stable: {run.passCount} / {run.total} ({run.passPercent}%)
@@ -131,6 +126,15 @@ export function E2EVisualIndicator({ run, runId, simpleView = true }) {
                       </span>
                     )}
                   </div>
+                )}
+                <code className={"tag"}>
+                  {run.tag.filter(
+                    (tag) => !tag.includes("Env-") && tag != "Deploy"
+                  )}
+                </code>
+                <br />
+                {run.branch !== "main" && (
+                  <code className={"tag"}>{run.branch}</code>
                 )}
               </div>
             </BlockText>
