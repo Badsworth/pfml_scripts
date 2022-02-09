@@ -2590,6 +2590,22 @@ components:
         is_withholding_tax:
           type: boolean
           nullable: true
+        computed_start_dates:
+          $ref: "#/components/schemas/ComputedStartDates"
+
+    ComputedStartDates:
+      type: object
+      properties:
+        other_reason:
+          type: string
+          format: date
+          example: "2021-01-01"
+          nullable: true
+        same_reason:
+          type: string
+          format: date
+          example: "2021-01-01"
+          nullable: true
 
     DocumentUploadRequest:
       type: object

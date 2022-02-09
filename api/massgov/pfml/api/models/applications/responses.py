@@ -6,6 +6,7 @@ from typing import List, Optional
 from pydantic import UUID4
 
 from massgov.pfml.api.models.applications.common import (
+    ComputedStartDates,
     EmploymentStatus,
     Gender,
     MaskedAddress,
@@ -84,6 +85,7 @@ class ApplicationResponse(PydanticBaseModel):
     is_withholding_tax: Optional[bool]
     imported_from_fineos_at: Optional[datetime]
     updated_at: datetime
+    computed_start_dates: Optional[ComputedStartDates]
 
     @classmethod
     def from_orm(cls, application: Application) -> "ApplicationResponse":
@@ -117,6 +119,7 @@ class ApplicationResponse(PydanticBaseModel):
             application_response.fineos_absence_id = application.claim.fineos_absence_id
 
         application_response.updated_time = application_response.updated_at
+        application_response.computed_start_dates = ComputedStartDates.from_orm(application)
 
         return application_response
 

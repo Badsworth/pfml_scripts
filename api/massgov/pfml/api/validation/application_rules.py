@@ -7,7 +7,12 @@ from dateutil.relativedelta import relativedelta
 
 import massgov.pfml.db as db
 import massgov.pfml.util.logging
-from massgov.pfml.api.constants.application import CERTIFICATION_DOC_TYPES, ID_DOC_TYPES
+from massgov.pfml.api.constants.application import (
+    CARING_LEAVE_EARLIEST_START_DATE,
+    CERTIFICATION_DOC_TYPES,
+    ID_DOC_TYPES,
+    PFML_PROGRAM_LAUNCH_DATE,
+)
 from massgov.pfml.api.models.applications.common import DurationBasis, FrequencyIntervalBasis
 from massgov.pfml.api.models.applications.requests import ApplicationImportRequestBody
 from massgov.pfml.api.services.applications import (
@@ -37,8 +42,6 @@ from massgov.pfml.db.models.applications import (
 from massgov.pfml.db.models.employees import Claim, PaymentMethod
 from massgov.pfml.util.routing_number_validation import validate_routing_number
 
-CARING_LEAVE_EARLIEST_START_DATE = date(2021, 7, 1)
-PFML_PROGRAM_LAUNCH_DATE = date(2021, 1, 1)
 MAX_DAYS_IN_ADVANCE_TO_SUBMIT = 60
 MAX_DAYS_IN_LEAVE_PERIOD_RANGE = 364
 MAX_MINUTES_IN_WEEK = 10080  # 60 * 24 * 7
