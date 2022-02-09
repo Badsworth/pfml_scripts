@@ -360,12 +360,13 @@ export default function Maintenance() {
                         value="true"
                       />
                       Schedule
-                      <DateTimeField
-                        name="start_datetime"
-                        disabled={props.values.start_use_datetime === "false"}
-                        required={props.values.start_use_datetime === "true"}
-                      />
                     </label>
+
+                    <DateTimeField
+                      name="start_datetime"
+                      disabled={props.values.start_use_datetime === "false"}
+                      required={props.values.start_use_datetime === "true"}
+                    />
                   </fieldset>
                   <fieldset className="maintenance-configure__datetime-wrapper maintenance-configure__fieldset">
                     <legend>
@@ -388,12 +389,12 @@ export default function Maintenance() {
                         value="true"
                       />
                       Schedule
-                      <DateTimeField
-                        name="end_datetime"
-                        disabled={props.values.end_use_datetime === "false"}
-                        required={props.values.end_use_datetime === "true"}
-                      />
                     </label>
+                    <DateTimeField
+                      name="end_datetime"
+                      disabled={props.values.end_use_datetime === "false"}
+                      required={props.values.end_use_datetime === "true"}
+                    />
                   </fieldset>
                 </div>
                 {/* Transform css property, rotate + 90 or - 90*/}
