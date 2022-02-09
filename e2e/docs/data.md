@@ -22,10 +22,28 @@ All data generation scripts use APIs which are defined in `src/generation` and `
 
 ### Common commands
 
+#### Upload a new dataset, process it, register LAs, and employer addresses
+
+```shell
+npm run cli -- dataset deploy --directory ./data/the-dataset --environment test
+```
+
+#### DOR file upload/ETL
+
+```bash
+npm run cli -- dataset upload --directory ./data/the-dataset --environment test
+```
+
 #### Leave Admin Registration
 
 ```bash
-E2E_ENVIRONMENT=${env} npm run cli -- simulation registerAllLeaveAdmins -f data/${folder}/employers.csv
+npm run cli -- dataset register-las --directory ./data/the-dataset --environment test
+```
+
+#### Registering Employer Addresses
+
+```bash
+npm run cli dataset register-ee-addresses --directory ./data/the-dataset --environment test
 ```
 
 #### Claim Submission

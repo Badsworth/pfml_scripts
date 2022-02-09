@@ -3395,6 +3395,47 @@ class TestGetClaimsEndpoint:
             )
             self._perform_assertions(resp, status_code=200, expected_claims=expected_claims)
 
+        def test_get_claims_with_status_filter_is_reviewable_yes(
+            self, client, employer_auth_token, review_by_claim
+        ):
+            resp = self._perform_api_call(
+                "/v1/claims?is_reviewable=yes", client, employer_auth_token
+            )
+            self._perform_assertions(resp, status_code=200, expected_claims=[review_by_claim])
+
+        def test_get_claims_with_status_filter_is_reviewable_no(
+            self,
+            client,
+            employer_auth_token,
+            no_open_requirement_claims,
+            pending_claims,
+            expired_requirements_claim,
+            no_action_claim,
+        ):
+            resp = self._perform_api_call(
+                "/v1/claims?is_reviewable=no", client, employer_auth_token
+            )
+            self._perform_assertions(
+                resp,
+                status_code=200,
+                expected_claims=[
+                    *no_open_requirement_claims,
+                    *pending_claims,
+                    expired_requirements_claim,
+                    no_action_claim,
+                ],
+            )
+
+        def test_get_claims_with_status_filter_is_reviewable_invalid_parameter(
+            self, client, employer_auth_token
+        ):
+            resp = self._perform_api_call(
+                "/v1/claims?is_reviewable=invalid", client, employer_auth_token
+            )
+            response_body = resp.get_json()
+            assert resp.status_code == 400
+            assert "'invalid' is not one of" in response_body["detail"]
+
         def test_get_claims_with_status_filter_multiple_statuses(
             self,
             client,
@@ -4482,6 +4523,34 @@ class TestGetClaimsEndpoint:
             response_body = resp.get_json()
             data = response_body.get("data", [])
             assert len(data) == self.claims_count / 4
+
+        def test_get_claims_is_reviewable_yes_absence_status_order(
+            self, client, employer_auth_token, employee
+        ):
+            params = {
+                "claim_status": ActionRequiredStatusFilter.OPEN_REQUIREMENT,
+                "order_by": "employee",
+                "is_reviewable": "yes",
+            }
+            resp = self._perform_api_call(params, client, employer_auth_token)
+            assert resp.status_code == 200
+            response_body = resp.get_json()
+            data = response_body.get("data", [])
+            assert len(data) == self.claims_count / 4
+
+        def test_get_claims_is_reviewable_no_absence_status_order(
+            self, client, employer_auth_token, employee
+        ):
+            params = {
+                "claim_status": ActionRequiredStatusFilter.OPEN_REQUIREMENT,
+                "order_by": "employee",
+                "is_reviewable": "no",
+            }
+            resp = self._perform_api_call(params, client, employer_auth_token)
+            assert resp.status_code == 200
+            response_body = resp.get_json()
+            data = response_body.get("data", [])
+            assert len(data) == 0
 
         def test_get_claims_absence_status_order_filter_employee_search_open_requirements(
             self, client, employer_auth_token, employee

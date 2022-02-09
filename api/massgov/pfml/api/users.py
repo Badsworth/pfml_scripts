@@ -16,6 +16,7 @@ from massgov.pfml.api.util.deepgetattr import deepgetattr
 from massgov.pfml.api.validation.exceptions import IssueType, ValidationErrorDetail
 from massgov.pfml.api.validation.user_rules import (
     get_users_convert_employer_issues,
+    get_users_patch_issues,
     get_users_post_employer_issues,
     get_users_post_required_fields_issues,
 )
@@ -178,6 +179,16 @@ def users_current_get():
 def users_patch(user_id):
     """This endpoint modifies the user specified by the user_id"""
     body = UserUpdateRequest.parse_obj(connexion.request.json)
+
+    issues = get_users_patch_issues(body)
+    if issues:
+        logger.info("users_patch failure - request has invalid fields")
+        return response_util.error_response(
+            status_code=BadRequest,
+            message="Request does not include valid fields.",
+            errors=issues,
+            data={},
+        ).to_api_response()
 
     with app.db_session() as db_session:
         user = get_or_404(db_session, User, user_id)

@@ -1873,11 +1873,18 @@ export function assertConcurrentLeave(leave: ValidConcurrentLeave): void {
     });
 }
 
+export type LeaveType =
+  | "Active duty"
+  | "Military family"
+  | "Bond with a child"
+  | "Care for a family member"
+  | "Medical leave"
+  | "Medical leave for pregnancy or birth";
 /**
  * Assert leave type of the claim during the review.
  * @param leaveType expand the type as needed
  */
-export function assertLeaveType(leaveType: "Active duty"): void {
+export function assertLeaveType(leaveType: LeaveType): void {
   cy.findByText(leaveType, { selector: "h3" });
 }
 export type FilterOptionsFlags = {

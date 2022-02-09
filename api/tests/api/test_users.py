@@ -547,6 +547,24 @@ def test_users_patch_fineos_forbidden(client, fineos_user, fineos_user_token):
     tests.api.validate_error_response(response, 403)
 
 
+def test_users_patch_mfa_phone_number_validation(client, user, auth_token):
+    body = {"mfa_phone_number": {}}
+
+    response = client.patch(
+        "/v1/users/{}".format(user.user_id),
+        json=body,
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+    errors = response.get_json().get("errors")
+
+    assert {
+        "field": "mfa_phone_number.phone_number",
+        "message": "phone_number is required when mfa_phone_number is included in request",
+        "type": "required",
+    } in errors
+    assert response.status_code == 400
+
+
 def test_has_verification_data_flag(client, employer_user, employer_auth_token, test_db_session):
     employer = EmployerFactory.create()
     # yesterday = datetime.today() - relativedelta(days=1)

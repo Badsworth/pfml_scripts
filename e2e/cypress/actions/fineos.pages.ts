@@ -51,12 +51,17 @@ import {
   parseISO,
   startOfWeek,
   subDays,
+  isBefore,
+  isAfter,
+  getHours,
+  addBusinessDays,
 } from "date-fns";
 import { DocumentUploadRequest } from "../../src/api";
 import { fineos } from ".";
 import { LeaveReason } from "../../src/generation/Claim";
 import { config } from "./common";
 import { FineosCorrespondanceType, FineosDocumentType } from "./fineos.enums";
+import { convertToTimeZone } from "date-fns-timezone";
 
 type StatusCategory =
   | "Applicability"
@@ -977,6 +982,13 @@ class TasksPage {
   all(): this {
     cy.get("input[type='radio'][value$='_allTasks']").click();
     waitForAjaxComplete();
+    return this;
+  }
+
+  returnSubTasksTab(): this {
+    cy.get(
+      'td[id$="_FINEOS.WorkManager.Activities.ViewTasks.AbsenceCase_TasksView_cell"]'
+    ).click();
     return this;
   }
 }
@@ -2133,6 +2145,61 @@ export function numToPaymentFormat(num: number): string {
   }).format(num)}${decimal}`;
 }
 
+/**
+ * Function to determine payment processing dates when preventing overpayments.
+ * Note: This is intended to be used for this specific scenario, and won't be compatible with every payment under Amounts Pending
+ * Read more on preventing overpayments here: https://lwd.atlassian.net/browse/CPS-3115
+ * @returns Date
+ */
+export function calculatePaymentDatePreventingOP() {
+  const PFML_HOLIDAYS = [
+    "2022-02-21",
+    "2022-04-18",
+    "2022-05-30",
+    "2022-06-20",
+    "2022-07-04",
+    "2022-09-05",
+    "2022-10-10",
+    "2022-11-11",
+    "2022-11-24",
+    "2022-12-26",
+    "2023-01-02",
+    "2023-01-16",
+    "2023-02-20",
+    "2023-04-17",
+    "2023-05-29",
+    "2023-06-19",
+    "2023-07-04",
+    "2023-09-04",
+    "2023-10-09",
+    "2023-11-23",
+    "2023-12-25",
+  ] as const;
+
+  const estTimeHour = getHours(
+    convertToTimeZone(new Date(), {
+      timeZone: "America/New_York",
+    })
+  );
+  const isBeforeEndBusinessDay = estTimeHour < 17;
+  const afterNormalBusinessDays = addBusinessDays(
+    new Date(),
+    isBeforeEndBusinessDay ? 5 : 6
+  );
+  const hasHoliday = (holiday: Date) => {
+    return (
+      isAfter(holiday, subDays(new Date(), 1)) &&
+      isBefore(holiday, addDays(afterNormalBusinessDays, 1))
+    );
+  };
+  // account for holidays - which further delays the payment processing date
+  let totalHolidays = 0;
+  for (let i = 0; i < PFML_HOLIDAYS.length; i++) {
+    if (hasHoliday(parseISO(PFML_HOLIDAYS[i]))) totalHolidays += 1;
+  }
+  return addBusinessDays(afterNormalBusinessDays, totalHolidays);
+}
+
 class BenefitsExtensionPage {
   private continue(text = "Next") {
     clickBottomWidgetButton(text);
@@ -2708,21 +2775,40 @@ class NotificationOptions extends CreateNotificationStep {
 }
 
 /**
- * Maps to select inputs available to describe Absense Reason
+ * Maps to select inputs available to describe Absence Reason
+ * Add new options to discriminated unions as needed
  */
 export type AbsenceReasonDescription = {
-  relates_to?: string;
-  reason?: string;
-  qualifier_1?: string;
-  qualifier_2?: string;
+  relates_to?: "Employee" | "Family";
+  reason?:
+    | "Serious Health Condition - Employee"
+    | "Care for a Family Member"
+    | "Pregnancy/Maternity"
+    | "Child Bonding"
+    | "Military Exigency Family"
+    | "Military Caregiver";
+  qualifier_1?:
+    | "Not Work Related"
+    | "Serious Health Condition"
+    | "Birth Disability"
+    | "Foster Care"
+    | "Other Additional Activities"
+    | "Newborn"
+    | "Adoption"
+    | "Prenatal Care";
+  qualifier_2?: "Sickness";
+  typeOfRequest?: TypeOfRequestOptions;
 };
 /**
  * Maps to select inputs available to describe Primary Relationship
+ * Add new options to discriminated unions as needed
  */
 export type PrimaryRelationshipDescription = {
-  relationship_to_employee?: string;
-  qualifier_1?: string;
-  qualifier_2?: string;
+  relationship_to_employee?: "Sibling - Brother/Sister" | "Child";
+  qualifier_1?: "Biological";
+  // @todo - currently unused, uncomment when you need to set
+  // this field
+  // qualifier_2?: "Equivalent Family Member" | "Opposite Sex" | "Same Sex";
 };
 
 class ReasonOfAbsence extends CreateNotificationStep {
@@ -2754,8 +2840,10 @@ class ReasonOfAbsence extends CreateNotificationStep {
         );
       if (relationship.qualifier_1)
         this.chooseSelectOption("Qualifier 1", relationship.qualifier_1);
-      if (relationship.qualifier_2)
-        this.chooseSelectOption("Qualifier 2", relationship.qualifier_2);
+      // @todo - currently unused, uncomment when you need to set
+      // this field
+      // if (relationship.qualifier_2)
+      //   this.chooseSelectOption("Qualifier 2", relationship.qualifier_2);
     });
     return this;
   }

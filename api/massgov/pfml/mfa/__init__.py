@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 
+import massgov.pfml.api.app as app
 import massgov.pfml.cognito.config as cognito_config
 import massgov.pfml.util.logging
 from massgov.pfml.db.models.employees import User
@@ -18,6 +19,12 @@ def handle_mfa_disabled(user: User, last_enabled_at: Optional[datetime], updated
 
     log_attributes = _collect_log_attributes(updated_by, last_enabled_at)
     logger.info("MFA disabled for user", extra=log_attributes)
+
+    if app.get_config().environment == "local" and app.get_config().disable_sending_emails:
+        logger.info(
+            "Skipping sending an MFA disabled notification email", extra=log_attributes,
+        )
+        return
 
     try:
         _send_mfa_disabled_email(user.email_address, user.mfa_phone_number_last_four())

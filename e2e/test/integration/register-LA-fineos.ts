@@ -43,14 +43,8 @@ describe("Series of test that verifies LAs are properly registered in Fineos", (
     });
   });
 
-  test("Register Leave Admins (** verify only one LA **)", async () => {
+  test("Register Leave Admins", async () => {
     const fein = employer.fein;
-    const withholding_amount =
-      employer.withholdings[employer.withholdings.length - 1];
-    const quarter = formatISO(endOfQuarter(subQuarters(new Date(), 2)), {
-      representation: "date",
-    });
-
     try {
       await authenticator.registerLeaveAdmin(
         leave_admin_creds_1.username,
@@ -63,6 +57,20 @@ describe("Series of test that verifies LAs are properly registered in Fineos", (
         fein
       );
       console.log("Both Leave Admins have been registered Successfully");
+    } catch (e) {
+      throw new Error(`Unable to register Leave Admins: ${e}`);
+    }
+  }, 90000);
+
+  test("Verify Leave Admin", async () => {
+    const fein = employer.fein;
+    const withholding_amount =
+      employer.withholdings[employer.withholdings.length - 1];
+    const quarter = formatISO(endOfQuarter(subQuarters(new Date(), 2)), {
+      representation: "date",
+    });
+    try {
+      console.log("Verifying Leave Admin");
       await authenticator.verifyLeaveAdmin(
         leave_admin_creds_1.username,
         leave_admin_creds_1.password,

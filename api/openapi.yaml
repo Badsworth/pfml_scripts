@@ -210,6 +210,7 @@ paths:
       security:
         - jwt: []
         - oauth2: []
+          agent-id: []
       tags:
         - Employees
       summary: Retrieve an Employee record
@@ -271,6 +272,7 @@ paths:
       security:
         - jwt: []
         - oauth2: []
+          agent-id: []
       tags:
         - Employees
       summary: Lookup an Employee by SSN/ITIN and name
@@ -404,6 +406,7 @@ paths:
       security:
         - jwt: []
         - oauth2: []
+          agent-id: []
       summary: Retrieve claims
       operationId: massgov.pfml.api.claims.get_claims
       tags:
@@ -456,6 +459,12 @@ paths:
             type: boolean
           description: A temporary boolean value used to allow smoke testers to see HRD dashboard
           required: false
+        - name: "is_reviewable"
+          in: query
+          schema:
+            type: string
+            enum: ["yes", "no"]
+          description: A string value used to check whether or not to filter claims where a review is requested for a leave admin.
         - name: "request_decision"
           in: query
           schema:
@@ -1354,7 +1363,16 @@ components:
         clientCredentials:
           tokenUrl: /api/v1/oauth2/token
           scopes: {}
+    agent-id:
+      type: apiKey
+      in: header
+      name: Mass-PFML-Agent-ID
+      description: |
+        Some clients are required to provide a non-empty value for this header in order to authenticate.
 
+        The value should be a stable, unique identifier for the entity/actor/agent driving the interaction with the Paid Leave API.
+
+        The typical case will be when the client is another system, making calls to the Paid Leave API on behalf of a user in that other system, the header value should then be some identifier for that individual user (not the client).
   parameters:
     pageSize:
       name: "page_size"

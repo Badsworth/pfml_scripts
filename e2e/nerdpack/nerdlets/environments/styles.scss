@@ -3,6 +3,11 @@
 @import "../common/components/EnvironmentsTable";
 
 .e2e-run-history {
+  min-width: 330px;
+}
+
+.versions {
+  min-width: 250px;
 }
 
 .version {

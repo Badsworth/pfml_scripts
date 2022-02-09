@@ -123,6 +123,7 @@ output "domains" {
     "test"        = "paidleave-test.mass.gov",
     "training"    = "paidleave-training.mass.gov",
     "uat"         = "paidleave-uat.mass.gov",
+    "trn2"        = "paidleave-trn2.dfml.eol.mass.gov"
   }
 }
 
@@ -173,6 +174,7 @@ output "cert_domains" {
     "test"        = "paidleave-test.mass.gov",
     "training"    = "paidleave-performance.mass.gov",
     "uat"         = "paidleave-uat.mass.gov",
+    "trn2"        = "paidleave-trn2.dfml.eol.mass.gov"
   }
 }
 

@@ -109,27 +109,48 @@ export const DefaultStory = (
   }
 ) => {
   // Configure payments array
+  const firstPaymentStartDate = STATIC_DATES.absence_period_start_date.subtract(
+    -7,
+    "day"
+  );
+
   const payments = {
     [PAYMENT_OPTIONS.REGULAR]: [
-      createMockPayment({
-        payment_method: args["Payment method"],
-        status: "Sent to bank",
-      }),
-      createMockPayment({
-        sent_to_bank_date: null,
-        payment_method: args["Payment method"],
-        status: "Pending",
-      }),
-      createMockPayment({
-        sent_to_bank_date: null,
-        payment_method: args["Payment method"],
-        status: "Delayed",
-      }),
-      createMockPayment({
-        sent_to_bank_date: null,
-        payment_method: args["Payment method"],
-        status: "Cancelled",
-      }),
+      createMockPayment(
+        {
+          payment_method: args["Payment method"],
+          status: "Sent to bank",
+        },
+        false,
+        firstPaymentStartDate.subtract(-7, "day").format("YYYY-MM-DD")
+      ),
+      createMockPayment(
+        {
+          sent_to_bank_date: null,
+          payment_method: args["Payment method"],
+          status: "Pending",
+        },
+        false,
+        firstPaymentStartDate.subtract(-14, "day").format("YYYY-MM-DD")
+      ),
+      createMockPayment(
+        {
+          sent_to_bank_date: null,
+          payment_method: args["Payment method"],
+          status: "Delayed",
+        },
+        false,
+        firstPaymentStartDate.subtract(-21, "day").format("YYYY-MM-DD")
+      ),
+      createMockPayment(
+        {
+          sent_to_bank_date: null,
+          payment_method: args["Payment method"],
+          status: "Cancelled",
+        },
+        false,
+        firstPaymentStartDate.subtract(-28, "day").format("YYYY-MM-DD")
+      ),
     ],
     [PAYMENT_OPTIONS.RETROACTIVE]: [
       createMockPayment({
@@ -164,11 +185,31 @@ export const DefaultStory = (
     absence_period_start_date: "2021-05-01",
     absence_period_end_date: "2021-07-01",
     request_decision: requestTypes[0],
+    reason: leaveScenarioMap[args["Leave scenario"]][0].reason,
+    reason_qualifier_one:
+      leaveScenarioMap[args["Leave scenario"]][0].reason_qualifier_one,
   });
+  // Only used for the "Medical (pregnancy and bonding)" scenario
+  const bondingAbsencePeriod = createAbsencePeriod({
+    ...absenceDetails,
+    absence_period_start_date: "2021-08-01",
+    absence_period_end_date: "2021-011-01",
+    request_decision: requestTypes[0],
+    reason: leaveScenarioMap[args["Leave scenario"]][1]?.reason,
+  });
+
+  // Do this so we can have two absence periods for the pregnancy and bonding leave scenario
+  const oneOrMultipleAbsencePeriod = (leaveScenario: string | number) => {
+    if (leaveScenario !== "Medical (pregnancy and bonding)") {
+      return [defaultAbsencePeriod];
+    }
+    // Override the reason for the second absence period
+    return [defaultAbsencePeriod, bondingAbsencePeriod];
+  };
   const appLogic = useMockableAppLogic({
     claims: {
       claimDetail: createMockClaimDetail({
-        absencePeriods: [defaultAbsencePeriod],
+        absencePeriods: oneOrMultipleAbsencePeriod(args["Leave scenario"]),
         hasPaidPayments:
           args.Payments === PAYMENT_OPTIONS.REGULAR ||
           args.Payments === PAYMENT_OPTIONS.RETROACTIVE,
@@ -191,6 +232,10 @@ export const DefaultStory = (
       ),
       hasLoadedClaimDocuments: () => true,
       loadAll: () => new Promise(() => {}),
+    },
+    // Make the navigation tab appear active
+    portalFlow: {
+      pathname: `/applications/status/payments`,
     },
   });
   return (

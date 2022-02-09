@@ -92,7 +92,6 @@ data "aws_iam_policy_document" "task_executor" {
       "${local.ssm_arn_prefix}/${local.app_name}/common"
     ]
   }
-
 }
 
 # Link access policies to the ECS task execution role.
