@@ -152,7 +152,7 @@ export class FilterByTag extends BaseFilter {
     morning: `(tag like '%Morning%' OR tag like '%Sanity Check%' OR tag like '%Post Morning Run Check%' )`,
     deploy: `tag like '%deploy%'`,
     pr: `(tag like 'PR,%' OR tag like '% - PR%')`,
-    manual: `(tag LIKE 'Manual%' AND branch = 'main')`,
+    manual: `(tag LIKE 'Manual%')`,
   };
 
   constructor(props) {
