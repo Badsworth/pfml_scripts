@@ -109,7 +109,7 @@ output "nonprod_admin_roles" {
 }
 
 # Mapping of environments to pretty domains.
-# Note that the EOTSS-recommended format changed to use the eol.mass.gov domain.
+# Note that the EOTSS-recommended format changed to use the `dfml.eol.mass.gov` domain.
 #
 output "domains" {
   value = {
