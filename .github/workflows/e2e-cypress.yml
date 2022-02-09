@@ -62,6 +62,11 @@ on:
       title_override:
         description: "Title Override (replaces commit message in Cypress Dashboard)"
         required: false
+      run_stable:
+        description: "Run tests in stable group"
+        required: false
+        default: true
+        type: boolean
       run_unstable:
         description: "Run tests in unstable group"
         required: false
@@ -92,7 +97,6 @@ env:
   E2E_SSO_USERNAME: ${{ secrets.E2E_SSO_USERNAME }}
   E2E_TWILIO_ACCOUNTSID: ${{ secrets.E2E_TWILIO_ACCOUNTSID }}
   E2E_TWILIO_AUTHTOKEN: ${{ secrets.E2E_TWILIO_AUTHTOKEN }}
-  CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   # Caching/build performance - Move Cypress, Playwright binary storage to .npm to leverage caching.
   CYPRESS_CACHE_FOLDER: /home/runner/.npm/.cypress-cache
@@ -169,6 +173,10 @@ jobs:
           group: Commit Stable
           tag: "${{ github.event.inputs.cypress_tags }},Env-${{ github.event.inputs.target_environment }}"
           config: reporter=cypress/reporters/new-relic.js
+        env:
+          CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
+          CYPRESS_PROJECT_ID: "wjoxhr"
+        if: github.event.inputs.run_stable == 'true' && always()
 
       # Run Cypress tests.
       - name: Cypress Tests (Commit Unstable)
@@ -183,6 +191,9 @@ jobs:
           install: false
           tag: "${{ github.event.inputs.cypress_tags }},Env-${{ github.event.inputs.target_environment }}"
           config: trashAssetsBeforeRuns=false,reporter=cypress/reporters/new-relic.js
+        env:
+          CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY_UNSTABLE }}
+          CYPRESS_PROJECT_ID: "2wzg2w"
         # Always run this step if requested, even if stable tests fail.
         if: github.event.inputs.run_unstable == 'true' && always()
         # Do not allow this step to fail the job. It is informational, not mandatory.
@@ -205,6 +216,9 @@ jobs:
           install: false
           tag: "${{ github.event.inputs.cypress_tags }},Env-${{ github.event.inputs.target_environment }}"
           config: trashAssetsBeforeRuns=false,reporter=cypress/reporters/new-relic.js
+        env:
+          CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY_MORNING }}
+          CYPRESS_PROJECT_ID: "tvt4k6"
         if: github.event.inputs.run_morning == 'true' && always()
 
       - name: "Archive screenshots"
