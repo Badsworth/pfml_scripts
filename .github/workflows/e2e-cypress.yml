@@ -44,6 +44,7 @@ on:
           - Manual - Post API Deployment Check
           - Manual - Post Portal Deployment Check
           - Manual - Post Fineos Deployment Check
+          - Manual - Fineos Trigger
           - Manual - Environment Sanity Check
           - Manual - New Dataset Check
           - Manual - Web Portal Flow Content Check
