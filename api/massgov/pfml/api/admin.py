@@ -99,7 +99,7 @@ def admin_logout():
     ).to_api_response()
 
 
-def admin_flag_get_logs(name):
+def admin_get_flag_logs(name):
     return response_util.success_response(
         data={}, message=f"Successfully retrieved flag {name}",
     ).to_api_response()

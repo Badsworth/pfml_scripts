@@ -1311,13 +1311,13 @@ paths:
       requestBody:
         $ref: "#/components/requestBodies/FlagUpdateRequest"
 
-  /admin/flags/logs/{name}:
+  /admin/flag-logs/{name}:
     get:
       tags:
         - Admin
         - Feature Flags
       summary: Get feature flags
-      operationId: massgov.pfml.api.admin.admin_flag_get_logs
+      operationId: massgov.pfml.api.admin.admin_get_flag_logs
       parameters:
         - name: name
           in: path
