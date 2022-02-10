@@ -6,7 +6,7 @@ import {
   FlagLogsResponse,
   FlagsResponse,
   getAdminFlagsLogsByName,
-  postAdminFlagsByName,
+  patchAdminFlagsByName,
 } from "../api";
 import Alert from "../components/Alert";
 import ConfirmationDialog from "../components/ConfirmationDialog";
@@ -55,7 +55,7 @@ export default function Maintenance() {
   const confirmationDialogContinueCallback = async () => {
     // disable at API.
     if (maintenance) {
-      await postAdminFlagsByName({ name: "maintenance" }, { enabled: false });
+      await patchAdminFlagsByName({ name: "maintenance" }, { enabled: false });
       setShowConfirmationDialog(false);
     }
   };
@@ -114,7 +114,7 @@ export default function Maintenance() {
   };
   const getCreatedBy = (m: FlagLog) => (
     <>
-      {m.family_name} {m.given_name}
+      {m.first_name} {m.last_name}
     </>
   );
 
