@@ -2095,8 +2095,10 @@ const pages: {
     leaveStatusMessage_Pending:
       "<strong>This leave is being reviewed.</strong>",
     // TODO (PORTAL-1652): Create content for these request decision options
-    leaveStatusMessage_Projected: "",
-    leaveStatusMessage_Voided: "",
+    leaveStatusMessage_Projected:
+      "<strong>This leave is being reviewed.</strong>",
+    leaveStatusMessage_Voided:
+      "<strong>This leave was cancelled.</strong><p>This application will no longer be processed. If you want to apply for paid leave again, you can begin another application.</p><p><application-link>Start another application</application-link></p>",
     leaveStatusMessage_Withdrawn:
       "<strong>This leave was withdrawn.</strong><p>You have withdrawn your application from the review process. If you want to apply for paid leave again, you can begin another application.</p><p><application-link>Start another application</application-link></p>",
     legalNoticesFallback:
