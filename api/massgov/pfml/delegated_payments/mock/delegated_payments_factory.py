@@ -22,6 +22,7 @@ from massgov.pfml.db.models.employees import (
     State,
 )
 from massgov.pfml.db.models.factories import (
+    AbsencePeriodFactory,
     AddressFactory,
     ClaimFactory,
     EmployeeFactory,
@@ -43,6 +44,10 @@ fake = faker.Faker()
 fake.seed_instance(2394)
 
 KWARG_VALUE_NOT_SET = "KWARG_VALUE_NOT_SET"
+
+
+def random_unique_int(min=1, max=999_999_999):
+    return fake.unique.random_int(min=min, max=max)
 
 
 # TODO consider adding the following
@@ -67,6 +72,7 @@ class DelegatedPaymentFactory(MockData):
         add_pub_eft: bool = True,
         add_payment: bool = True,
         add_import_log: bool = True,
+        add_single_absence_period: bool = False,
         **kwargs: Any,
     ):
         super().__init__(generate_defaults, **kwargs)
@@ -88,6 +94,7 @@ class DelegatedPaymentFactory(MockData):
         self.add_pub_eft = add_pub_eft
         self.add_payment = add_payment
         self.add_import_log = add_import_log
+        self.add_single_absence_period = add_single_absence_period
 
         # employee
         self.fineos_customer_number = self.get_value("fineos_customer_number", None)
@@ -117,9 +124,7 @@ class DelegatedPaymentFactory(MockData):
         self.employer_exempt_cease_date = self.get_value("employer_exempt_cease_date", None)
 
         # pub eft defaults
-        self.ssn = self.get_value(
-            "ssn", str(fake.unique.random_int(min=100_000_000, max=200_000_000))
-        )
+        self.ssn = self.get_value("ssn", str(random_unique_int(min=100_000_000, max=200_000_000)))
         self.pub_individual_id = self.get_value("pub_individual_id", None)
         self.prenote_state = self.get_value("prenote_state", PrenoteState.PENDING_WITH_PUB)
         self.routing_nbr = self.get_value("routing_nbr", generate_routing_nbr_from_ssn(self.ssn))
@@ -130,7 +135,7 @@ class DelegatedPaymentFactory(MockData):
         # claim defaults
         self.claim_type = self.get_value("claim_type", ClaimType.FAMILY_LEAVE)
         self.fineos_absence_id = self.get_value(
-            "fineos_absence_id", f"NTN-{fake.unique.random_int()}-ABS-01"
+            "fineos_absence_id", f"NTN-{random_unique_int()}-ABS-01"
         )
         self.is_id_proofed = self.get_value("is_id_proofed", True)
         self.fineos_absence_status_id = self.get_value("fineos_absence_status_id", None)
@@ -139,6 +144,11 @@ class DelegatedPaymentFactory(MockData):
         )
         self.organization_unit_name = self.get_value("organization_unit_name", None)
         self.organization_unit = self.get_value("organization_unit", None)
+
+        # Absence period defaults
+        self.fineos_leave_request_id = self.get_value(
+            "fineos_leave_request_id", random_unique_int()
+        )
 
         # payment defaults
         self.payment_optional_kwargs: Dict[str, Any] = (
@@ -279,6 +289,10 @@ class DelegatedPaymentFactory(MockData):
                 organization_unit=self.organization_unit,
             )
 
+        # Will add an absence period with length equal to claim
+        if self.add_single_absence_period:
+            self.create_absence_period()
+
         return self.claim
 
     def get_or_create_import_log(self):
@@ -319,6 +333,7 @@ class DelegatedPaymentFactory(MockData):
                 "fineos_extract_import_log_id": self.fineos_extract_import_log_id,
                 "exclude_from_payment_status": self.exclude_from_payment_status,
                 "disb_check_eft_issue_date": self.disb_check_eft_issue_date,
+                "fineos_leave_request_id": self.fineos_leave_request_id,
             }
             | self.payment_optional_kwargs
             | overrides
@@ -490,6 +505,26 @@ class DelegatedPaymentFactory(MockData):
         )
 
         return cancellation_payment, successor_payment
+
+    def create_absence_period(self, **kwargs):
+        claim = self.claim
+
+        if claim:
+            # Below are default params that can be overriden
+            # by the kwargs. Default is to make an absence period
+            # that matches the claim for similar fields
+            params = {
+                "claim": claim,
+                "fineos_leave_request_id": self.fineos_leave_request_id,
+                "absence_period_start_date": claim.absence_period_start_date,
+                "absence_period_end_date": claim.absence_period_end_date,
+                "is_id_proofed": claim.is_id_proofed,
+                "fineos_absence_period_class_id": random_unique_int(),
+                "fineos_absence_period_index_id": random_unique_int(),
+            } | kwargs
+
+            return AbsencePeriodFactory.create(**params)
+        return None
 
     def create_all(self):
         if self.add_pub_eft:
