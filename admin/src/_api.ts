@@ -1140,12 +1140,12 @@ export interface AdminLogoutResponse {
   logout_uri?: string;
 }
 export type GETAdminUsersResponse = UserResponse[];
-export interface FlagLog extends Flag {
+export interface FlagWithLog extends Flag {
   first_name?: string;
   last_name?: string;
   updated_at?: string;
 }
-export type FlagLogsResponse = FlagLog[];
+export type FlagWithLogsResponse = FlagWithLog[];
 /**
  * Get the API status
  */
@@ -1916,15 +1916,15 @@ export async function patchAdminFlagsByName(
 /**
  * Get feature flags
  */
-export async function getAdminFlagsLogsByName(
+export async function getAdminFlagLogsByName(
   {
     name,
   }: {
     name: string;
   },
   options?: RequestOptions,
-): Promise<ApiResponse<FlagLogsResponse>> {
-  return await http.fetchJson(`/admin/flags/logs/${name}`, {
+): Promise<ApiResponse<FlagWithLogsResponse>> {
+  return await http.fetchJson(`/admin/flag-logs/${name}`, {
     ...options,
   });
 }
