@@ -671,6 +671,36 @@ class TestNotificationManagedRequirement:
         )
 
     @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_managed_requirements")
+    def test_notification_managed_requirement_update_success_employer_confirmation_of_leave_data(
+        self,
+        mock_get_req,
+        client,
+        test_db_session,
+        claim,
+        fineos_user_token,
+        fineos_managed_requirement,
+    ):
+        mock_get_req.return_value = [fineos_managed_requirement]
+        # create existing managed requirement in db not in sync with fineos managed requirement
+        create_managed_requirement_from_fineos(
+            test_db_session, claim.claim_id, fineos_managed_requirement
+        )
+        fineos_managed_requirement.followUpDate = date.today() + timedelta(days=20)
+        fineos_managed_requirement.status = ManagedRequirementStatus.get_description(2)
+
+        # _api_call_create sends a notification with
+        # trigger "Employer Confirmation of Leave Data"
+        response = self._api_call_create(client, fineos_user_token)
+
+        assert response.status_code == 201
+        managed_requirement = get_managed_requirement_by_fineos_managed_requirement_id(
+            fineos_managed_requirement.managedReqId, test_db_session
+        )
+        self._assert_managed_requirement_data(
+            claim, managed_requirement, fineos_managed_requirement
+        )
+
+    @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_managed_requirements")
     def test_notification_managed_requirement_create_failure(
         self, mock_get_req, client, test_db_session, fineos_user_token, fineos_managed_requirement,
     ):
