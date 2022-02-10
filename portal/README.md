@@ -19,7 +19,7 @@ This is a [Next.js](https://nextjs.org/docs)-powered [React](https://reactjs.org
 
 Non-secret environment configuration is stored in [config/](config/) in files by env (`stage`, `test`, etc.)
 
-## Local development
+## Local Portal development
 
 Install dependencies:
 
