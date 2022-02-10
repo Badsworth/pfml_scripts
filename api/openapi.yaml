@@ -1331,7 +1331,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/FlagLogsResponse"
+                $ref: "#/components/schemas/FlagWithLogsResponse"
         "503":
           $ref: "#/components/responses/ServiceUnavailableError"
 
@@ -1791,7 +1791,7 @@ components:
           example: false
       additionalProperties: false
 
-    FlagLog:
+    FlagWithLog:
       allOf:
         - $ref: "#/components/schemas/Flag"
         - type: object
@@ -1812,10 +1812,10 @@ components:
               readOnly: true
           additionalProperties: false
 
-    FlagLogsResponse:
+    FlagWithLogsResponse:
       type: array
       items:
-        $ref: "#/components/schemas/FlagLog"
+        $ref: "#/components/schemas/FlagWithLog"
 
 
     FlagsResponse:
