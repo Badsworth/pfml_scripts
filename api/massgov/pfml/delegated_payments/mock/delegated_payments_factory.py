@@ -19,6 +19,7 @@ from massgov.pfml.db.models.employees import (
     PaymentCheck,
     PaymentTransactionType,
     PrenoteState,
+    State,
 )
 from massgov.pfml.db.models.factories import (
     AddressFactory,
@@ -358,7 +359,9 @@ class DelegatedPaymentFactory(MockData):
 
         return self.payment
 
-    def get_or_create_payment_with_writeback(self, writeback_transaction_status):
+    def get_or_create_payment_with_writeback(
+        self, writeback_transaction_status, writeback_sent_at=None
+    ):
         self.get_or_create_payment()
 
         if self.payment and writeback_transaction_status:
@@ -367,6 +370,17 @@ class DelegatedPaymentFactory(MockData):
                 writeback_transaction_status=writeback_transaction_status,
                 db_session=self.db_session,
             )
+            if writeback_sent_at:
+                # Move the state
+                state_log_util.create_finished_state_log(
+                    associated_model=self.payment,
+                    end_state=State.DELEGATED_FINEOS_WRITEBACK_SENT,
+                    outcome=state_log_util.build_outcome("Fake writeback send"),
+                    db_session=self.db_session,
+                )
+                # Set the end time
+                writeback_details.writeback_sent_at = writeback_sent_at
+
             return writeback_details
 
     def create_related_payment(
@@ -378,6 +392,7 @@ class DelegatedPaymentFactory(MockData):
         payment_end_state=None,
         writeback_transaction_status=None,
         fineos_extraction_date=None,
+        writeback_sent_at=None,
     ):
         """ Roughly mimic creating another payment. Uses the original payment as a base
             with only the specified values + C/I values updated.
@@ -407,11 +422,21 @@ class DelegatedPaymentFactory(MockData):
                 self._create_state_call(new_payment, payment_end_state)
 
             if writeback_transaction_status:
-                stage_payment_fineos_writeback(
+                writeback_details = stage_payment_fineos_writeback(
                     payment=new_payment,
                     writeback_transaction_status=writeback_transaction_status,
                     db_session=self.db_session,
                 )
+                if writeback_sent_at:
+                    # Move the state
+                    state_log_util.create_finished_state_log(
+                        associated_model=new_payment,
+                        end_state=State.DELEGATED_FINEOS_WRITEBACK_SENT,
+                        outcome=state_log_util.build_outcome("Fake writeback send"),
+                        db_session=self.db_session,
+                    )
+                    # Set the end time
+                    writeback_details.writeback_sent_at = writeback_sent_at
             return new_payment
 
         return None
@@ -441,6 +466,7 @@ class DelegatedPaymentFactory(MockData):
         import_log=None,
         payment_end_state=None,
         writeback_transaction_status=None,
+        writeback_sent_at=None,
     ):
         """ Create reissued equivalent payments.
             This will return a cancellation + new payment both with a new import log ID
@@ -460,6 +486,7 @@ class DelegatedPaymentFactory(MockData):
             import_log_id=import_log.import_log_id,
             payment_end_state=payment_end_state,
             writeback_transaction_status=writeback_transaction_status,
+            writeback_sent_at=writeback_sent_at,
         )
 
         return cancellation_payment, successor_payment

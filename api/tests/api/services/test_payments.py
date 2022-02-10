@@ -7,6 +7,7 @@ from freezegun.api import freeze_time
 from sqlalchemy.sql.expression import null
 
 import massgov.pfml.api.services.payments as payment_services
+from massgov.pfml.api.services.payments_services_util import WRITEBACK_SCENARIOS_MAPPER
 from massgov.pfml.db.models.employees import PaymentMethod, PaymentTransactionType
 from massgov.pfml.db.models.factories import ImportLogFactory, PaymentFactory
 from massgov.pfml.db.models.payments import FineosWritebackTransactionStatus
@@ -549,6 +550,13 @@ def test_get_payments_with_status(test_db_session, caplog):
             log_dict[f"payment[{i}].payment_type"]
             == expected_payment.payment_transaction_type.payment_transaction_type_description
         )
+        if i != 3:
+            assert (
+                log_dict[f"payment[{i}].writeback_transaction_status"]
+                == FineosWritebackTransactionStatus.PAYMENT_AUDIT_IN_PROGRESS.transaction_status_description
+            )
+            assert log_dict[f"payment[{i}].transaction_date"] is None  # Wasn't sent
+            assert log_dict[f"payment[{i}].transaction_date_could_change"] is True
 
         # payment 3 is cancelled, so a few values are different
         if i == 3:
@@ -685,6 +693,35 @@ def test_get_payments_with_legacy_and_regular(test_db_session):
         expected_send_date_start=legacy_send_date,
         expected_send_date_end=legacy_send_date,
     )
+
+
+def test_writeback_statuses_configured():
+    """
+    This test just validates that any new writebacks created are
+    configured in the payment status endpoint. If you're seeing this
+    test fail, and added a new writeback, you'll need to configure it.
+
+    Likely, you've added a new error scenario, and setting the status
+    to "delayed" is likely fine. If the status is a more granular version
+    of an older status, consider using that one.
+    """
+    writeback_statuses = FineosWritebackTransactionStatus.get_all()
+
+    unconfigured_writeback_statuses = []
+    for writeback_status in writeback_statuses:
+        if writeback_status.transaction_status_id not in WRITEBACK_SCENARIOS_MAPPER:
+            unconfigured_writeback_statuses.append(writeback_status.transaction_status_description)
+
+    assert (
+        len(unconfigured_writeback_statuses) == 0
+    ), f"The following writeback statuses need to be configured in api/massgov/pfml/api/services/payments.py::WRITEBACK_SCENARIOS: {unconfigured_writeback_statuses}"
+
+    transaction_status_ids = set()
+    for writeback_status in writeback_statuses:
+        assert (
+            writeback_status.transaction_status_id not in transaction_status_ids
+        ), f"Writeback transaction status ID {writeback_status.transaction_status_id} is configured for two separate writeback statuses"
+        transaction_status_ids.add(writeback_status.transaction_status_id)
 
 
 def validate_payment_matches(

@@ -2880,6 +2880,18 @@ components:
             - Cancelled
             - Delayed
           example: "Delayed"
+        writeback_transaction_status:
+          type: string
+          nullable: true
+          example: "Address Validation Error"
+        transaction_date:
+          format: date
+          type: string
+          nullable: true
+          example: "2021-01-01"
+        transaction_date_could_change:
+          type: boolean
+          example: false
 
     EvidenceStatusDetail:
       type: object

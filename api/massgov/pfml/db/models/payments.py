@@ -983,9 +983,9 @@ class FineosWritebackTransactionStatus(LookupTable):
     DATA_ISSUE_IN_SYSTEM = LkFineosWritebackTransactionStatus(
         5, "Payment System Error", PENDING_ACTIVE_WRITEBACK_RECORD_STATUS
     )
-    TOTAL_BENEFITS_OVER_CAP = LkFineosWritebackTransactionStatus(
+    DEPRECATED_TOTAL_BENEFITS_OVER_CAP = LkFineosWritebackTransactionStatus(
         6, "Max Weekly Benefits Exceeded", ACTIVE_WRITEBACK_RECORD_STATUS
-    )
+    )  # Duplicate of 18 - WEEKLY_BENEFITS_AMOUNT_EXCEEDS_850, use that instead
     ADDRESS_VALIDATION_ERROR = LkFineosWritebackTransactionStatus(
         7, "Address Validation Error", ACTIVE_WRITEBACK_RECORD_STATUS
     )
