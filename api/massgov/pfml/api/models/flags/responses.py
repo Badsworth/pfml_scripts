@@ -13,6 +13,6 @@ class FlagResponse(PydanticBaseModel):
 
 
 class FlagLogResponse(FlagResponse):
-    family_name: str
-    given_name: str
-    created_at: datetime
+    first_name: str
+    last_name: str
+    updated_at: datetime
