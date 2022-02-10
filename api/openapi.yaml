@@ -1286,12 +1286,12 @@ paths:
           $ref: "#/components/responses/NotFound"
 
   /admin/flags/{name}:
-    post:
+    patch:
       tags:
         - Admin
         - Feature Flags
       summary: Update a feature flag
-      operationId: massgov.pfml.api.admin.admin_flags_post
+      operationId: massgov.pfml.api.admin.admin_flags_patch
       parameters:
         - name: name
           in: path
@@ -1780,11 +1780,6 @@ components:
           type: string
           example: "maintenance"
           readOnly: true
-        updated_at:
-          type: string
-          nullable: true
-          format: date-time
-          example: "2020-06-26T01:02:03.967736+00:00"
         options:
           type: object
           example:
@@ -1801,15 +1796,15 @@ components:
         - $ref: "#/components/schemas/Flag"
         - type: object
           properties:
-            family_name:
-              type: string
-              example: "Doe"
-              readOnly: true
-            given_name:
+            first_name:
               type: string
               example: "John"
               readOnly: true
-            created_at:
+            last_name:
+              type: string
+              example: "Doe"
+              readOnly: true
+            updated_at:
               type: string
               nullable: false
               format: date-time

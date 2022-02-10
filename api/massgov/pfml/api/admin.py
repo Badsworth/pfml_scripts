@@ -105,9 +105,9 @@ def admin_flag_get_logs(name):
     ).to_api_response()
 
 
-def admin_flags_post(name):
+def admin_flags_patch(name):
     return response_util.success_response(
-        message=f"Successfully updated feature flag {name}", data={}, status_code=201,
+        message=f"Successfully updated feature flag {name}", data={},
     ).to_api_response()
 
 
