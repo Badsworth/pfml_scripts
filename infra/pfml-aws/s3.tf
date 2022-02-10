@@ -274,3 +274,73 @@ resource "aws_s3_bucket_policy" "sns_sms_usage_reports" {
     ]
   })
 }
+
+# ----------------------------------------------------------------------------------------------------------------------
+# Bucket for Admin Portal CloudFront Access Logging
+# Complies with AWS Security Hub control - [CloudFront.5] 
+# https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards-fsbp-controls.html#fsbp-cloudfront-5
+resource "aws_s3_bucket" "admin_portal_cloudfront_access_logging" {
+  bucket = "massgov-pfml-admin-portal-cloudfront-logging"
+  acl    = "log-delivery-write"
+  lifecycle_rule {
+    enabled = true
+    expiration {
+      days = 30
+    }
+  }
+  server_side_encryption_configuration {
+    rule {
+      apply_server_side_encryption_by_default {
+        sse_algorithm = "AES256"
+      }
+    }
+  }
+  tags = merge(module.constants.common_tags, {
+    environment = "all"
+    Name        = "massgov-pfml-admin-portal-cloudfront-logging"
+    public      = "no"
+  })
+}
+
+resource "aws_s3_bucket_public_access_block" "admin_portal_cloudfront_access_logging_block" {
+  bucket                  = aws_s3_bucket.admin_portal_cloudfront_access_logging.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+# Bucket for Portal CloudFront Access Logging
+# Complies with AWS Security Hub control - [CloudFront.5] 
+# https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards-fsbp-controls.html#fsbp-cloudfront-5
+resource "aws_s3_bucket" "portal_cloudfront_access_logging" {
+  bucket = "massgov-pfml-portal-cloudfront-logging"
+  acl    = "log-delivery-write"
+  lifecycle_rule {
+    enabled = true
+    expiration {
+      days = 30
+    }
+  }
+  server_side_encryption_configuration {
+    rule {
+      apply_server_side_encryption_by_default {
+        sse_algorithm = "AES256"
+      }
+    }
+  }
+  tags = merge(module.constants.common_tags, {
+    environment = "all"
+    Name        = "massgov-pfml-portal-cloudfront-logging"
+    public      = "no"
+  })
+}
+
+resource "aws_s3_bucket_public_access_block" "portal_cloudfront_access_logging_block" {
+  bucket                  = aws_s3_bucket.portal_cloudfront_access_logging.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+# ----------------------------------------------------------------------------------------------------------------------
