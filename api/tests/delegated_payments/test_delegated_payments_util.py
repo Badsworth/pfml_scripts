@@ -14,8 +14,6 @@ import massgov.pfml.util.files as file_util
 from massgov.pfml.db.models.employees import (
     BankAccountType,
     ClaimType,
-    Country,
-    GeoState,
     ImportLog,
     PaymentCheck,
     PrenoteState,
@@ -33,6 +31,7 @@ from massgov.pfml.db.models.factories import (
     PubEftFactory,
     ReferenceFileFactory,
 )
+from massgov.pfml.db.models.geo import Country, GeoState
 from massgov.pfml.db.models.payments import FineosExtractVpei, PaymentLog
 from massgov.pfml.delegated_payments.delegated_payments_util import (
     find_existing_address_pair,

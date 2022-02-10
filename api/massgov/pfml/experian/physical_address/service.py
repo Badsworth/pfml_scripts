@@ -1,6 +1,7 @@
 from typing import Optional
 
-from massgov.pfml.db.models.employees import Address, Country, GeoState
+from massgov.pfml.db.models.employees import Address
+from massgov.pfml.db.models.geo import Country, GeoState
 from massgov.pfml.experian.physical_address.client import (
     AddressFormatV1Response,
     AddressSearchV1InputComponent,

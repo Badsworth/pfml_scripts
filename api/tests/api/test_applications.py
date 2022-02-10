@@ -44,7 +44,6 @@ from massgov.pfml.db.models.employees import (
     BankAccountType,
     Claim,
     Gender,
-    GeoState,
     PaymentMethod,
     TaxIdentifier,
 )
@@ -70,6 +69,7 @@ from massgov.pfml.db.models.factories import (
     WagesAndContributionsFactory,
     WorkPatternFixedFactory,
 )
+from massgov.pfml.db.models.geo import GeoState
 from massgov.pfml.fineos.client import AbstractFINEOSClient
 from massgov.pfml.fineos.exception import (
     FINEOSClientError,

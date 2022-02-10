@@ -23,14 +23,13 @@ from massgov.pfml.api.authentication.azure import (
     AzureUser,
     create_azure_client_config,
 )
-from massgov.pfml.db.models.employees import (
+from massgov.pfml.db.models.azure import (
     AzureGroup,
     AzureGroupPermission,
     LkAzureGroup,
     LkAzurePermission,
-    Role,
-    User,
 )
+from massgov.pfml.db.models.employees import Role, User
 from massgov.pfml.util.users import has_role_in
 
 logger = massgov.pfml.util.logging.get_logger(__name__)

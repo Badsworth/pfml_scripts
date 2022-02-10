@@ -14,7 +14,6 @@ from massgov.pfml.db.models.employees import (
     BankAccountType,
     Employee,
     Flow,
-    GeoState,
     LkState,
     Payment,
     PaymentMethod,
@@ -34,6 +33,7 @@ from massgov.pfml.db.models.factories import (
     PaymentFactory,
     ReferenceFileFactory,
 )
+from massgov.pfml.db.models.geo import GeoState
 from massgov.pfml.db.models.payments import (
     FineosExtractVbiRequestedAbsence,
     FineosExtractVpei,

@@ -8,7 +8,7 @@ from jose.exceptions import JWTError
 from werkzeug.exceptions import Unauthorized
 
 import massgov.pfml.api.authentication as authentication
-from massgov.pfml.db.models.employees import AzureGroup, AzureGroupPermission, AzurePermission
+from massgov.pfml.db.models.azure import AzureGroup, AzureGroupPermission, AzurePermission
 
 
 @pytest.fixture(scope="session")

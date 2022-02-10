@@ -19,7 +19,6 @@ from massgov.pfml.db.models.employees import (
     EmployeePubEftPair,
     ExperianAddressPair,
     Flow,
-    GeoState,
     LatestStateLog,
     LkPaymentTransactionType,
     LkState,
@@ -36,6 +35,7 @@ from massgov.pfml.db.models.employees import (
     StateLog,
     TaxIdentifier,
 )
+from massgov.pfml.db.models.geo import GeoState
 from massgov.pfml.db.models.payments import (
     ACTIVE_WRITEBACK_RECORD_STATUS,
     FineosExtractVbiRequestedAbsence,
