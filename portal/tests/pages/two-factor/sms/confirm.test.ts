@@ -191,6 +191,37 @@ describe("Two-factor SMS Confirm", () => {
     ).toBeInTheDocument();
   });
 
+  it("displays an error when a user attempts the code too many times", async () => {
+    jest
+      .spyOn(MFAService, "verifyMFAPhoneNumber")
+      .mockRejectedValueOnce({ message: "limit exceeded" });
+    jest.spyOn(console, "error").mockImplementationOnce(jest.fn());
+
+    renderPage(ConfirmSMS, {
+      addCustomSetup: (appLogic) => {
+        appLogic.users.updateUser = updateUser;
+        appLogic.portalFlow.goToNextPage = goToNextPage;
+      },
+    });
+
+    const codeField = screen.getByLabelText("6-digit code");
+    userEvent.type(codeField, "123456");
+    const submitButton = screen.getByRole("button", {
+      name: "Save and continue",
+    });
+    await act(async () => await userEvent.click(submitButton));
+
+    expect(MFAService.verifyMFAPhoneNumber).toHaveBeenCalledWith("123456");
+    expect(updateUser).not.toHaveBeenCalled();
+    expect(goToNextPage).not.toHaveBeenCalled();
+
+    expect(
+      screen.getByText(
+        /We can't confirm your phone number because of too many failed verification attempts. Wait 15 minutes before trying again./
+      )
+    ).toBeInTheDocument();
+  });
+
   it("renders PageNotFound if the claimantShowMFA feature flag is not set", () => {
     process.env.featureFlags = JSON.stringify({ claimantShowMFA: false });
     renderPage(ConfirmSMS);

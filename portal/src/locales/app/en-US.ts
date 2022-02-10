@@ -551,6 +551,8 @@ const errors = {
     code: {
       attemptsExceeded:
         "Your account is temporarily locked because of too many failed verification attempts. Wait 15 minutes before trying again.",
+      attemptsExceeded_confirmPhone:
+        "We can't confirm your phone number because of too many failed verification attempts. Wait 15 minutes before trying again.",
       deliveryFailure:
         "We encountered an error while sending the verification code. Try again.",
       expired: "Your verification code has expired or has already been used.",
