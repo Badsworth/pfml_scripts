@@ -28,6 +28,11 @@ resource "aws_cloudfront_distribution" "admin_portal_web_distribution" {
     prefix = var.environment_name
   }
 
+  logging_config {
+    bucket = data.aws_s3_bucket.cloudfront_access_logging.bucket_domain_name
+    prefix = var.environment_name
+  }
+
   comment             = "PFML Admin Portal (${var.environment_name})"
   enabled             = true
   is_ipv6_enabled     = true
