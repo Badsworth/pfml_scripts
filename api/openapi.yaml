@@ -47,7 +47,30 @@ paths:
                 $ref: "#/components/schemas/FlagsResponse"
         "503":
           $ref: "#/components/responses/ServiceUnavailableError"
-
+  /flags/{name}:
+    get:
+      security:
+        - {} # no authentication option
+      tags:
+        - Feature Flags
+      summary: Get a feature flag
+      operationId: massgov.pfml.api.flags.flag_get
+      parameters:
+        - name: name
+          in: path
+          schema:
+            type: string
+          description: Name of the flag to get
+          required: true
+      responses:
+        "200":
+          description: A successful request returns a 200 status code and one flag.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Flag"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailableError"
   /users:
     post:
       security:
@@ -1262,6 +1285,56 @@ paths:
         "404":
           $ref: "#/components/responses/NotFound"
 
+  /admin/flags/{name}:
+    patch:
+      tags:
+        - Admin
+        - Feature Flags
+      summary: Update a feature flag
+      operationId: massgov.pfml.api.admin.admin_flags_patch
+      parameters:
+        - name: name
+          in: path
+          schema:
+            type: string
+          description: Name of flag to update
+          required: true
+      responses:
+        "200":
+          description: A successful request returns a 200 status code and a user object.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessfulResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+      requestBody:
+        $ref: "#/components/requestBodies/FlagUpdateRequest"
+
+  /admin/flag-logs/{name}:
+    get:
+      tags:
+        - Admin
+        - Feature Flags
+      summary: Get logs for a feature flag
+      operationId: massgov.pfml.api.admin.admin_get_flag_logs
+      parameters:
+        - name: name
+          in: path
+          schema:
+            type: string
+          description: Name of the flag to get
+          required: true
+      responses:
+        "200":
+          description: A successful request returns a 200 status code and list of flag logs.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FlagWithLogsResponse"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailableError"
+
 tags:
   - name: Test Endpoints
   - name: Roles
@@ -1389,6 +1462,12 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/EligibilityRequest"
+      required: true
+    FlagUpdateRequest:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Flag"
       required: true
     NotificationRequest:
       content:
@@ -1684,7 +1763,7 @@ components:
           pattern: '^[0-9]{5}((?:-[0-9]{4})?|(?:-\*{4})?)$'
           example: "12345"
 
-    FlagResponse:
+    Flag:
       type: object
       properties:
         start:
@@ -1700,6 +1779,7 @@ components:
         name:
           type: string
           example: "maintenance"
+          readOnly: true
         options:
           type: object
           example:
@@ -1709,11 +1789,39 @@ components:
         enabled:
           type: boolean
           example: false
+      additionalProperties: false
+
+    FlagWithLog:
+      allOf:
+        - $ref: "#/components/schemas/Flag"
+        - type: object
+          properties:
+            first_name:
+              type: string
+              example: "John"
+              readOnly: true
+            last_name:
+              type: string
+              example: "Doe"
+              readOnly: true
+            updated_at:
+              type: string
+              nullable: false
+              format: date-time
+              example: "2020-06-26T01:02:03.967736+00:00"
+              readOnly: true
+          additionalProperties: false
+
+    FlagWithLogsResponse:
+      type: array
+      items:
+        $ref: "#/components/schemas/FlagWithLog"
+
 
     FlagsResponse:
       type: array
       items:
-        $ref: "#/components/schemas/FlagResponse"
+        $ref: "#/components/schemas/Flag"
 
     UserResponse:
       type: object
