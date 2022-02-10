@@ -107,7 +107,7 @@ def admin_logout():
     ).to_api_response()
 
 
-def admin_flag_get_logs(name):
+def admin_get_flag_logs(name):
     azure_user = app.azure_user()
     # This should never be the case.
     if azure_user is None:
@@ -126,9 +126,9 @@ def admin_flag_get_logs(name):
         response = response_util.success_response(
             data=[
                 FlagLogResponse(
-                    given_name=log.given_name,
-                    family_name=log.family_name,
-                    created_at=log.created_at,
+                    first_name=log.given_name,
+                    last_name=log.family_name,
+                    updated_at=log.updated_at,
                     enabled=log.feature_flag_value.enabled,
                     name=log.feature_flag_value.name,
                     start=log.feature_flag_value.start,
@@ -142,7 +142,7 @@ def admin_flag_get_logs(name):
         return response
 
 
-def admin_flags_post(name):
+def admin_flags_patch(name):
     azure_user = app.azure_user()
     # This should never be the case.
     if azure_user is None:
@@ -176,17 +176,15 @@ def admin_flags_post(name):
             azure_feature_flag_value_id=feature_flag_value.feature_flag_value_id,
             email_address=azure_user.email_address,
             sub_id=azure_user.sub_id,
-            family_name=azure_user.first_name,
-            given_name=azure_user.last_name,
+            given_name=azure_user.first_name,
+            family_name=azure_user.last_name,
             action="INSERT",
         )
         db_session.add(log)
         db_session.commit()
 
     return response_util.success_response(
-        message="Successfully updated feature flag",
-        data=FlagRequest.from_orm(flag).dict(),
-        status_code=201,
+        message="Successfully updated feature flag", data=FlagRequest.from_orm(flag).dict(),
     ).to_api_response()
 
 
