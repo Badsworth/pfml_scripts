@@ -53,22 +53,24 @@ def generate_eligibility_scenario_data_in_db(
     )
     starting_quarter = quarter.Quarter.from_date(effective_date)
 
-    for i in range(6):
+    for i in range(len(scenario_descriptor.last_x_quarters_wages)):
+        quarters_to_subtract = i if scenario_descriptor.current_quarter_has_data else i + 1
         WagesAndContributionsFactory.create(
             employee=employee,
             employer=employer,
-            filing_period=starting_quarter.subtract_quarters(i).start_date(),
-            employee_qtr_wages=scenario_descriptor.last_six_quarters_wages[i],
+            filing_period=starting_quarter.subtract_quarters(quarters_to_subtract).start_date(),
+            employee_qtr_wages=scenario_descriptor.last_x_quarters_wages[i],
         )
 
-    if scenario_descriptor.last_six_quarters_wages_other_employer:
+    if scenario_descriptor.last_x_quarters_wages_other_employer:
         other_employer = EmployerFactory.create()
-        for i in range(6):
+        for i in range(len(scenario_descriptor.last_x_quarters_wages_other_employer)):
+            quarters_to_subtract = i if scenario_descriptor.current_quarter_has_data else i + 1
             WagesAndContributionsFactory.create(
                 employee=employee,
                 employer=other_employer,
-                filing_period=starting_quarter.subtract_quarters(i).start_date(),
-                employee_qtr_wages=scenario_descriptor.last_six_quarters_wages_other_employer[i],
+                filing_period=starting_quarter.subtract_quarters(quarters_to_subtract).start_date(),
+                employee_qtr_wages=scenario_descriptor.last_x_quarters_wages_other_employer[i],
             )
 
     if scenario_descriptor.active_benefit_year:
