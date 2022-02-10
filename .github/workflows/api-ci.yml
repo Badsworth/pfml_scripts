@@ -228,7 +228,6 @@ jobs:
           --header 'Content-Type: application/json' \
           --data '{   
             "@type": "MessageCard",
-            "@context": "http://schema.org/extensions",
             "themeColor": "FF0000",
             "title": "API tests failed",
             "text": "API tests failed in main ${{ env.workflow_self_link }}",
