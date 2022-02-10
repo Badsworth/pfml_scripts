@@ -159,6 +159,10 @@ jobs:
           group: Commit Stable
           tag: "${{ inputs.cypress_tags }},Env-${{ inputs.target_environment }}"
           config: reporter=cypress/reporters/new-relic.js
+          # With this action, we need to force triggering Cypress via CLI rather than API to fix a node version
+          # mixup. See https://github.com/cypress-io/github-action/issues/489
+          command-prefix: "--"
+          browser: "chrome"
         env:
           CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
           CYPRESS_PROJECT_ID: "wjoxhr"
@@ -177,6 +181,10 @@ jobs:
           install: false
           tag: "${{ inputs.cypress_tags }},Env-${{ inputs.target_environment }}"
           config: trashAssetsBeforeRuns=false,reporter=cypress/reporters/new-relic.js
+          # With this action, we need to force triggering Cypress via CLI rather than API to fix a node version
+          # mixup. See https://github.com/cypress-io/github-action/issues/489
+          command-prefix: "--"
+          browser: "chrome"
         env:
           CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY_UNSTABLE }}
           CYPRESS_PROJECT_ID: "2wzg2w"
@@ -202,6 +210,10 @@ jobs:
           install: false
           tag: "${{ inputs.cypress_tags }},Env-${{ inputs.target_environment }}"
           config: trashAssetsBeforeRuns=false,reporter=cypress/reporters/new-relic.js
+          # With this action, we need to force triggering Cypress via CLI rather than API to fix a node version
+          # mixup. See https://github.com/cypress-io/github-action/issues/489
+          command-prefix: "--"
+          browser: "chrome"
         env:
           CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY_MORNING }}
           CYPRESS_PROJECT_ID: "tvt4k6"
