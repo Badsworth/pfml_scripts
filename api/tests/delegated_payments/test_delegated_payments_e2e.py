@@ -21,10 +21,7 @@ import massgov.pfml.util.files as file_util
 from massgov.pfml import db
 from massgov.pfml.db.models.employees import (
     Claim,
-    Flow,
     ImportLog,
-    LkFlow,
-    LkState,
     Payment,
     PaymentMethod,
     PaymentTransactionType,
@@ -32,7 +29,6 @@ from massgov.pfml.db.models.employees import (
     PubError,
     ReferenceFile,
     ReferenceFileType,
-    State,
 )
 from massgov.pfml.db.models.payments import (
     FineosExtractCancelledPayments,
@@ -46,6 +42,7 @@ from massgov.pfml.db.models.payments import (
     LkFineosWritebackTransactionStatus,
     Pfml1099Request,
 )
+from massgov.pfml.db.models.state import Flow, LkFlow, LkState, State
 from massgov.pfml.delegated_payments.audit.delegated_payment_audit_csv import (
     PAYMENT_AUDIT_CSV_HEADERS,
 )

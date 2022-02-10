@@ -26,13 +26,11 @@ from massgov.pfml.db.models.employees import (
     ExperianAddressPair,
     LkClaimType,
     LkReferenceFileType,
-    LkState,
     Payment,
     PaymentTransactionType,
     PubEft,
     ReferenceFile,
     ReferenceFileType,
-    State,
 )
 from massgov.pfml.db.models.payments import (
     FineosExtractCancelledPayments,
@@ -49,6 +47,7 @@ from massgov.pfml.db.models.payments import (
     FineosExtractVpeiPaymentDetails,
     PaymentLog,
 )
+from massgov.pfml.db.models.state import LkState, State
 from massgov.pfml.util.converters.str_to_numeric import str_to_int
 from massgov.pfml.util.csv import CSVSourceWrapper
 from massgov.pfml.util.datetime import get_now_us_eastern

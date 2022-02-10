@@ -13,8 +13,6 @@ from massgov.pfml.db.models.employees import (
     AddressType,
     BankAccountType,
     Employee,
-    Flow,
-    LkState,
     Payment,
     PaymentMethod,
     PaymentTransactionType,
@@ -22,7 +20,6 @@ from massgov.pfml.db.models.employees import (
     PubEft,
     ReferenceFile,
     ReferenceFileType,
-    State,
     StateLog,
     TaxIdentifier,
 )
@@ -42,6 +39,7 @@ from massgov.pfml.db.models.payments import (
     FineosWritebackDetails,
     FineosWritebackTransactionStatus,
 )
+from massgov.pfml.db.models.state import Flow, LkState, State
 from massgov.pfml.delegated_payments.delegated_payments_util import (
     ValidationIssue,
     ValidationReason,

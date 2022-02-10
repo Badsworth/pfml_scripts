@@ -13,6 +13,7 @@ from . import (  # noqa: F401
     geo,
     industry_codes,
     payments,
+    state,
     verifications,
 )
 
@@ -24,6 +25,7 @@ def init_lookup_tables(db_session):
     start_time = time.monotonic()
     applications.sync_lookup_tables(db_session)
     geo.sync_lookup_tables(db_session)
+    state.sync_lookup_tables(db_session)
     employees.sync_lookup_tables(db_session)
     verifications.sync_lookup_tables(db_session)
     industry_codes.sync_lookup_tables(db_session)
