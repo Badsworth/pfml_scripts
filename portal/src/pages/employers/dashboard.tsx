@@ -24,10 +24,13 @@ import { useTranslation } from "../../locales/i18n";
 export const Dashboard = (props: WithUserProps & { query: ApiParams }) => {
   const { t } = useTranslation();
   const introElementRef = useRef<HTMLElement>(null);
+  const showMultiLeaveDash = isFeatureEnabled(
+    "employerShowMultiLeaveDashboard"
+  );
   const apiParams = {
     // Default the dashboard to show claims requiring action first
-    order_by: "absence_status",
-    order_direction: "ascending",
+    order_by: showMultiLeaveDash ? "latest_follow_up_date" : "absence_status",
+    order_direction: showMultiLeaveDash ? "descending" : "ascending",
     ...props.query,
   } as const;
 
@@ -61,9 +64,7 @@ export const Dashboard = (props: WithUserProps & { query: ApiParams }) => {
     if (introElementRef.current) introElementRef.current.scrollIntoView();
   };
 
-  const PaginatedClaimsTableWithClaims = isFeatureEnabled(
-    "employerShowMultiLeaveDashboard"
-  )
+  const PaginatedClaimsTableWithClaims = showMultiLeaveDash
     ? withClaims(PaginatedClaimsTable, apiParams)
     : withClaims(DeprecatedPaginatedClaimsTable, apiParams);
   const claimsTableProps = {

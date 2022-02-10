@@ -14,7 +14,11 @@ export interface ApiParams {
   search?: string;
   claim_status?: string;
   is_reviewable?: "no" | "yes";
-  order_by?: "absence_status" | "created_at" | "employee";
+  order_by?:
+    | "absence_status"
+    | "created_at"
+    | "employee"
+    | "latest_follow_up_date";
   order_direction?: "ascending" | "descending";
   request_decision?:
     | "approved"
