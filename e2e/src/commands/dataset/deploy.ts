@@ -2,7 +2,7 @@ import { CommandModule } from "yargs";
 import { DatasetArgs } from "../dataset";
 import { handler as uploadDORFiles } from "./upload";
 import { handler as registerLAs } from "./register-las";
-import { handler as registerEEAddresses } from "./register-ee-addresses";
+import { handler as registerERAddresses } from "./register-er-addresses";
 
 const cmd: CommandModule<DatasetArgs, DatasetArgs> = {
   command: "deploy",
@@ -11,7 +11,7 @@ const cmd: CommandModule<DatasetArgs, DatasetArgs> = {
     args.logger.info(`Deploying ${args.directory} to ${args.environment}`);
     await uploadDORFiles(args);
     await registerLAs(args);
-    await registerEEAddresses({ ...args, delay: 200, headless: true });
+    await registerERAddresses({ ...args, slowMo: 200, headless: true });
   },
 };
 

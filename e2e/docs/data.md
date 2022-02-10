@@ -49,7 +49,7 @@ npm run cli -- dataset register-las --directory ./data/the-dataset --environment
 #### Registering Employer Addresses
 
 ```bash
-npm run cli dataset register-ee-addresses --directory ./data/the-dataset --environment test
+npm run cli dataset register-er-addresses --directory ./data/the-dataset --environment test
 ```
 
 #### Claim Submission
