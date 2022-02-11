@@ -38,8 +38,13 @@ describe("ImportClaim", () => {
       screen.getByRole("textbox", { name: /application id/i }),
       "NTN-111-ABS-01"
     );
+    expect(
+      screen.queryByText("Submitting… Do not refresh or go back")
+    ).not.toBeInTheDocument();
     userEvent.click(screen.getByRole("button", { name: "Continue" }));
-
+    expect(
+      screen.getByText("Submitting… Do not refresh or go back")
+    ).toBeInTheDocument();
     await waitFor(() => {
       expect(associateMock).toHaveBeenCalledWith({
         absence_case_id: "NTN-111-ABS-01",

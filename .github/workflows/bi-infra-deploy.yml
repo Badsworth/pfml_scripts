@@ -4,6 +4,16 @@
 name: Business Intelligence CI Deploy
 
 on:
+  workflow_dispatch:
+    inputs:
+      deployment_env:
+        required: true
+        default: "stage"
+        description: |
+          🛑 DO NOT CHANGE THE DROPDOWN ABOVE FOR THE WORKFLOW. KEEP IT ON "main" BRANCH.     
+          --------------------------------------
+          ⬇️ Environment to be deployed.
+            (test, infra-test, stage,  uat, prod).
   push:
     branches:
       - main
@@ -15,11 +25,42 @@ env:
   working-dir: ./infra
   terraform-bi-dir: ./infra/bi/environments
   tf-version-default: 0.14.7
+  deployment_env: ${{ github.event.inputs.deployment_env || 'test' }}
 
 jobs:
+  prod-check:
+      # run if environment is production
+      runs-on: ubuntu-latest
+      steps:
+        - name: check users
+          if: contains(env.deployment_env, 'prod')
+          id: get_teams
+          env:
+            GITHUB_TOKEN: ${{ secrets.PFML_DEVOPS_TOKEN }}
+          uses: octokit/graphql-action@v2.x
+          with:
+            query: |
+              query {
+                organization(login:"EOLWD"){
+                  team(slug:"pfml-devops"){
+                    members(membership: ALL, query:"${{ github.actor }}"){
+                      nodes {
+                        login
+                      }
+                    }
+                  }
+                }
+              }
+        - name: fail if not a member
+          if: contains(env.deployment_env, 'prod') && contains('', fromJSON(steps.get_teams.outputs.data).organization.team.members.nodes[0])
+          run: |
+            echo "Not part of pfml-devops, cancelling workflow"
+            exit 1
+
   tf-format-check:
     name: "tf format (run 'terraform fmt -recursive infra/' if this fails)"
     runs-on: ubuntu-latest
+    needs: prod-check
 
     steps:
       - uses: actions/checkout@v2
@@ -30,13 +71,9 @@ jobs:
       - run: terraform fmt -recursive -check ${{ env.working-dir }}
      
   deploy-bi-infra:
-  # Deploy changes to lowers on PR
     name: "deploy bi infra"
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        environment: ["test", "stage", "uat"]
+    needs: prod-check
 
     steps:
       - name: Configure AWS Credentials
@@ -56,14 +93,14 @@ jobs:
       - name: tf-init
         id: terraform_init
         run: terraform init
-        working-directory: ${{ env.terraform-bi-dir }}/${{ matrix.environment }} 
+        working-directory: ${{ env.terraform-bi-dir }}/${{ env.deployment_env }} 
 
       - name: tf-plan
         id: terraform_plan
         run: terraform plan -out=plan.tfplan
-        working-directory: ${{ env.terraform-bi-dir }}/${{ matrix.environment }} 
+        working-directory: ${{ env.terraform-bi-dir }}/${{ env.deployment_env  }} 
 
       - name: apply from tf-plan
         id: terraform_apply
         run: terraform apply plan.tfplan
-        working-directory: ${{ env.terraform-bi-dir }}/${{ matrix.environment }}
+        working-directory: ${{ env.terraform-bi-dir }}/${{ env.deployment_env  }}

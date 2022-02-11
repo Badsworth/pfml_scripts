@@ -1,5 +1,6 @@
 import massgov.pfml.experian.physical_address.service as experian_address_service
-from massgov.pfml.db.models.employees import Address, Country, GeoState
+from massgov.pfml.db.models.employees import Address
+from massgov.pfml.db.models.geo import Country, GeoState
 from massgov.pfml.experian.physical_address.client.models import (
     AddressFormatV1Address,
     AddressFormatV1Components,

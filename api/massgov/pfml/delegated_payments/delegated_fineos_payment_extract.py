@@ -18,11 +18,8 @@ from massgov.pfml.db.models.employees import (
     EmployeeAddress,
     EmployeePubEftPair,
     ExperianAddressPair,
-    Flow,
-    GeoState,
     LatestStateLog,
     LkPaymentTransactionType,
-    LkState,
     Payment,
     PaymentDetails,
     PaymentMethod,
@@ -32,10 +29,10 @@ from massgov.pfml.db.models.employees import (
     PubEft,
     ReferenceFile,
     ReferenceFileType,
-    State,
     StateLog,
     TaxIdentifier,
 )
+from massgov.pfml.db.models.geo import GeoState
 from massgov.pfml.db.models.payments import (
     ACTIVE_WRITEBACK_RECORD_STATUS,
     FineosExtractVbiRequestedAbsence,
@@ -45,6 +42,7 @@ from massgov.pfml.db.models.payments import (
     FineosWritebackTransactionStatus,
     LkFineosWritebackTransactionStatus,
 )
+from massgov.pfml.db.models.state import Flow, LkState, State
 from massgov.pfml.delegated_payments.step import Step
 from massgov.pfml.delegated_payments.util.fineos_writeback_util import (
     stage_payment_fineos_writeback,

@@ -3,11 +3,9 @@ import pytest
 import massgov.pfml.api.util.state_log_util as state_log_util
 from massgov.pfml.db.models.employees import (
     ClaimType,
-    Flow,
     Payment,
     PaymentMethod,
     PaymentTransactionType,
-    State,
 )
 from massgov.pfml.db.models.factories import (
     ClaimFactory,
@@ -15,6 +13,7 @@ from massgov.pfml.db.models.factories import (
     MmarsPaymentDataFactory,
     PaymentFactory,
 )
+from massgov.pfml.db.models.state import Flow, State
 from massgov.pfml.delegated_payments.convert_mmars_data_step import ConvertMmarsDataStep
 from massgov.pfml.delegated_payments.delegated_payments_util import (
     ValidationContainer,

@@ -72,6 +72,15 @@ export const ConfirmSMS = (props: ConfirmSMSProps) => {
         appLogic.catchError(error);
         return;
       }
+      if (error.message.includes("limit exceeded")) {
+        appLogic.catchError(
+          new CognitoAuthError(error, {
+            field: "code",
+            type: "attemptsExceeded_confirmPhone",
+          })
+        );
+        return;
+      }
       const issue = { field: "code", type: "invalidMFACode" };
       appLogic.catchError(new CognitoAuthError(error, issue));
     }

@@ -14,7 +14,6 @@ import massgov.pfml.api.util.state_log_util
 import massgov.pfml.util.batch.log
 from massgov.pfml.db.models import factories
 from massgov.pfml.db.models.employees import (
-    Flow,
     Payment,
     PaymentCheckStatus,
     PaymentMethod,
@@ -23,9 +22,9 @@ from massgov.pfml.db.models.employees import (
     PubErrorType,
     ReferenceFile,
     ReferenceFileType,
-    State,
 )
 from massgov.pfml.db.models.payments import FineosWritebackDetails, FineosWritebackTransactionStatus
+from massgov.pfml.db.models.state import Flow, State
 from massgov.pfml.delegated_payments.mock.delegated_payments_factory import DelegatedPaymentFactory
 from massgov.pfml.delegated_payments.pub import check_return, process_check_return_step
 from massgov.pfml.delegated_payments.pub.check_return import PaidStatus

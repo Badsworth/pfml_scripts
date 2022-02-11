@@ -4,7 +4,7 @@ from jose.constants import ALGORITHMS
 from mock import patch
 
 from massgov.pfml.api.admin import SERVICE_UNAVAILABLE_MESSAGE
-from massgov.pfml.db.models.employees import AzureGroup, AzureGroupPermission, AzurePermission
+from massgov.pfml.db.models.azure import AzureGroup, AzureGroupPermission, AzurePermission
 from massgov.pfml.db.models.factories import UserFactory
 from massgov.pfml.db.models.flags import FeatureFlag, FeatureFlagValue, UserAzureFeatureFlagLog
 

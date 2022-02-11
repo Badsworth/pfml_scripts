@@ -744,28 +744,33 @@ jobs:
           echo "::set-output name=message-ts::$MESSAGE_TS"
 
   end-to-end:
-    name: End-to-End Test Deployment
-    runs-on: ubuntu-latest
+    name: E2E Tests
     needs: [update-the-deploy-branch, api-release, api-gateway-release]
     if: github.event.inputs.deployment_env != 'prod' && github.event.inputs.deployment_env != 'infra-test'
-    steps:
-      - name: Trigger E2E Workflow
-        uses: aurelien-baudet/workflow-dispatch@v2.1.1
-        with:
-          workflow: e2e-cypress.yml
-          token: ${{ secrets.PFML_DEVOPS_TOKEN }}
-          wait-for-completion: true
-          display-workflow-run-url-interval: 30s
-          ref: "main"
-          inputs: |
-            {
-              "target_environment": ${{ toJSON(env.deployment_env) }},
-              "cypress_tags": "Deploy,Deploy-API",
-              "run_stable": "true",
-              "run_unstable": "${{ env.deployment_env != 'test' && 'false' || 'true' }}",
-              "run_morning": "false",
-              "title_override": ${{ toJSON(format('API Deploy: {0} to {1}', env.version, env.deployment_env)) }}
-            }
+    # Always run tests from main to avoid coupling test code to release code.
+    uses: EOLWD/pfml/.github/workflows/e2e-tests.yml@main
+    with:
+      # We're not allowed to reference the env context when invoking reusable workflows,
+      # only inputs, needs, github, and secrets.
+      target_environment: ${{ github.event.inputs.deployment_env }}
+      cypress_tags: "Deploy,Deploy-API"
+      run_stable: true
+      title_override: "${{ format('API Deploy: {0} to {1}', github.event.inputs.version, github.event.inputs.deployment_env) }}"
+    secrets:
+      # These secrets must be kept in sync with e2e-tests.yml
+      E2E_FINEOS_PASSWORD: ${{ secrets.E2E_FINEOS_PASSWORD }}
+      E2E_PORTAL_PASSWORD: ${{ secrets.E2E_PORTAL_PASSWORD }}
+      E2E_EMPLOYER_PORTAL_PASSWORD: ${{ secrets.E2E_EMPLOYER_PORTAL_PASSWORD }}
+      E2E_TESTMAIL_APIKEY: ${{ secrets.E2E_TESTMAIL_APIKEY }}
+      E2E_SSO_PASSWORD: ${{ secrets.E2E_SSO_PASSWORD }}
+      E2E_SSO_USERNAME: ${{ secrets.E2E_SSO_USERNAME }}
+      E2E_TWILIO_ACCOUNTSID: ${{ secrets.E2E_TWILIO_ACCOUNTSID }}
+      E2E_TWILIO_AUTHTOKEN: ${{ secrets.E2E_TWILIO_AUTHTOKEN }}
+      CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
+      CYPRESS_RECORD_KEY_UNSTABLE: ${{ secrets.CYPRESS_RECORD_KEY_UNSTABLE }}
+      CYPRESS_RECORD_KEY_MORNING: ${{ secrets.CYPRESS_RECORD_KEY_MORNING }}
+      PFML_AWS_ACCESS_KEY_ID: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
+      PFML_AWS_SECRET_ACCESS_KEY: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
 
   load-test:
     name: "Trigger Load Testing"

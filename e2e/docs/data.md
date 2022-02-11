@@ -22,6 +22,12 @@ All data generation scripts use APIs which are defined in `src/generation` and `
 
 ### Common commands
 
+Note: Some of the dataset commands require AWS credentials. The easiest way to deal with these credentials is use AWS SSO:
+
+1. Setup AWS SSO using the [instructions here](https://github.com/EOLWD/pfml/blob/main/docs/infra/1-first-time-setup.md#configuring-aws-sso). Tip: use a memorable `profile` name for the SSO profile, like `pfml`, so it's easy to type later on.
+2. Run `aws sso login --profile pfml`, which will open your browser to perform the SSO login and grab a set of temporary credentials.
+3. Run any of the commands below, adding `AWS_PROFILE=pfml` before them to trigger using the SSO profile and credentials.
+
 #### Upload a new dataset, process it, register LAs, and employer addresses
 
 ```shell
@@ -43,7 +49,7 @@ npm run cli -- dataset register-las --directory ./data/the-dataset --environment
 #### Registering Employer Addresses
 
 ```bash
-npm run cli dataset register-ee-addresses --directory ./data/the-dataset --environment test
+npm run cli dataset register-er-addresses --directory ./data/the-dataset --environment test
 ```
 
 #### Claim Submission

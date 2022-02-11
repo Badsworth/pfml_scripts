@@ -256,9 +256,6 @@ class GetClaimsQuery:
             ManagedRequirement.claim_id == Claim.claim_id,
             ManagedRequirement.managed_requirement_type_id
             == ManagedRequirementType.EMPLOYER_CONFIRMATION.managed_requirement_type_id,
-            ManagedRequirement.managed_requirement_status_id
-            == ManagedRequirementStatus.OPEN.managed_requirement_status_id,
-            ManagedRequirement.follow_up_date >= date.today(),
         ]
         # use outer join to return claims without managed_requirements (one to many)
         self.join(ManagedRequirement, isouter=True, join_filter=and_(*filters))
@@ -271,11 +268,40 @@ class GetClaimsQuery:
         if context.order_key is Claim.employee:
             self.add_order_by_employee(sort_fn)
 
+        elif context.order_by == "latest_follow_up_date":
+            self.add_order_by_follow_up_date(is_asc)
+
         elif context.order_key is Claim.fineos_absence_status:
             self.add_order_by_absence_status(is_asc)
 
         elif context.order_by in Claim.__table__.columns:
             self.add_order_by_column(is_asc, context)
+
+    def add_order_by_follow_up_date(self, is_asc: bool) -> None:
+        """
+        For order_direction=ascending (user selects "Oldest"),
+        return non-open requirements first, then open,
+        all in ascending order.
+
+        For order_direction=descending (user selects "Newest"),
+        return open requirements first (sorted by those that need attention first),
+        then all the non-open claims in desc order.
+
+        More details in test_get_claims_with_order_by_follow_up_date_desc and
+        test_get_claims_with_order_by_follow_up_date_asc
+        """
+        if is_asc:
+            order_keys = [
+                asc(Claim.latest_follow_up_date),  # type:ignore
+                asc(Claim.soonest_open_requirement_date),  # type:ignore
+            ]
+        else:
+            order_keys = [
+                asc(Claim.soonest_open_requirement_date),  # type:ignore
+                desc_null_last(Claim.latest_follow_up_date),  # type:ignore
+            ]
+
+        self.query = self.query.order_by(*order_keys)
 
     def add_order_by_employee(self, sort_fn: Callable) -> None:
         order_keys = [

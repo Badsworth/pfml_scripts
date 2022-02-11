@@ -66,7 +66,11 @@ describe("Series of test that verifies LAs are properly registered in Fineos", (
     const fein = employer.fein;
     const withholding_amount =
       employer.withholdings[employer.withholdings.length - 1];
-    const quarter = formatISO(endOfQuarter(subQuarters(new Date(), 2)), {
+    const date: Date =
+      typeof employer.updated_date == "string"
+        ? new Date(employer.updated_date)
+        : employer.updated_date;
+    const quarter = formatISO(endOfQuarter(subQuarters(date, 1)), {
       representation: "date",
     });
     try {

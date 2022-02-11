@@ -25,7 +25,8 @@ from massgov.pfml.api.models.users.responses import (
     UserResponse,
 )
 from massgov.pfml.api.validation.exceptions import IssueType, ValidationErrorDetail
-from massgov.pfml.db.models.employees import AzurePermission, LkAzurePermission, User
+from massgov.pfml.db.models.azure import AzurePermission, LkAzurePermission
+from massgov.pfml.db.models.employees import User
 from massgov.pfml.db.models.flags import (
     FeatureFlag,
     FeatureFlagValue,

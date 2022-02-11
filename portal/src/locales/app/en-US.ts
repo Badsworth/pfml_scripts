@@ -551,6 +551,8 @@ const errors = {
     code: {
       attemptsExceeded:
         "Your account is temporarily locked because of too many failed verification attempts. Wait 15 minutes before trying again.",
+      attemptsExceeded_confirmPhone:
+        "We can't confirm your phone number because of too many failed verification attempts. Wait 15 minutes before trying again.",
       deliveryFailure:
         "We encountered an error while sending the verification code. Try again.",
       expired: "Your verification code has expired or has already been used.",
@@ -1402,6 +1404,7 @@ const pages: {
     submitButton: "Continue",
     taxIdLabel: "Social Security Number (SSN)",
     title: "Add an existing application",
+    uploadingMessage: "Submitting… Do not refresh or go back",
   },
   claimsIntermittentFrequency: {
     durationBasisChoice_days: "At least one day",
@@ -2092,8 +2095,10 @@ const pages: {
     leaveStatusMessage_Pending:
       "<strong>This leave is being reviewed.</strong>",
     // TODO (PORTAL-1652): Create content for these request decision options
-    leaveStatusMessage_Projected: "",
-    leaveStatusMessage_Voided: "",
+    leaveStatusMessage_Projected:
+      "<strong>This leave is being reviewed.</strong>",
+    leaveStatusMessage_Voided:
+      "<strong>This leave was cancelled.</strong><p>This application will no longer be processed. If you want to apply for paid leave again, you can begin another application.</p><p><application-link>Start another application</application-link></p>",
     leaveStatusMessage_Withdrawn:
       "<strong>This leave was withdrawn.</strong><p>You have withdrawn your application from the review process. If you want to apply for paid leave again, you can begin another application.</p><p><application-link>Start another application</application-link></p>",
     legalNoticesFallback:

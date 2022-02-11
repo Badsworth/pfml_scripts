@@ -666,7 +666,8 @@ def sync_managed_requirements(
         managed_requirement = create_or_update_managed_requirement_from_fineos(
             db_session, claim.claim_id, mr, log_attributes
         )
-        managed_requirements_from_db.append(managed_requirement)
+        if managed_requirement is not None:
+            managed_requirements_from_db.append(managed_requirement)
     commit_managed_requirements(db_session)
     return managed_requirements_from_db
 

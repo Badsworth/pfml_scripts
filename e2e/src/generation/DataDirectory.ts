@@ -47,7 +47,9 @@ export function fromAbsolute(dir: string) {
     },
     async getDORFiles(): Promise<string[]> {
       const files = await fs.promises.readdir(this.dir);
-      return files.filter((f) => f.startsWith("DORDFML"));
+      return files
+        .filter((f) => f.startsWith("DORDFML"))
+        .map((f) => this.join(f));
     },
   };
 }

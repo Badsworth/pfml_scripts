@@ -1,8 +1,8 @@
 import pytest
 
 import massgov.pfml.experian.address_validate_soap.models as sm
-from massgov.pfml.db.models.employees import GeoState
 from massgov.pfml.db.models.factories import AddressFactory
+from massgov.pfml.db.models.geo import GeoState
 from massgov.pfml.experian.address_validate_soap.client import Client
 from massgov.pfml.experian.address_validate_soap.mock_caller import MockVerificationZeepCaller
 from massgov.pfml.experian.address_validate_soap.service import (

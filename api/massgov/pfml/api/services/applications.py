@@ -68,12 +68,12 @@ from massgov.pfml.db.models.employees import (
     Address,
     AddressType,
     Claim,
-    GeoState,
     LeaveRequestDecision,
     LkAddressType,
     LkGender,
     MFADeliveryPreference,
 )
+from massgov.pfml.db.models.geo import GeoState
 from massgov.pfml.fineos import AbstractFINEOSClient
 from massgov.pfml.fineos.models.customer_api import PhoneNumber
 from massgov.pfml.fineos.models.customer_api.spec import (
