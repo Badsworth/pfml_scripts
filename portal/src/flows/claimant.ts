@@ -155,19 +155,8 @@ const claimantFlow: {
     [routes.applications.getReady]: {
       meta: {},
       on: {
-        CONSENT_TO_DATA_SHARING: routes.user.consentToDataSharing,
         START_APPLICATION: routes.applications.start,
         SHOW_APPLICATIONS: routes.applications.index,
-        /* We need this to trigger test coverage on
-         * the routes.user.convertToEmployer page, which is
-         * otherwise isolated.
-         */
-        CONVERT_TO_EMPLOYER: routes.user.convertToEmployer,
-        /* We need this to trigger test coverage on
-         * the routes.user.convertToEmployee page, which is
-         * otherwise isolated.
-         */
-        CONVERT_TO_EMPLOYEE: routes.user.convertToEmployee,
       },
     },
     [routes.applications.start]: {
