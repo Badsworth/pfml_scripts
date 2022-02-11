@@ -1183,6 +1183,48 @@ paths:
       requestBody:
         $ref: "#/components/requestBodies/VerificationRequest"
 
+  /benefit-years/search:
+    post:
+      security:
+        - jwt: []
+        - oauth2: []
+          agent-id: []
+      tags:
+        - Benefit Years
+      summary: >
+        Returns all benefit years for the employee_id in the request; if no employee_id is present
+        returns all benefit years for the current user.
+      responses:
+        '200':
+          description: A successful response returns a 200 status code and the benefit years
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessfulResponse'
+                  - properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/BenefitYearResponse'
+                example:
+                  meta:
+                    method: "POST"
+                    resource: "/benefit-years/search"
+                  status_code: 200
+                  message: "success"
+                  data:
+                  - benefit_year_end_date: '2020-12-31'
+                    benefit_year_start_date: '2020-01-01'
+                    employee_id: '2a340cf8-6d2a-4f82-a075-73588d003f8f'
+                    current_benefit_year: true
+                  - benefit_year_end_date: '2019-12-31'
+                    benefit_year_start_date: '2019-01-01'
+                    employee_id: '2a340cf8-6d2a-4f82-a075-73588d003f8f'
+                    current_benefit_year: false
+      requestBody:
+        $ref: '#/components/requestBodies/BenefitYearsSearchRequest'
+
   /admin/authorize:
     get:
       security:
@@ -1348,6 +1390,7 @@ tags:
   - name: Notifications
   - name: Feature Flags
   - name: Admin
+  - name: Benefit Years
 
 components:
   securitySchemes:
@@ -1497,6 +1540,11 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/EmployerAddFeinRequestBody"
+    BenefitYearsSearchRequest:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/BenefitYearsSearchRequest"
 
   responses:
     AdminTokenResponse:
@@ -2173,6 +2221,21 @@ components:
         - employer_benefits
         - previous_leaves
         - hours_worked_per_week
+
+    BenefitYearResponse:
+      type: object
+      properties:
+        employee_id:
+          type: string
+          format: uuid
+          example: '2a340cf8-6d2a-4f82-a075-73588d003f8f'
+        benefit_year_start_date:
+          $ref: '#/components/schemas/Date'
+        benefit_year_end_date:
+          $ref: '#/components/schemas/Date'
+        current_benefit_year:
+          type: boolean
+          example: true
 
     UpdateClaimReviewResponse:
       type: object
@@ -3994,3 +4057,14 @@ components:
             - Sibling - Brother/Sister
             - Other
             - Spouse
+
+    BenefitYearsSearchRequest:
+      type: object
+      properties:
+        employee_id:
+          type: string
+          example: '2a340cf8-6d2a-4f82-a075-73588d003f8f'
+          format: uuid
+        current:
+          type: boolean
+          example: false
