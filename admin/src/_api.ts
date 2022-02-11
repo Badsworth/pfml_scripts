@@ -521,6 +521,9 @@ export interface PaymentResponse {
   expected_send_date_end?: string | null;
   cancellation_date?: string | null;
   status?: "Sent to bank" | "Pending" | "Cancelled" | "Delayed";
+  writeback_transaction_status?: string | null;
+  transaction_date?: string | null;
+  transaction_date_could_change?: boolean;
 }
 export interface PaymentsResponse {
   absence_case_id?: any;
@@ -812,6 +815,10 @@ export interface OtherIncome {
       )
     | null;
 }
+export interface ComputedStartDates {
+  other_reason?: string | null;
+  same_reason?: string | null;
+}
 export interface ApplicationResponse {
   application_nickname?: string | null;
   organization_unit_id?: string | null;
@@ -870,6 +877,7 @@ export interface ApplicationResponse {
   previous_leaves_same_reason?: PreviousLeave[];
   concurrent_leave?: ConcurrentLeave | null;
   is_withholding_tax?: boolean | null;
+  computed_start_dates?: ComputedStartDates;
 }
 export interface POSTApplicationsResponse extends SuccessfulResponse {
   data?: ApplicationResponse;
@@ -1398,7 +1406,11 @@ export async function getClaims(
   }: {
     page_size?: number;
     page_offset?: number;
-    order_by?: "fineos_absence_status" | "created_at" | "employee";
+    order_by?:
+      | "fineos_absence_status"
+      | "created_at"
+      | "employee"
+      | "latest_follow_up_date";
     order_direction?: "ascending" | "descending";
     employer_id?: string;
     employee_id?: string[];
@@ -1914,7 +1926,7 @@ export async function patchAdminFlagsByName(
   );
 }
 /**
- * Get feature flags
+ * Get logs for a feature flag
  */
 export async function getAdminFlagLogsByName(
   {
