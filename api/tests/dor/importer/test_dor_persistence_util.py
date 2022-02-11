@@ -14,9 +14,7 @@ from sqlalchemy.orm.exc import NoResultFound
 import massgov.pfml.dor.importer.lib.dor_persistence_util as util
 from massgov.pfml.db.models.base import uuid_gen
 from massgov.pfml.db.models.employees import (
-    Country,
     EmployerQuarterlyContribution,
-    GeoState,
     WagesAndContributionsHistory,
 )
 from massgov.pfml.db.models.factories import (
@@ -26,6 +24,7 @@ from massgov.pfml.db.models.factories import (
     TaxIdentifierFactory,
     WagesAndContributionsFactory,
 )
+from massgov.pfml.db.models.geo import Country, GeoState
 
 sample_employee_file = "DORDFML_20200519120622"
 sample_employer_file = "DORDFMLEMP_20200519120622"

@@ -1,7 +1,8 @@
 import massgov.pfml.api.util.state_log_util as state_log_util
-from massgov.pfml.db.models.employees import Flow, ImportLog, State
+from massgov.pfml.db.models.employees import ImportLog
 from massgov.pfml.db.models.factories import PaymentFactory
 from massgov.pfml.db.models.payments import FineosWritebackDetails, FineosWritebackTransactionStatus
+from massgov.pfml.db.models.state import Flow, State
 from massgov.pfml.delegated_payments.util.fineos_writeback_util import (
     create_payment_finished_state_log_with_writeback,
     stage_payment_fineos_writeback,

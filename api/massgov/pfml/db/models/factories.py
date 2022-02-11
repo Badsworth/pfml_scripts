@@ -17,6 +17,7 @@ from sqlalchemy.orm import scoped_session
 import massgov.pfml.db as db
 import massgov.pfml.db.models.applications as application_models
 import massgov.pfml.db.models.employees as employee_models
+import massgov.pfml.db.models.geo as geo_models
 import massgov.pfml.db.models.payments as payment_models
 import massgov.pfml.db.models.verifications as verification_models
 import massgov.pfml.fineos.mock.field
@@ -622,7 +623,7 @@ class AddressFactory(BaseFactory):
     address_line_one = factory.Faker("street_address")
     city = factory.Faker("city")
     zip_code = factory.Faker("postcode")
-    geo_state_id = employee_models.GeoState.MA.geo_state_id
+    geo_state_id = geo_models.GeoState.MA.geo_state_id
 
 
 class CtrAddressPairFactory(BaseFactory):

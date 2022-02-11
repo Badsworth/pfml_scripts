@@ -5,7 +5,7 @@ import pytest
 
 import massgov.pfml.db as db
 import massgov.pfml.experian.address_validate_soap.client as soap_api
-from massgov.pfml.db.models.employees import Claim, Employee, ExperianAddressPair, GeoState, Payment
+from massgov.pfml.db.models.employees import Claim, Employee, ExperianAddressPair, Payment
 from massgov.pfml.db.models.factories import (
     AddressFactory,
     ClaimFactory,
@@ -14,6 +14,7 @@ from massgov.pfml.db.models.factories import (
     ExperianAddressPairFactory,
     PaymentFactory,
 )
+from massgov.pfml.db.models.geo import GeoState
 from massgov.pfml.delegated_payments.address_validation import Constants
 from massgov.pfml.delegated_payments.claimant_address_validation import (
     ClaimantAddressValidationStep,

@@ -126,8 +126,10 @@ export class DAOCypressRunsTimelineSummaryForEnvironment extends BaseDAO {
       },
       runUrl: row.results[12].latest,
       tag: row.results[15].latest
-        .split(",")
-        .filter((tag) => !tag.includes("Env-")),
+        ? row.results[15].latest
+            .split(",")
+            .filter((tag) => !tag.includes("Env-"))
+        : [],
       branch: row.results[16].latest,
     };
 

@@ -15,7 +15,6 @@ import {
 
 import config, { configuration } from "../../src/config";
 import path from "path";
-import webpackPreprocessor from "@cypress/webpack-preprocessor";
 import {
   getAuthManager,
   getEmployeePool,
@@ -294,11 +293,6 @@ export default function (
       return 0;
     },
   });
-
-  const options = {
-    webpackOptions: require("../../webpack.config.ts"),
-  };
-  on("file:preprocessor", webpackPreprocessor(options));
 
   // Pass config values through as environment variables, which we will access via Cypress.env() in actions/common.ts.
   const configEntries = Object.entries(configuration).map(([k, v]) => [

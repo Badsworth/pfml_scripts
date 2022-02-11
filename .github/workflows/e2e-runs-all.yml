@@ -41,6 +41,8 @@ on:
 
 jobs:
   trigger_e2e:
+    # This workflow intentionally doesn't use workflow_call because at the moment, it doesn't support matrix builds.
+    # Also, since we don't wait for results or care about having an accurate run URL, the benefit is small.
     name: Run Cypress Test
     runs-on: ubuntu-latest
     strategy:

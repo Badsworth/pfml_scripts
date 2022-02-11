@@ -4,13 +4,14 @@ import { DatasetArgs } from "../dataset";
 import EmployerPool, { Employer } from "../../generation/Employer";
 import { EmployerPage, Fineos } from "../../submission/fineos.pages";
 import { Page } from "playwright-chromium";
+import pRetry from "p-retry";
 
 export type CommandArgs = DatasetArgs & {
   headless?: boolean;
-  delay?: number;
+  slowMo?: number;
 };
 const cmd: CommandModule<DatasetArgs, CommandArgs> = {
-  command: "register-ee-addresses",
+  command: "register-er-addresses",
   describe: "Deploys a data directory to a particular environment.",
   builder: (yargs) =>
     yargs.options({
@@ -20,11 +21,11 @@ const cmd: CommandModule<DatasetArgs, CommandArgs> = {
         alias: "h",
         default: true,
       },
-      delay: {
+      slowMo: {
         type: "number",
         description:
           "Number of milliseconds of delay to apply to browser interactions. Use '0' to disable delay",
-        alias: "d",
+        alias: "s",
         default: 200,
       },
     }),
@@ -36,13 +37,28 @@ const cmd: CommandModule<DatasetArgs, CommandArgs> = {
     await Fineos.withBrowser(
       async (page): Promise<void> => {
         for await (const employer of employers) {
-          await upsertEmployerAddress(page, args.logger, employer);
-          await page.goto("/");
+          await pRetry(
+            async (): Promise<boolean> => {
+              await upsertEmployerAddress(page, args.logger, employer);
+              await page.goto(args.config("FINEOS_BASEURL"));
+
+              return true;
+            },
+            {
+              retries: 2,
+              onFailedAttempt: async (err) => {
+                args.logger.warn(
+                  `Attempt #${err.attemptNumber} to update address for employer (fein: ${employer.fein}) failed, retrying ${err.retriesLeft} more time(s)`
+                );
+                await page.goto(args.config("FINEOS_BASEURL"));
+              },
+            }
+          );
         }
       },
       {
         debug: !args.headless,
-        slowMo: args.delay || undefined,
+        slowMo: args.slowMo || undefined,
         config: args.config,
       }
     );

@@ -3,13 +3,13 @@ from decimal import Decimal
 import pytest
 
 import massgov.pfml.api.util.state_log_util as state_log_util
-from massgov.pfml.db.models.employees import Flow, State
 from massgov.pfml.db.models.factories import EmployeeFactory
 from massgov.pfml.db.models.payments import (
     FineosWritebackDetails,
     FineosWritebackTransactionStatus,
     PaymentLog,
 )
+from massgov.pfml.db.models.state import Flow, State
 from massgov.pfml.delegated_payments.weekly_max.max_weekly_benefit_amount_validation_step import (
     MaxWeeklyBenefitAmountValidationStep,
 )

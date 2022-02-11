@@ -269,13 +269,31 @@ exports[`Status displays a description for the Pending request decision 1`] = `
 exports[`Status displays a description for the Projected request decision 1`] = `
 <div
   data-testid="leaveStatusMessage"
-/>
+>
+  <strong>
+    This leave is being reviewed.
+  </strong>
+</div>
 `;
 
 exports[`Status displays a description for the Voided request decision 1`] = `
 <div
   data-testid="leaveStatusMessage"
-/>
+>
+  <strong>
+    This leave was cancelled.
+  </strong>
+  <p>
+    This application will no longer be processed. If you want to apply for paid leave again, you can begin another application.
+  </p>
+  <p>
+    <a
+      href="/applications/get-ready"
+    >
+      Start another application
+    </a>
+  </p>
+</div>
 `;
 
 exports[`Status displays a description for the Withdrawn request decision 1`] = `

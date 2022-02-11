@@ -16,12 +16,11 @@ from massgov.pfml.db.models.employees import (
     Claim,
     Employee,
     LatestStateLog,
-    LkFlow,
-    LkState,
     Payment,
     ReferenceFile,
     StateLog,
 )
+from massgov.pfml.db.models.state import LkFlow, LkState
 from massgov.pfml.delegated_payments.delegated_payments_util import ValidationContainer
 
 logger = logging.get_logger(__name__)

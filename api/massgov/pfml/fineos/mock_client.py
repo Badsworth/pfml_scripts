@@ -242,7 +242,7 @@ def mock_customer_details():
             },
         },
         "classExtensionInformation": [
-            {"name": "MassachusettsID", "stringValue": "45354352"},
+            {"name": "MassachusettsID", "stringValue": "123456789"},
             {"name": "OutOfStateID", "stringValue": "123"},
         ],
     }

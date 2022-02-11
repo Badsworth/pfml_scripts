@@ -28,7 +28,6 @@ from massgov.pfml.db.models.employees import (
     PubEft,
     ReferenceFile,
     ReferenceFileType,
-    State,
     TaxIdentifier,
 )
 from massgov.pfml.db.models.payments import (
@@ -36,6 +35,7 @@ from massgov.pfml.db.models.payments import (
     FineosExtractVbiRequestedAbsence,
     FineosExtractVbiRequestedAbsenceSom,
 )
+from massgov.pfml.db.models.state import State
 from massgov.pfml.delegated_payments.step import Step
 
 logger = logging.get_logger(__name__)

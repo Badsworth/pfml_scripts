@@ -4,13 +4,13 @@ from decimal import Decimal
 import pytest
 
 import massgov.pfml.api.util.state_log_util as state_log_util
-from massgov.pfml.db.models.employees import Flow, State
 from massgov.pfml.db.models.factories import (
     DiaReductionPaymentFactory,
     DuaReductionPaymentFactory,
     EmployeeFactory,
 )
 from massgov.pfml.db.models.payments import PaymentAuditReportDetails, PaymentAuditReportType
+from massgov.pfml.db.models.state import Flow, State
 from massgov.pfml.delegated_payments.postprocessing.payment_post_processing_step import (
     PaymentPostProcessingStep,
 )

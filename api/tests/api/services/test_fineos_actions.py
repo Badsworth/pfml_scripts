@@ -23,7 +23,6 @@ from massgov.pfml.db.models.employees import (
     AbsencePeriodType,
     AddressType,
     BankAccountType,
-    Country,
     Employer,
     PaymentMethod,
 )
@@ -42,6 +41,7 @@ from massgov.pfml.db.models.factories import (
     ReducedScheduleLeavePeriodFactory,
     WorkPatternFixedFactory,
 )
+from massgov.pfml.db.models.geo import Country
 from massgov.pfml.db.queries.absence_periods import (
     convert_fineos_absence_period_to_claim_response_absence_period,
 )

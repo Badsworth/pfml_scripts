@@ -2128,7 +2128,7 @@ export function viewPaymentStatus() {
   cy.contains("Your payments");
 }
 
-type PaymentStatus = {
+type PaymentStatusUnderV66 = {
   leaveDates?: string;
   paymentMethod?: "Check" | "Direct Deposit";
   estimatedScheduledDate?: string;
@@ -2136,8 +2136,12 @@ type PaymentStatus = {
   amount?: string;
 };
 
-export function assertPayments(spec: PaymentStatus[]) {
-  const mapColumnsToAssertionProperties: Record<keyof PaymentStatus, string> = {
+// @note: once portal versions are above V66 these should be considered deprecated and assertPaymentsOverV66 should be used
+export function assertPaymentsUnderV66(spec: PaymentStatusUnderV66[]) {
+  const mapColumnsToAssertionProperties: Record<
+    keyof PaymentStatusUnderV66,
+    string
+  > = {
     leaveDates: "Leave dates",
     paymentMethod: "Payment Method",
     amount: "Amount sent",
@@ -2146,22 +2150,44 @@ export function assertPayments(spec: PaymentStatus[]) {
   };
   cy.wait("@payments").wait(100);
   cy.get("section[data-testid='your-payments']").within(() => {
-    cy.get("tbody")
-      .children()
-      .then((children) => {
-        const rows = children.toArray();
-        spec.forEach((status, idx) => {
-          cy.wrap(rows[idx]).within(() => {
-            let key: keyof PaymentStatus;
-            for (key in status) {
-              const content = status[key];
-              const selector = `td[data-label='${mapColumnsToAssertionProperties[key]}']`;
-              if (!content) throw Error("No payment information to assert for");
-              cy.contains(selector, content);
-            }
-          });
-        });
-      });
+    spec.forEach((status) => {
+      let key: keyof PaymentStatusUnderV66;
+      for (key in status) {
+        const content = status[key];
+        const selector = `td[data-label='${mapColumnsToAssertionProperties[key]}']`;
+        if (!content) throw Error("No payment information to assert for");
+        cy.contains(selector, content);
+      }
+    });
+  });
+}
+
+type PaymentStatusOverV66 = {
+  payPeriod?: string;
+  status?: string;
+  amount?: string;
+};
+
+export function assertPaymentsOverV66(spec: PaymentStatusOverV66[]) {
+  const mapColumnsToAssertionProperties: Record<
+    keyof PaymentStatusOverV66,
+    string
+  > = {
+    payPeriod: "Pay period",
+    amount: "Amount",
+    status: "Status",
+  };
+  cy.wait("@payments").wait(100);
+  cy.get("section[data-testid='your-payments']").within(() => {
+    spec.forEach((status) => {
+      let key: keyof PaymentStatusOverV66;
+      for (key in status) {
+        const content = status[key];
+        const selector = `td[data-label='${mapColumnsToAssertionProperties[key]}']`;
+        if (!content) throw Error("No payment information to assert for");
+        cy.contains(selector, content);
+      }
+    });
   });
 }
 

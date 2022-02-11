@@ -2,8 +2,11 @@ from werkzeug.exceptions import NotFound
 
 import massgov.pfml.api.app as app
 import massgov.pfml.api.util.response as response_util
+import massgov.pfml.util.logging
 from massgov.pfml.api.models.flags.responses import FlagResponse
 from massgov.pfml.db.models.flags import LkFeatureFlag
+
+logger = massgov.pfml.util.logging.get_logger(__name__)
 
 ##########################################
 # Handlers

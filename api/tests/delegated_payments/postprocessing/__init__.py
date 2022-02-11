@@ -2,7 +2,7 @@ import random
 from datetime import date, timedelta
 
 from massgov.pfml.db.models.employees import PaymentTransactionType, SharedPaymentConstants, State
-from massgov.pfml.db.models.factories import PaymentDetailsFactory
+from massgov.pfml.db.models.factories import AbsencePeriodFactory, PaymentDetailsFactory
 from massgov.pfml.delegated_payments.mock.delegated_payments_factory import DelegatedPaymentFactory
 from massgov.pfml.delegated_payments.postprocessing.payment_post_processing_util import (
     PaymentContainer,
@@ -31,6 +31,28 @@ def _create_payment_periods(payment, total_amount, start_date, periods, length_o
     return payment_periods
 
 
+def _create_absence_periods(
+    claim, fineos_leave_request_id, absence_period_start_date=None, count=1, length_of_period=30
+):
+    if not absence_period_start_date:
+        absence_period_start_date = claim.absence_period_start_date
+
+    absence_periods = []
+    for _ in range(count):
+        absence_period_end_date = absence_period_start_date + timedelta(length_of_period - 1)
+
+        absence_period = AbsencePeriodFactory.create(
+            claim_id=claim,
+            claim=claim,
+            absence_period_start_date=absence_period_start_date,
+            absence_period_end_date=absence_period_end_date,
+            fineos_leave_request_id=fineos_leave_request_id,
+        )
+        absence_periods.append(absence_period)
+
+    return absence_periods
+
+
 def _create_payment_container(
     employee,
     amount,
@@ -47,6 +69,7 @@ def _create_payment_container(
     later_failed=False,
     payment_transaction_type=PaymentTransactionType.STANDARD,
     claim=None,
+    add_single_absence_period=True,
 ):
 
     if not start_date:
@@ -67,6 +90,7 @@ def _create_payment_container(
         payment_transaction_type_id=payment_transaction_type.payment_transaction_type_id,
         fineos_employee_first_name=employee.first_name,
         fineos_employee_last_name=employee.last_name,
+        add_single_absence_period=add_single_absence_period,
     )
     payment = factory.get_or_create_payment()
 
@@ -90,5 +114,4 @@ def _create_payment_container(
     if has_processed_state and later_failed:
         factory.get_or_create_payment_with_state(State.DELEGATED_PAYMENT_ERROR_FROM_BANK)
 
-    # db_session.commit()
     return PaymentContainer(payment)

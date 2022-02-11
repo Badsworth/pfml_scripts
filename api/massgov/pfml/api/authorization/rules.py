@@ -13,7 +13,8 @@ from massgov.pfml.db.models.applications import (
     Notification,
     RMVCheck,
 )
-from massgov.pfml.db.models.employees import AzurePermission, Employee, Role, User
+from massgov.pfml.db.models.azure import AzurePermission
+from massgov.pfml.db.models.employees import Employee, Role, User
 from massgov.pfml.util.users import has_role_in
 
 

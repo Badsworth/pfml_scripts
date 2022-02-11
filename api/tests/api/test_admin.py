@@ -4,7 +4,7 @@ from jose.constants import ALGORITHMS
 from mock import patch
 
 from massgov.pfml.api.admin import SERVICE_UNAVAILABLE_MESSAGE
-from massgov.pfml.db.models.employees import AzureGroup, AzureGroupPermission, AzurePermission
+from massgov.pfml.db.models.azure import AzureGroup, AzureGroupPermission, AzurePermission
 from massgov.pfml.db.models.factories import UserFactory
 from massgov.pfml.db.models.flags import FeatureFlag, FeatureFlagValue, UserAzureFeatureFlagLog
 
@@ -69,14 +69,14 @@ def test_admin_flag_get_logs_by_name_success(
         azure_feature_flag_value_id=feature_flag_value.feature_flag_value_id,
         email_address=azure_token["unique_name"],
         sub_id=azure_token["sub"],
-        family_name=azure_token["given_name"],
-        given_name=azure_token["family_name"],
+        family_name=azure_token["family_name"],
+        given_name=azure_token["given_name"],
         action="INSERT",
     )
     test_db_session.add(log)
     test_db_session.commit()
     response = client.get(
-        "/v1/admin/flags/logs/maintenance", headers={"Authorization": f"Bearer {encoded}"}
+        "/v1/admin/flag-logs/maintenance", headers={"Authorization": f"Bearer {encoded}"}
     )
     assert response.status_code == 200
     response_data = response.get_json().get("data")
@@ -116,7 +116,7 @@ def test_admin_flag_get_logs_by_name_unauthorized(
     test_db_session.add(log)
     test_db_session.commit()
     response = client.get(
-        "/v1/admin/flags/logs/maintenance", headers={"Authorization": f"Bearer {encoded}"}
+        "/v1/admin/flag-logs/maintenance", headers={"Authorization": f"Bearer {encoded}"}
     )
     assert response.status_code == 401
 

@@ -42,13 +42,13 @@ from massgov.pfml.db.models.applications import (
 from massgov.pfml.db.models.employees import (
     Address,
     Claim,
-    Country,
     Employee,
     Employer,
     PaymentMethod,
     TaxIdentifier,
     User,
 )
+from massgov.pfml.db.models.geo import Country
 from massgov.pfml.fineos.common import SUB_CASE_DOC_TYPES
 from massgov.pfml.fineos.exception import FINEOSClientError, FINEOSEntityNotFound
 from massgov.pfml.fineos.models import CreateOrUpdateServiceAgreement

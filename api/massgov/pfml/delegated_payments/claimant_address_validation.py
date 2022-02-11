@@ -19,12 +19,12 @@ from massgov.pfml.db.models.employees import (
     Claim,
     Employee,
     ExperianAddressPair,
-    GeoState,
     Payment,
     ReferenceFile,
     ReferenceFileType,
     StateLog,
 )
+from massgov.pfml.db.models.geo import GeoState
 from massgov.pfml.db.models.payments import FineosExtractEmployeeFeed, MmarsPaymentData
 from massgov.pfml.delegated_payments.address_validation import _get_experian_soap_client
 from massgov.pfml.delegated_payments.step import Step

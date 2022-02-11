@@ -14,17 +14,15 @@ import massgov.pfml.util.files
 import massgov.pfml.util.logging
 from massgov.pfml.api.util import state_log_util
 from massgov.pfml.db.models.employees import (
-    Flow,
-    LkState,
     Payment,
     PaymentCheck,
     PaymentCheckStatus,
     PubErrorType,
     ReferenceFile,
     ReferenceFileType,
-    State,
 )
 from massgov.pfml.db.models.payments import FineosWritebackTransactionStatus
+from massgov.pfml.db.models.state import Flow, LkState, State
 from massgov.pfml.delegated_payments import delegated_config, delegated_payments_util
 from massgov.pfml.delegated_payments.pub import check_return, process_files_in_path_step
 from massgov.pfml.delegated_payments.util.fineos_writeback_util import (

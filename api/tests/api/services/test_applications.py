@@ -479,7 +479,7 @@ def test_set_customer_detail_fields(
     assert application.first_name == "Samantha"
     assert application.last_name == "Jorgenson"
     assert application.gender_id == Gender.NONBINARY.gender_id
-    assert application.mass_id == "45354352"
+    assert application.mass_id == "123456789"
     assert application.has_state_id is True
     assert application.residential_address.address_line_one == "37 Mather Drive"
 

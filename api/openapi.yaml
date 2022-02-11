@@ -1286,12 +1286,12 @@ paths:
           $ref: "#/components/responses/NotFound"
 
   /admin/flags/{name}:
-    post:
+    patch:
       tags:
         - Admin
         - Feature Flags
       summary: Update a feature flag
-      operationId: massgov.pfml.api.admin.admin_flags_post
+      operationId: massgov.pfml.api.admin.admin_flags_patch
       parameters:
         - name: name
           in: path
@@ -1311,13 +1311,13 @@ paths:
       requestBody:
         $ref: "#/components/requestBodies/FlagUpdateRequest"
 
-  /admin/flags/logs/{name}:
+  /admin/flag-logs/{name}:
     get:
       tags:
         - Admin
         - Feature Flags
-      summary: Get feature flags
-      operationId: massgov.pfml.api.admin.admin_flag_get_logs
+      summary: Get logs for a feature flag
+      operationId: massgov.pfml.api.admin.admin_get_flag_logs
       parameters:
         - name: name
           in: path
@@ -1331,7 +1331,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/FlagLogsResponse"
+                $ref: "#/components/schemas/FlagWithLogsResponse"
         "503":
           $ref: "#/components/responses/ServiceUnavailableError"
 
@@ -1399,7 +1399,7 @@ components:
       schema:
         type: string
         default: "created_at"
-        enum: ["fineos_absence_status", "created_at", "employee"]
+        enum: ["fineos_absence_status", "created_at", "employee", "latest_follow_up_date"]
     orderDirection:
       name: "order_direction"
       in: query
@@ -1780,11 +1780,6 @@ components:
           type: string
           example: "maintenance"
           readOnly: true
-        updated_at:
-          type: string
-          nullable: true
-          format: date-time
-          example: "2020-06-26T01:02:03.967736+00:00"
         options:
           type: object
           example:
@@ -1796,20 +1791,20 @@ components:
           example: false
       additionalProperties: false
 
-    FlagLog:
+    FlagWithLog:
       allOf:
         - $ref: "#/components/schemas/Flag"
         - type: object
           properties:
-            family_name:
-              type: string
-              example: "Doe"
-              readOnly: true
-            given_name:
+            first_name:
               type: string
               example: "John"
               readOnly: true
-            created_at:
+            last_name:
+              type: string
+              example: "Doe"
+              readOnly: true
+            updated_at:
               type: string
               nullable: false
               format: date-time
@@ -1817,10 +1812,10 @@ components:
               readOnly: true
           additionalProperties: false
 
-    FlagLogsResponse:
+    FlagWithLogsResponse:
       type: array
       items:
-        $ref: "#/components/schemas/FlagLog"
+        $ref: "#/components/schemas/FlagWithLog"
 
 
     FlagsResponse:
@@ -2703,6 +2698,22 @@ components:
         is_withholding_tax:
           type: boolean
           nullable: true
+        computed_start_dates:
+          $ref: "#/components/schemas/ComputedStartDates"
+
+    ComputedStartDates:
+      type: object
+      properties:
+        other_reason:
+          type: string
+          format: date
+          example: "2021-01-01"
+          nullable: true
+        same_reason:
+          type: string
+          format: date
+          example: "2021-01-01"
+          nullable: true
 
     DocumentUploadRequest:
       type: object
@@ -2977,6 +2988,18 @@ components:
             - Cancelled
             - Delayed
           example: "Delayed"
+        writeback_transaction_status:
+          type: string
+          nullable: true
+          example: "Address Validation Error"
+        transaction_date:
+          format: date
+          type: string
+          nullable: true
+          example: "2021-01-01"
+        transaction_date_could_change:
+          type: boolean
+          example: false
 
     EvidenceStatusDetail:
       type: object

@@ -8,7 +8,11 @@ from freezegun import freeze_time
 from massgov.pfml.api.services.payments import FrontendPaymentStatus
 from massgov.pfml.db.models.employees import PaymentMethod, PaymentTransactionType
 from massgov.pfml.db.models.factories import ApplicationFactory
-from massgov.pfml.db.models.payments import FineosWritebackDetails, FineosWritebackTransactionStatus
+from massgov.pfml.db.models.payments import (
+    PENDING_ACTIVE_WRITEBACK_RECORD_STATUS,
+    FineosWritebackDetails,
+    FineosWritebackTransactionStatus,
+)
 from massgov.pfml.delegated_payments.mock.delegated_payments_factory import DelegatedPaymentFactory
 
 
@@ -55,6 +59,8 @@ def test_get_payments_200(
 ):
     status, amount, sent_date, expected_start_delta, expected_end_delta = scenario_details
 
+    now = datetime.now()
+
     absence_id = "NTN-12345-ABS-01"
 
     payment_factory = DelegatedPaymentFactory(
@@ -63,7 +69,7 @@ def test_get_payments_200(
         payment_method=PaymentMethod.ACH,
         amount=Decimal("750.67"),
         set_pub_eft_in_payment=True,
-        prenote_sent_at=date.today(),
+        prenote_sent_at=now.date(),
     )
     payment_factory.get_or_create_pub_eft()
     claim = payment_factory.get_or_create_claim()
@@ -72,11 +78,19 @@ def test_get_payments_200(
     if transaction_status == FineosWritebackTransactionStatus.POSTED:
         # Need to pull sent dates off of paid status record for posted statuses
         payment = payment_factory.get_or_create_payment()
-        wb_detail = FineosWritebackDetails(payment=payment, transaction_status_id=11)
+        wb_detail = FineosWritebackDetails(
+            payment=payment,
+            transaction_status_id=FineosWritebackTransactionStatus.PAID.transaction_status_id,
+            writeback_sent_at=now,
+        )
         test_db_session.add(wb_detail)
-        payment_factory.get_or_create_payment_with_writeback(transaction_status)
+        payment_factory.get_or_create_payment_with_writeback(
+            transaction_status, writeback_sent_at=now
+        )
     else:
-        wb_detail = payment_factory.get_or_create_payment_with_writeback(transaction_status)
+        wb_detail = payment_factory.get_or_create_payment_with_writeback(
+            transaction_status, writeback_sent_at=now
+        )
 
     test_db_session.commit()
 
@@ -95,15 +109,34 @@ def test_get_payments_200(
     payment = payment_factory.payment
 
     expected_start_date = (
-        str(date.today() + timedelta(days=expected_start_delta))
+        str(now.date() + timedelta(days=expected_start_delta))
         if (expected_start_delta is not None)
         else None
     )
     expected_end_date = (
-        str(date.today() + timedelta(days=expected_end_delta))
+        str(now.date() + timedelta(days=expected_end_delta))
         if (expected_end_delta is not None)
         else None
     )
+
+    expected_description = None
+    expected_transaction_date_could_change = True
+    expected_transaction_date = None
+    if transaction_status:
+        if (
+            transaction_status.transaction_status_id
+            == FineosWritebackTransactionStatus.POSTED.transaction_status_id
+        ):
+            expected_writeback_transaction_status = FineosWritebackTransactionStatus.PAID
+        else:
+            expected_writeback_transaction_status = transaction_status
+
+        expected_description = expected_writeback_transaction_status.transaction_status_description
+        expected_transaction_date = now.date().isoformat()
+        expected_transaction_date_could_change = (
+            expected_writeback_transaction_status.writeback_record_status
+            == PENDING_ACTIVE_WRITEBACK_RECORD_STATUS
+        )
 
     assert payment_response == {
         "payment_id": str(payment.payment_id),
@@ -117,7 +150,10 @@ def test_get_payments_200(
         "expected_send_date_start": expected_start_date,
         "expected_send_date_end": expected_end_date,
         "cancellation_date": None,
-        "status": status,
+        "status": status.value,
+        "writeback_transaction_status": expected_description,
+        "transaction_date": expected_transaction_date,
+        "transaction_date_could_change": expected_transaction_date_could_change,
     }
 
 
@@ -125,6 +161,7 @@ def test_get_payments_200_pending_validation_scenario_no_prenote_sent_at(
     client, auth_token, user, test_db_session
 ):
     absence_id = "NTN-12345-ABS-01"
+    now = datetime.now()
 
     payment_factory = DelegatedPaymentFactory(
         test_db_session,
@@ -139,7 +176,7 @@ def test_get_payments_200_pending_validation_scenario_no_prenote_sent_at(
     ApplicationFactory.create(claim=claim, user=user)
 
     transaction_status = FineosWritebackTransactionStatus.PENDING_PRENOTE
-    payment_factory.get_or_create_payment_with_writeback(transaction_status)
+    payment_factory.get_or_create_payment_with_writeback(transaction_status, writeback_sent_at=now)
 
     test_db_session.commit()
 
@@ -157,8 +194,8 @@ def test_get_payments_200_pending_validation_scenario_no_prenote_sent_at(
 
     payment = payment_factory.payment
 
-    expected_start_date = str(date.today() + timedelta(days=6))
-    expected_end_date = str(date.today() + timedelta(days=8))
+    expected_start_date = str(now.date() + timedelta(days=6))
+    expected_end_date = str(now.date() + timedelta(days=8))
 
     assert payment_response == {
         "payment_id": str(payment.payment_id),
@@ -173,11 +210,15 @@ def test_get_payments_200_pending_validation_scenario_no_prenote_sent_at(
         "expected_send_date_end": expected_end_date,
         "cancellation_date": None,
         "status": FrontendPaymentStatus.DELAYED,
+        "writeback_transaction_status": transaction_status.transaction_status_description,
+        "transaction_date": now.date().isoformat(),
+        "transaction_date_could_change": True,
     }
 
 
 def test_get_payments_200_range_before_today(client, auth_token, user, test_db_session):
     absence_id = "NTN-12345-ABS-01"
+    now = datetime.now()
 
     payment_factory = DelegatedPaymentFactory(
         test_db_session,
@@ -189,7 +230,9 @@ def test_get_payments_200_range_before_today(client, auth_token, user, test_db_s
     ApplicationFactory.create(claim=claim, user=user)
 
     transaction_status = FineosWritebackTransactionStatus.DIA_ADDITIONAL_INCOME
-    writeback_status = payment_factory.get_or_create_payment_with_writeback(transaction_status)
+    writeback_status = payment_factory.get_or_create_payment_with_writeback(
+        transaction_status, writeback_sent_at=now
+    )
 
     # The expected_end_date of the range (2-4 days from writeback created_at)
     # will be one day prior to todays date. In this scenario, we don't return values for
@@ -225,11 +268,15 @@ def test_get_payments_200_range_before_today(client, auth_token, user, test_db_s
         "expected_send_date_end": None,
         "cancellation_date": None,
         "status": FrontendPaymentStatus.DELAYED,
+        "writeback_transaction_status": transaction_status.transaction_status_description,
+        "transaction_date": now.date().isoformat(),
+        "transaction_date_could_change": False,
     }
 
 
 def test_get_payments_200_cancelled_payments(client, auth_token, user, test_db_session):
     absence_id = "NTN-12345-ABS-01"
+    now = datetime.now()
 
     payment_factory = DelegatedPaymentFactory(
         test_db_session,
@@ -243,7 +290,7 @@ def test_get_payments_200_cancelled_payments(client, auth_token, user, test_db_s
 
     # Create the payment and a cancellation in the DB
     transaction_status = FineosWritebackTransactionStatus.WAITING_WEEK
-    payment_factory.get_or_create_payment_with_writeback(transaction_status)
+    payment_factory.get_or_create_payment_with_writeback(transaction_status, writeback_sent_at=now)
     cancellation_payment = payment_factory.create_cancellation_payment(
         fineos_extraction_date=date(2021, 12, 1)
     )
@@ -277,11 +324,15 @@ def test_get_payments_200_cancelled_payments(client, auth_token, user, test_db_s
         "expected_send_date_end": None,
         "cancellation_date": str(cancellation_payment.fineos_extraction_date),
         "status": FrontendPaymentStatus.CANCELLED,
+        "writeback_transaction_status": transaction_status.transaction_status_description,
+        "transaction_date": now.date().isoformat(),
+        "transaction_date_could_change": False,
     }
 
 
 def test_get_payments_200_zero_dollar(client, auth_token, user, test_db_session):
     absence_id = "NTN-12345-ABS-01"
+    now = datetime.now()
 
     payment_factory = DelegatedPaymentFactory(
         test_db_session,
@@ -296,7 +347,7 @@ def test_get_payments_200_zero_dollar(client, auth_token, user, test_db_session)
 
     # Create the payment in the DB
     transaction_status = FineosWritebackTransactionStatus.PROCESSED
-    payment_factory.get_or_create_payment_with_writeback(transaction_status)
+    payment_factory.get_or_create_payment_with_writeback(transaction_status, writeback_sent_at=now)
 
     test_db_session.commit()
 
@@ -327,6 +378,9 @@ def test_get_payments_200_zero_dollar(client, auth_token, user, test_db_session)
         "expected_send_date_end": None,
         "cancellation_date": str(payment.fineos_extraction_date),
         "status": FrontendPaymentStatus.CANCELLED,
+        "writeback_transaction_status": transaction_status.transaction_status_description,
+        "transaction_date": now.date().isoformat(),
+        "transaction_date_could_change": False,
     }
 
 
@@ -372,6 +426,9 @@ def test_get_payments_200_legacy_payments(client, auth_token, user, test_db_sess
         "expected_send_date_end": str(payment.disb_check_eft_issue_date),
         "cancellation_date": None,
         "status": FrontendPaymentStatus.SENT_TO_BANK,
+        "writeback_transaction_status": None,
+        "transaction_date": None,
+        "transaction_date_could_change": True,
     }
 
 

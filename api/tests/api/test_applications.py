@@ -44,7 +44,6 @@ from massgov.pfml.db.models.employees import (
     BankAccountType,
     Claim,
     Gender,
-    GeoState,
     PaymentMethod,
     TaxIdentifier,
 )
@@ -70,6 +69,7 @@ from massgov.pfml.db.models.factories import (
     WagesAndContributionsFactory,
     WorkPatternFixedFactory,
 )
+from massgov.pfml.db.models.geo import GeoState
 from massgov.pfml.fineos.client import AbstractFINEOSClient
 from massgov.pfml.fineos.exception import (
     FINEOSClientError,
@@ -487,7 +487,7 @@ class TestApplicationsImport:
         assert imported_application.first_name == "Samantha"
         assert imported_application.last_name == "Jorgenson"
         assert imported_application.date_of_birth == date(1996, 1, 11)
-        assert imported_application.mass_id == "45354352"
+        assert imported_application.mass_id == "123456789"
         assert imported_application.has_state_id is True
         assert imported_application.gender_id == Gender.NONBINARY.gender_id
         assert imported_application.residential_address.address_line_one == "37 Mather Drive"
