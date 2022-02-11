@@ -30,8 +30,8 @@ import { config } from "../../actions/common";
 
     const ERProcess =
       it("CSR starts the Employer Reimbursement Process and adds documents", () => {
-        fineos.before();
         cy.dependsOnPreviousPass([submit]);
+        fineos.before();
         cy.unstash<Submission>("submission").then((submission) => {
           const claimPage = fineosPages.ClaimPage.visit(
             submission.fineos_absence_id
@@ -50,8 +50,8 @@ import { config } from "../../actions/common";
       });
 
     const approve = it("CSR approves the leave plan and absence case", () => {
-      fineos.before();
       cy.dependsOnPreviousPass([submit, ERProcess]);
+      fineos.before();
       cy.unstash<DehydratedClaim>("claim").then((claim) => {
         cy.unstash<Submission>("submission").then((submission) => {
           const claimPage = fineosPages.ClaimPage.visit(
@@ -83,8 +83,8 @@ import { config } from "../../actions/common";
 
     const ERtrigger =
       it("Add an employer reimbursement to the Paid Leave Case and trigger notice", () => {
-        fineos.before();
         cy.dependsOnPreviousPass([submit, ERProcess, approve]);
+        fineos.before();
         cy.unstash<Submission>("submission").then((submission) => {
           cy.unstash<DehydratedClaim>("claim").then((claim) => {
             const claimPage = fineosPages.ClaimPage.visit(
@@ -131,8 +131,8 @@ import { config } from "../../actions/common";
       });
 
     it("Enable AutoPay along with approve period. Check the adjustment for the payment amount", () => {
-      fineos.before();
       cy.dependsOnPreviousPass([submit, ERProcess, approve, ERtrigger]);
+      fineos.before();
       cy.unstash<Submission>("submission").then((submission) => {
         cy.unstash<DehydratedClaim>("claim").then((claim) => {
           const claimPage = fineosPages.ClaimPage.visit(

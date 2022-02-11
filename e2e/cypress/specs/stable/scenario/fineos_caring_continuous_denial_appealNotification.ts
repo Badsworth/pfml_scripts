@@ -88,8 +88,8 @@ describe("Create a new continuous leave, caring leave claim in FINEOS", () => {
     "Check the Leave Admin email for the appeal notification.",
     { retries: 0 },
     () => {
-      portal.before();
       cy.dependsOnPreviousPass([fineosSubmission, employerDenial, csrAppeal]);
+      portal.before();
       cy.unstash<Submission>("submission").then((submission) => {
         cy.unstash<ApplicationRequestBody>("claim").then((claim) => {
           const subjectEmployer = email.getNotificationSubject(
