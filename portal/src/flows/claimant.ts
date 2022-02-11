@@ -168,6 +168,8 @@ const claimantFlow: {
     [routes.applications.importClaim]: {
       on: {
         CONTINUE: routes.applications.index,
+        EDIT_PHONE: routes.user.settings,
+        ENABLE_MFA: routes.twoFactor.smsSetup,
       },
     },
     [routes.applications.index]: {

@@ -1397,12 +1397,24 @@ const pages: {
     title: "$t(shared.claimsVerifyIdTitle)",
   },
   claimsImport: {
-    absenceIdLabel: "Application ID number",
-    leadIntro: "We need some information to identify your application.",
-    leadReminder:
-      "Reminder: You’ll need to keep managing applications through the Contact Center if you are self-employed or unemployed or if you are applying for military-related paid family leave benefits.",
-    submitButton: "Continue",
-    taxIdLabel: "Social Security Number (SSN)",
+    absenceIdHint:
+      "Enter the application ID given to you when you applied by phone. It contains both numbers and letters and looks like NTN-123456-ABS-01.",
+    absenceIdLabel: "Application ID",
+    leadIdentify: "We need some information to identify your application.",
+    leadIntro:
+      "Some applications started on the phone can be added to this website. Once added, you can upload documents and see your application’s status and payments online.",
+    mfaDisabledWarningBody:
+      "In order to add an existing application, you need to provide a phone number we can use to <verify-link>verify your login</verify-link>. This number must match the one you gave the Contact Center when you applied.",
+    mfaDisabledWarningHeading: "We need to verify your login.",
+    phoneHint:
+      "This number must match the one you gave the Contact Center when you applied.",
+    phoneLabel: "Cell phone number",
+    phoneLink_unverified: "Verify your login",
+    phoneLink_verified: "Change your phone number",
+    submitButton: "Add application",
+    taxIdHint:
+      "Don’t have a Social Security Number? Use your Individual Taxpayer Identification Number (ITIN).",
+    taxIdLabel: "Social Security Number",
     title: "Add an existing application",
     uploadingMessage: "Submitting… Do not refresh or go back",
   },
