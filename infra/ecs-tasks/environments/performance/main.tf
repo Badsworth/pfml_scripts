@@ -3,7 +3,8 @@ locals {
 }
 
 provider "aws" {
-  region = "us-east-1"
+  region  = "us-east-1"
+  version = "3.74.1"
 }
 
 terraform {
