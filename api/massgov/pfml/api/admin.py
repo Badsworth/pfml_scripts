@@ -29,9 +29,9 @@ from massgov.pfml.db.models.azure import AzurePermission, LkAzurePermission
 from massgov.pfml.db.models.employees import User
 from massgov.pfml.db.models.flags import (
     FeatureFlag,
+    FeatureFlagLog,
     FeatureFlagValue,
     LkFeatureFlag,
-    UserAzureFeatureFlagLog,
 )
 from massgov.pfml.util.paginate.paginator import PaginationAPIContext, page_for_api_context
 
@@ -173,8 +173,8 @@ def admin_flags_patch(name):
             setattr(feature_flag_value, key, value)
         db_session.add(feature_flag_value)
         db_session.flush()
-        log = UserAzureFeatureFlagLog(
-            azure_feature_flag_value_id=feature_flag_value.feature_flag_value_id,
+        log = FeatureFlagLog(
+            feature_flag_value_id=feature_flag_value.feature_flag_value_id,
             email_address=azure_user.email_address,
             sub_id=azure_user.sub_id,
             given_name=azure_user.first_name,

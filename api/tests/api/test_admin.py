@@ -6,7 +6,7 @@ from mock import patch
 from massgov.pfml.api.admin import SERVICE_UNAVAILABLE_MESSAGE
 from massgov.pfml.db.models.azure import AzureGroup, AzureGroupPermission, AzurePermission
 from massgov.pfml.db.models.factories import UserFactory
-from massgov.pfml.db.models.flags import FeatureFlag, FeatureFlagValue, UserAzureFeatureFlagLog
+from massgov.pfml.db.models.flags import FeatureFlag, FeatureFlagLog, FeatureFlagValue
 
 FAKE_AUTH_URI_RESPONSE = {
     "auth_uri": "test",
@@ -65,8 +65,8 @@ def test_admin_flag_get_logs_by_name_success(
     feature_flag_value.enabled = True
     test_db_session.add(feature_flag_value)
     test_db_session.flush()
-    log = UserAzureFeatureFlagLog(
-        azure_feature_flag_value_id=feature_flag_value.feature_flag_value_id,
+    log = FeatureFlagLog(
+        feature_flag_value_id=feature_flag_value.feature_flag_value_id,
         email_address=azure_token["unique_name"],
         sub_id=azure_token["sub"],
         family_name=azure_token["family_name"],
@@ -105,12 +105,12 @@ def test_admin_flag_get_logs_by_name_unauthorized(
     feature_flag_value.enabled = True
     test_db_session.add(feature_flag_value)
     test_db_session.flush()
-    log = UserAzureFeatureFlagLog(
-        azure_feature_flag_value_id=feature_flag_value.feature_flag_value_id,
+    log = FeatureFlagLog(
+        feature_flag_value_id=feature_flag_value.feature_flag_value_id,
         email_address="johndoe@example.com",
         sub_id=azure_token["sub"],
-        family_name="john",
-        given_name="doe",
+        family_name="doe",
+        given_name="john",
         action="INSERT",
     )
     test_db_session.add(log)
