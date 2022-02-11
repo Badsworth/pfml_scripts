@@ -126,30 +126,36 @@ describe("Submit bonding application via the web portal: Adjudication Approval, 
     }
   );
 
-  it("Should be able to confirm the weekly payment amount for a intermittent schedule", () => {
-    cy.dependsOnPreviousPass([recordingHours]);
-    fineos.before();
-    cy.unstash<DehydratedClaim>("claim").then((claim) => {
-      cy.unstash<Submission>("submission").then((submission) => {
-        const payment = claim.metadata
-          ?.expected_weekly_payment as unknown as number;
-        fineosPages.ClaimPage.visit(submission.fineos_absence_id).paidLeave(
-          (leaveCase) => {
-            if (config("HAS_FEB_RELEASE") === "true") {
-              leaveCase.assertAmountsPending([
-                {
-                  net_payment_amount: 831.06,
-                  paymentProcessingDates: [calculatePaymentDatePreventingOP()],
-                },
-              ]);
-            } else {
-              leaveCase.assertPaymentsMade([{ net_payment_amount: payment }]);
+  it(
+    "Should be able to confirm the weekly payment amount for a intermittent schedule",
+    { retries: 0 },
+    () => {
+      cy.dependsOnPreviousPass([recordingHours]);
+      fineos.before();
+      cy.unstash<DehydratedClaim>("claim").then((claim) => {
+        cy.unstash<Submission>("submission").then((submission) => {
+          const payment = claim.metadata
+            ?.expected_weekly_payment as unknown as number;
+          fineosPages.ClaimPage.visit(submission.fineos_absence_id).paidLeave(
+            (leaveCase) => {
+              if (config("HAS_FEB_RELEASE") === "true") {
+                leaveCase.assertAmountsPending([
+                  {
+                    net_payment_amount: 831.06,
+                    paymentProcessingDates: [
+                      calculatePaymentDatePreventingOP(),
+                    ],
+                  },
+                ]);
+              } else {
+                leaveCase.assertPaymentsMade([{ net_payment_amount: payment }]);
+              }
             }
-          }
-        );
+          );
+        });
       });
-    });
-  });
+    }
+  );
   itIf(
     config("HAS_FEB_RELEASE") === "true",
     "CSR rep will override payment processing date to be schudeuled for day of approval",

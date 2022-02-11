@@ -162,47 +162,51 @@ describe("Claimant uses portal to report other leaves and benefits, receives cor
         });
       });
     });
-  it("Payments appear in paid leave case with the expected amounts", () => {
-    cy.dependsOnPreviousPass([approval]);
-    fineos.before();
-    cy.unstash<Submission>("submission").then((submission) => {
-      fineosPages.ClaimPage.visit(submission.fineos_absence_id).paidLeave(
-        (leaveCase) => {
-          if (config("HAS_FEB_RELEASE") === "true") {
-            const paymentDates = Array<Date>(2).fill(
-              calculatePaymentDatePreventingOP()
-            );
-            leaveCase.assertPaymentsMade([]).assertAmountsPending([
-              // retroactive SIT/FIT appear in amounts pending with processing date of today
-              {
-                net_payment_amount: 58.43,
-                paymentInstances: 2,
-                paymentProcessingDates: paymentDates,
-              },
-              {
-                net_payment_amount: 29.22,
-                paymentInstances: 2,
-                paymentProcessingDates: paymentDates,
-              },
-              {
-                net_payment_amount: 496.66,
-                paymentInstances: 2,
-                paymentProcessingDates: paymentDates,
-              },
-            ]);
-          } else {
-            leaveCase
-              .assertPaymentsMade([{ net_payment_amount: 496.66 }])
-              .assertPaymentAllocations([{ net_payment_amount: 496.66 }])
-              .assertAmountsPending([
+  it(
+    "Payments appear in paid leave case with the expected amounts",
+    { retries: 0 },
+    () => {
+      cy.dependsOnPreviousPass([approval]);
+      fineos.before();
+      cy.unstash<Submission>("submission").then((submission) => {
+        fineosPages.ClaimPage.visit(submission.fineos_absence_id).paidLeave(
+          (leaveCase) => {
+            if (config("HAS_FEB_RELEASE") === "true") {
+              const paymentDates = Array<Date>(2).fill(
+                calculatePaymentDatePreventingOP()
+              );
+              leaveCase.assertPaymentsMade([]).assertAmountsPending([
                 // retroactive SIT/FIT appear in amounts pending with processing date of today
-                { net_payment_amount: 58.43, paymentInstances: 2 },
-                { net_payment_amount: 29.22, paymentInstances: 2 },
-                { net_payment_amount: 496.66 },
+                {
+                  net_payment_amount: 58.43,
+                  paymentInstances: 2,
+                  paymentProcessingDates: paymentDates,
+                },
+                {
+                  net_payment_amount: 29.22,
+                  paymentInstances: 2,
+                  paymentProcessingDates: paymentDates,
+                },
+                {
+                  net_payment_amount: 496.66,
+                  paymentInstances: 2,
+                  paymentProcessingDates: paymentDates,
+                },
               ]);
+            } else {
+              leaveCase
+                .assertPaymentsMade([{ net_payment_amount: 496.66 }])
+                .assertPaymentAllocations([{ net_payment_amount: 496.66 }])
+                .assertAmountsPending([
+                  // retroactive SIT/FIT appear in amounts pending with processing date of today
+                  { net_payment_amount: 58.43, paymentInstances: 2 },
+                  { net_payment_amount: 29.22, paymentInstances: 2 },
+                  { net_payment_amount: 496.66 },
+                ]);
+            }
           }
-        }
-      );
-    });
-  });
+        );
+      });
+    }
+  );
 });

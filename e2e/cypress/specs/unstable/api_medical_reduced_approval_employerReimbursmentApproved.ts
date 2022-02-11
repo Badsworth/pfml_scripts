@@ -130,11 +130,11 @@ import { config } from "../../actions/common";
         });
       });
 
-    it("Enable AutoPay along with approve period. Check the adjustment for the payment amount", () => {
-      cy.dependsOnPreviousPass([submit, ERProcess, approve, ERtrigger]);
-      fineos.before();
-      cy.unstash<Submission>("submission").then((submission) => {
-        cy.unstash<DehydratedClaim>("claim").then((claim) => {
+    const enablePayment =
+      it("Enable AutoPay along with approve period to all the payment to show", () => {
+        cy.dependsOnPreviousPass([submit, ERProcess, approve, ERtrigger]);
+        fineos.before();
+        cy.unstash<Submission>("submission").then((submission) => {
           const claimPage = fineosPages.ClaimPage.visit(
             submission.fineos_absence_id
           );
@@ -153,7 +153,17 @@ import { config } from "../../actions/common";
             task.close("Manual Intervention required to Approve Payments");
             task.close("SOM Autopay After Appeal Reminder");
           });
+        });
+      });
 
+    it("Check the adjustment for the payment amount", { retries: 0 }, () => {
+      cy.dependsOnPreviousPass([enablePayment]);
+      fineos.before();
+      cy.unstash<Submission>("submission").then((submission) => {
+        cy.unstash<DehydratedClaim>("claim").then((claim) => {
+          const claimPage = fineosPages.ClaimPage.visit(
+            submission.fineos_absence_id
+          );
           const { expected_weekly_payment } = claim.metadata ?? {};
           if (
             !expected_weekly_payment ||
