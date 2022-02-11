@@ -31,6 +31,7 @@ from massgov.pfml.api.validation.exceptions import (
     ValidationErrorDetail,
     ValidationException,
 )
+from massgov.pfml.db.models.absences import AbsencePeriodType
 from massgov.pfml.db.models.applications import (
     AmountFrequency,
     Application,
@@ -64,7 +65,6 @@ from massgov.pfml.db.models.applications import (
     WorkPatternType,
 )
 from massgov.pfml.db.models.employees import (
-    AbsencePeriodType,
     Address,
     AddressType,
     Claim,

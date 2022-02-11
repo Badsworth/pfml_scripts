@@ -20,11 +20,10 @@ from massgov.pfml.api.exceptions import ObjectNotFound
 from massgov.pfml.api.models.claims.common import EmployerClaimReview
 from massgov.pfml.api.services.claims import ClaimWithdrawnError
 from massgov.pfml.api.validation.exceptions import ValidationErrorDetail
+from massgov.pfml.db.models.absences import AbsencePeriodType, AbsenceStatus
 from massgov.pfml.db.models.applications import FINEOSWebIdExt
 from massgov.pfml.db.models.employees import (
     AbsencePeriod,
-    AbsencePeriodType,
-    AbsenceStatus,
     Claim,
     LeaveRequestDecision,
     LkManagedRequirementStatus,

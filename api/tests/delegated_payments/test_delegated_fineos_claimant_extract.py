@@ -7,12 +7,14 @@ import pytest
 import massgov.pfml.delegated_payments.delegated_fineos_claimant_extract as claimant_extract
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 from massgov.pfml.api.util import state_log_util
-from massgov.pfml.db.models.employees import (
+from massgov.pfml.db.models.absences import (
     AbsencePeriodType,
     AbsenceReason,
     AbsenceReasonQualifierOne,
     AbsenceReasonQualifierTwo,
     AbsenceStatus,
+)
+from massgov.pfml.db.models.employees import (
     BankAccountType,
     Claim,
     ClaimType,

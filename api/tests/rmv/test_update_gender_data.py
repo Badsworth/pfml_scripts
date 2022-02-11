@@ -3,7 +3,8 @@ from typing import NoReturn
 import requests
 
 from massgov.pfml.api.config import RMVAPIBehavior
-from massgov.pfml.db.models.employees import AbsenceStatus, Gender
+from massgov.pfml.db.models.absences import AbsenceStatus
+from massgov.pfml.db.models.employees import Gender
 from massgov.pfml.db.models.factories import (
     ClaimFactory,
     EmployeeFactory,

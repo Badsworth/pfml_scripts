@@ -21,7 +21,8 @@ from massgov.pfml.api.services.administrator_fineos_actions import (
     register_leave_admin_with_fineos,
 )
 from massgov.pfml.api.validation.exceptions import ContainsV1AndV2Eforms
-from massgov.pfml.db.models.employees import AbsencePeriodType, UserLeaveAdministrator
+from massgov.pfml.db.models.absences import AbsencePeriodType
+from massgov.pfml.db.models.employees import UserLeaveAdministrator
 from massgov.pfml.db.models.factories import EmployerFactory
 from massgov.pfml.fineos import FINEOSClient
 from massgov.pfml.fineos.mock.eform import MOCK_EFORM_OTHER_INCOME_V1, MOCK_EFORM_OTHER_INCOME_V2

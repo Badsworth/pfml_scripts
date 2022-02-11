@@ -24,9 +24,9 @@ from massgov.pfml.api.eligibility.mock.scenarios import (
 )
 from massgov.pfml.api.eligibility.wage import get_wage_calculator
 from massgov.pfml.api.models.applications.common import EligibilityEmploymentStatus
+from massgov.pfml.db.models.absences import AbsenceStatus
 from massgov.pfml.db.models.employees import (
     AbsencePeriod,
-    AbsenceStatus,
     BenefitYear,
     BenefitYearContribution,
     Claim,

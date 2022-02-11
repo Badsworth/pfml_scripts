@@ -17,6 +17,7 @@ from massgov.pfml.api.validation.exceptions import (
     ValidationErrorDetail,
     ValidationException,
 )
+from massgov.pfml.db.models.absences import AbsenceReason
 from massgov.pfml.db.models.applications import (
     ContinuousLeavePeriod,
     DayOfWeek,
@@ -24,7 +25,7 @@ from massgov.pfml.db.models.applications import (
     LeaveReason,
     LeaveReasonQualifier,
 )
-from massgov.pfml.db.models.employees import AbsenceReason, BankAccountType, Gender, PaymentMethod
+from massgov.pfml.db.models.employees import BankAccountType, Gender, PaymentMethod
 from massgov.pfml.db.models.factories import ApplicationFactory
 from massgov.pfml.fineos.models.customer_api import EForm, EFormAttribute, ModelEnum
 from massgov.pfml.fineos.models.customer_api.spec import (

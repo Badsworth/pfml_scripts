@@ -39,8 +39,8 @@ from massgov.pfml.api.validation.exceptions import (
     IssueType,
     ValidationErrorDetail,
 )
+from massgov.pfml.db.models.absences import AbsenceStatus
 from massgov.pfml.db.models.employees import (
-    AbsenceStatus,
     Claim,
     Employer,
     LeaveRequestDecision,

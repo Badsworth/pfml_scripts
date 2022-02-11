@@ -40,8 +40,16 @@ import massgov.pfml.util.logging
 from massgov.pfml.util.datetime import utcnow
 
 from ..lookup import LookupTable
+from .absences import (
+    LkAbsencePeriodType,
+    LkAbsenceReason,
+    LkAbsenceReasonQualifierOne,
+    LkAbsenceReasonQualifierTwo,
+    LkAbsenceStatus,
+)
 from .base import Base, TimestampMixin, utc_timestamp_gen, uuid_gen
 from .common import PostgreSQLUUID
+from .dua import DuaEmployeeDemographics
 from .geo import LkCountry, LkGeoState
 from .industry_codes import LkIndustryCode
 from .state import LkState, State
@@ -56,60 +64,6 @@ else:
 
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
-
-
-class LkAbsencePeriodType(Base):
-    __tablename__ = "lk_absence_period_type"
-    absence_period_type_id = Column(Integer, primary_key=True, autoincrement=True)
-    absence_period_type_description = Column(Text, nullable=False)
-
-    def __init__(self, absence_period_type_id, absence_period_type_description):
-        self.absence_period_type_id = absence_period_type_id
-        self.absence_period_type_description = absence_period_type_description
-
-
-class LkAbsenceReason(Base):
-    __tablename__ = "lk_absence_reason"
-    absence_reason_id = Column(Integer, primary_key=True, autoincrement=True)
-    absence_reason_description = Column(Text, nullable=False)
-
-    def __init__(self, absence_reason_id, absence_reason_description):
-        self.absence_reason_id = absence_reason_id
-        self.absence_reason_description = absence_reason_description
-
-
-class LkAbsenceReasonQualifierOne(Base):
-    __tablename__ = "lk_absence_reason_qualifier_one"
-    absence_reason_qualifier_one_id = Column(Integer, primary_key=True, autoincrement=True)
-    absence_reason_qualifier_one_description = Column(Text, nullable=False)
-
-    def __init__(self, absence_reason_qualifier_one_id, absence_reason_qualifier_one_description):
-        self.absence_reason_qualifier_one_id = absence_reason_qualifier_one_id
-        self.absence_reason_qualifier_one_description = absence_reason_qualifier_one_description
-
-
-class LkAbsenceReasonQualifierTwo(Base):
-    __tablename__ = "lk_absence_reason_qualifier_two"
-    absence_reason_qualifier_two_id = Column(Integer, primary_key=True, autoincrement=True)
-    absence_reason_qualifier_two_description = Column(Text, nullable=False)
-
-    def __init__(self, absence_reason_qualifier_two_id, absence_reason_qualifier_two_description):
-        self.absence_reason_qualifier_two_id = absence_reason_qualifier_two_id
-        self.absence_reason_qualifier_two_description = absence_reason_qualifier_two_description
-
-
-class LkAbsenceStatus(Base):
-    __tablename__ = "lk_absence_status"
-    absence_status_id = Column(Integer, primary_key=True, autoincrement=True)
-    absence_status_description = Column(Text, nullable=False)
-    sort_order = Column(Integer, default=0, nullable=False)
-
-    # use to set order when sorting (non alphabetic) by absence status
-
-    def __init__(self, absence_status_id, absence_status_description, sort_order):
-        self.absence_status_id = absence_status_id
-        self.absence_status_description = absence_status_description
-        self.sort_order = sort_order
 
 
 class LkAddressType(Base):
@@ -512,72 +466,6 @@ class Employer(Base, TimestampMixin):
         if error:
             raise ValueError(f"Invalid FEIN: {employer_fein}. Expected a 9-digit integer value")
         return employer_fein
-
-
-class DuaEmployer(Base, TimestampMixin):
-    __tablename__ = "dua_employer_data"
-    __table_args__ = (
-        UniqueConstraint(
-            "fineos_employer_id",
-            "dba",
-            "attention",
-            "email",
-            "phone_number",
-            "address_line_1",
-            "address_line_2",
-            "address_city",
-            "address_zip_code",
-            "address_state",
-            "naics_code",
-            "naics_description",
-            name="uix_dua_employer",
-        ),
-    )
-    dua_employer_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
-    fineos_employer_id = Column(Text, nullable=False)
-    dba = Column(Text, nullable=True)
-    attention = Column(Text, nullable=True)
-    email = Column(Text, nullable=True)
-    phone_number = Column(Text, nullable=False)
-    address_line_1 = Column(Text, nullable=True)
-    address_line_2 = Column(Text, nullable=True)
-    address_city = Column(Text, nullable=True)
-    address_zip_code = Column(Text, nullable=True)
-    address_state = Column(Text, nullable=True)
-    naics_code = Column(Text, nullable=True)
-    naics_description = Column(Text, nullable=True)
-
-
-class DuaReportingUnitRaw(Base, TimestampMixin):
-    __tablename__ = "dua_reporting_unit_data"
-    __table_args__ = (
-        UniqueConstraint(
-            "fineos_employer_id",
-            "dua_id",
-            "dba",
-            "attention",
-            "email",
-            "phone_number",
-            "address_line_1",
-            "address_line_2",
-            "address_city",
-            "address_zip_code",
-            "address_state",
-            name="uix_dua_reporting_unit_data",
-        ),
-    )
-    dua_reporting_unit_data_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
-    fineos_employer_id = Column(Text, nullable=False)
-    dua_id = Column(Text, nullable=True)
-    dba = Column(Text, nullable=True)
-    attention = Column(Text, nullable=True)
-    email = Column(Text, nullable=True)
-    phone_number = Column(Text, nullable=False)
-    address_line_1 = Column(Text, nullable=True)
-    address_line_2 = Column(Text, nullable=True)
-    address_city = Column(Text, nullable=True)
-    address_zip_code = Column(Text, nullable=True)
-    address_state = Column(Text, nullable=True)
 
 
 class DuaReportingUnit(Base, TimestampMixin):
@@ -1797,39 +1685,6 @@ class DiaReductionPayment(Base, TimestampMixin):
     )
 
 
-class DuaEmployeeDemographics(Base, TimestampMixin):
-    __tablename__ = "dua_employee_demographics"
-    dua_employee_demographics_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
-
-    fineos_customer_number = Column(Text, nullable=True, index=True)
-    date_of_birth = Column(Date, nullable=True)
-    gender_code = Column(Text, nullable=True)
-    occupation_code = Column(Text, nullable=True)
-    occupation_description = Column(Text, nullable=True)
-    employer_fein = Column(Text, nullable=True, index=True)
-    employer_reporting_unit_number = Column(Text, nullable=True, index=True)
-
-    # this Unique index is required since our test framework does not run migrations
-    # it is excluded from migrations. see api/massgov/pfml/db/migrations/env.py
-    Index(
-        "dua_employee_demographics_unique_import_data_idx",
-        fineos_customer_number,
-        date_of_birth,
-        gender_code,
-        occupation_code,
-        occupation_description,
-        employer_fein,
-        employer_reporting_unit_number,
-        unique=True,
-    )
-
-    # Each row should be unique. This enables us to load only new rows from a CSV and ensures that
-    # we don't include demographics twice as two different rows. Almost all fields are nullable so we
-    # have to coalesce those null values to empty strings. We've manually adjusted the migration
-    # that adds this unique constraint to coalesce those nullable fields.
-    # See: 2021_10_04_13_30_03_95d3e464a5b2_add_dua_employee_demographics_table.py
-
-
 class PubError(Base, TimestampMixin):
     __tablename__ = "pub_error"
     pub_error_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
@@ -1888,19 +1743,6 @@ class PubErrorType(LookupTable):
     CHECK_PAYMENT_FAILED = LkPubErrorType(8, "Check payment failed")
 
 
-class AbsenceStatus(LookupTable):
-    model = LkAbsenceStatus
-    column_names = ("absence_status_id", "absence_status_description", "sort_order")
-
-    ADJUDICATION = LkAbsenceStatus(1, "Adjudication", 2)
-    APPROVED = LkAbsenceStatus(2, "Approved", 5)
-    CLOSED = LkAbsenceStatus(3, "Closed", 7)
-    COMPLETED = LkAbsenceStatus(4, "Completed", 6)
-    DECLINED = LkAbsenceStatus(5, "Declined", 4)
-    IN_REVIEW = LkAbsenceStatus(6, "In Review", 3)
-    INTAKE_IN_PROGRESS = LkAbsenceStatus(7, "Intake In Progress", 1)
-
-
 class AddressType(LookupTable):
     model = LkAddressType
     column_names = ("address_type_id", "address_description")
@@ -1909,105 +1751,6 @@ class AddressType(LookupTable):
     BUSINESS = LkAddressType(2, "Business")
     MAILING = LkAddressType(3, "Mailing")
     RESIDENTIAL = LkAddressType(4, "Residential")
-
-
-class AbsencePeriodType(LookupTable):
-    model = LkAbsencePeriodType
-    column_names = ("absence_period_type_id", "absence_period_type_description")
-
-    TIME_OFF_PERIOD = LkAbsencePeriodType(1, "Time off period")
-    REDUCED_SCHEDULE = LkAbsencePeriodType(2, "Reduced Schedule")
-    EPISODIC = LkAbsencePeriodType(3, "Episodic")
-    OFFICE_VISIT = LkAbsencePeriodType(4, "Office Visit")
-    INCAPACITY = LkAbsencePeriodType(5, "Incapacity")
-    OFFICE_VISIT_EPISODIC = LkAbsencePeriodType(6, "Office Visit Episodic")
-    INCAPACITY_EPISODIC = LkAbsencePeriodType(7, "Incapacity Episodic")
-    BLACKOUT_PERIOD = LkAbsencePeriodType(8, "Blackout Period")
-    UNSPECIFIED = LkAbsencePeriodType(9, "Unspecified")
-    CONTINUOUS = LkAbsencePeriodType(10, "Continuous")
-    INTERMITTENT = LkAbsencePeriodType(11, "Intermittent")
-
-
-class AbsenceReason(LookupTable):
-    model = LkAbsenceReason
-    column_names = ("absence_reason_id", "absence_reason_description")
-
-    SERIOUS_HEALTH_CONDITION_EMPLOYEE = LkAbsenceReason(1, "Serious Health Condition - Employee")
-    MEDICAL_DONATION_EMPLOYEE = LkAbsenceReason(2, "Medical Donation - Employee")
-    PREVENTATIVE_CARE_EMPLOYEE = LkAbsenceReason(3, "Preventative Care - Employee")
-    SICKENESS_NON_SERIOUS_HEALTH_CONDITION_EMPLOYEE = LkAbsenceReason(
-        4, "Sickness - Non-Serious Health Condition - Employee"
-    )
-    PREGNANCY_MATERNITY = LkAbsenceReason(5, "Pregnancy/Maternity")
-    CHILD_BONDING = LkAbsenceReason(6, "Child Bonding")
-    CARE_OF_A_FAMILY_MEMBER = LkAbsenceReason(7, "Care for a Family Member")
-    BEREAVEMENT = LkAbsenceReason(8, "Bereavement")
-    EDUCATIONAL_ACTIVITY_FAMILY = LkAbsenceReason(9, "Educational Activity - Family")
-    MEDICAL_DONATION_FAMILY = LkAbsenceReason(10, "Medical Donation - Family")
-    MILITARY_CAREGIVER = LkAbsenceReason(11, "Military Caregiver")
-    MILITARY_EXIGENCY_FAMILY = LkAbsenceReason(12, "Military Exigency Family")
-    PREVENTATIVE_CARE_FAMILY_MEMBER = LkAbsenceReason(13, "Preventative Care - Family Member")
-    PUBLIC_HEALTH_EMERGENCY_FAMILY = LkAbsenceReason(14, "Public Health Emergency - Family")
-    MILITARY_EMPLOYEE = LkAbsenceReason(15, "Military - Employee")
-    PERSONAL_EMPLOYEE = LkAbsenceReason(16, "Personal - Employee")
-
-
-class AbsenceReasonQualifierOne(LookupTable):
-    model = LkAbsenceReasonQualifierOne
-    column_names = ("absence_reason_qualifier_one_id", "absence_reason_qualifier_one_description")
-
-    NOT_WORK_RELATED = LkAbsenceReasonQualifierOne(1, "Not Work Related")
-    WORK_RELATED = LkAbsenceReasonQualifierOne(2, "Work Related")
-    BLOOD = LkAbsenceReasonQualifierOne(3, "Blood")
-    BLOOD_STEM_CELL = LkAbsenceReasonQualifierOne(4, "Blood Stem Cell")
-    BONE_MARROW = LkAbsenceReasonQualifierOne(5, "Bone Marrow")
-    ORGAN = LkAbsenceReasonQualifierOne(6, "Organ")
-    OTHER = LkAbsenceReasonQualifierOne(7, "Other")
-    POSTNATAL_DISABILITY = LkAbsenceReasonQualifierOne(8, "Postnatal Disability")
-    PRENATAL_CARE = LkAbsenceReasonQualifierOne(9, "Prenatal Care")
-    PRENATAL_DISABILITY = LkAbsenceReasonQualifierOne(10, "Prenatal Disability")
-    ADOPTION = LkAbsenceReasonQualifierOne(11, "Adoption")
-    FOSTER_CARE = LkAbsenceReasonQualifierOne(12, "Foster Care")
-    NEWBORN = LkAbsenceReasonQualifierOne(13, "Newborn")
-    PREGNANCY_RELATED = LkAbsenceReasonQualifierOne(14, "Pregnancy Related")
-    RIGHT_TO_LEAVE = LkAbsenceReasonQualifierOne(15, "Right to Leave")
-    SERIOUS_HEALTH_CONDITION = LkAbsenceReasonQualifierOne(16, "Serious Health Condition")
-    SICKNESS_NON_SERIOUS_HEALTH_CONDITION = LkAbsenceReasonQualifierOne(
-        17, "Sickness - Non-Serious Health Condition"
-    )
-    CHILDCARE = LkAbsenceReasonQualifierOne(18, "Childcare")
-    COUNSELING = LkAbsenceReasonQualifierOne(19, "Counseling")
-    FINANCIAL_AND_LEGAL_ARRANGEMENTS = LkAbsenceReasonQualifierOne(
-        20, "Financial & Legal Arrangements"
-    )
-    MILITARY_EVENTS_AND_RELATED_ACTIVITIES = LkAbsenceReasonQualifierOne(
-        21, "Military Events & Related Activities"
-    )
-    OTHER_ADDITIONAL_ACTIVITIES = LkAbsenceReasonQualifierOne(22, "Other Additional Activities")
-    PRENATAL_CARE = LkAbsenceReasonQualifierOne(23, "Prenatal Care")
-    POST_DEPLOYMENT_ACTIVITES_INCLUDING_BEREAVEMENT = LkAbsenceReasonQualifierOne(
-        24, "Post Deployment Activities - Including Bereavement"
-    )
-    REST_AND_RECUPERATION = LkAbsenceReasonQualifierOne(25, "Rest & Recuperation")
-    SHORT_NOTICE_DEPLOYMENT = LkAbsenceReasonQualifierOne(26, "Short Notice Deployment")
-    CLOSURE_OF_SCHOOL_CHILDCARE = LkAbsenceReasonQualifierOne(27, "Closure of School/Childcare")
-    QUARANTINE_ISOLATION_NON_SICK = LkAbsenceReasonQualifierOne(
-        28, "Quarantine/Isolation - Not Sick"
-    )
-    BIRTH_DISABILITY = LkAbsenceReasonQualifierOne(29, "Birth Disability")
-    CHILDCARE_AND_SCHOOL_ACTIVITIES = LkAbsenceReasonQualifierOne(
-        30, "Childcare and School Activities"
-    )
-
-
-class AbsenceReasonQualifierTwo(LookupTable):
-    model = LkAbsenceReasonQualifierTwo
-    column_names = ("absence_reason_qualifier_two_id", "absence_reason_qualifier_two_description")
-
-    ACCIDENT_INJURY = LkAbsenceReasonQualifierTwo(1, "Accident / Injury")
-    MEDICAL_RELATED = LkAbsenceReasonQualifierTwo(2, "Medical Related")
-    NON_MEDICAL = LkAbsenceReasonQualifierTwo(3, "Non Medical")
-    SICKNESS = LkAbsenceReasonQualifierTwo(4, "Sickness")
 
 
 class ClaimType(LookupTable):
@@ -2299,11 +2042,6 @@ class MFADeliveryPreferenceUpdatedBy(LookupTable):
 
 def sync_lookup_tables(db_session):
     """Synchronize lookup tables to the database."""
-    AbsencePeriodType.sync_to_database(db_session)
-    AbsenceReason.sync_to_database(db_session)
-    AbsenceReasonQualifierOne.sync_to_database(db_session)
-    AbsenceReasonQualifierTwo.sync_to_database(db_session)
-    AbsenceStatus.sync_to_database(db_session)
     AddressType.sync_to_database(db_session)
     ClaimType.sync_to_database(db_session)
     Race.sync_to_database(db_session)

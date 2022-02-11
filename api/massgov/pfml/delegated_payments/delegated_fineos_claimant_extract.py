@@ -9,13 +9,15 @@ from sqlalchemy.exc import SQLAlchemyError
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml.api.util import state_log_util
-from massgov.pfml.db.models.employees import (
-    AbsencePeriod,
+from massgov.pfml.db.models.absences import (
     AbsencePeriodType,
     AbsenceReason,
     AbsenceReasonQualifierOne,
     AbsenceReasonQualifierTwo,
     AbsenceStatus,
+)
+from massgov.pfml.db.models.employees import (
+    AbsencePeriod,
     BankAccountType,
     Claim,
     Employee,
