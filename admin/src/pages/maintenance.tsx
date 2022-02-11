@@ -2,11 +2,11 @@ import "react-datetime/css/react-datetime.css";
 import {
   ApiResponse,
   Flag,
-  FlagLog,
-  FlagLogsResponse,
+  FlagWithLog,
+  FlagWithLogsResponse,
   FlagsResponse,
-  getAdminFlagsLogsByName,
-  postAdminFlagsByName,
+  getAdminFlagLogsByName,
+  patchAdminFlagsByName,
 } from "../api";
 import Alert from "../components/Alert";
 import ConfirmationDialog from "../components/ConfirmationDialog";
@@ -25,7 +25,7 @@ export const TimezoneAbbr = moment().tz(Timezone).zoneAbbr();
 
 export default function Maintenance() {
   const [maintenanceHistory, setMaintenanceHistory] =
-    React.useState<FlagLogsResponse>([]);
+    React.useState<FlagWithLogsResponse>([]);
   const [maintenance, setMaintenance] = React.useState<Flag | null>(null);
 
   const router = useRouter();
@@ -34,8 +34,8 @@ export default function Maintenance() {
     React.useState(false);
 
   React.useEffect(() => {
-    getAdminFlagsLogsByName({ name: "maintenance" }).then(
-      (response: ApiResponse<FlagLogsResponse>) => {
+    getAdminFlagLogsByName({ name: "maintenance" }).then(
+      (response: ApiResponse<FlagWithLogsResponse>) => {
         const logs = response.data;
         setMaintenance(logs.shift() || null);
         setMaintenanceHistory(logs);
@@ -55,7 +55,7 @@ export default function Maintenance() {
   const confirmationDialogContinueCallback = async () => {
     // disable at API.
     if (maintenance) {
-      await postAdminFlagsByName({ name: "maintenance" }, { enabled: false });
+      await patchAdminFlagsByName({ name: "maintenance" }, { enabled: false });
       setShowConfirmationDialog(false);
     }
   };
@@ -84,8 +84,8 @@ export default function Maintenance() {
       TimezoneAbbr
     );
   };
-  const getName = (m: FlagLog) => <>{(m?.options as options)?.name}</>;
-  const getDuration = (m: FlagLog) => (
+  const getName = (m: FlagWithLog) => <>{(m?.options as options)?.name}</>;
+  const getDuration = (m: FlagWithLog) => (
     <>
       {(m.start ? formatHistoryDateTime(m.start) : "No start provided") +
         " - " +
@@ -112,9 +112,9 @@ export default function Maintenance() {
       </ul>
     );
   };
-  const getCreatedBy = (m: FlagLog) => (
+  const getCreatedBy = (m: FlagWithLog) => (
     <>
-      {m.family_name} {m.given_name}
+      {m.first_name} {m.last_name}
     </>
   );
 

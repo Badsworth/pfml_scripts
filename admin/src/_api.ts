@@ -319,7 +319,6 @@ export interface Flag {
   start?: string | null;
   end?: string | null;
   name?: string;
-  updated_at?: string | null;
   options?: object;
   enabled?: boolean;
 }
@@ -1062,12 +1061,12 @@ export interface RMVCheckRequest {
   date_of_birth: Date;
   first_name: string;
   last_name: string;
+  mass_id_number: MassId;
   residential_address_city: string;
   residential_address_line_1: string;
   residential_address_line_2?: string | null;
   residential_address_zip_code: string;
   ssn_last_4: string;
-  mass_id_number?: any;
 }
 export interface RMVCheckResponse {
   verified: boolean;
@@ -1141,12 +1140,12 @@ export interface AdminLogoutResponse {
   logout_uri?: string;
 }
 export type GETAdminUsersResponse = UserResponse[];
-export interface FlagLog extends Flag {
-  family_name?: string;
-  given_name?: string;
-  created_at?: string;
+export interface FlagWithLog extends Flag {
+  first_name?: string;
+  last_name?: string;
+  updated_at?: string;
 }
-export type FlagLogsResponse = FlagLog[];
+export type FlagWithLogsResponse = FlagWithLog[];
 /**
  * Get the API status
  */
@@ -1204,8 +1203,8 @@ export async function postUsers(
 export async function deleteRoles(
   roleUserDeleteRequest: RoleUserDeleteRequest,
   options?: RequestOptions,
-): Promise<ApiResponse<void>> {
-  return await http.fetchVoid(
+): Promise<ApiResponse<SuccessfulResponse>> {
+  return await http.fetchJson(
     "/roles",
     http.json({
       ...options,
@@ -1394,6 +1393,8 @@ export async function getClaims(
     claim_status,
     search,
     allow_hrd,
+    is_reviewable,
+    request_decision,
   }: {
     page_size?: number;
     page_offset?: number;
@@ -1404,6 +1405,13 @@ export async function getClaims(
     claim_status?: string;
     search?: string;
     allow_hrd?: boolean;
+    is_reviewable?: "yes" | "no";
+    request_decision?:
+      | "approved"
+      | "denied"
+      | "withdrawn"
+      | "pending"
+      | "cancelled";
   } = {},
   options?: RequestOptions,
 ): Promise<ApiResponse<GETClaimsResponse>> {
@@ -1419,6 +1427,8 @@ export async function getClaims(
         claim_status,
         search,
         allow_hrd,
+        is_reviewable,
+        request_decision,
       }),
     )}`,
     {
@@ -1885,7 +1895,7 @@ export async function getAdminUsers(
 /**
  * Update a feature flag
  */
-export async function postAdminFlagsByName(
+export async function patchAdminFlagsByName(
   {
     name,
   }: {
@@ -1898,7 +1908,7 @@ export async function postAdminFlagsByName(
     `/admin/flags/${name}`,
     http.json({
       ...options,
-      method: "POST",
+      method: "PATCH",
       body: flag,
     }),
   );
@@ -1906,15 +1916,15 @@ export async function postAdminFlagsByName(
 /**
  * Get feature flags
  */
-export async function getAdminFlagsLogsByName(
+export async function getAdminFlagLogsByName(
   {
     name,
   }: {
     name: string;
   },
   options?: RequestOptions,
-): Promise<ApiResponse<FlagLogsResponse>> {
-  return await http.fetchJson(`/admin/flags/logs/${name}`, {
+): Promise<ApiResponse<FlagWithLogsResponse>> {
+  return await http.fetchJson(`/admin/flag-logs/${name}`, {
     ...options,
   });
 }
