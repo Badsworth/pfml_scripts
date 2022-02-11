@@ -44,7 +44,7 @@ We following [trunk-based development](https://trunkbaseddevelopment.com/), whic
 
 ### Code Reviews
 
-- Get your code reviewed by your scrum team and in some cases additional component teams. See [code reviews](./code-reviews)
+- Get your code reviewed by your scrum team and in some cases additional component teams. See [code reviews](./code-reviews.md)
 - Code reviewers are expected to review code quickly (within 1 business day)
 
 ### Merging
