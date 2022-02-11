@@ -468,7 +468,7 @@ describe("claimFlowConfigs", () => {
     {
       guards: {
         ...guards,
-        // TODO (PFMLPB-2615): Remove this guard once the feature flag is obsolete
+        // TODO (PFMLPB-3195): Remove this guard once the feature flag is obsolete
         hasEmployerWithDepartments: ({ claim }) =>
           get(claim, "employment_status") === EmploymentStatus.employed &&
           get(claim, "employer_organization_units", []).length,

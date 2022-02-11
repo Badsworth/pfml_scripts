@@ -79,7 +79,7 @@ export const guards: { [guardName: string]: ClaimFlowGuardFn } = {
   isMedicalOrPregnancyLeave: ({ claim }) =>
     claim?.isMedicalOrPregnancyLeave === true,
   isBondingLeave: ({ claim }) => claim?.isBondingLeave === true,
-  // TODO (PFMLPB-2615): Remove isFeatureEnabled check once feature flag is obsolete
+  // TODO (PFMLPB-3195): Remove isFeatureEnabled check once feature flag is obsolete
   hasEmployerWithDepartments: ({ claim }) =>
     isFeatureEnabled("claimantShowOrganizationUnits") &&
     get(claim, "employment_status") === EmploymentStatus.employed &&
