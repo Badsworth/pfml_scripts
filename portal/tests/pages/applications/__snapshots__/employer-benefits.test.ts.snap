@@ -85,7 +85,7 @@ exports[`EmployerBenefits renders the page 1`] = `
           class="usa-list"
         >
           <li>
-            Temporary disability insurance, for either short-term or long-term disability
+            Temporary disability insurance that fully replaces your wages, for either short-term or long-term disability
           </li>
           <li>
             Permanent disability insurance
@@ -124,7 +124,7 @@ exports[`EmployerBenefits renders the page 1`] = `
             Benefits from any other employers
           </li>
           <li>
-            Any benefit from your employer that will be based on your PFML benefit amount. One example is a “top up” to make up the difference between your regular wages and your PFML benefits.
+            Temporary disability insurance that does not fully replace your wages
           </li>
         </ul>
       </div>

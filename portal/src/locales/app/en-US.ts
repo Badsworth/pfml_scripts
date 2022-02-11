@@ -1291,10 +1291,10 @@ const pages: {
       "I will receive employer-sponsored benefits during my paid leave",
     doNotReportHintHeading: "You don’t need to report:",
     doNotReportHintList:
-      "<ul><li>Benefits from any other employers</li><li>Any benefit from your employer that will be based on your PFML benefit amount. One example is a “top up” to make up the difference between your regular wages and your PFML benefits.</li></ul>",
+      "<ul><li>Benefits from any other employers</li><li>Temporary disability insurance that does not fully replace your wages</li></ul>",
     doReportHintHeading: "The employer-sponsored benefits you must report are:",
     doReportHintList:
-      "<ul><li>Temporary disability insurance, for either short-term or long-term disability</li><li>Permanent disability insurance</li><li>Family or medical leave benefits, such as a parental leave program</li><li>You only have to report benefits from the employer with this EIN: {{employer_fein}}. This is the same Employer Identification Number you entered earlier in your application.</li></ul>",
+      "<ul><li>Temporary disability insurance that fully replaces your wages, for either short-term or long-term disability</li><li>Permanent disability insurance</li><li>Family or medical leave benefits, such as a parental leave program</li><li>You only have to report benefits from the employer with this EIN: {{employer_fein}}. This is the same Employer Identification Number you entered earlier in your application.</li></ul>",
     sectionLabel:
       "Will you use any employer-sponsored benefits from this employer during your paid leave from PFML?",
     title: "$t(shared.claimsOtherLeaveTitle)",
