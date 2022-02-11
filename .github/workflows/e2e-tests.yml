@@ -35,16 +35,31 @@ on:
         required: false
         default: true
         type: boolean
+      stable_spec_pattern:
+        description: "Only run the specs in the stable group with names that match the given pattern"
+        required: false
+        default: "cypress/specs/stable/**"
+        type: "string"
       run_unstable:
         description: "Run tests in unstable group"
         required: false
         default: false
         type: boolean
+      unstable_spec_pattern:
+        description: "Only run the specs in the unstable group with names that match the given pattern"
+        required: false
+        default: "cypress/specs/unstable/**"
+        type: "string"
       run_morning:
         description: "Run tests in morning group"
         required: false
         default: false
         type: boolean
+      morning_spec_pattern:
+        description: "Only run the specs in the morning group with names that match the given pattern"
+        required: false
+        default: "cypress/specs/morning/**"
+        type: "string"
     secrets:
       # Note: this is EVERY secret we use in this workflow. It's critical that these line up with what's
       # in our actual secrets, so when this workflow is invoked using workflow_dispatch, we can still access
@@ -150,7 +165,7 @@ jobs:
         uses: cypress-io/github-action@v2
         timeout-minutes: 20
         with:
-          spec: "cypress/specs/stable/**"
+          spec: ${{ inputs.stable_spec_pattern }}
           record: true
           parallel: true
           install: false
@@ -172,7 +187,7 @@ jobs:
       - name: Cypress Tests (Commit Unstable)
         uses: cypress-io/github-action@v2
         with:
-          spec: "cypress/specs/unstable/**"
+          spec: ${{ inputs.unstable_spec_pattern }}
           record: true
           parallel: true
           working-directory: e2e
@@ -201,7 +216,7 @@ jobs:
         uses: cypress-io/github-action@v2
         timeout-minutes: 15
         with:
-          spec: "cypress/specs/morning/**"
+          spec: ${{ inputs.morning_spec_pattern }}
           record: true
           parallel: true
           working-directory: e2e

@@ -70,16 +70,31 @@ on:
         required: false
         default: true
         type: boolean
+      stable_spec_pattern:
+        description: "Only run the specs in the stable group with names that match the given pattern"
+        required: false
+        default: "cypress/specs/stable/**"
+        type: "string"
       run_unstable:
         description: "Run tests in unstable group"
         required: false
         default: false
         type: boolean
+      unstable_spec_pattern:
+        description: "Only run the specs in the unstable group with names that match the given pattern"
+        required: false
+        default: "cypress/specs/unstable/**"
+        type: "string"
       run_morning:
         description: "Run tests in morning group"
         required: false
         default: false
         type: boolean
+      morning_spec_pattern:
+        description: "Only run the specs in the morning group with names that match the given pattern"
+        required: false
+        default: "cypress/specs/morning/**"
+        type: "string"
 
 jobs:
   trigger:
@@ -91,8 +106,11 @@ jobs:
       target_environment: ${{ github.event.inputs.target_environment }}
       cypress_tags: ${{ github.event.inputs.cypress_tags }}
       run_stable: ${{ github.event.inputs.run_stable == 'true' }}
+      stable_spec_pattern: ${{ github.event.inputs.stable_spec_pattern }}
       run_unstable: ${{ github.event.inputs.run_unstable == 'true' }}
+      unstable_spec_pattern: ${{ github.event.inputs.unstable_spec_pattern }}
       run_morning: ${{ github.event.inputs.run_morning == 'true' }}
+      morning_spec_pattern: ${{ github.event.inputs.morning_spec_pattern }}
       title_override: ${{ github.event.inputs.title_override }}
     secrets:
       E2E_FINEOS_PASSWORD: ${{ secrets.E2E_FINEOS_PASSWORD }}
