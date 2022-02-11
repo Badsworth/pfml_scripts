@@ -1301,14 +1301,6 @@ const pages: {
   },
   claimsEmployerBenefitsDetails: {
     addButton: "Add another benefit",
-    amountFrequencyLabel: "$t(shared.amountFrequencyLabel)",
-    amountFrequency_daily: "$t(shared.amountFrequency_daily)",
-    amountFrequency_inTotal: "$t(shared.amountFrequency_inTotal)",
-    amountFrequency_monthly: "$t(shared.amountFrequency_monthly)",
-    amountFrequency_unknown: "$t(shared.amountFrequency_unknown)",
-    amountFrequency_weekly: "$t(shared.amountFrequency_weekly)",
-    amountLabel: "Amount",
-    amountLegend: "How much will you receive?",
     cardHeadingPrefix: "$t(shared.employerBenefitEntryPrefix)",
     choiceHint_familyOrMedicalLeave:
       "$t(shared.choiceHint_familyOrMedicalLeave)",
@@ -2895,8 +2887,6 @@ const components: {
       "This amendment will get saved when you submit your review. To remove this leave, include a comment at the end of the page.",
   },
   employersAmendableEmployerBenefit: {
-    amountFrequencyLabel: "$t(shared.amountFrequencyLabel)",
-    benefitAmountDollarsLabel: "Amount",
     benefitEndDateLabel:
       "What is the last day of leave from work that this benefit will pay your employee for?",
     benefitStartDateLabel:
@@ -2917,7 +2907,6 @@ const components: {
     choiceYes: "$t(shared.choiceYes)",
     destroyButtonLabel_add: "Cancel addition",
     destroyButtonLabel_amend: "Cancel amendment",
-    employeeAmountReceivedLabel: "How much will your employee receive?",
     heading_add: "Add an employer-sponsored benefit",
     heading_amend: "Amend employer-sponsored benefit",
     hint: "This addition will get saved when you submit your review at the end of this page.",
@@ -3026,27 +3015,13 @@ const components: {
   employersEmployerBenefits: {
     addButton_first: "Add an employer-sponsored benefit",
     addButton_subsequent: "Add another employer-sponsored benefit",
-    amountFrequency: "Select a frequency",
-    amountFrequency_daily: "$t(shared.amountFrequency_daily)",
-    amountFrequency_inTotal: "$t(shared.amountFrequency_inTotal)",
-    amountFrequency_monthly: "$t(shared.amountFrequency_monthly)",
-    amountFrequency_unknown: "$t(shared.amountFrequency_unknown)",
-    amountFrequency_weekly: "$t(shared.amountFrequency_weekly)",
-    amountPerFrequency_daily: "$t(shared.amountPerFrequency_daily)",
-    amountPerFrequency_inTotal: "$t(shared.amountPerFrequency_inTotal)",
-    amountPerFrequency_monthly: "$t(shared.amountPerFrequency_monthly)",
-    amountPerFrequency_unknown: "$t(shared.amountPerFrequency_unknown)",
-    amountPerFrequency_weekly: "$t(shared.amountPerFrequency_weekly)",
     benefitTypeLabel: "Benefit type",
     caption_v1:
       "Your employee is planning to use these benefits. Employer sponsored benefits include temporary disability insurance, permanent disability insurance, paid time off (PTO) or accrued paid leave, and family or medical leave benefits such as a parental leave program. <reductions-overview-link>Learn more about how these affect payments.</reductions-overview-link>",
     caption_v2:
       "Your employee is planning to use these benefits during their paid leave under PFML. Employer sponsored benefits include temporary disability insurance, permanent disability insurance, and family or medical leave benefits such as a parental leave program. For paid time off (PTO) and other accrued paid leave your employee will use, review “Concurrent accrued paid leave” above. <reductions-overview-link>Learn more about how these affect payments.</reductions-overview-link>",
     dateRangeLabel: "Date range",
-    detailsLabel: "Details",
-    fullSalaryContinuous: "Full salary continuous",
     header: "Employer-sponsored benefits",
-    noAmountReported: "No amount reported",
     tableName: "Employer-sponsored benefit details",
   },
   employersEmployerDecision: {

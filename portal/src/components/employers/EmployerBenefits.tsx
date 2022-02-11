@@ -71,9 +71,7 @@ const EmployerBenefits = (props: EmployerBenefitsProps) => {
             <th scope="col">
               {t("components.employersEmployerBenefits.benefitTypeLabel")}
             </th>
-            <th scope="col">
-              {t("components.employersEmployerBenefits.detailsLabel")}
-            </th>
+            <th></th>
             <th></th>
           </tr>
         </thead>
@@ -93,7 +91,6 @@ const EmployerBenefits = (props: EmployerBenefitsProps) => {
           ) : (
             <tr>
               <td>{t("shared.noneReported")}</td>
-              <td></td>
               <td></td>
               <td></td>
             </tr>

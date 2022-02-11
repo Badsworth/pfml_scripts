@@ -32,11 +32,7 @@ exports[`EmployerBenefits renders the component for v1 eforms 1`] = `
         >
           Benefit type
         </th>
-        <th
-          scope="col"
-        >
-          Details
-        </th>
+        <th />
         <th />
       </tr>
     </thead>
@@ -47,18 +43,11 @@ exports[`EmployerBenefits renders the component for v1 eforms 1`] = `
         <th
           data-label="Date range"
           scope="row"
-        >
-          2/1/2021 to 3/1/2021
-        </th>
+        />
         <td
           data-label="Benefit type"
         >
           Short-term disability insurance
-        </td>
-        <td
-          data-label="Details"
-        >
-          $1,000.00 per week
         </td>
         <td>
           <button
@@ -92,11 +81,6 @@ exports[`EmployerBenefits renders the component for v1 eforms 1`] = `
           data-label="Benefit type"
         >
           Accrued paid leave
-        </td>
-        <td
-          data-label="Details"
-        >
-          Full salary continuous
         </td>
         <td>
           <button
@@ -154,11 +138,7 @@ exports[`EmployerBenefits renders the component for v2 eforms 1`] = `
         >
           Benefit type
         </th>
-        <th
-          scope="col"
-        >
-          Details
-        </th>
+        <th />
         <th />
       </tr>
     </thead>
@@ -169,18 +149,11 @@ exports[`EmployerBenefits renders the component for v2 eforms 1`] = `
         <th
           data-label="Date range"
           scope="row"
-        >
-          2/1/2021 to 3/1/2021
-        </th>
+        />
         <td
           data-label="Benefit type"
         >
           Short-term disability insurance
-        </td>
-        <td
-          data-label="Details"
-        >
-          $1,000.00 per week
         </td>
         <td>
           <button
@@ -214,11 +187,6 @@ exports[`EmployerBenefits renders the component for v2 eforms 1`] = `
           data-label="Benefit type"
         >
           Accrued paid leave
-        </td>
-        <td
-          data-label="Details"
-        >
-          Full salary continuous
         </td>
         <td>
           <button
