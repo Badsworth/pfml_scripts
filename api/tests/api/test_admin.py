@@ -121,7 +121,7 @@ def test_admin_flag_get_logs_by_name_unauthorized(
     assert response.status_code == 401
 
 
-def test_admin_flags_post_success(
+def test_admin_flags_patch_success(
     app, client, test_db_session, auth_claims_unit, azure_auth_private_key
 ):
     azure_token = auth_claims_unit.copy()
@@ -144,7 +144,7 @@ def test_admin_flags_post_success(
         algorithm=ALGORITHMS.RS256,
         headers={"kid": azure_auth_private_key.get("kid")},
     )
-    post_body = {
+    body = {
         "enabled": True,
         "start": "2022-01-14T00:00:00-05:00",
         "end": "2022-01-15T00:00:00-05:00",
@@ -154,12 +154,12 @@ def test_admin_flags_post_success(
         },
     }
     with app.app.test_request_context("/v1/admin/flags/maintenance"):
-        response = client.post(
+        response = client.patch(
             "/v1/admin/flags/maintenance",
             headers={"Authorization": f"Bearer {encoded}"},
-            json=post_body,
+            json=body,
         )
-        assert response.status_code == 201
+        assert response.status_code == 200
         assert g.azure_user.sub_id == "foo"
         assert g.azure_user.permissions == [
             AzurePermission.MAINTENANCE_EDIT.azure_permission_id,
@@ -174,7 +174,7 @@ def test_admin_flags_post_success(
         assert data.get("options").get("page_routes") == ["/applications/*", "/custom/*"]
 
 
-def test_admin_flags_post_no_permissions(
+def test_admin_flags_patch_no_permissions(
     client, app, mock_azure, auth_claims_unit, azure_auth_private_key
 ):
     azure_token = auth_claims_unit.copy()
@@ -188,7 +188,7 @@ def test_admin_flags_post_no_permissions(
         algorithm=ALGORITHMS.RS256,
         headers={"kid": azure_auth_private_key.get("kid")},
     )
-    post_body = {
+    body = {
         "enabled": True,
         "start": "2022-01-14T00:00:00-05:00",
         "end": "2022-01-15T00:00:00-05:00",
@@ -198,10 +198,10 @@ def test_admin_flags_post_no_permissions(
         },
     }
     with app.app.test_request_context("/v1/admin/flags/maintenance"):
-        response = client.post(
+        response = client.patch(
             "/v1/admin/flags/maintenance",
             headers={"Authorization": f"Bearer {encoded}"},
-            json=post_body,
+            json=body,
         )
         assert response.status_code == 401
 
