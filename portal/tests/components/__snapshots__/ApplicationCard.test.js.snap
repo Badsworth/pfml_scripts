@@ -8,10 +8,10 @@ exports[`ApplicationCard with a completed application renders the component 1`] 
     class="border-top-1 border-primary"
   />
   <article
-    class="border-x border-bottom border-base-lighter padding-2 padding-top-0"
+    class="border-x border-bottom border-base-lighter padding-2 padding-top-3"
   >
     <h3
-      class="padding-top-3 font-heading-md text-bold"
+      class="font-heading-md text-bold"
     >
       Leave for an illness or injury
     </h3>

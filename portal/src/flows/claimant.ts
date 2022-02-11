@@ -155,6 +155,7 @@ const claimantFlow: {
     [routes.applications.getReady]: {
       meta: {},
       on: {
+        IMPORT_APPLICATION: routes.applications.importClaim,
         START_APPLICATION: routes.applications.start,
         SHOW_APPLICATIONS: routes.applications.index,
       },
