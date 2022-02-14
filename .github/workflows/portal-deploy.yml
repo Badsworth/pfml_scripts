@@ -578,10 +578,10 @@ jobs:
     with:
       # We're not allowed to reference the env context when invoking reusable workflows,
       # only inputs, needs, github, and secrets.
-      target_environment: ${{ github.event.inputs.deployment_env }}
+      target_environment: ${{ github.event.inputs.deployment_env || 'test' }}
       cypress_tags: "Deploy,Deploy-Portal"
       run_stable: true
-      title_override: "${{ format('Portal Deploy: {0} to {1}', github.event.inputs.version, github.event.inputs.deployment_env) }}"
+      title_override: "${{ format('Portal Deploy: {0} to {1}', github.event.inputs.version || 'main', github.event.inputs.deployment_env || 'test') }}"
     secrets:
       E2E_FINEOS_PASSWORD: ${{ secrets.E2E_FINEOS_PASSWORD }}
       E2E_PORTAL_PASSWORD: ${{ secrets.E2E_PORTAL_PASSWORD }}
