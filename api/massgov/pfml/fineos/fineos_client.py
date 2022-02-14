@@ -489,7 +489,9 @@ class FINEOSClient(client.AbstractFINEOSClient):
         response = self._customer_api(
             "GET", "customer/readCustomerDetails", user_id, "read_customer_details"
         )
-        return models.customer_api.Customer.parse_obj(response.json())
+        json = response.json()
+        set_empty_dates_to_none(json, ["dateOfBirth"])
+        return models.customer_api.Customer.parse_obj(json)
 
     def update_customer_details(self, user_id: str, customer: models.customer_api.Customer) -> None:
         """Update customer details."""
