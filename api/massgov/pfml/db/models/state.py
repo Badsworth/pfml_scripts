@@ -600,6 +600,22 @@ class State(LookupTable):
         210, "Legacy MMARS Payment Paid", Flow.LEGACY_MMARS_PAYMENTS.flow_id
     )
 
+    EMPLOYER_REIMBURSEMENT_READY_FOR_PROCESSING = LkState(
+        211, "Employer Reimbursement Ready For Processing", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    EMPLOYER_REIMBURSEMENT_RELATED_PENDING_AUDIT = LkState(
+        212, "Employer Reimbursement Related Pending Audit", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    EMPLOYER_REIMBURSEMENT_PENDING_AUDIT = LkState(
+        213, "Employer Reimbursement Pending Audit", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    EMPLOYER_REIMBURSEMENT_ERROR = LkState(
+        214, "Employer Reimbursement Error", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
 
 def sync_lookup_tables(db_session):
     # Order of operations matters here:
