@@ -999,31 +999,8 @@ def datetime_str_to_date(datetime_str: Optional[str]) -> Optional[date]:
     return datetime.fromisoformat(datetime_str).date()
 
 
-def is_same_eft(first: PubEft, second: PubEft) -> bool:
-    """Returns true if all EFT fields match"""
-    if (
-        first.routing_nbr == second.routing_nbr
-        and first.account_nbr == second.account_nbr
-        and first.bank_account_type_id == second.bank_account_type_id
-    ):
-        return True
-    else:
-        return False
-
-
-def find_existing_eft(employee: Optional[Employee], new_eft: PubEft) -> Optional[PubEft]:
-    if not employee:
-        return None
-
-    for pub_eft_pair in employee.pub_efts.all():
-        if is_same_eft(pub_eft_pair.pub_eft, new_eft):
-            return pub_eft_pair.pub_eft
-
-    return None
-
-
 def find_existing_address_pair(
-    employee: Optional[Employee], new_address: "Address", db_session: db.Session
+    employee: Optional[Employee], new_address: Address, db_session: db.Session
 ) -> Optional[ExperianAddressPair]:
     if not employee:
         return None
@@ -1053,6 +1030,29 @@ def find_existing_address_pair(
 
         if existing_experian_address and new_address.is_same_address(existing_experian_address):
             return experian_address_pair
+
+    return None
+
+
+def is_same_eft(first: PubEft, second: PubEft) -> bool:
+    """Returns true if all EFT fields match"""
+    if (
+        first.routing_nbr == second.routing_nbr
+        and first.account_nbr == second.account_nbr
+        and first.bank_account_type_id == second.bank_account_type_id
+    ):
+        return True
+    else:
+        return False
+
+
+def find_existing_eft(employee: Optional[Employee], new_eft: PubEft) -> Optional[PubEft]:
+    if not employee:
+        return None
+
+    for pub_eft_pair in employee.pub_efts.all():
+        if is_same_eft(pub_eft_pair.pub_eft, new_eft):
+            return pub_eft_pair.pub_eft
 
     return None
 
