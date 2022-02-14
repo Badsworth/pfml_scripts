@@ -78,10 +78,10 @@ jobs:
               "target_environment": "${{ matrix.environment }}",
               "cypress_tags": "${{ github.event_name == 'schedule' && 'Morning Run' || github.event.inputs.cypress_tags }}",
               "run_stable": "${{ github.event_name == 'schedule' && 'true' || github.event.inputs.run_stable }}",
-              "stable_spec_pattern": ${{ github.event.inputs.stable_spec_pattern }},
+              "stable_spec_pattern": "${{ github.event_name == 'schedule' && 'cypress/specs/stable/**' || github.event.inputs.stable_spec_pattern }}",
               "run_unstable": "${{ github.event_name == 'schedule' && 'true' || github.event.inputs.run_unstable }}",
-              "unstable_spec_pattern": ${{ github.event.inputs.unstable_spec_pattern }},
+              "unstable_spec_pattern": "${{ github.event_name == 'schedule' && 'cypress/specs/unstable/**' || github.event.inputs.unstable_spec_pattern }}",
               "run_morning": "${{ github.event_name == 'schedule' && 'true' || github.event.inputs.run_morning }}",
-              "morning_spec_pattern": ${{ github.event.inputs.morning_spec_pattern }},
+              "morning_spec_pattern": "${{ github.event_name == 'schedule' && 'cypress/specs/morning/**' || github.event.inputs.morning_spec_pattern }}",
               "title_override": "${{ github.event_name == 'schedule' && format('Scheduled Run: {0}', matrix.environment) || '' }}"
             }
