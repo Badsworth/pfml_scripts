@@ -1117,7 +1117,7 @@ def get_documents(
             lambda fd: fineos_document_response_to_document_response(fd, application),
             # Certain document types are Word documents when first created, then converted to PDF documents
             # Only PDF documents should be returned to the portal
-            filter(lambda fd: fd.fileExtension == ".pdf", fineos_documents),
+            filter(lambda fd: fd.fileExtension not in [".doc", ".docx"], fineos_documents),
         )
     )
 
