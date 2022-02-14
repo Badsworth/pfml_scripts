@@ -603,13 +603,13 @@ class Employee(Base, TimestampMixin):
         PostgreSQLUUID, ForeignKey("tax_identifier.tax_identifier_id"), index=True, unique=True,
     )
     title_id = Column(Integer, ForeignKey("lk_title.title_id"))
-    first_name = Column(Text, nullable=False)
-    middle_name = Column(Text)
-    last_name = Column(Text, nullable=False)
-    other_name = Column(Text)
-    email_address = Column(Text)
-    phone_number = Column(Text)  # Formatted in E.164
-    cell_phone_number = Column(Text)  # Formatted in E.164
+    first_name = Column(Text, nullable=False, index=True)
+    middle_name = Column(Text, index=True)
+    last_name = Column(Text, nullable=False, index=True)
+    other_name = Column(Text, index=True)
+    email_address = Column(Text, index=True)
+    phone_number = Column(Text, index=True)  # Formatted in E.164
+    cell_phone_number = Column(Text, index=True)  # Formatted in E.164
     preferred_comm_method_type = Column(Text)
     date_of_birth = Column(Date)
     date_of_death = Column(Date)
@@ -627,9 +627,9 @@ class Employee(Base, TimestampMixin):
         PostgreSQLUUID, ForeignKey("link_ctr_address_pair.fineos_address_id"), index=True
     )
 
-    fineos_employee_first_name = Column(Text)
-    fineos_employee_middle_name = Column(Text)
-    fineos_employee_last_name = Column(Text)
+    fineos_employee_first_name = Column(Text, index=True)
+    fineos_employee_middle_name = Column(Text, index=True)
+    fineos_employee_last_name = Column(Text, index=True)
 
     title = relationship(LkTitle)
     race = relationship(LkRace)

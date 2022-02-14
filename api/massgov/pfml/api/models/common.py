@@ -1,10 +1,11 @@
 from datetime import date
 from decimal import Decimal
 from enum import Enum
-from typing import Optional, Union
+from typing import Generic, Optional, TypeVar, Union
 
 import phonenumbers
-from pydantic import UUID4, validator
+from pydantic import UUID4, Field, validator
+from pydantic.generics import GenericModel
 
 import massgov.pfml.db.models.applications as db_application_models
 import massgov.pfml.db.models.employees as db_employee_models
@@ -294,3 +295,29 @@ class PhoneResponse(PydanticBaseModel):
             phone_response.int_code = str(parsed_phone_number.country_code)
 
         return phone_response
+
+
+# search stuff
+
+SearchTermsT = TypeVar("SearchTermsT")
+
+
+class OrderDirection(str, Enum):
+    asc = "ascending"
+    desc = "descending"
+
+
+class OrderData(PydanticBaseModel):
+    by: str = "created_at"
+    direction: OrderDirection = OrderDirection.desc
+
+
+class PagingData(PydanticBaseModel):
+    offset: int = 1
+    size: int = 25
+
+
+class SearchEnvelope(GenericModel, Generic[SearchTermsT]):
+    terms: SearchTermsT
+    order: OrderData = Field(default_factory=OrderData)
+    paging: PagingData = Field(default_factory=PagingData)

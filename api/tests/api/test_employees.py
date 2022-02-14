@@ -117,11 +117,11 @@ def test_employees_patch_snow_user_forbidden(client, employee, snow_user_headers
 
 
 def test_employees_search_nonsnow_forbidden(client, employee, consented_user_token):
-    body = {
+    terms = {
         "first_name": employee.first_name,
         "last_name": employee.last_name,
-        "tax_identifier_last4": employee.tax_identifier.tax_identifier_last4,
     }
+    body = {"terms": terms}
     response = client.post(
         "/v1/employees/search",
         json=body,
@@ -133,60 +133,206 @@ def test_employees_search_nonsnow_forbidden(client, employee, consented_user_tok
     assert response.status_code == 403
 
 
+def test_employees_search_snow_allowed_with_default_values(client, employee, snow_user_headers):
+    EmployeeFactory.create(first_name=employee.first_name)
+    EmployeeFactory.create(last_name=employee.last_name)
+    terms = {
+        "first_name": employee.first_name,
+        "last_name": employee.last_name,
+    }
+    body = {"terms": terms}
+    response = client.post("/v1/employees/search", json=body, headers=snow_user_headers,)
+
+    assert_employee_search_response_data(response, [employee])
+
+    data = response.get_json()
+    assert_employee_search_response_paging_data(data)
+
+
 def test_employees_search_snow_allowed(client, employee, snow_user_headers):
-    body = {
+    EmployeeFactory.create(first_name=employee.first_name)
+    EmployeeFactory.create(last_name=employee.last_name)
+    employee_2 = EmployeeFactory.create(
+        first_name=employee.first_name, last_name=employee.last_name
+    )
+    terms = {
         "first_name": employee.first_name,
         "last_name": employee.last_name,
-        "tax_identifier_last4": employee.tax_identifier.tax_identifier_last4,
     }
+    order = {"by": "created_at", "direction": "ascending"}
+    paging = {"offset": 1, "size": 5}
+
+    body = {"terms": terms, "order": order, "paging": paging}
     response = client.post("/v1/employees/search", json=body, headers=snow_user_headers,)
 
-    assert response.status_code == 200
+    assert_employee_search_response_data(response, [employee, employee_2])
+
+    data = response.get_json()
+    paging = dict(order=order, paging=paging)
+    assert_employee_search_response_paging_data(data, paging)
 
 
-def test_employees_search_valid_with_middle_name(client, employee, snow_user_headers):
-    # create identical employee except for middle name
-    # and tax_identifier (which is now enforced as unique)
-    new_tax_id = TaxIdentifierFactory.create()
-    EmployeeFactory.create(
-        first_name=employee.first_name, last_name=employee.last_name, tax_identifier=new_tax_id,
-    )
-
-    body = {
+def test_employees_search_name_requirement(client, employee, snow_user_headers):
+    terms_1 = {
         "first_name": employee.first_name,
-        "last_name": employee.last_name,
-        "middle_name": employee.middle_name,
-        "tax_identifier_last4": employee.tax_identifier.tax_identifier_last4,
     }
+    body_1 = {"terms": terms_1}
+    terms_2 = {
+        "last_name": employee.last_name,
+    }
+    body_2 = {"terms": terms_2}
+    terms_3 = {
+        "email_address": "ac",
+    }
+    body_3 = {"terms": terms_3}
+    terms_4 = {"first_name": "a", "last_name": "1"}
+    body_4 = {"terms": terms_4}
 
+    response_1 = client.post("/v1/employees/search", json=body_1, headers=snow_user_headers,)
+    response_2 = client.post("/v1/employees/search", json=body_2, headers=snow_user_headers,)
+    response_3 = client.post("/v1/employees/search", json=body_3, headers=snow_user_headers,)
+    response_4 = client.post("/v1/employees/search", json=body_4, headers=snow_user_headers,)
+
+    assert response_1.status_code == 400
+    assert response_2.status_code == 400
+    assert response_3.status_code == 400
+    assert response_4.status_code == 400
+
+
+def test_employees_search_nonexisting_employee(client, snow_user_headers):
+    EmployeeFactory.create(first_name="Jar", last_name="binks")
+    terms = {"first_name": "JarJar", "last_name": "Binks"}
+    body = {"terms": terms}
     response = client.post("/v1/employees/search", json=body, headers=snow_user_headers,)
 
-    assert response.status_code == 200
+    assert_employee_search_response_data(response, [])
 
-    response_data = response.get_json().get("data")
+    data = response.get_json()
+    assert_employee_search_response_paging_data(data)
 
-    assert response_data.get("middle_name") == employee.middle_name
+
+def test_employees_search_wildcard_rejects_invalid(client, snow_user_headers):
+    employee_1 = EmployeeFactory(first_name="Bob")
+    EmployeeFactory(first_name="Bobby", last_name=employee_1.last_name)
+
+    terms = {
+        "first_name": "Bob%",
+        "last_name": employee_1.last_name,
+    }
+
+    response = client.post("/v1/employees/search", json={"terms": terms}, headers=snow_user_headers)
+
+    assert response.status_code == 400
+    response_body = response.get_json()
+    assert "Name fields must only contain alphanumeric characters " in str(response_body)
+
+    terms = {"email_address": "e@"}
+    response = client.post("/v1/employees/search", json={"terms": terms}, headers=snow_user_headers)
+
+    assert response.status_code == 400
 
 
-def test_employees_search_missing_param(client, consented_user_token):
-    body = {"last_name": "Doe", "foo": "bar"}
-    response = client.post(
-        "/v1/employees/search",
-        json=body,
-        headers={"Authorization": "Bearer {}".format(consented_user_token)},
+def test_employees_search_wildcard_name(client, snow_user_headers):
+    employee_1 = EmployeeFactory(first_name="Bob")
+    employee_2 = EmployeeFactory(first_name="Bobby", last_name=employee_1.last_name)
+    # different first name, same last name
+    EmployeeFactory(first_name="Jane", last_name=employee_1.last_name)
+    # different first and last name
+    EmployeeFactory(first_name="Joe")
+
+    terms = {
+        "first_name": "Bob",
+        "last_name": employee_1.last_name,
+    }
+
+    response = client.post("/v1/employees/search", json={"terms": terms}, headers=snow_user_headers)
+
+    assert_employee_search_response_data(response, [employee_1, employee_2])
+
+    data = response.get_json()
+    assert_employee_search_response_paging_data(data)
+
+
+def test_employees_search_with_phone_number(client, snow_user_headers):
+    employee_1 = EmployeeFactory(cell_phone_number="+12247052345")
+    EmployeeFactory(first_name=employee_1.first_name)
+    terms = {
+        "phone_number": employee_1.cell_phone_number,
+    }
+
+    response = client.post("/v1/employees/search", json={"terms": terms}, headers=snow_user_headers)
+
+    assert_employee_search_response_data(response, [employee_1])
+    data = response.get_json()
+    assert_employee_search_response_paging_data(data)
+
+
+def test_employees_search_with_fineos_customer_number(client, snow_user_headers):
+    employee_1 = EmployeeFactory(fineos_customer_number="111111")
+    EmployeeFactory(first_name=employee_1.first_name)
+    terms = {
+        "fineos_customer_number": employee_1.fineos_customer_number,
+    }
+
+    response = client.post("/v1/employees/search", json={"terms": terms}, headers=snow_user_headers)
+
+    assert_employee_search_response_data(response, [employee_1])
+
+    data = response.get_json()
+    assert_employee_search_response_paging_data(data)
+
+
+def test_employees_search_with_email_address(client, snow_user_headers):
+    employee_1 = EmployeeFactory(email_address="test@example.com")
+    EmployeeFactory(first_name=employee_1.first_name)
+    terms = {
+        "email_address": employee_1.email_address,
+    }
+
+    response = client.post("/v1/employees/search", json={"terms": terms}, headers=snow_user_headers)
+
+    assert_employee_search_response_data(response, [employee_1])
+
+    data = response.get_json()
+    assert_employee_search_response_paging_data(data)
+
+
+def test_employees_search(client, snow_user_headers):
+    employee_1 = EmployeeFactory(
+        first_name="will", last_name="smith", cell_phone_number="+12247052345"
     )
-    tests.api.validate_error_response(response, 400)
-
-
-def test_employees_search_nonexisting_employee(client, consented_user_token):
-    body = {"first_name": "Damian", "last_name": "Wayne", "tax_identifier_last4": "6789"}
-    response = client.post(
-        "/v1/employees/search",
-        json=body,
-        headers={"Authorization": "Bearer {}".format(consented_user_token)},
+    employee_2 = EmployeeFactory(
+        fineos_employee_first_name="Will",
+        fineos_employee_last_name="Smith",
+        first_name="john",
+        last_name="doe",
+        cell_phone_number="+12247052345",
     )
+    employee_3 = EmployeeFactory(
+        fineos_employee_last_name="smith",
+        first_name="Will",
+        last_name="doe",
+        phone_number="+12247052345",
+    )
+    EmployeeFactory(first_name="Will")
 
-    tests.api.validate_error_response(response, 404)
+    terms = {
+        "first_name": "will",
+        "last_name": "Smith",
+        "phone_number": "+12247052345",
+    }
+    order = {"by": "created_at", "direction": "descending"}
+    paging = {"size": 5}
+
+    body = {"terms": terms, "order": order, "paging": paging}
+
+    response = client.post("/v1/employees/search", json=body, headers=snow_user_headers)
+
+    assert_employee_search_response_data(response, [employee_1, employee_2, employee_3])
+
+    data = response.get_json()
+    paging = dict(order=order, paging=paging)
+    assert_employee_search_response_paging_data(data, paging)
 
 
 def test_get_employee_basic_response(client, employee_different_fineos_name, snow_user_headers):
@@ -302,38 +448,6 @@ def test_employee_get_mass_id(client, employee, snow_user_headers, user, test_db
     assert employee_data["mass_id_number"] == "012345678"
 
 
-def test_employees_basic_response_search(client, employee_different_fineos_name, snow_user_headers):
-    body = {
-        "first_name": employee_different_fineos_name.first_name,
-        "last_name": employee_different_fineos_name.last_name,
-        "tax_identifier_last4": employee_different_fineos_name.tax_identifier.tax_identifier_last4,
-    }
-    response = client.post("/v1/employees/search", json=body, headers=snow_user_headers,)
-
-    response_body = response.get_json()
-    employee_data = response_body.get("data")
-
-    assert response.status_code == 200
-    assert employee_data["first_name"] == "Foo2"
-    assert employee_data["middle_name"] == "Baz2"
-    assert employee_data["last_name"] == "Bar2"
-
-
-def test_employees_search_fineos_user_forbidden(client, employee, fineos_user_token):
-    # Fineos role cannot access this endpoint
-    body = {
-        "first_name": employee.first_name,
-        "last_name": employee.last_name,
-        "tax_identifier_last4": employee.tax_identifier.tax_identifier_last4,
-    }
-    response = client.post(
-        "/v1/employees/search",
-        json=body,
-        headers={"Authorization": "Bearer {}".format(fineos_user_token)},
-    )
-    assert response.status_code == 403
-
-
 def test_employees_patch_snow_forbidden(client, employee, snow_user_headers):
     body = {"first_name": "James", "last_name": "Brown"}
     response = client.patch(
@@ -352,7 +466,10 @@ def test_employees_patch_snow_forbidden(client, employee, snow_user_headers):
 
 
 def test_employees_patch_empty(client, employee, snow_user_headers):
-    body = {"first_name": "", "last_name": ""}
+    body = {
+        "first_name": "",
+        "last_name": "",
+    }
     response = client.patch(
         "/v1/employees/{}".format(employee.employee_id), json=body, headers=snow_user_headers,
     )
@@ -412,3 +529,38 @@ def test_employee_patch_fineos_user_forbidden(client, employee, fineos_user_toke
         headers={"Authorization": "Bearer {}".format(fineos_user_token)},
     )
     tests.api.validate_error_response(response, 403)
+
+
+def assert_employee_search_response_data(response, expected_employees):
+    assert response.status_code == 200
+
+    data = response.get_json()["data"]
+    assert len(data) == len(expected_employees)
+
+    expected_employee_ids = {str(e.employee_id) for e in expected_employees}
+    for employee_response in data:
+        assert employee_response["employee_id"] in expected_employee_ids
+
+
+def assert_employee_search_response_paging_data(search_response, paging=None):
+    def deep_get(item, dictionary=paging):
+        if paging is None:
+            return None
+        for k, v in dictionary.items():
+            if k == item:
+                return v
+            if isinstance(v, dict) and item in v.keys():
+                return v[item]
+        return None
+
+    by = deep_get("by")
+    direction = deep_get("direction")
+    offset = deep_get("offset")
+    size = deep_get("size")
+
+    data = search_response["meta"]["paging"]
+
+    assert data["order_by"] == "created_at" if by is None else by
+    assert data["order_direction"] == "descending" if direction is None else direction
+    assert data["page_offset"] == 1 if offset is None else offset
+    assert data["page_size"] == 25 if size is None else size

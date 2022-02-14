@@ -31,6 +31,7 @@ from massgov.pfml.api.models.applications.requests import (
     TaxWithholdingPreferenceRequestBody,
 )
 from massgov.pfml.api.models.applications.responses import ApplicationResponse, DocumentResponse
+from massgov.pfml.api.models.common import OrderDirection
 from massgov.pfml.api.services.applications import get_document_by_id
 from massgov.pfml.api.services.fineos_actions import (
     complete_intake,
@@ -63,11 +64,7 @@ from massgov.pfml.fineos.exception import (
 )
 from massgov.pfml.fineos.models.customer_api import Base64EncodedFileData
 from massgov.pfml.util.logging.applications import get_application_log_attributes
-from massgov.pfml.util.paginate.paginator import (
-    ApplicationPaginationAPIContext,
-    OrderDirection,
-    page_for_api_context,
-)
+from massgov.pfml.util.paginate.paginator import PaginationAPIContext, page_for_api_context
 from massgov.pfml.util.sqlalchemy import get_or_404
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
@@ -112,7 +109,7 @@ def application_get(application_id):
 
 def applications_get():
     user = app.current_user()
-    with ApplicationPaginationAPIContext(Application, request=request) as pagination_context:
+    with PaginationAPIContext(Application, request=request) as pagination_context:
         with app.db_session() as db_session:
             is_asc = pagination_context.order_direction == OrderDirection.asc.value
             sort_fn = asc if is_asc else desc

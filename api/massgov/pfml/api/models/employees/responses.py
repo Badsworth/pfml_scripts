@@ -1,3 +1,4 @@
+from datetime import date
 from typing import List, Optional, cast
 
 from pydantic import UUID4
@@ -37,6 +38,7 @@ class EmployeeResponse(EmployeeBasicResponse):
     mass_id_number: Optional[MassIdStr]
     date_of_birth: Optional[MaskedDateStr]
     addresses: Optional[List[MaskedAddress]]
+    created_at: Optional[date]
 
     @classmethod
     def from_orm(cls, employee: Employee) -> "EmployeeResponse":
@@ -56,6 +58,7 @@ class EmployeeForPfmlCrmResponse(EmployeeBasicResponse):
     mass_id_number: Optional[MassIdStr]
     date_of_birth: Optional[MaskedDateStr]
     addresses: Optional[List[MaskedAddress]]
+    created_at: Optional[date]
 
     @classmethod
     def from_orm(cls, employee: Employee) -> "EmployeeForPfmlCrmResponse":
