@@ -506,7 +506,6 @@ class RelatedPaymentsProcessingStep(Step):
                         message = state_log_util.build_outcome(
                             "Employer reimbursement payment has an error"
                         )
-                        # DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT_RESTARTABLE
                         state_log_util.create_finished_state_log(
                             end_state=end_state,
                             outcome=message,
