@@ -11,6 +11,7 @@ from massgov.pfml.util.pydantic.types import MaskedDateStr, MassIdStr, TaxIdForm
 
 class EmployeeBasicResponse(PydanticBaseModel):
     employee_id: UUID4
+    fineos_customer_number: Optional[str]
     first_name: Optional[str]
     middle_name: Optional[str]
     last_name: Optional[str]

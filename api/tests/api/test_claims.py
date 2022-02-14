@@ -41,6 +41,7 @@ from massgov.pfml.db.models.factories import (
     ApplicationFactory,
     ClaimFactory,
     EmployeeFactory,
+    EmployeeWithFineosNumberFactory,
     EmployerFactory,
     ManagedRequirementFactory,
     OrganizationUnitFactory,
@@ -1890,6 +1891,10 @@ def assert_claim_pfml_crm_response_equal_to_claim_query(claim_response, claim_qu
     assert claim_response["fineos_absence_id"] == claim_query.fineos_absence_id
     assert claim_response["fineos_notification_id"] == claim_query.fineos_notification_id
     assert claim_response["employee"]["employee_id"] == str(claim_query.employee.employee_id)
+    assert (
+        claim_response["employee"]["fineos_customer_number"]
+        == claim_query.employee.fineos_customer_number
+    )
     assert claim_response["employee"]["first_name"] == claim_query.employee.first_name
     assert claim_response["employee"]["middle_name"] == claim_query.employee.middle_name
     assert claim_response["employee"]["last_name"] == claim_query.employee.last_name
@@ -2348,6 +2353,8 @@ class TestGetClaimsEndpoint:
         employer = EmployerFactory.create()
         employee = EmployeeFactory.create()
 
+        employee_with_fineos_customer_number = EmployeeWithFineosNumberFactory.create()
+
         generated_claims = [
             ClaimFactory.create(
                 employer=employer, employee=employee, fineos_absence_status_id=1, claim_type_id=1,
@@ -2355,18 +2362,20 @@ class TestGetClaimsEndpoint:
             for _ in range(3)
         ]
 
+        generated_claims.append(
+            ClaimFactory.create(employer=employer, employee=employee_with_fineos_customer_number)
+        )
+
         response = client.get("/v1/claims", headers=snow_user_headers)
         assert response.status_code == 200
         response_body = response.get_json()
         claim_data = response_body.get("data")
 
-        for i in range(3):
-            assert_claim_pfml_crm_response_equal_to_claim_query(
-                claim_data[i], generated_claims[2 - i]
-            )
-
         # assert that all created claims are returned
-        assert len(claim_data) == 3
+        assert len(claim_data) == len(generated_claims)
+
+        for response_claim, generated_claim in zip(claim_data, reversed(generated_claims)):
+            assert_claim_pfml_crm_response_equal_to_claim_query(response_claim, generated_claim)
 
     def test_get_claims_paginated_as_leave_admin(
         self, client, employer_auth_token, employer_user, test_db_session, test_verification

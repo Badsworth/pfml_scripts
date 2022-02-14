@@ -2140,6 +2140,10 @@ components:
           type: string
           format: uuid
           example: "009fa369-291b-403f-a85a-15e938c26a7b"
+        fineos_customer_number:
+          type: string
+          nullable: true
+          example: "1111111"
         first_name:
           type: string
           example: "Jane"
