@@ -3,7 +3,7 @@ import ClaimDetail from "src/models/ClaimDetail";
 import DocumentUploadIndex from "src/pages/applications/upload/index";
 import LeaveReason from "src/models/LeaveReason";
 import React from "react";
-import faker from "faker";
+import { faker } from "@faker-js/faker";
 import { pick } from "lodash";
 import useMockableAppLogic from "lib/mock-helpers/useMockableAppLogic";
 

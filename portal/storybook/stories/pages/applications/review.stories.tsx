@@ -8,7 +8,7 @@ import ApiResourceCollection from "src/models/ApiResourceCollection";
 import React from "react";
 import { Review } from "src/pages/applications/review";
 import User from "src/models/User";
-import faker from "faker";
+import { faker } from "@faker-js/faker";
 import useMockableAppLogic from "lib/mock-helpers/useMockableAppLogic";
 
 export default {

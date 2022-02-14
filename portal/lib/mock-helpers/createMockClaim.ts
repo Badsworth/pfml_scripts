@@ -3,7 +3,7 @@ import Claim, {
   ClaimEmployee,
 } from "../../src/models/Claim";
 import createAbsencePeriod from "./createAbsencePeriod";
-import faker from "faker";
+import { faker } from "@faker-js/faker";
 
 function createMockClaim(customAttrs: Partial<Claim>): Claim {
   return new Claim({

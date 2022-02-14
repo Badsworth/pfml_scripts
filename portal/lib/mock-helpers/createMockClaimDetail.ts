@@ -9,7 +9,7 @@ import { ClaimEmployee } from "src/models/Claim";
 import LeaveReason from "src/models/LeaveReason";
 import { ReasonQualifier } from "src/models/BenefitsApplication";
 import { createAbsencePeriod } from "lib/mock-helpers/createAbsencePeriod";
-import faker from "faker";
+import { faker } from "@faker-js/faker";
 
 export const leaveScenarioMap: {
   [scenario: string]: Array<Partial<AbsencePeriod>>;
