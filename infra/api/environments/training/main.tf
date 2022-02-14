@@ -82,4 +82,5 @@ module "api" {
   release_version                                     = var.release_version
 
   enable_application_import = "1"
+  enable_employee_endpoints = "1"
 }
