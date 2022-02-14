@@ -738,6 +738,32 @@ class EmployeePubEftPair(Base, TimestampMixin):
     pub_eft = relationship("PubEft", back_populates="employees")
 
 
+class LkChangeRequestType(Base):
+    __tablename__ = "lk_change_request_type"
+
+    change_request_type_id = Column(Integer, primary_key=True, autoincrement=True)
+    change_request_type_description = Column(Text, nullable=False)
+
+    def __init__(self, change_request_type_id, change_request_type_description):
+        self.change_request_type_id = change_request_type_id
+        self.change_request_type_description = change_request_type_description
+
+
+class ChangeRequest(Base, TimestampMixin):
+    __tablename__ = "change_request"
+    change_request_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+    change_request_type_id = Column(
+        Integer, ForeignKey("lk_change_request_type.change_request_type_id"), nullable=False
+    )
+    claim_id = Column(PostgreSQLUUID, ForeignKey("claim.claim_id"), index=True, nullable=False)
+    start_date = Column(Date)
+    end_date = Column(Date)
+    submitted_time = Column(TIMESTAMP(timezone=True))
+
+    change_request_type_instance = relationship(LkChangeRequestType)
+    claim = relationship("Claim", back_populates="change_request")
+
+
 class Claim(Base, TimestampMixin):
     __tablename__ = "claim"
     claim_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
@@ -773,6 +799,7 @@ class Claim(Base, TimestampMixin):
         Optional[List["AbsencePeriod"]], relationship("AbsencePeriod", back_populates="claim"),
     )
     organization_unit = relationship(OrganizationUnit)
+    change_request = relationship("ChangeRequest", back_populates="claim")
 
     @typed_hybrid_property
     def soonest_open_requirement_date(self) -> Optional[date]:
@@ -2040,6 +2067,15 @@ class MFADeliveryPreferenceUpdatedBy(LookupTable):
     ADMIN = LkMFADeliveryPreferenceUpdatedBy(2, "Admin")
 
 
+class ChangeRequestType(LookupTable):
+    model = LkChangeRequestType
+    column_names = ("change_request_type_id", "change_request_type_description")
+
+    MODIFICATION = LkChangeRequestType(1, "Modification")
+    WITHDRAWAL = LkChangeRequestType(2, "Withdrawal")
+    MEDICAL_TO_BONDING = LkChangeRequestType(3, "Medical To Bonding Transition")
+
+
 def sync_lookup_tables(db_session):
     """Synchronize lookup tables to the database."""
     AddressType.sync_to_database(db_session)
@@ -2064,4 +2100,5 @@ def sync_lookup_tables(db_session):
     ManagedRequirementType.sync_to_database(db_session)
     MFADeliveryPreference.sync_to_database(db_session)
     MFADeliveryPreferenceUpdatedBy.sync_to_database(db_session)
+    ChangeRequestType.sync_to_database(db_session)
     db_session.commit()
