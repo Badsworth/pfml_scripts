@@ -78,47 +78,6 @@ describeIf(
         });
       });
 
-    it("Claimant receives max weekly benefit change notification", () => {
-      cy.dependsOnPreviousPass([approval, notification]);
-      cy.unstash<Submission>("submission").then((submission) => {
-        const portalPath = `/applications/status/?absence_case_id=${submission.fineos_absence_id}#view-notices`;
-        email
-          .getEmails({
-            address: "gqzap.notifications@inbox.testmail.app",
-            subject: email.getNotificationSubject("appeal (claimant)"),
-            messageWildcard: portalPath,
-            timestamp_from: submission.timestamp_from,
-            debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
-          })
-          .then(() => {
-            cy.contains("Your maximum weekly benefit has changed");
-            cy.get(`a[href$='${portalPath}']`);
-          });
-      });
-    });
-
-    it("Leave admin receives max weekly benefit change notification", () => {
-      cy.dependsOnPreviousPass([approval, notification]);
-      cy.unstash<Submission>("submission").then((submission) => {
-        const portalPath = `/employers/applications/status/?absence_id=${submission.fineos_absence_id}`;
-        email
-          .getEmails(
-            {
-              address: "gqzap.notifications@inbox.testmail.app",
-              subject: email.getNotificationSubject("appeal (claimant)"),
-              messageWildcard: portalPath,
-              timestamp_from: submission.timestamp_from,
-              debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
-            },
-            90000
-          )
-          .then(() => {
-            cy.contains("The applicant’s maximum weekly benefit was changed.");
-            cy.get(`a[href*='${portalPath}']`);
-          });
-      });
-    });
-
     it("Check the leave admin portal for the max weekly benefit change notice and download it", () => {
       cy.dependsOnPreviousPass([approval, notification]);
       portal.before();
@@ -168,6 +127,47 @@ describeIf(
           .should("be.visible")
           .click({ force: true });
         portal.downloadLegalNotice(submission.fineos_absence_id);
+      });
+    });
+
+    it("Claimant receives max weekly benefit change notification", () => {
+      cy.dependsOnPreviousPass([approval, notification]);
+      cy.unstash<Submission>("submission").then((submission) => {
+        const portalPath = `/applications/status/?absence_case_id=${submission.fineos_absence_id}#view-notices`;
+        email
+          .getEmails({
+            address: "gqzap.notifications@inbox.testmail.app",
+            subject: email.getNotificationSubject("appeal (claimant)"),
+            messageWildcard: portalPath,
+            timestamp_from: submission.timestamp_from,
+            debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
+          })
+          .then(() => {
+            cy.contains("Your maximum weekly benefit has changed");
+            cy.get(`a[href$='${portalPath}']`);
+          });
+      });
+    });
+
+    it("Leave admin receives max weekly benefit change notification", () => {
+      cy.dependsOnPreviousPass([approval, notification]);
+      cy.unstash<Submission>("submission").then((submission) => {
+        const portalPath = `/employers/applications/status/?absence_id=${submission.fineos_absence_id}`;
+        email
+          .getEmails(
+            {
+              address: "gqzap.notifications@inbox.testmail.app",
+              subject: email.getNotificationSubject("appeal (claimant)"),
+              messageWildcard: portalPath,
+              timestamp_from: submission.timestamp_from,
+              debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
+            },
+            90000
+          )
+          .then(() => {
+            cy.contains("The applicant’s maximum weekly benefit was changed.");
+            cy.get(`a[href*='${portalPath}']`);
+          });
       });
     });
   }
