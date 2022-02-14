@@ -349,6 +349,37 @@ class TestApplicationsImport:
         assert imported_application.employer_fein == claim.employer_fein
         assert imported_application.imported_from_fineos_at is not None
 
+    def test_applications_import_application_for_claim_already_exists(
+        self, client, user, auth_token, claim, valid_request_body
+    ):
+        ApplicationFactory.create(user=user, claim=claim)
+        response = client.post(
+            "/v1/applications/import",
+            headers={"Authorization": f"Bearer {auth_token}"},
+            json=valid_request_body,
+        )
+        response_body = response.get_json()
+        assert response.status_code == 403
+        assert response_body["message"] == "An application already exists for this claim."
+        assert response_body["errors"][0]["type"] == "duplicate"
+
+    def test_applications_import_application_for_claim_already_exists_diff_account(
+        self, client, user_with_mfa, auth_token, claim, valid_request_body
+    ):
+        ApplicationFactory.create(user=user_with_mfa, claim=claim)
+        response = client.post(
+            "/v1/applications/import",
+            headers={"Authorization": f"Bearer {auth_token}"},
+            json=valid_request_body,
+        )
+        response_body = response.get_json()
+        assert response.status_code == 403
+        assert (
+            response_body["message"]
+            == "An application linked to a different account already exists for this claim."
+        )
+        assert response_body["errors"][0]["type"] == "duplicate"
+
     def test_applications_import_missing_required_fields(self, client, auth_token, claim):
         response = client.post(
             "/v1/applications/import",

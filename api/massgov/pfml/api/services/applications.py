@@ -71,6 +71,7 @@ from massgov.pfml.db.models.employees import (
     LkAddressType,
     LkGender,
     MFADeliveryPreference,
+    User,
 )
 from massgov.pfml.db.models.geo import GeoState
 from massgov.pfml.fineos import AbstractFINEOSClient
@@ -86,6 +87,7 @@ from massgov.pfml.fineos.transforms.from_fineos.eforms import (
     TransformPreviousLeaveFromOtherLeaveEform,
 )
 from massgov.pfml.util.datetime import utcnow
+from massgov.pfml.util.logging.applications import get_application_log_attributes
 from massgov.pfml.util.pydantic.types import Regexes
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
@@ -960,12 +962,41 @@ def get_document_by_id(
     return document
 
 
-def claim_is_valid_for_application_import(claim: Optional[Claim]) -> Optional[Response]:
+def claim_is_valid_for_application_import(
+    db_session: db.Session, user: User, claim: Optional[Claim]
+) -> Optional[Response]:
     if claim is not None and (claim.employee_tax_identifier is None or claim.employer_fein is None):
         message = "Claim data incomplete for application import."
         validation_error = ValidationErrorDetail(message=message, type=IssueType.conflicting)
         error = response_util.error_response(Conflict, message=message, errors=[validation_error])
         return error
+    if claim:
+        existing_application = (
+            db_session.query(Application)
+            .filter(Application.claim_id == claim.claim_id)
+            .one_or_none()
+        )
+        if existing_application and existing_application.user_id != user.user_id:
+            message = "An application linked to a different account already exists for this claim."
+            validation_error = ValidationErrorDetail(message=message, type=IssueType.duplicate)
+            logger.info(
+                "applications_import failure - exists_different_account",
+                extra=get_application_log_attributes(existing_application),
+            )
+            return response_util.error_response(
+                Forbidden, message=message, errors=[validation_error]
+            )
+
+        if existing_application:
+            message = "An application already exists for this claim."
+            validation_error = ValidationErrorDetail(message=message, type=IssueType.duplicate)
+            logger.info(
+                "applications_import failure - exists_same_account",
+                extra=get_application_log_attributes(existing_application),
+            )
+            return response_util.error_response(
+                Forbidden, message=message, errors=[validation_error]
+            )
     return None
 
 
