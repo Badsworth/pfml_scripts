@@ -203,7 +203,7 @@ describe("useAuthLogic", () => {
     });
     expect(appErrors).toHaveLength(1);
     expect(appErrors[0].message).toMatchInlineSnapshot(
-      `"Your authentication attempt has been blocked due to suspicious activity. We sent you an email to confirm your identity. Check your email and then follow the instructions to try again. If this continues to occur, call the contact center at (833) 344‑7365."`
+      `"Your authentication attempt has been blocked due to suspicious activity. We sent you an email to confirm your identity. Check your email and then follow the instructions to try again. If this continues to occur, call the Contact Center at (833) 344‑7365."`
     );
   });
 

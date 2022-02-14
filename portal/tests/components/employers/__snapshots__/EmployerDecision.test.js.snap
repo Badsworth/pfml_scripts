@@ -20,7 +20,7 @@ exports[`EmployerDecision renders the component 1`] = `
   <span
     class="display-block line-height-sans-5 measure-5 usa-hint text-base-darkest"
   >
-    Answer based on your company policies and our 
+    Answer based on your organization's policies and our 
     <a
       href="https://www.mass.gov/info-details/employer-paid-leave-application-review-guide"
       rel="noreferrer noopener"

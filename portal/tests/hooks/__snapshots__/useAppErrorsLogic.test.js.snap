@@ -33,7 +33,7 @@ exports[`useAppErrorsLogic returns HTML message when Employer ClaimWithdrawnErro
 exports[`useAppErrorsLogic returns HTML message when Employer validation error type is contains_v1_and_v2_eforms 1`] = `
 <div>
   <h3>
-    Call the contact center to review this application
+    Call the Contact Center to review this application
   </h3>
   <p>
     We can’t display this application for review online. To review this application, call the Contact Center at 
@@ -79,7 +79,7 @@ exports[`useAppErrorsLogic returns HTML message when Employer validation error t
     rel="noreferrer noopener"
     target="_blank"
   >
-    Learn more about filing returns and remitting contributions
+    Learn more about filing returns and sending contributions
   </a>
   .
 </div>
