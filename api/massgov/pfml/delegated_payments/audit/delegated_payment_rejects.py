@@ -11,13 +11,10 @@ import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml import db
 from massgov.pfml.db.models.employees import (
-    Flow,
-    LkState,
     Payment,
     PaymentTransactionType,
     ReferenceFile,
     ReferenceFileType,
-    State,
     StateLog,
 )
 from massgov.pfml.db.models.payments import (
@@ -27,6 +24,7 @@ from massgov.pfml.db.models.payments import (
     LinkSplitPayment,
     LkFineosWritebackTransactionStatus,
 )
+from massgov.pfml.db.models.state import Flow, LkState, State
 from massgov.pfml.delegated_payments.audit.delegated_payment_audit_csv import (
     PAYMENT_AUDIT_CSV_HEADERS,
     PaymentAuditCSV,

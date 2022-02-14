@@ -4,7 +4,7 @@
 from datetime import date, timedelta
 from decimal import Decimal
 from typing import List
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 import pytest
 from freezegun import freeze_time
@@ -23,9 +23,10 @@ from massgov.pfml.api.eligibility.mock.scenarios import (
     get_eligibility_scenario_by_name,
 )
 from massgov.pfml.api.eligibility.wage import get_wage_calculator
+from massgov.pfml.api.models.applications.common import EligibilityEmploymentStatus
+from massgov.pfml.db.models.absences import AbsenceStatus
 from massgov.pfml.db.models.employees import (
     AbsencePeriod,
-    AbsenceStatus,
     BenefitYear,
     BenefitYearContribution,
     Claim,
@@ -37,16 +38,15 @@ from massgov.pfml.db.models.factories import (
     ClaimFactory,
     EmployeeFactory,
     EmployerFactory,
-    TaxIdentifierFactory,
     WagesAndContributionsFactory,
 )
-from massgov.pfml.util.datetime.quarter import Quarter
 
 
-def test_compute_financial_eligibility_no_data(test_db_session):
-    result = eligibility.compute_financial_eligibility(
-        test_db_session, UUID(int=1), UUID(int=2), date(2021, 1, 5), date(2021, 1, 5), "Employed",
-    )
+def test_compute_financial_eligibility_no_data(test_db_session, initialize_factories_session):
+    scenario = get_eligibility_scenario_by_name(EligibilityScenarioName.NO_EXISTING_DATA)
+    scenario_data = generate_eligibility_scenario_data_in_db(scenario, test_db_session)
+
+    result = run_eligibility_for_scenario(scenario_data, test_db_session)
 
     assert result == eligibility.EligibilityResponse(
         financially_eligible=False,
@@ -58,10 +58,19 @@ def test_compute_financial_eligibility_no_data(test_db_session):
     )
 
 
-def test_state_metrics_based_on_benefit_year_start_date(test_db_session):
-    result = eligibility.compute_financial_eligibility(
-        test_db_session, UUID(int=1), UUID(int=2), date(2021, 1, 2), date(2021, 1, 2), "Employed",
+def test_state_metrics_based_on_benefit_year_start_date(
+    test_db_session, initialize_factories_session
+):
+
+    scenario = EligibilityScenarioDescriptor(
+        last_x_quarters_wages=[],
+        application_submitted_date=date(2021, 1, 2),
+        leave_start_date=date(2021, 1, 2),
+        employment_status=EligibilityEmploymentStatus.employed,
     )
+    scenario_data = generate_eligibility_scenario_data_in_db(scenario, test_db_session)
+
+    result = run_eligibility_for_scenario(scenario_data, test_db_session)
 
     # 01/02/2021 is a Saturday, so we should be using the prior Sunday
     # (12/27/2020) to look up the SAWW and the UI minimum.
@@ -83,12 +92,42 @@ def test_state_metrics_based_on_benefit_year_start_date(test_db_session):
 @pytest.mark.parametrize(
     "last_6_quarters_wages, is_eligible, expected_description, expected_total_wages, expected_weekly_avg",
     [
-        ([0, 0, 2000, 3000, 5000, 5000], True, "Financially eligible", "10000", "307.69"),
-        ([0, 10000, 0, 10000, 10000, 10000], True, "Financially eligible", "30000", "769.23"),
-        ([0, 6000, 6000, 6000, 6000, 0], True, "Financially eligible", "24000", "461.54"),
-        ([1000, 8000, 0, 0, 0, 0], False, "Claimant wages failed 30x rule", "9000", "615.38"),
-        ([1000, 8000, 1000, 0, 0, 0], True, "Financially eligible", "10000", "346.15"),
-        ([10000, 8000, 0, 0, 0, 0], False, "Claimant wages failed 30x rule", "18000", "769.23"),
+        (
+            ["0", "0", "2000", "3000", "5000", "5000"],
+            True,
+            "Financially eligible",
+            "10000",
+            "307.69",
+        ),
+        (
+            ["0", "10000", "0", "10000", "10000", "10000"],
+            True,
+            "Financially eligible",
+            "30000",
+            "769.23",
+        ),
+        (
+            ["0", "6000", "6000", "6000", "6000", "0"],
+            True,
+            "Financially eligible",
+            "24000",
+            "461.54",
+        ),
+        (
+            ["1000", "8000", "0", "0", "0", "0"],
+            False,
+            "Claimant wages failed 30x rule",
+            "9000",
+            "615.38",
+        ),
+        (["1000", "8000", "1000", "0", "0", "0"], True, "Financially eligible", "10000", "346.15"),
+        (
+            ["10000", "8000", "0", "0", "0", "0"],
+            False,
+            "Claimant wages failed 30x rule",
+            "18000",
+            "769.23",
+        ),
     ],
 )
 def test_compute_financial_eligibility_multiple_scenarios(
@@ -101,64 +140,19 @@ def test_compute_financial_eligibility_multiple_scenarios(
     expected_weekly_avg,
 ):
     """
-    In these scenarios thre is no data for 'current' quarter.
+    In these scenarios there is no data for 'current' quarter.
     """
 
-    employer_fein = 716779225
-    tax_id = TaxIdentifierFactory.create(tax_identifier="088574541")
-    employee = EmployeeFactory.create(tax_identifier=tax_id)
-    employer = EmployerFactory.create(employer_fein=employer_fein)
-    application_submitted_date = date(2021, 1, 5)
-    leave_start_date = date(2021, 1, 5)
-    employee_id = employee.employee_id
-    employer_id = employer.employer_id
-    employment_status = "Employed"
+    scenario = EligibilityScenarioDescriptor(
+        last_x_quarters_wages=last_6_quarters_wages,
+        application_submitted_date=date(2021, 1, 5),
+        leave_start_date=date(2021, 1, 5),
+        current_quarter_has_data=False,
+        employment_status=EligibilityEmploymentStatus.employed,
+    )
+    scenario_data = generate_eligibility_scenario_data_in_db(scenario, test_db_session)
 
-    WagesAndContributionsFactory.create(
-        employee=employee,
-        employer=employer,
-        filing_period=date(2020, 10, 1),
-        employee_qtr_wages=last_6_quarters_wages[0],
-    )
-    WagesAndContributionsFactory.create(
-        employee=employee,
-        employer=employer,
-        filing_period=date(2020, 7, 1),
-        employee_qtr_wages=last_6_quarters_wages[1],
-    )
-    WagesAndContributionsFactory.create(
-        employee=employee,
-        employer=employer,
-        filing_period=date(2020, 4, 1),
-        employee_qtr_wages=last_6_quarters_wages[2],
-    )
-    WagesAndContributionsFactory.create(
-        employee=employee,
-        employer=employer,
-        filing_period=date(2020, 1, 1),
-        employee_qtr_wages=last_6_quarters_wages[3],
-    )
-    WagesAndContributionsFactory.create(
-        employee=employee,
-        employer=employer,
-        filing_period=date(2019, 10, 1),
-        employee_qtr_wages=last_6_quarters_wages[4],
-    )
-    WagesAndContributionsFactory.create(
-        employee=employee,
-        employer=employer,
-        filing_period=date(2019, 7, 1),
-        employee_qtr_wages=last_6_quarters_wages[5],
-    )
-
-    result = eligibility.compute_financial_eligibility(
-        test_db_session,
-        employee_id,
-        employer_id,
-        leave_start_date,
-        application_submitted_date,
-        employment_status,
-    )
+    result = run_eligibility_for_scenario(scenario_data, test_db_session)
 
     assert result == eligibility.EligibilityResponse(
         financially_eligible=is_eligible,
@@ -176,7 +170,7 @@ def test_scenario_A_case_B(test_db_session, initialize_factories_session):
     """
 
     scenario = EligibilityScenarioDescriptor(
-        last_six_quarters_wages=["0", "0", "6000", "6000", "8000", "8000"],
+        last_x_quarters_wages=["0", "0", "6000", "6000", "8000", "8000"],
         application_submitted_date=date(2020, 10, 5),
         leave_start_date=date(2020, 10, 5),
     )
@@ -202,31 +196,18 @@ def test_scenario_B_case_G(test_db_session, initialize_factories_session):
     In this scenario the application is submitted 2021 Q3 after the leave has
     started 2021 Q2. The last recorded wages were in 2020 Q3.
     """
+    scenario = EligibilityScenarioDescriptor(
+        last_x_quarters_wages=["0", "0", "0", "24.78", "3177.13", "4333.07", "6264.50"],
+        application_submitted_date=date(2021, 9, 13),
+        leave_start_date=date(2021, 6, 4),
+        employment_status=EligibilityEmploymentStatus.employed,
+    )
+    scenario_data = generate_eligibility_scenario_data_in_db(scenario, test_db_session)
 
-    employer_fein = 716779225
-    tax_id = TaxIdentifierFactory.create(tax_identifier="088574541")
-    employee = EmployeeFactory.create(tax_identifier=tax_id)
-    employer = EmployerFactory.create(employer_fein=employer_fein)
-    application_submitted_date = date(2021, 9, 13)
-    leave_start_date = date(2021, 6, 4)
-    employee_id = employee.employee_id
-    employer_id = employer.employer_id
-    employment_status = "Employed"
-
-    start_qtr = Quarter(2019, 4)
-    current_qtr = start_qtr
-    earnings = [6264.50, 4333.07, 3177.13, 24.78, 0, 0, 0, 0]
-    for amount in earnings:
-        WagesAndContributionsFactory.create(
-            employee=employee,
-            employer=employer,
-            filing_period=current_qtr.as_date(),
-            employee_qtr_wages=amount,
-        )
-        current_qtr = current_qtr.next_quarter()
-
-    benefit_year_dates = get_benefit_year_dates(leave_start_date)
-    effective_date = eligibility_date(benefit_year_dates.start_date, application_submitted_date)
+    benefit_year_dates = get_benefit_year_dates(scenario_data.leave_start_date)
+    effective_date = eligibility_date(
+        benefit_year_dates.start_date, scenario_data.application_submitted_date
+    )
 
     # To determine the effective date: if the leave start date is in the future,
     # choose application submitted date otherwise choose the leave start date.
@@ -237,7 +218,9 @@ def test_scenario_B_case_G(test_db_session, initialize_factories_session):
     # If the effective quarter has wages, then the base period ends on the effective quarter
     # If the quarter before the effective quarter has wages, then the base period ends on the quarter before the effective quarter
     # Otherwise the base period ends two quarters previous the effective quarter
-    wage_calculator = wage.get_wage_calculator(employee_id, effective_date, test_db_session)
+    wage_calculator = wage.get_wage_calculator(
+        scenario_data.employee.employee_id, effective_date, test_db_session
+    )
     base_period_quarters = wage_calculator.base_period_quarters
 
     # Wage calculator determined that the base period
@@ -252,34 +235,9 @@ def test_scenario_B_case_G(test_db_session, initialize_factories_session):
     # Given that Q1 2020 and Q4 2020 are the range over which we are looking
     # for wages, Financial eligibility calculations will use:
     # Q1 $4333.07, Q2 $3177.13, Q3 $24.78, Q4 $0
-    fe_result = eligibility.compute_financial_eligibility(
-        test_db_session,
-        employee_id,
-        employer_id,
-        leave_start_date,
-        application_submitted_date,
-        employment_status,
-    )
+    result = run_eligibility_for_scenario(scenario_data, test_db_session)
 
-    assert fe_result == eligibility.EligibilityResponse(
-        financially_eligible=True,
-        description="Financially eligible",
-        total_wages=Decimal("7534.98"),
-        state_average_weekly_wage=Decimal("1487.78"),
-        unemployment_minimum=Decimal("5400.00"),
-        employer_average_weekly_wage=Decimal("288.85"),
-    )
-
-    by_result = eligibility.retrieve_financial_eligibility(
-        test_db_session,
-        employee_id,
-        employer_id,
-        leave_start_date,
-        application_submitted_date,
-        employment_status,
-    )
-
-    assert by_result == eligibility.EligibilityResponse(
+    assert result == eligibility.EligibilityResponse(
         financially_eligible=True,
         description="Financially eligible",
         total_wages=Decimal("7534.98"),
@@ -293,9 +251,10 @@ def test_retrieve_financial_eligibility_no_data(test_db_session, initialize_fact
     benefit_years_before = test_db_session.query(BenefitYear).all()
     assert len(benefit_years_before) == 0
 
-    result = eligibility.retrieve_financial_eligibility(
-        test_db_session, uuid4(), uuid4(), date(2021, 1, 5), date(2021, 1, 5), "Employed",
-    )
+    scenario = get_eligibility_scenario_by_name(EligibilityScenarioName.NO_EXISTING_DATA)
+    scenario_data = generate_eligibility_scenario_data_in_db(scenario, test_db_session)
+
+    result = run_eligibility_for_scenario(scenario_data, test_db_session)
 
     assert result == eligibility.EligibilityResponse(
         financially_eligible=False,
@@ -315,12 +274,42 @@ def test_retrieve_financial_eligibility_no_data(test_db_session, initialize_fact
 @pytest.mark.parametrize(
     "last_6_quarters_wages, is_eligible, expected_description, expected_total_wages, expected_weekly_avg",
     [
-        ([0, 0, 2000, 3000, 5000, 5000], True, "Financially eligible", "10000", "307.69"),
-        ([0, 10000, 0, 10000, 10000, 10000], True, "Financially eligible", "30000", "769.23"),
-        ([0, 6000, 6000, 6000, 6000, 0], True, "Financially eligible", "24000", "461.54"),
-        ([1000, 8000, 0, 0, 0, 0], False, "Claimant wages failed 30x rule", "9000", "615.38"),
-        ([1000, 8000, 1000, 0, 0, 0], True, "Financially eligible", "10000", "346.15"),
-        ([10000, 8000, 0, 0, 0, 0], False, "Claimant wages failed 30x rule", "18000", "769.23"),
+        (
+            ["0", "0", "2000", "3000", "5000", "5000"],
+            True,
+            "Financially eligible",
+            "10000",
+            "307.69",
+        ),
+        (
+            ["0", "10000", "0", "10000", "10000", "10000"],
+            True,
+            "Financially eligible",
+            "30000",
+            "769.23",
+        ),
+        (
+            ["0", "6000", "6000", "6000", "6000", "0"],
+            True,
+            "Financially eligible",
+            "24000",
+            "461.54",
+        ),
+        (
+            ["1000", "8000", "0", "0", "0", "0"],
+            False,
+            "Claimant wages failed 30x rule",
+            "9000",
+            "615.38",
+        ),
+        (["1000", "8000", "1000", "0", "0", "0"], True, "Financially eligible", "10000", "346.15"),
+        (
+            ["10000", "8000", "0", "0", "0", "0"],
+            False,
+            "Claimant wages failed 30x rule",
+            "18000",
+            "769.23",
+        ),
     ],
 )
 def test_retrieve_financial_eligibility_multiple_scenarios(
@@ -333,56 +322,21 @@ def test_retrieve_financial_eligibility_multiple_scenarios(
     expected_weekly_avg,
 ):
     """
-    In these scenarios thre is no data for 'current' quarter.
+    In these scenarios there is no data for 'current' quarter.
     """
 
-    employer_fein = 716779225
-    tax_id = TaxIdentifierFactory.create(tax_identifier="088574541")
-    employee = EmployeeFactory.create(tax_identifier=tax_id)
-    employer = EmployerFactory.create(employer_fein=employer_fein)
-    application_submitted_date = date(2021, 1, 5)
-    leave_start_date = date(2021, 1, 5)
-    employee_id = employee.employee_id
-    employer_id = employer.employer_id
-    employment_status = "Employed"
+    scenario = EligibilityScenarioDescriptor(
+        application_submitted_date=date(2021, 1, 5),
+        leave_start_date=date(2021, 1, 5),
+        employment_status=EligibilityEmploymentStatus.employed,
+        last_x_quarters_wages=last_6_quarters_wages,
+        current_quarter_has_data=False,
+    )
+    scenario_data = generate_eligibility_scenario_data_in_db(scenario, test_db_session)
 
-    WagesAndContributionsFactory.create(
-        employee=employee,
-        employer=employer,
-        filing_period=date(2020, 10, 1),
-        employee_qtr_wages=last_6_quarters_wages[0],
+    wage_calculator = get_wage_calculator(
+        scenario_data.employee.employee_id, scenario_data.leave_start_date, test_db_session
     )
-    WagesAndContributionsFactory.create(
-        employee=employee,
-        employer=employer,
-        filing_period=date(2020, 7, 1),
-        employee_qtr_wages=last_6_quarters_wages[1],
-    )
-    WagesAndContributionsFactory.create(
-        employee=employee,
-        employer=employer,
-        filing_period=date(2020, 4, 1),
-        employee_qtr_wages=last_6_quarters_wages[2],
-    )
-    WagesAndContributionsFactory.create(
-        employee=employee,
-        employer=employer,
-        filing_period=date(2020, 1, 1),
-        employee_qtr_wages=last_6_quarters_wages[3],
-    )
-    WagesAndContributionsFactory.create(
-        employee=employee,
-        employer=employer,
-        filing_period=date(2019, 10, 1),
-        employee_qtr_wages=last_6_quarters_wages[4],
-    )
-    WagesAndContributionsFactory.create(
-        employee=employee,
-        employer=employer,
-        filing_period=date(2019, 7, 1),
-        employee_qtr_wages=last_6_quarters_wages[5],
-    )
-    wage_calculator = get_wage_calculator(employee_id, leave_start_date, test_db_session)
     (
         expected_base_period_start_date,
         expected_base_period_end_date,
@@ -391,14 +345,7 @@ def test_retrieve_financial_eligibility_multiple_scenarios(
     benefit_years_before = test_db_session.query(BenefitYear).all()
     assert len(benefit_years_before) == 0
 
-    result = eligibility.retrieve_financial_eligibility(
-        test_db_session,
-        employee_id,
-        employer_id,
-        leave_start_date,
-        application_submitted_date,
-        employment_status,
-    )
+    result = run_eligibility_for_scenario(scenario_data, test_db_session)
 
     assert result == eligibility.EligibilityResponse(
         financially_eligible=is_eligible,
@@ -415,16 +362,19 @@ def test_retrieve_financial_eligibility_multiple_scenarios(
         assert len(benefit_years_after) == 0
     else:
         assert len(benefit_years_after) == 1
-        assert benefit_years_after[0].employee_id == employee_id
+        assert benefit_years_after[0].employee_id == scenario_data.employee.employee_id
         assert benefit_years_after[0].total_wages == Decimal(expected_total_wages)
         assert benefit_years_after[0].base_period_start_date == expected_base_period_start_date
         assert benefit_years_after[0].base_period_end_date == expected_base_period_end_date
-        expected_date_range = get_benefit_year_dates(leave_start_date)
+        expected_date_range = get_benefit_year_dates(scenario_data.leave_start_date)
         assert benefit_years_after[0].start_date == expected_date_range.start_date
         assert benefit_years_after[0].end_date == expected_date_range.end_date
 
         assert len(benefit_years_after[0].contributions) == 1
-        assert benefit_years_after[0].contributions[0].employer_id == employer_id
+        assert (
+            benefit_years_after[0].contributions[0].employer_id
+            == scenario_data.employer.employer_id
+        )
         assert (
             benefit_years_after[0].contributions[0].average_weekly_wage
             == result.employer_average_weekly_wage
@@ -437,51 +387,19 @@ def test_retrieve_financial_eligibility_scenario_A_case_B(
     """
     In this scenario there is recorded wage data of 0 dollars for the current quarter
     """
-
-    employer_fein = 716779225
-    tax_id = TaxIdentifierFactory.create(tax_identifier="088574541")
-    employee = EmployeeFactory.create(tax_identifier=tax_id)
-    employer = EmployerFactory.create(employer_fein=employer_fein)
-    application_submitted_date = date(2020, 11, 1)
-    leave_start_date = date(2020, 11, 1)
-    employee_id = employee.employee_id
-    employer_id = employer.employer_id
-    employment_status = "Employed"
-
-    WagesAndContributionsFactory.create(
-        employee=employee, employer=employer, filing_period=date(2020, 10, 1), employee_qtr_wages=0,
+    scenario = EligibilityScenarioDescriptor(
+        application_submitted_date=date(2020, 11, 1),
+        leave_start_date=date(2020, 11, 1),
+        employment_status=EligibilityEmploymentStatus.employed,
+        last_x_quarters_wages=["0", "0", "6000", "6000", "8000", "8000"],
     )
-    WagesAndContributionsFactory.create(
-        employee=employee, employer=employer, filing_period=date(2020, 7, 1), employee_qtr_wages=0,
-    )
-    WagesAndContributionsFactory.create(
-        employee=employee,
-        employer=employer,
-        filing_period=date(2020, 4, 1),
-        employee_qtr_wages=6000,
-    )
-    WagesAndContributionsFactory.create(
-        employee=employee,
-        employer=employer,
-        filing_period=date(2020, 1, 1),
-        employee_qtr_wages=6000,
-    )
-    WagesAndContributionsFactory.create(
-        employee=employee,
-        employer=employer,
-        filing_period=date(2019, 10, 1),
-        employee_qtr_wages=8000,
-    )
-    WagesAndContributionsFactory.create(
-        employee=employee,
-        employer=employer,
-        filing_period=date(2019, 7, 1),
-        employee_qtr_wages=8000,
-    )
+    scenario_data = generate_eligibility_scenario_data_in_db(scenario, test_db_session)
 
     expected_total_wages = Decimal("28000")
 
-    wage_calculator = get_wage_calculator(employee_id, leave_start_date, test_db_session)
+    wage_calculator = get_wage_calculator(
+        scenario_data.employee.employee_id, scenario_data.leave_start_date, test_db_session
+    )
     (
         expected_base_period_start_date,
         expected_base_period_end_date,
@@ -492,11 +410,11 @@ def test_retrieve_financial_eligibility_scenario_A_case_B(
 
     result = eligibility.retrieve_financial_eligibility(
         test_db_session,
-        employee_id,
-        employer_id,
-        leave_start_date,
-        application_submitted_date,
-        employment_status,
+        scenario_data.employee.employee_id,
+        scenario_data.employer.employer_id,
+        scenario_data.leave_start_date,
+        scenario_data.application_submitted_date,
+        scenario_data.employment_status,
     )
 
     assert result == eligibility.EligibilityResponse(
@@ -510,17 +428,17 @@ def test_retrieve_financial_eligibility_scenario_A_case_B(
 
     benefit_years_after = test_db_session.query(BenefitYear).all()
     assert len(benefit_years_after) == 1
-    assert benefit_years_after[0].employee_id == employee_id
+    assert benefit_years_after[0].employee_id == scenario_data.employee.employee_id
     assert benefit_years_after[0].total_wages == Decimal(expected_total_wages)
     assert benefit_years_after[0].base_period_start_date == expected_base_period_start_date
     assert benefit_years_after[0].base_period_end_date == expected_base_period_end_date
 
-    expected_date_range = get_benefit_year_dates(leave_start_date)
+    expected_date_range = get_benefit_year_dates(scenario_data.leave_start_date)
     assert benefit_years_after[0].start_date == expected_date_range.start_date
     assert benefit_years_after[0].end_date == expected_date_range.end_date
 
     assert len(benefit_years_after[0].contributions) == 1
-    assert benefit_years_after[0].contributions[0].employer_id == employer_id
+    assert benefit_years_after[0].contributions[0].employer_id == scenario_data.employer.employer_id
     assert (
         benefit_years_after[0].contributions[0].average_weekly_wage
         == result.employer_average_weekly_wage
@@ -531,34 +449,13 @@ def test_existing_BY_provides_different_IAWW_than_would_be_calculated_by_FE_1(
     test_db_session: db.Session, initialize_factories_session
 ):
 
-    employer_fein = 716779225
-    tax_id = TaxIdentifierFactory.create(tax_identifier="088574541")
-    employee = EmployeeFactory.create(tax_identifier=tax_id)
-    employer = EmployerFactory.create(employer_fein=employer_fein)
-    application_submitted_date = date(2020, 11, 1)
-    leave_start_date = date(2020, 11, 1)
-    employee_id = employee.employee_id
-    employer_id = employer.employer_id
-    employment_status = "Employed"
-
-    WagesAndContributionsFactory.create(
-        employee=employee,
-        employer=employer,
-        filing_period=date(2020, 10, 1),
-        employee_qtr_wages=25_000,
+    scenario = EligibilityScenarioDescriptor(
+        application_submitted_date=date(2020, 11, 1),
+        leave_start_date=date(2020, 11, 1),
+        employment_status=EligibilityEmploymentStatus.employed,
+        last_x_quarters_wages=["25000", "25000", "25000"],
     )
-    WagesAndContributionsFactory.create(
-        employee=employee,
-        employer=employer,
-        filing_period=date(2020, 7, 1),
-        employee_qtr_wages=25_000,
-    )
-    WagesAndContributionsFactory.create(
-        employee=employee,
-        employer=employer,
-        filing_period=date(2020, 4, 1),
-        employee_qtr_wages=25_000,
-    )
+    scenario_data = generate_eligibility_scenario_data_in_db(scenario, test_db_session)
 
     benefit_years_before = test_db_session.query(BenefitYear).all()
     assert len(benefit_years_before) == 0
@@ -566,11 +463,11 @@ def test_existing_BY_provides_different_IAWW_than_would_be_calculated_by_FE_1(
     # Get baseline values for FE check without BY
     result_1 = eligibility.retrieve_financial_eligibility(
         test_db_session,
-        employee_id,
-        employer_id,
-        leave_start_date,
-        application_submitted_date,
-        employment_status,
+        scenario_data.employee.employee_id,
+        scenario_data.employer.employer_id,
+        scenario_data.leave_start_date,
+        scenario_data.application_submitted_date,
+        scenario_data.employment_status,
     )
     assert result_1 == eligibility.EligibilityResponse(
         financially_eligible=True,
@@ -589,11 +486,11 @@ def test_existing_BY_provides_different_IAWW_than_would_be_calculated_by_FE_1(
     # Confirm the values are the stored not computed values
     result_2 = eligibility.retrieve_financial_eligibility(
         test_db_session,
-        employee_id,
-        employer_id,
-        leave_start_date,
-        application_submitted_date,
-        employment_status,
+        scenario_data.employee.employee_id,
+        scenario_data.employer.employer_id,
+        scenario_data.leave_start_date,
+        scenario_data.application_submitted_date,
+        scenario_data.employment_status,
     )
     assert result_2 == eligibility.EligibilityResponse(
         financially_eligible=True,
@@ -608,35 +505,13 @@ def test_existing_BY_provides_different_IAWW_than_would_be_calculated_by_FE_1(
 def test_existing_BY_provides_different_IAWW_than_would_be_calculated_by_FE_2(
     test_db_session: db.Session, initialize_factories_session
 ):
-
-    employer_fein = 716779225
-    tax_id = TaxIdentifierFactory.create(tax_identifier="088574541")
-    employee = EmployeeFactory.create(tax_identifier=tax_id)
-    employer = EmployerFactory.create(employer_fein=employer_fein)
-    application_submitted_date = date(2020, 11, 1)
-    leave_start_date = date(2020, 11, 1)
-    employee_id = employee.employee_id
-    employer_id = employer.employer_id
-    employment_status = "Employed"
-
-    WagesAndContributionsFactory.create(
-        employee=employee,
-        employer=employer,
-        filing_period=date(2020, 11, 1),
-        employee_qtr_wages=25_000,
+    scenario = EligibilityScenarioDescriptor(
+        application_submitted_date=date(2020, 11, 1),
+        leave_start_date=date(2020, 11, 1),
+        employment_status=EligibilityEmploymentStatus.employed,
+        last_x_quarters_wages=["25000", "25000", "25000"],
     )
-    WagesAndContributionsFactory.create(
-        employee=employee,
-        employer=employer,
-        filing_period=date(2020, 7, 1),
-        employee_qtr_wages=25_000,
-    )
-    WagesAndContributionsFactory.create(
-        employee=employee,
-        employer=employer,
-        filing_period=date(2020, 4, 1),
-        employee_qtr_wages=25_000,
-    )
+    scenario_data = generate_eligibility_scenario_data_in_db(scenario, test_db_session)
 
     benefit_years_before = test_db_session.query(BenefitYear).all()
     assert len(benefit_years_before) == 0
@@ -644,11 +519,11 @@ def test_existing_BY_provides_different_IAWW_than_would_be_calculated_by_FE_2(
     # Get baseline values for FE check without BY
     result_1 = eligibility.compute_financial_eligibility(
         test_db_session,
-        employee_id,
-        employer_id,
-        leave_start_date,
-        application_submitted_date,
-        employment_status,
+        scenario_data.employee.employee_id,
+        scenario_data.employer.employer_id,
+        scenario_data.leave_start_date,
+        scenario_data.application_submitted_date,
+        scenario_data.employment_status,
     )
     assert result_1 == eligibility.EligibilityResponse(
         financially_eligible=True,
@@ -660,15 +535,15 @@ def test_existing_BY_provides_different_IAWW_than_would_be_calculated_by_FE_2(
     )
 
     # Create a BY with differing total_wages and employer_average_weekly_wage
-    benefit_year_dates = get_benefit_year_dates(leave_start_date)
+    benefit_year_dates = get_benefit_year_dates(scenario_data.leave_start_date)
     benefit_year_created = BenefitYear()
     benefit_year_created.start_date = benefit_year_dates.start_date
     benefit_year_created.end_date = benefit_year_dates.end_date
-    benefit_year_created.employee_id = employee_id
+    benefit_year_created.employee_id = scenario_data.employee.employee_id
     benefit_year_created.total_wages = Decimal("90000")
     benefit_year_contribution = BenefitYearContribution()
-    benefit_year_contribution.employee_id = employee_id
-    benefit_year_contribution.employer_id = employer_id
+    benefit_year_contribution.employee_id = scenario_data.employee.employee_id
+    benefit_year_contribution.employer_id = scenario_data.employer.employer_id
     benefit_year_contribution.average_weekly_wage = Decimal("1000")
     benefit_year_created.contributions.append(benefit_year_contribution)
     test_db_session.add(benefit_year_created)
@@ -676,11 +551,11 @@ def test_existing_BY_provides_different_IAWW_than_would_be_calculated_by_FE_2(
     # Confirm the values are the stored not computed values
     result_2 = eligibility.retrieve_financial_eligibility(
         test_db_session,
-        employee_id,
-        employer_id,
-        leave_start_date,
-        application_submitted_date,
-        employment_status,
+        scenario_data.employee.employee_id,
+        scenario_data.employer.employer_id,
+        scenario_data.leave_start_date,
+        scenario_data.application_submitted_date,
+        scenario_data.employment_status,
     )
 
     assert result_2 == eligibility.EligibilityResponse(
@@ -697,42 +572,21 @@ def test_BY_from_previous_leave_absence_provides_different_IAWW_than_would_be_ca
     test_db_session: db.Session, initialize_factories_session
 ):
 
-    employer_fein = 716779225
-    tax_id = TaxIdentifierFactory.create(tax_identifier="088574541")
-    employee = EmployeeFactory.create(tax_identifier=tax_id)
-    employer = EmployerFactory.create(employer_fein=employer_fein)
-    application_submitted_date = date(2020, 11, 1)
-    leave_start_date = date(2020, 11, 1)
-    employee_id = employee.employee_id
-    employer_id = employer.employer_id
-    employment_status = "Employed"
-
-    WagesAndContributionsFactory.create(
-        employee=employee,
-        employer=employer,
-        filing_period=date(2020, 11, 1),
-        employee_qtr_wages=25_000,
+    scenario = EligibilityScenarioDescriptor(
+        application_submitted_date=date(2020, 11, 1),
+        leave_start_date=date(2020, 11, 1),
+        employment_status=EligibilityEmploymentStatus.employed,
+        last_x_quarters_wages=["25000", "25000", "25000"],
     )
-    WagesAndContributionsFactory.create(
-        employee=employee,
-        employer=employer,
-        filing_period=date(2020, 7, 1),
-        employee_qtr_wages=25_000,
-    )
-    WagesAndContributionsFactory.create(
-        employee=employee,
-        employer=employer,
-        filing_period=date(2020, 4, 1),
-        employee_qtr_wages=25_000,
-    )
+    scenario_data = generate_eligibility_scenario_data_in_db(scenario, test_db_session)
 
     # Previous claim 6 months in the past and went for 6 weeks
     fineos_average_weekly_wage = Decimal("123.34")
-    claim_start_date = leave_start_date - timedelta(weeks=52 / 2)
+    claim_start_date = scenario_data.leave_start_date - timedelta(weeks=52 / 2)
     claim_end_date = claim_start_date + timedelta(weeks=6)
     claim: Claim = ClaimFactory.create(
-        employee=employee,
-        employer=employer,
+        employee=scenario_data.employee,
+        employer=scenario_data.employer,
         claim_type_id=ClaimType.FAMILY_LEAVE.claim_type_id,
         fineos_absence_status_id=AbsenceStatus.APPROVED.absence_status_id,
         absence_period_start_date=claim_start_date,
@@ -746,8 +600,8 @@ def test_BY_from_previous_leave_absence_provides_different_IAWW_than_would_be_ca
     claim_start_date_2 = claim_end_date + timedelta(weeks=2)
     claim_end_date_2 = claim_start_date_2 + timedelta(weeks=6)
     claim_2: Claim = ClaimFactory.create(
-        employee=employee,
-        employer=employer,
+        employee=scenario_data.employee,
+        employer=scenario_data.employer,
         claim_type_id=ClaimType.FAMILY_LEAVE.claim_type_id,
         fineos_absence_status_id=AbsenceStatus.APPROVED.absence_status_id,
         absence_period_start_date=claim_start_date_2,
@@ -761,38 +615,12 @@ def test_BY_from_previous_leave_absence_provides_different_IAWW_than_would_be_ca
     benefit_years_before = test_db_session.query(BenefitYear).all()
     assert len(benefit_years_before) == 0
 
-    # Get baseline values for FE check without BY
-    result_1 = eligibility.compute_financial_eligibility(
-        test_db_session,
-        employee_id,
-        employer_id,
-        leave_start_date,
-        application_submitted_date,
-        employment_status,
-    )
-    assert result_1 == eligibility.EligibilityResponse(
-        financially_eligible=True,
-        description="Financially eligible",
-        total_wages=Decimal("75000"),
-        state_average_weekly_wage=Decimal("1431.66"),
-        unemployment_minimum=Decimal("5100.00"),
-        employer_average_weekly_wage=Decimal("1923.08"),
-    )
-
-    # Confirm the values are stored from previous claim data and not computed values
-    result_2 = eligibility.retrieve_financial_eligibility(
-        test_db_session,
-        employee_id,
-        employer_id,
-        leave_start_date,
-        application_submitted_date,
-        employment_status,
-    )
+    result = run_eligibility_for_scenario(scenario_data, test_db_session)
     benefit_year_created = test_db_session.query(BenefitYear).one()
     assert benefit_year_created.total_wages is None
     assert benefit_year_created.contributions[0].average_weekly_wage == fineos_average_weekly_wage
 
-    assert result_2 == eligibility.EligibilityResponse(
+    assert result == eligibility.EligibilityResponse(
         financially_eligible=True,
         description="Financially eligible",
         total_wages=benefit_year_created.total_wages,
@@ -806,42 +634,21 @@ def test_BY_from_previous_leave_absence_provides_different_IAWW_than_would_be_ca
     test_db_session: db.Session, initialize_factories_session
 ):
 
-    employer_fein = 716779225
-    tax_id = TaxIdentifierFactory.create(tax_identifier="088574541")
-    employee = EmployeeFactory.create(tax_identifier=tax_id)
-    employer = EmployerFactory.create(employer_fein=employer_fein)
-    application_submitted_date = date(2020, 11, 1)
-    leave_start_date = date(2020, 11, 1)
-    employee_id = employee.employee_id
-    employer_id = employer.employer_id
-    employment_status = "Employed"
-
-    WagesAndContributionsFactory.create(
-        employee=employee,
-        employer=employer,
-        filing_period=date(2020, 11, 1),
-        employee_qtr_wages=25_000,
+    scenario = EligibilityScenarioDescriptor(
+        application_submitted_date=date(2020, 11, 1),
+        leave_start_date=date(2020, 11, 1),
+        employment_status=EligibilityEmploymentStatus.employed,
+        last_x_quarters_wages=["25000", "25000", "25000"],
     )
-    WagesAndContributionsFactory.create(
-        employee=employee,
-        employer=employer,
-        filing_period=date(2020, 7, 1),
-        employee_qtr_wages=25_000,
-    )
-    WagesAndContributionsFactory.create(
-        employee=employee,
-        employer=employer,
-        filing_period=date(2020, 4, 1),
-        employee_qtr_wages=25_000,
-    )
+    scenario_data = generate_eligibility_scenario_data_in_db(scenario, test_db_session)
 
     # Previous claim 6 months in the past and went for 6 weeks
     fineos_average_weekly_wage = Decimal("123.34")
-    claim_start_date = leave_start_date - timedelta(weeks=52 / 2)
+    claim_start_date = scenario_data.leave_start_date - timedelta(weeks=52 / 2)
     claim_end_date = claim_start_date + timedelta(weeks=6)
     claim: Claim = ClaimFactory.create(
-        employee=employee,
-        employer=employer,
+        employee=scenario_data.employee,
+        employer=scenario_data.employer,
         claim_type_id=ClaimType.FAMILY_LEAVE.claim_type_id,
         fineos_absence_status_id=AbsenceStatus.APPROVED.absence_status_id,
         absence_period_start_date=claim_start_date,
@@ -855,8 +662,8 @@ def test_BY_from_previous_leave_absence_provides_different_IAWW_than_would_be_ca
     claim_start_date_2 = claim_start_date - timedelta(weeks=52)
     claim_end_date_2 = claim_start_date_2 + timedelta(weeks=6)
     claim_2: Claim = ClaimFactory.create(
-        employee=employee,
-        employer=employer,
+        employee=scenario_data.employee,
+        employer=scenario_data.employer,
         claim_type_id=ClaimType.FAMILY_LEAVE.claim_type_id,
         fineos_absence_status_id=AbsenceStatus.APPROVED.absence_status_id,
         absence_period_start_date=claim_start_date_2,
@@ -870,33 +677,7 @@ def test_BY_from_previous_leave_absence_provides_different_IAWW_than_would_be_ca
     benefit_years_before = test_db_session.query(BenefitYear).all()
     assert len(benefit_years_before) == 0
 
-    # Get baseline values for FE check without BY
-    result_1 = eligibility.compute_financial_eligibility(
-        test_db_session,
-        employee_id,
-        employer_id,
-        leave_start_date,
-        application_submitted_date,
-        employment_status,
-    )
-    assert result_1 == eligibility.EligibilityResponse(
-        financially_eligible=True,
-        description="Financially eligible",
-        total_wages=Decimal("75000"),
-        state_average_weekly_wage=Decimal("1431.66"),
-        unemployment_minimum=Decimal("5100.00"),
-        employer_average_weekly_wage=Decimal("1923.08"),
-    )
-
-    # Confirm the values are stored from previous claim data and not computed values
-    result_2 = eligibility.retrieve_financial_eligibility(
-        test_db_session,
-        employee_id,
-        employer_id,
-        leave_start_date,
-        application_submitted_date,
-        employment_status,
-    )
+    result = run_eligibility_for_scenario(scenario_data, test_db_session)
 
     benefit_years_created = test_db_session.query(BenefitYear).all()
     assert len(benefit_years_created) == 2
@@ -905,7 +686,7 @@ def test_BY_from_previous_leave_absence_provides_different_IAWW_than_would_be_ca
         benefit_years_created[1].contributions[0].average_weekly_wage == fineos_average_weekly_wage
     )
 
-    assert result_2 == eligibility.EligibilityResponse(
+    assert result == eligibility.EligibilityResponse(
         financially_eligible=True,
         description="Financially eligible",
         total_wages=benefit_years_created[1].total_wages,
@@ -919,35 +700,19 @@ def test_benefit_year_is_not_created_when_claimant_is_ineligible(
     test_db_session: db.Session, initialize_factories_session
 ):
 
-    employer_fein = 716779225
-    tax_id = TaxIdentifierFactory.create(tax_identifier="088574541")
-    employee = EmployeeFactory.create(tax_identifier=tax_id)
-    employer = EmployerFactory.create(employer_fein=employer_fein)
-    application_submitted_date = date(2020, 11, 1)
-    leave_start_date = date(2020, 11, 1)
-    employee_id = employee.employee_id
-    employer_id = employer.employer_id
-    employment_status = "Employed"
-
-    WagesAndContributionsFactory.create(
-        employee=employee, employer=employer, filing_period=date(2020, 11, 1), employee_qtr_wages=1,
+    scenario = EligibilityScenarioDescriptor(
+        application_submitted_date=date(2020, 11, 1),
+        leave_start_date=date(2020, 11, 1),
+        employment_status=EligibilityEmploymentStatus.employed,
+        last_x_quarters_wages=["1", "4"],
     )
-    WagesAndContributionsFactory.create(
-        employee=employee, employer=employer, filing_period=date(2020, 7, 1), employee_qtr_wages=4,
-    )
+    scenario_data = generate_eligibility_scenario_data_in_db(scenario, test_db_session)
 
     benefit_years_before = test_db_session.query(BenefitYear).all()
     assert len(benefit_years_before) == 0
 
     # Get baseline values for FE check without BY
-    result = eligibility.retrieve_financial_eligibility(
-        test_db_session,
-        employee_id,
-        employer_id,
-        leave_start_date,
-        application_submitted_date,
-        employment_status,
-    )
+    result = run_eligibility_for_scenario(scenario_data, test_db_session)
 
     # No benefit year should be created
     benefit_years_after = test_db_session.query(BenefitYear).all()
@@ -967,35 +732,19 @@ def test_existing_BY_keeps_someone_eligible_who_would_be_calculated_to_be_inelig
     test_db_session: db.Session, initialize_factories_session
 ):
 
-    employer_fein = 716779225
-    tax_id = TaxIdentifierFactory.create(tax_identifier="088574541")
-    employee = EmployeeFactory.create(tax_identifier=tax_id)
-    employer = EmployerFactory.create(employer_fein=employer_fein)
-    application_submitted_date = date(2020, 11, 1)
-    leave_start_date = date(2020, 11, 1)
-    employee_id = employee.employee_id
-    employer_id = employer.employer_id
-    employment_status = "Employed"
-
-    WagesAndContributionsFactory.create(
-        employee=employee, employer=employer, filing_period=date(2020, 11, 1), employee_qtr_wages=1,
+    scenario = EligibilityScenarioDescriptor(
+        application_submitted_date=date(2020, 11, 1),
+        leave_start_date=date(2020, 11, 1),
+        employment_status=EligibilityEmploymentStatus.employed,
+        last_x_quarters_wages=["1", "4"],
     )
-    WagesAndContributionsFactory.create(
-        employee=employee, employer=employer, filing_period=date(2020, 7, 1), employee_qtr_wages=4,
-    )
+    scenario_data = generate_eligibility_scenario_data_in_db(scenario, test_db_session)
 
     benefit_years_before = test_db_session.query(BenefitYear).all()
     assert len(benefit_years_before) == 0
 
     # Get baseline values for FE check without BY
-    result_1 = eligibility.retrieve_financial_eligibility(
-        test_db_session,
-        employee_id,
-        employer_id,
-        leave_start_date,
-        application_submitted_date,
-        employment_status,
-    )
+    result_1 = run_eligibility_for_scenario(scenario_data, test_db_session)
 
     # No benefit year should be created
     benefit_years_after = test_db_session.query(BenefitYear).all()
@@ -1011,28 +760,21 @@ def test_existing_BY_keeps_someone_eligible_who_would_be_calculated_to_be_inelig
     )
 
     # Create a BY with differing total_wages and employer_average_weekly_wage
-    benefit_year_dates = get_benefit_year_dates(leave_start_date)
+    benefit_year_dates = get_benefit_year_dates(scenario_data.leave_start_date)
     benefit_year_created = BenefitYear()
     benefit_year_created.start_date = benefit_year_dates.start_date
     benefit_year_created.end_date = benefit_year_dates.end_date
-    benefit_year_created.employee_id = employee_id
+    benefit_year_created.employee_id = scenario_data.employee.employee_id
     benefit_year_created.total_wages = Decimal("90000")
     benefit_year_contribution = BenefitYearContribution()
-    benefit_year_contribution.employee_id = employee_id
-    benefit_year_contribution.employer_id = employer_id
+    benefit_year_contribution.employee_id = scenario_data.employee.employee_id
+    benefit_year_contribution.employer_id = scenario_data.employer.employer_id
     benefit_year_contribution.average_weekly_wage = Decimal("1000")
     benefit_year_created.contributions.append(benefit_year_contribution)
     test_db_session.add(benefit_year_created)
 
     # Confirm the values are the stored not computed values
-    result_2 = eligibility.retrieve_financial_eligibility(
-        test_db_session,
-        employee_id,
-        employer_id,
-        leave_start_date,
-        application_submitted_date,
-        employment_status,
-    )
+    result_2 = run_eligibility_for_scenario(scenario_data, test_db_session)
     assert result_2 == eligibility.EligibilityResponse(
         financially_eligible=True,
         description="Financially eligible",
@@ -1047,35 +789,19 @@ def test_BY_from_previous_leave_absence_keeps_someone_eligible_who_would_be_calc
     test_db_session: db.Session, initialize_factories_session
 ):
 
-    employer_fein = 716779225
-    tax_id = TaxIdentifierFactory.create(tax_identifier="088574541")
-    employee = EmployeeFactory.create(tax_identifier=tax_id)
-    employer = EmployerFactory.create(employer_fein=employer_fein)
-    application_submitted_date = date(2020, 11, 1)
-    leave_start_date = date(2020, 11, 1)
-    employee_id = employee.employee_id
-    employer_id = employer.employer_id
-    employment_status = "Employed"
-
-    WagesAndContributionsFactory.create(
-        employee=employee, employer=employer, filing_period=date(2020, 11, 1), employee_qtr_wages=1,
+    scenario = EligibilityScenarioDescriptor(
+        application_submitted_date=date(2020, 11, 1),
+        leave_start_date=date(2020, 11, 1),
+        employment_status=EligibilityEmploymentStatus.employed,
+        last_x_quarters_wages=["1", "4"],
     )
-    WagesAndContributionsFactory.create(
-        employee=employee, employer=employer, filing_period=date(2020, 7, 1), employee_qtr_wages=4,
-    )
+    scenario_data = generate_eligibility_scenario_data_in_db(scenario, test_db_session)
 
     benefit_years_before = test_db_session.query(BenefitYear).all()
     assert len(benefit_years_before) == 0
 
     # Get baseline values for FE check without BY
-    result_1 = eligibility.retrieve_financial_eligibility(
-        test_db_session,
-        employee_id,
-        employer_id,
-        leave_start_date,
-        application_submitted_date,
-        employment_status,
-    )
+    result_1 = run_eligibility_for_scenario(scenario_data, test_db_session)
 
     # No benefit year should be created
     benefit_years_after = test_db_session.query(BenefitYear).all()
@@ -1093,11 +819,11 @@ def test_BY_from_previous_leave_absence_keeps_someone_eligible_who_would_be_calc
     # Create a BY with differing total_wages and employer_average_weekly_wage
     # Previous claim 6 months in the past and went for 6 weeks
     fineos_average_weekly_wage = Decimal("123.34")
-    claim_start_date = leave_start_date - timedelta(weeks=52 / 2)
+    claim_start_date = scenario_data.leave_start_date - timedelta(weeks=52 / 2)
     claim_end_date = claim_start_date + timedelta(weeks=6)
     claim: Claim = ClaimFactory.create(
-        employee=employee,
-        employer=employer,
+        employee=scenario_data.employee,
+        employer=scenario_data.employer,
         claim_type_id=ClaimType.FAMILY_LEAVE.claim_type_id,
         fineos_absence_status_id=AbsenceStatus.APPROVED.absence_status_id,
         absence_period_start_date=claim_start_date,
@@ -1111,8 +837,8 @@ def test_BY_from_previous_leave_absence_keeps_someone_eligible_who_would_be_calc
     claim_start_date_2 = claim_end_date + timedelta(weeks=2)
     claim_end_date_2 = claim_start_date_2 + timedelta(weeks=6)
     claim_2: Claim = ClaimFactory.create(
-        employee=employee,
-        employer=employer,
+        employee=scenario_data.employee,
+        employer=scenario_data.employer,
         claim_type_id=ClaimType.FAMILY_LEAVE.claim_type_id,
         fineos_absence_status_id=AbsenceStatus.APPROVED.absence_status_id,
         absence_period_start_date=claim_start_date_2,
@@ -1127,14 +853,7 @@ def test_BY_from_previous_leave_absence_keeps_someone_eligible_who_would_be_calc
     assert len(benefit_years_before) == 0
 
     # Confirm the values are the stored not computed values
-    result_2 = eligibility.retrieve_financial_eligibility(
-        test_db_session,
-        employee_id,
-        employer_id,
-        leave_start_date,
-        application_submitted_date,
-        employment_status,
-    )
+    result_2 = run_eligibility_for_scenario(scenario_data, test_db_session)
 
     benefit_year_created = test_db_session.query(BenefitYear).one()
     assert benefit_year_created.total_wages is None
@@ -1170,7 +889,7 @@ def test_retrieve_financial_eligibility_multiple_employers(
     application_submitted_date = date(2020, 11, 1)
     leave_start_date = date(2020, 11, 1)
     employee_id = employee.employee_id
-    employment_status = "Employed"
+    employment_status = EligibilityEmploymentStatus.employed
     employers: List[Employer] = []
     employer_ids_with_wages = set()
 

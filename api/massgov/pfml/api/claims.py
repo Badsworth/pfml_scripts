@@ -39,8 +39,8 @@ from massgov.pfml.api.validation.exceptions import (
     IssueType,
     ValidationErrorDetail,
 )
+from massgov.pfml.db.models.absences import AbsenceStatus
 from massgov.pfml.db.models.employees import (
-    AbsenceStatus,
     Claim,
     Employer,
     LeaveRequestDecision,
@@ -81,8 +81,9 @@ from massgov.pfml.util.users import has_role_in
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
-# HRD Employer FEIN. See https://lwd.atlassian.net/browse/PSD-2401
-CLAIMS_DASHBOARD_BLOCKED_FEINS = set(["046002284"])
+# Added in https://lwd.atlassian.net/browse/PSD-2401
+# Modified in https://lwd.atlassian.net/browse/PFMLPB-3276
+CLAIMS_DASHBOARD_BLOCKED_FEINS: Set[str] = set([])
 
 
 class VerificationRequired(Forbidden):
@@ -502,13 +503,13 @@ def get_claims() -> flask.Response:
     current_user = app.current_user()
     employer_id = flask.request.args.get("employer_id")
     employee_id_str = flask.request.args.get("employee_id")
-    allow_hrd = flask.request.args.get("allow_hrd", type=bool) or False
     search_string = flask.request.args.get("search", type=str)
     absence_statuses = parse_filterable_absence_statuses(flask.request.args.get("claim_status"))
     request_decisions = map_request_decision_param_to_db_columns(
         flask.request.args.get("request_decision")
     )
     is_employer = can(READ, "EMPLOYER_API")
+    is_reviewable = flask.request.args.get("is_reviewable", type=str)
     is_pfml_crm_user = has_role_in(current_user, [Role.PFML_CRM])
     log_attributes = {}
     log_attributes.update(get_employer_log_attributes(current_user))
@@ -534,7 +535,7 @@ def get_claims() -> flask.Response:
                 verified_employers = [
                     employer
                     for employer in employers_list
-                    if (employer.employer_fein not in CLAIMS_DASHBOARD_BLOCKED_FEINS or allow_hrd)
+                    if employer.employer_fein not in CLAIMS_DASHBOARD_BLOCKED_FEINS
                     and current_user.verified_employer(employer)
                 ]
 
@@ -550,6 +551,7 @@ def get_claims() -> flask.Response:
                 query.add_employees_filter(employee_ids)
 
             query.add_managed_requirements_filter()
+
             if len(absence_statuses):
                 # Log the values from the query params rather than the enum groups they
                 # might equate to, since what is sent into the API will be more familiar
@@ -564,6 +566,9 @@ def get_claims() -> flask.Response:
                 query.add_search_filter(
                     escape_like(search_string)
                 )  # escape user input search string
+
+            if is_reviewable:
+                query.add_is_reviewable_filter(is_reviewable)
 
             if request_decisions:
                 query.add_request_decision_filter(request_decisions)
@@ -661,7 +666,8 @@ def sync_managed_requirements(
         managed_requirement = create_or_update_managed_requirement_from_fineos(
             db_session, claim.claim_id, mr, log_attributes
         )
-        managed_requirements_from_db.append(managed_requirement)
+        if managed_requirement is not None:
+            managed_requirements_from_db.append(managed_requirement)
     commit_managed_requirements(db_session)
     return managed_requirements_from_db
 

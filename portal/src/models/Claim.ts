@@ -2,6 +2,7 @@
 import { compact, get } from "lodash";
 import { AbsencePeriod } from "./AbsencePeriod";
 import { ManagedRequirement } from "./ManagedRequirement";
+import { ValuesOf } from "../../types/common";
 
 /**
  * A record from the API's Claims table. Could be utilized by Leave Admin and Claimants.
@@ -67,7 +68,6 @@ export const AbsenceCaseStatus = {
   declined: "Declined",
 } as const;
 
-export type AbsenceCaseStatusType =
-  typeof AbsenceCaseStatus[keyof typeof AbsenceCaseStatus];
+export type AbsenceCaseStatusType = ValuesOf<typeof AbsenceCaseStatus>;
 
 export default Claim;

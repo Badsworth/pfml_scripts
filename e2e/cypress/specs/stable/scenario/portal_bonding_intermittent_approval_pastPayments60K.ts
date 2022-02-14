@@ -2,10 +2,9 @@ import { itIf } from "./../../../util";
 import { portal, fineos, fineosPages } from "../../../actions";
 import { Submission } from "../../../../src/types";
 import { assertValidClaim } from "../../../../src/util/typeUtils";
-import { addDays, formatISO, getHours, startOfWeek, subDays } from "date-fns";
+import { addDays, formatISO, startOfWeek, subDays } from "date-fns";
 import { config } from "../../../actions/common";
-import { addBusinessDays } from "date-fns";
-import { convertToTimeZone } from "date-fns-timezone";
+import { calculatePaymentDatePreventingOP } from "../../../actions/fineos.pages";
 
 describe("Submit bonding application via the web portal: Adjudication Approval, recording actual hours & payment checking", () => {
   const submissionTest =
@@ -127,38 +126,36 @@ describe("Submit bonding application via the web portal: Adjudication Approval, 
     }
   );
 
-  it("Should be able to confirm the weekly payment amount for a intermittent schedule", () => {
-    cy.dependsOnPreviousPass([recordingHours]);
-    fineos.before();
-    cy.unstash<DehydratedClaim>("claim").then((claim) => {
-      cy.unstash<Submission>("submission").then((submission) => {
-        const payment = claim.metadata
-          ?.expected_weekly_payment as unknown as number;
-        fineosPages.ClaimPage.visit(submission.fineos_absence_id).paidLeave(
-          (leaveCase) => {
-            if (config("HAS_FEB_RELEASE") === "true") {
-              const estTimeHour = getHours(
-                convertToTimeZone(new Date(), {
-                  timeZone: "America/New_York",
-                })
-              );
-              const isBeforeEndBusinessDay = estTimeHour < 17;
-              leaveCase.assertAmountsPending([
-                {
-                  net_payment_amount: 831.06,
-                  paymentProcessingDates: [
-                    addBusinessDays(new Date(), isBeforeEndBusinessDay ? 5 : 6),
-                  ],
-                },
-              ]);
-            } else {
-              leaveCase.assertPaymentsMade([{ net_payment_amount: payment }]);
+  it(
+    "Should be able to confirm the weekly payment amount for a intermittent schedule",
+    { retries: 0 },
+    () => {
+      cy.dependsOnPreviousPass([recordingHours]);
+      fineos.before();
+      cy.unstash<DehydratedClaim>("claim").then((claim) => {
+        cy.unstash<Submission>("submission").then((submission) => {
+          const payment = claim.metadata
+            ?.expected_weekly_payment as unknown as number;
+          fineosPages.ClaimPage.visit(submission.fineos_absence_id).paidLeave(
+            (leaveCase) => {
+              if (config("HAS_FEB_RELEASE") === "true") {
+                leaveCase.assertAmountsPending([
+                  {
+                    net_payment_amount: 831.06,
+                    paymentProcessingDates: [
+                      calculatePaymentDatePreventingOP(),
+                    ],
+                  },
+                ]);
+              } else {
+                leaveCase.assertPaymentsMade([{ net_payment_amount: payment }]);
+              }
             }
-          }
-        );
+          );
+        });
       });
-    });
-  });
+    }
+  );
   itIf(
     config("HAS_FEB_RELEASE") === "true",
     "CSR rep will override payment processing date to be schudeuled for day of approval",

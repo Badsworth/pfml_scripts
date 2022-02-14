@@ -9,11 +9,9 @@ import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 from massgov.pfml.db.models.employees import (
     Claim,
     Employee,
-    Flow,
     LatestStateLog,
     Payment,
     ReferenceFile,
-    State,
     StateLog,
 )
 from massgov.pfml.db.models.factories import (
@@ -22,6 +20,7 @@ from massgov.pfml.db.models.factories import (
     PaymentFactory,
     ReferenceFileFactory,
 )
+from massgov.pfml.db.models.state import Flow, State
 from tests.helpers.state_log import default_outcome, setup_state_log
 
 ### Setup methods for various state log scenarios ###

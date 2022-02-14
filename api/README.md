@@ -41,7 +41,7 @@ The API Layer is used by two front-end web applications.
 Additional information about [PFML system components](https://lwd.atlassian.net/wiki/spaces/API/pages/438240043/Components) can be found in confluence.
 
 
-## Directory Structure
+## API Directory Structure
 
 ```
 .

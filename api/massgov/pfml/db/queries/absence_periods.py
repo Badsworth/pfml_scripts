@@ -15,15 +15,13 @@ from massgov.pfml.api.validation.exceptions import (
     ValidationErrorDetail,
     ValidationException,
 )
-from massgov.pfml.db.models.employees import (
-    AbsencePeriod,
+from massgov.pfml.db.models.absences import (
     AbsencePeriodType,
     AbsenceReason,
     AbsenceReasonQualifierOne,
     AbsenceReasonQualifierTwo,
-    Claim,
-    LeaveRequestDecision,
 )
+from massgov.pfml.db.models.employees import AbsencePeriod, Claim, LeaveRequestDecision
 from massgov.pfml.fineos.models.customer_api import AbsencePeriod as FineosAbsencePeriod
 from massgov.pfml.fineos.models.group_client_api import Period
 from massgov.pfml.fineos.models.group_client_api.spec import LeaveRequest

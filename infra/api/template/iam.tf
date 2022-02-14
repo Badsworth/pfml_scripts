@@ -8,6 +8,10 @@ locals {
   shorthand_env_name     = module.constants.environment_shorthand[var.environment_name]
 }
 
+data "aws_kms_alias" "pfml_api_config_secrets" {
+  name = var.environment_name == "prod" ? "alias/pfml-api-prod-config-secrets" : "alias/pfml-api-non-prod-config-secrets"
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # IAM stuff for ECS
 # ----------------------------------------------------------------------------------------------------------------------
@@ -93,6 +97,15 @@ data "aws_iam_policy_document" "task_executor" {
     ]
   }
 
+  statement {
+    actions = [
+      "kms:DescribeKey",
+      "kms:Decrypt",
+    ]
+    resources = [
+      data.aws_kms_alias.pfml_api_config_secrets.arn
+    ]
+  }
 }
 
 # Link access policies to the ECS task execution role.
@@ -239,6 +252,16 @@ data "aws_iam_policy_document" "iam_policy_eligibility_feed_lambda_execution" {
 
     resources = [
       "${local.ssm_arn_prefix}/${local.app_name}/${var.environment_name}",
+    ]
+  }
+
+  statement {
+    actions = [
+      "kms:DescribeKey",
+      "kms:Decrypt",
+    ]
+    resources = [
+      data.aws_kms_alias.pfml_api_config_secrets.arn
     ]
   }
 }

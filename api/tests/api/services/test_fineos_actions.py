@@ -11,6 +11,7 @@ import massgov.pfml.fineos.mock.field
 import massgov.pfml.fineos.mock_client as fineos_mock
 from massgov.pfml.api.models.claims.responses import AbsencePeriodResponse
 from massgov.pfml.api.services import fineos_actions
+from massgov.pfml.db.models.absences import AbsencePeriodType
 from massgov.pfml.db.models.applications import (
     Application,
     LeaveReason,
@@ -19,14 +20,7 @@ from massgov.pfml.db.models.applications import (
     RelationshipQualifier,
     RelationshipToCaregiver,
 )
-from massgov.pfml.db.models.employees import (
-    AbsencePeriodType,
-    AddressType,
-    BankAccountType,
-    Country,
-    Employer,
-    PaymentMethod,
-)
+from massgov.pfml.db.models.employees import AddressType, BankAccountType, Employer, PaymentMethod
 from massgov.pfml.db.models.factories import (
     AddressFactory,
     ApplicationFactory,
@@ -42,6 +36,7 @@ from massgov.pfml.db.models.factories import (
     ReducedScheduleLeavePeriodFactory,
     WorkPatternFixedFactory,
 )
+from massgov.pfml.db.models.geo import Country
 from massgov.pfml.db.queries.absence_periods import (
     convert_fineos_absence_period_to_claim_response_absence_period,
 )

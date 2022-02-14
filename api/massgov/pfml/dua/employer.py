@@ -5,7 +5,8 @@ import massgov.pfml.db as db
 import massgov.pfml.util.batch.log as batch_log
 import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
-from massgov.pfml.db.models.employees import DuaEmployer, ReferenceFile, ReferenceFileType
+from massgov.pfml.db.models.dua import DuaEmployer
+from massgov.pfml.db.models.employees import ReferenceFile, ReferenceFileType
 from massgov.pfml.dua.config import DUAMoveItConfig, DUATransferConfig
 from massgov.pfml.dua.constants import Constants, Metrics
 from massgov.pfml.dua.util import download_files_from_moveit, load_rows_from_file_path

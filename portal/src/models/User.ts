@@ -1,3 +1,5 @@
+import { ValuesOf } from "../../types/common";
+
 /* eslint sort-keys: ["error", "asc"] */
 export const PhoneType = {
   cell: "Cell",
@@ -18,12 +20,10 @@ class User {
   mfa_phone_number: {
     int_code: string | null;
     phone_number: string | null;
-    phone_type: typeof PhoneType[keyof typeof PhoneType] | null;
+    phone_type: ValuesOf<typeof PhoneType> | null;
   } | null = null;
 
-  mfa_delivery_preference:
-    | typeof MFAPreference[keyof typeof MFAPreference]
-    | null = null;
+  mfa_delivery_preference: ValuesOf<typeof MFAPreference> | null = null;
 
   user_leave_administrators: UserLeaveAdministrator[] = [];
 
@@ -81,7 +81,7 @@ class User {
 }
 
 export class UserRole {
-  role_description: typeof RoleDescription[keyof typeof RoleDescription];
+  role_description: ValuesOf<typeof RoleDescription>;
   role_id: number;
 
   constructor(attrs: Partial<UserRole>) {

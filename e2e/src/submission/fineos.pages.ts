@@ -1,7 +1,7 @@
 import delay from "delay";
 import path from "path";
 import { Page, chromium, errors } from "playwright-chromium";
-import config from "../config";
+import defaultConfig, { ConfigFunction } from "../config";
 import { v4 as uuid } from "uuid";
 import * as util from "../util/playwright";
 import { ClaimStatus, Credentials, FineosTasks } from "../types";
@@ -11,12 +11,20 @@ export type FineosBrowserOptions = {
   debug: boolean;
   screenshots?: string;
   slowMo?: number;
+  config?: ConfigFunction;
 };
 export class Fineos {
   static async withBrowser<T>(
     next: (page: Page) => Promise<T>,
-    { debug = false, screenshots, slowMo, credentials }: FineosBrowserOptions
+    {
+      debug = false,
+      screenshots,
+      slowMo,
+      credentials,
+      config: configOverride,
+    }: FineosBrowserOptions
   ): Promise<T> {
+    const config = configOverride ?? defaultConfig;
     const isSSO =
       config("ENVIRONMENT") === "uat" || config("ENVIRONMENT") === "breakfix";
     const browser = await chromium.launch({

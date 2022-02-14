@@ -95,6 +95,9 @@ jobs:
 
   trigger-cypress:
     name: End-to-End Tests
+    # Note: While we'd love to convert this to use workflow_call, we can't right now due to a bug in
+    # actions where you can't run a reusable action from the current commit if you're responding to a PR event.
+    # See https://github.community/t/ref-head-in-reusable-workflows/203690/70
     runs-on: ubuntu-latest
     needs: changed-files
     if: needs.changed-files.outputs.has-cypress-changes == 'true'
@@ -110,7 +113,11 @@ jobs:
             {
               "target_environment": "test",
               "cypress_tags": "PR",
+              "run_stable": "true",
+              "stable_spec_pattern": "cypress/specs/stable/**",
               "run_unstable": "true",
+              "unstable_spec_pattern": "cypress/specs/unstable/**",
               "run_morning": "false",
+              "morning_spec_pattern": "cypress/specs/morning/**",
               "title_override": ${{ toJSON(format('PR: {0}', github.event.pull_request.title)) }}
             }

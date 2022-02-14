@@ -1,4 +1,9 @@
+from datetime import date
+
 from massgov.pfml.db.models.applications import DocumentType
+
+CARING_LEAVE_EARLIEST_START_DATE = date(2021, 7, 1)
+PFML_PROGRAM_LAUNCH_DATE = date(2021, 1, 1)
 
 ID_DOC_TYPES = [
     DocumentType.PASSPORT,

@@ -80,6 +80,7 @@ function getRawEnvironment() {
     HAS_FEB_RELEASE: process.env.HAS_FEB_RELEASE,
     LST_FILE_RANGE: process.env.E2E_LST_FILE_RANGE, // valid values are "small", "large", "full_range"
     MFA_ENABLED: process.env.MFA_ENABLED,
+    S3_INTELLIGENCE_TOOL_BUCKET: process.env.E2E_S3_INTELLIGENCE_TOOL_BUCKET,
   };
 }
 
@@ -120,6 +121,9 @@ export const factory: ConfigFactory = (env: string) => {
     ...fileConfiguration._default, // Defaults
     ...file,
     ...environment,
+    // explicitly map the environment we've been passed. Otherwise, ENVIRONMENT always comes from
+    // the .env file, which is not correct when we're using an explicit config factory.
+    ENVIRONMENT: env,
   };
   const get: ConfigFunction = (name) => {
     const value = configuration[name];

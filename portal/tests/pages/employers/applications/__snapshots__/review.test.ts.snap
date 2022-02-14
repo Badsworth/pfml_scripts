@@ -445,11 +445,7 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
             >
               Benefit type
             </th>
-            <th
-              scope="col"
-            >
-              Details
-            </th>
+            <th />
             <th />
           </tr>
         </thead>
@@ -460,18 +456,11 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
             <th
               data-label="Date range"
               scope="row"
-            >
-              1/1/2022 to 2/1/2022
-            </th>
+            />
             <td
               data-label="Benefit type"
             >
               Family or medical leave insurance
-            </td>
-            <td
-              data-label="Details"
-            >
-              $500.00 per week
             </td>
             <td>
               <button
@@ -498,18 +487,11 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
             <th
               data-label="Date range"
               scope="row"
-            >
-              1/1/2022 to 2/1/2022
-            </th>
+            />
             <td
               data-label="Benefit type"
             >
               Family or medical leave insurance
-            </td>
-            <td
-              data-label="Details"
-            >
-              $200.00 (frequency unknown)
             </td>
             <td>
               <button
@@ -544,11 +526,6 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
             >
               Short-term disability insurance
             </td>
-            <td
-              data-label="Details"
-            >
-              Full salary continuous
-            </td>
             <td>
               <button
                 class="usa-button position-relative text-no-wrap usa-button--unstyled"
@@ -574,18 +551,11 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
             <th
               data-label="Date range"
               scope="row"
-            >
-              1/1/2022 to 2/1/2022
-            </th>
+            />
             <td
               data-label="Benefit type"
             >
               Permanent disability insurance
-            </td>
-            <td
-              data-label="Details"
-            >
-              No amount reported
             </td>
             <td>
               <button

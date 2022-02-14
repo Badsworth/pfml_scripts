@@ -10,8 +10,8 @@ import massgov.pfml.util.logging
 from massgov.pfml import db
 from massgov.pfml.api.eligibility.benefit_year_dates import get_benefit_year_dates
 from massgov.pfml.api.eligibility.wage import WageCalculator, get_retroactive_base_period
+from massgov.pfml.db.models.absences import AbsenceStatus
 from massgov.pfml.db.models.employees import (
-    AbsenceStatus,
     BenefitYear,
     BenefitYearContribution,
     Claim,

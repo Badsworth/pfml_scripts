@@ -14,8 +14,6 @@ import massgov.pfml.util.files as file_util
 from massgov.pfml.db.models.employees import (
     BankAccountType,
     ClaimType,
-    Country,
-    GeoState,
     ImportLog,
     PaymentCheck,
     PrenoteState,
@@ -23,6 +21,7 @@ from massgov.pfml.db.models.employees import (
     ReferenceFileType,
 )
 from massgov.pfml.db.models.factories import (
+    AbsencePeriodFactory,
     AddressFactory,
     ClaimFactory,
     EmployeeFactory,
@@ -33,10 +32,12 @@ from massgov.pfml.db.models.factories import (
     PubEftFactory,
     ReferenceFileFactory,
 )
+from massgov.pfml.db.models.geo import Country, GeoState
 from massgov.pfml.db.models.payments import FineosExtractVpei, PaymentLog
 from massgov.pfml.delegated_payments.delegated_payments_util import (
     find_existing_address_pair,
     find_existing_eft,
+    get_earliest_absence_period_for_payment_leave_request,
     is_employer_exempt_for_payment,
     is_same_address,
     is_same_eft,
@@ -1243,3 +1244,134 @@ def test_is_employer_exempt_for_payment(
         )
         is False
     )
+
+
+def test_get_earliest_absence_period_for_payment_leave_request(
+    initialize_factories_session, test_db_session
+):
+    # This test simply implements the example given in the relevant method
+    claim = ClaimFactory.create()
+
+    # Paid Leave 0 (not connected to any payments - occurs before)
+    AbsencePeriodFactory.create(
+        claim=claim,
+        absence_period_start_date=date(2021, 12, 1),
+        absence_period_end_date=date(2021, 12, 28),
+        fineos_leave_request_id=0,
+    )
+    # Paid Leave 1
+    fineos_leave_request_id_1 = 1
+    ## Absence Period A
+    absence_period_a = AbsencePeriodFactory.create(
+        claim=claim,
+        absence_period_start_date=date(2022, 1, 1),
+        absence_period_end_date=date(2022, 1, 28),
+        fineos_leave_request_id=fineos_leave_request_id_1,
+    )
+    ### Payment I
+    payment_1 = PaymentFactory.create(
+        claim=claim,
+        fineos_leave_request_id=fineos_leave_request_id_1,
+        period_start_date=date(2022, 1, 1),
+        period_end_date=date(2022, 1, 7),
+    )
+    ### Payment II
+    payment_2 = PaymentFactory.create(
+        claim=claim,
+        fineos_leave_request_id=fineos_leave_request_id_1,
+        period_start_date=date(2022, 1, 8),
+        period_end_date=date(2022, 1, 14),
+    )
+    ## Absence Period B
+    AbsencePeriodFactory.create(
+        claim=claim,
+        absence_period_start_date=date(2022, 2, 1),
+        absence_period_end_date=date(2022, 2, 28),
+        fineos_leave_request_id=fineos_leave_request_id_1,
+    )
+    ### Payment III
+    payment_3 = PaymentFactory.create(
+        claim=claim,
+        fineos_leave_request_id=fineos_leave_request_id_1,
+        period_start_date=date(2022, 2, 1),
+        period_end_date=date(2022, 2, 7),
+    )
+    ### Payment IV
+    payment_4 = PaymentFactory.create(
+        claim=claim,
+        fineos_leave_request_id=fineos_leave_request_id_1,
+        period_start_date=date(2022, 2, 8),
+        period_end_date=date(2022, 2, 14),
+    )
+
+    # Paid Leave 2
+    fineos_leave_request_id_2 = 2
+    ## Absence Period C
+    absence_period_c = AbsencePeriodFactory.create(
+        claim=claim,
+        absence_period_start_date=date(2022, 3, 1),
+        absence_period_end_date=date(2022, 3, 28),
+        fineos_leave_request_id=fineos_leave_request_id_2,
+    )
+    ### Payment V
+    payment_5 = PaymentFactory.create(
+        claim=claim,
+        fineos_leave_request_id=fineos_leave_request_id_2,
+        period_start_date=date(2022, 3, 1),
+        period_end_date=date(2022, 3, 7),
+    )
+    ### Payment VI
+    payment_6 = PaymentFactory.create(
+        claim=claim,
+        fineos_leave_request_id=fineos_leave_request_id_2,
+        period_start_date=date(2022, 3, 8),
+        period_end_date=date(2022, 3, 14),
+    )
+    ## Absence Period D
+    AbsencePeriodFactory.create(
+        claim=claim,
+        absence_period_start_date=date(2022, 4, 1),
+        absence_period_end_date=date(2022, 4, 28),
+        fineos_leave_request_id=fineos_leave_request_id_2,
+    )
+    ### Payment VII
+    payment_7 = PaymentFactory.create(
+        claim=claim,
+        fineos_leave_request_id=fineos_leave_request_id_2,
+        period_start_date=date(2022, 4, 1),
+        period_end_date=date(2022, 4, 7),
+    )
+    ## Absence Period E
+    AbsencePeriodFactory.create(
+        claim=claim,
+        absence_period_start_date=date(2022, 5, 1),
+        absence_period_end_date=date(2022, 5, 28),
+        fineos_leave_request_id=fineos_leave_request_id_2,
+    )
+    ### Payment VIII
+    payment_8 = PaymentFactory.create(
+        claim=claim,
+        fineos_leave_request_id=fineos_leave_request_id_2,
+        period_start_date=date(2022, 5, 1),
+        period_end_date=date(2022, 5, 7),
+    )
+
+    # Paid Leave 3 (Occurs after, no payments associated)
+    AbsencePeriodFactory.create(
+        claim=claim,
+        absence_period_start_date=date(2023, 1, 1),
+        absence_period_end_date=date(2023, 1, 28),
+        fineos_leave_request_id=3,
+    )
+
+    for payment in [payment_1, payment_2, payment_3, payment_4]:
+        absence_period = get_earliest_absence_period_for_payment_leave_request(
+            test_db_session, payment
+        )
+        assert absence_period.absence_period_id == absence_period_a.absence_period_id
+
+    for payment in [payment_5, payment_6, payment_7, payment_8]:
+        absence_period = get_earliest_absence_period_for_payment_leave_request(
+            test_db_session, payment
+        )
+        assert absence_period.absence_period_id == absence_period_c.absence_period_id

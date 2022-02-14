@@ -50,39 +50,41 @@ const flagsConfig = {
 
     // When this flag is true, PDF files up to 10mb are sent to the API.
     sendLargePdfToApi: false,
-
-    // When this flag is true, the HRD employer will no longer have their
-    // dashboard blocked from seeing any applications, and will function like
-    // all other employers' dashboards.
-    // Will only be used for smoke testing purposes and removed afterwards.
-    employerUnlockDashboard: true,
   },
   // Environments can optionally override a default feature flag below.
   // The environment keys should use the same envName defined in
   // environment config files.
-  "cps-preview": {},
+  "cps-preview": {
+    claimantShowMFA: true,
+  },
   development: {
     example: true,
     pfmlTerriyay: true,
+    claimantShowMFA: true,
     claimantShowPaymentsPhaseTwo: true,
   },
   test: {
+    claimantShowMFA: true,
     claimantShowPaymentsPhaseTwo: true,
   },
   stage: {
+    claimantShowMFA: true,
     claimantShowPaymentsPhaseTwo: true,
   },
   training: {
     claimantShowPaymentsPhaseTwo: true,
   },
   performance: {
+    claimantShowMFA: true,
     claimantShowPaymentsPhaseTwo: true,
   },
   uat: {
+    claimantShowMFA: true,
     claimantShowPaymentsPhaseTwo: true,
   },
   local: {
     pfmlTerriyay: true,
+    claimantShowMFA: true,
     claimantShowPaymentsPhaseTwo: true,
   },
   prod: {

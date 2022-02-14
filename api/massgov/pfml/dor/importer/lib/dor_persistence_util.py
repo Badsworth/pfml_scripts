@@ -10,16 +10,15 @@ from massgov.pfml.db.models.base import uuid_gen
 from massgov.pfml.db.models.employees import (
     Address,
     AddressType,
-    Country,
     Employee,
     Employer,
     EmployerAddress,
     EmployerQuarterlyContribution,
-    GeoState,
     TaxIdentifier,
     WagesAndContributions,
     WagesAndContributionsHistory,
 )
+from massgov.pfml.db.models.geo import Country, GeoState
 from massgov.pfml.dor.importer.dor_file_formats import (
     EmployerQuarterlyKey,
     ParsedEmployeeLine,

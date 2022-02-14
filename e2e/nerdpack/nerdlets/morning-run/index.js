@@ -20,6 +20,7 @@ class EnvSummaryView extends React.Component {
     envs: [],
     since: "",
     where: "",
+    showUnstable: false,
   };
 
   static getDerivedStateFromProps(props) {
@@ -114,10 +115,11 @@ class EnvSummaryView extends React.Component {
               {this.state.envs.map((env) => {
                 if (byEnv[env]) {
                   let query = `SELECT count(*)
-                               FROM CypressTestResult FACET category, subCategory, file
+                               FROM CypressTestResult FACET category, subCategory, file, group
                                WHERE runId='${byEnv[env].runId}'
                                  AND pass is false
                                  AND subCategory != 'sync'
+                                 AND durationMs != 0
                                  SINCE 1 month ago`;
 
                   return [
@@ -154,8 +156,11 @@ class EnvSummaryView extends React.Component {
                               } else if (!a.category) {
                                 cat = "No Category";
                               }
-                              r[cat] = r[cat] || [];
-                              r[cat].push(a);
+                              if (!r[a.group]) {
+                                r[a.group] = [];
+                              }
+                              r[a.group][cat] = r[cat] || [];
+                              r[a.group][cat].push(a);
                               return r;
                             }, Object.create(null));
                           }
@@ -165,17 +170,30 @@ class EnvSummaryView extends React.Component {
                           );
                           return (
                             <ul className={"filelist"}>
-                              {Object.keys(data).map((subcat) => {
+                              {Object.keys(data).map((group) => {
+                                if (
+                                  !this.state.showUnstable &&
+                                  group === "Unstable"
+                                ) {
+                                  return;
+                                }
                                 return [
-                                  <li>{subcat}</li>,
+                                  <li>{group}</li>,
                                   <ul className={"filelist"}>
-                                    {data[subcat].map((row) => (
-                                      <li>
-                                        <span>
-                                          <code>{row.file}</code>
-                                        </span>
-                                      </li>
-                                    ))}
+                                    {Object.keys(data[group]).map((subcat) => {
+                                      return [
+                                        <li>{subcat}</li>,
+                                        <ul className={"filelist"}>
+                                          {data[group][subcat].map((row) => (
+                                            <li>
+                                              <span>
+                                                <code>{row.file}</code>
+                                              </span>
+                                            </li>
+                                          ))}
+                                        </ul>,
+                                      ];
+                                    })}
                                   </ul>,
                                 ];
                               })}
@@ -449,7 +467,7 @@ export default class MorningRunNerdlet extends React.Component {
     const since = `${startOfDay} UNTIL ${endOfDay}`;
     return [
       <Navigation></Navigation>,
-      <h2>Morning run for {dateFormat(now, "MM/dd/yyyy")}</h2>,
+      <h2>Runs for {dateFormat(now, "MM/dd/yyyy")}</h2>,
       <FilterByEnv
         handleUpdate={this.handleUpdateEnv}
         returnType={FilterByEnv.RETURN_TYPES.ALL}
@@ -470,6 +488,7 @@ export default class MorningRunNerdlet extends React.Component {
                   where={this.getFiltersTags()}
                   envs={this.state.env}
                   limitRuns={"max"}
+                  simpleView={false}
                 />
               </div>
               <EnvSummaryView

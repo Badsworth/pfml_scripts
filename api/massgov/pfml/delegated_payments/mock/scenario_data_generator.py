@@ -10,13 +10,12 @@ import massgov.pfml.experian.address_validate_soap.client as soap_api
 import massgov.pfml.experian.address_validate_soap.models as sm
 import massgov.pfml.util.logging as logging
 from massgov.pfml import db
+from massgov.pfml.db.models.absences import AbsenceStatus
 from massgov.pfml.db.models.employees import (
-    AbsenceStatus,
     Address,
     Claim,
     Employee,
     Employer,
-    GeoState,
     LkAbsenceStatus,
     Payment,
     PaymentMethod,
@@ -35,6 +34,7 @@ from massgov.pfml.db.models.factories import (
     EmployerFactory,
     PubEftFactory,
 )
+from massgov.pfml.db.models.geo import GeoState
 from massgov.pfml.delegated_payments.mock.mock_util import generate_routing_nbr_from_ssn
 from massgov.pfml.delegated_payments.mock.scenarios import (
     ScenarioDescriptor,

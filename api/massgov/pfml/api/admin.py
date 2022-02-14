@@ -23,7 +23,8 @@ from massgov.pfml.api.models.users.responses import (
     UserResponse,
 )
 from massgov.pfml.api.validation.exceptions import IssueType, ValidationErrorDetail
-from massgov.pfml.db.models.employees import AzurePermission, LkAzurePermission, User
+from massgov.pfml.db.models.azure import AzurePermission, LkAzurePermission
+from massgov.pfml.db.models.employees import User
 from massgov.pfml.util.paginate.paginator import PaginationAPIContext, page_for_api_context
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
@@ -81,7 +82,7 @@ def admin_token():
 def admin_login():
     # decode_jwt is automatically called and will validate the token.
     azure_user = app.azure_user()
-    # This should not ever be the case.
+    # This should never be the case.
     if azure_user is None:
         raise NotFound
     ensure(READ, azure_user)
@@ -99,9 +100,21 @@ def admin_logout():
     ).to_api_response()
 
 
+def admin_get_flag_logs(name):
+    return response_util.success_response(
+        data={}, message=f"Successfully retrieved flag {name}",
+    ).to_api_response()
+
+
+def admin_flags_patch(name):
+    return response_util.success_response(
+        message=f"Successfully updated feature flag {name}", data={},
+    ).to_api_response()
+
+
 def admin_users_get(email_address: Optional[str] = "") -> flask.Response:
     azure_user = app.azure_user()
-    # This should not ever be the case.
+    # This should never be the case.
     if azure_user is None:
         raise Unauthorized
     ensure(READ, azure_user)

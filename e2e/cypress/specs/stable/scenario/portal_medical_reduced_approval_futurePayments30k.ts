@@ -82,23 +82,27 @@ describe("Submit medical application via the web portal: Adjudication Approval &
     }
   );
 
-  it("Should be able to confirm the weekly payment amount for a reduced schedule", () => {
-    cy.dependsOnPreviousPass([approval]);
-    fineos.before();
-    cy.unstash<DehydratedClaim>("claim").then((claim) => {
-      cy.unstash<Submission>("submission").then((submission) => {
-        const payment = claim.metadata
-          ?.expected_weekly_payment as unknown as number;
-        fineosPages.ClaimPage.visit(submission.fineos_absence_id).paidLeave(
-          (leaveCase) => {
-            leaveCase
-              .assertAmountsPending([{ net_payment_amount: payment }])
-              .assertMatchingPaymentDates();
-          }
-        );
+  it(
+    "Should be able to confirm the weekly payment amount for a reduced schedule",
+    { retries: 0 },
+    () => {
+      cy.dependsOnPreviousPass([approval]);
+      fineos.before();
+      cy.unstash<DehydratedClaim>("claim").then((claim) => {
+        cy.unstash<Submission>("submission").then((submission) => {
+          const payment = claim.metadata
+            ?.expected_weekly_payment as unknown as number;
+          fineosPages.ClaimPage.visit(submission.fineos_absence_id).paidLeave(
+            (leaveCase) => {
+              leaveCase
+                .assertAmountsPending([{ net_payment_amount: payment }])
+                .assertMatchingPaymentDates();
+            }
+          );
+        });
       });
-    });
-  });
+    }
+  );
 
   it("Should display a checkback date of (leave start date + 2 weeks + 3 business days) on the payment status page", () => {
     cy.dependsOnPreviousPass([approval]);

@@ -506,7 +506,7 @@ describe("Status", () => {
 
       expect(
         screen.getByText(
-          /Once we’ve made a decision, you can download the decision notice here. You’ll also get an email notification./
+          /We will notify you once we’ve made a decision. You’ll be able to download the decision notice on this website./
         )
       ).toBeInTheDocument();
     });
@@ -1170,31 +1170,24 @@ describe("Status", () => {
     });
   });
 
-  describe("status message", () => {
-    it.each(Object.values(AbsencePeriodRequestDecision))(
-      "displays the leaveStatusMessage on an application",
-      () => {
-        // cleanup();
-        renderPage(
-          Status,
-          {
-            addCustomSetup: setupHelper({
-              ...defaultClaimDetail,
-              has_paid_payments: false,
-              absence_periods: [
-                createAbsencePeriod({
-                  period_type: "Continuous",
-                  reason: LeaveReason.medical,
-                }),
-              ],
-            }),
-          },
-          props
-        );
-        const leaveStatusMessage = screen.getByTestId("leaveStatusMessage");
-        expect(leaveStatusMessage).toBeInTheDocument();
-        expect(leaveStatusMessage).toMatchSnapshot();
-      }
-    );
-  });
+  it.each(Object.values(AbsencePeriodRequestDecision))(
+    "displays a description for the %s request decision",
+    (request_decision) => {
+      renderPage(
+        Status,
+        {
+          addCustomSetup: setupHelper({
+            ...defaultClaimDetail,
+            absence_periods: [
+              createAbsencePeriod({
+                request_decision,
+              }),
+            ],
+          }),
+        },
+        props
+      );
+      expect(screen.getByTestId("leaveStatusMessage")).toMatchSnapshot();
+    }
+  );
 });

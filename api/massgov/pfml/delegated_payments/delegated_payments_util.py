@@ -17,6 +17,7 @@ from massgov.pfml import db
 from massgov.pfml.db.lookup import LookupTable
 from massgov.pfml.db.models import base
 from massgov.pfml.db.models.employees import (
+    AbsencePeriod,
     Address,
     Claim,
     ClaimType,
@@ -25,13 +26,11 @@ from massgov.pfml.db.models.employees import (
     ExperianAddressPair,
     LkClaimType,
     LkReferenceFileType,
-    LkState,
     Payment,
     PaymentTransactionType,
     PubEft,
     ReferenceFile,
     ReferenceFileType,
-    State,
 )
 from massgov.pfml.db.models.payments import (
     FineosExtractCancelledPayments,
@@ -48,6 +47,7 @@ from massgov.pfml.db.models.payments import (
     FineosExtractVpeiPaymentDetails,
     PaymentLog,
 )
+from massgov.pfml.db.models.state import LkState, State
 from massgov.pfml.util.converters.str_to_numeric import str_to_int
 from massgov.pfml.util.csv import CSVSourceWrapper
 from massgov.pfml.util.datetime import get_now_us_eastern
@@ -1282,8 +1282,10 @@ def get_traceable_payment_details(
         else None,
         "is_adhoc": payment.is_adhoc_payment,
         "fineos_extract_import_log_id": payment.fineos_extract_import_log_id,
+        # Leave
         "leave_request_decision": payment.leave_request_decision,
         "claim_type": payment.claim_type.claim_type_description if payment.claim_type else None,
+        "fineos_leave_request_id": payment.fineos_leave_request_id,
         # Claim
         "claim_id": claim.claim_id if claim else None,
         "absence_case_id": claim.fineos_absence_id if claim else None,
@@ -1514,3 +1516,43 @@ def is_withholding_payments_enabled() -> bool:
 
 def is_employer_reimbursement_payments_enabled() -> bool:
     return os.environ.get("ENABLE_EMPLOYER_REIMBURSEMENT_PAYMENTS", "0") == "1"
+
+
+def get_earliest_absence_period_for_payment_leave_request(
+    db_session: db.Session, payment: Payment
+) -> Optional[AbsencePeriod]:
+    """
+    Get the earliest absence period associated with a payment
+    Note that this does not mean the payment is necessarily in
+    the absence period. It just means it's the first absence period
+    of the paid leave request connected to the payment.
+
+    Claim
+        * Paid Leave 1
+            * Absence Period A
+                * Payment I
+                * Payment II
+            * Absence Period B
+                * Payment III
+                * Payment IV
+        * Paid Leave 2
+            * Absence Period C
+                * Payment V
+                * Payment VI
+            * Absence Period D
+                * Payment VII
+            * Absence Period E
+                * Payment VIII
+
+    For the above example:
+    Payments I -> IV would return Absence Period A
+    Payments V -> VIII would return Absence Period C
+
+    Nothing would ever return Absence Periods B, D, or E
+    """
+    return (
+        db_session.query(AbsencePeriod)
+        .filter(AbsencePeriod.fineos_leave_request_id == payment.fineos_leave_request_id)
+        .order_by(AbsencePeriod.absence_period_start_date.asc())
+        .first()
+    )

@@ -20,22 +20,44 @@ on:
         - Manual - Environment Sanity Check (all envs)
         - Manual - New Dataset Check (all envs)
         - Manual - Other (all envs)
+      run_stable:
+        description: "Run tests in stable group"
+        required: false
+        default: true
+        type: boolean
+      stable_spec_pattern:
+        description: "Only run the specs in the stable group with names that match the given pattern"
+        required: false
+        default: "cypress/specs/stable/**"
+        type: "string"
       run_unstable:
         description: "Run tests in unstable group"
         required: false
         default: false
         type: boolean
+      unstable_spec_pattern:
+        description: "Only run the specs in the unstable group with names that match the given pattern"
+        required: false
+        default: "cypress/specs/unstable/**"
+        type: "string"
       run_morning:
         description: "Run tests in morning group"
         required: false
         default: false
         type: boolean
+      morning_spec_pattern:
+        description: "Only run the specs in the morning group with names that match the given pattern"
+        required: false
+        default: "cypress/specs/morning/**"
+        type: "string"
   schedule:
     - cron: "0 11 * * 1-5"
     - cron: "45 12 * * 1-5"
 
 jobs:
   trigger_e2e:
+    # This workflow intentionally doesn't use workflow_call because at the moment, it doesn't support matrix builds.
+    # Also, since we don't wait for results or care about having an accurate run URL, the benefit is small.
     name: Run Cypress Test
     runs-on: ubuntu-latest
     strategy:
@@ -55,7 +77,11 @@ jobs:
             {
               "target_environment": "${{ matrix.environment }}",
               "cypress_tags": "${{ github.event_name == 'schedule' && 'Morning Run' || github.event.inputs.cypress_tags }}",
-              "run_unstable": "${{ github.event.inputs.run_unstable || 'false' }}",
+              "run_stable": "${{ github.event_name == 'schedule' && 'true' || github.event.inputs.run_stable }}",
+              "stable_spec_pattern": ${{ github.event.inputs.stable_spec_pattern }},
+              "run_unstable": "${{ github.event_name == 'schedule' && 'true' || github.event.inputs.run_unstable }}",
+              "unstable_spec_pattern": ${{ github.event.inputs.unstable_spec_pattern }},
               "run_morning": "${{ github.event_name == 'schedule' && 'true' || github.event.inputs.run_morning }}",
+              "morning_spec_pattern": ${{ github.event.inputs.morning_spec_pattern }},
               "title_override": "${{ github.event_name == 'schedule' && format('Scheduled Run: {0}', matrix.environment) || '' }}"
             }

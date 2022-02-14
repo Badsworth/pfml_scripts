@@ -31,6 +31,7 @@ from massgov.pfml.api.validation.exceptions import (
     ValidationErrorDetail,
     ValidationException,
 )
+from massgov.pfml.db.models.absences import AbsencePeriodType
 from massgov.pfml.db.models.applications import (
     AmountFrequency,
     Application,
@@ -64,17 +65,15 @@ from massgov.pfml.db.models.applications import (
     WorkPatternType,
 )
 from massgov.pfml.db.models.employees import (
-    AbsencePeriodType,
     Address,
     AddressType,
     Claim,
-    GeoState,
     LeaveRequestDecision,
     LkAddressType,
     LkGender,
     MFADeliveryPreference,
-    User,
 )
+from massgov.pfml.db.models.geo import GeoState
 from massgov.pfml.fineos import AbstractFINEOSClient
 from massgov.pfml.fineos.models.customer_api import PhoneNumber
 from massgov.pfml.fineos.models.customer_api.spec import (
@@ -1183,7 +1182,30 @@ def set_application_absence_and_leave_period(
     absence_period = _get_absence_period_from_absence_details(absence_details, application)
     if absence_period is not None:
         if absence_period.reason is not None:
-            application.leave_reason_id = DBLeaveReason.get_id(absence_period.reason)
+            try:
+                leave_reason_id = DBLeaveReason.get_id(absence_period.reason)
+            except KeyError:
+                logger.warning(
+                    "Unsupported leave reason on absence period from FINEOS",
+                    extra={
+                        "fineos_web_id": fineos_web_id,
+                        "reason": absence_period.reason,
+                        "absence_case_id": (
+                            application.claim.fineos_absence_id if application.claim else None
+                        ),
+                    },
+                    exc_info=True,
+                )
+                raise ValidationException(
+                    errors=[
+                        ValidationErrorDetail(
+                            type=IssueType.invalid,
+                            message="Absence period reason is not supported.",
+                            field="leave_details.reason",
+                        )
+                    ]
+                )
+            application.leave_reason_id = leave_reason_id
         if absence_period.reasonQualifier1 is not None:
             application.leave_reason_qualifier_id = LeaveReasonQualifier.get_id(
                 absence_period.reasonQualifier1
@@ -1198,11 +1220,12 @@ def set_application_absence_and_leave_period(
     return
 
 
-def set_employment_status(
-    fineos_client: AbstractFINEOSClient,
-    fineos_web_id: str,
-    application: Application,
-    current_user: User,
+def minutes_from_hours_minutes(hours: int, minutes: int) -> int:
+    return hours * 60 + minutes
+
+
+def set_employment_status_and_occupations(
+    fineos_client: AbstractFINEOSClient, fineos_web_id: str, application: Application,
 ) -> None:
     occupations = fineos_client.get_customer_occupations_customer_api(
         fineos_web_id, application.tax_identifier.tax_identifier
@@ -1235,6 +1258,29 @@ def set_employment_status(
             application.employment_status_id = EmploymentStatus.EMPLOYED.employment_status_id
     if occupation.hoursWorkedPerWeek is not None:
         application.hours_worked_per_week = Decimal(occupation.hoursWorkedPerWeek)
+    if occupation.occupationId is None:
+        return
+
+    fineos_work_patterns = fineos_client.get_week_based_work_pattern(
+        fineos_web_id, occupation.occupationId
+    )
+    if fineos_work_patterns.workPatternType != WorkPatternType.FIXED.work_pattern_type_description:
+        newrelic_util.log_and_capture_exception(
+            f"Application work pattern type is not {WorkPatternType.FIXED.work_pattern_type_description}",
+            extra={"fineos_work_pattern_type": fineos_work_patterns.workPatternType},
+        )
+        return
+    db_work_pattern_days = []
+    work_pattern = WorkPattern(work_pattern_type_id=WorkPatternType.FIXED.work_pattern_type_id)
+    for pattern in fineos_work_patterns.workPatternDays:
+        db_work_pattern_days.append(
+            WorkPatternDay(
+                day_of_week_id=DayOfWeek.get_id(pattern.dayOfWeek),
+                minutes=minutes_from_hours_minutes(pattern.hours, pattern.minutes),
+            )
+        )
+    work_pattern.work_pattern_days = db_work_pattern_days
+    application.work_pattern = work_pattern
 
 
 def set_payment_preference_fields(
@@ -1363,7 +1409,7 @@ def set_customer_contact_detail_fields(
         raise ValidationException(
             errors=[
                 ValidationErrorDetail(
-                    type=IssueType.invalid,
+                    type=IssueType.incorrect,
                     message="An issue occurred while trying to import the application",
                 )
             ]

@@ -3,7 +3,8 @@ import os
 from freezegun import freeze_time
 
 import massgov.pfml.util.files as file_util
-from massgov.pfml.db.models.employees import DuaEmployer, ReferenceFile, ReferenceFileType
+from massgov.pfml.db.models.dua import DuaEmployer
+from massgov.pfml.db.models.employees import ReferenceFile, ReferenceFileType
 from massgov.pfml.dua.config import get_moveit_config, get_transfer_config
 from massgov.pfml.dua.employer import download_employer_file_from_moveit, load_employer_file
 from massgov.pfml.util.batch.log import LogEntry

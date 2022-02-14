@@ -25,7 +25,8 @@
     "HAS_LARGE_FILE_COMPRESSION": "true",
     "HAS_EMPLOYER_REIMBURSEMENTS": "true",
     "HAS_FEB_RELEASE": "true",
-    "MFA_ENABLED": "true"
+    "MFA_ENABLED": "true",
+    "S3_INTELLIGENCE_TOOL_BUCKET": "massgov-pfml-test-business-intelligence-tool"
   },
   "stage": {
     "PORTAL_BASEURL": "https://paidleave-stage.mass.gov",
@@ -45,8 +46,10 @@
     "HAS_ORGUNITS_SETUP": "false",
     "HAS_FINEOS_JANUARY_RELEASE": "true",
     "HAS_LARGE_FILE_COMPRESSION": "true",
+    "HAS_EMPLOYER_REIMBURSEMENTS": "true",
     "HAS_FEB_RELEASE": "false",
-    "MFA_ENABLED": "true"
+    "MFA_ENABLED": "true",
+    "S3_INTELLIGENCE_TOOL_BUCKET": "massgov-pfml-stage-business-intelligence-tool"
   },
   "training": {
     "PORTAL_BASEURL": "https://paidleave-training.mass.gov",
@@ -67,7 +70,8 @@
     "HAS_FINEOS_JANUARY_RELEASE": "true",
     "HAS_LARGE_FILE_COMPRESSION": "true",
     "HAS_FEB_RELEASE": "false",
-    "MFA_ENABLED": "true"
+    "MFA_ENABLED": "true",
+    "S3_INTELLIGENCE_TOOL_BUCKET": "massgov-pfml-training-business-intelligence-tool"
   },
   "trn2": {
     "PORTAL_BASEURL": "https://paidleave-trn2.dfml.eol.mass.gov",
@@ -85,7 +89,8 @@
     "HAS_FINEOS_JANUARY_RELEASE": "false",
     "HAS_LARGE_FILE_COMPRESSION": "true",
     "HAS_FEB_RELEASE": "false",
-    "MFA_ENABLED": "true"
+    "MFA_ENABLED": "true",
+    "S3_INTELLIGENCE_TOOL_BUCKET": "massgov-pfml-trn2-business-intelligence-tool"
   },
   "long": {
     "PORTAL_BASEURL": "https://paidleave-long.dfml.eol.mass.gov",
@@ -103,7 +108,8 @@
     "HAS_FINEOS_JANUARY_RELEASE": "false",
     "HAS_LARGE_FILE_COMPRESSION": "true",
     "HAS_FEB_RELEASE": "false",
-    "MFA_ENABLED": "true"
+    "MFA_ENABLED": "true",
+    "S3_INTELLIGENCE_TOOL_BUCKET": "massgov-pfml-long-business-intelligence-tool"
   },
   "performance": {
     "PORTAL_BASEURL": "https://paidleave-performance.mass.gov",
@@ -125,8 +131,10 @@
     "HAS_ORGUNITS_SETUP": "true",
     "HAS_FINEOS_JANUARY_RELEASE": "true",
     "HAS_LARGE_FILE_COMPRESSION": "true",
+    "HAS_EMPLOYER_REIMBURSEMENTS": "true",
     "HAS_FEB_RELEASE": "true",
-    "MFA_ENABLED": "true"
+    "MFA_ENABLED": "true",
+    "S3_INTELLIGENCE_TOOL_BUCKET": "massgov-pfml-performance-business-intelligence-tool"
   },
   "uat": {
     "PORTAL_BASEURL": "https://paidleave-uat.mass.gov",
@@ -147,8 +155,10 @@
     "HAS_ORGUNITS_SETUP": "false",
     "HAS_FINEOS_JANUARY_RELEASE": "true",
     "HAS_LARGE_FILE_COMPRESSION": "true",
+    "HAS_EMPLOYER_REIMBURSEMENTS": "false",
     "HAS_FEB_RELEASE": "true",
-    "MFA_ENABLED": "true"
+    "MFA_ENABLED": "true",
+    "S3_INTELLIGENCE_TOOL_BUCKET": "massgov-pfml-uat-business-intelligence-tool"
   },
   "cps-preview": {
     "PORTAL_BASEURL": "https://paidleave-cps-preview.eol.mass.gov",
@@ -170,7 +180,8 @@
     "HAS_LARGE_FILE_COMPRESSION": "false",
     "HAS_EMPLOYER_REIMBURSEMENTS": "true",
     "HAS_FEB_RELEASE": "true",
-    "MFA_ENABLED": "true"
+    "MFA_ENABLED": "true",
+    "S3_INTELLIGENCE_TOOL_BUCKET": "massgov-pfml-cps-preview-business-intelligence-tool"
   },
   "breakfix": {
     "PORTAL_BASEURL": "https://paidleave-breakfix.eol.mass.gov",
@@ -192,8 +203,10 @@
     "HAS_ORGUNITS_SETUP": "false",
     "HAS_FINEOS_JANUARY_RELEASE": "true",
     "HAS_LARGE_FILE_COMPRESSION": "false",
+    "HAS_EMPLOYER_REIMBURSEMENTS": "false",
     "HAS_FEB_RELEASE": "false",
-    "MFA_ENABLED": "true"
+    "MFA_ENABLED": "true",
+    "S3_INTELLIGENCE_TOOL_BUCKET": "massgov-pfml-breakfix-business-intelligence-tool"
   },
   "local": {
     "PORTAL_BASEURL": "http://localhost:3000",
@@ -204,6 +217,7 @@
     "FINEOS_BASEURL": "https://idt-claims-webapp.masspfml.fineos.com",
     "FINEOS_USERNAME": "CONTENT",
     "EMPLOYEES_FILE": "./employees/e2e-2021-09-08.json",
-    "EMPLOYERS_FILE": "./employers/e2e-2021-09-08.json"
+    "EMPLOYERS_FILE": "./employers/e2e-2021-09-08.json",
+    "MFA_ENABLED": "false"
   }
 }

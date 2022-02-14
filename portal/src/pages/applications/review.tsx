@@ -8,7 +8,6 @@ import {
   findDocumentsByTypes,
 } from "../../models/Document";
 import EmployerBenefit, {
-  EmployerBenefitFrequency,
   EmployerBenefitType,
 } from "../../models/EmployerBenefit";
 import {
@@ -974,25 +973,10 @@ export const EmployerBenefitList = (props: EmployerBenefitListProps) => {
       context: findKeyByValue(EmployerBenefitType, entry.benefit_type),
     });
 
-    const dates = formatDateRange(
-      entry.benefit_start_date,
-      entry.benefit_end_date
-    );
-
-    let amount;
+    let dates;
 
     if (entry.is_full_salary_continuous) {
-      amount = t("pages.claimsReview.employerBenefitIsFullSalaryContinuous");
-    } else {
-      amount = !isBlank(entry.benefit_amount_dollars)
-        ? t("pages.claimsReview.amountPerFrequency", {
-            context: findKeyByValue(
-              EmployerBenefitFrequency,
-              entry.benefit_amount_frequency
-            ),
-            amount: entry.benefit_amount_dollars,
-          })
-        : null;
+      dates = formatDateRange(entry.benefit_start_date, entry.benefit_end_date);
     }
 
     return (
@@ -1001,7 +985,7 @@ export const EmployerBenefitList = (props: EmployerBenefitListProps) => {
         label={label}
         type={type}
         dates={dates}
-        amount={amount}
+        amount={null}
         reviewRowLevel={reviewRowLevel}
       />
     );
@@ -1064,7 +1048,7 @@ export const OtherIncomeList = (props: OtherIncomeListProps) => {
 
 interface OtherLeaveEntryProps {
   amount?: string | null;
-  dates: string;
+  dates?: string;
   label: string;
   reviewRowLevel: "2" | "3" | "4" | "5" | "6";
   type?: string;

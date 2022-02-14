@@ -47,7 +47,30 @@ paths:
                 $ref: "#/components/schemas/FlagsResponse"
         "503":
           $ref: "#/components/responses/ServiceUnavailableError"
-
+  /flags/{name}:
+    get:
+      security:
+        - {} # no authentication option
+      tags:
+        - Feature Flags
+      summary: Get a feature flag
+      operationId: massgov.pfml.api.flags.flag_get
+      parameters:
+        - name: name
+          in: path
+          schema:
+            type: string
+          description: Name of the flag to get
+          required: true
+      responses:
+        "200":
+          description: A successful request returns a 200 status code and one flag.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Flag"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailableError"
   /users:
     post:
       security:
@@ -187,6 +210,7 @@ paths:
       security:
         - jwt: []
         - oauth2: []
+          agent-id: []
       tags:
         - Employees
       summary: Retrieve an Employee record
@@ -248,6 +272,7 @@ paths:
       security:
         - jwt: []
         - oauth2: []
+          agent-id: []
       tags:
         - Employees
       summary: Lookup an Employee by SSN/ITIN and name
@@ -381,6 +406,7 @@ paths:
       security:
         - jwt: []
         - oauth2: []
+          agent-id: []
       summary: Retrieve claims
       operationId: massgov.pfml.api.claims.get_claims
       tags:
@@ -427,12 +453,12 @@ paths:
             Absence Case IDs, in addition to the employees' first, middle, and last names.
             When the string is empty, it is ignored.
           required: false
-        - name: "allow_hrd"
+        - name: "is_reviewable"
           in: query
           schema:
-            type: boolean
-          description: A temporary boolean value used to allow smoke testers to see HRD dashboard
-          required: false
+            type: string
+            enum: ["yes", "no"]
+          description: A string value used to check whether or not to filter claims where a review is requested for a leave admin.
         - name: "request_decision"
           in: query
           schema:
@@ -1151,6 +1177,48 @@ paths:
       requestBody:
         $ref: "#/components/requestBodies/VerificationRequest"
 
+  /benefit-years/search:
+    post:
+      security:
+        - jwt: []
+        - oauth2: []
+          agent-id: []
+      tags:
+        - Benefit Years
+      summary: >
+        Returns all benefit years for the employee_id in the request; if no employee_id is present
+        returns all benefit years for the current user.
+      responses:
+        '200':
+          description: A successful response returns a 200 status code and the benefit years
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessfulResponse'
+                  - properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/BenefitYearResponse'
+                example:
+                  meta:
+                    method: "POST"
+                    resource: "/benefit-years/search"
+                  status_code: 200
+                  message: "success"
+                  data:
+                  - benefit_year_end_date: '2020-12-31'
+                    benefit_year_start_date: '2020-01-01'
+                    employee_id: '2a340cf8-6d2a-4f82-a075-73588d003f8f'
+                    current_benefit_year: true
+                  - benefit_year_end_date: '2019-12-31'
+                    benefit_year_start_date: '2019-01-01'
+                    employee_id: '2a340cf8-6d2a-4f82-a075-73588d003f8f'
+                    current_benefit_year: false
+      requestBody:
+        $ref: '#/components/requestBodies/BenefitYearsSearchRequest'
+
   /admin/authorize:
     get:
       security:
@@ -1253,6 +1321,56 @@ paths:
         "404":
           $ref: "#/components/responses/NotFound"
 
+  /admin/flags/{name}:
+    patch:
+      tags:
+        - Admin
+        - Feature Flags
+      summary: Update a feature flag
+      operationId: massgov.pfml.api.admin.admin_flags_patch
+      parameters:
+        - name: name
+          in: path
+          schema:
+            type: string
+          description: Name of flag to update
+          required: true
+      responses:
+        "200":
+          description: A successful request returns a 200 status code and a user object.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessfulResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+      requestBody:
+        $ref: "#/components/requestBodies/FlagUpdateRequest"
+
+  /admin/flag-logs/{name}:
+    get:
+      tags:
+        - Admin
+        - Feature Flags
+      summary: Get logs for a feature flag
+      operationId: massgov.pfml.api.admin.admin_get_flag_logs
+      parameters:
+        - name: name
+          in: path
+          schema:
+            type: string
+          description: Name of the flag to get
+          required: true
+      responses:
+        "200":
+          description: A successful request returns a 200 status code and list of flag logs.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FlagWithLogsResponse"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailableError"
+
 tags:
   - name: Test Endpoints
   - name: Roles
@@ -1266,6 +1384,7 @@ tags:
   - name: Notifications
   - name: Feature Flags
   - name: Admin
+  - name: Benefit Years
 
 components:
   securitySchemes:
@@ -1281,7 +1400,16 @@ components:
         clientCredentials:
           tokenUrl: /api/v1/oauth2/token
           scopes: {}
+    agent-id:
+      type: apiKey
+      in: header
+      name: Mass-PFML-Agent-ID
+      description: |
+        Some clients are required to provide a non-empty value for this header in order to authenticate.
 
+        The value should be a stable, unique identifier for the entity/actor/agent driving the interaction with the Paid Leave API.
+
+        The typical case will be when the client is another system, making calls to the Paid Leave API on behalf of a user in that other system, the header value should then be some identifier for that individual user (not the client).
   parameters:
     pageSize:
       name: "page_size"
@@ -1308,7 +1436,7 @@ components:
       schema:
         type: string
         default: "created_at"
-        enum: ["fineos_absence_status", "created_at", "employee"]
+        enum: ["fineos_absence_status", "created_at", "employee", "latest_follow_up_date"]
     orderDirection:
       name: "order_direction"
       in: query
@@ -1372,6 +1500,12 @@ components:
           schema:
             $ref: "#/components/schemas/EligibilityRequest"
       required: true
+    FlagUpdateRequest:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Flag"
+      required: true
     NotificationRequest:
       content:
         application/json:
@@ -1400,6 +1534,11 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/EmployerAddFeinRequestBody"
+    BenefitYearsSearchRequest:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/BenefitYearsSearchRequest"
 
   responses:
     AdminTokenResponse:
@@ -1666,7 +1805,7 @@ components:
           pattern: '^[0-9]{5}((?:-[0-9]{4})?|(?:-\*{4})?)$'
           example: "12345"
 
-    FlagResponse:
+    Flag:
       type: object
       properties:
         start:
@@ -1682,6 +1821,7 @@ components:
         name:
           type: string
           example: "maintenance"
+          readOnly: true
         options:
           type: object
           example:
@@ -1691,11 +1831,39 @@ components:
         enabled:
           type: boolean
           example: false
+      additionalProperties: false
+
+    FlagWithLog:
+      allOf:
+        - $ref: "#/components/schemas/Flag"
+        - type: object
+          properties:
+            first_name:
+              type: string
+              example: "John"
+              readOnly: true
+            last_name:
+              type: string
+              example: "Doe"
+              readOnly: true
+            updated_at:
+              type: string
+              nullable: false
+              format: date-time
+              example: "2020-06-26T01:02:03.967736+00:00"
+              readOnly: true
+          additionalProperties: false
+
+    FlagWithLogsResponse:
+      type: array
+      items:
+        $ref: "#/components/schemas/FlagWithLog"
+
 
     FlagsResponse:
       type: array
       items:
-        $ref: "#/components/schemas/FlagResponse"
+        $ref: "#/components/schemas/Flag"
 
     UserResponse:
       type: object
@@ -2047,6 +2215,21 @@ components:
         - employer_benefits
         - previous_leaves
         - hours_worked_per_week
+
+    BenefitYearResponse:
+      type: object
+      properties:
+        employee_id:
+          type: string
+          format: uuid
+          example: '2a340cf8-6d2a-4f82-a075-73588d003f8f'
+        benefit_year_start_date:
+          $ref: '#/components/schemas/Date'
+        benefit_year_end_date:
+          $ref: '#/components/schemas/Date'
+        current_benefit_year:
+          type: boolean
+          example: true
 
     UpdateClaimReviewResponse:
       type: object
@@ -2572,6 +2755,22 @@ components:
         is_withholding_tax:
           type: boolean
           nullable: true
+        computed_start_dates:
+          $ref: "#/components/schemas/ComputedStartDates"
+
+    ComputedStartDates:
+      type: object
+      properties:
+        other_reason:
+          type: string
+          format: date
+          example: "2021-01-01"
+          nullable: true
+        same_reason:
+          type: string
+          format: date
+          example: "2021-01-01"
+          nullable: true
 
     DocumentUploadRequest:
       type: object
@@ -2846,6 +3045,18 @@ components:
             - Cancelled
             - Delayed
           example: "Delayed"
+        writeback_transaction_status:
+          type: string
+          nullable: true
+          example: "Address Validation Error"
+        transaction_date:
+          format: date
+          type: string
+          nullable: true
+          example: "2021-01-01"
+        transaction_date_could_change:
+          type: boolean
+          example: false
 
     EvidenceStatusDetail:
       type: object
@@ -3840,3 +4051,14 @@ components:
             - Sibling - Brother/Sister
             - Other
             - Spouse
+
+    BenefitYearsSearchRequest:
+      type: object
+      properties:
+        employee_id:
+          type: string
+          example: '2a340cf8-6d2a-4f82-a075-73588d003f8f'
+          format: uuid
+        current:
+          type: boolean
+          example: false

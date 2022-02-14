@@ -15,46 +15,63 @@ import {
 import { E2EVisualIndicator } from "./E2EVisualIndicator";
 import { format as dateFormat } from "date-fns";
 
-function RunIndicators({ runs, env, link }) {
+function RunIndicators({ runs, env, link, simpleView = false }) {
   if (env === "infra-test" || env === "prod") {
     return (
-      <td>
-        <span className="info">
-          <Icon type={Icon.TYPE.INTERFACE__INFO__INFO} />
-          E2E Suite not configured for this environment
-        </span>
-      </td>
+      <span className="info">
+        <Icon type={Icon.TYPE.INTERFACE__INFO__INFO} />
+        E2E Suite not configured for this environment
+      </span>
     );
   }
   // EXPECTED TO BE DOWN, REMOVE AFTER Feb 21, 2022
   else if (env === "trn2" || env === "long") {
     return (
-      <td>
-        <span class="warning">
-          <Icon type={Icon.TYPE.INTERFACE__STATE__WARNING} />
-          Env expected offline until Feb 21, 2022
-        </span>
-      </td>
+      <span class="warning">
+        <Icon type={Icon.TYPE.INTERFACE__STATE__WARNING} />
+        Env expected offline until Feb 21, 2022
+      </span>
     );
   }
-  return (
-    <td className={"e2e-run-history"}>
-      <span className={"allLink"}>
-        <Link to={link}>All</Link>
-      </span>
-      {runs.map((run) => (
-        <E2EVisualIndicator
-          run={{
-            pass_rate: run.passPercent / 100,
-            timestamp: run.timestamp,
-            tag: run.tag.join(","),
-            runUrl: run.runUrl,
-          }}
-          runIds={[run.runId]}
-        />
-      ))}
-    </td>
-  );
+  return [
+    <Link to={link} className={"allLink"} ariaLabel="Compare Runs">
+      <Icon type={Icon.TYPE.HARDWARE_AND_SOFTWARE__HARDWARE__CLUSTER} />
+    </Link>,
+    runs.map((run) => (
+      <E2EVisualIndicator run={run} runId={run.runId} simpleView={simpleView} />
+    )),
+  ];
+}
+
+function EnvComponentVersions({ componentVersions, env }) {
+  {
+    return COMPONENTS.map((component) => {
+      if (componentVersions[component]) {
+        return (
+          <td className={"versions"}>
+            <div className={"version"}>
+              <Link
+                to={navigation.getOpenStackedNerdletLocation({
+                  id: "deployments",
+                  urlState: {
+                    environment: env,
+                    component: component,
+                  },
+                })}
+              >
+                {componentVersions[component].status}
+              </Link>
+              <span>
+                {componentVersions[component]?.timestamp
+                  ? dateFormat(componentVersions[component].timestamp, "PPPp")
+                  : ""}
+              </span>
+            </div>
+          </td>
+        );
+      }
+    });
+  }
 }
 
 export class EnvironmentsTable extends React.Component {
@@ -63,6 +80,7 @@ export class EnvironmentsTable extends React.Component {
     envs: ENVS,
     since: "",
     where: "",
+    simpleView: true,
   };
 
   static getDerivedStateFromProps(props) {
@@ -71,6 +89,7 @@ export class EnvironmentsTable extends React.Component {
       envs: setDefault(props.envs, ENVS),
       since: setDefault(props.since, "1 month ago UNTIL NOW"),
       where: setDefault(props.where, ""),
+      simpleView: setDefault(props.simpleView, true),
     };
   }
 
@@ -169,46 +188,20 @@ export class EnvironmentsTable extends React.Component {
                               {labelEnv(env)}
                             </Link>
                           </td>
-                          <RunIndicators
-                            runs={byEnv[env]}
-                            env={env}
-                            link={link}
-                          ></RunIndicators>
-                          {COMPONENTS.map((component) => {
-                            if (
-                              envVersions[env] &&
-                              envVersions[env][component]
-                            ) {
-                              return (
-                                <td>
-                                  <div className={"version"}>
-                                    <Link
-                                      to={navigation.getOpenStackedNerdletLocation(
-                                        {
-                                          id: "deployments",
-                                          urlState: {
-                                            environment: env,
-                                            component: component,
-                                          },
-                                        }
-                                      )}
-                                    >
-                                      {envVersions[env][component].status}
-                                    </Link>
-                                    <span>
-                                      {envVersions[env][component]?.timestamp
-                                        ? dateFormat(
-                                            envVersions[env][component]
-                                              .timestamp,
-                                            "PPPp"
-                                          )
-                                        : ""}
-                                    </span>
-                                  </div>
-                                </td>
-                              );
-                            }
-                          })}
+                          <td className={"e2e-run-history"}>
+                            <RunIndicators
+                              runs={byEnv[env]}
+                              env={env}
+                              link={link}
+                              simpleView={this.state.simpleView}
+                            />
+                          </td>
+                          {envVersions[env] && (
+                            <EnvComponentVersions
+                              env={env}
+                              componentVersions={envVersions[env]}
+                            />
+                          )}
                         </tr>
                       </>
                     );

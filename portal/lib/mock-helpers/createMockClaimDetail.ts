@@ -49,7 +49,9 @@ export const leaveTypes: AbsencePeriodTypes[] = [
 
 export const requestTypes: AbsencePeriodRequestDecisionEnum[] = [
   "Approved",
+  "Cancelled",
   "Denied",
+  "In Review",
   "Pending",
   "Withdrawn",
 ];

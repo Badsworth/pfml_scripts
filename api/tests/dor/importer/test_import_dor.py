@@ -23,17 +23,16 @@ import massgov.pfml.util.batch.log
 from massgov.pfml.db.models.employees import (
     Address,
     AddressType,
-    Country,
     Employee,
     EmployeePushToFineosQueue,
     Employer,
     EmployerPushToFineosQueue,
     EmployerQuarterlyContribution,
-    GeoState,
     WagesAndContributions,
     WagesAndContributionsHistory,
 )
 from massgov.pfml.db.models.factories import EmployerQuarterlyContributionFactory
+from massgov.pfml.db.models.geo import Country, GeoState
 from massgov.pfml.dor.importer.import_dor import (
     PROCESSED_FOLDER,
     RECEIVED_FOLDER,

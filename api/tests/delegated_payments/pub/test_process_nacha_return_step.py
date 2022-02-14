@@ -15,7 +15,6 @@ import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.files as file_util
 from massgov.pfml.db.models import factories
 from massgov.pfml.db.models.employees import (
-    Flow,
     ImportLog,
     PaymentMethod,
     PaymentTransactionType,
@@ -25,10 +24,10 @@ from massgov.pfml.db.models.employees import (
     PubErrorType,
     ReferenceFile,
     ReferenceFileType,
-    State,
 )
 from massgov.pfml.db.models.factories import PaymentFactory, PubEftFactory, ReferenceFileFactory
 from massgov.pfml.db.models.payments import FineosWritebackDetails, FineosWritebackTransactionStatus
+from massgov.pfml.db.models.state import Flow, State
 from massgov.pfml.delegated_payments.mock.delegated_payments_factory import DelegatedPaymentFactory
 from massgov.pfml.delegated_payments.pub import process_nacha_return_step
 from massgov.pfml.delegated_payments.util.ach.reader import (

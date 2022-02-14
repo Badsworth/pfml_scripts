@@ -1,54 +1,73 @@
 import { BenefitsApplicationDocument, DocumentType } from "src/models/Document";
+import LeaveReason, { LeaveReasonType } from "src/models/LeaveReason";
 import ApiResourceCollection from "src/models/ApiResourceCollection";
 import { ApplicationCard } from "src/components/ApplicationCard";
 import { MockBenefitsApplicationBuilder } from "lib/mock-helpers/mock-model-builder";
 import { Props } from "types/common";
 import React from "react";
+import { Story } from "@storybook/react";
 import { createMockBenefitsApplicationDocument } from "lib/mock-helpers/createMockDocument";
+import useMockableAppLogic from "lib/mock-helpers/useMockableAppLogic";
 
 export default {
   title: "Features/Applications/ApplicationCard",
   component: ApplicationCard,
   args: {
-    number: 1,
-    scenario: "Bonding",
+    claim: "Started, no EIN",
+    Reason: "",
+    Notices: "No notices",
   },
   argTypes: {
-    scenario: {
+    claim: {
       control: {
         type: "radio",
         options: [
-          "Bonding",
-          "Caring",
-          "Medical",
-          "Pregnancy",
-          "In Progress",
-          "In Progress + EIN",
-          "In Progress + Notices",
+          "Started, no EIN",
+          "Started, with EIN",
+          "Part 1 submitted",
+          "Completed",
         ],
+      },
+    },
+    Reason: {
+      control: {
+        type: "radio",
+        options: ["", ...Object.values(LeaveReason)],
+      },
+    },
+    Notices: {
+      control: {
+        type: "radio",
+        options: ["Has notices", "No notices", "Loading"],
       },
     },
   },
 };
 
-export const Story = ({
-  scenario,
-  ...args
-}: Props<typeof ApplicationCard> & { scenario: string }) => {
-  const hasDocuments = scenario.includes("Notices");
-  // Fake appLogic for stories
-  const appLogic = {
-    appErrors: [],
-    claims: {
-      claimDetail: args,
-      isLoadingClaimDetail: false,
-      loadClaimDetail: () => {},
-    },
+const claimScenarios = {
+  "Started, no EIN": new MockBenefitsApplicationBuilder().create(),
+  "Started, with EIN": new MockBenefitsApplicationBuilder().employed().create(),
+  "Part 1 submitted": new MockBenefitsApplicationBuilder().submitted().create(),
+  Completed: new MockBenefitsApplicationBuilder().completed().create(),
+} as const;
+
+type Args = Omit<Props<typeof ApplicationCard>, "claim"> & {
+  claim: keyof typeof claimScenarios;
+  Notices: "Has notices" | "No notices" | "Loading";
+  Reason: LeaveReasonType;
+};
+
+const Template: Story<Args> = (args) => {
+  const appLogic = useMockableAppLogic({
     documents: {
-      documents: hasDocuments
-        ? new ApiResourceCollection<BenefitsApplicationDocument>(
-            "fineos_document_id",
-            [
+      loadAll: () => Promise.resolve(),
+      isLoadingClaimDocuments: () => {
+        return args.Notices === "Loading";
+      },
+      documents: new ApiResourceCollection<BenefitsApplicationDocument>(
+        "fineos_document_id",
+        args.Notices === "Has notices"
+          ? [
               createMockBenefitsApplicationDocument({
                 document_type: DocumentType.requestForInfoNotice,
                 fineos_document_id: "test 1",
@@ -57,58 +76,35 @@ export const Story = ({
                 document_type: DocumentType.denialNotice,
                 fineos_document_id: "test 2",
               }),
+              createMockBenefitsApplicationDocument({
+                document_type:
+                  DocumentType.certification[
+                    "Serious Health Condition - Employee"
+                  ],
+                fineos_document_id: "test 3",
+              }),
             ]
-          )
-        : [],
-      download: () => {},
-      isLoadingClaimDocuments: () => undefined,
-      loadAll: () => {},
+          : []
+      ),
     },
-  };
+  });
 
-  // Configuration for ApplicationCard props
-  const cardProps = Object.assign(
-    {
-      Bonding: {
-        claim: new MockBenefitsApplicationBuilder()
-          .completed()
-          .bondingLeaveReason()
-          .create(),
-      },
-      Caring: {
-        claim: new MockBenefitsApplicationBuilder()
-          .completed()
-          .caringLeaveReason()
-          .create(),
-      },
-      Medical: {
-        claim: new MockBenefitsApplicationBuilder()
-          .completed()
-          .medicalLeaveReason()
-          .create(),
-      },
-      Pregnancy: {
-        claim: new MockBenefitsApplicationBuilder()
-          .completed()
-          .pregnancyLeaveReason()
-          .create(),
-      },
+  const defaultReason = args.claim === "Completed" ? LeaveReason.medical : null;
+  const claim = claimScenarios[args.claim];
+  claim.leave_details = claim.leave_details ?? {};
+  claim.leave_details.reason = args.Reason ? args.Reason : defaultReason;
 
-      "In Progress": {
-        claim: new MockBenefitsApplicationBuilder().address().create(),
-      },
+  return <ApplicationCard {...args} claim={claim} appLogic={appLogic} />;
+};
 
-      "In Progress + EIN": {
-        claim: new MockBenefitsApplicationBuilder().employed().create(),
-      },
+export const Started = Template.bind({});
 
-      "In Progress + Notices": {
-        claim: new MockBenefitsApplicationBuilder().submitted().create(),
-      },
-    }[scenario],
-    { ...args, appLogic }
-  );
+export const Submitted = Template.bind({});
+Submitted.args = {
+  claim: "Part 1 submitted",
+};
 
-  // @ts-expect-error appLogic mock type
-  return <ApplicationCard {...cardProps} />;
+export const Completed = Template.bind({});
+Completed.args = {
+  claim: "Completed",
 };

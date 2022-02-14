@@ -44,7 +44,6 @@ from massgov.pfml.db.models.employees import (
     BankAccountType,
     Claim,
     Gender,
-    GeoState,
     PaymentMethod,
     TaxIdentifier,
 )
@@ -70,6 +69,7 @@ from massgov.pfml.db.models.factories import (
     WagesAndContributionsFactory,
     WorkPatternFixedFactory,
 )
+from massgov.pfml.db.models.geo import GeoState
 from massgov.pfml.fineos.client import AbstractFINEOSClient
 from massgov.pfml.fineos.exception import (
     FINEOSClientError,
@@ -385,9 +385,8 @@ class TestApplicationsImport:
         assert response.status_code == 400
         assert response.get_json().get("errors") == [
             {
-                "field": "absence_case_id",
-                "message": "Application not found for the given ID.",
-                "type": "object_not_found",
+                "message": "An issue occurred while trying to import the application",
+                "type": "incorrect",
             },
         ]
         assert test_db_session.query(Application).one_or_none() is None
@@ -488,7 +487,7 @@ class TestApplicationsImport:
         assert imported_application.first_name == "Samantha"
         assert imported_application.last_name == "Jorgenson"
         assert imported_application.date_of_birth == date(1996, 1, 11)
-        assert imported_application.mass_id == "45354352"
+        assert imported_application.mass_id == "123456789"
         assert imported_application.has_state_id is True
         assert imported_application.gender_id == Gender.NONBINARY.gender_id
         assert imported_application.residential_address.address_line_one == "37 Mather Drive"
@@ -749,7 +748,7 @@ class TestApplicationsImport:
             json=valid_request_body,
         )
 
-        assert response.status_code == 500
+        assert response.status_code == 400
 
     def test_applications_import_has_previous_and_concurrent_leave_data(
         self, client, test_db_session, auth_token, claim, valid_request_body

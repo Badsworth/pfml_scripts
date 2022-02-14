@@ -602,7 +602,10 @@ export const MED_ERRE: ScenarioSpecification = {
       HCP: {},
       MASSID: {},
     },
-    metadata: { expected_weekly_payment: "461.54" },
+    metadata: {
+      expected_weekly_payment: "461.54",
+      employerReAmount: 100,
+    },
   },
 };
 

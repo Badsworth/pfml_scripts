@@ -13,7 +13,8 @@ terraform {
 
   required_providers {
     aws = {
-      source = "hashicorp/aws"
+      source  = "hashicorp/aws"
+      version = "3.74.1"
     }
     newrelic = {
       source = "newrelic/newrelic"

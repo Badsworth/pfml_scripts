@@ -13,6 +13,7 @@ import OrganizationUnit from "./OrganizationUnit";
 import OtherIncome from "./OtherIncome";
 import PaymentPreference from "./PaymentPreference";
 import PreviousLeave from "./PreviousLeave";
+import { ValuesOf } from "../../types/common";
 import assert from "assert";
 import dayjs from "dayjs";
 import spreadMinutesOverWeek from "../utils/spreadMinutesOverWeek";
@@ -31,7 +32,7 @@ class BenefitsApplication extends BaseBenefitsApplication {
   employer_benefits: EmployerBenefit[] = [];
   date_of_birth: string | null = null;
   employer_fein: string | null = null;
-  gender: typeof Gender[keyof typeof Gender] | null = null;
+  gender: ValuesOf<typeof Gender> | null = null;
   has_concurrent_leave: boolean | null = null;
   has_continuous_leave_periods: boolean | null = null;
   has_employer_benefits: boolean | null = null;
@@ -55,9 +56,7 @@ class BenefitsApplication extends BaseBenefitsApplication {
   tax_identifier: string | null = null;
   work_pattern: Partial<WorkPattern> | null = null;
 
-  employment_status:
-    | typeof EmploymentStatus[keyof typeof EmploymentStatus]
-    | null = null;
+  employment_status: ValuesOf<typeof EmploymentStatus> | null = null;
 
   leave_details: {
     continuous_leave_periods: ContinuousLeavePeriod[];
@@ -70,19 +69,17 @@ class BenefitsApplication extends BaseBenefitsApplication {
     child_placement_date: string | null;
     has_future_child_date: boolean | null;
     pregnant_or_recent_birth: boolean | null;
-    reason: typeof LeaveReason[keyof typeof LeaveReason] | null;
+    reason: ValuesOf<typeof LeaveReason> | null;
     reason_qualifier: ReasonQualifierEnum | null;
   };
 
   phone: {
     int_code: string | null;
     phone_number: string | null;
-    phone_type: typeof PhoneType[keyof typeof PhoneType] | null;
+    phone_type: ValuesOf<typeof PhoneType> | null;
   };
 
-  status:
-    | typeof BenefitsApplicationStatus[keyof typeof BenefitsApplicationStatus]
-    | null = null;
+  status: ValuesOf<typeof BenefitsApplicationStatus> | null = null;
 
   // Organization unit data selected by the user (used in review page)
   organization_unit: OrganizationUnit | null;
@@ -217,8 +214,7 @@ export const ReasonQualifier = {
   newBorn: "Newborn",
 } as const;
 
-export type ReasonQualifierEnum =
-  typeof ReasonQualifier[keyof typeof ReasonQualifier];
+export type ReasonQualifierEnum = ValuesOf<typeof ReasonQualifier>;
 
 export class ContinuousLeavePeriod {
   leave_period_id: string | null = null;
@@ -237,8 +233,7 @@ export class IntermittentLeavePeriod {
   // How many {days|hours} of work will you miss per absence?
   duration: number | null = null;
   // How long will an absence typically last?
-  duration_basis: typeof DurationBasis[keyof typeof DurationBasis] | null =
-    null;
+  duration_basis: ValuesOf<typeof DurationBasis> | null = null;
 
   // Estimate how many absences {per week|per month|over the next 6 months}
   frequency: number | null = null;
@@ -246,9 +241,8 @@ export class IntermittentLeavePeriod {
   // and can only ever be equal to 6
   frequency_interval: number | null = null;
   // How often might you need to be absent from work?
-  frequency_interval_basis:
-    | typeof FrequencyIntervalBasis[keyof typeof FrequencyIntervalBasis]
-    | null = null;
+  frequency_interval_basis: ValuesOf<typeof FrequencyIntervalBasis> | null =
+    null;
 
   constructor(attrs: Partial<IntermittentLeavePeriod>) {
     Object.assign(this, attrs);
@@ -260,9 +254,8 @@ export class CaringLeaveMetadata {
   family_member_first_name: string | null = null;
   family_member_last_name: string | null = null;
   family_member_middle_name: string | null = null;
-  relationship_to_caregiver:
-    | typeof RelationshipToCaregiver[keyof typeof RelationshipToCaregiver]
-    | null = null;
+  relationship_to_caregiver: ValuesOf<typeof RelationshipToCaregiver> | null =
+    null;
 
   constructor(attrs: Partial<CaringLeaveMetadata>) {
     Object.assign(this, attrs);
@@ -271,9 +264,7 @@ export class CaringLeaveMetadata {
 
 export class WorkPattern {
   work_pattern_days: WorkPatternDay[] | null = [];
-  work_pattern_type:
-    | typeof WorkPatternType[keyof typeof WorkPatternType]
-    | null = null;
+  work_pattern_type: ValuesOf<typeof WorkPatternType> | null = null;
 
   constructor(attrs: Partial<WorkPattern>) {
     Object.assign(this, attrs);

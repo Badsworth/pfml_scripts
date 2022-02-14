@@ -81,27 +81,31 @@ describe("Submit caring application via the web portal: Adjudication Approval & 
     }
   );
 
-  it("Should be able to confirm the weekly payment amount and check Ownership is Assigned To", () => {
-    cy.dependsOnPreviousPass();
-    fineos.before();
+  it(
+    "Should be able to confirm the weekly payment amount and check Ownership is Assigned To",
+    { retries: 0 },
+    () => {
+      cy.dependsOnPreviousPass();
+      fineos.before();
 
-    cy.unstash<DehydratedClaim>("claim").then((claim) => {
-      cy.unstash<Submission>("submission").then((submission) => {
-        const payment = claim.metadata
-          ?.expected_weekly_payment as unknown as number;
-        fineosPages.ClaimPage.visit(submission.fineos_absence_id).paidLeave(
-          (leaveCase) => {
-            leaveCase.assertOwnershipAssignTo("DFML Program Integrity");
-            leaveCase.assertAmountsPending([
-              {
-                net_payment_amount: payment,
-              },
-            ]);
-          }
-        );
+      cy.unstash<DehydratedClaim>("claim").then((claim) => {
+        cy.unstash<Submission>("submission").then((submission) => {
+          const payment = claim.metadata
+            ?.expected_weekly_payment as unknown as number;
+          fineosPages.ClaimPage.visit(submission.fineos_absence_id).paidLeave(
+            (leaveCase) => {
+              leaveCase.assertOwnershipAssignTo("DFML Program Integrity");
+              leaveCase.assertAmountsPending([
+                {
+                  net_payment_amount: payment,
+                },
+              ]);
+            }
+          );
+        });
       });
-    });
-  });
+    }
+  );
 
   it("Check the Claimant profile to see if bulk payee is enabled under Payment Preferences", () => {
     cy.dependsOnPreviousPass();

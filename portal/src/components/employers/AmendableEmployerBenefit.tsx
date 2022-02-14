@@ -1,5 +1,4 @@
 import EmployerBenefit, {
-  EmployerBenefitFrequency,
   EmployerBenefitType,
 } from "../../models/EmployerBenefit";
 import React, { useRef, useState } from "react";
@@ -7,14 +6,9 @@ import AmendButton from "./AmendButton";
 import AmendmentForm from "./AmendmentForm";
 import AppErrorInfo from "../../models/AppErrorInfo";
 import ConditionalContent from "../ConditionalContent";
-import Dropdown from "../core/Dropdown";
-import Fieldset from "../core/Fieldset";
-import FormLabel from "../core/FormLabel";
 import Heading from "../core/Heading";
 import InputChoiceGroup from "../core/InputChoiceGroup";
-import InputCurrency from "../core/InputCurrency";
 import InputDate from "../core/InputDate";
-import findKeyByValue from "../../utils/findKeyByValue";
 import formatDateRange from "../../utils/formatDateRange";
 import { get } from "lodash";
 import getInputValueFromEvent from "../../utils/getInputValueFromEvent";
@@ -85,53 +79,6 @@ const AmendableEmployerBenefit = ({
     );
   };
 
-  /**
-   * Get benefit_amount_frequency options for the input's `choices` prop
-   * Includes an option if frequency is null or "Unknown"
-   * (e.g. [{ label: "", value: "" }])
-   * @returns {Array}
-   */
-  const getAllBenefitFrequencies = () => {
-    return Object.values(EmployerBenefitFrequency).map((frequency) => {
-      return {
-        label: t("components.employersEmployerBenefits.amountFrequency", {
-          context: findKeyByValue(EmployerBenefitFrequency, frequency),
-        }),
-        value: frequency,
-      };
-    });
-  };
-
-  /**
-   * Get content based on dollars and frequency  (e.g. $10.00 per day)
-   * Displays dollar amount if frequency is null or "Unknown"
-   * @returns {string}
-   */
-  const getBenefitAmountByType = () => {
-    const {
-      benefit_amount_dollars,
-      benefit_amount_frequency,
-      is_full_salary_continuous,
-    } = employerBenefit;
-
-    if (is_full_salary_continuous) {
-      return t("components.employersEmployerBenefits.fullSalaryContinuous");
-    } else if (
-      benefit_amount_dollars === 0 &&
-      benefit_amount_frequency === EmployerBenefitFrequency.unknown
-    ) {
-      return t("components.employersEmployerBenefits.noAmountReported");
-    }
-
-    return t("components.employersEmployerBenefits.amountPerFrequency", {
-      context: findKeyByValue(
-        EmployerBenefitFrequency,
-        benefit_amount_frequency
-      ),
-      amount: benefit_amount_dollars,
-    });
-  };
-
   const handleCancelAmendment = () => {
     setIsAmendmentFormDisplayed(false);
     setAmendment(employerBenefit);
@@ -169,9 +116,6 @@ const AmendableEmployerBenefit = ({
         data-label={t("components.employersEmployerBenefits.benefitTypeLabel")}
       >
         {employerBenefit.benefit_type}
-      </td>
-      <td data-label={t("components.employersEmployerBenefits.detailsLabel")}>
-        {getBenefitAmountByType()}
       </td>
       <td>
         <AmendButton onClick={() => setIsAmendmentFormDisplayed(true)} />
@@ -244,39 +188,6 @@ const AmendableEmployerBenefit = ({
                   }}
                 />
               </ConditionalContent>
-              <InputDate
-                name={getFieldPath("benefit_start_date")}
-                data-test="benefit-start-date-input"
-                smallLabel
-                label={t(
-                  "components.employersAmendableEmployerBenefit.benefitStartDateLabel"
-                )}
-                value={get(amendment, "benefit_start_date") || ""}
-                dayLabel={t("components.form.dateInputDayLabel")}
-                monthLabel={t("components.form.dateInputMonthLabel")}
-                yearLabel={t("components.form.dateInputYearLabel")}
-                errorMsg={getErrorMessage("benefit_start_date")}
-                onChange={(e) => {
-                  amendBenefit("benefit_start_date", e);
-                }}
-              />
-              <InputDate
-                smallLabel
-                label={t(
-                  "components.employersAmendableEmployerBenefit.benefitEndDateLabel"
-                )}
-                optionalText={t("components.form.optional")}
-                errorMsg={getErrorMessage("benefit_end_date")}
-                name={getFieldPath("benefit_end_date")}
-                data-test="benefit-end-date-input"
-                value={get(amendment, "benefit_end_date") || ""}
-                onChange={(e) => {
-                  amendBenefit("benefit_end_date", e);
-                }}
-                dayLabel={t("components.form.dateInputDayLabel")}
-                monthLabel={t("components.form.dateInputMonthLabel")}
-                yearLabel={t("components.form.dateInputYearLabel")}
-              />
               <ConditionalContent visible={shouldShowV2}>
                 <InputChoiceGroup
                   name={getFieldPath("is_full_salary_continuous")}
@@ -315,54 +226,41 @@ const AmendableEmployerBenefit = ({
                 />
               </ConditionalContent>
               <ConditionalContent
-                visible={
-                  !shouldShowV2 ||
-                  get(amendment, "is_full_salary_continuous") === false
-                }
+                visible={get(amendment, "is_full_salary_continuous") === true}
               >
-                <Fieldset>
-                  <FormLabel
-                    component="legend"
-                    small
-                    optionalText={t("components.form.optional")}
-                  >
-                    {t(
-                      "components.employersAmendableEmployerBenefit.employeeAmountReceivedLabel"
-                    )}
-                  </FormLabel>
-                  <InputCurrency
-                    name={getFieldPath("benefit_amount_dollars")}
-                    data-test="benefit-amount-dollars-input"
-                    smallLabel
-                    label={t(
-                      "components.employersAmendableEmployerBenefit.benefitAmountDollarsLabel"
-                    )}
-                    labelClassName="text-normal"
-                    width="small"
-                    errorMsg={getErrorMessage("benefit_amount_dollars")}
-                    value={
-                      get(amendment, "benefit_amount_dollars") ?? undefined
-                    }
-                    onChange={(e) => {
-                      amendBenefit("benefit_amount_dollars", e);
-                    }}
-                  />
-                  <Dropdown
-                    name={getFieldPath("benefit_amount_frequency")}
-                    data-test="benefit-amount-frequency-input"
-                    smallLabel
-                    label={t(
-                      "components.employersAmendableEmployerBenefit.amountFrequencyLabel"
-                    )}
-                    labelClassName="text-normal"
-                    choices={getAllBenefitFrequencies()}
-                    errorMsg={getErrorMessage("benefit_amount_frequency")}
-                    value={get(amendment, "benefit_amount_frequency") || ""}
-                    onChange={(e) => {
-                      amendBenefit("benefit_amount_frequency", e);
-                    }}
-                  />
-                </Fieldset>
+                <InputDate
+                  name={getFieldPath("benefit_start_date")}
+                  data-test="benefit-start-date-input"
+                  smallLabel
+                  label={t(
+                    "components.employersAmendableEmployerBenefit.benefitStartDateLabel"
+                  )}
+                  value={get(amendment, "benefit_start_date") || ""}
+                  dayLabel={t("components.form.dateInputDayLabel")}
+                  monthLabel={t("components.form.dateInputMonthLabel")}
+                  yearLabel={t("components.form.dateInputYearLabel")}
+                  errorMsg={getErrorMessage("benefit_start_date")}
+                  onChange={(e) => {
+                    amendBenefit("benefit_start_date", e);
+                  }}
+                />
+                <InputDate
+                  smallLabel
+                  label={t(
+                    "components.employersAmendableEmployerBenefit.benefitEndDateLabel"
+                  )}
+                  optionalText={t("components.form.optional")}
+                  errorMsg={getErrorMessage("benefit_end_date")}
+                  name={getFieldPath("benefit_end_date")}
+                  data-test="benefit-end-date-input"
+                  value={get(amendment, "benefit_end_date") || ""}
+                  onChange={(e) => {
+                    amendBenefit("benefit_end_date", e);
+                  }}
+                  dayLabel={t("components.form.dateInputDayLabel")}
+                  monthLabel={t("components.form.dateInputMonthLabel")}
+                  yearLabel={t("components.form.dateInputYearLabel")}
+                />
               </ConditionalContent>
             </AmendmentForm>
           </td>

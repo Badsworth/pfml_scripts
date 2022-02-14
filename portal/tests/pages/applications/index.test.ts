@@ -43,8 +43,8 @@ describe("Applications", () => {
     expect(goToSpy).toHaveBeenCalledWith("/applications/get-ready", {});
   });
 
-  it("displays Find Application action when feature flag is enabled", () => {
-    const linkName = "Find my application";
+  it("displays prompt for channel switching when feature flag is enabled", () => {
+    const detailsLabel = "Did you start an application by phone?";
     process.env.featureFlags = JSON.stringify({ channelSwitching: false });
 
     renderPage(Index, {
@@ -54,9 +54,8 @@ describe("Applications", () => {
       },
     });
 
-    expect(
-      screen.queryByRole("link", { name: linkName })
-    ).not.toBeInTheDocument();
+    const detailsText = screen.queryByText(detailsLabel);
+    expect(detailsText).not.toBeInTheDocument();
 
     process.env.featureFlags = JSON.stringify({ channelSwitching: true });
 
@@ -67,7 +66,7 @@ describe("Applications", () => {
       },
     });
 
-    expect(screen.queryByRole("link", { name: linkName })).toBeInTheDocument();
+    expect(screen.getByText(detailsLabel)).toBeInTheDocument();
   });
 
   it("passes mfaSetupSuccess value when it redirects to getReady", () => {
@@ -230,13 +229,20 @@ describe("Applications", () => {
       Index,
       {
         pathname: routes.applications.index,
-        addCustomSetup: setUpHelper,
+        addCustomSetup: (appLogicHook) => {
+          setUpHelper(appLogicHook);
+          appLogicHook.documents.loadAll = jest.fn();
+          appLogicHook.benefitsApplications.benefitsApplications =
+            new ApiResourceCollection<BenefitsApplication>("application_id", [
+              submittedClaim,
+            ]);
+        },
       },
-      { query: { applicationAssociated: "mock_id" } }
+      { query: { applicationAssociated: submittedClaim.fineos_absence_id } }
     );
     expect(
       screen.getByText(
-        /Your application has been successfully linked to your account./
+        /Application NTN-111-ABS-03 has been added to your account./
       )
     ).toBeInTheDocument();
   });

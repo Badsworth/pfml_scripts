@@ -1,4 +1,5 @@
 import { filterByApplication, getLegalNotices } from "../models/Document";
+import Alert from "./core/Alert";
 import { AppLogic } from "../hooks/useAppLogic";
 import BenefitsApplication from "../models/BenefitsApplication";
 import ButtonLink from "./ButtonLink";
@@ -23,7 +24,7 @@ interface HeaderSectionProps {
  * Main header for the top of status cards
  */
 const HeaderSection = ({ title }: HeaderSectionProps) => (
-  <Heading className="padding-top-3" level="3" size="2">
+  <Heading level="3" size="2">
     {title}
   </Heading>
 );
@@ -255,6 +256,7 @@ const CompletedStatusCard = ({ claim }: CompletedStatusCardProps) => {
 interface ApplicationCardProps extends WithUserProps {
   claim: BenefitsApplication;
   number: number;
+  successfullyImported: boolean;
 }
 
 /**
@@ -264,8 +266,10 @@ interface ApplicationCardProps extends WithUserProps {
  * additional docs.
  */
 export const ApplicationCard = (props: ApplicationCardProps) => {
+  const { t } = useTranslation();
   const {
-    claim: { status },
+    claim: { status, fineos_absence_id },
+    successfullyImported,
   } = props;
 
   return (
@@ -275,7 +279,16 @@ export const ApplicationCard = (props: ApplicationCardProps) => {
           status === "Completed" ? "border-primary" : "border-gold"
         }`}
       />
-      <article className="border-x border-bottom border-base-lighter padding-2 padding-top-0">
+      <article className="border-x border-bottom border-base-lighter padding-2 padding-top-3">
+        {successfullyImported && (
+          <Alert state="success">
+            <p>
+              {t("components.applicationCard.claimAssociatedSuccessfully", {
+                fineos_absence_id,
+              })}
+            </p>
+          </Alert>
+        )}
         {status === "Completed" ? (
           <CompletedStatusCard {...props} />
         ) : (

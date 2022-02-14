@@ -4,6 +4,7 @@ import withBenefitsApplications, {
 } from "../../hoc/withBenefitsApplications";
 import Alert from "../../components/core/Alert";
 import ButtonLink from "../../components/ButtonLink";
+import Details from "../../components/core/Details";
 import Heading from "../../components/core/Heading";
 import Icon from "../../components/core/Icon";
 import Link from "next/link";
@@ -209,11 +210,21 @@ export const GetReady = (props: GetReadyProps) => {
           }}
         />
         <ButtonLink
-          className="margin-top-3 margin-bottom-8"
+          className="margin-top-3 margin-bottom-3"
           href={appLogic.portalFlow.getNextPageRoute("START_APPLICATION")}
         >
           {t("pages.getReady.createClaimButton")}
         </ButtonLink>
+        <Details label={t("pages.getReady.startByPhoneLabel")}>
+          <p>{t("pages.getReady.startByPhoneDescription")}</p>
+          <Link
+            href={appLogic.portalFlow.getNextPageRoute("IMPORT_APPLICATION")}
+          >
+            <a className="display-inline-block margin-bottom-5">
+              {t("pages.getReady.addApplication")}
+            </a>
+          </Link>
+        </Details>
       </div>
     </React.Fragment>
   );

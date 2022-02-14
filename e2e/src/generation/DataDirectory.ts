@@ -13,6 +13,7 @@ export interface DataDirectory {
   prepare(): Promise<void>;
   join(...parts: string[]): string;
   dorFile(prefix: string): string;
+  getDORFiles(): Promise<string[]>;
 }
 
 export default function directory(
@@ -21,6 +22,10 @@ export default function directory(
 ): DataDirectory {
   const base = rootDir ?? path.join(__dirname, "..", "..", "data");
   const dir = path.join(base, name);
+  return fromAbsolute(dir);
+}
+
+export function fromAbsolute(dir: string) {
   const documents = path.join(dir, "documents");
   return {
     dir: dir,
@@ -39,6 +44,12 @@ export default function directory(
     dorFile(prefix: string): string {
       const filename = `${prefix}_${formatDate(new Date(), "yyyyMMddHHmmss")}`;
       return path.join(dir, filename);
+    },
+    async getDORFiles(): Promise<string[]> {
+      const files = await fs.promises.readdir(this.dir);
+      return files
+        .filter((f) => f.startsWith("DORDFML"))
+        .map((f) => this.join(f));
     },
   };
 }

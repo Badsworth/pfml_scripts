@@ -551,6 +551,8 @@ const errors = {
     code: {
       attemptsExceeded:
         "Your account is temporarily locked because of too many failed verification attempts. Wait 15 minutes before trying again.",
+      attemptsExceeded_confirmPhone:
+        "We can't confirm your phone number because of too many failed verification attempts. Wait 15 minutes before trying again.",
       deliveryFailure:
         "We encountered an error while sending the verification code. Try again.",
       expired: "Your verification code has expired or has already been used.",
@@ -730,6 +732,7 @@ const shared: {
   absenceCaseStatus_pending: "Pending",
   achTypeChecking: "Checking",
   achTypeSavings: "Savings",
+  addApplication: "Add an existing application",
   amountFrequencyLabel: "Frequency",
   amountFrequency_daily: "Daily",
   amountFrequency_inTotal: "All at once",
@@ -946,6 +949,9 @@ const shared: {
   saveAndContinue: "Save and continue",
   siteDescription:
     "Apply for this Commonwealth-offered benefit here, or log in to review your applications.",
+  startByPhoneDescription:
+    "Some applications started on the phone can be added to this website. Once added, you can upload documents and see your application’s status and payments online.",
+  startByPhoneLabel: "Did you start an application by phone?",
   submitApplicationButton: "I understand and agree",
   trackStatus:
     "<track-status-link>Track the status of your application here</track-status-link>.",
@@ -965,15 +971,15 @@ const pages: {
     seoDescription: "$t(shared.siteDescription)",
   },
   applications: {
-    claimAssociatedSuccessfully:
-      "Your application has been successfully linked to your account.",
+    addApplication: "$t(shared.addApplication)",
     claimsApprovalProcess:
       "Learn more about the <approval-process-link>application review and approval process</approval-process-link>.",
     createApplicationHeading: "Create a new application",
-    findLink: "Find my application",
     getReadyLink: "Start a new application",
     inProgressHeading: "In-progress applications",
     noClaims: "You don’t have any applications yet.",
+    startByPhoneDescription: "$t(shared.startByPhoneDescription)",
+    startByPhoneLabel: "$t(shared.startByPhoneLabel)",
     submittedHeading: "Submitted applications",
     title: "Your applications",
     uploadSuccessHeading: "You successfully submitted your documents",
@@ -1285,24 +1291,16 @@ const pages: {
       "I will receive employer-sponsored benefits during my paid leave",
     doNotReportHintHeading: "You don’t need to report:",
     doNotReportHintList:
-      "<ul><li>Benefits from any other employers</li><li>Any benefit from your employer that will be based on your PFML benefit amount. One example is a “top up” to make up the difference between your regular wages and your PFML benefits.</li></ul>",
+      "<ul><li>Benefits from any other employers</li><li>Temporary disability insurance that does not fully replace your wages</li></ul>",
     doReportHintHeading: "The employer-sponsored benefits you must report are:",
     doReportHintList:
-      "<ul><li>Temporary disability insurance, for either short-term or long-term disability</li><li>Permanent disability insurance</li><li>Family or medical leave benefits, such as a parental leave program</li><li>You only have to report benefits from the employer with this EIN: {{employer_fein}}. This is the same Employer Identification Number you entered earlier in your application.</li></ul>",
+      "<ul><li>Temporary disability insurance that fully replaces your wages, for either short-term or long-term disability</li><li>Permanent disability insurance</li><li>Family or medical leave benefits, such as a parental leave program</li><li>You only have to report benefits from the employer with this EIN: {{employer_fein}}. This is the same Employer Identification Number you entered earlier in your application.</li></ul>",
     sectionLabel:
       "Will you use any employer-sponsored benefits from this employer during your paid leave from PFML?",
     title: "$t(shared.claimsOtherLeaveTitle)",
   },
   claimsEmployerBenefitsDetails: {
     addButton: "Add another benefit",
-    amountFrequencyLabel: "$t(shared.amountFrequencyLabel)",
-    amountFrequency_daily: "$t(shared.amountFrequency_daily)",
-    amountFrequency_inTotal: "$t(shared.amountFrequency_inTotal)",
-    amountFrequency_monthly: "$t(shared.amountFrequency_monthly)",
-    amountFrequency_unknown: "$t(shared.amountFrequency_unknown)",
-    amountFrequency_weekly: "$t(shared.amountFrequency_weekly)",
-    amountLabel: "Amount",
-    amountLegend: "How much will you receive?",
     cardHeadingPrefix: "$t(shared.employerBenefitEntryPrefix)",
     choiceHint_familyOrMedicalLeave:
       "$t(shared.choiceHint_familyOrMedicalLeave)",
@@ -1395,13 +1393,26 @@ const pages: {
     title: "$t(shared.claimsVerifyIdTitle)",
   },
   claimsImport: {
-    absenceIdLabel: "Application ID number",
-    leadIntro: "We need some information to identify your application.",
-    leadReminder:
-      "Reminder: You’ll need to keep managing applications through the Contact Center if you are self-employed or unemployed or if you are applying for military-related paid family leave benefits.",
-    submitButton: "Continue",
-    taxIdLabel: "Social Security Number (SSN)",
+    absenceIdHint:
+      "Enter the application ID given to you when you applied by phone. It contains both numbers and letters and looks like NTN-123456-ABS-01.",
+    absenceIdLabel: "Application ID",
+    leadIdentify: "We need some information to identify your application.",
+    leadIntro:
+      "Some applications started on the phone can be added to this website. Once added, you can upload documents and see your application’s status and payments online.",
+    mfaDisabledWarningBody:
+      "In order to add an existing application, you need to provide a phone number we can use to <verify-link>verify your login</verify-link>. This number must match the one you gave the Contact Center when you applied.",
+    mfaDisabledWarningHeading: "We need to verify your login.",
+    phoneHint:
+      "This number must match the one you gave the Contact Center when you applied.",
+    phoneLabel: "Cell phone number",
+    phoneLink_unverified: "Verify your login",
+    phoneLink_verified: "Change your phone number",
+    submitButton: "Add application",
+    taxIdHint:
+      "Don’t have a Social Security Number? Use your Individual Taxpayer Identification Number (ITIN).",
+    taxIdLabel: "Social Security Number",
     title: "Add an existing application",
+    uploadingMessage: "Submitting… Do not refresh or go back",
   },
   claimsIntermittentFrequency: {
     durationBasisChoice_days: "At least one day",
@@ -2091,10 +2102,15 @@ const pages: {
       "<strong>We’re reviewing your requested changes or appeal for this leave.</strong>",
     leaveStatusMessage_Pending:
       "<strong>This leave is being reviewed.</strong>",
+    // TODO (PORTAL-1652): Create content for these request decision options
+    leaveStatusMessage_Projected:
+      "<strong>This leave is being reviewed.</strong>",
+    leaveStatusMessage_Voided:
+      "<strong>This leave was cancelled.</strong><p>This application will no longer be processed. If you want to apply for paid leave again, you can begin another application.</p><p><application-link>Start another application</application-link></p>",
     leaveStatusMessage_Withdrawn:
       "<strong>This leave was withdrawn.</strong><p>You have withdrawn your application from the review process. If you want to apply for paid leave again, you can begin another application.</p><p><application-link>Start another application</application-link></p>",
     legalNoticesFallback:
-      "Once we’ve made a decision, you can download the decision notice here. You’ll also get an email notification.",
+      "We will notify you once we’ve made a decision. You’ll be able to download the decision notice on this website.",
     loadingClaimDetailLabel: "$t(shared.loadingClaimDetailLabel)",
     loadingLegalNoticesLabel: "Loading legal notices",
     makeChangesBody:
@@ -2154,14 +2170,14 @@ const pages: {
   },
   claimsSuccess: {
     adjudicationProcess:
-      "<ul> <li>Your employer has 10 business days to provide feedback on your application.</li> <li>We’ll confirm your eligibility and make sure that your documents are valid.</li> <li>After we’ve made a decision, you’ll receive an email notification with a link to details about the decision. Your employer will also get a copy of the decision.</li><li>Once your application is approved, you can expect your first payment to arrive at the beginning of your fourth week of leave, if your leave has already started. If your leave starts in the future, you can expect your first payment 2-4 weeks after your leave starts. After that, you will receive your payments every week.</li><li>$t(shared.trackStatus)</li><li>$t(shared.viewPostSubmissionVideo)</li></ul>",
+      "<ul> <li>Your employer has 10 business days to provide feedback on your application.</li> <li>We’ll confirm your eligibility and make sure that your documents are valid.</li> <li>We will notify you once we’ve made a decision. You’ll be able to read the details of the decision on this website. Your employer will also get a copy of the decision.</li><li>Once your application is approved, you can expect your first payment to arrive at the beginning of your fourth week of leave, if your leave has already started. If your leave starts in the future, you can expect your first payment 2-4 weeks after your leave starts. After that, you will receive your payments every week.</li><li>$t(shared.trackStatus)</li><li>$t(shared.viewPostSubmissionVideo)</li></ul>",
     adjudicationProcessHeading: "What happens next",
     adjudicationProcess_bondingAdoptFosterFuture:
       "<ul><li>Your employer has 10 days to provide feedback on your application.</li> <li>Once you’ve provided proof of placement, we’ll confirm your eligibility and make sure that your documents are valid.</li> <li>After we’ve made a decision, you’ll receive an email notification with a link to details about the decision.</li> <li>If you need to change your leave dates because your child arrived in your home earlier or later than expected, you must call the DFML Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.</li><li>If your application is approved prior to your leave, you can expect your first payment to arrive about 3 weeks after your leave starts. Otherwise, you can expect your first payment 2-3 weeks after your leave is approved.</li><li>$t(shared.trackStatus)</li><li>$t(shared.viewPostSubmissionVideo)</li></ul>",
     adjudicationProcess_bondingNewbornFuture:
       "<ul><li>Your employer has 10 days to provide feedback on your application.</li> <li>Once you’ve provided proof of birth, we’ll confirm your eligibility and make sure that your documents are valid.</li> <li>After we’ve made a decision, you’ll receive an email notification with a link to details about the decision.</li> <li>If you need to change your leave dates because your child was born earlier or later than expected, you must call the DFML Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.</li><li>If your application is approved prior to your leave, you can expect your first payment to arrive about 3 weeks after your leave starts. Otherwise, you can expect your first payment 2-3 weeks after your leave is approved.</li><li>$t(shared.trackStatus)</li><li>$t(shared.viewPostSubmissionVideo)</li></ul>",
     adjudicationProcess_caringLeave:
-      "<ul><li>Your employer has 10 business days to provide feedback on your application.</li> <li>We’ll confirm your eligibility and make sure that your documents are valid.</li> <li>After we’ve made a decision, you’ll receive an email notification with a link to details about the decision. Your employer will also get a copy of the decision.</li><li>Once your application is approved, you can expect your first payment to arrive at the beginning of your fourth week of leave, if your leave has already started. If your leave starts in the future, you can expect your first payment 2-4 weeks after your leave starts. After that, you will receive your payments every week.</li><li>If you need to end your leave early, you must call the DFML Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.</li><li>$t(shared.trackStatus)</li><li>$t(shared.viewPostSubmissionVideo)</li></ul>",
+      "<ul><li>Your employer has 10 business days to provide feedback on your application.</li> <li>We’ll confirm your eligibility and make sure that your documents are valid.</li> <li>We will notify you once we’ve made a decision. You’ll be able to read the details of the decision on this website. Your employer will also get a copy of the decision.</li><li>Once your application is approved, you can expect your first payment to arrive at the beginning of your fourth week of leave, if your leave has already started. If your leave starts in the future, you can expect your first payment 2-4 weeks after your leave starts. After that, you will receive your payments every week.</li><li>If you need to end your leave early, you must call the DFML Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.</li><li>$t(shared.trackStatus)</li><li>$t(shared.viewPostSubmissionVideo)</li></ul>",
     adjudicationProcess_medicalPregnantFuture:
       "<ul><li>Your employer has 10 days to provide feedback on your application.</li><li>After we’ve made a decision, you’ll receive an email notification with a link to details about the decision.</li><li>If your application is approved prior to your leave, you can expect your first payment to arrive about 3 weeks after your leave starts. Otherwise, you can expect your first payment 2-3 weeks after your leave is approved.</li><li>$t(shared.trackStatus)</li><li>$t(shared.viewPostSubmissionVideo)</li></ul>",
     claimantApplicationId:
@@ -2581,6 +2597,7 @@ const pages: {
     welcomeTitle: "Welcome",
   },
   getReady: {
+    addApplication: "$t(shared.addApplication)",
     alertHeading: "Only some people can apply online for now",
     alertOnline:
       "<p>If you are currently employed in Massachusetts but not self-employed, you can apply online or by phone for the following types of paid leave:</p><ul><li>Medical leave due to your own illness, injury, or pregnancy</li><li>Family leave to bond with your child after birth, adoption, or foster placement — whether you are applying before or after the child arrives</li><li>Family leave to care for a family member with a serious medical condition</li></ul>",
@@ -2592,6 +2609,8 @@ const pages: {
     convertDescription: "Your account type is now converted.",
     convertHeading: "Success",
     createClaimButton: "Create an application",
+    startByPhoneDescription: "$t(shared.startByPhoneDescription)",
+    startByPhoneLabel: "$t(shared.startByPhoneLabel)",
     stepOne:
       "<p>If you can, tell your employer at least 30 days before your leave begins. If you need to take leave right away, tell your employer as soon as possible.</p><p>Once you tell your employer, you have the right to apply and your job is protected. Make a note of when you notified your employer. You will need to provide this date in your leave application.</p>",
     stepOneHeading: "1. Tell your employer that you need to take paid leave",
@@ -2777,6 +2796,8 @@ const components: {
   },
   applicationCard: {
     applicationID: "Application ID",
+    claimAssociatedSuccessfully:
+      "Application {{fineos_absence_id}} has been added to your account.",
     continueApplication: "Continue application",
     employerEIN: "Employer Identification Number (EIN)",
     heading: "Application {{number}}",
@@ -2866,8 +2887,6 @@ const components: {
       "This amendment will get saved when you submit your review. To remove this leave, include a comment at the end of the page.",
   },
   employersAmendableEmployerBenefit: {
-    amountFrequencyLabel: "$t(shared.amountFrequencyLabel)",
-    benefitAmountDollarsLabel: "Amount",
     benefitEndDateLabel:
       "What is the last day of leave from work that this benefit will pay your employee for?",
     benefitStartDateLabel:
@@ -2888,7 +2907,6 @@ const components: {
     choiceYes: "$t(shared.choiceYes)",
     destroyButtonLabel_add: "Cancel addition",
     destroyButtonLabel_amend: "Cancel amendment",
-    employeeAmountReceivedLabel: "How much will your employee receive?",
     heading_add: "Add an employer-sponsored benefit",
     heading_amend: "Amend employer-sponsored benefit",
     hint: "This addition will get saved when you submit your review at the end of this page.",
@@ -2997,27 +3015,13 @@ const components: {
   employersEmployerBenefits: {
     addButton_first: "Add an employer-sponsored benefit",
     addButton_subsequent: "Add another employer-sponsored benefit",
-    amountFrequency: "Select a frequency",
-    amountFrequency_daily: "$t(shared.amountFrequency_daily)",
-    amountFrequency_inTotal: "$t(shared.amountFrequency_inTotal)",
-    amountFrequency_monthly: "$t(shared.amountFrequency_monthly)",
-    amountFrequency_unknown: "$t(shared.amountFrequency_unknown)",
-    amountFrequency_weekly: "$t(shared.amountFrequency_weekly)",
-    amountPerFrequency_daily: "$t(shared.amountPerFrequency_daily)",
-    amountPerFrequency_inTotal: "$t(shared.amountPerFrequency_inTotal)",
-    amountPerFrequency_monthly: "$t(shared.amountPerFrequency_monthly)",
-    amountPerFrequency_unknown: "$t(shared.amountPerFrequency_unknown)",
-    amountPerFrequency_weekly: "$t(shared.amountPerFrequency_weekly)",
     benefitTypeLabel: "Benefit type",
     caption_v1:
       "Your employee is planning to use these benefits. Employer sponsored benefits include temporary disability insurance, permanent disability insurance, paid time off (PTO) or accrued paid leave, and family or medical leave benefits such as a parental leave program. <reductions-overview-link>Learn more about how these affect payments.</reductions-overview-link>",
     caption_v2:
       "Your employee is planning to use these benefits during their paid leave under PFML. Employer sponsored benefits include temporary disability insurance, permanent disability insurance, and family or medical leave benefits such as a parental leave program. For paid time off (PTO) and other accrued paid leave your employee will use, review “Concurrent accrued paid leave” above. <reductions-overview-link>Learn more about how these affect payments.</reductions-overview-link>",
     dateRangeLabel: "Date range",
-    detailsLabel: "Details",
-    fullSalaryContinuous: "Full salary continuous",
     header: "Employer-sponsored benefits",
-    noAmountReported: "No amount reported",
     tableName: "Employer-sponsored benefit details",
   },
   employersEmployerDecision: {
