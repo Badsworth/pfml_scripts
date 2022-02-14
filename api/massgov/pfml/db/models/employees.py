@@ -37,6 +37,7 @@ from sqlalchemy.sql.expression import func
 from sqlalchemy.types import JSON
 
 import massgov.pfml.util.logging
+from massgov.pfml.util import compare_attributes
 from massgov.pfml.util.datetime import utcnow
 
 from ..lookup import LookupTable
@@ -1122,6 +1123,19 @@ class Address(Base, TimestampMixin):
     health_care_providers: "Query[HealthCareProviderAddress]" = dynamic_loader(
         "HealthCareProviderAddress", back_populates="address"
     )
+
+    def is_same_address(self, second: "Address") -> bool:
+        if (
+            compare_attributes(self, second, "address_line_one")
+            and compare_attributes(self, second, "city")
+            and compare_attributes(self, second, "zip_code")
+            and compare_attributes(self, second, "geo_state_id")
+            and compare_attributes(self, second, "country_id")
+            and compare_attributes(self, second, "address_line_two")
+        ):
+            return True
+        else:
+            return False
 
 
 class CtrDocumentIdentifier(Base, TimestampMixin):

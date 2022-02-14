@@ -623,16 +623,15 @@ def amount_validator(amount_str: str) -> Optional[ValidationReason]:
     return None
 
 
-def validate_csv_input(
+def validate_input(
     key: str,
-    data: Dict[str, str],
+    value: Any,
     errors: ValidationContainer,
     required: Optional[bool] = False,
     min_length: Optional[int] = None,
     max_length: Optional[int] = None,
     custom_validator_func: Optional[Callable[[str], Optional[ValidationReason]]] = None,
 ) -> Optional[str]:
-    value = data.get(key)
     if value == "Unknown":
         value = None  # Effectively treating "" and "Unknown" the same
 
@@ -667,6 +666,21 @@ def validate_csv_input(
         return None
 
     return value
+
+
+def validate_csv_input(
+    key: str,
+    data: Dict[str, str],
+    errors: ValidationContainer,
+    required: Optional[bool] = False,
+    min_length: Optional[int] = None,
+    max_length: Optional[int] = None,
+    custom_validator_func: Optional[Callable[[str], Optional[ValidationReason]]] = None,
+) -> Optional[str]:
+    value = data.get(key)
+    return validate_input(
+        key, value, errors, required, min_length, max_length, custom_validator_func
+    )
 
 
 def validate_db_input(
@@ -679,40 +693,9 @@ def validate_db_input(
     custom_validator_func: Optional[Callable[[str], Optional[ValidationReason]]] = None,
 ) -> Optional[str]:
     value = getattr(data, key.lower(), None)
-    if value == "Unknown":
-        value = None  # Effectively treating "" and "Unknown" the same
-
-    if required and not value:
-        errors.add_validation_issue(ValidationReason.MISSING_FIELD, key)
-        return None
-
-    validation_issues = []
-    # Check the length only if it is defined/not empty
-    if value:
-        if min_length and len(value) < min_length:
-            validation_issues.append(ValidationReason.FIELD_TOO_SHORT)
-        if max_length and len(value) > max_length:
-            validation_issues.append(ValidationReason.FIELD_TOO_LONG)
-
-        # Also only bother with custom validation if the value exists
-        if custom_validator_func:
-            reason = custom_validator_func(value)
-            if reason:
-                validation_issues.append(reason)
-
-    if required:
-
-        for validation_issue in validation_issues:
-            # Any non-missing error types add the value to the error details
-            # Note that this means these reports will contain PII data
-            errors.add_validation_issue(validation_issue, f"{key}: {value}")
-
-    # If any of the specific validations hit an error, don't return the value
-    # This is true even if the field is not required as we may still use the field.
-    if len(validation_issues) > 0:
-        return None
-
-    return value
+    return validate_input(
+        key, value, errors, required, min_length, max_length, custom_validator_func
+    )
 
 
 def get_date_group_str_from_path(path: str) -> Optional[str]:
@@ -1016,39 +999,31 @@ def datetime_str_to_date(datetime_str: Optional[str]) -> Optional[date]:
     return datetime.fromisoformat(datetime_str).date()
 
 
-def compare_address_fields(first: Address, second: Address, field: str) -> bool:
-    value1 = getattr(first, field)
-    value2 = getattr(second, field)
-
-    if type(value1) is str:
-        value1 = value1.strip().lower()
-    if type(value2) is str:
-        value2 = value2.strip().lower()
-
-    if value1 is None:
-        value1 = ""
-    if value2 is None:
-        value2 = ""
-
-    return value1 == value2
-
-
-def is_same_address(first: Address, second: Address) -> bool:
+def is_same_eft(first: PubEft, second: PubEft) -> bool:
+    """Returns true if all EFT fields match"""
     if (
-        compare_address_fields(first, second, "address_line_one")
-        and compare_address_fields(first, second, "city")
-        and compare_address_fields(first, second, "zip_code")
-        and compare_address_fields(first, second, "geo_state_id")
-        and compare_address_fields(first, second, "country_id")
-        and compare_address_fields(first, second, "address_line_two")
+        first.routing_nbr == second.routing_nbr
+        and first.account_nbr == second.account_nbr
+        and first.bank_account_type_id == second.bank_account_type_id
     ):
         return True
     else:
         return False
 
 
+def find_existing_eft(employee: Optional[Employee], new_eft: PubEft) -> Optional[PubEft]:
+    if not employee:
+        return None
+
+    for pub_eft_pair in employee.pub_efts.all():
+        if is_same_eft(pub_eft_pair.pub_eft, new_eft):
+            return pub_eft_pair.pub_eft
+
+    return None
+
+
 def find_existing_address_pair(
-    employee: Optional[Employee], new_address: Address, db_session: db.Session
+    employee: Optional[Employee], new_address: "Address", db_session: db.Session
 ) -> Optional[ExperianAddressPair]:
     if not employee:
         return None
@@ -1073,34 +1048,11 @@ def find_existing_address_pair(
         existing_fineos_address = experian_address_pair.fineos_address
         existing_experian_address = experian_address_pair.experian_address
 
-        if existing_fineos_address and is_same_address(new_address, existing_fineos_address):
+        if existing_fineos_address and new_address.is_same_address(existing_fineos_address):
             return experian_address_pair
 
-        if existing_experian_address and is_same_address(new_address, existing_experian_address):
+        if existing_experian_address and new_address.is_same_address(existing_experian_address):
             return experian_address_pair
-
-    return None
-
-
-def is_same_eft(first: PubEft, second: PubEft) -> bool:
-    """Returns true if all EFT fields match"""
-    if (
-        first.routing_nbr == second.routing_nbr
-        and first.account_nbr == second.account_nbr
-        and first.bank_account_type_id == second.bank_account_type_id
-    ):
-        return True
-    else:
-        return False
-
-
-def find_existing_eft(employee: Optional[Employee], new_eft: PubEft) -> Optional[PubEft]:
-    if not employee:
-        return None
-
-    for pub_eft_pair in employee.pub_efts.all():
-        if is_same_eft(pub_eft_pair.pub_eft, new_eft):
-            return pub_eft_pair.pub_eft
 
     return None
 

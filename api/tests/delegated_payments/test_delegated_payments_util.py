@@ -39,7 +39,6 @@ from massgov.pfml.delegated_payments.delegated_payments_util import (
     find_existing_eft,
     get_earliest_absence_period_for_payment_leave_request,
     is_employer_exempt_for_payment,
-    is_same_address,
     is_same_eft,
     move_reference_file,
 )
@@ -558,7 +557,7 @@ def test_same_address(initialize_factories_session):
         zip_code="02110",
         country_id=Country.USA.country_id,
     )
-    assert is_same_address(first, second) is True
+    assert first.is_same_address(second) is True
 
     # Test that None == ""
     third = AddressFactory(
@@ -575,7 +574,7 @@ def test_same_address(initialize_factories_session):
         zip_code="02110",
         country_id=Country.USA.country_id,
     )
-    assert is_same_address(third, fourth) is True
+    assert third.is_same_address(fourth) is True
 
 
 def test_same_address_comparable(initialize_factories_session):
@@ -591,13 +590,13 @@ def test_same_address_comparable(initialize_factories_session):
         city="boston",
         zip_code="02110",
     )
-    assert is_same_address(first, second) is True
+    assert first.is_same_address(second) is True
 
 
 def test_different_address(initialize_factories_session):
     first = AddressFactory()
     second = AddressFactory()
-    assert is_same_address(first, second) is False
+    assert first.is_same_address(second) is False
 
     # Different address line one
     third = AddressFactory(
@@ -612,7 +611,7 @@ def test_different_address(initialize_factories_session):
         city="boston",
         zip_code="02110",
     )
-    assert is_same_address(third, fourth) is False
+    assert third.is_same_address(fourth) is False
 
     # Different city
     fifth = AddressFactory(
@@ -621,7 +620,7 @@ def test_different_address(initialize_factories_session):
         city="watertown",
         zip_code="02110",
     )
-    assert is_same_address(third, fifth) is False
+    assert third.is_same_address(fifth) is False
 
     # Different state
     sixth = AddressFactory(
@@ -631,7 +630,7 @@ def test_different_address(initialize_factories_session):
         geo_state_id=GeoState.CA.geo_state_id,
         zip_code="02110",
     )
-    assert is_same_address(third, sixth) is False
+    assert third.is_same_address(sixth) is False
 
     # Different zip code
     seventh = AddressFactory(
@@ -640,7 +639,7 @@ def test_different_address(initialize_factories_session):
         city="boston",
         zip_code="02110-1234",
     )
-    assert is_same_address(third, seventh) is False
+    assert third.is_same_address(seventh) is False
 
     # Different country
     eighth = AddressFactory(
@@ -657,7 +656,7 @@ def test_different_address(initialize_factories_session):
         zip_code="02110",
         country_id=Country.TWN.country_id,
     )
-    assert is_same_address(eighth, ninth) is False
+    assert eighth.is_same_address(ninth) is False
 
 
 def test_address_line_two(initialize_factories_session):
@@ -668,7 +667,7 @@ def test_address_line_two(initialize_factories_session):
         zip_code="02110",
     )
     second = AddressFactory(address_line_one="1234 main st", city="boston", zip_code="02110")
-    assert is_same_address(first, second) is False
+    assert first.is_same_address(second) is False
 
     third = AddressFactory(address_line_one="1234 main st", city="boston", zip_code="02110")
     fourth = AddressFactory(
@@ -677,7 +676,7 @@ def test_address_line_two(initialize_factories_session):
         city="boston",
         zip_code="02110",
     )
-    assert is_same_address(third, fourth) is False
+    assert third.is_same_address(fourth) is False
 
 
 @pytest.mark.parametrize(
