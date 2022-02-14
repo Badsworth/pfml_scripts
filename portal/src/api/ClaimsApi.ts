@@ -2,6 +2,7 @@ import Claim, { AbsenceCaseStatus } from "../models/Claim";
 import ClaimDetail, { Payments } from "../models/ClaimDetail";
 import ApiResourceCollection from "../models/ApiResourceCollection";
 import BaseApi from "./BaseApi";
+import { isFeatureEnabled } from "../services/featureFlags";
 import routes from "../routes";
 
 export interface GetClaimsParams {
@@ -9,6 +10,7 @@ export interface GetClaimsParams {
   employer_id?: string;
   search?: string;
   claim_status?: string;
+  allow_hrd?: boolean;
   is_reviewable?: "no" | "yes";
   order_by?:
     | "absence_status"
@@ -41,6 +43,16 @@ export default class ClaimsApi extends BaseApi {
    */
   getClaims = async (params: GetClaimsParams = {}) => {
     const activeParams = { ...params };
+
+    // TODO (PFMLPB-2615) Remove this feature flag after HRD feature is enabled
+    const employerUnlockDashboard = Boolean(
+      isFeatureEnabled("employerUnlockDashboard")
+    );
+
+    if (employerUnlockDashboard) {
+      activeParams.allow_hrd = employerUnlockDashboard;
+    }
+
     // We display Closed and Completed claims as the same to the user, so we
     // want the Closed filter to encompass both.
     if (
