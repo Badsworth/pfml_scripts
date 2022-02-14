@@ -2,7 +2,6 @@ import React, { FormEvent, useRef } from "react";
 import SortDropdown, {
   PageQueryParam,
 } from "../../features/employer-dashboard/SortDropdown";
-import withClaims, { ApiParams } from "../../hoc/withClaims";
 import withUser, { WithUserProps } from "../../hoc/withUser";
 import Alert from "../../components/core/Alert";
 import Button from "../../components/core/Button";
@@ -10,6 +9,7 @@ import DeprecatedPaginatedClaimsTable from "../../features/employer-dashboard/De
 import Details from "../../components/core/Details";
 import EmployerNavigationTabs from "../../components/employers/EmployerNavigationTabs";
 import Filters from "../../features/employer-dashboard/Filters";
+import { GetClaimsParams } from "../../api/ClaimsApi";
 import InputText from "../../components/core/InputText";
 import PaginatedClaimsTable from "../../features/employer-dashboard/PaginatedClaimsTable";
 import Title from "../../components/core/Title";
@@ -20,8 +20,11 @@ import { isFeatureEnabled } from "../../services/featureFlags";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
+import withClaims from "../../hoc/withClaims";
 
-export const Dashboard = (props: WithUserProps & { query: ApiParams }) => {
+export const Dashboard = (
+  props: WithUserProps & { query: GetClaimsParams }
+) => {
   const { t } = useTranslation();
   const introElementRef = useRef<HTMLElement>(null);
   const showMultiLeaveDash = isFeatureEnabled(
@@ -31,6 +34,7 @@ export const Dashboard = (props: WithUserProps & { query: ApiParams }) => {
     // Default the dashboard to show claims requiring action first
     order_by: showMultiLeaveDash ? "latest_follow_up_date" : "absence_status",
     order_direction: showMultiLeaveDash ? "descending" : "ascending",
+    page_offset: 1,
     ...props.query,
   } as const;
 
