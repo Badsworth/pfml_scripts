@@ -81,9 +81,8 @@ from massgov.pfml.util.users import has_role_in
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
-# Added in https://lwd.atlassian.net/browse/PSD-2401
-# Modified in https://lwd.atlassian.net/browse/PFMLPB-3276
-CLAIMS_DASHBOARD_BLOCKED_FEINS: Set[str] = set([])
+# HRD Employer FEIN. See https://lwd.atlassian.net/browse/PSD-2401
+CLAIMS_DASHBOARD_BLOCKED_FEINS = set(["046002284"])
 
 
 class VerificationRequired(Forbidden):
@@ -503,6 +502,7 @@ def get_claims() -> flask.Response:
     current_user = app.current_user()
     employer_id = flask.request.args.get("employer_id")
     employee_id_str = flask.request.args.get("employee_id")
+    allow_hrd = flask.request.args.get("allow_hrd", type=bool) or False
     search_string = flask.request.args.get("search", type=str)
     absence_statuses = parse_filterable_absence_statuses(flask.request.args.get("claim_status"))
     request_decisions = map_request_decision_param_to_db_columns(
@@ -535,7 +535,7 @@ def get_claims() -> flask.Response:
                 verified_employers = [
                     employer
                     for employer in employers_list
-                    if employer.employer_fein not in CLAIMS_DASHBOARD_BLOCKED_FEINS
+                    if (employer.employer_fein not in CLAIMS_DASHBOARD_BLOCKED_FEINS or allow_hrd)
                     and current_user.verified_employer(employer)
                 ]
 
