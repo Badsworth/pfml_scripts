@@ -157,6 +157,7 @@ def test_get_payments_200(
     }
 
 
+@freeze_time("2021-12-09 12:00:00", tz_offset=5)
 def test_get_payments_200_pending_validation_scenario_no_prenote_sent_at(
     client, auth_token, user, test_db_session
 ):
@@ -216,6 +217,7 @@ def test_get_payments_200_pending_validation_scenario_no_prenote_sent_at(
     }
 
 
+@freeze_time("2021-12-09 12:00:00", tz_offset=5)
 def test_get_payments_200_range_before_today(client, auth_token, user, test_db_session):
     absence_id = "NTN-12345-ABS-01"
     now = datetime.now()
@@ -274,6 +276,7 @@ def test_get_payments_200_range_before_today(client, auth_token, user, test_db_s
     }
 
 
+@freeze_time("2021-12-09 12:00:00", tz_offset=5)
 def test_get_payments_200_cancelled_payments(client, auth_token, user, test_db_session):
     absence_id = "NTN-12345-ABS-01"
     now = datetime.now()
@@ -330,6 +333,7 @@ def test_get_payments_200_cancelled_payments(client, auth_token, user, test_db_s
     }
 
 
+@freeze_time("2021-12-09 12:00:00", tz_offset=5)
 def test_get_payments_200_zero_dollar(client, auth_token, user, test_db_session):
     absence_id = "NTN-12345-ABS-01"
     now = datetime.now()
@@ -384,6 +388,7 @@ def test_get_payments_200_zero_dollar(client, auth_token, user, test_db_session)
     }
 
 
+@freeze_time("2021-12-09 12:00:00", tz_offset=5)
 def test_get_payments_200_legacy_payments(client, auth_token, user, test_db_session):
     # Legacy payments fetch values from different places, so validate separately
     absence_id = "NTN-12345-ABS-01"
@@ -432,6 +437,7 @@ def test_get_payments_200_legacy_payments(client, auth_token, user, test_db_sess
     }
 
 
+@freeze_time("2021-12-09 12:00:00", tz_offset=5)
 def test_get_payments_returns_403_when_payments_not_associated_with_user_application(
     client, auth_token, test_db_session
 ):
