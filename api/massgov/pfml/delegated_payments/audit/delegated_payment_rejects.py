@@ -143,6 +143,7 @@ class PaymentRejectsStep(Step):
                     ),
                     first_name=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.first_name),
                     last_name=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.last_name),
+                    employer_name=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.employer_name),
                     dor_first_name=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.dor_first_name),
                     dor_last_name=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.dor_last_name),
                     address_line_1=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.address_line_1),

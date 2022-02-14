@@ -14,6 +14,7 @@ class PaymentAuditCSV(AbstractRecord):
     fineos_customer_number: Optional[str]
     first_name: Optional[str]
     last_name: Optional[str]
+    employer_name: Optional[str]
     dor_first_name: Optional[str]
     dor_last_name: Optional[str]
     dor_fineos_name_mismatch_details: Optional[str]
@@ -79,6 +80,7 @@ PAYMENT_AUDIT_CSV_HEADERS = PaymentAuditCSV(
     fineos_customer_number="Customer Number",
     first_name="First Name",
     last_name="Last Name",
+    employer_name="Employer Name",
     dor_first_name="DOR First Name",
     dor_last_name="DOR Last Name",
     dor_fineos_name_mismatch_details=PaymentAuditReportType.DOR_FINEOS_NAME_MISMATCH.payment_audit_report_type_description,

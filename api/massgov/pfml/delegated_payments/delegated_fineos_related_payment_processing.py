@@ -28,6 +28,8 @@ class RelatedPaymentsProcessingStep(Step):
     def run_step(self) -> None:
         """Top-level function that calls all the other functions in this file in order"""
         logger.info("Processing related payment processing step")
+        self.process_errored_employer_reimbursement_payments()
+        # go get failed ER payments and find primary payments if exists and set state that failed because of ER
         self.process_payments_for_related_employer_reimbursement_payments()
         self.process_payments_for_related_withholding_payments()
 
@@ -147,8 +149,17 @@ class RelatedPaymentsProcessingStep(Step):
                     payment_state_log.end_state_id
                     != State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING.state_id
                 ):
-                    end_state = State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT
-                    outcome = state_log_util.build_outcome("Primary payment has an error")
+                    if (
+                        payment_state_log.end_state_id
+                        in payments_util.Constants.RESTARTABLE_PAYMENT_STATE_IDS
+                    ):
+                        end_state = State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT_RESTARTABLE
+                        outcome = state_log_util.build_outcome(
+                            "Primary payment is in Error restartable state"
+                        )
+                    else:
+                        end_state = State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT
+                        outcome = state_log_util.build_outcome("Primary payment has an error")
                     state_log_util.create_finished_state_log(
                         associated_model=payment,
                         end_state=end_state,
@@ -425,3 +436,87 @@ class RelatedPaymentsProcessingStep(Step):
             db_session=db_session,
         )
         return [state_log.payment for state_log in state_logs]
+
+    def process_errored_employer_reimbursement_payments(self) -> None:
+        logger.info("Processing  errored employer reimbursement payment processing step")
+        fineos_extract_import_log_id = self.get_import_log_id()
+        # get employer reimbursement payments
+        employer_reimbursement_payments: List[Payment] = (
+            self.db_session.query(Payment)
+            .filter(
+                Payment.payment_transaction_type_id
+                == PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id
+            )
+            .filter(Payment.fineos_extract_import_log_id == fineos_extract_import_log_id)
+            .all()
+        )
+
+        for payment in employer_reimbursement_payments:
+            # find the primary payment and set the state to error for that payment.
+            payment_state_log: Optional[StateLog] = state_log_util.get_latest_state_log_in_flow(
+                payment, Flow.DELEGATED_PAYMENT, self.db_session
+            )
+            if payment_state_log is None:
+                raise Exception(
+                    "State log record not found for the primary payment id: %s", payment.payment_id,
+                )
+            if (
+                payment_state_log.end_state_id
+                != State.EMPLOYER_REIMBURSEMENT_READY_FOR_PROCESSING.state_id
+            ):
+                # find primary payment for the errored employer reimbursement payment
+                primary_payment_records: List[Payment] = (
+                    self.db_session.query(Payment)
+                    .filter(Payment.claim_id == payment.claim_id)
+                    .filter(Payment.period_start_date <= payment.period_start_date)
+                    .filter(Payment.period_end_date >= payment.period_end_date)
+                    .filter(
+                        Payment.payment_transaction_type_id
+                        == PaymentTransactionType.STANDARD.payment_transaction_type_id
+                    )
+                    .filter(
+                        Payment.fineos_extract_import_log_id == payment.fineos_extract_import_log_id
+                    )
+                    .all()
+                )
+                if len(primary_payment_records) == 1:
+                    # set the state and writeback
+                    end_state = State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT_RESTARTABLE
+                    message = state_log_util.build_outcome(
+                        "Employer reimbursement payment has an error"
+                    )
+                    # DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT_RESTARTABLE
+                    state_log_util.create_finished_state_log(
+                        end_state=end_state,
+                        outcome=message,
+                        associated_model=payment,
+                        db_session=self.db_session,
+                    )
+                    payment_log_details = payments_util.get_traceable_payment_details(payment)
+                    logger.info(
+                        "Payment added to state %s",
+                        end_state.state_description,
+                        extra=payment_log_details,
+                    )
+                if len(primary_payment_records) > 1:
+                    for primary_payment in primary_payment_records:
+                        # set the state and writeback
+                        end_state = State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT_RESTARTABLE
+                        message = state_log_util.build_outcome(
+                            "Employer reimbursement payment has an error"
+                        )
+                        # DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT_RESTARTABLE
+                        state_log_util.create_finished_state_log(
+                            end_state=end_state,
+                            outcome=message,
+                            associated_model=primary_payment,
+                            db_session=self.db_session,
+                        )
+                        payment_log_details = payments_util.get_traceable_payment_details(
+                            primary_payment
+                        )
+                        logger.info(
+                            "Payment added to state %s",
+                            end_state.state_description,
+                            extra=payment_log_details,
+                        )
