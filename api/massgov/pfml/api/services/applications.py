@@ -75,7 +75,7 @@ from massgov.pfml.db.models.employees import (
 )
 from massgov.pfml.db.models.geo import GeoState
 from massgov.pfml.fineos import AbstractFINEOSClient
-from massgov.pfml.fineos.models.customer_api import PhoneNumber
+from massgov.pfml.fineos.models.customer_api import AbsencePeriodStatus, PhoneNumber
 from massgov.pfml.fineos.models.customer_api.spec import (
     AbsenceDetails,
     AbsencePeriod,
@@ -1133,6 +1133,18 @@ def _set_reduced_leave_periods(application: Application, absence_details: Absenc
     application.reduced_schedule_leave_periods = reduced_schedule_leave_periods
 
 
+def _set_has_future_child_date(
+    application: Application, imported_absence_period: AbsencePeriod
+) -> None:
+    if (
+        application.leave_reason_id == DBLeaveReason.CHILD_BONDING.leave_reason_id
+        and imported_absence_period.status == AbsencePeriodStatus.ESTIMATED.value
+    ):
+        application.has_future_child_date = True
+    else:
+        application.has_future_child_date = False
+
+
 def _get_open_absence_period(absence_details: AbsenceDetails) -> Optional[AbsencePeriod]:
     if absence_details.absencePeriods:
         for absence_period in absence_details.absencePeriods:
@@ -1213,6 +1225,7 @@ def set_application_absence_and_leave_period(
         application.pregnant_or_recent_birth = (
             application.leave_reason_id == DBLeaveReason.PREGNANCY_MATERNITY.leave_reason_id
         )
+        _set_has_future_child_date(application, absence_period)
     application.submitted_time = absence_details.creationDate
     application.employer_notification_date = absence_details.notificationDate
     application.employer_notified = application.employer_notification_date is not None
