@@ -160,7 +160,7 @@ describe("Employer dashboard", () => {
     expect(screen.getByRole("table")).toMatchSnapshot();
   });
 
-  it("renders a table of claims, with links to review page", () => {
+  it("renders a table of claims, with links to status page", () => {
     process.env.featureFlags = JSON.stringify({
       employerShowMultiLeaveDashboard: true,
     });

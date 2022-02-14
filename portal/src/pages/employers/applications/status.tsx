@@ -50,6 +50,21 @@ export const Status = (props: WithEmployerClaimProps) => {
     DocumentType.changeRequestDenied,
   ]);
 
+  /**
+   * We use this page as the entry point for leave admins viewing an individual claim.
+   * We need to determine whether they should see the status page or the review page.
+   */
+  if (claim.is_reviewable) {
+    appLogic.portalFlow.goToPageFor(
+      "REDIRECT_REVIEWABLE_CLAIM",
+      {},
+      { absence_id: absenceId },
+      { redirect: true }
+    );
+
+    return null;
+  }
+
   return (
     <React.Fragment>
       <BackButton />

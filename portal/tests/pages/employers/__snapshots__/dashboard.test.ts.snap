@@ -89,7 +89,7 @@ exports[`Employer dashboard deprecated: renders a table of claims with links if 
 </table>
 `;
 
-exports[`Employer dashboard renders a table of claims, with links to review page 1`] = `
+exports[`Employer dashboard renders a table of claims, with links to status page 1`] = `
 <table
   class="usa-table usa-table--borderless width-full usa-table--stacked"
 >
@@ -126,7 +126,7 @@ exports[`Employer dashboard renders a table of claims, with links to review page
         scope="row"
       >
         <a
-          href="/employers/applications/new-application?absence_id=NTN-111-ABS-01"
+          href="/employers/applications/status?absence_id=NTN-111-ABS-01"
         >
           Jane Doe
           <div
@@ -188,7 +188,7 @@ exports[`Employer dashboard renders a table of claims, with links to review page
       >
         <a
           class="usa-button margin-bottom-05"
-          href="/employers/applications/new-application?absence_id=NTN-111-ABS-01"
+          href="/employers/applications/status?absence_id=NTN-111-ABS-01"
         >
           Review Application
         </a>

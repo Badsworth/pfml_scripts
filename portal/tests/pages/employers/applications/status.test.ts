@@ -8,13 +8,14 @@ import { screen, waitFor } from "@testing-library/react";
 import { AbsenceCaseStatus } from "../../../../src/models/Claim";
 import ApiResourceCollection from "src/models/ApiResourceCollection";
 import Status from "../../../../src/pages/employers/applications/status";
+import routes from "../../../../src/routes";
 import userEvent from "@testing-library/user-event";
 
 function setup(models = {}) {
-  const spys: {
-    loadDocumentsSpy?: jest.SpyInstance;
-    downloadDocumentSpy?: jest.SpyInstance;
-  } = {};
+  let loadDocumentsSpy!: jest.SpyInstance;
+  let downloadDocumentSpy!: jest.SpyInstance;
+  let goToPageForSpy!: jest.SpyInstance;
+
   const absence_id = "NTN-111-ABS-01";
   const { claim, claimDocumentsMap } = {
     claim: new MockEmployerClaimBuilder()
@@ -43,15 +44,17 @@ function setup(models = {}) {
   const utils = renderPage(
     Status,
     {
+      pathname: routes.employers.status,
       addCustomSetup: (appLogic) => {
         appLogic.employers.claim = claim;
         appLogic.employers.claimDocumentsMap = claimDocumentsMap;
-        spys.loadDocumentsSpy = jest
+        loadDocumentsSpy = jest
           .spyOn(appLogic.employers, "loadDocuments")
           .mockResolvedValue();
-        spys.downloadDocumentSpy = jest
+        downloadDocumentSpy = jest
           .spyOn(appLogic.employers, "downloadDocument")
           .mockResolvedValue(new Blob());
+        goToPageForSpy = jest.spyOn(appLogic.portalFlow, "goToPageFor");
       },
     },
     {
@@ -59,10 +62,24 @@ function setup(models = {}) {
     }
   );
 
-  return { ...spys, ...utils };
+  return { loadDocumentsSpy, downloadDocumentSpy, goToPageForSpy, ...utils };
 }
 
 describe("Status", () => {
+  it("redirects reviewable claims", () => {
+    const claim = new MockEmployerClaimBuilder().reviewable().create();
+    const { goToPageForSpy } = setup({
+      claim,
+    });
+
+    expect(goToPageForSpy).toHaveBeenCalledWith(
+      "REDIRECT_REVIEWABLE_CLAIM",
+      {},
+      { absence_id: claim.fineos_absence_id },
+      { redirect: true }
+    );
+  });
+
   it("renders the page for a completed claim", () => {
     const { container } = setup();
     expect(container).toMatchSnapshot();
