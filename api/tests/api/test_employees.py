@@ -42,6 +42,16 @@ def test_employees_get_snow_user_allowed(client, employee, snow_user_headers):
     assert response.status_code == 200
 
 
+def test_employees_get_e164_phone_number(client, employee, snow_user_headers):
+    response = client.get(
+        "/v1/employees/{}".format(employee.employee_id), headers=snow_user_headers,
+    )
+    response_data = response.get_json().get("data")
+
+    assert response_data["phone_numbers"][0]["e164"] == employee.phone_number
+    assert response.status_code == 200
+
+
 def test_employees_get_snow_user_requires_agent_id(client, employee, snow_user_token):
     # requires header {"Mass-PFML-Agent-ID": "123"}
     response = client.get(

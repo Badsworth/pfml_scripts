@@ -3997,6 +3997,11 @@ components:
           example: "224-705-2345"
           pattern: '^([0-9]|\*){3}\-([0-9]|\*){3}\-[0-9]{4}$'
           nullable: true
+        e164:
+          type: string
+          example: "+12247052345"
+          pattern: '^\+?[1-9]\d{1,14}$'
+          nullable: true
         phone_type:
           type: string
           nullable: true

@@ -23,7 +23,6 @@ from massgov.pfml.api.models.applications.responses import DocumentResponse
 from massgov.pfml.api.models.common import LookupEnum
 from massgov.pfml.api.services.administrator_fineos_actions import EformTypes
 from massgov.pfml.api.services.fineos_actions import get_documents
-from massgov.pfml.api.util.phone import convert_to_E164
 from massgov.pfml.api.util.response import Response
 from massgov.pfml.api.validation.exceptions import (
     IssueRule,
@@ -892,7 +891,7 @@ def add_or_update_phone(
     if not phone:
         return
 
-    internationalized_phone_number = convert_to_E164(phone)
+    internationalized_phone_number = phone.e164
 
     # If Phone exists, update with what we have, otherwise, create a new Phone
     # if process_masked_phone_number did not remove the phone_number field, update the db
