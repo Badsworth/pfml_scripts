@@ -12,7 +12,6 @@ const { ErrorCategory } = require("./service/error-category.js");
 module.exports = class NewRelicCypressReporter extends reporters.Spec {
   constructor(runner, options) {
     super(runner, options);
-
     const { accountId, apiKey, environment, branch } = options.reporterOptions;
     this.accountId = accountId;
     this.apiKey = apiKey;
@@ -30,7 +29,18 @@ module.exports = class NewRelicCypressReporter extends reporters.Spec {
     }
     debug("Booting New Relic Reporter");
 
+    runner.on(Runner.constants.EVENT_TEST_BEGIN, (test) => {
+      console.log('------------BEGIN---------------')
+    })
+    runner.on(Runner.constants.EVENT_HOOK_END, (test) => {
+      console.log('------------HOOK---------------')
+    })
+    runner.on(Runner.constants.EVENT_TEST_RETRY, (test) => {
+      console.log('------------RETRY---------------')
+      console.log(test.err)
+    })
     runner.on(Runner.constants.EVENT_TEST_END, (test) => {
+      console.log('------------END---------------')
       const promise = this.reportTest(test)
         .then(() => debug("Sent result to New Relic"))
         // Important - we absolutely cannot throw a real error here, or it will
@@ -42,6 +52,78 @@ module.exports = class NewRelicCypressReporter extends reporters.Spec {
 
   async reportTest(test) {
     const MAX_NR_EVENT_LENGTH = 4096;
+    console.log('------------TEST---------------')
+    console.log(test.err)
+    console.log('------------prevAttempts---------------')
+    console.log(test.prevAttempts)
+
+    // node_modules/.bin/cypress run --spec cypress/specs/test/test.ts --reporter cypress/reporters/new-relic.js
+    //
+    // ------------TEST---------------
+    //   {
+    //     message: "expected 'a' to equal 'b'",
+    //     name: 'AssertionError',
+    //     stack: "AssertionError: expected 'a' to equal 'b'\n" +
+    //            '    at Context.eval (https://paidleave-test.mass.gov/__cypress/tests?p=cypress/specs/test/test.ts:101:24)',
+    //     sourceMappedStack: "AssertionError: expected 'a' to equal 'b'\n" +
+    //                        '    at Context.eval (webpack:///./cypress/specs/test/test.ts:4:20)',
+    //     parsedStack: [
+    //       {
+    //         message: "AssertionError: expected 'a' to equal 'b'",
+    //         whitespace: ''
+    //       },
+    //       {
+    //         function: 'Context.eval',
+    //         fileUrl: 'https://paidleave-test.mass.gov/__cypress/tests?p=cypress/specs/test/test.ts',
+    //         originalFile: 'webpack:///./cypress/specs/test/test.ts',
+    //         relativeFile: 'cypress/specs/test/test.ts',
+    //         absoluteFile: '/home/zanson/projects/lcm/pfml/e2e/cypress/specs/test/test.ts',
+    //         line: 4,
+    //         column: 20,
+    //         whitespace: '    '
+    //       }
+    //     ],
+    //     actual: "'a'",
+    //     expected: "'b'",
+    //     showDiff: true,
+    //     codeFrame: {
+    //       line: 4,
+    //       column: 20,
+    //       originalFile: 'cypress/specs/test/test.ts',
+    //       relativeFile: 'cypress/specs/test/test.ts',
+    //       absoluteFile: '/home/zanson/projects/lcm/pfml/e2e/cypress/specs/test/test.ts',
+    //       frame: '  2 |   const a = it("Should do a thing",  () => {\n' +
+    //              '  3 |     cy.visit("/");\n' +
+    //              '> 4 |     expect("a").to.equal("b");\n' +
+    //              '    |                    ^\n' +
+    //              '  5 |   });\n' +
+    //              '  6 | });\n' +
+    //              '  7 | ',
+    //       language: 'ts'
+    //     }
+    //   }
+    // ------------prevAttempts---------------
+    //   [
+    //     {
+    //       err: {
+    //         message: "expected 'a' to equal 'b'",
+    //         name: 'AssertionError',
+    //         stack: "AssertionError: expected 'a' to equal 'b'\n" +
+    //                '    at Context.eval (https://paidleave-test.mass.gov/__cypress/tests?p=cypress/specs/test/test.ts:101:24)',
+    //         sourceMappedStack: "AssertionError: expected 'a' to equal 'b'\n" +
+    //                            '    at Context.eval (webpack:///./cypress/specs/test/test.ts:4:20)',
+    //         parsedStack: [Array],
+    //         actual: "'a'",
+    //         expected: "'b'",
+    //         showDiff: true,
+    //         codeFrame: [Object]
+    //       },
+    //       state: 'failed',
+    //       timings: { lifecycle: 75, 'before each': [Array], test: [Object] },
+    //       wallClockStartedAt: '2022-02-14T23:43:51.149Z',
+    //       wallClockDuration: 234
+    //     }
+    //   ]
     const suite = getSuite(test);
     const { ciBuildId: runId, group, tag, runUrl } = await getRunMetadata();
     const { environment, ErrorCategory, branch } = this;
@@ -85,7 +167,14 @@ module.exports = class NewRelicCypressReporter extends reporters.Spec {
       ErrorCategory.setErrorCategory(event);
     }
 
-    return this.send(event);
+    // Changes to make
+    // const event1 = awaitbuildCypressTestResult(test)
+    // const event1 = awaitbuildTestResult(test)
+    // const event1 = awaitbuildTestResult(test)
+    // return this.send([event,event2,event3])
+    console.log('------------SEND TO NEWRELIC---------------')
+    console.log(event)
+    // return this.send(event);
   }
 
   async send(event) {
