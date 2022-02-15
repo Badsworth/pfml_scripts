@@ -61,4 +61,3 @@ variable "threshold" {
   type        = string
   default     = "1"
 }
-
