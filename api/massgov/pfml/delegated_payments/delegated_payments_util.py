@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Set, Type, Union, cast
+from typing import Any, Callable, Dict, List, Optional, Type, Union, cast
 
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import ColumnProperty, class_mapper
@@ -48,6 +48,7 @@ from massgov.pfml.db.models.payments import (
     PaymentLog,
 )
 from massgov.pfml.db.models.state import LkState, State
+from massgov.pfml.util.collections.dict import filter_dict, make_keys_lowercase
 from massgov.pfml.util.converters.str_to_numeric import str_to_int
 from massgov.pfml.util.datetime import get_now_us_eastern
 from massgov.pfml.util.routing_number_validation import validate_routing_number
@@ -1178,10 +1179,6 @@ def move_reference_file(
         raise
 
 
-def make_keys_lowercase(data: Dict[str, Any]) -> Dict[str, Any]:
-    return {k.lower(): v for k, v in data.items()}
-
-
 def get_attribute_names(cls):
     return [
         prop.key
@@ -1311,19 +1308,6 @@ def get_transaction_status_date(payment: Payment) -> date:
 
     # Otherwise the transaction status date is calculated using the current time.
     return get_now_us_eastern().date()
-
-
-def filter_dict(dict: Dict[str, Any], allowed_keys: Set[str]) -> Dict[str, Any]:
-    """
-    Filter a dictionary to a specified set of allowed keys.
-    If the key isn't present, will not cause an issue (ie. when we delete columns in the DB)
-    """
-    new_dict = {}
-    for k, v in dict.items():
-        if k in allowed_keys:
-            new_dict[k] = v
-
-    return new_dict
 
 
 employee_audit_log_keys = set(
