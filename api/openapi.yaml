@@ -3602,12 +3602,6 @@ components:
             - Rotating
             - Variable
           nullable: true
-        work_week_starts:
-          $ref: "#/components/schemas/DayOfWeek"
-          nullable: true
-        pattern_start_date:
-          $ref: "#/components/schemas/Date"
-          nullable: true
         work_pattern_days:
           type: array
           maxItems: 7
