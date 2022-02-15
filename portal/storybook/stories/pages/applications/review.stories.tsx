@@ -42,7 +42,7 @@ export const DefaultStory = (
       fineos_document_id: faker.datatype.uuid(),
       name: "",
       user_id: "mock-user-id",
-      application_id: "mock-applicatoin-id",
+      application_id: "mock-application-id",
     },
     {
       document_type: DocumentType.certification.medicalCertification,
@@ -52,7 +52,7 @@ export const DefaultStory = (
       fineos_document_id: faker.datatype.uuid(),
       name: "",
       user_id: "mock-user-id",
-      application_id: "mock-applicatoin-id",
+      application_id: "mock-application-id",
     },
   ];
 

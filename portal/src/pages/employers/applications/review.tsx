@@ -1,8 +1,3 @@
-import {
-  DocumentType,
-  DocumentTypeEnum,
-  findDocumentsByTypes,
-} from "../../../models/Document";
 import LeaveReason, { LeaveReasonType } from "../../../models/LeaveReason";
 import PreviousLeave, {
   PreviousLeaveType,
@@ -12,7 +7,6 @@ import { get, isEqual } from "lodash";
 import withEmployerClaim, {
   WithEmployerClaimProps,
 } from "../../../hoc/withEmployerClaim";
-
 import Alert from "../../../components/core/Alert";
 import AppErrorInfo from "../../../models/AppErrorInfo";
 import BackButton from "../../../components/BackButton";
@@ -35,6 +29,7 @@ import ReviewHeading from "../../../components/ReviewHeading";
 import Title from "../../../components/core/Title";
 import { Trans } from "react-i18next";
 import WeeklyHoursWorkedRow from "../../../components/employers/WeeklyHoursWorkedRow";
+import { findDocumentsByLeaveReason } from "../../../models/Document";
 import formatDate from "../../../utils/formatDate";
 import { getSoonestReviewableFollowUpDate } from "../../../models/ManagedRequirement";
 import isBlank from "../../../utils/isBlank";
@@ -177,22 +172,10 @@ export const Review = (props: WithEmployerClaimProps) => {
   // only cert forms should be shown
   const allDocuments = claimDocumentsMap.get(absenceId)?.items || [];
 
-  // TODO (CP-1983): Remove caring leave feature flag check
-  // after turning on caring leave feature flag, use `findDocumentsByLeaveReason`
-  // instead of `findDocumentsByTypes`
-  const leaveReason: LeaveReasonType | undefined = get(
-    claim,
-    "leave_details.reason"
-  );
-  const certificationDocumentTypes: DocumentTypeEnum[] = [
-    DocumentType.certification.medicalCertification,
-  ];
-  if (leaveReason) {
-    certificationDocumentTypes.push(DocumentType.certification[leaveReason]);
-  }
-  const certificationDocuments = findDocumentsByTypes(
+  const leaveReason = claim.leave_details?.reason as LeaveReasonType;
+  const certificationDocuments = findDocumentsByLeaveReason(
     allDocuments,
-    certificationDocumentTypes
+    leaveReason
   );
 
   const handleBenefitInputAdd = () => {
