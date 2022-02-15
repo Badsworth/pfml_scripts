@@ -438,6 +438,74 @@ def test_get_payments_200_legacy_payments(client, auth_token, user, test_db_sess
 
 
 @freeze_time("2021-12-09 12:00:00", tz_offset=5)
+def test_get_payments_returns_200_when_no_payment_method(client, auth_token, user, test_db_session):
+    absence_id = "NTN-12345-ABS-01"
+    now = datetime.now()
+
+    payment_factory = DelegatedPaymentFactory(
+        test_db_session,
+        fineos_absence_id=absence_id,
+        payment_method=None,
+        amount=Decimal("750.67"),
+        set_pub_eft_in_payment=True,
+        prenote_sent_at=None,
+    )
+    payment_factory.get_or_create_pub_eft()
+    claim = payment_factory.get_or_create_claim()
+    payment = payment_factory.get_or_create_payment()
+    ApplicationFactory.create(claim=claim, user=user)
+
+    transaction_status = FineosWritebackTransactionStatus.PAID
+    payment_factory.get_or_create_payment_with_writeback(transaction_status, writeback_sent_at=now)
+
+    test_db_session.commit()
+
+    querystring = urlencode({"absence_case_id": absence_id})
+    response = client.get(
+        "/v1/payments?{}".format(querystring), headers={"Authorization": f"Bearer {auth_token}"},
+    )
+
+    assert response.status_code == 200
+
+    response_body = response.get_json().get("data")
+    assert response_body["absence_case_id"] == absence_id
+    assert len(response_body["payments"]) == 0
+
+    # Update the payment to have a payment method
+    payment.disb_method_id = PaymentMethod.ACH.payment_method_id
+    test_db_session.commit()
+
+    response = client.get(
+        "/v1/payments?{}".format(querystring), headers={"Authorization": f"Bearer {auth_token}"},
+    )
+
+    assert response.status_code == 200
+
+    response_body = response.get_json().get("data")
+    assert response_body["absence_case_id"] == absence_id
+    assert len(response_body["payments"]) == 1
+    payment_response = response_body["payments"][0]
+
+    assert payment_response == {
+        "payment_id": str(payment.payment_id),
+        "fineos_c_value": str(payment.fineos_pei_c_value),
+        "fineos_i_value": str(payment.fineos_pei_i_value),
+        "period_start_date": str(payment.period_start_date),
+        "period_end_date": str(payment.period_end_date),
+        "amount": 750.67,
+        "sent_to_bank_date": now.date().isoformat(),
+        "payment_method": payment.disb_method.payment_method_description,
+        "expected_send_date_start": now.date().isoformat(),
+        "expected_send_date_end": now.date().isoformat(),
+        "cancellation_date": None,
+        "status": FrontendPaymentStatus.SENT_TO_BANK,
+        "writeback_transaction_status": transaction_status.transaction_status_description,
+        "transaction_date": now.date().isoformat(),
+        "transaction_date_could_change": False,
+    }
+
+
+@freeze_time("2021-12-09 12:00:00", tz_offset=5)
 def test_get_payments_returns_403_when_payments_not_associated_with_user_application(
     client, auth_token, test_db_session
 ):

@@ -77,6 +77,9 @@ def get_payments_from_db(
             ),
         )
         .filter(Payment.exclude_from_payment_status != True)  # noqa: E712
+        .filter(
+            Payment.disb_method_id.isnot(None)
+        )  # Handling a bug where payments have an unset payment method
         .order_by(Payment.fineos_pei_i_value, desc(Payment.fineos_extract_import_log_id))
         .distinct(Payment.fineos_pei_i_value)
         .options(joinedload(Payment.fineos_writeback_details))  # type: ignore
