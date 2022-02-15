@@ -784,7 +784,6 @@ def test_generate_audit_report(test_db_session, payment_audit_report_step, monke
 def test_orphaned_withholding_payments(
     initialize_factories_session, test_db_session, test_db_other_session, monkeypatch
 ):
-    monkeypatch.setenv("ENABLE_WITHHOLDING_PAYMENTS", "1")
 
     payments: List[Payment] = []
 
@@ -838,7 +837,6 @@ def test_orphaned_withholding_payments(
 def test_related_withholding_payments(
     initialize_factories_session, test_db_session, test_db_other_session, monkeypatch
 ):
-    monkeypatch.setenv("ENABLE_WITHHOLDING_PAYMENTS", "1")
 
     payments: List[Payment] = []
 

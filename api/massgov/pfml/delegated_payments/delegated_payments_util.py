@@ -1472,10 +1472,6 @@ def is_employer_exempt_for_payment(payment: Payment, claim: Claim, employer: Emp
     return False
 
 
-def is_withholding_payments_enabled() -> bool:
-    return os.environ.get("ENABLE_WITHHOLDING_PAYMENTS", "0") == "1"
-
-
 def is_employer_reimbursement_payments_enabled() -> bool:
     return os.environ.get("ENABLE_EMPLOYER_REIMBURSEMENT_PAYMENTS", "0") == "1"
 

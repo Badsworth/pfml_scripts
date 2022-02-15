@@ -1,6 +1,5 @@
 import copy
 import json
-import os
 from datetime import date
 
 import pytest
@@ -1733,9 +1732,6 @@ def test_process_extract_tax_withholding_payment_types(
 ):
     datasets = []
 
-    # Turn on Tax Withholding Feature Flag for this test.
-    os.environ["ENABLE_WITHHOLDING_PAYMENTS"] = "1"
-
     # This tests that the behavior of tax withholding payment types are handled properly
     # All of these are setup as EFT payments, but we won't create EFT information for them
     # or reject them for not being prenoted yet.
@@ -1809,9 +1805,6 @@ def test_process_extract_invalid_tax_withholding_payment_types(
     local_test_db_session, local_payment_extract_step,
 ):
     datasets = []
-
-    # Turn on Tax Withholding Feature Flag for this test.
-    os.environ["ENABLE_WITHHOLDING_PAYMENTS"] = "1"
 
     # This tests that invalid tax withholding payment types are handled properly
     # All of these are setup as EFT payments, but we won't create EFT information for them

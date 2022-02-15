@@ -358,14 +358,13 @@ class PaymentData:
             return PaymentTransactionType.ZERO_DOLLAR
 
         # Tax Withholdings
-        if payments_util.is_withholding_payments_enabled():
-            # SIT
-            if self.tin == STATE_TAX_WITHHOLDING_TIN:
-                return PaymentTransactionType.STATE_TAX_WITHHOLDING
+        # SIT
+        if self.tin == STATE_TAX_WITHHOLDING_TIN:
+            return PaymentTransactionType.STATE_TAX_WITHHOLDING
 
-            # FIT
-            if self.tin == FEDERAL_TAX_WITHHOLDING_TIN:
-                return PaymentTransactionType.FEDERAL_TAX_WITHHOLDING
+        # FIT
+        if self.tin == FEDERAL_TAX_WITHHOLDING_TIN:
+            return PaymentTransactionType.FEDERAL_TAX_WITHHOLDING
 
         # Employer reimbursements reimbursements are a very specific set of records
         if (
@@ -1181,22 +1180,18 @@ class PaymentExtractStep(Step):
 
         # set status FEDERAL_WITHHOLDING_READY_FOR_PROCESSING
         elif (
-            payments_util.is_withholding_payments_enabled()
-            and payment.payment_transaction_type_id
+            payment.payment_transaction_type_id
             == PaymentTransactionType.FEDERAL_TAX_WITHHOLDING.payment_transaction_type_id
         ):
-            logger.info("Tax Withholding ENABLED")
             end_state = State.FEDERAL_WITHHOLDING_READY_FOR_PROCESSING
             message = "Federal Withholding payment processed"
             self.increment(self.Metrics.FEDERAL_WITHHOLDING_PAYMENT_COUNT)
 
         # set status  STATE_WITHHOLDING_READY_FOR_PROCESSING
         elif (
-            payments_util.is_withholding_payments_enabled()
-            and payment.payment_transaction_type_id
+            payment.payment_transaction_type_id
             == PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id
         ):
-            logger.info("Tax Withholding ENABLED")
             end_state = State.STATE_WITHHOLDING_READY_FOR_PROCESSING
             message = "State Withholding payment processed"
             self.increment(self.Metrics.STATE_WITHHOLDING_PAYMENT_COUNT)
