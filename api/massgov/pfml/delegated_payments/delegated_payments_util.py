@@ -49,7 +49,6 @@ from massgov.pfml.db.models.payments import (
 )
 from massgov.pfml.db.models.state import LkState, State
 from massgov.pfml.util.converters.str_to_numeric import str_to_int
-from massgov.pfml.util.csv import CSVSourceWrapper
 from massgov.pfml.util.datetime import get_now_us_eastern
 from massgov.pfml.util.routing_number_validation import validate_routing_number
 
@@ -1177,27 +1176,6 @@ def move_reference_file(
             },
         )
         raise
-
-
-def download_and_parse_csv(s3_path: str, download_directory: str) -> CSVSourceWrapper:
-    file_name = os.path.basename(s3_path)
-    download_location = os.path.join(download_directory, file_name)
-    logger.debug("Download file: %s, to: %s", s3_path, download_location)
-
-    try:
-        if s3_path.startswith("s3:/"):
-            file_util.download_from_s3(s3_path, download_location)
-        else:
-            file_util.copy_file(s3_path, download_location)
-    except Exception as e:
-        logger.exception(
-            "Error downloading file: %s",
-            s3_path,
-            extra={"src": s3_path, "destination": download_directory},
-        )
-        raise e
-
-    return CSVSourceWrapper(download_location)
 
 
 def make_keys_lowercase(data: Dict[str, Any]) -> Dict[str, Any]:

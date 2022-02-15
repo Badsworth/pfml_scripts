@@ -13,6 +13,7 @@ import massgov.pfml.util.logging as logging
 from massgov.pfml import db
 from massgov.pfml.db.models.employees import LkReferenceFileType, ReferenceFile, ReferenceFileType
 from massgov.pfml.delegated_payments.step import Step
+from massgov.pfml.util.csv import download_and_parse_csv
 
 logger = logging.get_logger(__name__)
 
@@ -271,7 +272,7 @@ class FineosExtractStep(Step):
 
     def _download_and_index_data(self, extract_data: ExtractData, download_directory: str) -> None:
         for file_location, extract in extract_data.extract_path_mapping.items():
-            records = payments_util.download_and_parse_csv(file_location, download_directory)
+            records = download_and_parse_csv(file_location, download_directory)
 
             logger.info(
                 "Storing extract data from %s to %s with reference_file_id %s and import_log_id %s",
