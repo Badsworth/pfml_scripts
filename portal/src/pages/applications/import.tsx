@@ -9,9 +9,19 @@ import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
 
-export const Find = (props: WithUserProps) => {
+interface FormState {
+  absence_case_id: string | null;
+  tax_identifier: string | null;
+}
+
+const initialFormState: FormState = {
+  absence_case_id: null,
+  tax_identifier: null,
+};
+
+export const Import = (props: WithUserProps) => {
   const { t } = useTranslation();
-  const { formState, updateFields } = useFormState();
+  const { formState, updateFields } = useFormState(initialFormState);
 
   const getFunctionalInputProps = useFunctionalInputProps({
     appErrors: props.appLogic.appErrors,
@@ -20,29 +30,32 @@ export const Find = (props: WithUserProps) => {
   });
 
   const handleSubmit = async () => {
-    await props.appLogic.benefitsApplications.associate(formState);
+    // TODO (PORTAL-264): Remove the type assertion once we're able to tell useFormState what type to expect
+    await props.appLogic.benefitsApplications.associate(formState as FormState);
   };
 
   if (!isFeatureEnabled("channelSwitching")) return <PageNotFound />;
 
   return (
     <QuestionPage
-      continueButtonLabel={t("pages.claimsAssociate.submitButton")}
+      continueButtonLabel={t("pages.claimsImport.submitButton")}
       onSave={handleSubmit}
-      title={t("pages.claimsAssociate.title")}
+      title={t("pages.claimsImport.title")}
       titleSize="regular"
     >
-      <Lead>{t("pages.claimsAssociate.lead")}</Lead>
+      <Lead>{t("pages.claimsImport.leadIntro")}</Lead>
+      <Lead>{t("pages.claimsImport.leadReminder")}</Lead>
 
       <InputText
-        {...getFunctionalInputProps("tax_identifier_last4")}
-        label={t("pages.claimsAssociate.taxIdLabel")}
+        {...getFunctionalInputProps("tax_identifier")}
+        label={t("pages.claimsImport.taxIdLabel")}
+        mask="ssn"
         smallLabel
-        width="small"
+        width="medium"
       />
       <InputText
-        {...getFunctionalInputProps("absence_id")}
-        label={t("pages.claimsAssociate.absenceIdLabel")}
+        {...getFunctionalInputProps("absence_case_id")}
+        label={t("pages.claimsImport.absenceIdLabel")}
         smallLabel
         width="medium"
       />
@@ -50,4 +63,4 @@ export const Find = (props: WithUserProps) => {
   );
 };
 
-export default withUser(Find);
+export default withUser(Import);

@@ -329,7 +329,7 @@ const machineTests = {
       },
     },
   },
-  [routes.applications.find]: {
+  [routes.applications.import]: {
     meta: {
       test: () => {},
     },
@@ -482,7 +482,7 @@ describe("claimFlowConfigs", () => {
     CREATE_CLAIM: {},
     EMPLOYER_INFORMATION: {},
     ENABLE_MFA: {},
-    FIND_APPLICATION: {},
+    IMPORT_APPLICATION: {},
     LEAVE_DETAILS: {},
     NEW_APPLICATION: {},
     OTHER_LEAVE: {},

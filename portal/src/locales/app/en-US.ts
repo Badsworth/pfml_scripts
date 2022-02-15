@@ -1111,13 +1111,6 @@ const pages: {
     sectionLabel: "What is your current residential address?",
     title: "$t(shared.claimsVerifyIdTitle)",
   },
-  claimsAssociate: {
-    absenceIdLabel: "Application ID",
-    lead: "To locate your application, please enter information for each field.",
-    submitButton: "Continue",
-    taxIdLabel: "Last 4 digits of Social Security Number",
-    title: "Find My Application",
-  },
   claimsBondingDateOfChild: {
     birthHint:
       "If your child has not been born yet, enter the expected due date.",
@@ -1412,6 +1405,15 @@ const pages: {
     sectionLabelHint:
       "This data helps us understand who is accessing our program to ensure it is built for everyone.",
     title: "$t(shared.claimsVerifyIdTitle)",
+  },
+  claimsImport: {
+    absenceIdLabel: "Application ID number",
+    leadIntro: "We need some information to identify your application.",
+    leadReminder:
+      "Reminder: You’ll need to keep managing applications through the Contact Center if you are self-employed or unemployed or if you are applying for military-related paid family leave benefits.",
+    submitButton: "Continue",
+    taxIdLabel: "Social Security Number (SSN)",
+    title: "Add an existing application",
   },
   claimsIntermittentFrequency: {
     durationBasisChoice_days: "At least one day",
