@@ -1010,12 +1010,6 @@ def group_s3_files_by_date(expected_file_names: List[str]) -> Dict[str, List[str
     return date_to_full_path
 
 
-def datetime_str_to_date(datetime_str: Optional[str]) -> Optional[date]:
-    if not datetime_str:
-        return None
-    return datetime.fromisoformat(datetime_str).date()
-
-
 def compare_address_fields(first: Address, second: Address, field: str) -> bool:
     value1 = getattr(first, field)
     value2 = getattr(second, field)

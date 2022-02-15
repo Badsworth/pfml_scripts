@@ -64,3 +64,9 @@ def test_getnow_est_edt():
         assert "2021-01-01 14:00:00-05:00" == str(datetime_util.get_now_us_eastern())
     with freeze_time("2021-08-01 19:00:00"):
         assert "2021-08-01 15:00:00-04:00" == str(datetime_util.get_now_us_eastern())
+
+
+def test_datetime_str_to_date():
+    assert datetime_util.datetime_str_to_date("2019-12-30") == date(2019, 12, 30)
+    assert datetime_util.datetime_str_to_date("") is None
+    assert datetime_util.datetime_str_to_date(None) is None

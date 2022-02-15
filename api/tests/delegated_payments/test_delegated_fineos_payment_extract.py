@@ -8,6 +8,7 @@ from freezegun import freeze_time
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.delegated_payments.delegated_fineos_payment_extract as extractor
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
+import massgov.pfml.util.datetime
 from massgov.pfml.db.models.employees import (
     AddressType,
     BankAccountType,
@@ -191,10 +192,10 @@ def validate_withholding(
     assert withholding_payment.claim_id
     assert withholding_payment.employee_id is None
     assert str(withholding_payment.amount) == withholding_payment_data.payment_amount
-    assert withholding_payment.period_start_date == payments_util.datetime_str_to_date(
+    assert withholding_payment.period_start_date == massgov.pfml.util.datetime.datetime_str_to_date(
         withholding_payment_data.payment_start_period
     )
-    assert withholding_payment.period_end_date == payments_util.datetime_str_to_date(
+    assert withholding_payment.period_end_date == massgov.pfml.util.datetime.datetime_str_to_date(
         withholding_payment_data.payment_end_period
     )
     assert (
@@ -332,13 +333,15 @@ def test_run_step_happy_path(
         assert payment.vpei_id is not None
 
         # Validate all of the payment fields that were set
-        assert payment.period_start_date == payments_util.datetime_str_to_date(
+        assert payment.period_start_date == massgov.pfml.util.datetime.datetime_str_to_date(
             payment_data.payment_start_period
         )
-        assert payment.period_end_date == payments_util.datetime_str_to_date(
+        assert payment.period_end_date == massgov.pfml.util.datetime.datetime_str_to_date(
             payment_data.payment_end_period
         )
-        assert payment.payment_date == payments_util.datetime_str_to_date(payment_data.payment_date)
+        assert payment.payment_date == massgov.pfml.util.datetime.datetime_str_to_date(
+            payment_data.payment_date
+        )
         assert payment.fineos_extraction_date == date(2021, 1, 13)
         assert str(payment.amount) == payment_data.payment_amount
         assert (

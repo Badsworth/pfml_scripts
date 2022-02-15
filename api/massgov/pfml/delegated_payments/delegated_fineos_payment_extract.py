@@ -48,7 +48,7 @@ from massgov.pfml.delegated_payments.util.fineos_writeback_util import (
     stage_payment_fineos_writeback,
 )
 from massgov.pfml.util.converters.str_to_numeric import str_to_int
-from massgov.pfml.util.datetime import get_now_us_eastern
+from massgov.pfml.util.datetime import datetime_str_to_date, get_now_us_eastern
 
 logger = logging.get_logger(__name__)
 
@@ -532,8 +532,8 @@ class PaymentData:
             ):
                 self.payment_detail_records.append(
                     PaymentDetails(
-                        period_start_date=payments_util.datetime_str_to_date(row_start_period),
-                        period_end_date=payments_util.datetime_str_to_date(row_end_period),
+                        period_start_date=datetime_str_to_date(row_start_period),
+                        period_end_date=datetime_str_to_date(row_end_period),
                         amount=Decimal(cast(str, row_amount_post_tax)),
                         business_net_amount=Decimal(cast(str, business_net_amount)),
                     )
@@ -825,14 +825,10 @@ class PaymentExtractStep(Step):
             payment.claim = claim
         if employee:
             payment.employee = employee
-        payment.period_start_date = payments_util.datetime_str_to_date(
-            payment_data.payment_start_period
-        )
-        payment.period_end_date = payments_util.datetime_str_to_date(
-            payment_data.payment_end_period
-        )
-        payment.payment_date = payments_util.datetime_str_to_date(payment_data.payment_date)
-        payment.absence_case_creation_date = payments_util.datetime_str_to_date(
+        payment.period_start_date = datetime_str_to_date(payment_data.payment_start_period)
+        payment.period_end_date = datetime_str_to_date(payment_data.payment_end_period)
+        payment.payment_date = datetime_str_to_date(payment_data.payment_date)
+        payment.absence_case_creation_date = datetime_str_to_date(
             payment_data.absence_case_creation_date
         )
 
