@@ -1,12 +1,12 @@
 import FormLabel from "./FormLabel";
-import Mask from "./Mask";
+import NumberMask from "./NumberMask";
 import React from "react";
 import classnames from "classnames";
 import isBlank from "../../utils/isBlank";
 import usePiiHandlers from "../../hooks/usePiiHandlers";
 import useUniqueId from "../../hooks/useUniqueId";
 
-interface InputTextProps {
+export interface InputTextProps {
   /**
    * HTML input `autocomplete` attribute
    */
@@ -54,8 +54,7 @@ interface InputTextProps {
    */
   labelClassName?: string;
   /**
-   * Apply formatting to the field that's unique to the value
-   * you expect to be entered. Depending on the mask, the
+   * Apply formatting to a number-only field. Depending on the mask, the
    * field's appearance and functionality may be affected.
    */
   mask?: "currency" | "fein" | "hours" | "phone" | "ssn" | "zip";
@@ -162,7 +161,11 @@ function InputText({ type = "text", ...props }: InputTextProps) {
   );
 
   const fieldAndMask = (field: React.ReactElement) => {
-    return props.mask ? <Mask mask={props.mask}>{field}</Mask> : field;
+    return props.mask ? (
+      <NumberMask mask={props.mask}>{field}</NumberMask>
+    ) : (
+      field
+    );
   };
 
   return (

@@ -2,6 +2,7 @@ import withUser, { WithUserProps } from "../../hoc/withUser";
 import Alert from "../../components/core/Alert";
 import FormLabel from "../../components/core/FormLabel";
 import Hint from "../../components/core/Hint";
+import InputAbsenceCaseId from "../../components/InputAbsenceCaseId";
 import InputText from "../../components/core/InputText";
 import Lead from "../../components/core/Lead";
 import Link from "next/link";
@@ -90,7 +91,7 @@ export const ImportClaim = (props: WithUserProps) => {
         smallLabel
         width="medium"
       />
-      <InputText
+      <InputAbsenceCaseId
         {...getFunctionalInputProps("absence_case_id")}
         label={t("pages.claimsImport.absenceIdLabel")}
         hint={t("pages.claimsImport.absenceIdHint")}
