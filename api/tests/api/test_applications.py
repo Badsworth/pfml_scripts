@@ -378,7 +378,7 @@ class TestApplicationsImport:
             response_body["message"]
             == "An application linked to a different account already exists for this claim."
         )
-        assert response_body["errors"][0]["type"] == "duplicate"
+        assert response_body["errors"][0]["type"] == "exists"
 
     def test_applications_import_missing_required_fields(self, client, auth_token, claim):
         response = client.post(
