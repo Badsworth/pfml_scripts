@@ -1,3 +1,4 @@
+import React, { useEffect, useState } from "react";
 import withUser, { WithUserProps } from "../../hoc/withUser";
 import Alert from "../../components/core/Alert";
 import FormLabel from "../../components/core/FormLabel";
@@ -8,7 +9,6 @@ import Lead from "../../components/core/Lead";
 import Link from "next/link";
 import PageNotFound from "../../components/PageNotFound";
 import QuestionPage from "../../components/QuestionPage";
-import React from "react";
 import { Trans } from "react-i18next";
 import { isFeatureEnabled } from "../../services/featureFlags";
 import useFormState from "../../hooks/useFormState";
@@ -28,6 +28,50 @@ const initialFormState: FormState = {
 export const ImportClaim = (props: WithUserProps) => {
   const { t } = useTranslation();
   const { portalFlow } = props.appLogic;
+
+  /**
+   * Setup: current state of MFA on the user's account.
+   * This informs the content and routing behavior of the page.
+   */
+  const mfaPreference = props.user.mfa_delivery_preference;
+  const [hasVerifiedMfaPhone, setHasVerifiedMfaPhone] = useState<
+    boolean | null
+  >(null);
+
+  let mfaState:
+    | "disabled"
+    | "enabled-pending-verification"
+    | "enabled-and-verified";
+  if (mfaPreference === "SMS") {
+    mfaState = hasVerifiedMfaPhone
+      ? "enabled-and-verified"
+      : "enabled-pending-verification";
+  } else {
+    mfaState = "disabled";
+  }
+
+  useEffect(() => {
+    // No point checking if the phone is verified if they haven't setup MFA
+    if (mfaPreference !== "SMS") return setHasVerifiedMfaPhone(false);
+
+    props.appLogic.auth
+      .isPhoneVerified()
+      .then(setHasVerifiedMfaPhone)
+      .catch(() => setHasVerifiedMfaPhone(false));
+  }, [props.appLogic.auth, mfaPreference, setHasVerifiedMfaPhone]);
+
+  /**
+   * Setup: where the user is routed for the "Verify login" / "Change phone" link(s)
+   */
+  const mfaRoute = {
+    disabled: portalFlow.getNextPageRoute("ENABLE_MFA"),
+    "enabled-and-verified": portalFlow.getNextPageRoute("EDIT_PHONE"),
+    "enabled-pending-verification": portalFlow.getNextPageRoute("VERIFY_PHONE"),
+  }[mfaState];
+
+  /**
+   * Setup: form state management
+   */
   const { formState, updateFields } = useFormState(initialFormState);
   const getFunctionalInputProps = useFunctionalInputProps({
     appErrors: props.appLogic.appErrors,
@@ -40,15 +84,10 @@ export const ImportClaim = (props: WithUserProps) => {
     await props.appLogic.benefitsApplications.associate(formState as FormState);
   };
 
+  /**
+   * Render
+   */
   if (!isFeatureEnabled("channelSwitching")) return <PageNotFound />;
-
-  // UI Setup
-  const hasVerifiedMfaPhone = props.user.mfa_delivery_preference === "SMS";
-  const mfaPhoneNumber = props.user.mfa_phone_number?.phone_number;
-  const enableMfaRoute = portalFlow.getNextPageRoute("ENABLE_MFA");
-  const phoneLink = hasVerifiedMfaPhone
-    ? portalFlow.getNextPageRoute("EDIT_PHONE")
-    : enableMfaRoute;
 
   return (
     <QuestionPage
@@ -70,7 +109,7 @@ export const ImportClaim = (props: WithUserProps) => {
             <Trans
               i18nKey="pages.claimsImport.mfaDisabledWarningBody"
               components={{
-                "verify-link": <a href={enableMfaRoute}></a>,
+                "verify-link": <a href={mfaRoute}></a>,
               }}
             />
           }
@@ -78,9 +117,9 @@ export const ImportClaim = (props: WithUserProps) => {
       )}
 
       <PhoneNumber
-        phoneNumber={mfaPhoneNumber}
-        link={phoneLink}
-        verified={hasVerifiedMfaPhone}
+        phoneNumber={props.user.mfa_phone_number?.phone_number}
+        link={mfaRoute}
+        mfaVerified={mfaState === "enabled-and-verified"}
       />
 
       <InputText
@@ -105,7 +144,8 @@ export const ImportClaim = (props: WithUserProps) => {
 const PhoneNumber = (props: {
   link: string;
   phoneNumber?: string | null;
-  verified: boolean;
+  /** MFA enabled and the phone is verified */
+  mfaVerified: boolean | null;
 }) => {
   const { t } = useTranslation();
   const phoneNumber = props.phoneNumber ?? "(---) --- - ----";
@@ -121,7 +161,7 @@ const PhoneNumber = (props: {
         <Link href={props.link}>
           <a className="margin-left-2 display-inline-block">
             {t("pages.claimsImport.phoneLink", {
-              context: props.verified ? "verified" : "unverified",
+              context: props.mfaVerified ? "verified" : "unverified",
             })}
           </a>
         </Link>

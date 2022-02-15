@@ -49,6 +49,30 @@ describe("useAuthLogic", () => {
     };
   });
 
+  it("isPhoneVerified returns verification status of Cognito user's phone", async () => {
+    Auth.currentAuthenticatedUser.mockResolvedValueOnce({
+      attributes: {
+        phone_number_verified: true,
+      },
+    });
+    const { result } = render();
+
+    await act(async () => {
+      const isVerified = await result.current.isPhoneVerified();
+      expect(isVerified).toBe(true);
+    });
+
+    Auth.currentAuthenticatedUser.mockResolvedValueOnce({
+      attributes: {
+        phone_number_verified: false,
+      },
+    });
+    await act(async () => {
+      const isVerified = await result.current.isPhoneVerified();
+      expect(isVerified).toBe(false);
+    });
+  });
+
   it("can call out to Auth.forgotPassword", async () => {
     const { result } = render();
     await act(async () => {

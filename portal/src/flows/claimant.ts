@@ -171,6 +171,7 @@ const claimantFlow: {
         CONTINUE: routes.applications.index,
         EDIT_PHONE: routes.user.settings,
         ENABLE_MFA: routes.twoFactor.smsSetup,
+        VERIFY_PHONE: routes.twoFactor.smsConfirm,
       },
     },
     [routes.applications.index]: {

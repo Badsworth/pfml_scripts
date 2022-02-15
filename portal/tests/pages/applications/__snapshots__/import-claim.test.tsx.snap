@@ -1,12 +1,12 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`ImportClaim conditionally renders MFA alert based on user's MFA preference 1`] = `
+exports[`ImportClaim conditionally renders MFA alert based on MFA preference and phone verification (Opt Out, ***-***-1234, true) 1`] = `
 <div
   class="usa-alert__body"
 >
   <h2
     class="usa-alert__heading font-heading-md text-bold"
-    id="alert-heading4"
+    id="alert-heading18"
   >
     We need to verify your login.
   </h2>
@@ -24,35 +24,55 @@ exports[`ImportClaim conditionally renders MFA alert based on user's MFA prefere
 </div>
 `;
 
-exports[`ImportClaim renders read-only phone number and link regardless of MFA preference 1`] = `
+exports[`ImportClaim conditionally renders MFA alert based on MFA preference and phone verification (SMS, ***-***-1234, false) 1`] = `
 <div
-  class="usa-form-group"
+  class="usa-alert__body"
 >
-  <label
-    class="usa-label text-bold font-heading-xs measure-5"
+  <h2
+    class="usa-alert__heading font-heading-md text-bold"
+    id="alert-heading12"
   >
-    Cell phone number
-  </label>
-  <span
-    class="display-block line-height-sans-5 measure-5 usa-hint text-base-darkest"
-  >
-    This number must match the one you gave the Contact Center when you applied.
-  </span>
+    We need to verify your login.
+  </h2>
   <div
-    class="margin-top-1"
+    class="usa-alert__text"
   >
-    ***-***-1234
+    In order to add an existing application, you need to provide a phone number we can use to 
     <a
-      class="margin-left-2 display-inline-block"
-      href="/user/settings"
+      href="/two-factor/sms/confirm"
     >
-      Change your phone number
+      verify your login
     </a>
+    . This number must match the one you gave the Contact Center when you applied.
   </div>
 </div>
 `;
 
-exports[`ImportClaim renders read-only phone number and link regardless of MFA preference 2`] = `
+exports[`ImportClaim conditionally renders MFA alert based on MFA preference and phone verification (null, null, false) 1`] = `
+<div
+  class="usa-alert__body"
+>
+  <h2
+    class="usa-alert__heading font-heading-md text-bold"
+    id="alert-heading24"
+  >
+    We need to verify your login.
+  </h2>
+  <div
+    class="usa-alert__text"
+  >
+    In order to add an existing application, you need to provide a phone number we can use to 
+    <a
+      href="/two-factor/sms/setup"
+    >
+      verify your login
+    </a>
+    . This number must match the one you gave the Contact Center when you applied.
+  </div>
+</div>
+`;
+
+exports[`ImportClaim renders read-only phone number and link regardless of MFA preference (Opt Out, ***-***-1234, true) 1`] = `
 <div
   class="usa-form-group"
 >
@@ -80,7 +100,63 @@ exports[`ImportClaim renders read-only phone number and link regardless of MFA p
 </div>
 `;
 
-exports[`ImportClaim renders read-only phone number and link regardless of MFA preference 3`] = `
+exports[`ImportClaim renders read-only phone number and link regardless of MFA preference (SMS, ***-***-1234, false) 1`] = `
+<div
+  class="usa-form-group"
+>
+  <label
+    class="usa-label text-bold font-heading-xs measure-5"
+  >
+    Cell phone number
+  </label>
+  <span
+    class="display-block line-height-sans-5 measure-5 usa-hint text-base-darkest"
+  >
+    This number must match the one you gave the Contact Center when you applied.
+  </span>
+  <div
+    class="margin-top-1"
+  >
+    ***-***-1234
+    <a
+      class="margin-left-2 display-inline-block"
+      href="/two-factor/sms/confirm"
+    >
+      Verify your login
+    </a>
+  </div>
+</div>
+`;
+
+exports[`ImportClaim renders read-only phone number and link regardless of MFA preference (SMS, ***-***-1234, true) 1`] = `
+<div
+  class="usa-form-group"
+>
+  <label
+    class="usa-label text-bold font-heading-xs measure-5"
+  >
+    Cell phone number
+  </label>
+  <span
+    class="display-block line-height-sans-5 measure-5 usa-hint text-base-darkest"
+  >
+    This number must match the one you gave the Contact Center when you applied.
+  </span>
+  <div
+    class="margin-top-1"
+  >
+    ***-***-1234
+    <a
+      class="margin-left-2 display-inline-block"
+      href="/user/settings"
+    >
+      Change your phone number
+    </a>
+  </div>
+</div>
+`;
+
+exports[`ImportClaim renders read-only phone number and link regardless of MFA preference (null, null, false) 1`] = `
 <div
   class="usa-form-group"
 >
