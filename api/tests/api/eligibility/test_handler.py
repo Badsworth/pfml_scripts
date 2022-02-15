@@ -3,11 +3,16 @@
 #
 from collections import namedtuple
 from datetime import date
+from decimal import Decimal
 from enum import Enum
+from uuid import UUID
 
 import pytest
+from freezegun import freeze_time
 
+from massgov.pfml.db.models.employees import BenefitYear
 from massgov.pfml.db.models.factories import (
+    ApplicationFactory,
     EmployeeFactory,
     EmployerFactory,
     TaxIdentifierFactory,
@@ -34,8 +39,18 @@ def tax_id():
 
 
 @pytest.fixture
+def tax_id_2():
+    return TaxIdentifierFactory.create(tax_identifier="454108857")
+
+
+@pytest.fixture
 def employee(tax_id):
     return EmployeeFactory.create(tax_identifier=tax_id)
+
+
+@pytest.fixture
+def employee_2(tax_id_2):
+    return EmployeeFactory.create(tax_identifier=tax_id_2)
 
 
 @pytest.fixture
@@ -745,3 +760,143 @@ def test_claimaint_scenario_i(
     assert response.get_json().get("data").get("financially_eligible") is True
     assert response.get_json().get("data").get("total_wages") == float(6_000)
     assert response.get_json().get("data").get("employer_average_weekly_wage") == float(230.77)
+
+
+def test_benefit_year_search_no_results(
+    client,
+    test_db_session,
+    initialize_factories_session,
+    user,
+    employee,
+    tax_id,
+    fineos_user_token,
+):
+    # Create an application and benefit year
+    ApplicationFactory.create(user=user, tax_identifier=tax_id)
+    by_1 = BenefitYear(
+        start_date=date(2018, 12, 30),
+        end_date=date(2019, 12, 28),
+        employee_id=employee.employee_id,
+        total_wages=Decimal(0),
+    )
+    test_db_session.add(by_1)
+    test_db_session.commit()
+    # Perform the request for a user other than the one that created
+    # the applications
+    response = client.post(
+        "/v1/benefit-years/search",
+        headers={"Authorization": f"Bearer {fineos_user_token}"},
+        json={},
+    )
+    assert response.get_json().get("data") == []
+
+
+@freeze_time("2020-09-13")
+def test_benefit_year_search(
+    client,
+    test_db_session,
+    initialize_factories_session,
+    tax_id,
+    auth_token,
+    user,
+    employee,
+    tax_id_2,
+    employee_2,
+):
+    # Create two applications for the same user but associated with different employees
+    ApplicationFactory.create(user=user, tax_identifier=tax_id)
+    ApplicationFactory.create(user=user, tax_identifier=tax_id_2)
+    # The ordering is employee_id, start_date so set the employee_id
+    # so that the test cannot fail because of an ordering difference
+    employee.employee_id = UUID("5b197b67-e9eb-4444-ab55-be33e133ab66")
+    employee_2.employee_id = UUID("95beed3d-ebff-4965-817e-418508fe74ad")
+    # Create three benefit years, two associated with one employee
+    # and one associated with the other
+    by_1 = BenefitYear(
+        start_date=date(2018, 12, 30),
+        end_date=date(2019, 12, 28),
+        employee_id=employee.employee_id,
+        total_wages=Decimal(0),
+    )
+    by_2 = BenefitYear(
+        start_date=date(2019, 12, 29),
+        end_date=date(2020, 12, 26),
+        employee_id=employee.employee_id,
+        total_wages=Decimal(0),
+    )
+    by_3 = BenefitYear(
+        start_date=date(2019, 12, 29),
+        end_date=date(2020, 12, 26),
+        employee_id=employee_2.employee_id,
+        total_wages=Decimal(0),
+    )
+    test_db_session.add(by_1)
+    test_db_session.add(by_2)
+    test_db_session.add(by_3)
+    test_db_session.commit()
+
+    response = client.post(
+        "/v1/benefit-years/search", headers={"Authorization": f"Bearer {auth_token}"}, json={}
+    )
+    benefit_years = response.get_json().get("data")
+    expected_response = [
+        {
+            "benefit_year_end_date": date(2020, 12, 26).strftime("%Y-%m-%d"),
+            "benefit_year_start_date": date(2019, 12, 29).strftime("%Y-%m-%d"),
+            "employee_id": employee.employee_id.__str__(),
+            "current_benefit_year": True,
+        },
+        {
+            "benefit_year_end_date": date(2019, 12, 28).strftime("%Y-%m-%d"),
+            "benefit_year_start_date": date(2018, 12, 30).strftime("%Y-%m-%d"),
+            "employee_id": employee.employee_id.__str__(),
+            "current_benefit_year": False,
+        },
+        {
+            "benefit_year_end_date": date(2020, 12, 26).strftime("%Y-%m-%d"),
+            "benefit_year_start_date": date(2019, 12, 29).strftime("%Y-%m-%d"),
+            "employee_id": employee_2.employee_id.__str__(),
+            "current_benefit_year": True,
+        },
+    ]
+    assert len(benefit_years) == 3
+    assert benefit_years == expected_response
+
+
+def test_benefit_year_search_current_year_at_edge_start_and_end(
+    client, test_db_session, initialize_factories_session, tax_id, auth_token, user, employee,
+):
+    ApplicationFactory.create(user=user, tax_identifier=tax_id)
+    by = BenefitYear(
+        start_date=date(2019, 12, 29),
+        end_date=date(2020, 12, 26),
+        employee_id=employee.employee_id,
+        total_wages=Decimal(0),
+    )
+    test_db_session.add(by)
+    test_db_session.commit()
+
+    expected_benefit_years = [
+        {
+            "benefit_year_end_date": date(2020, 12, 26).strftime("%Y-%m-%d"),
+            "benefit_year_start_date": date(2019, 12, 29).strftime("%Y-%m-%d"),
+            "employee_id": employee.employee_id.__str__(),
+            "current_benefit_year": True,
+        }
+    ]
+
+    with freeze_time("2020-12-26"):
+        response = client.post(
+            "/v1/benefit-years/search", headers={"Authorization": f"Bearer {auth_token}"}, json={}
+        )
+        benefit_years = response.get_json().get("data")
+        assert len(benefit_years) == 1
+        assert benefit_years == expected_benefit_years
+
+    with freeze_time("2019-12-29"):
+        response = client.post(
+            "/v1/benefit-years/search", headers={"Authorization": f"Bearer {auth_token}"}, json={}
+        )
+        benefit_years = response.get_json().get("data")
+        assert len(benefit_years) == 1
+        assert benefit_years == expected_benefit_years

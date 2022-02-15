@@ -1194,6 +1194,7 @@ paths:
       summary: >
         Returns all benefit years for the employee_id in the request; if no employee_id is present
         returns all benefit years for the current user.
+      operationId: massgov.pfml.api.eligibility.handler.benefit_years_search
       responses:
         '200':
           description: A successful response returns a 200 status code and the benefit years
