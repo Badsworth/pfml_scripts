@@ -1,8 +1,8 @@
-import { fineos, fineosPages, portal, email } from "../../actions";
-import { Submission } from "../../../src/types";
-import { getClaimantCredentials } from "../../config";
-import { describeIf } from "../../util";
-import { config } from "../../actions/common";
+import { fineos, fineosPages, portal, email } from "../../../actions";
+import { Submission } from "../../../../src/types";
+import { getClaimantCredentials } from "../../../config";
+import { describeIf } from "../../../util";
+import { config } from "../../../actions/common";
 
 describeIf(
   config("HAS_FINEOS_JANUARY_RELEASE") === "true",

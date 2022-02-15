@@ -1,11 +1,11 @@
-import { fineos, fineosPages, email, portal } from "../../actions";
-import { Submission } from "../../../src/types";
-import { extractLeavePeriod } from "../../../src/util/claims";
+import { fineos, fineosPages, email, portal } from "../../../actions";
+import { Submission } from "../../../../src/types";
+import { extractLeavePeriod } from "../../../../src/util/claims";
 import { addDays, format, subDays } from "date-fns";
-import { waitForAjaxComplete } from "../../actions/fineos";
-import { getClaimantCredentials } from "../../config";
-import { describeIf } from "../../util";
-import { config } from "../../actions/common";
+import { waitForAjaxComplete } from "../../../actions/fineos";
+import { getClaimantCredentials } from "../../../config";
+import { describeIf } from "../../../util";
+import { config } from "../../../actions/common";
 
 describeIf(
   config("HAS_FINEOS_JANUARY_RELEASE") === "true",
