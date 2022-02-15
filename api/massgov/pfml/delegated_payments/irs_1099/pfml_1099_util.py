@@ -47,8 +47,6 @@ class Constants:
     ARCHIVED_STATUS = "Archived: "
     ERRORED_STATUS = "Invalid: "
 
-    TAX_YEAR_CUTOFF = 6
-
     FEDERAL_WITHHOLDING_TYPE = "FEDERAL"
     STATE_WITHHOLDING_TYPE = "STATE"
 
@@ -1753,10 +1751,7 @@ def get_last_1099_batch_for_employee(
 
 
 def get_tax_year() -> int:
-    if date.today().month > Constants.TAX_YEAR_CUTOFF:
-        return date.today().year
-    else:
-        return date.today().year - 1
+    return int(os.environ.get("IRS_1099_TAX_YEAR", "0"))
 
 
 def get_batch_counts(db_session: db.Session) -> Dict[int, int]:

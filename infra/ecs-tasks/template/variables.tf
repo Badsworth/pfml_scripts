@@ -334,6 +334,11 @@ variable "irs_1099_correction_ind" {
   default     = "0"
 }
 
+variable "irs_1099_tax_year" {
+  description = "Declares the tax year for the 1099 batch"
+  default     = "2000"
+}
+
 ########## Variables for Step Functions ################
 
 variable "st_use_mock_dor_data" {
