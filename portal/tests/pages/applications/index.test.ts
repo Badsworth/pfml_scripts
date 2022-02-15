@@ -107,9 +107,14 @@ describe("Applications", () => {
       { query: {} }
     );
 
-    expect(screen.getByText(/In-progress applications/)).toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { name: "Application 1" })
+      screen.getByRole("heading", { level: 3, name: "In-progress application" })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", {
+        level: 3,
+        name: "Leave for an illness or injury",
+      })
     ).toBeInTheDocument();
   });
 
@@ -154,11 +159,6 @@ describe("Applications", () => {
     it("Displays Application Card for each claim", () => {
       const applicationCards = screen.getAllByRole("article");
       expect(applicationCards).toHaveLength(3);
-      expect(screen.getByText(/Application 1/)).toBeInTheDocument();
-      expect(
-        screen.getAllByRole("link", { name: "Continue application" })
-      ).toHaveLength(2);
-      expect(screen.getByText(/NTN-111-ABS-01/)).toBeInTheDocument();
     });
 
     it("Displays headers for each section", () => {
@@ -169,17 +169,16 @@ describe("Applications", () => {
     it("Displays claims in expected order", () => {
       const [inProgClaim, subClaim, compClaim] = screen.getAllByRole("article");
       expect(
-        within(inProgClaim).getByText(/Application 1/)
+        within(inProgClaim).getByText(/In-progress application/)
       ).toBeInTheDocument();
-      expect(within(subClaim).getByText(/Application 2/)).toBeInTheDocument();
+      expect(
+        within(subClaim).getByText(/Leave for an illness or injury/)
+      ).toBeInTheDocument();
       expect(within(compClaim).getByText(/NTN-111-ABS-01/)).toBeInTheDocument();
     });
   });
 
-  it("only loads documents for each claim once", () => {
-    const inProgressClaim2 = new MockBenefitsApplicationBuilder().create();
-    inProgressClaim2.application_id = "mock_application_id_two";
-
+  it("only loads documents for each submitted claim once", () => {
     const spy = jest.fn();
 
     renderPage(
@@ -191,14 +190,13 @@ describe("Applications", () => {
           appLogicHook.documents.loadAll = spy;
           appLogicHook.benefitsApplications.benefitsApplications =
             new ApiResourceCollection<BenefitsApplication>("application_id", [
-              inProgressClaim,
-              inProgressClaim2,
+              submittedClaim,
             ]);
         },
       },
       { query: {} }
     );
-    expect(spy).toHaveBeenCalledTimes(2);
+    expect(spy).toHaveBeenCalledTimes(1);
   });
 
   it("displays success alert when uploaded absence id is present", () => {
