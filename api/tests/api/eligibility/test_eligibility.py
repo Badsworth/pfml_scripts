@@ -24,9 +24,9 @@ from massgov.pfml.api.eligibility.mock.scenarios import (
 )
 from massgov.pfml.api.eligibility.wage import get_wage_calculator
 from massgov.pfml.api.models.applications.common import EligibilityEmploymentStatus
+from massgov.pfml.db.models.absences import AbsenceStatus
 from massgov.pfml.db.models.employees import (
     AbsencePeriod,
-    AbsenceStatus,
     BenefitYear,
     BenefitYearContribution,
     Claim,
@@ -40,6 +40,7 @@ from massgov.pfml.db.models.factories import (
     EmployerFactory,
     WagesAndContributionsFactory,
 )
+from massgov.pfml.util.datetime.quarter import Quarter
 
 
 def test_compute_financial_eligibility_no_data(test_db_session, initialize_factories_session):
@@ -1032,11 +1033,18 @@ def test_retrieve_financial_eligibility_multiple_employers(
             "1000",
         ),
         (
-            EligibilityScenarioName.EXISTING_BENEFIT_YEAR_CHANGES_IAWW,
+            EligibilityScenarioName.EXISTING_BENEFIT_YEAR_KEEP_HIGHER_IAWW,
             True,
             "Financially eligible",
             "30000",
             "1250",
+        ),
+        (
+            EligibilityScenarioName.EXISTING_BENEFIT_YEAR_KEEP_LOWER_IAWW,
+            True,
+            "Financially eligible",
+            "48000",
+            "923.08",
         ),
     ],
 )
@@ -1062,4 +1070,50 @@ def test_compute_financial_eligibility_benefit_year_scenarios(
         state_average_weekly_wage=Decimal("1487.78"),
         unemployment_minimum=Decimal("5400.00"),
         employer_average_weekly_wage=Decimal(expected_weekly_avg),
+    )
+
+
+def test_benefit_year_eligibility_mulitple_employers(test_db_session, initialize_factories_session):
+    # In this scenario the second claim within the benefit year is for a different employer.
+    # IAWW should still be based on the wage data when the benefit year was originally created.
+
+    # set up initial scenario
+
+    scenario = EligibilityScenarioDescriptor(
+        last_x_quarters_wages=["6000", "6000", "6000", "6000", "6000", "6000"],
+        last_x_quarters_wages_other_employer=["4000", "4000", "4000", "4000", "4000", "4000"],
+    )
+
+    # create the benefit year based on a finanical eligibility check for Employer A
+    scenario_data = generate_eligibility_scenario_data_in_db(scenario, test_db_session)
+    first_result = run_eligibility_for_scenario(scenario_data, test_db_session)
+
+    # add additional wage data for Employer B
+    employee = scenario_data.employee
+    other_employer = scenario_data.other_employer
+    for curr_quarter in Quarter.from_date(scenario_data.leave_start_date).series(2):
+        WagesAndContributionsFactory.create(
+            employee=employee,
+            employer=other_employer,
+            filing_period=curr_quarter.start_date(),
+            employee_qtr_wages="6000",
+        )
+
+    # run financial eligibility for a new claim from Employer B
+    second_result = eligibility.retrieve_financial_eligibility(
+        test_db_session,
+        employee.employee_id,
+        other_employer.employer_id,
+        date(2021, 12, 1),
+        date(2021, 12, 1),
+        EligibilityEmploymentStatus.employed,
+    )
+
+    assert second_result == eligibility.EligibilityResponse(
+        financially_eligible=True,
+        description="Financially eligible",
+        total_wages=first_result.total_wages,
+        state_average_weekly_wage=Decimal("1487.78"),
+        unemployment_minimum=Decimal("5400.00"),
+        employer_average_weekly_wage=Decimal("307.69"),
     )

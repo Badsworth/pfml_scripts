@@ -682,9 +682,6 @@ def test_process_rejects_error(
 
 def test_transition_audit_pending_payment_state_withholdings(test_db_session, payment_rejects_step):
 
-    # Enable Tax Withholding processing for this test
-    os.environ["ENABLE_WITHHOLDING_PAYMENTS"] = "1"
-
     # Test Rejection of Primary
     payment_1 = DelegatedPaymentFactory(
         test_db_session, payment_method=PaymentMethod.ACH,

@@ -2,7 +2,8 @@ from dataclasses import dataclass
 from typing import List
 
 import massgov.pfml.db as db
-from massgov.pfml.db.models.employees import AbsenceStatus, Claim, Employee
+from massgov.pfml.db.models.absences import AbsenceStatus
+from massgov.pfml.db.models.employees import Claim, Employee
 
 OUTBOUND_STATUSES = {
     AbsenceStatus.ADJUDICATION.absence_status_id,

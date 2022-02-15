@@ -5,7 +5,8 @@ import pytest
 import massgov.pfml.delegated_payments.delegated_fineos_iaww_extract as extractor
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 from massgov.pfml.api.eligibility.benefit_year import get_benefit_year_by_employee_id
-from massgov.pfml.db.models.employees import AbsenceStatus, ReferenceFileType
+from massgov.pfml.db.models.absences import AbsenceStatus
+from massgov.pfml.db.models.employees import ReferenceFileType
 from massgov.pfml.db.models.factories import (
     AbsencePeriodFactory,
     ClaimFactory,

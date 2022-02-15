@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Set, Type, Union, cast
+from typing import Any, Callable, Dict, List, Optional, Type, Union, cast
 
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import ColumnProperty, class_mapper
@@ -48,8 +48,8 @@ from massgov.pfml.db.models.payments import (
     PaymentLog,
 )
 from massgov.pfml.db.models.state import LkState, State
+from massgov.pfml.util.collections.dict import filter_dict, make_keys_lowercase
 from massgov.pfml.util.converters.str_to_numeric import str_to_int
-from massgov.pfml.util.csv import CSVSourceWrapper
 from massgov.pfml.util.datetime import get_now_us_eastern
 from massgov.pfml.util.routing_number_validation import validate_routing_number
 
@@ -1010,12 +1010,6 @@ def group_s3_files_by_date(expected_file_names: List[str]) -> Dict[str, List[str
     return date_to_full_path
 
 
-def datetime_str_to_date(datetime_str: Optional[str]) -> Optional[date]:
-    if not datetime_str:
-        return None
-    return datetime.fromisoformat(datetime_str).date()
-
-
 def compare_address_fields(first: Address, second: Address, field: str) -> bool:
     value1 = getattr(first, field)
     value2 = getattr(second, field)
@@ -1179,31 +1173,6 @@ def move_reference_file(
         raise
 
 
-def download_and_parse_csv(s3_path: str, download_directory: str) -> CSVSourceWrapper:
-    file_name = os.path.basename(s3_path)
-    download_location = os.path.join(download_directory, file_name)
-    logger.debug("Download file: %s, to: %s", s3_path, download_location)
-
-    try:
-        if s3_path.startswith("s3:/"):
-            file_util.download_from_s3(s3_path, download_location)
-        else:
-            file_util.copy_file(s3_path, download_location)
-    except Exception as e:
-        logger.exception(
-            "Error downloading file: %s",
-            s3_path,
-            extra={"src": s3_path, "destination": download_directory},
-        )
-        raise e
-
-    return CSVSourceWrapper(download_location)
-
-
-def make_keys_lowercase(data: Dict[str, Any]) -> Dict[str, Any]:
-    return {k.lower(): v for k, v in data.items()}
-
-
 def get_attribute_names(cls):
     return [
         prop.key
@@ -1333,19 +1302,6 @@ def get_transaction_status_date(payment: Payment) -> date:
 
     # Otherwise the transaction status date is calculated using the current time.
     return get_now_us_eastern().date()
-
-
-def filter_dict(dict: Dict[str, Any], allowed_keys: Set[str]) -> Dict[str, Any]:
-    """
-    Filter a dictionary to a specified set of allowed keys.
-    If the key isn't present, will not cause an issue (ie. when we delete columns in the DB)
-    """
-    new_dict = {}
-    for k, v in dict.items():
-        if k in allowed_keys:
-            new_dict[k] = v
-
-    return new_dict
 
 
 employee_audit_log_keys = set(
@@ -1508,10 +1464,6 @@ def is_employer_exempt_for_payment(payment: Payment, claim: Claim, employer: Emp
             return True
 
     return False
-
-
-def is_withholding_payments_enabled() -> bool:
-    return os.environ.get("ENABLE_WITHHOLDING_PAYMENTS", "0") == "1"
 
 
 def is_employer_reimbursement_payments_enabled() -> bool:

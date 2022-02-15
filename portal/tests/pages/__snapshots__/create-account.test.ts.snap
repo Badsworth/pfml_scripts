@@ -42,7 +42,7 @@ exports[`CreateAccount renders the empty page 1`] = `
     class="js-title margin-top-0 margin-bottom-2 font-heading-lg line-height-sans-2"
     tabindex="-1"
   >
-    Create a worker account to apply for paid leave
+    Create an employee account to apply for paid leave
   </h1>
   <p>
     Need to create an employer account? 

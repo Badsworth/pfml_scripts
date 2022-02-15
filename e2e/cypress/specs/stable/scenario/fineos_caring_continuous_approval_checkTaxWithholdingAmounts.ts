@@ -65,8 +65,10 @@ describe("Approve claim created in Fineos, then check Tax Withholding deductions
       });
     });
 
-  const payments =
-    it("Should calculate the proper withholding amounts for SIT/FIT", () => {
+  const payments = it(
+    "Should calculate the proper withholding amounts for SIT/FIT",
+    { retries: 0 },
+    () => {
       cy.dependsOnPreviousPass([fineosSubmission]);
       fineos.before();
       cy.unstash<Submission>("submission").then(({ fineos_absence_id }) => {
@@ -80,7 +82,8 @@ describe("Approve claim created in Fineos, then check Tax Withholding deductions
           }
         );
       });
-    });
+    }
+  );
 
   it("SIT/FIT opt-in cannot be modified once payments are generated", () => {
     cy.dependsOnPreviousPass([payments]);

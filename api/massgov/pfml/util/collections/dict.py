@@ -3,6 +3,7 @@
 #
 
 import collections
+from typing import Any, Dict, Set
 
 
 class LeastRecentlyUsedDict(collections.OrderedDict):
@@ -34,3 +35,16 @@ class LeastRecentlyUsedDict(collections.OrderedDict):
         super().__setitem__(key, value)
         if self.maxsize < len(self):
             self.popitem(last=False)
+
+
+def make_keys_lowercase(data: Dict[str, Any]) -> Dict[str, Any]:
+    return {k.lower(): v for k, v in data.items()}
+
+
+def filter_dict(dict: Dict[str, Any], allowed_keys: Set[str]) -> Dict[str, Any]:
+    """
+    Filter a dictionary to a specified set of allowed keys.
+    If the key isn't present, will not cause an issue (i.e.. when we delete columns in the DB)
+    """
+
+    return {k: v for k, v in dict.items() if k in allowed_keys}

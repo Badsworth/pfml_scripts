@@ -15,8 +15,8 @@ import sqlalchemy
 import massgov.pfml.reductions.dia as dia
 import massgov.pfml.util.csv as csv_util
 import massgov.pfml.util.files as file_util
+from massgov.pfml.db.models.absences import AbsenceStatus
 from massgov.pfml.db.models.employees import (
-    AbsenceStatus,
     DiaReductionPayment,
     ReferenceFile,
     ReferenceFileType,

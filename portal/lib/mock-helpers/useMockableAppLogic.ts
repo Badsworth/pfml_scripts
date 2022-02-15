@@ -1,7 +1,7 @@
 import useAppLogic, { AppLogic } from "../../src/hooks/useAppLogic";
 import User from "../../src/models/User";
 import createMockFn from "./createMockFn";
-import faker from "faker";
+import { faker } from "@faker-js/faker";
 import { merge } from "lodash";
 
 const authenticateUser = (appLogic: AppLogic) => {

@@ -3,7 +3,7 @@ import { act, screen } from "@testing-library/react";
 import { mockAuth, renderPage } from "../../../test-utils";
 import ConfirmSMS from "../../../../src/pages/two-factor/sms/confirm";
 import User from "../../../../src/models/User";
-import faker from "faker";
+import { faker } from "@faker-js/faker";
 import tracker from "../../../../src/services/tracker";
 import userEvent from "@testing-library/user-event";
 

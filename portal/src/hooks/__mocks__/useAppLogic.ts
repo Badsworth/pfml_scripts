@@ -46,7 +46,6 @@ export default jest.fn(() => ({
     warningsLists: {},
   },
   claims: {
-    activeFilters: {},
     claimDetail: new ClaimDetail(),
     claims: new ApiResourceCollection<Claim>("fineos_absence_id"),
     clearClaims: jest.fn(),

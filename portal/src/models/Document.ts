@@ -2,7 +2,7 @@
 /**
  * @file Document (AKA File) model and enum values
  */
-import LeaveReason from "./LeaveReason";
+import LeaveReason, { LeaveReasonType } from "./LeaveReason";
 import { ValuesOf } from "../../types/common";
 
 const CertificationType = {
@@ -92,7 +92,7 @@ export function filterByApplication(
  */
 export function findDocumentsByLeaveReason<
   T extends BenefitsApplicationDocument | ClaimDocument
->(documents: T[], leaveReason: keyof typeof DocumentType.certification): T[] {
+>(documents: T[], leaveReason?: LeaveReasonType): T[] {
   // TODO (CP-2029): Remove the medicalCertification type from this array when it becomes obsolete
   const documentFilters: Array<
     typeof DocumentType.certification[keyof typeof DocumentType.certification]

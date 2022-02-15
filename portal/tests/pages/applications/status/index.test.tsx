@@ -506,7 +506,7 @@ describe("Status", () => {
 
       expect(
         screen.getByText(
-          /Once we’ve made a decision, you can download the decision notice here. You’ll also get an email notification./
+          /We will notify you once we’ve made a decision. You’ll be able to download the decision notice on this website./
         )
       ).toBeInTheDocument();
     });

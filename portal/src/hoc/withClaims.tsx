@@ -2,31 +2,11 @@ import React, { useEffect } from "react";
 import withUser, { WithUserProps } from "./withUser";
 import ApiResourceCollection from "../models/ApiResourceCollection";
 import Claim from "../models/Claim";
+import { GetClaimsParams } from "../api/ClaimsApi";
 import PaginationMeta from "../models/PaginationMeta";
 import Spinner from "../components/core/Spinner";
 import { omitBy } from "lodash";
 import { useTranslation } from "../locales/i18n";
-
-export interface ApiParams {
-  page_offset?: string;
-  // TODO (PORTAL-1683): DRY these up
-  employer_id?: string;
-  search?: string;
-  claim_status?: string;
-  is_reviewable?: "no" | "yes";
-  order_by?:
-    | "absence_status"
-    | "created_at"
-    | "employee"
-    | "latest_follow_up_date";
-  order_direction?: "ascending" | "descending";
-  request_decision?:
-    | "approved"
-    | "cancelled"
-    | "denied"
-    | "pending"
-    | "withdrawn";
-}
 
 export interface WithClaimsProps extends WithUserProps {
   claims: ApiResourceCollection<Claim>;
@@ -39,11 +19,10 @@ export interface WithClaimsProps extends WithUserProps {
  */
 function withClaims<T extends WithClaimsProps>(
   Component: React.ComponentType<T>,
-  apiParams: ApiParams = {}
+  apiParams: GetClaimsParams = {}
 ) {
   const ComponentWithClaims = (props: Omit<T, "claims" | "paginationMeta">) => {
     const { appLogic } = props;
-    const { page_offset } = apiParams;
     const { t } = useTranslation();
 
     const { isLoadingClaims } = appLogic.claims;
@@ -52,15 +31,11 @@ function withClaims<T extends WithClaimsProps>(
     // send those into the API request's query string, and our
     // UI components won't need to filter them out when determining
     // how many filters are active.
-    const order = omitBy(
+    const params = omitBy(
       {
+        page_offset: apiParams.page_offset,
         order_by: apiParams.order_by,
         order_direction: apiParams.order_direction,
-      },
-      (value) => value === null || value === undefined
-    );
-    const filters = omitBy(
-      {
         claim_status: apiParams.claim_status,
         is_reviewable: apiParams.is_reviewable,
         request_decision: apiParams.request_decision,
@@ -71,9 +46,9 @@ function withClaims<T extends WithClaimsProps>(
     );
 
     useEffect(() => {
-      appLogic.claims.loadPage(page_offset, order, filters);
+      appLogic.claims.loadPage(params);
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isLoadingClaims, page_offset, order, filters]);
+    }, [isLoadingClaims, params]);
 
     if (isLoadingClaims) {
       return (

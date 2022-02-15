@@ -76,3 +76,18 @@ resource "aws_cloudwatch_metric_alarm" "sns_sms_rate_exceeded" {
   alarm_actions       = [aws_sns_topic.sns_sms_rate_exceeded.arn]
   ok_actions          = [aws_sns_topic.sns_sms_rate_exceeded.arn]
 }
+
+resource "aws_cloudwatch_metric_alarm" "sns_mfa_delivery_time_exceeded" {
+  alarm_name          = "sns-mfa-delivery-time-exceeded"
+  alarm_description   = "At least 1 SNS SMS rate exceeded error in 5 minutes"
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  evaluation_periods  = "1"
+  metric_name         = aws_cloudwatch_log_metric_filter.sns_mfa_delivery_time_exceeded.metric_transformation[0].name
+  namespace           = aws_cloudwatch_log_metric_filter.sns_mfa_delivery_time_exceeded.metric_transformation[0].namespace
+  period              = local.default_aggregation_window
+  statistic           = "Sum"
+  threshold           = 1
+  treat_missing_data  = "notBreaching"
+  alarm_actions       = [aws_sns_topic.sns_sms_rate_exceeded.arn]
+  ok_actions          = [aws_sns_topic.sns_sms_rate_exceeded.arn]
+}

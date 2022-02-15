@@ -4,8 +4,8 @@ import pytest
 from dateutil.relativedelta import relativedelta
 from freezegun import freeze_time
 
+from massgov.pfml.db.models.absences import AbsenceStatus
 from massgov.pfml.db.models.employees import (
-    AbsenceStatus,
     Claim,
     ManagedRequirementStatus,
     ManagedRequirementType,

@@ -133,6 +133,15 @@ resource "aws_s3_bucket_public_access_block" "business_intelligence_tool" {
   restrict_public_buckets = true
 }
 
+resource "aws_s3_bucket_public_access_block" "feature_gate" {
+  bucket = aws_s3_bucket.feature_gate.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
 resource "aws_s3_bucket_policy" "document_upload_policy" {
   bucket = aws_s3_bucket.document_upload.id
   policy = data.aws_iam_policy_document.document_upload.json

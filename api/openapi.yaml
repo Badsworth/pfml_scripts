@@ -275,7 +275,7 @@ paths:
           agent-id: []
       tags:
         - Employees
-      summary: Lookup an Employee by SSN/ITIN and name
+      summary: Lookup Employees
       operationId: massgov.pfml.api.employees.employees_search
       responses:
         "200":
@@ -287,7 +287,7 @@ paths:
                   - $ref: "#/components/schemas/SuccessfulResponse"
                   - properties:
                       data:
-                        $ref: "#/components/schemas/EmployeeResponse"
+                        $ref: "#/components/schemas/EmployeesResponse"
         "404":
           $ref: "#/components/responses/NotFound"
       requestBody:
@@ -1183,6 +1183,49 @@ paths:
       requestBody:
         $ref: "#/components/requestBodies/VerificationRequest"
 
+  /benefit-years/search:
+    post:
+      security:
+        - jwt: []
+        - oauth2: []
+          agent-id: []
+      tags:
+        - Benefit Years
+      summary: >
+        Returns all benefit years for the employee_id in the request; if no employee_id is present
+        returns all benefit years for the current user.
+      operationId: massgov.pfml.api.eligibility.handler.benefit_years_search
+      responses:
+        '200':
+          description: A successful response returns a 200 status code and the benefit years
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessfulResponse'
+                  - properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/BenefitYearResponse'
+                example:
+                  meta:
+                    method: "POST"
+                    resource: "/benefit-years/search"
+                  status_code: 200
+                  message: "success"
+                  data:
+                  - benefit_year_end_date: '2020-12-31'
+                    benefit_year_start_date: '2020-01-01'
+                    employee_id: '2a340cf8-6d2a-4f82-a075-73588d003f8f'
+                    current_benefit_year: true
+                  - benefit_year_end_date: '2019-12-31'
+                    benefit_year_start_date: '2019-01-01'
+                    employee_id: '2a340cf8-6d2a-4f82-a075-73588d003f8f'
+                    current_benefit_year: false
+      requestBody:
+        $ref: '#/components/requestBodies/BenefitYearsSearchRequest'
+
   /admin/authorize:
     get:
       security:
@@ -1348,6 +1391,7 @@ tags:
   - name: Notifications
   - name: Feature Flags
   - name: Admin
+  - name: Benefit Years
 
 components:
   securitySchemes:
@@ -1497,6 +1541,11 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/EmployerAddFeinRequestBody"
+    BenefitYearsSearchRequest:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/BenefitYearsSearchRequest"
 
   responses:
     AdminTokenResponse:
@@ -2024,19 +2073,15 @@ components:
     EmployeeSearchRequest:
       type: object
       properties:
-        first_name:
-          type: string
-          example: "Jane"
-        middle_name:
-          type: string
-          example: "Alice"
-        last_name:
-          type: string
-          example: "Doe"
-        tax_identifier_last4:
-          type: string
-          example: "1234"
-      required: ["first_name", "last_name", "tax_identifier_last4"]
+        terms:
+          $ref: "#/components/schemas/EmployeeSearchRequestTermsMetadata"
+        order:
+          $ref: "#/components/schemas/EmployeeSearchRequestOrderMetadata"
+          nullable: true
+        paging:
+          $ref: "#/components/schemas/EmployeeSearchRequestPagingMetadata"
+          nullable: true
+      required: ["terms"]
 
     EmployeeErrorResponse:
       type: object
@@ -2089,6 +2134,8 @@ components:
         date_of_birth:
           nullable: true
           $ref: "#/components/schemas/MaskedDate"
+        created_at:
+          format: date
       required: ["employee_id"]
 
     EmployeeBasicResponse:
@@ -2098,6 +2145,10 @@ components:
           type: string
           format: uuid
           example: "009fa369-291b-403f-a85a-15e938c26a7b"
+        fineos_customer_number:
+          type: string
+          nullable: true
+          example: "1111111"
         first_name:
           type: string
           example: "Jane"
@@ -2173,6 +2224,21 @@ components:
         - employer_benefits
         - previous_leaves
         - hours_worked_per_week
+
+    BenefitYearResponse:
+      type: object
+      properties:
+        employee_id:
+          type: string
+          format: uuid
+          example: '2a340cf8-6d2a-4f82-a075-73588d003f8f'
+        benefit_year_start_date:
+          $ref: '#/components/schemas/Date'
+        benefit_year_end_date:
+          $ref: '#/components/schemas/Date'
+        current_benefit_year:
+          type: boolean
+          example: true
 
     UpdateClaimReviewResponse:
       type: object
@@ -2923,6 +2989,11 @@ components:
       type: array
       items:
         $ref: "#/components/schemas/ClaimResponse"
+
+    EmployeesResponse:
+      type: array
+      items:
+        $ref: "#/components/schemas/EmployeeResponse"
 
     PaymentsResponse:
       type: object
@@ -3882,6 +3953,11 @@ components:
       example: "***-**-1234"
       pattern: '^\*{3}-\*{2}-\d{4}$'
 
+    NonMaskedSsnItin:
+      type: string
+      example: "000-00-0000"
+      pattern: '^\d{3}-\d{2}-\d{4}$'
+
     Fein:
       type: string
       example: "00-0000000"
@@ -3935,6 +4011,11 @@ components:
           type: string
           example: "224-705-2345"
           pattern: '^([0-9]|\*){3}\-([0-9]|\*){3}\-[0-9]{4}$'
+          nullable: true
+        e164:
+          type: string
+          example: "+12247052345"
+          pattern: '^\+?[1-9]\d{1,14}$'
           nullable: true
         phone_type:
           type: string
@@ -3994,3 +4075,89 @@ components:
             - Sibling - Brother/Sister
             - Other
             - Spouse
+
+    BenefitYearsSearchRequest:
+      type: object
+      properties:
+        employee_id:
+          type: string
+          example: '2a340cf8-6d2a-4f82-a075-73588d003f8f'
+          format: uuid
+        current:
+          type: boolean
+          example: false
+
+    EmployeeSearchRequestTermsMetadata:
+      type: object
+      properties:
+        first_name:
+          type: string
+          example: "Jane"
+          description: |
+            If `first_name` is present, `last_name` must be present as well.
+
+            This will be a case-insensitive, fuzzy match against first names on
+            record.
+          nullable: true
+          minLength: 3
+        last_name:
+          type: string
+          example: "Doe"
+          description: |
+            If `last_name` is present, `first_name` must be present as well.
+
+            This will be a case-insensitive, fuzzy match against last names on
+            record.
+          nullable: true
+          minLength: 3
+        email_address:
+          type: string
+          format: email
+          example: "j.a.doe@gmail.com"
+          nullable: true
+          minLength: 3
+        phone_number:
+          type: string
+          example: "+12247052345"
+          description: |
+            A phone number in E.164 format.
+          pattern: '^\+?[1-9]\d{1,14}$'
+          nullable: true
+        tax_identifier:
+          $ref: "#/components/schemas/NonMaskedSsnItin"
+          nullable: true
+        fineos_customer_number:
+          type: string
+          example: "111111"
+          nullable: true
+
+    EmployeeSearchRequestOrderMetadata:
+      type: object
+      properties:
+        by:
+          type: string
+          default: "created_at"
+          nullable: true
+          enum: ["created_at"]
+        direction:
+          type: string
+          example: "ascending"
+          default: "descending"
+          enum:
+            - ascending
+            - descending
+          nullable: true
+
+    EmployeeSearchRequestPagingMetadata:
+      type: object
+      properties:
+        offset:
+          type: integer
+          example: 1
+          default: 1
+          nullable: true
+        size:
+          type: integer
+          default: 25
+          example: 10
+          nullable: true

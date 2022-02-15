@@ -1,11 +1,11 @@
-import { fineos, portal, email, fineosPages } from "../../actions";
-import { Submission } from "../../../src/types";
+import { fineos, portal, email, fineosPages } from "../../../actions";
+import { Submission } from "../../../../src/types";
 import {
   findCertificationDoc,
   getDocumentReviewTaskName,
-} from "../../../src/util/documents";
-import { config } from "../../actions/common";
-import { itIf } from "../../util";
+} from "../../../../src/util/documents";
+import { config } from "../../../actions/common";
+import { itIf } from "../../../util";
 
 describe("Approval (notifications/notices)", () => {
   after(() => {

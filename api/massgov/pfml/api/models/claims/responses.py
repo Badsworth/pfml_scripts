@@ -13,12 +13,8 @@ from massgov.pfml.api.models.claims.common import (
 from massgov.pfml.api.models.common import ConcurrentLeave
 from massgov.pfml.api.models.employees.responses import EmployeeBasicResponse
 from massgov.pfml.api.models.employers.responses import EmployerResponse
-from massgov.pfml.db.models.employees import (
-    AbsencePeriod,
-    AbsencePeriodType,
-    Claim,
-    ManagedRequirement,
-)
+from massgov.pfml.db.models.absences import AbsencePeriodType
+from massgov.pfml.db.models.employees import AbsencePeriod, Claim, ManagedRequirement
 from massgov.pfml.util.pydantic import PydanticBaseModel
 from massgov.pfml.util.pydantic.types import (
     FEINFormattedStr,

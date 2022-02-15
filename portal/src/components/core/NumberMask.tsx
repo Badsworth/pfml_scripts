@@ -106,7 +106,7 @@ interface MaskProps {
 }
 
 /**
- * Mask component that takes an input field and applies a specified mask.
+ * Mask component that takes an input field expecting numbers only, and applies a specified mask.
  * Adapted from [CMS design system MaskedField](https://design.cms.gov/components/masked-field).
  * Source code: [Mask](https://github.com/CMSgov/design-system/blob/master/packages/design-system/src/components/TextField/Mask.jsx)
  */

@@ -77,3 +77,9 @@ def get_period_in_weeks(period_start: date, period_end: date) -> int:
     """
     weeks = math.ceil(get_period_in_days(period_start, period_end) / 7.0)
     return weeks
+
+
+def datetime_str_to_date(datetime_str: Optional[str]) -> Optional[date]:
+    if not datetime_str:
+        return None
+    return datetime.fromisoformat(datetime_str).date()

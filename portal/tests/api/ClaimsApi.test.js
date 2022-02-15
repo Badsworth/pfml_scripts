@@ -31,7 +31,7 @@ describe("ClaimsApi", () => {
       mockFetch();
 
       const claimsApi = new ClaimsApi();
-      await claimsApi.getClaims(2);
+      await claimsApi.getClaims({ page_offset: 2 });
 
       expect(global.fetch).toHaveBeenCalledWith(
         `${process.env.apiUrl}/claims?page_offset=2`,
@@ -45,17 +45,13 @@ describe("ClaimsApi", () => {
     it("includes order and filter params in request", async () => {
       mockFetch();
       const claimsApi = new ClaimsApi();
-      await claimsApi.getClaims(
-        2,
-        {
-          order_by: "employee",
-          order_direction: "descending",
-        },
-        {
-          employer_id: "mock-employer-id",
-          claim_status: "Approved,Pending",
-        }
-      );
+      await claimsApi.getClaims({
+        page_offset: 2,
+        order_by: "employee",
+        order_direction: "descending",
+        employer_id: "mock-employer-id",
+        claim_status: "Approved,Pending",
+      });
 
       // TODO (PORTAL-1560): Remove this assertion, once the deprecated filters are removed
       expect(global.fetch).toHaveBeenLastCalledWith(
@@ -67,18 +63,15 @@ describe("ClaimsApi", () => {
       );
 
       mockFetch();
-      await claimsApi.getClaims(
-        2,
-        {
-          order_by: "employee",
-          order_direction: "descending",
-        },
-        {
-          employer_id: "mock-employer-id",
-          is_reviewable: "yes",
-          request_decision: "approved",
-        }
-      );
+      await claimsApi.getClaims({
+        page_offset: 2,
+        order_by: "employee",
+        order_direction: "descending",
+
+        employer_id: "mock-employer-id",
+        is_reviewable: "yes",
+        request_decision: "approved",
+      });
 
       expect(global.fetch).toHaveBeenLastCalledWith(
         `${process.env.apiUrl}/claims?page_offset=2&order_by=employee&order_direction=descending&employer_id=mock-employer-id&is_reviewable=yes&request_decision=approved`,
@@ -98,7 +91,7 @@ describe("ClaimsApi", () => {
       };
       const originalFilters = { ...filters };
       const claimsApi = new ClaimsApi();
-      await claimsApi.getClaims(2, {}, filters);
+      await claimsApi.getClaims({ page_offset: 2, ...filters });
 
       expect(global.fetch).toHaveBeenCalledWith(
         `${process.env.apiUrl}/claims?page_offset=2&employer_id=mock-employer-id&claim_status=Closed%2CCompleted`,
@@ -121,7 +114,7 @@ describe("ClaimsApi", () => {
       };
       const originalOrder = { ...order };
       const claimsApi = new ClaimsApi();
-      await claimsApi.getClaims(2, order, {});
+      await claimsApi.getClaims({ page_offset: 2, ...order });
 
       expect(global.fetch).toHaveBeenCalledWith(
         `${process.env.apiUrl}/claims?page_offset=2&order_by=fineos_absence_status&order_direction=ascending`,

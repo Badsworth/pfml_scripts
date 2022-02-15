@@ -12,7 +12,12 @@ from massgov.pfml.api.validation import (
     get_custom_validator_map,
     log_validation_error,
 )
-from massgov.pfml.api.validation.exceptions import ValidationErrorDetail, ValidationException
+from massgov.pfml.api.validation.exceptions import (
+    IssueRule,
+    IssueType,
+    ValidationErrorDetail,
+    ValidationException,
+)
 from massgov.pfml.fineos.models.customer_api import Customer
 
 TEST_FOLDER = pathlib.Path(__file__).parent
@@ -127,7 +132,10 @@ def test_log_validation_error_unexpected_exception_handling(caplog):
     caplog.set_level(logging.INFO)  # noqa: B1
 
     unexpected_exception = ValidationErrorDetail(
-        rule="number", type="type", field="cents", message="something that might be PII",
+        rule=IssueRule.conditional,
+        type=IssueType.value_error,
+        field="cents",
+        message="something that might be PII",
     )
 
     expected_exception = ValidationErrorDetail(
@@ -145,7 +153,7 @@ def test_log_validation_error_unexpected_exception_handling(caplog):
         (
             "log_and_capture_exception",
             "ERROR",
-            "Request Validation Exception (field: cents, type: type, rule: number)",
+            "Request Validation Exception (field: cents, type: value_error, rule: conditional)",
         ),
         (
             "log_validation_error",
@@ -155,7 +163,7 @@ def test_log_validation_error_unexpected_exception_handling(caplog):
         (
             "log_and_capture_exception",
             "ERROR",
-            "Request Validation Exception (field: cents, type: type, rule: number)",
+            "Request Validation Exception (field: cents, type: value_error, rule: conditional)",
         ),
         (
             "log_validation_error",

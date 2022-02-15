@@ -39,8 +39,8 @@ from massgov.pfml.api.validation.exceptions import (
     IssueType,
     ValidationErrorDetail,
 )
+from massgov.pfml.db.models.absences import AbsenceStatus
 from massgov.pfml.db.models.employees import (
-    AbsenceStatus,
     Claim,
     Employer,
     LeaveRequestDecision,
@@ -550,8 +550,6 @@ def get_claims() -> flask.Response:
                 employee_ids = {eid.strip() for eid in employee_id_str.split(",")}
                 query.add_employees_filter(employee_ids)
 
-            query.add_managed_requirements_filter()
-
             if len(absence_statuses):
                 # Log the values from the query params rather than the enum groups they
                 # might equate to, since what is sent into the API will be more familiar
@@ -559,8 +557,9 @@ def get_claims() -> flask.Response:
                 log_attributes.update(
                     {"filter.absence_statuses": ", ".join(sorted(absence_statuses))}
                 )
-
                 query.add_absence_status_filter(absence_statuses)
+            else:
+                query.add_managed_requirements_filter()
 
             if search_string:
                 query.add_search_filter(

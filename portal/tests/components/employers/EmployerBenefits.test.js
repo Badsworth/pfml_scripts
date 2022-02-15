@@ -1,5 +1,4 @@
 import EmployerBenefit, {
-  EmployerBenefitFrequency,
   EmployerBenefitType,
 } from "../../../src/models/EmployerBenefit";
 import { render, screen } from "@testing-library/react";
@@ -8,17 +7,11 @@ import React from "react";
 
 const BENEFITS = [
   new EmployerBenefit({
-    benefit_amount_dollars: 1000,
-    benefit_amount_frequency: EmployerBenefitFrequency.weekly,
-    benefit_end_date: "2021-03-01",
-    benefit_start_date: "2021-02-01",
     benefit_type: EmployerBenefitType.shortTermDisability,
     employer_benefit_id: 0,
     is_full_salary_continuous: false,
   }),
   new EmployerBenefit({
-    benefit_amount_dollars: 2000,
-    benefit_amount_frequency: EmployerBenefitFrequency.weekly,
     benefit_end_date: "2021-05-11",
     benefit_start_date: "2021-05-01",
     benefit_type: EmployerBenefitType.paidLeave,

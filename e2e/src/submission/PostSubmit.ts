@@ -3,6 +3,7 @@ import { GeneratedClaim } from "../generation/Claim";
 import { getDocumentReviewTaskName } from "../util/documents";
 import { Claim } from "./fineos.pages";
 import winston from "winston";
+import { extractLeavePeriod } from "../util/claims";
 
 export async function approveClaim(
   page: Page,
@@ -55,7 +56,8 @@ export async function approveClaim(
   logger?.debug("Attempting to approve claim ...", {
     fineos_absence_id,
   });
-  await claimPage.approve();
+  const [, endDate] = extractLeavePeriod(claim.claim);
+  await claimPage.approve(endDate);
   logger?.debug("Claim was approved in Fineos", {
     fineos_absence_id,
   });

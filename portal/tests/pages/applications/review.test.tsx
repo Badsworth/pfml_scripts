@@ -9,7 +9,6 @@ import {
   DocumentType,
 } from "../../../src/models/Document";
 import EmployerBenefit, {
-  EmployerBenefitFrequency,
   EmployerBenefitType,
 } from "../../../src/models/EmployerBenefit";
 import { MockBenefitsApplicationBuilder, renderPage } from "../../test-utils";
@@ -496,32 +495,20 @@ describe("Review Page", () => {
   describe("EmployerBenefitList", () => {
     const entries = [
       new EmployerBenefit({
-        benefit_amount_dollars: 250,
-        benefit_amount_frequency: EmployerBenefitFrequency.monthly,
-        benefit_end_date: "2021-12-30",
-        benefit_start_date: "2021-08-12",
         benefit_type: EmployerBenefitType.paidLeave,
         is_full_salary_continuous: false,
       }),
       new EmployerBenefit({
-        benefit_amount_dollars: 250,
-        benefit_amount_frequency: EmployerBenefitFrequency.monthly,
-        benefit_end_date: "2021-12-30",
-        benefit_start_date: "2021-08-12",
         benefit_type: EmployerBenefitType.shortTermDisability,
         is_full_salary_continuous: false,
       }),
       new EmployerBenefit({
-        benefit_amount_dollars: 250,
-        benefit_amount_frequency: EmployerBenefitFrequency.monthly,
         benefit_end_date: "2021-12-30",
         benefit_start_date: "2021-08-12",
         benefit_type: EmployerBenefitType.permanentDisability,
         is_full_salary_continuous: true,
       }),
       new EmployerBenefit({
-        benefit_amount_dollars: 250,
-        benefit_amount_frequency: EmployerBenefitFrequency.monthly,
         benefit_end_date: "2021-12-30",
         benefit_start_date: "2021-08-12",
         benefit_type: EmployerBenefitType.familyOrMedicalLeave,

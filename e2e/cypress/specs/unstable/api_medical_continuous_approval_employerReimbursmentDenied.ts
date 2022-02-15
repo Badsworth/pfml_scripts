@@ -29,8 +29,8 @@ import { config } from "../../actions/common";
 
     const ERProcess =
       it("CSR starts the Employer Reimbursement Process and adds documents and approves claim", () => {
-        fineos.before();
         cy.dependsOnPreviousPass([submit]);
+        fineos.before();
         cy.unstash<DehydratedClaim>("claim").then((claim) => {
           cy.unstash<Submission>("submission").then((sumbmission) => {
             const claimPage = fineosPages.ClaimPage.visit(
@@ -78,8 +78,8 @@ import { config } from "../../actions/common";
       });
 
     it("Deny the employer reimbursement to the Paid Leave Case and trigger notice", () => {
-      fineos.before();
       cy.dependsOnPreviousPass([submit, ERProcess]);
+      fineos.before();
       cy.unstash<Submission>("submission").then((sumbmission) => {
         const claimPage = fineosPages.ClaimPage.visit(
           sumbmission.fineos_absence_id

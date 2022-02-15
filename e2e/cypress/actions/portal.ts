@@ -39,8 +39,6 @@ import {
 import { LeaveReason } from "generation/Claim";
 import { getClaimantCredentials, getLeaveAdminCredentials } from "../config";
 import { format } from "date-fns";
-import { Numbers } from "../../src/submission/TwilioClient";
-import { Environment } from "../../src/types";
 
 /**Set portal feature flags */
 function setFeatureFlags(flags?: Partial<FeatureFlags>): void {
@@ -2191,23 +2189,25 @@ export function assertPaymentsOverV66(spec: PaymentStatusOverV66[]) {
   });
 }
 
-export function completeFlowMFA(type: keyof Numbers[Environment]): void {
-  cy.task("getMFAPhoneNumber", type).then((phone_number) => {
-    cy.findByLabelText("Phone number").type(phone_number);
-    cy.contains("button", "Save and continue").click();
-    const timeSent = new Date();
-    cy.location("pathname", { timeout: 30000 }).should(
-      "include",
-      "/sms/confirm/"
-    );
-    cy.wait(500);
-    cy.task("mfaVerfication", { timeSent, type: type }).then((res) => {
-      cy.findByLabelText("6-digit code").type(res.code);
+export function completeFlowMFA(number: string): void {
+  cy.findByLabelText("Phone number")
+    .type(number)
+    .then(() => {
+      // Important: timeSent has to be calculated after we've started executing actions.
+      // That's why we wrap this block in a then().
+      const timeSent = new Date();
       cy.contains("button", "Save and continue").click();
-      cy.url({ timeout: 30000 }).should("contain", "smsMfaConfirmed=true");
-      cy.contains("Phone number confirmed");
+      cy.location("pathname", { timeout: 30000 }).should(
+        "include",
+        "/sms/confirm/"
+      );
+      cy.task("mfaVerification", { timeSent, number }).then((code) => {
+        cy.findByLabelText("6-digit code").type(code);
+        cy.contains("button", "Save and continue").click();
+        cy.url({ timeout: 30000 }).should("contain", "smsMfaConfirmed=true");
+        cy.contains("Phone number confirmed");
+      });
     });
-  });
 }
 
 export function enableMFA(): void {
@@ -2217,18 +2217,18 @@ export function enableMFA(): void {
   cy.contains("button", "Save and continue").click();
 }
 
-export function loginMFA(
-  credentials: Credentials,
-  type: keyof Numbers[Environment]
-): void {
-  const timeSent = new Date();
-  login(credentials);
-  cy.wait(1000);
-  cy.task("mfaVerfication", { timeSent, type }).then((res) => {
-    cy.findByLabelText("6-digit code").type(res.code);
-    cy.contains("button", "Submit").click();
-    cy.url({ timeout: 30000 }).should("contain", "get-ready");
-    assertLoggedIn();
+export function loginMFA(credentials: Credentials, number: string): void {
+  cy.then(() => {
+    // Important: If we don't assign timeSent inside a `then` block, it gets executed
+    // immediately, probably even before other steps get run.
+    const timeSent = new Date();
+    login(credentials);
+    cy.task("mfaVerification", { timeSent, number }).then((code) => {
+      cy.findByLabelText("6-digit code").type(code);
+      cy.contains("button", "Submit").click();
+      cy.url({ timeout: 30000 }).should("contain", "get-ready");
+      assertLoggedIn();
+    });
   });
 }
 
@@ -2247,10 +2247,10 @@ export function disableMFA(): void {
   );
 }
 
-export function updateNumberMFA(): void {
+export function updateNumberMFA(number: string): void {
   cy.contains("a", "Settings").click();
   cy.findByText("Phone number").parent().next().click();
-  completeFlowMFA("secondary");
+  completeFlowMFA(number);
 }
 
 export function leaveAdminAssertClaimStatus(leaves: LeaveStatus[]) {

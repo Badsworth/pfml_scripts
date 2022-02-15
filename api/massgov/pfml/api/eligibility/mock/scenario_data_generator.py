@@ -39,6 +39,7 @@ class ScenarioData:
     employment_status: EligibilityEmploymentStatus
     active_benefit_year: Optional[BenefitYear] = None
     future_benefit_year: Optional[BenefitYear] = None
+    other_employer: Optional[Employer] = None
 
 
 def generate_eligibility_scenario_data_in_db(
@@ -72,6 +73,8 @@ def generate_eligibility_scenario_data_in_db(
                 filing_period=starting_quarter.subtract_quarters(quarters_to_subtract).start_date(),
                 employee_qtr_wages=scenario_descriptor.last_x_quarters_wages_other_employer[i],
             )
+    else:
+        other_employer = None
 
     if scenario_descriptor.active_benefit_year:
         benefit_year_dates = get_benefit_year_dates(
@@ -126,6 +129,7 @@ def generate_eligibility_scenario_data_in_db(
         scenario_descriptor.employment_status,
         active_benefit_year,
         future_benefit_year,
+        other_employer,
     )
 
 

@@ -21,7 +21,8 @@ from massgov.pfml.api.services.administrator_fineos_actions import (
     register_leave_admin_with_fineos,
 )
 from massgov.pfml.api.validation.exceptions import ContainsV1AndV2Eforms
-from massgov.pfml.db.models.employees import AbsencePeriodType, UserLeaveAdministrator
+from massgov.pfml.db.models.absences import AbsencePeriodType
+from massgov.pfml.db.models.employees import UserLeaveAdministrator
 from massgov.pfml.db.models.factories import EmployerFactory
 from massgov.pfml.fineos import FINEOSClient
 from massgov.pfml.fineos.mock.eform import MOCK_EFORM_OTHER_INCOME_V1, MOCK_EFORM_OTHER_INCOME_V2
@@ -2031,10 +2032,46 @@ class TestGetDocumentsAsLeaveAdmin:
         )
 
     @pytest.fixture
+    def group_client_image_png(self):
+        return GroupClientDocument(
+            name="own serious health condition form",
+            documentId=2,
+            type="image",
+            caseId="123",
+            description="foo bar",
+            originalFilename="test.png",
+            fileExtension=".png",
+        )
+
+    @pytest.fixture
+    def group_client_image_jpeg(self):
+        return GroupClientDocument(
+            name="own serious health condition form",
+            documentId=3,
+            type="image",
+            caseId="123",
+            description="foo bar",
+            originalFilename="test.jpeg",
+            fileExtension=".jpeg",
+        )
+
+    @pytest.fixture
+    def group_client_image_jpg(self):
+        return GroupClientDocument(
+            name="own serious health condition form",
+            documentId=4,
+            type="image",
+            caseId="123",
+            description="foo bar",
+            originalFilename="test.jpg",
+            fileExtension=".jpg",
+        )
+
+    @pytest.fixture
     def group_client_doc_invalid_type(self):
         return GroupClientDocument(
             name="invalid type",
-            documentId=2,
+            documentId=5,
             type="document",
             caseId="234",
             description="foo bar",
@@ -2046,7 +2083,7 @@ class TestGetDocumentsAsLeaveAdmin:
     def group_client_doc_invalid_extension(self):
         return GroupClientDocument(
             name="approval notice",
-            documentId=3,
+            documentId=6,
             type="document",
             caseId="456",
             description="foo bar",
@@ -2058,18 +2095,24 @@ class TestGetDocumentsAsLeaveAdmin:
         self,
         mock_group_client_get_docs,
         group_client_document,
+        group_client_image_png,
+        group_client_image_jpeg,
+        group_client_image_jpg,
         group_client_doc_invalid_type,
         group_client_doc_invalid_extension,
     ):
         mock_group_client_get_docs.return_value = [
             group_client_document,
+            group_client_image_png,
+            group_client_image_jpeg,
+            group_client_image_jpg,
             group_client_doc_invalid_type,
             group_client_doc_invalid_extension,
         ]
         documents = get_documents_as_leave_admin("fake-user-id", "fake-absence-id")
         mock_group_client_get_docs.assert_called_once_with("fake-user-id", "fake-absence-id")
-        assert len(documents) == 1
-        assert documents[0].fineos_document_id == "1"
+        assert len(documents) == 4
+        assert [d.fineos_document_id for d in documents] == ["1", "2", "3", "4"]
 
 
 # testing class for download_document_as_leave_admin

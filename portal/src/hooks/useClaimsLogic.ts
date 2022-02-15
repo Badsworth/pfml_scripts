@@ -1,9 +1,9 @@
 import ClaimDetail, { PaymentDetail, Payments } from "../models/ClaimDetail";
 import { ClaimWithdrawnError, ValidationError } from "../errors";
+import ClaimsApi, { GetClaimsParams } from "../api/ClaimsApi";
 import ApiResourceCollection from "../models/ApiResourceCollection";
 import { AppErrorsLogic } from "./useAppErrorsLogic";
 import Claim from "../models/Claim";
-import ClaimsApi from "../api/ClaimsApi";
 import PaginationMeta from "../models/PaginationMeta";
 import { PortalFlow } from "./usePortalFlow";
 import { isEqual } from "lodash";
@@ -44,11 +44,8 @@ const useClaimsLogic = ({
   const hasLoadedPayments = (absenceId: string) =>
     loadedPaymentsData?.absence_case_id === absenceId;
 
-  // Track the search and filter params currently applied for the collection of claims
-  const [activeFilters, setActiveFilters] = useState({});
-
-  // Track the order params currently applied for the collection of claims
-  const [activeOrder, setActiveOrder] = useState({});
+  // Track params currently applied for the collection of claims
+  const [activeParams, setActiveParams] = useState({});
 
   /**
    * Empty the claims collection so that it is fetched again from the API
@@ -63,34 +60,11 @@ const useClaimsLogic = ({
   /**
    * Load a page of claims for the authenticated user
    */
-  const loadPage = async (
-    pageOffset: number | string = 1,
-    order: {
-      order_by?: string;
-      order_direction?: "ascending" | "descending";
-    } = {},
-    // TODO (PORTAL-1683): DRY this up
-    filters: {
-      claim_status?: string;
-      employer_id?: string;
-      is_reviewable?: "no" | "yes";
-      request_decision?:
-        | "approved"
-        | "cancelled"
-        | "denied"
-        | "pending"
-        | "withdrawn";
-      search?: string;
-    } = {}
-  ) => {
+  const loadPage = async (queryParams: GetClaimsParams = {}) => {
     if (isLoadingClaims) return;
 
     // Or have we already loaded this page with the same order and filter params?
-    if (
-      paginationMeta.page_offset === Number(pageOffset) &&
-      isEqual(activeFilters, filters) &&
-      isEqual(activeOrder, order)
-    ) {
+    if (isEqual(activeParams, queryParams)) {
       return;
     }
 
@@ -98,15 +72,9 @@ const useClaimsLogic = ({
     appErrorsLogic.clearErrors();
 
     try {
-      const { claims, paginationMeta } = await claimsApi.getClaims(
-        pageOffset,
-        order,
-        filters
-      );
-
+      const { claims, paginationMeta } = await claimsApi.getClaims(queryParams);
       setClaims(claims);
-      setActiveFilters(filters);
-      setActiveOrder(order);
+      setActiveParams(queryParams);
       setPaginationMeta(paginationMeta);
       setIsLoadingClaims(false);
     } catch (error) {
@@ -202,7 +170,6 @@ const useClaimsLogic = ({
   };
 
   return {
-    activeFilters,
     claimDetail,
     claims,
     clearClaims,

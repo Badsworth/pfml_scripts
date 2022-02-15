@@ -79,7 +79,7 @@ export const guards: { [guardName: string]: ClaimFlowGuardFn } = {
   isMedicalOrPregnancyLeave: ({ claim }) =>
     claim?.isMedicalOrPregnancyLeave === true,
   isBondingLeave: ({ claim }) => claim?.isBondingLeave === true,
-  // TODO (PFMLPB-2615): Remove isFeatureEnabled check once feature flag is obsolete
+  // TODO (PFMLPB-3195): Remove isFeatureEnabled check once feature flag is obsolete
   hasEmployerWithDepartments: ({ claim }) =>
     isFeatureEnabled("claimantShowOrganizationUnits") &&
     get(claim, "employment_status") === EmploymentStatus.employed &&
@@ -155,19 +155,9 @@ const claimantFlow: {
     [routes.applications.getReady]: {
       meta: {},
       on: {
-        CONSENT_TO_DATA_SHARING: routes.user.consentToDataSharing,
+        IMPORT_APPLICATION: routes.applications.importClaim,
         START_APPLICATION: routes.applications.start,
         SHOW_APPLICATIONS: routes.applications.index,
-        /* We need this to trigger test coverage on
-         * the routes.user.convertToEmployer page, which is
-         * otherwise isolated.
-         */
-        CONVERT_TO_EMPLOYER: routes.user.convertToEmployer,
-        /* We need this to trigger test coverage on
-         * the routes.user.convertToEmployee page, which is
-         * otherwise isolated.
-         */
-        CONVERT_TO_EMPLOYEE: routes.user.convertToEmployee,
       },
     },
     [routes.applications.start]: {
@@ -179,6 +169,9 @@ const claimantFlow: {
     [routes.applications.importClaim]: {
       on: {
         CONTINUE: routes.applications.index,
+        EDIT_PHONE: routes.user.settings,
+        ENABLE_MFA: routes.twoFactor.smsSetup,
+        VERIFY_PHONE: routes.twoFactor.smsConfirm,
       },
     },
     [routes.applications.index]: {

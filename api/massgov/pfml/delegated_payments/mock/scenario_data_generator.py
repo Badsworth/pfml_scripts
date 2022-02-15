@@ -10,8 +10,8 @@ import massgov.pfml.experian.address_validate_soap.client as soap_api
 import massgov.pfml.experian.address_validate_soap.models as sm
 import massgov.pfml.util.logging as logging
 from massgov.pfml import db
+from massgov.pfml.db.models.absences import AbsenceStatus
 from massgov.pfml.db.models.employees import (
-    AbsenceStatus,
     Address,
     Claim,
     Employee,

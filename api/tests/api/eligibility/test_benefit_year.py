@@ -19,9 +19,9 @@ from massgov.pfml.api.eligibility.benefit_year import (
     set_base_period_for_benefit_year,
 )
 from massgov.pfml.api.eligibility.benefit_year_dates import get_benefit_year_dates
+from massgov.pfml.db.models.absences import AbsenceStatus
 from massgov.pfml.db.models.employees import (
     AbsencePeriod,
-    AbsenceStatus,
     BenefitYear,
     BenefitYearContribution,
     Claim,

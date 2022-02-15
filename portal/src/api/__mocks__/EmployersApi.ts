@@ -2,7 +2,7 @@ import { ClaimDocument, DocumentType } from "../../models/Document";
 import User, { UserLeaveAdministrator } from "../../models/User";
 import ApiResourceCollection from "../../models/ApiResourceCollection";
 import EmployerClaim from "../../models/EmployerClaim";
-import faker from "faker";
+import { faker } from "@faker-js/faker";
 import { uniqueId } from "lodash";
 
 const documentData = {

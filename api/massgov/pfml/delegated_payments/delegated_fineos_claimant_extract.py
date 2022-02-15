@@ -9,13 +9,15 @@ from sqlalchemy.exc import SQLAlchemyError
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml.api.util import state_log_util
-from massgov.pfml.db.models.employees import (
-    AbsencePeriod,
+from massgov.pfml.db.models.absences import (
     AbsencePeriodType,
     AbsenceReason,
     AbsenceReasonQualifierOne,
     AbsenceReasonQualifierTwo,
     AbsenceStatus,
+)
+from massgov.pfml.db.models.employees import (
+    AbsencePeriod,
     BankAccountType,
     Claim,
     Employee,
@@ -37,6 +39,7 @@ from massgov.pfml.db.models.payments import (
 )
 from massgov.pfml.db.models.state import State
 from massgov.pfml.delegated_payments.step import Step
+from massgov.pfml.util.datetime import datetime_str_to_date
 
 logger = logging.get_logger(__name__)
 
@@ -87,8 +90,8 @@ class AbsencePeriodContainer:
         raw_absence_reason: Optional[str],
         raw_leave_request_decision: Optional[str],
     ):
-        self.start_date = payments_util.datetime_str_to_date(start_date)
-        self.end_date = payments_util.datetime_str_to_date(end_date)
+        self.start_date = datetime_str_to_date(start_date)
+        self.end_date = datetime_str_to_date(end_date)
         self.class_id = int(class_id)
         self.index_id = int(index_id)
         self.is_id_proofed = is_id_proofed
@@ -914,12 +917,12 @@ class ClaimantExtractStep(Step):
             )
 
         if claimant_data.absence_start_date is not None:
-            claim_pfml.absence_period_start_date = payments_util.datetime_str_to_date(
+            claim_pfml.absence_period_start_date = datetime_str_to_date(
                 claimant_data.absence_start_date
             )
 
         if claimant_data.absence_end_date is not None:
-            claim_pfml.absence_period_end_date = payments_util.datetime_str_to_date(
+            claim_pfml.absence_period_end_date = datetime_str_to_date(
                 claimant_data.absence_end_date
             )
 
@@ -1082,9 +1085,7 @@ class ClaimantExtractStep(Step):
 
         # Use employee feed entry to update PFML DB
         if claimant_data.date_of_birth is not None:
-            employee_pfml_entry.date_of_birth = payments_util.datetime_str_to_date(
-                claimant_data.date_of_birth
-            )
+            employee_pfml_entry.date_of_birth = datetime_str_to_date(claimant_data.date_of_birth)
 
         if claimant_data.fineos_customer_number is not None:
             employee_pfml_entry.fineos_customer_number = claimant_data.fineos_customer_number

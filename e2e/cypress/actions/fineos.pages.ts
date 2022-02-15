@@ -231,7 +231,7 @@ export class ClaimPage {
       }
       cy.wrap(el).click();
       waitForAjaxComplete();
-      cy.get('input[type="submit"][value="Continue"]').click();
+      cy.get('input[type="submit"][value="Continue"]').click({ force: true });
       cy.contains(".TreeNodeContainer", type, {
         timeout: 20000,
       })

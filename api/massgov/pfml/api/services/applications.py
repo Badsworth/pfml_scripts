@@ -23,7 +23,6 @@ from massgov.pfml.api.models.applications.responses import DocumentResponse
 from massgov.pfml.api.models.common import LookupEnum
 from massgov.pfml.api.services.administrator_fineos_actions import EformTypes
 from massgov.pfml.api.services.fineos_actions import get_documents
-from massgov.pfml.api.util.phone import convert_to_E164
 from massgov.pfml.api.util.response import Response
 from massgov.pfml.api.validation.exceptions import (
     IssueRule,
@@ -31,6 +30,7 @@ from massgov.pfml.api.validation.exceptions import (
     ValidationErrorDetail,
     ValidationException,
 )
+from massgov.pfml.db.models.absences import AbsencePeriodType
 from massgov.pfml.db.models.applications import (
     AmountFrequency,
     Application,
@@ -64,7 +64,6 @@ from massgov.pfml.db.models.applications import (
     WorkPatternType,
 )
 from massgov.pfml.db.models.employees import (
-    AbsencePeriodType,
     Address,
     AddressType,
     Claim,
@@ -72,10 +71,11 @@ from massgov.pfml.db.models.employees import (
     LkAddressType,
     LkGender,
     MFADeliveryPreference,
+    User,
 )
 from massgov.pfml.db.models.geo import GeoState
 from massgov.pfml.fineos import AbstractFINEOSClient
-from massgov.pfml.fineos.models.customer_api import PhoneNumber
+from massgov.pfml.fineos.models.customer_api import AbsencePeriodStatus, PhoneNumber
 from massgov.pfml.fineos.models.customer_api.spec import (
     AbsenceDetails,
     AbsencePeriod,
@@ -87,6 +87,7 @@ from massgov.pfml.fineos.transforms.from_fineos.eforms import (
     TransformPreviousLeaveFromOtherLeaveEform,
 )
 from massgov.pfml.util.datetime import utcnow
+from massgov.pfml.util.logging.applications import get_application_log_attributes
 from massgov.pfml.util.pydantic.types import Regexes
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
@@ -892,7 +893,7 @@ def add_or_update_phone(
     if not phone:
         return
 
-    internationalized_phone_number = convert_to_E164(phone)
+    internationalized_phone_number = phone.e164
 
     # If Phone exists, update with what we have, otherwise, create a new Phone
     # if process_masked_phone_number did not remove the phone_number field, update the db
@@ -961,12 +962,41 @@ def get_document_by_id(
     return document
 
 
-def claim_is_valid_for_application_import(claim: Optional[Claim]) -> Optional[Response]:
+def claim_is_valid_for_application_import(
+    db_session: db.Session, user: User, claim: Optional[Claim]
+) -> Optional[Response]:
     if claim is not None and (claim.employee_tax_identifier is None or claim.employer_fein is None):
         message = "Claim data incomplete for application import."
         validation_error = ValidationErrorDetail(message=message, type=IssueType.conflicting)
         error = response_util.error_response(Conflict, message=message, errors=[validation_error])
         return error
+    if claim:
+        existing_application = (
+            db_session.query(Application)
+            .filter(Application.claim_id == claim.claim_id)
+            .one_or_none()
+        )
+        if existing_application and existing_application.user_id != user.user_id:
+            message = "An application linked to a different account already exists for this claim."
+            validation_error = ValidationErrorDetail(message=message, type=IssueType.exists)
+            logger.info(
+                "applications_import failure - exists_different_account",
+                extra=get_application_log_attributes(existing_application),
+            )
+            return response_util.error_response(
+                Forbidden, message=message, errors=[validation_error]
+            )
+
+        if existing_application:
+            message = "An application already exists for this claim."
+            validation_error = ValidationErrorDetail(message=message, type=IssueType.duplicate)
+            logger.info(
+                "applications_import failure - exists_same_account",
+                extra=get_application_log_attributes(existing_application),
+            )
+            return response_util.error_response(
+                Forbidden, message=message, errors=[validation_error]
+            )
     return None
 
 
@@ -1133,6 +1163,18 @@ def _set_reduced_leave_periods(application: Application, absence_details: Absenc
     application.reduced_schedule_leave_periods = reduced_schedule_leave_periods
 
 
+def _set_has_future_child_date(
+    application: Application, imported_absence_period: AbsencePeriod
+) -> None:
+    if (
+        application.leave_reason_id == DBLeaveReason.CHILD_BONDING.leave_reason_id
+        and imported_absence_period.status == AbsencePeriodStatus.ESTIMATED.value
+    ):
+        application.has_future_child_date = True
+    else:
+        application.has_future_child_date = False
+
+
 def _get_open_absence_period(absence_details: AbsenceDetails) -> Optional[AbsencePeriod]:
     if absence_details.absencePeriods:
         for absence_period in absence_details.absencePeriods:
@@ -1213,6 +1255,7 @@ def set_application_absence_and_leave_period(
         application.pregnant_or_recent_birth = (
             application.leave_reason_id == DBLeaveReason.PREGNANCY_MATERNITY.leave_reason_id
         )
+        _set_has_future_child_date(application, absence_period)
     application.submitted_time = absence_details.creationDate
     application.employer_notification_date = absence_details.notificationDate
     application.employer_notified = application.employer_notification_date is not None

@@ -17,6 +17,7 @@ from massgov.pfml.api.validation.exceptions import (
     ValidationErrorDetail,
     ValidationException,
 )
+from massgov.pfml.db.models.absences import AbsenceReason
 from massgov.pfml.db.models.applications import (
     ContinuousLeavePeriod,
     DayOfWeek,
@@ -24,7 +25,7 @@ from massgov.pfml.db.models.applications import (
     LeaveReason,
     LeaveReasonQualifier,
 )
-from massgov.pfml.db.models.employees import AbsenceReason, BankAccountType, Gender, PaymentMethod
+from massgov.pfml.db.models.employees import BankAccountType, Gender, PaymentMethod
 from massgov.pfml.db.models.factories import ApplicationFactory
 from massgov.pfml.fineos.models.customer_api import EForm, EFormAttribute, ModelEnum
 from massgov.pfml.fineos.models.customer_api.spec import (
@@ -354,6 +355,15 @@ def test_set_application_absence_and_leave_period(
     assert application.submitted_time == absence_details.creationDate
     assert application.employer_notification_date == absence_details.notificationDate
     assert application.employer_notified
+    assert application.has_future_child_date is False
+
+    absence_details.absencePeriods[0].reason = "Child Bonding"
+    absence_details.absencePeriods[0].status = "estimated"
+    mock_get_absence.return_value = absence_details
+    set_application_absence_and_leave_period(
+        fineos_client, fineos_web_id, application, absence_case_id
+    )
+    assert application.has_future_child_date is True
 
 
 @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_absence")

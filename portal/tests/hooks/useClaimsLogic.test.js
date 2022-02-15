@@ -52,7 +52,7 @@ describe("useClaimsLogic", () => {
       const { appLogic } = setup();
 
       await act(async () => {
-        await appLogic.current.claims.loadPage();
+        await appLogic.current.claims.loadPage({ page_offset: 1 });
       });
 
       expect(appLogic.current.claims.claims.items).toHaveLength(1);
@@ -83,7 +83,7 @@ describe("useClaimsLogic", () => {
       const { appLogic } = setup();
 
       await act(async () => {
-        await appLogic.current.claims.loadPage();
+        await appLogic.current.claims.loadPage({ page_offset: 1 });
       });
 
       expect(appLogic.current.claims.claims.items).toHaveLength(
@@ -96,18 +96,14 @@ describe("useClaimsLogic", () => {
 
       await act(async () => {
         mockPaginatedFetch();
-        await appLogic.current.claims.loadPage(
-          1,
-          {
-            order_by: "created_at",
-            order_direction: "ascending",
-          },
-          {
-            claim_status: "Approved,Pending",
-            employer_id: "mock-employer-id",
-            search: "foo",
-          }
-        );
+        await appLogic.current.claims.loadPage({
+          page_offset: 1,
+          order_by: "created_at",
+          order_direction: "ascending",
+          claim_status: "Approved,Pending",
+          employer_id: "mock-employer-id",
+          search: "foo",
+        });
       });
 
       expect(global.fetch).toHaveBeenCalledWith(
@@ -142,52 +138,48 @@ describe("useClaimsLogic", () => {
       await act(async () => {
         // this should make an API request since ALL claims haven't been loaded yet
         mockPaginatedFetch();
-        await appLogic.current.claims.loadPage(1);
+        await appLogic.current.claims.loadPage({ page_offset: 1 });
         expect(global.fetch).toHaveBeenCalled();
 
         // but this shouldn't, since we've already loaded this page
         mockPaginatedFetch();
-        await appLogic.current.claims.loadPage(1);
+        await appLogic.current.claims.loadPage({ page_offset: 1 });
         expect(global.fetch).not.toHaveBeenCalled();
 
         // this should make an API request since previous claims were cleared
         appLogic.current.claims.clearClaims();
         mockPaginatedFetch();
-        await appLogic.current.claims.loadPage(1);
+        await appLogic.current.claims.loadPage();
         expect(global.fetch).toHaveBeenCalled();
 
         // this should make an API request since the filters changed
         mockPaginatedFetch();
-        await appLogic.current.claims.loadPage(
-          1,
-          {},
-          {
-            employer_id: "mock-employer-id",
-          }
-        );
+        await appLogic.current.claims.loadPage({
+          page_offset: 1,
+          employer_id: "mock-employer-id",
+        });
         expect(global.fetch).toHaveBeenCalled();
 
         // but this shouldn't, since we've already loaded all claims with these filters
         mockPaginatedFetch();
-        await appLogic.current.claims.loadPage(
-          1,
-          {},
-          {
-            employer_id: "mock-employer-id",
-          }
-        );
+        await appLogic.current.claims.loadPage({
+          page_offset: 1,
+          employer_id: "mock-employer-id",
+        });
         expect(global.fetch).not.toHaveBeenCalled();
 
         // this should make an API request since the order changed
         mockPaginatedFetch();
-        await appLogic.current.claims.loadPage(1, {
+        await appLogic.current.claims.loadPage({
+          page_offset: 1,
           order_by: "employee",
         });
         expect(global.fetch).toHaveBeenCalled();
 
         // but this shouldn't, since we've already loaded all claims with this order
         mockPaginatedFetch();
-        await appLogic.current.claims.loadPage(1, {
+        await appLogic.current.claims.loadPage({
+          page_offset: 1,
           order_by: "employee",
         });
         expect(global.fetch).not.toHaveBeenCalled();
@@ -202,7 +194,8 @@ describe("useClaimsLogic", () => {
       });
 
       await act(async () => {
-        await appLogic.current.claims.loadPage();
+        mockPaginatedFetch();
+        await appLogic.current.claims.loadPage({ page_offset: 1 });
       });
 
       expect(appLogic.current.appErrors).toHaveLength(0);
@@ -217,7 +210,7 @@ describe("useClaimsLogic", () => {
       const { appLogic } = setup();
 
       await act(async () => {
-        await appLogic.current.claims.loadPage();
+        await appLogic.current.claims.loadPage({ page_offset: 1 });
       });
 
       expect(appLogic.current.appErrors[0].name).toEqual("BadRequestError");

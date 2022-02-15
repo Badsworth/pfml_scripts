@@ -8,7 +8,7 @@ import { DocumentType } from "src/models/Document";
 import LeaveReason from "src/models/LeaveReason";
 import { Props } from "types/common";
 import React from "react";
-import faker from "faker";
+import { faker } from "@faker-js/faker";
 
 const renderComponent = (
   customProps: Partial<Props<typeof CertificationsAndAbsencePeriods>> = {}

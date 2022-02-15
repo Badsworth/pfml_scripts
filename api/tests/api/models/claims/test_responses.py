@@ -1,7 +1,7 @@
 import pytest
 
 from massgov.pfml.api.models.claims.responses import AbsencePeriodResponse
-from massgov.pfml.db.models.employees import AbsencePeriodType
+from massgov.pfml.db.models.absences import AbsencePeriodType
 from massgov.pfml.db.models.factories import AbsencePeriodFactory
 
 

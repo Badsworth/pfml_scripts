@@ -12,7 +12,7 @@ import { Review } from "src/pages/employers/applications/review";
 import User from "src/models/User";
 import createAbsencePeriod from "lib/mock-helpers/createAbsencePeriod";
 import { createMockManagedRequirement } from "lib/mock-helpers/createMockManagedRequirement";
-import faker from "faker";
+import { faker } from "@faker-js/faker";
 import useMockableAppLogic from "lib/mock-helpers/useMockableAppLogic";
 
 const absencePeriodTypes: Array<AbsencePeriod["period_type"]> = [

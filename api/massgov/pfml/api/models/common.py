@@ -1,11 +1,11 @@
 from datetime import date
 from decimal import Decimal
 from enum import Enum
-from typing import Optional, Union
+from typing import Generic, Optional, TypeVar, Union
 
 import phonenumbers
-from phonenumbers.phonenumberutil import region_code_for_country_code
-from pydantic import UUID4, root_validator
+from pydantic import UUID4, Field, validator
+from pydantic.generics import GenericModel
 
 import massgov.pfml.db.models.applications as db_application_models
 import massgov.pfml.db.models.employees as db_employee_models
@@ -19,6 +19,11 @@ from massgov.pfml.api.validation.exceptions import (
 )
 from massgov.pfml.db.lookup import LookupTable
 from massgov.pfml.util.pydantic import PydanticBaseModel
+
+PHONE_MISMATCH_MESSAGE = "E.164 phone number does not match provided phone number"
+PHONE_MISMATCH_ERROR = ValidationErrorDetail(
+    message=PHONE_MISMATCH_MESSAGE, type=IssueType.invalid_phone_number, field="e164",
+)
 
 
 class LookupEnum(Enum):
@@ -142,33 +147,22 @@ class Phone(PydanticBaseModel):
     int_code: Optional[str]
     phone_number: Optional[str]
     phone_type: Optional[PhoneType]
+    e164: Optional[str]
 
-    @root_validator(pre=False)
-    def check_phone_number(cls, values):  # noqa: B902
+    @validator("phone_number")
+    def check_phone_number(cls, phone_number, values):  # noqa: B902
+        # Import here to avoid circular import
+        from massgov.pfml.api.util.phone import parse_number
+
         error_list = []
         n = None
 
         int_code = values.get("int_code")
-        phone_number = values.get("phone_number")
         if phone_number is None:
             # if phone_number is removed by masking rules, skip validation
-            return values
+            return None
 
-        try:
-            # int_code is present in the PATCH request, but not when the Response is being processed
-            if int_code:
-                n = phonenumbers.parse(phone_number, region_code_for_country_code(int(int_code)))
-            else:
-                n = phonenumbers.parse(phone_number)
-        except phonenumbers.NumberParseException:
-            error_list.append(
-                ValidationErrorDetail(
-                    message="Phone number must be a valid number",
-                    type=IssueType.invalid_phone_number,
-                    rule="phone_number_must_be_valid_number",
-                    field="phone.phone_number",
-                )
-            )
+        n = parse_number(phone_number, int_code)
 
         if n is None or not phonenumbers.is_valid_number(n):
             error_list.append(
@@ -187,7 +181,60 @@ class Phone(PydanticBaseModel):
                 data={"phone_number": phone_number, "int_code": int_code},
             )
 
-        return values
+        return phone_number
+
+    @validator("e164", always=True)
+    def populate_e164_if_phone_number(cls, e164_phone_number, values):  # noqa: B902
+        # Import here to avoid circular import
+        from massgov.pfml.api.util.phone import convert_to_E164
+
+        is_phone_number_provided = "phone_number" in values and values["phone_number"]
+
+        if not e164_phone_number and is_phone_number_provided:
+            return convert_to_E164(values.get("phone_number"), values.get("int_code"))
+
+        if e164_phone_number is not None and is_phone_number_provided:
+            checked_number = convert_to_E164(values.get("phone_number"), values.get("int_code"))
+            if e164_phone_number != checked_number:
+                raise ValidationException(
+                    errors=[PHONE_MISMATCH_ERROR], message=PHONE_MISMATCH_MESSAGE
+                )
+
+        return e164_phone_number
+
+    @validator("e164")
+    def check_e164(cls, e164_phone_number):  # noqa: B902
+        # because the other validator for "e164" is always=True, this validator
+        # seems to be called regardless of if an "e164" value is available
+        # (either from the request directly or populate_e164_if_phone_number),
+        # so check before doing any validation
+        #
+        # if/when populate_e164_if_phone_number is removed, shouldn't need to do
+        # this check
+        if not e164_phone_number:
+            return None
+
+        validation_exception = ValidationException(
+            errors=[
+                ValidationErrorDetail(
+                    message="Phone number must be a valid number",
+                    type=IssueType.invalid_phone_number,
+                    rule="phone_number_must_be_valid_number",
+                    field="phone.e164",
+                )
+            ],
+            message="Validation error",
+        )
+
+        try:
+            n = phonenumbers.parse(e164_phone_number)
+        except phonenumbers.NumberParseException:
+            raise validation_exception
+
+        if not phonenumbers.is_valid_number(n):
+            raise validation_exception
+
+        return e164_phone_number
 
 
 class MaskedPhone(Phone):
@@ -224,6 +271,7 @@ class PhoneResponse(PydanticBaseModel):
     int_code: Optional[str]
     phone_number: Optional[str]
     phone_type: Optional[PhoneType]
+    e164: Optional[str]
 
     @classmethod
     def from_orm(cls, phone: Union[db_application_models.Phone, str]) -> "PhoneResponse":
@@ -240,7 +288,36 @@ class PhoneResponse(PydanticBaseModel):
             parsed_phone_number = phonenumbers.parse(phone_response.phone_number)
             number = str(parsed_phone_number.national_number)
 
+            phone_response.e164 = phonenumbers.format_number(
+                parsed_phone_number, phonenumbers.PhoneNumberFormat.E164
+            )
             phone_response.phone_number = f"{number[0:3]}-{number[3:6]}-{number[-4:]}"
             phone_response.int_code = str(parsed_phone_number.country_code)
 
         return phone_response
+
+
+# search stuff
+
+SearchTermsT = TypeVar("SearchTermsT")
+
+
+class OrderDirection(str, Enum):
+    asc = "ascending"
+    desc = "descending"
+
+
+class OrderData(PydanticBaseModel):
+    by: str = "created_at"
+    direction: OrderDirection = OrderDirection.desc
+
+
+class PagingData(PydanticBaseModel):
+    offset: int = 1
+    size: int = 25
+
+
+class SearchEnvelope(GenericModel, Generic[SearchTermsT]):
+    terms: SearchTermsT
+    order: OrderData = Field(default_factory=OrderData)
+    paging: PagingData = Field(default_factory=PagingData)

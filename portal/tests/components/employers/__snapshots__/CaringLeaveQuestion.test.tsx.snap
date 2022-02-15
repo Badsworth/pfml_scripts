@@ -39,7 +39,7 @@ exports[`CaringLeaveQuestion renders the alert info when user indicates the rela
     <div
       class="usa-alert__text"
     >
-      If you have not confirmed the accuracy of the family relationship the employee has attested to, please note that the Department of Family and Medical leave will adjudicate the claim based on the attestation the employee made when submitting their application.
+      If you have not confirmed the accuracy of the family relationship the employee has attested to, please note that the Department of Family and Medical leave will adjudicate based on the attestation the employee made when submitting their application.
     </div>
   </div>
 </div>

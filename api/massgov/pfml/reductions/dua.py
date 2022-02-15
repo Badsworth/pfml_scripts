@@ -12,8 +12,8 @@ import massgov.pfml.db as db
 import massgov.pfml.util.batch.log as batch_log
 import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
+from massgov.pfml.db.models.absences import AbsenceStatus
 from massgov.pfml.db.models.employees import (
-    AbsenceStatus,
     Claim,
     DuaReductionPayment,
     DuaReductionPaymentReferenceFile,

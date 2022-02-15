@@ -35,17 +35,17 @@ const simulateEvent = (eventType, uri = "/") => {
 describe("Cloudfront Function", () => {
   describe("when eventType is viewer-request", () => {
     describe("when URI has trailing slash", () => {
-      it("does not add a trailing slash to the URI", () => {
+      it("adds index.html to the URI", () => {
         const event = simulateEvent("viewer-request", "/test/");
 
         const request = handler(event);
 
-        expect(request.uri).toBe("/test/");
+        expect(request.uri).toBe("/test/index.html");
       });
     });
 
     describe("when URI has a file extension", () => {
-      it("does not add a trailing slash to the URI", () => {
+      it("does not add a index.html to the URI", () => {
         const event = simulateEvent("viewer-request", "/test.js");
 
         const request = handler(event);
@@ -55,12 +55,12 @@ describe("Cloudfront Function", () => {
     });
 
     describe("when URI does not have a trailing slash or file extension", () => {
-      it("adds a trailing slash to the URI", () => {
+      it("adds a trailing slash and index.html to the URI", () => {
         const event = simulateEvent("viewer-request", "/test");
 
         const request = handler(event);
 
-        expect(request.uri).toBe("/test/");
+        expect(request.uri).toBe("/test/index.html");
       });
     });
   });

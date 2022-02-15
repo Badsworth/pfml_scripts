@@ -1,5 +1,4 @@
 import EmployerBenefit, {
-  EmployerBenefitFrequency,
   EmployerBenefitType,
 } from "../../../src/models/EmployerBenefit";
 import { fireEvent, render, screen } from "@testing-library/react";
@@ -11,12 +10,11 @@ const onChange = jest.fn();
 const onRemove = jest.fn();
 const appErrors = [];
 const employerBenefit = new EmployerBenefit({
-  benefit_amount_dollars: 1000,
-  benefit_amount_frequency: EmployerBenefitFrequency.monthly,
   benefit_end_date: "2021-03-01",
   benefit_start_date: "2021-02-01",
   benefit_type: EmployerBenefitType.shortTermDisability,
   employer_benefit_id: 0,
+  is_full_salary_continuous: true,
 });
 
 const renderComponent = (customProps) => {
@@ -64,7 +62,6 @@ describe("AmendableEmployerBenefit", () => {
     expect(
       screen.getByText(/Short-term disability insurance/)
     ).toBeInTheDocument();
-    expect(screen.getByText("$1,000.00 per month")).toBeInTheDocument();
     const amendButton = screen.getByRole("button", { name: "Amend" });
     expect(
       screen.queryByText(/Amend employer-sponsored benefit/)
@@ -73,61 +70,6 @@ describe("AmendableEmployerBenefit", () => {
     expect(
       screen.queryByText(/Amend employer-sponsored benefit/)
     ).toBeInTheDocument();
-  });
-
-  it("specifies amountPerFrequency_unknown when amount not zero AND frequency is 'Unknown'", () => {
-    renderComponent({
-      employerBenefit: new EmployerBenefit({
-        benefit_amount_dollars: 200,
-        benefit_amount_frequency: EmployerBenefitFrequency.unknown,
-        benefit_end_date: "2021-03-01",
-        benefit_start_date: "2021-02-01",
-        benefit_type: EmployerBenefitType.paidLeave,
-        employer_benefit_id: 0,
-        is_full_salary_continuous: false,
-      }),
-      isAddedByLeaveAdmin: false,
-    });
-
-    expect(screen.getByText("$200.00 (frequency unknown)")).toBeInTheDocument();
-  });
-
-  it("renders fullSalaryContinuous when is_full_salary_continuous is true", () => {
-    const fullSalaryContinuousPaidLeave = new EmployerBenefit({
-      benefit_amount_dollars: 0,
-      benefit_amount_frequency: EmployerBenefitFrequency.unknown,
-      benefit_end_date: "2021-03-01",
-      benefit_start_date: "2021-02-01",
-      benefit_type: EmployerBenefitType.paidLeave,
-      employer_benefit_id: 0,
-      is_full_salary_continuous: true,
-    });
-
-    renderComponent({
-      isAddedByLeaveAdmin: false,
-      employerBenefit: fullSalaryContinuousPaidLeave,
-    });
-
-    expect(screen.getByText(/Full salary continuous/)).toBeInTheDocument();
-  });
-
-  it("renders noAmountReported when benefit_amount_dollars is 0.00 AND benefit_amount_frequency is unknown AND is_full_salary_continuous is falsy", () => {
-    const noAmountNoFreqPaidLeave = new EmployerBenefit({
-      benefit_amount_dollars: 0,
-      benefit_amount_frequency: EmployerBenefitFrequency.unknown,
-      benefit_end_date: "2021-03-01",
-      benefit_start_date: "2021-02-01",
-      benefit_type: EmployerBenefitType.paidLeave,
-      employer_benefit_id: 0,
-      is_full_salary_continuous: false,
-    });
-
-    renderComponent({
-      isAddedByLeaveAdmin: false,
-      employerBenefit: noAmountNoFreqPaidLeave,
-    });
-
-    expect(screen.getByText(/No amount reported/)).toBeInTheDocument();
   });
 
   it("enables updates to start and end dates", () => {
@@ -182,25 +124,6 @@ describe("AmendableEmployerBenefit", () => {
     );
   });
 
-  it("enables update of frequency in the AmendmentForm", () => {
-    renderComponent({ isAddedByLeaveAdmin: false });
-    userEvent.click(screen.getByRole("button", { name: "Amend" }));
-    const frequencyDropdown = screen.getByLabelText("Frequency");
-    fireEvent.change(frequencyDropdown, {
-      target: { value: EmployerBenefitFrequency.weekly },
-    });
-
-    expect(onChange).toHaveBeenCalledWith(
-      {
-        benefit_amount_frequency: EmployerBenefitFrequency.weekly,
-        employer_benefit_id: 0,
-      },
-      "amendedBenefits"
-    );
-
-    expect(frequencyDropdown).toHaveValue(EmployerBenefitFrequency.weekly);
-  });
-
   it("restores original value on cancel, and minimizes form", () => {
     renderComponent({ isAddedByLeaveAdmin: false });
     userEvent.click(screen.getByRole("button", { name: "Amend" }));
@@ -236,18 +159,6 @@ describe("AmendableEmployerBenefit", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("user can update amount via the form", () => {
-    renderComponent();
-    const benefitInput = screen.getByLabelText("Amount");
-    expect(benefitInput).toHaveValue("1,000");
-    fireEvent.change(benefitInput, { target: { value: 500 } });
-    expect(onChange).toHaveBeenCalledWith(
-      { benefit_amount_dollars: 500, employer_benefit_id: 0 },
-      "addedBenefits"
-    );
-    expect(benefitInput).toHaveValue("500");
-  });
-
   it("calls onRemove on cancel", () => {
     renderComponent({ isAddedByLeaveAdmin: true });
     const cancelButton = screen.getByRole("button", {
@@ -274,11 +185,11 @@ describe("AmendableEmployerBenefit", () => {
 
   it("full salary continuous is modifiable in v2", () => {
     renderComponent({ shouldShowV2: true });
-    const salaryContinuousRadio = screen.getByRole("radio", { name: "Yes" });
+    const salaryContinuousRadio = screen.getByRole("radio", { name: "No" });
     expect(salaryContinuousRadio).not.toBeChecked();
     userEvent.click(salaryContinuousRadio);
     expect(onChange).toHaveBeenCalledWith(
-      { is_full_salary_continuous: true, employer_benefit_id: 0 },
+      { is_full_salary_continuous: false, employer_benefit_id: 0 },
       "addedBenefits"
     );
     expect(salaryContinuousRadio).toBeChecked();

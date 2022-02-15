@@ -3,6 +3,7 @@
 #
 
 import massgov.pfml.util.collections.dict
+from massgov.pfml.util.collections.dict import filter_dict, make_keys_lowercase
 
 
 def test_least_recently_used_dict():
@@ -34,3 +35,17 @@ def test_least_recently_used_dict():
     lru_dict["g"] = 60  # Write new key g, and evict oldest d
     assert len(lru_dict) == 4
     assert tuple(lru_dict.items()) == (("a", 11), ("f", 50), ("c", 31), ("g", 60))
+
+
+def test_make_keys_lowercase():
+    example = {"foo": "BAR", "Bar": "baz"}
+    expected = {"foo": "BAR", "bar": "baz"}
+    assert make_keys_lowercase(example) == expected
+
+
+def test_filter_dict():
+    example = {"foo": "bar", "notAllowed": "removeMe"}
+    allowed_keys = {"foo", "permitted"}
+    expected = {"foo": "bar"}
+
+    assert filter_dict(dict=example, allowed_keys=allowed_keys) == expected
