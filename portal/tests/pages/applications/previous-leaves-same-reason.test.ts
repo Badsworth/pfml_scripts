@@ -27,7 +27,7 @@ const setup = (
 };
 
 describe("PreviousLeavesSameReason", () => {
-  it("renders different legend and hint when claim is for Caring Leave", () => {
+  it("renders different legend when claim is for Caring Leave", () => {
     setup(
       new MockBenefitsApplicationBuilder()
         .continuous()

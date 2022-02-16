@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`PreviousLeavesSameReason renders different legend and hint when claim is for Caring Leave 1`] = `
+exports[`PreviousLeavesSameReason renders different legend when claim is for Caring Leave 1`] = `
 <fieldset
   class="usa-fieldset margin-top-3 usa-form-group"
 >
@@ -13,11 +13,6 @@ exports[`PreviousLeavesSameReason renders different legend and hint when claim i
       Did you take any previous leave between July 1, 2021 and the first day of the leave you are applying for, for the same reason as you are applying?
     </h2>
   </legend>
-  <span
-    class="display-block line-height-sans-5 measure-5 usa-intro"
-  >
-    Select No if your current paid leave from PFML began on July 1, 2021.
-  </span>
   <div
     class="margin-top-3"
   >
@@ -71,7 +66,7 @@ exports[`PreviousLeavesSameReason renders different legend and hint when claim i
 </fieldset>
 `;
 
-exports[`PreviousLeavesSameReason renders different legend and hint when claim is for Caring Leave 2`] = `
+exports[`PreviousLeavesSameReason renders different legend when claim is for Caring Leave 2`] = `
 <fieldset
   class="usa-fieldset margin-top-3 usa-form-group"
 >

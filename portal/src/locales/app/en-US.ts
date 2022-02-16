@@ -1760,8 +1760,6 @@ const pages: {
     hintNo:
       "I have not taken previous leave for the same reason, or my other leave was through Massachusetts’ PFML program",
     hintYes: "I have taken previous leave for the same reason",
-    sectionHint:
-      "Select No if your current paid leave from PFML began on July 1, 2021.",
     sectionLabel:
       "Did you take any previous leave between {{previousLeaveStartDate}} and {{leaveStartDate}} for the same reason as you are applying for paid leave now?",
     sectionLabel_caring:
