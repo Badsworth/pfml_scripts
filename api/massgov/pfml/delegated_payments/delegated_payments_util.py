@@ -269,6 +269,7 @@ class FineosExtractConstants:
             "PAYEEIDENTIFI",
             "EVENTREASON",
             "AMALGAMATIONC",
+            "PAYMENTTYPE",
         ],
     )
 
@@ -332,6 +333,7 @@ class FineosExtractConstants:
             "ADVICETOPAY",
             "ADVICETOPAYOV",
             "AMALGAMATIONC",
+            "PAYMENTTYPE",
             "AMOUNT_MONAMT",
             "AMOUNT_MONCUR",
             "CHECKCUTTING",

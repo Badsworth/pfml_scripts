@@ -128,6 +128,7 @@ class PaymentData:
     absence_case_creation_date: Optional[str] = None
     payment_amount: Optional[Decimal] = None
     amalgamation_c: Optional[str] = None
+    payment_type: Optional[str] = None
 
     claim_type_raw: Optional[str] = None
 
@@ -183,6 +184,10 @@ class PaymentData:
         # Not required, only care if it's set and a specific value
         self.amalgamation_c = payments_util.validate_db_input(
             "AMALGAMATIONC", pei_record, self.validation_container, False
+        )
+
+        self.payment_type = payments_util.validate_db_input(
+            "PAYMENTTYPE", pei_record, self.validation_container, False
         )
 
         self.payment_date = payments_util.validate_db_input(
@@ -569,10 +574,11 @@ class PaymentData:
         return f"[C={self.c_value},I={self.i_value},absence_case_id={self.absence_case_number}]"
 
     def is_adhoc_payment(self) -> bool:
-        # A payment is considered adhoc if it's marked as "Adhoc" often with
-        # a random number suffixed to it.
-        # This column can be empty/missing, and that's fine.
-        return self.amalgamation_c is not None and "Adhoc" in self.amalgamation_c
+        # In past iteration self.amalgamation_c was used to determine this field,
+        # but was switched to payment_type to future proof against fineos
+        # changing amalgamation_c field again.
+        # See: https://lwd.atlassian.net/browse/API-2235 for more details
+        return self.payment_type == "Adhoc"
 
 
 class PaymentExtractStep(Step):

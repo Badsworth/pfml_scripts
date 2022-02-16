@@ -235,6 +235,7 @@ class FineosPaymentData(MockData):
         self.payee_identifier = self.get_value("payee_identifier", "Social Security Number")
         self.event_reason = self.get_value("event_reason", "Automatic Main Payment")
         self.amalgamationc = self.get_value("amalgamationc", "")  # Default blank
+        self.payment_type = self.get_value("payment_type", "")
 
         self.payment_start_period = self.get_value("payment_start", "2021-01-01 12:00:00")
         self.payment_end_period = self.get_value("payment_end", "2021-01-07 12:00:00")
@@ -260,6 +261,7 @@ class FineosPaymentData(MockData):
             vpei_record["PAYEEIDENTIFI"] = self.payee_identifier
             vpei_record["EVENTREASON"] = self.event_reason
             vpei_record["AMALGAMATIONC"] = self.amalgamationc
+            vpei_record["PAYMENTTYPE"] = self.payment_type
         return vpei_record
 
     def get_claim_details_record(self):
@@ -540,9 +542,10 @@ def generate_payment_extract_files(
         payee_identifier = "Social Security Number"
         event_reason = "Automatic Main Payment"
         amalgamationc = ""
+        payment_type = ""
 
         if scenario_descriptor.is_adhoc_payment:
-            amalgamationc = "Adhoc"
+            payment_type = "Adhoc"
 
         claim_type = scenario_descriptor.claim_type
 
@@ -608,6 +611,7 @@ def generate_payment_extract_files(
             event_reason=event_reason,
             payee_identifier=payee_identifier,
             amalgamationc=amalgamationc,
+            payment_type=payment_type,
             claim_type=claim_type,
             absence_period_c_value=scenario_data.absence_period_c_value,
             absence_period_i_value=scenario_data.absence_period_i_value,
