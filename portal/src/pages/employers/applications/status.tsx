@@ -102,13 +102,6 @@ export const Status = (props: WithEmployerClaimProps) => {
       {showStatusPageUpdates ? (
         <React.Fragment>
           <EmployeeInformation claim={claim} />
-          <StatusRow
-            label={t(
-              "components.employersWeeklyHoursWorkedRow.weeklyHoursWorkedLabel"
-            )}
-          >
-            <p className="margin-top-0">{claim.hours_worked_per_week}</p>
-          </StatusRow>
           <CertificationsAndAbsencePeriods
             claim={claim}
             documents={certificationDocuments}
