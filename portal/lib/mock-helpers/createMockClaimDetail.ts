@@ -3,7 +3,7 @@ import {
   AbsencePeriodRequestDecisionEnum,
   AbsencePeriodTypes,
 } from "src/models/AbsencePeriod";
-import ClaimDetail, { PaymentDetail } from "src/models/ClaimDetail";
+import ClaimDetail from "src/models/ClaimDetail";
 
 import { ClaimEmployee } from "src/models/Claim";
 import LeaveReason from "src/models/LeaveReason";
@@ -72,14 +72,12 @@ const createMockClaimDetail = ({
   hasPaidPayments,
   leaveScenario = "Bonding (adoption)",
   leaveType = "Continuous",
-  payments = [],
   requestDecision = "Approved",
 }: {
   absencePeriods?: AbsencePeriod[];
   hasPaidPayments?: boolean;
   leaveScenario?: keyof typeof leaveScenarioMap;
   leaveType?: AbsencePeriodTypes;
-  payments?: PaymentDetail[];
   requestDecision?: AbsencePeriodRequestDecisionEnum;
 }): ClaimDetail => {
   const reasonDetails = leaveScenarioMap[leaveScenario];
@@ -107,7 +105,6 @@ const createMockClaimDetail = ({
     fineos_notification_id: faker.datatype.uuid(),
     has_paid_payments: hasPaidPayments,
     managed_requirements: [],
-    payments,
     outstanding_evidence: {
       employee_evidence: [],
       employer_evidence: [],

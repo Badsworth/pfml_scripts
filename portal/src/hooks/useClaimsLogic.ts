@@ -1,19 +1,17 @@
-import ClaimDetail, { PaymentDetail, Payments } from "../models/ClaimDetail";
 import { ClaimWithdrawnError, ValidationError } from "../errors";
 import ClaimsApi, { GetClaimsParams } from "../api/ClaimsApi";
 import ApiResourceCollection from "../models/ApiResourceCollection";
 import { AppErrorsLogic } from "./useAppErrorsLogic";
 import Claim from "../models/Claim";
+import ClaimDetail from "../models/ClaimDetail";
 import PaginationMeta from "../models/PaginationMeta";
 import { PortalFlow } from "./usePortalFlow";
 import { isEqual } from "lodash";
-import { isFeatureEnabled } from "../services/featureFlags";
 import useCollectionState from "./useCollectionState";
 import { useState } from "react";
 
 const useClaimsLogic = ({
   appErrorsLogic,
-  portalFlow,
 }: {
   appErrorsLogic: AppErrorsLogic;
   portalFlow: PortalFlow;
@@ -34,15 +32,6 @@ const useClaimsLogic = ({
   const [paginationMeta, setPaginationMeta] = useState<
     PaginationMeta | { [key: string]: never }
   >({});
-
-  // Payments data associated with claim
-  const [loadedPaymentsData, setLoadedPaymentsData] = useState<Payments>();
-
-  /**
-   * Check if payments have loaded for claim
-   */
-  const hasLoadedPayments = (absenceId: string) =>
-    loadedPaymentsData?.absence_case_id === absenceId;
 
   // Track params currently applied for the collection of claims
   const [activeParams, setActiveParams] = useState({});
@@ -91,43 +80,12 @@ const useClaimsLogic = ({
   const loadClaimDetail = async (absenceId: string) => {
     if (isLoadingClaimDetail) return;
 
-    const shouldPaymentsLoad =
-      isFeatureEnabled("claimantShowPaymentsPhaseTwo") &&
-      portalFlow.pageRoute === "/applications/status/payments" &&
-      !hasLoadedPayments(absenceId);
-
-    let loadedClaimDetail = claimDetail;
-    // Have we already loaded this claim? If claim is loaded we check for payments being loaded as well
-    if (claimDetail?.fineos_absence_id === absenceId) {
-      if (shouldPaymentsLoad) {
-        try {
-          const claimDetailWithPayments = await fetchPayments(
-            absenceId,
-            claimDetail
-          );
-          setClaimDetail(claimDetailWithPayments);
-          return claimDetailWithPayments;
-        } catch (error) {
-          appErrorsLogic.catchError(error);
-        } finally {
-          setIsLoadingClaimDetail(false);
-        }
-      }
-    } else {
+    if (claimDetail?.fineos_absence_id !== absenceId) {
       try {
         setIsLoadingClaimDetail(true);
         appErrorsLogic.clearErrors();
         const data = await claimsApi.getClaimDetail(absenceId);
-        loadedClaimDetail = data.claimDetail;
-        if (shouldPaymentsLoad) {
-          const claimDetailWithPayments = fetchPayments(
-            absenceId,
-            loadedClaimDetail
-          );
-          setClaimDetail(await claimDetailWithPayments);
-          return claimDetailWithPayments;
-        }
-        setClaimDetail(loadedClaimDetail);
+        setClaimDetail(new ClaimDetail(data.claimDetail));
       } catch (error) {
         if (
           error instanceof ValidationError &&
@@ -144,29 +102,6 @@ const useClaimsLogic = ({
         setIsLoadingClaimDetail(false);
       }
     }
-    return loadedClaimDetail;
-  };
-
-  const fetchPayments = async (
-    absenceId: string,
-    loadedClaim: Partial<ClaimDetail> | undefined
-  ) => {
-    let paymentList: PaymentDetail[] = [];
-    try {
-      const fetchedPayments = await claimsApi.getPayments(absenceId);
-      paymentList = fetchedPayments.payments;
-    } catch (error) {
-      appErrorsLogic.catchError(error);
-    } finally {
-      setLoadedPaymentsData({
-        payments: paymentList,
-        absence_case_id: absenceId,
-      });
-    }
-    if (loadedClaim) {
-      loadedClaim.payments = paymentList;
-    }
-    return new ClaimDetail(loadedClaim);
   };
 
   return {
@@ -176,10 +111,8 @@ const useClaimsLogic = ({
     isLoadingClaims,
     isLoadingClaimDetail,
     loadClaimDetail,
-    loadedPaymentsData,
     loadPage,
     paginationMeta,
-    hasLoadedPayments,
   };
 };
 

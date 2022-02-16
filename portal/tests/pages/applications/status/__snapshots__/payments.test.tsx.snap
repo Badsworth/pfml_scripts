@@ -122,7 +122,7 @@ exports[`Payments Phase 2 Checkback date implementation renders intro text for r
 
 exports[`Payments displays info alert if claimant has bonding-newborn but not pregnancy claims 1`] = `
 <div
-  aria-labelledby="alert-heading10"
+  aria-labelledby="alert-heading12"
   class="usa-alert usa-alert--info usa-alert--no-icon margin-bottom-3"
   role="region"
   tabindex="-1"
@@ -132,7 +132,7 @@ exports[`Payments displays info alert if claimant has bonding-newborn but not pr
   >
     <h2
       class="usa-alert__heading font-heading-xs text-bold"
-      id="alert-heading10"
+      id="alert-heading12"
     >
       If you are giving birth, you may also be eligible for paid medical leave
     </h2>
@@ -163,7 +163,7 @@ exports[`Payments displays info alert if claimant has bonding-newborn but not pr
 
 exports[`Payments displays info alert if claimant has pregnancy but not bonding claims 1`] = `
 <div
-  aria-labelledby="alert-heading14"
+  aria-labelledby="alert-heading16"
   class="usa-alert usa-alert--info usa-alert--no-icon margin-bottom-3"
   role="region"
   tabindex="-1"
@@ -173,7 +173,7 @@ exports[`Payments displays info alert if claimant has pregnancy but not bonding 
   >
     <h2
       class="usa-alert__heading font-heading-xs text-bold"
-      id="alert-heading14"
+      id="alert-heading16"
     >
       You may also be eligible for paid family leave
     </h2>
@@ -252,7 +252,7 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
         class="usa-accordion__heading margin-y-2"
       >
         <button
-          aria-controls="accordion30"
+          aria-controls="accordion32"
           aria-expanded="false"
           class="usa-accordion__button"
           type="button"
@@ -262,9 +262,9 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
       </h2>
       <div
         class="usa-accordion__content usa-prose"
-        data-testid="accordion30"
+        data-testid="accordion32"
         hidden=""
-        id="accordion30"
+        id="accordion32"
       >
         <strong>
           What may cause a delayed payment
@@ -330,7 +330,7 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
       class="usa-accordion__heading margin-y-2"
     >
       <button
-        aria-controls="accordion31"
+        aria-controls="accordion33"
         aria-expanded="false"
         class="usa-accordion__button"
         type="button"
@@ -340,9 +340,9 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
     </h2>
     <div
       class="usa-accordion__content usa-prose"
-      data-testid="accordion31"
+      data-testid="accordion33"
       hidden=""
-      id="accordion31"
+      id="accordion33"
     >
       <p>
         To see your maximum weekly benefit amount, view your approval notice in the 
@@ -391,7 +391,7 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
       class="usa-accordion__heading margin-y-2"
     >
       <button
-        aria-controls="accordion32"
+        aria-controls="accordion34"
         aria-expanded="false"
         class="usa-accordion__button"
         type="button"
@@ -401,9 +401,9 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
     </h2>
     <div
       class="usa-accordion__content usa-prose"
-      data-testid="accordion32"
+      data-testid="accordion34"
       hidden=""
-      id="accordion32"
+      id="accordion34"
     >
       <p>
         To make changes to your payment method or banking information, call the Contact Center at 

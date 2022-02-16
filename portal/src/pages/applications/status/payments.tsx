@@ -15,6 +15,7 @@ import ClaimDetail from "src/models/ClaimDetail";
 import Heading from "../../../components/core/Heading";
 import LeaveReason from "../../../models/LeaveReason";
 import PageNotFound from "../../../components/PageNotFound";
+import { Payment } from "src/models/Payment";
 import Spinner from "../../../components/core/Spinner";
 import StatusNavigationTabs from "../../../components/status/StatusNavigationTabs";
 import Table from "../../../components/core/Table";
@@ -46,27 +47,25 @@ export const Payments = ({
   const { absence_id } = query;
   const {
     appErrors,
-    claims: { claimDetail, loadClaimDetail, hasLoadedPayments },
+    claims: { claimDetail, loadClaimDetail },
     documents: {
       documents: allClaimDocuments,
       loadAll: loadAllClaimDocuments,
       hasLoadedClaimDocuments,
     },
+    payments: { loadPayments, loadedPaymentsData, hasLoadedPayments },
     portalFlow,
   } = appLogic;
 
   const application_id = claimDetail?.application_id;
-  const shouldLoad =
-    !!absence_id &&
-    (claimDetail?.fineos_absence_id !== absence_id ||
-      !hasLoadedPayments(absence_id));
 
   useEffect(() => {
-    if (shouldLoad) {
+    if (absence_id) {
       loadClaimDetail(absence_id);
+      loadPayments(absence_id);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [shouldLoad, absence_id]);
+  }, [absence_id]);
 
   useEffect(() => {
     if (application_id) {
@@ -84,21 +83,30 @@ export const Payments = ({
     );
   }
 
-  // Check both because claimDetail could be cached from a different status page.
-  if (shouldLoad || !hasLoadedClaimDocuments(application_id || "")) {
-    return (
-      <div className="text-center">
-        <Spinner aria-label={t("pages.payments.loadingClaimDetailLabel")} />
-      </div>
-    );
-  }
   /**
    * If there is no absence_id query parameter,
    * then return the PFML 404 page.
    */
   if (!absence_id || !claimDetail) return <PageNotFound />;
 
-  const helper = paymentStatusViewHelper(claimDetail, allClaimDocuments);
+  // Check both because claimDetail could be cached from a different status page.
+  if (
+    claimDetail.fineos_absence_id !== absence_id ||
+    !hasLoadedPayments(absence_id) ||
+    !hasLoadedClaimDocuments(application_id || "")
+  ) {
+    return (
+      <div className="text-center">
+        <Spinner aria-label={t("pages.payments.loadingClaimDetailLabel")} />
+      </div>
+    );
+  }
+
+  const helper = paymentStatusViewHelper(
+    claimDetail,
+    allClaimDocuments,
+    loadedPaymentsData || new Payment()
+  );
 
   const {
     hasApprovedStatus,
@@ -434,14 +442,11 @@ type PaymentStatusViewHelper = ReturnType<typeof paymentStatusViewHelper>;
 
 function paymentStatusViewHelper(
   claimDetail: ClaimDetail,
-  documents: ApiResourceCollection<BenefitsApplicationDocument>
+  documents: ApiResourceCollection<BenefitsApplicationDocument>,
+  paymentList: Payment
 ) {
-  const {
-    absence_periods: _absencePeriods,
-    has_paid_payments: _isPaid,
-    payments,
-  } = claimDetail;
-
+  const { absence_periods: _absencePeriods, has_paid_payments: _isPaid } =
+    claimDetail;
   // private variables
   const _absenceDetails = AbsencePeriod.groupByReason(_absencePeriods);
   const _hasBondingReason = LeaveReason.bonding in _absenceDetails;
@@ -484,10 +489,12 @@ function paymentStatusViewHelper(
   // only show waiting period row in the payments table if there is a waiting week on the claim detail
   // intermittent claims never have waiting weeks.
   const hasWaitingWeek =
-    !isBlank(claimDetail.waitingWeek?.startDate) && !isIntermittent;
-
+    !isBlank(claimDetail.waitingWeek.startDate) && !isIntermittent;
   // 1. only show payments table if claimant has payments to show.
   // 2. changes intro text
+  const payments = hasWaitingWeek
+    ? paymentList.validPayments(claimDetail.waitingWeek.startDate)
+    : paymentList.payments;
   const hasPayments = !!payments.length;
 
   // changes intro text

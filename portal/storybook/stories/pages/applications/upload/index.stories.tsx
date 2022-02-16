@@ -57,7 +57,6 @@ export const Default = ({ absencePeriod }: { absencePeriod: string }) => {
     employer: null,
     fineos_notification_id: faker.datatype.uuid(),
     managed_requirements: [],
-    payments: [],
     outstanding_evidence: null,
   });
 
