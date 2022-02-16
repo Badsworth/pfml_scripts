@@ -1762,8 +1762,6 @@ const pages: {
     hintYes: "I have taken previous leave for the same reason",
     sectionLabel:
       "Did you take any previous leave between {{previousLeaveStartDate}} and {{leaveStartDate}} for the same reason as you are applying for paid leave now?",
-    sectionLabel_caring:
-      "Did you take any previous leave between {{previousLeaveStartDate}} and the first day of the leave you are applying for, for the same reason as you are applying?",
     title: "$t(shared.claimsOtherLeaveTitle)",
   },
   claimsPreviousLeavesSameReasonDetails: {

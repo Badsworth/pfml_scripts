@@ -73,7 +73,6 @@ export const PreviousLeavesSameReason = (
         label={
           <Heading level="2" size="1">
             {t("pages.claimsPreviousLeavesSameReason.sectionLabel", {
-              context: isCaringLeave ? "caring" : undefined,
               previousLeaveStartDate,
               leaveStartDate,
             })}
