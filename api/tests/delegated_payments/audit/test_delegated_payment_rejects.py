@@ -133,6 +133,7 @@ def test_parse_payment_rejects_file_missing_columns(
         assert row.dua_additional_income_details is None
         assert row.dia_additional_income_details is None
         assert row.dor_fineos_name_mismatch_details is None
+        assert row.payment_date_mismatch_details is None
 
 
 def test_rejects_column_validation(test_db_session, payment_rejects_step):

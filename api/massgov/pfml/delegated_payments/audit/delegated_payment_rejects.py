@@ -225,6 +225,9 @@ class PaymentRejectsStep(Step):
                     dor_fineos_name_mismatch_details=get_row(
                         row, PAYMENT_AUDIT_CSV_HEADERS.dor_fineos_name_mismatch_details
                     ),
+                    payment_date_mismatch_details=get_row(
+                        row, PAYMENT_AUDIT_CSV_HEADERS.payment_date_mismatch_details
+                    ),
                     rejected_by_program_integrity=get_row(
                         row, PAYMENT_AUDIT_CSV_HEADERS.rejected_by_program_integrity
                     ),

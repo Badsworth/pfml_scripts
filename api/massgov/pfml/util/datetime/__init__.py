@@ -1,6 +1,6 @@
 import math
 from datetime import date, datetime, time, timezone
-from typing import NamedTuple, Optional, Union
+from typing import NamedTuple, Optional, Tuple, Union
 
 import pytz
 
@@ -83,3 +83,12 @@ def datetime_str_to_date(datetime_str: Optional[str]) -> Optional[date]:
     if not datetime_str:
         return None
     return datetime.fromisoformat(datetime_str).date()
+
+
+def is_range_contained(container_range: Tuple[date, date], test_range: Tuple[date, date]) -> bool:
+    """
+    Determine if test_range is within container_range (inclusive)
+    """
+    c_start, c_end = container_range
+    t_start, t_end = test_range
+    return c_start <= t_start and t_end <= c_end
