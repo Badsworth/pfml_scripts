@@ -3,6 +3,7 @@ import BaseApi from "./BaseApi";
 import BenefitsApplication from "../models/BenefitsApplication";
 import PaymentPreference from "../models/PaymentPreference";
 import TaxWithholdingPreference from "../models/TaxWithholdingPreference";
+import { isFeatureEnabled } from "../services/featureFlags";
 import routes from "../routes";
 
 export default class BenefitsApplicationsApi extends BaseApi {
@@ -106,9 +107,18 @@ export default class BenefitsApplicationsApi extends BaseApi {
    * to be submitted to the claims processing system.
    */
   submitClaim = async (application_id: string) => {
+    const splitClaimsAcrossByEnabled = Boolean(
+      isFeatureEnabled("splitClaimsAcrossBY")
+    );
     const { data } = await this.request<BenefitsApplication>(
       "POST",
-      `${application_id}/submit_application`
+      `${application_id}/submit_application`,
+      undefined,
+      {
+        additionalHeaders: splitClaimsAcrossByEnabled
+          ? { "X-FF-Split-Claims-Across-BY": "true" }
+          : {},
+      }
     );
 
     return {
