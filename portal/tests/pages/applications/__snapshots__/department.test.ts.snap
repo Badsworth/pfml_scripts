@@ -109,6 +109,8 @@ exports[`DepartmentPage when claimantShowOrganizationUnits feature flag is enabl
             role="combobox"
             type="text"
           />
+          
+    
           <span
             class="usa-combo-box__clear-input__wrapper"
             tabindex="-1"
@@ -125,11 +127,15 @@ exports[`DepartmentPage when claimantShowOrganizationUnits feature flag is enabl
             
       
           </span>
+          
+      
           <span
             class="usa-combo-box__input-button-separator"
           >
              
           </span>
+          
+      
           <span
             class="usa-combo-box__toggle-list__wrapper"
             tabindex="-1"
@@ -147,6 +153,8 @@ exports[`DepartmentPage when claimantShowOrganizationUnits feature flag is enabl
             
       
           </span>
+          
+      
           <ul
             aria-labelledby="Dropdown2-label"
             class="usa-combo-box__list"
@@ -158,10 +166,14 @@ exports[`DepartmentPage when claimantShowOrganizationUnits feature flag is enabl
             
       
           </ul>
+          
+      
           <div
             class="usa-combo-box__status usa-sr-only"
             role="status"
           />
+          
+      
           <span
             class="usa-sr-only"
             id="Dropdown2--assistiveHint"
