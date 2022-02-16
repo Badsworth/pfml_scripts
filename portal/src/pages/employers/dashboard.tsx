@@ -114,32 +114,37 @@ export const Dashboard = (
         )}
       </div>
 
-      <section className="margin-bottom-4 margin-top-2" ref={introElementRef}>
-        <Details label={t("pages.employersDashboard.statusDescriptionsLabel")}>
-          <ul className="usa-list">
-            <li>
-              <Trans i18nKey="pages.employersDashboard.statusDescription_reviewBy" />
-            </li>
-            <li>
-              <Trans i18nKey="pages.employersDashboard.statusDescription_noAction" />
-            </li>
-            <li>
-              <Trans i18nKey="pages.employersDashboard.statusDescription_denied" />
-            </li>
-            <li>
-              <Trans i18nKey="pages.employersDashboard.statusDescription_approved" />
-            </li>
-            <li>
-              <Trans i18nKey="pages.employersDashboard.statusDescription_closed" />
-            </li>
-          </ul>
-        </Details>
+      {!showMultiLeaveDash && (
+        <section className="margin-bottom-4 margin-top-2">
+          <Details
+            label={t("pages.employersDashboard.statusDescriptionsLabel")}
+          >
+            <ul className="usa-list">
+              <li>
+                <Trans i18nKey="pages.employersDashboard.statusDescription_reviewBy" />
+              </li>
+              <li>
+                <Trans i18nKey="pages.employersDashboard.statusDescription_noAction" />
+              </li>
+              <li>
+                <Trans i18nKey="pages.employersDashboard.statusDescription_denied" />
+              </li>
+              <li>
+                <Trans i18nKey="pages.employersDashboard.statusDescription_approved" />
+              </li>
+              <li>
+                <Trans i18nKey="pages.employersDashboard.statusDescription_closed" />
+              </li>
+            </ul>
+          </Details>
+        </section>
+      )}
+      <section ref={introElementRef}>
+        <Search
+          initialValue={get(apiParams, "search", "")}
+          updatePageQuery={updatePageQuery}
+        />
       </section>
-
-      <Search
-        initialValue={get(apiParams, "search", "")}
-        updatePageQuery={updatePageQuery}
-      />
       <Filters
         params={apiParams}
         updatePageQuery={updatePageQuery}

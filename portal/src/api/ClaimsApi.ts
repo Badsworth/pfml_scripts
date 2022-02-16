@@ -9,11 +9,12 @@ export interface GetClaimsParams {
   page_offset?: string | number;
   employer_id?: string;
   search?: string;
+  // TODO (PORTAL-1560): Remove claim_status
   claim_status?: string;
   allow_hrd?: boolean;
   is_reviewable?: "no" | "yes";
-  order_by?:
-    | "absence_status"
+  order_by?: // TODO (PORTAL-1560): Remove absence_status and fineos_absence_status
+  | "absence_status"
     | "fineos_absence_status"
     | "created_at"
     | "employee"
