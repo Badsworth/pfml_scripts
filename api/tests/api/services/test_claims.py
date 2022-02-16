@@ -45,42 +45,6 @@ class TestGetClaimDetail:
 
             return get_claim_detail(claim, {})
 
-    def test_no_absence_id_exception(self, app, claim):
-        claim.fineos_absence_id = None
-
-        with pytest.raises(Exception) as exc_info:
-            self.get_claim_detail_with_app_context(claim, app)
-
-        error = exc_info.value
-        assert type(error) == Exception
-
-        expected = "Can't get absence periods from FINEOS - No absence_id for claim"
-        assert str(error) == expected
-
-    def test_no_employee_tax_id_exception(self, app, claim):
-        claim.employee.tax_identifier = None
-
-        with pytest.raises(Exception) as exc_info:
-            self.get_claim_detail_with_app_context(claim, app)
-
-        error = exc_info.value
-        assert type(error) == Exception
-
-        expected = "Can't get absence periods from FINEOS - No employee for claim"
-        assert str(error) == expected
-
-    def test_no_employer_fein_exception(self, app, claim):
-        claim.employer = None
-
-        with pytest.raises(Exception) as exc_info:
-            self.get_claim_detail_with_app_context(claim, app)
-
-        error = exc_info.value
-        assert type(error) == Exception
-
-        expected = "Can't get absence periods from FINEOS - No employer for claim"
-        assert str(error) == expected
-
     @mock.patch("massgov.pfml.api.services.claims.get_absence_periods")
     def test_withdrawn_claim_exception(self, mock_get_absence_periods, app, claim):
         error = {

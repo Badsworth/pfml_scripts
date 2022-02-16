@@ -95,6 +95,23 @@ class LeaveNotificationReason(str, Enum):
     OUT_OF_WORK_FOR_ANOTHER_REASON = "Out of work for another reason"
 
 
+def register_employee_with_claim(
+    fineos: massgov.pfml.fineos.AbstractFINEOSClient,
+    db_session: massgov.pfml.db.Session,
+    claim: Claim,
+) -> str:
+    """Helper method for getting a FINEOS auth id for a user with a Claim"""
+    employee_tax_id = claim.employee_tax_identifier
+    if not employee_tax_id:
+        raise Exception("Unable to register employee with FINEOS - No employee tax ID for claim")
+
+    employer_fein = claim.employer_fein
+    if not employer_fein:
+        raise Exception("Unable to register employee with FINEOS - No employer FEIN for claim")
+
+    return register_employee(fineos, employee_tax_id, employer_fein, db_session)
+
+
 def register_employee(
     fineos: massgov.pfml.fineos.AbstractFINEOSClient,
     employee_ssn: str,
@@ -1472,13 +1489,17 @@ def create_other_leaves_and_other_incomes_eforms(
 
 
 def get_absence_periods(
-    employee_tax_id: str, employer_fein: str, absence_id: str, db_session: massgov.pfml.db.Session,
+    claim: Claim, db_session: massgov.pfml.db.Session,
 ) -> List[FineosAbsencePeriod]:
+    absence_id = claim.fineos_absence_id
+    if absence_id is None:
+        raise Exception("Can't get absence periods from FINEOS - No absence_id for claim")
+
     fineos = massgov.pfml.fineos.create_client()
 
     try:
         # Get FINEOS web admin id
-        web_id = register_employee(fineos, employee_tax_id, employer_fein, db_session)
+        web_id = register_employee_with_claim(fineos, db_session, claim)
 
         # Get absence periods
         response: AbsenceDetails = fineos.get_absence(web_id, absence_id)
