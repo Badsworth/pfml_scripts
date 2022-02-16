@@ -119,7 +119,8 @@ class Constants:
     # How do you know if something should go in this list?
     #   1. The payment associated with the state has reached an end state and will never change again
     #   2. The state is an error state and someone will be notified (eg. Program Integrity) via a report
-    #   3. The state has a scenario where we want to receive the same payment again unmodified (eg. the issue is we're missing the employee record)
+    #   3. The state has a scenario where we want to receive the same payment again unmodified (eg. the issue is
+    #      we're missing the employee record)
     #   4. The payment has not already been sent to PUB - even if it's an error state
     #   5. The state is in the DELEGATED_PAYMENT flow
     RESTARTABLE_PAYMENT_STATES = frozenset(
@@ -558,7 +559,8 @@ def build_archive_path(
     If no current_time specified, will use get_now_us_eastern() method.
     For example:
 
-    build_archive_path("s3://bucket/path/archive", Constants.S3_INBOUND_RECEIVED_DIR, "2021-01-01-12-00-00-example-file.csv", datetime.datetime(2021, 1, 1, 12, 0, 0))
+    build_archive_path("s3://bucket/path/archive", Constants.S3_INBOUND_RECEIVED_DIR,
+      "2021-01-01-12-00-00-example-file.csv", datetime.datetime(2021, 1, 1, 12, 0, 0))
     produces
     "s3://bucket/path/archive/received/2021-01-01/2021-01-01-12-00-00-example-file.csv"
 
@@ -1304,31 +1306,27 @@ def get_transaction_status_date(payment: Payment) -> date:
     return get_now_us_eastern().date()
 
 
-employee_audit_log_keys = set(
-    [
-        "employee_id",
-        "tax_identifier_id",
-        "first_name",
-        "last_name",
-        "date_of_birth",
-        "fineos_customer_number",
-        "latest_import_log_id",
-        "created_at",
-        "updated_at",
-    ]
-)
-employer_audit_log_keys = set(
-    [
-        "employer_id",
-        "employer_fein",
-        "employer_name",
-        "dor_updated_date",
-        "latest_import_log_id",
-        "fineos_employer_id",
-        "created_at",
-        "updated_at",
-    ]
-)
+employee_audit_log_keys = {
+    "employee_id",
+    "tax_identifier_id",
+    "first_name",
+    "last_name",
+    "date_of_birth",
+    "fineos_customer_number",
+    "latest_import_log_id",
+    "created_at",
+    "updated_at",
+}
+employer_audit_log_keys = {
+    "employer_id",
+    "employer_fein",
+    "employer_name",
+    "dor_updated_date",
+    "latest_import_log_id",
+    "fineos_employer_id",
+    "created_at",
+    "updated_at",
+}
 
 
 def create_payment_log(
@@ -1343,7 +1341,6 @@ def create_payment_log(
     employee/employer/claim/absence period/payment check
     """
     absence_period = payment.leave_request
-    claim = payment.claim
 
     snapshot = {}
     if absence_period:
@@ -1375,8 +1372,7 @@ def create_payment_log(
     if check_details:
         snapshot["payment_check"] = check_details.for_json()
 
-    audit_details = {}
-    audit_details["snapshot"] = snapshot
+    audit_details = {"snapshot": snapshot}
     if additional_details:
         audit_details.update(additional_details)
 

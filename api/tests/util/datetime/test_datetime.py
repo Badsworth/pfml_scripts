@@ -70,3 +70,22 @@ def test_datetime_str_to_date():
     assert datetime_util.datetime_str_to_date("2019-12-30") == date(2019, 12, 30)
     assert datetime_util.datetime_str_to_date("") is None
     assert datetime_util.datetime_str_to_date(None) is None
+
+
+@pytest.mark.parametrize(
+    "test_range,is_contained",
+    [
+        ((date(2021, 4, 1), date(2021, 5, 1)), False),  # before
+        ((date(2021, 5, 1), date(2021, 5, 7)), False),  # overlaps start
+        ((date(2021, 5, 15), date(2021, 5, 25)), False),  # overlaps end
+        ((date(2021, 5, 16), date(2021, 5, 25)), False),  # after
+        # within
+        ((date(2021, 5, 7), date(2021, 5, 15)), True),  # entire range
+        ((date(2021, 5, 7), date(2021, 5, 14)), True),  # includes start
+        ((date(2021, 5, 8), date(2021, 5, 15)), True),  # includes end
+        ((date(2021, 5, 8), date(2021, 5, 14)), True),
+    ],
+)
+def test_is_range_contained(test_range, is_contained):
+    c_range = [date(2021, 5, 7), date(2021, 5, 15)]
+    assert datetime_util.is_range_contained(c_range, test_range) == is_contained

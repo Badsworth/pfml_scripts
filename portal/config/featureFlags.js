@@ -56,6 +56,11 @@ const flagsConfig = {
     // all other employers' dashboards.
     // Will only be used for smoke testing purposes and removed afterwards.
     employerUnlockDashboard: true,
+
+    // When this flag is true, claims that would span multiple benefit years
+    // are split into separate claims
+    // See: https://lwd.atlassian.net/wiki/spaces/DD/pages/2194014380/Tech+Spec+-+Claims+spanning+two+benefit+years
+    splitClaimsAcrossBY: false,
   },
   // Environments can optionally override a default feature flag below.
   // The environment keys should use the same envName defined in

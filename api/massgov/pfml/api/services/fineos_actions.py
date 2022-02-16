@@ -1361,7 +1361,9 @@ def resolve_service_agreement_inputs(
         return CreateOrUpdateServiceAgreement(
             absence_management_flag=absence_management_flag,
             leave_plans=", ".join(leave_plans),
-            start_date=prev_exemption_cease_date,
+            start_date=prev_exemption_cease_date + datetime.timedelta(1)
+            if prev_exemption_cease_date
+            else None,
             unlink_leave_plans=True,
         )
     elif (was_not_exempt or was_partially_exempt) and is_exempt:

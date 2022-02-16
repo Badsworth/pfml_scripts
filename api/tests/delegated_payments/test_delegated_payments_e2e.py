@@ -399,6 +399,7 @@ def test_e2e_pub_payments(
             ScenarioName.AUDIT_SKIPPED_WITH_NOTE,
             ScenarioName.PUB_ACH_FAMILY_RETURN_PAYMENT_ID_NOT_FOUND,
             ScenarioName.PUB_CHECK_FAMILY_RETURN_CHECK_NUMBER_NOT_FOUND,
+            ScenarioName.HAPPY_PATH_PAYMENT_DATE_MISMATCH,
         ]
 
         assert_payment_state_for_scenarios(
@@ -591,6 +592,7 @@ def test_e2e_pub_payments(
                 ScenarioName.HAPPY_PATH_DOR_FINEOS_NAME_MISMATCH,
                 ScenarioName.HAPPY_PATH_DUA_ADDITIONAL_INCOME,
                 ScenarioName.HAPPY_PATH_DIA_ADDITIONAL_INCOME,
+                ScenarioName.HAPPY_PATH_PAYMENT_DATE_MISMATCH,
                 ScenarioName.HAPPY_PATH_TAX_WITHHOLDING,
                 ScenarioName.HAPPY_PATH_TAX_WITHHOLDING_PAYMENT_METHOD_CHECK,
                 ScenarioName.TAX_WITHHOLDING_MISSING_PRIMARY_PAYMENT,
@@ -610,7 +612,11 @@ def test_e2e_pub_payments(
                 )
                 if p.claim.employee
                 else None,
-                PAYMENT_AUDIT_CSV_HEADERS.rejected_by_program_integrity: "",
+                PAYMENT_AUDIT_CSV_HEADERS.rejected_by_program_integrity: ""
+                if not test_dataset.is_payment_scenario(
+                    p, ScenarioName.HAPPY_PATH_PAYMENT_DATE_MISMATCH
+                )
+                else "Y",
                 PAYMENT_AUDIT_CSV_HEADERS.skipped_by_program_integrity: "Y"
                 if test_dataset.is_payment_scenario(
                     p, ScenarioName.IN_REVIEW_LEAVE_REQUEST_DECISION
@@ -629,6 +635,11 @@ def test_e2e_pub_payments(
                 PAYMENT_AUDIT_CSV_HEADERS.dia_additional_income_details: "DIA Reductions:"
                 if test_dataset.is_payment_scenario(
                     p, ScenarioName.HAPPY_PATH_DIA_ADDITIONAL_INCOME
+                )
+                else "",
+                PAYMENT_AUDIT_CSV_HEADERS.payment_date_mismatch_details: "Payment for 2021-05-01 -> 2021-05-16 outside all leave dates. Had absence periods for 2021-01-01 -> 2021-04-01, 2022-01-05 -> 2022-01-12."
+                if test_dataset.is_payment_scenario(
+                    p, ScenarioName.HAPPY_PATH_PAYMENT_DATE_MISMATCH
                 )
                 else "",
             }
@@ -781,6 +792,7 @@ def test_e2e_pub_payments(
                         ScenarioName.HAPPY_PATH_DOR_FINEOS_NAME_MISMATCH,
                         ScenarioName.HAPPY_PATH_DUA_ADDITIONAL_INCOME,
                         ScenarioName.HAPPY_PATH_DIA_ADDITIONAL_INCOME,
+                        ScenarioName.HAPPY_PATH_PAYMENT_DATE_MISMATCH,
                         ScenarioName.HAPPY_PATH_TAX_WITHHOLDING,
                         ScenarioName.IN_REVIEW_LEAVE_REQUEST_ADHOC_PAYMENTS_DECISION,
                     ]
@@ -830,6 +842,7 @@ def test_e2e_pub_payments(
                         ScenarioName.HAPPY_PATH_DOR_FINEOS_NAME_MISMATCH,
                         ScenarioName.HAPPY_PATH_DUA_ADDITIONAL_INCOME,
                         ScenarioName.HAPPY_PATH_DIA_ADDITIONAL_INCOME,
+                        ScenarioName.HAPPY_PATH_PAYMENT_DATE_MISMATCH,
                         ScenarioName.HAPPY_PATH_TAX_WITHHOLDING,
                         ScenarioName.TAX_WITHHOLDING_PRIMARY_PAYMENT_NOT_PRENOTED,
                         ScenarioName.IN_REVIEW_LEAVE_REQUEST_ADHOC_PAYMENTS_DECISION,
@@ -922,6 +935,7 @@ def test_e2e_pub_payments(
                         ScenarioName.HAPPY_PATH_DOR_FINEOS_NAME_MISMATCH,
                         ScenarioName.HAPPY_PATH_DUA_ADDITIONAL_INCOME,
                         ScenarioName.HAPPY_PATH_DIA_ADDITIONAL_INCOME,
+                        ScenarioName.HAPPY_PATH_PAYMENT_DATE_MISMATCH,
                         ScenarioName.HAPPY_PATH_TAX_WITHHOLDING,
                         ScenarioName.TAX_WITHHOLDING_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
                         ScenarioName.HAPPY_PATH_TAX_WITHHOLDING_PAYMENT_METHOD_CHECK,
@@ -976,6 +990,7 @@ def test_e2e_pub_payments(
                         ScenarioName.HAPPY_PATH_DOR_FINEOS_NAME_MISMATCH,
                         ScenarioName.HAPPY_PATH_DUA_ADDITIONAL_INCOME,
                         ScenarioName.HAPPY_PATH_DIA_ADDITIONAL_INCOME,
+                        ScenarioName.HAPPY_PATH_PAYMENT_DATE_MISMATCH,
                         ScenarioName.HAPPY_PATH_TAX_WITHHOLDING,
                         ScenarioName.HAPPY_PATH_TAX_WITHHOLDING_PAYMENT_METHOD_CHECK,
                         ScenarioName.IN_REVIEW_LEAVE_REQUEST_ADHOC_PAYMENTS_DECISION,
@@ -1009,6 +1024,7 @@ def test_e2e_pub_payments(
                         ScenarioName.HAPPY_PATH_DOR_FINEOS_NAME_MISMATCH,
                         ScenarioName.HAPPY_PATH_DUA_ADDITIONAL_INCOME,
                         ScenarioName.HAPPY_PATH_DIA_ADDITIONAL_INCOME,
+                        ScenarioName.HAPPY_PATH_PAYMENT_DATE_MISMATCH,
                         ScenarioName.HAPPY_PATH_TAX_WITHHOLDING,
                         ScenarioName.TAX_WITHHOLDING_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
                         ScenarioName.HAPPY_PATH_TAX_WITHHOLDING_PAYMENT_METHOD_CHECK,
@@ -1041,6 +1057,7 @@ def test_e2e_pub_payments(
                         ScenarioName.HAPPY_PATH_DOR_FINEOS_NAME_MISMATCH,
                         ScenarioName.HAPPY_PATH_DUA_ADDITIONAL_INCOME,
                         ScenarioName.HAPPY_PATH_DIA_ADDITIONAL_INCOME,
+                        ScenarioName.HAPPY_PATH_PAYMENT_DATE_MISMATCH,
                         ScenarioName.HAPPY_PATH_TAX_WITHHOLDING,
                         ScenarioName.HAPPY_PATH_TAX_WITHHOLDING_PAYMENT_METHOD_CHECK,
                         ScenarioName.IN_REVIEW_LEAVE_REQUEST_ADHOC_PAYMENTS_DECISION,
@@ -1104,6 +1121,7 @@ def test_e2e_pub_payments(
                         ScenarioName.HAPPY_PATH_DOR_FINEOS_NAME_MISMATCH,
                         ScenarioName.HAPPY_PATH_DUA_ADDITIONAL_INCOME,
                         ScenarioName.HAPPY_PATH_DIA_ADDITIONAL_INCOME,
+                        ScenarioName.HAPPY_PATH_PAYMENT_DATE_MISMATCH,
                         ScenarioName.HAPPY_PATH_TAX_WITHHOLDING,
                         ScenarioName.HAPPY_PATH_TAX_WITHHOLDING_PAYMENT_METHOD_CHECK,
                         ScenarioName.TAX_WITHHOLDING_MISSING_PRIMARY_PAYMENT,
@@ -1137,6 +1155,7 @@ def test_e2e_pub_payments(
                         ScenarioName.HAPPY_PATH_DOR_FINEOS_NAME_MISMATCH,
                         ScenarioName.HAPPY_PATH_DUA_ADDITIONAL_INCOME,
                         ScenarioName.HAPPY_PATH_DIA_ADDITIONAL_INCOME,
+                        ScenarioName.HAPPY_PATH_PAYMENT_DATE_MISMATCH,
                         ScenarioName.HAPPY_PATH_TAX_WITHHOLDING,
                         ScenarioName.HAPPY_PATH_TAX_WITHHOLDING_PAYMENT_METHOD_CHECK,
                         ScenarioName.TAX_WITHHOLDING_MISSING_PRIMARY_PAYMENT,
@@ -1170,6 +1189,7 @@ def test_e2e_pub_payments(
                         ScenarioName.HAPPY_PATH_DOR_FINEOS_NAME_MISMATCH,
                         ScenarioName.HAPPY_PATH_DUA_ADDITIONAL_INCOME,
                         ScenarioName.HAPPY_PATH_DIA_ADDITIONAL_INCOME,
+                        ScenarioName.HAPPY_PATH_PAYMENT_DATE_MISMATCH,
                         ScenarioName.HAPPY_PATH_TAX_WITHHOLDING,
                         ScenarioName.HAPPY_PATH_TAX_WITHHOLDING_PAYMENT_METHOD_CHECK,
                         ScenarioName.TAX_WITHHOLDING_MISSING_PRIMARY_PAYMENT,
@@ -1364,7 +1384,11 @@ def test_e2e_pub_payments(
         # End State
         assert_payment_state_for_scenarios(
             test_dataset=test_dataset,
-            scenario_names=[ScenarioName.AUDIT_REJECTED, ScenarioName.AUDIT_REJECTED_WITH_NOTE,],
+            scenario_names=[
+                ScenarioName.AUDIT_REJECTED,
+                ScenarioName.AUDIT_REJECTED_WITH_NOTE,
+                ScenarioName.HAPPY_PATH_PAYMENT_DATE_MISMATCH,
+            ],
             end_state=State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT,
             db_session=test_db_session,
         )
@@ -1522,6 +1546,7 @@ def test_e2e_pub_payments(
             ScenarioName.AUDIT_SKIPPED,
             ScenarioName.AUDIT_REJECTED_WITH_NOTE,
             ScenarioName.AUDIT_SKIPPED_WITH_NOTE,
+            ScenarioName.HAPPY_PATH_PAYMENT_DATE_MISMATCH,
         ]
         stage_2_writeback_scenarios.extend(stage_2_ach_scenarios)
         stage_2_writeback_scenarios.extend(stage_2_check_scenarios)
@@ -1565,7 +1590,11 @@ def test_e2e_pub_payments(
                 "payment_state_log_missing_count": 0,
                 "payment_state_log_not_in_audit_response_pending_count": 0,
                 "rejected_payment_count": len(
-                    [ScenarioName.AUDIT_REJECTED, ScenarioName.AUDIT_REJECTED_WITH_NOTE,]
+                    [
+                        ScenarioName.AUDIT_REJECTED,
+                        ScenarioName.AUDIT_REJECTED_WITH_NOTE,
+                        ScenarioName.HAPPY_PATH_PAYMENT_DATE_MISMATCH,
+                    ]
                 ),
                 "skipped_payment_count": len(
                     [ScenarioName.AUDIT_SKIPPED, ScenarioName.AUDIT_SKIPPED_WITH_NOTE,]

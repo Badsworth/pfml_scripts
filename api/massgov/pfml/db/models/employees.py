@@ -1296,7 +1296,7 @@ class UserRole(Base, TimestampMixin):
     role = relationship(LkRole)
 
 
-class UserLeaveAdministratorOrgUnit(Base):
+class UserLeaveAdministratorOrgUnit(Base, TimestampMixin):
     __tablename__ = "link_user_leave_administrator_org_unit"
     user_leave_administrator_id = Column(
         PostgreSQLUUID,

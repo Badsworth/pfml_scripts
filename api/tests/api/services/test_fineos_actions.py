@@ -841,7 +841,7 @@ def test_service_agreement_exempt_to_not_payload():
         is not None
     )
     assert payload.__contains__("<name>StartDate</name>")
-    assert re.search("<name>StartDate</name>\\s+<value>2021-02-09</value>", payload) is not None
+    assert re.search("<name>StartDate</name>\\s+<value>2021-02-10</value>", payload) is not None
 
 
 def test_service_agreement_not_exempt_to_exempt_payload():
