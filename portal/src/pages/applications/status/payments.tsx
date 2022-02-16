@@ -521,9 +521,9 @@ function paymentStatusViewHelper(
 
     let result;
     if (isRetroactive || !isApprovedBeforeFourteenthDayOfClaim) {
-      result = dayjs(_approvalDate).addBusinessDays(3);
+      result = dayjs(_approvalDate).addBusinessDays(5);
     } else {
-      result = dayjs(_initialClaimStartDate).add(14, "day").addBusinessDays(3);
+      result = dayjs(_initialClaimStartDate).add(14, "day").addBusinessDays(5);
     }
 
     return formatDate(result.format()).full();
