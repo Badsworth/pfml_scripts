@@ -513,7 +513,7 @@ const errors = {
       min_reduced_leave_minutes:
         "The total time entered for your hours off must be greater than 0.",
       require_employee:
-        "We couldn’t find a match between your Social Security Number and the employer you entered in our system. Check that you entered your Social Security Number and your employer’s Employer Identification Number (EIN) correctly. If you continue to get this error, call the Contact Center at (833) 344-7365 to provide proof of wages.",      
+        "We couldn’t find a match between your Social Security Number and the employer you entered in our system. Check that you entered your Social Security Number and your employer’s Employer Identification Number (EIN) correctly. If you continue to get this error, call the Contact Center at (833) 344-7365 to provide proof of wages.",
       require_employer_notified:
         "You must tell your employer that you’re taking leave before you can submit an application. If you’ve told your employer, update your application with the date that you notified them.",
     },
@@ -710,7 +710,6 @@ const errors = {
         require_non_exempt_employer:
           "Our records show the employer you entered has a private plan. Check that you entered your employer’s Employer Identification Number (EIN) correctly. If you continue to get this error, ask your employer about their private plan. If this is incorrect, call the Contact Center at $t(shared.contactCenterPhoneNumberNoBreak).",
         required: "Enter your 9-digit Employer Identification Number.",
-
       },
     },
   },
