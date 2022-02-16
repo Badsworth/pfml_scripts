@@ -1232,7 +1232,7 @@ def get_traceable_payment_details(
     #
 
     claim = payment.claim
-    employee = payment.claim.employee if payment.claim else None
+    employee = payment.employee
     employer = payment.claim.employer if payment.claim else None
 
     return {
@@ -1247,6 +1247,10 @@ def get_traceable_payment_details(
         if payment.fineos_extraction_date
         else None,
         "payment_date": payment.payment_date.isoformat() if payment.payment_date else None,
+        "payment_amount": str(payment.amount),
+        "payment_method": payment.disb_method.payment_method_description
+        if payment.disb_method
+        else None,
         "pub_individual_id": payment.pub_individual_id,
         "payment_transaction_type": payment.payment_transaction_type.payment_transaction_type_description
         if payment.payment_transaction_type
