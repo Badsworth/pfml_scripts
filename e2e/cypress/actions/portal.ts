@@ -1787,6 +1787,11 @@ function fillEmployerBenefitData(benefit: ValidEmployerBenefit): void {
   inFieldsetLabelled("What kind of employer-sponsored benefit is it?", () =>
     cy.findByText(benefitTypeMap[benefit.benefit_type]).click()
   );
+  const isSalaryReplacement = benefit.is_full_salary_continuous;
+  inFieldsetLabelled(
+    "Does this employer-sponsored benefit fully replace your employee's wages?",
+    () => cy.findByText(isSalaryReplacement ? "Yes" : "No").click()
+  );
   fillDateFieldset(
     "What is the first day of leave from work that this benefit will pay your employee for?",
     benefit.benefit_start_date
@@ -1794,11 +1799,6 @@ function fillEmployerBenefitData(benefit: ValidEmployerBenefit): void {
   fillDateFieldset(
     "What is the last day of leave from work that this benefit will pay your employee for?",
     benefit.benefit_end_date
-  );
-  const isSalaryReplacement = benefit.is_full_salary_continuous;
-  inFieldsetLabelled(
-    "Does this employer-sponsored benefit fully replace your employee's wages?",
-    () => cy.findByText(isSalaryReplacement ? "Yes" : "No").click()
   );
   if (!isSalaryReplacement)
     inFieldsetLabelled("How much will your employee receive?", () => {
