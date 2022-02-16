@@ -425,11 +425,11 @@ export function selectClaimType(application: ApplicationRequestBody): void {
   }
   const reasonMap: Record<typeof reason, string | RegExp> = {
     "Serious Health Condition - Employee":
-      /I can’t work due to (an|my) illness, injury, or pregnancy./,
+      "I can’t work due to my illness, injury, or pregnancy.",
     "Child Bonding":
       "I need to bond with my child after birth, adoption, or foster placement.",
     "Pregnancy/Maternity":
-      /I can’t work due to (an|my) illness, injury, or pregnancy./,
+      "I can’t work due to my illness, injury, or pregnancy.",
     "Care for a Family Member": "I need to care for my family member",
   };
   cy.contains(reasonMap[reason]).click();
@@ -450,11 +450,6 @@ export function selectClaimType(application: ApplicationRequestBody): void {
 export function answerPregnancyQuestion(
   application: ApplicationRequestBody
 ): void {
-  // if (
-  //   application.leave_details?.reason !== "Serious Health Condition - Employee"
-  // ) {
-  //   throw new Error("Reason besides Serious Health Condition was entered");
-  // }
   // Example of selecting a radio button pertaining to a particular question. Scopes the lookup
   // of the "yes" value so we don't select "yes" for the wrong question.
   cy.contains(
@@ -702,7 +697,7 @@ export function addPaymentInfo(
     default:
       throw new Error("Unknown payment method");
   }
-  cy.findByText(/Submit (Part 2|payment method)/).click();
+  cy.findByText("Submit payment method").click();
 }
 
 export function addId(idType: string): void {
@@ -840,8 +835,7 @@ export function completeIntermittentLeaveDetails(
       if (leave.duration_basis !== "Days") {
         throw new Error("Duration basis should be Days");
       }
-      // @bc: This label was changed recently: "At least a day" -> "At least one day".
-      cy.findByLabelText(/At least (a|one) day/).click({ force: true });
+      cy.findByLabelText("At least one day").click({ force: true });
     }
   );
   if (!leave.duration) {
@@ -1126,10 +1120,7 @@ export function addOrganization(fein: string, withholding: number): void {
  * Assertion for error message when adding employer with zero contributions.
  */
 export function assertZeroWithholdings(): void {
-  cy.contains(
-    /(Employer has no verification data|Your account can’t be verified yet, because your organization has not made any paid leave contributions. Once this organization pays quarterly taxes, you can verify your account and review applications)/,
-    { timeout: 30000 }
-  );
+  cy.contains("Employer has no verification data", { timeout: 30000 });
 }
 export type ClaimantStatus =
   | "Approved"
@@ -1254,7 +1245,7 @@ function reportPreviousLeave(leave: ValidPreviousLeave, index: number) {
  */
 function reportAccruedLeave(accruedLeave: ValidConcurrentLeave): void {
   inFieldsetLabelled(
-    /(Will you use accrued paid leave from this employer\?|Will you use employer-sponsored paid time off from this employer\?)/,
+    "Will you use employer-sponsored paid time off from this employer?",
     () => {
       cy.findByLabelText(
         accruedLeave.is_for_current_employer ? "Yes" : "No"
@@ -1264,11 +1255,11 @@ function reportAccruedLeave(accruedLeave: ValidConcurrentLeave): void {
     }
   );
   fillDateFieldset(
-    /(What is the first day of this leave|What is the first day of your employer-sponsored paid time off\?)/,
+    "What is the first day of your employer-sponsored paid time off?",
     accruedLeave.leave_start_date
   );
   fillDateFieldset(
-    /(What is the last day of this leave\?|What is the last day of your employer-sponsored paid time off\?)/,
+    "What is the last day of your employer-sponsored paid time off?",
     accruedLeave.leave_end_date
   );
   cy.contains("button", "Save and continue").click();
@@ -1327,8 +1318,7 @@ function reportEmployerBenefit(benefit: ValidEmployerBenefit, index: number) {
 function reportEmployerBenefits(benefits: ValidEmployerBenefit[]) {
   cy.contains(
     "form",
-    // BC for "leave dates for paid leave" -> "leave dates for paid leave from PFML" text change.
-    /Tell us about employer-sponsored benefits you will use during your leave dates for paid leave( from PFML)?\./
+    "Tell us about employer-sponsored benefits you will use during your leave dates for paid leave from PFML."
   ).within(() => {
     benefits.forEach((benefit, index) => {
       reportEmployerBenefit(benefit, index);
@@ -1402,8 +1392,7 @@ function reportOtherIncome(income: ValidOtherIncome, index: number): void {
 function reportOtherIncomes(other_incomes: ValidOtherIncome[]): void {
   cy.contains(
     "form",
-    // BC for "leave dates for paid leave" -> "leave dates for paid leave from PFML" text change.
-    /Tell us about your other sources of income during your leave dates for paid leave( from PFML)?\./
+    "Tell us about your other sources of income during your leave dates for paid leave from PFML."
   ).within(() => {
     other_incomes.forEach((income, index) => {
       reportOtherIncome(income, index);
@@ -1460,17 +1449,13 @@ function reportOtherLeavesAndBenefits(claim: ApplicationRequestBody): void {
     });
     cy.contains("button", "Save and continue").click();
   }
-
   cy.contains(
     "form",
-    // @bc: Old title: "Tell us about the accrued paid leave you'll use during your paid leave from PFML."
-    // @bc: Current title: "Tell us about the employer-sponsored paid time off you’ll use during your leave period"
-    /Tell us about the (accrued paid leave|employer-sponsored paid time off) you('|’)ll use during your (leave period.|paid leave from PFML.)/
+    "Tell us about the employer-sponsored paid time off you’ll use during your leave period"
   ).submit();
-
   cy.contains(
     "form",
-    /Will you use any employer-sponsored (paid time off|accrued paid leave) during your (leave period?|paid leave from PFML?)/
+    "Will you use any employer-sponsored paid time off during your leave period?"
   )
     .within(() => {
       const selector = (content: string) =>
@@ -1487,10 +1472,9 @@ function reportOtherLeavesAndBenefits(claim: ApplicationRequestBody): void {
     "form",
     "Tell us about other benefits and income you will use during your paid leave from PFML."
   ).submit();
-
   cy.contains(
     "form",
-    /(Will you use any employer-sponsored benefits from this employer during your paid leave from PFML\?|Will you use any employer-sponsored benefits from this employer during your paid leave from PFML\?)/
+    "Will you use any employer-sponsored benefits from this employer during your paid leave from PFML?"
   ).within(() => {
     const labelSelector = (content: string) =>
       content.startsWith(claim.employer_benefits ? "Yes" : "No");
@@ -1560,11 +1544,9 @@ export function uploadAdditionalDocument(
   cy.wait("@documentUpload", { timeout: 30000 })
     .its("response.statusCode")
     .should("eq", 200);
-  // @todo: success banner is not available in all environments yet - reinstate assertion after 9/22 https://nava.slack.com/archives/C023NUQ2Y0K/p1631810839125300?thread_ts=1631806074.115000&cid=C023NUQ2Y0K
-  // cy.contains(
-  //   /You('ve)? successfully submitted your (certification form|(identification )?documents)/,
-  //   { timeout: 30000 }
-  // );
+  cy.contains("You've successfully submitted your certification form", {
+    timeout: 30000,
+  });
 }
 
 export function uploadAdditionalDocumentLegacy(
@@ -1710,10 +1692,7 @@ export function assertEmployerBenefit(benefit: ValidEmployerBenefit): void {
 }
 
 export function addEmployerBenefit(benefit: ValidEmployerBenefit): void {
-  // BC: Add a benefit -> Add an employer-sponsored benefit.
-  cy.findByText(
-    /(Add a benefit|Add an(other)? employer-sponsored benefit)/
-  ).click();
+  cy.findByText("Add an employer-sponsored benefit").click();
   // The table's second to last row will be the new benefit form.
   // The last row is the "Add another previous leave" button
   cy.contains("tbody", "Add an employer-sponsored benefit")
@@ -1850,7 +1829,7 @@ function fillEmployerBenefitData(benefit: ValidEmployerBenefit): void {
 }
 
 export function addConcurrentLeave(leave: ValidConcurrentLeave): void {
-  cy.findByText(/Add (a concurrent|an accrued paid) leave/).click();
+  cy.findByText("Add an accrued paid leave").click();
   cy.contains("tr", "Add an accrued paid leave").within(() => {
     fillDateFieldset("When did the leave begin?", leave.leave_start_date);
     fillDateFieldset("When did the leave end?", leave.leave_end_date);
@@ -2031,6 +2010,9 @@ export function claimantGoToClaimStatus(
 
 const leaveReasonHeadings: Readonly<
   Partial<Record<NonNullable<LeaveReason>, string | RegExp>>
+  // @Note: The below regex is NOT being used for
+  // backwards compatibility but instead to switch
+  // between status headings of claimant & portal pages
 > = {
   "Serious Health Condition - Employee": /Medical leave/,
   "Child Bonding": /(Leave to )?bond with a child/i,
@@ -2113,7 +2095,7 @@ export function clearSearch(): void {
 
 export function addWithholdingPreference(withholding: boolean) {
   cy.contains(
-    /Do you want us to withhold state and federal taxes from (this|your) paid leave benefit?/
+    "Do you want us to withhold state and federal taxes from this paid leave benefit?"
   );
   cy.get("label")
     .contains(withholding ? "Yes" : "No")
