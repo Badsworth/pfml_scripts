@@ -14,6 +14,7 @@ from massgov.pfml.api.models.claims.common import PreviousLeave
 from massgov.pfml.api.models.common import ConcurrentLeave
 from massgov.pfml.api.services.administrator_fineos_actions import (
     EformTypes,
+    _get_computed_start_dates,
     _get_leave_details,
     download_document_as_leave_admin,
     get_claim_as_leave_admin,
@@ -1705,6 +1706,53 @@ def test_get_claim_absence_period_types(input_period_type, output_period_type):
     )
 
     assert claim.absence_periods[0].period_type == output_period_type
+
+
+def test_computed_start_dates_for_absence_with_no_reason():
+    period_decisions = group_client_api.PeriodDecisions.parse_obj(
+        {
+            "decisions": [
+                {
+                    "period": {
+                        "startDate": "2021-01-01",
+                        "endDate": "2021-01-31",
+                        "leaveRequest": {"reasonName": None,},
+                    },
+                }
+            ],
+        }
+    )
+    computed_start_dates = _get_computed_start_dates(period_decisions.dict())
+    assert computed_start_dates.other_reason is None
+    assert computed_start_dates.same_reason is None
+
+
+def test_computed_start_dates_for_claim_with_no_leave_periods():
+    period_decisions = group_client_api.PeriodDecisions.parse_obj({"decisions": []})
+    computed_start_dates = _get_computed_start_dates(period_decisions.dict())
+    assert computed_start_dates.same_reason is None
+    assert computed_start_dates.other_reason is None
+
+
+def test_computed_start_dates_for_caring_leave_with_prior_year_after_launch():
+    period_decisions = group_client_api.PeriodDecisions.parse_obj(
+        {
+            "decisions": [
+                {
+                    "period": {
+                        "startDate": "2022-07-30",
+                        "endDate": "2021-01-31",
+                        "leaveRequest": {"reasonName": "Care for a Family Member",},
+                    },
+                }
+            ],
+        }
+    )
+    computed_start_dates = _get_computed_start_dates(period_decisions.dict())
+    assert computed_start_dates.same_reason == date(2021, 7, 25)
+    assert computed_start_dates.other_reason == date(2021, 7, 25)
+    assert computed_start_dates.same_reason.strftime("%A") == "Sunday"
+    assert computed_start_dates.other_reason.strftime("%A") == "Sunday"
 
 
 def test_get_claim_absence_period_grouped_by_reference():

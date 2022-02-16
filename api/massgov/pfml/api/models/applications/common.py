@@ -1,4 +1,4 @@
-from datetime import date, timedelta
+from datetime import date
 from decimal import Decimal
 from enum import Enum
 from typing import List, Optional
@@ -8,10 +8,6 @@ from pydantic import UUID4
 import massgov.pfml.db.models.applications as db_application_models
 import massgov.pfml.db.models.employees as db_employee_models
 import massgov.pfml.util.pydantic.mask as mask
-from massgov.pfml.api.constants.application import (
-    CARING_LEAVE_EARLIEST_START_DATE,
-    PFML_PROGRAM_LAUNCH_DATE,
-)
 from massgov.pfml.api.models.common import (
     AmountFrequency,
     LookupEnum,
@@ -338,50 +334,6 @@ class OtherIncome(PydanticBaseModel):
     income_end_date: Optional[date]
     income_amount_dollars: Optional[Decimal]
     income_amount_frequency: Optional[AmountFrequency]
-
-
-class BaseStartDates(PydanticBaseModel):
-    other_reason: Optional[date]
-    same_reason: Optional[date]
-
-
-class ComputedStartDates(BaseStartDates):
-    @classmethod
-    def from_orm(cls, application: db_application_models.Application) -> "ComputedStartDates":
-        computed_start_dates = super().from_orm(application)
-
-        computed_start_dates.other_reason = None
-        computed_start_dates.same_reason = None
-
-        all_leave_periods = application.all_leave_periods
-        leave_period_start_dates = [
-            leave_period.start_date for leave_period in all_leave_periods if leave_period.start_date
-        ]
-        earliest_start_date = min(leave_period_start_dates, default=None)
-
-        if application.leave_reason_id is not None and earliest_start_date is not None:
-            week_start = earliest_start_date - timedelta(days=earliest_start_date.isoweekday() % 7)
-            prior_year = week_start - timedelta(days=364)
-
-            # other reason start date
-            if prior_year > PFML_PROGRAM_LAUNCH_DATE:
-                computed_start_dates.other_reason = prior_year
-            else:
-                computed_start_dates.other_reason = PFML_PROGRAM_LAUNCH_DATE
-
-            # same reason start date
-            start_date = PFML_PROGRAM_LAUNCH_DATE
-            if (
-                application.leave_reason_id
-                == db_application_models.LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_id
-            ):
-                start_date = CARING_LEAVE_EARLIEST_START_DATE
-            if prior_year > start_date:
-                computed_start_dates.same_reason = prior_year
-            else:
-                computed_start_dates.same_reason = start_date
-
-        return computed_start_dates
 
 
 # Document I/O Types
