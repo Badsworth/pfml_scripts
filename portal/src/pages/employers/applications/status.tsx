@@ -10,9 +10,9 @@ import withEmployerClaim, {
 import { AbsenceCaseStatus } from "../../../models/Claim";
 import AbsenceCaseStatusTag from "../../../components/AbsenceCaseStatusTag";
 import BackButton from "../../../components/BackButton";
-import CertificationsAndAbsencePeriods from "../../../components/employers/CertificationsAndAbsencePeriods";
+import CertificationsAndAbsencePeriods from "../../../features/employer-review/CertificationsAndAbsencePeriods";
 import DownloadableDocument from "../../../components/DownloadableDocument";
-import EmployeeInformation from "../../../components/employers/EmployeeInformation";
+import EmployeeInformation from "../../../features/employer-review/EmployeeInformation";
 import Heading from "../../../components/core/Heading";
 import HeadingPrefix from "src/components/core/HeadingPrefix";
 import Lead from "../../../components/core/Lead";

@@ -7,7 +7,7 @@ import Alert from "../../components/core/Alert";
 import Button from "../../components/core/Button";
 import DeprecatedPaginatedClaimsTable from "../../features/employer-dashboard/DeprecatedPaginatedClaimsTable";
 import Details from "../../components/core/Details";
-import EmployerNavigationTabs from "../../components/employers/EmployerNavigationTabs";
+import EmployerNavigationTabs from "../../components/EmployerNavigationTabs";
 import Filters from "../../features/employer-dashboard/Filters";
 import { GetClaimsParams } from "../../api/ClaimsApi";
 import InputText from "../../components/core/InputText";
