@@ -1766,7 +1766,7 @@ def get_batch_counts(db_session: db.Session) -> Dict[int, int]:
         year = record[0]
         count = record[1]
         logger.info(
-            "[%i][%i]: %i", year, count, extra={"tax_year": year, "count": count},
+            "Batch year %i has %i entries.", year, count, extra={"tax_year": year, "count": count},
         )
         batch_counts[year] = count
 
@@ -1787,7 +1787,7 @@ def get_payment_counts(db_session: db.Session) -> Dict[str, int]:
         batch = record[0]
         count = record[1]
         logger.info(
-            "[%i][%i]: %i", batch, count, extra={"batch": batch, "count": count},
+            "Batch %i has %i payments.", batch, count, extra={"batch": batch, "count": count},
         )
         payment_counts[batch] = count
 
@@ -1809,7 +1809,7 @@ def get_mmars_payment_counts(db_session: db.Session) -> Dict[str, int]:
         batch = record[0]
         count = record[1]
         logger.info(
-            "[%i][%i]: %i", batch, count, extra={"batch": batch, "count": count},
+            "Batch %i has %i MMARS payments.", batch, count, extra={"batch": batch, "count": count},
         )
         payment_counts[batch] = count
 
