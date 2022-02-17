@@ -16,7 +16,19 @@ on:
           🛑 DO NOT CHANGE THE DROPDOWN ABOVE FOR THE WORKFLOW. KEEP IT ON "main" BRANCH.     
           --------------------------------------
           ⬇️ Environment to be deployed.
-            (test, performance, stage, training, uat, prod, breakfix, cps-preview, long, trn2).
+        type: choice
+        options:
+          - breakfix
+          - cps-preview
+          - infra-test
+          - long
+          - performance
+          - prod
+          - stage
+          - test
+          - training
+          - trn2
+          - uat
       version:
         required: true
         default: "main"
