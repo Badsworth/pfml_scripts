@@ -257,26 +257,19 @@ class PaymentData:
             )
 
         # Employer reimbursement disallowed lookup values are debit and ACH
-        if self.is_standard_payment:
+        if self.is_standard_payment or self.is_employer_reimbursement:
             self.raw_payment_method = payments_util.validate_db_input(
                 "PAYMENTMETHOD",
                 pei_record,
                 self.validation_container,
-                self.is_standard_payment,
+                self.is_standard_payment
+                if self.is_standard_payment
+                else self.is_employer_reimbursement,
                 custom_validator_func=payments_util.lookup_validator(
                     PaymentMethod,
-                    disallowed_lookup_values=[PaymentMethod.DEBIT.payment_method_description],
-                ),
-            )
-        elif self.is_employer_reimbursement:
-            self.raw_payment_method = payments_util.validate_db_input(
-                "PAYMENTMETHOD",
-                pei_record,
-                self.validation_container,
-                self.is_employer_reimbursement,
-                custom_validator_func=payments_util.lookup_validator(
-                    PaymentMethod,
-                    disallowed_lookup_values=[
+                    disallowed_lookup_values=[PaymentMethod.DEBIT.payment_method_description]
+                    if self.is_standard_payment
+                    else [
                         PaymentMethod.DEBIT.payment_method_description,
                         PaymentMethod.ACH.payment_method_description,
                     ],
@@ -698,14 +691,12 @@ class PaymentExtractStep(Step):
             if payment_data.is_employee_required:
                 if payment_data.is_employer_reimbursement:
                     if claim is None:
-                        raise Exception(
-                            f"claim not found for employer reimbursement payment absence case number : {payment_data.absence_case_number}"
+                        self.increment(self.Metrics.CLAIM_NOT_FOUND_COUNT)
+                        payment_data.validation_container.add_validation_issue(
+                            payments_util.ValidationReason.MISSING_IN_DB,
+                            f"claim: {payment_data.absence_case_number}",
                         )
-                    employee = (
-                        self.db_session.query(Employee)
-                        .filter_by(employee_id=claim.employee_id)
-                        .one_or_none()
-                    )
+                    employee = claim.employee if claim is not None else None
                 else:
                     tax_identifier = (
                         self.db_session.query(TaxIdentifier)

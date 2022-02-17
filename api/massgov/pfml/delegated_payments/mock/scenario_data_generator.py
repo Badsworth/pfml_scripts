@@ -104,6 +104,8 @@ class ScenarioData:
 
     tax_withholding_payment_i_values: Optional[List[str]] = None
 
+    employer_reimbursement_payment_i_values: Optional[List[str]] = None
+
     additional_payment_absence_case_id: Optional[str] = None
 
     absence_period_c_value: Optional[str] = None
@@ -417,6 +419,12 @@ def generate_scenario_dataset(
 
                 if scenario_descriptor.is_tax_withholding_records_exists:
                     scenario_data.tax_withholding_payment_i_values = [
+                        str(fake.unique.random_int()),
+                        str(fake.unique.random_int()),
+                    ]
+
+                if scenario_descriptor.is_employer_reimbursement_records_exists:
+                    scenario_data.employer_reimbursement_payment_i_values = [
                         str(fake.unique.random_int()),
                         str(fake.unique.random_int()),
                     ]

@@ -5,7 +5,7 @@ import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml import db
-from massgov.pfml.db.models.employees import Payment, PaymentTransactionType, StateLog
+from massgov.pfml.db.models.employees import ImportLog, Payment, PaymentTransactionType, StateLog
 from massgov.pfml.db.models.payments import (
     FineosWritebackDetails,
     LinkSplitPayment,
@@ -30,12 +30,11 @@ class RelatedPaymentsProcessingStep(Step):
         """Top-level function that calls all the other functions in this file in order"""
         logger.info("Processing related payment processing step")
         self.process_errored_employer_reimbursement_payments()
-        # go get failed ER payments and find primary payments if exists and set state that failed because of ER
         self.process_payments_for_related_employer_reimbursement_payments()
         self.process_payments_for_related_withholding_payments()
 
     def process_payments_for_related_employer_reimbursement_payments(self) -> None:
-        logger.info("Processing employer reimbursement payment processing step")
+        logger.info("Processing employer reimbursement payment processing")
 
         # get employer reimbursement payment records
         employer_reimbursement_payments: List[
@@ -439,8 +438,18 @@ class RelatedPaymentsProcessingStep(Step):
         return [state_log.payment for state_log in state_logs]
 
     def process_errored_employer_reimbursement_payments(self) -> None:
-        logger.info("Processing  errored employer reimbursement payment processing step")
-        fineos_extract_import_log_id = self.get_import_log_id()
+        logger.info("Processing  errored employer reimbursement payment processing")
+
+        # get latest payment fineos_extract_import_log_id: PaymentExtractStep
+        # TODO revisit this logic for PAY-196
+        fineos_extract_import_log: List[ImportLog] = (
+            self.db_session.query(ImportLog)
+            .filter(ImportLog.source == "PaymentExtractStep")
+            .order_by(ImportLog.import_log_id.desc())
+            .limit(1)
+            .all()
+        )
+
         # get employer reimbursement payments
         employer_reimbursement_payments: List[Payment] = (
             self.db_session.query(Payment)
@@ -448,9 +457,15 @@ class RelatedPaymentsProcessingStep(Step):
                 Payment.payment_transaction_type_id
                 == PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id
             )
-            .filter(Payment.fineos_extract_import_log_id == fineos_extract_import_log_id)
+            .filter(
+                Payment.fineos_extract_import_log_id == fineos_extract_import_log[0].import_log_id
+            )
             .all()
         )
+
+        if not employer_reimbursement_payments:
+            logger.info("No payment records for errored employer reimbursement payment")
+            return
 
         for payment in employer_reimbursement_payments:
             # find the primary payment and set the state to error for that payment.
@@ -480,26 +495,7 @@ class RelatedPaymentsProcessingStep(Step):
                     )
                     .all()
                 )
-                if len(primary_payment_records) == 1:
-                    # set the state and writeback
-                    end_state = State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT_RESTARTABLE
-                    message = state_log_util.build_outcome(
-                        "Employer reimbursement payment has an error"
-                    )
-                    # DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT_RESTARTABLE
-                    state_log_util.create_finished_state_log(
-                        end_state=end_state,
-                        outcome=message,
-                        associated_model=payment,
-                        db_session=self.db_session,
-                    )
-                    payment_log_details = payments_util.get_traceable_payment_details(payment)
-                    logger.info(
-                        "Payment added to state %s",
-                        end_state.state_description,
-                        extra=payment_log_details,
-                    )
-                if len(primary_payment_records) > 1:
+                if len(primary_payment_records) > 0:
                     for primary_payment in primary_payment_records:
                         # set the state and writeback
                         end_state = State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT_RESTARTABLE
@@ -516,7 +512,6 @@ class RelatedPaymentsProcessingStep(Step):
                             primary_payment
                         )
                         logger.info(
-                            "Payment added to state %s",
-                            end_state.state_description,
+                            "Employer reimbursement failed validation, need to wait for it to be fixed",
                             extra=payment_log_details,
                         )

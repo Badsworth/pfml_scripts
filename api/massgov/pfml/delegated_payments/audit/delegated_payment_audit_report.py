@@ -64,8 +64,7 @@ class PaymentAuditReportStep(Step):
         )
 
         if len(state_logs) > 0:
-            for item in state_logs:
-                state_logs_containers.append(item)
+            state_logs_containers += state_logs
 
         if payments_util.is_withholding_payments_enabled():
             logger.info("Tax Withholding ENABLED")
@@ -76,8 +75,7 @@ class PaymentAuditReportStep(Step):
             )
 
             if len(federal_withholding_state_logs) > 0:
-                for item in federal_withholding_state_logs:
-                    state_logs_containers.append(item)
+                state_logs_containers += federal_withholding_state_logs
 
             state_withholding_state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
                 state_log_util.AssociatedClass.PAYMENT,
@@ -86,8 +84,7 @@ class PaymentAuditReportStep(Step):
             )
 
             if len(state_withholding_state_logs) > 0:
-                for item in state_withholding_state_logs:
-                    state_logs_containers.append(item)
+                state_logs_containers += state_withholding_state_logs
 
         employer_reimbursement_primary_state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
             state_log_util.AssociatedClass.PAYMENT,
@@ -95,8 +92,7 @@ class PaymentAuditReportStep(Step):
             self.db_session,
         )
         if len(employer_reimbursement_primary_state_logs) > 0:
-            for item in employer_reimbursement_primary_state_logs:
-                state_logs_containers.append(item)
+            state_logs_containers += employer_reimbursement_primary_state_logs
 
         # employer_reimbursement_related_state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
         #         state_log_util.AssociatedClass.PAYMENT,
@@ -188,23 +184,21 @@ class PaymentAuditReportStep(Step):
                 ):
                     linked_payments = _get_split_payments(self.db_session, payment)
                     for payment in linked_payments:
-                        if payment.payment_transaction_type_id in [
-                            PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id,
-                            PaymentTransactionType.FEDERAL_TAX_WITHHOLDING.payment_transaction_type_id,
-                        ]:
-                            end_state = (
-                                State.STATE_WITHHOLDING_RELATED_PENDING_AUDIT
-                                if (
-                                    payment.payment_transaction_type_id
-                                    == PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id
-                                )
-                                else State.FEDERAL_WITHHOLDING_RELATED_PENDING_AUDIT
-                            )
-                        elif payment.payment_transaction_type_id in [
-                            PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id,
-                        ]:
+                        if (
+                            payment.payment_transaction_type_id
+                            == PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id
+                        ):
+                            end_state = State.STATE_WITHHOLDING_RELATED_PENDING_AUDIT
+                        elif (
+                            payment.payment_transaction_type_id
+                            == PaymentTransactionType.FEDERAL_TAX_WITHHOLDING.payment_transaction_type_id
+                        ):
+                            end_state = State.FEDERAL_WITHHOLDING_RELATED_PENDING_AUDIT
+                        elif (
+                            payment.payment_transaction_type_id
+                            == PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id
+                        ):
                             end_state = State.EMPLOYER_REIMBURSEMENT_RELATED_PENDING_AUDIT
-
                         outcome = state_log_util.build_outcome("Related Payment Audit report sent")
                         state_log_util.create_finished_state_log(
                             associated_model=payment,
@@ -333,15 +327,17 @@ class PaymentAuditReportStep(Step):
 
         return payment_amount
 
+    # TODO Refactor this to one function for get all amount values.
     def calculate_state_withholding_amount(
         self, payment: Payment, link_payments: List[Payment]
     ) -> decimal.Decimal:
 
         payment_amount: decimal.Decimal = decimal.Decimal(0)
 
-        if payment.payment_transaction_type_id in [
-            PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id,
-        ]:
+        if (
+            payment.payment_transaction_type_id
+            == PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id
+        ):
             payment_amount = payment.amount
             return payment_amount
 
@@ -359,9 +355,10 @@ class PaymentAuditReportStep(Step):
 
         payment_amount: decimal.Decimal = decimal.Decimal(0)
 
-        if payment.payment_transaction_type_id in [
-            PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id,
-        ]:
+        if (
+            payment.payment_transaction_type_id
+            == PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id
+        ):
             payment_amount = payment.amount
             return payment_amount
 
@@ -373,6 +370,7 @@ class PaymentAuditReportStep(Step):
 
         return payment_amount
 
+    # TODO Refactor this to one function for get all i values.
     def get_federal_withholding_i_value(self, link_payments: List[Payment]) -> str:
         federal_withholding_i_values = []
 
@@ -393,8 +391,15 @@ class PaymentAuditReportStep(Step):
                 state_withholding_i_values.append(payment.fineos_pei_i_value)
         return " ".join(str(v) for v in state_withholding_i_values)
 
-    def get_employer_reimbursement_i_value(self, link_payments: List[Payment]) -> str:
+    def get_employer_reimbursement_i_value(
+        self, payment: Payment, link_payments: List[Payment]
+    ) -> str:
         employer_reimbursement_i_values = []
+        if payment:
+            if payment.payment_transaction_type_id in [
+                PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id
+            ]:
+                return str(payment.fineos_pei_i_value)
 
         for payment in link_payments:
             if payment.payment_transaction_type_id in [
@@ -453,7 +458,10 @@ class PaymentAuditReportStep(Step):
                     previously_paid_payments
                 ),
                 gross_payment_amount=str(
-                    net_payment_amount + federal_withholding_amount + state_withholding_amount
+                    net_payment_amount
+                    + federal_withholding_amount
+                    + state_withholding_amount
+                    + employer_reimbursement_amount
                 )
                 if payments_util.is_withholding_payments_enabled()
                 else "",
@@ -484,7 +492,7 @@ class PaymentAuditReportStep(Step):
                 if payments_util.is_withholding_payments_enabled()
                 else "",
                 employer_reimbursement_i_value=self.get_employer_reimbursement_i_value(
-                    linked_payments
+                    payment, linked_payments
                 ),
             )
             payment_audit_data_set.append(payment_audit_data)
