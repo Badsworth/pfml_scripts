@@ -442,10 +442,10 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
         claim_missing_employee=True,
         claim_extract_employee_identifier_unknown=True,
     ),
-    ScenarioDescriptor(
-        scenario_name=ScenarioName.EMPLOYER_REIMBURSEMENT_PAYMENT,
-        payment_transaction_type=PaymentTransactionType.EMPLOYER_REIMBURSEMENT,
-    ),
+    # ScenarioDescriptor(
+    #     scenario_name=ScenarioName.EMPLOYER_REIMBURSEMENT_PAYMENT,
+    #     payment_transaction_type=PaymentTransactionType.EMPLOYER_REIMBURSEMENT,
+    # ),
     # ScenarioDescriptor(
     #     scenario_name=ScenarioName.EMPLOYER_REIMBURSEMENT_PAYMENT,
     #     payment_transaction_type=PaymentTransactionType.EMPLOYER_REIMBURSEMENT,

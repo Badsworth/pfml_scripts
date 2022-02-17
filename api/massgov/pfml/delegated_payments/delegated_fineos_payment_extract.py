@@ -142,6 +142,7 @@ class PaymentData:
     is_standard_payment: bool
     is_employee_required: bool
     is_employer_reimbursement: bool
+    is_employer_reimbursement_enabled: bool
 
     def __init__(
         self,
@@ -233,6 +234,10 @@ class PaymentData:
             == PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id
         )
 
+        self.is_employer_reimbursement_enabled = (
+            payments_util.is_employer_reimbursement_payments_enabled()
+        )
+
         # We only want to check for an employee in certain scenarios
         # Employer Reimbursements will not map to an Employee,
         # and nor will payments associated with tax withholdings
@@ -247,14 +252,19 @@ class PaymentData:
         #######################################
 
         # Find the record in the other datasets.
-        if not claim_details and (self.is_standard_payment or self.is_employer_reimbursement):
+        if not claim_details and (
+            self.is_standard_payment
+            or (self.is_employer_reimbursement and self.is_employer_reimbursement_enabled)
+        ):
             self.validation_container.add_validation_issue(
                 payments_util.ValidationReason.MISSING_DATASET, "claim_details"
             )
 
         if claim_details:
             self.process_claim_details(claim_details, requested_absence_record, count_incrementer)
-        elif self.is_standard_payment or self.is_employer_reimbursement:
+        elif self.is_standard_payment or (
+            self.is_employer_reimbursement and self.is_employer_reimbursement_enabled
+        ):
             # We require the absence case number, if claim details doesn't exist
             # we want to set the validation issue manually here
             self.validation_container.add_validation_issue(
@@ -262,7 +272,9 @@ class PaymentData:
             )
 
         # Employer reimbursement disallowed lookup values are debit and ACH
-        if self.is_standard_payment or self.is_employer_reimbursement:
+        if self.is_standard_payment or (
+            self.is_employer_reimbursement and self.is_employer_reimbursement_enabled
+        ):
             self.raw_payment_method = payments_util.validate_db_input(
                 "PAYMENTMETHOD",
                 pei_record,
@@ -288,7 +300,10 @@ class PaymentData:
         # Address values are only required if we are paying by check
         address_required = (
             self.raw_payment_method == PaymentMethod.CHECK.payment_method_description
-            and (self.is_standard_payment or self.is_employer_reimbursement)
+            and (
+                self.is_standard_payment
+                or (self.is_employer_reimbursement and self.is_employer_reimbursement_enabled)
+            )
         )
         self.address_line_one = payments_util.validate_db_input(
             "PAYMENTADD1", pei_record, self.validation_container, address_required
@@ -429,7 +444,10 @@ class PaymentData:
             "LEAVEREQUESTI",
             claim_details,
             self.validation_container,
-            (self.is_standard_payment or self.is_employer_reimbursement),
+            (
+                self.is_standard_payment
+                or (self.is_employer_reimbursement and self.is_employer_reimbursement_enabled)
+            ),
             custom_validator_func=payments_util.leave_request_id_validator,
         )
 
@@ -463,7 +481,10 @@ class PaymentData:
                 "LEAVEREQUEST_DECISION",
                 requested_absence,
                 self.validation_container,
-                (self.is_standard_payment or self.is_employer_reimbursement),
+                (
+                    self.is_standard_payment
+                    or (self.is_employer_reimbursement and self.is_employer_reimbursement_enabled)
+                ),
                 custom_validator_func=leave_request_decision_validator_closure(
                     self.is_adhoc_payment()
                 ),
@@ -481,7 +502,9 @@ class PaymentData:
                 custom_validator_func=self.payment_period_date_validator,
             )
 
-        elif self.is_standard_payment or self.is_employer_reimbursement:
+        elif self.is_standard_payment or (
+            self.is_employer_reimbursement and self.is_employer_reimbursement_enabled
+        ):
             self.validation_container.add_validation_issue(
                 payments_util.ValidationReason.MISSING_DATASET,
                 f"Payment leave request ID not found in requested absence file: {self.leave_request_id}",
@@ -694,7 +717,10 @@ class PaymentExtractStep(Step):
             # If the employee is required and should be validated, do so
             # Otherwise, we know we aren't going to find an employee, so don't look
             if payment_data.is_employee_required:
-                if payment_data.is_employer_reimbursement:
+                if (
+                    payment_data.is_employer_reimbursement
+                    and payment_data.is_employer_reimbursement_enabled
+                ):
                     if claim is None:
                         self.increment(self.Metrics.CLAIM_NOT_FOUND_COUNT)
                         payment_data.validation_container.add_validation_issue(
@@ -1053,7 +1079,10 @@ class PaymentExtractStep(Step):
         payment_eft, address_pair = None, None
         if employee and not payment_data.validation_container.has_validation_issues():
             # Update the mailing address with values from FINEOS
-            if payment_data.is_standard_payment or payment_data.is_employer_reimbursement:
+            if payment_data.is_standard_payment or (
+                payment_data.is_employer_reimbursement
+                and payment_data.is_employer_reimbursement_enabled
+            ):
                 address_pair, has_address_update = self.update_experian_address_pair_fineos_address(
                     payment_data, employee
                 )
@@ -1165,7 +1194,7 @@ class PaymentExtractStep(Step):
             == PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id
         ):
             # TODO run this logic with feature flag on/off and check all other ER validations using existing scenarios.
-            if payments_util.is_employer_reimbursement_payments_enabled():
+            if PaymentData.is_employer_reimbursement_enabled:
                 end_state = State.PAYMENT_READY_FOR_ADDRESS_VALIDATION
                 message = "Success"
             else:
