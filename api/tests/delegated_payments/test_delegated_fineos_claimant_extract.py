@@ -429,10 +429,11 @@ def test_run_step_no_employee(
 
     assert len(claim.state_logs) == 1
     assert claim.state_logs[0].outcome["validation_container"]["validation_issues"] == [
-        {"reason": "MissingInDB", "details": f"tax_identifier: {claimant_data.ssn}"},
+        {"reason": "MissingInDB", "details": claimant_data.ssn, "field_name": "tax_identifier"},
         {
             "reason": "MissingInDB",
-            "details": f"employer customer number: {claimant_data.employer_customer_num}",
+            "details": claimant_data.employer_customer_num,
+            "field_name": "employer_customer_number",
         },
     ]
 
@@ -1038,7 +1039,11 @@ def test_update_eft_info_validation_issues(claimant_extract_step, test_db_sessio
     ).one_or_none()
 
     assert set(
-        [ValidationIssue(ValidationReason.ROUTING_NUMBER_FAILS_CHECKSUM, "SORTCODE: 111111111")]
+        [
+            ValidationIssue(
+                ValidationReason.ROUTING_NUMBER_FAILS_CHECKSUM, "SORTCODE: 111111111", "SORTCODE"
+            )
+        ]
     ) == set(claimant_data.validation_container.validation_issues)
 
     # Routing number incorrect length.
@@ -1055,8 +1060,10 @@ def test_update_eft_info_validation_issues(claimant_extract_step, test_db_sessio
 
     assert set(
         [
-            ValidationIssue(ValidationReason.FIELD_TOO_SHORT, "SORTCODE: 123"),
-            ValidationIssue(ValidationReason.ROUTING_NUMBER_FAILS_CHECKSUM, "SORTCODE: 123"),
+            ValidationIssue(ValidationReason.FIELD_TOO_SHORT, "SORTCODE: 123", "SORTCODE"),
+            ValidationIssue(
+                ValidationReason.ROUTING_NUMBER_FAILS_CHECKSUM, "SORTCODE: 123", "SORTCODE"
+            ),
         ]
     ) == set(claimant_data.validation_container.validation_issues)
 
@@ -1074,7 +1081,7 @@ def test_update_eft_info_validation_issues(claimant_extract_step, test_db_sessio
     ).one_or_none()
 
     assert set(
-        [ValidationIssue(ValidationReason.FIELD_TOO_LONG, f"ACCOUNTNO: {long_num}"),]
+        [ValidationIssue(ValidationReason.FIELD_TOO_LONG, f"ACCOUNTNO: {long_num}", "ACCOUNTNO"),]
     ) == set(claimant_data.validation_container.validation_issues)
     assert len(updated_employee.pub_efts.all()) == 0
 
@@ -1095,7 +1102,9 @@ def test_update_eft_info_validation_issues(claimant_extract_step, test_db_sessio
     assert set(
         [
             ValidationIssue(
-                ValidationReason.INVALID_LOOKUP_VALUE, "ACCOUNTTYPE: Certificate of Deposit"
+                ValidationReason.INVALID_LOOKUP_VALUE,
+                "ACCOUNTTYPE: Certificate of Deposit",
+                "ACCOUNTTYPE",
             )
         ]
     ) == set(claimant_data.validation_container.validation_issues)
@@ -1117,10 +1126,14 @@ def test_update_eft_info_validation_issues(claimant_extract_step, test_db_sessio
 
     assert set(
         [
-            ValidationIssue(ValidationReason.FIELD_TOO_SHORT, "SORTCODE: 12345678"),
-            ValidationIssue(ValidationReason.ROUTING_NUMBER_FAILS_CHECKSUM, "SORTCODE: 12345678"),
+            ValidationIssue(ValidationReason.FIELD_TOO_SHORT, "SORTCODE: 12345678", "SORTCODE"),
             ValidationIssue(
-                ValidationReason.INVALID_LOOKUP_VALUE, "ACCOUNTTYPE: Certificate of Deposit"
+                ValidationReason.ROUTING_NUMBER_FAILS_CHECKSUM, "SORTCODE: 12345678", "SORTCODE"
+            ),
+            ValidationIssue(
+                ValidationReason.INVALID_LOOKUP_VALUE,
+                "ACCOUNTTYPE: Certificate of Deposit",
+                "ACCOUNTTYPE",
             ),
         ]
     ) == set(claimant_data.validation_container.validation_issues)

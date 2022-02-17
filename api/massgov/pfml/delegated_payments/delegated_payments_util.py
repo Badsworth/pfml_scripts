@@ -1,11 +1,11 @@
 import os
 import re
 from collections import OrderedDict
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Type, Union, cast
+from typing import Any, Callable, Dict, List, Optional, Tuple, Type, Union, cast
 
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import ColumnProperty, class_mapper
@@ -519,7 +519,14 @@ class ValidationReason(str, Enum):
 @dataclass(frozen=True, eq=True)
 class ValidationIssue:
     reason: ValidationReason
-    details: str
+    details: Optional[str] = ""
+    field_name: Optional[str] = None
+
+    def to_dict(self):
+        output = asdict(self)
+        if self.field_name is None:
+            del output["field_name"]
+        return output
 
 
 @dataclass
@@ -528,14 +535,27 @@ class ValidationContainer:
     record_key: str
     validation_issues: List[ValidationIssue] = field(default_factory=list)
 
-    def add_validation_issue(self, reason: ValidationReason, details: str) -> None:
-        self.validation_issues.append(ValidationIssue(reason, details))
+    def add_validation_issue(
+        self, reason: ValidationReason, details: Optional[str], field_name: Optional[str] = None,
+    ) -> None:
+        self.validation_issues.append(ValidationIssue(reason, details, field_name))
 
     def has_validation_issues(self) -> bool:
         return len(self.validation_issues) != 0
 
     def get_reasons(self) -> List[ValidationReason]:
         return [validation_issue.reason for validation_issue in self.validation_issues]
+
+    def get_reasons_with_field_names(self) -> List[Tuple[ValidationReason, Optional[str]]]:
+        return [
+            (validation_issue.reason, validation_issue.field_name)
+            for validation_issue in self.validation_issues
+        ]
+
+    def to_dict(self):
+        output = asdict(self)
+        output["validation_issues"] = [issue.to_dict() for issue in self.validation_issues]
+        return output
 
 
 class ValidationIssueException(Exception):
@@ -709,7 +729,7 @@ def validate_db_input(
         for validation_issue in validation_issues:
             # Any non-missing error types add the value to the error details
             # Note that this means these reports will contain PII data
-            errors.add_validation_issue(validation_issue, f"{key}: {value}")
+            errors.add_validation_issue(validation_issue, f"{key}: {value}", key)
 
     # If any of the specific validations hit an error, don't return the value
     # This is true even if the field is not required as we may still use the field.
@@ -1508,5 +1528,22 @@ def get_earliest_absence_period_for_payment_leave_request(
         db_session.query(AbsencePeriod)
         .filter(AbsencePeriod.fineos_leave_request_id == payment.fineos_leave_request_id)
         .order_by(AbsencePeriod.absence_period_start_date.asc())
+        .first()
+    )
+
+
+def get_earliest_matching_payment(
+    db_session: db.Session, fineos_pei_c_value: str, fineos_pei_i_value: str
+) -> Optional[Payment]:
+    """
+    Get the earliest payment associated with C/I values
+    """
+    return (
+        db_session.query(Payment)
+        .filter(
+            Payment.fineos_pei_c_value == fineos_pei_c_value,
+            Payment.fineos_pei_i_value == fineos_pei_i_value,
+        )
+        .order_by(Payment.created_at.asc())
         .first()
     )

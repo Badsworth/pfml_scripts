@@ -684,7 +684,8 @@ class PaymentExtractStep(Step):
                     self.increment(self.Metrics.TAX_IDENTIFIER_MISSING_IN_DB_COUNT)
                     payment_data.validation_container.add_validation_issue(
                         payments_util.ValidationReason.MISSING_IN_DB,
-                        f"tax_identifier: {payment_data.tin}",
+                        payment_data.tin,
+                        "tax_identifier",
                     )
                 else:
                     employee = (
@@ -697,7 +698,8 @@ class PaymentExtractStep(Step):
                         self.increment(self.Metrics.EMPLOYEE_MISSING_IN_DB_COUNT)
                         payment_data.validation_container.add_validation_issue(
                             payments_util.ValidationReason.MISSING_IN_DB,
-                            f"employee: {payment_data.tin}",
+                            payment_data.tin,
+                            "employee",
                         )
 
             claim = (
@@ -719,7 +721,8 @@ class PaymentExtractStep(Step):
         if not claim and payment_data.is_standard_payment:
             payment_data.validation_container.add_validation_issue(
                 payments_util.ValidationReason.MISSING_IN_DB,
-                f"claim: {payment_data.absence_case_number}",
+                payment_data.absence_case_number,
+                "claim",
             )
             self.increment(self.Metrics.CLAIM_NOT_FOUND_COUNT)
             return None, None
@@ -1212,14 +1215,27 @@ class PaymentExtractStep(Step):
         )
         extra = payments_util.get_traceable_payment_details(payment, end_state)
         extra["is_for_standard_payment"] = payment_data.is_employee_required
+
+        # Keep track of stale payments
+        earliest_matching_payment = payments_util.get_earliest_matching_payment(
+            self.db_session, payment_data.c_value, payment_data.i_value
+        )
+        if earliest_matching_payment:
+            extra["days_since_payment_first_seen"] = (
+                datetime.utcnow().date() - earliest_matching_payment.created_at.date()
+            ).days + 1
+            extra["day_payment_first_seen"] = str(earliest_matching_payment.created_at.date())
+
         logger.info(
             "After consuming extracts and performing initial validation, payment added to state",
             extra=extra,
         )
         # For the payments that failed validation, log their reason codes
-        # so that we can collect metrics on the most common error types
-        for reason in payment_data.validation_container.get_reasons():
-            extra["validation_reason"] = str(reason)  # Replaced each iteration
+        # and field names so that we can collect metrics on the most common error types
+        for reason, field_name in payment_data.validation_container.get_reasons_with_field_names():
+            # Replaced each iteration
+            extra["validation_reason"] = str(reason)
+            extra["field_name"] = field_name
             logger.info("Payment failed validation", extra=extra)
 
     def _manage_pei_writeback_state(
