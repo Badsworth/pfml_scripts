@@ -717,7 +717,6 @@ class PaymentExtractStep(Step):
             # If the employee is required and should be validated, do so
             # Otherwise, we know we aren't going to find an employee, so don't look
             if payment_data.is_employee_required:
-<<<<<<< HEAD
                 if (
                     payment_data.is_employer_reimbursement
                     and payment_data.is_employer_reimbursement_enabled
@@ -729,20 +728,6 @@ class PaymentExtractStep(Step):
                             f"claim: {payment_data.absence_case_number}",
                         )
                     employee = claim.employee if claim is not None else None
-=======
-                tax_identifier = (
-                    self.db_session.query(TaxIdentifier)
-                    .filter_by(tax_identifier=payment_data.tin)
-                    .one_or_none()
-                )
-                if not tax_identifier:
-                    self.increment(self.Metrics.TAX_IDENTIFIER_MISSING_IN_DB_COUNT)
-                    payment_data.validation_container.add_validation_issue(
-                        payments_util.ValidationReason.MISSING_IN_DB,
-                        payment_data.tin,
-                        "tax_identifier",
-                    )
->>>>>>> main
                 else:
                     tax_identifier = (
                         self.db_session.query(TaxIdentifier)
@@ -753,7 +738,6 @@ class PaymentExtractStep(Step):
                         self.increment(self.Metrics.TAX_IDENTIFIER_MISSING_IN_DB_COUNT)
                         payment_data.validation_container.add_validation_issue(
                             payments_util.ValidationReason.MISSING_IN_DB,
-<<<<<<< HEAD
                             f"tax_identifier: {payment_data.tin}",
                         )
                     else:
@@ -761,10 +745,6 @@ class PaymentExtractStep(Step):
                             self.db_session.query(Employee)
                             .filter_by(tax_identifier=tax_identifier)
                             .one_or_none()
-=======
-                            payment_data.tin,
-                            "employee",
->>>>>>> main
                         )
 
                         if not employee:
