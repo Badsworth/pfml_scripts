@@ -1234,7 +1234,6 @@
 <div class="highlight"><pre><span></span><code><span class="nx">Amplify</span><span class="p">.</span><span class="nx">config</span><span class="p">(</span><span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">myCustomKey</span><span class="p">);</span>
 </code></pre></div>
 <h2 id="how-it-works">How it works</h2>
-<p>We use environment specific NPM scripts in <a href="https://github.com/EOLWD/pfml/tree/main/portal/package.json"><code>portal/package.json</code></a> to bundle builds with the correct configuration. For example <code>build:stage</code>.</p>
 <p>The target environment is set as the <code>BUILD_ENV</code>. For example:</p>
 <div class="highlight"><pre><span></span><code>BUILD_ENV=stage npm run build
 </code></pre></div>
