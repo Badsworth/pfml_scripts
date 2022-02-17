@@ -1,7 +1,6 @@
 /**
  * @file Jest CLI options for unit tests
  * @see https://jestjs.io/docs/en/cli
- * @see https://nextjs.org/docs/advanced-features/compiler#jest
  */
 const nextJest = require("next/jest");
 
@@ -10,10 +9,13 @@ const nextJest = require("next/jest");
 // Alternately, we could set via the CLI: https://github.com/facebook/jest/issues/9856#issuecomment-776532082
 process.env.TZ = "America/New_York";
 
-const createJestConfig = nextJest({ dir: "./" });
+// Base Jest config using the Next.js transformer. Also sets up
+// mocks for stylesheets and image files, and ignores Next.js
+// directories irrelevant to our tests.
+// https://nextjs.org/docs/advanced-features/compiler#jest
+const createNextJestConfig = nextJest({ dir: "./" });
 
-// Any custom config you want to pass to Jest
-const customJestConfig = {
+const extendedConfig = {
   clearMocks: true,
   coveragePathIgnorePatterns: [
     "/node_modules/",
@@ -53,4 +55,20 @@ const customJestConfig = {
   },
 };
 
-module.exports = createJestConfig(customJestConfig);
+/**
+ * Create the final config used for Jest. We can override, rather than append,
+ * the base Next.js config settings here.
+ * @returns {Promise<Object>}
+ */
+async function createConfig() {
+  const config = await createNextJestConfig(extendedConfig)();
+  config.transformIgnorePatterns = config.transformIgnorePatterns.filter(
+    // Next.js sets this to mimic their own behavior, but we actually need our
+    // tests to transform a subset of node_modules, so we remove their setting from here.
+    (pattern) => pattern !== "/node_modules/"
+  );
+
+  return config;
+}
+
+module.exports = createConfig;
