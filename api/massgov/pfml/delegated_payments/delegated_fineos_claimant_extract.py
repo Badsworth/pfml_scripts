@@ -217,18 +217,8 @@ class ClaimantData:
             if requested_absence.orgunit_name:  # skip records with empty org unit name
                 organization_unit_names.append(requested_absence.orgunit_name)
 
-            # If any of the requested absence records are ID proofed, then
-            # we consider the entire claim valid
-            evidence_result_type = requested_absence.leaverequest_evidenceresulttype
-            is_absence_period_id_proofed: Optional[bool]
-
-            if evidence_result_type == "Satisfied":
-                self.is_claim_id_proofed = True
-                is_absence_period_id_proofed = True
-            elif evidence_result_type is not None and evidence_result_type.strip() == "":
-                is_absence_period_id_proofed = None
-            else:
-                is_absence_period_id_proofed = False
+            self.is_claim_id_proofed = True
+            is_absence_period_id_proofed = True
 
             start_date = payments_util.validate_db_input(
                 "ABSENCEPERIOD_START", requested_absence, self.validation_container, True
@@ -367,7 +357,7 @@ class ClaimantData:
 
         # Note this should be identical regardless of absence case
         self.fineos_notification_id = payments_util.validate_db_input(
-            "NOTIFICATION_CASENUMBER", requested_absence, self.validation_container, True
+            "NOTIFICATION_CASENUMBER", requested_absence, self.validation_container, False
         )
         self.claim_type_raw = payments_util.validate_db_input(
             "ABSENCEREASON_COVERAGE", requested_absence, self.validation_container, True
