@@ -19,7 +19,7 @@ from .base import Base, TimestampMixin
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
 
-class FeatureFlagValue(Base, TimestampMixin):
+class FeatureFlagValue(Base, TimestampMixin, AzureUserLogMixin):
     __tablename__ = "feature_flag_value"
     feature_flag_value_id = Column(Integer, primary_key=True, autoincrement=True)
     feature_flag_id = Column(Integer, ForeignKey("lk_feature_flag.feature_flag_id"), nullable=False)
@@ -35,13 +35,6 @@ class FeatureFlagValue(Base, TimestampMixin):
         return self.feature_flag.name
 
 
-class FeatureFlagLog(Base, AzureUserLogMixin, TimestampMixin):
-    __tablename__ = "feature_flag_log"
-    feature_flag_log_id = Column(Integer, primary_key=True, autoincrement=True)
-    feature_flag_value_id = Column(Integer, ForeignKey("feature_flag_value.feature_flag_value_id"))
-    feature_flag_value = relationship("FeatureFlagValue")
-
-
 class LkFeatureFlag(Base):
     __tablename__ = "lk_feature_flag"
     feature_flag_id = Column(Integer, primary_key=True, autoincrement=True)
@@ -50,12 +43,11 @@ class LkFeatureFlag(Base):
 
     values = relationship("FeatureFlagValue")
 
-    def logs(self, limit: Optional[int] = 10) -> Optional[list[FeatureFlagLog]]:
+    def logs(self, limit: Optional[int] = 10) -> Optional[list[FeatureFlagValue]]:
         # Use a query to include limit.
         return (
             object_session(self)
-            .query(FeatureFlagLog)
-            .join(FeatureFlagValue)
+            .query(FeatureFlagValue)
             .filter(FeatureFlagValue.feature_flag_id == self.feature_flag_id)
             .order_by(FeatureFlagValue.updated_at.desc())
             .limit(limit)

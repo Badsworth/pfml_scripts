@@ -6,7 +6,7 @@ from mock import patch
 from massgov.pfml.api.admin import SERVICE_UNAVAILABLE_MESSAGE
 from massgov.pfml.db.models.azure import AzureGroup, AzureGroupPermission, AzurePermission
 from massgov.pfml.db.models.factories import UserFactory
-from massgov.pfml.db.models.flags import FeatureFlag, FeatureFlagLog, FeatureFlagValue
+from massgov.pfml.db.models.flags import FeatureFlag, FeatureFlagValue
 
 FAKE_AUTH_URI_RESPONSE = {
     "auth_uri": "test",
@@ -63,17 +63,12 @@ def test_admin_flag_get_logs_by_name_success(
     feature_flag_value = FeatureFlagValue()
     feature_flag_value.feature_flag = flag
     feature_flag_value.enabled = True
+    feature_flag_value.email_address = azure_token["unique_name"]
+    feature_flag_value.sub_id = azure_token["sub"]
+    feature_flag_value.family_name = azure_token["family_name"]
+    feature_flag_value.given_name = azure_token["given_name"]
+    feature_flag_value.action = "INSERT"
     test_db_session.add(feature_flag_value)
-    test_db_session.flush()
-    log = FeatureFlagLog(
-        feature_flag_value_id=feature_flag_value.feature_flag_value_id,
-        email_address=azure_token["unique_name"],
-        sub_id=azure_token["sub"],
-        family_name=azure_token["family_name"],
-        given_name=azure_token["given_name"],
-        action="INSERT",
-    )
-    test_db_session.add(log)
     test_db_session.commit()
     response = client.get(
         "/v1/admin/flag-logs/maintenance", headers={"Authorization": f"Bearer {encoded}"}
@@ -103,17 +98,12 @@ def test_admin_flag_get_logs_by_name_unauthorized(
     feature_flag_value = FeatureFlagValue()
     feature_flag_value.feature_flag = flag
     feature_flag_value.enabled = True
+    feature_flag_value.email_address = "johndoe@example.com"
+    feature_flag_value.sub_id = azure_token["sub"]
+    feature_flag_value.family_name = "doe"
+    feature_flag_value.given_name = "john"
+    feature_flag_value.action = "INSERT"
     test_db_session.add(feature_flag_value)
-    test_db_session.flush()
-    log = FeatureFlagLog(
-        feature_flag_value_id=feature_flag_value.feature_flag_value_id,
-        email_address="johndoe@example.com",
-        sub_id=azure_token["sub"],
-        family_name="doe",
-        given_name="john",
-        action="INSERT",
-    )
-    test_db_session.add(log)
     test_db_session.commit()
     response = client.get(
         "/v1/admin/flag-logs/maintenance", headers={"Authorization": f"Bearer {encoded}"}
