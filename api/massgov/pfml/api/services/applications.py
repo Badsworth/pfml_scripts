@@ -87,7 +87,10 @@ from massgov.pfml.fineos.transforms.from_fineos.eforms import (
     TransformPreviousLeaveFromOtherLeaveEform,
 )
 from massgov.pfml.util.datetime import utcnow
-from massgov.pfml.util.logging.applications import get_application_log_attributes
+from massgov.pfml.util.logging.applications import (
+    get_absence_period_log_attributes,
+    get_application_log_attributes,
+)
 from massgov.pfml.util.pydantic.types import Regexes
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
@@ -1207,10 +1210,25 @@ def _get_absence_period_from_absence_details(
     if absence_details.absencePeriods is None:
         return None
     absence_period = _get_open_absence_period(absence_details)
-    if absence_period is not None:
-        return absence_period
-    application.completed_time = utcnow()
-    return _get_latest_absence_period(absence_details)
+    if absence_period is None:
+        application.completed_time = utcnow()
+        absence_period = _get_latest_absence_period(absence_details)
+
+    if len(absence_details.absencePeriods) > 1:
+        logger.info(
+            "multiple absence periods found during application import",
+            extra={
+                "application_id": application.application_id,
+                "absence_case_id": (
+                    application.claim.fineos_absence_id if application.claim else None
+                ),
+                "absence_period_attributes": get_absence_period_log_attributes(
+                    absence_details.absencePeriods, absence_period
+                ),
+            },
+        )
+
+    return absence_period
 
 
 def set_application_absence_and_leave_period(

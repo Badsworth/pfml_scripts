@@ -1,6 +1,6 @@
 from collections import defaultdict
 from datetime import datetime
-from typing import DefaultDict, Dict, Iterable, Optional, Union
+from typing import DefaultDict, Dict, Iterable, List, Optional, Union
 
 from massgov.pfml.db.models.applications import (
     Application,
@@ -15,6 +15,8 @@ from massgov.pfml.db.models.applications import (
     PreviousLeaveQualifyingReason,
     ReducedScheduleLeavePeriod,
 )
+from massgov.pfml.db.models.employees import LeaveRequestDecision
+from massgov.pfml.fineos.models.customer_api.spec import AbsencePeriod
 
 
 def get_leave_dates(
@@ -227,5 +229,28 @@ def get_other_incomes_log_attributes(incomes: Iterable[OtherIncome]) -> Dict[str
         assert type_value
         count = income_counts[type_value]
         result[f"application.num_other_income_types.{type_value}"] = str(count)
+
+    return result
+
+
+def get_absence_period_log_attributes(
+    absence_periods: List[AbsencePeriod], imported_period: Optional[AbsencePeriod]
+) -> Dict[str, str]:
+    result = {"num_absence_periods": str(len(absence_periods))}
+    num_pending = 0
+    imported_id = imported_period.id if imported_period else ""
+    for index, absence_period in enumerate(absence_periods):
+        imported = "imported_" if absence_period.id == imported_id else ""
+        result[f"{imported}absence_period_{index}_request_status"] = str(
+            absence_period.requestStatus
+        )
+        result[f"{imported}absence_period_{index}_reason"] = str(absence_period.reason)
+        # Count the number of pending leave request decision statuses.
+        if (
+            absence_period.requestStatus
+            == LeaveRequestDecision.PENDING.leave_request_decision_description
+        ):
+            num_pending += 1
+    result["num_pending_leave_request_decision_status"] = str(num_pending)
 
     return result
