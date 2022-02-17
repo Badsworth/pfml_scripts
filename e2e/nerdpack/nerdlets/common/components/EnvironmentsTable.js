@@ -44,12 +44,17 @@ function RunIndicators({ runs, env, link, simpleView = false }) {
 }
 
 function EnvComponentVersions({ componentVersions, env }) {
-  {
-    return COMPONENTS.map((component) => {
-      if (componentVersions[component]) {
+  return (
+    <>
+      {COMPONENTS.map((component) => {
+        const versionInfo = componentVersions[component];
+        if (!versionInfo) {
+          return <></>;
+        }
+
         return (
-          <td className={"versions"}>
-            <div className={"version"}>
+          <td className="versions">
+            <div className="version">
               <Link
                 to={navigation.getOpenStackedNerdletLocation({
                   id: "deployments",
@@ -59,19 +64,21 @@ function EnvComponentVersions({ componentVersions, env }) {
                   },
                 })}
               >
-                {componentVersions[component].status}
+                {versionInfo[DAOEnvironmentComponentVersion.VERSION_ALIAS]}
               </Link>
               <span>
-                {componentVersions[component]?.timestamp
-                  ? dateFormat(componentVersions[component].timestamp, "PPPp")
-                  : ""}
+                {versionInfo[DAOEnvironmentComponentVersion.TIMESTAMP_ALIAS] &&
+                  dateFormat(
+                    versionInfo[DAOEnvironmentComponentVersion.TIMESTAMP_ALIAS],
+                    "PPPp"
+                  )}
               </span>
             </div>
           </td>
         );
-      }
-    });
-  }
+      })}
+    </>
+  );
 }
 
 export class EnvironmentsTable extends React.Component {
@@ -97,10 +104,6 @@ export class EnvironmentsTable extends React.Component {
     super(props);
     this.accountId = props.accountId;
   }
-
-  toggleShow = () => {
-    this.setState((state) => ({ open: !state.open }));
-  };
 
   render() {
     if (this.state.envs.length === 0) {
@@ -133,7 +136,7 @@ export class EnvironmentsTable extends React.Component {
 
           const byEnv = {};
           const envVersions = chartData.pop();
-          this.state.envs.map((env, i) => {
+          this.state.envs.forEach((env, i) => {
             if (!byEnv[env]) {
               byEnv[env] = [];
             }
