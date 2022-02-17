@@ -52,7 +52,9 @@ data "aws_iam_policy_document" "allow_admin_groups_access_policy" {
     principals {
       type = "AWS"
       identifiers = concat(
-      module.constants.prod_admin_roles, module.constants.ecs_taks_execution_roles)
+        module.constants.prod_admin_roles, 
+        [for i in local.environments : "arn:aws:iam::498823821309:role/pfml-api-${i}-ecs-tasks-execution-role"]
+      )
     }
   }
 }
