@@ -24,8 +24,6 @@ Amplify.config(process.env.myCustomKey);
 
 ## How it works
 
-We use environment specific NPM scripts in [`portal/package.json`](../../portal/package.json) to bundle builds with the correct configuration. For example `build:stage`.
-
 The target environment is set as the `BUILD_ENV`. For example:
 
 ```

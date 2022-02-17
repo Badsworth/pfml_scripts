@@ -1912,11 +1912,17 @@ def test_e2e_pub_payments(
         )
 
         # == Writeback
-        stage_3_errored_writeback_scenarios = [
+        stage_3_errored_writeback_scenarios_ach = [
             ScenarioName.PUB_ACH_FAMILY_RETURN,
             ScenarioName.PUB_ACH_MEDICAL_RETURN,
+        ]
+        stage_3_errored_writeback_scenarios_check_void = [
             ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
+        ]
+        stage_3_errored_writeback_scenarios_check_stale = [
             ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
+        ]
+        stage_3_errored_writeback_scenarios_check_stop = [
             ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
         ]
         stage_3_successful_writeback_scenarios = [
@@ -1928,7 +1934,11 @@ def test_e2e_pub_payments(
         ]
 
         stage_3_all_writeback_scenarios = (
-            stage_3_errored_writeback_scenarios + stage_3_successful_writeback_scenarios
+            stage_3_errored_writeback_scenarios_ach
+            + stage_3_errored_writeback_scenarios_check_void
+            + stage_3_errored_writeback_scenarios_check_stale
+            + stage_3_errored_writeback_scenarios_check_stop
+            + stage_3_successful_writeback_scenarios
         )
 
         assert_writeback_for_stage(
@@ -2108,7 +2118,16 @@ def test_e2e_pub_payments(
                 "successful_writeback_record_count": len(stage_3_all_writeback_scenarios),
                 "writeback_record_count": len(stage_3_all_writeback_scenarios),
                 "bank_processing_error_writeback_transaction_status_count": len(
-                    stage_3_errored_writeback_scenarios
+                    stage_3_errored_writeback_scenarios_ach
+                ),
+                "pub_check_stale_writeback_transaction_status_count": len(
+                    stage_3_errored_writeback_scenarios_check_stale
+                ),
+                "pub_check_undeliverable_writeback_transaction_status_count": len(
+                    stage_3_errored_writeback_scenarios_check_stop
+                ),
+                "pub_check_voided_writeback_transaction_status_count": len(
+                    stage_3_errored_writeback_scenarios_check_void
                 ),
                 "posted_writeback_transaction_status_count": len(
                     stage_3_successful_writeback_scenarios
