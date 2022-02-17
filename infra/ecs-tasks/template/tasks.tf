@@ -485,6 +485,13 @@ locals {
       ]
     },
 
+    "backfill-benefit-years" = {
+      command   = ["backfill-benefit-years"]
+      task_role = null
+      env = [
+        local.db_access
+      ]
+    },
   }
 }
 
