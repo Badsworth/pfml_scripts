@@ -7,13 +7,6 @@ from massgov.pfml.util.pydantic import PydanticBaseModel
 from massgov.pfml.util.pydantic.types import TaxIdUnformattedStr
 
 
-class EmployeeUpdateRequest(PydanticBaseModel):
-    first_name: Optional[str]
-    middle_name: Optional[str]
-    last_name: Optional[str]
-    email_address: Optional[str]
-
-
 class EmployeeSearchTerms(PydanticBaseModel):
     first_name: Optional[str]
     last_name: Optional[str]

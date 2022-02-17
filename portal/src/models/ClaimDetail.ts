@@ -81,6 +81,18 @@ class ClaimDetail {
     );
   }
 
+  get hasInReviewStatus() {
+    return this.absence_periods.some(
+      (absenceItem) => absenceItem.request_decision === "In Review"
+    );
+  }
+
+  get hasProjectedStatus() {
+    return this.absence_periods.some(
+      (absenceItem) => absenceItem.request_decision === "Projected"
+    );
+  }
+
   get hasPendingStatus() {
     return this.absence_periods.some(
       (absenceItem) => absenceItem.request_decision === "Pending"

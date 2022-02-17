@@ -717,6 +717,7 @@ class PaymentExtractStep(Step):
             # If the employee is required and should be validated, do so
             # Otherwise, we know we aren't going to find an employee, so don't look
             if payment_data.is_employee_required:
+<<<<<<< HEAD
                 if (
                     payment_data.is_employer_reimbursement
                     and payment_data.is_employer_reimbursement_enabled
@@ -728,6 +729,20 @@ class PaymentExtractStep(Step):
                             f"claim: {payment_data.absence_case_number}",
                         )
                     employee = claim.employee if claim is not None else None
+=======
+                tax_identifier = (
+                    self.db_session.query(TaxIdentifier)
+                    .filter_by(tax_identifier=payment_data.tin)
+                    .one_or_none()
+                )
+                if not tax_identifier:
+                    self.increment(self.Metrics.TAX_IDENTIFIER_MISSING_IN_DB_COUNT)
+                    payment_data.validation_container.add_validation_issue(
+                        payments_util.ValidationReason.MISSING_IN_DB,
+                        payment_data.tin,
+                        "tax_identifier",
+                    )
+>>>>>>> main
                 else:
                     tax_identifier = (
                         self.db_session.query(TaxIdentifier)
@@ -738,6 +753,7 @@ class PaymentExtractStep(Step):
                         self.increment(self.Metrics.TAX_IDENTIFIER_MISSING_IN_DB_COUNT)
                         payment_data.validation_container.add_validation_issue(
                             payments_util.ValidationReason.MISSING_IN_DB,
+<<<<<<< HEAD
                             f"tax_identifier: {payment_data.tin}",
                         )
                     else:
@@ -745,6 +761,10 @@ class PaymentExtractStep(Step):
                             self.db_session.query(Employee)
                             .filter_by(tax_identifier=tax_identifier)
                             .one_or_none()
+=======
+                            payment_data.tin,
+                            "employee",
+>>>>>>> main
                         )
 
                         if not employee:
@@ -768,7 +788,8 @@ class PaymentExtractStep(Step):
         if not claim and payment_data.is_standard_payment:
             payment_data.validation_container.add_validation_issue(
                 payments_util.ValidationReason.MISSING_IN_DB,
-                f"claim: {payment_data.absence_case_number}",
+                payment_data.absence_case_number,
+                "claim",
             )
             self.increment(self.Metrics.CLAIM_NOT_FOUND_COUNT)
             return None, None
@@ -1269,14 +1290,27 @@ class PaymentExtractStep(Step):
         )
         extra = payments_util.get_traceable_payment_details(payment, end_state)
         extra["is_for_standard_payment"] = payment_data.is_employee_required
+
+        # Keep track of stale payments
+        earliest_matching_payment = payments_util.get_earliest_matching_payment(
+            self.db_session, payment_data.c_value, payment_data.i_value
+        )
+        if earliest_matching_payment:
+            extra["days_since_payment_first_seen"] = (
+                datetime.utcnow().date() - earliest_matching_payment.created_at.date()
+            ).days + 1
+            extra["day_payment_first_seen"] = str(earliest_matching_payment.created_at.date())
+
         logger.info(
             "After consuming extracts and performing initial validation, payment added to state",
             extra=extra,
         )
         # For the payments that failed validation, log their reason codes
-        # so that we can collect metrics on the most common error types
-        for reason in payment_data.validation_container.get_reasons():
-            extra["validation_reason"] = str(reason)  # Replaced each iteration
+        # and field names so that we can collect metrics on the most common error types
+        for reason, field_name in payment_data.validation_container.get_reasons_with_field_names():
+            # Replaced each iteration
+            extra["validation_reason"] = str(reason)
+            extra["field_name"] = field_name
             logger.info("Payment failed validation", extra=extra)
 
     def _manage_pei_writeback_state(

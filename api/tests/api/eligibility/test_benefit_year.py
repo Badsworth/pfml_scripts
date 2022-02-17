@@ -9,7 +9,7 @@ from werkzeug.exceptions import NotFound
 
 from massgov.pfml import db
 from massgov.pfml.api.eligibility.benefit_year import (
-    AbsenceStatusesWithBenefitYear,
+    ABSENCE_STATUSES_WITH_BENEFIT_YEAR,
     CreateBenefitYearContribution,
     _get_earliest_claim_in_benefit_year,
     create_benefit_year_by_employee_id,
@@ -133,7 +133,7 @@ def include_employee_benefit_years(
         .join(TaxIdentifier, Employee.tax_identifier_id == TaxIdentifier.tax_identifier_id)
         .filter(
             TaxIdentifier.tax_identifier == include_employee.tax_identifier.tax_identifier,
-            Claim.fineos_absence_status_id.in_(AbsenceStatusesWithBenefitYear),
+            Claim.fineos_absence_status_id.in_(ABSENCE_STATUSES_WITH_BENEFIT_YEAR),
         )
         .order_by(Claim.absence_period_start_date)
         .all()

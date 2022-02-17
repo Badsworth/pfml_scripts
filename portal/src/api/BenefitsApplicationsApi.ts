@@ -55,7 +55,10 @@ export default class BenefitsApplicationsApi extends BaseApi {
     const { data } = await this.request<BenefitsApplication>(
       "POST",
       "import",
-      postData
+      postData,
+      {
+        i18nPrefix: "applicationImport",
+      }
     );
 
     return {

@@ -8,3 +8,8 @@ variable "runtime_py" {
   type        = string
   default     = "python3.9"
 }
+
+variable "redshift_daily_import_bucket_key" {
+  description = "KMS Keys for Redshift Daily Import Bucket"
+  type        = string
+}

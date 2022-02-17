@@ -26,6 +26,31 @@ const chars: { [key: string]: string } = {
 // since the format of these mirror the field path, which could possibly be more
 // than three levels deep (e.g `errors.claim.leave_details.start_date.required`).
 const errors = {
+  applicationImport: {
+    absence_case_id: {
+      duplicate: "You already have access.",
+      exists:
+        "This application cannot be added. You will need to call the Contact Center at $t(shared.contactCenterPhoneNumberNoBreak) to work on your application or get status updates.",
+      required: "Application ID is required.",
+    },
+    conflicting: "$t(shared.applicationImportError_noMatch)",
+    employment_status: {
+      invalid: "$t(shared.applicationImportError_unsupported)",
+    },
+    incorrect: "$t(shared.applicationImportError_noMatch)",
+    leave_details: {
+      reason: {
+        invalid: "$t(shared.applicationImportError_unsupported)",
+      },
+    },
+    mfa_delivery_preference: {
+      required: "Your login is not verified.",
+    },
+    tax_identifier: {
+      required: "Social Security Number is required.",
+      pattern: "Your Social Security Number or ITIN must be 9 digits.",
+    },
+  },
   applications: {
     claim: {
       exists:
@@ -744,6 +769,10 @@ const shared: {
   amountPerFrequency_monthly: "{{amount, currency}} per month",
   amountPerFrequency_unknown: "{{amount, currency}} (frequency unknown)",
   amountPerFrequency_weekly: "{{amount, currency}} per week",
+  applicationImportError_noMatch:
+    "No match found. Applications started on the phone with a Contact Center agent can take up to 24 hours to appear in our online system. Check back again. If you’re still unable to find your application, call the Contact Center at $t(shared.contactCenterPhoneNumberNoBreak).",
+  applicationImportError_unsupported:
+    "This application cannot be added at this time. If you are applying for military-related paid family leave benefits, or you are currently self-employed or unemployed, your application cannot be managed by this website. You will need to call the Contact Center at $t(shared.contactCenterPhoneNumberNoBreak) to work on your application or get status updates.",
   auth: {
     emailError_exists: "An account with the given email already exists",
     emailError_required: "Enter your email address",

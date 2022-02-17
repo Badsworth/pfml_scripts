@@ -9,9 +9,9 @@ from werkzeug.exceptions import Forbidden
 import massgov.pfml.api.app as app
 import massgov.pfml.api.util.response as response_util
 import massgov.pfml.util.logging
-from massgov.pfml.api.authorization.flask import EDIT, READ, ensure
+from massgov.pfml.api.authorization.flask import READ, ensure
 from massgov.pfml.api.models.common import OrderDirection
-from massgov.pfml.api.models.employees.requests import EmployeeSearchRequest, EmployeeUpdateRequest
+from massgov.pfml.api.models.employees.requests import EmployeeSearchRequest
 from massgov.pfml.api.models.employees.responses import EmployeeForPfmlCrmResponse, EmployeeResponse
 from massgov.pfml.db.models.employees import Employee, Role, TaxIdentifier
 from massgov.pfml.util.paginate.paginator import PaginationAPIContext, page_for_api_context
@@ -33,23 +33,6 @@ def employees_get(employee_id):
 
     return response_util.success_response(
         message="Successfully retrieved employee", data=response_type.from_orm(employee).dict(),
-    ).to_api_response()
-
-
-def employees_patch(employee_id):
-    """This endpoint updates an Employee record"""
-    request = EmployeeUpdateRequest.parse_obj(connexion.request.json)
-
-    with app.db_session() as db_session:
-        updated_employee = get_or_404(db_session, Employee, employee_id)
-        ensure(EDIT, updated_employee)
-        for key in request.__fields_set__:
-            value = getattr(request, key)
-            setattr(updated_employee, key, value)
-
-    return response_util.success_response(
-        message="Successfully updated employee",
-        data=EmployeeResponse.from_orm(updated_employee).dict(),
     ).to_api_response()
 
 

@@ -178,6 +178,13 @@ function Mask(props: MaskProps) {
     dispatchChange(maskedValue, event);
   };
 
+  let autoComplete;
+  if (field.props.autoComplete) {
+    autoComplete = field.props.autoComplete;
+  } else if (props.mask === "phone") {
+    autoComplete = "tel-national";
+  }
+
   const modifiedInputText = React.cloneElement(field, {
     defaultValue: undefined,
     inputMode:
@@ -185,6 +192,7 @@ function Mask(props: MaskProps) {
         ? "decimal"
         : "numeric",
     type: props.mask === "phone" ? "tel" : "text",
+    autoComplete,
     value: field.props.value,
     onBlur: handleBlur,
     onChange: field.props.onChange,

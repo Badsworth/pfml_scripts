@@ -1,6 +1,5 @@
 import abc
 from contextlib import contextmanager
-from dataclasses import asdict
 from datetime import datetime, timedelta
 from enum import Enum
 from typing import Any, Dict, Generator, List, Optional, Union
@@ -595,7 +594,7 @@ def build_outcome(
 
     # Only add a validation container if it had any issues (otherwise leave that empty)
     if validation_container and validation_container.has_validation_issues():
-        outcome["validation_container"] = asdict(validation_container)
+        outcome["validation_container"] = validation_container.to_dict()
 
     outcome.update(extra_attributes)
     return outcome
