@@ -657,18 +657,16 @@ def test_create_or_update_claim_invalid_values(claimant_extract_step):
     claimant_data = make_claimant_data_from_fineos_data(fineos_data)
 
     # The number of required fields we pull out of the requested absence file
-    assert len(set(claimant_data.validation_container.validation_issues)) == 14
+    assert len(set(claimant_data.validation_container.validation_issues)) == 13
 
     # The claim will be created, but with just an absence case number
     claim = claimant_extract_step.create_or_update_claim(claimant_data)
     assert claim is not None
     # New claim not yet persisted to DB
-    assert claim.fineos_notification_id is None
     assert claim.fineos_absence_id == "NTN-001-ABS-01"
     assert claim.fineos_absence_status_id is None
     assert claim.absence_period_start_date is None
     assert claim.absence_period_end_date is None
-    assert not claim.is_id_proofed
 
 
 def test_create_or_update_absence_period_happy_path(claimant_extract_step, test_db_session):
