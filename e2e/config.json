@@ -212,7 +212,7 @@
     "HAS_FINEOS_JANUARY_RELEASE": "true",
     "HAS_LARGE_FILE_COMPRESSION": "false",
     "HAS_EMPLOYER_REIMBURSEMENTS": "false",
-    "HAS_FEB_RELEASE": "false",
+    "HAS_FEB_RELEASE": "true",
     "MFA_ENABLED": "true",
     "S3_INTELLIGENCE_TOOL_BUCKET": "massgov-pfml-breakfix-business-intelligence-tool",
     "TWILIO_NUMBERS": "8063045688,7752564489"
