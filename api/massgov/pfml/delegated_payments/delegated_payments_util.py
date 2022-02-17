@@ -49,6 +49,7 @@ from massgov.pfml.db.models.payments import (
 )
 from massgov.pfml.db.models.state import LkState, State
 from massgov.pfml.util.collections.dict import filter_dict, make_keys_lowercase
+from massgov.pfml.util.compare import compare_attributes
 from massgov.pfml.util.converters.str_to_numeric import str_to_int
 from massgov.pfml.util.datetime import get_now_us_eastern
 from massgov.pfml.util.routing_number_validation import validate_routing_number
@@ -647,52 +648,6 @@ def amount_validator(amount_str: str) -> Optional[ValidationReason]:
     return None
 
 
-def validate_csv_input(
-    key: str,
-    data: Dict[str, str],
-    errors: ValidationContainer,
-    required: Optional[bool] = False,
-    min_length: Optional[int] = None,
-    max_length: Optional[int] = None,
-    custom_validator_func: Optional[Callable[[str], Optional[ValidationReason]]] = None,
-) -> Optional[str]:
-    value = data.get(key)
-    if value == "Unknown":
-        value = None  # Effectively treating "" and "Unknown" the same
-
-    if required and not value:
-        errors.add_validation_issue(ValidationReason.MISSING_FIELD, key)
-        return None
-
-    validation_issues = []
-    # Check the length only if it is defined/not empty
-    if value:
-        if min_length and len(value) < min_length:
-            validation_issues.append(ValidationReason.FIELD_TOO_SHORT)
-        if max_length and len(value) > max_length:
-            validation_issues.append(ValidationReason.FIELD_TOO_LONG)
-
-        # Also only bother with custom validation if the value exists
-        if custom_validator_func:
-            reason = custom_validator_func(value)
-            if reason:
-                validation_issues.append(reason)
-
-    if required:
-
-        for validation_issue in validation_issues:
-            # Any non-missing error types add the value to the error details
-            # Note that this means these reports will contain PII data
-            errors.add_validation_issue(validation_issue, f"{key}: {value}")
-
-    # If any of the specific validations hit an error, don't return the value
-    # This is true even if the field is not required as we may still use the field.
-    if len(validation_issues) > 0:
-        return None
-
-    return value
-
-
 def validate_db_input(
     key: str,
     data: Any,
@@ -1034,31 +989,14 @@ def group_s3_files_by_date(expected_file_names: List[str]) -> Dict[str, List[str
     return date_to_full_path
 
 
-def compare_address_fields(first: Address, second: Address, field: str) -> bool:
-    value1 = getattr(first, field)
-    value2 = getattr(second, field)
-
-    if type(value1) is str:
-        value1 = value1.strip().lower()
-    if type(value2) is str:
-        value2 = value2.strip().lower()
-
-    if value1 is None:
-        value1 = ""
-    if value2 is None:
-        value2 = ""
-
-    return value1 == value2
-
-
 def is_same_address(first: Address, second: Address) -> bool:
     if (
-        compare_address_fields(first, second, "address_line_one")
-        and compare_address_fields(first, second, "city")
-        and compare_address_fields(first, second, "zip_code")
-        and compare_address_fields(first, second, "geo_state_id")
-        and compare_address_fields(first, second, "country_id")
-        and compare_address_fields(first, second, "address_line_two")
+        compare_attributes(first, second, "address_line_one")
+        and compare_attributes(first, second, "city")
+        and compare_attributes(first, second, "zip_code")
+        and compare_attributes(first, second, "geo_state_id")
+        and compare_attributes(first, second, "country_id")
+        and compare_attributes(first, second, "address_line_two")
     ):
         return True
     else:
