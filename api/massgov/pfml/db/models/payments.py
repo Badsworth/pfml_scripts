@@ -1046,12 +1046,25 @@ class FineosWritebackTransactionStatus(LookupTable):
     NAME_MISMATCH = LkFineosWritebackTransactionStatus(
         23, "InvalidPayment NameMismatch", ACTIVE_WRITEBACK_RECORD_STATUS
     )
+
     WITHHOLDING_ERROR = LkFineosWritebackTransactionStatus(
         24, "PrimaryPayment ProcessingErr", ACTIVE_WRITEBACK_RECORD_STATUS
     )
 
     PAYMENT_AUDIT_IN_PROGRESS = LkFineosWritebackTransactionStatus(
         25, "Payment Audit In Progress", PENDING_ACTIVE_WRITEBACK_RECORD_STATUS
+    )
+
+    VOID_CHECK = LkFineosWritebackTransactionStatus(
+        26, "PUB Check Voided", ACTIVE_WRITEBACK_RECORD_STATUS
+    )
+
+    STOP_CHECK = LkFineosWritebackTransactionStatus(
+        27, "PUB Check Undeliverable", ACTIVE_WRITEBACK_RECORD_STATUS
+    )
+
+    STALE_CHECK = LkFineosWritebackTransactionStatus(
+        28, "PUB Check Stale", ACTIVE_WRITEBACK_RECORD_STATUS
     )
 
 
