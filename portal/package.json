@@ -54,7 +54,7 @@
     "dayjs-business-time": "^1.0.4",
     "downloadjs": "^1.4.7",
     "i18next": "^20.2.2",
-    "js-cookie": "^2.2.1",
+    "js-cookie": "^3.0.0",
     "lodash": "^4.17.21",
     "mockdate": "^3.0.5",
     "postcss": "^8.2.2",
