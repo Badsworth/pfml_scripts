@@ -759,7 +759,6 @@ def test_create_or_update_absence_period_happy_path(claimant_extract_step, test_
     assert absence_period.claim_id == claim.claim_id
     assert absence_period.fineos_absence_period_class_id == 1448
     assert absence_period.fineos_absence_period_index_id == 1
-    assert absence_period.is_id_proofed is False
     assert absence_period.absence_period_start_date == datetime.date(2021, 3, 7)
     assert absence_period.absence_period_end_date == datetime.date(2021, 12, 11)
     assert absence_period.fineos_leave_request_id == 2
@@ -796,7 +795,7 @@ def test_create_or_update_absence_period_invalid_values(claimant_extract_step, t
     claimant_data = make_claimant_data_from_fineos_data(fineos_data)
 
     # The number of required fields we pull out of the requested absence file
-    assert len(set(claimant_data.validation_container.validation_issues)) == 12
+    assert len(set(claimant_data.validation_container.validation_issues)) == 11
 
     # The claim will be created, but with just an absence case number
     absence_period_data = claimant_data.absence_period_data
@@ -815,7 +814,6 @@ def test_create_or_update_absence_period_invalid_values(claimant_extract_step, t
     assert absence_period.claim_id == claim.claim_id
     assert absence_period.fineos_absence_period_class_id == 1010
     assert absence_period.fineos_absence_period_index_id == 201
-    assert absence_period.is_id_proofed is None
     assert absence_period.absence_period_start_date is None
     assert absence_period.absence_period_end_date is None
     assert absence_period.fineos_leave_request_id is None
@@ -934,7 +932,6 @@ def test_create_or_update_absence_period_with_duplicated_rows_but_different_id_p
     assert absence_period.claim_id == claim.claim_id
     assert absence_period.fineos_absence_period_class_id == 1448
     assert absence_period.fineos_absence_period_index_id == 1
-    assert absence_period.is_id_proofed is None
     assert absence_period.absence_period_start_date == datetime.date(2021, 2, 14)
     assert absence_period.absence_period_end_date == datetime.date(2021, 2, 28)
     assert absence_period.fineos_leave_request_id == 5
@@ -1214,12 +1211,10 @@ def test_run_step_minimal_viable_claim(
     assert claim
     assert claim.fineos_absence_id == fineos_data.absence_case_number
     assert claim.employee_id is None
-    assert claim.fineos_notification_id is None
     assert claim.claim_type_id is None
     assert claim.fineos_absence_status_id is None
     assert claim.absence_period_start_date is None
     assert claim.absence_period_end_date is None
-    assert claim.is_id_proofed is False
     assert claim.organization_unit_id is None
 
     # Verify the state logs and outcome
@@ -1240,50 +1235,11 @@ def test_run_step_minimal_viable_claim(
         {"reason": "MissingField", "details": "ABSENCEREASON_QUALIFIER1"},
         {"reason": "MissingField", "details": "ABSENCEREASON_NAME"},
         {"reason": "MissingField", "details": "LEAVEREQUEST_DECISION"},
-        {"reason": "MissingField", "details": "NOTIFICATION_CASENUMBER"},
         {"reason": "MissingField", "details": "ABSENCEREASON_COVERAGE"},
         {"reason": "MissingField", "details": "ABSENCE_CASESTATUS"},
         {"reason": "MissingField", "details": "EMPLOYEE_CUSTOMERNO"},
         {"reason": "MissingField", "details": "EMPLOYER_CUSTOMERNO"},
-        {
-            "reason": "ClaimNotIdProofed",
-            "details": "Claim has not been ID proofed, LEAVEREQUEST_EVIDENCERESULTTYPE is not Satisfied",
-        },
     ]
-
-
-def test_run_step_not_id_proofed(
-    claimant_extract_step, test_db_session,
-):
-    fineos_data = FineosPaymentData(leave_request_evidence="Rejected")
-
-    add_db_records_from_fineos_data(test_db_session, fineos_data)
-    stage_data([fineos_data], test_db_session)
-
-    # Run the process
-    claimant_extract_step.run_step()
-
-    # Validate the claim was created properly
-    claim = test_db_session.query(Claim).one_or_none()
-    assert claim
-    assert claim.fineos_absence_id == fineos_data.absence_case_number
-    assert claim.employee_id is not None
-    assert claim.fineos_notification_id == fineos_data.notification_number
-    assert (
-        claim.claim_type_id
-        == payments_util.get_mapped_claim_type(fineos_data.claim_type).claim_type_id
-    )
-    assert claim.fineos_absence_status_id == AbsenceStatus.get_id(fineos_data.absence_case_status)
-    assert claim.absence_period_start_date is not None
-    assert claim.absence_period_end_date is not None
-    assert not claim.is_id_proofed
-
-    # Verify the state logs
-    assert len(claim.state_logs) == 1
-    state_log = claim.state_logs[0]
-    assert (
-        state_log.end_state_id == State.DELEGATED_CLAIM_ADD_TO_CLAIM_EXTRACT_ERROR_REPORT.state_id
-    )
 
 
 def test_run_step_no_default_payment_pref(
