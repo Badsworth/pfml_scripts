@@ -319,7 +319,7 @@ jobs:
         run: npm ci --prefix portal
 
       - name: Build
-        run: npm run build:${{ needs.deploy-info.outputs.portal-env }} --prefix portal
+        run: BUILD_ENV=${{ needs.deploy-info.outputs.portal-env }} npm run build --prefix portal
 
       - name: Sync S3 Bucket
         env:
