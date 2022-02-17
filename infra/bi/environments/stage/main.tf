@@ -22,5 +22,6 @@ terraform {
 module "pfml" {
   source = "../../template"
 
-  environment_name = "stage"
-}                                     
+  environment_name                 = "stage"
+  redshift_daily_import_bucket_key = "c83f6468-f34d-44e6-93d3-24690aca4b5a"
+}
