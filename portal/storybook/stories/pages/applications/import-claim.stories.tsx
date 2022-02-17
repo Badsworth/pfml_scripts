@@ -40,6 +40,9 @@ export const Page = (args: {
   });
 
   const appLogic = useMockableAppLogic({
+    auth: {
+      isPhoneVerified: () => Promise.resolve(args.MFA === "SMS verified"),
+    },
     portalFlow: {
       pathname: routes.applications.importClaim,
     },

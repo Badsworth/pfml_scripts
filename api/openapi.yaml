@@ -275,7 +275,7 @@ paths:
           agent-id: []
       tags:
         - Employees
-      summary: Lookup an Employee by SSN/ITIN and name
+      summary: Lookup Employees
       operationId: massgov.pfml.api.employees.employees_search
       responses:
         "200":
@@ -287,7 +287,7 @@ paths:
                   - $ref: "#/components/schemas/SuccessfulResponse"
                   - properties:
                       data:
-                        $ref: "#/components/schemas/EmployeeResponse"
+                        $ref: "#/components/schemas/EmployeesResponse"
         "404":
           $ref: "#/components/responses/NotFound"
       requestBody:
@@ -452,6 +452,12 @@ paths:
             when provided, is used in a fuzzy search against the claims'
             Absence Case IDs, in addition to the employees' first, middle, and last names.
             When the string is empty, it is ignored.
+          required: false
+        - name: "allow_hrd"
+          in: query
+          schema:
+            type: boolean
+          description: A temporary boolean value used to allow smoke testers to see HRD dashboard
           required: false
         - name: "is_reviewable"
           in: query
@@ -1188,6 +1194,7 @@ paths:
       summary: >
         Returns all benefit years for the employee_id in the request; if no employee_id is present
         returns all benefit years for the current user.
+      operationId: massgov.pfml.api.eligibility.handler.benefit_years_search
       responses:
         '200':
           description: A successful response returns a 200 status code and the benefit years
@@ -2066,19 +2073,15 @@ components:
     EmployeeSearchRequest:
       type: object
       properties:
-        first_name:
-          type: string
-          example: "Jane"
-        middle_name:
-          type: string
-          example: "Alice"
-        last_name:
-          type: string
-          example: "Doe"
-        tax_identifier_last4:
-          type: string
-          example: "1234"
-      required: ["first_name", "last_name", "tax_identifier_last4"]
+        terms:
+          $ref: "#/components/schemas/EmployeeSearchRequestTermsMetadata"
+        order:
+          $ref: "#/components/schemas/EmployeeSearchRequestOrderMetadata"
+          nullable: true
+        paging:
+          $ref: "#/components/schemas/EmployeeSearchRequestPagingMetadata"
+          nullable: true
+      required: ["terms"]
 
     EmployeeErrorResponse:
       type: object
@@ -2131,6 +2134,8 @@ components:
         date_of_birth:
           nullable: true
           $ref: "#/components/schemas/MaskedDate"
+        created_at:
+          format: date
       required: ["employee_id"]
 
     EmployeeBasicResponse:
@@ -2140,6 +2145,10 @@ components:
           type: string
           format: uuid
           example: "009fa369-291b-403f-a85a-15e938c26a7b"
+        fineos_customer_number:
+          type: string
+          nullable: true
+          example: "1111111"
         first_name:
           type: string
           example: "Jane"
@@ -2293,6 +2302,8 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/ManagedRequirementResponse"
+        computed_start_dates:
+          $ref: "#/components/schemas/ComputedStartDates"
       additionalProperties: false
       required:
         - employer_benefits
@@ -2981,6 +2992,11 @@ components:
       items:
         $ref: "#/components/schemas/ClaimResponse"
 
+    EmployeesResponse:
+      type: array
+      items:
+        $ref: "#/components/schemas/EmployeeResponse"
+
     PaymentsResponse:
       type: object
       properties:
@@ -3588,12 +3604,6 @@ components:
             - Rotating
             - Variable
           nullable: true
-        work_week_starts:
-          $ref: "#/components/schemas/DayOfWeek"
-          nullable: true
-        pattern_start_date:
-          $ref: "#/components/schemas/Date"
-          nullable: true
         work_pattern_days:
           type: array
           maxItems: 7
@@ -3939,6 +3949,11 @@ components:
       example: "***-**-1234"
       pattern: '^\*{3}-\*{2}-\d{4}$'
 
+    NonMaskedSsnItin:
+      type: string
+      example: "000-00-0000"
+      pattern: '^\d{3}-\d{2}-\d{4}$'
+
     Fein:
       type: string
       example: "00-0000000"
@@ -3992,6 +4007,11 @@ components:
           type: string
           example: "224-705-2345"
           pattern: '^([0-9]|\*){3}\-([0-9]|\*){3}\-[0-9]{4}$'
+          nullable: true
+        e164:
+          type: string
+          example: "+12247052345"
+          pattern: '^\+?[1-9]\d{1,14}$'
           nullable: true
         phone_type:
           type: string
@@ -4062,3 +4082,78 @@ components:
         current:
           type: boolean
           example: false
+
+    EmployeeSearchRequestTermsMetadata:
+      type: object
+      properties:
+        first_name:
+          type: string
+          example: "Jane"
+          description: |
+            If `first_name` is present, `last_name` must be present as well.
+
+            This will be a case-insensitive, fuzzy match against first names on
+            record.
+          nullable: true
+          minLength: 3
+        last_name:
+          type: string
+          example: "Doe"
+          description: |
+            If `last_name` is present, `first_name` must be present as well.
+
+            This will be a case-insensitive, fuzzy match against last names on
+            record.
+          nullable: true
+          minLength: 3
+        email_address:
+          type: string
+          format: email
+          example: "j.a.doe@gmail.com"
+          nullable: true
+          minLength: 3
+        phone_number:
+          type: string
+          example: "+12247052345"
+          description: |
+            A phone number in E.164 format.
+          pattern: '^\+?[1-9]\d{1,14}$'
+          nullable: true
+        tax_identifier:
+          $ref: "#/components/schemas/NonMaskedSsnItin"
+          nullable: true
+        fineos_customer_number:
+          type: string
+          example: "111111"
+          nullable: true
+
+    EmployeeSearchRequestOrderMetadata:
+      type: object
+      properties:
+        by:
+          type: string
+          default: "created_at"
+          nullable: true
+          enum: ["created_at"]
+        direction:
+          type: string
+          example: "ascending"
+          default: "descending"
+          enum:
+            - ascending
+            - descending
+          nullable: true
+
+    EmployeeSearchRequestPagingMetadata:
+      type: object
+      properties:
+        offset:
+          type: integer
+          example: 1
+          default: 1
+          nullable: true
+        size:
+          type: integer
+          default: 25
+          example: 10
+          nullable: true

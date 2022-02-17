@@ -1,61 +1,66 @@
 import math
-from enum import Enum
-from typing import Any, List
+from typing import Any, List, Union
 
 import flask
 from sqlalchemy import func
 from sqlalchemy.orm import Query
 from werkzeug.exceptions import BadRequest
 
+from massgov.pfml.api.models.common import OrderData, OrderDirection, PagingData, SearchEnvelope
 from massgov.pfml.db.models.base import Base
 
 DEFAULT_PAGE_OFFSET = 1
 DEFAULT_PAGE_SIZE = 25
 
 
-class OrderDirection(str, Enum):
-    asc = "ascending"
-    desc = "descending"
+def make_pagination_params(request: Union[flask.Request, SearchEnvelope]) -> SearchEnvelope:
+    if isinstance(request, SearchEnvelope):
+        return request
+
+    page_data = {}
+
+    if page_size := request.args.get("page_size", default=None, type=int):
+        page_data["size"] = page_size
+
+    if page_offset := request.args.get("page_offset", default=None, type=int):
+        page_data["offset"] = page_offset
+
+    order_data = {}
+
+    if order_by := request.args.get("order_by", default=None, type=str):
+        order_data["by"] = order_by
+
+    if order_direction := request.args.get("order_direction", default=None, type=str):
+        order_data["direction"] = OrderDirection(order_direction)
+
+    return SearchEnvelope[None](
+        terms=None, order=OrderData(**order_data), paging=PagingData(**page_data)
+    )
 
 
 class PaginationAPIContext:
-    default_order_by: str = "created_at"
+    def __init__(self, entity: Any, request: Union[flask.Request, SearchEnvelope]):
+        pagination_params = make_pagination_params(request)
 
-    def __init__(
-        self, entity: Any, request: flask.Request,
-    ):
-        page_size = request.args.get("page_size", default=DEFAULT_PAGE_SIZE, type=int)
-        page_offset = request.args.get("page_offset", default=DEFAULT_PAGE_OFFSET, type=int)
-        order_by = (
-            request.args.get("order_by", default=self.default_order_by, type=str).strip().lower()
-        )
-        order_direction = request.args.get(
-            "order_direction", default=OrderDirection.desc.value, type=str
-        )
+        self.page_size = pagination_params.paging.size
+        self.page_offset = pagination_params.paging.offset
+        self.order_by = pagination_params.order.by
+        self.order_direction = pagination_params.order.direction.value
+
         valid_order_keys = entity.__dict__.keys() - set(Base.__dict__.keys()).union(
             {"__tablename__"}
         )
-        if order_by not in valid_order_keys:
-            raise BadRequest(f"Unsupported order_key '{order_by}'")
 
-        order_key = getattr(entity, order_by)
+        if self.order_by not in valid_order_keys:
+            raise BadRequest(f"Unsupported order by '{self.order_by}'")
 
-        self.page_size = page_size
-        self.page_offset = page_offset
-        self.order_by = order_by
-        self.order_direction = order_direction
-        self.order_key = order_key
+        self.order_key = getattr(entity, self.order_by)
 
     def __enter__(self):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         return False
-
-
-# TODO (API-1776): remove when Application model uses create_at field
-class ApplicationPaginationAPIContext(PaginationAPIContext):
-    default_order_by: str = "created_at"
 
 
 class Page:

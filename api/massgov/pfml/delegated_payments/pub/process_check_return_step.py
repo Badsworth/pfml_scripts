@@ -204,6 +204,8 @@ class ProcessCheckReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
         latest_state = state_log_util.get_latest_state_log_in_flow(
             payment, Flow.DELEGATED_PAYMENT, self.db_session
         )
+
+        end_state = latest_state.end_state if latest_state is not None else None
         if latest_state is not None and latest_state.end_state is not None:
             end_state_id = latest_state.end_state_id
             state_description = str(latest_state.end_state.state_description)
@@ -212,7 +214,7 @@ class ProcessCheckReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
             if end_state_id in EXPECTED_STATE_IDS:
                 return latest_state.end_state
 
-        extra = extra_for_log(check_payment, payment)
+        extra = extra_for_log(check_payment, payment, end_state)
         extra["payments.state"] = end_state_id
 
         # The latest state for this payment is not compatible with a check return.
@@ -232,7 +234,7 @@ class ProcessCheckReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
         self, payment: Payment, check_payment: check_return.CheckPayment, payment_state: LkState
     ) -> None:
         """Handle a check payment that has been paid."""
-        extra = extra_for_log(check_payment, payment)
+        extra = extra_for_log(check_payment, payment, payment_state)
         # Don't recreate state logs and writebacks if we've already done it
         if payment_state.state_id == State.DELEGATED_PAYMENT_COMPLETE.state_id:
             logger.info("Payment previously processed and marked complete", extra=extra)
@@ -261,9 +263,10 @@ class ProcessCheckReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
 
         writeback_transaction_status = FineosWritebackTransactionStatus.POSTED
 
+        end_state = State.DELEGATED_PAYMENT_COMPLETE
         create_payment_finished_state_log_with_writeback(
             payment=payment,
-            payment_end_state=State.DELEGATED_PAYMENT_COMPLETE,
+            payment_end_state=end_state,
             payment_outcome=state_log_util.build_outcome(
                 "Payment complete by paid check",
                 check_paid_date=str(check_payment.paid_date),
@@ -283,7 +286,7 @@ class ProcessCheckReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
             extra["check_time_to_cash"] = check_time_to_cash
 
         logger.info(
-            "payment complete by paid check", extra=extra,
+            "payment complete by paid check", extra=extra_for_log(check_payment, payment, end_state)
         )
 
         self.increment(self.Metrics.PAYMENT_COMPLETE_BY_PAID_CHECK)
@@ -301,7 +304,7 @@ class ProcessCheckReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
         self, payment: Payment, check_payment: check_return.CheckPayment, payment_state: LkState
     ) -> None:
         """Handle a check payment that was void, stale, or stopped."""
-        extra = extra_for_log(check_payment, payment)
+        extra = extra_for_log(check_payment, payment, payment_state)
         # Don't recreate state logs and writebacks if we've already done it
         if payment_state.state_id == State.DELEGATED_PAYMENT_ERROR_FROM_BANK.state_id:
             logger.info("Payment previously processed and marked as errored", extra=extra)
@@ -321,9 +324,10 @@ class ProcessCheckReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
 
         writeback_transaction_status = FineosWritebackTransactionStatus.BANK_PROCESSING_ERROR
 
+        end_state = State.DELEGATED_PAYMENT_ERROR_FROM_BANK
         create_payment_finished_state_log_with_writeback(
             payment=payment,
-            payment_end_state=State.DELEGATED_PAYMENT_ERROR_FROM_BANK,
+            payment_end_state=end_state,
             payment_outcome=state_log_util.build_outcome(
                 "Payment failed by check status %s" % check_payment.status.name,
                 check_line_number=str(check_payment.line_number),
@@ -335,7 +339,7 @@ class ProcessCheckReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
         )
 
         logger.info(
-            "payment failed by check", extra=extra,
+            "payment failed by check", extra=extra_for_log(check_payment, payment, end_state),
         )
         self.increment(self.Metrics.PAYMENT_FAILED_BY_CHECK)
         self.add_pub_error(
@@ -349,10 +353,10 @@ class ProcessCheckReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
 
 
 def extra_for_log(
-    check_payment: check_return.CheckPayment, payment: Payment
+    check_payment: check_return.CheckPayment, payment: Payment, state: Optional[LkState] = None
 ) -> Dict[str, Union[None, int, str]]:
     return {
-        **delegated_payments_util.get_traceable_payment_details(payment),
+        **delegated_payments_util.get_traceable_payment_details(payment, state),
         "absence_case_id": payment.claim.fineos_absence_id if payment.claim else None,
         "payments.check.line_number": check_payment.line_number,
         "payments.check.check_number": check_payment.check_number,

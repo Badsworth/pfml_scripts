@@ -6,6 +6,7 @@ import pytest
 
 import massgov.pfml.delegated_payments.delegated_fineos_claimant_extract as claimant_extract
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
+import massgov.pfml.util.datetime
 from massgov.pfml.api.util import state_log_util
 from massgov.pfml.db.models.absences import (
     AbsencePeriodType,
@@ -192,10 +193,10 @@ def test_run_step_happy_path(
 
     assert claim.fineos_notification_id == claimant_data.notification_number
     assert claim.fineos_absence_status_id == AbsenceStatus.APPROVED.absence_status_id
-    assert claim.absence_period_start_date == payments_util.datetime_str_to_date(
+    assert claim.absence_period_start_date == massgov.pfml.util.datetime.datetime_str_to_date(
         claimant_data.leave_request_start
     )
-    assert claim.absence_period_end_date == payments_util.datetime_str_to_date(
+    assert claim.absence_period_end_date == massgov.pfml.util.datetime.datetime_str_to_date(
         claimant_data.leave_request_end
     )
     assert claim.is_id_proofed is True

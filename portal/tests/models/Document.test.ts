@@ -161,7 +161,7 @@ describe("findDocumentsByTypes", () => {
 });
 
 describe("getLegalNotices", () => {
-  it("filters out all non-legal notices", () => {
+  it("filters out notices of non-legal type", () => {
     const legalNoticeTypes = new Set<string>([
       DocumentType.appealAcknowledgment,
       DocumentType.approvalNotice,

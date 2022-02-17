@@ -6,6 +6,7 @@ import useClaimsLogic from "./useClaimsLogic";
 import useDocumentsLogic from "./useDocumentsLogic";
 import useEmployersLogic from "./useEmployersLogic";
 import useFeatureFlagsLogic from "./useFeatureFlagsLogic";
+import usePaymentsLogic from "./usePaymentsLogic";
 import usePortalFlow from "./usePortalFlow";
 import useUsersLogic from "./useUsersLogic";
 
@@ -47,6 +48,10 @@ const useAppLogic = () => {
     setUser: users.setUser,
   });
 
+  const payments = usePaymentsLogic({
+    appErrorsLogic,
+  });
+
   const featureFlags = useFeatureFlagsLogic();
 
   return {
@@ -63,6 +68,7 @@ const useAppLogic = () => {
     documents,
     employers,
     featureFlags,
+    payments,
     portalFlow,
     setAppErrors: appErrorsLogic.setAppErrors,
     users,

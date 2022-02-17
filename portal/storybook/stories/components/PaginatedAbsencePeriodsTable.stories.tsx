@@ -1,5 +1,5 @@
 import { AbsencePeriodRequestDecision } from "src/models/AbsencePeriod";
-import PaginatedAbsencePeriodsTable from "src/components/employers/PaginatedAbsencePeriodsTable";
+import PaginatedAbsencePeriodsTable from "src/features/employer-review/PaginatedAbsencePeriodsTable";
 import React from "react";
 import { createAbsencePeriod } from "lib/mock-helpers/createAbsencePeriod";
 

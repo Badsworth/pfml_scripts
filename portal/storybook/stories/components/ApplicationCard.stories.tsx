@@ -1,4 +1,8 @@
-import { BenefitsApplicationDocument, DocumentType } from "src/models/Document";
+import {
+  BenefitsApplicationDocument,
+  DocumentType,
+  DocumentTypeEnum,
+} from "src/models/Document";
 import LeaveReason, { LeaveReasonType } from "src/models/LeaveReason";
 import ApiResourceCollection from "src/models/ApiResourceCollection";
 import { ApplicationCard } from "src/components/ApplicationCard";
@@ -38,7 +42,7 @@ export default {
     Notices: {
       control: {
         type: "radio",
-        options: ["Has notices", "No notices", "Loading"],
+        options: ["Denied", "Withdrawn", "No notices", "Loading"],
       },
     },
   },
@@ -53,11 +57,22 @@ const claimScenarios = {
 
 type Args = Omit<Props<typeof ApplicationCard>, "claim"> & {
   claim: keyof typeof claimScenarios;
-  Notices: "Has notices" | "No notices" | "Loading";
+  Notices: "Denied" | "Withdrawn" | "No notices" | "Loading";
   Reason: LeaveReasonType;
 };
 
 const Template: Story<Args> = (args) => {
+  const document_types: {
+    [key in Args["Notices"]]: DocumentTypeEnum | undefined;
+  } = {
+    Denied: DocumentType.denialNotice,
+    Withdrawn: DocumentType.withdrawalNotice,
+    "No notices": undefined,
+    Loading: undefined,
+  } as const;
+
+  const document_type = document_types[args.Notices];
+
   const appLogic = useMockableAppLogic({
     documents: {
       loadAll: () => Promise.resolve(),
@@ -66,22 +81,10 @@ const Template: Story<Args> = (args) => {
       },
       documents: new ApiResourceCollection<BenefitsApplicationDocument>(
         "fineos_document_id",
-        args.Notices === "Has notices"
+        document_type
           ? [
               createMockBenefitsApplicationDocument({
-                document_type: DocumentType.requestForInfoNotice,
-                fineos_document_id: "test 1",
-              }),
-              createMockBenefitsApplicationDocument({
-                document_type: DocumentType.denialNotice,
-                fineos_document_id: "test 2",
-              }),
-              createMockBenefitsApplicationDocument({
-                document_type:
-                  DocumentType.certification[
-                    "Serious Health Condition - Employee"
-                  ],
-                fineos_document_id: "test 3",
+                document_type,
               }),
             ]
           : []
@@ -102,9 +105,18 @@ export const Started = Template.bind({});
 export const Submitted = Template.bind({});
 Submitted.args = {
   claim: "Part 1 submitted",
+  Reason: LeaveReason.medical,
 };
 
 export const Completed = Template.bind({});
 Completed.args = {
   claim: "Completed",
+  Reason: LeaveReason.bonding,
+};
+
+export const Withdrawn = Template.bind({});
+Withdrawn.args = {
+  claim: "Part 1 submitted",
+  Notices: "Withdrawn",
+  Reason: LeaveReason.care,
 };

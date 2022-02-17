@@ -11,12 +11,19 @@ export default {
 
 export const Default = () => {
   const appLogic = useMockableAppLogic();
+  const claim = new MockEmployerClaimBuilder()
+    .completed()
+    .reviewable()
+    .create();
 
   return (
     <NewApplication
       appLogic={appLogic}
       user={new User({})}
-      claim={new MockEmployerClaimBuilder().completed().reviewable().create()}
+      claim={claim}
+      query={{
+        absence_id: claim.fineos_absence_id,
+      }}
     />
   );
 };

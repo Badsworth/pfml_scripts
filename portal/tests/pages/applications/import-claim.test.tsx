@@ -1,13 +1,26 @@
-import { cleanup, screen, waitFor } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import ImportClaim from "../../../src/pages/applications/import-claim";
 import User from "../../../src/models/User";
 import { renderPage } from "../../test-utils";
 import routes from "../../../src/routes";
 import userEvent from "@testing-library/user-event";
 
-function setup({
+const mfaScenarios = [
+  // MFA enabled, phone number verified
+  ["SMS", "***-***-1234", true],
+  // MFA enabled, phone number NOT verified
+  ["SMS", "***-***-1234", false],
+  // MFA disabled, phone number verified
+  ["Opt Out", "***-***-1234", true],
+  // MFA preference not set, therefore phone number NOT verified
+  [null, null, false],
+] as const;
+
+async function setup({
+  phone_number_verified = false,
   userAttrs = {},
 }: {
+  phone_number_verified?: boolean;
   userAttrs?: Partial<User>;
 } = {}) {
   const associateSpy = jest.fn();
@@ -16,12 +29,19 @@ function setup({
     ...userAttrs,
   });
 
-  const utils = renderPage(ImportClaim, {
-    pathname: routes.applications.importClaim,
-    addCustomSetup: (appLogic) => {
-      appLogic.users.user = user;
-      appLogic.benefitsApplications.associate = associateSpy;
-    },
+  let utils!: ReturnType<typeof renderPage>;
+  // waitFor makes sure the async useEffect runs
+  await waitFor(() => {
+    utils = renderPage(ImportClaim, {
+      pathname: routes.applications.importClaim,
+      addCustomSetup: (appLogic) => {
+        appLogic.auth.isPhoneVerified = jest
+          .fn()
+          .mockResolvedValueOnce(phone_number_verified);
+        appLogic.users.user = user;
+        appLogic.benefitsApplications.associate = associateSpy;
+      },
+    });
   });
 
   return { ...utils, associateSpy };
@@ -34,55 +54,44 @@ describe("ImportClaim", () => {
     });
   });
 
-  it("renders page not found when feature flag isn't enabled", () => {
+  it("renders page not found when feature flag isn't enabled", async () => {
     process.env.featureFlags = JSON.stringify({ channelSwitching: false });
-    setup();
+    await setup();
 
     expect(screen.getByText("Page not found")).toBeInTheDocument();
   });
 
-  it("renders the page", () => {
-    const { container } = setup();
+  it("renders the page", async () => {
+    const { container } = await setup();
     expect(container).toMatchSnapshot();
   });
 
-  it("conditionally renders MFA alert based on user's MFA preference", () => {
-    function findMfaAlert() {
-      return screen.queryByText(/We need to verify your login/);
-    }
-
-    setup({
-      userAttrs: {
-        mfa_delivery_preference: "Opt Out",
-      },
-    });
-    expect(findMfaAlert()).toBeInTheDocument();
-    expect(findMfaAlert()?.parentNode).toMatchSnapshot();
-
-    cleanup();
-
-    setup({
-      userAttrs: {
-        mfa_delivery_preference: "SMS",
-        mfa_phone_number: {
-          int_code: "1",
-          phone_number: "***-***-1234",
-          phone_type: "Cell",
+  it.each(mfaScenarios)(
+    "conditionally renders MFA alert based on MFA preference and phone verification (%s, %s, %s)",
+    async (mfa_delivery_preference, _phone_number, phone_number_verified) => {
+      await setup({
+        phone_number_verified,
+        userAttrs: {
+          mfa_delivery_preference,
         },
-      },
-    });
+      });
 
-    expect(findMfaAlert()).not.toBeInTheDocument();
-  });
+      const mfaAlert = screen.queryByText(/We need to verify your login/);
 
-  it.each([
-    ["SMS", "***-***-1234"],
-    ["Opt Out", "***-***-1234"],
-    [null, null],
-  ] as const)(
-    "renders read-only phone number and link regardless of MFA preference",
-    (mfa_delivery_preference, phone_number) => {
-      setup({
+      if (mfa_delivery_preference !== "SMS" || !phone_number_verified) {
+        expect(mfaAlert).toBeInTheDocument();
+        expect(mfaAlert?.parentNode).toMatchSnapshot();
+      } else {
+        expect(mfaAlert).not.toBeInTheDocument();
+      }
+    }
+  );
+
+  it.each(mfaScenarios)(
+    "renders read-only phone number and link regardless of MFA preference (%s, %s, %s)",
+    async (mfa_delivery_preference, phone_number, phone_number_verified) => {
+      await setup({
+        phone_number_verified,
         userAttrs: {
           mfa_delivery_preference,
           mfa_phone_number: {
@@ -100,7 +109,7 @@ describe("ImportClaim", () => {
   );
 
   it("associates application when user clicks submit", async () => {
-    const { associateSpy } = setup();
+    const { associateSpy } = await setup();
 
     userEvent.type(
       screen.getByRole("textbox", { name: /social security/i }),

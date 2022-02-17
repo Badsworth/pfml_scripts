@@ -21,25 +21,11 @@ class ClaimWithdrawnError(Exception):
 
 
 def get_claim_detail(claim: Claim, log_attributes: Dict) -> DetailedClaimResponse:
-    absence_id = claim.fineos_absence_id
-    if absence_id is None:
-        raise Exception("Can't get absence periods from FINEOS - No absence_id for claim")
-
-    employee_tax_id = claim.employee_tax_identifier
-    if not employee_tax_id:
-        raise Exception("Can't get absence periods from FINEOS - No employee for claim")
-
-    employer_fein = claim.employer_fein
-    if not employer_fein:
-        raise Exception("Can't get absence periods from FINEOS - No employer for claim")
-
     absence_periods = []
 
     with app.db_session() as db_session:
         try:
-            absence_periods = get_absence_periods(
-                employee_tax_id, employer_fein, absence_id, db_session
-            )
+            absence_periods = get_absence_periods(claim, db_session)
         except exception.FINEOSForbidden as error:
             if _is_withdrawn_claim_error(error):
                 raise ClaimWithdrawnError

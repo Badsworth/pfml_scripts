@@ -1,4 +1,5 @@
 import Dropdown from "../../components/core/Dropdown";
+import { GetClaimsParams } from "../../api/ClaimsApi";
 import React from "react";
 import { compact } from "lodash";
 import { isFeatureEnabled } from "../../services/featureFlags";
@@ -11,13 +12,8 @@ export interface PageQueryParam {
   value: number | null | string | string[];
 }
 
-interface SortDropdownProps {
-  order_by?:
-    | "absence_status"
-    | "created_at"
-    | "employee"
-    | "latest_follow_up_date";
-  order_direction?: "ascending" | "descending";
+interface SortDropdownProps
+  extends Pick<GetClaimsParams, "order_by" | "order_direction"> {
   updatePageQuery: (params: PageQueryParam[]) => void;
 }
 

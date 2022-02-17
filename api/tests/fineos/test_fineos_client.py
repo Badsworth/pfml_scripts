@@ -18,6 +18,11 @@ import massgov.pfml.fineos.models
 from massgov.pfml.api.models.applications.common import DocumentType
 from massgov.pfml.fineos.exception import FINEOSClientError
 from massgov.pfml.fineos.mock_client import mock_document
+from massgov.pfml.fineos.models.customer_api import (
+    ChangeRequestPeriod,
+    ChangeRequestReason,
+    LeavePeriodChangeRequest,
+)
 from massgov.pfml.fineos.models.customer_api.spec import AbsenceDetails
 from massgov.pfml.fineos.models.group_client_api import EForm, EFormAttribute, ModelEnum
 
@@ -770,3 +775,46 @@ def test_customer_api_document_upload_multipart_success(httpserver, fineos_clien
     )
     assert document.documentId == document_response["documentId"]
     assert document.caseId == document_response["caseId"]
+
+
+class TestCreateOrUpdateLeavePeriodChangeRequest:
+    @pytest.fixture
+    def change_request(self):
+        return LeavePeriodChangeRequest(
+            reason=ChangeRequestReason(fullId=0, name="Employee Requested Removal"),
+            changeRequestPeriods=[
+                ChangeRequestPeriod(
+                    endDate=datetime.date(2022, 2, 15), startDate=datetime.date(2022, 2, 14)
+                )
+            ],
+            additionalNotes="Withdrawal",
+        )
+
+    def test_success(self, fineos_client, change_request):
+        response = fineos_client.create_or_update_leave_period_change_request(
+            "user_id", change_request
+        )
+
+        reason = response.reason
+        assert reason.name == "Employee Requested Removal"
+
+        assert response.additionalNotes == "Withdrawal"
+
+        period = response.changeRequestPeriods[0]
+        assert period.startDate == datetime.date(2022, 2, 14)
+        assert period.endDate == datetime.date(2022, 2, 15)
+
+
+class TestGetLeavePeriodChangeRequests:
+    def test_success(self, fineos_client):
+        change_requests = fineos_client.get_leave_period_change_requests("user_id", "claim_id")
+
+        assert len(change_requests) > 0
+        request = change_requests[0]
+
+        assert request.reason.name == "Employee Requested Removal"
+        assert request.additionalNotes == "Withdrawal"
+
+        period = request.changeRequestPeriods[0]
+        assert period.startDate == datetime.date(2022, 2, 14)
+        assert period.endDate == datetime.date(2022, 2, 15)

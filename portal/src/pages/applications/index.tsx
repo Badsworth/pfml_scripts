@@ -183,13 +183,12 @@ const PaginatedApplicationCards = (
           <Heading level="2">
             {t("pages.applications.inProgressHeading")}
           </Heading>
-          {inProgressClaims.map((claim, index) => {
+          {inProgressClaims.map((claim) => {
             return (
               <ApplicationCard
                 key={claim.application_id}
                 appLogic={appLogic}
                 claim={claim}
-                number={index + 1}
                 user={props.user}
                 successfullyImported={associatedId === claim.fineos_absence_id}
               />
@@ -203,12 +202,11 @@ const PaginatedApplicationCards = (
           <Heading level="2">
             {t("pages.applications.submittedHeading")}
           </Heading>
-          {completedClaims.map((claim, index) => {
+          {completedClaims.map((claim) => {
             return (
               <ApplicationCard
                 key={claim.application_id}
                 claim={claim}
-                number={index}
                 appLogic={props.appLogic}
                 user={props.user}
                 successfullyImported={associatedId === claim.fineos_absence_id}

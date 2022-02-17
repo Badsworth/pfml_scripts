@@ -4,10 +4,6 @@
 
 resource "aws_s3_bucket" "admin_portal_web" {
   bucket = "massgov-${local.app_name}-${var.environment_name}-admin-portal-site-builds"
-  website {
-    index_document = "index.html"
-    error_document = "404.html"
-  }
 
   # EOTSS AWS Tagging Standards
   tags = merge(module.constants.common_tags, {
@@ -15,6 +11,16 @@ resource "aws_s3_bucket" "admin_portal_web" {
     Name        = "massgov-${local.app_name}-${var.environment_name}-admin-portal-site-builds"
     public      = "yes"
   })
+}
+
+# Block public access
+resource "aws_s3_bucket_public_access_block" "admin_portal_web" {
+  bucket = aws_s3_bucket.admin_portal_web.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
 }
 
 data "aws_iam_policy_document" "admin_portal_web" {
@@ -25,7 +31,7 @@ data "aws_iam_policy_document" "admin_portal_web" {
 
     principals {
       type        = "AWS"
-      identifiers = ["*"]
+      identifiers = [aws_cloudfront_origin_access_identity.admin_portal_web_origin_access_identity.iam_arn]
     }
   }
 }

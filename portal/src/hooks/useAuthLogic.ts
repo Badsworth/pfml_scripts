@@ -63,6 +63,23 @@ const useAuthLogic = ({
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
 
   /**
+   * Check if the phone number used by the user for MFA has been verified.
+   * You can't rely on the presence of MFA preference or the phone number to signify this.
+   */
+  const isPhoneVerified = async () => {
+    const { attributes } = await Auth.currentAuthenticatedUser();
+    const phone_number_verified = attributes.phone_number_verified;
+
+    tracker.trackEvent("Checked phone_number_verified", {
+      // Useful for identifying how common it is for someone to not have
+      // a verified phone number on pages where we check this.
+      phone_number_verified,
+    });
+
+    return phone_number_verified;
+  };
+
+  /**
    * Initiate the Forgot Password flow, sending a verification code when user exists.
    * If there are any errors, sets app errors on the page.
    */
@@ -523,6 +540,7 @@ const useAuthLogic = ({
     logout,
     isCognitoError,
     isLoggedIn,
+    isPhoneVerified,
     requireLogin,
     resendVerifyAccountCode,
     resetPassword,

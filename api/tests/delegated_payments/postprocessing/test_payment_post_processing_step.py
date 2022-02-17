@@ -5,9 +5,12 @@ import pytest
 
 import massgov.pfml.api.util.state_log_util as state_log_util
 from massgov.pfml.db.models.factories import (
+    AbsencePeriodFactory,
+    ClaimFactory,
     DiaReductionPaymentFactory,
     DuaReductionPaymentFactory,
     EmployeeFactory,
+    EmployerFactory,
 )
 from massgov.pfml.db.models.payments import PaymentAuditReportDetails, PaymentAuditReportType
 from massgov.pfml.db.models.state import Flow, State
@@ -35,6 +38,64 @@ def payment_post_processing_step(
     )
 
 
+def test_payment_date_mismatch_post_processing(payment_post_processing_step, local_test_db_session):
+    absence_period_start_date = date(2020, 1, 5)
+    absence_period_end_date = date(2020, 1, 30)
+    period_start_date = date(2020, 2, 1)
+    fineos_leave_request_id = 1234
+
+    employee = EmployeeFactory.create()
+    employer = EmployerFactory.create()
+    claim = ClaimFactory.create(
+        employee=employee,
+        employer=employer,
+        absence_period_start_date=absence_period_start_date,
+        absence_period_end_date=absence_period_end_date,
+    )
+    AbsencePeriodFactory.create(
+        claim=claim,
+        absence_period_start_date=absence_period_start_date,
+        absence_period_end_date=absence_period_end_date,
+        fineos_leave_request_id=fineos_leave_request_id,
+    )
+    payment_container = _create_payment_container(
+        employee,
+        Decimal("600.00"),
+        local_test_db_session,
+        start_date=period_start_date,
+        periods=1,
+        length_of_period=7,
+        is_adhoc_payment=False,
+        claim=claim,
+    )
+    payment_container.payment.fineos_leave_request_id = fineos_leave_request_id
+
+    payment_post_processing_step.run()
+
+    payment = payment_container.payment
+    payment_flow_log = state_log_util.get_latest_state_log_in_flow(
+        payment, Flow.DELEGATED_PAYMENT, local_test_db_session
+    )
+    assert (
+        payment_flow_log.end_state_id
+        == State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING.state_id
+    )
+
+    audit_report_details: PaymentAuditReportDetails = (
+        local_test_db_session.query(PaymentAuditReportDetails)
+        .filter(PaymentAuditReportDetails.payment_id == payment.payment_id)
+        .one_or_none()
+    )
+    assert (
+        audit_report_details.audit_report_type_id
+        == PaymentAuditReportType.PAYMENT_DATE_MISMATCH.payment_audit_report_type_id
+    )
+    assert (
+        audit_report_details.details["message"]
+        == "Payment for 2020-02-01 -> 2020-02-07 outside all leave dates. Had absence periods for 2020-01-05 -> 2020-01-30."
+    )
+
+
 def test_name_mismatch_post_processing(payment_post_processing_step, local_test_db_session):
     employee = EmployeeFactory.create(first_name="Jane", last_name="Smith")
     payment_container = _create_payment_container(
@@ -58,6 +119,10 @@ def test_name_mismatch_post_processing(payment_post_processing_step, local_test_
     audit_report_details = (
         local_test_db_session.query(PaymentAuditReportDetails)
         .filter(PaymentAuditReportDetails.payment_id == payment.payment_id)
+        .filter(
+            PaymentAuditReportDetails.audit_report_type_id
+            == PaymentAuditReportType.DOR_FINEOS_NAME_MISMATCH.payment_audit_report_type_id
+        )
         .one_or_none()
     )
     assert audit_report_details.details["message"] == "\n".join(
@@ -184,7 +249,8 @@ def test_mixed_post_processing_scenarios(
         .filter(PaymentAuditReportDetails.payment_id == payment.payment_id)
         .all()
     )
-    assert len(audit_report_details) == 2
+
+    assert len(audit_report_details) == 3
 
     audit_report_type_ids = [
         audit_report_detail.audit_report_type.payment_audit_report_type_id
@@ -197,4 +263,16 @@ def test_mixed_post_processing_scenarios(
     assert (
         PaymentAuditReportType.DIA_ADDITIONAL_INCOME.payment_audit_report_type_id
         in audit_report_type_ids
+    )
+
+    payment_date_mismatch_details = [
+        x
+        for x in audit_report_details
+        if x.audit_report_type_id
+        == PaymentAuditReportType.PAYMENT_DATE_MISMATCH.payment_audit_report_type_id
+    ]
+    assert len(payment_date_mismatch_details) == 1
+    assert (
+        payment_date_mismatch_details[0].details["message"]
+        == "Payment for 2021-01-16 -> 2021-01-22 outside all leave dates. Had absence periods for 2021-01-07 -> None."
     )

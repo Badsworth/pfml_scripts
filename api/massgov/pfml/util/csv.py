@@ -1,6 +1,7 @@
 import csv
 import dataclasses
 import datetime
+import os
 from decimal import Decimal
 from enum import Enum
 from typing import (
@@ -18,6 +19,11 @@ from typing import (
 from uuid import UUID
 
 import smart_open
+
+from massgov.pfml.util import files as file_util
+from massgov.pfml.util import logging
+
+logger = logging.get_logger(__name__)
 
 
 def isoformat(o: Union[datetime.date, datetime.time]) -> str:
@@ -122,3 +128,24 @@ class CSVSourceWrapper:
             dict_reader = csv.DictReader(csvfile, delimiter=",")
             for row in dict_reader:
                 yield row
+
+
+def download_and_parse_csv(s3_path: str, download_directory: str) -> CSVSourceWrapper:
+    file_name = os.path.basename(s3_path)
+    download_location = os.path.join(download_directory, file_name)
+    logger.debug("Download file: %s, to: %s", s3_path, download_location)
+
+    try:
+        if s3_path.startswith("s3:/"):
+            file_util.download_from_s3(s3_path, download_location)
+        else:
+            file_util.copy_file(s3_path, download_location)
+    except Exception as e:
+        logger.exception(
+            "Error downloading file: %s",
+            s3_path,
+            extra={"src": s3_path, "destination": download_directory},
+        )
+        raise e
+
+    return CSVSourceWrapper(download_location)

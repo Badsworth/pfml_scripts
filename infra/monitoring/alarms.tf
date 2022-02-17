@@ -128,5 +128,7 @@ module "sns_unauthorized_api_calls" {
   sns_topic         = aws_sns_topic.sns_resource_changes.arn
 }
 
-
-
+module "event_bridge_rules" {
+  source        = "../modules/terraform_event_bridge_rules"
+  sns_topic_arn = aws_sns_topic.sns_resource_changes.arn
+}

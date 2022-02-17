@@ -145,3 +145,30 @@ resource "newrelic_nrql_alert_condition" "sns_sms_rate_exceeded" {
     threshold_occurrences = "all"
   }
 }
+
+resource "newrelic_nrql_alert_condition" "sns_mfa_delivery_time_exceeded" {
+  # MFA delivery time exceeded 1 second over 5 minutes
+  # At least 1 MFA User took longer than 5 seconds to respond to MFA
+
+  name               = "sns-mfa-delivery-time-exceeded"
+  policy_id          = newrelic_alert_policy.sns_alerts.id
+  type               = "static"
+  value_function     = "single_value"
+  enabled            = true
+  aggregation_window = local.default_aggregation_window # (evaluation_periods * period) in aws_cloudwatch_metric_alarm
+
+  nrql {
+    query = <<-NRQL
+      SELECT count(*) FROM Log WHERE (aws.logGroup = '${local.sns_failure_log_group_name}' or aws.logGroup = '${local.sns_log_group_name}') WHERE (delivery.dwellTimeMsUntilDeviceAck >= ${local.mfa_user_response_time}) OR (delivery.dwellTimeMs >= ${local.mfa_sns_delivery_time})
+    NRQL
+  }
+
+  violation_time_limit_seconds = local.violation_time_limit_seconds
+
+  critical {
+    threshold_duration    = local.default_aggregation_window # evaluation_periods in aws_cloudwatch_metric_alarm
+    threshold             = 1                                # threshold in aws_cloudwatch_metric_alarm
+    operator              = "above"                          # comparison_operator in aws_cloudwatch_metric_alarm
+    threshold_occurrences = "all"
+  }
+}

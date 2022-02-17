@@ -5,7 +5,7 @@ import defaultConfig, { ConfigFunction } from "../config";
 import { v4 as uuid } from "uuid";
 import * as util from "../util/playwright";
 import { ClaimStatus, Credentials, FineosTasks } from "../types";
-
+import { isAfter, isToday } from "date-fns";
 export type FineosBrowserOptions = {
   credentials?: Credentials;
   debug: boolean;
@@ -157,12 +157,16 @@ export class Claim extends FineosPage {
     await this.page.click("#footerButtonsBar input[value='OK']");
   }
 
-  async approve(): Promise<void> {
+  async approve(leaveEndDate: Date): Promise<void> {
     await this.page.click("a[title='Approve the Pending Leaving Request']", {
       // This sometimes takes a while. Wait for it to complete.
       timeout: 60000,
     });
-    await this.assertClaimStatus("Approved");
+    if (isAfter(leaveEndDate, new Date()) || isToday(leaveEndDate)) {
+      await this.assertClaimStatus("Approved");
+    } else {
+      await this.assertClaimStatus("Completed");
+    }
   }
 
   async assertClaimStatus(expected: ClaimStatus): Promise<void> {

@@ -338,6 +338,22 @@ describe("BenefitsApplicationsApi", () => {
       expect(claimResponse).toBeInstanceOf(BenefitsApplication);
       expect(claimResponse).toEqual(claim);
     });
+
+    it("makes a request using the FF header when splitClaimsAcrossBY is true", async () => {
+      process.env.featureFlags = JSON.stringify({ splitClaimsAcrossBY: true });
+      await claimsApi.submitClaim(claim.application_id);
+      expect(fetch).toHaveBeenCalledWith(
+        `${process.env.apiUrl}/applications/${claim.application_id}/submit_application`,
+        {
+          body: null,
+          headers: {
+            ...baseRequestHeaders,
+            "X-FF-Split-Claims-Across-BY": "true",
+          },
+          method: "POST",
+        }
+      );
+    });
   });
 
   describe("submitPaymentPreference", () => {

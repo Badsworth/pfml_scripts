@@ -10,7 +10,7 @@ from massgov.pfml.api.models.claims.common import (
     LeaveDetails,
     PreviousLeave,
 )
-from massgov.pfml.api.models.common import ConcurrentLeave
+from massgov.pfml.api.models.common import ComputedStartDates, ConcurrentLeave
 from massgov.pfml.api.models.employees.responses import EmployeeBasicResponse
 from massgov.pfml.api.models.employers.responses import EmployerResponse
 from massgov.pfml.db.models.absences import AbsencePeriodType
@@ -194,6 +194,7 @@ class ClaimReviewResponse(PydanticBaseModel):
     uses_second_eform_version: bool
     absence_periods: List[AbsencePeriodResponse] = []
     managed_requirements: List[ManagedRequirementResponse] = []
+    computed_start_dates: Optional[ComputedStartDates]
 
 
 class DocumentResponse(PydanticBaseModel):

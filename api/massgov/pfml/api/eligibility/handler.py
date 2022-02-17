@@ -4,6 +4,7 @@ from typing import Optional
 from uuid import UUID
 
 import connexion
+from sqlalchemy import desc
 from werkzeug.exceptions import NotFound
 
 import massgov.pfml.api.app as app
@@ -12,10 +13,33 @@ import massgov.pfml.api.util.response as response_util
 import massgov.pfml.util.logging
 from massgov.pfml.api.authorization.flask import CREATE, ensure
 from massgov.pfml.api.models.applications.common import EligibilityEmploymentStatus
-from massgov.pfml.db.models.employees import Employee, Employer, TaxIdentifier
+from massgov.pfml.db.models.applications import Application
+from massgov.pfml.db.models.employees import BenefitYear, Employee, Employer, TaxIdentifier
 from massgov.pfml.util.pydantic import PydanticBaseModel
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
+
+
+class BenefitYearsSearchRequest(PydanticBaseModel):
+    employee_id: Optional[str]
+
+
+class BenefitYearsSearchResponse(PydanticBaseModel):
+    benefit_year_end_date: date
+    benefit_year_start_date: date
+    employee_id: str
+    current_benefit_year: bool
+
+    @classmethod
+    def from_orm(cls, benefit_year: BenefitYear) -> "BenefitYearsSearchResponse":
+        today = date.today()
+        current_benefit_year = today >= benefit_year.start_date and today <= benefit_year.end_date
+        return BenefitYearsSearchResponse(
+            benefit_year_end_date=benefit_year.end_date,
+            benefit_year_start_date=benefit_year.start_date,
+            employee_id=benefit_year.employee_id.__str__(),
+            current_benefit_year=current_benefit_year,
+        )
 
 
 class EligibilityResponse(PydanticBaseModel):
@@ -33,6 +57,42 @@ class EligibilityRequest(PydanticBaseModel):
     application_submitted_date: date
     employment_status: EligibilityEmploymentStatus
     tax_identifier: str
+
+
+def benefit_years_search():
+    with app.db_session() as db_session:
+        current_user = app.current_user()
+        # Grab all the applications that the user has submitted
+        applications = (
+            db_session.query(Application).filter(Application.user_id == current_user.user_id).all()
+        )
+        # Filter to only applications where the employee has been set (via tax_id).
+        # See: https://github.com/EOLWD/pfml/blob/0ac0c389695edf9338c23142eef141a2d4399b91/api/massgov/pfml/db/models/applications.py#L390
+        valid_applications = [va for va in applications if va.employee]
+        if len(valid_applications) == 0:
+            logger.info("Benefit years search did not return any applications for the user")
+            return response_util.success_response(message="success", data=[]).to_api_response()
+        else:
+            employee_ids = []
+            for valid_application in valid_applications:
+                # This check is here for mypy, but this array is already filtered to only
+                # include applications where the employee can be found
+                if valid_application.employee:
+                    employee_ids.append(valid_application.employee.employee_id)
+            benefit_years = (
+                db_session.query(BenefitYear)
+                .filter(BenefitYear.employee_id.in_(employee_ids))
+                .order_by(BenefitYear.employee_id, desc(BenefitYear.start_date))
+                .all()
+            )
+            benefit_year_responses = []
+            for benefit_year in benefit_years:
+                benefit_year_responses.append(
+                    BenefitYearsSearchResponse.from_orm(benefit_year).dict()
+                )
+            return response_util.success_response(
+                message="success", data=benefit_year_responses
+            ).to_api_response()
 
 
 def eligibility_post():

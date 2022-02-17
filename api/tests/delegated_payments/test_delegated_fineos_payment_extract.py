@@ -1,6 +1,5 @@
 import copy
 import json
-import os
 from datetime import date
 
 import pytest
@@ -9,6 +8,7 @@ from freezegun import freeze_time
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.delegated_payments.delegated_fineos_payment_extract as extractor
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
+import massgov.pfml.util.datetime
 from massgov.pfml.db.models.employees import (
     AddressType,
     BankAccountType,
@@ -192,10 +192,10 @@ def validate_withholding(
     assert withholding_payment.claim_id
     assert withholding_payment.employee_id is None
     assert str(withholding_payment.amount) == withholding_payment_data.payment_amount
-    assert withholding_payment.period_start_date == payments_util.datetime_str_to_date(
+    assert withholding_payment.period_start_date == massgov.pfml.util.datetime.datetime_str_to_date(
         withholding_payment_data.payment_start_period
     )
-    assert withholding_payment.period_end_date == payments_util.datetime_str_to_date(
+    assert withholding_payment.period_end_date == massgov.pfml.util.datetime.datetime_str_to_date(
         withholding_payment_data.payment_end_period
     )
     assert (
@@ -333,13 +333,15 @@ def test_run_step_happy_path(
         assert payment.vpei_id is not None
 
         # Validate all of the payment fields that were set
-        assert payment.period_start_date == payments_util.datetime_str_to_date(
+        assert payment.period_start_date == massgov.pfml.util.datetime.datetime_str_to_date(
             payment_data.payment_start_period
         )
-        assert payment.period_end_date == payments_util.datetime_str_to_date(
+        assert payment.period_end_date == massgov.pfml.util.datetime.datetime_str_to_date(
             payment_data.payment_end_period
         )
-        assert payment.payment_date == payments_util.datetime_str_to_date(payment_data.payment_date)
+        assert payment.payment_date == massgov.pfml.util.datetime.datetime_str_to_date(
+            payment_data.payment_date
+        )
         assert payment.fineos_extraction_date == date(2021, 1, 13)
         assert str(payment.amount) == payment_data.payment_amount
         assert (
@@ -1138,9 +1140,9 @@ def test_process_extract_no_fineos_name(local_test_db_session, local_payment_ext
 def test_process_extract_is_adhoc(
     local_payment_extract_step, local_test_db_session,
 ):
-    fineos_adhoc_data = FineosPaymentData(amalgamationc="Adhoc1234")
+    fineos_adhoc_data = FineosPaymentData(payment_type="Adhoc")
     add_db_records_from_fineos_data(local_test_db_session, fineos_adhoc_data)
-    fineos_standard_data = FineosPaymentData(amalgamationc="Some other value")
+    fineos_standard_data = FineosPaymentData(payment_type="Some other value")
     add_db_records_from_fineos_data(local_test_db_session, fineos_standard_data)
 
     stage_data([fineos_adhoc_data, fineos_standard_data], local_test_db_session)
@@ -1733,9 +1735,6 @@ def test_process_extract_tax_withholding_payment_types(
 ):
     datasets = []
 
-    # Turn on Tax Withholding Feature Flag for this test.
-    os.environ["ENABLE_WITHHOLDING_PAYMENTS"] = "1"
-
     # This tests that the behavior of tax withholding payment types are handled properly
     # All of these are setup as EFT payments, but we won't create EFT information for them
     # or reject them for not being prenoted yet.
@@ -1809,9 +1808,6 @@ def test_process_extract_invalid_tax_withholding_payment_types(
     local_test_db_session, local_payment_extract_step,
 ):
     datasets = []
-
-    # Turn on Tax Withholding Feature Flag for this test.
-    os.environ["ENABLE_WITHHOLDING_PAYMENTS"] = "1"
 
     # This tests that invalid tax withholding payment types are handled properly
     # All of these are setup as EFT payments, but we won't create EFT information for them

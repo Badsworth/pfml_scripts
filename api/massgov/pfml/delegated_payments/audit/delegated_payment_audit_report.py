@@ -66,25 +66,23 @@ class PaymentAuditReportStep(Step):
         if len(state_logs) > 0:
             state_logs_containers += state_logs
 
-        if payments_util.is_withholding_payments_enabled():
-            logger.info("Tax Withholding ENABLED")
-            federal_withholding_state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
-                state_log_util.AssociatedClass.PAYMENT,
-                State.FEDERAL_WITHHOLDING_ORPHANED_PENDING_AUDIT,
-                self.db_session,
-            )
+        federal_withholding_state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
+            state_log_util.AssociatedClass.PAYMENT,
+            State.FEDERAL_WITHHOLDING_ORPHANED_PENDING_AUDIT,
+            self.db_session,
+        )
 
-            if len(federal_withholding_state_logs) > 0:
-                state_logs_containers += federal_withholding_state_logs
+        if len(federal_withholding_state_logs) > 0:
+            state_logs_containers += federal_withholding_state_logs
 
-            state_withholding_state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
-                state_log_util.AssociatedClass.PAYMENT,
-                State.STATE_WITHHOLDING_ORPHANED_PENDING_AUDIT,
-                self.db_session,
-            )
+        state_withholding_state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
+            state_log_util.AssociatedClass.PAYMENT,
+            State.STATE_WITHHOLDING_ORPHANED_PENDING_AUDIT,
+            self.db_session,
+        )
 
-            if len(state_withholding_state_logs) > 0:
-                state_logs_containers += state_withholding_state_logs
+        if len(state_withholding_state_logs) > 0:
+            state_logs_containers += state_withholding_state_logs
 
         employer_reimbursement_primary_state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
             state_log_util.AssociatedClass.PAYMENT,
@@ -177,35 +175,34 @@ class PaymentAuditReportStep(Step):
                 ),
             )
 
-            if payments_util.is_withholding_payments_enabled():
-                if (
-                    payment.payment_transaction_type_id
-                    == PaymentTransactionType.STANDARD.payment_transaction_type_id
-                ):
-                    linked_payments = _get_split_payments(self.db_session, payment)
-                    for payment in linked_payments:
-                        if (
-                            payment.payment_transaction_type_id
-                            == PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id
-                        ):
-                            end_state = State.STATE_WITHHOLDING_RELATED_PENDING_AUDIT
-                        elif (
-                            payment.payment_transaction_type_id
-                            == PaymentTransactionType.FEDERAL_TAX_WITHHOLDING.payment_transaction_type_id
-                        ):
-                            end_state = State.FEDERAL_WITHHOLDING_RELATED_PENDING_AUDIT
-                        elif (
-                            payment.payment_transaction_type_id
-                            == PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id
-                        ):
-                            end_state = State.EMPLOYER_REIMBURSEMENT_RELATED_PENDING_AUDIT
-                        outcome = state_log_util.build_outcome("Related Payment Audit report sent")
-                        state_log_util.create_finished_state_log(
-                            associated_model=payment,
-                            end_state=end_state,
-                            outcome=outcome,
-                            db_session=self.db_session,
-                        )
+            if (
+                payment.payment_transaction_type_id
+                == PaymentTransactionType.STANDARD.payment_transaction_type_id
+            ):
+                linked_payments = _get_split_payments(self.db_session, payment)
+                for payment in linked_payments:
+                    if (
+                        payment.payment_transaction_type_id
+                        == PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id
+                    ):
+                        end_state = State.STATE_WITHHOLDING_RELATED_PENDING_AUDIT
+                    elif (
+                        payment.payment_transaction_type_id
+                        == PaymentTransactionType.FEDERAL_TAX_WITHHOLDING.payment_transaction_type_id
+                    ):
+                        end_state = State.FEDERAL_WITHHOLDING_RELATED_PENDING_AUDIT
+                    elif (
+                        payment.payment_transaction_type_id
+                        == PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id
+                    ):
+                        end_state = State.EMPLOYER_REIMBURSEMENT_RELATED_PENDING_AUDIT
+                    outcome = state_log_util.build_outcome("Related Payment Audit report sent")
+                    state_log_util.create_finished_state_log(
+                        associated_model=payment,
+                        end_state=end_state,
+                        outcome=outcome,
+                        db_session=self.db_session,
+                    )
 
         logger.info("Done setting sampled payments to sent state: %i", len(state_logs))
 
@@ -433,15 +430,11 @@ class PaymentAuditReportStep(Step):
                 net_payment_amount = decimal.Decimal(0)
 
             linked_payments = _get_split_payments(self.db_session, payment)
-            federal_withholding_amount: decimal.Decimal = (
-                self.calculate_federal_withholding_amount(payment, linked_payments)
-                if payments_util.is_withholding_payments_enabled()
-                else decimal.Decimal(0)
+            federal_withholding_amount: decimal.Decimal = self.calculate_federal_withholding_amount(
+                payment, linked_payments
             )
-            state_withholding_amount: decimal.Decimal = (
-                self.calculate_state_withholding_amount(payment, linked_payments)
-                if payments_util.is_withholding_payments_enabled()
-                else decimal.Decimal(0)
+            state_withholding_amount: decimal.Decimal = self.calculate_state_withholding_amount(
+                payment, linked_payments
             )
             employer_reimbursement_amount: decimal.Decimal = (
                 self.calculate_employer_reimbursement_amount(payment, linked_payments)
@@ -462,14 +455,10 @@ class PaymentAuditReportStep(Step):
                     + federal_withholding_amount
                     + state_withholding_amount
                     + employer_reimbursement_amount
-                )
-                if payments_util.is_withholding_payments_enabled()
-                else "",
+                ),
                 net_payment_amount=str(
                     net_payment_amount if decimal.Decimal(net_payment_amount) > 0 else ""
-                )
-                if payments_util.is_withholding_payments_enabled()
-                else str(payment.amount),
+                ),
                 federal_withholding_amount=str(
                     federal_withholding_amount
                     if decimal.Decimal(federal_withholding_amount) > 0
@@ -485,12 +474,8 @@ class PaymentAuditReportStep(Step):
                     if decimal.Decimal(employer_reimbursement_amount) > 0
                     else ""
                 ),
-                federal_withholding_i_value=self.get_federal_withholding_i_value(linked_payments)
-                if payments_util.is_withholding_payments_enabled()
-                else "",
-                state_withholding_i_value=self.get_state_withholding_i_value(linked_payments)
-                if payments_util.is_withholding_payments_enabled()
-                else "",
+                federal_withholding_i_value=self.get_federal_withholding_i_value(linked_payments),
+                state_withholding_i_value=self.get_state_withholding_i_value(linked_payments),
                 employer_reimbursement_i_value=self.get_employer_reimbursement_i_value(
                     payment, linked_payments
                 ),

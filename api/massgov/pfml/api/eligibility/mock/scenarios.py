@@ -11,7 +11,8 @@ class EligibilityScenarioName(Enum):
     NO_EXISTING_BENEFIT_YEAR_MULTIPLE_EMPLOYERS = "NO_EXISTING_BENEFIT_YEAR_MULTIPLE_EMPLOYERS"
     NO_EXISTING_BENEFIT_YEAR_WAGES_UNDER_MIN = "NO_EXISTING_BENEFIT_YEAR_WAGES_UNDER_MIN"
     EXISTING_BENEFIT_YEAR_WAGES_UNDER_MIN = "EXISTING_BENEFIT_YEAR_WAGES_UNDER_MIN"
-    EXISTING_BENEFIT_YEAR_CHANGES_IAWW = "EXISTING_BENEFIT_YEAR_CHANGES_IAWW "
+    EXISTING_BENEFIT_YEAR_KEEP_HIGHER_IAWW = "EXISTING_BENEFIT_YEAR_KEEP_HIGHER_IAWW"
+    EXISTING_BENEFIT_YEAR_KEEP_LOWER_IAWW = "EXISTING_BENEFIT_YEAR_KEEP_LOWER_IAWW"
     NO_EXISTING_DATA = "NO_EXISTING_DATA"
 
 
@@ -56,8 +57,13 @@ SCENARIO_DESCRIPTORS: List[EligibilityScenarioDescriptor] = [
         active_benefit_year=BenefitYearDescriptor(total_wages="24000", employer_IAWW="1000"),
     ),
     EligibilityScenarioDescriptor(
-        scenario_name=EligibilityScenarioName.EXISTING_BENEFIT_YEAR_CHANGES_IAWW,
+        scenario_name=EligibilityScenarioName.EXISTING_BENEFIT_YEAR_KEEP_HIGHER_IAWW,
         active_benefit_year=BenefitYearDescriptor(total_wages="30000", employer_IAWW="1250"),
+    ),
+    EligibilityScenarioDescriptor(
+        scenario_name=EligibilityScenarioName.EXISTING_BENEFIT_YEAR_KEEP_LOWER_IAWW,
+        last_x_quarters_wages=["15000", "15000", "12000", "12000", "12000", "12000"],
+        active_benefit_year=BenefitYearDescriptor(total_wages="48000", employer_IAWW="923.08"),
     ),
     EligibilityScenarioDescriptor(
         scenario_name=EligibilityScenarioName.NO_EXISTING_DATA,

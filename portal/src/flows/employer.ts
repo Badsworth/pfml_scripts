@@ -7,6 +7,17 @@
  */
 import routes from "../routes";
 
+export interface EmployerFlowContext {
+  employerShowMultiLeaveDashboard?: boolean;
+}
+type GuardFn = (context: EmployerFlowContext) => boolean;
+
+export const guards: { [guardName: string]: GuardFn } = {
+  isEmployerShowMultiLeaveDashboardEnabled: (context: EmployerFlowContext) => {
+    return !!context.employerShowMultiLeaveDashboard;
+  },
+};
+
 export default {
   states: {
     [routes.employers.addOrganization]: {
@@ -23,9 +34,18 @@ export default {
     [routes.employers.dashboard]: {
       on: {
         VERIFY_ORG: routes.employers.organizations,
-        // New Application page handles conditional routing for claims, because the logic
+        // This page handles conditional routing for claims, because the logic
         // is dependent on fetching additional claim data from Fineos first
-        VIEW_CLAIM: routes.employers.newApplication,
+        VIEW_CLAIM: [
+          {
+            // TODO (PORTAL-1560): Remove the conditional routing and always route to the status page.
+            cond: "isEmployerShowMultiLeaveDashboardEnabled",
+            target: routes.employers.status,
+          },
+          {
+            target: routes.employers.newApplication,
+          },
+        ],
       },
     },
     [routes.employers.organizations]: {
@@ -38,7 +58,11 @@ export default {
         CONTINUE: routes.employers.success,
       },
     },
-    [routes.employers.status]: {},
+    [routes.employers.status]: {
+      on: {
+        REDIRECT_REVIEWABLE_CLAIM: routes.employers.review,
+      },
+    },
     [routes.employers.success]: {
       on: {
         BACK: routes.employers.dashboard,
@@ -46,6 +70,8 @@ export default {
     },
     [routes.employers.newApplication]: {
       on: {
+        REDIRECT: routes.employers.status,
+        // TODO (PORTAL-1560): Remove these transitions once the page is just a redirect
         CLAIM_NOT_REVIEWABLE: routes.employers.status,
         CONFIRMATION: routes.employers.confirmation,
         CONTINUE: routes.employers.review,

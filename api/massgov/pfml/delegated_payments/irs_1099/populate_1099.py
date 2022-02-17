@@ -88,13 +88,11 @@ class Populate1099Step(Step):
                 or claimant_row.ZIP_CODE is None
             ):
                 logger.info(
-                    "[%s]: Address could not be determined. %s: Line 1: %s, City: %s, State: %s, Zip: %s",
-                    claimant_row.employee_id,
-                    claimant_row.ADDRESS_SOURCE,
-                    claimant_row.ADDRESS_LINE_1,
-                    claimant_row.CITY,
-                    claimant_row.STATE,
-                    claimant_row.ZIP_CODE,
+                    "Address could not be determined.",
+                    extra={
+                        "claimant_row.employee_id": claimant_row.employee_id,
+                        "claimant_row.ADDRESS_SOURCE": claimant_row.ADDRESS_SOURCE,
+                    },
                 )
                 continue
 
@@ -108,7 +106,18 @@ class Populate1099Step(Step):
             if other_credits is None:
                 other_credits = 0
 
-            logger.info("[%s]: %s", claimant_row.employee_id, claimant_row.ADDRESS_SOURCE)
+            logger.info(
+                "Creating 1099 record.",
+                extra={
+                    "claimant_row.employee_id": claimant_row.employee_id,
+                    "claimant_row.ADDRESS_SOURCE": claimant_row.ADDRESS_SOURCE,
+                },
+            )
+
+            # Set the correction indicator for each 1099
+            correction_ind = False
+            if claimant_row.CORRECTION_IND:
+                correction_ind = True
 
             pfml_1099_payment = Pfml1099(
                 pfml_1099_id=uuid.uuid4(),
@@ -130,7 +139,7 @@ class Populate1099Step(Step):
                 state_tax_withholdings=state_tax_withholdings,
                 federal_tax_withholdings=federal_tax_withholdings,
                 overpayment_repayments=overpayment_repayments,
-                correction_ind=batch.correction_ind,
+                correction_ind=correction_ind,
             )
 
             self.db_session.add(pfml_1099_payment)

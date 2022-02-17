@@ -9,6 +9,7 @@ import AppErrorInfo from "../../../../src/models/AppErrorInfo";
 import { AppLogic } from "../../../../src/hooks/useAppLogic";
 import ClaimDetail from "../../../../src/models/ClaimDetail";
 import LeaveReason from "../../../../src/models/LeaveReason";
+import { Payment } from "../../../../src/models/Payment";
 import { Payments } from "../../../../src/pages/applications/status/payments";
 import { createMockBenefitsApplicationDocument } from "../../../../lib/mock-helpers/createMockDocument";
 import { createMockPayment } from "lib/mock-helpers/createMockPayment";
@@ -42,6 +43,7 @@ let goToSpy: jest.SpyInstance;
 const setupHelper =
   (
     claimDetailAttrs?: Partial<ClaimDetail>,
+    payments?: Partial<Payment>,
     isRetroactive?: boolean,
     approvalTime?: string,
     includeApprovalNotice = true
@@ -52,14 +54,17 @@ const setupHelper =
       : undefined;
     appLogicHook.claims.loadClaimDetail = jest.fn();
     goToSpy = jest.spyOn(appLogicHook.portalFlow, "goTo");
-    appLogicHook.claims.hasLoadedPayments = () =>
-      !!appLogicHook.claims.claimDetail?.payments;
     appLogicHook.appErrors = [];
     appLogicHook.documents.loadAll = jest.fn();
     appLogicHook.documents.hasLoadedClaimDocuments = () => true;
     if (includeApprovalNotice) {
       renderWithApprovalNotice(appLogicHook, isRetroactive, approvalTime);
     }
+    appLogicHook.payments.loadPayments = jest.fn();
+    appLogicHook.payments.loadedPaymentsData = payments
+      ? new Payment(payments)
+      : new Payment();
+    appLogicHook.payments.hasLoadedPayments = () => true;
   };
 
 const defaultClaimDetail = new ClaimDetail({
@@ -79,7 +84,6 @@ const defaultClaimDetail = new ClaimDetail({
       request_decision: "Approved",
     }),
   ],
-  payments: [],
 });
 
 const approvalDate = {
@@ -111,11 +115,18 @@ describe("Payments", () => {
     process.env.featureFlags = JSON.stringify({
       claimantShowPaymentsPhaseTwo: false,
     });
-
     renderPage(
       Payments,
       {
-        addCustomSetup: setupHelper(defaultClaimDetail),
+        addCustomSetup: setupHelper(defaultClaimDetail, {
+          payments: [
+            createMockPayment({ status: "Sent to bank" }, true),
+            createMockPayment(
+              { status: "Delayed", sent_to_bank_date: null },
+              true
+            ),
+          ],
+        }),
       },
       props
     );
@@ -135,6 +146,7 @@ describe("Payments", () => {
       {
         addCustomSetup: setupHelper(
           defaultClaimDetail,
+          {}, // default
           true, // default
           "", // default
           false // Dont render the approval notice
@@ -326,21 +338,26 @@ describe("Payments", () => {
     renderPage(
       Payments,
       {
-        addCustomSetup: setupHelper({
-          ...defaultClaimDetail,
-          payments: [
-            createMockPayment({ status: "Sent to bank" }, true),
-            createMockPayment(
-              { status: "Delayed", sent_to_bank_date: null },
-              true
-            ),
-            createMockPayment(
-              { status: "Pending", sent_to_bank_date: null },
-              true
-            ),
-            createMockPayment({ status: "Sent to bank" }, true),
-          ],
-        }),
+        addCustomSetup: setupHelper(
+          {
+            ...defaultClaimDetail,
+          },
+          {
+            absence_case_id: "NTN-12345-ABS-01",
+            payments: [
+              createMockPayment({ status: "Sent to bank" }, true),
+              createMockPayment(
+                { status: "Delayed", sent_to_bank_date: null },
+                true
+              ),
+              createMockPayment(
+                { status: "Pending", sent_to_bank_date: null },
+                true
+              ),
+              createMockPayment({ status: "Sent to bank" }, true),
+            ],
+          }
+        ),
       },
       {
         ...props,
@@ -398,6 +415,12 @@ describe("Payments", () => {
             ),
             loadAll: { loadAllClaimDocuments: jest.fn() },
           },
+          payments: {
+            loadPayments: jest.fn(),
+            loadedPaymentsData: [],
+            hasLoadedPayments: jest.fn,
+            isLoadingPayments: false,
+          },
         },
       }
     );
@@ -418,15 +441,20 @@ describe("Payments", () => {
       renderPage(
         Payments,
         {
-          addCustomSetup: setupHelper({
-            ...defaultClaimDetail,
-            payments: [
-              createMockPayment(
-                { status: "Delayed", sent_to_bank_date: null },
-                true
-              ),
-            ],
-          }),
+          addCustomSetup: setupHelper(
+            {
+              ...defaultClaimDetail,
+            },
+            {
+              absence_case_id: "NTN-12345-ABS-01",
+              payments: [
+                createMockPayment(
+                  { status: "Delayed", sent_to_bank_date: null },
+                  true
+                ),
+              ],
+            }
+          ),
         },
         props
       );
@@ -445,6 +473,7 @@ describe("Payments", () => {
               {
                 ...defaultClaimDetail,
               },
+              {},
               false,
               approvalDate[state]
             ),
@@ -476,6 +505,7 @@ describe("Payments", () => {
               {
                 ...reducedClaimDetail,
               },
+              {},
               false,
               approvalDate[state]
             ),
@@ -508,6 +538,7 @@ describe("Payments", () => {
               {
                 ...multipleClaimDetail,
               },
+              {},
               false,
               approvalDate[state]
             ),

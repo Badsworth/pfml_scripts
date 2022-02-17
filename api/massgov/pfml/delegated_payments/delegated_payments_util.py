@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Set, Type, Union, cast
+from typing import Any, Callable, Dict, List, Optional, Type, Union, cast
 
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import ColumnProperty, class_mapper
@@ -48,8 +48,8 @@ from massgov.pfml.db.models.payments import (
     PaymentLog,
 )
 from massgov.pfml.db.models.state import LkState, State
+from massgov.pfml.util.collections.dict import filter_dict, make_keys_lowercase
 from massgov.pfml.util.converters.str_to_numeric import str_to_int
-from massgov.pfml.util.csv import CSVSourceWrapper
 from massgov.pfml.util.datetime import get_now_us_eastern
 from massgov.pfml.util.routing_number_validation import validate_routing_number
 
@@ -119,7 +119,8 @@ class Constants:
     # How do you know if something should go in this list?
     #   1. The payment associated with the state has reached an end state and will never change again
     #   2. The state is an error state and someone will be notified (eg. Program Integrity) via a report
-    #   3. The state has a scenario where we want to receive the same payment again unmodified (eg. the issue is we're missing the employee record)
+    #   3. The state has a scenario where we want to receive the same payment again unmodified (eg. the issue is
+    #      we're missing the employee record)
     #   4. The payment has not already been sent to PUB - even if it's an error state
     #   5. The state is in the DELEGATED_PAYMENT flow
     RESTARTABLE_PAYMENT_STATES = frozenset(
@@ -268,6 +269,7 @@ class FineosExtractConstants:
             "PAYEEIDENTIFI",
             "EVENTREASON",
             "AMALGAMATIONC",
+            "PAYMENTTYPE",
         ],
     )
 
@@ -331,6 +333,7 @@ class FineosExtractConstants:
             "ADVICETOPAY",
             "ADVICETOPAYOV",
             "AMALGAMATIONC",
+            "PAYMENTTYPE",
             "AMOUNT_MONAMT",
             "AMOUNT_MONCUR",
             "CHECKCUTTING",
@@ -558,7 +561,8 @@ def build_archive_path(
     If no current_time specified, will use get_now_us_eastern() method.
     For example:
 
-    build_archive_path("s3://bucket/path/archive", Constants.S3_INBOUND_RECEIVED_DIR, "2021-01-01-12-00-00-example-file.csv", datetime.datetime(2021, 1, 1, 12, 0, 0))
+    build_archive_path("s3://bucket/path/archive", Constants.S3_INBOUND_RECEIVED_DIR,
+      "2021-01-01-12-00-00-example-file.csv", datetime.datetime(2021, 1, 1, 12, 0, 0))
     produces
     "s3://bucket/path/archive/received/2021-01-01/2021-01-01-12-00-00-example-file.csv"
 
@@ -1010,12 +1014,6 @@ def group_s3_files_by_date(expected_file_names: List[str]) -> Dict[str, List[str
     return date_to_full_path
 
 
-def datetime_str_to_date(datetime_str: Optional[str]) -> Optional[date]:
-    if not datetime_str:
-        return None
-    return datetime.fromisoformat(datetime_str).date()
-
-
 def compare_address_fields(first: Address, second: Address, field: str) -> bool:
     value1 = getattr(first, field)
     value2 = getattr(second, field)
@@ -1179,31 +1177,6 @@ def move_reference_file(
         raise
 
 
-def download_and_parse_csv(s3_path: str, download_directory: str) -> CSVSourceWrapper:
-    file_name = os.path.basename(s3_path)
-    download_location = os.path.join(download_directory, file_name)
-    logger.debug("Download file: %s, to: %s", s3_path, download_location)
-
-    try:
-        if s3_path.startswith("s3:/"):
-            file_util.download_from_s3(s3_path, download_location)
-        else:
-            file_util.copy_file(s3_path, download_location)
-    except Exception as e:
-        logger.exception(
-            "Error downloading file: %s",
-            s3_path,
-            extra={"src": s3_path, "destination": download_directory},
-        )
-        raise e
-
-    return CSVSourceWrapper(download_location)
-
-
-def make_keys_lowercase(data: Dict[str, Any]) -> Dict[str, Any]:
-    return {k.lower(): v for k, v in data.items()}
-
-
 def get_attribute_names(cls):
     return [
         prop.key
@@ -1261,7 +1234,7 @@ def get_traceable_payment_details(
     #
 
     claim = payment.claim
-    employee = payment.claim.employee if payment.claim else None
+    employee = payment.employee
     employer = payment.claim.employer if payment.claim else None
 
     return {
@@ -1276,6 +1249,10 @@ def get_traceable_payment_details(
         if payment.fineos_extraction_date
         else None,
         "payment_date": payment.payment_date.isoformat() if payment.payment_date else None,
+        "payment_amount": str(payment.amount),
+        "payment_method": payment.disb_method.payment_method_description
+        if payment.disb_method
+        else None,
         "pub_individual_id": payment.pub_individual_id,
         "payment_transaction_type": payment.payment_transaction_type.payment_transaction_type_description
         if payment.payment_transaction_type
@@ -1335,44 +1312,27 @@ def get_transaction_status_date(payment: Payment) -> date:
     return get_now_us_eastern().date()
 
 
-def filter_dict(dict: Dict[str, Any], allowed_keys: Set[str]) -> Dict[str, Any]:
-    """
-    Filter a dictionary to a specified set of allowed keys.
-    If the key isn't present, will not cause an issue (ie. when we delete columns in the DB)
-    """
-    new_dict = {}
-    for k, v in dict.items():
-        if k in allowed_keys:
-            new_dict[k] = v
-
-    return new_dict
-
-
-employee_audit_log_keys = set(
-    [
-        "employee_id",
-        "tax_identifier_id",
-        "first_name",
-        "last_name",
-        "date_of_birth",
-        "fineos_customer_number",
-        "latest_import_log_id",
-        "created_at",
-        "updated_at",
-    ]
-)
-employer_audit_log_keys = set(
-    [
-        "employer_id",
-        "employer_fein",
-        "employer_name",
-        "dor_updated_date",
-        "latest_import_log_id",
-        "fineos_employer_id",
-        "created_at",
-        "updated_at",
-    ]
-)
+employee_audit_log_keys = {
+    "employee_id",
+    "tax_identifier_id",
+    "first_name",
+    "last_name",
+    "date_of_birth",
+    "fineos_customer_number",
+    "latest_import_log_id",
+    "created_at",
+    "updated_at",
+}
+employer_audit_log_keys = {
+    "employer_id",
+    "employer_fein",
+    "employer_name",
+    "dor_updated_date",
+    "latest_import_log_id",
+    "fineos_employer_id",
+    "created_at",
+    "updated_at",
+}
 
 
 def create_payment_log(
@@ -1387,7 +1347,6 @@ def create_payment_log(
     employee/employer/claim/absence period/payment check
     """
     absence_period = payment.leave_request
-    claim = payment.claim
 
     snapshot = {}
     if absence_period:
@@ -1419,8 +1378,7 @@ def create_payment_log(
     if check_details:
         snapshot["payment_check"] = check_details.for_json()
 
-    audit_details = {}
-    audit_details["snapshot"] = snapshot
+    audit_details = {"snapshot": snapshot}
     if additional_details:
         audit_details.update(additional_details)
 
@@ -1508,10 +1466,6 @@ def is_employer_exempt_for_payment(payment: Payment, claim: Claim, employer: Emp
             return True
 
     return False
-
-
-def is_withholding_payments_enabled() -> bool:
-    return os.environ.get("ENABLE_WITHHOLDING_PAYMENTS", "0") == "1"
 
 
 def is_employer_reimbursement_payments_enabled() -> bool:

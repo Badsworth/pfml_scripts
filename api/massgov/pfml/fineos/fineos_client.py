@@ -21,6 +21,7 @@ import xmlschema
 from requests.models import Response
 
 import massgov.pfml.util.logging
+from massgov.pfml.fineos.models.customer_api import LeavePeriodChangeRequest
 from massgov.pfml.fineos.transforms.to_fineos.base import EFormBody
 from massgov.pfml.fineos.util.response import (
     fineos_document_empty_dates_to_none,
@@ -489,7 +490,9 @@ class FINEOSClient(client.AbstractFINEOSClient):
         response = self._customer_api(
             "GET", "customer/readCustomerDetails", user_id, "read_customer_details"
         )
-        return models.customer_api.Customer.parse_obj(response.json())
+        json = response.json()
+        set_empty_dates_to_none(json, ["dateOfBirth"])
+        return models.customer_api.Customer.parse_obj(json)
 
     def update_customer_details(self, user_id: str, customer: models.customer_api.Customer) -> None:
         """Update customer details."""
@@ -1341,6 +1344,34 @@ class FINEOSClient(client.AbstractFINEOSClient):
             fineos_employer_id_int = int(str(fineos_employer_id_value))
 
         return employer_create_or_update.fineos_customer_nbr, fineos_employer_id_int
+
+    def create_or_update_leave_period_change_request(
+        self, user_id: str, change_request: LeavePeriodChangeRequest
+    ) -> LeavePeriodChangeRequest:
+        # call the FINEOS POST change_request endpoint when the upgrade is complete
+        # TODO: https://lwd.atlassian.net/browse/PFMLPB-2055
+        mock_response_json = {
+            "additionalNotes": "Withdrawal",
+            "changeRequestPeriods": [{"endDate": "2022-02-15", "startDate": "2022-02-14"}],
+            "reason": {"fullId": 0, "name": "Employee Requested Removal"},
+        }
+
+        return LeavePeriodChangeRequest.parse_obj(mock_response_json)
+
+    def get_leave_period_change_requests(
+        self, user_id: str, claim_id: str
+    ) -> List[LeavePeriodChangeRequest]:
+        # call the FINEOS GET change_request endpoint when the upgrade is complete
+        # TODO: https://lwd.atlassian.net/browse/PFMLPB-2055
+        mock_response_json = [
+            {
+                "additionalNotes": "Withdrawal",
+                "changeRequestPeriods": [{"endDate": "2022-02-15", "startDate": "2022-02-14"}],
+                "reason": {"fullId": 0, "name": "Employee Requested Removal"},
+            }
+        ]
+
+        return pydantic.parse_obj_as(List[LeavePeriodChangeRequest], mock_response_json)
 
     @staticmethod
     def _create_or_update_leave_admin_payload(

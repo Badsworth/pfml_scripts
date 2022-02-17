@@ -25,7 +25,6 @@ import {
 import {
   ApplicationSubmissionResponse,
   Credentials,
-  Environment,
   Scenarios,
 } from "../../src/types";
 import {
@@ -40,11 +39,7 @@ import TestMailClient, {
   Email,
   GetEmailsOpts,
 } from "../../src/submission/TestMailClient";
-import TwilioClient, {
-  Numbers,
-  MFAOpts,
-  RES_MFA,
-} from "../../src/submission/TwilioClient";
+import TwilioClient, { MFAOpts } from "../../src/submission/TwilioClient";
 import DocumentWaiter from "./DocumentWaiter";
 import { ClaimGenerator, DehydratedClaim } from "../../src/generation/Claim";
 import * as scenarios from "../../src/scenarios";
@@ -78,14 +73,8 @@ export default function (
     getAuthVerification: (toAddress: string) => {
       return verificationFetcher.getVerificationCodeForUser(toAddress);
     },
-    async mfaVerfication(opts: MFAOpts): Promise<RES_MFA> {
+    async mfaVerification(opts: MFAOpts): Promise<string> {
       return await twilio_client.getPhoneVerification(opts);
-    },
-    getMFAPhoneNumber(type: keyof Numbers[Environment]) {
-      return twilio_client.getPhoneNumber(
-        config("ENVIRONMENT") as Environment,
-        type
-      );
     },
     async chooseFineosRole({
       userId,

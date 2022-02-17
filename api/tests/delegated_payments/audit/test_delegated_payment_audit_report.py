@@ -144,6 +144,14 @@ def test_get_payment_audit_report_details(test_db_session, initialize_factories_
         test_db_session,
     )
 
+    stage_payment_audit_report_details(
+        payment,
+        PaymentAuditReportType.PAYMENT_DATE_MISMATCH,
+        "Payment date mismatch Test Message",
+        None,
+        test_db_session,
+    )
+
     audit_report_time = get_now_us_eastern()
 
     audit_report_details = get_payment_audit_report_details(
@@ -154,16 +162,23 @@ def test_get_payment_audit_report_details(test_db_session, initialize_factories_
     assert audit_report_details.dua_additional_income_details == "DUA Reduction Test Message"
     assert audit_report_details.dia_additional_income_details == "DIA Reduction Test Message"
     assert audit_report_details.dor_fineos_name_mismatch_details == "Name mismatch Test Message"
-    assert audit_report_details.rejected_by_program_integrity is False
-    assert audit_report_details.skipped_by_program_integrity is False
     assert (
-        audit_report_details.rejected_notes
-        == f"{PaymentAuditReportType.DUA_ADDITIONAL_INCOME.payment_audit_report_type_description}, {PaymentAuditReportType.DIA_ADDITIONAL_INCOME.payment_audit_report_type_description}, {PaymentAuditReportType.DOR_FINEOS_NAME_MISMATCH.payment_audit_report_type_description}"
+        audit_report_details.payment_date_mismatch_details == "Payment date mismatch Test Message"
+    )
+    assert audit_report_details.rejected_by_program_integrity is True
+    assert audit_report_details.skipped_by_program_integrity is False
+    assert audit_report_details.rejected_notes == ", ".join(
+        [
+            PaymentAuditReportType.DUA_ADDITIONAL_INCOME.payment_audit_report_type_description,
+            PaymentAuditReportType.DIA_ADDITIONAL_INCOME.payment_audit_report_type_description,
+            PaymentAuditReportType.DOR_FINEOS_NAME_MISMATCH.payment_audit_report_type_description,
+            f"{PaymentAuditReportType.PAYMENT_DATE_MISMATCH.payment_audit_report_type_description} (Rejected)",
+        ]
     )
 
     # test that the audit report time was set
     audit_report_details = test_db_session.query(PaymentAuditReportDetails).all()
-    assert len(audit_report_details) == 3
+    assert len(audit_report_details) == 4
     for audit_report_detail in audit_report_details:
         assert audit_report_detail.added_to_audit_report_at == audit_report_time
 
@@ -586,6 +601,8 @@ def validate_payment_audit_csv_row_by_payment_audit_data(
 
     assert row[PAYMENT_AUDIT_CSV_HEADERS.dor_fineos_name_mismatch_details] == ""
 
+    assert row[PAYMENT_AUDIT_CSV_HEADERS.payment_date_mismatch_details] == ""
+
     assert row[PAYMENT_AUDIT_CSV_HEADERS.rejected_by_program_integrity] == ""
 
     assert row[PAYMENT_AUDIT_CSV_HEADERS.skipped_by_program_integrity] == "", error_msg
@@ -784,7 +801,6 @@ def test_generate_audit_report(test_db_session, payment_audit_report_step, monke
 def test_orphaned_withholding_payments(
     initialize_factories_session, test_db_session, test_db_other_session, monkeypatch
 ):
-    monkeypatch.setenv("ENABLE_WITHHOLDING_PAYMENTS", "1")
 
     payments: List[Payment] = []
 
@@ -838,7 +854,6 @@ def test_orphaned_withholding_payments(
 def test_related_withholding_payments(
     initialize_factories_session, test_db_session, test_db_other_session, monkeypatch
 ):
-    monkeypatch.setenv("ENABLE_WITHHOLDING_PAYMENTS", "1")
 
     payments: List[Payment] = []
 

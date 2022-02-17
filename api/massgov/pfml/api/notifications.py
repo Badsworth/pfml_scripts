@@ -156,12 +156,7 @@ def notifications_post():
                     "Unable to find Employee or Employee has no tax_identifier, can't get absence periods"
                 )
             else:
-                absence_periods = get_absence_periods(
-                    employee.tax_identifier.tax_identifier,
-                    employer.employer_fein,
-                    notification_request.absence_case_id,
-                    db_session,
-                )
+                absence_periods = get_absence_periods(claim, db_session)
                 sync_customer_api_absence_periods_to_db(
                     absence_periods, claim, db_session, log_attributes
                 )

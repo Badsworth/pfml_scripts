@@ -1,6 +1,6 @@
-import { PaymentDetail } from "../../src/models/ClaimDetail";
+import { PaymentDetail } from "../../src/models/Payment";
 import dayjs from "dayjs";
-import faker from "faker";
+import { faker } from "@faker-js/faker";
 import formatDate from "../../src/utils/formatDate";
 import { uniqueId } from "lodash";
 
