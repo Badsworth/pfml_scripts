@@ -52,7 +52,8 @@ describe("Approval (notifications/notices)", () => {
           .shouldHaveStatus("Availability", "Time Available")
           .shouldHaveStatus("Restriction", "Passed")
           .shouldHaveStatus("PlanDecision", "Accepted")
-          .approve();
+          .approve()
+          .triggerNotice("Designation Notice");
       });
     });
   });
@@ -71,7 +72,6 @@ describe("Approval (notifications/notices)", () => {
         .documents((docsPage) => {
           docsPage.assertDocumentExists("Record Cancel Time");
         })
-        .triggerNotice("Designation Notice")
         .triggerNotice("Leave Cancellation Request");
     });
   });

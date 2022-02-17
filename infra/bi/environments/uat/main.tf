@@ -24,5 +24,6 @@ terraform {
 module "pfml" {
   source = "../../template"
 
-  environment_name = "uat"
+  environment_name                 = "uat"
+  redshift_daily_import_bucket_key = "f35a0f5c-ca58-4f4d-85ac-21e84caab40d"
 }

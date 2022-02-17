@@ -117,6 +117,10 @@ def get_current_user_leave_admin_record(fineos_absence_id: str) -> UserLeaveAdmi
             associated_employer_id = claim.employer_id
 
         if claim is None or associated_employer_id is None:
+            logger.warning(
+                "Claim does not exist for given absence ID",
+                extra={"absence_case_id": fineos_absence_id},
+            )
             raise Forbidden(description="Claim does not exist for given absence ID")
 
         user_leave_admin = (
@@ -128,35 +132,53 @@ def get_current_user_leave_admin_record(fineos_absence_id: str) -> UserLeaveAdmi
             .one_or_none()
         )
 
+        log_attributes = {
+            "absence_case_id": fineos_absence_id,
+            "user_id": current_user.user_id,
+            "associated_employer_id": associated_employer_id,
+        }
+
         if user_leave_admin is None:
+            logger.warning(
+                "The leave admin is None", extra=log_attributes,
+            )
             raise NotAuthorizedForAccess(
                 description="User does not have leave administrator record for this employer",
                 error_type=IssueType.unauthorized_leave_admin,
             )
 
         if user_leave_admin.fineos_web_id is None:
+            logger.warning(
+                "The leave admin has no FINEOS ID", extra=log_attributes,
+            )
             raise VerificationRequired(
                 user_leave_admin, "User has no leave administrator FINEOS ID"
             )
 
         if not user_leave_admin.verified:
+            logger.warning(
+                "The leave admin is not verified", extra=log_attributes,
+            )
             raise VerificationRequired(user_leave_admin, "User is not Verified")
 
         if not user_has_access_to_claim(claim, current_user):
-            data = {
-                "employer_id": user_leave_admin.employer_id,
-                "has_verification_data": user_leave_admin.employer.has_verification_data,
-                "claim_organization_unit": OrganizationUnit.from_orm(
-                    claim.organization_unit
-                ).dict(),
-                "leave_admin_organization_unit_ids": ",".join(
-                    [str(o.organization_unit_id) for o in user_leave_admin.organization_units]
-                ),
-            }
+            logger.warning(
+                "The leave admin cannot access claims of this organization unit",
+                extra={
+                    "has_verification_data": user_leave_admin.employer.has_verification_data,
+                    "claim_organization_unit": OrganizationUnit.from_orm(
+                        claim.organization_unit
+                    ).dict(),
+                    "leave_admin_fineos_web_id": user_leave_admin.fineos_web_id,
+                    "leave_admin_organization_unit_ids": ",".join(
+                        [str(o.organization_unit_id) for o in user_leave_admin.organization_units]
+                    ),
+                    **log_attributes,
+                },
+            )
             raise NotAuthorizedForAccess(
                 description="The leave admin cannot access claims of this organization unit",
                 error_type="unauthorized_leave_admin",
-                data=data,
             )
 
         return user_leave_admin

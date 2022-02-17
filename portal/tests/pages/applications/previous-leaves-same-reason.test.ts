@@ -1,5 +1,5 @@
 import { MockBenefitsApplicationBuilder, renderPage } from "../../test-utils";
-import { cleanup, screen, waitFor } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import PreviousLeavesSameReason from "../../../src/pages/applications/previous-leaves-same-reason";
 import { setupBenefitsApplications } from "../../test-utils/helpers";
 import userEvent from "@testing-library/user-event";
@@ -27,21 +27,11 @@ const setup = (
 };
 
 describe("PreviousLeavesSameReason", () => {
-  it("renders different legend and hint when claim is for Caring Leave", () => {
+  it("renders fieldset", () => {
     setup(
       new MockBenefitsApplicationBuilder()
         .continuous()
         .caringLeaveReason()
-        .create()
-    );
-
-    expect(screen.getByRole("group")).toMatchSnapshot();
-
-    cleanup();
-    setup(
-      new MockBenefitsApplicationBuilder()
-        .continuous()
-        .medicalLeaveReason()
         .create()
     );
 

@@ -1,5 +1,4 @@
 import { NrqlQuery } from "nr1";
-import { COMPONENTS } from "./index";
 
 export class BaseDAO {
   static QueryObject(accountId, where, since, limit) {
@@ -7,8 +6,9 @@ export class BaseDAO {
       accountId: accountId,
       query: this.QUERY(where, since, limit),
       formatType: this.FORMAT_TYPE,
-      rowProcessor: this.PROCESSOR,
-      postProcessor: this.POST_PROCESSOR,
+      // bind the processor callbacks so that they retain a reference to 'this'
+      rowProcessor: this.PROCESSOR.bind(this),
+      postProcessor: this.POST_PROCESSOR.bind(this),
     };
   }
 
@@ -166,16 +166,27 @@ export class DAODeploymentsTimelineForEnvironment extends BaseDAO {
 }
 
 export class DAOEnvironmentComponentVersion extends BaseDAO {
+  static VERSION_ALIAS = "version";
+  static TIMESTAMP_ALIAS = "timestamp";
+
   static QUERY(where, since, limit) {
     since = since || "3 months ago";
     limit = limit || "max";
-    return `SELECT ${COMPONENTS.map(
-      (c) => `filter(latest(version), WHERE component = '${c}') AS '${c}'`
-    ).join(", ")}
-            FROM CustomDeploymentMarker FACET environment
-            ${where?.length ? `WHERE ${where}` : ""}
-            ${since?.length ? `SINCE ${since}` : ""}
-           LIMIT ${limit}`;
+    const queryParts = [
+      `SELECT
+        latest(version) as '${this.VERSION_ALIAS}',
+        latest(timestamp) as '${this.TIMESTAMP_ALIAS}'`,
+      "FROM CustomDeploymentMarker FACET environment, component",
+      `SINCE ${since}`,
+    ];
+
+    if (where) {
+      queryParts.push(`WHERE ${where}`);
+    }
+
+    queryParts.push(`LIMIT ${limit}`);
+
+    return queryParts.join("\n");
   }
 
   static POST_PROCESSOR(data) {
@@ -185,18 +196,27 @@ export class DAOEnvironmentComponentVersion extends BaseDAO {
           ...collected,
           [item.environment]: {
             environment: item.environment,
-            fineos: { status: "Unknown", timestamp: null },
-            api: { status: "Unknown", timestamp: null },
-            portal: { status: "Unknown", timestamp: null },
+            fineos: {
+              [this.VERSION_ALIAS]: "Unknown",
+              [this.TIMESTAMP_ALIAS]: null,
+            },
+            api: {
+              [this.VERSION_ALIAS]: "Unknown",
+              [this.TIMESTAMP_ALIAS]: null,
+            },
+            portal: {
+              [this.VERSION_ALIAS]: "Unknown",
+              [this.TIMESTAMP_ALIAS]: null,
+            },
           },
         };
       }
-      COMPONENTS.forEach((prop) => {
-        if (item[prop]) {
-          collected[item.environment][prop].status = item[prop];
-          collected[item.environment][prop].timestamp = item.begin_time;
-        }
-      });
+
+      if (collected[item.environment][item.component]) {
+        collected[item.environment][item.component][item.latest] =
+          item[item.latest];
+      }
+
       return collected;
     }, {});
   }

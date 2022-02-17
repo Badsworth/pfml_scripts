@@ -566,8 +566,16 @@ def test_process_extract_data_one_bad_record(
         "validation_container": {
             "record_key": f"C={payment_data.c_value},I={payment_data.i_value}",
             "validation_issues": [
-                {"reason": "MissingInDB", "details": f"tax_identifier: {payment_data.tin}"},
-                {"reason": "MissingInDB", "details": f"claim: {payment_data.absence_case_number}"},
+                {
+                    "reason": "MissingInDB",
+                    "details": payment_data.tin,
+                    "field_name": "tax_identifier",
+                },
+                {
+                    "reason": "MissingInDB",
+                    "details": payment_data.absence_case_number,
+                    "field_name": "claim",
+                },
             ],
         },
     }
@@ -1140,9 +1148,9 @@ def test_process_extract_no_fineos_name(local_test_db_session, local_payment_ext
 def test_process_extract_is_adhoc(
     local_payment_extract_step, local_test_db_session,
 ):
-    fineos_adhoc_data = FineosPaymentData(amalgamationc="Adhoc1234")
+    fineos_adhoc_data = FineosPaymentData(payment_type="Adhoc")
     add_db_records_from_fineos_data(local_test_db_session, fineos_adhoc_data)
-    fineos_standard_data = FineosPaymentData(amalgamationc="Some other value")
+    fineos_standard_data = FineosPaymentData(payment_type="Some other value")
     add_db_records_from_fineos_data(local_test_db_session, fineos_standard_data)
 
     stage_data([fineos_adhoc_data, fineos_standard_data], local_test_db_session)
@@ -2071,8 +2079,14 @@ def test_validation_param_length(initialize_factories_session, set_exporter_env_
     _, payment_data = make_payment_data_from_fineos_data(fineos_data)
     assert set(
         [
-            ValidationIssue(ValidationReason.FIELD_TOO_SHORT, "PAYEEBANKSORT: 123"),
-            ValidationIssue(ValidationReason.ROUTING_NUMBER_FAILS_CHECKSUM, "PAYEEBANKSORT: 123"),
+            ValidationIssue(
+                ValidationReason.FIELD_TOO_SHORT, "PAYEEBANKSORT: 123", "PAYEEBANKSORT"
+            ),
+            ValidationIssue(
+                ValidationReason.ROUTING_NUMBER_FAILS_CHECKSUM,
+                "PAYEEBANKSORT: 123",
+                "PAYEEBANKSORT",
+            ),
         ]
     ) == set(payment_data.validation_container.validation_issues)
 
@@ -2084,10 +2098,16 @@ def test_validation_param_length(initialize_factories_session, set_exporter_env_
     _, payment_data = make_payment_data_from_fineos_data(fineos_data)
     assert set(
         [
-            ValidationIssue(ValidationReason.FIELD_TOO_LONG, f"PAYEEBANKSORT: {long_num}"),
-            ValidationIssue(ValidationReason.FIELD_TOO_LONG, f"PAYEEACCOUNTN: {long_num}"),
             ValidationIssue(
-                ValidationReason.ROUTING_NUMBER_FAILS_CHECKSUM, f"PAYEEBANKSORT: {long_num}"
+                ValidationReason.FIELD_TOO_LONG, f"PAYEEBANKSORT: {long_num}", "PAYEEBANKSORT"
+            ),
+            ValidationIssue(
+                ValidationReason.FIELD_TOO_LONG, f"PAYEEACCOUNTN: {long_num}", "PAYEEACCOUNTN"
+            ),
+            ValidationIssue(
+                ValidationReason.ROUTING_NUMBER_FAILS_CHECKSUM,
+                f"PAYEEBANKSORT: {long_num}",
+                "PAYEEBANKSORT",
             ),
         ]
     ) == set(payment_data.validation_container.validation_issues)
@@ -2097,8 +2117,10 @@ def test_validation_param_length(initialize_factories_session, set_exporter_env_
     _, payment_data = make_payment_data_from_fineos_data(fineos_data)
     assert set(
         [
-            ValidationIssue(ValidationReason.FIELD_TOO_SHORT, "PAYMENTPOSTCO: 123"),
-            ValidationIssue(ValidationReason.INVALID_VALUE, "PAYMENTPOSTCO: 123"),
+            ValidationIssue(
+                ValidationReason.FIELD_TOO_SHORT, "PAYMENTPOSTCO: 123", "PAYMENTPOSTCO"
+            ),
+            ValidationIssue(ValidationReason.INVALID_VALUE, "PAYMENTPOSTCO: 123", "PAYMENTPOSTCO"),
         ]
     ) == set(payment_data.validation_container.validation_issues)
 
@@ -2107,8 +2129,12 @@ def test_validation_param_length(initialize_factories_session, set_exporter_env_
     _, payment_data = make_payment_data_from_fineos_data(fineos_data)
     assert set(
         [
-            ValidationIssue(ValidationReason.FIELD_TOO_LONG, "PAYMENTPOSTCO: 1234567890123456"),
-            ValidationIssue(ValidationReason.INVALID_VALUE, "PAYMENTPOSTCO: 1234567890123456"),
+            ValidationIssue(
+                ValidationReason.FIELD_TOO_LONG, "PAYMENTPOSTCO: 1234567890123456", "PAYMENTPOSTCO"
+            ),
+            ValidationIssue(
+                ValidationReason.INVALID_VALUE, "PAYMENTPOSTCO: 1234567890123456", "PAYMENTPOSTCO"
+            ),
         ]
     ) == set(payment_data.validation_container.validation_issues)
 
@@ -2121,21 +2147,33 @@ def test_validation_lookup_validators(initialize_factories_session, set_exporter
     fineos_data = FineosPaymentData(payment_method="Gold")
     _, payment_data = make_payment_data_from_fineos_data(fineos_data)
     assert set(
-        [ValidationIssue(ValidationReason.INVALID_LOOKUP_VALUE, "PAYMENTMETHOD: Gold")]
+        [
+            ValidationIssue(
+                ValidationReason.INVALID_LOOKUP_VALUE, "PAYMENTMETHOD: Gold", "PAYMENTMETHOD"
+            )
+        ]
     ) == set(payment_data.validation_container.validation_issues)
 
     # Verify account type lookup validator
     fineos_data = FineosPaymentData(payment_method="Elec Funds Transfer", account_type="Vault")
     _, payment_data = make_payment_data_from_fineos_data(fineos_data)
     assert set(
-        [ValidationIssue(ValidationReason.INVALID_LOOKUP_VALUE, "PAYEEACCOUNTT: Vault")]
+        [
+            ValidationIssue(
+                ValidationReason.INVALID_LOOKUP_VALUE, "PAYEEACCOUNTT: Vault", "PAYEEACCOUNTT"
+            )
+        ]
     ) == set(payment_data.validation_container.validation_issues)
 
     # Verify state lookup validator
     fineos_data = FineosPaymentData(payment_method="Check", state="NotAState")
     _, payment_data = make_payment_data_from_fineos_data(fineos_data)
     assert set(
-        [ValidationIssue(ValidationReason.INVALID_LOOKUP_VALUE, "PAYMENTADD6: NotAState")]
+        [
+            ValidationIssue(
+                ValidationReason.INVALID_LOOKUP_VALUE, "PAYMENTADD6: NotAState", "PAYMENTADD6"
+            )
+        ]
     ) == set(payment_data.validation_container.validation_issues)
 
 
@@ -2150,15 +2188,19 @@ def test_validation_payment_amount(initialize_factories_session, set_exporter_en
         assert set(
             [
                 ValidationIssue(
-                    ValidationReason.INVALID_VALUE, f"AMOUNT_MONAMT: {invalid_payment_amount}",
+                    ValidationReason.INVALID_VALUE,
+                    f"AMOUNT_MONAMT: {invalid_payment_amount}",
+                    "AMOUNT_MONAMT",
                 ),
                 ValidationIssue(
                     ValidationReason.INVALID_VALUE,
                     f"BALANCINGAMOU_MONAMT: {invalid_payment_amount}",
+                    "BALANCINGAMOU_MONAMT",
                 ),
                 ValidationIssue(
                     ValidationReason.INVALID_VALUE,
                     f"BUSINESSNETBE_MONAMT: {invalid_payment_amount}",
+                    "BUSINESSNETBE_MONAMT",
                 ),
                 ValidationIssue(
                     ValidationReason.UNEXPECTED_PAYMENT_TRANSACTION_TYPE,
@@ -2177,7 +2219,11 @@ def test_validation_zip_code(initialize_factories_session, set_exporter_env_vars
         fineos_data = FineosPaymentData(payment_method="Check", zip_code=invalid_zip)
         _, payment_data = make_payment_data_from_fineos_data(fineos_data)
         assert set(
-            [ValidationIssue(ValidationReason.INVALID_VALUE, f"PAYMENTPOSTCO: {invalid_zip}")]
+            [
+                ValidationIssue(
+                    ValidationReason.INVALID_VALUE, f"PAYMENTPOSTCO: {invalid_zip}", "PAYMENTPOSTCO"
+                )
+            ]
         ) == set(payment_data.validation_container.validation_issues)
 
 
@@ -2195,6 +2241,7 @@ def test_validation_routing_number(initialize_factories_session, set_exporter_en
                 ValidationIssue(
                     ValidationReason.ROUTING_NUMBER_FAILS_CHECKSUM,
                     f"PAYEEBANKSORT: {invalid_routing_number}",
+                    "PAYEEBANKSORT",
                 )
             ]
         ) == set(payment_data.validation_container.validation_issues)

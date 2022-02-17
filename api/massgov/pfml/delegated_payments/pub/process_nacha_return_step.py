@@ -373,9 +373,12 @@ class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
 
         if end_state_id == State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT.state_id:
             # Expected normal state for an ACH change notification payment.
+
+            end_state = State.DELEGATED_PAYMENT_COMPLETE_WITH_CHANGE_NOTIFICATION
+
             create_payment_finished_state_log_with_writeback(
                 payment=payment,
-                payment_end_state=State.DELEGATED_PAYMENT_COMPLETE_WITH_CHANGE_NOTIFICATION,
+                payment_end_state=end_state,
                 payment_outcome=state_log_util.build_outcome(
                     "Payment complete with change notification",
                     ach_return_reason_code=str(change_notification.return_reason_code),
@@ -389,8 +392,12 @@ class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
 
             logger.warning(
                 "ACH Notification: Payment complete with change notification",
-                extra=change_notification.get_details_for_log(),
+                extra={
+                    **change_notification.get_details_for_log(),
+                    **delegated_payments_util.get_traceable_payment_details(payment, end_state),
+                },
             )
+
             self.increment(self.Metrics.PAYMENT_COMPLETE_WITH_CHANGE_COUNT)
 
             self.add_pub_error(

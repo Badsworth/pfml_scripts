@@ -1,5 +1,10 @@
 import { act, renderHook } from "@testing-library/react-hooks";
-import { mockAuth, mockFetch } from "../test-utils";
+import {
+  createAbsencePeriod,
+  createMockClaimDetail,
+  mockAuth,
+  mockFetch,
+} from "../test-utils";
 import AppErrorInfo from "../../src/models/AppErrorInfo";
 import ClaimDetail from "../../src/models/ClaimDetail";
 import useAppLogic from "../../src/hooks/useAppLogic";
@@ -221,6 +226,7 @@ describe("useClaimsLogic", () => {
     it("gets claim from API", async () => {
       const mockResponseData = {
         fineos_absence_id: "absence_id_1",
+        claimDetail: createMockClaimDetail(createAbsencePeriod()),
       };
       mockFetch({
         response: {
@@ -230,15 +236,11 @@ describe("useClaimsLogic", () => {
 
       const { appLogic } = setup();
 
-      let claimDetail;
       await act(async () => {
-        claimDetail = await appLogic.current.claims.loadClaimDetail(
-          "absence_case_id"
-        );
+        await appLogic.current.claims.loadClaimDetail("absence_case_id");
       });
 
       expect(appLogic.current.claims.claimDetail).toBeInstanceOf(ClaimDetail);
-      expect(claimDetail).toStrictEqual(appLogic.current.claims.claimDetail);
     });
 
     it("it sets isLoadingClaimDetail to true when a claim is being loaded", async () => {
@@ -266,33 +268,28 @@ describe("useClaimsLogic", () => {
         // this should make an API request since no claim details are loaded
         const mockResponseData = {
           fineos_absence_id: "absence_id_1",
+          claimDetail: createMockClaimDetail(createAbsencePeriod()),
         };
         mockFetch({
           response: {
             data: mockResponseData,
           },
         });
-        let claimDetail = await appLogic.current.claims.loadClaimDetail(
-          "absence_id_1"
-        );
+        await appLogic.current.claims.loadClaimDetail("absence_id_1");
         expect(global.fetch).toHaveBeenCalled();
-        expect(claimDetail).toBeInstanceOf(ClaimDetail);
+        expect(appLogic.current.claims.claimDetail).toBeInstanceOf(ClaimDetail);
 
         // but this shouldn't, since we've already loaded this claim
         mockFetch();
-        claimDetail = await appLogic.current.claims.loadClaimDetail(
-          "absence_id_1"
-        );
+        await appLogic.current.claims.loadClaimDetail("absence_id_1");
         expect(global.fetch).not.toHaveBeenCalled();
-        expect(claimDetail).toBeInstanceOf(ClaimDetail);
+        expect(appLogic.current.claims.claimDetail).toBeInstanceOf(ClaimDetail);
 
         // this should make an API request since the absence case ID changed
         mockFetch();
-        claimDetail = await appLogic.current.claims.loadClaimDetail(
-          "absence_id_2"
-        );
+        await appLogic.current.claims.loadClaimDetail("absence_id_2");
         expect(global.fetch).toHaveBeenCalled();
-        expect(claimDetail).toBeInstanceOf(ClaimDetail);
+        expect(appLogic.current.claims.claimDetail).toBeInstanceOf(ClaimDetail);
       });
     });
 

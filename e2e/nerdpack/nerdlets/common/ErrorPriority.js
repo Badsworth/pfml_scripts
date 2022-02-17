@@ -6,6 +6,7 @@ export const CATEGORY_PRIORITY = {
   infrastructure: {
     "timeout-service": "LOW",
     authentication: "HIGH",
+    "authentication-sso": "HIGH",
     "failure-400": "EDM",
     "failure-500": "EDM",
     "failure-503": "MEDIUM",

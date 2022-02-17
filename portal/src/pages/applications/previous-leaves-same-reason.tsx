@@ -70,15 +70,9 @@ export const PreviousLeavesSameReason = (
             hint: t("pages.claimsPreviousLeavesSameReason.hintNo"),
           },
         ]}
-        hint={
-          isCaringLeave
-            ? t("pages.claimsPreviousLeavesSameReason.sectionHint")
-            : null
-        }
         label={
           <Heading level="2" size="1">
             {t("pages.claimsPreviousLeavesSameReason.sectionLabel", {
-              context: isCaringLeave ? "caring" : undefined,
               previousLeaveStartDate,
               leaveStartDate,
             })}

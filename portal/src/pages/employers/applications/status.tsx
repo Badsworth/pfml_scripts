@@ -10,9 +10,9 @@ import withEmployerClaim, {
 import { AbsenceCaseStatus } from "../../../models/Claim";
 import AbsenceCaseStatusTag from "../../../components/AbsenceCaseStatusTag";
 import BackButton from "../../../components/BackButton";
-import CertificationsAndAbsencePeriods from "../../../components/employers/CertificationsAndAbsencePeriods";
+import CertificationsAndAbsencePeriods from "../../../features/employer-review/CertificationsAndAbsencePeriods";
 import DownloadableDocument from "../../../components/DownloadableDocument";
-import EmployeeInformation from "../../../components/employers/EmployeeInformation";
+import EmployeeInformation from "../../../features/employer-review/EmployeeInformation";
 import Heading from "../../../components/core/Heading";
 import HeadingPrefix from "src/components/core/HeadingPrefix";
 import Lead from "../../../components/core/Lead";
@@ -102,13 +102,6 @@ export const Status = (props: WithEmployerClaimProps) => {
       {showStatusPageUpdates ? (
         <React.Fragment>
           <EmployeeInformation claim={claim} />
-          <StatusRow
-            label={t(
-              "components.employersWeeklyHoursWorkedRow.weeklyHoursWorkedLabel"
-            )}
-          >
-            <p className="margin-top-0">{claim.hours_worked_per_week}</p>
-          </StatusRow>
           <CertificationsAndAbsencePeriods
             claim={claim}
             documents={certificationDocuments}

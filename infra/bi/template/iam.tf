@@ -48,7 +48,7 @@ data "aws_iam_policy_document" "insights_copy_files_role_policy_document" {
     ]
 
     resources = [
-      "*"
+      "arn:aws:kms:us-east-1:498823821309:key/${var.redshift_daily_import_bucket_key}"
     ]
 
     effect = "Allow"

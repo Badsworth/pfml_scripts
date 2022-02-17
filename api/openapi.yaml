@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Paid Leave API
   description: An API for managing leave within Massachusetts Paid Family and Medical Leave.
-  version: "2022-01-06"
+  version: "2022-02-17"
 
 servers:
   - url: /v1
@@ -239,33 +239,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/EmployeeErrorResponse"
-    patch:
-      tags:
-        - Employees
-      summary: Update an Employee record, for mutable properties
-      operationId: massgov.pfml.api.employees.employees_patch
-      parameters:
-        - name: employee_id
-          in: path
-          schema:
-            type: string
-          description: ID of Employee to update
-          required: true
-      responses:
-        "200":
-          description: A successful response returns a 200 status code and an employee object.
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/SuccessfulResponse"
-                  - properties:
-                      data:
-                        $ref: "#/components/schemas/EmployeeResponse"
-        "404":
-          $ref: "#/components/responses/NotFound"
-      requestBody:
-        $ref: "#/components/requestBodies/EmployeeUpdateRequest"
 
   /employees/search:
     post:
@@ -1478,12 +1451,6 @@ components:
           schema:
             $ref: "#/components/schemas/EmployeeSearchRequest"
       required: true
-    EmployeeUpdateRequest:
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/EmployeeUpdateRequest"
-      required: true
     EmployerClaimRequestBody:
       content:
         application/json:
@@ -2045,31 +2012,6 @@ components:
         mfa_phone_number:
           $ref: "#/components/schemas/Phone"
 
-    EmployeeUpdateRequest:
-      type: object
-      properties:
-        first_name:
-          type: string
-          example: "Jane"
-          nullable: false
-          minLength: 1
-        middle_name:
-          type: string
-          example: "Alice"
-          nullable: false
-          minLength: 1
-        last_name:
-          type: string
-          example: "Doe"
-          nullable: false
-          minLength: 1
-        email_address:
-          type: string
-          format: email
-          example: "j.a.doe@gmail.com"
-          nullable: false
-          minLength: 1
-
     EmployeeSearchRequest:
       type: object
       properties:
@@ -2302,6 +2244,8 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/ManagedRequirementResponse"
+        computed_start_dates:
+          $ref: "#/components/schemas/ComputedStartDates"
       additionalProperties: false
       required:
         - employer_benefits

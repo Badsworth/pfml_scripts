@@ -126,9 +126,7 @@ class Generate1099DocumentsStep(Step):
             if response.ok:
                 record.s3_location = s3_location
                 self.db_session.commit()
-                logger.info(
-                    f"Pdf was successfully generated for {record.first_name} {record.last_name}"
-                )
+                logger.info("Pdf was successfully generated.")
                 self.increment(self.Metrics.DOCUMENT_COUNT)
             else:
                 logger.error(response.json())

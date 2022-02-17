@@ -26,7 +26,12 @@ from massgov.pfml.api.models.claims.responses import (
     ClaimReviewResponse,
     DocumentResponse,
 )
-from massgov.pfml.api.models.common import ConcurrentLeave, EmployerBenefit
+from massgov.pfml.api.models.common import (
+    ComputedStartDates,
+    ConcurrentLeave,
+    EmployerBenefit,
+    get_computed_start_dates,
+)
 from massgov.pfml.api.validation.exceptions import ContainsV1AndV2Eforms
 from massgov.pfml.db.models.employees import Employer, User, UserLeaveAdministrator
 from massgov.pfml.db.queries.absence_periods import (
@@ -157,6 +162,24 @@ def _get_leave_details(absence_periods: Dict[str, Dict]) -> LeaveDetails:
         ]
 
     return LeaveDetails.parse_obj(leave_details)
+
+
+def _get_computed_start_dates(absence_periods: Dict[str, Dict]) -> ComputedStartDates:
+    """ Extracts absence data based on a PeriodDecisions dict and returns ComputedStartDates """
+    if len(absence_periods["decisions"]) == 0 or not absence_periods["decisions"][0]["period"]:
+        return ComputedStartDates(other_reason=None, same_reason=None)
+
+    # This assumes a multiple leave claim won't have a mix of caring leave and some other leave reason
+    leave_reason = absence_periods["decisions"][0]["period"]["leaveRequest"]["reasonName"]
+
+    leave_period_start_dates = [
+        decision["period"]["startDate"]
+        for decision in absence_periods["decisions"]
+        if decision["period"]["startDate"]
+    ]
+    earliest_start_date = min(leave_period_start_dates, default=None)
+
+    return get_computed_start_dates(earliest_start_date, leave_reason)
 
 
 def fineos_document_response_to_document_response(
@@ -501,6 +524,9 @@ def get_claim_as_leave_admin(
     customer_info_for_review = CustomerInfoForReview.parse_obj(customer_info)
     employer_info_for_review = EmployerInfoForReview.from_orm(employer)
 
+    # Get computed start dates based on absence_periods
+    computed_start_dates = _get_computed_start_dates(absence_periods.dict())
+
     return (
         ClaimReviewResponse(
             **customer_info_for_review.dict(),
@@ -512,6 +538,7 @@ def get_claim_as_leave_admin(
             leave_details=leave_details,
             status=status,
             absence_periods=absence_period_responses,
+            computed_start_dates=computed_start_dates,
         ),
         managed_reqs,
         absence_periods,

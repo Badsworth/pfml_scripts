@@ -208,9 +208,6 @@ describe("Status", () => {
       screen.getByRole("heading", { name: "Employee information" })
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { name: "Weekly hours worked" })
-    ).toBeInTheDocument();
-    expect(
       screen.queryByRole("button", { name: "Amend" })
     ).not.toBeInTheDocument();
     expect(

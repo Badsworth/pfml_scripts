@@ -6,7 +6,6 @@ from typing import List, Optional
 from pydantic import UUID4
 
 from massgov.pfml.api.models.applications.common import (
-    ComputedStartDates,
     EmploymentStatus,
     Gender,
     MaskedAddress,
@@ -20,8 +19,19 @@ from massgov.pfml.api.models.applications.common import (
     WorkPattern,
 )
 from massgov.pfml.api.models.claims.common import PreviousLeave
-from massgov.pfml.api.models.common import ConcurrentLeave, EmployerBenefit, MaskedPhoneResponse
-from massgov.pfml.db.models.applications import Application, ApplicationPaymentPreference, Document
+from massgov.pfml.api.models.common import (
+    ComputedStartDates,
+    ConcurrentLeave,
+    EmployerBenefit,
+    MaskedPhoneResponse,
+    get_computed_start_dates,
+)
+from massgov.pfml.db.models.applications import (
+    Application,
+    ApplicationPaymentPreference,
+    Document,
+    LeaveReason,
+)
 from massgov.pfml.util.pydantic import PydanticBaseModel
 from massgov.pfml.util.pydantic.types import (
     FEINFormattedStr,
@@ -119,9 +129,25 @@ class ApplicationResponse(PydanticBaseModel):
             application_response.fineos_absence_id = application.claim.fineos_absence_id
 
         application_response.updated_time = application_response.updated_at
-        application_response.computed_start_dates = ComputedStartDates.from_orm(application)
+        application_response.computed_start_dates = _get_computed_start_dates(application)
 
         return application_response
+
+
+def _get_computed_start_dates(application: Application) -> ComputedStartDates:
+    all_leave_periods = application.all_leave_periods
+    leave_period_start_dates = [
+        leave_period.start_date for leave_period in all_leave_periods if leave_period.start_date
+    ]
+    earliest_start_date = min(leave_period_start_dates, default=None)
+
+    leave_reason = (
+        LeaveReason.get_description(application.leave_reason_id)
+        if application.leave_reason_id
+        else None
+    )
+
+    return get_computed_start_dates(earliest_start_date, leave_reason)
 
 
 def build_payment_preference(

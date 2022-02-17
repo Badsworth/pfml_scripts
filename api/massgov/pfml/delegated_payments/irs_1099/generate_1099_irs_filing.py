@@ -477,6 +477,5 @@ class Generate1099IRSfilingStep(Step):
 
         final_string = re.sub("[^A-Za-z0-9-& ]+", "", name_string)
         if final_string != name_string:
-            logger.info("Removed special characters from name %s", name_string)
-            logger.info("Name is now %s", final_string)
+            logger.info("Removed special characters from name.")
         return final_string

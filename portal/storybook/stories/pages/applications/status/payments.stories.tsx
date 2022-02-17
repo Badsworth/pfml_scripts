@@ -7,6 +7,7 @@ import createMockClaimDetail, {
 import { AbsencePeriodTypes } from "src/models/AbsencePeriod";
 import ApiResourceCollection from "src/models/ApiResourceCollection";
 import { BenefitsApplicationDocument } from "src/models/Document";
+import { Payment } from "src/models/Payment";
 import { Payments } from "src/pages/applications/status/payments";
 import { Props } from "types/common";
 import React from "react";
@@ -215,10 +216,8 @@ export const DefaultStory = (
           args.Payments === PAYMENT_OPTIONS.RETROACTIVE,
         leaveScenario: args["Leave scenario"],
         leaveType: args["Leave type"],
-        payments,
       }),
       isLoadingClaimDetail: false,
-      hasLoadedPayments: () => true,
     },
     documents: {
       documents: new ApiResourceCollection<BenefitsApplicationDocument>(
@@ -232,6 +231,15 @@ export const DefaultStory = (
       ),
       hasLoadedClaimDocuments: () => true,
       loadAll: () => new Promise(() => {}),
+    },
+    payments: {
+      loadPayments: () => new Promise(() => {}),
+      loadedPaymentsData: new Payment({
+        payments,
+        absence_case_id: "mock-absence-case-id",
+      }),
+      hasLoadedPayments: () => true,
+      isLoadingPayments: false,
     },
     // Make the navigation tab appear active
     portalFlow: {

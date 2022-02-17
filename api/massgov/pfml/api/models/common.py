@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 from enum import Enum
 from typing import Generic, Optional, TypeVar, Union
@@ -12,6 +12,10 @@ import massgov.pfml.db.models.employees as db_employee_models
 import massgov.pfml.db.models.payments as db_payment_models
 import massgov.pfml.db.models.verifications as db_verification_models
 import massgov.pfml.util.pydantic.mask as mask
+from massgov.pfml.api.constants.application import (
+    CARING_LEAVE_EARLIEST_START_DATE,
+    PFML_PROGRAM_LAUNCH_DATE,
+)
 from massgov.pfml.api.validation.exceptions import (
     IssueType,
     ValidationErrorDetail,
@@ -295,6 +299,41 @@ class PhoneResponse(PydanticBaseModel):
             phone_response.int_code = str(parsed_phone_number.country_code)
 
         return phone_response
+
+
+# Shared between ApplicationResponse and ClaimReviewResponse
+class ComputedStartDates(PydanticBaseModel):
+    other_reason: Optional[date]
+    same_reason: Optional[date]
+
+
+def get_computed_start_dates(
+    earliest_start_date: Optional[date], leave_reason: Optional[str]
+) -> ComputedStartDates:
+    computed_start_dates = ComputedStartDates(other_reason=None, same_reason=None)
+    if leave_reason is not None and earliest_start_date is not None:
+        week_start = earliest_start_date - timedelta(days=earliest_start_date.isoweekday() % 7)
+        prior_year = week_start - timedelta(days=364)
+
+        # other reason start date
+        if prior_year > PFML_PROGRAM_LAUNCH_DATE:
+            computed_start_dates.other_reason = prior_year
+        else:
+            computed_start_dates.other_reason = PFML_PROGRAM_LAUNCH_DATE
+
+        # same reason start date
+        start_date = PFML_PROGRAM_LAUNCH_DATE
+        if (
+            leave_reason
+            == db_application_models.LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_description
+        ):
+            start_date = CARING_LEAVE_EARLIEST_START_DATE
+        if prior_year > start_date:
+            computed_start_dates.same_reason = prior_year
+        else:
+            computed_start_dates.same_reason = start_date
+
+    return computed_start_dates
 
 
 # search stuff
