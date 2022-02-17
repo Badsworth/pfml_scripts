@@ -53,6 +53,7 @@ export const requestTypes: AbsencePeriodRequestDecisionEnum[] = [
   "Denied",
   "In Review",
   "Pending",
+  "Projected",
   "Withdrawn",
 ];
 
