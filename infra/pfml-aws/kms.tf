@@ -20,7 +20,6 @@ data "aws_iam_policy_document" "prod_tfstate_s3_kms_key" {
       identifiers = module.constants.prod_admin_roles
     }
   }
-
 }
 
 resource "aws_kms_key" "s3_kms_key" {
@@ -51,8 +50,9 @@ data "aws_iam_policy_document" "allow_admin_groups_access_policy" {
     resources = ["*"]
 
     principals {
-      type        = "AWS"
-      identifiers = module.constants.prod_admin_roles
+      type = "AWS"
+      identifiers = concat(
+      module.constants.prod_admin_roles, module.constants.ecs_taks_execution_roles)
     }
   }
 }

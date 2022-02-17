@@ -280,3 +280,19 @@ output "newrelic_trusted_account_key" {
   description = "EOLWD's New Relic parent account number"
   value       = "1606654"
 }
+
+output "ecs_taks_execution_roles" {
+  value = [
+    "arn:aws:iam::498823821309:role/pfml-api-test-ecs-tasks-execution-role",
+    "arn:aws:iam::498823821309:role/pfml-api-infra-test-ecs-tasks-execution-role",
+    "arn:aws:iam::498823821309:role/pfml-api-long-ecs-tasks-execution-role",
+    "arn:aws:iam::498823821309:role/pfml-api-breakfix-ecs-tasks-execution-role",
+    "arn:aws:iam::498823821309:role/pfml-api-cps-preview-ecs-tasks-execution-role",
+    "arn:aws:iam::498823821309:role/pfml-api-training-ecs-tasks-execution-role",
+    "arn:aws:iam::498823821309:role/pfml-api-trn2-ecs-tasks-execution-role",
+    "arn:aws:iam::498823821309:role/pfml-api-performance-ecs-tasks-execution-role",
+    "arn:aws:iam::498823821309:role/pfml-api-uat-ecs-tasks-execution-role",
+    "arn:aws:iam::498823821309:role/pfml-api-stage-ecs-tasks-execution-role",
+    "arn:aws:iam::498823821309:role/pfml-api-prod-ecs-tasks-execution-role"
+  ]
+}
