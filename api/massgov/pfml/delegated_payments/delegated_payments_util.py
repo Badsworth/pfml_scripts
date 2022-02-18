@@ -99,6 +99,7 @@ class Constants:
     FILE_NAME_PUB_POSITIVE_PAY = "EOLWD-DFML-POSITIVE-PAY"
     FILE_NAME_PAYMENT_AUDIT_REPORT = "Payment-Audit-Report"
     FILE_NAME_RAW_PUB_ACH_FILE = "ACD9T136-DFML"
+    FILE_NAME_MANUAL_PUB_REJECT = "manual-pub-reject"
 
     REQUESTED_ABSENCE_SOM_FILE_NAME = "VBI_REQUESTEDABSENCE_SOM.csv"
     EMPLOYEE_FEED_FILE_NAME = "Employee_feed.csv"
@@ -1242,7 +1243,7 @@ def get_traceable_payment_details(
 
 
 def get_traceable_pub_eft_details(
-    pub_eft: PubEft, employee: Employee, payment: Optional[Payment] = None
+    pub_eft: PubEft, employee: Optional[Employee] = None, payment: Optional[Payment] = None
 ) -> Dict[str, Any]:
     # For logging purposes, this returns useful, traceable details
     # about an EFT record and related fields
@@ -1259,8 +1260,9 @@ def get_traceable_pub_eft_details(
     details["pub_eft_prenote_state"] = (
         pub_eft.prenote_state.prenote_state_description if pub_eft.prenote_state else None
     )
-    details["employee_id"] = employee.employee_id
-    details["fineos_customer_number"] = employee.fineos_customer_number
+    if employee:
+        details["employee_id"] = employee.employee_id
+        details["fineos_customer_number"] = employee.fineos_customer_number
 
     return details
 
