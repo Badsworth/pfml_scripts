@@ -108,14 +108,6 @@ def test_employees_get_fineos_user_forbidden(client, employee, fineos_user_token
     assert response.status_code == 403
 
 
-def test_employees_patch_snow_user_forbidden(client, employee, snow_user_headers):
-    body = {"first_name": "James", "last_name": "Brown"}
-    response = client.patch(
-        "/v1/employees/{}".format(employee.employee_id), json=body, headers=snow_user_headers,
-    )
-    assert response.status_code == 403
-
-
 def test_employees_search_nonsnow_forbidden(client, employee, consented_user_token):
     terms = {
         "first_name": employee.first_name,
@@ -448,53 +440,6 @@ def test_employee_get_mass_id(client, employee, snow_user_headers, user, test_db
     assert employee_data["mass_id_number"] == "012345678"
 
 
-def test_employees_patch_snow_forbidden(client, employee, snow_user_headers):
-    body = {"first_name": "James", "last_name": "Brown"}
-    response = client.patch(
-        "/v1/employees/{}".format(employee.employee_id), json=body, headers=snow_user_headers,
-    )
-    assert response.status_code == 403
-
-    updated_employee = client.get(
-        "/v1/employees/{}".format(employee.employee_id), headers=snow_user_headers,
-    ).get_json()
-
-    updated_employee_item = updated_employee.get("data")
-
-    # This assertion is sparse because this endpoint is planned to be removed.
-    assert updated_employee_item["employee_id"] == str(employee.employee_id)
-
-
-def test_employees_patch_empty(client, employee, snow_user_headers):
-    body = {
-        "first_name": "",
-        "last_name": "",
-    }
-    response = client.patch(
-        "/v1/employees/{}".format(employee.employee_id), json=body, headers=snow_user_headers,
-    )
-    tests.api.validate_error_response(response, 400)
-
-    updated_employee = client.get(
-        "/v1/employees/{}".format(employee.employee_id), headers=snow_user_headers,
-    ).get_json()
-
-    # This test should return a 400 because blank requests shouldn't be accepted.
-    assert updated_employee.get("data")["first_name"] == employee.first_name
-
-
-def test_employees_patch_404(client, consented_user_token):
-    # This tests attempts to PATCH an employee that doesn't exist
-    body = {"first_name": "Barbara", "last_name": "Gordon"}
-    response = client.patch(
-        "/v1/employees/{}".format("9e243bae-3b1e-43a4-aafe-aca3c6517cf0"),
-        json=body,
-        headers={"Authorization": "Bearer {}".format(consented_user_token)},
-    )
-
-    tests.api.validate_error_response(response, 404)
-
-
 def test_employee_auth_get(disable_employee_endpoint, client, employee, consented_user_token):
     # This tests a user that doesn't meet authorization rules. Should return 403
 
@@ -503,31 +448,6 @@ def test_employee_auth_get(disable_employee_endpoint, client, employee, consente
         headers={"Authorization": "Bearer {}".format(consented_user_token)},
     )
 
-    tests.api.validate_error_response(response, 403)
-
-
-def test_employee_auth_patch(disable_employee_endpoint, client, employee, consented_user_token):
-    # Attempts to patch when user doesn't meet authorization rules.
-
-    body = {"first_name": "James", "last_name": "Brown"}
-
-    response = client.patch(
-        "/v1/employees/{}".format(employee.employee_id),
-        json=body,
-        headers={"Authorization": "Bearer {}".format(consented_user_token)},
-    )
-
-    tests.api.validate_error_response(response, 403)
-
-
-def test_employee_patch_fineos_user_forbidden(client, employee, fineos_user_token):
-    # Fineos role cannot access this endpoint
-    body = {"first_name": "James", "last_name": "Brown"}
-    response = client.patch(
-        "/v1/employees/{}".format(employee.employee_id),
-        json=body,
-        headers={"Authorization": "Bearer {}".format(fineos_user_token)},
-    )
     tests.api.validate_error_response(response, 403)
 
 

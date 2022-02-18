@@ -35,9 +35,12 @@ describe("isFeatureEnabled", () => {
         featureB: false,
       });
 
-      Cookies.set("_ff", {
-        featureA: false,
-      });
+      Cookies.set(
+        "_ff",
+        JSON.stringify({
+          featureA: false,
+        })
+      );
 
       expect(isFeatureEnabled("featureA")).toBe(false);
     });

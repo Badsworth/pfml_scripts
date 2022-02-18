@@ -124,6 +124,9 @@ create-erds:
 create-leave-admin-and-claims: ## Create local API Leave Admin user and claims
 	PYTHONPATH=$$PYTHONPATH:. $(PY_RUN_CMD) python bin/create-leave-admin-and-claims.py $(args)
 
+create-benefit-years: ## Create local benefit years data
+	PYTHONPATH=$$PYTHONPATH:. $(PY_RUN_CMD) python bin/create-benefit-years.py $(args)
+
 create-claim-with-payments-for-user: ## Create local API user with claims + payments (usable with payment status API)
 	PYTHONPATH=$$PYTHONPATH:. $(PY_RUN_CMD) python bin/create_claim_with_payments_for_user.py $(args)
 

@@ -35,7 +35,7 @@ exports[`Payments Phase 2 Checkback date implementation renders intro text for c
   data-testid="your-payments-intro"
 >
   <p>
-    Check back on November 9, 2021 to see when you can expect your first payment. Your first payment will include multiple weeks of leave. After your first payment, expect to be paid weekly.
+    Check back on November 16, 2021 to see when you can expect your first payment. Your first payment will include multiple weeks of leave. After your first payment, expect to be paid weekly.
   </p>
 </section>
 `;
@@ -45,7 +45,7 @@ exports[`Payments Phase 2 Checkback date implementation renders intro text for c
   data-testid="your-payments-intro"
 >
   <p>
-    Check back on November 9, 2021 to see when you can expect your first payment. Your first payment will be scheduled after your second week of leave ends. After your first payment, expect to be paid weekly.
+    Check back on November 16, 2021 to see when you can expect your first payment. Your first payment will be scheduled after your second week of leave ends. After your first payment, expect to be paid weekly.
   </p>
 </section>
 `;
@@ -55,7 +55,7 @@ exports[`Payments Phase 2 Checkback date implementation renders intro text for c
   data-testid="your-payments-intro"
 >
   <p>
-    Check back on January 18, 2022 to see when you can expect your first payment. You’ll receive one payment for your entire leave.
+    Check back on January 25, 2022 to see when you can expect your first payment. You’ll receive one payment for your entire leave.
   </p>
 </section>
 `;
@@ -65,7 +65,7 @@ exports[`Payments Phase 2 Checkback date implementation renders intro text for c
   data-testid="your-payments-intro"
 >
   <p>
-    Check back on November 9, 2021 to see when you can expect your first payment. Your first payment will include multiple weeks of leave. After your first payment, expect to be paid weekly.
+    Check back on November 16, 2021 to see when you can expect your first payment. Your first payment will include multiple weeks of leave. After your first payment, expect to be paid weekly.
   </p>
 </section>
 `;
@@ -75,7 +75,7 @@ exports[`Payments Phase 2 Checkback date implementation renders intro text for c
   data-testid="your-payments-intro"
 >
   <p>
-    Check back on November 9, 2021 to see when you can expect your first payment. Your first payment will be scheduled after your second week of leave ends. After your first payment, expect to be paid weekly.
+    Check back on November 16, 2021 to see when you can expect your first payment. Your first payment will be scheduled after your second week of leave ends. After your first payment, expect to be paid weekly.
   </p>
 </section>
 `;
@@ -85,7 +85,7 @@ exports[`Payments Phase 2 Checkback date implementation renders intro text for c
   data-testid="your-payments-intro"
 >
   <p>
-    Check back on January 18, 2022 to see when you can expect your first payment. You’ll receive one payment for your entire leave.
+    Check back on January 25, 2022 to see when you can expect your first payment. You’ll receive one payment for your entire leave.
   </p>
 </section>
 `;
@@ -95,7 +95,7 @@ exports[`Payments Phase 2 Checkback date implementation renders intro text for r
   data-testid="your-payments-intro"
 >
   <p>
-    Check back on November 9, 2021 to see when you can expect your first payment. You need to take at least 8 hours of leave or wait until 30 days have passed for a payment to be scheduled.
+    Check back on November 16, 2021 to see when you can expect your first payment. You need to take at least 8 hours of leave or wait until 30 days have passed for a payment to be scheduled.
   </p>
 </section>
 `;
@@ -105,7 +105,7 @@ exports[`Payments Phase 2 Checkback date implementation renders intro text for r
   data-testid="your-payments-intro"
 >
   <p>
-    Check back on November 9, 2021 to see when you can expect your first payment. You need to take at least 8 hours of leave or wait until 30 days have passed for a payment to be scheduled.
+    Check back on November 16, 2021 to see when you can expect your first payment. You need to take at least 8 hours of leave or wait until 30 days have passed for a payment to be scheduled.
   </p>
 </section>
 `;
@@ -115,14 +115,14 @@ exports[`Payments Phase 2 Checkback date implementation renders intro text for r
   data-testid="your-payments-intro"
 >
   <p>
-    Check back on January 18, 2022 to see when you can expect your first payment. You’ll receive one payment for your entire leave.
+    Check back on January 25, 2022 to see when you can expect your first payment. You’ll receive one payment for your entire leave.
   </p>
 </section>
 `;
 
 exports[`Payments displays info alert if claimant has bonding-newborn but not pregnancy claims 1`] = `
 <div
-  aria-labelledby="alert-heading12"
+  aria-labelledby="alert-heading10"
   class="usa-alert usa-alert--info usa-alert--no-icon margin-bottom-3"
   role="region"
   tabindex="-1"
@@ -132,7 +132,7 @@ exports[`Payments displays info alert if claimant has bonding-newborn but not pr
   >
     <h2
       class="usa-alert__heading font-heading-xs text-bold"
-      id="alert-heading12"
+      id="alert-heading10"
     >
       If you are giving birth, you may also be eligible for paid medical leave
     </h2>
@@ -163,7 +163,7 @@ exports[`Payments displays info alert if claimant has bonding-newborn but not pr
 
 exports[`Payments displays info alert if claimant has pregnancy but not bonding claims 1`] = `
 <div
-  aria-labelledby="alert-heading16"
+  aria-labelledby="alert-heading14"
   class="usa-alert usa-alert--info usa-alert--no-icon margin-bottom-3"
   role="region"
   tabindex="-1"
@@ -173,7 +173,7 @@ exports[`Payments displays info alert if claimant has pregnancy but not bonding 
   >
     <h2
       class="usa-alert__heading font-heading-xs text-bold"
-      id="alert-heading16"
+      id="alert-heading14"
     >
       You may also be eligible for paid family leave
     </h2>
@@ -252,7 +252,7 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
         class="usa-accordion__heading margin-y-2"
       >
         <button
-          aria-controls="accordion32"
+          aria-controls="accordion30"
           aria-expanded="false"
           class="usa-accordion__button"
           type="button"
@@ -262,9 +262,9 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
       </h2>
       <div
         class="usa-accordion__content usa-prose"
-        data-testid="accordion32"
+        data-testid="accordion30"
         hidden=""
-        id="accordion32"
+        id="accordion30"
       >
         <strong>
           What may cause a delayed payment
@@ -330,7 +330,7 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
       class="usa-accordion__heading margin-y-2"
     >
       <button
-        aria-controls="accordion33"
+        aria-controls="accordion31"
         aria-expanded="false"
         class="usa-accordion__button"
         type="button"
@@ -340,9 +340,9 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
     </h2>
     <div
       class="usa-accordion__content usa-prose"
-      data-testid="accordion33"
+      data-testid="accordion31"
       hidden=""
-      id="accordion33"
+      id="accordion31"
     >
       <p>
         To see your maximum weekly benefit amount, view your approval notice in the 
@@ -391,7 +391,7 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
       class="usa-accordion__heading margin-y-2"
     >
       <button
-        aria-controls="accordion34"
+        aria-controls="accordion32"
         aria-expanded="false"
         class="usa-accordion__button"
         type="button"
@@ -401,9 +401,9 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
     </h2>
     <div
       class="usa-accordion__content usa-prose"
-      data-testid="accordion34"
+      data-testid="accordion32"
       hidden=""
-      id="accordion34"
+      id="accordion32"
     >
       <p>
         To make changes to your payment method or banking information, call the Contact Center at 

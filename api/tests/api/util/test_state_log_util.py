@@ -626,6 +626,9 @@ def test_build_outcome():
         payments_util.ValidationReason.MISSING_FIELD, "FIELD1"
     )
     validation_container.add_validation_issue(payments_util.ValidationReason.MISSING_IN_DB, "DB1")
+    validation_container.add_validation_issue(
+        payments_util.ValidationReason.FIELD_TOO_LONG, "DETAIL1", "FIELD2"
+    )
     complex_outcome = state_log_util.build_outcome("complex", validation_container)
     assert complex_outcome == {
         "message": "complex",
@@ -635,6 +638,7 @@ def test_build_outcome():
                 {"reason": "MissingDataset", "details": "DATASET1"},
                 {"reason": "MissingField", "details": "FIELD1"},
                 {"reason": "MissingInDB", "details": "DB1"},
+                {"reason": "FieldTooLong", "details": "DETAIL1", "field_name": "FIELD2"},
             ],
         },
     }

@@ -123,9 +123,12 @@ export const Status = ({
   const absenceDetails = AbsencePeriod.groupByReason(
     claimDetail.absence_periods
   );
-  const hasPendingStatus = claimDetail.absence_periods.some(
-    (absenceItem) => absenceItem.request_decision === "Pending"
-  );
+  const hasPendingStatus = claimDetail?.hasPendingStatus;
+
+  const hasInReviewStatus = claimDetail?.hasInReviewStatus;
+
+  const hasProjectedStatus = claimDetail?.hasProjectedStatus;
+
   const hasApprovedStatus = claimDetail?.hasApprovedStatus;
 
   const documentsForApplication = filterByApplication(
@@ -259,40 +262,44 @@ export const Status = ({
         </Alert>
       )}
 
-      {!!infoAlertContext && (hasPendingStatus || hasApprovedStatus) && (
-        <Alert
-          className="margin-bottom-3"
-          data-test="info-alert"
-          heading={t("pages.claimsStatus.infoAlertHeading", {
-            context: infoAlertContext,
-          })}
-          headingLevel="2"
-          headingSize="4"
-          noIcon
-          state="info"
-        >
-          <p>
-            <Trans
-              i18nKey="pages.claimsStatus.infoAlertBody"
-              tOptions={{ context: infoAlertContext }}
-              components={{
-                "about-bonding-leave-link": (
-                  <a
-                    href={
-                      routes.external.massgov.benefitsGuide_aboutBondingLeave
-                    }
-                    target="_blank"
-                    rel="noreferrer noopener"
-                  />
-                ),
-                "contact-center-phone-link": (
-                  <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
-                ),
-              }}
-            />
-          </p>
-        </Alert>
-      )}
+      {!!infoAlertContext &&
+        (hasPendingStatus ||
+          hasApprovedStatus ||
+          hasInReviewStatus ||
+          hasProjectedStatus) && (
+          <Alert
+            className="margin-bottom-3"
+            data-test="info-alert"
+            heading={t("pages.claimsStatus.infoAlertHeading", {
+              context: infoAlertContext,
+            })}
+            headingLevel="2"
+            headingSize="4"
+            noIcon
+            state="info"
+          >
+            <p>
+              <Trans
+                i18nKey="pages.claimsStatus.infoAlertBody"
+                tOptions={{ context: infoAlertContext }}
+                components={{
+                  "about-bonding-leave-link": (
+                    <a
+                      href={
+                        routes.external.massgov.benefitsGuide_aboutBondingLeave
+                      }
+                      target="_blank"
+                      rel="noreferrer noopener"
+                    />
+                  ),
+                  "contact-center-phone-link": (
+                    <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
+                  ),
+                }}
+              />
+            </p>
+          </Alert>
+        )}
       <BackButton
         label={t("pages.claimsStatus.backButtonLabel")}
         href={routes.applications.index}

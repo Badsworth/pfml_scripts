@@ -38,6 +38,7 @@ from massgov.pfml.delegated_payments.delegated_payments_util import (
     find_existing_address_pair,
     find_existing_eft,
     get_earliest_absence_period_for_payment_leave_request,
+    get_earliest_matching_payment,
     is_employer_exempt_for_payment,
     is_same_address,
     is_same_eft,
@@ -1375,3 +1376,42 @@ def test_get_earliest_absence_period_for_payment_leave_request(
             test_db_session, payment
         )
         assert absence_period.absence_period_id == absence_period_c.absence_period_id
+
+
+def test_get_earliest_matching_payment(initialize_factories_session, test_db_session):
+    # Test ensures that we are retrieving the payment
+    # with the oldest created_at matching C/I values
+    fineos_pei_c_value = "1234"
+    fineos_pei_i_value = "5678"
+    payment_factory = DelegatedPaymentFactory(
+        test_db_session,
+        fineos_pei_c_value=fineos_pei_c_value,
+        fineos_pei_i_value=fineos_pei_i_value,
+    )
+    earliest_payment = payment_factory.get_or_create_payment()
+
+    # Create a series of related payments
+
+    for i in range(10):
+        new_payment = payment_factory.create_related_payment(weeks_later=i + 1)
+        assert new_payment.fineos_pei_c_value == earliest_payment.fineos_pei_c_value
+        assert new_payment.fineos_pei_i_value == earliest_payment.fineos_pei_i_value
+
+    earliest_matching_payment = get_earliest_matching_payment(
+        test_db_session, fineos_pei_c_value, fineos_pei_i_value
+    )
+
+    assert earliest_matching_payment.payment_id == earliest_payment.payment_id
+
+
+def test_get_earliest_matching_payment__no_previous_payments(
+    initialize_factories_session, test_db_session
+):
+    fineos_pei_c_value = "1234"
+    fineos_pei_i_value = "5678"
+
+    earliest_matching_payment = get_earliest_matching_payment(
+        test_db_session, fineos_pei_c_value, fineos_pei_i_value
+    )
+
+    assert earliest_matching_payment is None

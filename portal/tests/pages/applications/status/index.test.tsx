@@ -392,6 +392,48 @@ describe("Status", () => {
       expect(screen.getByRole("region")).toMatchSnapshot();
     });
 
+    it("displays if claimant has In Review claim status", () => {
+      renderPage(
+        Status,
+        {
+          addCustomSetup: setupHelper({
+            ...defaultClaimDetail,
+            absence_periods: [
+              createAbsencePeriod({
+                period_type: "Reduced Schedule",
+                reason: LeaveReason.pregnancy,
+                request_decision: "In Review",
+              }),
+            ],
+          }),
+        },
+        props
+      );
+
+      expect(screen.getByRole("region")).toMatchSnapshot();
+    });
+
+    it("displays if claimant has Projected claim status", () => {
+      renderPage(
+        Status,
+        {
+          addCustomSetup: setupHelper({
+            ...defaultClaimDetail,
+            absence_periods: [
+              createAbsencePeriod({
+                period_type: "Reduced Schedule",
+                reason: LeaveReason.pregnancy,
+                request_decision: "Projected",
+              }),
+            ],
+          }),
+        },
+        props
+      );
+
+      expect(screen.getByRole("region")).toMatchSnapshot();
+    });
+
     it("does not display if claimant has bonding AND pregnancy claims", () => {
       renderPage(
         Status,

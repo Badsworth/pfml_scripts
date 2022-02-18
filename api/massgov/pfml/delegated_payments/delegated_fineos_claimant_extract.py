@@ -1052,7 +1052,8 @@ class ClaimantExtractStep(Step):
                 self.increment(self.Metrics.TAX_IDENTIFIER_MISSING_IN_DB_COUNT)
                 claimant_data.validation_container.add_validation_issue(
                     payments_util.ValidationReason.MISSING_IN_DB,
-                    f"tax_identifier: {claimant_data.employee_tax_identifier}",
+                    claimant_data.employee_tax_identifier,
+                    "tax_identifier",
                 )
             else:
                 employee_pfml_entry = (
@@ -1064,7 +1065,8 @@ class ClaimantExtractStep(Step):
                     self.increment(self.Metrics.EMPLOYEE_NOT_FOUND_IN_DATABASE_COUNT)
                     claimant_data.validation_container.add_validation_issue(
                         payments_util.ValidationReason.MISSING_IN_DB,
-                        f"tax_identifier: {claimant_data.employee_tax_identifier}",
+                        claimant_data.employee_tax_identifier,
+                        "employee",
                     )
 
         except SQLAlchemyError as e:
@@ -1203,7 +1205,8 @@ class ClaimantExtractStep(Step):
             )
             claimant_data.validation_container.add_validation_issue(
                 payments_util.ValidationReason.MISSING_IN_DB,
-                f"employer customer number: {claimant_data.employer_customer_number}",
+                claimant_data.employer_customer_number,
+                "employer_customer_number",
             )
             self.increment(self.Metrics.EMPLOYER_NOT_FOUND_COUNT)
             return None
@@ -1252,7 +1255,8 @@ class ClaimantExtractStep(Step):
             )
             claimant_data.validation_container.add_validation_issue(
                 payments_util.ValidationReason.MISSING_IN_DB,
-                f"organization unit name: {claimant_data.organization_unit_name}",
+                claimant_data.organization_unit_name,
+                "organization_unit_name",
             )
             self.increment(self.Metrics.ORG_UNIT_NOT_FOUND_COUNT)
             return None
@@ -1283,6 +1287,19 @@ class ClaimantExtractStep(Step):
                 db_session=self.db_session,
             )
             self.increment(self.Metrics.ERRORED_CLAIM_COUNT)
+
+            # For claims that failed validation, log their reason codes
+            # and field names so that we can collect metrics  on the
+            # most common error types
+            extra = claimant_data.get_traceable_details()
+            for (
+                reason,
+                field_name,
+            ) in claimant_data.validation_container.get_reasons_with_field_names():
+                # Replaced each iteration
+                extra["validation_reason"] = str(reason)
+                extra["field_name"] = field_name
+                logger.info("Claim failed validation", extra=extra)
 
         else:
             state_log_util.create_finished_state_log(
