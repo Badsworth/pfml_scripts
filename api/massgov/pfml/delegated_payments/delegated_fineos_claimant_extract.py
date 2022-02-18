@@ -146,7 +146,7 @@ class ClaimantData:
     count_incrementer: Optional[Callable[[str], None]]
 
     absence_case_id: str
-    is_claim_id_proofed: bool = False
+    is_claim_id_proofed: bool = True
 
     fineos_notification_id: Optional[str] = None
     claim_type_raw: Optional[str] = None
@@ -219,16 +219,7 @@ class ClaimantData:
 
             # If any of the requested absence records are ID proofed, then
             # we consider the entire claim valid
-            evidence_result_type = requested_absence.leaverequest_evidenceresulttype
-            is_absence_period_id_proofed: Optional[bool]
-
-            if evidence_result_type == "Satisfied":
-                self.is_claim_id_proofed = True
-                is_absence_period_id_proofed = True
-            elif evidence_result_type is not None and evidence_result_type.strip() == "":
-                is_absence_period_id_proofed = None
-            else:
-                is_absence_period_id_proofed = False
+            is_absence_period_id_proofed: Optional[bool] = None
 
             start_date = payments_util.validate_db_input(
                 "ABSENCEPERIOD_START", requested_absence, self.validation_container, True
