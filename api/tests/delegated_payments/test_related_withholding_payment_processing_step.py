@@ -417,8 +417,6 @@ def test_employer_reimbursement_payment(
     # Get the counts after running
     state_log_counts = state_log_util.get_state_counts(test_db_session)
 
-    print(state_log_counts)
-
     assert (
         state_log_counts[State.EMPLOYER_REIMBURSEMENT_RELATED_PENDING_AUDIT.state_description] == 1
     )
