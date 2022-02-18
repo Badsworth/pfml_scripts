@@ -520,10 +520,12 @@ function paymentStatusViewHelper(
     }
 
     let result;
+    // claim is approved after second week of leave start date (includes retroactive)
     if (isRetroactive || !isApprovedBeforeFourteenthDayOfClaim) {
-      result = dayjs(_approvalDate).addBusinessDays(8);
+      result = dayjs(_approvalDate).addBusinessDays(5);
     } else {
-      result = dayjs(_initialClaimStartDate).add(14, "day").addBusinessDays(8);
+      // claim is approved before the second week of leave start date (includes before leave starts)
+      result = dayjs(_initialClaimStartDate).add(14, "day").addBusinessDays(3);
     }
 
     return formatDate(result.format()).full();

@@ -29,8 +29,9 @@ const STATIC_DATES = {
 };
 
 const APPROVAL_TIME = {
-  BEFORE_FOURTEEN_DAYS: "Before fourteen days",
   AFTER_FOURTEEN_DAYS: "After fourteen days",
+  BEFORE_FOURTEEN_DAYS: "Before fourteen days",
+  BEFORE_LEAVE_START: "Before leave start date",
   RETROACTIVE: "Retroactive",
 };
 
@@ -44,7 +45,10 @@ const mappedApprovalDate: { [key: string]: string } = {
     .subtract(-16, "day")
     .format("YYYY-MM-DD"),
   "Before fourteen days": STATIC_DATES.absence_period_start_date
-    .subtract(20, "day")
+    .subtract(-7, "day")
+    .format("YYYY-MM-DD"),
+  "Before leave start date": STATIC_DATES.absence_period_start_date
+    .subtract(1, "day")
     .format("YYYY-MM-DD"),
   Retroactive: STATIC_DATES.absence_period_end_date
     .subtract(-14, "day")

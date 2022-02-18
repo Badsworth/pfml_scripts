@@ -88,10 +88,15 @@ const approvalDate = {
   )
     .add(14, "day")
     .format("YYYY-MM-DD"),
+  "approved before claim start date": dayjs(
+    defaultClaimDetail.absence_periods[0].absence_period_start_date
+  )
+    .add(-1, "day")
+    .format("YYYY-MM-DD"),
   "approved before fourteenth claim date": dayjs(
     defaultClaimDetail.absence_periods[0].absence_period_start_date
   )
-    .subtract(14, "day")
+    .add(7, "day")
     .format("YYYY-MM-DD"),
   "with retroactive claim date": dayjs(
     defaultClaimDetail.absence_periods[0].absence_period_end_date
