@@ -1471,7 +1471,7 @@ def set_customer_contact_detail_fields(
             errors=[
                 ValidationErrorDetail(
                     type=IssueType.incorrect,
-                    message="An issue occurred while trying to import the application",
+                    message="Code 3: An issue occurred while trying to import the application.",
                 )
             ]
         )

@@ -778,7 +778,7 @@ def test_set_customer_contact_detail_fields_without_matching_mfa_phone_number(
     assert exc.value.errors == [
         ValidationErrorDetail(
             type=IssueType.incorrect,
-            message="An issue occurred while trying to import the application",
+            message="Code 3: An issue occurred while trying to import the application.",
         )
     ]
 
