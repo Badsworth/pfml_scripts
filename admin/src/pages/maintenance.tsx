@@ -4,10 +4,10 @@ import {
   deleteRoles,
   RoleUserDeleteRequest,
   RequestOptions,
-//  Flag,
-//  FlagsResponse,
-//  getFlagsByNameLogs,
-//  getFlagsByName,
+  //  Flag,
+  //  FlagsResponse,
+  //  getFlagsByNameLogs,
+  //  getFlagsByName,
 } from "../api";
 import Alert from "../components/Alert";
 import ConfirmationDialog from "../components/ConfirmationDialog";
@@ -88,11 +88,10 @@ export default function Maintenance() {
     //patchFlagsByName({ name: "maintenance" }, flag).then().finally();
     const request: RoleUserDeleteRequest = {
       role: {
-        role_description: "Employer"
+        role_description: "Employer",
       },
       user_id: "b6d9222e-d5b5-416b-b252-c97725e81b3b",
-
-    }
+    };
     deleteRoles(request).then().finally();
     setShowConfirmationDialog(false);
   };
