@@ -48,8 +48,11 @@ data "aws_iam_policy_document" "allow_admin_groups_access_policy" {
     ]
     resources = ["*"]
     condition {
-      test     = "StringLike"
-      variable = "kms:EncryptionContext:aws:iam:arn"
+      # test     = "StringLike"
+      # variable = "kms:EncryptionContext:aws:iam:arn"
+      # values   = ["arn:aws:iam::498823821309:role/pfml-api-${each.key}-ecs-tasks-*"]
+      test     = "ArnEquals"
+      variable = "aws:SourceArn"
       values   = ["arn:aws:iam::498823821309:role/pfml-api-${each.key}-ecs-tasks-*"]
     }
   }
