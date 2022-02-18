@@ -1196,8 +1196,7 @@ class PaymentExtractStep(Step):
             payment.payment_transaction_type_id
             == PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id
         ):
-            # TODO run this logic with feature flag on/off and check all other ER validations using existing scenarios.
-            if PaymentData.is_employer_reimbursement_enabled:
+            if payments_util.is_employer_reimbursement_payments_enabled():
                 end_state = State.PAYMENT_READY_FOR_ADDRESS_VALIDATION
                 message = "Success"
             else:
