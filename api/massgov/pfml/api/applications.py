@@ -46,6 +46,7 @@ from massgov.pfml.api.services.fineos_actions import (
     submit_payment_preference,
     upload_document,
 )
+from massgov.pfml.api.util.paginate.paginator import PaginationAPIContext, page_for_api_context
 from massgov.pfml.api.validation.employment_validator import (
     get_contributing_employer_or_employee_issue,
 )
@@ -64,7 +65,6 @@ from massgov.pfml.fineos.exception import (
 )
 from massgov.pfml.fineos.models.customer_api import Base64EncodedFileData
 from massgov.pfml.util.logging.applications import get_application_log_attributes
-from massgov.pfml.util.paginate.paginator import PaginationAPIContext, page_for_api_context
 from massgov.pfml.util.sqlalchemy import get_or_404
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
