@@ -58,7 +58,7 @@ resource "aws_s3_bucket_notification" "sharepoint_pub_notifications" {
   lambda_function {
     lambda_function_arn = module.trigger_sharepoint_pub.lambda_arn
     events              = ["s3:ObjectCreated:*"]
-    filter_prefix       = "dfml-responses"
+    filter_prefix       = "dfml-responses/Payment-Audit-Report"
   }
 }
 
