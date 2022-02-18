@@ -1148,32 +1148,38 @@ def create_staging_table_instance(
     db_cls: ExtractTable,
     ref_file: ReferenceFile,
     fineos_extract_import_log_id: Optional[int],
+    ignore_properties: Optional[List[Any]] = None,
 ) -> base.Base:
-    """ We check if keys from data have a matching class property in staging model db_cls, if data contains
-    properties not yet included in cls, we log a warning. We return an instance of cls, with matching properties
-    from data and cls.
+    """ We return an instance of cls, with matching properties from data and cls. If there are any
+    properties from the data that don't have a match in staging model db_cls, we discard them and log it.
     Eg:
         class VbiRequestedAbsenceSom(Base):
             __tablename__ = "a"
             absence_casenumber = Column(Text)
             absence_casestatus = Column(Text)
-            new_column = Column(Text)
 
         data = {'absence_casenumber': '123', 'absence_casestatus': 'active','new_column': 'testtest'}
 
         We will return an instance of class VbiRequestedAbsenceSom, with properties absence_casenumber and
-        absence_casestatus. We will log a warning stating property new_column is not included in model
-        class VbiRequestedAbsenceSom.
+        absence_casestatus. If new_column is not in ignore_properties, we will log a warning stating
+        property new_column is not included in model class VbiRequestedAbsenceSom.
     """
-    lower_data = make_keys_lowercase(data)
-    # check if extracted data types match our db model properties
-    known_properties = set(get_attribute_names(db_cls))
-    extracted_properties = set(lower_data.keys())
-    difference = [prop for prop in extracted_properties if prop not in known_properties]
+    ignore_properties = [] if ignore_properties is None else ignore_properties
 
-    if len(difference) > 0:
-        logger.warning(f"{db_cls.__name__} does not include properties: {','.join(difference)}")
-        [lower_data.pop(diff) for diff in difference]
+    lower_data = make_keys_lowercase(data)
+
+    # discard any properties (if they're even present) that we've been told to ignore
+    [lower_data.pop(prop) for prop in ignore_properties if prop in lower_data]
+
+    # check if extracted data types match our db model properties
+    # if there are extra properties, log them
+    unconfigured_columns = get_unconfigured_fineos_columns(lower_data, db_cls)
+    if len(unconfigured_columns) > 0:
+        logger.warning(
+            "Unconfigured columns in FINEOS extract after first record.",
+            extra={"db_cls.__name__": db_cls.__name__, "fields": ",".join(unconfigured_columns),},
+        )
+    [lower_data.pop(column) for column in unconfigured_columns]
 
     return db_cls(
         **lower_data,
@@ -1374,7 +1380,7 @@ def validate_columns_present(record: Dict[str, Any], fineos_extract: FineosExtra
     missing_columns = []
 
     for required_column in fineos_extract.field_names:
-        if required_column not in record:
+        if required_column.lower() not in record:
             missing_columns.append(required_column)
 
     if len(missing_columns) > 0:
@@ -1382,6 +1388,12 @@ def validate_columns_present(record: Dict[str, Any], fineos_extract: FineosExtra
             "FINEOS extract %s is missing required fields: %s - found only %s"
             % (fineos_extract.file_name, missing_columns, list(record.keys()))
         )
+
+
+def get_unconfigured_fineos_columns(record: Dict[str, Any], db_cls: ExtractTable) -> List[Any]:
+    class_properties = get_attribute_names(db_cls)
+    unconfigured_columns = [column for column in record if column not in class_properties]
+    return unconfigured_columns
 
 
 def is_employer_exempt_for_payment(payment: Payment, claim: Claim, employer: Employer) -> bool:
