@@ -367,7 +367,7 @@ class ClaimantData:
 
         # Note this should be identical regardless of absence case
         self.fineos_notification_id = payments_util.validate_db_input(
-            "NOTIFICATION_CASENUMBER", requested_absence, self.validation_container, True
+            "NOTIFICATION_CASENUMBER", requested_absence, self.validation_container, False
         )
         self.claim_type_raw = payments_util.validate_db_input(
             "ABSENCEREASON_COVERAGE", requested_absence, self.validation_container, True
@@ -933,11 +933,6 @@ class ClaimantExtractStep(Step):
                 extra=claimant_data.get_traceable_details(),
             )
             self.increment(self.Metrics.EVIDENCE_NOT_ID_PROOFED_COUNT)
-
-            claimant_data.validation_container.add_validation_issue(
-                payments_util.ValidationReason.CLAIM_NOT_ID_PROOFED,
-                "Claim has not been ID proofed, LEAVEREQUEST_EVIDENCERESULTTYPE is not Satisfied",
-            )
 
         claim_pfml.is_id_proofed = claimant_data.is_claim_id_proofed
 
