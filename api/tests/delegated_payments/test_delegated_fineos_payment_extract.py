@@ -1702,7 +1702,9 @@ def test_process_extract_additional_payment_types_can_be_missing_all_additional_
         .one_or_none()
     )
     assert employer_payment.claim_id is None
-    assert employer_payment.employee_id is None  # We don't fetch the employee for employers
+    assert (
+        employer_payment.employee_id
+    )  # is None  # We don't fetch the employee for employers #TODO Need to revalidate this change
     validate_non_standard_payment_state(
         employer_payment, State.DELEGATED_PAYMENT_PROCESSED_EMPLOYER_REIMBURSEMENT
     )
