@@ -1,13 +1,14 @@
 import connexion
-from werkzeug.exceptions import BadRequest
+from werkzeug.exceptions import BadRequest, Forbidden, Unauthorized
 
 import massgov.pfml.api.app as app
 import massgov.pfml.api.util.response as response_util
 import massgov.pfml.util.logging
-from massgov.pfml.api.authorization.flask import EDIT, ensure
+from massgov.pfml.api.authorization.flask import EDIT, READ, ensure
 from massgov.pfml.api.models.roles.requests import RoleUserDeleteRequest
 from massgov.pfml.api.util.deepgetattr import deepgetattr
 from massgov.pfml.api.validation.user_rules import get_users_convert_claimant_issues
+from massgov.pfml.db.models.azure import AzurePermission
 from massgov.pfml.db.models.employees import Role, User
 from massgov.pfml.util.sqlalchemy import get_or_404
 from massgov.pfml.util.users import remove_leave_admins_and_role
@@ -26,7 +27,15 @@ def roles_users_delete():
 
     with app.db_session() as db_session:
         user = get_or_404(db_session, User, user_id)
-        ensure(EDIT, user)
+        try:
+            ensure(EDIT, user)
+        except Forbidden:
+            azure_user = app.azure_user()
+            # This should never be the case.
+            if azure_user is None:
+                raise Unauthorized
+            ensure(READ, azure_user)
+            ensure(READ, AzurePermission.USER_READ)
         if delete_employer_role:
             convert_claimant_issues = get_users_convert_claimant_issues(user)
             if convert_claimant_issues:

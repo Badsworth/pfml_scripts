@@ -9,6 +9,22 @@ export const SSO_AUTH_URI = "SSO_AUTH_URI";
 export const SSO_ACCESS_TOKENS = "SSO_ACCESS_TOKENS";
 export const POST_LOGIN_REDIRECT = "POST_LOGIN_REDIRECT";
 
+
+export const getAuthorizationHeader = () => {
+  const localTokens: api.AdminTokenResponse = JSON.parse(
+    localStorage.getItem(SSO_ACCESS_TOKENS) || "{}",
+  );
+
+  if ("access_token" in localTokens) {
+    return {
+      headers: {
+        Authorization: `Bearer ${localTokens.access_token}`,
+      },
+    };
+  }
+  return {};
+};
+
 /**
  * authorizeUser() runs on every page request and router query change. It
  * runs in useEffect in _app.js.

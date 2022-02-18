@@ -1,11 +1,14 @@
 import "react-datetime/css/react-datetime.css";
-//import {
-//  ApiResponse,
+import {
+  ApiResponse,
+  deleteRoles,
+  RoleUserDeleteRequest,
+  RequestOptions,
 //  Flag,
 //  FlagsResponse,
 //  getFlagsByNameLogs,
 //  getFlagsByName,
-//} from "../api";
+} from "../api";
 import Alert from "../components/Alert";
 import ConfirmationDialog from "../components/ConfirmationDialog";
 import Link from "next/link";
@@ -83,6 +86,14 @@ export default function Maintenance() {
     setMaintenance({ ...maintenance, ...{ enabled: false } });
     // disable at API.
     //patchFlagsByName({ name: "maintenance" }, flag).then().finally();
+    const request: RoleUserDeleteRequest = {
+      role: {
+        role_description: "Employer"
+      },
+      user_id: "b6d9222e-d5b5-416b-b252-c97725e81b3b",
+
+    }
+    deleteRoles(request).then().finally();
     setShowConfirmationDialog(false);
   };
 
