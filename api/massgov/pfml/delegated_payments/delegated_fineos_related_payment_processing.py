@@ -200,10 +200,6 @@ class RelatedPaymentsProcessingStep(Step):
                         end_state.state_description,
                         extra=payment_log_details,
                     )
-                # # primary_payment_records[0].has validation issues then
-                # end_state = State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT
-                # # else payment is valid then set state to
-                # end_state = State.EMPLOYER_REIMBURSEMENT_RELATED_PENDING_AUDIT
 
     def _get_employer_reimbursement_payment_records(self, db_session: db.Session) -> List[Payment]:
         state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
