@@ -31,35 +31,37 @@ on:
         type: string
         required: false
       run_stable:
-        description: "Run tests in stable group"
+        description: |
+          🛑 REMEMBER TO UNCHECK IF YOU WANT TO RUN A SINGLE/GROUP OF TESTS     
+          --------------------------------------
+          ⬇️ Run tests in stable group. This is checked by default 
+          and runs the core suite of tests that are needed to pass
+          prior to deployments.          
         required: false
         default: true
         type: boolean
-      stable_spec_pattern:
-        description: "Only run the specs in the stable group with names that match the given pattern"
-        required: false
-        default: "cypress/specs/stable/**"
-        type: "string"
       run_unstable:
         description: "Run tests in unstable group"
         required: false
         default: false
         type: boolean
-      unstable_spec_pattern:
-        description: "Only run the specs in the unstable group with names that match the given pattern"
-        required: false
-        default: "cypress/specs/unstable/**"
-        type: "string"
       run_morning:
         description: "Run tests in morning group"
         required: false
         default: false
         type: boolean
-      morning_spec_pattern:
-        description: "Only run the specs in the morning group with names that match the given pattern"
+      run_targeted:
+        description: |
+          ⬇️ Run a specific test, comma seperated (no space)
+          list of tests, or blob: Ex:  cypress/specs/stable/feature/api_**         
         required: false
-        default: "cypress/specs/morning/**"
-        type: "string"
+        default: false
+        type: boolean
+      targeted_pattern: 
+        description: "Input Pattern"          
+        required: false
+        default: "cypress/specs/<group>/<type>/**"
+        type: string
     secrets:
       # Note: this is EVERY secret we use in this workflow. It's critical that these line up with what's
       # in our actual secrets, so when this workflow is invoked using workflow_dispatch, we can still access
@@ -75,6 +77,7 @@ on:
       CYPRESS_RECORD_KEY: { description: "", required: true }
       CYPRESS_RECORD_KEY_UNSTABLE: { description: "", required: true }
       CYPRESS_RECORD_KEY_MORNING: { description: "", required: true }
+      CYPRESS_RECORD_KEY_TARGETED: { description: "", required: true }
       PFML_AWS_ACCESS_KEY_ID: { description: "", required: true }
       PFML_AWS_SECRET_ACCESS_KEY: { description: "", required: true }
 
@@ -165,7 +168,7 @@ jobs:
         uses: cypress-io/github-action@v2
         timeout-minutes: 20
         with:
-          spec: ${{ inputs.stable_spec_pattern }}
+          spec: "cypress/specs/stable/**"
           record: true
           parallel: true
           install: false
@@ -187,7 +190,7 @@ jobs:
       - name: Cypress Tests (Commit Unstable)
         uses: cypress-io/github-action@v2
         with:
-          spec: ${{ inputs.unstable_spec_pattern }}
+          spec: "cypress/specs/unstable/**"
           record: true
           parallel: true
           working-directory: e2e
@@ -216,7 +219,7 @@ jobs:
         uses: cypress-io/github-action@v2
         timeout-minutes: 15
         with:
-          spec: ${{ inputs.morning_spec_pattern }}
+          spec: "cypress/specs/morning/**"
           record: true
           parallel: true
           working-directory: e2e
@@ -233,6 +236,29 @@ jobs:
           CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY_MORNING }}
           CYPRESS_PROJECT_ID: "tvt4k6"
         if: inputs.run_morning
+      
+      # Run Cypress tests (Targeted).
+      - name: Cypress Tests (Targeted)
+        uses: cypress-io/github-action@v2
+        timeout-minutes: 15
+        with:
+          spec: ${{ inputs.targeted_pattern }}
+          record: true
+          parallel: true
+          install: false
+          working-directory: e2e
+          ci-build-id: ${{ env.TEST_RUN_ID }}
+          group: Targeted
+          tag: "${{ inputs.cypress_tags }},Env-${{ inputs.target_environment }}"
+          config: reporter=cypress/reporters/new-relic.js
+          # With this action, we need to force triggering Cypress via CLI rather than API to fix a node version
+          # mixup. See https://github.com/cypress-io/github-action/issues/489
+          command-prefix: "--"
+          browser: "chrome"
+        env:
+          CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY_TARGETED }}
+          CYPRESS_PROJECT_ID: "98snsi"
+        if: inputs.run_targeted
 
       - name: "Archive screenshots"
         uses: actions/upload-artifact@v2
