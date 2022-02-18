@@ -239,6 +239,16 @@ data "aws_iam_policy_document" "register_admins_task_role_policy_document" {
     ]
 
   }
+
+  statement {
+    actions = [
+      "kms:DescribeKey",
+      "kms:Decrypt",
+    ]
+    resources = [
+      data.aws_kms_alias.pfml_api_config_secrets.arn
+    ]
+  }
 }
 
 
@@ -351,6 +361,16 @@ data "aws_iam_policy_document" "dor_import_execution_role_extras" {
       "${local.ssm_arn_prefix}/${local.app_name}/${var.environment_name}",
       "${local.ssm_arn_prefix}/${local.app_name}-dor-import/${var.environment_name}",
       "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/admin"
+    ]
+  }
+
+  statement {
+    actions = [
+      "kms:DescribeKey",
+      "kms:Decrypt",
+    ]
+    resources = [
+      data.aws_kms_alias.pfml_api_config_secrets.arn
     ]
   }
 }
@@ -1180,6 +1200,7 @@ data "aws_iam_policy_document" "reductions_workflow_task_role_extras" {
 
     resources = ["*"]
   }
+
 }
 
 resource "aws_iam_role" "reductions_workflow_execution_role" {
@@ -1253,6 +1274,16 @@ data "aws_iam_policy_document" "reductions_workflow_execution_role_extras" {
       "${local.ssm_arn_prefix}/${local.app_name}/${var.environment_name}",
       "${local.ssm_arn_prefix}/${local.app_name}-comptroller/${var.environment_name}",
       "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/admin"
+    ]
+  }
+
+  statement {
+    actions = [
+      "kms:DescribeKey",
+      "kms:Decrypt",
+    ]
+    resources = [
+      data.aws_kms_alias.pfml_api_config_secrets.arn
     ]
   }
 }
@@ -1477,6 +1508,16 @@ data "aws_iam_policy_document" "sftp_tool_execution_role_extras" {
       "${local.ssm_arn_prefix}/${local.app_name}/${var.environment_name}",
       "${local.ssm_arn_prefix}/${local.app_name}-comptroller/${var.environment_name}",
       "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/admin"
+    ]
+  }
+
+  statement {
+    actions = [
+      "kms:DescribeKey",
+      "kms:Decrypt",
+    ]
+    resources = [
+      data.aws_kms_alias.pfml_api_config_secrets.arn
     ]
   }
 }
@@ -1734,6 +1775,16 @@ data "aws_iam_policy_document" "dua_employee_workflow_execution_role_extras" {
       "${local.ssm_arn_prefix}/${local.app_name}/${var.environment_name}",
       "${local.ssm_arn_prefix}/${local.app_name}-comptroller/${var.environment_name}",
       "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/admin"
+    ]
+  }
+
+  statement {
+    actions = [
+      "kms:DescribeKey",
+      "kms:Decrypt",
+    ]
+    resources = [
+      data.aws_kms_alias.pfml_api_config_secrets.arn
     ]
   }
 }
