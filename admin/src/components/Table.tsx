@@ -23,6 +23,7 @@ const Table = <T,>({
   if (rows.length === 0 || cols.length === 0) {
     return noResults || <p>No results found</p>;
   }
+  colClasses += " table__col";
 
   return (
     <table className="table" cellPadding="0" cellSpacing="0">
@@ -40,16 +41,22 @@ const Table = <T,>({
       <tbody className="table__body">
         {rows.map((row, di) => (
           <tr className={rowClasses} key={di}>
-            {cols.map((col, hi) => (
-              <td
-                key={hi}
-                className={`table__col`}
-                width={col.width}
-                align={col.align}
-              >
-                {col.content(row)}
-              </td>
-            ))}
+            {cols.map((col, hi) => {
+              return (
+                <td
+                  key={hi}
+                  className={
+                    di === rows.length - 1
+                      ? colClasses + " table_col--last-row"
+                      : colClasses
+                  }
+                  width={col.width}
+                  align={col.align}
+                >
+                  {col.content(row)}
+                </td>
+              );
+            })}
           </tr>
         ))}
       </tbody>

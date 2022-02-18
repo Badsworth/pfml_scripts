@@ -416,7 +416,7 @@ class TestApplicationsImport:
         assert response.status_code == 400
         assert response.get_json().get("errors") == [
             {
-                "message": "An issue occurred while trying to import the application",
+                "message": "Code 1: An issue occurred while trying to import the application.",
                 "type": "incorrect",
             },
         ]
