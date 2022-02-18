@@ -30,7 +30,7 @@ class RelatedPaymentsProcessingStep(Step):
         """Top-level function that calls all the other functions in this file in order"""
         logger.info("Processing related payment processing step")
         if payments_util.is_employer_reimbursement_payments_enabled():
-            self.process_errored_employer_reimbursement_payments()
+            # self.process_errored_employer_reimbursement_payments()
             self.process_payments_for_related_employer_reimbursement_payments()
         self.process_payments_for_related_withholding_payments()
 
