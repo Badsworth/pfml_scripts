@@ -223,6 +223,8 @@ def test_valid_combination_of_reject_and_skip(
         state_withholding_amount="",
         federal_withholding_i_value="",
         state_withholding_i_value="",
+        employer_reimbursement_amount="",
+        employer_reimbursement_i_value="",
     )
 
     payment_rejects_row = build_audit_report_row(
