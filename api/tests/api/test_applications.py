@@ -18,6 +18,7 @@ import tests.api
 from massgov.pfml.api.models.applications.common import DurationBasis, FrequencyIntervalBasis
 from massgov.pfml.api.models.applications.responses import ApplicationStatus
 from massgov.pfml.api.services.fineos_actions import LeaveNotificationReason
+from massgov.pfml.api.util.paginate.paginator import DEFAULT_PAGE_SIZE
 from massgov.pfml.api.validation.exceptions import IssueRule, IssueType
 from massgov.pfml.db.models.applications import (
     Application,
@@ -86,7 +87,6 @@ from massgov.pfml.fineos.models.customer_api.spec import (
     ReportedReducedScheduleLeavePeriod,
     TimeOffLeavePeriod,
 )
-from massgov.pfml.util.paginate.paginator import DEFAULT_PAGE_SIZE
 from massgov.pfml.util.strings import format_tax_identifier
 
 

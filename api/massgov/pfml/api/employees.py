@@ -13,8 +13,8 @@ from massgov.pfml.api.authorization.flask import READ, ensure
 from massgov.pfml.api.models.common import OrderDirection
 from massgov.pfml.api.models.employees.requests import EmployeeSearchRequest
 from massgov.pfml.api.models.employees.responses import EmployeeForPfmlCrmResponse, EmployeeResponse
+from massgov.pfml.api.util.paginate.paginator import PaginationAPIContext, page_for_api_context
 from massgov.pfml.db.models.employees import Employee, Role, TaxIdentifier
-from massgov.pfml.util.paginate.paginator import PaginationAPIContext, page_for_api_context
 from massgov.pfml.util.sqlalchemy import get_or_404
 from massgov.pfml.util.users import has_role_in
 
