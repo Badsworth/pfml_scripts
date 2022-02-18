@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, expect, it } from "@jest/globals";
+import { afterAll, beforeAll, expect, it, jest } from "@jest/globals";
 import generateDocuments from "../../../src/generation/documents";
 import ClaimPool, {
   ClaimGenerator,
@@ -11,6 +11,7 @@ import { extractLeavePeriod } from "../../../src/util/claims";
 import fs from "fs";
 import path from "path";
 import os from "os";
+import { mocked } from "ts-jest/utils";
 import { Uint8ArrayWrapper } from "../../../src/generation/FileWrapper";
 import dataDirectory, {
   DataDirectory,
@@ -23,7 +24,7 @@ import {
 } from "../../../src/util/typeUtils";
 
 jest.mock("../../../src/generation/documents");
-const generateDocumentsMock = jest.mocked(generateDocuments);
+const generateDocumentsMock = mocked(generateDocuments);
 
 jest.mock("../../../src/generation/Employee");
 
@@ -184,7 +185,7 @@ describe("Claim Generator", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     employeePool = new EmployeePool([employee]);
-    jest.mocked(employeePool).pick.mockImplementation(() => employee);
+    mocked(employeePool).pick.mockImplementation(() => employee);
   });
 
   it("Should generate a unique ID for each simulation claim", async () => {
@@ -211,12 +212,12 @@ describe("Claim Generator", () => {
   it("Should pass arguments to the employee factory", async () => {
     const spec = { wages: 200 };
     ClaimGenerator.generate(employeePool, spec, medical);
-    expect(jest.mocked(employeePool).pick).toHaveBeenCalledTimes(1);
-    expect(jest.mocked(employeePool).pick).toHaveBeenCalledWith(spec);
+    expect(mocked(employeePool).pick).toHaveBeenCalledTimes(1);
+    expect(mocked(employeePool).pick).toHaveBeenCalledWith(spec);
   });
 
   it("Should populate the mass_id property for mass proofed claims", async () => {
-    jest.mocked(employeePool).pick.mockImplementationOnce(() => ({
+    mocked(employeePool).pick.mockImplementationOnce(() => ({
       ...employee,
       mass_id: "123",
     }));
@@ -802,7 +803,7 @@ describe("ClaimPool", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     employeePool = new EmployeePool([employee]);
-    jest.mocked(employeePool).pick.mockImplementation(() => employee);
+    mocked(employeePool).pick.mockImplementation(() => employee);
     generateDocumentsMock.mockImplementation(() => {
       return [
         {
@@ -822,7 +823,7 @@ describe("ClaimPool", () => {
 
   afterAll(async () => {
     if (tempDir) {
-      await fs.promises.rmdir(tempDir, { recursive: true });
+      await fs.promises.rmdir(tempDir);
     }
   });
 
@@ -861,8 +862,7 @@ describe("ClaimPool", () => {
         documents.map(async (doc) => ({
           ...doc,
           file: await doc.file().then(async (f) => {
-            const [buffer] = await collect(f.asStream());
-            return buffer.toString("utf-8");
+            return Buffer.from(await collect(f.asStream())).toString("utf-8");
           }),
         }))
       );
