@@ -738,7 +738,8 @@ class PaymentExtractStep(Step):
                         self.increment(self.Metrics.TAX_IDENTIFIER_MISSING_IN_DB_COUNT)
                         payment_data.validation_container.add_validation_issue(
                             payments_util.ValidationReason.MISSING_IN_DB,
-                            f"tax_identifier: {payment_data.tin}",
+                            payment_data.tin,
+                            "tax_identifier",
                         )
                     else:
                         employee = (
@@ -751,7 +752,8 @@ class PaymentExtractStep(Step):
                             self.increment(self.Metrics.EMPLOYEE_MISSING_IN_DB_COUNT)
                             payment_data.validation_container.add_validation_issue(
                                 payments_util.ValidationReason.MISSING_IN_DB,
-                                f"employee: {payment_data.tin}",
+                                payment_data.tin,
+                                "employee",
                             )
 
         except SQLAlchemyError as e:
