@@ -37,20 +37,20 @@ data "aws_iam_policy_document" "allow_admin_groups_access_policy" {
   for_each = toset(local.environments)
 
   statement {
-    sid = "AllowECSRoles"
-    effect    = "Allow"
+    sid    = "AllowECSRoles"
+    effect = "Allow"
     principals {
-        type        = "AWS"
-        identifiers = ["*"]
+      type        = "AWS"
+      identifiers = ["*"]
     }
     actions = [
       "kms:*",
     ]
     resources = ["*"]
     condition {
-        test     = "StringLike"
-        variable = "kms:EncryptionContext:aws:iam:arn"
-        values   = ["arn:aws:iam::498823821309:role/pfml-api-${each.key}-ecs-tasks-*"]
+      test     = "StringLike"
+      variable = "kms:EncryptionContext:aws:iam:arn"
+      values   = ["arn:aws:iam::498823821309:role/pfml-api-${each.key}-ecs-tasks-*"]
     }
   }
   statement {
@@ -64,7 +64,7 @@ data "aws_iam_policy_document" "allow_admin_groups_access_policy" {
     resources = ["*"]
 
     principals {
-      type = "AWS"
+      type        = "AWS"
       identifiers = module.constants.prod_admin_roles
     }
   }
