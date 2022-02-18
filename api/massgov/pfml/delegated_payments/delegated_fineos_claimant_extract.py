@@ -367,7 +367,7 @@ class ClaimantData:
 
         # Note this should be identical regardless of absence case
         self.fineos_notification_id = payments_util.validate_db_input(
-            "NOTIFICATION_CASENUMBER", requested_absence, self.validation_container, True
+            "NOTIFICATION_CASENUMBER", requested_absence, self.validation_container, False
         )
         self.claim_type_raw = payments_util.validate_db_input(
             "ABSENCEREASON_COVERAGE", requested_absence, self.validation_container, True
