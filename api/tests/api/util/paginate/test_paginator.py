@@ -1,3 +1,4 @@
+from massgov.pfml.api.util.paginate.paginator import Paginator
 from massgov.pfml.db.models.applications import Application
 from massgov.pfml.db.models.employees import Claim, UserLeaveAdministrator
 from massgov.pfml.db.models.factories import (
@@ -6,7 +7,6 @@ from massgov.pfml.db.models.factories import (
     EmployerFactory,
     UserFactory,
 )
-from massgov.pfml.util.paginate.paginator import Paginator
 
 
 class TestPaginator:
