@@ -95,16 +95,6 @@ data "aws_iam_policy_document" "task_executor" {
       "${local.ssm_arn_prefix}/${local.app_name}/common"
     ]
   }
-
-  statement {
-    actions = [
-      "kms:DescribeKey",
-      "kms:Decrypt",
-    ]
-    resources = [
-      data.aws_kms_alias.pfml_api_config_secrets.arn
-    ]
-  }
 }
 
 # Link access policies to the ECS task execution role.
@@ -1180,6 +1170,7 @@ data "aws_iam_policy_document" "reductions_workflow_task_role_extras" {
 
     resources = ["*"]
   }
+
 }
 
 resource "aws_iam_role" "reductions_workflow_execution_role" {

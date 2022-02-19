@@ -1,6 +1,3 @@
-locals {
-  envs = ["prod", "non-prod"]
-}
 
 data "aws_iam_policy_document" "prod_tfstate_s3_kms_key" {
   # Allow read/write with KMS key
@@ -37,8 +34,25 @@ resource "aws_kms_alias" "id_proofing_document_alias" {
 }
 
 data "aws_iam_policy_document" "allow_admin_groups_access_policy" {
-  for_each = toset(local.envs)
+  for_each = toset(local.environments)
 
+  statement {
+    sid    = "AllowECSRoles"
+    effect = "Allow"
+    principals {
+      type        = "AWS"
+      identifiers = ["*"]
+    }
+    actions = [
+      "kms:*",
+    ]
+    resources = ["*"]
+    condition {
+      test     = "ArnEquals"
+      variable = "aws:SourceArn"
+      values   = ["arn:aws:iam::498823821309:role/pfml-api-${each.key}-ecs-tasks-*"]
+    }
+  }
   statement {
     sid = "AllowAllForAdmins"
 
@@ -50,21 +64,20 @@ data "aws_iam_policy_document" "allow_admin_groups_access_policy" {
     resources = ["*"]
 
     principals {
-      type = "AWS"
-      identifiers = concat(
-      module.constants.prod_admin_roles, module.constants.ecs_taks_execution_roles)
+      type        = "AWS"
+      identifiers = module.constants.prod_admin_roles
     }
   }
 }
 
 resource "aws_kms_key" "api_config_secrets" {
-  for_each    = toset(local.envs)
+  for_each    = toset(local.environments)
   description = "Terraform generated KMS key for API config secrets in ${each.key}"
   policy      = data.aws_iam_policy_document.allow_admin_groups_access_policy[each.key].json
 }
 
 resource "aws_kms_alias" "api_config_secrets_aliases" {
-  for_each      = toset(local.envs)
+  for_each      = toset(local.environments)
   name          = "alias/pfml-api-${each.key}-config-secrets"
   target_key_id = aws_kms_key.api_config_secrets[each.key].key_id
 }
