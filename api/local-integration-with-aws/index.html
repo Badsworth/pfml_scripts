@@ -1106,10 +1106,11 @@
 
 <h1 id="local-integration-with-aws">Local Integration with AWS</h1>
 <p>In some cases, we need to make requests to AWS services directly. If running locally, you will need to ensure that your environment has appropriate credentials.</p>
-<p>Credentials can be obtained by signing in to AWS, and selecting "Command line or programmatic access"</p>
-<p>These credentials need to be placed in an AWS creds file (<code>~/.aws/credentials</code> or <code>~/.aws/config</code>)</p>
-<p>Then docker needs to know where to look for these credentials. Follow instructions in <code>docker-compose.override.yml</code></p>
-<p>(See also: <a href="https://github.com/EOLWD/pfml/tree/main/docs/api/environment-variables.md">the Environment Variables doc</a>)</p>
+<ul>
+<li>See <a href="./infra/1-first-time-setup.md#1-configure-aws">Configure AWS</a> for details on setting up the AWS command line locally.</li>
+<li>Once set up, the credentials need to be placed into the Docker container. Follow the instructions in <a href="https://github.com/EOLWD/pfml/tree/main/api/docker-compose.override.yml">docker-compose.override.yml</a>.</li>
+</ul>
+<p>(For more information on how setting environment variables work, see: <a href="https://github.com/EOLWD/pfml/tree/main/docs/api/environment-variables.md">Environment Variables</a>)</p>
 
               
             </article>
