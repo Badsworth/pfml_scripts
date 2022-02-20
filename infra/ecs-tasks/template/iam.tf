@@ -4,10 +4,6 @@ locals {
   ssm_arn_prefix = "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/service"
 }
 
-data "aws_kms_alias" "pfml_api_config_secrets" {
-  name = var.environment_name == "prod" ? "alias/pfml-api-prod-config-secrets" : "alias/pfml-api-non-prod-config-secrets"
-}
-
 data "aws_iam_policy_document" "ecs_tasks_assume_role_policy" {
   statement {
     actions = [
