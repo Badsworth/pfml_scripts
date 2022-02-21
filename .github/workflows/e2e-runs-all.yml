@@ -79,6 +79,6 @@ jobs:
               "run_unstable": "${{ github.event_name == 'schedule' && 'true' || github.event.inputs.run_unstable }}",
               "run_morning": "${{ github.event_name == 'schedule' && 'true' || github.event.inputs.run_morning }}",
               "run_targeted": "${{ github.event_name == 'schedule' && 'false' || github.event.inputs.run_targeted }}",
-              "target_pattern": "${{ github.event_name == 'schedule' && 'cypress/specs/stable/feature/**' || github.event.inputs.targeted_pattern }}",
+              "targeted_pattern": "${{ github.event_name == 'schedule' && 'cypress/specs/stable/feature/**' || github.event.inputs.targeted_pattern }}",
               "title_override": "${{ github.event_name == 'schedule' && format('Scheduled Run: {0}', matrix.environment) || '' }}"
             }
