@@ -18,6 +18,7 @@ import BenefitsApplication, {
 } from "../models/BenefitsApplication";
 
 import { ClaimSteps } from "../models/Step";
+import { Issue } from "../errors";
 import { UploadType } from "../pages/applications/upload/index";
 import { fields as addressFields } from "../pages/applications/address";
 import { fields as concurrentLeavesDetailsFields } from "../pages/applications/concurrent-leaves-details";
@@ -62,6 +63,7 @@ import { fields as workPatternTypeFields } from "../pages/applications/work-patt
 export interface ClaimantFlowContext {
   claim?: BenefitsApplication;
   isAdditionalDoc?: boolean;
+  errors?: Issue[];
 }
 
 type ClaimFlowGuardFn = (context: ClaimantFlowContext) => boolean;
@@ -107,6 +109,15 @@ export const guards: { [guardName: string]: ClaimFlowGuardFn } = {
     get(claim, "work_pattern.work_pattern_type") === WorkPatternType.fixed,
   isVariableWorkPattern: ({ claim }) =>
     get(claim, "work_pattern.work_pattern_type") === WorkPatternType.variable,
+
+  includesUserNotFoundError: ({ errors }) =>
+    (errors || []).some((e) => e.field === "foo" && e.type === "bar"),
+
+  // No Employee Found
+  // No Employer Found
+  // No Employee/Employer match found
+  // Employer is exempt
+  // Employer is something else
 };
 
 /**
@@ -137,6 +148,20 @@ const uploadDocEvents = {
     },
   ],
 };
+
+const employmentStatusOnContinue = [
+  {
+    target: routes.applications.department,
+    cond: "hasEmployerWithDepartments",
+  },
+  {
+    target: routes.applications.notifiedEmployer,
+    cond: "isEmployed",
+  },
+  {
+    target: routes.applications.checklist,
+  },
+];
 
 interface ConditionalEvent {
   target: string;
@@ -631,22 +656,32 @@ const claimantFlow: {
         fields: employmentStatusFields,
       },
       on: {
-        CONTINUE: [
+        CONTINUE: employmentStatusOnContinue,
+        ERROR: [
           {
-            target: routes.applications.department,
-            cond: "hasEmployerWithDepartments",
+            target: routes.applications.missingEeErMatch,
+            cond: "includesUserNotFoundError",
           },
           {
-            target: routes.applications.notifiedEmployer,
-            cond: "isEmployed",
+            target: routes.applications.employmentStatus,
           },
+        ],
+      },
+    },
+    [routes.applications.missingEeErMatch]: {
+      meta: {
+        step: ClaimSteps.employerInformation,
+        fields: departmentFields,
+      },
+      on: {
+        // if user successfully fixes the issue, continue to normal flow
+        CONTINUE: employmentStatusOnContinue,
+        // if there's still an error, start user not found submission flow
+        ERROR: [
+          // todo: add pages
           {
-            target: routes.applications.notifiedEmployer,
-            cond: "isUserNotFound",
+            target: routes.applications.employmentStatus,
           },
-          // {
-          //   target: routes.applications.checklist,
-          // },
         ],
       },
     },

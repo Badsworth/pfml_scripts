@@ -193,11 +193,19 @@ const useBenefitsApplicationsLogic = ({
       // which still received the updates in the request. This is important
       // for situations like leave periods, where the API passes us back
       // a leave_period_id field for making subsequent updates.
-      if (issues.length) {
-        throw new ValidationError(issues, applicationsApi.i18nPrefix);
-      }
-
       const params = { claim_id: claim.application_id };
+      if (issues.length) {
+        const errorPageRoute = portalFlow.getNextPageRoute(
+          "ERROR",
+          { claim, errors: issues },
+          params
+        );
+        if (errorPageRoute) {
+          portalFlow.goTo(errorPageRoute);
+        } else {
+          throw new ValidationError(issues, applicationsApi.i18nPrefix);
+        }
+      }
       portalFlow.goToNextPage({ claim }, params);
     } catch (error) {
       appErrorsLogic.catchError(error);

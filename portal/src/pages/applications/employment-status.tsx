@@ -5,9 +5,7 @@ import withBenefitsApplication, {
 import Alert from "../../components/core/Alert";
 import ConditionalContent from "../../components/ConditionalContent";
 import Details from "../../components/core/Details";
-import Button from "../../components/core/Button";
 import { EmploymentStatus as EmploymentStatusEnum } from "../../models/BenefitsApplication";
-import InputChoice from "../../components/core/InputChoice";
 import InputChoiceGroup from "../../components/core/InputChoiceGroup";
 import InputText from "../../components/core/InputText";
 import QuestionPage from "../../components/QuestionPage";
@@ -18,11 +16,7 @@ import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
 
-export const fields = [
-  "claim.employment_status",
-  "claim.employer_fein",
-  // "claim.unf.date_of_hire",
-];
+export const fields = ["claim.employment_status", "claim.employer_fein"];
 
 export const EmploymentStatus = (props: WithBenefitsApplicationProps) => {
   const { appLogic, claim } = props;
@@ -66,24 +60,12 @@ export const EmploymentStatus = (props: WithBenefitsApplicationProps) => {
     "selfEmployed",
   ];
 
-  // console.log({isUserNotFound: (get(claim, "employment_status") === EmploymentStatusEnum.employedNotFound || get(claim, "employment_status") === EmploymentStatusEnum.employedExempt) && !get(claim, "unf.submitted_at")})
-
-  const startUNFFlowOnClick = (e) => {
-    appLogic.portalFlow.goToPageFor(
-      "CONTINUE",
-      { claim },
-      { claim_id: claim.application_id }
-    );
-  };
-
   return (
     <React.Fragment>
       <QuestionPage
         title={t("pages.claimsEmploymentStatus.title")}
         onSave={handleSave}
       >
-        {/* Create enableUNFFlow feature flag */}
-
         {!showEmploymentStatus && (
           <Alert state="info" neutral>
             <Trans
@@ -135,13 +117,6 @@ export const EmploymentStatus = (props: WithBenefitsApplicationProps) => {
           />
         </ConditionalContent>
       </QuestionPage>
-      <Button
-        className="margin-top-4"
-        type="button"
-        onClick={startUNFFlowOnClick}
-      >
-        Move on
-      </Button>
     </React.Fragment>
   );
 };
