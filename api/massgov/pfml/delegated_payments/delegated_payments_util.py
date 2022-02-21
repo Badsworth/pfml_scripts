@@ -1505,6 +1505,7 @@ def get_earliest_absence_period_for_payment_leave_request(
     return (
         db_session.query(AbsencePeriod)
         .filter(AbsencePeriod.fineos_leave_request_id == payment.fineos_leave_request_id)
+        .filter(AbsencePeriod.claim_id == payment.claim_id)
         .order_by(AbsencePeriod.absence_period_start_date.asc())
         .first()
     )
