@@ -2,6 +2,9 @@ import config from "../config";
 import AuthenticationManager from "../submission/AuthenticationManager";
 import { getUsersCurrent, patchUsersByUser_id, RequestOptions } from "../_api";
 import { Credentials } from "../types";
+/* This script is used to opt out of MFA, primarily after db refreshes. 
+If you see an portal account that is used for regular E2E activities and you want MFA disabled, you can add the credentials to this script
+*/
 
 (async () => {
   // Accounts used for regular E2E activity
