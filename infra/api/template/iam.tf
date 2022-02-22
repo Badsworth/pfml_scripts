@@ -8,10 +8,6 @@ locals {
   shorthand_env_name     = module.constants.environment_shorthand[var.environment_name]
 }
 
-data "aws_kms_alias" "pfml_api_config_secrets" {
-  name = var.environment_name == "prod" ? "alias/pfml-api-prod-config-secrets" : "alias/pfml-api-non-prod-config-secrets"
-}
-
 # ----------------------------------------------------------------------------------------------------------------------
 # IAM stuff for ECS
 # ----------------------------------------------------------------------------------------------------------------------
