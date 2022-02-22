@@ -33,7 +33,7 @@ jobs:
         
       - name: display teams uri
         run: |
-          echo ${{ env.teams_uri }}
+          echo ${{ env.TEAMS_URI }}
 
 
       - name: Post to Teams
