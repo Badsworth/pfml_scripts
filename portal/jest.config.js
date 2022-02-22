@@ -19,6 +19,7 @@ const extendedConfig = {
   clearMocks: true,
   coveragePathIgnorePatterns: [
     "/node_modules/",
+    "<rootDir>/lib/",
     "<rootDir>/storybook/",
     "<rootDir>/tests/lib/",
     "<rootDir>/tests/test-utils/",
