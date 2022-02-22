@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - INFRA-1113--Testing-Github-to-Teams
+env:
+  CI: true
+  workflow_self_link: "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
 
 jobs:
 
@@ -23,4 +26,41 @@ jobs:
               "title": "title text",
               "text":"message"              
           }' \
+          )
+
+# Run Terriyay
+  post-to-teams2:
+    name: post failures to teams
+
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+          role-to-assume: ci-run-deploys
+          role-duration-seconds: 3600
+
+      - name: Pull teams uri from SSM
+        uses: "marvinpinto/action-inject-ssm-secrets@latest"
+        with:
+          ssm_parameter: "/admin/common/teams-deploy-uri-test"
+          env_variable_name: "TEAMS_URI_TEST"
+
+      - name: Post to Teams
+        run: |
+          RESPONSE=$(curl -fsLS -X POST ${{ env.TEAMS_URI_TEST }} \
+          --header 'Content-Type: application/json' \
+          --data '{   
+            "@type": "MessageCard",
+            "themeColor": "FF0000",
+            "title": "API tests failed",
+            "text": "API tests failed in main ${{ env.workflow_self_link }}",
+            "sections": [{
+                "activityImage":"https://th.bing.com/th/id/R.ee8882f44294e8a6f1732a54343ff17e?rik=FAYIPD4sACftKw&riu=http%3a%2f%2f3.bp.blogspot.com%2f-u6MZBWbGcZI%2fUT4mft01YTI%2fAAAAAAAADpU%2fJubGsyGdL00%2fs1600%2ffailure.png&ehk=ranH%2bkeeo59wsILuyxVyNTIR2oUECprijedE01jHq34%3d&risl=&pid=ImgRaw&r=0"
+            }]'
           )
