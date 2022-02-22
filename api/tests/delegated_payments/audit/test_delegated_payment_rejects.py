@@ -858,7 +858,7 @@ def test_transition_audit_pending_payment_state_withholdings(test_db_session, pa
         withholding_payment_state_log.end_state_id
         == State.FEDERAL_WITHHOLDING_ADD_TO_PAYMENT_REJECT_REPORT_RESTARTABLE.state_id
     )
-    assert withholding_payment_state_log.outcome["message"] == "Record is skipped"
+    assert withholding_payment_state_log.outcome["message"] == "Payment skipped"
 
     expected_writeback_transaction_status = FineosWritebackTransactionStatus.PENDING_PAYMENT_AUDIT
     writeback_state_log: Optional[StateLog] = state_log_util.get_latest_state_log_in_flow(
