@@ -1,4 +1,4 @@
-name: testing git to teams
+name: ZZ-testing-git-to-teams
 on:
   workflow_dispatch:
     
