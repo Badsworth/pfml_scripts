@@ -5,12 +5,30 @@ import massgov.pfml.api.app as app
 import massgov.pfml.cognito.config as cognito_config
 import massgov.pfml.util.logging
 from massgov.pfml.db.models.employees import User
+from massgov.pfml.util.aws.cognito import disable_user_mfa, enable_user_mfa
 from massgov.pfml.util.aws.ses import EmailRecipient, send_templated_email
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
 
+def handle_mfa_enabled(user: User) -> None:
+    # todo: update comments
+    """Helper method for handling necessary actions after MFA is disabled for a user (send email, logging, etc)"""
+    # This value should always be set by the time a user enables MFA but the
+    # linter doesn't know that. This prevents a linter failure
+    assert user.email_address
+
+    logger.info("MFA enabled for user")
+
+    try:
+        enable_user_mfa(user.email_address)
+    except Exception as error:
+        logger.error("Error sending MFA disabled email", exc_info=error)
+        raise error
+
+
 def handle_mfa_disabled(user: User, last_enabled_at: Optional[datetime], updated_by: str) -> None:
+    # todo: update comment
     """Helper method for handling necessary actions after MFA is disabled for a user (send email, logging, etc)"""
     # These values should always be set by the time a user disables MFA but the
     # linter doesn't know that. This prevents a linter failure
@@ -27,9 +45,10 @@ def handle_mfa_disabled(user: User, last_enabled_at: Optional[datetime], updated
         return
 
     try:
+        disable_user_mfa(user.email_address)
         _send_mfa_disabled_email(user.email_address, user.mfa_phone_number_last_four())
     except Exception as error:
-        logger.error("Error sending MFA disabled email", exc_info=error)
+        logger.error("Error disabling user MFA", exc_info=error)
         raise error
 
 

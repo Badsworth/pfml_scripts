@@ -10,7 +10,7 @@ from massgov.pfml.db.models.employees import (
     LkMFADeliveryPreferenceUpdatedBy,
     User,
 )
-from massgov.pfml.mfa import handle_mfa_disabled
+from massgov.pfml.mfa import handle_mfa_disabled, handle_mfa_enabled
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
@@ -60,6 +60,9 @@ def _update_mfa_preference(
 
     if value == "Opt Out" and existing_mfa_preference is not None:
         handle_mfa_disabled(user, last_updated_at, updated_by)
+        # todo: disable in cognito
+    elif value == "SMS":
+        handle_mfa_enabled(user)
 
 
 def _update_mfa_preference_audit_trail(db_session: db.Session, user: User, updated_by: str) -> None:
