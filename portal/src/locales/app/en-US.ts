@@ -1005,11 +1005,8 @@ const pages: {
       "Learn more about the <approval-process-link>application review and approval process</approval-process-link>.",
     createApplicationHeading: "Create a new application",
     getReadyLink: "Start a new application",
-    inProgressHeading: "In-progress applications",
-    noClaims: "You don’t have any applications yet.",
     startByPhoneDescription: "$t(shared.startByPhoneDescription)",
     startByPhoneLabel: "$t(shared.startByPhoneLabel)",
-    submittedHeading: "Submitted applications",
     title: "Your applications",
     uploadSuccessHeading: "You successfully submitted your documents",
     uploadSuccessMessage:

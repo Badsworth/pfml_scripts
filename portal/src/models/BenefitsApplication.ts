@@ -23,7 +23,6 @@ class BenefitsApplication extends BaseBenefitsApplication {
   fineos_absence_id: string | null = null;
   organization_unit_id: string | null = null;
   organization_unit_selection: "not_listed" | "not_selected" | null = null;
-  created_at: string;
 
   first_name: string | null = null;
   middle_name: string | null = null;
@@ -95,23 +94,6 @@ class BenefitsApplication extends BaseBenefitsApplication {
     super();
     // Recursively merge with the defaults
     merge(this, attrs);
-  }
-
-  /**
-   * Returns all claims with an "Started" or "Submitted" status
-   */
-  static inProgress(applications: BenefitsApplication[]) {
-    return applications.filter(
-      (item) => item.status !== BenefitsApplicationStatus.completed
-    );
-  }
-
-  /**
-   * Returns all claims that have completed all parts of
-   * the progressive application
-   */
-  static completed(applications: BenefitsApplication[]) {
-    return applications.filter((item) => item.isCompleted);
   }
 
   /**
