@@ -30,6 +30,10 @@ jobs:
         with:
           ssm_parameter: "/admin/common/teams-deploy-uri-test"
           env_variable_name: "teams_uri"
+        
+      - name: display teams uri
+        run: echo "teams_uri: ${{ env.teams_uri }}" 
+        
 
       - name: Post to Teams
         run: |
