@@ -82,13 +82,19 @@ describe("useBenefitsApplicationsLogic", () => {
       });
     });
 
-    it("causes a new API request the next time loadPage is called, after an application has been associated successfully", async () => {
+    it("updates state to force a new API request the next time loadPage is called, after an application has been associated successfully", async () => {
       await act(async () => {
         await claimsLogic.loadPage();
+      });
+
+      expect(claimsLogic.isLoadingClaims).toBe(false);
+      expect(getClaimsMock).toHaveBeenCalledTimes(1);
+
+      await act(async () => {
         await claimsLogic.associate(mockAssociateFormState);
       });
 
-      expect(getClaimsMock).toHaveBeenCalledTimes(1);
+      expect(claimsLogic.isLoadingClaims).toBeUndefined();
 
       await act(async () => {
         await claimsLogic.loadPage();
