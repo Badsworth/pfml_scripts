@@ -170,9 +170,7 @@ describe("users API", () => {
       expect(response.user).toBeInstanceOf(User);
       expect(response.user).toMatchInlineSnapshot(`
         User {
-          "auth_id": undefined,
           "consented_to_data_sharing": true,
-          "email_address": undefined,
           "mfa_delivery_preference": null,
           "mfa_phone_number": null,
           "roles": [
@@ -181,8 +179,6 @@ describe("users API", () => {
                 "role_description": "Employer",
                 "role_id": 1,
               },
-              "role_description": undefined,
-              "role_id": undefined,
             },
           ],
           "user_id": "mock-user_id",
