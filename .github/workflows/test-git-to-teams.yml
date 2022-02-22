@@ -15,37 +15,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
-          role-to-assume: ci-run-deploys
-          role-duration-seconds: 3600
-
-      - name: Pull teams uri from SSM
-        uses: "marvinpinto/action-inject-ssm-secrets@latest"
-        with:
-          ssm_parameter: "/admin/common/teams-deploy-uri-test"
-          env_variable_name: "teams_uri"
-        
-      - name: display teams uri
-        run: |
-          echo ${{ env.TEAMS_URI }}
-
-
       - name: Post to Teams
         run: |
-          RESPONSE=$(curl -fsLS -X POST ${{ env.TEAMS_URI }} \
+          RESPONSE=$(curl --location --request POST 'https://massgov.webhook.office.com/webhookb2/f2159e94-1fdd-4834-b5c1-79578a664392@3e861d16-48b7-4a0e-9806-8c04d81b7b2a/IncomingWebhook/8cb33caf02e546588d7c5934de5fcf8e/585d4b29-01f0-4c9e-b6ce-fef830aab7f2' \
           --header 'Content-Type: application/json' \
-          --data '{   
-            "@type": "MessageCard",
-            "themeColor": "FF0000",
-            "title": "API tests failed",
-            "text": "API tests failed in main ${{ env.workflow_self_link }}",
-            "sections": [{
-                "activityImage":"https://th.bing.com/th/id/R.ee8882f44294e8a6f1732a54343ff17e?rik=FAYIPD4sACftKw&riu=http%3a%2f%2f3.bp.blogspot.com%2f-u6MZBWbGcZI%2fUT4mft01YTI%2fAAAAAAAADpU%2fJubGsyGdL00%2fs1600%2ffailure.png&ehk=ranH%2bkeeo59wsILuyxVyNTIR2oUECprijedE01jHq34%3d&risl=&pid=ImgRaw&r=0"
-            }]'
+          --data-raw '{   
+              "@type": "MessageCard",
+              "themeColor": "FF0000",
+              "title": "title text",
+              "text":"message",
+              "sections": [{
+                  "activityImage":"https://th.bing.com/th/id/R.ee8882f44294e8a6f1732a54343ff17e?rik=FAYIPD4sACftKw&riu=http%3a%2f%2f3.bp.blogspot.com%2f-u6MZBWbGcZI%2fUT4mft01YTI%2fAAAAAAAADpU%2fJubGsyGdL00%2fs1600%2ffailure.png&ehk=ranH%2bkeeo59wsILuyxVyNTIR2oUECprijedE01jHq34%3d&risl=&pid=ImgRaw&r=0"
+              }]
+          }' \
           )
