@@ -1,7 +1,10 @@
 name: ZZ-testing-git-to-teams
 on:
   workflow_dispatch:
-    
+  push:
+    branches:
+      - INFRA-1113--Testing-Github-to-Teams
+
 jobs:
 
   # Run Terriyay
