@@ -32,8 +32,9 @@ jobs:
           env_variable_name: "teams_uri"
         
       - name: display teams uri
-        run: echo "teams_uri: ${{ env.teams_uri }}" 
-        
+        run: |
+          echo "teams_uri: ${{ env.teams_uri }}" 
+
 
       - name: Post to Teams
         run: |
