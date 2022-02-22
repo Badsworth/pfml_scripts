@@ -1438,15 +1438,12 @@ def set_customer_contact_detail_fields(
         logger.info("No contact details returned from FINEOS")
         return
 
-    mfa_phone_number = next(
-        (
-            phone_num
-            for phone_num in contact_details.phoneNumbers
-            if f"+{phone_num.intCode}{phone_num.areaCode}{phone_num.telephoneNo}"
-            == application.user.mfa_phone_number
-        ),
-        None,
-    )
+    mfa_phone_number = None
+    for phone_num in contact_details.phoneNumbers:
+        country_code = phone_num.intCode if phone_num.intCode else "1"
+        fineos_phone = f"+{country_code}{phone_num.areaCode}{phone_num.telephoneNo}"
+        if application.user.mfa_phone_number == fineos_phone:
+            mfa_phone_number = fineos_phone
 
     preferred_phone_number = next(
         (phone_num for phone_num in contact_details.phoneNumbers if phone_num.preferred),
