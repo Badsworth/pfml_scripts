@@ -7,7 +7,7 @@ import pytest
 
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.files as file_util
-from massgov.pfml.db.models.factories import Pfml1099BatchFactory, Pfml1099Factory
+from massgov.pfml.db.models.factories import Pfml1099Factory
 from massgov.pfml.delegated_payments.irs_1099.generate_1099_irs_filing import (
     Generate1099IRSfilingStep,
 )
@@ -190,14 +190,13 @@ def test_get_totals(generate_1099_step: Generate1099IRSfilingStep, create_pfml_1
     assert expected_fed == fed_tax
 
 
-def test_get_pfml_batch_as_empty(
-    local_test_db_session, generate_1099_step: Generate1099IRSfilingStep
+def test_generate_1099_irs_filing(
+    local_test_db_session, generate_1099_step: Generate1099IRSfilingStep, create_pfml_1099
 ):
 
-    current_batch = Pfml1099BatchFactory.build()
     mock.patch(
-        "massgov.pfml.delegated_payments.irs_1099.pfml_1099_util.get_current_1099_batch",
-        return_value=current_batch,
+        "massgov.pfml.delegated_payments.irs_1099.pfml_1099_util.get_1099_records_to_file",
+        return_value=create_pfml_1099,
     )
     generate_1099_step.run_step()
 

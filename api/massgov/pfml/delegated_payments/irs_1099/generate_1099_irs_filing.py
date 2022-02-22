@@ -12,7 +12,6 @@ import massgov.pfml.delegated_payments.irs_1099.pfml_1099_util as pfml_1099_util
 import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging
 from massgov.pfml.db.models.employees import ReferenceFile, ReferenceFileType
-from massgov.pfml.db.models.payments import Pfml1099
 from massgov.pfml.delegated_payments.step import Step
 from massgov.pfml.util.datetime import get_now_us_eastern
 
@@ -82,45 +81,31 @@ class Generate1099IRSfilingStep(Step):
 
     def _generate_1099_irs_filing(self) -> None:
         logger.info("1099 Documents - Generate 1099.org file to be transmitted to IRS")
-
-        recent_batch_id = pfml_1099_util.get_current_1099_batch(self.db_session)
-        if recent_batch_id is None:
-            logger.error("No current batch exists.")
-        else:
-            try:
-                logger.info("recent_batch_id %s", recent_batch_id.pfml_1099_batch_id)
-                pfml_1099 = list(
-                    self.db_session.query(Pfml1099).filter(
-                        Pfml1099.pfml_1099_batch_id == recent_batch_id.pfml_1099_batch_id
-                    )
-                )
-            except Exception:
-                logger.exception("Error accessing 1099 data")
-                raise
-            if pfml_1099_util.is_test_file() == "T":
-                pfml_1099 = pfml_1099[:11]
-            self.total_b_record = len(pfml_1099)
-            logger.info("Total b records are, %s", self.total_b_record)
-            t_template = self._create_t_template()
-            t_entries = self._load_t_rec_data(t_template)
-            a_template = self._create_a_template()
-            a_entries = self._load_a_rec_data(a_template)
-            entries = t_entries + a_entries
-            b_template = self._create_b_template()
-            b_entries = self._load_b_rec_data(b_template, pfml_1099)
-            for b_records in b_entries:
-                entries = entries + b_records
-            c_template = self._create_c_template()
-            ctl_total, st_tax, fed_tax = self._get_totals(pfml_1099)
-            c_entries = self._load_c_rec_data(c_template, ctl_total)
-            k_template = self._create_k_template()
-            k_entries = self._load_k_rec_data(k_template, ctl_total, st_tax, fed_tax)
-            f_template = self._create_f_template()
-            f_entries = self._load_f_rec_data(f_template)
-            entries += c_entries + k_entries + f_entries
-            logger.info("Completed irs file data mapping")
-            self._create_irs_file(entries)
-            self.db_session.commit()
+        pfml_1099 = pfml_1099_util.get_1099_records_to_file(self.db_session)
+        if pfml_1099_util.is_test_file() == "T":
+            pfml_1099 = pfml_1099[:11]
+        self.total_b_record = len(pfml_1099)
+        logger.info("Total b records are, %s", self.total_b_record)
+        t_template = self._create_t_template()
+        t_entries = self._load_t_rec_data(t_template)
+        a_template = self._create_a_template()
+        a_entries = self._load_a_rec_data(a_template)
+        entries = t_entries + a_entries
+        b_template = self._create_b_template()
+        b_entries = self._load_b_rec_data(b_template, pfml_1099)
+        for b_records in b_entries:
+            entries = entries + b_records
+        c_template = self._create_c_template()
+        ctl_total, st_tax, fed_tax = self._get_totals(pfml_1099)
+        c_entries = self._load_c_rec_data(c_template, ctl_total)
+        k_template = self._create_k_template()
+        k_entries = self._load_k_rec_data(k_template, ctl_total, st_tax, fed_tax)
+        f_template = self._create_f_template()
+        f_entries = self._load_f_rec_data(f_template)
+        entries += c_entries + k_entries + f_entries
+        logger.info("Completed irs file data mapping")
+        self._create_irs_file(entries)
+        self.db_session.commit()
 
     def _create_t_template(self) -> str:
         temp = (
@@ -268,6 +253,7 @@ class Generate1099IRSfilingStep(Step):
         b_seq = self.seq_number + 1
         logger.info("B sequence starts at %s", b_seq)
         for records in tax_data:
+
             b_dict = dict(
                 B_REC_TYPE=Constants.B_REC_TYPE,
                 TAX_YEAR=pfml_1099_util.get_tax_year(),
@@ -425,7 +411,6 @@ class Generate1099IRSfilingStep(Step):
                 last_name = last_name_list[0].rstrip() + last_name_list[1]
         else:
             last_name = lname
-        logger.debug("Last name 4 chars is %s", last_name[0:4])
         last_name_four = last_name[0:4].upper()
         return last_name_four
 
