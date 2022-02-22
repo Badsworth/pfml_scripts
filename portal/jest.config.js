@@ -64,7 +64,8 @@ async function createConfig() {
   const config = await createNextJestConfig(extendedConfig)();
   config.transformIgnorePatterns = config.transformIgnorePatterns.filter(
     // Next.js sets this to mimic their own behavior, but we actually need our
-    // tests to transform a subset of node_modules, so we remove their setting from here.
+    // tests to transform a subset of node_modules (see `transformIgnorePatterns`
+    // above), so we remove their setting from here.
     (pattern) => pattern !== "/node_modules/"
   );
 
