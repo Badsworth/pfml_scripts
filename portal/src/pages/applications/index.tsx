@@ -4,7 +4,6 @@ import withBenefitsApplications, {
 import withUser, { WithUserProps } from "../../hoc/withUser";
 import Alert from "../../components/core/Alert";
 import ApplicationCard from "../../components/ApplicationCard";
-import BenefitsApplication from "../../models/BenefitsApplication";
 import ButtonLink from "../../components/ButtonLink";
 import Details from "../../components/core/Details";
 import Heading from "../../components/core/Heading";
@@ -24,6 +23,7 @@ import { useTranslation } from "../../locales/i18n";
 interface IndexProps extends WithUserProps {
   query: {
     applicationAssociated?: string;
+    page_offset?: string;
     uploadedAbsenceId?: string;
     smsMfaConfirmed?: string;
   };
@@ -35,10 +35,6 @@ interface IndexProps extends WithUserProps {
 export const Index = (props: IndexProps) => {
   const { appLogic, query } = props;
   const { t } = useTranslation();
-  const apiParams = {
-    order_direction: "ascending",
-    ...query,
-  } as const;
 
   const PaginatedApplicationCardsWithRedirect = withRedirectToGetReadyPage(
     PaginatedApplicationCards,
@@ -46,7 +42,9 @@ export const Index = (props: IndexProps) => {
   );
 
   const PaginatedApplicationCardsWithBenefitsApplications =
-    withBenefitsApplications(PaginatedApplicationCardsWithRedirect, apiParams);
+    withBenefitsApplications(PaginatedApplicationCardsWithRedirect, {
+      page_offset: query?.page_offset,
+    });
 
   const applicationCardProps = { appLogic, query };
 
@@ -138,9 +136,6 @@ const PaginatedApplicationCards = (
   }
 ) => {
   const { appLogic, claims, paginationMeta, query } = props;
-  const { t } = useTranslation();
-  const inProgressClaims = BenefitsApplication.inProgress(claims.items);
-  const completedClaims = BenefitsApplication.completed(claims.items);
 
   /**
    * Update the page's query string, to load a different page number,
@@ -160,61 +155,36 @@ const PaginatedApplicationCards = (
 
   const associatedId = query?.applicationAssociated || "";
 
+  if (claims.isEmpty) return null;
+
   return (
     <React.Fragment>
-      {inProgressClaims.length > 0 && (
-        <React.Fragment>
-          <div className="measure-6">
-            <Lead>
-              <Trans
-                i18nKey="pages.applications.claimsApprovalProcess"
-                components={{
-                  "approval-process-link": (
-                    <a
-                      href={routes.external.massgov.approvalTimeline}
-                      rel="noopener noreferrer"
-                      target="_blank"
-                    />
-                  ),
-                }}
+      <Lead>
+        <Trans
+          i18nKey="pages.applications.claimsApprovalProcess"
+          components={{
+            "approval-process-link": (
+              <a
+                href={routes.external.massgov.approvalTimeline}
+                rel="noopener noreferrer"
+                target="_blank"
               />
-            </Lead>
-          </div>
-          <Heading level="2">
-            {t("pages.applications.inProgressHeading")}
-          </Heading>
-          {inProgressClaims.map((claim) => {
-            return (
-              <ApplicationCard
-                key={claim.application_id}
-                appLogic={appLogic}
-                claim={claim}
-                user={props.user}
-                successfullyImported={associatedId === claim.fineos_absence_id}
-              />
-            );
-          })}
-        </React.Fragment>
-      )}
+            ),
+          }}
+        />
+      </Lead>
+      {claims.items.map((claim) => {
+        return (
+          <ApplicationCard
+            key={claim.application_id}
+            appLogic={appLogic}
+            claim={claim}
+            user={props.user}
+            successfullyImported={associatedId === claim.fineos_absence_id}
+          />
+        );
+      })}
 
-      {completedClaims.length > 0 && (
-        <React.Fragment>
-          <Heading level="2">
-            {t("pages.applications.submittedHeading")}
-          </Heading>
-          {completedClaims.map((claim) => {
-            return (
-              <ApplicationCard
-                key={claim.application_id}
-                claim={claim}
-                appLogic={props.appLogic}
-                user={props.user}
-                successfullyImported={associatedId === claim.fineos_absence_id}
-              />
-            );
-          })}
-        </React.Fragment>
-      )}
       {paginationMeta.total_pages > 1 && (
         <PaginationNavigation
           pageOffset={paginationMeta.page_offset}
