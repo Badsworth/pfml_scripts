@@ -3,7 +3,14 @@ from decimal import Decimal
 from enum import Enum
 from typing import List, Optional
 
-from massgov.pfml.api.models.common import ConcurrentLeave, EmployerBenefit, PreviousLeave
+from pydantic import UUID4
+
+from massgov.pfml.api.models.common import (
+    ConcurrentLeave,
+    EmployerBenefit,
+    LookupEnum,
+    PreviousLeave,
+)
 from massgov.pfml.util.pydantic import PydanticBaseModel
 
 
@@ -58,3 +65,18 @@ class EmployerClaimReview(PydanticBaseModel):
     leave_reason: Optional[str]
     believe_relationship_accurate: Optional[YesNoUnknown]
     relationship_inaccurate_reason: Optional[str]
+
+
+class ChangeRequestType(str, LookupEnum):
+    MODIFICATION = "Modification"
+    WITHDRAWAL = "Withdrawal"
+    MEDICAL_TO_BONDING = "Medical To Bonding Transition"
+
+
+class ChangeRequest(PydanticBaseModel):
+    """ Defines the ChangeRequest format """
+
+    claim_id: Optional[UUID4]
+    change_request_type: ChangeRequestType
+    start_date: Optional[date]
+    end_date: Optional[date]
