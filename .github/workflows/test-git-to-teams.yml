@@ -28,7 +28,7 @@ jobs:
       - name: Pull teams uri from SSM
         uses: "marvinpinto/action-inject-ssm-secrets@latest"
         with:
-          ssm_parameter: "/admin/common/teams-deploy-uri-test"
+          ssm_parameter: "/admin/common/teams-deploy-uri"
           env_variable_name: "teams_uri"
         
       - name: display teams uri
