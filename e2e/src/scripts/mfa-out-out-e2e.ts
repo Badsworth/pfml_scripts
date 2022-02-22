@@ -27,8 +27,10 @@ import { Credentials } from "../types";
         "User-Agent": "PFML Business Simulation Bot",
       },
     };
+
     const { data } = await getUsersCurrent(opts);
     if (!data.data.user_id) throw Error("user_id undefined");
+
     await patchUsersByUser_id(
       { user_id: data.data.user_id },
       {
