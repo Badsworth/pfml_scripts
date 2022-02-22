@@ -45,13 +45,16 @@ const useUsersLogic = ({
       if (mfa_phone_number) {
         getMfaValidationErrors(mfa_phone_number?.phone_number);
       }
+      // todo: send ff to BE
       // Get api validation errors and update the user
       const { user } = await usersApi.updateUser(user_id, patchData);
+      /*
       // Update Cognito
       if (mfa_delivery_preference)
         await setMFAPreference(mfa_delivery_preference);
       if (mfa_phone_number?.phone_number)
         await updateMFAPhoneNumber(mfa_phone_number.phone_number);
+      */
       // Change internal state
       setUser(user);
       // Return the user only if the update did not throw any errors
