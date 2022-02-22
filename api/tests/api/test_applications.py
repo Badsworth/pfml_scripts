@@ -325,6 +325,16 @@ class TestApplicationsImport:
         user.mfa_delivery_preference_id = 1
         user.mfa_phone_number = "+13214567890"
 
+    @pytest.fixture(autouse=True)
+    def mock_cognito_user_mfa_status(self, mock_cognito, monkeypatch) -> None:
+        def admin_get_user(Username: str = None, UserPoolId: str = None):
+            return {
+                "Username": Username,
+                "UserAttributes": [{"Name": "phone_number_verified", "Value": "true"}],
+            }
+
+        monkeypatch.setattr(mock_cognito, "admin_get_user", admin_get_user)
+
     def test_applications_import(
         self, client, test_db_session, auth_token, claim, valid_request_body
     ):
@@ -362,6 +372,38 @@ class TestApplicationsImport:
         assert response.status_code == 403
         assert response_body["message"] == "An application already exists for this claim."
         assert response_body["errors"][0]["type"] == "duplicate"
+
+    def test_applications_import_mfa_not_verified(
+        self,
+        client,
+        test_db_session,
+        auth_token,
+        claim,
+        valid_request_body,
+        monkeypatch,
+        mock_cognito,
+    ):
+        def admin_get_user(Username: str = None, UserPoolId: str = None):
+            return {
+                "Username": Username,
+                "UserAttributes": [{"Name": "phone_number_verified", "Value": "false"}],
+            }
+
+        monkeypatch.setattr(mock_cognito, "admin_get_user", admin_get_user)
+
+        response = client.post(
+            "/v1/applications/import",
+            headers={"Authorization": f"Bearer {auth_token}"},
+            json=valid_request_body,
+        )
+        assert response.status_code == 400
+        assert response.get_json().get("errors") == [
+            {
+                "field": "mfa_delivery_preference",
+                "message": "User has not opted into MFA delivery preferences",
+                "type": "required",
+            }
+        ]
 
     def test_applications_import_application_for_claim_already_exists_diff_account(
         self, client, user_with_mfa, auth_token, claim, valid_request_body
