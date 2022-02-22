@@ -1,10 +1,10 @@
 import { MockBenefitsApplicationBuilder, renderPage } from "../../test-utils";
-import { screen, within } from "@testing-library/react";
 import ApiResourceCollection from "src/models/ApiResourceCollection";
 import { AppLogic } from "../../../src/hooks/useAppLogic";
 import BenefitsApplication from "src/models/BenefitsApplication";
 import Index from "../../../src/pages/applications/index";
 import routes from "../../../src/routes";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 const inProgressClaim = new MockBenefitsApplicationBuilder()
@@ -89,7 +89,7 @@ describe("Applications", () => {
     });
   });
 
-  it("user can view their in-progress + submitted applications", () => {
+  it("displays Application Card for each claim", () => {
     renderPage(
       Index,
       {
@@ -101,81 +101,15 @@ describe("Applications", () => {
             new ApiResourceCollection<BenefitsApplication>("application_id", [
               inProgressClaim,
               submittedClaim,
+              completedClaim,
             ]);
         },
       },
       { query: {} }
     );
 
-    expect(
-      screen.getByRole("heading", { level: 3, name: "In-progress application" })
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("heading", {
-        level: 3,
-        name: "Leave for an illness or injury",
-      })
-    ).toBeInTheDocument();
-  });
-
-  it("displays completed applications", () => {
-    renderPage(Index, {
-      pathname: routes.applications.index,
-      addCustomSetup: (appLogicHook) => {
-        setUpHelper(appLogicHook);
-        appLogicHook.documents.loadAll = jest.fn();
-        appLogicHook.benefitsApplications.benefitsApplications =
-          new ApiResourceCollection<BenefitsApplication>("application_id", [
-            completedClaim,
-          ]);
-      },
-    });
-
-    expect(screen.getByText(/Submitted applications/)).toBeInTheDocument();
-    expect(screen.getByText(/View your notices/)).toBeInTheDocument();
-  });
-
-  describe("When multiple claims of different statuses exist", () => {
-    beforeEach(() => {
-      renderPage(
-        Index,
-        {
-          pathname: routes.applications.index,
-          addCustomSetup: (appLogicHook) => {
-            setUpHelper(appLogicHook);
-            appLogicHook.documents.loadAll = jest.fn();
-            appLogicHook.benefitsApplications.benefitsApplications =
-              new ApiResourceCollection<BenefitsApplication>("application_id", [
-                inProgressClaim,
-                submittedClaim,
-                completedClaim,
-              ]);
-          },
-        },
-        { query: {} }
-      );
-    });
-
-    it("Displays Application Card for each claim", () => {
-      const applicationCards = screen.getAllByRole("article");
-      expect(applicationCards).toHaveLength(3);
-    });
-
-    it("Displays headers for each section", () => {
-      expect(screen.getByText(/In-progress applications/)).toBeInTheDocument();
-      expect(screen.getByText(/Submitted applications/)).toBeInTheDocument();
-    });
-
-    it("Displays claims in expected order", () => {
-      const [inProgClaim, subClaim, compClaim] = screen.getAllByRole("article");
-      expect(
-        within(inProgClaim).getByText(/In-progress application/)
-      ).toBeInTheDocument();
-      expect(
-        within(subClaim).getByText(/Leave for an illness or injury/)
-      ).toBeInTheDocument();
-      expect(within(compClaim).getByText(/NTN-111-ABS-01/)).toBeInTheDocument();
-    });
+    const applicationCards = screen.getAllByRole("article");
+    expect(applicationCards).toHaveLength(3);
   });
 
   it("only loads documents for each submitted claim once", () => {

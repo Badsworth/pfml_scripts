@@ -62,7 +62,7 @@ describe("ApplicationCard", () => {
     render(<ApplicationCardWithAppLogic claim={claim} />);
 
     expect(
-      screen.getByRole("heading", { level: 3 }).textContent
+      screen.getByRole("heading", { level: 2 }).textContent
     ).toMatchInlineSnapshot(`"Leave to bond with a child"`);
   });
 

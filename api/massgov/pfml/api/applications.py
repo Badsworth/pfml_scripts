@@ -64,6 +64,7 @@ from massgov.pfml.fineos.exception import (
     FINEOSUnprocessableEntity,
 )
 from massgov.pfml.fineos.models.customer_api import Base64EncodedFileData
+from massgov.pfml.util.aws import cognito
 from massgov.pfml.util.logging.applications import get_application_log_attributes
 from massgov.pfml.util.sqlalchemy import get_or_404
 
@@ -150,6 +151,28 @@ def applications_import():
         application_import_request, claim,
     )
     assert application_import_request.absence_case_id is not None
+
+    is_cognito_user_mfa_verified = cognito.is_mfa_phone_verified(application.user.email_address, app.get_app_config().cognito_user_pool_id)  # type: ignore
+
+    if not is_cognito_user_mfa_verified:
+        logger.info(
+            "application import failure - mfa not verified",
+            extra={
+                "absence_case_id": application.claim.fineos_absence_id
+                if application.claim
+                else None,
+                "user_id": application.user.user_id,
+            },
+        )
+        raise ValidationException(
+            errors=[
+                ValidationErrorDetail(
+                    field="mfa_delivery_preference",
+                    type=IssueType.required,
+                    message="User has not opted into MFA delivery preferences",
+                )
+            ]
+        )
 
     with app.db_session() as db_session:
         error = applications_service.claim_is_valid_for_application_import(db_session, user, claim)
