@@ -2,7 +2,7 @@
 
 ## Delivery Workflow
 
-Please see the [Delivery Workflow](https://lwd.atlassian.net/wiki/spaces/DD/pages/306577409/Delivery+Workflow)
+Please see the **Depricated** [Delivery Workflow](https://lwd.atlassian.net/wiki/spaces/DD/pages/306577409/Delivery+Workflow)
 Confluence page for guidance on how to pick up tickets, when to deploy, which environment to deploy to, etc.
 
 ## Local Development Guidelines
