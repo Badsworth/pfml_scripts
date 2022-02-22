@@ -1438,20 +1438,6 @@ def set_customer_contact_detail_fields(
         logger.info("No contact details returned from FINEOS")
         return
 
-    if (
-        application.user.mfa_delivery_preference_id
-        != MFADeliveryPreference.SMS.mfa_delivery_preference_id
-    ):
-        raise ValidationException(
-            errors=[
-                ValidationErrorDetail(
-                    field="mfa_delivery_preference",
-                    type=IssueType.required,
-                    message="User has not opted into MFA delivery preferences",
-                )
-            ]
-        )
-
     mfa_phone_number = next(
         (
             phone_num
@@ -1462,38 +1448,47 @@ def set_customer_contact_detail_fields(
         None,
     )
 
-    if mfa_phone_number is None:
+    preferred_phone_number = next(
+        (phone_num for phone_num in contact_details.phoneNumbers if phone_num.preferred),
+        contact_details.phoneNumbers[0],
+    )
+
+    if (
+        mfa_phone_number is None
+        or application.user.mfa_delivery_preference_id
+        != MFADeliveryPreference.SMS.mfa_delivery_preference_id
+    ):
         logger.info(
-            "application import failure - phone number mismatch",
-            extra={"absence_case_id": application.claim_id, "user_id": application.user.user_id,},
+            "application import failure - phone number mismatch / no SMS phone available ",
+            extra={
+                "absence_case_id": application.claim.fineos_absence_id
+                if application.claim
+                else None,
+                "mfa_delivery_preference_id": application.user.mfa_delivery_preference_id,
+            },
         )
         raise ValidationException(
             errors=[
                 ValidationErrorDetail(
                     type=IssueType.incorrect,
-                    message="An issue occurred while trying to import the application",
+                    message="Code 3: An issue occurred while trying to import the application.",
                 )
             ]
         )
 
-    phone_number_from_fineos = next(
-        (phone_num for phone_num in contact_details.phoneNumbers if phone_num.preferred),
-        contact_details.phoneNumbers[0],
-    )
-
     # Handles the potential case of a phone number list existing, but phone fields are null
     if not (
-        phone_number_from_fineos.intCode
-        or phone_number_from_fineos.areaCode
-        or phone_number_from_fineos.telephoneNo
+        preferred_phone_number.intCode
+        or preferred_phone_number.areaCode
+        or preferred_phone_number.telephoneNo
     ):
         logger.info(
             "Field missing from FINEOS phoneNumber list",
-            extra={"phoneNumbers": str(phone_number_from_fineos)},
+            extra={"phoneNumbers": str(preferred_phone_number)},
         )
         return
 
-    phone_to_create = create_common_io_phone_from_fineos(phone_number_from_fineos, db_session)
+    phone_to_create = create_common_io_phone_from_fineos(preferred_phone_number, db_session)
     add_or_update_phone(db_session, phone_to_create, application)
 
 

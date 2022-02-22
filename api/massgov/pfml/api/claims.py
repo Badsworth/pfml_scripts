@@ -16,7 +16,7 @@ from massgov.pfml.api.authorization.exceptions import NotAuthorizedForAccess
 from massgov.pfml.api.authorization.flask import READ, can, requires
 from massgov.pfml.api.exceptions import ClaimWithdrawn, ObjectNotFound
 from massgov.pfml.api.models.applications.common import OrganizationUnit
-from massgov.pfml.api.models.claims.common import EmployerClaimReview
+from massgov.pfml.api.models.claims.common import ChangeRequest, EmployerClaimReview
 from massgov.pfml.api.models.claims.responses import (
     ClaimForPfmlCrmResponse,
     ClaimResponse,
@@ -33,7 +33,7 @@ from massgov.pfml.api.services.administrator_fineos_actions import (
 from massgov.pfml.api.services.claims import ClaimWithdrawnError, get_claim_detail
 from massgov.pfml.api.services.managed_requirements import update_employer_confirmation_requirements
 from massgov.pfml.api.util.claims import user_has_access_to_claim
-from massgov.pfml.api.util.response import error_response
+from massgov.pfml.api.util.paginate.paginator import PaginationAPIContext
 from massgov.pfml.api.validation.exceptions import (
     ContainsV1AndV2Eforms,
     IssueType,
@@ -75,7 +75,6 @@ from massgov.pfml.util.logging.employers import get_employer_log_attributes
 from massgov.pfml.util.logging.managed_requirements import (
     get_managed_requirements_update_log_attributes,
 )
-from massgov.pfml.util.paginate.paginator import PaginationAPIContext
 from massgov.pfml.util.sqlalchemy import get_or_404
 from massgov.pfml.util.users import has_role_in
 
@@ -463,7 +462,7 @@ def employer_document_download(fineos_absence_id: str, fineos_document_id: str) 
 def get_claim(fineos_absence_id: str) -> flask.Response:
     is_employer = can(READ, "EMPLOYER_API")
     if is_employer:
-        error = error_response(
+        error = response_util.error_response(
             Forbidden, "Employers are not allowed to access claimant claim info", errors=[],
         )
         return error.to_api_response()
@@ -475,7 +474,7 @@ def get_claim(fineos_absence_id: str) -> flask.Response:
             "get_claim failure - Claim not in PFML database.",
             extra={"absence_case_id": fineos_absence_id},
         )
-        error = error_response(NotFound, "Claim not in PFML database.", errors=[])
+        error = response_util.error_response(NotFound, "Claim not in PFML database.", errors=[])
         return error.to_api_response()
 
     if not user_has_access_to_claim(claim, app.current_user()):
@@ -483,7 +482,9 @@ def get_claim(fineos_absence_id: str) -> flask.Response:
             "get_claim failure - User does not have access to claim.",
             extra={"absence_case_id": fineos_absence_id},
         )
-        error = error_response(Forbidden, "User does not have access to claim.", errors=[])
+        error = response_util.error_response(
+            Forbidden, "User does not have access to claim.", errors=[]
+        )
         return error.to_api_response()
 
     try:
@@ -711,3 +712,37 @@ def sync_absence_periods(
     # only commit to db when every absence period has been succesfully synced
     # otherwise rollback changes if any absence period upsert throws an exception
     db_session.commit()
+
+
+def post_change_request(fineos_absence_id: str) -> flask.Response:
+    body = connexion.request.json
+    change_request: ChangeRequest = ChangeRequest.parse_obj(body)
+
+    claim = get_claim_from_db(fineos_absence_id)
+    if claim is None:
+        logger.warning(
+            "Claim does not exist for given absence ID",
+            extra={"absence_case_id": fineos_absence_id},
+        )
+        error = response_util.error_response(
+            status_code=NotFound,
+            message="Claim does not exist for given absence ID",
+            errors=[],
+            data={},
+        )
+        return error.to_api_response()
+
+    # Add the claim id to the change request (needed to add to our db)
+    change_request.claim_id = claim.claim_id
+
+    if issues := claim_rules.get_change_request_issues(change_request):
+        return response_util.error_response(
+            status_code=BadRequest, message="Invalid change request body", errors=issues, data={},
+        ).to_api_response()
+
+    # Post change request to FINEOS - https://lwd.atlassian.net/browse/PORTAL-1710
+    # On a success, add it to our DB as well
+
+    return response_util.success_response(
+        message="Successfully posted change request", data=change_request.dict(), status_code=201,
+    ).to_api_response()

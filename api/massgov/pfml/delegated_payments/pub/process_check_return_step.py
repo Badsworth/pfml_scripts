@@ -322,7 +322,17 @@ class ProcessCheckReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
             description=check_payment.status.value
         )
 
-        writeback_transaction_status = FineosWritebackTransactionStatus.BANK_PROCESSING_ERROR
+        if check_payment.status == check_return.PaidStatus.VOID:
+            writeback_transaction_status = FineosWritebackTransactionStatus.VOID_CHECK
+        elif check_payment.status == check_return.PaidStatus.STALE:
+            writeback_transaction_status = FineosWritebackTransactionStatus.STALE_CHECK
+        elif check_payment.status == check_return.PaidStatus.STOP:
+            writeback_transaction_status = FineosWritebackTransactionStatus.STOP_CHECK
+        else:
+            logger.warning(
+                "Payment check errored, but status is not one of: void, stale, or stop", extra=extra
+            )
+            writeback_transaction_status = FineosWritebackTransactionStatus.BANK_PROCESSING_ERROR
 
         end_state = State.DELEGATED_PAYMENT_ERROR_FROM_BANK
         create_payment_finished_state_log_with_writeback(

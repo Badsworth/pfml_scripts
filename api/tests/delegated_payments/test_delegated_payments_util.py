@@ -957,15 +957,24 @@ def test_get_fineos_max_history_date_bad_string(monkeypatch):
         payments_util.get_fineos_max_history_date(ReferenceFileType.FINEOS_PAYMENT_EXTRACT)
 
 
-def test_create_staging_table_instance(test_db_session, initialize_factories_session):
+def test_create_staging_table_instance(test_db_session, initialize_factories_session, caplog):
     """ We test if an extra column is provided to given staging data model, an instance of data
-    model is created, excluding the extra column. The extra column is logged as warning.
+    model is created, excluding the extra columns. The extra columns that aren't in
+    ignore_properties are logged as a warning.
     """
 
+    caplog.set_level(logging.INFO)  # noqa: B1
+
     ref_file = ReferenceFileFactory.create()
-    vpei_data = {"addressline6": "test", "addressline7": "test", "addressline8": "test"}
+    vpei_data = {
+        "addressline6": "test",
+        "addressline7": "test",
+        "addressline8": "test",  # no matching column in FineosExtractVpei
+        "addressline9": "test",  # no matching column in FineosExtractVpei
+    }
+
     vpei_instance = payments_util.create_staging_table_instance(
-        vpei_data, FineosExtractVpei, ref_file, None
+        vpei_data, FineosExtractVpei, ref_file, None, ignore_properties=["addressline9",]
     )
     test_db_session.add(vpei_instance)
     test_db_session.commit()
@@ -977,6 +986,15 @@ def test_create_staging_table_instance(test_db_session, initialize_factories_ses
     )
 
     assert len(employee) == 1
+
+    warnings = 0
+    for record in caplog.records:
+        if record.msg == "Unconfigured columns in FINEOS extract after first record.":
+            assert "addressline8" in record.fields
+            assert "addressline9" not in record.fields
+            warnings += 1
+
+    assert warnings == 1
 
 
 def test_create_payment_log(test_db_session, initialize_factories_session):
@@ -1415,3 +1433,29 @@ def test_get_earliest_matching_payment__no_previous_payments(
     )
 
     assert earliest_matching_payment is None
+
+
+def test_get_unconfigured_fineos_columns():
+    expected_columns = {
+        "addressline6": "test",
+        "addressline7": "test",
+    }
+
+    unconfigured_columns = payments_util.get_unconfigured_fineos_columns(
+        expected_columns, FineosExtractVpei
+    )
+
+    assert len(unconfigured_columns) == 0
+
+    extra_columns = {
+        "addressline6": "test",
+        "addressline7": "test",
+        "addressline8": "test",  # no matching column in FineosExtractVpei
+        "addressline9": "test",  # no matching column in FineosExtractVpei
+    }
+
+    unconfigured_columns = payments_util.get_unconfigured_fineos_columns(
+        extra_columns, FineosExtractVpei
+    )
+
+    assert unconfigured_columns == ["addressline8", "addressline9"]

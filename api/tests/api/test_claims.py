@@ -5356,3 +5356,56 @@ class TestReviewByFilter:
         self._assert_only_approved_claims_with_open_requirements(
             resp, status_code=200, expected_claims=review_by_claims
         )
+
+
+class TestPostChangeRequest:
+    @pytest.fixture
+    def request_body(self) -> Dict[str, str]:
+        return {
+            "change_request_type": "Modification",
+            "start_date": "2022-01-01",
+            "end_date": "2022-02-01",
+        }
+
+    @mock.patch("massgov.pfml.api.claims.claim_rules.get_change_request_issues", return_value=[])
+    @mock.patch("massgov.pfml.api.claims.get_claim_from_db")
+    def test_successful_call(
+        self, mock_get_claim, mock_change_request_issues, auth_token, claim, client, request_body,
+    ):
+        mock_get_claim.return_value = claim
+        response = client.post(
+            "/v1/change-request?fineos_absence_id={}".format(claim.fineos_absence_id),
+            headers={"Authorization": f"Bearer {auth_token}"},
+            json=request_body,
+        )
+        response_body = response.get_json().get("data")
+        assert response.status_code == 201
+        assert response_body.get("claim_id") == str(claim.claim_id)
+        assert response_body.get("change_request_type") == request_body["change_request_type"]
+        assert response_body.get("start_date") == request_body["start_date"]
+        assert response_body.get("end_date") == request_body["end_date"]
+
+    @mock.patch("massgov.pfml.api.claims.claim_rules.get_change_request_issues", return_value=[])
+    @mock.patch("massgov.pfml.api.claims.get_claim_from_db", return_value=None)
+    def test_missing_claim(
+        self, mock_get_claim, mock_change_request_issues, auth_token, claim, client, request_body,
+    ):
+        response = client.post(
+            "/v1/change-request?fineos_absence_id={}".format(claim.fineos_absence_id),
+            headers={"Authorization": f"Bearer {auth_token}"},
+            json=request_body,
+        )
+        assert response.status_code == 404
+        assert response.get_json()["message"] == "Claim does not exist for given absence ID"
+
+    @mock.patch("massgov.pfml.api.claims.get_claim_from_db")
+    def test_validation_issues(self, mock_get_claim, auth_token, claim, client, request_body):
+        mock_get_claim.return_value = claim
+        del request_body["end_date"]
+        response = client.post(
+            "/v1/change-request?fineos_absence_id={}".format(claim.fineos_absence_id),
+            headers={"Authorization": f"Bearer {auth_token}"},
+            json=request_body,
+        )
+        assert response.status_code == 400
+        assert response.get_json()["message"] == "Invalid change request body"

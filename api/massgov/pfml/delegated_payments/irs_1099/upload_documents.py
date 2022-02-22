@@ -25,12 +25,15 @@ class FineosUploadStatus(str, enum.Enum):
     SUCCESS = "Success"
     # When a 1099 record failed to be uploaded to Fineos API
     FAILED = "Failed"
+    # When a 1099 record is skipped for reprinting process
+    SKIPPED = "Skipped"
 
 
 class Upload1099DocumentsStep(Step):
     class Metrics(str, enum.Enum):
         DOCUMENT_COUNT = "document_count"
         DOCUMENT_ERROR = "document_errors"
+        DOCUMENT_SKIP = "document_skips"
 
     def run_step(self) -> None:
         self._upload_1099_documents()
@@ -68,6 +71,12 @@ class Upload1099DocumentsStep(Step):
                     )
                     self.update_status(record1099, FineosUploadStatus.FAILED)
                     self.increment(self.Metrics.DOCUMENT_ERROR)
+                    continue
+
+                ## reprinting
+                if batch.correction_ind is True and record1099.correction_ind is False:
+                    self.update_status(record1099, FineosUploadStatus.SKIPPED)
+                    self.increment(self.Metrics.DOCUMENT_SKIP)
                     continue
 
                 self.update_status(record1099, FineosUploadStatus.IN_PROGRESS)

@@ -173,11 +173,11 @@ def test_process_single_check_payment_outstanding(
 
 
 @pytest.mark.parametrize(
-    "check_status, expected_payment_check_status",
+    "check_status, expected_payment_check_status, expected_writeback_status",
     (
-        (PaidStatus.STALE, PaymentCheckStatus.STALE),
-        (PaidStatus.STOP, PaymentCheckStatus.STOP),
-        (PaidStatus.VOID, PaymentCheckStatus.VOID),
+        (PaidStatus.STALE, PaymentCheckStatus.STALE, FineosWritebackTransactionStatus.STALE_CHECK),
+        (PaidStatus.STOP, PaymentCheckStatus.STOP, FineosWritebackTransactionStatus.STOP_CHECK),
+        (PaidStatus.VOID, PaymentCheckStatus.VOID, FineosWritebackTransactionStatus.VOID_CHECK),
     ),
 )
 def test_process_single_check_payment_failed(
@@ -185,6 +185,7 @@ def test_process_single_check_payment_failed(
     payment_state,
     check_status,
     expected_payment_check_status,
+    expected_writeback_status,
     local_test_db_session,
     local_test_db_other_session,
     step,
@@ -203,7 +204,7 @@ def test_process_single_check_payment_failed(
         "message": "Payment failed by check status " + check_status.name,
     }
     assert_writeback_state_and_details(
-        local_test_db_session, payment, True, FineosWritebackTransactionStatus.BANK_PROCESSING_ERROR
+        local_test_db_session, payment, True, expected_writeback_status
     )
 
     pub_error = local_test_db_session.query(PubError).one_or_none()
@@ -344,11 +345,13 @@ def test_process_check_return_step_full(
             State.DELEGATED_PAYMENT_PUB_TRANSACTION_CHECK_SENT,
             None,
             None,
+            None,
             reference_files[0],
             2,
         ),
         502: (
             State.DELEGATED_PAYMENT_PUB_TRANSACTION_CHECK_SENT,
+            None,
             None,
             None,
             reference_files[0],
@@ -357,6 +360,7 @@ def test_process_check_return_step_full(
         503: (
             State.DELEGATED_PAYMENT_ERROR_FROM_BANK,
             State.DELEGATED_ADD_TO_FINEOS_WRITEBACK,
+            FineosWritebackTransactionStatus.STALE_CHECK,
             "STALE",
             reference_files[0],
             4,
@@ -364,6 +368,7 @@ def test_process_check_return_step_full(
         504: (
             State.DELEGATED_PAYMENT_ERROR_FROM_BANK,
             State.DELEGATED_ADD_TO_FINEOS_WRITEBACK,
+            FineosWritebackTransactionStatus.STOP_CHECK,
             "STOP",
             reference_files[0],
             5,
@@ -371,6 +376,7 @@ def test_process_check_return_step_full(
         505: (
             State.DELEGATED_PAYMENT_ERROR_FROM_BANK,
             State.DELEGATED_ADD_TO_FINEOS_WRITEBACK,
+            FineosWritebackTransactionStatus.VOID_CHECK,
             "VOID",
             reference_files[0],
             6,
@@ -378,6 +384,7 @@ def test_process_check_return_step_full(
         506: (
             State.DELEGATED_PAYMENT_COMPLETE,
             State.DELEGATED_ADD_TO_FINEOS_WRITEBACK,
+            FineosWritebackTransactionStatus.POSTED,
             None,
             reference_files[1],
             3,
@@ -385,6 +392,7 @@ def test_process_check_return_step_full(
         507: (
             State.DELEGATED_PAYMENT_COMPLETE,
             State.DELEGATED_ADD_TO_FINEOS_WRITEBACK,
+            FineosWritebackTransactionStatus.POSTED,
             None,
             reference_files[1],
             4,
@@ -405,6 +413,7 @@ def test_process_check_return_step_full(
             (
                 expected_state,
                 expected_writeback_state,
+                expected_writeback_status,
                 expected_status,
                 expected_reference_file,
                 expected_line_num,
@@ -430,16 +439,7 @@ def test_process_check_return_step_full(
                 assert writeback_details
 
                 transaction_status_id = writeback_details.transaction_status_id
-                if expected_state.state_id == State.DELEGATED_PAYMENT_ERROR_FROM_BANK.state_id:
-                    assert (
-                        transaction_status_id
-                        == FineosWritebackTransactionStatus.BANK_PROCESSING_ERROR.transaction_status_id
-                    )
-                else:
-                    assert (
-                        transaction_status_id
-                        == FineosWritebackTransactionStatus.POSTED.transaction_status_id
-                    )
+                assert transaction_status_id == expected_writeback_status.transaction_status_id
 
         else:
             # Not in test files - state unchanged.

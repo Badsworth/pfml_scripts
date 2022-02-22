@@ -1,4 +1,4 @@
-import BenefitsApplication, {
+import {
   ReducedScheduleLeavePeriod,
   WorkPattern,
 } from "../../src/models/BenefitsApplication";
@@ -10,39 +10,6 @@ describe("BenefitsApplication", () => {
 
   beforeEach(() => {
     emptyClaim = new MockBenefitsApplicationBuilder().create();
-  });
-
-  describe("#inProgress", () => {
-    it("returns only the 'Started' and 'Submitted' claims", () => {
-      const startedClaim = new MockBenefitsApplicationBuilder().create();
-      const completedClaim = new MockBenefitsApplicationBuilder()
-        .completed()
-        .create();
-      const submittedClaim = new MockBenefitsApplicationBuilder()
-        .submitted()
-        .create();
-      const claims = [startedClaim, completedClaim, submittedClaim];
-
-      expect(BenefitsApplication.inProgress(claims)).toHaveLength(2);
-      expect(BenefitsApplication.inProgress(claims)).toContain(startedClaim);
-      expect(BenefitsApplication.inProgress(claims)).toContain(submittedClaim);
-    });
-  });
-
-  describe("#completed", () => {
-    it("returns 'Completed' claims", () => {
-      const startedClaim = new MockBenefitsApplicationBuilder().create();
-      const completedClaim = new MockBenefitsApplicationBuilder()
-        .completed()
-        .create();
-      const submittedClaim = new MockBenefitsApplicationBuilder()
-        .submitted()
-        .create();
-      const claims = [startedClaim, completedClaim, submittedClaim];
-
-      expect(BenefitsApplication.completed(claims)).toHaveLength(1);
-      expect(BenefitsApplication.completed(claims)).toEqual([completedClaim]);
-    });
   });
 
   describe("#isCompleted", () => {

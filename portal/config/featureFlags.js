@@ -83,6 +83,7 @@ const flagsConfig = {
     claimantShowPaymentsPhaseTwo: true,
   },
   training: {
+    claimantShowMFA: true,
     claimantShowPaymentsPhaseTwo: true,
   },
   performance: {
@@ -100,6 +101,7 @@ const flagsConfig = {
   },
   prod: {
     pfmlTerriyay: true,
+    claimantShowMFA: true,
     claimantShowPaymentsPhaseTwo: true,
   },
 };

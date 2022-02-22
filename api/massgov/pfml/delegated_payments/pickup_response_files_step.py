@@ -51,6 +51,9 @@ class PickupResponseFilesStep(Step):
         AUDIT_REPORT_MOVED_FILES = (
             payments_util.Constants.FILE_NAME_PAYMENT_AUDIT_REPORT + MOVED_FILES_STR
         )
+        MANUAL_PUB_REJECT_MOVED_FILES = (
+            payments_util.Constants.FILE_NAME_MANUAL_PUB_REJECT + MOVED_FILES_STR
+        )
         PUB_CHECK_RESPONSE_MOVED_FILES = (
             payments_util.Constants.FILE_NAME_PUB_POSITIVE_PAY + MOVED_FILES_STR
         )
@@ -64,6 +67,10 @@ class PickupResponseFilesStep(Step):
     def run_step(self):
         s3_config = payments_config.get_s3_config()
 
+        ######
+        # Files in the reports bucket coming from Sharepoint via PowerAutomate
+        ######
+
         # Move audit report from the DFML folder populated by Sharepoint
         payment_reject_received_folder = os.path.join(
             s3_config.pfml_payment_rejects_archive_path,
@@ -74,6 +81,21 @@ class PickupResponseFilesStep(Step):
             payment_reject_received_folder,
             payments_util.Constants.FILE_NAME_PAYMENT_AUDIT_REPORT,
         )
+
+        # Move manual PUB reject from the DFML folder populated by Sharepoint
+        manual_pub_reject_received_folder = os.path.join(
+            s3_config.pfml_manual_pub_reject_archive_path,
+            payments_util.Constants.S3_INBOUND_RECEIVED_DIR,
+        )
+        self.move_files(
+            s3_config.dfml_response_inbound_path,
+            manual_pub_reject_received_folder,
+            payments_util.Constants.FILE_NAME_MANUAL_PUB_REJECT,
+        )
+
+        ######
+        # Files in the pub inbound bucket coming from MoveIt via Argent
+        ######
 
         # Move check return files from the DFML folder populated by MoveIt
         # We expect this to copy both the Paid & Outstanding files

@@ -2837,7 +2837,7 @@ class TestValidateApplicationImportRequestForClaim:
         assert exc.value.errors == [
             ValidationErrorDetail(
                 type=IssueType.incorrect,
-                message="An issue occurred while trying to import the application",
+                message="Code 2: An issue occurred while trying to import the application.",
             )
         ]
 

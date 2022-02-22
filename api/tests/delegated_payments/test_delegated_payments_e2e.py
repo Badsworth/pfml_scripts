@@ -482,7 +482,6 @@ def test_e2e_pub_payments(
         # == Validate claim state
         invalid_claim_scenarios = [
             ScenarioName.CLAIM_UNABLE_TO_SET_EMPLOYEE_FROM_EXTRACT,
-            ScenarioName.CLAIM_NOT_ID_PROOFED,
         ]
         valid_claim_scenarios = test_dataset.get_scenario_names(
             scenarios_to_filter=invalid_claim_scenarios
@@ -736,10 +735,7 @@ def test_e2e_pub_payments(
                 "employee_not_found_in_database_count": 0,
                 "employee_processed_multiple_times": 0,
                 "errored_claim_count": len(
-                    [
-                        ScenarioName.CLAIM_UNABLE_TO_SET_EMPLOYEE_FROM_EXTRACT,
-                        ScenarioName.CLAIM_NOT_ID_PROOFED,
-                    ]
+                    [ScenarioName.CLAIM_UNABLE_TO_SET_EMPLOYEE_FROM_EXTRACT,]
                 ),
                 "errored_claimant_count": 0,
                 "evidence_not_id_proofed_count": len([ScenarioName.CLAIM_NOT_ID_PROOFED]),
@@ -756,12 +752,7 @@ def test_e2e_pub_payments(
                 "processed_employee_count": len(SCENARIO_DESCRIPTORS),
                 "processed_requested_absence_count": len(SCENARIO_DESCRIPTORS),
                 "valid_claim_count": len(SCENARIO_DESCRIPTORS)
-                - len(
-                    [
-                        ScenarioName.CLAIM_UNABLE_TO_SET_EMPLOYEE_FROM_EXTRACT,
-                        ScenarioName.CLAIM_NOT_ID_PROOFED,
-                    ]
-                ),
+                - len([ScenarioName.CLAIM_UNABLE_TO_SET_EMPLOYEE_FROM_EXTRACT,]),
                 "vbi_requested_absence_som_record_count": len(SCENARIO_DESCRIPTORS),
             },
         )
@@ -1912,11 +1903,17 @@ def test_e2e_pub_payments(
         )
 
         # == Writeback
-        stage_3_errored_writeback_scenarios = [
+        stage_3_errored_writeback_scenarios_ach = [
             ScenarioName.PUB_ACH_FAMILY_RETURN,
             ScenarioName.PUB_ACH_MEDICAL_RETURN,
+        ]
+        stage_3_errored_writeback_scenarios_check_void = [
             ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
+        ]
+        stage_3_errored_writeback_scenarios_check_stale = [
             ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
+        ]
+        stage_3_errored_writeback_scenarios_check_stop = [
             ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
         ]
         stage_3_successful_writeback_scenarios = [
@@ -1928,7 +1925,11 @@ def test_e2e_pub_payments(
         ]
 
         stage_3_all_writeback_scenarios = (
-            stage_3_errored_writeback_scenarios + stage_3_successful_writeback_scenarios
+            stage_3_errored_writeback_scenarios_ach
+            + stage_3_errored_writeback_scenarios_check_void
+            + stage_3_errored_writeback_scenarios_check_stale
+            + stage_3_errored_writeback_scenarios_check_stop
+            + stage_3_successful_writeback_scenarios
         )
 
         assert_writeback_for_stage(
@@ -2108,7 +2109,16 @@ def test_e2e_pub_payments(
                 "successful_writeback_record_count": len(stage_3_all_writeback_scenarios),
                 "writeback_record_count": len(stage_3_all_writeback_scenarios),
                 "bank_processing_error_writeback_transaction_status_count": len(
-                    stage_3_errored_writeback_scenarios
+                    stage_3_errored_writeback_scenarios_ach
+                ),
+                "pub_check_stale_writeback_transaction_status_count": len(
+                    stage_3_errored_writeback_scenarios_check_stale
+                ),
+                "pub_check_undeliverable_writeback_transaction_status_count": len(
+                    stage_3_errored_writeback_scenarios_check_stop
+                ),
+                "pub_check_voided_writeback_transaction_status_count": len(
+                    stage_3_errored_writeback_scenarios_check_void
                 ),
                 "posted_writeback_transaction_status_count": len(
                     stage_3_successful_writeback_scenarios

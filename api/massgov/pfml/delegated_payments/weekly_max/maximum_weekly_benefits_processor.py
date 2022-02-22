@@ -219,8 +219,12 @@ class MaximumWeeklyBenefitsStepProcessor(AbstractStepProcessor):
                     "pay_period_start_date": pay_period.start_date.isoformat(),
                     "pay_period_end_date": pay_period.end_date.isoformat(),
                     "new_maximum_amount": max_amount,
-                    "absence_case_id": absence_period.claim.fineos_absence_id,
-                    "fineos_customer_number": absence_period.claim.employee.fineos_customer_number,
+                    "absence_case_id": absence_period.claim.fineos_absence_id
+                    if absence_period.claim
+                    else None,
+                    "fineos_customer_number": absence_period.claim.employee.fineos_customer_number
+                    if absence_period.claim and absence_period.claim.employee
+                    else None,
                     "fineos_leave_request_id": absence_period.fineos_leave_request_id,
                     "absence_period_start_date": absence_period.absence_period_start_date.isoformat()
                     if absence_period.absence_period_start_date
