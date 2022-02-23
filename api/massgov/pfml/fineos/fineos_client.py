@@ -734,7 +734,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
     ) -> List[models.customer_api.EFormSummary]:
         try:
             response = self._customer_api(
-                "GET", f"customer/cases/{absence_id}/eforms", user_id, "customer_get_eform_summary"
+                "GET", f"customer/cases/{absence_id}/eForms", user_id, "customer_get_eform_summary"
             )
         except exception.FINEOSClientError as error:
             logger.error(

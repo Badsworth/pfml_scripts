@@ -125,7 +125,7 @@ class CSVSourceWrapper:
         with smart_open.open(
             self._file_path, "r", transport_params=self._transport_params
         ) as csvfile:
-            dict_reader = csv.DictReader(csvfile, delimiter=",")
+            dict_reader = csv.DictReader(csvfile, delimiter=",", restkey="other_fields")
             for row in dict_reader:
                 yield row
 

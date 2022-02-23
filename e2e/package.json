@@ -58,7 +58,6 @@
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-unused-imports": "^2.0.0",
     "jest": "^27.5.1",
-    "jest-circus": "^26.6.3",
     "path-browserify": "^1.0.1",
     "playwright-chromium": "^1.14.1",
     "prettier": "^2.3.2",

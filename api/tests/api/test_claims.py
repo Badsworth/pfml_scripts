@@ -2338,8 +2338,23 @@ class TestGetClaimsEndpoint:
         test_db_session.add(link)
         test_db_session.commit()
 
+        # GET /claims deprecated
         response = client.get(
             "/v1/claims", headers={"Authorization": f"Bearer {employer_auth_token}"},
+        )
+
+        assert response.status_code == 200
+        response_body = response.get_json()
+        claim_data = response_body.get("data")
+        assert len(claim_data) == len(generated_claims)
+        for i in range(3):
+            assert_claim_response_equal_to_claim_query(claim_data[i], generated_claims[2 - i])
+
+        # POST /claims/search
+        response = client.post(
+            "/v1/claims/search",
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+            json={},
         )
 
         assert response.status_code == 200
@@ -2366,7 +2381,20 @@ class TestGetClaimsEndpoint:
             ClaimFactory.create(employer=employer, employee=employee_with_fineos_customer_number)
         )
 
+        # GET /claims deprecated
         response = client.get("/v1/claims", headers=snow_user_headers)
+        assert response.status_code == 200
+        response_body = response.get_json()
+        claim_data = response_body.get("data")
+
+        # assert that all created claims are returned
+        assert len(claim_data) == len(generated_claims)
+
+        for response_claim, generated_claim in zip(claim_data, reversed(generated_claims)):
+            assert_claim_pfml_crm_response_equal_to_claim_query(response_claim, generated_claim)
+
+        # POST /claims/search
+        response = client.post("/v1/claims/search", headers=snow_user_headers, json={})
         assert response.status_code == 200
         response_body = response.get_json()
         claim_data = response_body.get("data")
@@ -2477,9 +2505,47 @@ class TestGetClaimsEndpoint:
             query_string = "&".join(
                 [f"{key}={value}" for key, value in scenario["request"].items()]
             )
+
+            # GET /claims deprecated
             response = client.get(
                 f"/v1/claims?{query_string}",
                 headers={"Authorization": f"Bearer {employer_auth_token}"},
+            )
+
+            assert (
+                response.status_code == scenario["status_code"]
+            ), f"tag:{tag}\nUnexpected response status code {response.status_code}"
+
+            if scenario["status_code"] != 200:
+                # Do not validate response structure for scenarios where an error response is expected
+                continue
+
+            response_body = response.get_json()
+
+            actual_response_page_size = len(response_body["data"])
+            expected_page_size = scenario["real_page_size"]
+            assert actual_response_page_size == expected_page_size, (
+                f"tag:{tag}\nUnexpected data response size {actual_response_page_size},"
+                + f"should've been {expected_page_size}"
+            )
+
+            actual_page_metadata = response_body["meta"]["paging"]
+            expected_page_metadata = scenario["paging"]
+
+            for key, expected_value in expected_page_metadata.items():
+                actual_value = actual_page_metadata[key]
+                if actual_page_metadata[key] != expected_value:
+                    raise AssertionError(
+                        f"tag: {tag}\n{key} value was '{actual_value}', not expected {expected_value}"
+                    )
+
+            # POST /claims/search
+
+            post_body = {**scenario["request"]}
+            response = client.post(
+                "/v1/claims/search",
+                headers={"Authorization": f"Bearer {employer_auth_token}"},
+                json=post_body,
             )
 
             assert (
@@ -2534,8 +2600,23 @@ class TestGetClaimsEndpoint:
         test_db_session.add(link)
         test_db_session.commit()
 
+        # GET /claims deprecated
         response = client.get(
             "/v1/claims", headers={"Authorization": f"Bearer {employer_auth_token}"},
+        )
+
+        assert response.status_code == 200
+        response_body = response.get_json()
+        claim_data = response_body.get("data")
+        assert len(claim_data) == 2
+
+        # Sort order places most recent claims first
+        assert_claim_response_equal_to_claim_query(claim_data[0], claim2, has_paid_payments=False)
+        assert_claim_response_equal_to_claim_query(claim_data[1], claim, has_paid_payments=True)
+
+        # POST /claims/search
+        response = client.post(
+            "/v1/claims/search", headers={"Authorization": f"Bearer {employer_auth_token}"}, json={}
         )
 
         assert response.status_code == 200
@@ -3062,9 +3143,25 @@ class TestGetClaimsEndpoint:
 
         test_db_session.commit()
 
+        # GET /claims deprecated
         response = client.get(
             f"/v1/claims?employer_id={employer.employer_id}",
             headers={"Authorization": f"Bearer {employer_auth_token}"},
+        )
+
+        assert response.status_code == 200
+        response_body = response.get_json()
+
+        assert len(response_body["data"]) == 5
+        for claim in response_body["data"]:
+            assert claim["employer"]["employer_fein"] == format_fein(employer.employer_fein)
+
+        # POST /claims/search
+        post_body = {"employer_id": employer.employer_id}
+        response = client.post(
+            "/v1/claims/search",
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+            json=post_body,
         )
 
         assert response.status_code == 200
@@ -3097,6 +3194,7 @@ class TestGetClaimsEndpoint:
         test_db_session.add(link)
         test_db_session.commit()
 
+        # GET /claims deprecated
         # Verify we can find the employee in question
         response1 = client.get(
             f"/v1/claims?employee_id={employee.employee_id}",
@@ -3107,10 +3205,33 @@ class TestGetClaimsEndpoint:
         assert len(response_body1["data"]) == 1
         assert response_body1["data"][0]["employee"]["employee_id"] == str(employee.employee_id)
 
+        # POST /claims/search
+        post_body = {"employee_id": [employee.employee_id]}
+        response1 = client.post(
+            "/v1/claims/search",
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+            json=post_body,
+        )
+        assert response1.status_code == 200
+        response_body1 = response1.get_json()
+        assert len(response_body1["data"]) == 1
+        assert response_body1["data"][0]["employee"]["employee_id"] == str(employee.employee_id)
+
         # Verify we're filtering OUT results if the employee isn't found
         response2 = client.get(
             f"/v1/claims?employee_id={employer.employer_id}",
             headers={"Authorization": f"Bearer {employer_auth_token}"},
+        )
+        assert response2.status_code == 200
+        response_body2 = response2.get_json()
+        assert len(response_body2["data"]) == 0
+
+        # POST /claims/search
+        post_body = {"employee_id": [employer.employer_id]}
+        response2 = client.post(
+            "/v1/claims/search",
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+            json=post_body,
         )
         assert response2.status_code == 200
         response_body2 = response2.get_json()
@@ -3139,6 +3260,7 @@ class TestGetClaimsEndpoint:
         test_db_session.add(link)
         test_db_session.commit()
 
+        # GET /claims deprecated
         # Verify the wrong employer_id fails to find anything
         response1 = client.get(
             f"/v1/claims?employer_id={employee.employee_id}&employee_id={employee.employee_id}",
@@ -3148,10 +3270,33 @@ class TestGetClaimsEndpoint:
         response_body1 = response1.get_json()
         assert len(response_body1["data"]) == 0
 
+        # POST /claims/search
+        post_body = {"employer_id": employee.employee_id, "employee_id": [employer.employer_id]}
+        response1 = client.post(
+            "/v1/claims/search",
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+            json=post_body,
+        )
+        assert response1.status_code == 200
+        response_body1 = response1.get_json()
+        assert len(response_body1["data"]) == 0
+
         # Verify the right employer_id and employee_id work together
         response2 = client.get(
             f"/v1/claims?employer_id={employer.employer_id}&employee_id={employee.employee_id}",
             headers={"Authorization": f"Bearer {employer_auth_token}"},
+        )
+        assert response2.status_code == 200
+        response_body2 = response2.get_json()
+        assert len(response_body2["data"]) == 1
+        assert response_body2["data"][0]["employee"]["employee_id"] == str(employee.employee_id)
+
+        # POST /claims/search
+        post_body = {"employer_id": employer.employer_id, "employee_id": [employee.employee_id]}
+        response2 = client.post(
+            "/v1/claims/search",
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+            json=post_body,
         )
         assert response2.status_code == 200
         response_body2 = response2.get_json()
@@ -3183,10 +3328,23 @@ class TestGetClaimsEndpoint:
         test_db_session.add(link)
         test_db_session.commit()
 
+        # GET /claims deprecated
         # Verify we can find a single valid employee_id when sending one
         response1 = client.get(
             f"/v1/claims?employee_id={employee.employee_id},{employer.employer_id}",
             headers={"Authorization": f"Bearer {employer_auth_token}"},
+        )
+        assert response1.status_code == 200
+        response_body1 = response1.get_json()
+        assert len(response_body1["data"]) == 1
+        assert response_body1["data"][0]["employee"]["employee_id"] == str(employee.employee_id)
+
+        # POST /claims/search
+        post_body = {"employee_id": [employee.employee_id, employer.employer_id]}
+        response1 = client.post(
+            "/v1/claims/search",
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+            json=post_body,
         )
         assert response1.status_code == 200
         response_body1 = response1.get_json()
@@ -3205,10 +3363,33 @@ class TestGetClaimsEndpoint:
         for found_employee in response_body2["data"]:
             assert found_employee["employee"]["employee_id"] in eids_to_find
 
+        # POST /claims/search
+        post_body = {"employee_id": [employee.employee_id, employee2.employee_id]}
+        response2 = client.post(
+            "/v1/claims/search",
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+            json=post_body,
+        )
+        assert response2.status_code == 200
+        response_body2 = response2.get_json()
+        assert len(response_body2["data"]) == 6
+        eids_to_find = [str(employee.employee_id), str(employee2.employee_id)]
+        for found_employee in response_body2["data"]:
+            assert found_employee["employee"]["employee_id"] in eids_to_find
+
         # Verify malformed e.g. trailing comma is rejected
         response3 = client.get(
             f"/v1/claims?employee_id={employee.employee_id},",
             headers={"Authorization": f"Bearer {employer_auth_token}"},
+        )
+        assert response3.status_code == 400
+
+        # POST /claims/search
+        post_body = {"employee_id": f"{employee.employee_id},"}
+        response3 = client.post(
+            "/v1/claims/search",
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+            json=post_body,
         )
         assert response3.status_code == 400
 
@@ -3242,9 +3423,31 @@ class TestGetClaimsEndpoint:
         claim_data1 = response_body1.get("data")
         assert len(claim_data1) == 0
 
+        # POST /claims/search
+        post_body = {"employee_id": [employeeB.employee_id]}
+        response1 = client.post(
+            "/v1/claims/search", headers={"Authorization": f"Bearer {auth_token}"}, json=post_body
+        )
+        assert response1.status_code == 200
+        response_body1 = response1.get_json()
+        claim_data1 = response_body1.get("data")
+        assert len(claim_data1) == 0
+
         response2 = client.get(
             f"/v1/claims?employee_id={employeeA.employee_id}",
             headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert response2.status_code == 200
+        response_body2 = response2.get_json()
+        claim_data2 = response_body2.get("data")
+        assert len(claim_data2) == 3
+        for found_claim in response_body2["data"]:
+            assert found_claim["employee"]["employee_id"] == str(employeeA.employee_id)
+
+        # POST /claims/search
+        post_body = {"employee_id": [employeeA.employee_id]}
+        response2 = client.post(
+            "/v1/claims/search", headers={"Authorization": f"Bearer {auth_token}"}, json=post_body
         )
         assert response2.status_code == 200
         response_body2 = response2.get_json()
@@ -3271,7 +3474,20 @@ class TestGetClaimsEndpoint:
             employer=employer, employee=employeeB, fineos_absence_status_id=1, claim_type_id=1
         )
 
+        # GET /claims deprecated
         response = client.get("/v1/claims", headers={"Authorization": f"Bearer {auth_token}"},)
+
+        assert response.status_code == 200
+        response_body = response.get_json()
+        claim_data = response_body.get("data")
+        assert len(claim_data) == 3
+        for i in range(3):
+            assert_claim_response_equal_to_claim_query(claim_data[i], generated_claims[2 - i])
+
+        # POST /claims/search
+        response = client.post(
+            "/v1/claims/search", headers={"Authorization": f"Bearer {auth_token}"}, json={}
+        )
 
         assert response.status_code == 200
         response_body = response.get_json()
@@ -3329,8 +3545,22 @@ class TestGetClaimsEndpoint:
             "CLAIMS_DASHBOARD_BLOCKED_FEINS",
             set([employer.employer_fein]),
         )
+
+        # GET /claims deprecated
         response = client.get(
             "/v1/claims", headers={"Authorization": f"Bearer {employer_auth_token}"},
+        )
+
+        assert response.status_code == 200
+        response_body = response.get_json()
+
+        assert len(response_body["data"]) == 5
+        for claim in response_body["data"]:
+            assert claim["employer"]["employer_fein"] == format_fein(other_employer.employer_fein)
+
+        # POST /claims/search
+        response = client.post(
+            "/v1/claims/search", headers={"Authorization": f"Bearer {employer_auth_token}"}, json={}
         )
 
         assert response.status_code == 200
@@ -3359,11 +3589,24 @@ class TestGetClaimsEndpoint:
         test_db_session.add(link)
         test_db_session.commit()
 
+        # GET /claims deprecated
         response = client.get(
             f"/v1/claims?employer_id={employer.employer_id}",
             headers={"Authorization": f"Bearer {employer_auth_token}"},
         )
 
+        assert response.status_code == 200
+        response_body = response.get_json()
+
+        assert len(response_body["data"]) == 5
+
+        # POST /claims/search
+        post_body = {"employer_id": employer.employer_id}
+        response = client.post(
+            "/v1/claims/search",
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+            json=post_body,
+        )
         assert response.status_code == 200
         response_body = response.get_json()
 
@@ -3556,6 +3799,15 @@ class TestGetClaimsEndpoint:
             )
             self._perform_assertions(resp, status_code=200, expected_claims=expected_claims)
 
+            # POST /claims/search
+            post_body = {"claim_status": "Approved"}
+            response = client.post(
+                "/v1/claims/search",
+                headers={"Authorization": f"Bearer {employer_auth_token}"},
+                json=post_body,
+            )
+            self._perform_assertions(response, status_code=200, expected_claims=expected_claims)
+
         def test_get_claims_with_status_filter_is_reviewable_yes(
             self, client, employer_auth_token, review_by_claim
         ):
@@ -3563,6 +3815,15 @@ class TestGetClaimsEndpoint:
                 "/v1/claims?is_reviewable=yes", client, employer_auth_token
             )
             self._perform_assertions(resp, status_code=200, expected_claims=[review_by_claim])
+
+            # POST /claims/search
+            post_body = {"is_reviewable": "yes"}
+            response = client.post(
+                "/v1/claims/search",
+                headers={"Authorization": f"Bearer {employer_auth_token}"},
+                json=post_body,
+            )
+            self._perform_assertions(response, status_code=200, expected_claims=[review_by_claim])
 
         def test_get_claims_with_status_filter_is_reviewable_no(
             self,
@@ -3587,6 +3848,24 @@ class TestGetClaimsEndpoint:
                 ],
             )
 
+            # POST /claims/search
+            post_body = {"is_reviewable": "no"}
+            response = client.post(
+                "/v1/claims/search",
+                headers={"Authorization": f"Bearer {employer_auth_token}"},
+                json=post_body,
+            )
+            self._perform_assertions(
+                response,
+                status_code=200,
+                expected_claims=[
+                    *no_open_requirement_claims,
+                    *pending_claims,
+                    expired_requirements_claim,
+                    no_action_claim,
+                ],
+            )
+
         def test_get_claims_with_status_filter_is_reviewable_invalid_parameter(
             self, client, employer_auth_token
         ):
@@ -3596,6 +3875,16 @@ class TestGetClaimsEndpoint:
             response_body = resp.get_json()
             assert resp.status_code == 400
             assert "'invalid' is not one of" in response_body["detail"]
+
+            # POST /claims/search
+            post_body = {"is_reviewable": "invalid"}
+            response = client.post(
+                "/v1/claims/search",
+                headers={"Authorization": f"Bearer {employer_auth_token}"},
+                json=post_body,
+            )
+            response_body = response.get_json()
+            assert resp.status_code == 400
 
         def test_get_claims_with_status_filter_multiple_statuses(
             self,
@@ -3613,6 +3902,15 @@ class TestGetClaimsEndpoint:
             )
             self._perform_assertions(resp, status_code=200, expected_claims=expected_claims)
 
+            # POST /claims/search
+            post_body = {"claim_status": "Approved,Closed"}
+            response = client.post(
+                "/v1/claims/search",
+                headers={"Authorization": f"Bearer {employer_auth_token}"},
+                json=post_body,
+            )
+            self._perform_assertions(response, status_code=200, expected_claims=expected_claims)
+
         def test_get_claims_with_status_filter_unsupported_statuses(
             self, client, employer_auth_token
         ):
@@ -3620,6 +3918,15 @@ class TestGetClaimsEndpoint:
                 "/v1/claims?claim_status=Unknown", client, employer_auth_token
             )
             self._perform_assertions(resp, status_code=400, expected_claims=[])
+
+            # POST /claims/search
+            post_body = {"claim_status": "Unknown"}
+            response = client.post(
+                "/v1/claims/search",
+                headers={"Authorization": f"Bearer {employer_auth_token}"},
+                json=post_body,
+            )
+            self._perform_assertions(response, status_code=400, expected_claims=[])
 
     # Inner class for testing Claims with Absence Periods
     class TestClaimsWithAbsencePeriods:
@@ -3915,6 +4222,18 @@ class TestGetClaimsEndpoint:
             claim = response_body["data"][0]
             assert len(claim.get("managed_requirements", [])) == 6
 
+            resp = client.post(
+                "/v1/claims/search",
+                headers={"Authorization": f"Bearer {employer_auth_token}"},
+                json={},
+            )
+            assert resp.status_code == 200
+            response_body = resp.get_json()
+            claim_data = response_body.get("data")
+            assert len(claim_data) == 1
+            claim = response_body["data"][0]
+            assert len(claim.get("managed_requirements", [])) == 6
+
         def test_claim_filter_has_open_managed_requirement(
             self, client, employer_auth_token, claims_with_managed_requirements
         ):
@@ -3926,6 +4245,17 @@ class TestGetClaimsEndpoint:
             resp = client.get(
                 f"/v1/claims?claim_status={ActionRequiredStatusFilter.OPEN_REQUIREMENT}",
                 headers={"Authorization": f"Bearer {employer_auth_token}"},
+            )
+            assert resp.status_code == 200
+            response_body = resp.get_json()
+            claim_data = response_body.get("data")
+            assert len(claim_data) == 1
+
+            post_body = {"claim_status": ActionRequiredStatusFilter.OPEN_REQUIREMENT}
+            resp = client.post(
+                "/v1/claims/search",
+                headers={"Authorization": f"Bearer {employer_auth_token}"},
+                json=post_body,
             )
             assert resp.status_code == 200
             response_body = resp.get_json()
@@ -3961,6 +4291,29 @@ class TestGetClaimsEndpoint:
                     == 0
                 )
 
+            post_body = {"claim_status": ActionRequiredStatusFilter.PENDING_NO_ACTION}
+            resp = client.post(
+                "/v1/claims/search",
+                headers={"Authorization": f"Bearer {employer_auth_token}"},
+                json=post_body,
+            )
+            assert resp.status_code == 200
+            response_body = resp.get_json()
+            claim_data = response_body.get("data")
+            assert len(claim_data) == 3
+            for returned_claim in claim_data:
+                assert (
+                    len(
+                        [
+                            claim
+                            for claim in returned_claim["managed_requirements"]
+                            if claim["status"] == "Open"
+                            and claim["follow_up_date"] >= datetime.today().strftime("%Y-%m-%d")
+                        ]
+                    )
+                    == 0
+                )
+
         def test_claim_filter_has_open_managed_requirement_has_pending_no_action(
             self, client, employer_auth_token, claims_with_managed_requirements
         ):
@@ -3972,6 +4325,19 @@ class TestGetClaimsEndpoint:
             resp = client.get(
                 f"/v1/claims?claim_status={ActionRequiredStatusFilter.PENDING_NO_ACTION},{ActionRequiredStatusFilter.OPEN_REQUIREMENT}",
                 headers={"Authorization": f"Bearer {employer_auth_token}"},
+            )
+            assert resp.status_code == 200
+            response_body = resp.get_json()
+            claim_data = response_body.get("data")
+            assert len(claim_data) == 4
+
+            post_body = {
+                "claim_status": f"{ActionRequiredStatusFilter.PENDING_NO_ACTION},{ActionRequiredStatusFilter.OPEN_REQUIREMENT}"
+            }
+            resp = client.post(
+                "/v1/claims/search",
+                headers={"Authorization": f"Bearer {employer_auth_token}"},
+                json=post_body,
             )
             assert resp.status_code == 200
             response_body = resp.get_json()
@@ -4731,6 +5097,50 @@ class TestGetClaimsEndpoint:
             data = response_body.get("data", [])
             assert len(data) == self.claims_count / 4
 
+    # Test validation of claims/search endpoint request body
+    class TestClaimsAPIRequestBodyValidation:
+        def _perform_api_call(self, request, client, employer_auth_token):
+            return client.post(
+                "/v1/claims/search",
+                headers={"Authorization": f"Bearer {employer_auth_token}"},
+                json=request,
+            )
+
+        def _assert_400_error_response(self, response):
+            assert response.status_code == 400
+
+        def test_claims_invalid_param_field(self, client, employer_auth_token):
+            params = {"invalid": "invalid"}
+            response = self._perform_api_call(params, client, employer_auth_token)
+            self._assert_400_error_response(response)
+
+        def test_claims_invalid_order_by(self, client, employer_auth_token):
+            params = {"order_by": "bad"}
+            response = self._perform_api_call(params, client, employer_auth_token)
+            self._assert_400_error_response(response)
+
+        def test_claims_unsupported_column_order_by(self, client, employer_auth_token):
+            params = {"order_by": "updated_at"}
+            response = self._perform_api_call(params, client, employer_auth_token)
+            self._assert_400_error_response(response)
+
+        def test_claims_bad_absence_status(self, client, employer_auth_token):
+            bad_statuses = [
+                "--",
+                "%",
+                "Intake In Progress!",
+                "Intake In Progress%",
+                "Pending--",
+                "; Select",
+            ]
+            for status in bad_statuses:
+                params = {"claim_status": status}
+
+                response = self._perform_api_call(params, client, employer_auth_token)
+                self._assert_400_error_response(response)
+                err_details = response.get_json()["detail"]
+                assert "Invalid claim status" in err_details or "does not match" in err_details
+
     # Test the combination of claims filters and search
     class TestClaimsMultipleParams:
         @pytest.fixture
@@ -5033,8 +5443,23 @@ class TestEmployerWithOrgUnitsAccess:
             claim_type_id=1,
         )
 
+        # GET /claims deprecated
         response = client.get(
             "/v1/claims", headers={"Authorization": f"Bearer {employer_auth_token}"},
+        )
+
+        response_body = response.get_json()
+        claim_data = response_body.get("data")
+        assert response.status_code == 200
+        assert len(claim_data) == 1
+        assert claim_data[0].get("fineos_absence_id") not in [
+            c.fineos_absence_id for c in generated_claims
+        ]
+        assert claim_data[0].get("fineos_absence_id") == claim_with_same_org_unit.fineos_absence_id
+
+        # POST /claims/search
+        response = client.post(
+            "/v1/claims/search", headers={"Authorization": f"Bearer {employer_auth_token}"}, json={}
         )
 
         response_body = response.get_json()
@@ -5060,8 +5485,19 @@ class TestEmployerWithOrgUnitsAccess:
                 claim_type_id=1,
             )
         )
+        # GET /claims deprecated
         response = client.get(
             "/v1/claims", headers={"Authorization": f"Bearer {employer_auth_token}"},
+        )
+
+        response_body = response.get_json()
+        claim_data = response_body.get("data")
+        assert response.status_code == 200
+        assert len(claim_data) == 0
+
+        # POST /claims/search
+        response = client.post(
+            "/v1/claims/search", headers={"Authorization": f"Bearer {employer_auth_token}"}, json={}
         )
 
         response_body = response.get_json()
@@ -5083,8 +5519,20 @@ class TestEmployerWithOrgUnitsAccess:
                 claim_type_id=1,
             )
         )
+
+        # GET /claims deprecated
         response = client.get(
             "/v1/claims", headers={"Authorization": f"Bearer {employer_auth_token}"},
+        )
+
+        response_body = response.get_json()
+        claim_data = response_body.get("data")
+        assert response.status_code == 200
+        assert len(claim_data) == len(generated_claims)
+
+        # POST /claims/search
+        response = client.post(
+            "/v1/claims/search", headers={"Authorization": f"Bearer {employer_auth_token}"}, json={}
         )
 
         response_body = response.get_json()
@@ -5356,3 +5804,66 @@ class TestReviewByFilter:
         self._assert_only_approved_claims_with_open_requirements(
             resp, status_code=200, expected_claims=review_by_claims
         )
+
+        post_body = {"claim_status": "Open requirement"}
+        response = client.post(
+            "/v1/claims/search",
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+            json=post_body,
+        )
+        self._assert_only_approved_claims_with_open_requirements(
+            response, status_code=200, expected_claims=review_by_claims
+        )
+
+
+class TestPostChangeRequest:
+    @pytest.fixture
+    def request_body(self) -> Dict[str, str]:
+        return {
+            "change_request_type": "Modification",
+            "start_date": "2022-01-01",
+            "end_date": "2022-02-01",
+        }
+
+    @mock.patch("massgov.pfml.api.claims.claim_rules.get_change_request_issues", return_value=[])
+    @mock.patch("massgov.pfml.api.claims.get_claim_from_db")
+    def test_successful_call(
+        self, mock_get_claim, mock_change_request_issues, auth_token, claim, client, request_body,
+    ):
+        mock_get_claim.return_value = claim
+        response = client.post(
+            "/v1/change-request?fineos_absence_id={}".format(claim.fineos_absence_id),
+            headers={"Authorization": f"Bearer {auth_token}"},
+            json=request_body,
+        )
+        response_body = response.get_json().get("data")
+        assert response.status_code == 201
+        assert response_body.get("claim_id") == str(claim.claim_id)
+        assert response_body.get("change_request_type") == request_body["change_request_type"]
+        assert response_body.get("start_date") == request_body["start_date"]
+        assert response_body.get("end_date") == request_body["end_date"]
+
+    @mock.patch("massgov.pfml.api.claims.claim_rules.get_change_request_issues", return_value=[])
+    @mock.patch("massgov.pfml.api.claims.get_claim_from_db", return_value=None)
+    def test_missing_claim(
+        self, mock_get_claim, mock_change_request_issues, auth_token, claim, client, request_body,
+    ):
+        response = client.post(
+            "/v1/change-request?fineos_absence_id={}".format(claim.fineos_absence_id),
+            headers={"Authorization": f"Bearer {auth_token}"},
+            json=request_body,
+        )
+        assert response.status_code == 404
+        assert response.get_json()["message"] == "Claim does not exist for given absence ID"
+
+    @mock.patch("massgov.pfml.api.claims.get_claim_from_db")
+    def test_validation_issues(self, mock_get_claim, auth_token, claim, client, request_body):
+        mock_get_claim.return_value = claim
+        del request_body["end_date"]
+        response = client.post(
+            "/v1/change-request?fineos_absence_id={}".format(claim.fineos_absence_id),
+            headers={"Authorization": f"Bearer {auth_token}"},
+            json=request_body,
+        )
+        assert response.status_code == 400
+        assert response.get_json()["message"] == "Invalid change request body"

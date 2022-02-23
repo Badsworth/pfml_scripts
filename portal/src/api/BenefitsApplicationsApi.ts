@@ -34,7 +34,11 @@ export default class BenefitsApplicationsApi extends BaseApi {
     const { data, meta } = await this.request<BenefitsApplication[]>(
       "GET",
       "",
-      { page_offset: pageOffset }
+      {
+        order_by: "created_at",
+        order_direction: "descending",
+        page_offset: pageOffset,
+      }
     );
 
     const claims = data.map((claimData) => new BenefitsApplication(claimData));

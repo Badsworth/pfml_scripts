@@ -658,13 +658,13 @@ def test_create_or_update_claim_invalid_values(claimant_extract_step):
     claimant_data = make_claimant_data_from_fineos_data(fineos_data)
 
     # The number of required fields we pull out of the requested absence file
-    assert len(set(claimant_data.validation_container.validation_issues)) == 14
+    assert len(set(claimant_data.validation_container.validation_issues)) == 13
 
     # The claim will be created, but with just an absence case number
     claim = claimant_extract_step.create_or_update_claim(claimant_data)
     assert claim is not None
     # New claim not yet persisted to DB
-    assert claim.fineos_notification_id is None
+    assert claim.fineos_notification_id == ""
     assert claim.fineos_absence_id == "NTN-001-ABS-01"
     assert claim.fineos_absence_status_id is None
     assert claim.absence_period_start_date is None
@@ -799,7 +799,7 @@ def test_create_or_update_absence_period_invalid_values(claimant_extract_step, t
     claimant_data = make_claimant_data_from_fineos_data(fineos_data)
 
     # The number of required fields we pull out of the requested absence file
-    assert len(set(claimant_data.validation_container.validation_issues)) == 12
+    assert len(set(claimant_data.validation_container.validation_issues)) == 11
 
     # The claim will be created, but with just an absence case number
     absence_period_data = claimant_data.absence_period_data
@@ -1229,7 +1229,7 @@ def test_run_step_minimal_viable_claim(
     assert claim
     assert claim.fineos_absence_id == fineos_data.absence_case_number
     assert claim.employee_id is None
-    assert claim.fineos_notification_id is None
+    assert claim.fineos_notification_id == ""
     assert claim.claim_type_id is None
     assert claim.fineos_absence_status_id is None
     assert claim.absence_period_start_date is None
@@ -1255,15 +1255,10 @@ def test_run_step_minimal_viable_claim(
         {"reason": "MissingField", "details": "ABSENCEREASON_QUALIFIER1"},
         {"reason": "MissingField", "details": "ABSENCEREASON_NAME"},
         {"reason": "MissingField", "details": "LEAVEREQUEST_DECISION"},
-        {"reason": "MissingField", "details": "NOTIFICATION_CASENUMBER"},
         {"reason": "MissingField", "details": "ABSENCEREASON_COVERAGE"},
         {"reason": "MissingField", "details": "ABSENCE_CASESTATUS"},
         {"reason": "MissingField", "details": "EMPLOYEE_CUSTOMERNO"},
         {"reason": "MissingField", "details": "EMPLOYER_CUSTOMERNO"},
-        {
-            "reason": "ClaimNotIdProofed",
-            "details": "Claim has not been ID proofed, LEAVEREQUEST_EVIDENCERESULTTYPE is not Satisfied",
-        },
     ]
 
 
@@ -1296,9 +1291,7 @@ def test_run_step_not_id_proofed(
     # Verify the state logs
     assert len(claim.state_logs) == 1
     state_log = claim.state_logs[0]
-    assert (
-        state_log.end_state_id == State.DELEGATED_CLAIM_ADD_TO_CLAIM_EXTRACT_ERROR_REPORT.state_id
-    )
+    assert state_log.end_state_id == State.DELEGATED_CLAIM_EXTRACTED_FROM_FINEOS.state_id
 
 
 def test_run_step_no_default_payment_pref(

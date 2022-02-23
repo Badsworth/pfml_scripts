@@ -2,10 +2,7 @@
 
 In some cases, we need to make requests to AWS services directly. If running locally, you will need to ensure that your environment has appropriate credentials.
 
-Credentials can be obtained by signing in to AWS, and selecting "Command line or programmatic access"
+- See [Configure AWS](./infra/1-first-time-setup.md#1-configure-aws) for details on setting up the AWS command line locally.
+- Once set up, the credentials need to be placed into the Docker container. Follow the instructions in [docker-compose.override.yml](/api/docker-compose.override.yml).
 
-These credentials need to be placed in an AWS creds file (`~/.aws/credentials` or `~/.aws/config`)
-
-Then docker needs to know where to look for these credentials. Follow instructions in `docker-compose.override.yml`
-
-(See also: [the Environment Variables doc](/docs/api/environment-variables.md))
+(For more information on how setting environment variables work, see: [Environment Variables](/docs/api/environment-variables.md))

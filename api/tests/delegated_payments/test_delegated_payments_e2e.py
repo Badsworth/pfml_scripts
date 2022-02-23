@@ -482,7 +482,6 @@ def test_e2e_pub_payments(
         # == Validate claim state
         invalid_claim_scenarios = [
             ScenarioName.CLAIM_UNABLE_TO_SET_EMPLOYEE_FROM_EXTRACT,
-            ScenarioName.CLAIM_NOT_ID_PROOFED,
         ]
         valid_claim_scenarios = test_dataset.get_scenario_names(
             scenarios_to_filter=invalid_claim_scenarios
@@ -736,10 +735,7 @@ def test_e2e_pub_payments(
                 "employee_not_found_in_database_count": 0,
                 "employee_processed_multiple_times": 0,
                 "errored_claim_count": len(
-                    [
-                        ScenarioName.CLAIM_UNABLE_TO_SET_EMPLOYEE_FROM_EXTRACT,
-                        ScenarioName.CLAIM_NOT_ID_PROOFED,
-                    ]
+                    [ScenarioName.CLAIM_UNABLE_TO_SET_EMPLOYEE_FROM_EXTRACT,]
                 ),
                 "errored_claimant_count": 0,
                 "evidence_not_id_proofed_count": len([ScenarioName.CLAIM_NOT_ID_PROOFED]),
@@ -756,12 +752,7 @@ def test_e2e_pub_payments(
                 "processed_employee_count": len(SCENARIO_DESCRIPTORS),
                 "processed_requested_absence_count": len(SCENARIO_DESCRIPTORS),
                 "valid_claim_count": len(SCENARIO_DESCRIPTORS)
-                - len(
-                    [
-                        ScenarioName.CLAIM_UNABLE_TO_SET_EMPLOYEE_FROM_EXTRACT,
-                        ScenarioName.CLAIM_NOT_ID_PROOFED,
-                    ]
-                ),
+                - len([ScenarioName.CLAIM_UNABLE_TO_SET_EMPLOYEE_FROM_EXTRACT,]),
                 "vbi_requested_absence_som_record_count": len(SCENARIO_DESCRIPTORS),
             },
         )

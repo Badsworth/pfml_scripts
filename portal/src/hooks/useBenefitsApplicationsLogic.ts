@@ -94,6 +94,7 @@ const useBenefitsApplicationsLogic = ({
 
       // Reset the applications pagination state to force applications to be refetched,
       // so that this newly associated application is listed
+      setIsLoadingClaims(undefined);
       setPaginationMeta({});
 
       portalFlow.goToNextPage(

@@ -16,6 +16,7 @@ import AppErrorInfo from "../../../../src/models/AppErrorInfo";
 import { AppLogic } from "../../../../src/hooks/useAppLogic";
 import ClaimDetail from "../../../../src/models/ClaimDetail";
 import LeaveReason from "../../../../src/models/LeaveReason";
+import { Payment } from "../../../../src/models/Payment";
 import React from "react";
 import { ReasonQualifier } from "../../../../src/models/BenefitsApplication";
 import { createMockBenefitsApplicationDocument } from "../../../../lib/mock-helpers/createMockDocument";
@@ -89,15 +90,19 @@ const setupHelper =
   (
     claimDetailAttrs?: Partial<ClaimDetail>,
     documents: BenefitsApplicationDocument[] = [],
-    appErrors: AppErrorInfo[] = []
+    appErrors: AppErrorInfo[] = [],
+    loadClaimDetailMock: jest.Mock = jest.fn()
   ) =>
   (appLogicHook: AppLogic) => {
     appLogicHook.claims.claimDetail = claimDetailAttrs
       ? new ClaimDetail(claimDetailAttrs)
       : undefined;
-    appLogicHook.claims.loadClaimDetail = jest.fn();
+    appLogicHook.claims.loadClaimDetail = loadClaimDetailMock;
     appLogicHook.appErrors = appErrors;
     renderWithClaimDocuments(appLogicHook, documents);
+    appLogicHook.payments.loadPayments = jest.fn();
+    appLogicHook.payments.loadedPaymentsData = new Payment();
+    appLogicHook.payments.hasLoadedPayments = () => true;
   };
 
 const defaultClaimDetail: Partial<ClaimDetail> = {
@@ -108,6 +113,15 @@ const defaultClaimDetail: Partial<ClaimDetail> = {
     employer_dba: "Acme",
     employer_id: "mock-employer-id",
   },
+  absence_periods: [
+    createAbsencePeriod({
+      period_type: "Continuous",
+      absence_period_start_date: "2021-10-21",
+      absence_period_end_date: "2021-12-30",
+      reason: "Child Bonding",
+      request_decision: "Approved",
+    }),
+  ],
 };
 
 const props = {
@@ -208,13 +222,16 @@ describe("Status", () => {
   });
 
   it("renders the page with only a back button if non-DocumentsLoadErrors exists", () => {
+    const errors = [
+      new AppErrorInfo({
+        meta: { application_id: "mock_application_id" },
+        name: "RequestTimeoutError",
+      }),
+    ];
     renderPage(
       Status,
       {
-        addCustomSetup: (appLogicHook) => {
-          appLogicHook.claims.loadClaimDetail = jest.fn();
-          appLogicHook.appErrors = [new AppErrorInfo({})];
-        },
+        addCustomSetup: setupHelper({ ...defaultClaimDetail }, [], errors),
       },
       props
     );
@@ -237,18 +254,22 @@ describe("Status", () => {
   });
 
   it("fetches claim detail on if none is loaded", () => {
-    const loadClaimDetailSpy = jest.fn();
+    const loadClaimDetailMock = jest.fn();
+    const errors = [new AppErrorInfo({})];
     renderPage(
       Status,
       {
-        addCustomSetup: (appLogicHook) => {
-          appLogicHook.claims.loadClaimDetail = loadClaimDetailSpy;
-        },
+        addCustomSetup: setupHelper(
+          { ...defaultClaimDetail },
+          [],
+          errors,
+          loadClaimDetailMock
+        ),
       },
       props
     );
 
-    expect(loadClaimDetailSpy).toHaveBeenCalledWith("mock-absence-case-id");
+    expect(loadClaimDetailMock).toHaveBeenCalledWith("mock-absence-case-id");
   });
 
   it("renders the page with claim detail", () => {

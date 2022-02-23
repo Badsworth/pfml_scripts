@@ -405,6 +405,11 @@ describe("Payments", () => {
     });
 
     const approvalDate = {
+      "approved before claim start date": dayjs(
+        defaultAbsencePeriod.absence_period_start_date
+      )
+        .add(-1, "day")
+        .format("YYYY-MM-DD"),
       "approved after fourteenth claim date": dayjs(
         defaultAbsencePeriod.absence_period_start_date
       )
@@ -413,7 +418,7 @@ describe("Payments", () => {
       "approved before fourteenth claim date": dayjs(
         defaultAbsencePeriod.absence_period_start_date
       )
-        .subtract(14, "day")
+        .add(7, "day")
         .format("YYYY-MM-DD"),
       "with retroactive claim date": dayjs(
         defaultAbsencePeriod.absence_period_end_date

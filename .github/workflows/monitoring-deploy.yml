@@ -12,7 +12,15 @@ on:
       - infra/modules/alarms_api/**
       - infra/modules/alarms_portal/**
       - infra/modules/newrelic_baseline_error_rate/**
-env: 
+  workflow_dispatch:
+    inputs:
+      version:
+        required: true
+        default: "main"
+        description: |
+          --------------------------------------
+          ⬇️ Tag or branch to be deployed.
+env:
   deploys_channel: "C01HEAJPE76" #mass-pfml-deploys-shared
   workflow_self_link: "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
 
@@ -21,7 +29,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       TF_CLI_ARGS: '-lock-timeout=120s'
-      
+
     steps:
       - uses: actions/checkout@v2
 

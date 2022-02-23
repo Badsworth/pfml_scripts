@@ -812,6 +812,7 @@ const shared: {
     leaveMinutesLabel: "What was the total number of hours you took off?",
     leaveStartDateLabel: "What was the first day of this leave?",
     limitMessage: "You can only add up to {{limit}} leaves",
+    minimumDateHint: "This date must be on or after {{minimumDate}}.",
     removeButton: "Remove this previous leave",
     sectionHint:
       "Enter details about each period of leave taken between {{previousLeaveStartDate}} and {{leaveStartDate}}. A leave period begins on the day you first went on leave and ends on the last day of leave. If you were on leave intermittently, your leave period begins on the first day you went on leave and ends on the very last day.<br/><br/>You don't need to tell us about previous leave you’ve taken through Massachusetts’ PFML program.",
@@ -831,8 +832,7 @@ const shared: {
       "The date your leave ended must include a valid month, day, and year.",
     leaveEndDate_invalidDateRange:
       "The date your leave ends must be on or after the date your leave began.",
-    leaveEndDate_minimum:
-      "Only enter previous leaves taken on or after January 1, 2021.",
+    leaveEndDate_minimum: "Only enter previous leaves with a valid start date.",
     leaveEndDate_required: "Enter the date your leave ended.",
     leaveMinutes_maximum: "The hours entered are more than the possible hours.",
     leaveMinutes_required: "Enter the hours you took off work for your leave.",
@@ -840,7 +840,7 @@ const shared: {
     leaveStartDate_format:
       "The date your leave began must include a valid month, day, and year.",
     leaveStartDate_minimum:
-      "Only enter previous leaves taken on or after January 1, 2021.",
+      "Only enter previous leaves with a valid start date.",
     leaveStartDate_required: "Enter the date your leave began.",
     workedPerWeekMinutes_maximum:
       "The hours entered are more than the possible hours.",
@@ -1005,11 +1005,8 @@ const pages: {
       "Learn more about the <approval-process-link>application review and approval process</approval-process-link>.",
     createApplicationHeading: "Create a new application",
     getReadyLink: "Start a new application",
-    inProgressHeading: "In-progress applications",
-    noClaims: "You don’t have any applications yet.",
     startByPhoneDescription: "$t(shared.startByPhoneDescription)",
     startByPhoneLabel: "$t(shared.startByPhoneLabel)",
-    submittedHeading: "Submitted applications",
     title: "Your applications",
     uploadSuccessHeading: "You successfully submitted your documents",
     uploadSuccessMessage:
@@ -1749,6 +1746,7 @@ const pages: {
       "$t(shared.claimsPreviousLeaveDetails.isForCurrentEmployerHint)",
     isForCurrentEmployerLabel:
       "$t(shared.claimsPreviousLeaveDetails.isForCurrentEmployerLabel)",
+    leaveEndDateHint: "$t(shared.claimsPreviousLeaveDetails.minimumDateHint)",
     leaveEndDateLabel:
       "$t(shared.claimsPreviousLeaveDetails.leaveEndDateLabel)",
     leaveMinutesHint: "$t(shared.claimsPreviousLeaveDetails.leaveMinutesHint)",
@@ -1765,6 +1763,7 @@ const pages: {
     leaveReasonHint:
       "If you didn’t take leave for one of these reasons, go back to the previous screen and select No.",
     leaveReasonLabel: "Why did you need to take this leave?",
+    leaveStartDateHint: "$t(shared.claimsPreviousLeaveDetails.minimumDateHint)",
     leaveStartDateLabel:
       "$t(shared.claimsPreviousLeaveDetails.leaveStartDateLabel)",
     limitMessage: "$t(shared.claimsPreviousLeaveDetails.limitMessage)",
@@ -1802,11 +1801,13 @@ const pages: {
       "$t(shared.claimsPreviousLeaveDetails.isForCurrentEmployerHint)",
     isForCurrentEmployerLabel:
       "$t(shared.claimsPreviousLeaveDetails.isForCurrentEmployerLabel)",
+    leaveEndDateHint: "$t(shared.claimsPreviousLeaveDetails.minimumDateHint)",
     leaveEndDateLabel:
       "$t(shared.claimsPreviousLeaveDetails.leaveEndDateLabel)",
     leaveMinutesHint: "$t(shared.claimsPreviousLeaveDetails.leaveMinutesHint)",
     leaveMinutesLabel:
       "$t(shared.claimsPreviousLeaveDetails.leaveMinutesLabel)",
+    leaveStartDateHint: "$t(shared.claimsPreviousLeaveDetails.minimumDateHint)",
     leaveStartDateLabel:
       "$t(shared.claimsPreviousLeaveDetails.leaveStartDateLabel)",
     limitMessage: "$t(shared.claimsPreviousLeaveDetails.limitMessage)",
