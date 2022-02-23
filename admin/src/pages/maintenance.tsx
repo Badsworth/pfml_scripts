@@ -1,9 +1,6 @@
 import "react-datetime/css/react-datetime.css";
 import {
-  ApiResponse,
-  deleteRoles,
-  RoleUserDeleteRequest,
-  RequestOptions,
+  //  ApiResponse,
   //  Flag,
   //  FlagsResponse,
   //  getFlagsByNameLogs,
@@ -86,14 +83,6 @@ export default function Maintenance() {
     setMaintenance({ ...maintenance, ...{ enabled: false } });
     // disable at API.
     //patchFlagsByName({ name: "maintenance" }, flag).then().finally();
-    const request: RoleUserDeleteRequest = {
-      role: {
-        role_description: "Employer",
-      },
-      user_id: "b6d9222e-d5b5-416b-b252-c97725e81b3b",
-    };
-    deleteRoles(request).then().finally();
-    setShowConfirmationDialog(false);
   };
 
   type options = {

@@ -1,3 +1,9 @@
+import {
+  ApiResponse,
+  deleteRoles,
+  RoleUserDeleteRequest,
+  RequestOptions,
+} from "../api";
 import ConfirmationDialog from "../components/ConfirmationDialog";
 import { Helmet } from "react-helmet-async";
 import { useState } from "react";
@@ -17,6 +23,14 @@ export default function Home() {
 
   const confirmationDialogContinueCallback = () => {
     setShowConfirmationDialog(false);
+    const request: RoleUserDeleteRequest = {
+      role: {
+        role_description: "Employer",
+      },
+      user_id: "b6d9222e-d5b5-416b-b252-c97725e81b3b",
+    };
+    deleteRoles(request).then().finally();
+    setShowConfirmationDialog(false);
   };
 
   const { Popup: SlideOutPopup, open: openSlideOut } =
@@ -29,7 +43,7 @@ export default function Home() {
       </Helmet>
       <h1>h1 HTML5 Kitchen Sink</h1>
       <Button onClick={() => setShowConfirmationDialog(true)}>
-        Click to Open Confirmation Dialog
+        Click to delete user role
       </Button>
       <Button onClick={openSlideOut()}>Click to Open Slide Out</Button>
       <Button onClick={() => setShowUserLookup(true)}>
@@ -37,7 +51,7 @@ export default function Home() {
       </Button>
       {showConfirmationDialog && (
         <ConfirmationDialog
-          title="Enable Caring Leave Type"
+          title="Delete user role"
           body="Lorem ipsum, dolor sit amet consectetur adip elit. Eius aliquam laudantium explicabo pari dolorem."
           handleCancelCallback={confirmationDialogCancelCallback}
           handleContinueCallback={confirmationDialogContinueCallback}
