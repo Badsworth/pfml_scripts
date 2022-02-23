@@ -49,6 +49,13 @@ class Base:
         """
         return self.dict().items()
 
+    def model_lookup_by_table_name(self, table_name):
+        # _decl_class_registry won't exist as of 1.4.x. Instead,
+        # Base.registry.mappers or similar can be used. See https://github.com/sqlalchemy/sqlalchemy/issues/6080
+        for model in self._decl_class_registry.values():  # type: ignore[attr-defined]
+            if hasattr(model, "__tablename__") and model.__tablename__ == table_name:
+                return model
+
 
 def uuid_gen() -> uuid.UUID:
     return uuid.uuid4()

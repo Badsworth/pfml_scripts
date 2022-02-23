@@ -30,6 +30,10 @@ class LkAzurePermission(Base):
         self.azure_permission_resource = azure_permission_resource
         self.azure_permission_action = azure_permission_action
 
+    def get_resource_model(self):
+        resource = self.azure_permission_resource.lower()
+        return self.model_lookup_by_table_name(resource)
+
 
 class AzureGroupPermission(Base, TimestampMixin):
     __tablename__ = "link_azure_group_permission"

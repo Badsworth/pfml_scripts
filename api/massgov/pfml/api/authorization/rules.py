@@ -13,7 +13,7 @@ from massgov.pfml.db.models.applications import (
     Notification,
     RMVCheck,
 )
-from massgov.pfml.db.models.azure import AzurePermission, additional_resource
+from massgov.pfml.db.models.azure import AzurePermission
 from massgov.pfml.db.models.employees import Employee, Role, User
 from massgov.pfml.util.users import has_role_in
 
@@ -52,9 +52,8 @@ def administrator(azure_user: AzureUser, they: RuleList) -> None:
             # Deduplicate by first creating a set. Otherwise, the tuple would
             # READ, READ if the action was READ.
             access = tuple({READ, permission.azure_permission_action})
-            # Allow access to any additional resources defined.
-            if (resource := additional_resource(permission.azure_permission_id)) :
-                they.can(access, resource)
+            if (resource_model := permission.get_resource_model()) :
+                they.can(access, resource_model)
             they.can(access, permission)
 
 
