@@ -3,7 +3,6 @@ from sqlalchemy import Column, ForeignKey, Integer, Text
 from sqlalchemy.orm import relationship
 
 import massgov.pfml.util.logging
-from massgov.pfml.db.models.employees import User
 
 from ..lookup import LookupTable
 from .base import Base, TimestampMixin
@@ -147,12 +146,6 @@ class AzurePermission(LookupTable):
     MAINTENANCE_EDIT = LkAzurePermission(8, "MAINTENANCE_EDIT", "MAINTENANCE", EDIT)
     FEATURES_READ = LkAzurePermission(9, "FEATURES_READ", "FEATURES", READ)
     FEATURES_EDIT = LkAzurePermission(10, "FEATURES_EDIT", "FEATURES", EDIT)
-
-
-def additional_resource(azure_permission_id):
-    """Returns an optional SQLAlchemy model"""
-    additional_resources = dict([(1, User), (2, User)])
-    return additional_resources.get(azure_permission_id)
 
 
 def sync_azure_permissions(db_session):
