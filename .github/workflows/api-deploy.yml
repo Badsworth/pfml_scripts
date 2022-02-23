@@ -64,6 +64,7 @@ env:
   workflow_self_link: "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
   version: ${{ github.event.inputs.version || 'main' }}
   deployment_env: ${{ github.event.inputs.deployment_env || 'test' }}
+  deploys_channel: "C01HEAJPE76" #mass-pfml-deploys-shared
   working-dir: ./api
   terraform-api-dir: ./infra/api/environments
   terraform-env-shared-dir: ./infra/env-shared/environments
@@ -263,6 +264,73 @@ jobs:
             "text": "Starting [API Deploy](${{ env.workflow_self_link }}) #${{ github.run_number }} of **${{ steps.create_version_link.outputs.version_link }}** to **${{ needs.deploy-info.outputs.api-env }}**"
             }'
           )
+  start-comms-slack:
+    name: Start deploy comms (Slack)
+    needs: [update-the-deploy-branch, deploy-info]
+    outputs:
+      version_link: ${{ steps.create_version_link.outputs.version_link }}
+    if: ${{ !contains(github.event.inputs.version || 'main', 'main') || !contains(github.event.inputs.deployment_env || 'test', 'test' )}} # Mutes notifications for auto-deploys to test    
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Set commit_details Value
+        id: set-commit-details
+        run: |
+          echo "commit_details=$(git log --pretty=format:"<https://github.com/${{ github.repository }}/commit/${{needs.update-the-deploy-branch.outputs.commit_hash}}|%h %s>" -1 ${{needs.update-the-deploy-branch.outputs.commit_hash }})" >> $GITHUB_ENV
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+          role-to-assume: ci-run-deploys
+          role-duration-seconds: 3600
+
+      - name: Pull slackbot API token from SSM
+        uses: "marvinpinto/action-inject-ssm-secrets@latest"
+        with:
+          ssm_parameter: "/admin/common/nava-slackbot-api-key"
+          env_variable_name: "slackbot_token"
+
+      - name: Create version link
+        id: create_version_link
+        env:
+          feature_branch_link: "<https://github.com/EOLWD/pfml/commits/${{ env.version }}|${{env.version}}>"
+          release_tag_link: "<https://github.com/EOLWD/pfml/releases/tag/${{ env.version }}|${{env.version}}>"
+        run: |
+          if [[ ${{ env.version }} == api/* ]]; then
+            echo "::set-output name=version_link::${{ env.release_tag_link }}"
+          else
+            echo "::set-output name=version_link::${{ env.feature_branch_link }}"
+          fi
+      - name: Post to Slack
+        run: |
+          SLACKBOT_RESPONSE=$(curl -fsLS -X POST -H "Authorization: Bearer ${{ env.SLACKBOT_TOKEN }}" \
+          -H 'Content-Type: application/json;charset=utf-8' \
+          --data '{
+            "channel": "${{ env.deploys_channel }}",
+            "blocks": [
+              {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": ":ship: Starting *<${{ env.workflow_self_link }}|API deploy #${{ github.run_number }}>* of *${{ steps.create_version_link.outputs.version_link }}* to *${{ needs.deploy-info.outputs.api-env }}*"
+                }
+              },
+              {
+                "type": "context",
+                "elements": [
+                  {
+                    "type": "mrkdwn",
+                    "text": "started by: *${{ github.actor }}*"
+                  }
+                ]
+              }
+            ]
+          }' https://slack.com/api/chat.postMessage)
 
   extra-env-deploy:
     if: github.event.inputs.deployment_env == 'stage'
@@ -685,6 +753,92 @@ jobs:
             "text": "API deploy #${{ github.run_number }} ${{ needs.postdeploy-info.outputs.deploy-state }} in **${{ env.deployment_env}}**: [workflow run](${{ env.workflow_self_link }})"
             }'
           )
+  finish-comms-slack:
+    name: Finish deploy comms (Slack)
+    needs: [start-comms-slack, deploy-info, postdeploy-info]
+    runs-on: ubuntu-latest
+    outputs:
+      message-ts: ${{ steps.post-to-slack.outputs.message-ts }}
+    # Notifies if there's a failure on auto-deploys to test
+    if: always() && 
+      (
+        (needs.start-comms-slack.result == 'success' && !contains(github.event.inputs.version || 'main', 'main')) ||
+        (needs.postdeploy-info.outputs.deploy-state == 'timed_out' || needs.postdeploy-info.outputs.deploy-state == 'failure')
+      )
+    steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+          role-to-assume: ci-run-deploys
+          role-duration-seconds: 3600
+
+      - name: Pull slackbot API token from SSM
+        uses: "marvinpinto/action-inject-ssm-secrets@latest"
+        with:
+          ssm_parameter: "/admin/common/nava-slackbot-api-key"
+          env_variable_name: "slackbot_token"
+
+      - name: Choose Slackbot message
+        id: choose_finish_message
+        env:
+          deployment_success: ":success: Completed"
+          deployment_failure: ":fail: Failed"
+          deployment_cancelled: ":heavy_multiplication_x: Cancelled"
+        run: |
+          if [[ ${{ needs.postdeploy-info.outputs.deploy-state }} == 'success' ]]; then
+            echo "::set-output name=message::${{ env.deployment_success }}"
+            echo "::set-output name=color::good"
+          elif [[ ${{ needs.postdeploy-info.outputs.deploy-state }} == 'cancelled' ]]; then
+            echo "::set-output name=message::${{ env.deployment_cancelled }}"
+            echo "::set-output name=color::#35373b"
+          elif [[ ${{ needs.postdeploy-info.outputs.deploy-state }} == 'skipped' ]]; then
+            echo "::set-output name=message::${{ env.deployment_cancelled }}"
+            echo "::set-output name=color::#35373b"
+          elif [[ ${{ needs.postdeploy-info.outputs.deploy-state }} == 'neutral' ]]; then
+            echo "::set-output name=message::${{ env.deployment_cancelled }}"
+            echo "::set-output name=color::#35373b"
+          elif [[ ${{ needs.postdeploy-info.outputs.deploy-state }} == 'timed_out' ]]; then
+            echo "::set-output name=message::${{ env.deployment_failure }}"
+            echo "::set-output name=color::danger"
+          elif [[ ${{ needs.postdeploy-info.outputs.deploy-state }} == 'failure' ]]; then
+            echo "::set-output name=message::${{ env.deployment_failure }}"
+            echo "::set-output name=color::danger"
+          else
+            echo "::set-output name=message::${{ env.deployment_failure }}"
+            echo "::set-output name=color::#2767cf"
+          fi
+      - name: Post to Slack
+        id: post-to-slack
+        run: |
+          SLACKBOT_RESPONSE=$(curl -fsLS -X POST -H "Authorization: Bearer ${{ env.SLACKBOT_TOKEN }}" \
+          -H 'Content-Type: application/json;charset=utf-8' \
+          --data '{
+            "channel": "${{ env.deploys_channel }}",
+            "blocks": [
+              {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "${{ steps.choose_finish_message.outputs.message }} *<${{ env.workflow_self_link }}|API deploy #${{ github.run_number }}>* of *${{ needs.start-comms-slack.outputs.version_link }}* to *${{ needs.deploy-info.outputs.api-env }}*"
+                }
+              },
+              {
+                "type": "context",
+                "elements": [
+                  {
+                    "type": "mrkdwn",
+                    "text": "started by: *${{ github.actor }}*"
+                  }
+                ]
+              }
+            ]
+          }' https://slack.com/api/chat.postMessage)
+          MESSAGE_TS=$(echo $SLACKBOT_RESPONSE | jq -r '.ts')
+          echo $MESSAGE_TS
+          echo "::set-output name=message-ts::$MESSAGE_TS"
 
   end-to-end:
     name: E2E Tests
@@ -776,3 +930,40 @@ jobs:
             }]
           }')
 
+  post-e2e-failures-to-slack:
+    name: Post E2E failures to Slack
+    needs: [finish-comms-slack, end-to-end]
+    # Run if the E2E tests failed or timed out. Applies to any environment that runs E2E tests.
+    if: always() &&
+        (needs.end-to-end.result == 'failure' || needs.end-to-end.result == 'timed_out')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+          role-to-assume: ci-run-deploys
+          role-duration-seconds: 3600
+
+      - name: Pull slackbot API token from SSM
+        uses: "marvinpinto/action-inject-ssm-secrets@latest"
+        with:
+          ssm_parameter: "/admin/common/nava-slackbot-api-key"
+          env_variable_name: "slackbot_token"
+
+      - name: Post to Slack
+        run: |
+          echo "Slackbot message reply TS is ${{ needs.finish-comms-slack.outputs.message-ts }}"
+          
+          SLACKBOT_RESPONSE=$(curl -fsLS -X POST -H "Authorization: Bearer ${{ env.SLACKBOT_TOKEN }}" \
+          -H 'Content-Type: application/json;charset=utf-8' \
+          --data '{
+            "channel": "${{ env.deploys_channel }}",
+            "thread_ts": "${{ needs.finish-comms-slack.outputs.message-ts }}",
+            "attachments": [{
+              "title": "E2E Test failed in ${{ github.event.inputs.deployment_env || 'test' }} (<${{ env.workflow_self_link }}|build logs>)",
+              "color": "danger"
+            }]
+          }' https://slack.com/api/chat.postMessage)
