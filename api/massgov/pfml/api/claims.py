@@ -17,6 +17,7 @@ from massgov.pfml.api.authorization.flask import READ, can, requires
 from massgov.pfml.api.exceptions import ClaimWithdrawn, ObjectNotFound
 from massgov.pfml.api.models.applications.common import OrganizationUnit
 from massgov.pfml.api.models.claims.common import ChangeRequest, EmployerClaimReview
+from massgov.pfml.api.models.claims.requests import ClaimRequest
 from massgov.pfml.api.models.claims.responses import (
     ClaimForPfmlCrmResponse,
     ClaimResponse,
@@ -522,18 +523,46 @@ def get_claim_from_db(fineos_absence_id: Optional[str]) -> Optional[Claim]:
     return claim
 
 
+def retrieve_claims() -> flask.Response:
+
+    body = connexion.request.json
+    claim_request = ClaimRequest.parse_obj(body)
+
+    return process_claims_request(
+        claim_request=claim_request, employee_id_str="", method_name="retrieve_claims"
+    )
+
+
 def get_claims() -> flask.Response:
-    current_user = app.current_user()
+
     employer_id = flask.request.args.get("employer_id")
     employee_id_str = flask.request.args.get("employee_id")
-    search_string = flask.request.args.get("search", type=str)
-    absence_statuses = parse_filterable_absence_statuses(flask.request.args.get("claim_status"))
-    request_decisions = map_request_decision_param_to_db_columns(
-        flask.request.args.get("request_decision")
+
+    claim_request = ClaimRequest()
+    claim_request.employer_id = employer_id
+    claim_request.search = flask.request.args.get("search", type=str)
+    claim_request.claim_status = flask.request.args.get("claim_status")
+    claim_request.request_decision = flask.request.args.get("request_decision")
+    claim_request.is_reviewable = flask.request.args.get("is_reviewable", type=str)
+
+    return process_claims_request(
+        claim_request=claim_request, employee_id_str=employee_id_str, method_name="get_claims"
     )
-    is_employer = can(READ, "EMPLOYER_API")
-    is_reviewable = flask.request.args.get("is_reviewable", type=str)
+
+
+def process_claims_request(
+    claim_request: ClaimRequest, employee_id_str: Optional[str], method_name: str
+) -> flask.Response:
+
+    employee_ids = claim_request.employee_id
+    search_string = claim_request.search
+    absence_statuses = parse_filterable_absence_statuses(claim_request.claim_status)
+    is_reviewable = claim_request.is_reviewable
+    request_decisions = map_request_decision_param_to_db_columns(claim_request.request_decision)
+
+    current_user = app.current_user()
     is_pfml_crm_user = has_role_in(current_user, [Role.PFML_CRM])
+    is_employer = can(READ, "EMPLOYER_API")
     log_attributes = {}
     log_attributes.update(get_employer_log_attributes(current_user))
 
@@ -548,9 +577,11 @@ def get_claims() -> flask.Response:
                 # The CRM user does not use use /claims/{claim_id} yet, so this logic has explicitly not been added to user_has_access_to_claim
                 pass
             elif is_employer and current_user and current_user.employers:
-                if employer_id:
+                if claim_request.employer_id:
                     employers_list = (
-                        db_session.query(Employer).filter(Employer.employer_id == employer_id).all()
+                        db_session.query(Employer)
+                        .filter(Employer.employer_id == claim_request.employer_id)
+                        .all()
                     )
                 else:
                     employers_list = list(current_user.employers)
@@ -570,8 +601,14 @@ def get_claims() -> flask.Response:
 
             # filter claims by an employee_id
             if employee_id_str:
-                employee_ids = {eid.strip() for eid in employee_id_str.split(",")}
-                query.add_employees_filter(employee_ids)
+                employee_ids_set = {eid.strip() for eid in employee_id_str.split(",")}
+                query.add_employees_filter(employee_ids_set)
+
+            # filter claims by an employee_id for POST /claims/search
+            if employee_ids:
+                # convert List[UUID] to Set[str]
+                employee_ids_set = {str(eid) for eid in employee_ids}
+                query.add_employees_filter(employee_ids_set)
 
             if len(absence_statuses):
                 # Log the values from the query params rather than the enum groups they
@@ -595,17 +632,25 @@ def get_claims() -> flask.Response:
             if request_decisions:
                 query.add_request_decision_filter(request_decisions)
 
+            # Update the pagination parameters from the request
+            if flask.request.method == "POST":
+                pagination_context.page_size = claim_request.page_size
+                pagination_context.page_offset = claim_request.page_offset
+                pagination_context.order_by = claim_request.order_by
+                pagination_context.order_direction = claim_request.order_direction
+
             query.add_order_by(pagination_context)
 
             page = query.get_paginated_results(pagination_context)
 
     logger.info(
-        "get_claims success",
+        f"{method_name} success",
         extra={
             "is_employer": str(is_employer),
             "pagination.order_by": pagination_context.order_by,
             "pagination.order_direction": pagination_context.order_direction,
             "pagination.page_offset": pagination_context.page_offset,
+            "pagination.page_size": pagination_context.page_size,
             "pagination.total_pages": page.total_pages,
             "pagination.total_records": page.total_records,
             "filter.search_string": search_string,

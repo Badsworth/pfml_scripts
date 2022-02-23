@@ -89,6 +89,10 @@ export class BaseMockBenefitsApplicationBuilder {
         )
       )
     );
+    set(this.claimAttrs, "computed_start_dates", {
+      other_reason: "2021-01-01",
+      same_reason: "2021-01-01",
+    });
     return this;
   }
 
@@ -112,6 +116,10 @@ export class BaseMockBenefitsApplicationBuilder {
         )
       )
     );
+    set(this.claimAttrs, "computed_start_dates", {
+      other_reason: "2021-01-01",
+      same_reason: "2021-01-01",
+    });
     return this;
   }
 
@@ -130,6 +138,10 @@ export class BaseMockBenefitsApplicationBuilder {
         )
       )
     );
+    set(this.claimAttrs, "computed_start_dates", {
+      other_reason: "2021-01-01",
+      same_reason: "2021-01-01",
+    });
     return this;
   }
 
@@ -410,6 +422,7 @@ export class MockBenefitsApplicationBuilder extends BaseMockBenefitsApplicationB
     this.claimAttrs = {
       application_id: "mock_application_id",
       status: BenefitsApplicationStatus.started,
+      computed_start_dates: {},
     };
   }
 

@@ -14,7 +14,9 @@ export const PreviousLeavesIntro = (props: WithBenefitsApplicationProps) => {
   const { t } = useTranslation();
   const { appLogic, claim } = props;
   const startDate = formatDate(claim.leaveStartDate).full();
-  const otherLeaveStartDate = formatDate(claim.otherLeaveStartDate).full();
+  const otherLeaveStartDate = formatDate(
+    claim.computed_start_dates.other_reason
+  ).full();
 
   const handleSave = async () => {
     return await appLogic.portalFlow.goToNextPage(
