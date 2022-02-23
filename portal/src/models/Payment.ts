@@ -8,6 +8,36 @@ export type PaymentStatus =
   | "Pending"
   | "Sent to bank";
 
+export type WritebackTransactionStatus =
+  | "Payment Validation Error"
+  | "EFT Account Information Error"
+  | "EFT Pending Bank Validation"
+  | "Payment System Error"
+  | "Max Weekly Benefits Exceeded"
+  | "Address Validation Error"
+  | "Pending Payment Audit"
+  | "Bank Processing Error"
+  | "Processed"
+  | "Paid"
+  | "Posted"
+  | "Leave Plan In Review"
+  | "Payment Audit Error"
+  | "DUA Additional Income"
+  | "DIA Additional Income"
+  | "SelfReported Additional Income"
+  | "Exempt Employer"
+  | "Max Weekly Benefits Exceeded"
+  | "InvalidPayment WaitingWeek"
+  | "InvalidPayment PaidDate"
+  | "InvalidPayment LeaveDateChange"
+  | "InvalidPayment PayAdjustment"
+  | "InvalidPayment NameMismatch"
+  | "PrimaryPayment ProcessingErr"
+  | "Payment Audit In Progress"
+  | "PUB Check Voided"
+  | "PUB Check Undeliverable"
+  | "PUB Check Stale";
+
 /**
  * Payment details associated with the Claim
  */
@@ -20,7 +50,11 @@ export class PaymentDetail {
   payment_method: string;
   expected_send_date_start: string | null;
   expected_send_date_end: string | null;
+  cancellation_date: string | null;
   status: PaymentStatus;
+  writeback_transaction_status: WritebackTransactionStatus;
+  transaction_date: string | null;
+  transaction_date_could_change: boolean;
 
   constructor(attrs?: Partial<PaymentDetail>) {
     if (!attrs) {
