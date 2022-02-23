@@ -54,7 +54,7 @@ jobs:
       - name: Post to Teams
         run: |
           TEAMS_URI_TEST=https://massgov.webhook.office.com/webhookb2/f2159e94-1fdd-4834-b5c1-79578a664392@3e861d16-48b7-4a0e-9806-8c04d81b7b2a/IncomingWebhook/8cb33caf02e546588d7c5934de5fcf8e/585d4b29-01f0-4c9e-b6ce-fef830aab7f2
-          RESPONSE=$(curl -fsLS -X POST ${{ env.TEAMS_URI_TEST }} \
+          RESPONSE=$(curl -fsLS -X POST ${TEAMS_URI_TEST} \
           --header 'Content-Type: application/json' \
           --data '{   
             "@type": "MessageCard",
