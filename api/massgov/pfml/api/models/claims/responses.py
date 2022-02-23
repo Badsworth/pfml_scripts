@@ -23,13 +23,6 @@ from massgov.pfml.util.pydantic.types import (
 )
 
 
-class EmployeeResponse(PydanticBaseModel):
-    first_name: Optional[str]
-    middle_name: Optional[str]
-    last_name: Optional[str]
-    other_name: Optional[str]
-
-
 class ManagedRequirementResponse(PydanticBaseModel):
     follow_up_date: Optional[date]
     responded_at: Optional[date]
