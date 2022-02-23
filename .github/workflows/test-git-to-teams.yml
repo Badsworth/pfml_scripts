@@ -10,47 +10,10 @@ env:
 
 jobs:
   # Run Terriyay
-  # post-to-teams:
-  #   name: post failures to teams
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v2
-  #     - name: Post to Teams
-  #       run: |
-  #         RESPONSE=$(curl --location --request POST 'https://massgov.webhook.office.com/webhookb2/f2159e94-1fdd-4834-b5c1-79578a664392@3e861d16-48b7-4a0e-9806-8c04d81b7b2a/IncomingWebhook/8cb33caf02e546588d7c5934de5fcf8e/585d4b29-01f0-4c9e-b6ce-fef830aab7f2' \
-  #         --header 'Content-Type: application/json' \
-  #         --data-raw '{
-  #             "@type": "MessageCard",
-  #             "themeColor": "FF0000",
-  #             "title": "title text",
-  #             "text":"message"
-  #         }' \
-  #         )
-
-  # Run Terriyay
   post-to-teams2:
     name: post failures to teams
-
     runs-on: ubuntu-latest
     steps:
-      # - name: Configure AWS Credentials
-      #   uses: aws-actions/configure-aws-credentials@v1
-      #   with:
-      #     aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
-      #     aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
-      #     aws-region: us-east-1
-      #     role-to-assume: ci-run-deploys
-      #     role-duration-seconds: 3600
-      # - name: Pull teams uri from SSM
-      #   uses: "marvinpinto/action-inject-ssm-secrets@latest"
-      #   with:
-      #     ssm_parameter: "/admin/common/teams-deploy-uri-test"
-      #     env_variable_name: "TEAMS_URI_TEST"
-      # - uses: dkershner6/aws-ssm-getparameters-action@v1
-      #   with:
-      #     parameterPairs: "/admin/common/teams-deploy-uri-test = TEAMS_URI_TEST"
-      #     withDecryption: true
-
       - name: Post to Teams
         run: |
           RESPONSE=$(curl --location --request POST 'https://massgov.webhook.office.com/webhookb2/f2159e94-1fdd-4834-b5c1-79578a664392@3e861d16-48b7-4a0e-9806-8c04d81b7b2a/IncomingWebhook/8cb33caf02e546588d7c5934de5fcf8e/585d4b29-01f0-4c9e-b6ce-fef830aab7f2' \
