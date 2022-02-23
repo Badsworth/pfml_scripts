@@ -35,24 +35,6 @@ resource "aws_kms_alias" "id_proofing_document_alias" {
 
 data "aws_iam_policy_document" "allow_admin_groups_access_policy" {
   for_each = toset(local.environments)
-
-  statement {
-    sid    = "AllowECSRoles"
-    effect = "Allow"
-    principals {
-      type        = "AWS"
-      identifiers = ["*"]
-    }
-    actions = [
-      "kms:*",
-    ]
-    resources = ["*"]
-    condition {
-      test     = "ArnEquals"
-      variable = "aws:SourceArn"
-      values   = ["arn:aws:iam::498823821309:role/pfml-api-${each.key}-ecs-tasks-*"]
-    }
-  }
   statement {
     sid = "AllowAllForAdmins"
 
@@ -64,8 +46,17 @@ data "aws_iam_policy_document" "allow_admin_groups_access_policy" {
     resources = ["*"]
 
     principals {
-      type        = "AWS"
-      identifiers = module.constants.prod_admin_roles
+      type = "AWS"
+      identifiers = concat(module.constants.prod_admin_roles,
+        [
+          "arn:aws:iam::498823821309:role/pfml-api-${each.key}-ecs-tasks-execution-role",
+          "arn:aws:iam::498823821309:role/pfml-api-${each.key}-ecs-tasks-register-admins-task-role",
+          "arn:aws:iam::498823821309:role/pfml-api-${each.key}-ecs-tasks-dor-import-execution-role",
+          "arn:aws:iam::498823821309:role/pfml-api-${each.key}-sftp-tool-execution-role",
+          "arn:aws:iam::498823821309:role/pfml-api-${each.key}-dua-employee-workflow-execution-role",
+          "arn:aws:iam::498823821309:role/pfml-api-${each.key}-ecs-tasks-reductions-wrkflw-execution-role"
+        ]
+      )
     }
   }
 }
