@@ -25,6 +25,7 @@ provider "registry.terraform.io/hashicorp/aws" {
   constraints = "3.74.1"
   hashes = [
     "h1:0/ImOh63jJHOqiA165x+99N+MR0Rz7x4Nlcbnpys4Ww=",
+    "h1:J9suPUZHL+g+gQCpxtzDwM0PKfLG7q+UC8CwgE9Qi38=",
     "zh:2de9a8c19e07ea3b12c3fe5fe23ffa71354f90683d1f3ded41f2f318e8bad401",
     "zh:3f651572f9ad067e119ed083d25455627ae121d36e737823f1d89445949f8ca0",
     "zh:468c5954ea646e8edbf70c5a3dbce3d9591a47259f3cf3bdfb2c8728a5e3a083",
@@ -43,6 +44,7 @@ provider "registry.terraform.io/newrelic/newrelic" {
   version     = "2.30.2"
   constraints = "~> 2.30.0"
   hashes = [
+    "h1:DBnPekbiBJupF40top9JFdrIFxPMjJTefQxIcucEIUQ=",
     "h1:DovgBVG7N+FIcJmNpWXeIAhMdTySQpDsEUHIirk2uG8=",
     "zh:39c3feabf3e05f59f247b7135f1467ec7e855e304cf20ba735387694391f0fd1",
     "zh:3fd6dfdaf06af663314ecf6ac2a03d510885d8a5a2f416ffad212ff21c1229db",
