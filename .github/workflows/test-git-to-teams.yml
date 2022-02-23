@@ -34,30 +34,26 @@ jobs:
 
     runs-on: ubuntu-latest
     steps:
-      # - uses: actions/checkout@v2
-
-      # - name: Configure AWS Credentials
-      #   uses: aws-actions/configure-aws-credentials@v1
-      #   with:
-      #     aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
-      #     aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
-      #     aws-region: us-east-1
-      #     role-to-assume: ci-run-deploys
-      #     role-duration-seconds: 3600
-
-      # - name: Pull teams uri from SSM
-      #   uses: "marvinpinto/action-inject-ssm-secrets@latest"
-      #   with:
-      #     ssm_parameter: "/admin/common/teams-deploy-uri-test"
-      #     env_variable_name: "TEAMS_URI_TEST"
-
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+          role-to-assume: ci-run-deploys
+          role-duration-seconds: 3600
+      - name: Pull teams uri from SSM
+        uses: "marvinpinto/action-inject-ssm-secrets@latest"
+        with:
+          ssm_parameter: "/admin/common/teams-deploy-uri-test"
+          env_variable_name: "TEAMS_URI_TEST"
       - name: Post to Teams
         run: |
-          RESPONSE=$(curl -fsLS -X POST 'https://massgov.webhook.office.com/webhookb2/f2159e94-1fdd-4834-b5c1-79578a664392@3e861d16-48b7-4a0e-9806-8c04d81b7b2a/IncomingWebhook/8cb33caf02e546588d7c5934de5fcf8e/585d4b29-01f0-4c9e-b6ce-fef830aab7f2' \
+          RESPONSE=$(curl -fsLS -X POST ${{ env.TEAMS_URI_TEST }} \
           --header 'Content-Type: application/json' \
           --data '{   
             "@type": "MessageCard",
             "themeColor": "FF0000",
-            "title": "post to teams2",
-            "text": "API tests failed in main ${{ env.workflow_self_link }}"}]'
+            "title": "post to teams test",
+            "text": "post to teams test ${{ env.workflow_self_link }}"}]'
           )
