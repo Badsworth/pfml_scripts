@@ -1,5 +1,5 @@
 import { MockBenefitsApplicationBuilder, renderPage } from "../../test-utils";
-import { cleanup, screen, waitFor, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import PreviousLeavesSameReasonDetails from "../../../src/pages/applications/previous-leaves-same-reason-details";
 import { setupBenefitsApplications } from "../../test-utils/helpers";
 import userEvent from "@testing-library/user-event";
@@ -70,59 +70,6 @@ describe("PreviousLeavesSameReasonDetails", () => {
     ).toBeInTheDocument();
   });
 
-  it("changes hint date if claim is caring leave or starts in 2021", () => {
-    const januaryTextMatch = /leave taken between January 1, 2021/i;
-    const marchTextMatch = /leave taken between March 7, 2021/i;
-    const julyTextMatch = /leave taken between July 1, 2021/i;
-
-    setup(
-      new MockBenefitsApplicationBuilder()
-        .continuous({
-          start_date: "2021-11-01",
-        })
-        .employed()
-        .previousLeavesSameReason()
-        .medicalLeaveReason()
-        .create()
-    );
-
-    expect(screen.queryByText(januaryTextMatch)).toBeInTheDocument();
-    expect(screen.queryByText(marchTextMatch)).not.toBeInTheDocument();
-    expect(screen.queryByText(julyTextMatch)).not.toBeInTheDocument();
-
-    cleanup();
-    setup(
-      new MockBenefitsApplicationBuilder()
-        .continuous({
-          start_date: "2022-03-07",
-        })
-        .employed()
-        .previousLeavesSameReason()
-        .caringLeaveReason()
-        .create()
-    );
-
-    expect(screen.queryByText(januaryTextMatch)).not.toBeInTheDocument();
-    expect(screen.queryByText(marchTextMatch)).not.toBeInTheDocument();
-    expect(screen.queryByText(julyTextMatch)).toBeInTheDocument();
-
-    cleanup();
-    setup(
-      new MockBenefitsApplicationBuilder()
-        .continuous({
-          start_date: "2022-03-07",
-        })
-        .employed()
-        .previousLeavesSameReason()
-        .medicalLeaveReason()
-        .create()
-    );
-
-    expect(screen.queryByText(januaryTextMatch)).not.toBeInTheDocument();
-    expect(screen.queryByText(marchTextMatch)).toBeInTheDocument();
-    expect(screen.queryByText(julyTextMatch)).not.toBeInTheDocument();
-  });
-
   it("calls update when user submits form with new data", async () => {
     const { updateSpy } = setup();
 
@@ -188,6 +135,7 @@ describe("PreviousLeavesSameReasonDetails", () => {
   it("calls update when user submits form with existing data", async () => {
     const claim = new MockBenefitsApplicationBuilder()
       .employed()
+      .continuous()
       .previousLeavesSameReason()
       .create();
     const previousLeave = claim.previous_leaves_same_reason[0];

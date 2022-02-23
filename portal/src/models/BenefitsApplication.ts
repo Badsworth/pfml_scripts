@@ -57,6 +57,11 @@ class BenefitsApplication extends BaseBenefitsApplication {
 
   employment_status: ValuesOf<typeof EmploymentStatus> | null = null;
 
+  computed_start_dates: {
+    other_reason?: string | null;
+    same_reason?: string | null;
+  };
+
   leave_details: {
     continuous_leave_periods: ContinuousLeavePeriod[];
     intermittent_leave_periods: IntermittentLeavePeriod[];

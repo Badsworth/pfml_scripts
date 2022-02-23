@@ -27,11 +27,11 @@ const setup = (
 };
 
 describe("PreviousLeavesSameReason", () => {
-  it("renders fieldset", () => {
+  it("renders legend and hint with computed dates", () => {
     setup(
       new MockBenefitsApplicationBuilder()
         .continuous()
-        .caringLeaveReason()
+        .medicalLeaveReason()
         .create()
     );
 
@@ -53,7 +53,10 @@ describe("PreviousLeavesSameReason", () => {
 
   it("sets previous_leaves_same_reason to null when has_previous_leaves_same_reason changes to false", async () => {
     const { updateSpy } = setup(
-      new MockBenefitsApplicationBuilder().previousLeavesSameReason().create()
+      new MockBenefitsApplicationBuilder()
+        .continuous()
+        .previousLeavesSameReason()
+        .create()
     );
 
     userEvent.click(screen.getByRole("radio", { name: /No/i }));
