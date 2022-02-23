@@ -60,7 +60,11 @@ export const createMockPayment = (
       payment_method: "Check",
       expected_send_date_start: "2021-11-15",
       expected_send_date_end: "2021-11-21",
+      cancellation_date: "",
       status: "Pending",
+      writeback_transaction_status: "Paid",
+      transaction_date: "2021-11-16",
+      transaction_date_could_change: false,
       ...customDetails,
     };
   }
@@ -89,12 +93,17 @@ export const createMockPayment = (
     ]),
     expected_send_date_start: sendDate,
     expected_send_date_end: sendDateEnd,
+    // This should probably depend on the status below
+    cancellation_date: "",
     status: faker.random.arrayElement<PaymentStatus>([
       "Cancelled",
       "Delayed",
       "Pending",
       "Sent to bank",
     ]),
+    writeback_transaction_status: "Paid",
+    transaction_date: "2021-11-16",
+    transaction_date_could_change: false,
     ...customDetails,
   };
 };
