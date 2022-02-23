@@ -47,6 +47,9 @@ jobs:
         with:
           ssm_parameter: "/admin/common/teams-deploy-uri-test"
           env_variable_name: "TEAMS_URI_TEST"
+      - name: echo teams uri
+        run: | 
+          echo "TEAMS_URI_TEST: ${{ env.TEAMS_URI_TEST }}"
       - name: Post to Teams
         run: |
           RESPONSE=$(curl -fsLS -X POST ${{ env.TEAMS_URI_TEST }} \
