@@ -27,7 +27,6 @@ output "infra_admin_sso_arn" {
 #       https://lwd.atlassian.net/wiki/spaces/DD/pages/272072807/Tagging+Standards.
 output "environment_tags" {
   value = {
-    "adhoc"       = "test"
     "breakfix"    = "qa"
     "cps-preview" = "qa"
     "infra-test"  = "test"
@@ -72,7 +71,6 @@ output "environment_shorthand" {
 #
 output "smartronix_environment_tags" {
   value = {
-    "adhoc"       = "Adhoc"
     "breakfix"    = "Breakfix"
     "cps-preview" = "CPSPreview"
     "infra-test"  = "Sandbox"
