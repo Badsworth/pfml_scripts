@@ -1,10 +1,11 @@
 import "react-datetime/css/react-datetime.css";
-import //  ApiResponse,
+//import {
+//  ApiResponse,
 //  Flag,
 //  FlagsResponse,
 //  getFlagsByNameLogs,
 //  getFlagsByName,
-"../api";
+//} from "../api";
 import Alert from "../components/Alert";
 import ConfirmationDialog from "../components/ConfirmationDialog";
 import Link from "next/link";
@@ -82,6 +83,7 @@ export default function Maintenance() {
     setMaintenance({ ...maintenance, ...{ enabled: false } });
     // disable at API.
     //patchFlagsByName({ name: "maintenance" }, flag).then().finally();
+    setShowConfirmationDialog(false);
   };
 
   type options = {
