@@ -226,7 +226,11 @@ class RelatedPaymentsProcessingStep(Step):
                 )
                 .all()
             )
-
+            transaction_type_id = (
+                payment.payment_transaction_type_id
+                if payment.payment_transaction_type_id is not None
+                else 0
+            )
             payment_log_details = payments_util.get_traceable_payment_details(payment)
             if len(primary_payment_records) > 1:
                 logger.info(
@@ -235,7 +239,7 @@ class RelatedPaymentsProcessingStep(Step):
                     extra=payment_log_details,
                 )
                 # set end state
-                end_state = self.multiple_primary_states[payment.payment_transaction_type_id]
+                end_state = self.multiple_primary_states[transaction_type_id]
                 message = "Duplicate records found for the related payment."
 
                 state_log_util.create_finished_state_log(
@@ -259,7 +263,7 @@ class RelatedPaymentsProcessingStep(Step):
                 )
 
                 # set correct state
-                end_state = self.primary_not_found_states[payment.payment_transaction_type_id]
+                end_state = self.primary_not_found_states[transaction_type_id]
 
                 message = "No primary payment found for the related payment record."
 
@@ -311,9 +315,7 @@ class RelatedPaymentsProcessingStep(Step):
                         payment_state_log.end_state_id
                         in payments_util.Constants.RESTARTABLE_PAYMENT_STATE_IDS
                     ):
-                        end_state = self.primary_in_restartable_states[
-                            payment.payment_transaction_type_id
-                        ]
+                        end_state = self.primary_in_restartable_states[transaction_type_id]
 
                         outcome = state_log_util.build_outcome(
                             "Primary payment is in Error restartable state"
@@ -323,9 +325,7 @@ class RelatedPaymentsProcessingStep(Step):
                             "Primary payment is in Error restartable state"
                         )
                     else:
-                        end_state = self.primary_in_error_states[
-                            payment.payment_transaction_type_id
-                        ]
+                        end_state = self.primary_in_error_states[transaction_type_id]
 
                         outcome = state_log_util.build_outcome("Primary payment has an error")
                     state_log_util.create_finished_state_log(
