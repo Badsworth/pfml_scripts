@@ -52,9 +52,9 @@ const useUsersLogic = ({
       // Update Cognito
       if (mfa_delivery_preference)
         await setMFAPreference(mfa_delivery_preference);
+      */
       if (mfa_phone_number?.phone_number)
         await updateMFAPhoneNumber(mfa_phone_number.phone_number);
-      */
       // Change internal state
       setUser(user);
       // Return the user only if the update did not throw any errors
