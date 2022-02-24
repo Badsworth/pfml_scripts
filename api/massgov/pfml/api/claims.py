@@ -1,4 +1,5 @@
 import base64
+import uuid
 from typing import Dict, List, Optional, Set, Type, Union
 from uuid import UUID
 
@@ -541,7 +542,13 @@ def retrieve_claims() -> flask.Response:
 
 def get_claims() -> flask.Response:
 
-    employer_id = flask.request.args.get("employer_id")
+    employer_id: Optional[UUID]
+    employer_id_str = flask.request.args.get("employer_id")
+    if employer_id_str is not None:
+        employer_id = uuid.UUID(employer_id_str)
+    else:
+        employer_id = employer_id_str
+
     employee_id_str = flask.request.args.get("employee_id")
 
     claim_request = ClaimRequest()

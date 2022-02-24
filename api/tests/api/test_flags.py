@@ -1,5 +1,6 @@
+from unittest.mock import mock_open, patch
+
 import pytest
-from mock import mock_open, patch
 
 from massgov.pfml.util.feature_gate import FeaturesCache
 
