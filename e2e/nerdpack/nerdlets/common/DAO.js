@@ -1,4 +1,5 @@
 import { NrqlQuery } from "nr1";
+import { GROUPS } from "./index";
 
 export class BaseDAO {
   static QueryObject(accountId, where, since, limit) {
@@ -219,5 +220,114 @@ export class DAOEnvironmentComponentVersion extends BaseDAO {
 
       return collected;
     }, {});
+  }
+}
+
+export class DAO {
+  static ACCOUNT_ID = "";
+
+  /**
+   * @returns {DAORunIndicators}
+   * @constructor
+   */
+  static RunIndicators() {
+    return new DAORunIndicators(this.ACCOUNT_ID);
+  }
+}
+
+export class BaseDAOV2 {
+  FORMAT_TYPE;
+  accountId;
+  queryParts = {
+    where: null,
+    since: null,
+    limit: null,
+  };
+
+  constructor(accountId) {
+    this.accountId = accountId;
+    this.FORMAT_TYPE = NrqlQuery.FORMAT_TYPE.RAW;
+  }
+
+  formatChart() {
+    this.FORMAT_TYPE = NrqlQuery.FORMAT_TYPE.CHART;
+  }
+
+  where(where) {
+    this.queryParts.where = where;
+    return this;
+  }
+
+  since(since) {
+    this.queryParts.since = since;
+    return this;
+  }
+
+  limit(limit) {
+    this.queryParts.limit = limit;
+    return this;
+  }
+
+  query() {}
+
+  rowProcessor(row) {
+    return row;
+  }
+
+  postProcessor(data) {
+    return data;
+  }
+}
+
+export class DAORunIndicators extends BaseDAOV2 {
+  constructor(accountId) {
+    super(accountId);
+    this.queryParts.since = "1 month ago";
+    this.queryParts.limit = "5";
+    this.queryParts.env = null;
+  }
+
+  env(env) {
+    this.queryParts.env = env;
+    return this;
+  }
+
+  query() {
+    const q_1 = GROUPS.map((group) => {
+      let groupAlias = group;
+      if (group === "Stable") {
+        group = "Commit Stable";
+      }
+      return `, filter(count (pass), WHERE group = '${group}') as ${groupAlias}_total
+    , filter(count (pass), WHERE pass is true and group = '${group}') as ${groupAlias}_passCount
+    , filter(count (pass), WHERE fail is true and group = '${group}') as ${groupAlias}_failCount
+    ${
+      group !== "Integration"
+        ? `, filter(latest(runUrl), WHERE group = '${group}') as ${groupAlias}_runUrl`
+        : ``
+    }
+    `;
+    }).join("");
+
+    return `SELECT MAX(timestamp) as time
+    , min(timestamp) as start
+    , count (pass) as total
+    ${q_1}
+    , latest(tag) as tag
+    , latest(branch) as branch
+FROM TestResult FACET environment, runId
+    WHERE durationMs != 0 AND
+          environment = '${this.queryParts.env}'
+          ${this.queryParts.where ? `AND (${this.queryParts.where})` : ``}
+    SINCE ${this.queryParts.since} limit ${this.queryParts.limit}`;
+  }
+
+  rowProcessor(row) {
+    if (row.tag) {
+      row.tag = row.tag.split(",").filter((tag) => !tag.includes("Env-"));
+    } else {
+      row.tag = [];
+    }
+    return row;
   }
 }

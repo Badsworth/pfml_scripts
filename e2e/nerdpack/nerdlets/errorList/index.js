@@ -264,7 +264,7 @@ export default class CategoriesNerdlet extends React.Component {
   render() {
     const where = this.getFilters();
     return [
-      <Navigation></Navigation>,
+      <Navigation active="error-v1"></Navigation>,
       <div className={"filters"}>
         FILTERS:
         <button onClick={this.clearAll}>Clear All</button>

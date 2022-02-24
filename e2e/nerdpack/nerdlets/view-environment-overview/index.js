@@ -1,8 +1,8 @@
 import React from "react";
 import { PlatformStateContext } from "nr1";
-import { EnvironmentsTable } from "../common/components/EnvironmentsTable";
+import { EnvironmentsOverviewTable } from "../common/components/EnvironmentsOverviewTable";
 import Navigation from "../common/components/Navigation";
-// https://docs.newrelic.com/docs/new-relic-programmable-platform-introduction
+import { DAO } from "../common/DAO";
 
 export default class PFMLEnvironmentsNerdlet extends React.PureComponent {
   render() {
@@ -11,13 +11,16 @@ export default class PFMLEnvironmentsNerdlet extends React.PureComponent {
                     OR (tag LIKE 'Manual%' AND branch = 'main')) AND group = 'Commit Stable'`;
     return (
       <PlatformStateContext.Consumer>
-        {(platformState) => [
-          <Navigation active="environment-v1" />,
-          <EnvironmentsTable
-            accountId={platformState.accountId}
-            where={where}
-          />,
-        ]}
+        {(platformState) => {
+          DAO.ACCOUNT_ID = platformState.accountId;
+          return [
+            <Navigation active="view-environment-overview" />,
+            <EnvironmentsOverviewTable
+              accountId={platformState.accountId}
+              where={where}
+            />,
+          ];
+        }}
       </PlatformStateContext.Consumer>
     );
   }
