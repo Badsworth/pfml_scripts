@@ -452,11 +452,11 @@ def generate_scenario_dataset(
                         str(fake.unique.random_int()),
                         str(fake.unique.random_int()),
                     ]
-
+                # TODO need to refactor
                 if scenario_descriptor.is_employer_reimbursement_records_exists:
                     scenario_data.employer_reimbursement_payment_i_values = [
                         str(fake.unique.random_int()),
-                        str(fake.unique.random_int()),
+                        # str(fake.unique.random_int()),
                     ]
 
                 scenario_dataset.append(scenario_data)
