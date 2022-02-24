@@ -136,13 +136,6 @@ def get_employer_benefits_issues(
 def get_change_request_issues(change_request: ChangeRequest) -> List[ValidationErrorDetail]:
     error_list: List[ValidationErrorDetail] = []
 
-    if not change_request.claim_id:
-        error_list.append(
-            ValidationErrorDetail(
-                message="Need a valid claim id", type=IssueType.required, field="claim_id",
-            )
-        )
-
     # for any change request type other than withdrawal we need start/end dates
     if change_request.change_request_type != ChangeRequestType.WITHDRAWAL:
         if not change_request.start_date:

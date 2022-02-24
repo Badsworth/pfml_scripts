@@ -5825,11 +5825,22 @@ class TestPostChangeRequest:
             "end_date": "2022-02-01",
         }
 
+    @freeze_time("2022-02-22")
+    @mock.patch("massgov.pfml.api.services.claims.add_change_request_to_db")
     @mock.patch("massgov.pfml.api.claims.claim_rules.get_change_request_issues", return_value=[])
     @mock.patch("massgov.pfml.api.claims.get_claim_from_db")
     def test_successful_call(
-        self, mock_get_claim, mock_change_request_issues, auth_token, claim, client, request_body,
+        self,
+        mock_get_claim,
+        mock_change_request_issues,
+        mock_add_change,
+        auth_token,
+        claim,
+        client,
+        request_body,
     ):
+        submitted_time = datetime_util.utcnow()
+        mock_add_change.return_value = submitted_time
         mock_get_claim.return_value = claim
         response = client.post(
             "/v1/change-request?fineos_absence_id={}".format(claim.fineos_absence_id),
@@ -5838,10 +5849,12 @@ class TestPostChangeRequest:
         )
         response_body = response.get_json().get("data")
         assert response.status_code == 201
-        assert response_body.get("claim_id") == str(claim.claim_id)
         assert response_body.get("change_request_type") == request_body["change_request_type"]
+        assert response_body.get("fineos_absence_id") == claim.fineos_absence_id
         assert response_body.get("start_date") == request_body["start_date"]
         assert response_body.get("end_date") == request_body["end_date"]
+        assert response_body.get("end_date") == request_body["end_date"]
+        assert response_body.get("submitted_time") == str(submitted_time.isoformat())
 
     @mock.patch("massgov.pfml.api.claims.claim_rules.get_change_request_issues", return_value=[])
     @mock.patch("massgov.pfml.api.claims.get_claim_from_db", return_value=None)

@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 from enum import Enum
 from typing import List, Optional
@@ -11,6 +11,8 @@ from massgov.pfml.api.models.common import (
     LookupEnum,
     PreviousLeave,
 )
+from massgov.pfml.db.models.employees import ChangeRequest as change_request_db_model
+from massgov.pfml.db.models.employees import LkChangeRequestType
 from massgov.pfml.util.pydantic import PydanticBaseModel
 
 
@@ -76,7 +78,17 @@ class ChangeRequestType(str, LookupEnum):
 class ChangeRequest(PydanticBaseModel):
     """ Defines the ChangeRequest format """
 
-    claim_id: Optional[UUID4]
     change_request_type: ChangeRequestType
     start_date: Optional[date]
     end_date: Optional[date]
+
+    def to_db_model(
+        self, change_type: LkChangeRequestType, claim_id: UUID4, submitted_time: datetime
+    ) -> change_request_db_model:
+        return change_request_db_model(
+            claim_id=claim_id,
+            change_request_type_instance=change_type,
+            start_date=self.start_date,
+            end_date=self.end_date,
+            submitted_time=submitted_time,
+        )

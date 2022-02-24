@@ -523,7 +523,7 @@ paths:
                   - $ref: '#/components/schemas/SuccessfulResponse'
                   - properties:
                       data:
-                        $ref: "#/components/schemas/ChangeRequest"
+                        $ref: "#/components/schemas/ChangeRequestResponse"
         "404":
           $ref: "#/components/responses/NotFound"
         "400":
@@ -4241,3 +4241,25 @@ components:
         end_date:
           $ref: "#/components/schemas/Date"
           nullable: true
+
+    ChangeRequestResponse:
+      type: object
+      properties:
+        fineos_absence_id:
+          type: string
+        change_request_type:
+          type: string
+          enum:
+            - Modification
+            - Withdrawal
+            - Medical To Bonding Transition
+        start_date: 
+          $ref: "#/components/schemas/Date"
+          nullable: true
+        end_date:
+          $ref: "#/components/schemas/Date"
+          nullable: true
+        submitted_time:
+          type: string
+          format: date-time
+          example: "2020-06-26T01:02:03.967736+00:00"

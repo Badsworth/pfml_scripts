@@ -19,6 +19,7 @@ from massgov.pfml.api.models.applications.common import OrganizationUnit
 from massgov.pfml.api.models.claims.common import ChangeRequest, EmployerClaimReview
 from massgov.pfml.api.models.claims.requests import ClaimRequest
 from massgov.pfml.api.models.claims.responses import (
+    ChangeRequestResponse,
     ClaimForPfmlCrmResponse,
     ClaimResponse,
     ManagedRequirementResponse,
@@ -31,7 +32,11 @@ from massgov.pfml.api.services.administrator_fineos_actions import (
     get_claim_as_leave_admin,
     get_documents_as_leave_admin,
 )
-from massgov.pfml.api.services.claims import ClaimWithdrawnError, get_claim_detail
+from massgov.pfml.api.services.claims import (
+    ClaimWithdrawnError,
+    add_change_request_to_db,
+    get_claim_detail,
+)
 from massgov.pfml.api.services.managed_requirements import update_employer_confirmation_requirements
 from massgov.pfml.api.util.claims import user_has_access_to_claim
 from massgov.pfml.api.util.paginate.paginator import PaginationAPIContext
@@ -64,6 +69,7 @@ from massgov.pfml.fineos.transforms.to_fineos.eforms.employer import (
     EmployerClaimReviewEFormBuilder,
     EmployerClaimReviewV1EFormBuilder,
 )
+from massgov.pfml.util.datetime import utcnow
 from massgov.pfml.util.logging.claims import (
     get_claim_log_attributes,
     get_claim_review_log_attributes,
@@ -763,6 +769,11 @@ def post_change_request(fineos_absence_id: str) -> flask.Response:
     body = connexion.request.json
     change_request: ChangeRequest = ChangeRequest.parse_obj(body)
 
+    if issues := claim_rules.get_change_request_issues(change_request):
+        return response_util.error_response(
+            status_code=BadRequest, message="Invalid change request body", errors=issues, data={},
+        ).to_api_response()
+
     claim = get_claim_from_db(fineos_absence_id)
     if claim is None:
         logger.warning(
@@ -777,17 +788,18 @@ def post_change_request(fineos_absence_id: str) -> flask.Response:
         )
         return error.to_api_response()
 
-    # Add the claim id to the change request (needed to add to our db)
-    change_request.claim_id = claim.claim_id
-
-    if issues := claim_rules.get_change_request_issues(change_request):
-        return response_util.error_response(
-            status_code=BadRequest, message="Invalid change request body", errors=issues, data={},
-        ).to_api_response()
-
     # Post change request to FINEOS - https://lwd.atlassian.net/browse/PORTAL-1710
-    # On a success, add it to our DB as well
+    submitted_time = utcnow()
+    add_change_request_to_db(change_request, claim.claim_id, submitted_time)
+
+    response_data = ChangeRequestResponse(
+        fineos_absence_id=fineos_absence_id,
+        change_request_type=change_request.change_request_type,
+        start_date=change_request.start_date,
+        end_date=change_request.end_date,
+        submitted_time=submitted_time,
+    )
 
     return response_util.success_response(
-        message="Successfully posted change request", data=change_request.dict(), status_code=201,
+        message="Successfully posted change request", data=response_data.dict(), status_code=201,
     ).to_api_response()

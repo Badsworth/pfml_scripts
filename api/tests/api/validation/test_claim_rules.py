@@ -166,13 +166,6 @@ class TestGetChangeRequestIssues:
         issues = get_change_request_issues(change_request)
         assert not issues
 
-    def test_no_claim_id(self, change_request):
-        change_request.claim_id = None
-        resp = get_change_request_issues(change_request)
-        assert resp[0].type == IssueType.required
-        assert resp[0].field == "claim_id"
-        assert "Need a valid claim id" in resp[0].message
-
     def test_no_start_date(self, change_request):
         change_request.start_date = None
         resp = get_change_request_issues(change_request)
