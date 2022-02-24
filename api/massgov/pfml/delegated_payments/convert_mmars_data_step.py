@@ -129,6 +129,13 @@ class ConvertMmarsDataStep(Step):
                 outcome=state_log_util.build_outcome("Successfully backfilled MMARS payment"),
                 db_session=self.db_session,
             )
+
+            logger.info(
+                "Successfully backfilled MMARS payment",
+                extra=payments_util.get_traceable_payment_details(
+                    payment, State.LEGACY_MMARS_PAYMENT_PAID
+                ),
+            )
         else:
             # don't create the payment, but log the validation issues.
             if not self.validation_containers_with_issues:

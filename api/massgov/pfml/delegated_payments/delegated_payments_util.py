@@ -663,7 +663,7 @@ def validate_db_input(
         value = None  # Effectively treating "" and "Unknown" the same
 
     if required and not value:
-        errors.add_validation_issue(ValidationReason.MISSING_FIELD, key)
+        errors.add_validation_issue(ValidationReason.MISSING_FIELD, key, field_name=key)
         return None
 
     validation_issues = []
@@ -1243,7 +1243,10 @@ def get_traceable_payment_details(
 
 
 def get_traceable_pub_eft_details(
-    pub_eft: PubEft, employee: Optional[Employee] = None, payment: Optional[Payment] = None
+    pub_eft: PubEft,
+    employee: Optional[Employee] = None,
+    payment: Optional[Payment] = None,
+    state: Optional[LkState] = None,
 ) -> Dict[str, Any]:
     # For logging purposes, this returns useful, traceable details
     # about an EFT record and related fields
@@ -1263,6 +1266,8 @@ def get_traceable_pub_eft_details(
     if employee:
         details["employee_id"] = employee.employee_id
         details["fineos_customer_number"] = employee.fineos_customer_number
+
+    details["current_state"] = state.state_description if state else None
 
     return details
 

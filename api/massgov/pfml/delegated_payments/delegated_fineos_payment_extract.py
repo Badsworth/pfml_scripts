@@ -996,7 +996,9 @@ class PaymentExtractStep(Step):
             self.db_session.add(new_eft)
             self.db_session.add(employee_pub_eft_pair)
 
-            extra |= payments_util.get_traceable_pub_eft_details(new_eft, employee)
+            extra |= payments_util.get_traceable_pub_eft_details(
+                new_eft, employee, state=State.DELEGATED_EFT_SEND_PRENOTE
+            )
             logger.info(
                 "Starting DELEGATED_EFT prenote flow for employee associated with payment",
                 extra=extra,

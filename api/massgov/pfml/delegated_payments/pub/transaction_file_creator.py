@@ -122,7 +122,9 @@ class TransactionFileCreatorStep(Step):
             logger.info(
                 "Sending prenote to PUB at %s eastern time",
                 eft.prenote_sent_at,
-                extra=payments_util.get_traceable_pub_eft_details(eft, employee),
+                extra=payments_util.get_traceable_pub_eft_details(
+                    eft, employee, state=State.DELEGATED_EFT_PRENOTE_SENT
+                ),
             )
 
             state_log_util.create_finished_state_log(
