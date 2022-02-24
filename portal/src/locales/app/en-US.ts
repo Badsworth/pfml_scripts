@@ -3100,7 +3100,9 @@ const components: {
     addButton: "$t(shared.claimsPreviousLeaveDetails.addButton)",
     dateRangeLabel: "Date range",
     explanation:
-      "Your employee has listed leave they have taken for qualified reasons. Only leave since {{otherLeaveStartDate}} is included. This includes both paid leave (for example: paid vacation or sick days) and unpaid leave (for example: FMLA leave). When possible, verify that this previous leave was for reasons that qualify for paid leave under PFML.",
+      "<p>Verify the accuracy of your employee’s qualified leave dates. Any qualifying reason should only be reported if it was taken after {{other_reason_date}}.</p><p>This includes both paid leave (for example: paid vacation or sick days) and unpaid leave (for example: FMLA leave).</p>",
+    explanation_differentDates:
+      "<p>Verify the accuracy of your employee’s qualified leave dates. Leave to care for a family member should only be reported if it was taken after {{same_reason_date}}. Any other qualifying reason should only be reported if it was taken after {{other_reason_date}}. </p><p>This includes both paid leave (for example: paid vacation or sick days) and unpaid leave (for example: FMLA leave).</p>",
     header: "Previous leave",
     leaveTypeLabel: "Leave type",
     qualifyingReasonContent:
