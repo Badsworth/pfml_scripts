@@ -644,6 +644,7 @@ class PaymentExtractStep(Step):
             .join(LkState, StateLog.end_state_id == LkState.state_id)
             .filter(
                 Payment.payment_id.in_(payment_ids),
+                Payment.exclude_from_payment_status != True,  # noqa: E712
                 StateLog.end_state_id.notin_(payments_util.Constants.RESTARTABLE_PAYMENT_STATE_IDS),
                 LkState.flow_id == Flow.DELEGATED_PAYMENT.flow_id,
             )

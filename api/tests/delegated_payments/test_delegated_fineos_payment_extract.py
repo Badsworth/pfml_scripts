@@ -2491,11 +2491,24 @@ def test_get_active_payment_state(payment_extract_step, test_db_session):
             test_db_session, payment_end_state_message=EXPECTED_OUTCOME["message"]
         ).get_or_create_payment_with_state(restartable_state)
 
+        # Due to odd timing issues, a payment could have restartable
+        # states, but also failed for already-active validation reasons
+        # on a prior day. This should be considered fine as we don't
+        # want a payment with only the already active issue blocking itself.
+        DelegatedPaymentFactory(
+            test_db_session,
+            payment_end_state_message=EXPECTED_OUTCOME["message"],
+            fineos_pei_c_value=payment.fineos_pei_c_value,
+            fineos_pei_i_value=payment.fineos_pei_i_value,
+            exclude_from_payment_status=True,
+        ).get_or_create_payment_with_state(non_restartable_states[0])
+
         # Create a payment with the same C/I value
         new_payment = PaymentFactory.build(
             fineos_pei_c_value=payment.fineos_pei_c_value,
             fineos_pei_i_value=payment.fineos_pei_i_value,
         )
+
         # We should not find anything
         found_state = payment_extract_step.get_active_payment_state(new_payment)
         assert found_state is None
