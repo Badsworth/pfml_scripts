@@ -83,6 +83,11 @@ export const IndexSMS = (props: IndexSMSProps) => {
             label: t("pages.authTwoFactorSmsIndex.optOut"),
             value: "false",
           },
+          {
+            checked: get(formState, "enterMFASetupFlow") === false,
+            label: t("pages.authTwoFactorSmsIndex.optOutNotPossible"),
+            value: "false",
+          },
         ]}
         type="radio"
       />
