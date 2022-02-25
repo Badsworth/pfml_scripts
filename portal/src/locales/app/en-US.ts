@@ -704,7 +704,8 @@ const errors = {
   users: {
     email_address: {
       exists: "$t(shared.auth.emailError_exists)",
-      format: "Enter a valid email address",
+      format:
+        "Enter an email address in the correct format, like name@example.com",
       required: "$t(shared.auth.emailError_required)",
     },
     mfa_phone_number: {
