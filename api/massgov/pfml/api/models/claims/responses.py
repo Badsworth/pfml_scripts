@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 from typing import List, Optional
 
@@ -6,6 +6,7 @@ from pydantic import UUID4
 
 from massgov.pfml.api.models.claims.common import (
     Address,
+    ChangeRequestType,
     EmployerBenefit,
     LeaveDetails,
     PreviousLeave,
@@ -21,13 +22,6 @@ from massgov.pfml.util.pydantic.types import (
     MaskedDateStr,
     MaskedTaxIdFormattedStr,
 )
-
-
-class EmployeeResponse(PydanticBaseModel):
-    first_name: Optional[str]
-    middle_name: Optional[str]
-    last_name: Optional[str]
-    other_name: Optional[str]
 
 
 class ManagedRequirementResponse(PydanticBaseModel):
@@ -204,3 +198,11 @@ class DocumentResponse(PydanticBaseModel):
     fineos_document_id: str
     name: Optional[str]
     description: Optional[str]
+
+
+class ChangeRequestResponse(PydanticBaseModel):
+    fineos_absence_id: str
+    change_request_type: ChangeRequestType
+    start_date: Optional[date]
+    end_date: Optional[date]
+    submitted_time: datetime

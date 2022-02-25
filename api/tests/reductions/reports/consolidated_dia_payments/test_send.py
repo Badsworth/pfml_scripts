@@ -1,5 +1,6 @@
+import unittest.mock as mock
+
 import boto3
-import mock
 import pytest
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 

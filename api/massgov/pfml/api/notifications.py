@@ -266,6 +266,7 @@ def _err400_multiple_employer_feins_found(notification_request, log_attributes):
 def handle_managed_requirements(
     notification: NotificationRequest, claim_id: UUID, db_session: Session, log_attributes: dict
 ) -> None:
+    fineos_requirements = []
     if notification.recipient_type == FineosRecipientType.LEAVE_ADMINISTRATOR:
         fineos_requirements = get_fineos_managed_requirements_from_notification(
             notification, log_attributes

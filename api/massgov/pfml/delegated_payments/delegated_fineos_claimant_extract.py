@@ -1160,7 +1160,9 @@ class ClaimantExtractStep(Step):
                 self.increment(self.Metrics.NEW_EFT_COUNT)
                 # This EFT info is new, it needs to be linked to the employee
                 # and added to the EFT prenoting flow
-                extra |= payments_util.get_traceable_pub_eft_details(new_eft, employee_pfml_entry)
+                extra |= payments_util.get_traceable_pub_eft_details(
+                    new_eft, employee_pfml_entry, state=State.DELEGATED_EFT_SEND_PRENOTE
+                )
                 logger.info(
                     "Initiating DELEGATED_EFT prenote flow for employee", extra=extra,
                 )

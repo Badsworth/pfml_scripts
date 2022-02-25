@@ -1968,17 +1968,27 @@ def test_validation_missing_fields(initialize_factories_session):
     assert validation_container.record_key == str(ci_index)
     expected_missing_values = set(
         [
-            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEESOCNUMBE"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTDATE"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "AMOUNT_MONAMT"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "EVENTTYPE"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEEIDENTIFI"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCEREASON_COVERAGE"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCE_CASECREATIONDATE"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTSTARTP"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTENDPER"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "BALANCINGAMOU_MONAMT"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "BUSINESSNETBE_MONAMT"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEESOCNUMBE", "PAYEESOCNUMBE"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTDATE", "PAYMENTDATE"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "AMOUNT_MONAMT", "AMOUNT_MONAMT"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "EVENTTYPE", "EVENTTYPE"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEEIDENTIFI", "PAYEEIDENTIFI"),
+            ValidationIssue(
+                ValidationReason.MISSING_FIELD, "ABSENCEREASON_COVERAGE", "ABSENCEREASON_COVERAGE"
+            ),
+            ValidationIssue(
+                ValidationReason.MISSING_FIELD,
+                "ABSENCE_CASECREATIONDATE",
+                "ABSENCE_CASECREATIONDATE",
+            ),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTSTARTP", "PAYMENTSTARTP"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTENDPER", "PAYMENTENDPER"),
+            ValidationIssue(
+                ValidationReason.MISSING_FIELD, "BALANCINGAMOU_MONAMT", "BALANCINGAMOU_MONAMT"
+            ),
+            ValidationIssue(
+                ValidationReason.MISSING_FIELD, "BUSINESSNETBE_MONAMT", "BUSINESSNETBE_MONAMT"
+            ),
             ValidationIssue(
                 ValidationReason.UNEXPECTED_PAYMENT_TRANSACTION_TYPE,
                 "Unknown payment scenario encountered. Payment Amount: None, Event Type: None, Event Reason: ",
@@ -1999,18 +2009,30 @@ def test_validation_missing_fields(initialize_factories_session):
     assert validation_container.record_key == str(ci_index)
     expected_missing_values = set(
         [
-            ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCECASENU"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "LEAVEREQUEST_DECISION"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEESOCNUMBE"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTSTARTP"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTENDPER"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTDATE"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTMETHOD"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEEIDENTIFI"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCEREASON_COVERAGE"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCE_CASECREATIONDATE"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "BALANCINGAMOU_MONAMT"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "BUSINESSNETBE_MONAMT"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCECASENU", "ABSENCECASENU"),
+            ValidationIssue(
+                ValidationReason.MISSING_FIELD, "LEAVEREQUEST_DECISION", "LEAVEREQUEST_DECISION"
+            ),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEESOCNUMBE", "PAYEESOCNUMBE"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTSTARTP", "PAYMENTSTARTP"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTENDPER", "PAYMENTENDPER"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTDATE", "PAYMENTDATE"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTMETHOD", "PAYMENTMETHOD"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEEIDENTIFI", "PAYEEIDENTIFI"),
+            ValidationIssue(
+                ValidationReason.MISSING_FIELD, "ABSENCEREASON_COVERAGE", "ABSENCEREASON_COVERAGE"
+            ),
+            ValidationIssue(
+                ValidationReason.MISSING_FIELD,
+                "ABSENCE_CASECREATIONDATE",
+                "ABSENCE_CASECREATIONDATE",
+            ),
+            ValidationIssue(
+                ValidationReason.MISSING_FIELD, "BALANCINGAMOU_MONAMT", "BALANCINGAMOU_MONAMT"
+            ),
+            ValidationIssue(
+                ValidationReason.MISSING_FIELD, "BUSINESSNETBE_MONAMT", "BUSINESSNETBE_MONAMT"
+            ),
         ]
     )
     assert expected_missing_values == set(validation_container.validation_issues)
@@ -2023,21 +2045,33 @@ def test_validation_missing_fields(initialize_factories_session):
     assert validation_container.record_key == str(ci_index)
     expected_missing_values = set(
         [
-            ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCECASENU"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "LEAVEREQUEST_DECISION"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEESOCNUMBE"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTSTARTP"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTENDPER"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTDATE"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEEIDENTIFI"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTADD1"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTADD4"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTADD6"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTPOSTCO"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCEREASON_COVERAGE"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCE_CASECREATIONDATE"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "BALANCINGAMOU_MONAMT"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "BUSINESSNETBE_MONAMT"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCECASENU", "ABSENCECASENU"),
+            ValidationIssue(
+                ValidationReason.MISSING_FIELD, "LEAVEREQUEST_DECISION", "LEAVEREQUEST_DECISION"
+            ),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEESOCNUMBE", "PAYEESOCNUMBE"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTSTARTP", "PAYMENTSTARTP"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTENDPER", "PAYMENTENDPER"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTDATE", "PAYMENTDATE"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEEIDENTIFI", "PAYEEIDENTIFI"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTADD1", "PAYMENTADD1"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTADD4", "PAYMENTADD4"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTADD6", "PAYMENTADD6"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTPOSTCO", "PAYMENTPOSTCO"),
+            ValidationIssue(
+                ValidationReason.MISSING_FIELD, "ABSENCEREASON_COVERAGE", "ABSENCEREASON_COVERAGE"
+            ),
+            ValidationIssue(
+                ValidationReason.MISSING_FIELD,
+                "ABSENCE_CASECREATIONDATE",
+                "ABSENCE_CASECREATIONDATE",
+            ),
+            ValidationIssue(
+                ValidationReason.MISSING_FIELD, "BALANCINGAMOU_MONAMT", "BALANCINGAMOU_MONAMT"
+            ),
+            ValidationIssue(
+                ValidationReason.MISSING_FIELD, "BUSINESSNETBE_MONAMT", "BUSINESSNETBE_MONAMT"
+            ),
         ]
     )
     assert expected_missing_values == set(validation_container.validation_issues)
@@ -2050,20 +2084,32 @@ def test_validation_missing_fields(initialize_factories_session):
     assert validation_container.record_key == str(ci_index)
     expected_missing_values = set(
         [
-            ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCECASENU"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "LEAVEREQUEST_DECISION"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEESOCNUMBE"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTSTARTP"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTENDPER"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTDATE"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEEIDENTIFI"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEEBANKSORT"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEEACCOUNTN"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEEACCOUNTT"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCEREASON_COVERAGE"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCE_CASECREATIONDATE"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "BALANCINGAMOU_MONAMT"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "BUSINESSNETBE_MONAMT"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCECASENU", "ABSENCECASENU"),
+            ValidationIssue(
+                ValidationReason.MISSING_FIELD, "LEAVEREQUEST_DECISION", "LEAVEREQUEST_DECISION"
+            ),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEESOCNUMBE", "PAYEESOCNUMBE"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTSTARTP", "PAYMENTSTARTP"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTENDPER", "PAYMENTENDPER"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTDATE", "PAYMENTDATE"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEEIDENTIFI", "PAYEEIDENTIFI"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEEBANKSORT", "PAYEEBANKSORT"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEEACCOUNTN", "PAYEEACCOUNTN"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEEACCOUNTT", "PAYEEACCOUNTT"),
+            ValidationIssue(
+                ValidationReason.MISSING_FIELD, "ABSENCEREASON_COVERAGE", "ABSENCEREASON_COVERAGE"
+            ),
+            ValidationIssue(
+                ValidationReason.MISSING_FIELD,
+                "ABSENCE_CASECREATIONDATE",
+                "ABSENCE_CASECREATIONDATE",
+            ),
+            ValidationIssue(
+                ValidationReason.MISSING_FIELD, "BALANCINGAMOU_MONAMT", "BALANCINGAMOU_MONAMT"
+            ),
+            ValidationIssue(
+                ValidationReason.MISSING_FIELD, "BUSINESSNETBE_MONAMT", "BUSINESSNETBE_MONAMT"
+            ),
         ]
     )
 
@@ -2491,11 +2537,24 @@ def test_get_active_payment_state(payment_extract_step, test_db_session):
             test_db_session, payment_end_state_message=EXPECTED_OUTCOME["message"]
         ).get_or_create_payment_with_state(restartable_state)
 
+        # Due to odd timing issues, a payment could have restartable
+        # states, but also failed for already-active validation reasons
+        # on a prior day. This should be considered fine as we don't
+        # want a payment with only the already active issue blocking itself.
+        DelegatedPaymentFactory(
+            test_db_session,
+            payment_end_state_message=EXPECTED_OUTCOME["message"],
+            fineos_pei_c_value=payment.fineos_pei_c_value,
+            fineos_pei_i_value=payment.fineos_pei_i_value,
+            exclude_from_payment_status=True,
+        ).get_or_create_payment_with_state(non_restartable_states[0])
+
         # Create a payment with the same C/I value
         new_payment = PaymentFactory.build(
             fineos_pei_c_value=payment.fineos_pei_c_value,
             fineos_pei_i_value=payment.fineos_pei_i_value,
         )
+
         # We should not find anything
         found_state = payment_extract_step.get_active_payment_state(new_payment)
         assert found_state is None

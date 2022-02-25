@@ -3,9 +3,11 @@ resource "newrelic_nrql_alert_condition" "sns_spending_limit" {
 
   name               = "sns-spending-limit"
   policy_id          = newrelic_alert_policy.sns_alerts.id
-  type               = "static"
-  value_function     = "single_value"
+  type               = local.condition_type
+  value_function     = local.value_function
   enabled            = true
+  aggregation_delay  = local.aggregation_delay
+  aggregation_method = local.aggregation_method
   aggregation_window = local.default_aggregation_window # (evaluation_periods * period) in aws_cloudwatch_metric_alarm
 
   nrql {
@@ -18,10 +20,10 @@ resource "newrelic_nrql_alert_condition" "sns_spending_limit" {
   violation_time_limit_seconds = local.violation_time_limit_seconds
 
   critical {
-    threshold_duration    = local.default_aggregation_window # period in aws_cloudwatch_metric_alarm
-    threshold             = 1                                # threshold in aws_cloudwatch_metric_alarm
-    operator              = "above"                          # comparison_operator in aws_cloudwatch_metric_alarm
-    threshold_occurrences = "all"
+    threshold_duration    = local.default_aggregation_window   # period in aws_cloudwatch_metric_alarm
+    threshold             = 1                                  # threshold in aws_cloudwatch_metric_alarm
+    operator              = local.newrelic_comparison_operator # comparison_operator in aws_cloudwatch_metric_alarm
+    threshold_occurrences = local.threshold_occurrences
   }
 }
 
@@ -31,9 +33,11 @@ resource "newrelic_nrql_alert_condition" "sns_sms_failure_rate" {
 
   name               = "sns-sms-failure-rate"
   policy_id          = newrelic_alert_policy.sns_alerts.id
-  type               = "static"
-  value_function     = "single_value"
+  type               = local.condition_type
+  value_function     = local.value_function
   enabled            = true
+  aggregation_delay  = local.aggregation_delay
+  aggregation_method = local.aggregation_method
   aggregation_window = local.default_aggregation_window #
 
   nrql {
@@ -46,15 +50,15 @@ resource "newrelic_nrql_alert_condition" "sns_sms_failure_rate" {
   warning {
     threshold_duration    = local.two_hours
     threshold             = 1 - var.sns_sms_failure_rate["warning"]
-    operator              = "above"
+    operator              = local.newrelic_comparison_operator
     threshold_occurrences = "at_least_once"
   }
 
   critical {
     threshold_duration    = local.two_hours
     threshold             = 1 - var.sns_sms_failure_rate["critical"] # current average rate is 0.5
-    operator              = "above"
-    threshold_occurrences = "all"
+    operator              = local.newrelic_comparison_operator
+    threshold_occurrences = local.threshold_occurrences
   }
 }
 
@@ -64,9 +68,11 @@ resource "newrelic_nrql_alert_condition" "sns_sms_phone_carrier_unavailable" {
 
   name               = "sns-spending-limit"
   policy_id          = newrelic_alert_policy.sns_alerts.id
-  type               = "static"
-  value_function     = "single_value"
+  type               = local.condition_type
+  value_function     = local.value_function
   enabled            = true
+  aggregation_delay  = local.aggregation_delay
+  aggregation_method = local.aggregation_method
   aggregation_window = local.default_aggregation_window # (evaluation_periods * period) in aws_cloudwatch_metric_alarm
 
   nrql {
@@ -81,15 +87,15 @@ resource "newrelic_nrql_alert_condition" "sns_sms_phone_carrier_unavailable" {
   warning {
     threshold_duration    = var.carrier_unavailable_period["warning"]
     threshold             = local.phone_carrier_unavailable_threshold # threshold in aws_cloudwatch_metric_alarm
-    operator              = "above"                                   # comparison_operator in aws_cloudwatch_metric_alarm
+    operator              = local.newrelic_comparison_operator        # comparison_operator in aws_cloudwatch_metric_alarm
     threshold_occurrences = "at_least_once"
   }
 
   critical {
     threshold_duration    = var.carrier_unavailable_period["critical"]
     threshold             = local.phone_carrier_unavailable_threshold # threshold in aws_cloudwatch_metric_alarm
-    operator              = "above"                                   # comparison_operator in aws_cloudwatch_metric_alarm
-    threshold_occurrences = "all"
+    operator              = local.newrelic_comparison_operator        # comparison_operator in aws_cloudwatch_metric_alarm
+    threshold_occurrences = local.threshold_occurrences
   }
 }
 
@@ -98,9 +104,11 @@ resource "newrelic_nrql_alert_condition" "sns_sms_blocked_as_spam" {
 
   name               = "sns_sms_blocked_as_spam"
   policy_id          = newrelic_alert_policy.sns_alerts.id
-  type               = "static"
-  value_function     = "single_value"
+  type               = local.condition_type
+  value_function     = local.value_function
   enabled            = true
+  aggregation_delay  = local.aggregation_delay
+  aggregation_method = local.aggregation_method
   aggregation_window = local.default_aggregation_window # (evaluation_periods * period) in aws_cloudwatch_metric_alarm
 
   nrql {
@@ -113,10 +121,10 @@ resource "newrelic_nrql_alert_condition" "sns_sms_blocked_as_spam" {
   violation_time_limit_seconds = local.violation_time_limit_seconds
 
   critical {
-    threshold_duration    = local.two_hours                 # period in aws_cloudwatch_metric_alarm
-    threshold             = local.blocked_as_spam_threshold # threshold in aws_cloudwatch_metric_alarm
-    operator              = "above"                         # comparison_operator in aws_cloudwatch_metric_alarm
-    threshold_occurrences = "all"
+    threshold_duration    = local.two_hours                    # period in aws_cloudwatch_metric_alarm
+    threshold             = local.blocked_as_spam_threshold    # threshold in aws_cloudwatch_metric_alarm
+    operator              = local.newrelic_comparison_operator # comparison_operator in aws_cloudwatch_metric_alarm
+    threshold_occurrences = local.threshold_occurrences
   }
 }
 
@@ -125,9 +133,11 @@ resource "newrelic_nrql_alert_condition" "sns_sms_rate_exceeded" {
 
   name               = "sns-spending-limit"
   policy_id          = newrelic_alert_policy.sns_alerts.id
-  type               = "static"
-  value_function     = "single_value"
+  type               = local.condition_type
+  value_function     = local.value_function
   enabled            = true
+  aggregation_delay  = local.aggregation_delay
+  aggregation_method = local.aggregation_method
   aggregation_window = local.default_aggregation_window # (evaluation_periods * period) in aws_cloudwatch_metric_alarm
 
   nrql {
@@ -139,22 +149,23 @@ resource "newrelic_nrql_alert_condition" "sns_sms_rate_exceeded" {
   violation_time_limit_seconds = local.violation_time_limit_seconds
 
   critical {
-    threshold_duration    = local.default_aggregation_window # evaluation_periods in aws_cloudwatch_metric_alarm
-    threshold             = 1                                # threshold in aws_cloudwatch_metric_alarm
-    operator              = "above"                          # comparison_operator in aws_cloudwatch_metric_alarm
-    threshold_occurrences = "all"
+    threshold_duration    = local.default_aggregation_window   # evaluation_periods in aws_cloudwatch_metric_alarm
+    threshold             = 1                                  # threshold in aws_cloudwatch_metric_alarm
+    operator              = local.newrelic_comparison_operator # comparison_operator in aws_cloudwatch_metric_alarm
+    threshold_occurrences = local.threshold_occurrences
   }
 }
 
 resource "newrelic_nrql_alert_condition" "sns_mfa_delivery_time_exceeded" {
-  # MFA delivery time exceeded 1 second over 5 minutes
-  # At least 1 MFA User took longer than 5 seconds to respond to MFA
+  # MFA delivery time (dwellTimeMs) exceeded 1 second over 5 minutes
 
   name               = "sns-mfa-delivery-time-exceeded"
-  policy_id          = newrelic_alert_policy.sns_alerts.id
-  type               = "static"
-  value_function     = "single_value"
+  policy_id          = newrelic_alert_policy.low_priority_sns_alerts.id
+  type               = local.condition_type
+  value_function     = local.value_function
   enabled            = true
+  aggregation_delay  = local.aggregation_delay
+  aggregation_method = local.aggregation_method
   aggregation_window = local.default_aggregation_window # (evaluation_periods * period) in aws_cloudwatch_metric_alarm
 
   nrql {
@@ -166,9 +177,9 @@ resource "newrelic_nrql_alert_condition" "sns_mfa_delivery_time_exceeded" {
   violation_time_limit_seconds = local.violation_time_limit_seconds
 
   critical {
-    threshold_duration    = local.default_aggregation_window # evaluation_periods in aws_cloudwatch_metric_alarm
-    threshold             = 1                                # threshold in aws_cloudwatch_metric_alarm
-    operator              = "above"                          # comparison_operator in aws_cloudwatch_metric_alarm
-    threshold_occurrences = "all"
+    threshold_duration    = local.default_aggregation_window   # evaluation_periods in aws_cloudwatch_metric_alarm
+    threshold             = 1                                  # threshold in aws_cloudwatch_metric_alarm
+    operator              = local.newrelic_comparison_operator # comparison_operator in aws_cloudwatch_metric_alarm
+    threshold_occurrences = local.threshold_occurrences
   }
 }

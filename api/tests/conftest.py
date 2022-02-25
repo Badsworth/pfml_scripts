@@ -1040,3 +1040,6 @@ def sqlalchemy_query_counter():
             self.count += 1
 
     return SQLAlchemyQueryCounter
+
+
+pytest.register_assert_rewrite("tests.helpers")

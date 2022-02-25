@@ -1893,3 +1893,32 @@ def is_test_file() -> str:
 
 def is_correction_batch() -> bool:
     return os.environ.get("IRS_1099_CORRECTION_IND", "0") == "1"
+
+
+def get_1099_records_to_file(db_session: db.Session) -> List[Pfml1099]:
+
+    irs_1099_subquery = (
+        db_session.query(
+            Pfml1099,
+            Pfml1099Batch.batch_run_date,
+            func.rank()
+            .over(
+                order_by=[
+                    # Pfml1099.employee_id.desc(),
+                    Pfml1099Batch.batch_run_date.desc(),
+                    Pfml1099.created_at.desc(),
+                ],
+                partition_by=Pfml1099.employee_id,
+            )
+            .label("R"),
+        )
+        .join(Pfml1099Batch, Pfml1099Batch.pfml_1099_batch_id == Pfml1099.pfml_1099_batch_id)
+        .filter(Pfml1099Batch.tax_year == get_tax_year())
+        .subquery()
+    )
+    irs_1099_records = list(db_session.query(irs_1099_subquery).filter(irs_1099_subquery.c.R == 1))
+    logger.info(
+        "Filtered records with latest batch run date for each employee is : %s",
+        len(irs_1099_records),
+    )
+    return irs_1099_records

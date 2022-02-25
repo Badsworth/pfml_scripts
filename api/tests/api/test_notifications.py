@@ -844,3 +844,23 @@ class TestNotificationManagedRequirement:
             )
 
             self._assert_managed_requirement_data(claim, managed_requirement, man_req["fineos_obj"])
+
+    @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_managed_requirements")
+    def test_alternate_recipient_type_no_rollback_or_exception(
+        self, mock_api, client, fineos_user_token, claim, caplog
+    ):
+        json = claimant_body
+        json["recipient_type"] = "Claimant"
+        client.post(
+            "/v1/notifications",
+            headers={"Authorization": f"Bearer {fineos_user_token}"},
+            json=json,
+        )
+        assert (
+            "Failed to handle the claim's managed requirements in notification call."
+            not in caplog.text
+        )
+        assert (
+            "UnboundLocalError: local variable 'fineos_requirements' referenced before assignment"
+            not in caplog.text
+        )

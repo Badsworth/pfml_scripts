@@ -19,6 +19,7 @@ from massgov.pfml.db.models.employees import (
     State,
     StateLog,
 )
+from massgov.pfml.db.models.state import LkState
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
@@ -89,11 +90,11 @@ class PaymentContainer:
         return self._get_sort_key() < other._get_sort_key()
 
     def get_traceable_details(
-        self, add_validation_issues: bool = False
+        self, add_validation_issues: bool = False, state: Optional[LkState] = None,
     ) -> Dict[str, Optional[Any]]:
         # For logging purposes, this returns useful, traceable details
 
-        details = payments_util.get_traceable_payment_details(self.payment)
+        details = payments_util.get_traceable_payment_details(self.payment, state)
 
         # This is just the reason codes, the details of the validation
         # container can potentially contain PII which we do not want to log.

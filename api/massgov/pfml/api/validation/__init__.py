@@ -4,9 +4,9 @@
 from typing import Union
 
 import botocore.exceptions
-import connexion.apps.flask_app
 import pydantic
 from connexion.exceptions import BadRequestProblem, ExtraParameterProblem, ProblemException
+from flask import g
 from flask.wrappers import Response
 from sqlalchemy.exc import OperationalError
 from werkzeug.exceptions import (
@@ -102,7 +102,13 @@ def connexion_400_handler(exception: ProblemException) -> Response:
     # messages which should definitely not have sensitive info.
     logger.info(exception.detail, extra={"error.class": exception.type})
 
-    return connexion.apps.flask_app.FlaskApp.common_error_handler(exception)
+    connexion_flask_app = g.get("connexion_flask_app")
+    if connexion_flask_app is None:
+        raise Exception(
+            "connexion_flask_app is unexpectedly missing from application context; unable to return error handler"
+        )
+
+    return connexion_flask_app.common_error_handler(exception)
 
 
 def http_exception_handler(http_exception: HTTPException) -> Response:
@@ -113,12 +119,7 @@ def http_exception_handler(http_exception: HTTPException) -> Response:
 
 def internal_server_error_handler(error: InternalServerError) -> Response:
     # Use the original exception if it exists.
-    #
-    # Ignore the mypy type error because it is missing the `original_exception` attribute.
-    #
-    # see: https://github.com/python/typeshed/pull/4210
-    #
-    exception = error.original_exception or error  # type: ignore[attr-defined]
+    exception = error.original_exception or error
 
     logger.exception(str(exception), extra={"error.class": type(exception).__name__})
 

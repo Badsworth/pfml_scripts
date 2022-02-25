@@ -1,6 +1,6 @@
+import unittest.mock as mock
 from datetime import date, datetime
 
-import mock
 import pytest
 
 import massgov
@@ -741,6 +741,28 @@ def test_set_customer_contact_detail_fields(
 
     # This also asserts that the preferred phone number gets returned in this case
     # since the phone number being set is the 2nd element in the phoneNumbers array
+    assert application.phone.phone_number == "+13214567890"
+    assert application.phone_id == application.phone.phone_id
+
+
+@mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.read_customer_contact_details")
+def test_set_customer_contact_detail_fields_missing_country_code(
+    mock_read_customer_contact_details, fineos_client, fineos_web_id, application, test_db_session
+):
+    customer_contact_details_json = massgov.pfml.fineos.mock_client.mock_customer_contact_details()
+    # country code missing
+    for phone_num in customer_contact_details_json["phoneNumbers"]:
+        phone_num["intCode"] = None
+    customer_contact_details = massgov.pfml.fineos.models.customer_api.ContactDetails.parse_obj(
+        customer_contact_details_json
+    )
+
+    application.user.mfa_phone_number = "+13214567890"
+    application.user.mfa_delivery_preference_id = 1
+    mock_read_customer_contact_details.return_value = customer_contact_details
+    set_customer_contact_detail_fields(fineos_client, fineos_web_id, application, test_db_session)
+
+    # We still get a match, country code added
     assert application.phone.phone_number == "+13214567890"
     assert application.phone_id == application.phone.phone_id
 

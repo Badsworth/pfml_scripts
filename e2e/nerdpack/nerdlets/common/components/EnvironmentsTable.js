@@ -15,6 +15,9 @@ import {
 import { E2EVisualIndicator } from "./E2EVisualIndicator";
 import { format as dateFormat } from "date-fns";
 
+/**
+ * @deprecated
+ */
 function RunIndicators({ runs, env, link, simpleView = false }) {
   if (env === "infra-test" || env === "prod") {
     return (
