@@ -76,7 +76,7 @@ class IAWWExtractStep(Step):
             if validation_container.has_validation_issues():
                 self.increment(self.Metrics.PAID_LEAVE_INSTRUCTION_VALIDATION_ISSUE_COUNT)
                 logger.info(
-                    f"Encoutred validation issue while processing leave instruction record: {validation_container.get_reasons()}"
+                    f"Encountered validation issue while processing leave instruction record: {validation_container.get_reasons()}"
                 )
                 return None
 

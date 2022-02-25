@@ -62,7 +62,7 @@ jobs:
       fail-fast: false
       matrix:
         environment:
-          ["test", "stage", "performance", "training", "uat", "cps-preview", "breakfix"]
+          ["test", "stage", "performance", "training", "uat", "cps-preview", "breakfix", "long", "trn2"]
     steps:
       - name: Trigger E2E Workflow
         uses: aurelien-baudet/workflow-dispatch@v2.1.1

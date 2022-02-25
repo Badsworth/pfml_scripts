@@ -92,7 +92,9 @@ class PaymentPostProcessingStep(Step):
             logger.info(
                 "Payment post-processing complete for %s",
                 make_payment_log(payment_container.payment),
-                extra=payment_container.get_traceable_details(),
+                extra=payment_container.get_traceable_details(
+                    state=State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING
+                ),
             )
 
             # if employer reimbursement change state to EMPLOYER_REIMBURSEMENT_READY_FOR_PROCESSING

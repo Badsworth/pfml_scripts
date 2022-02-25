@@ -8,7 +8,10 @@ exports[`PreviousLeaves when there are claimant-reported leaves shows a row for 
     Previous leave
   </h3>
   <p>
-    Your employee has listed leave they have taken for qualified reasons. Only leave since March 15, 2021 is included. This includes both paid leave (for example: paid vacation or sick days) and unpaid leave (for example: FMLA leave). When possible, verify that this previous leave was for reasons that qualify for paid leave under PFML.
+    Verify the accuracy of your employee’s qualified leave dates. Any qualifying reason should only be reported if it was taken after January 1, 2021.
+  </p>
+  <p>
+    This includes both paid leave (for example: paid vacation or sick days) and unpaid leave (for example: FMLA leave).
   </p>
   <details
     class="c-details"

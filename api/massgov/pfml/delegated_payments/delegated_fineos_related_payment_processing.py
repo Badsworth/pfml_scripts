@@ -227,7 +227,7 @@ class RelatedPaymentsProcessingStep(Step):
                 logger.info(
                     "Payment added to state %s",
                     end_state.state_description,
-                    extra=payment_log_details,
+                    extra=payments_util.get_traceable_payment_details(payment, end_state),
                 )
                 message = "Duplicate primary payment records found for the related payment record."
                 # do we have to do audit
@@ -252,7 +252,7 @@ class RelatedPaymentsProcessingStep(Step):
                 logger.info(
                     "Payment added to state %s",
                     end_state.state_description,
-                    extra=payment_log_details,
+                    extra=payments_util.get_traceable_payment_details(payment, end_state),
                 )
             else:
                 primary_payment_record = primary_payment_records[0].payment_id
@@ -312,7 +312,7 @@ class RelatedPaymentsProcessingStep(Step):
                     logger.info(
                         "Payment added to state %s",
                         end_state.state_description,
-                        extra=payment_log_details,
+                        extra=payments_util.get_traceable_payment_details(payment, end_state),
                     )
                     # Get the writeback status of the standard payment
                     # Cascade standard writeback status to employer reimbursement payment

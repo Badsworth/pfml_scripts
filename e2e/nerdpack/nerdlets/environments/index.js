@@ -12,7 +12,7 @@ export default class PFMLEnvironmentsNerdlet extends React.PureComponent {
     return (
       <PlatformStateContext.Consumer>
         {(platformState) => [
-          <Navigation />,
+          <Navigation active="environment-v1" />,
           <EnvironmentsTable
             accountId={platformState.accountId}
             where={where}

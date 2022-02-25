@@ -82,6 +82,7 @@ def log_get_claim_metrics(claim: DetailedClaimResponse) -> None:
 
     log_attributes: Dict[str, Any] = {
         "absence_id": claim.fineos_absence_id,
+        "absence_case_id": claim.fineos_absence_id,
         "num_absence_periods": len(periods),
         "num_approved_absence_periods": len(approved_periods),
         "num_denied_absence_periods": len(denied_periods),
@@ -95,7 +96,10 @@ def log_get_claim_metrics(claim: DetailedClaimResponse) -> None:
         if requirements is None or len(requirements) == 0:
             logger.warning(
                 "get_claim - No managed requirements found for claim with pending absence period",
-                extra={"absence_id": claim.fineos_absence_id},
+                extra={
+                    "absence_id": claim.fineos_absence_id,
+                    "absence_case_id": claim.fineos_absence_id,
+                },
             )
         else:
             open_requirements = list(filter(lambda r: r.status == "Open", requirements))
@@ -108,7 +112,10 @@ def log_get_claim_metrics(claim: DetailedClaimResponse) -> None:
             else:
                 logger.warning(
                     "get_claim - Multiple open requirements for claim",
-                    extra={"absence_id": claim.fineos_absence_id},
+                    extra={
+                        "absence_id": claim.fineos_absence_id,
+                        "absence_case_id": claim.fineos_absence_id,
+                    },
                 )
 
     logger.info("get_claim success", extra=log_attributes)
@@ -119,6 +126,7 @@ def log_absence_period(
 ) -> None:
     log_attributes = {
         "absence_id": fineos_absence_id,
+        "absence_case_id": fineos_absence_id,
         "leave_request_id": absence_period.fineos_leave_request_id,
         "reason": absence_period.reason,
         "request_decision": absence_period.request_decision,

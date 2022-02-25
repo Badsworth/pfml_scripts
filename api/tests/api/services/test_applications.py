@@ -1,6 +1,6 @@
+import unittest.mock as mock
 from datetime import date, datetime
 
-import mock
 import pytest
 
 import massgov

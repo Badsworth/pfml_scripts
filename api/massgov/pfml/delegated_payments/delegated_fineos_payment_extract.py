@@ -684,6 +684,7 @@ class PaymentExtractStep(Step):
             .join(LkState, StateLog.end_state_id == LkState.state_id)
             .filter(
                 Payment.payment_id.in_(payment_ids),
+                Payment.exclude_from_payment_status != True,  # noqa: E712
                 StateLog.end_state_id.notin_(payments_util.Constants.RESTARTABLE_PAYMENT_STATE_IDS),
                 LkState.flow_id == Flow.DELEGATED_PAYMENT.flow_id,
             )
@@ -1048,7 +1049,9 @@ class PaymentExtractStep(Step):
             self.db_session.add(new_eft)
             self.db_session.add(employee_pub_eft_pair)
 
-            extra |= payments_util.get_traceable_pub_eft_details(new_eft, employee)
+            extra |= payments_util.get_traceable_pub_eft_details(
+                new_eft, employee, state=State.DELEGATED_EFT_SEND_PRENOTE
+            )
             logger.info(
                 "Starting DELEGATED_EFT prenote flow for employee associated with payment",
                 extra=extra,

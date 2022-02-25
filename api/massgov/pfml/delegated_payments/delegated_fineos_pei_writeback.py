@@ -155,7 +155,9 @@ class FineosPeiWritebackStep(Step):
         for state_log in state_logs:
             try:
                 payment = state_log.payment
-                extra = payments_util.get_traceable_payment_details(payment)
+                extra = payments_util.get_traceable_payment_details(
+                    payment, State.DELEGATED_ADD_TO_FINEOS_WRITEBACK
+                )
                 logger.info("Processing payment for PEI writeback", extra=extra)
 
                 missing_fields = []

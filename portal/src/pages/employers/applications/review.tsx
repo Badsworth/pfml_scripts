@@ -385,8 +385,6 @@ export const Review = (props: WithEmployerClaimProps) => {
     }
   };
 
-  const otherLeaveStartDate = formatDate(claim.otherLeaveStartDate).full();
-
   return (
     <div className="maxw-desktop-lg">
       <BackButton />
@@ -500,13 +498,13 @@ export const Review = (props: WithEmployerClaimProps) => {
             </div>
             <PreviousLeaves
               appErrors={appErrors}
+              claim={claim}
               previousLeaves={formState.previousLeaves}
               addedPreviousLeaves={formState.addedPreviousLeaves}
               onAdd={handlePreviousLeaveAdd}
               onChange={handlePreviousLeavesChange}
               onRemove={handlePreviousLeaveRemove}
               shouldShowV2={shouldShowV2}
-              otherLeaveStartDate={otherLeaveStartDate}
             />
             <ConcurrentLeave
               appErrors={appErrors}

@@ -1,0 +1,6 @@
+{
+  "schemaType": "NERDLET",
+  "id": "view-environment-overview",
+  "displayName": "Environment Overview",
+  "description": "Displays information about PFML environments."
+}
