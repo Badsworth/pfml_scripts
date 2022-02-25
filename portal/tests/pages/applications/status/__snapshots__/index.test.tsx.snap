@@ -318,7 +318,7 @@ exports[`Status displays a description for the Withdrawn request decision 1`] = 
 
 exports[`Status info alert displays if claimant has In Review claim status 1`] = `
 <div
-  aria-labelledby="alert-heading11"
+  aria-labelledby="alert-heading15"
   class="usa-alert usa-alert--info usa-alert--no-icon margin-bottom-3"
   role="region"
   tabindex="-1"
@@ -328,7 +328,7 @@ exports[`Status info alert displays if claimant has In Review claim status 1`] =
   >
     <h2
       class="usa-alert__heading font-heading-xs text-bold"
-      id="alert-heading11"
+      id="alert-heading15"
     >
       You may also be eligible for paid family leave
     </h2>
@@ -359,7 +359,7 @@ exports[`Status info alert displays if claimant has In Review claim status 1`] =
 
 exports[`Status info alert displays if claimant has Projected claim status 1`] = `
 <div
-  aria-labelledby="alert-heading12"
+  aria-labelledby="alert-heading16"
   class="usa-alert usa-alert--info usa-alert--no-icon margin-bottom-3"
   role="region"
   tabindex="-1"
@@ -369,7 +369,7 @@ exports[`Status info alert displays if claimant has Projected claim status 1`] =
   >
     <h2
       class="usa-alert__heading font-heading-xs text-bold"
-      id="alert-heading12"
+      id="alert-heading16"
     >
       You may also be eligible for paid family leave
     </h2>
@@ -400,7 +400,7 @@ exports[`Status info alert displays if claimant has Projected claim status 1`] =
 
 exports[`Status info alert displays if claimant has bonding-newborn but not pregnancy claims 1`] = `
 <div
-  aria-labelledby="alert-heading9"
+  aria-labelledby="alert-heading13"
   class="usa-alert usa-alert--info usa-alert--no-icon margin-bottom-3"
   role="region"
   tabindex="-1"
@@ -410,7 +410,7 @@ exports[`Status info alert displays if claimant has bonding-newborn but not preg
   >
     <h2
       class="usa-alert__heading font-heading-xs text-bold"
-      id="alert-heading9"
+      id="alert-heading13"
     >
       If you are giving birth, you may also be eligible for paid medical leave
     </h2>
@@ -441,7 +441,7 @@ exports[`Status info alert displays if claimant has bonding-newborn but not preg
 
 exports[`Status info alert displays if claimant has pregnancy but not bonding claims 1`] = `
 <div
-  aria-labelledby="alert-heading10"
+  aria-labelledby="alert-heading14"
   class="usa-alert usa-alert--info usa-alert--no-icon margin-bottom-3"
   role="region"
   tabindex="-1"
@@ -451,7 +451,7 @@ exports[`Status info alert displays if claimant has pregnancy but not bonding cl
   >
     <h2
       class="usa-alert__heading font-heading-xs text-bold"
-      id="alert-heading10"
+      id="alert-heading14"
     >
       You may also be eligible for paid family leave
     </h2>
@@ -573,6 +573,22 @@ exports[`Status renders the page if the only errors are DocumentsLoadError 1`] =
     >
       Application details
     </h1>
+    <nav
+      class="border-bottom border-base-lighter margin-bottom-0 display-flex width-full"
+    >
+      <a
+        class="display-inline-block padding-y-2 margin-bottom-neg-1px text-no-underline width-card text-base-dark hover:text-primary hover:text-underline"
+        href="/applications/status?absence_id=mock-absence-case-id"
+      >
+        Application
+      </a>
+      <a
+        class="display-inline-block padding-y-2 margin-bottom-neg-1px text-no-underline width-card text-base-dark hover:text-primary hover:text-underline"
+        href="/applications/status/payments?absence_id=mock-absence-case-id"
+      >
+        Payments
+      </a>
+    </nav>
     <h2
       class="font-heading-lg text-bold"
     >
@@ -652,16 +668,64 @@ exports[`Status renders the page if the only errors are DocumentsLoadError 1`] =
             .
           </p>
         </div>
+        <p>
+          See your payment status and estimated payment date on your payments page.
+        </p>
+        <p>
+          <a
+            href="/applications/status/payments?absence_id=mock-absence-case-id"
+          >
+            Track your payments
+          </a>
+        </p>
       </div>
     </div>
     <div
       class="border-bottom border-base-lighter padding-y-4"
     >
-      <span
-        aria-label="Loading legal notices"
-        class="c-spinner"
-        role="progressbar"
-      />
+      <h2
+        class="font-heading-md text-bold"
+        id="view_notices"
+      >
+        View your notices
+      </h2>
+      <p
+        class="padding-bottom-2 margin-top-05"
+      >
+        When you click the notice link, the file will download to your device.
+      </p>
+      <ul
+        class="add-list-reset"
+      >
+        <li
+          class="grid-row flex-row flex-justify-start flex-align-start margin-bottom-1 text-primary"
+        >
+          <svg
+            aria-hidden="true"
+            class="usa-icon usa-icon--size-3 margin-right-1"
+            fill="currentColor"
+            focusable="false"
+            role="img"
+          >
+            <use
+              xlink:href="/img/sprite.svg#file_present"
+            />
+          </svg>
+          <div>
+            <button
+              class="usa-button position-relative text-bold usa-button--unstyled"
+              type="button"
+            >
+              Approval notice (PDF)
+            </button>
+            <div
+              class="text-base-dark"
+            >
+              Posted 4/5/2020.
+            </div>
+          </div>
+        </li>
+      </ul>
     </div>
     <div
       class="border-bottom border-base-lighter padding-y-4"
@@ -783,6 +847,22 @@ exports[`Status renders the page with claim detail 1`] = `
     >
       Application details
     </h1>
+    <nav
+      class="border-bottom border-base-lighter margin-bottom-0 display-flex width-full"
+    >
+      <a
+        class="display-inline-block padding-y-2 margin-bottom-neg-1px text-no-underline width-card text-base-dark hover:text-primary hover:text-underline"
+        href="/applications/status?absence_id=mock-absence-case-id"
+      >
+        Application
+      </a>
+      <a
+        class="display-inline-block padding-y-2 margin-bottom-neg-1px text-no-underline width-card text-base-dark hover:text-primary hover:text-underline"
+        href="/applications/status/payments?absence_id=mock-absence-case-id"
+      >
+        Payments
+      </a>
+    </nav>
     <h2
       class="font-heading-lg text-bold"
     >
@@ -862,16 +942,64 @@ exports[`Status renders the page with claim detail 1`] = `
             .
           </p>
         </div>
+        <p>
+          See your payment status and estimated payment date on your payments page.
+        </p>
+        <p>
+          <a
+            href="/applications/status/payments?absence_id=mock-absence-case-id"
+          >
+            Track your payments
+          </a>
+        </p>
       </div>
     </div>
     <div
       class="border-bottom border-base-lighter padding-y-4"
     >
-      <span
-        aria-label="Loading legal notices"
-        class="c-spinner"
-        role="progressbar"
-      />
+      <h2
+        class="font-heading-md text-bold"
+        id="view_notices"
+      >
+        View your notices
+      </h2>
+      <p
+        class="padding-bottom-2 margin-top-05"
+      >
+        When you click the notice link, the file will download to your device.
+      </p>
+      <ul
+        class="add-list-reset"
+      >
+        <li
+          class="grid-row flex-row flex-justify-start flex-align-start margin-bottom-1 text-primary"
+        >
+          <svg
+            aria-hidden="true"
+            class="usa-icon usa-icon--size-3 margin-right-1"
+            fill="currentColor"
+            focusable="false"
+            role="img"
+          >
+            <use
+              xlink:href="/img/sprite.svg#file_present"
+            />
+          </svg>
+          <div>
+            <button
+              class="usa-button position-relative text-bold usa-button--unstyled"
+              type="button"
+            >
+              Approval notice (PDF)
+            </button>
+            <div
+              class="text-base-dark"
+            >
+              Posted 4/5/2020.
+            </div>
+          </div>
+        </li>
+      </ul>
     </div>
     <div
       class="border-bottom border-base-lighter padding-y-4"
@@ -993,6 +1121,22 @@ exports[`Status renders the page with claim detail when there is absence_case_id
     >
       Application details
     </h1>
+    <nav
+      class="border-bottom border-base-lighter margin-bottom-0 display-flex width-full"
+    >
+      <a
+        class="display-inline-block padding-y-2 margin-bottom-neg-1px text-no-underline width-card text-base-dark hover:text-primary hover:text-underline"
+        href="/applications/status?absence_id=mock-absence-case-id"
+      >
+        Application
+      </a>
+      <a
+        class="display-inline-block padding-y-2 margin-bottom-neg-1px text-no-underline width-card text-base-dark hover:text-primary hover:text-underline"
+        href="/applications/status/payments?absence_id=mock-absence-case-id"
+      >
+        Payments
+      </a>
+    </nav>
     <h2
       class="font-heading-lg text-bold"
     >
@@ -1072,16 +1216,64 @@ exports[`Status renders the page with claim detail when there is absence_case_id
             .
           </p>
         </div>
+        <p>
+          See your payment status and estimated payment date on your payments page.
+        </p>
+        <p>
+          <a
+            href="/applications/status/payments?absence_id=mock-absence-case-id"
+          >
+            Track your payments
+          </a>
+        </p>
       </div>
     </div>
     <div
       class="border-bottom border-base-lighter padding-y-4"
     >
-      <span
-        aria-label="Loading legal notices"
-        class="c-spinner"
-        role="progressbar"
-      />
+      <h2
+        class="font-heading-md text-bold"
+        id="view_notices"
+      >
+        View your notices
+      </h2>
+      <p
+        class="padding-bottom-2 margin-top-05"
+      >
+        When you click the notice link, the file will download to your device.
+      </p>
+      <ul
+        class="add-list-reset"
+      >
+        <li
+          class="grid-row flex-row flex-justify-start flex-align-start margin-bottom-1 text-primary"
+        >
+          <svg
+            aria-hidden="true"
+            class="usa-icon usa-icon--size-3 margin-right-1"
+            fill="currentColor"
+            focusable="false"
+            role="img"
+          >
+            <use
+              xlink:href="/img/sprite.svg#file_present"
+            />
+          </svg>
+          <div>
+            <button
+              class="usa-button position-relative text-bold usa-button--unstyled"
+              type="button"
+            >
+              Approval notice (PDF)
+            </button>
+            <div
+              class="text-base-dark"
+            >
+              Posted 4/5/2020.
+            </div>
+          </div>
+        </li>
+      </ul>
     </div>
     <div
       class="border-bottom border-base-lighter padding-y-4"
@@ -1176,7 +1368,7 @@ exports[`Status renders the page with claim detail when there is absence_case_id
 
 exports[`Status success alert renders success alert when document type param is given 1`] = `
 <div
-  aria-labelledby="alert-heading6"
+  aria-labelledby="alert-heading10"
   class="usa-alert usa-alert--success"
   role="region"
   tabindex="-1"
@@ -1186,7 +1378,7 @@ exports[`Status success alert renders success alert when document type param is 
   >
     <h2
       class="usa-alert__heading font-heading-md text-bold"
-      id="alert-heading6"
+      id="alert-heading10"
     >
       You've successfully submitted your proof of birth documents
     </h2>
