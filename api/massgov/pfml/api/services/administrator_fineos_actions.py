@@ -233,6 +233,7 @@ def download_document_as_leave_admin(
         {
             "fineos_user_id": fineos_user_id,
             "absence_id": absence_id,
+            "absence_case_id": absence_id,
             "fineos_document_id": fineos_document_id,
         }
     )
@@ -279,7 +280,11 @@ def find_sub_case_id(
     if not case_id:
         logger.warning(
             "Document with that fineos_document_id could not be found",
-            extra={"absence_id": absence_id, "fineos_document_id": fineos_document_id,},
+            extra={
+                "absence_id": absence_id,
+                "absence_case_id": absence_id,
+                "fineos_document_id": fineos_document_id,
+            },
         )
         raise Exception("Document with that fineos_document_id could not be found")
     return case_id
@@ -457,6 +462,7 @@ def get_claim_as_leave_admin(
     log_attributes = {
         "fineos_user_id": fineos_user_id,
         "absence_id": absence_id,
+        "absence_case_id": absence_id,
         "employer_id": employer.employer_id,
     }
 

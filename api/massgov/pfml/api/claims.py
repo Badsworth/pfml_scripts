@@ -500,12 +500,19 @@ def get_claim(fineos_absence_id: str) -> flask.Response:
     except ClaimWithdrawnError:
         logger.warning(
             "get_claim failure - Claim has been withdrawn. Unable to display claim status.",
-            extra={"absence_id": claim.fineos_absence_id},
+            extra={
+                "absence_id": claim.fineos_absence_id,
+                "absence_case_id": claim.fineos_absence_id,
+            },
         )
         return ClaimWithdrawn().to_api_response()
     except Exception as ex:
         logger.warning(
-            f"get_claim failure - {str(ex)}", extra={"absence_id": claim.fineos_absence_id}
+            f"get_claim failure - {str(ex)}",
+            extra={
+                "absence_id": claim.fineos_absence_id,
+                "absence_case_id": claim.fineos_absence_id,
+            },
         )
         raise ex  # handled by catch-all error handler in validation/__init__.py
 

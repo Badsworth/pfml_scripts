@@ -932,6 +932,7 @@ def upsert_week_based_work_pattern(
 
     if application.claim is not None:
         log_attributes["application.absence_case_id"] = application.claim.fineos_absence_id
+        log_attributes["absence_case_id"] = application.claim.fineos_absence_id
         logger.info(
             "upserting work_pattern for absence case %s",
             application.claim.fineos_absence_id,
@@ -1218,7 +1219,11 @@ def download_document(
     if not absence_case:
         logger.warning(
             "Document with that fineos_document_id could not be found",
-            extra={"absence_id": absence_id, "fineos_document_id": fineos_document_id,},
+            extra={
+                "absence_id": absence_id,
+                "absence_case_id": absence_id,
+                "fineos_document_id": fineos_document_id,
+            },
         )
         raise Exception("Document with that fineos_document_id could not be found")
 
@@ -1504,7 +1509,11 @@ def get_absence_periods(
         # Get absence periods
         response: AbsenceDetails = fineos.get_absence(web_id, absence_id)
     except FINEOSClientError as ex:
-        logger.warn("Unable to get absence periods", exc_info=ex, extra={"absence_id": absence_id})
+        logger.warn(
+            "Unable to get absence periods",
+            exc_info=ex,
+            extra={"absence_id": absence_id, "absence_case_id": absence_id},
+        )
         raise
     return response.absencePeriods or []
 

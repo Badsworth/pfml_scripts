@@ -223,7 +223,8 @@ def _err400_employer_fein_not_found(notification_request, log_attributes):
             "request.method": flask.request.method if flask.has_request_context() else None,
             "request.uri": flask.request.path if flask.has_request_context() else None,
             "request.headers.x-amzn-requestid": flask.request.headers.get("x-amzn-requestid", None),
-            "absence-id": notification_request.absence_case_id
+            "absence-id": notification_request.absence_case_id,
+            "absence_case_id": notification_request.absence_case_id
             if flask.has_request_context()
             else None,
         },
@@ -249,7 +250,8 @@ def _err400_multiple_employer_feins_found(notification_request, log_attributes):
             "request.method": flask.request.method if flask.has_request_context() else None,
             "request.uri": flask.request.path if flask.has_request_context() else None,
             "request.headers.x-amzn-requestid": flask.request.headers.get("x-amzn-requestid", None),
-            "absence-id": notification_request.absence_case_id
+            "absence-id": notification_request.absence_case_id,
+            "absence_case_id": notification_request.absence_case_id
             if flask.has_request_context()
             else None,
         },

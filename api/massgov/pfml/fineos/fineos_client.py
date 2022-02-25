@@ -1136,7 +1136,11 @@ class FINEOSClient(client.AbstractFINEOSClient):
             if finres.response_status == requests.codes.FORBIDDEN:
                 logger.warning(
                     "FINEOS API responded with 403. Returning empty documents list",
-                    extra={"absence_id": absence_id, "user_id": user_id,},
+                    extra={
+                        "absence_id": absence_id,
+                        "absence_case_id": absence_id,
+                        "user_id": user_id,
+                    },
                 )
                 return []
 
@@ -1629,7 +1633,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
         )
         logger.warning(
             "FINEOS API responded with an error: {}".format(fineos_err),
-            extra={"absence_id": absence_id},
+            extra={"absence_id": absence_id, "absence_case_id": absence_id},
         )
         raise Exception(fineos_err)
 
