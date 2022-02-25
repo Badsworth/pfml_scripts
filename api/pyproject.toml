@@ -129,7 +129,6 @@ pub-payments-create-pub-files = "massgov.pfml.delegated_payments.task.process_pu
 pub-payments-process-pub-returns = "massgov.pfml.delegated_payments.task.process_pub_responses:main"
 pub-payments-process-snapshot = "massgov.pfml.delegated_payments.task.process_fineos_reconciliation_extracts:main"
 pub-payments-mock-generate = "massgov.pfml.delegated_payments.mock.mock_generate:main"
-pub-payments-process-mmars-payments = "massgov.pfml.delegated_payments.task.process_mmars_payments:main"
 pub-payments-copy-audit-report = "massgov.pfml.delegated_payments.audit.copy_audit_report_task:main"
 fineos-import-iaww = "massgov.pfml.delegated_payments.task.process_iaww_from_fineos:main"
 ach-reader = "massgov.pfml.delegated_payments.util.ach.ach_tool:ach_reader"
