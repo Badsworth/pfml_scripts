@@ -11,8 +11,8 @@ def create_lockout_resolver(dry_run=True):
         user_email="test@email.com",
         psd_number="PSD-1234",
         reason_for_disabling="lost phone",
-        employee_name="call center",
-        verification_method="seemed truthful",
+        agent_email="edith.finch@mass.gov",
+        verification_method="With Claim",
         dry_run=dry_run,
         db_session=MagicMock(),
     )
@@ -44,8 +44,8 @@ class TestMfaLockoutResolver:
         log_attrs = {
             "psd_ticket_number": "PSD-1234",
             "reason_for_disabling": "lost phone",
-            "contact_center_employee_name": "call center",
-            "identity_verification_method": "seemed truthful",
+            "contact_center_agent": "edith.finch@mass.gov",
+            "identity_verification_method": "With Claim",
             "dry_run": True,
         }
         assert mfa_lockout_resolver.log_attr == log_attrs
@@ -66,8 +66,8 @@ class TestMfaLockoutResolver:
         log_attrs = {
             "psd_ticket_number": "PSD-1234",
             "reason_for_disabling": "lost phone",
-            "contact_center_employee_name": "call center",
-            "identity_verification_method": "seemed truthful",
+            "contact_center_agent": "edith.finch@mass.gov",
+            "identity_verification_method": "With Claim",
             "dry_run": False,
         }
         assert self.mfa_lockout_resolver.log_attr == log_attrs

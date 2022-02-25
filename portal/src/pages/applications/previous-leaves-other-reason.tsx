@@ -29,7 +29,9 @@ export const PreviousLeavesOtherReason = (
   });
 
   const leaveStartDate = formatDate(claim.leaveStartDate).full();
-  const otherLeaveStartDate = formatDate(claim.otherLeaveStartDate).full();
+  const otherLeaveStartDate = formatDate(
+    claim.computed_start_dates.other_reason
+  ).full();
 
   const handleSave = async () => {
     const patchData = { ...formState };

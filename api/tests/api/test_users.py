@@ -122,13 +122,10 @@ def test_users_post_openapi_validation(
 
     response = client.post("/v1/users", json=body,)
     errors = response.get_json().get("errors")
-
-    assert {
-        "field": "email_address",
-        "message": "'not-a-valid-email' is not a 'email'",
-        "rule": "email",
-        "type": "format",
-    } in errors
+    assert (
+        len([err for err in errors if err["type"] == "format" and err["field"] == "email_address"])
+        > 0
+    )
     assert {
         "field": "role.role_description",
         "message": "'Dog' is not one of ['Claimant', 'Employer']",
@@ -162,6 +159,23 @@ def test_users_post_custom_validations(
     assert {"field": "password", "message": "password is required", "type": "required",} in errors
 
     assert len(errors) == 2
+    assert response.status_code == 400
+
+
+def test_users_post_email_validation(
+    client, mock_cognito_user_pool, valid_claimant_creation_request_body
+):
+    body = valid_claimant_creation_request_body
+    body["email_address"] = "invalid@email"
+
+    response = client.post("/v1/users", json=body,)
+    errors = response.get_json().get("errors")
+    assert (
+        len([err for err in errors if err["type"] == "format" and err["field"] == "email_address"])
+        > 0
+    )
+
+    assert len(errors) == 1
     assert response.status_code == 400
 
 

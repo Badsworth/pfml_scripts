@@ -1,4 +1,5 @@
 import base64
+import uuid
 from typing import Dict, List, Optional, Set, Type, Union
 from uuid import UUID
 
@@ -16,8 +17,10 @@ from massgov.pfml.api.authorization.exceptions import NotAuthorizedForAccess
 from massgov.pfml.api.authorization.flask import READ, can, requires
 from massgov.pfml.api.exceptions import ClaimWithdrawn, ObjectNotFound
 from massgov.pfml.api.models.applications.common import OrganizationUnit
-from massgov.pfml.api.models.claims.common import EmployerClaimReview
+from massgov.pfml.api.models.claims.common import ChangeRequest, EmployerClaimReview
+from massgov.pfml.api.models.claims.requests import ClaimRequest
 from massgov.pfml.api.models.claims.responses import (
+    ChangeRequestResponse,
     ClaimForPfmlCrmResponse,
     ClaimResponse,
     ManagedRequirementResponse,
@@ -30,10 +33,14 @@ from massgov.pfml.api.services.administrator_fineos_actions import (
     get_claim_as_leave_admin,
     get_documents_as_leave_admin,
 )
-from massgov.pfml.api.services.claims import ClaimWithdrawnError, get_claim_detail
+from massgov.pfml.api.services.claims import (
+    ClaimWithdrawnError,
+    add_change_request_to_db,
+    get_claim_detail,
+)
 from massgov.pfml.api.services.managed_requirements import update_employer_confirmation_requirements
 from massgov.pfml.api.util.claims import user_has_access_to_claim
-from massgov.pfml.api.util.response import error_response
+from massgov.pfml.api.util.paginate.paginator import PaginationAPIContext
 from massgov.pfml.api.validation.exceptions import (
     ContainsV1AndV2Eforms,
     IssueType,
@@ -63,6 +70,7 @@ from massgov.pfml.fineos.transforms.to_fineos.eforms.employer import (
     EmployerClaimReviewEFormBuilder,
     EmployerClaimReviewV1EFormBuilder,
 )
+from massgov.pfml.util.datetime import utcnow
 from massgov.pfml.util.logging.claims import (
     get_claim_log_attributes,
     get_claim_review_log_attributes,
@@ -75,7 +83,6 @@ from massgov.pfml.util.logging.employers import get_employer_log_attributes
 from massgov.pfml.util.logging.managed_requirements import (
     get_managed_requirements_update_log_attributes,
 )
-from massgov.pfml.util.paginate.paginator import PaginationAPIContext
 from massgov.pfml.util.sqlalchemy import get_or_404
 from massgov.pfml.util.users import has_role_in
 
@@ -463,7 +470,7 @@ def employer_document_download(fineos_absence_id: str, fineos_document_id: str) 
 def get_claim(fineos_absence_id: str) -> flask.Response:
     is_employer = can(READ, "EMPLOYER_API")
     if is_employer:
-        error = error_response(
+        error = response_util.error_response(
             Forbidden, "Employers are not allowed to access claimant claim info", errors=[],
         )
         return error.to_api_response()
@@ -475,7 +482,7 @@ def get_claim(fineos_absence_id: str) -> flask.Response:
             "get_claim failure - Claim not in PFML database.",
             extra={"absence_case_id": fineos_absence_id},
         )
-        error = error_response(NotFound, "Claim not in PFML database.", errors=[])
+        error = response_util.error_response(NotFound, "Claim not in PFML database.", errors=[])
         return error.to_api_response()
 
     if not user_has_access_to_claim(claim, app.current_user()):
@@ -483,7 +490,9 @@ def get_claim(fineos_absence_id: str) -> flask.Response:
             "get_claim failure - User does not have access to claim.",
             extra={"absence_case_id": fineos_absence_id},
         )
-        error = error_response(Forbidden, "User does not have access to claim.", errors=[])
+        error = response_util.error_response(
+            Forbidden, "User does not have access to claim.", errors=[]
+        )
         return error.to_api_response()
 
     try:
@@ -491,12 +500,19 @@ def get_claim(fineos_absence_id: str) -> flask.Response:
     except ClaimWithdrawnError:
         logger.warning(
             "get_claim failure - Claim has been withdrawn. Unable to display claim status.",
-            extra={"absence_id": claim.fineos_absence_id},
+            extra={
+                "absence_id": claim.fineos_absence_id,
+                "absence_case_id": claim.fineos_absence_id,
+            },
         )
         return ClaimWithdrawn().to_api_response()
     except Exception as ex:
         logger.warning(
-            f"get_claim failure - {str(ex)}", extra={"absence_id": claim.fineos_absence_id}
+            f"get_claim failure - {str(ex)}",
+            extra={
+                "absence_id": claim.fineos_absence_id,
+                "absence_case_id": claim.fineos_absence_id,
+            },
         )
         raise ex  # handled by catch-all error handler in validation/__init__.py
 
@@ -521,18 +537,48 @@ def get_claim_from_db(fineos_absence_id: Optional[str]) -> Optional[Claim]:
     return claim
 
 
+def retrieve_claims() -> flask.Response:
+
+    body = connexion.request.json
+    claim_request = ClaimRequest.parse_obj(body)
+
+    return _process_claims_request(claim_request=claim_request, method_name="retrieve_claims")
+
+
 def get_claims() -> flask.Response:
-    current_user = app.current_user()
-    employer_id = flask.request.args.get("employer_id")
+
+    employer_id: Optional[UUID]
+    employer_id_str = flask.request.args.get("employer_id")
+    if employer_id_str is not None:
+        employer_id = uuid.UUID(employer_id_str)
+    else:
+        employer_id = employer_id_str
+
     employee_id_str = flask.request.args.get("employee_id")
-    search_string = flask.request.args.get("search", type=str)
-    absence_statuses = parse_filterable_absence_statuses(flask.request.args.get("claim_status"))
-    request_decisions = map_request_decision_param_to_db_columns(
-        flask.request.args.get("request_decision")
-    )
-    is_employer = can(READ, "EMPLOYER_API")
-    is_reviewable = flask.request.args.get("is_reviewable", type=str)
+
+    claim_request = ClaimRequest()
+    claim_request.employer_id = employer_id
+    if employee_id_str is not None:
+        claim_request.employee_ids = [UUID(eid.strip()) for eid in employee_id_str.split(",")]
+    claim_request.search = flask.request.args.get("search", type=str)
+    claim_request.claim_status = flask.request.args.get("claim_status")
+    claim_request.request_decision = flask.request.args.get("request_decision")
+    claim_request.is_reviewable = flask.request.args.get("is_reviewable", type=str)
+
+    return _process_claims_request(claim_request=claim_request, method_name="get_claims")
+
+
+def _process_claims_request(claim_request: ClaimRequest, method_name: str) -> flask.Response:
+
+    employee_ids = claim_request.employee_ids
+    search_string = claim_request.search
+    absence_statuses = parse_filterable_absence_statuses(claim_request.claim_status)
+    is_reviewable = claim_request.is_reviewable
+    request_decisions = map_request_decision_param_to_db_columns(claim_request.request_decision)
+
+    current_user = app.current_user()
     is_pfml_crm_user = has_role_in(current_user, [Role.PFML_CRM])
+    is_employer = can(READ, "EMPLOYER_API")
     log_attributes = {}
     log_attributes.update(get_employer_log_attributes(current_user))
 
@@ -547,9 +593,11 @@ def get_claims() -> flask.Response:
                 # The CRM user does not use use /claims/{claim_id} yet, so this logic has explicitly not been added to user_has_access_to_claim
                 pass
             elif is_employer and current_user and current_user.employers:
-                if employer_id:
+                if claim_request.employer_id:
                     employers_list = (
-                        db_session.query(Employer).filter(Employer.employer_id == employer_id).all()
+                        db_session.query(Employer)
+                        .filter(Employer.employer_id == claim_request.employer_id)
+                        .all()
                     )
                 else:
                     employers_list = list(current_user.employers)
@@ -567,10 +615,10 @@ def get_claims() -> flask.Response:
             else:
                 query.add_user_owns_claim_filter(current_user)
 
-            # filter claims by an employee_id
-            if employee_id_str:
-                employee_ids = {eid.strip() for eid in employee_id_str.split(",")}
-                query.add_employees_filter(employee_ids)
+            if employee_ids:
+                # convert List[UUID] to Set[str]
+                employee_ids_set = {str(eid) for eid in employee_ids}
+                query.add_employees_filter(employee_ids_set)
 
             if len(absence_statuses):
                 # Log the values from the query params rather than the enum groups they
@@ -594,17 +642,25 @@ def get_claims() -> flask.Response:
             if request_decisions:
                 query.add_request_decision_filter(request_decisions)
 
+            # Update the pagination parameters from the request
+            if flask.request.method == "POST":
+                pagination_context.page_size = claim_request.page_size
+                pagination_context.page_offset = claim_request.page_offset
+                pagination_context.order_by = claim_request.order_by
+                pagination_context.order_direction = claim_request.order_direction
+
             query.add_order_by(pagination_context)
 
             page = query.get_paginated_results(pagination_context)
 
     logger.info(
-        "get_claims success",
+        f"{method_name} success",
         extra={
             "is_employer": str(is_employer),
             "pagination.order_by": pagination_context.order_by,
             "pagination.order_direction": pagination_context.order_direction,
             "pagination.page_offset": pagination_context.page_offset,
+            "pagination.page_size": pagination_context.page_size,
             "pagination.total_pages": page.total_pages,
             "pagination.total_records": page.total_records,
             "filter.search_string": search_string,
@@ -711,3 +767,43 @@ def sync_absence_periods(
     # only commit to db when every absence period has been succesfully synced
     # otherwise rollback changes if any absence period upsert throws an exception
     db_session.commit()
+
+
+def post_change_request(fineos_absence_id: str) -> flask.Response:
+    body = connexion.request.json
+    change_request: ChangeRequest = ChangeRequest.parse_obj(body)
+
+    if issues := claim_rules.get_change_request_issues(change_request):
+        return response_util.error_response(
+            status_code=BadRequest, message="Invalid change request body", errors=issues, data={},
+        ).to_api_response()
+
+    claim = get_claim_from_db(fineos_absence_id)
+    if claim is None:
+        logger.warning(
+            "Claim does not exist for given absence ID",
+            extra={"absence_case_id": fineos_absence_id},
+        )
+        error = response_util.error_response(
+            status_code=NotFound,
+            message="Claim does not exist for given absence ID",
+            errors=[],
+            data={},
+        )
+        return error.to_api_response()
+
+    # Post change request to FINEOS - https://lwd.atlassian.net/browse/PORTAL-1710
+    submitted_time = utcnow()
+    add_change_request_to_db(change_request, claim.claim_id, submitted_time)
+
+    response_data = ChangeRequestResponse(
+        fineos_absence_id=fineos_absence_id,
+        change_request_type=change_request.change_request_type,
+        start_date=change_request.start_date,
+        end_date=change_request.end_date,
+        submitted_time=submitted_time,
+    )
+
+    return response_util.success_response(
+        message="Successfully posted change request", data=response_data.dict(), status_code=201,
+    ).to_api_response()

@@ -43,6 +43,11 @@ class EmployerClaim extends BaseBenefitsApplication {
   // Todo(EMPLOYER-1453): remove V1 eform functionality
   uses_second_eform_version: boolean;
 
+  computed_start_dates: {
+    other_reason: string | null;
+    same_reason: string | null;
+  };
+
   leave_details: {
     continuous_leave_periods: BaseLeavePeriod[];
     employer_notification_date: string | null;

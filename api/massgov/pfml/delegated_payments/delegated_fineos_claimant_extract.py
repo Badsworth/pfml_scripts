@@ -367,7 +367,7 @@ class ClaimantData:
 
         # Note this should be identical regardless of absence case
         self.fineos_notification_id = payments_util.validate_db_input(
-            "NOTIFICATION_CASENUMBER", requested_absence, self.validation_container, True
+            "NOTIFICATION_CASENUMBER", requested_absence, self.validation_container, False
         )
         self.claim_type_raw = payments_util.validate_db_input(
             "ABSENCEREASON_COVERAGE", requested_absence, self.validation_container, True
@@ -934,11 +934,6 @@ class ClaimantExtractStep(Step):
             )
             self.increment(self.Metrics.EVIDENCE_NOT_ID_PROOFED_COUNT)
 
-            claimant_data.validation_container.add_validation_issue(
-                payments_util.ValidationReason.CLAIM_NOT_ID_PROOFED,
-                "Claim has not been ID proofed, LEAVEREQUEST_EVIDENCERESULTTYPE is not Satisfied",
-            )
-
         claim_pfml.is_id_proofed = claimant_data.is_claim_id_proofed
 
         # Return claim, we want to create this even if the employee
@@ -1165,7 +1160,9 @@ class ClaimantExtractStep(Step):
                 self.increment(self.Metrics.NEW_EFT_COUNT)
                 # This EFT info is new, it needs to be linked to the employee
                 # and added to the EFT prenoting flow
-                extra |= payments_util.get_traceable_pub_eft_details(new_eft, employee_pfml_entry)
+                extra |= payments_util.get_traceable_pub_eft_details(
+                    new_eft, employee_pfml_entry, state=State.DELEGATED_EFT_SEND_PRENOTE
+                )
                 logger.info(
                     "Initiating DELEGATED_EFT prenote flow for employee", extra=extra,
                 )

@@ -376,6 +376,7 @@ paths:
 
   /claims:
     get:
+      deprecated: true
       security:
         - jwt: []
         - oauth2: []
@@ -457,6 +458,74 @@ paths:
                   - properties:
                       data:
                         $ref: "#/components/schemas/ClaimsResponse"
+        "400":
+          description: An unsuccessful request returns a 400 status code if one or more errors occurred.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /claims/search:
+    post:
+      security:
+        - jwt: []
+        - oauth2: []
+      summary: Retrieve claims
+      operationId: massgov.pfml.api.claims.retrieve_claims
+      tags:
+        - Claims
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClaimRequest"
+      responses:
+        "200":
+          description: The claim information.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessfulResponse'
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/ClaimsResponse"
+        "400":
+          description: An unsuccessful request returns a 400 status code if one or more errors occurred.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /change-request:
+    post:
+      summary: Submit a change request to FINEOS
+      operationId: massgov.pfml.api.claims.post_change_request
+      parameters:
+        - name: fineos_absence_id
+          in: query
+          schema:
+            type: string
+            example: "NTN-00-ABS-00"
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema: 
+              $ref: "#/components/schemas/ChangeRequest"
+      responses:
+        "201":
+          description: A successful request returns a 201
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessfulResponse'
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/ChangeRequestResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
         "400":
           description: An unsuccessful request returns a 400 status code if one or more errors occurred.
           content:
@@ -1513,6 +1582,11 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/BenefitYearsSearchRequest"
+    ChangeRequest:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ChangeRequest"
 
   responses:
     AdminTokenResponse:
@@ -2846,7 +2920,6 @@ components:
           type: integer
           example: 1234
 
-
     DetailedClaimResponse:
       type: object
       properties:
@@ -2933,6 +3006,59 @@ components:
       type: array
       items:
         $ref: "#/components/schemas/ClaimResponse"
+
+    ClaimRequest:
+      type: object
+      properties:
+        page_size:
+          type: integer
+          format: int32
+          minimum: 1
+          default: 25
+        page_offset:
+          type: integer
+          format: int32
+          minimum: 1
+          default: 1
+        order_by:
+          type: string
+          default: "created_at"
+          enum: ["fineos_absence_status", "created_at", "employee"]
+        order_direction:
+          type: string
+          default: "descending"
+          enum: ["ascending", "descending"]
+        employer_id:
+          type: string
+          format: uuid
+          description: ID of Employer to query claims for
+        employee_id:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: ID(s) of Employee to query claims for
+        claim_status:
+          type: string
+          description: >
+            claim status used to filter the request,
+            single claim status or a comma seperated list of claim status (i.e claim_status="Approved,Closed"),
+            the valid status are "Approved", "Closed", "Completed", "Declined", "Open requirement" and "Pending - no action".
+        search:
+          type: string
+          description: >
+            A search string used to filter the request that,
+            when provided, is used in a fuzzy search against the claims'
+            Absence Case IDs, in addition to the employees' first, middle, and last names.
+            When the string is empty, it is ignored.
+        allow_hrd:
+          type: boolean
+          description: A temporary boolean value used to allow smoke testers to see HRD dashboard
+
+        is_reviewable:
+          type: string
+          enum: ["yes", "no"]
+          description: A string value used to check whether or not to filter claims where a review is requested for a leave admin.
 
     EmployeesResponse:
       type: array
@@ -4099,3 +4225,41 @@ components:
           default: 25
           example: 10
           nullable: true
+          
+    ChangeRequest:
+      type: object
+      properties:
+        change_request_type:
+          type: string
+          enum:
+            - Modification
+            - Withdrawal
+            - Medical To Bonding Transition
+        start_date: 
+          $ref: "#/components/schemas/Date"
+          nullable: true
+        end_date:
+          $ref: "#/components/schemas/Date"
+          nullable: true
+
+    ChangeRequestResponse:
+      type: object
+      properties:
+        fineos_absence_id:
+          type: string
+        change_request_type:
+          type: string
+          enum:
+            - Modification
+            - Withdrawal
+            - Medical To Bonding Transition
+        start_date: 
+          $ref: "#/components/schemas/Date"
+          nullable: true
+        end_date:
+          $ref: "#/components/schemas/Date"
+          nullable: true
+        submitted_time:
+          type: string
+          format: date-time
+          example: "2020-06-26T01:02:03.967736+00:00"

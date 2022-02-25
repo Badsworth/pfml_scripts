@@ -10,10 +10,12 @@ import createMockClaimDetail, {
 
 import ApiResourceCollection from "src/models/ApiResourceCollection";
 import { BenefitsApplicationDocument } from "src/models/Document";
+import { Payment } from "src/models/Payment";
 import { Props } from "types/common";
 import React from "react";
 import { Status } from "src/pages/applications/status";
 import User from "src/models/User";
+import { createMockPayment } from "lib/mock-helpers/createMockPayment";
 import { generateNotice } from "storybook/utils/generateNotice";
 import useMockableAppLogic from "lib/mock-helpers/useMockableAppLogic";
 
@@ -96,7 +98,6 @@ export const DefaultStory = (
   const shouldIncludeRfiDocument = args["Show request for more information"];
 
   const claimDetail = createMockClaimDetail({
-    hasPaidPayments: args["Has payments"],
     leaveScenario: args["Leave scenario"],
     leaveType: args["Leave type"],
     requestDecision,
@@ -111,6 +112,22 @@ export const DefaultStory = (
       documents: getDocuments({ requestDecision, shouldIncludeRfiDocument }),
       hasLoadedClaimDocuments: () => true,
       loadAll: () => new Promise(() => {}),
+    },
+    payments: {
+      loadPayments: () => new Promise(() => {}),
+      loadedPaymentsData: new Payment({
+        payments: args["Has payments"]
+          ? [
+              createMockPayment({
+                payment_method: "Check",
+                status: "Sent to bank",
+              }),
+            ]
+          : [],
+        absence_case_id: "mock-absence-case-id",
+      }),
+      hasLoadedPayments: () => true,
+      isLoadingPayments: false,
     },
     // Make the navigation tab appear active
     portalFlow: {

@@ -312,6 +312,17 @@ export class ClaimPage {
     return this;
   }
 
+  approveExtendedTime(): this {
+    waitForAjaxComplete();
+    cy.get("table[id$='leaveRequestListviewWidget']").within(() => {
+      cy.get("tr.ListRowSelected").click();
+    });
+    cy.get('a[title="Approve the Pending Leaving Request"]').click({
+      force: true,
+    });
+    return this;
+  }
+
   addAppeal(stashAppealCase: boolean): this {
     // This button turns out to be unclickable without force, because selecting
     // it seems to scroll it out of view. Force works around that.

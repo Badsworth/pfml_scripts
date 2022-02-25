@@ -222,6 +222,11 @@ exports[`PreviousLeavesOtherReasonDetails renders the page 1`] = `
               What was the first day of this leave?
             </legend>
             <span
+              class="display-block line-height-sans-5 measure-5 usa-hint text-base-darkest"
+            >
+              This date must be on or after January 1, 2021.
+            </span>
+            <span
               class="display-block line-height-sans-5 usa-hint text-base-dark measure-5"
             >
               MM / DD / YYYY
@@ -302,6 +307,11 @@ exports[`PreviousLeavesOtherReasonDetails renders the page 1`] = `
             >
               What was the last day of this leave?
             </legend>
+            <span
+              class="display-block line-height-sans-5 measure-5 usa-hint text-base-darkest"
+            >
+              This date must be on or after January 1, 2021.
+            </span>
             <span
               class="display-block line-height-sans-5 usa-hint text-base-dark measure-5"
             >

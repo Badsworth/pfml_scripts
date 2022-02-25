@@ -16,7 +16,7 @@ import { useRouter } from "next/router";
 import { Helmet } from "react-helmet-async";
 import React from "react";
 import { StaticPropsPermissions } from "../../menus";
-import { Timezone } from "../maintenance";
+import { Timezone } from "../index";
 import moment from "moment-timezone";
 
 // This is the dateTimeFormat that is rendered in the date time input element.
@@ -189,7 +189,7 @@ export default function Maintenance() {
 
   const handleCancelOnClick = (e: React.MouseEvent) => {
     e.preventDefault();
-    router.push("/maintenance");
+    router.push("/");
   };
 
   const handleEndUseDatetimeOnClick =
@@ -308,12 +308,12 @@ export default function Maintenance() {
     });
     */
     // Remove this push when above is uncommented.
-    router.push("/maintenance?saved=true");
+    router.push("/?saved=true");
   };
 
   return (
     <>
-      <Breadcrumb text="Back to Maintenance" href="/maintenance" />
+      <Breadcrumb text="Back to Maintenance" href="/" />
       <Helmet>
         <title>Maintenance</title>
       </Helmet>

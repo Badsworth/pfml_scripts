@@ -117,7 +117,7 @@ describe("Payments", () => {
     });
   });
 
-  it("redirects to status page if claim does not have an approval notice", () => {
+  it("redirects to status page if claim is not approved and has no payments", () => {
     process.env.featureFlags = JSON.stringify({
       claimantShowPaymentsPhaseTwo: true,
     });
@@ -129,6 +129,9 @@ describe("Payments", () => {
       {
         // includeApprovalNotice is false by default in setupHelper, passing for clarity
         addCustomSetup: setupHelper({
+          absence_periods: [
+            { ...defaultAbsencePeriod, request_decision: "Pending" },
+          ],
           goTo: goToMock,
           includeApprovalNotice: false,
         }),
@@ -184,6 +187,7 @@ describe("Payments", () => {
               request_decision: "Approved",
             }),
           ],
+          includeApprovalNotice: true,
         }),
       },
       props
@@ -209,6 +213,7 @@ describe("Payments", () => {
               request_decision: "Approved",
             }),
           ],
+          includeApprovalNotice: true,
         }),
       },
       props
@@ -405,6 +410,11 @@ describe("Payments", () => {
     });
 
     const approvalDate = {
+      "approved before claim start date": dayjs(
+        defaultAbsencePeriod.absence_period_start_date
+      )
+        .add(-1, "day")
+        .format("YYYY-MM-DD"),
       "approved after fourteenth claim date": dayjs(
         defaultAbsencePeriod.absence_period_start_date
       )
@@ -413,7 +423,7 @@ describe("Payments", () => {
       "approved before fourteenth claim date": dayjs(
         defaultAbsencePeriod.absence_period_start_date
       )
-        .subtract(14, "day")
+        .add(7, "day")
         .format("YYYY-MM-DD"),
       "with retroactive claim date": dayjs(
         defaultAbsencePeriod.absence_period_end_date

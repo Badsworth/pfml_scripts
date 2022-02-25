@@ -89,7 +89,7 @@ class RelatedPaymentsProcessingStep(Step):
                 logger.info(
                     "Payment added to state %s",
                     end_state.state_description,
-                    extra=payment_log_details,
+                    extra=payments_util.get_traceable_payment_details(payment, end_state),
                 )
                 message = "Duplicate primary payment records found for the withholding record."
             elif len(primary_payment_records) == 0:
@@ -118,7 +118,7 @@ class RelatedPaymentsProcessingStep(Step):
                 logger.info(
                     "Payment added to state %s",
                     end_state.state_description,
-                    extra=payment_log_details,
+                    extra=payments_util.get_traceable_payment_details(payment, end_state),
                 )
                 message = "No primary payment record found for the withholding record."
             else:
@@ -190,7 +190,7 @@ class RelatedPaymentsProcessingStep(Step):
                     logger.info(
                         "Payment added to state %s",
                         end_state.state_description,
-                        extra=payment_log_details,
+                        extra=payments_util.get_traceable_payment_details(payment, end_state),
                     )
 
                     transaction_status: Optional[

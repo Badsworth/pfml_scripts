@@ -3,10 +3,14 @@ from decimal import Decimal
 from itertools import chain
 from typing import List, Optional
 
-from massgov.pfml.api.models.claims.common import EmployerClaimReview, PreviousLeave
+from massgov.pfml.api.models.claims.common import (
+    ChangeRequest,
+    ChangeRequestType,
+    EmployerClaimReview,
+    PreviousLeave,
+)
 from massgov.pfml.api.models.common import EmployerBenefit
 from massgov.pfml.api.validation.exceptions import IssueType, ValidationErrorDetail
-from massgov.pfml.db.models.employees import ChangeRequest, ChangeRequestType
 
 # there are 168 hours in a week
 MAX_HOURS_WORKED_PER_WEEK = 168
@@ -132,15 +136,8 @@ def get_employer_benefits_issues(
 def get_change_request_issues(change_request: ChangeRequest) -> List[ValidationErrorDetail]:
     error_list: List[ValidationErrorDetail] = []
 
-    if not change_request.claim_id:
-        error_list.append(
-            ValidationErrorDetail(
-                message="Need a valid claim id", type=IssueType.required, field="claim_id",
-            )
-        )
-
     # for any change request type other than withdrawal we need start/end dates
-    if change_request.change_request_type_instance != ChangeRequestType.WITHDRAWAL:
+    if change_request.change_request_type != ChangeRequestType.WITHDRAWAL:
         if not change_request.start_date:
             error_list.append(
                 ValidationErrorDetail(

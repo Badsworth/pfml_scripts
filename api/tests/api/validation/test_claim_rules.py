@@ -2,7 +2,11 @@ from datetime import date
 
 import pytest
 
-from massgov.pfml.api.models.claims.common import EmployerClaimReview
+from massgov.pfml.api.models.claims.common import (
+    ChangeRequest,
+    ChangeRequestType,
+    EmployerClaimReview,
+)
 from massgov.pfml.api.models.common import EmployerBenefit, PreviousLeave
 from massgov.pfml.api.validation.claim_rules import (
     get_change_request_issues,
@@ -12,7 +16,6 @@ from massgov.pfml.api.validation.claim_rules import (
     get_previous_leaves_issues,
 )
 from massgov.pfml.api.validation.exceptions import IssueType
-from massgov.pfml.db.models.employees import ChangeRequest, ChangeRequestType
 
 
 @pytest.fixture
@@ -152,9 +155,9 @@ class TestGetEmployerBenefitsIssues:
 def change_request():
     return ChangeRequest(
         claim_id="5f91c12b-4d49-4eb0-b5d9-7fa0ce13eb32",
-        change_request_type_instance=ChangeRequestType.MODIFICATION,
-        start_date=date(2020, 1, 1),
-        end_date=date(2020, 2, 1),
+        change_request_type=ChangeRequestType.MODIFICATION,
+        start_date="2020-01-01",
+        end_date="2020-02-01",
     )
 
 
@@ -162,13 +165,6 @@ class TestGetChangeRequestIssues:
     def test_no_issues(self, change_request):
         issues = get_change_request_issues(change_request)
         assert not issues
-
-    def test_no_claim_id(self, change_request):
-        change_request.claim_id = None
-        resp = get_change_request_issues(change_request)
-        assert resp[0].type == IssueType.required
-        assert resp[0].field == "claim_id"
-        assert "Need a valid claim id" in resp[0].message
 
     def test_no_start_date(self, change_request):
         change_request.start_date = None
@@ -185,7 +181,7 @@ class TestGetChangeRequestIssues:
         assert "End date is required for this request type" in resp[0].message
 
     def test_no_issues_on_dates_withdrawal(self, change_request):
-        change_request.change_request_type_instance = ChangeRequestType.WITHDRAWAL
+        change_request.change_request_type = ChangeRequestType.WITHDRAWAL
         change_request.start_date = None
         change_request.end_date = None
         assert not get_change_request_issues(change_request)

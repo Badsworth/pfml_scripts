@@ -1,8 +1,8 @@
 import io
+import unittest.mock as mock
 from datetime import datetime, timedelta
 from pathlib import Path
 
-import mock
 import pytest
 from freezegun import freeze_time
 

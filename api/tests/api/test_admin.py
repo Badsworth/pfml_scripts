@@ -1,7 +1,8 @@
+from unittest.mock import patch
+
 from flask import g
 from jose import jwt
 from jose.constants import ALGORITHMS
-from mock import patch
 
 from massgov.pfml.api.admin import SERVICE_UNAVAILABLE_MESSAGE
 from massgov.pfml.db.models.azure import AzureGroup, AzureGroupPermission, AzurePermission

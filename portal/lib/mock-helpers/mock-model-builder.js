@@ -89,6 +89,10 @@ export class BaseMockBenefitsApplicationBuilder {
         )
       )
     );
+    set(this.claimAttrs, "computed_start_dates", {
+      other_reason: "2021-01-01",
+      same_reason: "2021-01-01",
+    });
     return this;
   }
 
@@ -112,6 +116,10 @@ export class BaseMockBenefitsApplicationBuilder {
         )
       )
     );
+    set(this.claimAttrs, "computed_start_dates", {
+      other_reason: "2021-01-01",
+      same_reason: "2021-01-01",
+    });
     return this;
   }
 
@@ -130,6 +138,10 @@ export class BaseMockBenefitsApplicationBuilder {
         )
       )
     );
+    set(this.claimAttrs, "computed_start_dates", {
+      other_reason: "2021-01-01",
+      same_reason: "2021-01-01",
+    });
     return this;
   }
 
@@ -271,6 +283,10 @@ export class MockEmployerClaimBuilder extends BaseMockBenefitsApplicationBuilder
     // Defaults, can be overridden by calling instance methods
     this.claimAttrs = {
       absence_periods: [],
+      computed_start_dates: {
+        other_reason: "2021-02-01",
+        same_reason: "2021-02-01",
+      },
       employer_dba: "Work Inc.",
       employer_id: "dda903f-f093f-ff900",
       first_name: "Jane",
@@ -410,6 +426,7 @@ export class MockBenefitsApplicationBuilder extends BaseMockBenefitsApplicationB
     this.claimAttrs = {
       application_id: "mock_application_id",
       status: BenefitsApplicationStatus.started,
+      computed_start_dates: {},
     };
   }
 

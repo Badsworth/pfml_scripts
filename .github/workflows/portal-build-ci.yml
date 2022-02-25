@@ -41,7 +41,7 @@ jobs:
         working-directory: ${{ env.working-dir }}
 
       - name: build
-        run: npm run build:${{ matrix.env }}
+        run: BUILD_ENV=${{ matrix.env }} npm run build
         working-directory: ${{ env.working-dir }}
   storybook:
     name: Check Storybook builds successfully
@@ -84,7 +84,7 @@ jobs:
     name: post failures to slack
     needs: [get-build-state]
     if: needs.get-build-state.outputs.build-state == 'failure' || needs.get-build-state.outputs.build-state == 'timed_out'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest    
     steps:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1

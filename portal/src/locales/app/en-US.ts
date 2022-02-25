@@ -704,7 +704,8 @@ const errors = {
   users: {
     email_address: {
       exists: "$t(shared.auth.emailError_exists)",
-      format: "Enter a valid email address",
+      format:
+        "Enter an email address in the correct format, like name@example.com",
       required: "$t(shared.auth.emailError_required)",
     },
     mfa_phone_number: {
@@ -812,6 +813,7 @@ const shared: {
     leaveMinutesLabel: "What was the total number of hours you took off?",
     leaveStartDateLabel: "What was the first day of this leave?",
     limitMessage: "You can only add up to {{limit}} leaves",
+    minimumDateHint: "This date must be on or after {{minimumDate}}.",
     removeButton: "Remove this previous leave",
     sectionHint:
       "Enter details about each period of leave taken between {{previousLeaveStartDate}} and {{leaveStartDate}}. A leave period begins on the day you first went on leave and ends on the last day of leave. If you were on leave intermittently, your leave period begins on the first day you went on leave and ends on the very last day.<br/><br/>You don't need to tell us about previous leave you’ve taken through Massachusetts’ PFML program.",
@@ -831,8 +833,7 @@ const shared: {
       "The date your leave ended must include a valid month, day, and year.",
     leaveEndDate_invalidDateRange:
       "The date your leave ends must be on or after the date your leave began.",
-    leaveEndDate_minimum:
-      "Only enter previous leaves taken on or after January 1, 2021.",
+    leaveEndDate_minimum: "Only enter previous leaves with a valid start date.",
     leaveEndDate_required: "Enter the date your leave ended.",
     leaveMinutes_maximum: "The hours entered are more than the possible hours.",
     leaveMinutes_required: "Enter the hours you took off work for your leave.",
@@ -840,7 +841,7 @@ const shared: {
     leaveStartDate_format:
       "The date your leave began must include a valid month, day, and year.",
     leaveStartDate_minimum:
-      "Only enter previous leaves taken on or after January 1, 2021.",
+      "Only enter previous leaves with a valid start date.",
     leaveStartDate_required: "Enter the date your leave began.",
     workedPerWeekMinutes_maximum:
       "The hours entered are more than the possible hours.",
@@ -1005,11 +1006,8 @@ const pages: {
       "Learn more about the <approval-process-link>application review and approval process</approval-process-link>.",
     createApplicationHeading: "Create a new application",
     getReadyLink: "Start a new application",
-    inProgressHeading: "In-progress applications",
-    noClaims: "You don’t have any applications yet.",
     startByPhoneDescription: "$t(shared.startByPhoneDescription)",
     startByPhoneLabel: "$t(shared.startByPhoneLabel)",
-    submittedHeading: "Submitted applications",
     title: "Your applications",
     uploadSuccessHeading: "You successfully submitted your documents",
     uploadSuccessMessage:
@@ -1749,6 +1747,7 @@ const pages: {
       "$t(shared.claimsPreviousLeaveDetails.isForCurrentEmployerHint)",
     isForCurrentEmployerLabel:
       "$t(shared.claimsPreviousLeaveDetails.isForCurrentEmployerLabel)",
+    leaveEndDateHint: "$t(shared.claimsPreviousLeaveDetails.minimumDateHint)",
     leaveEndDateLabel:
       "$t(shared.claimsPreviousLeaveDetails.leaveEndDateLabel)",
     leaveMinutesHint: "$t(shared.claimsPreviousLeaveDetails.leaveMinutesHint)",
@@ -1765,6 +1764,7 @@ const pages: {
     leaveReasonHint:
       "If you didn’t take leave for one of these reasons, go back to the previous screen and select No.",
     leaveReasonLabel: "Why did you need to take this leave?",
+    leaveStartDateHint: "$t(shared.claimsPreviousLeaveDetails.minimumDateHint)",
     leaveStartDateLabel:
       "$t(shared.claimsPreviousLeaveDetails.leaveStartDateLabel)",
     limitMessage: "$t(shared.claimsPreviousLeaveDetails.limitMessage)",
@@ -1802,11 +1802,13 @@ const pages: {
       "$t(shared.claimsPreviousLeaveDetails.isForCurrentEmployerHint)",
     isForCurrentEmployerLabel:
       "$t(shared.claimsPreviousLeaveDetails.isForCurrentEmployerLabel)",
+    leaveEndDateHint: "$t(shared.claimsPreviousLeaveDetails.minimumDateHint)",
     leaveEndDateLabel:
       "$t(shared.claimsPreviousLeaveDetails.leaveEndDateLabel)",
     leaveMinutesHint: "$t(shared.claimsPreviousLeaveDetails.leaveMinutesHint)",
     leaveMinutesLabel:
       "$t(shared.claimsPreviousLeaveDetails.leaveMinutesLabel)",
+    leaveStartDateHint: "$t(shared.claimsPreviousLeaveDetails.minimumDateHint)",
     leaveStartDateLabel:
       "$t(shared.claimsPreviousLeaveDetails.leaveStartDateLabel)",
     limitMessage: "$t(shared.claimsPreviousLeaveDetails.limitMessage)",
@@ -3099,7 +3101,9 @@ const components: {
     addButton: "$t(shared.claimsPreviousLeaveDetails.addButton)",
     dateRangeLabel: "Date range",
     explanation:
-      "Your employee has listed leave they have taken for qualified reasons. Only leave since {{otherLeaveStartDate}} is included. This includes both paid leave (for example: paid vacation or sick days) and unpaid leave (for example: FMLA leave). When possible, verify that this previous leave was for reasons that qualify for paid leave under PFML.",
+      "<p>Verify the accuracy of your employee’s qualified leave dates. Any qualifying reason should only be reported if it was taken after {{other_reason_date}}.</p><p>This includes both paid leave (for example: paid vacation or sick days) and unpaid leave (for example: FMLA leave).</p>",
+    explanation_differentDates:
+      "<p>Verify the accuracy of your employee’s qualified leave dates. Leave to care for a family member should only be reported if it was taken after {{same_reason_date}}. Any other qualifying reason should only be reported if it was taken after {{other_reason_date}}. </p><p>This includes both paid leave (for example: paid vacation or sick days) and unpaid leave (for example: FMLA leave).</p>",
     header: "Previous leave",
     leaveTypeLabel: "Leave type",
     qualifyingReasonContent:

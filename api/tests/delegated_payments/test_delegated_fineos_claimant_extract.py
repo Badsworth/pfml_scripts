@@ -658,13 +658,13 @@ def test_create_or_update_claim_invalid_values(claimant_extract_step):
     claimant_data = make_claimant_data_from_fineos_data(fineos_data)
 
     # The number of required fields we pull out of the requested absence file
-    assert len(set(claimant_data.validation_container.validation_issues)) == 14
+    assert len(set(claimant_data.validation_container.validation_issues)) == 13
 
     # The claim will be created, but with just an absence case number
     claim = claimant_extract_step.create_or_update_claim(claimant_data)
     assert claim is not None
     # New claim not yet persisted to DB
-    assert claim.fineos_notification_id is None
+    assert claim.fineos_notification_id == ""
     assert claim.fineos_absence_id == "NTN-001-ABS-01"
     assert claim.fineos_absence_status_id is None
     assert claim.absence_period_start_date is None
@@ -799,7 +799,7 @@ def test_create_or_update_absence_period_invalid_values(claimant_extract_step, t
     claimant_data = make_claimant_data_from_fineos_data(fineos_data)
 
     # The number of required fields we pull out of the requested absence file
-    assert len(set(claimant_data.validation_container.validation_issues)) == 12
+    assert len(set(claimant_data.validation_container.validation_issues)) == 11
 
     # The claim will be created, but with just an absence case number
     absence_period_data = claimant_data.absence_period_data
@@ -896,8 +896,16 @@ def test_create_or_update_absence_period_with_incomplete_request_absence_data(
     assert len(claimant_data.validation_container.validation_issues) == 2
 
     assert claimant_data.validation_container.validation_issues == [
-        ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCEPERIOD_CLASSID"),
-        ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCEPERIOD_INDEXID"),
+        ValidationIssue(
+            ValidationReason.MISSING_FIELD,
+            "ABSENCEPERIOD_CLASSID",
+            field_name="ABSENCEPERIOD_CLASSID",
+        ),
+        ValidationIssue(
+            ValidationReason.MISSING_FIELD,
+            "ABSENCEPERIOD_INDEXID",
+            field_name="ABSENCEPERIOD_INDEXID",
+        ),
     ]
 
     absence_period_data = claimant_data.absence_period_data
@@ -1202,11 +1210,15 @@ def test_run_step_validation_issues(
     # AbsencePeriod Start is not included in validation issues because it is technically a valid field.
     # Even though it is technically valid, it should not be set on the claim unless both start_date and end_date are present.
     assert validation_issues == [
-        {"reason": "MissingField", "details": "ABSENCEPERIOD_END"},
-        {"reason": "MissingField", "details": "DATEOFBIRTH"},
-        {"reason": "MissingField", "details": "FIRSTNAMES"},
-        {"reason": "MissingField", "details": "LASTNAME"},
-        {"reason": "MissingField", "details": "SORTCODE"},
+        {
+            "reason": "MissingField",
+            "details": "ABSENCEPERIOD_END",
+            "field_name": "ABSENCEPERIOD_END",
+        },
+        {"reason": "MissingField", "details": "DATEOFBIRTH", "field_name": "DATEOFBIRTH"},
+        {"reason": "MissingField", "details": "FIRSTNAMES", "field_name": "FIRSTNAMES"},
+        {"reason": "MissingField", "details": "LASTNAME", "field_name": "LASTNAME"},
+        {"reason": "MissingField", "details": "SORTCODE", "field_name": "SORTCODE"},
     ]
 
 
@@ -1229,7 +1241,7 @@ def test_run_step_minimal_viable_claim(
     assert claim
     assert claim.fineos_absence_id == fineos_data.absence_case_number
     assert claim.employee_id is None
-    assert claim.fineos_notification_id is None
+    assert claim.fineos_notification_id == ""
     assert claim.claim_type_id is None
     assert claim.fineos_absence_status_id is None
     assert claim.absence_period_start_date is None
@@ -1246,23 +1258,66 @@ def test_run_step_minimal_viable_claim(
     validation_issues = state_log.outcome["validation_container"]["validation_issues"]
 
     assert validation_issues == [
-        {"reason": "MissingField", "details": "ABSENCEPERIOD_START"},
-        {"reason": "MissingField", "details": "ABSENCEPERIOD_END"},
-        {"reason": "MissingField", "details": "ABSENCEPERIOD_CLASSID"},
-        {"reason": "MissingField", "details": "ABSENCEPERIOD_INDEXID"},
-        {"reason": "MissingField", "details": "LEAVEREQUEST_ID"},
-        {"reason": "MissingField", "details": "ABSENCEPERIOD_TYPE"},
-        {"reason": "MissingField", "details": "ABSENCEREASON_QUALIFIER1"},
-        {"reason": "MissingField", "details": "ABSENCEREASON_NAME"},
-        {"reason": "MissingField", "details": "LEAVEREQUEST_DECISION"},
-        {"reason": "MissingField", "details": "NOTIFICATION_CASENUMBER"},
-        {"reason": "MissingField", "details": "ABSENCEREASON_COVERAGE"},
-        {"reason": "MissingField", "details": "ABSENCE_CASESTATUS"},
-        {"reason": "MissingField", "details": "EMPLOYEE_CUSTOMERNO"},
-        {"reason": "MissingField", "details": "EMPLOYER_CUSTOMERNO"},
         {
-            "reason": "ClaimNotIdProofed",
-            "details": "Claim has not been ID proofed, LEAVEREQUEST_EVIDENCERESULTTYPE is not Satisfied",
+            "reason": "MissingField",
+            "details": "ABSENCEPERIOD_START",
+            "field_name": "ABSENCEPERIOD_START",
+        },
+        {
+            "reason": "MissingField",
+            "details": "ABSENCEPERIOD_END",
+            "field_name": "ABSENCEPERIOD_END",
+        },
+        {
+            "reason": "MissingField",
+            "details": "ABSENCEPERIOD_CLASSID",
+            "field_name": "ABSENCEPERIOD_CLASSID",
+        },
+        {
+            "reason": "MissingField",
+            "details": "ABSENCEPERIOD_INDEXID",
+            "field_name": "ABSENCEPERIOD_INDEXID",
+        },
+        {"reason": "MissingField", "details": "LEAVEREQUEST_ID", "field_name": "LEAVEREQUEST_ID"},
+        {
+            "reason": "MissingField",
+            "details": "ABSENCEPERIOD_TYPE",
+            "field_name": "ABSENCEPERIOD_TYPE",
+        },
+        {
+            "reason": "MissingField",
+            "details": "ABSENCEREASON_QUALIFIER1",
+            "field_name": "ABSENCEREASON_QUALIFIER1",
+        },
+        {
+            "reason": "MissingField",
+            "details": "ABSENCEREASON_NAME",
+            "field_name": "ABSENCEREASON_NAME",
+        },
+        {
+            "reason": "MissingField",
+            "details": "LEAVEREQUEST_DECISION",
+            "field_name": "LEAVEREQUEST_DECISION",
+        },
+        {
+            "reason": "MissingField",
+            "details": "ABSENCEREASON_COVERAGE",
+            "field_name": "ABSENCEREASON_COVERAGE",
+        },
+        {
+            "reason": "MissingField",
+            "details": "ABSENCE_CASESTATUS",
+            "field_name": "ABSENCE_CASESTATUS",
+        },
+        {
+            "reason": "MissingField",
+            "details": "EMPLOYEE_CUSTOMERNO",
+            "field_name": "EMPLOYEE_CUSTOMERNO",
+        },
+        {
+            "reason": "MissingField",
+            "details": "EMPLOYER_CUSTOMERNO",
+            "field_name": "EMPLOYER_CUSTOMERNO",
         },
     ]
 
@@ -1296,9 +1351,7 @@ def test_run_step_not_id_proofed(
     # Verify the state logs
     assert len(claim.state_logs) == 1
     state_log = claim.state_logs[0]
-    assert (
-        state_log.end_state_id == State.DELEGATED_CLAIM_ADD_TO_CLAIM_EXTRACT_ERROR_REPORT.state_id
-    )
+    assert state_log.end_state_id == State.DELEGATED_CLAIM_EXTRACTED_FROM_FINEOS.state_id
 
 
 def test_run_step_no_default_payment_pref(
@@ -1493,7 +1546,11 @@ def test_run_step_with_missing_start_and_end_dates(
     assert claim.absence_period_end_date is None
 
     assert claim.state_logs[0].outcome["validation_container"]["validation_issues"] == [
-        {"reason": "MissingField", "details": "ABSENCEPERIOD_END"}
+        {
+            "reason": "MissingField",
+            "details": "ABSENCEPERIOD_END",
+            "field_name": "ABSENCEPERIOD_END",
+        }
     ]
 
 
@@ -1552,7 +1609,11 @@ def test_claimant_data_validation_nonmatching_dupes(initialize_factories_session
     # so it additional gets the validation issue for a blank field
     assert set(claimant_data.validation_container.validation_issues) == set(
         [
-            ValidationIssue(ValidationReason.MISSING_FIELD, "EMPLOYER_CUSTOMERNO"),
+            ValidationIssue(
+                ValidationReason.MISSING_FIELD,
+                "EMPLOYER_CUSTOMERNO",
+                field_name="EMPLOYER_CUSTOMERNO",
+            ),
             ValidationIssue(
                 ValidationReason.UNEXPECTED_RECORD_VARIANCE,
                 "Expected only a single employer customer number for claim, and received 2: ['1234', '']",
