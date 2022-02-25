@@ -535,9 +535,7 @@ def retrieve_claims() -> flask.Response:
     body = connexion.request.json
     claim_request = ClaimRequest.parse_obj(body)
 
-    return process_claims_request(
-        claim_request=claim_request, employee_id_str="", method_name="retrieve_claims"
-    )
+    return _process_claims_request(claim_request=claim_request, method_name="retrieve_claims")
 
 
 def get_claims() -> flask.Response:
@@ -553,21 +551,19 @@ def get_claims() -> flask.Response:
 
     claim_request = ClaimRequest()
     claim_request.employer_id = employer_id
+    if employee_id_str is not None:
+        claim_request.employee_ids = [UUID(eid.strip()) for eid in employee_id_str.split(",")]
     claim_request.search = flask.request.args.get("search", type=str)
     claim_request.claim_status = flask.request.args.get("claim_status")
     claim_request.request_decision = flask.request.args.get("request_decision")
     claim_request.is_reviewable = flask.request.args.get("is_reviewable", type=str)
 
-    return process_claims_request(
-        claim_request=claim_request, employee_id_str=employee_id_str, method_name="get_claims"
-    )
+    return _process_claims_request(claim_request=claim_request, method_name="get_claims")
 
 
-def process_claims_request(
-    claim_request: ClaimRequest, employee_id_str: Optional[str], method_name: str
-) -> flask.Response:
+def _process_claims_request(claim_request: ClaimRequest, method_name: str) -> flask.Response:
 
-    employee_ids = claim_request.employee_id
+    employee_ids = claim_request.employee_ids
     search_string = claim_request.search
     absence_statuses = parse_filterable_absence_statuses(claim_request.claim_status)
     is_reviewable = claim_request.is_reviewable
@@ -612,12 +608,6 @@ def process_claims_request(
             else:
                 query.add_user_owns_claim_filter(current_user)
 
-            # filter claims by an employee_id
-            if employee_id_str:
-                employee_ids_set = {eid.strip() for eid in employee_id_str.split(",")}
-                query.add_employees_filter(employee_ids_set)
-
-            # filter claims by an employee_id for POST /claims/search
             if employee_ids:
                 # convert List[UUID] to Set[str]
                 employee_ids_set = {str(eid) for eid in employee_ids}
