@@ -233,6 +233,10 @@ export class DAO {
   static RunIndicators() {
     return new DAORunIndicators(this.ACCOUNT_ID);
   }
+
+  static ComponentVersions() {
+    return new DAOComponentVersions(this.ACCOUNT_ID);
+  }
 }
 
 export class BaseDAOV2 {
@@ -329,5 +333,45 @@ FROM TestResult FACET environment, runId
       row.tag = [];
     }
     return row;
+  }
+}
+
+export class DAOComponentVersions extends BaseDAOV2 {
+  constructor(accountId) {
+    super(accountId);
+    this.queryParts.since = "3 month ago";
+    this.queryParts.limit = "max";
+    this.queryParts.env = null;
+  }
+
+  query() {
+    const queryParts = [
+      `SELECT
+        latest(version) as version,
+        latest(timestamp) as timestamp`,
+      "FROM CustomDeploymentMarker FACET environment, component",
+      `SINCE ${this.queryParts.since}`,
+    ];
+
+    if (this.queryParts.where) {
+      queryParts.push(`WHERE ${this.queryParts.where}`);
+    }
+
+    queryParts.push(`LIMIT ${this.queryParts.limit}`);
+
+    return queryParts.join("\n");
+  }
+
+  postProcessor(data) {
+    return data.reduce((obj, datum) => {
+      if (!obj[datum.environment]) {
+        obj[datum.environment] = {};
+      }
+      obj[datum.environment][datum.component] = {
+        version: datum.version,
+        timestamp: new Date(datum.timestamp),
+      };
+      return obj;
+    }, {});
   }
 }

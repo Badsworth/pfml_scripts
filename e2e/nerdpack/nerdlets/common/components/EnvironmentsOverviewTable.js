@@ -12,6 +12,7 @@ import {
 import { RunIndicator } from "./RunIndicator";
 import { E2EQuery } from "./E2EQuery";
 import { DAO } from "../DAO";
+import { format as dateFormat } from "date-fns";
 
 class RunIndicators extends React.Component {
   static getDerivedStateFromProps(props) {
@@ -110,54 +111,86 @@ export class EnvironmentsOverviewTable extends React.Component {
     //TODO: Add component versions back into this view
 
     return [
-      <table className="EnvironmentsOverviewTable">
-        <thead>
-          <tr>
-            <th>Environment</th>
-            <th>E2E</th>
-            {COMPONENTS.map((component) => (
-              <th>{labelComponent(component)} Version</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {this.state.envs.map((env) => {
-            return (
-              <>
-                {env === "infra-test" && (
-                  <tr className={"infra"}>
-                    <td colspan="2">Environment for Infra Deployments Only</td>
-                  </tr>
-                )}
-                <tr>
-                  <td className={"env"}>
-                    <Link
-                      to={navigation.getOpenStackedNerdletLocation({
-                        id: "env-timeline",
-                        urlState: {
-                          environment: env,
-                        },
+      <E2EQuery DAO={DAO.ComponentVersions()}>
+        {({ data: versions }) => (
+          <table className="EnvironmentsOverviewTable">
+            <thead>
+              <tr>
+                <th>Environment</th>
+                <th>E2E</th>
+                {COMPONENTS.map((component) => (
+                  <th>{labelComponent(component)} Version</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {this.state.envs.map((env) => {
+                return (
+                  <>
+                    {env === "infra-test" && (
+                      <tr className={"infra"}>
+                        <td colspan="2">
+                          Environment for Infra Deployments Only
+                        </td>
+                      </tr>
+                    )}
+                    <tr>
+                      <td className={"env"}>
+                        <Link
+                          to={navigation.getOpenStackedNerdletLocation({
+                            id: "env-timeline",
+                            urlState: {
+                              environment: env,
+                            },
+                          })}
+                        >
+                          {labelEnv(env)}
+                        </Link>
+                      </td>
+                      <td className={"e2e-run-history"}>
+                        <RunIndicators
+                          env={env}
+                          since={this.state.since}
+                          where={this.state.where}
+                          limit={this.state.limitRuns}
+                          accountId={this.accountId}
+                          simpleView={this.state.simpleView}
+                        />
+                      </td>
+                      {COMPONENTS.map((component) => {
+                        if (versions[env] && versions[env][component]) {
+                          return (
+                            <td className="version">
+                              <Link
+                                to={navigation.getOpenStackedNerdletLocation({
+                                  id: "deployments",
+                                  urlState: {
+                                    environment: env,
+                                    component: component,
+                                  },
+                                })}
+                              >
+                                {versions[env][component].version}
+                              </Link>
+                              <div className="date">
+                                {dateFormat(
+                                  versions[env][component].timestamp,
+                                  "PPp"
+                                )}
+                              </div>
+                            </td>
+                          );
+                        }
+                        return <td>UNKNOWN</td>;
                       })}
-                    >
-                      {labelEnv(env)}
-                    </Link>
-                  </td>
-                  <td className={"e2e-run-history"}>
-                    <RunIndicators
-                      env={env}
-                      since={this.state.since}
-                      where={this.state.where}
-                      limit={this.state.limitRuns}
-                      accountId={this.accountId}
-                      simpleView={this.state.simpleView}
-                    />
-                  </td>
-                </tr>
-              </>
-            );
-          })}
-        </tbody>
-      </table>,
+                    </tr>
+                  </>
+                );
+              })}
+            </tbody>
+          </table>
+        )}
+      </E2EQuery>,
     ];
   }
 }
