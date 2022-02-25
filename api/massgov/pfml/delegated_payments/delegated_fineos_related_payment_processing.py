@@ -29,52 +29,32 @@ class RelatedPaymentsProcessingStep(Step):
         STANDARD_PAYMENT_RECORD_COUNT = "standard_payment_record_count"
 
     # End state when we have multiple primary payments
-    multiple_primary_states: Dict[int, LkState] = {}
-    multiple_primary_states[
-        PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id
-    ] = State.EMPLOYER_REIMBURSEMENT_ERROR
-    multiple_primary_states[
-        PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id
-    ] = State.STATE_WITHHOLDING_ORPHANED_PENDING_AUDIT
-    multiple_primary_states[
-        PaymentTransactionType.FEDERAL_TAX_WITHHOLDING.payment_transaction_type_id
-    ] = State.FEDERAL_WITHHOLDING_ORPHANED_PENDING_AUDIT
+    multiple_primary_states: Dict[int, LkState] = {
+        PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id: State.EMPLOYER_REIMBURSEMENT_ERROR,
+        PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id: State.STATE_WITHHOLDING_ORPHANED_PENDING_AUDIT,
+        PaymentTransactionType.FEDERAL_TAX_WITHHOLDING.payment_transaction_type_id: State.FEDERAL_WITHHOLDING_ORPHANED_PENDING_AUDIT,
+    }
 
     # End state when we have no primary payments
-    primary_not_found_states: Dict[int, LkState] = {}
-    primary_not_found_states[
-        PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id
-    ] = State.EMPLOYER_REIMBURSEMENT_PENDING_AUDIT
-    primary_not_found_states[
-        PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id
-    ] = State.STATE_WITHHOLDING_ORPHANED_PENDING_AUDIT
-    primary_not_found_states[
-        PaymentTransactionType.FEDERAL_TAX_WITHHOLDING.payment_transaction_type_id
-    ] = State.FEDERAL_WITHHOLDING_ORPHANED_PENDING_AUDIT
+    primary_not_found_states: Dict[int, LkState] = {
+        PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id: State.EMPLOYER_REIMBURSEMENT_PENDING_AUDIT,
+        PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id: State.STATE_WITHHOLDING_ORPHANED_PENDING_AUDIT,
+        PaymentTransactionType.FEDERAL_TAX_WITHHOLDING.payment_transaction_type_id: State.FEDERAL_WITHHOLDING_ORPHANED_PENDING_AUDIT,
+    }
 
     # End state when we have primary payment in restartable state
-    primary_in_restartable_states: Dict[int, LkState] = {}
-    primary_in_restartable_states[
-        PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id
-    ] = State.DELEGATED_PAYMENT_CASCADED_ERROR_RESTARTABLE
-    primary_in_restartable_states[
-        PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id
-    ] = State.STATE_WITHHOLDING_ERROR_RESTARTABLE
-    primary_in_restartable_states[
-        PaymentTransactionType.FEDERAL_TAX_WITHHOLDING.payment_transaction_type_id
-    ] = State.FEDERAL_WITHHOLDING_ERROR_RESTARTABLE
+    primary_in_restartable_states: Dict[int, LkState] = {
+        PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id: State.DELEGATED_PAYMENT_CASCADED_ERROR_RESTARTABLE,
+        PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id: State.STATE_WITHHOLDING_ERROR_RESTARTABLE,
+        PaymentTransactionType.FEDERAL_TAX_WITHHOLDING.payment_transaction_type_id: State.FEDERAL_WITHHOLDING_ERROR_RESTARTABLE,
+    }
 
     # End state when we have primary payment in errored state
-    primary_in_error_states: Dict[int, LkState] = {}
-    primary_in_error_states[
-        PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id
-    ] = State.DELEGATED_PAYMENT_CASCADED_ERROR
-    primary_in_error_states[
-        PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id
-    ] = State.STATE_WITHHOLDING_ERROR
-    primary_in_error_states[
-        PaymentTransactionType.FEDERAL_TAX_WITHHOLDING.payment_transaction_type_id
-    ] = State.FEDERAL_WITHHOLDING_ERROR
+    primary_in_error_states: Dict[int, LkState] = {
+        PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id: State.DELEGATED_PAYMENT_CASCADED_ERROR,
+        PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id: State.STATE_WITHHOLDING_ERROR,
+        PaymentTransactionType.FEDERAL_TAX_WITHHOLDING.payment_transaction_type_id: State.FEDERAL_WITHHOLDING_ERROR,
+    }
 
     def run_step(self) -> None:
         """Top-level function that calls all the other functions in this file in order"""
@@ -93,8 +73,6 @@ class RelatedPaymentsProcessingStep(Step):
             if payment.claim is None:
                 raise Exception("Claim not found for standard payment id: %s ", payment.payment_id)
             list_of_related_transaction_type_ids = [
-                # PaymentTransactionType.FEDERAL_TAX_WITHHOLDING.payment_transaction_type_id,
-                # PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id,
                 PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id,
             ]
 
@@ -115,15 +93,13 @@ class RelatedPaymentsProcessingStep(Step):
             # If we have more than one Employer Reimbursement payment : set standard payment state to error
             payment_log_details = payments_util.get_traceable_payment_details(payment)
             if len(related_payment_records) > 1:
+                message = "Duplicate employer reimbursement payments exists for primary payment."
+
                 logger.info(
-                    "Duplicate employer reimbursement payments exists for primary payment %s",
-                    payment.claim.fineos_absence_id,
-                    extra=payment_log_details,
+                    message, extra=payment_log_details,
                 )
 
                 end_state = State.DELEGATED_PAYMENT_CASCADED_ERROR
-
-                message = "Duplicate employer reimbursement payments exists for primary payment."
 
                 state_log_util.create_finished_state_log(
                     end_state=end_state,
@@ -284,17 +260,16 @@ class RelatedPaymentsProcessingStep(Step):
                     raise Exception(
                         f"Primary payment id not found for related payment id: {payment.payment_id}"
                     )
-                payment_id = primary_payment_record
-                related_payment_id = payment.payment_id
-                link_payment = LinkSplitPayment()
-                link_payment.payment_id = payment_id
-                link_payment.related_payment_id = related_payment_id
+
+                link_payment = LinkSplitPayment(
+                    payment_id=primary_payment_record, related_payment_id=payment.payment_id
+                )
                 self.db_session.add(link_payment)
 
                 logger.info(
                     "Added related payment to link_payment: Primary payment id %s , Related Payment Id %s",
-                    payment_id,
-                    related_payment_id,
+                    primary_payment_record,
+                    payment.payment_id,
                     extra=payment_log_details,
                 )
 

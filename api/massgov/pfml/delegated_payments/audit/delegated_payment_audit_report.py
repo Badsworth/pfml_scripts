@@ -360,9 +360,10 @@ class PaymentAuditReportStep(Step):
             return payment_amount
 
         for payment in link_payments:
-            if payment.payment_transaction_type_id in [
-                PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id
-            ]:
+            if (
+                payment.payment_transaction_type_id
+                == PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id
+            ):
                 payment_amount += payment.amount
 
         return payment_amount
@@ -393,16 +394,18 @@ class PaymentAuditReportStep(Step):
     ) -> str:
         employer_reimbursement_i_values = []
         if payment:
-            if payment.payment_transaction_type_id in [
-                PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id
-            ]:
+            if (
+                payment.payment_transaction_type_id
+                == PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id
+            ):
                 return str(payment.fineos_pei_i_value)
 
-        for payment in link_payments:
-            if payment.payment_transaction_type_id in [
-                PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id
-            ]:
-                employer_reimbursement_i_values.append(payment.fineos_pei_i_value)
+        for link_payment in link_payments:
+            if (
+                link_payment.payment_transaction_type_id
+                == PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id
+            ):
+                employer_reimbursement_i_values.append(link_payment.fineos_pei_i_value)
         return " ".join(str(v) for v in employer_reimbursement_i_values)
 
     def build_payment_audit_data_set(

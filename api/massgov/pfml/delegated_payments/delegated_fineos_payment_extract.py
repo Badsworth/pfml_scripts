@@ -275,6 +275,15 @@ class PaymentData:
         if self.is_standard_payment or (
             self.is_employer_reimbursement and self.is_employer_reimbursement_enabled
         ):
+            disallowed_lookup_values = (
+                [PaymentMethod.DEBIT.payment_method_description]
+                if self.is_standard_payment
+                else [
+                    PaymentMethod.DEBIT.payment_method_description,
+                    PaymentMethod.ACH.payment_method_description,
+                ]
+            )
+
             self.raw_payment_method = payments_util.validate_db_input(
                 "PAYMENTMETHOD",
                 pei_record,
@@ -283,13 +292,7 @@ class PaymentData:
                 if self.is_standard_payment
                 else self.is_employer_reimbursement,
                 custom_validator_func=payments_util.lookup_validator(
-                    PaymentMethod,
-                    disallowed_lookup_values=[PaymentMethod.DEBIT.payment_method_description]
-                    if self.is_standard_payment
-                    else [
-                        PaymentMethod.DEBIT.payment_method_description,
-                        PaymentMethod.ACH.payment_method_description,
-                    ],
+                    PaymentMethod, disallowed_lookup_values=disallowed_lookup_values,
                 ),
             )
 
@@ -725,7 +728,8 @@ class PaymentExtractStep(Step):
                         self.increment(self.Metrics.CLAIM_NOT_FOUND_COUNT)
                         payment_data.validation_container.add_validation_issue(
                             payments_util.ValidationReason.MISSING_IN_DB,
-                            f"claim: {payment_data.absence_case_number}",
+                            payment_data.absence_case_number,
+                            "claim",
                         )
                     employee = claim.employee if claim is not None else None
                 else:
