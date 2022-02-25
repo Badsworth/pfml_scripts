@@ -855,6 +855,15 @@ class MmarsPaymentData(Base, TimestampMixin):
 
     payment = relationship(Payment)
 
+    claim_id = Column(PostgreSQLUUID, ForeignKey("claim.claim_id"), index=True, nullable=True)
+    claim = relationship(Claim)
+
+    employee_id = Column(
+        PostgreSQLUUID, ForeignKey("employee.employee_id"), index=True, nullable=True
+    )
+    employee = relationship(Employee)
+    payment_i_value = Column(Text)
+
 
 class MmarsPaymentRefunds(Base, TimestampMixin):
     __tablename__ = "mmars_payment_refunds"
