@@ -33,7 +33,7 @@ resource "aws_kms_alias" "id_proofing_document_alias" {
   target_key_id = aws_kms_key.s3_kms_key.key_id
 }
 
-data "aws_iam_policy_document" "allow_admin_groups_access_policy" {
+data "aws_iam_policy_document" "env_kms_key_policy" {
   for_each = toset(local.environments)
   statement {
     sid = "AllowAllForAdmins"
@@ -46,30 +46,45 @@ data "aws_iam_policy_document" "allow_admin_groups_access_policy" {
     resources = ["*"]
 
     principals {
-      type = "AWS"
-      identifiers = concat(module.constants.prod_admin_roles,
-        [
-          "arn:aws:iam::498823821309:role/pfml-api-${each.key}-ecs-tasks-execution-role",
-          "arn:aws:iam::498823821309:role/pfml-api-${each.key}-ecs-tasks-register-admins-task-role",
-          "arn:aws:iam::498823821309:role/pfml-api-${each.key}-ecs-tasks-dor-import-execution-role",
-          "arn:aws:iam::498823821309:role/pfml-api-${each.key}-sftp-tool-execution-role",
-          "arn:aws:iam::498823821309:role/pfml-api-${each.key}-dua-employee-workflow-execution-role",
-          "arn:aws:iam::498823821309:role/pfml-api-${each.key}-ecs-tasks-reductions-wrkflw-execution-role"
-        ]
-      )
+      type        = "AWS"
+      identifiers = module.constants.prod_admin_roles
+    }
+  }
+  statement {
+    sid = "AllowAllFor${each.key}Env"
+
+    actions = [
+      "kms:*",
+    ]
+
+    effect    = "Allow"
+    resources = ["*"]
+
+    principals {
+      type        = "AWS"
+      identifiers = ["*"]
+    }
+    condition {
+      test     = "ArnEquals"
+      variable = "aws:PrincipalArn"
+      values = [
+        "arn:aws:iam::498823821309:role/pfml-api-${each.key}-*",
+        "arn:aws:iam::498823821309:role/pfml-${each.key}-*",
+        "arn:aws:iam::498823821309:role/massgov-pfml-${each.key}-*"
+      ]
     }
   }
 }
 
-resource "aws_kms_key" "api_config_secrets" {
+resource "aws_kms_key" "env_kms_key" {
   for_each    = toset(local.environments)
-  description = "Terraform generated KMS key for API config secrets in ${each.key}"
-  policy      = data.aws_iam_policy_document.allow_admin_groups_access_policy[each.key].json
+  description = "Terraform generated KMS key for ${each.key}"
+  policy      = data.aws_iam_policy_document.env_kms_key_policy[each.key].json
 }
 
-resource "aws_kms_alias" "api_config_secrets_aliases" {
+resource "aws_kms_alias" "env_kms_key_alias" {
   for_each      = toset(local.environments)
-  name          = "alias/pfml-api-${each.key}-config-secrets"
-  target_key_id = aws_kms_key.api_config_secrets[each.key].key_id
+  name          = "alias/pfml-${each.key}-kms-key"
+  target_key_id = aws_kms_key.env_kms_key[each.key].key_id
 }
 
