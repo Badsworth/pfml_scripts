@@ -1,4 +1,4 @@
-import NavigationTabs from "../NavigationTabs";
+import NavigationTabs from "../../components/NavigationTabs";
 import React from "react";
 import { createRouteWithQuery } from "../../utils/routeWithParams";
 import routes from "../../routes";

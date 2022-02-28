@@ -9,12 +9,10 @@ import {
 } from "../../../models/Document";
 import React, { useEffect } from "react";
 import {
-  getInfoAlertContext,
   paymentStatusViewHelper,
   showPaymentsTab,
-} from "./payments";
+} from "src/utils/paymentsHelpers";
 import withUser, { WithUserProps } from "../../../hoc/withUser";
-
 import { AbsencePeriod } from "../../../models/AbsencePeriod";
 import AbsencePeriodStatusTag from "../../../components/AbsencePeriodStatusTag";
 import Alert from "../../../components/core/Alert";
@@ -27,7 +25,7 @@ import LegalNoticeList from "../../../components/LegalNoticeList";
 import PageNotFound from "../../../components/PageNotFound";
 import { Payment } from "src/models/Payment";
 import Spinner from "../../../components/core/Spinner";
-import StatusNavigationTabs from "../../../components/status/StatusNavigationTabs";
+import StatusLayout from "src/features/claim-status-payments/status-layout";
 import Title from "../../../components/core/Title";
 import { Trans } from "react-i18next";
 import { createRouteWithQuery } from "../../../utils/routeWithParams";
@@ -51,17 +49,16 @@ export const Status = ({
 }) => {
   const { t } = useTranslation();
   const {
-    claims: { claimDetail, loadClaimDetail, isLoadingClaimDetail },
+    claims: { claimDetail, isLoadingClaimDetail },
     documents: {
       documents: allClaimDocuments,
       download: downloadDocument,
       hasLoadedClaimDocuments,
-      loadAll: loadAllClaimDocuments,
     },
-    payments: { loadPayments, loadedPaymentsData },
+    payments: { loadedPaymentsData },
   } = appLogic;
   const { absence_case_id, absence_id, uploaded_document_type } = query;
-  const application_id = claimDetail?.application_id;
+
   const absenceId = absence_id || absence_case_id;
   const hasDocuments = hasLoadedClaimDocuments(
     claimDetail?.application_id || ""
@@ -70,21 +67,6 @@ export const Status = ({
     appLogic.appErrors,
     claimDetail?.application_id || ""
   );
-
-  useEffect(() => {
-    if (absenceId) {
-      loadClaimDetail(absenceId);
-      loadPayments(absenceId);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [absenceId]);
-
-  useEffect(() => {
-    if (application_id) {
-      loadAllClaimDocuments(application_id);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [application_id]);
 
   useEffect(() => {
     /**
@@ -118,15 +100,6 @@ export const Status = ({
     );
   }
 
-  // Check both because claimDetail could be cached from a different status page.
-  if (isLoadingClaimDetail || !claimDetail) {
-    return (
-      <div className="text-center">
-        <Spinner aria-label={t("pages.claimsStatus.loadingClaimDetailLabel")} />
-      </div>
-    );
-  }
-
   const absenceDetails = AbsencePeriod.groupByReason(
     claimDetail.absence_periods
   );
@@ -141,16 +114,7 @@ export const Status = ({
     allClaimDocuments,
     loadedPaymentsData || new Payment()
   );
-
-  const {
-    hasApprovedStatus,
-    hasPendingStatus,
-    hasInReviewStatus,
-    hasProjectedStatus,
-  } = helper;
-
-  const infoAlertContext = getInfoAlertContext(helper);
-
+  const { hasApprovedStatus, hasPendingStatus } = helper;
   const viewYourNotices = () => {
     const legalNotices = getLegalNotices(documentsForApplication);
     const hasNothingToShow = hasDocumentsError || legalNotices.length === 0;
@@ -247,186 +211,146 @@ export const Status = ({
         </Alert>
       )}
 
-      {!!infoAlertContext &&
-        (hasPendingStatus ||
-          hasApprovedStatus ||
-          hasInReviewStatus ||
-          hasProjectedStatus) && (
-          <Alert
-            className="margin-bottom-3"
-            data-test="info-alert"
-            heading={t("pages.claimsStatus.infoAlertHeading", {
-              context: infoAlertContext,
+      <StatusLayout appLogic={appLogic}>
+        <div className="measure-6">
+          <Title hidden>{t("pages.claimsStatus.applicationTitle")}</Title>
+
+          {/* Heading section */}
+          <Heading level="2" size="1">
+            {t("pages.claimsStatus.leaveReasonValueHeader", {
+              context: findKeyByValue(LeaveReason, firstAbsenceDetail),
             })}
-            headingLevel="2"
-            headingSize="4"
-            noIcon
-            state="info"
-          >
-            <p>
+          </Heading>
+
+          <div className="bg-base-lightest tablet:display-flex padding-3">
+            <div className=" padding-right-6">
+              <Heading weight="normal" level="2" size="4">
+                {t("pages.claimsStatus.applicationID")}
+              </Heading>
+              <p className="text-bold">{absenceId}</p>
+            </div>
+            {claimDetail.employer && (
+              <div>
+                <Heading weight="normal" level="2" size="4">
+                  {t("pages.claimsStatus.employerEIN")}
+                </Heading>
+                <p className="text-bold">
+                  {claimDetail.employer.employer_fein}
+                </p>
+              </div>
+            )}
+          </div>
+
+          {hasPendingStatus && (
+            <Timeline
+              absencePeriods={claimDetail.absence_periods}
+              employerFollowUpDate={
+                claimDetail.managedRequirementByFollowUpDate[0]?.follow_up_date
+              }
+              applicationId={claimDetail.application_id}
+              docList={documentsForApplication}
+              absenceId={claimDetail.fineos_absence_id}
+              appLogic={appLogic}
+            />
+          )}
+          <LeaveDetails
+            absenceDetails={absenceDetails}
+            absenceId={claimDetail.fineos_absence_id}
+            isPaymentsTab={isPaymentsTab}
+          />
+          {viewYourNotices()}
+
+          {/* Upload documents section */}
+          <div className={containerClassName} id="upload_documents">
+            <Heading level="2">
+              {t("pages.claimsStatus.infoRequestsHeading")}
+            </Heading>
+            <div>
               <Trans
-                i18nKey="pages.claimsStatus.infoAlertBody"
-                tOptions={{ context: infoAlertContext }}
+                i18nKey="pages.claimsStatus.infoRequestsBody"
+                tOptions={{
+                  context: !hasPendingStatus ? "Decision" : "Pending",
+                }}
                 components={{
-                  "about-bonding-leave-link": (
+                  "online-appeals-form": (
                     <a
-                      href={
-                        routes.external.massgov.benefitsGuide_aboutBondingLeave
-                      }
+                      href={routes.external.massgov.onlineAppealsForm}
                       target="_blank"
                       rel="noreferrer noopener"
                     />
                   ),
-                  "contact-center-phone-link": (
-                    <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
-                  ),
+                  p: <p className="margin-top-1"></p>,
                 }}
               />
-            </p>
-          </Alert>
-        )}
-      <BackButton
-        label={t("pages.claimsStatus.backButtonLabel")}
-        href={routes.applications.index}
-      />
-      <div className="measure-6">
-        <Title hidden>{t("pages.claimsStatus.applicationTitle")}</Title>
-        {isPaymentsTab && (
-          <StatusNavigationTabs
-            activePath={appLogic.portalFlow.pathname}
-            absence_id={absenceId}
-          />
-        )}
-
-        {/* Heading section */}
-        <Heading level="2" size="1">
-          {t("pages.claimsStatus.leaveReasonValueHeader", {
-            context: findKeyByValue(LeaveReason, firstAbsenceDetail),
-          })}
-        </Heading>
-
-        <div className="bg-base-lightest tablet:display-flex padding-3">
-          <div className=" padding-right-6">
-            <Heading weight="normal" level="2" size="4">
-              {t("pages.claimsStatus.applicationID")}
-            </Heading>
-            <p className="text-bold">{absenceId}</p>
-          </div>
-          {claimDetail.employer && (
-            <div>
-              <Heading weight="normal" level="2" size="4">
-                {t("pages.claimsStatus.employerEIN")}
-              </Heading>
-              <p className="text-bold">{claimDetail.employer.employer_fein}</p>
             </div>
-          )}
-        </div>
-
-        {hasPendingStatus && (
-          <Timeline
-            absencePeriods={claimDetail.absence_periods}
-            employerFollowUpDate={
-              claimDetail.managedRequirementByFollowUpDate[0]?.follow_up_date
-            }
-            applicationId={claimDetail.application_id}
-            docList={documentsForApplication}
-            absenceId={claimDetail.fineos_absence_id}
-            appLogic={appLogic}
-          />
-        )}
-        <LeaveDetails
-          absenceDetails={absenceDetails}
-          absenceId={claimDetail.fineos_absence_id}
-          isPaymentsTab={isPaymentsTab}
-        />
-        {viewYourNotices()}
-
-        {/* Upload documents section */}
-        <div className={containerClassName} id="upload_documents">
-          <Heading level="2">
-            {t("pages.claimsStatus.infoRequestsHeading")}
-          </Heading>
-          <div>
-            <Trans
-              i18nKey="pages.claimsStatus.infoRequestsBody"
-              tOptions={{ context: !hasPendingStatus ? "Decision" : "Pending" }}
-              components={{
-                "online-appeals-form": (
-                  <a
-                    href={routes.external.massgov.onlineAppealsForm}
-                    target="_blank"
-                    rel="noreferrer noopener"
-                  />
-                ),
-                p: <p className="margin-top-1"></p>,
-              }}
-            />
+            {hasPendingStatus && (
+              <ButtonLink
+                className="margin-top-3"
+                href={appLogic.portalFlow.getNextPageRoute(
+                  "UPLOAD_DOC_OPTIONS",
+                  {},
+                  { absence_id: claimDetail.fineos_absence_id }
+                )}
+              >
+                {t("pages.claimsStatus.uploadDocumentsButton")}
+              </ButtonLink>
+            )}
           </div>
-          {hasPendingStatus && (
-            <ButtonLink
-              className="margin-top-3"
-              href={appLogic.portalFlow.getNextPageRoute(
-                "UPLOAD_DOC_OPTIONS",
-                {},
-                { absence_id: claimDetail.fineos_absence_id }
-              )}
-            >
-              {t("pages.claimsStatus.uploadDocumentsButton")}
-            </ButtonLink>
-          )}
-        </div>
 
-        {/* Manage applications section */}
-        {(hasPendingStatus || hasApprovedStatus) && (
-          <div className="padding-y-4" data-testid="manageApplication">
-            <div>
-              <Heading level="2">
-                {t("pages.claimsStatus.manageApplicationHeading")}
-              </Heading>
-              <Heading level="3" className="margin-top-3">
-                {t("pages.claimsStatus.makeChangesHeading")}
+          {/* Manage applications section */}
+          {(hasPendingStatus || hasApprovedStatus) && (
+            <div className="padding-y-4" data-testid="manageApplication">
+              <div>
+                <Heading level="2">
+                  {t("pages.claimsStatus.manageApplicationHeading")}
+                </Heading>
+                <Heading level="3" className="margin-top-3">
+                  {t("pages.claimsStatus.makeChangesHeading")}
+                </Heading>
+                <Trans
+                  i18nKey="pages.claimsStatus.makeChangesBody"
+                  components={{
+                    "contact-center-phone-link": (
+                      <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
+                    ),
+                  }}
+                />
+                {hasApprovedStatus && (
+                  <Trans
+                    i18nKey="pages.claimsStatus.manageApprovedApplicationText"
+                    components={{
+                      "manage-approved-app-link": (
+                        <a
+                          data-testid="manageApprovedApplicationLink"
+                          href={
+                            routes.external.massgov.manageApprovedApplication
+                          }
+                          rel="noopener noreferrer"
+                          target="_blank"
+                        />
+                      ),
+                    }}
+                  />
+                )}
+              </div>
+
+              <Heading level="3">
+                {t("pages.claimsStatus.reportOtherBenefitsHeading")}
               </Heading>
               <Trans
-                i18nKey="pages.claimsStatus.makeChangesBody"
+                i18nKey="pages.claimsStatus.reportOtherBenefitsBody"
                 components={{
                   "contact-center-phone-link": (
                     <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
                   ),
+                  ul: <ul className="usa-list" />,
+                  li: <li />,
                 }}
               />
-              {hasApprovedStatus && (
-                <Trans
-                  i18nKey="pages.claimsStatus.manageApprovedApplicationText"
-                  components={{
-                    "manage-approved-app-link": (
-                      <a
-                        data-testid="manageApprovedApplicationLink"
-                        href={routes.external.massgov.manageApprovedApplication}
-                        rel="noopener noreferrer"
-                        target="_blank"
-                      />
-                    ),
-                  }}
-                />
-              )}
             </div>
-
-            <Heading level="3">
-              {t("pages.claimsStatus.reportOtherBenefitsHeading")}
-            </Heading>
-            <Trans
-              i18nKey="pages.claimsStatus.reportOtherBenefitsBody"
-              components={{
-                "contact-center-phone-link": (
-                  <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
-                ),
-                ul: <ul className="usa-list" />,
-                li: <li />,
-              }}
-            />
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      </StatusLayout>
     </React.Fragment>
   );
 };
