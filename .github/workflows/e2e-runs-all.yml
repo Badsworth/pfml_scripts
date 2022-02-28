@@ -49,8 +49,7 @@ on:
         default: "cypress/specs/<group>/<type>/**"
         type: "string"
   schedule:
-    - cron: "0 11 * * 1-5"
-    - cron: "45 12 * * 1-5"
+    - cron: "15 12 * * 1-5"
 
 jobs:
   trigger_e2e:
