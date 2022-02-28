@@ -16,13 +16,17 @@ logger = massgov.pfml.util.logging.get_logger(__name__)
 
 
 def update_user(
-    db_session: db.Session, user: User, update_request: UserUpdateRequest, updated_by: str = "User"
+    db_session: db.Session,
+    user: User,
+    update_request: UserUpdateRequest,
+    cognito_auth_token: str,
+    updated_by: str = "User",
 ) -> User:
     for key in update_request.__fields_set__:
         value = getattr(update_request, key)
 
         if key == "mfa_delivery_preference":
-            _update_mfa_preference(db_session, user, key, value, updated_by)
+            _update_mfa_preference(db_session, user, key, value, updated_by, cognito_auth_token)
             continue
 
         if key == "mfa_phone_number":
@@ -35,7 +39,12 @@ def update_user(
 
 
 def _update_mfa_preference(
-    db_session: db.Session, user: User, key: str, value: Optional[str], updated_by: str
+    db_session: db.Session,
+    user: User,
+    key: str,
+    value: Optional[str],
+    updated_by: str,
+    cognito_auth_token: str,
 ) -> None:
     existing_mfa_preference = user.mfa_preference_description()
     if value == existing_mfa_preference:
@@ -59,10 +68,10 @@ def _update_mfa_preference(
     logger.info("MFA updated for user", extra=log_attributes)
 
     if value == "Opt Out" and existing_mfa_preference is not None:
-        handle_mfa_disabled(user, last_updated_at, updated_by)
+        handle_mfa_disabled(user, last_updated_at, updated_by, cognito_auth_token)
         # todo: disable in cognito
     elif value == "SMS":
-        handle_mfa_enabled(user)
+        handle_mfa_enabled(user, cognito_auth_token)
 
 
 def _update_mfa_preference_audit_trail(db_session: db.Session, user: User, updated_by: str) -> None:

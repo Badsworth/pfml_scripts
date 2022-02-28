@@ -11,7 +11,7 @@ from massgov.pfml.util.aws.ses import EmailRecipient, send_templated_email
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
 
-def handle_mfa_enabled(user: User) -> None:
+def handle_mfa_enabled(user: User, cognito_auth_token: str) -> None:
     # todo: update comments
     """Helper method for handling necessary actions after MFA is disabled for a user (send email, logging, etc)"""
     # This value should always be set by the time a user enables MFA but the
@@ -21,13 +21,15 @@ def handle_mfa_enabled(user: User) -> None:
     logger.info("MFA enabled for user")
 
     try:
-        enable_user_mfa(user.email_address)
+        enable_user_mfa(user.email_address, cognito_auth_token)
     except Exception as error:
         logger.error("Error sending MFA disabled email", exc_info=error)
         raise error
 
 
-def handle_mfa_disabled(user: User, last_enabled_at: Optional[datetime], updated_by: str) -> None:
+def handle_mfa_disabled(
+    user: User, last_enabled_at: Optional[datetime], updated_by: str, cognito_auth_token: str
+) -> None:
     # todo: update comment
     """Helper method for handling necessary actions after MFA is disabled for a user (send email, logging, etc)"""
     # These values should always be set by the time a user disables MFA but the
@@ -38,15 +40,16 @@ def handle_mfa_disabled(user: User, last_enabled_at: Optional[datetime], updated
     log_attributes = _collect_log_attributes(updated_by, last_enabled_at)
     logger.info("MFA disabled for user", extra=log_attributes)
 
-    if app.get_config().environment == "local" and app.get_config().disable_sending_emails:
-        logger.info(
-            "Skipping sending an MFA disabled notification email", extra=log_attributes,
-        )
-        return
-
     try:
-        disable_user_mfa(user.email_address)
-        _send_mfa_disabled_email(user.email_address, user.mfa_phone_number_last_four())
+        logger.info("About to disable cognito mfa")
+        disable_user_mfa(user.email_address, cognito_auth_token)
+        logger.info("Disabled cognito mfa")
+        if app.get_config().environment == "local" and app.get_config().disable_sending_emails:
+            logger.info(
+                "Skipping sending an MFA disabled notification email", extra=log_attributes,
+            )
+        else:
+            _send_mfa_disabled_email(user.email_address, user.mfa_phone_number_last_four())
     except Exception as error:
         logger.error("Error disabling user MFA", exc_info=error)
         raise error

@@ -1,4 +1,5 @@
 import connexion
+import flask
 from werkzeug.exceptions import BadRequest
 
 import massgov.pfml.api.app as app
@@ -180,6 +181,9 @@ def users_patch(user_id):
     """This endpoint modifies the user specified by the user_id"""
     body = UserUpdateRequest.parse_obj(connexion.request.json)
 
+    auth_header = flask.request.headers.get("Authorization", None)
+    cognito_auth_token = auth_header[7:]
+
     issues = get_users_patch_issues(body)
     if issues:
         logger.info("users_patch failure - request has invalid fields")
@@ -195,7 +199,7 @@ def users_patch(user_id):
 
         ensure(EDIT, user)
 
-    updated_user = update_user(db_session, user, body)
+    updated_user = update_user(db_session, user, body, cognito_auth_token)
     data = UserResponse.from_orm(updated_user).dict()
 
     return response_util.success_response(
