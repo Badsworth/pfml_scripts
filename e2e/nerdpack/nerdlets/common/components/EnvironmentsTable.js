@@ -27,6 +27,15 @@ function RunIndicators({ runs, env, link, simpleView = false }) {
       </span>
     );
   }
+  // EXPECTED TO BE DOWN, REMOVE AFTER Feb 21, 2022
+  else if (env === "trn2") {
+    return (
+      <span class="warning">
+        <Icon type={Icon.TYPE.INTERFACE__STATE__WARNING} />
+        Env expected offline
+      </span>
+    );
+  }
   return [
     <Link to={link} className={"allLink"} ariaLabel="Compare Runs">
       <Icon type={Icon.TYPE.HARDWARE_AND_SOFTWARE__HARDWARE__CLUSTER} />

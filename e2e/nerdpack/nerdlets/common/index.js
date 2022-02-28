@@ -14,7 +14,9 @@ export const ENVS = [
 ];
 export const GROUPS = ["Stable", "Unstable", "Morning", "Integration"];
 export const ENV_NOT_CONFIGURED = ["prod", "infra-test"];
-export const ENV_OFFLINE = {};
+export const ENV_OFFLINE = {
+  trn2: "Env expected offline",
+};
 
 export const extractGroup = (item, name) => {
   const group = item.metadata.groups.find((g) => g.name === name);
